@@ -1,0 +1,21 @@
+a:link {text-decoration: none; font-family: Verdana; font-weight: bold; color: yellow}
+a:hover {text-decoration: none; font-family: Verdana; font-weight: bold; color: red}
+a:active {text-decoration: none; font-family: Verdana; font-weight: bold; color: red}
+a:visited {text-decoration: none; font-family: Verdana; font-weight: bold; color: blue}	
+a:visited:hover {text-decoration: none; font-family: Verdana; font-weight: bold; color: red}
+a:visited:active {text-decoration: none; font-family: Verdana; font-weight: bold; color: blue}
+
+A.button:link {text-decoration: none; font-family: Verdana; font-weight: bold; background: yellow; color: black}
+A.button:hover {text-decoration: none; font-family: Verdana; font-weight: bold; background: red; color: black}
+A.button:active {text-decoration: none; font-family: Verdana; font-weight: bold; background: yellow; color: black}
+A.button:visited {text-decoration: none; font-family: Verdana; font-weight: bold; background: blue; color: black}
+A.button:visited:hover {text-decoration: none; font-family: Verdana; font-weight: bold; background: red; color: black}
+A.button:visited:active {text-decoration: none; font-family: Verdana; font-weight: bold; background: red; color: black}
+
+A.hereyouare:link {text-decoration: none; font-family: Verdana; font-weight: bold; background: lime; color: black}
+A.hereyouare:hover {text-decoration: none; font-family: Verdana; font-weight: bold; background: lime; color: black}
+A.hereyouare:active {text-decoration: none; font-family: Verdana; font-weight: bold; background: lime; color: black}
+A.hereyouare:visited {text-decoration: none; font-family: Verdana; font-weight: bold; background: lime; color: black}
+A.hereyouare:visited:hover {text-decoration: none; font-family: Verdana; font-weight: bold; background: lime; color: black}
+A.hereyouare:visited:active {text-decoration: none; font-family: Verdana; font-weight: bold; background: lime; color: black}
+	
