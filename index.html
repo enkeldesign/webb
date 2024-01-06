@@ -34,19 +34,6 @@ h1 {
   text-align: center;
   color: #abc;
 }    
-    
-@media (prefers-color-scheme: dark) {
-/* Defaults to dark. */  
-}
-
-@media (prefers-color-scheme: light) {
-body {
-  background-color: #abc;
-}
-
-h1 {
-  color: #123;
-}    
 
 #colorSwatch {
   position: fixed;
@@ -85,6 +72,21 @@ h1 {
     max-width: 100px; /* Example fixed size for smaller screens */
   }
 }
+@media (prefers-color-scheme: dark) {
+/* Defaults to dark. */  
+}
+
+@media (prefers-color-scheme: light) {
+body {
+  background-color: #abc;
+  }
+
+
+h1 {
+  color: #123;
+}    
+}
+
   </style> 
 
   </head>
