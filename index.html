@@ -49,7 +49,43 @@ h1 {
 }    
 
 }
+#colorSwatch {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  max-width: 33vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
+.color {
+  width: 20%;
+  padding-bottom: 20%; /* This maintains a square aspect ratio */
+  margin: 2px;
+}
+
+.pastelBlue {
+  background-color: #abc;
+}
+.deepBlue {
+  background-color: #123;
+}
+.lightGrayish {
+  background-color: #def;
+}
+.darkGrayish {
+  background-color: #456;
+}
+.goldenYellow {
+  background-color: #ffd700;
+}
+
+@media (max-width: 600px) {
+  #colorSwatch {
+    max-width: 100px; /* Example fixed size for smaller screens */
+  }
+}
   </style> 
 
   </head>
@@ -59,6 +95,14 @@ h1 {
     <h1>
       enkel design
     </h1>
+
+    <div id="colorSwatch">
+      <div class="color pastelBlue"></div>
+      <div class="color deepBlue"></div>
+      <div class="color lightGrayish"></div>
+      <div class="color darkGrayish"></div>
+      <div class="color goldenYellow"></div>
+    </div>
 
   </body>
 
