@@ -1,3 +1,4 @@
+
 <!DOCTYPE HTML>
 
 <html lang="sv-SE">
@@ -19,20 +20,40 @@
   <meta property="og:url" content="https://enkel.design">
 
   <style>
+    :root {
+      --back: #000;
+      --ice-fire: #abc;
+    }
     body {
-  background: #000;
+      background: var(--back);
+    }
+    svg {
+      position: absolute;
+      inset: 0;
+      margin: auto;      
+    }
+    svg>text {
+      transition: fill 3s ease;
+      font-family: "Helvetica Neue", "Roboto Condensed", "Segoe Ui", "Selawik", "Open Sans", "Roboto", "Helvetica", "Arial", sans-serif;
+      font-weight: 600;
+      font-stretch: condensed;
+      font-size: 1.25em;
+    }
+    svg:hover {
+      --ice-fire: #fa0;
+    }
+    svg:focus {
+      --ice-fire: #fa0;
+      outline: var(--ice-fire) solid 20px;
+    }
+    svg:active {
+      --ice-fire: #f80;
+    }
+  @media (prefers-reduced-motion) {
+    svg>text {
+      transition: none;
+    }
 }
-svg {
-  position: absolute;
-  inset: 0;
-  margin: auto;
-}
-svg>text {
-  font-family: "Helvetica Neue", "Roboto Condensed", "Segoe Ui", "Selawik", "Open Sans", "Roboto", "Helvetica", "Arial", sans-serif;
-  font-weight: 600;
-  font-stretch: condensed;
-  font-size: 1.25em;
-  }
   </style>
 
 </head>
@@ -40,18 +61,18 @@ svg>text {
 <body>
   
   <a href="mailto:erik@enkel.design">
-    <svg role="img" xmlns="http://www.w3.org/2000/svg" version="1.1" width="240" height="240" viewBox="0 0 240 240" aria-label="Mejla mig: Erik, snabel-a, Enkel, punkt, design">
+    <svg role="img" xmlns="http://www.w3.org/2000/svg" version="1.1" width="240" height="240" viewBox="0 0 240 240" tabindex="0" aria-label="Mejla mig: Erik, snabel-a, Enkel, punkt, design">
       <mask id="mask">
       <rect x="0" y="0" width="240" height="240" fill="white" />
       <circle cx="120" cy="120" r="100" fill="black"/>
       <rect x="110" y="0" height="240" width="20" fill="black"/>
       </mask>
 
-      <circle cx="120" cy="120" r="120" fill="#abc" mask="url(#mask)" />
+      <circle cx="120" cy="120" r="120" fill="var(--ice-fire)" mask="url(#mask)" />
   
-      <rect x="18" y="110" width="20" height="20" fill="#abc" />
-      <rect x="130" y="194" width="20" height="30" fill="#abc" />
-      <text x="53.5%" y="50.75%" dominant-baseline="middle" text-anchor="middle" fill="#abc">ERIK@ENKEL.DESIGN</text>
+      <rect x="18" y="110" width="20" height="20" fill="var(--ice-fire)" />
+      <rect x="130" y="194" width="20" height="30" fill="var(--ice-fire)" />
+      <text x="53.5%" y="50.75%" dominant-baseline="middle" text-anchor="middle" fill="var(--ice-fire)">ERIK@ENKEL.DESIGN</text>
     </svg>
   </a>
 
