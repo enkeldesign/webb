@@ -4,7 +4,7 @@
       <circle cx="120" cy="120" r="100" fill="black"/>
       <rect x="110" y="0" height="240" width="20" fill="black"/>
       </mask>
-      <mask id"center">
+      <mask id="center">
       <rect x="0" y="0" width="240" height="240" fill="white" />
       <circle cx="120" cy="120" r="80" fill="black"/>
       </mask>
