@@ -25,6 +25,10 @@
     :root {
       --back: #000;
       --ice-fire: #545454; /* #0ab; */
+      --blue: #009eff;
+      --blue: color(display-p3 0.000000 0.619608 1.000000 / 1.000000);
+      --orange: #ff9e00;
+      --orange: color(display-p3 1.000000 0.619608 0.000000 / 1.000000);
   /*  --ice-fire: color(display-p3 0.066667 0.666667 0.733333 / 1.000000); */
     }
     
@@ -89,8 +93,8 @@
       <rect x="0" y="0" width="114" height="208" fill="black" />
     </mask>
       <circle cx="104" cy="104" r="104" fill="var(--ice-fire)" mask="url(#base)" />
-      <circle cx="104" cy="104" r="104" fill="#009eff" mask="url(#blue)" />
-    <circle cx="104" cy="104" r="104" fill="#ff9e00" mask="url(#orange)" />
+      <circle cx="104" cy="104" r="104" fill="var(--blue)" mask="url(#blue)" />
+    <circle cx="104" cy="104" r="104" fill="var(--orange)" mask="url(#orange)" />
     <rect x="18" y="94" width="30" height="20" fill="var(--ice-fire)" />
       <rect x="114" y="150" width="20" height="38" fill="var(--ice-fire)" />
       <circle cx="104" cy="104" r="64" fill="var(--back)"/>
