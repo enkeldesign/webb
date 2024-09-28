@@ -34,33 +34,17 @@
     body {
       background: var(--back);
     }
-    
-    svg {
+    img {
       position: absolute;
       inset: 0;
       margin: auto;      
     }
+    img:focus {
+      --ice-fire: #ededed;
+      /*--ice-fire: color(display-p3 1.000000 0.800000 0.000000 / 1.000000);*/
+      outline: 20px solid #abc;
+    }
     
-    svg>circle {
-        transition: fill 666ms ease;
-    }
-    svg>rect {
-        transition: fill 666ms ease;
-    }
-
-    svg:hover {
-      --ice-fire: #ededed;
-      /*--ice-fire: color(display-p3 1.000000 0.800000 0.000000 / 1.000000);*/
-    }
-    svg:focus {
-      --ice-fire: #ededed;
-      /*--ice-fire: color(display-p3 1.000000 0.800000 0.000000 / 1.000000);*/
-      outline: 20px solid #ededed;
-    }
-    svg:active {
-      --ice-fire: #fff;
-      /*--ice-fire: color(display-p3 1.000000 0.533333 0.000000 / 1.000000);*/
-    }
     
   </style>
 
@@ -69,30 +53,8 @@
 <body>
   
   <a href="mailto:erik@enkel.design">
-    <svg role="img" xmlns="http://www.w3.org/2000/svg" version="1.1" width="208" height="208" viewBox="0 0 208 208" tabindex="0" aria-label="Mejla mig: Erik, snabel-a, Enkel, punkt, design">
-      <mask id="base">
-        <rect x="0" y="0" width="208" height="208" fill="white" />
-        <circle cx="104" cy="104" r="84" fill="black"/>
-        <rect x="94" y="0" height="208" width="20" fill="black"/>
-      </mask>
-      <mask id="blue">
-        <circle cx="104" cy="104" r="104" fill="white" />
-        <circle cx="104" cy="94" r="94" fill="black" />
-        <rect x="94" y="0" width="114" height="208" fill="black" />
-      </mask>
-      <mask id="orange">
-        <circle cx="104" cy="104" r="104" fill="white" />
-        <circle cx="104" cy="114" r="94" fill="black" />
-        <rect x="0" y="0" width="114" height="208" fill="black" />
-      </mask>
-      
-      <circle cx="104" cy="104" r="104" fill="var(--ice-fire)" mask="url(#base)" />
-      <circle cx="104" cy="104" r="104" fill="var(--blue)" mask="url(#blue)" />
-      <circle cx="104" cy="104" r="104" fill="var(--orange)" mask="url(#orange)" />
-      <rect x="18" y="94" width="30" height="20" fill="var(--ice-fire)" />
-      <rect x="114" y="150" width="20" height="38" fill="var(--ice-fire)" />
-      <circle cx="104" cy="104" r="64" fill="var(--back)"/>
-    </svg>
+    <img src="ED logo cba.svg" alt="Mejla mig: Erik, snabel-a, Enkel, punkt, design" width="242.7" height="161.8">
+    
   </a>
 
 </body>
