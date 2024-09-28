@@ -33,9 +33,14 @@
       inset: 0;
       margin: auto;      
     }
-    img:focus {
-      outline: 20px solid #abc;
-    }
+   a:focus {
+  outline: 2px solid #abc;
+  outline-offset: 2px;
+}
+
+a:focus-within img {
+  outline: 20px solid #abc;
+}
     
     
   </style>
