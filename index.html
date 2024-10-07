@@ -20,10 +20,9 @@
     <style>
         :root {
             --background-color: #313131;
-            --color-1: #0ab;
+            --color-1: #cdd;
             --color-2: #fc0;
-            --text-color: #eee;
-            --highlight-color: #bdc;
+            --highlight-color: #0bc;
         }
 
         html,
@@ -58,18 +57,15 @@
             transition: fill 0.3s ease;
         }
 
-        .logoEPath {
+        .logoEPath,
+        .textPath {
             fill: var(--color-1);
         }
 
-        .logoDPath {
-            fill: var(--color-2);
-        }
-
-        .textPath,
+        .logoDPath,
         .mailPath,
         .linePath {
-            fill: var(--text-color);
+            fill: var(--color-2);
         }
 
         a:hover path,
@@ -82,7 +78,7 @@
             outline-offset: 10px;
         }
 
-        /*
+
 
         @keyframes hueRotation {
             from {
@@ -90,12 +86,13 @@
             }
 
             to {
-                filter: hue-rotate(5deg);
+                filter: hue-rotate(15deg);
             }
         }
 
-        a {
-            animation: hueRotation 10s linear infinite;
+        a:hover,
+        a:focus {
+            animation: hueRotation 5s linear infinite alternate;
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -103,8 +100,6 @@
                 animation: none;
             }
         }
-      
-        */
     </style>
 
 </head>
