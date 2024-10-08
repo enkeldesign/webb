@@ -3,7 +3,7 @@
             --color-1: #cdd;
             --color-2: #fc0;
             --highlight-color: #0bc;
-            --active-color: #ffae00;    
+            --active-color: #ffae00;
         }
 
         html,
@@ -59,7 +59,8 @@
             outline-offset: 10px;
         }
 
-        a:active, a:active path  {
+        a:active,
+        a:active path {
             fill: var(--active-color);
             outline-color: var(--active-color);
         }
