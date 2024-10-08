@@ -1,0 +1,82 @@
+        :root {
+            --background-color: #313131;
+            --color-1: #cdd;
+            --color-2: #fc0;
+            --highlight-color: #0bc;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--color-1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        a {
+            display: block;
+            width: min(70vw, 320px);
+            outline: none;
+            color: var(--color-1);
+            text-decoration: none;
+        }
+
+        svg {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        path {
+            transition: fill 0.3s ease;
+        }
+
+        .logoEPath,
+        .textPath,
+        .linePath {
+            fill: var(--color-1);
+        }
+
+        .logoDPath,
+        .mailPath {
+            fill: var(--color-2);
+        }
+
+        a:hover path,
+        a:focus path {
+            fill: var(--highlight-color);
+        }
+
+        a:focus {
+            outline: 20px solid var(--highlight-color);
+            outline-offset: 10px;
+        }
+
+
+
+        @keyframes hueRotation {
+            from {
+                filter: hue-rotate(0deg);
+            }
+
+            to {
+                filter: hue-rotate(15deg);
+            }
+        }
+
+        a:hover,
+        a:focus {
+            animation: hueRotation 5s linear infinite alternate;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            a {
+                animation: none;
+            }
+        }
