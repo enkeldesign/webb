@@ -59,8 +59,10 @@
             outline-offset: 10px;
         }
 
-        a:active path {
+        a:active, a:active path  {
             fill: var(--active-color);
+            outline: 20px solid var(--active-color);
+            outline-offset: 10px;
         }
 
 
