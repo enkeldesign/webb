@@ -83,7 +83,9 @@
         }
 
         @media (prefers-reduced-motion: reduce) {
-            a {
+
+            a:hover,
+            a:focus {
                 animation: none;
             }
         }
