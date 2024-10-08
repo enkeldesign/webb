@@ -61,8 +61,7 @@
 
         a:active, a:active path  {
             fill: var(--active-color);
-            outline: 20px solid var(--active-color);
-            outline-offset: 10px;
+            outline-color: var(--active-color);
         }
 
 
