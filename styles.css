@@ -20,6 +20,7 @@ html {
 
 body {
     min-height: 100vh;
+    min-height: 100dvh;
     margin: 0;
     color: var(--color-1);
     display: flex;
