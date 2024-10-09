@@ -1,94 +1,97 @@
- :root {
-     --background-color: #313131;
-     --color-1: #cdd;
-     --color-2: #fc0;
-     --highlight-color: #0bc;
-     --active-color: #ffae00;
- }
+:root {
+    --background-color: #313131;
+    --color-1: #cdd;
+    --color-2: #fc0;
+    --highlight-color: #0bc;
+    --active-color: #ffae00;
+}
 
- html,
- body {
-     min-height: 100vh;
-     margin: 0;
- }
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
 
- body {
-     background-color: var(--background-color);
-     color: var(--color-1);
-     display: flex;
-     justify-content: center;
-     align-items: center;
-     margin: 0;
-     padding-top: env(safe-area-inset-top);
-     padding-bottom: env(safe-area-inset-bottom);
- }
+html {
+    height: 100%;
+    margin: 0;
+    background-color: var(--background-color);
+}
 
- a {
-     display: block;
-     width: min(70vw, 320px);
-     outline: none;
-     color: var(--color-1);
-     text-decoration: none;
- }
+body {
+    height: 100%;
+    margin: 0;
+    color: var(--color-1);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
 
- svg {
-     display: block;
-     width: 100%;
-     height: auto;
- }
+a {
+    display: block;
+    width: min(70vw, 320px);
+    outline: none;
+    color: var(--color-1);
+    text-decoration: none;
+}
 
- path {
-     transition: fill 0.3s ease;
- }
+svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
 
- .logoEPath,
- .textPath,
- .linePath {
-     fill: var(--color-1);
- }
+path {
+    transition: fill 0.3s ease;
+}
 
- .logoDPath,
- .mailPath {
-     fill: var(--color-2);
- }
+.logoEPath,
+.textPath,
+.linePath {
+    fill: var(--color-1);
+}
 
- a:hover path,
- a:focus path {
-     fill: var(--highlight-color);
- }
+.logoDPath,
+.mailPath {
+    fill: var(--color-2);
+}
 
- a:focus {
-     outline: 20px solid var(--highlight-color);
-     outline-offset: 10px;
- }
+a:hover path,
+a:focus path {
+    fill: var(--highlight-color);
+}
 
- a:active,
- a:active path {
-     fill: var(--active-color);
-     outline-color: var(--active-color);
- }
+a:focus {
+    outline: 20px solid var(--highlight-color);
+    outline-offset: 10px;
+}
 
+a:active,
+a:active path {
+    fill: var(--active-color);
+    outline-color: var(--active-color);
+}
 
+@keyframes hueRotation {
+    from {
+        filter: hue-rotate(0deg);
+    }
+    to {
+        filter: hue-rotate(10deg);
+    }
+}
 
- @keyframes hueRotation {
-     from {
-         filter: hue-rotate(0deg);
-     }
+a:hover,
+a:focus {
+    animation: hueRotation 3s linear infinite alternate;
+}
 
-     to {
-         filter: hue-rotate(15deg);
-     }
- }
-
- a:hover,
- a:focus {
-     animation: hueRotation 5s linear infinite alternate;
- }
-
- @media (prefers-reduced-motion: reduce) {
-
-     a:hover,
-     a:focus {
-         animation: none;
-     }
- }
+@media (prefers-reduced-motion: reduce) {
+    a:hover,
+    a:focus {
+        animation: none;
+    }
+}
