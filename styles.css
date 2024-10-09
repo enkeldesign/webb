@@ -141,17 +141,17 @@ a:focus {
 @media (prefers-color-scheme: light) {
     :root {
         --background-color: var(--light-back);
-        --light-prim: #0ab;
-        --light-sec: #666;
+        --light-prim: #666;
+        --light-sec: #0ab;
         --highlight-color: #FF8000;
         --color-1: var(--light-sec);
         --color-2: var(--light-prim);
 
         --color-logoE: var(--color-2);
         --color-logoD: var(--color-1);
-        --color-text: var(--color-1);
-        --color-line: var(--color-1);
-        --color-mail: var(--color-2);
+        --color-text: var(--color-2);
+        --color-line: var(--color-2);
+        --color-mail: var(--color-1);
 
         --rect-top-fill-opacity: 0.1;
         --rect-btm-fill-opacity: 0;
