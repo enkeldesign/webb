@@ -1,9 +1,23 @@
 :root {
-    --background-color: #313131;
-    --color-1: #cdd;
-    --color-2: #fc0;
+    --dark-back: #313131;
+    --light-back: #f4f4f4;
+    --dark-prim: #cdd;
+    --dark-sec: #fc0;
     --highlight-color: #0bc;
     --active-color: #ffae00;
+    --background-color: var(--dark-back);
+    --color-1: var(--dark-prim);
+    --color-2: var(--dark-sec);
+
+
+    --color-logoE: var(--color-1);
+    --color-logoD: var(--color-2);
+    --color-text: var(--color-1);
+    --color-line: var(--color-1);
+    --color-mail: var(--color-2);
+
+    --rect-top-fill-opacity: 0;
+    --rect-btm-fill-opacity: 0.1;
 }
 
 *,
@@ -53,15 +67,36 @@ path {
     transition: fill 0.3s ease;
 }
 
-.logoEPath,
-.textPath,
-.linePath {
-    fill: var(--color-1);
+.rect-top,
+.rect-btm {
+    transition: fill 0.3s ease;
 }
 
-.logoDPath,
+.logoEPath {
+    fill: var(--color-logoE);
+}
+
+.logoDPath {
+    fill: var(--color-logoD);
+}
+
+.rect-top {
+    fill: var(--light-back);
+    fill-opacity: var(--rect-top-fill-opacity);
+}
+
+.rect-btm {
+    fill: var(--dark-back);
+    fill-opacity: var(--rect-btm-fill-opacity);
+}
+
+.textPath,
+.linePath {
+    fill: var(--color-text);
+}
+
 .mailPath {
-    fill: var(--color-2);
+    fill: var(--color-mail);
 }
 
 a:hover path,
@@ -84,6 +119,7 @@ a:active path {
     from {
         filter: hue-rotate(0deg);
     }
+
     to {
         filter: hue-rotate(10deg);
     }
@@ -95,8 +131,38 @@ a:focus {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
     a:hover,
     a:focus {
         animation: none;
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+        --background-color: var(--light-back);
+        --light-prim: #0ab;
+        --light-sec: #666;
+        --highlight-color: #FF8000;
+        --color-1: var(--light-sec);
+        --color-2: var(--light-prim);
+
+        --color-logoE: var(--color-2);
+        --color-logoD: var(--color-1);
+        --color-text: var(--color-1);
+        --color-line: var(--color-1);
+        --color-mail: var(--color-2);
+
+        --rect-top-fill-opacity: 0.1;
+        --rect-btm-fill-opacity: 0;
+    }
+
+    html,
+    body {
+        background-color: var(--background-color);
+    }
+
+    a {
+        color: var(--color-1);
     }
 }
