@@ -2,7 +2,7 @@
     --dark-back: #313131;
     --light-back: #f4f4f4;
     --dark-prim: #cdd;
-    --dark-sec: #09a;
+    --dark-sec: #009099;
     --highlight-color: #fc0;
     --active-color: #ffae00;
     --background-color: var(--dark-back);
@@ -137,8 +137,8 @@ a:focus {
 @media (prefers-color-scheme: light) {
     :root {
         --background-color: var(--light-back);
-        --light-prim: #666;
-        --light-sec: #0ab;
+        --light-prim: #696969;
+        --light-sec: #009099;
         --highlight-color: #FF8000;
         --color-1: var(--light-sec);
         --color-2: var(--light-prim);
