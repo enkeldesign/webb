@@ -30,8 +30,6 @@ html {
     background-color: var(--background-color);
     height: 100%;
     margin: 0;
-    padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
     overflow-x: hidden;
 }
 
@@ -44,8 +42,6 @@ body {
     align-items: center;
     min-height: 100vh;
     min-height: 100dvh;
-    padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
     overflow: hidden;
 }
 
