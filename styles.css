@@ -138,7 +138,7 @@ a:focus {
     :root {
         --background-color: var(--light-back);
         --light-prim: #4d575a;
-        --light-sec: #08a;
+        --light-sec: #0888aa;
         --highlight-color: #FF8000;
         --color-1: var(--light-sec);
         --color-2: var(--light-prim);
