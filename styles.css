@@ -3,24 +3,27 @@
     --charcoal: #313131;
     --dark-cyan-grey: #4d575a;
     --white-smoke: #f4f4f4;
+
     --dark-cerulean: #0888aa;
     --cerulean: #1199bb;
     --pale-cyan: #ccdddd;
+
     --amber: #ffcc00;
     --gold: #ffae00;
     --orange: #ff8000;
-
-    --background-color: var(--charcoal);
-    --primary-color: var(--pale-cyan);
-    --secondary-color: var(--cerulean);
-    --highlight-color: var(--amber);
-    --active-color: var(--gold);
 
     --color-logoE: var(--primary-color);
     --color-logoD: var(--secondary-color);
     --color-text: var(--primary-color);
     --color-line: var(--primary-color);
     --color-mail: var(--secondary-color);
+
+    /* Dark mode default */
+    --background-color: var(--charcoal);
+    --primary-color: var(--pale-cyan);
+    --secondary-color: var(--cerulean);
+    --highlight-color: var(--amber);
+    --active-color: var(--gold);
 
     --rect-top-fill-opacity: 0;
     --rect-btm-fill-opacity: 0.1;
@@ -143,17 +146,12 @@ a:focus {
 @media (prefers-color-scheme: light) {
     :root {
 
+        /* Light mode */
         --background-color: var(--white-smoke);
         --primary-color: var(--dark-cyan-grey);
         --secondary-color: var(--dark-cerulean);
         --highlight-color: var(--orange);
         --active-color: var(--orange);
-
-        --color-logoE: var(--primary-color);
-        --color-logoD: var(--secondary-color);
-        --color-text: var(--primary-color);
-        --color-line: var(--primary-color);
-        --color-mail: var(--secondary-color);
 
         --rect-top-fill-opacity: 0.1;
         --rect-btm-fill-opacity: 0;
