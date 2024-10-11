@@ -1,20 +1,26 @@
 :root {
-    --dark-back: #313131;
-    --light-back: #f4f4f4;
-    --dark-prim: #cdd;
-    --dark-sec: #19b;
-    --highlight-color: #fc0;
-    --active-color: #ffae00;
-    --background-color: var(--dark-back);
-    --color-1: var(--dark-prim);
-    --color-2: var(--dark-sec);
 
+    --charcoal: #313131;
+    --dark-cyan-grey: #4d575a;
+    --white-smoke: #f4f4f4;
+    --dark-cerulean: #0888aa;
+    --cerulean: #1199bb;
+    --pale-cyan: #ccdddd;
+    --amber: #ffcc00;
+    --gold: #ffae00;
+    --orange: #ff8000;
 
-    --color-logoE: var(--color-1);
-    --color-logoD: var(--color-2);
-    --color-text: var(--color-1);
-    --color-line: var(--color-1);
-    --color-mail: var(--color-2);
+    --background-color: var(--charcoal);
+    --primary-color: var(--pale-cyan);
+    --secondary-color: var(--cerulean);
+    --highlight-color: var(--amber);
+    --active-color: var(--gold);
+
+    --color-logoE: var(--primary-color);
+    --color-logoD: var(--secondary-color);
+    --color-text: var(--primary-color);
+    --color-line: var(--primary-color);
+    --color-mail: var(--secondary-color);
 
     --rect-top-fill-opacity: 0;
     --rect-btm-fill-opacity: 0.1;
@@ -49,7 +55,7 @@ a {
     display: block;
     width: min(70vw, 320px);
     outline: none;
-    color: var(--color-1);
+    color: var(--primary-color);
     text-decoration: none;
 }
 
@@ -77,12 +83,12 @@ path {
 }
 
 .rect-top {
-    fill: var(--light-back);
+    fill: var(--white-smoke);
     fill-opacity: var(--rect-top-fill-opacity);
 }
 
 .rect-btm {
-    fill: var(--dark-back);
+    fill: var(--charcoal);
     fill-opacity: var(--rect-btm-fill-opacity);
 }
 
@@ -136,18 +142,18 @@ a:focus {
 
 @media (prefers-color-scheme: light) {
     :root {
-        --background-color: var(--light-back);
-        --light-prim: #4d575a;
-        --light-sec: #0888aa;
-        --highlight-color: #FF8000;
-        --color-1: var(--light-sec);
-        --color-2: var(--light-prim);
 
-        --color-logoE: var(--color-2);
-        --color-logoD: var(--color-1);
-        --color-text: var(--color-2);
-        --color-line: var(--color-2);
-        --color-mail: var(--color-1);
+        --background-color: var(--white-smoke);
+        --primary-color: var(--dark-cyan-grey);
+        --secondary-color: var(--dark-cerulean);
+        --highlight-color: var(--orange);
+        --active-color: var(--orange);
+
+        --color-logoE: var(--primary-color);
+        --color-logoD: var(--secondary-color);
+        --color-text: var(--primary-color);
+        --color-line: var(--primary-color);
+        --color-mail: var(--secondary-color);
 
         --rect-top-fill-opacity: 0.1;
         --rect-btm-fill-opacity: 0;
@@ -159,6 +165,6 @@ a:focus {
     }
 
     a {
-        color: var(--color-1);
+        color: var(--primary-color);
     }
 }
