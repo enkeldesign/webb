@@ -151,7 +151,7 @@ a:focus {
         --primary-color: var(--dark-cyan-grey);
         --secondary-color: var(--dark-cerulean);
         --highlight-color: var(--orange);
-        --active-color: var(--orange);
+        --active-color: var(--amber);
 
         --rect-top-fill-opacity: 0.1;
         --rect-btm-fill-opacity: 0;
