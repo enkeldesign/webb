@@ -2,15 +2,15 @@
 
     --charcoal: #313131;
     --dark-cyan-grey: #4d575a;
+    --pale-cyan: #ccdddd;
     --white-smoke: #f4f4f4;
 
     --dark-cerulean: #0888aa;
     --cerulean: #1199bb;
-    --pale-cyan: #ccdddd;
 
+    --orange: #ff8000;
     --amber: #ffcc00;
     --gold: #ffae00;
-    --orange: #ff8000;
 
     --color-logoE: var(--primary-color);
     --color-logoD: var(--secondary-color);
@@ -29,9 +29,7 @@
     --rect-btm-fill-opacity: 0.1;
 }
 
-*,
-*::before,
-*::after {
+* {
     box-sizing: border-box;
 }
 
@@ -68,10 +66,7 @@ svg {
     height: auto;
 }
 
-path {
-    transition: fill 0.3s ease;
-}
-
+path,
 .rect-top,
 .rect-btm {
     transition: fill 0.3s ease;
@@ -136,8 +131,7 @@ a {
 
 @media (prefers-reduced-motion: reduce) {
 
-    a:hover,
-    a:focus {
+    a {
         animation: none;
     }
 }
@@ -154,14 +148,5 @@ a {
 
         --rect-top-fill-opacity: 0.1;
         --rect-btm-fill-opacity: 0;
-    }
-
-    html,
-    body {
-        background-color: var(--background-color);
-    }
-
-    a {
-        color: var(--primary-color);
     }
 }
