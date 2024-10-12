@@ -66,9 +66,7 @@ svg {
     height: auto;
 }
 
-path,
-.rect-top,
-.rect-btm {
+path {
     transition: fill 0.3s ease;
 }
 
