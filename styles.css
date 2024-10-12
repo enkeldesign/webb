@@ -130,9 +130,8 @@ a:active path {
     }
 }
 
-a:hover,
-a:focus {
-    animation: hueRotation 3s linear infinite alternate;
+a {
+    animation: hueRotation 10s linear infinite alternate;
 }
 
 @media (prefers-reduced-motion: reduce) {
