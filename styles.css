@@ -1,150 +1,147 @@
 :root {
+    color-scheme:       light dark;
 
-    --charcoal: #313131;
-    --dark-cyan-grey: #4d575a;
-    --pale-cyan: #ccdddd;
-    --white-smoke: #f4f4f4;
+    /* Base colors */
+    --charcoal:         #313131;
+    --dark-cyan-grey:   #4d575a;
+    --pale-cyan:        #ccdddd;
+    --white-smoke:      #f4f4f4;
+    --dark-cerulean:    #0888aa;
+    --cerulean:         #1199bb;
+    --orange:           #ff8000;
+    --amber:            #ffcc00;
+    --gold:             #ffae00;
 
-    --dark-cerulean: #0888aa;
-    --cerulean: #1199bb;
+    /* Colors that change with theme */
+    --background-color: light-dark(var(--white-smoke), var(--charcoal));
+    --primary-color:    light-dark(var(--dark-cyan-grey), var(--pale-cyan));
+    --secondary-color:  light-dark(var(--dark-cerulean), var(--cerulean));
+    --highlight-color:  light-dark(var(--orange), var(--amber));
+    --active-color:     light-dark(var(--amber), var(--gold));
+    --rect-top-color:   light-dark(#f4f4f411, #31313100);
+    --rect-btm-color:   light-dark(#f4f4f400, #31313111);
 
-    --orange: #ff8000;
-    --amber: #ffcc00;
-    --gold: #ffae00;
-
-    --color-logoE: var(--primary-color);
-    --color-logoD: var(--secondary-color);
-    --color-text: var(--primary-color);
-    --color-line: var(--primary-color);
-    --color-mail: var(--secondary-color);
-
-    /* Dark mode default */
-    --background-color: var(--charcoal);
-    --primary-color: var(--pale-cyan);
-    --secondary-color: var(--cerulean);
-    --highlight-color: var(--amber);
-    --active-color: var(--gold);
-
-    --rect-top-fill-opacity: 0;
-    --rect-btm-fill-opacity: 0.1;
+    /* Dependent colors */
+    --color-logoE:      var(--primary-color);
+    --color-logoD:      var(--secondary-color);
+    --color-text:       var(--primary-color);
+    --color-mail:       var(--secondary-color);
 }
 
 * {
-    box-sizing: border-box;
+    margin:             0;
+    padding:            0;
+    box-sizing:         border-box;
 }
 
 html {
-    background-color: var(--background-color);
-    height: 100%;
-    margin: 0;
-    overflow-x: hidden;
+    height:             100%;
+    margin:             0;
+    overflow-x:         hidden;
 }
 
 body {
-    background-color: var(--background-color);
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    min-height: 100dvh;
-    overflow: hidden;
+    background-color:   #f4f4f4; /* Fallback */
+    background-color:   var(--background-color);
+    color:              #4d575a; /* Fallback */
+    color:              var(--primary-color);
+    margin:             0;
+    display:            flex;
+    flex-direction:     column;
+    justify-content:    center;
+    align-items:        center;
+    min-height:         100vh; /* Fallback */
+    min-height:         100dvh;
+    overflow:           hidden;
 }
 
 a {
-    display: block;
-    width: min(70vw, 320px);
-    outline: none;
-    color: var(--primary-color);
-    text-decoration: none;
+    display:            block;
+    width:              min(70vw, 320px);
+    outline:            none;
+    color:              #4d575a; /* Fallback */
+    color:              var(--primary-color);
+    text-decoration:    none;
 }
 
 svg {
-    display: block;
-    width: 100%;
-    height: auto;
+    display:            block;
+    width:              100%;
+    height:             auto;
 }
 
 path {
-    transition: fill 0.3s ease;
+    fill:               #4d575a; /* Fallback */
+    fill:               var(--primary-color);
+    transition:         fill 0.3s ease;
 }
 
 .logoEPath {
-    fill: var(--color-logoE);
+    fill:               #4d575a; /* Fallback */
+    fill:               var(--color-logoE);
 }
 
 .logoDPath {
-    fill: var(--color-logoD);
+    fill:               #0888aa; /* Fallback */
+    fill:               var(--color-logoD);
 }
 
 .rect-top {
-    fill: var(--white-smoke);
-    fill-opacity: var(--rect-top-fill-opacity);
+    fill:               transparent; /* Fallback */
+    fill:               var(--rect-top-color);
 }
 
 .rect-btm {
-    fill: var(--charcoal);
-    fill-opacity: var(--rect-btm-fill-opacity);
+    fill:               transparent; /* Fallback */
+    fill:               var(--rect-btm-color);
 }
 
 .textPath,
 .linePath {
-    fill: var(--color-text);
+    fill:               #4d575a; /* Fallback */
+    fill:               var(--color-text);
 }
 
 .mailPath {
-    fill: var(--color-mail);
+    fill:               #0888aa; /* Fallback */
+    fill:               var(--color-mail);
 }
 
 a:hover path,
 a:focus path {
-    fill: var(--highlight-color);
+    fill:               #0888aa; /* Fallback */
+    fill:               var(--highlight-color);
 }
 
 a:focus {
-    outline: 20px solid var(--highlight-color);
-    outline-offset: 10px;
+    outline:            20px solid #0888aa; /* Fallback */
+    outline:            20px solid var(--highlight-color);
+    outline-offset:     20px;
 }
 
 a:active,
 a:active path {
-    fill: var(--active-color);
-    outline-color: var(--active-color);
+    fill:               #1199bb; /* Fallback */
+    fill:               var(--active-color);
+    outline-color:      #1199bb; /* Fallback */
+    outline-color:      var(--active-color);
 }
 
 @keyframes hueRotation {
     from {
-        filter: hue-rotate(0deg);
+        filter:          hue-rotate(0deg);
     }
-
     to {
-        filter: hue-rotate(10deg);
+        filter:          hue-rotate(10deg);
     }
 }
 
 a {
-    animation: hueRotation 10s linear infinite alternate;
+    animation:           hueRotation 10s linear infinite alternate;
 }
 
 @media (prefers-reduced-motion: reduce) {
-
     a {
-        animation: none;
-    }
-}
-
-@media (prefers-color-scheme: light) {
-    :root {
-
-        /* Light mode */
-        --background-color: var(--white-smoke);
-        --primary-color: var(--dark-cyan-grey);
-        --secondary-color: var(--dark-cerulean);
-        --highlight-color: var(--orange);
-        --active-color: var(--amber);
-
-        --rect-top-fill-opacity: 0.1;
-        --rect-btm-fill-opacity: 0;
+        animation:       none;
     }
 }
