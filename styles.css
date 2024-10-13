@@ -3,7 +3,7 @@
 
     /* Base colors */
     --charcoal:         #313131;
-    --dark-cyan-grey:   #4d575a;
+    --dark-cyan-grey:   #556666;
     --pale-cyan:        #ccdddd;
     --white-smoke:      #f4f4f4;
     --dark-cerulean:    #0888aa;
@@ -12,7 +12,6 @@
     --amber:            #ffcc00;
     --gold:             #ffae00;
 
-    /* Colors that change with theme */
     --background-color: light-dark(var(--white-smoke), var(--charcoal));
     --primary-color:    light-dark(var(--dark-cyan-grey), var(--pale-cyan));
     --secondary-color:  light-dark(var(--dark-cerulean), var(--cerulean));
@@ -21,7 +20,6 @@
     --rect-top-color:   light-dark(#f4f4f411, #31313100);
     --rect-btm-color:   light-dark(#f4f4f400, #31313111);
 
-    /* Dependent colors */
     --color-logoE:      var(--primary-color);
     --color-logoD:      var(--secondary-color);
     --color-text:       var(--primary-color);
@@ -43,7 +41,7 @@ html {
 body {
     background-color:   #f4f4f4; /* Fallback */
     background-color:   var(--background-color);
-    color:              #4d575a; /* Fallback */
+    color:              #556666; /* Fallback */
     color:              var(--primary-color);
     margin:             0;
     display:            flex;
@@ -59,7 +57,7 @@ a {
     display:            block;
     width:              min(70vw, 320px);
     outline:            none;
-    color:              #4d575a; /* Fallback */
+    color:              #556666; /* Fallback */
     color:              var(--primary-color);
     text-decoration:    none;
 }
@@ -71,12 +69,12 @@ svg {
 }
 
 path {
-    fill:               #4d575a; /* Fallback */
+    fill:               #556666; /* Fallback */
     transition:         fill 0.3s ease;
 }
 
 .logoEPath {
-    fill:               #4d575a; /* Fallback */
+    fill:               #556666; /* Fallback */
     fill:               var(--color-logoE);
 }
 
@@ -97,7 +95,7 @@ path {
 
 .textPath,
 .linePath {
-    fill:               #4d575a; /* Fallback */
+    fill:               #556666; /* Fallback */
     fill:               var(--color-text);
 }
 
