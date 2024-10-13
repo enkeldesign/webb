@@ -11,7 +11,7 @@
         }
 
         .logoEPath {
-            fill: light-dark(#4d575a, #ccdddd);
+            fill: light-dark(#757575, #ccdddd);
         }
 
         .logoDPath {
@@ -19,7 +19,7 @@
         }
 
         rect {
-            fill: transparent;
+            fill: none;
             /* Fallback */
         }
 
