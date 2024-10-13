@@ -23,7 +23,7 @@
             /* Fallback */
         }
 
-        /.rect-top {
+        .rect-top {
             fill: light-dark(#f4f4f411, #31313100);
         }
 
