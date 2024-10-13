@@ -6,12 +6,12 @@
         }
 
         path {
-            fill: #757575;
+            fill: #667777;
             /* Fallback */
         }
 
         .logoEPath {
-            fill: light-dark(#757575, #ccdddd);
+            fill: light-dark(#667777, #ccdddd);
         }
 
         .logoDPath {
