@@ -72,7 +72,6 @@ svg {
 
 path {
     fill:               #4d575a; /* Fallback */
-    fill:               var(--primary-color);
     transition:         fill 0.3s ease;
 }
 
@@ -87,12 +86,12 @@ path {
 }
 
 .rect-top {
-    fill:               transparent; /* Fallback */
+    fill:               none; /* Fallback */
     fill:               var(--rect-top-color);
 }
 
 .rect-btm {
-    fill:               transparent; /* Fallback */
+    fill:               none; /* Fallback */
     fill:               var(--rect-btm-color);
 }
 
