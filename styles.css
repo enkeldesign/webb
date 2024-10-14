@@ -1,7 +1,6 @@
 :root {
     color-scheme:       light dark;
 
-    /* Base colors */
     --charcoal:         #313131;
     --dark-cyan-grey:   #556666;
     --pale-cyan:        #ccdddd;
@@ -9,8 +8,8 @@
     --dark-cerulean:    #0888aa;
     --cerulean:         #1199bb;
     --orange:           #ff8000;
-    --dark-gold:         #bb8811;
-    --gold:              #ffae00;
+    --dark-gold:        #bb8811;
+    --gold:             #ffae00;
 
     --background-color: light-dark(var(--white-smoke), var(--charcoal));
     --primary-color:    light-dark(var(--dark-cyan-grey), var(--pale-cyan));
