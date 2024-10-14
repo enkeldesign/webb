@@ -9,14 +9,14 @@
     --dark-cerulean:    #0888aa;
     --cerulean:         #1199bb;
     --orange:           #ff8000;
-    --amber:            #ffcc00;
-    --gold:             #ffae00;
+    --dark-gold:         #bb8811;
+    --gold:              #ffae00;
 
     --background-color: light-dark(var(--white-smoke), var(--charcoal));
     --primary-color:    light-dark(var(--dark-cyan-grey), var(--pale-cyan));
     --secondary-color:  light-dark(var(--dark-cerulean), var(--cerulean));
-    --highlight-color:  light-dark(var(--orange), var(--amber));
-    --active-color:     light-dark(var(--amber), var(--gold));
+    --highlight-color:  light-dark(var(--dark-gold), var(--gold));
+    --active-color:     light-dark(var(--orange), var(--orange));
     --rect-top-color:   light-dark(#f4f4f411, #31313100);
     --rect-btm-color:   light-dark(#f4f4f400, #31313111);
 
@@ -106,21 +106,21 @@ path {
 
 a:hover path,
 a:focus path {
-    fill:               #0888aa; /* Fallback */
+    fill:               #bb8811; /* Fallback */
     fill:               var(--highlight-color);
 }
 
 a:focus {
-    outline:            20px solid #0888aa; /* Fallback */
+    outline:            20px solid #bb8811; /* Fallback */
     outline:            20px solid var(--highlight-color);
     outline-offset:     20px;
 }
 
 a:active,
 a:active path {
-    fill:               #1199bb; /* Fallback */
+    fill:               #ff8000; /* Fallback */
     fill:               var(--active-color);
-    outline-color:      #1199bb; /* Fallback */
+    outline-color:      #ff8000; /* Fallback */
     outline-color:      var(--active-color);
 }
 
