@@ -1,143 +1,147 @@
 :root {
-    color-scheme:       light dark;
+    color-scheme: dark light;
 
-    --charcoal:         #313131;
-    --dark-cyan-grey:   #556666;
-    --pale-cyan:        #ccdddd;
-    --white-smoke:      #f4f4f4;
-    --dark-cerulean:    #0888aa;
-    --cerulean:         #1199bb;
-    --orange:           #ff8000;
-    --dark-gold:        #bb8811;
-    --gold:             #ffae00;
+    --charcoal: #313131;
+    --dark-cyan-grey: #556666;
+    --pale-cyan: #ccdddd;
+    --white-smoke: #f4f4f4;
+    --dark-cerulean: #0888aa;
+    --cerulean: #1199bb;
+    --orange: #ff8000;
+    --dark-gold: #bb8811;
+    --gold: #ffae00;
 
-    --background-color: light-dark(var(--white-smoke), var(--charcoal));
-    --primary-color:    light-dark(var(--dark-cyan-grey), var(--pale-cyan));
-    --secondary-color:  light-dark(var(--dark-cerulean), var(--cerulean));
-    --highlight-color:  light-dark(var(--dark-gold), var(--gold));
-    --active-color:     light-dark(var(--orange), var(--orange));
-    --rect-top-color:   light-dark(#f4f4f411, #31313100);
-    --rect-btm-color:   light-dark(#f4f4f400, #31313111);
+    --background-color: var(--charcoal);
+    --primary-color: var(--pale-cyan);
+    --secondary-color: var(--cerulean);
+    --highlight-color: var(--gold);
+    --active-color: var(--orange);
+    --rect-top-color: #31313100;
+    --rect-btm-color: #31313111;
 
-    --color-logoE:      var(--primary-color);
-    --color-logoD:      var(--secondary-color);
-    --color-text:       var(--primary-color);
-    --color-mail:       var(--secondary-color);
+    --color-logoE: var(--primary-color);
+    --color-logoD: var(--secondary-color);
+    --color-text: var(--primary-color);
+    --color-mail: var(--secondary-color);
 }
 
 * {
-    margin:             0;
-    padding:            0;
-    box-sizing:         border-box;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 html {
-    height:             100%;
-    margin:             0;
-    overflow-x:         hidden;
+    height: 100%;
+    margin: 0;
+    overflow-x: hidden;
 }
 
 body {
-    background-color:   #f4f4f4; /* Fallback */
-    background-color:   var(--background-color, #f4f4f4);
-    color:              #556666; /* Fallback */
-    color:              var(--primary-color, #556666);
-    margin:             0;
-    display:            flex;
-    flex-direction:     column;
-    justify-content:    center;
-    align-items:        center;
-    min-height:         100vh; /* Fallback */
-    min-height:         100dvh;
-    overflow:           hidden;
+    background-color: var(--background-color, #313131);
+    color: var(--primary-color, #ccdddd);
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: hidden;
 }
 
 a {
-    display:            block;
-    width:              min(70vw, 320px);
-    outline:            none;
-    color:              #556666; /* Fallback */
-    color:              var(--primary-color, #556666);
-    text-decoration:    none;
+    display: block;
+    width: min(70vw, 320px);
+    outline: none;
+    color: var(--primary-color, #ccdddd);
+    text-decoration: none;
 }
 
 svg {
-    display:            block;
-    width:              100%;
-    height:             auto;
+    display: block;
+    width: 100%;
+    height: auto;
 }
 
 path {
-    fill:               #556666; /* Fallback */
-    transition:         fill 0.3s ease;
+    fill: #ccdddd;
+    transition: fill 0.3s ease;
 }
 
 .logoEPath {
-    fill:               #556666; /* Fallback */
-    fill:               var(--color-logoE, #556666);
+    fill: var(--color-logoE, #ccdddd);
 }
 
 .logoDPath {
-    fill:               #0888aa; /* Fallback */
-    fill:               var(--color-logoD, #0888aa);
+    fill: none;
+    fill: var(--color-logoD, #1199bb);
 }
 
 .rect-top {
-    fill:               none; /* Fallback */
-    fill:               var(--rect-top-color, none);
+    fill: var(--rect-top-color, none);
 }
 
 .rect-btm {
-    fill:               none; /* Fallback */
-    fill:               var(--rect-btm-color, none);
+    fill: none;
+    fill: var(--rect-btm-color, none);
 }
 
 .textPath,
 .linePath {
-    fill:               #556666; /* Fallback */
-    fill:               var(--color-text, #556666);
+    fill: var(--color-text, #ccdddd);
 }
 
 .mailPath {
-    fill:               #0888aa; /* Fallback */
-    fill:               var(--color-mail, #0888aa);
+    fill: var(--color-mail, #1199bb);
 }
 
 a:hover path,
 a:focus path {
-    fill:               #bb8811; /* Fallback */
-    fill:               var(--highlight-color, #bb8811);
+    fill: #ffae00;
+    fill: var(--highlight-color, #ffae00);
 }
 
 a:focus {
-    outline:            20px solid #bb8811; /* Fallback */
-    outline:            20px solid var(--highlight-color, #bb8811);
-    outline-offset:     20px;
+    outline: 20px solid #ffae00;
+    outline: 20px solid var(--highlight-color, #ffae00);
+    outline-offset: 20px;
 }
 
 a:active,
 a:active path {
-    fill:               #ff8000; /* Fallback */
-    fill:               var(--active-color, #ff8000);
-    outline-color:      #ff8000; /* Fallback */
-    outline-color:      var(--active-color, #ff8000);
+    fill: #ff8000;
+    fill: var(--active-color, #ff8000);
+    outline-color: #ff8000;
+    outline-color: var(--active-color, #ff8000);
 }
 
 @keyframes hueRotation {
     from {
-        filter:          hue-rotate(0deg);
+        filter: hue-rotate(0deg);
     }
+
     to {
-        filter:          hue-rotate(10deg);
+        filter: hue-rotate(10deg);
     }
 }
 
 a {
-    animation:           hueRotation 10s linear infinite alternate;
+    animation: hueRotation 10s linear infinite alternate;
 }
 
 @media (prefers-reduced-motion: reduce) {
     a {
-        animation:       none;
+        animation: none;
     }
 }
+
+@media (prefers-color-scheme: light) {
+    :root {
+        --background-color: var(--white-smoke);
+        --primary-color: var(--dark-cyan-grey);
+        --secondary-color: var(--dark-cerulean);
+        --highlight-color: var(--dark-gold);
+        --rect-top-color: #f4f4f411;
+        --rect-btm-color: #f4f4f400;
+    }
