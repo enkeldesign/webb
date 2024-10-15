@@ -39,9 +39,9 @@ html {
 
 body {
     background-color:   #f4f4f4; /* Fallback */
-    background-color:   var(--background-color);
+    background-color:   var(--background-color, #f4f4f4);
     color:              #556666; /* Fallback */
-    color:              var(--primary-color);
+    color:              var(--primary-color, #556666);
     margin:             0;
     display:            flex;
     flex-direction:     column;
@@ -57,7 +57,7 @@ a {
     width:              min(70vw, 320px);
     outline:            none;
     color:              #556666; /* Fallback */
-    color:              var(--primary-color);
+    color:              var(--primary-color, #556666);
     text-decoration:    none;
 }
 
@@ -74,53 +74,53 @@ path {
 
 .logoEPath {
     fill:               #556666; /* Fallback */
-    fill:               var(--color-logoE);
+    fill:               var(--color-logoE, #556666);
 }
 
 .logoDPath {
     fill:               #0888aa; /* Fallback */
-    fill:               var(--color-logoD);
+    fill:               var(--color-logoD, #0888aa);
 }
 
 .rect-top {
     fill:               none; /* Fallback */
-    fill:               var(--rect-top-color);
+    fill:               var(--rect-top-color, none);
 }
 
 .rect-btm {
     fill:               none; /* Fallback */
-    fill:               var(--rect-btm-color);
+    fill:               var(--rect-btm-color, none);
 }
 
 .textPath,
 .linePath {
     fill:               #556666; /* Fallback */
-    fill:               var(--color-text);
+    fill:               var(--color-text, #556666);
 }
 
 .mailPath {
     fill:               #0888aa; /* Fallback */
-    fill:               var(--color-mail);
+    fill:               var(--color-mail, #0888aa);
 }
 
 a:hover path,
 a:focus path {
     fill:               #bb8811; /* Fallback */
-    fill:               var(--highlight-color);
+    fill:               var(--highlight-color, #bb8811);
 }
 
 a:focus {
     outline:            20px solid #bb8811; /* Fallback */
-    outline:            20px solid var(--highlight-color);
+    outline:            20px solid var(--highlight-color, #bb8811);
     outline-offset:     20px;
 }
 
 a:active,
 a:active path {
     fill:               #ff8000; /* Fallback */
-    fill:               var(--active-color);
+    fill:               var(--active-color, #ff8000);
     outline-color:      #ff8000; /* Fallback */
-    outline-color:      var(--active-color);
+    outline-color:      var(--active-color, #ff8000);
 }
 
 @keyframes hueRotation {
