@@ -1,3 +1,5 @@
+@charset "UTF-8";
+
 :root {
     color-scheme: dark light;
 
@@ -22,7 +24,12 @@
     --color-logoE: var(--primary-color);
     --color-logoD: var(--secondary-color);
     --color-text: var(--primary-color);
-    --color-mail: var(--secondary-color);
+    --color-heading: var(--secondary-color);
+}
+
+::selection {
+    background-color: var(--orange);
+    color: white;
 }
 
 * {
@@ -32,36 +39,43 @@
 }
 
 html {
+    background-color: var(--background-color, #313131);
     height: 100%;
     margin: 0;
     overflow-x: hidden;
 }
 
 body {
-    background-color: var(--background-color, #313131);
-    color: var(--primary-color, #ccdddd);
-    margin: 0;
     display: flex;
+    height: 100%;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
-    min-height: 100dvh;
+    background-color: var(--background-color, #313131);
+    color: var(--primary-color, #ccdddd);
+    margin: 0;
     overflow: hidden;
+    font-family: sans-serif;
 }
 
-a {
-    display: block;
-    width: min(70vw, 320px);
-    outline: none;
-    color: var(--primary-color, #ccdddd);
-    text-decoration: none;
+.flexbox {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    max-width: 780px;
 }
 
 svg {
     display: block;
-    width: 100%;
+    width: min(50vw, 300px);
+    max-width: 300px;
+    margin: 0 1em 0 1em;
     height: auto;
+
 }
 
 path {
@@ -87,53 +101,48 @@ path {
     fill: var(--rect-btm-color, none);
 }
 
-.textPath,
-.linePath {
-    fill: var(--color-text, #ccdddd);
+header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
 }
 
-.mailPath {
-    fill: var(--color-mail, #1199bb);
+main {
+    display: flex;
+    flex-direction: column;
+    padding: 2rem;
+    background-color: #0888aa;
+    flex-grow: 1;
 }
 
-a:hover path,
-a:focus path {
-    fill: #ffae00;
-    fill: var(--highlight-color, #ffae00);
+h1 {
+    color: var(--charcoal);
+    margin-bottom: 2rem;
 }
 
-a:focus {
-    outline: 20px solid #ffae00;
-    outline: 20px solid var(--highlight-color, #ffae00);
-    outline-offset: 20px;
+h1 span {
+    display: block;
+    font-size: 0.75em;
+    color: var(--pale-cyan);
 }
 
-a:active,
-a:active path {
-    fill: #ff8000;
-    fill: var(--active-color, #ff8000);
-    outline-color: #ff8000;
-    outline-color: var(--active-color, #ff8000);
+small {
+    display: inline;
+    margin-top: auto;
+    color: black;
 }
 
-@keyframes hueRotation {
-    from {
-        filter: hue-rotate(0deg);
-    }
-
-    to {
-        filter: hue-rotate(10deg);
-    }
+address {
+    font-style: normal;
 }
 
 a {
-    animation: hueRotation 10s linear infinite alternate;
+    color: black;
 }
 
-@media (prefers-reduced-motion: reduce) {
-    a {
-        animation: none;
-    }
+p {
+    color: var(--white-smoke);
 }
 
 @media (prefers-color-scheme: light) {
@@ -145,4 +154,31 @@ a {
         --rect-top-color: #f4f4f411;
         --rect-btm-color: #f4f4f400;
     }
+
+    small {
+        color: var(--pale-cyan)
+    }
+
+
+}
+
+@media (min-width: 30rem) {
+    .flexbox {
+        flex-direction: row;
+    }
+
+    main {
+
+        min-height: 100vh;
+        min-height: 100dvh;
+        max-width: 50%;
+
+        align-content: center;
+    }
+
+    h1 {
+        margin-top: auto;
+    }
+
+
 }
