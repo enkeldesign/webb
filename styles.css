@@ -128,12 +128,12 @@ h1 span {
 }
 
 .footer {
-    display: inline;
     margin-top: auto;
     color: black;
 }
 
 address {
+    display: inline;
     font-style: normal;
 }
 
