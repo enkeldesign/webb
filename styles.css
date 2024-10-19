@@ -128,7 +128,7 @@ p {
 
 footer p {
 
-    color: var(--charcoal);
+    color: black;
     display: inline;
 }
 
@@ -151,13 +151,14 @@ a {
         --rect-btm-color: #f4f4f400;
     }
 
-    footer {
+    footer p {
 
-        color: var(--white-smoke);
+        color: white;
     }
 
     a {
         color: white;
+        font-weight: bolder;
     }
 }
 
