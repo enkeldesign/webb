@@ -10,12 +10,13 @@
     --dark-cerulean: #0888aa;
     --cerulean: #1199bb;
     --orange: #ff8000;
+    --sand: #987;
     --dark-sand: #876;
     --gold: #ffae00;
 
     --background-color: var(--charcoal);
     --primary-color: var(--pale-cyan);
-    --secondary-color: var(--dark-cerulean);
+    --secondary-color: var(--sand);
     --highlight-color: var(--gold);
     --active-color: var(--orange);
     --rect-top-color: #31313100;
@@ -113,7 +114,7 @@ footer {
 }
 
 h1 {
-    color: var(--charcoal);
+    color: #222;
     margin-bottom: 1.5rem;
 }
 
@@ -148,11 +149,16 @@ a {
     :root {
         --background-color: var(--white-smoke);
         --primary-color: var(--dark-cyan-grey);
+        --secondary-color: var(--sand);
         --highlight-color: var(--gold);
         --rect-top-color: #f4f4f411;
         --rect-btm-color: #f4f4f400;
+        --color-main: var(--sand);
     }
 
+    h1 {
+        color: #233;
+    }
 }
 
 @media (orientation: landscape) and (max-width: 1023px) {
@@ -207,7 +213,7 @@ a {
     footer {
         grid-column: 2 / 3;
     }
-    
+
     main {
 
         align-content: center;
@@ -216,7 +222,7 @@ a {
     h1 {
         margin-top: 3rem;
     }
-    
+
     footer {
         align-self: end;
     }
