@@ -71,7 +71,7 @@ body {
 
 svg {
     display: block;
-    width: min(50vw, 300px);
+    width: min(70vw, 2508px);
     max-width: 300px;
     margin: 0 1em 0 1em;
     height: auto;
@@ -127,7 +127,7 @@ h1 span {
     color: var(--pale-cyan);
 }
 
-small {
+.footer {
     display: inline;
     margin-top: auto;
     color: black;
@@ -155,7 +155,7 @@ p {
         --rect-btm-color: #f4f4f400;
     }
 
-    small {
+    .footer {
         color: var(--pale-cyan)
     }
 
@@ -172,7 +172,6 @@ p {
         min-height: 100vh;
         min-height: 100dvh;
         max-width: 50%;
-
         align-content: center;
     }
 
