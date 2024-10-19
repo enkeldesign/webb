@@ -61,7 +61,7 @@
 
 body {
     display: grid;
-    grid: auto 1fr auto / 100%;
+    grid: 4fr 3fr 1fr / 100%;
     min-height: 100vh;
 }
 
@@ -85,7 +85,7 @@ footer {
 
 svg {
     display: block;
-    height: min(12rem, 40vh);
+    height: min(12rem, 50vh);
     width: auto;
     margin: 0 auto
 }
@@ -123,7 +123,8 @@ h1 span {
 }
 
 h1+p {
-    font-size: 1.25em;
+    margin: 0;
+    font-size: 1.25rem;
     color: var(--main-text-color);
 }
 
