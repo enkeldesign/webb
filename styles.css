@@ -30,17 +30,17 @@
 
     --body-background: light-dark(var(--grey-50), var(--grey-950));
     --header-background: light-dark(var(--grey-50), var(--grey-950));
-    --main-background: light-dark(var(--sand-300), var(--sand-500));
-    --footer-background: light-dark(var(--sand-300), var(--sand-500));
+    --main-background: light-dark(var(--corduroy-200), var(--sand-500));
+    --footer-background: light-dark(var(--corduroy-200), var(--sand-500));
 
     --logo-e-color: light-dark(var(--corduroy-600), var(--corduroy-200));
     --logo-d-color: var(--sand-400);
     --rect-top-color: light-dark(var(--grey-50-opa-1), var(--grey-950-opa-0));
     --rect-btm-color: light-dark(var(--grey-50-opa-0), var(--grey-950-opa-1));
 
-    --heading-color: light-dark(var(--corduroy-800), var(--grey-950));
-    --heading-span-color: light-dark(var(--corduroy-900), var(--grey-50));
-    --main-text-color: light-dark(var(--corduroy-950), var(--grey-50));
+    --heading-color: light-dark(var(--sand-500), var(--grey-950));
+    --heading-span-color: light-dark(var(--corduroy-800), var(--grey-50));
+    --main-text-color: light-dark(var(--corduroy-900), var(--grey-50));
     --footer-text-color: light-dark(var(--corduroy-950), var(--grey-50));
     --footer-link-color: light-dark(var(--black), var(--white));
 
