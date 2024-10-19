@@ -10,7 +10,7 @@
     --dark-cerulean: #0888aa;
     --cerulean: #1199bb;
     --orange: #ff8000;
-    --dark-gold: #bb8811;
+    --dark-sand: #876;
     --gold: #ffae00;
 
     --background-color: var(--charcoal);
@@ -25,6 +25,7 @@
     --color-logoD: var(--secondary-color);
     --color-text: var(--primary-color);
     --color-heading: var(--secondary-color);
+    --color-main: var(--dark-sand);
 }
 
 ::selection {
@@ -108,23 +109,23 @@ header {
 
 main,
 footer {
-    background-color: var(--secondary-color);
+    background-color: var(--color-main);
 }
 
 h1 {
-    color: #212121;
-    margin-bottom: 2rem;
+    color: var(--charcoal);
+    margin-bottom: 1.5rem;
 }
 
 h1 span {
     display: block;
     font-size: 0.75em;
-    color: var(--pale-cyan);
+    color: var(--white-smoke);
 }
 
 p {
     font-size: 1.25em;
-    color: var(--pale-cyan);
+    color: var(--white-smoke);
 }
 
 footer p {
