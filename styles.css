@@ -42,15 +42,15 @@
 
 html {
     background-color: var(--background-color, #313131);
-    height: 100vh;
-    height: 100dvh;
+    min-height: 100vh;
+    min-height: 100dvh;
     margin: 0;
     overflow-x: hidden;
 }
 
 body {
-    height: 100vh;
-    height: 100dvh;
+    min-height: 100vh;
+    min-height: 100dvh;
     background-color: var(--background-color, #313131);
     color: var(--primary-color, #ccdddd);
     margin: 0;
