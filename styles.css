@@ -157,7 +157,7 @@ a {
     }
 
     h1 span {
-        color: #cdd;
+        color: var(--white-smoke);
     }
 
     p {
