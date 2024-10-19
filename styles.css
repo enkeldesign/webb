@@ -123,11 +123,12 @@ h1 span {
 }
 
 p {
+    font-size: 1.25em;
     color: var(--pale-cyan);
 }
 
 footer p {
-
+    font-size: 1em;
     color: black;
     display: inline;
 }
