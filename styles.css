@@ -213,6 +213,11 @@ a {
     footer {
         grid-column: 2 / 3;
     }
+    
+    main {
+
+        align-content: center;
+    }
 
     footer {
         align-self: end;
