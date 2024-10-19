@@ -126,12 +126,9 @@ p {
     color: var(--white-smoke);
 }
 
-footer {
+footer p {
 
     color: var(--charcoal);
-}
-
-footer p {
     display: inline;
 }
 
