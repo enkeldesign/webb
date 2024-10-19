@@ -184,6 +184,7 @@ p {
     }
 
 }
+
 @media (min-width: 801px) {
     .container {
         grid-template-columns: 1fr 1fr;
