@@ -58,8 +58,7 @@ body {
 
 .container {
     display: grid;
-    height: 100vh;
-    height: 100dvh;
+    height: 100%;
     grid-template-rows: 5fr 4fr 1fr;
 }
 
@@ -107,10 +106,9 @@ header {
     align-items: center;
 }
 
-main {
-    display: flex;
-    justify-content: center;
-    background-color: #0888aa;
+main,
+footer {
+    background-color: var(--secondary-color);
 }
 
 h1 {
@@ -124,8 +122,17 @@ h1 span {
     color: var(--pale-cyan);
 }
 
+p {
+    color: var(--white-smoke);
+}
+
 footer {
-    color: black;
+
+    color: var(--charcoal);
+}
+
+footer p {
+    display: inline;
 }
 
 address {
@@ -135,10 +142,6 @@ address {
 
 a {
     color: black;
-}
-
-p {
-    color: var(--white-smoke);
 }
 
 @media (prefers-color-scheme: light) {
@@ -151,9 +154,17 @@ p {
         --rect-btm-color: #f4f4f400;
     }
 
+    footer {
+
+        color: var(--white-smoke);
+    }
+
+    a {
+        color: white;
+    }
 }
 
-@media (orientation: landscape) and (max-width: 800px) {
+@media (orientation: landscape) and (max-width: 1023px) {
     .container {
         grid-template-columns: 1fr 1fr;
         grid-template-rows: 4fr 1fr;
@@ -185,7 +196,7 @@ p {
 
 }
 
-@media (min-width: 801px) {
+@media (min-width: 1024px) {
     .container {
         grid-template-columns: 1fr 1fr;
         grid-template-rows: 1fr;
@@ -199,7 +210,6 @@ p {
         align-self: center;
         aspect-ratio: 1 / 1;
         width: 100%;
-        background-color: #f0f0f0;
     }
 
     main,
