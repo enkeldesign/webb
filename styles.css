@@ -64,7 +64,7 @@ body {
 
 svg {
     display: block;
-    width: min(75%, 300px);
+    width: 75%;
     margin: auto;
     height: auto;
 
