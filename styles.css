@@ -61,7 +61,7 @@ body {
 .grid {
     display: grid;
     height: 100%;
-    grid-template-rows: 5fr 4fr 1fr;
+    grid-template-rows: 4fr 3fr 1fr;
 }
 
 svg {
@@ -157,7 +157,7 @@ a {
     }
 
     h1 {
-        color: #233;
+        color: #344;
     }
 }
 
