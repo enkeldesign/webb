@@ -85,7 +85,7 @@ footer {
 
 svg {
     display: block;
-    height: min(12rem, 60vh);
+    height: min(12rem, 40vh);
     width: auto;
     margin: 0 auto
 }
