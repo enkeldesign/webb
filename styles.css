@@ -112,7 +112,7 @@ footer {
 }
 
 h1 {
-    color: var(--charcoal);
+    color: #212121;
     margin-bottom: 2rem;
 }
 
@@ -123,7 +123,7 @@ h1 span {
 }
 
 p {
-    color: var(--white-smoke);
+    color: var(--pale-cyan);
 }
 
 footer p {
@@ -139,6 +139,7 @@ address {
 
 a {
     color: black;
+    font-weight: bolder;
 }
 
 @media (prefers-color-scheme: light) {
@@ -151,15 +152,6 @@ a {
         --rect-btm-color: #f4f4f400;
     }
 
-    footer p {
-
-        color: white;
-    }
-
-    a {
-        color: white;
-        font-weight: bolder;
-    }
 }
 
 @media (orientation: landscape) and (max-width: 1023px) {
