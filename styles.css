@@ -15,7 +15,7 @@
 
     --background-color: var(--charcoal);
     --primary-color: var(--pale-cyan);
-    --secondary-color: var(--cerulean);
+    --secondary-color: var(--dark-cerulean);
     --highlight-color: var(--gold);
     --active-color: var(--orange);
     --rect-top-color: #31313100;
@@ -147,8 +147,7 @@ a {
     :root {
         --background-color: var(--white-smoke);
         --primary-color: var(--dark-cyan-grey);
-        --secondary-color: var(--dark-cerulean);
-        --highlight-color: var(--dark-gold);
+        --highlight-color: var(--gold);
         --rect-top-color: #f4f4f411;
         --rect-btm-color: #f4f4f400;
     }
