@@ -56,7 +56,7 @@ body {
     font-family: sans-serif;
 }
 
-.container {
+.grid {
     display: grid;
     height: 100%;
     grid-template-rows: 5fr 4fr 1fr;
@@ -165,7 +165,7 @@ a {
 }
 
 @media (orientation: landscape) and (max-width: 1023px) {
-    .container {
+    .grid {
         grid-template-columns: 1fr 1fr;
         grid-template-rows: 4fr 1fr;
     }
@@ -197,7 +197,7 @@ a {
 }
 
 @media (min-width: 1024px) {
-    .container {
+    .grid {
         grid-template-columns: 1fr 1fr;
         grid-template-rows: 1fr;
         max-width: 50vw;
