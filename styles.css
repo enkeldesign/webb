@@ -155,11 +155,6 @@ p {
         --rect-btm-color: #f4f4f400;
     }
 
-    .footer {
-        color: var(--pale-cyan)
-    }
-
-
 }
 
 @media (min-width: 30rem) {
