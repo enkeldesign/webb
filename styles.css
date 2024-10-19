@@ -61,7 +61,7 @@
 
 body {
     display: grid;
-    grid: auto 1fr auto / 100%;
+    grid: 5fr 4fr 1fr / 100%;
     min-height: 100vh;
     min-height: 100dvh;
 }
@@ -69,7 +69,7 @@ body {
 header,
 main,
 footer {
-    padding: 1rem;
+    padding: 1.5rem;
 }
 
 header {
@@ -86,8 +86,8 @@ footer {
 
 svg {
     display: block;
-    height: min(10rem, 40vh);
-    height: min(10rem, 40dvh);
+    height: min(12rem, 50vh);
+    height: min(12rem, 50dvh);
     width: auto;
     margin: 0 auto;
 }
@@ -113,7 +113,7 @@ svg {
 }
 
 h1 {
-    margin: 0;
+    margin: 0 0 1.5rem;
     color: var(--heading-color);
     font-weight: bolder;
 }
