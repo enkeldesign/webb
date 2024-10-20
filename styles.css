@@ -37,7 +37,7 @@
     --footer-background: light-dark(var(--teal-300), var(--sand-600));
 
     --logo-e-color: light-dark(var(--teal-400), var(--teal-200));
-    --logo-d-color: light-dark(var(--sand-400), var(--sand-400);
+    --logo-d-color: light-dark(var(--sand-400), var(--sand-400));
     --rect-top-color: light-dark(var(--grey-50-opa-1), var(--grey-950-opa-0));
     --rect-btm-color: light-dark(var(--grey-50-opa-0), var(--grey-950-opa-1));
 
