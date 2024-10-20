@@ -117,14 +117,12 @@ svg {
 
 h1 {
     margin: 0 0 1.5rem;
-    font-weight: bold;
     color: var(--heading-color);
 }
 
 h1 span {
     display: block;
     font-size: 0.75em;
-    font-weight: bold;
     color: var(--heading-span-color);
 }
 
