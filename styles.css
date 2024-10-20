@@ -157,7 +157,11 @@ a {
         grid-row: span 2;
         align-self: center;
     }
-
+    
+    svg {
+        margin: 0 auto;
+    }
+    
     main {
         display: flex;
         flex-direction: column;
