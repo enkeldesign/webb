@@ -172,7 +172,7 @@ a {
     }
 }
 
-@media (width >=64em) {
+@media (min-width: 64em) {
     body {
         max-width: 50vw;
         max-width: 50dvw;
