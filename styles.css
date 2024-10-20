@@ -6,6 +6,7 @@
     /* Color palette */
 
     --corduroy-200: #CCDDDD;
+    --corduroy-300: #C0D0D0;
     --corduroy-600: #556666;
     --corduroy-800: #334444;
     --corduroy-900: #223333;
@@ -14,6 +15,7 @@
     --sand-300: #CCBBAA;
     --sand-400: #998877;
     --sand-500: #887766;
+    --sand-600: #807060;
 
     --white: #FFFFFF;
     --grey-50: #F4F4F4;
@@ -31,7 +33,7 @@
     --body-background: light-dark(var(--grey-50), var(--grey-950));
     --header-background: light-dark(var(--grey-50), var(--grey-950));
     --main-background: light-dark(var(--corduroy-200), var(--sand-500));
-    --footer-background: light-dark(var(--corduroy-200), var(--sand-500));
+    --footer-background: light-dark(var(--corduroy-300), var(--sand-600));
 
     --logo-e-color: light-dark(var(--corduroy-600), var(--corduroy-200));
     --logo-d-color: var(--sand-400);
@@ -158,11 +160,11 @@ a {
         grid-row: span 2;
         align-self: center;
     }
-    
+
     svg {
         margin: 0 auto;
     }
-    
+
     main {
         display: flex;
         flex-direction: column;
