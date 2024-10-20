@@ -87,8 +87,8 @@ footer {
 
 svg {
     display: block;
-    height: min(11rem, 50vh);
-    height: min(11rem, 50dvh);
+    height: min(11rem, 100vh);
+    height: min(11rem, 100dvh);
     width: auto;
     margin: 1.5rem auto;
 }
@@ -138,6 +138,7 @@ footer p {
 
 address {
     display: inline;
+    color: var(--footer-text-color);
     font-style: normal;
 }
 
