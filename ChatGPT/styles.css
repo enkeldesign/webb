@@ -115,3 +115,22 @@ footer {
         padding: 0.5em;
     }
 }
+
+/* Blog section styles */
+details {
+    margin-bottom: 1em;
+    background-color: #fff;
+    padding: 1em;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+summary {
+    font-weight: bold;
+    cursor: pointer;
+    color: #2a9d8f;
+}
+
+details[open] summary {
+    color: #e76f51;
+}
