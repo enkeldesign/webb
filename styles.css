@@ -170,7 +170,7 @@ a {
 }
 
 a:hover,
-a:focus, {
+a:focus {
     background-color: var(--link-hover-focus-color);
     color: light-dark(var(--white), var(--black));
 }
