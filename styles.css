@@ -175,12 +175,6 @@ a:focus, {
     color: light-dark(var(--white), var(--black));
 }
 
-label:hover,
-label:focus {
-        background-color: var(--link-hover-focus-color);
-        filter: grayscale(0%) brightness(100%);
-}
-
 a:active {
     background-color: light-dark(var(--black), var(--white));
     color: light-dark(var(--white), var(--black));
@@ -200,6 +194,7 @@ input[type="radio"] {
 
 label {
     cursor: pointer;
+    font-size: 2em;
     margin: 0 1.25rem;
     display: inline-block;
 }
@@ -215,6 +210,11 @@ label {
 #light-label,
 #dark-label {
     display: none;
+}
+
+label:hover,
+label:focus {
+    filter: grayscale(0%) brightness(100%);
 }
 
 @media (prefers-color-scheme: dark) {
