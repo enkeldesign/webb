@@ -197,3 +197,7 @@ svg {
   height: min(12rem, 20vh);
   height: min(12rem, 20dvh);
 }
+main p {
+    font-size: 1.25em;
+    line-height: 1.5;
+  }
