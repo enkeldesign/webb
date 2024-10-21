@@ -216,7 +216,7 @@ label {
 #dark-label:hover,
 #light-label:focus,
 #dark-label:focus {
-    filter: grayscale(0%) brightness(100%);
+    filter: grayscale(0%);
 }
 
 @media (prefers-color-scheme: dark) {
