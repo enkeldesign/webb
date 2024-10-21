@@ -179,4 +179,7 @@
                 max-width: 50vw;
                 max-width: 50dvw;
             }
-        }
+		svg {
+			height: min(15rem, 150vh);
+        		height: min(15rem, 150dvh);
+      		}
