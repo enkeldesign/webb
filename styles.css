@@ -213,10 +213,13 @@ label {
 }
 
 #light-label:hover,
+#light-label:focus {
+    filter: grayscale(0%) brightness(150%);
+}
+
 #dark-label:hover,
-#light-label:focus,
 #dark-label:focus {
-    filter: grayscale(0%);
+    filter: grayscale(0%) brightness(50%);
 }
 
 @media (prefers-color-scheme: dark) {
