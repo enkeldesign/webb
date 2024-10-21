@@ -192,12 +192,14 @@ a:active {
     max-width: 50vw;
     max-width: 50dvw;
   }
-}
+  
 svg {
   height: min(12rem, 20vh);
   height: min(12rem, 20dvh);
 }
+
 main p {
     font-size: 1.25em;
     line-height: 1.5;
   }
+}
