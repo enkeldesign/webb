@@ -188,10 +188,6 @@ footer fieldset {
     border: none;
 }
 
-input[type="radio"] {
-    display: none;
-}
-
 label {
     cursor: pointer;
     font-size: 1.5em;
@@ -212,13 +208,13 @@ label {
     display: none;
 }
 
-#light-label:hover,
-#light-label:focus {
+input[type="radio"]:hover + #light-label,
+input[type="radio"]:focus + #light-label {
     filter: grayscale(0%) brightness(150%);
 }
 
-#dark-label:hover,
-#dark-label:focus {
+input[type="radio"]:hover + #dark-label,
+input[type="radio"]:focus + #dark-label {
     filter: grayscale(0%) brightness(50%);
 }
 
