@@ -212,8 +212,10 @@ label {
     display: none;
 }
 
-label:hover,
-label:focus {
+#light-label:hover,
+#dark-label:hover,
+#light-label:focus,
+#dark-label:focus {
     filter: grayscale(0%) brightness(100%);
 }
 
