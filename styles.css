@@ -204,7 +204,7 @@ label {
 }
 
 #dark-label {
-    filter: grayscale(100%) brightness(25%);
+    filter: grayscale(100%) brightness(50%);
 }
 
 #light-label,
