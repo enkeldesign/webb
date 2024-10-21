@@ -170,9 +170,15 @@ a {
 }
 
 a:hover,
-a:focus {
+a:focus, {
     background-color: var(--link-hover-focus-color);
     color: light-dark(var(--white), var(--black));
+}
+
+label:hover,
+label:focus {
+        background-color: var(--link-hover-focus-color);
+        filter: grayscale(0%) brightness(100%);
 }
 
 a:active {
