@@ -171,6 +171,7 @@ a {
 
 footer span {
     color: light-dark(var(--heading-span-color), var(--footer-text-color));
+}
 
 a:hover,
 a:focus {
