@@ -16,6 +16,7 @@
     --sand-500: #887766;
     --sand-600: #807060;
 
+    --cerulean: #077799;
     --white: #ffffff;
     --grey-50: #f4f4f4;
     --grey-950: #313131;
@@ -32,8 +33,8 @@
     --main-background: light-dark(var(--teal-200), var(--sand-500));
     --footer-background: light-dark(var(--teal-300), var(--sand-600));
 
-    --logo-e-color: light-dark(var(--teal-400), var(--teal-300));
-    --logo-d-color: light-dark(var(--sand-400), var(--sand-400));
+    --logo-e-color: light-dark(var(--sand-400), var(--sand-400));
+    --logo-d-color: light-dark(var(--cerulean), var(--cerulean));
     --rect-top-color: light-dark(var(--grey-50-opa-1), var(--grey-950-opa-0));
     --rect-btm-color: light-dark(var(--grey-50-opa-0), var(--grey-950-opa-1));
 
