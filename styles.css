@@ -127,12 +127,14 @@ svg {
 }
 
 .rect-top {
-    fill: var(--rect-top-color, none);
+    fill-opacity: 0;
+    fill: var(--rect-top-color);
     stroke: none;
 }
 
 .rect-btm {
-    fill: var(--rect-btm-color, none);
+    fill-opacity: 0;
+    fill: var(--rect-btm-color);
     stroke: none;
 }
 
