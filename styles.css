@@ -169,6 +169,9 @@ a {
     color: var(--footer-link-color);
 }
 
+footer span {
+    color: light-dark(var(--heading-span-color), var(--footer-text-color));
+
 a:hover,
 a:focus {
     background-color: var(--link-hover-focus-color);
