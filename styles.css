@@ -117,23 +117,25 @@ svg {
 }
 
 .logoEPath {
+    fill: #777;
     fill: var(--logo-e-color);
     stroke: none;
 }
 
 .logoDPath {
+    fill: #888;
     fill: var(--logo-d-color);
     stroke: none;
 }
 
 .rect-top {
-    fill-opacity: 0;
+    fill: transparent;
     fill: var(--rect-top-color);
     stroke: none;
 }
 
 .rect-btm {
-    fill-opacity: 0;
+    fill: none; fill: transparent;
     fill: var(--rect-btm-color);
     stroke: none;
 }
