@@ -140,7 +140,7 @@ svg {
 }
 
 h1 {
-    margin: 0 0 1.5rem;
+    margin: 1rem 0 1.5rem;
     color: var(--heading-color);
 }
 
@@ -270,6 +270,10 @@ input[type="radio"]:focus + #dark-label {
         justify-content: center;
     }
 
+    h1 {
+    margin: 0 0 1.5rem;
+    }
+    
     main p {
         font-size: 1em;
     }
@@ -285,7 +289,11 @@ input[type="radio"]:focus + #dark-label {
         height: min(12rem, 20vh);
         height: min(12rem, 20dvh);
     }
-
+    
+    h1 {
+    margin: 1.5rem 0;
+    }
+    
     main p {
         font-size: 1.25em;
         line-height: 1.5;
