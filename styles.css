@@ -261,7 +261,12 @@ input[type="radio"]:focus + #dark-label {
         grid-row: span 2;
         align-self: center;
     }
-
+    
+    main {
+        display: flex;
+        align-content: center;
+    }
+    
     h1 {
         margin: 0 0 1rem;
     }
