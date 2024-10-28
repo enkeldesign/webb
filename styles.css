@@ -18,7 +18,7 @@
     --sand-400: #998877;
     --sand-500: #887766;
     --sand-600: #776655;
-    
+
     --white: #ffffff;
     --grey-50: #f4f4f4;
     --grey-950: #313131;
@@ -53,6 +53,7 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
         "Helvetica Neue", Arial, sans-serif;
 }
+
 /*
 :root:has(#dark:checked) {
     color-scheme: dark;
@@ -72,6 +73,7 @@
     padding: 0;
     box-sizing: border-box;
 }
+
 /*
 .visually-hidden {
     position: absolute !important;
@@ -95,11 +97,13 @@ body {
 header,
 main,
 footer {
-    padding: 1.5rem;
+    padding: 1.6rem;
 }
 
 header {
+    display: flex;
     align-content: center;
+    justify-content: center;
 }
 
 main {
@@ -113,10 +117,9 @@ footer {
 
 svg {
     display: block;
-    height: min(11rem, 100vh);
-    height: min(11rem, 100dvh);
-    width: auto;
-    margin: 1.5rem auto;
+    width: 75%;
+    height: auto;
+    margin: 1.6rem;
 }
 
 .logoEPath {
@@ -140,19 +143,21 @@ svg {
 }
 
 h1 {
-    margin: 1rem 0 1.5rem;
+    margin: 1rem 0;
+    font-size: 2.6rem;
+    font-weight: 800;
     color: var(--heading-color);
 }
 
 h1 span {
     display: block;
-    font-size: 0.8275em;
+    font-size: 1.6rem;
+    font-weight: 700;
     color: var(--heading-span-color);
 }
 
 main p {
-    margin: 0 0 0.5em;
-    font-size: 1.1em;
+    margin: 0 0 0.6rem;
     color: var(--main-text-color);
 }
 
@@ -186,6 +191,7 @@ a:active {
     background-color: light-dark(var(--black), var(--white));
     color: light-dark(var(--white), var(--black));
 }
+
 /*
 footer fieldset {
     position: absolute;
@@ -260,23 +266,14 @@ input[type="radio"]:focus + #dark-label {
         align-self: center;
     }
 
-    svg {
-        margin: 0 auto;
-    }
-
-    main {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
     h1 {
-    margin: 0 0 1.5rem;
+        margin: 0 0 1rem;
     }
-    
-    main p {
-        font-size: 1em;
+
+    footer {
+        padding: 1rem 1.6rem;
     }
+
 }
 
 @media (min-width: 64em) {
@@ -285,17 +282,8 @@ input[type="radio"]:focus + #dark-label {
         max-width: 50dvw;
     }
 
-    svg {
-        height: min(12rem, 20vh);
-        height: min(12rem, 20dvh);
-    }
-    
     h1 {
-    margin: 1.5rem 0;
+        margin: 1.6rem 0;
     }
-    
-    main p {
-        font-size: 1.25em;
-        line-height: 1.5;
-    }
+
 }
