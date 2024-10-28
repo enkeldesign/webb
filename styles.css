@@ -94,7 +94,6 @@ body {
     min-height: 100dvh;
 }
 
-header,
 main,
 footer {
     padding: 1.6rem;
@@ -117,7 +116,7 @@ footer {
 
 svg {
     display: block;
-    width: 70%;
+    width: 75%;
     margin: 1.6rem;
 }
 
