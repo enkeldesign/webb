@@ -116,8 +116,10 @@ footer {
 
 svg {
     display: block;
-    width: 75%;
+    width: 70%;
+    height: auto;
     margin: 1.6rem;
+    overflow: visible;
 }
 
 .logoEPath {
