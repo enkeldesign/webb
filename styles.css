@@ -124,22 +124,18 @@ svg {
 
 .logoEPath {
     fill: var(--logo-e-color);
-    stroke: none;
 }
 
 .logoDPath {
     fill: var(--logo-d-color);
-    stroke: none;
 }
 
 .rect-top {
     fill: var(--rect-top-color);
-    stroke: none;
 }
 
 .rect-btm {
     fill: var(--rect-btm-color);
-    stroke: none;
 }
 
 h1 {
@@ -276,12 +272,17 @@ input[type="radio"]:focus + #dark-label {
 
 }
 
-@media (min-width: 64em) {
+@media (min-width: 70em) {
     body {
-        max-width: 50vw;
-        max-width: 50dvw;
+        max-width: 62vw;
+        max-width: 62dvw;
     }
-
+    
+    main {
+        display: flex;
+        align-content: center;
+    }
+    
     h1 {
         margin: 1.6rem 0;
     }
