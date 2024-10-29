@@ -160,6 +160,10 @@ main p {
     color: var(--main-text-color);
 }
 
+abbr {
+    text-decoration: none;
+}
+
 footer p {
     display: inline;
     color: var(--footer-text-color);
