@@ -112,6 +112,7 @@ main {
 }
 
 footer {
+    font-size: smaller;
     background-color: var(--footer-background);
     /*position: relative;*/
 }
