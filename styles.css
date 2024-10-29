@@ -281,8 +281,8 @@ input[type="radio"]:focus + #dark-label {
     main {
         display: flex;
         flex-direction: column;
-        align-content: center;
-        justify-content: left;
+        justify-content: center;
+        align-items: flex-start;
     }
     
     h1 {
