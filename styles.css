@@ -63,6 +63,7 @@
     color-scheme: light;
 }
 */
+
 ::selection {
     background-color: light-dark(var(--teal-800), var(--teal-200));
     color: light-dark(var(--white), var(--black));
@@ -87,6 +88,7 @@
     border: 0;
 }
 */
+
 body {
     display: grid;
     grid: auto 1fr auto / 100%;
@@ -250,6 +252,7 @@ input[type="radio"]:focus + #dark-label {
     display: inline-block;
 }
 */
+
 @media (orientation: landscape) {
     body {
         grid: 1fr auto / 1fr 1fr;
@@ -290,6 +293,10 @@ input[type="radio"]:focus + #dark-label {
         flex-direction: column;
         justify-content: center;
         align-items: flex-start;
+    }
+    
+    svg {
+        width: 62%;
     }
     
     h1 {
