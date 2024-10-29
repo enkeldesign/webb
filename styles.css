@@ -3,7 +3,7 @@
 :root {
     color-scheme: light dark;
 
-    --cerulean-400: #0bbbee;
+    --cerulean-100: #bbeeff;
     --cerulean-700: #077799;
     --cerulean-800: #066688;
 
@@ -46,8 +46,8 @@
     --main-text-color: light-dark(var(--teal-900), var(--grey-50));
     --footer-text-color: light-dark(var(--teal-950), var(--grey-50));
 
-    --footer-link-color: light-dark(var(--cerulean-800), var(--cerulean-400));
-    --link-hover-focus-color: light-dark(var(--cerulean-400), var(--cerulean-700));
+    --footer-link-color: light-dark(var(--cerulean-800), var(--cerulean-100));
+    --link-hover-focus-color: light-dark(var(--cerulean-700), var(--teal-200));
     --link-active-color: light-dark(var(--black), var(--white));
 
     background-color: var(--body-background);
@@ -188,7 +188,7 @@ a:focus {
 
 a:active {
     background-color: light-dark(var(--black), var(--white));
-    color: light-dark(var(--white), var(--black));
+    color: light-dark(var(--cerulean-100), var(--cerulean-800));
 }
 
 /*
