@@ -10,6 +10,7 @@
     --teal-300: #c0d0d0;
     --teal-400: #778888;
     --teal-600: #556666;
+    --teal-700: #445555;
     --teal-800: #334444;
     --teal-900: #223333;
     --teal-950: #001111;
@@ -45,7 +46,7 @@
     --main-text-color: light-dark(var(--teal-900), var(--grey-50));
     --footer-text-color: light-dark(var(--teal-950), var(--grey-50));
 
-    --footer-link-color: light-dark(var(--cerulean-700), var(--cerulean-400));
+    --footer-link-color: light-dark(var(--teal-700), var(--cerulean-400));
     --link-hover-focus-color: light-dark(var(--cerulean-400), var(--cerulean-700));
     --link-active-color: light-dark(var(--black), var(--white));
 
