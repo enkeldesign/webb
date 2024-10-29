@@ -278,7 +278,7 @@ input[type="radio"]:focus + #dark-label {
 
 }
 
-@media (min-width: 70em) {
+@media (min-width: 85em) {
     body {
         max-width: 62vw;
         max-width: 62dvw;
