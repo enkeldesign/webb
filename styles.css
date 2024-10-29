@@ -262,6 +262,13 @@ input[type="radio"]:focus + #dark-label {
         align-self: center;
     }
     
+    main {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+    }
+    
     h1 {
         margin: 0 0 1rem;
     }
