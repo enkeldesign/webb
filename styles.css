@@ -97,22 +97,26 @@ body {
     min-height: 100dvh;
 }
 
-main,
-footer {
-    padding: 1.6rem;
-}
-
 header {
     display: flex;
     align-content: center;
     justify-content: center;
 }
 
+
+main,
+footer {
+    padding: 1.6rem;
+    text-align: center;
+}
+
 main {
+    text-align: center;
     background-color: var(--main-background);
 }
 
 footer {
+    text-align: center;
     font-size: 0.875rem;
     background-color: var(--footer-background);
     /*position: relative;*/
@@ -143,9 +147,10 @@ svg {
 }
 
 h1 {
-    margin: 1rem 0;
+    margin: 1rem 0 1.6rem;
     font-size: 2.6rem;
     font-weight: 800;
+
     color: var(--heading-color);
 }
 
@@ -268,6 +273,8 @@ input[type="radio"]:focus + #dark-label {
     main,
     footer {
         padding: 1rem;
+        text-align: left;
+
     }
 
     footer {
@@ -301,6 +308,8 @@ input[type="radio"]:focus + #dark-label {
     main,
     footer {
         padding: 1.6rem;
+        text-align: left;
+
     }
 
     main {
