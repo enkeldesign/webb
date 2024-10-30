@@ -176,7 +176,7 @@ address {
 }
 
 a {
-    font-weight: bolder;
+    /* font-weight: bolder; */
     color: var(--footer-link-color);
 }
 
