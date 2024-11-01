@@ -112,7 +112,7 @@ footer {
 
 svg {
   display: block;
-  width: min(62%, 200px);
+  width: min(75%, 200px);
   height: auto;
   margin: 1rem 0;
   overflow: visible;
