@@ -246,12 +246,14 @@ a:active {
 
   .section-a {
     grid-area: section-a;
+    padding: 1.6rem 2.6rem;
     text-align: left;
     align-content: center;
   }
 
   .section-b {
     grid-area: section-b;
+    padding: 1.6rem 2.6rem;
     text-align: left;
   }
 
@@ -261,12 +263,13 @@ a:active {
 
   .section-c {
     grid-area: section-c;
+    padding: 1.6rem 2.6rem;
     text-align: left;
   }
 
   footer {
     grid-area: footer;
-    padding: 1.6rem 1.6rem 2.6rem;
+    padding: 1.6rem 2.6rem 2.6rem;
     text-align: left;
     font-size: 1rem;
   }
