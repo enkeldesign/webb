@@ -46,7 +46,7 @@
   --rect-top-color: light-dark(var(--grey-50-opa-1), var(--grey-950-opa-0));
   --rect-btm-color: light-dark(var(--grey-50-opa-0), var(--grey-950-opa-1));
 
-  --heading-color: light-dark(var(--sand-500), var(--black-900));
+  --heading-color: light-dark(var(--sand-500), var(--grey-950));
   --heading-span-color: light-dark(var(--teal-600), var(--teal-200));
   --main-text-color: light-dark(var(--teal-900), var(--teal-200));
   --footer-text-color: light-dark(var(--teal-950), var(--grey-50));
