@@ -24,7 +24,6 @@
   --white: #ffffff;
   --grey-50: #f4f4f4;
   --grey-950: #313131;
-  --black-900: #212121;
   --black: #000000;
 
   --grey-50-opa-0: #f4f4f400;
@@ -48,6 +47,7 @@
 
   --heading-color: light-dark(var(--sand-500), var(--grey-950));
   --heading-span-color: light-dark(var(--teal-600), var(--teal-200));
+  --section-heading-color: light-dark(var(--teal-800), var(--teal-200));
   --main-text-color: light-dark(var(--teal-900), var(--teal-200));
   --footer-text-color: light-dark(var(--teal-950), var(--grey-50));
 
@@ -182,7 +182,7 @@ abbr {
 .section-b h2,
 .section-c h2 {
   margin: 1rem 0 0.5rem;
-  color: var(--heading-span-color);
+  color: var(--section-heading-color);
 }
 
 .image img {
