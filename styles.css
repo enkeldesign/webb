@@ -341,7 +341,10 @@ a:active {
     }
 
     footer label {
-        right: 2.6rem;
+        top: auto;
+        right: auto;
+        bottom: 2.6rem;
+        left: 1.6rem;
     }
 
     svg {
