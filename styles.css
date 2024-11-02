@@ -61,7 +61,8 @@ footer label span::after {
     --cerulean-700: #077799;
     --cerulean-800: #044466;
 
-    --teal-200: #ccdddd;
+    --teal-200: #dde0e0;
+    --teal-300: #ccdddd;
     --teal-600: #556666;
     --teal-800: #334444;
     --teal-900: #223333;
@@ -86,10 +87,10 @@ footer label span::after {
 
     --body-background: light-dark(var(--grey-50), var(--grey-950));
     --header-background: light-dark(var(--grey-50), var(--grey-950));
-    --main-background: light-dark(var(--teal-200), var(--sand-600));
-    --section-a-background: light-dark(var(--teal-200), var(--sand-600));
+    --main-background: light-dark(var(--teal-300), var(--sand-600));
+    --section-a-background: light-dark(var(--teal-300), var(--sand-600));
     --section-b-background: light-dark(var(--sand-300), var(--cerulean-800));
-    --section-c-background: light-dark(var(--teal-200), var(--sand-600));
+    --section-c-background: light-dark(var(--teal-300), var(--sand-600));
     --footer-background: light-dark(var(--grey-50), var(--grey-950));
 
     --logo-e-color: light-dark(var(--sand-400), var(--sand-400));
@@ -98,8 +99,8 @@ footer label span::after {
     --rect-btm-color: light-dark(var(--grey-50-opa-0), var(--grey-950-opa-1));
 
     --heading-color: light-dark(var(--sand-500), var(--sand-200));
-    --heading-span-color: light-dark(var(--teal-600), var(--teal-200));
-    --section-heading-color: light-dark(var(--teal-800), var(--teal-200));
+    --heading-span-color: light-dark(var(--teal-600), var(--teal-300));
+    --section-heading-color: light-dark(var(--teal-800), var(--teal-300));
     --main-text-color: light-dark(var(--teal-900), var(--teal-200));
     --footer-text-color: light-dark(var(--teal-950), var(--grey-50));
 
