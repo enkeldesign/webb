@@ -93,7 +93,7 @@ footer label span::after {
     --section-c-background: light-dark(var(--teal-300), var(--sand-600));
     --footer-background: light-dark(var(--grey-50), var(--grey-950));
 
-    --logo-e-color: light-dark(var(--sand-400), var(--sand-400));
+    --logo-e-color: light-dark(var(--sand-400), var(--teal-300));
     --logo-d-color: light-dark(var(--cerulean-700), var(--cerulean-700));
     --rect-top-color: light-dark(var(--grey-50-opa-1), var(--grey-950-opa-0));
     --rect-btm-color: light-dark(var(--grey-50-opa-0), var(--grey-950-opa-1));
