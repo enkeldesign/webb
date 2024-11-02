@@ -131,6 +131,10 @@ footer label span::after {
     box-sizing: border-box;
 }
 
+html {
+    background-color: var(--body-background);
+}
+    
 body {
     min-height: 100vh;
     min-height: 100dvh;
