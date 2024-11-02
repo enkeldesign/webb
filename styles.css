@@ -16,7 +16,7 @@ footer label:focus-within {
 
 footer label span::after {
     content: "🌙"/ "mörkt tema";
-    filter: grayscale(100%) brightness(50%);
+    filter: grayscale(100%) brightness(25%);
 }
 
 @media (prefers-color-scheme: light),
@@ -27,7 +27,7 @@ footer label span::after {
 
     :root:has(footer input:checked) footer label span::after {
         content: "💡"/ "mörkt tema";
-        filter: grayscale(100%) brightness(150%);
+        filter: grayscale(100%) brightness(100%);
     }
 
 }
@@ -40,12 +40,12 @@ footer label span::after {
 
     footer label span::after {
         content: "💡"/ "ljust tema";
-        filter: grayscale(100%) brightness(150%);
+        filter: grayscale(100%) brightness(100%);
     }
 
     :root:has(footer input:checked) footer label span::after {
         content: "🌙"/ "ljust tema";
-        filter: grayscale(100%) brightness(50%);
+        filter: grayscale(100%) brightness(25%);
     }
 }
 
