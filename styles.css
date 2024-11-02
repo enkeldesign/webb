@@ -4,13 +4,10 @@
   color-scheme: light dark;
 
   --cerulean-100: #bbeeff;
-  --cerulean-400: #0bbbee;
   --cerulean-700: #077799;
   --cerulean-800: #044466;
 
   --teal-200: #ccdddd;
-  --teal-300: #c0d0d0;
-  --teal-400: #778888;
   --teal-600: #556666;
   --teal-800: #334444;
   --teal-900: #223333;
@@ -59,7 +56,6 @@
   background-color: var(--body-background);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
-  font-size: 16px;
   line-height: 1.6;
 }
 
@@ -272,14 +268,8 @@ a:active {
     grid-area: footer;
     padding: 1.6rem 2.6rem 2.6rem;
     text-align: left;
-    font-size: 1rem;
   }
 
-  footer nav a,
-  footer nav li {
-    font-size: 1rem;
-  }
-  
   svg {
     margin: auto;
     width: min(75%, 300px);
