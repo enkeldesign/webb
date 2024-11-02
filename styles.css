@@ -26,7 +26,7 @@ footer label span::after {
     }
 
     :root:has(footer input:checked) footer label span::after {
-        content: "☀️"/ "mörkt tema";
+        content: "💡"/ "mörkt tema";
         filter: none;
     }
 
@@ -39,7 +39,7 @@ footer label span::after {
     }
 
     footer label span::after {
-        content: "☀️"/ "ljust tema";
+        content: "💡"/ "ljust tema";
         filter: none;
     }
 
