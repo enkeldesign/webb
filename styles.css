@@ -175,6 +175,7 @@ footer label {
     position: absolute;
     top: 1.6rem;
     right: 1.6rem;
+    cursor: pointer;
 }
 
 svg {
