@@ -62,6 +62,7 @@ footer label span::after {
     --cerulean-800: #044466;
 
     --teal-200: #dde0e0;
+    --teal-400: #b0bbbb;
     --teal-300: #ccdddd;
     --teal-600: #556666;
     --teal-800: #334444;
@@ -98,7 +99,7 @@ footer label span::after {
     --rect-top-color: light-dark(var(--grey-50-opa-1), var(--grey-950-opa-0));
     --rect-btm-color: light-dark(var(--grey-50-opa-0), var(--grey-950-opa-1));
 
-    --heading-color: light-dark(var(--sand-500), var(--teal-300));
+    --heading-color: light-dark(var(--sand-500), var(--teal-400));
     --heading-span-color: light-dark(var(--teal-600), var(--teal-300));
     --section-heading-color: light-dark(var(--teal-800), var(--teal-300));
     --main-text-color: light-dark(var(--teal-900), var(--teal-200));
