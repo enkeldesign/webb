@@ -277,6 +277,9 @@ footer ul {
     line-height: 2;
     list-style: none;
 }
+    footer label span::after {
+        font-size: 1.6rem;
+    }
 
 a:hover,
 a:focus {
@@ -342,7 +345,7 @@ a:active {
     }
 
     footer label span::after {
-    font-size: 1.5rem;
+        font-size: 2.6rem;
     }
 
     svg {
