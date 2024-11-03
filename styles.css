@@ -3,7 +3,7 @@
 :root {
 
     color-scheme: light dark;
-    
+
     --cerulean-100: #bbeeff;
     --cerulean-700: #077799;
     --cerulean-800: #044466;
@@ -82,7 +82,7 @@
 html {
     background-color: var(--body-background);
 }
-    
+
 body {
     min-height: 100vh;
     min-height: 100dvh;
@@ -227,8 +227,9 @@ footer ul {
     line-height: 2;
     list-style: none;
 }
-    footer label span::after {
-        font-size: 1.6rem;
+
+footer label span::after {
+    font-size: 1.6rem;
 }
 
 a:hover,
@@ -365,7 +366,7 @@ footer label:focus-within {
     footer {
         padding-left: 0;
     }
-      
+
     h1 {
         margin: 1.6rem 0;
     }
