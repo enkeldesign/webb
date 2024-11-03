@@ -1,62 +1,9 @@
 @charset "UTF-8";
 
 :root {
+
     color-scheme: light dark;
-}
-
-footer input {
-    appearance: none;
-    margin: 0;
-}
-
-footer label:focus-within {
-    outline: 2px auto;
-    outline-offset: 4px;
-}
-
-footer label span::after {
-    content: "🌙"/ "mörkt tema";
-    filter: grayscale(100%) brightness(25%);
-}
-
-@media (prefers-color-scheme: light),
-(prefers-color-scheme: no-preference) {
-    :root:has(footer input:checked) {
-        color-scheme: dark;
-    }
-
-    :root:has(footer input:checked) footer label span::after {
-        content: "💡"/ "mörkt tema";
-        filter: grayscale(100%) brightness(100%);
-    }
-
-}
-
-@media (prefers-color-scheme:dark) {
-    :root:has(footer input:checked) {
-        color-scheme: light;
-
-    }
-
-    footer label span::after {
-        content: "💡"/ "ljust tema";
-        filter: grayscale(100%) brightness(100%);
-    }
-
-    :root:has(footer input:checked) footer label span::after {
-        content: "🌙"/ "ljust tema";
-        filter: grayscale(100%) brightness(25%);
-    }
-}
-
-@media (forced-colors:active) {
-    footer label {
-        display: none
-    }
-}
-
-:root {
-
+    
     --cerulean-100: #bbeeff;
     --cerulean-700: #077799;
     --cerulean-800: #044466;
@@ -293,6 +240,64 @@ a:focus {
 a:active {
     background-color: light-dark(var(--black), var(--white));
     color: light-dark(var(--cerulean-100), var(--cerulean-800));
+}
+
+footer input {
+    appearance: none;
+    margin: 0;
+}
+
+footer label span::after {
+    content: "🌙"/ "mörkt tema";
+    filter: grayscale(100%) brightness(25%);
+}
+
+footer label:focus-within {
+    background-color: var(--cerulean-700);
+}
+
+footer label:hover {
+    background-color: var(--cerulean-700);
+}
+
+footer label:active {
+    background-color: light-dark(var(--grey-950), var(--grey-50));
+}
+
+@media (prefers-color-scheme: light),
+(prefers-color-scheme: no-preference) {
+    :root:has(footer input:checked) {
+        color-scheme: dark;
+    }
+
+    :root:has(footer input:checked) footer label span::after {
+        content: "💡"/ "mörkt tema";
+        filter: grayscale(100%) brightness(100%);
+    }
+
+}
+
+@media (prefers-color-scheme:dark) {
+    :root:has(footer input:checked) {
+        color-scheme: light;
+
+    }
+
+    footer label span::after {
+        content: "💡"/ "ljust tema";
+        filter: grayscale(100%) brightness(100%);
+    }
+
+    :root:has(footer input:checked) footer label span::after {
+        content: "🌙"/ "ljust tema";
+        filter: grayscale(100%) brightness(25%);
+    }
+}
+
+@media (forced-colors:active) {
+    footer label {
+        display: none
+    }
 }
 
 @media (min-width: 40em) {
