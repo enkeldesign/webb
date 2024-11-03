@@ -248,7 +248,7 @@ footer input {
 }
 
 footer label span::after {
-    content: "🌙"/ "mörkt tema";
+    content: "🌙"/ "mörkt tema / dark theme";
     filter: grayscale(100%) brightness(25%);
 }
 
@@ -264,7 +264,7 @@ footer label:focus-within {
     }
 
     :root:has(footer input:checked) footer label span::after {
-        content: "💡"/ "mörkt tema";
+        content: "💡"/ "mörkt tema / dark theme";
         filter: grayscale(100%) brightness(100%);
     }
 
@@ -277,12 +277,12 @@ footer label:focus-within {
     }
 
     footer label span::after {
-        content: "💡"/ "ljust tema";
+        content: "💡"/ "ljust tema / light theme";
         filter: grayscale(100%) brightness(100%);
     }
 
     :root:has(footer input:checked) footer label span::after {
-        content: "🌙"/ "ljust tema";
+        content: "🌙"/ "ljust tema / light theme";
         filter: grayscale(100%) brightness(25%);
     }
 }
