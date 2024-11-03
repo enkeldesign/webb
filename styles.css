@@ -52,8 +52,8 @@
     --main-text-color: light-dark(var(--teal-900), var(--teal-200));
     --footer-text-color: light-dark(var(--teal-950), var(--grey-50));
 
-    --footer-link-color: light-dark(var(--cerulean-800), var(--cerulean-100));
-    --link-hover-focus-color: light-dark(var(--cerulean-700), var(--teal-200));
+    --footer-link-color: light-dark(var(--cerulean-700), var(--cerulean-100));
+    --link-hover-focus-color: light-dark(var(--cerulean-800), var(--teal-200));
     --link-active-color: light-dark(var(--black), var(--white));
 
     background-color: var(--body-background);
