@@ -253,13 +253,8 @@ footer label span::after {
 }
 
 footer label:focus-within {
-    background-color: light-dark(var(--teal-300), var(--cerulean-700));
     outline: 2px auto;
     outline-offset: 4px;
-}
-
-footer label:hover {
-    background-color: light-dark(var(--teal-300), var(--cerulean-700));
 }
 
 @media (prefers-color-scheme: light),
