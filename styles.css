@@ -333,10 +333,14 @@ footer label:focus-within {
 
   footer {
     grid-area: footer;
-    padding: 1.6rem 4.2rem 2.6rem 2.6rem;
+    padding: 1.6rem 2.6rem 2.6rem;
     text-align: left;
   }
-
+  
+  footer label {
+    right: 2.6rem;
+  }
+  
   svg {
     margin: auto;
     width: min(75%, 300px);
@@ -353,14 +357,15 @@ footer label:focus-within {
     margin: 0 auto;
   }
 
-  header {
+  header,
+  footer {
     padding-left: 0;
   }
   
-  footer {
-     padding: 1.6rem 2.6rem 2.6rem 0;
+  footer label {
+    right: 1.6rem;
   }
-
+  
   h1 {
     margin: 1.6rem 0;
   }
