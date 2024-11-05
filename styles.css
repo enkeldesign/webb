@@ -206,7 +206,7 @@ abbr {
 }
 
 footer small {
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: var(--footer-small-color);
 }
 
@@ -364,11 +364,15 @@ footer label:focus-within {
     footer {
         padding-left: 0;
     }
-
+    
+    footer small {
+        font-size: 1rem;
+}
+    
     footer label {
         right: 1.6rem;
     }
-
+    
     h1 {
         margin: 1.6rem 0;
     }
