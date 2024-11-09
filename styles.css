@@ -92,12 +92,10 @@ header,
 footer {
     grid-column: 1;
     padding: 1.6rem;
-    box-sizing: border-box;
 }
 
 main {
     grid-column: 1;
-    box-sizing: border-box;
 }
 
 header {
@@ -195,7 +193,7 @@ abbr {
 
 .section-b h2,
 .section-c h2 {
-    margin: 1rem 0 0.5rem;
+    margin: 1rem 0 0.6rem;
     color: var(--section-heading-color);
 }
 
