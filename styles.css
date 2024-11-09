@@ -14,8 +14,6 @@
     --teal-900: #223333;
     --teal-950: #001111;
     
-    --sand-100: #e0d8cf;
-    --sand-200: #d0c8bf;
     --sand-300: #ccbbaa;
     --sand-400: #998877;
     --sand-500: #887766;
@@ -46,8 +44,8 @@
     --rect-top-color: light-dark(var(--grey-50-opa-1), var(--grey-950-opa-0));
     --rect-btm-color: light-dark(var(--grey-50-opa-0), var(--grey-950-opa-1));
 
-    --heading-color: light-dark(var(--sand-500), var(--sand-100));
-    --heading-span-color: light-dark(var(--teal-600), var(--sand-100));
+    --heading-color: light-dark(var(--sand-500), var(--grey-100));
+    --heading-span-color: light-dark(var(--teal-600), var(--grey-50));
     --section-heading-color: light-dark(var(--teal-800), var(--grey-100));
     --main-text-color: light-dark(var(--teal-900), var(--grey-50));
     --footer-text-color: light-dark(var(--teal-950), var(--grey-50));
