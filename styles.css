@@ -42,15 +42,15 @@
     --section-c-background: light-dark(var(--teal-400), var(--sand-600));
     --footer-background: light-dark(var(--grey-50), var(--grey-950));
 
-    --logo-e-color: light-dark(var(--sand-400), var(--grey-400));
+    --logo-e-color: light-dark(var(--sand-400), var(--sand-400));
     --logo-d-color: light-dark(var(--cerulean-700), var(--cerulean-700));
     --rect-top-color: light-dark(var(--grey-50-opa-1), var(--grey-950-opa-0));
     --rect-btm-color: light-dark(var(--grey-50-opa-0), var(--grey-950-opa-1));
 
     --heading-color: light-dark(var(--sand-500), var(--grey-400));
-    --heading-span-color: light-dark(var(--teal-600), var(--teal-400));
-    --section-heading-color: light-dark(var(--teal-800), var(--teal-400));
-    --main-text-color: light-dark(var(--teal-900), var(--teal-200));
+    --heading-span-color: light-dark(var(--teal-600), var(--sand-200));
+    --section-heading-color: light-dark(var(--teal-800), var(--grey-100));
+    --main-text-color: light-dark(var(--teal-900), var(--sand-200));
     --footer-text-color: light-dark(var(--teal-950), var(--grey-50));
     --footer-small-color: light-dark(var(--teal-600), var(--sand-300));
     --footer-link-color: light-dark(var(--cerulean-700), var(--cerulean-100));
