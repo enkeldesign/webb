@@ -305,7 +305,7 @@ svg {
     }
 }
 
-@media (min-width: 40em) {
+@media (min-width: 45em) {
     body {
         display: grid;
         grid-template-columns: 1fr 1fr;
