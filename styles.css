@@ -382,6 +382,10 @@ svg {
         padding-left: 0;
     }
 
+    .section-a {
+        background-color: var(--body-background);
+    }
+
     footer small {
         font-size: 1rem;
     }
