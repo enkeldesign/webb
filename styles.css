@@ -371,7 +371,7 @@ svg {
     }
 }
 
-@media (min-width: 68em) {
+@media (min-width: 70em) {
     body {
         width: min(62vw, 75em);
         margin: 0 auto;
