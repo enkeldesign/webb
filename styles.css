@@ -162,7 +162,7 @@ h1 span {
 
 main p {
     margin: 0 0 0.6rem;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     color: var(--main-text-color);
 }
 
@@ -203,7 +203,7 @@ abbr {
 }
 
 footer small {
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: var(--footer-small-color);
 }
 
@@ -387,7 +387,7 @@ svg {
     }
 
     footer small {
-        font-size: 1rem;
+        font-size: 1.1rem;
     }
 
     footer label {
