@@ -167,7 +167,7 @@ h1 span {
 }
 
 main p {
-    margin: 0 0 0.6rem;
+    margin: 0 0 1rem;
     font-size: 1.1rem;
     color: var(--main-text-color);
 }
