@@ -211,11 +211,12 @@ abbr {
 }
 
 footer {
+    font-family: var(--heading-font);
     font-size: 1.1rem;
 }
 
 footer small {
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: var(--footer-small-color);
 }
 
