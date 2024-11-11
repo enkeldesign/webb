@@ -55,11 +55,14 @@
     --link-hover-focus-color: light-dark(var(--cerulean-800), var(--teal-200));
     --link-active-color: light-dark(var(--black), var(--white));
 
-    background-color: var(--body-background);
-    font-family: "azo-sans-web", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    --body-font: "azo-sans-web", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, sans-serif;
+    --heading-font: "futura-pt", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
         "Helvetica Neue", Arial, sans-serif;
     -webkit-text-size-adjust: 100%;
     line-height: 1.6;
+
+    background-color: var(--body-background);
 }
 
 ::selection {
@@ -83,6 +86,7 @@ body {
     display: grid;
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr auto;
+    font-family: var(--body-font);
     background-color: var(--body-background);
 }
 
@@ -147,6 +151,7 @@ svg {
 h1 {
     margin: 1rem 0 1.6rem;
     line-height: 1;
+    font-family: var(--heading-font);
     font-size: 3rem;
     font-weight: bold;
     color: var(--heading-color);
@@ -155,6 +160,7 @@ h1 {
 h1 span {
     display: block;
     margin-top: 0.6rem;
+    font-family: var(--heading-font);
     font-size: 1.9rem;
     font-weight: bold;
     color: var(--heading-span-color);
@@ -162,7 +168,7 @@ h1 span {
 
 main p {
     margin: 0 0 0.6rem;
-    font-size: 1.2rem;
+    font-size: 1rem;
     color: var(--main-text-color);
 }
 
@@ -192,6 +198,7 @@ abbr {
 .section-b h2,
 .section-c h2 {
     margin: 1rem 0 0.6rem;
+    font-family: var(--heading-font);
     font-size: 1.9rem;
     color: var(--section-heading-color);
 }
@@ -204,11 +211,11 @@ abbr {
 }
 
 footer {
-    font-size: 1.2rem;
+    font-size: 1rem;
 }
 
 footer small {
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: var(--footer-small-color);
 }
 
@@ -372,7 +379,7 @@ footer label:focus-within {
     }
 
     footer small {
-        font-size: 1.1rem;
+        font-size: 1rem;
     }
 
     footer label {
