@@ -284,26 +284,6 @@ footer label:focus-within {
     }
 }
 
-@keyframes hueRotation {
-    from {
-        filter: hue-rotate(-6deg);
-    }
-
-    to {
-        filter: hue-rotate(6deg);
-    }
-}
-
-svg {
-    animation: hueRotation 12s linear infinite alternate;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    svg {
-        animation: none;
-    }
-}
-
 @media (forced-colors: active) {
     footer label {
         display: none;
