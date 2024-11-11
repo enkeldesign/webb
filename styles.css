@@ -216,7 +216,7 @@ footer {
 
 footer small {
     font-family: var(--heading-font);
-    font-size: 1rem;
+    font-size: 1.1rem;
     color: var(--footer-small-color);
 }
 
