@@ -4,6 +4,7 @@
     color-scheme: light dark;
 
     --cerulean-100: #bbeeff;
+    --cerulean-600: #1888aa;
     --cerulean-700: #077799;
     --cerulean-800: #105070;
 
@@ -15,6 +16,7 @@
     --teal-950: #001111;
 
     --sand-300: #ccbbaa;
+    --sand-350: #aa9988;
     --sand-400: #998877;
     --sand-500: #887766;
     --sand-600: #706050;
@@ -40,12 +42,12 @@
     --section-c-background: light-dark(var(--teal-400), var(--sand-600));
     --footer-background: light-dark(var(--grey-50), var(--grey-950));
 
-    --logo-e-color: light-dark(var(--sand-400), var(--sand-400));
-    --logo-d-color: light-dark(var(--cerulean-700), var(--cerulean-700));
+    --logo-e-color: light-dark(var(--sand-400), var(--sand-350));
+    --logo-d-color: light-dark(var(--cerulean-700), var(--cerulean-600));
     --rect-top-color: light-dark(var(--grey-50-opa-1), var(--grey-950-opa-0));
     --rect-btm-color: light-dark(var(--grey-50-opa-0), var(--grey-950-opa-1));
 
-    --heading-color: light-dark(var(--sand-500), var(--sand-400));
+    --heading-color: light-dark(var(--sand-500), var(--sand-350));
     --heading-span-color: light-dark(var(--teal-600), var(--grey-100));
     --section-heading-color: light-dark(var(--teal-800), var(--grey-100));
     --main-text-color: light-dark(var(--teal-900), var(--grey-50));
