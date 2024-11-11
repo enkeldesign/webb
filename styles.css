@@ -14,7 +14,6 @@
     --teal-900: #223333;
     --teal-950: #001111;
 
-    --sand-200: #dfd7ca;
     --sand-300: #ccbbaa;
     --sand-400: #998877;
     --sand-500: #887766;
@@ -37,7 +36,7 @@
     --header-background: light-dark(var(--grey-50), var(--grey-950));
     --main-background: light-dark(var(--teal-400), var(--sand-600));
     --section-a-background: light-dark(var(--teal-400), var(--grey-900));
-    --section-b-background: light-dark(var(--sand-200), var(--cerulean-800));
+    --section-b-background: light-dark(var(--sand-300), var(--cerulean-800));
     --section-c-background: light-dark(var(--teal-400), var(--sand-600));
     --footer-background: light-dark(var(--grey-50), var(--grey-950));
 
