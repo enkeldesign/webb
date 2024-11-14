@@ -224,7 +224,7 @@ footer small {
   display: block;
   width: 100%;
   border-top: solid 3px var(--section-c-background);
-  padding-top: 1.6rem;
+  padding-top: 1rem;
 }
 
 a {
@@ -236,7 +236,7 @@ footer span {
 }
 
 footer ul {
-  margin: 0 0 2.6rem;
+  margin: 0 0 1.6rem;
   line-height: 2.6;
   list-style: none;
 }
