@@ -281,6 +281,7 @@ footer label:focus-within {
 .footer-logo svg {
   width: 25%;
   height: auto;
+  overflow: visible;
 }
 
 .footer-logo .logoEPath,
