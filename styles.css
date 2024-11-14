@@ -217,14 +217,15 @@ footer {
 }
 
 footer small {
-  font-family: var(--heading-font);
-  font-size: 1.1rem;
-  color: var(--footer-small-color);
-  text-align: center;
   display: block;
   width: 100%;
   border-top: solid 3px var(--section-c-background);
-  padding-top: 1rem;
+  padding-top: 1.6rem;
+  text-align: center;
+  font-family: var(--heading-font);
+  font-size: 1.1rem;
+  line-height: 2.6;
+  color: var(--footer-small-color);
 }
 
 a {
@@ -280,6 +281,7 @@ footer label:focus-within {
 .footer-logo svg {
   width: 25%;
   height: auto;
+  margin: 1.6rem 0:
 }
 
 .footer-logo .logoEPath,
