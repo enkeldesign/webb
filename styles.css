@@ -221,7 +221,8 @@ footer small {
   width: 100%;
   border-top: solid 3px var(--section-c-background);
   padding-top: 1rem;
-  text-align: justify;
+  text-align: center;
+  letter-spacing: 0.05rem;
   font-family: var(--heading-font);
   font-size: 1.1rem;
   line-height: 2.6;
