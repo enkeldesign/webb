@@ -280,7 +280,7 @@ footer label:focus-within {
 }
 
 .footer-logo svg {
-  width: 25%;
+  width: 5rem;
   height: auto;
   overflow: visible;
 }
