@@ -417,7 +417,12 @@ footer label:focus-within {
   .section-a {
     background-color: var(--body-background);
   }
-
+  
+  footer label,
+  .footer-logo {
+    right: 0;
+  }
+  
   h1 {
     margin: 1.6rem 0;
   }
