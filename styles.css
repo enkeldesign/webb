@@ -10,6 +10,7 @@
 
   --teal-200: #dde0e0;
   --teal-400: #ccdddd;
+  --teal-500: #bbcccc;
   --teal-600: #556666;
   --teal-800: #334444;
   --teal-900: #223333;
@@ -42,8 +43,8 @@
   --section-c-background: light-dark(var(--teal-400), var(--sand-600));
   --footer-background: light-dark(var(--grey-50), var(--grey-950));
 
-  --logo-e-color: light-dark(var(--sand-400), var(--sand-350));
-  --logo-d-color: light-dark(var(--cerulean-700), var(--cerulean-600));
+  --logo-e-color: light-dark(var(--teal-500), var(--sand-350));
+  --logo-d-color: light-dark(var(--teal-500), var(--cerulean-600));
   --rect-top-color: light-dark(var(--grey-50-opa-1), var(--grey-950-opa-0));
   --rect-btm-color: light-dark(var(--grey-50-opa-0), var(--grey-950-opa-1));
 
