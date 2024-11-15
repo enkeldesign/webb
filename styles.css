@@ -417,7 +417,8 @@ footer label:focus-within {
     background-color: var(--body-background);
   }
 
-  footer label {
+  footer label,
+  .footer-logo {
     right: 1.6rem;
   }
 
