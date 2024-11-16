@@ -239,7 +239,7 @@ footer span {
 }
 
 footer ul {
-  margin: 0 0 4.2rem;
+  margin: 0 0 6.9rem;
   line-height: 2.6;
   list-style: none;
 }
@@ -376,6 +376,10 @@ footer label:focus-within {
     text-align: left;
   }
 
+  footer ul {
+    margin: 0 0 4.2rem;
+  }
+  
   footer small {
     text-align: left;
     display: inline;
