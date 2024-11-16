@@ -200,7 +200,7 @@ a {
 
     section:first-child {
         grid-area: sec1;
-        padding: 1.5rem 2.5rem;
+        padding: 1.5rem 2.5rem 1.5rem 0;
         text-align: left;
         align-content: center;
     }
