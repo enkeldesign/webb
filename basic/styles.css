@@ -52,7 +52,8 @@ footer {
 
 header svg {
     display: block;
-    width: 8rem;
+    margin-top: 0.5rem;
+    width: 10rem;
     height: auto;
     overflow: visible;
 }
@@ -84,9 +85,8 @@ abbr {
 }
 
 section:first-child {
-    padding: 1.5rem;
+    padding: 0 1.5rem 1.5rem;
     text-align: center;
-    background-color: #eee;
 }
 
 section:nth-child(3) {
@@ -150,10 +150,6 @@ a {
     body {
         background-color: #313131;
         color: #f4f4f4;
-    }
-
-    section:first-child {
-        background-color: #444;
     }
 
     section:nth-child(3) {
@@ -242,7 +238,7 @@ a {
     }
 
     header svg {
-        margin: auto;
+        margin: 0 auto;
         width: 12rem;
     }
 
