@@ -65,7 +65,7 @@ path {
 h1 {
     margin: 0 0 1.5rem;
     font-family: sans-serif;
-    font-size: 2rem;
+    font-size: 3rem;
     line-height: 1;
     color: #269;
 }
@@ -73,7 +73,7 @@ h1 {
 h1 span {
     display: block;
     margin-top: 0.6rem;
-    font-size: 1.5rem;
+    font-size: 2.5rem;
     color: #444;
 }
 
@@ -104,6 +104,8 @@ section:nth-child(3) h2,
 section:last-child h2 {
     margin: 1rem 0 0.5rem;
     font-family: sans-serif;
+    font-size: 2.5rem;
+    line-height: 1;
     color: #444;
 }
 
