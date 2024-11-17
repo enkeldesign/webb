@@ -281,6 +281,7 @@ footer label:focus-within {
 }
 
 .footer-logo {
+  margin-top: 0.6rem;
   display: flex;
   align-items: center;
   justify-content: center;
