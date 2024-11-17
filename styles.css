@@ -229,6 +229,9 @@ footer small {
   line-height: 2.6;
   color: var(--footer-small-color);
 }
+footer small:last-of-type {
+  border: none;
+}
 
 a {
   color: var(--footer-link-color);
