@@ -127,6 +127,8 @@ footer small {
 }
 
 footer small:last-of-type {
+  padding-top: 0;
+  line-height: 1;
   border: none;
 }
 
