@@ -145,27 +145,6 @@ footer svg {
   overflow: visible;
 }
 
-footer details {
-  max-width: 80vw;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  cursor: pointer;
-}
-footer details:last-of-type {
-  margin-bottom: 2rem;
-}
-
-details pre,
-details pre code {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  overflow-x: auto;
-  max-width: 100%;
-  font-size: 0.8rem;
-}
-
 a {
   color: #369;
 }
