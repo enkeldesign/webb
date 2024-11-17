@@ -126,6 +126,10 @@ footer small {
   line-height: 2.5;
 }
 
+footer small:last-of-type {
+  border: none;
+}
+
 footer ul {
   margin: 0 0 2.5rem;
   line-height: 2.5;
