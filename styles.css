@@ -65,7 +65,6 @@
   -webkit-text-size-adjust: 100%;
   line-height: 1.8;
   interpolate-size: allow-keywords;
-
   background-color: var(--body-background);
 }
 
@@ -218,9 +217,10 @@ details {
 details::details-content {
   block-size: 0;
   overflow-y: clip;
-  transition: content-visibility 1s allow-discrete,
-              opacity 1s,
-              block-size 1s;
+  transition: content-visibility 618ms,
+              opacity 618ms,
+              block-size 618ms;
+  transition-behavior: allow-discrete;
 }
 
 details[open]::details-content {
