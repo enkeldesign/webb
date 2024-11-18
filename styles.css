@@ -215,6 +215,7 @@ details {
 }
 
 summary {
+  cursor: pointer;
   font-family: var(--heading-font);
   font-size: 1.3rem;
   font-weight: bold;
