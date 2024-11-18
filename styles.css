@@ -64,6 +64,7 @@
     Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-text-size-adjust: 100%;
   line-height: 1.8;
+  interpolate-size: allow-keywords;
 
   background-color: var(--body-background);
 }
@@ -212,6 +213,22 @@ abbr {
 
 details {
   margin: 1.6rem 0;
+  overflow: hidden;
+}
+
+details::details-content {
+  block-size: 0;
+  transition: block-size 618ms,
+              content-visibility 618ms;
+  transition-behavior: allow-discrete;
+}
+
+details[open]::details-content {
+  block-size: auto;
+}
+
+details ul {
+  margin: 1rem 1.6rem 1.6rem;
 }
 
 summary {
@@ -220,10 +237,6 @@ summary {
   font-size: 1.3rem;
   font-weight: bold;
   color: var(--section-heading-color);
-}
-
-details ul {
-  margin: 1rem 1.6rem 1.6rem;
 }
 
 .image img {
