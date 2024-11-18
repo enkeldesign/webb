@@ -426,6 +426,7 @@ footer label:focus-within {
   }
 
   .section-a {
+    padding-left: 0;
     background-color: var(--body-background);
   }
   
