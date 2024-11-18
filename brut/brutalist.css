@@ -115,10 +115,10 @@ details {
 }
 
 summary {
-  font-family: var(--heading-font);
+  font-family: sans-serif;
   font-size: 1.3rem;
   font-weight: bold;
-  color: var(--section-heading-color);
+  color: #444;
 }
 
 details ul {
@@ -190,7 +190,8 @@ a {
 
     h1 span,
     section:nth-child(3) h2,
-    section:last-child h2 {
+    section:last-child h2,
+    summary {
         color: #cde;
     }
 
