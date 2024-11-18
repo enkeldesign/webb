@@ -175,6 +175,7 @@ nav ul a {
   display: block;
   padding: 0.2rem 0 0.2rem;
   margin-bottom: 0.2rem;
+  max-width: 15rem;
 }
 
 @media (prefers-color-scheme: dark) {
