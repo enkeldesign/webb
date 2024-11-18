@@ -122,14 +122,14 @@ footer {
 
 footer label {
   position: absolute;
-  top: 1.6rem;
+  top: 2.6rem;
   right: 1.6rem;
   cursor: pointer;
 }
 
 svg {
   display: block;
-  width: min(75%, 200px);
+  width: min(75%, 10rem);
   height: auto;
   margin: 1rem 0;
   overflow: visible;
@@ -236,7 +236,7 @@ footer small {
 
 footer small:last-of-type {
   padding-top: 0;
-  line-height: 1;
+  line-height: 1.2;
   border: none;
 }
 
@@ -249,7 +249,7 @@ footer span {
 }
 
 footer ul {
-  margin: 0 0 6.9rem;
+  margin: 1rem 0 4.2rem;
   line-height: 2.6;
   list-style: none;
 }
@@ -386,10 +386,6 @@ footer label:focus-within {
     padding: 1.6rem 2.6rem 2.6rem;
     text-align: left;
   }
-
-  footer ul {
-    margin: 0 0 4.2rem;
-  }
   
   footer small {
     text-align: left;
@@ -404,7 +400,7 @@ footer label:focus-within {
 
   svg {
     margin: auto;
-    width: min(62%, 262px);
+    width: min(62%, 12rem);
   }
 
   .footer-logo {
