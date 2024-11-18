@@ -171,6 +171,11 @@ a {
     color: #369;
 }
 
+nav ul a {
+  display: block;
+  padding: 0.5rem 0 0.5rem;
+}
+
 @media (prefers-color-scheme: dark) {
 
     :root,
