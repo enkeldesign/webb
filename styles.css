@@ -279,12 +279,6 @@ a {
   color: var(--footer-link-color);
 }
 
-nav ul a {
-  display: block;
-  padding: 0.25rem 0 0.25rem;
-  max-width: 75%;
-}
-
 footer span {
   color: light-dark(var(--heading-span-color), var(--footer-text-color));
 }
