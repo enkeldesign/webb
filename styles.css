@@ -129,7 +129,7 @@ footer label {
 
 svg {
   display: block;
-  width: min(75%, 10rem);
+  width: min(75%, 12rem);
   height: auto;
   margin: 1rem 0;
   overflow: visible;
@@ -415,7 +415,7 @@ footer label:focus-within {
 
   svg {
     margin: auto;
-    width: min(62%, 12rem);
+    width: min(62%, 15rem);
   }
 
   .footer-logo {
