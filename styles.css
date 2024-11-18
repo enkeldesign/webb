@@ -275,8 +275,13 @@ footer small:last-of-type {
   border: none;
 }
 
-a {
+a {  
   color: var(--footer-link-color);
+}
+
+nav ul a {
+  display: block;
+  padding: 0.6rem 0 0.6rem;
 }
 
 footer span {
