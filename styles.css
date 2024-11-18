@@ -213,17 +213,18 @@ abbr {
 
 details {
   margin: 1.6rem 0;
-  overflow: hidden;
 }
 
 details::details-content {
   block-size: 0;
-  transition: block-size 618ms,
-              content-visibility 618ms;
-  transition-behavior: allow-discrete;
+  overflow-y: clip;
+  transition: content-visibility 1s allow-discrete,
+              opacity 1s,
+              block-size 1s;
 }
 
 details[open]::details-content {
+  opacity: 1;
   block-size: auto;
 }
 
@@ -237,6 +238,11 @@ summary {
   font-size: 1.3rem;
   font-weight: bold;
   color: var(--section-heading-color);
+}
+
+summary:focus-visible {
+  outline: 2px auto;
+  outline-offset: 4px;
 }
 
 .image img {
@@ -288,7 +294,7 @@ footer label span::after {
 }
 
 a:hover,
-a:focus {
+a:focus-visible {
   background-color: var(--link-hover-focus-color);
   color: light-dark(var(--white), var(--black));
 }
