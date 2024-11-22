@@ -124,7 +124,7 @@ footer {
 
 label {
   position: absolute;
-  top: 1.rem;
+  top: 1rem;
   right: 1.6rem;
   cursor: pointer;
 }
@@ -434,8 +434,8 @@ label:focus-within {
   }
   
   label {
-    top: 2.6rem;
-    right: 2.6rem;
+    top: 1.6rem;
+    right: .6rem;
   }
   
   .footer-logo {
