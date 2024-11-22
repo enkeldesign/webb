@@ -120,9 +120,9 @@ footer {
   background-color: var(--footer-background);
 }
 
-footer label {
+label {
   position: absolute;
-  top: 3rem;
+  top: 1.6rem;
   right: 1.6rem;
   cursor: pointer;
 }
@@ -298,23 +298,23 @@ a:active {
   color: light-dark(var(--cerulean-100), var(--cerulean-800));
 }
 
-footer input {
+input {
   appearance: none;
-  background-color: var(--footer-background);
+  opacity: 0;
   margin: 0;
 }
 
-footer label span::after {
+label span::after {
   content: "";
   display: inline-block;
-  width: 2rem;
-  height: 2rem;
+  width: 1.6rem;
+  height: 1.6rem;
   background-image: url("/dark.svg");
   background-size: contain;
   background-repeat: no-repeat;
 }
 
-footer label:focus-within {
+label:focus-within {
   outline: 2px auto;
   outline-offset: 4px;
 }
@@ -338,31 +338,31 @@ footer label:focus-within {
 }
 
 @media (prefers-color-scheme: light), (prefers-color-scheme: no-preference) {
-  :root:has(footer input:checked) {
+  :root:has(input:checked) {
     color-scheme: dark;
   }
 
-  :root:has(footer input:checked) footer label span::after {
+  :root:has(input:checked) label span::after {
     background-image: url("/light.svg");
   }
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:has(footer input:checked) {
+  :root:has(input:checked) {
     color-scheme: light;
   }
 
-  footer label span::after {
+  label span::after {
     background-image: url("/light.svg");
   }
 
-  :root:has(footer input:checked) footer label span::after {
+  :root:has(input:checked) label span::after {
     background-image: url("/dark.svg");
   }
 }
 
 @media (forced-colors: active) {
-  footer label {
+  label {
     display: none;
   }
 }
@@ -426,10 +426,6 @@ footer label:focus-within {
     border: none;
   }
 
-  footer label {
-    right: 2.6rem;
-  }
-
   svg {
     margin: auto;
     width: min(62%, 15rem);
@@ -462,7 +458,7 @@ footer label:focus-within {
     background-color: var(--body-background);
   }
 
-  footer label,
+  label,
   .footer-logo {
     right: 0;
   }
