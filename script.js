@@ -25,11 +25,11 @@ document.addEventListener('DOMContentLoaded', function() {
       if (isDarkMode) {
         updateThemeColor('#313131');
 
-        themeFeedback.textContent = 'Mörkt färgschema. Dark theme.';
+        themeFeedback.textContent = 'Mörkt färgschema aktiverat.';
       } else {
         updateThemeColor('#f4f4f4');
 
-        themeFeedback.textContent = 'Ljust färgschema. Light theme.';
+        themeFeedback.textContent = 'Ljust färgschema aktiverat.';
       }
     });
 
