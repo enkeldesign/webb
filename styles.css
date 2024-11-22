@@ -304,7 +304,7 @@ footer label span::after {
   display: inline-block;
   width: 1.6rem;
   height: 1.6rem;
-  background-image: url("/light.svg");
+  background-image: url("/dark.svg");
   background-size: contain;
   background-repeat: no-repeat;
 }
@@ -338,7 +338,7 @@ footer label:focus-within {
   }
 
   :root:has(footer input:checked) footer label span::after {
-    background-image: url("/dark.svg");
+    background-image: url("/light.svg");
   }
 }
 
@@ -348,11 +348,11 @@ footer label:focus-within {
   }
 
   footer label span::after {
-    background-image: url("/dark.svg");
+    background-image: url("/light.svg");
   }
 
   :root:has(footer input:checked) footer label span::after {
-    background-image: url("/light.svg");
+    background-image: url("/dark.svg");
   }
 }
 
