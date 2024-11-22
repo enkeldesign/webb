@@ -127,7 +127,7 @@ footer label {
     cursor: pointer;
 }
 
-svg {
+header svg {
     display: block;
     width: min(75%, 12rem);
     height: auto;
@@ -279,18 +279,10 @@ a {
     color: var(--footer-link-color);
 }
 
-footer span {
-    color: light-dark(var(--heading-span-color), var(--footer-text-color));
-}
-
 footer ul {
     margin: 1rem 0 4.2rem;
     line-height: 2.6;
     list-style: none;
-}
-
-footer label span::after {
-    font-size: 1.6rem;
 }
 
 a:hover,
@@ -310,8 +302,13 @@ footer input {
 }
 
 footer label span::after {
-    content: "🔅"/ "mörkt tema dark theme";
-    filter: grayscale(100%) brightness(25%);
+    content: '';
+    display: inline-block;
+    width: 1.6rem;
+    height: 1.6rem;
+    background-image: url('https://enkel.design/light.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
 }
 
 footer label:focus-within {
@@ -344,8 +341,7 @@ footer label:focus-within {
     }
 
     :root:has(footer input:checked) footer label span::after {
-        content: "🔆"/ "mörkt tema dark theme";
-        filter: grayscale(100%) brightness(100%);
+        background-image: url('https://enkel.design/dark.svg');
     }
 }
 
@@ -355,13 +351,11 @@ footer label:focus-within {
     }
 
     footer label span::after {
-        content: "🔆"/ "ljust tema light theme";
-        filter: grayscale(100%) brightness(100%);
+        background-image: url('https://enkel.design/dark.svg');
     }
 
     :root:has(footer input:checked) footer label span::after {
-        content: "🔅"/ "ljust tema light theme";
-        filter: grayscale(100%) brightness(25%);
+        background-image: url('https://enkel.design/light.svg');
     }
 }
 
@@ -434,7 +428,7 @@ footer label:focus-within {
         right: 2.6rem;
     }
 
-    svg {
+    header svg {
         margin: auto;
         width: min(62%, 15rem);
     }
