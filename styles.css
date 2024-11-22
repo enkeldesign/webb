@@ -232,15 +232,19 @@ details ul {
 
 summary {
   cursor: pointer;
-  font-family: var(--heading-font);
-  font-size: 1.3rem;
-  font-weight: bold;
-  color: var(--section-heading-color);
 }
 
 summary:focus-visible {
   outline: 2px auto;
   outline-offset: 4px;
+}
+
+summary h3 {
+  display: inline;
+  font-family: var(--heading-font);
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: var(--section-heading-color);
 }
 
 .image img {
