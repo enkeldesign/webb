@@ -310,7 +310,7 @@ footer input {
 }
 
 footer label span::after {
-    content: "🌙"/ "mörkt tema dark theme";
+    content: "🔅"/ "mörkt tema dark theme";
     filter: grayscale(100%) brightness(25%);
 }
 
@@ -360,7 +360,7 @@ footer label:focus-within {
     }
 
     :root:has(footer input:checked) footer label span::after {
-        content: "🌙"/ "ljust tema light theme";
+        content: "🔅"/ "ljust tema light theme";
         filter: grayscale(100%) brightness(25%);
     }
 }
