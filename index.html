@@ -34,15 +34,16 @@
     <meta property="og:url" content="https://enkel.design/">
     <meta property="og:locale" content="sv_SE">
 
-    <meta property="article:published_time" content="2024-11-16">
+    <meta property="article:published_time" content="2024-11-23">
 </head>
 
 <body>
     <section aria-label="Inställningar">
-        <label title="Växla mellan ljust och mörkt färgschema">
-            <input type="checkbox" aria-label="Växla mellan ljust och mörkt färgschema">
+        <label for="theme-toggle" title="Växla mellan ljust och mörkt färgschema">
+            <input type="checkbox" id="theme-toggle" role="switch" aria-checked="false">
             <span></span>
         </label>
+        <div id="sr-theme-feedback" aria-live="polite" class="visually-hidden"></div>
     </section>
     <header>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2427 1618" role="img" aria-labelledby="logo-title" preserveAspectRatio="xMidYMid meet" shape-rendering="geometricPrecision">
@@ -76,7 +77,9 @@
             <p>Född <time datetime="1981-04-30">1981</time> i Stockholm, med rötter i Norrland. Jag bor sedan <time datetime="2016-08-01">2016</time> i Söråker på en gård vid en sjö med min fru, två barn, tre katter och noll möss. Jag spelar gärna schack och bordshockey. Jag har även sysslat med webb på fritiden sedan 1900-talet.</p>
             <p>Min akademiska bakgrund är kognitions&shy;vetenskap (masterexamen) och teoretisk filosofi (<abbr title="Filosofie Kandidatexamen">fil.kand.</abbr>). Min expertis i praktiken är problem&shy;lösning och design i mötet mellan människa och digital service.</p>
             <details>
-                <summary><h3>Mina kompetenser</h3></summary>
+                <summary>
+                    <h3>Mina kompetenser</h3>
+                </summary>
                 <ul>
                     <li>UX-design</li>
                     <li>Digital tillgänglighet</li>
@@ -123,7 +126,7 @@
 
             </ul>
         </nav>
-        <small>&copy;<time datetime="2024-11-16">2024</time> Erik Jansson. Handkodad&nbsp;webbsida.</small>
+        <small>&copy;<time datetime="2024-11-23">2024</time> Erik Jansson. Handkodad&nbsp;webbsida.</small>
         <small>enkel.design ligger på <a href="https://pages.github.com" lang="en">GitHub&nbsp;Pages</a>.</small>
         <div class="footer-logo">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2427 1618" role="img" aria-labelledby="footer-logo-title" preserveAspectRatio="xMidYMid meet" shape-rendering="geometricPrecision">
