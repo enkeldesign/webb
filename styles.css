@@ -122,7 +122,7 @@ footer {
 
 footer label {
   position: absolute;
-  top: 2.6rem;
+  top: 3rem;
   right: 1.6rem;
   cursor: pointer;
 }
@@ -302,8 +302,8 @@ footer input {
 footer label span::after {
   content: "";
   display: inline-block;
-  width: 1.6rem;
-  height: 1.6rem;
+  width: 2rem;
+  height: 2rem;
   background-image: url("/dark.svg");
   background-size: contain;
   background-repeat: no-repeat;
