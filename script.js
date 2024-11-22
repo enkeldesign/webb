@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
 
-  const themeToggle = document.querySelector('input[type="checkbox"]');
+  const themeToggle = document.getElementById('theme-toggle');
+  const themeFeedback = document.getElementById('sr-theme-feedback');
 
   if (themeToggle) {
 
@@ -19,10 +20,16 @@ document.addEventListener('DOMContentLoaded', function() {
     themeToggle.addEventListener('change', function() {
       const isDarkMode = this.checked;
 
+      this.setAttribute('aria-checked', isDarkMode.toString());
+
       if (isDarkMode) {
         updateThemeColor('#313131');
+
+        themeFeedback.textContent = 'Mörkt färgschema. Dark theme.';
       } else {
         updateThemeColor('#f4f4f4');
+
+        themeFeedback.textContent = 'Ljust färgschema. Light theme.';
       }
     });
 
