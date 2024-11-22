@@ -127,7 +127,7 @@ footer label {
   cursor: pointer;
 }
 
-header svg {
+svg {
   display: block;
   width: min(75%, 12rem);
   height: auto;
@@ -296,6 +296,7 @@ a:active {
 
 footer input {
   appearance: none;
+  background-color: var(--footer-background);
   margin: 0;
 }
 
@@ -425,7 +426,7 @@ footer label:focus-within {
     right: 2.6rem;
   }
 
-  header svg {
+  svg {
     margin: auto;
     width: min(62%, 15rem);
   }
