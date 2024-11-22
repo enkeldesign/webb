@@ -242,7 +242,7 @@ summary:focus-visible {
 summary h3 {
   display: inline;
   font-family: var(--heading-font);
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   font-weight: bold;
   color: var(--section-heading-color);
 }
