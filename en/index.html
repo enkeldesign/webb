@@ -38,11 +38,12 @@
 </head>
 
 <body>
-    <section aria-label="Settings">
-        <label title="Switch between light and dark color scheme">
-            <input type="checkbox" aria-label="Switch between light and dark color scheme">
+    <section aria-label="Inställningar">
+        <label for="theme-toggle" title="Växla mellan ljust och mörkt färgschema">
+            <input type="checkbox" id="theme-toggle" role="switch" aria-checked="false">
             <span></span>
         </label>
+        <div id="sr-theme-feedback" aria-live="polite" class="visually-hidden"></div>
     </section>
     <header>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2427 1618" role="img" aria-labelledby="logo-title" preserveAspectRatio="xMidYMid meet" shape-rendering="geometricPrecision">
@@ -130,7 +131,7 @@
             </svg>
         </div>
     </footer>
-    <script src="/script.js"></script>
+    <script src="/en/script.js"></script>
 </body>
 
 </html>
