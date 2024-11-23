@@ -301,6 +301,10 @@ a:active {
   color: light-dark(var(--cerulean-100), var(--cerulean-800));
 }
 
+footer small a {
+  color: var(--footer-small-color);
+}
+
 input {
   appearance: none;
   opacity: 0;
