@@ -158,7 +158,7 @@ footer ul {
     list-style: none;
 }
 
-footer li>small {
+#email {
     display: inline;
     color: #258;
     border: none;
