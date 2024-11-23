@@ -159,12 +159,12 @@ footer ul {
 }
 
 footer ul li {
-    display: inline;
+    display: inline-block;
 }
 
 footer ul small {
-    display: inline;
     font-size: 1rem;
+    margin-left: 0.5rem;
 }
 
 footer figure {
@@ -181,15 +181,13 @@ footer svg {
 }
 
 a {
-    display: inline;
     color: #369;
 }
 
 nav ul a {
-    display: inline;
-    padding: 0.2rem 0 0.2rem;
+    padding: 0.2rem 0;
     margin-bottom: 0.2rem;
-    max-width: 15rem;
+    max-width: none;
 }
 
 @media (prefers-color-scheme: dark) {
