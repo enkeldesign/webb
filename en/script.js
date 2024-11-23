@@ -28,7 +28,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       themeFeedback.setAttribute('lang', 'en');
-      themeFeedback.setAttribute('aria-atomic', 'true');
       themeFeedback.textContent = message;
     });
 
