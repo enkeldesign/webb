@@ -292,15 +292,15 @@ footer ul {
 
 button {
   margin: 0 0 0 0.6rem;
-  background-color: light-dark(var(--teal-600), var(--sand-600));
-  color: #f4f4f4;
-  padding: 0.05rem 0.2rem;
+  padding: 0;
   border: none;
   height: 1rem;
   border-radius: 0.5rem;
+  cursor: pointer;
   font-family: var(--heading-font);
   font-size: 0.8rem;
-  cursor: pointer;
+  background-color: light-dark(var(--teal-600), var(--sand-600));
+  color: #f4f4f4;
   text-decoration: none;
   display: inline-block; 
 }
