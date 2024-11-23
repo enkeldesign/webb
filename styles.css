@@ -299,7 +299,7 @@ button {
   border-radius: 0.5rem;
   cursor: pointer;
   font-family: var(--heading-font);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   background-color: light-dark(var(--teal-550), var(--sand-600));
   color: #f4f4f4;
   text-decoration: none;
