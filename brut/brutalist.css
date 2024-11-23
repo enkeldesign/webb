@@ -159,7 +159,7 @@ footer ul {
 }
 
 footer ul li {
-    display: inline-block;
+    display: block;
 }
 
 footer ul small {
