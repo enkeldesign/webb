@@ -158,8 +158,13 @@ footer ul {
     list-style: none;
 }
 
+footer ul li {
+    display: inline;
+}
+
 footer ul small {
     display: inline;
+    font-size: 1rem;
 }
 
 footer figure {
@@ -181,7 +186,7 @@ a {
 }
 
 nav ul a {
-    display: block;
+    display: inline;
     padding: 0.2rem 0 0.2rem;
     margin-bottom: 0.2rem;
     max-width: 15rem;
