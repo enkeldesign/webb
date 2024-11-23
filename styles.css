@@ -305,8 +305,7 @@ button {
 }
 
 button:hover {
-  background-color: light-dark(var(--teal-800), var(--teal-200));
-  color: light-dark(var(--white), var(--black));
+  background-color: light-dark(var(--teal-800), var(--sand-500));
 }
 
 button:focus-visible {
