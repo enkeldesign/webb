@@ -296,7 +296,8 @@ button {
   color: #f4f4f4;
   padding: 0.1rem 0.3rem;
   border: none;
-  border-radius: 0.6rem;
+  height: 0.8rem;
+  border-radius: 0.4rem;
   font-family: var(--heading-font);
   font-size: 0.8rem;
   cursor: pointer;
