@@ -89,14 +89,11 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   display: grid;
+  position: relative;
   grid-template-columns: 1fr;
   grid-template-rows: auto 1fr auto;
   font-family: var(--body-font);
   background-color: var(--body-background);
-}
-
-body>section {
-  position: relative;
 }
 
 header,
