@@ -290,6 +290,10 @@ footer ul {
   list-style: none;
 }
 
+button {
+  margin: 0 0 0 0,6rem;
+}
+
 a:hover,
 a:focus-visible {
   background-color: var(--link-hover-focus-color);
