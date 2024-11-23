@@ -95,6 +95,10 @@ body {
   background-color: var(--body-background);
 }
 
+body>section {
+  position: relative;
+}
+
 header,
 footer {
   grid-column: 1;
