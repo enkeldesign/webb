@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
       themeFeedback.setAttribute('lang', 'sv');
-
+      themeFeedback.setAttribute('aria-atomic', 'true');
       themeFeedback.textContent = message;
     });
 
