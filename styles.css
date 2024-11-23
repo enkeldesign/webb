@@ -292,22 +292,23 @@ footer ul {
 }
 
 button {
-  margin: -0.175rem 0 0 0.6rem;
+  margin: -0.3rem 0 0 0.6rem;
   padding: 0 0.5rem 0.175rem;
-  border: none;
+  border: 2px solid var(--footer-link-color);
   height: 1.2rem;
   border-radius: 0.6rem;
   cursor: pointer;
   font-family: var(--heading-font);
   font-size: 0.8rem;
-  background-color: light-dark(var(--teal-550), var(--sand-300));
-  color: light-dark(var(--white), var(--black));
+  background-color: transparent;
+  color: var(--footer-link-color);
   text-decoration: none;
   display: inline-block; 
 }
 
 button:hover {
-  background-color: light-dark(var(--teal-800), var(--sand-500));
+  background-color: var(--footer-link-color);
+  color: light-dark(var(--white), var(--black));
 }
 
 button:focus-visible {
