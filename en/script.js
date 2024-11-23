@@ -41,3 +41,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
+
+function copyEmail() {
+    const email = "erik@enkel.design";
+    navigator.clipboard.writeText(email).then(() => {
+      alert("Email address copied to clipboard!");
+    }).catch(err => {
+      console.error('Error copying text: ', err);
+    });
+  }
