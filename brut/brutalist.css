@@ -158,6 +158,12 @@ footer ul {
     list-style: none;
 }
 
+footer ul small {
+    display: inline;
+    width: auto;
+    border: none;
+}
+
 footer figure {
     display: flex;
     align-items: center;
@@ -172,6 +178,7 @@ footer svg {
 }
 
 a {
+    display: inline;
     color: #369;
 }
 
