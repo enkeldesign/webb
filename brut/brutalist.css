@@ -158,9 +158,12 @@ footer ul {
     list-style: none;
 }
 
-footer ul small {
+footer li>small {
     display: inline;
     color: #258;
+    border: none;
+    padding: 0;
+    font-family: sans-serif;
 }
 
 footer figure {
