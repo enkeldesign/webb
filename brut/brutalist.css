@@ -164,7 +164,7 @@ footer ul li {
 
 footer ul small {
     font-size: 1rem;
-    margin-left: 0.5rem;
+    color: #333;
 }
 
 footer figure {
@@ -218,7 +218,7 @@ nav ul a {
     }
     
     footer ul small {
-        color: #9cf;
+        color: #bbb;
     }
 }
 
