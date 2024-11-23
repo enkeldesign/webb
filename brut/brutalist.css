@@ -201,7 +201,7 @@ nav ul a {
     h1 span,
     section:nth-child(3) h2,
     section:last-child h2,
-    summary {
+    summary h3 {
         color: #cde;
     }
 
