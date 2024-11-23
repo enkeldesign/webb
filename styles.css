@@ -291,7 +291,25 @@ footer ul {
 }
 
 button {
-  margin: 0 0 0 0,6rem;
+  margin: 0 0 0 0.6rem;
+  background-color: #887766;
+  color: #f4f4f4;
+  padding: 0.2em 0.5em;
+  border: none;
+  font-size: 0.6em;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block; 
+}
+
+button:hover {
+  background-color: light-dark(var(--teal-800), var(--teal-200));
+  color: light-dark(var(--white), var(--black));
+}
+
+button:focus-visible {
+  outline: 2px auto;
+  outline-offset: 4px;
 }
 
 a:hover,
