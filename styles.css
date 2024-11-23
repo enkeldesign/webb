@@ -296,7 +296,8 @@ button {
   color: #f4f4f4;
   padding: 0.2em 0.5em;
   border: none;
-  font-size: 0.6em;
+  border-radius: 50%;
+  font-size: 0.8em;
   cursor: pointer;
   text-decoration: none;
   display: inline-block; 
