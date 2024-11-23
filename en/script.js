@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', function() {
       this.setAttribute('aria-checked', isDarkMode.toString());
 
       let message = '';
-
       if (isDarkMode) {
         updateThemeColor('#313131');
         message = 'Dark mode activated.';
@@ -29,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       themeFeedback.setAttribute('lang', 'en');
-
+      themeFeedback.setAttribute('aria-atomic', 'true');
       themeFeedback.textContent = message;
     });
 
