@@ -158,6 +158,11 @@ footer ul {
     list-style: none;
 }
 
+footer ul small {
+    display: inline;
+    color: #258;
+}
+
 footer figure {
     display: flex;
     align-items: center;
@@ -207,6 +212,10 @@ nav ul a {
 
     a {
         color: #8be;
+    }
+    
+    footer ul small {
+        color: #9cf;
     }
 }
 
