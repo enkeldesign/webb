@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function copyEmail() {
     const email = "erik@enkel.design";
     navigator.clipboard.writeText(email).then(() => {
-      alert("Mejladress kopierad till urklipp!");
+      alert("erik@enkel.design kopierat till urklipp.");
     }).catch(err => {
       console.error('Error copying text: ', err);
     });
