@@ -136,7 +136,7 @@ img {
     object-fit: cover;
 }
 
-footer small {
+footer>small {
     display: block;
     width: 100%;
     border-top: solid 3px #48b;
@@ -146,7 +146,7 @@ footer small {
     line-height: 2.5;
 }
 
-footer small:last-of-type {
+footer>small:last-of-type {
     padding-top: 0;
     line-height: 1;
     border: none;
@@ -160,8 +160,6 @@ footer ul {
 
 footer ul small {
     display: inline;
-    width: auto;
-    border: none;
 }
 
 footer figure {
@@ -276,7 +274,7 @@ nav ul a {
         margin: 0 0 4rem;
     }
 
-    footer small {
+    footer>small {
         text-align: left;
         display: inline;
         width: auto;
