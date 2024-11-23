@@ -11,7 +11,7 @@
   --teal-200: #dde0e0;
   --teal-400: #ccdddd;
   --teal-500: #bbcccc;
-  --teal-550: #778888;
+  --teal-550: #659595;
   --teal-600: #556666;
   --teal-800: #334444;
   --teal-900: #223333;
@@ -293,7 +293,7 @@ footer ul {
 
 button {
   margin: 0 0 0 0.6rem;
-  padding: 0 0.5rem 0.2rem;
+  padding: 0 0.5rem 0.175rem;
   border: none;
   height: 1.2rem;
   border-radius: 0.6rem;
@@ -301,7 +301,7 @@ button {
   font-family: var(--heading-font);
   font-size: 0.8rem;
   background-color: light-dark(var(--teal-550), var(--sand-600));
-  color: #f4f4f4;
+  color: light-dark(var(--black), var(--white));
   text-decoration: none;
   display: inline-block; 
 }
