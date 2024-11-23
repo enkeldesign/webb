@@ -292,7 +292,7 @@ footer ul {
 
 button {
   margin: 0 0 0 0.6rem;
-  background-color: #887766;
+  background-color: light-dark(var(--teal-600), var(--sand-600));
   color: #f4f4f4;
   padding: 0.1rem 0.3rem;
   border: none;
