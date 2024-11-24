@@ -143,7 +143,7 @@ details p:nth-child(2) {
 }
 
 blockquote {
-    border-left: solid 3px #48b;
+    border-left: solid 3px #d45;
     padding-left: 1rem;
     margin: 1rem 0;
     color: #456;
@@ -151,7 +151,7 @@ blockquote {
 
 blockquote>footer {
     margin-top: 0.5rem;
-    color: #444;
+    color: #d45;
 }
 
 img {
@@ -164,7 +164,7 @@ img {
 footer>small {
     display: block;
     width: 100%;
-    border-top: solid 3px #48b;
+    border-top: solid 3px #d45;
     padding-top: 1rem;
     font-family: ui-sans-serif, sans-serif;
     font-size: 0.7rem;
