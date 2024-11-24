@@ -63,7 +63,7 @@ path {
 }
 
 svg text {
-  	font-family: sans-serif;
+        font-family: ui-sans-serif, sans-serif;
 		font-size: 7rem;
 		font-weight: bold;
 		fill: #333;
