@@ -133,12 +133,12 @@ blockquote {
     border-left: solid 3px #48b;
     padding-left: 1rem;
     margin: 1rem 0;
-    color: #345;
+    color: #456;
 }
 
 blockquote>footer {
-    font-size: 0.9em;
-    color: #666;
+    margin-top: 0.5rem;
+    color: #444;
 }
 
 img {
@@ -226,11 +226,11 @@ nav ul a {
     }
     
     blockquote {
-        color: #abc;
+        color: #def;
     }
     
     blockquote>footer {
-        color: #bbb;
+        color: #eee;
     }
 
     a {
