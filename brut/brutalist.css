@@ -83,7 +83,7 @@ h1 span:first-child {
     font-family: ui-monospace, monospace;
     font-weight: bold;
     font-size: 1rem;
-    color: #b23;
+    color: #b40;
 }
 
 main p {
@@ -132,7 +132,7 @@ details {
 
 summary {
     cursor: pointer;
-    color: #b23;
+    color: #b40;
 }
 
 summary h3 {
@@ -152,7 +152,7 @@ details p:nth-child(2) {
 }
 
 blockquote {
-    border-left: solid 3px #b23;
+    border-left: solid 3px #b40;
     padding-left: 1rem;
     margin: 1rem 0;
     color: #555;
@@ -160,7 +160,7 @@ blockquote {
 
 blockquote>footer {
     margin-top: 0.5rem;
-    color: #b23;
+    color: #b40;
 }
 
 img {
@@ -173,7 +173,7 @@ img {
 footer>small {
     display: block;
     width: 100%;
-    border-top: solid 3px #b23;
+    border-top: solid 3px #b40;
     padding-top: 1rem;
     font-family: ui-sans-serif, sans-serif;
     font-size: 0.7rem;
@@ -239,7 +239,7 @@ nav ul a {
     }
 
     summary {
-        color: #fc0;
+        color: #c90;
     }
 
     h1 span,
@@ -250,16 +250,16 @@ nav ul a {
     }
 
     h1 span:first-child {
-        color: #fc0;
+        color: #c90;
     }
 
     blockquote {
         color: #abc;
-        border-color: #fc0;
+        border-color: #c90;
     }
 
     blockquote>footer {
-        color: #fc0;
+        color: #c90;
     }
 
     a {
@@ -272,7 +272,7 @@ nav ul a {
     }
 
     footer>small {
-        border-color: #fc0;
+        border-color: #c90;
     }
 
 }
