@@ -173,7 +173,7 @@ img {
 footer>small {
     display: block;
     width: 100%;
-    border-top: solid 3px #48b;
+    border-top: solid 3px #b23;
     padding-top: 1rem;
     font-family: ui-sans-serif, sans-serif;
     font-size: 0.7rem;
@@ -277,15 +277,15 @@ nav ul a {
 
 }
 
-@media (min-width: 40em) {
+@media (min-width: 50em) {
     body {
         display: grid;
         grid-template-columns: 1fr 1fr;
         grid-template-rows: auto 1fr auto auto;
         grid-template-areas:
             "header     sec1"
-            "sec2 			image"
-            "sec2  			sec3"
+            "sec2 		image"
+            "sec2  		sec3"
             "footer     footer";
         min-height: none;
         margin: 0 auto;
