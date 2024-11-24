@@ -234,7 +234,7 @@ nav ul a {
     }
 
     summary {
-        color: #e67;
+        color: #fc0;
     }
     
     h1 span,
@@ -245,16 +245,16 @@ nav ul a {
     }
     
   	svg text {
-      	fill: #d45;
+      	fill: #fc0;
 		}
 
     blockquote {
-        color: #ddd;
-        border-color: #d45;
+        color: #def;
+        border-color: #fc0;
     }
 
     blockquote>footer {
-        color: #e67;
+        color: #fc0;
     }
 
     a {
