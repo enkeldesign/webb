@@ -129,6 +129,10 @@ details ul {
     margin: 1rem 0 1.5rem 1rem;
 }
 
+details p:first-child {
+    margin-top: 1rem;
+}
+
 blockquote {
     border-left: solid 3px #48b;
     padding-left: 1rem;
