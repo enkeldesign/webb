@@ -2,6 +2,7 @@
 
 :root {
     color-scheme: light dark;
+    font-family: ui-serif, serif;
     font-size: 20px;
     -webkit-text-size-adjust: 100%;
     line-height: 2;
