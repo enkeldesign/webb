@@ -206,6 +206,10 @@ footer svg {
     overflow: visible;
 }
 
+footer svg path {
+    fill: #b23;
+}
+
 a {
     color: #369;
 }
@@ -249,7 +253,7 @@ nav ul a {
     }
 
     blockquote>footer {
-        color: #d45;
+        color: #e67;
     }
 
     a {
@@ -263,6 +267,11 @@ nav ul a {
     footer ul small {
         color: #bbb;
     }
+    
+    footer svg path {
+    fill: #d45;
+}
+
 }
 
 @media (min-width: 50em) {
