@@ -134,6 +134,10 @@ summary h3 {
     color: #444;
 }
 
+section:last-child summary h3 {
+        color: #b23;
+    }
+
 details ul {
     margin: 1rem 0 1.5rem 1rem;
 }
@@ -143,15 +147,15 @@ details p:nth-child(2) {
 }
 
 blockquote {
-    border-left: solid 3px #b23;
+    border-left: solid 3px #48b;
     padding-left: 1rem;
     margin: 1rem 0;
-    color: #444;
+    color: #456;
 }
 
 blockquote>footer {
     margin-top: 0.5rem;
-    color: #b23;
+    color: #444;
 }
 
 img {
@@ -164,7 +168,7 @@ img {
 footer>small {
     display: block;
     width: 100%;
-    border-top: solid 3px #b23;
+    border-top: solid 3px #48b;
     padding-top: 1rem;
     font-family: ui-sans-serif, sans-serif;
     font-size: 0.7rem;
@@ -206,10 +210,6 @@ footer svg {
     overflow: visible;
 }
 
-footer svg path {
-    fill: #b23;
-}
-
 a {
     color: #369;
 }
@@ -242,14 +242,17 @@ nav ul a {
     summary h3 {
         color: #cde;
     }
-  
+    
+    section:last-child summary h3 {
+        color: #e56;
+    }
+    
   	svg text {
       	fill: #d45;
 		}
 
     blockquote {
-        color: #eee;
-        border-color: #d45;
+        color: #def;
     }
 
     blockquote>footer {
@@ -259,19 +262,10 @@ nav ul a {
     a {
         color: #8be;
     }
-    
-    footer>small {
-        border-color: #d45;
-    }
-    
+
     footer ul small {
         color: #bbb;
     }
-    
-    footer svg path {
-    fill: #d45;
-}
-
 }
 
 @media (min-width: 50em) {
