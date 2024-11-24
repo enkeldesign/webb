@@ -7,7 +7,7 @@
     -webkit-text-size-adjust: 100%;
     line-height: 2;
     background-color: #f4f4f4;
-    color: #313131;
+    color: #333;
 }
 
 * {
@@ -222,7 +222,7 @@ nav ul a {
     :root,
     body {
         background-color: #313131;
-        color: #f4f4f4;
+        color: #bbb;
     }
 
     section:nth-child(3) {
@@ -265,9 +265,6 @@ nav ul a {
         border-color: #fc0;
     }
     
-    footer ul small {
-        color: #bbb;
-    }
 }
 
 @media (min-width: 50em) {
