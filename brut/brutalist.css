@@ -95,7 +95,7 @@ abbr {
 
 section:first-child {
     padding: 0 1.5rem 1.5rem;
-    font-family: ui-sans-serif, sans-serif;
+    font-size: 0.9rem;
     text-align: center;
 }
 
