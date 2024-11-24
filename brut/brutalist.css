@@ -143,15 +143,15 @@ details p:nth-child(2) {
 }
 
 blockquote {
-    border-left: solid 3px #d45;
+    border-left: solid 3px #b23;
     padding-left: 1rem;
     margin: 1rem 0;
-    color: #456;
+    color: #444;
 }
 
 blockquote>footer {
     margin-top: 0.5rem;
-    color: #d45;
+    color: #b23;
 }
 
 img {
@@ -164,7 +164,7 @@ img {
 footer>small {
     display: block;
     width: 100%;
-    border-top: solid 3px #d45;
+    border-top: solid 3px #b23;
     padding-top: 1rem;
     font-family: ui-sans-serif, sans-serif;
     font-size: 0.7rem;
@@ -244,17 +244,22 @@ nav ul a {
 		}
 
     blockquote {
-        color: #def;
+        color: #eee;
+        border-color: #d45;
     }
 
     blockquote>footer {
-        color: #eee;
+        color: #d45;
     }
 
     a {
         color: #8be;
     }
-
+    
+    footer>small {
+        border-color: #d45;
+    }
+    
     footer ul small {
         color: #bbb;
     }
