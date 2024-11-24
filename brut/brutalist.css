@@ -206,6 +206,7 @@ a {
     color: #333;
 }
 
+p>a,
 nav ul a {
     padding: 0.2rem 0;
     margin-bottom: 0.2rem;
@@ -257,6 +258,7 @@ nav ul a {
         color: #ccc;
     }
     
+    p>a,
     nav ul a {
         color: #8be;
 }
