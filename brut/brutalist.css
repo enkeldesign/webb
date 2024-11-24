@@ -203,13 +203,14 @@ footer svg {
 }
 
 a {
-    color: #369;
+    color: #333;
 }
 
 nav ul a {
     padding: 0.2rem 0;
     margin-bottom: 0.2rem;
     max-width: none;
+    color: #369;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -244,7 +245,7 @@ nav ul a {
 		}
 
     blockquote {
-        color: #def;
+        color: #abc;
         border-color: #fc0;
     }
 
@@ -253,8 +254,12 @@ nav ul a {
     }
 
     a {
-        color: #8be;
+        color: #ccc;
     }
+    
+    nav ul a {
+        color: #8be;
+}
 
     footer>small {
         border-color: #fc0;
