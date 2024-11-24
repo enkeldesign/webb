@@ -26,7 +26,7 @@ body {
 }
 
 header,
-footer {
+body>footer {
     grid-column: 1;
     padding: 1.5rem;
 }
@@ -46,7 +46,7 @@ main {
     grid-template-rows: repeat(4, auto);
 }
 
-footer {
+body>footer {
     position: relative;
 }
 
@@ -127,6 +127,18 @@ summary h3 {
 
 details ul {
     margin: 1rem 0 1.5rem 1rem;
+}
+
+blockquote {
+    border-left: solid 3px #48b;
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: #345;
+}
+
+blockquote>footer {
+    font-size: 0.9em;
+    color: #666;
 }
 
 img {
@@ -212,6 +224,14 @@ nav ul a {
     summary h3 {
         color: #cde;
     }
+    
+    blockquote {
+        color: #abc;
+    }
+    
+    blockquote>footer {
+        color: #bbb;
+    }
 
     a {
         color: #8be;
@@ -267,7 +287,7 @@ nav ul a {
         text-align: left;
     }
 
-    footer {
+    body>footer {
         grid-area: footer;
         padding: 1.5rem 2.5rem 2.5rem;
         text-align: left;
@@ -308,7 +328,7 @@ nav ul a {
     }
 
     header,
-    footer {
+    body>footer {
         padding-left: 0;
     }
 
