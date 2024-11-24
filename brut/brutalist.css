@@ -59,10 +59,6 @@ header svg {
     overflow: visible;
 }
 
-path {
-    fill: #48b;
-}
-
 h1 {
     margin: 0 0 1.5rem;
     font-family: ui-sans-serif, sans-serif;
