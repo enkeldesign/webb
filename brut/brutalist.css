@@ -189,11 +189,6 @@ footer ul li {
     display: block;
 }
 
-footer ul small {
-    font-size: 1rem;
-    color: #333;
-}
-
 footer figure {
     display: flex;
     align-items: center;
