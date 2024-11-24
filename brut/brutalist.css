@@ -124,6 +124,7 @@ details {
 
 summary {
     cursor: pointer;
+    color: #b23;
 }
 
 summary h3 {
@@ -133,10 +134,6 @@ summary h3 {
     font-weight: bold;
     color: #444;
 }
-
-section:last-child summary {
-        color: #b23;
-    }
 
 details ul {
     margin: 1rem 0 1.5rem 1rem;
@@ -236,15 +233,15 @@ nav ul a {
         background-color: #444;
     }
 
+    summary {
+        color: #e67;
+    }
+    
     h1 span,
     section:nth-child(3) h2,
     section:last-child h2,
     summary h3 {
         color: #cde;
-    }
-    
-    section:last-child summary {
-        color: #e56;
     }
     
   	svg text {
