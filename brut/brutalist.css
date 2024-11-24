@@ -134,7 +134,7 @@ summary h3 {
     color: #444;
 }
 
-section:last-child summary h3 {
+section:last-child summary {
         color: #b23;
     }
 
@@ -147,15 +147,15 @@ details p:nth-child(2) {
 }
 
 blockquote {
-    border-left: solid 3px #48b;
+    border-left: solid 3px #b23;
     padding-left: 1rem;
     margin: 1rem 0;
-    color: #456;
+    color: #555;
 }
 
 blockquote>footer {
     margin-top: 0.5rem;
-    color: #444;
+    color: #b23;
 }
 
 img {
@@ -243,7 +243,7 @@ nav ul a {
         color: #cde;
     }
     
-    section:last-child summary h3 {
+    section:last-child summary {
         color: #e56;
     }
     
@@ -252,7 +252,8 @@ nav ul a {
 		}
 
     blockquote {
-        color: #def;
+        color: #ddd;
+        border-color: #d45;
     }
 
     blockquote>footer {
