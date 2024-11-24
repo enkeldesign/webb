@@ -62,6 +62,13 @@ path {
     fill: #48b;
 }
 
+svg text {
+  	font-family: sans-serif;
+		font-size: 7rem;
+		font-weight: bold;
+		fill: #333;
+}
+
 h1 {
     margin: 0 0 1.5rem;
     font-family: sans-serif;
@@ -228,11 +235,15 @@ nav ul a {
     summary h3 {
         color: #cde;
     }
-    
+  
+  	svg text {
+      	fill: #cde;
+		}
+
     blockquote {
         color: #def;
     }
-    
+
     blockquote>footer {
         color: #eee;
     }
@@ -240,7 +251,7 @@ nav ul a {
     a {
         color: #8be;
     }
-    
+
     footer ul small {
         color: #bbb;
     }
