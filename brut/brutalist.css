@@ -63,13 +63,6 @@ path {
     fill: #48b;
 }
 
-svg text {
-        font-family: ui-monospace, monospace;
-		font-size: 8rem;
-		font-weight: bold;
-		fill: #b23;
-}
-
 h1 {
     margin: 0 0 1.5rem;
     font-family: ui-sans-serif, sans-serif;
@@ -80,9 +73,17 @@ h1 {
 
 h1 span {
     display: block;
-    margin-top: 0.6rem;
+    margin-top: 0.25rem;
     font-size: 2rem;
     color: #444;
+}
+
+h1 span:first-child {
+    margin: 0 0 0.5rem;
+    font-family: ui-monospace, monospace;
+    font-weight: bold;
+    font-size: 1rem;
+    color: #b23;
 }
 
 main p {
@@ -94,9 +95,16 @@ abbr {
 }
 
 section:first-child {
+    display: flex;
+    flex-direction: column;
     padding: 0 1.5rem 1.5rem;
     font-size: 0.9rem;
     text-align: center;
+    align-items: center;
+}
+
+hgroup {
+    text-align: left;
 }
 
 section:nth-child(3) {
@@ -165,7 +173,7 @@ img {
 footer>small {
     display: block;
     width: 100%;
-    border-top: solid 3px #b23;
+    border-top: solid 3px #48b;
     padding-top: 1rem;
     font-family: ui-sans-serif, sans-serif;
     font-size: 0.7rem;
@@ -233,17 +241,17 @@ nav ul a {
     summary {
         color: #fc0;
     }
-    
+
     h1 span,
     section:nth-child(3) h2,
     section:last-child h2,
     summary h3 {
         color: #cde;
     }
-    
-  	svg text {
-      	fill: #fc0;
-		}
+
+    h1 span:first-child {
+        color: #fc0;
+    }
 
     blockquote {
         color: #abc;
@@ -257,19 +265,19 @@ nav ul a {
     a {
         color: #ccc;
     }
-    
+
     p>a,
     nav ul a {
         color: #8be;
-}
+    }
 
     footer>small {
         border-color: #fc0;
     }
-    
+
 }
 
-@media (min-width: 50em) {
+@media (min-width: 40em) {
     body {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -296,7 +304,7 @@ nav ul a {
         grid-area: sec1;
         padding: 1.5rem 2.5rem 1.5rem 0;
         text-align: left;
-        align-content: center;
+        align-items: flex-start;
     }
 
     section:nth-child(3) {
@@ -311,7 +319,6 @@ nav ul a {
     section:last-child {
         grid-area: sec3;
         padding: 1.5rem 2.5rem;
-        text-align: left;
     }
 
     body>footer {
