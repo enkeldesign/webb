@@ -226,11 +226,11 @@ nav ul a {
     }
 
     section:nth-child(3) {
-        background-color: #222;
+        background-color: #444;
     }
 
     section:last-child {
-        background-color: #444;
+        background-color: #222;
     }
 
     summary {
