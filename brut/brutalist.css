@@ -261,6 +261,14 @@ nav ul a {
         color: #8be;
     }
 
+    footer>small {
+        border-color: #fc0;
+    }
+    
+    footer svg path {
+        fill: #fc0;
+    }
+    
     footer ul small {
         color: #bbb;
     }
