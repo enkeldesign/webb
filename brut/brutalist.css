@@ -165,6 +165,7 @@ footer>small {
     border-top: solid 3px #48b;
     padding-top: 1rem;
     font-family: ui-sans-serif, sans-serif;
+    font-size: 0.75rem,
     text-align: center;
     line-height: 2.5;
 }
