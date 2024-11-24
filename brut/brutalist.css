@@ -67,7 +67,7 @@ svg text {
         font-family: ui-monospace, monospace;
 		font-size: 8rem;
 		font-weight: bold;
-		fill: #333;
+		fill: #b23;
 }
 
 h1 {
@@ -240,7 +240,7 @@ nav ul a {
     }
   
   	svg text {
-      	fill: #cde;
+      	fill: #d45;
 		}
 
     blockquote {
