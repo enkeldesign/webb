@@ -266,7 +266,7 @@ footer {
 footer small {
   display: block;
   width: 100%;
-  border-top: 6px solid transparent;
+  border-top: 0.6rem solid transparent;
         border-image: repeating-linear-gradient(
         to right,
         #e83 0,
