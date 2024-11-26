@@ -280,7 +280,7 @@ footer small {
 				#363 80%,
         #363 100%
     ) 1;
-  padding-top: 1rem;
+  padding-top: 2.6rem;
   text-align: center;
   letter-spacing: 0.04rem;
   font-family: var(--heading-font);
@@ -480,7 +480,7 @@ label:focus-within {
 
   footer small {
     text-align: left;
-    display: inline;
+    display: inline-block;
     width: auto;
   }
 
