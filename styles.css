@@ -266,19 +266,19 @@ footer {
 footer small {
   display: block;
   width: 100%;
-  border-top: 0.6rem solid transparent;
+  border-top: 6px solid transparent;
         border-image: repeating-linear-gradient(
         to right,
-        #e83 0,
-        #e83 20%,
-        #c33 20%,
-        #c33 40%,
-        #935 40%,
-        #935 60%,
-        #468 60%,
-        #468 80%,
-				#585 80%,
-        #585 100%
+        #f94 0,
+        #f94 20%,
+        #d44 20%,
+        #d44 40%,
+        #a46 40%,
+        #a46 60%,
+        #579 60%,
+        #579 80%,
+				#696 80%,
+        #696 100%
     ) 1;
   padding-top: 2.6rem;
   text-align: center;
