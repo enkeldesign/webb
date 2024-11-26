@@ -269,16 +269,16 @@ footer small {
   border-top: 6px solid transparent;
         border-image: repeating-linear-gradient(
         to right,
-        #d72 0,
-        #d72 20%,
-        #b22 20%,
-        #b22 40%,
-        #713 40%,
-        #713 60%,
-        #246 60%,
-        #246 80%,
-				#363 80%,
-        #363 100%
+        #e83 0,
+        #e83 20%,
+        #c33 20%,
+        #c33 40%,
+        #935 40%,
+        #935 60%,
+        #468 60%,
+        #468 80%,
+				#585 80%,
+        #585 100%
     ) 1;
   padding-top: 2.6rem;
   text-align: center;
@@ -404,6 +404,22 @@ label:focus-within {
   :root:has(input:checked) label span::after {
     background-image: url("/light.svg");
   }
+  
+  :root:has(input:checked) footer small {
+        border-image: repeating-linear-gradient(
+        to right,
+        #d72 0,
+        #d72 20%,
+        #b22 20%,
+        #b22 40%,
+        #713 40%,
+        #713 60%,
+        #246 60%,
+        #246 80%,
+				#363 80%,
+        #363 100%
+    ) 1;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -417,6 +433,22 @@ label:focus-within {
 
   :root:has(input:checked) label span::after {
     background-image: url("/dark.svg");
+  }
+  
+  footer small {
+        border-image: repeating-linear-gradient(
+        to right,
+        #d72 0,
+        #d72 20%,
+        #b22 20%,
+        #b22 40%,
+        #713 40%,
+        #713 60%,
+        #246 60%,
+        #246 80%,
+				#363 80%,
+        #363 100%
+    ) 1;
   }
 }
 
