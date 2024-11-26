@@ -266,7 +266,20 @@ footer {
 footer small {
   display: block;
   width: 100%;
-  border-top: solid 3px var(--section-c-background);
+  border-top: 3px solid transparent;
+        border-image: repeating-linear-gradient(
+        to right,
+        #d72 0,
+        #d72 20%,
+        #b22 20%,
+        #b22 40%,
+        #713 40%,
+        #713 60%,
+        #246 60%,
+        #246 80%,
+				#363 80%,
+        #363 100%
+    ) 1;
   padding-top: 1rem;
   text-align: center;
   letter-spacing: 0.04rem;
