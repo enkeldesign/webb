@@ -56,6 +56,7 @@
   --footer-text-color: light-dark(var(--teal-950), var(--grey-50));
   --footer-small-color: light-dark(var(--teal-600), var(--sand-300));
   --footer-svg-color: light-dark(var(--teal-500), var(--sand-600));
+  --footer-svg-landscape-color: light-dark(var(--teal-550), var(--sand-350));
   --footer-link-color: light-dark(var(--cerulean-700), var(--cerulean-100));
   --link-hover-focus-color: light-dark(var(--cerulean-800), var(--teal-200));
   --link-active-color: light-dark(var(--black), var(--white));
@@ -384,8 +385,7 @@ label:focus-within {
   overflow: visible;
 }
 
-.footer-logo .logoEPath,
-.footer-logo .logoDPath {
+.footer-logo path {
   fill: var(--footer-svg-color);
 }
 
@@ -559,6 +559,10 @@ label:focus-within {
   
   .footer-logo svg {
     width: 3rem;
+  }
+
+  .footer-logo svg path {
+  fill: var(--footer-svg-landscape-color);
   }
 
 }
