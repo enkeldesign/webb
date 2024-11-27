@@ -530,6 +530,12 @@ label:focus-within {
     text-align: left;
   }
 
+  .divider {
+    min-width: 100vw;
+    min-width: 100dvw;
+    margin-left: -2.6rem;
+  }
+  
   footer small {
     text-align: left;
     display: inline-block;
@@ -549,7 +555,7 @@ label:focus-within {
   .footer-logo {
     position: absolute;
     right: 2.6rem;
-    bottom: 3.6rem;
+    bottom: 3rem;
   }
   
   .footer-logo svg {
@@ -580,7 +586,12 @@ label:focus-within {
   footer {
     padding: 1.6rem 0 2.6rem;
   }
-
+  
+  .divider {
+    width: 100%
+    margin: 0;
+  }
+  
   label,
   .footer-logo {
     right: 0;
