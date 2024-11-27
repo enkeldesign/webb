@@ -533,8 +533,6 @@ label:focus-within {
   }
 
   .divider {
-    min-width: 100vw;
-    min-width: 100dvw;
     margin-left: -2.6rem;
   }
   
@@ -561,7 +559,7 @@ label:focus-within {
   }
   
   .footer-logo svg {
-    width: 2.6rem;
+    width: 3rem;
   }
 
 }
@@ -590,7 +588,7 @@ label:focus-within {
   }
   
   .divider {
-    width: 100%
+    width: 100%;
     margin: 0;
   }
   
