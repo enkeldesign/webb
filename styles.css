@@ -263,10 +263,9 @@ footer {
   font-size: 1rem;
 }
 
-footer small {
-  display: block;
+.divider {
   width: 100%;
-  border-top: 6px solid transparent;
+  border-top: 5px solid transparent;
         border-image: repeating-linear-gradient(
         to right,
         #f94 0,
@@ -280,6 +279,11 @@ footer small {
 				#696 80%,
         #696 100%
     ) 1;
+}
+
+footer small {
+  display: block;
+  width: auto;
   padding-top: 2.6rem;
   text-align: center;
   letter-spacing: 0.04rem;
@@ -367,7 +371,7 @@ label:focus-within {
 }
 
 .footer-logo {
-  margin-top: 0.6rem;
+  margin-top: 2.6rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -405,7 +409,7 @@ label:focus-within {
     background-image: url("/light.svg");
   }
   
-  :root:has(input:checked) footer small {
+  :root:has(input:checked) .divider {
         border-image: repeating-linear-gradient(
         to right,
         #d72 0,
@@ -434,8 +438,24 @@ label:focus-within {
   :root:has(input:checked) label span::after {
     background-image: url("/dark.svg");
   }
-  
-  footer small {
+ 
+  :root:has(input:checked) .divider {
+        border-image: repeating-linear-gradient(
+        to right,
+        #f94 0,
+        #f94 20%,
+        #d44 20%,
+        #d44 40%,
+        #a46 40%,
+        #a46 60%,
+        #579 60%,
+        #579 80%,
+				#696 80%,
+        #696 100%
+    ) 1;
+}
+
+  .divider {
         border-image: repeating-linear-gradient(
         to right,
         #d72 0,
@@ -531,10 +551,11 @@ label:focus-within {
     right: 2.6rem;
     bottom: 3.6rem;
   }
-
-  h1 {
-    margin: 1rem 0 1rem;
+  
+  .footer-logo svg {
+    width: 2.6rem;
   }
+
 }
 
 @media (min-width: 70em) {
@@ -543,14 +564,21 @@ label:focus-within {
     margin: 0 auto;
   }
 
-  header,
-  footer {
+  header {
     padding-left: 0;
   }
-
+    
+  h1 {
+    margin: 1.6rem 0;
+  }
+  
   .section-a {
     padding-left: 0;
     background-color: var(--body-background);
+  }
+  
+  footer {
+    padding: 1.6rem 0 2.6rem;
   }
 
   label,
@@ -558,7 +586,4 @@ label:focus-within {
     right: 0;
   }
 
-  h1 {
-    margin: 1.6rem 0;
-  }
 }
