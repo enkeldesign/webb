@@ -264,9 +264,7 @@ footer {
 }
 
 .divider {
-  width: 100vw;
-  width: 100dvw;
-  overflow: hidden;
+  width: 100%;
   border-top: 5px solid transparent;
         border-image: repeating-linear-gradient(
         to right,
@@ -581,11 +579,6 @@ label:focus-within {
   
   footer {
     padding: 1.6rem 0 2.6rem;
-  }
-  
-  .divider {
-    width: 100%;
-    margin: 0;
   }
   
   label,
