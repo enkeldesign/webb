@@ -92,6 +92,7 @@ body {
   min-height: 100dvh;
   display: grid;
   position: relative;
+  overflow-x: hidden;
   grid-template-columns: 1fr;
   grid-template-rows: auto 1fr auto;
   font-family: var(--body-font);
@@ -264,7 +265,7 @@ footer {
 }
 
 .divider {
-  width: 100%;
+  margin: 0 -1.6rem;
   border-top: 5px solid transparent;
         border-image: repeating-linear-gradient(
         to right,
@@ -536,6 +537,10 @@ label:focus-within {
     width: auto;
   }
 
+  .divider {
+    margin: 0 -2.6rem;
+  }
+  
   svg {
     margin: auto;
     width: min(62%, 15rem);
@@ -579,6 +584,10 @@ label:focus-within {
   
   footer {
     padding: 1.6rem 0 2.6rem;
+  }
+  
+  .divider {
+    margin: 0;
   }
   
   label,
