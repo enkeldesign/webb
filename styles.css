@@ -264,7 +264,9 @@ footer {
 }
 
 .divider {
-  width: 100%;
+  min-width: 100vw;
+  min-width: 100dvw;
+  margin-left: -1.6rem;
   border-top: 5px solid transparent;
         border-image: repeating-linear-gradient(
         to right,
