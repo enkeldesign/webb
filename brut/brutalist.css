@@ -148,7 +148,7 @@ details p:nth-child(2) {
 }
 
 blockquote {
-    border-left: solid 3px #b40;
+    border-left: solid 5px #b40;
     padding-left: 1rem;
     margin: 1.5rem 0;
     color: #765;
@@ -169,7 +169,7 @@ img {
 footer>small {
     display: block;
     width: 100%;
-    border-top: solid 3px #b40;
+    border-top: solid 5px #b40;
     padding-top: 1rem;
     font-family: ui-sans-serif, sans-serif;
     font-size: 0.7rem;
