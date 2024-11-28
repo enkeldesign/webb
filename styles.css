@@ -11,11 +11,9 @@
   --teal-200: #dde0e0;
   --teal-400: #ccdddd;
   --teal-500: #bbcccc;
-  --teal-550: #447788;
   --teal-600: #556666;
   --teal-800: #334444;
   --teal-900: #223333;
-  --teal-950: #001111;
 
   --sand-300: #ccbbaa;
   --sand-350: #aa9988;
@@ -53,13 +51,10 @@
   --heading-span-color: light-dark(var(--teal-600), var(--grey-100));
   --section-heading-color: light-dark(var(--teal-800), var(--grey-100));
   --main-text-color: light-dark(var(--teal-900), var(--grey-50));
-  --footer-text-color: light-dark(var(--teal-950), var(--grey-50));
   --footer-small-color: light-dark(var(--teal-600), var(--sand-300));
   --footer-svg-color: light-dark(var(--teal-500), var(--sand-400));
-  --footer-svg-landscape-color: light-dark(var(--teal-550), var(--sand-350));
   --footer-link-color: light-dark(var(--cerulean-700), var(--cerulean-100));
   --link-hover-focus-color: light-dark(var(--cerulean-800), var(--teal-200));
-  --link-active-color: light-dark(var(--black), var(--white));
 
   --body-font: "azo-sans-web", -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -560,11 +555,7 @@ label:focus-within {
   .footer-logo svg {
     width: 3rem;
   }
-
-  .footer-logo svg path {
-  fill: var(--footer-svg-landscape-color);
-  }
-
+	
 }
 
 @media (min-width: 70em) {
