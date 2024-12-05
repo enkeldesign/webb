@@ -227,7 +227,7 @@ nav ul a {
     }
 
     section:nth-child(3) {
-        background-color: #444;
+        background-color: #257;
     }
 
     section:last-child {
@@ -239,10 +239,13 @@ nav ul a {
     }
 
     h1 span,
-    section:nth-child(3) h2,
-    section:last-child h2,
     summary h3 {
         color: #cde;
+    }
+    
+    section:nth-child(3) h2,
+    section:last-child h2 {
+        color: #c93;
     }
 
     h1 span:first-child {
