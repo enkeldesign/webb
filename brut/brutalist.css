@@ -16,6 +16,8 @@
     box-sizing: border-box;
 }
 
+/* */
+
 body {
     min-height: 100vh;
     min-height: 100dvh;
@@ -36,10 +38,20 @@ main {
     grid-column: 1;
 }
 
+/* */
+
 header {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+header svg {
+    display: block;
+    margin-top: 0.5rem;
+    width: 10rem;
+    height: auto;
+    overflow: visible;
 }
 
 main {
@@ -51,13 +63,7 @@ body>footer {
     position: relative;
 }
 
-header svg {
-    display: block;
-    margin-top: 0.5rem;
-    width: 10rem;
-    height: auto;
-    overflow: visible;
-}
+/* */
 
 h1 {
     margin: 0 0 1.5rem;
@@ -82,12 +88,19 @@ h1 span:first-child {
     color: #b40;
 }
 
-main p {
-    margin: 0 0 1rem;
+hgroup {
+    text-align: left;
 }
 
-abbr {
-    text-decoration: none;
+/* */
+
+section:nth-child(3) h2,
+section:last-child h2 {
+    margin: 1rem 0 1.5rem;
+    font-family: ui-sans-serif, sans-serif;
+    font-size: 2rem;
+    line-height: 1.2;
+    color: #48b;
 }
 
 section:first-child {
@@ -97,10 +110,6 @@ section:first-child {
     font-size: 0.9rem;
     text-align: center;
     align-items: center;
-}
-
-hgroup {
-    text-align: left;
 }
 
 section:nth-child(3) {
@@ -113,14 +122,17 @@ section:last-child {
     background-color: #eee;
 }
 
-section:nth-child(3) h2,
-section:last-child h2 {
-    margin: 1rem 0 1.5rem;
-    font-family: ui-sans-serif, sans-serif;
-    font-size: 2rem;
-    line-height: 1.2;
-    color: #48b;
+/* */
+
+main p {
+    margin: 0 0 1rem;
 }
+
+abbr {
+    text-decoration: none;
+}
+
+/* */
 
 details {
     margin: 1.5rem 0;
@@ -158,6 +170,8 @@ blockquote>footer {
     margin-top: 0.5rem;
     color: #b40;
 }
+
+/* */
 
 img {
     width: 100%;
@@ -206,6 +220,8 @@ footer svg {
     overflow: visible;
 }
 
+/* */
+
 a {
     color: #333;
 }
@@ -242,8 +258,11 @@ nav ul a {
     summary h3 {
         color: #cde;
     }
-    
-    section:nth-child(3) h2,
+
+    section:nth-child(3) h2 {
+        color: #48b;
+    }
+
     section:last-child h2 {
         color: #c93;
     }
@@ -273,7 +292,6 @@ nav ul a {
     footer>small {
         border-color: #c90;
     }
-
 }
 
 @media (min-width: 50em) {
@@ -282,10 +300,10 @@ nav ul a {
         grid-template-columns: 1fr 1fr;
         grid-template-rows: auto 1fr auto auto;
         grid-template-areas:
-            "header     sec1"
-            "sec2 		image"
-            "sec2  		sec3"
-            "footer     footer";
+            "header      sec1"
+            "sec2        image"
+            "sec2        sec3"
+            "footer      footer";
         min-height: none;
         margin: 0 auto;
     }
