@@ -234,6 +234,8 @@ nav ul a {
     color: #369;
 }
 
+/* */
+
 @media (prefers-color-scheme: dark) {
 
     :root,
@@ -293,6 +295,8 @@ nav ul a {
         border-color: #c90;
     }
 }
+
+/* */
 
 @media (min-width: 50em) {
     body {
@@ -370,6 +374,8 @@ nav ul a {
         margin: 1rem 0 1rem;
     }
 }
+
+/* */
 
 @media (min-width: 75em) {
     body {
