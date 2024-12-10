@@ -107,13 +107,13 @@ a {
     color: var(--footer-link-color);
 }
 
-a:hover,
-a:focus-visible {
+a:hover, a:visited:hover,
+a:focus-visible, a:visited:focus-visible {
     background-color: var(--link-hover-focus-color);
     color: light-dark(var(--white), var(--black));
 }
 
-a:active {
+a:active, a:visited:active {
     background-color: light-dark(var(--black), var(--white));
     color: light-dark(var(--cerulean-100), var(--cerulean-800));
 }
@@ -362,6 +362,10 @@ footer small:last-of-type {
 
 footer small a {
     color: var(--footer-small-color);
+}
+
+footer small a:visited {
+    color: var(--link-visited-color);
 }
 
 footer ul {
