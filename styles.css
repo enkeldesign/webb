@@ -54,6 +54,7 @@
     --main-text-color: light-dark(var(--teal-900), var(--grey-50));
     --footer-small-color: light-dark(var(--teal-600), var(--sand-300));
     --footer-link-color: light-dark(var(--cerulean-700), var(--cerulean-100));
+    --link-visited-color: light-dark(purple, violet);
     --link-hover-focus-color: light-dark(var(--cerulean-800), var(--teal-200));
 
     --body-font: "azo-sans-web", -apple-system, BlinkMacSystemFont, "Segoe UI",
@@ -115,6 +116,10 @@ a:focus-visible {
 a:active {
     background-color: light-dark(var(--black), var(--white));
     color: light-dark(var(--cerulean-100), var(--cerulean-800));
+}
+
+a:visited {
+    color: var(--link-visited-color);
 }
 
 input {
