@@ -18,6 +18,7 @@
     --teal-900: #223333;
 
     --sand-300: #ccbbaa;
+    --sand-325: #bbaa99;
     --sand-350: #aa9988;
     --sand-400: #998877;
     --sand-500: #887766;
@@ -52,7 +53,7 @@
     --rect-btm-color: light-dark(var(--grey-50-opa-0), var(--grey-950-opa-1));
     */
     
-    --logo-et-color: light-dark(var(--sand-300), var(--sand-400));
+    --logo-et-color: light-dark(var(--sand-325), var(--sand-400));
     --logo-eb-color: light-dark(var(--sand-350), var(--sand-500));
     --logo-dt-color: light-dark(var(--cerulean-500), var(--cerulean-700));
     --logo-db-color: light-dark(var(--cerulean-600), var(--cerulean-750));
