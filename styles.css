@@ -31,13 +31,6 @@
     --grey-950: #313131;
     --black: #000000;
     
-    /* old
-    --grey-50-opa-0: #f4f4f400;
-    --grey-50-opa-1: #f4f4f422;
-    --grey-950-opa-0: #31313100;
-    --grey-950-opa-1: #31313122;
-    */
-    
     --body-background: light-dark(var(--grey-50), var(--grey-950));
     --header-background: light-dark(var(--grey-50), var(--grey-950));
     --main-background: light-dark(var(--teal-400), var(--sand-600));
@@ -45,13 +38,6 @@
     --section-b-background: light-dark(var(--sand-300), var(--cerulean-800));
     --section-c-background: light-dark(var(--teal-400), var(--sand-600));
     --footer-background: light-dark(var(--grey-50), var(--grey-950));
-    
-    /* old
-    --logo-e-color: light-dark(var(--sand-350), var(--sand-400));
-    --logo-d-color: light-dark(var(--cerulean-600), var(--cerulean-700));
-    --rect-top-color: light-dark(var(--grey-50-opa-1), var(--grey-950-opa-0));
-    --rect-btm-color: light-dark(var(--grey-50-opa-0), var(--grey-950-opa-1));
-    */
     
     --logo-et-color: light-dark(var(--sand-325), var(--sand-400));
     --logo-eb-color: light-dark(var(--sand-350), var(--sand-500));
@@ -187,6 +173,8 @@ label:focus-within {
     outline-offset: 4px;
 }
 
+/* */
+
 svg {
     display: block;
     width: min(75%, 12rem);
@@ -211,15 +199,7 @@ svg {
     fill: var(--logo-db-color);
 }
 
-/* old
-.rect-top {
-    fill: var(--rect-top-color);
-}
-
-.rect-btm {
-    fill: var(--rect-btm-color);
-}
-*/
+/* */
 
 h1 {
     margin: 1rem 0 1.6rem;
