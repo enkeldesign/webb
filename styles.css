@@ -46,6 +46,12 @@
     --logo-d-color: light-dark(var(--cerulean-600), var(--cerulean-700));
     --rect-top-color: light-dark(var(--grey-50-opa-1), var(--grey-950-opa-0));
     --rect-btm-color: light-dark(var(--grey-50-opa-0), var(--grey-950-opa-1));
+    /*
+    --logo-et-color:
+    --logo-eb-color:
+    --logo-dt-color:
+    --logo-db-color:
+    */
     --footer-svg-color: light-dark(var(--teal-500), var(--sand-500));
 
     --heading-color: light-dark(var(--sand-500), var(--sand-350));
