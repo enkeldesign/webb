@@ -29,10 +29,10 @@
     --black: #000000;
 
     --grey-50-opa-0: #f4f4f400;
-    --grey-50-opa-1: #f4f4f41a;
+    --grey-50-opa-1: #f4f4f422;
 
     --grey-950-opa-0: #31313100;
-    --grey-950-opa-1: #3131311a;
+    --grey-950-opa-1: #31313122;
 
     --body-background: light-dark(var(--grey-50), var(--grey-950));
     --header-background: light-dark(var(--grey-50), var(--grey-950));
