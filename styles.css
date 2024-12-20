@@ -4,8 +4,10 @@
     color-scheme: light dark;
 
     --cerulean-100: #bbeeff;
+    --cerulean-500: #18A2C2;
     --cerulean-600: #1888aa;
     --cerulean-700: #077799;
+    --cerulean-750: #105F7A;
     --cerulean-800: #105070;
 
     --teal-200: #dde0e0;
@@ -27,13 +29,14 @@
     --grey-900: #393939;
     --grey-950: #313131;
     --black: #000000;
-
+    
+    /* old
     --grey-50-opa-0: #f4f4f400;
     --grey-50-opa-1: #f4f4f422;
-
     --grey-950-opa-0: #31313100;
     --grey-950-opa-1: #31313122;
-
+    */
+    
     --body-background: light-dark(var(--grey-50), var(--grey-950));
     --header-background: light-dark(var(--grey-50), var(--grey-950));
     --main-background: light-dark(var(--teal-400), var(--sand-600));
@@ -41,17 +44,19 @@
     --section-b-background: light-dark(var(--sand-300), var(--cerulean-800));
     --section-c-background: light-dark(var(--teal-400), var(--sand-600));
     --footer-background: light-dark(var(--grey-50), var(--grey-950));
-
+    
+    /* old
     --logo-e-color: light-dark(var(--sand-350), var(--sand-400));
     --logo-d-color: light-dark(var(--cerulean-600), var(--cerulean-700));
     --rect-top-color: light-dark(var(--grey-50-opa-1), var(--grey-950-opa-0));
     --rect-btm-color: light-dark(var(--grey-50-opa-0), var(--grey-950-opa-1));
-    /*
-    --logo-et-color:
-    --logo-eb-color:
-    --logo-dt-color:
-    --logo-db-color:
     */
+    
+    --logo-et-color: light-dark(var(--sand-300), var(--sand-400));
+    --logo-eb-color: light-dark(var(--sand-350), var(--sand-500));
+    --logo-dt-color: light-dark(var(--cerulean-500), var(--cerulean-700));
+    --logo-db-color: light-dark(var(--cerulean-600), var(--cerulean-750));
+    
     --footer-svg-color: light-dark(var(--teal-500), var(--sand-500));
 
     --heading-color: light-dark(var(--sand-500), var(--sand-350));
@@ -189,14 +194,23 @@ svg {
     overflow: visible;
 }
 
-.logoEPath {
-    fill: var(--logo-e-color);
+.logoEtPath {
+    fill: var(--logo-et-color);
 }
 
-.logoDPath {
-    fill: var(--logo-d-color);
+.logoEbPath {
+    fill: var(--logo-eb-color);
 }
 
+.logoDtPath {
+    fill: var(--logo-dt-color);
+}
+
+.logoDbPath {
+    fill: var(--logo-db-color);
+}
+
+/* old
 .rect-top {
     fill: var(--rect-top-color);
 }
@@ -204,6 +218,7 @@ svg {
 .rect-btm {
     fill: var(--rect-btm-color);
 }
+*/
 
 h1 {
     margin: 1rem 0 1.6rem;
