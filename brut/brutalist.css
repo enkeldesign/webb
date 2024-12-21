@@ -58,6 +58,10 @@ path {
     fill: #48b;
 }
 
+path:nth-child(2), path:nth-child(4) {
+    fill: #38b;
+}
+
 main {
     display: grid;
     grid-template-rows: repeat(4, auto);
