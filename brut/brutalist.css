@@ -54,13 +54,14 @@ header svg {
     overflow: visible;
 }
 
-header path {
+header path,
+footer path {
     fill: #48b;
 }
 
 header path:nth-child(2),
 header path:nth-child(4) {
-    fill: #58b;
+    fill: #4090c0;
 }
 
 main {
@@ -79,7 +80,7 @@ h1 {
     font-family: ui-sans-serif, sans-serif;
     font-size: 2.5rem;
     line-height: 1;
-    color: #58b;
+    color: #4090c0;
 }
 
 h1 span {
