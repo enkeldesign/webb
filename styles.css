@@ -22,6 +22,7 @@
     --sand-350: #aa9988;
     --sand-400: #998877;
     --sand-500: #908070;
+    --sand-550: #887766;
     --sand-600: #706050;
 
     --white: #ffffff;
@@ -46,7 +47,7 @@
     
     --footer-svg-color: light-dark(var(--teal-500), var(--sand-500));
 
-    --heading-color: light-dark(var(--sand-500), var(--sand-350));
+    --heading-color: light-dark(var(--sand-550), var(--sand-350));
     --heading-span-color: light-dark(var(--teal-600), var(--grey-100));
     --section-heading-color: light-dark(var(--teal-800), var(--grey-100));
     --main-text-color: light-dark(var(--teal-900), var(--grey-50));
