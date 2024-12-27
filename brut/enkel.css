@@ -517,10 +517,17 @@ footer ul {
     .intro {
         background-color: var(--header-bkg);
         color: var(--footer-clr);
+        padding-left: 0;
+
+    }
+
+    .intro p {
+        color: var(--footer-clr);
+
     }
 
     footer {
-        padding: 1.6rem 0 2.6rem;
+        padding: 1.6rem 2.6rem 0;
     }
 
 }
