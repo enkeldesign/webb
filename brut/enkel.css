@@ -505,24 +505,22 @@ footer ul {
         grid-template-rows: auto 1fr auto auto;
     }
 
-    header {
-        padding-left: 0;
-    }
-
     h1 {
         margin: 1.6rem 0;
+        color: var(--footer-clr);
+    }
+
+    h1 span {
+        color: var(--footer-clr);
     }
 
     .intro {
-        padding-left: 0;
-        background-color: var(--body-bkg);
+        background-color: var(--header-bkg);
+        color: var(--footer-clr);
     }
 
     footer {
         padding: 1.6rem 0 2.6rem;
     }
 
-    label {
-        left: 0;
-    }
 }
