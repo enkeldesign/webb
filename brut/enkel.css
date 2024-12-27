@@ -120,7 +120,7 @@ input {
 
 button {
     margin: 0 0 0.3rem 1rem;
-    padding: 0 0.5rem 0.175rem;
+    padding: 0 0.6rem 0.175rem;
     height: 1.6rem;
     border: 2px solid var(--link-clr);
     border-radius: 0.8rem;
@@ -158,7 +158,7 @@ label span::after {
     background-image: url("/dark.svg");
     background-size: contain;
     background-repeat: no-repeat;
-    filter: brightness(300%);
+    filter: brightness(300%); /* ändra på ikonen istället */
 }
 
 label:focus-within {
@@ -300,6 +300,7 @@ details ul {
 
 summary {
     cursor: pointer;
+    color: var(--section-b-h2-clr);
 }
 
 summary:focus-visible {
@@ -530,5 +531,7 @@ footer ul {
     footer {
         padding: 1.6rem 2.6rem 0;
     }
+    
+    /* footer logo 102% section c clr? */
 
 }
