@@ -505,7 +505,7 @@ footer ul {
 
     h1 {
         margin: 1.6rem 0;
-        font-size: 4.2rem;
+        font-size: 4rem;
         color: var(--footer-clr);
     }
 
@@ -522,6 +522,7 @@ footer ul {
     }
 
     .intro p {
+        font-size: 1.2rem;
         color: var(--footer-clr);
 
     }
