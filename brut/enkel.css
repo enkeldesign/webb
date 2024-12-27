@@ -3,36 +3,34 @@
 :root {
     color-scheme: light dark;
 
-    --teal-400: #5ab;
-    --teal-600: #378;
+    --teal-400: #6ac;
+    --teal-600: #479;
 
-    --sand-300: #cba;
-    --sand-400: #ba9;
-    --sand-700: #654;
-    --sand-900: #432;
-
+    --mine-800: #444;
     --mine-950: #313131;
+
     --snow-050: #f4f4f4;
+    --snow-200: #ddd;
 
     --body-bkg: light-dark(var(--snow-050), var(--mine-950));
     --header-bkg: light-dark(var(--teal-600), var(--teal-400));
     --footer-bkg: light-dark(var(--teal-600), var(--teal-400));
     --section-a-bkg: light-dark(var(--snow-050), var(--mine-950));
     --section-b-bkg: light-dark(var(--snow-050), var(--mine-950));
-    --section-c-bkg: light-dark(var(--sand-400), var(--sand-700));
+    --section-c-bkg: light-dark(var(--snow-200), var(--mine-800));
 
     --logo-clr: var(--body-bkg);
     --text-clr: light-dark(var(--mine-950), var(--snow-050));
     --heading-clr: light-dark(var(--teal-600), var(--teal-400));
     --heading-span-clr: var(--text-clr);
     --section-b-h2-clr: light-dark(var(--teal-600), var(--teal-400));
-    --section-c-h2-clr: light-dark(var(--sand-900), var(--sand-300));
+    --section-c-h2-clr: light-dark(var(--teal-600), var(--teal-400));
 
     --footer-clr: light-dark(var(--snow-050), var(--mine-950));
 
     --link-clr: light-dark(var(--snow-050), var(--mine-950));
-    --link-vis-clr: light-dark(#fef, #423);
-    --link-hov-foc-clr: light-dark(#eef, #224);
+    --link-vis-clr: light-dark(#fcf, #414);
+    --link-hov-foc-clr: light-dark(#eef, #124);
 
     --body-font: "azo-sans-web", -apple-system, BlinkMacSystemFont, "Segoe UI",
         Roboto, "Helvetica Neue", Arial, sans-serif;
