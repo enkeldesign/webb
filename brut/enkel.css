@@ -504,6 +504,10 @@ footer ul {
         width: 10rem;
         height: auto;
     }
+    
+    .footer-logo path {
+        fill: var(--section-c-bkg);
+    }
 }
 
 
@@ -542,10 +546,6 @@ footer ul {
 
     footer {
         padding: 1.6rem 2.6rem 0;
-    }
-    
-    .footer-logo path {
-        fill: var(--section-c-bkg);
     }
 
 }
