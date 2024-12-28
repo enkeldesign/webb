@@ -248,6 +248,8 @@ footer {
 
 .intro {
     padding: 1.6rem;
+    font-size: 1.1rem;
+    line-height: 1.8;
     text-align: center;
     background-color: var(--section-a-bkg);
 }
