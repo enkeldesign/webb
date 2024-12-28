@@ -29,7 +29,7 @@
     --footer-clr: light-dark(var(--snow-050), var(--mine-950));
 
     --link-clr: light-dark(var(--snow-050), var(--mine-950));
-    --link-vis-clr: light-dark(#fdf, #605);
+    --link-vis-clr: light-dark(#edf, #425);
     --link-hov-foc-clr: light-dark(#cdf, #125);
 
     --body-font: ui-serif, serif;
@@ -207,7 +207,8 @@ h1 span {
 
 main p {
     margin: 0 0 1rem;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
+    line-height: 2.0;
     color: var(--text-clr);
 }
 
