@@ -29,7 +29,7 @@
     --footer-clr: light-dark(var(--snow-050), var(--mine-950));
 
     --link-clr: light-dark(var(--snow-050), var(--mine-950));
-    --link-vis-clr: light-dark(#fcf, #504);
+    --link-vis-clr: light-dark(#fdf, #605);
     --link-hov-foc-clr: light-dark(#cdf, #125);
 
     --body-font: ui-serif, serif;
