@@ -125,7 +125,7 @@ button {
     margin: 0 0 0.3rem 1rem;
     padding: 0 0.6rem 0.175rem;
     height: 1.6rem;
-    border: 2px solid var(--link-clr);
+    border: 1.6px solid var(--link-clr);
     border-radius: 0.8rem;
     background-color: transparent;
     color: var(--link-clr);
