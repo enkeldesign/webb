@@ -357,7 +357,7 @@ footer ul {
     list-style: none;
     line-height: 2.6;
     font-family: var(--alt-font);
-    font-size: 1.1rem;
+    font-size: 1.2rem;
 }
 
 .footer-logo {
@@ -434,7 +434,8 @@ footer ul {
         grid-template-columns: 1fr 1fr;
         grid-template-rows: 37.5vw 1fr auto auto;
         grid-template-rows: 37.5dvw 1fr auto auto;
-        grid-template-areas: "header     intro"
+        grid-template-areas:
+            "header     intro"
             "about      photo"
             "about      enkel-design"
             "footer     footer";
