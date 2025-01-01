@@ -3,31 +3,39 @@
 :root {
     color-scheme: light dark;
 
-    --teal-800: #068;
-    --pink-200: #FCB;
+    --teal: #068
+        /* 800 */
+    ;
+    --pink: #FBA
+        /* 300 */
+    ;
+    --mine: #444
+        /* 800 */
+    ;
+    --dark: #313131
+        /* 950 */
+    ;
+    --lite: #F4F4F4
+        /* 050 */
+    ;
+    --snow: #DDD
+        /* 200 */
+    ;
 
-    --mine-800: #444;
-    --mine-950: #313131;
-
-    --snow-050: #F4F4F4;
-    --snow-200: #DDD;
-
-    --body-bkg: light-dark(var(--snow-050), var(--mine-950));
-    --logo-clr: light-dark(var(--teal-800), var(--pink-200));
-    --logo-bkg: light-dark(var(--pink-200), var(--teal-800));
+    --body-bkg: light-dark(var(--lite), var(--dark));
+    --logo-clr: light-dark(var(--teal), var(--pink));
+    --logo-bkg: light-dark(var(--pink), var(--teal));
     --header-bkg: var(--logo-bkg);
     --footer-bkg: var(--logo-bkg);
-    --section-a-bkg: light-dark(var(--snow-050), var(--mine-950));
-    --section-b-bkg: light-dark(var(--snow-050), var(--mine-950));
-    --section-c-bkg: light-dark(var(--snow-200), var(--mine-800));
+    --section-a-bkg: light-dark(var(--lite), var(--dark));
+    --section-b-bkg: light-dark(var(--lite), var(--dark));
+    --section-c-bkg: light-dark(var(--snow), var(--mine));
 
-
-
-    --text-clr: light-dark(var(--mine-950), var(--snow-050));
+    --text-clr: light-dark(var(--dark), var(--lite));
     --heading-clr: var(--logo-clr);
     --heading-span-clr: var(--text-clr);
-    --section-b-h2-clr: light-dark(var(--teal-800), var(--pink-200));
-    --section-c-h2-clr: light-dark(var(--teal-800), var(--pink-200));
+    --section-b-h2-clr: light-dark(var(--teal), var(--pink));
+    --section-c-h2-clr: light-dark(var(--teal), var(--pink));
 
     --footer-clr: var(--text-clr);
     --border-clr: light-dark(var(--logo-clr), var(--footer-bkg));
@@ -49,7 +57,6 @@
     background-color: var(--body-bkg);
 }
 
-
 /* */
 
 * {
@@ -57,7 +64,6 @@
     padding: 0;
     box-sizing: border-box;
 }
-
 
 /* */
 
@@ -79,21 +85,18 @@ body {
     background-color: var(--body-bkg);
 }
 
-
 /* */
 
 ::selection {
-    background-color: light-dark(var(--teal-700), var(--pink-300));
+    background-color: light-dark(var(--teal), var(--pink));
     color: light-dark(#fff, #000);
 }
-
 
 /* */
 
 abbr {
     text-decoration: none;
 }
-
 
 /* */
 
@@ -112,7 +115,6 @@ a:visited:focus-visible {
 a:visited {
     color: var(--link-vis-clr);
 }
-
 
 /* */
 
@@ -174,7 +176,6 @@ label:focus-within {
     outline-offset: 4px;
 }
 
-
 /* */
 
 svg {
@@ -189,7 +190,6 @@ svg {
 header svg path {
     fill: var(--logo-clr);
 }
-
 
 /* */
 
@@ -254,7 +254,6 @@ footer {
     color: var(--footer-clr);
 }
 
-
 /* */
 
 .intro {
@@ -291,7 +290,6 @@ h2 {
 .enkel-design h2 {
     color: var(--section-c-h2-clr);
 }
-
 
 /* */
 
@@ -332,7 +330,6 @@ summary h3 {
     font-weight: bold;
     color: var(--text-clr);
 }
-
 
 /* */
 
@@ -396,7 +393,6 @@ footer ul {
     border: 0;
 }
 
-
 /* */
 
 @media (prefers-color-scheme: light),
@@ -432,7 +428,6 @@ footer ul {
         display: none;
     }
 }
-
 
 /* */
 
@@ -520,7 +515,6 @@ footer ul {
     }
 }
 
-
 /* */
 
 @media (min-width: 70em) {
@@ -545,17 +539,14 @@ footer ul {
         background-color: var(--header-bkg);
         color: var(--footer-clr);
         padding-left: 0;
-
     }
 
     .intro p {
         font-size: 1.2rem;
         color: var(--footer-clr);
-
     }
 
     footer {
         padding: 1.6rem 2.6rem 0;
     }
-
 }
