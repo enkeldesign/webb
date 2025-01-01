@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HL Prototyp – Flikar & sökning</title>
+    <title>HL Prototyp – Flikar & Ändra företrädare</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 
@@ -19,13 +19,16 @@
             <h1>HL Prototyp – Flikhantering</h1>
         </div>
         <div class="header-right">
+            <!-- Globalt sökfält för att slå upp ett ärendenummer -->
             <label for="globalSearchInput" class="visually-hidden">Sök ärende</label>
             <input id="globalSearchInput" type="text" placeholder="Sök i HL..." aria-label="Sök i HL" />
-            <!-- Välj om vi ska öppna i nuvarande flik eller en ny -->
+
+            <!-- Välj om ärendet ska öppnas i aktuell eller ny flik -->
             <select id="openTabSelect" aria-label="Välj var resultat ska öppnas">
                 <option value="current">Öppna i aktuell flik</option>
                 <option value="new">Öppna i ny flik</option>
             </select>
+
             <button type="button" id="globalFetchBtn">Hämta</button>
             <button type="button" aria-label="Inställningar">⚙️</button>
             <div class="user-info" aria-label="Inloggad användare">
@@ -34,17 +37,17 @@
         </div>
     </header>
 
-    <!-- Flik-rad -->
+    <!-- Flik-rad (lista med öppna ärenden) -->
     <nav class="tab-bar" aria-label="Ärendetabbar">
         <ul id="tabList">
-            <!-- Exempel på en redan öppen flik -->
+            <!-- En startflik (tabId=1) visar R654321/24 -->
             <li class="tab-item active" data-tab-id="1" aria-selected="true" aria-controls="tabPanel1" role="tab">
                 R654321/24 FÖR
                 <button type="button" class="close-tab-btn" aria-label="Stäng denna flik" onclick="closeTab(event, '1')">
                     ×
                 </button>
             </li>
-            <!-- Plus-knapp för ny flik -->
+            <!-- Plus-knapp för att öppna en ny flik -->
             <li class="tab-item new-tab" role="presentation">
                 <button id="addTabBtn" type="button" aria-label="Öppna en ny tom flik">
                     +
@@ -53,48 +56,129 @@
         </ul>
     </nav>
 
-    <!-- Paneler för varje flik. Här finns en “standardflik” (id=1). -->
+    <!-- Paneler för varje flik -->
     <main id="mainContent" tabindex="0">
-        <!-- Tabpanel 1 (redan öppen) -->
+        <!-- Tabpanel 1 (förifylld med Ångloket 16 Fastighets AB) -->
         <section id="tabPanel1" class="tab-panel" role="tabpanel" aria-labelledby="tab-id-1">
             <!-- Översikt företag + ärende -->
             <section class="overview-panel" aria-label="Översikt företag och ärende">
                 <article aria-labelledby="foretagHeader1">
                     <h2 id="foretagHeader1">Företag</h2>
                     <div id="foretagInfo-1">
-                        <!-- Här fylls mock-data via JS om fliken har data -->
-                        <p><strong>Namn:</strong> Ångloket 16 Fastighets AB</p>
-                        <p><strong>Org.nr:</strong> 559065-7795</p>
-                        <p><strong>Bolagsform:</strong> Aktiebolag</p>
+                        <!-- Fylls via script.js (initial mock-data) -->
                     </div>
                 </article>
                 <article aria-labelledby="arendeHeader1">
                     <h2 id="arendeHeader1">Ärende</h2>
                     <div id="arendeInfo-1">
-                        <p><strong>Ändring av företrädare / firmateckning</strong></p>
-                        <p>R654321/24</p>
-                        <p>Status: Handläggning pågår</p>
-                        <p>Händelser:</p>
-                        <ul>
-                            <li>— (exempel, inga händelser listade)</li>
-                        </ul>
+                        <!-- Fylls via script.js (initial mock-data) -->
                     </div>
                 </article>
             </section>
 
-            <!-- Högerdel: eventuellt “arbetsuppgift” 
-           (kan återanvända exempelkod för styrelse-lägg-till etc) -->
+            <!-- Högerdel: "Ändra företrädare / firmateckning" -->
             <section class="task-panel" aria-labelledby="uppgiftHeader1">
                 <h2 id="uppgiftHeader1">Ändra företrädare / firmateckning</h2>
-                <p>Denna flik kan innehålla styrelsedata enligt tidigare exempel.</p>
+
+                <!-- Knapp för att hämta "ny arbetsuppgift" (mock) -->
+                <button id="fetchUppgiftBtn-1" type="button" class="fetch-uppgift-btn">
+                    Hämta ny arbetsuppgift
+                </button>
+
+                <!-- Styrelselista -->
+                <section aria-labelledby="styrelseHeader1" class="styrelse-section">
+                    <h3 id="styrelseHeader1">Styrelse</h3>
+                    <div id="styrelseData-1">
+                        <!-- JS renderar styrelsemedlemmar -->
+                    </div>
+                    <button id="showAddModalBtn-1" type="button" class="show-add-modal-btn">
+                        Lägg till företrädare
+                    </button>
+                </section>
+
+                <!-- Spara/Klar -->
+                <div class="save-area">
+                    <span id="noChangesText-1">Inga ändringar att spara.</span>
+                    <button id="klarBtn-1" type="button" class="klar-btn">Klar</button>
+                </div>
             </section>
         </section>
     </main>
 
-    <!-- Mall för nya tabpaneler (du kan välja att generera DOM-element i JS i stället) -->
+    <!-- Modal för "Lägg till person" -->
+    <div id="modalOverlay" class="hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div id="modalContent">
+            <h2 id="modalTitle">Lägg till person</h2>
 
-    <!-- Modal, bekräftelseruta m.m. kan finnas här, 
-       men utelämnas i denna demo för enkelhet. -->
+            <form id="addPersonForm">
+                <!-- Personnummer -->
+                <label for="personNummerInput">Person- eller samordningsnummer</label>
+                <input id="personNummerInput" name="personnummer" type="text" placeholder="ÅÅÅÅMMDD-NNNN" aria-describedby="personNummerFormat" />
+                <div id="personNummerFormat" class="form-hint">
+                    Format: ååååmmdd-nnnn
+                </div>
+
+                <button type="button" id="fetchPersonBtn">Hämta</button>
+
+                <!-- Visa när personen hittats -->
+                <div id="personDataArea" class="hidden">
+                    <p>
+                        <strong>Namn:</strong>
+                        <span id="fetchedPersonName"></span>
+                    </p>
+
+                    <label for="landSelect">Land</label>
+                    <select id="landSelect" name="land">
+                        <option value="Sverige">Sverige</option>
+                        <option value="Norge">Norge</option>
+                        <option value="Danmark">Danmark</option>
+                    </select>
+
+                    <label for="coInput">C/O (valfri)</label>
+                    <input id="coInput" name="co" type="text" placeholder="Ex: C/O Anna Andersson" />
+
+                    <label for="addressInput">Adress</label>
+                    <input id="addressInput" name="address" type="text" placeholder="Väggatan 23" />
+
+                    <label for="postNummerInput">Postnummer</label>
+                    <input id="postNummerInput" name="postnummer" type="text" placeholder="183 77" />
+
+                    <label for="postOrtInput">Postort</label>
+                    <input id="postOrtInput" name="postort" type="text" placeholder="TÄBY" />
+
+                    <!-- Roller -->
+                    <fieldset>
+                        <legend>Personens roll</legend>
+                        <p class="form-hint">
+                            En person kan ha flera roller, men inte alla i kombination.
+                        </p>
+                        <div>
+                            <input type="checkbox" id="chkOrdf" name="roller" value="Styrelseordförande" />
+                            <label for="chkOrdf">Styrelseordförande</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="chkLed" name="roller" value="Styrelseledamot" />
+                            <label for="chkLed">Styrelseledamot</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="chkSupp" name="roller" value="Styrelsesuppleant" />
+                            <label for="chkSupp">Styrelsesuppleant</label>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" id="sparaBtn" disabled>Spara</button>
+                    <button type="button" id="avbrytBtn">Avbryt</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bekräftelseruta när man tryckt på Klar -->
+    <div id="confirmationBar" class="hidden" role="status" aria-live="polite">
+        <p>Ändringar sparade <span aria-hidden="true">✅</span></p>
+    </div>
 
     <script src="script.js"></script>
 </body>
