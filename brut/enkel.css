@@ -3,34 +3,38 @@
 :root {
     color-scheme: light dark;
 
-    --teal-400: #6ac;
-    --teal-600: #279;
+    --teal-800: #068;
+    --pink-200: #FCB;
 
     --mine-800: #444;
     --mine-950: #313131;
 
-    --snow-050: #f4f4f4;
-    --snow-200: #ddd;
+    --snow-050: #F4F4F4;
+    --snow-200: #DDD;
 
     --body-bkg: light-dark(var(--snow-050), var(--mine-950));
-    --header-bkg: light-dark(var(--teal-600), var(--teal-400));
-    --footer-bkg: light-dark(var(--teal-600), var(--teal-400));
+    --logo-clr: light-dark(var(--teal-800), var(--pink-200));
+    --logo-bkg: light-dark(var(--pink-200), var(--teal-800));
+    --header-bkg: var(--logo-bkg);
+    --footer-bkg: var(--logo-bkg);
     --section-a-bkg: light-dark(var(--snow-050), var(--mine-950));
     --section-b-bkg: light-dark(var(--snow-050), var(--mine-950));
     --section-c-bkg: light-dark(var(--snow-200), var(--mine-800));
 
-    --logo-clr: var(--body-bkg);
+
+
     --text-clr: light-dark(var(--mine-950), var(--snow-050));
-    --heading-clr: light-dark(var(--teal-600), var(--teal-400));
+    --heading-clr: var(--logo-clr);
     --heading-span-clr: var(--text-clr);
-    --section-b-h2-clr: light-dark(var(--teal-600), var(--teal-400));
-    --section-c-h2-clr: light-dark(var(--teal-600), var(--teal-400));
+    --section-b-h2-clr: light-dark(var(--teal-800), var(--pink-200));
+    --section-c-h2-clr: light-dark(var(--teal-800), var(--pink-200));
 
-    --footer-clr: light-dark(var(--snow-050), var(--mine-950));
+    --footer-clr: var(--text-clr);
+    --border-clr: light-dark(var(--logo-clr), var(--footer-bkg));
 
-    --link-clr: light-dark(var(--snow-050), var(--mine-950));
-    --link-vis-clr: light-dark(#edf, #425);
-    --link-hov-foc-clr: light-dark(#cdf, #125);
+    --link-clr: var(--text-clr);
+    --link-vis-clr: light-dark(#425, #edf);
+    --link-hov-foc-clr: light-dark(#125, #cdf);
 
     --body-font: ui-serif, serif;
     --alt-font:
@@ -79,7 +83,7 @@ body {
 /* */
 
 ::selection {
-    background-color: light-dark(#000, #fff);
+    background-color: light-dark(var(--teal-700), var(--pink-300));
     color: light-dark(#fff, #000);
 }
 
@@ -161,7 +165,7 @@ label span::after {
     background-image: url("/dark.svg");
     background-size: contain;
     background-repeat: no-repeat;
-    filter: brightness(300%);
+    filter: brightness(25%);
     /* ändra på ikonen istället */
 }
 
@@ -175,12 +179,14 @@ label:focus-within {
 
 svg {
     display: block;
-    height: 102%;
+    height: 100%;
     width: auto;
+    margin: 0;
     overflow: visible;
+    background-color: var(--logo-bkg);
 }
 
-path {
+header svg path {
     fill: var(--logo-clr);
 }
 
@@ -229,7 +235,7 @@ header {
     height: 75dvw;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: right;
     background-color: var(--header-bkg);
 }
 
@@ -243,6 +249,7 @@ footer {
     grid-column: 1;
     padding: 1.6rem 1.6rem 0;
     position: relative;
+    border-top: 1.6rem solid var(--border-clr);
     background-color: var(--footer-bkg);
     color: var(--footer-clr);
 }
@@ -336,7 +343,7 @@ footer small {
     font-family: var(--alt-font);
     font-size: 1.1rem;
     line-height: 1.6;
-    color: var(--body-bkg);
+    color: var(--text-clr);
 }
 
 footer small:last-of-type {
@@ -370,6 +377,7 @@ footer ul {
     height: 10rem;
     width: auto;
     overflow: visible;
+    background: none;
 }
 
 .footer-logo path {
@@ -399,7 +407,7 @@ footer ul {
 
     :root:has(input:checked) label span::after {
         background-image: url("/light.svg");
-        filter: brightness(25%);
+        filter: brightness(300%);
     }
 }
 
@@ -410,12 +418,12 @@ footer ul {
 
     label span::after {
         background-image: url("/light.svg");
-        filter: brightness(25%);
+        filter: brightness(300%);
     }
 
     :root:has(input:checked) label span::after {
         background-image: url("/dark.svg");
-        filter: brightness(300%);
+        filter: brightness(25%);
     }
 }
 
@@ -446,8 +454,10 @@ footer ul {
     header {
         grid-area: header;
         height: 100%;
-        align-self: center;
-        padding: 0 2.6rem;
+        align-self: right;
+        margin-right: 0;
+        padding-right: 0;
+        background-color: var(--logo-bkg);
     }
 
     main {
@@ -491,8 +501,8 @@ footer ul {
     }
 
     svg {
-        margin: 0 auto;
-        height: 102%;
+        margin: 0;
+        height: 100%;
     }
 
     label {
@@ -504,9 +514,9 @@ footer ul {
         width: 10rem;
         height: auto;
     }
-    
+
     .footer-logo path {
-        fill: var(--section-c-bkg);
+        fill: var(--logo-clr);
     }
 }
 
