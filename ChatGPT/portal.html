@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="sv">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HL Prototyp – Flikar & sökning</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <!-- Skip-länk för tillgänglighet -->
+    <a href="#mainContent" class="skip-link">Hoppa till innehåll</a>
+
+    <!-- Sidhuvud -->
+    <header>
+        <div class="header-left">
+            <img src="https://via.placeholder.com/140x40?text=Bolagsverket" alt="Bolagsverkets logotyp" />
+            <h1>HL Prototyp – Flikhantering</h1>
+        </div>
+        <div class="header-right">
+            <label for="globalSearchInput" class="visually-hidden">Sök ärende</label>
+            <input id="globalSearchInput" type="text" placeholder="Sök i HL..." aria-label="Sök i HL" />
+            <!-- Välj om vi ska öppna i nuvarande flik eller en ny -->
+            <select id="openTabSelect" aria-label="Välj var resultat ska öppnas">
+                <option value="current">Öppna i aktuell flik</option>
+                <option value="new">Öppna i ny flik</option>
+            </select>
+            <button type="button" id="globalFetchBtn">Hämta</button>
+            <button type="button" aria-label="Inställningar">⚙️</button>
+            <div class="user-info" aria-label="Inloggad användare">
+                <span>Förnamn Efternamn (FE1)</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Flik-rad -->
+    <nav class="tab-bar" aria-label="Ärendetabbar">
+        <ul id="tabList">
+            <!-- Exempel på en redan öppen flik -->
+            <li class="tab-item active" data-tab-id="1" aria-selected="true" aria-controls="tabPanel1" role="tab">
+                R654321/24 FÖR
+                <button type="button" class="close-tab-btn" aria-label="Stäng denna flik" onclick="closeTab(event, '1')">
+                    ×
+                </button>
+            </li>
+            <!-- Plus-knapp för ny flik -->
+            <li class="tab-item new-tab" role="presentation">
+                <button id="addTabBtn" type="button" aria-label="Öppna en ny tom flik">
+                    +
+                </button>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Paneler för varje flik. Här finns en “standardflik” (id=1). -->
+    <main id="mainContent" tabindex="0">
+        <!-- Tabpanel 1 (redan öppen) -->
+        <section id="tabPanel1" class="tab-panel" role="tabpanel" aria-labelledby="tab-id-1">
+            <!-- Översikt företag + ärende -->
+            <section class="overview-panel" aria-label="Översikt företag och ärende">
+                <article aria-labelledby="foretagHeader1">
+                    <h2 id="foretagHeader1">Företag</h2>
+                    <div id="foretagInfo-1">
+                        <!-- Här fylls mock-data via JS om fliken har data -->
+                        <p><strong>Namn:</strong> Ångloket 16 Fastighets AB</p>
+                        <p><strong>Org.nr:</strong> 559065-7795</p>
+                        <p><strong>Bolagsform:</strong> Aktiebolag</p>
+                    </div>
+                </article>
+                <article aria-labelledby="arendeHeader1">
+                    <h2 id="arendeHeader1">Ärende</h2>
+                    <div id="arendeInfo-1">
+                        <p><strong>Ändring av företrädare / firmateckning</strong></p>
+                        <p>R654321/24</p>
+                        <p>Status: Handläggning pågår</p>
+                        <p>Händelser:</p>
+                        <ul>
+                            <li>— (exempel, inga händelser listade)</li>
+                        </ul>
+                    </div>
+                </article>
+            </section>
+
+            <!-- Högerdel: eventuellt “arbetsuppgift” 
+           (kan återanvända exempelkod för styrelse-lägg-till etc) -->
+            <section class="task-panel" aria-labelledby="uppgiftHeader1">
+                <h2 id="uppgiftHeader1">Ändra företrädare / firmateckning</h2>
+                <p>Denna flik kan innehålla styrelsedata enligt tidigare exempel.</p>
+            </section>
+        </section>
+    </main>
+
+    <!-- Mall för nya tabpaneler (du kan välja att generera DOM-element i JS i stället) -->
+
+    <!-- Modal, bekräftelseruta m.m. kan finnas här, 
+       men utelämnas i denna demo för enkelhet. -->
+
+    <script src="script.js"></script>
+</body>
+
+</html>
