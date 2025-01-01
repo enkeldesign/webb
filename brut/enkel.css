@@ -33,12 +33,12 @@
 
     --text-clr: light-dark(var(--dark), var(--lite));
     --heading-clr: var(--logo-clr);
-    --heading-span-clr: var(--text-clr);
+    --heading-span-clr: var(--blue);
     --section-b-h2-clr: light-dark(var(--blue), var(--blue));
     --section-c-h2-clr: light-dark(var(--teal), var(--pink));
     --footer-clr: var(--text-clr);
 
-    --link-clr: var(--text-clr);
+    --link-clr: light-dark(#001, #eef);
     --link-vis-clr: light-dark(#425, #edf);
     --link-hov-foc-clr: light-dark(#125, #cdf);
 
@@ -525,24 +525,21 @@ footer ul {
 
     h1 {
         margin: 1.6rem 0;
-        font-size: 4rem;
-        color: var(--footer-clr);
+        font-size: 3rem;
+        color: var(--logo-clr);
     }
 
     h1 span {
-        font-size: 2.6rem;
-        color: var(--footer-clr);
+        font-size: 2rem;
     }
 
     .intro {
-        background-color: var(--header-bkg);
-        color: var(--footer-clr);
-        padding-left: 0;
+        background-color: var(--body-bkg);
     }
 
     .intro p {
         font-size: 1.2rem;
-        color: var(--footer-clr);
+        color: var(--text-clr);
     }
 
     footer {
