@@ -34,8 +34,8 @@
     --text-clr: light-dark(var(--dark), var(--lite));
     --heading-clr: var(--logo-clr);
     --heading-span-clr: var(--text-clr);
-    --section-b-h2-clr: light-dark(var(--teal), var(--blue));
-    --section-c-h2-clr: light-dark(var(--blue), var(--pink));
+    --section-b-h2-clr: light-dark(var(--blue), var(--blue));
+    --section-c-h2-clr: light-dark(var(--teal), var(--pink));
 
     --footer-clr: var(--text-clr);
     --border-clr: light-dark(var(--logo-clr), var(--footer-bkg));
