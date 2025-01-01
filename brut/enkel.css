@@ -3,20 +3,25 @@
 :root {
     color-scheme: light dark;
 
+    /* Color palette */
+    
     --lite: #F4F4F4;
-        /* 050 */
+        /* 50 */
     --snow: #DDD;
         /* 200 */
     --pink: #FBA;
         /* 300 */
-
-    --dark: #313131;
-        /* 950 */
-    --mine: #444;
-        /* 800 */
+    --blue: #28A;
+        /* 500 */
     --teal: #068;
         /* 800 */
-        
+    --coal: #444;
+        /* 800 */
+    --dark: #313131;
+        /* 950 */
+
+    /* Color application */
+    
     --body-bkg: light-dark(var(--lite), var(--dark));
     --logo-clr: light-dark(var(--teal), var(--pink));
     --logo-bkg: light-dark(var(--pink), var(--teal));
@@ -24,13 +29,13 @@
     --footer-bkg: var(--logo-bkg);
     --section-a-bkg: light-dark(var(--lite), var(--dark));
     --section-b-bkg: light-dark(var(--lite), var(--dark));
-    --section-c-bkg: light-dark(var(--snow), var(--mine));
+    --section-c-bkg: light-dark(var(--snow), var(--coal));
 
     --text-clr: light-dark(var(--dark), var(--lite));
     --heading-clr: var(--logo-clr);
     --heading-span-clr: var(--text-clr);
-    --section-b-h2-clr: light-dark(var(--teal), var(--pink));
-    --section-c-h2-clr: light-dark(var(--teal), var(--pink));
+    --section-b-h2-clr: light-dark(var(--teal), var(--blue));
+    --section-c-h2-clr: light-dark(var(--blue), var(--pink));
 
     --footer-clr: var(--text-clr);
     --border-clr: light-dark(var(--logo-clr), var(--footer-bkg));
@@ -39,6 +44,8 @@
     --link-vis-clr: light-dark(#425, #edf);
     --link-hov-foc-clr: light-dark(#125, #cdf);
 
+    /* Root settings */
+    
     --body-font: ui-serif, serif;
     --alt-font:
         /*"azo-sans-web",*/
@@ -52,7 +59,7 @@
     background-color: var(--body-bkg);
 }
 
-/* */
+    /* */
 
 * {
     margin: 0;
@@ -60,7 +67,7 @@
     box-sizing: border-box;
 }
 
-/* */
+    /* */
 
 html {
     min-height: 100vh;
@@ -80,20 +87,20 @@ body {
     background-color: var(--body-bkg);
 }
 
-/* */
+    /* */
 
 ::selection {
     background-color: light-dark(var(--teal), var(--pink));
     color: light-dark(#fff, #000);
 }
 
-/* */
+    /* */
 
 abbr {
     text-decoration: none;
 }
 
-/* */
+    /* */
 
 a {
     color: var(--link-clr);
@@ -111,7 +118,7 @@ a:visited {
     color: var(--link-vis-clr);
 }
 
-/* */
+    /* */
 
 input {
     position: absolute;
@@ -171,7 +178,7 @@ label:focus-within {
     outline-offset: 4px;
 }
 
-/* */
+    /* */
 
 svg {
     display: block;
@@ -186,7 +193,7 @@ header svg path {
     fill: var(--logo-clr);
 }
 
-/* */
+    /* */
 
 h1 {
     margin: 1rem 0 1.6rem;
@@ -222,7 +229,7 @@ main p:last-child {
     line-height: 1.8;
 }
 
-/* */
+    /* */
 
 header {
     grid-column: 1;
@@ -249,7 +256,7 @@ footer {
     color: var(--footer-clr);
 }
 
-/* */
+    /* */
 
 .intro {
     padding: 1.6rem;
@@ -286,7 +293,7 @@ h2 {
     color: var(--section-c-h2-clr);
 }
 
-/* */
+    /* */
 
 details {
     margin: 1.6rem 0;
@@ -326,7 +333,7 @@ summary h3 {
     color: var(--text-clr);
 }
 
-/* */
+    /* */
 
 footer small {
     display: block;
@@ -388,7 +395,7 @@ footer ul {
     border: 0;
 }
 
-/* */
+    /* */
 
 @media (prefers-color-scheme: light),
 (prefers-color-scheme: no-preference) {
@@ -424,7 +431,7 @@ footer ul {
     }
 }
 
-/* */
+    /* */
 
 @media (min-width: 45em) {
     body {
@@ -510,7 +517,7 @@ footer ul {
     }
 }
 
-/* */
+    /* */
 
 @media (min-width: 70em) {
     body {
