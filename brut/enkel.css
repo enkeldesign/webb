@@ -36,9 +36,7 @@
     --heading-span-clr: var(--text-clr);
     --section-b-h2-clr: light-dark(var(--blue), var(--blue));
     --section-c-h2-clr: light-dark(var(--teal), var(--pink));
-
     --footer-clr: var(--text-clr);
-    --border-clr: light-dark(var(--logo-clr), var(--footer-bkg));
 
     --link-clr: var(--text-clr);
     --link-vis-clr: light-dark(#425, #edf);
@@ -251,7 +249,6 @@ footer {
     grid-column: 1;
     padding: 1.6rem 1.6rem 0;
     position: relative;
-    border-top: 1.6rem solid var(--border-clr);
     background-color: var(--footer-bkg);
     color: var(--footer-clr);
 }
