@@ -33,7 +33,7 @@
 
     --text-clr: light-dark(var(--dark), var(--lite));
     --heading-clr: light-dark(var(--dark), var(--cyan));
-    --heading-span-clr: light-dark(var(--navy), var(--lite));
+    --heading-span-clr: light-dark(var(--dark), var(--lite));
     --section-b-h2-clr: light-dark(var(--dark), var(--lite));
     --section-c-h2-clr: light-dark(var(--navy), var(--teal));
     --footer-clr: var(--text-clr);
@@ -437,6 +437,7 @@ footer ul {
 @media (min-width: 45em) {
     :root {
         --heading-clr: var(--sand);
+        --heading-span-clr: light-dark(var(--blue), var(--lite));
         }
         
     body {
@@ -543,7 +544,6 @@ footer ul {
     h1 {
         margin: 1.6rem 0;
         font-size: 3rem;
-        color: var(--heading-span-clr);
     }
 
     h1 span {
