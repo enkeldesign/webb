@@ -435,6 +435,10 @@ footer ul {
 /* */
 
 @media (min-width: 45em) {
+    :root {
+        --heading-clr: var(--sand);
+        }
+        
     body {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -448,7 +452,7 @@ footer ul {
         margin: 0 auto;
         min-height: none;
     }
-
+    
     header {
         grid-area: header;
         height: 100%;
