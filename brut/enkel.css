@@ -9,8 +9,8 @@
         /* 50 */
     --snow: #DDD;
         /* 200 */
-    --pink: #FBA;
-        /* 300 */
+    --cyan: #BEE;
+        /* 200 */
     --blue: #28A;
         /* 500 */
     --teal: #068;
@@ -23,8 +23,8 @@
     /* Color application */
     
     --body-bkg: light-dark(var(--lite), var(--dark));
-    --logo-clr: light-dark(var(--teal), var(--pink));
-    --logo-bkg: light-dark(var(--pink), var(--teal));
+    --logo-clr: light-dark(var(--teal), var(--cyan));
+    --logo-bkg: light-dark(var(--cyan), var(--teal));
     --header-bkg: var(--logo-bkg);
     --footer-bkg: var(--logo-bkg);
     --section-a-bkg: light-dark(var(--lite), var(--dark));
@@ -35,7 +35,7 @@
     --heading-clr: var(--logo-clr);
     --heading-span-clr: var(--blue);
     --section-b-h2-clr: light-dark(var(--blue), var(--blue));
-    --section-c-h2-clr: light-dark(var(--teal), var(--pink));
+    --section-c-h2-clr: light-dark(var(--teal), var(--cyan));
     --footer-clr: var(--text-clr);
 
     --link-clr: light-dark(#001, #eef);
@@ -88,7 +88,7 @@ body {
     /* */
 
 ::selection {
-    background-color: light-dark(var(--teal), var(--pink));
+    background-color: light-dark(var(--teal), var(--cyan));
     color: light-dark(#fff, #000);
 }
 
