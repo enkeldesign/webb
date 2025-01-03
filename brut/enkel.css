@@ -181,12 +181,11 @@ label:focus-within {
 
 svg {
     display: block;
-    height: 105%;
+    height: 100%;
     width: auto;
-    vertical-align: unset;
+    vertical-align: bottom;
     margin: 0;
     padding: 0;
-    overflow: visible;
     background-color: var(--logo-bkg);
 }
 
