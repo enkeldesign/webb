@@ -363,7 +363,7 @@ footer small a:visited {
 }
 
 footer ul {
-    margin: 1rem 0 6rem;
+    margin: 1rem 0 4.2rem;
     list-style: none;
     line-height: 2.6;
     font-family: var(--alt-font);
