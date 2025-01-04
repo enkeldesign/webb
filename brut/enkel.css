@@ -14,8 +14,6 @@
     /* 400 */
     --sand: #987;
     /* 400 */
-    --clay: #654;
-    /* 700 */
     --blue: #168;
     /* 700 */
     --navy: #157;
@@ -35,11 +33,11 @@
     --section-c-bkg: light-dark(var(--cyan), var(--navy));
 
     --text-clr: light-dark(var(--dark), var(--lite));
-    --heading-clr: light-dark(var(--clay), var(--teal));
+    --heading-clr: light-dark(var(--dark), var(--teal));
     --heading-span-clr: light-dark(var(--blue), var(--lite));
     --section-b-h2-clr: light-dark(var(--dark), var(--lite));
     --section-c-h2-clr: light-dark(var(--clay), var(--teal));
-    --footer-clr: light-dark(var(--clay), var(--teal));
+    --footer-clr: light-dark(var(--navy), var(--teal));
 
     --link-clr: light-dark(#001, #eef);
     --link-vis-clr: light-dark(#425, #edf);
@@ -47,10 +45,9 @@
 
     /* Root settings */
 
-    --body-font: ui-serif, serif;
-    --alt-font:
-        /*"azo-sans-web",*/
-        "futura-pt", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    --body-font: "azo-sans-web", "futura-pt", -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, "Helvetica Neue", Arial, sans-serif;
+    --alt-font: "futura-pt", -apple-system, BlinkMacSystemFont, "Segoe UI",
         Roboto, "Helvetica Neue", Arial, sans-serif;
     --heading-font: "futura-pt", -apple-system, BlinkMacSystemFont, "Segoe UI",
         Roboto, "Helvetica Neue", Arial, sans-serif;
