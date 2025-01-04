@@ -237,6 +237,8 @@ main p:last-child {
 header {
     grid-column: 1;
     height: 100%;
+    max-width: 100vw;
+    max-width: 100dvw;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -460,7 +462,8 @@ footer ul {
         grid-area: header;
         height: 100%;
         width: auto;
-        max-width: 
+        max-width: 50vw;
+        max-width: 50dvw;
         align-self: right;
         margin-right: 0;
         padding-right: 0;
