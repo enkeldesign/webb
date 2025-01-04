@@ -458,7 +458,6 @@ footer ul {
     header {
         grid-area: header;
         height: 100%;
-        aspect-ratio: 1.618 / 2;
         align-self: right;
         margin-right: 0;
         padding-right: 0;
