@@ -81,7 +81,8 @@ body {
     position: relative;
     overflow-x: clip;
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: 75vw 1fr auto;
+    grid-template-rows: 75dvw 1fr auto;
     font-family: var(--body-font);
     background-color: var(--body-bkg);
 }
@@ -234,8 +235,7 @@ main p:last-child {
 
 header {
     grid-column: 1;
-    height: 75vw;
-    height: 75dvw;
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
