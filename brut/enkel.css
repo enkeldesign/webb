@@ -2,6 +2,7 @@
 
 :root {
     color-scheme: light dark;
+    transition: background-color 0.5s ease, color 0.5s ease;
 
     /* Color palette */
 
@@ -272,7 +273,9 @@ footer {
 
 .photo img {
     width: 100%;
-    height: 100%;
+    max-width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
     object-fit: cover;
     overflow: hidden;
 }
