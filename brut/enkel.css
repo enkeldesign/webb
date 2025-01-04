@@ -35,8 +35,8 @@
     --section-c-bkg: light-dark(var(--cyan), var(--navy));
 
     --text-clr: light-dark(var(--dark), var(--lite));
-    --heading-clr: light-dark(var(--clay), var(--lite));
-    --heading-span-clr: light-dark(var(--blue), var(--teal));
+    --heading-clr: light-dark(var(--clay), var(--teal));
+    --heading-span-clr: light-dark(var(--blue), var(--lite));
     --section-b-h2-clr: light-dark(var(--dark), var(--lite));
     --section-c-h2-clr: light-dark(var(--clay), var(--teal));
     --footer-clr: light-dark(var(--clay), var(--teal));
@@ -351,7 +351,7 @@ footer small {
     font-family: var(--alt-font);
     font-size: 1.1rem;
     line-height: 1.6;
-    color: var(--text-clr);
+    color: var(--footer-clr);
 }
 
 footer small:last-of-type {
