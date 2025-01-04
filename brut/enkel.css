@@ -339,14 +339,13 @@ summary h3 {
 
 .divider {
     margin: -1.6rem 0 0;
-    border-top: 5px solid transparent;
+    border-top: 5px solid;
     border-image: repeating-linear-gradient(to right,
-            #eb3 0%, #eb3 20%,
-            #c33 20%, #c33 40%,
-            #883 40%, #883 60%,
-            #1a9 60%, #1a9 80%,
-            #4c4 80%, #4c4 100%; ) 1;
-    overflow-x: clip;
+            #eb3 0%,     #eb3 20%,
+            #c33 20%,    #c33 40%,
+            #883 40%,    #883 60%,
+            #1a9 60%,    #1a9 80%,
+            #4c4 80%,    #4c4 100%; ) 1;
 }
 
 /* */
