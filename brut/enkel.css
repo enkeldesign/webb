@@ -76,7 +76,7 @@ html {
 
 body {
     min-height: 100vh;
-    min-height: 100svh;
+    min-height: 100dvh;
     display: grid;
     position: relative;
     overflow-x: clip;
@@ -185,7 +185,6 @@ svg {
     vertical-align: bottom;
     margin: 0;
     padding: 0;
-    object-fit: contain;
     overflow: clip;
     background-color: var(--logo-bkg);
 }
@@ -241,7 +240,7 @@ header {
     flex-direction: column;
     align-items: flex-end;
     justify-content: right;
-    aspect-ratio: 1.618 / 1;
+    aspect-ratio: 1.618; /* Golden ratio */
     line-height: 0;
     background-color: var(--header-bkg);
 }
