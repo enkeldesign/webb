@@ -25,7 +25,7 @@
 
     --body-bkg: light-dark(var(--lite), var(--dark));
     --logo-clr: light-dark(var(--teal), var(--blue));
-    --logo-bkg: var(--sand);
+    --logo-bkg: none;
     --header-bkg: var(--body-bkg);
     --footer-bkg: var(--body-bkg);
     --section-a-bkg: light-dark(var(--logo-clr), var(--logo-clr));
