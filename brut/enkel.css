@@ -445,8 +445,7 @@ footer ul {
     body {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        grid-template-rows: 37.5vw 1fr auto auto;
-        grid-template-rows: 37.5dvw 1fr auto auto;
+        grid-template-rows: auto 1fr auto auto;
         grid-template-areas:
             "header     intro"
             "about      photo"
@@ -459,6 +458,7 @@ footer ul {
     header {
         grid-area: header;
         height: 100%;
+        aspect-ratio: 1.618 / 2;
         align-self: right;
         margin-right: 0;
         padding-right: 0;
