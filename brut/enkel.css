@@ -76,7 +76,7 @@ html {
 
 body {
     min-height: 100vh;
-    min-height: 100dvh;
+    min-height: 100svh;
     display: grid;
     position: relative;
     overflow-x: clip;
@@ -183,11 +183,12 @@ svg {
     display: block;
     height: 100%;
     width: auto;
+    max-width: 100%;
     vertical-align: bottom;
     margin: 0;
     padding: 0;
     object-fit: contain;
-    overflow: visible;
+    overflow: clip;
     background-color: var(--logo-bkg);
 }
 
@@ -458,6 +459,8 @@ footer ul {
     header {
         grid-area: header;
         height: 100%;
+        width: auto;
+        max-width: 
         align-self: right;
         margin-right: 0;
         padding-right: 0;
