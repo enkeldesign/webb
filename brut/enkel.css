@@ -38,8 +38,8 @@
     --heading-clr: light-dark(var(--clay), var(--lite));
     --heading-span-clr: light-dark(var(--blue), var(--teal));
     --section-b-h2-clr: light-dark(var(--dark), var(--lite));
-    --section-c-h2-clr: light-dark(var(--navy), var(--teal));
-    --footer-clr: var(--text-clr);
+    --section-c-h2-clr: light-dark(var(--clay), var(--teal));
+    --footer-clr: light-dark(var(--clay), var(--teal));
 
     --link-clr: light-dark(#001, #eef);
     --link-vis-clr: light-dark(#425, #edf);
