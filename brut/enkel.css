@@ -339,13 +339,13 @@ summary h3 {
 
 .divider {
     margin: -2.6rem -1.6rem 0;
-    border-top: 5px solid transparent;
+    border-top: 6px solid transparent;
     border-image: repeating-linear-gradient(to right,
             #eb3 0%,     #eb3 20%,
             #c33 20%,    #c33 40%,
-            #883 40%,    #883 60%,
-            #1a9 60%,    #1a9 80%,
-            #4c4 80%,    #4c4 100%) 1;
+            #826 40%,    #826 60%,
+            #248 60%,    #248 80%,
+            #4a4 80%,    #4a4 100%) 1;
 }
 
 /* */
@@ -374,7 +374,7 @@ footer small a:visited {
 }
 
 footer ul {
-    margin: 1rem 0 4.2rem;
+    margin: 1.6rem 0 4.2rem;
     list-style: none;
     line-height: 2.6;
     font-family: var(--alt-font);
