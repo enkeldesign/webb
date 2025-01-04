@@ -14,6 +14,8 @@
     /* 400 */
     --sand: #987;
     /* 400 */
+    --clay: #654;
+    /* 700 */
     --blue: #168;
     /* 700 */
     --navy: #157;
@@ -33,7 +35,7 @@
     --section-c-bkg: light-dark(var(--cyan), var(--navy));
 
     --text-clr: light-dark(var(--dark), var(--lite));
-    --heading-clr: light-dark(var(--dark), var(--lite));
+    --heading-clr: light-dark(var(--clay), var(--lite));
     --heading-span-clr: light-dark(var(--blue), var(--teal));
     --section-b-h2-clr: light-dark(var(--dark), var(--lite));
     --section-c-h2-clr: light-dark(var(--navy), var(--teal));
