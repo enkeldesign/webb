@@ -181,7 +181,8 @@ label:focus-within {
 
 svg {
     display: block;
-    height: 100%;
+    height: 75vw;
+    height: 75dvw;
     width: auto;
     vertical-align: bottom;
     margin: 0;
@@ -455,7 +456,7 @@ footer ul {
     
     header {
         grid-area: header;
-        height: 100%;
+    /*  height: 100%; */
         align-self: right;
         margin-right: 0;
         padding-right: 0;
