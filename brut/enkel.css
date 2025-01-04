@@ -240,7 +240,8 @@ header {
     flex-direction: column;
     align-items: flex-end;
     justify-content: right;
-    aspect-ratio: 1.618; /* Golden ratio */
+    aspect-ratio: 1.618;
+    /* Golden ratio */
     line-height: 0;
     background-color: var(--header-bkg);
 }
@@ -334,6 +335,20 @@ summary h3 {
     font-size: 1.4rem;
     font-weight: bold;
     color: var(--text-clr);
+}
+
+.divider {
+    border-image: repeating-linear-gradient(to right,
+            #eb3 0,
+            #eb3 20%,
+            #c33 20%,
+            #c33 40%,
+            #883 40%,
+            #883 60%,
+            #1a9 60%,
+            #1a9 80%,
+            #4c4 80%,
+            #4c4 100%; ) 1;
 }
 
 /* */
@@ -437,8 +452,8 @@ footer ul {
     :root {
         --heading-clr: var(--sand);
         --heading-span-clr: light-dark(var(--blue), var(--lite));
-        }
-        
+    }
+
     body {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -451,7 +466,7 @@ footer ul {
         margin: 0 auto;
         min-height: none;
     }
-    
+
     header {
         grid-area: header;
         height: 100%;
