@@ -186,6 +186,7 @@ svg {
     vertical-align: bottom;
     margin: 0;
     padding: 0;
+    object-fit: contain;
     overflow: visible;
     background-color: var(--logo-bkg);
 }
@@ -239,6 +240,7 @@ header {
     flex-direction: column;
     align-items: flex-end;
     justify-content: right;
+    aspect-ratio: 1 / 1;
     line-height: 0;
     background-color: var(--header-bkg);
 }
