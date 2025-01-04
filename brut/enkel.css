@@ -25,14 +25,14 @@
 
     --body-bkg: light-dark(var(--lite), var(--dark));
     --logo-clr: light-dark(var(--teal), var(--blue));
-    --logo-bkg: none;
+    --logo-bkg: var(--sand);
     --header-bkg: var(--body-bkg);
     --footer-bkg: var(--body-bkg);
     --section-a-bkg: light-dark(var(--logo-clr), var(--logo-clr));
     --section-b-bkg: light-dark(var(--logo-clr), var(--logo-clr));
     --section-c-bkg: light-dark(var(--cyan), var(--navy));
 
-    --text-clr: light-dark(var(--dark), var(--lite));
+    --text-clr: light-dark(var(--dark), var(--alite));
     --heading-clr: light-dark(var(--dark), var(--teal));
     --heading-span-clr: light-dark(var(--blue), var(--lite));
     --section-b-h2-clr: light-dark(var(--dark), var(--lite));
@@ -168,8 +168,6 @@ label span::after {
     background-image: url("/dark.svg");
     background-size: contain;
     background-repeat: no-repeat;
-    filter: brightness(50%);
-    /* ändra på ikonen istället */
 }
 
 label:focus-within {
@@ -411,7 +409,6 @@ footer ul {
 
     :root:has(input:checked) label span::after {
         background-image: url("/light.svg");
-        filter: brightness(200%);
     }
 }
 
@@ -422,12 +419,10 @@ footer ul {
 
     label span::after {
         background-image: url("/light.svg");
-        filter: brightness(200%);
     }
 
     :root:has(input:checked) label span::after {
         background-image: url("/dark.svg");
-        filter: brightness(50%);
     }
 }
 
