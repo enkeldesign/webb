@@ -81,8 +81,8 @@ body {
     position: relative;
     overflow-x: clip;
     grid-template-columns: 1fr;
-    grid-template-rows: 75vw 1fr auto;
-    grid-template-rows: 75dvw 1fr auto;
+    grid-template-rows: 100vw 1fr auto;
+    grid-template-rows: 100dvw 1fr auto;
     font-family: var(--body-font);
     background-color: var(--body-bkg);
 }
