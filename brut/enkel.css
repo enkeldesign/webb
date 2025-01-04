@@ -338,6 +338,9 @@ summary h3 {
 }
 
 .divider {
+    min-width: 100vw;
+    min-width: 100dvw;
+    border-top: 5px solid transparent;
     border-image: repeating-linear-gradient(to right,
             #eb3 0,
             #eb3 20%,
