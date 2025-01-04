@@ -254,7 +254,7 @@ main {
 
 footer {
     grid-column: 1;
-    padding: 1.6rem 1.6rem 0;
+    padding: 2.6rem 1.6rem 0;
     position: relative;
     background-color: var(--footer-bkg);
     color: var(--footer-clr);
@@ -338,14 +338,14 @@ summary h3 {
 }
 
 .divider {
-    margin: -1.6rem -1.6rem 0;
-    border-top: 5px solid;
+    margin: -2.6rem -1.6rem 0;
+    border-top: 5px solid transparent;
     border-image: repeating-linear-gradient(to right,
             #eb3 0%,     #eb3 20%,
             #c33 20%,    #c33 40%,
             #883 40%,    #883 60%,
             #1a9 60%,    #1a9 80%,
-            #4c4 80%,    #4c4 100%; ) 1;
+            #4c4 80%,    #4c4 100%) 1;
 }
 
 /* */
@@ -506,7 +506,7 @@ footer ul {
 
     footer {
         grid-area: footer;
-        padding: 1.6rem 2.6rem 0;
+        padding: 2.6rem 2.6rem 0;
         text-align: left;
     }
 
@@ -522,7 +522,7 @@ footer ul {
     }
 
     .divider {
-        margin: -1.6rem -2.6rem 0;
+        margin: -2.6rem -2.6rem 0;
     }
     
     label {
