@@ -96,12 +96,12 @@ body::before {
     pointer-events: none;
     z-index: -1;
     background-image:
-        repeating-linear-gradient(to bottom, transparent 0 5px, rgba(68, 136, 187, 0.025) 5px 6px, transparent 6px 10px),
-        repeating-linear-gradient(to bottom, transparent 0 25px, rgba(68, 136, 187, 0.025) 25px 26px, transparent 26px 50px),
-        repeating-linear-gradient(to bottom, transparent 0 25px, rgba(68, 136, 187, 0.050) 25px 26px, transparent 26px 100px),
-        repeating-linear-gradient(to right, transparent 0 5px, rgba(68, 136, 187, 0.025) 5px 6px, transparent 6px 10px),
-        repeating-linear-gradient(to right, transparent 0 25px, rgba(68, 136, 187, 0.025) 25px 26px, transparent 26px 50px),
-        repeating-linear-gradient(to right, transparent 0 25px, rgba(68, 136, 187, 0.050) 25px 26px, transparent 26px 100px);
+        repeating-linear-gradient(47.5deg, transparent 0 5px, rgba(100, 150, 200, 0.02) 5px 6px, transparent 6px 10px),
+        repeating-linear-gradient(47.5deg, transparent 0 25px, rgba(100, 150, 200, 0.03) 25px 26px, transparent 26px 50px),
+        repeating-linear-gradient(47.5deg, transparent 0 25px, rgba(100, 150, 200, 0.04) 25px 26px, transparent 26px 100px),
+        repeating-linear-gradient(137.5deg, transparent 0 5px, rgba(100, 150, 200, 0.02) 5px 6px, transparent 6px 10px),
+        repeating-linear-gradient(137.5deg, transparent 0 25px, rgba(100, 150, 200, 0.03) 25px 26px, transparent 26px 50px),
+        repeating-linear-gradient(137.5deg, transparent 0 25px, rgba(100, 150, 200, 0.04) 25px 26px, transparent 26px 100px);
 }
 
 /* */
