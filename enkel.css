@@ -1,0 +1,615 @@
+@charset "UTF-8";
+
+:root {
+    color-scheme: light dark;
+    transition: background-color 0.5s ease, color 0.5s ease;
+
+    /* Color palette */
+
+    --lite: #F4F4F4;
+    /* 50 */
+    --cyan: #9cd;
+    /* 200 */
+    --teal: #8bc;
+    /* 400 */
+    --sand: #987;
+    /* 400 */
+    --blue: #168;
+    /* 700 */
+    --navy: #157;
+    /* 800 */
+    --dark: #313131;
+    /* 950 */
+
+    /* Color application */
+
+    --body-bkg: light-dark(var(--lite), var(--dark));
+    --logo-clr: light-dark(var(--teal), var(--blue));
+    --logo-bkg: none;
+    --header-bkg: none;
+    --footer-bkg: none;
+    --section-a-bkg: light-dark(var(--logo-clr), var(--logo-clr));
+    --section-b-bkg: light-dark(var(--logo-clr), var(--logo-clr));
+    --section-c-bkg: light-dark(var(--cyan), var(--navy));
+
+    --text-clr: light-dark(var(--dark), var(--lite));
+    --heading-clr: light-dark(var(--blue), var(--teal));
+    --heading-span-clr: light-dark(var(--dark), var(--lite));
+    --section-b-h2-clr: light-dark(var(--dark), var(--lite));
+    --section-c-h2-clr: light-dark(var(--navy), var(--teal));
+    --footer-clr: light-dark(var(--navy), var(--teal));
+    --quote-clr: light-dark(var(--navy), var(--cyan));
+    --link-clr: light-dark(#001, #eef);
+    --link-vis-clr: light-dark(#425, #edf);
+    --link-hov-foc-clr: light-dark(#125, #cdf);
+
+    /* Root settings */
+
+    --body-font: "azo-sans-web", "futura-pt", -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, "Helvetica Neue", Arial, sans-serif;
+    --alt-font: "futura-pt", -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, "Helvetica Neue", Arial, sans-serif;
+    --heading-font: "futura-pt", -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    line-height: 1.8;
+    interpolate-size: allow-keywords;
+    background-color: var(--body-bkg);
+}
+
+/* */
+
+* {
+    margin: 0;
+    padding: 0;
+    gap: 0;
+    box-sizing: border-box;
+}
+
+/* */
+
+html {
+    min-height: 100vh;
+    min-height: 100dvh;
+    background-color: var(--body-bkg);
+}
+
+body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: grid;
+    position: relative;
+    overflow-x: clip;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+    font-family: var(--body-font);
+}
+
+body::before {
+    background-color: var(--body-bkg);
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    background-image:
+        repeating-linear-gradient(to bottom, transparent 0 5px, rgba(68, 136, 187, 0.010) 5px 6px, transparent 6px 10px),
+        repeating-linear-gradient(to bottom, transparent 0 25px, rgba(68, 136, 187, 0.025) 25px 26px, transparent 26px 50px),
+        repeating-linear-gradient(to bottom, transparent 0 25px, rgba(68, 136, 187, 0.050) 25px 26px, transparent 26px 100px),
+        repeating-linear-gradient(to right, transparent 0 5px, rgba(68, 136, 187, 0.010) 5px 6px, transparent 6px 10px),
+        repeating-linear-gradient(to right, transparent 0 25px, rgba(68, 136, 187, 0.025) 25px 26px, transparent 26px 50px),
+        repeating-linear-gradient(to right, transparent 0 25px, rgba(68, 136, 187, 0.050) 25px 26px, transparent 26px 100px);
+}
+
+/* */
+
+::selection {
+    background-color: light-dark(var(--teal), var(--cyan));
+    color: light-dark(#fff, #000);
+}
+
+/* */
+
+abbr {
+    text-decoration: none;
+}
+
+/* */
+
+a {
+    color: var(--link-clr);
+}
+
+a:hover,
+a:visited:hover,
+a:focus-visible,
+a:visited:focus-visible {
+    background-color: var(--link-hov-foc-clr);
+    color: light-dark(#000, #fff);
+}
+
+a:visited {
+    color: var(--link-vis-clr);
+}
+
+/* */
+
+input {
+    position: absolute;
+    top: 1.6rem;
+    left: 1.6rem;
+    appearance: none;
+    opacity: 0;
+    margin: 0;
+}
+
+button {
+    margin: 0 0 0.3rem 1rem;
+    padding: 0 0.6rem 0.175rem;
+    height: 1.6rem;
+    border: 1.6px solid var(--link-clr);
+    border-radius: 0.8rem;
+    background-color: transparent;
+    color: var(--link-clr);
+    font-family: var(--alt-font);
+    font-size: 1rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+button:hover {
+    background-color: var(--text-clr);
+    color: light-dark(#fff, #000);
+}
+
+button:focus-visible {
+    outline: 2px auto;
+    outline-offset: 4px;
+}
+
+label {
+    position: absolute;
+    top: 1.6rem;
+    left: 1.6rem;
+    cursor: pointer;
+}
+
+label span::after {
+    content: "";
+    display: inline-block;
+    width: 1.6rem;
+    height: 1.6rem;
+    background-image: url("/dark.svg");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+label:focus-within {
+    outline: 2px auto;
+    outline-offset: 4px;
+}
+
+/* */
+
+svg {
+    display: block;
+    height: 100%;
+    width: auto;
+    max-width: 100%;
+    vertical-align: bottom;
+    margin: 0;
+    padding: 0;
+    overflow: clip;
+    background-color: var(--logo-bkg);
+}
+
+header svg path {
+    fill: var(--logo-clr);
+}
+
+/* */
+
+h1 {
+    margin: 1rem 0 1.6rem;
+    font-family: var(--heading-font);
+    font-size: 3rem;
+    font-weight: bold;
+    line-height: 1;
+    color: var(--heading-clr);
+}
+
+h1 span {
+    display: block;
+    margin-top: 0.6rem;
+    font-family: var(--heading-font);
+    font-size: 1.9rem;
+    font-weight: bold;
+    color: var(--heading-span-clr);
+}
+
+main p {
+    margin: 0 0 1rem;
+    font-size: 1.2rem;
+    line-height: 2.0;
+    color: var(--text-clr);
+}
+
+main p:last-child {
+    margin-bottom: 1.6rem;
+}
+
+.intro p {
+    font-size: 1.1rem;
+    line-height: 1.8;
+}
+
+/* */
+
+header {
+    grid-column: 1;
+    height: 100%;
+    max-width: 100vw;
+    max-width: 100dvw;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: right;
+    aspect-ratio: 1.618;
+    line-height: 0;
+    background-color: var(--header-bkg);
+}
+
+main {
+    grid-column: 1;
+    display: grid;
+    grid-template-rows: repeat(4, auto);
+}
+
+footer {
+    grid-column: 1;
+    padding: 2.6rem 1.6rem 0;
+    position: relative;
+    background-color: var(--footer-bkg);
+    color: var(--footer-clr);
+}
+
+/* */
+
+.intro {
+    padding: 1.6rem;
+    text-align: center;
+    background-color: var(--section-a-bkg);
+}
+
+.photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    overflow: hidden;
+}
+
+.about {
+    padding: 1.6rem;
+    background-color: var(--section-b-bkg);
+}
+
+.enkel-design {
+    margin-top: 3.2rem;
+    padding: 1.6rem;
+    background-color: var(--section-c-bkg);
+}
+
+h2 {
+    color: var(--section-b-h2-clr);
+    font-family: var(--heading-font);
+    font-size: 2.2rem;
+    line-height: 1.1;
+    margin: 1.6rem 0;
+}
+
+.enkel-design h2 {
+    color: var(--section-c-h2-clr);
+}
+
+/* */
+
+details {
+    margin: 1.6rem 0;
+}
+
+details::details-content {
+    block-size: 0;
+    overflow-y: clip;
+    transition: content-visibility 618ms, opacity 618ms, block-size 618ms;
+    transition-behavior: allow-discrete;
+}
+
+details[open]::details-content {
+    opacity: 1;
+    block-size: auto;
+}
+
+details ul {
+    margin: 1rem 1.6rem 1.6rem;
+}
+
+summary {
+    cursor: pointer;
+    color: var(--section-c-h2-clr);
+}
+
+summary:focus-visible {
+    outline: 2px auto;
+    outline-offset: 4px;
+}
+
+summary h3 {
+    display: inline;
+    font-family: var(--heading-font);
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: var(--text-clr);
+}
+
+blockquote {
+    border-left: solid 6px var(--quote-clr);
+    padding-left: 1rem;
+    margin: 1.6rem 0;
+    font-size: 1.4rem;
+    line-height: 1.5;
+    font-family: serif-ui, serif;
+    color: var(--quote-clr);
+}
+
+blockquote>footer {
+    margin-top: 0.5rem;
+    color: var(--text-clr);
+}
+
+.divider {
+    margin: -2.6rem -1.6rem 0;
+    border-top: 6px solid transparent;
+    border-image: repeating-linear-gradient(to right,
+            #eb3 0%, #eb3 20%,
+            #c43 20%, #c43 40%,
+            #948 40%, #948 60%,
+            #46c 60%, #46c 80%,
+            #4a4 80%, #4a4 100%) 1;
+    opacity: 0.75;
+}
+
+/* */
+
+footer small {
+    display: block;
+    width: 67%;
+    letter-spacing: 0.04rem;
+    font-family: var(--alt-font);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--footer-clr);
+}
+
+footer small:last-of-type {
+    margin-bottom: 1.6rem;
+    font-weight: 600;
+}
+
+footer small a {
+    color: var(--link-clr);
+}
+
+footer small a:visited {
+    color: var(--link-vis-clr);
+}
+
+footer ul {
+    margin: 1.6rem 0 4.2rem;
+    list-style: none;
+    line-height: 2.6;
+    font-family: var(--alt-font);
+    font-size: 1.2rem;
+}
+
+.footer-logo {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+}
+
+.footer-logo svg {
+    height: 10rem;
+    width: auto;
+    overflow: visible;
+    background: none;
+}
+
+.footer-logo path {
+    fill: var(--logo-clr);
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* */
+
+@media (prefers-color-scheme: light),
+(prefers-color-scheme: no-preference) {
+    :root:has(input:checked) {
+        color-scheme: dark;
+    }
+
+    :root:has(input:checked) label span::after {
+        background-image: url("/light.svg");
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:has(input:checked) {
+        color-scheme: light;
+    }
+
+    label span::after {
+        background-image: url("/light.svg");
+    }
+
+    :root:has(input:checked) label span::after {
+        background-image: url("/dark.svg");
+    }
+}
+
+@media (forced-colors: active) {
+    label {
+        display: none;
+    }
+}
+
+/* */
+
+@media (min-width: 45em) {
+    :root {
+        --heading-clr: var(--sand);
+        --heading-span-clr: light-dark(var(--blue), var(--lite));
+        --section-a-bkg: none;
+    }
+
+    body {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto 1fr auto auto;
+        grid-template-areas:
+            "header     intro"
+            "about      photo"
+            "about      enkel-design"
+            "footer     footer";
+        margin: 0 auto;
+        min-height: none;
+    }
+
+    header {
+        grid-area: header;
+        height: 100%;
+        width: auto;
+        max-width: 50vw;
+        max-width: 50dvw;
+        align-self: right;
+        margin-right: 0;
+        padding-right: 0;
+    }
+
+    main {
+        display: contents;
+    }
+
+    .intro {
+        grid-area: intro;
+        padding: 0.6rem 2.6rem;
+        text-align: left;
+        align-content: center;
+        align-items: center;
+    }
+
+    .about {
+        grid-area: about;
+        padding: 1.6rem 2.6rem;
+        text-align: left;
+    }
+
+    .photo {
+        grid-area: photo;
+    }
+
+    .enkel-design {
+        grid-area: enkel-design;
+        padding: 1.6rem 2.6rem;
+        margin-top: 0;
+
+        text-align: left;
+    }
+
+    footer {
+        grid-area: footer;
+        padding: 2.6rem 2.6rem 0;
+        text-align: left;
+    }
+
+    footer ul {
+        margin-top: 2.6rem;
+    }
+
+    footer small {
+        display: block;
+        width: auto;
+        text-align: left;
+    }
+
+    svg {
+        margin: 0;
+        height: 100%;
+    }
+
+    .divider {
+        margin: -2.6rem -2.6rem 0;
+    }
+
+    label {
+        top: 1.6rem;
+        left: 2.6rem;
+    }
+
+    .footer-logo svg {
+        width: 10rem;
+        height: auto;
+    }
+
+}
+
+/* */
+
+@media (min-width: 70em) {
+    body {
+        width: min(62vw, 75em);
+        margin: 0 auto;
+        grid-template-rows: auto 1fr auto auto;
+    }
+
+    label {
+        /* top: 2.6rem; */
+        left: 0;
+    }
+
+    label span::after {
+        content: "";
+        display: inline-block;
+        width: 2.6rem;
+        height: 2.6rem;
+    }
+
+    h1 {
+        margin: 1.6rem 0;
+        font-size: 3rem;
+    }
+
+    h1 span {
+        font-size: 2rem;
+    }
+
+    .intro {
+        background-color: var(--body-bkg);
+    }
+
+    .intro p {
+        font-size: 1.2rem;
+        color: var(--text-clr);
+    }
+}
