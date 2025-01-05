@@ -177,8 +177,8 @@ button:focus-visible {
 
 label {
     position: absolute;
-    top: 38px;
-    left: 38px;
+    top: 48px;
+    left: 48px;
     cursor: pointer;
 }
 
@@ -551,8 +551,8 @@ footer ul {
     }
     
 label {
-    top: 38px;
-    left: 88px;
+    top: 48px;
+    left: 98px;
 }
 
     .footer-logo svg {
