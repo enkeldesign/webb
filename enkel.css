@@ -41,7 +41,7 @@
     --section-c-h2-clr: light-dark(var(--navy), var(--teal));
     --footer-clr: light-dark(var(--navy), var(--teal));
     --quote-clr: light-dark(var(--navy), var(--cyan));
-    --link-clr: light-dark(var(--navy), var(--aqua));
+    --link-clr: light-dark(var(--navy), var(--teal));
     --link-vis-clr: light-dark(#425, #edf);
     --link-hov-foc-clr: light-dark(#125, #cdf);
 
@@ -485,7 +485,7 @@ footer ul {
 @media (min-width: 45em) {
     :root {
         --heading-clr: var(--sand);
-        --heading-span-clr: var(--aqua);
+        --heading-span-clr: light-dark(var(--aqua), var(--teal));
         --section-a-bkg: none;
     }
 
