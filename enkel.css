@@ -334,6 +334,10 @@ details ul {
     margin: 1rem 1.6rem 1.6rem;
 }
 
+details p {
+    margin: 1rem 1.6rem 1.6rem;
+}
+
 summary {
     cursor: pointer;
     color: var(--section-c-h2-clr);
