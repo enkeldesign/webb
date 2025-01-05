@@ -39,7 +39,10 @@
     --section-c-h2-clr: light-dark(var(--navy), var(--teal));
     --footer-clr: light-dark(var(--navy), var(--teal));
     --quote-clr: light-dark(var(--navy), var(--cyan));
-    --link-clr: light-dark(var(--navy), var(--teal));
+
+    --border-clr: light-dark(var(--blue), var(--teal));
+    
+    --link-clr: light-dark(var(--navy), var(--cyan));
     --link-vis-clr: light-dark(#425, #edf);
     --link-hov-foc-clr: light-dark(#125, #cdf);
 
@@ -357,7 +360,7 @@ summary h3 {
 }
 
 blockquote {
-    border-left: solid 6px var(--quote-clr);
+    border-left: solid 6px var(--border-clr);
     padding-left: 1rem;
     margin: 1.6rem 0;
     font-size: 1.4rem;
