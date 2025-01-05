@@ -14,8 +14,6 @@
     /* 400 */
     --sand: #987;
     /* 400 */
-    --aqua: #29b;
-    /* 500 */
     --blue: #168;
     /* 700 */
     --navy: #157;
@@ -485,7 +483,6 @@ footer ul {
 @media (min-width: 45em) {
     :root {
         --heading-clr: var(--sand);
-        --heading-span-clr: light-dark(var(--aqua), var(--teal));
         --section-a-bkg: none;
     }
 
