@@ -258,7 +258,7 @@ header {
     flex-direction: column;
     align-items: flex-end;
     justify-content: right;
-    aspect-ratio: 1.618;
+    aspect-ratio: 13 / 8;
     line-height: 0;
     background-color: var(--header-bkg);
 }
@@ -579,7 +579,7 @@ footer ul {
     }
 
     label {
-        top: 1.6rem;
+        top: 2.6rem;
         left: 2.6rem;
     }
 
