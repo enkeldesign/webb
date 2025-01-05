@@ -125,7 +125,7 @@ a:visited:hover,
 a:focus-visible,
 a:visited:focus-visible {
     background-color: var(--link-hov-foc-clr);
-    color: light-dark(#000, #fff);
+    color: light-dark(#fff, #000);
 }
 
 a:visited {
