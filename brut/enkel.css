@@ -26,8 +26,8 @@
     --body-bkg: light-dark(var(--lite), var(--dark));
     --logo-clr: light-dark(var(--teal), var(--blue));
     --logo-bkg: none;
-    --header-bkg: var(--body-bkg);
-    --footer-bkg: var(--body-bkg);
+    --header-bkg: none;
+    --footer-bkg: none;
     --section-a-bkg: light-dark(var(--logo-clr), var(--logo-clr));
     --section-b-bkg: light-dark(var(--logo-clr), var(--logo-clr));
     --section-c-bkg: light-dark(var(--cyan), var(--navy));
@@ -94,23 +94,17 @@ body::before {
     z-index: -1;
     background-image:
         repeating-linear-gradient(to bottom,
-            rgba(68, 136, 187, 0.025) 0 1px,
-            transparent 1px 10px),
+            rgba(68, 136, 187, 0.025) 0 1px, transparent 1px 10px),
         repeating-linear-gradient(to bottom,
-            rgba(68, 136, 187, 0.05) 0 1px,
-            transparent 1px 50px),
+            rgba(68, 136, 187, 0.05) 0 1px, transparent 1px 50px),
         repeating-linear-gradient(to bottom,
-            rgba(68, 136, 187, 0.75) 0 1px,
-            transparent 1px 100px),
+            rgba(68, 136, 187, 0.075) 0 1px, transparent 1px 100px),
         repeating-linear-gradient(to right,
-            rgba(68, 136, 187, 0.025) 0 1px,
-            transparent 1px 10px),
+            rgba(68, 136, 187, 0.025) 0 1px, transparent 1px 10px),
         repeating-linear-gradient(to right,
-            rgba(68, 136, 187, 0.05) 0 1px,
-            transparent 1px 50px),
+            rgba(68, 136, 187, 0.05) 0 1px, transparent 1px 50px),
         repeating-linear-gradient(to right,
-            rgba(68, 136, 187, 0.75) 0 1px,
-            transparent 1px 100px);
+            rgba(68, 136, 187, 0.075) 0 1px, transparent 1px 100px);
     background-position: 38px 38px;
 }
 
@@ -269,7 +263,6 @@ header {
     align-items: flex-end;
     justify-content: right;
     aspect-ratio: 1.618;
-    /* Golden ratio */
     line-height: 0;
     background-color: var(--header-bkg);
 }
