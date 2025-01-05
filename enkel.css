@@ -97,7 +97,7 @@ body::before {
     background-image:
         repeating-linear-gradient(to bottom, transparent 0 5px, rgba(68, 136, 187, 0.025) 5px 6px, transparent 6px 10px),
         repeating-linear-gradient(to bottom, transparent 0 25px, rgba(68, 136, 187, 0.025) 25px 26px, transparent 26px 50px),
-        repeating-linear-gradient(to bottom, transparent 0 25px, rgba(68, 136, 187, 0.025) 25px 26px, transparent 26px 100px),
+        repeating-linear-gradient(to bottom, transparent 0 25px, rgba(68, 136, 187, 0.050) 25px 26px, transparent 26px 100px),
         repeating-linear-gradient(to right, transparent 0 5px, rgba(68, 136, 187, 0.025) 5px 6px, transparent 6px 10px),
         repeating-linear-gradient(to right, transparent 0 25px, rgba(68, 136, 187, 0.025) 25px 26px, transparent 26px 50px),
         repeating-linear-gradient(to right, transparent 0 25px, rgba(68, 136, 187, 0.025) 25px 26px, transparent 26px 100px);
