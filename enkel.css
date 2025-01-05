@@ -41,7 +41,7 @@
     --quote-clr: light-dark(var(--navy), var(--cyan));
 
     --border-clr: light-dark(var(--blue), var(--teal));
-    
+
     --link-clr: light-dark(var(--navy), var(--cyan));
     --link-vis-clr: light-dark(#425, #edf);
     --link-hov-foc-clr: light-dark(#125, #cdf);
@@ -500,6 +500,16 @@ footer ul {
             "footer     footer";
         margin: 0 auto;
         min-height: none;
+    }
+
+    body:before {
+        background-image:
+            repeating-linear-gradient(to bottom, transparent 0 1px, rgba(100, 150, 200, 0.02) 1px 2px, transparent 2px 10px),
+            repeating-linear-gradient(to bottom, transparent 0 41px, rgba(100, 150, 200, 0.03) 41px 42px, transparent 42px 50px),
+            repeating-linear-gradient(to bottom, transparent 0 41px, rgba(100, 150, 200, 0.04) 41px 42px, transparent 42px 100px),
+            repeating-linear-gradient(to right, transparent 0 1px, rgba(100, 150, 200, 0.02) 1px 2px, transparent 2px 10px),
+            repeating-linear-gradient(to right, transparent 0 41px, rgba(100, 150, 200, 0.03) 41px 42px, transparent 42px 50px),
+            repeating-linear-gradient(to right, transparent 0 41px, rgba(100, 150, 200, 0.04) 41px 42px, transparent 42px 100px);
     }
 
     header {
