@@ -89,7 +89,6 @@ body::before {
     background-color: var(--body-bkg);
     content: "";
     position: fixed;
-    background-position: 1.6rem 1.6rem;
     inset: 0;
     pointer-events: none;
     z-index: -1;
@@ -177,8 +176,8 @@ button:focus-visible {
 
 label {
     position: absolute;
-    top: 0.8rem;
-    left: 0.8rem;
+    top: 1.6rem;
+    left: 1.6rem;
     cursor: pointer;
 }
 
@@ -551,8 +550,8 @@ footer ul {
     }
     
 label {
-    top: 0.8rem;
-    left: 1.6rem;
+    top: 1.6rem;
+    left: 2.6rem;
 }
 
     .footer-logo svg {
