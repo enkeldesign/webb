@@ -38,7 +38,7 @@
     --section-b-h2-clr: light-dark(var(--dark), var(--lite));
     --section-c-h2-clr: light-dark(var(--navy), var(--teal));
     --footer-clr: light-dark(var(--navy), var(--teal));
-
+    --quote-clr: light-dark(var(--navy), var(--cyan));
     --link-clr: light-dark(#001, #eef);
     --link-vis-clr: light-dark(#425, #edf);
     --link-hov-foc-clr: light-dark(#125, #cdf);
@@ -93,12 +93,12 @@ body::before {
     pointer-events: none;
     z-index: -1;
     background-image:
-    repeating-linear-gradient(to bottom, transparent 0 5px, rgba(68, 136, 187, 0.03) 5px 6px, transparent 6px 10px),
-    repeating-linear-gradient(to bottom, transparent 0 25px, rgba(68, 136, 187, 0.01) 25px 26px, transparent 26px 50px),
-    repeating-linear-gradient(to bottom, transparent 0 25px, rgba(68, 136, 187, 0.02) 25px 26px, transparent 26px 100px),
-    repeating-linear-gradient(to right, transparent 0 5px, rgba(68, 136, 187, 0.03) 5px 6px, transparent 6px 10px),
-    repeating-linear-gradient(to right, transparent 0 25px, rgba(68, 136, 187, 0.01) 25px 26px, transparent 26px 50px),
-    repeating-linear-gradient(to right, transparent 0 25px, rgba(68, 136, 187, 0.02) 25px 26px, transparent 26px 100px);
+        repeating-linear-gradient(to bottom, transparent 0 5px, rgba(68, 136, 187, 0.03) 5px 6px, transparent 6px 10px),
+        repeating-linear-gradient(to bottom, transparent 0 25px, rgba(68, 136, 187, 0.01) 25px 26px, transparent 26px 50px),
+        repeating-linear-gradient(to bottom, transparent 0 25px, rgba(68, 136, 187, 0.02) 25px 26px, transparent 26px 100px),
+        repeating-linear-gradient(to right, transparent 0 5px, rgba(68, 136, 187, 0.03) 5px 6px, transparent 6px 10px),
+        repeating-linear-gradient(to right, transparent 0 25px, rgba(68, 136, 187, 0.01) 25px 26px, transparent 26px 50px),
+        repeating-linear-gradient(to right, transparent 0 25px, rgba(68, 136, 187, 0.02) 25px 26px, transparent 26px 100px);
 }
 
 /* */
@@ -351,15 +351,30 @@ summary h3 {
     color: var(--text-clr);
 }
 
+blockquote {
+    border-left: solid 6px var(--quote-clr);
+    padding-left: 1rem;
+    margin: 1.6rem 0;
+    font-size: 1.4rem;
+    line-height: 1.5;
+    font-family: serif-ui, serif;
+    color: var(--quote-clr);
+}
+
+blockquote>footer {
+    margin-top: 0.5rem;
+    color: var(--text-clr);
+}
+
 .divider {
     margin: -2.6rem -1.6rem 0;
     border-top: 6px solid transparent;
     border-image: repeating-linear-gradient(to right,
-            #eb3 0%,     #eb3 20%,
-            #c43 20%,    #c43 40%,
-            #948 40%,    #948 60%,
-            #46c 60%,    #46c 80%,
-            #4a4 80%,    #4a4 100%) 1;
+            #eb3 0%, #eb3 20%,
+            #c43 20%, #c43 40%,
+            #948 40%, #948 60%,
+            #46c 60%, #46c 80%,
+            #4a4 80%, #4a4 100%) 1;
     opacity: 0.75;
 }
 
@@ -524,7 +539,7 @@ footer ul {
         padding: 2.6rem 2.6rem 0;
         text-align: left;
     }
-    
+
     footer ul {
         margin-top: 2.6rem;
     }
@@ -543,11 +558,11 @@ footer ul {
     .divider {
         margin: -2.6rem -2.6rem 0;
     }
-    
-label {
-    top: 1.6rem;
-    left: 2.6rem;
-}
+
+    label {
+        top: 1.6rem;
+        left: 2.6rem;
+    }
 
     .footer-logo svg {
         width: 10rem;
