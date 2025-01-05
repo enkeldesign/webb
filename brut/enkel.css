@@ -105,7 +105,6 @@ body::before {
             rgba(68, 136, 187, 0.0375) 0 1px, transparent 1px 50px),
         repeating-linear-gradient(to right,
             rgba(68, 136, 187, 0.05) 0 1px, transparent 1px 100px);
-    background-position: 38px 38px;
 }
 
 /* */
