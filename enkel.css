@@ -14,6 +14,8 @@
     /* 400 */
     --sand: #987;
     /* 400 */
+    --aqua: #29b;
+    /* 500 */
     --blue: #168;
     /* 700 */
     --navy: #157;
@@ -39,7 +41,7 @@
     --section-c-h2-clr: light-dark(var(--navy), var(--teal));
     --footer-clr: light-dark(var(--navy), var(--teal));
     --quote-clr: light-dark(var(--navy), var(--cyan));
-    --link-clr: light-dark(#001, #eef);
+    --link-clr: light-dark(var(--navy), var(--aqua));
     --link-vis-clr: light-dark(#425, #edf);
     --link-hov-foc-clr: light-dark(#125, #cdf);
 
@@ -483,7 +485,7 @@ footer ul {
 @media (min-width: 45em) {
     :root {
         --heading-clr: var(--sand);
-        --heading-span-clr: light-dark(var(--blue), var(--lite));
+        --heading-span-clr: var(--aqua);
         --section-a-bkg: none;
     }
 
