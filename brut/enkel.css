@@ -469,6 +469,7 @@ footer ul {
     :root {
         --heading-clr: var(--sand);
         --heading-span-clr: light-dark(var(--blue), var(--lite));
+        --section-a-bkg: none;
     }
 
     body {
