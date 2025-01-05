@@ -2,7 +2,7 @@
 
 :root {
     color-scheme: light dark;
-    transition: background-color 0.5s ease, color 0.5s ease;
+    transition: background-color 0.25s ease, color 0.25s ease;
 
     /* Color palette with brightness 50-950 */
 
@@ -36,7 +36,7 @@
     --heading-clr: light-dark(var(--blue), var(--teal));
     --heading-span-clr: light-dark(var(--dark), var(--lite));
     --section-b-h2-clr: light-dark(var(--dark), var(--lite));
-    --section-c-h2-clr: light-dark(var(--navy), var(--teal));
+    --section-c-h2-clr: light-dark(var(--blue), var(--teal));
     --footer-clr: light-dark(var(--navy), var(--teal));
     --quote-clr: light-dark(var(--navy), var(--cyan));
 
