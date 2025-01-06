@@ -412,7 +412,7 @@ footer small a:visited {
 }
 
 footer ul {
-    margin: 1.6rem 0 4.2rem;
+    margin: 1rem 0 6rem;
     list-style: none;
     line-height: 2.6;
     font-family: var(--alt-font);
