@@ -14,6 +14,8 @@
     /* 400 */
     --sand: #987;
     /* 400 */
+    --oliv: #884;
+    /* 500 */
     --blue: #168;
     /* 700 */
     --navy: #157;
@@ -429,11 +431,12 @@ footer ul {
 }
 
 .footer-logo path,
-.footer-logo circle {
     fill: var(--logo-clr);
+    fill-opacity: 0.50;
 }
 
 .footer-logo circle {
+    fill: var(--logo-clr);
     fill-opacity: 0.15;
 }
 
@@ -490,7 +493,7 @@ footer ul {
 
 @media (min-width: 45em) {
     :root {
-        --heading-clr: var(--sand);
+        --heading-clr: var(--oliv);
         --section-a-bkg: none;
     }
 
@@ -575,10 +578,6 @@ footer ul {
     svg {
         margin: 0;
         height: 100%;
-    }
-    
-    .divider {
-        margin: -2.6rem -2.6rem 0;
     }
 
     label {
