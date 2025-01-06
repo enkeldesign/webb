@@ -294,7 +294,7 @@ footer {
 }
 
 .enkel-design {
-    margin-top: 2.6rem;
+    /* margin-top: 2.6rem; */
     padding: 1.6rem;
     background-color: var(--section-c-bkg);
 }
