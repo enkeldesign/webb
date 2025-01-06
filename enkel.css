@@ -431,12 +431,12 @@ footer ul {
 }
 
 .footer-logo path {
-    fill: light-dark(var(--oliv), var(--drab));
+    fill: light-dark(var(--drab), var(--blue));
     fill-opacity: 0.50;
 }
 
 .footer-logo circle {
-    fill: light-dark(var(--oliv), var(--drab));
+    fill: light-dark(var(--drab), var(--blue));
     fill-opacity: 0.20;
 
 }
