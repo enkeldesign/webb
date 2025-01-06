@@ -6,7 +6,7 @@
 
     /* Color palette with brightness 50-950 */
 
-    --lite: #F4F4F4;
+    --lite: #f4f4f4;
     /* 50 */
     --cyan: #9cd;
     /* 200 */
@@ -25,7 +25,10 @@
 
     --body-bkg: light-dark(var(--lite), var(--dark));
     --logo-clr: light-dark(var(--teal), var(--blue));
+    --small-c-clr: light-dark(#cd2, #ee4);
+    --large-c-clr: light-dark(#7b4, #8c6);
     --logo-bkg: none;
+    
     --header-bkg: none;
     --footer-bkg: none;
     --section-a-bkg: light-dark(var(--logo-clr), var(--logo-clr));
@@ -207,13 +210,13 @@ svg path {
     fill: var(--logo-clr);
 }
 
-svg circle {
-    fill: var(--logo-clr);
-    fill-opacity: 0.25;
+header svg circle {
+    fill: var(--small-c-clr);
+    fill-opacity: 0.5;
 }
 
-svg circle:first-of-type {
-    fill-opacity: 0.15;
+header svg circle:last-of-type {
+    fill: var(--large-c-clr);
 }
 
 /* */
@@ -425,8 +428,17 @@ footer ul {
     background: none;
 }
 
-.footer-logo path {
+.footer-logo path,
+.footer-logo circle {
     fill: var(--logo-clr);
+}
+
+.footer-logo circle {
+    fill-opacity: 0.15;
+}
+
+.footer-logo circle:last-of-type {
+    fill-opacity: 0.30;
 }
 
 .visually-hidden {
