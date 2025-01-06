@@ -12,6 +12,8 @@
     /* 200 */
     --teal: #8bc;
     /* 400 */
+    --drab: #bb6;
+    /* 400 */
     --oliv: #994;
     /* 500 */
     --blue: #168;
@@ -28,7 +30,7 @@
     --small-c-clr: light-dark(#cd2, #ee4);
     --large-c-clr: light-dark(#7b4, #8c6);
     --logo-bkg: none;
-    
+
     --header-bkg: none;
     --footer-bkg: none;
     --section-a-bkg: light-dark(var(--logo-clr), var(--logo-clr));
@@ -36,10 +38,10 @@
     --section-c-bkg: light-dark(var(--cyan), var(--navy));
 
     --text-clr: light-dark(var(--dark), var(--lite));
-    --heading-clr: light-dark(var(--blue), var(--teal));
+    --heading-clr: light-dark(var(--blue), var(--drab));
     --heading-span-clr: light-dark(var(--dark), var(--lite));
     --section-b-h2-clr: light-dark(var(--dark), var(--lite));
-    --section-c-h2-clr: light-dark(var(--blue), var(--teal));
+    --section-c-h2-clr: light-dark(var(--blue), var(--drab));
     --footer-clr: light-dark(var(--navy), var(--teal));
     --quote-clr: light-dark(var(--navy), var(--cyan));
 
@@ -212,7 +214,7 @@ svg path {
 
 header svg circle {
     fill: var(--small-c-clr);
-    fill-opacity: 0.5;
+    fill-opacity: 0.4;
 }
 
 header svg circle:last-of-type {
@@ -429,17 +431,18 @@ footer ul {
 }
 
 .footer-logo path {
-    fill: var(--logo-clr);
-    fill-opacity: 0.50;
+    fill: light-dark(var(--oliv), var(--drab));
+    fill-opacity: 0.30;
 }
 
 .footer-logo circle {
-    fill: var(--logo-clr);
-    fill-opacity: 0.15;
+    fill: light-dark(var(--oliv), var(--drab));
+    fill-opacity: 0.10;
+
 }
 
 .footer-logo circle:last-of-type {
-    fill-opacity: 0.30;
+    fill-opacity: 0.20;
 }
 
 .visually-hidden {
