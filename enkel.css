@@ -412,7 +412,7 @@ footer small a:visited {
 }
 
 footer ul {
-    margin: 1rem 0 6rem;
+    margin: 0 0 5rem;
     list-style: none;
     line-height: 2.6;
     font-family: var(--alt-font);
@@ -557,10 +557,6 @@ footer ul {
         grid-area: footer;
         padding: 2.6rem 2.6rem 0;
         text-align: left;
-    }
-
-    footer ul {
-        margin-top: 2.6rem;
     }
 
     footer small {
