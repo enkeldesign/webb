@@ -203,16 +203,16 @@ svg {
     background-color: var(--logo-bkg);
 }
 
-header svg path {
+svg path {
     fill: var(--logo-clr);
 }
 
-header svg circle {
+svg circle {
     fill: var(--logo-clr);
     fill-opacity: 0.25;
 }
 
-header svg circle:first-of-type {
+svg circle:first-of-type {
     fill-opacity: 0.15;
 }
 
@@ -506,7 +506,7 @@ footer ul {
             repeating-linear-gradient(to right, transparent 0 41px, rgba(160, 140, 120, 0.04) 41px 42px, transparent 42px 100px);
     }
     */
-    
+
     header {
         grid-area: header;
         height: 100%;
