@@ -207,6 +207,11 @@ header svg path {
     fill: var(--logo-clr);
 }
 
+header svg circle {
+    fill: var(--logo-clr);
+    fill-opacity: 0.25;
+}
+
 /* */
 
 h1 {
