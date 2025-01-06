@@ -493,7 +493,7 @@ footer ul {
 
 @media (min-width: 45em) {
     :root {
-        --heading-clr: var(--oliv);
+        --heading-clr: light-dark(var(--blue), var(--oliv));
         --section-a-bkg: none;
     }
 
