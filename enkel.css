@@ -564,7 +564,7 @@ footer ul {
         margin: 0;
         height: 100%;
     }
-
+    
     .divider {
         margin: -2.6rem -2.6rem 0;
     }
@@ -575,7 +575,7 @@ footer ul {
     }
 
     .footer-logo svg {
-        width: 10rem;
+        width: 20rem;
         height: auto;
     }
 
