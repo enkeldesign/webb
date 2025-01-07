@@ -42,8 +42,8 @@
     --heading-span-clr: light-dark(var(--dark), var(--lite));
     --section-b-h2-clr: light-dark(var(--dark), var(--lite));
     --section-c-h2-clr: light-dark(var(--dark), var(--lite));
-    --summary-h3: light-dark(var(--blue), var(--teal));
-    --summary-marker: light-dark(var(--navy), var(--cyan));
+    --summary-h3: light-dark(var(--blue), var(--cyan));
+    --summary-marker: light-dark(var(--navy), var(--lite));
     --footer-clr: light-dark(var(--navy), var(--teal));
     
     --quote-clr: light-dark(var(--navy), var(--cyan));
