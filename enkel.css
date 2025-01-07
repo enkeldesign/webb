@@ -396,7 +396,6 @@ blockquote>footer {
 footer small {
     display: block;
     width: 67%;
-    z-index: 1;
     letter-spacing: 0.04rem;
     font-family: var(--alt-font);
     font-size: 1.1rem;
@@ -430,30 +429,28 @@ footer ul {
     position: absolute;
     right: 0;
     bottom: 0;
-    z-index: 0;
 }
 
 .footer-logo svg {
     height: 10rem;
     width: auto;
-    z-index: 0;
     overflow: visible;
     background: none;
 }
 
 .footer-logo path {
     fill: var(--logo-clr);
-    fill-opacity: 0.50;
+    fill-opacity: 0.30;
 }
 
 .footer-logo circle {
     fill: var(--logo-clr);
-    fill-opacity: 0.20;
+    fill-opacity: 0.10;
 
 }
 
 .footer-logo circle:last-of-type {
-    fill-opacity: 0.35;
+    fill-opacity: 0.20;
 }
 
 .visually-hidden {
