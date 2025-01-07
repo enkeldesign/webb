@@ -293,7 +293,7 @@ footer {
 
 .intro {
     padding: 1.6rem;
-    text-align: center;
+    text-align: right;
     background-color: var(--section-a-bkg);
 }
 
