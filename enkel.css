@@ -45,7 +45,7 @@
     --summary-h3: light-dark(var(--blue), var(--cyan));
     --summary-marker: light-dark(var(--navy), var(--lite));
     --footer-clr: light-dark(var(--navy), var(--teal));
-    
+
     --quote-clr: light-dark(var(--navy), var(--cyan));
     --border-clr: light-dark(var(--blue), var(--teal));
 
@@ -228,7 +228,7 @@ header svg circle:last-of-type {
 h1 {
     margin: 1rem 0 1.6rem;
     font-family: var(--heading-font);
-    font-size: 3rem;
+    font-size: 2.6rem;
     font-weight: bold;
     line-height: 1;
     color: var(--heading-clr);
@@ -255,6 +255,7 @@ main p:last-child {
 }
 
 .intro p {
+    text-align: center;
     font-size: 1.1rem;
     line-height: 1.8;
 }
@@ -542,6 +543,10 @@ footer ul {
         display: contents;
     }
 
+    h1 {
+        font-size: 3rem;
+    }
+
     .intro {
         grid-area: intro;
         padding: 0.6rem 2.6rem;
@@ -620,7 +625,6 @@ footer ul {
 
     h1 {
         margin: 1.6rem 0;
-        font-size: 3rem;
     }
 
     h1 span {
