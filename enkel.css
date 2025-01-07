@@ -20,6 +20,8 @@
     /* 700 */
     --navy: #157;
     /* 800 */
+    --rust: #760;
+    /* 900 */
     --dark: #313131;
     /* 950 */
 
@@ -42,8 +44,8 @@
     --heading-span-clr: light-dark(var(--dark), var(--lite));
     --section-b-h2-clr: light-dark(var(--dark), var(--lite));
     --section-c-h2-clr: light-dark(var(--dark), var(--lite));
-    --summary-h3: light-dark(var(--blue), var(--cyan));
-    --summary-marker: light-dark(var(--navy), var(--drab));
+    --summary-h3: light-dark(var(--blue), var(--lite));
+    --summary-marker: light-dark(var(--rust), var(--drab));
     --footer-clr: light-dark(var(--navy), var(--teal));
 
     --quote-clr: light-dark(var(--navy), var(--cyan));
@@ -404,6 +406,7 @@ footer small {
 footer small:last-of-type {
     margin-bottom: 1.6rem;
     font-weight: 600;
+    color: light-dark(var(--rust), var(--drab));
 }
 
 footer small a {
@@ -412,10 +415,6 @@ footer small a {
 
 footer small a:visited {
     color: var(--link-clr);
-}
-
-footer small:last-of-type {
-    color: light-dark(var(--oliv), var(--drab));
 }
 
 footer ul {
