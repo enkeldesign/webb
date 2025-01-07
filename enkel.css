@@ -436,6 +436,7 @@ footer ul {
 .footer-logo svg {
     height: 10rem;
     width: auto;
+    z-index: 0;
     overflow: visible;
     background: none;
 }
