@@ -20,7 +20,7 @@
     /* 700 */
     --navy: #157;
     /* 800 */
-    --rust: #760;
+    --gold: #760;
     /* 900 */
     --dark: #313131;
     /* 950 */
@@ -45,7 +45,7 @@
     --section-b-h2-clr: light-dark(var(--dark), var(--lite));
     --section-c-h2-clr: light-dark(var(--dark), var(--lite));
     --summary-h3: light-dark(var(--dark), var(--lite));
-    --summary-marker: light-dark(var(--rust), var(--drab));
+    --summary-marker: light-dark(var(--gold), var(--drab));
     --footer-clr: light-dark(var(--navy), var(--teal));
 
     --quote-clr: light-dark(var(--navy), var(--cyan));
@@ -405,7 +405,7 @@ footer small {
 footer small:last-of-type {
     margin-bottom: 1.6rem;
     font-weight: 600;
-    color: light-dark(var(--rust), var(--drab));
+    color: light-dark(var(--gold), var(--drab));
 }
 
 footer small a {
