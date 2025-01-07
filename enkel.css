@@ -27,8 +27,8 @@
 
     --body-bkg: light-dark(var(--lite), var(--dark));
     --logo-clr: light-dark(var(--teal), var(--blue));
-    --small-c-clr: light-dark(#cd2, #ee4);
-    --large-c-clr: light-dark(#7b4, #8c6);
+    --small-c-clr: light-dark(#cd2, #de3);
+    --large-c-clr: light-dark(#7b4, #8c5);
     --logo-bkg: none;
 
     --header-bkg: none;
@@ -353,7 +353,7 @@ details p {
 
 summary {
     cursor: pointer;
-    color: var(--section-c-h2-clr);
+    color: light-dark(var(--oliv),var(--section-c-h2-clr));
 }
 
 summary:focus-visible {
