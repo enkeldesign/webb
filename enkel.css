@@ -43,7 +43,7 @@
     --section-b-h2-clr: light-dark(var(--dark), var(--lite));
     --section-c-h2-clr: light-dark(var(--dark), var(--lite));
     --summary-h3: light-dark(var(--blue), var(--cyan));
-    --summary-marker: light-dark(var(--navy), var(--lite));
+    --summary-marker: light-dark(var(--navy), var(--drab));
     --footer-clr: light-dark(var(--navy), var(--teal));
 
     --quote-clr: light-dark(var(--navy), var(--cyan));
@@ -411,7 +411,11 @@ footer small a {
 }
 
 footer small a:visited {
-    color: var(--link-vis-clr);
+    color: var(--link-clr);
+}
+
+footer small:last-of-type {
+    color: light-dark(var(--oliv), var(--drab));
 }
 
 footer ul {
