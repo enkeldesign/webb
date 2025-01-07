@@ -27,8 +27,8 @@
 
     --body-bkg: light-dark(var(--lite), var(--dark));
     --logo-clr: light-dark(var(--teal), var(--blue));
-    --small-c-clr: light-dark(#cd2, #de3);
-    --large-c-clr: light-dark(#7b4, #8c5);
+    --small-c-clr: light-dark(#cd2, #bc1);
+    --large-c-clr: light-dark(#7b4, #6a3);
     --logo-bkg: none;
 
     --header-bkg: none;
@@ -216,7 +216,7 @@ svg path {
 
 header svg circle {
     fill: var(--small-c-clr);
-    fill-opacity: 0.4;
+    fill-opacity: 0.5;
 }
 
 header svg circle:last-of-type {
@@ -435,12 +435,12 @@ footer ul {
 }
 
 .footer-logo path {
-    fill: light-dark(var(--drab), var(--blue));
+    fill: var(--logo-clr);
     fill-opacity: 0.50;
 }
 
 .footer-logo circle {
-    fill: light-dark(var(--drab), var(--blue));
+    fill: var(--logo-clr);
     fill-opacity: 0.20;
 
 }
