@@ -356,8 +356,8 @@ summary {
     color: var(--section-c-h2-clr);
 }
 
-summary:marker {
-    font-size: 2rem;
+summary::marker {
+    font-size: 1.5em;
 }
 
 summary:focus-visible {
