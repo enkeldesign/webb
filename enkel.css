@@ -41,10 +41,12 @@
     --heading-clr: light-dark(var(--blue), var(--drab));
     --heading-span-clr: light-dark(var(--dark), var(--lite));
     --section-b-h2-clr: light-dark(var(--dark), var(--lite));
-    --section-c-h2-clr: light-dark(var(--blue), var(--drab));
+    --section-c-h2-clr: light-dark(var(--blue), var(--cyan));
+    --summary-h3: light-dark(var(--blue), var(--cyan));
+    --summary-marker: light-dark(var(--navy), var(--drab));
     --footer-clr: light-dark(var(--navy), var(--teal));
+    
     --quote-clr: light-dark(var(--navy), var(--cyan));
-
     --border-clr: light-dark(var(--blue), var(--teal));
 
     --link-clr: light-dark(var(--navy), var(--cyan));
@@ -353,8 +355,8 @@ details p {
 
 summary {
     cursor: pointer;
-    font-size: 1.5rem;
-    color: var(--section-c-h2-clr);
+    font-size: 1.6rem;
+    color: var(--summary-marker);
 }
 
 summary:focus-visible {
@@ -366,8 +368,9 @@ summary h3 {
     display: inline;
     margin-left: -0.25rem;
     font-family: var(--heading-font);
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     font-weight: bold;
+    color: var(--summary-h3);
 }
 
 blockquote {
