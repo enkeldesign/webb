@@ -48,8 +48,8 @@
     --summary-marker: light-dark(var(--gold), var(--drab));
     --footer-clr: light-dark(var(--navy), var(--teal));
 
-    --quote-clr: light-dark(var(--navy), var(--cyan));
-    --border-clr: light-dark(var(--blue), var(--teal));
+    --quote-clr: light-dark(var(--navy), var(--drab));
+    --border-clr: light-dark(var(--blue), var(--oliv));
 
     --link-clr: light-dark(var(--navy), var(--cyan));
     --link-vis-clr: light-dark(#425, #edf);
