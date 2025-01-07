@@ -396,6 +396,7 @@ blockquote>footer {
 footer small {
     display: block;
     width: 67%;
+    z-index: 1;
     letter-spacing: 0.04rem;
     font-family: var(--alt-font);
     font-size: 1.1rem;
@@ -429,6 +430,7 @@ footer ul {
     position: absolute;
     right: 0;
     bottom: 0;
+    z-index: 0;
 }
 
 .footer-logo svg {
