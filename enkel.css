@@ -353,11 +353,8 @@ details p {
 
 summary {
     cursor: pointer;
+    font-size: 2rem;
     color: var(--section-c-h2-clr);
-}
-
-summary::marker {
-    font-size: 2em;
 }
 
 summary:focus-visible {
