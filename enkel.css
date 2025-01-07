@@ -30,7 +30,7 @@
     --body-bkg: light-dark(var(--lite), var(--dark));
     --logo-clr: light-dark(var(--teal), var(--blue));
     --small-c-clr: light-dark(#cd2, #ab1);
-    --large-c-clr: light-dark(#7b4, #592);
+    --large-c-clr: light-dark(#7b6, #594);
     --logo-bkg: none;
 
     --header-bkg: none;
