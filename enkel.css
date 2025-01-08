@@ -613,6 +613,10 @@ footer ul {
         grid-template-rows: auto 1fr auto auto;
     }
 
+    footer {
+        padding-left: 0;
+    }
+
     label {
         top: 2.6rem;
         left: 0;
