@@ -212,7 +212,7 @@ svg {
     background-color: var(--logo-bkg);
 }
 
-svg path {
+svg path, rect {
     fill: var(--logo-clr);
 }
 
