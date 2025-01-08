@@ -441,7 +441,6 @@ footer ul {
 
 .footer-logo path {
     fill: var(--logo-clr);
-    fill-opacity: 0.30;
 }
 
 .footer-logo circle {
