@@ -45,7 +45,7 @@
     --section-b-h2-clr: light-dark(var(--dark), var(--lite));
     --section-c-h2-clr: light-dark(var(--dark), var(--lite));
     --summary-h3: light-dark(var(--dark), var(--lite));
-    --summary-marker: light-dark(var(--gold), var(--drab));
+    --summary-marker: light-dark(var(--navy), var(--drab));
     --footer-clr: light-dark(var(--navy), var(--teal));
 
     --quote-clr: light-dark(var(--navy), var(--lite));
