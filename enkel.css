@@ -613,6 +613,14 @@ footer ul {
         grid-template-rows: auto 1fr auto auto;
     }
 
+    header {
+        border-top-left-radius: 3rem;
+    }
+    
+    .enkel-design {
+        border-bottom-right-radius: 3rem;
+    }
+    
     footer {
         padding-left: 0;
     }
