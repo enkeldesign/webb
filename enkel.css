@@ -613,7 +613,7 @@ footer ul {
         grid-template-rows: auto 1fr auto auto;
     }
 
-    header {
+    .about {
         border-top-left-radius: 3rem;
     }
     
