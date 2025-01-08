@@ -563,6 +563,7 @@ footer ul {
     .about {
         grid-area: about;
         padding: 1.6rem 2.6rem;
+        border-top-left-radius: 3rem;
         text-align: left;
     }
 
@@ -574,7 +575,6 @@ footer ul {
         grid-area: enkel-design;
         padding: 1.6rem 2.6rem;
         margin-top: 0;
-        border-radius: none;
         text-align: left;
     }
 
@@ -614,14 +614,6 @@ footer ul {
         width: min(62vw, 75em);
         margin: 0 auto;
         grid-template-rows: auto 1fr auto auto;
-    }
-
-    .about {
-        border-top-left-radius: 3rem;
-    }
-    
-    .enkel-design {
-        border-bottom-right-radius: 3rem;
     }
     
     footer {
