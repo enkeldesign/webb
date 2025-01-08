@@ -296,7 +296,7 @@ footer {
 
 .intro {
     padding: 1.6rem;
-    text-align: right;
+    text-align: center;
     border-top-left-radius: 3rem;
     background-color: var(--section-a-bkg);
 }
