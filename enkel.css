@@ -296,6 +296,7 @@ footer {
 .intro {
     padding: 1.6rem;
     text-align: right;
+    border-top-left-radius: 3rem;
     background-color: var(--section-a-bkg);
 }
 
@@ -314,6 +315,7 @@ footer {
 .enkel-design {
     /* margin-top: 2.6rem; */
     padding: 1.6rem;
+    border-bottom-right-radius: 3rem;
     background-color: var(--section-c-bkg);
 }
 
@@ -552,6 +554,7 @@ footer ul {
     .intro {
         grid-area: intro;
         padding: 0.6rem 2.6rem;
+        border-radius: none;
         text-align: left;
         align-content: center;
         align-items: center;
@@ -571,7 +574,7 @@ footer ul {
         grid-area: enkel-design;
         padding: 1.6rem 2.6rem;
         margin-top: 0;
-
+        border-radius: none;
         text-align: left;
     }
 
