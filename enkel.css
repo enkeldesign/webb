@@ -441,8 +441,7 @@ footer ul {
 }
 
 .footer-logo path,
-.footer-logo rect,
- {
+.footer-logo rect {
     fill: var(--logo-footer-clr);
 }
 
