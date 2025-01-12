@@ -511,9 +511,7 @@ footer ul {
 
     header {
         grid-area: header;
-        padding: 0.6rem 2.6rem;
-
-
+        padding: 1.6rem 2.6rem;
     }
 
     main {
