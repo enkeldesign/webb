@@ -30,7 +30,6 @@
 
     --body-bkg: light-dark(var(--lite), var(--dark));
     --logo-clr: light-dark(var(--teal), var(--blue));
-    --logo-footer-clr: light-dark(var(--cyan), var(--navy));
     --small-c-clr: light-dark(#cd2, #ab1);
     --large-c-clr: light-dark(#7b6, #594);
     --logo-bkg: none;
@@ -214,7 +213,7 @@ svg {
     background-color: var(--logo-bkg);
 }
 
-svg path, rect {
+svg path {
     fill: var(--logo-clr);
 }
 
@@ -441,9 +440,9 @@ footer ul {
     background: none;
 }
 
-.footer-logo path,
-.footer-logo rect {
-    fill: var(--logo-footer-clr);
+.footer-logo path {
+    fill: var(--logo-clr);
+    fill-opacity: 0.30;
 }
 
 .footer-logo circle {
