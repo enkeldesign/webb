@@ -10,6 +10,8 @@
     /* 50 */
     --cyan: #9cd;
     /* 200 */
+    --moss: #bca;
+    /* 200 */
     --teal: #8bc;
     /* 400 */
     --drab: #bb6;
@@ -23,6 +25,9 @@
     /* 800 */
     --gold: #760;
     /* 900 */
+    --deep: #033;
+    --deep: color(display-p3 0.000000 0.200000 0.200000 / 1.000000);
+    /* 950 */
     --dark: #313131;
     /* 950 */
 
@@ -38,19 +43,19 @@
     --footer-bkg: none;
     --section-a-bkg: light-dark(var(--logo-clr), var(--logo-clr));
     --section-b-bkg: light-dark(var(--logo-clr), var(--logo-clr));
-    --section-c-bkg: light-dark(var(--cyan), var(--navy));
+    --section-c-bkg: light-dark(var(--moss), var(--deep));
 
     --text-clr: light-dark(var(--dark), var(--lite));
     --heading-clr: light-dark(var(--blue), var(--drab));
     --heading-span-clr: light-dark(var(--dark), var(--lite));
-    --section-b-h2-clr: light-dark(var(--dark), var(--lite));
-    --section-c-h2-clr: light-dark(var(--dark), var(--lite));
+    --section-b-h2-clr: light-dark(var(--navy), var(--teal));
+    --section-c-h2-clr: light-dark(var(--deep), var(--moss));
     --summary-h3: light-dark(var(--dark), var(--lite));
-    --summary-marker: light-dark(var(--navy), var(--drab));
+    --summary-marker: light-dark(var(--deep), var(--drab));
     --footer-clr: light-dark(var(--navy), var(--teal));
 
-    --quote-clr: light-dark(var(--navy), var(--lite));
-    --border-clr: light-dark(var(--blue), var(--drab));
+    --quote-clr: light-dark(var(--deep), var(--moss));
+    --border-clr: light-dark(var(--oliv), var(--drab));
 
     --link-clr: light-dark(var(--navy), var(--cyan));
     --link-vis-clr: light-dark(#425, #edf);
@@ -586,7 +591,7 @@ footer ul {
         margin: 0 auto;
         grid-template-rows: auto 1fr auto auto;
     }
-    
+
     footer {
         padding-left: 0;
     }
