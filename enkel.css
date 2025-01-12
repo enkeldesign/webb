@@ -390,7 +390,7 @@ footer small {
 footer small:last-of-type {
     margin-bottom: 1.6rem;
     font-weight: 600;
-    color: light-dark(var(--gold), var(--drab));
+    color: light-dark(var(--blue), var(--drab));
 }
 
 footer small a {
