@@ -50,6 +50,7 @@
     --heading-span-clr: light-dark(var(--dark), var(--lite));
     --section-b-h2-clr: light-dark(var(--navy), var(--teal));
     --section-c-h2-clr: light-dark(var(--dark), var(--teal));
+    --details-ul-clr: light-dark(var(--navy), var(--moss));
     --summary-h3: light-dark(var(--dark), var(--lite));
     --summary-marker: light-dark(var(--blue), var(--drab));
     --footer-clr: light-dark(var(--navy), var(--teal));
@@ -339,6 +340,7 @@ details[open]::details-content {
 
 details ul {
     margin: 1rem 1.6rem 1.6rem;
+    color: var(--details-ul-clr);
 }
 
 details p {
