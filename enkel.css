@@ -25,9 +25,9 @@
     /* 800 */
     --gold: #760;
     /* 900 */
-    --deep: #044;
-    --deep: color(display-p3 0.000000 0.266667 0.266667 / 1.000000);
-    /* 950 */
+    --deep: #055;
+    --deep: color(display-p3 0.000000 0.333333 0.333333 / 1.000000);
+    /* 900 */
     --dark: #313131;
     /* 950 */
 
@@ -43,13 +43,13 @@
     --footer-bkg: none;
     --section-a-bkg: light-dark(var(--logo-clr), var(--logo-clr));
     --section-b-bkg: light-dark(var(--logo-clr), var(--logo-clr));
-    --section-c-bkg: light-dark(var(--moss), var(--deep));
+    --section-c-bkg: light-dark(var(--moss), var(--navy));
 
     --text-clr: light-dark(var(--dark), var(--lite));
     --heading-clr: light-dark(var(--blue), var(--drab));
     --heading-span-clr: light-dark(var(--dark), var(--lite));
     --section-b-h2-clr: light-dark(var(--navy), var(--teal));
-    --section-c-h2-clr: light-dark(var(--deep), var(--moss));
+    --section-c-h2-clr: light-dark(var(--deep), var(--teal));
     --summary-h3: light-dark(var(--dark), var(--lite));
     --summary-marker: light-dark(var(--deep), var(--drab));
     --footer-clr: light-dark(var(--navy), var(--teal));
