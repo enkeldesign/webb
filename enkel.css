@@ -194,10 +194,9 @@ svg {
     height: 100%;
     width: auto;
     max-width: 100%;
-    vertical-align: bottom;
     margin: 0;
     padding: 0;
-    overflow: clip;
+    overflow: visible;
     background-color: var(--logo-bkg);
 }
 
@@ -258,10 +257,10 @@ header {
     max-width: 100vw;
     max-width: 100dvw;
     display: flex;
+    padding: 1.6rem;
     flex-direction: column;
-    align-items: flex-end;
-    justify-content: right;
-    aspect-ratio: 13 / 8;
+    align-items: center;
+    justify-content: center;
     line-height: 0;
     background-color: var(--header-bkg);
 }
@@ -423,7 +422,7 @@ footer ul {
 }
 
 .footer-logo svg {
-    height: 10rem;
+    height: 5rem;
     width: auto;
     overflow: visible;
     background: none;
@@ -512,13 +511,9 @@ footer ul {
 
     header {
         grid-area: header;
-        height: 100%;
-        width: auto;
-        max-width: 50vw;
-        max-width: 50dvw;
-        align-self: right;
-        margin-right: 0;
-        padding-right: 0;
+        padding: 0.6rem 2.6rem;
+
+
     }
 
     main {
@@ -531,6 +526,8 @@ footer ul {
 
     .intro {
         grid-area: intro;
+        margin-top: 1rem;
+
         padding: 0.6rem 2.6rem;
         border-radius: none;
         text-align: left;
@@ -566,11 +563,6 @@ footer ul {
         display: block;
         width: auto;
         text-align: left;
-    }
-
-    svg {
-        margin: 0;
-        height: 100%;
     }
 
     label {
