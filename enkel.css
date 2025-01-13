@@ -578,7 +578,11 @@ footer ul {
         margin: 0 auto;
         grid-template-rows: auto 1fr auto auto;
     }
-
+    
+    header {
+        padding: 2.6rem 2.6rem 0;
+    }
+    
     footer {
         padding-left: 0;
     }
