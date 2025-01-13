@@ -518,6 +518,10 @@ footer ul {
         display: contents;
     }
 
+    svg {
+        max-height: 75%;
+    }
+    
     h1 {
         margin-top: 0;
     }
@@ -600,6 +604,10 @@ footer ul {
         height: 2.6rem;
     }
 
+    svg {
+        max-height: 62%;
+    }
+    
     h1 {
         margin: 1.6rem 0;
     }
