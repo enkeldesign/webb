@@ -59,7 +59,7 @@
     --footer-clr: light-dark(var(--navy), var(--teal));
 
     --quote-clr: light-dark(var(--deep), var(--moss));
-    --border-clr: light-dark(var(--oliv), var(--drab));
+    --border-clr: light-dark(var(--navy), var(--drab));
 
     --link-clr: light-dark(var(--navy), var(--cyan));
     --link-vis-clr: light-dark(#425, #edf);
