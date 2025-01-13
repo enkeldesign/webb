@@ -574,7 +574,7 @@ footer ul {
 
 @media (min-width: 70em) {
     :root {
-        --logo-clr: light-dark(#bcd, #256);
+        --logo-clr: light-dark(#bdd, #145);
     }
     
     body {
