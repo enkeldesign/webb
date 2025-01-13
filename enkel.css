@@ -510,7 +510,7 @@ footer ul {
 
     header {
         grid-area: header;
-        padding: 1.6rem 0 0 2.6rem;
+        padding: 0 2.6rem;
     }
 
     main {
@@ -519,7 +519,6 @@ footer ul {
 
     svg {
         max-height: 85%;
-        margin-left: auto;
     }
     
     h1 {
@@ -528,12 +527,9 @@ footer ul {
     
     .intro {
         grid-area: intro;
-        margin-top: 1rem;
-        padding: 0.6rem 2.6rem;
+        padding: 0.6rem 2.6rem 0.6rem 0;
         border-radius: none;
         text-align: left;
-        align-content: center;
-        align-items: center;
     }
 
     .about {
