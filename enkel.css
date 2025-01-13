@@ -10,8 +10,11 @@
     /* 50 */
     --cyan: #9cd;
     /* 200 */
+    --cold: #bdd;
+    /* 200 */
     --moss: #bca;
     /* 200 */
+    
     --teal: #8bc;
     /* 400 */
     --drab: #bb6;
@@ -21,12 +24,12 @@
     --blue: #168;
     --blue: color(display-p3 0.066667 0.400000 0.533333 / 1.000000);
     /* 700 */
+    
     --navy: #157;
     /* 800 */
     --gold: #760;
     /* 900 */
-    --deep: #342;
-    --deep: color(display-p3 0.200000 0.266667 0.133333 / 1.000000);
+    --deep: #145;
     /* 900 */
     --dark: #313131;
     /* 950 */
@@ -574,7 +577,7 @@ footer ul {
 
 @media (min-width: 70em) {
     :root {
-        --logo-clr: light-dark(#bdd, #145);
+        --logo-clr: light-dark(var(--cold), var(--deep));
     }
     
     body {
