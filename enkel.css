@@ -194,8 +194,7 @@ svg {
     height: 100%;
     width: auto;
     max-width: 100%;
-    margin: 0;
-    padding: 0;
+    transform: translateY(6.8%);
     overflow: visible;
     background-color: var(--logo-bkg);
 }
@@ -520,6 +519,7 @@ footer ul {
 
     svg {
         max-height: 85%;
+        transform: none;
     }
     
     h1 {
