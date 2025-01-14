@@ -362,7 +362,7 @@ blockquote {
     border-left: solid 6px var(--border-clr);
     padding-left: 1rem;
     margin: 1.6rem 0;
-    font-size: 1.4rem;
+    font-size: 1.2rem;
     line-height: 1.5;
     font-family: ui-serif, serif;
     color: var(--quote-clr);
