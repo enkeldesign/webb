@@ -262,7 +262,7 @@ main {
 
 footer {
     grid-column: 1;
-    padding: 2.6rem 1.6rem 0;
+    padding: 1.6rem 1.6rem;
     position: relative;
     background-color: var(--footer-bkg);
     color: var(--footer-clr);
@@ -383,7 +383,6 @@ footer small {
 }
 
 footer small:last-of-type {
-    margin-bottom: 1.6rem;
     font-weight: 600;
     color: light-dark(var(--blue), var(--drab));
 }
@@ -407,7 +406,7 @@ footer ul {
 .footer-logo {
     position: absolute;
     right: 1.6rem;
-    bottom: 2rem;
+    bottom: 1.6rem;
 }
 
 .footer-logo svg {
