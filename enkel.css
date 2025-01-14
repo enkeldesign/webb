@@ -193,9 +193,12 @@ svg {
     height: 100%;
     width: auto;
     max-width: 100%;
-    transform: translateY(6.7%);
     overflow: visible;
     background-color: var(--logo-bkg);
+}
+
+header svg {
+    transform: translateY(6.7%);
 }
 
 svg path {
@@ -418,7 +421,7 @@ footer ul {
 
 .footer-logo path {
     fill: var(--logo-clr);
-    fill-opacity: 0.30;
+    fill-opacity: 0.50;
 }
 
 .visually-hidden {
