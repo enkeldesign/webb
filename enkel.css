@@ -25,7 +25,7 @@
     /* 700 */
     --navy: #157;
     /* 800 */
-    --gold: #751;
+    --rust: #543;
     /* 900 */
     --deep: #145;
     /* 900 */
@@ -45,17 +45,17 @@
     --section-c-bkg: light-dark(var(--cold), var(--navy));
 
     --text-clr: light-dark(var(--dark), var(--lite));
-    --heading-clr: light-dark(var(--gold), var(--drab));
+    --heading-clr: light-dark(var(--rust), var(--drab));
     --heading-span-clr: light-dark(var(--dark), var(--lite));
     --section-b-h2-clr: light-dark(var(--navy), var(--teal));
     --section-c-h2-clr: light-dark(var(--dark), var(--moss));
     --details-ul-clr: light-dark(var(--deep), var(--lite));
     --summary-h3: light-dark(var(--dark), var(--lite));
-    --summary-marker: light-dark(var(--gold), var(--drab));
+    --summary-marker: light-dark(var(--rust), var(--drab));
     --footer-clr: light-dark(var(--navy), var(--teal));
 
-    --quote-clr: light-dark(var(--gold), var(--moss));
-    --border-clr: light-dark(var(--gold), var(--drab));
+    --quote-clr: light-dark(var(--rust), var(--moss));
+    --border-clr: light-dark(var(--rust), var(--drab));
 
     --link-clr: light-dark(var(--navy), var(--cyan));
     --link-vis-clr: light-dark(#425, #edf);
@@ -387,7 +387,7 @@ footer small {
 
 footer small:last-of-type {
     font-weight: 600;
-    color: light-dark(var(--gold), var(--drab));
+    color: light-dark(var(--rust), var(--drab));
 }
 
 footer small a {
@@ -420,7 +420,7 @@ footer ul {
 }
 
 .footer-logo path {
-    fill: light-dark(var(--gold), var(--drab));
+    fill: light-dark(var(--rust), var(--drab));
     fill-opacity: 0.50;
 }
 
