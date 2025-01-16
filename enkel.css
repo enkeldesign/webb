@@ -25,7 +25,7 @@
     /* 700 */
     --navy: #157;
     /* 800 */
-    --gold: #760;
+    --gold: #751;
     /* 900 */
     --deep: #145;
     /* 900 */
@@ -51,11 +51,11 @@
     --section-c-h2-clr: light-dark(var(--dark), var(--moss));
     --details-ul-clr: light-dark(var(--deep), var(--lite));
     --summary-h3: light-dark(var(--dark), var(--lite));
-    --summary-marker: light-dark(var(--blue), var(--drab));
+    --summary-marker: light-dark(var(--gold), var(--drab));
     --footer-clr: light-dark(var(--navy), var(--teal));
 
-    --quote-clr: light-dark(var(--deep), var(--moss));
-    --border-clr: light-dark(var(--navy), var(--drab));
+    --quote-clr: light-dark(var(--gold), var(--moss));
+    --border-clr: light-dark(var(--gold), var(--drab));
 
     --link-clr: light-dark(var(--navy), var(--cyan));
     --link-vis-clr: light-dark(#425, #edf);
