@@ -16,10 +16,8 @@
     /* 200 */
     --teal: #8bc;
     /* 400 */
-    --drab: #bb6;
+    --lime: #bb6;
     /* 400 */
-    --oliv: #994;
-    /* 500 */
     --blue: #168;
     --blue: color(display-p3 0.066667 0.400000 0.533333 / 1.000000);
     /* 700 */
@@ -45,17 +43,17 @@
     --section-c-bkg: light-dark(var(--cold), var(--navy));
 
     --text-clr: light-dark(var(--dark), var(--lite));
-    --heading-clr: light-dark(var(--rust), var(--drab));
+    --heading-clr: light-dark(var(--rust), var(--lime));
     --heading-span-clr: light-dark(var(--dark), var(--lite));
     --section-b-h2-clr: light-dark(var(--rust), var(--cold));
     --section-c-h2-clr: light-dark(var(--rust), var(--cold));
     --details-ul-clr: light-dark(var(--rust), var(--moss));
     --summary-h3: light-dark(var(--dark), var(--lite));
-    --summary-marker: light-dark(var(--rust), var(--drab));
+    --summary-marker: light-dark(var(--rust), var(--lime));
     --footer-clr: light-dark(var(--navy), var(--teal));
 
     --quote-clr: light-dark(var(--rust), var(--moss));
-    --border-clr: light-dark(var(--rust), var(--drab));
+    --border-clr: light-dark(var(--rust), var(--lime));
 
     --link-clr: light-dark(var(--navy), var(--cyan));
     --link-vis-clr: light-dark(#425, #edf);
@@ -387,7 +385,7 @@ footer small {
 
 footer small:last-of-type {
     font-weight: 600;
-    color: light-dark(var(--rust), var(--drab));
+    color: light-dark(var(--rust), var(--lime));
 }
 
 footer small a {
@@ -420,7 +418,7 @@ footer ul {
 }
 
 .footer-logo path {
-    fill: light-dark(var(--rust), var(--drab));
+    fill: light-dark(var(--rust), var(--lime));
     fill-opacity: 0.50;
 }
 
@@ -473,7 +471,6 @@ footer ul {
 
 @media (min-width: 45em) {
     :root {
-        --heading-clr: light-dark(var(--blue), var(--oliv));
         --section-a-bkg: none;
     }
 
