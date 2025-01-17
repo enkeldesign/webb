@@ -6,9 +6,9 @@
 
     /* Color palette with brightness 50-950 */
 
-    --lite: #f4f4f4;
+    --mist: #f4f4f4;
     /* 50 */
-    --cold: #bdd;
+    --cyan: #bdd;
     /* 200 */
     --moss: #bca;
     /* 200 */
@@ -30,7 +30,7 @@
 
     /* Color application */
 
-    --body-bkg: light-dark(var(--lite), var(--dark));
+    --body-bkg: light-dark(var(--mist), var(--dark));
     --logo-clr: light-dark(var(--teal), var(--blue));
     --logo-bkg: none;
 
@@ -38,22 +38,22 @@
     --footer-bkg: none;
     --section-a-bkg: light-dark(var(--logo-clr), var(--logo-clr));
     --section-b-bkg: light-dark(var(--logo-clr), var(--logo-clr));
-    --section-c-bkg: light-dark(var(--cold), var(--navy));
+    --section-c-bkg: light-dark(var(--cyan), var(--navy));
 
-    --text-clr: light-dark(var(--dark), var(--lite));
+    --text-clr: light-dark(var(--dark), var(--mist));
     --heading-clr: light-dark(var(--rust), var(--lime));
-    --heading-span-clr: light-dark(var(--dark), var(--lite));
-    --section-b-h2-clr: light-dark(var(--rust), var(--cold));
-    --section-c-h2-clr: light-dark(var(--rust), var(--cold));
+    --heading-span-clr: light-dark(var(--dark), var(--mist));
+    --section-b-h2-clr: light-dark(var(--rust), var(--cyan));
+    --section-c-h2-clr: light-dark(var(--rust), var(--cyan));
     --details-ul-clr: light-dark(var(--rust), var(--moss));
-    --summary-h3: light-dark(var(--dark), var(--lite));
+    --summary-h3: light-dark(var(--dark), var(--mist));
     --summary-marker: light-dark(var(--rust), var(--lime));
     --footer-clr: light-dark(var(--navy), var(--teal));
 
     --quote-clr: light-dark(var(--rust), var(--moss));
     --border-clr: light-dark(var(--rust), var(--lime));
 
-    --link-clr: light-dark(var(--navy), var(--cold));
+    --link-clr: light-dark(var(--navy), var(--cyan));
     --link-vis-clr: light-dark(#425, #edf);
     --link-hov-foc-clr: light-dark(#125, #cdf);
 
