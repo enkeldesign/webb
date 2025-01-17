@@ -559,9 +559,6 @@ footer ul {
 /* */
 
 @media (min-width: 70em) {
-    :root {
-        --logo-clr: light-dark(var(--cold), var(--blue));
-    }
     
     body {
         width: min(62vw, 75em);
