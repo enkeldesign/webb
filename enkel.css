@@ -25,7 +25,7 @@
     /* 700 */
     --navy: #157;
     /* 800 */
-    --rust: #543;
+    --rust: #541;
     /* 900 */
     --deep: #145;
     /* 900 */
@@ -47,9 +47,9 @@
     --text-clr: light-dark(var(--dark), var(--lite));
     --heading-clr: light-dark(var(--rust), var(--drab));
     --heading-span-clr: light-dark(var(--dark), var(--lite));
-    --section-b-h2-clr: light-dark(var(--rust), var(--moss));
-    --section-c-h2-clr: light-dark(var(--rust), var(--teal));
-    --details-ul-clr: light-dark(var(--deep), var(--moss));
+    --section-b-h2-clr: light-dark(var(--rust), var(--cold));
+    --section-c-h2-clr: light-dark(var(--rust), var(--cold));
+    --details-ul-clr: light-dark(var(--rust), var(--moss));
     --summary-h3: light-dark(var(--dark), var(--lite));
     --summary-marker: light-dark(var(--rust), var(--drab));
     --footer-clr: light-dark(var(--navy), var(--teal));
