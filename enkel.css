@@ -45,7 +45,7 @@
     --heading-span-clr: light-dark(var(--dark), var(--mist));
     --section-b-h2-clr: light-dark(var(--rust), var(--cyan));
     --section-c-h2-clr: light-dark(var(--rust), var(--cyan));
-    --details-ul-clr: light-dark(var(--rust), var(--moss));
+    --details-ul-clr: light-dark(var(--rust), var(--mist));
     --summary-h3: light-dark(var(--dark), var(--mist));
     --summary-marker: light-dark(var(--rust), var(--lime));
     --footer-clr: light-dark(var(--navy), var(--teal));
