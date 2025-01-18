@@ -553,7 +553,7 @@ footer ul {
 
     label,
     input {
-        left: 2.6rem;
+        right: 2.6rem;
     }
 
     .footer-logo {
@@ -592,7 +592,7 @@ footer ul {
 
     label,
     input {
-        left: 0;
+        right: 0;
     }
 
     label span::after {
