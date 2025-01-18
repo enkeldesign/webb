@@ -131,7 +131,7 @@ a:visited {
 /* */
 
 input {
-    position: absolute;
+    position: fixed;
     top: 1.6rem;
     right: 1.6rem;
     appearance: none;
@@ -177,7 +177,7 @@ footer figure a:visited:focus-visible {
 }
 
 label {
-    position: absolute;
+    position: fixed;
     top: 1.6rem;
     right: 1.6rem;
     cursor: pointer;
