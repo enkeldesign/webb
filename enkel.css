@@ -158,7 +158,10 @@ button:hover {
     color: light-dark(#fff, #000);
 }
 
-button:focus-visible {
+button:focus-visible,
+label:focus-within,
+summary:focus-visible,
+footer figure:focus-within {
     outline: 2px auto;
     outline-offset: 4px;
 }
@@ -178,11 +181,6 @@ label span::after {
     background-image: url("/dark.svg");
     background-size: contain;
     background-repeat: no-repeat;
-}
-
-label:focus-within {
-    outline: 2px auto;
-    outline-offset: 4px;
 }
 
 /* */
@@ -341,11 +339,6 @@ summary {
     cursor: pointer;
     font-size: 1.6rem;
     color: var(--summary-marker);
-}
-
-summary:focus-visible {
-    outline: 2px auto;
-    outline-offset: 4px;
 }
 
 summary h3 {
