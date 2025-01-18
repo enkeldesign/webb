@@ -107,6 +107,7 @@ body {
 
 body>section:first-child {
     position: relative;
+    width: 100%;
 }
 
 /* */
@@ -188,6 +189,9 @@ label {
 }
 
 label span::after {
+    position: absolute;
+    top: 1.6rem;
+    right: 1.6rem;
     content: "";
     display: inline-block;
     width: 1.6rem;
@@ -556,8 +560,8 @@ footer ul {
     }
 
     label,
-    input,
-    label span::after {
+    label span::after,
+    input {
         right: 2.6rem;
     }
 
@@ -596,8 +600,8 @@ footer ul {
     }
 
     label,
-    input,
-    label span::after {
+    label span::after,
+    input {
         right: 0;
     }
 
