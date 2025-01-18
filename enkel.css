@@ -102,6 +102,10 @@ body {
     overflow-x: clip;
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr auto;
+    grid-template-areas: 
+        "header"
+        "main"
+        "footer";
     font-family: var(--body-font);
 }
 
@@ -131,7 +135,7 @@ a:visited {
 /* */
 
 input {
-    position: fixed;
+    position: absolute;
     top: 1.6rem;
     right: 1.6rem;
     appearance: none;
@@ -177,7 +181,7 @@ footer figure a:visited:focus-visible {
 }
 
 label {
-    position: fixed;
+    position: absolute;
     top: 1.6rem;
     right: 1.6rem;
     cursor: pointer;
