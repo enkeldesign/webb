@@ -167,6 +167,15 @@ footer figure:focus-within {
     outline-offset: 4px;
 }
 
+footer figure a:hover,
+footer figure a:visited,
+footer figure a:visited:hover,
+footer figure a:focus-visible,
+footer figure a:visited:focus-visible {
+    background-color: transparent;
+    color: transparent;
+}
+
 label {
     position: absolute;
     top: 1.6rem;
