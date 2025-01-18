@@ -98,16 +98,11 @@ body {
     min-height: 100vh;
     min-height: 100dvh;
     display: grid;
-    /*position: relative;*/
+    position: relative;
     overflow-x: clip;
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr auto;
     font-family: var(--body-font);
-}
-
-body>section:first-child {
-    position: relative;
-    width: 100%;
 }
 
 /* */
