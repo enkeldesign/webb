@@ -111,6 +111,7 @@ abbr {
 
 a {
     color: var(--link-clr);
+    font-weight: bold;
 }
 
 a:hover,
@@ -385,6 +386,10 @@ footer small {
 footer small:last-of-type {
     font-weight: 600;
     color: var(--footer-clr);
+}
+
+footer a {
+    font-weight: normal;
 }
 
 footer small a {
