@@ -136,7 +136,7 @@ a:visited {
 
 input {
     position: absolute;
-    top: 1.6rem;
+    top: 0.6rem;
     right: 1.6rem;
     appearance: none;
     opacity: 0;
@@ -182,7 +182,7 @@ footer figure a:visited:focus-visible {
 
 label {
     position: absolute;
-    top: 1.6rem;
+    top: 0.6rem;
     right: 1.6rem;
     cursor: pointer;
 }
@@ -557,6 +557,7 @@ footer ul {
 
     label,
     input {
+        top: 2.6rem;
         right: 2.6rem;
     }
 
