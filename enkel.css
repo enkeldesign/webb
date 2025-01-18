@@ -8,6 +8,8 @@
 
     --mist: #f4f4f4;
     /* 50 */
+    --haze: #ddd;
+    /* 200 */
     --cyan: #bdd;
     /* 200 */
     --moss: #bca;
@@ -21,6 +23,8 @@
     /* 700 */
     --navy: #157;
     /* 800 */
+    --mine: #444;
+    /* 800 */
     --rust: #432;
     /* 900 */
     --deep: #145;
@@ -31,24 +35,25 @@
     /* Color application */
 
     --body-bkg: light-dark(var(--mist), var(--dark));
-    --logo-clr: light-dark(var(--teal), var(--blue));
+    --logo-clr: light-dark(var(--moss), var(--navy));
     --logo-bkg: none;
 
     --header-bkg: none;
     --footer-bkg: none;
     --section-a-bkg: light-dark(var(--logo-clr), var(--logo-clr));
     --section-b-bkg: light-dark(var(--logo-clr), var(--logo-clr));
-    --section-c-bkg: light-dark(var(--cyan), var(--navy));
+    --section-c-bkg: light-dark(var(--teal), var(--deep));
 
     --text-clr: light-dark(var(--dark), var(--mist));
     --heading-clr: light-dark(var(--rust), var(--lime));
     --heading-span-clr: light-dark(var(--dark), var(--mist));
-    --section-b-h2-clr: light-dark(var(--rust), var(--cyan));
-    --section-c-h2-clr: light-dark(var(--rust), var(--cyan));
+    --section-b-h2-clr: light-dark(var(--rust), var(--moss));
+    --section-c-h2-clr: light-dark(var(--deep), var(--moss));
     --details-ul-clr: light-dark(var(--rust), var(--mist));
     --summary-h3: light-dark(var(--dark), var(--mist));
-    --summary-marker: light-dark(var(--rust), var(--lime));
-    --footer-clr: light-dark(var(--navy), var(--teal));
+    --summary-marker: light-dark(var(--blue), var(--lime));
+    --footer-clr: light-dark(var(--navy), var(--lime));
+    --footer-logo-clr: light-dark(var(--rust), var(--lime));
 
     --quote-clr: light-dark(var(--rust), var(--moss));
     --border-clr: light-dark(var(--rust), var(--lime));
@@ -383,7 +388,7 @@ footer small {
 
 footer small:last-of-type {
     font-weight: 600;
-    color: light-dark(var(--rust), var(--lime));
+    color: var(--footer-clr);
 }
 
 footer small a {
@@ -416,8 +421,7 @@ footer ul {
 }
 
 .footer-logo path {
-    fill: light-dark(var(--rust), var(--lime));
-    fill-opacity: 0.50;
+    fill: var(--footer-logo-clr);
 }
 
 .visually-hidden {
@@ -497,7 +501,7 @@ footer ul {
     h1 {
         margin-top: 0;
     }
-    
+
     .intro {
         grid-area: intro;
         padding: 1.6rem 2.6rem 0 0;
@@ -535,15 +539,16 @@ footer ul {
         text-align: left;
     }
 
-    label, input {
+    label,
+    input {
         left: 2.6rem;
     }
-    
+
     .footer-logo {
         right: 2.6rem;
         bottom: 2.6rem;
     }
-    
+
     .footer-logo svg {
         width: 10rem;
         height: auto;
@@ -554,25 +559,27 @@ footer ul {
 /* */
 
 @media (min-width: 70em) {
-    
+
     body {
         width: min(62vw, 75em);
         margin: 0 auto;
         grid-template-rows: auto 1fr auto auto;
     }
-    
+
     header {
         padding: 4.2rem 2.6rem 0;
     }
+
     .intro {
         padding-top: 3.1rem;
     }
-    
+
     footer {
         padding-left: 0;
     }
 
-    label, input {
+    label,
+    input {
         left: 0;
     }
 
@@ -582,7 +589,7 @@ footer ul {
         width: 2.6rem;
         height: 2.6rem;
     }
-    
+
     h1 {
         margin: 1.6rem 0;
     }
@@ -595,9 +602,9 @@ footer ul {
         font-size: 1.2rem;
         color: var(--text-clr);
     }
-    
+
     .footer-logo {
         right: 0;
     }
-    
+
 }
