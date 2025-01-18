@@ -556,7 +556,8 @@ footer ul {
     }
 
     label,
-    input {
+    input,
+    label span::after {
         right: 2.6rem;
     }
 
@@ -595,7 +596,8 @@ footer ul {
     }
 
     label,
-    input {
+    input,
+    label span::after {
         right: 0;
     }
 
