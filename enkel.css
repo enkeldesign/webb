@@ -408,6 +408,14 @@ footer ul {
     bottom: 1.6rem;
 }
 
+.footer-logo a {
+    display: block;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+    color: transparent;
+}
+
 .footer-logo svg {
     height: 3rem;
     width: auto;
