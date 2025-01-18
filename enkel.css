@@ -49,7 +49,7 @@
     --summary-h3: light-dark(var(--dark), var(--mist));
     --summary-marker: light-dark(var(--blue), var(--lime));
     --footer-clr: light-dark(var(--navy), var(--lime));
-    --footer-logo-clr: light-dark(var(--deep), var(--moss));
+    --footer-logo-clr: var(--section-c-bkg);
 
     --quote-clr: light-dark(var(--rust), var(--moss));
     --border-clr: light-dark(var(--blue), var(--lime));
