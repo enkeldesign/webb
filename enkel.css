@@ -190,7 +190,7 @@ label {
 
 label span::after {
     content: "";
-    /* display: inline-block; */
+    display: inline-block;
     width: 1.6rem;
     height: 1.6rem;
     background-image: url("/dark.svg");
