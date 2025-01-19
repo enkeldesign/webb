@@ -607,14 +607,10 @@ footer ul {
     input {
         right: 0;
     }
-
-    svg {
-        height: auto;
-    }
     
     header svg {
-        max-width: 13em;
-        height: auto;
+        max-height: 13em;
+        width: auto;
     }
 
     h1 {
