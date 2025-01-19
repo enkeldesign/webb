@@ -31,7 +31,7 @@
     /* Color application */
 
     --body-bkg: light-dark(var(--mist), var(--dark));
-    --logo-clr: light-dark(var(--cyan), var(--navy));
+    --logo-clr: light-dark(var(--teal), var(--navy));
     --logo-bkg: none;
 
     --header-bkg: none;
@@ -54,7 +54,7 @@
     --quote-clr: light-dark(var(--rust), var(--moss));
     --border-clr: light-dark(var(--rust), var(--lime));
 
-    --link-clr: light-dark(var(--navy), var(--teal));
+    --link-clr: light-dark(var(--navy), var(--cyan));
     --link-vis-clr: light-dark(#425, #edf);
     --link-hov-foc-clr: light-dark(#125, #cdf);
 
@@ -509,7 +509,11 @@ footer ul {
         grid-area: header;
         padding: 1.6rem 2.6rem 0;
     }
-
+    
+    header svg {
+    transform: translateY(7%);
+    }
+    
     main {
         display: contents;
     }
