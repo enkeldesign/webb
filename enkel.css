@@ -560,7 +560,12 @@ footer ul {
         top: 2.6rem;
         right: 2.6rem;
     }
-
+    
+    label span::after {
+    width: 2rem;
+    height: 2rem;
+    }
+    
     .footer-logo {
         right: 2.6rem;
         bottom: 2.6rem;
