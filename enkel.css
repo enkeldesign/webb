@@ -41,10 +41,10 @@
     --section-c-bkg: light-dark(var(--moss), var(--deep));
 
     --text-clr: light-dark(var(--dark), var(--mist));
-    --heading-clr: light-dark(var(--navy), var(--moss));
+    --heading-clr: light-dark(var(--navy), var(--lime));
     --heading-span-clr: light-dark(var(--dark), var(--mist));
     --section-b-h2-clr: light-dark(var(--deep), var(--moss));
-    --section-c-h2-clr: light-dark(var(--rust), var(--moss));
+    --section-c-h2-clr: light-dark(var(--deep), var(--moss));
     --details-ul-clr: light-dark(var(--deep), var(--mist));
     --summary-h3: light-dark(var(--dark), var(--mist));
     --summary-marker: light-dark(var(--blue), var(--lime));
