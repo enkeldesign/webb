@@ -45,7 +45,7 @@
     --heading-span-clr: light-dark(var(--dark), var(--mist));
     --section-b-h2-clr: light-dark(var(--deep), var(--moss));
     --section-c-h2-clr: light-dark(var(--deep), var(--moss));
-    --details-ul-clr: light-dark(var(--deep), var(--mist));
+    --details-ul-clr: light-dark(var(--deep), var(--moss));
     --summary-h3: light-dark(var(--dark), var(--mist));
     --summary-marker: light-dark(var(--blue), var(--lime));
     --footer-clr: light-dark(var(--navy), var(--lime));
@@ -66,7 +66,7 @@
         Roboto, "Helvetica Neue", Arial, sans-serif;
     --heading-font: "futura-pt", -apple-system, BlinkMacSystemFont, "Segoe UI",
         Roboto, "Helvetica Neue", Arial, sans-serif;
-        
+
     -webkit-text-size-adjust: 100%;
     line-height: 1.8;
     interpolate-size: allow-keywords;
@@ -102,7 +102,7 @@ body {
     overflow-x: clip;
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr auto;
-    grid-template-areas: 
+    grid-template-areas:
         "header"
         "main"
         "footer";
@@ -509,11 +509,11 @@ footer ul {
         grid-area: header;
         padding: 1.6rem 2.6rem 0;
     }
-    
+
     header svg {
-    transform: translateY(7%);
+        transform: translateY(7%);
     }
-    
+
     main {
         display: contents;
     }
@@ -567,12 +567,12 @@ footer ul {
         top: 2rem;
         right: 2.6rem;
     }
-    
+
     label span::after {
-    width: 2rem;
-    height: 2rem;
+        width: 2rem;
+        height: 2rem;
     }
-    
+
     .footer-logo {
         right: 2.6rem;
         bottom: 2.6rem;
@@ -611,7 +611,7 @@ footer ul {
     input {
         right: 0;
     }
-    
+
     header svg {
         max-height: 13em;
         width: auto;
