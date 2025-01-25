@@ -394,11 +394,11 @@ footer a {
 }
 
 footer small a {
-    color: var(--link-clr);
+    color: var(--footer-clr);
 }
 
 footer small a:visited {
-    color: var(--link-clr);
+    color: var(--footer-clr);
 }
 
 footer ul {
