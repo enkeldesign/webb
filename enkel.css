@@ -514,13 +514,12 @@ footer ul {
     }
 
     h1 {
-        margin-bottom: 1.6rem;
+        margin: 1.6rem 0; 
     }
 
     .intro {
         display: flex;
         flex-direction: column;
-        justify-content: center;
         grid-area: intro;
         padding: 1.6rem 2.6rem 1.6rem 0;
         border-radius: none;
