@@ -512,7 +512,13 @@ footer ul {
     main {
         display: contents;
     }
-
+    
+    label,
+    input {
+        top: 1.6rem;
+        right: 1.6rem;
+    }
+    
     h1 {
         margin: 1.6rem 0; 
     }
@@ -587,7 +593,7 @@ footer ul {
 
     label,
     input {
-        top: 1.6rem;
+        top: 2.6rem;
         right: 0;
     }
 
