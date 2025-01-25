@@ -213,7 +213,7 @@ svg path {
 /* */
 
 h1 {
-    margin: 2rem 0 1.6rem;
+    margin: 1.6rem;
     font-family: var(--heading-font);
     font-size: 3rem;
     font-weight: bold;
@@ -503,12 +503,12 @@ footer ul {
         grid-area: header;
         padding: 2.6rem;
     }
-    
+
     header svg {
-        max-height: 10em;
+        max-height: 12em;
         width: auto;
     }
-    
+
     main {
         display: contents;
     }
