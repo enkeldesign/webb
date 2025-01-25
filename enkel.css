@@ -588,6 +588,7 @@ footer ul {
 
     label,
     input {
+        top: 1.6rem;
         right: 0;
     }
 
