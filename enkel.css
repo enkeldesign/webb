@@ -218,7 +218,7 @@ label span::after {
 
 svg {
     display: block;
-    height: 100%;
+    height: 62%;
     width: auto;
     overflow: visible;
 }
@@ -287,7 +287,6 @@ header {
     max-width: 100vw;
     max-width: 100dvw;
     display: flex;
-    padding: 2.6rem;
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -312,9 +311,9 @@ footer {
 /* */
 
 .intro {
-    padding: 1.6rem;
+    padding: 0.6rem 1.6rem;
     text-align: center;
-    border-top-left-radius: 3rem;
+    border-radius: 0.6rem 0.6rem 0 0;
     background-color: var(--section-a-bkg);
 }
 
@@ -534,7 +533,7 @@ footer ul {
 
     header {
         grid-area: header;
-        padding: 2.6rem;
+        padding: 1.6rem 2.6rem;
     }
 
     header svg {
