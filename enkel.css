@@ -54,7 +54,7 @@
     --header-bkg: none;
     --footer-bkg: none;
     --section-a-bkg: light-dark(var(--cyan), var(--mine));
-    --section-b-bkg: light-dark(var(--mist), var(--navy));
+    --section-b-bkg: light-dark(var(--moss), var(--navy));
     --section-c-bkg: light-dark(var(--cyan), var(--deep));
 
     --text-clr: light-dark(var(--dark), var(--mist));
