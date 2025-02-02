@@ -515,7 +515,10 @@ footer ul {
 /* */
 
 @media (min-width: 45em) {
-
+    :root {
+        --section-a-bkg: var(--body-bkg);
+    }
+    
     body {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -558,7 +561,7 @@ footer ul {
         flex-direction: column;
         grid-area: intro;
         padding: 1.6rem 2.6rem 1.6rem 0;
-        border-radius: none;
+        border-radius: 0;
         text-align: left;
     }
 
