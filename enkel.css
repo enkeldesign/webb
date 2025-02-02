@@ -54,8 +54,8 @@
     --header-bkg: none;
     --footer-bkg: none;
     --section-a-bkg: light-dark(var(--cyan), var(--mine));
-    --section-b-bkg: light-dark(var(--logo-clr), var(--logo-clr));
-    --section-c-bkg: light-dark(var(--moss), var(--deep));
+    --section-b-bkg: light-dark(var(--mist), var(--navy));
+    --section-c-bkg: light-dark(var(--cyan), var(--deep));
 
     --text-clr: light-dark(var(--dark), var(--mist));
     --heading-clr: light-dark(var(--sand), var(--okra));
@@ -515,9 +515,6 @@ footer ul {
 /* */
 
 @media (min-width: 45em) {
-    :root {
-        --section-a-bkg: none;
-    }
 
     body {
         display: grid;
