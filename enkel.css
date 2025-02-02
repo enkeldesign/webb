@@ -12,12 +12,19 @@
     /* 200 */
     --moss: #bca;
     /* 200 */
+    --sand: #987;
+    /* 400 */
+    --dune: #9f8f7f;
+    /* 400 */
     --teal: #8bc;
     /* 400 */
     --lime: #bb6;
     /* 400 */
     --blue: #168;
     --blue: color(display-p3 0.066667 0.400000 0.533333 / 1.000000);
+    /* 700 */
+    --brue: #1f6f8f;
+    --brue: color(display-p3 0.121569 0.435294 0.560784 / 1.000000);
     /* 700 */
     --navy: #157;
     /* 800 */
@@ -32,6 +39,10 @@
 
     --body-bkg: light-dark(var(--mist), var(--dark));
     --logo-clr: light-dark(var(--teal), var(--navy));
+    --et-clr: var(--dune);
+    --eb-clr: var(--sand);
+    --dt-clr: var(--brue);
+    --db-clr: var(--blue);
     --logo-bkg: none;
 
     --header-bkg: none;
@@ -208,6 +219,22 @@ svg {
 
 svg path {
     fill: var(--logo-clr);
+}
+
+.logoEtPath {
+    fill: var(--et-clr);
+}
+
+.logoEbPath {
+    fill: var(--eb-clr);
+}
+
+.logoDtPath {
+    fill: var(--dt-clr);
+}
+
+.logoDbPath {
+    fill: var(--db-clr);
 }
 
 /* */
@@ -512,15 +539,15 @@ footer ul {
     main {
         display: contents;
     }
-    
+
     label,
     input {
         top: 1.6rem;
         right: 1.6rem;
     }
-    
+
     h1 {
-        margin: 1.6rem 0; 
+        margin: 1.6rem 0;
     }
 
     .intro {
