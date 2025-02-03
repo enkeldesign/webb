@@ -87,7 +87,7 @@
         Roboto, "Helvetica Neue", Arial, sans-serif;
 
     -webkit-text-size-adjust: 100%;
-    line-height: 1.8;
+    line-height: 1.7;
     interpolate-size: allow-keywords;
     scroll-behavior: smooth;
     background-color: var(--body-bkg);
@@ -267,7 +267,7 @@ h1 span {
 
 main p {
     margin: 0 0 1rem;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     line-height: 2.0;
     color: var(--text-clr);
 }
@@ -341,7 +341,7 @@ footer {
 h2 {
     color: var(--section-b-h2-clr);
     font-family: var(--heading-font);
-    font-size: 2.2rem;
+    font-size: 2rem;
     line-height: 1.1;
     margin: 1.6rem 0;
 }
@@ -370,7 +370,7 @@ details[open]::details-content {
 
 details ul {
     margin: 1rem 1.6rem 1.6rem;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     color: var(--details-ul-clr);
 }
 
@@ -397,6 +397,7 @@ blockquote {
     border-left: solid 6px var(--border-clr);
     padding-left: 1rem;
     margin: 1.6rem 0;
+    line-height: 1.8rem;
     font-size: 1.2rem;
     font-family: ui-serif, serif;
     color: var(--quote-clr);
@@ -441,7 +442,7 @@ footer ul {
     list-style: none;
     line-height: 2.6;
     font-family: var(--alt-font);
-    font-size: 1.2rem;
+    font-size: 1.1rem;
 }
 
 .footer-logo {
