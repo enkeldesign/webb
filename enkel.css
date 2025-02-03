@@ -2,7 +2,6 @@
 
 :root {
     color-scheme: light dark;
-    transition: background-color 0.2s ease, color 0.2s ease;
 
     /* Color palette with brightness 50-950 */
 
@@ -98,6 +97,7 @@
     padding: 0;
     gap: 0;
     box-sizing: border-box;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 ::selection {
