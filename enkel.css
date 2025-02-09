@@ -65,7 +65,7 @@
     --section-c-h2-clr: light-dark(var(--deep), var(--bone));
     --details-ul-clr: light-dark(var(--deep), var(--moss));
     --summary-h3: light-dark(var(--dark), var(--mist));
-    --summary-marker: light-dark(var(--blue), var(--bone));
+    --summary-marker: light-dark(var(--blue), var(--moss));
     --footer-clr: light-dark(var(--navy), var(--bone));
     --footer-logo-clr: light-dark(var(--blue), var(--bone));
 
