@@ -27,6 +27,8 @@
     /* 400 */
     --pale: #567;
     /* 500 */
+    --gold: #876;
+    /* 500 */
     --blue: #168;
     --blue: color(display-p3 0.066667 0.400000 0.533333 / 1.000000);
     /* 700 */
@@ -61,7 +63,7 @@
     --section-c-bkg: light-dark(var(--cyan), var(--deep));
 
     --text-clr: light-dark(var(--mine), var(--milk));
-    --heading-clr: light-dark(var(--sand), var(--okra));
+    --heading-clr: light-dark(var(--gold), var(--okra));
     --heading-span-clr: light-dark(var(--pale), var(--mist));
     --section-b-h2-clr: light-dark(var(--deep), var(--moss));
     --section-c-h2-clr: light-dark(var(--deep), var(--moss));
