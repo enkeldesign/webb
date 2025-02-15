@@ -7,6 +7,8 @@
 
     --mist: #f4f4f4;
     /* 50 */
+    --alto: #ddd;
+    /* 200 */
     --milk: #edc;
     /* 200 */
     --cyan: #cdd;
@@ -62,9 +64,9 @@
     --section-b-bkg: light-dark(var(--bone), var(--navy));
     --section-c-bkg: light-dark(var(--cyan), var(--deep));
 
-    --text-clr: light-dark(var(--mine), var(--milk));
+    --text-clr: light-dark(var(--mine), var(--alto));
     --heading-clr: light-dark(var(--gold), var(--okra));
-    --heading-span-clr: light-dark(var(--pale), var(--mist));
+    --heading-span-clr: light-dark(var(--pale), var(--alto));
     --section-b-h2-clr: light-dark(var(--deep), var(--moss));
     --section-c-h2-clr: light-dark(var(--deep), var(--moss));
     --details-ul-clr: light-dark(var(--deep), var(--moss));
