@@ -422,6 +422,7 @@ svg {
   stroke: var(--calc-color);
 }
 
+/*
 @keyframes lightUp {
     from {
         fill-opacity: var(--fill-opa);
@@ -496,7 +497,7 @@ svg {
 #topLogo .D-1 {
     animation: lightUp var(--ani-dur) ease-in-out infinite;
     animation-delay: 2.4s;
-    /* Start after the last E segment */
+
 }
 
 #topLogo .D-2 {
@@ -553,6 +554,8 @@ svg {
     animation: lightUp var(--ani-dur) ease-in-out infinite;
     animation-delay: 1.3s;
 }
+
+*/
 
 /* */
 
