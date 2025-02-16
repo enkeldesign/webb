@@ -232,17 +232,17 @@ svg {
 }
 
 :root {
-    --ani-dur: 9.6s;
+    --ani-dur: 4.8s;
     --fill-opa: 0.9;
     --l-inc: 1%;
 
     --e-h: 30;
-    --e-s: 15%;
-    --e-l: 40%;
+    --e-s: 20%;
+    --e-l: 50%;
 
     --d-h: 195;
     --d-s: 80%;
-    --d-l: 25%;
+    --d-l: 30%;
 
     --e-1-l: calc(0 * var(--l-inc));
     --e-2-l: calc(1 * var(--l-inc));
@@ -422,7 +422,6 @@ svg {
   stroke: var(--calc-color);
 }
 
-/*
 @keyframes lightUp {
     from {
         fill-opacity: var(--fill-opa);
@@ -554,8 +553,6 @@ svg {
     animation: lightUp var(--ani-dur) ease-in-out infinite;
     animation-delay: 1.3s;
 }
-
-*/
 
 /* */
 
