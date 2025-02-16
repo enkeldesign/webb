@@ -232,8 +232,8 @@ svg {
 }
 
 :root {
-    --ani-dur: 4.8s;
-    --fill-opa: 0.9;
+    --ani-dur: 9.6s;
+    --fill-opa: 0.95;
     --l-inc: 1%;
 
     --e-h: 30;
