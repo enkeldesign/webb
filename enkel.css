@@ -236,12 +236,10 @@ svg {
     --fill-opa: 0.9;
     --l-inc: 1%;
 
-    /* Base HSL values for letter E (#779999) */
     --e-h: 30;
     --e-s: 15%;
     --e-l: 40%;
 
-    /* Base HSL values for letter D (#778899) */
     --d-h: 195;
     --d-s: 80%;
     --d-l: 25%;
@@ -272,7 +270,6 @@ svg {
     --d-11-l: calc(10 * var(--l-inc));
     --d-12-l: calc(11 * var(--l-inc));
 
-
 }
 
 #topLogo path {
@@ -280,7 +277,6 @@ svg {
     stroke-width: 3px;
 }
 
-/* For letter E segments (from E-1 to E-12) */
 .E-1 {
 
   --calc-color: hsl(var(--e-h), var(--e-s), calc(var(--e-l) + var(--e-1-l)));
@@ -354,12 +350,10 @@ svg {
   stroke: var(--calc-color);
 }
 
-/* For letter D segments (from D-1 to D-12) */
 .D-1 {
-  /* Calculate the color and store it in a custom variable */
   --calc-color: hsl(var(--d-h), var(--d-s), calc(var(--d-l) + var(--d-1-l)));
-  fill: var(--calc-color);   /* Use calculated color for fill */
-  stroke: var(--calc-color); /* Use calculated color for stroke */
+  fill: var(--calc-color);
+  stroke: var(--calc-color);
 }
 
 .D-2 {
@@ -439,8 +433,6 @@ svg {
     }
 }
 
-
-/* Animate .E-1 to .E-12 */
 #topLogo .E-1 {
     animation: lightUp var(--ani-dur) ease-in-out infinite;
     animation-delay: 0s;
@@ -501,7 +493,6 @@ svg {
     animation-delay: 1.1s;
 }
 
-/* Animate .D-1 to .D-12 */
 #topLogo .D-1 {
     animation: lightUp var(--ani-dur) ease-in-out infinite;
     animation-delay: 2.4s;
