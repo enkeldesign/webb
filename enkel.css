@@ -7,30 +7,14 @@
 
     --mist: #f4f4f4;
     /* 50 */
+    --pale: #efeae5;
+    /* 100 */
     --alto: #ddd;
-    /* 200 */
-    --milk: #edc;
     /* 200 */
     --cyan: #cdd;
     /* 200 */
-    --moss: #bca;
-    /* 200 */
-    --bone: #cba;
-    /* 300 */
-    --sand: #987;
-    /* 400 */
-    --okra: #a98;
-    /* 400 */
-    --dune: #9f8f7f;
-    /* 400 */
     --teal: #8bc;
     /* 400 */
-    --lime: #bb6;
-    /* 400 */
-    --pale: #567;
-    /* 500 */
-    --gold: #876;
-    /* 500 */
     --blue: #168;
     --blue: color(display-p3 0.066667 0.400000 0.533333 / 1.000000);
     /* 700 */
@@ -47,36 +31,36 @@
     /* 900 */
     --dark: #313131;
     /* 950 */
+    --void: #212a33;
+    /* 950 */
+
 
     /* Color application */
 
     --body-bkg: light-dark(var(--mist), var(--dark));
-    --logo-clr: light-dark(var(--teal), var(--navy));
-    --et-clr: var(--dune);
-    --eb-clr: var(--sand);
-    --dt-clr: var(--brue);
-    --db-clr: var(--blue);
-    --logo-bkg: none;
 
-    --header-bkg: none;
-    --footer-bkg: none;
+    --header-bkg: transparent;
+    --main-bkg: transparent;
+    --footer-bkg: transparent;
+
+    --logo-e-clr: light-dark(var(--mine), var(--alto));
+    --logo-d-clr: light-dark(var(--blue), var(--brue));
     --section-a-bkg: light-dark(var(--cyan), var(--mine));
-    --section-b-bkg: light-dark(var(--bone), var(--navy));
+    --section-b-bkg: light-dark(var(--pale), var(--void));
     --section-c-bkg: light-dark(var(--cyan), var(--deep));
 
     --text-clr: light-dark(var(--mine), var(--alto));
-    --heading-clr: light-dark(var(--gold), var(--okra));
-    --heading-span-clr: light-dark(var(--pale), var(--alto));
-    --section-b-h2-clr: light-dark(var(--deep), var(--moss));
-    --section-c-h2-clr: light-dark(var(--deep), var(--moss));
-    --details-ul-clr: light-dark(var(--deep), var(--moss));
-    --summary-h3: light-dark(var(--dark), var(--moss));
-    --summary-marker: light-dark(var(--blue), var(--mist));
-    --footer-clr: light-dark(var(--navy), var(--bone));
-    --footer-logo-clr: light-dark(var(--blue), var(--bone));
+    --heading-clr: light-dark(var(--mine), var(--alto));
+    --heading-span-clr: light-dark(var(--navy), var(--teal));
+    --section-b-h2-clr: light-dark(var(--navy), var(--teal));
+    --section-c-h2-clr: light-dark(var(--navy), var(--teal));
+    --details-ul-clr: light-dark(var(--deep), var(--cyan));
+    --summary-h3: light-dark(var(--dark), var(--cyan));
+    --summary-marker: light-dark(var(--blue), var(--teal));
+    --footer-clr: light-dark(var(--dark), var(--mist));
 
-    --quote-clr: light-dark(var(--rust), var(--moss));
-    --border-clr: light-dark(var(--rust), var(--moss));
+    --quote-clr: light-dark(var(--rust), var(--cyan));
+    --border-clr: light-dark(var(--rust), var(--teal));
 
     --link-clr: light-dark(var(--navy), var(--cyan));
     --link-vis-clr: light-dark(#425, #edf);
@@ -231,327 +215,12 @@ svg {
     overflow: visible;
 }
 
-:root {
-    --ani-dur: 6s;
-    --fill-opa: 0.95;
-    --l-inc: 1.1%;
-
-    --e-h: 30;
-    --e-s: 20%;
-    --e-l: 50%;
-
-    --d-h: 195;
-    --d-s: 80%;
-    --d-l: 30%;
-
-    --e-1-l: calc(0 * var(--l-inc));
-    --e-2-l: calc(1 * var(--l-inc));
-    --e-3-l: calc(2 * var(--l-inc));
-    --e-4-l: calc(3 * var(--l-inc));
-    --e-5-l: calc(4 * var(--l-inc));
-    --e-6-l: calc(5 * var(--l-inc));
-    --e-7-l: calc(6 * var(--l-inc));
-    --e-8-l: calc(7 * var(--l-inc));
-    --e-9-l: calc(8 * var(--l-inc));
-    --e-10-l: calc(9 * var(--l-inc));
-    --e-11-l: calc(10 * var(--l-inc));
-    --e-12-l: calc(11 * var(--l-inc));
-
-    --d-1-l: calc(0 * var(--l-inc));
-    --d-2-l: calc(1 * var(--l-inc));
-    --d-3-l: calc(2 * var(--l-inc));
-    --d-4-l: calc(3 * var(--l-inc));
-    --d-5-l: calc(4 * var(--l-inc));
-    --d-6-l: calc(5 * var(--l-inc));
-    --d-7-l: calc(6 * var(--l-inc));
-    --d-8-l: calc(7 * var(--l-inc));
-    --d-9-l: calc(8 * var(--l-inc));
-    --d-10-l: calc(9 * var(--l-inc));
-    --d-11-l: calc(10 * var(--l-inc));
-    --d-12-l: calc(11 * var(--l-inc));
-
+path:first-of-type {
+    fill: var(--logo-e-clr);
 }
 
-#topLogo path {
-    fill-opacity: var(--fill-opa);
-    stroke-width: 3px;
-}
-
-.E-1 {
-
-  --calc-color: hsl(var(--e-h), var(--e-s), calc(var(--e-l) + var(--e-1-l)));
-  fill: var(--calc-color); 
-  stroke: var(--calc-color); 
-}
-
-.E-2 {
-  --calc-color: hsl(var(--e-h), var(--e-s), calc(var(--e-l) + var(--e-2-l)));
-  fill: var(--calc-color);
-  stroke: var(--calc-color);
-}
-
-.E-3 {
-  --calc-color: hsl(var(--e-h), var(--e-s), calc(var(--e-l) + var(--e-3-l)));
-  fill: var(--calc-color);
-  stroke: var(--calc-color);
-}
-
-.E-4 {
-  --calc-color: hsl(var(--e-h), var(--e-s), calc(var(--e-l) + var(--e-4-l)));
-  fill: var(--calc-color);
-  stroke: var(--calc-color);
-}
-
-.E-5 {
-  --calc-color: hsl(var(--e-h), var(--e-s), calc(var(--e-l) + var(--e-5-l)));
-  fill: var(--calc-color);
-  stroke: var(--calc-color);
-}
-
-.E-6 {
-  --calc-color: hsl(var(--e-h), var(--e-s), calc(var(--e-l) + var(--e-6-l)));
-  fill: var(--calc-color);
-  stroke: var(--calc-color);
-}
-
-.E-7 {
-  --calc-color: hsl(var(--e-h), var(--e-s), calc(var(--e-l) + var(--e-7-l)));
-  fill: var(--calc-color);
-  stroke: var(--calc-color);
-}
-
-.E-8 {
-  --calc-color: hsl(var(--e-h), var(--e-s), calc(var(--e-l) + var(--e-8-l)));
-  fill: var(--calc-color);
-  stroke: var(--calc-color);
-}
-
-.E-9 {
-  --calc-color: hsl(var(--e-h), var(--e-s), calc(var(--e-l) + var(--e-9-l)));
-  fill: var(--calc-color);
-  stroke: var(--calc-color);
-}
-
-.E-10 {
-  --calc-color: hsl(var(--e-h), var(--e-s), calc(var(--e-l) + var(--e-10-l)));
-  fill: var(--calc-color);
-  stroke: var(--calc-color);
-}
-
-.E-11 {
-  --calc-color: hsl(var(--e-h), var(--e-s), calc(var(--e-l) + var(--e-11-l)));
-  fill: var(--calc-color);
-  stroke: var(--calc-color);
-}
-
-.E-12 {
-  --calc-color: hsl(var(--e-h), var(--e-s), calc(var(--e-l) + var(--e-12-l)));
-  fill: var(--calc-color);
-  stroke: var(--calc-color);
-}
-
-.D-1 {
-  --calc-color: hsl(var(--d-h), var(--d-s), calc(var(--d-l) + var(--d-1-l)));
-  fill: var(--calc-color);
-  stroke: var(--calc-color);
-}
-
-.D-2 {
-  --calc-color: hsl(var(--d-h), var(--d-s), calc(var(--d-l) + var(--d-2-l)));
-  fill: var(--calc-color);
-  stroke: var(--calc-color);
-}
-
-.D-3 {
-  --calc-color: hsl(var(--d-h), var(--d-s), calc(var(--d-l) + var(--d-3-l)));
-  fill: var(--calc-color);
-  stroke: var(--calc-color);
-}
-
-.D-4 {
-  --calc-color: hsl(var(--d-h), var(--d-s), calc(var(--d-l) + var(--d-4-l)));
-  fill: var(--calc-color);
-  stroke: var(--calc-color);
-}
-
-.D-5 {
-  --calc-color: hsl(var(--d-h), var(--d-s), calc(var(--d-l) + var(--d-5-l)));
-  fill: var(--calc-color);
-  stroke: var(--calc-color);
-}
-
-.D-6 {
-  --calc-color: hsl(var(--d-h), var(--d-s), calc(var(--d-l) + var(--d-6-l)));
-  fill: var(--calc-color);
-  stroke: var(--calc-color);
-}
-
-.D-7 {
-  --calc-color: hsl(var(--d-h), var(--d-s), calc(var(--d-l) + var(--d-7-l)));
-  fill: var(--calc-color);
-  stroke: var(--calc-color);
-}
-
-.D-8 {
-  --calc-color: hsl(var(--d-h), var(--d-s), calc(var(--d-l) + var(--d-8-l)));
-  fill: var(--calc-color);
-  stroke: var(--calc-color);
-}
-
-.D-9 {
-  --calc-color: hsl(var(--d-h), var(--d-s), calc(var(--d-l) + var(--d-9-l)));
-  fill: var(--calc-color);
-  stroke: var(--calc-color);
-}
-
-.D-10 {
-  --calc-color: hsl(var(--d-h), var(--d-s), calc(var(--d-l) + var(--d-10-l)));
-  fill: var(--calc-color);
-  stroke: var(--calc-color);
-}
-
-.D-11 {
-  --calc-color: hsl(var(--d-h), var(--d-s), calc(var(--d-l) + var(--d-11-l)));
-  fill: var(--calc-color);
-  stroke: var(--calc-color);
-}
-
-.D-12 {
-  --calc-color: hsl(var(--d-h), var(--d-s), calc(var(--d-l) + var(--d-12-l)));
-  fill: var(--calc-color);
-  stroke: var(--calc-color);
-}
-
-@keyframes lightUp {
-    from {
-        fill-opacity: var(--fill-opa);
-    }
-
-    to {
-        fill-opacity: 1;
-
-    }
-}
-
-#topLogo .E-1 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 0s;
-}
-
-#topLogo .E-2 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 0.1s;
-}
-
-#topLogo .E-3 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 0.2s;
-}
-
-#topLogo .E-4 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 0.3s;
-}
-
-#topLogo .E-5 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 0.4s;
-}
-
-#topLogo .E-6 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 0.5s;
-}
-
-#topLogo .E-7 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 0.6s;
-}
-
-#topLogo .E-8 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 0.7s;
-}
-
-#topLogo .E-9 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 0.8s;
-}
-
-#topLogo .E-10 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 0.9s;
-}
-
-#topLogo .E-11 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 1.0s;
-}
-
-#topLogo .E-12 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 1.1s;
-}
-
-#topLogo .D-1 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 2.4s;
-
-}
-
-#topLogo .D-2 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 2.3s;
-}
-
-#topLogo .D-3 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 2.2s;
-}
-
-#topLogo .D-4 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 2.1s;
-}
-
-#topLogo .D-5 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 2.0s;
-}
-
-#topLogo .D-6 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 1.9s;
-}
-
-#topLogo .D-7 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 1.8s;
-}
-
-#topLogo .D-8 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 1.7s;
-}
-
-#topLogo .D-9 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 1.6s;
-}
-
-#topLogo .D-10 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 1.5s;
-}
-
-#topLogo .D-11 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 1.4s;
-}
-
-#topLogo .D-12 {
-    animation: lightUp var(--ani-dur) ease-in-out infinite;
-    animation-delay: 1.3s;
+path:last-of-type {
+    fill: var(--logo-d-clr);
 }
 
 /* */
@@ -610,6 +279,7 @@ main {
     grid-column: 1;
     display: grid;
     grid-template-rows: repeat(4, auto);
+    background-color: var(--main-bkg);
 }
 
 footer {
@@ -625,7 +295,6 @@ footer {
 .intro {
     padding: 0.6rem 1.6rem;
     text-align: center;
-    border-radius: 1.6rem 0 0 0;
     background-color: var(--section-a-bkg);
 }
 
@@ -775,10 +444,6 @@ footer ul {
     background: none;
 }
 
-.footer-logo path {
-    fill: var(--footer-logo-clr);
-}
-
 .visually-hidden {
     position: absolute;
     width: 1px;
@@ -826,10 +491,10 @@ footer ul {
 
 @media (prefers-reduced-motion: reduce) {
 
-*, #topPath path {
-    animation: none !important;
-    transition: none !important;
-  }
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
 }
 
 /* */
@@ -838,7 +503,7 @@ footer ul {
     :root {
         --section-a-bkg: var(--body-bkg);
     }
-    
+
     body {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -881,14 +546,12 @@ footer ul {
         flex-direction: column;
         grid-area: intro;
         padding: 1.6rem 2.6rem 1.6rem 0;
-        border-radius: 0;
         text-align: left;
     }
 
     .about {
         grid-area: about;
         padding: 1.6rem 2.6rem;
-        border-radius: 3rem 0 0 0;
         text-align: left;
     }
 
