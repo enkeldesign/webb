@@ -5,17 +5,12 @@
             color-scheme: light dark;
         }
 
-        path {
-            fill: #888888;
-            /* Fallback */
-        }
-
         .logoEPath {
-            fill: light-dark(#313131, #dddddd);
+            fill: #888888;
         }
 
         .logoDPath {
-            fill: light-dark(#116688, #227799);
+            fill: #227799;
         }
     </style>
     <g transform="translate(1198.5, 404.5)">
