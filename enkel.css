@@ -152,6 +152,10 @@ a:visited {
   background-color: var(--link-hov-foc-clr);
   color: light-dark(#fff, #000);
   font-weight: bold;
+  clip: auto;
+  margin: 0;
+  overflow: visible;
+  white-space: normal;
 }
 
 /* */
