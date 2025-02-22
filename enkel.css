@@ -143,11 +143,12 @@ a:visited {
 
 .skip-lang:focus {
   position: static;
-  left: auto;
-  top: auto;
+  left: 0.6rem;
+  top: 0.6rem;
   width: auto;
   height: auto;
   padding: 0.6rem;
+  border-radius: 0 0 1.6rem 0;
   background-color: var(--link-hov-foc-clr);
   color: light-dark(#fff, #000);
   font-weight: bold;
