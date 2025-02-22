@@ -141,6 +141,18 @@ a:visited {
     color: var(--link-vis-clr);
 }
 
+.skip-lang:focus {
+  position: static;
+  left: auto;
+  top: auto;
+  width: auto;
+  height: auto;
+  padding: 0.6rem;
+  background-color: var(--link-hov-foc-clr);
+  color: light-dark(#fff, #000);
+  font-weight: bold;
+}
+
 /* */
 
 input {
