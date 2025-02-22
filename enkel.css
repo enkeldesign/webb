@@ -141,7 +141,7 @@ a:visited {
     color: var(--link-vis-clr);
 }
 
-.skip-lang:focus {
+.skip-lang:focus-visible {
   position: absolute;
   left: 0.6rem;
   top: 0.6rem;
@@ -457,7 +457,8 @@ footer ul {
     background: none;
 }
 
-.visually-hidden {
+.visually-hidden,
+.skip-lang {
     position: absolute;
     width: 1px;
     height: 1px;
