@@ -142,7 +142,7 @@ a:visited {
 }
 
 .skip-lang:focus {
-  position: static;
+  position: absolute;
   left: 0.6rem;
   top: 0.6rem;
   width: auto;
