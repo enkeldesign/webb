@@ -228,6 +228,7 @@ label span::after {
 svg {
   display: block;
   height: 75%;
+  max-height: 250px;
   width: auto;
   overflow: visible;
 }
@@ -630,11 +631,11 @@ footer ul {
 
   h1 {
     margin: 1.6rem 0;
-    font-size: 3rem;
+    font-size: 2.6rem;
   }
 
   h1 span {
-    font-size: 2rem;
+    font-size: 2.1rem;
   }
 
   .intro p {
