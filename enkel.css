@@ -61,7 +61,7 @@
   --border-clr: light-dark(var(--rust), var(--teal));
 
   --link-clr: light-dark(var(--blue), var(--cyan));
-  --link-vis-clr: light-dark(#425, #edf);
+  --link-vis-clr: light-dark(#719, #edf);
   --link-hov-foc-clr: light-dark(#125, #cdf);
 
   /* Root settings */
