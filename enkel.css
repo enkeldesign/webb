@@ -246,7 +246,7 @@ path:last-of-type {
   fill: var(--logo-d-clr);
 }
 
-footer path {
+.footer-logo path {
   fill: var(--link-clr);
 }
   
