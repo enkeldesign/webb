@@ -246,8 +246,8 @@ path:last-of-type {
   fill: var(--logo-d-clr);
 }
 
-footer path:last-of-type {
-  fill: var(--logo-e-clr);
+footer path {
+  fill: var(--link-clr);
 }
   
 /* */
