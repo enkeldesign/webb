@@ -131,7 +131,6 @@ abbr {
 
 a {
   color: var(--link-clr);
-  font-weight: 600;
   text-decoration: underline;
 }
 
@@ -431,14 +430,7 @@ footer small:last-of-type {
   color: var(--footer-clr);
 }
 
-footer a {
-  font-weight: normal;
-}
-
-footer small a {
-  color: var(--footer-clr);
-}
-
+footer small a,
 footer small a:visited {
   color: var(--footer-clr);
 }
