@@ -60,8 +60,8 @@
   --quote-clr: light-dark(var(--rust), var(--cyan));
   --border-clr: light-dark(var(--rust), var(--teal));
 
-  --link-clr: light-dark(var(--blue), var(--cyan));
-  --link-vis-clr: light-dark(#719, #edf);
+  --link-clr: light-dark(var(--blue), var(--teal));
+  --link-vis-clr: light-dark(#719, #eaf);
   --link-hov-foc-clr: light-dark(#125, #cdf);
 
   /* Root settings */
