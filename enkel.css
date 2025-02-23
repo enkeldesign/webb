@@ -541,7 +541,7 @@ footer ul {
 
   header {
     grid-area: header;
-    padding: 1.6rem 2.6rem;
+    padding: 1.6rem 3rem;
   }
 
   header svg {
@@ -567,14 +567,14 @@ footer ul {
     display: flex;
     flex-direction: column;
     grid-area: intro;
-    padding: 1.6rem 2.6rem 1.6rem 0;
+    padding: 1.6rem 3rem 1.6rem 0;
     text-align: left;
   }
 
   .about {
     grid-area: about;
-    padding: 1.6rem 2.6rem;
-    border-radius: 2.6rem 0 0 0;
+    padding: 1.6rem 3rem;
+    border-radius: 3rem 0 0 0;
     text-align: left;
   }
 
@@ -584,13 +584,13 @@ footer ul {
 
   .enkel-design {
     grid-area: enkel-design;
-    padding: 1.6rem 2.6rem;
+    padding: 1.6rem 3rem;
     text-align: left;
   }
 
   footer {
     grid-area: footer;
-    padding: 2.6rem 2.6rem;
+    padding: 2.6rem 3rem;
     text-align: left;
   }
 
@@ -606,8 +606,8 @@ footer ul {
   }
 
   .footer-logo {
-    right: 2.6rem;
-    bottom: 2.6rem;
+    right: 3rem;
+    bottom: 3rem;
   }
 }
 
@@ -621,7 +621,7 @@ footer ul {
   }
 
   header {
-    padding: 2.6rem;
+    padding: 3rem;
   }
 
   footer {
@@ -630,7 +630,7 @@ footer ul {
 
   label,
   input {
-    top: 2.6rem;
+    top: 3rem;
     right: 0;
   }
 
