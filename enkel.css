@@ -246,6 +246,10 @@ path:last-of-type {
   fill: var(--logo-d-clr);
 }
 
+footer path:last-of-type {
+  fill: var(--logo-e-clr);
+}
+  
 /* */
 
 h1 {
