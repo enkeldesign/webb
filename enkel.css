@@ -458,7 +458,7 @@ footer ul {
 }
 
 .footer-logo svg {
-  height: 3rem;
+  height: 2.6rem;
   width: auto;
   overflow: visible;
   background: none;
@@ -606,6 +606,11 @@ footer ul {
     right: 3rem;
     bottom: 3rem;
   }
+  
+  .footer-logo svg {
+  height: 3rem;
+  }
+  
 }
 
 /* */
