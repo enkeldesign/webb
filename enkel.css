@@ -131,7 +131,6 @@ abbr {
 
 a {
   color: var(--link-clr);
-  font-weight: bold;
 }
 
 a:hover,
