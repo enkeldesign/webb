@@ -415,7 +415,6 @@ footer small {
   display: block;
   max-width: 75%;
   letter-spacing: 0.03rem;
-  word-spacing: 0.13em;
   font-family: var(--alt-font);
   font-size: 1.1rem;
   line-height: 1.6;
