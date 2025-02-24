@@ -407,11 +407,11 @@ summary h3 {
 }
 
 blockquote {
-  border-left: solid 6px var(--border-clr);
+  border-left: solid 3px var(--border-clr);
   padding-left: 1rem;
   margin: 1.6rem 0;
   line-height: 1.8;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-family: ui-serif, serif;
   color: var(--quote-clr);
 }
@@ -424,9 +424,9 @@ blockquote > footer {
 figcaption {
   font-family: ui-serif, serif;
   color: var(--quote-clr);
-  padding-bottom: 1.6rem;
-  margin-bottom: 1.6rem;
-  border-bottom: solid 2px var(--border-clr);
+  padding-bottom: 1rem;
+  margin: -0.6rem 0 1.6rem;
+  border-bottom: solid 3px var(--border-clr);
 }
 
 /* */
