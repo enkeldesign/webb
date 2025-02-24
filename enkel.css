@@ -424,7 +424,7 @@ blockquote > footer {
 figcaption {
   font-family: ui-serif, serif;
   color: var(--quote-clr);
-  padding-bottom: 0.6rem;
+  padding-bottom: 1.6rem;
   margin-bottom: 1.6rem;
   border-bottom: solid 2px var(--border-clr);
 }
