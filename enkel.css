@@ -343,7 +343,8 @@ footer {
   background-color: var(--section-c-bkg);
 }
 
-.enkel-design .photo img {
+.enkel-design .photo img,
+.about .photo img {
   width: calc(100% + 3.2rem);
   height: auto;
   margin: 0.6rem -1.6rem;
@@ -597,7 +598,8 @@ footer ul {
     text-align: left;
   }
   
-.enkel-design .photo img {
+.enkel-design .photo img,
+.about .photo img {
   width: calc(100% + 6rem);
   margin: 0.6rem -3rem;
 }
