@@ -330,6 +330,8 @@ footer {
   height: 100%;
   object-fit: cover;
   overflow: hidden;
+  overflow-x: clip;
+  margin: 0.6rem 0;
 }
 
 .about {
