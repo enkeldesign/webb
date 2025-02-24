@@ -331,7 +331,6 @@ footer {
   object-fit: cover;
   overflow: hidden;
   overflow-x: clip;
-  margin: 0.6rem 0;
 }
 
 .about {
@@ -349,7 +348,7 @@ footer {
 .about .photo img {
   width: calc(100% + 3.2rem);
   height: auto;
-  margin: 0.6rem -1.6rem;
+  margin: 1.6rem -1.6rem;
 }
 
 h2 {
