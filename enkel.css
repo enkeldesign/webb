@@ -22,7 +22,7 @@
   /* 700 */
   --navy: #157;
   /* 800 */
-  --rust: #432;
+  --rust: #531;
   /* 900 */
   --mine: #393939;
   /* 900 */
@@ -57,7 +57,7 @@
   --summary-marker: light-dark(var(--blue), var(--teal));
   --footer-clr: light-dark(var(--dark), var(--mist));
 
-  --quote-clr: light-dark(var(--rust), var(--cyan));
+  --quote-clr: light-dark(var(--rust), var(--teal));
   --border-clr: light-dark(var(--rust), var(--teal));
 
   --link-clr: light-dark(var(--blue), var(--teal));
@@ -424,7 +424,9 @@ blockquote > footer {
 figcaption {
   font-family: ui-serif, serif;
   color: var(--quote-clr);
+  padding-bottom: 0.6rem;
   margin-bottom: 1.6rem;
+  border-bottom: solid 2px var(--border-clr);
 }
 
 /* */
