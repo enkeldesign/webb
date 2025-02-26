@@ -438,6 +438,7 @@ figcaption {
             #948 40%, #948 60%,
             #46c 60%, #46c 80%,
             #4a4 80%, #4a4 100%) 1;
+    opacity: 80%;
 }
 
 footer small {
