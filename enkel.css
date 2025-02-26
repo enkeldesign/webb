@@ -685,6 +685,10 @@ footer ul {
     color: var(--text-clr);
   }
 
+  .divider {
+    margin: 0 -3rem 2.6rem 0;
+  }
+  
   .footer-logo {
     right: 0;
   }
