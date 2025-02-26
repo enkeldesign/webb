@@ -429,6 +429,17 @@ figcaption {
 
 /* */
 
+.divider {
+    margin: 0 -1.6rem 1.6rem;
+    border-top: 6px solid transparent;
+    border-image: repeating-linear-gradient(to right,
+            #eb3 0%, #eb3 20%,
+            #c43 20%, #c43 40%,
+            #948 40%, #948 60%,
+            #46c 60%, #46c 80%,
+            #4a4 80%, #4a4 100%) 1;
+}
+
 footer small {
   display: block;
   max-width: 75%;
@@ -610,7 +621,11 @@ footer ul {
     padding: 2.6rem 3rem;
     text-align: left;
   }
-
+  
+.divider {
+    margin: 0 -3rem 1.6rem;
+  }
+  
   footer small {
     display: block;
     width: auto;
