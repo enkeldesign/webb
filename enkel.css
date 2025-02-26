@@ -691,6 +691,7 @@ footer ul {
   transform: translateX(-50%);
   width: 100vw;
   width: 100dvw;
+  margin-bottom: 2.6rem;
 }
   
   .footer-logo {
