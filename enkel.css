@@ -247,7 +247,7 @@ path:last-of-type {
 }
 
 .footer-logo path {
-    fill: var(--link-clr);
+    fill: var(--logo-e-clr);
 }
 
 /* */
