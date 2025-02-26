@@ -639,11 +639,11 @@ footer ul {
 
   .footer-logo {
     right: 3rem;
-    bottom: 3rem;
+    bottom: 2.6rem;
   }
   
   .footer-logo svg {
-  height: 3rem;
+    height: 2.6rem;
   }
   
 }
@@ -694,7 +694,7 @@ footer ul {
   }
 
   .footer-logo svg {
-    width: 5rem;
+    width: 4rem;
     height: auto;
   }
 }
