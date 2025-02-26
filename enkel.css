@@ -688,6 +688,7 @@ footer ul {
     }
 
     .divider {
+        border-top: 4px solid transparent;
         position: relative;
         left: 50%;
         transform: translateX(-50%);
