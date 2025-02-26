@@ -368,7 +368,7 @@ blockquote>footer {
 }
 
 .divider {
-    margin: -2.6rem -1.6rem 0;
+    margin: 0 -1.6rem 1.6rem;
     border-top: 6px solid transparent;
     border-image: repeating-linear-gradient(to right,
             #eb3 0%, #eb3 20%,
@@ -376,7 +376,6 @@ blockquote>footer {
             #948 40%, #948 60%,
             #46c 60%, #46c 80%,
             #4a4 80%, #4a4 100%) 1;
-    opacity: 0.75;
 }
 
 /* */
@@ -547,6 +546,10 @@ footer ul {
         margin-top: 2.6rem;
     }
 
+    .divider {
+    margin: 0 -3rem 1.6rem;
+    }
+    
     footer small {
         display: block;
         width: auto;
