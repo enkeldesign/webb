@@ -690,15 +690,7 @@ footer ul {
   left: 50%;
   transform: translateX(-50%);
   width: 100vw;
-  width: 100vw;
-  margin-bottom: 1.6rem;
-  border-top: 6px solid transparent;
-  border-image: repeating-linear-gradient(to right,
-            #eb3 0%, #eb3 20%,
-            #c43 20%, #c43 40%,
-            #948 40%, #948 60%,
-            #46c 60%, #46c 80%,
-            #4a4 80%, #4a4 100%) 1;
+  width: 100dvw;
 }
   
   .footer-logo {
