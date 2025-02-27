@@ -93,6 +93,7 @@
     gap: 0;
     box-sizing: border-box;
     transition: background-color 0.2s ease, color 0.2s ease;
+    transition: color 0.2s ease, color 0.2s ease;
 }
 
 ::selection {
