@@ -1,5 +1,5 @@
 @charset "UTF-8";
-/* Latest update: 2025-02-26 */
+/* Latest update: 2025-02-27 */
 
 :root {
     color-scheme: light dark;
@@ -515,6 +515,10 @@ footer ul {
     :root:has(input:checked) label span::after {
         background-image: url("/light.svg");
     }
+
+    :root:has(input:checked) .enkel-design img {
+        filter: brightness(75%);
+    }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -524,6 +528,10 @@ footer ul {
 
     label span::after {
         background-image: url("/light.svg");
+    }
+
+    .enkel-design img {
+        filter: brightness(75%);
     }
 
     :root:has(input:checked) label span::after {
