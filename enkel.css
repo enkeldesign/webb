@@ -519,7 +519,7 @@ footer ul {
     }
 
     :root:has(input:checked) .enkel-design img {
-        filter: brightness(75%);
+        filter: brightness(85%);
     }
 }
 
@@ -533,7 +533,7 @@ footer ul {
     }
 
     .enkel-design img {
-        filter: brightness(75%);
+        filter: brightness(85%);
     }
 
     :root:has(input:checked) label span::after {
