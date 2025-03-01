@@ -5,28 +5,19 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!themeToggle) return;
 
   const updateThemeColor = (color) => {
-    let themeMeta = document.querySelector('meta[name="theme-color"][data-user-theme]');
-    if (!themeMeta) {
-      themeMeta = document.createElement('meta');
-      themeMeta.setAttribute('name', 'theme-color');
-      themeMeta.setAttribute('data-user-theme', 'true');
-      document.head.appendChild(themeMeta);
-    }
+    let themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeMeta) themeMeta.remove();
+    themeMeta = document.createElement('meta');
+    themeMeta.setAttribute('name', 'theme-color');
     themeMeta.setAttribute('content', color);
+    document.head.appendChild(themeMeta);
   };
 
   const updateThemeFeedback = (isDark) => {
     const messages = {
-      dark: {
-        text: 'Mörkt färgschema aktiverat.',
-        lang: 'sv',
-      },
-      light: {
-        text: 'Ljust färgschema aktiverat.',
-        lang: 'sv',
-      },
+      dark: { text: 'Mörkt färgschema aktiverat.', lang: 'sv' },
+      light: { text: 'Ljust färgschema aktiverat.', lang: 'sv' },
     };
-
     const { text, lang } = isDark ? messages.dark : messages.light;
     themeFeedback.setAttribute('lang', lang);
     themeFeedback.textContent = text;
@@ -54,10 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
 const copyEmail = () => {
   const email = "erik@enkel.design";
   navigator.clipboard.writeText(email)
-    .then(() => {
-      alert(`${email} kopierat till urklipp.`);
-    })
-    .catch(err => {
-      console.error('Error copying text:', err);
-    });
+    .then(() => alert(`${email} kopierat till urklipp.`))
+    .catch(err => console.error('Error copying text:', err));
 };
