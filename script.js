@@ -4,14 +4,15 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!themeToggle) return;
   const updateThemeColor = (color) => {
     let themeMeta = document.querySelector('meta[name="theme-color"]');
-    if (themeMeta) themeMeta.parentNode.removeChild(themeMeta);
-    setTimeout(() => {
-      const newMeta = document.createElement('meta');
-      newMeta.setAttribute('name', 'theme-color');
-      newMeta.setAttribute('content', color);
-      document.head.insertBefore(newMeta, document.head.firstChild);
-      void document.documentElement.offsetHeight;
-    }, 300);
+    if (themeMeta) themeMeta.remove();
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const newMeta = document.createElement('meta');
+        newMeta.setAttribute('name', 'theme-color');
+        newMeta.setAttribute('content', color);
+        document.head.insertBefore(newMeta, document.head.firstChild);
+      });
+    });
   };
   const updateThemeFeedback = (isDark) => {
     const messages = {
