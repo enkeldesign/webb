@@ -339,13 +339,13 @@ footer {
     background-color: var(--section-b-bkg);
 }
 
-.enkel-design {
+.enkel {
     padding: 1.6rem;
     border-radius: 0 0 2.6rem 0;
     background-color: var(--section-c-bkg);
 }
 
-.enkel-design .photo img,
+.enkel .photo img,
 .about .photo img {
     width: calc(100% + 3.2rem);
     height: auto;
@@ -360,7 +360,7 @@ h2 {
     margin: 1.6rem 0;
 }
 
-.enkel-design h2 {
+.enkel h2 {
     color: var(--section-c-h2-clr);
 }
 
@@ -518,7 +518,7 @@ footer ul {
         background-image: url("/light.svg");
     }
 
-    :root:has(input:checked) .enkel-design img {
+    :root:has(input:checked) .enkel img {
         filter: brightness(85%);
     }
 }
@@ -532,7 +532,7 @@ footer ul {
         background-image: url("/light.svg");
     }
 
-    .enkel-design img {
+    .enkel img {
         filter: brightness(85%);
     }
 
@@ -568,7 +568,7 @@ footer ul {
         grid-template-areas:
             "header     intro"
             "about      photo"
-            "about      enkel-design"
+            "about      enkel"
             "footer     footer";
         margin: 0 auto;
         min-height: none;
@@ -617,13 +617,13 @@ footer ul {
         grid-area: photo;
     }
 
-    .enkel-design {
-        grid-area: enkel-design;
+    .enkel {
+        grid-area: enkel;
         padding: 1.6rem 3rem;
         text-align: left;
     }
 
-    .enkel-design .photo img,
+    .enkel .photo img,
     .about .photo img {
         width: calc(100% + 6rem);
         margin: 0.6rem -3rem;
