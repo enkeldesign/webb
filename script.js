@@ -4,13 +4,14 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!themeToggle) return;
   const updateThemeColor = (color) => {
     let themeMeta = document.querySelector('meta[name="theme-color"]');
-    if (themeMeta) themeMeta.remove();
+    if (themeMeta) themeMeta.parentNode.removeChild(themeMeta);
     setTimeout(() => {
-      themeMeta = document.createElement('meta');
-      themeMeta.setAttribute('name', 'theme-color');
-      themeMeta.setAttribute('content', color);
-      document.head.appendChild(themeMeta);
-    }, 50);
+      const newMeta = document.createElement('meta');
+      newMeta.setAttribute('name', 'theme-color');
+      newMeta.setAttribute('content', color);
+      document.head.insertBefore(newMeta, document.head.firstChild);
+      void document.documentElement.offsetHeight;
+    }, 300);
   };
   const updateThemeFeedback = (isDark) => {
     const messages = {
