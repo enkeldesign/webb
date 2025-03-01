@@ -5,28 +5,19 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!themeToggle) return;
 
   const updateThemeColor = (color) => {
-    let themeMeta = document.querySelector('meta[name="theme-color"][data-user-theme]');
-    if (!themeMeta) {
-      themeMeta = document.createElement('meta');
-      themeMeta.setAttribute('name', 'theme-color');
-      themeMeta.setAttribute('data-user-theme', 'true');
-      document.head.appendChild(themeMeta);
-    }
+    let themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeMeta) themeMeta.remove();
+    themeMeta = document.createElement('meta');
+    themeMeta.setAttribute('name', 'theme-color');
     themeMeta.setAttribute('content', color);
+    document.head.appendChild(themeMeta);
   };
 
   const updateThemeFeedback = (isDark) => {
     const messages = {
-      dark: {
-        text: 'Dark mode activated.',
-        lang: 'en',
-      },
-      light: {
-        text: 'Light mode activated.',
-        lang: 'en',
-      },
+      dark: { text: 'Dark mode activated.', lang: 'sv' },
+      light: { text: 'Light mode activated.', lang: 'sv' },
     };
-
     const { text, lang } = isDark ? messages.dark : messages.light;
     themeFeedback.setAttribute('lang', lang);
     themeFeedback.textContent = text;
@@ -54,10 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
 const copyEmail = () => {
   const email = "erik@enkel.design";
   navigator.clipboard.writeText(email)
-    .then(() => {
-      alert(`${email} copied to clipboard.`);
-    })
-    .catch(err => {
-      console.error('Error copying text:', err);
-    });
+    .then(() => alert(`${email} copied to clipboard.`))
+    .catch(err => console.error('Error copying text:', err));
 };
