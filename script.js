@@ -5,12 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const updateThemeColor = (color) => {
     let themeMeta = document.querySelector('meta[name="theme-color"]');
     if (themeMeta) themeMeta.remove();
-    requestAnimationFrame(() => {
+    setTimeout(() => {
       themeMeta = document.createElement('meta');
       themeMeta.setAttribute('name', 'theme-color');
       themeMeta.setAttribute('content', color);
       document.head.appendChild(themeMeta);
-    });
+    }, 50);
   };
   const updateThemeFeedback = (isDark) => {
     const messages = {
