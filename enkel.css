@@ -1,5 +1,5 @@
 @charset "UTF-8";
-/* Latest update: 2025-02-27 */
+/* Latest update: 2025-03-02 */
 
 :root {
     color-scheme: light dark;
@@ -164,15 +164,6 @@ a:visited {
 
 /* */
 
-input {
-    position: absolute;
-    top: 0.6rem;
-    right: 1.6rem;
-    appearance: none;
-    opacity: 0;
-    margin: 0;
-}
-
 button {
     margin: 0 0 0.3rem 1rem;
     padding: 0 0.6rem 0.175rem;
@@ -194,7 +185,6 @@ button:hover {
 }
 
 button:focus-visible,
-label:focus-within,
 summary:focus-visible,
 footer figure:focus-within {
     outline: 2px auto;
@@ -208,23 +198,6 @@ footer figure a:focus-visible,
 footer figure a:visited:focus-visible {
     background-color: transparent;
     color: transparent;
-}
-
-label {
-    position: absolute;
-    top: 0.6rem;
-    right: 1.6rem;
-    cursor: pointer;
-}
-
-label span::after {
-    content: "";
-    display: inline-block;
-    width: 1.6rem;
-    height: 1.6rem;
-    background-image: url("/dark.svg");
-    background-size: contain;
-    background-repeat: no-repeat;
 }
 
 /* */
@@ -491,7 +464,6 @@ footer ul {
     background: none;
 }
 
-.visually-hidden,
 .skip-lang {
     position: absolute;
     width: 1px;
@@ -502,54 +474,6 @@ footer ul {
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
-}
-
-/* */
-
-@media (prefers-color-scheme: light),
-(prefers-color-scheme: no-preference) {
-    :root:has(input:checked) {
-        color-scheme: dark;
-    }
-
-    :root:has(input:checked) label span::after {
-        background-image: url("/light.svg");
-    }
-
-    :root:has(input:checked) .enkel img {
-        filter: brightness(85%);
-    }
-}
-
-@media (prefers-color-scheme: dark) {
-    :root:has(input:checked) {
-        color-scheme: light;
-    }
-
-    label span::after {
-        background-image: url("/light.svg");
-    }
-
-    .enkel img {
-        filter: brightness(85%);
-    }
-
-    :root:has(input:checked) label span::after {
-        background-image: url("/dark.svg");
-    }
-}
-
-@media (forced-colors: active) {
-    label {
-        display: none;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    * {
-        animation: none !important;
-        transition: none !important;
-    }
 }
 
 /* */
@@ -584,12 +508,6 @@ footer ul {
 
     main {
         display: contents;
-    }
-
-    label,
-    input {
-        top: 1.6rem;
-        right: 1.6rem;
     }
 
     h1 {
@@ -643,11 +561,6 @@ footer ul {
         text-align: left;
     }
 
-    label span::after {
-        width: 2rem;
-        height: 2rem;
-    }
-
     .footer-logo {
         right: 3rem;
         bottom: 2.8rem;
@@ -674,12 +587,6 @@ footer ul {
 
     footer {
         padding: 2.6rem 0;
-    }
-
-    label,
-    input {
-        top: 3rem;
-        right: 0;
     }
 
     h1 {
