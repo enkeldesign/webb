@@ -23,6 +23,10 @@ document.addEventListener('DOMContentLoaded', () => {
     themeFeedback.setAttribute('lang', lang);
     themeFeedback.textContent = text;
   };
+  const isSystemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  themeToggle.checked = isSystemDark;
+  updateThemeColor(isSystemDark ? '#313131' : '#f4f4f4');
+  updateThemeFeedback(isSystemDark);
   const handleThemeToggleChange = (event) => {
     const isDark = event.target.checked;
     event.target.setAttribute('aria-checked', isDark.toString());
@@ -39,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
   themeToggle.addEventListener('change', handleThemeToggleChange);
   themeToggle.addEventListener('keydown', handleThemeToggleKeydown);
 });
-
 const copyEmail = () => {
   const email = "erik@enkel.design";
   navigator.clipboard.writeText(email)
