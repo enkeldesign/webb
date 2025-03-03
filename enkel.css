@@ -402,8 +402,9 @@ figcaption {
     color: var(--quote-clr);
 }
 
-br {
-    margin-bottom: 0.6rem;
+figcaption span {
+    display: block;
+    margin-top: 0.6rem;
 }
 
 /* */
