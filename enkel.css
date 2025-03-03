@@ -67,11 +67,12 @@
     /* Root settings */
 
     --body-font: "azo-sans-web", "futura-pt", -apple-system, BlinkMacSystemFont,
-        "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        "Segoe UI", Roboto, "Helvetica Neue", Arial, ui-sans-serif, sans-serif;
     --alt-font: "futura-pt", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-        "Helvetica Neue", Arial, sans-serif;
+        "Helvetica Neue", Arial, ui-sans-serif, sans-serif;
     --heading-font: "futura-pt", -apple-system, BlinkMacSystemFont, "Segoe UI",
-        Roboto, "Helvetica Neue", Arial, sans-serif;
+        Roboto, "Helvetica Neue", Arial, ui-sans-serif, sans-serif;
+    --serif-font: Georgia, ui-serif, serif;
 
     -webkit-text-size-adjust: 100%;
     line-height: 1.7;
@@ -384,7 +385,7 @@ blockquote {
     margin: 1.6rem 0;
     line-height: 1.8;
     font-size: 1.1rem;
-    font-family: ui-serif, serif;
+    font-family: var(--serif-font);
     color: var(--quote-clr);
 }
 
@@ -394,11 +395,11 @@ blockquote>footer {
 }
 
 figcaption {
-    font-family: ui-serif, serif;
-    color: var(--quote-clr);
-    margin: -0.6rem 0 2rem;
     padding-bottom: 1.6rem;
+    margin: -0.6rem 0 2rem;
     border-bottom: 1.6px solid var(--border-clr);
+    font-family: var(--serif-font);
+    color: var(--quote-clr);
 }
 
 /* */
