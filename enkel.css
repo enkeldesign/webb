@@ -402,6 +402,10 @@ figcaption {
     color: var(--quote-clr);
 }
 
+br {
+    margin-bottom: 0.6rem;
+}
+
 /* */
 
 .divider {
