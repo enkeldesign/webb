@@ -391,6 +391,7 @@ blockquote {
 
 blockquote>footer {
     margin-top: 0.5rem;
+    font-weight: 600;
     color: var(--text-clr);
 }
 
