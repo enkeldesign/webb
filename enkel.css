@@ -10,7 +10,7 @@
     /* 50 */
     --pale: #e9e7e5;
     /* 100 */
-    --alto: #d7dfdf;
+    --alto: #d5dfdf;
     /* 200 */
     --cyan: #cdd;
     /* 200 */
@@ -57,7 +57,7 @@
     --details-ul-clr: light-dark(var(--deep), var(--cyan));
     --summary-h3: light-dark(var(--dusk), var(--alto));
     --summary-marker: light-dark(var(--blue), var(--teal));
-    --footer-clr: light-dark(var(--dark), var(--mist));
+    --footer-clr: light-dark(var(--dusk), var(--alto));
 
     --quote-clr: light-dark(var(--rust), var(--teal));
     --border-clr: light-dark(var(--rust), var(--teal));
