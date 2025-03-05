@@ -28,7 +28,7 @@
     /* 900 */
     --mine: #393939;
     /* 900 */
-    --deep: #145;
+    --deep: #114455;
     /* 900 */
     --dark: #313131;
     /* 950 */
@@ -326,6 +326,10 @@ footer {
     margin: 1.6rem -1.6rem;
 }
 
+.about .photo img {
+    margin-top: 0;
+}
+
 h2 {
     color: var(--section-b-h2-clr);
     font-family: var(--heading-font);
@@ -554,6 +558,11 @@ footer ul {
         width: calc(100% + 6rem);
         margin: 0.6rem -3rem;
     }
+
+    .about .photo img {
+        margin-top: 0;
+    }
+
 
     footer {
         grid-area: footer;
