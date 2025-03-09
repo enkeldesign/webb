@@ -252,7 +252,8 @@ main p {
     color: var(--text-clr);
 }
 
-.about p:last-of-type::before {
+.about p:last-of-type::before,
+.enkel p:nth-of-type(2)::before {
   content: "";
   display: block;
   margin: 1.6rem auto;
@@ -262,7 +263,8 @@ main p {
 }
 
 @media (prefers-color-scheme: dark) {
-.about p:last-of-type::before {
+  .about p:last-of-type::before,
+  .enkel p:nth-of-type(2)::before {
 	background-image: url("EDdark.svg");
   }
 }
