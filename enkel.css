@@ -252,6 +252,21 @@ main p {
     color: var(--text-clr);
 }
 
+.about p:last-of-type::before {
+  content: "";
+  display: block;
+  margin: 1.6rem auto;
+  height: 1.6rem;
+  width: auto;
+  background: url("EDlight.svg") no-repeat center / contain;
+}
+
+@media (prefers-color-scheme: dark) {
+.about p:last-of-type::before {
+	background-image: url("EDdark.svg");
+  }
+}
+
 main p:last-child {
     margin-bottom: 1.6rem;
 }
