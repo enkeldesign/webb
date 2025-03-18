@@ -221,6 +221,11 @@ path:last-of-type {
     fill: var(--logo-d-clr);
 }
 
+circle {
+    fill: var(--body-bkg, none);
+    fill-opacity: 0.1;
+}
+
 .footer-logo path {
     fill: var(--logo-e-clr);
 }
