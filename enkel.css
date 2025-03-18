@@ -1,5 +1,5 @@
 @charset "UTF-8";
-/* Latest update: 2025-03-02 */
+/* Latest update: 2025-03-18 */
 
 :root {
     color-scheme: light dark;
@@ -223,7 +223,7 @@ path:last-of-type {
 
 circle {
     fill: var(--body-bkg, none);
-    fill-opacity: 0.1;
+    fill-opacity: 0.05;
 }
 
 .footer-logo path {
@@ -271,6 +271,9 @@ main p {
   .about p:last-of-type::before,
   .enkel p:nth-of-type(2)::before {
 	background-image: url("EDdark.svg");
+  }
+  circle {
+    fill-opacity: 0.1;
   }
 }
 
