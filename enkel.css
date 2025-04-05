@@ -224,6 +224,8 @@ path:last-of-type {
 circle {
     fill: var(--body-bkg, none);
     fill-opacity: 0.05;
+    stroke: var(--body-bkg, none);
+    stroke-opacity: 0.10;
 }
 
 .footer-logo path {
