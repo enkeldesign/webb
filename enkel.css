@@ -225,7 +225,7 @@ circle {
     fill: var(--body-bkg, none);
     fill-opacity: 0.05;
     stroke: var(--body-bkg, none);
-    stroke-width: 16;
+    stroke-width: 6;
     stroke-opacity: 0.10;
 }
 
