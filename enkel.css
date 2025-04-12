@@ -1,5 +1,5 @@
 @charset "UTF-8";
-/* Latest update: 2025-03-18 */
+/* Latest update: 2025-04-12 */
 
 :root {
     color-scheme: light dark;
@@ -269,16 +269,6 @@ main p {
   background: url("EDlight.svg") no-repeat center / contain;
 }
 
-@media (prefers-color-scheme: dark) {
-  .about p:last-of-type::before,
-  .enkel p:nth-of-type(2)::before {
-	background-image: url("EDdark.svg");
-  }
-  circle {
-    fill-opacity: 0.1;
-  }
-}
-
 main p:last-child {
     margin-bottom: 1.6rem;
 }
@@ -518,6 +508,16 @@ footer ul {
 }
 
 /* */
+
+@media (prefers-color-scheme: dark) {
+  .about p+p::before {
+	background-image: url("EDdark.svg");
+  }
+	
+  circle {
+    fill-opacity: 0.1;
+  }
+}
 
 @media (min-width: 45em) {
     :root {
