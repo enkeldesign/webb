@@ -260,8 +260,7 @@ main p {
     color: var(--text-clr);
 }
 
-.about p:last-of-type::before,
-.enkel p:nth-of-type(2)::before {
+.about p+p::before {
   content: "";
   display: block;
   margin: 1.6rem auto;
