@@ -393,6 +393,14 @@ summary {
     color: var(--summary-marker);
 }
 
+summary::marker {
+    font-size: 2.6rem;
+}
+
+summary::-webkit-details-marker {
+    font-size: 2.6rem;
+}
+
 summary h3 {
     display: inline;
     margin-left: -0.25rem;
