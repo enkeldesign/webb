@@ -404,6 +404,7 @@ summary h3 {
     margin: 0;
     vertical-align: bottom;
     font-family: var(--heading-font);
+    font-size: 1.6rem;
     font-weight: bold;
     color: var(--summary-h3);
 }
