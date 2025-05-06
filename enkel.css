@@ -390,19 +390,17 @@ details p {
 summary {
     cursor: pointer;
     line-height: 3rem;
-    vertical-align: middle;
     color: var(--summary-marker);
 }
 
 summary::marker,
 summary::-webkit-details-marker {
-    vertical-align: bottom;
     font-size: 3rem;
 }
 
 summary h3 {
     display: inline;
-    vertical-align: middle;
+    vertical-align: top;
     margin: 0;
     font-family: var(--heading-font);
     font-size: 1.6rem;
