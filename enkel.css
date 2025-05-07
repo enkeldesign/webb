@@ -389,13 +389,10 @@ details p {
 
 summary {
     cursor: pointer;
+    font-family: var(--heading-font);
     font-size: 1.6rem;
+    font-weight: bold;
     color: var(--summary-marker);
-    text-shadow:
-        2px 2px 0 var(--summary-marker),
-       -2px 2px 0 var(--summary-marker),
-       -2px -2px 0 var(--summary-marker),
-        2px -2px 0 var(--summary-marker);
 }
 
 summary h3 {
@@ -404,7 +401,6 @@ summary h3 {
     font-size: 1.6rem;
     font-weight: bold;
     color: var(--summary-h3);
-    text-shadow: none;
 }
 
 blockquote {
