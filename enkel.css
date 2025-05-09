@@ -389,7 +389,7 @@ details p {
 
 summary {
     cursor: pointer;
-    font-size: 3rem;
+    font-size: 2rem;
     font-weight: bold;
     color: var(--summary-marker);
 }
