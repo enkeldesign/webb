@@ -20,7 +20,7 @@
     /* 700 */
     --brue: #1f6f8f;
     /* 700 */
-    --fire: #b60;
+    --fire: #b50;
     /* 700 */
     --navy: #157;
     /* 800 */
@@ -39,16 +39,16 @@
 }
 
 @supports (
-    color: color(display-p3 0.067 0.4 0.533 / 1)
+    color: color(display-p3 0.067 0.400 0.533 / 1)
 ) and (
     color: color(display-p3 0.122 0.435 0.561 / 1)
 ) and (
-    color: color(display-p3 0.733 0.4 0 / 1)
+    color: color(display-p3 0.733 0.333 0 / 1)
 ) {
     :root {
-        --blue: color(display-p3 0.067 0.4 0.533 / 1);
+        --blue: color(display-p3 0.067 0.400 0.533 / 1);
         --brue: color(display-p3 0.122 0.435 0.561 / 1);
-        --fire: color(display-p3 0.733 0.4 0 / 1);
+        --fire: color(display-p3 0.733 0.333 0 / 1);
     }
 }
 
@@ -62,7 +62,7 @@
     --footer-bkg: transparent;
 
     --logo-e-clr: light-dark(var(--blue, #168), var(--brue, #1f6f8f));
-    --logo-d-clr: light-dark(var(--fire, #b60), var(--fire, #b60));
+    --logo-d-clr: light-dark(var(--fire, #b50), var(--fire, #b50));
     --section-a-bkg: light-dark(var(--cyan), var(--mine));
     --section-b-bkg: light-dark(var(--pale), var(--deep));
     --section-c-bkg: light-dark(var(--cyan), var(--void));
