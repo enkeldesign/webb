@@ -20,6 +20,8 @@
     /* 700 */
     --brue: #1f6f8f;
     /* 700 */
+    --fire: #b60;
+    /* 700 */
     --navy: #157;
     /* 800 */
     --dusk: #345;
@@ -34,7 +36,23 @@
     /* 950 */
     --void: #222426;
     /* 950 */
+}
 
+@supports (
+    color: color(display-p3 0.067 0.4 0.533 / 1)
+) and (
+    color: color(display-p3 0.122 0.435 0.561 / 1)
+) and (
+    color: color(display-p3 0.733 0.4 0 / 1)
+) {
+    :root {
+        --blue: color(display-p3 0.067 0.4 0.533 / 1);
+        --brue: color(display-p3 0.122 0.435 0.561 / 1);
+        --fire: color(display-p3 0.733 0.4 0 / 1);
+    }
+}
+
+:root {
     /* Color application */
 
     --body-bkg: light-dark(var(--mist), var(--dark));
@@ -43,8 +61,8 @@
     --main-bkg: transparent;
     --footer-bkg: transparent;
 
-    --logo-e-clr: light-dark(var(--dusk), var(--alto));
-    --logo-d-clr: light-dark(var(--blue, #168), var(--brue, #1f6f8f));
+    --logo-e-clr: light-dark(var(--blue, #168), var(--brue, #1f6f8f));
+    --logo-d-clr: light-dark(var(--fire, #b60), var(--fire, #b60));
     --section-a-bkg: light-dark(var(--cyan), var(--mine));
     --section-b-bkg: light-dark(var(--pale), var(--deep));
     --section-c-bkg: light-dark(var(--cyan), var(--void));
@@ -81,13 +99,6 @@
     interpolate-size: allow-keywords;
     scroll-behavior: smooth;
     background-color: var(--body-bkg);
-}
-
-@supports (color: color(display-p3 0.066667 0.4 0.533333 / 1)) and (color: color(display-p3 0.121569 0.435294 0.560784 / 1)) {
-    :root {
-        --blue: color(display-p3 0.066667 0.4 0.533333 / 1);
-        --brue: color(display-p3 0.121569 0.435294 0.560784 / 1);
-    }
 }
 
 * {
