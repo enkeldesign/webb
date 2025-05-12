@@ -62,7 +62,7 @@
     --footer-bkg: transparent;
 
     --logo-e-clr: light-dark(var(--dusk, #345), var(--alto, #d5dfdf));
-    --logo-d-clr: light-dark(var(--fire, #b50), var(--fire, #b50));
+    --logo-d-clr: light-dark(var(--blue, #168), var(--brue, #1f6f8f));
     --section-a-bkg: light-dark(var(--cyan), var(--mine));
     --section-b-bkg: light-dark(var(--pale), var(--deep));
     --section-c-bkg: light-dark(var(--cyan), var(--void));
