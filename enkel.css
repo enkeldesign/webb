@@ -16,11 +16,11 @@
     /* 200 */
     --teal: #8bc;
     /* 400 */
+    --fire: #c08010;
+    /* 600 */
     --blue: #168;
     /* 700 */
     --brue: #1f6f8f;
-    /* 700 */
-    --fire: #b50;
     /* 700 */
     --navy: #157;
     /* 800 */
@@ -43,12 +43,12 @@
 ) and (
     color: color(display-p3 0.122 0.435 0.561 / 1)
 ) and (
-    color: color(display-p3 0.733 0.333 0 / 1)
+    color: color(display-p3 0.753 0.502 0.063 / 1)
 ) {
     :root {
         --blue: color(display-p3 0.067 0.400 0.533 / 1);
         --brue: color(display-p3 0.122 0.435 0.561 / 1);
-        --fire: color(display-p3 0.733 0.333 0 / 1);
+        --fire: color(display-p3 0.753 0.502 0.063 / 1);
     }
 }
 
@@ -61,7 +61,7 @@
     --main-bkg: transparent;
     --footer-bkg: transparent;
 
-    --logo-e-clr: light-dark(var(--dusk, #345), var(--alto, #d5dfdf));
+    --logo-e-clr: light-dark(var(--fire, #c08010), var(--fire, #c08010));
     --logo-d-clr: light-dark(var(--blue, #168), var(--brue, #1f6f8f));
     --section-a-bkg: light-dark(var(--cyan), var(--mine));
     --section-b-bkg: light-dark(var(--pale), var(--deep));
