@@ -1,5 +1,5 @@
 @charset "UTF-8";
-/* Latest update: 2025-05-07 */
+/* Latest update: 2025-06-02 */
 
 :root {
     color-scheme: light dark;
@@ -67,8 +67,8 @@
     --section-b-bkg: light-dark(var(--pale), var(--deep));
     --section-c-bkg: light-dark(var(--cyan), var(--void));
 
-    --text-clr: light-dark(var(--mine), var(--alto));
-    --heading-clr: light-dark(var(--dusk), var(--alto));
+    --text-clr: light-dark(var(--mine), var(--pale));
+    --heading-clr: light-dark(var(--mine), var(--pale));
     --heading-span-clr: light-dark(var(--navy), var(--teal));
     --section-b-h2-clr: light-dark(var(--navy), var(--teal));
     --section-c-h2-clr: light-dark(var(--navy), var(--teal));
