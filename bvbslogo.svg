@@ -5,8 +5,10 @@
         :root {
             color-scheme: light dark;
         }
+
 				svg {
-						margin: 10vh;
+						width: 50vw;
+						height: auto;
 				}
 
         path {
