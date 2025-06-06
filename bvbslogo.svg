@@ -5,6 +5,9 @@
         :root {
             color-scheme: light dark;
         }
+				svg {
+						margin: 10vh;
+				}
 
         path {
             fill: #002244;
