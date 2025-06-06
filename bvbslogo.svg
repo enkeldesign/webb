@@ -7,9 +7,9 @@
         }
 
 				svg {
-						width: 50vw;
+						width: 100px;
 						height: auto;
-						margin: 10vw;
+						margin: 30px;
 				}
 
         path {
