@@ -13,11 +13,11 @@
 				}
 
         path {
-            fill: #002244;
+            fill: #002856;
         }
 
         #needle path:first-child {
-            fill: #dd2200;
+            fill: #FCCA15;
         }
 
         #needle {
@@ -74,11 +74,11 @@
             path {
                 fill: #ffffff;
             }
-
+/*
             #needle path:first-child {
-                fill: #dd2200;
+                fill: #FCCA15;
             }
-
+*/
         }
     </style>
 
