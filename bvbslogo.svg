@@ -13,11 +13,11 @@
 				}
 
         path {
-            fill: #002856;
+            fill: #002857;
         }
 
         #needle path:first-child {
-            fill: #FCCA15;
+            fill: #E0B000;
         }
 
         #needle {
