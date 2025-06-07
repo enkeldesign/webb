@@ -17,7 +17,7 @@
         }
 
         #needle path:first-child {
-            fill: #E0B000;
+            fill: #EDBA00;
         }
 
         #needle {
