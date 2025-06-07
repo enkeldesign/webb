@@ -74,11 +74,7 @@
             path {
                 fill: #ffffff;
             }
-/*
-            #needle path:first-child {
-                fill: #FCCA15;
-            }
-*/
+
         }
     </style>
 
