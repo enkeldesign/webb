@@ -17,7 +17,7 @@
         }
 
         #needle path:first-child {
-            fill: #eebb00;
+            fill: #dd2200;
         }
 
         #needle {
@@ -76,7 +76,7 @@
             }
 
             #needle path:first-child {
-                fill: #eebb00;
+                fill: #dd2200;
             }
 
         }
