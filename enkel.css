@@ -1,5 +1,5 @@
 @charset "UTF-8";
-/* Latest update: 2025-06-02 */
+/* Latest update: 2025-06-08 */
 
 :root {
     color-scheme: light dark;
@@ -7,7 +7,7 @@
     /* Color palette with brightness 50-950 */
 
     --mist: #f4f4f4;
-    /* 50 */
+    /* 50 iOS canvas*/
     --pale: #e9e7e5;
     /* 100 */
     --alto: #d5dfdf;
@@ -19,9 +19,9 @@
     --fire: #c08010;
     /* 600 */
     --blue: #168;
-    /* 700 */
+    /* 700 Profile */
     --brue: #1f6f8f;
-    /* 700 */
+    /* 700 Profile brighter */
     --navy: #157;
     /* 800 */
     --dusk: #345;
@@ -33,9 +33,9 @@
     --deep: #114455;
     /* 900 */
     --dark: #313131;
-    /* 950 */
-    --void: #222426;
-    /* 950 */
+    /* 950 iOS canvas */
+    --void: #16161d;
+    /* 950 Eigengrau */
 }
 
 @supports (
