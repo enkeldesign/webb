@@ -6,11 +6,11 @@
             color-scheme: light dark;
         }
 
-				svg {
-						width: 200px;
-						height: auto;
-						margin: 100px;
-				}
+        svg {
+            width: 200px;
+            height: auto;
+            margin: 100px;
+        }
 
         path {
             fill: #002857;
@@ -72,7 +72,11 @@
 
         @media (prefers-color-scheme: dark) {
             path {
-                fill: #ffffff;
+                fill: #F4F4F4;
+            }
+
+            :root {
+                background-color: #002857;
             }
 
         }
