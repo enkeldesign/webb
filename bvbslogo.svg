@@ -2,7 +2,7 @@
 
     <title id="logo-title">Bolagsverket Backstage Logotyp</title>
     <style>
-        :root {
+              :root {
             color-scheme: light dark;
         }
 
