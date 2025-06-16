@@ -56,7 +56,7 @@
             justify-content: center;
         }
 
-        img {
+        img, figure {
             display: block;
             max-width: 100vw;
             height: auto;
@@ -67,7 +67,7 @@
             body {
                 max-width: 62%;
             }
-            img {
+            img, figure {
                 width: 100%;
                 margin: 1.6rem 0;
             }
@@ -84,6 +84,12 @@
         <h2>Blueprint</h2>
         <img src="/logoBlueprint.png" alt="Blueprint showing two rings made of golden ratio circles overlapping horizontally, cropping at the intersection, creating the base for the letters E and D.">
         <h2>Mockup</h2>
+        <figure class="mockup">
+            <picture>
+                <source srcset="/mockdark.jpg" media="(prefers-color-scheme: dark)">
+                <img src="/mocklight.jpg" alt="">
+            </picture>
+        </figure>
         <img src="/mockup.png" alt="Hand-drawn version of the Enkel Design logo.">
     </main>
     <footer>
