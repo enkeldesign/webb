@@ -75,9 +75,9 @@
                 fill: #F4F4F4;
             }
 
-            :root {
+            /* :root {
                 background-color: #002857;
-            }
+            } */
 
         }
     </style>
