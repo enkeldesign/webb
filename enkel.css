@@ -1,10 +1,10 @@
 @charset "UTF-8";
-/* Latest update: 2025-06-08 */
+/* Latest update: 2025-07-23 */
 
 :root {
     color-scheme: light dark;
 
-    /* Color palette with brightness 50-950 */
+    /* Color palette with brightness 50 (bright) - 950 (dark) */
 
     --mist: #f4f4f4;
     /* 50 iOS canvas*/
