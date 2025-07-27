@@ -1,136 +1,109 @@
-/* Base styles for all screen sizes */
+/*
+  Custom stylesheet for the AI safety misbehaviours site.
+  The design uses a responsive flexbox layout with cards.  Colours and
+  typography are kept simple and modern to emphasise the artwork and
+  descriptions.
+*/
+
+/* Base styles */
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    background-color: #f0f4f8;
-    line-height: 1.6;
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #f5f5f5;
+  color: #333;
+  line-height: 1.6;
 }
 
 header {
-    background-color: #2a9d8f;
-    color: #fff;
-    padding: 2em;
-    text-align: center;
+  background-color: #2c3e50;
+  color: #fff;
+  padding: 2rem 1rem;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-nav {
-    background-color: #264653;
+header h1 {
+  margin: 0;
+  font-size: 2.2rem;
 }
 
-nav ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
+.subtitle {
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  color: #ecf0f1;
+  font-weight: 300;
 }
 
-nav li {
-    margin: 0;
+/* Card container */
+.card-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-nav a {
-    color: #fff;
-    padding: 1em;
-    display: block;
-    text-decoration: none;
+/* Individual card */
+.card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  flex: 1 1 280px;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
 }
 
-nav a:hover {
-    background-color: #1d3557;
+.card-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
 }
 
-main {
-    padding: 2em;
+.card h2 {
+  font-size: 1.4rem;
+  margin: 0.75rem 1rem 0.5rem 1rem;
+  color: #2c3e50;
 }
 
-section {
-    background-color: #fff;
-    margin-bottom: 2em;
-    padding: 2em;
-    border-radius: 8px;
+.card p {
+  flex-grow: 1;
+  margin: 0 1rem 1rem 1rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
-h2 {
-    color: #e76f51;
-}
-
-article h3 {
-    color: #2a9d8f;
-}
-
+/* Footer & citations */
 footer {
-    background-color: #2a9d8f;
-    color: #fff;
-    text-align: center;
-    padding: 1em;
+  background-color: #ecf0f1;
+  padding: 2rem 1rem;
+  border-top: 1px solid #dcdcdc;
 }
 
-/* Styles for mobile screens */
-@media (max-width: 768px) {
-    nav ul {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    nav a {
-        padding: 0.8em;
-        width: 100%;
-        text-align: center;
-    }
-
-    main {
-        padding: 1em;
-    }
-
-    section {
-        padding: 1.5em;
-    }
-
-    header {
-        padding: 1.5em;
-    }
-
-    footer {
-        padding: 1em;
-    }
+footer h2 {
+  margin-top: 0;
+  font-size: 1.5rem;
+  color: #2c3e50;
 }
 
-/* Styles for very small screens */
-@media (max-width: 480px) {
-    header {
-        font-size: 1.5em;
-    }
-
-    nav ul {
-        padding: 0;
-    }
-
-    section {
-        padding: 1em;
-    }
-
-    footer {
-        padding: 0.5em;
-    }
+.citations {
+  list-style: decimal;
+  padding-left: 1.5rem;
+  font-size: 0.85rem;
 }
 
-/* Blog section styles */
-details {
-    margin-bottom: 1em;
-    background-color: #fff;
-    padding: 1em;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+.citations li {
+  margin-bottom: 0.4rem;
 }
 
-summary {
-    font-weight: bold;
-    cursor: pointer;
-    color: #2a9d8f;
+.citations a {
+  color: #2980b9;
+  text-decoration: none;
 }
 
-details[open] summary {
-    color: #e76f51;
+.citations a:hover {
+  text-decoration: underline;
 }
