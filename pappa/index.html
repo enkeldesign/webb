@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="sv">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pappa Quest</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="game-container">
+      <canvas id="gameCanvas" width="600" height="600"></canvas>
+      <div id="hud">
+        <span id="hp">HP: 100</span>
+        <span id="points">Poäng: 0</span>
+        <!-- Quest indicator shows the current active quest description or a dash when none is active -->
+        <span id="quest">Uppdrag: –</span>
+        <!-- Progress bar for quests that have a duration (e.g. fixing computer, playing).  The inner bar width is updated in game.js -->
+        <div id="progress-container">
+          <div id="progress-bar"></div>
+        </div>
+      </div>
+      <div id="dialogue"></div>
+    </div>
+    <script src="game.js"></script>
+  </body>
+</html>
