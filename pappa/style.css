@@ -83,8 +83,8 @@ canvas#gameCanvas {
   min-height: 70px;
   /* Dialogue box has a blue backdrop with bold white text, inspired by
      classic RPG message windows. */
-  background: #004da8;
-  border: 5px solid white;
+  background: #004da8bb;
+  border: 5px solid #ffffffdd;
   border-radius: 5px;
   color: #ffffff;
   font-size: 14px;
