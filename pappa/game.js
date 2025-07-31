@@ -36,11 +36,11 @@
     'Pappa, jag är level 735 i spelet nu!',
     'Pappa, det finns en planet gjord av diamant!',
     'Pappa, jag fick en legendary!',
-    'Pappa, jag slog just mitt hastighetsrekord!',
+    'Pappa, vet du vilka mina favorit-moves är?',
     'Pappa, visste du att det finns en vulkan på Mars?',
-    'Pappa, jag har pluggat 10 dinosaurier idag!',
+    'Pappa, jag har lärt mig 3 nya stjärnor idag!',
     'Pappa, jag är den bästa i hela servern!',
-    'Pappa, jag kan bygga ett slott på en minut!'
+    'Pappa, jag gjorde ett skitsnyggt mål!'
   ];
 
   // Simple message manager that keeps a queue of messages and displays
@@ -153,7 +153,7 @@
         this.hp = Math.min(100, this.hp + 20 * dt);
         if (this.hp >= 80) {
           this.isResting = false;
-          messageLog.add('Pappa känner sig pigg igen.');
+          messageLog.add('Upp och hoppa, pappa!');
         }
       } else if (!this.isDownstairs) {
         // If a path exists, follow it smoothly.  Ignore keyboard input
@@ -800,9 +800,9 @@
     draw(ctx) {
       if (!this.active) return;
       // Body colour depends on cat
-      let bodyColour = '#d9a675';
-      if (this.name === 'Bella') bodyColour = '#e0b3a7';
-      else if (this.name === 'Kasper') bodyColour = '#c5a58a';
+      let bodyColour = '#563d00';
+      if (this.name === 'Bella') bodyColour = '#907050';
+      else if (this.name === 'Kasper') bodyColour = '#c0cfd7';
       // Draw body
       ctx.fillStyle = bodyColour;
       ctx.fillRect(this.x, this.y + 4, this.w, this.h - 4);
@@ -1343,7 +1343,7 @@
       // Setup quest description and any special actions
       switch (questType) {
         case 'wasp':
-          quest.description = `${child.name}: Det finns en geting här inne! Få ut den genom ett fönster.`;
+          quest.description = `${child.name}: GETING! Få ut den genom ett fönster.`;
           break;
         case 'charger':
           quest.description = `${child.name}: Min iPad är snart död, kan du hämta laddsladden?`;
@@ -1604,7 +1604,7 @@
               if (lova && this.player.intersects(lova)) {
                 // Cat runs away: deactivate it
                 lova.active = false;
-                messageLog.add('Pappa jagade bort Lova.', 2000);
+                messageLog.add('Pappa bar ut Lova.', 2000);
                 quest.state = 'return';
               }
             }
@@ -1753,12 +1753,12 @@
               bella.x = stairs.x + stairs.w / 2 - bella.w / 2;
               bella.y = stairs.y + stairs.h + 4;
               // Make Bella meow as she enters
-              bella.meowText = 'Määäh määh';
+              bella.meowText = 'Määäh. Määääh';
               bella.meowTimer = 2.0;
             }
             this.bellaSpawned = true;
             this.bellaScratch = false;
-            messageLog.add('Dörr öppnas och stängs.', 3000);
+            messageLog.add('Dörren nere öppnas och stängs.', 3000);
           }
         }
       }
