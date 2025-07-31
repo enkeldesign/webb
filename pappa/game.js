@@ -693,7 +693,7 @@ ctx.fillStyle = '#ffcc00';
 ctx.font = '40px sans-serif';
 ctx.fillText('!', cx - 8, this.y - 8);
 ctx.strokeStyle = 'black';
-ctx.lineWidth = 2;
+ctx.lineWidth = 1;
 ctx.strokeText('!', cx - 8, this.y - 8);
 }
 }
