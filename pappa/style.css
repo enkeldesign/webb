@@ -62,7 +62,7 @@ canvas#gameCanvas {
 /* Progress bar container.  A thin horizontal bar below the quest text. */
 #progress-container {
   flex-grow: 1;
-  height: 4px;
+  height: 8px;
   background: #ddd;
   border-radius: 2px;
   margin: 2px 0 0 8px;
