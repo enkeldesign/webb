@@ -38,7 +38,7 @@
     'Pappa, jag fick en legendary!',
     'Pappa, vet du vilka mina favorit-moves är?',
     'Pappa, visste du att det finns en vulkan på Mars?',
-    'Pappa, jag har lärt mig 3 nya stjärnor idag!',
+    'Pappa, jag hittade en jättecool AoT-animation!',
     'Pappa, jag är den bästa i hela servern!',
     'Pappa, jag gjorde ett skitsnyggt mål!'
   ];
