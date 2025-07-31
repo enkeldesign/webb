@@ -690,8 +690,8 @@ drawBubble(this.callLine);
 // Draw exclamation mark when child has a quest assigned (activeQuest set)
 if (this.activeQuest) {
 ctx.fillStyle = '#ff8800';
-ctx.font = '30px sans-serif';
-ctx.fillText('', cx - 4, this.y - 8);
+ctx.font = '24px serif';
+ctx.fillText('!', cx - 8, this.y - 16);
 }
 }
 }
