@@ -1,0 +1,138 @@
+/* Basic reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: sans-serif;
+  background: #ececec;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+#game-container {
+  position: relative;
+  width: 600px;
+  height: 600px;
+  border: 2px solid #333;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  background: #fafafa;
+}
+
+canvas#gameCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #ddd;
+}
+
+#hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  z-index: 2;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Add spacing between HUD spans for readability */
+#hud span {
+  margin-right: 8px;
+}
+
+/* Quest indicator styling.  Display the current quest description next to the HP and points. */
+#hud #quest {
+  margin-left: 8px;
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Progress bar container.  A thin horizontal bar below the quest text. */
+#progress-container {
+  flex-grow: 1;
+  height: 4px;
+  background: #ddd;
+  border-radius: 2px;
+  margin: 2px 0 0 8px;
+  overflow: hidden;
+}
+
+/* Inner progress bar showing quest completion.  Width is set dynamically. */
+#progress-bar {
+  height: 100%;
+  width: 0%;
+  background: #4caf50;
+  border-radius: 2px;
+}
+
+#dialogue {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  min-height: 70px;
+  /* Dialogue box has a blue backdrop with bold white text, inspired by
+     classic RPG message windows. */
+  background: #004da8;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 6px 8px;
+  overflow: hidden;
+  z-index: 2;
+  pointer-events: none;
+}
+
+#dialogue p {
+  margin-bottom: 4px;
+}
+
+/* Title screen overlay styles.  Covers entire viewport with a dark
+   background and centres the title and start button. */
+#title-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.9);
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+}
+
+#title-screen h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+#title-screen button {
+  font-size: 1.5rem;
+  padding: 0.5rem 2rem;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  background: #4caf50;
+  color: #ffffff;
+  transition: background 0.2s ease;
+}
+
+#title-screen button:hover {
+  background: #45a049;
+}
