@@ -1815,7 +1815,7 @@
           if (this.player.greetCooldown <= 0 && this.player.speakTimer <= 0) {
             this.player.speakLine = 'Hej älsklingen!';
             this.player.speakTimer = 2; // seconds
-            this.player.greetCooldown = 4; // wait at least 4 seconds before greeting again
+            this.player.greetCooldown = 15; // wait at least 4 seconds before greeting again
           }
         }
       }
