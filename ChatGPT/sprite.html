@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pixel Sprite Editor</title>
+  <style>
+    body { font-family: sans-serif; padding: 1em; background: #f5f5f5; }
+    .toolbar { margin-bottom: 1em; }
+    .toolbar button, .toolbar input { margin-right: 0.5em; padding: 0.5em 1em; }
+    #canvas { image-rendering: pixelated; background: #fff; border: 1px solid #ccc; display: block; margin-bottom: 1em; }
+    #export, #importArea { width: 100%; height: 6em; margin-top: 0.5em; font-family: monospace; }
+    .io-container { margin-top: 1em; }
+  </style>
+</head>
+<body>
+  <h1>Pixel Sprite Editor</h1>
+  <div class="toolbar">
+    <input type="color" id="colorPicker" value="#ff0000">
+    <button id="penBtn">Pen</button>
+    <button id="fillBtn">Fill</button>
+    <button id="clearBtn">Clear</button>
+    <button id="exportBtn">Export JS Array</button>
+    <button id="importBtn">Import JS Array</button>
+  </div>
+
+  <canvas id="canvas" width="13" height="26" style="width: 260px; height: 520px;"></canvas>
+
+  <div class="io-container">
+    <label for="export">Export (JS Array):</label>
+    <textarea id="export" readonly placeholder="Här visas din sprite-array..."></textarea>
+  </div>
+  <div class="io-container">
+    <label for="importArea">Importera (klistra in bara JS-arrayen):</label>
+    <textarea id="importArea" placeholder="[ [null, "#ff0000", ...], ... ]"></textarea>
+  </div>
+
+  <script>
+    const cols = 13, rows = 26;
+    let tool = 'pen', currentColor = '#ff0000';
+    let grid = Array.from({ length: rows }, () => Array(cols).fill(null));
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const colorPicker = document.getElementById('colorPicker');
+    const exportArea = document.getElementById('export');
+    const importArea = document.getElementById('importArea');
+
+    function drawGrid() {
+      ctx.clearRect(0, 0, cols, rows);
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const c = grid[y][x];
+          if (c) {
+            ctx.fillStyle = c;
+            ctx.fillRect(x, y, 1, 1);
+          }
+        }
+      }
+    }
+
+    function getCell(e) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = Math.floor((e.clientX - rect.left) * scaleX);
+      const y = Math.floor((e.clientY - rect.top) * scaleY);
+      return { x, y };
+    }
+
+    canvas.addEventListener('click', e => {
+      const { x, y } = getCell(e);
+      if (x < 0 || x >= cols || y < 0 || y >= rows) return;
+      if (tool === 'pen') {
+        grid[y][x] = currentColor;
+      } else if (tool === 'fill') {
+        const target = grid[y][x];
+        floodFill(x, y, target, currentColor);
+      }
+      drawGrid();
+    });
+
+    // Smart flood fill: replaces colors within tolerance
+    function floodFill(x, y, targetColor, newColor) {
+      const tol = 50; // färgtolerans
+      const targetRGB = hexToRgb(targetColor);
+      const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
+      const stack = [{ x, y }];
+      while (stack.length) {
+        const { x, y } = stack.pop();
+        if (x < 0 || x >= cols || y < 0 || y >= rows) continue;
+        if (visited[y][x]) continue;
+        const c = grid[y][x];
+        const cRgb = hexToRgb(c);
+        if (!colorClose(cRgb, targetRGB, tol)) continue;
+        grid[y][x] = newColor;
+        visited[y][x] = true;
+        stack.push({ x: x+1, y }, { x: x-1, y }, { x, y: y+1 }, { x, y: y-1 });
+      }
+    }
+
+    function hexToRgb(hex) {
+      if (!hex) return null;
+      const m = hex.replace('#','');
+      const bigint = parseInt(m, 16);
+      return [(bigint>>16)&255, (bigint>>8)&255, bigint&255];
+    }
+    function colorClose(a, b, tol) {
+      if (!a || !b) return a===b;
+      const dr = a[0]-b[0], dg = a[1]-b[1], db = a[2]-b[2];
+      return (dr*dr + dg*dg + db*db) <= tol*tol;
+    }
+
+    colorPicker.addEventListener('input', e => currentColor = e.target.value);
+    document.getElementById('penBtn').onclick   = () => tool = 'pen';
+    document.getElementById('fillBtn').onclick  = () => tool = 'fill';
+    document.getElementById('clearBtn').onclick = () => { grid = Array.from({ length: rows }, () => Array(cols).fill(null)); drawGrid(); };
+
+    document.getElementById('exportBtn').onclick = () => {
+      const s = '[\n' + grid.map(row => '  [' + row.map(c => c ? `"${c}"` : 'null').join(', ') + ']').join(',\n') + '\n]';
+      exportArea.value = 'const sprite = ' + s + ';';
+    };
+
+    document.getElementById('importBtn').onclick = () => {
+      try {
+        const arr = JSON.parse(importArea.value);
+        if (Array.isArray(arr) && arr.length===rows && arr[0].length===cols) {
+          grid = arr;
+          drawGrid();
+        } else {
+          alert('Fel format: array måste vara ' + rows + '×' + cols);
+        }
+      } catch (e) {
+        alert('Kunde inte tolka array: ' + e.message);
+      }
+    };
+
+    drawGrid();
+  </script>
+</body>
+</html>
