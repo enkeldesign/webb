@@ -30,8 +30,8 @@
     <textarea id="export" readonly placeholder="Här visas din sprite-array..."></textarea>
   </div>
   <div class="io-container">
-    <label for="importArea">Importera (klistra in bara JS-arrayen):</label>
-    <textarea id="importArea" placeholder="[ [null, "#ff0000", ...], ... ]"></textarea>
+    <label for="importArea">Importera (klistra in bara JS-arrayen eller 'const sprite = [...]'):</label>
+    <textarea id="importArea" placeholder="[ [null, '#ff0000', ... ], ... ]"></textarea>
   </div>
 
   <script>
@@ -100,8 +100,8 @@
 
     function hexToRgb(hex) {
       if (!hex) return null;
-      const m = hex.replace('#','');
-      const bigint = parseInt(m, 16);
+      const m = hex.replace(/^['\"]|['\"]$/g, '');
+      const bigint = parseInt(m.replace('#',''), 16);
       return [(bigint>>16)&255, (bigint>>8)&255, bigint&255];
     }
     function colorClose(a, b, tol) {
@@ -121,8 +121,12 @@
     };
 
     document.getElementById('importBtn').onclick = () => {
+      let text = importArea.value.trim();
+      if (text.startsWith('const')) {
+        text = text.replace(/^const\s+\w+\s*=\s*/, '').replace(/;$/, '');
+      }
       try {
-        const arr = JSON.parse(importArea.value);
+        const arr = JSON.parse(text);
         if (Array.isArray(arr) && arr.length===rows && arr[0].length===cols) {
           grid = arr;
           drawGrid();
