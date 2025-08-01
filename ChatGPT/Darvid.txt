@@ -1,0 +1,56 @@
+const darvidSprite = [
+
+      [null, null, null, null, null, null, null, null, null, null, null, null, null],
+
+      [null, null, null, null, null, "#6b3824", "#673622", "#60321f", "#6a3721", "#63331e", null, null, null],
+
+      [null, null, null, "#61321e", "#8d4a27", "#914d27", "#934f28", "#8f4a26", "#8e4b27", "#693722", null, null, null],
+
+      [null, null, "#572a1c", "#854323", "#944c29", "#924d29", "#874524", "#96532b", "#934e29", "#914e27", "#582d1e", null, null],
+
+      [null, null, "#5a2d1e", "#8f4b27", "#4b251a", "#8d4b26", "#8f4c28", "#4a2518", "#914d28", "#904b26", "#542a1b", null, null],
+
+      [null, null, "#572c1d", "#4e271c", "#fbb17e", "#4a2719", "#482519", "#f9ae7e", "#49251a", "#492419", "#572e1d", null, null],
+
+      [null, null, "#532819", "#f7ad7b", "#37313a", "#f7ab79", "#f7ac7a", "#f7ae7a", "#221c23", "#f5ac7a", "#52291a", null, null],
+
+      [null, null, "#e27b48", "#f5ac7b", "#312d36", "#f7ad79", "#f8ae7b", "#f8af7c", "#251f27", "#f9b07f", "#e37c4a", null, null],
+
+      [null, null, null, "#e27945", "#f8ae7b", "#f6ab7a", "#f9af7c", "#fbb17f", "#f9af7d", "#e37b49", null, null, null],
+
+      [null, null, null, null, "#a55504", "#e07945", "#e37b48", "#de7541", "#a45503", null, null, null, null],
+
+      [null, null, null, "#a35300", "#d87a0d", "#d5770e", "#dd7f12", "#d97d0f", "#dd8013", "#a45303", null, null, null],
+
+      [null, null, "#a04f00", "#d57612", "#da7c14", "#d5770f", "#e18013", "#e08114", "#dc7f12", "#dc7f12", "#a65803", null, null],
+
+      [null, null, "#fbb98b", "#974901", "#da7d10", "#d97c0e", "#cf740b", "#de7f12", "#dc7f12", "#984d03", "#fbb487", null, null],
+
+      [null, null, "#fbbb8d", "#964801", "#d97c10", "#d97c0e", "#d0740c", "#de7f12", "#dc7f12", "#974c03", "#fbb487", null, null],
+
+      [null, null, "#f7ab7b", "#9f4d00", "#da7c0e", "#d87b0f", "#dd8014", "#db7e11", "#d87c10", "#a35505", "#f4a673", null, null],
+
+      [null, null, "#f2a874", "#e07948", "#0d3c67", "#11406d", "#0b3a64", "#0f3e6a", "#103d66", "#e27a48", "#f2a370", null, null],
+
+      [null, null, null, "#0a3a68", "#276084", "#29638a", "#256087", "#265f85", "#276188", "#0c3c6b", null, null, null],
+
+      [null, null, null, "#08365f", "#286487", "#296288", null, "#2b648b", "#2d678d", "#103f68", null, null, null],
+
+      [null, null, null, "#07355e", "#296589", "#296388", null, "#2a648a", "#296389", "#0f3e69", null, null, null],
+
+      [null, null, null, "#0a3a62", "#275e83", "#266085", null, "#29638a", "#235c81", "#0e3c67", null, null, null],
+
+      [null, null, null, "#382623", "#3d2827", "#3f2a26", null, "#3d2b29", "#382724", "#392724", null, null, null],
+
+      [null, null, null, null, null, null, null, null, null, null, null, null, null],
+
+      [null, null, null, null, null, null, null, null, null, null, null, null, null],
+
+      [null, null, null, null, null, null, null, null, null, null, null, null, null],
+
+      [null, null, null, null, null, null, null, null, null, null, null, null, null],
+
+      [null, null, null, null, null, null, null, null, null, null, null, null, null]
+
+    ]
+
