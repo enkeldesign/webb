@@ -614,36 +614,49 @@ function sceneSwedish(){
 function sceneLunch(){
   const all = ['rivna morötter','pizzasallad','gurka','potatisbullar','bacon','lingonsylt'];
   const wants = shuffle(all).slice(0,3);
+
   const bubble = el('div',{class:'dialog'},[
     el('div',{},'Darvid tänker på…'),
     el('ul',{}, wants.map(w=>el('li',{},w)))
   ]);
   arena.append(bubble);
+
   setTimeout(()=>{
     bubble.remove();
-    // selection list
+
     const dialog = el('div',{class:'dialog'},[
-      el('div',{},'Välj det Darvid ville ha:'),
+      el('div',{},'Välj det Darvid ville ha:')
     ]);
+
     const picked = new Set();
     const grid = el('div',{class:'choices'});
+
     shuffle(all.slice()).forEach(name=>{
-      const btn = el('button',{onclick:()=>toggle(name,btn)},name);
+      const btn = el('button',{onclick:()=>toggle(name, btn)}, name);
       grid.append(btn);
-      function btn(){return;}
     });
-    function toggle(name,btnRef){
-      const btn = event.currentTarget;
-      if(picked.has(name)){ picked.delete(name); btn.style.outline='';}
-      else{ picked.add(name); btn.style.outline='3px solid #7dd3fc';}
+
+    function toggle(name, btnEl){
+      if(picked.has(name)){
+        picked.delete(name);
+        btnEl.style.outline = '';
+      }else{
+        picked.add(name);
+        btnEl.style.outline = '3px solid #7dd3fc';
+      }
     }
+
     const ok = el('button',{class:'btn-primary',style:'margin-top:8px',onclick:check},'Servera');
     dialog.append(grid, ok);
     ui.innerHTML=''; ui.append(dialog);
+
     function check(){
       const correct = wants.every(w=>picked.has(w)) && picked.size===3;
-      if(correct){ addScore(9); state.flags.lunchDone=true; transitionTo('Träslöjd', sceneWood); }
-      else { dialog.append(el('div',{style:'color:var(--bad);margin-top:6px'},'Fel kombination. Försök igen.')); }
+      if(correct){
+        addScore(9); state.flags.lunchDone=true; transitionTo('Träslöjd', sceneWood);
+      }else{
+        dialog.append(el('div',{style:'color:var(--bad);margin-top:6px'},'Fel kombination. Försök igen.'));
+      }
     }
   }, 2200);
 }
