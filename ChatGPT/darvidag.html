@@ -182,7 +182,27 @@ function makeTimer(seconds, onDone){
   bar.stop = ()=>{ if(!dead) clearInterval(iv); };
   return bar;
 }
+function safeTransitionTo(title, fn){
+  try{
+    transitionTo(title, fn);
+  }catch(err){
+    showError(err);
+    console.error(err);
+  }
+}
 
+function showError(err){
+  ui.innerHTML = '';
+  const box = el('div',{class:'dialog'},[
+    el('div',{},'Ett fel uppstod:'),
+    el('pre',{style:'white-space:pre-wrap;background:#0b1220;padding:8px;border-radius:8px;margin-top:6px'}, String(err && err.message ? err.message : err))
+  ]);
+  ui.append(box);
+}
+
+// Valfritt: fånga globala fel så du ser dem direkt
+window.addEventListener('error', e => showError(e.error || e.message));
+window.addEventListener('unhandledrejection', e => showError(e.reason || e));
 /* ============ START SCREEN ============ */
 function startScreen(){
   setArea('—');
@@ -191,13 +211,21 @@ function startScreen(){
       el('h1',{class:'titlexxl'},'Darvid dag'),
       el('p',{class:'subtitle'},'Hjälp Darvid genom skoldagen – men räkna inte med att allt går som du tänkt.'),
       el('div',{class:'stack',style:'margin-top:14px'},[
-        el('button',{class:'btn-primary',onclick:()=>transitionTo('Darvids rum', sceneBedroom)},'Vakna')
+        // Ge knappen ett id och type="button"
+        el('button',{id:'btn-wake',type:'button',class:'btn-primary'},'Vakna')
       ]),
       el('p',{class:'hint',style:'margin-top:14px'},'Tips: WASD för att gå. Klick för att välja.')
     ]),
     el('div',{class:'footer'},'MVP – inline-SVG, inga externa assets')
   ]);
+  // Töm spelytan (förutom overlay) och lägg in splash
+  [...arena.children].forEach(c=>{ if(c!==overlay) c.remove(); });
   arena.append(splash);
+
+  // Robust lyssnare (fungerar i Safari/iOS)
+  $('#btn-wake').addEventListener('click', ()=>{
+    safeTransitionTo('Darvids rum', sceneBedroom);
+  });
 }
 
 /* ============ SCENE 1: Darvids rum (frukost + kläder + till trappan) ============ */
