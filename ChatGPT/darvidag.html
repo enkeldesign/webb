@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Darvid dag – MVP</title>
+<style>
+  :root{
+    --bg:#0e1116; --ink:#f5f7fa; --accent:#6ee7ff; --accent2:#ffd166; --ok:#22c55e; --bad:#ef4444;
+    --arena-w:896px; --arena-h:560px;
+  }
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,Segoe UI,Roboto,Inter,Arial}
+  button{font:inherit;cursor:pointer;background:#1c2430;color:var(--ink);border:1px solid #2c394a;border-radius:10px;padding:.6rem 1rem}
+  button:hover{background:#212b39}
+  button:focus{outline:3px solid #7dd3fc;outline-offset:2px}
+  .btn-primary{background:linear-gradient(#1f8ab3,#156a8a);border:0}
+  .btn-danger{background:#7a1d1d}
+  .btn-ok{background:#1f6d35}
+  a{color:var(--accent)}
+  /* Layout */
+  #root{max-width:min(100vw, calc(var(--arena-w) + 32px));margin:0 auto;padding:16px}
+  #hud{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+  #hud .left, #hud .right{display:flex;align-items:center;gap:10px}
+  #hud .pill{background:#1a2230;border:1px solid #2b374a;border-radius:999px;padding:.25rem .6rem}
+  #hud .score{font-weight:700}
+  #hud .area{opacity:.85}
+  #arena{position:relative;width:var(--arena-w);height:var(--arena-h);margin:0 auto;background:#141922;border:1px solid #293244;border-radius:14px;overflow:hidden}
+  #ui{margin-top:10px}
+  /* Overlay transition */
+  #overlay{position:absolute;inset:0;background:#000;display:flex;align-items:center;justify-content:center;color:#fff;opacity:0;pointer-events:none;transition:opacity .6s}
+  #overlay.show{opacity:1;pointer-events:auto}
+  #overlay .title{font-size:42px;letter-spacing:.04em}
+  /* Dialog */
+  .dialog{position:absolute;left:50%;top:8%;transform:translateX(-50%);background:#10161f;border:1px solid #2c394a;border-radius:12px;padding:10px 12px;max-width:80%}
+  .choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:8px}
+  .timerbar{height:10px;background:#263142;border-radius:999px;overflow:hidden}
+  .timerbar > div{height:100%;width:100%;background:linear-gradient(90deg,#36c,#39c);transform-origin:left center;transition:width .12s}
+  .notice{position:absolute;top:12px;right:12px;background:#1d2430;border:1px solid #2b374a;border-radius:10px;padding:.4rem .6rem;opacity:.9}
+  /* Inventory icons */
+  #inventory{display:flex;gap:8px}
+  .slot{width:30px;height:30px;border-radius:6px;border:1px solid #34465f;background:#17202c;display:grid;place-items:center}
+  .slot.have{outline:2px solid #86efac}
+  /* Entities */
+  .entity{position:absolute;will-change:transform}
+  .label{position:absolute;transform:translate(-50%,-120%);background:#111827cc;padding:2px 6px;border-radius:6px;font-size:12px}
+  /* Mini helpers */
+  .hint{opacity:.75}
+  .stack{display:flex;flex-direction:column;gap:8px}
+  .center{display:grid;place-items:center}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .kbd{font-family:ui-monospace,Menlo,Consolas,monospace;background:#111826;border:1px solid #2b374a;border-radius:6px;padding:2px 6px}
+  /* SVG tiles */
+  .tile{position:absolute}
+  .marker{position:absolute;animation:bounce 1.2s infinite}
+  @keyframes bounce{0%,100%{transform:translate(-50%,-100%) translateY(0)}50%{transform:translate(-50%,-100%) translateY(-6px)}}
+  /* Drawing canvas */
+  canvas.draw{touch-action:none;background:#d6b995}
+  /* Start screen */
+  .startsplash{height:100%;display:grid;place-items:center;text-align:center}
+  .titlexxl{font-size:64px;margin:0 0 6px}
+  .subtitle{opacity:.8}
+  .footer{position:absolute;bottom:8px;left:0;right:0;text-align:center;opacity:.5}
+</style>
+</head>
+<body>
+  <div id="root" aria-live="polite">
+    <div id="hud" role="toolbar" aria-label="Spelhuvud">
+      <div class="left">
+        <span class="pill">Styrning: <span class="kbd">WASD</span> + <span class="kbd">MUS</span></span>
+        <span class="pill area" id="areaName">—</span>
+      </div>
+      <div class="right">
+        <div id="inventory" aria-label="Inventarie">
+          <div class="slot" id="inv-shoes" title="Skor"></div>
+          <div class="slot" id="inv-bag" title="Skolväska"></div>
+        </div>
+        <span class="pill score">Poäng: <span id="score">0</span></span>
+      </div>
+    </div>
+    <div id="arena" role="region" aria-label="Spelyta">
+      <div id="overlay" aria-hidden="true"><div class="title"></div></div>
+      <!-- dynamic content goes here -->
+    </div>
+    <div id="ui" aria-live="polite"></div>
+  </div>
+
+<script>
+/* ============ tiny helpers ============ */
+const $ = (sel, el=document)=>el.querySelector(sel);
+const $$ = (sel, el=document)=>[...el.querySelectorAll(sel)];
+const el = (tag, attrs={}, kids=[])=>{
+  const n = document.createElement(tag);
+  for(const [k,v] of Object.entries(attrs)){ (k==='class')? n.className=v : (k==='style')? n.style.cssText=v : n.setAttribute(k,v); }
+  (Array.isArray(kids)?kids:[kids]).filter(Boolean).forEach(k=>n.append(k));
+  return n;
+};
+const shuffle = arr => arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+const choice = arr => arr[Math.floor(Math.random()*arr.length)];
+const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+const rnd=(min,max)=>Math.floor(Math.random()*(max-min+1))+min;
+
+/* ============ game state ============ */
+const state = {
+  area:'—',
+  score:0,
+  inventory:{shoes:false, bag:false},
+  flags:{
+    breakfast:false, dressed:false, hallDone:false, friendsDone:false,
+    mathDone:false, recessDone:false, swedishDone:false, lunchDone:false,
+    woodDone:false
+  }
+};
+const arena = $('#arena'); const ui = $('#ui'); const overlay = $('#overlay'); const areaName = $('#areaName');
+const scoreEl = $('#score');
+function setArea(name){state.area=name; areaName.textContent=name;}
+function addScore(n){state.score+=n; scoreEl.textContent=state.score;}
+
+/* ============ overlay transition ============ */
+function transitionTo(areaTitle, sceneFn){
+  overlay.classList.add('show');
+  $('.title', overlay).textContent = areaTitle;
+  setArea(areaTitle);
+  setTimeout(()=>{
+    // clear arena and UI
+    [...arena.children].forEach(c=>{ if(c!==overlay) c.remove(); });
+    ui.innerHTML='';
+    // build scene
+    sceneFn?.();
+    // fade out
+    setTimeout(()=>overlay.classList.remove('show'), 350);
+  }, 450);
+}
+
+/* ============ input (WASD) ============ */
+const keys = new Set();
+addEventListener('keydown',e=>{ if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault(); keys.add(e.key.toLowerCase()); });
+addEventListener('keyup',e=>{ keys.delete(e.key.toLowerCase()); });
+
+/* ============ simple actor (Darvid) ============ */
+function spawnDarvid(x=80,y=380){
+  const wrap = el('div',{class:'entity',style:`left:${x}px;top:${y}px`});
+  const tag = el('div',{class:'label'},'Darvid');
+  // Minimal SVG avatar (head, body, tiny backpack mount)
+  wrap.append(el('div',{innerHTML:`
+    <svg width="36" height="48" viewBox="0 0 36 48" aria-label="Darvid">
+      <rect x="10" y="18" width="16" height="18" rx="3" fill="#3a70b6"/>
+      <rect x="6" y="20" width="6" height="10" rx="2" fill="#2e5a91"/> <!-- backpack hint -->
+      <circle cx="18" cy="12" r="8" fill="#f0c89b"/>
+      <rect x="8" y="36" width="8" height="10" rx="2" fill="#222"/>
+      <rect x="20" y="36" width="8" height="10" rx="2" fill="#222"/>
+      <path d="M10 8 Q18 2 26 8" stroke="#2b2b2b" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="15" cy="12" r="1.2" fill="#222"/><circle cx="21" cy="12" r="1.2" fill="#222"/>
+    </svg>`}));
+  wrap.append(tag);
+  arena.append(wrap);
+  const actor = {el:wrap, x, y, w:36, h:48, speed:160, vx:0, vy:0, loop:null, bounds:{x:0,y:0,w:parseInt(getComputedStyle(arena).width),h:parseInt(getComputedStyle(arena).height)}};
+  actor.update = (dt)=>{
+    actor.vx = (keys.has('a')||keys.has('arrowleft')? -1 : 0) + (keys.has('d')||keys.has('arrowright')? 1 : 0);
+    actor.vy = (keys.has('w')||keys.has('arrowup')? -1 : 0) + (keys.has('s')||keys.has('arrowdown')? 1 : 0);
+    const sp = actor.speed * dt;
+    actor.x = clamp(actor.x + actor.vx*sp, 0, actor.bounds.w-actor.w);
+    actor.y = clamp(actor.y + actor.vy*sp, 0, actor.bounds.h-actor.h);
+    actor.el.style.transform = `translate(${actor.x}px, ${actor.y}px)`;
+  };
+  return actor;
+}
+/* Basic AABB */
+function overlaps(a,b){return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;}
+
+/* Timer bar utility */
+function makeTimer(seconds, onDone){
+  const bar = el('div',{class:'timerbar',role:'progressbar','aria-label':'Timer','aria-valuemin':'0','aria-valuemax':String(seconds)});
+  const fill = el('div'); bar.append(fill);
+  let t=seconds, dead=false;
+  const iv = setInterval(()=>{
+    t = Math.max(0, t-0.1);
+    fill.style.width = `${(t/seconds)*100}%`;
+    bar.setAttribute('aria-valuenow', t.toFixed(1));
+    if(t<=0){ clearInterval(iv); dead=true; onDone?.(); }
+  },100);
+  bar.stop = ()=>{ if(!dead) clearInterval(iv); };
+  return bar;
+}
+
+/* ============ START SCREEN ============ */
+function startScreen(){
+  setArea('—');
+  const splash = el('div',{class:'startsplash',style:'position:absolute;inset:0'},[
+    el('div',{},[
+      el('h1',{class:'titlexxl'},'Darvid dag'),
+      el('p',{class:'subtitle'},'Hjälp Darvid genom skoldagen – men räkna inte med att allt går som du tänkt.'),
+      el('div',{class:'stack',style:'margin-top:14px'},[
+        el('button',{class:'btn-primary',onclick:()=>transitionTo('Darvids rum', sceneBedroom)},'Vakna')
+      ]),
+      el('p',{class:'hint',style:'margin-top:14px'},'Tips: WASD för att gå. Klick för att välja.')
+    ]),
+    el('div',{class:'footer'},'MVP – inline-SVG, inga externa assets')
+  ]);
+  arena.append(splash);
+}
+
+/* ============ SCENE 1: Darvids rum (frukost + kläder + till trappan) ============ */
+function sceneBedroom(){
+  // Background tiles: floor, bed, wardrobe, door/stairs
+  drawBedroom();
+  const darvid = spawnDarvid(120,380);
+  runBreakfastMinigame(()=>{ state.flags.breakfast=true; addScore(10); startClothesFlow(darvid); });
+
+  function drawBedroom(){
+    const g = el('div',{style:'position:absolute;inset:0'});
+    // floor
+    g.append(tileRect(0,0,896,560,'#18212b'));
+    // bed
+    g.append(tileSVG(40,120,220,120,`
+      <rect x="0" y="0" width="220" height="120" rx="10" fill="#22405b"/>
+      <rect x="8" y="8" width="204" height="48" rx="8" fill="#ffffff"/>
+      <rect x="8" y="64" width="204" height="48" rx="8" fill="#90cdf4"/>
+    `));
+    // wardrobe
+    g.append(tileSVG(620,80,200,220,`
+      <rect x="0" y="0" width="200" height="220" rx="8" fill="#5b4632"/>
+      <line x1="100" y1="0" x2="100" y2="220" stroke="#442f1f" stroke-width="4"/>
+      <circle cx="86" cy="110" r="6" fill="#caa36a"/><circle cx="114" cy="110" r="6" fill="#caa36a"/>
+    `));
+    g.append(marker(720,60,'!','Gå hit för kläder', 'wardrobe-marker').style.setProperty('--off','-10px'));
+    // stairs door
+    g.append(tileSVG(760,360,120,140,`
+      <rect x="0" y="0" width="120" height="140" rx="6" fill="#2b3544"/>
+      <rect x="10" y="10" width="100" height="120" rx="6" fill="#10161f"/>
+    `));
+    arena.append(g);
+  }
+
+  /* --- Minigame: Frukost --- */
+  function runBreakfastMiniggameUI(onSuccess){
+    const dialog = el('div',{class:'dialog',role:'dialog','aria-label':'Frukost'});
+    const intro = el('div',{},[
+      el('b',{},'Pappa:'),' ',document.createTextNode('Vad vill du ha till frukost? (15 sek)'),
+    ]);
+    const items = ['päronfil','päronfil i mugg','flingor','god macka','toast','drickyoghurt'];
+    const choicesBox = el('div',{class:'choices'});
+    let options = shuffle(items.slice());
+    const timer = makeTimer(15,fail);
+
+    function renderChoices(){
+      choicesBox.innerHTML='';
+      options.forEach((name,i)=>{
+        const btn = el('button',{onclick:()=>pick(name)},name);
+        choicesBox.append(btn);
+      });
+    }
+    function pick(name){
+      // 40% chans att Darvid inte vill, 20% att det är slut – disable och shuffle
+      const roll = Math.random();
+      if(roll<0.2){ note(`Slut på ${name}! Välj något annat.`); options = shuffle(options.filter(x=>x!==name)); renderChoices(); return; }
+      if(roll<0.6){ note(`Darvid: "Nää… inte ${name}."`); options = shuffle(options); renderChoices(); return; }
+      timer.stop();
+      eatAnimation(name);
+      ui.innerHTML='';
+      onSuccess?.();
+    }
+    function fail(){ ui.innerHTML=''; note('Tiden gick ut! Försök igen.'); setTimeout(()=>runBreakfastMiniggameUI(onSuccess), 600); }
+    function eatAnimation(name){
+      const bubble = el('div',{class:'dialog'},[`Darvid äter ${name} i sängen.`, el('div',{style:'margin-top:6px'},el('button',{class:'btn-ok',onclick:()=>bubble.remove()},'Mums!'))]);
+      arena.append(bubble);
+      setTimeout(()=>bubble.remove(),1500);
+    }
+    function note(t){ const n=el('div',{class:'notice'},t); arena.append(n); setTimeout(()=>n.remove(),1200); }
+
+    dialog.append(intro, el('div',{style:'margin-top:6px'},timer), choicesBox);
+    ui.innerHTML=''; ui.append(dialog); renderChoices();
+  }
+  function runBreakfastMinigame(onSuccess){ runBreakfastMiniggameUI(onSuccess); }
+
+  /* --- Minigame: Kläder (sekvens med minne + 5 sek per plagg) --- */
+  function startClothesFlow(darvid){
+    $('.notice')?.remove();
+    $('#wardrobe-marker')?.remove();
+    marker(720,60,'!','Garderoben').id='wardrobe-marker';
+    const goal = {x:640,y:90,w:200,h:220};
+    // loop for movement until near wardrobe
+    let last=performance.now(), run=true;
+    function loop(ts){
+      const dt=(ts-last)/1000; last=ts;
+      if(run){ darvid.update(dt); if(overlaps({...darvid,w:36,h:48},{...goal})) { run=false; runClothesMinigame(); } requestAnimationFrame(loop);}
+    }
+    requestAnimationFrame(loop);
+  }
+
+  function runClothesMinigame(){
+    const steps = [
+      {type:'kalsonger', set: ['blåa','randiga','med raketer']},
+      {type:'strumpor', set: ['svarta','gröna','prickiga']},
+      {type:'byxor', set: ['jeans','mjukis','chinos']},
+      {type:'tröja', set: ['röd hoodie','blå tröja','t-shirt']}
+    ];
+    // Välj en "rätt" per steg, resten fel (för små/obekväma)
+    const correct = steps.map(s=>choice(s.set));
+    let idx=0;
+
+    function doStep(){
+      const s = steps[idx];
+      const dialog = el('div',{class:'dialog',role:'dialog'},[
+        el('div',{},[`Välj ${s.type} (5 sek). Kom ihåg rätt val!`]),
+        el('div',{style:'margin-top:6px'}, makeTimer(5,fail)),
+      ]);
+      const grid = el('div',{class:'choices'});
+      shuffle(s.set.slice()).forEach(name=>{
+        const btn = el('button',{onclick:()=>pick(name)},name);
+        grid.append(btn);
+      });
+      dialog.append(grid);
+      ui.innerHTML=''; ui.append(dialog);
+
+      function pick(name){
+        if(name===correct[idx]){
+          idx++;
+          addScore(2);
+          if(idx>=steps.length){ ui.innerHTML=''; afterClothes(); }
+          else doStep();
+        }else{
+          // miss – börja om
+          ui.innerHTML='';
+          note(`Ajdå, ${name} var ${rnd(0,1)?'för små':'obekväma'}… Börja om!`);
+          idx=0; setTimeout(doStep,700);
+        }
+      }
+      function fail(){ ui.innerHTML=''; note('Tiden tog slut! Börja om.'); idx=0; setTimeout(doStep,700); }
+    }
+    doStep();
+
+    function note(t){ const n=el('div',{class:'notice'},t); arena.append(n); setTimeout(()=>n.remove(),1300); }
+    function afterClothes(){
+      state.flags.dressed=true;
+      const call = el('div',{class:'dialog'},[
+        el('div',{},[el('b',{},'Pappa (ropar): '),'Nu ska vi åka!']),
+        el('div',{class:'hint',style:'margin-top:6px'},'Gå till trappan.')
+      ]); arena.append(call); setTimeout(()=>call.remove(),2000);
+      // show stairs marker and require the player to go there
+      const stairSpot = {x:760,y:360,w:120,h:140};
+      const m = marker(820,350,'⬇','Trappan'); m.style.left='820px'; m.style.top='350px';
+      // spawn Kerstin walking left->stairs
+      spawnKerstin(40,380, 780,420);
+      goTo(stairSpot, ()=>transitionTo('Hallen', sceneHall));
+    }
+    function goTo(rect, onArrive){
+      const darvid = spawnDarvid(120,380); // fresh controlled actor placed again to ensure movement resumes
+      let last=performance.now();
+      function loop(ts){
+        const dt=(ts-last)/1000; last=ts;
+        darvid.update(dt);
+        if(overlaps(darvid, rect)){ onArrive(); return; }
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+    }
+  }
+}
+
+/* Helper visuals */
+function tileRect(x,y,w,h,fill){ const d=el('div',{class:'tile',style:`left:${x}px;top:${y}px;width:${w}px;height:${h}px;background:${fill}`}); return d; }
+function tileSVG(x,y,w,h,svg){ const d=el('div',{class:'tile',style:`left:${x}px;top:${y}px;width:${w}px;height:${h}px`}); d.innerHTML=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${svg}</svg>`; return d; }
+function marker(x,y,text,alt,id){ const m = el('div',{id:id||'',class:'marker',style:`left:${x}px;top:${y}px;transform:translate(-50%,-100%)`},[
+  el('div',{style:'background:#f5f5f5;color:#111;padding:2px 6px;border-radius:6px;font-weight:700'},text),
+  alt?el('div',{class:'hint',style:'color:#fff;text-align:center;margin-top:2px'},alt):null
+]); arena.append(m); return m; }
+function spawnKerstin(x,y, tx,ty){
+  const wrap = el('div',{class:'entity',style:`left:${x}px;top:${y}px`});
+  wrap.append(el('div',{innerHTML:`
+    <svg width="30" height="42" viewBox="0 0 30 42" aria-label="Kerstin">
+      <rect x="10" y="15" width="10" height="16" rx="3" fill="#d46fa6"/>
+      <circle cx="15" cy="10" r="7" fill="#f2d6b8"/>
+      <path d="M6 8 Q15 0 24 8" stroke="#6b2d5b" stroke-width="6" stroke-linecap="round"/>
+      <rect x="6" y="31" width="8" height="9" rx="2" fill="#222"/>
+      <rect x="16" y="31" width="8" height="9" rx="2" fill="#222"/>
+    </svg>`}));
+  wrap.append(el('div',{class:'label'},'Kerstin'));
+  arena.append(wrap);
+  const k={el:wrap,x,y,w:30,h:42};
+  const dx=tx-x, dy=ty-y, L=Math.hypot(dx,dy)||1; const vx=dx/L*60, vy=dy/L*60;
+  function step(){ k.x+=vx*0.016; k.y+=vy*0.016; wrap.style.transform=`translate(${k.x}px, ${k.y}px)`; if(Math.hypot(k.x-tx,k.y-ty)>4) requestAnimationFrame(step); }
+  requestAnimationFrame(step);
+}
+
+/* ============ SCENE 3: Hallen (skor+väska -> bil) ============ */
+function sceneHall(){
+  drawHall();
+  setInventory();
+  const darvid = spawnDarvid(120,420);
+  // place shoes + bag pickups
+  const shoes = pickupIcon(520,420,'👟','Skor', 'inv-shoes');
+  const bag   = pickupIcon(240,260,'🎒','Skolväska', 'inv-bag');
+  const carZone = {x:760,y:60,w:110,h:80};
+  tileSVG(carZone.x,carZone.y,carZone.w,carZone.h,`
+    <rect x="0" y="20" width="110" height="50" rx="8" fill="#375462"/>
+    <rect x="6" y="0" width="80" height="30" rx="6" fill="#7fb0c2"/>
+    <circle cx="25" cy="58" r="12" fill="#111"/><circle cx="85" cy="58" r="12" fill="#111"/>
+  `);
+
+  let haveShoes=false, haveBag=false, last=performance.now();
+  function loop(ts){
+    const dt=(ts-last)/1000; last=ts;
+    darvid.update(dt);
+    // overlaps pickups
+    if(!haveShoes && overlaps(darvid, shoes.rect)){ haveShoes=true; state.inventory.shoes=true; setInventory(); shoes.remove(); addScore(2); note('Du tog skorna.'); }
+    if(!haveBag && overlaps(darvid, bag.rect)){ haveBag=true; state.inventory.bag=true; setInventory(); bag.remove(); addScore(2); note('Du tog väskan.'); }
+    if(haveShoes && haveBag && overlaps(darvid, carZone)){ // everyone goes in – next scene
+      state.flags.hallDone=true;
+      transitionTo('Skolgården', sceneSchoolyard);
+      return;
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  function drawHall(){
+    const g = el('div',{style:'position:absolute;inset:0'});
+    g.append(tileRect(0,0,896,560,'#181f29'));
+    // stairs from previous
+    g.append(tileSVG(40,320,180,180,`<rect x="0" y="0" width="180" height="180" fill="#243040"/><path d="M0 150h180v-30H30v-30H60v-30H90v-30h30" fill="#314158"/>`));
+    // wall hooks
+    for(let i=0;i<5;i++){ g.append(tileSVG(200+i*70,60,60,30,`<rect x="0" y="10" width="60" height="10" rx="5" fill="#394b62"/><circle cx="15" cy="25" r="5" fill="#2f3d52"/><circle cx="45" cy="25" r="5" fill="#2f3d52"/>`)); }
+    arena.append(g);
+  }
+  function pickupIcon(x,y,emoji,label,slotId){
+    const wrap = el('div',{class:'entity',style:`left:${x}px;top:${y}px`},[
+      el('div',{class:'label'},label), el('div',{style:'font-size:28px'},emoji)
+    ]);
+    arena.append(wrap);
+    return {
+      rect:{x,y,w:28,h:28}, remove:()=>wrap.remove(),
+    };
+  }
+  function setInventory(){
+    const a=$('#inv-shoes'), b=$('#inv-bag');
+    a.classList.toggle('have', !!state.inventory.shoes);
+    b.classList.toggle('have', !!state.inventory.bag);
+    a.textContent = state.inventory.shoes?'👟':'';
+    b.textContent = state.inventory.bag?'🎒':'';
+  }
+  function note(t){ const n=el('div',{class:'notice'},t); arena.append(n); setTimeout(()=>n.remove(),1100); }
+}
+
+/* ============ SCENE 4: Skolgården (Kerstin leds? / Hitta vänner) ============ */
+function sceneSchoolyard(){
+  drawYard();
+  const darvid = spawnDarvid(120,420);
+  runFindFriends(()=>{ state.flags.friendsDone=true; addScore(10); transitionTo('Klassrummet', sceneMath); });
+
+  function drawYard(){
+    const g=el('div',{style:'position:absolute;inset:0'});
+    // parking
+    g.append(tileRect(0,0,896,180,'#1d2b34'));
+    // yard
+    g.append(tileRect(0,180,896,220,'#1f2e23'));
+    // building with two doors
+    g.append(tileRect(0,400,896,160,'#2b3144'));
+    // doors
+    g.append(tileSVG(120,420,120,120,`<rect x="0" y="0" width="120" height="120" rx="6" fill="#0d121a"/><rect x="12" y="12" width="96" height="96" rx="5" fill="#232b39"/>`));
+    g.append(tileSVG(620,420,120,120,`<rect x="0" y="0" width="120" height="120" rx="6" fill="#0d121a"/><rect x="12" y="12" width="96" height="96" rx="5" fill="#232b39"/>`));
+    arena.append(g);
+  }
+
+  // Minigame: hitta Tander + Beo i en folkmassa
+  function runFindFriends(done){
+    const crowd = [];
+    // Spawn ~10 random kids
+    for(let i=0;i<10;i++) crowd.push(spawnKid(rnd(40,860), rnd(220,360)));
+    // Spawn Tander + Beo with labels
+    const tander = spawnKid(rnd(60,820), rnd(220,360), {name:'Tander', style:'hair:black;skin:#5f402e;glasses:1'});
+    const beo    = spawnKid(rnd(60,820), rnd(220,360), {name:'Beo', short:true, hair:'#b58a5a', skin:'#f1d9c9'});
+    let foundT=false, foundB=false;
+
+    function clickTarget(ev){
+      const x = ev.clientX - arena.getBoundingClientRect().left;
+      const y = ev.clientY - arena.getBoundingClientRect().top;
+      for(const k of [tander,beo]){
+        if(k && Math.abs(x-(k.x+15))<16 && Math.abs(y-(k.y+20))<20){
+          if(k===tander && !foundT){ foundT=true; addScore(5); showTag(k,'🎉 Tander!'); k.pulse(); }
+          if(k===beo && !foundB){ foundB=true; addScore(5); showTag(k,'🎉 Beo!'); k.pulse(); }
+        }
+      }
+      if(foundT && foundB){
+        arena.removeEventListener('click', clickTarget);
+        setTimeout(()=>done?.(),400);
+      }
+    }
+    arena.addEventListener('click', clickTarget);
+
+    // tiny wander loop
+    let last=performance.now();
+    function loop(ts){
+      const dt=(ts-last)/1000; last=ts;
+      [tander,beo,...crowd].forEach(k=>{
+        k.x = clamp(k.x + k.vx*dt, 10, 860);
+        k.y = clamp(k.y + k.vy*dt, 200, 360);
+        // random jitter
+        if(Math.random()<0.01){ k.vx = rnd(-30,30); k.vy = rnd(-20,20); }
+        k.el.style.transform = `translate(${k.x}px, ${k.y}px)`;
+      });
+      darvid.update(dt);
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+
+    function showTag(k, text){
+      const tag = el('div',{class:'notice',style:`left:${k.x}px;top:${k.y-20}px;position:absolute;`},text);
+      arena.append(tag); setTimeout(()=>tag.remove(),900);
+    }
+  }
+
+  function spawnKid(x,y, traits={}){
+    const wrap = el('div',{class:'entity',style:`left:${x}px;top:${y}px`});
+    const hair = traits.style?.includes('black') ? '#222' : (traits.hair||['#5b4632','#6a341a','#b58a5a','#2b2b2b'][rnd(0,3)]);
+    const skin = traits.skin || ['#f1d9c9','#e8c8a7','#d8b08c','#5f402e'][rnd(0,3)];
+    const short = !!traits.short;
+    const glasses = traits.style?.includes('glasses')? true:false;
+    wrap.innerHTML = `
+      <svg width="${short?24:28}" height="${short?34:38}" viewBox="0 0 28 38" aria-label="Barn">
+        <rect x="10" y="14" width="10" height="14" rx="3" fill="#4c6a7a"/>
+        <circle cx="15" cy="9" r="7" fill="${skin}"/>
+        <path d="M8 7 Q15 1 22 7" stroke="${hair}" stroke-width="6" stroke-linecap="round"/>
+        ${glasses?`<rect x="10" y="10" width="4" height="3" rx="1" fill="#111"/><rect x="16" y="10" width="4" height="3" rx="1" fill="#111"/><rect x="14" y="11" width="2" height="1" fill="#111"/>`:''}
+        <rect x="8" y="28" width="7" height="8" rx="2" fill="#222"/>
+        <rect x="16" y="28" width="7" height="8" rx="2" fill="#222"/>
+      </svg>`;
+    if(traits.name) wrap.append(el('div',{class:'label'},traits.name));
+    arena.append(wrap);
+    const kid = {el:wrap, x,y, vx:rnd(-30,30), vy:rnd(-20,20), pulse:()=>{ wrap.animate([{transform:`translate(${x}px,${y}px) scale(1)`},{transform:`translate(${x}px,${y}px) scale(1.2)`},{transform:`translate(${x}px,${y}px) scale(1)`}],{duration:300}); }};
+    return kid;
+  }
+}
+
+/* ============ SCENE 5: Matte (tre frågor, 10s var) ============ */
+function sceneMath(){
+  const dialog = el('div',{class:'dialog',role:'dialog'},[
+    el('div',{},'Matte – svara inom 10 sekunder per fråga.'),
+  ]);
+  ui.innerHTML=''; ui.append(dialog);
+
+  const ops = [
+    {op:'+ ', fn:(a,b)=>a+b},
+    {op:'− ', fn:(a,b)=>a-b},
+    {op:'× ', fn:(a,b)=>a*b},
+  ];
+  let i=0;
+
+  function ask(){
+    if(i>=3){ state.flags.mathDone=true; addScore(9); transitionTo('Skolgården', sceneRecess); return; }
+    dialog.innerHTML='';
+    const a=rnd(3,12), b=rnd(2,10), {op,fn}=ops[i];
+    const form = el('form',{},[
+      el('div',{},`Fråga ${i+1}/3: ${a} ${op} ${b} = ?`),
+      el('div',{style:'margin:8px 0'}, makeTimer(10,()=>fail('Tiden tog slut.'))),
+      el('input',{type:'number',required:true,style:'width:120px;padding:.4rem',autocomplete:'off',inputmode:'numeric'}),
+      el('button',{class:'btn-primary',style:'margin-left:8px',type:'submit'},'Klar')
+    ]);
+    form.addEventListener('submit',e=>{
+      e.preventDefault();
+      const val = Number($('input',form).value);
+      if(val===fn(a,b)){ addScore(3); i++; ask(); }
+      else fail('Fel svar.');
+    });
+    dialog.append(form); $('input',form).focus();
+  }
+  function fail(msg){ dialog.append(el('div',{style:'color:var(--bad);margin-top:6px'},msg)); setTimeout(()=>transitionTo('Skolgården', sceneRecess),600); }
+  ask();
+}
+
+/* ============ SCENE 6: Rast (klicka barn -> vänner, 30 sek) ============ */
+function sceneRecess(){
+  drawYardAgain();
+  const dialog = el('div',{class:'dialog'},[
+    el('div',{},'Rast – prata med barn (klicka) för att bli vänner. 30 sekunder.')
+  ]); arena.append(dialog);
+
+  let friends=0;
+  const kids = Array.from({length:14},()=>spawnKid(rnd(40,860), rnd(220,360)));
+  kids.forEach(k=>{
+    k.el.style.cursor='pointer';
+    k.el.addEventListener('click',()=>{
+      if(k.el.dataset.friended) return;
+      k.el.dataset.friended='1';
+      k.pulse(); friends++; addScore(1);
+    });
+  });
+  const bar = makeTimer(30,()=>finish()); ui.innerHTML=''; ui.append(bar);
+  function finish(){ state.flags.recessDone=true; addScore(friends>=8?8:friends>=4?4:1); transitionTo('Klassrummet', sceneSwedish); }
+  function drawYardAgain(){ /* reuse palette */ const g=el('div',{style:'position:absolute;inset:0'}); g.append(tileRect(0,0,896,180,'#1d2b34')); g.append(tileRect(0,180,896,220,'#1f2e23')); g.append(tileRect(0,400,896,160,'#2b3144')); arena.append(g); }
+}
+
+/* ============ SCENE 7: Svenska (synonymer) ============ */
+function sceneSwedish(){
+  const questions = [
+    {q:'Vad betyder "petig"?', a:['Någon som petar på allt.','Någon som är noga med att det blir rätt.','Någon som samlar pets.'], i:1},
+    {q:'Vad betyder "snarare"?', a:['Troligen', 'Hellre / mer korrekt', 'I smyg'], i:1},
+    {q:'Vad betyder "påkostad"?', a:['Dyr och välgjord','Sparsam','Trasig'], i:0},
+  ];
+  let ix=0; ask();
+  function ask(){
+    if(ix>=questions.length){ state.flags.swedishDone=true; addScore(9); transitionTo('Matsalen', sceneLunch); return; }
+    const {q,a,i} = questions[ix];
+    const dialog = el('div',{class:'dialog',role:'dialog'},[
+      el('div',{},`Svenska ${ix+1}/${questions.length}: ${q}`),
+      el('div',{class:'choices',style:'margin-top:6px'}, a.map((opt,idx)=>el('button',{onclick:()=>pick(idx)},opt)))
+    ]);
+    ui.innerHTML=''; ui.append(dialog);
+    function pick(idx){ if(idx===i){ addScore(3); ix++; ask(); } else { dialog.append(el('div',{style:'color:var(--bad);margin-top:6px'},'Fel.')); setTimeout(()=>ask(),700); } }
+  }
+}
+
+/* ============ SCENE 8: Lunch (minne: 3 saker i lista) ============ */
+function sceneLunch(){
+  const all = ['rivna morötter','pizzasallad','gurka','potatisbullar','bacon','lingonsylt'];
+  const wants = shuffle(all).slice(0,3);
+  const bubble = el('div',{class:'dialog'},[
+    el('div',{},'Darvid tänker på…'),
+    el('ul',{}, wants.map(w=>el('li',{},w)))
+  ]);
+  arena.append(bubble);
+  setTimeout(()=>{
+    bubble.remove();
+    // selection list
+    const dialog = el('div',{class:'dialog'},[
+      el('div',{},'Välj det Darvid ville ha:'),
+    ]);
+    const picked = new Set();
+    const grid = el('div',{class:'choices'});
+    shuffle(all.slice()).forEach(name=>{
+      const btn = el('button',{onclick:()=>toggle(name,btn)},name);
+      grid.append(btn);
+      function btn(){return;}
+    });
+    function toggle(name,btnRef){
+      const btn = event.currentTarget;
+      if(picked.has(name)){ picked.delete(name); btn.style.outline='';}
+      else{ picked.add(name); btn.style.outline='3px solid #7dd3fc';}
+    }
+    const ok = el('button',{class:'btn-primary',style:'margin-top:8px',onclick:check},'Servera');
+    dialog.append(grid, ok);
+    ui.innerHTML=''; ui.append(dialog);
+    function check(){
+      const correct = wants.every(w=>picked.has(w)) && picked.size===3;
+      if(correct){ addScore(9); state.flags.lunchDone=true; transitionTo('Träslöjd', sceneWood); }
+      else { dialog.append(el('div',{style:'color:var(--bad);margin-top:6px'},'Fel kombination. Försök igen.')); }
+    }
+  }, 2200);
+}
+
+/* ============ SCENE 8 (forts): Träslöjd (såga + rita) ============ */
+function sceneWood(){
+  const wrap = el('div',{class:'center',style:'position:absolute;inset:0'});
+  const inner = el('div',{class:'stack',style:'width:760px;max-width:95%'}); wrap.append(inner);
+  arena.append(wrap);
+  const board = el('div',{style:'background:#caa36a;height:140px;border-radius:8px;position:relative;overflow:hidden'});
+  inner.append(el('div',{},'Såga av plankan på två streckade linjer. Tryck MELLANSLAG när den rörliga linjen är mitt på strecket.'));
+  inner.append(board);
+
+  const lines = [rnd(140,260), rnd(460,620)].sort((a,b)=>a-b);
+  lines.forEach(x=>board.append(el('div',{style:`position:absolute;left:${x}px;top:6px;bottom:6px;border-left:3px dashed #633`})));
+  const moving = el('div',{style:`position:absolute;left:0;top:0;bottom:0;border-left:4px solid #111`}); board.append(moving);
+
+  let t=0, idx=0, okCuts=0, anim=null;
+  function step(){
+    t = (t+2)%1; // speed
+    const x = Math.round(40 + (680)*Math.abs(Math.sin(performance.now()/700)));
+    moving.style.left = x+'px';
+    anim=requestAnimationFrame(step);
+  }
+  step();
+  function onSpace(e){
+    if(e.code!=='Space') return;
+    const x = parseInt(moving.style.left,10);
+    const target = lines[idx];
+    if(Math.abs(x-target)<=8){ // success
+      okCuts++; idx++; splash('Snyggt!');
+      // visually cut: mask left/right (simple effect)
+      board.append(el('div',{style:`position:absolute;top:0;bottom:0;left:0;width:${x}px;background:#b78e54;opacity:.6;pointer-events:none`}));
+      if(okCuts>=2){ finishSaw(); }
+    }else{
+      splash('Ajdå, prova igen!'); // reset plank (new lines)
+      cancelAnimationFrame(anim);
+      board.innerHTML='';
+      const newBoard = sceneWood; // ignore, we’ll rebuild simpler:
+      removeEventListener('keydown', onSpace);
+      transitionTo('Träslöjd', sceneWood); // restart wood scene on miss (per krav)
+    }
+  }
+  addEventListener('keydown', onSpace, {once:false});
+
+  function finishSaw(){
+    removeEventListener('keydown', onSpace);
+    cancelAnimationFrame(anim);
+    // Draw name
+    inner.append(el('div',{style:'margin-top:8px'},'Skriv DARVID på plankbiten: (rita med mus)'));
+    const c = el('canvas',{width:760,height:180,class:'draw'}); inner.append(c);
+    const ctx = c.getContext('2d'); ctx.lineWidth=6; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.strokeStyle='#5b3b18';
+    let draw=false, lx=0,ly=0;
+    c.addEventListener('pointerdown',e=>{draw=true; const r=c.getBoundingClientRect(); lx=e.clientX-r.left; ly=e.clientY-r.top;});
+    c.addEventListener('pointermove',e=>{ if(!draw) return; const r=c.getBoundingClientRect(); const x=e.clientX-r.left,y=e.clientY-r.top; ctx.beginPath(); ctx.moveTo(lx,ly); ctx.lineTo(x,y); ctx.stroke(); lx=x; ly=y; });
+    addEventListener('pointerup',()=>draw=false);
+    const btn = el('button',{class:'btn-ok',style:'margin-top:8px',onclick:done},'Klar!');
+    inner.append(btn);
+    function done(){ addScore(12); state.flags.woodDone=true; transitionTo('Skolgården', sceneGoingHome); }
+  }
+  function splash(t){ const n=el('div',{class:'notice'},t); arena.append(n); setTimeout(()=>n.remove(),900); }
+}
+
+/* ============ SCENE 9: Hemgång (hämta Kerstin -> bil) ============ */
+function sceneGoingHome(){
+  // draw yard + doors + car
+  const g=el('div',{style:'position:absolute;inset:0'}); g.append(tileRect(0,0,896,180,'#1d2b34')); g.append(tileRect(0,180,896,220,'#1f2e23')); g.append(tileRect(0,400,896,160,'#2b3144'));
+  // Kerstin door right
+  g.append(tileSVG(620,420,120,120,`<rect x="0" y="0" width="120" height="120" rx="6" fill="#0d121a"/><rect x="12" y="12" width="96" height="96" rx="5" fill="#232b39"/>`));
+  // Car on parking
+  const carZone = {x:780,y:60,w:90,h:60};
+  g.append(tileSVG(carZone.x,carZone.y,carZone.w,carZone.h,`<rect x="0" y="10" width="90" height="40" rx="8" fill="#2c4b56"/><circle cx="20" cy="45" r="10" fill="#111"/><circle cx="70" cy="45" r="10" fill="#111"/>`));
+  arena.append(g);
+  const darvid = spawnDarvid(120,420);
+
+  // Step 1: go to Kerstin’s door -> she appears, then both to car
+  const kerstinDoor = {x:620,y:420,w:120,h:120};
+  let withKerstin=false;
+  let kSprite=null;
+
+  let last=performance.now();
+  function loop(ts){
+    const dt=(ts-last)/1000; last=ts; darvid.update(dt);
+    if(!withKerstin && overlaps(darvid, kerstinDoor)){
+      withKerstin=true; kSprite=spawnKerstin(660,420, darvid.x, darvid.y);
+      marker(825,60,'🚗','Till bilen'); // hint
+    }
+    if(withKerstin && overlaps(darvid, carZone)){ transitionTo('Slut', endScreen); return; }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+}
+
+/* ============ END ============ */
+function endScreen(){
+  const wrap = el('div',{class:'startsplash',style:'position:absolute;inset:0'},[
+    el('div',{},[
+      el('h1',{class:'titlexxl'},'Slut på dag ett.'),
+      el('p',{},`Dagens poäng: ${state.score}`),
+      el('div',{class:'stack',style:'margin-top:10px'},[
+        el('button',{class:'btn-primary',onclick:()=>location.reload()},'Spela igen')
+      ])
+    ])
+  ]);
+  arena.append(wrap);
+}
+
+/* ============ boot ============ */
+startScreen();
+</script>
+</body>
+</html>
