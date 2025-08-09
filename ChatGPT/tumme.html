@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tummflykt – ett en-tums-spel</title>
+<style>
+  :root{
+    color-scheme: light dark;
+    --ui-bg: light-dark(#ffffffcc, #000000cc);
+    --ui-text: light-dark(#0b1b2b, #f3f7fb);
+    --accent: #35c759;
+  }
+  html,body{height:100%;margin:0}
+  body{background:#000;font-family:system-ui, Segoe UI, Helvetica, Arial, sans-serif}
+  canvas#game{position:fixed; inset:0; display:block; touch-action:none; background:#000; z-index:0}
+  #hud{position:fixed; inset:env(safe-area-inset-top) 0 auto 0; display:flex; justify-content:center; pointer-events:none; user-select:none; font-weight:700; letter-spacing:.5px; text-shadow:0 1px 2px #0008; z-index:2}
+  #score{ margin:.6rem 0; padding:.2rem .8rem; border-radius:999px; background:var(--ui-bg); color:var(--ui-text); }
+  .overlay{position:fixed; inset:0; display:grid; place-items:center; padding:clamp(16px,4vw,32px); background:radial-gradient(1200px 1200px at 50% 50%, #00000080, #000000e0); color:#fff; text-align:center; z-index:3}
+  .overlay.hidden{display:none}
+  .panel{backdrop-filter:saturate(1.2) blur(8px); background:var(--ui-bg); color:var(--ui-text); border-radius:16px; padding:20px 18px; max-width:min(560px,90vw); box-shadow:0 10px 30px #0008, inset 0 1px 0 #fff2}
+  h1{font-size:clamp(28px,6vw,44px); margin:.2rem 0 .6rem}
+  p{margin:.5rem 0 1rem; line-height:1.35}
+  .btn{display:inline-block; font-weight:700; border:0; padding:.9rem 1.25rem; border-radius:12px; background:var(--accent); color:#fff; cursor:pointer; box-shadow:0 6px 14px #1db95455; touch-action:manipulation} /* NEW: touch-action */
+  .row{display:flex; gap:.5rem; justify-content:center; flex-wrap:wrap}
+  small{opacity:.8}
+  #thumbHint{position:fixed; left:0; right:0; bottom:calc(10px + env(safe-area-inset-bottom)); display:flex; justify-content:center; pointer-events:none; color:#fff; text-shadow:0 1px 2px #0009; font-size:.9rem; opacity:.85; animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{opacity:.35}50%{opacity:.95}}
+</style>
+</head>
+<body>
+<canvas id="game" aria-label="Spelcanvas"></canvas>
+
+<div id="hud"><div id="score" aria-live="polite">0</div></div>
+<div id="thumbHint">Håll tummen nere för att flyga ↑</div>
+
+<!-- Start -->
+<div id="start" class="overlay">
+  <div class="panel" role="dialog" aria-modal="true">
+    <h1>🟢 Tummflykt</h1>
+    <p>Håll inne tummen för att flyga upp. Släpp för att falla. Undvik hindren.<br>Allt styrs med <strong>en (1) tumme</strong>.</p>
+    <button class="btn" id="startBtn" type="button" onclick="window._start()"><!-- NEW inline fallback -->Starta</button>
+    <p><small>Tips: Porträttläge är lättast. Poäng visas högst upp.</small></p>
+  </div>
+</div>
+
+<!-- Game Over -->
+<div id="over" class="overlay hidden">
+  <div class="panel" role="dialog" aria-modal="true">
+    <h1>💥 Pang!</h1>
+    <p id="finalText">Poäng: 0 · Bästa: 0</p>
+    <div class="row">
+      <button class="btn" id="againBtn" type="button" onclick="window._start()"><!-- NEW inline fallback -->Spela igen</button>
+    </div>
+    <p><small>Hint: korta, rytmiska tryck ger fin höjd-kontroll.</small></p>
+  </div>
+</div>
+
+<script>
+(()=>{
+  const cvs = document.getElementById('game');
+  const ctx = cvs.getContext('2d', { alpha:false });
+  const hudScore = document.getElementById('score');
+  const startOverlay = document.getElementById('start');
+  const overOverlay  = document.getElementById('over');
+  const startBtn = document.getElementById('startBtn');
+  const againBtn = document.getElementById('againBtn');
+  const finalText = document.getElementById('finalText');
+  const thumbHint = document.getElementById('thumbHint');
+
+  let W=0,H=0,DPR=1;
+  function fit(){
+    DPR = window.devicePixelRatio || 1;
+    W = Math.floor(window.innerWidth);
+    H = Math.floor(window.innerHeight);
+    cvs.width = Math.round(W*DPR);
+    cvs.height= Math.round(H*DPR);
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  window.addEventListener('resize', fit, {passive:true});
+  fit();
+
+  const state = { running:false, holding:false, tPrev:0, speed:160, score:0, best:Number(localStorage.tummBest||0), gameTime:0 };
+  const player = { x: W*0.25, y: H*0.5, r: Math.max(10, Math.min(W,H)*0.03), vy:0 };
+  let obstacles = [];
+  let spawnTimer = 0;
+
+  function reset(){
+    fit();
+    state.running = false;
+    state.holding = false;
+    state.tPrev = 0;
+    state.gameTime = 0;
+    state.speed = 160;
+    state.score = 0;
+    hudScore.textContent = '0';
+    obstacles = [];
+    player.x = W*0.25;
+    player.y = H*0.5;
+    player.vy = 0;
+    player.r  = Math.max(10, Math.min(W,H)*0.03);
+    spawnTimer = 0;
+  }
+
+  // Input (touch & mus)
+  const onHold = (v)=>{ state.holding = v; thumbHint.style.display = v || state.running ? 'none' : ''; };
+  cvs.addEventListener('touchstart', e=>{ e.preventDefault(); onHold(true); }, {passive:false});
+  cvs.addEventListener('touchend',   e=>{ e.preventDefault(); onHold(false);}, {passive:false});
+  cvs.addEventListener('pointerdown', ()=> onHold(true));   // NEW: pointerdown
+  window.addEventListener('pointerup', ()=> onHold(false)); // NEW: pointerup
+
+  // --- Robust start wiring ---
+  const startNow = e => { e && e.preventDefault && e.preventDefault(); start(); };
+
+  // 1) Buttons (all events)
+  ['pointerdown','touchstart','click'].forEach(ev=>{
+    startBtn.addEventListener(ev, startNow, {passive:false});
+    againBtn.addEventListener(ev, startNow, {passive:false});
+  });
+
+  // 2) Starta även vid första tryck på canvas (om overlay råkar strula)
+  cvs.addEventListener('pointerdown', startNow, {once:true});     // NEW
+  cvs.addEventListener('touchstart',  startNow, {once:true, passive:false}); // NEW
+
+  // 3) Exponera global fallback för inline onclick
+  window._start = startNow; // NEW
+
+  function start(){
+    startOverlay.classList.add('hidden');
+    overOverlay.classList.add('hidden');
+    reset();
+    state.running = true;
+    requestAnimationFrame(loop);
+  }
+
+  // Fysik
+  const GRAV = 1800, THRUST = -2200, MAX_VY = 900;
+
+  function spawnObstacle(){
+    const w = Math.max(46, Math.min(80, W*0.16));
+    const gap = Math.max(120, Math.min(220, H*0.35) - state.gameTime*6);
+    const margin = 30;
+    const gapY = margin + Math.random()*(H - gap - margin*2);
+    obstacles.push({ x: W + w, w, gapY, gap, passed:false });
+  }
+
+  function collide(o){
+    const px = player.x, py = player.y, r = player.r;
+    if (px + r < o.x || px - r > o.x + o.w) return false;
+    return py - r < o.gapY || py + r > o.gapY + o.gap;
+  }
+
+  function loop(ts){
+    if (!state.running) return;
+    if (!state.tPrev) state.tPrev = ts;
+    const dt = Math.min((ts - state.tPrev)/1000, 0.033);
+    state.tPrev = ts;
+    state.gameTime += dt;
+
+    state.speed += 8 * dt;
+
+    drawBackground(ts);
+
+    const ay = state.holding ? THRUST : GRAV;
+    player.vy = clamp(player.vy + ay*dt, -MAX_VY, MAX_VY);
+    player.y  = clamp(player.y + player.vy*dt, player.r, H - player.r);
+
+    if (player.y === player.r || player.y === H - player.r){ return gameOver(); }
+
+    spawnTimer -= dt;
+    const spawnEvery = Math.max(0.86, 1.4 - state.gameTime*0.03);
+    if (spawnTimer <= 0){ spawnObstacle(); spawnTimer = spawnEvery; }
+
+    for (let i=obstacles.length-1; i>=0; i--){
+      const o = obstacles[i];
+      o.x -= state.speed * dt;
+      if (!o.passed && o.x + o.w < player.x - player.r){
+        o.passed = true;
+        state.score++;
+        hudScore.textContent = String(state.score);
+        navigator.vibrate && navigator.vibrate(20);
+      }
+      if (collide(o)) return gameOver();
+      drawObstacle(o);
+      if (o.x + o.w < -4) obstacles.splice(i,1);
+    }
+
+    drawPlayer();
+    requestAnimationFrame(loop);
+  }
+
+  function drawBackground(t){
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0, '#0a1020');
+    g.addColorStop(1, '#041018');
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+    const tsec = t/1000, cols=5;
+    for (let i=0;i<cols;i++){
+      const x = ((i/cols)*W + (tsec*20*(i%2?1:-1))) % (W+200) - 100;
+      ctx.globalAlpha = 0.06;
+      const grad = ctx.createLinearGradient(x,0,x+100,0);
+      grad.addColorStop(0,'#9fdcff'); grad.addColorStop(1,'transparent');
+      ctx.fillStyle = grad; ctx.fillRect(x,0,100,H);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  function drawPlayer(){
+    ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2);
+    ctx.fillStyle = '#35c759'; ctx.fill();
+    ctx.beginPath(); ctx.arc(player.x + player.r*0.55, player.y, player.r*0.22, 0, Math.PI*2);
+    ctx.fillStyle = '#ffffff'; ctx.fill();
+    ctx.globalAlpha = .12;
+    ctx.beginPath(); ctx.ellipse(player.x, player.y+player.r*1.2, player.r*1.2, player.r*0.45, 0, 0, Math.PI*2);
+    ctx.fillStyle = '#000'; ctx.fill(); ctx.globalAlpha = 1;
+  }
+
+  function drawObstacle(o){
+    ctx.fillStyle = '#ff3b30';
+    ctx.fillRect(o.x, 0, o.w, o.gapY);
+    ctx.fillRect(o.x, o.gapY + o.gap, o.w, H - (o.gapY + o.gap));
+    ctx.globalAlpha = .25; ctx.fillStyle = '#000'; ctx.fillRect(o.x-2, 0, 2, H); ctx.globalAlpha = 1;
+  }
+
+  function gameOver(){
+    state.running = false;
+    navigator.vibrate && navigator.vibrate([20,40,60]);
+    state.best = Math.max(state.best, state.score);
+    localStorage.tummBest = String(state.best);
+    finalText.textContent = `Poäng: ${state.score} · Bästa: ${state.best}`;
+    overOverlay.classList.remove('hidden');
+  }
+
+  function clamp(v,min,max){ return v<min?min:(v>max?max:v); }
+
+  reset();
+})();
+</script>
+</body>
+</html>
