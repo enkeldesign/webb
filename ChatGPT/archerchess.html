@@ -3,116 +3,85 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Archer Chess – Canvas</title>
+<title>Archer Chess – Web Sprites</title>
 <style>
-  :root {
+  :root{
     color-scheme: light dark;
-    --square-light:#e6edf5; --square-dark:#8aa0be;
+    --light:#e6edf5; --dark:#8aa0be;
+    --light-d:#2c3442; --dark-d:#1f2633;
     --hl-move: rgba(73,211,255,.35);
-    --hl-capture: rgba(255,120,120,.45);
-    --hl-special: rgba(126,255,179,.35);
-    --bg:#0b0d12; --panel:#161a21; --text:#e7eef7;
+    --hl-cap: rgba(255,120,120,.45);
+    --hl-spec: rgba(126,255,179,.35);
   }
   @media (prefers-color-scheme: dark){
-    :root{ --square-light:#2c3442; --square-dark:#1f2633; }
+    :root{ --light:var(--light-d); --dark:var(--dark-d); }
   }
-  *{box-sizing:border-box}
-  body{margin:0; min-height:100dvh; display:grid; place-items:center; padding:24px;
-       background: radial-gradient(1200px 800px at 15% -10%, #1e2530 0%, var(--bg) 40%);
-       color:var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;}
-  .app{display:grid; gap:16px; grid-template-columns:minmax(320px,min(90vw,720px)); width:100%; max-width:720px}
-  .panel{background:#151a22cc; border:1px solid #2a3240; border-radius:16px; padding:12px 14px; box-shadow:0 10px 30px rgba(0,0,0,.25); display:grid; gap:10px}
-  .row{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
-  .pill{padding:.15rem .5rem; border-radius:999px; background:#202633; font-size:.9rem}
-  .turn{font-weight:700}
-  canvas{display:block; width:100%; height:auto; aspect-ratio:1/1; border-radius:18px;
-         box-shadow:0 12px 35px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06);
-         touch-action: manipulation;}
+  body{margin:0; display:grid; place-items:center; min-height:100dvh; background:#0b0d12; font-family:system-ui,Segoe UI,Arial,sans-serif; color:#e7eef7; padding:20px}
+  .wrap{max-width:720px; width:min(92vw,720px)}
+  canvas{width:100%; height:auto; aspect-ratio:1/1; border-radius:16px; box-shadow:0 12px 35px rgba(0,0,0,.35); touch-action:manipulation}
+  .row{display:flex; justify-content:space-between; align-items:center; margin:8px 0}
 </style>
 </head>
 <body>
-  <div class="app">
-    <div class="panel">
-      <div class="row">
-        <span class="pill">Click/tap a piece → then a highlighted target</span>
-        <span>Turn: <span id="turn" class="turn">White</span></span>
-      </div>
-      <canvas id="board" aria-label="Archer Chess board"></canvas>
-      <div class="pill">Archer = king-move + volley (+3 forward, capture only). Merge with rook → immobile Tower (fires forward over pieces). Tower can dismount once.</div>
-    </div>
-  </div>
+<div class="wrap">
+  <div class="row"><strong>Archer Chess</strong><span>Turn: <span id="turn">White</span></span></div>
+  <canvas id="board" aria-label="Archer Chess board"></canvas>
+  <p style="opacity:.8">Archer: king-move + volley (+3 forward capture). Merge with rook → Tower (immobile, fires forward over pieces). Tower can dismount once.</p>
+</div>
 
 <script>
-/* ====== Archer Chess – Interactive (fixed pointer mapping + HiDPI) ====== */
+/* --- Configure web-hosted sprite URLs --- */
+/* Cburnett/Wikipedia set for standard pieces (PNG, 60px) */
+const WIKI = "https://upload.wikimedia.org/wikipedia/commons";
+const SPRITE_URLS = {
+  wK: `${WIKI}/3/3b/Chess_klt60.png`,
+  bK: `${WIKI}/e/e3/Chess_kdt60.png`,
+  wQ: `${WIKI}/4/49/Chess_qlt60.png`,
+  bQ: `${WIKI}/a/af/Chess_qdt60.png`,
+  wR: `${WIKI}/5/5c/Chess_rlt60.png`,
+  bR: `${WIKI}/a/a0/Chess_rdt60.png`,
+  wN: `${WIKI}/2/28/Chess_nlt60.png`,
+  bN: `${WIKI}/f/f1/Chess_ndt60.png`,
+  wP: `https://images.chesscomfiles.com/chess-themes/pieces/classic/150/wp.png`,
+  bP: `https://images.chesscomfiles.com/chess-themes/pieces/classic/150/bp.png`,
+
+  /* TODO: point these to your hosted Archer/Tower SVG/PNGs */
+  wA: `https://enkel.design/ChatGPT/IMG_5740.jpeg`,
+  bA: `https://enkel.design/ChatGPT/IMG_5739.jpeg`,
+  wAT:`https://enkel.design/ChatGPT/IMG_5738.jpeg`,
+  bAT:`https://enkel.design/ChatGPT/IMG_5737.jpeg`,
+};
+
+/* ====== Canvas + HiDPI ====== */
 const canvas = document.getElementById('board');
-const ctx = canvas.getContext('2d', { alpha: true });
+const ctx = canvas.getContext('2d', { alpha:true });
 const turnEl = document.getElementById('turn');
+let SQ = 100;
 
-let SQ = 100; // updated on resize
-const S = 8;
-
-function resizeCanvas(){
-  const dpr = window.devicePixelRatio || 1;
-  const rect = canvas.getBoundingClientRect();
-  const size = Math.min(rect.width || 600, rect.height || rect.width || 600);
-  canvas.width  = Math.round(size * dpr);
-  canvas.height = Math.round(size * dpr);
-  ctx.setTransform(dpr,0,0,dpr,0,0); // draw in CSS pixels
-  SQ = (canvas.width / dpr) / 8;
-  redraw();
+function resize(){
+  const dpr = devicePixelRatio || 1;
+  const w = canvas.getBoundingClientRect().width || 600;
+  canvas.width = Math.round(w*dpr);
+  canvas.height = Math.round(w*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  SQ = w/8;
+  draw();
 }
-new ResizeObserver(resizeCanvas).observe(canvas);
-window.addEventListener('orientationchange', ()=>setTimeout(resizeCanvas, 50));
+new ResizeObserver(resize).observe(canvas);
 
-function getSquareFromEvent(ev){
-  const rect = canvas.getBoundingClientRect();
-  const x = (ev.clientX ?? ev.touches?.[0]?.clientX) - rect.left;
-  const y = (ev.clientY ?? ev.touches?.[0]?.clientY) - rect.top;
-  const c = Math.floor((x / rect.width)  * 8);
-  const r = Math.floor((y / rect.height) * 8);
-  return {r, c};
+/* ====== Load sprites ====== */
+const IMGS = {};
+function loadAll(urls){
+  return Promise.all(Object.entries(urls).map(([k,src])=>new Promise(res=>{
+    const img = new Image(); img.crossOrigin = "anonymous";
+    img.onload = ()=>{ IMGS[k]=img; res(); };
+    img.onerror = ()=>{ IMGS[k]=null; res(); };
+    img.src = src;
+  })));
 }
 
-// Colors
-const CSS = getComputedStyle(document.documentElement);
-const COLOR = {
-  light: CSS.getPropertyValue('--square-light').trim() || '#e6edf5',
-  dark:  CSS.getPropertyValue('--square-dark').trim()  || '#8aa0be',
-  move:  CSS.getPropertyValue('--hl-move').trim()      || 'rgba(73,211,255,.35)',
-  cap:   CSS.getPropertyValue('--hl-capture').trim()   || 'rgba(255,120,120,.45)',
-  special: CSS.getPropertyValue('--hl-special').trim() || 'rgba(126,255,179,.35)',
-};
-
-// --- Sprites (SVG data URIs) ---
-const SPRITES = {};
-function svgURI(svg){ return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg); }
-function makeSprite(key, svg){ const img=new Image(); img.src=svgURI(svg); SPRITES[key]=img; }
-const CHIP = (fill, stroke)=>`<rect x="4" y="4" width="92" height="92" rx="14" ry="14" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>`;
-const WCHIP = CHIP('#f8fafc','#cdd5df');
-const BCHIP = CHIP('#131822','#2a3240');
-
-const glyphs = {
-  wK: WCHIP + `<path d="M50 23 v8 m-12 7 h24 M30 73 h40 l-3 9 H33z M28 58 a22 18 0 1 0 44 0 a22 18 0 1 0 -44 0z" fill="#0b1220" stroke="#0b1220" stroke-width="2"/>`,
-  bK: BCHIP + `<path d="M50 23 v8 m-12 7 h24 M30 73 h40 l-3 9 H33z M28 58 a22 18 0 1 0 44 0 a22 18 0 1 0 -44 0z" fill="#e7eef7" stroke="#e7eef7" stroke-width="2"/>`,
-  wQ: WCHIP + `<path d="M22 42 34 28 46 42 54 28 66 42 78 28 74 60 26 60z" fill="#0b1220"/><rect x="26" y="60" width="48" height="22" rx="3" fill="#0b1220"/>`,
-  bQ: BCHIP + `<path d="M22 42 34 28 46 42 54 28 66 42 78 28 74 60 26 60z" fill="#e7eef7"/><rect x="26" y="60" width="48" height="22" rx="3" fill="#e7eef7"/>`,
-  wR: WCHIP + `<path d="M28 32 h44 v14 H28zm4 14 h36 v30 H32z" fill="#0b1220"/>`,
-  bR: BCHIP + `<path d="M28 32 h44 v14 H28zm4 14 h36 v30 H32z" fill="#e7eef7"/>`,
-  wN: WCHIP + `<path d="M68 68 H36 V44 l16-10 8 6 8-4z" fill="#0b1220"/>`,
-  bN: BCHIP + `<path d="M68 68 H36 V44 l16-10 8 6 8-4z" fill="#e7eef7"/>`,
-  wP: WCHIP + `<circle cx="50" cy="42" r="10" fill="#0b1220"/><rect x="38" y="52" width="24" height="22" rx="4" fill="#0b1220"/>`,
-  bP: BCHIP + `<circle cx="50" cy="42" r="10" fill="#e7eef7"/><rect x="38" y="52" width="24" height="22" rx="4" fill="#e7eef7"/>`,
-  wA: WCHIP + `<path d="M62 64 C58 46 42 34 30 30" stroke="#0b1220" stroke-width="5" fill="none"/><path d="M30 30 L44 30" stroke="#0b1220" stroke-width="5"/><path d="M50 20 L50 10 M50 10 L46 16 M50 10 L54 16" stroke="#0b1220" stroke-width="4"/>`,
-  bA: BCHIP + `<path d="M62 36 C58 54 42 66 30 70" stroke="#e7eef7" stroke-width="5" fill="none"/><path d="M30 70 L44 70" stroke="#e7eef7" stroke-width="5"/><path d="M50 90 L50 100 M50 100 L46 94 M50 100 L54 94" stroke="#e7eef7" stroke-width="4"/>`,
-  wAT: WCHIP + `<rect x="34" y="30" width="32" height="40" rx="3" fill="#0b1220"/><rect x="48" y="14" width="4" height="72" rx="2" fill="#14b86a"/>`,
-  bAT: BCHIP + `<rect x="34" y="30" width="32" height="40" rx="3" fill="#e7eef7"/><rect x="48" y="14" width="4" height="72" rx="2" fill="#7dffbc"/>`,
-};
-for(const k of Object.keys(glyphs)){
-  makeSprite(k, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${glyphs[k]}</svg>`);
-}
-
-// --- Game state ---
-function initialBoard(){
+/* ====== Game state & rules (same Archer logic) ====== */
+function initBoard(){
   const e=null, w=t=>({t,c:'w'}), b=t=>({t,c:'b'});
   return [
     [b('R'), b('N'), b('A'), b('Q'), b('K'), b('A'), b('N'), b('R')],
@@ -125,159 +94,148 @@ function initialBoard(){
     [w('R'), w('N'), w('A'), w('Q'), w('K'), w('A'), w('N'), w('R')],
   ];
 }
-const state = { board: initialBoard(), toMove:'w', selected:null, legalTargets:[], history:[] };
-function ensureFlags(p){ if(p?.t==='A' && p.canMerge===undefined) p.canMerge=true; if(p?.t==='AT' && p.canDismount===undefined) p.canDismount=true; }
+const state = { board:initBoard(), toMove:'w', selected:null, legal:[], history:[] };
+function inside(r,c){ return r>=0 && r<8 && c>=0 && c<8; }
+function ensureFlags(p){ if(!p) return; if(p.t==='A'&&p.canMerge===undefined)p.canMerge=true; if(p.t==='AT'&&p.canDismount===undefined)p.canDismount=true; }
 
-// --- Rendering ---
-function drawBoard(){
-  // Checkered
-  for(let r=0;r<8;r++){
-    for(let c=0;c<8;c++){
-      ctx.fillStyle = ((r+c)&1) ? COLOR.dark : COLOR.light;
-      ctx.fillRect(c*SQ, r*SQ, SQ, SQ);
-    }
+/* ====== Rendering ====== */
+function draw(){
+  // board
+  const light = getComputedStyle(document.documentElement).getPropertyValue('--light').trim() || '#e6edf5';
+  const dark  = getComputedStyle(document.documentElement).getPropertyValue('--dark').trim()  || '#8aa0be';
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+    ctx.fillStyle = ((r+c)&1)?dark:light;
+    ctx.fillRect(c*SQ, r*SQ, SQ, SQ);
   }
-  // Highlights
+  // highlights
+  const mv = getComputedStyle(document.documentElement).getPropertyValue('--hl-move').trim() || 'rgba(73,211,255,.35)';
+  const cp = getComputedStyle(document.documentElement).getPropertyValue('--hl-cap').trim()  || 'rgba(255,120,120,.45)';
+  const sp = getComputedStyle(document.documentElement).getPropertyValue('--hl-spec').trim() || 'rgba(126,255,179,.35)';
   if(state.selected){
-    const {r,c}=state.selected;
-    ctx.lineWidth=3; ctx.strokeStyle='rgba(255,255,255,.6)';
+    const {r,c}=state.selected; ctx.lineWidth=3; ctx.strokeStyle='rgba(255,255,255,.65)';
     ctx.strokeRect(c*SQ+2, r*SQ+2, SQ-4, SQ-4);
   }
-  for(const t of state.legalTargets){
-    const x=t.c*SQ+SQ/2, y=t.r*SQ+SQ/2;
-    ctx.fillStyle = t.kind==='cap' ? COLOR.cap : (t.kind==='special'?COLOR.special:COLOR.move);
-    ctx.beginPath(); ctx.arc(x,y,SQ*.18,0,Math.PI*2); ctx.fill();
+  for(const t of state.legal){
+    ctx.fillStyle = t.kind==='cap'?cp:(t.kind==='special'?sp:mv);
+    ctx.beginPath(); ctx.arc(t.c*SQ+SQ/2, t.r*SQ+SQ/2, SQ*.18, 0, Math.PI*2); ctx.fill();
   }
-  // Pieces
+  // pieces
   for(let r=0;r<8;r++) for(let c=0;c<8;c++){
-    const p = state.board[r][c]; if(!p) continue; drawPiece(r,c,p);
-  }
-}
-function spriteKey(p){ const side=p.c==='w'?'w':'b'; return p.t==='AT' ? side+'AT' : side+p.t; }
-function drawPiece(r,c,p){
-  ensureFlags(p);
-  const img = SPRITES[spriteKey(p)];
-  if(img?.complete){
-    ctx.save(); ctx.shadowColor='rgba(0,0,0,.35)'; ctx.shadowBlur=10;
-    ctx.drawImage(img, c*SQ+4, r*SQ+4, SQ-8, SQ-8); ctx.restore();
-  }else{
-    // fallback letter
-    ctx.fillStyle = p.c==='w' ? '#f8fafc' : '#131822';
-    ctx.fillRect(c*SQ+6, r*SQ+6, SQ-12, SQ-12);
-    ctx.fillStyle = p.c==='w' ? '#0b1220' : '#e7eef7';
-    ctx.font = `700 ${Math.floor(SQ*.34)}px system-ui`; ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText(p.t, c*SQ+SQ/2, r*SQ+SQ/2+2);
+    const p = state.board[r][c]; if(!p) continue;
+    const key = (p.c==='w'?'w':'b') + (p.t==='AT'?'AT':p.t);
+    const img = IMGS[key];
+    if(img){
+      ctx.drawImage(img, c*SQ+4, r*SQ+4, SQ-8, SQ-8);
+    }else{
+      // fallback letter
+      ctx.fillStyle = p.c==='w' ? '#f8fafc' : '#131822';
+      ctx.fillRect(c*SQ+6, r*SQ+6, SQ-12, SQ-12);
+      ctx.fillStyle = p.c==='w' ? '#0b1220' : '#e7eef7';
+      ctx.font = `700 ${Math.floor(SQ*.34)}px system-ui`; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(p.t, c*SQ+SQ/2, r*SQ+SQ/2+2);
+    }
   }
 }
 
-// --- Input ---
+function select(r,c){ state.selected={r,c}; state.legal = genMoves(r,c); }
+function clearSel(){ state.selected=null; state.legal=[]; }
 canvas.addEventListener('pointerdown', (ev)=>{
-  const {r,c} = getSquareFromEvent(ev);
-  if(r<0||r>7||c<0||c>7) return;
-
+  const rect = canvas.getBoundingClientRect();
+  const x = ev.clientX - rect.left, y = ev.clientY - rect.top;
+  const c = Math.floor(x/rect.width*8), r = Math.floor(y/rect.height*8);
   if(state.selected){
-    const target = state.legalTargets.find(t=>t.r===r && t.c===c);
-    if(target){ target.action(); clearSel(); redraw(); return; }
-    const p = state.board[r][c];
-    if(p && p.c===state.toMove){ select(r,c); redraw(); return; }
-    clearSel(); redraw();
+    const tgt = state.legal.find(t=>t.r===r && t.c===c);
+    if(tgt){ tgt.action(); clearSel(); turnEl.textContent = state.toMove==='w'?'White':'Black'; draw(); return; }
+    const q = state.board[r][c];
+    if(q && q.c===state.toMove){ select(r,c); draw(); return; }
+    clearSel(); draw(); return;
   } else {
     const p = state.board[r][c];
-    if(p && p.c===state.toMove){ select(r,c); redraw(); }
+    if(p && p.c===state.toMove){ select(r,c); draw(); }
   }
 });
-function clearSel(){ state.selected=null; state.legalTargets=[]; }
-function select(r,c){ state.selected={r,c}; state.legalTargets=computeMoves(r,c); }
 
-// --- Moves (no check rules yet) ---
+/* ====== Move gen (MVP, no check) ====== */
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
-function inside(r,c){ return r>=0 && r<8 && c>=0 && c<8; }
-function computeMoves(r,c){
-  const b=state.board, p=b[r][c]; if(!p) return []; ensureFlags(p);
-  const me=p.c, opp=me==='w'?'b':'w', out=[];
-  function add(rr,cc,kind,action){
-    out.push({r:rr,c:cc,kind, action: action || (function(){
+function genMoves(r,c){
+  const B=state.board, P=B[r][c]; if(!P) return []; ensureFlags(P);
+  const me=P.c, opp=me==='w'?'b':'w', out=[];
+  function add(rr,cc,kind,fn){
+    out.push({r:rr,c:cc,kind, action: fn || (function(){
       const snap=clone(state); state.history.push(snap);
-      const target=b[rr][cc];
-      b[rr][cc]=p; b[r][c]=null;
-      if(p.t==='A' && target && target.t==='R' && target.c===me){
-        b[rr][cc]={t:'AT', c:me, canDismount:true};
-      }
-      if(p.t==='P'){
-        if(me==='w' && rr===0) b[rr][cc]={t:'Q',c:me};
-        if(me==='b' && rr===7) b[rr][cc]={t:'Q',c:me};
-      }
-      state.toMove=opp;
+      const target=B[rr][cc]; B[rr][cc]=P; B[r][c]=null;
+      if(P.t==='A' && target && target.t==='R' && target.c===me){ B[rr][cc]={t:'AT',c:me,canDismount:true}; }
+      if(P.t==='P'){ if(me==='w'&&rr===0) B[rr][cc]={t:'Q',c:me}; if(me==='b'&&rr===7) B[rr][cc]={t:'Q',c:me}; }
+      state.toMove = opp;
     })});
   }
-  function addSpecial(rr,cc,fn){ out.push({r:rr,c:cc,kind:'special',action:fn}); }
+  function addSpec(rr,cc,fn){ out.push({r:rr,c:cc,kind:'special',action:fn}); }
   function ray(dr,dc){
-    const list=[]; let rr=r+dr, cc=c+dc;
-    while(inside(rr,cc)){ const q=b[rr][cc];
-      if(q){ if(q.c!==me) list.push({r:rr,c:cc,cap:true}); break; }
-      list.push({r:rr,c:cc}); rr+=dr; cc+=dc;
-    } return list;
+    const L=[]; let rr=r+dr, cc=c+dc;
+    while(inside(rr,cc)){
+      const q=B[rr][cc];
+      if(q){ if(q.c!==me) L.push({r:rr,c:cc,cap:true}); break; }
+      L.push({r:rr,c:cc}); rr+=dr; cc+=dc;
+    } return L;
   }
 
-  if(p.t==='P'){
+  if(P.t==='P'){
     const dir=me==='w'?-1:1, start=me==='w'?6:1;
-    if(inside(r+dir,c) && !b[r+dir][c]) add(r+dir,c,'move');
-    if(r===start && !b[r+dir][c] && !b[r+2*dir][c]) add(r+2*dir,c,'move');
-    for(const dc of [-1,1]){ const rr=r+dir, cc=c+dc;
-      if(inside(rr,cc) && b[rr][cc]?.c===opp) add(rr,cc,'cap');
-    }
-  } else if(p.t==='N'){
+    if(inside(r+dir,c) && !B[r+dir][c]) add(r+dir,c,'move');
+    if(r===start && !B[r+dir][c] && !B[r+2*dir][c]) add(r+2*dir,c,'move');
+    for(const dc of [-1,1]){ const rr=r+dir, cc=c+dc; if(inside(rr,cc)&&B[rr][cc]?.c===opp) add(rr,cc,'cap'); }
+  } else if(P.t==='N'){
     for(const [dr,dc] of [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]]){
       const rr=r+dr, cc=c+dc; if(!inside(rr,cc)) continue;
-      const q=b[rr][cc]; if(!q) add(rr,cc,'move'); else if(q.c===opp) add(rr,cc,'cap');
+      const q=B[rr][cc]; if(!q) add(rr,cc,'move'); else if(q.c===opp) add(rr,cc,'cap');
     }
-  } else if(p.t==='R'){
-    for(const d of [[1,0],[-1,0],[0,1],[0,-1]]) for(const step of ray(...d)) add(step.r,step.c, step.cap?'cap':'move');
-  } else if(p.t==='Q'){
-    for(const d of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]) for(const step of ray(...d)) add(step.r,step.c, step.cap?'cap':'move');
-  } else if(p.t==='K'){
+  } else if(P.t==='R'){
+    for(const d of [[1,0],[-1,0],[0,1],[0,-1]]) for(const s of ray(...d)) add(s.r,s.c, s.cap?'cap':'move');
+  } else if(P.t==='Q'){
+    for(const d of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]) for(const s of ray(...d)) add(s.r,s.c, s.cap?'cap':'move');
+  } else if(P.t==='K'){
     for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
       if(!dr&&!dc) continue; const rr=r+dr, cc=c+dc; if(!inside(rr,cc)) continue;
-      const q=b[rr][cc]; if(!q) add(rr,cc,'move'); else if(q.c===opp) add(rr,cc,'cap');
+      const q=B[rr][cc]; if(!q) add(rr,cc,'move'); else if(q.c===opp) add(rr,cc,'cap');
     }
-  } else if(p.t==='A'){
-    // king-like
+  } else if(P.t==='A'){
+    // king-like + merge
     for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
       if(!dr&&!dc) continue; const rr=r+dr, cc=c+dc; if(!inside(rr,cc)) continue;
-      const q=b[rr][cc];
-      if(q && q.c===me && q.t==='R' && p.canMerge!==false) add(rr,cc,'special'); // merge
+      const q=B[rr][cc];
+      if(q && q.c===me && q.t==='R' && P.canMerge!==false) add(rr,cc,'special'); // merge
       else if(!q) add(rr,cc,'move');
       else if(q.c===opp) add(rr,cc,'cap');
     }
-    // volley
+    // volley: +3 forward capture only
     const dir=me==='w'?-1:1, vr=r+dir*3, vc=c;
-    if(inside(vr,vc) && b[vr][vc]?.c===opp){
-      addSpecial(vr,vc, function(){
+    if(inside(vr,vc) && B[vr][vc]?.c===opp){
+      addSpec(vr,vc, function(){
         const snap=clone(state); state.history.push(snap);
-        b[vr][vc]=null; state.toMove=opp; // Archer stays
+        B[vr][vc]=null; state.toMove=opp; // Archer stays put
       });
     }
-  } else if(p.t==='AT'){
-    // fire forward
+  } else if(P.t==='AT'){
+    // fire forward capture, ignoring blockers
     const dir=me==='w'?-1:1;
     for(let rr=r+dir; rr>=0 && rr<8; rr+=dir){
-      const q=b[rr][c];
+      const q=B[rr][c];
       if(q && q.c===opp){
-        addSpecial(rr,c, function(){
+        addSpec(rr,c, function(){
           const snap=clone(state); state.history.push(snap);
-          b[rr][c]=null; state.toMove=opp;
+          B[rr][c]=null; state.toMove=opp;
         });
       }
     }
     // dismount once
-    if(p.canDismount){
+    if(P.canDismount){
       for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
         if(!dr&&!dc) continue; const rr=r+dr, cc=c+dc; if(!inside(rr,cc)) continue;
-        if(!b[rr][cc]){
-          addSpecial(rr,cc, function(){
+        if(!B[rr][cc]){
+          addSpec(rr,cc, function(){
             const snap=clone(state); state.history.push(snap);
-            b[r][c]={t:'R',c:me};
-            b[rr][cc]={t:'A',c:me,canMerge:false};
+            B[r][c]={t:'R',c:me};
+            B[rr][cc]={t:'A',c:me,canMerge:false};
             state.toMove=opp;
           });
         }
@@ -287,17 +245,8 @@ function computeMoves(r,c){
   return out;
 }
 
-// --- Boot / Redraw ---
-function redraw(){ drawBoard(); turnEl.textContent = state.toMove==='w' ? 'White' : 'Black'; }
-(function reset(){
-  state.board = initialBoard();
-  state.toMove = 'w';
-  state.selected = null;
-  state.legalTargets = [];
-  state.history = [];
-  // kick initial sizing
-  requestAnimationFrame(resizeCanvas);
-})();
+/* ====== Boot ====== */
+loadAll(SPRITE_URLS).then(()=>{ resize(); turnEl.textContent='White'; });
 </script>
 </body>
 </html>
