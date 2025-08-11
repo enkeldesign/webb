@@ -10,21 +10,15 @@
   html,body{ margin:0; height:100%; }
   body{
     font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-    background: canvas;
-    color: canvastext;
+    background: #0e1320;
+    color: #e9ecf1;
     overflow:hidden;
   }
-
-  /* Canvas fills the window */
   canvas#game{
     position:fixed; inset:0; display:block; touch-action:manipulation;
     background:
-      linear-gradient(to bottom, color-mix(in oklab, canvastext 8%, canvas) 0%,
-                                   color-mix(in oklab, canvastext 3%, canvas) 60%,
-                                   canvas 100%);
+      linear-gradient(#1a2240, #0e1320 60%, #0b0f1a);
   }
-
-  /* Minimal HUD */
   .hud{
     position:fixed; inset:0; pointer-events:none; display:grid;
     grid-template-rows:auto 1fr auto; padding:1rem;
@@ -32,32 +26,30 @@
   .hud__top{ display:flex; gap:.75rem; align-items:center; justify-content:space-between; }
   .pill{
     pointer-events:auto;
-    background: color-mix(in oklab, canvastext 12%, canvas);
-    border:1px solid color-mix(in oklab, canvastext 18%, canvas);
+    background: rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.15);
     padding:.5rem .75rem; border-radius:999px; font-weight:600;
+    color:#e9ecf1;
   }
   .btn{
     pointer-events:auto; cursor:pointer; user-select:none;
-    background: color-mix(in oklab, canvastext 15%, canvas);
-    border:1px solid color-mix(in oklab, canvastext 30%, canvas);
+    background: rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.25);
     padding:.6rem 1rem; border-radius:.7rem; font-weight:700;
+    color:#e9ecf1;
   }
-  .btn:focus-visible{ outline:3px solid Highlight; outline-offset:2px; }
+  .btn:focus-visible{ outline:3px solid #4da3ff; outline-offset:2px; }
 
   .center{
     place-self:center; text-align:center; pointer-events:auto;
-    background: color-mix(in oklab, canvastext 10%, canvas);
-    border:1px solid color-mix(in oklab, canvastext 20%, canvas);
+    background: rgba(0,0,0,.35);
+    border:1px solid rgba(255,255,255,.2);
     padding:1rem 1.25rem; border-radius:1rem; max-width:min(38rem, 90vw);
-    box-shadow: 0 10px 40px color-mix(in oklab, canvastext 15%, transparent);
+    box-shadow: 0 10px 40px rgba(0,0,0,.4);
   }
   .title{ font-size:clamp(1.3rem, 2.8vw + .6rem, 2rem); margin:0 0 .25rem; }
-  .muted{ opacity:.7; margin:.25rem 0 0; }
-
-  /* Small helper badge bottom-right */
-  .help{
-    justify-self:end; align-self:end; opacity:.8; font-size:.9rem; pointer-events:none;
-  }
+  .muted{ opacity:.8; margin:.25rem 0 0; }
+  .help{ justify-self:end; align-self:end; opacity:.8; font-size:.9rem; pointer-events:none; }
 </style>
 </head>
 <body>
@@ -88,22 +80,23 @@
   const ctx = canvas.getContext('2d');
 
   function fitCanvas() {
-    const dpr = Math.max(devicePixelRatio || 1, 1);
+    const dpr = Math.max(window.devicePixelRatio || 1, 1);
     canvas.width = Math.floor(innerWidth * dpr);
     canvas.height = Math.floor(innerHeight * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // scale drawing so units = CSS pixels
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // draw in CSS pixels
   }
   addEventListener('resize', fitCanvas, { passive:true });
   fitCanvas();
 
   // ===== Game state =====
+  const dark = true; // simple theme flag for safe colors
   const G = {
-    gravity: 980,        // px/s^2 (feels snappy)
-    moveSpeed: 160,      // horizontal px/s for moving brick
-    fallMax: 1200,       // terminal fall speed
-    baseBrickH: 24,      // brick height in px
-    minOverlap: 8,       // px required to keep stacking
-    speedupEvery: 5,     // speed up after N successful drops
+    gravity: 980,
+    moveSpeed: 160,
+    fallMax: 1200,
+    baseBrickH: 24,
+    minOverlap: 8,
+    speedupEvery: 5,
     speedupFactor: 1.08,
   };
 
@@ -111,11 +104,11 @@
     running: false,
     paused: false,
     score: 0,
-    stack: [],   // array of bricks (bottom -> top)
-    active: null // current moving/dropping brick
+    stack: [],
+    active: null
   };
 
-  // ===== UI elements =====
+  // ===== UI =====
   const $score = document.getElementById('score');
   const $restart = document.getElementById('restart');
   const $overlay = document.getElementById('overlay');
@@ -131,57 +124,37 @@
     $overlay.hidden = false;
   }
   function hideOverlay(){ $overlay.hidden = true; }
+  function updateScore(n){ state.score += n; $score.textContent = `Score: ${state.score}`; document.title = `Score ${state.score} – Brick Builder`; }
 
-  // ===== Helpers =====
-  const rand = (a,b)=> a + Math.random()*(b-a);
-
+  // ===== Colors (no color-mix / system colors) =====
   function colorForLevel(i){
-    // subtle shifting hue with light/dark aware stroke
-    // use oklch-ish progression via HSL approximations
     const hue = (200 + i*9) % 360;
-    const light = matchMedia('(prefers-color-scheme: dark)').matches ? 62 : 54;
-    return `hsl(${hue} 70% ${light}%)`;
+    const light = dark ? 62 : 54;
+    return `hsl(${hue}, 70%, ${light}%)`;
   }
+  const edgeColor = 'rgba(255,255,255,.35)';
+  const rivetColor = 'rgba(255,255,255,.55)';
+  const groundStroke = 'rgba(255,255,255,.25)';
 
-  // Brick factory
+  // ===== Bricks =====
   function makeBrick(w, x, y, vx=G.moveSpeed){
-    return {
-      x, y, w,
-      h: G.baseBrickH,
-      vx, vy: 0,
-      moving: true,   // moving horizontally on top, waiting for drop
-      dropping: false,
-      color: colorForLevel(state.stack.length)
-    };
+    return { x, y, w, h: G.baseBrickH, vx, vy:0, moving:true, dropping:false, color: colorForLevel(state.stack.length) };
   }
 
-  // Reset game
-  function resetGame() {
+  function resetGame(){
     state.running = false;
     state.paused = false;
     state.score = 0;
     state.stack = [];
     state.active = null;
 
-    // Ground brick
     const groundW = Math.min(420, innerWidth * 0.8);
     const groundX = innerWidth/2;
-    const groundY = Math.floor(innerHeight * 0.80);
-    state.stack.push({ x: groundX, y: groundY, w: groundW, h: G.baseBrickH, color: 'hsl(210 10% 40%)', moving:false, dropping:false });
+    const groundY = Math.floor(innerHeight * 0.80); // this is TOP of the ground brick
+    state.stack.push({ x: groundX, y: groundY, w: groundW, h: G.baseBrickH, color: 'hsl(210, 10%, 40%)', moving:false, dropping:false });
 
-    // First moving brick same width as ground, starts from left
     state.active = makeBrick(state.stack[0].w, innerWidth/2, state.stack[0].y - state.stack[0].h, G.moveSpeed);
-    state.active.moving = true;
-    state.active.dropping = false;
-
     updateScore(0);
-    // small breathing room
-  }
-
-  function updateScore(delta){
-    state.score += delta;
-    $score.textContent = `Score: ${state.score}`;
-    document.title = `Score ${state.score} – Brick Builder`;
   }
 
   // ===== Input =====
@@ -189,19 +162,15 @@
     if (!state.running || state.paused || !state.active || state.active.dropping) return;
     state.active.moving = false;
     state.active.dropping = true;
-    // inherit slight horizontal motion upon drop
     state.active.vy = 0;
   }
-
   function togglePause(){
     if (!state.running) return;
     state.paused = !state.paused;
-    if (state.paused){
+    if (state.paused) {
       showOverlay('Paused', 'Press P to resume or click Start.', false);
     } else {
-      hideOverlay();
-      last = performance.now();
-      requestAnimationFrame(tick);
+      hideOverlay(); last = performance.now(); requestAnimationFrame(tick);
     }
   }
 
@@ -210,102 +179,70 @@
     if (e.key.toLowerCase() === 'r') { e.preventDefault(); startGame(); }
     if (e.key.toLowerCase() === 'p') { e.preventDefault(); togglePause(); }
   });
-
-  canvas.addEventListener('pointerdown', (e)=> {
-    // ignore right-click
-    if (e.button === 0) dropBrick();
-  }, { passive:true });
+  canvas.addEventListener('pointerdown', (e)=> { if (e.button === 0) dropBrick(); }, { passive:true });
 
   $start.addEventListener('click', startGame);
   $restart.addEventListener('click', startGame);
-  $how.addEventListener('click', ()=>{
-    showOverlay('How to play',
-      'A new brick slides left/right at the top of your stack. Click/tap or press Space/Enter to drop it. ' +
-      'Only the overlapped part remains; the rest is sliced away. Miss completely and it’s game over.');
-  });
+  $how.addEventListener('click', ()=> showOverlay('How to play','A new brick slides left/right at the top. Drop it with click/tap/Space. Only overlap remains; miss and it’s game over.'));
 
-  function startGame(){
-    hideOverlay();
-    resetGame();
-    state.running = true;
-    last = performance.now();
-    requestAnimationFrame(tick);
-  }
+  function startGame(){ hideOverlay(); resetGame(); state.running = true; last = performance.now(); requestAnimationFrame(tick); }
 
-  // ===== Physics / loop =====
+  // ===== Loop =====
   let last = 0;
-
   function tick(ts){
     if (!state.running || state.paused) return;
-    const dt = Math.min((ts - last) / 1000, 1/20); // clamp delta
+    const dt = Math.min((ts - last) / 1000, 1/20);
     last = ts;
-
     step(dt);
     draw();
-
     requestAnimationFrame(tick);
   }
 
   function step(dt){
-    const active = state.active;
+    const a = state.active;
     const top = state.stack[state.stack.length - 1];
-    if (!active) return;
+    if (!a) return;
 
-    // Horizontal patrol while waiting
-    if (active.moving){
-      active.x += active.vx * dt;
+    // patrol
+    if (a.moving){
+      a.x += a.vx * dt;
       const margin = 24;
-      if (active.x - active.w/2 < margin){ active.x = margin + active.w/2; active.vx = Math.abs(active.vx); }
-      if (active.x + active.w/2 > innerWidth - margin){ active.x = innerWidth - margin - active.w/2; active.vx = -Math.abs(active.vx); }
+      if (a.x - a.w/2 < margin){ a.x = margin + a.w/2; a.vx = Math.abs(a.vx); }
+      if (a.x + a.w/2 > innerWidth - margin){ a.x = innerWidth - margin - a.w/2; a.vx = -Math.abs(a.vx); }
     }
 
-    // Dropping physics
-    if (active.dropping){
-      active.vy = Math.min(active.vy + G.gravity * dt, G.fallMax);
-      active.y += active.vy * dt;
+    // drop
+    if (a.dropping){
+      a.vy = Math.min(a.vy + G.gravity * dt, G.fallMax);
+      a.y += a.vy * dt;
 
-      // Collide with top of stack (the last placed brick)
       const target = top;
-      const hitY = target.y - target.h; // top surface y of target
-      if (active.y >= hitY){
-        // Evaluate overlap along X
-        const aL = active.x - active.w/2;
-        const aR = active.x + active.w/2;
-        const tL = target.x - target.w/2;
-        const tR = target.x + target.w/2;
-        const oL = Math.max(aL, tL);
-        const oR = Math.min(aR, tR);
+      const hitY = target.y - target.h;
+      if (a.y >= hitY){
+        const aL = a.x - a.w/2, aR = a.x + a.w/2;
+        const tL = target.x - target.w/2, tR = target.x + target.w/2;
+        const oL = Math.max(aL, tL), oR = Math.min(aR, tR);
         const overlap = Math.max(0, oR - oL);
 
-        if (overlap < G.minOverlap){
-          gameOver();
-          return;
-        }
+        if (overlap < G.minOverlap){ return gameOver(); }
 
-        // Slice to the overlapped section
-        active.w = overlap;
-        active.x = oL + overlap/2;
-        active.y = hitY;
-        active.moving = false;
-        active.dropping = false;
-        state.stack.push(active);
+        a.w = overlap;
+        a.x = oL + overlap/2;
+        a.y = hitY;
+        a.moving = false;
+        a.dropping = false;
+        state.stack.push(a);
         updateScore(1);
 
-        // Slightly speed up every few successful drops
-        if (state.score % G.speedupEvery === 0){
-          G.moveSpeed *= G.speedupFactor;
-        }
+        if (state.score % G.speedupEvery === 0){ G.moveSpeed *= G.speedupFactor; }
 
-        // Spawn next moving brick on top of new top
-        const nextW = active.w; // same as last overlap
+        const nextW = a.w;
         const startFromLeft = (state.stack.length % 2) === 0;
-        const startX = startFromLeft ? (active.w/2 + 24) : (innerWidth - active.w/2 - 24);
-        state.active = makeBrick(nextW, startX, active.y - active.h, startFromLeft ? Math.abs(G.moveSpeed) : -Math.abs(G.moveSpeed));
+        const startX = startFromLeft ? (a.w/2 + 24) : (innerWidth - a.w/2 - 24);
+        state.active = makeBrick(nextW, startX, a.y - a.h, startFromLeft ? Math.abs(G.moveSpeed) : -Math.abs(G.moveSpeed));
 
-        // Camera nudge upward if we’re getting tall
         const minTopY = innerHeight * 0.25;
         if (state.active.y < minTopY){
-          // move everything down to keep active near top quarter
           const dy = (minTopY - state.active.y);
           for (const b of state.stack) b.y += dy;
           state.active.y += dy;
@@ -322,46 +259,42 @@
 
   // ===== Drawing =====
   function draw(){
-    // Sky gradient already set as canvas background via CSS; clear needed for artifacts
     ctx.clearRect(0,0,innerWidth,innerHeight);
 
-    // subtle ground line
+    // ground line
     ctx.lineWidth = 1;
-    ctx.strokeStyle = 'color-mix(in oklab, canvastext 25%, transparent)';
+    ctx.strokeStyle = groundStroke;
     ctx.beginPath();
     const groundY = state.stack[0]?.y + state.stack[0]?.h || innerHeight*0.8;
     ctx.moveTo(0, groundY + 0.5);
     ctx.lineTo(innerWidth, groundY + 0.5);
     ctx.stroke();
 
-    // draw stack
-    for (let i=0;i<state.stack.length;i++){
-      drawBrick(state.stack[i], i);
-    }
-    // draw active
-    if (state.active) drawBrick(state.active, state.stack.length);
+    // stack
+    for (let i=0;i<state.stack.length;i++) drawBrick(state.stack[i]);
+    if (state.active) drawBrick(state.active);
   }
 
-  function drawBrick(b, idx){
-    // Fill
+  function drawBrick(b){
+    // body
     ctx.fillStyle = b.color;
-    roundRect(ctx, b.x - b.w/2, b.y, b.w, b.h, 6, true, false);
+    roundRect(b.x - b.w/2, b.y, b.w, b.h, 6, true, false);
 
-    // Top highlight
+    // top highlight
     ctx.globalAlpha = .18;
-    ctx.fillStyle = '#fff';
-    roundRect(ctx, b.x - b.w/2 + 3, b.y + 3, b.w - 6, 6, 4, true, false);
+    ctx.fillStyle = '#ffffff';
+    roundRect(b.x - b.w/2 + 3, b.y + 3, b.w - 6, 6, 4, true, false);
     ctx.globalAlpha = 1;
 
-    // Edge stroke (light/dark aware)
+    // edge
     ctx.lineWidth = 2;
-    ctx.strokeStyle = 'color-mix(in oklab, canvastext 35%, transparent)';
-    roundRect(ctx, b.x - b.w/2, b.y, b.w, b.h, 6, false, true);
+    ctx.strokeStyle = edgeColor;
+    roundRect(b.x - b.w/2, b.y, b.w, b.h, 6, false, true);
 
-    // Tiny rivets for fun
+    // rivets
     const n = Math.max(2, Math.floor(b.w / 60));
     const step = b.w / (n+1);
-    ctx.fillStyle = 'color-mix(in oklab, canvastext 45%, transparent)';
+    ctx.fillStyle = rivetColor;
     for (let i=1;i<=n;i++){
       ctx.beginPath();
       ctx.arc(b.x - b.w/2 + i*step, b.y + b.h/2, 1.8, 0, Math.PI*2);
@@ -369,7 +302,7 @@
     }
   }
 
-  function roundRect(ctx, x, y, w, h, r, fill, stroke){
+  function roundRect(x, y, w, h, r, fill, stroke){
     if (w < 1 || h < 1) return;
     const rr = Math.min(r, w/2, h/2);
     ctx.beginPath();
@@ -383,7 +316,7 @@
     if (stroke) ctx.stroke();
   }
 
-  // Intro screen
+  // Intro
   showOverlay('Brick Builder', 'Click/tap or press Space/Enter to drop the moving brick. Slice off overhangs; miss and it’s game over.');
 })();
 </script>
