@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Brick Builder – Canvas</title>
+<style>
+  :root{ color-scheme: light dark; }
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; height:100%; }
+  body{
+    font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    background: canvas;
+    color: canvastext;
+    overflow:hidden;
+  }
+
+  /* Canvas fills the window */
+  canvas#game{
+    position:fixed; inset:0; display:block; touch-action:manipulation;
+    background:
+      linear-gradient(to bottom, color-mix(in oklab, canvastext 8%, canvas) 0%,
+                                   color-mix(in oklab, canvastext 3%, canvas) 60%,
+                                   canvas 100%);
+  }
+
+  /* Minimal HUD */
+  .hud{
+    position:fixed; inset:0; pointer-events:none; display:grid;
+    grid-template-rows:auto 1fr auto; padding:1rem;
+  }
+  .hud__top{ display:flex; gap:.75rem; align-items:center; justify-content:space-between; }
+  .pill{
+    pointer-events:auto;
+    background: color-mix(in oklab, canvastext 12%, canvas);
+    border:1px solid color-mix(in oklab, canvastext 18%, canvas);
+    padding:.5rem .75rem; border-radius:999px; font-weight:600;
+  }
+  .btn{
+    pointer-events:auto; cursor:pointer; user-select:none;
+    background: color-mix(in oklab, canvastext 15%, canvas);
+    border:1px solid color-mix(in oklab, canvastext 30%, canvas);
+    padding:.6rem 1rem; border-radius:.7rem; font-weight:700;
+  }
+  .btn:focus-visible{ outline:3px solid Highlight; outline-offset:2px; }
+
+  .center{
+    place-self:center; text-align:center; pointer-events:auto;
+    background: color-mix(in oklab, canvastext 10%, canvas);
+    border:1px solid color-mix(in oklab, canvastext 20%, canvas);
+    padding:1rem 1.25rem; border-radius:1rem; max-width:min(38rem, 90vw);
+    box-shadow: 0 10px 40px color-mix(in oklab, canvastext 15%, transparent);
+  }
+  .title{ font-size:clamp(1.3rem, 2.8vw + .6rem, 2rem); margin:0 0 .25rem; }
+  .muted{ opacity:.7; margin:.25rem 0 0; }
+
+  /* Small helper badge bottom-right */
+  .help{
+    justify-self:end; align-self:end; opacity:.8; font-size:.9rem; pointer-events:none;
+  }
+</style>
+</head>
+<body>
+<canvas id="game" aria-label="Brick Builder game area" role="img"></canvas>
+
+<div class="hud" aria-live="polite">
+  <div class="hud__top">
+    <div class="pill" id="score">Score: 0</div>
+    <button id="restart" class="btn" type="button" aria-keyshortcuts="r">Restart (R)</button>
+  </div>
+
+  <div id="overlay" class="center" hidden>
+    <h1 class="title" id="stateTitle">Brick Builder</h1>
+    <p id="stateMsg" class="muted">Click/tap or press Space/Enter to drop the moving brick. Keep stacking! Overhang is trimmed—miss and it’s game over.</p>
+    <div style="margin-top:.75rem; display:flex; gap:.5rem; justify-content:center; flex-wrap:wrap">
+      <button id="start" class="btn" type="button" aria-keyshortcuts="Enter Space">Start</button>
+      <button id="how" class="btn" type="button">How to play</button>
+    </div>
+  </div>
+
+  <div class="help muted">Controls: Click / Tap / Space / Enter to drop · R to restart · P to pause</div>
+</div>
+
+<script>
+(() => {
+  // ===== Canvas setup with HiDPI scaling =====
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+
+  function fitCanvas() {
+    const dpr = Math.max(devicePixelRatio || 1, 1);
+    canvas.width = Math.floor(innerWidth * dpr);
+    canvas.height = Math.floor(innerHeight * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // scale drawing so units = CSS pixels
+  }
+  addEventListener('resize', fitCanvas, { passive:true });
+  fitCanvas();
+
+  // ===== Game state =====
+  const G = {
+    gravity: 980,        // px/s^2 (feels snappy)
+    moveSpeed: 160,      // horizontal px/s for moving brick
+    fallMax: 1200,       // terminal fall speed
+    baseBrickH: 24,      // brick height in px
+    minOverlap: 8,       // px required to keep stacking
+    speedupEvery: 5,     // speed up after N successful drops
+    speedupFactor: 1.08,
+  };
+
+  const state = {
+    running: false,
+    paused: false,
+    score: 0,
+    stack: [],   // array of bricks (bottom -> top)
+    active: null // current moving/dropping brick
+  };
+
+  // ===== UI elements =====
+  const $score = document.getElementById('score');
+  const $restart = document.getElementById('restart');
+  const $overlay = document.getElementById('overlay');
+  const $start = document.getElementById('start');
+  const $how = document.getElementById('how');
+  const $stateTitle = document.getElementById('stateTitle');
+  const $stateMsg = document.getElementById('stateMsg');
+
+  function showOverlay(title, msg, showStart=true){
+    $stateTitle.textContent = title;
+    $stateMsg.textContent = msg;
+    $start.hidden = !showStart;
+    $overlay.hidden = false;
+  }
+  function hideOverlay(){ $overlay.hidden = true; }
+
+  // ===== Helpers =====
+  const rand = (a,b)=> a + Math.random()*(b-a);
+
+  function colorForLevel(i){
+    // subtle shifting hue with light/dark aware stroke
+    // use oklch-ish progression via HSL approximations
+    const hue = (200 + i*9) % 360;
+    const light = matchMedia('(prefers-color-scheme: dark)').matches ? 62 : 54;
+    return `hsl(${hue} 70% ${light}%)`;
+  }
+
+  // Brick factory
+  function makeBrick(w, x, y, vx=G.moveSpeed){
+    return {
+      x, y, w,
+      h: G.baseBrickH,
+      vx, vy: 0,
+      moving: true,   // moving horizontally on top, waiting for drop
+      dropping: false,
+      color: colorForLevel(state.stack.length)
+    };
+  }
+
+  // Reset game
+  function resetGame() {
+    state.running = false;
+    state.paused = false;
+    state.score = 0;
+    state.stack = [];
+    state.active = null;
+
+    // Ground brick
+    const groundW = Math.min(420, innerWidth * 0.8);
+    const groundX = innerWidth/2;
+    const groundY = Math.floor(innerHeight * 0.80);
+    state.stack.push({ x: groundX, y: groundY, w: groundW, h: G.baseBrickH, color: 'hsl(210 10% 40%)', moving:false, dropping:false });
+
+    // First moving brick same width as ground, starts from left
+    state.active = makeBrick(state.stack[0].w, innerWidth/2, state.stack[0].y - state.stack[0].h, G.moveSpeed);
+    state.active.moving = true;
+    state.active.dropping = false;
+
+    updateScore(0);
+    // small breathing room
+  }
+
+  function updateScore(delta){
+    state.score += delta;
+    $score.textContent = `Score: ${state.score}`;
+    document.title = `Score ${state.score} – Brick Builder`;
+  }
+
+  // ===== Input =====
+  function dropBrick(){
+    if (!state.running || state.paused || !state.active || state.active.dropping) return;
+    state.active.moving = false;
+    state.active.dropping = true;
+    // inherit slight horizontal motion upon drop
+    state.active.vy = 0;
+  }
+
+  function togglePause(){
+    if (!state.running) return;
+    state.paused = !state.paused;
+    if (state.paused){
+      showOverlay('Paused', 'Press P to resume or click Start.', false);
+    } else {
+      hideOverlay();
+      last = performance.now();
+      requestAnimationFrame(tick);
+    }
+  }
+
+  addEventListener('keydown', (e)=>{
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); dropBrick(); }
+    if (e.key.toLowerCase() === 'r') { e.preventDefault(); startGame(); }
+    if (e.key.toLowerCase() === 'p') { e.preventDefault(); togglePause(); }
+  });
+
+  canvas.addEventListener('pointerdown', (e)=> {
+    // ignore right-click
+    if (e.button === 0) dropBrick();
+  }, { passive:true });
+
+  $start.addEventListener('click', startGame);
+  $restart.addEventListener('click', startGame);
+  $how.addEventListener('click', ()=>{
+    showOverlay('How to play',
+      'A new brick slides left/right at the top of your stack. Click/tap or press Space/Enter to drop it. ' +
+      'Only the overlapped part remains; the rest is sliced away. Miss completely and it’s game over.');
+  });
+
+  function startGame(){
+    hideOverlay();
+    resetGame();
+    state.running = true;
+    last = performance.now();
+    requestAnimationFrame(tick);
+  }
+
+  // ===== Physics / loop =====
+  let last = 0;
+
+  function tick(ts){
+    if (!state.running || state.paused) return;
+    const dt = Math.min((ts - last) / 1000, 1/20); // clamp delta
+    last = ts;
+
+    step(dt);
+    draw();
+
+    requestAnimationFrame(tick);
+  }
+
+  function step(dt){
+    const active = state.active;
+    const top = state.stack[state.stack.length - 1];
+    if (!active) return;
+
+    // Horizontal patrol while waiting
+    if (active.moving){
+      active.x += active.vx * dt;
+      const margin = 24;
+      if (active.x - active.w/2 < margin){ active.x = margin + active.w/2; active.vx = Math.abs(active.vx); }
+      if (active.x + active.w/2 > innerWidth - margin){ active.x = innerWidth - margin - active.w/2; active.vx = -Math.abs(active.vx); }
+    }
+
+    // Dropping physics
+    if (active.dropping){
+      active.vy = Math.min(active.vy + G.gravity * dt, G.fallMax);
+      active.y += active.vy * dt;
+
+      // Collide with top of stack (the last placed brick)
+      const target = top;
+      const hitY = target.y - target.h; // top surface y of target
+      if (active.y >= hitY){
+        // Evaluate overlap along X
+        const aL = active.x - active.w/2;
+        const aR = active.x + active.w/2;
+        const tL = target.x - target.w/2;
+        const tR = target.x + target.w/2;
+        const oL = Math.max(aL, tL);
+        const oR = Math.min(aR, tR);
+        const overlap = Math.max(0, oR - oL);
+
+        if (overlap < G.minOverlap){
+          gameOver();
+          return;
+        }
+
+        // Slice to the overlapped section
+        active.w = overlap;
+        active.x = oL + overlap/2;
+        active.y = hitY;
+        active.moving = false;
+        active.dropping = false;
+        state.stack.push(active);
+        updateScore(1);
+
+        // Slightly speed up every few successful drops
+        if (state.score % G.speedupEvery === 0){
+          G.moveSpeed *= G.speedupFactor;
+        }
+
+        // Spawn next moving brick on top of new top
+        const nextW = active.w; // same as last overlap
+        const startFromLeft = (state.stack.length % 2) === 0;
+        const startX = startFromLeft ? (active.w/2 + 24) : (innerWidth - active.w/2 - 24);
+        state.active = makeBrick(nextW, startX, active.y - active.h, startFromLeft ? Math.abs(G.moveSpeed) : -Math.abs(G.moveSpeed));
+
+        // Camera nudge upward if we’re getting tall
+        const minTopY = innerHeight * 0.25;
+        if (state.active.y < minTopY){
+          // move everything down to keep active near top quarter
+          const dy = (minTopY - state.active.y);
+          for (const b of state.stack) b.y += dy;
+          state.active.y += dy;
+        }
+      }
+    }
+  }
+
+  function gameOver(){
+    state.running = false;
+    state.active = null;
+    showOverlay('Game Over', `Final score: ${state.score}. Press Start or R to try again.`);
+  }
+
+  // ===== Drawing =====
+  function draw(){
+    // Sky gradient already set as canvas background via CSS; clear needed for artifacts
+    ctx.clearRect(0,0,innerWidth,innerHeight);
+
+    // subtle ground line
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'color-mix(in oklab, canvastext 25%, transparent)';
+    ctx.beginPath();
+    const groundY = state.stack[0]?.y + state.stack[0]?.h || innerHeight*0.8;
+    ctx.moveTo(0, groundY + 0.5);
+    ctx.lineTo(innerWidth, groundY + 0.5);
+    ctx.stroke();
+
+    // draw stack
+    for (let i=0;i<state.stack.length;i++){
+      drawBrick(state.stack[i], i);
+    }
+    // draw active
+    if (state.active) drawBrick(state.active, state.stack.length);
+  }
+
+  function drawBrick(b, idx){
+    // Fill
+    ctx.fillStyle = b.color;
+    roundRect(ctx, b.x - b.w/2, b.y, b.w, b.h, 6, true, false);
+
+    // Top highlight
+    ctx.globalAlpha = .18;
+    ctx.fillStyle = '#fff';
+    roundRect(ctx, b.x - b.w/2 + 3, b.y + 3, b.w - 6, 6, 4, true, false);
+    ctx.globalAlpha = 1;
+
+    // Edge stroke (light/dark aware)
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'color-mix(in oklab, canvastext 35%, transparent)';
+    roundRect(ctx, b.x - b.w/2, b.y, b.w, b.h, 6, false, true);
+
+    // Tiny rivets for fun
+    const n = Math.max(2, Math.floor(b.w / 60));
+    const step = b.w / (n+1);
+    ctx.fillStyle = 'color-mix(in oklab, canvastext 45%, transparent)';
+    for (let i=1;i<=n;i++){
+      ctx.beginPath();
+      ctx.arc(b.x - b.w/2 + i*step, b.y + b.h/2, 1.8, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function roundRect(ctx, x, y, w, h, r, fill, stroke){
+    if (w < 1 || h < 1) return;
+    const rr = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+rr, y);
+    ctx.arcTo(x+w, y,   x+w, y+h, rr);
+    ctx.arcTo(x+w, y+h, x,   y+h, rr);
+    ctx.arcTo(x,   y+h, x,   y,   rr);
+    ctx.arcTo(x,   y,   x+w, y,   rr);
+    ctx.closePath();
+    if (fill) ctx.fill();
+    if (stroke) ctx.stroke();
+  }
+
+  // Intro screen
+  showOverlay('Brick Builder', 'Click/tap or press Space/Enter to drop the moving brick. Slice off overhangs; miss and it’s game over.');
+})();
+</script>
+</body>
+</html>
