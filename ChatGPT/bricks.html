@@ -75,173 +75,118 @@
 
 <script>
 (() => {
-  // ===== Canvas setup with HiDPI scaling =====
   const canvas = document.getElementById('game');
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { alpha: true });
 
+  // === Viewport-safe sizing ===
+  let dpr = 1, W = 0, H = 0;
   function fitCanvas() {
-    const dpr = Math.max(window.devicePixelRatio || 1, 1);
-    canvas.width = Math.floor(innerWidth * dpr);
-    canvas.height = Math.floor(innerHeight * dpr);
+    dpr = Math.max(window.devicePixelRatio || 1, 1);
+    const r = canvas.getBoundingClientRect(); // actual on-screen size
+    W = Math.max(1, Math.round(r.width));
+    H = Math.max(1, Math.round(r.height));
+    canvas.width  = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // draw in CSS pixels
   }
-  addEventListener('resize', fitCanvas, { passive:true });
+  addEventListener('resize', fitCanvas, { passive: true });
+  if (window.visualViewport) {
+    // iOS address bar show/hide, pinch-zoom, etc.
+    visualViewport.addEventListener('resize', fitCanvas, { passive: true });
+    visualViewport.addEventListener('scroll', fitCanvas, { passive: true });
+  }
   fitCanvas();
 
-  // ===== Game state =====
-  const dark = true; // simple theme flag for safe colors
-  const G = {
-    gravity: 980,
-    moveSpeed: 160,
-    fallMax: 1200,
-    baseBrickH: 24,
-    minOverlap: 8,
-    speedupEvery: 5,
-    speedupFactor: 1.08,
-  };
+  // === Game constants/state (unchanged except we use W/H) ===
+  const G = { gravity:980, moveSpeed:160, fallMax:1200, baseBrickH:24, minOverlap:8, speedupEvery:5, speedupFactor:1.08 };
+  const state = { running:false, paused:false, score:0, stack:[], active:null };
 
-  const state = {
-    running: false,
-    paused: false,
-    score: 0,
-    stack: [],
-    active: null
-  };
-
-  // ===== UI =====
+  // UI
   const $score = document.getElementById('score');
-  const $restart = document.getElementById('restart');
   const $overlay = document.getElementById('overlay');
   const $start = document.getElementById('start');
   const $how = document.getElementById('how');
-  const $stateTitle = document.getElementById('stateTitle');
-  const $stateMsg = document.getElementById('stateMsg');
-
-  function showOverlay(title, msg, showStart=true){
-    $stateTitle.textContent = title;
-    $stateMsg.textContent = msg;
-    $start.hidden = !showStart;
-    $overlay.hidden = false;
-  }
-  function hideOverlay(){ $overlay.hidden = true; }
-  function updateScore(n){ state.score += n; $score.textContent = `Score: ${state.score}`; document.title = `Score ${state.score} – Brick Builder`; }
-
-  // ===== Colors (no color-mix / system colors) =====
-  function colorForLevel(i){
-    const hue = (200 + i*9) % 360;
-    const light = dark ? 62 : 54;
-    return `hsl(${hue}, 70%, ${light}%)`;
-  }
+  const $restart = document.getElementById('restart');
   const edgeColor = 'rgba(255,255,255,.35)';
   const rivetColor = 'rgba(255,255,255,.55)';
   const groundStroke = 'rgba(255,255,255,.25)';
+  const dark = true;
+  const colorForLevel = i => `hsl(${(200 + i*9) % 360}, 70%, ${dark?62:54}%)`;
 
-  // ===== Bricks =====
-  function makeBrick(w, x, y, vx=G.moveSpeed){
-    return { x, y, w, h: G.baseBrickH, vx, vy:0, moving:true, dropping:false, color: colorForLevel(state.stack.length) };
+  function showOverlay(t,m,showStart=true){ 
+    document.getElementById('stateTitle').textContent=t;
+    document.getElementById('stateMsg').textContent=m;
+    $start.hidden=!showStart; $overlay.hidden=false;
   }
+  function hideOverlay(){ $overlay.hidden=true; }
+  function updateScore(n){ state.score+=n; $score.textContent=`Score: ${state.score}`; document.title=`Score ${state.score} – Brick Builder`; }
+
+  function makeBrick(w,x,y,vx=G.moveSpeed){ return {x,y,w,h:G.baseBrickH,vx,vy:0,moving:true,dropping:false,color:colorForLevel(state.stack.length)}; }
 
   function resetGame(){
-    state.running = false;
-    state.paused = false;
-    state.score = 0;
-    state.stack = [];
-    state.active = null;
-
-    const groundW = Math.min(420, innerWidth * 0.8);
-    const groundX = innerWidth/2;
-    const groundY = Math.floor(innerHeight * 0.80); // this is TOP of the ground brick
-    state.stack.push({ x: groundX, y: groundY, w: groundW, h: G.baseBrickH, color: 'hsl(210, 10%, 40%)', moving:false, dropping:false });
-
-    state.active = makeBrick(state.stack[0].w, innerWidth/2, state.stack[0].y - state.stack[0].h, G.moveSpeed);
+    state.running=false; state.paused=false; state.score=0; state.stack.length=0; state.active=null;
+    const groundW = Math.min(420, W * 0.8);
+    const groundX = W/2;
+    const groundY = Math.floor(H * 0.80);
+    state.stack.push({ x:groundX, y:groundY, w:groundW, h:G.baseBrickH, color:'hsl(210,10%,40%)', moving:false, dropping:false });
+    state.active = makeBrick(groundW, W/2, groundY - G.baseBrickH, G.moveSpeed);
     updateScore(0);
   }
 
-  // ===== Input =====
   function dropBrick(){
     if (!state.running || state.paused || !state.active || state.active.dropping) return;
-    state.active.moving = false;
-    state.active.dropping = true;
-    state.active.vy = 0;
-  }
-  function togglePause(){
-    if (!state.running) return;
-    state.paused = !state.paused;
-    if (state.paused) {
-      showOverlay('Paused', 'Press P to resume or click Start.', false);
-    } else {
-      hideOverlay(); last = performance.now(); requestAnimationFrame(tick);
-    }
+    state.active.moving=false; state.active.dropping=true; state.active.vy=0;
   }
 
-  addEventListener('keydown', (e)=>{
-    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); dropBrick(); }
-    if (e.key.toLowerCase() === 'r') { e.preventDefault(); startGame(); }
-    if (e.key.toLowerCase() === 'p') { e.preventDefault(); togglePause(); }
+  function startGame(){ hideOverlay(); resetGame(); state.running=true; last=performance.now(); requestAnimationFrame(tick); }
+  function gameOver(){ state.running=false; state.active=null; showOverlay('Game Over', `Final score: ${state.score}. Press Start or R to try again.`); }
+
+  addEventListener('keydown', e=>{
+    if (e.key===' '||e.key==='Enter'){ e.preventDefault(); dropBrick(); }
+    if (e.key.toLowerCase()==='r'){ e.preventDefault(); startGame(); }
+    if (e.key.toLowerCase()==='p'){ e.preventDefault(); state.paused=!state.paused; state.paused?showOverlay('Paused','Press P to resume or click Start.',false):(hideOverlay(), last=performance.now(), requestAnimationFrame(tick)); }
   });
-  canvas.addEventListener('pointerdown', (e)=> { if (e.button === 0) dropBrick(); }, { passive:true });
+  canvas.addEventListener('pointerdown', e=>{ if (e.button===0) dropBrick(); }, { passive:true });
+  $start?.addEventListener('click', startGame);
+  $restart?.addEventListener('click', startGame);
+  $how?.addEventListener('click', ()=> showOverlay('How to play','Drop the sliding brick with click/tap/Space. Only the overlap remains; miss and it’s game over.'));
 
-  $start.addEventListener('click', startGame);
-  $restart.addEventListener('click', startGame);
-  $how.addEventListener('click', ()=> showOverlay('How to play','A new brick slides left/right at the top. Drop it with click/tap/Space. Only overlap remains; miss and it’s game over.'));
-
-  function startGame(){ hideOverlay(); resetGame(); state.running = true; last = performance.now(); requestAnimationFrame(tick); }
-
-  // ===== Loop =====
-  let last = 0;
+  // === Loop (now using W/H instead of innerWidth/innerHeight) ===
+  let last=0;
   function tick(ts){
     if (!state.running || state.paused) return;
-    const dt = Math.min((ts - last) / 1000, 1/20);
-    last = ts;
-    step(dt);
-    draw();
-    requestAnimationFrame(tick);
+    const dt = Math.min((ts-last)/1000, 1/20); last=ts;
+    step(dt); draw(); requestAnimationFrame(tick);
   }
 
   function step(dt){
-    const a = state.active;
-    const top = state.stack[state.stack.length - 1];
-    if (!a) return;
-
+    const a = state.active; if (!a) return;
     // patrol
     if (a.moving){
-      a.x += a.vx * dt;
-      const margin = 24;
-      if (a.x - a.w/2 < margin){ a.x = margin + a.w/2; a.vx = Math.abs(a.vx); }
-      if (a.x + a.w/2 > innerWidth - margin){ a.x = innerWidth - margin - a.w/2; a.vx = -Math.abs(a.vx); }
+      a.x += a.vx*dt;
+      const m=24;
+      if (a.x - a.w/2 < m){ a.x = m + a.w/2; a.vx = Math.abs(a.vx); }
+      if (a.x + a.w/2 > W - m){ a.x = W - m - a.w/2; a.vx = -Math.abs(a.vx); }
     }
-
     // drop
     if (a.dropping){
-      a.vy = Math.min(a.vy + G.gravity * dt, G.fallMax);
-      a.y += a.vy * dt;
-
-      const target = top;
-      const hitY = target.y - target.h;
+      a.vy = Math.min(a.vy + G.gravity*dt, G.fallMax);
+      a.y += a.vy*dt;
+      const top = state.stack[state.stack.length-1];
+      const hitY = top.y - top.h;
       if (a.y >= hitY){
-        const aL = a.x - a.w/2, aR = a.x + a.w/2;
-        const tL = target.x - target.w/2, tR = target.x + target.w/2;
-        const oL = Math.max(aL, tL), oR = Math.min(aR, tR);
-        const overlap = Math.max(0, oR - oL);
-
-        if (overlap < G.minOverlap){ return gameOver(); }
-
-        a.w = overlap;
-        a.x = oL + overlap/2;
-        a.y = hitY;
-        a.moving = false;
-        a.dropping = false;
-        state.stack.push(a);
-        updateScore(1);
-
-        if (state.score % G.speedupEvery === 0){ G.moveSpeed *= G.speedupFactor; }
-
-        const nextW = a.w;
+        const aL=a.x-a.w/2, aR=a.x+a.w/2, tL=top.x-top.w/2, tR=top.x+top.w/2;
+        const oL=Math.max(aL,tL), oR=Math.min(aR,tR), overlap=Math.max(0,oR-oL);
+        if (overlap < G.minOverlap){ gameOver(); return; }
+        a.w = overlap; a.x = oL + overlap/2; a.y = hitY; a.moving=false; a.dropping=false;
+        state.stack.push(a); updateScore(1);
+        if (state.score % G.speedupEvery === 0) G.moveSpeed *= G.speedupFactor;
         const startFromLeft = (state.stack.length % 2) === 0;
-        const startX = startFromLeft ? (a.w/2 + 24) : (innerWidth - a.w/2 - 24);
-        state.active = makeBrick(nextW, startX, a.y - a.h, startFromLeft ? Math.abs(G.moveSpeed) : -Math.abs(G.moveSpeed));
+        const nextX = startFromLeft ? (a.w/2 + 24) : (W - a.w/2 - 24);
+        state.active = makeBrick(a.w, nextX, a.y - a.h, startFromLeft ? Math.abs(G.moveSpeed) : -Math.abs(G.moveSpeed));
 
-        const minTopY = innerHeight * 0.25;
+        // keep active near top quarter
+        const minTopY = H * 0.25;
         if (state.active.y < minTopY){
           const dy = (minTopY - state.active.y);
           for (const b of state.stack) b.y += dy;
@@ -251,59 +196,37 @@
     }
   }
 
-  function gameOver(){
-    state.running = false;
-    state.active = null;
-    showOverlay('Game Over', `Final score: ${state.score}. Press Start or R to try again.`);
-  }
-
-  // ===== Drawing =====
   function draw(){
-    ctx.clearRect(0,0,innerWidth,innerHeight);
+    ctx.clearRect(0,0,W,H);
 
-    // ground line
+    // ground reference
     ctx.lineWidth = 1;
     ctx.strokeStyle = groundStroke;
     ctx.beginPath();
-    const groundY = state.stack[0]?.y + state.stack[0]?.h || innerHeight*0.8;
+    const groundY = (state.stack[0]?.y ?? Math.floor(H*0.8)) + (state.stack[0]?.h ?? 0);
     ctx.moveTo(0, groundY + 0.5);
-    ctx.lineTo(innerWidth, groundY + 0.5);
+    ctx.lineTo(W, groundY + 0.5);
     ctx.stroke();
 
-    // stack
-    for (let i=0;i<state.stack.length;i++) drawBrick(state.stack[i]);
+    for (const b of state.stack) drawBrick(b);
     if (state.active) drawBrick(state.active);
   }
 
   function drawBrick(b){
     // body
-    ctx.fillStyle = b.color;
-    roundRect(b.x - b.w/2, b.y, b.w, b.h, 6, true, false);
-
+    ctx.fillStyle = b.color; roundRect(b.x - b.w/2, b.y, b.w, b.h, 6, true, false);
     // top highlight
-    ctx.globalAlpha = .18;
-    ctx.fillStyle = '#ffffff';
-    roundRect(b.x - b.w/2 + 3, b.y + 3, b.w - 6, 6, 4, true, false);
-    ctx.globalAlpha = 1;
-
+    ctx.globalAlpha = .18; ctx.fillStyle = '#fff'; roundRect(b.x - b.w/2 + 3, b.y + 3, b.w - 6, 6, 4, true, false); ctx.globalAlpha = 1;
     // edge
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = edgeColor;
-    roundRect(b.x - b.w/2, b.y, b.w, b.h, 6, false, true);
-
+    ctx.lineWidth = 2; ctx.strokeStyle = edgeColor; roundRect(b.x - b.w/2, b.y, b.w, b.h, 6, false, true);
     // rivets
-    const n = Math.max(2, Math.floor(b.w / 60));
-    const step = b.w / (n+1);
+    const n = Math.max(2, Math.floor(b.w / 60)), step = b.w / (n+1);
     ctx.fillStyle = rivetColor;
-    for (let i=1;i<=n;i++){
-      ctx.beginPath();
-      ctx.arc(b.x - b.w/2 + i*step, b.y + b.h/2, 1.8, 0, Math.PI*2);
-      ctx.fill();
-    }
+    for (let i=1;i<=n;i++){ ctx.beginPath(); ctx.arc(b.x - b.w/2 + i*step, b.y + b.h/2, 1.8, 0, Math.PI*2); ctx.fill(); }
   }
 
-  function roundRect(x, y, w, h, r, fill, stroke){
-    if (w < 1 || h < 1) return;
+  function roundRect(x,y,w,h,r,fill,stroke){
+    if (w<1||h<1) return;
     const rr = Math.min(r, w/2, h/2);
     ctx.beginPath();
     ctx.moveTo(x+rr, y);
