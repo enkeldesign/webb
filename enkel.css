@@ -162,8 +162,8 @@ a:visited {
 /* */
 
 button {
-    margin: 0 0 0.25rem 0.25rem;
-    padding: 0 0.25rem 0.175rem;
+    margin: 0 0 0.25rem 0.5rem;
+    padding: 0 0.25rem 0.175rem 0.5rem;
     height: 1.5rem;
     border: 0.75px solid var(--link-clr);
     border-radius: 0.75rem;
