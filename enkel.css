@@ -1,5 +1,5 @@
 @charset "UTF-8";
-/* Latest update: 2025-07-23 */
+/* Latest update: 2025-08-15 */
 
 :root {
     color-scheme: light dark;
@@ -38,13 +38,7 @@
     /* 950 Eigengrau */
 }
 
-@supports (
-    color: color(display-p3 0.067 0.400 0.533 / 1)
-) and (
-    color: color(display-p3 0.122 0.435 0.561 / 1)
-) and (
-    color: color(display-p3 0.753 0.502 0.063 / 1)
-) {
+@supports (color: color(display-p3 0.067 0.400 0.533 / 1)) and (color: color(display-p3 0.122 0.435 0.561 / 1)) and (color: color(display-p3 0.753 0.502 0.063 / 1)) {
     :root {
         --blue: color(display-p3 0.067 0.400 0.533 / 1);
         --brue: color(display-p3 0.122 0.435 0.561 / 1);
@@ -99,6 +93,12 @@
     interpolate-size: allow-keywords;
     scroll-behavior: smooth;
     background-color: var(--body-bkg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        scroll-behavior: auto;
+    }
 }
 
 * {
@@ -159,31 +159,14 @@ a:visited {
     color: var(--link-vis-clr);
 }
 
-.skip-lang:focus-visible {
-    position: absolute;
-    left: 0.6rem;
-    top: 0.6rem;
-    width: auto;
-    height: auto;
-    padding: 0.6rem;
-    border-radius: 0 0 1.6rem 0;
-    background-color: var(--link-hov-foc-clr);
-    color: light-dark(#fff, #000);
-    font-weight: bold;
-    clip: auto;
-    margin: 0;
-    overflow: visible;
-    white-space: normal;
-}
-
 /* */
 
 button {
-    margin: 0 0 0.3rem 1rem;
-    padding: 0 0.6rem 0.175rem;
-    height: 1.6rem;
-    border: 1.6px solid var(--link-clr);
-    border-radius: 0.8rem;
+    margin: 0 0 0.3rem 0.5rem;
+    padding: 0 0.5rem 0.175rem;
+    height: 1.5rem;
+    border: 0.75px solid var(--link-clr);
+    border-radius: 0.75rem;
     background-color: transparent;
     color: var(--link-clr);
     font-family: var(--alt-font);
@@ -271,15 +254,6 @@ main p {
     color: var(--text-clr);
 }
 
-.about p+p::before {
-  content: "";
-  display: block;
-  margin: 1.6rem auto;
-  height: 1.6rem;
-  width: auto;
-  background: url("EDlight.svg") no-repeat center / contain;
-}
-
 main p:last-child {
     margin-bottom: 1.6rem;
 }
@@ -287,6 +261,21 @@ main p:last-child {
 .intro p {
     font-size: 1.1rem;
     line-height: 1.8;
+}
+
+.intro ul {
+    color: var(--heading-span-clr);
+    text-align: left;
+    list-style: none;
+    margin-left: 0;
+    font-family: var(--alt-font);
+    font-size: 1.1rem;
+    border-left: 0.75px solid var(--link-clr);
+    padding-left: 1rem;
+}
+
+.intro address {
+    font-style: normal;
 }
 
 /* */
@@ -361,8 +350,8 @@ footer {
 h2 {
     color: var(--section-b-h2-clr);
     font-family: var(--heading-font);
-    font-size: 2rem;
-    line-height: 1.1;
+    font-size: 1.9rem;
+    line-height: 1.2;
     margin: 1.6rem 0;
 }
 
@@ -372,44 +361,18 @@ h2 {
 
 /* */
 
-details {
-    margin: 1.6rem 0;
-}
-
-details::details-content {
-    block-size: 0;
-    overflow-y: clip;
-    transition: content-visibility 618ms, opacity 618ms, block-size 618ms;
-    transition-behavior: allow-discrete;
-}
-
-details[open]::details-content {
-    opacity: 1;
-    block-size: auto;
-}
-
-details ul {
+ul {
     margin: 1rem 1.6rem 1.6rem;
     font-size: 1.1rem;
     color: var(--details-ul-clr);
 }
 
-details p {
-    margin: 1rem 0;
-}
 
-summary {
-    cursor: pointer;
-    font-size: 2rem;
-    font-weight: bold;
-    color: var(--summary-marker);
-}
-
-summary h3 {
+h3 {
     display: inline;
     vertical-align: middle;
     font-family: var(--heading-font);
-  	font-size: 1.6rem;
+    font-size: 1.6rem;
     font-weight: bold;
     color: var(--summary-h3);
 }
@@ -426,7 +389,6 @@ blockquote {
 
 blockquote>footer {
     margin-top: 0.5rem;
-    font-weight: 600;
     color: var(--text-clr);
 }
 
@@ -507,28 +469,14 @@ footer ul {
     background: none;
 }
 
-.skip-lang {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    padding: 0;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-}
-
 /* */
 
 @media (prefers-color-scheme: dark) {
-  .about p+p::before {
-	background-image: url("EDdark.svg");
-  }
-	
-  circle {
-    fill-opacity: 0.1;
-  }
+
+
+    circle {
+        fill-opacity: 0.1;
+    }
 }
 
 @media (min-width: 45em) {
@@ -555,7 +503,7 @@ footer ul {
     }
 
     header svg {
-        max-height: 10em;
+        max-height: 12em;
         width: auto;
     }
 
@@ -571,8 +519,12 @@ footer ul {
         display: flex;
         flex-direction: column;
         grid-area: intro;
-        padding: 1.6rem 3rem 1.6rem 0;
+        padding: 1.6rem 0;
         text-align: left;
+    }
+
+    .intro ul {
+        margin: 0
     }
 
     .about {
