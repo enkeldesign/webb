@@ -481,6 +481,10 @@ footer ul {
     circle {
         fill-opacity: 0.1;
     }
+    
+    .enkel img {
+        filter: brightness(50%);
+    }
 }
 
 @media (min-width: 45em) {
