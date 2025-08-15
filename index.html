@@ -16,10 +16,9 @@
     <meta name="theme-color" content="#313131" media="(prefers-color-scheme: dark)">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <!-- 
+<!--
     <base href="https://enkel.design/">
-    -->
-    
+-->
     <link rel="canonical" href="https://enkel.design/">
     <link rel="stylesheet" href="/enkel.css">
     <link rel="stylesheet" href="https://use.typekit.net/fxw6rub.css">
@@ -57,7 +56,6 @@
 </head>
 
 <body>
-    <a class="skip-lang" href="/en/" lang="en">This page in English</a>
     <header id="top">
         <svg id="topLogo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2397 1618" role="img" aria-labelledby="logo-title" preserveAspectRatio="xMidYMid meet" shape-rendering="geometricPrecision">
             <title id="logo-title">Enkel Design logotyp</title>
@@ -77,6 +75,12 @@
             <p>
                 Certifierad specialist, utbildare och coach inom <abbr lang="en" title="User eXperience">UX</abbr>&zwj;-&zwj;design och digital tillgänglighet.
             </p>
+            <ul>
+                <li>
+                    <address><a href="mailto:erik@enkel.design">Mejla erik@enkel.design</a><button onclick="copyEmail()">Kopiera &#10697;</button></address>
+                </li>
+                <li><a href="/en/" lang="en">This page in&nbsp;English</a></li>
+            </ul>
         </section>
 
         <figure class="photo">
@@ -87,59 +91,56 @@
             <h2 id="om">Om mig</h2>
             <p>Jag jobbar som utvecklingsstöd, utbildare och coach på <a href="https://bolagsverket.se/jobbahosbolagsverket.5046.html">Bolagsverkets</a> IT-avdelning. Jag hjälper våra utvecklings&shy;team att skapa tillgängliga och användbara digitala tjänster för webben. Jag är även ansvarig för arbetssätt, designsystem och verktyg för <abbr lang="en" title="User eXperience">UX</abbr>&zwj;-&zwj;design och digital tillgänglighet.</p>
             <p>Född <time datetime="1981-04-30">1981</time> i Stockholm, med rötter i Norrland. Jag bor sedan <time datetime="2016-08-01">2016</time> i Söråker på en gård vid en sjö med min fru, två barn, tre katter och noll möss. Jag spelar gärna schack och bordshockey. Jag har även sysslat med webb på fritiden sedan 1900-talet.</p>
-            <!--<figure class="photo">
+
+            <p>Min akademiska bakgrund är <a href="https://www.lucs.lu.se/education/2-arigt-masterprogram/">kognitions&shy;vetenskap (masterexamen)</a> och <dfn><a href="https://www.fil.lu.se/institutionen/amnen-vid-institutionen/teoretisk-filosofi/">teoretisk filosofi (<abbr title="Filosofie Kandidatexamen">fil.kand.</abbr>)</a></dfn>, som jag studerade vid Lunds universitet.
+                Närmare bestämt i Kungshuset i Lundagård med sin gamla, krokiga men vackra vindeltrappa – avbildad här nedanför (<cite>Erik Jansson</cite>, 2025). Min expertis i praktiken är problem&shy;lösning och design i mötet mellan människan och det digitala.
+            </p>
+            <figure class="photo">
                 <picture>
                     <source srcset="/trappadark.jpg" media="(prefers-color-scheme: dark)">
                     <img src="/trappalight.jpg" alt="Teckning av en gammal spiraltrappa som finns i Kungshuset vid Lunds universitet.">
                 </picture>
-            </figure>-->
-            <p>Min akademiska bakgrund är <a href="https://www.lucs.lu.se/education/2-arigt-masterprogram/">kognitions&shy;vetenskap (masterexamen)</a> och <dfn><a href="https://www.fil.lu.se/institutionen/amnen-vid-institutionen/teoretisk-filosofi/">teoretisk filosofi (<abbr title="Filosofie Kandidatexamen">fil.kand.</abbr>)</a></dfn>, som jag studerade vid Lunds universitet.
-                <!--Närmare bestämt i Kungshuset i Lundagård med sin gamla, krokiga men vackra vindeltrappa – avbildad här ovanför (<cite>Erik Jansson</cite>, 2025.)-->Min expertis i praktiken är problem&shy;lösning och design i mötet mellan människan och det digitala.
-            </p>
-            <details>
-                <summary>
-                    <h3>Mina kompetenser</h3>
-                </summary>
-                <ul>
-                    <li>UX-design</li>
-                    <li>Digital tillgänglighet</li>
-                    <li>WCAG 2.2 och EN301549</li>
-                    <li>Tjänstedesign och user research</li>
-                    <li lang="en">Identity design</li>
-                    <li>Användningstest och analys</li>
-                    <li>Expertgransking UX och webbtillgänglighet</li>
-                    <li>Wireframing och lo-fi-prototyping</li>
-                    <li>Komponentbaserade, interaktiva prototyper</li>
-                    <li lang="en">Design system management</li>
-                    <li>HTML, CSS, WAI-ARIA</li>
-                    <li>Agila arbetssätt</li>
-                    <li lang="en">Design sprint/studio</li>
-                    <li>Utbildare och föreläsare</li>
-                    <li>Figma, Adobe XD, Balsamiq</li>
-                </ul>
-            </details>
+            </figure>
+            <h3>Mina kompetenser</h3>
+            <ul>
+                <li>UX-design</li>
+                <li>Digital tillgänglighet</li>
+                <li>WCAG 2.2 och EN301549</li>
+                <li>Tjänstedesign och user research</li>
+                <li lang="en">Identity design</li>
+                <li>Användningstest och analys</li>
+                <li>Expertgransking UX och webbtillgänglighet</li>
+                <li>Wireframing och lo-fi-prototyping</li>
+                <li>Komponentbaserade, interaktiva prototyper</li>
+                <li lang="en">Design system management</li>
+                <li>HTML, CSS, WAI-ARIA</li>
+                <li>Agila arbetssätt</li>
+                <li lang="en">Design sprint/studio</li>
+                <li>Utbildare och föreläsare</li>
+                <li>Figma, Adobe XD, Balsamiq</li>
+            </ul>
+            <h3 id="enkel">Min designfilosofi</h3>
+            <p>Ingen har någonsin sagt att en webbplats varit för enkel att använda. I en tid då allt fler aspekter av samhället digitaliseras är enkel design avgörande för att säkerställa att vi bygger en webb för alla.</p>
+            <p>Enkel design är intuitiv och begriplig. Den är tillgänglig för alla användare och ändamåls&shy;enlig utan att vara komplicerad. Den är också estetiskt tilltalande och behaglig att använda. En bra användar&shy;upplevelse helt enkelt.</p>
+
         </section>
 
         <section class="enkel">
-            <h2 id="enkel">Enkel design i&nbsp;korthet</h2>
-            <p>Ingen har någonsin sagt att en webbplats varit för enkel att använda. I en tid då allt fler aspekter av samhället digitaliseras är enkel design avgörande för att säkerställa att vi bygger en webb för alla.</p>
-            <p>Enkel design är intuitiv och begriplig. Den är tillgänglig för alla användare och ändamåls&shy;enlig utan att vara komplicerad. Den är också estetiskt tilltalande och behaglig att använda. En bra användar&shy;upplevelse helt enkelt.</p>
-            <details>
-                <summary>
-                    <h3>En enkel designfilosofi</h3>
-                </summary>
-                <p>Gör det enkelt för användaren. Inget onödigt eller svårbegripligt innehåll, inga div:ar med klasser när det finns semantiska element och inga onödiga JavaScript. Enkel design är kompatibel med alla tänkbara enheter och uppkopplingar samt tillgänglig för alla användare.</p>
-                <blockquote>
-                    <q cite="https://motherfuckingwebsite.com" lang="en">What I'm saying is that all the problems we have with websites are ones we create ourselves. Websites aren't broken by default, they are functional, high-performing, and accessible. You break them.</q>
-                    <footer>—Barry T. Smith</footer>
-                </blockquote>
-                <p>Enkel Design är inspirerad av David Bryant Copelands <a href="https://brutalist-web.design"><dfn lang="en">Brutalist Web Design</dfn></a>, som han liknar vid arkitekturstilen <dfn><a href="https://sv.m.wikipedia.org/wiki/Brutalism">Brutalism</a></dfn>, som är trogen sitt material, robust och funktionell. Enkelhet som fungerar.</p>
-                <figure class="photo">
-                    <img src="/utkik.jpeg" alt="Brutalistisk arkitektur. Teckning av ett utkikstorn i betong sett från marken.">
-                    <figcaption>Teckning av <a href="https://norraberget.se/norra-berget/friluftsmuseet/utsiktstornet">utkikstornet på Norra berget i Sundsvall</a> – ett exempel på brutalistisk arkitektur.<span>Ritad av: <cite>Erik Jansson</cite>, 2025. Inspirerad av ett foto taget 1956 av <cite>Ragge Ellefsson</cite>.</span></figcaption>
-                </figure>
-                <p>Den här sidan som du läser just nu är byggd utifrån principen <dfn>progressiv förbättring</dfn> och är mitt försök att hitta en balans mellan <span lang="en">brutalist web design</span> och modern UX. En balans som inte kompro&shy;missar med tillgäng&shy;lighet – min viktigaste designprincip.</p>
-            </details>
+            <h2>Enkel design i&nbsp;praktiken</h2>
+            <p>Enkel design är att göra det enkelt för användaren. Inget onödigt eller svårbegripligt innehåll, inga div:ar med klasser när det finns semantiska element och inga onödiga JavaScript. Enkel design är kompatibel med alla tänkbara enheter och uppkopplingar samt tillgänglig för alla användare.</p>
+            <p>
+                Respektera användarens tid, uppmärksamhet och behov. När vi skalar bort allt onödigt och låter funktion och innehåll stå i centrum skapar vi lösningar som känns självklara.
+            </p>
+            <blockquote>
+                <q cite="https://motherfuckingwebsite.com" lang="en">What I'm saying is that all the problems we have with websites are ones we create ourselves. Websites aren't broken by default, they are functional, high-performing, and accessible. You break them.</q>
+                <footer>—Barry T. Smith</footer>
+            </blockquote>
+            <p>Enkel Design är inspirerad av David Bryant Copelands <a href="https://brutalist-web.design"><dfn lang="en">Brutalist Web Design</dfn></a>, som han liknar vid arkitekturstilen <dfn><a href="https://sv.m.wikipedia.org/wiki/Brutalism">Brutalism</a></dfn>, som är trogen sitt material, robust och funktionell. Enkelhet som fungerar.</p>
+            <figure class="photo">
+                <img src="/utkik.jpeg" alt="Brutalistisk arkitektur. Teckning av ett utkikstorn i betong sett från marken.">
+                <figcaption>Teckning av <a href="https://norraberget.se/norra-berget/friluftsmuseet/utsiktstornet">utkikstornet på Norra berget i Sundsvall</a> – ett exempel på brutalistisk arkitektur.<span>Ritad av: <cite>Erik Jansson</cite>, 2025. Inspirerad av ett foto taget 1956 av <cite>Ragge Ellefsson</cite>.</span></figcaption>
+            </figure>
+            <p>Den här sidan som du läser just nu är byggd utifrån principen <dfn>progressiv förbättring</dfn> och är mitt försök att hitta en balans mellan <span lang="en">brutalist web design</span> och modern UX. En balans som inte kompro&shy;missar med tillgäng&shy;lighet – min viktigaste designprincip.</p>
 
         </section>
     </main>
@@ -160,6 +161,9 @@
 
                 <li>
                     <a href="/en/" lang="en">This page in&nbsp;English</a>
+                </li>
+                <li>
+                    <a href="#">Till sidans början</a>
                 </li>
 
             </ul>
