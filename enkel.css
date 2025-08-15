@@ -87,7 +87,7 @@
     --heading-font: "futura-pt", -apple-system, BlinkMacSystemFont, "Segoe UI",
         Roboto, "Helvetica Neue", Arial, ui-sans-serif, sans-serif;
     --serif-font: Georgia, ui-serif, serif;
-
+    text-wrap: pretty;
     -webkit-text-size-adjust: 100%;
     line-height: 1.7;
     interpolate-size: allow-keywords;
@@ -247,6 +247,10 @@ h1 span {
     color: var(--heading-span-clr);
 }
 
+h1,h2, h3 {
+    text-wrap: balance;
+}
+    
 main p {
     margin: 0 0 1rem;
     font-size: 1.1rem;
