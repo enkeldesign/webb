@@ -273,7 +273,7 @@ main p:last-child {
     list-style: none;
     margin-left: 0;
     font-family: var(--alt-font);
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     border-left: 0.75px solid var(--link-clr);
     padding-left: 1rem;
 }
@@ -449,7 +449,7 @@ footer ul {
     list-style: none;
     line-height: 2.6;
     font-family: var(--alt-font);
-    font-size: 1.1rem;
+    font-size: 1.2rem;
 }
 
 .footer-logo {
@@ -646,9 +646,13 @@ footer ul {
         border: none;
         font-size: 0.9rem;
     }
-    .intro a {
+    
+    .intro a,
+    footer a,
+    footer ul {
         font-size: 0.9rem;
     }
+    
     button {
         margin: 0 0 0 0.25rem;
         font-size: 0.8rem;
