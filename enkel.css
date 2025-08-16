@@ -389,8 +389,8 @@ blockquote {
     border-left: solid 1.6px var(--border-clr);
     padding-left: 1rem;
     margin: 1.6rem 0;
-    line-height: 1.8;
-    font-size: 1.1rem;
+    line-height: 1.9;
+    font-size: 1.2rem;
     font-family: var(--serif-font);
     color: var(--quote-clr);
 }
