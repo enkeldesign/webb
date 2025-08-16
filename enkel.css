@@ -639,7 +639,7 @@ footer ul {
     }
 }
 
-@media (max-width: 400px) and (-webkit-min-device-pixel-ratio: 2) {
+@media (max-width: 320px) {
     .intro ul {
         padding: 0;
         margin: 0;
