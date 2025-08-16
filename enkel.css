@@ -334,6 +334,10 @@ footer {
     background-color: var(--section-b-bkg);
 }
 
+.about figure {
+    margin-top: 1rem;
+}
+
 .enkel {
     padding: 1.6rem;
     border-radius: 0 0 2.6rem 0;
