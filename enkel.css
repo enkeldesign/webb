@@ -477,7 +477,6 @@ footer ul {
 
 @media (prefers-color-scheme: dark) {
 
-
     circle {
         fill-opacity: 0.1;
     }
@@ -492,9 +491,20 @@ footer ul {
   and (max-device-width: 736px)
   and (-webkit-min-device-pixel-ratio: 2) {
     .intro ul {
-        padding-left: 0;
+        padding: 0;
+        margin: 0;
         border: none;
-}
+        font-size: 0.9rem;
+    }
+    
+    .intro a {
+        font-size: 0.9rem;
+    }
+
+    button {
+        margin: 0;
+        font-size: 0.9rem;
+    }
 
 @media (min-width: 45em) {
     :root {
