@@ -532,7 +532,7 @@ footer ul {
         display: flex;
         flex-direction: column;
         grid-area: intro;
-        padding: 1.6rem 0;
+        padding: 1.6rem 1.6rem 1.6rem 0;
         text-align: left;
     }
 
