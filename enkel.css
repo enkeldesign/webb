@@ -1,4 +1,5 @@
-/* Latest update: 2025-08-16 */
+/* Latest update: 2025-08-23 */
+/* Separated display-p3 to p3.css */
 
 :root {
     color-scheme: light dark;
@@ -242,10 +243,12 @@ h1 span {
     color: var(--heading-span-clr);
 }
 
-h1,h2, h3 {
+h1,
+h2,
+h3 {
     text-wrap: balance;
 }
-    
+
 main p {
     margin: 0 0 1rem;
     font-size: 1.1rem;
@@ -479,7 +482,7 @@ footer ul {
     circle {
         fill-opacity: 0.1;
     }
-    
+
     .enkel img {
         filter: brightness(75%);
     }
@@ -645,13 +648,13 @@ footer ul {
         border: none;
         font-size: 0.9rem;
     }
-    
+
     .intro a,
     footer a,
     footer ul {
         font-size: 0.9rem;
     }
-    
+
     button {
         margin: 0 0 0 0.25rem;
         font-size: 0.8rem;
