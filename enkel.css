@@ -39,16 +39,6 @@
     /* 950 Eigengrau */
 }
 
-@media (color-gamut: p3) {
-    @supports (color: color(display-p3 0.067 0.400 0.533 / 1)) and (color: color(display-p3 0.122 0.435 0.561 / 1)) and (color: color(display-p3 0.753 0.502 0.063 / 1)) {
-        :root {
-            --blue: color(display-p3 0.067 0.400 0.533 / 1);
-            --brue: color(display-p3 0.122 0.435 0.561 / 1);
-            --fire: color(display-p3 0.753 0.502 0.063 / 1);
-        }
-    }
-}
-
 :root {
     /* Color application */
 
