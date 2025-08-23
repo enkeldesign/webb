@@ -13,7 +13,7 @@
     --alto: #d5dfdf;
     /* 200 */
     --cyan-srgb: #cdd;
-    --cyan: var(cyan-srgb);
+    --cyan: var(--cyan-srgb);
     /* 200 */
     --teal: #8bc;
     /* 400 */
