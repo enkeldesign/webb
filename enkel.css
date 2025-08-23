@@ -169,12 +169,12 @@ button {
     cursor: pointer;
     text-decoration: none;
     display: inline-block;
+    vertical-align: middle;
 }
 
 button::after {
-    margin-left: 0.3rem;
+    margin-left: 0.15rem;
     content: " ◳";
-    font-size: 1.1rem;
 }
 
 button:hover {
