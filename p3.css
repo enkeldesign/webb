@@ -1,0 +1,34 @@
+@supports (color: color(display-p3 1 1 1)) {
+
+  :root {
+    /* neutrals (no change): --mist, --pale, --alto, --mine, --dark, --void, --grau */
+
+    /* Slight cyan-tinted light gray (#cdd => #ccdddd).
+       Add a touch more cyan in P3 for subtle “cleaner” feel */
+    --cyan: color(display-p3 0.800 0.870 0.900);
+
+    /* Teal (#8bc => #88bbcc). Nudge saturation/chroma */
+    --teal: color(display-p3 0.550 0.720 0.800);
+
+    /* Fire (#c08010). A bit more vivid orange in P3 */
+    --fire: color(display-p3 0.880 0.560 0.000);
+
+    /* Blue (#168 => #116688). Signature brand blue, richer in P3 */
+    --blue: color(display-p3 0.100 0.400 0.530);
+
+    /* Brue (#1f6f8f). Slightly brighter & cleaner cyan-blue */
+    --brue: color(display-p3 0.120 0.460 0.620);
+
+    /* Navy (#157 => #115577). Deepened blue-teal edge */
+    --navy: color(display-p3 0.070 0.360 0.500);
+
+    /* Dusk (#345 => #334455). Tiny bump to blue component to keep it cool */
+    --dusk: color(display-p3 0.200 0.270 0.350);
+
+    /* Rust (#531 => #553311). Add warmth/chroma carefully to avoid clipping */
+    --rust: color(display-p3 0.400 0.220 0.070);
+
+    /* Deep (#114455). Cooler, slightly clearer cyan-leaning deep */
+    --deep: color(display-p3 0.070 0.275 0.340);
+  }
+}
