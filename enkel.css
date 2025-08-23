@@ -62,9 +62,8 @@
     --heading-span-clr: light-dark(var(--navy), var(--teal));
     --section-b-h2-clr: light-dark(var(--navy), var(--teal));
     --section-c-h2-clr: light-dark(var(--navy), var(--teal));
-    --details-ul-clr: light-dark(var(--deep), var(--cyan));
-    --summary-h3: light-dark(var(--dusk), var(--alto));
-    --summary-marker: light-dark(var(--blue), var(--teal));
+    --ul-clr: light-dark(var(--deep), var(--cyan));
+    --h3-clr: light-dark(var(--dusk), var(--alto));
     --footer-clr: light-dark(var(--dusk), var(--alto));
 
     --quote-clr: light-dark(var(--rust), var(--teal));
@@ -178,7 +177,6 @@ button:hover {
 }
 
 button:focus-visible,
-summary:focus-visible,
 footer figure:focus-within {
     outline: 2px auto;
     outline-offset: 4px;
@@ -370,7 +368,7 @@ h2 {
 ul {
     margin: 1rem 1.6rem 1.6rem;
     font-size: 1.1rem;
-    color: var(--details-ul-clr);
+    color: var(--ul-clr);
 }
 
 
@@ -380,7 +378,7 @@ h3 {
     font-family: var(--heading-font);
     font-size: 1.6rem;
     font-weight: bold;
-    color: var(--summary-h3);
+    color: var(--h3-clr);
 }
 
 blockquote {
