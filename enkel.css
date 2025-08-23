@@ -171,6 +171,12 @@ button {
     display: inline-block;
 }
 
+button::after {
+    margin-left: 0.3rem;
+    content: " ◳";
+    font-size: 1.1rem;
+}
+
 button:hover {
     background-color: var(--text-clr);
     color: light-dark(#fff, #000);
