@@ -454,6 +454,14 @@ footer ul {
     font-size: 1.2rem;
 }
 
+footer ul a:last-of-type::after {
+    display: inline-block;
+    margin-left: 0.3rem;
+    content: " ⤒";
+    font-size: smaller;
+    text-decoration: none;
+}
+
 .footer-logo {
     position: absolute;
     right: 1.6rem;
