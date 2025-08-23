@@ -454,7 +454,7 @@ footer ul {
     font-size: 1.2rem;
 }
 
-footer ul a:last-of-type::after {
+#up::after {
     display: inline-block;
     margin-left: 0.3rem;
     content: " ⤒";
