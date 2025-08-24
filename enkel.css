@@ -162,9 +162,8 @@ address {
     gap: 0.25rem;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    margin-bottom: 1rem;
-    /* max-width: ?? */
+    max-width: clamp(20.4rem, 50%, 28rem);
+    margin: 0 auto 1rem;
 }
 
 .pill {
@@ -193,7 +192,7 @@ address {
 }
 
 .cta {
-    flex: 3 1 70%;
+    flex: 3 1 0;
     background: var(--heading-span-clr);
     color: var(--body-bkg);
     border-radius: var(--radius) 0 0 var(--radius);
@@ -201,7 +200,7 @@ address {
 
 
 .sec {
-    flex: 1 1 30%;
+    flex: 1 1 0;
     background: none;
     color: var(--heading-span-clr);
     border-radius: 0 var(--radius) var(--radius) 0;
@@ -226,6 +225,10 @@ address {
     margin-bottom: 1rem;
 }
 
+.intro .nav-link.ext {
+    margin-top: 0.25rem;
+}
+
 .ext::after {
     display: inline-block;
     margin-left: 0.25rem;
@@ -233,10 +236,14 @@ address {
     content: " »"
 }
 
+.pill:link,
+.pill:visited {
+    color: inherit;
+}
 
 .pill:hover {
-    background-color: var(--text-clr);
-    color: light-dark(#fff, #000);
+    background-color: var(--heading-span-clr);
+    color: var(--body-bkg);
 }
 
 .pill:focus-visible,
@@ -468,6 +475,8 @@ figcaption span {
     display: block;
     margin-top: 0.6rem;
     font-weight: 600;
+    font-size: .95em;
+    opacity: .9;
 }
 
 /* */
@@ -555,7 +564,7 @@ footer .nav-link {
     }
 
     .enkel img {
-        filter: brightness(75%);
+        filter: brightness(80%);
     }
 }
 
@@ -634,11 +643,6 @@ footer .nav-link {
         margin-top: 0;
     }
 
-    footer address {
-        max-width: 52%;
-        min-width: 20.4rem;
-    }
-
     .nav-link {
         text-align: left;
         margin-bottom: 1rem;
@@ -682,6 +686,14 @@ footer .nav-link {
 
     header {
         padding: 3rem;
+    }
+
+    header svg {
+        max-height: 11.5em;
+    }
+
+    h1 {
+        margin: 1.2rem 0;
     }
 
     footer {
