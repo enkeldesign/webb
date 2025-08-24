@@ -198,6 +198,10 @@ address {
     border-radius: var(--radius) 0 0 var(--radius);
 }
 
+.cta:link,
+.cta:visited {
+    color: var(--body-bkg);
+}
 
 .sec {
     flex: 1 1 0;
@@ -236,11 +240,6 @@ address {
     content: " »"
 }
 
-.pill:link,
-.pill:visited {
-    color: inherit;
-}
-
 .pill:hover {
     background-color: var(--heading-span-clr);
     color: var(--body-bkg);
@@ -248,7 +247,7 @@ address {
 
 .pill:focus-visible,
 footer figure:focus-within {
-    outline: 2px auto;
+    outline: 2px var(--text-clr);
     outline-offset: 4px;
 }
 
