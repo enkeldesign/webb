@@ -225,7 +225,7 @@ circle {
 }
 
 .footer-logo path {
-    fill: var(--logo-e-clr);
+    fill: var(--footer-clr);
 }
 
 /* */
