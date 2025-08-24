@@ -594,8 +594,8 @@ footer .nav-link {
     address {
         justify-content: flex-start;
         margin: 0 0 1rem 0;
-        max-width: clamp(20rem, 52%, 28rem);
-        min-width: 20rem;
+        max-width: 26rem;
+        min-width: 22rem;
   }
 
     main {
