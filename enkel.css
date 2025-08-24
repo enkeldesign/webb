@@ -176,7 +176,7 @@ address {
     border: 2px solid var(--heading-span-clr);
     border-radius: var(--radius);
     font-family: var(--alt-font);
-    font-size: 1.1rem;
+    font-size: 1.25rem;
     text-decoration: none;
     cursor: pointer;
     width: auto;
@@ -217,7 +217,7 @@ address {
 .nav-link {
     text-align: center;
     font-family: var(--alt-font);
-    font-size: 1.2rem;
+    font-size: 1.25rem;
     line-height: 44px;
     /* WCAG 2.2 AAA */
     display: block;
@@ -321,21 +321,9 @@ main p:last-child {
 }
 
 .intro p {
-    font-size: 1.1rem;
-    line-height: 1.8;
-}
-
-.intro ul {
-    color: var(--heading-span-clr);
-    text-align: left;
-    list-style: none;
-    margin-left: 0;
     font-family: var(--alt-font);
-    font-size: 1.2rem;
-    border-left: 0.75px solid var(--link-clr);
-    padding-left: 1rem;
+    font-size: 1.25rem;
 }
-
 
 /* */
 
@@ -715,7 +703,6 @@ footer .nav-link {
     }
 
     .intro p {
-        font-size: 1.2rem;
         color: var(--text-clr);
     }
 
