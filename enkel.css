@@ -159,7 +159,7 @@ address {
     gap: 0.25rem;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1rem;
+    margin: 0 auto 0.6rem;
     width: 100%;
 }
 
@@ -580,9 +580,9 @@ footer .nav-link {
     
     address {
         justify-content: flex-start;
-        margin: 0 0 1rem 0;
-        max-width: 24rem;
-        min-width: 21rem;
+        margin: 0 0 0.6rem 0;
+        max-width: 22rem;
+        min-width: 20rem;
   }
 
     main {
@@ -590,7 +590,7 @@ footer .nav-link {
     }
 
     h1 {
-        margin: 1.6rem 0;
+        margin: 1rem 0;
     }
 
     .intro {
@@ -599,10 +599,6 @@ footer .nav-link {
         grid-area: intro;
         padding: 1.6rem 3rem 1.6rem 0;
         text-align: left;
-    }
-
-    .intro ul {
-        margin: 0
     }
 
     .about {
@@ -634,7 +630,8 @@ footer .nav-link {
 
     .nav-link {
         text-align: left;
-        margin-bottom: 1rem;
+        margin-bottom: 1
+        0.6rem;
     }
 
     footer {
@@ -674,21 +671,21 @@ footer .nav-link {
     }
 
     header {
-        padding: 3rem;
+        padding: 1.6rem;
     }
 
     header svg {
-        max-height: 11.5em;
+        max-height: 12em;
     }
 
     h1 {
-        margin: 1.2rem 0;
+        margin: 1rem 0;
     }
     
     address {
         justify-content: flex-start;
-        margin: 0 0 1rem 0;
-        max-width: 26rem;
+        margin: 0 0 0.6rem 0;
+        max-width: 24rem;
         min-width: 22rem;
     }
     footer {
@@ -734,7 +731,11 @@ footer .nav-link {
     footer ul {
         font-size: 0.9rem;
     }
-        
+    
+    .intro p {
+        white-space: normal;
+    }
+    
     .pill {
         margin: 0;
         font-size: 0.8rem;
