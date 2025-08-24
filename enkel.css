@@ -162,8 +162,8 @@ address {
     gap: 0.25rem;
     align-items: center;
     justify-content: center;
-    max-width: clamp(20.4rem, 50%, 28rem);
     margin: 0 auto 1rem;
+    width: 100%;
 }
 
 .pill {
@@ -227,10 +227,6 @@ address {
     padding: 0;
     border: none;
     margin-bottom: 1rem;
-}
-
-.intro .nav-link.ext {
-    margin-top: 0.25rem;
 }
 
 .ext::after {
@@ -597,8 +593,11 @@ footer .nav-link {
     
     address {
         justify-content: flex-start;
-    }
-    
+        margin: 0 0 1rem 0;
+        max-width: clamp(20rem, 52%, 28rem);
+        min-width: 20rem;
+  }
+
     main {
         display: contents;
     }
