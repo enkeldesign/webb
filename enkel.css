@@ -1,675 +1,202 @@
-/* Latest update: 2025-08-23 */
-/* Separated display-p3 to p3.css */
-
-:root {
-    color-scheme: light dark;
-
-    /* Color palette with brightness 50 (bright) - 950 (dark) */
-
-    --mist: #f4f4f4;
-    /* 50 iOS canvas*/
-    --pale: #e9e7e5;
-    /* 100 */
-    --alto: #d5dfdf;
-    /* 200 */
-    --cyan-srgb: #cdd;
-    --cyan: var(--cyan-srgb);
-    /* 200 */
-    --teal: #8bc;
-    /* 400 */
-    --fire: #c08010;
-    /* 600 */
-    --blue: #168;
-    /* 700 Profile */
-    --brue: #1f6f8f;
-    /* 700 Profile brighter */
-    --navy: #157;
-    /* 800 */
-    --dusk: #345;
-    /* 800 */
-    --rust: #531;
-    /* 900 */
-    --mine: #393939;
-    /* 900 */
-    --deep-srgb: #114455;
-    --deep: var(--deep-srgb);
-    /* 900 */
-    --dark: #313131;
-    /* 950 iOS canvas */
-    --void: #1a2026;
-    /* 950 */
-    --grau: #16161d;
-    /* 950 Eigengrau */
-}
-
-:root {
-    /* Color application */
-
-    --body-bkg: light-dark(var(--mist), var(--dark));
-
-    --header-bkg: transparent;
-    --main-bkg: transparent;
-    --footer-bkg: transparent;
-
-    --logo-e-clr: light-dark(var(--dark, #313131), var(--mist, #f4f4f4));
-    --logo-d-clr: light-dark(var(--blue, #168), var(--brue, #1f6f8f));
-    --section-a-bkg: light-dark(var(--cyan-srgb), var(--mine));
-    --section-b-bkg: light-dark(var(--pale), var(--deep-srgb));
-    --section-c-bkg: light-dark(var(--cyan-srgb), var(--void));
-
-    --text-clr: light-dark(var(--mine), var(--pale));
-    --heading-clr: light-dark(var(--mine), var(--pale));
-    --heading-span-clr: light-dark(var(--navy), var(--teal));
-    --section-b-h2-clr: light-dark(var(--navy), var(--teal));
-    --section-c-h2-clr: light-dark(var(--navy), var(--teal));
-    --ul-clr: light-dark(var(--deep), var(--cyan));
-    --h3-clr: light-dark(var(--dusk), var(--alto));
-    --footer-clr: light-dark(var(--dusk), var(--alto));
-
-    --quote-clr: light-dark(var(--rust), var(--teal));
-    --border-clr: light-dark(var(--rust), var(--teal));
-
-    --link-clr: light-dark(var(--blue), var(--teal));
-    --link-vis-clr: light-dark(#719, #eaf);
-    --link-hov-foc-clr: light-dark(#125, #cdf);
-
-    /* Root settings */
-
-    --body-font: "azo-sans-web", "futura-pt", -apple-system, BlinkMacSystemFont,
-        "Segoe UI", Roboto, "Helvetica Neue", Arial, ui-sans-serif, sans-serif;
-    --alt-font: "futura-pt", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-        "Helvetica Neue", Arial, ui-sans-serif, sans-serif;
-    --heading-font: "futura-pt", -apple-system, BlinkMacSystemFont, "Segoe UI",
-        Roboto, "Helvetica Neue", Arial, ui-sans-serif, sans-serif;
-    --serif-font: Georgia, ui-serif, serif;
-    text-wrap: pretty;
-    -webkit-text-size-adjust: 100%;
-    line-height: 1.7;
-    interpolate-size: allow-keywords;
-    scroll-behavior: smooth;
-    background-color: var(--body-bkg);
-}
-
-@media (prefers-reduced-motion: reduce) {
-    :root {
-        scroll-behavior: auto;
-    }
-}
-
-* {
-    margin: 0;
-    padding: 0;
-    gap: 0;
-    box-sizing: border-box;
-}
-
-::selection {
-    background-color: light-dark(var(--deep), var(--teal));
-    color: light-dark(#fff, #000);
-}
-
-/* */
-
-html {
-    min-height: 100vh;
-    min-height: 100dvh;
-    background-color: var(--body-bkg);
-}
-
-body {
-    min-height: 100vh;
-    min-height: 100dvh;
-    display: grid;
-    position: relative;
-    overflow-x: clip;
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr auto;
-    grid-template-areas:
-        "header"
-        "main"
-        "footer";
-    font-family: var(--body-font);
-}
-
-/* */
-
-abbr {
-    text-decoration: none;
-}
-
-a {
-    color: var(--link-clr);
-    text-decoration: underline;
-}
-
-a:hover,
-a:visited:hover,
-a:focus-visible,
-a:visited:focus-visible {
-    background-color: var(--link-hov-foc-clr);
-    color: light-dark(#fff, #000);
-}
-
-a:visited {
-    color: var(--link-vis-clr);
-}
-
-/* */
-
-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 0 0.25rem 0.4rem;
-    padding: 0 0.5rem;
-    height: 1.5rem;
-    border: 1px solid var(--link-clr);
-    border-radius: 0.75rem;
-    background-color: transparent;
-    color: var(--link-clr);
-    font-family: var(--alt-font);
-    font-size: 1rem;
-    cursor: pointer;
-    text-decoration: none;
-}
-
-button::after {
-    margin-left: 0.15rem;
-    content: " ◳";
-}
-
-button:hover {
-    background-color: var(--text-clr);
-    color: light-dark(#fff, #000);
-}
-
-button:focus-visible,
-footer figure:focus-within {
-    outline: 2px auto;
-    outline-offset: 4px;
-}
-
-footer figure a:hover,
-footer figure a:visited,
-footer figure a:visited:hover,
-footer figure a:focus-visible,
-footer figure a:visited:focus-visible {
-    background-color: transparent;
-    color: transparent;
-}
-
-/* */
-
-svg {
-    display: block;
-    height: 75%;
-    max-height: 250px;
-    width: auto;
-    overflow: visible;
-}
-
-path:first-of-type {
-    fill: var(--logo-e-clr);
-}
-
-path:last-of-type {
-    fill: var(--logo-d-clr);
-}
-
-circle {
-    fill: var(--body-bkg, none);
-    fill-opacity: 0.05;
-    stroke: var(--body-bkg, none);
-    stroke-width: 3;
-    stroke-opacity: 0.10;
-}
-
-.footer-logo path {
-    fill: var(--footer-clr);
-}
-
-/* */
-
-h1 {
-    margin: 1.6rem;
-    font-family: var(--heading-font);
-    font-size: 2.3rem;
-    font-weight: bold;
-    line-height: 1;
-    color: var(--heading-clr);
-}
-
-h1 span {
-    display: block;
-    margin-top: 0.6rem;
-    font-family: var(--heading-font);
-    font-size: 1.9rem;
-    font-weight: bold;
-    color: var(--heading-span-clr);
-}
-
-h1,
-h2,
-h3 {
-    text-wrap: balance;
-}
-
-main p {
-    margin: 0 0 1rem;
-    font-size: 1.1rem;
-    line-height: 2;
-    color: var(--text-clr);
-}
-
-main p:last-child {
-    margin-bottom: 1.6rem;
-}
-
-.intro p {
-    font-size: 1.1rem;
-    line-height: 1.8;
-}
-
-.intro ul {
-    color: var(--heading-span-clr);
-    text-align: left;
-    list-style: none;
-    margin-left: 0;
-    font-family: var(--alt-font);
-    font-size: 1.2rem;
-    border-left: 0.75px solid var(--link-clr);
-    padding-left: 1rem;
-}
-
-.intro address {
-    font-style: normal;
-}
-
-/* */
-
-header {
-    grid-column: 1;
-    padding: 0.6rem 1.6rem;
-    height: 100%;
-    max-width: 100vw;
-    max-width: 100dvw;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    line-height: 0;
-    background-color: var(--header-bkg);
-}
-
-main {
-    grid-column: 1;
-    display: grid;
-    grid-template-rows: repeat(4, auto);
-    background-color: var(--main-bkg);
-}
-
-footer {
-    grid-column: 1;
-    padding: 1.6rem 1.6rem;
-    position: relative;
-    background-color: var(--footer-bkg);
-    color: var(--footer-clr);
-}
-
-/* */
-
-.intro {
-    padding: 0.6rem 1.6rem;
-    text-align: center;
-    background-color: var(--section-a-bkg);
-}
-
-.photo img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    overflow: hidden;
-    overflow-x: clip;
-}
-
-.about {
-    padding: 1.6rem;
-    background-color: var(--section-b-bkg);
-}
-
-.about figure {
-    margin-top: 1rem;
-}
-
-.enkel {
-    padding: 1.6rem;
-    border-radius: 0 0 2.6rem 0;
-    background-color: var(--section-c-bkg);
-}
-
-.enkel .photo img,
-.about .photo img {
-    width: calc(100% + 3.2rem);
-    height: auto;
-    margin: 1.6rem -1.6rem;
-}
-
-.about .photo img {
-    margin-top: 0;
-}
-
-h2 {
-    color: var(--section-b-h2-clr);
-    font-family: var(--heading-font);
-    font-size: 1.9rem;
-    line-height: 1.2;
-    margin: 1.6rem 0;
-}
-
-.enkel h2 {
-    color: var(--section-c-h2-clr);
-}
-
-/* */
-
-ul {
-    margin: 1rem 1.6rem 1.6rem;
-    font-size: 1.1rem;
-    color: var(--ul-clr);
-}
-
-
-h3 {
-    display: inline;
-    vertical-align: middle;
-    font-family: var(--heading-font);
-    font-size: 1.6rem;
-    font-weight: bold;
-    color: var(--h3-clr);
-}
-
-blockquote {
-    border-left: solid 1.6px var(--border-clr);
-    padding-left: 1rem;
-    margin: 1.6rem 0;
-    line-height: 1.9;
-    font-size: 1.2rem;
-    font-family: var(--serif-font);
-    color: var(--quote-clr);
-}
-
-blockquote>footer {
-    margin-top: 0.5rem;
-    color: var(--text-clr);
-}
-
-figcaption {
-    padding-bottom: 1.6rem;
-    margin: -0.6rem 0 2rem;
-    border-bottom: 1.6px solid var(--border-clr);
-    font-family: var(--serif-font);
-    color: var(--quote-clr);
-}
-
-figcaption span {
-    display: block;
-    margin-top: 0.6rem;
-    font-weight: 600;
-}
-
-/* */
-
-.divider {
-    margin: 0 -1.6rem 1.6rem;
-    border-top: 2px solid transparent;
-    border-image: repeating-linear-gradient(to right,
-            #e73 0%, #e73 20%,
-            #c43 20%, #c43 40%,
-            #948 40%, #948 60%,
-            #46c 60%, #46c 80%,
-            #4a4 80%, #4a4 100%) 1;
-    opacity: 75%;
-}
-
-footer small {
-    display: block;
-    max-width: 75%;
-    letter-spacing: 0.03rem;
-    font-family: var(--alt-font);
-    font-size: 1.1rem;
-    line-height: 1.6;
-    color: var(--footer-clr);
-}
-
-footer small:last-of-type {
-    font-weight: 600;
-    color: var(--footer-clr);
-}
-
-footer small a,
-footer small a:visited {
-    color: var(--footer-clr);
-}
-
-footer ul {
-    margin: 0 0 5rem;
-    list-style: none;
-    line-height: 2.6;
-    font-family: var(--alt-font);
-    font-size: 1.2rem;
-}
-
-#up::after {
-    display: inline-block;
-    margin-left: 0.3rem;
-    content: " ⤒";
-    font-size: smaller;
-    text-decoration: none;
-}
-
-.footer-logo {
-    position: absolute;
-    right: 1.6rem;
-    bottom: 2rem;
-}
-
-.footer-logo a {
-    display: block;
-    width: 100%;
-    height: 100%;
-    text-decoration: none;
-    color: transparent;
-}
-
-.footer-logo svg {
-    height: 2.6rem;
-    width: auto;
-    overflow: visible;
-    background: none;
-}
-
-/* */
-
-@media (prefers-color-scheme: dark) {
-
-    circle {
-        fill-opacity: 0.1;
-    }
-
-    .enkel img {
-        filter: brightness(75%);
-    }
-}
-
-@media (min-width: 45em) {
-    :root {
-        --section-a-bkg: var(--body-bkg);
-    }
-
-    body {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: auto 1fr auto auto;
-        grid-template-areas:
-            "header     intro"
-            "about      photo"
-            "about      enkel"
-            "footer     footer";
-        margin: 0 auto;
-        min-height: none;
-    }
-
-    header {
-        grid-area: header;
-        padding: 1.6rem 3rem;
-    }
-
-    header svg {
-        max-height: 12em;
-        width: auto;
-    }
-
-    main {
-        display: contents;
-    }
-
-    h1 {
-        margin: 1.6rem 0;
-    }
-
-    .intro {
-        display: flex;
-        flex-direction: column;
-        grid-area: intro;
-        padding: 1.6rem 1.6rem 1.6rem 0;
-        text-align: left;
-    }
-
-    .intro ul {
-        margin: 0
-    }
-
-    .about {
-        grid-area: about;
-        padding: 1.6rem 3rem;
-        border-radius: 3rem 0 0 0;
-        text-align: left;
-    }
-
-    .photo {
-        grid-area: photo;
-    }
-
-    .enkel {
-        grid-area: enkel;
-        padding: 1.6rem 3rem;
-        text-align: left;
-    }
-
-    .enkel .photo img,
-    .about .photo img {
-        width: calc(100% + 6rem);
-        margin: 0.6rem -3rem;
-    }
-
-    .about .photo img {
-        margin-top: 0;
-    }
-
-
-    footer {
-        grid-area: footer;
-        padding: 2.6rem 3rem;
-        text-align: left;
-    }
-
-    .divider {
-        margin: 0 -3rem 1.6rem;
-    }
-
-    footer small {
-        display: block;
-        width: auto;
-        text-align: left;
-    }
-
-    .footer-logo {
-        right: 3rem;
-        bottom: 2.8rem;
-    }
-
-    .footer-logo svg {
-        height: 2.8rem;
-    }
-
-}
-
-/* */
-
-@media (min-width: 70em) {
-    body {
-        width: min(62vw, 75em);
-        margin: 0 auto;
-        grid-template-rows: auto 1fr auto auto;
-    }
-
-    header {
-        padding: 3rem;
-    }
-
-    footer {
-        padding: 2.6rem 0;
-    }
-
-    h1 {
-        margin: 1.6rem 0;
-        font-size: 2.6rem;
-    }
-
-    h1 span {
-        font-size: 2.1rem;
-    }
-
-    .intro p {
-        font-size: 1.2rem;
-        color: var(--text-clr);
-    }
-
-    .divider {
-        position: relative;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 100vw;
-        width: 100dvw;
-        margin: 0 0 2.6rem;
-    }
-
-    .footer-logo {
-        right: 0;
-    }
-
-    .footer-logo svg {
-        width: 4.2rem;
-        height: auto;
-    }
-}
-
-@media (max-width: 320px) {
-    .intro ul {
-        padding: 0;
-        margin: 0 0 1.6rem 0;
-        border: none;
-        font-size: 0.9rem;
-    }
-
-    .intro a,
-    footer a,
-    footer ul {
-        font-size: 0.9rem;
-    }
-
-    button {
-        margin: 0 0 0 0.25rem;
-        font-size: 0.8rem;
-    }
-}
+<!DOCTYPE HTML>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+    <title>Enkel Design by Erik Jansson</title>
+    <meta name="description" content="Enkel Design by Erik Jansson, UX designer and specialist in digital accessibility.">
+    <meta name="code-origin" content="Human">
+    <meta name="code-description" content="Hand-coded HTML, CSS, and JavaScript with no frameworks or other nonsense.">
+
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#f4f4f4" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#313131" media="(prefers-color-scheme: dark)">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!--<base href="https://enkel.design/">-->
+
+    <link rel="canonical" href="https://enkel.design/en/">
+    <link rel="preconnect" href="https://use.typekit.net" crossorigin>
+    <link rel="stylesheet" href="/enkel.css">
+    <link rel="stylesheet" href="/p3.css" media="(color-gamut: p3)">
+    <link rel="stylesheet" href="https://use.typekit.net/fxw6rub.css">
+    <link rel="alternate" href="https://enkel.design/" hreflang="sv">
+    <link rel="alternate" href="https://enkel.design/en/" hreflang="en">
+
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96">
+    <link rel="mask-icon" href="/favicon.svg" color="#000000">
+    <link rel="apple-touch-icon" href="/favicon.svg">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any">
+
+    <meta property="og:title" content="Enkel Design by Erik Jansson">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="Enkel Design by Erik Jansson, UX designer and specialist in digital accessibility.">
+    <meta property="og:image" content="https://enkel.design/og.svg">
+    <meta property="og:url" content="https://enkel.design/en/">
+    <meta property="og:locale" content="en">
+
+    <meta property="article:published_time" content="2025-08-14">
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Person",
+            "name": "Erik Jansson",
+            "url": "https://enkel.design/en/",
+            "image": "https://enkel.design/erik.JPG",
+            "sameAs": ["https://se.linkedin.com/in/erikjanssondesign"],
+            "jobTitle": "UX Designer and Accessibility Specialist",
+            "worksFor": {
+                "@type": "Organization",
+                "name": "Enkel Design"
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <header id="top">
+        <svg id="topLogo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2397 1618" role="img" aria-labelledby="logo-title" preserveAspectRatio="xMidYMid meet" shape-rendering="geometricPrecision">
+            <title id="logo-title">Enkel Design logotype</title>
+            <path d="M809,0C362.202,0 0,362.202 0,809C0,1255.8 362.202,1618 809,1618C1072.1,1618 1305.78,1492.32 1453.53,1297.81C1341.73,1279.11 1237.79,1237.38 1146.53,1177.81C1057.58,1259.26 939.11,1309 809,1309C532.858,1309 309,1085.14 309,809C309,535.311 528.933,313.117 801.688,309.188C828.239,199.391 877.23,98.3904 943.469,11.1875C899.728,3.86857 854.82,0 809,0ZM779.031,501.469C622.442,516.544 500,648.458 500,809C500,979.656 638.344,1118 809,1118C880.244,1118 945.796,1093.82 998.062,1053.31C862.604,908.944 779.412,714.969 779.031,501.469Z" />
+            <path d="M1588,0C1324.9,0 1091.22,125.677 943.469,320.188C1055.27,338.894 1159.21,380.623 1250.47,440.188C1339.42,358.741 1457.89,309 1588,309C1864.14,309 2088,532.858 2088,809C2088,1082.69 1868.07,1304.88 1595.31,1308.81C1568.76,1418.61 1519.77,1519.61 1453.53,1606.81C1497.27,1614.13 1542.18,1618 1588,1618C2034.8,1618 2397,1255.8 2397,809C2397,362.202 2034.8,0 1588,0ZM1588,500C1516.76,500 1451.2,524.18 1398.94,564.688C1534.4,709.056 1617.59,903.031 1617.97,1116.53C1774.56,1101.46 1897,969.542 1897,809C1897,638.344 1758.66,500 1588,500Z" />
+            <circle cx="809" cy="1068" r="809" fill="none" />
+            <circle cx="1588" cy="550" r="809" fill="none" />
+        </svg>
+    </header>
+
+    <main>
+        <section class="intro">
+            <h1>Enkel Design <span>by Erik&nbsp;Jansson</span></h1>
+            <p>Certified specialist, educator, and coach in <abbr title="User eXperience">UX</abbr>&zwj;-&zwj;design and digital accessibility.</p>
+
+            <address>
+                <a class="pill cta" href="mailto:erik@enkel.design">Email erik@enkel.design</a>
+                <button class="pill sec" aria-label="Copy email address" type="button" onclick="copyEmail()">Copy</button>
+            </address>
+
+            <a class="nav-link ext" href="/" lang="sv">Den här sidan på&nbsp;svenska</a>
+        </section>
+
+        <figure class="photo">
+            <img src="/erik.JPG" loading="eager" fetchpriority="high" decoding="async" alt="Erik Jansson with closely trimmed hair and beard, wearing a light blue short-sleeved polo shirt, arms crossed and a big smile. Colorful outdoor background.">
+        </figure>
+
+        <section class="about">
+            <h2 id="about">About me</h2>
+            <p>I work as a development coach, educator, and mentor at <a href="https://bolagsverket.se/en/omoss.2047.html">Bolagsverket's</a> IT department. I help our development teams create accessible and usable digital services for the web. I am also responsible for processes, the design system, and tools for <abbr title="User eXperience">UX</abbr>&zwj;-&zwj;design and digital accessibility.</p>
+            <p>Born in <time datetime="1981-04-30">1981</time> in Stockholm, with roots in Northern Sweden. Since <time datetime="2016-08-01">2016</time>, I have been living in Söråker on a lakeside property with my wife, two children, three cats, and zero mice. I enjoy playing chess and table hockey. I have also worked with the web as a hobby since the 1990s.</p>
+
+            <figure class="photo">
+                <picture>
+                    <source srcset="/trappadark.jpg" media="(prefers-color-scheme: dark)">
+                    <img src="/trappalight.jpg" alt="Drawing of the crooked winding stairs in The King's House in Lund.">
+                </picture>
+                <figcaption>Drawing of the 450-year-old, crooked but beautiful spiral staircase in
+                    <a href="https://en.m.wikipedia.org/wiki/Kungshuset">Kungshuset in Lundagård</a>, where I spent many years studying philosophy and cognitive science.
+                    <span>Drawn by: <cite>Erik Jansson</cite>, 2025.</span>
+                </figcaption>
+            </figure>
+
+            <h3>Education</h3>
+            <p>My academic background includes the technology and engineering preparatory program; a <a href="https://www.lucs.lu.se/about/">Master's degree in Cognitive Science</a> and a <a href="https://www.fil.lu.se/en/research/theoretical-philosophy/">Bachelor's degree in Theoretical Philosophy</a> – both degrees from Lund University.</p>
+            <p>In practice, my expertise is problem-solving and design at the intersection of people and the digital.</p>
+
+            <h3>My competencies</h3>
+            <ul>
+                <li>UX design</li>
+                <li>Digital accessibility</li>
+                <li><abbr title="Web Content Accessibility Guidelines">WCAG</abbr> 2.2 and <abbr title="European Standard 301 549: Accessibility requirements for ICT products and services">EN301549</abbr></li>
+                <li>Service design and user research</li>
+                <li>Identity design</li>
+                <li>Usability testing and analysis</li>
+                <li>Expert review in UX and web accessibility</li>
+                <li>Wireframing and lo-fi prototyping</li>
+                <li>Component-based, interactive prototypes</li>
+                <li>Design system management</li>
+                <li><abbr title="HyperText Markup Language">HTML</abbr>, <abbr title="Cascading Style Sheets">CSS</abbr>, <abbr title="Web Accessibility Initiative – Accessible Rich Internet Applications">WAI-ARIA</abbr></li>
+                <li>Agile methodologies</li>
+                <li>Design sprint/studio</li>
+                <li>Educator and lecturer</li>
+                <li>Figma, Adobe XD, Balsamiq</li>
+            </ul>
+
+            <h3 id="enkel">My design philosophy</h3>
+            <p>No one has ever said that a website was too easy to use. In an era where more and more aspects of society are becoming digitized, simple design is essential to ensure we build a web for everyone.</p>
+            <p>Simple design is intuitive and easy to understand. It is accessible to all users and purposeful without being complicated. It is also aesthetically pleasing and enjoyable to use. Simply a great user experience.</p>
+        </section>
+
+        <section class="enkel">
+            <h2>Enkel design in&nbsp;practice</h2>
+            <p><dfn lang="sv">Enkel</dfn> is a Swedish word with several meanings – among them “simple” and “uncomplicated”.</p>
+            <p>Make it easy for the user. No unnecessary or difficult-to-grasp content, no extra div elements with classes when semantic elements exist, and no needless JavaScript. Enkel design is compatible with all conceivable devices and connections and accessible to all users.</p>
+            <p>Respect the user's time, attention, and needs. When we remove all unnecessary parts and let function and content take center stage, we create solutions that feel natural.</p>
+            <p>It's worth noting that any and all barriers to accessibility on a website were put there by designers and developers.</p>
+
+            <blockquote>
+                <q cite="https://motherfuckingwebsite.com">What I'm saying is that all the problems we have with websites are ones we create ourselves. Websites aren't broken by default, they are functional, high-performing, and accessible. You break them.</q>
+                <footer>—Barry T. Smith</footer>
+            </blockquote>
+
+            <p>Enkel Design is inspired by David Bryant Copeland's <a href="https://brutalist-web.design"><dfn>Brutalist Web Design</dfn></a>, which he likens to the architectural style <a href="https://en.m.wikipedia.org/wiki/Brutalist_architecture"><dfn>Brutalism</dfn></a>, being true to its materials, robust, and functional. Simplicity that works.</p>
+
+            <figure class="photo">
+                <img src="/utkik.jpeg" alt="Brutalist architecture. Drawing of a concrete observation tower seen from the ground.">
+                <figcaption>Drawing of the <a href="https://norraberget.se/norra-berget/friluftsmuseet/utsiktstornet">observation tower at Norra berget in Sundsvall</a> – an example of brutalist architecture.
+                    <span>Drawn by: <cite>Erik Jansson</cite>, 2025. Inspired by a photo taken in 1956 by <cite>Ragge Ellefsson</cite>.</span>
+                </figcaption>
+            </figure>
+
+            <p>This page is built according to the principle of <dfn>progressive enhancement</dfn> and is my attempt to find a balance between brutalist web design and modern <abbr title="User eXperience">UX</abbr> – a balance that never compromises accessibility, my most important design principle.</p>
+        </section>
+    </main>
+
+    <footer>
+        <nav aria-label="Contact, language, and other links">
+            <ul>
+                <li>
+                    <address>
+                        <a class="pill cta" href="mailto:erik@enkel.design">Email erik@enkel.design</a>
+                        <button class="pill sec" aria-label="Copy email address" type="button" onclick="copyEmail()">Copy</button>
+                    </address>
+                </li>
+
+                <li>
+                    <a class="nav-link ext" href="/" lang="sv">Den här sidan på&nbsp;svenska</a>
+                </li>
+
+                <li>
+                    <a class="nav-link ext" href="https://se.linkedin.com/in/erikjanssondesign" aria-label="My profile on LinkedIn">My profile on LinkedIn</a>
+                </li>
+
+                <li>
+                    <a class="nav-link ext" href="/logo.html">The logotype’s design</a>
+                </li>
+
+                <li>
+                    <a id="up" class="nav-link" href="#top">Back to top</a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="divider" aria-hidden="true"></div>
+
+        <small>enkel.design on <a href="https://pages.github.com">GitHub&nbsp;Pages</a></small>
+        <small>&copy;<time datetime="2025-08-14">2025</time> Erik Jansson.</small>
+
+        <figure class="footer-logo">
+            <a href="#top">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2427 1618" role="img" aria-labelledby="logo-footer-title" preserveAspectRatio="xMidYMid meet" shape-rendering="geometricPrecision">
+                    <title id="logo-footer-title">Enkel Design logotype – back to top</title>
+                    <path d="M809,0C362.202,0 0,362.202 0,809C0,1255.8 362.202,1618 809,1618C1072.1,1618 1305.78,1492.32 1453.53,1297.81C1341.73,1279.11 1237.79,1237.38 1146.53,1177.81C1057.58,1259.26 939.11,1309 809,1309C532.858,1309 309,1085.14 309,809C309,535.311 528.933,313.117 801.688,309.188C828.239,199.391 877.23,98.3904 943.469,11.1875C899.728,3.86857 854.82,0 809,0ZM779.031,501.469C622.442,516.544 500,648.458 500,809C500,979.656 638.344,1118 809,1118C880.244,1118 945.796,1093.82 998.062,1053.31C862.604,908.944 779.412,714.969 779.031,501.469Z" />
+                    <path d="M1588,0C1324.9,0 1091.22,125.677 943.469,320.188C1055.27,338.894 1159.21,380.623 1250.47,440.188C1339.42,358.741 1457.89,309 1588,309C1864.14,309 2088,532.858 2088,809C2088,1082.69 1868.07,1304.88 1595.31,1308.81C1568.76,1418.61 1519.77,1519.61 1453.53,1606.81C1497.27,1614.13 1542.18,1618 1588,1618C2034.8,1618 2397,1255.8 2397,809C2397,362.202 2034.8,0 1588,0ZM1588,500C1516.76,500 1451.2,524.18 1398.94,564.688C1534.4,709.056 1617.59,903.031 1617.97,1116.53C1774.56,1101.46 1897,969.542 1897,809C1897,638.344 1758.66,500 1588,500Z" />
+                </svg>
+            </a>
+        </figure>
+    </footer>
+
+    <script src="/script.js"></script> <!-- Accessibility helpers -->
+</body>
+
+</html>
