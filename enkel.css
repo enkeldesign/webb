@@ -736,21 +736,26 @@ footer .nav-link {
 }
 
 @media (max-width: 320px) {
-    .intro ul {
-        padding: 0;
-        margin: 0 0 1.6rem 0;
-        border: none;
-        font-size: 0.9rem;
-    }
 
     .intro a,
     footer a,
     footer ul {
         font-size: 0.9rem;
     }
-
+        
     .pill {
-        margin: 0 0 0 0.25rem;
+        margin: 0;
         font-size: 0.8rem;
     }
+    
+    .divider {
+    margin: 0;
+    }
+
+    .enkel .photo img,
+    .about .photo img {
+        width: 100%;
+        margin: 0;
+    }
 }
+
