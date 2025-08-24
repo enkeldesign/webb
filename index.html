@@ -16,9 +16,7 @@
     <meta name="theme-color" content="#313131" media="(prefers-color-scheme: dark)">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <!--
-    <base href="https://enkel.design/">
-		-->
+    <!--<base href="https://enkel.design/">-->
 
     <link rel="canonical" href="https://enkel.design/">
     <link rel="preconnect" href="https://use.typekit.net" crossorigin>
@@ -80,12 +78,12 @@
             <p>
                 Certifierad specialist, utbildare och coach inom <abbr lang="en" title="User eXperience">UX</abbr>&zwj;-&zwj;design och digital tillgänglighet.
             </p>
-            <ul>
-                <li>
-                    <address><a href="mailto:erik@enkel.design">Mejla erik@enkel.design</a><button aria-label="Kopiera mejladress" type="button" onclick="copyEmail()">Kopiera</button></address>
-                </li>
-                <li><a href="/en/" lang="en">This page in&nbsp;English</a></li>
-            </ul>
+            <address><a class="pill cta" href="mailto:erik@enkel.design">Mejla erik@enkel.design</a>
+                <button class="pill sec" aria-label="Kopiera mejladress" type="button" onclick="copyEmail()">Kopiera</button>
+            </address>
+
+            <a class="nav-link ext" href="/en/" lang="en">This page in&nbsp;English</a>
+
         </section>
 
         <figure class="photo">
@@ -155,22 +153,23 @@
         <nav aria-label="Kontakt, språk och andra länkar">
             <ul>
                 <li>
-                    <a href="mailto:erik@enkel.design">Mejla erik@enkel.design</a><button aria-label="Kopiera mejladress" type="button" onclick="copyEmail()">Kopiera</button>
+                    <address><a class="pill cta" href="mailto:erik@enkel.design">Mejla erik@enkel.design</a><button class="pill sec" aria-label="Kopiera mejladress" type="button" onclick="copyEmail()">Kopiera</button></address>
                 </li>
 
                 <li>
-                    <a href="https://se.linkedin.com/in/erikjanssondesign" aria-label="Min profil på Linkt In">Min profil på LinkedIn</a> <!-- aria för korrekt uttal -->
+                    <a class="nav-link ext" href="/en/" lang="en">This page in&nbsp;English</a>
                 </li>
 
                 <li>
-                    <a href="/logo.html">Logotypens design</a>
+                    <a class="nav-link ext" href="https://se.linkedin.com/in/erikjanssondesign" aria-label="Min profil på Linkt In">Min profil på LinkedIn</a> <!-- aria för korrekt uttal -->
                 </li>
 
                 <li>
-                    <a href="/en/" lang="en">This page in&nbsp;English</a>
+                    <a class="nav-link ext" href="/logo.html">Logotypens design</a>
                 </li>
+
                 <li>
-                    <a id="up" href="#top">Till sidans början</a>
+                    <a id="up" class="nav-link" href="#top">Till sidans början</a>
                 </li>
 
             </ul>
