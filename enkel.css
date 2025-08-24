@@ -321,6 +321,7 @@ main p:last-child {
 }
 
 .intro p {
+    white-space: pre-wrap;
     font-family: var(--alt-font);
     font-size: 1.25rem;
     line-height: 1.5;
