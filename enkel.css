@@ -594,7 +594,11 @@ footer .nav-link {
         max-height: 12em;
         width: auto;
     }
-
+    
+    address {
+        justify-content: flex-start;
+    }
+    
     main {
         display: contents;
     }
