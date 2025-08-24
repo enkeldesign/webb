@@ -765,3 +765,22 @@ footer .nav-link {
     }
 }
 
+
+
+
+/* TEST AREA */
+
+@media (min-width: 45em) {
+  header { padding: 0.6rem 3rem; }
+  header svg { max-height: clamp(5.8rem, 10vh, 7.2rem); }
+
+  .intro { padding: 0.5rem 1.4rem 0.6rem 0; }
+
+  h1 { margin: 0.2rem 0 0.2rem; line-height: 1.02; }
+  h1 span { margin-top: 0.2rem; }
+
+  .intro p { margin: 0.2rem 0 0.5rem; line-height: 1.5; }
+
+  address { margin: 0.3rem 0 0.45rem; }
+  .intro .nav-link.ext { margin-top: 0.1rem; }
+}
