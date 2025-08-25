@@ -142,7 +142,8 @@ a {
 a:hover,
 a:visited:hover,
 a:focus-visible,
-a:visited:focus-visible {
+a:visited:focus-visible,
+.pill:hover {
     background-color: var(--link-hov-foc-clr);
     color: light-dark(#fff, #000);
 }
@@ -233,9 +234,6 @@ address {
     content: " »"
 }
 
-.pill:hover {
-    background-color: var(--section-b-bkg);
-    color: var(--text-clr);
 }
 
 .pill:focus-visible,
