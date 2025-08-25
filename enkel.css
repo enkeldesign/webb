@@ -234,14 +234,14 @@ address {
 }
 
 .pill:hover {
-    background-color: var(--heading-span-clr);
-    color: var(--body-bkg);
+    background-color: var(--section-b-bkg);
+    color: var(--text-clr);
 }
 
 .pill:focus-visible,
 footer figure:focus-within {
-    outline: 2px var(--text-clr);
-    outline-offset: 4px;
+    outline: 3px solid var(--text-clr);
+    outline-offset: 3px;
 }
 
 footer figure a:hover,
