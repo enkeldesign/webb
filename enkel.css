@@ -607,6 +607,10 @@ footer .nav-link {
         display: none;
     }
     
+    .about .nav-link {
+        display: block;
+    }
+    
     .about {
         grid-area: about;
         padding: 1.6rem 3rem;
