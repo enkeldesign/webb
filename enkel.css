@@ -238,8 +238,6 @@ address {
     content: " »"
 }
 
-}
-
 .pill:focus-visible,
 footer figure:focus-within {
     outline: 3px solid var(--text-clr);
