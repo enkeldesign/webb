@@ -326,8 +326,8 @@ address {
     margin-left: var(--gap-1);
     text-decoration: none;
     content: " ⚑";
-    font-size: var(--font-xl);
-    vertical-align: -3px;
+    font-family: serif;
+    vertical-align: -2px;
 }
 
 .pill:focus-visible,
