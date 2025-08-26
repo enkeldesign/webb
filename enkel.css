@@ -226,6 +226,7 @@ figcaption span {
 a {
     color: var(--link-clr);
     text-decoration: underline;
+    text-underline-offset: 0.2em;
 }
 
 a:hover,
