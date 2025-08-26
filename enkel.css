@@ -593,13 +593,14 @@ footer .nav-link {
 
     h1 {
         margin: 1rem 0;
+        line-height: 0.8;
     }
 
     .intro {
         display: flex;
         flex-direction: column;
         grid-area: intro;
-        padding: 1.6rem 3rem 1.6rem 0;
+        padding: 1.6rem 3rem 1rem 0;
         text-align: left;
     }
     
