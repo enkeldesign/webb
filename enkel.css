@@ -325,10 +325,8 @@ address {
     display: inline-block;
     margin-left: var(--gap-1);
     text-decoration: none;
-    content: " ⚑";
     font-family: serif;
-    font-size: var(--font-xl);
-    vertical-align: -3px;
+    content: " ⚑";
 }
 
 .pill:focus-visible,
