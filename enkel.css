@@ -568,7 +568,8 @@ footer .nav-link {
 
     header {
         grid-area: header;
-        padding: 1rem 3rem 2rem;
+        justify-content: flex-start;
+        padding: 1.6rem 3rem
     }
 
     header svg {
