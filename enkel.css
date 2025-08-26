@@ -568,21 +568,20 @@ footer .nav-link {
 
     header {
         grid-area: header;
-        justify-content: flex-start;
-        padding: 3rem
+        padding: 1.6rem 3rem 2rem;
     }
 
     header svg {
         max-height: 12em;
         width: auto;
     }
-    
+
     address {
         justify-content: flex-start;
         margin: 0 0 0.6rem 0;
         max-width: 22rem;
         min-width: 20rem;
-  }
+    }
 
     main {
         display: contents;
@@ -629,8 +628,7 @@ footer .nav-link {
 
     .nav-link {
         text-align: left;
-        margin-bottom: 1
-        0.6rem;
+        margin-bottom: 1 0.6rem;
     }
 
     footer {
@@ -680,13 +678,14 @@ footer .nav-link {
     h1 {
         margin: 1rem 0;
     }
-    
+
     address {
         justify-content: flex-start;
         margin: 0 0 0.6rem 0;
         max-width: 24rem;
         min-width: 22rem;
     }
+
     footer {
         padding: 2.6rem 0;
     }
@@ -730,18 +729,18 @@ footer .nav-link {
     footer ul {
         font-size: 0.9rem;
     }
-    
+
     .intro p {
         white-space: normal;
     }
-    
+
     .pill {
         margin: 0;
         font-size: 0.8rem;
     }
-    
+
     .divider {
-    margin: 0;
+        margin: 0;
     }
 
     .enkel .photo img,
