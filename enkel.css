@@ -227,6 +227,10 @@ address {
     margin-bottom: 1rem;
 }
 
+.about .nav-link {
+    display: none;
+}
+
 .ext::after {
     display: inline-block;
     margin-left: 0.25rem;
@@ -598,7 +602,11 @@ footer .nav-link {
         padding: 1.6rem 3rem 1.6rem 0;
         text-align: left;
     }
-
+    
+    .intro .nav-link {
+        display: none;
+    }
+    
     .about {
         grid-area: about;
         padding: 1.6rem 3rem;
