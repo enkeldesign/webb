@@ -318,7 +318,7 @@ address {
     display: inline-block;
     margin-left: var(--gap-1);
     text-decoration: none;
-    content: " »"
+    content: " »";
 }
 
 .lang::after {
@@ -326,9 +326,10 @@ address {
     margin-left: var(--gap-1);
     text-decoration: none;
     content: " ⚑";
-    font-size: larger;
-    vertical-align: -2px;
+    font-size: var(--font-xl);
+    vertical-align: -3px;
 }
+
 .pill:focus-visible,
 footer figure:focus-within {
     outline: 3px solid var(--text-clr);
