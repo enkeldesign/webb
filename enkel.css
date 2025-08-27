@@ -218,7 +218,6 @@ figcaption span {
     margin-top: var(--gap-2);
     font-weight: 600;
     font-size: .95em;
-    opacity: .9;
 }
 
 /* Links & interactive */
