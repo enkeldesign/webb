@@ -485,8 +485,8 @@ footer ul {
     font-size: 1.2rem;
 }
 
-footer li:first-child {
-    margin-bottom: var(--gap-2);
+footer ul li:first-child {
+    margin-bottom: var(--gap-3);
 }
 
 footer .nav-link {
