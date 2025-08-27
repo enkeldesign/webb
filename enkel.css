@@ -485,6 +485,10 @@ footer ul {
     font-size: 1.2rem;
 }
 
+footer li:first-child {
+    margin-bottom: var(--gap-2);
+}
+
 footer .nav-link {
     display: inline-block;
     text-align: left;
