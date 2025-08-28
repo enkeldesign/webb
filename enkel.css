@@ -6,11 +6,11 @@
     --alto: #d5dfdf;
     --cyan-srgb: #cdd;
     --cyan: var(--cyan-srgb);
-    --cyat: #ccdddd88;
+    --cyat: #ccdddd77;
     --teal: #8bc;
     --fire: #c08010;
     --blue: #168;
-    --blut: #11668888;
+    --blut: #11668877;
     --brue: #1f6f8f;
     --navy: #157;
     --dusk: #345;
@@ -195,7 +195,7 @@ ul {
 }
 
 blockquote {
-    border-left: solid 1.6px var(--border-clr);
+    border-left: solid 1.6px var(--quote-clr);
     padding-inline-start: var(--gap-4);
     margin: var(--gap-5) 0;
     line-height: 1.9;
