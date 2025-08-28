@@ -40,7 +40,8 @@
     --footer-clr: light-dark(var(--dusk), var(--alto));
     --quote-clr: light-dark(var(--rust), var(--teal));
     --border-clr: light-dark(var(--rust), var(--teal));
-    --link-clr: light-dark(var(--blue), var(--teal));
+    --pill-clr: light-dark(var(--blue), var(--teal));
+    --: light-dark(var(--blue), var(--cyan));
     --link-vis-clr: light-dark(#719, #eaf);
     --link-hov-foc-clr: light-dark(#125, #cdf);
 
