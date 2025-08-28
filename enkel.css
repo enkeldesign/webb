@@ -452,7 +452,7 @@ footer {
 /* Lists, dividers, footer text */
 
 .divider {
-    margin: 0 calc(var(--gap-5) * -1) var(--gap-5);
+    margin: var(--gap-5) calc(var(--gap-5) * -1) var(--gap-5);
     border-top: 2px solid transparent;
     border-image: repeating-linear-gradient(to right,
             #e73 0%, #e73 20%,
@@ -484,12 +484,12 @@ footer small a:visited {
 }
 
 footer ul {
-    margin: var(--gap-4) 0 var(--gap-6);
+    margin: var(--gap-4) 0;
     list-style: none;
     line-height: 2.6;
     font-family: var(--alt-font);
     font-size: 1.2rem;
-    border-left: 1.6px solid var(--border-clr);
+    border-left: 2px solid var(--link-clr);
     padding-left: var(--gap-5);
 }
 
