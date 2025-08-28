@@ -488,7 +488,7 @@ footer ul {
     line-height: 2.6;
     font-family: var(--alt-font);
     font-size: 1.2rem;
-    border-left: 2px solid var(--heading-span-clr);
+    border-left: 2px solid var(--link-clr);
     padding-left: var(--gap-5);
 }
 
