@@ -6,11 +6,11 @@
     --alto: #d5dfdf;
     --cyan-srgb: #cdd;
     --cyan: var(--cyan-srgb);
-    --cyat: #ccdddd44;
+    --cyat: #ccdddd33;
     --teal: #8bc;
     --fire: #c08010;
     --blue: #168;
-    --blut: #11668844;
+    --blut: #11668833;
     --brue: #1f6f8f;
     --navy: #157;
     --dusk: #345;
@@ -491,7 +491,7 @@ footer ul {
     line-height: 2.6;
     font-family: var(--alt-font);
     font-size: 1.2rem;
-    border-left: 2px solid var(--border-clr);
+    border-left: 1.6px solid var(--border-clr);
     padding-left: var(--gap-5);
 }
 
