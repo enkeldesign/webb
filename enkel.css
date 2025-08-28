@@ -221,9 +221,13 @@ figcaption span {
     font-size: .95em;
 }
 
-/* Links & interactive */
+/* Links and interactive */
 
 a {
+    display: inline-block
+    height: 2rem;
+    line-height: 2rem;
+    vertical-align: middle;
     color: var(--link-clr);
     text-decoration: underline;
     text-underline-offset: 0.2em;
