@@ -281,6 +281,10 @@ address {
     border-radius: var(--radius-pill) 0 0 var(--radius-pill);
 }
 
+.cta:hover {
+    background-color: var(--ul-clr);
+}
+
 .cta:link,
 .cta:visited {
     color: var(--cta-text-clr);
