@@ -8,7 +8,6 @@
     --cyan: var(--cyan-srgb);
     --teal: #8bc;
     --fire: #c08010;
-    --lava: #d97;
     --blue: #168;
     --brue: #1f6f8f;
     --navy: #157;
@@ -45,7 +44,7 @@
     --cta-text-clr: light-dark(var(--mist), var(--grau));
     --link-clr: light-dark(var(--blue), var(--cyan));
     --link-vis-clr: light-dark(#719, #eaf);
-    --border-clr: light-dark(var(--lava), var(--lava));
+    --border-clr: light-dark(var(--rust), var(--teal));
 
     /* Typography */
     --body-font: "azo-sans-web", "futura-pt", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, ui-sans-serif, sans-serif;
