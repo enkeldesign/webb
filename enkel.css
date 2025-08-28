@@ -224,7 +224,7 @@ figcaption span {
 /* Links and interactive */
 
 a {
-    display: inline-block
+    display: inline-block;
     height: 2rem;
     line-height: 2rem;
     vertical-align: middle;
