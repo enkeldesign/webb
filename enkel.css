@@ -40,7 +40,7 @@
     --footer-clr: light-dark(var(--dusk), var(--alto));
     --quote-clr: light-dark(var(--rust), var(--teal));
     --border-clr: light-dark(var(--rust), var(--teal));
-    --pill-clr: light-dark(var(--mine), var(--pale));
+    --pill-clr: light-dark(var(--blue), var(--teal));
     --cta-text-clr: light-dark(var(--mist), var(--grau));
     --link-clr: light-dark(var(--blue), var(--cyan));
     --link-vis-clr: light-dark(#719, #eaf);
@@ -294,8 +294,7 @@ address {
 .sec {
     flex: 1 1 0;
     background: none;
-    color: var(--link-clr);
-    border-color: var(--link-clr);
+    color: var(--pill-clr);
     border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
     min-width: 6rem;
 }
