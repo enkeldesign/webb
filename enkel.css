@@ -260,7 +260,7 @@ address {
     justify-content: center;
     line-height: 1;
     padding: var(--gap-2) var(--gap-3);
-    margin: var(--gap-2) 0;
+    margin: var(--gap-2) 0 var(--gap-3);
     border: 2px solid var(--pill-clr);
     border-radius: var(--radius-pill);
     font-family: var(--alt-font);
@@ -305,7 +305,7 @@ address {
 }
 
 .nav-link {
-    text-align: center;
+    /*text-align: center;*/
     font-family: var(--alt-font);
     font-size: var(--font-lg);
     line-height: 44px;
