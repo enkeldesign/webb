@@ -222,7 +222,7 @@ figcaption span {
     font-size: .95em;
 }
 
-/* Links and interactive */
+/* Interactive */
 
 a {
     color: var(--link-clr);
@@ -260,7 +260,7 @@ address {
     justify-content: center;
     line-height: 1;
     padding: var(--gap-2) var(--gap-3);
-    margin: var(--gap-2) 0 var(--gap-3);
+    margin: var(--gap-2) 0 var(--gap-4);
     border: 2px solid var(--pill-clr);
     border-radius: var(--radius-pill);
     font-family: var(--alt-font);
@@ -305,24 +305,12 @@ address {
 }
 
 .nav-link {
-    /*text-align: center;*/
+    display: block;
     font-family: var(--alt-font);
     font-size: var(--font-lg);
     line-height: 44px;
-    display: block;
-    padding: 0;
     border: none;
-    margin-bottom: var(--gap-4);
-}
-
-/*
-.about .nav-link {
-    display: none;
-}
-*/
-
-.intro .nav-link {
-    display: none;
+    margin: 0 0 var(--gap-2);
 }
 
 .ext::after {
@@ -430,7 +418,7 @@ footer {
 }
 
 .about {
-    padding: var(--gap-5);
+    padding: var(--gap-2) var(--gap-5);
     background-color: var(--section-b-bkg);
 }
 
@@ -597,14 +585,6 @@ footer .nav-link {
         text-align: left;
     }
 
-    .intro .nav-link {
-        display: none;
-    }
-
-    .about .nav-link {
-        display: block;
-    }
-
     .about {
         grid-area: about;
         padding: var(--gap-5) var(--gap-6);
@@ -750,4 +730,4 @@ footer .nav-link {
     }
 }
 
-/* by Erik Jansson, updated 2025-08-26 */
+/* by Erik Jansson, updated 2025-09-01 */
