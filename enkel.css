@@ -350,7 +350,7 @@ svg {
     /* height: 80%;
     max-height: 275px; */
     max-height: 3rem;
-    margin: 0 0 var(--gap-2);
+    margin: var(--gap-2) 0;
     width: auto;
     overflow: visible;
 }
