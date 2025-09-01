@@ -315,7 +315,13 @@ address {
     margin-bottom: var(--gap-4);
 }
 
+/*
 .about .nav-link {
+    display: none;
+}
+*/
+
+.intro .nav-link {
     display: none;
 }
 
