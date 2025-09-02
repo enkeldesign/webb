@@ -347,7 +347,7 @@ footer figure a:visited:focus-visible {
 
 svg {
     display: block;
-    max-height: 80%;
+    height: 75%;
     width: auto;
     overflow: visible;
 }
@@ -556,6 +556,7 @@ footer .nav-link {
     }
 
     header svg {
+        height: 90%;
         max-height: 13em;
         margin-top: var(--gap-4);
         width: auto;
