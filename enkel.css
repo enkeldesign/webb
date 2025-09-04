@@ -502,7 +502,7 @@ footer .nav-link {
 .footer-logo {
     position: absolute;
     right: var(--gap-5);
-    bottom: var(--gap-6);
+    bottom: var(--gap-4);
 }
 
 .footer-logo a {
