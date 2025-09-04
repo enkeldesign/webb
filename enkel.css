@@ -705,6 +705,14 @@ footer .nav-link {
 
 @media (max-width: 320px) {
 
+    header,
+    .intro,
+    .about,
+    .enkel,
+    footer {
+        padding: var(--gap-2) var(--gap-4);
+    }
+    
     .intro a,
     footer a,
     footer ul {
@@ -726,9 +734,10 @@ footer .nav-link {
 
     .enkel .photo img,
     .about .photo img {
-        width: 100%;
-        margin: 0;
+        width: calc(100% + (var(--gap-4) * 2));
+        height: auto;
+        margin: var(--gap-5) calc(var(--gap-4) * -1);
     }
 }
 
-/* by Erik Jansson, updated 2025-09-01 */
+/* by Erik Jansson, updated 2025-09-04 */
