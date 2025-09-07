@@ -25,8 +25,8 @@
     --header-bkg: transparent;
     --main-bkg: transparent;
     --footer-bkg: transparent;
-    --logo-e-clr: light-dark(var(--dark), var(--mist));
-    --logo-d-clr: light-dark(var(--blue), var(--brue));
+    --logo-e-clr: light-dark(var(--mine), var(--pale));
+    --logo-d-clr: light-dark(var(--navy), var(--teal));
     --section-a-bkg: light-dark(var(--cyan-srgb), var(--mine));
     --section-b-bkg: light-dark(var(--pale), var(--deep-srgb));
     --section-c-bkg: light-dark(var(--cyan-srgb), var(--void));
@@ -348,6 +348,7 @@ footer figure a:visited:focus-visible {
 svg {
     display: block;
     height: 75%;
+    max-height: 10rem;
     width: auto;
     overflow: visible;
 }
@@ -502,7 +503,7 @@ footer .nav-link {
 .footer-logo {
     position: absolute;
     right: var(--gap-5);
-    bottom: var(--gap-4);
+    bottom: var(--gap-6);
 }
 
 .footer-logo a {
