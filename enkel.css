@@ -739,6 +739,10 @@ footer .nav-link {
         height: auto;
         margin: var(--gap-5) calc(var(--gap-4) * -1);
     }
+    
+    .footer-logo {
+    bottom: var(--gap-2);
+    }
 }
 
 /* by Erik Jansson, updated 2025-09-04 */
