@@ -180,7 +180,7 @@ main p:last-child {
 }
 
 .intro p {
-    white-space: pre-wrap;
+    text-wrap: balance;
     font-family: var(--alt-font);
     font-size: var(--font-lg);
     line-height: 1.5;
