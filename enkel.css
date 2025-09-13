@@ -6,9 +6,11 @@
     --alto: #d5dfdf;
     --cyan-srgb: #cdd;
     --cyan: var(--cyan-srgb);
+    --cyab: #cddb;
     --teal: #8bc;
     --fire: #c08010;
     --blue: #168;
+    --blub: #168d;
     --brue: #1f6f8f;
     --navy: #157;
     --dusk: #345;
@@ -16,7 +18,9 @@
     --mine: #393939;
     --deep-srgb: #114455;
     --deep: var(--deep-srgb);
+    --deeb: #145d;
     --dark: #313131;
+    --darb: #333b;
     --void: #1a2026;
     --grau: #16161d;
 
