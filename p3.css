@@ -15,7 +15,8 @@
 
     /* Blue (#168 => #116688). Signature brand blue, richer in P3 */
     --blue: color(display-p3 0.100 0.400 0.530);
-
+    --blub: color(display-p3 0.100 0.400 0.530 / 0.733);
+    
     /* Brue (#1f6f8f). Slightly brighter & cleaner cyan-blue */
     --brue: color(display-p3 0.120 0.460 0.620);
 
@@ -30,5 +31,6 @@
 
     /* Deep (#114455). Cooler, slightly clearer cyan-leaning deep */
     --deep: color(display-p3 0.070 0.275 0.340);
+    --deeb: color(display-p3 0.070 0.275 0.340 / 0.733);
   }
 }
