@@ -624,8 +624,8 @@ footer figure a:visited:focus-visible {
     address {
         justify-content: flex-start;
         margin: 0 0 var(--gap-2) 0;
-        max-width:22rem;
-        min-width:20rem;
+        max-width:24rem;
+        min-width:22rem;
     }
 
     main {
