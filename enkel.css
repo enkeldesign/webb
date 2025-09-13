@@ -46,6 +46,10 @@
     --border-clr: light-dark(var(--rust), var(--teal));
     --pill-clr: light-dark(var(--blue), var(--teal));
     --cta-text-clr: light-dark(var(--mist), var(--grau));
+    --cta-bkg: light-dark(var(--blub), var(--deeb));
+    --cta-txt: #fff;
+    --sec-bkg: light-dark(var(--cyab), var(--darb));
+    --sec-txt: light-dark(var(--dark), var(--mist));
     --link-clr: light-dark(var(--blue), var(--cyan));
     --link-vis-clr: light-dark(#719, #eaf);
     --border-clr: light-dark(var(--rust), var(--teal));
