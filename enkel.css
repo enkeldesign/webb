@@ -717,7 +717,11 @@ footer figure a:visited:focus-visible {
         margin: 0 auto;
         grid-template-rows: auto 1fr auto auto;
     }
-
+    
+    header {
+        padding: var(--gap-5) 0 var(--gap-4);
+    }
+    
     footer {
         padding: var(--gap-7) 0;
     }
@@ -748,12 +752,16 @@ footer figure a:visited:focus-visible {
         padding: var(--gap-2) var(--gap-4);
     }
     
+    #topLogo {
+        height: 3rem;
+    }
+    
     h1 span:first-child {
         font-size: 0.8em;
     }
     
     h1 span:last-child {
-        font-size: 0.7em;
+        font-size: 0.6em;
     }
         
     footer a,
