@@ -618,6 +618,7 @@ footer figure a:visited:focus-visible {
         grid-area: header;
         flex-direction: row;
         justify-content: space-between;
+        padding: var(--gap-4) 0;
     }
 
     address {
