@@ -745,8 +745,8 @@ footer figure a:visited:focus-visible {
 }
 
 @media (max-width:320px) {
-
-    header,
+    --fs-title: 1.7rem;
+    
     .about,
     .enkel,
     footer {
