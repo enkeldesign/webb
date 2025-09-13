@@ -159,7 +159,7 @@ h1 span:first-child {
 h1 span:last-child {
     margin-top: var(--gap-2);
     font-family: var(--heading-font);
-    font-size: 0.8em;
+    font-size: 0.85em;
     font-weight: bold;
     color: var(--heading-span-clr);
 }
@@ -316,7 +316,7 @@ figure.photo address {
 .cta.glass {
     background-color: var(--cta-bkg);
     color: var(--cta-txt);
-    border-left: 2px solid var(--cta-left);
+    border-left: 1px solid var(--cta-left);
 }
 
 .sec.glass {
@@ -623,8 +623,6 @@ footer figure a:visited:focus-visible {
     address {
         justify-content: flex-start;
         margin: 0 0 var(--gap-2) 0;
-        max-width: 22rem;
-        min-width: 20rem;
     }
 
     main {
@@ -639,7 +637,6 @@ footer figure a:visited:focus-visible {
 
     .intro {
         text-align: left;
-        font-size-adjust: 0.4;
         width: 50%;
         padding: var(--gap-1) 0 0;
     }
