@@ -19,7 +19,6 @@
     --deep-srgb: #114455;
     --deep: var(--deep-srgb);
     --deeb: #145d;
-    --mosb: #253C35bb;
     --dark: #313131;
     --darb: #333b;
     --void: #1a2026;
@@ -56,7 +55,7 @@
     --cta-txt: #fff;
     --cta-left: light-dark(var(--brue), var(--navy));
     --cta-left-lite: light-dark(var(--cyab), var(--teab));
-    --sec-bkg: light-dark(var(--mosb), var(--darb));
+    --sec-bkg: light-dark(var(--darb), var(--darb));
     --sec-txt: light-dark(var(--mist), var(--mist));
 
     --link-clr: light-dark(var(--blue), var(--cyan));
