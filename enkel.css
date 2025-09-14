@@ -361,15 +361,7 @@ footer figure:focus-within {
 
 .pill.glass:focus-visible {
     outline: 3px solid var(--cyan);
-    outline-offset: 3px;
-}
-
-.pill.cta.glass:focus-visible {
-    outline-right: none;
-}
-
-.pill.sec.glass:focus-visible {
-    outline-left: none;
+    outline-offset: 1px;
 }
 
 /* ===== Graphics ===== */
