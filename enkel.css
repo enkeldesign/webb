@@ -373,7 +373,7 @@ footer figure:focus-within {
 
 svg {
     display: block;
-    height: 4rem;
+    height: 3.75rem;
     width: auto;
     overflow: visible;
 }
@@ -416,7 +416,7 @@ header {
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: var(--gap-3);
+    gap: var(--gap-4);
     padding: var(--gap-6) var(--gap-3);
 }
 
