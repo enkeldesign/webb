@@ -251,6 +251,7 @@ figure.photo address {
     position: absolute;
     bottom: 0;
     left: 50%;
+    gap: 2px;
     transform: translateX(-50%);
     text-align: center;
     padding: 0 var(--gap-5);
