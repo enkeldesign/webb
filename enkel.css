@@ -316,7 +316,7 @@ figure.photo address {
 .cta.glass {
     background-color: var(--cta-bkg);
     color: var(--cta-txt);
-    border-left: 1px solid var(--cta-left);
+    border: 1px solid var(--cta-left);
 }
 
 .sec.glass {
@@ -668,11 +668,15 @@ footer figure a:visited:focus-visible {
         text-align: center;
         padding: 0 var(--gap-3);
     }
-
+/*
     .cta.glass {
         border-left: 2px solid var(--cta-left-lite);
     }
+*/
 
+.cta.glass {
+    border: 1px solid var(--cta-left-lite);
+}
     .enkel {
         grid-area: enkel;
         padding: var(--gap-5) var(--gap-6);
