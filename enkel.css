@@ -720,7 +720,7 @@ footer figure a:visited:focus-visible {
     }
 }
 
-@media (min-width:70em) {
+@media (min-width:75em) {
     body {
         width: min(62vw, 75em);
         margin: 0 auto;
