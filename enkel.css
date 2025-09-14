@@ -203,6 +203,7 @@ main p:last-child {
 }
 
 .intro {
+    width: 100%;
     text-wrap: balance;
     font-family: var(--alt-font);
     font-size: var(--font-lg);
@@ -392,7 +393,6 @@ circle {
 header {
     grid-column: 1;
     height: 100%;
-    max-width: 100dvw;
     display: flex;
     flex-direction: column;
     align-items: center;
