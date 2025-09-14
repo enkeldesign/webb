@@ -347,9 +347,12 @@ figure.photo address {
     content: " ⚑";
 }
 
-.pill:hover,
-.sec::after:hover {
+.pill:hover {
     background-color: light-dark(var(--teal), var(--navy));
+    color: light-dark(#000, #fff);
+}
+
+.pill.sec:hover::after {
     color: light-dark(#000, #fff);
 }
 
