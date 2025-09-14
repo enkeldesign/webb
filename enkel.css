@@ -359,6 +359,11 @@ footer figure:focus-within {
     outline-offset: 3px;
 }
 
+.pill.glass:focus-visible {
+    outline: 3px solid var(--cyan);
+    outline-offset: 3px;
+}
+
 /* ===== Graphics ===== */
 
 svg {
