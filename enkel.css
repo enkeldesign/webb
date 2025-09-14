@@ -184,9 +184,6 @@ h2 {
 }
 
 h3 {
-    display: inline;
-    margin-bottom: var(--gap-1);
-    vertical-align: middle;
     font-family: var(--heading-font);
     font-size: var(--font-xl);
     font-weight: bold;
@@ -198,6 +195,10 @@ main p {
     font-size: var(--font-md);
     line-height: 2;
     color: var(--text-clr);
+}
+
+.about h3>p {
+    margin-top: var(--gap-2);
 }
 
 main p:last-child {
