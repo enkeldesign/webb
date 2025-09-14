@@ -220,8 +220,7 @@ a {
 a:hover,
 a:visited:hover,
 a:focus-visible,
-a:visited:focus-visible,
-.pill:hover {
+a:visited:focus-visible {
     background-color: var(--link-clr);
     color: light-dark(#fff, #000);
 }
@@ -348,9 +347,14 @@ figure.photo address {
     content: " ⚑";
 }
 
+.pill:hover {
+    background-color: light-dark(var(--teal), var(--navy));
+    color: light-dark(#000, #fff);
+}
+
 .pill:focus-visible,
 footer figure:focus-within {
-    outline: 3px solid var(--text-clr);
+    outline: 3px solid var(--link-clr);
     outline-offset: 3px;
 }
 
