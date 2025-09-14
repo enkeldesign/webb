@@ -310,10 +310,6 @@ figure.photo address {
     content: " ◳";
 }
 
-.glass {
-    border: none;
-}
-
 .cta.glass {
     background-color: var(--cta-bkg);
     color: var(--cta-txt);
@@ -323,6 +319,7 @@ figure.photo address {
 .sec.glass {
     background-color: var(--sec-bkg);
     color: var(--sec-txt);
+    border: 1px solid var(--dark);
 }
 
 .nav-link {
@@ -634,8 +631,8 @@ footer figure a:visited:focus-visible {
     address {
         justify-content: flex-start;
         margin: 0 0 var(--gap-2) 0;
-        max-width:24rem;
-        min-width:22rem;
+        max-width: 24rem;
+        min-width: 22rem;
     }
 
     main {
@@ -669,15 +666,11 @@ footer figure a:visited:focus-visible {
         text-align: center;
         padding: 0 var(--gap-3);
     }
-/*
-    .cta.glass {
-        border-left: 2px solid var(--cta-left-lite);
-    }
-*/
 
-.cta.glass {
-    border: 1px solid var(--cta-left-lite);
-}
+    .cta.glass {
+        border: 1px solid var(--cta-left-lite);
+    }
+
     .enkel {
         grid-area: enkel;
         padding: var(--gap-5) var(--gap-6);
@@ -731,11 +724,11 @@ footer figure a:visited:focus-visible {
         margin: 0 auto;
         grid-template-rows: auto 1fr auto auto;
     }
-    
+
     header {
         padding: var(--gap-5) 0 var(--gap-4);
     }
-    
+
     footer {
         padding: var(--gap-7) 0;
     }
@@ -759,25 +752,25 @@ footer figure a:visited:focus-visible {
 }
 
 @media (max-width:320px) {
-    
+
     .about,
     .enkel,
     footer {
         padding: var(--gap-2) var(--gap-4);
     }
-    
+
     #topLogo {
         height: 3rem;
     }
-    
+
     h1 span:first-child {
         font-size: 0.8em;
     }
-    
+
     h1 span:last-child {
         font-size: 0.6em;
     }
-        
+
     footer a,
     footer ul {
         font-size: var(--font-xs);
