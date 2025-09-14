@@ -7,11 +7,11 @@
     --cyan: var(--cyan-srgb);
     --cyab: #cddb;
     --teal: #8bc;
+    --teab: #8bcd;
     --fire: #c08010;
     --blue: #168;
     --blub: #168d;
     --brue: #1f6f8f;
-    --brub: #279d;
     --navy: #157;
     --dusk: #345;
     --rust: #531;
@@ -54,7 +54,7 @@
     --cta-bkg: light-dark(var(--blub), var(--deeb));
     --cta-txt: #fff;
     --cta-left: light-dark(var(--brue), var(--navy));
-    --cta-left-lite: light-dark(var(--cyab), var(--brub));
+    --cta-left-lite: light-dark(var(--cyab), var(--teab));
     --sec-bkg: light-dark(var(--cyab), var(--darb));
     --sec-txt: light-dark(var(--dark), var(--mist));
 
