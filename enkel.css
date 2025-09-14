@@ -185,6 +185,7 @@ h2 {
 
 h3 {
     display: inline;
+    margin-bottom: var(--gap-1);
     vertical-align: middle;
     font-family: var(--heading-font);
     font-size: var(--font-xl);
