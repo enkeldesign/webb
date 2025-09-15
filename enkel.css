@@ -218,7 +218,7 @@ main p:last-child {
 a {
     color: var(--link-clr);
     text-decoration: underline;
-    text-underline-offset: .2em;
+    text-underline-offset: .3em;
 }
 
 a:hover,
