@@ -352,7 +352,7 @@ figure.photo address {
 .about .nav-link {
     text-align: center;
     margin: calc((var(--gap-2))*-1) calc((var(--gap-5))*-1) var(--gap-5);
-    background-color: light-dark(#00000005, #ffffff05);
+    background-color: light-dark(#00000007, #ffffff07);
     padding: var(--gap-2) 0 var(--gap-3);
 }
 
