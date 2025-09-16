@@ -338,8 +338,8 @@ figure.photo address {
 .about .nav-link {
     text-align: center;
     margin: calc((var(--gap-2))*-1) calc((var(--gap-5))*-1) var(--gap-5);
-    background-color: light-dark(#0001, #fff1);
-    padding: var(--gap-2) 0 var(--gap-4);
+    background-color: light-dark(#0001, #ffffff08);
+    padding: var(--gap-2) 0 var(--gap-3);
 }
 
 .ext::after {
@@ -676,8 +676,7 @@ footer figure a:visited:focus-visible {
     .about .nav-link {
         text-align: left;
         margin: calc((var(--gap-5))*-1) calc((var(--gap-6))*-1) var(--gap-5);
-        background-color: #0001;
-        padding: var(--gap-2) var(--gap-6) var(--gap-3);
+        padding: var(--gap-2) var(--gap-6) var(--gap-4);
         border-radius: var(--radius-large) 0 0 0;
     }
 
