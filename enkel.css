@@ -491,10 +491,36 @@ footer {
     width: calc(100% + (var(--gap-5) * 2));
     height: auto;
     margin: var(--gap-5) calc(var(--gap-5) * -1);
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+    mask-size: 100% 100%;
+    -webkit-mask-size: 100% 100%;
 }
 
 .about .photo img {
     margin-top: 0;
+    mask-image: linear-gradient(to bottom,
+            transparent 0,
+            #000 5rem,
+            #000 calc(100% - 5rem),
+            transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom,
+            transparent 0,
+            #000 5rem,
+            #000 calc(100% - 5rem),
+            transparent 100%);
+}
+
+.enkel .photo img {
+    mask-image: linear-gradient(to bottom,
+            transparent 0,
+            #000 20rem,
+            #000 100%);
+
+    -webkit-mask-image: linear-gradient(to bottom,
+            transparent 0,
+            #000 20rem,
+            #000 100%);
 }
 
 /* ===== Lists, dividers, footer text ===== */
