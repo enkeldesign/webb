@@ -334,6 +334,11 @@ figure.photo address {
     margin: 0 0 var(--gap-2);
 }
 
+.about .nav-link {
+    text-align: center;
+    margin-bottom: var(--gap-4);
+    }
+    
 .ext::after {
     display: inline-block;
     margin-left: var(--gap-1);
@@ -417,7 +422,7 @@ header {
     align-items: center;
     justify-content: center;
     gap: var(--gap-4);
-    padding: var(--gap-6) var(--gap-3);
+    padding: var(--gap-7) var(--gap-3);
 }
 
 main {
@@ -438,7 +443,7 @@ footer {
 .intro {
     text-align: center;
     background-color: var(--section-a-bkg);
-    padding: var(--gap-5) var(--gap-3);
+    padding: var(--gap-4) var(--gap-3);
 }
 
 .photo img {
