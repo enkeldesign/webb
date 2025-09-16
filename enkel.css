@@ -231,11 +231,14 @@ a:visited:focus-visible {
 }
 
 .about .nav-link:hover,
-.about .nav-link:visited:hover,
-a:focus-visible,
-a:visited:focus-visible {
+.about .nav-link:visited:hover {
     background-color: light-dark(#0002, #fff1);
-    color: light-dark(#000, #fff);
+}
+
+.about .nav-link:focus-visible,
+.about .nav-link:visited:focus-visible {
+    outline: 3px solid var(--link-clr);
+    outline-offset: 0;
 }
 
 a:visited {
