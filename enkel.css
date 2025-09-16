@@ -682,6 +682,10 @@ footer figure a:visited:focus-visible {
     .cta.glass {
         border: 1px solid var(--cta-left-lite);
     }
+    
+    .about .nav-link {
+    text-align: left;
+    }
 
     .enkel {
         grid-area: enkel;
