@@ -176,11 +176,12 @@ h2 {
     font-family: var(--heading-font);
     font-size: var(--font-xxl);
     line-height: 1.2;
-    margin: var(--gap-5) 0;
+    margin: var(--gap-7) 0 var(--gap-5);
 }
 
 .enkel h2 {
     color: var(--section-c-h2-clr);
+    margin: var(--gap-5) 0;
 }
 
 h3 {
@@ -197,7 +198,7 @@ main p {
     color: var(--text-clr);
 }
 
-.about h3 + p {
+.about h3+p {
     margin-top: var(--gap-2);
 }
 
@@ -331,14 +332,16 @@ figure.photo address {
     font-size: var(--font-lg);
     line-height: 44px;
     border: none;
-    margin: 0 0 var(--gap-2);
+
 }
 
 .about .nav-link {
     text-align: center;
-    margin-bottom: var(--gap-4);
-    }
-    
+    margin: calc((var(--gap-2))*-1) calc((var(--gap-5))*-1) var(--gap-5);
+    background-color: #0001;
+    padding: var(--gap-2) 0 var(--gap-3);
+}
+
 .ext::after {
     display: inline-block;
     margin-left: var(--gap-1);
@@ -670,6 +673,14 @@ footer figure a:visited:focus-visible {
         text-align: left;
     }
 
+    .about .nav-link {
+        text-align: left;
+        margin: calc((var(--gap-5))*-1) calc((var(--gap-6))*-1) var(--gap-5);
+        background-color: #0001;
+        padding: var(--gap-2) var(--gap-6) var(--gap-3);
+        border-radius: var(--radius-large) 0 0 0;
+    }
+
     .photo {
         grid-area: photo;
     }
@@ -682,10 +693,7 @@ footer figure a:visited:focus-visible {
     .cta.glass {
         border: 1px solid var(--cta-left-lite);
     }
-    
-    .about .nav-link {
-    text-align: left;
-    }
+
 
     .enkel {
         grid-area: enkel;
