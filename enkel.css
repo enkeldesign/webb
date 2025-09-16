@@ -230,9 +230,12 @@ a:visited:focus-visible {
     color: light-dark(#fff, #000);
 }
 
+.about .nav-link:focus-visible,
+.about .nav-link:visited:focus-visible,
 .about .nav-link:hover,
 .about .nav-link:visited:hover {
     background-color: light-dark(#0002, #fff1);
+    color: var(--link-clr);
 }
 
 .about .nav-link:focus-visible,
