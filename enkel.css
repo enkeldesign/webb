@@ -282,7 +282,7 @@ figure.photo address {
     line-height: 1;
     padding: var(--gap-2) var(--gap-3);
     margin: var(--gap-2) 0 var(--gap-4);
-    border: 2px solid var(--pill-clr);
+    border: 1px solid var(--pill-clr);
     border-radius: var(--radius-pill);
     font-family: var(--alt-font);
     font-size: var(--font-lg);
