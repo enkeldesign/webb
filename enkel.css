@@ -53,8 +53,8 @@
     --cta-text-clr: light-dark(var(--mist), var(--grau));
     --cta-bkg: light-dark(var(--blub), var(--deeb));
     --cta-txt: #fff;
-    --cta-left: light-dark(var(--brue), var(--navy));
-    --cta-left-lite: light-dark(var(--cyab), var(--teab));
+    --cta-left: light-dark(var(--cyab), var(--cyab));
+    --cta-left-lite: light-dark(var(--cyab), var(--cyab));
     --sec-bkg: light-dark(var(--darb), var(--darb));
     --sec-txt: light-dark(var(--mist), var(--mist));
 
@@ -331,13 +331,13 @@ figure.photo address {
 .cta.glass {
     background-color: var(--cta-bkg);
     color: var(--cta-txt);
-    border: 1px solid var(--cta-left);
+    border: 1px solid var(--cta-left-lite);
 }
 
 .sec.glass {
     background-color: var(--sec-bkg);
     color: var(--sec-txt);
-    border: 1px solid var(--dark);
+    border: 1px solid var(--cta-left);
 }
 
 .nav-link {
