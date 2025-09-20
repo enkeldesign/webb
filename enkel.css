@@ -1,4 +1,6 @@
 :root {
+    color-scheme: light dark;
+    
     /* ===== Color palette ===== */
     --mist: #f4f4f4;
     --pale: #e9e7e5;
