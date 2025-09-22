@@ -27,7 +27,7 @@
     --grau: #16161d;
 
     /* ===== Color application ===== */
-    --body-bkg: light-dark(var(--mist), var(--grau));
+    --body-bkg: light-dark(var(--mist), var(--dark));
     --header-bkg: transparent;
     --main-bkg: transparent;
     --footer-bkg: transparent;
@@ -35,7 +35,7 @@
     --logo-e-clr: light-dark(var(--mine), var(--pale));
     --logo-d-clr: light-dark(var(--navy), var(--teal));
 
-    --section-a-bkg: light-dark(var(--cyan-srgb), var(--dark));
+    --section-a-bkg: light-dark(var(--cyan-srgb), var(--mine));
     --section-b-bkg: light-dark(var(--pale), var(--deep-srgb));
     --section-c-bkg: light-dark(var(--cyan-srgb), var(--void));
 
