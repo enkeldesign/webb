@@ -122,7 +122,6 @@
 
 html {
     min-height: 100dvh;
-    background-color: var(--body-bkg);
 }
 
 body {
