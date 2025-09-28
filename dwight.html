@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Dwight: The Fifth Element (Fan page)</title>
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#0ff">
+
+  <style>
+    :root{
+      /* Neon-ish palette; tweak on the fly with the toggle */
+      --bg: light-dark(#0a0a0a,#0a0a0a);
+      --text: light-dark(#111,#f4f4f4);
+      --muted: light-dark(#333,#bbb);
+      --accent: #00f0ff;      /* cyan */
+      --accent-2:#ff6a00;     /* korben orange */
+      --accent-3:#ff00b3;     /* magenta */
+      --card:#111;
+      --beet:#b90e4d;
+
+      /* Type scale */
+      --step--1: clamp(.85rem, .82rem + .2vw, 1rem);
+      --step-0:  clamp(1rem, 1rem + .6vw, 1.25rem);
+      --step-1:  clamp(1.25rem, 1.1rem + 2.4vw, 2.2rem);
+      --step-2:  clamp(1.5rem, 1.2rem + 4.2vw, 3.2rem);
+      --step-3:  clamp(2rem, 1.5rem + 6vw, 4.2rem);
+      --step-4:  clamp(2.6rem, 1.8rem + 9vw, 6.2rem);
+
+      --radius: .9rem;
+      --gap: 1rem;
+      --shadow: 0 10px 30px hsl(190 100% 50% / .18);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans";
+      color:var(--text);
+      background: var(--bg);
+      line-height:1.45;
+    }
+
+    a{color:var(--accent)}
+    .wrap{max-width:1100px;margin-inline:auto;padding: clamp(1rem,2vw,2rem)}
+
+    /* ====== HERO ====== */
+    .hero{
+      position:relative;
+      min-height: min(85svh, 900px);
+      display:grid;
+      place-items:end start;
+      overflow:hidden;
+      border-bottom: 1px solid #1a1a1a;
+      background:
+        radial-gradient(100% 50% at 0% 0%, hsl(190 100% 50% / .25), transparent 60%),
+        linear-gradient(to bottom, hsl(200 70% 6% / .7), hsl(220 70% 4% / .9));
+      isolation:isolate;
+    }
+    .hero::before{
+      /* Futuristic city backdrop (CC0) */
+      content:"";
+      position:absolute; inset:0;
+      background-image:url("https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/City-of-the-future.jpg/1280px-City-of-the-future.jpg");
+      background-size:cover; background-position:center 40%;
+      filter: saturate(1.2) contrast(1.1) brightness(.9);
+      transform: translate3d(0,0,0);
+      z-index:-2;
+      will-change:transform;
+    }
+    .hero::after{
+      /* scanline glow */
+      content:"";
+      position:absolute; inset:0;
+      background:
+        linear-gradient(180deg, transparent 0 40%, hsl(210 80% 2% / .65) 80%, hsl(210 90% 2% / 1));
+      z-index:-1;
+    }
+
+    .glitch{
+      font-weight:900;
+      line-height: .95;
+      margin: 12svh clamp(1rem,3vw,3rem);
+      text-transform:uppercase;
+      letter-spacing:.02em;
+      font-size: var(--step-4);
+      color: #fff;
+      text-shadow:
+        0 0 .25rem hsl(180 100% 50% / .75),
+        0 0 1.25rem hsl(180 100% 50% / .55),
+        0 0 2.5rem hsl(300 100% 50% / .35);
+      position:relative;
+    }
+    .glitch>span{display:block}
+    .glitch .sub{
+      font-size: var(--step-1);
+      font-weight:600;
+      color:hsl(0 0% 100% / .85);
+      letter-spacing:.06em;
+    }
+    /* subtle jitter */
+    @media (prefers-reduced-motion: no-preference){
+      .glitch::before,.glitch::after{
+        content:attr(data-text);
+        position:absolute; left:0; top:0; mix-blend-mode:screen; pointer-events:none;
+      }
+      .glitch::before{ transform:translate(.04em,-.02em); color:var(--accent)}
+      .glitch::after{  transform:translate(-.03em,.03em); color:var(--accent-3)}
+      .hero:hover .glitch::before{animation:shakeX .6s steps(2,end) infinite}
+      .hero:hover .glitch::after{ animation:shakeY .7s steps(2,end) infinite}
+    }
+    @keyframes shakeX{50%{transform:translate(-.02em,.03em)}}
+    @keyframes shakeY{50%{transform:translate(.06em,-.02em)}}
+
+    .badge{
+      display:inline-flex;align-items:center;gap:.5rem;
+      background: hsl(195 100% 50% / .12);
+      border:1px solid hsl(190 100% 50% / .3);
+      padding:.45rem .7rem;border-radius: 999px;
+      backdrop-filter: blur(4px);
+      box-shadow: var(--shadow);
+      font-size: var(--step--1);
+    }
+
+    /* ====== STRIP (tour stops) ====== */
+    .ticker{
+      display:flex; overflow:hidden; border-block:1px solid #1b1b1b;
+      background: linear-gradient(90deg, hsl(195 100% 10% / .6), transparent);
+    }
+    .ticker ul{
+      --speed: 36s;
+      display:flex; gap:2rem; padding: .6rem 1rem; margin:0; list-style:none; flex: 0 0 auto;
+      animation: scroll var(--speed) linear infinite;
+      white-space:nowrap; text-transform:uppercase; letter-spacing:.08em;
+      color:hsl(180 100% 80% / .85);
+    }
+    .ticker li{display:flex;align-items:center;gap:.7rem}
+    .dot{width:.45rem;height:.45rem;border-radius:999px;background:var(--accent-2);box-shadow:0 0 12px var(--accent-2)}
+    @keyframes scroll{to{transform:translateX(-50%)}}
+    @media (prefers-reduced-motion: reduce){ .ticker ul{animation:none} }
+
+    /* ====== GRID ====== */
+    .grid{
+      display:grid;
+      gap: clamp(1rem, 2vw, 1.4rem);
+      grid-template-columns: 1fr;
+      margin-block: clamp(1.2rem, 2vw, 2rem);
+    }
+    @media (min-width: 820px){
+      .grid{ grid-template-columns: 1.1fr .9fr; align-items:start}
+    }
+
+    .card{
+      background: linear-gradient(180deg, hsl(220 10% 9% / .9), hsl(220 8% 6% / .92));
+      border:1px solid hsl(200 10% 30% / .3);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card header{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:.6rem; padding:.9rem 1rem; border-bottom:1px solid #1c1c1c;
+      background: linear-gradient(90deg, hsl(195 100% 14% / .3), transparent);
+    }
+    .card h2{margin:0;font-size: var(--step-1); letter-spacing:.02em}
+    .card .content{padding: clamp(1rem, 1vw + .6rem, 1.5rem);}
+
+    /* ====== MULTIPASS ====== */
+    .idwrap{display:grid; gap:1rem}
+    .pass{
+      position:relative; border-radius: .6rem; overflow:hidden;
+      background:linear-gradient(135deg,#191919 0 35%, #202222 60%, #0b0b0b);
+      border:1px solid #2b2b2b; box-shadow: var(--shadow);
+      color:#e8f9ff;
+      aspect-ratio: 85.6 / 54; /* credit card ratio */
+      max-width: 520px;
+    }
+    .pass .strip{position:absolute; inset:auto 0 0 0; height:34%; background: linear-gradient(90deg,var(--accent-2),var(--accent),var(--accent-3))}
+    .pass .chip{position:absolute; left:1rem; top:1rem; width:44px;height:32px; background:
+      radial-gradient(circle at 30% 30%, #ffe, #cc6 60%); border-radius:.3rem; box-shadow: inset 0 0 10px #0006}
+    .pass .title{
+      position:absolute; left: calc(1rem + 52px); top:.8rem;
+      font: 800 var(--step-0)/1.1 ui-sans-serif, system-ui;
+      letter-spacing:.08em; text-transform:uppercase;
+      text-shadow: 0 0 12px hsl(190 100% 50% / .5);
+    }
+    .pass .figure{
+      position:absolute; left:1rem; bottom: calc(34% + .5rem);
+      width: 34%; aspect-ratio: 3/4; border-radius:.4rem;
+      overflow:hidden; border:2px solid hsl(190 100% 50% / .6);
+      box-shadow: 0 0 16px hsl(190 100% 50% / .35);
+      background:#000;
+    }
+    .pass .meta{
+      position:absolute; right:1rem; bottom: calc(34% + .6rem);
+      display:grid; gap:.35rem; text-transform:uppercase; letter-spacing:.06em;
+      font-weight:700; font-size:.9rem;
+    }
+    .pass .meta span{display:block; opacity:.9}
+    .pass .strip .label{
+      position:absolute; left:1rem; bottom:.4rem;
+      font-weight:900; font-size:1rem; letter-spacing:.12em; color:#0b0b0b;
+      mix-blend-mode:soft-light; text-shadow:0 0 8px #fff3;
+    }
+    .pass button{
+      position:absolute; right:.6rem; top:.6rem;
+      background:#0e0e0e; border:1px solid #2a2a2a; color:#e8f9ff;
+      border-radius:.5rem; padding:.4rem .6rem; font:600 .9rem/1.1 inherit;
+      display:inline-flex; gap:.4rem; align-items:center; cursor:pointer;
+    }
+    .pass button:focus-visible{outline:2px solid var(--accent)}
+
+    /* Dwight & Leeloo images */
+    .figure img{width:100%; height:100%; object-fit:cover}
+
+    /* ====== MYSTERY ACTS ====== */
+    .acts{display:grid; gap: .8rem; grid-template-columns:1fr 1fr 1fr}
+    .acts button{
+      position:relative; border:0; padding:0; border-radius:.6rem; overflow:hidden; cursor:pointer;
+      background:#000;
+    }
+    .acts button .cover{
+      position:absolute; inset:0; background:#000;
+      display:grid; place-items:center; color:#fff; font-weight:800; letter-spacing:.08em;
+      transition: clip-path .45s ease, opacity .45s ease, filter .45s ease;
+      clip-path: inset(0 round .6rem);
+    }
+    .acts button img{display:block; width:100%; height:100%; object-fit:cover; filter:saturate(1.15) contrast(1.05)}
+    .acts button:where(:hover,:focus-visible) .cover{
+      opacity:.1; filter: blur(2px);
+      clip-path: inset(2% round 1.2rem);
+    }
+
+    /* ====== QUOTES ====== */
+    .quotes{display:grid; gap:.8rem}
+    .q{
+      border-left: 4px solid var(--accent-2);
+      padding: .6rem .8rem; background: hsl(220 8% 10% / .6);
+      border-radius:.4rem;
+    }
+    .q em{color:var(--muted)}
+    .q strong{color:var(--accent)}
+
+    /* ====== FOOTER / CREDITS ====== */
+    footer{margin-block:2rem 4rem; font-size: var(--step--1); color:var(--muted)}
+    .credits{display:grid; gap:.35rem}
+    .credits a{color:inherit; text-decoration-color: hsl(190 100% 60%); text-decoration-thickness:.08em}
+
+    /* ====== THEME TOGGLE ====== */
+    .toolbar{position:fixed; right:.75rem; bottom:.75rem; z-index:10}
+    .toolbar button{
+      border:1px solid #2b2b2b; background:#0e0e0e; color:#e8f9ff;
+      border-radius:999px; padding:.6rem .9rem; box-shadow: var(--shadow);
+      cursor:pointer; font-weight:700; letter-spacing:.04em;
+    }
+    .toolbar button:focus-visible{outline:2px solid var(--accent)}
+    .alt{ --accent:#ffef00; --accent-2:#fe7d00; --accent-3:#00e676; }
+
+    /* Simple parallax on scroll */
+    @media (prefers-reduced-motion: no-preference){
+      .hero[data-parallax="on"]::before{ transition: transform .2s ease-out; will-change: transform; }
+    }
+  </style>
+</head>
+
+<body>
+  <a class="badge" href="#content" style="position:absolute;left:-999px;top:auto" id="skip">Hoppa till innehåll</a>
+
+  <header class="hero" aria-label="Futuristisk stad – Dwight möter The Fifth Element" data-parallax="on">
+    <div>
+      <div class="glitch" data-text="DWIGHT · THE FIFTH ELEMENT" aria-label="DWIGHT – THE FIFTH ELEMENT">
+        DWIGHT · THE FIFTH ELEMENT
+        <span class="sub">Beets. Bears. <span style="color:var(--accent-2)">Multipass.</span></span>
+      </div>
+      <div class="wrap">
+        <span class="badge" role="status" aria-live="polite">Assistant (to the) Regional Manager · Supreme Being (probationary)</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- TOUR STOPS -->
+  <div class="ticker" aria-label="Kommande stopp">
+    <ul aria-hidden="true">
+      <li><span class="dot"></span> Scranton</li>
+      <li><span class="dot"></span> Fhloston Paradise</li>
+      <li><span class="dot"></span> Mondoshawan Temple</li>
+      <li><span class="dot"></span> The Dunder Mifflin Nebula</li>
+      <li><span class="dot"></span> Zorg HQ (bring staplers)</li>
+    </ul>
+    <ul aria-hidden="true" aria-label="Duplicerat band för kontinuerlig rullning">
+      <li><span class="dot"></span> Scranton</li>
+      <li><span class="dot"></span> Fhloston Paradise</li>
+      <li><span class="dot"></span> Mondoshawan Temple</li>
+      <li><span class="dot"></span> The Dunder Mifflin Nebula</li>
+      <li><span class="dot"></span> Zorg HQ (bring staplers)</li>
+    </ul>
+  </div>
+
+  <main id="content" class="wrap" role="main">
+    <section class="grid" aria-label="Huvudinnehåll">
+
+      <!-- LEFT: Multipass -->
+      <article class="card" aria-labelledby="h-pass">
+        <header>
+          <h2 id="h-pass">Schrute Dallas – MULTIPASS</h2>
+          <span class="badge">ID-generator</span>
+        </header>
+        <div class="content">
+          <div class="idwrap">
+            <div class="pass" id="pass">
+              <div class="chip" aria-hidden="true"></div>
+              <div class="title">MULTI PASS</div>
+              <figure class="figure" aria-label="Foto på Dwight (Rainn Wilson)">
+                <img id="dwightImg" alt="Rainn Wilson (Dwight) porträtt" loading="lazy"
+                     src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Rainn_Wilson_2011_Shankbone.JPG/960px-Rainn_Wilson_2011_Shankbone.JPG">
+              </figure>
+              <div class="meta" aria-label="Passinformation">
+                <span id="name">DWIGHT K. SCHRUTE</span>
+                <span>ID: 5E-BEET-042</span>
+                <span>LEVEL: SUPREME (TEMP)</span>
+              </div>
+              <div class="strip">
+                <div class="label">LEEL00 DALLAS MULTIPASS</div>
+              </div>
+              <button id="regen" type="button" aria-controls="pass" aria-label="Generera neonläge / uppdatera">
+                ⚡ Neon Boost
+              </button>
+            </div>
+
+            <p class="help" style="margin:0">
+              Prova <kbd>Tab</kbd> till bilderna nedan – håll kvar för att avslöja “mystery-acts”.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <!-- RIGHT: Mystery Acts -->
+      <article class="card" aria-labelledby="h-acts">
+        <header>
+          <h2 id="h-acts">Mystery-Acts</h2>
+          <span class="badge">Hovra eller fokusera</span>
+        </header>
+        <div class="content">
+          <div class="acts">
+            <!-- Leeloo cosplay (CC BY-SA) -->
+            <button type="button" aria-label="Leeloo cosplay med Multipass">
+              <img alt="Leeloo cosplay med multipass" loading="lazy"
+                   src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Cosplay_of_Leeloo%2C_with_multipass%2C_Otakon_2012.jpg/960px-Cosplay_of_Leeloo%2C_with_multipass%2C_Otakon_2012.jpg">
+              <div class="cover">HOLD TO REVEAL</div>
+            </button>
+            <!-- Scranton sign (CC BY-SA/GFDL) -->
+            <button type="button" aria-label="Scranton välkomstskylt från The Office">
+              <img alt="Scranton Welcomes You – skylten från The Office" loading="lazy"
+                   src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Scranton_welcome_sign_from_The_Office_credits.jpg/991px-Scranton_welcome_sign_from_The_Office_credits.jpg">
+              <div class="cover">HOLD TO REVEAL</div>
+            </button>
+            <!-- Beetroot (CC BY-SA) -->
+            <button type="button" aria-label="Beetroots (Schrute Farms vibes)">
+              <img alt="Rödbetor i låda – vittrosa mönster" loading="lazy"
+                   src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Beetroot_jm26647.jpg/960px-Beetroot_jm26647.jpg">
+              <div class="cover">HOLD TO REVEAL</div>
+            </button>
+          </div>
+
+          <div class="quotes" style="margin-top:1rem">
+            <div class="q"><strong>Dwight:</strong> “I am fast. To give you a reference point, I’m somewhere between a <em>Mondoshawan</em> and a <em>Mangalore</em>.”</div>
+            <div class="q"><strong>Leeloo:</strong> “Multipass.” <em>Dwight:</em> “Correct. Three copies. Laminated.”</div>
+            <div class="q"><strong>Zorg:</strong> “Life, which you so nobly serve, comes from chaos.” <em>Dwight:</em> “False. It comes from structure, rules – och beets.”</div>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="wrap" aria-labelledby="h-cred">
+    <h2 id="h-cred" style="font-size:var(--step-0);margin:.2rem 0 1rem">Bildkällor & licenser</h2>
+    <div class="credits">
+      <div>• Futuristisk stad: <a href="https://commons.wikimedia.org/wiki/File:City-of-the-future.jpg">Pete Linforth (CC0) via Wikimedia Commons</a>.</div>
+      <div>• Rainn Wilson porträtt: <a href="https://commons.wikimedia.org/wiki/File:Rainn_Wilson_2011_Shankbone.JPG">David Shankbone (CC BY 3.0) via Wikimedia Commons</a>.</div>
+      <div>• Leeloo cosplay med Multipass: <a href="https://commons.wikimedia.org/wiki/File:Cosplay_of_Leeloo,_with_multipass,_Otakon_2012.jpg">Piotrus (CC BY-SA 3.0) via Wikimedia Commons</a>.</div>
+      <div>• “Scranton Welcomes You” skylten: <a href="https://commons.wikimedia.org/wiki/File:Scranton_welcome_sign_from_The_Office_credits.jpg">Daniel Case (CC BY-SA 3.0/GFDL) via Wikimedia Commons</a>.</div>
+      <div>• Rödbetor: <a href="https://commons.wikimedia.org/wiki/File:Beetroot_jm26647.jpg">Jörgens.mi (CC BY-SA 3.0) via Wikimedia Commons</a>.</div>
+    </div>
+  </footer>
+
+  <div class="toolbar">
+    <button id="theme" type="button" aria-pressed="false" aria-label="Växla neon-tema">✨ Växla neon</button>
+  </div>
+
+  <script>
+    // Parallax: move background a touch on scroll (reduced-motion friendly by CSS gate)
+    const hero = document.querySelector('.hero');
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(hero && !prefersReduced){
+      window.addEventListener('scroll', () => {
+        const y = Math.min(30, Math.max(-30, window.scrollY * 0.06));
+        hero.style.setProperty('--parallax', y);
+        hero.style.transform = `translate3d(0, ${y * 0.2}px, 0)`;
+        hero.style.willChange = 'transform';
+        hero.setAttribute('data-parallax','on');
+        hero.style.setProperty('--y', y);
+        hero.style.setProperty('--s', 1 + Math.abs(y)/500);
+      }, {passive:true});
+    }
+
+    // Theme toggle – shifts neon hues
+    const themeBtn = document.getElementById('theme');
+    themeBtn.addEventListener('click', () => {
+      document.documentElement.classList.toggle('alt');
+      const on = document.documentElement.classList.contains('alt');
+      themeBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+
+    // Multipass "Neon Boost" – quick micro-interaction
+    const regen = document.getElementById('regen');
+    const pass = document.getElementById('pass');
+    regen.addEventListener('click', () => {
+      pass.animate([
+        { filter:'brightness(1) saturate(1)' },
+        { filter:'brightness(1.4) saturate(1.6)' },
+        { filter:'brightness(1) saturate(1)' }
+      ], {duration: 700, easing:'cubic-bezier(.2,.9,.2,1)'});
+      // swap strip label briefly to Dwight-flavoured joke
+      const label = pass.querySelector('.label');
+      const old = label.textContent;
+      label.textContent = 'SCHRUTE DALLAS MULTIPASS';
+      setTimeout(()=> label.textContent = old, 1400);
+    });
+
+    // Keyboard-friendly reveal on acts: Space/Enter toggles a pressed state
+    document.querySelectorAll('.acts button').forEach(btn=>{
+      btn.addEventListener('keydown', (e)=>{
+        if(e.code === 'Space' || e.key === 'Enter'){
+          e.preventDefault();
+          btn.querySelector('.cover').style.opacity = btn.querySelector('.cover').style.opacity === '0.1' ? '1' : '0.1';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
