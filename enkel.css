@@ -896,9 +896,9 @@ footer figure a:visited:focus-visible {
         --link-vis-clr: VisitedText;
         --border-clr: CanvasText;
         --pill-clr: CanvasText;
-        --cta-text-clr: ButtonText;
-        --cta-bkg: ButtonFace;
-        --cta-txt: ButtonText;
+        --cta-text-clr: Canvas;
+        --cta-bkg: CanvasText;
+        --cta-txt: Canvas;
         --cta-left: ButtonFace;
         --cta-left-lite: ButtonFace;
         --sec-bkg: ButtonFace;
@@ -935,9 +935,17 @@ footer figure a:visited:focus-visible {
         border-color: CanvasText !important;
     }
 
-    .cta,
+    .cta {
+        background: CanvasText !important;
+        color: Canvas !important;
+    }
+
     .sec {
         background: ButtonFace !important;
+        color: ButtonText !important;
+    }
+
+    .sec::after {
         color: ButtonText !important;
     }
 
@@ -957,4 +965,8 @@ footer figure a:visited:focus-visible {
     }
 }
 
-/* by Erik Jansson, updated 2025-10-07 */
+@media (inverted-colors: inverted) {
+  img { filter: invert(1) hue-rotate(180deg); }
+}
+
+/* == by Erik Jansson, updated 2025-10-07 == */
