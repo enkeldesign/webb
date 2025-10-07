@@ -1,6 +1,6 @@
 :root {
     color-scheme: light dark;
-    
+
     /* ===== Color palette ===== */
     --mist: #f4f4f4;
     --pale: #e9e7e5;
@@ -845,7 +845,7 @@ footer figure a:visited:focus-visible {
         margin: 0;
         font-size: var(--font-xs);
     }
-    
+
     .about .nav-link {
         background-color: transparent;
         margin: var(--gap-3) 0;
@@ -873,69 +873,88 @@ footer figure a:visited:focus-visible {
 /* = Compatibility mode for high contrast, invert et c = */
 
 @media (forced-colors: active),
-       (-ms-high-contrast: active),
-       (prefers-contrast: more),
-       (inverted-colors: inverted) {
-  :root {
-    --body-bkg: Canvas;
-    --header-bkg: Canvas;
-    --main-bkg: Canvas;
-    --footer-bkg: Canvas;
-    --section-a-bkg: Canvas;
-    --section-b-bkg: Canvas;
-    --section-c-bkg: Canvas;
-    --text-clr: CanvasText;
-    --heading-clr: CanvasText;
-    --heading-span-clr: CanvasText;
-    --section-b-h2-clr: CanvasText;
-    --section-c-h2-clr: CanvasText;
-    --h3-clr: CanvasText;
-    --footer-clr: CanvasText;
-    --ul-clr: CanvasText;
-    --link-clr: LinkText;
-    --link-vis-clr: VisitedText;
-    --border-clr: CanvasText;
-    --pill-clr: CanvasText;
-    --cta-text-clr: ButtonText;
-    --cta-bkg: ButtonFace;
-    --cta-txt: ButtonText;
-    --cta-left: ButtonFace;
-    --cta-left-lite: ButtonFace;
-    --sec-bkg: ButtonFace;
-    --sec-txt: ButtonText;
-  }
-  * {
-    text-shadow: none !important;
-    box-shadow: none !important;
-    mix-blend-mode: normal !important;
-    filter: none !important;
-  }
-  .glass, .frosted, .translucent {
-    backdrop-filter: none !important;
-    background: Canvas !important;
-  }
-  :where(a,button,.pill,.nav-link):focus-visible {
-    outline: 3px solid Highlight !important;
-    outline-offset: 3px !important;
-  }
-  ::selection {
-    background: Highlight !important;
-    color: HighlightText !important;
-  }
-  .pill,.cta,.sec { border-color: CanvasText !important; }
-  .cta {
-    background: ButtonFace !important;
-    color: ButtonText !important;
-  }
-  .sec {
-    background: transparent !important;
-    color: CanvasText !important;
-  }
-  .about a,.enkel a,.intro a,footer a {
-    color: LinkText !important;
-  }
-  svg { color: currentColor !important; }
-  header svg circle { display: none !important; }
+(-ms-high-contrast: active),
+(prefers-contrast: more),
+(inverted-colors: inverted) {
+    :root {
+        --body-bkg: Canvas;
+        --header-bkg: Canvas;
+        --main-bkg: Canvas;
+        --footer-bkg: Canvas;
+        --section-a-bkg: Canvas;
+        --section-b-bkg: Canvas;
+        --section-c-bkg: Canvas;
+        --text-clr: CanvasText;
+        --heading-clr: CanvasText;
+        --heading-span-clr: CanvasText;
+        --section-b-h2-clr: CanvasText;
+        --section-c-h2-clr: CanvasText;
+        --h3-clr: CanvasText;
+        --footer-clr: CanvasText;
+        --ul-clr: CanvasText;
+        --link-clr: LinkText;
+        --link-vis-clr: VisitedText;
+        --border-clr: CanvasText;
+        --pill-clr: CanvasText;
+        --cta-text-clr: ButtonText;
+        --cta-bkg: ButtonFace;
+        --cta-txt: ButtonText;
+        --cta-left: ButtonFace;
+        --cta-left-lite: ButtonFace;
+        --sec-bkg: ButtonFace;
+        --sec-txt: ButtonText;
+    }
+
+    * {
+        text-shadow: none !important;
+        box-shadow: none !important;
+        mix-blend-mode: normal !important;
+        filter: none !important;
+    }
+
+    .glass,
+    .frosted,
+    .translucent {
+        backdrop-filter: none !important;
+        background: Canvas !important;
+    }
+
+    :where(a, button, .pill, .nav-link):focus-visible {
+        outline: 3px solid Highlight !important;
+        outline-offset: 3px !important;
+    }
+
+    ::selection {
+        background: Highlight !important;
+        color: HighlightText !important;
+    }
+
+    .pill,
+    .cta,
+    .sec {
+        border-color: CanvasText !important;
+    }
+
+    .cta,
+    .sec {
+        background: ButtonFace !important;
+        color: ButtonText !important;
+    }
+
+    .about a,
+    .enkel a,
+    .intro a,
+    footer a {
+        color: LinkText !important;
+    }
+
+    svg path {
+        color: currentColor !important;
+    }
+
+    header svg circle {
+        display: none !important;
+    }
 }
 
 /* by Erik Jansson, updated 2025-10-07 */
