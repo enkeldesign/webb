@@ -929,44 +929,40 @@ footer figure a:visited:focus-visible {
         color: HighlightText !important;
     }
 
+    a { color: LinkText !important; text-decoration-color: currentColor !important; }
+    a:visited { color: VisitedText !important; }
+    a:hover, a:active { color: ActiveText !important; }
+    .about a, .enkel a, .intro a, footer a { color: LinkText !important; }
+    .about a:visited, .enkel a:visited, .intro a:visited, footer a:visited { color: VisitedText !important; }
+    .about a:hover, .about a:active,
+    .enkel a:hover, .enkel a:active,
+    .intro a:hover, .intro a:active,
+    footer a:hover, footer a:active { color: ActiveText !important; }
+
     .pill,
     .cta,
     .sec {
         border-color: CanvasText !important;
     }
 
-    .cta {
-        background: CanvasText !important;
-        color: Canvas !important;
-    }
+    .cta { background: CanvasText !important; color: Canvas !important; }
+    .cta:hover, .cta:active, .cta:focus-visible { background: CanvasText !important; color: Canvas !important; }
 
-    .sec {
-        background: ButtonFace !important;
-        color: ButtonText !important;
-    }
+    .sec { background: ButtonFace !important; color: ButtonText !important; }
+    .sec:hover, .sec:active, .sec:focus-visible { background: ButtonFace !important; color: ButtonText !important; }
 
-    .sec::after {
-        color: ButtonText !important;
-    }
+    .sec::after,
+    .sec:hover::after,
+    .sec:active::after,
+    .sec:focus-visible::after { color: Canvas !important; }
 
-    .about a,
-    .enkel a,
-    .intro a,
-    footer a {
-        color: LinkText !important;
-    }
+    svg, svg * { fill: currentColor !important; }
 
-    svg path {
-        color: currentColor !important;
-    }
-
-    header svg circle {
-        display: none !important;
-    }
+    header svg circle { display: none !important; }
 }
 
 @media (inverted-colors: inverted) {
   img { filter: invert(1) hue-rotate(180deg); }
 }
 
-/* == by Erik Jansson, updated 2025-10-07 == */
+/* by Erik Jansson, updated 2025-10-07 */
