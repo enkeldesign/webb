@@ -134,7 +134,7 @@
     .sec:hover::after,
     .sec:active::after,
     .sec:focus-visible::after {
-        color: Canvas !important;
+        color: currentColor !important;
     }
 
     svg,
