@@ -27,10 +27,10 @@
         --link-clr: LinkText;
         --link-vis-clr: VisitedText;
         --border-clr: CanvasText;
-        --pill-clr: CanvasText;
-        --cta-text-clr: Canvas;
-        --cta-bkg: CanvasText;
-        --cta-txt: Canvas;
+        --pill-clr: ButtonFace;
+        --cta-text-clr: ButtonText;
+        --cta-bkg: ButtonFace;
+        --cta-txt: ButtonText;
         --cta-left: ButtonFace;
         --cta-left-lite: ButtonFace;
         --sec-bkg: ButtonFace;
@@ -49,10 +49,17 @@
     .translucent {
         backdrop-filter: none !important;
         background: Canvas !important;
+        opacity: 1;
     }
 
     :where(a, button, .pill, .nav-link):focus-visible {
-        outline: 3px solid Highlight !important;
+        outline: 5px solid Highlight !important;
+        outline-offset: 3px !important;
+        background: none;
+    }
+    
+    :where(main .pill):focus-visible {
+        outline: 5px solid white !important;
         outline-offset: 3px !important;
     }
 
@@ -105,17 +112,23 @@
     .sec {
         border-color: CanvasText !important;
     }
+    
+    main .pill,
+    main .cta,
+    main .sec {
+        border-color: white !important;
+    }
 
     .cta {
-        background: CanvasText !important;
-        color: Canvas !important;
+        background: ButtonFace !important;
+        color: ButtonText !important;
     }
 
     .cta:hover,
     .cta:active,
     .cta:focus-visible {
-        background: CanvasText !important;
-        color: Canvas !important;
+        background: Canvas !important;
+        color: CanvasText !important;
     }
 
     .sec {
@@ -126,8 +139,8 @@
     .sec:hover,
     .sec:active,
     .sec:focus-visible {
-        background: ButtonFace !important;
-        color: ButtonText !important;
+        background: Canvas !important;
+        color: CanvasText !important;
     }
 
     .sec::after,
@@ -144,11 +157,5 @@
 
     header svg circle {
         display: none !important;
-    }
-}
-
-@media (inverted-colors: inverted) {
-    img {
-        filter: invert(1) hue-rotate(180deg);
     }
 }
