@@ -179,10 +179,6 @@
         filter: none !important;
     }
     
-    figure.photo address {
-        z-index: 666;
-    }
-    
     header svg circle {
         display: none !important;
     }
