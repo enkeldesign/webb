@@ -162,12 +162,3 @@
         display: none !important;
     }
 }
-
-@media (inverted-colors: inverted) {
-
-    main .photo img,
-    .about .photo img,
-    .enkel .photo img {
-        filter: invert(1) hue-rotate (180deg);
-    }
-}
