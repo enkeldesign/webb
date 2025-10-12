@@ -216,6 +216,7 @@ a {
     color: var(--link-clr);
     text-decoration: underline;
     text-underline-offset: .3em;
+    white-space: nowrap;
 }
 
 a:hover,
@@ -337,11 +338,12 @@ figure.photo address {
 }
 
 .nav-link {
-    display: block;
+    display: inline-block;
     font-family: var(--alt-font);
     font-size: var(--font-lg);
     line-height: 44px;
     border: none;
+    white-space: nowrap;
 
 }
 
@@ -353,14 +355,14 @@ figure.photo address {
 }
 
 .ext::after {
-    display: inline;
+    display: inline-block;
     margin-left: var(--gap-1);
     text-decoration: none;
     content: " »";
 }
 
 footer .lang::after {
-    display: inline;
+    display: inline-block;
     margin-left: var(--gap-1);
     text-decoration: none;
     font-family: serif;
@@ -605,7 +607,7 @@ footer .nav-link {
 }
 
 #up::after {
-    display: inline;
+    display: inline-block;
     margin-left: .3rem;
     content: " ⤒";
     font-size: .8rem;
