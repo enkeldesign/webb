@@ -42,7 +42,7 @@
         box-shadow: none !important;
         mix-blend-mode: normal !important;
     }
-    
+
     *::after {
         display: none;
     }
@@ -53,19 +53,6 @@
         backdrop-filter: none !important;
         background-color: ButtonFace !important;
         opacity: 1;
-    }
-
-    :where(a, button, .pill, .nav-link):focus-visible {
-        outline: 5px solid Highlight !important;
-        outline-offset: 3px !important;
-        background: none;
-    }
-
-    :where(main .pill):focus-visible {
-        background-color: ButtonFace;
-        color: ButtonText;
-        outline: 5px solid white !important;
-        outline-offset: 3px !important;
     }
 
     ::selection {
@@ -112,6 +99,27 @@
         color: ActiveText !important;
     }
 
+    a:hover,
+    a:visited:hover,
+    a:focus-visible,
+    a:visited:focus-visible {
+        background-color: Canvas !important;
+        color: ActiveText !important;
+    }
+
+    :where(a, button, .pill, .nav-link):focus-visible {
+        outline: 5px solid Highlight !important;
+        outline-offset: 3px !important;
+        background: Canvas;
+    }
+    
+    :where(main .pill):focus-visible {
+        background-color: ButtonFace;
+        color: ButtonText;
+        outline: 5px solid white !important;
+        outline-offset: 3px !important;
+    }
+
     .pill,
     .cta,
     .sec {
@@ -133,7 +141,7 @@
     .cta:active,
     .cta:focus-visible {
         background-color: Canvas !important;
-        color: CanvasText !important;
+        color: ActiveText !important;
     }
 
     .sec {
@@ -145,7 +153,7 @@
     .sec:active,
     .sec:focus-visible {
         background-color: Canvas !important;
-        color: CanvasText !important;
+        color: ActiveText !important;
     }
 
     .sec::after,
