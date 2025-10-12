@@ -103,8 +103,8 @@
     a:visited:hover,
     a:focus-visible,
     a:visited:focus-visible {
-        background-color: Canvas !important;
-        color: ActiveText !important;
+        background-color: ActiveText !important;
+        color: Canvas !important;
     }
 
     :where(a, button, .pill, .nav-link):focus-visible {
@@ -114,8 +114,8 @@
     }
     
     :where(main .pill):focus-visible {
-        background-color: ButtonFace;
-        color: ButtonText;
+        background-color: CanvasText !important;
+        color: Canvas !important;
         outline: 5px solid white !important;
         outline-offset: 3px !important;
     }
