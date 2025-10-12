@@ -353,14 +353,14 @@ figure.photo address {
 }
 
 .ext::after {
-    display: inline-block;
+    display: inline;
     margin-left: var(--gap-1);
     text-decoration: none;
     content: " »";
 }
 
 footer .lang::after {
-    display: inline-block;
+    display: inline;
     margin-left: var(--gap-1);
     text-decoration: none;
     font-family: serif;
@@ -605,7 +605,7 @@ footer .nav-link {
 }
 
 #up::after {
-    display: inline-block;
+    display: inline;
     margin-left: .3rem;
     content: " ⤒";
     font-size: .8rem;
