@@ -264,6 +264,7 @@ figure.photo {
 
 figure.photo address {
     position: absolute;
+    z-index: 1;
     bottom: 0;
     left: 50%;
     gap: 2px;
