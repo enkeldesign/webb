@@ -173,7 +173,9 @@
     }
     
     .about .photo picture,
-    .about .photo img {
+    .about .photo img,
+    .photo address a,
+    .photo address button {
         filter: none !important;
     }
     
