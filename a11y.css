@@ -41,7 +41,6 @@
         text-shadow: none !important;
         box-shadow: none !important;
         mix-blend-mode: normal !important;
-        filter: none !important;
     }
     
     *::after {
