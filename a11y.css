@@ -57,7 +57,7 @@
         outline-offset: 3px !important;
         background: none;
     }
-    
+
     :where(main .pill):focus-visible {
         outline: 5px solid white !important;
         outline-offset: 3px !important;
@@ -112,7 +112,7 @@
     .sec {
         border-color: CanvasText !important;
     }
-    
+
     main .pill,
     main .cta,
     main .sec {
@@ -157,5 +157,14 @@
 
     header svg circle {
         display: none !important;
+    }
+}
+
+@media (inverted-colors: inverted) {
+
+    main .photo img,
+    .about .photo img,
+    .enkel .photo img {
+        filter: invert(1) hue-rotate (180deg);
     }
 }
