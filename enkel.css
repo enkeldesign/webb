@@ -42,7 +42,7 @@
 
     --text-clr: light-dark(var(--mine), var(--pale));
     --heading-clr: light-dark(var(--mine), var(--pale));
-    --heading-span-clr: light-dark(var(--dear), var(--dear));
+    --heading-span-clr: light-dark(var(--blue), var(--dear));
 
     --section-b-h2-clr: light-dark(var(--navy), var(--teal));
     --section-c-h2-clr: light-dark(var(--navy), var(--teal));
