@@ -172,7 +172,8 @@
         fill: currentColor !important;
     }
     
-    .about img {
+    .about .photo picture,
+    .about .photo img {
         filter: none !important;
     }
     
