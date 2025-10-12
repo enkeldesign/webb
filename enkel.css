@@ -320,7 +320,7 @@ figure.photo address {
     margin-left: var(--gap-1);
     transform: translateY(-3px);
     font-size: var(--font-sm);
-    color: var(--teal);
+    color: currentColor;
     content: " ◳";
 }
 
