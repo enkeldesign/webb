@@ -95,6 +95,7 @@
     --radius-large: 3rem;
 
     /* ===== Global ===== */
+    font-size: 100%;
     text-wrap: pretty;
     -webkit-text-size-adjust: 100%;
     line-height: 1.7;
