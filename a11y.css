@@ -171,7 +171,11 @@
     svg * {
         fill: currentColor !important;
     }
-
+    
+    .about img {
+        filter: none !important;
+    }
+    
     header svg circle {
         display: none !important;
     }
