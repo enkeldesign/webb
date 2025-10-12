@@ -136,7 +136,11 @@
         background-color: ButtonFace !important;
         color: ButtonText !important;
     }
-
+    
+    main .cta {
+        background-color: white !important;
+        color: black !important;
+    }
     .cta:hover,
     .cta:active,
     .cta:focus-visible {
