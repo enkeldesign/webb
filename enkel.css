@@ -343,11 +343,10 @@ figure.photo address {
     font-size: var(--font-lg);
     line-height: 44px;
     border: none;
-    white-space: nowrap;
-
 }
 
 .about .nav-link {
+    display: block;
     text-align: center;
     margin: calc((var(--gap-2))*-1) calc((var(--gap-5))*-1) var(--gap-5);
     background-color: light-dark(#0000000a, #ffffff0a);
