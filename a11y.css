@@ -51,7 +51,7 @@
     .frosted,
     .translucent {
         backdrop-filter: none !important;
-        background: Canvas !important;
+        background-color: ButtonFace !important;
         opacity: 1;
     }
 
@@ -62,6 +62,8 @@
     }
 
     :where(main .pill):focus-visible {
+        background-color: ButtonFace;
+        color: ButtonText;
         outline: 5px solid white !important;
         outline-offset: 3px !important;
     }
@@ -123,26 +125,26 @@
     }
 
     .cta {
-        background: ButtonFace !important;
+        background-color: ButtonFace !important;
         color: ButtonText !important;
     }
 
     .cta:hover,
     .cta:active,
     .cta:focus-visible {
-        background: Canvas !important;
+        background-color: Canvas !important;
         color: CanvasText !important;
     }
 
     .sec {
-        background: ButtonFace !important;
+        background-color: ButtonFace !important;
         color: ButtonText !important;
     }
 
     .sec:hover,
     .sec:active,
     .sec:focus-visible {
-        background: Canvas !important;
+        background-color: Canvas !important;
         color: CanvasText !important;
     }
 
