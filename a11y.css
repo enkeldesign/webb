@@ -133,8 +133,8 @@
     }
     
     .cta {
-        background-color: CanvasText !important;
-        color: Canvas !important;
+        background-color: Canvas !important;
+        color: CanvasText !important;
     }
     
     .cta:hover,
