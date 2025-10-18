@@ -217,7 +217,6 @@ a {
     color: var(--link-clr);
     text-decoration: underline;
     text-underline-offset: .3em;
-    white-space: nowrap;
 }
 
 a:hover,
