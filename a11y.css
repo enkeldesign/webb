@@ -114,6 +114,7 @@
     }
     
     :where(main .pill):focus-visible {
+        forced-color-adjust: none;
         background-color: ButtonFace;
         color: ButtonText;
         outline: 5px solid white !important;
