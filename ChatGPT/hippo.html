@@ -18,42 +18,126 @@
     --border: rgba(255,255,255,.2);
     --radius: 12px;
   }
-  body {
-    margin: 0 auto;
-    padding: 1rem clamp(1rem,3vw,2rem);
-    max-width: 78rem;
-    font: 1rem/1.6 system-ui,-apple-system,Segoe UI,Roboto,Helvetica Neue,Arial,sans-serif;
+
+  /* ===== Baslayout (Chess.com-grönt) ===== */
+  body{
+    margin:0 auto;
+    padding:1rem clamp(1rem,3vw,2rem);
+    max-width:78rem;
+    font:1rem/1.6 system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif;
     background:
       radial-gradient(1200px 800px at 15% 0%, #3e7c37 0%, transparent 60%),
       radial-gradient(900px 700px at 85% 100%, #345f2f 0%, transparent 55%),
       var(--bg);
-    color: var(--fg);
+    color:var(--fg);
   }
-  a { color: var(--link); }
-  h1 { font-size: clamp(1.6rem,3vw,2.3rem); margin:.25rem 0; }
-  .lead { color: var(--muted); margin:0 0 1rem; }
-  nav { display:flex; flex-wrap:wrap; gap:.5rem; margin:.75rem 0 1.25rem; }
-  nav a { text-decoration:none; color:var(--fg); border:1px solid var(--border); padding:.45rem .75rem; border-radius:999px; background:rgba(0,0,0,.15); }
-  main>section { margin-block:1.25rem 2rem; }
-  .card { border:1px solid var(--border); border-radius:var(--radius); padding:.8rem; background:rgba(0,0,0,.15); }
-  .card.white { background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02)); }
-  .card.black { background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.2)); }
-  details { border:1px solid var(--border); border-radius:var(--radius); background:rgba(0,0,0,.12); padding:.5rem .7rem; margin:.6rem 0; }
-  summary { cursor:pointer; font-weight:650; list-style:none; }
-  .tag { font:.9em ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; border:1px solid var(--border); padding:.1rem .35rem; border-radius:6px; }
-  .plan li { margin:.15rem 0; }
-  .games { display:grid; grid-template-columns:1fr; gap:1rem; }
-  @media(min-width:52rem){ .games{ grid-template-columns:1fr 1fr; } }
-  .gamecard{ border:1px solid var(--border); border-radius:var(--radius); padding:.8rem; background:rgba(0,0,0,.15); }
-  .board-wrap{ display:grid; grid-template-columns:auto 1fr; gap:.75rem; align-items:start; }
-  chess-board{ width:min(360px,80vw); }
-  .ctrl{ display:flex; gap:.35rem; flex-wrap:wrap; margin:.5rem 0; }
-  .ctrl button{ border:1px solid var(--border); background:rgba(0,0,0,.15); color:var(--fg); padding:.35rem .55rem; border-radius:.5rem; cursor:pointer; }
-  .movelist{ max-height:300px; overflow:auto; font:.95rem ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; border:1px dashed var(--border); border-radius:8px; padding:.45rem; background:rgba(0,0,0,.08); }
+  a{ color:var(--link); }
+  h1{ font-size:clamp(1.6rem,3vw,2.3rem); margin:.25rem 0; }
+  .lead{ color:var(--muted); margin:0 0 1rem; }
+  nav{ display:flex; flex-wrap:wrap; gap:.5rem; margin:.75rem 0 1.25rem; }
+  nav a{
+    text-decoration:none; color:var(--fg);
+    border:1px solid var(--border);
+    padding:.45rem .75rem; border-radius:999px;
+    background:rgba(0,0,0,.15);
+  }
+  main>section{ margin-block:1.25rem 2rem; }
+
+  /* ===== Kort & detaljer ===== */
+  .card{
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:.8rem;
+    background:rgba(0,0,0,.15);
+  }
+  .card.white{ background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02)); }
+  .card.black{ background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.2)); }
+
+  details{
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    background:rgba(0,0,0,.12);
+    padding:.5rem .7rem;
+    margin:.6rem 0;
+  }
+  summary{ cursor:pointer; font-weight:650; list-style:none; }
+  .note{ color:var(--muted); font-size:.95em; }
+  .tag{ font:.9em ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; border:1px solid var(--border); padding:.1rem .35rem; border-radius:6px; }
+  .plan li{ margin:.15rem 0; }
+  hr{ border:0; border-top:1px solid var(--border); margin:1.5rem 0; }
+  footer{ color:var(--muted); font-size:.9rem; margin-top:2rem; }
+
+  /* ===== Gamecards och grid ===== */
+  .games{
+    display:grid;
+    grid-template-columns:1fr;    /* en kolumn – inga sidoutflöden */
+    gap:1rem;
+  }
+  .gamecard{
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:.8rem;
+    background:rgba(0,0,0,.15);
+    max-width:720px;              /* håll allt inom marginal */
+    margin-inline:auto;           /* centrera kortet */
+  }
+
+  /* ===== Bräde + UI staplat ===== */
+  .board-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:.6rem;
+  }
+
+  /* Själva brädet */
+  chess-board{
+    width:min(92vw,520px);        /* responsivt men kontrollerat */
+    height:auto;
+  }
+
+  /* Knappar under brädet */
+  .ctrl{
+    display:flex;
+    gap:.4rem .5rem;
+    flex-wrap:wrap;
+    justify-content:center;
+    margin:.25rem 0 .25rem;
+  }
+  .ctrl button{
+    border:1px solid var(--border);
+    background:rgba(0,0,0,.15);
+    color:var(--fg);
+    padding:.4rem .6rem;
+    border-radius:.55rem;
+    cursor:pointer;
+  }
+
+  /* Draglista */
+  .movelist{
+    width:100%;
+    max-width:640px;
+    max-height:280px;
+    overflow:auto;
+    font:.95rem ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    border:1px dashed var(--border);
+    border-radius:8px;
+    padding:.5rem .55rem;
+    background:rgba(0,0,0,.08);
+    word-break:break-word;
+  }
   .movelist .active{ background:rgba(255,255,255,.18); }
-  .allpos{ margin-top:.5rem; }
-  .allpos .grid{ display:grid; gap:.5rem; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); }
-  chess-board.mini{ width:140px; height:140px; }
+
+  /* Alla ställningar (minibräden) */
+  .allpos{ width:100%; max-width:660px; }
+  .allpos .grid{
+    display:grid; gap:.5rem;
+    grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  }
+  chess-board.mini{ width:120px; height:120px; }
+  @media (min-width:480px){
+    chess-board.mini{ width:140px; height:140px; }
+  }
 </style>
 </head>
 
@@ -146,30 +230,35 @@
     }
   ];
 
-  function makeCard(g,i) {
-    const el = document.createElement('article');
-    el.className = 'gamecard';
-    el.innerHTML = `
-      <h3>${g.title}</h3>
-      <div class="meta"><span class="tag">${g.eco}</span> · <a href="${g.link}" target="_blank">Öppna på Chess.com ↗</a></div>
-      <div class="board-wrap">
-        <chess-board id="board-${i}" class="board"></chess-board>
-        <div>
-          <div class="ctrl">
-            <button data-act="start">⏮</button>
-            <button data-act="prev">◀</button>
-            <button data-act="next">▶</button>
-            <button data-act="end">⏭</button>
-            <button data-act="auto">🔁</button>
-            <button data-act="allpos">🗂</button>
-            <button data-act="clearpos">🧹</button>
-          </div>
-          <div id="movelist-${i}" class="movelist"></div>
-          <div id="allpos-${i}" class="allpos" hidden><div class="grid" id="grid-${i}"></div></div>
-        </div>
-      </div>`;
-    return el;
-  }
+function makeCard(g, i) {
+  const el = document.createElement('article');
+  el.className = 'gamecard';
+  el.innerHTML = `
+    <h3>${g.title}</h3>
+    <div class="meta"><span class="tag">${g.eco}</span> · <a href="${g.link}" target="_blank" rel="noopener">Öppna på Chess.com ↗</a></div>
+
+    <div class="board-wrap">
+      <chess-board id="board-${i}" class="board" aria-label="Schackbräde: ${g.title}"></chess-board>
+
+      <div class="ctrl" role="group" aria-label="Kontroller">
+        <button data-act="start" title="Till början">⏮</button>
+        <button data-act="prev"  title="Ett drag bakåt">◀</button>
+        <button data-act="next"  title="Ett drag framåt">▶</button>
+        <button data-act="end"   title="Till slutet">⏭</button>
+        <button data-act="auto"  title="Autoplay">🔁</button>
+        <button data-act="allpos"  title="Visa alla ställningar">🗂</button>
+        <button data-act="clearpos" title="Rensa minibräden">🧹</button>
+      </div>
+
+      <div id="movelist-${i}" class="movelist" aria-live="polite"></div>
+
+      <div id="allpos-${i}" class="allpos" hidden>
+        <div class="grid" id="grid-${i}"></div>
+      </div>
+    </div>
+  `;
+  return el;
+}
 
   function initViewer(node,g,i) {
     const board  = node.querySelector('#board-'+i);
