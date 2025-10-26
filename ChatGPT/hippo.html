@@ -138,6 +138,39 @@
   @media (min-width:480px){
     chess-board.mini{ width:140px; height:140px; }
   }
+  
+  /* === Partiexempel utan kortkant === */
+#partier {
+  border: none;
+  background: transparent;
+  padding: 0;                 /* inga innerkanter runt hela sektionen */
+  max-width: 78rem;           /* följ sidans maxbredd */
+  margin-inline: auto;
+}
+#partier > h2 { margin: .5rem 0 .35rem; }
+#partier > .note { margin: 0 0 .75rem; }
+
+/* Gamecards inuti får fortsatt “kort”-look och håller sig inom marginaler */
+.gamecard{
+  border:1px solid var(--border);
+  border-radius: var(--radius);
+  padding:.8rem;
+  background:rgba(0,0,0,.15);
+  max-width:720px;
+  margin-inline:auto;
+}
+
+/* Stackat layout under brädet – från förra stylen */
+.board-wrap{ display:flex; flex-direction:column; align-items:center; gap:.6rem; }
+chess-board{ width:min(92vw,520px); height:auto; }
+.ctrl{ display:flex; gap:.4rem .5rem; flex-wrap:wrap; justify-content:center; margin:.25rem 0; }
+.ctrl button{ border:1px solid var(--border); background:rgba(0,0,0,.15); color:var(--fg); padding:.4rem .6rem; border-radius:.55rem; cursor:pointer; }
+.movelist{ width:100%; max-width:640px; max-height:280px; overflow:auto; font:.95rem ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; border:1px dashed var(--border); border-radius:8px; padding:.5rem .55rem; background:rgba(0,0,0,.08); word-break:break-word; }
+.movelist .active{ background:rgba(255,255,255,.18); }
+.allpos{ width:100%; max-width:660px; }
+.allpos .grid{ display:grid; gap:.5rem; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); }
+chess-board.mini{ width:120px; height:120px; }
+@media (min-width:480px){ chess-board.mini{ width:140px; height:140px; } }
 </style>
 </head>
 
@@ -191,7 +224,7 @@
     </details>
   </section>
 
-  <section id="partier" class="card">
+  <section id="partier" class="card card--plain">
     <h2>♜ Partiexempel (interaktiv PGN-visare)</h2>
     <p class="note">⏮ ◀ ▶ ⏭ spelar drag; 🔁 auto; 🗂 visar alla ställningar som minibräden.</p>
     <div class="games" id="games"></div>
