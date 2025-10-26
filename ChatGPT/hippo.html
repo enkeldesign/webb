@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="sv">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hippo-repertoar – Strindarn</title>
+    <meta name="description" content="Strindarns hippo-repertoar – vit (1.b3–Bb2–e3–Ne2) och svart (…g6 …Bg7 …d6 …Nd7) med planer, idéer och interaktiva partiexempel.">
+
+    <!-- Chess.com-grön bakgrund och typografi -->
+    <style>
+        :root {
+            color-scheme: light dark;
+            --bg-green: #2f5b2c;
+            --bg-green-2: #21481f;
+            --bg: color-mix(in oklab, var(--bg-green) 70%, var(--bg-green-2));
+            --fg: #f6fff6;
+            --muted: #d3e7d3;
+            --link: #c8ffb8;
+            --border: rgba(255, 255, 255, .2);
+            --radius: 12px;
+        }
+
+        body {
+            margin: 0 auto;
+            padding: 1rem clamp(1rem, 3vw, 2rem);
+            max-width: 78rem;
+            font: 1rem/1.6 system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;
+            background:
+                radial-gradient(1200px 800px at 15% 0%, #3e7c37 0%, transparent 60%),
+                radial-gradient(900px 700px at 85% 100%, #345f2f 0%, transparent 55%),
+                var(--bg);
+            color: var(--fg);
+        }
+
+        a {
+            color: var(--link);
+        }
+
+        h1 {
+            font-size: clamp(1.6rem, 3vw, 2.3rem);
+            margin: .25rem 0;
+        }
+
+        .lead {
+            color: var(--muted);
+            margin: 0 0 1rem;
+        }
+
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
+            margin: .75rem 0 1.25rem;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--fg);
+            border: 1px solid var(--border);
+            padding: .45rem .75rem;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, .15);
+        }
+
+        main>section {
+            margin-block: 1.25rem 2rem;
+        }
+
+        .card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: .8rem;
+            background: rgba(0, 0, 0, .15);
+        }
+
+        .card.white {
+            background: linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .02));
+        }
+
+        .card.black {
+            background: linear-gradient(180deg, rgba(0, 0, 0, .35), rgba(0, 0, 0, .2));
+        }
+
+        details {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: rgba(0, 0, 0, .12);
+            padding: .5rem .7rem;
+            margin: .6rem 0;
+        }
+
+        summary {
+            cursor: pointer;
+            font-weight: 650;
+            list-style: none;
+        }
+
+        .note {
+            color: var(--muted);
+            font-size: .95em;
+        }
+
+        .tag {
+            font: .9em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            border: 1px solid var(--border);
+            padding: .1rem .35rem;
+            border-radius: 6px;
+        }
+
+        .plan li {
+            margin: .15rem 0;
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid var(--border);
+            margin: 1.5rem 0;
+        }
+
+        /* Interaktiv PGN-visare */
+        .games {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        @media(min-width:52rem) {
+            .games {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .gamecard {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: .8rem;
+            background: rgba(0, 0, 0, .15);
+        }
+
+        .board-wrap {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: .75rem;
+            align-items: start;
+        }
+
+        .board {
+            width: min(360px, 80vw);
+        }
+
+        .ctrl {
+            display: flex;
+            gap: .35rem;
+            flex-wrap: wrap;
+            margin: .5rem 0;
+        }
+
+        .ctrl button {
+            border: 1px solid var(--border);
+            background: rgba(0, 0, 0, .15);
+            color: var(--fg);
+            padding: .35rem .55rem;
+            border-radius: .5rem;
+            cursor: pointer;
+        }
+
+        .movelist {
+            max-height: 300px;
+            overflow: auto;
+            font: .95rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            border: 1px dashed var(--border);
+            border-radius: 8px;
+            padding: .45rem;
+            background: rgba(0, 0, 0, .08);
+        }
+
+        .movelist .active {
+            background: rgba(255, 255, 255, .18);
+        }
+
+        .allpos {
+            margin-top: .5rem;
+        }
+
+        .allpos .grid {
+            display: grid;
+            gap: .5rem;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        }
+
+        chess-board.mini {
+            width: 140px;
+            height: 140px;
+        }
+
+        footer {
+            color: var(--muted);
+            font-size: .9rem;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Hippo-repertoar <span>🦛 Strindarn</span></h1>
+        <p class="lead">Stabilt, igenkännligt och farligt vid rätt timing.</p>
+        <nav>
+            <a href="#vit">♔ Vit</a>
+            <a href="#svart">♚ Svart</a>
+            <a href="#planer">♟ Planer</a>
+            <a href="#partier">♜ Partier</a>
+        </nav>
+    </header>
+
+    <main>
+        <section id="vit" class="card white">
+            <h2>♔ Vit – 1.b3 2.Bb2 3.e3 4.Ne2</h2>
+            <details open>
+                <summary>Start-ram & nyckelfördelning</summary>
+                <ul class="plan">
+                    <li><strong>Stomme:</strong> <span class="tag">b3</span> <span class="tag">Bb2</span> <span class="tag">e3</span> <span class="tag">Ne2</span> → <span class="tag">g3</span> <span class="tag">Bg2</span> <span class="tag">O-O</span> <span class="tag">d3</span>.</li>
+                    <li><strong>Diagonaler:</strong> ♗b2↦e5/♚, ♗g2↦d5/h7.</li>
+                    <li><strong>Språng:</strong> ♘e2–f4/g3; bryt med f4 eller c4 när torn är kopplade.</li>
+                </ul>
+                <p class="note">Rockera först, slå sen.</p>
+            </details>
+        </section>
+
+        <section id="svart" class="card black">
+            <h2>♚ Svart – …g6 …Bg7 …d6 …Nd7</h2>
+            <details open>
+                <summary>Start-ram & nyckelfördelning</summary>
+                <ul class="plan">
+                    <li><strong>Stomme:</strong> …g6, …♗g7, …d6, …♞d7 → …e6, …♞e7, …O-O, …a6, …h6.</li>
+                    <li><strong>Kontring:</strong> …c5 vid låst centrum eller …f5 för kungssidan.</li>
+                </ul>
+                <p class="note">Undvik tidigt …d5 – elasticiteten är din styrka.</p>
+            </details>
+        </section>
+
+        <section id="planer" class="card">
+            <h2>♟ Planer & idéer</h2>
+            <details open>
+                <summary>Gemensam Hippo-filosofi</summary>
+                <ul class="plan">
+                    <li>Elastiskt centrum (vit: d3/e3, svart: d6/e6) – öppna när <em>du</em> vill.</li>
+                    <li>Diagonaldominans: byt aldrig snipern ♗b2/♗b7 gratis.</li>
+                    <li>Språngpunkt: vit → f4/c4; svart → …f5/…c5.</li>
+                </ul>
+            </details>
+        </section>
+
+        <!-- === Interaktiva partier === -->
+        <section id="partier" class="card">
+            <h2>♜ Partiexempel (interaktiv PGN-visare)</h2>
+            <p class="note">⏮ ◀ ▶ ⏭ spelar drag; 🔁 auto; 🗂 visar alla ställningar som minibräden.</p>
+            <div class="games" id="games"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Byggd i Chess.com-grönt. Web-komponenter utan jQuery.</p>
+    </footer>
+
+    <!-- ===== JS med web-komponenter ===== -->
+    <script type="module">
+        import 'https://unpkg.com/chessboard-element@^4/dist/chessboard-element.js';
+        import {
+            Chess
+        } from 'https://unpkg.com/chess.js@^1.0.0/dist/esm/chess.js';
+
+        const SETTINGS = {
+            autoplayMs: 700,
+            maxPlyForAllPositions: 120
+        };
+
+        const GAMES = [{
+                title: "Vit vs mikewasicko – 1-0 (Blitz 3+2, 2025-10-09)",
+                link: "https://www.chess.com/game/live/144100767932",
+                eco: "A00 (omv. Hippo)",
+                pgn: `1. e3 e5 2. Ne2 d5 3. d3 c5 4. Nd2 Nc6 5. b3 Bf5 6. Bb2 Nf6 7. g3 Be7 8. Bg2 O-O
+9. O-O d4 10. e4 Bg4 11. h3 Bh5 12. g4 Bg6 13. f4 exf4 14. Nxf4 Ne5 15. g5 Nh5
+16. Nxh5 Bxh5 17. Qxh5 Bxg5 18. Nf3 Nxf3+ 19. Rxf3 Be3+ 20. Kh1 Qa5 21. Raf1 f6
+22. Bc1 Bxc1 23. Rxc1 Qd2 24. Qd5+ Kh8 25. Rcf1 Qxc2 26. e5 Rad8 27. Qxb7 fxe5
+28. Rxf8+ Rxf8 29. Rxf8#`
+            },
+            {
+                title: "Svart vs ParsaBlazing – 0-1 (Blitz 3+2, 2025-10-14)",
+                link: "https://www.chess.com/game/live/144300217534",
+                eco: "B00 (Owen’s / Modern-hybrid)",
+                pgn: `1. e4 b6 2. Nc3 Bb7 3. f4 e6 4. e5 Ne7 5. Nge2 d6 6. Nd4 c5 7. Ndb5 a6
+8. exd6 Nec6 9. Nc7+ Kd7 10. Nxa8 Bxa8 11. Ne4 Nd4 12. c3 Bxe4 13. Bxa6 Nxa6
+14. Qa4+ Bc6 15. Qxa6 Qh4+ 16. g3 Qg4 17. O-O Ne2+ 18. Kf2 Qf3+ 19. Ke1 Qg2
+20. d3 Bf3 21. Be3 Nxc3 22. bxc3 Qe2#`
+            }
+        ];
+
+        function makeCard(g, i) {
+            const el = document.createElement('article');
+            el.className = 'gamecard';
+            el.innerHTML = `
+      <h3>${g.title}</h3>
+      <div class="meta"><span class="tag">${g.eco}</span> · <a href="${g.link}" target="_blank">Öppna på Chess.com ↗</a></div>
+      <div class="board-wrap">
+        <chess-board id="board-${i}" class="board"></chess-board>
+        <div>
+          <div class="ctrl">
+            <button data-act="start">⏮</button>
+            <button data-act="prev">◀</button>
+            <button data-act="next">▶</button>
+            <button data-act="end">⏭</button>
+            <button data-act="auto">🔁</button>
+            <button data-act="allpos">🗂</button>
+            <button data-act="clearpos">🧹</button>
+          </div>
+          <div id="movelist-${i}" class="movelist"></div>
+          <div id="allpos-${i}" class="allpos" hidden><div class="grid" id="grid-${i}"></div></div>
+        </div>
+      </div>`;
+            return el;
+        }
+
+        function initViewer(node, g, i) {
+            const board = node.querySelector('#board-' + i);
+            const list = node.querySelector('#movelist-' + i);
+            const allpos = node.querySelector('#allpos-' + i);
+            const grid = node.querySelector('#grid-' + i);
+            const btns = node.querySelectorAll('.ctrl button');
+            const chess = new Chess();
+            chess.loadPgn(g.pgn);
+            const moves = chess.history({
+                verbose: true
+            });
+            chess.reset();
+            let ply = 0,
+                timer = null;
+
+            function render() {
+                chess.reset();
+                for (let k = 0; k < ply; k++) chess.move(moves[k]);
+                board.setPosition(chess.fen());
+                let html = '';
+                for (let k = 0; k < moves.length; k += 2) {
+                    const m1 = moves[k]?.san || '',
+                        m2 = moves[k + 1]?.san || '';
+                    const n = (k / 2) + 1;
+                    const a1 = (k === ply - 1) ? 'active' : '',
+                        a2 = (k + 1 === ply - 1) ? 'active' : '';
+                    html += `<span class="${a1}">${n}. ${m1}</span> ${m2?`<span class="${a2}">${m2}</span>`:''} `;
+                }
+                list.innerHTML = html;
+            }
+
+            function goStart() {
+                ply = 0;
+                render();
+            }
+
+            function goEnd() {
+                ply = moves.length;
+                render();
+            }
+
+            function goPrev() {
+                ply = Math.max(0, ply - 1);
+                render();
+            }
+
+            function goNext() {
+                ply = Math.min(moves.length, ply + 1);
+                render();
+            }
+
+            function toggleAuto() {
+                if (timer) {
+                    clearInterval(timer);
+                    timer = null;
+                    return;
+                }
+                if (ply === moves.length) ply = 0;
+                timer = setInterval(() => {
+                    ply < moves.length ? goNext() : (clearInterval(timer), timer = null);
+                }, SETTINGS.autoplayMs);
+            }
+
+            function renderAll() {
+                allpos.hidden = false;
+                grid.innerHTML = '';
+                const tmp = new Chess();
+                const tot = Math.min(moves.length, SETTINGS.maxPlyForAllPositions);
+                for (let k = 0; k <= tot; k++) {
+                    tmp.reset();
+                    for (let j = 0; j < k; j++) tmp.move(moves[j]);
+                    const mini = document.createElement('chess-board');
+                    mini.className = 'mini';
+                    mini.setPosition(tmp.fen());
+                    grid.appendChild(mini);
+                }
+            }
+
+            function clearAll() {
+                grid.innerHTML = '';
+                allpos.hidden = true;
+            }
+
+            btns.forEach(b => b.onclick = e => {
+                const a = e.target.dataset.act;
+                if (a === 'start') goStart();
+                if (a === 'prev') goPrev();
+                if (a === 'next') goNext();
+                if (a === 'end') goEnd();
+                if (a === 'auto') toggleAuto();
+                if (a === 'allpos') renderAll();
+                if (a === 'clearpos') clearAll();
+            });
+            render();
+        }
+
+        const root = document.getElementById('games');
+        GAMES.forEach((g, i) => {
+            const c = makeCard(g, i);
+            root.appendChild(c);
+            initViewer(c, g, i);
+        });
+    </script>
+</body>
+
+</html>
