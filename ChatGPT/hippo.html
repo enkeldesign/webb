@@ -7,23 +7,19 @@
 <meta name="description" content="Strindarns hippo-repertoar – vit (1.b3–Bb2–e3–Ne2) och svart (…g6 …Bg7 …d6 …Nd7) med planer, idéer och interaktiva partiexempel.">
 
 <style>
-  :root {
+  :root{
     color-scheme: light dark;
-    --bg-green: #2f5b2c;
-    --bg-green-2: #21481f;
+    --bg-green:#2f5b2c; --bg-green-2:#21481f;
     --bg: color-mix(in oklab, var(--bg-green) 70%, var(--bg-green-2));
-    --fg: #f6fff6;
-    --muted: #d3e7d3;
-    --link: #c8ffb8;
+    --fg:#f6fff6; --muted:#d3e7d3; --link:#c8ffb8;
     --border: rgba(255,255,255,.2);
-    --radius: 12px;
+    --radius:12px;
   }
 
-  /* ===== Baslayout (Chess.com-grönt) ===== */
+  /* ===== Bas / container-gutters ===== */
   body{
-    margin:0 auto;
-    padding:1rem clamp(1rem,3vw,2rem);
-    max-width:78rem;
+    margin:0;
+    padding:0;                    /* inga stora body-paddings */
     font:1rem/1.6 system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif;
     background:
       radial-gradient(1200px 800px at 15% 0%, #3e7c37 0%, transparent 60%),
@@ -31,6 +27,12 @@
       var(--bg);
     color:var(--fg);
   }
+  header, main, footer{
+    max-width:78rem;
+    margin-inline:auto;
+    padding-inline: clamp(12px, 3vw, 24px); /* responsiva gutters */
+  }
+
   a{ color:var(--link); }
   h1{ font-size:clamp(1.6rem,3vw,2.3rem); margin:.25rem 0; }
   .lead{ color:var(--muted); margin:0 0 1rem; }
@@ -42,8 +44,9 @@
     background:rgba(0,0,0,.15);
   }
   main>section{ margin-block:1.25rem 2rem; }
+  footer{ color:var(--muted); font-size:.9rem; margin-top:2rem; }
 
-  /* ===== Kort & detaljer ===== */
+  /* ===== Kort & detaljer (behåll kort för Vit/Svart/Planer) ===== */
   .card{
     border:1px solid var(--border);
     border-radius:var(--radius);
@@ -65,112 +68,80 @@
   .tag{ font:.9em ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; border:1px solid var(--border); padding:.1rem .35rem; border-radius:6px; }
   .plan li{ margin:.15rem 0; }
   hr{ border:0; border-top:1px solid var(--border); margin:1.5rem 0; }
-  footer{ color:var(--muted); font-size:.9rem; margin-top:2rem; }
 
-  /* ===== Gamecards och grid ===== */
+  /* ===== Partiexempel: utan övergripande kort/ram ===== */
+  #partier{
+    border:none; background:transparent; padding:0;
+  }
+  #partier > h2{ margin:.5rem 0 .35rem; }
+  #partier > .note{ margin:0 0 .75rem; }
+
+  /* Grid med prydliga gamecards, inga overflow-problem */
   .games{
     display:grid;
-    grid-template-columns:1fr;    /* en kolumn – inga sidoutflöden */
+    grid-template-columns:1fr;    /* en kolumn på mobil */
     gap:1rem;
   }
   .gamecard{
-    border:1px solid var(--border);
-    border-radius:var(--radius);
-    padding:.8rem;
-    background:rgba(0,0,0,.15);
-    max-width:720px;              /* håll allt inom marginal */
-    margin-inline:auto;           /* centrera kortet */
+    border:none;                  /* ⬅️ ingen ram runt visaren */
+    background:transparent;
+    padding:.2rem 0 1rem;
+    max-width:720px;
+    margin-inline:auto;           /* centrera hela kortet */
+  }
+  /* diskret avskiljare mellan korten */
+  .gamecard + .gamecard{
+    border-top:1px solid var(--border);
+    padding-top:1rem;
+    margin-top:.5rem;
   }
 
-  /* ===== Bräde + UI staplat ===== */
+  /* ===== Bräde + UI – allt under brädet och centrerat ===== */
   .board-wrap{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:.6rem;
+    display:flex; flex-direction:column; align-items:center; gap:.6rem;
   }
-
-  /* Själva brädet */
   chess-board{
-    width:min(92vw,520px);        /* responsivt men kontrollerat */
+    display:block;
+    margin-inline:auto;           /* centrera brädet */
+    width:min(96vw, 520px);       /* responsivt men kontrollerat */
     height:auto;
   }
 
-  /* Knappar under brädet */
   .ctrl{
-    display:flex;
-    gap:.4rem .5rem;
-    flex-wrap:wrap;
-    justify-content:center;
-    margin:.25rem 0 .25rem;
+    display:flex; gap:.4rem .5rem; flex-wrap:wrap;
+    justify-content:center; margin:.25rem 0;
   }
   .ctrl button{
     border:1px solid var(--border);
     background:rgba(0,0,0,.15);
     color:var(--fg);
-    padding:.4rem .6rem;
-    border-radius:.55rem;
-    cursor:pointer;
+    padding:.5rem .7rem;          /* lite större tappytor */
+    border-radius:.6rem; cursor:pointer;
   }
 
-  /* Draglista */
   .movelist{
-    width:100%;
-    max-width:640px;
-    max-height:280px;
-    overflow:auto;
+    width:100%; max-width:640px; max-height:280px; overflow:auto;
     font:.95rem ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-    border:1px dashed var(--border);
-    border-radius:8px;
-    padding:.5rem .55rem;
-    background:rgba(0,0,0,.08);
+    border:1px dashed var(--border); border-radius:8px;
+    padding:.5rem .55rem; background:rgba(0,0,0,.08);
     word-break:break-word;
   }
   .movelist .active{ background:rgba(255,255,255,.18); }
 
-  /* Alla ställningar (minibräden) */
   .allpos{ width:100%; max-width:660px; }
   .allpos .grid{
     display:grid; gap:.5rem;
-    grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+    grid-template-columns: repeat(auto-fill, minmax(120px,1fr));
   }
   chess-board.mini{ width:120px; height:120px; }
   @media (min-width:480px){
     chess-board.mini{ width:140px; height:140px; }
   }
-  
-  /* === Partiexempel utan kortkant === */
-#partier {
-  border: none;
-  background: transparent;
-  padding: 0;                 /* inga innerkanter runt hela sektionen */
-  max-width: 78rem;           /* följ sidans maxbredd */
-  margin-inline: auto;
-}
-#partier > h2 { margin: .5rem 0 .35rem; }
-#partier > .note { margin: 0 0 .75rem; }
 
-/* Gamecards inuti får fortsatt “kort”-look och håller sig inom marginaler */
-.gamecard{
-  border:1px solid var(--border);
-  border-radius: var(--radius);
-  padding:.8rem;
-  background:rgba(0,0,0,.15);
-  max-width:720px;
-  margin-inline:auto;
-}
-
-/* Stackat layout under brädet – från förra stylen */
-.board-wrap{ display:flex; flex-direction:column; align-items:center; gap:.6rem; }
-chess-board{ width:min(92vw,520px); height:auto; }
-.ctrl{ display:flex; gap:.4rem .5rem; flex-wrap:wrap; justify-content:center; margin:.25rem 0; }
-.ctrl button{ border:1px solid var(--border); background:rgba(0,0,0,.15); color:var(--fg); padding:.4rem .6rem; border-radius:.55rem; cursor:pointer; }
-.movelist{ width:100%; max-width:640px; max-height:280px; overflow:auto; font:.95rem ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; border:1px dashed var(--border); border-radius:8px; padding:.5rem .55rem; background:rgba(0,0,0,.08); word-break:break-word; }
-.movelist .active{ background:rgba(255,255,255,.18); }
-.allpos{ width:100%; max-width:660px; }
-.allpos .grid{ display:grid; gap:.5rem; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); }
-chess-board.mini{ width:120px; height:120px; }
-@media (min-width:480px){ chess-board.mini{ width:140px; height:140px; } }
+  /* ===== Liten polish för extremt bred skärm ===== */
+  @media (min-width:68rem){
+    #partier > h2{ margin-top:.75rem; }
+  }
 </style>
 </head>
 
