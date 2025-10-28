@@ -356,17 +356,15 @@ figure.photo address {
 
 .ext::after {
     display: inline;
-    margin-left: var(--gap-1);
     text-decoration: none;
-    content: " »";
+    content: "  »";
 }
 
 footer .lang::after {
     display: inline;
-    margin-left: var(--gap-1);
     text-decoration: none;
     font-family: serif;
-    content: " ⚑";
+    content: "  ⚑";
 }
 
 .pill:hover {
@@ -607,9 +605,8 @@ footer .nav-link {
 }
 
 #up::after {
-    display: inline-block;
-    margin-left: .3rem;
-    content: " ⤒";
+    display: inline;
+    content: "  ⤒";
     font-size: .8rem;
     text-decoration: none;
 }
