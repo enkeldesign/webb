@@ -79,7 +79,7 @@
     --font-xxxl: 2.3rem;
     --font-huge: 2.6rem;
 
-    --fs-title: var(--font-xxxl);
+    --fs-title: var(--font-xxl);
 
     /* ===== Spacing ===== */
     --gap-1: .25rem;
@@ -142,22 +142,24 @@ h1 {
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
-    line-height: .75;
+    line-height: .7;
     font-family: var(--heading-font);
-    font-size: var(--fs-title);
+    font-size: 1.85rem;
     font-weight: bold;
     color: var(--heading-clr);
     font-size-adjust: from-font;
 }
 
 h1 span:first-child {
-    font-size: 1em;
-}
+      margin-top: var(--gap-1);
+
+text-transform: uppercase;
+letter-spacing: -0.02em}
 
 h1 span:last-child {
     margin-top: var(--gap-2);
     font-family: var(--heading-font);
-    font-size: 0.825em;
+  font-size:0.94em;
     font-weight: bold;
     color: var(--heading-span-clr);
 }
