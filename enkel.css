@@ -78,8 +78,7 @@
     --font-xxl: 1.9rem;
     --font-xxxl: 2.3rem;
     --font-huge: 2.6rem;
-
-    --fs-title: var(--font-xxl);
+    --fs-title: 2rem;
 
     /* ===== Spacing ===== */
     --gap-1: .25rem;
@@ -144,22 +143,22 @@ h1 {
     justify-content: center;
     line-height: .7;
     font-family: var(--heading-font);
-    font-size: 1.85rem;
+    font-size: var(--fs-title);
     font-weight: bold;
     color: var(--heading-clr);
     font-size-adjust: from-font;
 }
 
 h1 span:first-child {
-      margin-top: var(--gap-1);
-
-text-transform: uppercase;
-letter-spacing: -0.02em}
+    margin-top: var(--gap-1);
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+}
 
 h1 span:last-child {
     margin-top: var(--gap-2);
     font-family: var(--heading-font);
-  font-size:0.94em;
+    font-size:0.94em;
     font-weight: bold;
     color: var(--heading-span-clr);
 }
@@ -865,4 +864,4 @@ footer figure a:visited:focus-visible {
     }
 }
 
-/* by Erik Jansson, updated 2025-10-07 */
+/* by Erik Jansson, updated 2025-11-15 */
