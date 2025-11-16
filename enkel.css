@@ -42,7 +42,7 @@
     --section-c-bkg: light-dark(var(--cyan-srgb), var(--void));
 
     --text-clr: light-dark(var(--mine), var(--pale));
-    --heading-clr: light-dark(var(--blue), var(--dear));
+    --heading-clr: light-dark(var(--blue), var(--brue));
     --heading-span-clr: light-dark(var(--mine), var(--pale));
 
 
