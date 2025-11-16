@@ -41,8 +41,9 @@
     --section-c-bkg: light-dark(var(--cyan-srgb), var(--void));
 
     --text-clr: light-dark(var(--mine), var(--pale));
-    --heading-clr: light-dark(var(--mine), var(--pale));
-    --heading-span-clr: light-dark(var(--blue), var(--dear));
+    --heading-clr: light-dark(var(--blue), var(--dear));
+    --heading-span-clr: light-dark(var(--mine), var(--pale));
+
 
     --section-b-h2-clr: light-dark(var(--navy), var(--teal));
     --section-c-h2-clr: light-dark(var(--navy), var(--teal));
