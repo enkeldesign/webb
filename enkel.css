@@ -10,6 +10,7 @@
     --cyab: #cddb;
     --teal: #8bc;
     --teab: #8bcd;
+    --tear: #4090a0;
     --dear: #5ab;
     --fire: #c08010;
     --blue: #168;
@@ -34,14 +35,14 @@
     --footer-bkg: transparent;
 
     --logo-e-clr: light-dark(var(--mine), var(--pale));
-    --logo-d-clr: light-dark(var(--dear), var(--dear));
+    --logo-d-clr: light-dark(var(--tear), var(--dear));
 
     --section-a-bkg: light-dark(var(--cyan-srgb), var(--mine));
     --section-b-bkg: light-dark(var(--pale), var(--deep-srgb));
     --section-c-bkg: light-dark(var(--cyan-srgb), var(--void));
 
     --text-clr: light-dark(var(--mine), var(--pale));
-    --heading-clr: light-dark(var(--dear), var(--dear));
+    --heading-clr: light-dark(var(--tear), var(--dear));
     --heading-span-clr: light-dark(var(--mine), var(--pale));
 
 
