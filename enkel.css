@@ -161,7 +161,7 @@ h1 span:first-child {
 h1 span:last-child {
     margin-top: var(--gap-2);
     font-family: var(--heading-font);
-    font-size:0.9em;
+    font-size:1em;
     font-weight: bold;
     color: var(--heading-span-clr);
 }
