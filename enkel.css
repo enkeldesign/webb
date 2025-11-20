@@ -81,7 +81,7 @@
     --font-xxl: 1.9rem;
     --font-xxxl: 2.3rem;
     --font-huge: 2.6rem;
-    --fs-title: 2rem;
+    --fs-title: 1.9rem;
 
     /* ===== Spacing ===== */
     --gap-1: .25rem;
@@ -660,7 +660,7 @@ footer figure a:visited:focus-visible {
 @media (min-width:45em) {
     :root {
         --section-a-bkg: var(--body-bkg);
-        --fs-title: clamp(2rem, 4vw, 2.3rem);
+        --fs-title: clamp(1.9rem, 4vw, 2.1rem);
     }
 
     body {
