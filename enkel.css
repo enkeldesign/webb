@@ -45,7 +45,6 @@
     --heading-clr: light-dark(var(--brue), var(--teal));
     --heading-span-clr: light-dark(var(--mine), var(--pale));
 
-
     --section-b-h2-clr: light-dark(var(--navy), var(--teal));
     --section-c-h2-clr: light-dark(var(--mine), var(--alto));
     --ul-clr: light-dark(var(--deep), var(--cyan));
@@ -53,6 +52,7 @@
     --footer-clr: light-dark(var(--dark), var(--mist));
     --quote-clr: light-dark(var(--rust), var(--teal));
     --border-clr: light-dark(var(--rust), var(--dear));
+    --ul-border-clr: light-dark(var(--blue), var(--dear));
 
     --pill-clr: light-dark(var(--blue), var(--teal));
     --cta-text-clr: light-dark(var(--mist), var(--grau));
@@ -599,7 +599,7 @@ footer ul {
     line-height: 2.6;
     font-family: var(--alt-font);
     font-size: 1.2rem;
-    border-left: 2px solid var(--pill-clr);
+    border-left: 2px solid var(--ul-border-clr);
     padding: 0 0 0 var(--gap-5);
 }
 
@@ -867,4 +867,4 @@ footer figure a:visited:focus-visible {
     }
 }
 
-/* by Erik Jansson, updated 2025-11-15 */
+/* by Erik Jansson, updated 2025-11-20 */
