@@ -99,7 +99,7 @@
     /* ===== Global ===== */
     font-size: 100%;
     text-wrap: pretty;
-    -webkit-text-size-adjust: 100%;
+    /* -webkit-text-size-adjust: 100%; */
     line-height: 1.7;
     scroll-behavior: smooth;
     background-color: var(--body-bkg);
@@ -148,7 +148,7 @@ h1 {
     font-size: var(--fs-title);
     font-weight: bold;
     color: var(--heading-clr);
-    font-size-adjust: from-font;
+    /* font-size-adjust: from-font; */
 }
 
 h1 span:first-child {
