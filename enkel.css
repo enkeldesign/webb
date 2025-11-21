@@ -161,7 +161,7 @@ h1 span:first-child {
 h1 span:last-child {
     margin-top: var(--gap-2);
     font-family: var(--heading-font);
-    font-size: 0.9em;
+    font-size: 0.99em;
     font-weight: bold;
     color: var(--heading-span-clr);
 }
@@ -830,7 +830,7 @@ footer figure a:visited:focus-visible {
     }
 
     h1 span:last-child {
-        font-size: 0.725em;
+        font-size: 0.8em;
     }
 
     footer a,
