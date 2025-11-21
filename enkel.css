@@ -99,7 +99,7 @@
     /* ===== Global ===== */
     font-size: 100%;
     text-wrap: pretty;
-    /* -webkit-text-size-adjust: 100%; */
+    -webkit-text-size-adjust: 100%;
     line-height: 1.7;
     scroll-behavior: smooth;
     background-color: var(--body-bkg);
