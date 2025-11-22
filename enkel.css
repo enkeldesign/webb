@@ -645,6 +645,10 @@ footer figure a:visited:focus-visible {
     color: transparent;
 }
 
+footer address {
+--teal: var(--dear);
+}
+
 /* ===== Media queries ===== */
 
 @media (prefers-color-scheme: dark) {
