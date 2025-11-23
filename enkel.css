@@ -36,14 +36,14 @@
     --footer-bkg: transparent;
 
     --logo-e-clr: light-dark(var(--mine), var(--pale));
-    --logo-d-clr: light-dark(var(--brue), var(--teal));
+    --logo-d-clr: light-dark(var(--brue), var(--brue));
 
     --section-a-bkg: light-dark(var(--cyan-srgb), var(--grau));
     --section-b-bkg: light-dark(var(--pale), var(--deep-srgb));
     --section-c-bkg: light-dark(var(--cyan-srgb), var(--grau));
 
     --text-clr: light-dark(var(--mine), var(--pale));
-    --heading-clr: light-dark(var(--brue), var(--teal));
+    --heading-clr: light-dark(var(--brue), var(--brue));
     --heading-span-clr: light-dark(var(--mine), var(--pale));
 
     --section-b-h2-clr: light-dark(var(--navy), var(--teal));
