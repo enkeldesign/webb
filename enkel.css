@@ -27,9 +27,10 @@
     --darb: #333b;
     --void: #1a2026;
     --grau: #16161d;
+    --coal: #000;
 
     /* ===== Color application ===== */
-    --body-bkg: light-dark(var(--mist), var(--dark));
+    --body-bkg: light-dark(var(--mist), var(--coal));
     --header-bkg: transparent;
     --main-bkg: transparent;
     --footer-bkg: transparent;
