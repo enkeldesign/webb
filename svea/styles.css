@@ -407,7 +407,7 @@
             margin-bottom: 0.6rem;
             border-radius: 0.75rem;
             overflow: hidden;
-            background-color: var(--highlight-blue);
+            background-color: var(--primary-blue);
         }
 
         .faq details:last-child {
@@ -448,8 +448,8 @@
 
         .faq details>*:not(summary) {
             padding: 0.8rem 0.85rem;
-            border: 0.15rem solid var(--highlight-blue);
-            background-color: var(--primary-blue);
+            border: 0.15rem solid var(--primary-blue);
+            background-color: var(--highlight-blue);
             font-size: 0.9rem;
             line-height: 1.4;
         }
