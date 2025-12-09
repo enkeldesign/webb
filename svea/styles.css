@@ -358,7 +358,7 @@
 
         .rules,
         .faq {
-            margin: 0 .9rem 1rem;
+            margin: 0 .9rem 2rem;
             background-color: var(--deep-blue);
                     border: 0.15rem solid var(--yellow);
             border-radius: 1rem;
