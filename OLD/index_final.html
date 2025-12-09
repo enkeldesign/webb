@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vi är Svea – Klanfamilj i Clash Royale</title>
+    <style>
+        :root {
+            /* Colour palette inspired by Clash Royale */
+            --primary-blue: #4c7aa5;
+            --highlight-blue: #407099;
+            --bright-blue: #30557e;
+            --deep-blue: #274e75;
+            --yellow: #fdd433;
+            --text-light: #ffffff;
+
+            /* Layout and spacing */
+            --border-thick: 1rem;
+            --space-1: 2rem;
+            --space-2: 2rem;
+            --panel-padding: 4rem;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100dvh;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background-color: #111;
+            color: var(--text-light);
+        }
+
+        body {
+            border: 0.15rem solid #222;
+        }
+
+        /* Central panel (mobile layout, centred on larger screens) */
+        .panel {
+            margin: 0.75rem auto;
+            border: 0.25rem solid #333;
+            border-radius: 0.25rem;
+            background-color: var(--primary-blue);
+            min-height: calc(100dvh - 4rem);
+            position: relative;
+            overflow: hidden;
+            max-width: 30rem; /* keeps mobile width on large screens */
+        }
+
+        /* Clash Royale logo in top‑right */
+        .cr-logo {
+            position: absolute;
+            top: 1.1rem;
+            right: 1.5rem;
+            width: 5rem;
+            height: auto;
+            z-index: 2;
+        }
+
+        /* Yellow frame – bars extend to the edge of the blue panel */
+        .flag-frame {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .flag-frame__vertical,
+        .flag-frame__horizontal {
+            position: absolute;
+            background-color: var(--yellow);
+        }
+
+        .flag-frame__vertical {
+            top: 0;
+            bottom: 0;
+            width: var(--border-thick);
+        }
+
+        .flag-frame__vertical--left {
+            left: var(--border-thick);
+        }
+
+        .flag-frame__vertical--right {
+            right: var(--border-thick);
+        }
+
+        .flag-frame__horizontal {
+            left: 0;
+            right: 0;
+            height: var(--border-thick);
+        }
+
+        .flag-frame__horizontal--top {
+            top: var(--border-thick);
+        }
+
+        .flag-frame__horizontal--bottom {
+            bottom: var(--border-thick);
+        }
+
+        /* Content wrapper – fills the panel */
+        .content {
+            padding: var(--panel-padding) 1rem;
+            position: relative;
+            z-index: 1;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        header {
+            margin: 0 2rem;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        /* Headings */
+        h1,
+        h2,
+        h3 {
+            text-align: center;
+            margin: 0 0 var(--space-1);
+        }
+
+        h1 {
+            font-size: 2.4rem;
+        }
+
+        h2 {
+            font-size: 1.6rem;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            margin: -0.5rem 0 var(--space-2);
+            font-size: 1rem;
+            color: var(--yellow);
+            letter-spacing: 0.03em;
+        }
+
+        /* ==== CLANS SECTION ==== */
+        .clans {
+            margin: 0 0; /* remove side margins so the section spans full width of content */
+        }
+
+        .clans > h2 {
+            margin-bottom: 0.5rem;
+        }
+
+        .clans > p.subtitle {
+            margin-top: 0;
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        /* row of badges */
+        .clan-badges {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .clan-badge {
+            flex: 1;
+            border: none;
+            background: none;
+            padding: 0.25rem 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.4rem;
+            cursor: pointer;
+            opacity: 0.6;
+            transform: translateY(0);
+            transition:
+                opacity 0.15s ease,
+                transform 0.15s ease,
+                filter 0.15s ease;
+        }
+
+        .clan-badge:focus-visible {
+            outline: 2px solid var(--yellow);
+            outline-offset: 3px;
+        }
+
+        .clan-badge.is-active {
+            opacity: 1;
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+        }
+
+        .badge-icon {
+            display: block;
+            width: 4.2rem;
+            height: auto;
+            filter: drop-shadow(0 0.25rem 0 rgba(0, 0, 0, 0.6));
+        }
+
+        .badge-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            color: #ffe66d;
+        }
+
+        .clan-badge:not(.is-active) .badge-name {
+            color: #f6f6ff;
+        }
+
+        /* Bubble card under badges */
+        .clan-info {
+            position: relative;
+            margin-bottom: 2rem;
+            /* default horizontal position for the triangle, will be overridden via data-active-clan */
+            --tail-x: 50%;
+        }
+
+        .clan-panel {
+            display: none;
+            background: var(--deep-blue);
+            border-radius: 0 0 1rem 1rem;
+            border: 0.15rem solid var(--yellow);
+            border-top: none;
+            padding: 1.25rem 1.25rem 1.75rem;
+            color: var(--text-light);
+            box-shadow: 0 0.45rem 0 rgba(0, 0, 0, 0.4);
+            position: relative;
+            min-height: 7.5rem; /* ensure equal height of all clan panels */
+        }
+
+        .clan-panel.is-active {
+            display: block;
+        }
+
+        /* horizontal yellow line above the bubble */
+        .clan-panel.is-active::before {
+            content: "";
+            position: absolute;
+            top: -0.15rem;
+            left: -0.15rem;
+            right: -0.15rem;
+            height: 0.15rem;
+            background: var(--yellow);
+            border-radius: 1rem 1rem 0 0;
+        }
+
+        /* triangle indicator pointing to active clan */
+        .clan-panel.is-active::after {
+            content: "";
+            position: absolute;
+            top: -1rem; /* base of triangle sits on the yellow line */
+            left: var(--tail-x);
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 0.9rem solid transparent;
+            border-right: 0.9rem solid transparent;
+            border-bottom: 0.9rem solid var(--yellow);
+        }
+
+        .clan-panel h3 {
+            text-align: left;
+            margin: 0 0 0.4rem;
+            font-size: 1.2rem;
+        }
+
+        .clan-panel p {
+            margin: 0;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .clan-panel small {
+            display: block;
+            margin-top: 0.3rem;
+            font-size: 0.8rem;
+            color: #ffd966;
+        }
+
+        /* Tail positions for each clan (rough thirds) */
+        .clan-info[data-active-clan="apex"] {
+            --tail-x: 16%;
+        }
+
+        .clan-info[data-active-clan="svea"] {
+            --tail-x: 50%;
+        }
+
+        .clan-info[data-active-clan="lax"] {
+            --tail-x: 84%;
+        }
+
+        /* ==== DISCORD CTA ==== */
+        .cta {
+            margin: 0;
+        }
+
+        .cta-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1rem 1.5rem;
+            border-radius: 1rem;
+            border: 0.15rem solid var(--yellow);
+            background-color: #5865f2;
+            color: var(--text-light);
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 0.6rem 0 rgba(0, 0, 0, 0.4);
+            text-decoration: none;
+            width: 100%;
+        }
+
+        .cta-button:hover,
+        .cta-button:focus {
+            background: linear-gradient(45deg, #9fa5f9, #5865f2);
+            color: #111;
+        }
+
+        .cta-icon {
+            width: 1.2rem;
+            height: 1.2rem;
+            border-radius: 50%;
+            background: #ffffff;
+            position: relative;
+        }
+
+        .cta-icon::before,
+        .cta-icon::after {
+            content: "";
+            position: absolute;
+            background-color: #3b4fd8;
+            border-radius: 999px;
+        }
+
+        .cta-icon::before {
+            width: 0.75rem;
+            height: 0.22rem;
+            top: 0.45rem;
+            left: 0.22rem;
+        }
+
+        .cta-icon::after {
+            width: 0.11rem;
+            height: 0.11rem;
+            top: 0.54rem;
+            left: 0.3rem;
+            box-shadow: 0.3rem 0 0 0 #3b4fd8;
+        }
+
+        /* ==== RULES & FAQ ==== */
+        .rules,
+        .faq {
+            margin: 0 -1rem; /* extend to the yellow frame edges */
+            background-color: var(--highlight-blue);
+            border-radius: 1rem;
+            padding: 1.5rem 1.25rem 1.75rem;
+            box-shadow: 0 0.45rem 0 rgba(0, 0, 0, 0.35);
+        }
+
+        .rules h2,
+        .faq h2 {
+            margin-bottom: 1rem;
+        }
+
+        .rules p {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        /* rules list using § numbering */
+        .rules-list {
+            list-style: none;
+            margin: 0;
+            padding-left: 0;
+            counter-reset: rule;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .rules-list li {
+            counter-increment: rule;
+            position: relative;
+            padding-left: 2.5rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .rules-list li::before {
+            content: "§" counter(rule) " ";
+            position: absolute;
+            left: 0;
+            top: 0;
+            font-weight: 700;
+        }
+
+        /* ==== FAQ accordion styled with <details> */
+        .faq details {
+            margin-bottom: 0.6rem;
+            border: 0.15rem solid var(--yellow);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            background-color: var(--bright-blue);
+        }
+
+        .faq details:last-child {
+            margin-bottom: 0;
+        }
+
+        .faq summary {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            list-style: none;
+            padding: 0.65rem 0.85rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-light);
+            position: relative;
+        }
+
+        /* hide default triangle */
+        .faq summary::-webkit-details-marker {
+            display: none;
+        }
+
+        /* arrow indicator before summary */
+        .faq summary::before {
+            content: "";
+            width: 0;
+            height: 0;
+            border-top: 0.3rem solid transparent;
+            border-bottom: 0.3rem solid transparent;
+            border-left: 0.35rem solid var(--yellow);
+            transition: transform 0.2s ease;
+        }
+
+        /* rotate arrow when open */
+        .faq details[open] summary::before {
+            transform: rotate(90deg);
+        }
+
+        /* expanded content */
+        .faq details > *:not(summary) {
+            padding: 0.8rem 0.85rem;
+            border-top: 0.15rem solid var(--yellow);
+            background-color: var(--highlight-blue);
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .faq details ul {
+            margin: 0.5rem 0 0;
+            padding-left: 1.2rem;
+            list-style: disc;
+        }
+
+        /* anchor links styling */
+        a {
+            color: #ffea7f;
+        }
+
+        a:hover,
+        a:focus {
+            color: #fff899;
+            text-decoration: underline;
+        }
+
+        /* ==== FOOTER ==== */
+        footer {
+            margin: 0;
+            text-align: center;
+            font-size: 0.8rem;
+            opacity: 0.9;
+            padding: 1.5rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="panel">
+        <!-- Clash Royale logo -->
+        <img src="https://www.kollektor.se/cr/Images/cr-logo.png" alt="Clash Royale-logo" class="cr-logo" />
+
+        <!-- Yellow frame -->
+        <div class="flag-frame" aria-hidden="true">
+            <div class="flag-frame__vertical flag-frame__vertical--left"></div>
+            <div class="flag-frame__vertical flag-frame__vertical--right"></div>
+            <div class="flag-frame__horizontal flag-frame__horizontal--top"></div>
+            <div class="flag-frame__horizontal flag-frame__horizontal--bottom"></div>
+        </div>
+
+        <div class="content">
+            <header>
+                <h1>Vi är Svea</h1>
+                <p class="subtitle">En klanfamilj i Clash Royale.</p>
+            </header>
+
+            <main>
+                <!-- CLANS -->
+                <section class="clans" aria-label="Klaner">
+                    <h2>Våra klaner</h2>
+                    <p class="subtitle">Om du vill satsa på Clan Wars och talar svenska så har du hittat rätt!</p>
+                    <div class="clan-badges" role="tablist">
+                        <button class="clan-badge is-active" type="button" data-clan="apex" role="tab" aria-selected="true">
+                            <img src="https://enkel.design/apex.WEBP" alt="Svea Apex vapen" class="badge-icon" />
+                            <span class="badge-name">Svea Apex</span>
+                        </button>
+
+                        <button class="clan-badge" type="button" data-clan="svea" role="tab" aria-selected="false">
+                            <img src="https://enkel.design/svea.WEBP" alt="Svea vapen" class="badge-icon" />
+                            <span class="badge-name">Svea</span>
+                        </button>
+
+                        <button class="clan-badge" type="button" data-clan="lax" role="tab" aria-selected="false">
+                            <img src="https://enkel.design/lax.WEBP" alt="Svea Lax vapen" class="badge-icon" />
+                            <span class="badge-name">Svea Lax</span>
+                        </button>
+                    </div>
+
+                    <div class="clan-info" data-active-clan="apex">
+                        <article class="clan-panel is-active" data-clan="apex" role="tabpanel">
+                            <h3>Svea Apex</h3>
+                            <p>
+                                <strong>Svea Apex – en klan i Sverigetoppen.</strong>
+                                Vi tävlar i toppen av Clan&nbsp;Wars med höga krav på deltagande och prestation.
+                                Vi är ett gäng dedikerade krigare som ständigt strävar efter att nå nya höjder.
+                            </p>
+                            <small>Tagg: #Y8RUVJJG</small>
+                        </article>
+
+                        <article class="clan-panel" data-clan="svea" role="tabpanel">
+                            <h3>Svea</h3>
+                            <p>
+                                <strong>Svea – en klan att utvecklas i.</strong>
+                                Hos oss ligger fokus på att utveckla spelare genom samarbete och lärande. Alla får chansen att växa
+                                och testa nya strategier, men vi förväntar oss också att du deltar i krigen.
+                            </p>
+                            <small>Tagg: #Y0GUUC</small>
+                        </article>
+
+                        <article class="clan-panel" data-clan="lax" role="tabpanel">
+                            <h3>Svea Lax</h3>
+                            <p>
+                                <strong>Svea Lax – Relaxen.</strong>
+                                Vår mest avslappnade klan där du spelar i ditt eget tempo. Här står gemenskap och glädje i centrum,
+                                men du är fortfarande välkommen att delta i krigen när det passar dig.
+                            </p>
+                            <small>Tagg: #YLORLP8U</small>
+                        </article>
+                    </div>
+                </section>
+
+                <!-- DISCORD CTA -->
+                <section class="cta" aria-label="Discord">
+                    <a class="cta-button" href="https://discord.gg/KAc5rGF" aria-label="Joina oss på Discord">
+                        <span>Joina oss på Discord</span>
+                        <span class="cta-icon" aria-hidden="true"></span>
+                    </a>
+                </section>
+
+                <!-- RULES -->
+                <section class="rules" aria-labelledby="rules-heading">
+                    <h2 id="rules-heading">Våra regler</h2>
+                    <p>
+                        Reglerna gäller i våra klaner och på vår Discord‑server. Om du bryter mot dem får du en varning
+                        eller riskerar att kickas direkt om det du gjort kan anses allvarligt.
+                    </p>
+                    <ul class="rules-list">
+                        <li>Var trevlig mot dina klankamrater.</li>
+                        <li>Läs alltid kapp det som är nytt i chatten.</li>
+                        <li>Använd ett vårdat och inkluderande språk.</li>
+                        <li>Privata meddelanden och personuppgifter hör inte hemma här.</li>
+                        <li>Berätta i förväg om du kommer att vara inaktiv.</li>
+                        <li>Delta i krigen om du är med i en krigsklan.</li>
+                    </ul>
+                </section>
+
+                <!-- FAQ -->
+                <section class="faq" aria-labelledby="faq-heading">
+                    <h2 id="faq-heading">Vanliga frågor</h2>
+                    <!-- Replace placeholder list with styled accordion -->
+                    <details>
+                        <summary>Hur blir jag elder?</summary>
+                        <p>
+                            För att bli elder krävs att du uppvisar en viss mognad och har visat en vilja att driva klanen
+                            framåt. Elders välkomnar nya medlemmar, informerar om våra regler och hjälper ledarna att hålla ordning
+                            i klanen.
+                        </p>
+                        <ul>
+                            <li>välkomna nya medlemmar</li>
+                            <li>informera om våra regler (hänvisa till webbsidan: bit.ly/sveacr)</li>
+                            <li>hjälpa ledarna att hålla ordning i klanen</li>
+                            <li>vara aktiv i chatten och drivande i Clan Wars</li>
+                        </ul>
+                    </details>
+                    <details>
+                        <summary>Hur blir jag CO‑leader?</summary>
+                        <p>
+                            För att bli CO‑leader krävs att du varit elder en längre tid och mött de förväntningar som finns. Utöver
+                            det ska du ha uppvisat bra ledaregenskaper och kunna stötta både nya och erfarna spelare.
+                        </p>
+                    </details>
+                    <details>
+                        <summary>Kan jag flytta mellan klanerna?</summary>
+                        <p>
+                            Ja, men det är ledarna som avgör om en flytt är lämplig. De bästa och mest engagerade spelarna i
+                            Svea får ofta erbjudande om att prova på att spela i Svea Apex. Spelare som har en längre period av
+                            svaga resultat i Svea Apex kan ombedas att flytta till Svea ett tag.
+                        </p>
+                    </details>
+                    <details>
+                        <summary>Hur funkar Clan Wars?</summary>
+                        <p>
+                            Torsdag till och med söndag varje vecka är <dfn>Battle Days</dfn>. Då använder vi våra fyra war‑deck och kör först
+                            Duel (vänstra sidan av floden) och därefter valfritt game mode. Duel ger potentiellt flest medaljer.
+                        </p>
+                        <p>
+                            Om du behöver hjälp med att bygga bra war‑deck så kan du joina vår Discord så hjälper vi dig i
+                            kanalen #deck‑snack. Du kan också använda en war‑deck‑builder på exempelvis Deckshop.pro där du matar in din
+                            player tag och får hjälp med att bygga dina deck!
+                        </p>
+                        <ul>
+                            <li><a href="https://www.deckshop.pro/deck-builder/clan-wars/war-decks">War‑deck‑builder på deckshop.pro</a></li>
+                        </ul>
+                    </details>
+                    <details>
+                        <summary>Hur mäter ni prestation?</summary>
+                        <p>
+                            Vi tittar på hur många medaljer varje spelare fått ihop under kriget samt hur aktiv du är i chatten. Både
+                            prestation och engagemang räknas.
+                        </p>
+                    </details>
+                    <details>
+                        <summary>Hur ser jag hur jag ligger till?</summary>
+                        <p>
+                            Följ våra klaner på ClashRatings eller RoyaleAPI och sortera på <dfn>Average</dfn>, alltså medelvärdet för antal medaljer per krig.
+                        </p>
+                        <ul>
+                            <li><a href="https://clashratings.com/cr/clan/Y0GUUC/racestats">Svea på ClashRatings.com</a></li>
+                            <li><a href="https://clashratings.com/cr/clan/Y8RUVJJG/racestats">Svea Apex på ClashRatings.com</a></li>
+                        </ul>
+                    </details>
+                    <details>
+                        <summary>Vad kan leda till kick ur klanen?</summary>
+                        <p>
+                            Du kan bli kickad ur klanen om du bryter mot våra regler, inte möter kraven eller blir inaktiv under en längre
+                            period, eller aldrig deltar i chatten.
+                        </p>
+                    </details>
+                    <details>
+                        <summary>Varför kickas inte alla inaktiva?</summary>
+                        <p>
+                            Vi kickar inaktiva spelare regelbundet, men blir vi för få i klanen så syns vi inte högt upp i sökresultaten
+                            för spelare som söker klan. Därför gör vi ofta uppstädningar stegvis istället för att kicka alla samtidigt.
+                        </p>
+                    </details>
+                    <details>
+                        <summary>Övriga länkar och resurser</summary>
+                        <p>
+                            Här är några användbara länkar för dig som vill fördjupa dig ytterligare:
+                        </p>
+                        <ul>
+                            <li><a href="https://discord.gg/KAc5rGF">Joina oss på Discord</a></li>
+                            <li><a href="https://royaleapi.com/clan/Y0GUUC">Svea på RoyaleAPI</a></li>
+                            <li><a href="https://royaleapi.com/clan/Y8RUVJJG">Svea Apex på RoyaleAPI</a></li>
+                        </ul>
+                    </details>
+                </section>
+            </main>
+
+            <footer>
+                <small>©2026 Svea Clash Royale.</small>
+            </footer>
+        </div>
+    </div>
+    <script>
+        // Script to handle switching between clans and updating the indicator
+        const badges = document.querySelectorAll(".clan-badge");
+        const panels = document.querySelectorAll(".clan-panel");
+        const clanInfo = document.querySelector(".clan-info");
+
+        badges.forEach((badge) => {
+            badge.addEventListener("click", () => {
+                const clan = badge.dataset.clan;
+
+                // update badges active state
+                badges.forEach((b) => {
+                    const isActive = b === badge;
+                    b.classList.toggle("is-active", isActive);
+                    b.setAttribute("aria-selected", isActive ? "true" : "false");
+                });
+
+                // update panels
+                panels.forEach((panel) => {
+                    const isActive = panel.dataset.clan === clan;
+                    panel.classList.toggle("is-active", isActive);
+                });
+
+                // move bubble tail under active clan
+                clanInfo.dataset.activeClan = clan;
+            });
+        });
+    </script>
+</body>
+</html>
