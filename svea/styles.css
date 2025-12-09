@@ -358,8 +358,9 @@
 
         .rules,
         .faq {
-            margin: 0 1rem 1rem;
-            background-color: var(--highlight-blue);
+            margin: 0 .9rem 1rem;
+            background-color: var(--deep-blue);
+                    border: 0.15rem solid var(--yellow);
             border-radius: 1rem;
             padding: 1.5rem 1.25rem 1.75rem;
             box-shadow: 0 0.45rem 0 rgba(0, 0, 0, 0.35);
