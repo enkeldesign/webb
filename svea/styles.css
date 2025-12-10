@@ -41,10 +41,8 @@
 
   .panel {
       margin: 0 auto;
-      border: 0.25rem solid #222;
-      border-radius: 0.25rem;
       background-color: var(--primary-blue);
-      min-height: calc(100dvh - 4rem);
+      min-height: 100dvh;
       position: relative;
       overflow: hidden;
       max-width: 30rem;
