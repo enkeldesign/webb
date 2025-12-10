@@ -292,6 +292,14 @@
       font-size: 0.9rem;
       line-height: 1.4;
   }
+  
+  .clan-panel a {
+      text-decoration: none;
+  }
+
+  .clan-panel img {
+      transform: translateY(3px);
+  }
 
   .clan-panel small {
       display: block;
