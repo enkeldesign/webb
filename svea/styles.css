@@ -30,12 +30,12 @@
   }
 
   .sr-only:not(:focus):not(:active) {
-    clip-path: inset(50%);
-    height: 1px;
-    overflow: hidden;
-    position: absolute;
-    white-space: nowrap;
-    width: 1px;
+      clip-path: inset(50%);
+      height: 1px;
+      overflow: hidden;
+      position: absolute;
+      white-space: nowrap;
+      width: 1px;
   }
 
   .panel {
@@ -300,7 +300,7 @@
       font-size: 0.9rem;
       line-height: 1.4;
   }
-  
+
   .clan-panel a {
       text-decoration: none;
   }
