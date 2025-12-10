@@ -5,6 +5,7 @@
       --bright-blue: #30557e;
       --deep-blue: #274e75;
       --yellow: #fdd433;
+      --sun: #feb;
       --text-light: #ffffff;
 
       --border-thick: 1rem;
@@ -483,7 +484,7 @@
       margin: 0.5rem 0 0.5;
       padding-left: 1.75rem;
       list-style: disc;
-      color: var(--yellow);
+      color: var(--sun);
 
   }
 
