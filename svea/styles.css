@@ -157,7 +157,7 @@
   }
 
   .clans {
-      margin: 0;
+      margin: 1rem;
 
   }
 
@@ -500,8 +500,7 @@
       margin: 0;
       text-align: center;
       font-size: 0.8rem;
-      opacity: 0.9;
-      padding: 1.5rem 0 1rem;
+      padding: 1rem 0;
   }
 
   small {
