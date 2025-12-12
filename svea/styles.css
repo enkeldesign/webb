@@ -427,64 +427,83 @@
       font-weight: 700;
   }
 
-  .faq details {
-      margin-bottom: 0.6rem;
-      border-radius: 0.75rem;
-      overflow: hidden;
-      background-color: var(--primary-blue);
-  }
+/* ===== FAQ (details/summary) — Swedish flag + / − ===== */
 
-  .faq details:last-child {
-      margin-bottom: 0;
-  }
+.faq details {
+  margin-bottom: 0.6rem;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background-color: var(--primary-blue);
+}
 
-  .faq summary {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      list-style: none;
-      padding: 0.85rem 0.85rem;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      color: var(--text-light);
-      position: relative;
-  }
+.faq details:last-child { margin-bottom: 0; }
 
-  .faq summary::-webkit-details-marker {
-      display: none;
-  }
+/* Summary = the “button” row */
+.faq details > summary {
+  list-style: none;
+  cursor: pointer;
+  position: relative;
 
+  display: flex;
+  align-items: center;
 
-  .faq summary::before {
-      content: "";
-      width: 0;
-      height: 0;
-      border-top: 0.3rem solid transparent;
-      border-bottom: 0.3rem solid transparent;
-      border-left: 0.35rem solid var(--yellow);
-      transition: transform 1s ease;
-  }
+  /* space for the icon */
+  padding: 0.85rem 0.95rem 0.85rem 3.2rem;
 
-  .faq details[open] summary::before {
-      transform: rotate(450deg);
-  }
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-light);
+}
 
-  .faq details>*:not(summary) {
-      padding: 0.8rem 0.85rem;
-      border: 0.15rem solid var(--primary-blue);
-      background-color: var(--highlight-blue);
-      font-size: 0.9rem;
-      line-height: 1.4;
-  }
+/* Remove native marker everywhere */
+.faq details > summary::-webkit-details-marker { display: none; }
+.faq details > summary::marker { content: ""; }
 
-  .faq details ul {
-      margin: 0.5rem 0 0.5;
-      padding-left: 1.75rem;
-      list-style: disc;
-      color: var(--sun);
+/* Yellow + / − icon */
+.faq details > summary::before {
+  content: "";
+  position: absolute;
+  left: 1.1rem;      /* tweak horizontal position */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.35rem;    /* tweak size */
+  height: 1.35rem;
 
-  }
+  /* draw + using two bars in “currentColor” */
+  color: var(--yellow);
+  background:
+    linear-gradient(currentColor 0 0) 50% 50% / 100% 0.22rem no-repeat,
+    linear-gradient(currentColor 0 0) 50% 50% / 0.22rem 100% no-repeat;
+}
+
+/* When open => “−” (remove vertical bar) */
+.faq details[open] > summary::before {
+  background:
+    linear-gradient(currentColor 0 0) 50% 50% / 100% 0.22rem no-repeat;
+}
+
+/* Accessible keyboard focus */
+.faq details > summary:focus-visible {
+  outline: 2px solid var(--yellow);
+  outline-offset: 3px;
+  border-radius: 0.5rem;
+}
+
+/* Content panel */
+.faq details > *:not(summary) {
+  padding: 0.85rem 0.95rem;
+  border-top: 0.15rem solid rgba(255, 255, 255, 0.12);
+  background-color: var(--highlight-blue);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+/* Lists inside open panel */
+.faq details ul {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+  color: var(--sun);
+}
 
   a {
       color: #ffea7f;
