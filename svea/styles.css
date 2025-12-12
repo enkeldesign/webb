@@ -316,7 +316,7 @@
 
 
   .clan-info[data-active-clan="apex"] {
-      --tail-x: 20%;
+      --tail-x: 21%;
   }
 
   .clan-info[data-active-clan="svea"] {
@@ -324,7 +324,7 @@
   }
 
   .clan-info[data-active-clan="lax"] {
-      --tail-x: 80%;
+      --tail-x: 79%;
   }
 
   .cta {
