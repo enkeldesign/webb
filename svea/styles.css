@@ -53,7 +53,7 @@
       position: absolute;
       top: .5rem;
       right: .9rem;
-      width: 6rem;
+      width: 7rem;
       height: auto;
       z-index: 2;
   }
@@ -157,7 +157,7 @@
   }
 
   .clans {
-      margin: 0 .9rem;
+      margin: 0;
 
   }
 
@@ -373,7 +373,7 @@
 
   .rules,
   .faq {
-      margin: 0 .9rem 2rem;
+      margin: 0 0 2rem;
       background-color: var(--deep-blue);
       border: 0.15rem solid var(--yellow);
       border-radius: 1rem;
@@ -386,7 +386,7 @@
       border-left: none;
       border-right: none;
       padding: 1rem 0 0;
-      margin: 0 1rem 1.5rem;
+      margin: 0 0 1.5rem;
   }
 
 
