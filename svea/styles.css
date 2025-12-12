@@ -468,7 +468,7 @@
   transform: translateY(-50%);
   width: 1rem;    /* tweak size */
   height: 1rem;
-  transition: transform 1s ease;
+  transition: transform 250ms ease;
 
   /* draw + using two bars in “currentColor” */
   color: var(--yellow);
@@ -479,10 +479,10 @@
 
 /* When open => “−” (remove vertical bar) */
 .faq details[open] > summary::before {
-  transform: translateY(-25%);
+  transform: translateY(0);
   background:
     linear-gradient(currentColor 0 0) 50% 50% / 100% 0.22rem no-repeat;
-  transform: rotate(180deg);
+  transform: rotate(90deg);
 }
 
 /* Accessible keyboard focus */
