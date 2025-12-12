@@ -463,7 +463,7 @@
       border-top: 0.3rem solid transparent;
       border-bottom: 0.3rem solid transparent;
       border-left: 0.35rem solid var(--yellow);
-      transition: transform 0.2s ease;
+      transition: transform 1s ease;
   }
 
   .faq details[open] summary::before {
