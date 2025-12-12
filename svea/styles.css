@@ -466,8 +466,9 @@
   left: 1.1rem;      /* tweak horizontal position */
   top: 50%;
   transform: translateY(-50%);
-  width: 1.35rem;    /* tweak size */
-  height: 1.35rem;
+  width: 1rem;    /* tweak size */
+  height: 1rem;
+  transition: transform 1s ease;
 
   /* draw + using two bars in “currentColor” */
   color: var(--yellow);
@@ -480,6 +481,7 @@
 .faq details[open] > summary::before {
   background:
     linear-gradient(currentColor 0 0) 50% 50% / 100% 0.22rem no-repeat;
+  transform: rotate(180deg);
 }
 
 /* Accessible keyboard focus */
