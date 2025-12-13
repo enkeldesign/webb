@@ -252,6 +252,30 @@
             });
         });
     </script>
+    <script>
+  // Reveal clans when it enters the viewport
+  const clansSection = document.querySelector(".clans");
+
+  if (clansSection && "IntersectionObserver" in window) {
+    const io = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          clansSection.classList.add("is-revealed");
+          io.disconnect(); // bara en gång
+        }
+      }
+    }, {
+      root: null,
+      threshold: 0.15,          // trigga när ~15% syns
+      rootMargin: "0px 0px -10% 0px" // lite tidigare
+    });
+
+    io.observe(clansSection);
+  } else if (clansSection) {
+    // fallback: visa direkt
+    clansSection.classList.add("is-revealed");
+  }
+</script>
 </body>
 
 </html>
