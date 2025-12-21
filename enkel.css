@@ -200,7 +200,8 @@ main p {
     color: var(--text-clr);
 }
 
-p:has(> strong) {
+main p:has(> strong),
+main p strong {
     margin-bottom: 0;
 }
 
