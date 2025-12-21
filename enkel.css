@@ -200,6 +200,10 @@ main p {
     color: var(--text-clr);
 }
 
+p:has(> strong) {
+    margin-bottom: 0;
+}
+
 .about h3+p {
     margin-top: var(--gap-2);
 }
