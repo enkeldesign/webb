@@ -206,10 +206,16 @@ main p strong {
 }
 
 .highlight {
-    background-color: light-dark(#0022331a, #cceeff1a);
+    background-color: light-dark(#ebd7d7, #002856);
     margin: 0 calc(-1*(var(--gap-5))) var(--gap-4);
     padding: var(--gap-5) var(--gap-5) 0.1rem;
     overflow-x: clip;
+}
+
+.highlight p,
+.highlight strong,
+.highlight a {
+    color: light-dark(#002856, #ebd7d7);
 }
 
 .about h3+p {
