@@ -206,7 +206,7 @@ main p strong {
 }
 
 .highlight {
-    background-color: light-dark(#0000000a, #ffffff0a);
+    background-color: light-dark(#0022331a, #cceeff1a);
     margin: 0 calc(-1*(var(--gap-5))) var(--gap-4);
     padding: var(--gap-5) var(--gap-5) 0.1rem;
     overflow-x: clip;
