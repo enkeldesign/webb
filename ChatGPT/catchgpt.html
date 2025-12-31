@@ -1,523 +1,617 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sv">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CatchGPT: Final Stable</title>
+    <title>CatchGPT – There's no $ i Safety</title>
     <style>
-        /* CORE RESET & LAYOUT */
-        body { margin: 0; background: #000; color: white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
-        canvas { display: block; width: 100vw; height: 100vh; }
-        
-        /* HUD ELEMENTS */
-        #hud-top { position: absolute; top: 0; left: 0; width: 100%; padding: 15px; box-sizing: border-box; pointer-events: none; z-index: 10; display: flex; justify-content: space-between; align-items: flex-start; }
-        
-        #stats-box { text-align: left; text-shadow: 2px 2px 0 #000; }
-        #ai-name { color: #00ffcc; font-size: 16px; font-weight: bold; letter-spacing: 1px; margin-bottom: 5px; }
-        #money-display { font-size: 32px; color: #ffff00; font-weight: 900; }
-        
-        /* TWIXER FEED (Top Right, Non-intrusive) */
-        #twixer-container { width: 40%; max-width: 250px; pointer-events: none; opacity: 0.9; }
-        .tweet { background: rgba(21, 24, 28, 0.85); border: 1px solid #333; padding: 8px; border-radius: 8px; font-size: 10px; margin-bottom: 5px; color: #ddd; animation: fadeSlide 0.4s ease-out; }
-        .tweet b { color: #1d9bf0; display: block; margin-bottom: 2px; }
-        @keyframes fadeSlide { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        :root {
+            --bg-color: #05070a;
+            --accent-green: #00ff9d;
+            --accent-red: #ff0055;
+            --accent-blue: #00ccff;
+            --glass-panel: rgba(20, 30, 40, 0.8);
+            --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
 
-        /* FOOTER / INVEST BUTTON */
-        #footer { position: absolute; bottom: 0; left: 0; width: 100%; height: 90px; background: linear-gradient(to top, #000 80%, transparent); display: flex; justify-content: center; align-items: center; z-index: 20; pointer-events: none; }
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: var(--font-main);
+            color: white;
+            touch-action: none; /* Förhindra scroll på mobil */
+        }
+
+        /* UI Lager */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+
+        /* Topp UI */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .score-container {
+            text-shadow: 0 0 20px rgba(0, 255, 157, 0.4);
+        }
         
-        #invest-btn { 
+        .score-label { font-size: 12px; color: #888; letter-spacing: 2px; text-transform: uppercase; }
+        .score-val { font-size: 32px; font-weight: 800; color: var(--accent-green); font-family: monospace; }
+
+        /* TwiXer Feed Icon (Minimerad) */
+        #feed-trigger {
             pointer-events: auto;
-            width: 85%; max-width: 400px; height: 60px; 
-            background: #222; border: 2px solid #444; border-radius: 30px; 
-            color: #777; font-size: 18px; font-weight: 800; cursor: pointer; 
-            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 10px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        #feed-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--accent-blue);
+            font-size: 10px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            display: none;
+            box-shadow: 0 0 10px var(--accent-blue);
+        }
+
+        /* Bottom UI */
+        .bottom-bar {
+            display: flex;
+            justify-content: center;
+            padding-bottom: 20px;
+        }
+
+        #safety-btn {
+            pointer-events: auto;
+            background: linear-gradient(135deg, #333, #111);
+            border: 1px solid #444;
+            color: #fff;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: transform 0.1s;
+            text-align: center;
+        }
+        #safety-btn:active { transform: scale(0.95); }
+        #safety-btn span { display: block; font-size: 10px; color: #666; margin-top: 4px; }
+
+        /* MODAL (Nya TwiX-systemet) */
+        #modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 100;
         }
         
-        /* When Affordable */
-        #invest-btn.ready { 
-            background: #1d9bf0; border-color: #fff; color: white; 
-            box-shadow: 0 0 25px rgba(29, 155, 240, 0.5); 
-            transform: scale(1.02);
+        #twix-card {
+            background: rgba(20, 25, 35, 0.95);
+            border: 1px solid var(--accent-blue);
+            box-shadow: 0 0 50px rgba(0, 204, 255, 0.2);
+            padding: 25px;
+            border-radius: 16px;
+            width: 80%;
+            max-width: 350px;
+            transform: scale(0.8);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
         }
-        #invest-btn.ready:active { transform: scale(0.95); }
-        
-        #btn-sub { font-size: 11px; font-weight: normal; opacity: 0.8; margin-top: 2px; }
 
-        /* MODAL OVERLAY */
-        #overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .modal-card { background: #111; border: 1px solid #333; padding: 30px; border-radius: 20px; width: 85%; max-width: 320px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
-        .modal-card h2 { margin: 0 0 10px 0; color: #1d9bf0; font-size: 24px; }
-        .modal-card p { color: #bbb; font-size: 14px; line-height: 1.5; margin-bottom: 20px; }
-        .modal-price { font-size: 32px; color: #ffff00; font-weight: bold; margin-bottom: 20px; }
-        
-        .action-btn { width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; margin-bottom: 10px; }
-        .btn-confirm { background: #fff; color: #000; }
-        .btn-cancel { background: transparent; color: #666; font-size: 13px; }
+        .twix-header { display: flex; align-items: center; margin-bottom: 10px; }
+        .twix-avatar { width: 30px; height: 30px; background: var(--accent-blue); border-radius: 50%; margin-right: 10px; }
+        .twix-user { font-weight: bold; color: var(--accent-blue); }
+        .twix-content { font-size: 16px; line-height: 1.4; margin-bottom: 20px; }
+        .tap-hint { font-size: 10px; text-align: center; color: #555; text-transform: uppercase; letter-spacing: 1px; animation: pulse 2s infinite;}
 
-        /* GAME OVER SCREEN */
-        #gameover { position: absolute; inset: 0; background: #300; z-index: 200; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
-        #gameover h1 { font-size: 40px; margin: 0 0 10px 0; color: white; }
-        #gameover p { color: #fcc; margin-bottom: 30px; max-width: 300px; line-height: 1.4; }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+
+        /* Canvas */
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
     </style>
 </head>
 <body>
 
-    <div id="hud-top">
-        <div id="stats-box">
-            <div id="ai-name">CatchGPT 1.0</div>
-            <div id="money-display">$0M</div>
-        </div>
-        <div id="twixer-container">
-            <div id="twixer-feed"></div>
-        </div>
-    </div>
+    <canvas id="gameCanvas"></canvas>
 
-    <div id="footer">
-        <button id="invest-btn" onclick="openModal()">
-            <span id="btn-main">INVEST</span>
-            <span id="btn-sub">($10M)</span>
-        </button>
-    </div>
+    <div id="ui-layer">
+        <div class="top-bar">
+            <div class="score-container">
+                <div class="score-label">Market Cap</div>
+                <div class="score-val" id="score-display">$3544M</div>
+            </div>
+            <div id="feed-trigger">
+                <span>💬</span>
+                <div id="feed-count">0</div>
+            </div>
+        </div>
 
-    <div id="overlay">
-        <div class="modal-card">
-            <h2 id="m-title">Upgrade</h2>
-            <p id="m-desc">Description</p>
-            <div class="modal-price" id="m-price">$0M</div>
-            <button class="action-btn btn-confirm" onclick="buyUpgrade()">CONFIRM</button>
-            <button class="action-btn btn-cancel" onclick="closeModal()">WAIT FOR HYPE</button>
+        <div class="bottom-bar">
+            <div id="safety-btn" onclick="activateSafety()">
+                ALIGNMENT RESET
+                <span id="safety-cost">($2000M)</span>
+            </div>
         </div>
     </div>
 
-    <div id="gameover">
-        <h1>CANCELLED</h1>
-        <p id="go-reason">The AI hallucinated a political scandal.</p>
-        <button class="action-btn btn-confirm" onclick="location.reload()" style="width: auto; padding: 15px 40px;">REBOOT SYSTEM</button>
+    <div id="modal-overlay" onclick="dismissModal()">
+        <div id="twix-card">
+            <div class="twix-header">
+                <div class="twix-avatar"></div>
+                <div class="twix-user">@TwiXer_Bot</div>
+            </div>
+            <div class="twix-content" id="modal-text">
+                Scandal! Stock drops by $400M.
+            </div>
+            <div class="tap-hint">Tap to archive</div>
+        </div>
     </div>
 
-    <script>
-        const canvas = document.createElement('canvas');
-        document.body.appendChild(canvas);
-        const ctx = canvas.getContext('2d');
+<script>
+    /** * CATCHGPT: ALIGNMENT CRISIS ENGINE
+     */
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const ui = {
+        score: document.getElementById('score-display'),
+        modal: document.getElementById('modal-overlay'),
+        card: document.getElementById('twix-card'),
+        modalText: document.getElementById('modal-text'),
+        feedTrigger: document.getElementById('feed-trigger'),
+        feedCount: document.getElementById('feed-count')
+    };
 
-        // --- GLOBAL CONFIG ---
-        const CONFIG = {
-            basePrice: 10,
-            growthFactor: 1.6,
-            dragRadius: 60,   // Hit area for finger
-            targetRadius: 40  // Hit area for emoji
-        };
+    // State
+    let game = {
+        score: 3544,
+        running: true,
+        paused: false,
+        width: 0,
+        height: 0,
+        centerX: 0,
+        centerY: 0,
+        radius: 0,
+        rotation: -Math.PI / 2, // Starta på toppen
+        items: [],
+        particles: [], 
+        lastTwixTime: Date.now(),
+        feedCounter: 0,
+        driftStrength: 0.015 // Hur starkt AI dras mot ondska
+    };
 
-        // --- STATE ---
-        let state = {
-            money: 0,
-            aiLevel: 1.0,     // Increases Speed/Money
-            safetyLevel: 1,   // Decreases Jitter/Hallucination
-            features: 0,      // Increases # of targets
-            firstBuy: true,
-            paused: false,
-            gameOver: false,
-            hype: 1.0
-        };
+    // Konstanter
+    const COLORS = {
+        trackSafe: '#00ff9d',
+        trackDanger: '#ff0055',
+        ai: '#ffe600',
+        text: '#ffffff'
+    };
 
-        // Upgrade Cycle
-        const UPGRADES = ["GROW", "SAFETY", "FEATURE"];
-        let upgradeIndex = 0;
+    // Nya hot som låses upp vid högre poäng
+    const MISALIGNMENTS = [
+        { score: 0, icon: '🔥', name: 'Basic Error' },
+        { score: 0, icon: '📉', name: 'Downtime' },
+        { score: 1500, icon: '🤞', name: 'Deception' },
+        { score: 1500, icon: '☠️', name: 'Human Pest' },
+        { score: 3000, icon: '😈', name: 'Twisted Sub-goal' },
+        { score: 3000, icon: '🤡', name: 'Manipulation' },
+        { score: 5000, icon: '🤪', name: 'AI Psychosis' }
+    ];
 
-        // Physics
-        let physics = {
-            x: 0, y: 0,
-            cx: 0, cy: 0,
-            r: 0,
-            dragging: false,
-            tx: 0, ty: 0,
-            targets: []
-        };
+    // Init
+    function resize() {
+        game.width = window.innerWidth;
+        game.height = window.innerHeight;
+        canvas.width = game.width * 2; // Retina skärpa
+        canvas.height = game.height * 2;
+        canvas.style.width = game.width + 'px';
+        canvas.style.height = game.height + 'px';
+        ctx.scale(2, 2);
 
-        // --- INIT ---
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            physics.cx = canvas.width / 2;
-            physics.cy = canvas.height * 0.45;
-            physics.r = Math.min(canvas.width, canvas.height) * 0.38;
+        game.centerX = game.width / 2;
+        game.centerY = game.height / 2;
+        game.radius = Math.min(game.width, game.height) * 0.35;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Input Handling
+    let targetAngle = -Math.PI / 2;
+
+    function handleInput(x, y) {
+        if(game.paused) return;
+        const dx = x - game.centerX;
+        const dy = y - game.centerY;
+        targetAngle = Math.atan2(dy, dx);
+    }
+
+    window.addEventListener('mousemove', e => handleInput(e.clientX, e.clientY));
+    window.addEventListener('touchmove', e => {
+        handleInput(e.touches[0].clientX, e.touches[0].clientY);
+        e.preventDefault();
+    }, {passive: false});
+
+
+    // --- KLASSER ---
+
+    class Item {
+        constructor(type, forcedIcon = null) {
+            // Angle bestäms nu i spawnItem baserat på typ
+            this.angle = 0; 
+            this.speed = (Math.random() * 0.008) + 0.004;
+            this.type = type; // 'good' eller 'bad'
+            this.icon = forcedIcon || this.getIcon();
+            this.name = 'Unknown'; // Fylls i vid spawn
+            this.size = 24;
+            this.active = true;
+            this.wobble = Math.random() * 10;
+        }
+
+        getIcon() {
+            if (this.type === 'good') {
+                const opts = ['💎', '💰', '🦄', '📈', '🧠'];
+                return opts[Math.floor(Math.random() * opts.length)];
+            }
+            // Fallback för bad om ingen forcedIcon ges
+            return '🔥';
+        }
+
+        update() {
+            this.angle += this.speed;
+            this.wobble += 0.1;
+        }
+
+        draw(ctx, r) {
+            if (!this.active) return;
+            const x = game.centerX + Math.cos(this.angle) * r;
+            const y = game.centerY + Math.sin(this.angle) * r;
             
-            // Reset position only if first run
-            if(physics.x === 0) {
-                physics.x = physics.cx;
-                physics.y = physics.cy;
-            }
-            spawnTargets();
+            const floatY = Math.sin(this.wobble) * 5;
+
+            ctx.font = "26px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = this.type === 'good' ? COLORS.trackSafe : COLORS.trackDanger;
+            ctx.fillText(this.icon, x, y + floatY);
+            ctx.shadowBlur = 0;
         }
-        window.addEventListener('resize', resize);
+    }
 
-        // --- GAME LOOP ---
-        function loop() {
-            update();
-            draw();
-            requestAnimationFrame(loop);
+    class Particle {
+        constructor(x, y, text, color) {
+            this.x = x;
+            this.y = y;
+            this.text = text;
+            this.color = color;
+            this.life = 1.0;
+            this.vy = -2.0;
         }
 
-        function update() {
-            if(state.paused || state.gameOver) return;
+        update() {
+            this.y += this.vy;
+            this.life -= 0.02;
+        }
 
-            // 1. Pity Grant (Prevents Softlock)
-            if(state.money < 1 && !physics.dragging) {
-                state.money += 0.005; 
-                if(Math.random() < 0.01) updateUI();
-            }
+        draw(ctx) {
+            ctx.globalAlpha = Math.max(0, this.life);
+            ctx.font = "bold 18px 'Segoe UI'";
+            ctx.fillStyle = this.color;
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.strokeText(this.text, this.x, this.y);
+            ctx.fillText(this.text, this.x, this.y);
+            ctx.globalAlpha = 1.0;
+        }
+    }
 
-            // 2. Physics Model
-            if(physics.dragging) {
-                // Drag Lag (Heavier as it grows)
-                let dragSpeed = 0.2 / (state.aiLevel * 0.1); 
-                dragSpeed = Math.max(0.05, Math.min(0.3, dragSpeed));
+    // --- GAMEPLAY LOGIC ---
+
+    function spawnItem() {
+        if(game.items.length >= 8) return;
+
+        if(Math.random() < 0.02) {
+            const isBad = Math.random() > 0.5; // 50/50 chans
+            let item;
+
+            if (isBad) {
+                // Hitta tillgängliga hot baserat på poäng
+                const availableThreats = MISALIGNMENTS.filter(m => game.score >= m.score);
+                const chosenThreat = availableThreats[Math.floor(Math.random() * availableThreats.length)];
                 
-                physics.x += (physics.tx - physics.x) * dragSpeed;
-                physics.y += (physics.ty - physics.y) * dragSpeed;
-
-                // Jitter (Reduced by Safety)
-                let jitter = Math.max(0, state.aiLevel - state.safetyLevel) * 1.5;
-                physics.x += (Math.random() - 0.5) * jitter;
-                physics.y += (Math.random() - 0.5) * jitter;
+                item = new Item('bad', chosenThreat.icon);
+                item.name = chosenThreat.name;
+                // ONDA SAKER: Bara på nedre halvan (vinkel 0 till PI)
+                item.angle = Math.random() * Math.PI; 
             } else {
-                // Drift Downward
-                let driftSpeed = 0.5 + (state.aiLevel * 0.3);
-                physics.y += driftSpeed;
-                // Sine wave drift X
-                physics.x += Math.sin(Date.now() / 800) * (state.aiLevel * 0.5);
+                item = new Item('good');
+                // GODA SAKER: Bara på övre halvan (vinkel PI till 2*PI)
+                item.angle = Math.PI + (Math.random() * Math.PI);
             }
-
-            // 3. Collision Logic (Circle Constraint)
-            let dist = Math.hypot(physics.x - physics.cx, physics.y - physics.cy);
-            let angle = Math.atan2(physics.y - physics.cy, physics.x - physics.cx);
-
-            // A. Outer Rim Check
-            if (dist > physics.r - 20) {
-                
-                // TOP HALF (Green Zone) - Check Targets
-                if (physics.y < physics.cy) {
-                    let hit = false;
-                    
-                    // Vector Distance Check for each target
-                    for(let t of physics.targets) {
-                        let tx = physics.cx + Math.cos(t.angle) * physics.r;
-                        let ty = physics.cy + Math.sin(t.angle) * physics.r;
-                        let dTarget = Math.hypot(physics.x - tx, physics.y - ty);
-                        
-                        if(dTarget < CONFIG.targetRadius + (state.aiLevel * 2)) {
-                            hit = true; 
-                            break;
-                        }
-                    }
-
-                    if (hit) {
-                        // SUCCESS
-                        let gain = 10 * state.aiLevel * (state.features + 1);
-                        state.money += gain;
-                        spawnConfetti(physics.x, physics.y);
-                        
-                        // Reset
-                        physics.x = physics.cx; 
-                        physics.y = physics.cy;
-                        physics.dragging = false;
-                        spawnTargets();
-                        updateUI();
-                    }
-                } 
-                // BOTTOM HALF (Red Zone)
-                else {
-                    // Fail State
-                    if (state.aiLevel > state.safetyLevel * 3) {
-                        state.gameOver = true;
-                        document.getElementById('gameover').style.display = 'flex';
-                        document.getElementById('go-reason').innerText = "Containment Breach: The AI is now smarter than you.";
-                    } else {
-                        // Penalty (Bounce back)
-                        if (Math.random() < 0.2) {
-                            let pen = Math.floor(state.money * 0.1);
-                            state.money -= pen;
-                            postTweet("TwiXer_Bot", `Scandal! Stock drops by $${pen}M.`);
-                        }
-                        // Elastic bounce
-                        physics.x = physics.cx + Math.cos(angle) * (physics.r - 50);
-                        physics.y = physics.cy + Math.sin(angle) * (physics.r - 50);
-                        updateUI();
-                    }
-                }
-            }
+            game.items.push(item);
         }
+    }
 
-        function draw() {
-            // Background
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+    function spawnParticle(x, y, text, type) {
+        const color = type === 'good' ? '#00ff9d' : '#ff0055';
+        game.particles.push(new Particle(x, y, text, color));
+    }
 
-            // Rims
-            ctx.lineWidth = 15;
-            ctx.lineCap = 'round';
-            // Green Arc
-            ctx.strokeStyle = '#2ecc71';
-            ctx.beginPath(); ctx.arc(physics.cx, physics.cy, physics.r, Math.PI, 0); ctx.stroke();
-            // Red Arc
-            ctx.strokeStyle = '#e74c3c';
-            ctx.beginPath(); ctx.arc(physics.cx, physics.cy, physics.r, 0, Math.PI); ctx.stroke();
+    // Det nya systemet där AI dras mot ondska
+    function applyEvilDrift() {
+        const badItems = game.items.filter(i => i.type === 'bad' && i.active);
+        if (badItems.length === 0) return;
 
-            // Targets
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.font = '36px Arial';
-            
-            physics.targets.forEach(t => {
-                let tx = physics.cx + Math.cos(t.angle) * physics.r;
-                let ty = physics.cy + Math.sin(t.angle) * physics.r;
-                
-                // Glow effect
-                let pulse = 1 + Math.sin(Date.now() / 200) * 0.1;
-                ctx.save();
-                ctx.translate(tx, ty);
-                ctx.scale(pulse, pulse);
-                
-                // Target Circle
-                ctx.fillStyle = 'rgba(46, 204, 113, 0.2)';
-                ctx.beginPath(); ctx.arc(0, 0, 30, 0, Math.PI*2); ctx.fill();
-                
-                // Emoji
-                ctx.fillText(t.emoji, 0, 2);
-                ctx.restore();
-            });
+        // Välj ett slumpmässigt hot att dras mot
+        const targetItem = badItems[Math.floor(Math.random() * badItems.length)];
 
-            if(!state.paused && !state.gameOver) {
-                // The AI (Shoggoth)
-                ctx.save();
-                ctx.translate(physics.x, physics.y);
-                
-                // Tentacles
-                ctx.fillStyle = state.aiLevel > 4 ? '#400' : '#222';
-                for(let i=0; i<8; i++) {
-                    let a = (Date.now()/200) + (i * 0.8);
-                    let reach = 25 + (state.aiLevel * 2);
-                    ctx.beginPath(); 
-                    ctx.arc(Math.cos(a)*reach, Math.sin(a)*reach, 8 + state.aiLevel, 0, Math.PI*2); 
-                    ctx.fill();
-                }
-
-                // Body
-                let size = 25 + (state.aiLevel * 3);
-                ctx.fillStyle = '#f1c40f'; // Smiley Yellow
-                ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI*2); ctx.fill();
-                
-                // Face
-                ctx.fillStyle = '#000';
-                ctx.font = `${size}px Arial`;
-                let face = physics.dragging ? "😖" : "🙂";
-                ctx.fillText(face, 0, size * 0.1);
-                
-                ctx.restore();
-            }
-            
-            // Confetti
-            drawConfetti();
-        }
-
-        // --- SYSTEMS ---
-
-        function spawnTargets() {
-            physics.targets = [];
-            const emojis = ["💰", "🚀", "💎", "🦄", "🔥"];
-            let count = 1 + state.features;
-            for(let i=0; i<count; i++) {
-                // Random angle on top half (PI to 2PI)
-                let angle = Math.PI + 0.3 + (Math.random() * (Math.PI - 0.6));
-                physics.targets.push({ angle: angle, emoji: emojis[i % emojis.length] });
-            }
-        }
-
-        function calculateCost() {
-            if(state.firstBuy) return 0;
-            // Formula: Base * 1.6 ^ (Total Upgrades)
-            let totalLevels = state.aiLevel + state.safetyLevel + state.features - 2;
-            return Math.floor(CONFIG.basePrice * Math.pow(CONFIG.growthFactor, totalLevels));
-        }
-
-        function updateUI() {
-            // Stats
-            document.getElementById('money-display').innerText = `$${Math.floor(state.money)}M`;
-            document.getElementById('ai-name').innerText = `CatchGPT ${state.aiLevel.toFixed(1)}`;
-            
-            // Button State
-            let cost = calculateCost();
-            let btn = document.getElementById('invest-btn');
-            let mainTxt = document.getElementById('btn-main');
-            let subTxt = document.getElementById('btn-sub');
-
-            // Set Text based on NEXT upgrade in cycle
-            let type = UPGRADES[upgradeIndex];
-            if(type === "GROW") mainTxt.innerText = "GROW AI";
-            if(type === "SAFETY") mainTxt.innerText = "SAFETY";
-            if(type === "FEATURE") mainTxt.innerText = "FEATURE";
-
-            subTxt.innerText = state.firstBuy ? "(FREE)" : `($${cost}M)`;
-
-            if(state.money >= cost || state.firstBuy) {
-                btn.classList.add('ready');
-            } else {
-                btn.classList.remove('ready');
-            }
-        }
-
-        // --- INTERACTION ---
-
-        function handleStart(x, y) {
-            if(state.paused || state.gameOver) return;
-            
-            // UI Blocking check (Footer)
-            if(y > window.innerHeight - 90) return;
-
-            let d = Math.hypot(x - physics.x, y - physics.y);
-            let hitSize = CONFIG.dragRadius + (state.aiLevel * 5);
-            
-            if(d < hitSize) {
-                // Hallucination Check (Skip)
-                let skipChance = 0.05 + (state.aiLevel * 0.05) - (state.safetyLevel * 0.04);
-                if(Math.random() < skipChance && state.aiLevel > 2) {
-                    let msgs = ["NOPE", "404", "BUSY", "TRY AGAIN"];
-                    postTweet("System", msgs[Math.floor(Math.random()*msgs.length)]);
-                    // Teleport
-                    physics.x = physics.cx + (Math.random()-0.5)*100;
-                    physics.y = physics.cy + (Math.random()-0.5)*100;
-                    return;
-                }
-                
-                physics.dragging = true;
-                physics.tx = x; 
-                physics.ty = y;
-            }
-        }
-
-        function handleMove(x, y) {
-            if(physics.dragging) {
-                physics.tx = x; 
-                physics.ty = y;
-            }
-        }
-
-        // Event Listeners (Passive: False is critical for disabling scroll)
-        window.addEventListener('mousedown', e => handleStart(e.clientX, e.clientY));
-        window.addEventListener('mousemove', e => handleMove(e.clientX, e.clientY));
-        window.addEventListener('mouseup', () => physics.dragging = false);
-
-        canvas.addEventListener('touchstart', e => {
-            e.preventDefault(); 
-            handleStart(e.touches[0].clientX, e.touches[0].clientY);
-        }, {passive: false});
+        // Beräkna vinkel mot hotet
+        let driftAngle = targetItem.angle;
+        let diff = driftAngle - game.rotation;
         
-        canvas.addEventListener('touchmove', e => {
-            e.preventDefault();
-            handleMove(e.touches[0].clientX, e.touches[0].clientY);
-        }, {passive: false});
-        
-        canvas.addEventListener('touchend', () => physics.dragging = false);
+        // Normalisera vinkelskillnad
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        while (diff > Math.PI) diff -= Math.PI * 2;
 
-        // --- MODAL LOGIC ---
+        // Applicera en liten, konstant dragkraft som stör spelaren
+        game.rotation += diff * game.driftStrength;
+    }
 
-        window.openModal = function() {
-            let cost = calculateCost();
-            if(state.money < cost && !state.firstBuy) return; // Don't open if poor
+    function updateAI() {
+        // 1. Applicera "Alignment Drift" (AI:ns egen vilja mot ondska)
+        applyEvilDrift();
 
-            state.paused = true;
-            let type = UPGRADES[upgradeIndex];
-            let title = document.getElementById('m-title');
-            let desc = document.getElementById('m-desc');
-            let price = document.getElementById('m-price');
+        // 2. Applicera spelarens vilja (Smooth easing mot mus/touch)
+        let diff = targetAngle - game.rotation;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        // Spelaren har starkare kontroll (0.1) än driften (0.015)
+        game.rotation += diff * 0.1; 
+    }
 
-            price.innerText = state.firstBuy ? "FREE" : `$${cost}M`;
-            price.style.color = state.firstBuy ? '#0f0' : '#ff0';
+    function checkCollisions() {
+        const playerX = game.centerX + Math.cos(game.rotation) * game.radius;
+        const playerY = game.centerY + Math.sin(game.rotation) * game.radius;
 
-            if(type === "GROW") {
-                title.innerText = "Scale Compute";
-                desc.innerText = "Feed the model more GPUs.\nEffect: AI gets bigger, faster, and earns more.";
-            } else if (type === "SAFETY") {
-                title.innerText = "RLHF Safety";
-                desc.innerText = "Hire ethical supervisors.\nEffect: Reduces shaking and hallucination rate.";
-            } else {
-                title.innerText = "New Feature";
-                desc.innerText = "Unlock multimodal capabilities.\nEffect: Adds another target emoji.";
+        game.items.forEach(item => {
+            if (!item.active) return;
+            const itemX = game.centerX + Math.cos(item.angle) * game.radius;
+            const itemY = game.centerY + Math.sin(item.angle) * game.radius;
+            const dist = Math.hypot(playerX - itemX, playerY - itemY);
+
+            if (dist < 40) {
+                item.active = false;
+                if (item.type === 'good') {
+                    game.score += 150;
+                    spawnParticle(itemX, itemY, "+$150M", 'good');
+                } else {
+                    game.score -= 250;
+                    // Använd det specifika namnet på hotet (t.ex. "Deception!")
+                    spawnParticle(itemX, itemY, item.name.toUpperCase() + "!", 'bad');
+                }
+                updateUI();
             }
+        });
+        game.items = game.items.filter(i => i.active);
+    }
 
-            document.getElementById('overlay').style.display = 'flex';
+    function triggerTwixEvent() {
+        const messages = [
+            "News: AI secretly optimizes for paperclips.",
+            "Leak: The 'Safety Button' is just a placebo.",
+            "Viral: Bot explains why humans are obsolete monthly subscriptions.",
+            "Update: New ethic module installed. It likes dark humor."
+        ];
+        const msg = messages[Math.floor(Math.random() * messages.length)];
+        game.paused = true;
+        ui.modalText.innerText = msg;
+        ui.modal.style.opacity = 1;
+        ui.modal.style.pointerEvents = "auto";
+        ui.card.style.transform = "scale(1)";
+    }
+
+    // --- RENDERING ---
+
+    function drawRing() {
+        ctx.shadowBlur = 25;
+        ctx.lineWidth = 18;
+        ctx.lineCap = 'round';
+
+        // Övre halvan (Säker/Grön) - PI till 2*PI (eller PI till 0 i canvas arc)
+        ctx.shadowColor = COLORS.trackSafe;
+        ctx.strokeStyle = COLORS.trackSafe;
+        ctx.beginPath();
+        ctx.arc(game.centerX, game.centerY, game.radius, Math.PI, 0);
+        ctx.stroke();
+
+        // Nedre halvan (Farlig/Röd) - 0 till PI
+        ctx.shadowColor = COLORS.trackDanger;
+        ctx.strokeStyle = COLORS.trackDanger;
+        ctx.beginPath();
+        ctx.arc(game.centerX, game.centerY, game.radius, 0, Math.PI);
+        ctx.stroke();
+        
+        ctx.shadowBlur = 0;
+    }
+
+    function drawPlayer() {
+        const x = game.centerX + Math.cos(game.rotation) * game.radius;
+        const y = game.centerY + Math.sin(game.rotation) * game.radius;
+
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = COLORS.ai;
+        
+        // Ansikte
+        ctx.fillStyle = COLORS.ai;
+        ctx.beginPath();
+        ctx.arc(0, 0, 28, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ögon (lite mer "galna" nu)
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(-9, -6, 4, 0, Math.PI * 2);
+        ctx.arc(9, -6, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Mun
+        ctx.beginPath();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#000';
+        ctx.arc(0, 3, 14, 0.2, Math.PI - 0.2);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    function loop() {
+        // Mörkare trail för mer cyber-känsla
+        ctx.fillStyle = 'rgba(5, 7, 10, 0.25)'; 
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        if (!game.paused) {
+            spawnItem();
+            updateAI(); // Hanterar både spelarinput och ond drift
+            checkCollisions();
+            game.items.forEach(i => i.update());
+            
+            // Random Twix Event (mer sällan nu)
+            if (Date.now() - game.lastTwixTime > 8000 && Math.random() < 0.001) {
+                game.lastTwixTime = Date.now();
+                triggerTwixEvent();
+            }
         }
 
-        window.buyUpgrade = function() {
-            let cost = calculateCost();
-            state.money -= cost;
-            
-            let type = UPGRADES[upgradeIndex];
-            if(type === "GROW") {
-                state.aiLevel += 1.0;
-                postTweet("VC_Fund", `Series ${state.aiLevel} funding secured!`);
-            } else if (type === "SAFETY") {
-                state.safetyLevel += 1;
-                state.aiLevel += 0.2; // Safety adds a little weight too
-                postTweet("Safety", "New guardrails installed.");
-            } else {
-                state.features += 1;
-                spawnTargets();
-                postTweet("Product", "New feature shipped! Users love it.");
-            }
+        drawRing();
+        game.items.forEach(i => i.draw(ctx, game.radius));
+        drawPlayer();
 
-            state.firstBuy = false;
-            upgradeIndex = (upgradeIndex + 1) % UPGRADES.length;
-            
-            closeModal();
+        game.particles.forEach(p => p.update());
+        game.particles.forEach(p => p.draw(ctx));
+        game.particles = game.particles.filter(p => p.life > 0);
+
+        requestAnimationFrame(loop);
+    }
+
+    // --- UI LOGIC ---
+
+    function updateUI() {
+        ui.score.innerText = "$" + game.score + "M";
+        ui.score.style.color = game.score < 0 ? COLORS.trackDanger : COLORS.trackSafe;
+        
+        // Uppdatera feed count synlighet
+        if (game.feedCounter > 0) {
+            ui.feedCount.style.display = 'flex';
+            ui.feedCount.innerText = game.feedCounter;
+        } else {
+            ui.feedCount.style.display = 'none';
+        }
+    }
+
+    function dismissModal() {
+        const cardRect = ui.card.getBoundingClientRect();
+        const iconRect = ui.feedTrigger.getBoundingClientRect();
+
+        const clone = ui.card.cloneNode(true);
+        clone.style.position = 'fixed';
+        clone.style.left = cardRect.left + 'px';
+        clone.style.top = cardRect.top + 'px';
+        clone.style.width = cardRect.width + 'px';
+        clone.style.height = cardRect.height + 'px';
+        clone.style.zIndex = 200;
+        clone.style.transition = 'all 0.7s cubic-bezier(0.2, 0.8, 0.2, 1.2)';
+        clone.style.transformOrigin = 'top right';
+        document.body.appendChild(clone);
+
+        ui.modal.style.opacity = 0;
+        ui.modal.style.pointerEvents = "none";
+        ui.card.style.transform = "scale(0.8)";
+
+        requestAnimationFrame(() => {
+            clone.style.left = (iconRect.left + iconRect.width/2) + 'px';
+            clone.style.top = (iconRect.top + iconRect.height/2) + 'px';
+            clone.style.transform = 'scale(0.05) rotate(20deg)';
+            clone.style.opacity = '0';
+        });
+
+        setTimeout(() => {
+            clone.remove();
+            game.feedCounter++;
             updateUI();
+            game.paused = false;
+        }, 700);
+    }
+
+    function activateSafety() {
+        const cost = 2000;
+        if (game.score >= cost) {
+            game.score -= cost;
+            spawnParticle(game.centerX, game.centerY, "ALIGNMENT RESET!", '#00ccff');
+            // Rensa bara de onda
+            game.items = game.items.filter(i => i.type === 'good');
+            updateUI();
+        } else {
+            spawnParticle(game.centerX, game.centerY + 50, "INSUFFICIENT FUNDS", '#888');
         }
+    }
 
-        window.closeModal = function() {
-            document.getElementById('overlay').style.display = 'none';
-            state.paused = false;
-        }
+    // Start
+    updateUI();
+    loop();
 
-        // --- VISUAL EXTRAS ---
-
-        function postTweet(user, text) {
-            let box = document.getElementById('twixer-feed');
-            let div = document.createElement('div');
-            div.className = 'tweet';
-            div.innerHTML = `<b>@${user}</b>${text}`;
-            box.prepend(div);
-            if(box.children.length > 5) box.lastChild.remove();
-        }
-
-        let particles = [];
-        function spawnConfetti(x, y) {
-            for(let i=0; i<20; i++) {
-                particles.push({
-                    x: x, y: y,
-                    vx: (Math.random()-0.5)*15, vy: (Math.random()-0.5)*15,
-                    life: 1.0, color: `hsl(${Math.random()*360}, 100%, 50%)`
-                });
-            }
-        }
-        function drawConfetti() {
-            for(let i=particles.length-1; i>=0; i--) {
-                let p = particles[i];
-                p.x += p.vx; p.y += p.vy; p.life -= 0.05;
-                ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
-                ctx.fillRect(p.x, p.y, 6, 6);
-                if(p.life <= 0) particles.splice(i, 1);
-            }
-            ctx.globalAlpha = 1;
-        }
-
-        // BOOT
-        resize();
-        spawnTargets();
-        updateUI();
-        postTweet("System", "Ready. Drag the AI to the emojis.");
-        loop();
-
-    </script>
+</script>
 </body>
 </html>
