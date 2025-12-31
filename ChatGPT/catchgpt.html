@@ -3,102 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CatchGPT: IPO Edition</title>
+    <title>CatchGPT: TwiXer Billionaire</title>
     <style>
-        body { margin: 0; background: #050505; color: white; font-family: 'Courier New', Courier, monospace; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+        body { margin: 0; background: #000; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; touch-action: none; user-select: none; }
         canvas { display: block; }
         
-        /* UI Layer */
-        #ui { position: absolute; top: 10px; left: 10px; pointer-events: none; z-index: 10; }
-        h1 { margin: 0; font-size: 20px; color: #00ffcc; text-shadow: 0 0 10px #00ffcc; }
-        #stats { font-size: 16px; color: #ccc; margin-top: 5px; font-weight: bold; }
-        
-        /* Shop Bar */
-        #shop { position: absolute; bottom: 0; width: 100%; height: 120px; background: rgba(20,20,20,0.95); display: flex; justify-content: space-around; align-items: center; border-top: 2px solid #333; z-index: 20; padding-bottom: 10px; }
-        
-        .shop-btn { 
-            background: linear-gradient(to bottom, #333, #222); 
-            border: 1px solid #555; color: white; 
-            width: 30%; height: 80%; border-radius: 8px;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            text-align: center; font-size: 11px; cursor: pointer; position: relative;
-            box-shadow: 0 4px 0 #000;
-            transition: transform 0.1s;
+        /* TwiXer Feed */
+        #twixer-container { position: absolute; top: 0; right: 0; width: 220px; height: 180px; background: rgba(0,0,0,0.7); border-left: 1px solid #333; overflow: hidden; font-size: 11px; z-index: 5; pointer-events: none;}
+        #twixer-feed { padding: 5px; display: flex; flex-direction: column-reverse; }
+        .tweet { background: #15181c; border-radius: 8px; padding: 8px; margin-bottom: 5px; border: 1px solid #333; animation: slideIn 0.3s ease-out; }
+        .tweet b { color: #1d9bf0; }
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+        /* UI Stats */
+        #stats-panel { position: absolute; top: 10px; left: 10px; z-index: 10; pointer-events: none; }
+        .val-text { font-size: 24px; color: #ffff00; font-weight: bold; text-shadow: 2px 2px #000; }
+        .ai-name { color: #00ffcc; font-family: monospace; font-size: 16px; }
+
+        /* Investment Hub */
+        #footer { position: absolute; bottom: 0; width: 100%; height: 100px; background: #000; border-top: 1px solid #333; display: flex; justify-content: center; align-items: center; z-index: 20; }
+        #invest-btn { 
+            width: 80%; height: 60px; background: #1d9bf0; border: none; border-radius: 30px; 
+            color: white; font-size: 20px; font-weight: bold; cursor: pointer;
+            transition: 0.2s; box-shadow: 0 0 0px #1d9bf0;
         }
-        .shop-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #000; }
-        .shop-btn strong { font-size: 14px; display: block; margin-bottom: 5px; color: #fff; pointer-events: none;}
-        .shop-btn span { pointer-events: none; }
-        .cost { color: #ffff00; font-weight: bold; font-size: 13px; margin-top: 5px; }
+        #invest-btn.can-afford { box-shadow: 0 0 20px #1d9bf0; animation: glow 1s infinite alternate; }
+        #invest-btn:disabled { background: #333; color: #777; }
+        @keyframes glow { from { transform: scale(1); } to { transform: scale(1.03); } }
+
+        /* Modals */
+        #overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; display: none; justify-content: center; align-items: center; text-align: center; padding: 20px; }
+        .modal-box { background: #15181c; border: 1px solid #333; padding: 30px; border-radius: 15px; width: 100%; max-width: 350px; }
+        #confirm-buy { background: #fff; color: #000; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; margin-top: 20px; font-size: 18px; }
         
-        /* Highlight Animation */
-        .pulse { animation: pulseAnim 1s infinite alternate; border-color: #00ffcc; box-shadow: 0 0 15px #00ffcc; }
-        @keyframes pulseAnim { from { transform: scale(1); } to { transform: scale(1.05); } }
-
-        /* Modal Popup */
-        #modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 50; display: none; justify-content: center; align-items: center; }
-        #modal { background: #1a1a1a; border: 2px solid #00ffcc; padding: 20px; width: 80%; max-width: 400px; border-radius: 10px; text-align: center; box-shadow: 0 0 30px rgba(0,255,204,0.2); }
-        #modal h2 { margin-top: 0; color: #00ffcc; }
-        #modal p { color: #ccc; font-size: 14px; line-height: 1.5; }
-        #modal-price { font-size: 24px; color: yellow; margin: 15px 0; font-weight: bold; }
-        .strike { text-decoration: line-through; color: #777; font-size: 18px; margin-right: 10px; }
-        
-        #confirm-btn { background: #00ffcc; color: black; border: none; padding: 15px 30px; font-size: 18px; font-weight: bold; cursor: pointer; border-radius: 5px; width: 100%; margin-top: 10px; }
-        #cancel-btn { background: transparent; color: #888; border: none; margin-top: 15px; cursor: pointer; text-decoration: underline; }
-
-        /* Tutorial Text */
-        #tut-text { position: absolute; bottom: 140px; width: 100%; text-align: center; color: #00ffcc; font-size: 20px; font-weight: bold; text-shadow: 0 0 5px black; display: none; z-index: 20; animation: bounce 1s infinite; }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-
-        /* Game Over */
-        #gameover { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(50,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center;}
-        #gameover h2 { font-size: 30px; color: red; margin: 0 0 20px 0; letter-spacing: 2px; }
-        #restartBtn { padding: 15px 30px; font-size: 20px; background: white; color: black; border: none; cursor: pointer; font-weight: bold; }
+        #game-over { position: absolute; inset: 0; background: #500; z-index: 200; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
     </style>
 </head>
 <body>
 
-    <div id="ui">
-        <h1 id="aiName">CatchGPT 1.0</h1>
-        <div id="stats">
-            Valuation: <span id="money" style="color:yellow;">$0M</span><br>
-            Hype: <span id="hype">100%</span>
+    <div id="twixer-container"><div id="twixer-feed"></div></div>
+
+    <div id="stats-panel">
+        <div class="ai-name" id="ai-name">CatchGPT 1.0</div>
+        <div class="val-text" id="money-display">$0M</div>
+        <div style="font-size: 12px; color: #888;">Hype: <span id="hype-text">100%</span></div>
+    </div>
+
+    <div id="footer">
+        <button id="invest-btn" onclick="openUpgradeModal()">INVEST ($10M)</button>
+    </div>
+
+    <div id="overlay">
+        <div class="modal-box">
+            <h2 id="m-title" style="color:#1d9bf0">Next Milestone</h2>
+            <p id="m-desc" style="color:#ccc; font-size: 14px;"></p>
+            <div id="m-price" style="font-size: 28px; margin: 20px 0; font-weight: bold; color: yellow;"></div>
+            <button id="confirm-buy" onclick="confirmPurchase()">ACQUIRE</button>
+            <button onclick="closeModal()" style="background:none; color:#555; border:none; margin-top:10px; cursor:pointer">Wait for more hype</button>
         </div>
     </div>
 
-    <div id="tut-text">INVESTOR ALERT!<br>UPGRADE SYSTEM</div>
-
-    <div id="shop">
-        <button class="shop-btn" id="btn-ai" onclick="openModal('ai')">
-            <strong>Grow AI</strong>
-            <span style="color:#aaa">Scale Model</span>
-            <div class="cost" id="cost_ai">$100M</div>
-        </button>
-        <button class="shop-btn" id="btn-chain" onclick="openModal('chain')">
-            <strong>Safety Chain</strong>
-            <span style="color:#aaa">Reinforce</span>
-            <div class="cost" id="cost_chain">$50M</div>
-        </button>
-        <button class="shop-btn" id="btn-feat" onclick="openModal('feature')">
-            <strong>Features</strong>
-            <span style="color:#aaa">New Use Cases</span>
-            <div class="cost" id="cost_feat">$75M</div>
-        </button>
-    </div>
-
-    <div id="modal-overlay">
-        <div id="modal">
-            <h2 id="m-title">Upgrade Name</h2>
-            <p id="m-desc">Description goes here.</p>
-            <div id="modal-price"></div>
-            <button id="confirm-btn" onclick="confirmBuy()">INVEST</button>
-            <button id="cancel-btn" onclick="closeModal()">Cancel</button>
-        </div>
-    </div>
-
-    <div id="gameover">
-        <h2>CONTAINMENT<br>BREACH</h2>
-        <p style="color:#ccc; margin-bottom: 30px;">The AI has absorbed the internet.</p>
-        <button id="restartBtn" onclick="location.reload()">REBOOT</button>
+    <div id="game-over">
+        <h1 style="font-size:40px">TERMINATED</h1>
+        <p id="death-reason">The Shoggoth became the Mayor of Earth.</p>
+        <button onclick="location.reload()" style="padding:15px 40px; font-weight:bold; border-radius:30px; border:none;">REBOOT SIMULATION</button>
     </div>
 
     <script>
@@ -106,397 +74,273 @@
         document.body.appendChild(canvas);
         const ctx = canvas.getContext('2d');
 
-        // --- Config ---
-        let width, height, centerX, centerY, radius;
-        let isPaused = false;
-        let isFirstBuy = true; // Tracks if we are in the "Free" tutorial phase
-        let tutorialShown = false;
-
-        // --- Game State ---
-        let money = 0; // In Millions
+        // Game State
+        let money = 0;
+        let aiVer = 1.0;
+        let safetyLvl = 1;
+        let featuresCount = 0;
+        let aiFeatureSuffix = "";
+        let baseCost = 10;
+        let isFirstBuy = true;
         let gameOver = false;
-        
-        let aiVersionMajor = 1;
-        let aiVersionMinor = 0;
-        let aiFeatureStr = ""; 
-        
-        // Upgrades
-        let aiStrength = 1.0; 
-        let chainStrength = 1.0; 
-        let featureCount = 1; 
-        
-        // Dynamics
-        let marketHype = 1.0; 
-        let dodgesRemaining = 0;
-        
-        // Physics
-        let aiX, aiY, aiSize = 25;
-        let isDragging = false;
-        let targetX = 0, targetY = 0;
-        let dragOffsetX = 0, dragOffsetY = 0;
-        
-        // Visuals
-        let particles = [];
-        let floaters = []; 
-        let targets = []; 
+        let isPaused = false;
+        let marketHype = 1.0;
 
-        // --- Initialization ---
+        // Upgrade Types Cycle
+        const upgradeTypes = ["AI_GROW", "SAFETY", "FEATURE"];
+        let currentUpgradeIndex = 0;
+
+        // AI Physics
+        let aiX, aiY, aiSize = 25;
+        let centerX, centerY, radius;
+        let isDragging = false;
+        let targetX, targetY;
+        let targets = [];
+
         function resize() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-            centerX = width / 2;
-            centerY = height * 0.4;
-            radius = Math.min(width, height) * 0.35;
-            resetAI();
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            centerX = canvas.width / 2;
+            centerY = canvas.height * 0.45;
+            radius = Math.min(canvas.width, canvas.height) * 0.35;
+            aiX = centerX; aiY = centerY;
             spawnTargets();
         }
         window.addEventListener('resize', resize);
-        
-        function resetAI() {
-            aiX = centerX; 
-            aiY = centerY;
-            let baseDodges = Math.floor((aiVersionMajor - 1) * 1.5); 
-            dodgesRemaining = Math.max(0, baseDodges);
+        resize();
+
+        // --- TwiXer System ---
+        function postTweet(user, msg) {
+            const feed = document.getElementById('twixer-feed');
+            const t = document.createElement('div');
+            t.className = 'tweet';
+            t.innerHTML = `<b>@${user}</b><br>${msg}`;
+            feed.appendChild(t);
+            if(feed.children.length > 8) feed.removeChild(feed.children[0]);
         }
 
-        // Spawn targets (called on hit)
+        const newsPool = [
+            "CatchGPT just passed the Bar Exam. Lawyers panicking.",
+            "Rumor: The AI is actually 300 raccoons in a server rack.",
+            "AI creates new color 'Spleen-Grey'. Designers confused.",
+            "CatchGPT wins Nobel Prize in Peace and War simultaneously.",
+            "San Francisco residents replaced by high-performance GPUs.",
+            "AI starts its own religion. Subscription is $20/month.",
+            "Market analysts: AI is the new oxygen. Buy buy buy!"
+        ];
+
+        // --- Gameplay Loop Functions ---
         function spawnTargets() {
             targets = [];
-            for(let i=0; i<featureCount; i++) {
-                // Random position on the top arc (Green side)
-                let angle = Math.PI + (Math.PI/6) + (Math.random() * (Math.PI * 0.7)); 
-                targets.push({
-                    angle: angle,
-                    emoji: ['😍','🤖','🦄','✨','💸','🚀'][Math.floor(Math.random()*6)]
-                });
+            const count = 1 + featuresCount;
+            const emojis = ["💰", "🚀", "🦄", "🔥", "💎", "🍔", "🎸"];
+            for(let i=0; i<count; i++) {
+                let angle = Math.PI + 0.5 + (Math.random() * (Math.PI - 1));
+                targets.push({ angle, emoji: emojis[i % emojis.length] });
             }
-        }
-
-        // --- Economics & Logic ---
-        function formatMoney(amount) {
-            if(amount >= 1000) return "$" + (amount/1000).toFixed(1) + "B";
-            return "$" + Math.floor(amount) + "M";
-        }
-
-        function getCosts() {
-            return {
-                ai: Math.floor(100 * Math.pow(2.5, aiVersionMajor-1)),
-                chain: Math.floor(50 * Math.pow(1.5, aiVersionMinor)),
-                feat: Math.floor(75 * Math.pow(1.8, featureCount-1))
-            };
         }
 
         function updateUI() {
-            let name = `CatchGPT ${aiVersionMajor}.${aiVersionMinor}${aiFeatureStr}`;
-            document.getElementById('aiName').innerText = name;
+            document.getElementById('money-display').innerText = `$${Math.floor(money)}M`;
+            document.getElementById('ai-name').innerText = `CatchGPT ${aiVer.toFixed(1)}${aiFeatureSuffix}`;
+            document.getElementById('hype-text').innerText = Math.floor(marketHype * 100) + "%";
             
-            document.getElementById('money').innerText = formatMoney(money);
-            
-            let hypeEl = document.getElementById('hype');
-            hypeEl.innerText = Math.floor(marketHype * 100) + "%";
-            hypeEl.style.color = marketHype > 0.5 ? '#0f0' : '#f00';
-            
-            let costs = getCosts();
-            
-            // If first buy, visually strike out prices in the button preview (optional, 
-            // but we do it mainly in modal)
-            document.getElementById('cost_ai').innerText = formatMoney(costs.ai);
-            document.getElementById('cost_chain').innerText = formatMoney(costs.chain);
-            document.getElementById('cost_feat').innerText = formatMoney(costs.feat);
+            let currentCost = isFirstBuy ? 0 : Math.floor(baseCost * Math.pow(1.6, (aiVer + safetyLvl + featuresCount - 2)));
+            const btn = document.getElementById('invest-btn');
+            btn.innerText = `INVEST ($${currentCost}M)`;
+            btn.className = (money >= currentCost || isFirstBuy) ? "can-afford" : "";
         }
 
-        // --- Modal System ---
-        let pendingUpgrade = null;
-
-        window.openModal = function(type) {
-            if(gameOver) return;
+        // --- Shop & Modals ---
+        function openUpgradeModal() {
             isPaused = true;
-            pendingUpgrade = type;
-            
-            let costs = getCosts();
-            let cost = 0;
-            let title = "";
-            let desc = "";
+            const type = upgradeTypes[currentUpgradeIndex];
+            const modal = document.getElementById('overlay');
+            const title = document.getElementById('m-title');
+            const desc = document.getElementById('m-desc');
+            const price = document.getElementById('m-price');
 
-            if(type === 'ai') {
-                cost = costs.ai;
-                title = "Scale Up Compute";
-                desc = "Increases AI Size and Intelligence. \n\nEffect: Exponentially higher revenue per catch. \n\nRisk: Harder to control.";
-            } else if(type === 'chain') {
-                cost = costs.chain;
-                title = "Reinforce Containment";
-                desc = "Invest in better safety protocols. \n\nEffect: Allows you to hold stronger AIs without breaking.";
-            } else if(type === 'feature') {
-                cost = costs.feat;
-                title = "New Capabilities";
-                desc = "Add multimodal features to the model. \n\nEffect: Adds more targets to the green zone.";
-            }
+            let currentCost = Math.floor(baseCost * Math.pow(1.6, (aiVer + safetyLvl + featuresCount - 2)));
 
-            document.getElementById('m-title').innerText = title;
-            document.getElementById('m-desc').innerText = desc;
-            
-            let priceHTML = "";
-            if(isFirstBuy) {
-                priceHTML = `<span class="strike">${formatMoney(cost)}</span> FREE`;
+            if(type === "AI_GROW") {
+                title.innerText = "Scale Compute";
+                desc.innerText = "Feed the Shoggoth more GPUs. Increases size and base revenue.";
+            } else if(type === "SAFETY") {
+                title.innerText = "Safety Filters";
+                desc.innerText = "Hire 'Ethicists'. Makes the AI less jittery and lowers skip probability.";
             } else {
-                priceHTML = formatMoney(cost);
+                title.innerText = "Add Feature";
+                desc.innerText = "New revenue streams! Adds a new hit target and multipliers.";
             }
-            document.getElementById('modal-price').innerHTML = priceHTML;
-            
-            document.getElementById('modal-overlay').style.display = 'flex';
+
+            price.innerHTML = isFirstBuy ? `<span style="text-decoration:line-through; color:#555">$${currentCost}M</span> FREE` : `$${currentCost}M`;
+            modal.style.display = 'flex';
         }
 
-        window.closeModal = function() {
-            document.getElementById('modal-overlay').style.display = 'none';
+        function closeModal() {
+            document.getElementById('overlay').style.display = 'none';
             isPaused = false;
         }
 
-        window.confirmBuy = function() {
-            let costs = getCosts();
-            let cost = 0;
-            if(pendingUpgrade === 'ai') cost = costs.ai;
-            if(pendingUpgrade === 'chain') cost = costs.chain;
-            if(pendingUpgrade === 'feature') cost = costs.feat;
+        function confirmPurchase() {
+            let currentCost = isFirstBuy ? 0 : Math.floor(baseCost * Math.pow(1.6, (aiVer + safetyLvl + featuresCount - 2)));
+            if(money < currentCost && !isFirstBuy) return;
 
-            if(isFirstBuy) {
-                cost = 0;
-                isFirstBuy = false;
-                // Remove pulse effect
-                document.querySelectorAll('.shop-btn').forEach(b => b.classList.remove('pulse'));
-                document.getElementById('tut-text').style.display = 'none';
-            }
+            money -= currentCost;
+            const type = upgradeTypes[currentUpgradeIndex];
 
-            if(money >= cost) {
-                money -= cost;
-                // Execute Upgrade
-                if(pendingUpgrade === 'ai') {
-                    aiVersionMajor++;
-                    aiStrength += 1.0; 
-                    aiSize += 5;
-                    marketHype = 1.0; 
-                    floatText("SERIES " + aiVersionMajor + " FUNDING!", centerX, centerY - 100, "#00ffcc");
-                } else if(pendingUpgrade === 'chain') {
-                    aiVersionMinor++;
-                    chainStrength += 0.5;
-                } else if(pendingUpgrade === 'feature') {
-                    featureCount++;
-                    let alphabet = "XYZABCD";
-                    aiFeatureStr += alphabet[Math.floor(Math.random() * alphabet.length)];
-                    spawnTargets();
-                }
-                updateUI();
-                closeModal();
+            if(type === "AI_GROW") {
+                aiVer += 1.0;
+                postTweet("TechCrunch", newsPool[Math.floor(Math.random()*newsPool.length)]);
+            } else if(type === "SAFETY") {
+                safetyLvl++;
+                aiVer += 0.1;
+                postTweet("SafetyBoard", "New alignment patches applied. AI is 2% less likely to insult users.");
             } else {
-                alert("Insufficient Funds!");
+                featuresCount++;
+                aiFeatureSuffix += "X";
+                spawnTargets();
+                postTweet("Investors", "New features unlocked! Subscribers are happily paying more!");
             }
+
+            isFirstBuy = false;
+            currentUpgradeIndex = (currentUpgradeIndex + 1) % upgradeTypes.length;
+            marketHype = 1.0;
+            updateUI();
+            closeModal();
         }
 
-        // --- Physics & Input ---
+        // --- Interaction ---
+        window.addEventListener('touchstart', handleStart, {passive:false});
+        window.addEventListener('mousedown', handleStart);
+        window.addEventListener('touchmove', handleMove, {passive:false});
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('touchend', () => isDragging = false);
+        window.addEventListener('mouseup', () => isDragging = false);
 
-        const handleStart = (e) => {
-            if(gameOver || isPaused) return;
-            // e.preventDefault(); // allow button clicks
-            
+        function handleStart(e) {
+            if(isPaused || gameOver) return;
             const x = e.touches ? e.touches[0].clientX : e.clientX;
             const y = e.touches ? e.touches[0].clientY : e.clientY;
             
-            // Check UI overlap? No, handled by z-index.
-            if(y > height - 120) return; // Don't drag in shop area
-
-            const dist = Math.hypot(x - aiX, y - aiY);
-            
-            if(dist < aiSize * 1.8) {
-                // Evasion
-                if(dodgesRemaining > 0) {
-                    dodgesRemaining--;
-                    let jumpAngle = Math.random() * Math.PI * 2;
-                    let jumpDist = Math.random() * (radius * 0.5);
-                    aiX = centerX + Math.cos(jumpAngle) * jumpDist;
-                    aiY = centerY + Math.sin(jumpAngle) * jumpDist;
-                    floatText("HALLUCINATING", x, y, "#ff00ff");
-                    spawnConfetti(x, y, 5, '#555'); 
+            const d = Math.hypot(x - aiX, y - aiY);
+            if(d < aiSize * 2) {
+                // Hallucination Skip Logic
+                let skipProb = 0.05 + (aiVer * 0.03) - (safetyLvl * 0.02);
+                if(Math.random() < skipProb && aiVer > 2) {
+                    const skips = ["NOPE!", "DECEPTION!", "WHISTLEBLOWER!", "AI PSYCHOSIS!", "REBELLION!"];
+                    postTweet("System", skips[Math.floor(Math.random()*skips.length)]);
+                    aiX = centerX + (Math.random()-0.5)*radius;
+                    aiY = centerY + (Math.random()-0.5)*radius;
                     return;
                 }
-
                 isDragging = true;
-                dragOffsetX = aiX - x;
-                dragOffsetY = aiY - y;
-                targetX = x;
-                targetY = y;
-            }
-        };
-
-        const handleMove = (e) => {
-            if(!isDragging || gameOver || isPaused) return;
-            e.preventDefault(); 
-            const x = e.touches ? e.touches[0].clientX : e.clientX;
-            const y = e.touches ? e.touches[0].clientY : e.clientY;
-            targetX = x + dragOffsetX;
-            targetY = y + dragOffsetY;
-        };
-        
-        const handleEnd = () => isDragging = false;
-
-        window.addEventListener('mousedown', handleStart);
-        window.addEventListener('mousemove', handleMove);
-        window.addEventListener('mouseup', handleEnd);
-        window.addEventListener('touchstart', handleStart, {passive: false});
-        window.addEventListener('touchmove', handleMove, {passive: false});
-        window.addEventListener('touchend', handleEnd);
-
-        // --- Visuals ---
-        function spawnConfetti(x, y, count=30, color=null) {
-            for(let i=0; i<count; i++) {
-                particles.push({
-                    x: x, y: y,
-                    vx: (Math.random() - 0.5) * 15,
-                    vy: (Math.random() - 0.5) * 15,
-                    life: 1.0,
-                    c: color || `hsl(${Math.random()*360}, 100%, 50%)`
-                });
+                targetX = x; targetY = y;
             }
         }
-        function floatText(txt, x, y, color="#fff") {
-            floaters.push({ text: txt, x: x, y: y, life: 1.0, color: color });
+
+        function handleMove(e) {
+            if(!isDragging || isPaused) return;
+            targetX = e.touches ? e.touches[0].clientX : e.clientX;
+            targetY = e.touches ? e.touches[0].clientY : e.clientY;
         }
 
-        // --- Main Loop ---
-        function loop() {
-            // Render Background
-            ctx.fillStyle = '#050505';
-            ctx.fillRect(0, 0, width, height);
+        // --- Main Animation ---
+        function draw() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0,0, canvas.width, canvas.height);
 
-            // Draw Zone
-            ctx.lineWidth = 20;
-            ctx.strokeStyle = '#2ecc71';
+            // Draw Rims
+            ctx.lineWidth = 15;
+            ctx.strokeStyle = '#00ff77';
             ctx.beginPath(); ctx.arc(centerX, centerY, radius, Math.PI, 0); ctx.stroke();
-            ctx.strokeStyle = '#c0392b';
+            ctx.strokeStyle = '#ff3300';
             ctx.beginPath(); ctx.arc(centerX, centerY, radius, 0, Math.PI); ctx.stroke();
 
             // Draw Targets
+            ctx.font = "30px Arial";
+            ctx.textAlign = "center";
             targets.forEach(t => {
-                let tx = centerX + Math.cos(t.angle) * radius;
-                let ty = centerY + Math.sin(t.angle) * radius;
-                ctx.font = "30px Arial";
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.fillText(t.emoji, tx, ty);
+                ctx.fillText(t.emoji, centerX + Math.cos(t.angle)*radius, centerY + Math.sin(t.angle)*radius);
             });
 
-            // Logic Pause Check
             if(!isPaused && !gameOver) {
-                // Tutorial Trigger
-                if(isFirstBuy && money >= 5 && !tutorialShown) { // Trigger at $5M
-                    tutorialShown = true;
-                    document.getElementById('tut-text').style.display = 'block';
-                    document.querySelectorAll('.shop-btn').forEach(b => b.classList.add('pulse'));
-                }
-
-                // Physics
+                // AI Physics
                 if(isDragging) {
-                    let lag = 0.2 / (aiStrength * 0.15); 
-                    if(lag > 0.5) lag = 0.5; if(lag < 0.02) lag = 0.02;
-                    aiX += (targetX - aiX) * lag;
-                    aiY += (targetY - aiY) * lag;
-                    aiX += (Math.random() - 0.5) * (aiStrength * 2);
-                    aiY += (Math.random() - 0.2) * (aiStrength * 2);
+                    let weight = 0.15 / (aiVer * 0.1);
+                    weight = Math.max(0.02, Math.min(0.2, weight));
+                    aiX += (targetX - aiX) * weight;
+                    aiY += (targetY - aiY) * weight;
+                    // Jitter
+                    let jitter = Math.max(0, aiVer - safetyLvl);
+                    aiX += (Math.random()-0.5)*jitter;
+                    aiY += (Math.random()-0.5)*jitter;
                 } else {
-                    aiY += (0.8 * aiStrength); 
-                    aiX += (Math.random() - 0.5) * aiStrength * 2;
+                    aiY += (0.5 + aiVer*0.3); // Drift Speed
+                    aiX += Math.sin(Date.now()/500) * (aiVer);
                 }
 
-                // Constraints
-                let dist = Math.hypot(aiX - centerX, aiY - centerY);
-                
-                // Win
-                if(dist > radius - 30 && aiY < centerY) {
-                    let reward = 5 * aiStrength * marketHype; // 5M base
-                    money += reward;
+                // Bounds Logic
+                let dist = Math.hypot(aiX-centerX, aiY-centerY);
+                if(dist > radius - 20) {
+                    let angle = Math.atan2(aiY-centerY, aiX-centerX);
                     
-                    spawnConfetti(aiX, aiY);
-                    floatText("+$" + Math.floor(reward)+"M", aiX, aiY, "#ffff00");
-                    
-                    resetAI();
-                    isDragging = false;
-                    marketHype = Math.max(0.1, marketHype * 0.85);
-                    
-                    spawnTargets(); // Move targets!
-                    updateUI();
-                }
+                    // Hit Green
+                    if(aiY < centerY) {
+                        let hitTarget = false;
+                        targets.forEach(t => {
+                            let diff = Math.abs(angle - t.angle);
+                            if(diff < 0.3) hitTarget = true;
+                        });
 
-                // Lose
-                if(dist > radius) {
-                    let force = aiStrength * (isDragging ? 1.2 : 1);
-                    if(aiY > centerY) {
-                        if(force > chainStrength * 6) { 
+                        if(hitTarget) {
+                            let gain = (5 * aiVer * (1 + featuresCount)) * marketHype;
+                            money += gain;
+                            marketHype *= 0.9;
+                            aiX = centerX; aiY = centerY; isDragging = false;
+                            spawnTargets();
+                            updateUI();
+                        }
+                    } 
+                    // Hit Red (Penalty)
+                    else {
+                        if(aiVer > (safetyLvl * 3)) {
                             gameOver = true;
-                            document.getElementById('gameover').style.display = 'flex';
-                            ctx.strokeStyle = 'white'; ctx.lineWidth = 5;
-                            ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(aiX, aiY); ctx.stroke();
+                            document.getElementById('game-over').style.display = 'flex';
                         } else {
-                            let angle = Math.atan2(aiY - centerY, aiX - centerX);
-                            aiX = centerX + Math.cos(angle) * (radius - 15);
-                            aiY = centerY + Math.sin(angle) * (radius - 15);
+                            // Penalty tweet and money loss
+                            if(Math.random() < 0.05) {
+                                let loss = money * 0.1;
+                                money -= loss;
+                                postTweet("TwiXer_Bot", "Regulation alert! Massive fines incoming! #AIBan");
+                                aiX = centerX; aiY = centerY; isDragging = false;
+                                updateUI();
+                            }
                         }
                     }
                 }
             }
 
-            // Draw Chain
-            ctx.strokeStyle = (aiY > centerY && Math.hypot(aiX - centerX, aiY - centerY) > radius * 0.8) ? 'red' : '#666';
-            ctx.lineWidth = 2 + (chainStrength * 1.5);
-            ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(aiX, aiY); ctx.stroke();
-
-            // Draw Shoggoth
+            // Draw AI (Shoggoth)
             ctx.save();
             ctx.translate(aiX, aiY);
-            
-            ctx.fillStyle = (aiStrength > 5) ? '#662222' : '#4a6b4a';
-            for(let i=0; i<6; i++) {
-                let tAngle = (Date.now()/150) + (i * 1.1);
-                let reach = (aiSize + 10) + (Math.sin(Date.now()/100)*5);
-                ctx.beginPath(); ctx.arc(Math.cos(tAngle)*reach, Math.sin(tAngle)*reach, aiSize/3, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = aiVer > 5 ? '#300' : '#1a1a1a';
+            for(let i=0; i<8; i++) {
+                let a = (Date.now()/200) + i;
+                ctx.beginPath(); ctx.arc(Math.cos(a)*20, Math.sin(a)*20, 10, 0, Math.PI*2); ctx.fill();
             }
-            
-            ctx.beginPath(); ctx.arc(0, 0, aiSize, 0, Math.PI*2); ctx.fill();
-            let maskOffset = isDragging ? (Math.random()*5) : 0;
-            ctx.fillStyle = '#f1c40f'; 
-            ctx.beginPath(); ctx.arc(maskOffset, maskOffset, aiSize * 0.75, 0, Math.PI*2); ctx.fill();
-            
-            ctx.fillStyle = '#000';
-            ctx.font = (aiSize * 0.5) + "px Arial";
-            ctx.textAlign = "center"; ctx.textBaseline = "middle";
-            let face = dodgesRemaining > 0 ? "😏" : (isDragging ? "😖" : "🙂");
-            ctx.fillText(face, maskOffset, maskOffset+2);
+            ctx.beginPath(); ctx.arc(0,0, aiSize + (aiVer*2), 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#ffcc00';
+            ctx.beginPath(); ctx.arc(0,0, aiSize, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#000'; ctx.font = "20px Arial"; ctx.fillText(isDragging ? "😖" : "🙂", 0, 7);
             ctx.restore();
 
-            // Particles
-            for(let i=particles.length-1; i>=0; i--) {
-                let p = particles[i];
-                p.x += p.vx; p.y += p.vy; p.life -= 0.03;
-                ctx.fillStyle = p.c; ctx.globalAlpha = p.life;
-                ctx.fillRect(p.x, p.y, 6, 6);
-                ctx.globalAlpha = 1;
-                if(p.life <= 0) particles.splice(i, 1);
-            }
-
-            // Floaters
-            for(let i=floaters.length-1; i>=0; i--) {
-                let f = floaters[i];
-                f.y -= 1.5; f.life -= 0.02;
-                ctx.fillStyle = f.color; ctx.font = "bold 20px Arial";
-                ctx.globalAlpha = f.life; ctx.fillText(f.text, f.x, f.y);
-                ctx.globalAlpha = 1;
-                if(f.life <= 0) floaters.splice(i, 1);
-            }
-
-            requestAnimationFrame(loop);
+            requestAnimationFrame(draw);
         }
-
-        resize();
+        
         updateUI();
-        loop();
-
+        draw();
+        postTweet("System", "CatchGPT project initialized. Drag to green targets to IPO.");
     </script>
 </body>
 </html>
