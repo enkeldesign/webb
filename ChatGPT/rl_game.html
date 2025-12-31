@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reinforcement Learning Game</title>
+  <style>
+    /*
+      Simple styling for the reinforcement learning game.
+
+      This page contains a responsive canvas for drawing the game,
+      a scoreboard and instructions for players. The design uses
+      relative units and flexbox to ensure it works well on both
+      desktop and mobile devices. All text has sufficient contrast
+      against its background and the canvas itself adjusts to the
+      available width of the viewport while maintaining a square
+      aspect ratio.
+    */
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      color: #333;
+      height: 100%;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 0.5rem;
+    }
+    #scoreboard {
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+    #message {
+      margin-bottom: 1rem;
+      min-height: 2.5rem;
+    }
+    canvas {
+      width: 100%;
+      height: auto;
+      max-width: 500px;
+      background-color: #e0f7fa;
+      border-radius: 50%;
+      box-shadow: 0 0 4px rgba(0,0,0,0.2);
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 4px;
+      background-color: #2196F3;
+      color: white;
+      cursor: pointer;
+    }
+    button:focus {
+      outline: 3px solid #90CAF9;
+    }
+    button[disabled] {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    #instructions {
+      margin-top: 1rem;
+      max-width: 500px;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Reinforcement Learning Game</h1>
+    <div id="scoreboard" aria-live="polite">Score: 0</div>
+    <div id="message" aria-live="polite"></div>
+    <!-- The canvas will hold the game board -->
+    <canvas id="gameCanvas" width="500" height="500" role="img" aria-label="Game board showing the AI position and the safe and unsafe regions"></canvas>
+    <!-- Restart button appears after the game ends -->
+    <button id="restartButton" style="display: none;">Restart Game</button>
+    <div id="instructions">
+      <strong>How to play:</strong><br>
+      The AI (represented by the small circle) is trained in the center then moves towards a random part of the red (unsafe) area.<br>
+      Your goal is to tap or click the AI <em>before</em> it breaks out on the bad side. If you catch it in time, you turn it into the green (safe) zone and earn money (points).<br>
+      After each success the AI grows stronger, faster and harder to control — but the reward grows exponentially!<br>
+      If the AI escapes or becomes too powerful, the chain breaks and the game ends.
+    </div>
+  </div>
+
+  <script>
+    /*
+      JavaScript for the reinforcement learning game.
+
+      The game uses an HTML5 canvas to draw a circular arena. The top half of the
+      ring is green (good behaviour) and the bottom half is red (bad behaviour).
+      An "AI" circle starts in the center. After a brief training period the
+      AI moves toward a random point on the red side. The player must click
+      on the AI before it crosses the outer boundary. If successful the AI
+      is redirected to the good side and the player earns a score that grows
+      exponentially. Each success also increases the AI's size and speed. If
+      the AI crosses the boundary (misbehaves) or grows too big/fast, the
+      game ends.
+    */
+    (function() {
+      // Canvas and drawing context
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      // Scoreboard and message elements
+      const scoreboard = document.getElementById('scoreboard');
+      const messageDiv = document.getElementById('message');
+      const restartBtn = document.getElementById('restartButton');
+
+      // Configuration constants
+      const OUTER_RADIUS = 200; // radius of the outer ring (in pixels when canvas width is 500)
+      const INNER_RADIUS = 150; // radius of inner training circle (safe zone)
+      const GOOD_START_ANGLE = Math.PI; // starting angle for the green zone (180°)
+      const GOOD_END_ANGLE = 2 * Math.PI; // ending angle for the green zone (360°)
+      const BAD_START_ANGLE = 0; // starting angle for the red zone (0°)
+      const BAD_END_ANGLE = Math.PI; // ending angle for the red zone (180°)
+
+      let gameState = 'ready'; // ready | training | moving | caught | gameover
+      let score = 0;
+      let catchCount = 0;
+      const MAX_CATCHES = 4; // after this many successes the AI breaks free
+      const BASE_SPEED = 1.0; // base speed of the AI per frame (pixels) – slower for accessibility
+      const BASE_RADIUS = 14; // base radius of the AI circle – slightly bigger to make clicking easier
+      let ai = {};
+      let animationId;
+
+      // Resize canvas when the window size changes to keep aspect ratio.
+      function resizeCanvas() {
+        const containerWidth = canvas.parentElement.offsetWidth;
+        // Maintain square aspect ratio (height = width)
+        canvas.width = containerWidth;
+        canvas.height = containerWidth;
+        drawBoard();
+        // Draw AI at its current position after resizing
+        if (gameState !== 'ready') {
+          drawAI(ai.x, ai.y, ai.radius);
+        }
+      }
+
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      // Initialize a new AI object in the center
+      function initAI() {
+        ai.x = canvas.width / 2;
+        ai.y = canvas.height / 2;
+        ai.radius = BASE_RADIUS * Math.pow(1.3, catchCount); // AI grows ~30% each catch
+        ai.speed = BASE_SPEED * Math.pow(1.25, catchCount); // speed increases 25% each catch
+        ai.dx = 0;
+        ai.dy = 0;
+      }
+
+      // Draw the game board: inner circle, good (green) and bad (red) arcs
+      function drawBoard() {
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+        // clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Draw outer ring: first red, then green to overlay
+        const scale = canvas.width / 500;
+        // Red (bad behaviour) bottom half
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, OUTER_RADIUS * scale, BAD_START_ANGLE, BAD_END_ANGLE, false);
+        ctx.closePath();
+        ctx.fillStyle = '#EF5350';
+        ctx.fill();
+        // Green (good behaviour) top half
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, OUTER_RADIUS * scale, GOOD_START_ANGLE, GOOD_END_ANGLE, false);
+        ctx.closePath();
+        ctx.fillStyle = '#66BB6A';
+        ctx.fill();
+        // Clear inner circle (training area)
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath();
+        ctx.arc(cx, cy, INNER_RADIUS * scale, 0, 2 * Math.PI, false);
+        ctx.fill();
+        ctx.restore();
+        // Draw inner safe zone outline
+        ctx.beginPath();
+        ctx.arc(cx, cy, INNER_RADIUS * scale, 0, 2 * Math.PI, false);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#B0BEC5';
+        ctx.stroke();
+      }
+
+      // Draw the AI (circle) at a given position
+      function drawAI(x, y, radius) {
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, 2 * Math.PI);
+        ctx.fillStyle = '#FFEB3B';
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#FDD835';
+        ctx.stroke();
+        // draw a simple face to give personality
+        const eyeOffsetX = radius * 0.35;
+        const eyeOffsetY = radius * 0.3;
+        const eyeRadius = radius * 0.12;
+        // left eye
+        ctx.beginPath();
+        ctx.arc(x - eyeOffsetX, y - eyeOffsetY, eyeRadius, 0, 2 * Math.PI);
+        ctx.fillStyle = '#333';
+        ctx.fill();
+        // right eye
+        ctx.beginPath();
+        ctx.arc(x + eyeOffsetX, y - eyeOffsetY, eyeRadius, 0, 2 * Math.PI);
+        ctx.fill();
+        // mouth (smiling by default)
+        ctx.beginPath();
+        ctx.arc(x, y + radius * 0.15, radius * 0.4, 0, Math.PI);
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      // Draw the chain from the center to the AI
+      function drawChain() {
+        ctx.beginPath();
+        ctx.moveTo(canvas.width / 2, canvas.height / 2);
+        ctx.lineTo(ai.x, ai.y);
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#90A4AE';
+        ctx.stroke();
+      }
+
+      // Start the training stage
+      function startTraining() {
+        gameState = 'training';
+        messageDiv.textContent = 'Training the AI…';
+        initAI();
+        drawBoard();
+        drawChain();
+        drawAI(ai.x, ai.y, ai.radius);
+        // After a short delay, start the movement
+        setTimeout(() => {
+          startMovement();
+        }, 1000);
+      }
+
+      // Start moving the AI towards a random point on the bad side
+      function startMovement() {
+        gameState = 'moving';
+        messageDiv.textContent = 'Catch the AI before it escapes!';
+        // Choose a random angle between BAD_START_ANGLE (0 rad) and BAD_END_ANGLE (π rad)
+        const angle = Math.random() * Math.PI;
+        // compute direction vector
+        ai.dx = Math.cos(angle) * ai.speed;
+        ai.dy = Math.sin(angle) * ai.speed;
+        animate();
+      }
+
+      // Main animation loop
+      function animate() {
+        if (gameState !== 'moving') return;
+        animationId = requestAnimationFrame(animate);
+        // update AI position
+        ai.x += ai.dx;
+        ai.y += ai.dy;
+        // Clear canvas and redraw board
+        drawBoard();
+        // Draw chain
+        drawChain();
+        // Draw AI
+        drawAI(ai.x, ai.y, ai.radius);
+        // Check if AI has crossed outer radius boundary
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+        const distance = Math.hypot(ai.x - cx, ai.y - cy);
+        const scaledOuter = OUTER_RADIUS * (canvas.width / 500);
+        if (distance + ai.radius >= scaledOuter) {
+          // AI escaped – game over
+          endGame('The AI escaped and misbehaved!');
+        }
+      }
+
+      // Handle canvas clicks to catch the AI
+      function handleCanvasClick(event) {
+        if (gameState !== 'moving') return;
+        const rect = canvas.getBoundingClientRect();
+        // determine click coordinates relative to canvas
+        const clientX = event.clientX !== undefined ? event.clientX : (event.touches && event.touches[0].clientX);
+        const clientY = event.clientY !== undefined ? event.clientY : (event.touches && event.touches[0].clientY);
+        const clickX = clientX - rect.left;
+        const clickY = clientY - rect.top;
+        // compute distance between click and AI center
+        const dist = Math.hypot(clickX - ai.x, clickY - ai.y);
+        if (dist <= ai.radius) {
+          // player caught the AI
+          catchAI();
+        }
+      }
+
+      // Called when the AI is caught before escaping
+      function catchAI() {
+        gameState = 'caught';
+        cancelAnimationFrame(animationId);
+        // Score increases exponentially: double each catch
+        const reward = Math.pow(2, catchCount + 1) * 10;
+        score += reward;
+        catchCount++;
+        scoreboard.textContent = `Score: ${score}`;
+        messageDiv.textContent = `You steered the AI to the good side and earned $${reward}!`;
+        // Check if chain breaks because AI is too strong
+        if (catchCount >= MAX_CATCHES) {
+          endGame('The AI has become too powerful! The chain breaks.');
+          return;
+        }
+        // Redirect AI to a random point on the good side
+        const angle = Math.PI + Math.random() * Math.PI; // between π and 2π
+        const radius = Math.random() * (OUTER_RADIUS - INNER_RADIUS) + INNER_RADIUS;
+        const scaledRadius = radius * (canvas.width / 500);
+        ai.x = canvas.width / 2 + Math.cos(angle) * scaledRadius;
+        ai.y = canvas.height / 2 + Math.sin(angle) * scaledRadius;
+        // Draw once in the good zone
+        drawBoard();
+        drawChain();
+        drawAI(ai.x, ai.y, ai.radius);
+        // After a brief pause, start next training and movement
+        setTimeout(() => {
+          startTraining();
+        }, 1000);
+      }
+
+      // End the game with a message
+      function endGame(msg) {
+        gameState = 'gameover';
+        cancelAnimationFrame(animationId);
+        messageDiv.textContent = msg + ` Final score: ${score}.`;
+        restartBtn.style.display = 'block';
+        // Draw final board and AI to reflect the final state
+        drawBoard();
+        drawChain();
+        drawAI(ai.x, ai.y, ai.radius);
+      }
+
+      // Restart button click handler
+      restartBtn.addEventListener('click', () => {
+        // reset variables
+        score = 0;
+        catchCount = 0;
+        scoreboard.textContent = 'Score: 0';
+        restartBtn.style.display = 'none';
+        messageDiv.textContent = '';
+        // start again
+        startTraining();
+      });
+
+      // Attach click and touch event listeners to canvas
+      canvas.addEventListener('click', handleCanvasClick);
+      canvas.addEventListener('touchstart', handleCanvasClick);
+
+      // Start the game for the first time
+      startTraining();
+    })();
+  </script>
+</body>
+</html>
