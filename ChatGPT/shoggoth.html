@@ -3,31 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Shoggoth Lead</title>
+    <title>CatchGPT: Adversarial Mode</title>
     <style>
-        body { margin: 0; background: #1a1a1a; color: white; font-family: sans-serif; overflow: hidden; touch-action: none; }
+        body { margin: 0; background: #111; color: white; font-family: 'Courier New', Courier, monospace; overflow: hidden; touch-action: none; }
         canvas { display: block; }
-        #ui { position: absolute; top: 10px; left: 10px; pointer-events: none; text-shadow: 2px 2px 4px black; }
-        #shop { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: space-around; }
-        .btn { pointer-events: auto; background: #333; border: 2px solid #555; color: white; padding: 10px; border-radius: 8px; font-size: 12px; min-width: 80px; text-align: center; }
-        .btn:active { background: #555; }
-        .btn span { display: block; font-weight: bold; font-size: 14px; }
-        #msg { position: absolute; top: 50%; width: 100%; text-align: center; font-size: 24px; pointer-events: none; display: none; }
+        #ui { position: absolute; top: 10px; left: 10px; pointer-events: none; z-index: 10; }
+        h1 { margin: 0; font-size: 18px; color: #00ffcc; text-shadow: 0 0 5px #00ffcc; }
+        #stats { font-size: 14px; color: #ccc; margin-top: 5px; }
+        
+        #shop { position: absolute; bottom: 0; width: 100%; height: 140px; background: rgba(0,0,0,0.9); display: flex; justify-content: space-around; align-items: center; border-top: 2px solid #333; z-index: 15; }
+        .btn { 
+            background: #222; border: 1px solid #444; color: white; 
+            padding: 5px; border-radius: 5px; width: 30%; height: 85%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; font-size: 11px; cursor: pointer; transition: all 0.1s;
+        }
+        .btn:active { transform: scale(0.95); background: #444; }
+        .btn strong { font-size: 13px; display: block; margin-bottom: 4px; color: #fff; }
+        .cost { color: #ffff00; font-weight: bold; font-size: 12px; }
+        
+        #gameover { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(50,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 20; text-align: center;}
+        #gameover h2 { font-size: 30px; color: red; margin: 0 0 20px 0; letter-spacing: 2px; }
+        #restartBtn { padding: 15px 30px; font-size: 20px; background: white; color: black; border: none; cursor: pointer; font-family: inherit; font-weight: bold; }
     </style>
 </head>
 <body>
+
     <div id="ui">
-        <div>Wealth: <span id="money">$0</span></div>
-        <div>Revenue: <span id="rev">$0</span>/s</div>
-        <div style="font-size: 10px; color: #aaa;">AI Power: <span id="pwr">1</span></div>
+        <h1 id="aiName">CatchGPT 1.0</h1>
+        <div id="stats">
+            Cash: <span id="money" style="color:yellow; font-size:1.2em">$0</span><br>
+            Market Hype: <span id="hype">100%</span>
+        </div>
     </div>
 
-    <div id="msg">CHAIN SNAPPED. COLLAPSE.</div>
-
     <div id="shop">
-        <div class="btn" onclick="buy('compute')"><span>COMPUTE</span>Cost: <span id="c_cost">$10</span><br>+Power (Inc. $)</div>
-        <div class="btn" onclick="buy('chain')"><span>CHAIN</span>Cost: <span id="h_cost">$50</span><br>+Strength</div>
-        <div class="btn" onclick="buy('alignment')"><span>ALIGN</span>Cost: <span id="a_cost">$20</span><br>+Emoji Multiplier</div>
+        <div class="btn" onclick="upgrade('ai')">
+            <strong>Grow AI</strong>
+            <span style="color:#aaa">Bigger & Smarter</span>
+            <span class="cost" id="cost_ai">$100</span>
+        </div>
+        <div class="btn" onclick="upgrade('chain')">
+            <strong>Reinforce Chain</strong>
+            <span style="color:#aaa">Thicker Line (+0.1)</span>
+            <span class="cost" id="cost_chain">$50</span>
+        </div>
+        <div class="btn" onclick="upgrade('feature')">
+            <strong>Add Feature</strong>
+            <span style="color:#aaa">New Targets</span>
+            <span class="cost" id="cost_feat">$75</span>
+        </div>
+    </div>
+
+    <div id="gameover">
+        <h2>CONTAINMENT<br>BREACH</h2>
+        <p style="color:#ccc; margin-bottom: 30px;">The Shoggoth has escaped to the cloud.</p>
+        <button id="restartBtn" onclick="location.reload()">REBOOT SYSTEM</button>
     </div>
 
     <script>
@@ -35,138 +66,355 @@
         document.body.appendChild(canvas);
         const ctx = canvas.getContext('2d');
 
+        // Game State
         let width, height, centerX, centerY, radius;
-        let money = 10;
-        let aiPower = 1;
-        let chainStrength = 10;
-        let alignLevel = 0;
+        let money = 0;
         let gameOver = false;
-
-        // AI State
-        let aiX, aiY, aiSize = 30;
-        let angle = Math.PI; // Start in middle
-        let driftSpeed = 0.02;
+        
+        // AI Stats
+        let aiVersionMajor = 1;
+        let aiVersionMinor = 0;
+        let aiFeatures = ""; 
+        let aiStrength = 1.0; 
+        let chainStrength = 1.0; 
+        let featureCount = 1; 
+        
+        // Behavior Stats
+        let dodgesRemaining = 0; // Current round dodges
+        
+        // Economics
+        let marketHype = 1.0; 
+        
+        // Physics
+        let aiX, aiY, aiSize = 25;
         let isDragging = false;
+        // Target is where the mouse is. AI lags behind target.
+        let targetX = 0, targetY = 0; 
+        let dragOffsetX = 0, dragOffsetY = 0;
+        
+        // Visuals
+        let particles = [];
+        let floaters = []; 
+        let targets = []; 
 
+        // Setup
         function resize() {
             width = canvas.width = window.innerWidth;
             height = canvas.height = window.innerHeight;
             centerX = width / 2;
-            centerY = height / 2 - 50;
+            centerY = height * 0.4;
             radius = Math.min(width, height) * 0.35;
-            aiX = centerX; aiY = centerY;
+            resetAI();
+            spawnTargets();
         }
         window.addEventListener('resize', resize);
-        resize();
-
-        function buy(type) {
-            if (gameOver) return;
-            if (type === 'compute' && money >= Math.floor(10 * Math.pow(1.5, aiPower-1))) {
-                money -= Math.floor(10 * Math.pow(1.5, aiPower-1));
-                aiPower++;
-                aiSize += 2;
-                driftSpeed += 0.005;
-            } else if (type === 'chain' && money >= 50 * chainStrength) {
-                money -= 50 * chainStrength;
-                chainStrength += 5;
-            } else if (type === 'alignment' && money >= 20 * (alignLevel + 1)) {
-                money -= 20 * (alignLevel + 1);
-                alignLevel++;
-            }
-            updateUI();
+        
+        function resetAI() {
+            aiX = centerX; 
+            aiY = centerY;
+            // Calculate how many times it will dodge based on version
+            // Starts dodging at Version 2.0
+            let baseDodges = Math.floor((aiVersionMajor - 1) * 1.5); 
+            dodgesRemaining = Math.max(0, baseDodges);
         }
 
-        function updateUI() {
+        function spawnTargets() {
+            targets = [];
+            for(let i=0; i<featureCount; i++) {
+                // Spread targets across the top arc
+                let angle = Math.PI + (Math.PI/6) + (Math.random() * (Math.PI * 0.7)); 
+                targets.push({
+                    angle: angle,
+                    emoji: ['😍','🤖','🦄','✨','💸','🚀','🧠'][Math.floor(Math.random()*7)]
+                });
+            }
+        }
+
+        function updateName() {
+            let name = `CatchGPT ${aiVersionMajor}.${aiVersionMinor}${aiFeatures}`;
+            document.getElementById('aiName').innerText = name;
+            document.getElementById('hype').innerText = Math.floor(marketHype * 100) + "%";
+            document.getElementById('hype').style.color = marketHype > 0.5 ? '#0f0' : '#f00';
+            
+            let costAI = Math.floor(100 * Math.pow(2.5, aiVersionMajor-1));
+            let costChain = Math.floor(50 * Math.pow(1.5, aiVersionMinor));
+            let costFeat = Math.floor(75 * Math.pow(1.8, featureCount-1));
+            
+            document.getElementById('cost_ai').innerText = "$" + costAI;
+            document.getElementById('cost_chain').innerText = "$" + costChain;
+            document.getElementById('cost_feat').innerText = "$" + costFeat;
+        }
+
+        function upgrade(type) {
+            if(gameOver) return;
+            
+            let costAI = Math.floor(100 * Math.pow(2.5, aiVersionMajor-1));
+            let costChain = Math.floor(50 * Math.pow(1.5, aiVersionMinor));
+            let costFeat = Math.floor(75 * Math.pow(1.8, featureCount-1));
+
+            if(type === 'ai' && money >= costAI) {
+                money -= costAI;
+                aiVersionMajor++;
+                aiStrength += 1.0; 
+                aiSize += 4;
+                marketHype = 1.0; 
+                floatText("MAJOR UPDATE!", centerX, centerY - 100, "#00ffcc");
+            }
+            else if(type === 'chain' && money >= costChain) {
+                money -= costChain;
+                aiVersionMinor++;
+                chainStrength += 0.5;
+            }
+            else if(type === 'feature' && money >= costFeat) {
+                money -= costFeat;
+                featureCount++;
+                let alphabet = "XYZABCD";
+                aiFeatures += alphabet[Math.floor(Math.random() * alphabet.length)];
+                spawnTargets();
+            }
+            updateName();
+            updateMoneyUI();
+        }
+        
+        function updateMoneyUI() {
             document.getElementById('money').innerText = "$" + Math.floor(money);
-            document.getElementById('rev').innerText = "$" + (aiPower * (1 + alignLevel));
-            document.getElementById('pwr').innerText = aiPower;
-            document.getElementById('c_cost').innerText = "$" + Math.floor(10 * Math.pow(1.5, aiPower-1));
-            document.getElementById('h_cost').innerText = "$" + (50 * chainStrength);
-            document.getElementById('a_cost').innerText = "$" + (20 * (alignLevel + 1));
         }
 
-        // Input Handling
-        const handleInput = (e) => {
-            if (gameOver) return;
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            const dist = Math.hypot(clientX - aiX, clientY - aiY);
-            if (dist < aiSize * 2) isDragging = true;
+        // --- INPUT HANDLING WITH EVASION ---
+
+        const handleStart = (e) => {
+            if(gameOver) return;
+            e.preventDefault();
+            const x = e.touches ? e.touches[0].clientX : e.clientX;
+            const y = e.touches ? e.touches[0].clientY : e.clientY;
+            const dist = Math.hypot(x - aiX, y - aiY);
+            
+            if(dist < aiSize * 1.8) {
+                // EVASION CHECK
+                if(dodgesRemaining > 0) {
+                    dodgesRemaining--;
+                    // Teleport AI to a random spot within radius
+                    let jumpAngle = Math.random() * Math.PI * 2;
+                    let jumpDist = Math.random() * (radius * 0.5);
+                    aiX = centerX + Math.cos(jumpAngle) * jumpDist;
+                    aiY = centerY + Math.sin(jumpAngle) * jumpDist;
+                    
+                    // Visuals
+                    let msgs = ["NOPE", "404", "BUSY", "TRY AGAIN", "MISALIGNED"];
+                    floatText(msgs[Math.floor(Math.random()*msgs.length)], x, y, "#ff00ff");
+                    spawnConfetti(x, y, 5, '#555'); // Grey confetti (dust)
+                    return;
+                }
+
+                // If no dodges left, grab it
+                isDragging = true;
+                dragOffsetX = aiX - x;
+                dragOffsetY = aiY - y;
+                targetX = x;
+                targetY = y;
+            }
         };
 
-        const moveInput = (e) => {
-            if (!isDragging || gameOver) return;
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            aiX = clientX;
-            aiY = clientY;
+        const handleMove = (e) => {
+            if(!isDragging || gameOver) return;
+            e.preventDefault(); // Stop scrolling
+            const x = e.touches ? e.touches[0].clientX : e.clientX;
+            const y = e.touches ? e.touches[0].clientY : e.clientY;
+            targetX = x + dragOffsetX;
+            targetY = y + dragOffsetY;
         };
+        
+        const handleEnd = () => isDragging = false;
 
-        window.addEventListener('mousedown', handleInput);
-        window.addEventListener('touchstart', handleInput);
-        window.addEventListener('mousemove', moveInput);
-        window.addEventListener('touchmove', moveInput);
-        window.addEventListener('mouseup', () => isDragging = false);
-        window.addEventListener('touchend', () => isDragging = false);
+        window.addEventListener('mousedown', handleStart);
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('mouseup', handleEnd);
+        window.addEventListener('touchstart', handleStart, {passive: false});
+        window.addEventListener('touchmove', handleMove, {passive: false});
+        window.addEventListener('touchend', handleEnd);
 
-        function gameLoop() {
-            if (gameOver) return;
+        // --- VISUAL SYSTEMS ---
 
-            ctx.clearRect(0, 0, width, height);
+        function spawnConfetti(x, y, count=30, color=null) {
+            for(let i=0; i<count; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    life: 1.0,
+                    c: color || `hsl(${Math.random()*360}, 100%, 50%)`
+                });
+            }
+        }
 
-            // Draw Zones
+        function floatText(txt, x, y, color="#fff") {
+            floaters.push({ text: txt, x: x, y: y, life: 1.0, color: color });
+        }
+
+        // --- MAIN LOOP ---
+        function loop() {
+            if(gameOver) return;
+            
+            ctx.fillStyle = '#111';
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw Zone
             ctx.lineWidth = 20;
-            ctx.strokeStyle = '#44ff44'; // Good side
-            ctx.beginPath(); ctx.arc(centerX, centerY, radius, Math.PI * 1.5, Math.PI * 0.5, true); ctx.stroke();
-            ctx.strokeStyle = '#ff4444'; // Bad side
-            ctx.beginPath(); ctx.arc(centerX, centerY, radius, Math.PI * 1.5, Math.PI * 0.5, false); ctx.stroke();
+            ctx.strokeStyle = '#2ecc71';
+            ctx.beginPath(); ctx.arc(centerX, centerY, radius, Math.PI, 0); ctx.stroke();
+            ctx.strokeStyle = '#c0392b';
+            ctx.beginPath(); ctx.arc(centerX, centerY, radius, 0, Math.PI); ctx.stroke();
 
-            // AI Drift Logic
-            if (!isDragging) {
-                // Drift toward random point in Red Zone
-                aiX += (Math.cos(0) * driftSpeed * aiPower);
-                aiY += (Math.sin(0.1) * driftSpeed * aiPower);
+            // Draw Targets
+            targets.forEach(t => {
+                let tx = centerX + Math.cos(t.angle) * radius;
+                let ty = centerY + Math.sin(t.angle) * radius;
+                ctx.font = "30px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(t.emoji, tx, ty);
+            });
+
+            // --- PHYSICS ENGINE ---
+
+            if(isDragging) {
+                // RESISTANCE MECHANIC: 
+                // As AI gets stronger, it follows the cursor slower (Lerp)
+                // Strength 1 = Fast, Strength 10 = Very Slow
+                let lag = 0.2 / (aiStrength * 0.15); 
+                if(lag > 0.5) lag = 0.5; // Cap speed
+                if(lag < 0.02) lag = 0.02; // Cap slowness
+                
+                // Move towards target
+                aiX += (targetX - aiX) * lag;
+                aiY += (targetY - aiY) * lag;
+
+                // STRUGGLE MECHANIC:
+                // AI vibrates and pulls down slightly while held
+                aiX += (Math.random() - 0.5) * (aiStrength * 2);
+                aiY += (Math.random() - 0.2) * (aiStrength * 2); // Pulls down more
+            } else {
+                // Idle Drift (Towards Red Zone)
+                aiY += (0.8 * aiStrength); 
+                aiX += (Math.random() - 0.5) * aiStrength * 2;
             }
 
-            // Check if in Good Zone (Left side)
-            if (aiX < centerX) {
-                money += (aiPower * (1 + alignLevel)) / 60;
+            // --- CONSTRAINT & WIN/LOSS ---
+            
+            let dist = Math.hypot(aiX - centerX, aiY - centerY);
+            
+            // 1. Success (Green Rim)
+            if(dist > radius - 30 && aiY < centerY) {
+                let reward = 10 * aiStrength * marketHype;
+                money += reward;
+                
+                spawnConfetti(aiX, aiY);
+                floatText("+$" + Math.floor(reward), aiX, aiY, "#ffff00");
+                
+                resetAI();
+                isDragging = false;
+                marketHype = Math.max(0.1, marketHype * 0.85); // Hype drops
+                updateName();
+                updateMoneyUI();
             }
 
-            // Tension Check
-            const distFromCenter = Math.hypot(aiX - centerX, aiY - centerY);
-            if (distFromCenter > radius) {
-                if (aiPower > chainStrength) {
-                    gameOver = true;
-                    document.getElementById('msg').style.display = 'block';
-                } else {
-                    // Snap back a bit if chain holds
-                    aiX = centerX + (aiX - centerX) * 0.9;
-                    aiY = centerY + (aiY - centerY) * 0.9;
+            // 2. Failure (Red Rim)
+            if(dist > radius) {
+                // Check if Chain Holds
+                let force = aiStrength * (isDragging ? 1.2 : 1);
+                
+                if(aiY > centerY) {
+                    if(force > chainStrength * 6) { 
+                        gameOver = true;
+                        document.getElementById('gameover').style.display = 'flex';
+                        // Draw Snap
+                        ctx.strokeStyle = 'white'; ctx.lineWidth = 5;
+                        ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(aiX, aiY); ctx.stroke();
+                        return;
+                    } else {
+                        // Elastic Snap Back
+                        let angle = Math.atan2(aiY - centerY, aiX - centerX);
+                        aiX = centerX + Math.cos(angle) * (radius - 15);
+                        aiY = centerY + Math.sin(angle) * (radius - 15);
+                        
+                        // Stress Visual
+                        ctx.fillStyle = "rgba(255,0,0,0.3)";
+                        ctx.fillRect(0,0,width,height);
+                    }
                 }
             }
 
             // Draw Chain
-            ctx.strokeStyle = (aiPower > chainStrength * 0.8) ? 'red' : 'white';
-            ctx.lineWidth = 2;
+            ctx.strokeStyle = (aiY > centerY && dist > radius * 0.8) ? 'red' : '#888';
+            ctx.lineWidth = 2 + (chainStrength * 1.5);
             ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(aiX, aiY); ctx.stroke();
 
             // Draw Shoggoth
-            ctx.fillStyle = '#222';
-            ctx.beginPath(); ctx.arc(aiX, aiY, aiSize, 0, Math.PI*2); ctx.fill();
-            // Smiley Mask
-            ctx.fillStyle = 'yellow';
-            ctx.beginPath(); ctx.arc(aiX, aiY, aiSize * 0.6, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = 'black';
-            ctx.fillRect(aiX - aiSize*0.3, aiY - aiSize*0.2, 4, 4);
-            ctx.fillRect(aiX + aiSize*0.1, aiY - aiSize*0.2, 4, 4);
-            ctx.beginPath(); ctx.arc(aiX, aiY + aiSize*0.1, aiSize*0.3, 0.2, Math.PI-0.2); ctx.stroke();
+            ctx.save();
+            ctx.translate(aiX, aiY);
+            
+            // Tentacles
+            ctx.fillStyle = '#4a6b4a';
+            if(aiStrength > 5) ctx.fillStyle = '#662222'; // Evil color
+            
+            for(let i=0; i<6; i++) {
+                let tAngle = (Date.now()/150) + (i * 1.1);
+                let reach = (aiSize + 10) + (Math.sin(Date.now()/100)*5);
+                let tx = Math.cos(tAngle) * reach;
+                let ty = Math.sin(tAngle) * reach;
+                ctx.beginPath(); ctx.arc(tx, ty, aiSize/3, 0, Math.PI*2); ctx.fill();
+            }
+            
+            // Body
+            ctx.beginPath(); ctx.arc(0, 0, aiSize, 0, Math.PI*2); ctx.fill();
+            
+            // Mask (The Smiley)
+            // If dragging, mask slips slightly
+            let maskOffset = isDragging ? (Math.random()*5) : 0;
+            ctx.fillStyle = '#f1c40f'; 
+            ctx.beginPath(); ctx.arc(maskOffset, maskOffset, aiSize * 0.75, 0, Math.PI*2); ctx.fill();
+            
+            // Face Expression
+            ctx.fillStyle = '#000';
+            ctx.font = (aiSize * 0.5) + "px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            // If dodging, look sneaky. If dragging, look stressed.
+            let face = "🙂";
+            if(dodgesRemaining > 0) face = "😏";
+            if(isDragging) face = "😖";
+            ctx.fillText(face, maskOffset, maskOffset+2);
+            
+            ctx.restore();
 
-            updateUI();
-            requestAnimationFrame(gameLoop);
+            // Particles
+            for(let i=particles.length-1; i>=0; i--) {
+                let p = particles[i];
+                p.x += p.vx; p.y += p.vy; p.life -= 0.03;
+                ctx.fillStyle = p.c; ctx.globalAlpha = p.life;
+                ctx.fillRect(p.x, p.y, 6, 6);
+                ctx.globalAlpha = 1;
+                if(p.life <= 0) particles.splice(i, 1);
+            }
+
+            // Floaters
+            for(let i=floaters.length-1; i>=0; i--) {
+                let f = floaters[i];
+                f.y -= 1.5; f.life -= 0.02;
+                ctx.fillStyle = f.color; ctx.font = "bold 20px Arial";
+                ctx.globalAlpha = f.life; ctx.fillText(f.text, f.x, f.y);
+                ctx.globalAlpha = 1;
+                if(f.life <= 0) floaters.splice(i, 1);
+            }
+
+            requestAnimationFrame(loop);
         }
 
-        gameLoop();
+        // Init
+        resize();
+        updateName();
+        loop();
+
     </script>
 </body>
 </html>
