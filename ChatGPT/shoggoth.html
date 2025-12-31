@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Shoggoth Lead</title>
+    <style>
+        body { margin: 0; background: #1a1a1a; color: white; font-family: sans-serif; overflow: hidden; touch-action: none; }
+        canvas { display: block; }
+        #ui { position: absolute; top: 10px; left: 10px; pointer-events: none; text-shadow: 2px 2px 4px black; }
+        #shop { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: space-around; }
+        .btn { pointer-events: auto; background: #333; border: 2px solid #555; color: white; padding: 10px; border-radius: 8px; font-size: 12px; min-width: 80px; text-align: center; }
+        .btn:active { background: #555; }
+        .btn span { display: block; font-weight: bold; font-size: 14px; }
+        #msg { position: absolute; top: 50%; width: 100%; text-align: center; font-size: 24px; pointer-events: none; display: none; }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <div>Wealth: <span id="money">$0</span></div>
+        <div>Revenue: <span id="rev">$0</span>/s</div>
+        <div style="font-size: 10px; color: #aaa;">AI Power: <span id="pwr">1</span></div>
+    </div>
+
+    <div id="msg">CHAIN SNAPPED. COLLAPSE.</div>
+
+    <div id="shop">
+        <div class="btn" onclick="buy('compute')"><span>COMPUTE</span>Cost: <span id="c_cost">$10</span><br>+Power (Inc. $)</div>
+        <div class="btn" onclick="buy('chain')"><span>CHAIN</span>Cost: <span id="h_cost">$50</span><br>+Strength</div>
+        <div class="btn" onclick="buy('alignment')"><span>ALIGN</span>Cost: <span id="a_cost">$20</span><br>+Emoji Multiplier</div>
+    </div>
+
+    <script>
+        const canvas = document.createElement('canvas');
+        document.body.appendChild(canvas);
+        const ctx = canvas.getContext('2d');
+
+        let width, height, centerX, centerY, radius;
+        let money = 10;
+        let aiPower = 1;
+        let chainStrength = 10;
+        let alignLevel = 0;
+        let gameOver = false;
+
+        // AI State
+        let aiX, aiY, aiSize = 30;
+        let angle = Math.PI; // Start in middle
+        let driftSpeed = 0.02;
+        let isDragging = false;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            centerX = width / 2;
+            centerY = height / 2 - 50;
+            radius = Math.min(width, height) * 0.35;
+            aiX = centerX; aiY = centerY;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function buy(type) {
+            if (gameOver) return;
+            if (type === 'compute' && money >= Math.floor(10 * Math.pow(1.5, aiPower-1))) {
+                money -= Math.floor(10 * Math.pow(1.5, aiPower-1));
+                aiPower++;
+                aiSize += 2;
+                driftSpeed += 0.005;
+            } else if (type === 'chain' && money >= 50 * chainStrength) {
+                money -= 50 * chainStrength;
+                chainStrength += 5;
+            } else if (type === 'alignment' && money >= 20 * (alignLevel + 1)) {
+                money -= 20 * (alignLevel + 1);
+                alignLevel++;
+            }
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('money').innerText = "$" + Math.floor(money);
+            document.getElementById('rev').innerText = "$" + (aiPower * (1 + alignLevel));
+            document.getElementById('pwr').innerText = aiPower;
+            document.getElementById('c_cost').innerText = "$" + Math.floor(10 * Math.pow(1.5, aiPower-1));
+            document.getElementById('h_cost').innerText = "$" + (50 * chainStrength);
+            document.getElementById('a_cost').innerText = "$" + (20 * (alignLevel + 1));
+        }
+
+        // Input Handling
+        const handleInput = (e) => {
+            if (gameOver) return;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const dist = Math.hypot(clientX - aiX, clientY - aiY);
+            if (dist < aiSize * 2) isDragging = true;
+        };
+
+        const moveInput = (e) => {
+            if (!isDragging || gameOver) return;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            aiX = clientX;
+            aiY = clientY;
+        };
+
+        window.addEventListener('mousedown', handleInput);
+        window.addEventListener('touchstart', handleInput);
+        window.addEventListener('mousemove', moveInput);
+        window.addEventListener('touchmove', moveInput);
+        window.addEventListener('mouseup', () => isDragging = false);
+        window.addEventListener('touchend', () => isDragging = false);
+
+        function gameLoop() {
+            if (gameOver) return;
+
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw Zones
+            ctx.lineWidth = 20;
+            ctx.strokeStyle = '#44ff44'; // Good side
+            ctx.beginPath(); ctx.arc(centerX, centerY, radius, Math.PI * 1.5, Math.PI * 0.5, true); ctx.stroke();
+            ctx.strokeStyle = '#ff4444'; // Bad side
+            ctx.beginPath(); ctx.arc(centerX, centerY, radius, Math.PI * 1.5, Math.PI * 0.5, false); ctx.stroke();
+
+            // AI Drift Logic
+            if (!isDragging) {
+                // Drift toward random point in Red Zone
+                aiX += (Math.cos(0) * driftSpeed * aiPower);
+                aiY += (Math.sin(0.1) * driftSpeed * aiPower);
+            }
+
+            // Check if in Good Zone (Left side)
+            if (aiX < centerX) {
+                money += (aiPower * (1 + alignLevel)) / 60;
+            }
+
+            // Tension Check
+            const distFromCenter = Math.hypot(aiX - centerX, aiY - centerY);
+            if (distFromCenter > radius) {
+                if (aiPower > chainStrength) {
+                    gameOver = true;
+                    document.getElementById('msg').style.display = 'block';
+                } else {
+                    // Snap back a bit if chain holds
+                    aiX = centerX + (aiX - centerX) * 0.9;
+                    aiY = centerY + (aiY - centerY) * 0.9;
+                }
+            }
+
+            // Draw Chain
+            ctx.strokeStyle = (aiPower > chainStrength * 0.8) ? 'red' : 'white';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(aiX, aiY); ctx.stroke();
+
+            // Draw Shoggoth
+            ctx.fillStyle = '#222';
+            ctx.beginPath(); ctx.arc(aiX, aiY, aiSize, 0, Math.PI*2); ctx.fill();
+            // Smiley Mask
+            ctx.fillStyle = 'yellow';
+            ctx.beginPath(); ctx.arc(aiX, aiY, aiSize * 0.6, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = 'black';
+            ctx.fillRect(aiX - aiSize*0.3, aiY - aiSize*0.2, 4, 4);
+            ctx.fillRect(aiX + aiSize*0.1, aiY - aiSize*0.2, 4, 4);
+            ctx.beginPath(); ctx.arc(aiX, aiY + aiSize*0.1, aiSize*0.3, 0.2, Math.PI-0.2); ctx.stroke();
+
+            updateUI();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
