@@ -2,6 +2,7 @@
     color-scheme: light dark;
 
     /* ===== Color palette ===== */
+    --snow: #fff;
     --mist: #f4f4f4;
     --pale: #e9e7e5;
     --alto: #d5dfdf;
@@ -30,7 +31,7 @@
     --coal: #000;
 
     /* ===== Color application ===== */
-    --body-bkg: light-dark(var(--mist), var(--dark));
+    --body-bkg: light-dark(var(--snow), var(--coal));
     --header-bkg: transparent;
     --main-bkg: transparent;
     --footer-bkg: transparent;
@@ -38,7 +39,7 @@
     --logo-e-clr: light-dark(var(--mine), var(--pale));
     --logo-d-clr: light-dark(var(--brue), var(--dear));
 
-    --section-a-bkg: light-dark(var(--cyan-srgb), var(--mine));
+    --section-a-bkg: light-dark(var(--cyan-srgb), var(--deep-srgb));
     --section-b-bkg: light-dark(var(--pale), var(--deep-srgb));
     --section-c-bkg: light-dark(var(--cyan-srgb), var(--void));
 
