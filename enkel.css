@@ -39,9 +39,9 @@
     --logo-e-clr: light-dark(var(--mine), var(--pale));
     --logo-d-clr: light-dark(var(--brue), var(--dear));
 
-    --section-a-bkg: light-dark(var(--cyan-srgb), var(--deep-srgb));
+    --section-a-bkg: light-dark(var(--cyan-srgb), var(--grau));
     --section-b-bkg: light-dark(var(--pale), var(--deep-srgb));
-    --section-c-bkg: light-dark(var(--cyan-srgb), var(--void));
+    --section-c-bkg: light-dark(var(--cyan-srgb), var(--grau));
 
     --text-clr: light-dark(var(--mine), var(--pale));
     --heading-clr: light-dark(var(--mine), var(--pale));
@@ -901,4 +901,4 @@ footer address {
     }
 }
 
-/* by Erik Jansson, updated 2025-12-21 */
+/* by Erik Jansson, updated 2026-01-04 */
