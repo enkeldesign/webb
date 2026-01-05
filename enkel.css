@@ -2,7 +2,6 @@
     color-scheme: light dark;
 
     /* ===== Color palette ===== */
-    --snow: #fff;
     --mist: #f4f4f4;
     --pale: #e9e7e5;
     --alto: #d5dfdf;
@@ -31,7 +30,7 @@
     --coal: #000;
 
     /* ===== Color application ===== */
-    --body-bkg: light-dark(var(--snow), var(--coal));
+    --body-bkg: light-dark(var(--mist), var(--dark));
     --header-bkg: transparent;
     --main-bkg: transparent;
     --footer-bkg: transparent;
@@ -39,9 +38,9 @@
     --logo-e-clr: light-dark(var(--mine), var(--pale));
     --logo-d-clr: light-dark(var(--brue), var(--dear));
 
-    --section-a-bkg: light-dark(var(--cyan-srgb), var(--grau));
+    --section-a-bkg: light-dark(var(--cyan-srgb), var(--mine));
     --section-b-bkg: light-dark(var(--pale), var(--deep-srgb));
-    --section-c-bkg: light-dark(var(--cyan-srgb), var(--grau));
+    --section-c-bkg: light-dark(var(--cyan-srgb), var(--void));
 
     --text-clr: light-dark(var(--mine), var(--pale));
     --heading-clr: light-dark(var(--mine), var(--pale));
@@ -374,7 +373,7 @@ figure.photo address {
     display: block;
     text-align: center;
     margin: calc((var(--gap-2))*-1) calc((var(--gap-5))*-1) var(--gap-5);
-    background-color: light-dark(#0000000a, var(--grau));
+    background-color: light-dark(#0000000a, #ffffff0a);
     padding: var(--gap-2) 0 var(--gap-3);
 }
 
@@ -736,10 +735,6 @@ footer address {
         text-align: left;
     }
 
-    .about .nav-link {
-    background-color: light-dark(#0000000a, #ffffff0a);
-    }
-    
     .highlight {
         margin: 0 calc(-1*(var(--gap-6))) var(--gap-4);
         padding: var(--gap-5) var(--gap-6) 0.1rem;
@@ -905,4 +900,4 @@ footer address {
     }
 }
 
-/* by Erik Jansson, updated 2026-01-04 */
+/* by Erik Jansson, updated 2026-01-05 */
