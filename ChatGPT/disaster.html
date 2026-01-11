@@ -42,23 +42,13 @@
             font-size: 1.2em;
             font-weight: 600;
         }
-        .poster-placeholder {
+        .poster { 
             width: 100%; 
             height: 220px; 
-            background: linear-gradient(45deg, #ff4444, #ff6666, #ff4444);
+            object-fit: cover; 
             border-radius: 10px; 
             margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 4em;
-            color: rgba(255,255,255,0.8);
             box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 0.8; }
-            50% { opacity: 1; }
         }
         .synopsis { 
             line-height: 1.4; 
@@ -99,13 +89,13 @@
             font-size: 0.9em;
         }
         .predicted { 
-            background: rgba(76,175,80,0.3); 
+            background: rgba(76,175,80,0.2); 
             padding: 12px; 
             border-radius: 8px; 
             margin-top: 10px; 
             color: #4CAF50; 
             font-weight: 700;
-            border: 1px solid rgba(76,175,80,0.5);
+            border: 1px solid rgba(76,175,80,0.4);
             text-align: center;
         }
         .section-divider { 
@@ -121,15 +111,6 @@
             color: #ffaa00;
             font-size: 1.1em;
         }
-        .ide-note {
-            background: rgba(255,193,7,0.2);
-            border: 1px solid #ffc107;
-            border-radius: 8px;
-            padding: 12px;
-            margin: 20px 0;
-            font-size: 0.85em;
-            color: #fff;
-        }
     </style>
 </head>
 <body>
@@ -138,14 +119,10 @@
     <div class="subtitle">⭐ Rate Movies You've Seen</div>
     <p style="text-align: center; color: #ccc; font-size: 0.9em;">Click stars (1-5) to rate. Predictions update instantly!</p>
     
-    <div class="ide-note">
-        💡 <strong>Images not showing?</strong> IDE preview blocks external URLs. Works perfectly in any browser! Posters are stylized placeholders.
-    </div>
-    
     <div class="movie-grid" id="rated-movies">
         <div class="movie" data-tags="earthquake,tsunami,flood">
             <h2>2012 (2009)</h2>
-            <div class="poster-placeholder">🌍💥</div>
+            <img src="https://m.media-amazon.com/images/M/MV5BMTY3MTEwNjQwOV5BMl5BanBnXkFtZTcwOTM5MzUwMw@@._V1_FMjpg_UX1000_.jpg" alt="2012 poster" class="poster">
             <p class="synopsis">Global cataclysms trigger massive earthquakes, tsunamis, and volcanic eruptions as one family races for arks.</p>
             <div class="rating-section">
                 <div class="stars-container" data-movie="2012">
@@ -161,7 +138,7 @@
         
         <div class="movie" data-tags="weather,ice,freeze">
             <h2>The Day After Tomorrow (2004)</h2>
-            <div class="poster-placeholder">❄️🌪️</div>
+            <img src="https://m.media-amazon.com/images/M/MV5BMTY1MzIxOTc5Nl5BMl5BanBnXkFtZTcwMzUyMzg2Mw@@._V1_FMjpg_UX1000_.jpg" alt="Day After Tomorrow poster" class="poster">
             <p class="synopsis">Abrupt climate change unleashes superstorms, plunging Earth into a new Ice Age as a father saves his son.</p>
             <div class="rating-section">
                 <div class="stars-container" data-movie="day-after">
@@ -177,7 +154,7 @@
         
         <div class="movie" data-tags="space,asteroid">
             <h2>Armageddon (1998)</h2>
-            <div class="poster-placeholder">☄️🚀</div>
+            <img src="https://m.media-amazon.com/images/M/MV5BMjIwNTYzMzUyM15BMl5BanBnXkFtZTcwMjU5MDgyMQ@@._V1_FMjpg_UX1000_.jpg" alt="Armageddon poster" class="poster">
             <p class="synopsis">Oil drillers become astronauts racing to nuke a Texas-sized asteroid hurtling toward Earth.</p>
             <div class="rating-section">
                 <div class="stars-container" data-movie="armageddon">
@@ -193,7 +170,7 @@
         
         <div class="movie" data-tags="space,comet,tsunami">
             <h2>Deep Impact (1998)</h2>
-            <div class="poster-placeholder">☄️🌊</div>
+            <img src="https://m.media-amazon.com/images/M/MV5BY2U1YTM4M2EtZGYxOS00ZWM4LWFkZDktMDAyMjNhZDdkMzQ1XkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_FMjpg_UX1000_.jpg" alt="Deep Impact poster" class="poster">
             <p class="synopsis">A comet threatens Earth; journalists and astronauts scramble while tsunamis devastate coasts.</p>
             <div class="rating-section">
                 <div class="stars-container" data-movie="deep-impact">
@@ -209,7 +186,7 @@
         
         <div class="movie" data-tags="alien,invasion">
             <h2>Independence Day (1996)</h2>
-            <div class="poster-placeholder">👽💥</div>
+            <img src="https://m.media-amazon.com/images/M/MV5BMTU5OTYzNDQxNF5BMl5BanBnXkFtZTgwNTIwOTI3NTE@._V1_FMjpg_UX1000_.jpg" alt="Independence Day poster" class="poster">
             <p class="synopsis">Alien saucers attack Earth cities; humanity unites for a desperate counterstrike.</p>
             <div class="rating-section">
                 <div class="stars-container" data-movie="independence-day">
@@ -230,44 +207,44 @@
     <div class="movie-grid" id="predicted-movies">
         <div class="movie" data-tags="volcano,lava">
             <h2>Volcano (1997)</h2>
-            <div class="poster-placeholder">🌋🔥</div>
+            <img src="https://m.media-amazon.com/images/M/MV5BMjA4MjI2NDI1Nl5BMl5BanBnXkFtZTcwMTk1OTM1MQ@@._V1_FMjpg_UX1000_.jpg" alt="Volcano poster" class="poster">
             <p class="synopsis">Lava erupts beneath Los Angeles, flowing through streets as teams race to contain it.</p>
             <div class="predicted" id="pred-volcano">Predicted: ⭐⭐⭐⭐</div>
         </div>
         
         <div class="movie" data-tags="volcano,ash">
             <h2>Dante's Peak (1997)</h2>
-            <div class="poster-placeholder">🌋💨</div>
+            <img src="https://m.media-amazon.com/images/M/MV5BMTI3NjE1NTI2MV5BMl5BanBnXkFtZTcwMTU5OTM1MQ@@._V1_FMjpg_UX1000_.jpg" alt="Dante's Peak poster" class="poster">
             <p class="synopsis">Volcanologist evacuates town as Mount Dante erupts with pyroclastic flows and ash.</p>
             <div class="predicted" id="pred-dantes">Predicted: ⭐⭐⭐⭐</div>
         </div>
         
         <div class="movie" data-tags="earthquake,tsunami">
             <h2>San Andreas (2015)</h2>
-            <div class="poster-placeholder">🌍🌊</div>
+            <img src="https://m.media-amazon.com/images/M/MV5BMTQ4NjE4MDYzM15BMl5BanBnXkFtZTgwOTU0Nzk5NDE@._V1_FMjpg_UX1000_.jpg" alt="San Andreas poster" class="poster">
             <p class="synopsis">Massive earthquake ravages California as pilot searches family amid tsunamis.</p>
-            <div class="predicted" id="pred-san-andreas">Predicted: ⭐⭐⭐⭐⭐</div>
+            <div class="predicted" id="pred-san-andreas">Predicted: ⭐⭐⭐⭐</div>
         </div>
         
         <div class="movie" data-tags="space,moon,alien">
             <h2>Moonfall (2022)</h2>
-            <div class="poster-placeholder">🌙👽</div>
+            <img src="https://m.media-amazon.com/images/M/MV5BYmY3Y2Q0YmMtNTIyOS00NzkxLTkwNTMtZWU1M2I4OTIwN2JhXkEyXkFqcGdeQXVyMTkxNjUyNQ@@._V1_FMjpg_UX1000_.jpg" alt="Moonfall poster" class="poster">
             <p class="synopsis">Moon destabilizes toward Earth; NASA uncovers secrets to prevent annihilation.</p>
-            <div class="predicted" id="pred-moonfall">Predicted: ⭐⭐⭐⭐</div>
+            <div class="predicted" id="pred-moonfall">Predicted: ⭐⭐⭐</div>
         </div>
         
         <div class="movie" data-tags="weather,tornado">
             <h2>Twister (1996)</h2>
-            <div class="poster-placeholder">🌪️⚡</div>
+            <img src="https://m.media-amazon.com/images/M/MV5BNTdkNjU3MDAtYTQ3Zi00MmQyLWE1OTMtN2WjNzY1YTQ1ZjNhXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_FMjpg_UX1000_.jpg" alt="Twister poster" class="poster">
             <p class="synopsis">Storm chasers pursue F5 tornado with innovative tech amid roaring winds.</p>
-            <div class="predicted" id="pred-twister">Predicted: ⭐⭐⭐⭐⭐</div>
+            <div class="predicted" id="pred-twister">Predicted: ⭐⭐⭐⭐</div>
         </div>
         
         <div class="movie" data-tags="earth,core">
             <h2>The Core (2003)</h2>
-            <div class="poster-placeholder">🌎⚡</div>
+            <img src="https://m.media-amazon.com/images/M/MV5BMTU5MDcwNjIyNF5BMl5BanBnXkFtZTcwMjI1OTM1MQ@@._V1_FMjpg_UX1000_.jpg" alt="The Core poster" class="poster">
             <p class="synopsis">Earth's core stops; team drills center to detonate nukes and restart it.</p>
-            <div class="predicted" id="pred-core">Predicted: ⭐⭐⭐⭐</div>
+            <div class="predicted" id="pred-core">Predicted: ⭐⭐⭐</div>
         </div>
     </div>
 
@@ -303,6 +280,7 @@
                 setRating(movieId, rating);
             });
 
+            // Hover effects
             container.addEventListener('mouseenter', () => {
                 if (!container.classList.contains('rated')) {
                     container.style.filter = 'grayscale(50%) opacity(0.7)';
@@ -368,17 +346,17 @@
                 let weightSum = 0;
                 
                 tags.forEach(tag => {
-                    const avg = tagAverages[tag] || 3.5; // OPTIMISTIC BASELINE +0.5
-                    totalScore += avg * 0.75; // Increased tag weight
-                    weightSum += 0.75;
+                    const avg = tagAverages[tag] || 3.0;
+                    totalScore += avg * 0.7;
+                    weightSum += 0.7;
                 });
                 
-                const overallAvg = (Object.values(ratings).reduce((a, b) => a + b, 0) / ratedMovies.length) + 0.5; // OPTIMISTIC BOOST
-                totalScore += overallAvg * 0.25;
-                weightSum += 0.25;
+                const overallAvg = Object.values(ratings).reduce((a, b) => a + b, 0) / ratedMovies.length;
+                totalScore += overallAvg * 0.3;
+                weightSum += 0.3;
                 
-                const predicted = Math.min(5, totalScore / weightSum); // OPTIMISTIC: 3→4, 4→5
-                const stars = Math.max(1, Math.min(5, Math.ceil(predicted))); // Round UP for optimism
+                const predicted = totalScore / weightSum;
+                const stars = Math.max(1, Math.min(5, Math.round(predicted)));
                 
                 const predEl = document.getElementById(`pred-${movieId.replace(/[^a-zA-Z0-9]/g, '')}`);
                 predEl.innerHTML = `Predicted: ${'⭐'.repeat(stars)} (${predicted.toFixed(1)}/5)`;
