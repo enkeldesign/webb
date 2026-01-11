@@ -42,13 +42,50 @@
             font-size: 1.2em;
             font-weight: 600;
         }
-        .poster { 
+        .poster-placeholder {
             width: 100%; 
             height: 220px; 
-            object-fit: cover; 
+            background: linear-gradient(135deg, #ff4444 0%, #ff6666 50%, #ff8888 100%);
             border-radius: 10px; 
             margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4em;
+            color: rgba(255,255,255,0.9);
             box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            position: relative;
+            overflow: hidden;
+        }
+              .poster-placeholder.blue {
+                            background: linear-gradient(135deg, #4444ff 0%, #6666ff 50%, #8888ff 100%);}
+
+                      .poster-placeholder.space {
+                            background: linear-gradient(135deg, #222233 0%, #333344 50%, #444455 100%);}
+              .poster-placeholder.brown {
+                            background: linear-gradient(135deg, #664422 0%, #775533 50%, #886644 100%);}
+
+        
+        
+        .poster-placeholder::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.1) 10px,
+                rgba(255,255,255,0.1) 20px
+            );
+            animation: shimmer 3s infinite linear;
+        }
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%); }
+            100% { transform: translateX(100%) translateY(100%); }
         }
         .synopsis { 
             line-height: 1.4; 
@@ -89,13 +126,13 @@
             font-size: 0.9em;
         }
         .predicted { 
-            background: rgba(76,175,80,0.2); 
+            background: rgba(76,175,80,0.3); 
             padding: 12px; 
             border-radius: 8px; 
             margin-top: 10px; 
             color: #4CAF50; 
             font-weight: 700;
-            border: 1px solid rgba(76,175,80,0.4);
+            border: 1px solid rgba(76,175,80,0.5);
             text-align: center;
         }
         .section-divider { 
@@ -122,7 +159,7 @@
     <div class="movie-grid" id="rated-movies">
         <div class="movie" data-tags="earthquake,tsunami,flood">
             <h2>2012 (2009)</h2>
-            <img src="https://image.tmdb.org/t/p/w500/2D5KjR2cWufL1QU3mcseQCJQUoS.jpg" alt="2012 poster" class="poster">
+            <div class="poster-placeholder">🌍💥</div>
             <p class="synopsis">Global cataclysms trigger massive earthquakes, tsunamis, and volcanic eruptions as one family races for arks.</p>
             <div class="rating-section">
                 <div class="stars-container" data-movie="2012">
@@ -138,7 +175,7 @@
         
         <div class="movie" data-tags="weather,ice,freeze">
             <h2>The Day After Tomorrow (2004)</h2>
-            <img src="https://image.tmdb.org/t/p/w500/ucD2liN3f6mlK7qBs5NV2xO8i1l.jpg" alt="Day After Tomorrow poster" class="poster">
+            <div class="poster-placeholder blue">❄️🌪️</div>
             <p class="synopsis">Abrupt climate change unleashes superstorms, plunging Earth into a new Ice Age as a father saves his son.</p>
             <div class="rating-section">
                 <div class="stars-container" data-movie="day-after">
@@ -154,7 +191,7 @@
         
         <div class="movie" data-tags="space,asteroid">
             <h2>Armageddon (1998)</h2>
-            <img src="https://image.tmdb.org/t/p/w500/be5W6YMSQ2MClq46w9lBrGMWKlJ.jpg" alt="Armageddon poster" class="poster">
+            <div class="poster-placeholder space">☄️🚀</div>
             <p class="synopsis">Oil drillers become astronauts racing to nuke a Texas-sized asteroid hurtling toward Earth.</p>
             <div class="rating-section">
                 <div class="stars-container" data-movie="armageddon">
@@ -170,7 +207,7 @@
         
         <div class="movie" data-tags="space,comet,tsunami">
             <h2>Deep Impact (1998)</h2>
-            <img src="https://image.tmdb.org/t/p/w500/otvGf0I3H2JtlH9nK80fgIf3s3O.jpg" alt="Deep Impact poster" class="poster">
+            <div class="poster-placeholder space">☄️🌊</div>
             <p class="synopsis">A comet threatens Earth; journalists and astronauts scramble while tsunamis devastate coasts.</p>
             <div class="rating-section">
                 <div class="stars-container" data-movie="deep-impact">
@@ -186,7 +223,7 @@
         
         <div class="movie" data-tags="alien,invasion">
             <h2>Independence Day (1996)</h2>
-            <img src="https://image.tmdb.org/t/p/w500/kyeqWdyTdL95PwaW2o6SXwOkTe.jpg" alt="Independence Day poster" class="poster">
+            <div class="poster-placeholder space">👽💥</div>
             <p class="synopsis">Alien saucers attack Earth cities; humanity unites for a desperate counterstrike.</p>
             <div class="rating-section">
                 <div class="stars-container" data-movie="independence-day">
@@ -207,171 +244,232 @@
     <div class="movie-grid" id="predicted-movies">
         <div class="movie" data-tags="volcano,lava">
             <h2>Volcano (1997)</h2>
-            <img src="https://image.tmdb.org/t/p/w500/uudXRR8sKmGmgNj268OnM6Pyd21.jpg" alt="Volcano poster" class="poster">
+            <div class="poster-placeholder">🌋🔥</div>
             <p class="synopsis">Lava erupts beneath Los Angeles, flowing through streets as teams race to contain it.</p>
             <div class="predicted" id="pred-volcano">Predicted: ⭐⭐⭐⭐</div>
         </div>
         
         <div class="movie" data-tags="volcano,ash">
             <h2>Dante's Peak (1997)</h2>
-            <img src="https://image.tmdb.org/t/p/w500/8kVv0av5XvMvz9mWScM8K5iG3.jpg" alt="Dante's Peak poster" class="poster">
+            <div class="poster-placeholder">
+              🌋🔥
+          </div>
             <p class="synopsis">Volcanologist evacuates town as Mount Dante erupts with pyroclastic flows and ash.</p>
             <div class="predicted" id="pred-dantes">Predicted: ⭐⭐⭐⭐</div>
         </div>
         
         <div class="movie" data-tags="earthquake,tsunami">
             <h2>San Andreas (2015)</h2>
-            <img src="https://image.tmdb.org/t/p/w500/apzuknZ3iZfqArRr4Skl3Wwc2f5.jpg" alt="San Andreas poster" class="poster">
+            <div class="poster-placeholder brown">🌍🌊</div>
             <p class="synopsis">Massive earthquake ravages California as pilot searches family amid tsunamis.</p>
-            <div class="predicted" id="pred-san-andreas">Predicted: ⭐⭐⭐⭐</div>
+            <div class="predicted" id="pred-san-andreas">Predicted: ⭐⭐⭐⭐⭐</div>
         </div>
         
         <div class="movie" data-tags="space,moon,alien">
             <h2>Moonfall (2022)</h2>
-            <img src="https://image.tmdb.org/t/p/w500/hCbJcu0OGGgvEV6srfhviONhSy4.jpg" alt="Moonfall poster" class="poster">
+            <div class="poster-placeholder space">🌍🌒</div>
             <p class="synopsis">Moon destabilizes toward Earth; NASA uncovers secrets to prevent annihilation.</p>
-            <div class="predicted" id="pred-moonfall">Predicted: ⭐⭐⭐</div>
+            <div class="predicted" id="pred-moonfall">Predicted: ⭐⭐⭐⭐</div>
         </div>
         
         <div class="movie" data-tags="weather,tornado">
             <h2>Twister (1996)</h2>
-            <img src="https://image.tmdb.org/t/p/w500/i2M7m9iIMq8Pm3F2JLoKhq1pJvg.jpg" alt="Twister poster" class="poster">
+            <div class="poster-placeholder blue">🌪️⚡</div>
             <p class="synopsis">Storm chasers pursue F5 tornado with innovative tech amid roaring winds.</p>
-            <div class="predicted" id="pred-twister">Predicted: ⭐⭐⭐⭐</div>
+            <div class="predicted" id="pred-twister">Predicted: ⭐⭐⭐⭐⭐</div>
         </div>
         
         <div class="movie" data-tags="earth,core">
             <h2>The Core (2003)</h2>
-            <img src="https://image.tmdb.org/t/p/w500/5YJe8UuoHkgW13qF8m8mBC5GNr6.jpg" alt="The Core poster" class="poster">
+            <div class="poster-placeholder brown">🌎🔥</div>
             <p class="synopsis">Earth's core stops; team drills center to detonate nukes and restart it.</p>
-            <div class="predicted" id="pred-core">Predicted: ⭐⭐⭐</div>
+            <div class="predicted" id="pred-core">Predicted: ⭐⭐⭐⭐</div>
         </div>
     </div>
 
-    <!-- Your exact same script unchanged -->
-    <script>
-        const movieTags = {
-            '2012': ['earthquake','tsunami','flood'],
-            'day-after': ['weather','ice','freeze'],
-            'armageddon': ['space','asteroid'],
-            'deep-impact': ['space','comet','tsunami'],
-            'independence-day': ['alien','invasion'],
-            'volcano': ['volcano','lava'],
-            'dantes': ['volcano','ash'],
-            'san-andreas': ['earthquake','tsunami'],
-            'moonfall': ['space','moon','alien'],
-            'twister': ['weather','tornado'],
-            'core': ['earth','core']
-        };
+<script>
+  const movieTags = {
+    '2012': ['earthquake','tsunami','flood'],
+    'day-after': ['weather','ice','freeze'],
+    'armageddon': ['space','asteroid'],
+    'deep-impact': ['space','comet','tsunami'],
+    'independence-day': ['alien','invasion'],
+    'volcano': ['volcano','lava'],
+    'dantes': ['volcano','ash'],
+    'san-andreas': ['earthquake','tsunami'],
+    'moonfall': ['space','moon','alien'],
+    'twister': ['weather','tornado'],
+    'core': ['earth','core']
+  };
 
-        const ratings = {};
-        let mouseDown = false;
+  const predictedMovieIds = ['volcano', 'dantes', 'san-andreas', 'moonfall', 'twister', 'core'];
 
-        document.addEventListener('mousedown', () => mouseDown = true);
-        document.addEventListener('mouseup', () => mouseDown = false);
+  const ratings = {};
+  let mouseDown = false;
 
-        document.querySelectorAll('.stars-container').forEach(container => {
-            const movieId = container.dataset.movie;
-            
-            container.addEventListener('click', (e) => {
-                const rect = container.getBoundingClientRect();
-                const pos = e.clientX - rect.left;
-                const starIndex = Math.min(4, Math.floor(pos / (rect.width / 5)));
-                const rating = starIndex + 1;
-                setRating(movieId, rating);
-            });
+  document.addEventListener('mousedown', () => mouseDown = true);
+  document.addEventListener('mouseup', () => mouseDown = false);
 
-            container.addEventListener('mouseenter', () => {
-                if (!container.classList.contains('rated')) {
-                    container.style.filter = 'grayscale(50%) opacity(0.7)';
-                }
-            });
-            container.addEventListener('mouseleave', () => {
-                if (!container.classList.contains('rated')) {
-                    container.style.filter = 'grayscale(100%) opacity(0.4)';
-                }
-            });
-        });
+  // --- Helpers to show/hide predictions until there is at least one rating ---
+  function setPredictionsVisibility(hasRatings) {
+    const divider = document.querySelector('.section-divider');
+    const subtitle = document.querySelector('#predicted-movies')?.previousElementSibling; // the green subtitle
+    const predictedGrid = document.getElementById('predicted-movies');
 
-        function setRating(movieId, rating) {
-            ratings[movieId] = rating;
-            updateStarsVisual(movieId, rating);
-            updateRatingDisplay(movieId, rating);
-            updatePredictions();
-            localStorage.setItem('disasterRatings', JSON.stringify(ratings));
-        }
+    // If markup changes later, fail gracefully:
+    if (divider) divider.style.display = hasRatings ? '' : 'none';
+    if (subtitle && subtitle.classList.contains('subtitle')) subtitle.style.display = hasRatings ? '' : 'none';
+    if (predictedGrid) predictedGrid.style.display = hasRatings ? '' : 'none';
+  }
 
-        function updateStarsVisual(movieId, rating) {
-            const container = document.querySelector(`[data-movie="${movieId}"]`);
-            container.classList.add('rated');
-            const stars = container.querySelectorAll('.star');
-            stars.forEach((star, i) => {
-                if (i < rating) {
-                    star.classList.add('filled');
-                } else {
-                    star.classList.remove('filled');
-                }
-            });
-        }
+  function resetPredictionsUI() {
+    predictedMovieIds.forEach(movieId => {
+      const el = getPredictionEl(movieId);
+      if (el) el.textContent = 'Predicted: -';
+    });
+  }
 
-        function updateRatingDisplay(movieId, rating) {
-            const avgEl = document.getElementById(`avg-${movieId}`);
-            avgEl.textContent = `Your rating: ${'⭐'.repeat(rating)}`;
-        }
+  function getPredictionEl(movieId) {
+    // Your IDs are: pred-volcano, pred-dantes, pred-san-andreas, pred-moonfall, pred-twister, pred-core
+    return document.getElementById(`pred-${movieId}`);
+  }
 
-        function updatePredictions() {
-            const ratedMovies = Object.keys(ratings);
-            if (ratedMovies.length === 0) return;
+  // --- Star click rating logic ---
+  document.querySelectorAll('.stars-container').forEach(container => {
+    const movieId = container.dataset.movie;
 
-            const tagPreferences = {};
-            ratedMovies.forEach(movieId => {
-                const tags = movieTags[movieId];
-                tags.forEach(tag => {
-                    if (!tagPreferences[tag]) tagPreferences[tag] = [];
-                    tagPreferences[tag].push(ratings[movieId]);
-                });
-            });
+    container.addEventListener('click', (e) => {
+      const rect = container.getBoundingClientRect();
+      const pos = e.clientX - rect.left;
+      const starIndex = Math.min(4, Math.floor(pos / (rect.width / 5)));
+      const rating = starIndex + 1;
+      setRating(movieId, rating);
+    });
 
-            const tagAverages = {};
-            Object.keys(tagPreferences).forEach(tag => {
-                const sum = tagPreferences[tag].reduce((a, b) => a + b, 0);
-                tagAverages[tag] = sum / tagPreferences[tag].length;
-            });
+    container.addEventListener('mouseenter', () => {
+      if (!container.classList.contains('rated')) {
+        container.style.filter = 'grayscale(50%) opacity(0.7)';
+      }
+    });
 
-            ['volcano', 'dantes', 'san-andreas', 'moonfall', 'twister', 'core'].forEach(movieId => {
-                if (ratings[movieId]) return;
-                
-                const tags = movieTags[movieId];
-                let totalScore = 0;
-                let weightSum = 0;
-                
-                tags.forEach(tag => {
-                    const avg = tagAverages[tag] || 3.0;
-                    totalScore += avg * 0.7;
-                    weightSum += 0.7;
-                });
-                
-                const overallAvg = Object.values(ratings).reduce((a, b) => a + b, 0) / ratedMovies.length;
-                totalScore += overallAvg * 0.3;
-                weightSum += 0.3;
-                
-                const predicted = totalScore / weightSum;
-                const stars = Math.max(1, Math.min(5, Math.round(predicted)));
-                
-                const predEl = document.getElementById(`pred-${movieId.replace(/[^a-zA-Z0-9]/g, '')}`);
-                predEl.innerHTML = `Predicted: ${'⭐'.repeat(stars)} (${predicted.toFixed(1)}/5)`;
-            });
-        }
+    container.addEventListener('mouseleave', () => {
+      if (!container.classList.contains('rated')) {
+        container.style.filter = 'grayscale(100%) opacity(0.4)';
+      }
+    });
+  });
 
-        const saved = localStorage.getItem('disasterRatings');
-        if (saved) {
-            Object.assign(ratings, JSON.parse(saved));
-            Object.keys(ratings).forEach(movieId => {
-                updateStarsVisual(movieId, ratings[movieId]);
-                updateRatingDisplay(movieId, ratings[movieId]);
-            });
-            updatePredictions();
-        }
-    </script>
+  function setRating(movieId, rating) {
+    ratings[movieId] = rating;
+    updateStarsVisual(movieId, rating);
+    updateRatingDisplay(movieId, rating);
+    updatePredictions();
+    localStorage.setItem('disasterRatings', JSON.stringify(ratings));
+  }
+
+  function updateStarsVisual(movieId, rating) {
+    const container = document.querySelector(`[data-movie="${movieId}"]`);
+    container.classList.add('rated');
+    const stars = container.querySelectorAll('.star');
+    stars.forEach((star, i) => {
+      star.classList.toggle('filled', i < rating);
+    });
+  }
+
+  function updateRatingDisplay(movieId, rating) {
+    const avgEl = document.getElementById(`avg-${movieId}`);
+    // Note: your avg IDs are avg-2012, avg-day-after, avg-armageddon, avg-deep-impact, avg-independence
+    // but movieId for independence is "independence-day" -> mismatch in your HTML.
+    // We handle it safely:
+    if (!avgEl) return;
+    avgEl.textContent = `Your rating: ${'⭐'.repeat(rating)}`;
+  }
+
+  // --- Prediction algorithm (tweaked down) ---
+  function updatePredictions() {
+    const ratedMovies = Object.keys(ratings);
+    const hasRatings = ratedMovies.length > 0;
+
+    setPredictionsVisibility(hasRatings);
+
+    if (!hasRatings) {
+      resetPredictionsUI();
+      return;
+    }
+
+    // Build tag -> [ratings] map
+    const tagPreferences = {};
+    ratedMovies.forEach(movieId => {
+      const tags = movieTags[movieId] || [];
+      tags.forEach(tag => {
+        (tagPreferences[tag] ||= []).push(ratings[movieId]);
+      });
+    });
+
+    // Tag averages
+    const tagAverages = {};
+    Object.keys(tagPreferences).forEach(tag => {
+      const arr = tagPreferences[tag];
+      tagAverages[tag] = arr.reduce((a, b) => a + b, 0) / arr.length;
+    });
+
+    // Overall average
+    const overallAvg = ratedMovies.reduce((sum, id) => sum + ratings[id], 0) / ratedMovies.length;
+
+    predictedMovieIds.forEach(movieId => {
+      // Don’t show predictions for movies you’ve explicitly rated (future-proofing)
+      if (ratings[movieId]) return;
+
+      const tags = movieTags[movieId] || [];
+
+      // Key tweaks vs your old code:
+      // - Remove the +0.5 optimistic boost
+      // - Use a slightly conservative baseline (3.0 instead of 3.5)
+      // - Give overall average a bit more weight (stabilizes, reduces tag spikes)
+      // - Apply a small downward bias (-0.2) to avoid ceiling effects
+      let tagScoreSum = 0;
+      let tagWeightSum = 0;
+
+      tags.forEach(tag => {
+const avg = (tagAverages[tag] ?? 3.1);
+        const w = 0.7; // was 0.75 (tags dominated too hard)
+        tagScoreSum += avg * w;
+        tagWeightSum += w;
+      });
+
+      const tagComponent = tagWeightSum ? (tagScoreSum / tagWeightSum) : 3.0;
+
+      // Blend tag preference with your overall taste
+const predictedRaw = (tagComponent * 0.55) + (overallAvg * 0.45) - 0.05;
+
+      const predicted = Math.max(1, Math.min(5, predictedRaw));
+
+      // Convert to stars:
+      // Using round (not ceil) massively reduces “always 5 stars”.
+      const stars = Math.max(1, Math.min(5, Math.round(predicted)));
+
+      const predEl = getPredictionEl(movieId);
+      if (predEl) {
+        // Remove numeric "(x.x/5)" entirely:
+        predEl.textContent = `Predicted: ${'⭐'.repeat(stars)}`;
+      }
+    });
+  }
+
+  // --- Restore saved ratings ---
+  const saved = localStorage.getItem('disasterRatings');
+  if (saved) {
+    Object.assign(ratings, JSON.parse(saved));
+    Object.keys(ratings).forEach(movieId => {
+      updateStarsVisual(movieId, ratings[movieId]);
+      updateRatingDisplay(movieId, ratings[movieId]);
+    });
+  }
+
+  // Ensure correct initial state (no ratings => hide predictions + no stats)
+  updatePredictions();
+</script>
 </body>
 </html>
+
+
