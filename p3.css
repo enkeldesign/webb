@@ -1,7 +1,8 @@
 @supports (color: color(display-p3 1 1 1)) {
 
   :root {
-
+    
+    --blur: color(display-p3 0.220 0.533 0.733);
     --cyan: color(display-p3 0.800 0.870 0.900);
     --cyab: color(display-p3 0.800 0.870 0.900 / 0.850);
     
