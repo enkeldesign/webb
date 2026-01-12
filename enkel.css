@@ -13,7 +13,6 @@
     --tear: #4090a0;
     --dear: #5ab;
     --fire: #c08010;
-    --blur: #3888bb;
     --blue: #168;
     --blub: #168d;
     --brue: #1f6f8f;
@@ -37,9 +36,8 @@
     --footer-bkg: transparent;
 
     --logo-e-clr: light-dark(var(--mine), var(--pale));
-    /* --logo-d-clr: light-dark(var(--brue), var(--dear));*/
-    --logo-d-clr: light-dark(var(--blur), var(--blur));
-    
+    --logo-d-clr: light-dark(var(--brue), var(--dear));
+
     --section-a-bkg: light-dark(var(--cyan-srgb), var(--mine));
     --section-b-bkg: light-dark(var(--pale), var(--deep-srgb));
     --section-c-bkg: light-dark(var(--cyan-srgb), var(--void));
@@ -54,16 +52,12 @@
     --h3-clr: light-dark(var(--dusk), var(--alto));
     --footer-clr: light-dark(var(--dark), var(--mist));
     --quote-clr: light-dark(var(--rust), var(--teal));
-    /*--border-clr: light-dark(var(--rust), var(--dear));*/
-    --border-clr: light-dark(var(--blur), var(--blur));
-    /*--ul-border-clr: light-dark(var(--blue), var(--dear));*/
-    --ul-border-clr: light-dark(var(--blur), var(--blur));
-    
-    /*--pill-clr: light-dark(var(--blue), var(--teal));*/
-    --pill-clr: light-dark(var(--blur), var(--blur));
+    --border-clr: light-dark(var(--rust), var(--dear));
+    --ul-border-clr: light-dark(var(--blue), var(--dear));
+
+    --pill-clr: light-dark(var(--blue), var(--teal));
     --cta-text-clr: light-dark(var(--mist), var(--grau));
-    /*--cta-bkg: light-dark(var(--blub), var(--deeb));*/
-    --cta-bkg: light-dark(var(--blur), var(--blur));
+    --cta-bkg: light-dark(var(--blub), var(--deeb));
     --cta-txt: #fff;
     --cta-left: light-dark(var(--cyab), var(--cyab));
     --cta-left-lite: light-dark(var(--cyab), var(--cyab));
