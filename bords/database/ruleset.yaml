@@ -1,0 +1,790 @@
+rulesetVersion: "1.2"
+source: "spelschema (6).docx"
+
+# Gemensamma begrepp:
+# - from: { group: X, rank: N } betyder placering N i grupp X
+# - fromBestOf: väljer "bästa" lag bland flera grupper utifrån sortBy
+# - pairingRule:
+#     avoidSameGroupInFirstPlayoffRound: true
+#   betyder: grupp(homeSeed) != grupp(awaySeed) i den första slutspelsrundan
+#
+# "winRef" används för att referera till vinnare i senare matcher.
+#
+# Denna version (1.2) specificerar alla mini‑gruppmatcher för 21 deltagare
+# (istället för att använda det generella roundRobin‑formatet) och understryker
+# att två olika lag väljs när flera "bästa treor" plockas ut (t.ex. W3_1 ≠ W3_2).
+
+formats:
+
+# =========================================================
+# 12 lag: 3 grupper: 4,4,4
+# Slutspel: 8 lag (alla 1:or, 2:or + två bästa 3:or)
+# =========================================================
+- participants: 12
+
+  groups:
+    - { label: A, slots: [A1, A2, A3, A4] }
+    - { label: B, slots: [B1, B2, B3, B4] }
+    - { label: C, slots: [C1, C2, C3, C4] }
+
+  groupStage:
+    matches:
+      - { id: G1,  home: A1, away: A2 }
+      - { id: G2,  home: A3, away: A4 }
+      - { id: G3,  home: B1, away: B2 }
+      - { id: G4,  home: B3, away: B4 }
+      - { id: G5,  home: C1, away: C2 }
+      - { id: G6,  home: C3, away: C4 }
+      - { id: G7,  home: A1, away: A3 }
+      - { id: G8,  home: A2, away: A4 }
+      - { id: G9,  home: B1, away: B2 }
+      - { id: G10, home: B3, away: B4 }
+      - { id: G11, home: C1, away: C3 }
+      - { id: G12, home: C2, away: C4 }
+      - { id: G13, home: A1, away: A4 }
+      - { id: G14, home: A2, away: A3 }
+      - { id: G15, home: B1, away: B3 }
+      - { id: G16, home: B2, away: B4 }
+      - { id: G17, home: C1, away: C4 }
+      - { id: G18, home: C2, away: C3 }
+
+  playoffs:
+    seeds:
+      A1: { from: { group: A, rank: 1 } }
+      A2: { from: { group: A, rank: 2 } }
+      B1: { from: { group: B, rank: 1 } }
+      B2: { from: { group: B, rank: 2 } }
+      C1: { from: { group: C, rank: 1 } }
+      C2: { from: { group: C, rank: 2 } }
+
+      # Två bästa treor totalt (A3, B3, C3), sorterade enligt sortBy.
+      # För att garantera två olika lag används pick 1 och pick 2.
+      W3_1:
+        fromBestOf:
+          rank: 3
+          count: 2
+          pick: 1
+          groups: [A, B, C]
+          sortBy: [points, goalDiff, goalsFor, fairPlay, stableSeed]
+      W3_2:
+        fromBestOf:
+          rank: 3
+          count: 2
+          pick: 2
+          groups: [A, B, C]
+          sortBy: [points, goalDiff, goalsFor, fairPlay, stableSeed]
+
+    rounds:
+      - name: Quarterfinals
+        pairingRule:
+          avoidSameGroupInFirstPlayoffRound: true
+          # Om både (A1–W3_1, B1–W3_2) och (A1–W3_2, B1–W3_1) är giltiga:
+          tieBreakStrategy: preferKeepOrder
+        matches:
+          - { id: QF1, home: A1, away: W3_1, winRef: "1" }
+          - { id: QF2, home: B1, away: W3_2, winRef: "2" }
+          - { id: QF3, home: C1, away: B2,  winRef: "3" }
+          - { id: QF4, home: A2, away: C2,  winRef: "4" }
+
+      - name: Semifinals
+        matches:
+          - { id: SF1, home: "1", away: "3" }
+          - { id: SF2, home: "2", away: "4" }
+
+# =========================================================
+# 13 lag: 3 grupper: 5,4,4
+# Slutspel: QF1 tar en "bästa trea" mellan B3 och C3
+# (A3 går in som fast seed i QF2 enligt dokumentet)
+# =========================================================
+- participants: 13
+
+  groups:
+    - { label: A, slots: [A1, A2, A3, A4, A5] }
+    - { label: B, slots: [B1, B2, B3, B4] }
+    - { label: C, slots: [C1, C2, C3, C4] }
+
+  groupStage:
+    matches:
+      - { id: G1,  home: A1, away: A3 }
+      - { id: G2,  home: A2, away: A5 }
+      - { id: G3,  home: B1, away: B2 }
+      - { id: G4,  home: B3, away: B4 }
+      - { id: G5,  home: C1, away: C2 }
+      - { id: G6,  home: C3, away: C4 }
+      - { id: G7,  home: A1, away: A2 }
+      - { id: G8,  home: A3, away: A4 }
+      - { id: G9,  home: B1, away: B2 }
+      - { id: G10, home: B3, away: B4 }
+      - { id: G11, home: C1, away: C3 }
+      - { id: G12, home: C2, away: C4 }
+      - { id: G13, home: A1, away: A5 }
+      - { id: G14, home: A2, away: A4 }
+      - { id: G15, home: B1, away: B3 }
+      - { id: G16, home: B2, away: B4 }
+      - { id: G17, home: A3, away: A5 }
+      - { id: G18, home: A1, away: A4 }
+      - { id: G19, home: B1, away: B4 }
+      - { id: G20, home: A2, away: A3 }
+      - { id: G21, home: A4, away: A5 }
+      - { id: G22, home: B2, away: B3 }
+      - { id: G23, home: C1, away: C4 }
+      - { id: G24, home: C2, away: C3 }
+
+  playoffs:
+    seeds:
+      A1: { from: { group: A, rank: 1 } }
+      A2: { from: { group: A, rank: 2 } }
+      A3: { from: { group: A, rank: 3 } }
+      B1: { from: { group: B, rank: 1 } }
+      B2: { from: { group: B, rank: 2 } }
+      C1: { from: { group: C, rank: 1 } }
+      C2: { from: { group: C, rank: 2 } }
+
+      # Bästa trea av (B3, C3) — alltså exakt "B/C3". Garanti för unik.
+      W3_BC:
+        fromBestOf:
+          rank: 3
+          count: 1
+          pick: 1
+          groups: [B, C]
+          sortBy: [points, goalDiff, goalsFor, fairPlay, stableSeed]
+
+    rounds:
+      - name: Quarterfinals
+        pairingRule:
+          avoidSameGroupInFirstPlayoffRound: true
+        matches:
+          - { id: QF1, home: A1, away: W3_BC, winRef: "1" }
+          - { id: QF2, home: B1, away: A3,    winRef: "2" }
+          - { id: QF3, home: C1, away: B2,    winRef: "3" }
+          - { id: QF4, home: A2, away: C2,    winRef: "4" }
+
+      - name: Semifinals
+        matches:
+          - { id: SF1, home: "1", away: "3" }
+          - { id: SF2, home: "2", away: "4" }
+
+# =========================================================
+# 14 lag: 3 grupper: 5,5,4
+# =========================================================
+- participants: 14
+
+  groups:
+    - { label: A, slots: [A1, A2, A3, A4, A5] }
+    - { label: B, slots: [B1, B2, B3, B4, B5] }
+    - { label: C, slots: [C1, C2, C3, C4] }
+
+  groupStage:
+    matches:
+      - { id: G1,  home: A1, away: A3 }
+      - { id: G2,  home: A2, away: A5 }
+      - { id: G3,  home: B1, away: B3 }
+      - { id: G4,  home: B2, away: B5 }
+      - { id: G5,  home: C1, away: C2 }
+      - { id: G6,  home: C3, away: C4 }
+      - { id: G7,  home: A1, away: A2 }
+      - { id: G8,  home: A3, away: A4 }
+      - { id: G9,  home: B1, away: B2 }
+      - { id: G10, home: B3, away: B4 }
+      - { id: G11, home: C1, away: C3 }
+      - { id: G12, home: C2, away: C4 }
+      - { id: G13, home: A1, away: A5 }
+      - { id: G14, home: A2, away: A4 }
+      - { id: G15, home: B1, away: B5 }
+      - { id: G16, home: B2, away: B4 }
+      - { id: G17, home: A3, away: A5 }
+      - { id: G18, home: A1, away: A4 }
+      - { id: G19, home: B3, away: B5 }
+      - { id: G20, home: B1, away: B4 }
+      - { id: G21, home: A2, away: A3 }
+      - { id: G22, home: A4, away: A5 }
+      - { id: G23, home: B2, away: B3 }
+      - { id: G24, home: B4, away: B5 }
+      - { id: G25, home: C1, away: C4 }
+      - { id: G26, home: C2, away: C3 }
+
+  playoffs:
+    rounds:
+      - name: Quarterfinals
+        matches:
+          - { id: QF1, home: A1, away: B3, winRef: "1" }
+          - { id: QF2, home: B1, away: A3, winRef: "2" }
+          - { id: QF3, home: C1, away: B2, winRef: "3" }
+          - { id: QF4, home: A2, away: C2, winRef: "4" }
+      - name: Semifinals
+        matches:
+          - { id: SF1, home: "1", away: "3" }
+          - { id: SF2, home: "2", away: "4" }
+
+# =========================================================
+# 15 lag: 3 grupper: 5,5,5
+# Slutspel: alla 1:or, 2:or + två bästa 3:or (A3/B3/C3)
+# =========================================================
+- participants: 15
+
+  groups:
+    - { label: A, slots: [A1, A2, A3, A4, A5] }
+    - { label: B, slots: [B1, B2, B3, B4, B5] }
+    - { label: C, slots: [C1, C2, C3, C4, C5] }
+
+  groupStage:
+    matches:
+      - { id: G1,  home: A1, away: A3 }
+      - { id: G2,  home: A2, away: A5 }
+      - { id: G3,  home: B1, away: B3 }
+      - { id: G4,  home: B2, away: B5 }
+      - { id: G5,  home: C1, away: C3 }
+      - { id: G6,  home: C2, away: C5 }
+      - { id: G7,  home: A1, away: A2 }
+      - { id: G8,  home: A3, away: A4 }
+      - { id: G9,  home: B1, away: B2 }
+      - { id: G10, home: B3, away: B4 }
+      - { id: G11, home: C1, away: C2 }
+      - { id: G12, home: C3, away: C4 }
+      - { id: G13, home: A1, away: A5 }
+      - { id: G14, home: A2, away: A4 }
+      - { id: G15, home: B1, away: B5 }
+      - { id: G16, home: B2, away: B4 }
+      - { id: G17, home: C1, away: C5 }
+      - { id: G18, home: C2, away: C4 }
+      - { id: G19, home: A3, away: A5 }
+      - { id: G20, home: A1, away: A4 }
+      - { id: G21, home: B3, away: B5 }
+      - { id: G22, home: B1, away: B4 }
+      - { id: G23, home: C3, away: C5 }
+      - { id: G24, home: C1, away: C4 }
+      - { id: G25, home: A2, away: A3 }
+      - { id: G26, home: A4, away: A5 }
+      - { id: G27, home: B2, away: B3 }
+      - { id: G28, home: B4, away: B5 }
+      - { id: G29, home: C2, away: C3 }
+      - { id: G30, home: C4, away: C5 }
+
+  playoffs:
+    seeds:
+      A1: { from: { group: A, rank: 1 } }
+      A2: { from: { group: A, rank: 2 } }
+      B1: { from: { group: B, rank: 1 } }
+      B2: { from: { group: B, rank: 2 } }
+      C1: { from: { group: C, rank: 1 } }
+      C2: { from: { group: C, rank: 2 } }
+
+      # Två bästa treor totalt (A3, B3, C3). Pick 1 och pick 2 garanterar unika lag.
+      W3_1:
+        fromBestOf:
+          rank: 3
+          count: 2
+          pick: 1
+          groups: [A, B, C]
+          sortBy: [points, goalDiff, goalsFor, fairPlay, stableSeed]
+      W3_2:
+        fromBestOf:
+          rank: 3
+          count: 2
+          pick: 2
+          groups: [A, B, C]
+          sortBy: [points, goalDiff, goalsFor, fairPlay, stableSeed]
+
+    rounds:
+      - name: Quarterfinals
+        pairingRule:
+          avoidSameGroupInFirstPlayoffRound: true
+          tieBreakStrategy: preferKeepOrder
+        matches:
+          - { id: QF1, home: A1, away: W3_1, winRef: "1" }
+          - { id: QF2, home: B1, away: W3_2, winRef: "2" }
+          - { id: QF3, home: C1, away: B2,  winRef: "3" }
+          - { id: QF4, home: A2, away: C2,  winRef: "4" }
+
+      - name: Semifinals
+        matches:
+          - { id: SF1, home: "1", away: "3" }
+          - { id: SF2, home: "2", away: "4" }
+
+# =========================================================
+# 16 deltagare: 4 grupper: 4,4,4,4
+# =========================================================
+- participants: 16
+
+  groups:
+    - { label: A, slots: [A1, A2, A3, A4] }
+    - { label: B, slots: [B1, B2, B3, B4] }
+    - { label: C, slots: [C1, C2, C3, C4] }
+    - { label: D, slots: [D1, D2, D3, D4] }
+
+  groupStage:
+    matches:
+      - { id: G1,  home: A1, away: A2 }
+      - { id: G2,  home: A3, away: A4 }
+      - { id: G3,  home: B1, away: B2 }
+      - { id: G4,  home: B3, away: B4 }
+      - { id: G5,  home: C1, away: C2 }
+      - { id: G6,  home: C3, away: C4 }
+      - { id: G7,  home: D1, away: D2 }
+      - { id: G8,  home: D3, away: D4 }
+      - { id: G9,  home: A1, away: A3 }
+      - { id: G10, home: A2, away: A4 }
+      - { id: G11, home: B1, away: B3 }
+      - { id: G12, home: B2, away: B4 }
+      - { id: G13, home: C1, away: C3 }
+      - { id: G14, home: C2, away: C4 }
+      - { id: G15, home: D1, away: D3 }
+      - { id: G16, home: D2, away: D4 }
+      - { id: G17, home: A1, away: A4 }
+      - { id: G18, home: A2, away: A3 }
+      - { id: G19, home: B1, away: B4 }
+      - { id: G20, home: B2, away: B3 }
+      - { id: G21, home: C1, away: C4 }
+      - { id: G22, home: C2, away: C3 }
+      - { id: G23, home: D1, away: D4 }
+      - { id: G24, home: D2, away: D3 }
+
+  playoffs:
+    rounds:
+      - name: Quarterfinals
+        matches:
+          - { id: QF1, home: A1, away: B2, winRef: "1" }
+          - { id: QF2, home: B1, away: A2, winRef: "2" }
+          - { id: QF3, home: C1, away: D2, winRef: "3" }
+          - { id: QF4, home: D1, away: C2, winRef: "4" }
+      - name: Semifinals
+        matches:
+          - { id: SF1, home: "1", away: "3" }
+          - { id: SF2, home: "2", away: "4" }
+
+# =========================================================
+# 17–20 deltagare: 4 grupper + Slutspelsomgång 1 (V1–V4)
+# =========================================================
+- participants: 17
+  groups:
+    - { label: A, slots: [A1, A2, A3, A4, A5] }
+    - { label: B, slots: [B1, B2, B3, B4] }
+    - { label: C, slots: [C1, C2, C3, C4] }
+    - { label: D, slots: [D1, D2, D3, D4] }
+  groupStage:
+    matches:
+      - { id: G1, home: A1, away: A3 }
+      - { id: G2, home: A2, away: A5 }
+      - { id: G3, home: B1, away: B2 }
+      - { id: G4, home: B3, away: B4 }
+      - { id: G5, home: C1, away: C2 }
+      - { id: G6, home: C3, away: C4 }
+      - { id: G7, home: D1, away: D2 }
+      - { id: G8, home: D3, away: D4 }
+      - { id: G9, home: A1, away: A2 }
+      - { id: G10, home: A3, away: A4 }
+      - { id: G11, home: B1, away: B3 }
+      - { id: G12, home: B2, away: B4 }
+      - { id: G13, home: C1, away: C3 }
+      - { id: G14, home: C2, away: C4 }
+      - { id: G15, home: A1, away: A5 }
+      - { id: G16, home: A2, away: A4 }
+      - { id: G17, home: D1, away: D3 }
+      - { id: G18, home: D2, away: D4 }
+      - { id: G19, home: B1, away: B4 }
+      - { id: G20, home: B2, away: B3 }
+      - { id: G21, home: A3, away: A5 }
+      - { id: G22, home: A1, away: A4 }
+      - { id: G23, home: C1, away: C4 }
+      - { id: G24, home: C2, away: C3 }
+      - { id: G25, home: D1, away: D4 }
+      - { id: G26, home: D2, away: D3 }
+      - { id: G27, home: A2, away: A3 }
+      - { id: G28, home: A4, away: A5 }
+  playoffs:
+    rounds:
+      - name: PlayoffRound1
+        matches:
+          - { id: PR1, home: A2, away: B3, winRef: V1 }
+          - { id: PR2, home: B2, away: A3, winRef: V2 }
+          - { id: PR3, home: C2, away: D3, winRef: V3 }
+          - { id: PR4, home: D2, away: C3, winRef: V4 }
+      - name: Quarterfinals
+        matches:
+          - { id: QF1, home: A1, away: V3, winRef: "1" }
+          - { id: QF2, home: B1, away: V4, winRef: "2" }
+          - { id: QF3, home: C1, away: V1, winRef: "3" }
+          - { id: QF4, home: D1, away: V2, winRef: "4" }
+      - name: Semifinals
+        matches:
+          - { id: SF1, home: "1", away: "3" }
+          - { id: SF2, home: "2", away: "4" }
+
+- participants: 18
+  groups:
+    - { label: A, slots: [A1, A2, A3, A4, A5] }
+    - { label: B, slots: [B1, B2, B3, B4, B5] }
+    - { label: C, slots: [C1, C2, C3, C4] }
+    - { label: D, slots: [D1, D2, D3, D4] }
+  groupStage:
+    matches:
+      - { id: G1, home: A1, away: A3 }
+      - { id: G2, home: A2, away: A5 }
+      - { id: G3, home: B1, away: B3 }
+      - { id: G4, home: B2, away: B5 }
+      - { id: G5, home: C1, away: C2 }
+      - { id: G6, home: C3, away: C4 }
+      - { id: G7, home: D1, away: D2 }
+      - { id: G8, home: D3, away: D4 }
+      - { id: G9, home: A1, away: A2 }
+      - { id: G10, home: A3, away: A4 }
+      - { id: G11, home: B1, away: B2 }
+      - { id: G12, home: B3, away: B4 }
+      - { id: G13, home: C1, away: C3 }
+      - { id: G14, home: C2, away: C4 }
+      - { id: G15, home: A1, away: A5 }
+      - { id: G16, home: A2, away: A4 }
+      - { id: G17, home: B1, away: B5 }
+      - { id: G18, home: B2, away: B4 }
+      - { id: G19, home: D1, away: D3 }
+      - { id: G20, home: D2, away: D4 }
+      - { id: G21, home: A3, away: A5 }
+      - { id: G22, home: A1, away: A4 }
+      - { id: G23, home: B3, away: B5 }
+      - { id: G24, home: B1, away: B4 }
+      - { id: G25, home: C1, away: C4 }
+      - { id: G26, home: C2, away: C3 }
+      - { id: G27, home: D1, away: D4 }
+      - { id: G28, home: D2, away: D3 }
+      - { id: G29, home: A2, away: A3 }
+      - { id: G30, home: A4, away: A5 }
+      - { id: G31, home: B2, away: B3 }
+      - { id: G32, home: B4, away: B5 }
+  playoffs:
+    rounds:
+      - name: PlayoffRound1
+        matches:
+          - { id: PR1, home: A2, away: B3, winRef: V1 }
+          - { id: PR2, home: B2, away: A3, winRef: V2 }
+          - { id: PR3, home: C2, away: D3, winRef: V3 }
+          - { id: PR4, home: D2, away: C3, winRef: V4 }
+      - name: Quarterfinals
+        matches:
+          - { id: QF1, home: A1, away: V3, winRef: "1" }
+          - { id: QF2, home: B1, away: V4, winRef: "2" }
+          - { id: QF3, home: C1, away: V1, winRef: "3" }
+          - { id: QF4, home: D1, away: V2, winRef: "4" }
+      - name: Semifinals
+        matches:
+          - { id: SF1, home: "1", away: "3" }
+          - { id: SF2, home: "2", away: "4" }
+
+- participants: 19
+  groups:
+    - { label: A, slots: [A1, A2, A3, A4, A5] }
+    - { label: B, slots: [B1, B2, B3, B4, B5] }
+    - { label: C, slots: [C1, C2, C3, C4, C5] }
+    - { label: D, slots: [D1, D2, D3, D4] }
+  groupStage:
+    matches:
+      - { id: G1, home: A1, away: A3 }
+      - { id: G2, home: A2, away: A5 }
+      - { id: G3, home: B1, away: B3 }
+      - { id: G4, home: B2, away: B5 }
+      - { id: G5, home: C1, away: C3 }
+      - { id: G6, home: C2, away: C5 }
+      - { id: G7, home: D1, away: D2 }
+      - { id: G8, home: D3, away: D4 }
+      - { id: G9, home: A1, away: A2 }
+      - { id: G10, home: A3, away: A4 }
+      - { id: G11, home: B1, away: B2 }
+      - { id: G12, home: B3, away: B4 }
+      - { id: G13, home: C1, away: C2 }
+      - { id: G14, home: C3, away: C4 }
+      - { id: G15, home: D1, away: D3 }
+      - { id: G16, home: D2, away: D4 }
+      - { id: G17, home: A1, away: A5 }
+      - { id: G18, home: A2, away: A4 }
+      - { id: G19, home: B1, away: B5 }
+      - { id: G20, home: B2, away: B4 }
+      - { id: G21, home: C1, away: C5 }
+      - { id: G22, home: C2, away: C4 }
+      - { id: G23, home: A3, away: A5 }
+      - { id: G24, home: A1, away: A4 }
+      - { id: G25, home: B3, away: B5 }
+      - { id: G26, home: B1, away: B4 }
+      - { id: G27, home: C3, away: C5 }
+      - { id: G28, home: C1, away: C4 }
+      - { id: G29, home: A2, away: A3 }
+      - { id: G30, home: A4, away: A5 }
+      - { id: G31, home: B2, away: B3 }
+      - { id: G32, home: B4, away: B5 }
+      - { id: G33, home: C2, away: C3 }
+      - { id: G34, home: C4, away: C5 }
+      - { id: G35, home: D1, away: D4 }
+      - { id: G36, home: D2, away: D3 }
+  playoffs:
+    rounds:
+      - name: PlayoffRound1
+        matches:
+          - { id: PR1, home: A2, away: B3, winRef: V1 }
+          - { id: PR2, home: B2, away: A3, winRef: V2 }
+          - { id: PR3, home: C2, away: D3, winRef: V3 }
+          - { id: PR4, home: D2, away: C3, winRef: V4 }
+      - name: Quarterfinals
+        matches:
+          - { id: QF1, home: A1, away: V3, winRef: "1" }
+          - { id: QF2, home: B1, away: V4, winRef: "2" }
+          - { id: QF3, home: C1, away: V1, winRef: "3" }
+          - { id: QF4, home: D1, away: V2, winRef: "4" }
+      - name: Semifinals
+        matches:
+          - { id: SF1, home: "1", away: "3" }
+          - { id: SF2, home: "2", away: "4" }
+
+- participants: 20
+  groups:
+    - { label: A, slots: [A1, A2, A3, A4, A5] }
+    - { label: B, slots: [B1, B2, B3, B4, B5] }
+    - { label: C, slots: [C1, C2, C3, C4, C5] }
+    - { label: D, slots: [D1, D2, D3, D4, D5] }
+  groupStage:
+    matches:
+      - { id: G1, home: A1, away: A3 }
+      - { id: G2, home: A2, away: A5 }
+      - { id: G3, home: B1, away: B3 }
+      - { id: G4, home: B2, away: B5 }
+      - { id: G5, home: C1, away: C3 }
+      - { id: G6, home: C2, away: C5 }
+      - { id: G7, home: D1, away: D3 }
+      - { id: G8, home: D2, away: D5 }
+      - { id: G9, home: A1, away: A2 }
+      - { id: G10, home: A3, away: A4 }
+      - { id: G11, home: B1, away: B2 }
+      - { id: G12, home: B3, away: B4 }
+      - { id: G13, home: C1, away: C2 }
+      - { id: G14, home: C3, away: C4 }
+      - { id: G15, home: D1, away: D2 }
+      - { id: G16, home: D3, away: D4 }
+      - { id: G17, home: A1, away: A5 }
+      - { id: G18, home: A2, away: A4 }
+      - { id: G19, home: B1, away: B5 }
+      - { id: G20, home: B2, away: B4 }
+      - { id: G21, home: C1, away: C5 }
+      - { id: G22, home: C2, away: C4 }
+      - { id: G23, home: D1, away: D5 }
+      - { id: G24, home: D2, away: D4 }
+      - { id: G25, home: A3, away: A5 }
+      - { id: G26, home: A1, away: A4 }
+      - { id: G27, home: B3, away: B5 }
+      - { id: G28, home: B1, away: B4 }
+      - { id: G29, home: C3, away: C5 }
+      - { id: G30, home: C1, away: C4 }
+      - { id: G31, home: D3, away: D5 }
+      - { id: G32, home: D1, away: D4 }
+      - { id: G33, home: A2, away: A3 }
+      - { id: G34, home: A4, away: A5 }
+      - { id: G35, home: B2, away: B3 }
+      - { id: G36, home: B4, away: B5 }
+      - { id: G37, home: C2, away: C3 }
+      - { id: G38, home: C4, away: C5 }
+      - { id: G39, home: D2, away: D3 }
+      - { id: G40, home: D4, away: D5 }
+  playoffs:
+    rounds:
+      - name: PlayoffRound1
+        matches:
+          - { id: PR1, home: A2, away: B3, winRef: V1 }
+          - { id: PR2, home: B2, away: A3, winRef: V2 }
+          - { id: PR3, home: C2, away: D3, winRef: V3 }
+          - { id: PR4, home: D2, away: C3, winRef: V4 }
+      - name: Quarterfinals
+        matches:
+          - { id: QF1, home: A1, away: V3, winRef: "1" }
+          - { id: QF2, home: B1, away: V4, winRef: "2" }
+          - { id: QF3, home: C1, away: V1, winRef: "3" }
+          - { id: QF4, home: D1, away: V2, winRef: "4" }
+      - name: Semifinals
+        matches:
+          - { id: SF1, home: "1", away: "3" }
+          - { id: SF2, home: "2", away: "4" }
+
+# =========================================================
+# 21 deltagare: 5 grupper: 4,4,4,4,5
+# Efter gruppspel: "GRUPP 1–4" (mini-gruppspel med 3 lag)
+# =========================================================
+- participants: 21
+
+  groups:
+    - { label: A, slots: [A1, A2, A3, A4] }
+    - { label: B, slots: [B1, B2, B3, B4] }
+    - { label: C, slots: [C1, C2, C3, C4] }
+    - { label: D, slots: [D1, D2, D3, D4] }
+    - { label: E, slots: [E1, E2, E3, E4, E5] }
+
+  groupStage:
+    matches:
+      - { id: G1,  home: E1, away: E3 }
+      - { id: G2,  home: E2, away: E5 }
+      - { id: G3,  home: A1, away: A2 }
+      - { id: G4,  home: A3, away: A4 }
+      - { id: G5,  home: B1, away: B2 }
+      - { id: G6,  home: B3, away: B4 }
+      - { id: G7,  home: C1, away: C2 }
+      - { id: G8,  home: C3, away: C4 }
+      - { id: G9,  home: D1, away: D2 }
+      - { id: G10, home: D3, away: D4 }
+      - { id: G11, home: E1, away: E2 }
+      - { id: G12, home: E3, away: E4 }
+      - { id: G13, home: A1, away: A3 }
+      - { id: G14, home: A2, away: A4 }
+      - { id: G15, home: B1, away: B3 }
+      - { id: G16, home: B2, away: B4 }
+      - { id: G17, home: C1, away: C3 }
+      - { id: G18, home: C2, away: C4 }
+      - { id: G19, home: D1, away: D3 }
+      - { id: G20, home: D2, away: D4 }
+      - { id: G21, home: E1, away: E5 }
+      - { id: G22, home: E2, away: E4 }
+      - { id: G23, home: A1, away: A4 }
+      - { id: G24, home: A2, away: A3 }
+      - { id: G25, home: B1, away: B4 }
+      - { id: G26, home: B2, away: B3 }
+      - { id: G27, home: E3, away: E5 }
+      - { id: G28, home: E1, away: E4 }
+      - { id: G29, home: C1, away: C4 }
+      - { id: G30, home: C2, away: C3 }
+      - { id: G31, home: D1, away: D4 }
+      - { id: G32, home: D2, away: D3 }
+      - { id: G33, home: E2, away: E3 }
+      - { id: G34, home: E4, away: E5 }
+
+  playoffs:
+    seeds:
+      A1: { from: { group: A, rank: 1 } }
+      A2: { from: { group: A, rank: 2 } }
+      B1: { from: { group: B, rank: 1 } }
+      B2: { from: { group: B, rank: 2 } }
+      C1: { from: { group: C, rank: 1 } }
+      C2: { from: { group: C, rank: 2 } }
+      D1: { from: { group: D, rank: 1 } }
+      D2: { from: { group: D, rank: 2 } }
+      E1: { from: { group: E, rank: 1 } }
+      E2: { from: { group: E, rank: 2 } }
+      E3: { from: { group: E, rank: 3 } }
+
+      # X3/E3 betyder i underlaget: "bästa 3:a (X3) eller E3".
+      # Välj bästa 3:a totalt bland A,B,C,D,E. pick 1 och pick 2 ger två olika lag.
+      X3_1:
+        fromBestOf:
+          rank: 3
+          count: 2
+          pick: 1
+          groups: [A, B, C, D, E]
+          sortBy: [points, goalDiff, goalsFor, fairPlay, stableSeed]
+      X3_2:
+        fromBestOf:
+          rank: 3
+          count: 2
+          pick: 2
+          groups: [A, B, C, D, E]
+          sortBy: [points, goalDiff, goalsFor, fairPlay, stableSeed]
+
+    groupPlayoffs:
+      # Fyra mini‑grupper på tre lag vardera med explicit matchordning.
+      # Matchids är unika inom varje grupp. De tre matcherna per grupp bildar ett round robin.
+      - id: GP1
+        participants: [A1, B1, X3_1]
+        matches:
+          - { id: GP1_M1, home: A1, away: B1 }
+          - { id: GP1_M2, home: B1, away: X3_1 }
+          - { id: GP1_M3, home: A1, away: X3_1 }
+        winnerRef: W1
+      - id: GP2
+        participants: [C1, D1, X3_2]
+        matches:
+          - { id: GP2_M1, home: C1, away: D1 }
+          - { id: GP2_M2, home: D1, away: X3_2 }
+          - { id: GP2_M3, home: C1, away: X3_2 }
+        winnerRef: W2
+      - id: GP3
+        participants: [C2, D2, E1]
+        matches:
+          - { id: GP3_M1, home: C2, away: D2 }
+          - { id: GP3_M2, home: D2, away: E1 }
+          - { id: GP3_M3, home: C2, away: E1 }
+        winnerRef: W3
+      - id: GP4
+        participants: [B2, E2, A2]
+        matches:
+          - { id: GP4_M1, home: B2, away: E2 }
+          - { id: GP4_M2, home: E2, away: A2 }
+          - { id: GP4_M3, home: B2, away: A2 }
+        winnerRef: W4
+
+    rounds:
+      - name: Semifinals
+        matches:
+          - { id: SF1, home: W1, away: W3 }
+          - { id: SF2, home: W2, away: W4 }
+
+# =========================================================
+# 22 deltagare: 6 grupper: 4,4,4,4,3,3
+# =========================================================
+- participants: 22
+
+  groups:
+    - { label: A, slots: [A1, A2, A3, A4] }
+    - { label: B, slots: [B1, B2, B3, B4] }
+    - { label: C, slots: [C1, C2, C3, C4] }
+    - { label: D, slots: [D1, D2, D3, D4] }
+    - { label: E, slots: [E1, E2, E3] }
+    - { label: F, slots: [F1, F2, F3] }
+
+  groupStage:
+    matches:
+      - { id: G1,  home: A1, away: A2 }
+      - { id: G2,  home: A3, away: A4 }
+      - { id: G3,  home: B1, away: B2 }
+      - { id: G4,  home: B3, away: B4 }
+      - { id: G5,  home: C1, away: C2 }
+      - { id: G6,  home: C3, away: C4 }
+      - { id: G7,  home: D1, away: D2 }
+      - { id: G8,  home: D3, away: D4 }
+      - { id: G9,  home: E1, away: E2 }
+      - { id: G10, home: F1, away: F2 }
+      - { id: G11, home: A1, away: A3 }
+      - { id: G12, home: A2, away: A4 }
+      - { id: G13, home: B1, away: B3 }
+      - { id: G14, home: B2, away: B4 }
+      - { id: G15, home: C1, away: C3 }
+      - { id: G16, home: C2, away: C4 }
+      - { id: G17, home: D1, away: D3 }
+      - { id: G18, home: D2, away: D4 }
+      - { id: G19, home: E1, away: E3 }
+      - { id: G20, home: F1, away: F3 }
+      - { id: G21, home: A1, away: A4 }
+      - { id: G22, home: A2, away: A3 }
+      - { id: G23, home: B1, away: B4 }
+      - { id: G24, home: B2, away: B3 }
+      - { id: G25, home: C1, away: C4 }
+      - { id: G26, home: C2, away: C3 }
+      - { id: G27, home: D1, away: D4 }
+      - { id: G28, home: D2, away: D3 }
+      - { id: G29, home: E2, away: E3 }
+      - { id: G30, home: F2, away: F3 }
+
+  playoffs:
+    rounds:
+      - name: RoundOf16
+        matches:
+          - { id: R16_1, home: B1, away: A3, winRef: "1" }
+          - { id: R16_2, home: A1, away: C2, winRef: "2" }
+          - { id: R16_3, home: F1, away: C3, winRef: "3" }
+          - { id: R16_4, home: D2, away: E2, winRef: "4" }
+          - { id: R16_5, home: E1, away: B3, winRef: "5" }
+          - { id: R16_6, home: D1, away: F2, winRef: "6" }
+          - { id: R16_7, home: C1, away: D3, winRef: "7" }
+          - { id: R16_8, home: A2, away: B2, winRef: "8" }
+
+      - name: Quarterfinals
+        matches:
+          - { id: QF9,  home: "1", away: "2", winRef: "9" }
+          - { id: QF10, home: "3", away: "4", winRef: "10" }
+          - { id: QF11, home: "5", away: "6", winRef: "11" }
+          - { id: QF12, home: "7", away: "8", winRef: "12" }
+
+      - name: Semifinals
+        matches:
+          - { id: SF1, home: "9",  away: "10" }
+          - { id: SF2, home: "11", away: "12" }
