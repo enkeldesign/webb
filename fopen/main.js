@@ -1429,7 +1429,7 @@ function resetState() {
 
 // Auto fill results for debugging
 function autoFillResults() {
-  state.schedule.forEach((match, idx) => {
+  state.schedule.forEach((match) => {
     if (match.status !== 'completed') {
       const s1 = Math.floor(Math.random() * 6);
       const s2 = Math.floor(Math.random() * 6);
@@ -1439,18 +1439,24 @@ function autoFillResults() {
       state.results[match.id] = { score1: s1, score2: s2 };
     }
   });
-  // Reset standings and recompute
+
+  // Reset standings and recompute (IMPORTANT: re-init before adding stats)
   state.groupStandings = null;
-  state.schedule.forEach(match => {
+
+  // ⬇️ Ny rad: skapa tomma tabeller för alla grupper/lag igen
+  initGroupStandings();
+
+  // Räkna om allt från scratch
+  state.schedule.forEach((match) => {
     if (match.status === 'completed') {
       updateStandings(match);
     }
   });
+
   saveState();
   updateScheduleUI();
   updateNowPlaying();
   updateStandingsUI();
-  // After auto filling results, check if group stage is complete
   checkGroupStageComplete();
 }
 
