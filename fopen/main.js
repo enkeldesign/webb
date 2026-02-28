@@ -865,6 +865,81 @@ function updateStandings(match) {
   }
 }
 
+/**
+ * Infer direct and chance qualifiers from a playoffs bracket when explicit seeds
+ * are missing. The ruleset defines playoff rounds as an array of rounds.
+ * Each round contains matches with `home` and `away` codes that may reference
+ * group placements (e.g. 'A1' for group A rank 1). This function determines
+ * which group positions advance directly to later rounds and which must
+ * participate in earlier play-in rounds.
+ *
+ * The algorithm identifies the highest round (closest to the final) that
+ * contains at least one group seed. Seeds in this round are treated as direct
+ * qualifiers (green). Seeds in any earlier rounds are treated as potential
+ * qualifiers (yellow). Winners of earlier matches (codes like 'V1' or numeric
+ * IDs) are ignored.
+ *
+ * @param {Object} playoffs - The playoffs definition from the ruleset.
+ * @returns {{direct: Object, chance: Object}} An object where keys are group
+ *          letters and values are Sets of ranks for direct and chance qualifiers.
+ */
+function computeQualifiersFromPlayoffs(playoffs) {
+  const direct = {};
+  const chance = {};
+  if (!playoffs || !Array.isArray(playoffs.rounds)) {
+    return { direct, chance };
+  }
+  const rounds = playoffs.rounds;
+  // Find the highest round index that contains a group seed
+  let directRoundIndex = null;
+  for (let i = rounds.length - 1; i >= 0; i--) {
+    const round = rounds[i];
+    if (!round.matches) continue;
+    let found = false;
+    for (const match of round.matches) {
+      const codes = [match.home, match.away];
+      for (const code of codes) {
+        if (typeof code === 'string' && /^[A-Z][0-9]+$/.test(code)) {
+          found = true;
+          break;
+        }
+      }
+      if (found) break;
+    }
+    if (found) {
+      directRoundIndex = i;
+      break;
+    }
+  }
+  // Helper to add group and rank to a map
+  function add(map, group, rank) {
+    const rNum = parseInt(rank, 10);
+    if (isNaN(rNum)) return;
+    if (!map[group]) map[group] = new Set();
+    map[group].add(rNum);
+  }
+  // Gather seeds from each round
+  for (let i = 0; i < rounds.length; i++) {
+    const round = rounds[i];
+    if (!round.matches) continue;
+    for (const match of round.matches) {
+      const codes = [match.home, match.away];
+      for (const code of codes) {
+        if (typeof code === 'string' && /^[A-Z][0-9]+$/.test(code)) {
+          const group = code[0];
+          const rank = code.slice(1);
+          if (i === directRoundIndex) {
+            add(direct, group, rank);
+          } else {
+            add(chance, group, rank);
+          }
+        }
+      }
+    }
+  }
+  return { direct, chance };
+}
+
 // Compare two standings entries for sorting within a group
 function compareStandings(a, b) {
   // Sort by points desc, then goal difference desc, then goalsFor desc
@@ -915,6 +990,10 @@ function updateStandingsUI() {
   const direct = {};
   const chance = {};
   if (format.playoffs && format.playoffs.seeds) {
+    // If explicit seeds are defined in the ruleset, use them to determine
+    // direct (green) and chance (yellow) placements. Seeds with `from` map
+    // directly to a group and rank; seeds with `fromBestOf` indicate potential
+    // qualifiers (best third placements).
     Object.entries(format.playoffs.seeds).forEach(([seedName, seedDef]) => {
       if (seedDef.from) {
         const g = seedDef.from.group;
@@ -922,13 +1001,27 @@ function updateStandingsUI() {
         if (!direct[g]) direct[g] = new Set();
         direct[g].add(r);
       } else if (seedDef.fromBestOf) {
-        // mark chance seeds: for each group in list
         const groups = seedDef.fromBestOf.groups;
         groups.forEach(g => {
           if (!chance[g]) chance[g] = new Set();
           chance[g].add(seedDef.fromBestOf.rank);
         });
       }
+    });
+  } else if (format.playoffs && format.playoffs.rounds) {
+    // When explicit seeds are not provided, infer qualifiers from the playoff
+    // bracket using computeQualifiersFromPlayoffs(). This examines the
+    // bracket structure to classify seeds into direct and chance based on
+    // which rounds they appear in.
+    const tmp = computeQualifiersFromPlayoffs(format.playoffs);
+    // Merge computed seeds into direct and chance maps
+    Object.keys(tmp.direct).forEach(g => {
+      if (!direct[g]) direct[g] = new Set();
+      tmp.direct[g].forEach(r => direct[g].add(r));
+    });
+    Object.keys(tmp.chance).forEach(g => {
+      if (!chance[g]) chance[g] = new Set();
+      tmp.chance[g].forEach(r => chance[g].add(r));
     });
   }
   state.groups.forEach(group => {
