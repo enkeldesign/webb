@@ -852,11 +852,11 @@ function updateStandings(match) {
   if (s1 > s2) {
     stat1.wins++;
     stat2.losses++;
-    stat1.points += 3;
+    stat1.points += 2;
   } else if (s2 > s1) {
     stat2.wins++;
     stat1.losses++;
-    stat2.points += 3;
+    stat2.points += 2;
   } else {
     stat1.draws++;
     stat2.draws++;
@@ -1228,11 +1228,11 @@ function renderMarathonTable() {
     if (score1 > score2) {
       combined[team1].wins++;
       combined[team2].losses++;
-      combined[team1].points += 3;
+      combined[team1].points += 2;
     } else if (score2 > score1) {
       combined[team2].wins++;
       combined[team1].losses++;
-      combined[team2].points += 3;
+      combined[team2].points += 2;
     } else {
       combined[team1].draws++;
       combined[team2].draws++;
