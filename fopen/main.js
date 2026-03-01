@@ -1315,7 +1315,31 @@ function updateStandingsUI() {
     const tbody = document.createElement('tbody');
     // Create array of stats
     const stats = Object.values(state.groupStandings[label]);
-    stats.sort(compareStandings);
+    // Compute initial slot order for this group based on draw assignments.  This is
+    // used to preserve the draw order when no games have been played yet and as
+    // a tiebreaker when all standings metrics are equal.  We map each team
+    // to its position index within the group's slots array.
+    const groupInfo = state.groups.find(g => g.label === label);
+    const slotOrderMap = {};
+    if (groupInfo) {
+      groupInfo.slots.forEach((slot, idx) => {
+        if (slot.team) slotOrderMap[slot.team] = idx;
+      });
+    }
+    // Determine if any games have been played (non-zero games).  If not, we
+    // maintain the original draw order rather than sorting alphabetically.
+    const hasPlayed = stats.some(s => s.games > 0);
+    stats.sort((a, b) => {
+      if (!hasPlayed) {
+        // Sort purely by slot order when no games have been played.
+        return (slotOrderMap[a.team] || 0) - (slotOrderMap[b.team] || 0);
+      }
+      const cmp = compareStandings(a, b);
+      if (cmp !== 0) return cmp;
+      // If standings are identical, fall back to slot order to maintain
+      // deterministic ordering instead of locale-based name ordering.
+      return (slotOrderMap[a.team] || 0) - (slotOrderMap[b.team] || 0);
+    });
     stats.forEach((stat, idx) => {
       const tr = document.createElement('tr');
       const rank = idx + 1;
