@@ -85,6 +85,9 @@ header.hero {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
+  /* Make the hero a positioning context for the toast so it can be
+     vertically centred relative to the header */
+  position: relative;
 }
 .hero-left {
   display: flex;
@@ -394,6 +397,19 @@ header.hero {
   background-color: #eef2f8;
   border-color: var(--color-primary);
 }
+
+/* Pending matches (yet to be played): subtle appearance */
+.schedule-item.pending {
+  background-color: var(--color-surface);
+  border-left: 4px solid var(--color-muted);
+  opacity: 0.95;
+}
+
+/* Playing matches: highlight with secondary color */
+.schedule-item.playing {
+  background-color: #fffbe8;
+  border-left: 4px solid var(--color-secondary);
+}
 /* Lagdel: flagga och nationsnamn */
 .schedule-team {
   display: flex;
@@ -439,6 +455,67 @@ header.hero {
   object-fit: cover;
 }
 
+/* --- Playoff bracket styles --- */
+.playoff-bracket {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.playoff-round {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  padding: 0.75rem;
+}
+.playoff-round h3 {
+  margin: 0 0 0.5rem 0;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  color: var(--color-primary);
+}
+.playoff-match {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.playoff-match:last-child {
+  border-bottom: none;
+}
+.playoff-match-team {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.playoff-match-team .flag {
+  width: 28px;
+  height: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+}
+.playoff-match-score {
+  font-weight: bold;
+  font-size: 1rem;
+  margin: 0 0.5rem;
+}
+
+/* Icons for qualifiers in group standings */
+.qual-icons {
+  display: inline-flex;
+  gap: 0.25rem;
+  margin: 0 0.4rem;
+  align-items: center;
+}
+.icon {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+.icon-qual { filter: saturate(1.1); }
+.icon-best3 { opacity: 0.95; }
+.icon-clinched { opacity: 0.9; }
+
 /* Groups ranking table */
 /* Layout för gruppsammanställningar: använd CSS-grid för att sprida ut grupper över bredden.
    Antalet kolumner bestäms av extra klasser (.groups-count-3, -4, -5) som JS lägger på
@@ -482,6 +559,13 @@ header.hero {
 
 /* Nation cell inside group tables: align flag and team name horizontally */
 .group-ranking .nation-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Nation cell inside marathon table: align flag and team name horizontally */
+.marathon-table .nation-cell {
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -566,6 +650,25 @@ header.hero {
   font-weight: bold;
 }
 
+/* Flags in marathon table: keep consistent size with group rankings */
+.marathon-table img.flag {
+  width: 24px;
+  height: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  object-fit: cover;
+  margin-right: 0.25rem;
+}
+
+/* Highlight rows for teams participating in the current tournament */
+.marathon-table tr.participant td {
+  background-color: #e6f5ff;
+}
+.marathon-table tr.participant:nth-child(even) td {
+  /* keep background consistent on alternating rows */
+  background-color: #e6f5ff;
+}
+
 /* Flag styling: apply consistent border and size to all flag images */
 img.flag {
   border: 1px solid #000;
@@ -645,17 +748,23 @@ img.flag {
   color: #555;
 }
 
+/* Match group label displayed at the top of each now-playing match card */
+.match-group {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+}
+
 /* Toast notification */
 .toast {
-  /* Position the toast absolutely within the page rather than fixed.  This
-     prevents it from following the scroll and ensures it does not overlap
-     modals (z‑index is lower than the modal).  It will sit below the hero
-     header at the top centre of the page. */
+  /* Position the toast absolutely within the hero header.  Centre it
+     vertically and horizontally relative to the header using transforms. */
   position: absolute;
-  /* Position below the hero header; adjust as necessary for your header height. */
-  top: 4rem;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius);

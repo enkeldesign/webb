@@ -500,6 +500,11 @@ function updateNowPlaying() {
     const m = state.schedule[idx];
     return m && m.status !== 'completed';
   });
+  // Reset status of all non-completed matches to pending; matches
+  // currently in playingMatches will be set to 'playing' later
+  state.schedule.forEach((m, i) => {
+    if (m.status !== 'completed') m.status = 'pending';
+  });
   // Prepare the list of team names currently playing (for readiness check)
   state.playing = [];
   state.playingMatches.forEach(idx => {
@@ -529,8 +534,15 @@ function updateNowPlaying() {
   state.playingMatches.forEach(idx => {
     const match = state.schedule[idx];
     if (!match) return;
+    // Mark match as playing so schedule UI can highlight it
+    if (match.status !== 'completed') match.status = 'playing';
     const card = document.createElement('div');
     card.classList.add('match-card');
+    // Insert group label at top of card
+    const groupLabel = document.createElement('div');
+    groupLabel.classList.add('match-group');
+    groupLabel.textContent = match.group ? `Grupp ${match.group}` : '';
+    card.appendChild(groupLabel);
     // Teams display: use three columns (team1, vs, team2) for better alignment
     const teamsRow = document.createElement('div');
     teamsRow.classList.add('match-teams');
@@ -769,6 +781,161 @@ function showToast(match, score1, score2) {
   toast.classList.add('show');
 }
 
+// Generate the playoff bracket based on final group standings and ruleset.
+// This function constructs a data structure representing each playoff round
+// and the matches within it. Seeds referencing group placements (e.g. 'A1')
+// are resolved to actual team names using the final group standings. Seeds
+// referencing winners of previous matches (e.g. 'V1', '1') remain as
+// identifiers and will be resolved after those matches are played. A bronze
+// match is appended after the semifinals using placeholder loser seeds ('L1', 'L2').
+function generatePlayoffBracket() {
+  const format = getFormat(state.numSlots);
+  if (!format || !format.playoffs || !format.playoffs.rounds) return [];
+  // Compute final standings order for each group (sorted by rank)
+  const finalStandings = {};
+  state.groups.forEach(group => {
+    const stats = Object.values(state.groupStandings[group.label]);
+    stats.sort(compareStandings);
+    finalStandings[group.label] = stats.map(s => s.team);
+  });
+  const rounds = [];
+  format.playoffs.rounds.forEach(round => {
+    const r = { name: round.name, matches: [] };
+    round.matches.forEach(match => {
+      const seed1 = match.home;
+      const seed2 = match.away;
+      // Resolve group seeds (e.g. 'A2') to team names.  Seeds referencing
+      // winners of previous matches (e.g. 'V1', '1') remain unresolved (null)
+      let team1 = null;
+      let team2 = null;
+      if (typeof seed1 === 'string' && /^[A-Z][0-9]+$/.test(seed1)) {
+        const g = seed1.charAt(0);
+        const rnk = parseInt(seed1.slice(1), 10);
+        const arr = finalStandings[g];
+        if (arr && arr.length >= rnk) team1 = arr[rnk - 1];
+      }
+      if (typeof seed2 === 'string' && /^[A-Z][0-9]+$/.test(seed2)) {
+        const g = seed2.charAt(0);
+        const rnk = parseInt(seed2.slice(1), 10);
+        const arr = finalStandings[g];
+        if (arr && arr.length >= rnk) team2 = arr[rnk - 1];
+      }
+      r.matches.push({
+        id: match.id,
+        homeSeed: seed1,
+        awaySeed: seed2,
+        team1,
+        team2,
+        score1: null,
+        score2: null,
+        status: 'pending',
+        winRef: match.winRef || null
+      });
+    });
+    rounds.push(r);
+  });
+  // Append a bronze match after the last round (semifinals) if not defined.
+  // Seeds 'L1' and 'L2' represent the losers of semifinal 1 and 2.
+  rounds.push({
+    name: 'Bronsmatch',
+    matches: [
+      {
+        id: 'BM',
+        homeSeed: 'L1',
+        awaySeed: 'L2',
+        team1: null,
+        team2: null,
+        score1: null,
+        score2: null,
+        status: 'pending',
+        winRef: null
+      }
+    ]
+  });
+  return rounds;
+}
+
+// Start playoffs: generate bracket, set stage to 'playoff' and render the bracket
+function startPlayoffs() {
+  // Generate the playoff bracket using final group standings
+  const bracket = generatePlayoffBracket();
+  state.playoffs = bracket;
+  state.stage = 'playoff';
+  // Save and render playoff stage
+  saveState();
+  renderStage();
+  renderPlayoffStage();
+}
+
+// Render the playoff stage UI.  This function populates the playoff-bracket
+// container with rounds and matches based on state.playoffs.  For each match
+// the home and away teams are displayed if resolved; otherwise the seed
+// identifiers are shown.  Scores are left blank until implemented.
+function renderPlayoffStage() {
+  const bracketDiv = document.getElementById('playoff-bracket');
+  if (!bracketDiv) return;
+  bracketDiv.innerHTML = '';
+  const rounds = state.playoffs || [];
+  rounds.forEach(round => {
+    const roundDiv = document.createElement('div');
+    roundDiv.classList.add('playoff-round');
+    const title = document.createElement('h3');
+    title.textContent = round.name;
+    roundDiv.appendChild(title);
+    round.matches.forEach(match => {
+      const matchDiv = document.createElement('div');
+      matchDiv.classList.add('playoff-match');
+      // Home team or seed
+      const homeDiv = document.createElement('div');
+      homeDiv.classList.add('playoff-match-team');
+      if (match.team1) {
+        const img = document.createElement('img');
+        img.src = getFlagSrc(match.team1);
+        img.alt = match.team1;
+        img.classList.add('flag');
+        homeDiv.appendChild(img);
+        const span = document.createElement('span');
+        span.textContent = match.team1;
+        homeDiv.appendChild(span);
+      } else {
+        const span = document.createElement('span');
+        span.textContent = match.homeSeed;
+        homeDiv.appendChild(span);
+      }
+      // Score
+      const scoreDiv = document.createElement('div');
+      scoreDiv.classList.add('playoff-match-score');
+      if (match.score1 != null && match.score2 != null) {
+        scoreDiv.textContent = `${match.score1} – ${match.score2}`;
+      } else {
+        scoreDiv.textContent = '';
+      }
+      // Away team or seed
+      const awayDiv = document.createElement('div');
+      awayDiv.classList.add('playoff-match-team');
+      if (match.team2) {
+        const img2 = document.createElement('img');
+        img2.src = getFlagSrc(match.team2);
+        img2.alt = match.team2;
+        img2.classList.add('flag');
+        awayDiv.appendChild(img2);
+        const span2 = document.createElement('span');
+        span2.textContent = match.team2;
+        awayDiv.appendChild(span2);
+      } else {
+        const span2 = document.createElement('span');
+        span2.textContent = match.awaySeed;
+        awayDiv.appendChild(span2);
+      }
+      matchDiv.appendChild(homeDiv);
+      matchDiv.appendChild(scoreDiv);
+      matchDiv.appendChild(awayDiv);
+      roundDiv.appendChild(matchDiv);
+    });
+    bracketDiv.appendChild(roundDiv);
+  });
+}
+
 // Check if the group stage is complete (all matches completed).  If so,
 // replace the "Kör nu" area with a message and a button to start the
 // playoffs.  The actual playoff bracket is not implemented; instead we
@@ -782,27 +949,10 @@ function checkGroupStageComplete() {
   if (!nowPlaying) return;
   // Clear existing content
   nowPlaying.innerHTML = '';
-  // Message
+  // Message indicating group stage completion
   const msg = document.createElement('h2');
   msg.textContent = 'Gruppspelet är slut';
   nowPlaying.appendChild(msg);
-  // Button to start playoffs
-  const startBtn = document.createElement('button');
-  startBtn.classList.add('btn', 'btn-primary');
-  startBtn.textContent = 'Starta slutspel';
-  startBtn.addEventListener('click', () => {
-    // Show confirmation modal for starting playoffs
-    const modal = document.getElementById('start-playoff-modal');
-    if (modal) {
-      modal.removeAttribute('hidden');
-    } else {
-      // fallback confirm
-      if (confirm('Är du säker på att starta slutspelet?')) {
-        alert('Slutspelet är inte implementerat ännu.');
-      }
-    }
-  });
-  nowPlaying.appendChild(startBtn);
 }
 
 // Compute and update group standings after a result
@@ -850,14 +1000,17 @@ function updateStandings(match) {
   stat2.goalsFor += s2;
   stat2.goalsAgainst += s1;
   if (s1 > s2) {
+    // A win awards two points instead of three
     stat1.wins++;
     stat2.losses++;
     stat1.points += 2;
   } else if (s2 > s1) {
+    // A win awards two points instead of three
     stat2.wins++;
     stat1.losses++;
     stat2.points += 2;
   } else {
+    // A draw still awards one point to each team
     stat1.draws++;
     stat2.draws++;
     stat1.points += 1;
@@ -951,6 +1104,115 @@ function compareStandings(a, b) {
   return a.team.localeCompare(b.team, 'sv');
 }
 
+// Determine if the entire group stage is complete (all matches completed)
+function isGroupStageComplete() {
+  return state.schedule && state.schedule.every(m => m.status === 'completed');
+}
+
+// Compute the number of remaining group-stage matches for each team
+function getRemainingByTeam() {
+  const remaining = {};
+  (state.schedule || []).forEach(m => {
+    if (m.status === 'completed') return;
+    remaining[m.team1] = (remaining[m.team1] || 0) + 1;
+    remaining[m.team2] = (remaining[m.team2] || 0) + 1;
+  });
+  return remaining;
+}
+
+// Return number of points awarded for a win
+function pointsPerWin() {
+  return 2;
+}
+
+// Determine how many best third slots exist in this format
+function getBestThirdSlotsCount(format) {
+  if (!format?.playoffs?.seeds) return 0;
+  let c = 0;
+  Object.values(format.playoffs.seeds).forEach(seedDef => {
+    if (seedDef.fromBestOf) c += 1;
+  });
+  return c;
+}
+
+// Return an object mapping group labels to sorted standings arrays
+function getSortedGroupStats() {
+  const out = {};
+  state.groups.forEach(g => {
+    const label = g.label;
+    const stats = Object.values(state.groupStandings[label] || {});
+    stats.sort(compareStandings);
+    out[label] = stats;
+  });
+  return out;
+}
+
+// Determine if a team has conservatively clinched a given rank in its group
+// using only points (no goal difference assumptions). A team clinches a rank
+// if its worst-case points (losing all remaining games) are strictly greater
+// than any other team's best-case points (winning all remaining games).
+function isClinchedRankByPoints(groupStatsSorted, team, rankWanted, remainingByTeam) {
+  const pWin = pointsPerWin();
+  const idx = groupStatsSorted.findIndex(s => s.team === team);
+  if (idx === -1) return false;
+  // Must currently be at or above wanted rank
+  const currentRank = idx + 1;
+  if (currentRank > rankWanted) return false;
+  const me = groupStatsSorted[idx];
+  const myWorst = me.points; // lose remaining
+  // Anyone behind could potentially overtake or tie
+  for (let j = 0; j < groupStatsSorted.length; j++) {
+    if (j === idx) continue;
+    const other = groupStatsSorted[j];
+    const otherBest = other.points + (remainingByTeam[other.team] || 0) * pWin;
+    if (otherBest >= myWorst) return false;
+  }
+  return true;
+}
+
+// Compute current best third leaders and number of slots. Leaders are the third-place
+// teams sorted across all groups using the standard tie-break order.
+function getBestThirdLeaders(format) {
+  const slots = getBestThirdSlotsCount(format);
+  if (!slots) return { slots: 0, leaders: [] };
+  const groupsSorted = getSortedGroupStats();
+  const thirdPlacers = [];
+  Object.entries(groupsSorted).forEach(([groupLabel, stats]) => {
+    if (stats.length >= 3) {
+      const s = { ...stats[2], __group: groupLabel, __rank: 3 };
+      thirdPlacers.push(s);
+    }
+  });
+  thirdPlacers.sort((a, b) => compareStandings(a, b));
+  return { slots, leaders: thirdPlacers.slice(0, slots) };
+}
+
+// Determine conservatively if a best-third qualifier is clinched. A third-place team
+// is clinched as best third if its worst-case points exceed the best-case points
+// of the first challenger outside the qualifying slots.
+function getClinchedBestThird(format) {
+  const { slots } = getBestThirdLeaders(format);
+  if (!slots) return new Set();
+  const remainingByTeam = getRemainingByTeam();
+  const pWin = pointsPerWin();
+  const groupsSorted = getSortedGroupStats();
+  const thirdPlacers = [];
+  Object.entries(groupsSorted).forEach(([label, stats]) => {
+    if (stats.length >= 3) thirdPlacers.push({ ...stats[2], __group: label });
+  });
+  thirdPlacers.sort((a, b) => compareStandings(a, b));
+  if (thirdPlacers.length <= slots) return new Set();
+  const cutoff = thirdPlacers[slots];
+  const challengerBest = cutoff.points + (remainingByTeam[cutoff.team] || 0) * pWin;
+  const clinched = new Set();
+  for (let i = 0; i < slots; i++) {
+    const q = thirdPlacers[i];
+    const qWorst = q.points;
+    if (qWorst > challengerBest) clinched.add(q.team);
+  }
+  return clinched;
+}
+
 // Initialise group standings for all groups with zero values.  Called when the
 // tournament starts to ensure the standings table is displayed even before
 // any matches have been played.
@@ -1024,6 +1286,15 @@ function updateStandingsUI() {
       tmp.chance[g].forEach(r => chance[g].add(r));
     });
   }
+  // Precompute whether group stage is complete and which third-placed teams
+  // qualify as best third (based on points) when group stage is done.  If
+  // group stage is not complete, bestThirdTeams will be used only to mark
+  // current best third seeds for seeding purposes.  Teams not in bestThird
+  // will be left without highlight once group stage is complete.
+  const allDone = isGroupStageComplete();
+  const bestThirdInfo = getBestThirdLeaders(format);
+  const bestThirdTeams = new Set(bestThirdInfo.leaders.map(x => x.team));
+
   state.groups.forEach(group => {
     const label = group.label;
     const rankingDiv = document.createElement('div');
@@ -1047,15 +1318,34 @@ function updateStandingsUI() {
     stats.sort(compareStandings);
     stats.forEach((stat, idx) => {
       const tr = document.createElement('tr');
-      // highlight direct/chance placements
       const rank = idx + 1;
-      if (direct[label] && direct[label].has(rank)) tr.classList.add('direct');
-      else if (chance[label] && chance[label].has(rank)) tr.classList.add('chance');
+      // Determine highlight class for this row.  Direct placements are always
+      // green.  Before group stage completion, all chance seeds (rank per
+      // ruleset) are yellow.  After completion, only the actual best third
+      // qualifiers remain yellow; other chance seeds become default.
+      const isDirectRank = direct[label] && direct[label].has(rank);
+      // Determine if this third-place team is a qualifying best third when done
+      const isBestThirdNow = bestThirdTeams.has(stat.team);
+      let highlight = '';
+      if (isDirectRank) {
+        highlight = 'direct';
+      } else {
+        if (!allDone) {
+          // Group stage in progress: highlight all potential chance seeds
+          const isChanceSeed = chance[label] && chance[label].has(rank);
+          if (isChanceSeed) highlight = 'chance';
+        } else {
+          // Group stage finished: highlight only actual qualifying third teams
+          if (isBestThirdNow) highlight = 'chance';
+        }
+      }
+      if (highlight) tr.classList.add(highlight);
+
       // Rank cell
       const tdRank = document.createElement('td');
       tdRank.textContent = rank;
       tr.appendChild(tdRank);
-      // Nation cell with flag and name
+      // Nation cell with flag, icons and name
       const tdNation = document.createElement('td');
       tdNation.classList.add('nation-cell');
       const flagImg = document.createElement('img');
@@ -1092,6 +1382,10 @@ function updateScheduleUI() {
   state.schedule.forEach((match, idx) => {
     const item = document.createElement('div');
     item.classList.add('schedule-item');
+    // Mark schedule item with its status to allow styling. Completed status
+    // still gets the dedicated class.  Pending and playing statuses will
+    // receive their own class names (pending, playing).
+    item.classList.add(match.status);
     if (match.status === 'completed') item.classList.add('completed');
     // Build columns: flag1, team1, score, flag2, team2, group label, edit button
     // Flag for team1
@@ -1228,10 +1522,12 @@ function renderMarathonTable() {
     if (score1 > score2) {
       combined[team1].wins++;
       combined[team2].losses++;
+      // Award two points for a win instead of three
       combined[team1].points += 2;
     } else if (score2 > score1) {
       combined[team2].wins++;
       combined[team1].losses++;
+      // Award two points for a win instead of three
       combined[team2].points += 2;
     } else {
       combined[team1].draws++;
@@ -1274,11 +1570,46 @@ function renderMarathonTable() {
   thead.appendChild(trh);
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
+  // Determine which nations are participating in this tournament.  Use drawAssignments to
+  // gather assigned teams, as selectedTeams may change during draw.
+  const participants = new Set(Object.values(state.drawAssignments || {}));
+
   entries.forEach((entry, idx) => {
     const tr = document.createElement('tr');
     const rank = idx + 1;
     const originalRank = originalRanks[entry.nation] || null;
     const delta = originalRank ? originalRank - rank : null;
+
+    // If this nation is participating in the current tournament, mark row with participant class
+    if (participants.has(entry.nation)) {
+      tr.classList.add('participant');
+    }
+
+    // Build cells: rank, nation (with flag), matches, wins, draws, losses, goal difference, points, delta
+    // Rank
+    const tdRank = document.createElement('td');
+    tdRank.textContent = rank;
+    tr.appendChild(tdRank);
+    // Nation cell with flag and name
+    const tdNation = document.createElement('td');
+    tdNation.classList.add('nation-cell');
+    const flagImg = document.createElement('img');
+    flagImg.src = getFlagSrc(entry.nation);
+    flagImg.alt = entry.nation;
+    flagImg.classList.add('flag');
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = entry.nation;
+    tdNation.appendChild(flagImg);
+    tdNation.appendChild(nameSpan);
+    tr.appendChild(tdNation);
+    // Matches, wins, draws, losses, goal diff, points
+    const values = [entry.matches, entry.wins, entry.draws, entry.losses, entry.goal_difference, entry.points];
+    values.forEach(val => {
+      const td = document.createElement('td');
+      td.textContent = val;
+      tr.appendChild(td);
+    });
+    // Delta cell (rank change)
     const deltaCell = document.createElement('td');
     if (delta) {
       if (delta > 0) deltaCell.innerHTML = `<span class="up">↑ ${delta}</span>`;
@@ -1287,11 +1618,6 @@ function renderMarathonTable() {
     } else {
       deltaCell.textContent = '';
     }
-    [rank, entry.nation, entry.matches, entry.wins, entry.draws, entry.losses, entry.goal_difference, entry.points].forEach(val => {
-      const td = document.createElement('td');
-      td.textContent = val;
-      tr.appendChild(td);
-    });
     tr.appendChild(deltaCell);
     tbody.appendChild(tr);
   });
@@ -1319,16 +1645,28 @@ function renderStage() {
     selectStage.hidden = false;
     drawStage.hidden = true;
     tournamentStage.hidden = true;
+    const playoffStage = document.getElementById('playoff-stage');
+    if (playoffStage) playoffStage.hidden = true;
   } else if (state.stage === 'draw') {
     selectStage.hidden = true;
     drawStage.hidden = false;
     tournamentStage.hidden = false;
     // In draw stage we still show tournament stage? No, hide tournament
     tournamentStage.hidden = true;
+    const playoffStage = document.getElementById('playoff-stage');
+    if (playoffStage) playoffStage.hidden = true;
   } else if (state.stage === 'tournament') {
     selectStage.hidden = true;
     drawStage.hidden = true;
     tournamentStage.hidden = false;
+    const playoffStage = document.getElementById('playoff-stage');
+    if (playoffStage) playoffStage.hidden = true;
+  } else if (state.stage === 'playoff') {
+    selectStage.hidden = true;
+    drawStage.hidden = true;
+    tournamentStage.hidden = true;
+    const playoffStage = document.getElementById('playoff-stage');
+    if (playoffStage) playoffStage.hidden = false;
   }
 }
 
@@ -1342,6 +1680,9 @@ function bindEvents() {
   document.getElementById('backup-btn').addEventListener('click', backupState);
   document.getElementById('reset-btn').addEventListener('click', resetState);
   document.getElementById('auto-results').addEventListener('click', autoFillResults);
+
+  // Return to group stage from playoffs
+  // Removed: no playoff stage in this version
 
   // Hamburger menu toggle: show/hide dropdown on click and hide when clicking outside
   const menuToggle = document.getElementById('menu-toggle');
@@ -1362,20 +1703,7 @@ function bindEvents() {
       }
     });
   }
-  // Event listeners for start playoff modal actions (if present)
-  const confirmStart = document.getElementById('start-playoff-confirm');
-  const cancelStart = document.getElementById('start-playoff-cancel');
-  const playoffModal = document.getElementById('start-playoff-modal');
-  if (confirmStart && cancelStart) {
-    confirmStart.addEventListener('click', () => {
-      // Hide modal and inform user that playoffs are not implemented yet
-      playoffModal.setAttribute('hidden', '');
-      alert('Slutspelet är inte implementerat ännu.');
-    });
-    cancelStart.addEventListener('click', () => {
-      playoffModal.setAttribute('hidden', '');
-    });
-  }
+  // Event listeners for start playoff modal actions are removed: no playoff stage
   window.addEventListener('beforeunload', () => {
     saveState();
   });
@@ -1429,7 +1757,7 @@ function resetState() {
 
 // Auto fill results for debugging
 function autoFillResults() {
-  state.schedule.forEach((match) => {
+  state.schedule.forEach((match, idx) => {
     if (match.status !== 'completed') {
       const s1 = Math.floor(Math.random() * 6);
       const s2 = Math.floor(Math.random() * 6);
@@ -1439,24 +1767,22 @@ function autoFillResults() {
       state.results[match.id] = { score1: s1, score2: s2 };
     }
   });
-
-  // Reset standings and recompute (IMPORTANT: re-init before adding stats)
+  // Reset standings and recompute
   state.groupStandings = null;
-
-  // ⬇️ Ny rad: skapa tomma tabeller för alla grupper/lag igen
+  // Initialize empty standings so that ranking tables are visible even before recomputation
   initGroupStandings();
-
-  // Räkna om allt från scratch
-  state.schedule.forEach((match) => {
+  // Recalculate standings based on the completed matches
+  state.schedule.forEach(match => {
     if (match.status === 'completed') {
       updateStandings(match);
     }
   });
-
   saveState();
+  // Refresh UI: schedule, now playing list, and standings
   updateScheduleUI();
   updateNowPlaying();
   updateStandingsUI();
+  // After auto filling results, check if group stage is complete
   checkGroupStageComplete();
 }
 

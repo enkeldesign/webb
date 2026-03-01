@@ -25,6 +25,8 @@
                         <button id="reset-btn" class="btn menu-item">Nollställ</button>
                     </div>
                 </div>
+        <!-- Latest result (toast) is placed here to be vertically centered within the header -->
+        <div id="toast" class="toast" hidden></div>
             </div>
         </header>
 
@@ -81,6 +83,7 @@
                     <button id="auto-results" class="btn btn-secondary debug">Fyll i resultat (debug)</button>
                 </div>
             </section>
+
         </main>
 
         <!-- Marathon modal -->
@@ -95,22 +98,8 @@
         </div>
     </div>
 
-    <!-- Toast notification for match results -->
-    <div id="toast" class="toast" hidden></div>
-
-    <!-- Modal for starting playoffs -->
-    <div id="start-playoff-modal" class="modal" hidden>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Starta slutspel</h2>
-            </div>
-            <p>Är du säker på att starta slutspelet?</p>
-            <div class="modal-actions" style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                <button id="start-playoff-confirm" class="btn btn-primary">Ja</button>
-                <button id="start-playoff-cancel" class="btn btn-secondary">Nej</button>
-            </div>
-        </div>
-    </div>
+        <!-- Toast notification for match results inside header for vertical centering -->
+        <!-- Moved inside header to align centrally -->
 
     <!-- Load global data definitions before the main script.  This file defines
          RULESET, MARATHON and HISTORIK on the window object so that
