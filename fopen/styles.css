@@ -4,7 +4,7 @@
  * Alla komponenter använder runda hörn och mjuka skuggor för ett sportigt uttryck.
  */
 
-/* CSS‑variabler för färger och spacing */
+/* CSS-variabler för färger och spacing */
 :root {
   --color-primary: #003893; /* mörkblå, från Färöarnas flagga */
   --color-secondary: #d7282f; /* röd accent */
@@ -14,13 +14,18 @@
   --color-border: #e3edf8; /* ännu ljusare blå kant för diskreta ramar */
   --color-text: #1a1a1a;
   --color-text-muted: #57667a;
+
   --border-radius: 12px;
   --shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
-  /* Use sporty, modern fonts: Teko for display (headlines) and Inter for body */
+
+  /* Fonts */
   --font-display: 'Teko', 'Barlow Condensed', Impact, sans-serif;
   --font-body: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  /* Default size for flag icons.  Increased for better visibility throughout the app. */
-  --flag-size: 44px;
+
+  /* Flag sizing + styling */
+  --flag-size: 32px;
+  --flag-border: 1px; /* tunnare border */
+  --flag-radius: 8px;
 }
 
 body {
@@ -32,23 +37,16 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+
   /* Förhindra att sidans bredd hoppar när scrollbar visas/gömmer sig */
   scrollbar-gutter: stable both-edges;
-
-  /* Add an ultra‑subtle Faroe Islands flag as the page background using a pseudo element. */
 }
 
 /* Background flag overlay */
 body::before {
   content: "";
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  /* Use the Faroe Islands flag as a soft, desaturated backdrop.  The flag
-     graphic sits beneath all content and is barely visible thanks to the
-     low opacity.  This replaces the previous hockey‑pattern background. */
+  inset: 0;
   background-image: url('flags/Flag_of_the_Faroe_Islands.svg');
   background-size: cover;
   background-position: center;
@@ -59,11 +57,6 @@ body::before {
 }
 
 .container {
-  /* Använd mer av skärmbredden och centrera innehållet. Justera maxbredden för stora skärmar. */
-  /* Utnyttja mer av skärmens bredd för en luftig design. På stora skärmar sträcks
-     sidan ut till 1600px men håller sig centrerad. */
-  /* Make the layout slightly narrower: reduce max width by ~20%. */
-  /* Make the layout about 20% narrower than before */
   max-width: 1100px;
   width: 100%;
   min-width: 720px;
@@ -75,7 +68,31 @@ body::before {
   gap: 1rem;
 }
 
-/* Hero header */
+/* =========================
+   GLOBAL FLAG STYLE (single source of truth)
+   ========================= */
+img.flag {
+  width: var(--flag-size);
+  height: var(--flag-size);
+  object-fit: cover;
+  border: var(--flag-border) solid var(--color-border);
+  border-radius: var(--flag-radius);
+  box-sizing: border-box;
+  flex: 0 0 auto;
+}
+
+/* Contextual flag sizing */
+.nation-card img.flag { width: 60px; height: 60px; }
+.schedule-item img.flag,
+.group-ranking img.flag,
+.match-card img.flag,
+.toast img.flag { width: 28px; height: 28px; }
+
+.marathon-table img.flag { width: 24px; height: 24px; }
+
+/* =========================
+   HERO / HEADER
+   ========================= */
 header.hero {
   background-color: var(--color-surface);
   border-radius: var(--border-radius);
@@ -85,50 +102,61 @@ header.hero {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  /* Make the hero a positioning context for the toast so it can be
-     vertically centred relative to the header */
-  position: relative;
+  position: relative; /* positioning context for toast */
 }
+
 .hero-left {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  align-items: center;
+  gap: 14px;
 }
+
+/* Logo in header */
+.hero-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
 .hero h1.title {
   margin: 0;
   font-family: var(--font-display);
   font-size: 2.4rem;
-  line-height: 1.1;
+  line-height: 1.05;
   color: var(--color-primary);
 }
+
 .hero .subtitle {
   font-size: 0.875rem;
   color: var(--color-text-muted);
   display: flex;
   gap: 0.25rem;
 }
+
 .hero-right {
   display: flex;
   gap: 0.5rem;
   margin-top: 0.5rem;
 }
 
-/* Buttons */
+/* =========================
+   BUTTONS
+   ========================= */
 .btn {
   padding: 0.5rem 1rem;
   border: none;
   border-radius: var(--border-radius);
   font-size: 1rem;
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
-  /* Prevent buttons from stretching to fill their container */
+  transition: background-color 0.2s ease, color 0.2s ease, filter 0.2s ease;
   width: fit-content;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  /* Prevent flex parents from stretching buttons; place them at start */
   align-self: flex-start;
 }
+
 .btn.btn-primary {
   background-color: var(--color-primary);
   color: #fff;
@@ -138,6 +166,7 @@ header.hero {
   color: var(--color-text-muted);
   cursor: default;
 }
+
 .btn.btn-secondary {
   background-color: var(--color-secondary);
   color: #fff;
@@ -147,18 +176,21 @@ header.hero {
   color: var(--color-text-muted);
   cursor: default;
 }
+
 .btn.debug {
   background-color: #6c757d;
   color: #fff;
 }
 .btn.debug:hover:not(:disabled) {
-  background-color: #5a6268;
+  filter: brightness(0.92);
 }
 .btn:hover:not(:disabled) {
-  filter: brightness(0.9);
+  filter: brightness(0.92);
 }
 
-/* Stages */
+/* =========================
+   STAGES
+   ========================= */
 .stage {
   background-color: var(--color-surface);
   border-radius: var(--border-radius);
@@ -169,17 +201,19 @@ header.hero {
   gap: 1rem;
 }
 
-/* Hide stages when they carry the hidden attribute */
 .stage[hidden] {
   display: none !important;
 }
 
-/* Nation list grid */
+/* =========================
+   NATION LIST
+   ========================= */
 .nation-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 0.5rem;
 }
+
 .nation-card {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -198,10 +232,6 @@ header.hero {
   border-color: var(--color-primary);
   transform: translateY(-2px);
 }
-.nation-card img {
-  width: 48px;
-  height: auto;
-}
 .nation-card .name {
   font-size: 0.8rem;
   font-weight: bold;
@@ -212,12 +242,15 @@ header.hero {
   color: var(--color-text-muted);
 }
 
-/* Draw stage styling */
+/* =========================
+   DRAW STAGE
+   ========================= */
 .groups-container {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
 }
+
 .group {
   flex: 1 1 200px;
   background-color: var(--color-surface);
@@ -229,6 +262,7 @@ header.hero {
   flex-direction: column;
   gap: 0.5rem;
 }
+
 .group header {
   font-family: var(--font-display);
   font-size: 1.25rem;
@@ -236,6 +270,7 @@ header.hero {
   border-bottom: 2px solid var(--color-primary);
   padding-bottom: 0.25rem;
 }
+
 .group .slot {
   border: 1px dashed var(--color-border);
   border-radius: var(--border-radius);
@@ -255,6 +290,7 @@ header.hero {
 .group .slot:hover {
   background-color: #f5f7fb;
 }
+
 .selected-nations {
   display: flex;
   flex-wrap: wrap;
@@ -273,7 +309,9 @@ header.hero {
   border-color: var(--color-primary);
 }
 
-/* Tournament stage */
+/* =========================
+   TOURNAMENT STAGE
+   ========================= */
 .now-playing {
   background-color: var(--color-surface);
   border-radius: var(--border-radius);
@@ -283,13 +321,14 @@ header.hero {
   flex-direction: column;
   gap: 0.5rem;
 }
+
 .current-matches {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  /* Ensure match cards use full available width */
   width: 100%;
 }
+
 .match-card {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -299,18 +338,20 @@ header.hero {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  animation: slideDown 0.6s ease;
-  /* Stretch match cards across available width */
   width: 100%;
-
-  /* Smoothly animate vertical movement and opacity when matches are
-     added or removed.  When a match result is submitted, the card will
-     fade out and adjacent cards will slide to fill the gap, creating
-     a pushing effect. */
+  animation: slideDown 0.6s ease;
   transition: transform 0.5s ease, opacity 0.5s ease;
 }
+
+.match-group {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+}
+
 .match-teams {
-  /* Use grid for balanced layout: three columns (team1, vs, team2) */
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
@@ -319,7 +360,6 @@ header.hero {
   gap: 0.5rem;
 }
 
-/* Left and right team containers inside now playing matches */
 .match-team-left,
 .match-team-right {
   display: flex;
@@ -330,11 +370,13 @@ header.hero {
 .match-team-right {
   justify-content: flex-end;
 }
+
 .match-vs {
   text-align: center;
   font-style: italic;
   color: var(--color-text-muted);
 }
+
 .match-inputs {
   display: flex;
   gap: 0.5rem;
@@ -351,348 +393,15 @@ header.hero {
   padding: 0.25rem 0.5rem;
   font-size: 0.875rem;
 }
-.history {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-.history .entry {
-  display: flex;
-  justify-content: space-between;
-}
 
 @keyframes slideDown {
   from { transform: translateY(-10px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
 
-/* Schedule list */
-.schedule-list {
-  display: flex;
-  flex-direction: column;
-  /* Ge lite mer luft mellan matchraderna */
-  gap: 0.5rem;
-}
-/* Varje rad i spelschemat består av flera kolumner: vänster lag, resultat,
-   höger lag, grupp och en ändra-knapp. Vi använder grid för att få snygg
-   vertikal justering och konsekvent spacing. */
-.schedule-item {
-  padding: 0.75rem 1rem;
-  background-color: var(--color-surface);
-  border-radius: var(--border-radius);
-  border: 1px solid var(--color-border);
-  display: grid;
-  /* New layout: flag1, team1, score, flag2, team2, group, edit button */
-  grid-template-columns: auto 1fr auto auto 1fr auto auto;
-  align-items: center;
-  gap: 0.6rem;
-  /* Ensure equal row height and vertical alignment */
-  min-height: 3rem;
-  /* Öka teckenstorleken för bättre läsbarhet */
-  font-size: 1.05rem;
-}
-.schedule-item.completed {
-  background-color: #eef2f8;
-  border-color: var(--color-primary);
-}
-
-/* Pending matches (yet to be played): subtle appearance */
-.schedule-item.pending {
-  background-color: var(--color-surface);
-  border-left: 4px solid var(--color-muted);
-  opacity: 0.95;
-}
-
-/* Playing matches: highlight with secondary color */
-.schedule-item.playing {
-  background-color: #fffbe8;
-  border-left: 4px solid var(--color-secondary);
-}
-/* Lagdel: flagga och nationsnamn */
-.schedule-team {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-/* Resultatdel: håll siffrorna centrerade och ge dem lite utrymme */
-.schedule-score {
-  /* Bredda resultatskolumnen och håll siffrorna centrerade.  Använd flex
-     layout så att resultatet och en‑dashen placeras centrerat både
-     vertikalt och horisontellt. */
-  min-width: 90px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.15rem;
-  font-weight: bold;
-}
-/* Gruppetikett: mindre text och diskret färg */
-.schedule-group {
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-  white-space: nowrap;
-}
-/* Ändra-knapp i spelschema */
-.schedule-item button.change-result {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
-}
-
-/* Ensure flag icons across the app share a consistent size and border.  This
-   covers flags in schedule rows, match cards, group tables and the toast
-   notification.  A subtle border and rounded corners tie them into the
-   overall design. */
-.schedule-item img.flag,
-.match-card img.flag,
-.group-ranking img.flag,
-.toast img.flag {
-  width: 32px;
-  height: auto;
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-  object-fit: cover;
-}
-
-/* --- Playoff bracket styles --- */
-.playoff-bracket {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-.playoff-round {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
-  padding: 0.75rem;
-}
-.playoff-round h3 {
-  margin: 0 0 0.5rem 0;
-  font-family: var(--font-display);
-  font-size: 1.4rem;
-  color: var(--color-primary);
-}
-.playoff-match {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.4rem 0;
-  border-bottom: 1px solid var(--color-border);
-}
-.playoff-match:last-child {
-  border-bottom: none;
-}
-.playoff-match-team {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-.playoff-match-team .flag {
-  width: 28px;
-  height: auto;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-}
-.playoff-match-score {
-  font-weight: bold;
-  font-size: 1rem;
-  margin: 0 0.5rem;
-}
-
-/* Icons for qualifiers in group standings */
-.qual-icons {
-  display: inline-flex;
-  gap: 0.25rem;
-  margin: 0 0.4rem;
-  align-items: center;
-}
-.icon {
-  font-size: 0.95rem;
-  line-height: 1;
-}
-.icon-qual { filter: saturate(1.1); }
-.icon-best3 { opacity: 0.95; }
-.icon-clinched { opacity: 0.9; }
-
-/* Groups ranking table */
-/* Layout för gruppsammanställningar: använd CSS-grid för att sprida ut grupper över bredden.
-   Antalet kolumner bestäms av extra klasser (.groups-count-3, -4, -5) som JS lägger på
-   elementscontainern. Faller tillbaka till en kolumn vid liten skärmbredd. */
-.groups-rankings {
-  display: grid;
-  gap: 1rem;
-  /* Fyll rutorna radvis istället för kolumnvis när antalet grupper är fler än
-     kolumnerna (t.ex. 5 grupper blir 3 på första raden och 2 på nästa). */
-  grid-auto-flow: row;
-}
-/* 3 grupper visas i en rad */
-.groups-rankings.groups-count-3 {
-  grid-template-columns: repeat(3, 1fr);
-}
-/* 4 grupper visas två och två */
-.groups-rankings.groups-count-4 {
-  grid-template-columns: repeat(2, 1fr);
-}
-/* 5 grupper visas tre överst och två under */
-.groups-rankings.groups-count-5 {
-  grid-template-columns: repeat(3, 1fr);
-}
-.group-ranking {
-  flex: 1 1 240px;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-  padding: 0.5rem;
-}
-.group-ranking table {
-  width: 100%;
-  border-collapse: collapse;
-  /* Lite större font i tabeller för bättre läsbarhet */
-  font-size: 0.85rem;
-}
-.group-ranking th, .group-ranking td {
-  padding: 0.25rem;
-  text-align: left;
-}
-
-/* Nation cell inside group tables: align flag and team name horizontally */
-.group-ranking .nation-cell {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-/* Nation cell inside marathon table: align flag and team name horizontally */
-.marathon-table .nation-cell {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-.group-ranking th {
-  background-color: #f0f4fa;
-  border-bottom: 1px solid var(--color-border);
-  font-weight: bold;
-}
-.group-ranking tr:nth-child(even) td {
-  background-color: #fafbfc;
-}
-.group-ranking tr.direct td {
-  /* More visible green for direct advancement */
-  background-color: #daf7da;
-}
-.group-ranking tr.chance td {
-  /* More visible yellow for potential advancement */
-  background-color: #fff3d6;
-}
-
-/* Marathon modal */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-/* Hide modal when [hidden] attribute is present */
-.modal[hidden] {
-  display: none;
-}
-.modal .modal-content {
-  background-color: var(--color-surface);
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
-  max-width: 800px;
-  width: 90%;
-  max-height: 90%;
-  overflow: auto;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid var(--color-border);
-  padding-bottom: 0.5rem;
-}
-.marathon-table table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.8rem;
-}
-.marathon-table th, .marathon-table td {
-  padding: 0.25rem 0.5rem;
-  border-bottom: 1px solid var(--color-border);
-  text-align: left;
-}
-.marathon-table th {
-  background-color: #f0f4fa;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-.marathon-table .up {
-  color: green;
-  font-weight: bold;
-}
-.marathon-table .down {
-  color: red;
-  font-weight: bold;
-}
-
-/* Flags in marathon table: keep consistent size with group rankings */
-.marathon-table img.flag {
-  width: 24px;
-  height: auto;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  object-fit: cover;
-  margin-right: 0.25rem;
-}
-
-/* Highlight rows for teams participating in the current tournament */
-.marathon-table tr.participant td {
-  background-color: #e6f5ff;
-}
-.marathon-table tr.participant:nth-child(even) td {
-  /* keep background consistent on alternating rows */
-  background-color: #e6f5ff;
-}
-
-/* Flag styling: apply consistent border and size to all flag images */
-img.flag {
-  border: 1px solid #000;
-  border-radius: 4px;
-  width: var(--flag-size);
-  height: auto;
-  object-fit: cover;
-  box-sizing: border-box;
-}
-
-/* Smaller flags inside the schedule list and group rankings for alignment */
-.schedule-item img.flag,
-.group-ranking img.flag {
-  width: 28px;
-  height: auto;
-}
-
-/* Override flag size inside nation cards to be larger for easier selection */
-.nation-card img.flag {
-  width: 60px;
-  height: auto;
-}
-
-/* History list inside match cards */
+/* =========================
+   HISTORY (now-playing)
+   ========================= */
 .history {
   display: flex;
   flex-direction: column;
@@ -709,7 +418,6 @@ img.flag {
   display: flex;
   gap: 0.6rem;
   align-items: center;
-  /* Reserve consistent widths for year, dash and score circles so they align under the match scoreboard */
   --year-width: 40px;
   --dash-width: 16px;
   --score-width: 24px;
@@ -735,32 +443,196 @@ img.flag {
   text-align: center;
   color: var(--color-text-muted);
 }
-.history-score.win {
-  background-color: #e6f6e6;
-  color: #0c5c3b;
-}
-.history-score.loss {
-  background-color: #fbe8e8;
-  color: #972222;
-}
-.history-score.draw {
-  background-color: #eaeaea;
-  color: #555;
+.history-score.win { background-color: #e6f6e6; color: #0c5c3b; }
+.history-score.loss { background-color: #fbe8e8; color: #972222; }
+.history-score.draw { background-color: #eaeaea; color: #555; }
+
+/* =========================
+   SCHEDULE LIST
+   ========================= */
+.schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-/* Match group label displayed at the top of each now-playing match card */
-.match-group {
+.schedule-item {
+  padding: 0.75rem 1rem;
+  background-color: var(--color-surface);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border);
+  display: grid;
+  grid-template-columns: auto 1fr auto auto 1fr auto auto;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 3rem;
+  font-size: 1.05rem;
+}
+
+.schedule-item.completed {
+  background-color: #eef2f8;
+  border-color: var(--color-primary);
+}
+
+.schedule-item.pending {
+  background-color: var(--color-surface);
+  border-left: 4px solid var(--color-muted);
+  opacity: 0.95;
+}
+
+.schedule-item.playing {
+  background-color: #fffbe8;
+  border-left: 4px solid var(--color-secondary);
+}
+
+.schedule-team {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.schedule-score {
+  min-width: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  font-weight: bold;
+}
+
+.schedule-group {
   font-size: 0.8rem;
-  font-weight: 500;
   color: var(--color-text-muted);
-  margin-bottom: 0.25rem;
-  text-transform: uppercase;
+  white-space: nowrap;
 }
 
-/* Toast notification */
+.schedule-item button.change-result {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+/* =========================
+   GROUP TABLES
+   ========================= */
+.groups-rankings {
+  display: grid;
+  gap: 1rem;
+  grid-auto-flow: row;
+}
+
+.groups-rankings.groups-count-3 { grid-template-columns: repeat(3, 1fr); }
+.groups-rankings.groups-count-4 { grid-template-columns: repeat(2, 1fr); }
+.groups-rankings.groups-count-5 { grid-template-columns: repeat(3, 1fr); }
+
+.group-ranking {
+  flex: 1 1 240px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  padding: 0.5rem;
+}
+
+.group-ranking table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.group-ranking th, .group-ranking td {
+  padding: 0.25rem;
+  text-align: left;
+}
+
+.group-ranking .nation-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.group-ranking th {
+  background-color: #f0f4fa;
+  border-bottom: 1px solid var(--color-border);
+  font-weight: bold;
+}
+
+.group-ranking tr:nth-child(even) td {
+  background-color: #fafbfc;
+}
+
+.group-ranking tr.direct td { background-color: #daf7da; }
+.group-ranking tr.chance td { background-color: #fff3d6; }
+
+/* =========================
+   MODAL (marathon)
+   ========================= */
+.modal {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal[hidden] { display: none; }
+
+.modal .modal-content {
+  background-color: var(--color-surface);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  max-width: 800px;
+  width: 90%;
+  max-height: 90%;
+  overflow: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0.5rem;
+}
+
+.marathon-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.marathon-table th, .marathon-table td {
+  padding: 0.25rem 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+}
+
+.marathon-table th {
+  background-color: #f0f4fa;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.marathon-table .nation-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.marathon-table .up { color: green; font-weight: bold; }
+.marathon-table .down { color: red; font-weight: bold; }
+
+.marathon-table tr.participant td { background-color: #e6f5ff; }
+.marathon-table tr.participant:nth-child(even) td { background-color: #e6f5ff; }
+
+/* =========================
+   TOAST (latest result)
+   ========================= */
 .toast {
-  /* Position the toast absolutely within the hero header.  Centre it
-     vertically and horizontally relative to the header using transforms. */
   position: absolute;
   top: 50%;
   left: 50%;
@@ -770,7 +642,6 @@ img.flag {
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
   padding: 0.75rem 1.25rem;
-  /* Moderately large font for emphasis when presenting results */
   font-size: 1.25rem;
   font-weight: bold;
   color: var(--color-primary);
@@ -778,21 +649,13 @@ img.flag {
   opacity: 0;
   pointer-events: none;
 }
-/* When toast is shown, fade it in and keep it visible. The animation lasts
-   0.6s and does not automatically hide the toast. */
-.toast.show {
-  animation: fadeIn 0.6s forwards;
-}
-.toast .winner {
-  color: var(--color-primary);
-}
-.toast .loser {
-  color: var(--color-secondary);
-}
-.toast .score {
-  color: var(--color-text);
-}
-/* Title and body inside toast */
+
+.toast.show { animation: fadeIn 0.6s forwards; }
+
+.toast .winner { color: var(--color-primary); }
+.toast .loser { color: var(--color-secondary); }
+.toast .score { color: var(--color-text); }
+
 .toast .toast-title {
   font-size: 0.7em;
   font-weight: normal;
@@ -800,55 +663,39 @@ img.flag {
   margin-bottom: 0.25rem;
   text-transform: uppercase;
 }
+
 .toast .toast-body {
   display: flex;
   flex-wrap: wrap;
   gap: 0.3rem;
   align-items: center;
 }
-@keyframes fadeInOut {
-  0% { opacity: 0; transform: translate(-50%, -20px); }
-  10% { opacity: 1; transform: translate(-50%, 0); }
-  90% { opacity: 1; transform: translate(-50%, 0); }
-  100% { opacity: 0; transform: translate(-50%, -20px); }
-}
 
 @keyframes fadeIn {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
+  0% { opacity: 0; transform: translate(-50%, -20px); }
+  100% { opacity: 1; transform: translate(-50%, 0); }
 }
 
-/* Modal actions layout */
+/* =========================
+   UTILITIES
+   ========================= */
+.hint {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
 .modal-actions {
   display: flex;
   gap: 0.5rem;
   justify-content: flex-end;
 }
 
-/* Utility */
-.hint {
-  color: var(--color-text-muted);
-  font-size: 0.8rem;
-}
-
-/* Responsive tweaks for smaller screens */
+/* =========================
+   RESPONSIVE
+   ========================= */
 @media (max-width: 600px) {
-  .hero {
-    flex-direction: column;
-  }
-  .hero-right {
-    margin-top: 0.5rem;
-  }
-  .nation-list {
-    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-  }
-  .match-teams {
-    font-size: 0.9rem;
-  }
+  .hero { flex-direction: column; }
+  .hero-right { margin-top: 0.5rem; }
+  .nation-list { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
+  .match-teams { font-size: 0.9rem; }
 }
