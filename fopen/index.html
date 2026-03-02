@@ -5,94 +5,114 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Färöarna Open 2026</title>
     <link rel="icon" type="image/png" href="https://enkel.design/fopen/fopen.png">
-    <link rel="apple-touch-icon" href="https://enkel.design/fopen/fopen.png">
+<link rel="apple-touch-icon" href="https://enkel.design/fopen/fopen.png">
+    <!-- Link our stylesheet -->
     <link rel="stylesheet" href="styles.css">
+    <!-- Include custom fonts via Google Fonts.  Teko for headings and Inter for body text -->
     <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
-<body id="top">
-<div id="app" class="container">
-    <!-- Hero / sidhuvud -->
-    <header id="header" class="hero">
-        <div class="hero-left">
-            <img class="hero-logo" src="https://enkel.design/fopen/fopen.png" alt="Färöarna Open">
-            <h1 class="title">Färöarna<br>Open&nbsp;2026</h1>
-        </div>
-        <nav class="nav-links">
-            <a href="#tabeller">Tabeller</a>
-            <a href="#spelschema">Spelschema</a>
-        </nav>
-        <!-- Senaste resultat visas absolut centrerat i headern -->
+<body>
+    <div id="app" class="container">
+        <!-- Header / Hero card -->
+        <header id="header" class="hero">
+<div class="hero-left">
+  <img
+    class="hero-logo"
+    src="https://enkel.design/fopen/fopen.png"
+    alt="Färöarna Open"
+  >
+  <h1 class="title">Färöarna<br>Open&nbsp;2026</h1>
+</div>
+            <!-- Replace backup and reset buttons with a hamburger menu -->
+            <div class="hero-right">
+                <div class="menu">
+                    <button id="menu-toggle" class="menu-toggle">☰</button>
+                    <div id="menu-dropdown" class="menu-dropdown" hidden>
+                        <button id="backup-btn" class="btn menu-item">Backup</button>
+                        <button id="reset-btn" class="btn menu-item">Nollställ</button>
+                    </div>
+                </div>
+        <!-- Latest result (toast) is placed here to be vertically centered within the header -->
         <div id="toast" class="toast" hidden></div>
-    </header>
+            </div>
+        </header>
 
-    <!-- Innehåll -->
-    <main id="content">
-        <!-- Deltagarval -->
-        <section id="select-stage" class="stage">
-            <h2>Välj deltagare <a href="#top" class="top-link">↑</a></h2>
-            <div class="controls">
-                <label for="num-slots-select">Antal platser:</label>
-                <select id="num-slots-select"></select>
-                <span class="selected-counter">
-                  Valda: <span id="selected-count">0</span> / <span id="slots-total">0</span>
-                </span>
-            </div>
-            <button id="draw-btn" class="btn btn-primary" disabled>Lottning</button>
-            <p id="select-hint" class="hint"></p>
-            <div id="nation-list" class="nation-list"></div>
-        </section>
+        <!-- Main content area -->
+        <main id="content">
+            <!-- Select participants stage -->
+            <section id="select-stage" class="stage">
+                <h2>Välj deltagare</h2>
+                <div class="controls">
+                    <label for="num-slots-select">Antal platser:</label>
+                    <select id="num-slots-select">
+                        <!-- Options filled from JS (12–22) -->
+                    </select>
+                    <span class="selected-counter">Valda: <span id="selected-count">0</span> / <span id="slots-total">0</span></span>
+                </div>
+                <button id="draw-btn" class="btn btn-primary" disabled>Lottning</button>
+                <p id="select-hint" class="hint"></p>
+                <div id="nation-list" class="nation-list"></div>
+            </section>
 
-        <!-- Lottning -->
-        <section id="draw-stage" class="stage" hidden>
-            <h2>Lottning – tilldela grupper <a href="#top" class="top-link">↑</a></h2>
-            <div class="draw-instructions">
-                Klicka på en nation och sedan på en gruppplats för att tilldela. Du kan även dra och släppa.
-            </div>
-            <div id="selected-nations" class="selected-nations"></div>
-            <div id="groups-container" class="groups-container"></div>
-            <div class="draw-actions">
-                <button id="fill-all-draw" class="btn btn-secondary debug">Fyll i alla (debug)</button>
-                <button id="start-tournament-btn" class="btn btn-primary" disabled>Starta turnering</button>
-            </div>
-        </section>
+            <!-- Draw stage: assign teams to groups -->
+            <section id="draw-stage" class="stage" hidden>
+                <h2>Lottning – tilldela grupper</h2>
+                <div class="draw-instructions">
+                    Klicka på en nation och sedan på en gruppplats för att tilldela. Du kan även dra och släppa.
+                </div>
+                <div id="selected-nations" class="selected-nations"></div>
+                <div id="groups-container" class="groups-container"></div>
+                <div class="draw-actions">
+                    <button id="fill-all-draw" class="btn btn-secondary debug">Fyll i alla (debug)</button>
+                    <button id="start-tournament-btn" class="btn btn-primary" disabled>Starta turnering</button>
+                </div>
+            </section>
 
-        <!-- Gruppspel -->
-        <section id="tournament-stage" class="stage" hidden>
-            <div id="now-playing" class="now-playing">
-                <h2>Kör nu <a href="#top" class="top-link">↑</a></h2>
-                <div id="current-matches" class="current-matches"></div>
-            </div>
-            <!-- Tabeller -->
-            <div id="tabeller" class="groups-rankings"></div>
-            <!-- Maratontabellknapp -->
-            <div class="marathon-section">
-                <button id="marathon-btn" class="btn btn-secondary">Visa maratontabell</button>
-            </div>
-            <!-- Spelschema -->
-            <div id="spelschema" class="schedule">
-                <h2>Spelschema och resultat <a href="#top" class="top-link">↑</a></h2>
-                <div id="schedule-list"></div>
-            </div>
-            <div class="tournament-actions">
-                <button id="auto-results" class="btn btn-secondary debug">Fyll i resultat (debug)</button>
-            </div>
-        </section>
-    </main>
+            <!-- Tournament stage -->
+            <section id="tournament-stage" class="stage" hidden>
+                <!-- Now playing area -->
+                <div id="now-playing" class="now-playing">
+                    <h2>Kör nu</h2>
+                    <div id="current-matches" class="current-matches"></div>
+                </div>
+                <!-- Groups rankings area -->
+                <div id="groups-rankings" class="groups-rankings"></div>
+                <!-- Marathon button -->
+                <div class="marathon-section">
+                    <button id="marathon-btn" class="btn btn-secondary">Visa maratontabell</button>
+                </div>
+                <!-- Full schedule area -->
+                <div id="schedule" class="schedule">
+                <h2>Spelschema och resultat</h2>
+                    <div id="schedule-list"></div>
+                </div>
+                <div class="tournament-actions">
+                    <button id="auto-results" class="btn btn-secondary debug">Fyll i resultat (debug)</button>
+                </div>
+            </section>
 
-    <!-- Maratonmodal -->
-    <div id="marathon-modal" class="modal" hidden>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Maratontabell</h2>
-                <button id="close-marathon" class="btn btn-secondary">Stäng</button>
+        </main>
+
+        <!-- Marathon modal -->
+        <div id="marathon-modal" class="modal" hidden>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Maratontabell</h2>
+                    <button id="close-marathon" class="btn btn-secondary">Stäng</button>
+                </div>
+                <div id="marathon-table" class="marathon-table"></div>
             </div>
-            <div id="marathon-table" class="marathon-table"></div>
         </div>
     </div>
-</div>
 
-<!-- Data och script -->
-<script src="data/global-data.js"></script>
-<script src="main.js"></script>
+        <!-- Toast notification for match results inside header for vertical centering -->
+        <!-- Moved inside header to align centrally -->
+
+    <!-- Load global data definitions before the main script.  This file defines
+         RULESET, MARATHON and HISTORIK on the window object so that
+         main.js can access them without using ES module imports. -->
+    <script src="data/global-data.js"></script>
+    <!-- Main script for the app -->
+    <script src="main.js"></script>
 </body>
 </html>
