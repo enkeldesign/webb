@@ -6,8 +6,8 @@
 
 /* CSS-variabler för färger och spacing */
 :root {
-  --color-primary: #003893; /* mörkblå, från Färöarnas flagga */
-  --color-secondary: #d7282f; /* röd accent */
+  --color-primary: #005cb5; /* mörkblå, från Färöarnas flagga */
+  --color-secondary: #ee3340; /* röd accent */
   --color-background: #f8f9fa; /* ljus bakgrund */
   --color-surface: #ffffff; /* kortbakgrund */
   --color-muted: #d3d9e3; /* svag linje/fill */
