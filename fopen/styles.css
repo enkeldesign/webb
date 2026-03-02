@@ -24,7 +24,8 @@
   --font-body: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
   /* Flag sizing + styling */
-  --flag-size: 32px;
+  --flag-height: 32px;
+  --flag-width: 48px;
   --flag-border: 1.5px; /* tunnare border */
   --flag-radius: 8px;
 }
@@ -75,8 +76,8 @@ body::before {
    GLOBAL FLAG STYLE (single source of truth)
    ========================= */
 img.flag {
-  width: var(--flag-size);
-  height: var(--flag-size);
+  width: var(--flag-width);
+  height: var(--flag-height);
   object-fit: cover;
   border: var(--flag-border) solid var(--color-title);
   border-radius: var(--flag-radius);
@@ -85,13 +86,13 @@ img.flag {
 }
 
 /* Contextual flag sizing */
-.nation-card img.flag { width: 60px; height: 60px; }
+.nation-card img.flag { width: 90px; height: 60px; }
 .schedule-item img.flag,
 .group-ranking img.flag,
 .match-card img.flag,
-.toast img.flag { width: 28px; height: 28px; }
+.toast img.flag { width: 42px; height: 28px; }
 
-.marathon-table img.flag { width: 24px; height: 24px; }
+.marathon-table img.flag { width: 36px; height: 24px; }
 
 /* =========================
    HERO / HEADER
