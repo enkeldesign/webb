@@ -25,7 +25,7 @@
 
   /* Flag sizing + styling */
   --flag-size: 32px;
-  --flag-border: 1px; /* tunnare border */
+  --flag-border: 3px; /* tunnare border */
   --flag-radius: 8px;
 }
 
@@ -78,7 +78,7 @@ img.flag {
   width: var(--flag-size);
   height: var(--flag-size);
   object-fit: cover;
-  border: var(--flag-border) solid var(--color-border);
+  border: var(--flag-border) solid var(--color-title);
   border-radius: var(--flag-radius);
   box-sizing: border-box;
   flex: 0 0 auto;
@@ -116,7 +116,7 @@ header.hero {
 
 /* Logo in header */
 .hero-logo {
-  height: 75px;
+  height: 67px;
   width: auto;
   object-fit: contain;
   flex: 0 0 auto;
