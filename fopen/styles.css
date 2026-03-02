@@ -4,29 +4,29 @@
  * Alla komponenter använder runda hörn och mjuka skuggor för ett sportigt uttryck.
  */
 
-/* Grundläggande variabler */
+/* CSS-variabler för färger och spacing */
 :root {
-  --color-primary: #005cb5;
-  --color-secondary: #ee3340;
-  --color-background: #f8f9fa;
-  --color-surface: #ffffff;
-  --color-muted: #d3d9e3;
-  --color-border: #e3edf8;
+  --color-primary: #005cb5; /* mörkblå, från Färöarnas flagga */
+  --color-secondary: #ee3340; /* röd accent */
+  --color-background: #f8f9fa; /* ljus bakgrund */
+  --color-surface: #ffffff; /* kortbakgrund */
+  --color-muted: #d3d9e3; /* svag linje/fill */
+  --color-border: #e3edf8; /* ännu ljusare blå kant för diskreta ramar */
   --color-text: #1a1a1a;
   --color-text-muted: #57667a;
   --color-title: #313131;
+
   --border-radius: 12px;
   --shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+
+  /* Fonts */
   --font-display: 'Teko', 'Barlow Condensed', Impact, sans-serif;
   --font-body: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --flag-size: 32px;
-  --flag-border: 1.5px;
-  --flag-radius: 8px;
-}
 
-/* Smidig scroll för ankarlänkar */
-html {
-  scroll-behavior: smooth;
+  /* Flag sizing + styling */
+  --flag-size: 32px;
+  --flag-border: 1.5px; /* tunnare border */
+  --flag-radius: 8px;
 }
 
 body {
@@ -38,10 +38,12 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+
+  /* Förhindra att sidans bredd hoppar när scrollbar visas/gömmer sig */
   scrollbar-gutter: stable both-edges;
 }
 
-/* Subtil bakgrundsflagga */
+/* Background flag overlay */
 body::before {
   content: "";
   position: fixed;
@@ -55,7 +57,6 @@ body::before {
   pointer-events: none;
 }
 
-/* App-container */
 .container {
   max-width: 1100px;
   width: 100%;
@@ -70,7 +71,9 @@ body::before {
   gap: 1rem;
 }
 
-/* Konsistent flaggstorlek */
+/* =========================
+   GLOBAL FLAG STYLE (single source of truth)
+   ========================= */
 img.flag {
   width: var(--flag-size);
   height: var(--flag-size);
@@ -81,17 +84,18 @@ img.flag {
   flex: 0 0 auto;
 }
 
-/* Kontextberoende flaggor */
+/* Contextual flag sizing */
 .nation-card img.flag { width: 60px; height: 60px; }
 .schedule-item img.flag,
 .group-ranking img.flag,
 .match-card img.flag,
 .toast img.flag { width: 28px; height: 28px; }
+
 .marathon-table img.flag { width: 24px; height: 24px; }
 
-/* =======================
-   Hero / sidhuvud
-   ======================= */
+/* =========================
+   HERO / HEADER
+   ========================= */
 header.hero {
   background-color: var(--color-surface);
   border-radius: var(--border-radius);
@@ -101,7 +105,7 @@ header.hero {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  position: relative;
+  position: relative; /* positioning context for toast */
 }
 
 .hero-left {
@@ -110,11 +114,13 @@ header.hero {
   gap: 14px;
 }
 
+/* Logo in header */
 .hero-logo {
   height: 67px;
   width: auto;
   object-fit: contain;
   flex: 0 0 auto;
+  margin-right: 1em;
 }
 
 .hero h1.title {
@@ -125,78 +131,17 @@ header.hero {
   color: var(--color-primary);
 }
 
-/* Navigationslänkar */
-.nav-links {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  margin-left: auto;
-}
-
-.nav-links a {
-  color: var(--color-secondary);
-  text-decoration: none;
-  font-weight: bold;
-  font-size: 1rem;
-}
-
-.nav-links a:hover {
-  text-decoration: underline;
-}
-
-/* Liten länk till toppen vid rubriker */
-.top-link {
-  margin-left: 0.25rem;
-  font-size: 0.75rem;
-  text-decoration: none;
-  color: var(--color-secondary);
-}
-
-/* Toast (senaste resultat) – bibehåller din tidigare placering */
-.toast {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
-  padding: 0.75rem 1.25rem;
-  font-size: 1.25rem;
-  font-weight: bold;
-  color: var(--color-primary);
-  z-index: 800;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.toast.show {
-  animation: fadeIn 0.6s forwards;
-}
-
-.toast .winner { color: var(--color-primary); }
-.toast .loser  { color: var(--color-secondary); }
-.toast .score  { color: var(--color-text); }
-
-.toast .toast-title {
-  font-size: 0.7em;
-  font-weight: normal;
+.hero .subtitle {
+  font-size: 0.875rem;
   color: var(--color-text-muted);
-  margin-bottom: 0.25rem;
-  text-transform: uppercase;
-}
-
-.toast .toast-body {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-  align-items: center;
+  gap: 0.25rem;
 }
 
-@keyframes fadeIn {
-  0%   { opacity: 0; transform: translate(-50%, -20px); }
-  100% { opacity: 1; transform: translate(-50%, 0);     }
+.hero-right {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 /* =========================
