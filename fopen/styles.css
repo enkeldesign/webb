@@ -25,7 +25,7 @@
 
   /* Flag sizing + styling */
   --flag-size: 32px;
-  --flag-border: 3px; /* tunnare border */
+  --flag-border: 1.5px; /* tunnare border */
   --flag-radius: 8px;
 }
 
