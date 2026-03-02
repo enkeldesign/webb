@@ -438,6 +438,7 @@ header.hero {
   align-items: center;
   width: var(--score-width);
   height: var(--score-width);
+  border: 0.75px solid var(--color-text-muted);
   border-radius: 50%;
   font-size: 0.7rem;
   font-weight: bold;
