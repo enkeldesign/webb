@@ -113,8 +113,8 @@ header.hero {
 
 /* Logo in header */
 .hero-logo {
-  width: 44px;
-  height: 44px;
+  height: 100%;
+  width: auto;
   object-fit: contain;
   flex: 0 0 auto;
 }
