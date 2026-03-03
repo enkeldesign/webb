@@ -87,11 +87,10 @@ img.flag {
 
 /* Contextual flag sizing */
 .nation-card img.flag { width: 90px; height: 60px; }
+.match-card img.flag { width: 60px; height: 40px; }
 .schedule-item img.flag,
 .group-ranking img.flag,
-.match-card img.flag,
 .toast img.flag { width: 42px; height: 28px; }
-
 .marathon-table img.flag { width: 36px; height: 24px; }
 
 /* =========================
@@ -117,7 +116,7 @@ header.hero {
 
 /* Logo in header */
 .hero-logo {
-  height: 67px;
+  height: 90px;
   width: auto;
   object-fit: contain;
   flex: 0 0 auto;
@@ -125,7 +124,7 @@ header.hero {
 }
 
 .hero h1.title {
-  margin: 0;
+  margin: 0.5rem 0 0;
   font-family: var(--font-display);
   font-size: 2.4rem;
   line-height: 1.05;
@@ -363,6 +362,12 @@ header.hero {
   font-weight: bold;
   font-size: 1rem;
   gap: 0.5rem;
+  margin-bottom: -15px;
+}
+
+.match-teams span {
+  font-size: 2em;
+  margin: 0 0.75rem;
 }
 
 .match-team-left,
@@ -386,6 +391,9 @@ header.hero {
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  border-top: solid var(--color-muted) 1px;
+  padding-top: 10px;
+  margin-top: 10px;
 }
 .match-inputs input[type="number"] {
   width: 50px;
@@ -410,6 +418,7 @@ header.hero {
 .history {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.25rem;
   font-size: 0.75rem;
   color: var(--color-text-muted);
@@ -640,7 +649,7 @@ header.hero {
    ========================= */
 .toast {
   position: absolute;
-  top: 15%;
+  top: 16%;
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: #eef2f8;
