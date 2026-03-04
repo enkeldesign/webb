@@ -953,6 +953,8 @@ function checkGroupStageComplete() {
   const msg = document.createElement('h2');
   msg.textContent = 'Gruppspelet är slut';
   nowPlaying.appendChild(msg);
+  // Ensure latest recorded result is reflected in group tables
+  updateStandingsUI();
 }
 
 // Compute and update group standings after a result
@@ -1286,15 +1288,6 @@ function updateStandingsUI() {
       tmp.chance[g].forEach(r => chance[g].add(r));
     });
   }
-  // Precompute whether group stage is complete and which third-placed teams
-  // qualify as best third (based on points) when group stage is done.  If
-  // group stage is not complete, bestThirdTeams will be used only to mark
-  // current best third seeds for seeding purposes.  Teams not in bestThird
-  // will be left without highlight once group stage is complete.
-  const allDone = isGroupStageComplete();
-  const bestThirdInfo = getBestThirdLeaders(format);
-  const bestThirdTeams = new Set(bestThirdInfo.leaders.map(x => x.team));
-
   state.groups.forEach(group => {
     const label = group.label;
     const rankingDiv = document.createElement('div');
@@ -1343,27 +1336,13 @@ function updateStandingsUI() {
     stats.forEach((stat, idx) => {
       const tr = document.createElement('tr');
       const rank = idx + 1;
-      // Determine highlight class for this row.  Direct placements are always
-      // green.  Before group stage completion, all chance seeds (rank per
-      // ruleset) are yellow.  After completion, only the actual best third
-      // qualifiers remain yellow; other chance seeds become default.
-      const isDirectRank = direct[label] && direct[label].has(rank);
-      // Determine if this third-place team is a qualifying best third when done
-      const isBestThirdNow = bestThirdTeams.has(stat.team);
-      let highlight = '';
-      if (isDirectRank) {
-        highlight = 'direct';
-      } else {
-        if (!allDone) {
-          // Group stage in progress: highlight all potential chance seeds
-          const isChanceSeed = chance[label] && chance[label].has(rank);
-          if (isChanceSeed) highlight = 'chance';
-        } else {
-          // Group stage finished: highlight only actual qualifying third teams
-          if (isBestThirdNow) highlight = 'chance';
-        }
+      // Highlight direct (green) and chance (yellow) seeds from ruleset,
+      // regardless of whether the group stage has completed.
+      if (direct[label] && direct[label].has(rank)) {
+        tr.classList.add('direct');
+      } else if (chance[label] && chance[label].has(rank)) {
+        tr.classList.add('chance');
       }
-      if (highlight) tr.classList.add(highlight);
 
       // Rank cell
       const tdRank = document.createElement('td');
