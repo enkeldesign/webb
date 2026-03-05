@@ -407,7 +407,7 @@ header.hero {
   font-size: 0.875rem;
 }
 
-.skip-match-btn {
+.btn.btn-secondary.skip-match-btn {
   margin-left: auto;
   min-width: 32px;
   line-height: 1;
