@@ -1101,6 +1101,12 @@ function checkGroupStageComplete() {
   msg.textContent = 'Gruppspelet är slut';
   nowPlaying.appendChild(msg);
 
+  const startBtn = document.createElement('button');
+  startBtn.className = 'btn btn-primary';
+  startBtn.textContent = 'Starta slutspel';
+  startBtn.addEventListener('click', startPlayoffs);
+  nowPlaying.appendChild(startBtn);
+
   // Ensure latest recorded result is reflected in group tables
   updateStandingsUI();
 }
@@ -1436,18 +1442,6 @@ function updateStandingsUI() {
       tmp.chance[g].forEach(r => chance[g].add(r));
     });
   }
-
-  const groupStageComplete = isGroupStageComplete();
-  const resolvedChanceTeams = new Set();
-  if (groupStageComplete && format?.playoffs?.seeds && window.PlayoffUtils?.resolveSeedToTeam) {
-    const rankedStatsByGroup = getSortedGroupStats();
-    Object.entries(format.playoffs.seeds).forEach(([seedName, seedDef]) => {
-      if (!seedDef.fromBestOf) return;
-      const team = window.PlayoffUtils.resolveSeedToTeam(seedName, format.playoffs.seeds, rankedStatsByGroup);
-      if (team) resolvedChanceTeams.add(team);
-    });
-  }
-
   state.groups.forEach(group => {
     const label = group.label;
     const rankingDiv = document.createElement('div');
@@ -1501,12 +1495,7 @@ function updateStandingsUI() {
       if (direct[label] && direct[label].has(rank)) {
         tr.classList.add('direct');
       } else if (chance[label] && chance[label].has(rank)) {
-        const isQualifiedChanceTeam = !groupStageComplete
-          || resolvedChanceTeams.size === 0
-          || resolvedChanceTeams.has(stat.team);
-        if (isQualifiedChanceTeam) {
-          tr.classList.add('chance');
-        }
+        tr.classList.add('chance');
       }
 
       // Rank cell
@@ -2006,7 +1995,9 @@ function init() {
     });
     // Finally, render the standings table UI
     updateStandingsUI();
-
+  } else if (state.stage === 'playoff') {
+    renderPlayoffStage();
+  }
 }
 
 init();
