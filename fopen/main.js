@@ -945,9 +945,6 @@ function generatePlayoffBracket() {
     return null;
   }
 
-  const playoffSeeds = seedDefs;
-  const rankedStatsByGroup = finalStats;
-
   const rounds = [];
   format.playoffs.rounds.forEach(round => {
     const r = { name: round.name, matches: [] };
@@ -956,12 +953,8 @@ function generatePlayoffBracket() {
       const seed2 = match.away;
       // Resolve group and best-of seeds to concrete teams. Winner references
       // from previous rounds (e.g. numeric refs) remain unresolved until played.
-      const team1 = window.PlayoffUtils?.resolveSeedToTeam
-        ? window.PlayoffUtils.resolveSeedToTeam(seed1, playoffSeeds, rankedStatsByGroup)
-        : resolveSeed(seed1);
-      const team2 = window.PlayoffUtils?.resolveSeedToTeam
-        ? window.PlayoffUtils.resolveSeedToTeam(seed2, playoffSeeds, rankedStatsByGroup)
-        : resolveSeed(seed2);
+      const team1 = window.PlayoffUtils.resolveSeedToTeam(seed1, playoffSeeds, rankedStatsByGroup);
+      const team2 = window.PlayoffUtils.resolveSeedToTeam(seed2, playoffSeeds, rankedStatsByGroup);
       r.matches.push({
         id: match.id,
         homeSeed: seed1,
