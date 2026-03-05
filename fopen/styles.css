@@ -417,39 +417,41 @@ header.hero {
 }
 
 .upcoming-title {
-  margin: 0;
-  font-size: 0.72rem;
+  margin: 0 1rem 0 0;
+  font-size: 1.25rem;
   line-height: 1;
 }
 
 .upcoming-matches {
   display: flex;
-  gap: 0.4rem;
+  gap: 2rem;
   flex-wrap: wrap;
 }
 
 .upcoming-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: .5rem;
   border: 1px solid #b9cbe6;
   border-radius: 6px;
-  padding: 0.14rem 0.3rem;
+  padding: 0.14rem .5rem;
   background: #f6f9ff;
+  border-left: var(--color-secondary) 3px solid;
 }
 
 .upcoming-chip .flag {
-  width: 28px;
-  height: 18px;
+  width: 42px;
+  height: 28px;
   border-radius: 3px;
 }
 
 .upcoming-group {
-  font-size: 0.72rem;
+  font-size: 1rem;
   line-height: 1;
   font-weight: 700;
-  color: #8da8c7;
+  color: #457;
   text-transform: uppercase;
+  margin: 0 0.5rem;
 }
 
 .upcoming-sep {
