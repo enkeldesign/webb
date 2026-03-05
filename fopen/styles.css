@@ -407,6 +407,59 @@ header.hero {
   font-size: 0.875rem;
 }
 
+
+.upcoming-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.upcoming-title {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.upcoming-matches {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.upcoming-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid #b9cbe6;
+  border-radius: 6px;
+  padding: 0.14rem 0.3rem;
+  background: #f6f9ff;
+}
+
+.upcoming-chip .flag {
+  width: 28px;
+  height: 18px;
+  border-radius: 3px;
+}
+
+.upcoming-group {
+  font-size: 0.72rem;
+  line-height: 1;
+  font-weight: 700;
+  color: #8da8c7;
+  text-transform: uppercase;
+}
+
+.upcoming-sep {
+  font-weight: 700;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+
 @keyframes slideDown {
   from { transform: translateY(-10px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
