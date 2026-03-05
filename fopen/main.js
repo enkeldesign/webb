@@ -877,34 +877,23 @@ function generatePlayoffBracket() {
   const format = getFormat(state.numSlots);
   if (!format || !format.playoffs || !format.playoffs.rounds) return [];
   // Compute final standings order for each group (sorted by rank)
-  const finalStandings = {};
+  const rankedStatsByGroup = {};
   state.groups.forEach(group => {
     const stats = Object.values(state.groupStandings[group.label]);
     stats.sort(compareStandings);
-    finalStandings[group.label] = stats.map(s => s.team);
+    rankedStatsByGroup[group.label] = stats;
   });
+  const playoffSeeds = format.playoffs.seeds || {};
   const rounds = [];
   format.playoffs.rounds.forEach(round => {
     const r = { name: round.name, matches: [] };
     round.matches.forEach(match => {
       const seed1 = match.home;
       const seed2 = match.away;
-      // Resolve group seeds (e.g. 'A2') to team names.  Seeds referencing
-      // winners of previous matches (e.g. 'V1', '1') remain unresolved (null)
-      let team1 = null;
-      let team2 = null;
-      if (typeof seed1 === 'string' && /^[A-Z][0-9]+$/.test(seed1)) {
-        const g = seed1.charAt(0);
-        const rnk = parseInt(seed1.slice(1), 10);
-        const arr = finalStandings[g];
-        if (arr && arr.length >= rnk) team1 = arr[rnk - 1];
-      }
-      if (typeof seed2 === 'string' && /^[A-Z][0-9]+$/.test(seed2)) {
-        const g = seed2.charAt(0);
-        const rnk = parseInt(seed2.slice(1), 10);
-        const arr = finalStandings[g];
-        if (arr && arr.length >= rnk) team2 = arr[rnk - 1];
-      }
+      // Resolve group and best-of seeds to concrete teams. Winner references
+      // from previous rounds (e.g. numeric refs) remain unresolved until played.
+      const team1 = window.PlayoffUtils.resolveSeedToTeam(seed1, playoffSeeds, rankedStatsByGroup);
+      const team2 = window.PlayoffUtils.resolveSeedToTeam(seed2, playoffSeeds, rankedStatsByGroup);
       r.matches.push({
         id: match.id,
         homeSeed: seed1,
@@ -942,6 +931,11 @@ function generatePlayoffBracket() {
 
 // Start playoffs: generate bracket, set stage to 'playoff' and render the bracket
 function startPlayoffs() {
+  const format = getFormat(state.numSlots);
+  if (format?.playoffs?.groupPlayoffs) {
+    alert('Det här formatet använder gruppslutspel i slutspelet och stöds inte ännu.');
+    return;
+  }
   // Generate the playoff bracket using final group standings
   const bracket = generatePlayoffBracket();
   state.playoffs = bracket;
