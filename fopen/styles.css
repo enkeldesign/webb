@@ -407,13 +407,11 @@ header.hero {
   font-size: 0.875rem;
 }
 
-.btn.btn-secondary.skip-match-btn {
+.skip-match-btn {
   margin-left: auto;
   min-width: 32px;
   line-height: 1;
   padding: 0.15rem 0.45rem;
-  background: transparent;
-  color: var(--color-secondary);
 }
 
 
