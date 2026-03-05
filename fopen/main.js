@@ -876,84 +876,35 @@ function showToast(match, score1, score2) {
 function generatePlayoffBracket() {
   const format = getFormat(state.numSlots);
   if (!format || !format.playoffs || !format.playoffs.rounds) return [];
-  const seedDefs = format.playoffs.seeds || {};
   // Compute final standings order for each group (sorted by rank)
   const finalStandings = {};
-  const finalStats = {};
   state.groups.forEach(group => {
     const stats = Object.values(state.groupStandings[group.label]);
     stats.sort(compareStandings);
     finalStandings[group.label] = stats.map(s => s.team);
-    finalStats[group.label] = stats;
   });
-
-  function compareBestOfCandidates(a, b, sortBy) {
-    const order = Array.isArray(sortBy) && sortBy.length
-      ? sortBy
-      : ['points', 'goalDiff', 'goalsFor', 'fairPlay', 'stableSeed'];
-    for (const key of order) {
-      if (key === 'points' && a.points !== b.points) return b.points - a.points;
-      if (key === 'goalDiff' && a.goalDiff !== b.goalDiff) return b.goalDiff - a.goalDiff;
-      if (key === 'goalsFor' && a.goalsFor !== b.goalsFor) return b.goalsFor - a.goalsFor;
-      // Lower fair-play penalty is better.
-      if (key === 'fairPlay' && a.fairPlay !== b.fairPlay) return a.fairPlay - b.fairPlay;
-      if (key === 'stableSeed' && a.stableSeed !== b.stableSeed) {
-        return a.stableSeed.localeCompare(b.stableSeed, 'sv');
-      }
-    }
-    return a.team.localeCompare(b.team, 'sv');
-  }
-
-  function resolveSeed(seedId) {
-    if (typeof seedId !== 'string') return null;
-    const seedDef = seedDefs[seedId];
-    if (seedDef?.from) {
-      const group = seedDef.from.group;
-      const rank = parseInt(seedDef.from.rank, 10);
-      if (!group || Number.isNaN(rank) || rank < 1) return null;
-      return finalStandings[group]?.[rank - 1] || null;
-    }
-    if (seedDef?.fromBestOf) {
-      const bestOf = seedDef.fromBestOf;
-      const rank = parseInt(bestOf.rank, 10);
-      const pick = parseInt(bestOf.pick, 10);
-      if (Number.isNaN(rank) || rank < 1 || Number.isNaN(pick) || pick < 1) return null;
-      const candidates = [];
-      (bestOf.groups || []).forEach(group => {
-        const stat = finalStats[group]?.[rank - 1];
-        if (!stat) return;
-        candidates.push({
-          team: stat.team,
-          points: stat.points,
-          goalDiff: stat.goalsFor - stat.goalsAgainst,
-          goalsFor: stat.goalsFor,
-          fairPlay: stat.fairPlay ?? 0,
-          stableSeed: `${group}${rank}`
-        });
-      });
-      candidates.sort((a, b) => compareBestOfCandidates(a, b, bestOf.sortBy));
-      return candidates[pick - 1]?.team || null;
-    }
-    // Fallback for äldre format där seed-strängen är direktkodad (t.ex. A1).
-    if (/^[A-Z][0-9]+$/.test(seedId)) {
-      const group = seedId.charAt(0);
-      const rank = parseInt(seedId.slice(1), 10);
-      if (!Number.isNaN(rank) && rank > 0) {
-        return finalStandings[group]?.[rank - 1] || null;
-      }
-    }
-    return null;
-  }
-
   const rounds = [];
   format.playoffs.rounds.forEach(round => {
     const r = { name: round.name, matches: [] };
     round.matches.forEach(match => {
       const seed1 = match.home;
       const seed2 = match.away;
-      // Seeds referencing winners of previous matches (e.g. 'W1', '1') remain unresolved.
-      const team1 = resolveSeed(seed1);
-      const team2 = resolveSeed(seed2);
+      // Resolve group seeds (e.g. 'A2') to team names.  Seeds referencing
+      // winners of previous matches (e.g. 'V1', '1') remain unresolved (null)
+      let team1 = null;
+      let team2 = null;
+      if (typeof seed1 === 'string' && /^[A-Z][0-9]+$/.test(seed1)) {
+        const g = seed1.charAt(0);
+        const rnk = parseInt(seed1.slice(1), 10);
+        const arr = finalStandings[g];
+        if (arr && arr.length >= rnk) team1 = arr[rnk - 1];
+      }
+      if (typeof seed2 === 'string' && /^[A-Z][0-9]+$/.test(seed2)) {
+        const g = seed2.charAt(0);
+        const rnk = parseInt(seed2.slice(1), 10);
+        const arr = finalStandings[g];
+        if (arr && arr.length >= rnk) team2 = arr[rnk - 1];
+      }
       r.matches.push({
         id: match.id,
         homeSeed: seed1,
