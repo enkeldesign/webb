@@ -1439,56 +1439,11 @@ function updateStandingsUI() {
 
   const groupStageComplete = isGroupStageComplete();
   const resolvedChanceTeams = new Set();
-  if (groupStageComplete && format?.playoffs?.seeds) {
+  if (groupStageComplete && format?.playoffs?.seeds && window.PlayoffUtils?.resolveSeedToTeam) {
     const rankedStatsByGroup = getSortedGroupStats();
-    const resolveSeedToTeam = window.PlayoffUtils?.resolveSeedToTeam
-      ? window.PlayoffUtils.resolveSeedToTeam
-      : (seedName, playoffSeeds, statsByGroup) => {
-        const seedDef = playoffSeeds?.[seedName];
-        if (seedDef?.from) {
-          const group = seedDef.from.group;
-          const rank = parseInt(seedDef.from.rank, 10);
-          if (!Number.isNaN(rank) && rank > 0) return statsByGroup[group]?.[rank - 1]?.team || null;
-          return null;
-        }
-        if (seedDef?.fromBestOf) {
-          const bestOf = seedDef.fromBestOf;
-          const rank = parseInt(bestOf.rank, 10);
-          const pick = parseInt(bestOf.pick, 10);
-          if (Number.isNaN(rank) || rank < 1 || Number.isNaN(pick) || pick < 1) return null;
-          const candidates = [];
-          (bestOf.groups || []).forEach(group => {
-            const stat = statsByGroup[group]?.[rank - 1];
-            if (!stat) return;
-            candidates.push({
-              ...stat,
-              fairPlay: stat.fairPlay ?? 0,
-              stableSeed: `${group}${rank}`
-            });
-          });
-          candidates.sort((a, b) => {
-            for (const criterion of bestOf.sortBy || []) {
-              if (criterion === 'points' && a.points !== b.points) return b.points - a.points;
-              if (criterion === 'goalDiff') {
-                const gdA = a.goalsFor - a.goalsAgainst;
-                const gdB = b.goalsFor - b.goalsAgainst;
-                if (gdA !== gdB) return gdB - gdA;
-              }
-              if (criterion === 'goalsFor' && a.goalsFor !== b.goalsFor) return b.goalsFor - a.goalsFor;
-              if (criterion === 'fairPlay' && a.fairPlay !== b.fairPlay) return a.fairPlay - b.fairPlay;
-              if (criterion === 'stableSeed' && a.stableSeed !== b.stableSeed) {
-                return a.stableSeed.localeCompare(b.stableSeed, 'sv');
-              }
-            }
-            return a.team.localeCompare(b.team, 'sv');
-          });
-          return candidates[pick - 1]?.team || null;
-        }
-        return null;
-      };
     Object.entries(format.playoffs.seeds).forEach(([seedName, seedDef]) => {
       if (!seedDef.fromBestOf) return;
-      const team = resolveSeedToTeam(seedName, format.playoffs.seeds, rankedStatsByGroup);
+      const team = window.PlayoffUtils.resolveSeedToTeam(seedName, format.playoffs.seeds, rankedStatsByGroup);
       if (team) resolvedChanceTeams.add(team);
     });
   }
