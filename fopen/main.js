@@ -263,6 +263,7 @@ function toggleTeamSelection(nation) {
   updateNationCards();
   updateSelectedCounter();
   updateDrawButtonState();
+  renderUpcomingMatches();
   saveState();
 }
 
@@ -491,6 +492,58 @@ function getReadyMatches() {
   return ready;
 }
 
+
+function getUpcomingMatches(limit = 3) {
+  const upcoming = [];
+  const playingSet = new Set(state.playingMatches);
+  for (let i = 0; i < state.schedule.length; i++) {
+    if (playingSet.has(i)) continue;
+    const match = state.schedule[i];
+    if (!match || match.status === 'completed') continue;
+    upcoming.push(match);
+    if (upcoming.length >= limit) break;
+  }
+  return upcoming;
+}
+
+function renderUpcomingMatches() {
+  const wrap = document.getElementById('upcoming-wrap');
+  const container = document.getElementById('upcoming-matches');
+  if (!wrap || !container) return;
+  const upcoming = getUpcomingMatches(3);
+  container.innerHTML = '';
+  if (!upcoming.length) {
+    wrap.hidden = true;
+    return;
+  }
+  upcoming.forEach(match => {
+    const chip = document.createElement('div');
+    chip.classList.add('upcoming-chip');
+
+    const group = document.createElement('span');
+    group.classList.add('upcoming-group');
+    group.textContent = match.group || '—';
+
+    const t1 = document.createElement('img');
+    t1.src = getFlagSrc(match.team1);
+    t1.alt = match.team1;
+    t1.classList.add('flag');
+
+    const sep = document.createElement('span');
+    sep.classList.add('upcoming-sep');
+    sep.textContent = '–';
+
+    const t2 = document.createElement('img');
+    t2.src = getFlagSrc(match.team2);
+    t2.alt = match.team2;
+    t2.classList.add('flag');
+
+    chip.append(group, t1, sep, t2);
+    container.appendChild(chip);
+  });
+  wrap.hidden = false;
+}
+
 // Render now playing area
 function updateNowPlaying() {
   const container = document.getElementById('current-matches');
@@ -669,6 +722,7 @@ function updateNowPlaying() {
     card.appendChild(inputRow);
     container.appendChild(card);
   });
+  renderUpcomingMatches();
   saveState();
 }
 
