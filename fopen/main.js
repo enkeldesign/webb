@@ -1343,6 +1343,9 @@ function updateStandingsUI() {
     // direct (green) and chance (yellow) placements. Seeds with `from` map
     // directly to a group and rank; seeds with `fromBestOf` indicate potential
     // qualifiers (best third placements).
+    // Build a quick lookup of current ranked teams per group so seeds that use
+    // fromBestOf can point to the teams currently occupying those best-of slots.
+    const sortedByGroup = getSortedGroupStats();
     Object.entries(format.playoffs.seeds).forEach(([seedName, seedDef]) => {
       if (seedDef.from) {
         const g = seedDef.from.group;
@@ -1350,11 +1353,19 @@ function updateStandingsUI() {
         if (!direct[g]) direct[g] = new Set();
         direct[g].add(r);
       } else if (seedDef.fromBestOf) {
-        const groups = seedDef.fromBestOf.groups;
+        const { groups, rank, pick } = seedDef.fromBestOf;
+        const candidates = [];
         groups.forEach(g => {
-          if (!chance[g]) chance[g] = new Set();
-          chance[g].add(seedDef.fromBestOf.rank);
+          const stats = sortedByGroup[g] || [];
+          const row = stats[rank - 1];
+          if (row) candidates.push({ ...row, __group: g, __rank: rank });
         });
+        candidates.sort(compareStandings);
+        const picked = candidates[(pick || 1) - 1];
+        if (picked) {
+          if (!chance[picked.__group]) chance[picked.__group] = new Set();
+          chance[picked.__group].add(picked.__rank);
+        }
       }
     });
   } else if (format.playoffs && format.playoffs.rounds) {
