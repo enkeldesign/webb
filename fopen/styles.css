@@ -7,9 +7,7 @@
 /* CSS-variabler för färger och spacing */
 :root {
   --color-primary: #005cb5; /* mörkblå, från Färöarnas flagga */
-  --color-primary-dark: #003d79;
   --color-secondary: #ee3340; /* röd accent */
-  --color-secondary-soft: #ffdfe2;
   --color-background: #f8f9fa; /* ljus bakgrund */
   --color-surface: #ffffff; /* kortbakgrund */
   --color-muted: #d3d9e3; /* svag linje/fill */
@@ -36,7 +34,7 @@ body {
   margin: 0;
   padding: 0;
   font-family: var(--font-body);
-  background: linear-gradient(155deg, #0b3f7d 0%, #005cb5 45%, #f1f5fb 100%);
+  background-color: var(--color-primary);
   color: var(--color-text);
   min-height: 100vh;
   display: flex;
@@ -63,16 +61,14 @@ body::before {
 .container {
   max-width: 1100px;
   width: 100%;
-  min-width: min(720px, 100%);
+  min-width: 720px;
   margin: 3em auto;
   padding: 1.25rem;
   border-radius: var(--border-radius);
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: rgba(247, 251, 255, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(8px);
+  background-color: var(--color-border);
   gap: 1rem;
 }
 
@@ -101,9 +97,9 @@ img.flag {
    HERO / HEADER
    ========================= */
 header.hero {
-  background: linear-gradient(125deg, #ffffff 0%, #f7faff 100%);
+  background-color: var(--color-surface);
   border-radius: var(--border-radius);
-  box-shadow: 0 10px 24px rgba(0, 41, 84, 0.14);
+  box-shadow: var(--shadow);
   padding: 1rem;
   display: flex;
   align-items: center;
@@ -132,8 +128,7 @@ header.hero {
   font-family: var(--font-display);
   font-size: 2.4rem;
   line-height: 1.05;
-  color: var(--color-primary-dark);
-  letter-spacing: 0.03em;
+  color: var(--color-primary);
 }
 
 .hero .subtitle {
@@ -147,49 +142,6 @@ header.hero {
   display: flex;
   gap: 0.5rem;
   margin-top: 0.5rem;
-  align-items: center;
-}
-
-.menu {
-  position: relative;
-}
-
-.menu-toggle {
-  border: 0;
-  border-radius: 10px;
-  background-color: var(--color-primary);
-  color: #fff;
-  font-size: 1.2rem;
-  width: 42px;
-  height: 42px;
-  cursor: pointer;
-  transition: transform 0.15s ease, filter 0.2s ease;
-}
-
-.menu-toggle:hover {
-  filter: brightness(0.95);
-  transform: translateY(-1px);
-}
-
-.menu-dropdown {
-  position: absolute;
-  top: calc(100% + 0.4rem);
-  right: 0;
-  min-width: 140px;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-  border: 1px solid var(--color-border);
-  padding: 0.3rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  z-index: 20;
-}
-
-.menu-dropdown .menu-item {
-  width: 100%;
-  justify-content: flex-start;
 }
 
 /* =========================
@@ -244,7 +196,7 @@ header.hero {
    STAGES
    ========================= */
 .stage {
-  background-color: rgba(255, 255, 255, 0.94);
+  background-color: var(--color-surface);
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
   padding: 1rem;
@@ -277,43 +229,12 @@ header.hero {
   align-items: center;
   gap: 0.25rem;
   cursor: pointer;
-  transition: border-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s ease, transform 0.1s ease;
   min-height: 100px;
 }
 .nation-card.selected {
   border-color: var(--color-primary);
   transform: translateY(-2px);
-  box-shadow: 0 8px 18px rgba(0, 92, 181, 0.16);
-}
-
-.controls {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.controls select {
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 0.35rem 0.5rem;
-  font: inherit;
-}
-
-.selected-counter {
-  color: var(--color-primary-dark);
-  font-weight: 600;
-  background-color: #edf4ff;
-  border-radius: 99px;
-  padding: 0.2rem 0.65rem;
-}
-
-.draw-instructions {
-  background: #f3f8ff;
-  border: 1px solid #d9e8ff;
-  border-radius: 10px;
-  padding: 0.65rem 0.8rem;
-  color: var(--color-primary-dark);
 }
 .nation-card .name {
   font-size: 0.8rem;
@@ -413,7 +334,7 @@ header.hero {
 }
 
 .match-card {
-  background: linear-gradient(180deg, #f6f9fe, #f2f7ff);
+  background-color: #f4f7fa;
   border: 1px solid var(--color-border);
   border-left: 8px solid var(--color-secondary);
   border-radius: var(--border-radius);
@@ -564,7 +485,7 @@ header.hero {
 }
 
 .schedule-item.completed {
-  background-color: #ecf5ff;
+  background-color: #eef2f8;
   border-color: var(--color-primary);
 }
 
@@ -655,7 +576,6 @@ header.hero {
 
 .group-ranking tr.direct td { background-color: #daf7da; }
 .group-ranking tr.chance td { background-color: #fff3d6; }
-.group-ranking tr.eliminated td { background-color: var(--color-secondary-soft); }
 
 /* =========================
    MODAL (marathon)
@@ -789,20 +709,8 @@ header.hero {
    RESPONSIVE
    ========================= */
 @media (max-width: 600px) {
-  .container {
-    margin: 0.8rem auto;
-    padding: 0.7rem;
-  }
-  .hero { flex-direction: column; align-items: flex-start; }
-  .hero-right { margin-top: 0.5rem; width: 100%; justify-content: flex-end; }
-  .hero-logo { height: 72px; }
-  .hero h1.title { font-size: 2rem; }
+  .hero { flex-direction: column; }
+  .hero-right { margin-top: 0.5rem; }
   .nation-list { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
   .match-teams { font-size: 0.9rem; }
-  .schedule-item {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    text-align: center;
-    gap: 0.35rem;
-  }
 }
