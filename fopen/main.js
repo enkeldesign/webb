@@ -468,6 +468,7 @@ function getReadyMatches() {
   // We'll iterate through schedule sequentially; pick matches that are pending and whose teams have completed all previous matches and are not currently playing
   for (let i = 0; i < state.schedule.length; i++) {
     const match = state.schedule[i];
+    if (match.skipped) continue;
     if (match.status !== 'pending') continue;
     const team1 = match.team1;
     const team2 = match.team2;
@@ -477,7 +478,7 @@ function getReadyMatches() {
     let previousIncomplete = false;
     for (let j = 0; j < i; j++) {
       const m = state.schedule[j];
-      if (m.status !== 'completed') {
+      if (m.status !== 'completed' && !m.skipped) {
         if (m.team1 === team1 || m.team2 === team1 || m.team1 === team2 || m.team2 === team2) {
           previousIncomplete = true;
           break;
@@ -499,6 +500,7 @@ function getUpcomingMatches(limit = 3) {
   for (let i = 0; i < state.schedule.length; i++) {
     if (playingSet.has(i)) continue;
     const match = state.schedule[i];
+    if (match?.skipped) continue;
     if (!match || match.status === 'completed') continue;
     upcoming.push(match);
     if (upcoming.length >= limit) break;
@@ -713,17 +715,46 @@ function updateNowPlaying() {
       }
       recordResult(idx, s1, s2);
     });
+
+    const skipBtn = document.createElement('button');
+    skipBtn.classList.add('btn', 'btn-secondary', 'skip-match-btn');
+    skipBtn.type = 'button';
+    skipBtn.textContent = '↪';
+    skipBtn.title = 'Skippa match';
+    skipBtn.addEventListener('click', () => {
+      skipMatch(idx);
+    });
+
     inputRow.appendChild(input1);
     const dash = document.createElement('span');
     dash.textContent = '-';
     inputRow.appendChild(dash);
     inputRow.appendChild(input2);
     inputRow.appendChild(doneBtn);
+    inputRow.appendChild(skipBtn);
     card.appendChild(inputRow);
     container.appendChild(card);
   });
   renderUpcomingMatches();
   saveState();
+}
+
+function skipMatch(scheduleIndex) {
+  const match = state.schedule[scheduleIndex];
+  if (!match || match.status === 'completed') return;
+  const ok = confirm(
+    'Vill du ersätta den här matchen med nästa i kön?\nFör att sedan mata in resultatet för denna match, använd knappen Ändra i spelschemat.'
+  );
+  if (!ok) return;
+  match.status = 'pending';
+  match.score1 = null;
+  match.score2 = null;
+  match.skipped = true;
+  state.playing = state.playing.filter(team => team !== match.team1 && team !== match.team2);
+  state.playingMatches = state.playingMatches.filter(i => i !== scheduleIndex);
+  saveState();
+  updateNowPlaying();
+  updateScheduleUI();
 }
 
 // Precompute last year each team appeared in historik for fallback messages
@@ -1444,6 +1475,7 @@ function updateScheduleUI() {
     // receive their own class names (pending, playing).
     item.classList.add(match.status);
     if (match.status === 'completed') item.classList.add('completed');
+    if (match.skipped) item.classList.add('skipped');
     // Build columns: flag1, team1, score, flag2, team2, group label, edit button
     // Flag for team1
     const leftImg = document.createElement('img');
@@ -1465,6 +1497,12 @@ function updateScheduleUI() {
     score.classList.add('schedule-score');
     if (match.status === 'completed') {
       score.innerHTML = `<span>${match.score1}</span><span> – </span><span>${match.score2}</span>`;
+    } else if (match.skipped) {
+      const skippedMarker = document.createElement('span');
+      skippedMarker.classList.add('skipped-indicator');
+      skippedMarker.textContent = '!';
+      skippedMarker.title = 'Skippad match. Tryck Ändra för att mata in resultatet.';
+      score.appendChild(skippedMarker);
     } else {
       score.innerHTML = '';
     }
@@ -1489,7 +1527,7 @@ function updateScheduleUI() {
     groupDiv.textContent = match.group ? `Grupp ${match.group}` : '';
     // Change result button (if match completed)
     let changeBtn = null;
-    if (match.status === 'completed') {
+    if (match.status === 'completed' || match.skipped) {
       changeBtn = document.createElement('button');
       changeBtn.classList.add('btn', 'btn-secondary', 'change-result');
       changeBtn.textContent = 'Ändra';
@@ -1523,6 +1561,10 @@ function editResult(idx) {
   state.groupStandings = null;
   match.score1 = newScore1;
   match.score2 = newScore2;
+  match.status = 'completed';
+  delete match.skipped;
+  state.playingMatches = state.playingMatches.filter(i => i !== idx);
+  state.playing = state.playing.filter(team => team !== match.team1 && team !== match.team2);
   state.results[match.id] = { score1: newScore1, score2: newScore2 };
   // Recompute standings from scratch
   state.schedule.forEach(m => {

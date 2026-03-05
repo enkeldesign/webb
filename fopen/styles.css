@@ -407,6 +407,13 @@ header.hero {
   font-size: 0.875rem;
 }
 
+.skip-match-btn {
+  margin-left: auto;
+  min-width: 32px;
+  line-height: 1;
+  padding: 0.15rem 0.45rem;
+}
+
 
 .upcoming-wrap {
   display: flex;
@@ -555,6 +562,11 @@ header.hero {
   border-left: 4px solid var(--color-secondary);
 }
 
+.schedule-item.skipped {
+  background-color: #fff3f5;
+  border-left: 4px solid #f03747;
+}
+
 .schedule-team {
   display: flex;
   align-items: center;
@@ -568,6 +580,19 @@ header.hero {
   justify-content: center;
   gap: 0.15rem;
   font-weight: bold;
+}
+
+.skipped-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #f03747;
+  color: #f03747;
+  font-weight: 700;
+  font-size: 0.9rem;
 }
 
 .schedule-group {
