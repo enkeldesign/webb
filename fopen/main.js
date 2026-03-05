@@ -456,8 +456,8 @@ function startTournament() {
   state.playingMatches = [];
   saveState();
   renderStage();
-  updateScheduleUI();
   updateNowPlaying();
+  updateScheduleUI();
   updateStandingsUI();
 }
 
@@ -718,8 +718,8 @@ function recordResult(scheduleIndex, score1, score2) {
   // Save state
   saveState();
   // Update UI
-  updateScheduleUI();
   updateNowPlaying();
+  updateScheduleUI();
   updateStandingsUI();
   // Check if group stage is complete and update UI accordingly
   checkGroupStageComplete();
@@ -1477,9 +1477,9 @@ function editResult(idx) {
     }
   });
   saveState();
+  updateNowPlaying();
   updateScheduleUI();
   updateStandingsUI();
-  updateNowPlaying();
 }
 
 // Render marathon modal
@@ -1782,8 +1782,8 @@ function autoFillResults() {
   });
   saveState();
   // Refresh UI: schedule, now playing list, and standings
-  updateScheduleUI();
   updateNowPlaying();
+  updateScheduleUI();
   updateStandingsUI();
   // After auto filling results, check if group stage is complete
   checkGroupStageComplete();
@@ -1811,8 +1811,8 @@ function init() {
   renderStage();
   if (state.stage === 'tournament') {
     // Always build the schedule and now playing lists from stored state
-    updateScheduleUI();
     updateNowPlaying();
+    updateScheduleUI();
     // If no group standings exist yet, initialise them so that the rankings
     // table displays even before any games have been played. Without this
     // initialisation, the rankings section would remain blank on page load
