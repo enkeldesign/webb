@@ -1100,13 +1100,6 @@ function checkGroupStageComplete() {
   const msg = document.createElement('h2');
   msg.textContent = 'Gruppspelet är slut';
   nowPlaying.appendChild(msg);
-
-  const startBtn = document.createElement('button');
-  startBtn.className = 'btn btn-primary';
-  startBtn.textContent = 'Starta slutspel';
-  startBtn.addEventListener('click', startPlayoffs);
-  nowPlaying.appendChild(startBtn);
-
   // Ensure latest recorded result is reflected in group tables
   updateStandingsUI();
 }
@@ -1995,8 +1988,6 @@ function init() {
     });
     // Finally, render the standings table UI
     updateStandingsUI();
-  } else if (state.stage === 'playoff') {
-    renderPlayoffStage();
   }
 }
 
