@@ -412,8 +412,8 @@ header.hero {
   min-width: 32px;
   line-height: 1;
   padding: 0.15rem 0.45rem;
-  background: transparent;
-  color: var(--color-secondary);
+  background: var(--color-secondary);
+  color: white;
 }
 
 
