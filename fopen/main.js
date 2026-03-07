@@ -719,7 +719,7 @@ function updateNowPlaying() {
     const skipBtn = document.createElement('button');
     skipBtn.classList.add('btn', 'btn-secondary', 'skip-match-btn');
     skipBtn.type = 'button';
-    skipBtn.textContent = '↪';
+    skipBtn.textContent = '↺';
     skipBtn.title = 'Skippa match';
     skipBtn.addEventListener('click', () => {
       skipMatch(idx);
