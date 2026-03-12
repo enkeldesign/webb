@@ -23,7 +23,7 @@
   --font-display: 'Teko', 'Barlow Condensed', Impact, sans-serif;
   --font-body: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-display: 'Press Start 2P', 'Teko', monospace;
-  --font-body: 'Press Start 2P', 'Teko', monospace;
+  /* --font-body: 'Press Start 2P', 'Teko', monospace; */
 
   /* Flag sizing + styling */
   --flag-height: 32px;
@@ -41,7 +41,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  image-rendering: pixelated;
+  /*image-rendering: pixelated;*/
 
   /* Förhindra att sidans bredd hoppar när scrollbar visas/gömmer sig */
   scrollbar-gutter: stable both-edges;
