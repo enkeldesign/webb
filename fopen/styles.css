@@ -133,7 +133,7 @@ header.hero {
 .hero h1.title {
   margin: 0.5rem 0 0;
   font-family: var(--font-display);
-  font-size: 2.4rem;
+  font-size: 2rem;
   line-height: 1.05;
   color: var(--color-primary);
 }
@@ -276,7 +276,8 @@ header.hero {
 
 .group header {
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: .75rem;
+   font-weight: normal;
   color: var(--color-primary);
   border-bottom: 2px solid var(--color-primary);
   padding-bottom: 0.25rem;
@@ -385,8 +386,10 @@ header.hero {
   justify-content: flex-start;
 }
 
-.match-team-left span {
+.match-team-left span, .match-team-right span {
   font-family: var(--font-display);
+  font-size: smaller;
+  font-weight: normal;
 }
 
 .match-team-right {
@@ -468,7 +471,8 @@ header.hero {
 
 .upcoming-group {
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: .75rem;
+     font-weight: normal;
   line-height: 1;
   font-weight: 700;
   color: #457;
@@ -545,6 +549,8 @@ header.hero {
 
 .schedule {
   font-family: var(--font-display);
+   font-size: smaller;
+  font-weight: normal;
 }
 
 .schedule-list {
