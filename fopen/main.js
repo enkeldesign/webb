@@ -1751,6 +1751,9 @@ function renderStage() {
   const selectStage = document.getElementById('select-stage');
   const drawStage = document.getElementById('draw-stage');
   const tournamentStage = document.getElementById('tournament-stage');
+  const isTournamentStage = state.stage === 'tournament';
+  document.body.classList.toggle('tournament-fullscreen', isTournamentStage);
+
   if (state.stage === 'select') {
     selectStage.hidden = false;
     drawStage.hidden = true;
