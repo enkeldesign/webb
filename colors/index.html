@@ -116,7 +116,16 @@
     .swatch.missing,
     .chip.missing {
       background:
-        linear-gradient(45deg, #f5f5f5 25%, #ececec 25%, #ececec 50%, #f5f5f5 50%, #f5f5f5 75%, #ececec 75%, #ececec 100%);
+        linear-gradient(
+          45deg,
+          #f5f5f5 25%,
+          #ececec 25%,
+          #ececec 50%,
+          #f5f5f5 50%,
+          #f5f5f5 75%,
+          #ececec 75%,
+          #ececec 100%
+        );
       background-size: 16px 16px;
       border-color: #d4d4d4;
       color: #666 !important;
@@ -266,11 +275,12 @@
       <h1>Linjärt namngivna färgskalor</h1>
       <p>
         Färgerna nedan bygger på liggande förslaget i Figma, men är mappade till den äldre strukturen:
-        <code>140, 120, 100, 85, 70, 50, 30, 20, 15, 10, 5</code>. Saknade nivåer lämnas transparenta.
+        <code>140, 120, 100, 85, 70, 50, 30, 20, 15, 10, 5</code>.
+        Endast <code>vit-0</code> har <code>-0</code>, och <code>svart-140</code> visas som dess motpol.
       </p>
       <p>
-        Det innebär att trycknamn som “Hav”, “Ros”, “Lav” och liknande inte används i token-namnen.
-        De ingår i respektive toppfamilj, till exempel <code>midnatt-*</code>.
+        Där originalpaletten inte hade alla nivåer har mellanvärden justerats för att ge jämnare visuella steg,
+        utan att ändra kärnfärgerna i onödan.
       </p>
       <p><a href="#contrast">Kontrastmatris</a></p>
       <div class="scales" id="scales"></div>
@@ -280,8 +290,8 @@
       <h2 id="contrast">Kontrastmatris</h2>
       <p>
         Matrisen visar kontrast mellan vald förgrundsserie och vald bakgrundsserie. Grön = klarar
-        normal text (AA 4.5:1), gul = klarar stor text/grafik (3:1), röd = under 3:1),
-        ljusröd = minst en av färgerna saknas.
+        normal text (AA 4.5:1), gul = klarar stor text/grafik (3:1), röd = under 3:1, ljusröd = minst
+        en av färgerna saknas i serien.
       </p>
 
       <div class="controls">
@@ -316,112 +326,81 @@
   </div>
 
   <script>
-    const legacySlots = [140, 120, 100, 85, 70, 50, 30, 20, 15, 10, 5];
-
-    const sourceSeries = {
-      midnatt: [
-        "#002856",
-        "#0b3d6f",
-        "#064986",
-        "#0155a3",
-        "#0065bd",
-        "#0c8aeb",
-        "#36a5fa",
-        "#7cc3fd",
-        "#b9ddfe",
-        "#e0eefe",
-        "#eef8fe"
-      ],
-      sol: [
-        "#b94f04",
-        "#df7300",
-        "#fc9b04",
-        "#ffbe1e",
-        "#fac800",
-        "#ffe687",
-        "#fff3c5",
-        "#fffbea"
-      ],
-      barr: [
-        "#0c2711",
-        "#2d4225",
-        "#2a5a2a",
-        "#3c5e2d",
-        "#4c7937",
-        "#639a48",
-        "#82b566",
-        "#a2cb8b",
-        "#bedbac",
-        "#f4f9f2",
-        "#f9fcf9"
-      ],
-      ledkryss: [
-        "#480707",
-        "#831919",
-        "#9f1515",
-        "#c01515",
-        "#d31919",
-        "#f73c3c",
-        "#fe6b6b",
-        "#f2b3b3",
-        "#f8d0d0",
-        "#fbe7e7",
-        "#fff1f1"
-      ],
-      sten: [
-        "#090a0b",
-        "#171a1c",
-        "#26292b",
-        "#4d4f53",
-        "#50575d",
-        "#6f767c",
-        "#bababa",
-        "#d3d6d9",
-        "#e8e8e8",
-        "#f4f5f5",
-        "#fafafa"
+    const series = {
+      svart: [
+        ["140", "#000000"]
       ],
       vit: [
-        "#ffffff"
+        ["0", "#ffffff"]
+      ],
+      midnatt: [
+        ["140", "#002856"],
+        ["120", "#0b3d6f"],
+        ["100", "#064986"],
+        ["85",  "#0155a3"],
+        ["70",  "#0065bd"],
+        ["50",  "#0c8aeb"],
+        ["30",  "#36a5fa"],
+        ["20",  "#7cc3fd"],
+        ["15",  "#b9ddfe"],
+        ["10",  "#e0eefe"],
+        ["5",   "#eef8fe"]
+      ],
+      sol: [
+        ["140", "#b94f04"],
+        ["120", "#df7300"],
+        ["100", "#ee8702"],
+        ["85",  "#fc9b04"],
+        ["70",  "#ffbe1e"],
+        ["50",  "#fac800"],
+        ["30",  "#ffe687"],
+        ["20",  "#fff3c5"],
+        ["15",  "#fff7d8"],
+        ["10",  "#fff9e4"],
+        ["5",   "#fffbea"]
+      ],
+      barr: [
+        ["140", "#0c2711"],
+        ["120", "#2d4225"],
+        ["100", "#2a5a2a"],
+        ["85",  "#3c5e2d"],
+        ["70",  "#4c7937"],
+        ["50",  "#639a48"],
+        ["30",  "#82b566"],
+        ["20",  "#a2cb8b"],
+        ["15",  "#bedbac"],
+        ["10",  "#dcebd3"],
+        ["5",   "#f4f9f2"]
+      ],
+      ledkryss: [
+        ["140", "#480707"],
+        ["120", "#831919"],
+        ["100", "#9f1515"],
+        ["85",  "#c01515"],
+        ["70",  "#d31919"],
+        ["50",  "#f73c3c"],
+        ["30",  "#fe6b6b"],
+        ["20",  "#f2b3b3"],
+        ["15",  "#f8d0d0"],
+        ["10",  "#fbe7e7"],
+        ["5",   "#fff1f1"]
+      ],
+      sten: [
+        ["140", "#090a0b"],
+        ["120", "#171a1c"],
+        ["100", "#26292b"],
+        ["85",  "#4d4f53"],
+        ["70",  "#50575d"],
+        ["50",  "#6f767c"],
+        ["30",  "#bababa"],
+        ["20",  "#d3d6d9"],
+        ["15",  "#e8e8e8"],
+        ["10",  "#f4f5f5"],
+        ["5",   "#fafafa"]
       ]
     };
 
-    const order = ["midnatt", "sol", "barr", "ledkryss", "sten", "vit"];
-
-    function mapToLegacySlots(seriesName, colors) {
-      if (seriesName === "vit") {
-        return [["0", "#ffffff"]];
-      }
-
-      const mapped = legacySlots.map(slot => [String(slot), null]);
-
-      if (colors.length === 1) {
-        mapped[mapped.length - 1][1] = colors[0];
-        return mapped;
-      }
-
-      const usedPositions = new Set();
-
-      colors.forEach((hex, index) => {
-        let pos = Math.round(index * (legacySlots.length - 1) / (colors.length - 1));
-
-        while (usedPositions.has(pos) && pos < legacySlots.length - 1) {
-          pos += 1;
-        }
-        while (usedPositions.has(pos) && pos > 0) {
-          pos -= 1;
-        }
-
-        usedPositions.add(pos);
-        mapped[pos][1] = hex;
-      });
-
-      return mapped;
-    }
-
-    const series = Object.fromEntries(
-      Object.entries(sourceSeries).map(([name, colors]) => [name, mapToLegacySlots(name, colors)])
-    );
+    const order = ["svart", "vit", "midnatt", "sol", "barr", "ledkryss", "sten"];
 
     function isMissing(hex) {
       return !hex || hex === "transparent";
@@ -475,7 +454,6 @@
     }
 
     function formatTokenName(seriesName, slot) {
-      if (seriesName === "vit") return `vit-${slot}`;
       return `${seriesName}-${slot}`;
     }
 
