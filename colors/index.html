@@ -519,72 +519,83 @@
     }
 
     function renderMatrix() {
-      const fgKey = document.getElementById("fgSeries").value;
-      const bgKey = document.getElementById("bgSeries").value;
-      const fgTokens = series[fgKey];
-      const bgTokens = series[bgKey];
+    const fgKey = document.getElementById("fgSeries").value;
+    const bgKey = document.getElementById("bgSeries").value;
+    const fgTokens = series[fgKey];
+    const bgTokens = series[bgKey];
 
-      const table = document.getElementById("matrix");
-      table.innerHTML = "";
+    const table = document.getElementById("matrix");
+    table.innerHTML = "";
 
-      const thead = document.createElement("thead");
-      const headRow = document.createElement("tr");
+    const thead = document.createElement("thead");
+    const headRow = document.createElement("tr");
 
-      const corner = document.createElement("th");
-      corner.textContent = "Förgrund \\ Bakgrund";
-      headRow.appendChild(corner);
+    const corner = document.createElement("th");
+    corner.textContent = "Förgrund \\ Bakgrund";
+    headRow.appendChild(corner);
 
-      bgTokens.forEach(([slot, hex]) => {
-        const th = document.createElement("th");
-        const chip = document.createElement("span");
-        chip.className = "chip";
-        chip.textContent = slot;
+    bgTokens.forEach(([slot, hex]) => {
+      const th = document.createElement("th");
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.textContent = slot;
 
-        if (isMissing(hex)) {
-          chip.classList.add("missing");
+      if (isMissing(hex)) {
+        chip.classList.add("missing");
+      } else {
+        chip.style.background = hex;
+        chip.style.color = onColor(hex);
+      }
+
+      th.appendChild(chip);
+      headRow.appendChild(th);
+    });
+
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+
+    fgTokens.forEach(([fgSlot, fgHex]) => {
+      const tr = document.createElement("tr");
+
+      const rowHead = document.createElement("th");
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.textContent = fgSlot;
+
+      if (isMissing(fgHex)) {
+        chip.classList.add("missing");
+      } else {
+        chip.style.background = fgHex;
+        chip.style.color = onColor(fgHex);
+      }
+
+      rowHead.appendChild(chip);
+      tr.appendChild(rowHead);
+
+      bgTokens.forEach(([bgSlot, bgHex]) => {
+        const ratio = contrastRatio(fgHex, bgHex);
+        const td = document.createElement("td");
+        td.className = statusClass(ratio);
+
+        if (ratio === null) {
+          td.innerHTML = "<strong>saknas</strong>";
+          td.title = `${formatTokenName(fgKey, fgSlot)} eller ${formatTokenName(bgKey, bgSlot)} saknas`;
         } else {
-          chip.style.background = hex;
-          chip.style.color = onColor(hex);
+          td.innerHTML = `<strong>${ratio.toFixed(2)}:1</strong>`;
+          td.title = `${formatTokenName(fgKey, fgSlot)} på ${formatTokenName(bgKey, bgSlot)} = ${ratio.toFixed(2)}:1`;
         }
 
-        th.appendChild(chip);
-        headRow.appendChild(th);
+        tr.appendChild(td);
       });
 
-      thead.appendChild(headRow);
-      table.appendChild(thead);
+      tbody.appendChild(tr);
+    });
 
-      const tbody = document.createElement("tbody");
-
-      fgTokens.forEach(([fgSlot, fgHex]) => {
-        const tr = document.createElement("tr");
-
-        const rowHead = document.createElement("th");
-        rowHead.textContent = fgSlot;
-        tr.appendChild(rowHead);
-
-        bgTokens.forEach(([bgSlot, bgHex]) => {
-          const ratio = contrastRatio(fgHex, bgHex);
-          const td = document.createElement("td");
-          td.className = statusClass(ratio);
-
-          if (ratio === null) {
-            td.innerHTML = "<strong>saknas</strong>";
-            td.title = `${formatTokenName(fgKey, fgSlot)} eller ${formatTokenName(bgKey, bgSlot)} saknas`;
-          } else {
-            td.innerHTML = `<strong>${ratio.toFixed(2)}:1</strong>`;
-            td.title = `${formatTokenName(fgKey, fgSlot)} på ${formatTokenName(bgKey, bgSlot)} = ${ratio.toFixed(2)}:1`;
-          }
-
-          tr.appendChild(td);
-        });
-
-        tbody.appendChild(tr);
-      });
-
-      table.appendChild(tbody);
-      renderPreview(fgKey, bgKey);
-    }
+    table.appendChild(tbody);
+    renderPreview(fgKey, bgKey);
+  }
 
     function findClosestPairWithinSelectedSeries(fgKey, bgKey, target, bgType, minRatio, maxRatio, used) {
       const candidates = [];
