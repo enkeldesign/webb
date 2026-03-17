@@ -13,71 +13,8 @@
       --border: #d7dbe0;
       --shadow: 0 8px 24px rgb(0 0 0 / 0.08);
       --radius: 14px;
-
-      /* Midnatt */
-      --midnatt-140: #002856;
-      --midnatt-125: #0b3d6f;
-      --midnatt-110: #064986;
-      --midnatt-95:  #0155a3;
-      --midnatt-80:  #0065bd;
-      --midnatt-65:  #0c8aeb;
-      --midnatt-50:  #36a5fa;
-      --midnatt-35:  #7cc3fd;
-      --midnatt-20:  #b9ddfe;
-      --midnatt-5:   #e0eefe;
-      --midnatt-0:   #eef8fe;
-
-      /* Sol */
-      --sol-140: #b94f04;
-      --sol-125: #df7300;
-      --sol-110: transparent;
-      --sol-95:  #fc9b04;
-      --sol-80:  #ffbe1e;
-      --sol-65:  #fac800;
-      --sol-50:  transparent;
-      --sol-35:  #ffe687;
-      --sol-20:  #fff3c5;
-      --sol-5:   transparent;
-      --sol-0:   #fffbea;
-
-      /* Barr */
-      --barr-140: #0c2711;
-      --barr-125: #2d4225;
-      --barr-110: #2a5a2a;
-      --barr-95:  #3c5e2d;
-      --barr-80:  #4c7937;
-      --barr-65:  #639a48;
-      --barr-50:  #82b566;
-      --barr-35:  #a2cb8b;
-      --barr-20:  #bedbac;
-      --barr-5:   #f4f9f2;
-      --barr-0:   #f9fcf9;
-
-      /* Ledkryss */
-      --ledkryss-140: #480707;
-      --ledkryss-125: #831919;
-      --ledkryss-110: #9f1515;
-      --ledkryss-95:  #c01515;
-      --ledkryss-80:  #d31919;
-      --ledkryss-65:  #f73c3c;
-      --ledkryss-50:  #fe6b6b;
-      --ledkryss-35:  #f2b3b3;
-      --ledkryss-20:  #f8d0d0;
-      --ledkryss-5:   #fbe7e7;
-      --ledkryss-0:   #fff1f1;
-
-      /* Sten */
-      --sten-140: #090a0b;
-      --sten-125: #171a1c;
-      --sten-110: #26292b;
-      --sten-95:  #4d4f53;
-      --sten-80:  #50575d;
-      --sten-65:  #6f767c;
-      --sten-50:  #bababa;
-      --sten-35:  #d3d6d9;
-      --sten-20:  #e8e8e8;
-      --sten-5:   #f4f5f5;
-      --sten-0:   #fafafa;
+      --missing: #fde8e8;
+      --missing-border: #f3b8b8;
     }
 
     * { box-sizing: border-box; }
@@ -142,6 +79,7 @@
     .dot-aa { background: #198754; }
     .dot-large { background: #f0ad4e; }
     .dot-fail { background: #dc3545; }
+    .dot-missing { background: var(--missing); }
 
     .scales {
       display: grid;
@@ -161,7 +99,7 @@
 
     .token {
       display: grid;
-      grid-template-columns: 88px 1fr auto;
+      grid-template-columns: 56px 1fr auto;
       gap: 12px;
       align-items: center;
     }
@@ -172,12 +110,23 @@
       border-radius: 10px;
       border: 1px solid rgb(0 0 0 / 0.08);
       box-shadow: 0 6px 16px rgb(0 0 0 / 0.08);
+      background-clip: padding-box;
+    }
+
+    .swatch.missing,
+    .chip.missing {
+      background:
+        linear-gradient(45deg, #f5f5f5 25%, #ececec 25%, #ececec 50%, #f5f5f5 50%, #f5f5f5 75%, #ececec 75%, #ececec 100%);
+      background-size: 16px 16px;
+      border-color: #d4d4d4;
+      color: #666 !important;
     }
 
     .name {
-      font-family: monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       font-weight: 700;
       font-size: 1rem;
+      word-break: break-word;
     }
 
     .meta {
@@ -249,7 +198,7 @@
 
     .chip {
       display: inline-block;
-      min-width: 4.8em;
+      min-width: 5.6em;
       padding: 0.3em 0.45em;
       border-radius: 8px;
       font-weight: 700;
@@ -260,6 +209,11 @@
     .cell-aa { background: #198754; color: #fff; }
     .cell-large { background: #f0ad4e; color: #111; }
     .cell-fail { background: #dc3545; color: #fff; }
+    .cell-missing {
+      background: var(--missing);
+      color: #7b2424;
+      font-weight: 700;
+    }
 
     .preview-grid {
       margin-top: 16px;
@@ -284,7 +238,7 @@
 
     .small {
       font-size: 0.86rem;
-      opacity: 0.9;
+      opacity: 0.95;
       margin-top: 8px;
     }
 
@@ -311,13 +265,12 @@
     <section class="panel">
       <h1>Linjärt namngivna färgskalor</h1>
       <p>
-        Färgerna nedan bygger på liggande förslaget i Figma. Varje serie är namngiven
-        linjärt från <code>-140</code> (mörkast) till <code>-0</code> (ljusast), och alla värden
-        ligger på jämna steg med <code>0</code> eller <code>5</code>.
+        Färgerna nedan bygger på liggande förslaget i Figma, men är mappade till den äldre strukturen:
+        <code>140, 120, 100, 85, 70, 50, 30, 20, 15, 10, 5</code>. Saknade nivåer lämnas transparenta.
       </p>
       <p>
         Det innebär att trycknamn som “Hav”, “Ros”, “Lav” och liknande inte används i token-namnen.
-        De ingår i respektive toppfamilj, till exempel <code>--midnatt-*</code>.
+        De ingår i respektive toppfamilj, till exempel <code>midnatt-*</code>.
       </p>
       <p><a href="#contrast">Kontrastmatris</a></p>
       <div class="scales" id="scales"></div>
@@ -327,7 +280,8 @@
       <h2 id="contrast">Kontrastmatris</h2>
       <p>
         Matrisen visar kontrast mellan vald förgrundsserie och vald bakgrundsserie. Grön = klarar
-        normal text (AA 4.5:1), gul = klarar stor text/grafik (3:1), röd = under 3:1.
+        normal text (AA 4.5:1), gul = klarar stor text/grafik (3:1), röd = under 3:1),
+        ljusröd = minst en av färgerna saknas.
       </p>
 
       <div class="controls">
@@ -345,6 +299,7 @@
         <span class="legend-item"><span class="dot dot-aa"></span>AA normal text ≥ 4.5:1</span>
         <span class="legend-item"><span class="dot dot-large"></span>Stor text/grafik ≥ 3:1</span>
         <span class="legend-item"><span class="dot dot-fail"></span>Under 3:1</span>
+        <span class="legend-item"><span class="dot dot-missing"></span>Saknad färg</span>
       </div>
 
       <div class="matrix-wrap">
@@ -353,7 +308,7 @@
 
       <h3 style="margin-top:20px;">Godkända exempel nära trösklarna</h3>
       <p>
-        Här visas automatiskt fyra godkända par inom de valda serierna: två nära <code>4.5:1</code>
+        Här visas automatiskt upp till fyra godkända par inom de valda serierna: två nära <code>4.5:1</code>
         och två nära <code>3:1</code>, vardera med mörk respektive ljus bakgrund.
       </p>
       <div class="preview-grid" id="preview"></div>
@@ -361,75 +316,116 @@
   </div>
 
   <script>
-    const series = {
+    const legacySlots = [140, 120, 100, 85, 70, 50, 30, 20, 15, 10, 5];
+
+    const sourceSeries = {
       midnatt: [
-        ["140", "#002856"],
-        ["125", "#0b3d6f"],
-        ["110", "#064986"],
-        ["95",  "#0155a3"],
-        ["80",  "#0065bd"],
-        ["65",  "#0c8aeb"],
-        ["50",  "#36a5fa"],
-        ["35",  "#7cc3fd"],
-        ["20",  "#b9ddfe"],
-        ["5",   "#e0eefe"],
-        ["0",   "#eef8fe"]
+        "#002856",
+        "#0b3d6f",
+        "#064986",
+        "#0155a3",
+        "#0065bd",
+        "#0c8aeb",
+        "#36a5fa",
+        "#7cc3fd",
+        "#b9ddfe",
+        "#e0eefe",
+        "#eef8fe"
       ],
       sol: [
-        ["140", "#b94f04"],
-        ["125", "#df7300"],
-        ["110",   "--"],
-        ["95", "#fc9b04"],
-        ["80",  "#ffbe1e"],
-        ["65",  "#fac800"],
-        ["50",   "--"],
-        ["35",  "#ffe687"],
-        ["20",  "#fff3c5"],
-        ["5",   "--"],
-        ["0",   "#fffbea"]
+        "#b94f04",
+        "#df7300",
+        "#fc9b04",
+        "#ffbe1e",
+        "#fac800",
+        "#ffe687",
+        "#fff3c5",
+        "#fffbea"
       ],
       barr: [
-        ["140", "#0c2711"],
-        ["125", "#2d4225"],
-        ["110", "#2a5a2a"],
-        ["95",  "#3c5e2d"],
-        ["80",  "#4c7937"],
-        ["65",  "#639a48"],
-        ["50",  "#82b566"],
-        ["35",  "#a2cb8b"],
-        ["20",  "#bedbac"],
-        ["5",   "#f4f9f2"],
-        ["0",   "#f9fcf9"]
+        "#0c2711",
+        "#2d4225",
+        "#2a5a2a",
+        "#3c5e2d",
+        "#4c7937",
+        "#639a48",
+        "#82b566",
+        "#a2cb8b",
+        "#bedbac",
+        "#f4f9f2",
+        "#f9fcf9"
       ],
       ledkryss: [
-        ["140", "#480707"],
-        ["125", "#831919"],
-        ["110", "#9f1515"],
-        ["95",  "#c01515"],
-        ["80",  "#d31919"],
-        ["65",  "#f73c3c"],
-        ["50",  "#fe6b6b"],
-        ["35",  "#f2b3b3"],
-        ["20",  "#f8d0d0"],
-        ["5",   "#fbe7e7"],
-        ["0",   "#fff1f1"]
+        "#480707",
+        "#831919",
+        "#9f1515",
+        "#c01515",
+        "#d31919",
+        "#f73c3c",
+        "#fe6b6b",
+        "#f2b3b3",
+        "#f8d0d0",
+        "#fbe7e7",
+        "#fff1f1"
       ],
       sten: [
-        ["140", "#090a0b"],
-        ["125", "#171a1c"],
-        ["110", "#26292b"],
-        ["95",  "#4d4f53"],
-        ["80",  "#50575d"],
-        ["65",  "#6f767c"],
-        ["50",  "#bababa"],
-        ["35",  "#d3d6d9"],
-        ["20",  "#e8e8e8"],
-        ["5",   "#f4f5f5"],
-        ["0",   "#fafafa"]
+        "#090a0b",
+        "#171a1c",
+        "#26292b",
+        "#4d4f53",
+        "#50575d",
+        "#6f767c",
+        "#bababa",
+        "#d3d6d9",
+        "#e8e8e8",
+        "#f4f5f5",
+        "#fafafa"
+      ],
+      vit: [
+        "#ffffff"
       ]
     };
 
-    const order = ["midnatt", "sol", "barr", "ledkryss", "sten"];
+    const order = ["midnatt", "sol", "barr", "ledkryss", "sten", "vit"];
+
+    function mapToLegacySlots(seriesName, colors) {
+      if (seriesName === "vit") {
+        return [["0", "#ffffff"]];
+      }
+
+      const mapped = legacySlots.map(slot => [String(slot), null]);
+
+      if (colors.length === 1) {
+        mapped[mapped.length - 1][1] = colors[0];
+        return mapped;
+      }
+
+      const usedPositions = new Set();
+
+      colors.forEach((hex, index) => {
+        let pos = Math.round(index * (legacySlots.length - 1) / (colors.length - 1));
+
+        while (usedPositions.has(pos) && pos < legacySlots.length - 1) {
+          pos += 1;
+        }
+        while (usedPositions.has(pos) && pos > 0) {
+          pos -= 1;
+        }
+
+        usedPositions.add(pos);
+        mapped[pos][1] = hex;
+      });
+
+      return mapped;
+    }
+
+    const series = Object.fromEntries(
+      Object.entries(sourceSeries).map(([name, colors]) => [name, mapToLegacySlots(name, colors)])
+    );
+
+    function isMissing(hex) {
+      return !hex || hex === "transparent";
+    }
 
     function hexToRgb(hex) {
       const value = hex.replace("#", "");
@@ -451,6 +447,7 @@
     }
 
     function contrastRatio(fg, bg) {
+      if (isMissing(fg) || isMissing(bg)) return null;
       const l1 = luminance(fg);
       const l2 = luminance(bg);
       const lighter = Math.max(l1, l2);
@@ -459,19 +456,27 @@
     }
 
     function onColor(bg) {
+      if (isMissing(bg)) return "#666666";
       const white = contrastRatio("#ffffff", bg);
       const black = contrastRatio("#000000", bg);
       return white >= black ? "#ffffff" : "#000000";
     }
 
     function statusClass(ratio) {
+      if (ratio === null) return "cell-missing";
       if (ratio >= 4.5) return "cell-aa";
       if (ratio >= 3) return "cell-large";
       return "cell-fail";
     }
 
     function brightnessBucket(hex) {
+      if (isMissing(hex)) return "light";
       return luminance(hex) < 0.18 ? "dark" : "light";
+    }
+
+    function formatTokenName(seriesName, slot) {
+      if (seriesName === "vit") return `vit-${slot}`;
+      return `${seriesName}-${slot}`;
     }
 
     function createScales() {
@@ -489,22 +494,27 @@
         const list = document.createElement("div");
         list.className = "token-list";
 
-        series[key].forEach(([name, hex]) => {
+        series[key].forEach(([slot, hex]) => {
           const row = document.createElement("div");
           row.className = "token";
 
           const swatch = document.createElement("div");
           swatch.className = "swatch";
-          swatch.style.background = hex;
-          swatch.title = `${name} • ${hex}`;
+          swatch.title = `${formatTokenName(key, slot)} • ${hex || "saknas"}`;
+
+          if (isMissing(hex)) {
+            swatch.classList.add("missing");
+          } else {
+            swatch.style.background = hex;
+          }
 
           const nameEl = document.createElement("div");
           nameEl.className = "name";
-          nameEl.textContent = name;
+          nameEl.textContent = formatTokenName(key, slot);
 
           const meta = document.createElement("div");
           meta.className = "meta";
-          meta.textContent = hex.toUpperCase();
+          meta.textContent = isMissing(hex) ? "transparent" : hex.toUpperCase();
 
           row.appendChild(swatch);
           row.appendChild(nameEl);
@@ -550,13 +560,19 @@
       corner.textContent = "Förgrund \\ Bakgrund";
       headRow.appendChild(corner);
 
-      bgTokens.forEach(([name, hex]) => {
+      bgTokens.forEach(([slot, hex]) => {
         const th = document.createElement("th");
         const chip = document.createElement("span");
         chip.className = "chip";
-        chip.textContent = name.replace("--", "");
-        chip.style.background = hex;
-        chip.style.color = onColor(hex);
+        chip.textContent = formatTokenName(bgKey, slot);
+
+        if (isMissing(hex)) {
+          chip.classList.add("missing");
+        } else {
+          chip.style.background = hex;
+          chip.style.color = onColor(hex);
+        }
+
         th.appendChild(chip);
         headRow.appendChild(th);
       });
@@ -566,24 +582,37 @@
 
       const tbody = document.createElement("tbody");
 
-      fgTokens.forEach(([fgName, fgHex]) => {
+      fgTokens.forEach(([fgSlot, fgHex]) => {
         const tr = document.createElement("tr");
 
         const rowHead = document.createElement("th");
         const chip = document.createElement("span");
         chip.className = "chip";
-        chip.textContent = fgName.replace("--", "");
-        chip.style.background = fgHex;
-        chip.style.color = onColor(fgHex);
+        chip.textContent = formatTokenName(fgKey, fgSlot);
+
+        if (isMissing(fgHex)) {
+          chip.classList.add("missing");
+        } else {
+          chip.style.background = fgHex;
+          chip.style.color = onColor(fgHex);
+        }
+
         rowHead.appendChild(chip);
         tr.appendChild(rowHead);
 
-        bgTokens.forEach(([bgName, bgHex]) => {
+        bgTokens.forEach(([bgSlot, bgHex]) => {
           const ratio = contrastRatio(fgHex, bgHex);
           const td = document.createElement("td");
           td.className = statusClass(ratio);
-          td.innerHTML = `<strong>${ratio.toFixed(2)}:1</strong>`;
-          td.title = `${fgName} på ${bgName} = ${ratio.toFixed(2)}:1`;
+
+          if (ratio === null) {
+            td.innerHTML = "<strong>saknas</strong>";
+            td.title = `${formatTokenName(fgKey, fgSlot)} eller ${formatTokenName(bgKey, bgSlot)} saknas`;
+          } else {
+            td.innerHTML = `<strong>${ratio.toFixed(2)}:1</strong>`;
+            td.title = `${formatTokenName(fgKey, fgSlot)} på ${formatTokenName(bgKey, bgSlot)} = ${ratio.toFixed(2)}:1`;
+          }
+
           tr.appendChild(td);
         });
 
@@ -597,19 +626,24 @@
     function findClosestPairWithinSelectedSeries(fgKey, bgKey, target, bgType, minRatio, maxRatio, used) {
       const candidates = [];
 
-      for (const [fgName, fgHex] of series[fgKey]) {
-        for (const [bgName, bgHex] of series[bgKey]) {
+      for (const [fgSlot, fgHex] of series[fgKey]) {
+        for (const [bgSlot, bgHex] of series[bgKey]) {
           const ratio = contrastRatio(fgHex, bgHex);
+          if (ratio === null) continue;
           if (ratio < minRatio || ratio > maxRatio) continue;
           if (brightnessBucket(bgHex) !== bgType) continue;
           if (fgHex.toLowerCase() === bgHex.toLowerCase()) continue;
 
-          const key = `${fgName}|${bgName}`;
+          const key = `${fgSlot}|${bgSlot}`;
           if (used.has(key)) continue;
 
           candidates.push({
-            fgKey, fgName, fgHex,
-            bgKey, bgName, bgHex,
+            fgKey,
+            fgName: formatTokenName(fgKey, fgSlot),
+            fgHex,
+            bgKey,
+            bgName: formatTokenName(bgKey, bgSlot),
+            bgHex,
             ratio,
             distance: Math.abs(ratio - target)
           });
@@ -623,19 +657,24 @@
     function findFallbackPairWithinSelectedSeries(fgKey, bgKey, target, bgType, minRatio, used) {
       const candidates = [];
 
-      for (const [fgName, fgHex] of series[fgKey]) {
-        for (const [bgName, bgHex] of series[bgKey]) {
+      for (const [fgSlot, fgHex] of series[fgKey]) {
+        for (const [bgSlot, bgHex] of series[bgKey]) {
           const ratio = contrastRatio(fgHex, bgHex);
+          if (ratio === null) continue;
           if (ratio < minRatio) continue;
           if (brightnessBucket(bgHex) !== bgType) continue;
           if (fgHex.toLowerCase() === bgHex.toLowerCase()) continue;
 
-          const key = `${fgName}|${bgName}`;
+          const key = `${fgSlot}|${bgSlot}`;
           if (used.has(key)) continue;
 
           candidates.push({
-            fgKey, fgName, fgHex,
-            bgKey, bgName, bgHex,
+            fgKey,
+            fgName: formatTokenName(fgKey, fgSlot),
+            fgHex,
+            bgKey,
+            bgName: formatTokenName(bgKey, bgSlot),
+            bgHex,
             ratio,
             distance: Math.abs(ratio - target)
           });
