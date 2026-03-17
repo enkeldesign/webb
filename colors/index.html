@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Linjära färgskalor + kontrastmatris</title>
+  <style>
+    :root {
+      --bg: #f3f3f3;
+      --surface: #ffffff;
+      --text: #1f2328;
+      --muted: #5f6b76;
+      --border: #d7dbe0;
+      --shadow: 0 8px 24px rgb(0 0 0 / 0.08);
+      --radius: 14px;
+
+      /* Midnatt */
+      --midnatt-140: #002856;
+      --midnatt-125: #0b3d6f;
+      --midnatt-110: #064986;
+      --midnatt-95:  #0155a3;
+      --midnatt-80:  #0065bd;
+      --midnatt-65:  #0c8aeb;
+      --midnatt-50:  #36a5fa;
+      --midnatt-35:  #7cc3fd;
+      --midnatt-20:  #b9ddfe;
+      --midnatt-5:   #e0eefe;
+      --midnatt-0:   #eef8fe;
+
+      /* Sol */
+      --sol-140: #b94f04;
+      --sol-120: #df7300;
+      --sol-100: #fc9b04;
+      --sol-80:  #ffbe1e;
+      --sol-60:  #fac800;
+      --sol-40:  #ffe687;
+      --sol-20:  #fff3c5;
+      --sol-0:   #fffbea;
+
+      /* Barr */
+      --barr-140: #0c2711;
+      --barr-125: #2d4225;
+      --barr-110: #2a5a2a;
+      --barr-95:  #3c5e2d;
+      --barr-80:  #4c7937;
+      --barr-65:  #639a48;
+      --barr-50:  #82b566;
+      --barr-35:  #a2cb8b;
+      --barr-20:  #bedbac;
+      --barr-5:   #f4f9f2;
+      --barr-0:   #f9fcf9;
+
+      /* Ledkryss */
+      --ledkryss-140: #480707;
+      --ledkryss-125: #831919;
+      --ledkryss-110: #9f1515;
+      --ledkryss-95:  #c01515;
+      --ledkryss-80:  #d31919;
+      --ledkryss-65:  #f73c3c;
+      --ledkryss-50:  #fe6b6b;
+      --ledkryss-35:  #f2b3b3;
+      --ledkryss-20:  #f8d0d0;
+      --ledkryss-5:   #fbe7e7;
+      --ledkryss-0:   #fff1f1;
+
+      /* Sten */
+      --sten-140: #090a0b;
+      --sten-125: #171a1c;
+      --sten-110: #26292b;
+      --sten-95:  #4d4f53;
+      --sten-80:  #50575d;
+      --sten-65:  #6f767c;
+      --sten-50:  #bababa;
+      --sten-35:  #d3d6d9;
+      --sten-20:  #e8e8e8;
+      --sten-5:   #f4f5f5;
+      --sten-0:   #fafafa;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .page {
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    h1, h2, h3 {
+      margin: 0 0 12px;
+      line-height: 1.15;
+    }
+
+    p {
+      margin: 0 0 12px;
+      color: var(--muted);
+      max-width: 82ch;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      margin-top: 12px;
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      border: 1px solid rgb(0 0 0 / 0.12);
+      flex: none;
+    }
+
+    .dot-aa { background: #198754; }
+    .dot-large { background: #f0ad4e; }
+    .dot-fail { background: #dc3545; }
+
+    .scales {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 18px;
+    }
+
+    .scale-card h2 {
+      font-size: 1.05rem;
+      margin-bottom: 14px;
+    }
+
+    .token-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .token {
+      display: grid;
+      grid-template-columns: 88px 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .swatch {
+      height: 52px;
+      border-radius: 12px;
+      border: 1px solid rgb(0 0 0 / 0.08);
+      box-shadow: 0 6px 16px rgb(0 0 0 / 0.08);
+    }
+
+    .name {
+      font-weight: 700;
+      font-size: 0.95rem;
+      word-break: break-word;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+
+    .controls {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      align-items: end;
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      font-weight: 600;
+    }
+
+    select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font: inherit;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .matrix-wrap {
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: white;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: max-content;
+      min-width: 100%;
+      font-size: 0.83rem;
+    }
+
+    th, td {
+      border: 1px solid #e5e7eb;
+      padding: 6px 8px;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #fff;
+    }
+
+    tbody th {
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      background: #fff;
+      text-align: left;
+      min-width: 170px;
+    }
+
+    .chip {
+      display: inline-block;
+      min-width: 4.8em;
+      padding: 0.3em 0.45em;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.78rem;
+      border: 1px solid rgb(0 0 0 / 0.08);
+    }
+
+    .cell-aa { background: #198754; color: #fff; }
+    .cell-large { background: #f0ad4e; color: #111; }
+    .cell-fail { background: #dc3545; color: #fff; }
+
+    .preview-grid {
+      margin-top: 16px;
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+
+    .example {
+      border-radius: 14px;
+      padding: 16px;
+      border: 1px solid rgb(0 0 0 / 0.08);
+      box-shadow: 0 6px 18px rgb(0 0 0 / 0.08);
+      min-height: 172px;
+    }
+
+    .example strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 1rem;
+    }
+
+    .small {
+      font-size: 0.86rem;
+      opacity: 0.9;
+      margin-top: 8px;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.25rem 0.5rem;
+      border-radius: 999px;
+      border: 1px solid rgb(0 0 0 / 0.1);
+      background: rgb(255 255 255 / 0.65);
+      color: #111;
+      margin-bottom: 10px;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="panel">
+      <h1>Linjärt namngivna färgskalor</h1>
+      <p>
+        Färgerna nedan bygger på exakt de färgrutor du klistrade in. Varje serie är namngiven
+        linjärt från <code>-140</code> (mörkast) till <code>-0</code> (ljusast), och alla värden
+        ligger på jämna steg med <code>0</code> eller <code>5</code>.
+      </p>
+      <p>
+        Det innebär att trycknamn som “Hav”, “Ros”, “Lav” och liknande inte används i token-namnen.
+        De ingår i respektive toppfamilj, till exempel <code>--midnatt-*</code>.
+      </p>
+      <div class="scales" id="scales"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Kontrastmatris</h2>
+      <p>
+        Matrisen visar kontrast mellan vald förgrundsserie och vald bakgrundsserie. Grön = klarar
+        normal text (AA 4.5:1), gul = klarar stor text/grafik (3:1), röd = under 3:1.
+      </p>
+
+      <div class="controls">
+        <label>
+          Förgrundsserie
+          <select id="fgSeries"></select>
+        </label>
+        <label>
+          Bakgrundsserie
+          <select id="bgSeries"></select>
+        </label>
+      </div>
+
+      <div class="legend" aria-hidden="true">
+        <span class="legend-item"><span class="dot dot-aa"></span>AA normal text ≥ 4.5:1</span>
+        <span class="legend-item"><span class="dot dot-large"></span>Stor text/grafik ≥ 3:1</span>
+        <span class="legend-item"><span class="dot dot-fail"></span>Under 3:1</span>
+      </div>
+
+      <div class="matrix-wrap">
+        <table id="matrix"></table>
+      </div>
+
+      <h3 style="margin-top:20px;">Godkända exempel nära trösklarna</h3>
+      <p>
+        Här visas automatiskt fyra godkända par inom de valda serierna: två nära <code>4.5:1</code>
+        och två nära <code>3:1</code>, vardera med mörk respektive ljus bakgrund.
+      </p>
+      <div class="preview-grid" id="preview"></div>
+    </section>
+  </div>
+
+  <script>
+    const series = {
+      midnatt: [
+        ["--midnatt-140", "#002856"],
+        ["--midnatt-125", "#0b3d6f"],
+        ["--midnatt-110", "#064986"],
+        ["--midnatt-95",  "#0155a3"],
+        ["--midnatt-80",  "#0065bd"],
+        ["--midnatt-65",  "#0c8aeb"],
+        ["--midnatt-50",  "#36a5fa"],
+        ["--midnatt-35",  "#7cc3fd"],
+        ["--midnatt-20",  "#b9ddfe"],
+        ["--midnatt-5",   "#e0eefe"],
+        ["--midnatt-0",   "#eef8fe"]
+      ],
+      sol: [
+        ["--sol-140", "#b94f04"],
+        ["--sol-120", "#df7300"],
+        ["--sol-100", "#fc9b04"],
+        ["--sol-80",  "#ffbe1e"],
+        ["--sol-60",  "#fac800"],
+        ["--sol-40",  "#ffe687"],
+        ["--sol-20",  "#fff3c5"],
+        ["--sol-0",   "#fffbea"]
+      ],
+      barr: [
+        ["--barr-140", "#0c2711"],
+        ["--barr-125", "#2d4225"],
+        ["--barr-110", "#2a5a2a"],
+        ["--barr-95",  "#3c5e2d"],
+        ["--barr-80",  "#4c7937"],
+        ["--barr-65",  "#639a48"],
+        ["--barr-50",  "#82b566"],
+        ["--barr-35",  "#a2cb8b"],
+        ["--barr-20",  "#bedbac"],
+        ["--barr-5",   "#f4f9f2"],
+        ["--barr-0",   "#f9fcf9"]
+      ],
+      ledkryss: [
+        ["--ledkryss-140", "#480707"],
+        ["--ledkryss-125", "#831919"],
+        ["--ledkryss-110", "#9f1515"],
+        ["--ledkryss-95",  "#c01515"],
+        ["--ledkryss-80",  "#d31919"],
+        ["--ledkryss-65",  "#f73c3c"],
+        ["--ledkryss-50",  "#fe6b6b"],
+        ["--ledkryss-35",  "#f2b3b3"],
+        ["--ledkryss-20",  "#f8d0d0"],
+        ["--ledkryss-5",   "#fbe7e7"],
+        ["--ledkryss-0",   "#fff1f1"]
+      ],
+      sten: [
+        ["--sten-140", "#090a0b"],
+        ["--sten-125", "#171a1c"],
+        ["--sten-110", "#26292b"],
+        ["--sten-95",  "#4d4f53"],
+        ["--sten-80",  "#50575d"],
+        ["--sten-65",  "#6f767c"],
+        ["--sten-50",  "#bababa"],
+        ["--sten-35",  "#d3d6d9"],
+        ["--sten-20",  "#e8e8e8"],
+        ["--sten-5",   "#f4f5f5"],
+        ["--sten-0",   "#fafafa"]
+      ]
+    };
+
+    const order = ["midnatt", "sol", "barr", "ledkryss", "sten"];
+
+    function hexToRgb(hex) {
+      const value = hex.replace("#", "");
+      return {
+        r: parseInt(value.slice(0, 2), 16),
+        g: parseInt(value.slice(2, 4), 16),
+        b: parseInt(value.slice(4, 6), 16)
+      };
+    }
+
+    function srgbToLinear(c) {
+      const v = c / 255;
+      return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    }
+
+    function luminance(hex) {
+      const { r, g, b } = hexToRgb(hex);
+      return 0.2126 * srgbToLinear(r) + 0.7152 * srgbToLinear(g) + 0.0722 * srgbToLinear(b);
+    }
+
+    function contrastRatio(fg, bg) {
+      const l1 = luminance(fg);
+      const l2 = luminance(bg);
+      const lighter = Math.max(l1, l2);
+      const darker = Math.min(l1, l2);
+      return (lighter + 0.05) / (darker + 0.05);
+    }
+
+    function onColor(bg) {
+      const white = contrastRatio("#ffffff", bg);
+      const black = contrastRatio("#000000", bg);
+      return white >= black ? "#ffffff" : "#000000";
+    }
+
+    function statusClass(ratio) {
+      if (ratio >= 4.5) return "cell-aa";
+      if (ratio >= 3) return "cell-large";
+      return "cell-fail";
+    }
+
+    function brightnessBucket(hex) {
+      return luminance(hex) < 0.18 ? "dark" : "light";
+    }
+
+    function createScales() {
+      const root = document.getElementById("scales");
+      root.innerHTML = "";
+
+      order.forEach(key => {
+        const card = document.createElement("article");
+        card.className = "panel scale-card";
+
+        const h2 = document.createElement("h2");
+        h2.textContent = key.charAt(0).toUpperCase() + key.slice(1);
+        card.appendChild(h2);
+
+        const list = document.createElement("div");
+        list.className = "token-list";
+
+        series[key].forEach(([name, hex]) => {
+          const row = document.createElement("div");
+          row.className = "token";
+
+          const swatch = document.createElement("div");
+          swatch.className = "swatch";
+          swatch.style.background = hex;
+          swatch.title = `${name} • ${hex}`;
+
+          const nameEl = document.createElement("div");
+          nameEl.className = "name";
+          nameEl.textContent = name;
+
+          const meta = document.createElement("div");
+          meta.className = "meta";
+          meta.textContent = hex.toUpperCase();
+
+          row.appendChild(swatch);
+          row.appendChild(nameEl);
+          row.appendChild(meta);
+          list.appendChild(row);
+        });
+
+        card.appendChild(list);
+        root.appendChild(card);
+      });
+    }
+
+    function fillSelects() {
+      const fg = document.getElementById("fgSeries");
+      const bg = document.getElementById("bgSeries");
+
+      order.forEach(key => {
+        const label = key.charAt(0).toUpperCase() + key.slice(1);
+        fg.add(new Option(label, key));
+        bg.add(new Option(label, key));
+      });
+
+      fg.value = "sten";
+      bg.value = "midnatt";
+
+      fg.addEventListener("change", renderMatrix);
+      bg.addEventListener("change", renderMatrix);
+    }
+
+    function renderMatrix() {
+      const fgKey = document.getElementById("fgSeries").value;
+      const bgKey = document.getElementById("bgSeries").value;
+      const fgTokens = series[fgKey];
+      const bgTokens = series[bgKey];
+
+      const table = document.getElementById("matrix");
+      table.innerHTML = "";
+
+      const thead = document.createElement("thead");
+      const headRow = document.createElement("tr");
+
+      const corner = document.createElement("th");
+      corner.textContent = "Förgrund \\ Bakgrund";
+      headRow.appendChild(corner);
+
+      bgTokens.forEach(([name, hex]) => {
+        const th = document.createElement("th");
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        chip.textContent = name.replace("--", "");
+        chip.style.background = hex;
+        chip.style.color = onColor(hex);
+        th.appendChild(chip);
+        headRow.appendChild(th);
+      });
+
+      thead.appendChild(headRow);
+      table.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+
+      fgTokens.forEach(([fgName, fgHex]) => {
+        const tr = document.createElement("tr");
+
+        const rowHead = document.createElement("th");
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        chip.textContent = fgName.replace("--", "");
+        chip.style.background = fgHex;
+        chip.style.color = onColor(fgHex);
+        rowHead.appendChild(chip);
+        tr.appendChild(rowHead);
+
+        bgTokens.forEach(([bgName, bgHex]) => {
+          const ratio = contrastRatio(fgHex, bgHex);
+          const td = document.createElement("td");
+          td.className = statusClass(ratio);
+          td.innerHTML = `<strong>${ratio.toFixed(2)}:1</strong>`;
+          td.title = `${fgName} på ${bgName} = ${ratio.toFixed(2)}:1`;
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+      });
+
+      table.appendChild(tbody);
+      renderPreview(fgKey, bgKey);
+    }
+
+    function findClosestPairWithinSelectedSeries(fgKey, bgKey, target, bgType, minRatio, maxRatio, used) {
+      const candidates = [];
+
+      for (const [fgName, fgHex] of series[fgKey]) {
+        for (const [bgName, bgHex] of series[bgKey]) {
+          const ratio = contrastRatio(fgHex, bgHex);
+          if (ratio < minRatio || ratio > maxRatio) continue;
+          if (brightnessBucket(bgHex) !== bgType) continue;
+          if (fgHex.toLowerCase() === bgHex.toLowerCase()) continue;
+
+          const key = `${fgName}|${bgName}`;
+          if (used.has(key)) continue;
+
+          candidates.push({
+            fgKey, fgName, fgHex,
+            bgKey, bgName, bgHex,
+            ratio,
+            distance: Math.abs(ratio - target)
+          });
+        }
+      }
+
+      candidates.sort((a, b) => a.distance - b.distance);
+      return candidates[0] || null;
+    }
+
+    function findFallbackPairWithinSelectedSeries(fgKey, bgKey, target, bgType, minRatio, used) {
+      const candidates = [];
+
+      for (const [fgName, fgHex] of series[fgKey]) {
+        for (const [bgName, bgHex] of series[bgKey]) {
+          const ratio = contrastRatio(fgHex, bgHex);
+          if (ratio < minRatio) continue;
+          if (brightnessBucket(bgHex) !== bgType) continue;
+          if (fgHex.toLowerCase() === bgHex.toLowerCase()) continue;
+
+          const key = `${fgName}|${bgName}`;
+          if (used.has(key)) continue;
+
+          candidates.push({
+            fgKey, fgName, fgHex,
+            bgKey, bgName, bgHex,
+            ratio,
+            distance: Math.abs(ratio - target)
+          });
+        }
+      }
+
+      candidates.sort((a, b) => a.distance - b.distance);
+      return candidates[0] || null;
+    }
+
+    function pickExamples(fgKey, bgKey) {
+      const wanted = [
+        { label: "Nära 4.5:1 · mörk bakgrund", target: 4.5, bgType: "dark",  min: 4.5, max: 5.2, level: "AA normal text" },
+        { label: "Nära 4.5:1 · ljus bakgrund", target: 4.5, bgType: "light", min: 4.5, max: 5.2, level: "AA normal text" },
+        { label: "Nära 3:1 · mörk bakgrund",   target: 3.0, bgType: "dark",  min: 3.0, max: 3.6, level: "Stor text/grafik" },
+        { label: "Nära 3:1 · ljus bakgrund",   target: 3.0, bgType: "light", min: 3.0, max: 3.6, level: "Stor text/grafik" }
+      ];
+
+      const used = new Set();
+      const results = [];
+
+      for (const spec of wanted) {
+        let pair = findClosestPairWithinSelectedSeries(
+          fgKey, bgKey, spec.target, spec.bgType, spec.min, spec.max, used
+        );
+
+        if (!pair) {
+          pair = findFallbackPairWithinSelectedSeries(
+            fgKey, bgKey, spec.target, spec.bgType, spec.min, used
+          );
+        }
+
+        if (pair) {
+          used.add(`${pair.fgName}|${pair.bgName}`);
+          results.push({ ...spec, ...pair });
+        }
+      }
+
+      return results;
+    }
+
+    function renderPreview(fgKey, bgKey) {
+      const target = document.getElementById("preview");
+      target.innerHTML = "";
+
+      const examples = pickExamples(fgKey, bgKey);
+
+      if (examples.length === 0) {
+        target.innerHTML = `
+          <div class="panel" style="margin:0;">
+            <p style="margin:0;">
+              Det finns inga godkända exempel nära de valda trösklarna inom just dessa två serier.
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      examples.forEach(example => {
+        const card = document.createElement("div");
+        card.className = "example";
+        card.style.background = example.bgHex;
+        card.style.color = example.fgHex;
+
+        card.innerHTML = `
+          <span class="badge">${example.label}</span>
+          <strong>Det här exemplet är godkänt</strong>
+          <div style="font-size:1.08rem; font-weight:700;">Kontrast ${example.ratio.toFixed(2)}:1</div>
+          <div style="margin-top:8px;">${example.level}</div>
+          <div class="small" style="color:${example.fgHex};">
+            Förgrund: <code>${example.fgName}</code><br>
+            Bakgrund: <code>${example.bgName}</code><br>
+            Serier: ${example.fgKey} / ${example.bgKey}
+          </div>
+        `;
+        target.appendChild(card);
+      });
+    }
+
+    createScales();
+    fillSelects();
+    renderMatrix();
+  </script>
+</body>
+</html>
