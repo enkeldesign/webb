@@ -14,7 +14,6 @@
       --shadow: 0 8px 24px rgb(0 0 0 / 0.08);
       --radius: 14px;
       --missing: #fde8e8;
-      --missing-border: #f3b8b8;
     }
 
     * { box-sizing: border-box; }
@@ -99,8 +98,8 @@
 
     .token {
       display: grid;
-      grid-template-columns: 56px 1fr auto;
-      gap: 12px;
+      grid-template-columns: 50px 40px 1fr;
+      gap: 10px;
       align-items: center;
     }
 
@@ -134,13 +133,13 @@
     .name {
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       font-weight: 700;
-      font-size: 1rem;
-      word-break: break-word;
+      font-size: 0.95rem;
+      text-align: right;
     }
 
     .meta {
       color: var(--muted);
-      font-size: 1rem;
+      font-size: 0.92rem;
       white-space: nowrap;
     }
 
@@ -202,12 +201,12 @@
       z-index: 1;
       background: #fff;
       text-align: left;
-      min-width: 170px;
+      min-width: 120px;
     }
 
     .chip {
       display: inline-block;
-      min-width: 5.6em;
+      min-width: 4.5em;
       padding: 0.3em 0.45em;
       border-radius: 8px;
       font-weight: 700;
@@ -277,10 +276,6 @@
         Färgerna nedan bygger på liggande förslaget i Figma, men är mappade till den äldre strukturen:
         <code>140, 120, 100, 85, 70, 50, 30, 20, 15, 10, 5</code>.
         Endast <code>vit-0</code> har <code>-0</code>, och <code>svart-140</code> visas som dess motpol.
-      </p>
-      <p>
-        Där originalpaletten inte hade alla nivåer har mellanvärden justerats för att ge jämnare visuella steg,
-        utan att ändra kärnfärgerna i onödan.
       </p>
       <p><a href="#contrast">Kontrastmatris</a></p>
       <div class="scales" id="scales"></div>
@@ -488,7 +483,7 @@
 
           const nameEl = document.createElement("div");
           nameEl.className = "name";
-          nameEl.textContent = formatTokenName(key, slot);
+          nameEl.textContent = slot;
 
           const meta = document.createElement("div");
           meta.className = "meta";
@@ -542,7 +537,7 @@
         const th = document.createElement("th");
         const chip = document.createElement("span");
         chip.className = "chip";
-        chip.textContent = formatTokenName(bgKey, slot);
+        chip.textContent = slot;
 
         if (isMissing(hex)) {
           chip.classList.add("missing");
@@ -564,18 +559,7 @@
         const tr = document.createElement("tr");
 
         const rowHead = document.createElement("th");
-        const chip = document.createElement("span");
-        chip.className = "chip";
-        chip.textContent = formatTokenName(fgKey, fgSlot);
-
-        if (isMissing(fgHex)) {
-          chip.classList.add("missing");
-        } else {
-          chip.style.background = fgHex;
-          chip.style.color = onColor(fgHex);
-        }
-
-        rowHead.appendChild(chip);
+        rowHead.textContent = fgSlot;
         tr.appendChild(rowHead);
 
         bgTokens.forEach(([bgSlot, bgHex]) => {
