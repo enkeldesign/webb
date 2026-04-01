@@ -997,3 +997,243 @@ header.hero {
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================
+   TV baseline for fullscreen browser via HDMI
+   3 current matches + 4 groups visible together
+   ========================================= */
+
+@media (min-width: 1400px) and (min-height: 760px) {
+  body.tournament-fullscreen {
+    min-height: 100dvh;
+    overflow: hidden;
+    font-size: 20px; /* TV baseline */
+  }
+
+  body.tournament-fullscreen .container {
+    max-width: min(1680px, calc(100vw - 32px));
+    min-width: 1280px;
+    min-height: 100dvh;
+    margin: 0 auto;
+    padding: 16px 20px;
+    gap: 14px;
+    border-radius: 0;
+  }
+
+  body.tournament-fullscreen header.hero {
+    padding: 18px 20px;
+    min-height: 108px;
+  }
+
+  body.tournament-fullscreen .hero-logo {
+    height: 84px;
+  }
+
+  body.tournament-fullscreen .hero h1.title {
+    font-size: 2rem;
+    line-height: 1.05;
+  }
+
+  body.tournament-fullscreen #tournament-stage {
+    flex: 1;
+    min-height: 0;
+    padding: 18px 20px;
+    gap: 14px;
+  }
+
+  body.tournament-fullscreen .tournament-overview {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(420px, 1fr);
+    gap: 18px;
+    align-items: stretch;
+  }
+
+  /* LEFT: matches */
+  body.tournament-fullscreen .now-playing {
+    min-height: 0;
+    overflow: hidden;
+    padding: 18px;
+    gap: 12px;
+  }
+
+  body.tournament-fullscreen .now-playing h2,
+  body.tournament-fullscreen .schedule h2,
+  body.tournament-fullscreen .group-ranking h3,
+  body.tournament-fullscreen .upcoming-title {
+    font-size: 1.7rem;
+    line-height: 1.1;
+  }
+
+  body.tournament-fullscreen .current-matches {
+    gap: 12px;
+    overflow: visible; /* 3 cards should fit without inner scroll */
+    padding-right: 0;
+  }
+
+  body.tournament-fullscreen .match-card {
+    width: 100%;
+    min-height: 168px;
+    padding: 14px 16px;
+    gap: 10px;
+    border-left-width: 10px;
+  }
+
+  body.tournament-fullscreen .match-group {
+    font-size: 0.9rem;
+  }
+
+  body.tournament-fullscreen .match-teams {
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    font-size: 1.05rem;
+    margin-bottom: 0;
+  }
+
+  body.tournament-fullscreen .match-team-left,
+  body.tournament-fullscreen .match-team-right {
+    gap: 10px;
+  }
+
+  body.tournament-fullscreen .match-team-left span,
+  body.tournament-fullscreen .match-team-right span {
+    font-size: 1.5rem;
+    line-height: 1.05;
+  }
+
+  body.tournament-fullscreen .match-vs {
+    font-size: 1rem;
+  }
+
+  body.tournament-fullscreen .match-card img.flag {
+    width: 58px;
+    height: 39px;
+  }
+
+  body.tournament-fullscreen .history {
+    font-size: 0.82rem;
+    gap: 4px;
+  }
+
+  body.tournament-fullscreen .match-inputs {
+    gap: 10px;
+    margin-top: 6px;
+    padding-top: 10px;
+  }
+
+  body.tournament-fullscreen .match-inputs input[type="number"] {
+    width: 56px;
+    height: 42px;
+    padding: 0;
+    font-size: 1.05rem;
+  }
+
+  body.tournament-fullscreen .match-inputs button,
+  body.tournament-fullscreen .btn {
+    min-height: 40px;
+    font-size: 0.95rem;
+  }
+
+  /* Upcoming chips */
+  body.tournament-fullscreen .upcoming-wrap {
+    gap: 10px;
+    margin-top: 2px;
+  }
+
+  body.tournament-fullscreen .upcoming-matches {
+    gap: 10px;
+  }
+
+  body.tournament-fullscreen .upcoming-chip {
+    gap: 8px;
+    padding: 4px 10px;
+  }
+
+  body.tournament-fullscreen .upcoming-chip .flag {
+    width: 34px;
+    height: 23px;
+  }
+
+  body.tournament-fullscreen .upcoming-group {
+    font-size: 0.82rem;
+  }
+
+  /* RIGHT: four groups */
+  body.tournament-fullscreen .groups-rankings {
+    min-height: 0;
+    gap: 12px;
+  }
+
+  body.tournament-fullscreen .groups-rankings.groups-count-4 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  body.tournament-fullscreen .group-ranking {
+    min-height: 0;
+    padding: 12px 12px 10px;
+    overflow: hidden;
+  }
+
+  body.tournament-fullscreen .group-ranking h3 {
+    margin: 0 0 8px;
+  }
+
+  body.tournament-fullscreen .group-ranking table {
+    font-size: 0.9rem;
+    line-height: 1.2;
+  }
+
+  body.tournament-fullscreen .group-ranking th,
+  body.tournament-fullscreen .group-ranking td {
+    padding: 4px 4px;
+  }
+
+  body.tournament-fullscreen .group-ranking .nation-cell {
+    gap: 6px;
+  }
+
+  body.tournament-fullscreen .group-ranking img.flag {
+    width: 28px;
+    height: 19px;
+    border-radius: 4px;
+  }
+
+  /* Bottom schedule: still visible, but compact */
+  body.tournament-fullscreen .marathon-section {
+    margin-top: 0;
+  }
+
+  body.tournament-fullscreen #schedule-list {
+    max-height: 24vh;
+    overflow: auto;
+  }
+
+  body.tournament-fullscreen .schedule-item {
+    min-height: 52px;
+    padding: 8px 12px;
+    font-size: 0.96rem;
+    gap: 8px;
+  }
+
+  body.tournament-fullscreen .schedule-score {
+    min-width: 76px;
+  }
+
+  body.tournament-fullscreen .schedule-group {
+    font-size: 0.82rem;
+  }
+
+  body.tournament-fullscreen .schedule-item button.change-result {
+    font-size: 0.8rem;
+    padding: 4px 10px;
+  }
+
+  /* Toast / latest result */
+  body.tournament-fullscreen .toast {
+    padding: 14px 24px;
+    font-size: 1.2rem;
+  }
+}
