@@ -1475,8 +1475,10 @@ function updateStandingsUI() {
 // Render schedule at bottom
 function updateScheduleUI() {
   const list = document.getElementById('schedule-modal-list');
+  const modal = document.getElementById('schedule-modal');
   if (!list) return;
   list.innerHTML = '';
+  if (modal) modal.classList.remove('ultra-compact');
   // Bygg varje rad i spelschemat med en tydlig struktur: flagga + nation, resultat,
   // flagga + nation, gruppnamn och en ändra‑knapp. Vinnande lag markeras med
   // fetstil. Gruppnamn hämtas från match.group som sätts i buildSchedule().
@@ -1544,7 +1546,8 @@ function updateScheduleUI() {
       changeBtn = document.createElement('button');
       changeBtn.classList.add('btn', 'btn-secondary', 'change-result');
       changeBtn.textContent = 'Ändra';
-      changeBtn.addEventListener('click', () => {
+      changeBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
         editResult(idx);
       });
     }
@@ -1558,10 +1561,32 @@ function updateScheduleUI() {
     if (changeBtn) item.appendChild(changeBtn);
     list.appendChild(item);
   });
+  enableUltraCompactScheduleIfNeeded();
   // After rendering the schedule, check if the group stage has been completed.
   // This ensures that on page reload the "Gruppspelet är slut" message and button
   // appear if all matches have results.
   checkGroupStageComplete();
+}
+
+function enableUltraCompactScheduleIfNeeded() {
+  const modal = document.getElementById('schedule-modal');
+  const list = document.getElementById('schedule-modal-list');
+  if (!modal || !list) return;
+  if (!document.body.classList.contains('tournament-fullscreen')) return;
+
+  requestAnimationFrame(() => {
+    const listOverflows = list.scrollHeight > list.clientHeight;
+    modal.classList.toggle('ultra-compact', listOverflows);
+    if (!listOverflows) return;
+
+    const rows = list.querySelectorAll('.schedule-item');
+    rows.forEach(row => {
+      row.addEventListener('click', () => {
+        rows.forEach(otherRow => otherRow.classList.remove('expanded'));
+        row.classList.add('expanded');
+      });
+    });
+  });
 }
 
 function editResult(idx) {
@@ -1752,8 +1777,8 @@ function toggleScheduleModal(show) {
   const modal = document.getElementById('schedule-modal');
   if (!modal) return;
   if (show) {
-    updateScheduleUI();
     modal.hidden = false;
+    updateScheduleUI();
   } else {
     modal.hidden = true;
   }
