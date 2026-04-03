@@ -1058,7 +1058,7 @@ header.hero {
     min-height: 0;
     overflow: hidden;
     padding: 18px;
-    gap: 12px;
+    gap: 8px;
   }
 
   body.tournament-fullscreen .now-playing h2,
@@ -1070,16 +1070,16 @@ header.hero {
   }
 
   body.tournament-fullscreen .current-matches {
-    gap: 12px;
+    gap: 8px;
     overflow: visible; /* 3 cards should fit without inner scroll */
     padding-right: 0;
   }
 
   body.tournament-fullscreen .match-card {
     width: 100%;
-    min-height: 168px;
+    min-height: 140px;
     padding: 14px 16px;
-    gap: 10px;
+    gap: 8px;
     border-left-width: 10px;
   }
 
@@ -1101,7 +1101,7 @@ header.hero {
 
   body.tournament-fullscreen .match-team-left span,
   body.tournament-fullscreen .match-team-right span {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     line-height: 1.05;
   }
 
@@ -1115,12 +1115,16 @@ header.hero {
   }
 
   body.tournament-fullscreen .history {
-    font-size: 0.82rem;
-    gap: 4px;
+    font-size: 0.76rem;
+    gap: 2px;
+  }
+
+  body.tournament-fullscreen .history .history-entry:nth-of-type(n + 2) {
+    display: none;
   }
 
   body.tournament-fullscreen .match-inputs {
-    gap: 10px;
+    gap: 6px;
     margin-top: 6px;
     padding-top: 10px;
   }
