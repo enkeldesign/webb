@@ -240,13 +240,14 @@ header.hero {
 .marathon-section {
   display: flex;
   justify-content: flex-end;
+  gap: 0.5rem;
 }
 
 .schedule {
   min-height: 0;
 }
 
-#schedule-list {
+#schedule-modal-list {
   max-height: 38vh;
   overflow: auto;
   padding-right: 0.25rem;
@@ -981,7 +982,7 @@ header.hero {
     margin-top: -0.1rem;
   }
 
-  body.tournament-fullscreen #schedule-list {
+  body.tournament-fullscreen #schedule-modal-list {
     max-height: 21vh;
   }
 
@@ -1206,7 +1207,7 @@ header.hero {
     margin-top: 0;
   }
 
-  body.tournament-fullscreen #schedule-list {
+  body.tournament-fullscreen #schedule-modal-list {
     max-height: 24vh;
     overflow: auto;
   }
