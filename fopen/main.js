@@ -108,7 +108,7 @@ function loadState() {
       drawAssignments: {},
       schedule: [],
       results: {}, // matchId -> {score1, score2}
-      numBoards: 1,
+      numBoards: 3,
       marathonUpdated: null,
       // Use a stable ordering for matches in progress to avoid concurrency issues
       playing: [],
@@ -123,6 +123,7 @@ function loadState() {
   if (!state.drawAssignments) state.drawAssignments = {};
   if (!Array.isArray(state.schedule)) state.schedule = [];
   if (!state.results) state.results = {};
+  if (!Number.isInteger(state.numBoards) || state.numBoards < 1) state.numBoards = 3;
   if (!state.playing) state.playing = [];
   if (!Array.isArray(state.playingMatches)) state.playingMatches = [];
   return state;
@@ -445,11 +446,9 @@ function buildSchedule() {
   saveState();
 }
 
-// Prompt user for number of boards and start tournament
+// Start tournament (TV deployment uses fixed 3 boards)
 function startTournament() {
-  let boards = parseInt(prompt('Hur många bord (1–5)?', state.numBoards || 1), 10);
-  if (isNaN(boards) || boards < 1 || boards > 5) boards = 1;
-  state.numBoards = boards;
+  state.numBoards = 3;
   buildSchedule();
   // Initialise group standings with zero values so that groups are displayed even before any matches are played.
   initGroupStandings();
@@ -556,6 +555,9 @@ function updateNowPlaying() {
     const m = state.schedule[idx];
     return m && m.status !== 'completed';
   });
+  if (state.playingMatches.length > state.numBoards) {
+    state.playingMatches = state.playingMatches.slice(0, state.numBoards);
+  }
   // Reset status of all non-completed matches to pending; matches
   // currently in playingMatches will be set to 'playing' later
   state.schedule.forEach((m, i) => {
@@ -1917,7 +1919,7 @@ function resetState() {
     drawAssignments: {},
     schedule: [],
     results: {},
-    numBoards: 1,
+    numBoards: 3,
     marathonUpdated: null,
     playing: [],
     playingMatches: []
