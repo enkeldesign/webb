@@ -108,11 +108,7 @@
                 <!-- Marathon button -->
                 <div class="marathon-section">
                     <button id="marathon-btn" class="btn btn-secondary">Visa maratontabell</button>
-                </div>
-                <!-- Full schedule area -->
-                <div id="schedule" class="schedule">
-                <h2>Spelschema och resultat</h2>
-                    <div id="schedule-list"></div>
+                    <button id="schedule-btn" class="btn btn-secondary">Visa spelschema</button>
                 </div>
                 <div class="tournament-actions">
                     <button id="auto-results" class="btn btn-secondary debug">Fyll i resultat (debug)</button>
@@ -129,6 +125,17 @@
                     <button id="close-marathon" class="btn btn-secondary">Stäng</button>
                 </div>
                 <div id="marathon-table" class="marathon-table"></div>
+            </div>
+        </div>
+
+        <!-- Schedule modal -->
+        <div id="schedule-modal" class="modal" hidden>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Spelschema och resultat</h2>
+                    <button id="close-schedule" class="btn btn-secondary">Stäng</button>
+                </div>
+                <div id="schedule-modal-list" class="schedule-list"></div>
             </div>
         </div>
     </div>

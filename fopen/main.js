@@ -1474,7 +1474,8 @@ function updateStandingsUI() {
 
 // Render schedule at bottom
 function updateScheduleUI() {
-  const list = document.getElementById('schedule-list');
+  const list = document.getElementById('schedule-modal-list');
+  if (!list) return;
   list.innerHTML = '';
   // Bygg varje rad i spelschemat med en tydlig struktur: flagga + nation, resultat,
   // flagga + nation, gruppnamn och en ändra‑knapp. Vinnande lag markeras med
@@ -1747,6 +1748,17 @@ function toggleMarathonModal(show) {
   }
 }
 
+function toggleScheduleModal(show) {
+  const modal = document.getElementById('schedule-modal');
+  if (!modal) return;
+  if (show) {
+    updateScheduleUI();
+    modal.hidden = false;
+  } else {
+    modal.hidden = true;
+  }
+}
+
 // Render current stage UI
 function renderStage() {
   const selectStage = document.getElementById('select-stage');
@@ -1791,6 +1803,8 @@ function bindEvents() {
   document.getElementById('start-tournament-btn').addEventListener('click', startTournament);
   document.getElementById('marathon-btn').addEventListener('click', () => toggleMarathonModal(true));
   document.getElementById('close-marathon').addEventListener('click', () => toggleMarathonModal(false));
+  document.getElementById('schedule-btn').addEventListener('click', () => toggleScheduleModal(true));
+  document.getElementById('close-schedule').addEventListener('click', () => toggleScheduleModal(false));
   document.getElementById('backup-btn').addEventListener('click', backupState);
   document.getElementById('reset-btn').addEventListener('click', resetState);
   document.getElementById('auto-results').addEventListener('click', autoFillResults);
