@@ -1775,12 +1775,16 @@ function toggleMarathonModal(show) {
 
 function toggleScheduleModal(show) {
   const modal = document.getElementById('schedule-modal');
+  const closeScheduleBtn = document.getElementById('close-schedule');
+  const scheduleBtn = document.getElementById('schedule-btn');
   if (!modal) return;
   if (show) {
     modal.hidden = false;
     updateScheduleUI();
+    if (closeScheduleBtn) closeScheduleBtn.focus({ preventScroll: true });
   } else {
     modal.hidden = true;
+    if (scheduleBtn) scheduleBtn.focus({ preventScroll: true });
   }
 }
 
@@ -1831,8 +1835,21 @@ function bindEvents() {
   // Schedule button opens the dedicated schedule modal.
   const scheduleBtn = document.getElementById('schedule-btn');
   const closeScheduleBtn = document.getElementById('close-schedule');
+  const scheduleModal = document.getElementById('schedule-modal');
+  const scheduleModalContent = scheduleModal ? scheduleModal.querySelector('.modal-content') : null;
   if (scheduleBtn) scheduleBtn.addEventListener('click', () => toggleScheduleModal(true));
   if (closeScheduleBtn) closeScheduleBtn.addEventListener('click', () => toggleScheduleModal(false));
+  if (scheduleModal && scheduleModalContent) {
+    scheduleModal.addEventListener('click', evt => {
+      if (evt.target === scheduleModal) toggleScheduleModal(false);
+    });
+  }
+
+  document.addEventListener('keydown', evt => {
+    if (evt.key === 'Escape' && scheduleModal && !scheduleModal.hidden) {
+      toggleScheduleModal(false);
+    }
+  });
   document.getElementById('backup-btn').addEventListener('click', backupState);
   document.getElementById('reset-btn').addEventListener('click', resetState);
   document.getElementById('auto-results').addEventListener('click', autoFillResults);
