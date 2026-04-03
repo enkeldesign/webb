@@ -1332,3 +1332,10 @@ body.tournament-fullscreen #schedule-modal.ultra-compact .schedule-item.expanded
 body.tournament-fullscreen #schedule-modal.ultra-compact .schedule-item.expanded button.change-result {
   display: inline-flex;
 }
+
+/* Merge-safe override: fill schedule modal column 1 before column 2 on TV */
+@media (min-width: 1400px) and (min-height: 760px) {
+  body.tournament-fullscreen #schedule-modal-list {
+    column-fill: auto;
+  }
+}
