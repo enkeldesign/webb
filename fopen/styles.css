@@ -253,6 +253,8 @@ header.hero {
   max-height: 38vh;
   overflow: auto;
   padding-right: 0.25rem;
+  flex: 1;
+  min-height: 0;
 }
 
 #schedule-modal .modal-content {
@@ -263,11 +265,6 @@ header.hero {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-}
-
-#schedule-modal-list {
-  flex: 1;
-  min-height: 0;
 }
 
 #schedule-modal .schedule-item {
