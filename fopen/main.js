@@ -55,6 +55,7 @@ const FLAG_MAP = {
   'Island': 'Flag_of_Iceland.svg',
   'Åland': 'Flag_of_#U00c5land.svg',
   'Ukraina': 'Flag_of_Ukraine.svg',
+  'Irland': 'Flag_of_Ireland.svg',
   // Korrigera stavning för Nepal (rätt namn i maratonlistan). Lägg även till alias
   // utan sista bokstaven för bakåtkompatibilitet.  Båda pekar på samma fil.
   'Nepal': 'Flag_of_Nepal.svg',
