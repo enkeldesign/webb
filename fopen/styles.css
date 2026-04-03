@@ -1258,7 +1258,7 @@ header.hero {
   }
 
   body.tournament-fullscreen #schedule-modal .modal-content {
-    width: min(90vw, 1420px);
+    width: min(98vw, 1700px);
     height: min(96vh, 1280px);
     max-width: none;
     max-height: none;
@@ -1288,22 +1288,22 @@ header.hero {
   }
 
   body.tournament-fullscreen #schedule-modal .schedule-score {
-    min-width: 56px;
+    min-width: 68px;
   }
 
   body.tournament-fullscreen #schedule-modal .schedule-group {
-    font-size: 0.6rem;
+    font-size: 0.66rem;
   }
 
   body.tournament-fullscreen #schedule-modal .schedule-item img.flag {
-    width: 22px;
-    height: 15px;
+    width: 26px;
+    height: 17px;
   }
 
   body.tournament-fullscreen #schedule-modal .schedule-item button.change-result {
-    font-size: 0.6rem;
-    padding: 1px 4px;
-    min-height: 20px;
+    font-size: 0.66rem;
+    padding: 2px 5px;
+    min-height: 24px;
     white-space: nowrap;
     pointer-events: auto;
     position: relative;
