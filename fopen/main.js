@@ -1803,8 +1803,11 @@ function bindEvents() {
   document.getElementById('start-tournament-btn').addEventListener('click', startTournament);
   document.getElementById('marathon-btn').addEventListener('click', () => toggleMarathonModal(true));
   document.getElementById('close-marathon').addEventListener('click', () => toggleMarathonModal(false));
-  document.getElementById('schedule-btn').addEventListener('click', () => toggleScheduleModal(true));
-  document.getElementById('close-schedule').addEventListener('click', () => toggleScheduleModal(false));
+  // Schedule button opens the dedicated schedule modal.
+  const scheduleBtn = document.getElementById('schedule-btn');
+  const closeScheduleBtn = document.getElementById('close-schedule');
+  if (scheduleBtn) scheduleBtn.addEventListener('click', () => toggleScheduleModal(true));
+  if (closeScheduleBtn) closeScheduleBtn.addEventListener('click', () => toggleScheduleModal(false));
   document.getElementById('backup-btn').addEventListener('click', backupState);
   document.getElementById('reset-btn').addEventListener('click', resetState);
   document.getElementById('auto-results').addEventListener('click', autoFillResults);
