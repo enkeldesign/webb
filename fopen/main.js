@@ -1491,7 +1491,10 @@ function updateScheduleUI() {
     item.classList.add(match.status);
     if (match.status === 'completed') item.classList.add('completed');
     if (match.skipped) item.classList.add('skipped');
-    // Build columns: flag1, team1, score, flag2, team2, group label, edit button
+    // Build columns: number, flag1, team1, score, flag2, team2, group label, edit button
+    const numberDiv = document.createElement('div');
+    numberDiv.classList.add('schedule-number');
+    numberDiv.textContent = `${idx + 1}.`;
     // Flag for team1
     const leftImg = document.createElement('img');
     leftImg.src = getFlagSrc(match.team1);
@@ -1552,6 +1555,7 @@ function updateScheduleUI() {
       });
     }
     // Append in order to match grid columns
+    item.appendChild(numberDiv);
     item.appendChild(leftImg);
     item.appendChild(leftName);
     item.appendChild(score);
