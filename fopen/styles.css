@@ -253,6 +253,8 @@ header.hero {
   max-height: 38vh;
   overflow: auto;
   padding-right: 0.25rem;
+  flex: 1;
+  min-height: 0;
 }
 
 #schedule-modal .modal-content {
@@ -265,9 +267,8 @@ header.hero {
   flex-direction: column;
 }
 
-#schedule-modal-list {
-  flex: 1;
-  min-height: 0;
+#schedule-modal .schedule-item {
+  line-height: 1.12;
 }
 
 #schedule-modal .schedule-item {
@@ -1332,4 +1333,11 @@ body.tournament-fullscreen #schedule-modal.ultra-compact .schedule-item.expanded
 
 body.tournament-fullscreen #schedule-modal.ultra-compact .schedule-item.expanded button.change-result {
   display: inline-flex;
+}
+
+/* Merge-safe override: fill schedule modal column 1 before column 2 on TV */
+@media (min-width: 1400px) and (min-height: 760px) {
+  body.tournament-fullscreen #schedule-modal-list {
+    column-fill: auto;
+  }
 }
