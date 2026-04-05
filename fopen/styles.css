@@ -431,7 +431,7 @@ header.hero {
   font-weight: bold;
   font-size: 1rem;
   gap: 0.5rem;
-  margin-bottom: -15px;
+  margin-bottom: 0;
 }
 
 .match-teams span {
@@ -449,8 +449,9 @@ header.hero {
 
 .match-team-left span, .match-team-right span {
   font-family: var(--font-display);
-  font-size: 1.05rem;
+  font-size: clamp(1.5rem, 2.2vw, 2rem);
   font-weight: 600;
+  line-height: 1;
 }
 
 .match-team-right {
@@ -1144,7 +1145,7 @@ header.hero {
 
   body.tournament-fullscreen .match-card {
     width: 100%;
-    min-height: 118px;
+    min-height: 102px;
     padding: 10px 12px;
     gap: 6px;
     border-left-width: 10px;
@@ -1190,7 +1191,7 @@ header.hero {
     gap: 2px;
   }
 
-  body.tournament-fullscreen .history .history-entry:nth-of-type(n + 2) {
+  body.tournament-fullscreen .history .history-entry:nth-child(n + 3) {
     display: none;
   }
 
@@ -1298,7 +1299,8 @@ header.hero {
     columns: 2;
     column-gap: 12px;
     max-height: none;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
     padding-right: 0;
   }
 
@@ -1308,12 +1310,20 @@ header.hero {
     font-size: 0.79rem;
     line-height: 1;
     gap: 3px;
+    grid-template-columns: auto auto minmax(0, 1fr) auto auto minmax(0, 1fr) auto auto;
     break-inside: avoid;
     margin: 0 0 6px;
   }
 
   body.tournament-fullscreen #schedule-modal .schedule-team {
     gap: 4px;
+    min-width: 0;
+  }
+
+  body.tournament-fullscreen #schedule-modal .schedule-team span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   body.tournament-fullscreen #schedule-modal .schedule-score {
