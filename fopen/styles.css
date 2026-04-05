@@ -65,6 +65,13 @@ h2, h3 {
   color: var(--color-primary);
 }
 
+
+.overview-title {
+  margin: 0;
+  font-size: clamp(1.25rem, 1.9vw, 1.9rem);
+  line-height: 1.1;
+}
+
 .container {
   max-width: 1100px;
   width: 100%;
@@ -712,8 +719,6 @@ header.hero {
 
 .rankings-title {
   margin: 0;
-  font-size: clamp(1.25rem, 1.9vw, 1.9rem);
-  line-height: 1.1;
 }
 
 .groups-rankings.groups-count-3 { grid-template-columns: repeat(3, 1fr); }
@@ -1124,7 +1129,7 @@ header.hero {
   /* LEFT: matches */
   body.tournament-fullscreen .now-playing {
     min-height: 0;
-    overflow: hidden;
+    overflow: auto;
     padding: 14px;
     gap: 6px;
   }
@@ -1191,9 +1196,6 @@ header.hero {
     gap: 2px;
   }
 
-  body.tournament-fullscreen .history .history-entry:nth-child(n + 3) {
-    display: none;
-  }
 
   body.tournament-fullscreen .match-inputs {
     gap: 6px;
