@@ -89,42 +89,54 @@ const DEFAULT_FLAG = 'placeholder_light_gray_block.png';
 // State management: we persist state in localStorage under key 'fo-state'
 let state = {};
 
+function getDefaultState() {
+  return {
+    stage: 'select',
+    numSlots: 12,
+    selectedTeams: [],
+    groups: [],
+    drawAssignments: {},
+    schedule: [],
+    results: {}, // matchId -> {score1, score2}
+    numBoards: 1,
+    marathonUpdated: null,
+    // Use a stable ordering for matches in progress to avoid concurrency issues
+    playing: [],
+    // List of schedule indices that are currently being played. This is
+    // separate from the list of team names and ensures that matches in
+    // progress persist in the UI until their results are recorded.
+    playingMatches: []
+  };
+}
+
+function normalizeState(rawState) {
+  const merged = { ...getDefaultState(), ...(rawState || {}) };
+  if (!Array.isArray(merged.selectedTeams)) merged.selectedTeams = [];
+  if (!Array.isArray(merged.groups)) merged.groups = [];
+  if (!merged.drawAssignments || typeof merged.drawAssignments !== 'object') merged.drawAssignments = {};
+  if (!Array.isArray(merged.schedule)) merged.schedule = [];
+  if (!merged.results || typeof merged.results !== 'object') merged.results = {};
+  if (!Array.isArray(merged.playing)) merged.playing = [];
+  if (!Array.isArray(merged.playingMatches)) merged.playingMatches = [];
+  if (typeof merged.numSlots !== 'number' || Number.isNaN(merged.numSlots)) merged.numSlots = 12;
+  if (!['select', 'draw', 'tournament', 'playoff'].includes(merged.stage)) merged.stage = 'select';
+  return merged;
+}
+
 function loadState() {
   try {
     const stored = localStorage.getItem('fo-state');
     if (stored) {
-      state = JSON.parse(stored);
+      state = normalizeState(JSON.parse(stored));
     }
   } catch (e) {
     console.warn('Kunde inte läsa state från localStorage', e);
   }
   // If state is empty or invalid, initialise defaults
   if (!state.stage) {
-    state = {
-      stage: 'select',
-      numSlots: 12,
-      selectedTeams: [],
-      groups: [],
-      drawAssignments: {},
-      schedule: [],
-      results: {}, // matchId -> {score1, score2}
-      numBoards: 1,
-      marathonUpdated: null,
-      // Use a stable ordering for matches in progress to avoid concurrency issues
-      playing: [],
-      // List of schedule indices that are currently being played. This is
-      // separate from the list of team names and ensures that matches in
-      // progress persist in the UI until their results are recorded.
-      playingMatches: []
-    };
+    state = getDefaultState();
   }
-  // Ensure selectedTeams is array
-  if (!Array.isArray(state.selectedTeams)) state.selectedTeams = [];
-  if (!state.drawAssignments) state.drawAssignments = {};
-  if (!Array.isArray(state.schedule)) state.schedule = [];
-  if (!state.results) state.results = {};
-  if (!state.playing) state.playing = [];
-  if (!Array.isArray(state.playingMatches)) state.playingMatches = [];
+  state = normalizeState(state);
   return state;
 }
 
@@ -1855,6 +1867,7 @@ function bindEvents() {
     }
   });
   document.getElementById('backup-btn').addEventListener('click', backupState);
+  document.getElementById('import-btn').addEventListener('click', importBackupState);
   document.getElementById('reset-btn').addEventListener('click', resetState);
   document.getElementById('auto-results').addEventListener('click', autoFillResults);
 
@@ -1899,33 +1912,41 @@ function backupState() {
   URL.revokeObjectURL(url);
 }
 
+function importBackupState() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/json,.json';
+  input.addEventListener('change', async () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const importedState = normalizeState(parsed);
+      localStorage.setItem('fo-state', JSON.stringify(importedState));
+      alert('Backup importerad. Sidan laddas om.');
+      location.reload();
+    } catch (e) {
+      console.warn('Kunde inte importera backup', e);
+      alert('Kunde inte läsa backupfilen. Kontrollera att du valt en giltig JSON-backup.');
+    }
+  });
+  input.click();
+}
+
 // Reset state (debug) and reload page
 function resetState() {
   if (!confirm('Detta kommer att nollställa allt sparad data. Är du säker?')) return;
-  // Radera all data från localStorage så att allt sparat från tidigare sessioner
-  // tas bort. removeItem() på enskild nyckel räcker inte alltid när sidan
-  // körs under file://-protokollet, därför kör vi clear().
+  // Radera endast appens egen state-nyckel.
   try {
-    localStorage.clear();
+    localStorage.removeItem('fo-state');
   } catch (e) {
     console.warn('Kunde inte rensa localStorage', e);
   }
   // Reset the global state object till sina ursprungliga standardvärden.  Vi
   // inkluderar playingMatches så att logiken för "Kör nu" fungerar korrekt
   // direkt efter återställning.
-  state = {
-    stage: 'select',
-    numSlots: 12,
-    selectedTeams: [],
-    groups: [],
-    drawAssignments: {},
-    schedule: [],
-    results: {},
-    numBoards: 1,
-    marathonUpdated: null,
-    playing: [],
-    playingMatches: []
-  };
+  state = getDefaultState();
   // Spara detta tomma state så att nästa laddning av sidan tar del av det.
   saveState();
   // Ladda om sidan för att uppdatera hela gränssnittet
