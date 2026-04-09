@@ -322,7 +322,7 @@
 
   <script>
     const series = {
-      sol: [
+      havtorn: [
         ["140", "#B94F04"],
         ["120", "#DF7300"],
         ["100", "#FC9B04"],
@@ -335,7 +335,7 @@
         ["10",  "#FFFEE7"],
         ["5",   "#FFFFF8"]
       ],
-      apelsin: [
+      solApelsin: [
         ["140", "#B94F04"],
         ["120", "#DF7300"],
         ["100", "#FC9B04"],
@@ -348,7 +348,7 @@
         ["10",  "#FFFEE7"],
         ["5",   "#FFFFF8"]
       ],
-      energi: [
+      ledkryssEnergi: [
         ["140", "#480707"],
         ["120", "#831919"],
         ["100", "#D31919"],
@@ -361,7 +361,7 @@
         ["10",  "#FFF1F1"],
         ["5",   "#FFF8F8"]
       ],
-      hav: [
+      midnattHav: [
         ["140", "#002856"],
         ["120", "#0B3D6F"],
         ["100", "#064986"],
@@ -387,7 +387,7 @@
         ["10",  "#EAF3E5"],
         ["5",   "#F9FCF9"]
       ],
-      neutral: [
+      stenNeutral: [
         ["140", "#171A1C"],
         ["120", "#26292B"],
         ["100", "#4D4F53"],
@@ -412,7 +412,7 @@
       ]
     };
 
-    const order = ["sol", "apelsin", "energi", "hav", "barr", "neutral", "canvas", "transparent", "vit"];
+    const order = ["havtorn", "solApelsin", "ledkryssEnergi", "midnattHav", "barr", "stenNeutral", "canvas", "transparent", "vit"];
 
     function isMissing(hex) {
       return !hex || hex === "transparent";
@@ -527,8 +527,8 @@
         bg.add(new Option(label, key));
       });
 
-      fg.value = "neutral";
-      bg.value = "hav";
+      fg.value = "stenNeutral";
+      bg.value = "midnattHav";
 
       fg.addEventListener("change", renderMatrix);
       bg.addEventListener("change", renderMatrix);
