@@ -273,9 +273,9 @@
     <section class="panel">
       <h1>Linjärt namngivna färgskalor</h1>
       <p>
-        Färgerna nedan bygger på liggande förslaget i Figma, men är mappade till den äldre strukturen:
+        Färgerna nedan bygger på den uppdaterade primitive-paletten från Figma och visas i samma slot-struktur:
         <code>140, 120, 100, 85, 70, 50, 30, 20, 15, 10, 5</code>.
-        Endast <code>vit-0</code> har <code>-0</code>, och <code>svart-140</code> visas som dess motpol.
+        Slotar som saknas i källan visas som <code>transparent</code>.
       </p>
       <p><a href="#contrast">Kontrastmatris</a></p>
       <div class="scales" id="scales"></div>
@@ -322,81 +322,107 @@
 
   <script>
     const series = {
-      
-      midnatt: [
-        ["140", "#002856"],
-        ["120", "#0b3d6f"],
-        ["100", "#064986"],
-        ["85",  "#0155a3"],
-        ["70",  "#0065bd"],
-        ["50",  "#0c8aeb"],
-        ["30",  "#36a5fa"],
-        ["20",  "#7cc3fd"],
-        ["15",  "#b9ddfe"],
-        ["10",  "#e0eefe"],
-        ["5",   "#eef8fe"]
-      ],
       sol: [
-        ["140", "#b94f04"],
-        ["120", "#df7300"],
-        ["100", "#ee8702"],
-        ["85",  "#fc9b04"],
-        ["70",  "#ffbe1e"],
-        ["50",  "#fac800"],
-        ["30",  "#ffe687"],
-        ["20",  "#fff3c5"],
-        ["15",  "#fff7d8"],
-        ["10",  "#fff9e4"],
-        ["5",   "#fffbea"]
+        ["140", "transparent"],
+        ["120", "#CC980D"],
+        ["100", "#FFBE10"],
+        ["85",  "#FFC834"],
+        ["70",  "transparent"],
+        ["50",  "#FFDF87"],
+        ["30",  "transparent"],
+        ["20",  "transparent"],
+        ["15",  "#FFF5DB"],
+        ["10",  "transparent"],
+        ["5",   "#FFFCF3"]
+      ],
+      energi: [
+        ["140", "transparent"],
+        ["120", "#A21111"],
+        ["100", "#CA1515"],
+        ["85",  "#D23838"],
+        ["70",  "transparent"],
+        ["50",  "#E48A8A"],
+        ["30",  "transparent"],
+        ["20",  "transparent"],
+        ["15",  "#F7DCDC"],
+        ["10",  "transparent"],
+        ["5",   "#FCF3F3"]
       ],
       barr: [
-        ["140", "#0c2711"],
-        ["120", "#2d4225"],
-        ["100", "#2a5a2a"],
-        ["85",  "#3c5e2d"],
-        ["70",  "#4c7937"],
-        ["50",  "#639a48"],
-        ["30",  "#82b566"],
-        ["20",  "#a2cb8b"],
-        ["15",  "#bedbac"],
-        ["10",  "#dcebd3"],
-        ["5",   "#f4f9f2"]
+        ["140", "transparent"],
+        ["120", "#0E5532"],
+        ["100", "#116A3E"],
+        ["85",  "#35805B"],
+        ["70",  "transparent"],
+        ["50",  "#88B49F"],
+        ["30",  "transparent"],
+        ["20",  "transparent"],
+        ["15",  "#DBE9E2"],
+        ["10",  "transparent"],
+        ["5",   "#F3F8F5"]
       ],
-      ledkryss: [
-        ["140", "#480707"],
-        ["120", "#831919"],
-        ["100", "#9f1515"],
-        ["85",  "#c01515"],
-        ["70",  "#d31919"],
-        ["50",  "#f73c3c"],
-        ["30",  "#fe6b6b"],
-        ["20",  "#f2b3b3"],
-        ["15",  "#f8d0d0"],
-        ["10",  "#fbe7e7"],
-        ["5",   "#fff1f1"]
+      "green-b": [
+        ["140", "transparent"],
+        ["120", "#0E5532"],
+        ["100", "#5F9E6C"],
+        ["85",  "#77AD82"],
+        ["70",  "transparent"],
+        ["50",  "#AFCFB5"],
+        ["30",  "transparent"],
+        ["20",  "transparent"],
+        ["15",  "#E7F0E9"],
+        ["10",  "transparent"],
+        ["5",   "#F7FAF8"]
       ],
-      sten: [
-        ["140", "#090a0b"],
-        ["120", "#171a1c"],
-        ["100", "#26292b"],
-        ["85",  "#4d4f53"],
-        ["70",  "#50575d"],
-        ["50",  "#6f767c"],
-        ["30",  "#bababa"],
-        ["20",  "#d3d6d9"],
-        ["15",  "#e8e8e8"],
-        ["10",  "#f4f5f5"],
-        ["5",   "#fafafa"]
+      apelsin: [
+        ["140", "transparent"],
+        ["120", "#C2700D"],
+        ["100", "#F38C10"],
+        ["85",  "#F59D34"],
+        ["70",  "transparent"],
+        ["50",  "#F9C587"],
+        ["30",  "transparent"],
+        ["20",  "transparent"],
+        ["15",  "#FFEFDC"],
+        ["10",  "transparent"],
+        ["5",   "#FEF9F3"]
       ],
-      svart: [
-        ["140", "#000000"]
+      hav: [
+        ["140", "#000000"],
+        ["120", "#3B4292"],
+        ["100", "#4A52B6"],
+        ["85",  "#656CC1"],
+        ["70",  "transparent"],
+        ["50",  "#A4A8DB"],
+        ["30",  "transparent"],
+        ["20",  "transparent"],
+        ["15",  "#E5E5F5"],
+        ["10",  "transparent"],
+        ["5",   "#F5F6FA"]
+      ],
+      neutral: [
+        ["100", "#1B1E23"],
+        ["70",  "#5F6165"],
+        ["50",  "#8D8E91"],
+        ["30",  "#BBBBBD"],
+        ["20",  "#DDDDDE"],
+        ["15",  "#F4F4F4"],
+        ["10",  "#FFFFFF"],
+        ["5",   "#FFFFFF"]
+      ],
+      canvas: [
+        ["100", "#FFFFFF"],
+        ["10",  "#FFFFFF"]
+      ],
+      transparent: [
+        ["0", "transparent"]
       ],
       vit: [
-        ["0", "#ffffff"]
+        ["0", "#FFFFFF"]
       ]
     };
 
-    const order = ["midnatt", "sol", "barr", "ledkryss", "sten", "svart", "vit"];
+    const order = ["sol", "energi", "barr", "green-b", "apelsin", "hav", "neutral", "canvas", "transparent", "vit"];
 
     function isMissing(hex) {
       return !hex || hex === "transparent";
@@ -511,8 +537,8 @@
         bg.add(new Option(label, key));
       });
 
-      fg.value = "sten";
-      bg.value = "midnatt";
+      fg.value = "neutral";
+      bg.value = "hav";
 
       fg.addEventListener("change", renderMatrix);
       bg.addEventListener("change", renderMatrix);
