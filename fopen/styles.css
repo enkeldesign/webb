@@ -1166,7 +1166,7 @@ header.hero {
   body.tournament-fullscreen .match-teams {
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     gap: 8px;
-    font-size: 0.98rem;
+    font-size: 1.5rem;
     margin-bottom: 0;
   }
 
