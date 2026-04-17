@@ -1178,7 +1178,7 @@ header.hero {
 
   body.tournament-fullscreen .match-team-left span,
   body.tournament-fullscreen .match-team-right span {
-    font-size: 1.5rem;
+    font-size: 2rem;
     line-height: 1.04;
     white-space: nowrap;
     overflow: hidden;
