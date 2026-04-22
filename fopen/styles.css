@@ -1386,3 +1386,113 @@ body.tournament-fullscreen #schedule-modal.ultra-compact .schedule-item.expanded
   body.tournament-fullscreen #schedule-modal-list {
     column-fill: auto;
   }
+}
+
+/* =========================================
+   OPEN 2026 visual refresh
+   ========================================= */
+:root {
+  --bg-deep: #030a1f;
+  --bg-panel: #071534;
+  --text-bright: #eaf1ff;
+}
+
+body {
+  background: radial-gradient(circle at 20% 0%, #0c214f 0%, var(--bg-deep) 55%, #030712 100%);
+  color: var(--text-bright);
+}
+
+body::before { opacity: 0.08; }
+
+.container,
+.stage,
+header.hero,
+.now-playing,
+.group-ranking,
+.modal .modal-content {
+  background: linear-gradient(180deg, rgba(9, 24, 56, 0.94) 0%, rgba(3, 13, 34, 0.96) 100%);
+  border: 1px solid #16386f;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+
+.hero h1.title,
+h2, h3, .overview-title { color: var(--text-bright); }
+.hero-logo { border-radius: 10px; }
+
+.menu-toggle {
+  border: 1px solid #2e4f84;
+  background: #0a1a3b;
+  color: var(--text-bright);
+  border-radius: 12px;
+  min-width: 54px;
+  min-height: 54px;
+  font-size: 1.5rem;
+}
+
+.menu-dropdown {
+  background: #081737;
+  border: 1px solid #22467f;
+  border-radius: 12px;
+  padding: 0.4rem;
+}
+
+.menu-item { width: 100%; justify-content: flex-start; margin-bottom: 0.25rem; }
+
+.match-card { background: linear-gradient(180deg, rgba(8, 23, 53, 0.97) 0%, rgba(4, 15, 37, 0.98) 100%); border-color: #22467a; }
+.match-team-left span, .match-team-right span { color: #f1f5ff; }
+.history { color: #a5b9e0; }
+.history-title { color: #dce8ff; }
+
+.history-toggle-btn {
+  margin-top: 0.15rem;
+  border: 1px solid #365d97;
+  border-radius: 8px;
+  background: #102851;
+  color: #dce8ff;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.match-inputs input[type="number"] { background: #061839; color: #fff; border-color: #3863a5; }
+.btn.btn-primary, .btn.btn-secondary { border: 1px solid #3b5f98; border-radius: 10px; font-weight: 700; }
+.btn.btn-primary { background: linear-gradient(180deg, #173f7a 0%, #0b2a5d 100%); }
+.btn.btn-secondary { background: linear-gradient(180deg, #163c73 0%, #09244f 100%); }
+
+.marathon-section { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+
+#schedule-btn, #marathon-btn {
+  width: 100%;
+  justify-content: center;
+  min-height: 58px;
+  font-size: 1.2rem;
+  border-radius: 14px;
+  border: 1px solid #3b67ab;
+  background: linear-gradient(180deg, rgba(17, 47, 95, 0.95) 0%, rgba(8, 26, 56, 0.98) 100%);
+  color: #d9e8ff;
+}
+
+.upcoming-title { color: #b9ceef; }
+.upcoming-chip { background: #081b3e; border-color: #365b94; }
+.group-ranking h3 { margin: 0 0 0.45rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.group-ranking th { background: #0f2a5b; color: #cfe2ff; border-bottom-color: #365c93; }
+.group-ranking td, .group-ranking tr:nth-child(even) td { background: transparent; color: #edf3ff; }
+
+.group-ranking tr.direct td { background-color: rgba(52, 161, 106, 0.3); }
+.group-ranking tr.chance td { background-color: rgba(255, 189, 83, 0.3); }
+
+.group-a { border-color: #3a86ff; }
+.group-b { border-color: #f4b942; }
+.group-c { border-color: #25c281; }
+.group-d { border-color: #b76dff; }
+.group-e { border-color: #f26f78; }
+
+.group-a .match-group, .group-a h3, .upcoming-chip.group-a .upcoming-group { color: #78aefe; }
+.group-b .match-group, .group-b h3, .upcoming-chip.group-b .upcoming-group { color: #f4c96f; }
+.group-c .match-group, .group-c h3, .upcoming-chip.group-c .upcoming-group { color: #5ed4a3; }
+.group-d .match-group, .group-d h3, .upcoming-chip.group-d .upcoming-group { color: #c696ff; }
+.group-e .match-group, .group-e h3, .upcoming-chip.group-e .upcoming-group { color: #f79ba2; }
+
+@media (min-width: 1400px) and (min-height: 760px) {
+  body.tournament-fullscreen .current-matches { overflow: hidden; }
+}
