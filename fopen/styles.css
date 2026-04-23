@@ -587,6 +587,10 @@ header.hero {
   --score-width: 24px;
   font-size: rem;
 }
+.history-entry[hidden],
+.history-entry-overflow[hidden] {
+  display: none !important;
+}
 .history-entry .history-year {
   font-size: 1.25rem;
   color: var(--color-text-muted);

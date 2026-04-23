@@ -713,13 +713,17 @@ function updateNowPlaying() {
         toggleButton.type = 'button';
         toggleButton.classList.add('history-toggle-btn');
         toggleButton.textContent = 'Visa mer';
+        toggleButton.setAttribute('aria-expanded', 'false');
+        toggleButton.dataset.expanded = 'false';
         toggleButton.addEventListener('click', () => {
           const hiddenRows = historyContainer.querySelectorAll('.history-entry-overflow');
           const isExpanded = toggleButton.dataset.expanded === 'true';
           hiddenRows.forEach(row => {
             row.hidden = isExpanded;
           });
-          toggleButton.dataset.expanded = isExpanded ? 'false' : 'true';
+          const nextExpanded = !isExpanded;
+          toggleButton.dataset.expanded = nextExpanded ? 'true' : 'false';
+          toggleButton.setAttribute('aria-expanded', nextExpanded ? 'true' : 'false');
           toggleButton.textContent = isExpanded ? 'Visa mer' : 'Visa mindre';
         });
         historyContainer.appendChild(toggleButton);
