@@ -161,33 +161,6 @@ function updateAutosaveStatus(status) {
   }, 3000);
 }
 
-const THEME_STORAGE_KEY = 'fo-theme';
-const LIGHT_THEME = 'light';
-const DARK_THEME = 'dark';
-
-function applyTheme(theme) {
-  const resolvedTheme = theme === LIGHT_THEME ? LIGHT_THEME : DARK_THEME;
-  document.documentElement.setAttribute('data-theme', resolvedTheme);
-  const themeToggleBtn = document.getElementById('theme-toggle-btn');
-  if (themeToggleBtn) {
-    const isLightTheme = resolvedTheme === LIGHT_THEME;
-    themeToggleBtn.setAttribute('aria-pressed', isLightTheme ? 'true' : 'false');
-    themeToggleBtn.textContent = isLightTheme ? 'Mörkt läge' : 'Ljust läge';
-  }
-}
-
-function initializeTheme() {
-  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-  applyTheme(savedTheme === LIGHT_THEME ? LIGHT_THEME : DARK_THEME);
-}
-
-function toggleTheme() {
-  const currentTheme = document.documentElement.getAttribute('data-theme') === LIGHT_THEME ? LIGHT_THEME : DARK_THEME;
-  const nextTheme = currentTheme === LIGHT_THEME ? DARK_THEME : LIGHT_THEME;
-  localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-  applyTheme(nextTheme);
-}
-
 // Utility: sort teams by Swedish name (locale aware)
 function sortTeamsAlphabetical(teams) {
   return [...teams].sort((a, b) => a.localeCompare(b, 'sv'));
@@ -1935,7 +1908,7 @@ function bindEvents() {
   document.getElementById('backup-btn').addEventListener('click', backupState);
   document.getElementById('import-btn').addEventListener('click', importBackupState);
   document.getElementById('reset-btn').addEventListener('click', resetState);
-  document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
+  document.getElementById('auto-results-menu-btn').addEventListener('click', autoFillResults);
 
   // Return to group stage from playoffs
   // Removed: no playoff stage in this version
@@ -2024,6 +1997,37 @@ function resetState() {
   location.reload();
 }
 
+// Auto fill results for debugging
+function autoFillResults() {
+  state.schedule.forEach((match, idx) => {
+    if (match.status !== 'completed') {
+      const s1 = Math.floor(Math.random() * 6);
+      const s2 = Math.floor(Math.random() * 6);
+      match.score1 = s1;
+      match.score2 = s2;
+      match.status = 'completed';
+      state.results[match.id] = { score1: s1, score2: s2 };
+    }
+  });
+  // Reset standings and recompute
+  state.groupStandings = null;
+  // Initialize empty standings so that ranking tables are visible even before recomputation
+  initGroupStandings();
+  // Recalculate standings based on the completed matches
+  state.schedule.forEach(match => {
+    if (match.status === 'completed') {
+      updateStandings(match);
+    }
+  });
+  saveState();
+  // Refresh UI: schedule, now playing list, and standings
+  updateNowPlaying();
+  updateScheduleUI();
+  updateStandingsUI();
+  // After auto filling results, check if group stage is complete
+  checkGroupStageComplete();
+}
+
 // Update selected items each time we enter draw stage
 function renderDrawStage() {
   updateSelectedNationCards();
@@ -2033,7 +2037,6 @@ function renderDrawStage() {
 
 // Initial bootstrap
 function init() {
-  initializeTheme();
   loadState();
   populateNumSlotsSelect();
   renderNationList();
