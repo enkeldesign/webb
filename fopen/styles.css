@@ -1447,11 +1447,42 @@ body.tournament-fullscreen #schedule-modal.ultra-compact .schedule-item.expanded
   --group-c-line: #25c281;
   --group-d-line: #b76dff;
   --group-e-line: #f26f78;
+  --brand-gradient: linear-gradient(135deg, rgba(11, 42, 93, 0.95) 0%, rgba(238, 51, 64, 0.92) 100%);
+  --brand-title-color: #f2f6ff;
 }
 
 body {
   background: radial-gradient(circle at 20% 0%, var(--bg-body-top) 0%, var(--bg-deep) 55%, var(--bg-body-bottom) 100%);
   color: var(--text-primary);
+}
+
+:root[data-theme="light"] {
+  --bg-deep: #dce8ff;
+  --bg-body-top: #f6f9ff;
+  --bg-body-bottom: #c9d9ff;
+  --bg-panel: #eff5ff;
+  --bg-panel-soft: #e7f0ff;
+  --bg-panel-elevated: #dde9ff;
+  --bg-chip: #edf4ff;
+  --bg-input: #ffffff;
+  --bg-modal: #f3f8ff;
+  --bg-toast: #edf4ff;
+  --panel-grad-top: rgba(244, 249, 255, 0.96);
+  --panel-grad-bottom: rgba(223, 234, 255, 0.96);
+  --match-grad-top: rgba(241, 247, 255, 0.98);
+  --match-grad-bottom: rgba(220, 234, 255, 0.98);
+  --line-strong: #2d5ea6;
+  --line-muted: #9eb9e6;
+  --line-muted-lite: #b5caed;
+  --line-subtle: #bdd0ef;
+  --text-bright: #0f2e58;
+  --text-primary: #16345c;
+  --text-muted: #35557f;
+  --text-dim: #4e6e97;
+  --btn-bg-top: #2f63ab;
+  --btn-bg-bottom: #1d4e96;
+  --btn-alt-top: #d94452;
+  --btn-alt-bottom: #bf2634;
 }
 
 body::before { opacity: 0.08; }
@@ -1490,6 +1521,16 @@ h2, h3, .overview-title { color: var(--text-bright); }
 }
 
 .menu-item { width: 100%; justify-content: flex-start; margin-bottom: 0.25rem; }
+
+.hero-left {
+  background: var(--brand-gradient);
+  border-radius: 14px;
+  padding: 0.4rem 0.9rem 0.55rem 0.5rem;
+}
+
+.hero h1.title {
+  color: var(--brand-title-color);
+}
 
 .match-card {
   background: linear-gradient(180deg, var(--match-grad-top) 0%, var(--match-grad-bottom) 100%);
@@ -1545,7 +1586,14 @@ h2, h3, .overview-title { color: var(--text-bright); }
   width: 100%;
 }
 
-.upcoming-title { color: var(--text-primary); }
+.upcoming-wrap {
+  background: var(--brand-gradient);
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  padding: 0.55rem 0.8rem;
+}
+
+.upcoming-title { color: var(--brand-title-color); }
 .upcoming-chip { background: var(--bg-chip); border-color: var(--line-strong); }
 .group-ranking h3 { margin: 0 0 0.45rem; letter-spacing: 0.04em; text-transform: uppercase; }
 .group-ranking th {
