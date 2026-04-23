@@ -830,7 +830,7 @@ header.hero {
 .marathon-table .down { color: red; font-weight: bold; }
 
 .marathon-table tr.participant td { background-color: var(--line-muted); }
-.marathon-table tr.participant:nth-child(even) td { background-color: var(--line-strong); }
+.marathon-table tr.participant:nth-child(even) td { background-color: var(--line-muted-lite); }
 
 /* =========================
    TOAST (latest result)
@@ -1408,6 +1408,7 @@ body.tournament-fullscreen #schedule-modal.ultra-compact .schedule-item.expanded
   --match-grad-bottom: rgba(4, 15, 37, 0.98);
   --line-strong: #3d74bf;
   --line-muted: #244b86;
+  --line-muted-lite: #2a4f8a;
   --line-subtle: #17386d;
   --text-bright: #f2f6ff;
   --text-primary: #deebff;
