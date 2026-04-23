@@ -1458,6 +1458,8 @@ header.hero,
 .modal .modal-content {
   background: linear-gradient(180deg, var(--panel-grad-top) 0%, var(--panel-grad-bottom) 100%);
   border: 1px solid var(--line-subtle);
+  background: linear-gradient(180deg, rgba(9, 24, 56, 0.94) 0%, rgba(3, 13, 34, 0.96) 100%);
+  border: 1px solid #16386f;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
 }
 
