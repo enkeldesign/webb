@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Färöarna Open 2026</title>
-    <link rel="icon" type="image/png" href="https://enkel.design/fopen/fopen.png">
-<link rel="apple-touch-icon" href="https://enkel.design/fopen/fopen.png">
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
+<link rel="apple-touch-icon" href="logo.jpg">
     <!-- Link our stylesheet -->
   <link rel="stylesheet" href="styles.css">
       
@@ -40,7 +40,7 @@
 <div class="hero-left">
   <img
     class="hero-logo"
-    src="https://enkel.design/fopen/fopen.png"
+    src="logo.jpg"
     alt="Färöarna Open"
   >
   <h1 class="title">Färöarna<br>Open&nbsp;2026</h1>
@@ -52,6 +52,7 @@
                     <div id="menu-dropdown" class="menu-dropdown" hidden>
                         <button id="backup-btn" class="btn menu-item">Backup</button>
                         <button id="import-btn" class="btn menu-item">Importera backup</button>
+                        <button id="auto-results-menu-btn" class="btn menu-item debug">Fyll i resultat (debug)</button>
                         <button id="reset-btn" class="btn menu-item">Nollställ</button>
                     </div>
                 </div>
@@ -98,24 +99,20 @@
                     <div id="now-playing" class="now-playing">
                         <h2 class="overview-title">Kör nu</h2>
                         <div id="current-matches" class="current-matches"></div>
-                        <div id="upcoming-wrap" class="upcoming-wrap" hidden>
-                            <h3 class="upcoming-title">Kommande:</h3>
-                            <div id="upcoming-matches" class="upcoming-matches"></div>
-                        </div>
                     </div>
                     <!-- Groups rankings area -->
                     <div class="rankings-panel">
                         <h2 class="overview-title rankings-title">Ställningen just nu</h2>
                         <div id="groups-rankings" class="groups-rankings"></div>
+                        <div class="marathon-section">
+                            <button id="schedule-btn" class="btn btn-primary">Spelschema och resultat</button>
+                            <button id="marathon-btn" class="btn btn-secondary">Maratontabellen just nu</button>
+                        </div>
                     </div>
                 </div>
-                <!-- Marathon button -->
-                <div class="marathon-section">
-                    <button id="schedule-btn" class="btn btn-primary">Visa spelschema</button>
-                    <button id="marathon-btn" class="btn btn-secondary">Visa maratontabell</button>
-                </div>
-                <div class="tournament-actions">
-                    <button id="auto-results" class="btn btn-secondary debug">Fyll i resultat (debug)</button>
+                <div id="upcoming-wrap" class="upcoming-wrap upcoming-full-row" hidden>
+                    <h3 class="upcoming-title">Kommande:</h3>
+                    <div id="upcoming-matches" class="upcoming-matches"></div>
                 </div>
             </section>
 

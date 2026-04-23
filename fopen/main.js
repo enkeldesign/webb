@@ -507,7 +507,7 @@ function getReadyMatches() {
 }
 
 
-function getUpcomingMatches(limit = 3) {
+function getUpcomingMatches(limit = 6) {
   const upcoming = [];
   const playingSet = new Set(state.playingMatches);
   for (let i = 0; i < state.schedule.length; i++) {
@@ -525,7 +525,7 @@ function renderUpcomingMatches() {
   const wrap = document.getElementById('upcoming-wrap');
   const container = document.getElementById('upcoming-matches');
   if (!wrap || !container) return;
-  const upcoming = getUpcomingMatches(3);
+  const upcoming = getUpcomingMatches(6);
   container.innerHTML = '';
   if (!upcoming.length) {
     wrap.hidden = true;
@@ -534,6 +534,7 @@ function renderUpcomingMatches() {
   upcoming.forEach(match => {
     const chip = document.createElement('div');
     chip.classList.add('upcoming-chip');
+    if (match.group) chip.classList.add(`group-${String(match.group).toLowerCase()}`);
 
     const group = document.createElement('span');
     group.classList.add('upcoming-group');
@@ -606,6 +607,7 @@ function updateNowPlaying() {
     if (match.status !== 'completed') match.status = 'playing';
     const card = document.createElement('div');
     card.classList.add('match-card');
+    if (match.group) card.classList.add(`group-${String(match.group).toLowerCase()}`);
     // Insert group label at top of card
     const groupLabel = document.createElement('div');
     groupLabel.classList.add('match-group');
@@ -653,9 +655,15 @@ function updateNowPlaying() {
       title.classList.add('history-title');
       title.textContent = 'Tidigare möten';
       historyContainer.appendChild(title);
-      history.forEach(entry => {
+      const MAX_HISTORY_ROWS = 3;
+      const hasOverflowHistory = history.length > MAX_HISTORY_ROWS;
+      history.forEach((entry, entryIndex) => {
         const row = document.createElement('div');
         row.classList.add('history-entry');
+        if (hasOverflowHistory && entryIndex >= MAX_HISTORY_ROWS) {
+          row.classList.add('history-entry-overflow');
+          row.hidden = true;
+        }
         // Year
         const yearSpan = document.createElement('span');
         yearSpan.classList.add('history-year');
@@ -700,6 +708,22 @@ function updateNowPlaying() {
         row.appendChild(score2Span);
         historyContainer.appendChild(row);
       });
+      if (hasOverflowHistory) {
+        const toggleButton = document.createElement('button');
+        toggleButton.type = 'button';
+        toggleButton.classList.add('history-toggle-btn');
+        toggleButton.textContent = 'Visa mer';
+        toggleButton.addEventListener('click', () => {
+          const hiddenRows = historyContainer.querySelectorAll('.history-entry-overflow');
+          const isExpanded = toggleButton.dataset.expanded === 'true';
+          hiddenRows.forEach(row => {
+            row.hidden = isExpanded;
+          });
+          toggleButton.dataset.expanded = isExpanded ? 'false' : 'true';
+          toggleButton.textContent = isExpanded ? 'Visa mer' : 'Visa mindre';
+        });
+        historyContainer.appendChild(toggleButton);
+      }
     } else {
       // No historic meetings: simply inform that there are no previous meetings.
       historyContainer.textContent = 'Inga möten i historiken.';
@@ -1401,6 +1425,7 @@ function updateStandingsUI() {
     const label = group.label;
     const rankingDiv = document.createElement('div');
     rankingDiv.classList.add('group-ranking');
+    rankingDiv.classList.add(`group-${String(label).toLowerCase()}`);
     const title = document.createElement('h3');
     title.textContent = 'Grupp ' + label;
     rankingDiv.appendChild(title);
@@ -1869,7 +1894,7 @@ function bindEvents() {
   document.getElementById('backup-btn').addEventListener('click', backupState);
   document.getElementById('import-btn').addEventListener('click', importBackupState);
   document.getElementById('reset-btn').addEventListener('click', resetState);
-  document.getElementById('auto-results').addEventListener('click', autoFillResults);
+  document.getElementById('auto-results-menu-btn').addEventListener('click', autoFillResults);
 
   // Return to group stage from playoffs
   // Removed: no playoff stage in this version
@@ -1891,6 +1916,11 @@ function bindEvents() {
       if (!menuDropdown.hasAttribute('hidden') && !menuDropdown.contains(evt.target) && evt.target !== menuToggle) {
         menuDropdown.setAttribute('hidden', '');
       }
+    });
+    menuDropdown.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        menuDropdown.setAttribute('hidden', '');
+      });
     });
   }
   // Event listeners for start playoff modal actions are removed: no playoff stage
