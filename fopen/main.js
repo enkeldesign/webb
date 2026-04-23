@@ -752,6 +752,16 @@ function updateNowPlaying() {
       }
       recordResult(idx, s1, s2);
     });
+    const submitOnEnter = evt => {
+      if (evt.key !== 'Enter') return;
+      const s1 = parseInt(input1.value, 10);
+      const s2 = parseInt(input2.value, 10);
+      if (isNaN(s1) || isNaN(s2)) return;
+      evt.preventDefault();
+      recordResult(idx, s1, s2);
+    };
+    input1.addEventListener('keydown', submitOnEnter);
+    input2.addEventListener('keydown', submitOnEnter);
 
     const skipBtn = document.createElement('button');
     skipBtn.classList.add('btn', 'btn-secondary', 'skip-match-btn');
@@ -2038,14 +2048,9 @@ function init() {
     // Always build the schedule and now playing lists from stored state
     updateNowPlaying();
     updateScheduleUI();
-    // If no group standings exist yet, initialise them so that the rankings
-    // table displays even before any games have been played. Without this
-    // initialisation, the rankings section would remain blank on page load
-    // until at least one match result is recorded. We then recompute
-    // statistics for all completed matches to reflect current results.
-    if (!state.groupStandings) {
-      initGroupStandings();
-    }
+    // Rebuild standings from scratch on every load to avoid double-counting
+    // completed matches when the page is refreshed.
+    initGroupStandings();
     // Recompute standings from scratch based on completed matches. This
     // ensures that standings reflect any results that were entered before
     // reloading the page. Note that updateStandings() will update the
