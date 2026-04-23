@@ -178,11 +178,7 @@ function applyTheme(theme) {
 
 function initializeTheme() {
   const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-  if (savedTheme === LIGHT_THEME || savedTheme === DARK_THEME) {
-    applyTheme(savedTheme);
-    return;
-  }
-  applyTheme(LIGHT_THEME);
+  applyTheme(savedTheme === LIGHT_THEME ? LIGHT_THEME : DARK_THEME);
 }
 
 function toggleTheme() {
@@ -190,12 +186,6 @@ function toggleTheme() {
   const nextTheme = currentTheme === LIGHT_THEME ? DARK_THEME : LIGHT_THEME;
   localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
   applyTheme(nextTheme);
-}
-
-function bindThemeToggle() {
-  const themeToggleBtn = document.getElementById('theme-toggle-btn');
-  if (!themeToggleBtn) return;
-  themeToggleBtn.addEventListener('click', toggleTheme);
 }
 
 // Utility: sort teams by Swedish name (locale aware)
@@ -1945,6 +1935,7 @@ function bindEvents() {
   document.getElementById('backup-btn').addEventListener('click', backupState);
   document.getElementById('import-btn').addEventListener('click', importBackupState);
   document.getElementById('reset-btn').addEventListener('click', resetState);
+  document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
 
   // Return to group stage from playoffs
   // Removed: no playoff stage in this version
@@ -2049,7 +2040,6 @@ function init() {
   updateSelectedCounter();
   updateDrawButtonState();
   bindEvents();
-  bindThemeToggle();
   if (state.stage === 'draw') {
     // Rebuild group assignments from state
     renderDrawStage();
