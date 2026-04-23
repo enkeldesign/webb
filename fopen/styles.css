@@ -829,8 +829,8 @@ header.hero {
 .marathon-table .up { color: green; font-weight: bold; }
 .marathon-table .down { color: red; font-weight: bold; }
 
-.marathon-table tr.participant td { background-color: #e6f5ff; }
-.marathon-table tr.participant:nth-child(even) td { background-color: #e6f5ff; }
+.marathon-table tr.participant td { background-color: var(--line-muted); }
+.marathon-table tr.participant:nth-child(even) td { background-color: var(--line-strong); }
 
 /* =========================
    TOAST (latest result)
