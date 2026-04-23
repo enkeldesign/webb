@@ -1467,7 +1467,6 @@ header.hero,
 
 .hero h1.title,
 h2, h3, .overview-title { color: var(--text-bright); }
-.hero-logo { border-radius: 10px; }
 
 .menu-toggle {
   border: 1px solid var(--line-muted);
