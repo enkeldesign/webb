@@ -869,8 +869,6 @@ function recordResult(scheduleIndex, score1, score2) {
 function showToast(match, score1, score2) {
   const toast = document.getElementById('toast');
   if (!toast) return;
-  toast.classList.remove('group-a', 'group-b', 'group-c', 'group-d', 'group-e');
-  if (match.group) toast.classList.add(`group-${String(match.group).toLowerCase()}`);
   let resultHtml;
   // Generate HTML with flag icons and scores.  A draw shows both teams in neutral colour;
   // otherwise the winner uses the "winner" class and the loser uses the "loser" class.  Flags
