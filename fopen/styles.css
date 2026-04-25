@@ -592,7 +592,7 @@ header.hero {
 }
 
 .upcoming-wrap svg {
-  height: 10px;
+  height: 13px;
   width: auto;
   fill: var(--line-subtle);
   display: inline;
