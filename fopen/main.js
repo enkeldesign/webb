@@ -88,9 +88,6 @@ const DEFAULT_FLAG = 'placeholder_light_gray_block.png';
 
 // State management: we persist state in localStorage under key 'fo-state'
 let state = {};
-let fredrikConfig = null;
-let fredrikHideTimeout = null;
-let fredrikInterval = null;
 
 function getDefaultState() {
   return {
@@ -108,10 +105,7 @@ function getDefaultState() {
     // List of schedule indices that are currently being played. This is
     // separate from the list of team names and ensures that matches in
     // progress persist in the UI until their results are recorded.
-    playingMatches: [],
-    fredrikPool: [],
-    fredrikPoolIndex: 0,
-    tournamentFinished: false
+    playingMatches: []
   };
 }
 
@@ -124,9 +118,6 @@ function normalizeState(rawState) {
   if (!merged.results || typeof merged.results !== 'object') merged.results = {};
   if (!Array.isArray(merged.playing)) merged.playing = [];
   if (!Array.isArray(merged.playingMatches)) merged.playingMatches = [];
-  if (!Array.isArray(merged.fredrikPool)) merged.fredrikPool = [];
-  if (typeof merged.fredrikPoolIndex !== 'number') merged.fredrikPoolIndex = 0;
-  if (typeof merged.tournamentFinished !== 'boolean') merged.tournamentFinished = false;
   if (typeof merged.numSlots !== 'number' || Number.isNaN(merged.numSlots)) merged.numSlots = 12;
   if (!['select', 'draw', 'tournament', 'playoff'].includes(merged.stage)) merged.stage = 'select';
   return merged;
@@ -156,104 +147,6 @@ function saveState() {
   } catch (e) {
     console.error('Kunde inte spara state', e);
   }
-}
-
-function shuffleArray(items) {
-  const arr = [...items];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
-async function loadFredrikConfig() {
-  if (fredrikConfig) return fredrikConfig;
-  try {
-    const response = await fetch('data/fredrik-citat.json', { cache: 'no-store' });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const parsed = await response.json();
-    const quotes = Array.isArray(parsed.quotes) ? parsed.quotes.filter(q => q?.quote && q?.caption) : [];
-    fredrikConfig = {
-      quotes,
-      finalMessage: parsed.finalMessage || {
-        quote: 'Turneringen är slut. Bra kämpat!',
-        caption: 'Färöarna Open'
-      }
-    };
-  } catch (err) {
-    console.warn('Kunde inte läsa fredrik-citat.json, använder fallback.', err);
-    fredrikConfig = {
-      quotes: [
-        { quote: 'Prova för fan aldrig något nytt!', caption: '2025, apropå självmål vid försök till nytt trick.' }
-      ],
-      finalMessage: {
-        quote: 'Turneringen är slut. Bra kämpat!',
-        caption: 'Färöarna Open'
-      }
-    };
-  }
-  return fredrikConfig;
-}
-
-function getNextFredrikQuote() {
-  const quotes = fredrikConfig?.quotes || [];
-  if (!quotes.length) return null;
-  if (!Array.isArray(state.fredrikPool) || state.fredrikPool.length !== quotes.length) {
-    state.fredrikPool = shuffleArray(quotes.map((_, index) => index));
-    state.fredrikPoolIndex = 0;
-  }
-  if (state.fredrikPoolIndex >= state.fredrikPool.length) {
-    state.fredrikPool = shuffleArray(quotes.map((_, index) => index));
-    state.fredrikPoolIndex = 0;
-  }
-  const quoteIndex = state.fredrikPool[state.fredrikPoolIndex];
-  state.fredrikPoolIndex += 1;
-  return quotes[quoteIndex] || null;
-}
-
-function showFredrikOverlay(message, { persistent = false, durationMs = 9000 } = {}) {
-  const overlay = document.getElementById('fredrik-overlay');
-  const quoteEl = document.getElementById('fredrik-quote');
-  const captionEl = document.getElementById('fredrik-caption');
-  if (!overlay || !quoteEl || !captionEl || !message) return;
-  quoteEl.textContent = message.quote || '';
-  captionEl.textContent = message.caption || '';
-  overlay.hidden = false;
-  clearTimeout(fredrikHideTimeout);
-  if (!persistent) {
-    fredrikHideTimeout = setTimeout(() => {
-      overlay.hidden = true;
-    }, durationMs);
-  }
-}
-
-async function triggerFredrikQuote({ manual = false } = {}) {
-  if (state.stage !== 'tournament' || state.tournamentFinished) return;
-  await loadFredrikConfig();
-  const quote = getNextFredrikQuote();
-  if (!quote) return;
-  showFredrikOverlay(quote, { persistent: false, durationMs: manual ? 12000 : 9000 });
-  saveState();
-}
-
-function stopFredrikRotation() {
-  if (fredrikInterval) {
-    clearInterval(fredrikInterval);
-    fredrikInterval = null;
-  }
-}
-
-async function startFredrikRotation() {
-  stopFredrikRotation();
-  await loadFredrikConfig();
-  if (state.stage !== 'tournament' || state.tournamentFinished) return;
-  fredrikInterval = setInterval(() => {
-    if (state.stage !== 'tournament' || state.tournamentFinished) return;
-    if (Math.random() < 0.35) {
-      triggerFredrikQuote();
-    }
-  }, 75000);
 }
 
 // Debounce autosave status reset
@@ -608,17 +501,13 @@ function startTournament() {
   // Initialise group standings with zero values so that groups are displayed even before any matches are played.
   initGroupStandings();
   state.stage = 'tournament';
-  state.tournamentFinished = false;
   // Clear playing matches list when starting new tournament
   state.playingMatches = [];
-  const overlay = document.getElementById('fredrik-overlay');
-  if (overlay) overlay.hidden = true;
   saveState();
   renderStage();
   updateNowPlaying();
   updateScheduleUI();
   updateStandingsUI();
-  startFredrikRotation();
 }
 
 // Build "Kör nu" according to schedule order with team-collision guard.
@@ -991,9 +880,6 @@ function recordResult(scheduleIndex, score1, score2) {
   updateNowPlaying();
   updateScheduleUI();
   updateStandingsUI();
-  if (Math.random() < 0.32) {
-    triggerFredrikQuote();
-  }
   // Check if group stage is complete and update UI accordingly
   checkGroupStageComplete();
 }
@@ -1228,14 +1114,6 @@ function checkGroupStageComplete() {
   nowPlaying.appendChild(msg);
   // Ensure latest recorded result is reflected in group tables
   updateStandingsUI();
-  state.tournamentFinished = true;
-  stopFredrikRotation();
-  loadFredrikConfig().then(() => {
-    if (fredrikConfig?.finalMessage) {
-      showFredrikOverlay(fredrikConfig.finalMessage, { persistent: true });
-    }
-  });
-  saveState();
 }
 
 // Compute and update group standings after a result
@@ -2023,11 +1901,6 @@ function renderStage() {
     const playoffStage = document.getElementById('playoff-stage');
     if (playoffStage) playoffStage.hidden = false;
   }
-  if (state.stage !== 'tournament') {
-    stopFredrikRotation();
-    const overlay = document.getElementById('fredrik-overlay');
-    if (overlay) overlay.hidden = true;
-  }
 }
 
 // Set up event listeners
@@ -2053,16 +1926,6 @@ function bindEvents() {
   document.addEventListener('keydown', evt => {
     if (evt.key === 'Escape' && scheduleModal && !scheduleModal.hidden) {
       toggleScheduleModal(false);
-      return;
-    }
-    const isTypingTarget = evt.target && (
-      evt.target.tagName === 'INPUT' ||
-      evt.target.tagName === 'TEXTAREA' ||
-      evt.target.isContentEditable
-    );
-    if (!isTypingTarget && evt.key === 'F' && evt.shiftKey) {
-      evt.preventDefault();
-      triggerFredrikQuote({ manual: true });
     }
   });
   document.getElementById('backup-btn').addEventListener('click', backupState);
@@ -2224,17 +2087,6 @@ function init() {
     });
     // Finally, render the standings table UI
     updateStandingsUI();
-    if (state.tournamentFinished || state.schedule.every(match => match.status === 'completed')) {
-      state.tournamentFinished = true;
-      loadFredrikConfig().then(() => {
-        if (fredrikConfig?.finalMessage) {
-          showFredrikOverlay(fredrikConfig.finalMessage, { persistent: true });
-        }
-      });
-      saveState();
-    } else {
-      startFredrikRotation();
-    }
   }
 }
 
