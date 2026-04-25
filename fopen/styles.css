@@ -588,7 +588,15 @@ header.hero {
   width: 100%;
   text-align: right;
   color: var(--line-subtle);
+    display: inline;
 }
+
+.upcoming-wrap svg {
+  height: 34px;
+  width: auto;
+  fill: var(--line-subtle);
+  display: inline;
+  }
 
 .upcoming-matches {
   display: flex;
