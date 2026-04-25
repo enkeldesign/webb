@@ -510,19 +510,39 @@ function startTournament() {
   updateStandingsUI();
 }
 
-// Determine matches ready to be played (next for each board)
-function getReadyMatches() {
-  const ready = [];
-  const playingSet = new Set(state.playingMatches);
-  for (let i = 0; i < state.schedule.length; i++) {
+// Build "Kör nu" according to schedule order with team-collision guard.
+// Existing playing matches are preserved (if still valid), then empty boards
+// are filled with the next eligible matches from top to bottom in schedule.
+function getReadyMatchIndices() {
+  const maxBoards = Math.max(1, Number(state.numBoards) || 1);
+  const readyIndices = [];
+  const usedTeams = new Set();
+  const seen = new Set();
+
+  // Keep ongoing matches first so entering one result doesn't reshuffle others.
+  (state.playingMatches || []).forEach(idx => {
+    const match = state.schedule[idx];
+    if (!match) return;
+    if (match.status === 'completed' || match.skipped) return;
+    if (seen.has(idx)) return;
+    readyIndices.push(idx);
+    seen.add(idx);
+    usedTeams.add(match.team1);
+    usedTeams.add(match.team2);
+  });
+
+  // Fill remaining boards from schedule order.
+  for (let i = 0; i < state.schedule.length && readyIndices.length < maxBoards; i++) {
     const match = state.schedule[i];
-    if (!match || match.skipped) continue;
-    if (match.status === 'completed') continue;
-    if (playingSet.has(i)) continue;
-    ready.push({ match, index: i });
-    if (ready.length >= state.numBoards) break;
+    if (!match || match.status === 'completed' || match.skipped) continue;
+    if (seen.has(i)) continue;
+    if (usedTeams.has(match.team1) || usedTeams.has(match.team2)) continue;
+    readyIndices.push(i);
+    seen.add(i);
+    usedTeams.add(match.team1);
+    usedTeams.add(match.team2);
   }
-  return ready;
+  return readyIndices;
 }
 
 
@@ -583,22 +603,19 @@ function renderUpcomingMatches() {
 function updateNowPlaying() {
   const container = document.getElementById('current-matches');
   container.innerHTML = '';
-  // Remove any completed matches from the playingMatches list
+  // Remove invalid/completed/skipped matches from the playingMatches list
   state.playingMatches = state.playingMatches.filter(idx => {
     const m = state.schedule[idx];
-    return m && m.status !== 'completed';
+    return m && m.status !== 'completed' && !m.skipped;
   });
   // Reset status of all non-completed matches to pending; matches
   // currently in playingMatches will be set to 'playing' later
   state.schedule.forEach((m, i) => {
     if (m.status !== 'completed') m.status = 'pending';
   });
-  // Prepare the list of team names currently playing (for readiness check)
+  // Prepare the list of team names currently playing
   state.playing = [];
-  // TUMREGEL: de första väntande matcherna i schemat ska alltid ligga i "Kör nu".
-  // Därför byggs playingMatches om från början varje gång.
-  const ready = getReadyMatches();
-  state.playingMatches = ready.slice(0, state.numBoards).map(item => item.index);
+  state.playingMatches = getReadyMatchIndices();
   state.playingMatches.forEach(idx => {
     const m = state.schedule[idx];
     if (!m) return;
