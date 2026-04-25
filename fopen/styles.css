@@ -200,7 +200,7 @@ header.hero {
 
 /* Logo in header */
 .hero-logo {
-  height: 50px;
+  height: 75px;
   width: auto;
   object-fit: contain;
   flex: 0 0 auto;
@@ -585,14 +585,14 @@ header.hero {
 }
 
 .upcoming-wrap span {
-  width: 100%;
   text-align: right;
   color: var(--line-subtle);
-    display: inline;
+  display: inline;
+  margin-left: 2rem;
 }
 
 .upcoming-wrap svg {
-  height: 13px;
+  height: 15px;
   width: auto;
   fill: var(--line-subtle);
   display: inline;
@@ -923,7 +923,7 @@ header.hero {
    ========================= */
 .toast {
   position: absolute;
-  top: 15%;
+  top: 0%;
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: #eef2f8;
@@ -1017,7 +1017,7 @@ header.hero {
   }
 
   body.tournament-fullscreen .hero-logo {
-    height: 50px;
+    height: 75px;
   }
 
   body.tournament-fullscreen .hero h1.title {
@@ -1191,7 +1191,7 @@ header.hero {
   }
 
   body.tournament-fullscreen .hero-logo {
-    height: 50px;
+    height: 75px;
   }
 
   body.tournament-fullscreen .hero h1.title {
