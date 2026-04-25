@@ -434,8 +434,43 @@ function updateStartTournamentButtonState() {
 // Build schedule of matches based on assignments and ruleset
 function buildSchedule() {
   const format = getFormat(state.numSlots);
+  const configuredMatches = Array.isArray(format?.groupStage?.matches) ? format.groupStage.matches : [];
+  // Skyddsnät: säkerställ att varje grupp spelar komplett round-robin.
+  // Om ruleset saknar en match (t.ex. 36 i stället för 40 för 4x5),
+  // läggs den saknade matchen till automatiskt.
+  const completeMatchDefs = [...configuredMatches];
+  const seenPairs = new Set();
+  completeMatchDefs.forEach(matchDef => {
+    if (!matchDef?.home || !matchDef?.away) return;
+    const pairKey = [matchDef.home, matchDef.away].sort().join('|');
+    seenPairs.add(pairKey);
+  });
+  const autoDefs = [];
+  if (Array.isArray(format?.groups)) {
+    format.groups.forEach(group => {
+      const slots = Array.isArray(group?.slots) ? group.slots : [];
+      for (let i = 0; i < slots.length; i++) {
+        for (let j = i + 1; j < slots.length; j++) {
+          const home = slots[i];
+          const away = slots[j];
+          const pairKey = [home, away].sort().join('|');
+          if (seenPairs.has(pairKey)) continue;
+          seenPairs.add(pairKey);
+          autoDefs.push({ home, away });
+        }
+      }
+    });
+  }
+  autoDefs.forEach((def, i) => {
+    completeMatchDefs.push({
+      id: `AUTO_G${configuredMatches.length + i + 1}`,
+      home: def.home,
+      away: def.away
+    });
+  });
+
   const matches = [];
-  format.groupStage.matches.forEach(matchDef => {
+  completeMatchDefs.forEach(matchDef => {
     const homeTeam = state.drawAssignments[matchDef.home];
     const awayTeam = state.drawAssignments[matchDef.away];
     matches.push({
@@ -478,30 +513,14 @@ function startTournament() {
 // Determine matches ready to be played (next for each board)
 function getReadyMatches() {
   const ready = [];
-  // We'll iterate through schedule sequentially; pick matches that are pending and whose teams have completed all previous matches and are not currently playing
+  const playingSet = new Set(state.playingMatches);
   for (let i = 0; i < state.schedule.length; i++) {
     const match = state.schedule[i];
-    if (match.skipped) continue;
-    if (match.status !== 'pending') continue;
-    const team1 = match.team1;
-    const team2 = match.team2;
-    // Check if team1 or team2 is currently playing
-    if (state.playing.includes(team1) || state.playing.includes(team2)) continue;
-    // Check if there is any earlier pending match involving team1 or team2
-    let previousIncomplete = false;
-    for (let j = 0; j < i; j++) {
-      const m = state.schedule[j];
-      if (m.status !== 'completed' && !m.skipped) {
-        if (m.team1 === team1 || m.team2 === team1 || m.team1 === team2 || m.team2 === team2) {
-          previousIncomplete = true;
-          break;
-        }
-      }
-    }
-    if (!previousIncomplete) {
-      ready.push({ match, index: i });
-      if (ready.length >= state.numBoards) break;
-    }
+    if (!match || match.skipped) continue;
+    if (match.status === 'completed') continue;
+    if (playingSet.has(i)) continue;
+    ready.push({ match, index: i });
+    if (ready.length >= state.numBoards) break;
   }
   return ready;
 }
@@ -576,29 +595,16 @@ function updateNowPlaying() {
   });
   // Prepare the list of team names currently playing (for readiness check)
   state.playing = [];
+  // TUMREGEL: de första väntande matcherna i schemat ska alltid ligga i "Kör nu".
+  // Därför byggs playingMatches om från början varje gång.
+  const ready = getReadyMatches();
+  state.playingMatches = ready.slice(0, state.numBoards).map(item => item.index);
   state.playingMatches.forEach(idx => {
     const m = state.schedule[idx];
-    if (m) {
-      state.playing.push(m.team1);
-      state.playing.push(m.team2);
-    }
+    if (!m) return;
+    state.playing.push(m.team1);
+    state.playing.push(m.team2);
   });
-  // Determine how many slots we need to fill
-  let slotsToFill = state.numBoards - state.playingMatches.length;
-  if (slotsToFill > 0) {
-    const ready = getReadyMatches();
-    for (const item of ready) {
-      if (slotsToFill <= 0) break;
-      // Skip if this match is already in playingMatches
-      if (!state.playingMatches.includes(item.index)) {
-        state.playingMatches.push(item.index);
-        // Add team names so subsequent ready checks avoid duplicates
-        state.playing.push(item.match.team1);
-        state.playing.push(item.match.team2);
-        slotsToFill--;
-      }
-    }
-  }
   // Render all currently playing matches
   state.playingMatches.forEach(idx => {
     const match = state.schedule[idx];
