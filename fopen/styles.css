@@ -1132,6 +1132,7 @@ header.hero {
 
   body.tournament-fullscreen #schedule-modal-list {
     max-height: none;
+    min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
     padding-right: 0;
@@ -1397,6 +1398,8 @@ header.hero {
     max-height: none;
     overflow-y: auto;
     overflow-x: hidden;
+    height: 100%;
+    min-height: 0;
     padding-right: 0;
   }
 
