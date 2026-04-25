@@ -29,9 +29,63 @@
   --flag-width: 48px;
   --flag-border: 1.5px; /* tunnare border */
   --flag-radius: 8px;
-  
-          background-color: #030712;
-} html {  background-color: #030712}
+
+  /* OPEN 2026 visual refresh */
+  --bg-deep: #030a1f;
+  --bg-body-top: #0c214f;
+  --bg-body-bottom: #030712;
+  --bg-panel: #071534;
+  --bg-panel-soft: #0b1f47;
+  --bg-panel-elevated: #102851;
+  --bg-chip: #081b3e;
+  --bg-input: #061839;
+  --bg-modal: #081737;
+  --bg-toast: #0d2249;
+  --panel-grad-top: rgba(9, 24, 56, 0.94);
+  --panel-grad-bottom: rgba(3, 13, 34, 0.96);
+  --match-grad-top: rgba(8, 23, 53, 0.97);
+  --match-grad-bottom: rgba(4, 15, 37, 0.98);
+  --line-strong: #3d74bf;
+  --line-muted: #244b86;
+  --line-muted-lite: #2a4f8a;
+  --line-subtle: #17386d;
+  --text-bright: #f2f6ff;
+  --text-primary: #deebff;
+  --text-muted: #a9bcde;
+  --text-dim: #7f93b8;
+  --success-ring: #9af5b7;
+  --danger-ring: #7b2f37;
+  --draw-ring: #8f99ab;
+  --success-text: #dffff0;
+  --danger-text: #f0c2c8;
+  --draw-text: #e6e9ef;
+  --btn-bg-top: #173f7a;
+  --btn-bg-bottom: #0b2a5d;
+  --btn-alt-top: #163c73;
+  --btn-alt-bottom: #09244f;
+  --bg-playing-row: #233a0e;
+  --bg-skipped-row: #321720;
+  --toast-loser: #ff8d9b;
+  --row-direct-bg: rgba(52, 161, 106, 0.3);
+  --row-chance-bg: rgba(255, 189, 83, 0.3);
+  --score-win-bg: rgba(60, 130, 80, 0.18);
+  --score-loss-bg: rgba(90, 24, 34, 0.18);
+  --score-draw-bg: rgba(116, 124, 139, 0.2);
+  --group-a-color: #78aefe;
+  --group-b-color: #f4c96f;
+  --group-c-color: #5ed4a3;
+  --group-d-color: #c696ff;
+  --group-e-color: #f79ba2;
+  --group-a-line: #3a86ff;
+  --group-b-line: #f4b942;
+  --group-c-line: #25c281;
+  --group-d-line: #b76dff;
+  --group-e-line: #f26f78;
+}
+
+html {
+  background-color: #030712;
+}
 body {
   margin: 0;
   padding: 0;
@@ -281,10 +335,6 @@ header.hero {
   line-height: 1.12;
 }
 
-#schedule-modal .schedule-item {
-  line-height: 1.12;
-}
-
 /* =========================
    NATION LIST
    ========================= */
@@ -295,8 +345,8 @@ header.hero {
 }
 
 .nation-card {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background-color: var(--bg-panel-soft);
+  border: 1px solid var(--line-muted);
   border-radius: var(--border-radius);
   padding: 0.5rem;
   text-align: center;
@@ -315,11 +365,11 @@ header.hero {
 .nation-card .name {
   font-size: 0.8rem;
   font-weight: bold;
-  color: var(--color-text);
+  color: var(--text-bright);
 }
 .nation-card .seed {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--text-primary);
 }
 
 /* =========================
@@ -333,8 +383,8 @@ header.hero {
 
 .group {
   flex: 1 1 200px;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background-color: var(--bg-panel-soft);
+  border: 1px solid var(--line-muted);
   border-radius: var(--border-radius);
   padding: 0.5rem;
   min-width: 220px;
@@ -353,7 +403,7 @@ header.hero {
 }
 
 .group .slot {
-  border: 1px dashed var(--color-border);
+  border: 1px dashed var(--line-muted);
   border-radius: var(--border-radius);
   padding: 0.5rem;
   min-height: 50px;
@@ -365,11 +415,11 @@ header.hero {
 }
 .group .slot.filled {
   border-style: solid;
-  border-color: var(--color-primary);
-  background-color: #f0f4fa;
+  border-color: var(--line-strong);
+  background-color: var(--bg-panel-elevated);
 }
 .group .slot:hover {
-  background-color: #f5f7fb;
+  background-color: var(--bg-panel-elevated);
 }
 
 .selected-nations {
@@ -378,13 +428,14 @@ header.hero {
   gap: 0.5rem;
 }
 .selected-nations .selected-card {
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--line-muted);
   border-radius: var(--border-radius);
   padding: 0.25rem 0.5rem;
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  background-color: #fff;
+  background-color: var(--bg-panel-soft);
+  color: var(--text-bright);
 }
 .selected-card.selected-team {
   border-color: var(--color-primary);
@@ -1392,62 +1443,6 @@ body.tournament-fullscreen #schedule-modal.ultra-compact .schedule-item.expanded
   body.tournament-fullscreen #schedule-modal-list {
     column-fill: auto;
   }
-}
-
-/* =========================================
-   OPEN 2026 visual refresh
-   ========================================= */
-:root {
-  --bg-deep: #030a1f;
-  --bg-body-top: #0c214f;
-  --bg-body-bottom: #030712;
-  --bg-panel: #071534;
-  --bg-panel-soft: #0b1f47;
-  --bg-panel-elevated: #102851;
-  --bg-chip: #081b3e;
-  --bg-input: #061839;
-  --bg-modal: #081737;
-  --bg-toast: #0d2249;
-  --panel-grad-top: rgba(9, 24, 56, 0.94);
-  --panel-grad-bottom: rgba(3, 13, 34, 0.96);
-  --match-grad-top: rgba(8, 23, 53, 0.97);
-  --match-grad-bottom: rgba(4, 15, 37, 0.98);
-  --line-strong: #3d74bf;
-  --line-muted: #244b86;
-  --line-muted-lite: #2a4f8a;
-  --line-subtle: #17386d;
-  --text-bright: #f2f6ff;
-  --text-primary: #deebff;
-  --text-muted: #a9bcde;
-  --text-dim: #7f93b8;
-  --success-ring: #9af5b7;
-  --danger-ring: #7b2f37;
-  --draw-ring: #8f99ab;
-  --success-text: #dffff0;
-  --danger-text: #f0c2c8;
-  --draw-text: #e6e9ef;
-  --btn-bg-top: #173f7a;
-  --btn-bg-bottom: #0b2a5d;
-  --btn-alt-top: #163c73;
-  --btn-alt-bottom: #09244f;
-  --bg-playing-row: #233a0e;
-  --bg-skipped-row: #321720;
-  --toast-loser: #ff8d9b;
-  --row-direct-bg: rgba(52, 161, 106, 0.3);
-  --row-chance-bg: rgba(255, 189, 83, 0.3);
-  --score-win-bg: rgba(60, 130, 80, 0.18);
-  --score-loss-bg: rgba(90, 24, 34, 0.18);
-  --score-draw-bg: rgba(116, 124, 139, 0.2);
-  --group-a-color: #78aefe;
-  --group-b-color: #f4c96f;
-  --group-c-color: #5ed4a3;
-  --group-d-color: #c696ff;
-  --group-e-color: #f79ba2;
-  --group-a-line: #3a86ff;
-  --group-b-line: #f4b942;
-  --group-c-line: #25c281;
-  --group-d-line: #b76dff;
-  --group-e-line: #f26f78;
 }
 
 body {
