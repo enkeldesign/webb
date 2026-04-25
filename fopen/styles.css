@@ -584,7 +584,7 @@ header.hero {
   line-height: 1;
 }
 
-.upcoming-wrap span {
+.upcoming-wrap span:last-of-type {
   text-align: right;
   color: var(--line-subtle);
   display: inline;
