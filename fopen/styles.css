@@ -316,7 +316,7 @@ header.hero {
   gap: 1rem;
 }
 
-.controls input {
+.controls select {
   /* Reset default appearance */
   appearance: none;
   -webkit-appearance: none;
