@@ -316,6 +316,33 @@ header.hero {
   gap: 1rem;
 }
 
+.controls input {
+  /* Reset default appearance */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  /* Solid colors */
+  background-color: #0b1c36;
+  border: 1px solid #4a6894;
+  
+  /* Layout */
+  border-radius: 8px;
+  padding: 8px 32px 8px 12px;
+  color: white;
+  font-family: sans-serif;
+  cursor: pointer;
+
+  /* Custom dropdown arrow */
+  background-image: url('data:image/svg+xml;utf8,<svg fill="%234a6894" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+}
+
+.simple-select:focus {
+  outline: 1px solid #4a6894;
+}
+
 .marathon-section {
   display: flex;
   flex-direction: row;
