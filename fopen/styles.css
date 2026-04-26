@@ -873,6 +873,8 @@ header.hero {
   background-color: var(--color-surface);
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
+  scrollbar-color: var(--color-primary) var(--bg-deep);
+  scrollbar-width: thin;
   max-width: 1600px;
   width: 90%;
   max-height: 90%;
