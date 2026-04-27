@@ -673,6 +673,28 @@ header.hero {
   to { transform: translateY(0); opacity: 1; }
 }
 
+
+.now-playing.group-stage-complete {
+  position: relative;
+  overflow: hidden;
+}
+
+.korv-mascot {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  max-width: min(44%, 300px);
+  height: auto;
+  pointer-events: none;
+  animation: korvSlideIn 1.8s ease-out forwards;
+  transform: translateY(100%);
+}
+
+@keyframes korvSlideIn {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
 /* =========================
    HISTORY (now-playing)
    ========================= */
