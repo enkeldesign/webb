@@ -603,6 +603,8 @@ function renderUpcomingMatches() {
 function updateNowPlaying() {
   const container = document.getElementById('current-matches');
   container.innerHTML = '';
+  const nowPlayingWrap = document.getElementById('now-playing');
+  if (nowPlayingWrap) nowPlayingWrap.classList.remove('group-stage-complete');
   // Remove invalid/completed/skipped matches from the playingMatches list
   state.playingMatches = state.playingMatches.filter(idx => {
     const m = state.schedule[idx];
@@ -864,8 +866,8 @@ function recordResult(scheduleIndex, score1, score2) {
   match.score2 = score2;
   match.status = 'completed';
   state.results[match.id] = { score1, score2 };
-  // Show toast with result and winner information
-  showToast(match, score1, score2);
+  // Show toast with result and winner information (except after final group match)
+  if (!isGroupStageComplete()) showToast(match, score1, score2);
   // Remove teams from playing list
   state.playing = state.playing.filter(team => team !== match.team1 && team !== match.team2);
   // Remove this match from the list of currently playing matches so that it
@@ -1106,12 +1108,26 @@ function checkGroupStageComplete() {
   if (!allDone) return;
   const nowPlaying = document.getElementById('now-playing');
   if (!nowPlaying) return;
+  // Hide latest result toast when group stage is finished
+  const toast = document.getElementById('toast');
+  if (toast) {
+    toast.hidden = true;
+    toast.classList.remove('show');
+  }
   // Clear existing content
   nowPlaying.innerHTML = '';
+  nowPlaying.classList.add('group-stage-complete');
   // Message indicating group stage completion
   const msg = document.createElement('h2');
   msg.textContent = 'Gruppspelet är slut';
   nowPlaying.appendChild(msg);
+
+  const korvImg = document.createElement('img');
+  korvImg.src = 'korv.png';
+  korvImg.alt = 'Korv';
+  korvImg.className = 'korv-mascot';
+  nowPlaying.appendChild(korvImg);
+
   // Ensure latest recorded result is reflected in group tables
   updateStandingsUI();
 }
