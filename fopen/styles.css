@@ -683,7 +683,7 @@ header.hero {
   position: absolute;
   left: 0;
   bottom: 0;
-  max-width: min(44%, 300px);
+  max-width: 80%;
   height: auto;
   pointer-events: none;
   animation: korvSlideIn 1.8s ease-out forwards;
