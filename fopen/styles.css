@@ -862,7 +862,7 @@ header.hero {
 
 .groups-rankings.groups-count-3 { grid-template-columns: repeat(3, 1fr); }
 .groups-rankings.groups-count-4 { grid-template-columns: repeat(2, 1fr); }
-.groups-rankings.groups-count-5 { grid-template-columns: repeat(3, 1fr); }
+.groups-rankings.groups-count-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
 .group-ranking {
   flex: 1 1 240px;
@@ -1139,6 +1139,10 @@ header.hero {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  body.tournament-fullscreen .groups-rankings.groups-count-5 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   body.tournament-fullscreen .group-ranking {
     min-height: 0;
     padding: 0.35rem 0.45rem;
@@ -1396,6 +1400,12 @@ header.hero {
   }
 
   body.tournament-fullscreen .groups-rankings.groups-count-4 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  body.tournament-fullscreen .groups-rankings.groups-count-5 {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
