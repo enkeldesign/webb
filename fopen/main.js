@@ -1415,13 +1415,21 @@ function initGroupStandings() {
 
 function updateStandingsUI() {
   const container = document.getElementById('groups-rankings');
+  const rankingsPanel = document.querySelector('.rankings-panel');
   // Reset container content and classes
   container.innerHTML = '';
   // Set a class based on the number of groups so that CSS can adjust the
   // grid layout (e.g. 3 columns for 3 groups, 2 columns for 4 groups etc.)
   container.className = 'groups-rankings';
+  if (rankingsPanel) {
+    rankingsPanel.className = 'rankings-panel';
+  }
   if (state.groups && state.groups.length) {
-    container.classList.add(`groups-count-${state.groups.length}`);
+    const countClass = `groups-count-${state.groups.length}`;
+    container.classList.add(countClass);
+    if (rankingsPanel) {
+      rankingsPanel.classList.add(countClass);
+    }
   }
   if (!state.groupStandings) return;
   // Determine direct and chance seeds for each group

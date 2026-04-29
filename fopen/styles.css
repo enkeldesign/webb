@@ -862,7 +862,7 @@ header.hero {
 
 .groups-rankings.groups-count-3 { grid-template-columns: repeat(3, 1fr); }
 .groups-rankings.groups-count-4 { grid-template-columns: repeat(2, 1fr); }
-.groups-rankings.groups-count-5 { grid-template-columns: repeat(3, 1fr); }
+.groups-rankings.groups-count-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
 .group-ranking {
   flex: 1 1 240px;
@@ -1139,6 +1139,10 @@ header.hero {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  body.tournament-fullscreen .groups-rankings.groups-count-5 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   body.tournament-fullscreen .group-ranking {
     min-height: 0;
     padding: 0.35rem 0.45rem;
@@ -1239,7 +1243,7 @@ header.hero {
     min-height: 100dvh;
     margin: 0 auto;
     padding: 16px 20px;
-    gap: 14px;
+    gap: 10px;
     border-radius: 0;
   }
 
@@ -1260,8 +1264,8 @@ header.hero {
   body.tournament-fullscreen #tournament-stage {
     flex: 1;
     min-height: 0;
-    padding: 18px 20px;
-    gap: 14px;
+    padding: 10px 20px 14px;
+    gap: 10px;
   }
 
   body.tournament-fullscreen .tournament-overview {
@@ -1366,8 +1370,8 @@ header.hero {
 
   /* Upcoming chips */
   body.tournament-fullscreen .upcoming-wrap {
-    gap: 10px;
-    margin-top: 2px;
+    gap: 8px;
+    margin-top: 0;
   }
 
   body.tournament-fullscreen .upcoming-matches {
@@ -1399,6 +1403,27 @@ header.hero {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
+  }
+
+  body.tournament-fullscreen .groups-rankings.groups-count-5 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  body.tournament-fullscreen .rankings-panel.groups-count-5 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    align-content: start;
+  }
+
+  body.tournament-fullscreen .rankings-panel.groups-count-5 .rankings-title {
+    grid-column: 1 / -1;
+  }
+
+  body.tournament-fullscreen .rankings-panel.groups-count-5 .groups-rankings {
+    display: contents;
   }
 
   body.tournament-fullscreen .group-ranking {
@@ -1437,6 +1462,15 @@ header.hero {
     position: sticky;
     bottom: 1.5rem;
     right: 0;
+  }
+
+  body.tournament-fullscreen .rankings-panel.groups-count-5 .marathon-section {
+    grid-column: 2;
+    align-self: end;
+    position: static;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
   }
 
   body.tournament-fullscreen #schedule-modal .modal-content {
@@ -1722,8 +1756,8 @@ h2, h3, .overview-title { color: var(--text-bright); }
     grid-template-columns: minmax(400px, 1.25fr) minmax(400px, 1fr);
   }
   body.tournament-fullscreen .upcoming-wrap {
-    margin-top: 0.4rem;
-    padding: 0.45rem 0.15rem 0;
+    margin-top: 0.2rem;
+    padding: 0.2rem 0.15rem 0;
     border-top: 1px solid var(--line-subtle);
   }
   body.tournament-fullscreen .rankings-panel .marathon-section {
