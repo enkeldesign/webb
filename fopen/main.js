@@ -494,8 +494,8 @@ function buildSchedule() {
 
 // Prompt user for number of boards and start tournament
 function startTournament() {
-  let boards = parseInt(prompt('Hur många bord (1–5)?', state.numBoards || 1), 10);
-  if (isNaN(boards) || boards < 1 || boards > 5) boards = 1;
+  let boards = parseInt(prompt('Hur många bord (1–4)?', state.numBoards || 1), 10);
+  if (isNaN(boards) || boards < 1 || boards > 4) boards = 1;
   state.numBoards = boards;
   buildSchedule();
   // Initialise group standings with zero values so that groups are displayed even before any matches are played.
@@ -676,11 +676,12 @@ function updateNowPlaying() {
     historyContainer.classList.add('history');
     const history = getHistory(match.team1, match.team2);
     if (history.length > 0) {
+      const compactHistoryMode = state.numBoards === 4;
       const title = document.createElement('div');
       title.classList.add('history-title');
-      title.textContent = 'Tidigare möten';
+      title.textContent = compactHistoryMode ? 'Senaste mötet' : 'Tidigare möten';
       historyContainer.appendChild(title);
-      const MAX_HISTORY_ROWS = 3;
+      const MAX_HISTORY_ROWS = compactHistoryMode ? 1 : 3;
       const hasOverflowHistory = history.length > MAX_HISTORY_ROWS;
       history.forEach((entry, entryIndex) => {
         const row = document.createElement('div');
@@ -737,7 +738,7 @@ function updateNowPlaying() {
         const toggleButton = document.createElement('button');
         toggleButton.type = 'button';
         toggleButton.classList.add('history-toggle-btn');
-        toggleButton.textContent = 'Visa mer';
+        toggleButton.textContent = compactHistoryMode ? 'Historik' : 'Visa mer';
         toggleButton.setAttribute('aria-expanded', 'false');
         toggleButton.dataset.expanded = 'false';
         toggleButton.addEventListener('click', () => {
@@ -749,7 +750,11 @@ function updateNowPlaying() {
           const nextExpanded = !isExpanded;
           toggleButton.dataset.expanded = nextExpanded ? 'true' : 'false';
           toggleButton.setAttribute('aria-expanded', nextExpanded ? 'true' : 'false');
-          toggleButton.textContent = isExpanded ? 'Visa mer' : 'Visa mindre';
+          if (compactHistoryMode) {
+            toggleButton.textContent = isExpanded ? 'Historik' : 'Mindre';
+          } else {
+            toggleButton.textContent = isExpanded ? 'Visa mer' : 'Visa mindre';
+          }
         });
         historyContainer.appendChild(toggleButton);
       }
