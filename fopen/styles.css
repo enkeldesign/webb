@@ -973,6 +973,25 @@ header.hero {
 .marathon-table tr.participant td { background-color: var(--line-muted); }
 .marathon-table tr.participant:nth-child(even) td { background-color: var(--line-muted-lite); }
 
+
+.pre-results-banner {
+  position: absolute;
+  top: 0.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 790;
+  pointer-events: none;
+}
+
+.pre-results-image {
+  display: block;
+  max-width: min(420px, 65vw);
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+
 /* =========================
    TOAST (latest result)
    ========================= */

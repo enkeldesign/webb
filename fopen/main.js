@@ -873,6 +873,7 @@ function recordResult(scheduleIndex, score1, score2) {
   state.results[match.id] = { score1, score2 };
   // Show toast with result and winner information (except after final group match)
   if (!isGroupStageComplete()) showToast(match, score1, score2);
+  else updatePreResultsBanner();
   // Remove teams from playing list
   state.playing = state.playing.filter(team => team !== match.team1 && team !== match.team2);
   // Remove this match from the list of currently playing matches so that it
@@ -889,6 +890,17 @@ function recordResult(scheduleIndex, score1, score2) {
   updateStandingsUI();
   // Check if group stage is complete and update UI accordingly
   checkGroupStageComplete();
+}
+
+
+function updatePreResultsBanner() {
+  const banner = document.getElementById('pre-results-banner');
+  const toast = document.getElementById('toast');
+  if (!banner) return;
+  const inTournament = state.stage === 'tournament';
+  const hasResults = Object.keys(state.results || {}).length > 0;
+  const toastVisible = toast && !toast.hidden;
+  banner.hidden = !(inTournament && !hasResults && !toastVisible);
 }
 
 // Show a toast notification summarising a match result.  The toast displays the
@@ -945,6 +957,7 @@ function showToast(match, score1, score2) {
   toast.classList.remove('show');
   void toast.offsetWidth;
   toast.classList.add('show');
+  updatePreResultsBanner();
 }
 
 // Generate the playoff bracket based on final group standings and ruleset.
@@ -1119,6 +1132,7 @@ function checkGroupStageComplete() {
     toast.hidden = true;
     toast.classList.remove('show');
   }
+  updatePreResultsBanner();
   // Clear existing content
   nowPlaying.innerHTML = '';
   nowPlaying.classList.add('group-stage-complete');
@@ -1930,6 +1944,7 @@ function renderStage() {
     const playoffStage = document.getElementById('playoff-stage');
     if (playoffStage) playoffStage.hidden = false;
   }
+  updatePreResultsBanner();
 }
 
 // Set up event listeners
