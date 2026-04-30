@@ -741,6 +741,20 @@ function updateNowPlaying() {
         toggleButton.textContent = compactHistoryMode ? 'Historik' : 'Visa mer';
         toggleButton.setAttribute('aria-expanded', 'false');
         toggleButton.dataset.expanded = 'false';
+        let autoCollapseTimeoutId = null;
+        const collapseHistoryOverflow = () => {
+          const hiddenRows = historyContainer.querySelectorAll('.history-entry-overflow');
+          hiddenRows.forEach(row => {
+            row.hidden = true;
+          });
+          toggleButton.dataset.expanded = 'false';
+          toggleButton.setAttribute('aria-expanded', 'false');
+          toggleButton.textContent = compactHistoryMode ? 'Historik' : 'Visa mer';
+          if (autoCollapseTimeoutId) {
+            clearTimeout(autoCollapseTimeoutId);
+            autoCollapseTimeoutId = null;
+          }
+        };
         toggleButton.addEventListener('click', () => {
           const hiddenRows = historyContainer.querySelectorAll('.history-entry-overflow');
           const isExpanded = toggleButton.dataset.expanded === 'true';
@@ -754,6 +768,13 @@ function updateNowPlaying() {
             toggleButton.textContent = isExpanded ? 'Historik' : 'Mindre';
           } else {
             toggleButton.textContent = isExpanded ? 'Visa mer' : 'Visa mindre';
+          }
+          if (autoCollapseTimeoutId) {
+            clearTimeout(autoCollapseTimeoutId);
+            autoCollapseTimeoutId = null;
+          }
+          if (nextExpanded) {
+            autoCollapseTimeoutId = setTimeout(collapseHistoryOverflow, 60000);
           }
         });
         historyContainer.appendChild(toggleButton);
