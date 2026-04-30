@@ -976,7 +976,7 @@ header.hero {
 
 .pre-results-banner {
   position: absolute;
-  top: 0.25rem;
+  top: -2rem;
   left: 50%;
   transform: translateX(-50%);
   z-index: 790;
@@ -985,11 +985,8 @@ header.hero {
 
 .pre-results-image {
   display: block;
-  max-width: min(420px, 65vw);
-  width: 100%;
+  width: 600px;
   height: auto;
-  border-radius: 10px;
-  box-shadow: var(--shadow);
 }
 
 /* =========================
