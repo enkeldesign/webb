@@ -81,6 +81,9 @@
   --group-c-line: #25c281;
   --group-d-line: #b76dff;
   --group-e-line: #f26f78;
+
+  scrollbar-color: var(--color-primary) var(--bg-deep);
+  scrollbar-width: thin;
 }
 
 .sr-only {
@@ -113,9 +116,7 @@ body {
 
   /* Förhindra att sidans bredd hoppar när scrollbar visas/gömmer sig */
   scrollbar-gutter: stable both-edges;
-  scrollbar-color: var(--color-primary) var(--bg-deep);
-  scrollbar-width: thin;
-}
+  }
 
 /* Background flag overlay */
 body::before {
