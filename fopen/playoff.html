@@ -6,6 +6,7 @@
   <title>Färöarna Open – Slutspel</title>
   <link rel="icon" type="image/jpeg" href="logo.png">
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="playoff.css" />
   <style>
     .playoff-wrap{padding:1rem;max-width:1200px;margin:0 auto}
     .card{background:#111827;border:1px solid #334155;border-radius:12px;padding:1rem;margin-bottom:1rem}
@@ -16,17 +17,17 @@
     .status{font-size:.85rem;color:#93c5fd}
   </style>
 </head>
-<body class="tournament-fullscreen">
+<body class="playoff-body">
   <div class="playoff-wrap">
     <header class="hero" style="margin-bottom:1rem;">
       <div class="hero-left"><img class="hero-logo" src="logo.svg" alt="Färöarna Open"></div>
       <div class="hero-right"><a class="btn menu-item" href="index.html">Till gruppspelsappen</a></div>
     </header>
 
-    <section class="card">
+    <section class="playoff-card">
       <h2>1) Välj slutspelsupplägg</h2>
       <select id="preset"></select>
-      <div class="grid" style="margin-top:.75rem">
+      <div class="playoff-grid" style="margin-top:.75rem">
         <button id="load-backup" class="btn btn-secondary">Importera backup-fil</button>
         <button id="save-export" class="btn btn-primary">Exportera hela turneringen</button>
       </div>
@@ -34,12 +35,12 @@
       <p class="status" id="meta-status">Ingen backup läst ännu.</p>
     </section>
 
-    <section class="card">
+    <section class="playoff-card">
       <h2>2) Placera deltagare manuellt</h2>
       <div id="rounds"></div>
     </section>
 
-    <section class="card">
+    <section class="playoff-card">
       <h2>3) Slutrapport</h2>
       <div id="summary">Spela klart semifinaler/final/bronsmatch för att se GULD/SILVER/BRONS.</div>
     </section>

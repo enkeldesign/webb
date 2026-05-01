@@ -25,6 +25,13 @@ const PRESETS = {
   }
 };
 
+
+const DEFAULT_FLAG = 'placeholder_light_gray_block.png';
+const FLAG_MAP = {
+  'Färöarna': 'Flag_of_the_Faroe_Islands.svg','Jugoslavien':'Flag_of_Yugoslavia_(1946-1992).svg','Finland':'Flag_of_Finland.svg','Sverige':'Flag_of_Sweden.svg','Nordkorea':'Flag_of_North_Korea.svg','Chile':'Flag_of_Chile.svg','Schweiz':'Flag_of_Switzerland.svg','Australien':'Flag_of_Australia.svg','Iran':'Flag_of_Iran.svg','Tamil Eelam':'Tamil_Eelam_Flag.svg','Kanada':'Flag_of_Canada.svg','Albanien':'Flag_of_Albania.svg','Peru':'Flag_of_Peru.svg','Norge':'Flag_of_Norway.svg','Västtyskland':'Flag_of_West_Germany;_Flag_of_Germany_(1990#U20131996).svg','Östtyskland':'Flag_of_East_Germany.svg','Belgien':'Flag_of_Belgium.svg','Mali':'Flag_of_Mali.svg','El Salvador':'Flag_of_El_Salvador.svg','Italien':'Flag_of_Italy.svg','Sovjetunionen':'Flag_of_the_Soviet_Union.svg','Polen':'Flag_of_Poland.svg','Nauru':'Flag_of_Nauru.svg','Skottland':'Flag_of_Scotland.svg','Danmark':'Flag_of_Denmark.svg','Grekland':'Flag_of_Greece.svg','St: Kitts/Nevis':'Flag_of_Saint_Kitts_and_Nevis.svg','St:Kitts/Nevis':'Flag_of_Saint_Kitts_and_Nevis.svg','Övre Volta':'Flag_of_Upper_Volta.svg','Cypern':'Flag_of_Cyprus.svg','USA':'Flag_of_the_United_States.svg','England':'Flag_of_England.svg','Spanien':'Flag_of_Spain.svg','Mexiko':'Flag_of_Mexico.svg','Tunisien':'Flag_of_Tunisia.svg','Rhodesia':'Flag_of_Rhodesia_(1968#U20131979).svg','Malta':'Flag_of_Malta.svg','Japan':'Flag_of_Japan.svg','Trinidad/Tobago':'Flag_of_Trinidad_and_Tobago.svg','Island':'Flag_of_Iceland.svg','Åland':'Flag_of_#U00c5land.svg','Ukraina':'Flag_of_Ukraine.svg','Irland':'Flag_of_Ireland.svg','Nepal':'Flag_of_Nepal.svg','Indien':'Flag_of_India.svg'
+};
+function getFlagSrc(nation){ return `flags/${encodeURIComponent(FLAG_MAP[nation] || DEFAULT_FLAG)}`; }
+
 let backupData = null;
 let teams = [];
 let state = { preset: 'qf_sf_bronze_final', matches: {} };
@@ -93,8 +100,8 @@ function buildBracket(){
 function renderMatch(id){
   const m=ensureMatch(id); const el=document.createElement('div'); el.className='match';
   const t=document.createElement('strong'); t.textContent=id; el.appendChild(t);
-  const s1=document.createElement('div'); s1.className='slot'; s1.append('Hemma: ', teamSelect(m.home,v=>{m.home=v; saveState(); buildBracket();}));
-  const s2=document.createElement('div'); s2.className='slot'; s2.append('Borta: ', teamSelect(m.away,v=>{m.away=v; saveState(); buildBracket();}));
+  const s1=document.createElement('div'); s1.className='slot'; const f1=document.createElement('img'); f1.className='flag-sm'; f1.src=getFlagSrc(m.home); f1.alt=m.home||''; s1.append('Hemma: ', f1, teamSelect(m.home,v=>{m.home=v; saveState(); buildBracket();}));
+  const s2=document.createElement('div'); s2.className='slot'; const f2=document.createElement('img'); f2.className='flag-sm'; f2.src=getFlagSrc(m.away); f2.alt=m.away||''; s2.append('Borta: ', f2, teamSelect(m.away,v=>{m.away=v; saveState(); buildBracket();}));
   el.append(s1,s2);
 
   const rs=document.createElement('div'); rs.className='slot';
@@ -119,7 +126,7 @@ function resolveMatch(id){
 function updateSummary(){
   const f=state.matches.F, br=state.matches.BR;
   const sum=document.getElementById('summary');
-  if(!f?.winner || !br?.winner){ sum.textContent='Spela klart semifinaler/final/bronsmatch för att se GULD/SILVER/BRONS.'; return; }
+  if(!f?.winner || !br?.winner){ sum.innerHTML='Spela klart semifinaler/final/bronsmatch för att se GULD/SILVER/BRONS.<p class="status">Tips: Exportfilen används som komplett arkiv/backup. Statistik hämtas från NotebookLM och kan senare skrivas in i exportens awards-fält.</p>'; return; }
   const finalLoser = f.winner===f.home?f.away:f.home;
   sum.innerHTML = `<p><strong>GULD:</strong> ${f.winner}</p><p><strong>SILVER:</strong> ${finalLoser}</p><p><strong>BRONS:</strong> ${br.winner}</p>`;
 }
