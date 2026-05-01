@@ -1,0 +1,11 @@
+body { overflow-y: auto; overflow-x: hidden; min-height: 100vh; }
+.playoff-body { background: var(--color-bg); color: var(--color-text); }
+.playoff-wrap{padding:1rem;max-width:1200px;margin:0 auto}
+.playoff-card{background:#111827;border:1px solid #334155;border-radius:12px;padding:1rem;margin-bottom:1rem}
+.playoff-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.75rem}
+.playoff-round{border:1px solid #334155;border-radius:10px;padding:.75rem;background:#0b1220;margin-bottom:.75rem}
+.playoff-match{border:1px dashed #334155;border-radius:8px;padding:.65rem;margin:.4rem 0}
+.slot{display:flex;gap:.5rem;align-items:center;margin:.35rem 0}
+.flag-sm{width:36px;height:24px;object-fit:cover;border:1px solid #94a3b8;border-radius:4px;background:#1e293b}
+select,input{width:100%;padding:.45rem;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#fff}
+.status{font-size:.85rem;color:#93c5fd}
