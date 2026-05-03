@@ -941,6 +941,17 @@ header.hero {
   padding-bottom: 0.5rem;
 }
 
+.marathon-view-toggle {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.marathon-view-toggle .btn[aria-selected="true"] {
+  background-color: var(--color-primary);
+  color: #fff;
+}
+
 .marathon-table table {
   width: 100%;
   border-collapse: collapse;
