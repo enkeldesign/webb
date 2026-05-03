@@ -100,6 +100,7 @@ function getDefaultState() {
     results: {}, // matchId -> {score1, score2}
     numBoards: 1,
     marathonUpdated: null,
+    marathonView: 'absolute',
     // Use a stable ordering for matches in progress to avoid concurrency issues
     playing: [],
     // List of schedule indices that are currently being played. This is
@@ -118,6 +119,7 @@ function normalizeState(rawState) {
   if (!merged.results || typeof merged.results !== 'object') merged.results = {};
   if (!Array.isArray(merged.playing)) merged.playing = [];
   if (!Array.isArray(merged.playingMatches)) merged.playingMatches = [];
+  if (!['absolute', 'efficiency'].includes(merged.marathonView)) merged.marathonView = 'absolute';
   if (typeof merged.numSlots !== 'number' || Number.isNaN(merged.numSlots)) merged.numSlots = 12;
   if (!['select', 'draw', 'tournament', 'playoff'].includes(merged.stage)) merged.stage = 'select';
   return merged;
@@ -1838,10 +1840,14 @@ function renderMarathonTable() {
   // Render table
   const tableContainer = document.getElementById('marathon-table');
   tableContainer.innerHTML = '';
+  const viewMode = state.marathonView || 'absolute';
   const table = document.createElement('table');
   const thead = document.createElement('thead');
   const trh = document.createElement('tr');
-  ['Plac', 'Nation', 'Matcher', 'Vinster', 'Oavg', 'Förluster', 'Målskillnad', 'Poäng', '∆'].forEach(h => {
+  const headers = viewMode === 'efficiency'
+    ? ['Plac', 'Nation', 'Poäng/match', 'Vinst %', 'Oavg %', 'Förlust %', 'Mål/match', 'Insläppta/match', '∆']
+    : ['Plac', 'Nation', 'Matcher', 'Vinster', 'Oavg', 'Förluster', 'Målskillnad', 'Poäng', '∆'];
+  headers.forEach(h => {
     const th = document.createElement('th');
     th.textContent = h;
     trh.appendChild(th);
@@ -1881,8 +1887,19 @@ function renderMarathonTable() {
     tdNation.appendChild(flagImg);
     tdNation.appendChild(nameSpan);
     tr.appendChild(tdNation);
-    // Matches, wins, draws, losses, goal diff, points
-    const values = [entry.matches, entry.wins, entry.draws, entry.losses, entry.goal_difference, entry.points];
+    // Matches, wins, draws, losses, goal diff, points OR efficiency view values
+    const safeMatches = entry.matches || 0;
+    const ratio = (value) => (safeMatches ? value / safeMatches : 0);
+    const values = viewMode === 'efficiency'
+      ? [
+          ratio(entry.points).toFixed(2),
+          `${(ratio(entry.wins) * 100).toFixed(1)}%`,
+          `${(ratio(entry.draws) * 100).toFixed(1)}%`,
+          `${(ratio(entry.losses) * 100).toFixed(1)}%`,
+          ratio(entry.goalsFor).toFixed(2),
+          ratio(entry.goalsAgainst).toFixed(2)
+        ]
+      : [entry.matches, entry.wins, entry.draws, entry.losses, entry.goal_difference, entry.points];
     values.forEach(val => {
       const td = document.createElement('td');
       td.textContent = val;
@@ -1913,6 +1930,16 @@ function toggleMarathonModal(show) {
   } else {
     modal.hidden = true;
   }
+}
+
+function setMarathonView(view) {
+  state.marathonView = view === 'efficiency' ? 'efficiency' : 'absolute';
+  const absoluteBtn = document.getElementById('marathon-view-absolute');
+  const efficiencyBtn = document.getElementById('marathon-view-efficiency');
+  if (absoluteBtn) absoluteBtn.setAttribute('aria-selected', String(state.marathonView === 'absolute'));
+  if (efficiencyBtn) efficiencyBtn.setAttribute('aria-selected', String(state.marathonView === 'efficiency'));
+  renderMarathonTable();
+  saveState();
 }
 
 function toggleScheduleModal(show) {
@@ -1975,6 +2002,8 @@ function bindEvents() {
   document.getElementById('start-tournament-btn').addEventListener('click', startTournament);
   document.getElementById('marathon-btn').addEventListener('click', () => toggleMarathonModal(true));
   document.getElementById('close-marathon').addEventListener('click', () => toggleMarathonModal(false));
+  document.getElementById('marathon-view-absolute').addEventListener('click', () => setMarathonView('absolute'));
+  document.getElementById('marathon-view-efficiency').addEventListener('click', () => setMarathonView('efficiency'));
   // Schedule button opens the dedicated schedule modal.
   const scheduleBtn = document.getElementById('schedule-btn');
   const closeScheduleBtn = document.getElementById('close-schedule');
