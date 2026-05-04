@@ -948,7 +948,7 @@ header.hero {
 }
 
 .marathon-view-toggle .btn[aria-selected="true"] {
-  background-color: var(--color-primary);
+  background-color: var(--color-secondary);
   color: #fff;
 }
 
