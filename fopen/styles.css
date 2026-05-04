@@ -951,12 +951,14 @@ header.hero {
 
 .marathon-view-toggle .btn[aria-selected="true"] {
   background-color: var(--color-secondary);
+  border: 1px solid var(--line-red);
   color: #fff;
 }
 
 .marathon-view-toggle .btn[aria-selected="false"] {
   background: linear-gradient(180deg, var(--btn-bg-top) 0%, var(--btn-bg-bottom) 100%);
   background-color: var(--color-primary);
+  border: 1px solid var(--line-strong);
   color: #fff;
 }
 
@@ -1682,12 +1684,9 @@ h2, h3, .overview-title { color: var(--text-bright); }
   font-weight: 700;
 }
 
-.btn.btn-secondary {
-  border: 1px solid var(--line-red);
-}
-
 .btn.btn-primary { background: linear-gradient(180deg, var(--btn-bg-top) 0%, var(--btn-bg-bottom) 100%); }
-.btn.btn-secondary, .match-inputs .btn { background: linear-gradient(180deg, var(--btn-alt-top) 0%, var(--btn-alt-bottom) 100%); }
+.btn.btn-secondary, .match-inputs .btn { background: linear-gradient(180deg, var(--btn-alt-top) 0%, var(--btn-alt-bottom) 100%);
+   border: 1px solid var(--line-red); }
 
 .marathon-section { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
 
