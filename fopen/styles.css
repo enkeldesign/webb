@@ -1680,7 +1680,7 @@ h2, h3, .overview-title { color: var(--text-bright); }
   font-weight: 700;
 }
 .btn.btn-primary { background: linear-gradient(180deg, var(--btn-bg-top) 0%, var(--btn-bg-bottom) 100%); }
-.btn.btn-secondary, .match-input .btn { background: linear-gradient(180deg, var(--btn-alt-top) 0%, var(--btn-alt-bottom) 100%); }
+.btn.btn-secondary, .match-inputs .btn.btn-primary { background: linear-gradient(180deg, var(--btn-alt-top) 0%, var(--btn-alt-bottom) 100%); }
 
 .marathon-section { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
 
