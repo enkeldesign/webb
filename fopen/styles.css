@@ -952,7 +952,7 @@ header.hero {
   color: #fff;
 }
 
-.marathon-view-toggle .btn[aria-selected="false"] {
+.marathon-view-toggle .btn[aria-selected="false"], .match-input .btn {
   background: linear-gradient(180deg, var(--btn-bg-top) 0%, var(--btn-bg-bottom) 100%);
   background-color: var(--color-primary);
   color: #fff;
