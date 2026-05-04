@@ -952,6 +952,12 @@ header.hero {
   color: #fff;
 }
 
+.marathon-view-toggle .btn[aria-selected="false"] {
+  background: linear-gradient(180deg, var(--btn-bg-top) 0%, var(--btn-bg-bottom) 100%);
+  background-color: var(--color-primary);
+  color: #fff;
+}
+
 .marathon-table table {
   width: 100%;
   border-collapse: collapse;
