@@ -1683,7 +1683,7 @@ h2, h3, .overview-title { color: var(--text-bright); }
 }
 
 .btn.btn-secondary {
-  border-color: var(--line-red);
+  border: 1px solid var(--line-red);
 }
 
 .btn.btn-primary { background: linear-gradient(180deg, var(--btn-bg-top) 0%, var(--btn-bg-bottom) 100%); }
