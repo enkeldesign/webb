@@ -941,12 +941,12 @@ function showToast(match, score1, score2) {
   if (score1 === score2) {
     resultHtml = `
       <img src="${getFlagSrc(match.team1)}" alt="${match.team1}" class="flag">
-      <span class="winner">${match.team1}</span>
+      <span class="neutral">${match.team1}</span>
       <span class="score">${score1}</span>
       <span>–</span>
       <span class="score">${score2}</span>
       <img src="${getFlagSrc(match.team2)}" alt="${match.team2}" class="flag">
-      <span class="loser">${match.team2}</span>
+      <span class="neutral">${match.team2}</span>
     `;
   } else {
     let winnerTeam, loserTeam, winnerScore, loserScore;
