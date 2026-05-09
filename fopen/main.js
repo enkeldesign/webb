@@ -2101,7 +2101,12 @@ function importBackupState() {
     try {
       const text = await file.text();
       const parsed = JSON.parse(text);
-      const importedState = normalizeState(parsed);
+      // Stöd både rena backup-filer (state direkt i root) och full-exporter
+      // från slutspelet där backup-state ligger i sourceBackup.
+      const rawState = parsed && typeof parsed === 'object' && parsed.sourceBackup && typeof parsed.sourceBackup === 'object'
+        ? parsed.sourceBackup
+        : parsed;
+      const importedState = normalizeState(rawState);
       localStorage.setItem('fo-state', JSON.stringify(importedState));
       alert('Backup importerad. Sidan laddas om.');
       location.reload();
