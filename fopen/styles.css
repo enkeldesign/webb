@@ -489,7 +489,8 @@ header.hero {
   color: var(--text-bright);
 }
 .selected-card.selected-team {
-  border-color: var(--color-border);
+  border: 2px solid var(--color-border);
+  background-color: var(--color-primary);
 }
 
 /* =========================
