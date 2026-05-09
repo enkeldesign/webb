@@ -408,8 +408,9 @@ header.hero {
   min-height: 100px;
 }
 .nation-card.selected {
-  border: 3px solid var(--color-primary);
+  border: 3px solid var(--color-border);
   transform: translateY(2px);
+  background-color: var(--color-primary);
 }
 .nation-card .name {
   font-size: 0.8rem;
