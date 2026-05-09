@@ -2122,6 +2122,9 @@ function importBackupState() {
       const parsed = JSON.parse(text);
       const rawState = extractStateFromBackup(parsed);
       const importedState = normalizeState(rawState);
+      // Viktigt: uppdatera även minnes-state innan reload. beforeunload sparar
+      // annars om det gamla state:t och kan skriva över den importerade backupen.
+      state = importedState;
       localStorage.setItem('fo-state', JSON.stringify(importedState));
       alert('Backup importerad. Sidan laddas om.');
       location.reload();
