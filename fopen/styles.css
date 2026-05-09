@@ -1189,8 +1189,9 @@ header.hero {
     gap: 0.65rem;
   }
 
-  body.tournament-fullscreen .rankings-title {
-    font-size: 1.45rem;
+  body.tournament-fullscreen .rankings-title,
+  body.tournament-fullscreen .overview-title {
+    font-size: 2rem;
     margin-top: 1rem;
   }
 
