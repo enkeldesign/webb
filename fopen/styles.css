@@ -781,7 +781,7 @@ header.hero {
 
 .schedule-number {
   font-weight: 700;
-  color: #5e6d81;
+  color: var(--text-muted);
   min-width: 2.2ch;
   text-align: right;
 }
@@ -837,13 +837,21 @@ header.hero {
 
 .schedule-group {
   font-size: 0.8rem;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
 .schedule-item button.change-result {
   padding: 0.25rem 0.5rem;
   font-size: 0.75rem;
+}
+
+.schedule-team-name {
+  cursor: pointer;
+}
+
+.schedule-item.highlighted-nation-match {
+  background: linear-gradient(90deg, rgba(45, 95, 15, 0.72) 0%, rgba(24, 58, 12, 0.84) 100%);
 }
 
 /* =========================

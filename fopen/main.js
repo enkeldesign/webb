@@ -88,6 +88,7 @@ const DEFAULT_FLAG = 'placeholder_light_gray_block.png';
 
 // State management: we persist state in localStorage under key 'fo-state'
 let state = {};
+let selectedScheduleNation = null;
 
 function getDefaultState() {
   return {
@@ -1617,6 +1618,8 @@ function updateScheduleUI() {
   const list = document.getElementById('schedule-modal-list');
   const modal = document.getElementById('schedule-modal');
   if (!list) return;
+
+  const isHighlightedMatch = (match) => selectedScheduleNation && (match.team1 === selectedScheduleNation || match.team2 === selectedScheduleNation);
   list.innerHTML = '';
   if (modal) modal.classList.remove('ultra-compact');
   // Bygg varje rad i spelschemat med en tydlig struktur: flagga + nation, resultat,
@@ -1629,6 +1632,7 @@ function updateScheduleUI() {
     // still gets the dedicated class.  Pending and playing statuses will
     // receive their own class names (pending, playing).
     item.classList.add(match.status);
+    if (isHighlightedMatch(match)) item.classList.add('highlighted-nation-match');
     if (match.status === 'completed') item.classList.add('completed');
     if (match.skipped) item.classList.add('skipped');
     // Build columns: number, flag1, team1, score, flag2, team2, group label, edit button
@@ -1644,12 +1648,17 @@ function updateScheduleUI() {
     const leftName = document.createElement('div');
     leftName.classList.add('schedule-team');
     const leftNameSpan = document.createElement('span');
+    leftNameSpan.classList.add('schedule-team-name');
     if (match.status === 'completed' && match.score1 > match.score2) {
       leftNameSpan.innerHTML = `<strong>${match.team1}</strong>`;
     } else {
       leftNameSpan.textContent = match.team1;
     }
     leftName.appendChild(leftNameSpan);
+    leftName.addEventListener('click', () => {
+      selectedScheduleNation = selectedScheduleNation === match.team1 ? null : match.team1;
+      updateScheduleUI();
+    });
     // Score
     const score = document.createElement('div');
     score.classList.add('schedule-score');
@@ -1673,12 +1682,17 @@ function updateScheduleUI() {
     const rightName = document.createElement('div');
     rightName.classList.add('schedule-team');
     const rightNameSpan = document.createElement('span');
+    rightNameSpan.classList.add('schedule-team-name');
     if (match.status === 'completed' && match.score2 > match.score1) {
       rightNameSpan.innerHTML = `<strong>${match.team2}</strong>`;
     } else {
       rightNameSpan.textContent = match.team2;
     }
     rightName.appendChild(rightNameSpan);
+    rightName.addEventListener('click', () => {
+      selectedScheduleNation = selectedScheduleNation === match.team2 ? null : match.team2;
+      updateScheduleUI();
+    });
     // Group label
     const groupDiv = document.createElement('div');
     groupDiv.classList.add('schedule-group');
@@ -1948,6 +1962,7 @@ function toggleScheduleModal(show) {
   const scheduleBtn = document.getElementById('schedule-btn');
   if (!modal) return;
   if (show) {
+    selectedScheduleNation = null;
     modal.hidden = false;
     updateScheduleUI();
     if (closeScheduleBtn) closeScheduleBtn.focus({ preventScroll: true });
