@@ -2091,6 +2091,25 @@ function backupState() {
   URL.revokeObjectURL(url);
 }
 
+
+function looksLikeAppState(candidate) {
+  if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) return false;
+  return ['stage', 'selectedTeams', 'groups', 'schedule', 'results'].some(k => Object.prototype.hasOwnProperty.call(candidate, k));
+}
+
+function extractStateFromBackup(parsed) {
+  const candidates = [
+    parsed,
+    parsed && parsed.state,
+    parsed && parsed.sourceBackup,
+    parsed && parsed.sourceBackup && parsed.sourceBackup.state,
+    parsed && parsed.backup,
+    parsed && parsed.data && parsed.data.state
+  ];
+  const match = candidates.find(looksLikeAppState);
+  if (!match) throw new Error('Ingen giltig app-state hittades i backupfilen.');
+  return match;
+}
 function importBackupState() {
   const input = document.createElement('input');
   input.type = 'file';
@@ -2101,11 +2120,7 @@ function importBackupState() {
     try {
       const text = await file.text();
       const parsed = JSON.parse(text);
-      // Stöd både rena backup-filer (state direkt i root) och full-exporter
-      // från slutspelet där backup-state ligger i sourceBackup.
-      const rawState = parsed && typeof parsed === 'object' && parsed.sourceBackup && typeof parsed.sourceBackup === 'object'
-        ? parsed.sourceBackup
-        : parsed;
+      const rawState = extractStateFromBackup(parsed);
       const importedState = normalizeState(rawState);
       localStorage.setItem('fo-state', JSON.stringify(importedState));
       alert('Backup importerad. Sidan laddas om.');
