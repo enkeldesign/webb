@@ -1192,7 +1192,8 @@ header.hero {
   body.tournament-fullscreen .rankings-title,
   body.tournament-fullscreen .overview-title {
     font-size: 2rem;
-    margin-top: 1rem;
+    /* margin-top: 1rem; */
+    line-height: 1;
   }
 
   body.tournament-fullscreen .groups-rankings.groups-count-4 {
@@ -1342,7 +1343,7 @@ header.hero {
   body.tournament-fullscreen .now-playing {
     min-height: 0;
     overflow: auto;
-    padding: 14px;
+    padding: 0 14px 14px;
     gap: 6px;
     border: none;
   }
@@ -1351,8 +1352,8 @@ header.hero {
   body.tournament-fullscreen .schedule h2,
   body.tournament-fullscreen .group-ranking h3,
   body.tournament-fullscreen .upcoming-title {
-    font-size: 1.7rem;
-    line-height: 1.1;
+    font-size: 2rem;
+    line-height: 1;
   }
 
   body.tournament-fullscreen .current-matches {
