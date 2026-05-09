@@ -1632,7 +1632,8 @@ function updateScheduleUI() {
     // still gets the dedicated class.  Pending and playing statuses will
     // receive their own class names (pending, playing).
     item.classList.add(match.status);
-    if (isHighlightedMatch(match)) item.classList.add('highlighted-nation-match');
+    const isHighlighted = isHighlightedMatch(match);
+    if (isHighlighted) item.classList.add('highlighted-nation-match');
     if (match.status === 'completed') item.classList.add('completed');
     if (match.skipped) item.classList.add('skipped');
     // Build columns: number, flag1, team1, score, flag2, team2, group label, edit button
@@ -1649,6 +1650,7 @@ function updateScheduleUI() {
     leftName.classList.add('schedule-team');
     const leftNameSpan = document.createElement('span');
     leftNameSpan.classList.add('schedule-team-name');
+    if (selectedScheduleNation === match.team1) leftNameSpan.classList.add('selected-nation');
     if (match.status === 'completed' && match.score1 > match.score2) {
       leftNameSpan.innerHTML = `<strong>${match.team1}</strong>`;
     } else {
@@ -1683,6 +1685,7 @@ function updateScheduleUI() {
     rightName.classList.add('schedule-team');
     const rightNameSpan = document.createElement('span');
     rightNameSpan.classList.add('schedule-team-name');
+    if (selectedScheduleNation === match.team2) rightNameSpan.classList.add('selected-nation');
     if (match.status === 'completed' && match.score2 > match.score1) {
       rightNameSpan.innerHTML = `<strong>${match.team2}</strong>`;
     } else {
