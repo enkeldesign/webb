@@ -855,7 +855,16 @@ header.hero {
 }
 
 .schedule-item.highlighted-nation-match {
-  background-color: var(--color-primary);
+  background-color: color-mix(in srgb, var(--color-primary) 16%, var(--color-surface));
+  border-color: var(--color-primary);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--color-primary) 40%, transparent);
+}
+
+.schedule-team-name.selected-nation {
+  color: var(--color-primary);
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 /* =========================
