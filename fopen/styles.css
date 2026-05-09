@@ -345,7 +345,8 @@ header.hero {
 }
 
 .simple-select:focus {
-  outline: 1px solid #4a6894;
+  outline: 1px solid var(--color-border);
+  background-color: var(--color-primary);
 }
 
 .marathon-section {
@@ -474,6 +475,7 @@ header.hero {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  cursor: pointer;
 }
 .selected-nations .selected-card {
   border: 1px solid var(--line-muted);
@@ -486,7 +488,7 @@ header.hero {
   color: var(--text-bright);
 }
 .selected-card.selected-team {
-  border-color: var(--color-primary);
+  border-color: var(--color-border);
 }
 
 /* =========================
@@ -851,7 +853,7 @@ header.hero {
 }
 
 .schedule-item.highlighted-nation-match {
-  background: linear-gradient(90deg, rgba(45, 95, 15, 0.72) 0%, rgba(24, 58, 12, 0.84) 100%);
+  background-color: var(--color-primary);
 }
 
 /* =========================
