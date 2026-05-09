@@ -1304,13 +1304,14 @@ header.hero {
     min-height: 0;
     padding: 10px 20px 14px;
     gap: 10px;
+    max-width: 95dvw;
   }
 
   body.tournament-fullscreen .tournament-overview {
     flex: 1;
     min-height: 0;
     display: grid;
-    grid-template-columns: minmax(400px, 1.25fr) minmax(400px, 1fr);
+    grid-template-columns: minmax(400px, 1fr) minmax(400px, 1fr);
     gap: 14px;
     align-items: stretch;
   }
