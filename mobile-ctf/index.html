@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Mobile CTF Prototype</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="hud">
+    <div><strong>Mobile CTF Prototype</strong> · First to 3 captures</div>
+    <div id="score">Blue 0 : 0 Red</div>
+    <div id="status"></div>
+  </div>
+
+  <canvas id="game" width="960" height="540" aria-label="ctf arena"></canvas>
+
+  <div id="controls">
+    <button id="classBtn">Class: Balanced</button>
+    <button id="boostBtn">Use Boost</button>
+    <button id="dropBtn">Drop Flag</button>
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
