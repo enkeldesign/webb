@@ -1,0 +1,113 @@
+@import './fonts.css';
+@import './tailwind.css';
+
+@import '../MockupDeisyFkds6400/styles.css';
+@import '../MockupDeisyFkds6400/styles.css';
+@import '../MockupDeisyFkds6400/styles.css';
+
+button,
+a,
+[role="button"],
+label,
+summary,
+select,
+input[type="checkbox"],
+input[type="radio"],
+input[type="submit"],
+input[type="button"],
+input[type="reset"] {
+  cursor: pointer;
+}
+
+button:disabled,
+[role="button"][aria-disabled="true"],
+input:disabled,
+select:disabled {
+  cursor: not-allowed;
+}
+
+/* ───────── Lo-fi theme for user research ─────────
+   Maps the project's brand palette to grayscale so the
+   prototype looks low fidelity. Red/error tokens are left
+   untouched so error states remain visible in red. */
+
+/* Brand blues → dark gray */
+.lofi-root .bg-\[\#002857\],
+.lofi-root .bg-\[\#002856\],
+.lofi-root .bg-\[\#003d7a\],
+.lofi-root .bg-\[\#003d73\],
+.lofi-root .bg-\[\#005299\],
+.lofi-root .bg-\[\#0065bd\] {
+  background-color: #4a4a4a !important;
+  background-image: none !important;
+}
+
+/* Light brand tints → very light gray */
+.lofi-root .bg-\[\#ecf7fe\],
+.lofi-root .bg-\[\#d9edfc\],
+.lofi-root .bg-\[\#cfe0f3\],
+.lofi-root .bg-\[\#9ec5f0\],
+.lofi-root .bg-\[\#e9eef5\],
+.lofi-root .bg-\[\#f8f9fb\],
+.lofi-root .bg-\[\#f4f5f7\],
+.lofi-root .bg-\[\#eee\],
+.lofi-root .bg-\[\#fefcf4\] {
+  background-color: #f1f1f1 !important;
+}
+
+/* Pending/warning background → gray (success stays green) */
+.lofi-root .bg-\[\#fff4d6\] {
+  background-color: #ececec !important;
+}
+
+/* Gradient hero — flatten */
+.lofi-root .bg-gradient-to-br,
+.lofi-root .bg-gradient-to-r {
+  background-image: none !important;
+  background-color: #3a3a3a !important;
+}
+
+/* Text colors → gray scale */
+.lofi-root .text-\[\#002857\],
+.lofi-root .text-\[\#002856\],
+.lofi-root .text-\[\#003d73\],
+.lofi-root .text-\[\#005299\],
+.lofi-root .text-\[\#0065bd\],
+.lofi-root .text-\[\#9ec5f0\],
+.lofi-root .text-\[\#cfe0f3\],
+.lofi-root .text-\[\#1c398e\],
+.lofi-root .text-\[\#6b4d00\] {
+  color: #3a3a3a !important;
+}
+
+/* Borders → neutral gray */
+.lofi-root .border-\[\#002857\],
+.lofi-root .border-\[\#005299\],
+.lofi-root .border-\[\#0065bd\],
+.lofi-root .border-\[\#9ec5f0\] {
+  border-color: #9a9a9a !important;
+}
+
+/* Soft pinkish "logout" pill → light gray */
+.lofi-root .bg-\[\#fbe5e5\] {
+  background-color: #e6e6e6 !important;
+}
+.lofi-root .hover\:bg-\[\#f5d5d5\]:hover {
+  background-color: #d8d8d8 !important;
+}
+
+/* White-on-translucent helpers in hero stay neutral */
+.lofi-root .bg-white\/15 { background-color: rgba(255,255,255,0.18) !important; }
+.lofi-root .bg-white\/5  { background-color: rgba(255,255,255,0.08) !important; }
+
+/* Desaturate raster imagery so photos look low-fi too */
+.lofi-root img,
+.lofi-root [style*="background-image"] {
+  filter: grayscale(1) contrast(0.95);
+}
+@import '../MockupDeisyFkds6400/styles.css';
+@import '../MockupDeisyFkds6400/styles.css';
+@import '../MockupDeisyFkds6400/styles.css';
+@import '../MockupDeisyFkds6400/styles.css';
+@import '../MockupDeisyFkds6400/styles.css';
+@import '../MockupDeisyFkds6400/styles.css';

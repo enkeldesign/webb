@@ -1,0 +1,355 @@
+:root {
+  --text\/primary: var(--neutral\/sten-140);
+  --text\/secondary: var(--neutral\/sten-85);
+  --text\/disabled: var(--neutral\/sten-50);
+  --text\/inverted: var(--neutral\/vit-0);
+  --background\/primary: var(--neutral\/vit-0);
+  --border\/primary: var(--neutral\/sten-50);
+  --border\/strong: var(--neutral\/sten-70);
+  --border\/weak: var(--neutral\/sten-15);
+  --border\/disabled: var(--neutral\/sten-50);
+  --action\/text\/primary-default: var(--neutral\/sten-120);
+  --action\/text\/primary-hover: var(--neutral\/sten-100);
+  --action\/text\/primary-active: var(--neutral\/sten-100);
+  --action\/text\/primary-focus: var(--neutral\/sten-100);
+  --action\/text\/secondary-default: var(--neutral\/sten-120);
+  --action\/text\/secondary-hover: var(--neutral\/sten-120);
+  --action\/text\/secondary-active: var(--neutral\/sten-120);
+  --action\/text\/secondary-focus: var(--neutral\/sten-120);
+  --action\/text\/header-default: var(--neutral\/sten-140);
+  --action\/text\/inverted-default: var(--neutral\/vit-0);
+  --action\/text\/inverted-hover: var(--neutral\/vit-0);
+  --action\/text\/inverted-active: var(--neutral\/vit-0);
+  --action\/text\/inverted-focus: var(--neutral\/vit-0);
+  --action\/text\/action-text-disabled: var(--neutral\/sten-50);
+  --action\/background\/primary-default: var(--neutral\/sten-100);
+  --action\/background\/primary-hover: var(--neutral\/sten-120);
+  --action\/background\/primary-active: var(--neutral\/sten-120);
+  --action\/background\/primary-focus: var(--neutral\/sten-120);
+  --action\/background\/secondary-default: var(--neutral\/sten-15);
+  --action\/background\/secondary-hover: var(--neutral\/sten-10);
+  --action\/background\/secondary-active: var(--neutral\/sten-10);
+  --action\/background\/secondary-focus: var(--neutral\/sten-10);
+  --action\/border\/primary-default: var(--neutral\/sten-120);
+  --action\/border\/primary-hover: var(--neutral\/sten-100);
+  --action\/border\/primary-active: var(--neutral\/sten-100);
+  --action\/border\/primary-focus: var(--neutral\/sten-100);
+  --feedback\/text\/negative: var(--energi\/energi-120);
+  --feedback\/background\/neutral: var(--neutral\/sten-5);
+  --feedback\/border\/neutral: var(--neutral\/sten-50);
+  --feedback\/border\/info: var(--hav\/hav-140);
+  --feedback\/border\/positive: var(--barr\/barr-140);
+  --feedback\/border\/negative: var(--energi\/energi-120);
+  --select\/background\/primary-default: var(--neutral\/sten-100);
+  --select\/background\/warning: var(--sol\/sol-85);
+  --select\/background\/primary-hover: var(--neutral\/sten-15);
+  --select\/background\/primary-active: var(--neutral\/sten-15);
+  --select\/background\/primary-focus: var(--neutral\/sten-15);
+  --select\/background\/secondary-default: var(--neutral\/sten-120);
+  --select\/background\/secondary-hover: var(--neutral\/sten-50);
+  --select\/background\/secondary-active: var(--neutral\/sten-100);
+  --select\/background\/secondary-focus: var(--neutral\/sten-100);
+  --navigation\/background\/selected: var(--neutral\/sten-85);
+  --header\/background-primary: var(--neutral\/vit-0);
+  --navigation\/background\/hover: var(--neutral\/sten-50);
+  --feedback\/background\/neutral-strong: var(--neutral\/sten-15);
+  --feedback\/background\/info: var(--neutral\/sten-5);
+  --feedback\/background\/info-strong: var(--neutral\/sten-100);
+  --feedback\/background\/positive: var(--barr\/barr-10);
+  --feedback\/background\/positive-strong: var(--barr\/barr-140);
+  --feedback\/background\/warning: var(--apelsin\/apelsin-15);
+  --feedback\/background\/warning-strong: var(--apelsin\/apelsin-85);
+  --feedback\/background\/negative: var(--energi\/energi-5);
+  --feedback\/background\/negative-strong: var(--energi\/energi-120);
+  --feedback\/text\/positive: var(--barr\/barr-140);
+  --background\/secondary: var(--neutral\/sten-5);
+  --background\/tertiary: var(--neutral\/sten-10);
+  --background\/disabled: var(--neutral\/sten-5);
+  --transparent: #FFF0;
+  --canvas: #F4F4F4;
+  --logo-top: var(--neutral\/sten-85);
+  --logo-btm: var(--neutral\/sten-140);
+  --navigation\/border\/selected: var(--neutral\/sten-85);
+  --navigation\/border\/hover: var(--neutral\/sten-15);
+  --border\/radius\/small: 2;
+  --border\/radius\/medium: 4;
+  --border\/width\/small: 1;
+  --border\/width\/medium: 2;
+  --interactive-surface\/background\/primary-default: var(--neutral\/sten-15);
+  --interactive-surface\/background\/primary-hover: var(--neutral\/sten-5);
+  --interactive-surface\/background\/primary-focus: var(--neutral\/sten-5);
+  --interactive-surface\/background\/primary-active: var(--neutral\/sten-5);
+  --sol\/sol-85: var(--havtorn-sol\/havtorn-sol-85);
+  --sol\/sol-50: var(--havtorn-sol\/havtorn-sol-50);
+  --sol\/sol-5: var(--havtorn-sol\/havtorn-sol-5);
+  --sol\/sol-100: var(--havtorn-sol\/havtorn-sol-100);
+  --sol\/sol-120: var(--havtorn-sol\/havtorn-sol-120);
+  --energi\/energi-100: var(--ledkryss\/ledkryss-100);
+  --energi\/energi-15: var(--ledkryss\/ledkryss-15);
+  --energi\/energi-5: var(--ledkryss\/ledkryss-5);
+  --energi\/energi-120: var(--ledkryss\/ledkryss-120);
+  --energi\/energi-50: var(--ledkryss\/ledkryss-50);
+  --energi\/energi-85: var(--ledkryss\/ledkryss-85);
+  --neutral\/vit-0: #FFF;
+  --neutral\/sten-15: #E8E8E8;
+  --neutral\/sten-20: #D3D3D3;
+  --neutral\/sten-50: #9E9E9E;
+  --neutral\/sten-70: #727272;
+  --neutral\/sten-30: #BABABA;
+  --neutral\/sten-100: #4D4F53;
+  --apelsin\/apelsin-15: var(--havtorn-sol\/havtorn-sol-15);
+  --apelsin\/apelsin-85: var(--havtorn-sol\/havtorn-sol-85);
+  --apelsin\/apelsin-100: var(--havtorn-sol\/havtorn-sol-100);
+  --apelsin\/apelsin-50: var(--havtorn-sol\/havtorn-sol-50);
+  --apelsin\/apelsin-5: var(--havtorn-sol\/havtorn-sol-5);
+  --apelsin\/apelsin-120: var(--havtorn-sol\/havtorn-sol-120);
+  --hav\/hav-5: var(--midnatt\/midnatt-5);
+  --hav\/hav-15: var(--midnatt\/midnatt-15);
+  --hav\/hav-50: var(--midnatt\/midnatt-30);
+  --hav\/hav-85: var(--midnatt\/midnatt-85);
+  --hav\/hav-100: var(--midnatt\/midnatt-100);
+  --hav\/hav-120: var(--midnatt\/midnatt-120);
+  --sol\/sol-15: var(--havtorn-sol\/havtorn-sol-15);
+  --transparent-2: #FFF0;
+  --neutral\/sten-10: #F5F5F5;
+  --neutral\/sten-5: #FAFAFA;
+  --hav\/hav-140: var(--midnatt\/midnatt-140);
+  --neutral\/sten-85: #535353;
+  --neutral\/sten-140: #171A1C;
+  --neutral\/sten-120: #26292B;
+  --havtorn-sol\/havtorn-sol-140: #B94F04;
+  --havtorn-sol\/havtorn-sol-120: #DF7300;
+  --havtorn-sol\/havtorn-sol-100: #FC9B04;
+  --havtorn-sol\/havtorn-sol-85: #FFBE1E;
+  --havtorn-sol\/havtorn-sol-70: #FDCA00;
+  --havtorn-sol\/havtorn-sol-50: #FFD80D;
+  --midnatt\/midnatt-140: #002856;
+  --midnatt\/midnatt-120: #0B3D6F;
+  --midnatt\/midnatt-100: #064986;
+  --midnatt\/midnatt-85: #0065BD;
+  --midnatt\/midnatt-70: #0098D6;
+  --midnatt\/midnatt-50: #0CB1EB;
+  --havtorn-sol\/havtorn-sol-30: #FFE941;
+  --havtorn-sol\/havtorn-sol-20: #FFF586;
+  --havtorn-sol\/havtorn-sol-15: #FFFCC1;
+  --havtorn-sol\/havtorn-sol-10: #FFFEE7;
+  --havtorn-sol\/havtorn-sol-5: #FFFFF8;
+  --midnatt\/midnatt-30: #7EC5E3;
+  --midnatt\/midnatt-20: #B1E1F3;
+  --midnatt\/midnatt-15: #CDEAF9;
+  --midnatt\/midnatt-10: #E6F3FE;
+  --midnatt\/midnatt-5: #EEF8FE;
+  --ledkryss\/ledkryss-140: #480707;
+  --ledkryss\/ledkryss-120: #831919;
+  --ledkryss\/ledkryss-100: #D31919;
+  --ledkryss\/ledkryss-85: #FF3030;
+  --ledkryss\/ledkryss-70: #FF4343;
+  --ledkryss\/ledkryss-50: #FF6363;
+  --ledkryss\/ledkryss-30: #F2B3B3;
+  --ledkryss\/ledkryss-20: #F8D0D0;
+  --ledkryss\/ledkryss-15: #FBE7E7;
+  --ledkryss\/ledkryss-10: #FFF1F1;
+  --ledkryss\/ledkryss-5: #FFF8F8;
+  --barr\/barr-140: #0C2711;
+  --barr\/barr-120: #2A5A2A;
+  --barr\/barr-100: #356D1E;
+  --barr\/barr-85: #438F21;
+  --barr\/barr-70: #82B566;
+  --barr\/barr-50: #A2CB8B;
+  --barr\/barr-30: #BEDBAC;
+  --barr\/barr-20: #D0F5B7;
+  --barr\/barr-15: #E0FAD4;
+  --barr\/barr-10: #EAF3E5;
+  --barr\/barr-5: #F9FCF9;
+}
+
+.lnk {
+  font-family: "Balsamiq Sans";
+  font-style: "Regular";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  letter-spacing: 0px;
+}
+
+.brdtext-medium {
+  font-family: "Balsamiq Sans";
+  font-style: "Bold";
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 24px;
+  letter-spacing: 0px;
+}
+
+.brdtext {
+  font-family: "Balsamiq Sans";
+  font-style: "Regular";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  letter-spacing: 0px;
+}
+
+/* About liten-text: Används endast i undantagsfall */
+.liten-text {
+  font-family: "Balsamiq Sans";
+  font-style: "Regular";
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 21px;
+  letter-spacing: 0px;
+}
+
+.rubriker-mobil-h1-mobile {
+  font-family: "Balsamiq Sans";
+  font-style: "Bold";
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 39.2px;
+  letter-spacing: 0px;
+}
+
+.rubriker-mobil-h1-extern-mobile {
+  font-family: "Balsamiq Sans";
+  font-style: "Bold";
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 39.2px;
+  letter-spacing: 0px;
+}
+
+.rubriker-mobil-h2-mobile {
+  font-family: "Balsamiq Sans";
+  font-style: "Bold";
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 33.6px;
+  letter-spacing: 0px;
+}
+
+.rubriker-mobil-h3-mobile {
+  font-family: "Balsamiq Sans";
+  font-style: "Bold";
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 28px;
+  letter-spacing: 0px;
+}
+
+.rubriker-mobil-h4-mobile {
+  font-family: "Balsamiq Sans";
+  font-style: "Bold";
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 25.2px;
+  letter-spacing: 0px;
+}
+
+.rubriker-mobil-h5-mobil {
+  font-family: "Balsamiq Sans";
+  font-style: "Bold";
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22.4px;
+  letter-spacing: 0px;
+}
+
+.rubriker-mobil-h6-mobil {
+  font-family: "Balsamiq Sans";
+  font-style: "Bold";
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22.4px;
+  letter-spacing: 0px;
+}
+
+.rubriker-desktop-h1-desktop {
+  font-family: "Balsamiq Sans";
+  font-style: "Bold";
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 56px;
+  letter-spacing: 0px;
+}
+
+.rubriker-desktop-h1-extern-desktop {
+  font-family: "Balsamiq Sans";
+  font-style: "Bold";
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 56px;
+  letter-spacing: 0px;
+}
+
+.rubriker-desktop-h2-desktop {
+  font-family: "Balsamiq Sans";
+  font-style: "Bold";
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 39.2px;
+  letter-spacing: 0px;
+}
+
+.rubriker-desktop-h3-desktop {
+  font-family: "Balsamiq Sans";
+  font-style: "Bold";
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 30.8px;
+  letter-spacing: 0px;
+}
+
+.rubriker-desktop-h4-desktop {
+  font-family: "Balsamiq Sans";
+  font-style: "Bold";
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 28px;
+  letter-spacing: 0px;
+}
+
+.rubriker-desktop-h5-desktop {
+  font-family: "Balsamiq Sans";
+  font-style: "Bold";
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 25.2px;
+  letter-spacing: 0px;
+}
+
+.rubriker-desktop-h6-desktop {
+  font-family: "Balsamiq Sans";
+  font-style: "Bold";
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22.4px;
+  letter-spacing: 0px;
+}
+
+.etikett-rubrik {
+  font-family: "Balsamiq Sans";
+  font-style: "Bold";
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 24px;
+  letter-spacing: 0px;
+}
+
+.etikett-hjlptext {
+  font-family: "Balsamiq Sans";
+  font-style: "Regular";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  letter-spacing: 0px;
+}
+
+.etikett-formatbeskrivning {
+  font-family: "Balsamiq Sans";
+  font-style: "Regular";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: 0px;
+}
+
