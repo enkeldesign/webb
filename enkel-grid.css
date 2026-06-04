@@ -1,0 +1,387 @@
+:root {
+  color-scheme: light dark;
+
+  --grid-page: #f4f4f4;
+  --grid-page-line: rgb(0 127 134 / 0.18);
+  --grid-cell: #f4f4f4;
+  --grid-text: #242424;
+  --grid-muted: #3f3f3f;
+  --grid-border: rgb(0 0 0 / 0.12);
+  --grid-accent: #007f86;
+  --grid-focus: #704cff;
+  --grid-shadow: 0 1px 0 rgb(0 0 0 / 0.12), 0 18px 48px rgb(0 0 0 / 0.08);
+  --grid-gap: clamp(8px, 1.5vw, 14px);
+  --grid-pad: clamp(18px, 3vw, 42px);
+  --grid-max: 1120px;
+}
+
+@media (color-gamut: p3) {
+  :root {
+    --grid-page-line: color(display-p3 0 0.49 0.52 / 0.18);
+    --grid-accent: color(display-p3 0 0.49 0.52);
+    --grid-focus: color(display-p3 0.44 0.3 1);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --grid-page: #242424;
+    --grid-page-line: rgb(37 198 208 / 0.18);
+    --grid-cell: #313131;
+    --grid-text: #f4f4f4;
+    --grid-muted: #d8d8d8;
+    --grid-border: rgb(255 255 255 / 0.12);
+    --grid-accent: #25c6d0;
+    --grid-shadow: 0 1px 0 rgb(255 255 255 / 0.08), 0 18px 48px rgb(0 0 0 / 0.28);
+  }
+}
+
+html {
+  min-block-size: 100%;
+  background:
+    linear-gradient(90deg, rgb(0 0 0 / 0.035) 1px, transparent 1px),
+    linear-gradient(rgb(0 0 0 / 0.035) 1px, transparent 1px),
+    var(--grid-page) !important;
+  background-size: 24px 24px;
+}
+
+body {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  grid-template-areas:
+    "logo title byline portrait"
+    "email email intro intro"
+    "about about enkel enkel"
+    "footer footer footer footer" !important;
+  gap: var(--grid-gap) !important;
+  inline-size: min(calc(100% - (var(--grid-gap) * 2)), var(--grid-max)) !important;
+  min-block-size: 100dvh;
+  margin: 0 auto !important;
+  padding-block: var(--grid-gap) !important;
+  overflow-x: clip;
+  background:
+    linear-gradient(135deg, transparent 0 49.55%, var(--grid-page-line) 49.55% 50.45%, transparent 50.45%),
+    radial-gradient(circle at 0 0, var(--grid-page-line), transparent 34rem),
+    var(--grid-page) !important;
+  color: var(--grid-text);
+}
+
+header,
+header .brand,
+header h1,
+main,
+main > figure.photo {
+  display: contents !important;
+}
+
+#topLogo {
+  grid-area: logo;
+}
+
+header h1 > span:first-child {
+  grid-area: title;
+}
+
+header h1 > span:last-child {
+  grid-area: byline;
+}
+
+main > figure.photo > img {
+  grid-area: portrait;
+}
+
+main > figure.photo > address {
+  grid-area: email;
+}
+
+header > .intro {
+  grid-area: intro;
+}
+
+.about {
+  grid-area: about;
+}
+
+.enkel {
+  grid-area: enkel;
+}
+
+body > footer {
+  grid-area: footer;
+}
+
+#topLogo,
+header h1 > span,
+main > figure.photo > img,
+main > figure.photo > address,
+header > .intro,
+.about,
+.enkel,
+body > footer {
+  min-inline-size: 0;
+  border: 1px solid var(--grid-border) !important;
+  border-radius: 0 !important;
+  background-color: var(--grid-cell) !important;
+  color: var(--grid-text) !important;
+  box-shadow: var(--grid-shadow);
+}
+
+#topLogo,
+header h1 > span,
+main > figure.photo > img {
+  aspect-ratio: 1;
+}
+
+#topLogo {
+  display: block;
+  inline-size: 100% !important;
+  block-size: auto !important;
+  padding: 24%;
+  box-sizing: border-box;
+}
+
+header h1 > span {
+  display: grid !important;
+  align-content: center;
+  padding: clamp(18px, 2.6vw, 32px);
+  font-family: var(--heading-font);
+  font-size: clamp(1.35rem, 1.1rem + 1vw, 2rem) !important;
+  font-weight: 800;
+  letter-spacing: 0 !important;
+  line-height: 1.05;
+  text-transform: none;
+}
+
+header h1 > span:first-child {
+  text-transform: uppercase;
+}
+
+header h1 > span:first-child::after {
+  content: ".";
+  color: var(--grid-accent);
+}
+
+main > figure.photo > img {
+  display: block;
+  inline-size: 100% !important;
+  block-size: 100% !important;
+  object-fit: cover;
+  margin: 0 !important;
+  filter: none !important;
+}
+
+main > figure.photo > address {
+  position: static !important;
+  z-index: auto !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  gap: 0 !important;
+  min-inline-size: 0 !important;
+  max-inline-size: none !important;
+  min-block-size: clamp(64px, 9vw, 96px);
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+}
+
+main > figure.photo > address .pill {
+  min-inline-size: 0;
+  min-block-size: 44px;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--grid-text) !important;
+  box-shadow: none !important;
+}
+
+main > figure.photo > address .cta {
+  justify-content: start;
+  padding-inline: clamp(18px, 2.6vw, 32px);
+  font-size: clamp(1.15rem, 0.95rem + 0.8vw, 1.55rem);
+  font-weight: 800;
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.15em;
+}
+
+main > figure.photo > address .sec {
+  inline-size: clamp(58px, 7vw, 80px);
+  padding: 0;
+  overflow: hidden;
+  border-inline-start: 1px solid var(--grid-border) !important;
+  color: transparent !important;
+}
+
+main > figure.photo > address .sec::after {
+  content: "";
+  display: block;
+  inline-size: 0.72em;
+  block-size: 0.92em;
+  margin: 0 auto;
+  border: 2px solid currentColor;
+  color: var(--grid-text);
+  box-shadow:
+    -0.3em 0.3em 0 -0.1em var(--grid-cell),
+    -0.3em 0.3em 0 0 currentColor;
+}
+
+header > .intro {
+  display: grid;
+  align-content: center;
+  min-block-size: clamp(64px, 9vw, 96px);
+  padding: clamp(18px, 2.6vw, 32px) !important;
+  text-align: left !important;
+  font-size: clamp(1rem, 0.92rem + 0.35vw, 1.16rem) !important;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.about,
+.enkel,
+body > footer {
+  padding: var(--grid-pad) !important;
+}
+
+.about,
+.enkel {
+  min-block-size: clamp(320px, 44vw, 560px);
+}
+
+.about .nav-link {
+  margin: calc(var(--grid-pad) * -1) calc(var(--grid-pad) * -1) var(--gap-5) !important;
+  border-radius: 0 !important;
+}
+
+h2,
+.enkel h2 {
+  color: var(--grid-accent) !important;
+  letter-spacing: 0 !important;
+  text-transform: uppercase;
+}
+
+h3,
+main p,
+figcaption,
+blockquote,
+ul,
+footer small {
+  color: var(--grid-text) !important;
+}
+
+main p,
+figcaption,
+blockquote {
+  max-inline-size: 66ch;
+}
+
+a {
+  text-underline-offset: 0.18em;
+}
+
+a:focus-visible,
+button:focus-visible,
+.footer-logo:focus-within {
+  outline: 3px solid var(--grid-focus) !important;
+  outline-offset: 4px !important;
+}
+
+a:hover,
+a:visited:hover,
+a:focus-visible,
+a:visited:focus-visible {
+  background-color: var(--grid-accent) !important;
+  color: #fff !important;
+}
+
+body > footer .divider {
+  margin-inline: calc(var(--grid-pad) * -1) !important;
+}
+
+@media (max-width: 760px) {
+  body {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-areas:
+      "logo title"
+      "byline portrait"
+      "email email"
+      "intro intro"
+      "about about"
+      "enkel enkel"
+      "footer footer" !important;
+  }
+
+  header h1 > span {
+    padding: clamp(18px, 5vw, 28px);
+    font-size: clamp(1.2rem, 5.5vw, 1.55rem) !important;
+  }
+
+  main > figure.photo > address {
+    min-block-size: 72px;
+  }
+
+  main > figure.photo > address .cta {
+    font-size: clamp(1.05rem, 5vw, 1.25rem);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #topLogo,
+  header h1 > span,
+  main > figure.photo > img,
+  main > figure.photo > address,
+  header > .intro,
+  .about,
+  .enkel,
+  body > footer {
+    transition:
+      border-color 160ms ease,
+      box-shadow 160ms ease,
+      transform 160ms ease;
+  }
+
+  #topLogo:hover,
+  header h1 > span:hover,
+  main > figure.photo > address:hover,
+  header > .intro:hover,
+  .about:hover,
+  .enkel:hover {
+    border-color: var(--grid-accent) !important;
+    transform: translateY(-1px);
+  }
+}
+
+@media (forced-colors: active) {
+  html,
+  body,
+  #topLogo,
+  header h1 > span,
+  main > figure.photo > img,
+  main > figure.photo > address,
+  header > .intro,
+  .about,
+  .enkel,
+  body > footer {
+    background: Canvas !important;
+    color: CanvasText !important;
+    box-shadow: none !important;
+  }
+
+  #topLogo,
+  header h1 > span,
+  main > figure.photo > img,
+  main > figure.photo > address,
+  header > .intro,
+  .about,
+  .enkel,
+  body > footer {
+    border: 1px solid CanvasText !important;
+  }
+
+  h2,
+  .enkel h2,
+  header h1 > span:first-child::after {
+    color: LinkText !important;
+  }
+}
