@@ -1,70 +1,59 @@
 :root {
   color-scheme: light dark;
 
-  --grid-page: #f4f4f4;
-  --grid-page-line: rgb(0 127 134 / 0.18);
-  --grid-cell: #f4f4f4;
-  --grid-text: #242424;
-  --grid-muted: #3f3f3f;
-  --grid-border: rgb(0 0 0 / 0.12);
-  --grid-accent: #007f86;
-  --grid-focus: #704cff;
-  --grid-shadow: 0 1px 0 rgb(0 0 0 / 0.12), 0 18px 48px rgb(0 0 0 / 0.08);
-  --grid-gap: clamp(8px, 1.5vw, 14px);
-  --grid-pad: clamp(18px, 3vw, 42px);
-  --grid-max: 1120px;
+  --grid-bg: light-dark(#cbd8d7, #202a2c);
+  --grid-paper: light-dark(#f4f4f2, #252b2e);
+  --grid-warm: light-dark(#fffde1, #302f26);
+  --grid-blue: light-dark(#005b7c, #7fc8dc);
+  --grid-blue-deep: light-dark(#005274, #123845);
+  --grid-text: light-dark(#303236, #f4f4f2);
+  --grid-mark: light-dark(rgb(255 255 255 / 0.62), rgb(255 255 255 / 0.32));
+  --grid-focus: light-dark(#111, #fff);
+
+  --grid-gap: clamp(1rem, 3vw, 1.35rem);
+  --grid-max: 40.75rem;
+  --grid-card-pad: clamp(2rem, 5vw, 3rem);
+  --grid-top-space: 3rem;
 }
 
 @media (color-gamut: p3) {
   :root {
-    --grid-page-line: color(display-p3 0 0.49 0.52 / 0.18);
-    --grid-accent: color(display-p3 0 0.49 0.52);
-    --grid-focus: color(display-p3 0.44 0.3 1);
+    --grid-bg: light-dark(color(display-p3 0.80 0.85 0.85), color(display-p3 0.13 0.17 0.18));
+    --grid-blue: light-dark(color(display-p3 0.03 0.35 0.48), color(display-p3 0.50 0.78 0.86));
+    --grid-blue-deep: light-dark(color(display-p3 0.02 0.32 0.45), color(display-p3 0.07 0.22 0.27));
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --grid-page: #242424;
-    --grid-page-line: rgb(37 198 208 / 0.18);
-    --grid-cell: #313131;
-    --grid-text: #f4f4f4;
-    --grid-muted: #d8d8d8;
-    --grid-border: rgb(255 255 255 / 0.12);
-    --grid-accent: #25c6d0;
-    --grid-shadow: 0 1px 0 rgb(255 255 255 / 0.08), 0 18px 48px rgb(0 0 0 / 0.28);
-  }
-}
+/* ===== Page grid ===== */
 
 html {
-  min-block-size: 100%;
-  background:
-    linear-gradient(90deg, rgb(0 0 0 / 0.035) 1px, transparent 1px),
-    linear-gradient(rgb(0 0 0 / 0.035) 1px, transparent 1px),
-    var(--grid-page) !important;
-  background-size: 24px 24px;
+  background: var(--grid-bg) !important;
 }
 
 body {
   display: grid !important;
-  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   grid-template-areas:
-    "logo title byline portrait"
-    "email email intro intro"
-    "about about enkel enkel"
-    "footer footer footer footer" !important;
+    "logo title"
+    "byline portrait"
+    "intro intro"
+    "contact contact"
+    "mark mark"
+    "enkel enkel"
+    "about about"
+    "footer footer" !important;
+
   gap: var(--grid-gap) !important;
-  inline-size: min(calc(100% - (var(--grid-gap) * 2)), var(--grid-max)) !important;
-  min-block-size: 100dvh;
-  margin: 0 auto !important;
-  padding-block: var(--grid-gap) !important;
-  overflow-x: clip;
-  background:
-    linear-gradient(135deg, transparent 0 49.55%, var(--grid-page-line) 49.55% 50.45%, transparent 50.45%),
-    radial-gradient(circle at 0 0, var(--grid-page-line), transparent 34rem),
-    var(--grid-page) !important;
+  inline-size: min(calc(100% - 2rem), var(--grid-max)) !important;
+  margin-inline: auto !important;
+  padding-block: var(--grid-top-space) var(--grid-gap) !important;
+
+  background: var(--grid-bg) !important;
   color: var(--grid-text);
+  overflow-x: clip;
 }
+
+/* ===== Flatten existing semantic structure into the grid ===== */
 
 header,
 header .brand,
@@ -91,39 +80,42 @@ main > figure.photo > img {
 }
 
 main > figure.photo > address {
-  grid-area: email;
+  grid-area: contact;
 }
 
 header > .intro {
   grid-area: intro;
 }
 
-.about {
-  grid-area: about;
+body::before {
+  grid-area: mark;
 }
 
 .enkel {
   grid-area: enkel;
 }
 
+.about {
+  grid-area: about;
+}
+
 body > footer {
   grid-area: footer;
 }
 
+/* ===== Shared card reset ===== */
+
 #topLogo,
 header h1 > span,
 main > figure.photo > img,
-main > figure.photo > address,
 header > .intro,
-.about,
 .enkel,
+.about,
 body > footer {
   min-inline-size: 0;
-  border: 1px solid var(--grid-border) !important;
+  border: 0 !important;
   border-radius: 0 !important;
-  background-color: var(--grid-cell) !important;
-  color: var(--grid-text) !important;
-  box-shadow: var(--grid-shadow);
+  box-shadow: none !important;
 }
 
 #topLogo,
@@ -132,135 +124,246 @@ main > figure.photo > img {
   aspect-ratio: 1;
 }
 
+/* ===== Logo card ===== */
+
 #topLogo {
   display: block;
   inline-size: 100% !important;
   block-size: auto !important;
-  padding: 24%;
+  padding: 16%;
   box-sizing: border-box;
+  background: var(--grid-blue-deep) !important;
 }
+
+#topLogo path {
+  fill: var(--grid-paper) !important;
+}
+
+#topLogo circle {
+  fill: none !important;
+  stroke: none !important;
+}
+
+/* ===== Title / byline cards ===== */
 
 header h1 > span {
   display: grid !important;
   align-content: center;
-  padding: clamp(18px, 2.6vw, 32px);
+
+  margin: 0 !important;
   font-family: var(--heading-font);
-  font-size: clamp(1.35rem, 1.1rem + 1vw, 2rem) !important;
-  font-weight: 800;
-  letter-spacing: 0 !important;
-  line-height: 1.05;
-  text-transform: none;
+  font-weight: 700;
+  line-height: 1.2;
+  text-transform: uppercase;
+  text-wrap: balance;
 }
 
 header h1 > span:first-child {
-  text-transform: uppercase;
+  place-content: center;
+  padding: 18%;
+
+  background: var(--grid-paper) !important;
+  color: var(--grid-blue) !important;
+
+  font-size: clamp(1.7rem, 8vw, 3.45rem) !important;
+  letter-spacing: 0.015em !important;
 }
 
 header h1 > span:first-child::after {
   content: ".";
-  color: var(--grid-accent);
 }
+
+header h1 > span:last-child {
+  justify-content: start;
+  padding: 14%;
+
+  background: var(--grid-warm) !important;
+  color: var(--grid-text) !important;
+
+  font-size: clamp(1.7rem, 8vw, 3.75rem) !important;
+  letter-spacing: 0.025em !important;
+}
+
+/* ===== Portrait ===== */
 
 main > figure.photo > img {
   display: block;
   inline-size: 100% !important;
   block-size: 100% !important;
   object-fit: cover;
+  object-position: center;
   margin: 0 !important;
   filter: none !important;
+  background: var(--grid-paper);
 }
+
+/* ===== Intro card ===== */
+
+header > .intro {
+  display: grid;
+  align-content: center;
+
+  min-block-size: clamp(8.8rem, 22vw, 9.75rem);
+  padding: clamp(2rem, 5vw, 2.4rem) !important;
+
+  background: var(--grid-warm) !important;
+  color: var(--grid-text) !important;
+
+  text-align: left !important;
+  font-family: var(--body-font);
+  font-size: clamp(1.35rem, 4.3vw, 1.85rem) !important;
+  font-weight: 650;
+  letter-spacing: 0.07em;
+  line-height: 1.55;
+}
+
+/* ===== Email / copy row ===== */
 
 main > figure.photo > address {
   position: static !important;
   z-index: auto !important;
+
   display: grid !important;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: stretch !important;
-  justify-content: stretch !important;
-  gap: 0 !important;
-  min-inline-size: 0 !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--grid-gap) !important;
+
+  inline-size: 100% !important;
   max-inline-size: none !important;
-  min-block-size: clamp(64px, 9vw, 96px);
+  min-inline-size: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
+
   transform: none !important;
+  text-align: initial !important;
 }
 
 main > figure.photo > address .pill {
-  min-inline-size: 0;
-  min-block-size: 44px;
+  min-block-size: clamp(8.8rem, 22vw, 9.75rem);
+  min-inline-size: 44px;
   margin: 0 !important;
   border: 0 !important;
   border-radius: 0 !important;
-  background: transparent !important;
-  color: var(--grid-text) !important;
   box-shadow: none !important;
 }
 
 main > figure.photo > address .cta {
-  justify-content: start;
-  padding-inline: clamp(18px, 2.6vw, 32px);
-  font-size: clamp(1.15rem, 0.95rem + 0.8vw, 1.55rem);
+  grid-column: 1 / 4;
+
+  display: grid;
+  place-items: center start;
+
+  padding-inline: clamp(2rem, 5vw, 4.25rem) !important;
+  background: var(--grid-blue-deep) !important;
+  color: var(--grid-paper) !important;
+
+  font-size: 0 !important;
+  text-decoration: none !important;
+
+  box-shadow:
+    inset 1.35rem 1.35rem 0 rgb(255 255 255 / 0.22),
+    inset -1.35rem -1.35rem 0 rgb(0 0 0 / 0.18) !important;
+}
+
+main > figure.photo > address .cta::after {
+  content: "erik@enkel.design";
+  font-size: clamp(1.15rem, 4.8vw, 2rem);
   font-weight: 800;
-  text-decoration-thickness: 0.1em;
-  text-underline-offset: 0.15em;
+  letter-spacing: 0.06em;
 }
 
 main > figure.photo > address .sec {
-  inline-size: clamp(58px, 7vw, 80px);
-  padding: 0;
+  grid-column: 4 / 5;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0 !important;
   overflow: hidden;
-  border-inline-start: 1px solid var(--grid-border) !important;
+
+  background: var(--grid-paper) !important;
   color: transparent !important;
+
+  box-shadow:
+    inset 1.35rem 1.35rem 0 rgb(255 255 255 / 0.62),
+    inset -1.35rem -1.35rem 0 rgb(0 0 0 / 0.18) !important;
 }
 
 main > figure.photo > address .sec::after {
   content: "";
   display: block;
-  inline-size: 0.72em;
-  block-size: 0.92em;
-  margin: 0 auto;
-  border: 2px solid currentColor;
-  color: var(--grid-text);
+
+  inline-size: clamp(2rem, 6vw, 3.5rem);
+  aspect-ratio: 1;
+
+  margin: 0;
+  border: 0.25rem solid var(--grid-blue);
+  transform: translate(0.3rem, -0.3rem);
+
   box-shadow:
-    -0.3em 0.3em 0 -0.1em var(--grid-cell),
-    -0.3em 0.3em 0 0 currentColor;
+    -0.75rem 0.75rem 0 -0.25rem var(--grid-paper),
+    -0.75rem 0.75rem 0 0 var(--grid-blue);
 }
 
-header > .intro {
-  display: grid;
-  align-content: center;
-  min-block-size: clamp(64px, 9vw, 96px);
-  padding: clamp(18px, 2.6vw, 32px) !important;
-  text-align: left !important;
-  font-size: clamp(1rem, 0.92rem + 0.35vw, 1.16rem) !important;
-  font-weight: 500;
-  line-height: 1.35;
+/* ===== Decorative mark ===== */
+
+body::before {
+  content: "";
+  justify-self: center;
+
+  inline-size: clamp(4rem, 14vw, 5.75rem);
+  block-size: clamp(3.4rem, 12vw, 5rem);
+  margin-block: clamp(2.25rem, 7vw, 3.9rem);
+
+  background: var(--grid-mark);
+  mask: url("/favicon.svg") center / contain no-repeat;
+  -webkit-mask: url("/favicon.svg") center / contain no-repeat;
 }
 
-.about,
-.enkel,
-body > footer {
-  padding: var(--grid-pad) !important;
-}
+/* ===== Main content cards ===== */
 
-.about,
 .enkel {
-  min-block-size: clamp(320px, 44vw, 560px);
+  min-block-size: clamp(26rem, 64vw, 30rem);
+  padding: clamp(4.5rem, 10vw, 5.25rem) clamp(3rem, 8vw, 4.25rem) !important;
+
+  background: rgb(255 255 255 / 0.42) !important;
+  color: var(--grid-text) !important;
 }
+
+.enkel h2 {
+  margin: 0 !important;
+  color: var(--grid-blue) !important;
+  font-family: var(--heading-font);
+  font-size: clamp(2.25rem, 7vw, 3.55rem) !important;
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.enkel > p:first-of-type {
+  margin-top: clamp(9rem, 28vw, 15rem);
+}
+
+.about {
+  padding: var(--grid-card-pad) !important;
+  background: var(--grid-paper) !important;
+  color: var(--grid-text) !important;
+}
+
+body > footer {
+  padding: var(--grid-card-pad) !important;
+  background: transparent !important;
+  color: var(--grid-text) !important;
+}
+
+/* ===== Existing content cleanup ===== */
 
 .about .nav-link {
-  margin: calc(var(--grid-pad) * -1) calc(var(--grid-pad) * -1) var(--gap-5) !important;
+  margin: calc(var(--grid-card-pad) * -1) calc(var(--grid-card-pad) * -1) var(--gap-5) !important;
   border-radius: 0 !important;
 }
 
 h2,
-.enkel h2 {
-  color: var(--grid-accent) !important;
-  letter-spacing: 0 !important;
-  text-transform: uppercase;
-}
-
 h3,
 main p,
 figcaption,
@@ -291,66 +394,76 @@ a:hover,
 a:visited:hover,
 a:focus-visible,
 a:visited:focus-visible {
-  background-color: var(--grid-accent) !important;
+  background-color: var(--grid-blue) !important;
   color: #fff !important;
 }
 
-body > footer .divider {
-  margin-inline: calc(var(--grid-pad) * -1) !important;
-}
+/* ===== Desktop: four columns ===== */
 
-@media (max-width: 760px) {
+@media (min-width: 64rem) {
+  :root {
+    --grid-max: 78rem;
+    --grid-top-space: clamp(5rem, 9vw, 8rem);
+  }
+
   body {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     grid-template-areas:
-      "logo title"
-      "byline portrait"
-      "email email"
-      "intro intro"
-      "about about"
-      "enkel enkel"
-      "footer footer" !important;
+      "logo title byline portrait"
+      "intro intro intro intro"
+      "contact contact contact contact"
+      "mark mark mark mark"
+      "enkel enkel enkel enkel"
+      "about about about about"
+      "footer footer footer footer" !important;
+
+    inline-size: min(calc(100% - 4rem), var(--grid-max)) !important;
+    padding-block-start: var(--grid-top-space) !important;
   }
 
-  header h1 > span {
-    padding: clamp(18px, 5vw, 28px);
-    font-size: clamp(1.2rem, 5.5vw, 1.55rem) !important;
+  header h1 > span:first-child,
+  header h1 > span:last-child {
+    font-size: clamp(2rem, 3.8vw, 3.35rem) !important;
   }
 
-  main > figure.photo > address {
-    min-block-size: 72px;
-  }
-
-  main > figure.photo > address .cta {
-    font-size: clamp(1.05rem, 5vw, 1.25rem);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  #topLogo,
-  header h1 > span,
-  main > figure.photo > img,
-  main > figure.photo > address,
   header > .intro,
-  .about,
-  .enkel,
-  body > footer {
-    transition:
-      border-color 160ms ease,
-      box-shadow 160ms ease,
-      transform 160ms ease;
+  main > figure.photo > address .pill {
+    min-block-size: clamp(8rem, 11vw, 10rem);
   }
 
-  #topLogo:hover,
-  header h1 > span:hover,
-  main > figure.photo > address:hover,
-  header > .intro:hover,
-  .about:hover,
-  .enkel:hover {
-    border-color: var(--grid-accent) !important;
-    transform: translateY(-1px);
+  .enkel {
+    min-block-size: clamp(30rem, 44vw, 38rem);
+  }
+
+  .enkel > p:first-of-type {
+    margin-top: clamp(10rem, 18vw, 16rem);
   }
 }
+
+/* ===== Very narrow screens ===== */
+
+@media (max-width: 22rem) {
+  body {
+    inline-size: min(calc(100% - 1rem), var(--grid-max)) !important;
+  }
+
+  header h1 > span:first-child,
+  header h1 > span:last-child {
+    font-size: clamp(1.25rem, 7vw, 1.6rem) !important;
+  }
+
+  header > .intro {
+    font-size: 1.05rem !important;
+    letter-spacing: 0.03em;
+  }
+
+  main > figure.photo > address .cta::after {
+    font-size: 0.95rem;
+    letter-spacing: 0.03em;
+  }
+}
+
+/* ===== Forced colors ===== */
 
 @media (forced-colors: active) {
   html,
@@ -358,10 +471,10 @@ body > footer .divider {
   #topLogo,
   header h1 > span,
   main > figure.photo > img,
-  main > figure.photo > address,
   header > .intro,
-  .about,
+  main > figure.photo > address .pill,
   .enkel,
+  .about,
   body > footer {
     background: Canvas !important;
     color: CanvasText !important;
@@ -371,17 +484,21 @@ body > footer .divider {
   #topLogo,
   header h1 > span,
   main > figure.photo > img,
-  main > figure.photo > address,
   header > .intro,
-  .about,
+  main > figure.photo > address .pill,
   .enkel,
+  .about,
   body > footer {
     border: 1px solid CanvasText !important;
   }
 
-  h2,
-  .enkel h2,
-  header h1 > span:first-child::after {
+  #topLogo path,
+  .enkel h2 {
+    fill: CanvasText !important;
     color: LinkText !important;
+  }
+
+  body::before {
+    background: CanvasText;
   }
 }
