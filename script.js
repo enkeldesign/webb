@@ -1,11 +1,17 @@
 const loadOptionalDesign = () => {
   const params = new URLSearchParams(window.location.search);
+  const design = params.get("design");
 
-  if (params.get("design") !== "enkel-grid") {
+  const optionalDesigns = {
+    "enkel-grid": "/enkel-grid.css?v=20260604",
+    "aspect-grid": "/enkel-aspect-grid.css?v=20260605"
+  };
+
+  const href = optionalDesigns[design];
+
+  if (!href) {
     return;
   }
-
-  const href = "/enkel-grid.css?v=20260604";
 
   if (document.querySelector(`link[rel="stylesheet"][href="${href}"]`)) {
     return;
@@ -14,7 +20,7 @@ const loadOptionalDesign = () => {
   const link = document.createElement("link");
   link.rel = "stylesheet";
   link.href = href;
-  link.dataset.enkelDesign = "grid";
+  link.dataset.enkelDesign = design;
   document.head.append(link);
 };
 
