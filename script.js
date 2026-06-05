@@ -4,7 +4,8 @@ const loadOptionalDesign = () => {
 
   const optionalDesigns = {
     "enkel-grid": "/enkel-grid.css?v=20260604",
-    "aspect-grid": "/enkel-aspect-grid.css?v=20260605"
+    "aspect-grid": "/enkel-aspect-grid.css?v=20260605-2",
+    "modular-12": "/enkel-aspect-grid.css?v=20260605-2"
   };
 
   const href = optionalDesigns[design];
