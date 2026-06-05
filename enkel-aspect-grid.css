@@ -1,86 +1,93 @@
 :root {
   color-scheme: light dark;
 
-  --ag-page: light-dark(#dbe9e9, #20282b);
-  --ag-blue: light-dark(#005678, #78c5da);
-  --ag-blue-deep: light-dark(#005274, #123844);
-  --ag-paper: light-dark(#f7f7f5, #252b2e);
-  --ag-pale: light-dark(#e8f4d8, #303424);
-  --ag-grey: light-dark(#e9e9e9, #2c3032);
-  --ag-text: light-dark(#303236, #f7f7f5);
-  --ag-focus: light-dark(#111, #fff);
-  --ag-shadow-light: light-dark(rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.18));
-  --ag-shadow-dark: light-dark(rgb(0 0 0 / 0.18), rgb(0 0 0 / 0.45));
+  --mg-page: light-dark(#dbe9e9, #20282b);
+  --mg-blue: light-dark(#005678, #78c5da);
+  --mg-blue-deep: light-dark(#005274, #123844);
+  --mg-paper: light-dark(#f7f7f5, #252b2e);
+  --mg-pale: light-dark(#e8f4d8, #303424);
+  --mg-grey: light-dark(#e9e9e9, #2c3032);
+  --mg-text: light-dark(#303236, #f7f7f5);
+  --mg-focus: light-dark(#111, #fff);
+  --mg-shadow-light: light-dark(rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.18));
+  --mg-shadow-dark: light-dark(rgb(0 0 0 / 0.18), rgb(0 0 0 / 0.45));
 
-  --ag-gap: clamp(0.75rem, 1.8vw, 1.25rem);
-  --ag-square-max: 16rem;
-  --ag-content-pad: clamp(2rem, 5vw, 4rem);
+  --mg-gap: clamp(0.75rem, 1.8vw, 1.25rem);
+  --mg-square-max: 16rem;
+  --mg-content-pad: clamp(2rem, 5vw, 4rem);
 }
 
 @media (color-gamut: p3) {
   :root {
-    --ag-page: light-dark(color(display-p3 0.86 0.91 0.91), color(display-p3 0.13 0.16 0.17));
-    --ag-blue: light-dark(color(display-p3 0.00 0.33 0.46), color(display-p3 0.47 0.77 0.85));
-    --ag-blue-deep: light-dark(color(display-p3 0.00 0.31 0.43), color(display-p3 0.07 0.22 0.27));
-    --ag-pale: light-dark(color(display-p3 0.91 0.96 0.85), color(display-p3 0.19 0.20 0.15));
+    --mg-page: light-dark(color(display-p3 0.86 0.91 0.91), color(display-p3 0.13 0.16 0.17));
+    --mg-blue: light-dark(color(display-p3 0.00 0.33 0.46), color(display-p3 0.47 0.77 0.85));
+    --mg-blue-deep: light-dark(color(display-p3 0.00 0.31 0.43), color(display-p3 0.07 0.22 0.27));
+    --mg-pale: light-dark(color(display-p3 0.91 0.96 0.85), color(display-p3 0.19 0.20 0.15));
   }
 }
 
 html {
-  container: enkel-aspect-grid / inline-size;
-  background: var(--ag-page) !important;
+  container: enkel-modular-grid / inline-size;
+  background: var(--mg-page) !important;
 }
 
 body {
-  --ag-content: min(
-    calc(100cqi - var(--ag-gap) - var(--ag-gap)),
+  --mg-content: min(
+    calc(100cqi - var(--mg-gap) - var(--mg-gap)),
     calc(
-      var(--ag-square-max) +
-      var(--ag-square-max) +
-      var(--ag-square-max) +
-      var(--ag-square-max) +
-      var(--ag-gap) +
-      var(--ag-gap) +
-      var(--ag-gap)
+      var(--mg-square-max) +
+      var(--mg-square-max) +
+      var(--mg-square-max) +
+      var(--mg-square-max) +
+      var(--mg-gap) +
+      var(--mg-gap) +
+      var(--mg-gap)
     )
   );
-  --ag-track: calc((var(--ag-content) - var(--ag-gap) - var(--ag-gap) - var(--ag-gap)) / 4);
+
+  --mg-col: calc(
+    (
+      var(--mg-content) -
+      var(--mg-gap) - var(--mg-gap) - var(--mg-gap) -
+      var(--mg-gap) - var(--mg-gap) - var(--mg-gap) -
+      var(--mg-gap) - var(--mg-gap) - var(--mg-gap) -
+      var(--mg-gap) - var(--mg-gap)
+    ) / 12
+  );
+
+  /*
+    12 columns horizontally. Rows are half-modules:
+    square = 6 rows × 3 columns on desktop,
+             8 rows × 4 columns on medium,
+            12 rows × 6 columns on small.
+  */
+  --mg-row: calc((var(--mg-col) - var(--mg-gap)) / 2);
 
   display: grid !important;
-  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-  grid-template-rows: repeat(6, var(--ag-track)) auto auto auto !important;
-  grid-template-areas:
-    "logo    logo    brand   brand"
-    "logo    logo    brand   brand"
-    "byline  byline  photo   photo"
-    "byline  byline  photo   photo"
-    "intro   intro   intro   intro"
-    "contact contact contact contact"
-    "about   about   about   about"
-    "enkel   enkel   enkel   enkel"
-    "footer  footer  footer  footer" !important;
+  grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+  grid-template-rows: repeat(36, var(--mg-row)) auto auto auto !important;
+  gap: var(--mg-gap) !important;
 
-  gap: var(--ag-gap) !important;
   inline-size: min(
     100%,
     calc(
-      var(--ag-square-max) +
-      var(--ag-square-max) +
-      var(--ag-square-max) +
-      var(--ag-square-max) +
-      var(--ag-gap) +
-      var(--ag-gap) +
-      var(--ag-gap) +
-      var(--ag-gap) +
-      var(--ag-gap)
+      var(--mg-square-max) +
+      var(--mg-square-max) +
+      var(--mg-square-max) +
+      var(--mg-square-max) +
+      var(--mg-gap) +
+      var(--mg-gap) +
+      var(--mg-gap) +
+      var(--mg-gap) +
+      var(--mg-gap)
     )
   ) !important;
   min-block-size: 100dvh;
   margin-inline: auto !important;
-  padding: var(--ag-gap) !important;
+  padding: var(--mg-gap) !important;
 
-  background: var(--ag-page) !important;
-  color: var(--ag-text) !important;
+  background: var(--mg-page) !important;
+  color: var(--mg-text) !important;
   overflow-x: clip;
 }
 
@@ -93,45 +100,55 @@ main > figure.photo {
 }
 
 #topLogo {
-  grid-area: logo;
+  grid-column: 1 / 7;
+  grid-row: 1 / 13;
 }
 
 header h1 > span:first-child {
-  grid-area: brand;
+  grid-column: 7 / 13;
+  grid-row: 1 / 13;
 }
 
 header h1 > span:last-child {
-  grid-area: byline;
+  grid-column: 1 / 7;
+  grid-row: 13 / 25;
 }
 
 main > figure.photo > img {
-  grid-area: photo;
+  grid-column: 7 / 13;
+  grid-row: 13 / 25;
 }
 
 header > .intro {
-  grid-area: intro;
+  grid-column: 1 / 13;
+  grid-row: 25 / 31;
 }
 
 main > figure.photo > address {
-  grid-area: contact;
+  grid-column: 1 / 13;
+  grid-row: 31 / 37;
 }
 
 .about {
-  grid-area: about;
+  grid-column: 1 / 13;
+  grid-row: 37;
 }
 
 .enkel {
-  grid-area: enkel;
+  grid-column: 1 / 13;
+  grid-row: 38;
 }
 
 body > footer {
-  grid-area: footer;
+  grid-column: 1 / 13;
+  grid-row: 39;
 }
 
 #topLogo,
 header h1 > span,
 main > figure.photo > img,
 header > .intro,
+main > figure.photo > address,
 main > figure.photo > address .pill,
 .about,
 .enkel,
@@ -143,23 +160,17 @@ body > footer {
   box-shadow: none !important;
 }
 
-#topLogo,
-header h1 > span,
-main > figure.photo > img {
-  aspect-ratio: 1;
-}
-
 #topLogo {
   display: block !important;
   inline-size: 100% !important;
   block-size: 100% !important;
   padding: 16%;
   box-sizing: border-box;
-  background: var(--ag-blue-deep) !important;
+  background: var(--mg-blue-deep) !important;
 }
 
 #topLogo path {
-  fill: var(--ag-paper) !important;
+  fill: var(--mg-paper) !important;
 }
 
 #topLogo circle {
@@ -181,8 +192,8 @@ header h1 > span {
 header h1 > span:first-child {
   place-content: center;
   padding: 14%;
-  background: var(--ag-paper) !important;
-  color: var(--ag-blue) !important;
+  background: var(--mg-paper) !important;
+  color: var(--mg-blue) !important;
   font-size: 0 !important;
   letter-spacing: 0.025em !important;
 }
@@ -196,8 +207,8 @@ header h1 > span:first-child::before {
 header h1 > span:last-child {
   justify-content: start;
   padding: 14%;
-  background: var(--ag-pale) !important;
-  color: var(--ag-text) !important;
+  background: var(--mg-pale) !important;
+  color: var(--mg-text) !important;
   font-size: 0 !important;
   letter-spacing: 0.035em !important;
 }
@@ -216,21 +227,29 @@ main > figure.photo > img {
   object-fit: cover;
   object-position: center;
   filter: none !important;
-  background: var(--ag-grey) !important;
+  background: var(--mg-grey) !important;
 }
 
 header > .intro {
   display: grid;
   align-content: center;
-  padding: clamp(1.5rem, 4vw, 2.5rem) !important;
-  background: var(--ag-pale) !important;
-  color: var(--ag-text) !important;
+  padding: clamp(0.85rem, 2.4vw, 1.5rem) !important;
+  overflow: hidden;
+
+  background: var(--mg-pale) !important;
+  color: var(--mg-text) !important;
+
   text-align: left !important;
+  text-wrap: balance;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+
   font-family: var(--body-font);
-  font-size: clamp(1.05rem, 3.4vw, 1.65rem) !important;
+  font-size: clamp(0.95rem, 2.75vw, 1.28rem) !important;
   font-weight: 650;
-  letter-spacing: 0.055em;
-  line-height: 1.55;
+  letter-spacing: 0.028em;
+  line-height: 1.35;
 }
 
 main > figure.photo > address {
@@ -240,7 +259,7 @@ main > figure.photo > address {
 
   display: grid !important;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--ag-gap) !important;
+  gap: var(--mg-gap) !important;
 
   inline-size: 100% !important;
   block-size: 100% !important;
@@ -266,27 +285,27 @@ main > figure.photo > address .cta {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding-inline: clamp(1.5rem, 5vw, 3.5rem) !important;
-  background: var(--ag-blue-deep) !important;
-  color: var(--ag-paper) !important;
+  padding-inline: clamp(1.15rem, 4vw, 3.5rem) !important;
+  background: var(--mg-blue-deep) !important;
+  color: var(--mg-paper) !important;
   font-size: 0 !important;
   box-shadow:
-    inset 1rem 1rem 0 var(--ag-shadow-light),
-    inset -1rem -1rem 0 var(--ag-shadow-dark) !important;
+    inset 1rem 1rem 0 var(--mg-shadow-light),
+    inset -1rem -1rem 0 var(--mg-shadow-dark) !important;
 }
 
 main > figure.photo > address .cta::before {
   content: "✉";
   margin-inline-end: 0.45em;
-  font-size: clamp(1.05rem, 4vw, 1.7rem);
+  font-size: clamp(0.95rem, 3.2vw, 1.7rem);
   font-weight: 500;
 }
 
 main > figure.photo > address .cta::after {
   content: "erik@enkel.design";
-  font-size: clamp(0.98rem, 4.4vw, 1.75rem);
+  font-size: clamp(0.8rem, 3.3vw, 1.75rem);
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.055em;
 }
 
 main > figure.photo > address .sec {
@@ -295,11 +314,11 @@ main > figure.photo > address .sec {
   place-items: center;
   padding: 0 !important;
   overflow: hidden;
-  background: var(--ag-grey) !important;
+  background: var(--mg-grey) !important;
   color: transparent !important;
   box-shadow:
-    inset 1rem 1rem 0 var(--ag-shadow-light),
-    inset -1rem -1rem 0 var(--ag-shadow-dark) !important;
+    inset 1rem 1rem 0 var(--mg-shadow-light),
+    inset -1rem -1rem 0 var(--mg-shadow-dark) !important;
 }
 
 main > figure.photo > address .sec::after {
@@ -308,27 +327,27 @@ main > figure.photo > address .sec::after {
   inline-size: clamp(1.6rem, 6vw, 3.2rem);
   aspect-ratio: 1;
   margin: 0;
-  border: clamp(0.18rem, 0.8vw, 0.28rem) solid var(--ag-blue);
+  border: clamp(0.18rem, 0.8vw, 0.28rem) solid var(--mg-blue);
   transform: translate(0.22rem, -0.22rem);
   box-shadow:
-    -0.65rem 0.65rem 0 -0.25rem var(--ag-grey),
-    -0.65rem 0.65rem 0 0 var(--ag-blue);
+    -0.65rem 0.65rem 0 -0.25rem var(--mg-grey),
+    -0.65rem 0.65rem 0 0 var(--mg-blue);
 }
 
 .about,
 .enkel,
 body > footer {
-  padding: var(--ag-content-pad) !important;
-  background: var(--ag-paper) !important;
-  color: var(--ag-text) !important;
+  padding: var(--mg-content-pad) !important;
+  background: var(--mg-paper) !important;
+  color: var(--mg-text) !important;
 }
 
 .enkel {
-  background: color-mix(in srgb, var(--ag-pale) 72%, var(--ag-paper)) !important;
+  background: color-mix(in srgb, var(--mg-pale) 72%, var(--mg-paper)) !important;
 }
 
 .about .nav-link {
-  margin: calc(var(--ag-content-pad) * -1) calc(var(--ag-content-pad) * -1) var(--gap-5) !important;
+  margin: calc(var(--mg-content-pad) * -1) calc(var(--mg-content-pad) * -1) var(--gap-5) !important;
   border-radius: 0 !important;
 }
 
@@ -344,7 +363,7 @@ figcaption,
 blockquote,
 ul,
 footer small {
-  color: var(--ag-text) !important;
+  color: var(--mg-text) !important;
 }
 
 main p,
@@ -356,7 +375,7 @@ blockquote {
 a:focus-visible,
 button:focus-visible,
 .footer-logo:focus-within {
-  outline: 3px solid var(--ag-focus) !important;
+  outline: 3px solid var(--mg-focus) !important;
   outline-offset: 4px !important;
 }
 
@@ -364,24 +383,55 @@ a:hover,
 a:visited:hover,
 a:focus-visible,
 a:visited:focus-visible {
-  background-color: var(--ag-blue) !important;
+  background-color: var(--mg-blue) !important;
   color: light-dark(#fff, #000) !important;
 }
 
-@container enkel-aspect-grid (min-width: 42rem) {
+@container enkel-modular-grid (min-width: 42rem) {
   body {
-    --ag-track: calc((var(--ag-content) - var(--ag-gap) - var(--ag-gap) - var(--ag-gap) - var(--ag-gap) - var(--ag-gap)) / 6);
+    grid-template-rows: repeat(16, var(--mg-row)) auto auto auto !important;
+  }
 
-    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
-    grid-template-rows: repeat(4, var(--ag-track)) auto auto auto !important;
-    grid-template-areas:
-      "logo    logo    brand   brand   byline byline"
-      "logo    logo    brand   brand   byline byline"
-      "intro   intro   intro   intro   photo  photo"
-      "contact contact contact contact photo  photo"
-      "about   about   about   about   about  about"
-      "enkel   enkel   enkel   enkel   enkel  enkel"
-      "footer  footer  footer  footer  footer footer" !important;
+  #topLogo {
+    grid-column: 1 / 5;
+    grid-row: 1 / 9;
+  }
+
+  header h1 > span:first-child {
+    grid-column: 5 / 9;
+    grid-row: 1 / 9;
+  }
+
+  header h1 > span:last-child {
+    grid-column: 9 / 13;
+    grid-row: 1 / 9;
+  }
+
+  header > .intro {
+    grid-column: 1 / 9;
+    grid-row: 9 / 13;
+  }
+
+  main > figure.photo > img {
+    grid-column: 9 / 13;
+    grid-row: 9 / 17;
+  }
+
+  main > figure.photo > address {
+    grid-column: 1 / 9;
+    grid-row: 13 / 17;
+  }
+
+  .about {
+    grid-row: 17;
+  }
+
+  .enkel {
+    grid-row: 18;
+  }
+
+  body > footer {
+    grid-row: 19;
   }
 
   header h1 > span:first-child::before {
@@ -393,27 +443,59 @@ a:visited:focus-visible {
   }
 
   header > .intro {
-    font-size: clamp(1.2rem, 3vw, 1.65rem) !important;
+    font-size: clamp(0.95rem, 1.9vw, 1.25rem) !important;
   }
 
   main > figure.photo > address .cta::after {
-    font-size: clamp(1.1rem, 3vw, 1.65rem);
+    font-size: clamp(1rem, 2.25vw, 1.55rem);
   }
 }
 
-@container enkel-aspect-grid (min-width: 64rem) {
+@container enkel-modular-grid (min-width: 64rem) {
   body {
-    --ag-track: calc((var(--ag-content) - var(--ag-gap) - var(--ag-gap) - var(--ag-gap) - var(--ag-gap) - var(--ag-gap) - var(--ag-gap) - var(--ag-gap)) / 8);
+    grid-template-rows: repeat(9, var(--mg-row)) auto auto auto !important;
+  }
 
-    grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
-    grid-template-rows: repeat(3, var(--ag-track)) auto auto auto !important;
-    grid-template-areas:
-      "logo    logo    brand   brand   byline byline photo photo"
-      "logo    logo    brand   brand   byline byline photo photo"
-      "contact contact contact contact intro  intro  intro intro"
-      "about   about   about   about   about  about  about about"
-      "enkel   enkel   enkel   enkel   enkel  enkel  enkel enkel"
-      "footer  footer  footer  footer  footer footer footer footer" !important;
+  #topLogo {
+    grid-column: 1 / 4;
+    grid-row: 1 / 7;
+  }
+
+  header h1 > span:first-child {
+    grid-column: 4 / 7;
+    grid-row: 1 / 7;
+  }
+
+  header h1 > span:last-child {
+    grid-column: 7 / 10;
+    grid-row: 1 / 7;
+  }
+
+  main > figure.photo > img {
+    grid-column: 10 / 13;
+    grid-row: 1 / 7;
+  }
+
+  main > figure.photo > address {
+    grid-column: 1 / 7;
+    grid-row: 7 / 10;
+  }
+
+  header > .intro {
+    grid-column: 7 / 13;
+    grid-row: 7 / 10;
+  }
+
+  .about {
+    grid-row: 10;
+  }
+
+  .enkel {
+    grid-row: 11;
+  }
+
+  body > footer {
+    grid-row: 12;
   }
 
   header h1 > span:first-child::before,
@@ -422,17 +504,17 @@ a:visited:focus-visible {
   }
 
   header > .intro {
-    font-size: clamp(1.2rem, 2vw, 1.55rem) !important;
+    font-size: clamp(1rem, 1.45vw, 1.22rem) !important;
   }
 
   main > figure.photo > address .cta::after {
-    font-size: clamp(1.15rem, 2vw, 1.75rem);
+    font-size: clamp(1.1rem, 1.8vw, 1.65rem);
   }
 }
 
 @media (max-width: 22rem) {
   body {
-    --ag-gap: 0.625rem;
+    --mg-gap: 0.625rem;
   }
 
   header h1 > span:first-child::before {
@@ -444,8 +526,8 @@ a:visited:focus-visible {
   }
 
   header > .intro {
-    font-size: 1rem !important;
-    letter-spacing: 0.03em;
+    font-size: 0.9rem !important;
+    letter-spacing: 0.015em;
   }
 
   main > figure.photo > address .cta::before {
@@ -453,8 +535,8 @@ a:visited:focus-visible {
   }
 
   main > figure.photo > address .cta::after {
-    font-size: 0.9rem;
-    letter-spacing: 0.025em;
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
   }
 }
 
@@ -490,4 +572,4 @@ a:visited:focus-visible {
   }
 }
 
-/* Optional aspect grid design, 2026-06-05 */
+/* Optional modular 12-grid design, 2026-06-05 */
