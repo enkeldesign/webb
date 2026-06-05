@@ -222,15 +222,23 @@ main > figure.photo > img {
 header > .intro {
   display: grid;
   align-content: center;
-  padding: clamp(1.5rem, 4vw, 2.5rem) !important;
+  padding: clamp(0.85rem, 2.4vw, 1.5rem) !important;
+  overflow: hidden;
+
   background: var(--ag-pale) !important;
   color: var(--ag-text) !important;
+
   text-align: left !important;
+  text-wrap: balance;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+
   font-family: var(--body-font);
-  font-size: clamp(1.05rem, 3.4vw, 1.65rem) !important;
+  font-size: clamp(0.95rem, 2.75vw, 1.28rem) !important;
   font-weight: 650;
-  letter-spacing: 0.055em;
-  line-height: 1.55;
+  letter-spacing: 0.028em;
+  line-height: 1.35;
 }
 
 main > figure.photo > address {
@@ -266,7 +274,7 @@ main > figure.photo > address .cta {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding-inline: clamp(1.5rem, 5vw, 3.5rem) !important;
+  padding-inline: clamp(1.15rem, 4vw, 3.5rem) !important;
   background: var(--ag-blue-deep) !important;
   color: var(--ag-paper) !important;
   font-size: 0 !important;
@@ -278,15 +286,15 @@ main > figure.photo > address .cta {
 main > figure.photo > address .cta::before {
   content: "✉";
   margin-inline-end: 0.45em;
-  font-size: clamp(1.05rem, 4vw, 1.7rem);
+  font-size: clamp(0.95rem, 3.2vw, 1.7rem);
   font-weight: 500;
 }
 
 main > figure.photo > address .cta::after {
   content: "erik@enkel.design";
-  font-size: clamp(0.98rem, 4.4vw, 1.75rem);
+  font-size: clamp(0.8rem, 3.3vw, 1.75rem);
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.055em;
 }
 
 main > figure.photo > address .sec {
@@ -393,11 +401,11 @@ a:visited:focus-visible {
   }
 
   header > .intro {
-    font-size: clamp(1.2rem, 3vw, 1.65rem) !important;
+    font-size: clamp(0.95rem, 1.9vw, 1.25rem) !important;
   }
 
   main > figure.photo > address .cta::after {
-    font-size: clamp(1.1rem, 3vw, 1.65rem);
+    font-size: clamp(1rem, 2.25vw, 1.55rem);
   }
 }
 
@@ -422,11 +430,11 @@ a:visited:focus-visible {
   }
 
   header > .intro {
-    font-size: clamp(1.2rem, 2vw, 1.55rem) !important;
+    font-size: clamp(1rem, 1.45vw, 1.22rem) !important;
   }
 
   main > figure.photo > address .cta::after {
-    font-size: clamp(1.15rem, 2vw, 1.75rem);
+    font-size: clamp(1.1rem, 1.8vw, 1.65rem);
   }
 }
 
@@ -444,8 +452,8 @@ a:visited:focus-visible {
   }
 
   header > .intro {
-    font-size: 1rem !important;
-    letter-spacing: 0.03em;
+    font-size: 0.9rem !important;
+    letter-spacing: 0.015em;
   }
 
   main > figure.photo > address .cta::before {
@@ -453,8 +461,8 @@ a:visited:focus-visible {
   }
 
   main > figure.photo > address .cta::after {
-    font-size: 0.9rem;
-    letter-spacing: 0.025em;
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
   }
 }
 
