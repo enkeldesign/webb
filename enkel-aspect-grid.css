@@ -1,0 +1,480 @@
+:root {
+  color-scheme: light dark;
+
+  --ag-page: light-dark(#dbe9e9, #20282b);
+  --ag-blue: light-dark(#005678, #78c5da);
+  --ag-blue-deep: light-dark(#005274, #123844);
+  --ag-paper: light-dark(#f7f7f5, #252b2e);
+  --ag-pale: light-dark(#e8f4d8, #303424);
+  --ag-grey: light-dark(#e9e9e9, #2c3032);
+  --ag-text: light-dark(#303236, #f7f7f5);
+  --ag-shadow-light: light-dark(rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.18));
+  --ag-shadow-dark: light-dark(rgb(0 0 0 / 0.18), rgb(0 0 0 / 0.45));
+  --ag-focus: light-dark(#111, #fff);
+
+  --ag-gap: clamp(0.75rem, 1.8vw, 1.25rem);
+  --ag-square-max: 16rem;
+  --ag-content-pad: clamp(2rem, 5vw, 4rem);
+}
+
+@media (color-gamut: p3) {
+  :root {
+    --ag-page: light-dark(color(display-p3 0.86 0.91 0.91), color(display-p3 0.13 0.16 0.17));
+    --ag-blue: light-dark(color(display-p3 0.00 0.33 0.46), color(display-p3 0.47 0.77 0.85));
+    --ag-blue-deep: light-dark(color(display-p3 0.00 0.31 0.43), color(display-p3 0.07 0.22 0.27));
+    --ag-pale: light-dark(color(display-p3 0.91 0.96 0.85), color(display-p3 0.19 0.20 0.15));
+  }
+}
+
+html {
+  container: enkel-aspect-grid / inline-size;
+  background: var(--ag-page) !important;
+}
+
+body {
+  --ag-track: calc((100% - var(--ag-gap) - var(--ag-gap) - var(--ag-gap)) / 4);
+
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  grid-template-rows: repeat(6, var(--ag-track)) auto auto auto !important;
+  grid-template-areas:
+    "logo    logo    brand   brand"
+    "logo    logo    brand   brand"
+    "byline  byline  photo   photo"
+    "byline  byline  photo   photo"
+    "intro   intro   intro   intro"
+    "contact contact contact contact"
+    "about   about   about   about"
+    "enkel   enkel   enkel   enkel"
+    "footer  footer  footer  footer" !important;
+
+  gap: var(--ag-gap) !important;
+  inline-size: min(
+    100%,
+    calc(
+      var(--ag-square-max) +
+      var(--ag-square-max) +
+      var(--ag-square-max) +
+      var(--ag-square-max) +
+      var(--ag-gap) +
+      var(--ag-gap) +
+      var(--ag-gap) +
+      var(--ag-gap) +
+      var(--ag-gap)
+    )
+  ) !important;
+  min-block-size: 100dvh;
+  margin-inline: auto !important;
+  padding: var(--ag-gap) !important;
+
+  background: var(--ag-page) !important;
+  color: var(--ag-text) !important;
+  overflow-x: clip;
+}
+
+header,
+header .brand,
+header h1,
+main,
+main > figure.photo {
+  display: contents !important;
+}
+
+#topLogo {
+  grid-area: logo;
+}
+
+header h1 > span:first-child {
+  grid-area: brand;
+}
+
+header h1 > span:last-child {
+  grid-area: byline;
+}
+
+main > figure.photo > img {
+  grid-area: photo;
+}
+
+header > .intro {
+  grid-area: intro;
+}
+
+main > figure.photo > address {
+  grid-area: contact;
+}
+
+.about {
+  grid-area: about;
+}
+
+.enkel {
+  grid-area: enkel;
+}
+
+body > footer {
+  grid-area: footer;
+}
+
+#topLogo,
+header h1 > span,
+main > figure.photo > img,
+header > .intro,
+main > figure.photo > address .pill,
+.about,
+.enkel,
+body > footer {
+  min-inline-size: 0;
+  min-block-size: 0;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+#topLogo,
+header h1 > span,
+main > figure.photo > img {
+  aspect-ratio: 1;
+}
+
+#topLogo {
+  display: block !important;
+  inline-size: 100% !important;
+  block-size: 100% !important;
+  padding: 16%;
+  box-sizing: border-box;
+  background: var(--ag-blue-deep) !important;
+}
+
+#topLogo path {
+  fill: var(--ag-paper) !important;
+}
+
+#topLogo circle {
+  fill: none !important;
+  stroke: none !important;
+}
+
+header h1 > span {
+  display: grid !important;
+  align-content: center;
+  margin: 0 !important;
+  font-family: var(--heading-font);
+  font-weight: 700;
+  line-height: 1.25;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+header h1 > span:first-child {
+  place-content: center;
+  padding: 14%;
+  background: var(--ag-paper) !important;
+  color: var(--ag-blue) !important;
+  font-size: 0 !important;
+  letter-spacing: 0.025em !important;
+}
+
+header h1 > span:first-child::before {
+  content: "Enkel .\A Design";
+  white-space: pre-line;
+  font-size: clamp(1.65rem, 8vw, 3.45rem);
+}
+
+header h1 > span:last-child {
+  justify-content: start;
+  padding: 14%;
+  background: var(--ag-pale) !important;
+  color: var(--ag-text) !important;
+  font-size: 0 !important;
+  letter-spacing: 0.035em !important;
+}
+
+header h1 > span:last-child::before {
+  content: "Av\A Erik\A Jansson";
+  white-space: pre-line;
+  font-size: clamp(1.5rem, 7.4vw, 3.35rem);
+}
+
+main > figure.photo > img {
+  display: block;
+  inline-size: 100% !important;
+  block-size: 100% !important;
+  margin: 0 !important;
+  object-fit: cover;
+  object-position: center;
+  filter: none !important;
+  background: var(--ag-grey) !important;
+}
+
+header > .intro {
+  display: grid;
+  align-content: center;
+  padding: clamp(1.5rem, 4vw, 2.5rem) !important;
+  background: var(--ag-pale) !important;
+  color: var(--ag-text) !important;
+  text-align: left !important;
+  font-family: var(--body-font);
+  font-size: clamp(1.05rem, 3.4vw, 1.65rem) !important;
+  font-weight: 650;
+  letter-spacing: 0.055em;
+  line-height: 1.55;
+}
+
+main > figure.photo > address {
+  position: static !important;
+  z-index: auto !important;
+  transform: none !important;
+
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--ag-gap) !important;
+
+  inline-size: 100% !important;
+  max-inline-size: none !important;
+  min-inline-size: 0 !important;
+  min-block-size: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: initial !important;
+}
+
+main > figure.photo > address .pill {
+  min-inline-size: 44px;
+  min-block-size: 100%;
+  block-size: var(--ag-track);
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  text-decoration: none !important;
+}
+
+main > figure.photo > address .cta {
+  grid-column: 1 / 4;
+  display: grid;
+  place-items: center start;
+  padding-inline: clamp(1.5rem, 5vw, 3.5rem) !important;
+  background: var(--ag-blue-deep) !important;
+  color: var(--ag-paper) !important;
+  font-size: 0 !important;
+  box-shadow:
+    inset 1rem 1rem 0 var(--ag-shadow-light),
+    inset -1rem -1rem 0 var(--ag-shadow-dark) !important;
+}
+
+main > figure.photo > address .cta::before {
+  content: "✉";
+  margin-inline-end: 0.45em;
+  font-size: clamp(1.05rem, 4vw, 1.7rem);
+  font-weight: 500;
+}
+
+main > figure.photo > address .cta::after {
+  content: "erik@enkel.design";
+  font-size: clamp(0.98rem, 4.4vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+main > figure.photo > address .sec {
+  grid-column: 4 / 5;
+  display: grid;
+  place-items: center;
+  padding: 0 !important;
+  overflow: hidden;
+  background: var(--ag-grey) !important;
+  color: transparent !important;
+  box-shadow:
+    inset 1rem 1rem 0 var(--ag-shadow-light),
+    inset -1rem -1rem 0 var(--ag-shadow-dark) !important;
+}
+
+main > figure.photo > address .sec::after {
+  content: "";
+  display: block;
+  inline-size: clamp(1.6rem, 6vw, 3.2rem);
+  aspect-ratio: 1;
+  margin: 0;
+  border: clamp(0.18rem, 0.8vw, 0.28rem) solid var(--ag-blue);
+  transform: translate(0.22rem, -0.22rem);
+  box-shadow:
+    -0.65rem 0.65rem 0 -0.25rem var(--ag-grey),
+    -0.65rem 0.65rem 0 0 var(--ag-blue);
+}
+
+.about,
+.enkel,
+body > footer {
+  padding: var(--ag-content-pad) !important;
+  background: var(--ag-paper) !important;
+  color: var(--ag-text) !important;
+}
+
+.enkel {
+  background: color-mix(in srgb, var(--ag-pale) 72%, var(--ag-paper)) !important;
+}
+
+.about .nav-link {
+  margin: calc(var(--ag-content-pad) * -1) calc(var(--ag-content-pad) * -1) var(--gap-5) !important;
+  border-radius: 0 !important;
+}
+
+.enkel .photo img,
+.about .photo img {
+  max-inline-size: none;
+}
+
+h2,
+h3,
+main p,
+figcaption,
+blockquote,
+ul,
+footer small {
+  color: var(--ag-text) !important;
+}
+
+main p,
+figcaption,
+blockquote {
+  max-inline-size: 66ch;
+}
+
+a:focus-visible,
+button:focus-visible,
+.footer-logo:focus-within {
+  outline: 3px solid var(--ag-focus) !important;
+  outline-offset: 4px !important;
+}
+
+a:hover,
+a:visited:hover,
+a:focus-visible,
+a:visited:focus-visible {
+  background-color: var(--ag-blue) !important;
+  color: light-dark(#fff, #000) !important;
+}
+
+@container enkel-aspect-grid (min-width: 42rem) {
+  body {
+    --ag-track: calc((100% - var(--ag-gap) - var(--ag-gap) - var(--ag-gap) - var(--ag-gap) - var(--ag-gap)) / 6);
+
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(4, var(--ag-track)) auto auto auto !important;
+    grid-template-areas:
+      "logo    logo    brand   brand   byline byline"
+      "logo    logo    brand   brand   byline byline"
+      "intro   intro   intro   intro   photo  photo"
+      "contact contact contact contact photo  photo"
+      "about   about   about   about   about  about"
+      "enkel   enkel   enkel   enkel   enkel  enkel"
+      "footer  footer  footer  footer  footer footer" !important;
+  }
+
+  header h1 > span:first-child::before {
+    font-size: clamp(2rem, 6vw, 3.5rem);
+  }
+
+  header h1 > span:last-child::before {
+    font-size: clamp(1.85rem, 5.3vw, 3.3rem);
+  }
+
+  header > .intro {
+    font-size: clamp(1.2rem, 3vw, 1.65rem) !important;
+  }
+
+  main > figure.photo > address .cta::after {
+    font-size: clamp(1.1rem, 3vw, 1.65rem);
+  }
+}
+
+@container enkel-aspect-grid (min-width: 64rem) {
+  body {
+    --ag-track: calc((100% - var(--ag-gap) - var(--ag-gap) - var(--ag-gap) - var(--ag-gap) - var(--ag-gap) - var(--ag-gap) - var(--ag-gap)) / 8);
+
+    grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(3, var(--ag-track)) auto auto auto !important;
+    grid-template-areas:
+      "logo    logo    brand   brand   byline byline photo photo"
+      "logo    logo    brand   brand   byline byline photo photo"
+      "contact contact contact contact intro  intro  intro intro"
+      "about   about   about   about   about  about  about about"
+      "enkel   enkel   enkel   enkel   enkel  enkel  enkel enkel"
+      "footer  footer  footer  footer  footer footer footer footer" !important;
+  }
+
+  header h1 > span:first-child::before,
+  header h1 > span:last-child::before {
+    font-size: clamp(2rem, 3.6vw, 3.35rem);
+  }
+
+  header > .intro {
+    font-size: clamp(1.2rem, 2vw, 1.55rem) !important;
+  }
+
+  main > figure.photo > address .cta::after {
+    font-size: clamp(1.15rem, 2vw, 1.75rem);
+  }
+}
+
+@media (max-width: 22rem) {
+  body {
+    --ag-gap: 0.625rem;
+  }
+
+  header h1 > span:first-child::before {
+    font-size: clamp(1.25rem, 7vw, 1.65rem);
+  }
+
+  header h1 > span:last-child::before {
+    font-size: clamp(1.15rem, 6.3vw, 1.5rem);
+  }
+
+  header > .intro {
+    font-size: 1rem !important;
+    letter-spacing: 0.03em;
+  }
+
+  main > figure.photo > address .cta::before {
+    content: none;
+  }
+
+  main > figure.photo > address .cta::after {
+    font-size: 0.9rem;
+    letter-spacing: 0.025em;
+  }
+}
+
+@media (forced-colors: active) {
+  html,
+  body,
+  #topLogo,
+  header h1 > span,
+  main > figure.photo > img,
+  header > .intro,
+  main > figure.photo > address .pill,
+  .about,
+  .enkel,
+  body > footer {
+    background: Canvas !important;
+    color: CanvasText !important;
+    box-shadow: none !important;
+  }
+
+  #topLogo,
+  header h1 > span,
+  main > figure.photo > img,
+  header > .intro,
+  main > figure.photo > address .pill,
+  .about,
+  .enkel,
+  body > footer {
+    border: 1px solid CanvasText !important;
+  }
+
+  #topLogo path {
+    fill: CanvasText !important;
+  }
+}
+
+/* by Erik Jansson and OpenAI, optional aspect grid design, 2026-06-05 */
