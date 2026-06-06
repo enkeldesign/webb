@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="sv-SE">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+  <title>Enkel Design – modulär grid</title>
+  <meta name="description" content="En modulär 12-grid-version av Enkel Design av Erik Jansson.">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#dbe9e9" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#20282b" media="(prefers-color-scheme: dark)">
+
+  <link rel="canonical" href="https://enkel.design/grid/">
+  <link rel="preconnect" href="https://use.typekit.net" crossorigin>
+  <link rel="stylesheet" href="https://use.typekit.net/fxw6rub.css">
+  <link rel="stylesheet" href="/grid/grid.css">
+
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any">
+  <link rel="apple-touch-icon" href="/favicon.svg">
+</head>
+
+<body>
+  <a class="skip-link" href="#innehall">Gå till innehåll</a>
+
+  <header class="hero-grid" id="top">
+    <a class="hero-logo box box-blue" href="/" aria-label="Till startsidan för Enkel Design">
+      <img src="/favicon.svg" alt="" width="512" height="512">
+    </a>
+
+    <div class="hero-brand box box-paper">
+      <h1>Enkel<span>Design</span></h1>
+    </div>
+
+    <p class="hero-byline box box-pale">Av<br>Erik<br>Jansson</p>
+
+    <figure class="hero-photo box box-media">
+      <img src="/erik.JPG" loading="eager" fetchpriority="high" decoding="async" alt="Erik Jansson med korttrimmat hår och skägg, iförd en ljusblå kortärmad piké, med armarna i kors och ett stort leende.">
+    </figure>
+
+    <p class="hero-intro box box-pale">Certifierad specialist, utbildare och coach inom <abbr lang="en" title="User Experience">UX</abbr>-design och digital tillgänglighet.</p>
+
+    <address class="hero-contact">
+      <a class="contact-mail box box-blue" href="mailto:erik@enkel.design"><span>erik@enkel.design</span></a>
+      <button class="contact-copy box box-grey" type="button" aria-label="Kopiera mejladress" data-copy-email="erik@enkel.design"><span aria-hidden="true"></span></button>
+    </address>
+  </header>
+
+  <main id="innehall" class="content-grid">
+    <article class="content-box about-box">
+      <p class="kicker">Om mig</p>
+      <h2>Jag hjälper team att bygga enklare digital service.</h2>
+      <p>Jag jobbar som utvecklingsstöd, utbildare och coach på <a href="https://bolagsverket.se/jobbahosbolagsverket.5046.html">Bolagsverkets</a> IT-avdelning. Jag hjälper utvecklingsteam att skapa tillgängliga och användbara digitala tjänster för webben.</p>
+      <p>Min akademiska bakgrund är tekniskt gymnasium, kognitionsvetenskap och teoretisk filosofi. I praktiken arbetar jag i mötet mellan människa, språk, teknik och design.</p>
+    </article>
+
+    <article class="content-box skills-box">
+      <p class="kicker">Kompetens</p>
+      <h2>UX, tillgänglighet och fungerande arbetssätt.</h2>
+      <ul class="tag-list">
+        <li>UX-design</li>
+        <li>Digital tillgänglighet</li>
+        <li>WCAG 2.2</li>
+        <li>HTML och WAI-ARIA</li>
+        <li>Tjänstedesign</li>
+        <li>Designsystem</li>
+        <li>Utbildning</li>
+        <li>Teamcoaching</li>
+      </ul>
+    </article>
+
+    <article class="content-box philosophy-box">
+      <p class="kicker">Enkel Design</p>
+      <h2>Enkel design är respekt för användarens tid.</h2>
+      <p>Enkel design är att göra det lätt att förstå, välja och gå vidare. Det handlar inte om att förenkla bort det viktiga, utan om att ta bort brus, otydlighet och onödiga hinder.</p>
+      <p>En bra digital tjänst är begriplig, tillgänglig och ändamålsenlig. Den fungerar med olika skärmar, olika hjälpmedel och olika förutsättningar. Den låter innehåll och funktion bära upplevelsen.</p>
+    </article>
+
+    <blockquote class="quote-box">
+      <p lang="en">What I'm saying is that all the problems we have with websites are ones we create ourselves.</p>
+      <footer>— Barry T. Smith</footer>
+    </blockquote>
+
+    <figure class="image-box stair-box">
+      <picture>
+        <source srcset="/trappadark.jpg" media="(prefers-color-scheme: dark)">
+        <img src="/trappalight.jpg" loading="lazy" decoding="async" alt="Teckning av en gammal spiraltrappa som finns i Kungshuset vid Lunds universitet.">
+      </picture>
+      <figcaption>Den 450 år gamla vindeltrappan i Kungshuset i Lundagård, där jag studerade filosofi och kognitionsvetenskap.</figcaption>
+    </figure>
+
+    <figure class="image-box tower-box">
+      <img src="/utkik.jpeg" loading="lazy" decoding="async" alt="Brutalistisk arkitektur. Teckning av ett utkikstorn i betong sett från marken.">
+      <figcaption>Utkikstornet på Norra berget i Sundsvall – ett exempel på brutalistisk arkitektur, trogen sitt material.</figcaption>
+    </figure>
+  </main>
+
+  <footer class="footer-grid">
+    <div class="footer-brand">
+      <a href="#top" aria-label="Till sidans början"><img src="/favicon.svg" alt="" width="96" height="96"></a>
+      <p>Enkel Design av Erik Jansson</p>
+    </div>
+
+    <address class="footer-contact">
+      <a href="mailto:erik@enkel.design">erik@enkel.design</a>
+    </address>
+
+    <nav class="footer-links" aria-label="Länkar i sidfoten">
+      <a href="/">Ordinarie startsida</a>
+      <a href="/en/" lang="en">This page in English</a>
+      <a href="https://se.linkedin.com/in/erikjanssondesign">LinkedIn</a>
+    </nav>
+
+    <p class="footer-meta">Byggd som modulär 12-grid med semantisk HTML, utan <code>display: contents</code>.</p>
+  </footer>
+
+  <p class="copy-status" aria-live="polite"></p>
+
+  <script>
+    const copyButton = document.querySelector('[data-copy-email]');
+    const copyStatus = document.querySelector('.copy-status');
+
+    copyButton?.addEventListener('click', async () => {
+      const email = copyButton.dataset.copyEmail;
+
+      try {
+        await navigator.clipboard.writeText(email);
+        copyStatus.textContent = `${email} kopierat till urklipp.`;
+      } catch (error) {
+        copyStatus.textContent = `Kunde inte kopiera automatiskt. Mejladressen är ${email}.`;
+      }
+    });
+  </script>
+</body>
+
+</html>
