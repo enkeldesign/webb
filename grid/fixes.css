@@ -1,0 +1,91 @@
+:root {
+  --on-blue: #f7f7f5;
+  --on-blue-muted: rgb(247 247 245 / 0.78);
+}
+
+/* Dark mode contrast fixes:
+   --paper is intentionally dark in dark mode, so it should not be used as
+   foreground text on blue surfaces. */
+.box-blue,
+.contact-mail,
+.quote-box {
+  color: var(--on-blue);
+}
+
+.contact-mail span,
+.contact-mail::before,
+.quote-box p {
+  color: inherit;
+}
+
+.quote-box p {
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+}
+
+.quote-box footer {
+  color: var(--on-blue-muted);
+}
+
+/* Keep illustration boxes bounded. The source images have very different
+   proportions, so they should be cropped inside stable boxes instead of
+   letting intrinsic height drive the page. */
+.image-box picture {
+  display: block;
+  inline-size: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+
+.image-box > img {
+  inline-size: 100%;
+  block-size: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  min-block-size: 0;
+}
+
+.image-box picture img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.image-box picture,
+.image-box > img {
+  min-block-size: 0;
+}
+
+/* Mobile landscape / medium width:
+   Avoid a narrow quote column. The quote works better as its own full-width
+   editorial block until the page has enough real width. */
+@container (min-width: 42rem) and (max-width: 63.999rem) {
+  .philosophy-box,
+  .quote-box {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Wide footer:
+   Keep the meta text readable instead of forcing it into a narrow 2-column
+   ending column. */
+@container (min-width: 64rem) {
+  .quote-box p {
+    font-size: clamp(1.2rem, 2.1vw, 1.75rem);
+  }
+
+  .footer-brand {
+    grid-column: 1 / 7;
+  }
+
+  .footer-contact {
+    grid-column: 7 / 13;
+  }
+
+  .footer-links {
+    grid-column: 1 / 7;
+  }
+
+  .footer-meta {
+    grid-column: 7 / 13;
+  }
+}
