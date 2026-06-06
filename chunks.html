@@ -1,663 +1,635 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Finding Chunk Borders in Minecraft Bedrock</title>
-    <style>
-      :root{
-        --bg:#101814;
-        --panel:#18241e;
-        --panel-2:#223228;
-        --text:#f2f6ef;
-        --muted:#b9c6b4;
-        --accent:#78d36d;
-        --accent-2:#70c7ff;
-        --warning:#ffd66b;
-        --danger:#ff7a7a;
-        --grid:#31463a;
-        --grid-soft:#233229;
-        --chunk:#e9f7df;
-        --sub-bg:rgba(0,0,0,.72);
-        --font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-      }
-      *{box-sizing:border-box}
-      body{
-        margin:0;
-        background: radial-gradient(circle at 20% 0%, #203428 0, var(--bg) 45%, #0b100d 100%);
-        color:var(--text);
-        font-family:var(--font);
-        min-height:100vh;
-        display:grid;
-        place-items:center;
-        padding:1rem;
-      }
-      .app{
-        width:min(1180px,100%);
-        display:grid;
-        gap:.8rem;
-      }
-      .stage{
-        position:relative;
-        aspect-ratio:16/9;
-        width:100%;
-        overflow:hidden;
-        border:3px solid #31463a;
-        border-radius:1.2rem;
-        background:#152018;
-        box-shadow:0 24px 80px rgba(0,0,0,.45);
-      }
-      canvas{
-        width:100%;
-        height:100%;
-        display:block;
-      }
-      .hud{
-        position:absolute;
-        left:1.2rem;
-        top:1.2rem;
-        display:grid;
-        gap:.6rem;
-        max-width:min(42rem, 48%);
-      }
-      .tag{
-        width:max-content;
-        padding:.25rem .55rem;
-        border-radius:.45rem;
-        font:700 .85rem/1 var(--mono);
-        color:#08100b;
-        background:var(--accent);
-        box-shadow:0 2px 0 rgba(0,0,0,.35);
-      }
-      .card{
-        background:rgba(18,27,21,.86);
-        border:1px solid rgba(233,247,223,.18);
-        border-radius:.8rem;
-        padding:.8rem .95rem;
-        backdrop-filter: blur(4px);
-      }
-      .card h1,.card h2{
-        margin:0 0 .35rem;
-        line-height:1.05;
-        letter-spacing:-.03em;
-      }
-      .card h1{font-size:clamp(1.55rem, 3vw, 3rem)}
-      .card h2{font-size:clamp(1.15rem, 2vw, 2rem)}
-      .card p{
-        margin:.25rem 0 0;
-        color:var(--muted);
-        font-size:clamp(.9rem, 1.35vw, 1.15rem);
-        line-height:1.35;
-      }
-      .formula{
-        font-family:var(--mono);
-        font-size:clamp(.9rem, 1.35vw, 1.2rem);
-        color:#fff6cf;
-        display:block;
-        margin-top:.5rem;
-      }
-      .position{
-        position:absolute;
-        right:1.2rem;
-        top:1.2rem;
-        background:rgba(0,0,0,.62);
-        color:white;
-        border-radius:.55rem;
-        padding:.55rem .7rem;
-        font:700 clamp(.85rem, 1.4vw, 1.25rem)/1.2 var(--mono);
-        border:1px solid rgba(255,255,255,.18);
-        text-shadow:0 2px 0 rgba(0,0,0,.45);
-      }
-      .position small{
-        display:block;
-        font:500 .75em/1.1 var(--font);
-        color:#d7e1d3;
-        margin-bottom:.2rem;
-      }
-      .subtitle{
-        position:absolute;
-        left:50%;
-        bottom:1.05rem;
-        transform:translateX(-50%);
-        width:min(92%, 58rem);
-        padding:.8rem 1rem;
-        border-radius:.65rem;
-        background:var(--sub-bg);
-        color:white;
-        text-align:center;
-        font-size:clamp(1rem, 2.1vw, 1.75rem);
-        line-height:1.25;
-        text-shadow:0 2px 2px #000;
-        border:1px solid rgba(255,255,255,.16);
-      }
-      .controls{
-        display:grid;
-        grid-template-columns:auto auto 1fr auto;
-        gap:.7rem;
-        align-items:center;
-        background:rgba(18,27,21,.86);
-        border:1px solid rgba(233,247,223,.14);
-        border-radius:.85rem;
-        padding:.7rem;
-      }
-      button{
-        border:0;
-        border-radius:.6rem;
-        background:#e9f7df;
-        color:#0b100d;
-        font-weight:800;
-        padding:.7rem .95rem;
-        cursor:pointer;
-        box-shadow:0 3px 0 rgba(0,0,0,.28);
-      }
-      button:active{transform:translateY(1px);box-shadow:0 2px 0 rgba(0,0,0,.28)}
-      input[type="range"]{width:100%; accent-color:var(--accent)}
-      .time{font:700 .9rem/1 var(--mono); color:var(--muted); min-width:6.5rem; text-align:right}
-      .notes{
-        color:var(--muted);
-        font-size:.9rem;
-        line-height:1.35;
-        padding-inline:.2rem;
-      }
-      .notes strong{color:var(--text)}
-      @media (max-width:720px){
-        body{padding:.5rem}
-        .stage{border-radius:.8rem}
-        .hud{max-width:70%; left:.65rem; top:.65rem}
-        .position{right:.65rem; top:.65rem}
-        .subtitle{bottom:.6rem; width:94%}
-        .controls{grid-template-columns:auto auto 1fr;}
-        .time{grid-column:1/-1; text-align:left}
-      }
-    </style>
-  </head>
-  <body>
-    <main class="app">
-      <section
-        class="stage"
-        aria-label="Animation explaining how to find chunk borders in Minecraft Bedrock using coordinates"
-      >
-        <canvas
-          id="scene"
-          width="1600"
-          height="900"
-          aria-hidden="true"
-        ></canvas>
-        <div class="hud" aria-live="polite">
-          <div class="tag" id="tag">BEDROCK EDITION</div>
-          <div class="card" id="card">
-            <h1>Find chunk borders with coordinates</h1>
-            <p>
-              In Bedrock, use X and Z. Every chunk is 16 blocks wide and 16
-              blocks long.
-            </p>
-          </div>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Finding Chunk Borders in Minecraft Bedrock</title>
+<style>
+  :root{
+    --bg:#101814;
+    --panel:#18241e;
+    --panel-2:#223228;
+    --text:#f2f6ef;
+    --muted:#b9c6b4;
+    --accent:#78d36d;
+    --accent-2:#70c7ff;
+    --warning:#ffd66b;
+    --danger:#ff7a7a;
+    --grid:#31463a;
+    --grid-soft:#233229;
+    --chunk:#e9f7df;
+    --sub-bg:rgba(0,0,0,.72);
+    --font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background: radial-gradient(circle at 20% 0%, #203428 0, var(--bg) 45%, #0b100d 100%);
+    color:var(--text);
+    font-family:var(--font);
+    min-height:100vh;
+    display:grid;
+    place-items:center;
+    padding:1rem;
+  }
+  .app{
+    width:min(1180px,100%);
+    display:grid;
+    gap:.8rem;
+  }
+  .stage{
+    position:relative;
+    aspect-ratio:16/9;
+    width:100%;
+    overflow:hidden;
+    border:3px solid #31463a;
+    border-radius:1.2rem;
+    background:#152018;
+    box-shadow:0 24px 80px rgba(0,0,0,.45);
+  }
+  canvas{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+  .hud{
+    position:absolute;
+    left:1.2rem;
+    top:1.2rem;
+    display:grid;
+    gap:.6rem;
+    max-width:min(42rem, 48%);
+  }
+  .tag{
+    width:max-content;
+    padding:.25rem .55rem;
+    border-radius:.45rem;
+    font:700 .85rem/1 var(--mono);
+    color:#08100b;
+    background:var(--accent);
+    box-shadow:0 2px 0 rgba(0,0,0,.35);
+  }
+  .card{
+    background:rgba(18,27,21,.86);
+    border:1px solid rgba(233,247,223,.18);
+    border-radius:.8rem;
+    padding:.8rem .95rem;
+    backdrop-filter: blur(4px);
+  }
+  .card h1,.card h2{
+    margin:0 0 .35rem;
+    line-height:1.05;
+    letter-spacing:-.03em;
+  }
+  .card h1{font-size:clamp(1.55rem, 3vw, 3rem)}
+  .card h2{font-size:clamp(1.15rem, 2vw, 2rem)}
+  .card p{
+    margin:.25rem 0 0;
+    color:var(--muted);
+    font-size:clamp(.9rem, 1.35vw, 1.15rem);
+    line-height:1.35;
+  }
+  .formula{
+    font-family:var(--mono);
+    font-size:clamp(.9rem, 1.35vw, 1.2rem);
+    color:#fff6cf;
+    display:block;
+    margin-top:.5rem;
+  }
+  .position{
+    position:absolute;
+    right:1.2rem;
+    top:1.2rem;
+    background:rgba(0,0,0,.62);
+    color:white;
+    border-radius:.55rem;
+    padding:.55rem .7rem;
+    font:700 clamp(.85rem, 1.4vw, 1.25rem)/1.2 var(--mono);
+    border:1px solid rgba(255,255,255,.18);
+    text-shadow:0 2px 0 rgba(0,0,0,.45);
+  }
+  .position small{
+    display:block;
+    font:500 .75em/1.1 var(--font);
+    color:#d7e1d3;
+    margin-bottom:.2rem;
+  }
+  .subtitle{
+    position:absolute;
+    left:50%;
+    bottom:1.05rem;
+    transform:translateX(-50%);
+    width:min(92%, 58rem);
+    padding:.8rem 1rem;
+    border-radius:.65rem;
+    background:var(--sub-bg);
+    color:white;
+    text-align:center;
+    font-size:clamp(1rem, 2.1vw, 1.75rem);
+    line-height:1.25;
+    text-shadow:0 2px 2px #000;
+    border:1px solid rgba(255,255,255,.16);
+  }
+  .controls{
+    display:grid;
+    grid-template-columns:auto auto 1fr auto;
+    gap:.7rem;
+    align-items:center;
+    background:rgba(18,27,21,.86);
+    border:1px solid rgba(233,247,223,.14);
+    border-radius:.85rem;
+    padding:.7rem;
+  }
+  button{
+    border:0;
+    border-radius:.6rem;
+    background:#e9f7df;
+    color:#0b100d;
+    font-weight:800;
+    padding:.7rem .95rem;
+    cursor:pointer;
+    box-shadow:0 3px 0 rgba(0,0,0,.28);
+  }
+  button:active{transform:translateY(1px);box-shadow:0 2px 0 rgba(0,0,0,.28)}
+  input[type="range"]{width:100%; accent-color:var(--accent)}
+  .time{font:700 .9rem/1 var(--mono); color:var(--muted); min-width:6.5rem; text-align:right}
+  .notes{
+    color:var(--muted);
+    font-size:.9rem;
+    line-height:1.35;
+    padding-inline:.2rem;
+  }
+  .notes strong{color:var(--text)}
+  @media (max-width:720px){
+    body{padding:.5rem}
+    .stage{border-radius:.8rem}
+    .hud{max-width:70%; left:.65rem; top:.65rem}
+    .position{right:.65rem; top:.65rem}
+    .subtitle{bottom:.6rem; width:94%}
+    .controls{grid-template-columns:auto auto 1fr;}
+    .time{grid-column:1/-1; text-align:left}
+  }
+</style>
+</head>
+<body>
+  <main class="app">
+    <section class="stage" aria-label="Animation explaining how to find chunk borders in Minecraft Bedrock using coordinates">
+      <canvas id="scene" width="1600" height="900" aria-hidden="true"></canvas>
+      <div class="hud" aria-live="polite">
+        <div class="tag" id="tag">BEDROCK EDITION</div>
+        <div class="card" id="card">
+          <h1>Find chunk borders with coordinates</h1>
+          <p>In Bedrock, use X and Z. Every chunk is 16 blocks wide and 16 blocks long.</p>
         </div>
-        <div class="position" id="position">
-          <small>Show Coordinates</small>Position: 12, 64, 12
-        </div>
-        <div class="subtitle" id="subtitle">
-          In Minecraft Bedrock, there is no built-in F3+G chunk border overlay,
-          so the reliable method is coordinates.
-        </div>
-      </section>
+      </div>
+      <div class="position" id="position"><small>Show Coordinates</small>Position: 12, 64, 12</div>
+      <div class="subtitle" id="subtitle">In Minecraft Bedrock, there is no built-in F3+G chunk border overlay, so the reliable method is coordinates.</div>
+    </section>
 
-      <section class="controls" aria-label="Animation controls">
-        <button id="play" type="button">Pause</button>
-        <button id="restart" type="button">Restart</button>
-        <input
-          id="scrub"
-          type="range"
-          min="0"
-          max="78"
-          step="0.05"
-          value="0"
-          aria-label="Timeline"
-        />
-        <div class="time" id="time">00:00 / 01:18</div>
-      </section>
+    <section class="controls" aria-label="Animation controls">
+      <button id="play" type="button">Pause</button>
+      <button id="restart" type="button">Restart</button>
+      <input id="scrub" type="range" min="0" max="78" step="0.05" value="0" aria-label="Timeline" />
+      <div class="time" id="time">00:00 / 01:18</div>
+    </section>
 
-      <p class="notes">
-        <strong>Rule:</strong> a chunk border starts where X or Z is divisible
-        by 16. A corner is where both X and Z are divisible by 16. Negative
-        coordinates work the same way: … −32, −16, 0, 16, 32 …
-      </p>
-    </main>
+    <p class="notes"><strong>Rule:</strong> a chunk border starts where X or Z is divisible by 16. A corner is where both X and Z are divisible by 16. Negative coordinates work the same way: … −32, −16, 0, 16, 32 …</p>
+  </main>
 
-    <script>
-      (() => {
-        const canvas = document.getElementById('scene');
-        const ctx = canvas.getContext('2d');
-        const subtitle = document.getElementById('subtitle');
-        const card = document.getElementById('card');
-        const tag = document.getElementById('tag');
-        const positionEl = document.getElementById('position');
-        const playBtn = document.getElementById('play');
-        const restartBtn = document.getElementById('restart');
-        const scrub = document.getElementById('scrub');
-        const timeEl = document.getElementById('time');
+<script>
+(() => {
+  const canvas = document.getElementById('scene');
+  const ctx = canvas.getContext('2d');
+  const subtitle = document.getElementById('subtitle');
+  const card = document.getElementById('card');
+  const tag = document.getElementById('tag');
+  const positionEl = document.getElementById('position');
+  const playBtn = document.getElementById('play');
+  const restartBtn = document.getElementById('restart');
+  const scrub = document.getElementById('scrub');
+  const timeEl = document.getElementById('time');
 
-        const DURATION = 78;
-        let playing = true;
-        let startedAt = performance.now();
-        let pausedAt = 0;
-        let current = 0;
-        let lastSceneIndex = -1;
+  const DURATION = 78;
+  let playing = true;
+  let startedAt = performance.now();
+  let pausedAt = 0;
+  let current = 0;
+  let lastSceneIndex = -1;
 
-        const scenes = [
-          {
-            start:0, end:7, tag:'BEDROCK EDITION',
-            title:'Find chunk borders with coordinates',
-            body:'Bedrock does not have Java’s F3+G overlay. Turn on Show Coordinates and watch X and Z.',
-            formula:'Use: X, Y, Z → ignore Y for borders',
-            sub:'In Minecraft Bedrock, there is no built-in F3+G chunk border overlay, so the reliable method is coordinates.'
-          },
-          {
-            start:7, end:15, tag:'STEP 1',
-            title:'A chunk is 16 × 16 blocks',
-            body:'Chunks are vertical columns. For borders on the ground, only the X and Z coordinates matter.',
-            formula:'One chunk: X 0–15 and Z 0–15',
-            sub:'A chunk is sixteen blocks wide and sixteen blocks long. Ignore the Y value; height does not tell you the border.'
-          },
-          {
-            start:15, end:26, tag:'STEP 2',
-            title:'Look for multiples of 16',
-            body:'When X reaches 16, 32, 48 and so on, you are on a chunk edge for the X direction.',
-            formula:'X ÷ 16 has no remainder → X border',
-            sub:'Walk while watching X. When X is divisible by sixteen, you have reached a chunk border in that direction.'
-          },
-          {
-            start:26, end:37, tag:'STEP 3',
-            title:'Do the same with Z',
-            body:'When Z reaches 16, 32, 48 and so on, you are on a chunk edge for the Z direction.',
-            formula:'Z ÷ 16 has no remainder → Z border',
-            sub:'Now check Z. If Z is divisible by sixteen, you are standing on the north or south edge of a chunk.'
-          },
-          {
-            start:37, end:48, tag:'STEP 4',
-            title:'Both divisible means a corner',
-            body:'If both X and Z are divisible by 16, four chunks meet at that point.',
-            formula:'X mod 16 = 0 and Z mod 16 = 0',
-            sub:'When both X and Z are divisible by sixteen, you are at a chunk corner where four chunks meet.'
-          },
-          {
-            start:48, end:61, tag:'NEGATIVE COORDINATES',
-            title:'Negative coordinates use the same pattern',
-            body:'The borders continue through zero: −32, −16, 0, 16, 32. A chunk can run from −16 to −1.',
-            formula:'… −32 | −16 | 0 | 16 | 32 …',
-            sub:'Negative coordinates are not special. The borders are still every sixteen blocks: minus thirty-two, minus sixteen, zero, sixteen.'
-          },
-          {
-            start:61, end:71, tag:'PRACTICAL METHOD',
-            title:'Fast method in-game',
-            body:'Find a multiple of 16 on X, then a multiple of 16 on Z. Mark the lines with blocks if you need a visible border.',
-            formula:'Example: X = 32 and Z = 48 → corner',
-            sub:'For a visible guide, stand on a multiple of sixteen, place marker blocks along that line, then count sixteen blocks to the next border.'
-          },
-          {
-            start:71, end:78, tag:'RECAP',
-            title:'The whole rule',
-            body:'X divisible by 16: X edge. Z divisible by 16: Z edge. Both divisible by 16: corner.',
-            formula:'16, 32, 48 … and −16, −32, −48 …',
-            sub:'Remember: X divisible by sixteen means one edge. Z divisible by sixteen means the other edge. Both together means a corner.'
-          }
-        ];
+  const scenes = [
+    {
+      start:0, end:7, tag:'BEDROCK EDITION',
+      title:'Find chunk borders with coordinates',
+      body:'Bedrock does not have Java’s F3+G overlay. Turn on Show Coordinates and watch X and Z.',
+      formula:'Use: X, Y, Z → ignore Y for borders',
+      sub:'In Minecraft Bedrock, there is no built-in F3+G chunk border overlay, so the reliable method is coordinates.'
+    },
+    {
+      start:7, end:15, tag:'STEP 1',
+      title:'A chunk is 16 × 16 blocks',
+      body:'Chunks are vertical columns. For borders on the ground, only the X and Z coordinates matter.',
+      formula:'One chunk: X 0–15 and Z 0–15',
+      sub:'A chunk is sixteen blocks wide and sixteen blocks long. Ignore the Y value; height does not tell you the border.'
+    },
+    {
+      start:15, end:26, tag:'STEP 2',
+      title:'Look for multiples of 16',
+      body:'When X reaches 16, 32, 48 and so on, you are on a chunk edge for the X direction.',
+      formula:'X ÷ 16 has no remainder → X border',
+      sub:'Walk while watching X. When X is divisible by sixteen, you have reached a chunk border in that direction.'
+    },
+    {
+      start:26, end:37, tag:'STEP 3',
+      title:'Do the same with Z',
+      body:'When Z reaches 16, 32, 48 and so on, you are on a chunk edge for the Z direction.',
+      formula:'Z ÷ 16 has no remainder → Z border',
+      sub:'Now check Z. If Z is divisible by sixteen, you are standing on the north or south edge of a chunk.'
+    },
+    {
+      start:37, end:48, tag:'STEP 4',
+      title:'Both divisible means a corner',
+      body:'If both X and Z are divisible by 16, four chunks meet at that point.',
+      formula:'X mod 16 = 0 and Z mod 16 = 0',
+      sub:'When both X and Z are divisible by sixteen, you are at a chunk corner where four chunks meet.'
+    },
+    {
+      start:48, end:61, tag:'NEGATIVE COORDINATES',
+      title:'Negative coordinates use the same pattern',
+      body:'The borders continue through zero: −32, −16, 0, 16, 32. A chunk can run from −16 to −1.',
+      formula:'… −32 | −16 | 0 | 16 | 32 …',
+      sub:'Negative coordinates are not special. The borders are still every sixteen blocks: minus thirty-two, minus sixteen, zero, sixteen.'
+    },
+    {
+      start:61, end:71, tag:'PRACTICAL METHOD',
+      title:'Fast method in-game',
+      body:'Find a multiple of 16 on X, then a multiple of 16 on Z. Mark the lines with blocks if you need a visible border.',
+      formula:'Example: X = 32 and Z = 48 → corner',
+      sub:'For a visible guide, stand on a multiple of sixteen, place marker blocks along that line, then count sixteen blocks to the next border.'
+    },
+    {
+      start:71, end:78, tag:'RECAP',
+      title:'The whole rule',
+      body:'X divisible by 16: X edge. Z divisible by 16: Z edge. Both divisible by 16: corner.',
+      formula:'16, 32, 48 … and −16, −32, −48 …',
+      sub:'Remember: X divisible by sixteen means one edge. Z divisible by sixteen means the other edge. Both together means a corner.'
+    }
+  ];
 
-        function ease(x){ return x<0 ? 0 : x>1 ? 1 : x*x*(3-2*x); }
-        function lerp(a,b,t){ return a+(b-a)*t; }
-        function clamp(x,a,b){ return Math.max(a, Math.min(b, x)); }
-        function fmt(sec){
-          sec = Math.max(0, sec|0);
-          const m = String(Math.floor(sec/60)).padStart(2,'0');
-          const s = String(sec%60).padStart(2,'0');
-          return `${m}:${s}`;
-        }
-        function sceneAt(t){ return scenes.findIndex(s => t >= s.start && t < s.end); }
-        function sceneProgress(scene,t){ return clamp((t - scene.start)/(scene.end-scene.start),0,1); }
+  function ease(x){ return x<0 ? 0 : x>1 ? 1 : x*x*(3-2*x); }
+  function lerp(a,b,t){ return a+(b-a)*t; }
+  function clamp(x,a,b){ return Math.max(a, Math.min(b, x)); }
+  function fmt(sec){
+    sec = Math.max(0, sec|0);
+    const m = String(Math.floor(sec/60)).padStart(2,'0');
+    const s = String(sec%60).padStart(2,'0');
+    return `${m}:${s}`;
+  }
+  function sceneAt(t){ return scenes.findIndex(s => t >= s.start && t < s.end); }
+  function sceneProgress(scene,t){ return clamp((t - scene.start)/(scene.end-scene.start),0,1); }
 
-        function worldToScreen(x,z, view){
-          return {
-            x: view.cx + (x - view.centerX) * view.scale,
-            y: view.cy + (z - view.centerZ) * view.scale
-          };
-        }
+  function worldToScreen(x,z, view){
+    return {
+      x: view.cx + (x - view.centerX) * view.scale,
+      y: view.cy + (z - view.centerZ) * view.scale
+    };
+  }
 
-        function drawBlockyBackground(){
-          const w = canvas.width, h = canvas.height;
-          const grad = ctx.createLinearGradient(0,0,w,h);
-          grad.addColorStop(0,'#1d3223');
-          grad.addColorStop(.55,'#142018');
-          grad.addColorStop(1,'#0c110e');
-          ctx.fillStyle = grad;
-          ctx.fillRect(0,0,w,h);
+  function drawBlockyBackground(){
+    const w = canvas.width, h = canvas.height;
+    const grad = ctx.createLinearGradient(0,0,w,h);
+    grad.addColorStop(0,'#1d3223');
+    grad.addColorStop(.55,'#142018');
+    grad.addColorStop(1,'#0c110e');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,w,h);
 
-          // decorative Minecraft-like hills
-          for(let i=0;i<24;i++){
-            const x = (i*91)%w;
-            const y = 80 + ((i*47)%180);
-            ctx.fillStyle = i%3===0 ? 'rgba(54,88,55,.28)' : 'rgba(41,68,48,.22)';
-            ctx.fillRect(x, y, 70, 34);
-            ctx.fillRect(x+22, y-22, 46, 22);
-          }
-        }
+    // decorative Minecraft-like hills
+    for(let i=0;i<24;i++){
+      const x = (i*91)%w;
+      const y = 80 + ((i*47)%180);
+      ctx.fillStyle = i%3===0 ? 'rgba(54,88,55,.28)' : 'rgba(41,68,48,.22)';
+      ctx.fillRect(x, y, 70, 34);
+      ctx.fillRect(x+22, y-22, 46, 22);
+    }
+  }
 
-        function drawGrid(view, opts={}){
-          const w = canvas.width, h = canvas.height;
-          const minX = Math.floor(view.centerX - view.cx/view.scale) - 4;
-          const maxX = Math.ceil(view.centerX + (w-view.cx)/view.scale) + 4;
-          const minZ = Math.floor(view.centerZ - view.cy/view.scale) - 4;
-          const maxZ = Math.ceil(view.centerZ + (h-view.cy)/view.scale) + 4;
+  function drawGrid(view, opts={}){
+    const w = canvas.width, h = canvas.height;
+    const minX = Math.floor(view.centerX - view.cx/view.scale) - 4;
+    const maxX = Math.ceil(view.centerX + (w-view.cx)/view.scale) + 4;
+    const minZ = Math.floor(view.centerZ - view.cy/view.scale) - 4;
+    const maxZ = Math.ceil(view.centerZ + (h-view.cy)/view.scale) + 4;
 
-          // grass base
-          ctx.save();
-          ctx.globalAlpha = .95;
-          ctx.fillStyle = '#23382a';
-          ctx.fillRect(0,0,w,h);
+    // grass base
+    ctx.save();
+    ctx.globalAlpha = .95;
+    ctx.fillStyle = '#23382a';
+    ctx.fillRect(0,0,w,h);
 
-          // alternating chunk fields
-          for(let cx = Math.floor(minX/16)*16; cx <= maxX; cx += 16){
-            for(let cz = Math.floor(minZ/16)*16; cz <= maxZ; cz += 16){
-              const a = worldToScreen(cx, cz, view);
-              const b = worldToScreen(cx+16, cz+16, view);
-              const alt = ((Math.floor(cx/16)+Math.floor(cz/16)) & 1) === 0;
-              ctx.fillStyle = alt ? 'rgba(85,134,76,.22)' : 'rgba(63,111,70,.22)';
-              ctx.fillRect(a.x, a.y, b.x-a.x, b.y-a.y);
-            }
-          }
+    // alternating chunk fields
+    for(let cx = Math.floor(minX/16)*16; cx <= maxX; cx += 16){
+      for(let cz = Math.floor(minZ/16)*16; cz <= maxZ; cz += 16){
+        const a = worldToScreen(cx, cz, view);
+        const b = worldToScreen(cx+16, cz+16, view);
+        const alt = ((Math.floor(cx/16)+Math.floor(cz/16)) & 1) === 0;
+        ctx.fillStyle = alt ? 'rgba(85,134,76,.22)' : 'rgba(63,111,70,.22)';
+        ctx.fillRect(a.x, a.y, b.x-a.x, b.y-a.y);
+      }
+    }
 
-          // normal grid lines
-          ctx.lineWidth = 1;
-          ctx.strokeStyle = 'rgba(208,229,194,.08)';
-          ctx.beginPath();
-          for(let x = minX; x <= maxX; x++){
-            const p1 = worldToScreen(x, minZ, view);
-            const p2 = worldToScreen(x, maxZ, view);
-            ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
-          }
-          for(let z = minZ; z <= maxZ; z++){
-            const p1 = worldToScreen(minX, z, view);
-            const p2 = worldToScreen(maxX, z, view);
-            ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
-          }
-          ctx.stroke();
+    // normal grid lines
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(208,229,194,.08)';
+    ctx.beginPath();
+    for(let x = minX; x <= maxX; x++){
+      const p1 = worldToScreen(x, minZ, view);
+      const p2 = worldToScreen(x, maxZ, view);
+      ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
+    }
+    for(let z = minZ; z <= maxZ; z++){
+      const p1 = worldToScreen(minX, z, view);
+      const p2 = worldToScreen(maxX, z, view);
+      ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
+    }
+    ctx.stroke();
 
-          // chunk borders
-          ctx.lineWidth = opts.thick ? 5 : 3;
-          ctx.strokeStyle = opts.chunkColor || 'rgba(233,247,223,.58)';
-          ctx.beginPath();
-          for(let x = Math.floor(minX/16)*16; x <= maxX; x += 16){
-            const p1 = worldToScreen(x, minZ, view);
-            const p2 = worldToScreen(x, maxZ, view);
-            ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
-          }
-          for(let z = Math.floor(minZ/16)*16; z <= maxZ; z += 16){
-            const p1 = worldToScreen(minX, z, view);
-            const p2 = worldToScreen(maxX, z, view);
-            ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
-          }
-          ctx.stroke();
+    // chunk borders
+    ctx.lineWidth = opts.thick ? 5 : 3;
+    ctx.strokeStyle = opts.chunkColor || 'rgba(233,247,223,.58)';
+    ctx.beginPath();
+    for(let x = Math.floor(minX/16)*16; x <= maxX; x += 16){
+      const p1 = worldToScreen(x, minZ, view);
+      const p2 = worldToScreen(x, maxZ, view);
+      ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
+    }
+    for(let z = Math.floor(minZ/16)*16; z <= maxZ; z += 16){
+      const p1 = worldToScreen(minX, z, view);
+      const p2 = worldToScreen(maxX, z, view);
+      ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
+    }
+    ctx.stroke();
 
-          drawAxes(view);
-          ctx.restore();
-        }
+    drawAxes(view);
+    ctx.restore();
+  }
 
-        function drawAxes(view){
-          const origin = worldToScreen(0,0,view);
-          ctx.save();
-          ctx.lineWidth = 3;
-          ctx.strokeStyle = 'rgba(112,199,255,.7)';
-          ctx.fillStyle = 'rgba(112,199,255,.95)';
-          // X axis
-          let p1 = worldToScreen(-64,0,view), p2 = worldToScreen(64,0,view);
-          ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
-          // Z axis
-          p1 = worldToScreen(0,-64,view); p2 = worldToScreen(0,64,view);
-          ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
-          ctx.font = '700 28px ui-monospace, monospace';
-          ctx.fillText('X →', origin.x + 160, origin.y - 12);
-          ctx.fillText('Z ↓', origin.x + 12, origin.y + 178);
-          ctx.restore();
-        }
+  function drawAxes(view){
+    const origin = worldToScreen(0,0,view);
+    ctx.save();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(112,199,255,.7)';
+    ctx.fillStyle = 'rgba(112,199,255,.95)';
+    // X axis
+    let p1 = worldToScreen(-64,0,view), p2 = worldToScreen(64,0,view);
+    ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+    // Z axis
+    p1 = worldToScreen(0,-64,view); p2 = worldToScreen(0,64,view);
+    ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+    ctx.font = '700 28px ui-monospace, monospace';
+    ctx.fillText('X →', origin.x + 160, origin.y - 12);
+    ctx.fillText('Z ↓', origin.x + 12, origin.y + 178);
+    ctx.restore();
+  }
 
-        function drawHighlightedLine(view, type, value, alpha=1){
-          ctx.save();
-          ctx.globalAlpha = alpha;
-          ctx.lineWidth = 11;
-          ctx.strokeStyle = '#ffd66b';
-          ctx.shadowColor = '#ffd66b';
-          ctx.shadowBlur = 18;
-          ctx.beginPath();
-          if(type === 'x'){
-            const p1 = worldToScreen(value, -80, view);
-            const p2 = worldToScreen(value, 80, view);
-            ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y);
-          } else {
-            const p1 = worldToScreen(-80, value, view);
-            const p2 = worldToScreen(80, value, view);
-            ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y);
-          }
-          ctx.stroke();
-          ctx.restore();
-        }
+  function drawHighlightedLine(view, type, value, alpha=1){
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.lineWidth = 11;
+    ctx.strokeStyle = '#ffd66b';
+    ctx.shadowColor = '#ffd66b';
+    ctx.shadowBlur = 18;
+    ctx.beginPath();
+    if(type === 'x'){
+      const p1 = worldToScreen(value, -80, view);
+      const p2 = worldToScreen(value, 80, view);
+      ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y);
+    } else {
+      const p1 = worldToScreen(-80, value, view);
+      const p2 = worldToScreen(80, value, view);
+      ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
 
-        function drawCorner(view,x,z,alpha=1){
-          const p = worldToScreen(x,z,view);
-          ctx.save();
-          ctx.globalAlpha = alpha;
-          ctx.strokeStyle = '#ff7a7a';
-          ctx.fillStyle = 'rgba(255,122,122,.18)';
-          ctx.lineWidth = 8;
-          ctx.shadowColor = '#ff7a7a';
-          ctx.shadowBlur = 22;
-          ctx.beginPath(); ctx.arc(p.x,p.y,30,0,Math.PI*2); ctx.fill(); ctx.stroke();
-          ctx.font = '900 28px ui-monospace, monospace';
-          ctx.fillStyle = '#fff';
-          ctx.fillText(`corner ${x}, ${z}`, p.x + 40, p.y - 34);
-          ctx.restore();
-        }
+  function drawCorner(view,x,z,alpha=1){
+    const p = worldToScreen(x,z,view);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = '#ff7a7a';
+    ctx.fillStyle = 'rgba(255,122,122,.18)';
+    ctx.lineWidth = 8;
+    ctx.shadowColor = '#ff7a7a';
+    ctx.shadowBlur = 22;
+    ctx.beginPath(); ctx.arc(p.x,p.y,30,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.font = '900 28px ui-monospace, monospace';
+    ctx.fillStyle = '#fff';
+    ctx.fillText(`corner ${x}, ${z}`, p.x + 40, p.y - 34);
+    ctx.restore();
+  }
 
-        function drawPlayer(view,x,z,label='Player'){
-          const p = worldToScreen(x,z,view);
-          ctx.save();
-          // shadow
-          ctx.fillStyle = 'rgba(0,0,0,.35)';
-          ctx.beginPath(); ctx.ellipse(p.x+8,p.y+12,28,16,0,0,Math.PI*2); ctx.fill();
-          // body marker
-          ctx.fillStyle = '#4fb3ff';
-          ctx.strokeStyle = '#e9f7ff';
-          ctx.lineWidth = 4;
-          ctx.beginPath(); ctx.arc(p.x,p.y,24,0,Math.PI*2); ctx.fill(); ctx.stroke();
-          ctx.fillStyle = '#082033';
-          ctx.fillRect(p.x-8,p.y-8,16,16);
-          ctx.font = '800 22px ui-sans-serif, system-ui';
-          ctx.fillStyle = 'white';
-          ctx.strokeStyle = 'rgba(0,0,0,.6)';
-          ctx.lineWidth = 5;
-          ctx.strokeText(label, p.x+32, p.y+6);
-          ctx.fillText(label, p.x+32, p.y+6);
-          ctx.restore();
-        }
+  function drawPlayer(view,x,z,label='Player'){
+    const p = worldToScreen(x,z,view);
+    ctx.save();
+    // shadow
+    ctx.fillStyle = 'rgba(0,0,0,.35)';
+    ctx.beginPath(); ctx.ellipse(p.x+8,p.y+12,28,16,0,0,Math.PI*2); ctx.fill();
+    // body marker
+    ctx.fillStyle = '#4fb3ff';
+    ctx.strokeStyle = '#e9f7ff';
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(p.x,p.y,24,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#082033';
+    ctx.fillRect(p.x-8,p.y-8,16,16);
+    ctx.font = '800 22px ui-sans-serif, system-ui';
+    ctx.fillStyle = 'white';
+    ctx.strokeStyle = 'rgba(0,0,0,.6)';
+    ctx.lineWidth = 5;
+    ctx.strokeText(label, p.x+32, p.y+6);
+    ctx.fillText(label, p.x+32, p.y+6);
+    ctx.restore();
+  }
 
-        function drawMarkerBlocks(view, t){
-          ctx.save();
-          const count = Math.floor(1 + 15*clamp(t,0,1));
-          for(let i=0;i<count;i++){
-            const p = worldToScreen(32, 48+i, view);
-            ctx.fillStyle = '#f3c45b';
-            ctx.strokeStyle = 'rgba(0,0,0,.35)';
-            ctx.lineWidth = 2;
-            ctx.fillRect(p.x-11,p.y-11,22,22);
-            ctx.strokeRect(p.x-11,p.y-11,22,22);
-          }
-          ctx.restore();
-        }
+  function drawMarkerBlocks(view, t){
+    ctx.save();
+    const count = Math.floor(1 + 15*clamp(t,0,1));
+    for(let i=0;i<count;i++){
+      const p = worldToScreen(32, 48+i, view);
+      ctx.fillStyle = '#f3c45b';
+      ctx.strokeStyle = 'rgba(0,0,0,.35)';
+      ctx.lineWidth = 2;
+      ctx.fillRect(p.x-11,p.y-11,22,22);
+      ctx.strokeRect(p.x-11,p.y-11,22,22);
+    }
+    ctx.restore();
+  }
 
-        function drawCoordinateLabels(view, values){
-          ctx.save();
-          ctx.font = '700 22px ui-monospace, monospace';
-          ctx.textAlign='center';
-          ctx.textBaseline='middle';
-          for(const v of values){
-            const px = worldToScreen(v, view.centerZ, view);
-            ctx.fillStyle = v % 16 === 0 ? '#fff6cf' : 'rgba(255,255,255,.55)';
-            ctx.fillText(String(v), px.x, canvas.height - 90);
-            const pz = worldToScreen(view.centerX, v, view);
-            ctx.fillText(String(v), 92, pz.y);
-          }
-          ctx.restore();
-        }
+  function drawCoordinateLabels(view, values){
+    ctx.save();
+    ctx.font = '700 22px ui-monospace, monospace';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    for(const v of values){
+      const px = worldToScreen(v, view.centerZ, view);
+      ctx.fillStyle = v % 16 === 0 ? '#fff6cf' : 'rgba(255,255,255,.55)';
+      ctx.fillText(String(v), px.x, canvas.height - 90);
+      const pz = worldToScreen(view.centerX, v, view);
+      ctx.fillText(String(v), 92, pz.y);
+    }
+    ctx.restore();
+  }
 
-        function drawSettingsPanel(progress){
-          const a = ease(progress);
-          ctx.save();
-          ctx.translate(940, lerp(920,170,a));
-          ctx.fillStyle='rgba(15,23,18,.92)';
-          roundRect(0,0,470,420,24); ctx.fill();
-          ctx.strokeStyle='rgba(233,247,223,.18)'; ctx.lineWidth=2; ctx.stroke();
-          ctx.fillStyle='#f2f6ef'; ctx.font='900 42px ui-sans-serif, system-ui'; ctx.fillText('Game settings',34,62);
-          ctx.fillStyle='#b9c6b4'; ctx.font='700 28px ui-sans-serif, system-ui'; ctx.fillText('World Options',34,132);
-          // toggle row
-          ctx.fillStyle='rgba(255,255,255,.08)'; roundRect(24,170,422,86,18); ctx.fill();
-          ctx.fillStyle='#f2f6ef'; ctx.font='800 28px ui-sans-serif, system-ui'; ctx.fillText('Show Coordinates',50,225);
-          // toggle
-          const on = clamp((progress-.45)/.35,0,1);
-          ctx.fillStyle = on > .5 ? '#78d36d' : '#56645a';
-          roundRect(330,193,86,40,20); ctx.fill();
-          ctx.fillStyle='#fff';
-          ctx.beginPath(); ctx.arc(350 + 46*ease(on),213,16,0,Math.PI*2); ctx.fill();
-          ctx.fillStyle='#b9c6b4'; ctx.font='600 22px ui-sans-serif, system-ui'; ctx.fillText('Position appears in the top-left in game.',34,326);
-          ctx.restore();
-        }
+  function drawSettingsPanel(progress){
+    const a = ease(progress);
+    ctx.save();
+    ctx.translate(940, lerp(920,170,a));
+    ctx.fillStyle='rgba(15,23,18,.92)';
+    roundRect(0,0,470,420,24); ctx.fill();
+    ctx.strokeStyle='rgba(233,247,223,.18)'; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle='#f2f6ef'; ctx.font='900 42px ui-sans-serif, system-ui'; ctx.fillText('Game settings',34,62);
+    ctx.fillStyle='#b9c6b4'; ctx.font='700 28px ui-sans-serif, system-ui'; ctx.fillText('World Options',34,132);
+    // toggle row
+    ctx.fillStyle='rgba(255,255,255,.08)'; roundRect(24,170,422,86,18); ctx.fill();
+    ctx.fillStyle='#f2f6ef'; ctx.font='800 28px ui-sans-serif, system-ui'; ctx.fillText('Show Coordinates',50,225);
+    // toggle
+    const on = clamp((progress-.45)/.35,0,1);
+    ctx.fillStyle = on > .5 ? '#78d36d' : '#56645a';
+    roundRect(330,193,86,40,20); ctx.fill();
+    ctx.fillStyle='#fff';
+    ctx.beginPath(); ctx.arc(350 + 46*ease(on),213,16,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#b9c6b4'; ctx.font='600 22px ui-sans-serif, system-ui'; ctx.fillText('Position appears in the top-left in game.',34,326);
+    ctx.restore();
+  }
 
-        function roundRect(x,y,w,h,r){
-          ctx.beginPath();
-          ctx.moveTo(x+r,y);
-          ctx.arcTo(x+w,y,x+w,y+h,r);
-          ctx.arcTo(x+w,y+h,x,y+h,r);
-          ctx.arcTo(x,y+h,x,y,r);
-          ctx.arcTo(x,y,x+w,y,r);
-          ctx.closePath();
-        }
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
 
-        function drawNumberRuler(view, min=-48, max=48){
-          ctx.save();
-          ctx.font='700 24px ui-monospace, monospace';
-          ctx.textAlign='center';
-          for(let x = min; x<=max; x+=16){
-            const p = worldToScreen(x, view.centerZ-23, view);
-            ctx.fillStyle='#fff6cf';
-            ctx.fillText(String(x), p.x, p.y);
-            ctx.strokeStyle='rgba(255,214,107,.8)'; ctx.lineWidth=4;
-            ctx.beginPath(); ctx.moveTo(p.x, p.y+10); ctx.lineTo(p.x, p.y+36); ctx.stroke();
-          }
-          ctx.restore();
-        }
+  function drawNumberRuler(view, min=-48, max=48){
+    ctx.save();
+    ctx.font='700 24px ui-monospace, monospace';
+    ctx.textAlign='center';
+    for(let x = min; x<=max; x+=16){
+      const p = worldToScreen(x, view.centerZ-23, view);
+      ctx.fillStyle='#fff6cf';
+      ctx.fillText(String(x), p.x, p.y);
+      ctx.strokeStyle='rgba(255,214,107,.8)'; ctx.lineWidth=4;
+      ctx.beginPath(); ctx.moveTo(p.x, p.y+10); ctx.lineTo(p.x, p.y+36); ctx.stroke();
+    }
+    ctx.restore();
+  }
 
-        function getState(t){
-          let x=12,z=12, centerX=16, centerZ=16, scale=24;
-          const i = sceneAt(t);
-          const s = scenes[Math.max(0,i)];
-          const p = s ? sceneProgress(s,t) : 0;
-          let extra = {};
+  function getState(t){
+    let x=12,z=12, centerX=16, centerZ=16, scale=24;
+    const i = sceneAt(t);
+    const s = scenes[Math.max(0,i)];
+    const p = s ? sceneProgress(s,t) : 0;
+    let extra = {};
 
-          if(i <= 0){ x=12; z=12; centerX=12; centerZ=12; scale=22; extra.settings = sceneProgress(s,t); }
-          if(i === 1){ x=8; z=8; centerX=12; centerZ=12; scale=27; extra.highlightChunk=true; }
-          if(i === 2){ x=lerp(12,19,ease(p)); z=12; centerX=16; centerZ=12; scale=33; extra.highlightX=16; }
-          if(i === 3){ x=19; z=lerp(27,35,ease(p)); centerX=19; centerZ=32; scale=31; extra.highlightZ=32; }
-          if(i === 4){ x=lerp(19,32,ease(p)); z=lerp(35,32,ease(p)); centerX=32; centerZ=32; scale=27; extra.highlightX=32; extra.highlightZ=32; extra.corner=[32,32]; }
-          if(i === 5){ x=lerp(-3,-17,ease(p)); z=-8; centerX=-16; centerZ=-8; scale=25; extra.highlightX = p < .55 ? 0 : -16; extra.negative=true; }
-          if(i === 6){ x=32; z=48; centerX=40; centerZ=54; scale=24; extra.highlightX=32; extra.highlightZ=48; extra.corner=[32,48]; extra.markers=p; }
-          if(i === 7){ x=32; z=48; centerX=32; centerZ=48; scale=22; extra.highlightX=32; extra.highlightZ=48; extra.corner=[32,48]; extra.markers=1; }
-          return {x,z, view:{centerX,centerZ,scale,cx:820,cy:475}, extra};
-        }
+    if(i <= 0){ x=12; z=12; centerX=12; centerZ=12; scale=22; extra.settings = sceneProgress(s,t); }
+    if(i === 1){ x=8; z=8; centerX=12; centerZ=12; scale=27; extra.highlightChunk=true; }
+    if(i === 2){ x=lerp(12,19,ease(p)); z=12; centerX=16; centerZ=12; scale=33; extra.highlightX=16; }
+    if(i === 3){ x=19; z=lerp(27,35,ease(p)); centerX=19; centerZ=32; scale=31; extra.highlightZ=32; }
+    if(i === 4){ x=lerp(19,32,ease(p)); z=lerp(35,32,ease(p)); centerX=32; centerZ=32; scale=27; extra.highlightX=32; extra.highlightZ=32; extra.corner=[32,32]; }
+    if(i === 5){ x=lerp(-3,-17,ease(p)); z=-8; centerX=-16; centerZ=-8; scale=25; extra.highlightX = p < .55 ? 0 : -16; extra.negative=true; }
+    if(i === 6){ x=32; z=48; centerX=40; centerZ=54; scale=24; extra.highlightX=32; extra.highlightZ=48; extra.corner=[32,48]; extra.markers=p; }
+    if(i === 7){ x=32; z=48; centerX=32; centerZ=48; scale=22; extra.highlightX=32; extra.highlightZ=48; extra.corner=[32,48]; extra.markers=1; }
+    return {x,z, view:{centerX,centerZ,scale,cx:820,cy:475}, extra};
+  }
 
-        function draw(t){
-          drawBlockyBackground();
-          const {x,z,view,extra} = getState(t);
-          drawGrid(view, {thick: true});
+  function draw(t){
+    drawBlockyBackground();
+    const {x,z,view,extra} = getState(t);
+    drawGrid(view, {thick: true});
 
-          if(extra.highlightChunk){
-            const a = worldToScreen(0,0,view), b = worldToScreen(16,16,view);
-            ctx.save();
-            ctx.fillStyle='rgba(255,214,107,.18)';
-            ctx.strokeStyle='#ffd66b'; ctx.lineWidth=7; ctx.shadowColor='#ffd66b'; ctx.shadowBlur=16;
-            ctx.fillRect(a.x,a.y,b.x-a.x,b.y-a.y); ctx.strokeRect(a.x,a.y,b.x-a.x,b.y-a.y);
-            ctx.fillStyle='#fff'; ctx.font='900 34px ui-sans-serif, system-ui';
-            ctx.fillText('16 blocks', (a.x+b.x)/2-75, b.y+45);
-            ctx.save(); ctx.translate(a.x-45,(a.y+b.y)/2+75); ctx.rotate(-Math.PI/2); ctx.fillText('16 blocks',0,0); ctx.restore();
-            ctx.restore();
-          }
-          if(extra.highlightX !== undefined) drawHighlightedLine(view,'x',extra.highlightX,1);
-          if(extra.highlightZ !== undefined) drawHighlightedLine(view,'z',extra.highlightZ,1);
-          if(extra.corner) drawCorner(view, extra.corner[0], extra.corner[1], 1);
-          if(extra.markers !== undefined) drawMarkerBlocks(view, extra.markers);
-          if(extra.negative){
-            drawNumberRuler(view,-48,32);
-            drawChunkRangeCallout(view);
-          }
-          drawCoordinateLabels(view, [-48,-32,-16,0,16,32,48,64]);
-          drawPlayer(view,x,z,'You');
-          if(extra.settings) drawSettingsPanel(extra.settings);
+    if(extra.highlightChunk){
+      const a = worldToScreen(0,0,view), b = worldToScreen(16,16,view);
+      ctx.save();
+      ctx.fillStyle='rgba(255,214,107,.18)';
+      ctx.strokeStyle='#ffd66b'; ctx.lineWidth=7; ctx.shadowColor='#ffd66b'; ctx.shadowBlur=16;
+      ctx.fillRect(a.x,a.y,b.x-a.x,b.y-a.y); ctx.strokeRect(a.x,a.y,b.x-a.x,b.y-a.y);
+      ctx.fillStyle='#fff'; ctx.font='900 34px ui-sans-serif, system-ui';
+      ctx.fillText('16 blocks', (a.x+b.x)/2-75, b.y+45);
+      ctx.save(); ctx.translate(a.x-45,(a.y+b.y)/2+75); ctx.rotate(-Math.PI/2); ctx.fillText('16 blocks',0,0); ctx.restore();
+      ctx.restore();
+    }
+    if(extra.highlightX !== undefined) drawHighlightedLine(view,'x',extra.highlightX,1);
+    if(extra.highlightZ !== undefined) drawHighlightedLine(view,'z',extra.highlightZ,1);
+    if(extra.corner) drawCorner(view, extra.corner[0], extra.corner[1], 1);
+    if(extra.markers !== undefined) drawMarkerBlocks(view, extra.markers);
+    if(extra.negative){
+      drawNumberRuler(view,-48,32);
+      drawChunkRangeCallout(view);
+    }
+    drawCoordinateLabels(view, [-48,-32,-16,0,16,32,48,64]);
+    drawPlayer(view,x,z,'You');
+    if(extra.settings) drawSettingsPanel(extra.settings);
 
-          // overlay vignette for subtitle readability
-          const grad = ctx.createLinearGradient(0,650,0,900);
-          grad.addColorStop(0,'rgba(0,0,0,0)');
-          grad.addColorStop(1,'rgba(0,0,0,.38)');
-          ctx.fillStyle = grad; ctx.fillRect(0,620,1600,280);
+    // overlay vignette for subtitle readability
+    const grad = ctx.createLinearGradient(0,650,0,900);
+    grad.addColorStop(0,'rgba(0,0,0,0)');
+    grad.addColorStop(1,'rgba(0,0,0,.38)');
+    ctx.fillStyle = grad; ctx.fillRect(0,620,1600,280);
 
-          const xi = Math.floor(x);
-          const zi = Math.floor(z);
-          positionEl.innerHTML = `<small>Show Coordinates</small>Position: ${xi}, 64, ${zi}`;
-        }
+    const xi = Math.floor(x);
+    const zi = Math.floor(z);
+    positionEl.innerHTML = `<small>Show Coordinates</small>Position: ${xi}, 64, ${zi}`;
+  }
 
-        function drawChunkRangeCallout(view){
-          const a = worldToScreen(-16,-18,view), b=worldToScreen(0,-2,view);
-          ctx.save();
-          ctx.fillStyle='rgba(120,211,109,.14)';
-          ctx.strokeStyle='rgba(120,211,109,.9)'; ctx.lineWidth=5;
-          ctx.fillRect(a.x,a.y,b.x-a.x,b.y-a.y); ctx.strokeRect(a.x,a.y,b.x-a.x,b.y-a.y);
-          ctx.fillStyle='#f2f6ef'; ctx.font='900 26px ui-sans-serif, system-ui';
-          ctx.fillText('chunk X: −16 to −1', a.x+12, a.y-16);
-          ctx.restore();
-        }
+  function drawChunkRangeCallout(view){
+    const a = worldToScreen(-16,-18,view), b=worldToScreen(0,-2,view);
+    ctx.save();
+    ctx.fillStyle='rgba(120,211,109,.14)';
+    ctx.strokeStyle='rgba(120,211,109,.9)'; ctx.lineWidth=5;
+    ctx.fillRect(a.x,a.y,b.x-a.x,b.y-a.y); ctx.strokeRect(a.x,a.y,b.x-a.x,b.y-a.y);
+    ctx.fillStyle='#f2f6ef'; ctx.font='900 26px ui-sans-serif, system-ui';
+    ctx.fillText('chunk X: −16 to −1', a.x+12, a.y-16);
+    ctx.restore();
+  }
 
-        function updateText(t){
-          const idx = sceneAt(t);
-          if(idx === lastSceneIndex) return;
-          lastSceneIndex = idx;
-          const s = scenes[idx] || scenes[scenes.length-1];
-          tag.textContent = s.tag;
-          card.innerHTML = `<h2>${s.title}</h2><p>${s.body}</p><span class="formula">${s.formula}</span>`;
-          subtitle.textContent = s.sub;
-        }
+  function updateText(t){
+    const idx = sceneAt(t);
+    if(idx === lastSceneIndex) return;
+    lastSceneIndex = idx;
+    const s = scenes[idx] || scenes[scenes.length-1];
+    tag.textContent = s.tag;
+    card.innerHTML = `<h2>${s.title}</h2><p>${s.body}</p><span class="formula">${s.formula}</span>`;
+    subtitle.textContent = s.sub;
+  }
 
-        function tick(now){
-          if(playing){
-            current = (now - startedAt)/1000;
-            if(current >= DURATION){ current = DURATION; playing = false; playBtn.textContent='Play'; }
-          }
-          updateText(current);
-          draw(current);
-          scrub.value = current.toFixed(2);
-          timeEl.textContent = `${fmt(current)} / ${fmt(DURATION)}`;
-          requestAnimationFrame(tick);
-        }
+  function tick(now){
+    if(playing){
+      current = (now - startedAt)/1000;
+      if(current >= DURATION){ current = DURATION; playing = false; playBtn.textContent='Play'; }
+    }
+    updateText(current);
+    draw(current);
+    scrub.value = current.toFixed(2);
+    timeEl.textContent = `${fmt(current)} / ${fmt(DURATION)}`;
+    requestAnimationFrame(tick);
+  }
 
-        playBtn.addEventListener('click', () => {
-          playing = !playing;
-          if(playing){ startedAt = performance.now() - current*1000; playBtn.textContent='Pause'; }
-          else { pausedAt = current; playBtn.textContent='Play'; }
-        });
-        restartBtn.addEventListener('click', () => {
-          current = 0; lastSceneIndex = -1; playing = true; startedAt = performance.now(); playBtn.textContent='Pause';
-        });
-        scrub.addEventListener('input', () => {
-          current = Number(scrub.value); startedAt = performance.now() - current*1000; lastSceneIndex=-1;
-        });
+  playBtn.addEventListener('click', () => {
+    playing = !playing;
+    if(playing){ startedAt = performance.now() - current*1000; playBtn.textContent='Pause'; }
+    else { pausedAt = current; playBtn.textContent='Play'; }
+  });
+  restartBtn.addEventListener('click', () => {
+    current = 0; lastSceneIndex = -1; playing = true; startedAt = performance.now(); playBtn.textContent='Pause';
+  });
+  scrub.addEventListener('input', () => {
+    current = Number(scrub.value); startedAt = performance.now() - current*1000; lastSceneIndex=-1;
+  });
 
-        requestAnimationFrame(tick);
-      })();
-    </script>
-  </body>
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
 </html>
