@@ -1,0 +1,1299 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>RPS: Secret Arena Duel</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101218;
+      --panel: #171b25;
+      --panel-2: #202638;
+      --text: #f2f4fa;
+      --muted: #aeb6c8;
+      --line: #333b51;
+      --accent: #f6c453;
+      --p1: #ff766c;
+      --p2: #72a7ff;
+      --spark: #b58cff;
+      --ok: #83e6a1;
+      --danger: #ff8a8a;
+      --shadow: 0 18px 60px rgb(0 0 0 / .36);
+      --radius: 22px;
+      --tap: 52px;
+      font-family: ui-rounded, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+      margin: 0;
+      background:
+        radial-gradient(circle at 10% 0%, rgb(246 196 83 / .18), transparent 30rem),
+        radial-gradient(circle at 90% 20%, rgb(114 167 255 / .13), transparent 26rem),
+        radial-gradient(circle at 50% 100%, rgb(181 140 255 / .12), transparent 28rem),
+        var(--bg);
+      color: var(--text);
+    }
+
+    body {
+      display: grid;
+      place-items: stretch;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      min-height: var(--tap);
+      padding: .9rem 1.1rem;
+      background: var(--panel-2);
+      color: var(--text);
+      font-weight: 850;
+      touch-action: manipulation;
+      box-shadow: inset 0 0 0 1px rgb(255 255 255 / .06);
+    }
+
+    button:focus-visible,
+    input:focus-visible {
+      outline: 4px solid white;
+      outline-offset: 3px;
+    }
+
+    button:disabled {
+      opacity: .42;
+    }
+
+    .app {
+      width: min(100%, 34rem);
+      min-height: 100svh;
+      margin-inline: auto;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 1rem;
+      padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+    }
+
+    header {
+      display: grid;
+      gap: .75rem;
+    }
+
+    .topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(1.35rem, 6vw, 2.2rem);
+      line-height: .95;
+      letter-spacing: -.04em;
+    }
+
+    .round-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .45rem .75rem;
+      border-radius: 999px;
+      background: rgb(255 255 255 / .07);
+      color: var(--muted);
+      font-size: .86rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .scoreboard {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: stretch;
+      gap: .5rem;
+    }
+
+    .score {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: .75rem;
+      background: rgb(255 255 255 / .04);
+      display: grid;
+      gap: .25rem;
+    }
+
+    .score strong {
+      font-size: 1.8rem;
+      line-height: 1;
+    }
+
+    .score span {
+      color: var(--muted);
+      font-size: .82rem;
+      font-weight: 760;
+      overflow-wrap: anywhere;
+    }
+
+    .score .sparkline {
+      color: var(--spark);
+      font-size: .86rem;
+    }
+
+    .score.p1 strong {
+      color: var(--p1);
+    }
+
+    .score.p2 {
+      text-align: right;
+    }
+
+    .score.p2 strong {
+      color: var(--p2);
+    }
+
+    .vs {
+      align-self: center;
+      color: var(--muted);
+      font-weight: 950;
+    }
+
+    main {
+      display: grid;
+      align-content: center;
+      gap: 1rem;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 1rem;
+      background: linear-gradient(180deg, rgb(255 255 255 / .06), rgb(255 255 255 / .03)), var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .start-card {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .field-grid {
+      display: grid;
+      gap: .75rem;
+    }
+
+    label {
+      display: grid;
+      gap: .35rem;
+      color: var(--muted);
+      font-weight: 820;
+      font-size: .9rem;
+    }
+
+    input {
+      width: 100%;
+      min-height: var(--tap);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: .8rem 1rem;
+      background: rgb(0 0 0 / .24);
+      color: var(--text);
+    }
+
+    .primary {
+      background: linear-gradient(180deg, #ffe08f, var(--accent));
+      color: #231a00;
+      box-shadow: 0 10px 26px rgb(246 196 83 / .24);
+    }
+
+    .danger {
+      background: rgb(255 138 138 / .13);
+      color: #ffd0d0;
+    }
+
+    .ghost {
+      background: transparent;
+      border: 1px solid var(--line);
+    }
+
+    .secret {
+      display: grid;
+      place-items: center;
+      gap: 1.15rem;
+      min-height: 30rem;
+      text-align: center;
+      background:
+        linear-gradient(135deg, rgb(255 255 255 / .08), transparent 45%),
+        repeating-linear-gradient(45deg, rgb(255 255 255 / .045) 0 1px, transparent 1px 16px),
+        var(--panel);
+    }
+
+    .secret-symbol {
+      width: 7.4rem;
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      border-radius: 32px;
+      background: rgb(0 0 0 / .26);
+      font-size: 3.8rem;
+      box-shadow: inset 0 0 0 1px rgb(255 255 255 / .08);
+    }
+
+    .secret h2 {
+      font-size: clamp(1.55rem, 7vw, 2.35rem);
+      line-height: 1;
+      letter-spacing: -.04em;
+    }
+
+    .secret p,
+    .start-card p {
+      color: var(--muted);
+      max-width: 27rem;
+      line-height: 1.45;
+    }
+
+    .choice-screen {
+      display: grid;
+      gap: .9rem;
+    }
+
+    .player-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+      padding: .8rem;
+      border-radius: 18px;
+      background: rgb(255 255 255 / .06);
+    }
+
+    .player-banner strong {
+      overflow-wrap: anywhere;
+    }
+
+    .player-banner small {
+      display: block;
+      color: var(--muted);
+      font-weight: 720;
+      margin-top: .15rem;
+      line-height: 1.3;
+    }
+
+    .player-tag {
+      padding: .3rem .55rem;
+      border-radius: 999px;
+      color: #170b0b;
+      font-size: .78rem;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .player-tag.p1 {
+      background: var(--p1);
+    }
+
+    .player-tag.p2 {
+      background: var(--p2);
+    }
+
+    .challenge {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: .75rem;
+      align-items: center;
+      padding: .8rem;
+      border-radius: 18px;
+      background: rgb(246 196 83 / .1);
+      border: 1px solid rgb(246 196 83 / .28);
+    }
+
+    .challenge .big {
+      width: 3.4rem;
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      border-radius: 18px;
+      background: rgb(0 0 0 / .24);
+      font-size: 1.9rem;
+    }
+
+    .challenge p {
+      color: var(--muted);
+      line-height: 1.35;
+      font-weight: 700;
+    }
+
+    .section {
+      display: grid;
+      gap: .65rem;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: baseline;
+      color: var(--muted);
+      font-size: .84rem;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+    }
+
+    .moves {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: .55rem;
+    }
+
+    .move,
+    .lane,
+    .gambit {
+      border-radius: 20px;
+      text-align: left;
+      padding: .8rem;
+      min-height: 6.8rem;
+      display: grid;
+      align-content: space-between;
+      gap: .35rem;
+      position: relative;
+    }
+
+    .move[aria-pressed="true"],
+    .lane[aria-pressed="true"],
+    .gambit[aria-pressed="true"] {
+      outline: 3px solid var(--accent);
+      background: rgb(246 196 83 / .14);
+    }
+
+    .move .icon,
+    .lane .icon,
+    .gambit .icon {
+      font-size: 2rem;
+      line-height: 1;
+    }
+
+    .move .name,
+    .lane .name,
+    .gambit .name {
+      display: block;
+      font-size: .93rem;
+      font-weight: 950;
+    }
+
+    .count,
+    .cost {
+      position: absolute;
+      inset: .55rem .55rem auto auto;
+      min-width: 1.65rem;
+      height: 1.65rem;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: rgb(0 0 0 / .35);
+      color: var(--text);
+      font-size: .8rem;
+      font-weight: 900;
+    }
+
+    .cost {
+      color: var(--spark);
+    }
+
+    .board,
+    .gambits {
+      display: grid;
+      gap: .55rem;
+    }
+
+    .lane {
+      width: 100%;
+      min-height: 6.4rem;
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      text-align: left;
+      border-radius: 20px;
+    }
+
+    .lane .icon {
+      font-size: 2.2rem;
+    }
+
+    .lane small,
+    .gambit small {
+      display: block;
+      margin-top: .18rem;
+      color: var(--muted);
+      font-weight: 720;
+      line-height: 1.25;
+    }
+
+    .gambits {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .gambit {
+      min-height: 6.2rem;
+    }
+
+    .sparkbox {
+      border-radius: 18px;
+      padding: .7rem .8rem;
+      background: rgb(181 140 255 / .12);
+      border: 1px solid rgb(181 140 255 / .25);
+      color: #e7d9ff;
+      font-weight: 780;
+      line-height: 1.35;
+    }
+
+    .actions {
+      display: grid;
+      gap: .7rem;
+    }
+
+    .reveal {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .result {
+      display: grid;
+      gap: .75rem;
+      text-align: center;
+    }
+
+    .result-title {
+      font-size: clamp(1.7rem, 8vw, 2.5rem);
+      line-height: 1;
+      letter-spacing: -.05em;
+    }
+
+    .duel {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: .6rem;
+      align-items: stretch;
+    }
+
+    .duel-card {
+      border-radius: 20px;
+      padding: .8rem;
+      background: rgb(0 0 0 / .22);
+      border: 1px solid var(--line);
+      display: grid;
+      gap: .45rem;
+      align-content: start;
+    }
+
+    .duel-card:nth-child(3) {
+      text-align: right;
+    }
+
+    .played {
+      font-size: 2.4rem;
+      line-height: 1;
+    }
+
+    .duel-card strong {
+      overflow-wrap: anywhere;
+    }
+
+    .duel-card small {
+      color: var(--muted);
+      font-weight: 750;
+      line-height: 1.3;
+    }
+
+    .notes {
+      display: grid;
+      gap: .45rem;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+
+    .notes li {
+      padding: .65rem .75rem;
+      border-radius: 14px;
+      background: rgb(255 255 255 / .055);
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .footer-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .7rem;
+    }
+
+    details {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: .8rem;
+      background: rgb(0 0 0 / .18);
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    details ul {
+      margin: .7rem 0 0;
+      padding-inline-start: 1.2rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    footer {
+      color: var(--muted);
+      font-size: .78rem;
+      text-align: center;
+      line-height: 1.35;
+    }
+
+    @media (min-height: 780px) {
+      .board,
+      .gambits {
+        gap: .7rem;
+      }
+
+      .lane {
+        min-height: 7.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="topline">
+        <h1>Secret Arena Duel</h1>
+        <div class="round-pill" id="roundPill">Round 1 / 6</div>
+      </div>
+
+      <div class="scoreboard" aria-label="Score and sparks">
+        <div class="score p1">
+          <span id="p1ScoreName">Player 1</span>
+          <strong id="p1Score">0</strong>
+          <span class="sparkline" id="p1Sparks">✦ 2</span>
+        </div>
+        <div class="vs" aria-hidden="true">VS</div>
+        <div class="score p2">
+          <span id="p2ScoreName">Player 2</span>
+          <strong id="p2Score">0</strong>
+          <span class="sparkline" id="p2Sparks">✦ 2</span>
+        </div>
+      </div>
+    </header>
+
+    <main id="appMain" aria-live="polite"></main>
+
+    <footer>
+      RPS is unchanged. The challenger chooses the arena lane. The responder fights on that same lane.
+    </footer>
+  </div>
+
+  <script>
+    const MOVES = {
+      rock: { icon: "🪨", name: "Rock", beats: "scissors" },
+      paper: { icon: "📄", name: "Paper", beats: "rock" },
+      scissors: { icon: "✂️", name: "Scissors", beats: "paper" }
+    };
+
+    const TILE_LIBRARY = [
+      {
+        id: "crag",
+        icon: "⛰️",
+        name: "Crag",
+        text: "Rock wins here score +1."
+      },
+      {
+        id: "press",
+        icon: "📰",
+        name: "Printing Press",
+        text: "Paper wins here score +1."
+      },
+      {
+        id: "shears",
+        icon: "🧵",
+        name: "Tailor Shop",
+        text: "Scissors wins here score +1."
+      },
+      {
+        id: "vault",
+        icon: "💎",
+        name: "Vault",
+        text: "Any win here scores +1."
+      },
+      {
+        id: "garden",
+        icon: "🕊️",
+        name: "Peace Garden",
+        text: "On a tie, both players gain +1 spark."
+      },
+      {
+        id: "spring",
+        icon: "🔁",
+        name: "Spring Floor",
+        text: "Loser takes their card back."
+      },
+      {
+        id: "foundry",
+        icon: "🔥",
+        name: "Foundry",
+        text: "Winner gains +1 spark."
+      },
+      {
+        id: "mirror",
+        icon: "🪞",
+        name: "Mirror Gate",
+        text: "On a tie, both take their card back."
+      }
+    ];
+
+    const GAMBITS = {
+      none: {
+        icon: "—",
+        name: "No gambit",
+        cost: 0,
+        text: "Save your sparks."
+      },
+      bet: {
+        icon: "⭐",
+        name: "Bet",
+        cost: 1,
+        text: "If you win, score +1."
+      },
+      guard: {
+        icon: "🛡️",
+        name: "Guard",
+        cost: 1,
+        text: "If you lose, take your card back."
+      },
+      surge: {
+        icon: "⚡",
+        name: "Surge",
+        cost: 2,
+        text: "If you win, score +2. If you lose, opponent gains +1 spark."
+      }
+    };
+
+    const state = {
+      phase: "start",
+      round: 1,
+      maxRounds: 6,
+      names: { 1: "Player 1", 2: "Player 2" },
+      scores: { 1: 0, 2: 0 },
+      sparks: { 1: 2, 2: 2 },
+      hands: {
+        1: { rock: 2, paper: 2, scissors: 2 },
+        2: { rock: 2, paper: 2, scissors: 2 }
+      },
+      board: [],
+      choices: {
+        1: { move: null, lane: null, gambit: "none" },
+        2: { move: null, lane: null, gambit: "none" }
+      },
+      challenger: 1,
+      currentPlayer: 1,
+      result: null
+    };
+
+    const main = document.querySelector("#appMain");
+
+    function $(selector) {
+      return document.querySelector(selector);
+    }
+
+    function shuffle(array) {
+      return [...array].sort(() => Math.random() - 0.5);
+    }
+
+    function makeBoard() {
+      state.board = shuffle(TILE_LIBRARY).slice(0, 3);
+    }
+
+    function resetHands() {
+      state.hands = {
+        1: { rock: 2, paper: 2, scissors: 2 },
+        2: { rock: 2, paper: 2, scissors: 2 }
+      };
+    }
+
+    function resetChoices() {
+      const lane = state.choices[state.challenger]?.lane ?? null;
+      state.choices = {
+        1: { move: null, lane: null, gambit: "none" },
+        2: { move: null, lane: null, gambit: "none" }
+      };
+    }
+
+    function opponent(player) {
+      return player === 1 ? 2 : 1;
+    }
+
+    function roleFor(player) {
+      return player === state.challenger ? "Challenger" : "Responder";
+    }
+
+    function updateHeader() {
+      $("#roundPill").textContent = state.phase === "gameover"
+        ? "Final"
+        : `Round ${Math.min(state.round, state.maxRounds)} / ${state.maxRounds}`;
+
+      $("#p1ScoreName").textContent = state.names[1];
+      $("#p2ScoreName").textContent = state.names[2];
+      $("#p1Score").textContent = state.scores[1];
+      $("#p2Score").textContent = state.scores[2];
+      $("#p1Sparks").textContent = `✦ ${state.sparks[1]}`;
+      $("#p2Sparks").textContent = `✦ ${state.sparks[2]}`;
+    }
+
+    function setPhase(phase) {
+      state.phase = phase;
+      updateHeader();
+      render();
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
+
+    function startGame() {
+      const p1 = $("#p1Name").value.trim();
+      const p2 = $("#p2Name").value.trim();
+
+      state.names[1] = p1 || "Player 1";
+      state.names[2] = p2 || "Player 2";
+      state.round = 1;
+      state.scores = { 1: 0, 2: 0 };
+      state.sparks = { 1: 2, 2: 2 };
+      state.challenger = 1;
+      state.currentPlayer = 1;
+      resetHands();
+      makeBoard();
+      state.choices = {
+        1: { move: null, lane: null, gambit: "none" },
+        2: { move: null, lane: null, gambit: "none" }
+      };
+      state.result = null;
+      setPhase("secret");
+    }
+
+    function startChoice(player) {
+      state.currentPlayer = player;
+      setPhase("choice");
+    }
+
+    function selectMove(player, move) {
+      if (state.hands[player][move] <= 0) return;
+      state.choices[player].move = move;
+      render();
+    }
+
+    function selectLane(player, index) {
+      if (player !== state.challenger) return;
+      state.choices[player].lane = index;
+      state.choices[opponent(player)].lane = index;
+      render();
+    }
+
+    function selectGambit(player, key) {
+      const gambit = GAMBITS[key];
+      if (!gambit) return;
+      if (state.sparks[player] < gambit.cost) return;
+      state.choices[player].gambit = key;
+      render();
+    }
+
+    function finishChoice(player) {
+      const choice = state.choices[player];
+      const isChallenger = player === state.challenger;
+
+      if (!choice.move || choice.gambit === null) return;
+      if (isChallenger && choice.lane === null) return;
+
+      if (isChallenger) {
+        state.currentPlayer = opponent(player);
+        setPhase("secret");
+      } else {
+        setPhase("readyReveal");
+      }
+    }
+
+    function determineWinner(move1, move2) {
+      if (move1 === move2) return 0;
+      if (MOVES[move1].beats === move2) return 1;
+      return 2;
+    }
+
+    function tileByIndex(index) {
+      return state.board[index];
+    }
+
+    function spendGambits(notes) {
+      [1, 2].forEach(player => {
+        const gambit = GAMBITS[state.choices[player].gambit];
+        if (gambit.cost > 0) {
+          state.sparks[player] -= gambit.cost;
+          notes.push(`${state.names[player]} spent ${gambit.cost} spark on ${gambit.name}.`);
+        }
+      });
+    }
+
+    function resolveRound() {
+      const c1 = state.choices[1];
+      const c2 = state.choices[2];
+      const lane = c1.lane;
+      const tile = tileByIndex(lane);
+
+      state.hands[1][c1.move] -= 1;
+      state.hands[2][c2.move] -= 1;
+
+      const winner = determineWinner(c1.move, c2.move);
+      const points = { 1: 0, 2: 0 };
+      const sparkGain = { 1: 0, 2: 0 };
+      const cardReturn = { 1: false, 2: false };
+      const notes = [];
+
+      notes.push(`${state.names[state.challenger]} challenged on ${tile.icon} ${tile.name}.`);
+      notes.push(`${state.names[1]} played ${MOVES[c1.move].name}. ${state.names[2]} played ${MOVES[c2.move].name}.`);
+
+      spendGambits(notes);
+
+      if (winner === 0) {
+        notes.push("Tie. No one wins the throw.");
+
+        if (tile.id === "garden") {
+          sparkGain[1] += 1;
+          sparkGain[2] += 1;
+          notes.push("Peace Garden: both players gain +1 spark.");
+        }
+
+        if (tile.id === "mirror") {
+          cardReturn[1] = true;
+          cardReturn[2] = true;
+          notes.push("Mirror Gate: tie returns both cards.");
+        }
+      } else {
+        const loser = opponent(winner);
+        const winChoice = state.choices[winner];
+        const loseChoice = state.choices[loser];
+        const winMove = winChoice.move;
+
+        points[winner] += 1;
+        sparkGain[loser] += 1;
+        notes.push(`${state.names[winner]} wins the throw: +1 point.`);
+        notes.push(`${state.names[loser]} gains +1 comeback spark for losing.`);
+
+        if (tile.id === "crag" && winMove === "rock") {
+          points[winner] += 1;
+          notes.push("Crag bonus: Rock won here for +1.");
+        }
+
+        if (tile.id === "press" && winMove === "paper") {
+          points[winner] += 1;
+          notes.push("Printing Press bonus: Paper won here for +1.");
+        }
+
+        if (tile.id === "shears" && winMove === "scissors") {
+          points[winner] += 1;
+          notes.push("Tailor Shop bonus: Scissors won here for +1.");
+        }
+
+        if (tile.id === "vault") {
+          points[winner] += 1;
+          notes.push("Vault bonus: any win here scores +1.");
+        }
+
+        if (tile.id === "spring") {
+          cardReturn[loser] = true;
+          notes.push("Spring Floor: loser takes their card back.");
+        }
+
+        if (tile.id === "foundry") {
+          sparkGain[winner] += 1;
+          notes.push("Foundry: winner gains +1 spark.");
+        }
+
+        if (winChoice.gambit === "bet") {
+          points[winner] += 1;
+          notes.push(`${state.names[winner]}'s Bet paid off: +1 point.`);
+        }
+
+        if (winChoice.gambit === "surge") {
+          points[winner] += 2;
+          notes.push(`${state.names[winner]}'s Surge hit: +2 points.`);
+        }
+
+        if (loseChoice.gambit === "guard") {
+          cardReturn[loser] = true;
+          notes.push(`${state.names[loser]}'s Guard worked: lost card returned.`);
+        }
+
+        if (loseChoice.gambit === "surge") {
+          sparkGain[winner] += 1;
+          notes.push(`${state.names[loser]}'s Surge failed: ${state.names[winner]} gains +1 spark.`);
+        }
+      }
+
+      [1, 2].forEach(player => {
+        if (cardReturn[player]) {
+          state.hands[player][state.choices[player].move] += 1;
+        }
+        state.scores[player] += points[player];
+        state.sparks[player] = Math.min(5, state.sparks[player] + sparkGain[player]);
+      });
+
+      state.result = { winner, points, sparkGain, cardReturn, notes };
+      setPhase("reveal");
+    }
+
+    function nextRound() {
+      if (state.round >= state.maxRounds) {
+        setPhase("gameover");
+        return;
+      }
+
+      state.round += 1;
+      state.challenger = state.round % 2 === 1 ? 1 : 2;
+      state.currentPlayer = state.challenger;
+      makeBoard();
+      state.choices = {
+        1: { move: null, lane: null, gambit: "none" },
+        2: { move: null, lane: null, gambit: "none" }
+      };
+      state.result = null;
+      setPhase("secret");
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    function render() {
+      updateHeader();
+
+      if (state.phase === "start") renderStart();
+      if (state.phase === "secret") renderSecret();
+      if (state.phase === "choice") renderChoice();
+      if (state.phase === "readyReveal") renderReadyReveal();
+      if (state.phase === "reveal") renderReveal();
+      if (state.phase === "gameover") renderGameover();
+    }
+
+    function renderStart() {
+      main.innerHTML = `
+        <section class="card start-card" aria-labelledby="introTitle">
+          <h2 id="introTitle">A secret hotseat RPS duel</h2>
+          <p>
+            Each player gets six cards: 2 Rock, 2 Paper, 2 Scissors. Each round has a challenger and a responder.
+            The challenger secretly chooses a card and the arena lane. The responder sees only the lane and secretly chooses a card for that lane.
+          </p>
+          <p>
+            Sparks add pressure: spend them on gambits, earn them by losing, and cap them at 5.
+          </p>
+
+          <div class="field-grid">
+            <label>
+              Player 1 name
+              <input id="p1Name" autocomplete="off" value="Player 1">
+            </label>
+
+            <label>
+              Player 2 name
+              <input id="p2Name" autocomplete="off" value="Player 2">
+            </label>
+          </div>
+
+          <details>
+            <summary>Rules summary</summary>
+            <ul>
+              <li>Rock beats Scissors. Scissors beats Paper. Paper beats Rock.</li>
+              <li>Odd rounds: Player 1 challenges. Even rounds: Player 2 challenges.</li>
+              <li>The challenger chooses the arena lane for both players.</li>
+              <li>The responder sees the lane, but not the challenger's card or gambit.</li>
+              <li>Lose a throw: gain +1 spark. Spend sparks on gambits.</li>
+            </ul>
+          </details>
+
+          <button class="primary" type="button" onclick="startGame()">Start match</button>
+        </section>
+      `;
+    }
+
+    function renderSecret() {
+      const p = state.currentPlayer;
+      const challenger = state.challenger;
+      const isChallenger = p === challenger;
+      const challenge = state.choices[challenger].lane !== null
+        ? tileByIndex(state.choices[challenger].lane)
+        : null;
+
+      main.innerHTML = `
+        <section class="card secret" aria-labelledby="secretTitle">
+          <div class="secret-symbol" aria-hidden="true">${isChallenger ? "🎯" : "🛡️"}</div>
+          <div style="display:grid; gap:.6rem;">
+            <h2 id="secretTitle">Secret mode</h2>
+            <p>
+              Hand the phone to <strong>${escapeHtml(state.names[p])}</strong>.
+              ${isChallenger
+                ? "They are the challenger and will choose the lane."
+                : `They are responding on ${challenge.icon} ${challenge.name}.`}
+            </p>
+          </div>
+          <button class="primary" type="button" onclick="startChoice(${p})">
+            ${escapeHtml(state.names[p])}: show my turn
+          </button>
+        </section>
+      `;
+    }
+
+    function renderReadyReveal() {
+      const tile = tileByIndex(state.choices[state.challenger].lane);
+
+      main.innerHTML = `
+        <section class="card secret" aria-labelledby="revealReadyTitle">
+          <div class="secret-symbol" aria-hidden="true">${tile.icon}</div>
+          <div style="display:grid; gap:.6rem;">
+            <h2 id="revealReadyTitle">Both cards are locked</h2>
+            <p>The duel happens on <strong>${tile.name}</strong>. Put the phone where both players can see it.</p>
+          </div>
+          <button class="primary" type="button" onclick="resolveRound()">Reveal round</button>
+        </section>
+      `;
+    }
+
+    function moveButton(player, key) {
+      const move = MOVES[key];
+      const selected = state.choices[player].move === key;
+      const count = state.hands[player][key];
+      const disabled = count <= 0 ? "disabled" : "";
+
+      return `
+        <button
+          class="move"
+          type="button"
+          aria-pressed="${selected}"
+          ${disabled}
+          onclick="selectMove(${player}, '${key}')">
+          <span class="count" aria-label="${count} left">${count}</span>
+          <span class="icon" aria-hidden="true">${move.icon}</span>
+          <span class="name">${move.name}</span>
+        </button>
+      `;
+    }
+
+    function laneButton(player, tile, index) {
+      const selected = state.choices[player].lane === index;
+
+      return `
+        <button
+          class="lane"
+          type="button"
+          aria-pressed="${selected}"
+          onclick="selectLane(${player}, ${index})">
+          <span class="icon" aria-hidden="true">${tile.icon}</span>
+          <span>
+            <span class="name">${tile.name}</span>
+            <small>${tile.text}</small>
+          </span>
+        </button>
+      `;
+    }
+
+    function gambitButton(player, key) {
+      const gambit = GAMBITS[key];
+      const selected = state.choices[player].gambit === key;
+      const disabled = state.sparks[player] < gambit.cost ? "disabled" : "";
+
+      return `
+        <button
+          class="gambit"
+          type="button"
+          aria-pressed="${selected}"
+          ${disabled}
+          onclick="selectGambit(${player}, '${key}')">
+          <span class="cost" aria-label="cost ${gambit.cost} sparks">${gambit.cost === 0 ? "0" : "✦" + gambit.cost}</span>
+          <span class="icon" aria-hidden="true">${gambit.icon}</span>
+          <span>
+            <span class="name">${gambit.name}</span>
+            <small>${gambit.text}</small>
+          </span>
+        </button>
+      `;
+    }
+
+    function renderChoice() {
+      const p = state.currentPlayer;
+      const c = state.choices[p];
+      const isChallenger = p === state.challenger;
+      const lane = state.choices[state.challenger].lane;
+      const tile = lane !== null ? tileByIndex(lane) : null;
+      const ready = c.move && c.gambit !== null && (!isChallenger || c.lane !== null);
+
+      main.innerHTML = `
+        <section class="card choice-screen" aria-labelledby="choiceTitle">
+          <div class="player-banner">
+            <span>
+              <strong id="choiceTitle">${escapeHtml(state.names[p])}'s secrets</strong>
+              <small>${roleFor(p)} · ${state.sparks[p]} sparks available</small>
+            </span>
+            <span class="player-tag p${p}">Player ${p}</span>
+          </div>
+
+          ${isChallenger ? "" : `
+            <div class="challenge" aria-label="Arena lane selected by challenger">
+              <span class="big" aria-hidden="true">${tile.icon}</span>
+              <span>
+                <strong>${tile.name}</strong>
+                <p>${tile.text}</p>
+              </span>
+            </div>
+          `}
+
+          <div class="section">
+            <div class="section-title">
+              <span>Choose one card</span>
+              <span>${Object.values(state.hands[p]).reduce((a, b) => a + b, 0)} left</span>
+            </div>
+            <div class="moves" role="group" aria-label="Cards">
+              ${moveButton(p, "rock")}
+              ${moveButton(p, "paper")}
+              ${moveButton(p, "scissors")}
+            </div>
+          </div>
+
+          ${isChallenger ? `
+            <div class="section">
+              <div class="section-title">
+                <span>Choose the arena lane</span>
+                <span>both players use it</span>
+              </div>
+              <div class="board" role="group" aria-label="Arena lanes">
+                ${state.board.map((tile, index) => laneButton(p, tile, index)).join("")}
+              </div>
+            </div>
+          ` : ""}
+
+          <div class="section">
+            <div class="section-title">
+              <span>Optional gambit</span>
+              <span>sparks max 5</span>
+            </div>
+            <div class="sparkbox">
+              Sparks are visible in the header, but your chosen gambit stays secret until reveal.
+            </div>
+            <div class="gambits" role="group" aria-label="Gambits">
+              ${Object.keys(GAMBITS).map(key => gambitButton(p, key)).join("")}
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="primary" type="button" ${ready ? "" : "disabled"} onclick="finishChoice(${p})">
+              Done: hide my secrets
+            </button>
+            <button class="ghost" type="button" onclick="setPhase('secret')">
+              Hide without locking
+            </button>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderReveal() {
+      const c1 = state.choices[1];
+      const c2 = state.choices[2];
+      const lane = state.choices[state.challenger].lane;
+      const tile = tileByIndex(lane);
+      const r = state.result;
+
+      let title = "Tie";
+      if (r.winner === 1) title = `${state.names[1]} wins`;
+      if (r.winner === 2) title = `${state.names[2]} wins`;
+
+      main.innerHTML = `
+        <section class="card reveal" aria-labelledby="resultTitle">
+          <div class="result">
+            <h2 class="result-title" id="resultTitle">${escapeHtml(title)}</h2>
+            <p style="color: var(--muted);">
+              ${tile.icon} ${tile.name} · ${escapeHtml(state.names[1])} +${r.points[1]} · ${escapeHtml(state.names[2])} +${r.points[2]}
+            </p>
+          </div>
+
+          <div class="duel">
+            <div class="duel-card">
+              <strong>${escapeHtml(state.names[1])}</strong>
+              <span class="played" aria-hidden="true">${MOVES[c1.move].icon}</span>
+              <small>${MOVES[c1.move].name} · ${GAMBITS[c1.gambit].icon} ${GAMBITS[c1.gambit].name}</small>
+            </div>
+            <div class="vs">VS</div>
+            <div class="duel-card">
+              <strong>${escapeHtml(state.names[2])}</strong>
+              <span class="played" aria-hidden="true">${MOVES[c2.move].icon}</span>
+              <small>${MOVES[c2.move].name} · ${GAMBITS[c2.gambit].icon} ${GAMBITS[c2.gambit].name}</small>
+            </div>
+          </div>
+
+          <ul class="notes">
+            ${r.notes.map(note => `<li>${escapeHtml(note)}</li>`).join("")}
+          </ul>
+
+          <button class="primary" type="button" onclick="nextRound()">
+            ${state.round >= state.maxRounds ? "Finish match" : "Next secret round"}
+          </button>
+        </section>
+      `;
+    }
+
+    function renderGameover() {
+      let title = "Draw match";
+      let detail = "No one leaves with bragging rights.";
+
+      if (state.scores[1] > state.scores[2]) {
+        title = `${state.names[1]} wins the match`;
+        detail = `${state.scores[1]} to ${state.scores[2]}.`;
+      }
+
+      if (state.scores[2] > state.scores[1]) {
+        title = `${state.names[2]} wins the match`;
+        detail = `${state.scores[2]} to ${state.scores[1]}.`;
+      }
+
+      main.innerHTML = `
+        <section class="card secret" aria-labelledby="gameoverTitle">
+          <div class="secret-symbol" aria-hidden="true">🏆</div>
+          <div style="display:grid; gap:.6rem;">
+            <h2 id="gameoverTitle">${escapeHtml(title)}</h2>
+            <p>${escapeHtml(detail)}</p>
+          </div>
+          <div class="footer-actions">
+            <button class="primary" type="button" onclick="startGame()">Play again</button>
+            <button class="danger" type="button" onclick="location.reload()">Reset names</button>
+          </div>
+        </section>
+      `;
+    }
+
+    render();
+  </script>
+</body>
+</html>
