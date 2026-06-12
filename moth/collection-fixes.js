@@ -22,6 +22,7 @@
 
     let preferredSelected = null;
     let setPollenWrapped = false;
+    let resetHooked = false;
 
     function storedCollection() {
         try {
@@ -47,6 +48,35 @@
         }
     }
 
+    function hardResetProgress() {
+        const resetSave = { pollen: 0, unlocked: ['monarch'], selected: 'monarch', summon: null };
+        const resetCollection = { unlocked: ['monarch'], selected: 'monarch', pending: null, highScore: 0, discoveredBiomes: ['moonleaf'] };
+        const liveSave = window.nocturneWingsDebug?.save?.();
+        if (liveSave) {
+            liveSave.pollen = 0;
+            liveSave.unlocked = ['monarch'];
+            liveSave.selected = 'monarch';
+            liveSave.summon = null;
+        }
+        preferredSelected = 'monarch';
+        originalSetItem(SAVE_KEY, JSON.stringify(resetSave));
+        originalSetItem(COLLECTION_KEY, JSON.stringify(resetCollection));
+        window.setTimeout(() => window.location.reload(), 100);
+    }
+
+    function installResetOverride() {
+        const debug = window.nocturneCollectionDebug;
+        if (debug && debug.resetProgress !== hardResetProgress) debug.resetProgress = hardResetProgress;
+        const resetButton = document.getElementById('resetProgressButton');
+        if (!resetButton || resetHooked) return;
+        resetHooked = true;
+        resetButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            hardResetProgress();
+        }, true);
+    }
+
     function wrapSetPollen() {
         const debug = window.nocturneWingsDebug;
         if (!debug?.setPollen || setPollenWrapped) return;
@@ -69,6 +99,7 @@
     function syncSpeciesLabels() {
         wrapSetPollen();
         applyPreferredSelection();
+        installResetOverride();
         const key = selectedKey();
         const name = SPECIES[key];
         if (name) {
@@ -78,5 +109,8 @@
         requestAnimationFrame(syncSpeciesLabels);
     }
 
+    wrapSetPollen();
+    applyPreferredSelection();
+    installResetOverride();
     requestAnimationFrame(syncSpeciesLabels);
 })();
