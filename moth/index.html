@@ -3,36 +3,38 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Nocturne Wings - Phase D Prototype</title>
-    <meta name="description" content="A Phase D PixiJS prototype for Nocturne Wings: dash through glowing biomes, collect pollen, and dodge thorns, wasps, and sky raindrops.">
+    <title>Nocturne Wings - Endless Lobby Prototype</title>
+    <meta name="description" content="A PixiJS prototype for Nocturne Wings: collect pollen, summon butterflies and moths, and survive endless biome runs.">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <main id="gameShell" aria-label="Nocturne Wings game prototype">
         <div id="gameCanvas" aria-hidden="true"></div>
 
-        <section id="hud" class="hud" aria-label="Game status">
+        <section id="hud" class="hud" aria-label="Game status" hidden>
             <div class="hud-card">Score <strong id="scoreValue">0</strong></div>
-            <div class="hud-card">Pollen <strong id="pollenValue">0</strong></div>
+            <div class="hud-card">Run pollen <strong id="pollenValue">0</strong></div>
+            <div class="hud-card">Saved pollen <strong id="bankValue">0</strong></div>
             <div class="hud-card">Health <strong id="healthValue">3</strong></div>
-            <div class="hud-card">Goal <strong id="goalValue">40</strong></div>
             <div class="hud-card wide">Biome <strong id="biomeValue">Moonleaf Grove</strong></div>
             <div class="hud-card">Dash <strong id="dashValue" data-ready="true">Ready</strong></div>
         </section>
 
+        <section id="lobbyHud" class="lobby-hud" hidden aria-label="Lobby status">
+            <div class="lobby-pill">Pollen <strong id="lobbyPollenValue">0</strong></div>
+            <div class="lobby-pill">Selected <strong id="selectedValue">Monarch</strong></div>
+            <button id="playButton" class="corner-button" type="button">Play</button>
+        </section>
+
+        <button id="summonButton" class="summon-button" type="button" hidden>Summon</button>
+        <div id="summonStatus" class="summon-status" hidden></div>
         <div id="biomeToast" class="biome-toast" hidden>Moonleaf Grove</div>
 
         <section id="startScreen" class="screen-panel">
-            <p class="eyebrow">Phase D Prototype</p>
+            <p class="eyebrow">Endless Prototype</p>
             <h1>Nocturne Wings</h1>
-            <p class="summary">Guide the monarch through changing biomes. Collect pollen, dash past each biome hazard, and reach 40 pollen before your 3 health runs out.</p>
-            <ul class="controls-list" aria-label="Controls">
-                <li><span>Move</span> WASD / Arrow keys</li>
-                <li><span>Mouse</span> Steer toward pointer</li>
-                <li><span>Dash</span> Space</li>
-                <li><span>Pause</span> Esc</li>
-            </ul>
-            <button id="startButton" class="primary-button" type="button">Start Run</button>
+            <p class="summary">Enter the leaf lobby, collect pollen in endless runs, and summon new butterflies and moths for your garden.</p>
+            <button id="startButton" class="primary-button" type="button">Enter Lobby</button>
         </section>
 
         <section id="gameOverScreen" class="screen-panel" hidden>
@@ -41,9 +43,13 @@
             <p id="resultSummary" class="summary"></p>
             <div class="result-grid" aria-label="Run results">
                 <div><span>Score</span><strong id="finalScore">0</strong></div>
-                <div><span>Pollen</span><strong id="finalPollen">0</strong></div>
+                <div><span>Run pollen</span><strong id="finalPollen">0</strong></div>
+                <div><span>Saved pollen</span><strong id="finalBank">0</strong></div>
             </div>
-            <button id="restartButton" class="primary-button" type="button">Play Again</button>
+            <div class="button-row">
+                <button id="restartButton" class="primary-button" type="button">Play Again</button>
+                <button id="lobbyButton" class="secondary-button" type="button">Lobby</button>
+            </div>
         </section>
 
         <section id="pauseScreen" class="screen-panel compact" hidden>
