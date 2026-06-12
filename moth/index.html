@@ -26,6 +26,33 @@
             <button id="playButton" class="corner-button" type="button">Play</button>
         </section>
 
+        <div id="utilityControls" class="utility-controls" aria-label="Utility controls">
+            <button id="pauseButton" class="utility-button" type="button">Pause</button>
+            <button id="adminButton" class="utility-button admin" type="button">Admin</button>
+        </div>
+
+        <section id="adminPanel" class="admin-panel" hidden aria-label="Admin panel">
+            <form id="adminGate" class="admin-gate">
+                <label for="adminCode">Admin code</label>
+                <div class="admin-code-row">
+                    <input id="adminCode" type="password" autocomplete="off" spellcheck="false" placeholder="Code">
+                    <button type="submit">Open</button>
+                </div>
+                <p id="adminMessage" class="admin-message" aria-live="polite"></p>
+            </form>
+            <div id="adminControls" class="admin-controls" hidden>
+                <p class="admin-title">Admin</p>
+                <div class="admin-biomes" aria-label="Force biome">
+                    <button type="button" data-biome-index="0">Moonleaf</button>
+                    <button type="button" data-biome-index="1">Amber</button>
+                    <button type="button" data-biome-index="2">Sky</button>
+                </div>
+                <button id="infinitePollenButton" type="button">Infinite pollen</button>
+                <button id="instantHatchButton" type="button">Instant hatch</button>
+                <p id="adminStatus" class="admin-message" aria-live="polite"></p>
+            </div>
+        </section>
+
         <button id="summonButton" class="summon-button" type="button" hidden>Summon</button>
         <div id="summonStatus" class="summon-status" hidden></div>
         <div id="biomeToast" class="biome-toast" hidden>Moonleaf Grove</div>
@@ -55,7 +82,7 @@
         <section id="pauseScreen" class="screen-panel compact" hidden>
             <p class="eyebrow">Paused</p>
             <h1>Nocturne Wings</h1>
-            <p class="summary">Press Esc or use the button to return to the run.</p>
+            <p class="summary">Press Esc, Pause, or use the button to return to the run.</p>
             <button id="resumeButton" class="primary-button" type="button">Resume</button>
         </section>
     </main>
