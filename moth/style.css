@@ -1,14 +1,15 @@
 :root {
     color-scheme: dark;
     --ink: #f8fbff;
-    --muted: #c8d2e7;
-    --panel: rgba(9, 12, 28, 0.76);
-    --panel-strong: rgba(11, 15, 34, 0.92);
-    --line: rgba(255, 255, 255, 0.2);
+    --muted: #d2dcf2;
+    --panel: rgba(7, 10, 28, 0.7);
+    --panel-strong: rgba(8, 10, 28, 0.92);
+    --line: rgba(255, 255, 255, 0.22);
     --gold: #ffd66b;
     --coral: #ff7d67;
     --teal: #7af7ff;
     --violet: #b891ff;
+    --pink: #ff72cf;
 }
 
 * {
@@ -24,6 +25,14 @@ body {
     background: #050712;
     color: var(--ink);
     font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+    background:
+        radial-gradient(circle at 18% 20%, rgba(122, 247, 255, 0.28), transparent 32rem),
+        radial-gradient(circle at 84% 28%, rgba(255, 114, 207, 0.22), transparent 31rem),
+        radial-gradient(circle at 52% 82%, rgba(255, 214, 107, 0.14), transparent 28rem),
+        linear-gradient(145deg, #050712 0%, #14104a 44%, #06283b 70%, #120620 100%);
 }
 
 button,
@@ -48,10 +57,20 @@ button {
     min-width: 320px;
     min-height: 480px;
     isolation: isolate;
+}
+
+#gameShell::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
     background:
-        radial-gradient(circle at 20% 20%, rgba(126, 247, 255, 0.22), transparent 28rem),
-        radial-gradient(circle at 80% 30%, rgba(184, 145, 255, 0.18), transparent 30rem),
-        linear-gradient(145deg, #07091b 0%, #101032 45%, #071421 100%);
+        linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    background-size: 84px 84px;
+    mask-image: radial-gradient(circle at center, black, transparent 78%);
+    opacity: 0.28;
 }
 
 #gameCanvas,
@@ -80,13 +99,16 @@ button {
 .hud-card {
     min-width: 112px;
     padding: 10px 14px;
-    border: 1px solid var(--line);
+    border: 1px solid rgba(122, 247, 255, 0.24);
     border-radius: 8px;
-    background: rgba(7, 10, 24, 0.58);
-    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    background: linear-gradient(180deg, rgba(13, 18, 46, 0.72), rgba(8, 10, 28, 0.54));
+    box-shadow:
+        0 12px 36px rgba(0, 0, 0, 0.32),
+        0 0 30px rgba(122, 247, 255, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
     color: var(--muted);
     text-align: center;
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(14px) saturate(145%);
 }
 
 .hud-card strong {
@@ -95,6 +117,7 @@ button {
     color: var(--ink);
     font-size: clamp(1.1rem, 2vw, 1.4rem);
     line-height: 1;
+    text-shadow: 0 0 16px rgba(122, 247, 255, 0.32);
 }
 
 .screen-panel {
@@ -104,12 +127,18 @@ button {
     transform: translate(-50%, -50%);
     width: min(560px, calc(100vw - 32px));
     padding: clamp(24px, 5vw, 42px);
-    border: 1px solid var(--line);
+    border: 1px solid rgba(122, 247, 255, 0.24);
     border-radius: 8px;
-    background: var(--panel);
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    background:
+        linear-gradient(180deg, rgba(18, 16, 54, 0.74), rgba(6, 9, 27, 0.84)),
+        radial-gradient(circle at 20% 0%, rgba(255, 214, 107, 0.16), transparent 40%),
+        radial-gradient(circle at 90% 12%, rgba(255, 114, 207, 0.14), transparent 38%);
+    box-shadow:
+        0 24px 80px rgba(0, 0, 0, 0.52),
+        0 0 70px rgba(122, 247, 255, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
     text-align: center;
-    backdrop-filter: blur(18px) saturate(130%);
+    backdrop-filter: blur(20px) saturate(145%);
 }
 
 .screen-panel.compact {
@@ -120,9 +149,10 @@ button {
     margin: 0 0 10px;
     color: var(--teal);
     font-size: 0.78rem;
-    font-weight: 800;
+    font-weight: 900;
     letter-spacing: 0.16em;
     text-transform: uppercase;
+    text-shadow: 0 0 18px rgba(122, 247, 255, 0.42);
 }
 
 h1 {
@@ -131,6 +161,9 @@ h1 {
     font-size: clamp(2.25rem, 8vw, 5rem);
     line-height: 0.92;
     letter-spacing: 0;
+    text-shadow:
+        0 0 26px rgba(122, 247, 255, 0.22),
+        0 0 46px rgba(255, 114, 207, 0.14);
 }
 
 .summary {
@@ -159,13 +192,14 @@ h1 {
     padding: 10px 12px;
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.07);
 }
 
 .controls-list span,
 .result-grid span {
     color: var(--gold);
-    font-weight: 800;
+    font-weight: 900;
+    text-shadow: 0 0 14px rgba(255, 214, 107, 0.24);
 }
 
 .primary-button {
@@ -174,14 +208,16 @@ h1 {
     padding: 13px 20px;
     border: 0;
     border-radius: 8px;
-    background: linear-gradient(135deg, var(--gold), var(--coral));
-    box-shadow: 0 12px 36px rgba(255, 125, 103, 0.34);
+    background: linear-gradient(135deg, var(--gold), var(--coral) 58%, var(--pink));
+    box-shadow:
+        0 12px 36px rgba(255, 125, 103, 0.36),
+        0 0 36px rgba(255, 214, 107, 0.18);
     color: #1e1020;
     font-weight: 900;
 }
 
 .primary-button:hover {
-    filter: brightness(1.08);
+    filter: brightness(1.08) saturate(1.08);
 }
 
 .primary-button:focus-visible {
@@ -198,9 +234,9 @@ h1 {
 
 .result-grid div {
     padding: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(122, 247, 255, 0.18);
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.075);
 }
 
 .result-grid strong {
