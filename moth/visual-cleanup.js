@@ -33,6 +33,10 @@
         node.alpha = 0.01;
     }
 
+    function isHidden(node) {
+        return node?.worldVisible === false || node?.visible === false || node?.parent?.visible === false;
+    }
+
     function cleanup() {
         const application = app();
         if (!application) { requestAnimationFrame(cleanup); return; }
@@ -44,16 +48,17 @@
         });
 
         if (currentMode === 'lobby') {
-            const lobbyExtras = new Set(nodes.filter((node) => !node.radius).map(actualSpecies));
+            const lobbyExtras = new Set(nodes.filter((node) => !node.radius && !isHidden(node)).map(actualSpecies));
             for (const node of nodes) {
                 const species = actualSpecies(node);
-                if (!node.radius) restore(node);
+                if (isHidden(node)) suppress(node);
+                else if (!node.radius) restore(node);
                 else if (lobbyExtras.has(species)) suppress(node);
                 else restore(node);
             }
         } else {
             for (const node of nodes) {
-                if (!node.radius) suppress(node);
+                if (isHidden(node) || !node.radius) suppress(node);
                 else restore(node);
             }
         }
