@@ -106,6 +106,17 @@
     </script>
     <script src="game.js"></script>
     <script src="abilities.js"></script>
-    <script src="ability-fixes.js"></script>
+    <script>
+        (() => {
+            const names = { volcano: 'Volcano Caldera', ice: 'Crystal Icefield' };
+            const biomeValue = document.getElementById('biomeValue');
+            function syncExtraBiomeHud() {
+                const biome = window.nocturneAbilitiesDebug?.active?.customBiome;
+                if (biome && names[biome] && biomeValue) biomeValue.textContent = names[biome];
+                requestAnimationFrame(syncExtraBiomeHud);
+            }
+            requestAnimationFrame(syncExtraBiomeHud);
+        })();
+    </script>
 </body>
 </html>
