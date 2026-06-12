@@ -18,6 +18,7 @@
             <div class="hud-card">Health <strong id="healthValue">3</strong></div>
             <div class="hud-card wide">Biome <strong id="biomeValue">Moonleaf Grove</strong></div>
             <div class="hud-card">Dash <strong id="dashValue" data-ready="true">Ready</strong></div>
+            <div class="hud-card">Ability R <strong id="abilityValue" data-ready="true">Ready</strong></div>
         </section>
 
         <section id="lobbyHud" class="lobby-hud" hidden aria-label="Lobby status">
@@ -49,6 +50,7 @@
                 </div>
                 <button id="infinitePollenButton" type="button">Infinite pollen</button>
                 <button id="instantHatchButton" type="button">Instant hatch</button>
+                <button id="resetAbilityCooldownButton" type="button">Remove ability cooldown</button>
                 <p id="adminStatus" class="admin-message" aria-live="polite"></p>
             </div>
         </section>
@@ -88,6 +90,19 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.2/dist/pixi.min.js"></script>
+    <script>
+        if (window.PIXI && !window.__nocturnePixiCaptured) {
+            window.__nocturnePixiCaptured = true;
+            const OriginalApplication = window.PIXI.Application;
+            window.PIXI.Application = class NocturneCapturedApplication extends OriginalApplication {
+                constructor(options) {
+                    super(options);
+                    window.nocturnePixiApp = this;
+                }
+            };
+        }
+    </script>
     <script src="game.js"></script>
+    <script src="abilities.js"></script>
 </body>
 </html>
