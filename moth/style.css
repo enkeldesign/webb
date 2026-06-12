@@ -2,13 +2,10 @@
     color-scheme: dark;
     --ink: #f8fbff;
     --muted: #d2dcf2;
-    --panel: rgba(7, 10, 28, 0.7);
-    --panel-strong: rgba(8, 10, 28, 0.92);
     --line: rgba(255, 255, 255, 0.22);
     --gold: #ffd66b;
     --coral: #ff7d67;
     --teal: #7af7ff;
-    --violet: #b891ff;
     --pink: #ff72cf;
 }
 
@@ -70,7 +67,7 @@ button {
         linear-gradient(0deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
     background-size: 84px 84px;
     mask-image: radial-gradient(circle at center, black, transparent 78%);
-    opacity: 0.28;
+    opacity: 0.24;
 }
 
 #gameCanvas,
@@ -93,11 +90,12 @@ button {
     gap: 8px;
     align-items: center;
     justify-content: center;
-    width: min(1040px, calc(100vw - 24px));
+    width: min(1100px, calc(100vw - 24px));
     pointer-events: none;
 }
 
-.hud-card {
+.hud-card,
+.lobby-pill {
     min-width: 104px;
     padding: 8px 12px;
     border: 1px solid rgba(122, 247, 255, 0.24);
@@ -112,11 +110,13 @@ button {
     backdrop-filter: blur(14px) saturate(145%);
 }
 
-.hud-card.wide {
+.hud-card.wide,
+.lobby-pill {
     min-width: 184px;
 }
 
-.hud-card strong {
+.hud-card strong,
+.lobby-pill strong {
     display: block;
     margin-top: 2px;
     color: var(--ink);
@@ -135,9 +135,26 @@ button {
     color: #a9b3c8;
 }
 
-.screen-panel {
+.lobby-hud {
     position: absolute;
     z-index: 4;
+    top: max(16px, env(safe-area-inset-top));
+    left: max(16px, env(safe-area-inset-left));
+    right: max(16px, env(safe-area-inset-right));
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.lobby-hud .corner-button {
+    margin-left: auto;
+    pointer-events: auto;
+}
+
+.screen-panel {
+    position: absolute;
+    z-index: 5;
     inset: 50% auto auto 50%;
     transform: translate(-50%, -50%);
     width: min(560px, calc(100vw - 32px));
@@ -190,16 +207,6 @@ button {
     text-shadow: 0 0 18px rgba(122, 247, 255, 0.42);
 }
 
-#gameShell[data-biome="amber"] .eyebrow {
-    color: var(--gold);
-    text-shadow: 0 0 18px rgba(255, 214, 107, 0.42);
-}
-
-#gameShell[data-biome="sky"] .eyebrow {
-    color: #ffffff;
-    text-shadow: 0 0 18px rgba(166, 224, 255, 0.55);
-}
-
 h1 {
     margin: 0;
     color: var(--ink);
@@ -247,34 +254,94 @@ h1 {
     text-shadow: 0 0 14px rgba(255, 214, 107, 0.24);
 }
 
-.primary-button {
-    min-width: 180px;
-    margin-top: 26px;
-    padding: 13px 20px;
+.primary-button,
+.secondary-button,
+.corner-button,
+.summon-button {
     border: 0;
     border-radius: 8px;
+    font-weight: 900;
+    transition: transform 160ms ease, filter 160ms ease;
+}
+
+.primary-button,
+.corner-button,
+.summon-button {
+    min-width: 180px;
+    padding: 13px 20px;
     background: linear-gradient(135deg, var(--gold), var(--coral) 58%, var(--pink));
     box-shadow:
         0 12px 36px rgba(255, 125, 103, 0.36),
         0 0 36px rgba(255, 214, 107, 0.18);
     color: #1e1020;
-    font-weight: 900;
-    transition: transform 160ms ease, filter 160ms ease;
 }
 
-.primary-button:hover {
+.primary-button {
+    margin-top: 26px;
+}
+
+.secondary-button {
+    min-width: 130px;
+    padding: 13px 20px;
+    border: 1px solid rgba(122, 247, 255, 0.28);
+    background: rgba(8, 12, 32, 0.68);
+    color: var(--ink);
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.28);
+}
+
+.corner-button {
+    min-width: 116px;
+}
+
+.primary-button:hover,
+.secondary-button:hover,
+.corner-button:hover,
+.summon-button:hover {
     filter: brightness(1.08) saturate(1.08);
     transform: translateY(-1px);
 }
 
-.primary-button:focus-visible {
+.primary-button:focus-visible,
+.secondary-button:focus-visible,
+.corner-button:focus-visible,
+.summon-button:focus-visible {
     outline: 3px solid var(--teal);
     outline-offset: 4px;
 }
 
+.summon-button {
+    position: absolute;
+    z-index: 5;
+    left: 50%;
+    bottom: 178px;
+    transform: translateX(-50%);
+    animation: float-button 1.8s ease-in-out infinite;
+}
+
+.summon-button:hover {
+    transform: translateX(-50%) translateY(-1px);
+}
+
+.summon-status {
+    position: absolute;
+    z-index: 5;
+    left: 50%;
+    bottom: 132px;
+    transform: translateX(-50%);
+    width: min(430px, calc(100vw - 32px));
+    padding: 10px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+    background: rgba(6, 9, 24, 0.7);
+    color: var(--ink);
+    text-align: center;
+    box-shadow: 0 0 32px rgba(122, 247, 255, 0.16);
+    backdrop-filter: blur(14px) saturate(140%);
+}
+
 .result-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
     margin-top: 22px;
 }
@@ -290,6 +357,19 @@ h1 {
     display: block;
     margin-top: 6px;
     font-size: 1.8rem;
+}
+
+.button-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.button-row .primary-button,
+.button-row .secondary-button {
+    margin-top: 0;
 }
 
 .biome-toast {
@@ -338,6 +418,15 @@ h1 {
     }
 }
 
+@keyframes float-button {
+    0%, 100% {
+        translate: 0 0;
+    }
+    50% {
+        translate: 0 -6px;
+    }
+}
+
 @media (max-width: 760px) {
     .hud {
         display: grid;
@@ -345,17 +434,34 @@ h1 {
     }
 
     .hud-card,
-    .hud-card.wide {
+    .hud-card.wide,
+    .lobby-pill {
         min-width: 0;
         padding: 8px 8px;
     }
 
-    .hud-card strong {
+    .hud-card strong,
+    .lobby-pill strong {
         font-size: 0.98rem;
+    }
+
+    .lobby-hud {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .lobby-hud .corner-button {
+        grid-column: 1 / -1;
+        margin-left: 0;
+        justify-self: end;
     }
 
     .screen-panel {
         top: 56%;
+    }
+
+    .result-grid {
+        grid-template-columns: 1fr;
     }
 
     .biome-toast {
