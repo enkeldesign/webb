@@ -6,15 +6,51 @@
     const PLAYER_RADIUS = 24;
     const HAZARD_RADIUS = 26;
     const POLLEN_RADIUS = 13;
-    const VIEW_ZOOM = 1.24;
-    const MAX_PARTICLES = 220;
-    const MAX_RINGS = 18;
+    const VIEW_ZOOM = 1.28;
+    const BIOME_LENGTH = 30;
+    const MAX_PARTICLES = 280;
+    const MAX_RINGS = 24;
+    const DASH_SPEED = 1080;
+    const DASH_COOLDOWN = 1.05;
+    const DASH_DURATION = 0.16;
+
+    const BIOMES = [
+        {
+            key: 'moonleaf',
+            name: 'Moonleaf Grove',
+            colors: ['#061028', '#171352', '#063342', '#120720'],
+            glows: [
+                ['rgba(93, 245, 255, 0.38)', 0.2, 0.22, 0.43],
+                ['rgba(255, 114, 207, 0.26)', 0.78, 0.3, 0.46],
+                ['rgba(255, 214, 107, 0.14)', 0.52, 0.78, 0.34]
+            ],
+            leaves: [0x0d5a5a, 0x168175, 0x1a3a6b, 0x34235f],
+            veins: 0x7af7ff,
+            spores: [0x7af7ff, 0xff72cf, 0xffd66b, 0xb891ff],
+            blooms: [0x7af7ff, 0xff72cf, 0xffd66b]
+        },
+        {
+            key: 'amber',
+            name: 'Amber Fern Canopy',
+            colors: ['#071809', '#1f3b16', '#40200d', '#170714'],
+            glows: [
+                ['rgba(255, 190, 80, 0.32)', 0.22, 0.24, 0.46],
+                ['rgba(84, 255, 184, 0.22)', 0.78, 0.28, 0.44],
+                ['rgba(255, 91, 112, 0.18)', 0.55, 0.78, 0.36]
+            ],
+            leaves: [0x285f20, 0x478f2e, 0x73621c, 0x205b4b],
+            veins: 0xffd66b,
+            spores: [0xffd66b, 0x79ffb4, 0xff7d67, 0xf4ff9b],
+            blooms: [0xffd66b, 0x79ffb4, 0xff7d67]
+        }
+    ];
 
     const shell = document.getElementById('gameShell');
     const canvasMount = document.getElementById('gameCanvas');
     const startScreen = document.getElementById('startScreen');
     const gameOverScreen = document.getElementById('gameOverScreen');
     const pauseScreen = document.getElementById('pauseScreen');
+    const biomeToast = document.getElementById('biomeToast');
     const startButton = document.getElementById('startButton');
     const restartButton = document.getElementById('restartButton');
     const resumeButton = document.getElementById('resumeButton');
@@ -22,6 +58,8 @@
     const pollenValue = document.getElementById('pollenValue');
     const healthValue = document.getElementById('healthValue');
     const goalValue = document.getElementById('goalValue');
+    const biomeValue = document.getElementById('biomeValue');
+    const dashValue = document.getElementById('dashValue');
     const resultEyebrow = document.getElementById('resultEyebrow');
     const resultTitle = document.getElementById('resultTitle');
     const resultSummary = document.getElementById('resultSummary');
@@ -47,6 +85,8 @@
     canvasMount.appendChild(app.view);
 
     const backgroundLayer = new PIXI.Container();
+    const farLeafLayer = new PIXI.Container();
+    const midLeafLayer = new PIXI.Container();
     const bloomLayer = new PIXI.Container();
     const world = new PIXI.Container();
     const trailLayer = new PIXI.Container();
@@ -54,9 +94,10 @@
     const hazardLayer = new PIXI.Container();
     const effectLayer = new PIXI.Container();
     const playerLayer = new PIXI.Container();
+    const nearLeafLayer = new PIXI.Container();
     const foregroundLayer = new PIXI.Container();
 
-    app.stage.addChild(backgroundLayer, bloomLayer, world, foregroundLayer);
+    app.stage.addChild(backgroundLayer, farLeafLayer, midLeafLayer, bloomLayer, world, nearLeafLayer, foregroundLayer);
     world.addChild(trailLayer, pollenLayer, hazardLayer, effectLayer, playerLayer);
     world.scale.set(VIEW_ZOOM);
 
@@ -72,8 +113,10 @@
     const rings = [];
     const spores = [];
     const blooms = [];
+    const leaves = [];
 
     let backgroundTexture = null;
+    let biomeToastTimer = 0;
 
     const camera = {
         x: 0,
@@ -89,6 +132,15 @@
         lastMove: 0
     };
 
+    const audio = {
+        context: null,
+        master: null,
+        musicGain: null,
+        musicOscA: null,
+        musicOscB: null,
+        unlocked: false
+    };
+
     const state = {
         mode: 'menu',
         score: 0,
@@ -99,6 +151,10 @@
         pollenTimer: 0,
         hazardTimer: 0,
         particleTimer: 0,
+        dashCooldown: 0,
+        dashTime: 0,
+        dashVector: { x: 1, y: 0 },
+        biomeIndex: 0,
         player: null,
         velocity: { x: 0, y: 0 }
     };
@@ -115,6 +171,10 @@
         return min + Math.random() * (max - min);
     }
 
+    function pick(list) {
+        return list[Math.floor(Math.random() * list.length)];
+    }
+
     function distanceSquared(a, b) {
         const dx = a.x - b.x;
         const dy = a.y - b.y;
@@ -126,12 +186,16 @@
         return distanceSquared(a, b) <= range * range;
     }
 
+    function getBiome() {
+        return BIOMES[state.biomeIndex] || BIOMES[0];
+    }
+
     function getArena() {
         const worldWidth = app.screen.width / VIEW_ZOOM;
         const worldHeight = app.screen.height / VIEW_ZOOM;
-        const marginX = Math.min(96 / VIEW_ZOOM, worldWidth * 0.13);
-        const top = Math.min(108 / VIEW_ZOOM, worldHeight * 0.2);
-        const bottomMargin = Math.min(64 / VIEW_ZOOM, worldHeight * 0.13);
+        const marginX = Math.min(86 / VIEW_ZOOM, worldWidth * 0.12);
+        const top = Math.min(104 / VIEW_ZOOM, worldHeight * 0.19);
+        const bottomMargin = Math.min(58 / VIEW_ZOOM, worldHeight * 0.12);
         return {
             left: marginX,
             right: worldWidth - marginX,
@@ -155,6 +219,13 @@
         scoreValue.textContent = String(state.score);
         pollenValue.textContent = String(state.pollen);
         healthValue.textContent = String(state.health);
+        if (biomeValue) {
+            biomeValue.textContent = getBiome().name;
+        }
+        if (dashValue) {
+            dashValue.textContent = state.dashCooldown <= 0 ? 'Ready' : `${Math.ceil(state.dashCooldown * 10) / 10}s`;
+            dashValue.dataset.ready = state.dashCooldown <= 0 ? 'true' : 'false';
+        }
     }
 
     function showPanel(panel) {
@@ -163,41 +234,142 @@
         pauseScreen.hidden = panel !== 'pause';
     }
 
-    function createGradientTexture(width, height) {
+    function initAudio() {
+        if (audio.context || !window.AudioContext && !window.webkitAudioContext) {
+            return;
+        }
+
+        try {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            const context = new AudioContextClass();
+            const master = context.createGain();
+            const musicGain = context.createGain();
+            const filter = context.createBiquadFilter();
+            const oscA = context.createOscillator();
+            const oscB = context.createOscillator();
+
+            master.gain.value = 0.58;
+            musicGain.gain.value = 0.012;
+            filter.type = 'lowpass';
+            filter.frequency.value = 820;
+            filter.Q.value = 0.6;
+            oscA.type = 'sine';
+            oscB.type = 'triangle';
+            oscA.frequency.value = 110;
+            oscB.frequency.value = 165;
+            oscA.connect(filter);
+            oscB.connect(filter);
+            filter.connect(musicGain);
+            musicGain.connect(master);
+            master.connect(context.destination);
+            oscA.start();
+            oscB.start();
+
+            audio.context = context;
+            audio.master = master;
+            audio.musicGain = musicGain;
+            audio.musicOscA = oscA;
+            audio.musicOscB = oscB;
+        } catch (error) {
+            audio.context = null;
+        }
+    }
+
+    function setMusic(active) {
+        if (!audio.context || !audio.musicGain) {
+            return;
+        }
+        audio.musicGain.gain.setTargetAtTime(active ? 0.034 : 0.012, audio.context.currentTime, 0.25);
+    }
+
+    function playTone(frequency, duration, type = 'sine', gain = 0.05, sweep = 0) {
+        if (!audio.context || !audio.master) {
+            return;
+        }
+
+        const now = audio.context.currentTime;
+        const osc = audio.context.createOscillator();
+        const env = audio.context.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(frequency, now);
+        if (sweep !== 0) {
+            osc.frequency.exponentialRampToValueAtTime(Math.max(30, frequency + sweep), now + duration);
+        }
+        env.gain.setValueAtTime(0.0001, now);
+        env.gain.exponentialRampToValueAtTime(gain, now + 0.012);
+        env.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+        osc.connect(env);
+        env.connect(audio.master);
+        osc.start(now);
+        osc.stop(now + duration + 0.04);
+    }
+
+    function playCollectSound() {
+        playTone(760, 0.08, 'triangle', 0.04, 260);
+    }
+
+    function playDashSound() {
+        playTone(220, 0.12, 'sawtooth', 0.035, 520);
+        playTone(880, 0.08, 'triangle', 0.02, 120);
+    }
+
+    function playHitSound() {
+        playTone(150, 0.18, 'sawtooth', 0.055, -70);
+    }
+
+    function playBiomeSound() {
+        playTone(330, 0.22, 'sine', 0.032, 220);
+        window.setTimeout(() => playTone(495, 0.18, 'triangle', 0.028, 180), 90);
+    }
+
+    function createGradientTexture(width, height, biome) {
         const canvas = document.createElement('canvas');
         canvas.width = Math.max(2, Math.floor(width));
         canvas.height = Math.max(2, Math.floor(height));
         const ctx = canvas.getContext('2d');
 
         const linear = ctx.createLinearGradient(0, 0, width, height);
-        linear.addColorStop(0, '#07102b');
-        linear.addColorStop(0.32, '#161052');
-        linear.addColorStop(0.66, '#062b3d');
-        linear.addColorStop(1, '#120620');
+        linear.addColorStop(0, biome.colors[0]);
+        linear.addColorStop(0.34, biome.colors[1]);
+        linear.addColorStop(0.68, biome.colors[2]);
+        linear.addColorStop(1, biome.colors[3]);
         ctx.fillStyle = linear;
         ctx.fillRect(0, 0, width, height);
 
-        const cyan = ctx.createRadialGradient(width * 0.2, height * 0.22, 0, width * 0.2, height * 0.22, width * 0.42);
-        cyan.addColorStop(0, 'rgba(86, 245, 255, 0.38)');
-        cyan.addColorStop(0.42, 'rgba(34, 132, 184, 0.13)');
-        cyan.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = cyan;
-        ctx.fillRect(0, 0, width, height);
-
-        const magenta = ctx.createRadialGradient(width * 0.78, height * 0.32, 0, width * 0.78, height * 0.32, width * 0.45);
-        magenta.addColorStop(0, 'rgba(255, 82, 190, 0.28)');
-        magenta.addColorStop(0.45, 'rgba(145, 75, 255, 0.14)');
-        magenta.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = magenta;
-        ctx.fillRect(0, 0, width, height);
-
-        const gold = ctx.createRadialGradient(width * 0.52, height * 0.78, 0, width * 0.52, height * 0.78, width * 0.36);
-        gold.addColorStop(0, 'rgba(255, 216, 107, 0.16)');
-        gold.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = gold;
-        ctx.fillRect(0, 0, width, height);
+        for (const glow of biome.glows) {
+            const gradient = ctx.createRadialGradient(width * glow[1], height * glow[2], 0, width * glow[1], height * glow[2], width * glow[3]);
+            gradient.addColorStop(0, glow[0]);
+            gradient.addColorStop(0.48, glow[0].replace(/0\.[0-9]+\)/, '0.08)'));
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+        }
 
         return PIXI.Texture.from(canvas);
+    }
+
+    function drawLeafShape(color, vein, alpha, scale) {
+        const leaf = new PIXI.Container();
+        const g = new PIXI.Graphics();
+        g.beginFill(color, alpha);
+        g.lineStyle(1.2, vein, alpha * 0.35);
+        g.moveTo(0, -42 * scale);
+        g.bezierCurveTo(38 * scale, -30 * scale, 50 * scale, 18 * scale, 0, 50 * scale);
+        g.bezierCurveTo(-50 * scale, 18 * scale, -38 * scale, -30 * scale, 0, -42 * scale);
+        g.endFill();
+        g.lineStyle(1.4, vein, alpha * 0.5);
+        g.moveTo(0, -34 * scale);
+        g.lineTo(0, 42 * scale);
+        g.lineStyle(1, vein, alpha * 0.3);
+        for (let i = -2; i <= 2; i += 1) {
+            const y = i * 13 * scale;
+            g.moveTo(0, y);
+            g.lineTo(20 * scale, y - 12 * scale);
+            g.moveTo(0, y + 4 * scale);
+            g.lineTo(-20 * scale, y - 8 * scale);
+        }
+        leaf.addChild(g);
+        return leaf;
     }
 
     function drawArenaFrame() {
@@ -209,15 +381,15 @@
         const height = arena.height * VIEW_ZOOM;
 
         const shadow = new PIXI.Graphics();
-        shadow.lineStyle(16, 0x7af7ff, 0.035);
+        shadow.lineStyle(16, getBiome().veins, 0.04);
         shadow.drawRoundedRect(x, y, width, height, 24);
         shadow.filters = [new PIXI.BlurFilter(10, 2)];
         shadow.blendMode = PIXI.BLEND_MODES.ADD;
 
         const frame = new PIXI.Graphics();
-        frame.lineStyle(1.5, 0x7af7ff, 0.3);
+        frame.lineStyle(1.5, getBiome().veins, 0.32);
         frame.drawRoundedRect(x, y, width, height, 24);
-        frame.lineStyle(1, 0xffd66b, 0.16);
+        frame.lineStyle(1, 0xffd66b, 0.18);
         frame.drawRoundedRect(x + 5, y + 5, width - 10, height - 10, 18);
 
         const vignette = new PIXI.Graphics();
@@ -231,57 +403,103 @@
         foregroundLayer.addChild(vignette, shadow, frame);
     }
 
-    function createBackground() {
-        backgroundLayer.removeChildren().forEach((child) => child.destroy({ children: true }));
-        bloomLayer.removeChildren().forEach((child) => child.destroy({ children: true }));
+    function clearBackgroundLayers() {
+        for (const layer of [backgroundLayer, farLeafLayer, midLeafLayer, bloomLayer, nearLeafLayer]) {
+            layer.removeChildren().forEach((child) => child.destroy({ children: true }));
+        }
         spores.length = 0;
         blooms.length = 0;
-
+        leaves.length = 0;
         if (backgroundTexture) {
             backgroundTexture.destroy(true);
+            backgroundTexture = null;
         }
+    }
 
+    function createBackground() {
+        clearBackgroundLayers();
+
+        const biome = getBiome();
         const w = app.screen.width;
         const h = app.screen.height;
-        backgroundTexture = createGradientTexture(w, h);
+        backgroundTexture = createGradientTexture(w, h, biome);
 
         const gradient = new PIXI.Sprite(backgroundTexture);
         gradient.width = w;
         gradient.height = h;
         backgroundLayer.addChild(gradient);
 
-        for (let i = 0; i < 150; i += 1) {
+        const leafLayerData = [
+            { layer: farLeafLayer, count: 18, min: 0.65, max: 1.15, alpha: 0.16, speed: [8, 20], blur: 2 },
+            { layer: midLeafLayer, count: 24, min: 0.8, max: 1.6, alpha: 0.22, speed: [18, 38], blur: 0 },
+            { layer: nearLeafLayer, count: 10, min: 1.6, max: 2.6, alpha: 0.16, speed: [30, 58], blur: 3 }
+        ];
+
+        for (const config of leafLayerData) {
+            for (let i = 0; i < config.count; i += 1) {
+                const scale = randomBetween(config.min, config.max);
+                const leaf = drawLeafShape(pick(biome.leaves), biome.veins, randomBetween(config.alpha * 0.65, config.alpha * 1.2), scale);
+                leaf.x = randomBetween(-120, w + 180);
+                leaf.y = randomBetween(-80, h + 100);
+                leaf.rotation = randomBetween(-1.8, 1.8);
+                leaf.speed = randomBetween(config.speed[0], config.speed[1]);
+                leaf.drift = randomBetween(-10, 10);
+                leaf.phase = randomBetween(0, Math.PI * 2);
+                if (config.blur > 0) {
+                    leaf.filters = [new PIXI.BlurFilter(config.blur, 1)];
+                }
+                config.layer.addChild(leaf);
+                leaves.push(leaf);
+            }
+        }
+
+        for (let i = 0; i < 170; i += 1) {
             const spore = new PIXI.Graphics();
-            const tint = Math.random() > 0.76 ? 0xffd66b : Math.random() > 0.48 ? 0x7af7ff : 0xff72cf;
-            const radius = randomBetween(0.8, 3.6);
-            spore.beginFill(tint, randomBetween(0.32, 0.9));
+            const tint = pick(biome.spores);
+            const radius = randomBetween(0.8, 4.2);
+            spore.beginFill(tint, randomBetween(0.3, 0.9));
             spore.drawCircle(0, 0, radius);
             spore.endFill();
             spore.x = randomBetween(0, w);
             spore.y = randomBetween(0, h);
-            spore.speed = randomBetween(12, 48);
-            spore.drift = randomBetween(-12, 12);
+            spore.speed = randomBetween(12, 56);
+            spore.drift = randomBetween(-14, 14);
             spore.pulse = randomBetween(0, Math.PI * 2);
             spore.blendMode = PIXI.BLEND_MODES.ADD;
             backgroundLayer.addChild(spore);
             spores.push(spore);
         }
 
-        for (let i = 0; i < 16; i += 1) {
+        for (let i = 0; i < 18; i += 1) {
             const bloom = new PIXI.Graphics();
-            const color = i % 3 === 0 ? 0x7af7ff : i % 3 === 1 ? 0xff72cf : 0xffd66b;
-            bloom.beginFill(color, randomBetween(0.08, 0.18));
-            bloom.drawCircle(0, 0, randomBetween(50, 150));
+            bloom.beginFill(pick(biome.blooms), randomBetween(0.08, 0.17));
+            bloom.drawCircle(0, 0, randomBetween(58, 160));
             bloom.endFill();
-            bloom.x = randomBetween(-40, w + 40);
+            bloom.x = randomBetween(-60, w + 60);
             bloom.y = randomBetween(-30, h + 30);
-            bloom.speed = randomBetween(3, 14);
+            bloom.speed = randomBetween(3, 15);
             bloom.phase = randomBetween(0, Math.PI * 2);
             bloomLayer.addChild(bloom);
             blooms.push(bloom);
         }
 
         drawArenaFrame();
+    }
+
+    function applyBiome(index, announce = false) {
+        state.biomeIndex = index % BIOMES.length;
+        shell.dataset.biome = getBiome().key;
+        createBackground();
+        updateHud();
+
+        if (announce && biomeToast) {
+            biomeToast.textContent = getBiome().name;
+            biomeToast.hidden = false;
+            biomeToastTimer = 2.2;
+            playBiomeSound();
+            const arena = getArena();
+            createRing(arena.centerX, arena.centerY, getBiome().veins, 0.9, 170);
+        }
     }
 
     function makeCircle(radius, color, alpha) {
@@ -296,11 +514,11 @@
         const butterfly = new PIXI.Container();
         butterfly.radius = PLAYER_RADIUS;
 
-        const outerGlow = makeCircle(56, 0xff7d4b, 0.12);
+        const outerGlow = makeCircle(62, 0xff7d4b, 0.13);
         outerGlow.blendMode = PIXI.BLEND_MODES.ADD;
-        outerGlow.filters = [new PIXI.BlurFilter(8, 2)];
+        outerGlow.filters = [new PIXI.BlurFilter(9, 2)];
 
-        const glow = makeCircle(38, 0xffd66b, 0.16);
+        const glow = makeCircle(40, 0xffd66b, 0.18);
         glow.blendMode = PIXI.BLEND_MODES.ADD;
         butterfly.addChild(outerGlow, glow);
         butterfly.glow = glow;
@@ -348,23 +566,43 @@
         rightWing.moveTo(8, 7);
         rightWing.lineTo(25, 31);
 
-        const body = new PIXI.Graphics();
-        body.beginFill(0x17101e, 1);
-        body.drawEllipse(0, 2, 6, 25);
-        body.endFill();
-        body.beginFill(0xfff4b4, 1);
-        body.drawCircle(0, -21, 6);
-        body.endFill();
-        body.lineStyle(2, 0xffd66b, 0.9);
-        body.moveTo(-2, -24);
-        body.lineTo(-12, -36);
-        body.moveTo(2, -24);
-        body.lineTo(12, -36);
+        const body = new PIXI.Container();
+        const abdomen = new PIXI.Graphics();
+        abdomen.beginFill(0x100a17, 1);
+        abdomen.drawEllipse(0, 9, 5.5, 21);
+        abdomen.endFill();
+        abdomen.lineStyle(1.2, 0xffd66b, 0.48);
+        for (let y = -4; y <= 22; y += 7) {
+            abdomen.moveTo(-4.5, y);
+            abdomen.quadraticCurveTo(0, y + 3, 4.5, y);
+        }
+        const thorax = new PIXI.Graphics();
+        thorax.beginFill(0x1b1221, 1);
+        thorax.drawEllipse(0, -9, 7.5, 11);
+        thorax.endFill();
+        thorax.beginFill(0x3a2638, 0.8);
+        thorax.drawEllipse(0, -11, 3.8, 6);
+        thorax.endFill();
+        const head = new PIXI.Graphics();
+        head.beginFill(0x15101c, 1);
+        head.drawCircle(0, -24, 7);
+        head.endFill();
+        head.beginFill(0xfff1ae, 0.78);
+        head.drawCircle(-3, -25, 1.6);
+        head.drawCircle(3, -25, 1.6);
+        head.endFill();
+        head.lineStyle(1.8, 0xffd66b, 0.86);
+        head.moveTo(-3, -29);
+        head.quadraticCurveTo(-12, -36, -17, -32);
+        head.moveTo(3, -29);
+        head.quadraticCurveTo(12, -36, 17, -32);
+        body.addChild(abdomen, thorax, head);
 
         butterfly.addChild(leftWing, rightWing, body);
         butterfly.leftWing = leftWing;
         butterfly.rightWing = rightWing;
         butterfly.body = body;
+        butterfly.abdomen = abdomen;
 
         const arena = getArena();
         butterfly.x = arena.left + arena.width * 0.26;
@@ -378,12 +616,20 @@
         pollen.radius = POLLEN_RADIUS;
         pollen.speed = randomBetween(134, 178);
 
-        const aura = makeCircle(28, 0xffd66b, 0.22);
+        const aura = makeCircle(31, 0xffd66b, 0.24);
         aura.blendMode = PIXI.BLEND_MODES.ADD;
         aura.filters = [new PIXI.BlurFilter(5, 2)];
 
-        const halo = makeCircle(16, 0xff7d67, 0.22);
+        const halo = makeCircle(17, 0xff7d67, 0.24);
         halo.blendMode = PIXI.BLEND_MODES.ADD;
+
+        const petals = new PIXI.Graphics();
+        petals.beginFill(0xffd66b, 0.9);
+        for (let i = 0; i < 6; i += 1) {
+            const angle = (Math.PI * 2 * i) / 6;
+            petals.drawEllipse(Math.cos(angle) * 8, Math.sin(angle) * 8, 3.5, 2.1);
+        }
+        petals.endFill();
 
         const core = new PIXI.Graphics();
         core.beginFill(0xfff0a3, 1);
@@ -393,7 +639,8 @@
         core.drawCircle(3, -3, 3);
         core.endFill();
 
-        pollen.addChild(aura, halo, core);
+        pollen.addChild(aura, halo, petals, core);
+        pollen.petals = petals;
         pollen.x = x;
         pollen.y = y;
         pollen.phase = randomBetween(0, Math.PI * 2);
@@ -402,42 +649,102 @@
         pollenItems.push(pollen);
     }
 
-    function createHazard(x, y) {
-        const hazard = new PIXI.Container();
-        hazard.radius = HAZARD_RADIUS;
-        hazard.speed = randomBetween(162, 222) + state.time * 2.5;
-        hazard.rotationSpeed = randomBetween(-1.9, 1.9);
+    function createWaspSprite() {
+        const wasp = new PIXI.Container();
+        const glow = makeCircle(28, 0xff2d3d, 0.18);
+        glow.blendMode = PIXI.BLEND_MODES.ADD;
+        glow.filters = [new PIXI.BlurFilter(5, 2)];
 
-        const warning = makeCircle(39, 0xff4fbd, 0.18);
+        const leftWing = new PIXI.Graphics();
+        leftWing.beginFill(0xcffaff, 0.42);
+        leftWing.drawEllipse(-9, -12, 8, 16);
+        leftWing.endFill();
+        leftWing.lineStyle(1, 0xffffff, 0.35);
+        leftWing.moveTo(-9, -23);
+        leftWing.lineTo(-7, 1);
+
+        const rightWing = new PIXI.Graphics();
+        rightWing.beginFill(0xcffaff, 0.42);
+        rightWing.drawEllipse(9, -12, 8, 16);
+        rightWing.endFill();
+        rightWing.lineStyle(1, 0xffffff, 0.35);
+        rightWing.moveTo(9, -23);
+        rightWing.lineTo(7, 1);
+
+        const body = new PIXI.Graphics();
+        body.beginFill(0x241315, 1);
+        body.drawEllipse(0, 1, 8, 23);
+        body.endFill();
+        body.beginFill(0xffcf3a, 1);
+        body.drawRoundedRect(-7, -12, 14, 5, 2);
+        body.drawRoundedRect(-7, 1, 14, 5, 2);
+        body.drawRoundedRect(-6, 13, 12, 4, 2);
+        body.endFill();
+        body.beginFill(0xfff1a2, 0.9);
+        body.drawCircle(0, -23, 7);
+        body.endFill();
+        body.beginFill(0x14090c, 1);
+        body.drawCircle(-2.8, -24, 1.5);
+        body.drawCircle(2.8, -24, 1.5);
+        body.endFill();
+        body.lineStyle(1.7, 0x14090c, 0.9);
+        body.moveTo(-2, -28);
+        body.lineTo(-11, -36);
+        body.moveTo(2, -28);
+        body.lineTo(11, -36);
+        body.moveTo(0, 22);
+        body.lineTo(0, 32);
+
+        wasp.addChild(glow, leftWing, rightWing, body);
+        wasp.leftWing = leftWing;
+        wasp.rightWing = rightWing;
+        wasp.glow = glow;
+        return wasp;
+    }
+
+    function createHazard() {
+        const arena = getArena();
+        const y = randomBetween(arena.top + 34, arena.bottom - 34);
+        const slope = randomBetween(-0.12, 0.12);
+        const startX = arena.right + 120;
+        const endX = arena.left - 140;
+        const startY = y;
+        const endY = clamp(y + (endX - startX) * slope, arena.top + 26, arena.bottom - 26);
+
+        const container = new PIXI.Container();
+        const warning = new PIXI.Graphics();
+        warning.lineStyle(15, 0xff3148, 0.15);
+        warning.moveTo(startX, startY);
+        warning.lineTo(endX, endY);
+        warning.lineStyle(2, 0xff8792, 0.65);
+        warning.moveTo(startX, startY);
+        warning.lineTo(endX, endY);
         warning.blendMode = PIXI.BLEND_MODES.ADD;
-        warning.filters = [new PIXI.BlurFilter(5, 2)];
 
-        const rim = new PIXI.Graphics();
-        rim.lineStyle(2, 0xff65c8, 0.52);
-        rim.drawCircle(0, 0, 30);
-        rim.blendMode = PIXI.BLEND_MODES.ADD;
+        const wasp = createWaspSprite();
+        wasp.visible = false;
+        wasp.x = startX;
+        wasp.y = startY;
+        wasp.rotation = Math.atan2(endY - startY, endX - startX) - Math.PI / 2;
 
-        const thorn = new PIXI.Graphics();
-        thorn.lineStyle(2, 0xff9ad8, 0.78);
-        thorn.beginFill(0x190724, 1);
-        thorn.moveTo(0, -33);
-        thorn.lineTo(24, -3);
-        thorn.lineTo(9, 30);
-        thorn.lineTo(-18, 23);
-        thorn.lineTo(-26, -9);
-        thorn.closePath();
-        thorn.endFill();
-        thorn.beginFill(0x3a0d4b, 0.86);
-        thorn.drawCircle(0, 0, 8);
-        thorn.endFill();
-
-        hazard.addChild(warning, rim, thorn);
-        hazard.warning = warning;
-        hazard.rim = rim;
-        hazard.x = x;
-        hazard.y = y;
-        hazardLayer.addChild(hazard);
-        hazards.push(hazard);
+        container.addChild(warning, wasp);
+        hazardLayer.addChild(container);
+        hazards.push({
+            container,
+            warning,
+            wasp,
+            startX,
+            startY,
+            endX,
+            endY,
+            timer: 0,
+            warningTime: 1.85,
+            attackTime: 0.72,
+            phase: 'warning',
+            radius: HAZARD_RADIUS,
+            x: startX,
+            y: startY
+        });
     }
 
     function createParticle(x, y, color, size, speedX, speedY, life, alpha = 0.82) {
@@ -480,14 +787,14 @@
     function burst(x, y, color, count) {
         for (let i = 0; i < count; i += 1) {
             const angle = randomBetween(0, Math.PI * 2);
-            const speed = randomBetween(95, 260);
-            createParticle(x, y, color, randomBetween(2, 5.5), Math.cos(angle) * speed, Math.sin(angle) * speed, randomBetween(0.35, 0.82));
+            const speed = randomBetween(95, 285);
+            createParticle(x, y, color, randomBetween(2, 5.8), Math.cos(angle) * speed, Math.sin(angle) * speed, randomBetween(0.35, 0.86));
         }
     }
 
     function clearRunObjects() {
         pollenItems.splice(0).forEach((item) => item.destroy({ children: true }));
-        hazards.splice(0).forEach((hazard) => hazard.destroy({ children: true }));
+        hazards.splice(0).forEach((hazard) => hazard.container.destroy({ children: true }));
         particles.splice(0).forEach((particle) => particle.destroy());
         rings.splice(0).forEach((ring) => ring.destroy());
         pollenLayer.removeChildren();
@@ -502,6 +809,9 @@
             state.player.destroy({ children: true });
         }
 
+        state.time = 0;
+        state.biomeIndex = 0;
+        applyBiome(0, false);
         state.player = createMonarchButterfly();
         playerLayer.addChild(state.player);
         state.velocity.x = 0;
@@ -509,11 +819,14 @@
         state.score = 0;
         state.pollen = 0;
         state.health = START_HEALTH;
-        state.time = 0;
         state.invulnerable = 0;
         state.pollenTimer = 0.35;
-        state.hazardTimer = 1.05;
+        state.hazardTimer = 1.2;
         state.particleTimer = 0;
+        state.dashCooldown = 0;
+        state.dashTime = 0;
+        state.dashVector.x = 1;
+        state.dashVector.y = 0;
         camera.x = 0;
         camera.y = 0;
         camera.targetX = 0;
@@ -524,9 +837,14 @@
     }
 
     function startRun() {
+        initAudio();
+        if (audio.context && audio.context.state === 'suspended') {
+            audio.context.resume();
+        }
         resetRun();
         state.mode = 'playing';
         showPanel(null);
+        setMusic(true);
         app.view.focus?.();
     }
 
@@ -536,6 +854,7 @@
         }
         state.mode = 'paused';
         showPanel('pause');
+        setMusic(false);
     }
 
     function resumeRun() {
@@ -544,6 +863,7 @@
         }
         state.mode = 'playing';
         showPanel(null);
+        setMusic(true);
     }
 
     function finishRun(won) {
@@ -551,30 +871,75 @@
         resultEyebrow.textContent = won ? 'Goal Reached' : 'Run Ended';
         resultTitle.textContent = won ? 'Garden Cleared' : 'Game Over';
         resultSummary.textContent = won
-            ? 'The monarch gathered enough pollen to finish this Phase B route.'
-            : 'A shadow thorn took the last health. Try a wider glide and watch the warning glows.';
+            ? 'The monarch gathered enough pollen to finish this Phase C route.'
+            : 'A wasp took the last health. Read the red warning lane, then dash clear before it strikes.';
         finalScore.textContent = String(state.score);
         finalPollen.textContent = String(state.pollen);
+        setMusic(false);
         showPanel('gameOver');
     }
 
     function spawnPollenCluster() {
         const arena = getArena();
-        const baseY = randomBetween(arena.top + 22, arena.bottom - 22);
+        const baseY = randomBetween(arena.top + 24, arena.bottom - 24);
         const cluster = Math.random() > 0.55 ? 4 : 3;
         for (let i = 0; i < cluster; i += 1) {
             createPollen(arena.right + 34 + 34 * i, baseY + Math.sin(i * 1.2) * 27);
         }
     }
 
+    function tryDash() {
+        if (state.mode !== 'playing' || state.dashCooldown > 0 || !state.player) {
+            return;
+        }
+
+        let dx = state.velocity.x;
+        let dy = state.velocity.y;
+        if (Math.hypot(dx, dy) < 30 && mouse.active) {
+            dx = mouse.x - state.player.x;
+            dy = mouse.y - state.player.y;
+        }
+        if (Math.hypot(dx, dy) < 30) {
+            dx = 1;
+            dy = 0;
+        }
+
+        const len = Math.hypot(dx, dy) || 1;
+        state.dashVector.x = dx / len;
+        state.dashVector.y = dy / len;
+        state.velocity.x = state.dashVector.x * DASH_SPEED;
+        state.velocity.y = state.dashVector.y * DASH_SPEED;
+        state.dashCooldown = DASH_COOLDOWN;
+        state.dashTime = DASH_DURATION;
+        playDashSound();
+        createRing(state.player.x, state.player.y, 0x7af7ff, 0.36, 72);
+        burst(state.player.x, state.player.y, 0x7af7ff, 18);
+        updateHud();
+    }
+
+    function updateBiome(dt) {
+        const targetBiome = Math.floor(state.time / BIOME_LENGTH) % BIOMES.length;
+        if (targetBiome !== state.biomeIndex) {
+            applyBiome(targetBiome, true);
+        }
+
+        if (biomeToast && !biomeToast.hidden) {
+            biomeToastTimer -= dt;
+            if (biomeToastTimer <= 0) {
+                biomeToast.hidden = true;
+            }
+        }
+    }
+
     function updateCamera(dt, immediate = false) {
         if (state.player) {
             const arena = getArena();
-            camera.targetX = clamp((arena.centerX - state.player.x) * 0.13, -22, 22);
-            camera.targetY = clamp((arena.centerY - state.player.y) * 0.1, -15, 15);
+            const dashKick = state.dashTime > 0 ? 1.6 : 1;
+            camera.targetX = clamp((arena.centerX - state.player.x) * 0.14 * dashKick, -28, 28);
+            camera.targetY = clamp((arena.centerY - state.player.y) * 0.11 * dashKick, -18, 18);
         }
 
-        const ease = immediate ? 1 : 1 - Math.pow(0.0008, dt);
+        const ease = immediate ? 1 : 1 - Math.pow(0.00065, dt);
         camera.x = lerp(camera.x, camera.targetX, ease);
         camera.y = lerp(camera.y, camera.targetY, ease);
         world.scale.set(VIEW_ZOOM);
@@ -586,6 +951,13 @@
         const player = state.player;
         if (!player) {
             return;
+        }
+
+        if (state.dashCooldown > 0) {
+            state.dashCooldown = Math.max(0, state.dashCooldown - dt);
+        }
+        if (state.dashTime > 0) {
+            state.dashTime = Math.max(0, state.dashTime - dt);
         }
 
         let ax = 0;
@@ -607,9 +979,9 @@
             const dx = targetX - player.x;
             const dy = targetY - player.y;
             const length = Math.hypot(dx, dy) || 1;
-            const pull = clamp(length / 180, 0, 1);
-            ax += (dx / length) * pull * 1.25;
-            ay += (dy / length) * pull * 1.25;
+            const pull = clamp(length / 165, 0, 1);
+            ax += (dx / length) * pull * 1.35;
+            ay += (dy / length) * pull * 1.35;
         }
 
         const inputLength = Math.hypot(ax, ay);
@@ -618,9 +990,9 @@
             ay /= inputLength;
         }
 
-        const acceleration = 1160;
-        const drag = 0.9;
-        const maxSpeed = 650;
+        const acceleration = state.dashTime > 0 ? 1880 : 1640;
+        const drag = state.dashTime > 0 ? 0.97 : 0.905;
+        const maxSpeed = state.dashTime > 0 ? 1120 : 760;
 
         state.velocity.x += ax * acceleration * dt;
         state.velocity.y += ay * acceleration * dt;
@@ -639,29 +1011,35 @@
         player.x = clamp(player.x, arena.left + 30, arena.right - 30);
         player.y = clamp(player.y, arena.top + 30, arena.bottom - 30);
 
-        const flutter = Math.sin(state.time * 22) * (0.18 + speed / 3200);
+        const refreshedSpeed = Math.hypot(state.velocity.x, state.velocity.y);
+        const flutter = Math.sin(state.time * (state.dashTime > 0 ? 34 : 24)) * (0.2 + refreshedSpeed / 3000);
         player.leftWing.scale.x = 1 + flutter;
         player.rightWing.scale.x = 1 + flutter;
-        player.scale.set(1 + Math.sin(state.time * 4.4) * 0.018);
-        player.rotation = clamp(state.velocity.x / 1050, -0.28, 0.28);
-        player.glow.alpha = state.invulnerable > 0 ? 0.34 + Math.sin(state.time * 36) * 0.16 : 0.19 + speed / 5200;
-        player.outerGlow.alpha = 0.78 + Math.sin(state.time * 6) * 0.16;
+        player.leftWing.rotation = -0.04 + flutter * 0.1;
+        player.rightWing.rotation = 0.04 - flutter * 0.1;
+        player.body.rotation = clamp(state.velocity.x / 1800, -0.08, 0.08);
+        player.scale.set(1 + Math.sin(state.time * 4.8) * 0.018 + (state.dashTime > 0 ? 0.08 : 0));
+        player.rotation = clamp(state.velocity.x / 980, -0.32, 0.32);
+        player.glow.alpha = state.invulnerable > 0 ? 0.34 + Math.sin(state.time * 36) * 0.16 : 0.19 + refreshedSpeed / 4800;
+        player.outerGlow.alpha = 0.8 + Math.sin(state.time * 6) * 0.16;
 
         state.particleTimer -= dt;
         if (state.particleTimer <= 0) {
-            state.particleTimer = 0.036;
-            const trailColor = Math.random() > 0.5 ? 0xffb24a : 0x7af7ff;
+            state.particleTimer = state.dashTime > 0 ? 0.018 : 0.032;
+            const trailColor = state.dashTime > 0 ? 0x7af7ff : Math.random() > 0.5 ? 0xffb24a : getBiome().veins;
             createParticle(
-                player.x - 20 + randomBetween(-6, 5),
-                player.y + randomBetween(-15, 18),
+                player.x - 20 + randomBetween(-8, 8),
+                player.y + randomBetween(-18, 20),
                 trailColor,
-                randomBetween(1.6, 4.2),
-                randomBetween(-150, -70) - Math.abs(state.velocity.x) * 0.08,
-                randomBetween(-42, 42),
-                randomBetween(0.38, 0.68),
-                0.68
+                randomBetween(1.8, 5.2),
+                randomBetween(-170, -80) - Math.abs(state.velocity.x) * 0.08,
+                randomBetween(-52, 52),
+                randomBetween(0.36, 0.72),
+                0.7
             );
         }
+
+        updateHud();
     }
 
     function updatePollen(dt) {
@@ -678,14 +1056,16 @@
             pollen.x -= pollen.speed * dt;
             pollen.y += Math.sin(pollen.phase) * 21 * dt;
             pollen.scale.set(1 + Math.sin(pollen.phase * 1.7) * 0.1);
-            pollen.rotation += dt * 1.8;
+            pollen.rotation += dt * 1.9;
+            pollen.petals.rotation -= dt * 2.8;
 
             if (state.player && isColliding(state.player, pollen, PLAYER_RADIUS, POLLEN_RADIUS)) {
                 state.score += 10;
                 state.pollen += 1;
                 updateHud();
-                burst(pollen.x, pollen.y, 0xffd66b, 12);
-                createRing(pollen.x, pollen.y, 0xffd66b, 0.42, 46);
+                playCollectSound();
+                burst(pollen.x, pollen.y, 0xffd66b, 14);
+                createRing(pollen.x, pollen.y, 0xffd66b, 0.42, 48);
                 pollen.destroy({ children: true });
                 pollenItems.splice(i, 1);
                 if (state.pollen >= TARGET_POLLEN) {
@@ -702,11 +1082,10 @@
     }
 
     function updateHazards(dt) {
-        const arena = getArena();
         state.hazardTimer -= dt;
         if (state.hazardTimer <= 0) {
-            state.hazardTimer = randomBetween(0.95, 1.45);
-            createHazard(arena.right + 64, randomBetween(arena.top + 24, arena.bottom - 24));
+            state.hazardTimer = randomBetween(1.38, 2.05);
+            createHazard();
         }
 
         if (state.invulnerable > 0) {
@@ -715,31 +1094,49 @@
 
         for (let i = hazards.length - 1; i >= 0; i -= 1) {
             const hazard = hazards[i];
-            hazard.x -= hazard.speed * dt;
-            hazard.rotation += hazard.rotationSpeed * dt;
-            hazard.alpha = hazard.x > arena.right - 74 ? 0.52 : 1;
-            const pulse = 1 + Math.sin(state.time * 8 + hazard.x * 0.02) * 0.08;
-            hazard.warning.scale.set(pulse);
-            hazard.rim.alpha = 0.42 + Math.sin(state.time * 7) * 0.14;
+            hazard.timer += dt;
 
-            if (state.player && state.invulnerable <= 0 && isColliding(state.player, hazard, PLAYER_RADIUS, HAZARD_RADIUS)) {
-                state.health -= 1;
-                state.invulnerable = 1.05;
-                updateHud();
-                burst(hazard.x, hazard.y, 0xff4fbd, 18);
-                createRing(hazard.x, hazard.y, 0xff4fbd, 0.5, 64);
-                hazard.destroy({ children: true });
-                hazards.splice(i, 1);
-
-                if (state.health <= 0) {
-                    finishRun(false);
+            if (hazard.phase === 'warning') {
+                const pulse = 0.22 + Math.sin(state.time * 11) * 0.08;
+                hazard.warning.alpha = 0.75 + Math.sin(state.time * 9) * 0.2;
+                hazard.warning.scale.y = 1 + pulse;
+                if (hazard.timer >= hazard.warningTime) {
+                    hazard.phase = 'attack';
+                    hazard.timer = 0;
+                    hazard.wasp.visible = true;
+                    hazard.warning.alpha = 0.32;
                 }
-                continue;
-            }
+            } else {
+                const t = clamp(hazard.timer / hazard.attackTime, 0, 1);
+                const ease = t * t * (3 - 2 * t);
+                hazard.x = lerp(hazard.startX, hazard.endX, ease);
+                hazard.y = lerp(hazard.startY, hazard.endY, ease);
+                hazard.wasp.x = hazard.x;
+                hazard.wasp.y = hazard.y;
+                hazard.wasp.leftWing.scale.x = 1 + Math.sin(state.time * 54) * 0.35;
+                hazard.wasp.rightWing.scale.x = 1 + Math.sin(state.time * 54 + Math.PI) * 0.35;
+                hazard.wasp.glow.alpha = 0.55 + Math.sin(state.time * 20) * 0.2;
 
-            if (hazard.x < arena.left - 120) {
-                hazard.destroy({ children: true });
-                hazards.splice(i, 1);
+                if (state.player && state.invulnerable <= 0 && isColliding(state.player, hazard, PLAYER_RADIUS, hazard.radius)) {
+                    state.health -= 1;
+                    state.invulnerable = 1.05;
+                    updateHud();
+                    playHitSound();
+                    burst(hazard.x, hazard.y, 0xff3148, 24);
+                    createRing(hazard.x, hazard.y, 0xff3148, 0.5, 70);
+                    hazard.container.destroy({ children: true });
+                    hazards.splice(i, 1);
+
+                    if (state.health <= 0) {
+                        finishRun(false);
+                    }
+                    continue;
+                }
+
+                if (t >= 1) {
+                    hazard.container.destroy({ children: true });
+                    hazards.splice(i, 1);
+                }
             }
         }
     }
@@ -780,11 +1177,23 @@
     function updateBackground(dt) {
         const w = app.screen.width;
         const h = app.screen.height;
+
+        for (const leaf of leaves) {
+            leaf.phase += dt;
+            leaf.x -= leaf.speed * dt;
+            leaf.y += Math.sin(leaf.phase) * leaf.drift * dt;
+            leaf.rotation += Math.sin(leaf.phase * 0.7) * 0.002;
+            if (leaf.x < -220) {
+                leaf.x = w + randomBetween(60, 220);
+                leaf.y = randomBetween(-90, h + 110);
+            }
+        }
+
         for (const spore of spores) {
             spore.x -= spore.speed * dt;
             spore.y += Math.sin(spore.pulse) * spore.drift * dt;
             spore.pulse += dt * 2;
-            spore.alpha = 0.45 + Math.sin(spore.pulse) * 0.28;
+            spore.alpha = 0.44 + Math.sin(spore.pulse) * 0.28;
             if (spore.x < -12) {
                 spore.x = w + 12;
                 spore.y = randomBetween(0, h);
@@ -812,6 +1221,7 @@
         }
 
         state.time += dt;
+        updateBiome(dt);
         updatePlayer(dt);
         updatePollen(dt);
         updateHazards(dt);
@@ -839,6 +1249,11 @@
 
         if ((key === 'enter' || key === ' ') && state.mode === 'menu') {
             startRun();
+            return;
+        }
+
+        if ((key === ' ' || key === 'spacebar') && !event.repeat) {
+            tryDash();
             return;
         }
 
@@ -883,13 +1298,20 @@
                 pollen: pollenItems.length,
                 hazards: hazards.length,
                 particles: particles.length,
-                rings: rings.length
+                rings: rings.length,
+                leaves: leaves.length,
+                spores: spores.length,
+                biome: getBiome().name,
+                dashCooldown: state.dashCooldown
             };
         },
-        state
+        state,
+        forceBiome(index = 1) {
+            applyBiome(index, true);
+        }
     };
 
-    createBackground();
+    applyBiome(0, false);
     updateHud();
     showPanel('start');
     app.ticker.add(tick);
