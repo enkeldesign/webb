@@ -166,6 +166,16 @@ button {
         inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
+#gameShell[data-biome="sky"] .screen-panel,
+#gameShell[data-biome="sky"] .hud-card {
+    border-color: rgba(255, 255, 255, 0.36);
+    background: linear-gradient(180deg, rgba(24, 58, 92, 0.62), rgba(7, 21, 44, 0.58));
+    box-shadow:
+        0 24px 80px rgba(0, 0, 0, 0.32),
+        0 0 70px rgba(166, 224, 255, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
 .screen-panel.compact {
     width: min(440px, calc(100vw - 32px));
 }
@@ -183,6 +193,11 @@ button {
 #gameShell[data-biome="amber"] .eyebrow {
     color: var(--gold);
     text-shadow: 0 0 18px rgba(255, 214, 107, 0.42);
+}
+
+#gameShell[data-biome="sky"] .eyebrow {
+    color: #ffffff;
+    text-shadow: 0 0 18px rgba(166, 224, 255, 0.55);
 }
 
 h1 {
