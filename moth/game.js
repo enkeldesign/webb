@@ -7,8 +7,8 @@
     const HAZARD_RADIUS = 25;
     const VIEW_ZOOM = 1.28;
     const BIOME_LENGTH = 30;
-    const MAX_PARTICLES = 220;
-    const MAX_RINGS = 18;
+    const MAX_PARTICLES = 240;
+    const MAX_RINGS = 20;
     const MAX_HAZARDS = 8;
     const DASH_SPEED = 1120;
     const DASH_COOLDOWN = 1.0;
@@ -16,19 +16,24 @@
     const SUMMON_COST = 2000;
     const SUMMON_TIME = 60 * 1000;
     const SAVE_KEY = 'nocturneWingsSaveV2';
+    const ADMIN_CODE = 'DarvidAdmin';
+    const INFINITE_POLLEN = 999999999;
 
     const SPECIES = {
         monarch: {
-            name: 'Monarch', kind: 'butterfly', body: 0x100a17, thorax: 0x1b1221,
-            wingA: 0xff7a1a, wingB: 0xffc94a, spot: 0xfff0a8, glow: 0xffa24a
+            name: 'Monarch', kind: 'butterfly', body: 0x171017, thorax: 0x2b1823,
+            wingA: 0xff7b22, wingB: 0xffbf3d, rim: 0x24131a, vein: 0x25121b,
+            spot: 0xfff4bf, glow: 0xffa24a, dust: 0xffdf87
         },
         cabbage: {
-            name: 'Cabbage White', kind: 'butterfly', body: 0x2d3140, thorax: 0x4c5264,
-            wingA: 0xf8fbff, wingB: 0xdcecff, spot: 0x2e3444, glow: 0xdff8ff
+            name: 'Cabbage White', kind: 'butterfly', body: 0x303545, thorax: 0x586071,
+            wingA: 0xfbfdff, wingB: 0xdbefff, rim: 0x545b69, vein: 0x94a7bb,
+            spot: 0x2f3543, glow: 0xdff8ff, dust: 0xffffff
         },
         rosy: {
-            name: 'Rosy Maple Moth', kind: 'moth', body: 0xffe37a, thorax: 0xff9ac9,
-            wingA: 0xff8fc3, wingB: 0xffe875, spot: 0xfff5b8, glow: 0xff9ac9
+            name: 'Rosy Maple Moth', kind: 'moth', body: 0xffd86f, thorax: 0xffa2cf,
+            wingA: 0xff8fc8, wingB: 0xffe57a, rim: 0x7b3558, vein: 0xffc0dd,
+            spot: 0xfff6bc, glow: 0xff9ac9, dust: 0xfff0a7
         }
     };
 
@@ -70,6 +75,17 @@
     const restartButton = document.getElementById('restartButton');
     const lobbyButton = document.getElementById('lobbyButton');
     const resumeButton = document.getElementById('resumeButton');
+    const pauseButton = document.getElementById('pauseButton');
+    const adminButton = document.getElementById('adminButton');
+    const adminPanel = document.getElementById('adminPanel');
+    const adminGate = document.getElementById('adminGate');
+    const adminCode = document.getElementById('adminCode');
+    const adminMessage = document.getElementById('adminMessage');
+    const adminControls = document.getElementById('adminControls');
+    const adminStatus = document.getElementById('adminStatus');
+    const infinitePollenButton = document.getElementById('infinitePollenButton');
+    const instantHatchButton = document.getElementById('instantHatchButton');
+    const biomeButtons = Array.from(document.querySelectorAll('[data-biome-index]'));
     const scoreValue = document.getElementById('scoreValue');
     const pollenValue = document.getElementById('pollenValue');
     const bankValue = document.getElementById('bankValue');
@@ -140,6 +156,7 @@
     let lobbyBuiltFor = '';
     let caterpillar = null;
     let pupae = null;
+    let adminUnlocked = false;
 
     const camera = { x: 0, y: 0, targetX: 0, targetY: 0 };
     const mouse = { x: 0, y: 0, active: false, lastMove: 0 };
@@ -203,6 +220,7 @@
         save.summon = null;
         saveGame();
         setSummonStatus(`${speciesName(species)} hatched! Click it to select it.`, true);
+        setAdminStatus(`${speciesName(species)} hatched.`);
         rebuildLobby();
         return true;
     }
@@ -229,13 +247,14 @@
     function updateHud() {
         scoreValue.textContent = String(state.score);
         pollenValue.textContent = String(state.runPollen);
-        bankValue.textContent = String(save.pollen);
-        lobbyPollenValue.textContent = String(save.pollen);
+        bankValue.textContent = save.pollen >= INFINITE_POLLEN ? 'Infinite' : String(save.pollen);
+        lobbyPollenValue.textContent = save.pollen >= INFINITE_POLLEN ? 'Infinite' : String(save.pollen);
         selectedValue.textContent = speciesName(save.selected);
         healthValue.textContent = String(state.health);
         biomeValue.textContent = getBiome().name;
         dashValue.textContent = state.dashCooldown <= 0 ? 'Ready' : `${Math.ceil(state.dashCooldown * 10) / 10}s`;
         dashValue.dataset.ready = state.dashCooldown <= 0 ? 'true' : 'false';
+        if (pauseButton) pauseButton.textContent = state.mode === 'paused' ? 'Resume' : 'Pause';
     }
 
     function showPanel(panel) {
@@ -251,6 +270,10 @@
             summonButton.hidden = true;
             summonStatus.hidden = true;
         }
+    }
+
+    function setAdminStatus(message) {
+        if (adminStatus) adminStatus.textContent = message;
     }
 
     function initAudio() {
@@ -336,6 +359,8 @@
         g.endFill();
         g.lineStyle(1, vein, alpha * 0.5);
         g.moveTo(0, -32 * scale); g.lineTo(0, 42 * scale);
+        g.moveTo(0, -6 * scale); g.lineTo(20 * scale, -20 * scale);
+        g.moveTo(0, 10 * scale); g.lineTo(-23 * scale, -3 * scale);
         leaf.addChild(g);
         return leaf;
     }
@@ -448,7 +473,7 @@
     }
 
     function applyBiome(index, announce = false) {
-        state.biomeIndex = index % BIOMES.length;
+        state.biomeIndex = ((index % BIOMES.length) + BIOMES.length) % BIOMES.length;
         shell.dataset.biome = getBiome().key;
         createGameBackground();
         updateHud();
@@ -468,71 +493,104 @@
         return circle;
     }
 
+    function drawOrganicWing(data, side, scale, upper) {
+        const g = new PIXI.Graphics();
+        const s = scale;
+        const fill = upper ? data.wingA : data.wingB;
+        const alpha = data.kind === 'moth' ? 0.94 : 0.9;
+        g.lineStyle(2.8 * s, data.rim, 0.9);
+        g.beginFill(fill, alpha);
+        if (upper) {
+            g.moveTo(side * 3 * s, -5 * s);
+            g.bezierCurveTo(side * 14 * s, -42 * s, side * 53 * s, -47 * s, side * 59 * s, -8 * s);
+            g.bezierCurveTo(side * 58 * s, 14 * s, side * 24 * s, 19 * s, side * 6 * s, 5 * s);
+            g.bezierCurveTo(side * 0 * s, 1 * s, side * 0 * s, -1 * s, side * 3 * s, -5 * s);
+        } else {
+            g.moveTo(side * 5 * s, 4 * s);
+            g.bezierCurveTo(side * 22 * s, 9 * s, side * 44 * s, 22 * s, side * 34 * s, 45 * s);
+            g.bezierCurveTo(side * 20 * s, 58 * s, side * 3 * s, 35 * s, side * 2 * s, 10 * s);
+            g.bezierCurveTo(side * 2 * s, 7 * s, side * 3 * s, 5 * s, side * 5 * s, 4 * s);
+        }
+        g.endFill();
+        g.beginFill(0xffffff, upper ? 0.13 : 0.08);
+        if (upper) g.drawEllipse(side * 35 * s, -18 * s, 13 * s, 25 * s);
+        else g.drawEllipse(side * 21 * s, 26 * s, 9 * s, 18 * s);
+        g.endFill();
+        g.lineStyle(1.4 * s, data.vein, 0.55);
+        if (upper) {
+            g.moveTo(side * 6 * s, -2 * s); g.bezierCurveTo(side * 20 * s, -20 * s, side * 34 * s, -33 * s, side * 53 * s, -35 * s);
+            g.moveTo(side * 7 * s, 1 * s); g.bezierCurveTo(side * 25 * s, -5 * s, side * 39 * s, 0, side * 55 * s, -7 * s);
+            g.moveTo(side * 9 * s, 3 * s); g.bezierCurveTo(side * 24 * s, 9 * s, side * 39 * s, 11 * s, side * 53 * s, 8 * s);
+        } else {
+            g.moveTo(side * 5 * s, 8 * s); g.bezierCurveTo(side * 17 * s, 19 * s, side * 25 * s, 34 * s, side * 31 * s, 47 * s);
+            g.moveTo(side * 4 * s, 8 * s); g.bezierCurveTo(side * 12 * s, 21 * s, side * 13 * s, 37 * s, side * 10 * s, 48 * s);
+        }
+        g.beginFill(data.spot, 0.76);
+        if (data.kind === 'moth') {
+            g.drawCircle(side * (upper ? 36 : 20) * s, upper ? -12 * s : 25 * s, upper ? 3.5 * s : 3 * s);
+        } else if (data.name === 'Monarch') {
+            if (upper) {
+                g.drawCircle(side * 42 * s, -28 * s, 3.2 * s);
+                g.drawCircle(side * 52 * s, -12 * s, 2.6 * s);
+                g.drawCircle(side * 44 * s, 6 * s, 2.4 * s);
+            } else {
+                g.drawCircle(side * 24 * s, 37 * s, 2.8 * s);
+                g.drawCircle(side * 11 * s, 24 * s, 2 * s);
+            }
+        } else {
+            if (upper) g.drawCircle(side * 43 * s, -6 * s, 3.4 * s);
+            else g.drawCircle(side * 24 * s, 28 * s, 2.4 * s);
+        }
+        g.endFill();
+        return g;
+    }
+
     function createCharacter(speciesKey, scale = 1, interactive = false) {
         const data = SPECIES[speciesKey] || SPECIES.monarch;
         const character = new PIXI.Container();
         character.species = speciesKey;
         character.radius = PLAYER_RADIUS * scale;
 
-        const outerGlow = makeCircle(62 * scale, data.glow, 0.13);
+        const outerGlow = makeCircle(70 * scale, data.glow, 0.105);
         outerGlow.blendMode = PIXI.BLEND_MODES.ADD;
-        const glow = makeCircle(40 * scale, data.glow, 0.18);
+        const glow = makeCircle(42 * scale, data.glow, 0.18);
         glow.blendMode = PIXI.BLEND_MODES.ADD;
         character.addChild(outerGlow, glow);
         character.glow = glow;
         character.outerGlow = outerGlow;
 
-        const wingSize = data.kind === 'moth' ? { top: [23, 24], bottom: [22, 19] } : { top: [19, 25], bottom: [16, 19] };
-
-        function wing(side) {
-            const g = new PIXI.Graphics();
-            g.lineStyle(3 * scale, 0x150814, 0.98);
-            g.beginFill(data.wingA, 1);
-            g.drawEllipse(side * 20 * scale, -15 * scale, wingSize.top[0] * scale, wingSize.top[1] * scale);
-            g.endFill();
-            g.beginFill(data.wingB, 1);
-            g.drawEllipse(side * 18 * scale, 15 * scale, wingSize.bottom[0] * scale, wingSize.bottom[1] * scale);
-            g.endFill();
-            g.beginFill(data.spot, 0.82);
-            if (data.kind === 'moth') {
-                g.drawCircle(side * 24 * scale, -4 * scale, 3.2 * scale);
-                g.drawCircle(side * 24 * scale, 18 * scale, 2.8 * scale);
-            } else {
-                g.drawCircle(side * 28 * scale, -21 * scale, 3 * scale);
-                g.drawCircle(side * 32 * scale, -9 * scale, 2.5 * scale);
-                g.drawCircle(side * 25 * scale, 23 * scale, 2.5 * scale);
-            }
-            g.endFill();
-            g.lineStyle(2 * scale, 0x20101f, 0.85);
-            g.moveTo(side * 4 * scale, -2 * scale); g.lineTo(side * 31 * scale, -29 * scale);
-            g.moveTo(side * 5 * scale, 2 * scale); g.lineTo(side * 33 * scale, 16 * scale);
-            g.moveTo(side * 8 * scale, 7 * scale); g.lineTo(side * 25 * scale, 31 * scale);
-            return g;
-        }
-
-        const leftWing = wing(-1);
-        const rightWing = wing(1);
+        const leftWing = new PIXI.Container();
+        const rightWing = new PIXI.Container();
+        leftWing.addChild(drawOrganicWing(data, -1, scale, true), drawOrganicWing(data, -1, scale, false));
+        rightWing.addChild(drawOrganicWing(data, 1, scale, true), drawOrganicWing(data, 1, scale, false));
+        leftWing.alpha = data.kind === 'moth' ? 0.98 : 0.94;
+        rightWing.alpha = leftWing.alpha;
 
         const body = new PIXI.Container();
         const abdomen = new PIXI.Graphics();
-        abdomen.beginFill(data.body, 1); abdomen.drawEllipse(0, 9 * scale, 5.5 * scale, 21 * scale); abdomen.endFill();
-        abdomen.lineStyle(1.2 * scale, data.spot, 0.46);
-        for (let y = -4; y <= 22; y += 7) {
-            abdomen.moveTo(-4.5 * scale, y * scale);
-            abdomen.quadraticCurveTo(0, (y + 3) * scale, 4.5 * scale, y * scale);
+        abdomen.beginFill(data.body, 1); abdomen.drawEllipse(0, 10 * scale, 5.2 * scale, 23 * scale); abdomen.endFill();
+        abdomen.lineStyle(1.1 * scale, data.dust, 0.34);
+        for (let y = -6; y <= 24; y += 6) {
+            abdomen.moveTo(-4.4 * scale, y * scale); abdomen.quadraticCurveTo(0, (y + 3) * scale, 4.4 * scale, y * scale);
         }
         const thorax = new PIXI.Graphics();
-        thorax.beginFill(data.thorax, 1); thorax.drawEllipse(0, -9 * scale, 7.5 * scale, 11 * scale); thorax.endFill();
-        thorax.beginFill(data.kind === 'moth' ? 0xffe5a8 : 0x3a2638, 0.5); thorax.drawEllipse(0, -11 * scale, 3.8 * scale, 6 * scale); thorax.endFill();
+        thorax.beginFill(data.thorax, 1); thorax.drawEllipse(0, -9 * scale, 8.4 * scale, 12.2 * scale); thorax.endFill();
+        thorax.beginFill(data.kind === 'moth' ? data.dust : 0x3a2638, data.kind === 'moth' ? 0.42 : 0.34); thorax.drawEllipse(0, -10 * scale, 4.8 * scale, 8 * scale); thorax.endFill();
         const head = new PIXI.Graphics();
-        head.beginFill(data.body, 1); head.drawCircle(0, -24 * scale, 7 * scale); head.endFill();
-        head.beginFill(data.spot, 0.78); head.drawCircle(-3 * scale, -25 * scale, 1.6 * scale); head.drawCircle(3 * scale, -25 * scale, 1.6 * scale); head.endFill();
-        head.lineStyle(1.8 * scale, data.spot, 0.86);
-        head.moveTo(-3 * scale, -29 * scale); head.quadraticCurveTo(-12 * scale, -36 * scale, -17 * scale, -32 * scale);
-        head.moveTo(3 * scale, -29 * scale); head.quadraticCurveTo(12 * scale, -36 * scale, 17 * scale, -32 * scale);
+        head.beginFill(data.body, 1); head.drawCircle(0, -25 * scale, 7.4 * scale); head.endFill();
+        head.beginFill(0xffffff, 0.82); head.drawCircle(-2.8 * scale, -26 * scale, 1.5 * scale); head.drawCircle(2.8 * scale, -26 * scale, 1.5 * scale); head.endFill();
+        head.beginFill(0x050409, 0.92); head.drawCircle(-2.8 * scale, -26 * scale, 0.75 * scale); head.drawCircle(2.8 * scale, -26 * scale, 0.75 * scale); head.endFill();
+        head.lineStyle(1.7 * scale, data.dust, 0.86);
+        head.moveTo(-3 * scale, -31 * scale); head.bezierCurveTo(-10 * scale, -43 * scale, -18 * scale, -39 * scale, -19 * scale, -33 * scale);
+        head.moveTo(3 * scale, -31 * scale); head.bezierCurveTo(10 * scale, -43 * scale, 18 * scale, -39 * scale, 19 * scale, -33 * scale);
         body.addChild(abdomen, thorax, head);
-        character.addChild(leftWing, rightWing, body);
-        character.leftWing = leftWing; character.rightWing = rightWing; character.body = body;
+
+        const shimmer = new PIXI.Graphics();
+        shimmer.beginFill(data.dust, 0.18); shimmer.drawEllipse(0, 0, 36 * scale, 54 * scale); shimmer.endFill();
+        shimmer.blendMode = PIXI.BLEND_MODES.ADD;
+        character.addChild(leftWing, rightWing, body, shimmer);
+        character.leftWing = leftWing; character.rightWing = rightWing; character.body = body; character.shimmer = shimmer;
+        character.flutterPhase = randomBetween(0, Math.PI * 2);
 
         if (interactive) {
             character.eventMode = 'static';
@@ -540,6 +598,22 @@
             character.on('pointertap', () => selectSpecies(speciesKey));
         }
         return character;
+    }
+
+    function animateCharacter(character, time, speed, intensity = 1) {
+        if (!character) return;
+        const phase = time * (18 + speed * 0.02) + character.flutterPhase;
+        const flap = Math.sin(phase) * (0.22 + Math.min(speed / 2600, 0.18)) * intensity;
+        const float = Math.sin(time * 4.2 + character.flutterPhase) * 0.018;
+        character.leftWing.scale.x = 1 - flap;
+        character.rightWing.scale.x = 1 + flap;
+        character.leftWing.scale.y = 1 + Math.abs(flap) * 0.12;
+        character.rightWing.scale.y = 1 + Math.abs(flap) * 0.12;
+        character.leftWing.rotation = -0.08 - flap * 0.12;
+        character.rightWing.rotation = 0.08 - flap * 0.12;
+        character.body.rotation = Math.sin(time * 5.2 + character.flutterPhase) * 0.035;
+        character.shimmer.alpha = 0.12 + Math.abs(flap) * 0.32;
+        character.scale.set(1 + float);
     }
 
     function selectSpecies(speciesKey) {
@@ -553,27 +627,41 @@
 
     function createCaterpillar() {
         const c = new PIXI.Container();
-        const bodyColors = [0x8bff7a, 0x74e56f, 0x5fd56a, 0x48bc5f, 0x36a452];
-        for (let i = 0; i < 6; i += 1) {
+        const bodyColors = [0x83f06f, 0x71dd64, 0x5dc759, 0x49ad50, 0x3c9649, 0x2f7f42];
+        for (let i = 0; i < 7; i += 1) {
+            const x = (i - 3) * 24;
+            const radius = 26 - Math.abs(i - 3) * 1.5;
             const segment = new PIXI.Graphics();
             segment.beginFill(bodyColors[i % bodyColors.length], 1);
-            segment.drawCircle((i - 2.5) * 25, 0, 27 - Math.abs(i - 2.5) * 1.6);
+            segment.drawEllipse(x, Math.sin(i * 0.7) * 2, radius, radius * 0.9);
             segment.endFill();
-            segment.lineStyle(2, 0x12401f, 0.45);
-            segment.drawCircle((i - 2.5) * 25, 0, 27 - Math.abs(i - 2.5) * 1.6);
+            segment.beginFill(0xd7ffc6, 0.18); segment.drawEllipse(x - 5, -7, radius * 0.5, radius * 0.26); segment.endFill();
+            segment.lineStyle(2, 0x12351f, 0.42); segment.drawEllipse(x, Math.sin(i * 0.7) * 2, radius, radius * 0.9);
             c.addChild(segment);
         }
-        const face = new PIXI.Graphics();
-        face.beginFill(0x102018, 1); face.drawCircle(-73, -8, 3); face.drawCircle(-61, -8, 3); face.endFill();
-        face.lineStyle(2, 0x102018, 0.9); face.moveTo(-72, 7); face.quadraticCurveTo(-66, 12, -58, 7);
-        c.addChild(face);
+        const headX = -78;
+        const head = new PIXI.Graphics();
+        head.beginFill(0x91ff72, 1); head.drawEllipse(headX, -1, 28, 26); head.endFill();
+        head.beginFill(0xd9ffc7, 0.18); head.drawEllipse(headX - 8, -10, 13, 6); head.endFill();
+        head.lineStyle(2, 0x12351f, 0.45); head.drawEllipse(headX, -1, 28, 26);
+        head.beginFill(0x09140c, 1); head.drawCircle(headX - 9, -7, 3.3); head.drawCircle(headX + 8, -7, 3.3); head.endFill();
+        head.beginFill(0xffffff, 0.9); head.drawCircle(headX - 10, -8, 1.1); head.drawCircle(headX + 7, -8, 1.1); head.endFill();
+        head.lineStyle(2, 0x18351f, 0.9); head.moveTo(headX - 12, 8); head.quadraticCurveTo(headX - 1, 16, headX + 13, 7);
+        head.lineStyle(1.5, 0x18351f, 0.55); head.moveTo(headX - 18, -22); head.quadraticCurveTo(headX - 28, -31, headX - 25, -39); head.moveTo(headX + 17, -22); head.quadraticCurveTo(headX + 27, -31, headX + 24, -39);
+        c.addChild(head);
+        const feet = new PIXI.Graphics();
+        feet.beginFill(0x234a28, 0.72);
+        for (let i = 0; i < 5; i += 1) feet.drawEllipse(-50 + i * 28, 26, 7, 4);
+        feet.endFill();
+        c.addChild(feet);
         const crown = new PIXI.Graphics();
         crown.beginFill(0xffd66b, 1);
-        crown.moveTo(-22, -37); crown.lineTo(-12, -62); crown.lineTo(0, -40); crown.lineTo(12, -62); crown.lineTo(22, -37); crown.closePath();
-        crown.endFill(); crown.lineStyle(2, 0x7a4b10, 0.75); crown.drawPolygon([-22, -37, -12, -62, 0, -40, 12, -62, 22, -37]);
+        crown.moveTo(headX - 20, -29); crown.lineTo(headX - 11, -52); crown.lineTo(headX, -32); crown.lineTo(headX + 11, -52); crown.lineTo(headX + 20, -29); crown.closePath();
+        crown.endFill(); crown.lineStyle(2, 0x7a4b10, 0.82); crown.drawPolygon([headX - 20, -29, headX - 11, -52, headX, -32, headX + 11, -52, headX + 20, -29]);
+        crown.beginFill(0xfff4bd, 0.95); crown.drawCircle(headX - 11, -52, 3); crown.drawCircle(headX + 11, -52, 3); crown.drawCircle(headX, -32, 2.4); crown.endFill();
         c.addChild(crown);
         c.eventMode = 'static'; c.cursor = 'pointer'; c.on('pointertap', showSummonControls);
-        c.scale.set(1.28);
+        c.scale.set(1.22);
         return c;
     }
 
@@ -664,12 +752,12 @@
             const flyer = createCharacter(speciesKey, 0.72, true);
             flyer.x = randomBetween(120, Math.max(180, app.screen.width - 120));
             flyer.y = randomBetween(110, Math.max(180, app.screen.height - 210));
-            flyer.vx = randomBetween(-42, 42) || 28;
-            flyer.vy = randomBetween(-28, 28) || -18;
+            flyer.vx = randomBetween(-46, 46) || 30;
+            flyer.vy = randomBetween(-30, 30) || -20;
             flyer.phase = randomBetween(0, Math.PI * 2);
             flyer.species = speciesKey;
             const ring = new PIXI.Graphics();
-            ring.lineStyle(3, 0xffd66b, 0.82); ring.drawCircle(0, 0, 48);
+            ring.lineStyle(3, 0xffd66b, 0.82); ring.drawCircle(0, 0, 52);
             ring.visible = speciesKey === save.selected;
             flyer.addChildAt(ring, 0);
             flyer.ring = ring;
@@ -702,18 +790,18 @@
         for (const flyer of lobbyFlyers) {
             flyer.phase += dt;
             flyer.x += flyer.vx * dt;
-            flyer.y += flyer.vy * dt;
+            flyer.y += flyer.vy * dt + Math.sin(flyer.phase * 1.6) * 7 * dt;
             if (flyer.x < 70 || flyer.x > w - 70) flyer.vx *= -1;
             if (flyer.y < 80 || flyer.y > h - 205) flyer.vy *= -1;
             const speed = Math.hypot(flyer.vx, flyer.vy);
             const target = speed > 1 ? Math.atan2(flyer.vy, flyer.vx) + Math.PI / 2 : flyer.rotation;
             flyer.rotation = angleLerp(flyer.rotation, target, 0.08);
-            const flutter = Math.sin(flyer.phase * 14) * 0.22;
-            flyer.leftWing.scale.x = 1 + flutter;
-            flyer.rightWing.scale.x = 1 - flutter * 0.4;
-            flyer.y += Math.sin(flyer.phase * 1.5) * 7 * dt;
+            animateCharacter(flyer, performance.now() / 1000 + flyer.phase, speed, 0.86);
         }
-        if (caterpillar) caterpillar.rotation = Math.sin(performance.now() / 700) * 0.018;
+        if (caterpillar) {
+            caterpillar.rotation = Math.sin(performance.now() / 700) * 0.018;
+            caterpillar.scale.set(1.22 + Math.sin(performance.now() / 900) * 0.014);
+        }
         if (pupae) pupae.rotation = Math.sin(performance.now() / 560) * 0.035;
     }
 
@@ -831,37 +919,45 @@
         hazards.splice(0).forEach((hazard) => hazard.container.destroy({ children: true }));
         particles.splice(0).forEach((particle) => particle.destroy());
         rings.splice(0).forEach((ring) => ring.destroy());
-        pollenLayer.removeChildren(); warningLayer.removeChildren(); hazardLayer.removeChildren(); effectLayer.removeChildren(); playerLayer.removeChildren();
+        pollenLayer.removeChildren(); warningLayer.removeChildren(); hazardLayer.removeChildren(); effectLayer.removeChildren();
+        playerLayer.removeChildren().forEach((child) => child.destroy({ children: true }));
     }
 
-    function resetRun() {
-        clearRunObjects();
-        state.time = 0; state.biomeIndex = 0; state.velocity.x = 0; state.velocity.y = 0; state.score = 0; state.runPollen = 0; state.health = START_HEALTH; state.invulnerable = 0;
-        state.pollenTimer = 0.35; state.hazardTimer = 1.2; state.particleTimer = 0; state.dashCooldown = 0; state.dashTime = 0; state.facing = 0;
-        applyBiome(0, false);
+    function placePlayerAtStart() {
         state.player = createCharacter(save.selected, 1, false);
-        const arena = getArena(); state.player.x = arena.left + arena.width * 0.26; state.player.y = arena.centerY;
+        const arena = getArena();
+        state.player.x = arena.left + arena.width * 0.26;
+        state.player.y = arena.centerY;
         playerLayer.addChild(state.player);
+    }
+
+    function resetRun(startBiome = 0) {
+        clearRunObjects();
+        state.time = startBiome * BIOME_LENGTH; state.biomeIndex = startBiome; state.velocity.x = 0; state.velocity.y = 0; state.score = 0; state.runPollen = 0; state.health = START_HEALTH; state.invulnerable = 0;
+        state.pollenTimer = 0.35; state.hazardTimer = 1.2; state.particleTimer = 0; state.dashCooldown = 0; state.dashTime = 0; state.facing = 0;
+        applyBiome(startBiome, false);
+        placePlayerAtStart();
         camera.x = 0; camera.y = 0; camera.targetX = 0; camera.targetY = 0; mouse.active = false;
         updateHud(); updateCamera(1, true);
     }
 
-    function startRun() {
+    function startRun(startBiome = 0) {
         initAudio();
         if (audio.context && audio.context.state === 'suspended') audio.context.resume();
         lobbyLayer.visible = false; world.visible = true; setHudMode('game'); showPanel(null); summonButton.hidden = true; summonStatus.hidden = true;
-        resetRun(); state.mode = 'playing'; setMusic(true); app.view.focus?.();
+        resetRun(startBiome); state.mode = 'playing'; setMusic(true); app.view.focus?.(); updateHud();
     }
 
-    function pauseRun() { if (state.mode !== 'playing') return; state.mode = 'paused'; showPanel('pause'); setMusic(false); }
-    function resumeRun() { if (state.mode !== 'paused') return; state.mode = 'playing'; showPanel(null); setMusic(true); }
+    function pauseRun() { if (state.mode !== 'playing') return; state.mode = 'paused'; showPanel('pause'); setMusic(false); updateHud(); }
+    function resumeRun() { if (state.mode !== 'paused') return; state.mode = 'playing'; showPanel(null); setMusic(true); updateHud(); }
+    function togglePause() { if (state.mode === 'playing') pauseRun(); else if (state.mode === 'paused') resumeRun(); }
 
     function finishRun() {
         state.mode = 'gameOver';
         resultEyebrow.textContent = 'Run Ended'; resultTitle.textContent = 'Game Over';
         resultSummary.textContent = 'The butterfly lost its last health. Your collected pollen has been saved.';
-        finalScore.textContent = String(state.score); finalPollen.textContent = String(state.runPollen); finalBank.textContent = String(save.pollen);
-        setMusic(false); showPanel('gameOver');
+        finalScore.textContent = String(state.score); finalPollen.textContent = String(state.runPollen); finalBank.textContent = save.pollen >= INFINITE_POLLEN ? 'Infinite' : String(save.pollen);
+        setMusic(false); showPanel('gameOver'); updateHud();
     }
 
     function spawnPollenCluster() {
@@ -881,9 +977,27 @@
         playDashSound(); createRing(state.player.x, state.player.y, getBiome().accent, 0.36, 72); burst(state.player.x, state.player.y, getBiome().accent, 18); updateHud();
     }
 
+    function switchRunBiome(index, announce = true) {
+        const safeIndex = ((index % BIOMES.length) + BIOMES.length) % BIOMES.length;
+        if (state.mode !== 'playing' && state.mode !== 'paused') {
+            startRun(safeIndex);
+            setAdminStatus(`Started in ${getBiome().name}.`);
+            return;
+        }
+        clearRunObjects();
+        state.time = safeIndex * BIOME_LENGTH;
+        state.velocity.x = 0; state.velocity.y = 0; state.dashTime = 0;
+        applyBiome(safeIndex, announce);
+        placePlayerAtStart();
+        state.hazardTimer = 1.0;
+        updateCamera(1, true);
+        updateHud();
+        setAdminStatus(`Switched to ${getBiome().name}.`);
+    }
+
     function updateBiome(dt) {
         const targetBiome = Math.floor(state.time / BIOME_LENGTH) % BIOMES.length;
-        if (targetBiome !== state.biomeIndex) { clearRunObjects(); applyBiome(targetBiome, true); state.hazardTimer = 1.0; state.player = createCharacter(save.selected, 1, false); const arena = getArena(); state.player.x = arena.left + arena.width * 0.26; state.player.y = arena.centerY; playerLayer.addChild(state.player); }
+        if (targetBiome !== state.biomeIndex) switchRunBiome(targetBiome, true);
         if (biomeToast && !biomeToast.hidden) { biomeToastTimer -= dt; if (biomeToastTimer <= 0) biomeToast.hidden = true; }
     }
 
@@ -919,10 +1033,11 @@
         const arena = getArena(); player.x = clamp(player.x + state.velocity.x * dt, arena.left + 30, arena.right - 30); player.y = clamp(player.y + state.velocity.y * dt, arena.top + 30, arena.bottom - 30);
         const currentSpeed = Math.hypot(state.velocity.x, state.velocity.y);
         if (currentSpeed > 35) state.facing = angleLerp(state.facing, Math.atan2(state.velocity.y, state.velocity.x) + Math.PI / 2, 1 - Math.pow(0.0002, dt));
-        const flutter = Math.sin(state.time * (state.dashTime > 0 ? 34 : 24)) * (0.2 + currentSpeed / 3100);
-        player.leftWing.scale.x = 1 + flutter; player.rightWing.scale.x = 1 + flutter; player.leftWing.rotation = -0.04 + flutter * 0.1; player.rightWing.rotation = 0.04 - flutter * 0.1;
-        player.body.rotation = clamp(state.velocity.x / 1800, -0.08, 0.08); player.scale.set(1 + Math.sin(state.time * 4.8) * 0.018 + (state.dashTime > 0 ? 0.08 : 0)); player.rotation = state.facing;
-        player.glow.alpha = state.invulnerable > 0 ? 0.34 + Math.sin(state.time * 36) * 0.16 : 0.19 + currentSpeed / 5000; player.outerGlow.alpha = 0.78 + Math.sin(state.time * 6) * 0.14;
+        player.rotation = state.facing;
+        player.glow.alpha = state.invulnerable > 0 ? 0.34 + Math.sin(state.time * 36) * 0.16 : 0.19 + currentSpeed / 5000;
+        player.outerGlow.alpha = 0.78 + Math.sin(state.time * 6) * 0.14;
+        animateCharacter(player, state.time, currentSpeed, state.dashTime > 0 ? 1.35 : 1);
+        if (state.dashTime > 0) player.scale.set(player.scale.x + 0.08);
         state.particleTimer -= dt;
         if (state.particleTimer <= 0) {
             state.particleTimer = state.dashTime > 0 ? 0.018 : 0.036;
@@ -937,7 +1052,7 @@
         for (let i = pollenItems.length - 1; i >= 0; i -= 1) {
             const pollen = pollenItems[i]; pollen.phase += dt * 5; pollen.x -= pollen.speed * dt; pollen.y += Math.sin(pollen.phase) * 21 * dt; pollen.scale.set(1 + Math.sin(pollen.phase * 1.7) * 0.1); pollen.rotation += dt * 1.9; pollen.petals.rotation -= dt * 2.8;
             if (state.player && isColliding(state.player, pollen, PLAYER_RADIUS, POLLEN_RADIUS)) {
-                state.score += 10; state.runPollen += 1; save.pollen += 1; saveGame(); updateHud(); playCollectSound(); burst(pollen.x, pollen.y, getBiome().pollen, 12); createRing(pollen.x, pollen.y, getBiome().pollen, 0.42, 48);
+                state.score += 10; state.runPollen += 1; if (save.pollen < INFINITE_POLLEN) save.pollen += 1; saveGame(); updateHud(); playCollectSound(); burst(pollen.x, pollen.y, getBiome().pollen, 12); createRing(pollen.x, pollen.y, getBiome().pollen, 0.42, 48);
                 pollen.destroy({ children: true }); pollenItems.splice(i, 1); continue;
             }
             if (pollen.x < arena.left - 110) { pollen.destroy({ children: true }); pollenItems.splice(i, 1); }
@@ -989,20 +1104,68 @@
         for (const glow of glows) { glow.phase += dt; glow.x -= glow.speed * dt; glow.scale.set(1 + Math.sin(glow.phase) * 0.05); if (glow.x < -200) glow.x = w + 200; }
     }
 
+    function openAdminPanel() {
+        adminPanel.hidden = !adminPanel.hidden;
+        if (!adminPanel.hidden && !adminUnlocked) adminCode.focus();
+    }
+
+    function unlockAdmin() {
+        adminUnlocked = true;
+        adminGate.hidden = true;
+        adminControls.hidden = false;
+        adminMessage.textContent = '';
+        setAdminStatus('Admin ready.');
+    }
+
+    function giveInfinitePollen() {
+        save.pollen = INFINITE_POLLEN;
+        saveGame();
+        updateHud();
+        setAdminStatus('Infinite pollen enabled.');
+    }
+
+    function instantHatch() {
+        let target = save.summon?.species;
+        if (!target) {
+            const candidates = SUMMON_POOL.filter((key) => !save.unlocked.includes(key));
+            if (candidates.length === 0) { setAdminStatus('All summon species already hatched.'); return; }
+            target = pick(candidates);
+            save.summon = { species: target, hatchAt: Date.now() - 1 };
+        } else {
+            save.summon.hatchAt = Date.now() - 1;
+        }
+        saveGame();
+        maybeHatchSummon();
+        updateHud();
+        if (state.mode === 'lobby') rebuildLobby();
+        setAdminStatus(`${speciesName(target)} hatched instantly.`);
+    }
+
     function tick() {
         const dt = Math.min(app.ticker.elapsedMS / 1000, 0.033);
-        updateBackground(dt); updateCamera(dt);
+        if (state.mode !== 'paused') updateBackground(dt);
+        updateCamera(dt);
         if (state.mode === 'lobby') updateLobby(dt);
         if (state.mode !== 'playing') return;
         state.time += dt; updateBiome(dt); updatePlayer(dt); updatePollen(dt); updateHazards(dt); updateParticles(dt);
     }
 
     startButton.addEventListener('click', enterLobby);
-    playButton.addEventListener('click', startRun);
-    restartButton.addEventListener('click', startRun);
+    playButton.addEventListener('click', () => startRun(0));
+    restartButton.addEventListener('click', () => startRun(0));
     lobbyButton.addEventListener('click', enterLobby);
     resumeButton.addEventListener('click', resumeRun);
+    pauseButton.addEventListener('click', togglePause);
     summonButton.addEventListener('click', startSummon);
+    adminButton.addEventListener('click', openAdminPanel);
+    adminGate.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (adminCode.value === ADMIN_CODE) unlockAdmin();
+        else { adminMessage.textContent = 'Wrong code.'; adminCode.select(); }
+    });
+    biomeButtons.forEach((button) => button.addEventListener('click', () => switchRunBiome(Number(button.dataset.biomeIndex), true)));
+    infinitePollenButton.addEventListener('click', giveInfinitePollen);
+    instantHatchButton.addEventListener('click', instantHatch);
 
     window.addEventListener('keydown', (event) => {
         const key = event.key.toLowerCase();
@@ -1036,8 +1199,10 @@
         state,
         save: () => save,
         setPollen(value) { save.pollen = Math.max(0, Math.floor(value)); saveGame(); updateHud(); },
-        forceHatch() { if (save.summon) { save.summon.hatchAt = Date.now() - 1; saveGame(); maybeHatchSummon(); updateHud(); } },
-        forceBiome(index = 1) { applyBiome(index, true); }
+        forceHatch: instantHatch,
+        forceBiome(index = 1) { switchRunBiome(index, true); },
+        unlockAdmin,
+        infinitePollen: giveInfinitePollen
     };
 
     createParticleTexture();
