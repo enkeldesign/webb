@@ -85,23 +85,24 @@ button {
 .hud {
     position: absolute;
     z-index: 3;
-    top: max(16px, env(safe-area-inset-top));
+    top: max(14px, env(safe-area-inset-top));
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
     align-items: center;
     justify-content: center;
-    width: min(720px, calc(100vw - 24px));
+    width: min(1040px, calc(100vw - 24px));
     pointer-events: none;
 }
 
 .hud-card {
-    min-width: 112px;
-    padding: 10px 14px;
+    min-width: 104px;
+    padding: 8px 12px;
     border: 1px solid rgba(122, 247, 255, 0.24);
     border-radius: 8px;
-    background: linear-gradient(180deg, rgba(13, 18, 46, 0.72), rgba(8, 10, 28, 0.54));
+    background: linear-gradient(180deg, rgba(13, 18, 46, 0.72), rgba(8, 10, 28, 0.52));
     box-shadow:
         0 12px 36px rgba(0, 0, 0, 0.32),
         0 0 30px rgba(122, 247, 255, 0.08),
@@ -111,13 +112,27 @@ button {
     backdrop-filter: blur(14px) saturate(145%);
 }
 
+.hud-card.wide {
+    min-width: 184px;
+}
+
 .hud-card strong {
     display: block;
     margin-top: 2px;
     color: var(--ink);
-    font-size: clamp(1.1rem, 2vw, 1.4rem);
+    font-size: clamp(1rem, 1.7vw, 1.24rem);
     line-height: 1;
     text-shadow: 0 0 16px rgba(122, 247, 255, 0.32);
+    white-space: nowrap;
+}
+
+#dashValue[data-ready="true"] {
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(255, 214, 107, 0.48);
+}
+
+#dashValue[data-ready="false"] {
+    color: #a9b3c8;
 }
 
 .screen-panel {
@@ -139,6 +154,16 @@ button {
         inset 0 1px 0 rgba(255, 255, 255, 0.12);
     text-align: center;
     backdrop-filter: blur(20px) saturate(145%);
+    animation: panel-in 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+#gameShell[data-biome="amber"] .screen-panel,
+#gameShell[data-biome="amber"] .hud-card {
+    border-color: rgba(255, 214, 107, 0.28);
+    box-shadow:
+        0 24px 80px rgba(0, 0, 0, 0.5),
+        0 0 70px rgba(255, 190, 80, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .screen-panel.compact {
@@ -153,6 +178,11 @@ button {
     letter-spacing: 0.16em;
     text-transform: uppercase;
     text-shadow: 0 0 18px rgba(122, 247, 255, 0.42);
+}
+
+#gameShell[data-biome="amber"] .eyebrow {
+    color: var(--gold);
+    text-shadow: 0 0 18px rgba(255, 214, 107, 0.42);
 }
 
 h1 {
@@ -179,7 +209,7 @@ h1 {
     gap: 10px;
     margin: 24px auto 0;
     padding: 0;
-    max-width: 360px;
+    max-width: 380px;
     list-style: none;
     color: var(--muted);
     text-align: left;
@@ -214,10 +244,12 @@ h1 {
         0 0 36px rgba(255, 214, 107, 0.18);
     color: #1e1020;
     font-weight: 900;
+    transition: transform 160ms ease, filter 160ms ease;
 }
 
 .primary-button:hover {
     filter: brightness(1.08) saturate(1.08);
+    transform: translateY(-1px);
 }
 
 .primary-button:focus-visible {
@@ -245,19 +277,82 @@ h1 {
     font-size: 1.8rem;
 }
 
-@media (max-width: 640px) {
+.biome-toast {
+    position: absolute;
+    z-index: 5;
+    top: 92px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 11px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+    background: rgba(6, 9, 24, 0.66);
+    color: var(--ink);
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    box-shadow: 0 0 32px rgba(122, 247, 255, 0.2);
+    backdrop-filter: blur(14px) saturate(140%);
+    animation: toast-in 2.2s ease both;
+    pointer-events: none;
+}
+
+@keyframes panel-in {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -47%) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+@keyframes toast-in {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -10px) scale(0.96);
+    }
+    18%, 78% {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -6px) scale(0.98);
+    }
+}
+
+@media (max-width: 760px) {
     .hud {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    .hud-card {
+    .hud-card,
+    .hud-card.wide {
         min-width: 0;
-        padding: 8px 10px;
+        padding: 8px 8px;
+    }
+
+    .hud-card strong {
+        font-size: 0.98rem;
     }
 
     .screen-panel {
-        top: 54%;
+        top: 56%;
+    }
+
+    .biome-toast {
+        top: 132px;
+        width: max-content;
+        max-width: calc(100vw - 24px);
+    }
+}
+
+@media (max-width: 460px) {
+    .hud {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
