@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Nocturne Wings - Phase A Prototype</title>
+    <meta name="description" content="A Phase A PixiJS prototype for Nocturne Wings: collect pollen, dodge hazards, and guide a monarch butterfly through a glowing garden.">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main id="gameShell" aria-label="Nocturne Wings game prototype">
+        <div id="gameCanvas" aria-hidden="true"></div>
+
+        <section id="hud" class="hud" aria-label="Game status">
+            <div class="hud-card">Score <strong id="scoreValue">0</strong></div>
+            <div class="hud-card">Pollen <strong id="pollenValue">0</strong></div>
+            <div class="hud-card">Health <strong id="healthValue">3</strong></div>
+            <div class="hud-card">Goal <strong id="goalValue">40</strong></div>
+        </section>
+
+        <section id="startScreen" class="screen-panel">
+            <p class="eyebrow">Phase A Prototype</p>
+            <h1>Nocturne Wings</h1>
+            <p class="summary">Guide the free monarch butterfly through the glowing garden. Collect pollen, dodge shadow thorns, and reach 40 pollen before your 3 health runs out.</p>
+            <ul class="controls-list" aria-label="Controls">
+                <li><span>Move</span> WASD / Arrow keys</li>
+                <li><span>Mouse</span> Steer toward pointer</li>
+                <li><span>Pause</span> Esc</li>
+            </ul>
+            <button id="startButton" class="primary-button" type="button">Start Run</button>
+        </section>
+
+        <section id="gameOverScreen" class="screen-panel" hidden>
+            <p id="resultEyebrow" class="eyebrow">Run Complete</p>
+            <h1 id="resultTitle">Game Over</h1>
+            <p id="resultSummary" class="summary"></p>
+            <div class="result-grid" aria-label="Run results">
+                <div><span>Score</span><strong id="finalScore">0</strong></div>
+                <div><span>Pollen</span><strong id="finalPollen">0</strong></div>
+            </div>
+            <button id="restartButton" class="primary-button" type="button">Play Again</button>
+        </section>
+
+        <section id="pauseScreen" class="screen-panel compact" hidden>
+            <p class="eyebrow">Paused</p>
+            <h1>Nocturne Wings</h1>
+            <p class="summary">Press Esc or use the button to return to the run.</p>
+            <button id="resumeButton" class="primary-button" type="button">Resume</button>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.2/dist/pixi.min.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
