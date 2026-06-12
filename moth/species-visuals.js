@@ -12,7 +12,7 @@
     };
 
     const EXTRA_KEYS = ['peacock', 'silverY', 'redAdmiral', 'atlas'];
-    const ALL_KEYS = Object.keys(SPECIES);
+    const SUPPRESSED = '__nocturne_suppressed__';
     let layer = null;
     let lastCount = 0;
 
@@ -29,11 +29,19 @@
         return true;
     }
 
+    function visibleForArt(node) {
+        return node
+            && node.species !== SUPPRESSED
+            && node.worldVisible !== false
+            && node.visible !== false
+            && node.parent?.visible !== false;
+    }
+
     function walk(container, out) {
-        if (!container?.children) return;
+        if (!container?.children || container.visible === false || container.worldVisible === false) return;
         for (const child of container.children) {
-            if (child !== layer && child?.species && SPECIES[child.species]) out.push(child);
-            if (child !== layer && child.children) walk(child, out);
+            if (child !== layer && visibleForArt(child) && child.species && SPECIES[child.species]) out.push(child);
+            if (child !== layer && visibleForArt(child) && child.children) walk(child, out);
         }
     }
 
@@ -175,9 +183,10 @@
         const pos = source.getGlobalPosition();
         const wt = source.worldTransform;
         const scale = Math.max(0.5, Math.min(1.55, Math.hypot(wt.a, wt.b)));
-        art.position.set(pos.x, pos.y);
+        const breath = 1 + Math.sin(now * 1.15 + index * 0.61) * 0.014;
+        art.position.set(pos.x, pos.y + Math.sin(now * 1.25 + index * 0.7) * 1.7);
         art.rotation = source.rotation || 0;
-        art.scale.set(scale);
+        art.scale.set(scale * breath);
         const data = SPECIES[key] || SPECIES.monarch;
         const selected = key === selectedKey();
         art.parts.ring.clear();
@@ -185,17 +194,17 @@
             art.parts.ring.lineStyle(2.5 / scale, 0xffd66b, 0.82); art.parts.ring.drawCircle(0, 0, 52);
         }
         const moth = data.kind === 'moth';
-        const phase = now * (moth ? 3.0 : 3.55) + index * 0.73 + (source.flutterPhase || 0);
-        const flap = Math.sin(phase) * (moth ? 0.13 : 0.17);
-        const lower = Math.sin(phase + 0.45) * (moth ? 0.08 : 0.11);
+        const phase = now * (moth ? 1.85 : 2.2) + index * 0.73 + (source.flutterPhase || 0);
+        const flap = Math.sin(phase) * (moth ? 0.105 : 0.135);
+        const lower = Math.sin(phase + 0.45) * (moth ? 0.07 : 0.09);
         art.parts.leftUpper.scale.x = 1 - flap; art.parts.rightUpper.scale.x = 1 + flap;
         art.parts.leftLower.scale.x = 1 - lower; art.parts.rightLower.scale.x = 1 + lower;
         art.parts.leftUpper.rotation = -0.08 - flap * 0.18; art.parts.rightUpper.rotation = 0.08 - flap * 0.18;
         art.parts.leftLower.rotation = -0.02 - lower * 0.12; art.parts.rightLower.rotation = 0.02 - lower * 0.12;
-        art.parts.body.rotation = Math.sin(now * 1.95 + index) * 0.026;
-        art.parts.glow.alpha = 0.72 + Math.sin(now * 1.6 + index) * 0.16;
-        art.parts.dust.alpha = 0.72 + Math.sin(now * 2.3 + index) * 0.18;
-        source.alpha = EXTRA_KEYS.includes(key) ? 0.02 : 0.08;
+        art.parts.body.rotation = Math.sin(now * 1.25 + index) * 0.022;
+        art.parts.glow.alpha = 0.72 + Math.sin(now * 1.25 + index) * 0.16;
+        art.parts.dust.alpha = 0.72 + Math.sin(now * 1.65 + index) * 0.18;
+        source.alpha = 0.015;
     }
 
     function loop(nowMs) {
