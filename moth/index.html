@@ -47,8 +47,6 @@
                     <button type="button" data-biome-index="0">Moonleaf</button>
                     <button type="button" data-biome-index="1">Amber</button>
                     <button type="button" data-biome-index="2">Sky</button>
-                    <button type="button" data-extra-biome="volcano">Volcano</button>
-                    <button type="button" data-extra-biome="ice">Ice</button>
                 </div>
                 <button id="infinitePollenButton" type="button">Infinite pollen</button>
                 <button id="instantHatchButton" type="button">Instant hatch</button>
@@ -106,21 +104,6 @@
     </script>
     <script src="game.js"></script>
     <script src="abilities.js"></script>
-    <script>
-        (() => {
-            const names = { volcano: 'Volcano Caldera', ice: 'Crystal Icefield' };
-            const biomeValue = document.getElementById('biomeValue');
-            function syncExtraBiomeHud() {
-                const biome = window.nocturneAbilitiesDebug?.active?.customBiome;
-                if (biome && names[biome] && biomeValue) biomeValue.textContent = names[biome];
-                requestAnimationFrame(syncExtraBiomeHud);
-            }
-            requestAnimationFrame(syncExtraBiomeHud);
-        })();
-    </script>
-    <script src="collection-migration.js"></script>
-    <script src="collection.js"></script>
-    <script src="collection-fixes.js"></script>
     <script src="visual-cleanup.js"></script>
     <script src="species-visuals.js"></script>
 </body>
