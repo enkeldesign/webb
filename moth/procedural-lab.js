@@ -136,14 +136,14 @@
         if (!papp || !procedural) return;
         papp.stage.removeChildren().forEach((child) => child.destroy({ children: true }));
         examples = [];
-        selectedCreature = await procedural.createCreature(genome, { scale: 1.18 });
+        selectedCreature = await procedural.createCreature(genome, { scale: 2.45 });
         selectedCreature.x = papp.screen.width * 0.5;
-        selectedCreature.y = papp.screen.height * 0.46;
+        selectedCreature.y = papp.screen.height * 0.44;
         papp.stage.addChild(selectedCreature);
         const seeds = [genome.seed + 101, genome.seed + 202, genome.seed + 303, genome.seed + 404];
         for (let i = 0; i < seeds.length; i += 1) {
             const smallGenome = procedural.createGenome(seeds[i]);
-            const creature = await procedural.createCreature(smallGenome, { scale: 0.55 });
+            const creature = await procedural.createCreature(smallGenome, { scale: 1.0 });
             creature.x = papp.screen.width * (0.18 + i * 0.215);
             creature.y = papp.screen.height * 0.82;
             creature.__labVelocity = { x: 120 + i * 30, y: 20 };
