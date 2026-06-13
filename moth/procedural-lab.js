@@ -29,7 +29,8 @@
             .procedural-seed-row input { width:100%; min-width:0; padding:9px 10px; border:1px solid rgba(255,255,255,.17); border-radius:8px; background:rgba(255,255,255,.08); color:var(--ink); }
             .procedural-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
             .procedural-actions button, .procedural-close { min-height:38px; border:0; border-radius:8px; background:linear-gradient(135deg,var(--gold),var(--coral)); color:#1e1020; font-weight:900; }
-            .procedural-close { background:rgba(255,255,255,.1); color:var(--ink); border:1px solid rgba(255,255,255,.16); }
+            .procedural-close { position:absolute; top:10px; right:10px; width:42px; padding:0; background:rgba(255,255,255,.12); color:var(--ink); border:1px solid rgba(255,255,255,.18); font-size:0; box-shadow:0 10px 28px rgba(0,0,0,.28); }
+            .procedural-close::before { content:'X'; font-size:1rem; }
             .procedural-actions button:focus-visible, .procedural-close:focus-visible, .procedural-seed-row input:focus-visible { outline:3px solid var(--teal); outline-offset:3px; }
             .procedural-meta { overflow:auto; padding:10px; border:1px solid rgba(255,255,255,.14); border-radius:8px; background:rgba(255,255,255,.055); color:var(--muted); font-size:.82rem; line-height:1.45; }
             .procedural-meta code { color:var(--gold); }
