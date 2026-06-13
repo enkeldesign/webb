@@ -2,22 +2,30 @@
     'use strict';
 
     const SPECIES = {
-        monarch: { name: 'Monarch', kind: 'butterfly', wingA: 0xff7a1f, wingB: 0xffbd39, rim: 0x171018, vein: 0x23131a, body: 0x161016, thorax: 0x2a1720, glow: 0xffa24a, accent: 0xfff2bd },
-        cabbage: { name: 'Cabbage White', kind: 'butterfly', wingA: 0xfbfdff, wingB: 0xdcefff, rim: 0x636a76, vein: 0x9aaec2, body: 0x2f3442, thorax: 0x5d6577, glow: 0xdff8ff, accent: 0x2f3543 },
-        rosy: { name: 'Rosy Maple Moth', kind: 'moth', wingA: 0xff8fc8, wingB: 0xffe57a, rim: 0x7b3558, vein: 0xffc0dd, body: 0xffd86f, thorax: 0xffa2cf, glow: 0xff9ac9, accent: 0xfff6bc },
-        peacock: { name: 'Peacock Butterfly', kind: 'butterfly', wingA: 0xc45624, wingB: 0x8e381e, rim: 0x15101d, vein: 0x261525, body: 0x171018, thorax: 0x2b1a22, glow: 0x4da5ff, accent: 0x82ecff },
-        redAdmiral: { name: 'Red Admiral', kind: 'butterfly', wingA: 0x17131d, wingB: 0x262031, rim: 0xff3549, vein: 0x4a2634, body: 0x151018, thorax: 0x2b1b25, glow: 0xff5369, accent: 0xffead1 },
-        silverY: { name: 'Silver Y Moth', kind: 'moth', wingA: 0x777888, wingB: 0xbcc1ce, rim: 0x3f4150, vein: 0xdce8f7, body: 0x2a2936, thorax: 0x5b5d6d, glow: 0xcfe9ff, accent: 0xf4fbff },
-        atlas: { name: 'Atlas Moth', kind: 'moth', wingA: 0xb86b31, wingB: 0xffb25d, rim: 0x4d1e16, vein: 0xffd48a, body: 0x2b1710, thorax: 0x6f3821, glow: 0xffd48a, accent: 0xfff0bc }
+        monarch: {
+            name: 'Monarch', kind: 'butterfly', wingA: 0xff7a1f, wingB: 0xffbd39,
+            rim: 0x171018, vein: 0x23131a, body: 0x161016, thorax: 0x2a1720,
+            glow: 0xffa24a, accent: 0xfff2bd, shadow: 0x7a2d13
+        },
+        cabbage: {
+            name: 'Cabbage White', kind: 'butterfly', wingA: 0xfbfdff, wingB: 0xdcefff,
+            rim: 0x636a76, vein: 0x9aaec2, body: 0x2f3442, thorax: 0x5d6577,
+            glow: 0xdff8ff, accent: 0x2f3543, shadow: 0xbfd6e7
+        },
+        rosy: {
+            name: 'Rosy Maple Moth', kind: 'moth', wingA: 0xff8fc8, wingB: 0xffe57a,
+            rim: 0x7b3558, vein: 0xffc0dd, body: 0xffd86f, thorax: 0xffa2cf,
+            glow: 0xff9ac9, accent: 0xfff6bc, shadow: 0xff6fae
+        }
     };
 
-    const EXTRA_KEYS = ['peacock', 'silverY', 'redAdmiral', 'atlas'];
     const SUPPRESSED = '__nocturne_suppressed__';
     let layer = null;
     let lastCount = 0;
 
     function app() { return window.nocturnePixiApp; }
     function debug() { return window.nocturneWingsDebug; }
+    function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
 
     function ensureLayer() {
         if (layer || !app() || !window.PIXI) return !!layer;
@@ -46,49 +54,50 @@
     }
 
     function selectedKey() {
-        return debug()?.save?.().selected || window.nocturneCollectionDebug?.collection?.selected || 'monarch';
+        const selected = debug()?.save?.().selected;
+        return SPECIES[selected] ? selected : 'monarch';
     }
 
-    function buildWing(data, side, upper) {
+    function drawWing(data, side, upper) {
         const wing = new PIXI.Graphics();
         const moth = data.kind === 'moth';
         const fill = upper ? data.wingA : data.wingB;
-        wing.lineStyle((upper ? 2.2 : 1.8), data.rim, 0.85);
-        wing.beginFill(fill, upper ? 0.96 : 0.88);
+        wing.lineStyle(upper ? 2.3 : 1.9, data.rim, moth ? 0.72 : 0.86);
+        wing.beginFill(fill, upper ? 0.92 : 0.84);
         if (upper) {
             if (moth) {
                 wing.moveTo(side * 3, -5);
-                wing.bezierCurveTo(side * 22, -48, side * 66, -44, side * 70, -7);
-                wing.bezierCurveTo(side * 68, 22, side * 30, 28, side * 6, 6);
+                wing.bezierCurveTo(side * 23, -50, side * 68, -46, side * 73, -8);
+                wing.bezierCurveTo(side * 69, 22, side * 30, 29, side * 6, 6);
                 wing.bezierCurveTo(side * 1, 1, side * 1, -2, side * 3, -5);
             } else {
                 wing.moveTo(side * 3, -6);
-                wing.bezierCurveTo(side * 15, -48, side * 57, -53, side * 64, -9);
-                wing.bezierCurveTo(side * 63, 16, side * 26, 23, side * 6, 5);
+                wing.bezierCurveTo(side * 16, -50, side * 59, -56, side * 66, -10);
+                wing.bezierCurveTo(side * 64, 16, side * 27, 23, side * 6, 5);
                 wing.bezierCurveTo(side * 0, 1, side * 0, -2, side * 3, -6);
             }
         } else {
             wing.moveTo(side * 5, 4);
-            wing.bezierCurveTo(side * 24, moth ? 4 : 9, side * 48, moth ? 26 : 24, side * 38, moth ? 54 : 47);
-            wing.bezierCurveTo(side * 20, moth ? 66 : 60, side * 3, 37, side * 2, 10);
+            wing.bezierCurveTo(side * 24, moth ? 4 : 9, side * 49, moth ? 27 : 24, side * 39, moth ? 56 : 48);
+            wing.bezierCurveTo(side * 20, moth ? 67 : 60, side * 3, 37, side * 2, 10);
             wing.bezierCurveTo(side * 2, 7, side * 3, 5, side * 5, 4);
         }
         wing.endFill();
 
-        wing.lineStyle(1.15, data.vein, 0.52);
-        const veinReach = moth ? 63 : 56;
+        wing.beginFill(0xffffff, upper ? 0.12 : 0.075);
+        wing.drawEllipse(side * (upper ? 35 : 21), upper ? -19 : 27, upper ? 15 : 9, upper ? 27 : 17);
+        wing.endFill();
+
+        wing.lineStyle(1.12, data.vein, moth ? 0.45 : 0.52);
+        const reach = moth ? 63 : 56;
         if (upper) {
-            wing.moveTo(side * 6, -2); wing.bezierCurveTo(side * 20, -22, side * 36, -36, side * veinReach, -34);
-            wing.moveTo(side * 7, 1); wing.bezierCurveTo(side * 26, -7, side * 41, -1, side * (veinReach - 2), -8);
-            wing.moveTo(side * 8, 4); wing.bezierCurveTo(side * 25, 11, side * 42, 13, side * (veinReach - 4), 8);
+            wing.moveTo(side * 6, -2); wing.bezierCurveTo(side * 20, -22, side * 36, -37, side * reach, -35);
+            wing.moveTo(side * 7, 1); wing.bezierCurveTo(side * 26, -7, side * 41, -1, side * (reach - 2), -8);
+            wing.moveTo(side * 8, 4); wing.bezierCurveTo(side * 25, 11, side * 42, 13, side * (reach - 4), 8);
         } else {
-            wing.moveTo(side * 5, 8); wing.bezierCurveTo(side * 18, 21, side * 27, 36, side * 34, 49);
+            wing.moveTo(side * 5, 8); wing.bezierCurveTo(side * 18, 21, side * 27, 36, side * 34, 50);
             wing.moveTo(side * 4, 8); wing.bezierCurveTo(side * 11, 23, side * 13, 40, side * 10, 51);
         }
-
-        wing.beginFill(0xffffff, upper ? 0.09 : 0.06);
-        wing.drawEllipse(side * (upper ? 34 : 20), upper ? -18 : 27, upper ? 14 : 9, upper ? 25 : 17);
-        wing.endFill();
 
         drawMarkings(wing, data, side, upper);
         return wing;
@@ -96,43 +105,38 @@
 
     function drawMarkings(g, data, side, upper) {
         if (data.name === 'Monarch') {
-            g.beginFill(data.accent, 0.78);
-            if (upper) { g.drawCircle(side * 42, -28, 3); g.drawCircle(side * 53, -12, 2.5); g.drawCircle(side * 44, 7, 2.3); }
-            else { g.drawCircle(side * 24, 37, 2.7); g.drawCircle(side * 11, 24, 2); }
-            g.endFill();
-        } else if (data.name === 'Cabbage White') {
-            g.beginFill(data.accent, 0.48);
-            if (upper) g.drawCircle(side * 43, -6, 4.1); else g.drawCircle(side * 24, 28, 2.6);
-            g.endFill();
-        } else if (data.name === 'Rosy Maple Moth') {
-            g.beginFill(data.accent, 0.5);
-            if (upper) g.drawEllipse(side * 39, -10, 5, 8); else g.drawCircle(side * 22, 27, 3.2);
-            g.endFill();
-        } else if (data.name === 'Peacock Butterfly') {
+            g.lineStyle(1.8, data.rim, 0.42);
             if (upper) {
-                g.beginFill(0x244bd6, 0.5); g.drawEllipse(side * 42, -18, 12, 15); g.endFill();
-                g.beginFill(0x15101d, 0.86); g.drawEllipse(side * 42, -18, 6.5, 7.5); g.endFill();
-                g.beginFill(0x8fffff, 0.9); g.drawCircle(side * 40, -20, 2.2); g.endFill();
+                g.moveTo(side * 14, -34); g.bezierCurveTo(side * 26, -22, side * 39, -12, side * 58, -12);
+                g.moveTo(side * 12, 2); g.bezierCurveTo(side * 29, 3, side * 44, 9, side * 56, 3);
             }
-            g.lineStyle(4, 0xffc44f, 0.42); g.moveTo(side * 12, upper ? -32 : 16); g.lineTo(side * (upper ? 58 : 34), upper ? -9 : 42);
-        } else if (data.name === 'Red Admiral') {
-            g.lineStyle(6, 0xff3448, 0.88);
-            if (upper) { g.moveTo(side * 9, -30); g.lineTo(side * 53, 1); }
-            else { g.moveTo(side * 9, 12); g.lineTo(side * 32, 40); }
-            g.beginFill(data.accent, 0.88);
-            if (upper) { g.drawCircle(side * 51, -28, 2.8); g.drawCircle(side * 57, -15, 2.2); }
+            g.beginFill(data.accent, 0.8);
+            if (upper) { g.drawCircle(side * 43, -29, 3); g.drawCircle(side * 54, -13, 2.5); g.drawCircle(side * 45, 7, 2.4); }
+            else { g.drawCircle(side * 24, 38, 2.8); g.drawCircle(side * 11, 24, 2); }
             g.endFill();
-        } else if (data.name === 'Silver Y Moth') {
-            g.lineStyle(3, data.accent, 0.78);
-            if (upper) {
-                g.moveTo(side * 26, -20); g.bezierCurveTo(side * 33, -12, side * 31, -3, side * 25, 8);
-                g.moveTo(side * 31, -12); g.bezierCurveTo(side * 40, -14, side * 43, -21, side * 47, -27);
-            }
-            g.beginFill(0xffffff, 0.18); g.drawEllipse(side * (upper ? 44 : 24), upper ? -3 : 32, upper ? 8 : 5, upper ? 18 : 10); g.endFill();
-        } else if (data.name === 'Atlas Moth') {
-            g.lineStyle(3, data.accent, 0.5); g.drawEllipse(side * (upper ? 36 : 23), upper ? -10 : 29, upper ? 19 : 11, upper ? 24 : 15);
-            if (upper) { g.beginFill(0xfff4c8, 0.28); g.drawEllipse(side * 47, -27, 9, 7); g.endFill(); }
+            return;
         }
+        if (data.name === 'Cabbage White') {
+            g.beginFill(data.accent, upper ? 0.46 : 0.28);
+            if (upper) g.drawCircle(side * 43, -6, 4.2);
+            else g.drawCircle(side * 24, 28, 2.6);
+            g.endFill();
+            g.beginFill(0xffffff, 0.22);
+            g.drawEllipse(side * (upper ? 31 : 18), upper ? -22 : 31, upper ? 16 : 8, upper ? 20 : 12);
+            g.endFill();
+            return;
+        }
+        g.beginFill(data.accent, 0.46);
+        if (upper) {
+            g.drawEllipse(side * 39, -12, 6, 10);
+            g.drawCircle(side * 52, 2, 2.7);
+        } else {
+            g.drawCircle(side * 23, 28, 3.4);
+        }
+        g.endFill();
+        g.lineStyle(2.2, data.shadow, 0.26);
+        g.moveTo(side * 12, upper ? -31 : 16);
+        g.bezierCurveTo(side * 28, upper ? -9 : 26, side * 42, upper ? 1 : 44, side * (upper ? 61 : 34), upper ? -4 : 49);
     }
 
     function buildArt() {
@@ -146,34 +150,54 @@
         const rightLower = new PIXI.Container();
         const body = new PIXI.Graphics();
         const dust = new PIXI.Graphics();
-        art.addChild(glow, ring, leftUpper, rightUpper, leftLower, rightLower, body, dust);
-        art.parts = { glow, ring, leftUpper, rightUpper, leftLower, rightLower, body, dust, key: null };
+        art.addChild(glow, dust, ring, leftUpper, rightUpper, leftLower, rightLower, body);
+        art.parts = { glow, dust, ring, leftUpper, rightUpper, leftLower, rightLower, body, key: null };
         return art;
     }
 
     function rebuildArt(art, key) {
         const data = SPECIES[key] || SPECIES.monarch;
         const p = art.parts;
-        for (const part of [p.glow, p.ring, p.body, p.dust]) part.clear();
+        for (const part of [p.glow, p.dust, p.ring, p.body]) part.clear();
         for (const part of [p.leftUpper, p.rightUpper, p.leftLower, p.rightLower]) part.removeChildren().forEach((child) => child.destroy());
-        p.glow.beginFill(data.glow, 0.13); p.glow.drawCircle(0, 0, 62); p.glow.endFill();
+
+        p.glow.beginFill(data.glow, data.kind === 'moth' ? 0.12 : 0.105);
+        p.glow.drawCircle(0, 0, data.kind === 'moth' ? 68 : 62);
+        p.glow.endFill();
         p.glow.blendMode = PIXI.BLEND_MODES.ADD;
-        p.leftUpper.addChild(buildWing(data, -1, true));
-        p.rightUpper.addChild(buildWing(data, 1, true));
-        p.leftLower.addChild(buildWing(data, -1, false));
-        p.rightLower.addChild(buildWing(data, 1, false));
-        p.body.beginFill(data.body, 1); p.body.drawEllipse(0, 10, data.kind === 'moth' ? 6.7 : 5.2, 25); p.body.endFill();
-        p.body.lineStyle(1.1, data.accent, 0.32);
-        for (let y = -6; y <= 24; y += 7) { p.body.moveTo(-4.2, y); p.body.quadraticCurveTo(0, y + 3, 4.2, y); }
-        p.body.beginFill(data.thorax, 1); p.body.drawEllipse(0, -9, data.kind === 'moth' ? 10 : 8.3, 12.5); p.body.endFill();
-        p.body.beginFill(data.body, 1); p.body.drawCircle(0, -26, 7.3); p.body.endFill();
-        p.body.beginFill(0xffffff, 0.78); p.body.drawCircle(-2.7, -27, 1.4); p.body.drawCircle(2.7, -27, 1.4); p.body.endFill();
-        p.body.beginFill(0x050409, 0.92); p.body.drawCircle(-2.7, -27, 0.7); p.body.drawCircle(2.7, -27, 0.7); p.body.endFill();
-        p.body.lineStyle(1.55, data.accent, 0.78);
+
+        p.dust.beginFill(data.glow, 0.09);
+        p.dust.drawEllipse(0, 0, 46, data.kind === 'moth' ? 62 : 56);
+        p.dust.endFill();
+        p.dust.blendMode = PIXI.BLEND_MODES.ADD;
+
+        p.leftUpper.addChild(drawWing(data, -1, true));
+        p.rightUpper.addChild(drawWing(data, 1, true));
+        p.leftLower.addChild(drawWing(data, -1, false));
+        p.rightLower.addChild(drawWing(data, 1, false));
+
+        p.body.beginFill(data.body, 1);
+        p.body.drawEllipse(0, 10, data.kind === 'moth' ? 6.8 : 5.1, data.kind === 'moth' ? 26 : 24);
+        p.body.endFill();
+        p.body.lineStyle(1.1, data.accent, data.kind === 'moth' ? 0.34 : 0.28);
+        for (let y = -7; y <= 25; y += 7) p.body.drawEllipse(0, y, data.kind === 'moth' ? 5.4 : 4.3, 1.6);
+        p.body.beginFill(data.thorax, 1);
+        p.body.drawEllipse(0, -9, data.kind === 'moth' ? 10.5 : 8.4, 12.8);
+        p.body.endFill();
+        p.body.beginFill(data.body, 1);
+        p.body.drawCircle(0, -26, 7.3);
+        p.body.endFill();
+        p.body.beginFill(0xffffff, 0.78);
+        p.body.drawCircle(-2.8, -27, 1.35);
+        p.body.drawCircle(2.8, -27, 1.35);
+        p.body.endFill();
+        p.body.beginFill(0x050409, 0.92);
+        p.body.drawCircle(-2.8, -27, 0.7);
+        p.body.drawCircle(2.8, -27, 0.7);
+        p.body.endFill();
+        p.body.lineStyle(1.45, data.accent, 0.72);
         p.body.moveTo(-3, -32); p.body.bezierCurveTo(-11, -44, -19, -38, -18, -31);
         p.body.moveTo(3, -32); p.body.bezierCurveTo(11, -44, 19, -38, 18, -31);
-        p.dust.beginFill(data.glow, 0.1); p.dust.drawEllipse(0, 0, 42, 58); p.dust.endFill();
-        p.dust.blendMode = PIXI.BLEND_MODES.ADD;
         p.key = key;
     }
 
@@ -182,29 +206,52 @@
         if (art.parts.key !== key) rebuildArt(art, key);
         const pos = source.getGlobalPosition();
         const wt = source.worldTransform;
-        const scale = Math.max(0.5, Math.min(1.55, Math.hypot(wt.a, wt.b)));
-        const breath = 1 + Math.sin(now * 1.15 + index * 0.61) * 0.014;
-        art.position.set(pos.x, pos.y + Math.sin(now * 1.25 + index * 0.7) * 1.7);
-        art.rotation = source.rotation || 0;
-        art.scale.set(scale * breath);
+        const sourceScale = clamp(Math.hypot(wt.a, wt.b), 0.46, 1.7);
         const data = SPECIES[key] || SPECIES.monarch;
-        const selected = key === selectedKey();
+        const speed = source.flightSpeed ?? Math.max(Math.hypot(source.vx || 0, source.vy || 0), 0);
+        const speedRatio = clamp(speed / 620, 0, 1.3);
+        const breathe = 1 + Math.sin(now * 0.82 + index * 0.61) * 0.018;
+        const drift = Math.sin(now * 0.9 + index * 0.7) * (data.kind === 'moth' ? 2.4 : 1.8);
+
+        art.position.set(pos.x, pos.y + drift);
+        art.rotation = source.rotation || 0;
+        art.scale.set(sourceScale * breathe);
+
+        const selected = debug()?.state?.mode === 'lobby' && key === selectedKey();
         art.parts.ring.clear();
-        if (debug()?.state?.mode === 'lobby' && selected) {
-            art.parts.ring.lineStyle(2.5 / scale, 0xffd66b, 0.82); art.parts.ring.drawCircle(0, 0, 52);
+        if (selected) {
+            const pulse = 1 + Math.sin(now * 2.1) * 0.035;
+            art.parts.ring.lineStyle(2.4 / sourceScale, 0xffd66b, 0.82);
+            art.parts.ring.drawCircle(0, 0, 54 * pulse);
+            art.parts.ring.lineStyle(1.2 / sourceScale, data.glow, 0.48);
+            art.parts.ring.drawCircle(0, 0, 62 * pulse);
         }
+
         const moth = data.kind === 'moth';
-        const phase = now * (moth ? 1.85 : 2.2) + index * 0.73 + (source.flutterPhase || 0);
-        const flap = Math.sin(phase) * (moth ? 0.105 : 0.135);
-        const lower = Math.sin(phase + 0.45) * (moth ? 0.07 : 0.09);
-        art.parts.leftUpper.scale.x = 1 - flap; art.parts.rightUpper.scale.x = 1 + flap;
-        art.parts.leftLower.scale.x = 1 - lower; art.parts.rightLower.scale.x = 1 + lower;
-        art.parts.leftUpper.rotation = -0.08 - flap * 0.18; art.parts.rightUpper.rotation = 0.08 - flap * 0.18;
-        art.parts.leftLower.rotation = -0.02 - lower * 0.12; art.parts.rightLower.rotation = 0.02 - lower * 0.12;
-        art.parts.body.rotation = Math.sin(now * 1.25 + index) * 0.022;
-        art.parts.glow.alpha = 0.72 + Math.sin(now * 1.25 + index) * 0.16;
-        art.parts.dust.alpha = 0.72 + Math.sin(now * 1.65 + index) * 0.18;
-        source.alpha = 0.015;
+        const phase = now * (moth ? 1.85 + speedRatio * 2.25 : 2.35 + speedRatio * 3.05) + index * 0.73 + (source.flutterPhase || 0);
+        const upperAmp = (moth ? 0.09 : 0.11) + speedRatio * (moth ? 0.055 : 0.075);
+        const lowerAmp = upperAmp * (moth ? 0.62 : 0.74);
+        const flap = Math.sin(phase) * upperAmp;
+        const lower = Math.sin(phase + 0.45) * lowerAmp;
+        const lift = Math.cos(phase) * (0.016 + speedRatio * 0.012);
+
+        art.parts.leftUpper.scale.x = 1 - flap;
+        art.parts.rightUpper.scale.x = 1 + flap;
+        art.parts.leftLower.scale.x = 1 - lower;
+        art.parts.rightLower.scale.x = 1 + lower;
+        art.parts.leftUpper.scale.y = 1 + Math.abs(flap) * 0.1 + lift;
+        art.parts.rightUpper.scale.y = 1 + Math.abs(flap) * 0.1 + lift;
+        art.parts.leftLower.scale.y = 1 + Math.abs(lower) * 0.07;
+        art.parts.rightLower.scale.y = 1 + Math.abs(lower) * 0.07;
+        art.parts.leftUpper.rotation = -0.075 - flap * 0.18;
+        art.parts.rightUpper.rotation = 0.075 - flap * 0.18;
+        art.parts.leftLower.rotation = -0.02 - lower * 0.12;
+        art.parts.rightLower.rotation = 0.02 - lower * 0.12;
+        art.parts.body.rotation = Math.sin(now * 0.94 + index) * 0.023 + (source.flightTilt || 0) * 0.016;
+        art.parts.glow.alpha = 0.58 + Math.sin(now * 1.08 + index) * 0.15 + speedRatio * 0.1;
+        art.parts.dust.alpha = 0.48 + Math.sin(now * 1.32 + index) * 0.16 + speedRatio * 0.16;
+
+        source.alpha = 0.001;
     }
 
     function loop(nowMs) {
