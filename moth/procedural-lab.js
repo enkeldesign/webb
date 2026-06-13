@@ -7,6 +7,7 @@
     let selectedGenome = null;
     let selectedCreature = null;
     let examples = [];
+    let renderSerial = 0;
     let lastNow = performance.now();
 
     function api() { return window.nocturneProcedural; }
@@ -126,20 +127,24 @@
         selectedGenome = genome;
         const meta = byId('proceduralMeta');
         if (meta) meta.innerHTML = metaHtml(genome);
-        await drawPreview(genome);
+        const drawn = await drawPreview(genome);
+        if (!drawn) return;
         const errors = procedural.errors;
         setStatus(errors.length ? `Fallback available. ${errors[0]}` : 'Generated insect ready. Same seed will recreate this genome.');
     }
 
     async function drawPreview(genome) {
+        const serial = ++renderSerial;
         const papp = ensurePreviewApp();
         const procedural = api();
-        if (!papp || !procedural) return;
+        if (!papp || !procedural) return false;
         const oldChildren = papp.stage.removeChildren();
         selectedCreature = null;
         examples = [];
         oldChildren.forEach((child) => child.destroy({ children: true }));
-        selectedCreature = await procedural.createCreature(genome, { scale: 2.45 });
+        const mainCreature = await procedural.createCreature(genome, { scale: 2.45 });
+        if (serial !== renderSerial) { mainCreature.destroy({ children: true }); return false; }
+        selectedCreature = mainCreature;
         selectedCreature.x = papp.screen.width * 0.5;
         selectedCreature.y = papp.screen.height * 0.44;
         papp.stage.addChild(selectedCreature);
@@ -147,12 +152,14 @@
         for (let i = 0; i < seeds.length; i += 1) {
             const smallGenome = procedural.createGenome(seeds[i]);
             const creature = await procedural.createCreature(smallGenome, { scale: 1.0 });
+            if (serial !== renderSerial) { creature.destroy({ children: true }); return false; }
             creature.x = papp.screen.width * (0.18 + i * 0.215);
             creature.y = papp.screen.height * 0.82;
             creature.__labVelocity = { x: 120 + i * 30, y: 20 };
             papp.stage.addChild(creature);
             examples.push(creature);
         }
+        return true;
     }
 
     async function openLab() {
