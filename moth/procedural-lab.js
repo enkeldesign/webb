@@ -134,8 +134,10 @@
         const papp = ensurePreviewApp();
         const procedural = api();
         if (!papp || !procedural) return;
-        papp.stage.removeChildren().forEach((child) => child.destroy({ children: true }));
+        const oldChildren = papp.stage.removeChildren();
+        selectedCreature = null;
         examples = [];
+        oldChildren.forEach((child) => child.destroy({ children: true }));
         selectedCreature = await procedural.createCreature(genome, { scale: 2.45 });
         selectedCreature.x = papp.screen.width * 0.5;
         selectedCreature.y = papp.screen.height * 0.44;
