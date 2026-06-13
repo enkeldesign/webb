@@ -255,6 +255,11 @@
             const ll = await wingArtwork(lower, genome, false);
             rightUpper.addChild(ru); leftUpper.addChild(lu); rightLower.addChild(rl); leftLower.addChild(ll);
             rightUpper.y = -3; leftUpper.y = -3; rightLower.y = 8; leftLower.y = 8;
+            const p = genome.proportions;
+            rightUpper.scale.set(p.upperScaleX, p.upperScaleY);
+            leftUpper.scale.set(-p.upperScaleX, p.upperScaleY);
+            rightLower.scale.set(p.lowerScaleX, p.lowerScaleY);
+            leftLower.scale.set(-p.lowerScaleX, p.lowerScaleY);
             visualRoot.addChild(glow, leftUpper, leftLower, rightUpper, rightLower, bodyGlow, body, antennae);
             root.addChild(gameplayRoot, visualRoot);
             root.scale.set(options.scale || 1);
