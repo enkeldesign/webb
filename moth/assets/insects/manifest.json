@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "basePath": "assets/insects/",
+  "assets": {
+    "upperWings": [
+      { "id": "rounded-butterfly-upper", "file": "wings/upper/rounded-butterfly.svg", "kind": "butterfly", "part": "upperWing", "anchor": { "x": 42, "y": 280 }, "compatibleWith": ["rounded-butterfly-lower", "longwing-butterfly-lower"], "weight": 1.2 },
+      { "id": "longwing-butterfly-upper", "file": "wings/upper/longwing-butterfly.svg", "kind": "butterfly", "part": "upperWing", "anchor": { "x": 40, "y": 285 }, "compatibleWith": ["longwing-butterfly-lower", "rounded-butterfly-lower"], "weight": 1 },
+      { "id": "soft-rounded-moth-upper", "file": "wings/upper/soft-rounded-moth.svg", "kind": "moth", "part": "upperWing", "anchor": { "x": 42, "y": 286 }, "compatibleWith": ["soft-rounded-moth-lower", "atlas-luna-moth-lower"], "weight": 1.15 },
+      { "id": "atlas-luna-moth-upper", "file": "wings/upper/atlas-luna-moth.svg", "kind": "moth", "part": "upperWing", "anchor": { "x": 40, "y": 286 }, "compatibleWith": ["atlas-luna-moth-lower", "soft-rounded-moth-lower"], "weight": 0.85 }
+    ],
+    "lowerWings": [
+      { "id": "rounded-butterfly-lower", "file": "wings/lower/rounded-butterfly.svg", "kind": "butterfly", "part": "lowerWing", "anchor": { "x": 48, "y": 70 }, "weight": 1.2 },
+      { "id": "longwing-butterfly-lower", "file": "wings/lower/longwing-butterfly.svg", "kind": "butterfly", "part": "lowerWing", "anchor": { "x": 48, "y": 70 }, "weight": 1 },
+      { "id": "soft-rounded-moth-lower", "file": "wings/lower/soft-rounded-moth.svg", "kind": "moth", "part": "lowerWing", "anchor": { "x": 48, "y": 70 }, "weight": 1.1 },
+      { "id": "atlas-luna-moth-lower", "file": "wings/lower/atlas-luna-moth.svg", "kind": "moth", "part": "lowerWing", "anchor": { "x": 48, "y": 70 }, "weight": 0.9 }
+    ],
+    "bodies": [
+      { "id": "slim-butterfly-body", "file": "bodies/slim-butterfly.svg", "kind": "butterfly", "part": "body", "anchor": { "x": 256, "y": 256 }, "weight": 1.3 },
+      { "id": "fuzzy-moth-body", "file": "bodies/fuzzy-moth.svg", "kind": "moth", "part": "body", "anchor": { "x": 256, "y": 256 }, "weight": 1.2 },
+      { "id": "rounded-fantasy-body", "file": "bodies/rounded-fantasy.svg", "kind": "any", "part": "body", "anchor": { "x": 256, "y": 256 }, "weight": 0.8 }
+    ],
+    "antennae": [
+      { "id": "clubbed", "file": "antennae/clubbed.svg", "kind": "butterfly", "part": "antennae", "anchor": { "x": 256, "y": 352 }, "weight": 1.2 },
+      { "id": "curved", "file": "antennae/curved.svg", "kind": "any", "part": "antennae", "anchor": { "x": 256, "y": 352 }, "weight": 1 },
+      { "id": "feathery", "file": "antennae/feathery.svg", "kind": "moth", "part": "antennae", "anchor": { "x": 256, "y": 360 }, "weight": 1.2 }
+    ],
+    "patterns": [
+      { "id": "veins", "file": "patterns/veins.svg", "kind": "any", "part": "pattern", "anchor": { "x": 42, "y": 280 }, "weight": 1.25 },
+      { "id": "eyespots", "file": "patterns/eyespots.svg", "kind": "any", "part": "pattern", "anchor": { "x": 42, "y": 280 }, "weight": 0.7 },
+      { "id": "edge-dots", "file": "patterns/edge-dots.svg", "kind": "butterfly", "part": "pattern", "anchor": { "x": 42, "y": 280 }, "weight": 1 },
+      { "id": "diagonal-band", "file": "patterns/diagonal-band.svg", "kind": "any", "part": "pattern", "anchor": { "x": 42, "y": 280 }, "weight": 0.95 },
+      { "id": "speckles", "file": "patterns/speckles.svg", "kind": "moth", "part": "pattern", "anchor": { "x": 42, "y": 280 }, "weight": 1.05 }
+    ]
+  },
+  "fallback": {
+    "upperWing": "rounded-butterfly-upper",
+    "lowerWing": "rounded-butterfly-lower",
+    "body": "slim-butterfly-body",
+    "antennae": "clubbed",
+    "patterns": ["veins"]
+  }
+}
