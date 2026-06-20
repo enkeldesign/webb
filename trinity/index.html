@@ -3,98 +3,92 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#111a24">
+  <meta name="theme-color" content="#17110a">
   <meta name="color-scheme" content="dark">
-  <title>Trinity — Pocket Party Tactics</title>
-  <meta name="description" content="A portrait-mode tactical combat game built around the classic tank, healer and damage-dealer trinity.">
+  <title>Trinity — Party Command</title>
+  <meta name="description" content="A portrait-mode fantasy party tactics game built around tank, healer and ranged damage roles.">
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "pixi.js": "https://cdn.jsdelivr.net/npm/pixi.js@8.6.6/dist/pixi.mjs"
+      }
+    }
+  </script>
+
   <link rel="stylesheet" href="style.css">
-  <script src="game.js" defer></script>
+  <script type="module" src="game.js"></script>
 </head>
 <body>
-  <main class="game-shell" aria-labelledby="game-title">
-    <header class="topbar">
-      <div>
-        <p class="eyebrow">Pocket party tactics</p>
-        <h1 id="game-title">Trinity</h1>
-      </div>
-      <div class="wave-status" aria-live="polite">
-        <span>Wave</span>
-        <strong id="wave-number">1</strong>
-      </div>
-    </header>
+  <main class="game" id="game" aria-labelledby="game-title">
+    <div class="stage" id="stage">
+      <canvas class="scene scene--travel" id="travel-canvas" aria-label="Journey map"></canvas>
+      <div class="scene scene--combat" id="combat-host" aria-label="Combat scene"></div>
 
-    <section class="battlefield" aria-label="Battlefield">
-      <div class="battle-message" id="battle-message" role="status" aria-live="polite">
-        Queue abilities. Your party acts automatically.
-      </div>
+      <div class="vignette" aria-hidden="true"></div>
 
-      <section class="enemy-side" aria-label="Enemies">
-        <div class="enemy-line" id="enemy-line"></div>
-      </section>
+      <header class="top-frame">
+        <div class="title-lockup">
+          <p class="kicker">Party command</p>
+          <h1 id="game-title">Trinity</h1>
+        </div>
 
-      <div class="arena-divider" aria-hidden="true">
-        <span></span>
-      </div>
+        <div class="encounter-meta" aria-live="polite">
+          <span id="phase-label">Journey</span>
+          <strong><span id="wave-label">1</span></strong>
+        </div>
+      </header>
 
-      <section class="party-side" aria-label="Party">
-        <div class="party-line" id="party-line"></div>
-      </section>
+      <section class="hud hud--travel" id="travel-hud" aria-labelledby="travel-title">
+        <div class="quest-card">
+          <p class="quest-label">The road ahead</p>
+          <h2 id="travel-title">Drag the party standard along the trail</h2>
+          <p id="travel-copy">Choose a route at the fork. Each route grants a different preparation for the encounter.</p>
+        </div>
 
-      <div class="combat-log" aria-label="Recent combat events">
-        <ol id="combat-log"></ol>
-      </div>
-    </section>
-
-    <section class="command-panel" aria-label="Party commands">
-      <div class="class-tabs" role="tablist" aria-label="Choose party member">
-        <button class="class-tab" id="tab-tank" role="tab" aria-selected="true" aria-controls="class-controls" data-class="tank" type="button">
-          <span class="tab-icon" aria-hidden="true">◆</span>
-          <span class="tab-copy"><strong>Tank</strong><span><span id="tab-tank-hp">100</span>% HP</span></span>
-          <span class="tab-health"><span id="tab-tank-health-fill"></span></span>
-        </button>
-        <button class="class-tab" id="tab-healer" role="tab" aria-selected="false" aria-controls="class-controls" data-class="healer" type="button">
-          <span class="tab-icon" aria-hidden="true">✦</span>
-          <span class="tab-copy"><strong>Healer</strong><span><span id="tab-healer-hp">100</span>% HP</span></span>
-          <span class="tab-health"><span id="tab-healer-health-fill"></span></span>
-        </button>
-        <button class="class-tab" id="tab-ranger" role="tab" aria-selected="false" aria-controls="class-controls" data-class="ranger" type="button">
-          <span class="tab-icon" aria-hidden="true">➶</span>
-          <span class="tab-copy"><strong>Ranger</strong><span><span id="tab-ranger-hp">100</span>% HP</span></span>
-          <span class="tab-health"><span id="tab-ranger-health-fill"></span></span>
-        </button>
-      </div>
-
-      <div class="class-controls" id="class-controls" role="tabpanel" aria-labelledby="tab-tank">
-        <div class="selected-class-heading">
+        <div class="route-result" id="route-result" hidden>
+          <span class="route-result__icon" id="route-result-icon" aria-hidden="true">✦</span>
           <div>
-            <p class="eyebrow">Commanding</p>
-            <h2 id="selected-class-name">Tank</h2>
-          </div>
-          <div class="readiness" aria-live="polite">
-            <span>Acts in</span>
-            <strong id="selected-ready">0.0s</strong>
+            <strong id="route-result-title">Moonwell blessing</strong>
+            <span id="route-result-copy">The party recovers before combat.</span>
           </div>
         </div>
 
-        <div class="ability-grid" id="ability-grid"></div>
-
-        <div class="queue-section">
-          <div class="queue-heading">
-            <h3>Ability queue</h3>
-            <button class="clear-button" id="clear-queue" type="button">Clear queue</button>
-          </div>
-          <div class="command-queue" id="command-queue" aria-live="polite"></div>
-          <p class="queue-help" id="queue-help">Tap an ability to add it. Maximum three.</p>
+        <div class="travel-actions">
+          <button class="travel-button travel-button--subtle" id="travel-step" type="button">
+            Travel onward
+          </button>
+          <button class="travel-button travel-button--primary" id="enter-combat" type="button" hidden>
+            Enter encounter
+          </button>
         </div>
-      </div>
-    </section>
+      </section>
+
+      <section class="hud hud--combat" id="combat-hud" aria-labelledby="combat-title" hidden>
+        <div class="combat-instruction" id="combat-instruction" role="status" aria-live="polite">
+          <span class="combat-instruction__sigil" aria-hidden="true">✥</span>
+          <div>
+            <h2 id="combat-title">Command through the party</h2>
+            <p>Press or drag a hero to open their actions. Drag an action onto a target. Tap a queued action to remove it.</p>
+          </div>
+        </div>
+
+        <div class="combat-feed" id="combat-feed" aria-live="polite"></div>
+      </section>
+
+      <div class="party-strip" id="party-strip" aria-label="Party health" hidden></div>
+    </div>
+
+    <dialog class="result-dialog" id="result-dialog">
+      <div class="result-dialog__crest" id="result-icon" aria-hidden="true">✦</div>
+      <p class="result-dialog__eyebrow" id="result-eyebrow">Encounter complete</p>
+      <h2 id="result-title">Victory</h2>
+      <p id="result-copy">The road continues.</p>
+      <button id="result-action" type="button">Continue journey</button>
+    </dialog>
+
+    <noscript>This game requires JavaScript.</noscript>
   </main>
-
-  <dialog id="result-dialog">
-    <div class="dialog-icon" id="dialog-icon" aria-hidden="true">✦</div>
-    <h2 id="dialog-title">Victory</h2>
-    <p id="dialog-copy">The party survived.</p>
-    <button id="dialog-action" type="button">Next wave</button>
-  </dialog>
 </body>
 </html>
