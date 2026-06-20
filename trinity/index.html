@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111a24">
+  <meta name="color-scheme" content="dark">
+  <title>Trinity — Pocket Party Tactics</title>
+  <meta name="description" content="A portrait-mode tactical combat game built around the classic tank, healer and damage-dealer trinity.">
+  <link rel="stylesheet" href="style.css">
+  <script src="game.js" defer></script>
+</head>
+<body>
+  <main class="game-shell" aria-labelledby="game-title">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Pocket party tactics</p>
+        <h1 id="game-title">Trinity</h1>
+      </div>
+      <div class="wave-status" aria-live="polite">
+        <span>Wave</span>
+        <strong id="wave-number">1</strong>
+      </div>
+    </header>
+
+    <section class="battlefield" aria-label="Battlefield">
+      <div class="battle-message" id="battle-message" role="status" aria-live="polite">
+        Queue abilities. Your party acts automatically.
+      </div>
+
+      <section class="enemy-side" aria-label="Enemies">
+        <div class="enemy-line" id="enemy-line"></div>
+      </section>
+
+      <div class="arena-divider" aria-hidden="true">
+        <span></span>
+      </div>
+
+      <section class="party-side" aria-label="Party">
+        <div class="party-line" id="party-line"></div>
+      </section>
+
+      <div class="combat-log" aria-label="Recent combat events">
+        <ol id="combat-log"></ol>
+      </div>
+    </section>
+
+    <section class="command-panel" aria-label="Party commands">
+      <div class="class-tabs" role="tablist" aria-label="Choose party member">
+        <button class="class-tab" id="tab-tank" role="tab" aria-selected="true" aria-controls="class-controls" data-class="tank" type="button">
+          <span class="tab-icon" aria-hidden="true">◆</span>
+          <span class="tab-copy"><strong>Tank</strong><span><span id="tab-tank-hp">100</span>% HP</span></span>
+          <span class="tab-health"><span id="tab-tank-health-fill"></span></span>
+        </button>
+        <button class="class-tab" id="tab-healer" role="tab" aria-selected="false" aria-controls="class-controls" data-class="healer" type="button">
+          <span class="tab-icon" aria-hidden="true">✦</span>
+          <span class="tab-copy"><strong>Healer</strong><span><span id="tab-healer-hp">100</span>% HP</span></span>
+          <span class="tab-health"><span id="tab-healer-health-fill"></span></span>
+        </button>
+        <button class="class-tab" id="tab-ranger" role="tab" aria-selected="false" aria-controls="class-controls" data-class="ranger" type="button">
+          <span class="tab-icon" aria-hidden="true">➶</span>
+          <span class="tab-copy"><strong>Ranger</strong><span><span id="tab-ranger-hp">100</span>% HP</span></span>
+          <span class="tab-health"><span id="tab-ranger-health-fill"></span></span>
+        </button>
+      </div>
+
+      <div class="class-controls" id="class-controls" role="tabpanel" aria-labelledby="tab-tank">
+        <div class="selected-class-heading">
+          <div>
+            <p class="eyebrow">Commanding</p>
+            <h2 id="selected-class-name">Tank</h2>
+          </div>
+          <div class="readiness" aria-live="polite">
+            <span>Acts in</span>
+            <strong id="selected-ready">0.0s</strong>
+          </div>
+        </div>
+
+        <div class="ability-grid" id="ability-grid"></div>
+
+        <div class="queue-section">
+          <div class="queue-heading">
+            <h3>Ability queue</h3>
+            <button class="clear-button" id="clear-queue" type="button">Clear queue</button>
+          </div>
+          <div class="command-queue" id="command-queue" aria-live="polite"></div>
+          <p class="queue-help" id="queue-help">Tap an ability to add it. Maximum three.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="result-dialog">
+    <div class="dialog-icon" id="dialog-icon" aria-hidden="true">✦</div>
+    <h2 id="dialog-title">Victory</h2>
+    <p id="dialog-copy">The party survived.</p>
+    <button id="dialog-action" type="button">Next wave</button>
+  </dialog>
+</body>
+</html>
