@@ -1,0 +1,332 @@
+<!--
+  Web AR app that lets the user draw a perfectly level circular area for a 5.49 m x 1.32 m pool.
+
+  The app uses the WebXR API and Three.js to run augmented reality in Safari on iOS 17+.  When the
+  AR session starts, the app displays a reticle (a small ring) that indicates where on the real
+  world a virtual object can be placed.  The user taps on the screen to select the centre of
+  their pool.  The app then draws a semi‑transparent cylinder with a diameter of 5.49 m
+  and a height of 1.32 m.  Because the cylinder’s top and bottom faces are constrained to
+  the world‑aligned horizontal plane, it will always be perfectly level regardless of
+  device tilt.
+
+  The cylinder includes a set of radial guide lines on its top face to help you measure
+  the distance to the ground and mark out areas that still need digging.  You can also
+  capture a snapshot of the AR scene via the “Capture” button, which saves a PNG of
+  the current view.
+
+  Note that WebXR is only available on iOS 17+ and Safari.  Android and desktop
+  browsers may not provide AR functionality.  When WebXR is unsupported, the app
+  displays a message instead of attempting to start an AR session.
+
+  To use:
+    1. Visit this page on your iPhone (iOS 17 or later) using Safari.
+    2. Tap “Enter AR” to allow camera access.
+    3. Move the device around so the system can find a horizontal surface.
+    4. A white ring (reticle) appears when a plane is detected.  Tap the screen to
+       place the pool centre.  The cylinder and guides will appear.
+    5. Use the “Capture” button to save a screenshot.  The file will be downloaded
+       to your device.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>AR Pool Level Guide</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+                   Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      pointer-events: none;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    #buttonContainer {
+      display: flex;
+      gap: 12px;
+      pointer-events: auto;
+    }
+    .btn {
+      background: rgba(255,255,255,0.8);
+      color: #333;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+    #message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      padding: 16px;
+      border-radius: 8px;
+      max-width: 90vw;
+      text-align: center;
+    }
+  </style>
+  <!-- Load Three.js and ARButton from CDN.  These dependencies provide core 3D rendering and
+       WebXR utilities.  If you prefer, you can host these files locally.  -->
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.module.js';
+    import { ARButton } from 'https://cdn.jsdelivr.net/npm/three@0.155.0/examples/jsm/webxr/ARButton.js';
+
+    let camera, scene, renderer;
+    let controller;
+    let reticle;
+    let poolPlaced = false;
+    let poolMesh;
+    let hitTestSource = null;
+    let hitTestSourceRequested = false;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'overlay';
+    document.body.appendChild(overlay);
+
+    const buttonContainer = document.createElement('div');
+    buttonContainer.id = 'buttonContainer';
+    overlay.appendChild(buttonContainer);
+
+    const captureButton = document.createElement('button');
+    captureButton.textContent = 'Capture';
+    captureButton.className = 'btn';
+    captureButton.disabled = true;
+    buttonContainer.appendChild(captureButton);
+
+    function showMessage(text) {
+      let msg = document.getElementById('message');
+      if (!msg) {
+        msg = document.createElement('div');
+        msg.id = 'message';
+        document.body.appendChild(msg);
+      }
+      msg.textContent = text;
+      msg.style.display = 'block';
+    }
+    function hideMessage() {
+      const msg = document.getElementById('message');
+      if (msg) msg.style.display = 'none';
+    }
+
+    function init() {
+      // Check for WebXR support.  Safari on iOS 17+ supports 'immersive-ar'.
+      if (navigator.xr === undefined) {
+        showMessage('WebXR is not available on this device or browser.\nPlease use Safari on iOS 17+ for AR.');
+        return;
+      }
+
+      camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 20 );
+      scene = new THREE.Scene();
+
+      // Light so the cylinder is visible in AR.  The HemisphereLight simulates natural
+      // lighting and the DirectionalLight adds some highlights.
+      const light = new THREE.HemisphereLight( 0xffffff, 0xbbbbff, 1 );
+      scene.add( light );
+      const dirLight = new THREE.DirectionalLight( 0xffffff, 0.4 );
+      dirLight.position.set( 0, 10, 0 );
+      scene.add( dirLight );
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio( window.devicePixelRatio );
+      renderer.setSize( window.innerWidth, window.innerHeight );
+      renderer.xr.enabled = true;
+      document.body.appendChild( renderer.domElement );
+
+      // Show an ARButton that will start the AR session when clicked.
+      // The optional parameters specify that we need hit test support.
+      const arButton = ARButton.createButton( renderer, {
+        requiredFeatures: [ 'hit-test' ],
+        optionalFeatures: [ 'dom-overlay' ],
+        domOverlay: { root: overlay }
+      } );
+      document.body.appendChild( arButton );
+
+      // Reticle indicates where on a horizontal plane the pool can be placed.
+      const ringGeometry = new THREE.RingGeometry( 0.07, 0.09, 32 );
+      const ringMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00, opacity: 0.7, transparent: true });
+      reticle = new THREE.Mesh( ringGeometry, ringMaterial );
+      reticle.rotation.x = - Math.PI / 2;
+      reticle.matrixAutoUpdate = false;
+      reticle.visible = false;
+      scene.add( reticle );
+
+      controller = renderer.xr.getController(0);
+      controller.addEventListener('select', onSelect);
+      scene.add( controller );
+
+      // Resize handling.
+      window.addEventListener( 'resize', onWindowResize );
+
+      captureButton.addEventListener('click', captureSnapshot);
+
+      animate();
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize( window.innerWidth, window.innerHeight );
+    }
+
+    function onSelect() {
+      // Only place the pool once.  Subsequent taps have no effect.
+      if ( poolPlaced || reticle.visible === false ) return;
+      poolPlaced = true;
+
+      // Dimensions of the pool (metres).  549 cm diameter, 132 cm height.
+      const diameter = 5.49;
+      const height = 1.32;
+      const radius = diameter / 2;
+
+      // Create the main cylinder.  We use a semi‑transparent material so that ground details
+      // remain visible underneath.  The radial guides are added separately.
+      const cylinderGeo = new THREE.CylinderGeometry( radius, radius, height, 64, 1, true );
+      const cylinderMat = new THREE.MeshStandardMaterial({
+        color: 0x80c0ff,
+        opacity: 0.3,
+        transparent: true,
+        side: THREE.DoubleSide
+      });
+      const cylinder = new THREE.Mesh( cylinderGeo, cylinderMat );
+      cylinder.castShadow = false;
+      cylinder.receiveShadow = false;
+      cylinder.rotation.x = 0; // keep it upright
+
+      // Create the top face with radial guides.  We draw a flat disc and lines.
+      const top = new THREE.Group();
+      // Draw a thin disc to mark the circumference (slightly offset upward so it renders correctly).
+      const discGeo = new THREE.CircleGeometry( radius, 64 );
+      const discMat = new THREE.MeshBasicMaterial({ color: 0x0077ff, opacity: 0.1, transparent: true });
+      const disc = new THREE.Mesh( discGeo, discMat );
+      disc.rotation.x = -Math.PI / 2;
+      disc.position.y = height / 2 + 0.01;
+      top.add( disc );
+      // Add radial lines every 30° to aid visualisation.  They extend slightly beyond the disc.
+      const lineMat = new THREE.LineBasicMaterial({ color: 0xff0000, opacity: 0.8, transparent: true });
+      for (let i = 0; i < 12; i++) {
+        const angle = (i / 12) * Math.PI * 2;
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
+        const points = [];
+        points.push(new THREE.Vector3(0, height / 2 + 0.02, 0));
+        points.push(new THREE.Vector3(x, height / 2 + 0.02, z));
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        const line = new THREE.Line(geometry, lineMat);
+        top.add(line);
+      }
+
+      // Combine cylinder and guides.
+      poolMesh = new THREE.Group();
+      poolMesh.add( cylinder );
+      poolMesh.add( top );
+
+      // Position the mesh at the reticle location.  The reticle's matrix contains the full
+      // transform including rotation.  We copy it so that the cylinder sits flush with
+      // the ground plane (y coordinate).  We then move it upward by half its height so
+      // the bottom sits on the ground.
+      poolMesh.position.setFromMatrixPosition( reticle.matrix );
+      poolMesh.rotation.y = 0;
+      poolMesh.position.y += height / 2;
+      scene.add( poolMesh );
+
+      // Enable the capture button now that an object exists.
+      captureButton.disabled = false;
+    }
+
+    function captureSnapshot() {
+      // Use the renderer’s DOM element to get a snapshot.  Note that this captures
+      // only the WebGL content, not the live camera feed, because the latter is
+      // composited by the browser outside of Three.js.  Safari currently
+      // allows screen capture via HTMLCanvasElement.toDataURL() only for the
+      // 3D layer.  This still provides a useful reference for cylinder
+      // placement and guide lines.
+      const dataURL = renderer.domElement.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = dataURL;
+      a.download = 'ar_pool_snapshot.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    function animate() {
+      renderer.setAnimationLoop( render );
+    }
+
+    function render( timestamp, frame ) {
+      if ( frame ) {
+        const referenceSpace = renderer.xr.getReferenceSpace();
+        const session = renderer.xr.getSession();
+        if ( hitTestSourceRequested === false ) {
+          session.requestReferenceSpace('viewer').then(function (viewerSpace) {
+            session.requestHitTestSource({ space: viewerSpace }).then(function (source) {
+              hitTestSource = source;
+            });
+          });
+          session.addEventListener('end', function () {
+            hitTestSourceRequested = false;
+            hitTestSource = null;
+          });
+          hitTestSourceRequested = true;
+        }
+        if ( hitTestSource ) {
+          const hitTestResults = frame.getHitTestResults( hitTestSource );
+          if ( hitTestResults.length > 0 && poolPlaced === false ) {
+            const hit = hitTestResults[0];
+            const hitPose = hit.getPose( referenceSpace );
+            if ( hitPose ) {
+              // Update reticle matrix so it matches the hit pose.  We only set
+              // the translation and ignore rotation because we want our pool
+              // aligned with the world horizontal plane.
+              reticle.matrix.fromArray( hitPose.transform.matrix );
+              // Zero out the rotation components to keep the reticle level.
+              reticle.matrix.elements[4] = 0;
+              reticle.matrix.elements[5] = 1;
+              reticle.matrix.elements[6] = 0;
+              reticle.matrix.elements[1] = 0;
+              reticle.matrix.elements[9] = 0;
+              reticle.matrix.elements[10] = 1;
+              reticle.matrix.elements[8] = 0;
+              reticle.matrix.elements[2] = 0;
+              reticle.matrix.elements[3] = 0;
+              reticle.matrix.elements[7] = 0;
+              reticle.matrix.elements[11] = 0;
+              reticle.matrixWorldNeedsUpdate = true;
+              reticle.visible = true;
+            }
+          } else {
+            reticle.visible = false;
+          }
+        }
+      }
+      renderer.render( scene, camera );
+    }
+
+    init();
+  </script>
+</head>
+<body>
+  <!-- The canvas and AR button are inserted dynamically by Three.js and ARButton. -->
+</body>
+</html>
