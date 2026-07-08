@@ -1,0 +1,856 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bilweb budanalys live</title>
+
+<style>
+  :root {
+    color-scheme: dark light;
+    --bg: light-dark(#f3f4f6, #151719);
+    --panel: light-dark(#fff, #22262a);
+    --soft: light-dark(#f8fafc, #2b3036);
+    --text: light-dark(#111827, #f4f4f5);
+    --muted: light-dark(#64748b, #a1a1aa);
+    --border: light-dark(#dbe1e8, #3f4751);
+    --accent: light-dark(#116688, #8fd3ff);
+    --warn: light-dark(#fff3c4, #4b3d16);
+    --manual: light-dark(#e7f5ff, #14364a);
+    --new: light-dark(#fff7cc, #4d420f);
+    --error: light-dark(#fff1f2, #451a22);
+    --radius: 16px;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  main {
+    width: min(1200px, calc(100% - 32px));
+    margin: auto;
+    padding: 32px 0;
+  }
+
+  header,
+  section,
+  details {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 18px;
+  }
+
+  header,
+  section {
+    padding: 24px;
+  }
+
+  details {
+    overflow: hidden;
+  }
+
+  summary {
+    cursor: pointer;
+    padding: 18px 24px;
+    font-weight: 800;
+    font-size: 1.15rem;
+  }
+
+  details > div {
+    padding: 0 24px 24px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(2rem, 5vw, 4rem);
+    letter-spacing: -0.05em;
+    line-height: 1;
+  }
+
+  h2,
+  h3 {
+    margin: 0 0 12px;
+    line-height: 1.15;
+  }
+
+  p {
+    color: var(--muted);
+    margin: .5rem 0 0;
+  }
+
+  button,
+  input,
+  textarea {
+    font: inherit;
+  }
+
+  button {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--soft);
+    color: var(--text);
+    padding: .55rem .9rem;
+    cursor: pointer;
+  }
+
+  button:hover {
+    border-color: var(--accent);
+  }
+
+  input {
+    width: 8rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--soft);
+    color: var(--text);
+    padding: .55rem .9rem;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 150px;
+    resize: vertical;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--soft);
+    color: var(--text);
+    padding: 12px;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: .85rem;
+  }
+
+  label {
+    color: var(--muted);
+  }
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+    align-items: center;
+    margin-top: 1rem;
+  }
+
+  .status {
+    display: inline-flex;
+    gap: .5rem;
+    align-items: center;
+    color: var(--muted);
+    font-size: .95rem;
+  }
+
+  .dot {
+    inline-size: .7rem;
+    block-size: .7rem;
+    border-radius: 50%;
+    background: var(--muted);
+  }
+
+  .dot.ok { background: #22c55e; }
+  .dot.error { background: #ef4444; }
+  .dot.loading { background: #f59e0b; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 12px;
+  }
+
+  .card {
+    background: var(--soft);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+  }
+
+  .card strong {
+    display: block;
+    font-size: 1.35rem;
+    line-height: 1.15;
+  }
+
+  .card small {
+    display: block;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .bidder {
+    display: grid;
+    gap: 10px;
+  }
+
+  .bidder h3 {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .pill {
+    display: inline-flex;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 3px 9px;
+    font-size: .8rem;
+    background: var(--soft);
+    white-space: nowrap;
+  }
+
+  .proxy { background: var(--warn); }
+  .manual { background: var(--manual); }
+  .new { background: var(--new); }
+
+  dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 12px;
+    margin: 0;
+  }
+
+  dt {
+    color: var(--muted);
+  }
+
+  dd {
+    margin: 0;
+    text-align: right;
+  }
+
+  .ids {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: .9rem;
+    color: var(--muted);
+  }
+
+  .insight {
+    border-left: 4px solid var(--accent);
+    padding: 12px 14px;
+    background: var(--soft);
+    border-radius: 10px;
+    margin-top: 12px;
+  }
+
+  .error-box {
+    background: var(--error);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-top: 12px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 850px;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  th,
+  td {
+    text-align: left;
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  th {
+    background: var(--soft);
+    color: var(--muted);
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+
+  tr.is-new td {
+    background: var(--new);
+  }
+
+  .amount {
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .chart {
+    display: grid;
+    gap: 9px;
+  }
+
+  .bar-row {
+    display: grid;
+    grid-template-columns: 120px 110px 1fr 95px;
+    gap: 10px;
+    align-items: center;
+    font-size: .88rem;
+  }
+
+  .track {
+    height: 26px;
+    background: var(--soft);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .bar {
+    width: var(--w);
+    height: 100%;
+    background: var(--accent);
+  }
+
+  .bar-row.is-new .bar {
+    background: #f59e0b;
+  }
+
+  @media (max-width: 720px) {
+    main {
+      width: min(100% - 16px, 1200px);
+      padding-block: 16px;
+    }
+
+    header,
+    section {
+      padding: 16px;
+    }
+
+    .bar-row {
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+  }
+</style>
+</head>
+
+<body>
+<main>
+  <header>
+    <h1>Bid strategy analysis</h1>
+    <p id="intro">
+      Object <span id="object-label">55041</span>.
+      Hämtar senaste budhistorik som text, parsar JSON och uppdaterar automatiskt.
+    </p>
+
+    <div class="toolbar">
+      <label>
+        Object ID
+        <input id="object-id" type="number" value="55041">
+      </label>
+
+      <label>
+        Antal
+        <input id="num-bids" type="number" value="100">
+      </label>
+
+      <button id="refresh">Uppdatera nu</button>
+      <button id="toggle-live">Pausa live</button>
+
+      <span class="status">
+        <span class="dot" id="status-dot"></span>
+        <span id="status-text">Inte uppdaterad än</span>
+      </span>
+    </div>
+
+    <div id="fetch-error"></div>
+
+    <details>
+      <summary>Manuell fallback: klistra in JSON här</summary>
+      <div>
+        <p>
+          Om livehämtning blockeras av webbläsaren: öppna endpointen i en ny flik,
+          kopiera JSON-svaret och klistra in det här.
+        </p>
+        <textarea id="manual-json" placeholder='[{"id":202292,"amount":"203 001", ...}]'></textarea>
+        <div class="toolbar">
+          <button id="load-manual">Läs in inklistrad JSON</button>
+        </div>
+      </div>
+    </details>
+
+    <div class="grid" id="summary"></div>
+  </header>
+
+  <section>
+    <h2>Bidders</h2>
+    <div class="grid" id="bidders"></div>
+  </section>
+
+  <details open>
+    <summary>Inferred strategy and max auto-bids</summary>
+    <div id="analysis"></div>
+  </details>
+
+  <details open>
+    <summary>Bid graph</summary>
+    <div>
+      <div class="chart" id="chart"></div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Detailed bid history</summary>
+    <div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>User</th>
+              <th>Amount</th>
+              <th>Type</th>
+              <th>Auto bid-id</th>
+              <th>Bid-id</th>
+            </tr>
+          </thead>
+          <tbody id="history"></tbody>
+        </table>
+      </div>
+    </div>
+  </details>
+</main>
+
+<script>
+let OBJECT_ID = 55041;
+let NUM_OF_BIDS = 100;
+let POLL_INTERVAL_MS = 15_000;
+let liveEnabled = true;
+
+let bids = [];
+let seenIds = new Set();
+let latestKnownId = 0;
+let hasRenderedOnce = false;
+let timer = null;
+
+function getApiUrl() {
+  /*
+    Om sidan körs på bilwebauctions.se används relativ URL.
+    Det är det enda rena client-side-sättet att undvika CORS.
+
+    Om sidan körs lokalt används full URL.
+    Den kan fungera om Bilweb tillåter CORS, annars blockeras den.
+  */
+  const path = `/object/get_latest_bids_json?object_id=${OBJECT_ID}&num_of_bids=${NUM_OF_BIDS}`;
+
+  if (location.hostname === "bilwebauctions.se") {
+    return path;
+  }
+
+  return `https://bilwebauctions.se${path}`;
+}
+
+function amount(bid) {
+  return Number(String(bid.amount).replace(/\s/g, ""));
+}
+
+function sek(n) {
+  return new Intl.NumberFormat("sv-SE").format(n) + " SEK";
+}
+
+function setStatus(type, text) {
+  const dot = document.querySelector("#status-dot");
+  const statusText = document.querySelector("#status-text");
+
+  dot.className = `dot ${type}`;
+  statusText.textContent = text;
+}
+
+function showError(message) {
+  document.querySelector("#fetch-error").innerHTML = message
+    ? `<div class="error-box">${message}</div>`
+    : "";
+}
+
+function normalizeBids(input) {
+  return input
+    .filter(b => b && b.id && b.amount)
+    .map(b => ({
+      ...b,
+      amount: String(b.amount),
+      amountNumber: amount(b)
+    }));
+}
+
+function parseJsonText(text) {
+  const trimmed = text.trim();
+
+  /*
+    Stöd för om användaren råkar kopiera från en HTML-renderad JSON-sida.
+  */
+  const preMatch = trimmed.match(/<pre[^>]*>([\s\S]*?)<\/pre>/i);
+  const raw = preMatch ? preMatch[1] : trimmed;
+
+  const decoded = raw
+    .replaceAll("&quot;", '"')
+    .replaceAll("&amp;", "&")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">");
+
+  const data = JSON.parse(decoded);
+
+  if (!Array.isArray(data)) {
+    throw new Error("Svaret var inte en JSON-array.");
+  }
+
+  return normalizeBids(data);
+}
+
+async function fetchLatestBidsAsText() {
+  setStatus("loading", "Hämtar senaste bud som text...");
+
+  const response = await fetch(getApiUrl(), {
+    method: "GET",
+    cache: "no-store",
+    credentials: "include",
+    headers: {
+      "Accept": "application/json,text/plain,*/*"
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+
+  const text = await response.text();
+  return parseJsonText(text);
+}
+
+async function updateFromNetwork() {
+  OBJECT_ID = Number(document.querySelector("#object-id").value || 55041);
+  NUM_OF_BIDS = Number(document.querySelector("#num-bids").value || 100);
+
+  document.querySelector("#object-label").textContent = String(OBJECT_ID);
+
+  try {
+    const fresh = await fetchLatestBidsAsText();
+
+    if (!fresh.length) {
+      throw new Error("Endpointen returnerade en tom lista.");
+    }
+
+    const previousLatestId = latestKnownId;
+
+    bids = fresh;
+    latestKnownId = Math.max(...bids.map(b => b.id));
+
+    renderAll(previousLatestId);
+
+    showError("");
+    setStatus("ok", `Uppdaterad ${new Date().toLocaleTimeString("sv-SE")}`);
+  } catch (error) {
+    console.warn(error);
+
+    showError(`
+      Livehämtning misslyckades.
+      Det kan bero på CORS om sidan körs lokalt eller i en editor.
+      Offentlig sida räcker inte: servern måste också tillåta att JavaScript från annan origin läser svaret.
+      <br><br>
+      Testa att öppna endpointen direkt i en ny flik:
+      <br>
+      <code>${getApiUrl()}</code>
+      <br><br>
+      Teknisk detalj: ${error.message}
+    `);
+
+    setStatus("error", `Livehämtning misslyckades ${new Date().toLocaleTimeString("sv-SE")}`);
+  }
+}
+
+function loadManualJson() {
+  try {
+    const text = document.querySelector("#manual-json").value;
+    const manual = parseJsonText(text);
+
+    if (!manual.length) {
+      throw new Error("JSON innehöll inga bud.");
+    }
+
+    const previousLatestId = latestKnownId;
+
+    bids = manual;
+    latestKnownId = Math.max(...bids.map(b => b.id));
+
+    renderAll(previousLatestId);
+
+    showError("");
+    setStatus("ok", `Manuell JSON inläst ${new Date().toLocaleTimeString("sv-SE")}`);
+  } catch (error) {
+    showError(`Kunde inte läsa inklistrad JSON. Teknisk detalj: ${error.message}`);
+    setStatus("error", "Manuell JSON misslyckades");
+  }
+}
+
+function groupBy(list, keyFn) {
+  return list.reduce((map, item) => {
+    const key = keyFn(item);
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(item);
+    return map;
+  }, new Map());
+}
+
+function getAsc() {
+  return [...bids].sort((a, b) => a.id - b.id);
+}
+
+function getDesc() {
+  return [...bids].sort((a, b) => b.id - a.id);
+}
+
+function autoBidInferences() {
+  const asc = getAsc();
+  const byAuto = groupBy(bids.filter(b => b.auto_bid_id !== null), b => b.auto_bid_id);
+
+  return [...byAuto.entries()]
+    .map(([autoId, rows]) => {
+      const ordered = [...rows].sort((a, b) => a.id - b.id);
+      const user = ordered[0].user_id;
+      const min = Math.min(...ordered.map(amount));
+      const maxVisible = Math.max(...ordered.map(amount));
+      const last = ordered.at(-1);
+
+      const challengedByManual = asc.find(b =>
+        b.id > last.id &&
+        b.user_id !== user &&
+        !b.is_proxy &&
+        amount(b) > maxVisible
+      );
+
+      const status = challengedByManual
+        ? `exhausted or replaced after ${sek(maxVisible)}`
+        : `active or unchallenged above ${sek(maxVisible)}`;
+
+      return {
+        autoId,
+        user,
+        min,
+        maxVisible,
+        count: rows.length,
+        last,
+        challengedByManual,
+        status
+      };
+    })
+    .sort((a, b) => b.maxVisible - a.maxVisible);
+}
+
+function renderSummary() {
+  if (!bids.length) return;
+
+  const users = [...new Set(bids.map(b => b.user_id))];
+  const byAuto = groupBy(bids.filter(b => b.auto_bid_id !== null), b => b.auto_bid_id);
+  const highest = Math.max(...bids.map(amount));
+  const latest = getDesc()[0];
+
+  document.querySelector("#summary").innerHTML = `
+    <div class="card">
+      <strong>${sek(highest)}</strong>
+      <small>Current highest visible bid</small>
+    </div>
+
+    <div class="card">
+      <strong>${bids.length}</strong>
+      <small>Total visible bids</small>
+    </div>
+
+    <div class="card">
+      <strong>${users.length}</strong>
+      <small>Visible bidders</small>
+    </div>
+
+    <div class="card">
+      <strong>${byAuto.size}</strong>
+      <small>Distinct auto-bid IDs</small>
+    </div>
+
+    <div class="card">
+      <strong>${latest.created}</strong>
+      <small>Latest visible bid</small>
+    </div>
+
+    <div class="card">
+      <strong>${latest.user_id}</strong>
+      <small>Current leading user</small>
+    </div>
+  `;
+}
+
+function renderBidders() {
+  const byUser = groupBy(bids, b => b.user_id);
+
+  document.querySelector("#bidders").innerHTML = [...byUser.entries()]
+    .sort((a, b) => Math.max(...b[1].map(amount)) - Math.max(...a[1].map(amount)))
+    .map(([user, rows]) => {
+      const autoIds = [...new Set(rows.map(b => b.auto_bid_id).filter(Boolean))];
+      const maxBid = Math.max(...rows.map(amount));
+      const manual = rows.filter(b => !b.is_proxy).length;
+      const proxy = rows.filter(b => b.is_proxy).length;
+      const latest = [...rows].sort((a, b) => b.id - a.id)[0];
+      const isNew = rows.some(row => seenIds.has(row.id));
+
+      let strategy = "Mostly manual/reactive bidding.";
+      if (autoIds.length >= 4) strategy = "Highly engaged proxy bidder; repeatedly raises max.";
+      else if (autoIds.length >= 2) strategy = "Uses proxy bidding, then creates new max when challenged.";
+      else if (autoIds.length === 1 && proxy > manual) strategy = "Set-and-let-run proxy strategy.";
+
+      return `
+        <article class="card bidder">
+          <h3>
+            User ${user}
+            <span class="pill ${isNew ? "new" : autoIds.length ? "proxy" : "manual"}">
+              ${isNew ? "new" : autoIds.length ? "proxy" : "manual"}
+            </span>
+          </h3>
+
+          <dl>
+            <dt>Highest</dt><dd>${sek(maxBid)}</dd>
+            <dt>Bids</dt><dd>${rows.length}</dd>
+            <dt>Manual</dt><dd>${manual}</dd>
+            <dt>Proxy</dt><dd>${proxy}</dd>
+            <dt>Latest</dt><dd>${latest.created}</dd>
+          </dl>
+
+          <div class="ids">${autoIds.length ? autoIds.join(" → ") : "No auto-bid IDs"}</div>
+          <p>${strategy}</p>
+        </article>
+      `;
+    }).join("");
+}
+
+function renderAnalysis() {
+  const inferred = autoBidInferences();
+  const newest = getDesc()[0];
+
+  document.querySelector("#analysis").innerHTML = `
+    <div class="insight">
+      <strong>Important:</strong> hidden maximums are not present in the data.
+      The page can only infer lower bounds.
+      If an auto-bid reached ${sek(amount(newest))}, the true max was at least that amount, possibly higher.
+    </div>
+
+    <h3 style="margin-top:18px">Inferred auto-bid ceilings</h3>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Auto bid-id</th>
+            <th>User</th>
+            <th>Visible range</th>
+            <th>Bids</th>
+            <th>Inference</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          ${inferred.map(x => `
+            <tr>
+              <td>${x.autoId}</td>
+              <td>User ${x.user}</td>
+              <td class="amount">${sek(x.min)} → ${sek(x.maxVisible)}</td>
+              <td>${x.count}</td>
+              <td>${x.status}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderChart() {
+  const asc = getAsc();
+  const max = Math.max(...bids.map(amount));
+
+  document.querySelector("#chart").innerHTML = asc.map(b => {
+    const isNew = seenIds.has(b.id);
+
+    return `
+      <div class="bar-row ${isNew ? "is-new" : ""}">
+        <div>${b.created}</div>
+        <div>User ${b.user_id}</div>
+
+        <div class="track">
+          <div class="bar" style="--w:${Math.max(1, amount(b) / max * 100)}%"></div>
+        </div>
+
+        <div class="amount">${sek(amount(b))}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderHistory() {
+  document.querySelector("#history").innerHTML = getDesc().map(b => {
+    const isNew = seenIds.has(b.id);
+
+    return `
+      <tr class="${isNew ? "is-new" : ""}">
+        <td>${b.created}</td>
+        <td>User ${b.user_id}</td>
+        <td class="amount">${b.amount} SEK</td>
+        <td>
+          <span class="pill ${b.is_proxy ? "proxy" : "manual"}">
+            ${b.is_proxy ? "proxy/autobid" : "manual"}
+          </span>
+        </td>
+        <td>${b.auto_bid_id ?? "–"}</td>
+        <td>${b.id}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function renderAll(previousLatestId = 0) {
+  seenIds = new Set(
+    previousLatestId
+      ? bids.filter(b => b.id > previousLatestId).map(b => b.id)
+      : []
+  );
+
+  renderSummary();
+  renderBidders();
+  renderAnalysis();
+  renderChart();
+  renderHistory();
+
+  hasRenderedOnce = true;
+}
+
+function startTimer() {
+  clearInterval(timer);
+
+  timer = setInterval(() => {
+    if (liveEnabled) updateFromNetwork();
+  }, POLL_INTERVAL_MS);
+}
+
+document.querySelector("#refresh").addEventListener("click", updateFromNetwork);
+document.querySelector("#load-manual").addEventListener("click", loadManualJson);
+
+document.querySelector("#toggle-live").addEventListener("click", event => {
+  liveEnabled = !liveEnabled;
+  event.target.textContent = liveEnabled ? "Pausa live" : "Starta live";
+  setStatus(liveEnabled ? "ok" : "", liveEnabled ? "Live aktiv" : "Live pausad");
+});
+
+updateFromNetwork();
+startTimer();
+</script>
+</body>
+</html>
