@@ -702,8 +702,8 @@ function renderBidders() {
         <article class="card bidder">
           <h3>
             User ${escapeHtml(user)}
-            <span class="pill ${autoIds.length ? "proxy" : "manual"}">
-              ${autoIds.length ? "proxy" : "manuell"}
+            <span class="pill ${autoIds.length ? "auto" : "manual"}">
+              ${autoIds.length ? "auto" : "manuell"}
             </span>
           </h3>
 
@@ -711,7 +711,7 @@ function renderBidders() {
             <dt>Högsta</dt><dd>${sek(maxBid)}</dd>
             <dt>Bud</dt><dd>${rows.length}</dd>
             <dt>Manuella</dt><dd>${manual}</dd>
-            <dt>Proxy</dt><dd>${proxy}</dd>
+            <dt>Auto</dt><dd>${proxy}</dd>
             <dt>Senaste</dt><dd>${escapeHtml(latest.created)}</dd>
           </dl>
 
@@ -789,8 +789,8 @@ function renderHistory() {
       <td>User ${escapeHtml(bid.user_id)}</td>
       <td class="amount">${escapeHtml(bid.amount)} SEK</td>
       <td>
-        <span class="pill ${Number(bid.is_proxy) ? "proxy" : "manual"}">
-          ${Number(bid.is_proxy) ? "proxy/autobud" : "manuellt"}
+        <span class="pill ${Number(bid.is_proxy) ? "auto" : "manual"}">
+          ${Number(bid.is_proxy) ? "auto" : "manuellt"}
         </span>
       </td>
       <td>${bid.auto_bid_id ?? "–"}</td>
