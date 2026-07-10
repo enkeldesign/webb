@@ -460,6 +460,10 @@ main > section > * {
   font-size: clamp(2rem, 3.2cqi, 2.85rem);
 }
 
+#kompetens .eyebrow {
+  margin-block-end: clamp(1rem, 2cqi, 1.5rem);
+}
+
 #kompetens > header p:last-child {
   font-size: clamp(.875rem, 1.25cqi, 1rem);
 }
@@ -659,7 +663,7 @@ body > footer p {
   margin: 0;
 }
 
-@media (max-width: 63.99rem) {
+@media (max-width: 69.99rem) {
   body > header > nav {
     align-items: flex-start;
   }
