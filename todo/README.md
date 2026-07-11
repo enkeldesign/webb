@@ -5,26 +5,28 @@ Gemensam att göra-lista för `https://enkel.design/todo/`.
 ## Funktioner
 
 - Profilmodal för Erik eller Annika.
-- Gemensam serverlagring i Supabase/Postgres.
+- Gemensam lagring i `todo/data.json` i detta GitHub-repo.
+- Varje ändring sparas som en vanlig Git-commit.
 - Lägg till, redigera och ta bort uppgifter.
 - Ändra titel, nästa steg, brådska, värdeskapande, lugnvärde, energikostnad, taggar och status via knappen **Redigera** på varje rad.
 - Manuell prioritering med dra och släpp samt tillgängliga upp/ned-knappar.
 - Sortering utan att den sparade prioriteten ändras.
 - Kalkylförslag: `brådska × 5 + lugnvärde × 3 + värdeskapande × 2 − energikostnad × 2`.
 - Automatisk synkning var tjugonde sekund och vid återgång till fliken.
-- Serveråtkomst skyddad av en familjekod som hashas med bcrypt i databasen.
+- Ingen extern databas eller server.
 
-## Installera databasen
+## Anslut GitHub
 
-1. Skapa ett Supabase-projekt.
-2. Öppna SQL Editor och kör hela `supabase.sql`.
-3. Öppna `/todo/` och välj Erik eller Annika.
-4. Fyll i Project URL, den publika `anon`-nyckeln och en familjekod på minst 12 tecken.
-5. Välj **Skapa listan** första gången.
-6. Gör samma anslutning på den andra personens enhet.
+Sidan läser och skriver `todo/data.json` via GitHubs Contents API.
 
-Project URL och anon-nyckel finns under **Project Settings → API** i Supabase. Familjekoden lagras bara lokalt i respektive webbläsare och skickas över HTTPS till databasfunktionerna.
+1. Skapa en finmaskig personal access token på GitHub.
+2. Begränsa token till repot `enkeldesign/webb`.
+3. Ge repository-behörigheten **Contents: Read and write**.
+4. Öppna `/todo/`, välj Erik eller Annika och klistra in token under **GitHub-inställningar**.
+5. Gör samma sak på den andra enheten. Ni kan använda varsin token eller samma.
 
-## Säkerhetsmodell
+Token sparas i `localStorage` på respektive enhet och checkas aldrig in i repot.
 
-Tabellerna har Row Level Security aktiverad och ger inga direkta rättigheter till `anon` eller `authenticated`. All åtkomst går genom ett litet antal `security definer`-funktioner. Varje funktion kontrollerar familjekoden mot ett bcrypt-hashat värde innan data läses eller ändras.
+## Lagringsmodell
+
+`data.json` innehåller listans version, senaste ändring och alla uppgifter. Vid skrivning hämtar klienten först filens aktuella SHA och skickar den med uppdateringen. Vid en samtidig ändring gör klienten ett nytt försök mot den senaste versionen.
