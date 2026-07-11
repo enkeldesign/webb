@@ -10,6 +10,7 @@
   <meta name="description" content="Erik och Annikas gemensamma prioriterade att göra-lista.">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="cards.css">
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -54,28 +55,11 @@
       <p id="syncStatus" class="sync-status" role="status" aria-live="polite">Inte ansluten ännu.</p>
     </section>
 
-    <div id="tableContainer" class="table-container" tabindex="0" aria-label="Att göra-lista, kan rullas i sidled på små skärmar">
-      <table>
-        <caption class="visually-hidden">Gemensam prioriterad att göra-lista för Erik och Annika</caption>
-        <thead>
-          <tr>
-            <th scope="col">Prio</th>
-            <th scope="col">Uppgift</th>
-            <th scope="col">Nästa konkreta steg</th>
-            <th scope="col">Brådska</th>
-            <th scope="col">Värde</th>
-            <th scope="col">Lugn</th>
-            <th scope="col">Energi</th>
-            <th scope="col">Kalkyl</th>
-            <th scope="col">Taggar</th>
-            <th scope="col">Status</th>
-            <th scope="col"><span class="visually-hidden">Åtgärder</span></th>
-          </tr>
-        </thead>
-        <tbody id="taskBody"></tbody>
-      </table>
+    <section id="tableContainer" class="card-container" aria-labelledby="task-list-heading">
+      <h2 id="task-list-heading" class="visually-hidden">Gemensam prioriterad att göra-lista för Erik och Annika</h2>
+      <ol id="taskBody" class="task-list"></ol>
       <p id="emptyState" class="empty-state" hidden>Här var det tomt. En ovanligt fridfull datafil.</p>
-    </div>
+    </section>
   </main>
 
   <dialog id="profileDialog" aria-labelledby="profileHeading">
@@ -209,28 +193,53 @@
   </dialog>
 
   <template id="taskRowTemplate">
-    <tr>
-      <td class="priority-cell">
+    <li class="task-card">
+      <article>
+        <h2 class="task-title"></h2>
+        <p class="next-step"></p>
+
+        <dl class="metrics">
+          <div>
+            <dt>Brådska</dt>
+            <dd class="urgency rating-cell"></dd>
+          </div>
+          <div>
+            <dt>Värde</dt>
+            <dd class="value rating-cell"></dd>
+          </div>
+          <div>
+            <dt>Lugn</dt>
+            <dd class="calm rating-cell"></dd>
+          </div>
+          <div>
+            <dt>Energi</dt>
+            <dd class="energy rating-cell"></dd>
+          </div>
+          <div class="metric-score">
+            <dt>Kalkyl</dt>
+            <dd class="score rating-cell"></dd>
+          </div>
+        </dl>
+
+        <div class="task-meta">
+          <div class="tags" aria-label="Taggar"></div>
+          <div class="status"></div>
+        </div>
+
+        <div class="row-actions">
+          <button class="edit-button" type="button">Redigera</button>
+          <button class="delete-button danger" type="button">Ta bort</button>
+        </div>
+      </article>
+
+      <div class="priority-cell" aria-label="Prioritering">
         <span class="priority-number"></span>
         <div class="reorder-buttons">
           <button class="move-up" type="button" aria-label="Flytta upp">↑</button>
           <button class="move-down" type="button" aria-label="Flytta ned">↓</button>
         </div>
-      </td>
-      <th class="task-title" scope="row"></th>
-      <td class="next-step"></td>
-      <td class="urgency rating-cell"></td>
-      <td class="value rating-cell"></td>
-      <td class="calm rating-cell"></td>
-      <td class="energy rating-cell"></td>
-      <td class="score rating-cell"></td>
-      <td class="tags"></td>
-      <td class="status"></td>
-      <td class="row-actions">
-        <button class="edit-button" type="button">Redigera</button>
-        <button class="delete-button danger" type="button">Ta bort</button>
-      </td>
-    </tr>
+      </div>
+    </li>
   </template>
 </body>
 </html>
