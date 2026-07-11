@@ -43,7 +43,7 @@
 
       <button id="directionButton" type="button" aria-pressed="false">Fallande</button>
       <button id="refreshButton" type="button">Uppdatera</button>
-      <button id="settingsButton" type="button" aria-haspopup="dialog">Serverinställningar</button>
+      <button id="settingsButton" type="button" aria-haspopup="dialog">GitHub-inställningar</button>
     </section>
 
     <section class="calculation" aria-labelledby="calculation-heading">
@@ -74,7 +74,7 @@
         </thead>
         <tbody id="taskBody"></tbody>
       </table>
-      <p id="emptyState" class="empty-state" hidden>Här var det tomt. En ovanligt fridfull databas.</p>
+      <p id="emptyState" class="empty-state" hidden>Här var det tomt. En ovanligt fridfull datafil.</p>
     </div>
   </main>
 
@@ -183,49 +183,29 @@
     <form id="settingsForm" class="dialog-content">
       <div class="dialog-heading-row">
         <div>
-          <p class="eyebrow">Gemensam server</p>
-          <h2 id="settingsHeading">Anslut databasen</h2>
+          <p class="eyebrow">GitHub-lagring</p>
+          <h2 id="settingsHeading">Anslut listan</h2>
         </div>
         <button class="icon-button" type="button" data-close-dialog="settingsDialog" aria-label="Stäng">×</button>
       </div>
 
-      <p>Uppgifterna lagras i Supabase. Projektadressen och den publika nyckeln är inte hemliga. Familjekoden är nyckeln till själva listan och ska bara delas mellan er.</p>
+      <p>Uppgifterna ligger i <code>enkeldesign/webb/todo/data.json</code>. Varje ändring sparas som en vanlig Git-commit. Ingen extern databas eller server används.</p>
 
       <label>
-        Supabase-projektets URL
-        <input id="serverUrlInput" type="url" required placeholder="https://abcdefgh.supabase.co" autocomplete="url">
+        GitHub-token
+        <input id="tokenInput" type="password" required autocomplete="off" spellcheck="false">
+        <span class="hint">Skapa en finmaskig token för repot <strong>enkeldesign/webb</strong> med behörigheten <strong>Contents: Read and write</strong>. Token sparas bara i den här webbläsaren.</span>
       </label>
 
-      <label>
-        Publik anon-nyckel
-        <textarea id="anonKeyInput" required rows="4" spellcheck="false" autocomplete="off"></textarea>
-      </label>
-
-      <label>
-        Familjekod
-        <input id="accessCodeInput" type="password" required minlength="12" autocomplete="current-password">
-        <span class="hint">Minst 12 tecken. Koden sparas bara i den här webbläsaren.</span>
-      </label>
+      <p class="hint"><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noreferrer">Skapa en finmaskig GitHub-token</a>. Erik och Annika kan använda varsin token eller samma.</p>
 
       <div class="dialog-actions split-actions">
-        <button id="forgetSettingsButton" type="button">Glöm inställningar</button>
+        <button id="forgetSettingsButton" type="button">Glöm token</button>
         <span></span>
         <button type="button" data-close-dialog="settingsDialog">Avbryt</button>
         <button class="primary" type="submit">Spara och anslut</button>
       </div>
     </form>
-  </dialog>
-
-  <dialog id="initializeDialog" aria-labelledby="initializeHeading">
-    <div class="dialog-content">
-      <p class="eyebrow">Tom server</p>
-      <h2 id="initializeHeading">Skapa den gemensamma listan?</h2>
-      <p>Databasen är installerad men ännu inte initierad. Familjekoden du nyss angav blir låset till listan och de nuvarande uppgifterna läggs in som startinnehåll.</p>
-      <div class="dialog-actions">
-        <button type="button" data-close-dialog="initializeDialog">Avbryt</button>
-        <button id="initializeButton" class="primary" type="button">Skapa listan</button>
-      </div>
-    </div>
   </dialog>
 
   <template id="taskRowTemplate">
