@@ -1,0 +1,224 @@
+.card-container {
+  margin-block-end: 4rem;
+}
+
+.task-list {
+  display: grid;
+  gap: .85rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.task-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 3.45rem;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 .35rem 1rem rgb(0 0 0 / .06);
+}
+
+.task-card[draggable="true"] {
+  cursor: grab;
+}
+
+.task-card.dragging {
+  opacity: .45;
+}
+
+.task-card.drag-target {
+  outline: .22rem solid var(--accent);
+  outline-offset: .12rem;
+}
+
+.task-card > article {
+  min-inline-size: 0;
+  padding: 1rem;
+}
+
+.task-card .priority-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .55rem;
+  inline-size: auto;
+  padding: .65rem .4rem;
+  border-inline-start: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 84%, var(--accent));
+  white-space: normal;
+}
+
+.task-card .priority-number {
+  min-inline-size: 2.35rem;
+  min-block-size: 2.35rem;
+  font-size: 1rem;
+}
+
+.task-card .reorder-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+  margin: 0;
+}
+
+.task-card .reorder-buttons button {
+  inline-size: 2.55rem;
+  min-inline-size: 2.55rem;
+  block-size: 2.55rem;
+  min-block-size: 2.55rem;
+  padding: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.task-card .task-title {
+  max-inline-size: none;
+  margin: 0 0 .4rem;
+  font-size: clamp(1.12rem, 4.5vw, 1.4rem);
+  line-height: 1.15;
+}
+
+.task-card .next-step {
+  max-inline-size: none;
+  margin: 0 0 1rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.task-card .next-step::before {
+  content: "Nästa steg";
+  display: block;
+  margin-block-end: .18rem;
+  color: var(--accent);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: .45rem;
+  margin: 0 0 .9rem;
+}
+
+.metrics > div {
+  min-inline-size: 0;
+  padding: .5rem .35rem;
+  border: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+  border-radius: .45rem;
+  text-align: center;
+  background: color-mix(in srgb, var(--surface) 92%, var(--accent));
+}
+
+.metrics dt {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: .65rem;
+  font-weight: 750;
+  letter-spacing: .025em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metrics dd {
+  margin: .18rem 0 0;
+  font-size: .95rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.metrics .score {
+  font-weight: 850;
+}
+
+.task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .55rem;
+}
+
+.task-card .tags {
+  max-inline-size: none;
+}
+
+.task-card .row-actions {
+  display: flex;
+  gap: .5rem;
+  margin-block-start: .9rem;
+  white-space: normal;
+}
+
+.task-card .row-actions button {
+  display: inline-block;
+  inline-size: auto;
+  margin: 0;
+}
+
+@media (max-width: 46rem) {
+  body > header {
+    padding-block-start: 1.2rem;
+  }
+
+  h1 {
+    font-size: clamp(2.25rem, 12vw, 3.6rem);
+  }
+
+  .toolbar {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 3;
+    padding: .75rem;
+    box-shadow: 0 .4rem 1rem rgb(0 0 0 / .08);
+  }
+
+  .calculation {
+    padding: .8rem;
+  }
+
+  .calculation h2 {
+    font-size: 1rem;
+  }
+
+  .calculation p {
+    font-size: .86rem;
+  }
+
+  .task-card > article {
+    padding: .85rem;
+  }
+
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .metrics .metric-score {
+    grid-column: 1 / -1;
+  }
+
+  .task-card .row-actions button {
+    flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 25rem) {
+  .task-card {
+    grid-template-columns: minmax(0, 1fr) 3.15rem;
+  }
+
+  .task-card .priority-cell {
+    padding-inline: .3rem;
+  }
+
+  .task-card .reorder-buttons button {
+    inline-size: 2.25rem;
+    min-inline-size: 2.25rem;
+    block-size: 2.25rem;
+    min-block-size: 2.25rem;
+  }
+}
