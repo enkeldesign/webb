@@ -7,6 +7,7 @@ Gemensam att göra-lista för `https://enkel.design/todo/`.
 - Profilmodal för Erik eller Annika.
 - Gemensam serverlagring i Supabase/Postgres.
 - Lägg till, redigera och ta bort uppgifter.
+- Ändra titel, nästa steg, brådska, värdeskapande, lugnvärde, energikostnad, taggar och status via knappen **Redigera** på varje rad.
 - Manuell prioritering med dra och släpp samt tillgängliga upp/ned-knappar.
 - Sortering utan att den sparade prioriteten ändras.
 - Kalkylförslag: `brådska × 5 + lugnvärde × 3 + värdeskapande × 2 − energikostnad × 2`.
