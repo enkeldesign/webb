@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f4f4f4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#20242a" media="(prefers-color-scheme: dark)">
+  <title>Att göra tillsammans</title>
+  <meta name="description" content="Erik och Annikas gemensamma prioriterade att göra-lista.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header>
+    <div>
+      <p class="eyebrow">Enkel Design / todo</p>
+      <h1>Att göra tillsammans</h1>
+      <p class="intro">En gemensam lista där brådskan väger tyngst, lugnet kommer därnäst och energin får ett ärligt pris.</p>
+    </div>
+    <button id="profileButton" class="profile-button" type="button" aria-haspopup="dialog">Välj person</button>
+  </header>
+
+  <main>
+    <section class="toolbar" aria-label="Verktyg för listan">
+      <button id="addButton" class="primary" type="button">Lägg till uppgift</button>
+
+      <label>
+        Sortera
+        <select id="sortSelect">
+          <option value="priority">Prio</option>
+          <option value="score">Kalkylförslag</option>
+          <option value="urgency">Brådska</option>
+          <option value="calm">Lugnvärde</option>
+          <option value="value">Värdeskapande</option>
+          <option value="energy">Energikostnad</option>
+          <option value="status">Status</option>
+          <option value="title">Uppgift</option>
+          <option value="updated_at">Senast ändrad</option>
+        </select>
+      </label>
+
+      <button id="directionButton" type="button" aria-pressed="false">Fallande</button>
+      <button id="refreshButton" type="button">Uppdatera</button>
+      <button id="settingsButton" type="button" aria-haspopup="dialog">Serverinställningar</button>
+    </section>
+
+    <section class="calculation" aria-labelledby="calculation-heading">
+      <div>
+        <h2 id="calculation-heading">Så räknas kalkylförslaget</h2>
+        <p><strong>Brådska × 5 + lugnvärde × 3 + värdeskapande × 2 − energikostnad × 2.</strong> Kalkylen ändrar aldrig er manuella prio.</p>
+      </div>
+      <p id="syncStatus" class="sync-status" role="status" aria-live="polite">Inte ansluten ännu.</p>
+    </section>
+
+    <div id="tableContainer" class="table-container" tabindex="0" aria-label="Att göra-lista, kan rullas i sidled på små skärmar">
+      <table>
+        <caption class="visually-hidden">Gemensam prioriterad att göra-lista för Erik och Annika</caption>
+        <thead>
+          <tr>
+            <th scope="col">Prio</th>
+            <th scope="col">Uppgift</th>
+            <th scope="col">Nästa konkreta steg</th>
+            <th scope="col">Brådska</th>
+            <th scope="col">Värde</th>
+            <th scope="col">Lugn</th>
+            <th scope="col">Energi</th>
+            <th scope="col">Kalkyl</th>
+            <th scope="col">Taggar</th>
+            <th scope="col">Status</th>
+            <th scope="col"><span class="visually-hidden">Åtgärder</span></th>
+          </tr>
+        </thead>
+        <tbody id="taskBody"></tbody>
+      </table>
+      <p id="emptyState" class="empty-state" hidden>Här var det tomt. En ovanligt fridfull databas.</p>
+    </div>
+  </main>
+
+  <dialog id="profileDialog" aria-labelledby="profileHeading">
+    <div class="dialog-content profile-dialog-content">
+      <p class="eyebrow">Vem använder listan?</p>
+      <h2 id="profileHeading">Välj person</h2>
+      <p>Valet märker vem som senast ändrade en uppgift. Ni ser samma lista.</p>
+      <div class="profile-options">
+        <button type="button" data-profile="Erik">Erik</button>
+        <button type="button" data-profile="Annika">Annika</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="taskDialog" aria-labelledby="taskDialogHeading">
+    <form id="taskForm" class="dialog-content">
+      <div class="dialog-heading-row">
+        <div>
+          <p class="eyebrow">Uppgift</p>
+          <h2 id="taskDialogHeading">Lägg till uppgift</h2>
+        </div>
+        <button class="icon-button" type="button" data-close-dialog="taskDialog" aria-label="Stäng">×</button>
+      </div>
+
+      <input id="taskId" type="hidden">
+
+      <label>
+        Uppgift
+        <input id="titleInput" name="title" required maxlength="180" autocomplete="off">
+      </label>
+
+      <label>
+        Nästa konkreta steg
+        <textarea id="nextStepInput" name="nextStep" rows="3" maxlength="500"></textarea>
+      </label>
+
+      <div class="ratings-grid">
+        <label>
+          Brådska
+          <select id="urgencyInput" name="urgency">
+            <option value="1">1, kan vänta</option>
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+            <option value="5">5, tidskritiskt</option>
+          </select>
+        </label>
+
+        <label>
+          Värdeskapande
+          <select id="valueInput" name="value">
+            <option value="1">1, litet värde</option>
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+            <option value="5">5, stort värde</option>
+          </select>
+        </label>
+
+        <label>
+          Lugnvärde
+          <select id="calmInput" name="calm">
+            <option value="1">1, liten lättnad</option>
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+            <option value="5">5, stor lättnad</option>
+          </select>
+        </label>
+
+        <label>
+          Energikostnad
+          <select id="energyInput" name="energy">
+            <option value="1">1, mycket liten</option>
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+            <option value="5">5, mycket stor</option>
+          </select>
+        </label>
+      </div>
+
+      <label>
+        Taggar, separerade med kommatecken
+        <input id="tagsInput" name="tags" placeholder="Pool, Trädgård" maxlength="300" autocomplete="off">
+      </label>
+
+      <label>
+        Status
+        <select id="statusInput" name="status">
+          <option value="todo">Att göra</option>
+          <option value="doing">Pågående</option>
+          <option value="done">Klar</option>
+        </select>
+      </label>
+
+      <div class="dialog-actions">
+        <button type="button" data-close-dialog="taskDialog">Avbryt</button>
+        <button class="primary" type="submit">Spara uppgift</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="settingsDialog" aria-labelledby="settingsHeading">
+    <form id="settingsForm" class="dialog-content">
+      <div class="dialog-heading-row">
+        <div>
+          <p class="eyebrow">Gemensam server</p>
+          <h2 id="settingsHeading">Anslut databasen</h2>
+        </div>
+        <button class="icon-button" type="button" data-close-dialog="settingsDialog" aria-label="Stäng">×</button>
+      </div>
+
+      <p>Uppgifterna lagras i Supabase. Projektadressen och den publika nyckeln är inte hemliga. Familjekoden är nyckeln till själva listan och ska bara delas mellan er.</p>
+
+      <label>
+        Supabase-projektets URL
+        <input id="serverUrlInput" type="url" required placeholder="https://abcdefgh.supabase.co" autocomplete="url">
+      </label>
+
+      <label>
+        Publik anon-nyckel
+        <textarea id="anonKeyInput" required rows="4" spellcheck="false" autocomplete="off"></textarea>
+      </label>
+
+      <label>
+        Familjekod
+        <input id="accessCodeInput" type="password" required minlength="12" autocomplete="current-password">
+        <span class="hint">Minst 12 tecken. Koden sparas bara i den här webbläsaren.</span>
+      </label>
+
+      <div class="dialog-actions split-actions">
+        <button id="forgetSettingsButton" type="button">Glöm inställningar</button>
+        <span></span>
+        <button type="button" data-close-dialog="settingsDialog">Avbryt</button>
+        <button class="primary" type="submit">Spara och anslut</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="initializeDialog" aria-labelledby="initializeHeading">
+    <div class="dialog-content">
+      <p class="eyebrow">Tom server</p>
+      <h2 id="initializeHeading">Skapa den gemensamma listan?</h2>
+      <p>Databasen är installerad men ännu inte initierad. Familjekoden du nyss angav blir låset till listan och de nuvarande uppgifterna läggs in som startinnehåll.</p>
+      <div class="dialog-actions">
+        <button type="button" data-close-dialog="initializeDialog">Avbryt</button>
+        <button id="initializeButton" class="primary" type="button">Skapa listan</button>
+      </div>
+    </div>
+  </dialog>
+
+  <template id="taskRowTemplate">
+    <tr>
+      <td class="priority-cell">
+        <span class="priority-number"></span>
+        <div class="reorder-buttons">
+          <button class="move-up" type="button" aria-label="Flytta upp">↑</button>
+          <button class="move-down" type="button" aria-label="Flytta ned">↓</button>
+        </div>
+      </td>
+      <th class="task-title" scope="row"></th>
+      <td class="next-step"></td>
+      <td class="urgency rating-cell"></td>
+      <td class="value rating-cell"></td>
+      <td class="calm rating-cell"></td>
+      <td class="energy rating-cell"></td>
+      <td class="score rating-cell"></td>
+      <td class="tags"></td>
+      <td class="status"></td>
+      <td class="row-actions">
+        <button class="edit-button" type="button">Redigera</button>
+        <button class="delete-button danger" type="button">Ta bort</button>
+      </td>
+    </tr>
+  </template>
+</body>
+</html>
