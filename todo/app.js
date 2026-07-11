@@ -1,8 +1,14 @@
 'use strict';
 
-const STORAGE_KEY = 'enkel-todo-server-v1';
+const STORAGE_KEY = 'enkel-todo-github-v1';
 const PROFILE_KEY = 'enkel-todo-profile';
 const POLL_INTERVAL = 20000;
+const GITHUB = {
+  owner: 'enkeldesign',
+  repo: 'webb',
+  path: 'todo/data.json',
+  branch: 'main'
+};
 
 const state = {
   actor: '',
@@ -11,6 +17,7 @@ const state = {
   sortDirection: 'asc',
   draggedId: null,
   loading: false,
+  saving: false,
   pollTimer: null
 };
 
@@ -29,9 +36,8 @@ function cacheElements() {
     'settingsButton', 'syncStatus', 'taskBody', 'emptyState', 'profileDialog',
     'taskDialog', 'taskForm', 'taskDialogHeading', 'taskId', 'titleInput',
     'nextStepInput', 'urgencyInput', 'valueInput', 'calmInput', 'energyInput',
-    'tagsInput', 'statusInput', 'settingsDialog', 'settingsForm', 'serverUrlInput',
-    'anonKeyInput', 'accessCodeInput', 'forgetSettingsButton', 'initializeDialog',
-    'initializeButton', 'taskRowTemplate'
+    'tagsInput', 'statusInput', 'settingsDialog', 'settingsForm', 'tokenInput',
+    'forgetSettingsButton', 'taskRowTemplate'
   ];
 
   for (const id of ids) elements[id] = document.getElementById(id);
@@ -56,7 +62,6 @@ function bindEvents() {
   elements.taskForm.addEventListener('submit', saveTask);
   elements.settingsForm.addEventListener('submit', saveSettings);
   elements.forgetSettingsButton.addEventListener('click', forgetSettings);
-  elements.initializeButton.addEventListener('click', initializeDatabase);
 
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden && getSettings()) loadTasks({ announce: false });
@@ -85,7 +90,7 @@ async function chooseProfile(profile) {
 function getSettings() {
   try {
     const value = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!value?.url || !value?.anonKey || !value?.accessCode) return null;
+    if (!value?.token) return null;
     return value;
   } catch {
     return null;
@@ -94,28 +99,21 @@ function getSettings() {
 
 function openSettingsDialog() {
   const settings = getSettings();
-  elements.serverUrlInput.value = settings?.url ?? '';
-  elements.anonKeyInput.value = settings?.anonKey ?? '';
-  elements.accessCodeInput.value = settings?.accessCode ?? '';
-  elements.settingsDialog.showModal();
+  elements.tokenInput.value = settings?.token ?? '';
+  if (!elements.settingsDialog.open) elements.settingsDialog.showModal();
 }
 
 async function saveSettings(event) {
   event.preventDefault();
-  const settings = {
-    url: elements.serverUrlInput.value.trim().replace(/\/$/, ''),
-    anonKey: elements.anonKeyInput.value.trim(),
-    accessCode: elements.accessCodeInput.value
-  };
-
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  const token = elements.tokenInput.value.trim();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ token }));
   elements.settingsDialog.close();
   await loadTasks({ announce: true });
   startPolling();
 }
 
 function forgetSettings() {
-  if (!confirm('Glömma serveradress, anon-nyckel och familjekod på den här enheten?')) return;
+  if (!confirm('Glömma GitHub-token på den här enheten?')) return;
   localStorage.removeItem(STORAGE_KEY);
   state.tasks = [];
   renderTasks();
@@ -124,75 +122,141 @@ function forgetSettings() {
   setSyncStatus('Inte ansluten.');
 }
 
-async function rpc(functionName, body = {}) {
+function githubUrl() {
+  const encodedPath = GITHUB.path.split('/').map(encodeURIComponent).join('/');
+  return `https://api.github.com/repos/${GITHUB.owner}/${GITHUB.repo}/contents/${encodedPath}`;
+}
+
+function githubHeaders() {
   const settings = getSettings();
   if (!settings) throw new Error('MISSING_SETTINGS');
+  return {
+    Accept: 'application/vnd.github+json',
+    Authorization: `Bearer ${settings.token}`,
+    'X-GitHub-Api-Version': '2022-11-28'
+  };
+}
 
-  const response = await fetch(`${settings.url}/rest/v1/rpc/${functionName}`, {
-    method: 'POST',
+async function requestGitHub(url, options = {}) {
+  const response = await fetch(url, {
+    ...options,
     headers: {
-      apikey: settings.anonKey,
-      Authorization: `Bearer ${settings.anonKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ p_access_code: settings.accessCode, ...body })
+      ...githubHeaders(),
+      ...(options.headers ?? {})
+    }
   });
 
   if (!response.ok) {
     let detail = '';
     try {
       const error = await response.json();
-      detail = [error.message, error.details, error.hint].filter(Boolean).join(' ');
+      detail = error.message ?? '';
     } catch {
       detail = await response.text();
     }
-    const requestError = new Error(detail || `Serverfel ${response.status}`);
+    const requestError = new Error(detail || `GitHub-fel ${response.status}`);
     requestError.status = response.status;
     throw requestError;
   }
 
   if (response.status === 204) return null;
-  const text = await response.text();
-  return text ? JSON.parse(text) : null;
+  return response.json();
+}
+
+async function fetchRemoteData() {
+  const result = await requestGitHub(
+    `${githubUrl()}?ref=${encodeURIComponent(GITHUB.branch)}&cache=${Date.now()}`
+  );
+
+  const json = decodeBase64(result.content);
+  const data = JSON.parse(json);
+  if (!Array.isArray(data.tasks)) throw new Error('Datafilen saknar en uppgiftslista.');
+  return { data, sha: result.sha };
 }
 
 async function loadTasks({ announce = false } = {}) {
-  if (state.loading || !getSettings()) return;
+  if (state.loading || state.saving || !getSettings()) return;
   state.loading = true;
   setBusy(true);
 
   try {
-    const tasks = await rpc('todo_list');
-    state.tasks = Array.isArray(tasks) ? tasks : [];
+    const remote = await fetchRemoteData();
+    state.tasks = normalizeTasks(remote.data.tasks);
     renderTasks();
     setSyncStatus(`Synkad ${formatTime(new Date())}.`);
     if (announce) announceStatus('Listan är uppdaterad.');
   } catch (error) {
-    if (error.message.includes('TODO_NOT_INITIALIZED')) {
-      elements.initializeDialog.showModal();
-      setSyncStatus('Databasen behöver initieras.');
-    } else if (error.message === 'MISSING_SETTINGS') {
-      openSettingsDialog();
-    } else {
-      setSyncStatus(`Kunde inte synka: ${friendlyError(error)}`);
-    }
+    if (error.message === 'MISSING_SETTINGS') openSettingsDialog();
+    else setSyncStatus(`Kunde inte synka: ${friendlyError(error)}`);
   } finally {
     state.loading = false;
     setBusy(false);
   }
 }
 
-async function initializeDatabase() {
-  elements.initializeButton.disabled = true;
+async function mutateRemote(mutator, commitMessage) {
+  if (state.saving) throw new Error('En annan ändring sparas fortfarande.');
+  state.saving = true;
+  setBusy(true);
+  setSyncStatus('Sparar till GitHub…');
+
   try {
-    await rpc('todo_initialize', { p_actor: state.actor });
-    elements.initializeDialog.close();
-    await loadTasks({ announce: true });
-  } catch (error) {
-    setSyncStatus(`Kunde inte skapa listan: ${friendlyError(error)}`);
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const remote = await fetchRemoteData();
+      const draft = JSON.parse(JSON.stringify(remote.data));
+      draft.tasks = normalizeTasks(draft.tasks);
+      mutator(draft.tasks);
+      draft.tasks = normalizeTasks(draft.tasks);
+      draft.tasks.forEach((task, index) => { task.priority = index + 1; });
+      draft.version = 1;
+      draft.updated_at = new Date().toISOString();
+      draft.updated_by = state.actor;
+
+      try {
+        await requestGitHub(githubUrl(), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: `${commitMessage} (${state.actor})`,
+            content: encodeBase64(`${JSON.stringify(draft, null, 2)}\n`),
+            sha: remote.sha,
+            branch: GITHUB.branch
+          })
+        });
+
+        state.tasks = draft.tasks;
+        renderTasks();
+        setSyncStatus(`Sparad ${formatTime(new Date())}.`);
+        return;
+      } catch (error) {
+        if (error.status === 409 && attempt === 0) continue;
+        throw error;
+      }
+    }
   } finally {
-    elements.initializeButton.disabled = false;
+    state.saving = false;
+    setBusy(false);
   }
+}
+
+function normalizeTasks(tasks) {
+  return [...tasks]
+    .map(task => ({
+      ...task,
+      id: String(task.id),
+      priority: Number(task.priority) || 9999,
+      urgency: clampRating(task.urgency),
+      value_creation: clampRating(task.value_creation),
+      calm: clampRating(task.calm),
+      energy: clampRating(task.energy),
+      tags: Array.isArray(task.tags) ? task.tags : [],
+      status: ['todo', 'doing', 'done'].includes(task.status) ? task.status : 'todo'
+    }))
+    .sort((a, b) => a.priority - b.priority);
+}
+
+function clampRating(value) {
+  return Math.min(5, Math.max(1, Number(value) || 3));
 }
 
 function handleSortChange() {
@@ -322,7 +386,7 @@ function renderStatus(cell, task) {
   const badge = document.createElement('span');
   badge.className = 'status-badge';
   badge.textContent = statusLabel(task.status);
-  badge.title = `Senast ändrad av ${task.updated_by} ${formatDateTime(task.updated_at)}`;
+  badge.title = `Senast ändrad av ${task.updated_by ?? 'okänd'} ${formatDateTime(task.updated_at)}`;
   cell.replaceChildren(badge);
 }
 
@@ -348,23 +412,38 @@ async function saveTask(event) {
   submitButton.disabled = true;
 
   const id = elements.taskId.value;
-  const payload = {
-    p_actor: state.actor,
-    p_title: elements.titleInput.value.trim(),
-    p_next_step: elements.nextStepInput.value.trim(),
-    p_urgency: Number(elements.urgencyInput.value),
-    p_value_creation: Number(elements.valueInput.value),
-    p_calm: Number(elements.calmInput.value),
-    p_energy: Number(elements.energyInput.value),
-    p_tags: parseTags(elements.tagsInput.value),
-    p_status: elements.statusInput.value
+  const now = new Date().toISOString();
+  const values = {
+    title: elements.titleInput.value.trim(),
+    next_step: elements.nextStepInput.value.trim(),
+    urgency: Number(elements.urgencyInput.value),
+    value_creation: Number(elements.valueInput.value),
+    calm: Number(elements.calmInput.value),
+    energy: Number(elements.energyInput.value),
+    tags: parseTags(elements.tagsInput.value),
+    status: elements.statusInput.value,
+    updated_at: now,
+    updated_by: state.actor
   };
 
   try {
-    if (id) await rpc('todo_update', { p_id: id, ...payload });
-    else await rpc('todo_create', payload);
+    await mutateRemote(tasks => {
+      if (id) {
+        const index = tasks.findIndex(task => task.id === id);
+        if (index < 0) throw new Error('Uppgiften finns inte längre. Uppdatera listan och försök igen.');
+        tasks[index] = { ...tasks[index], ...values };
+      } else {
+        tasks.push({
+          id: crypto.randomUUID(),
+          priority: tasks.length + 1,
+          created_at: now,
+          created_by: state.actor,
+          ...values
+        });
+      }
+    }, id ? 'Redigera uppgift' : 'Lägg till uppgift');
+
     elements.taskDialog.close();
-    await loadTasks({ announce: true });
   } catch (error) {
     setSyncStatus(`Kunde inte spara: ${friendlyError(error)}`);
   } finally {
@@ -375,8 +454,11 @@ async function saveTask(event) {
 async function deleteTask(task) {
   if (!confirm(`Ta bort ”${task.title}”?`)) return;
   try {
-    await rpc('todo_delete', { p_id: task.id, p_actor: state.actor });
-    await loadTasks({ announce: true });
+    await mutateRemote(tasks => {
+      const index = tasks.findIndex(candidate => candidate.id === task.id);
+      if (index < 0) throw new Error('Uppgiften finns inte längre.');
+      tasks.splice(index, 1);
+    }, `Ta bort uppgift: ${task.title}`);
   } catch (error) {
     setSyncStatus(`Kunde inte ta bort: ${friendlyError(error)}`);
   }
@@ -423,6 +505,7 @@ async function handleDrop(event) {
   const ordered = [...state.tasks].sort((a, b) => a.priority - b.priority);
   const fromIndex = ordered.findIndex(task => task.id === state.draggedId);
   const toIndex = ordered.findIndex(task => task.id === targetId);
+  if (fromIndex < 0 || toIndex < 0) return;
   const [moved] = ordered.splice(fromIndex, 1);
   ordered.splice(toIndex, 0, moved);
   await persistOrder(ordered);
@@ -435,19 +518,17 @@ function handleDragEnd(event) {
 }
 
 async function persistOrder(ordered) {
-  const previous = state.tasks.map(task => ({ ...task }));
-  const priorities = new Map(ordered.map((task, index) => [task.id, index + 1]));
-  state.tasks = state.tasks.map(task => ({ ...task, priority: priorities.get(task.id) }));
-  renderTasks();
-  setSyncStatus('Sparar ny prioritering…');
-
+  const desiredIds = ordered.map(task => task.id);
   try {
-    await rpc('todo_reorder', { p_ids: ordered.map(task => task.id), p_actor: state.actor });
-    setSyncStatus(`Prioritering sparad ${formatTime(new Date())}.`);
+    await mutateRemote(tasks => {
+      const taskById = new Map(tasks.map(task => [task.id, task]));
+      const reordered = desiredIds.map(id => taskById.get(id)).filter(Boolean);
+      const unseen = tasks.filter(task => !desiredIds.includes(task.id));
+      tasks.splice(0, tasks.length, ...reordered, ...unseen);
+    }, 'Ändra prioritering');
   } catch (error) {
-    state.tasks = previous;
-    renderTasks();
     setSyncStatus(`Kunde inte spara ordningen: ${friendlyError(error)}`);
+    await loadTasks({ announce: false });
   }
 }
 
@@ -464,14 +545,18 @@ function statusOrder(status) {
 }
 
 function friendlyError(error) {
-  if (error.message.includes('TODO_ACCESS_DENIED')) return 'familjekoden stämmer inte.';
-  if (error.message.includes('Failed to fetch')) return 'servern kunde inte nås.';
+  if (error.status === 401) return 'GitHub-token saknas eller är ogiltig.';
+  if (error.status === 403) return 'GitHub-token saknar skrivrättighet till repot.';
+  if (error.status === 404) return 'datafilen eller repot kunde inte hittas.';
+  if (error.status === 409) return 'någon annan hann ändra listan. Uppdatera och försök igen.';
+  if (error.message.includes('Failed to fetch')) return 'GitHub kunde inte nås.';
   return error.message || 'ett okänt fel uppstod.';
 }
 
 function setBusy(isBusy) {
   elements.refreshButton.disabled = isBusy;
-  elements.refreshButton.textContent = isBusy ? 'Hämtar…' : 'Uppdatera';
+  elements.addButton.disabled = isBusy;
+  elements.refreshButton.textContent = isBusy ? 'Arbetar…' : 'Uppdatera';
 }
 
 function setSyncStatus(message) {
@@ -487,10 +572,24 @@ function formatTime(date) {
 }
 
 function formatDateTime(value) {
+  if (!value) return '';
   return new Intl.DateTimeFormat('sv-SE', {
     dateStyle: 'medium',
     timeStyle: 'short'
   }).format(new Date(value));
+}
+
+function encodeBase64(value) {
+  const bytes = new TextEncoder().encode(value);
+  let binary = '';
+  for (let index = 0; index < bytes.length; index += 1) binary += String.fromCharCode(bytes[index]);
+  return btoa(binary);
+}
+
+function decodeBase64(value) {
+  const binary = atob(value.replace(/\s/g, ''));
+  const bytes = Uint8Array.from(binary, character => character.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
 }
 
 function startPolling() {
