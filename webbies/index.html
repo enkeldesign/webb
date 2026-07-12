@@ -1,0 +1,6323 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
+  >
+
+  <meta name="theme-color" content="#07111f">
+
+  <title>Webbies</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+
+      font-family:
+        Inter,
+        ui-rounded,
+        "SF Pro Rounded",
+        system-ui,
+        sans-serif;
+
+      background: #050b14;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+
+      overscroll-behavior: none;
+      touch-action: none;
+
+      background:
+        radial-gradient(
+          circle at 50% 10%,
+          #17314f 0,
+          transparent 38%
+        ),
+        linear-gradient(
+          #07111f,
+          #03070d
+        );
+    }
+
+    body {
+      position: fixed;
+      inset: 0;
+    }
+
+    #game {
+      position: fixed;
+
+      top: env(safe-area-inset-top);
+      right: env(safe-area-inset-right);
+      bottom: env(safe-area-inset-bottom);
+      left: env(safe-area-inset-left);
+
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+
+      touch-action: none;
+    }
+
+    .rotate-note {
+      position: fixed;
+
+      inset:
+        auto
+        1rem
+        calc(env(safe-area-inset-bottom) + 1rem);
+
+      z-index: 10;
+
+      display: none;
+
+      padding: .65rem .9rem;
+
+      border: 1px solid rgb(255 255 255 / .14);
+      border-radius: 999px;
+
+      color: rgb(255 255 255 / .78);
+      background: rgb(5 11 20 / .72);
+
+      backdrop-filter: blur(14px);
+
+      font-size: .78rem;
+      text-align: center;
+    }
+
+    @media (orientation: landscape) and (max-height: 600px) {
+      .rotate-note {
+        display: block;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main
+    id="game"
+    aria-label="Webbies game"
+  ></main>
+
+  <p class="rotate-note">
+    Webbies likes portrait mode best.
+  </p>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.2/dist/pixi.min.js"
+    onerror="
+      this.onerror = null;
+      this.src = 'https://unpkg.com/pixi.js@7.4.2/dist/pixi.min.js';
+    "
+  ></script>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const GAME_W = 420;
+      const GAME_H = 820;
+
+      const GRAVITY = 980;
+      const MAX_WEB = 390;
+
+      const COLORS = {
+        ink: 0x07111f,
+        mist: 0xdff7ff,
+
+        cyan: 0x66e5ff,
+        coral: 0xff8b7d,
+        gold: 0xffd86b,
+        mint: 0x93f2c5,
+        violet: 0xb79cff,
+
+        danger: 0xff4f78,
+
+        stone: 0x213754,
+        stone2: 0x2e496b,
+
+        shadow: 0x02060c,
+        white: 0xffffff,
+        black: 0x000000
+      };
+
+      const gameElement =
+        document.querySelector("#game");
+
+      const app =
+        new PIXI.Application({
+          resizeTo: gameElement,
+          antialias: true,
+          autoDensity: true,
+
+          resolution: Math.min(
+            window.devicePixelRatio || 1,
+            2
+          ),
+
+          backgroundAlpha: 0
+        });
+
+      gameElement.appendChild(
+        app.view
+      );
+
+      const root =
+        new PIXI.Container();
+
+      const backdrop =
+        new PIXI.Container();
+
+      const worldHost =
+        new PIXI.Container();
+
+      const fxLayer =
+        new PIXI.Container();
+
+      const ui =
+        new PIXI.Container();
+
+      root.addChild(
+        backdrop,
+        worldHost,
+        fxLayer,
+        ui
+      );
+
+      app.stage.addChild(root);
+
+      function fitGame() {
+        const viewportWidth =
+          app.screen.width;
+
+        const viewportHeight =
+          app.screen.height;
+
+        const scale =
+          Math.min(
+            viewportWidth / GAME_W,
+            viewportHeight / GAME_H
+          );
+
+        root.scale.set(scale);
+
+        root.position.set(
+          (
+            viewportWidth -
+            GAME_W * scale
+          ) / 2,
+
+          (
+            viewportHeight -
+            GAME_H * scale
+          ) / 2
+        );
+      }
+
+      app.renderer.on(
+        "resize",
+        fitGame
+      );
+
+      requestAnimationFrame(
+        fitGame
+      );
+
+      const state = {
+        level: 1,
+        time: 0,
+
+        paused: false,
+        aiming: false,
+        transitioning: false,
+        resetting: false,
+
+        activeIndex: 0,
+
+        aimStart: null,
+        aimPoint: null,
+
+        joystick: {
+          x: 0,
+          y: 0,
+          pointerId: null
+        },
+
+        obstacles: [],
+        zones: [],
+        particles: [],
+        webbies: [],
+        nets: [],
+
+        boss: null,
+        world: null,
+
+        threadsLayer: null,
+        actorLayer: null,
+        obstacleLayer: null,
+        sceneryLayer: null,
+
+        finishOpen: true,
+        levelReadyAt: 0,
+
+        messageTimer: 0,
+        messageText: "",
+
+        shake: 0
+      };
+
+      const clamp = (
+        value,
+        min,
+        max
+      ) => Math.max(
+        min,
+        Math.min(max, value)
+      );
+
+      const lerp = (
+        a,
+        b,
+        amount
+      ) => a + (b - a) * amount;
+
+      const dist = (
+        a,
+        b
+      ) => Math.hypot(
+        b.x - a.x,
+        b.y - a.y
+      );
+
+      function normalize(
+        x,
+        y
+      ) {
+        const distance =
+          Math.hypot(x, y) || 1;
+
+        return {
+          x: x / distance,
+          y: y / distance
+        };
+      }
+
+      function pointSegmentDistance(
+        point,
+        start,
+        end
+      ) {
+        const abX =
+          end.x - start.x;
+
+        const abY =
+          end.y - start.y;
+
+        const lengthSquared =
+          abX * abX +
+          abY * abY ||
+          1;
+
+        const amount =
+          clamp(
+            (
+              (
+                point.x -
+                start.x
+              ) *
+              abX +
+
+              (
+                point.y -
+                start.y
+              ) *
+              abY
+            ) /
+            lengthSquared,
+
+            0,
+            1
+          );
+
+        const closest = {
+          x:
+            start.x +
+            abX * amount,
+
+          y:
+            start.y +
+            abY * amount
+        };
+
+        return {
+          distance: Math.hypot(
+            point.x -
+            closest.x,
+
+            point.y -
+            closest.y
+          ),
+
+          amount,
+          point: closest
+        };
+      }
+
+      function hashNoise(number) {
+        const value =
+          Math.sin(
+            number * 12.9898
+          ) * 43758.5453;
+
+        return (
+          value -
+          Math.floor(value)
+        );
+      }
+
+      function makeText(
+        text,
+        size,
+        color = COLORS.white,
+        weight = "600"
+      ) {
+        return new PIXI.Text(
+          text,
+          {
+            fontFamily:
+              "Inter, ui-rounded, system-ui, sans-serif",
+
+            fontSize: size,
+            fill: color,
+            fontWeight: weight,
+
+            letterSpacing: .3,
+            align: "center"
+          }
+        );
+      }
+
+      function drawBackdrop() {
+        backdrop.removeChildren();
+
+        const background =
+          new PIXI.Graphics();
+
+        background
+          .beginFill(COLORS.ink)
+          .drawRect(
+            0,
+            0,
+            GAME_W,
+            GAME_H
+          )
+          .endFill();
+
+        background
+          .beginFill(
+            0x0d2036,
+            .75
+          )
+          .drawEllipse(
+            210,
+            120,
+            300,
+            240
+          )
+          .endFill();
+
+        background
+          .beginFill(
+            0x112f4c,
+            .34
+          )
+          .drawEllipse(
+            80,
+            460,
+            210,
+            360
+          )
+          .endFill();
+
+        background
+          .beginFill(
+            0x251d4f,
+            .24
+          )
+          .drawEllipse(
+            390,
+            610,
+            230,
+            320
+          )
+          .endFill();
+
+        backdrop.addChild(
+          background
+        );
+
+        for (
+          let index = 0;
+          index < 34;
+          index += 1
+        ) {
+          const speck =
+            new PIXI.Graphics();
+
+          const x =
+            hashNoise(
+              index + 1
+            ) *
+            GAME_W;
+
+          const y =
+            hashNoise(
+              index + 99
+            ) *
+            GAME_H;
+
+          const radius =
+            .8 +
+            hashNoise(
+              index + 200
+            ) *
+            2.2;
+
+          speck
+            .beginFill(
+              index % 4 === 0
+                ? COLORS.cyan
+                : COLORS.white,
+
+              .14 +
+              hashNoise(
+                index + 17
+              ) *
+              .25
+            )
+            .drawCircle(
+              0,
+              0,
+              radius
+            )
+            .endFill();
+
+          speck.x = x;
+          speck.y = y;
+
+          speck._drift =
+            .15 +
+            hashNoise(
+              index + 400
+            ) *
+            .65;
+
+          speck._phase =
+            hashNoise(
+              index + 500
+            ) *
+            Math.PI *
+            2;
+
+          backdrop.addChild(
+            speck
+          );
+        }
+      }
+
+      drawBackdrop();
+
+      class Obstacle {
+        constructor({
+          x,
+          y,
+          w,
+          h,
+
+          type = "solid",
+
+          range = 0,
+          speed = 1,
+          phase = 0,
+
+          label = ""
+        }) {
+          Object.assign(
+            this,
+            {
+              x,
+              y,
+              w,
+              h,
+              type,
+              range,
+              speed,
+              phase,
+              label
+            }
+          );
+
+          this.baseX = x;
+          this.baseY = y;
+
+          this.vx = 0;
+          this.vy = 0;
+
+          this.active = true;
+          this.electricOn = true;
+
+          this.crumbleTimer = 0;
+          this.crumbleStarted = false;
+
+          this.graphics =
+            new PIXI.Container();
+
+          this.body =
+            new PIXI.Graphics();
+
+          this.detail =
+            new PIXI.Graphics();
+
+          this.graphics.addChild(
+            this.body,
+            this.detail
+          );
+
+          state.obstacleLayer
+            .addChild(
+              this.graphics
+            );
+
+          this.draw();
+
+          state.obstacles.push(
+            this
+          );
+        }
+
+        get movable() {
+          return (
+            this.type === "tug"
+          );
+        }
+
+        get harmful() {
+          return (
+            this.type ===
+              "spikes" ||
+
+            (
+              this.type ===
+                "electric" &&
+
+              this.electricOn
+            )
+          );
+        }
+
+        get collidable() {
+          return (
+            this.active &&
+            this.type !== "wind"
+          );
+        }
+
+        draw() {
+          const body =
+            this.body;
+
+          const detail =
+            this.detail;
+
+          body.clear();
+          detail.clear();
+
+          this.graphics
+            .position
+            .set(
+              this.x,
+              this.y
+            );
+
+          this.graphics.alpha =
+            this.active
+              ? 1
+              : 0;
+
+          if (
+            this.type ===
+            "spikes"
+          ) {
+            body
+              .beginFill(
+                0x14243a
+              )
+              .drawRoundedRect(
+                0,
+                8,
+                this.w,
+
+                Math.max(
+                  10,
+                  this.h - 8
+                ),
+
+                8
+              )
+              .endFill();
+
+            detail.beginFill(
+              COLORS.danger
+            );
+
+            const count =
+              Math.max(
+                2,
+                Math.floor(
+                  this.w / 22
+                )
+              );
+
+            const step =
+              this.w / count;
+
+            for (
+              let index = 0;
+              index < count;
+              index += 1
+            ) {
+              detail
+                .moveTo(
+                  index *
+                    step +
+                    2,
+
+                  10
+                )
+                .lineTo(
+                  index *
+                    step +
+                    step / 2,
+
+                  -8
+                )
+                .lineTo(
+                  (
+                    index + 1
+                  ) *
+                    step -
+                    2,
+
+                  10
+                );
+            }
+
+            detail.endFill();
+            return;
+          }
+
+          if (
+            this.type ===
+            "electric"
+          ) {
+            body
+              .beginFill(
+                0x13283e
+              )
+              .drawRoundedRect(
+                0,
+                0,
+                this.w,
+                this.h,
+                8
+              )
+              .endFill();
+
+            body
+              .lineStyle(
+                2,
+
+                this.electricOn
+                  ? COLORS.cyan
+                  : 0x34536c,
+
+                this.electricOn
+                  ? .95
+                  : .45
+              )
+              .drawRoundedRect(
+                1,
+                1,
+                this.w - 2,
+                this.h - 2,
+                8
+              );
+
+            if (
+              this.electricOn
+            ) {
+              detail.lineStyle(
+                3,
+                COLORS.white,
+                .9
+              );
+
+              const vertical =
+                this.h > this.w;
+
+              if (vertical) {
+                let y = 5;
+
+                detail.moveTo(
+                  this.w * .5,
+                  y
+                );
+
+                while (
+                  y <
+                  this.h - 5
+                ) {
+                  y += 12;
+
+                  detail.lineTo(
+                    this.w *
+                      (
+                        y % 24
+                          ? .24
+                          : .76
+                      ),
+
+                    y
+                  );
+                }
+              } else {
+                let x = 5;
+
+                detail.moveTo(
+                  x,
+                  this.h * .5
+                );
+
+                while (
+                  x <
+                  this.w - 5
+                ) {
+                  x += 14;
+
+                  detail.lineTo(
+                    x,
+
+                    this.h *
+                      (
+                        x % 28
+                          ? .24
+                          : .76
+                      )
+                  );
+                }
+              }
+            }
+
+            return;
+          }
+
+          let fill =
+            COLORS.stone;
+
+          let line =
+            COLORS.stone2;
+
+          if (
+            this.type ===
+            "crumble"
+          ) {
+            fill = 0x59455c;
+            line = COLORS.coral;
+          }
+
+          if (
+            this.type ===
+            "moving"
+          ) {
+            fill = 0x183f56;
+            line = COLORS.cyan;
+          }
+
+          if (
+            this.type ===
+            "tug"
+          ) {
+            fill = 0x3b3156;
+            line = COLORS.violet;
+          }
+
+          if (
+            this.type ===
+            "bounce"
+          ) {
+            fill = 0x244b43;
+            line = COLORS.mint;
+          }
+
+          if (
+            this.type ===
+            "sticky"
+          ) {
+            fill = 0x604c24;
+            line = COLORS.gold;
+          }
+
+          body
+            .beginFill(
+              COLORS.shadow,
+              .32
+            )
+            .drawRoundedRect(
+              4,
+              8,
+              this.w,
+              this.h,
+              11
+            )
+            .endFill();
+
+          body
+            .beginFill(fill)
+            .drawRoundedRect(
+              0,
+              0,
+              this.w,
+              this.h,
+              11
+            )
+            .endFill();
+
+          body
+            .lineStyle(
+              2,
+              line,
+              .8
+            )
+            .drawRoundedRect(
+              1,
+              1,
+              this.w - 2,
+              this.h - 2,
+              10
+            );
+
+          if (
+            this.type ===
+            "crumble"
+          ) {
+            detail.lineStyle(
+              2,
+              0xffc7bf,
+              .55
+            );
+
+            detail
+              .moveTo(
+                this.w * .2,
+                2
+              )
+              .lineTo(
+                this.w * .42,
+                this.h * .55
+              )
+              .lineTo(
+                this.w * .32,
+                this.h - 2
+              );
+
+            detail
+              .moveTo(
+                this.w * .72,
+                2
+              )
+              .lineTo(
+                this.w * .58,
+                this.h * .45
+              )
+              .lineTo(
+                this.w * .8,
+                this.h - 2
+              );
+          }
+
+          if (
+            this.type ===
+            "moving"
+          ) {
+            detail
+              .beginFill(
+                COLORS.cyan,
+                .7
+              )
+              .drawCircle(
+                12,
+                this.h / 2,
+                3
+              )
+              .drawCircle(
+                this.w - 12,
+                this.h / 2,
+                3
+              )
+              .endFill();
+          }
+
+          if (
+            this.type ===
+            "tug"
+          ) {
+            detail
+              .lineStyle(
+                2,
+                COLORS.violet,
+                .75
+              )
+              .drawCircle(
+                16,
+                this.h / 2,
+                7
+              )
+              .drawCircle(
+                this.w - 16,
+                this.h / 2,
+                7
+              );
+
+            detail
+              .beginFill(
+                COLORS.violet,
+                .9
+              )
+              .drawCircle(
+                16,
+                this.h / 2,
+                2
+              )
+              .drawCircle(
+                this.w - 16,
+                this.h / 2,
+                2
+              )
+              .endFill();
+          }
+
+          if (
+            this.type ===
+            "bounce"
+          ) {
+            detail.beginFill(
+              COLORS.mint,
+              .85
+            );
+
+            for (
+              let x = 14;
+              x < this.w;
+              x += 28
+            ) {
+              detail.drawCircle(
+                x,
+                7,
+                5
+              );
+            }
+
+            detail.endFill();
+          }
+
+          if (
+            this.type ===
+            "sticky"
+          ) {
+            detail.beginFill(
+              COLORS.gold,
+              .75
+            );
+
+            for (
+              let x = 12;
+              x < this.w;
+              x += 28
+            ) {
+              detail.drawEllipse(
+                x,
+
+                6 +
+                (
+                  x % 3
+                ) *
+                3,
+
+                7,
+                4
+              );
+            }
+
+            detail.endFill();
+          }
+        }
+
+        update(deltaTime) {
+          if (!this.active) {
+            return;
+          }
+
+          if (
+            this.type ===
+            "moving"
+          ) {
+            this.x =
+              this.baseX +
+              Math.sin(
+                state.time *
+                  this.speed +
+                  this.phase
+              ) *
+              this.range;
+          }
+
+          if (
+            this.type ===
+            "electric"
+          ) {
+            const wasOn =
+              this.electricOn;
+
+            this.electricOn =
+              Math.sin(
+                state.time *
+                  this.speed +
+                  this.phase
+              ) > -.15;
+
+            if (
+              wasOn !==
+              this.electricOn
+            ) {
+              this.draw();
+            }
+          }
+
+          if (
+            this.type ===
+              "crumble" &&
+
+            this.crumbleStarted
+          ) {
+            this.crumbleTimer +=
+              deltaTime;
+
+            this.graphics.rotation =
+              Math.sin(
+                this.crumbleTimer *
+                  52
+              ) *
+              .025;
+
+            if (
+              this.crumbleTimer >
+              .72
+            ) {
+              this.active = false;
+              this.graphics.alpha = 0;
+            }
+          }
+
+          if (
+            this.type ===
+            "tug"
+          ) {
+            this.vy +=
+              GRAVITY *
+              .35 *
+              deltaTime;
+
+            this.vx *=
+              Math.pow(
+                .15,
+                deltaTime
+              );
+
+            this.vy *=
+              Math.pow(
+                .35,
+                deltaTime
+              );
+
+            this.x +=
+              this.vx *
+              deltaTime;
+
+            this.y +=
+              this.vy *
+              deltaTime;
+
+            this.x =
+              clamp(
+                this.x,
+                22,
+
+                GAME_W -
+                this.w -
+                22
+              );
+
+            this.y =
+              clamp(
+                this.y,
+                120,
+
+                GAME_H -
+                80 -
+                this.h
+              );
+          }
+
+          this.graphics
+            .position
+            .set(
+              this.x,
+              this.y
+            );
+        }
+      }
+
+      class WindZone {
+        constructor(
+          x,
+          y,
+          w,
+          h,
+          forceX,
+          forceY = 0
+        ) {
+          Object.assign(
+            this,
+            {
+              x,
+              y,
+              w,
+              h,
+              forceX,
+              forceY
+            }
+          );
+
+          this.graphics =
+            new PIXI.Graphics();
+
+          this.graphics
+            .beginFill(
+              COLORS.cyan,
+              .035
+            )
+            .drawRoundedRect(
+              x,
+              y,
+              w,
+              h,
+              24
+            )
+            .endFill();
+
+          this.graphics
+            .lineStyle(
+              1,
+              COLORS.cyan,
+              .18
+            )
+            .drawRoundedRect(
+              x,
+              y,
+              w,
+              h,
+              24
+            );
+
+          for (
+            let currentY =
+              y + 25;
+
+            currentY <
+              y + h;
+
+            currentY += 42
+          ) {
+            this.graphics
+              .lineStyle(
+                2,
+                COLORS.cyan,
+                .18
+              );
+
+            if (
+              forceX > 0
+            ) {
+              this.graphics
+                .moveTo(
+                  x + 16,
+                  currentY
+                )
+                .bezierCurveTo(
+                  x + w * .35,
+                  currentY - 8,
+
+                  x + w * .65,
+                  currentY + 8,
+
+                  x + w - 18,
+                  currentY
+                );
+            } else {
+              this.graphics
+                .moveTo(
+                  x + w - 16,
+                  currentY
+                )
+                .bezierCurveTo(
+                  x + w * .65,
+                  currentY - 8,
+
+                  x + w * .35,
+                  currentY + 8,
+
+                  x + 18,
+                  currentY
+                );
+            }
+          }
+
+          state.sceneryLayer
+            .addChild(
+              this.graphics
+            );
+
+          state.zones.push(
+            this
+          );
+        }
+
+        contains(point) {
+          return (
+            point.x > this.x &&
+            point.x <
+              this.x + this.w &&
+
+            point.y > this.y &&
+            point.y <
+              this.y + this.h
+          );
+        }
+      }
+
+      class Thread {
+        constructor(owner) {
+          this.owner = owner;
+
+          this.active = false;
+          this.anchor = null;
+
+          this.length = 0;
+
+          this.rider = null;
+          this.breakTimer = 0;
+
+          this.container =
+            new PIXI.Container();
+
+          this.glow =
+            new PIXI.Graphics();
+
+          this.line =
+            new PIXI.Graphics();
+
+          this.hit =
+            new PIXI.Graphics();
+
+          this.container.addChild(
+            this.glow,
+            this.line,
+            this.hit
+          );
+
+          state.threadsLayer
+            .addChild(
+              this.container
+            );
+
+          this.hit.eventMode =
+            "static";
+
+          this.hit.cursor =
+            "pointer";
+
+          this.hit.on(
+            "pointerdown",
+            event => {
+              event.stopPropagation();
+            }
+          );
+
+          this.hit.on(
+            "pointertap",
+            event => {
+              event.stopPropagation();
+
+              const active =
+                getActive();
+
+              if (
+                !this.active ||
+                active ===
+                  this.owner
+              ) {
+                return;
+              }
+
+              const point =
+                event.getLocalPosition(
+                  state.world
+                );
+
+              const start =
+                this.owner.pos;
+
+              const end =
+                this.getAnchorPoint();
+
+              const near =
+                pointSegmentDistance(
+                  point,
+                  start,
+                  end
+                );
+
+              if (
+                near.distance < 34
+              ) {
+                active.grabThread(
+                  this,
+                  near.amount
+                );
+              }
+            }
+          );
+        }
+
+        getAnchorPoint() {
+          if (!this.anchor) {
+            return this.owner.pos;
+          }
+
+          if (
+            this.anchor.kind ===
+            "obstacle"
+          ) {
+            return {
+              x:
+                this.anchor.target.x +
+                this.anchor.localX,
+
+              y:
+                this.anchor.target.y +
+                this.anchor.localY
+            };
+          }
+
+          if (
+            this.anchor.kind ===
+            "boss"
+          ) {
+            return {
+              x: state.boss.x,
+              y: state.boss.y
+            };
+          }
+
+          return {
+            x: this.anchor.x,
+            y: this.anchor.y
+          };
+        }
+
+        attach(anchor) {
+          this.active = true;
+          this.anchor = anchor;
+
+          const point =
+            this.getAnchorPoint();
+
+          this.length =
+            Math.max(
+              42,
+
+              dist(
+                this.owner.pos,
+                point
+              )
+            );
+
+          this.owner.airKickUsed =
+            false;
+
+          this.breakTimer = 0;
+
+          burst(
+            point.x,
+            point.y,
+            this.owner.color,
+            8,
+            70
+          );
+        }
+
+        release(
+          withBurst = true
+        ) {
+          if (!this.active) {
+            return;
+          }
+
+          if (withBurst) {
+            const point =
+              this.getAnchorPoint();
+
+            burst(
+              point.x,
+              point.y,
+              this.owner.color,
+              4,
+              45
+            );
+          }
+
+          if (this.rider) {
+            this.rider.ridingThread =
+              null;
+
+            this.rider = null;
+          }
+
+          this.active = false;
+          this.anchor = null;
+          this.breakTimer = 0;
+        }
+
+        update(deltaTime) {
+          if (!this.active) {
+            this.container.visible =
+              false;
+
+            return;
+          }
+
+          this.container.visible =
+            true;
+
+          const start =
+            this.owner.pos;
+
+          const end =
+            this.getAnchorPoint();
+
+          const dx =
+            end.x - start.x;
+
+          const dy =
+            end.y - start.y;
+
+          const distance =
+            Math.hypot(
+              dx,
+              dy
+            ) || 1;
+
+          const normalX =
+            dx / distance;
+
+          const normalY =
+            dy / distance;
+
+          if (
+            distance >
+            this.length
+          ) {
+            const excess =
+              distance -
+              this.length;
+
+            let ownerShare = 1;
+            let targetShare = 0;
+
+            if (
+              this.anchor.kind ===
+                "obstacle" &&
+
+              this.anchor.target
+                .movable
+            ) {
+              const attachedCount =
+                state.webbies
+                  .filter(
+                    webbie =>
+                      webbie.thread
+                        .active &&
+
+                      webbie.thread
+                        .anchor
+                        ?.target ===
+                        this.anchor
+                          .target
+                  )
+                  .length;
+
+              if (
+                attachedCount >= 2
+              ) {
+                ownerShare = .63;
+                targetShare = .37;
+              }
+            }
+
+            if (
+              this.anchor.kind ===
+                "boss" &&
+
+              state.boss &&
+
+              state.boss
+                .hookedCount() >= 2
+            ) {
+              ownerShare = .78;
+              targetShare = .22;
+            }
+
+            this.owner.pos.x +=
+              normalX *
+              excess *
+              ownerShare;
+
+            this.owner.pos.y +=
+              normalY *
+              excess *
+              ownerShare;
+
+            const radialVelocity =
+              this.owner.vel.x *
+                normalX +
+
+              this.owner.vel.y *
+                normalY;
+
+            if (
+              radialVelocity < 0
+            ) {
+              this.owner.vel.x -=
+                normalX *
+                radialVelocity;
+
+              this.owner.vel.y -=
+                normalY *
+                radialVelocity;
+            }
+
+            if (
+              targetShare &&
+              this.anchor.kind ===
+                "obstacle"
+            ) {
+              this.anchor.target.x -=
+                normalX *
+                excess *
+                targetShare;
+
+              this.anchor.target.y -=
+                normalY *
+                excess *
+                targetShare;
+
+              this.anchor.target.vx -=
+                normalX *
+                excess *
+                8;
+
+              this.anchor.target.vy -=
+                normalY *
+                excess *
+                8;
+            }
+
+            if (
+              targetShare &&
+              this.anchor.kind ===
+                "boss"
+            ) {
+              state.boss.x -=
+                normalX *
+                excess *
+                targetShare;
+
+              state.boss.y -=
+                normalY *
+                excess *
+                targetShare;
+
+              state.boss.vx -=
+                normalX *
+                excess *
+                5;
+
+              state.boss.vy -=
+                normalY *
+                excess *
+                5;
+            }
+          }
+
+          if (this.rider) {
+            this.breakTimer +=
+              deltaTime;
+
+            const lower =
+              this.rider.pos.y >
+              this.owner.pos.y
+
+                ? this.rider
+                : this.owner;
+
+            if (
+              this.breakTimer >
+              .42
+            ) {
+              showMessage(
+                `${lower.name} is overloading the strand!`,
+                .65
+              );
+            }
+
+            if (
+              this.breakTimer >
+              .88
+            ) {
+              const middle = {
+                x: lerp(
+                  start.x,
+                  end.x,
+                  .55
+                ),
+
+                y: lerp(
+                  start.y,
+                  end.y,
+                  .55
+                )
+              };
+
+              burst(
+                middle.x,
+                middle.y,
+                COLORS.white,
+                18,
+                150
+              );
+
+              this.release(false);
+
+              state.shake = 9;
+            }
+          } else {
+            this.breakTimer = 0;
+          }
+        }
+
+        draw() {
+          this.glow.clear();
+          this.line.clear();
+          this.hit.clear();
+
+          if (!this.active) {
+            return;
+          }
+
+          const start =
+            this.owner.pos;
+
+          const end =
+            this.getAnchorPoint();
+
+          const danger =
+            this.rider &&
+            this.breakTimer >
+              .42;
+
+          this.glow
+            .lineStyle(
+              danger
+                ? 7
+                : 5,
+
+              danger
+                ? COLORS.danger
+                : this.owner.color,
+
+              danger
+                ? .3
+                : .14
+            )
+            .moveTo(
+              start.x,
+              start.y
+            )
+            .lineTo(
+              end.x,
+              end.y
+            );
+
+          this.line
+            .lineStyle(
+              danger
+                ? 2.6
+                : 2.1,
+
+              danger
+                ? COLORS.danger
+                : COLORS.mist,
+
+              .95
+            )
+            .moveTo(
+              start.x,
+              start.y
+            )
+            .lineTo(
+              end.x,
+              end.y
+            );
+
+          this.hit
+            .lineStyle(
+              20,
+              COLORS.white,
+              .001
+            )
+            .moveTo(
+              start.x,
+              start.y
+            )
+            .lineTo(
+              end.x,
+              end.y
+            );
+        }
+      }
+
+      class Webbie {
+        constructor(
+          name,
+          color,
+          x,
+          y
+        ) {
+          this.name = name;
+          this.color = color;
+
+          this.pos = {
+            x,
+            y
+          };
+
+          this.vel = {
+            x: 0,
+            y: 0
+          };
+
+          this.radius = 16;
+
+          this.grounded = false;
+          this.onWall = false;
+
+          this.wallNormal = {
+            x: 0,
+            y: 0
+          };
+
+          this.airKickUsed =
+            false;
+
+          this.ridingThread =
+            null;
+
+          this.rideAmount = .5;
+
+          this.container =
+            new PIXI.Container();
+
+          this.shadow =
+            new PIXI.Graphics();
+
+          this.halo =
+            new PIXI.Graphics();
+
+          this.body =
+            new PIXI.Graphics();
+
+          this.face =
+            new PIXI.Graphics();
+
+          this.label =
+            makeText(
+              name,
+              11,
+              COLORS.white,
+              "700"
+            );
+
+          this.label.anchor
+            .set(.5);
+
+          this.label.y = -31;
+
+          this.container.addChild(
+            this.shadow,
+            this.halo,
+            this.body,
+            this.face,
+            this.label
+          );
+
+          this.container.eventMode =
+            "static";
+
+          this.container.cursor =
+            "pointer";
+
+          this.container.hitArea =
+            new PIXI.Circle(
+              0,
+              0,
+              29
+            );
+
+          this.container.on(
+            "pointerdown",
+            event => {
+              event.stopPropagation();
+
+              selectWebbie(
+                this
+              );
+            }
+          );
+
+          this.container.on(
+            "pointertap",
+            event => {
+              event.stopPropagation();
+            }
+          );
+
+          state.actorLayer
+            .addChild(
+              this.container
+            );
+
+          this.thread =
+            new Thread(this);
+
+          this.draw();
+        }
+
+        draw() {
+          const selected =
+            getActive() === this;
+
+          const gait =
+            Math.sin(
+              state.time *
+                12 +
+                this.pos.x *
+                .02
+            ) *
+            2.3;
+
+          this.shadow
+            .clear()
+            .beginFill(
+              COLORS.black,
+              .24
+            )
+            .drawEllipse(
+              2,
+              19,
+              20,
+              8
+            )
+            .endFill();
+
+          this.halo.clear();
+
+          if (selected) {
+            this.halo
+              .lineStyle(
+                2,
+                this.color,
+                .72
+              )
+              .drawCircle(
+                0,
+                0,
+
+                25 +
+                Math.sin(
+                  state.time *
+                  5
+                ) *
+                1.5
+              );
+
+            this.halo
+              .beginFill(
+                this.color,
+                .08
+              )
+              .drawCircle(
+                0,
+                0,
+                24
+              )
+              .endFill();
+          }
+
+          this.body.clear();
+
+          this.body.lineStyle(
+            4,
+            this.color,
+            .92
+          );
+
+          for (
+            let index = 0;
+            index < 4;
+            index += 1
+          ) {
+            const startY =
+              -10 +
+              index *
+              7;
+
+            const bend =
+              17 +
+              (
+                index % 2
+              ) *
+              4;
+
+            this.body
+              .moveTo(
+                -7,
+                startY
+              )
+              .quadraticCurveTo(
+                -bend,
+
+                startY -
+                6 +
+                gait *
+                (
+                  index % 2
+                    ? 1
+                    : -1
+                ),
+
+                -24,
+                startY + 5
+              );
+
+            this.body
+              .moveTo(
+                7,
+                startY
+              )
+              .quadraticCurveTo(
+                bend,
+
+                startY -
+                6 -
+                gait *
+                (
+                  index % 2
+                    ? 1
+                    : -1
+                ),
+
+                24,
+                startY + 5
+              );
+          }
+
+          this.body
+            .beginFill(
+              COLORS.shadow,
+              .38
+            )
+            .drawEllipse(
+              2,
+              5,
+              15,
+              19
+            )
+            .endFill();
+
+          this.body
+            .beginFill(
+              this.color
+            )
+            .drawEllipse(
+              0,
+              2,
+              14,
+              18
+            )
+            .endFill();
+
+          this.body
+            .beginFill(
+              COLORS.white,
+              .16
+            )
+            .drawEllipse(
+              -4,
+              -3,
+              5,
+              8
+            )
+            .endFill();
+
+          this.body
+            .beginFill(
+              this.color
+            )
+            .drawCircle(
+              0,
+              -12,
+              11
+            )
+            .endFill();
+
+          this.face.clear();
+
+          this.face
+            .beginFill(
+              COLORS.white
+            )
+            .drawCircle(
+              -4,
+              -14,
+              3.4
+            )
+            .drawCircle(
+              4,
+              -14,
+              3.4
+            )
+            .endFill();
+
+          this.face
+            .beginFill(
+              0x102033
+            )
+            .drawCircle(
+              -3.5,
+              -13.8,
+              1.7
+            )
+            .drawCircle(
+              4.5,
+              -13.8,
+              1.7
+            )
+            .endFill();
+
+          this.face
+            .lineStyle(
+              1.5,
+              0x102033,
+              .8
+            )
+            .arc(
+              0,
+              -8,
+              3,
+              .15,
+              Math.PI - .15
+            );
+
+          this.container
+            .position
+            .set(
+              this.pos.x,
+              this.pos.y
+            );
+
+          this.container.rotation =
+            clamp(
+              this.vel.x / 900,
+              -.16,
+              .16
+            );
+        }
+
+        grabThread(
+          thread,
+          amount
+        ) {
+          if (
+            !thread.active ||
+            thread.owner === this
+          ) {
+            return;
+          }
+
+          if (
+            this.ridingThread ===
+            thread
+          ) {
+            return;
+          }
+
+          if (
+            this.thread.active
+          ) {
+            this.thread.release();
+          }
+
+          if (
+            this.ridingThread
+              ?.rider ===
+            this
+          ) {
+            this.ridingThread.rider =
+              null;
+          }
+
+          this.ridingThread =
+            thread;
+
+          this.rideAmount =
+            clamp(
+              amount,
+              .12,
+              .9
+            );
+
+          thread.rider = this;
+
+          this.vel.x *= .3;
+          this.vel.y *= .3;
+
+          showMessage(
+            `${this.name} grabbed ${thread.owner.name}'s strand`,
+            .9
+          );
+        }
+
+        releaseRide() {
+          if (
+            !this.ridingThread
+          ) {
+            return;
+          }
+
+          if (
+            this.ridingThread
+              .rider ===
+            this
+          ) {
+            this.ridingThread.rider =
+              null;
+          }
+
+          this.ridingThread =
+            null;
+
+          this.vel.y -= 90;
+        }
+
+        update(deltaTime) {
+          this.grounded = false;
+          this.onWall = false;
+
+          this.wallNormal.x = 0;
+          this.wallNormal.y = 0;
+
+          const active =
+            getActive() === this;
+
+          const input =
+            active
+              ? state.joystick
+              : {
+                  x: 0,
+                  y: 0
+                };
+
+          if (
+            this.ridingThread
+              ?.active
+          ) {
+            this.rideAmount =
+              clamp(
+                this.rideAmount -
+                input.y *
+                deltaTime *
+                .55,
+
+                .08,
+                .94
+              );
+
+            const start =
+              this.ridingThread
+                .owner
+                .pos;
+
+            const end =
+              this.ridingThread
+                .getAnchorPoint();
+
+            const target = {
+              x: lerp(
+                start.x,
+                end.x,
+                this.rideAmount
+              ),
+
+              y: lerp(
+                start.y,
+                end.y,
+                this.rideAmount
+              )
+            };
+
+            this.vel.x +=
+              (
+                target.x -
+                this.pos.x
+              ) *
+              26 *
+              deltaTime;
+
+            this.vel.y +=
+              (
+                target.y -
+                this.pos.y
+              ) *
+              26 *
+              deltaTime;
+
+            this.vel.x *=
+              Math.pow(
+                .18,
+                deltaTime
+              );
+
+            this.vel.y *=
+              Math.pow(
+                .18,
+                deltaTime
+              );
+          } else {
+            if (active) {
+              this.vel.x +=
+                input.x *
+                690 *
+                deltaTime;
+
+              if (
+                this.thread.active &&
+                Math.abs(
+                  input.y
+                ) >
+                .12
+              ) {
+                this.thread.length =
+                  clamp(
+                    this.thread.length +
+                    input.y *
+                    135 *
+                    deltaTime,
+
+                    38,
+                    MAX_WEB
+                  );
+              }
+            }
+
+            this.vel.y +=
+              GRAVITY *
+              deltaTime;
+          }
+
+          for (
+            const zone
+            of state.zones
+          ) {
+            if (
+              zone.contains(
+                this.pos
+              )
+            ) {
+              this.vel.x +=
+                zone.forceX *
+                deltaTime;
+
+              this.vel.y +=
+                zone.forceY *
+                deltaTime;
+            }
+          }
+
+          this.vel.x *=
+            Math.pow(
+              .12,
+              deltaTime
+            );
+
+          this.vel.y =
+            Math.min(
+              this.vel.y,
+              850
+            );
+
+          this.pos.x +=
+            this.vel.x *
+            deltaTime;
+
+          this.pos.y +=
+            this.vel.y *
+            deltaTime;
+
+          this.pos.x =
+            clamp(
+              this.pos.x,
+
+              this.radius + 7,
+
+              GAME_W -
+              this.radius -
+              7
+            );
+
+          for (
+            const obstacle
+            of state.obstacles
+          ) {
+            if (
+              !obstacle.collidable
+            ) {
+              continue;
+            }
+
+            resolveCircleRect(
+              this,
+              obstacle
+            );
+          }
+
+          for (
+            const net
+            of state.nets
+          ) {
+            const distance =
+              Math.hypot(
+                this.pos.x -
+                net.x,
+
+                this.pos.y -
+                net.y
+              );
+
+            if (
+              distance <
+                net.r +
+                this.radius &&
+
+              distance >
+                net.r *
+                .38 &&
+
+              this.vel.y > 25
+            ) {
+              const normal =
+                normalize(
+                  this.pos.x -
+                  net.x,
+
+                  this.pos.y -
+                  net.y
+                );
+
+              this.pos.x =
+                net.x +
+                normal.x *
+                (
+                  net.r +
+                  this.radius
+                );
+
+              this.pos.y =
+                net.y +
+                normal.y *
+                (
+                  net.r +
+                  this.radius
+                );
+
+              const bounce =
+                Math.max(
+                  430,
+
+                  Math.hypot(
+                    this.vel.x,
+                    this.vel.y
+                  ) *
+                  .9
+                );
+
+              this.vel.x =
+                normal.x *
+                bounce;
+
+              this.vel.y =
+                normal.y *
+                bounce -
+                140;
+
+              burst(
+                this.pos.x,
+                this.pos.y,
+                COLORS.mint,
+                10,
+                110
+              );
+
+              this.airKickUsed =
+                false;
+            }
+          }
+
+          if (
+            state.boss &&
+            !state.boss.dead
+          ) {
+            const bossDistance =
+              Math.hypot(
+                this.pos.x -
+                state.boss.x,
+
+                this.pos.y -
+                state.boss.y
+              );
+
+            if (
+              bossDistance <
+              this.radius +
+              state.boss.radius -
+              5
+            ) {
+              resetLevel(
+                `${state.boss.title} caught ${this.name}`
+              );
+            }
+          }
+
+          if (
+            this.pos.y >
+            GAME_H + 90
+          ) {
+            resetLevel(
+              `${this.name} fell into the dark`
+            );
+          }
+
+          this.draw();
+        }
+
+        kick() {
+          if (
+            this.ridingThread
+          ) {
+            this.releaseRide();
+          }
+
+          if (
+            this.thread.active
+          ) {
+            this.thread.release();
+          }
+
+          const inputX =
+            Math.abs(
+              state.joystick.x
+            ) >
+            .15
+
+              ? state.joystick.x
+
+              : (
+                  this.pos.x <
+                  GAME_W / 2
+
+                    ? 1
+                    : -1
+                );
+
+          if (
+            this.grounded ||
+            this.onWall
+          ) {
+            this.vel.y = -470;
+
+            this.vel.x +=
+              this.onWall
+
+                ? this.wallNormal.x *
+                  320
+
+                : inputX *
+                  260;
+
+            this.airKickUsed =
+              false;
+          } else if (
+            !this.airKickUsed
+          ) {
+            this.vel.y =
+              Math.min(
+                this.vel.y,
+                -250
+              );
+
+            this.vel.x +=
+              inputX *
+              230;
+
+            this.airKickUsed =
+              true;
+          }
+
+          burst(
+            this.pos.x,
+            this.pos.y + 14,
+            this.color,
+            7,
+            90
+          );
+        }
+      }
+
+      class Net {
+        constructor(
+          x,
+          y,
+          radius = 64
+        ) {
+          Object.assign(
+            this,
+            {
+              x,
+              y,
+
+              r: radius,
+
+              age: 0,
+              life: 14
+            }
+          );
+
+          this.graphics =
+            new PIXI.Graphics();
+
+          state.sceneryLayer
+            .addChild(
+              this.graphics
+            );
+
+          state.nets.push(
+            this
+          );
+
+          this.draw();
+        }
+
+        draw() {
+          const graphics =
+            this.graphics;
+
+          graphics.clear();
+
+          graphics
+            .lineStyle(
+              5,
+              COLORS.mint,
+              .09
+            )
+            .drawCircle(
+              this.x,
+              this.y,
+              this.r + 3
+            );
+
+          graphics.lineStyle(
+            1.6,
+            COLORS.mist,
+            .86
+          );
+
+          for (
+            let ring = .25;
+            ring <= 1;
+            ring += .25
+          ) {
+            graphics.drawCircle(
+              this.x,
+              this.y,
+              this.r * ring
+            );
+          }
+
+          for (
+            let index = 0;
+            index < 10;
+            index += 1
+          ) {
+            const angle =
+              index /
+              10 *
+              Math.PI *
+              2;
+
+            graphics
+              .moveTo(
+                this.x,
+                this.y
+              )
+              .lineTo(
+                this.x +
+                Math.cos(angle) *
+                this.r,
+
+                this.y +
+                Math.sin(angle) *
+                this.r
+              );
+          }
+
+          graphics
+            .beginFill(
+              COLORS.mint,
+              .08
+            )
+            .drawCircle(
+              this.x,
+              this.y,
+              this.r
+            )
+            .endFill();
+        }
+
+        update(deltaTime) {
+          this.age +=
+            deltaTime;
+
+          this.graphics.alpha =
+            clamp(
+              (
+                this.life -
+                this.age
+              ) / 2,
+
+              0,
+              1
+            );
+
+          this.graphics.rotation +=
+            deltaTime *
+            .035;
+
+          if (
+            this.age >
+            this.life
+          ) {
+            this.destroy();
+          }
+        }
+
+        destroy() {
+          const index =
+            state.nets.indexOf(
+              this
+            );
+
+          if (
+            index >= 0
+          ) {
+            state.nets.splice(
+              index,
+              1
+            );
+          }
+
+          this.graphics.destroy();
+        }
+      }
+
+      class Boss {
+        constructor(level) {
+          this.level = level;
+
+          this.x =
+            GAME_W / 2;
+
+          this.y = 235;
+
+          this.vx = 90;
+          this.vy = 0;
+
+          this.radius = 34;
+          this.dead = false;
+
+          this.title =
+            level % 6 === 3
+
+              ? "The Orchard Wasp"
+              : "The Lantern Frog";
+
+          this.container =
+            new PIXI.Container();
+
+          this.glow =
+            new PIXI.Graphics();
+
+          this.body =
+            new PIXI.Graphics();
+
+          this.label =
+            makeText(
+              this.title,
+              12,
+              COLORS.gold,
+              "800"
+            );
+
+          this.label.anchor
+            .set(.5);
+
+          this.label.y = -52;
+
+          this.container.addChild(
+            this.glow,
+            this.body,
+            this.label
+          );
+
+          state.actorLayer
+            .addChild(
+              this.container
+            );
+
+          state.boss = this;
+          state.finishOpen = false;
+
+          this.draw();
+        }
+
+        hookedCount() {
+          return (
+            state.webbies
+              .filter(
+                webbie =>
+                  webbie.thread
+                    .active &&
+
+                  webbie.thread
+                    .anchor
+                    ?.kind ===
+                    "boss"
+              )
+              .length
+          );
+        }
+
+        update(deltaTime) {
+          if (this.dead) {
+            return;
+          }
+
+          const hooks =
+            this.hookedCount();
+
+          const targetX =
+            GAME_W / 2 +
+            Math.sin(
+              state.time *
+              .9
+            ) *
+            118;
+
+          const targetY =
+            235 +
+            Math.sin(
+              state.time *
+              1.7
+            ) *
+            52;
+
+          const mobility =
+            hooks >= 2
+              ? .16
+              : 1;
+
+          this.vx +=
+            (
+              targetX -
+              this.x
+            ) *
+            1.1 *
+            deltaTime *
+            mobility;
+
+          this.vy +=
+            (
+              targetY -
+              this.y
+            ) *
+            1.1 *
+            deltaTime *
+            mobility;
+
+          this.vx *=
+            Math.pow(
+              .3,
+              deltaTime
+            );
+
+          this.vy *=
+            Math.pow(
+              .3,
+              deltaTime
+            );
+
+          this.x +=
+            this.vx *
+            deltaTime;
+
+          this.y +=
+            this.vy *
+            deltaTime;
+
+          this.x =
+            clamp(
+              this.x,
+              55,
+              GAME_W - 55
+            );
+
+          this.y =
+            clamp(
+              this.y,
+              145,
+              395
+            );
+
+          if (
+            hooks >= 2
+          ) {
+            for (
+              const net
+              of state.nets
+            ) {
+              if (
+                Math.hypot(
+                  this.x -
+                  net.x,
+
+                  this.y -
+                  net.y
+                ) <
+                net.r *
+                .78
+              ) {
+                this.defeat(net);
+                break;
+              }
+            }
+          }
+
+          this.draw();
+        }
+
+        defeat(net) {
+          this.dead = true;
+          state.finishOpen = true;
+
+          state.webbies.forEach(
+            webbie => {
+              if (
+                webbie.thread
+                  .anchor
+                  ?.kind ===
+                  "boss"
+              ) {
+                webbie.thread
+                  .release(false);
+              }
+            }
+          );
+
+          burst(
+            this.x,
+            this.y,
+            COLORS.gold,
+            42,
+            260
+          );
+
+          burst(
+            this.x,
+            this.y,
+            COLORS.mint,
+            28,
+            210
+          );
+
+          this.container.visible =
+            false;
+
+          net.life =
+            Math.min(
+              net.life,
+              net.age + 2.2
+            );
+
+          showMessage(
+            "Boss cocooned! The canopy opens.",
+            2.2
+          );
+
+          updateFinishVisual();
+
+          state.shake = 14;
+        }
+
+        draw() {
+          this.container
+            .position
+            .set(
+              this.x,
+              this.y
+            );
+
+          this.container.rotation =
+            Math.sin(
+              state.time *
+              3.8
+            ) *
+            .08;
+
+          const graphics =
+            this.body;
+
+          const glow =
+            this.glow;
+
+          graphics.clear();
+          glow.clear();
+
+          const hooked =
+            this.hookedCount();
+
+          glow
+            .beginFill(
+              hooked >= 2
+                ? COLORS.mint
+                : COLORS.gold,
+
+              .08 +
+              hooked *
+              .06
+            )
+            .drawCircle(
+              0,
+              0,
+
+              48 +
+              hooked *
+              4
+            )
+            .endFill();
+
+          if (
+            this.title.includes(
+              "Wasp"
+            )
+          ) {
+            graphics
+              .beginFill(
+                0xe7f7ff,
+                .38
+              )
+              .drawEllipse(
+                -26,
+                -7,
+                22,
+                11
+              )
+              .drawEllipse(
+                26,
+                -7,
+                22,
+                11
+              )
+              .endFill();
+
+            graphics
+              .beginFill(
+                0x42294f
+              )
+              .drawEllipse(
+                0,
+                4,
+                28,
+                18
+              )
+              .endFill();
+
+            graphics
+              .beginFill(
+                COLORS.gold
+              )
+              .drawRoundedRect(
+                -22,
+                -12,
+                44,
+                8,
+                4
+              )
+              .drawRoundedRect(
+                -23,
+                3,
+                46,
+                8,
+                4
+              )
+              .endFill();
+
+            graphics
+              .beginFill(
+                0x20132c
+              )
+              .drawCircle(
+                -10,
+                -19,
+                7
+              )
+              .drawCircle(
+                10,
+                -19,
+                7
+              )
+              .endFill();
+
+            graphics
+              .beginFill(
+                COLORS.danger
+              )
+              .drawCircle(
+                -10,
+                -20,
+                2.2
+              )
+              .drawCircle(
+                10,
+                -20,
+                2.2
+              )
+              .endFill();
+
+            graphics
+              .beginFill(
+                0x27203b
+              )
+              .moveTo(
+                24,
+                2
+              )
+              .lineTo(
+                44,
+                9
+              )
+              .lineTo(
+                22,
+                13
+              )
+              .endFill();
+          } else {
+            graphics
+              .beginFill(
+                0x2f7354
+              )
+              .drawEllipse(
+                0,
+                4,
+                35,
+                26
+              )
+              .endFill();
+
+            graphics
+              .beginFill(
+                0x86c96c
+              )
+              .drawCircle(
+                -18,
+                -16,
+                15
+              )
+              .drawCircle(
+                18,
+                -16,
+                15
+              )
+              .endFill();
+
+            graphics
+              .beginFill(
+                COLORS.white
+              )
+              .drawCircle(
+                -18,
+                -18,
+                7
+              )
+              .drawCircle(
+                18,
+                -18,
+                7
+              )
+              .endFill();
+
+            graphics
+              .beginFill(
+                0x122031
+              )
+              .drawCircle(
+                -18,
+                -18,
+                3
+              )
+              .drawCircle(
+                18,
+                -18,
+                3
+              )
+              .endFill();
+
+            graphics
+              .lineStyle(
+                3,
+                0x183626
+              )
+              .arc(
+                0,
+                5,
+                17,
+                .15,
+                Math.PI - .15
+              );
+          }
+        }
+      }
+
+      function resolveCircleRect(
+        webbie,
+        obstacle
+      ) {
+        const rectX =
+          obstacle.x;
+
+        const rectY =
+          obstacle.y;
+
+        const rectW =
+          obstacle.w;
+
+        const rectH =
+          obstacle.h;
+
+        const closestX =
+          clamp(
+            webbie.pos.x,
+            rectX,
+            rectX + rectW
+          );
+
+        const closestY =
+          clamp(
+            webbie.pos.y,
+            rectY,
+            rectY + rectH
+          );
+
+        let dx =
+          webbie.pos.x -
+          closestX;
+
+        let dy =
+          webbie.pos.y -
+          closestY;
+
+        let distanceSquared =
+          dx * dx +
+          dy * dy;
+
+        const radius =
+          webbie.radius;
+
+        if (
+          distanceSquared >=
+          radius * radius
+        ) {
+          return;
+        }
+
+        if (
+          obstacle.harmful
+        ) {
+          resetLevel(
+            `${webbie.name} touched danger`
+          );
+
+          return;
+        }
+
+        if (
+          distanceSquared === 0
+        ) {
+          const left =
+            Math.abs(
+              webbie.pos.x -
+              rectX
+            );
+
+          const right =
+            Math.abs(
+              rectX +
+              rectW -
+              webbie.pos.x
+            );
+
+          const top =
+            Math.abs(
+              webbie.pos.y -
+              rectY
+            );
+
+          const bottom =
+            Math.abs(
+              rectY +
+              rectH -
+              webbie.pos.y
+            );
+
+          const minimum =
+            Math.min(
+              left,
+              right,
+              top,
+              bottom
+            );
+
+          if (
+            minimum === top
+          ) {
+            dx = 0;
+            dy = -1;
+          } else if (
+            minimum === bottom
+          ) {
+            dx = 0;
+            dy = 1;
+          } else if (
+            minimum === left
+          ) {
+            dx = -1;
+            dy = 0;
+          } else {
+            dx = 1;
+            dy = 0;
+          }
+
+          distanceSquared = 1;
+        }
+
+        const distance =
+          Math.sqrt(
+            distanceSquared
+          );
+
+        const normalX =
+          dx / distance;
+
+        const normalY =
+          dy / distance;
+
+        const overlap =
+          radius -
+          distance;
+
+        webbie.pos.x +=
+          normalX *
+          overlap;
+
+        webbie.pos.y +=
+          normalY *
+          overlap;
+
+        const normalVelocity =
+          webbie.vel.x *
+            normalX +
+
+          webbie.vel.y *
+            normalY;
+
+        if (
+          normalVelocity < 0
+        ) {
+          const restitution =
+            obstacle.type ===
+            "bounce"
+
+              ? 1.02
+              : .06;
+
+          webbie.vel.x -=
+            (
+              1 +
+              restitution
+            ) *
+            normalVelocity *
+            normalX;
+
+          webbie.vel.y -=
+            (
+              1 +
+              restitution
+            ) *
+            normalVelocity *
+            normalY;
+        }
+
+        if (
+          normalY < -.65
+        ) {
+          webbie.grounded = true;
+          webbie.airKickUsed = false;
+
+          if (
+            obstacle.type ===
+            "sticky"
+          ) {
+            webbie.vel.x *= .25;
+          }
+
+          if (
+            obstacle.type ===
+            "bounce"
+          ) {
+            webbie.vel.y = -560;
+
+            burst(
+              webbie.pos.x,
+              webbie.pos.y + 12,
+              COLORS.mint,
+              9,
+              105
+            );
+          }
+
+          if (
+            obstacle.type ===
+              "crumble" &&
+
+            !obstacle
+              .crumbleStarted
+          ) {
+            obstacle.crumbleStarted =
+              true;
+
+            showMessage(
+              "Crumbly! Keep moving.",
+              .8
+            );
+          }
+        }
+
+        if (
+          Math.abs(normalX) >
+          .65
+        ) {
+          webbie.onWall = true;
+
+          webbie.wallNormal.x =
+            normalX;
+
+          webbie.wallNormal.y =
+            normalY;
+
+          webbie.airKickUsed =
+            false;
+        }
+      }
+
+      function getActive() {
+        return (
+          state.webbies[
+            state.activeIndex
+          ]
+        );
+      }
+
+      function selectWebbie(
+        webbie
+      ) {
+        const index =
+          state.webbies.indexOf(
+            webbie
+          );
+
+        if (
+          index < 0
+        ) {
+          return;
+        }
+
+        state.activeIndex =
+          index;
+
+        state.webbies.forEach(
+          current => {
+            current.draw();
+          }
+        );
+
+        updateButtons();
+
+        burst(
+          webbie.pos.x,
+          webbie.pos.y,
+          webbie.color,
+          5,
+          55
+        );
+      }
+
+      function buildWorldContainer() {
+        const world =
+          new PIXI.Container();
+
+        const scenery =
+          new PIXI.Container();
+
+        const obstacles =
+          new PIXI.Container();
+
+        const threads =
+          new PIXI.Container();
+
+        const actors =
+          new PIXI.Container();
+
+        world.addChild(
+          scenery,
+          obstacles,
+          threads,
+          actors
+        );
+
+        state.sceneryLayer =
+          scenery;
+
+        state.obstacleLayer =
+          obstacles;
+
+        state.threadsLayer =
+          threads;
+
+        state.actorLayer =
+          actors;
+
+        return world;
+      }
+
+      let finishGraphics = null;
+
+      function buildFinish() {
+        finishGraphics =
+          new PIXI.Container();
+
+        const glow =
+          new PIXI.Graphics();
+
+        glow
+          .beginFill(
+            COLORS.mint,
+            .05
+          )
+          .drawEllipse(
+            GAME_W / 2,
+            55,
+            240,
+            80
+          )
+          .endFill();
+
+        const line =
+          new PIXI.Graphics();
+
+        line.lineStyle(
+          2,
+          COLORS.mint,
+          .6
+        );
+
+        line
+          .moveTo(
+            65,
+            82
+          )
+          .bezierCurveTo(
+            150,
+            45,
+
+            270,
+            45,
+
+            355,
+            82
+          );
+
+        for (
+          let index = 0;
+          index < 9;
+          index += 1
+        ) {
+          const x =
+            65 +
+            index *
+            36;
+
+          line
+            .moveTo(
+              x,
+              82
+            )
+            .lineTo(
+              GAME_W / 2,
+              48
+            );
+        }
+
+        const label =
+          makeText(
+            "BOTH WEBBIES",
+            10,
+            COLORS.mint,
+            "800"
+          );
+
+        label.anchor.set(.5);
+
+        label.position.set(
+          GAME_W / 2,
+          30
+        );
+
+        finishGraphics.addChild(
+          glow,
+          line,
+          label
+        );
+
+        state.sceneryLayer
+          .addChild(
+            finishGraphics
+          );
+
+        updateFinishVisual();
+      }
+
+      function updateFinishVisual() {
+        if (!finishGraphics) {
+          return;
+        }
+
+        finishGraphics.alpha =
+          state.finishOpen
+            ? 1
+            : .22;
+
+        finishGraphics
+          .children[2]
+          .text =
+            state.finishOpen
+
+              ? "BOTH WEBBIES"
+              : "LOCKED BY PREDATOR";
+
+        finishGraphics
+          .children[2]
+          .style
+          .fill =
+            state.finishOpen
+
+              ? COLORS.mint
+              : COLORS.danger;
+      }
+
+      function addFloor() {
+        new Obstacle({
+          x: 20,
+          y: 778,
+          w: 380,
+          h: 38,
+          type: "solid"
+        });
+      }
+
+      function addSideNubs() {
+        new Obstacle({
+          x: 0,
+          y: 620,
+          w: 42,
+          h: 110,
+          type: "solid"
+        });
+
+        new Obstacle({
+          x: 378,
+          y: 520,
+          w: 42,
+          h: 115,
+          type: "solid"
+        });
+      }
+
+      function buildLevel(
+        level,
+        animateIn = false
+      ) {
+        state.obstacles = [];
+        state.zones = [];
+
+        state.nets.forEach(
+          net => {
+            net.graphics.destroy();
+          }
+        );
+
+        state.nets = [];
+        state.webbies = [];
+        state.boss = null;
+
+        state.finishOpen = true;
+        state.resetting = false;
+        state.activeIndex = 0;
+
+        const oldWorld =
+          state.world;
+
+        const world =
+          buildWorldContainer();
+
+        state.world = world;
+
+        worldHost.addChild(
+          world
+        );
+
+        buildFinish();
+        addFloor();
+
+        const mode =
+          level % 3;
+
+        if (
+          level === 1
+        ) {
+          buildTutorialLevel();
+        } else if (
+          level === 2
+        ) {
+          buildMechanicsLevel();
+        } else if (
+          mode === 0
+        ) {
+          buildBossLevel(level);
+        } else {
+          buildGeneratedLevel(
+            level
+          );
+        }
+
+        const pip =
+          new Webbie(
+            "Pip",
+            COLORS.cyan,
+            135,
+            748
+          );
+
+        const purl =
+          new Webbie(
+            "Purl",
+            COLORS.coral,
+            285,
+            748
+          );
+
+        state.webbies.push(
+          pip,
+          purl
+        );
+
+        state.webbies.forEach(
+          webbie => {
+            state.threadsLayer
+              .addChild(
+                webbie.thread
+                  .container
+              );
+          }
+        );
+
+        state.webbies.forEach(
+          webbie => {
+            state.actorLayer
+              .addChild(
+                webbie.container
+              );
+          }
+        );
+
+        if (oldWorld) {
+          worldHost.removeChild(
+            oldWorld
+          );
+
+          oldWorld.destroy({
+            children: true
+          });
+        }
+
+        if (animateIn) {
+          world.y = -GAME_H;
+
+          state.transitioning =
+            true;
+
+          const start =
+            performance.now();
+
+          function transitionTick() {
+            const amount =
+              clamp(
+                (
+                  performance.now() -
+                  start
+                ) /
+                720,
+
+                0,
+                1
+              );
+
+            const eased =
+              1 -
+              Math.pow(
+                1 - amount,
+                3
+              );
+
+            world.y =
+              lerp(
+                -GAME_H,
+                0,
+                eased
+              );
+
+            if (
+              amount < 1
+            ) {
+              requestAnimationFrame(
+                transitionTick
+              );
+            } else {
+              world.y = 0;
+
+              state.transitioning =
+                false;
+
+              state.levelReadyAt =
+                state.time;
+            }
+          }
+
+          requestAnimationFrame(
+            transitionTick
+          );
+        }
+
+        levelText.text =
+          `CANOPY ${level}`;
+
+        if (
+          level % 3 === 0
+        ) {
+          showMessage(
+            "Predator screen: hook it twice, then cocoon it.",
+            2.4
+          );
+        } else if (
+          level === 1
+        ) {
+          showMessage(
+            "Tap a Webbie. Hold the world to aim. Release to shoot.",
+            2.4
+          );
+        } else {
+          showMessage(
+            "Get both Webbies into the canopy.",
+            2.4
+          );
+        }
+
+        updateButtons();
+      }
+
+      function buildTutorialLevel() {
+        new Obstacle({
+          x: 0,
+          y: 620,
+          w: 105,
+          h: 30,
+          type: "solid"
+        });
+
+        new Obstacle({
+          x: 285,
+          y: 545,
+          w: 135,
+          h: 30,
+          type: "solid"
+        });
+
+        new Obstacle({
+          x: 115,
+          y: 430,
+          w: 110,
+          h: 26,
+          type: "bounce"
+        });
+
+        new Obstacle({
+          x: 300,
+          y: 315,
+          w: 120,
+          h: 28,
+          type: "solid"
+        });
+
+        new Obstacle({
+          x: 0,
+          y: 210,
+          w: 135,
+          h: 28,
+          type: "solid"
+        });
+
+        new Obstacle({
+          x: 165,
+          y: 130,
+          w: 90,
+          h: 20,
+          type: "crumble"
+        });
+
+        new WindZone(
+          45,
+          250,
+          105,
+          245,
+          120
+        );
+      }
+
+      function buildMechanicsLevel() {
+        addSideNubs();
+
+        new Obstacle({
+          x: 90,
+          y: 650,
+          w: 105,
+          h: 25,
+          type: "crumble"
+        });
+
+        new Obstacle({
+          x: 238,
+          y: 570,
+          w: 120,
+          h: 26,
+
+          type: "moving",
+
+          range: 72,
+          speed: 1.15,
+          phase: .4
+        });
+
+        new Obstacle({
+          x: 194,
+          y: 390,
+          w: 26,
+          h: 145,
+
+          type: "electric",
+
+          speed: 3.2,
+          phase: .2
+        });
+
+        new Obstacle({
+          x: 35,
+          y: 370,
+          w: 105,
+          h: 24,
+          type: "sticky"
+        });
+
+        new Obstacle({
+          x: 255,
+          y: 300,
+          w: 125,
+          h: 26,
+          type: "spikes"
+        });
+
+        new Obstacle({
+          x: 145,
+          y: 185,
+          w: 130,
+          h: 54,
+          type: "tug"
+        });
+
+        new WindZone(
+          230,
+          390,
+          125,
+          160,
+          -145
+        );
+      }
+
+      function buildBossLevel(
+        level
+      ) {
+        new Obstacle({
+          x: 0,
+          y: 635,
+          w: 120,
+          h: 28,
+          type: "solid"
+        });
+
+        new Obstacle({
+          x: 300,
+          y: 635,
+          w: 120,
+          h: 28,
+          type: "solid"
+        });
+
+        new Obstacle({
+          x: 32,
+          y: 425,
+          w: 92,
+          h: 24,
+          type: "solid"
+        });
+
+        new Obstacle({
+          x: 296,
+          y: 425,
+          w: 92,
+          h: 24,
+          type: "solid"
+        });
+
+        new Obstacle({
+          x: 150,
+          y: 290,
+          w: 120,
+          h: 22,
+
+          type: "moving",
+
+          range: 105,
+          speed: .8
+        });
+
+        new Boss(level);
+      }
+
+      function buildGeneratedLevel(
+        level
+      ) {
+        const seed =
+          level * 17.13;
+
+        const pattern =
+          level % 4;
+
+        if (
+          pattern === 0
+        ) {
+          new Obstacle({
+            x: 0,
+            y: 645,
+            w: 120,
+            h: 26,
+            type: "spikes"
+          });
+
+          new Obstacle({
+            x: 285,
+            y: 600,
+            w: 135,
+            h: 28,
+
+            type: "moving",
+
+            range: 70,
+
+            speed:
+              1 +
+              hashNoise(seed)
+          });
+
+          new Obstacle({
+            x: 75,
+            y: 465,
+            w: 115,
+            h: 24,
+            type: "crumble"
+          });
+
+          new Obstacle({
+            x: 220,
+            y: 350,
+            w: 150,
+            h: 30,
+            type: "bounce"
+          });
+
+          new Obstacle({
+            x: 115,
+            y: 200,
+            w: 190,
+            h: 48,
+            type: "tug"
+          });
+        } else if (
+          pattern === 1
+        ) {
+          new Obstacle({
+            x: 0,
+            y: 600,
+            w: 110,
+            h: 28,
+            type: "sticky"
+          });
+
+          new Obstacle({
+            x: 188,
+            y: 485,
+            w: 24,
+            h: 160,
+
+            type: "electric",
+
+            speed: 3.6,
+            phase: seed
+          });
+
+          new Obstacle({
+            x: 270,
+            y: 405,
+            w: 150,
+            h: 26,
+            type: "crumble"
+          });
+
+          new Obstacle({
+            x: 0,
+            y: 290,
+            w: 145,
+            h: 26,
+
+            type: "moving",
+
+            range: 70,
+            speed: 1.4
+          });
+
+          new Obstacle({
+            x: 240,
+            y: 175,
+            w: 180,
+            h: 24,
+            type: "solid"
+          });
+
+          new WindZone(
+            220,
+            450,
+            155,
+            200,
+            -180
+          );
+        } else if (
+          pattern === 2
+        ) {
+          new Obstacle({
+            x: 60,
+            y: 650,
+            w: 120,
+            h: 26,
+            type: "bounce"
+          });
+
+          new Obstacle({
+            x: 250,
+            y: 565,
+            w: 170,
+            h: 28,
+            type: "spikes"
+          });
+
+          new Obstacle({
+            x: 0,
+            y: 440,
+            w: 140,
+            h: 26,
+
+            type: "moving",
+
+            range: 60,
+            speed: 1.8
+          });
+
+          new Obstacle({
+            x: 175,
+            y: 330,
+            w: 105,
+            h: 24,
+            type: "crumble"
+          });
+
+          new Obstacle({
+            x: 35,
+            y: 190,
+            w: 155,
+            h: 52,
+            type: "tug"
+          });
+
+          new WindZone(
+            80,
+            255,
+            260,
+            110,
+            0,
+            -130
+          );
+        } else {
+          new Obstacle({
+            x: 0,
+            y: 635,
+            w: 105,
+            h: 26,
+            type: "crumble"
+          });
+
+          new Obstacle({
+            x: 315,
+            y: 560,
+            w: 105,
+            h: 26,
+            type: "crumble"
+          });
+
+          new Obstacle({
+            x: 90,
+            y: 470,
+            w: 240,
+            h: 22,
+
+            type: "electric",
+
+            speed: 2.8,
+            phase: seed
+          });
+
+          new Obstacle({
+            x: 0,
+            y: 345,
+            w: 130,
+            h: 24,
+            type: "bounce"
+          });
+
+          new Obstacle({
+            x: 275,
+            y: 245,
+            w: 145,
+            h: 24,
+
+            type: "moving",
+
+            range: 65,
+            speed: 1.2
+          });
+
+          new Obstacle({
+            x: 130,
+            y: 150,
+            w: 160,
+            h: 22,
+            type: "sticky"
+          });
+        }
+      }
+
+      function rayAabb(
+        origin,
+        direction,
+        maximumDistance,
+        rectangle
+      ) {
+        let minimum = 0;
+        let maximum =
+          maximumDistance;
+
+        for (
+          const axis
+          of ["x", "y"]
+        ) {
+          const originValue =
+            origin[axis];
+
+          const directionValue =
+            direction[axis];
+
+          const rectangleMinimum =
+            axis === "x"
+              ? rectangle.x
+              : rectangle.y;
+
+          const rectangleMaximum =
+            axis === "x"
+              ? rectangle.x +
+                rectangle.w
+              : rectangle.y +
+                rectangle.h;
+
+          if (
+            Math.abs(
+              directionValue
+            ) <
+            1e-6
+          ) {
+            if (
+              originValue <
+                rectangleMinimum ||
+
+              originValue >
+                rectangleMaximum
+            ) {
+              return null;
+            }
+          } else {
+            const inverse =
+              1 /
+              directionValue;
+
+            let first =
+              (
+                rectangleMinimum -
+                originValue
+              ) *
+              inverse;
+
+            let second =
+              (
+                rectangleMaximum -
+                originValue
+              ) *
+              inverse;
+
+            if (
+              first > second
+            ) {
+              [
+                first,
+                second
+              ] = [
+                second,
+                first
+              ];
+            }
+
+            minimum =
+              Math.max(
+                minimum,
+                first
+              );
+
+            maximum =
+              Math.min(
+                maximum,
+                second
+              );
+
+            if (
+              minimum >
+              maximum
+            ) {
+              return null;
+            }
+          }
+        }
+
+        return (
+          minimum >= 0 &&
+          minimum <=
+          maximumDistance
+        )
+          ? minimum
+          : null;
+      }
+
+      function segmentIntersection(
+        firstStart,
+        firstEnd,
+        secondStart,
+        secondEnd
+      ) {
+        const firstDirection = {
+          x:
+            firstEnd.x -
+            firstStart.x,
+
+          y:
+            firstEnd.y -
+            firstStart.y
+        };
+
+        const secondDirection = {
+          x:
+            secondEnd.x -
+            secondStart.x,
+
+          y:
+            secondEnd.y -
+            secondStart.y
+        };
+
+        const cross = (
+          first,
+          second
+        ) =>
+          first.x *
+            second.y -
+          first.y *
+            second.x;
+
+        const denominator =
+          cross(
+            firstDirection,
+            secondDirection
+          );
+
+        if (
+          Math.abs(
+            denominator
+          ) <
+          1e-6
+        ) {
+          return null;
+        }
+
+        const difference = {
+          x:
+            secondStart.x -
+            firstStart.x,
+
+          y:
+            secondStart.y -
+            firstStart.y
+        };
+
+        const firstAmount =
+          cross(
+            difference,
+            secondDirection
+          ) /
+          denominator;
+
+        const secondAmount =
+          cross(
+            difference,
+            firstDirection
+          ) /
+          denominator;
+
+        if (
+          firstAmount >= 0 &&
+          firstAmount <= 1 &&
+
+          secondAmount >= 0 &&
+          secondAmount <= 1
+        ) {
+          return {
+            x:
+              firstStart.x +
+              firstDirection.x *
+              firstAmount,
+
+            y:
+              firstStart.y +
+              firstDirection.y *
+              firstAmount,
+
+            amount: firstAmount
+          };
+        }
+
+        return null;
+      }
+
+      function shootWeb(
+        webbie,
+        target
+      ) {
+        const dx =
+          target.x -
+          webbie.pos.x;
+
+        const dy =
+          target.y -
+          webbie.pos.y;
+
+        if (
+          Math.hypot(
+            dx,
+            dy
+          ) <
+          18
+        ) {
+          return;
+        }
+
+        const direction =
+          normalize(
+            dx,
+            dy
+          );
+
+        const end = {
+          x:
+            webbie.pos.x +
+            direction.x *
+            MAX_WEB,
+
+          y:
+            webbie.pos.y +
+            direction.y *
+            MAX_WEB
+        };
+
+        let best = {
+          distance: MAX_WEB,
+          kind: null,
+          point: end
+        };
+
+        for (
+          const obstacle
+          of state.obstacles
+        ) {
+          if (
+            !obstacle.active ||
+            obstacle.type ===
+              "wind"
+          ) {
+            continue;
+          }
+
+          const hitDistance =
+            rayAabb(
+              webbie.pos,
+              direction,
+              MAX_WEB,
+              obstacle
+            );
+
+          if (
+            hitDistance !==
+              null &&
+
+            hitDistance <
+              best.distance
+          ) {
+            best = {
+              distance:
+                hitDistance,
+
+              kind:
+                "obstacle",
+
+              target:
+                obstacle,
+
+              point: {
+                x:
+                  webbie.pos.x +
+                  direction.x *
+                  hitDistance,
+
+                y:
+                  webbie.pos.y +
+                  direction.y *
+                  hitDistance
+              }
+            };
+          }
+        }
+
+        for (
+          const other
+          of state.webbies
+        ) {
+          if (
+            other === webbie ||
+            !other.thread.active
+          ) {
+            continue;
+          }
+
+          const hit =
+            segmentIntersection(
+              webbie.pos,
+              end,
+
+              other.pos,
+              other.thread
+                .getAnchorPoint()
+            );
+
+          if (
+            hit &&
+            hit.amount *
+              MAX_WEB <
+              best.distance
+          ) {
+            best = {
+              distance:
+                hit.amount *
+                MAX_WEB,
+
+              kind: "cut",
+
+              target:
+                other.thread,
+
+              point: hit
+            };
+          }
+        }
+
+        if (
+          state.boss &&
+          !state.boss.dead
+        ) {
+          const offsetX =
+            webbie.pos.x -
+            state.boss.x;
+
+          const offsetY =
+            webbie.pos.y -
+            state.boss.y;
+
+          const b =
+            2 *
+            (
+              offsetX *
+                direction.x +
+
+              offsetY *
+                direction.y
+            );
+
+          const c =
+            offsetX *
+              offsetX +
+
+            offsetY *
+              offsetY -
+
+            state.boss.radius *
+              state.boss.radius;
+
+          const discriminant =
+            b * b -
+            4 * c;
+
+          if (
+            discriminant >= 0
+          ) {
+            const hitDistance =
+              (
+                -b -
+                Math.sqrt(
+                  discriminant
+                )
+              ) /
+              2;
+
+            if (
+              hitDistance >= 0 &&
+              hitDistance <
+                best.distance
+            ) {
+              best = {
+                distance:
+                  hitDistance,
+
+                kind: "boss",
+
+                point: {
+                  x:
+                    webbie.pos.x +
+                    direction.x *
+                    hitDistance,
+
+                  y:
+                    webbie.pos.y +
+                    direction.y *
+                    hitDistance
+                }
+              };
+            }
+          }
+        }
+
+        if (
+          best.kind ===
+          "cut"
+        ) {
+          best.target.release(
+            false
+          );
+
+          burst(
+            best.point.x,
+            best.point.y,
+            COLORS.danger,
+            14,
+            145
+          );
+
+          showMessage(
+            "Snip! That shot cut the other strand.",
+            1.1
+          );
+
+          return;
+        }
+
+        if (!best.kind) {
+          burst(
+            end.x,
+            end.y,
+            COLORS.white,
+            4,
+            38
+          );
+
+          return;
+        }
+
+        if (
+          webbie.ridingThread
+        ) {
+          webbie.releaseRide();
+        }
+
+        if (
+          webbie.thread.active
+        ) {
+          webbie.thread.release(
+            false
+          );
+        }
+
+        if (
+          best.kind ===
+          "obstacle"
+        ) {
+          webbie.thread.attach({
+            kind: "obstacle",
+
+            target:
+              best.target,
+
+            localX:
+              best.point.x -
+              best.target.x,
+
+            localY:
+              best.point.y -
+              best.target.y
+          });
+        }
+
+        if (
+          best.kind ===
+          "boss"
+        ) {
+          webbie.thread.attach({
+            kind: "boss"
+          });
+
+          showMessage(
+            state.boss
+              .hookedCount() >= 2
+
+              ? "Double hook! Weave a web and pull."
+
+              : "One hook set. Switch Webbie.",
+
+            1.15
+          );
+        }
+      }
+
+      function canWeave() {
+        if (
+          state.webbies.length <
+          2
+        ) {
+          return false;
+        }
+
+        const [
+          first,
+          second
+        ] = state.webbies;
+
+        return (
+          first.thread.active &&
+          second.thread.active &&
+
+          dist(
+            first.pos,
+            second.pos
+          ) <
+          175 &&
+
+          state.nets.length <
+          2
+        );
+      }
+
+      function weaveNet() {
+        if (!canWeave()) {
+          showMessage(
+            "Both Webbies need strands and must be close.",
+            1.1
+          );
+
+          return;
+        }
+
+        const [
+          first,
+          second
+        ] = state.webbies;
+
+        const x =
+          (
+            first.pos.x +
+            second.pos.x
+          ) /
+          2;
+
+        const y =
+          (
+            first.pos.y +
+            second.pos.y
+          ) /
+          2;
+
+        new Net(
+          x,
+          y,
+          66
+        );
+
+        burst(
+          x,
+          y,
+          COLORS.mint,
+          24,
+          155
+        );
+
+        showMessage(
+          "Complete web! It catches, bounces and cocoons.",
+          1.35
+        );
+
+        updateButtons();
+      }
+
+      function resetLevel(reason) {
+        if (
+          state.resetting ||
+          state.transitioning
+        ) {
+          return;
+        }
+
+        state.resetting = true;
+        state.shake = 16;
+
+        showMessage(
+          reason,
+          1.1
+        );
+
+        const overlay =
+          new PIXI.Graphics();
+
+        overlay
+          .beginFill(
+            COLORS.danger,
+            .12
+          )
+          .drawRect(
+            0,
+            0,
+            GAME_W,
+            GAME_H
+          )
+          .endFill();
+
+        fxLayer.addChild(
+          overlay
+        );
+
+        window.setTimeout(
+          () => {
+            overlay.destroy();
+
+            buildLevel(
+              state.level,
+              false
+            );
+          },
+          520
+        );
+      }
+
+      function checkFinish() {
+        if (
+          !state.finishOpen ||
+          state.transitioning ||
+          state.resetting
+        ) {
+          return;
+        }
+
+        if (
+          state.time -
+          state.levelReadyAt <
+          1
+        ) {
+          return;
+        }
+
+        const bothAtTop =
+          state.webbies.every(
+            webbie =>
+              webbie.pos.y <
+              92
+          );
+
+        if (!bothAtTop) {
+          return;
+        }
+
+        state.level += 1;
+        state.transitioning = true;
+
+        showMessage(
+          "Both through! Climbing into the next canopy…",
+          1.1
+        );
+
+        window.setTimeout(
+          () => {
+            buildLevel(
+              state.level,
+              true
+            );
+          },
+          360
+        );
+      }
+
+      function burst(
+        x,
+        y,
+        color,
+        count = 10,
+        speed = 100
+      ) {
+        for (
+          let index = 0;
+          index < count;
+          index += 1
+        ) {
+          const graphics =
+            new PIXI.Graphics();
+
+          const radius =
+            1.2 +
+            Math.random() *
+            2.6;
+
+          graphics
+            .beginFill(
+              color,
+              .85
+            )
+            .drawCircle(
+              0,
+              0,
+              radius
+            )
+            .endFill();
+
+          graphics.position.set(
+            x,
+            y
+          );
+
+          fxLayer.addChild(
+            graphics
+          );
+
+          const angle =
+            Math.random() *
+            Math.PI *
+            2;
+
+          const velocity =
+            speed *
+            (
+              .25 +
+              Math.random() *
+              .75
+            );
+
+          state.particles.push({
+            graphics,
+
+            vx:
+              Math.cos(angle) *
+              velocity,
+
+            vy:
+              Math.sin(angle) *
+              velocity,
+
+            age: 0,
+
+            life:
+              .35 +
+              Math.random() *
+              .55
+          });
+        }
+      }
+
+      function updateParticles(
+        deltaTime
+      ) {
+        for (
+          let index =
+            state.particles.length -
+            1;
+
+          index >= 0;
+          index -= 1
+        ) {
+          const particle =
+            state.particles[index];
+
+          particle.age +=
+            deltaTime;
+
+          particle.vy +=
+            180 *
+            deltaTime;
+
+          particle.graphics.x +=
+            particle.vx *
+            deltaTime;
+
+          particle.graphics.y +=
+            particle.vy *
+            deltaTime;
+
+          particle.graphics.alpha =
+            1 -
+            particle.age /
+            particle.life;
+
+          if (
+            particle.age >=
+            particle.life
+          ) {
+            particle.graphics
+              .destroy();
+
+            state.particles.splice(
+              index,
+              1
+            );
+          }
+        }
+      }
+
+      const topBar =
+        new PIXI.Container();
+
+      ui.addChild(topBar);
+
+      const topPill =
+        new PIXI.Graphics();
+
+      topPill
+        .beginFill(
+          0x07111f,
+          .76
+        )
+        .drawRoundedRect(
+          18,
+          17,
+          232,
+          50,
+          20
+        )
+        .endFill();
+
+      topPill
+        .lineStyle(
+          1,
+          COLORS.white,
+          .11
+        )
+        .drawRoundedRect(
+          18,
+          17,
+          232,
+          50,
+          20
+        );
+
+      topBar.addChild(
+        topPill
+      );
+
+      const titleText =
+        makeText(
+          "WEBBIES",
+          16,
+          COLORS.white,
+          "900"
+        );
+
+      titleText.anchor.set(
+        0,
+        .5
+      );
+
+      titleText.position.set(
+        35,
+        35
+      );
+
+      const levelText =
+        makeText(
+          "CANOPY 1",
+          10,
+          COLORS.mint,
+          "800"
+        );
+
+      levelText.anchor.set(
+        0,
+        .5
+      );
+
+      levelText.position.set(
+        35,
+        54
+      );
+
+      topBar.addChild(
+        titleText,
+        levelText
+      );
+
+      const pauseButton =
+        new PIXI.Container();
+
+      pauseButton.position.set(
+        376,
+        42
+      );
+
+      const pauseBackground =
+        new PIXI.Graphics();
+
+      pauseBackground
+        .beginFill(
+          0x07111f,
+          .78
+        )
+        .drawCircle(
+          0,
+          0,
+          25
+        )
+        .endFill();
+
+      pauseBackground
+        .lineStyle(
+          1,
+          COLORS.white,
+          .13
+        )
+        .drawCircle(
+          0,
+          0,
+          25
+        );
+
+      const pauseIcon =
+        new PIXI.Graphics();
+
+      pauseIcon
+        .beginFill(
+          COLORS.white,
+          .86
+        )
+        .drawRoundedRect(
+          -7,
+          -8,
+          5,
+          16,
+          2
+        )
+        .drawRoundedRect(
+          2,
+          -8,
+          5,
+          16,
+          2
+        )
+        .endFill();
+
+      pauseButton.addChild(
+        pauseBackground,
+        pauseIcon
+      );
+
+      pauseButton.eventMode =
+        "static";
+
+      pauseButton.cursor =
+        "pointer";
+
+      pauseButton.hitArea =
+        new PIXI.Circle(
+          0,
+          0,
+          34
+        );
+
+      pauseButton.on(
+        "pointerdown",
+        event => {
+          event.stopPropagation();
+
+          state.paused =
+            !state.paused;
+
+          pauseIcon.clear();
+
+          if (state.paused) {
+            pauseIcon
+              .beginFill(
+                COLORS.white,
+                .86
+              )
+              .moveTo(
+                -6,
+                -9
+              )
+              .lineTo(
+                9,
+                0
+              )
+              .lineTo(
+                -6,
+                9
+              )
+              .endFill();
+          } else {
+            pauseIcon
+              .beginFill(
+                COLORS.white,
+                .86
+              )
+              .drawRoundedRect(
+                -7,
+                -8,
+                5,
+                16,
+                2
+              )
+              .drawRoundedRect(
+                2,
+                -8,
+                5,
+                16,
+                2
+              )
+              .endFill();
+          }
+
+          showMessage(
+            state.paused
+              ? "Paused. The silk holds still."
+              : "Climb!",
+
+            .8
+          );
+        }
+      );
+
+      pauseButton.on(
+        "pointertap",
+        event => {
+          event.stopPropagation();
+        }
+      );
+
+      ui.addChild(
+        pauseButton
+      );
+
+      const messagePlate =
+        new PIXI.Container();
+
+      const messageBackground =
+        new PIXI.Graphics();
+
+      messageBackground
+        .beginFill(
+          0x07111f,
+          .78
+        )
+        .drawRoundedRect(
+          45,
+          84,
+          330,
+          46,
+          18
+        )
+        .endFill();
+
+      messageBackground
+        .lineStyle(
+          1,
+          COLORS.white,
+          .1
+        )
+        .drawRoundedRect(
+          45,
+          84,
+          330,
+          46,
+          18
+        );
+
+      const messageLabel =
+        makeText(
+          "",
+          11,
+          COLORS.white,
+          "650"
+        );
+
+      messageLabel.anchor.set(.5);
+
+      messageLabel.position.set(
+        210,
+        107
+      );
+
+      messagePlate.addChild(
+        messageBackground,
+        messageLabel
+      );
+
+      messagePlate.alpha = 0;
+
+      ui.addChild(
+        messagePlate
+      );
+
+      function showMessage(
+        text,
+        duration = 1.2
+      ) {
+        state.messageText =
+          text;
+
+        state.messageTimer =
+          duration;
+
+        messageLabel.text =
+          text;
+
+        messagePlate.alpha = 1;
+      }
+
+      const stick =
+        new PIXI.Container();
+
+      stick.position.set(
+        79,
+        728
+      );
+
+      const stickBase =
+        new PIXI.Graphics();
+
+      stickBase
+        .beginFill(
+          0x07111f,
+          .66
+        )
+        .drawCircle(
+          0,
+          0,
+          53
+        )
+        .endFill();
+
+      stickBase
+        .lineStyle(
+          2,
+          COLORS.white,
+          .12
+        )
+        .drawCircle(
+          0,
+          0,
+          53
+        );
+
+      const stickKnob =
+        new PIXI.Graphics();
+
+      stickKnob
+        .beginFill(
+          COLORS.white,
+          .16
+        )
+        .drawCircle(
+          0,
+          0,
+          25
+        )
+        .endFill();
+
+      stickKnob
+        .lineStyle(
+          1,
+          COLORS.white,
+          .2
+        )
+        .drawCircle(
+          0,
+          0,
+          25
+        );
+
+      stick.addChild(
+        stickBase,
+        stickKnob
+      );
+
+      stick.eventMode =
+        "static";
+
+      stick.hitArea =
+        new PIXI.Circle(
+          0,
+          0,
+          70
+        );
+
+      stick.on(
+        "pointerdown",
+        event => {
+          event.stopPropagation();
+
+          state.joystick.pointerId =
+            event.pointerId;
+
+          updateStick(event);
+        }
+      );
+
+      stick.on(
+        "globalpointermove",
+        event => {
+          if (
+            state.joystick
+              .pointerId ===
+            event.pointerId
+          ) {
+            updateStick(event);
+          }
+        }
+      );
+
+      stick.on(
+        "pointerup",
+        releaseStick
+      );
+
+      stick.on(
+        "pointerupoutside",
+        releaseStick
+      );
+
+      ui.addChild(stick);
+
+      function updateStick(event) {
+        const point =
+          event.getLocalPosition(
+            stick
+          );
+
+        const length =
+          Math.hypot(
+            point.x,
+            point.y
+          ) || 1;
+
+        const maximum = 34;
+
+        const magnitude =
+          Math.min(
+            length,
+            maximum
+          );
+
+        stickKnob.position.set(
+          point.x /
+          length *
+          magnitude,
+
+          point.y /
+          length *
+          magnitude
+        );
+
+        state.joystick.x =
+          clamp(
+            point.x /
+            maximum,
+
+            -1,
+            1
+          );
+
+        state.joystick.y =
+          clamp(
+            point.y /
+            maximum,
+
+            -1,
+            1
+          );
+      }
+
+      function releaseStick(event) {
+        if (
+          state.joystick
+            .pointerId !==
+          event.pointerId
+        ) {
+          return;
+        }
+
+        event.stopPropagation();
+
+        state.joystick.pointerId =
+          null;
+
+        state.joystick.x = 0;
+        state.joystick.y = 0;
+
+        stickKnob.position.set(
+          0,
+          0
+        );
+      }
+
+      function makeActionButton(
+        x,
+        y,
+        radius,
+        label,
+        color,
+        callback
+      ) {
+        const container =
+          new PIXI.Container();
+
+        container.position.set(
+          x,
+          y
+        );
+
+        const glow =
+          new PIXI.Graphics();
+
+        glow
+          .beginFill(
+            color,
+            .08
+          )
+          .drawCircle(
+            0,
+            0,
+            radius + 8
+          )
+          .endFill();
+
+        const background =
+          new PIXI.Graphics();
+
+        background
+          .beginFill(
+            0x07111f,
+            .76
+          )
+          .drawCircle(
+            0,
+            0,
+            radius
+          )
+          .endFill();
+
+        background
+          .lineStyle(
+            2,
+            color,
+            .72
+          )
+          .drawCircle(
+            0,
+            0,
+            radius
+          );
+
+        const text =
+          makeText(
+            label,
+
+            radius > 34
+              ? 11
+              : 9,
+
+            COLORS.white,
+            "900"
+          );
+
+        text.anchor.set(.5);
+
+        container.addChild(
+          glow,
+          background,
+          text
+        );
+
+        container.eventMode =
+          "static";
+
+        container.hitArea =
+          new PIXI.Circle(
+            0,
+            0,
+            radius + 10
+          );
+
+        container.on(
+          "pointerdown",
+          event => {
+            event.stopPropagation();
+
+            container.scale.set(
+              .93
+            );
+
+            callback();
+          }
+        );
+
+        container.on(
+          "pointerup",
+          event => {
+            event.stopPropagation();
+
+            container.scale.set(
+              1
+            );
+          }
+        );
+
+        container.on(
+          "pointerupoutside",
+          () => {
+            container.scale.set(
+              1
+            );
+          }
+        );
+
+        container.on(
+          "pointertap",
+          event => {
+            event.stopPropagation();
+          }
+        );
+
+        ui.addChild(container);
+
+        return {
+          container,
+          background,
+          glow,
+          label: text,
+          color,
+          radius
+        };
+      }
+
+      const kickButton =
+        makeActionButton(
+          346,
+          730,
+          43,
+          "KICK",
+          COLORS.coral,
+
+          () => {
+            if (
+              !state.paused &&
+              !state.transitioning
+            ) {
+              getActive()?.kick();
+            }
+          }
+        );
+
+      const cutButton =
+        makeActionButton(
+          355,
+          638,
+          28,
+          "CUT",
+          COLORS.cyan,
+
+          () => {
+            const webbie =
+              getActive();
+
+            if (
+              webbie
+                ?.ridingThread
+            ) {
+              webbie.releaseRide();
+            } else {
+              webbie
+                ?.thread
+                .release();
+            }
+          }
+        );
+
+      const weaveButton =
+        makeActionButton(
+          262,
+          682,
+          31,
+          "WEAVE",
+          COLORS.mint,
+          weaveNet
+        );
+
+      weaveButton
+        .container
+        .visible = false;
+
+      function updateButtons() {
+        if (
+          !state.webbies.length
+        ) {
+          return;
+        }
+
+        const active =
+          getActive();
+
+        cutButton.label.text =
+          active?.ridingThread
+            ? "DROP"
+            : "CUT";
+
+        weaveButton
+          .container
+          .visible =
+            canWeave();
+
+        kickButton
+          .background
+          .tint =
+            active?.color ||
+            COLORS.white;
+
+        kickButton
+          .background
+          .alpha = .98;
+      }
+
+      const hint =
+        makeText(
+          "HOLD + DRAG THE WORLD TO SHOOT WEB",
+          9,
+          COLORS.white,
+          "700"
+        );
+
+      hint.anchor.set(.5);
+
+      hint.position.set(
+        210,
+        793
+      );
+
+      hint.alpha = .45;
+
+      ui.addChild(hint);
+
+      const aimGraphics =
+        new PIXI.Graphics();
+
+      fxLayer.addChild(
+        aimGraphics
+      );
+
+      const playfield =
+        new PIXI.Graphics();
+
+      playfield
+        .beginFill(
+          COLORS.white,
+          .001
+        )
+        .drawRect(
+          0,
+          0,
+          GAME_W,
+          GAME_H
+        )
+        .endFill();
+
+      playfield.eventMode =
+        "static";
+
+      playfield.hitArea =
+        new PIXI.Rectangle(
+          0,
+          0,
+          GAME_W,
+          GAME_H
+        );
+
+      playfield.on(
+        "pointerdown",
+        event => {
+          if (
+            state.paused ||
+            state.transitioning ||
+            state.resetting
+          ) {
+            return;
+          }
+
+          const point =
+            event.getLocalPosition(
+              root
+            );
+
+          if (
+            point.y < 135 ||
+            point.y > 805
+          ) {
+            return;
+          }
+
+          state.aiming = true;
+
+          state.aimStart = {
+            ...getActive().pos
+          };
+
+          state.aimPoint = point;
+        }
+      );
+
+      playfield.on(
+        "globalpointermove",
+        event => {
+          if (!state.aiming) {
+            return;
+          }
+
+          state.aimPoint =
+            event.getLocalPosition(
+              root
+            );
+        }
+      );
+
+      playfield.on(
+        "pointerup",
+        finishAim
+      );
+
+      playfield.on(
+        "pointerupoutside",
+        finishAim
+      );
+
+      root.addChildAt(
+        playfield,
+        1
+      );
+
+      function finishAim(event) {
+        if (!state.aiming) {
+          return;
+        }
+
+        const point =
+          event.getLocalPosition(
+            root
+          );
+
+        state.aiming = false;
+
+        aimGraphics.clear();
+
+        shootWeb(
+          getActive(),
+          point
+        );
+      }
+
+      function drawAim() {
+        aimGraphics.clear();
+
+        if (
+          !state.aiming ||
+          !state.aimPoint
+        ) {
+          return;
+        }
+
+        const webbie =
+          getActive();
+
+        const dx =
+          state.aimPoint.x -
+          webbie.pos.x;
+
+        const dy =
+          state.aimPoint.y -
+          webbie.pos.y;
+
+        const direction =
+          normalize(
+            dx,
+            dy
+          );
+
+        const length =
+          Math.min(
+            MAX_WEB,
+
+            Math.hypot(
+              dx,
+              dy
+            )
+          );
+
+        const end = {
+          x:
+            webbie.pos.x +
+            direction.x *
+            length,
+
+          y:
+            webbie.pos.y +
+            direction.y *
+            length
+        };
+
+        aimGraphics
+          .lineStyle(
+            8,
+            webbie.color,
+            .1
+          )
+          .moveTo(
+            webbie.pos.x,
+            webbie.pos.y
+          )
+          .lineTo(
+            end.x,
+            end.y
+          );
+
+        aimGraphics
+          .lineStyle(
+            2,
+            COLORS.white,
+            .75
+          )
+          .moveTo(
+            webbie.pos.x,
+            webbie.pos.y
+          )
+          .lineTo(
+            end.x,
+            end.y
+          );
+
+        aimGraphics
+          .beginFill(
+            webbie.color,
+            .92
+          )
+          .drawCircle(
+            end.x,
+            end.y,
+            6
+          )
+          .endFill();
+
+        for (
+          let index = 1;
+          index < 6;
+          index += 1
+        ) {
+          const amount =
+            index / 6;
+
+          aimGraphics
+            .beginFill(
+              COLORS.white,
+              .36
+            )
+            .drawCircle(
+              lerp(
+                webbie.pos.x,
+                end.x,
+                amount
+              ),
+
+              lerp(
+                webbie.pos.y,
+                end.y,
+                amount
+              ),
+
+              1.7
+            )
+            .endFill();
+        }
+      }
+
+      app.ticker.add(
+        () => {
+          const rawDelta =
+            Math.min(
+              app.ticker.deltaMS /
+              1000,
+
+              1 / 30
+            );
+
+          const frozen =
+            state.paused ||
+            state.aiming ||
+            state.transitioning ||
+            state.resetting;
+
+          const deltaTime =
+            frozen
+              ? 0
+              : rawDelta;
+
+          state.time +=
+            deltaTime;
+
+          for (
+            let index = 1;
+            index <
+              backdrop.children.length;
+            index += 1
+          ) {
+            const speck =
+              backdrop.children[
+                index
+              ];
+
+            speck.y +=
+              Math.sin(
+                state.time *
+                speck._drift +
+                speck._phase
+              ) *
+              .018;
+
+            speck.alpha =
+              .14 +
+              (
+                Math.sin(
+                  state.time *
+                  speck._drift *
+                  1.4 +
+                  speck._phase
+                ) +
+                1
+              ) *
+              .08;
+          }
+
+          if (
+            deltaTime > 0 &&
+            state.world
+          ) {
+            for (
+              const obstacle
+              of state.obstacles
+            ) {
+              obstacle.update(
+                deltaTime
+              );
+            }
+
+            for (
+              const webbie
+              of state.webbies
+            ) {
+              webbie.update(
+                deltaTime
+              );
+            }
+
+            for (
+              const webbie
+              of state.webbies
+            ) {
+              webbie.thread.update(
+                deltaTime
+              );
+            }
+
+            for (
+              const webbie
+              of state.webbies
+            ) {
+              webbie.thread.update(
+                deltaTime *
+                .35
+              );
+            }
+
+            state.boss?.update(
+              deltaTime
+            );
+
+            for (
+              let index =
+                state.nets.length -
+                1;
+
+              index >= 0;
+              index -= 1
+            ) {
+              state.nets[index]
+                .update(
+                  deltaTime
+                );
+            }
+
+            checkFinish();
+          }
+
+          for (
+            const webbie
+            of state.webbies
+          ) {
+            webbie.thread.draw();
+            webbie.draw();
+          }
+
+          state.boss?.draw();
+
+          drawAim();
+          updateParticles(rawDelta);
+          updateButtons();
+
+          if (
+            state.messageTimer > 0
+          ) {
+            state.messageTimer -=
+              rawDelta;
+
+            messagePlate.alpha =
+              clamp(
+                state.messageTimer *
+                4,
+
+                0,
+                1
+              );
+          } else {
+            messagePlate.alpha = 0;
+          }
+
+          if (
+            state.shake > .1
+          ) {
+            state.shake *=
+              Math.pow(
+                .03,
+                rawDelta
+              );
+
+            const shakeX =
+              (
+                Math.random() -
+                .5
+              ) *
+              state.shake;
+
+            const shakeY =
+              (
+                Math.random() -
+                .5
+              ) *
+              state.shake;
+
+            worldHost.position.set(
+              shakeX,
+              shakeY
+            );
+          } else {
+            worldHost.position.set(
+              0,
+              0
+            );
+
+            state.shake = 0;
+          }
+        }
+      );
+
+      buildLevel(1);
+    })();
+  </script>
+</body>
+</html>
