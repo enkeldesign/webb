@@ -197,11 +197,9 @@ function populateNumSlotsSelect() {
   });
 }
 
-// Extract all nation names from marathon table (MARATHON) and append additional teams that
-// do not appear in the historic data (e.g. Åland, Island, Ukraina).  We de‑duplicate the list
-// and sort alphabetically.  This allows the new nations to be selected even though they
-// are missing from historik.json and marathon.md.
-const ADDITIONAL_TEAMS = ['Åland', 'Island', 'Ukraina', 'Irland'];
+// Extract all nation names from marathon table (MARATHON) and append teams that
+// have not yet participated. We de-duplicate the list and sort alphabetically.
+const ADDITIONAL_TEAMS = ['Åland'];
 const ALL_TEAMS = sortTeamsAlphabetical(Array.from(new Set([...MARATHON.map(item => item.nation), ...ADDITIONAL_TEAMS])));
 
 // Render nation cards for selection
