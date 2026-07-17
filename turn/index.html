@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#090b10">
+  <title>TURN — motion racing prototype</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      background: #090b10;
+      color: #f7f7f2;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      overscroll-behavior: none;
+      background: #090b10;
+      touch-action: none;
+    }
+
+    body {
+      position: fixed;
+      inset: 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .panel {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      padding:
+        max(24px, env(safe-area-inset-top))
+        max(24px, env(safe-area-inset-right))
+        max(24px, env(safe-area-inset-bottom))
+        max(24px, env(safe-area-inset-left));
+      background:
+        radial-gradient(circle at 50% 38%, rgb(255 255 255 / 0.09), transparent 28rem),
+        rgb(9 11 16 / 0.93);
+      backdrop-filter: blur(12px);
+      transition: opacity 220ms ease, visibility 220ms ease;
+    }
+
+    .panel[hidden] {
+      display: none;
+    }
+
+    .card {
+      width: min(34rem, 100%);
+      border: 1px solid rgb(255 255 255 / 0.34);
+      padding: clamp(24px, 6vw, 42px);
+      background: rgb(9 11 16 / 0.78);
+      box-shadow: 0 28px 80px rgb(0 0 0 / 0.45);
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(3.5rem, 18vw, 8rem);
+      line-height: 0.78;
+      letter-spacing: -0.09em;
+      font-weight: 900;
+    }
+
+    .tagline {
+      margin: 0 0 26px;
+      max-width: 31rem;
+      font-family: system-ui, sans-serif;
+      font-size: 1rem;
+      line-height: 1.5;
+      color: rgb(247 247 242 / 0.78);
+    }
+
+    .diagram {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 14px;
+      align-items: center;
+      margin: 26px 0;
+      color: rgb(247 247 242 / 0.72);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .phone {
+      width: 44px;
+      height: 78px;
+      border: 2px solid currentColor;
+      border-radius: 9px;
+      position: relative;
+      animation: steer 2.4s ease-in-out infinite;
+    }
+
+    .phone::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 120px;
+      height: 1px;
+      background: currentColor;
+      transform: translate(-50%, -50%) rotate(-24deg);
+      opacity: 0.45;
+    }
+
+    @keyframes steer {
+      0%, 100% { transform: rotate(-18deg); }
+      50% { transform: rotate(18deg); }
+    }
+
+    .actions {
+      display: grid;
+      gap: 10px;
+    }
+
+    .primary,
+    .secondary,
+    .mini {
+      min-height: 48px;
+      border: 1px solid rgb(255 255 255 / 0.52);
+      border-radius: 0;
+      padding: 12px 16px;
+      background: #f7f7f2;
+      color: #090b10;
+      cursor: pointer;
+    }
+
+    .secondary,
+    .mini {
+      background: transparent;
+      color: #f7f7f2;
+    }
+
+    .primary:active,
+    .secondary:active,
+    .mini:active {
+      transform: translateY(1px);
+    }
+
+    .status {
+      min-height: 1.5em;
+      margin: 16px 0 0;
+      font-family: system-ui, sans-serif;
+      font-size: 0.85rem;
+      line-height: 1.45;
+      color: rgb(247 247 242 / 0.68);
+    }
+
+    .controls {
+      position: fixed;
+      z-index: 5;
+      left: max(12px, env(safe-area-inset-left));
+      right: max(12px, env(safe-area-inset-right));
+      bottom: max(12px, env(safe-area-inset-bottom));
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      pointer-events: none;
+    }
+
+    .controls > * {
+      pointer-events: auto;
+    }
+
+    .mini {
+      min-height: 40px;
+      padding: 8px 12px;
+      border-color: rgb(255 255 255 / 0.28);
+      background: rgb(9 11 16 / 0.55);
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      backdrop-filter: blur(8px);
+    }
+
+    .debug {
+      min-width: 8rem;
+      padding: 9px 11px;
+      border: 1px solid rgb(255 255 255 / 0.2);
+      background: rgb(9 11 16 / 0.48);
+      font-size: 0.68rem;
+      line-height: 1.45;
+      color: rgb(247 247 242 / 0.7);
+      backdrop-filter: blur(8px);
+    }
+
+    .noscript {
+      padding: 2rem;
+      font-family: system-ui, sans-serif;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .phone { animation: none; transform: rotate(12deg); }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game" aria-label="A first-person wireframe racing prototype"></canvas>
+
+  <section class="panel" id="intro" aria-labelledby="title">
+    <div class="card">
+      <h1 id="title">TURN</h1>
+      <p class="tagline">
+        Turn the phone like a steering wheel. The road turns with you, while the horizon counter-rotates to stay level in the room.
+      </p>
+
+      <div class="diagram" aria-hidden="true">
+        <span>turn left</span>
+        <span class="phone"></span>
+        <span>turn right</span>
+      </div>
+
+      <div class="actions">
+        <button class="primary" id="motionButton" type="button">Enable motion &amp; drive</button>
+        <button class="secondary" id="manualButton" type="button">Try without sensors</button>
+      </div>
+      <p class="status" id="status" role="status">
+        Best tested on a phone held roughly upright. iPhone asks for motion permission after you tap the button.
+      </p>
+    </div>
+  </section>
+
+  <div class="controls" id="controls" hidden>
+    <button class="mini" id="calibrateButton" type="button">Center steering</button>
+    <div class="debug" id="debug" aria-live="off"></div>
+  </div>
+
+  <noscript><p class="noscript">This prototype needs JavaScript.</p></noscript>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const canvas = document.querySelector('#game');
+      const ctx = canvas.getContext('2d');
+      const intro = document.querySelector('#intro');
+      const controls = document.querySelector('#controls');
+      const motionButton = document.querySelector('#motionButton');
+      const manualButton = document.querySelector('#manualButton');
+      const calibrateButton = document.querySelector('#calibrateButton');
+      const status = document.querySelector('#status');
+      const debug = document.querySelector('#debug');
+
+      const TAU = Math.PI * 2;
+      const DEG = 180 / Math.PI;
+      const MAX_STEER_ROLL = 34 / DEG;
+
+      const state = {
+        width: 0,
+        height: 0,
+        dpr: 1,
+        running: false,
+        sensorMode: false,
+        motionSeen: false,
+        roll: 0,
+        targetRoll: 0,
+        neutralRoll: 0,
+        steering: 0,
+        manualSteering: 0,
+        speed: 0,
+        distance: 0,
+        trackPosition: 0,
+        pointerActive: false,
+        lastTime: performance.now()
+      };
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function lerp(a, b, t) {
+        return a + (b - a) * t;
+      }
+
+      function normalizeAngle(angle) {
+        while (angle > Math.PI) angle -= TAU;
+        while (angle < -Math.PI) angle += TAU;
+        return angle;
+      }
+
+      function shortestAngle(from, to) {
+        return normalizeAngle(to - from);
+      }
+
+      function resize() {
+        state.dpr = Math.min(window.devicePixelRatio || 1, 2);
+        state.width = window.innerWidth;
+        state.height = window.innerHeight;
+        canvas.width = Math.round(state.width * state.dpr);
+        canvas.height = Math.round(state.height * state.dpr);
+        canvas.style.width = `${state.width}px`;
+        canvas.style.height = `${state.height}px`;
+        ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
+      }
+
+      function motionRollFromGravity(event) {
+        const gravity = event.accelerationIncludingGravity;
+        if (!gravity || gravity.x == null || gravity.y == null) return null;
+
+        const planarGravity = Math.hypot(gravity.x, gravity.y);
+        if (planarGravity < 1.4) return null;
+
+        // With the phone held upright, gravity points towards the bottom of the screen.
+        // atan2 gives us the phone's physical roll around the viewing axis.
+        return normalizeAngle(Math.atan2(gravity.x, -gravity.y));
+      }
+
+      function handleMotion(event) {
+        const roll = motionRollFromGravity(event);
+        if (roll == null) return;
+
+        state.motionSeen = true;
+        state.targetRoll = roll;
+      }
+
+      async function requestMotion() {
+        try {
+          if (typeof DeviceMotionEvent === 'undefined') {
+            throw new Error('Motion sensors are not available in this browser.');
+          }
+
+          if (typeof DeviceMotionEvent.requestPermission === 'function') {
+            const permission = await DeviceMotionEvent.requestPermission();
+            if (permission !== 'granted') {
+              throw new Error('Motion permission was not granted.');
+            }
+          }
+
+          window.addEventListener('devicemotion', handleMotion, { passive: true });
+          state.sensorMode = true;
+          startGame();
+
+          window.setTimeout(() => {
+            if (!state.motionSeen && state.sensorMode) {
+              debug.textContent = 'No motion data yet\nTry moving the phone';
+            }
+          }, 1200);
+        } catch (error) {
+          status.textContent = `${error.message} You can still try the manual version.`;
+        }
+      }
+
+      function startGame() {
+        state.running = true;
+        state.lastTime = performance.now();
+        intro.hidden = true;
+        controls.hidden = false;
+
+        if (state.sensorMode) {
+          window.setTimeout(() => {
+            state.neutralRoll = state.targetRoll;
+          }, 250);
+        }
+
+        try {
+          screen.orientation?.lock?.('portrait').catch(() => {});
+        } catch (_) {
+          // Orientation locking is not available in iPhone Safari. The prototype
+          // still works as long as the steering motion stays below auto-rotate.
+        }
+      }
+
+      function useManualMode() {
+        state.sensorMode = false;
+        state.roll = 0;
+        state.targetRoll = 0;
+        startGame();
+      }
+
+      function calibrate() {
+        if (state.sensorMode) {
+          state.neutralRoll = state.targetRoll;
+        } else {
+          state.manualSteering = 0;
+        }
+      }
+
+      function setManualSteering(clientX) {
+        const normalized = (clientX / Math.max(1, state.width)) * 2 - 1;
+        state.manualSteering = clamp(normalized, -1, 1);
+      }
+
+      canvas.addEventListener('pointerdown', (event) => {
+        if (!state.running || state.sensorMode) return;
+        state.pointerActive = true;
+        canvas.setPointerCapture?.(event.pointerId);
+        setManualSteering(event.clientX);
+      });
+
+      canvas.addEventListener('pointermove', (event) => {
+        if (!state.pointerActive || state.sensorMode) return;
+        setManualSteering(event.clientX);
+      });
+
+      canvas.addEventListener('pointerup', () => {
+        state.pointerActive = false;
+      });
+
+      canvas.addEventListener('pointercancel', () => {
+        state.pointerActive = false;
+      });
+
+      window.addEventListener('keydown', (event) => {
+        if (state.sensorMode) return;
+        if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') {
+          state.manualSteering = clamp(state.manualSteering - 0.18, -1, 1);
+        }
+        if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'd') {
+          state.manualSteering = clamp(state.manualSteering + 0.18, -1, 1);
+        }
+        if (event.key === ' ') {
+          state.manualSteering = 0;
+        }
+      });
+
+      motionButton.addEventListener('click', requestMotion);
+      manualButton.addEventListener('click', useManualMode);
+      calibrateButton.addEventListener('click', calibrate);
+      window.addEventListener('resize', resize, { passive: true });
+      window.addEventListener('orientationchange', () => window.setTimeout(resize, 120), { passive: true });
+
+      function update(dt) {
+        if (!state.running) return;
+
+        if (state.sensorMode) {
+          state.roll += shortestAngle(state.roll, state.targetRoll) * Math.min(1, dt * 10);
+          const steeringRoll = normalizeAngle(state.roll - state.neutralRoll);
+          state.steering = clamp(steeringRoll / MAX_STEER_ROLL, -1, 1);
+        } else {
+          state.steering = lerp(state.steering, state.manualSteering, Math.min(1, dt * 7));
+          state.roll = 0;
+        }
+
+        const offRoad = Math.abs(state.trackPosition) > 1.05;
+        const targetSpeed = offRoad ? 72 : 154;
+        state.speed = lerp(state.speed, targetSpeed, Math.min(1, dt * 0.7));
+        state.distance += state.speed * dt * 0.055;
+
+        // A deliberately arcade-like steering model. The road moves beneath the
+        // first-person camera, so the effect is readable even in wireframe form.
+        state.trackPosition += state.steering * dt * (0.72 + state.speed / 220);
+        state.trackPosition *= Math.pow(0.985, dt * 60);
+        state.trackPosition = clamp(state.trackPosition, -1.55, 1.55);
+      }
+
+      function trackCurve(distance) {
+        return (
+          Math.sin(distance * 0.010) * 0.55 +
+          Math.sin(distance * 0.0037 + 1.7) * 0.38 +
+          Math.sin(distance * 0.0019 + 4.1) * 0.22
+        );
+      }
+
+      function roadCenterAt(depth, baseX, roadWidth) {
+        const farDistance = state.distance + depth * 170;
+        const curve = trackCurve(farDistance);
+        const playerShift = state.trackPosition * roadWidth * (0.34 + depth * 0.68);
+        const steeringLook = state.steering * roadWidth * depth * 0.36;
+        return baseX + curve * roadWidth * depth * 0.34 - playerShift - steeringLook;
+      }
+
+      function drawScene() {
+        const w = state.width;
+        const h = state.height;
+        const cx = w / 2;
+        const cy = h / 2;
+        const overscan = Math.hypot(w, h) * 0.74;
+        const horizonY = h * 0.39;
+        const bottomY = h + overscan * 0.2;
+        const roadWidth = Math.min(w, h * 0.82);
+
+        ctx.save();
+        ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
+        ctx.clearRect(0, 0, w, h);
+        ctx.translate(cx, cy);
+        ctx.rotate(state.sensorMode ? -state.roll : 0);
+        ctx.translate(-cx, -cy);
+
+        // Oversized background prevents exposed corners while the scene counter-rotates.
+        ctx.fillStyle = '#090b10';
+        ctx.fillRect(-overscan, -overscan, w + overscan * 2, h + overscan * 2);
+
+        drawSkyAndHorizon(w, h, horizonY, overscan);
+        drawRoadGrid(w, h, horizonY, bottomY, roadWidth, overscan);
+        drawTrackMarkers(w, h, horizonY, roadWidth);
+        drawCockpit(w, h);
+        drawHud(w, h);
+
+        ctx.restore();
+      }
+
+      function drawSkyAndHorizon(w, h, horizonY, overscan) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(247,247,242,0.34)';
+        ctx.lineWidth = 1;
+
+        // Horizon
+        ctx.beginPath();
+        ctx.moveTo(-overscan, horizonY);
+        ctx.lineTo(w + overscan, horizonY);
+        ctx.stroke();
+
+        // Wireframe mountains make horizon stabilisation immediately visible.
+        ctx.beginPath();
+        for (let x = -overscan; x <= w + overscan; x += 18) {
+          const y = horizonY - 18 -
+            Math.sin(x * 0.014 + state.distance * 0.0017) * 20 -
+            Math.sin(x * 0.0051 + 2.4) * 26;
+          if (x === -overscan) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        // Sparse stars / reference points.
+        ctx.fillStyle = 'rgba(247,247,242,0.36)';
+        for (let i = 0; i < 34; i++) {
+          const x = ((i * 193) % (w + overscan * 2)) - overscan;
+          const y = ((i * 71) % Math.max(40, horizonY - 45)) - 12;
+          ctx.fillRect(x, y, 1.2, 1.2);
+        }
+        ctx.restore();
+      }
+
+      function drawRoadGrid(w, h, horizonY, bottomY, roadWidth, overscan) {
+        const cx = w / 2;
+        const rows = 24;
+        const nearHalf = roadWidth * 0.76;
+
+        ctx.save();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(247,247,242,0.52)';
+
+        // Ground scan lines. Perspective spacing is animated by distance.
+        const phase = (state.distance * 0.035) % 1;
+        for (let i = 0; i <= rows; i++) {
+          const t = (i + phase) / rows;
+          if (t > 1) continue;
+          const perspective = t * t;
+          const y = lerp(horizonY, bottomY, perspective);
+          const center = roadCenterAt(t, cx, roadWidth);
+          const half = nearHalf * t;
+
+          ctx.globalAlpha = 0.22 + t * 0.62;
+          ctx.beginPath();
+          ctx.moveTo(center - half, y);
+          ctx.lineTo(center + half, y);
+          ctx.stroke();
+        }
+
+        // Road edges and lane lines as rays sampled through the curved road.
+        const laneFractions = [-1, -0.34, 0.34, 1];
+        laneFractions.forEach((lane, index) => {
+          ctx.globalAlpha = index === 0 || index === laneFractions.length - 1 ? 0.95 : 0.46;
+          ctx.beginPath();
+          for (let i = 0; i <= 70; i++) {
+            const t = i / 70;
+            const perspective = t * t;
+            const y = lerp(horizonY, bottomY, perspective);
+            const center = roadCenterAt(t, cx, roadWidth);
+            const x = center + nearHalf * t * lane;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        });
+
+        // Outside ground rays.
+        ctx.globalAlpha = 0.2;
+        for (let i = -9; i <= 9; i++) {
+          if (Math.abs(i) < 3) continue;
+          ctx.beginPath();
+          ctx.moveTo(cx, horizonY);
+          ctx.lineTo(cx + i * roadWidth * 0.33, h + overscan * 0.25);
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+
+      function drawTrackMarkers(w, h, horizonY, roadWidth) {
+        const cx = w / 2;
+        const markerCount = 9;
+
+        ctx.save();
+        ctx.strokeStyle = 'rgba(247,247,242,0.75)';
+        ctx.lineWidth = 1;
+
+        for (let i = 0; i < markerCount; i++) {
+          const cycle = (state.distance * 0.018 + i / markerCount) % 1;
+          const t = cycle * cycle;
+          const y = lerp(horizonY + 2, h * 1.05, t);
+          const center = roadCenterAt(cycle, cx, roadWidth);
+          const half = roadWidth * 0.76 * cycle;
+          const postHeight = 7 + t * 52;
+          const side = i % 2 === 0 ? -1 : 1;
+          const x = center + half * side;
+
+          ctx.globalAlpha = 0.2 + cycle * 0.7;
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x, y - postHeight);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function drawCockpit(w, h) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(247,247,242,0.72)';
+        ctx.fillStyle = 'rgba(9,11,16,0.92)';
+        ctx.lineWidth = 1.4;
+
+        ctx.beginPath();
+        ctx.moveTo(-40, h + 18);
+        ctx.lineTo(w * 0.16, h * 0.88);
+        ctx.lineTo(w * 0.36, h * 0.94);
+        ctx.lineTo(w * 0.64, h * 0.94);
+        ctx.lineTo(w * 0.84, h * 0.88);
+        ctx.lineTo(w + 40, h + 18);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Steering wheel / yoke hint.
+        const wheelX = w / 2;
+        const wheelY = h * 0.94;
+        ctx.translate(wheelX, wheelY);
+        ctx.rotate(state.steering * 0.38);
+        ctx.beginPath();
+        ctx.arc(0, 0, Math.min(w, h) * 0.12, Math.PI * 1.08, Math.PI * 1.92);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-34, -8);
+        ctx.lineTo(0, 17);
+        ctx.lineTo(34, -8);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawHud(w, h) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(247,247,242,0.9)';
+        ctx.strokeStyle = 'rgba(247,247,242,0.5)';
+        ctx.font = '700 12px ui-monospace, SFMono-Regular, Menlo, monospace';
+        ctx.textBaseline = 'top';
+
+        const speed = Math.round(state.speed).toString().padStart(3, '0');
+        ctx.fillText(`${speed} KM/H`, 20, 20);
+
+        const label = state.sensorMode ? 'MOTION' : 'MANUAL';
+        const labelWidth = ctx.measureText(label).width;
+        ctx.fillText(label, w - labelWidth - 20, 20);
+
+        // Fixed crosshair and steering bar, both inside the stabilised scene.
+        const crossX = w / 2;
+        const crossY = h * 0.39;
+        ctx.beginPath();
+        ctx.moveTo(crossX - 8, crossY);
+        ctx.lineTo(crossX + 8, crossY);
+        ctx.moveTo(crossX, crossY - 8);
+        ctx.lineTo(crossX, crossY + 8);
+        ctx.stroke();
+
+        const barWidth = Math.min(180, w * 0.42);
+        const barX = (w - barWidth) / 2;
+        const barY = h - 33;
+        ctx.globalAlpha = 0.5;
+        ctx.strokeRect(barX, barY, barWidth, 4);
+        ctx.globalAlpha = 0.95;
+        ctx.fillRect(barX + barWidth / 2 + state.steering * barWidth * 0.46 - 2, barY - 4, 4, 12);
+
+        ctx.restore();
+      }
+
+      function updateDebug() {
+        if (!state.running) return;
+
+        const rollDegrees = Math.round(state.roll * DEG);
+        const steerPercent = Math.round(state.steering * 100);
+        debug.textContent = state.sensorMode
+          ? `roll ${rollDegrees}°\nsteer ${steerPercent}%`
+          : `drag to steer\nsteer ${steerPercent}%`;
+      }
+
+      function frame(now) {
+        const dt = Math.min(0.05, Math.max(0, (now - state.lastTime) / 1000));
+        state.lastTime = now;
+
+        update(dt);
+        drawScene();
+        updateDebug();
+        requestAnimationFrame(frame);
+      }
+
+      resize();
+      requestAnimationFrame(frame);
+    })();
+  </script>
+</body>
+</html>
