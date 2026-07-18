@@ -25,6 +25,13 @@ replaceRequired(
   'GLTFLoader and world asset imports'
 );
 
+// Let the new distant mountains sit at the horizon instead of disappearing into the old close fog.
+replaceRequired(
+  'scene.fog = new THREE.Fog(0x74c0fc, 110, 420);',
+  'scene.fog = new THREE.Fog(0x74c0fc, 180, 700);',
+  'longer horizon fog'
+);
+
 // Motion has two separate jobs:
 // 1. Horizon roll is absolute and follows gravity in screen coordinates.
 // 2. Steering is relative to the player's chosen neutral steering position.
@@ -102,20 +109,32 @@ replaceRequired(
   'remove digital gas binding'
 );
 
-// Make the road read as one wide asphalt ribbon with flat red/white curbs.
+// Build a clearly readable road: dark asphalt, red/white curbs and a dashed white centre line.
+// The previous road triangles were wound downward, so the asphalt itself was back-face culled.
 replaceRequired('const TRACK_WIDTH = 18;', 'const TRACK_WIDTH = 24;', 'wider road');
 
 const roadFunction = `function makeRoad() {
   const roadPositions = [];
+  const roadColors = [];
   const roadIndices = [];
+  const asphaltDark = new THREE.Color(0x34383d);
+  const asphaltLight = new THREE.Color(0x4a4f55);
 
   for (let i = 0; i <= TRACK_SAMPLES; i += 1) {
     const sample = samples[i % TRACK_SAMPLES];
     const left = sample.point.clone().addScaledVector(sample.normal, TRACK_WIDTH / 2);
     const right = sample.point.clone().addScaledVector(sample.normal, -TRACK_WIDTH / 2);
-    left.y = 0.12;
-    right.y = 0.12;
+    left.y = 0.13;
+    right.y = 0.13;
     roadPositions.push(left.x, left.y, left.z, right.x, right.y, right.z);
+
+    const variation = THREE.MathUtils.clamp(
+      0.42 + Math.sin(i * 0.19) * 0.12 + Math.sin(i * 0.73 + 1.4) * 0.07,
+      0,
+      1
+    );
+    const color = asphaltDark.clone().lerp(asphaltLight, variation);
+    roadColors.push(color.r, color.g, color.b, color.r, color.g, color.b);
   }
 
   for (let i = 0; i < TRACK_SAMPLES; i += 1) {
@@ -123,17 +142,24 @@ const roadFunction = `function makeRoad() {
     const b = a + 1;
     const c = a + 2;
     const d = a + 3;
-    roadIndices.push(a, b, c, b, d, c);
+    // Reverse the old winding so the road faces upward toward the camera.
+    roadIndices.push(a, c, b, b, c, d);
   }
 
   const roadGeometry = new THREE.BufferGeometry();
   roadGeometry.setAttribute('position', new THREE.Float32BufferAttribute(roadPositions, 3));
+  roadGeometry.setAttribute('color', new THREE.Float32BufferAttribute(roadColors, 3));
   roadGeometry.setIndex(roadIndices);
   roadGeometry.computeVertexNormals();
 
   const road = new THREE.Mesh(
     roadGeometry,
-    new THREE.MeshStandardMaterial({ color: 0x686d73, roughness: 0.96, metalness: 0 })
+    new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      roughness: 0.98,
+      metalness: 0,
+      side: THREE.DoubleSide
+    })
   );
   road.receiveShadow = true;
   world.add(road);
@@ -152,10 +178,10 @@ const roadFunction = `function makeRoad() {
       const innerOffset = side * (TRACK_WIDTH / 2 - 0.05);
       const outerOffset = side * (TRACK_WIDTH / 2 + curbWidth);
 
-      const a = current.point.clone().addScaledVector(current.normal, innerOffset).setY(0.155);
-      const b = current.point.clone().addScaledVector(current.normal, outerOffset).setY(0.155);
-      const c = next.point.clone().addScaledVector(next.normal, innerOffset).setY(0.155);
-      const d = next.point.clone().addScaledVector(next.normal, outerOffset).setY(0.155);
+      const a = current.point.clone().addScaledVector(current.normal, innerOffset).setY(0.165);
+      const b = current.point.clone().addScaledVector(current.normal, outerOffset).setY(0.165);
+      const c = next.point.clone().addScaledVector(next.normal, innerOffset).setY(0.165);
+      const d = next.point.clone().addScaledVector(next.normal, outerOffset).setY(0.165);
 
       positions.push(
         a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z,
@@ -175,11 +201,42 @@ const roadFunction = `function makeRoad() {
 
     const curb = new THREE.Mesh(
       curbGeometry,
-      new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0 })
+      new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        roughness: 0.9,
+        metalness: 0,
+        side: THREE.DoubleSide
+      })
     );
     curb.receiveShadow = true;
     world.add(curb);
   }
+
+  const dashStep = 8;
+  const dashCount = Math.ceil(TRACK_SAMPLES / dashStep);
+  const dashGeometry = new THREE.BoxGeometry(0.34, 0.045, 5.2);
+  const dashMaterial = new THREE.MeshStandardMaterial({
+    color: 0xfaf8ee,
+    roughness: 0.92,
+    metalness: 0
+  });
+  const centreLine = new THREE.InstancedMesh(dashGeometry, dashMaterial, dashCount);
+  const marker = new THREE.Object3D();
+  let dashIndex = 0;
+
+  for (let i = 0; i < TRACK_SAMPLES; i += dashStep) {
+    const sample = samples[i];
+    marker.position.copy(sample.point);
+    marker.position.y = 0.19;
+    marker.rotation.set(0, Math.atan2(sample.tangent.x, sample.tangent.z), 0);
+    marker.updateMatrix();
+    centreLine.setMatrixAt(dashIndex, marker.matrix);
+    dashIndex += 1;
+  }
+
+  centreLine.instanceMatrix.needsUpdate = true;
+  centreLine.receiveShadow = true;
+  world.add(centreLine);
 }`;
 
 replaceRequired(
