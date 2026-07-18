@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#10151f">
+  <title>Marble Lab</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main id="app" aria-label="Marble Lab sandbox">
+    <canvas id="game" aria-label="3D marble run building area"></canvas>
+
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">SANDBOX</p>
+        <h1>MARBLE LAB</h1>
+      </div>
+      <div class="top-actions">
+        <button id="undoButton" class="icon-button" type="button" aria-label="Undo last action" title="Undo">↶</button>
+        <button id="clearButton" class="icon-button danger" type="button" aria-label="Clear board" title="Clear board">⌫</button>
+      </div>
+    </header>
+
+    <aside id="selectionPanel" class="selection-panel" aria-live="polite">
+      <div>
+        <span class="selection-label">Selected node</span>
+        <strong id="heightValue">Height 0</strong>
+      </div>
+      <div class="height-buttons">
+        <button id="lowerButton" type="button" aria-label="Lower selected node">−</button>
+        <button id="raiseButton" type="button" aria-label="Raise selected node">＋</button>
+      </div>
+    </aside>
+
+    <section class="hint" id="hint">
+      <strong>Build a route.</strong>
+      <span>Place a Start, add Nodes, then place a Finish.</span>
+    </section>
+
+    <nav class="tool-dock" aria-label="Build tools">
+      <button class="tool active" type="button" data-tool="node" aria-pressed="true">
+        <span class="tool-icon node-icon"></span>
+        <span>Node</span>
+      </button>
+      <button class="tool" type="button" data-tool="start" aria-pressed="false">
+        <span class="tool-icon start-icon">●</span>
+        <span>Start</span>
+      </button>
+      <button class="tool" type="button" data-tool="finish" aria-pressed="false">
+        <span class="tool-icon finish-icon">◆</span>
+        <span>Finish</span>
+      </button>
+      <button class="tool" type="button" data-tool="delete" aria-pressed="false">
+        <span class="tool-icon delete-icon">×</span>
+        <span>Delete</span>
+      </button>
+      <button id="playButton" class="play-button" type="button">
+        <span id="playIcon">▶</span>
+        <span id="playLabel">PLAY</span>
+      </button>
+    </nav>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </main>
+
+  <script type="module" src="./game.js"></script>
+</body>
+</html>
