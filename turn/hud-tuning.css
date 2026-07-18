@@ -4,33 +4,46 @@
 
 .stats .chip {
   min-width: 0;
+  height: clamp(58px, 8vh, 66px);
+  box-sizing: border-box;
   flex: 0 0 auto;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.stats .chip strong,
+.stats .chip strong span {
+  white-space: nowrap;
 }
 
 .stats .chip:nth-child(1) {
-  width: clamp(108px, 12vw, 132px);
+  width: clamp(124px, 14vw, 150px);
 }
 
 .stats .chip:nth-child(2) {
-  width: clamp(72px, 8vw, 92px);
+  width: clamp(78px, 9vw, 98px);
 }
 
 .stats .chip:nth-child(3),
 .stats .chip:nth-child(4) {
-  width: clamp(112px, 13vw, 142px);
+  width: clamp(122px, 14vw, 152px);
 }
 
 @media (max-height: 430px) {
+  .stats .chip {
+    height: 58px;
+  }
+
   .stats .chip:nth-child(1) {
-    width: 108px;
+    width: 124px;
   }
 
   .stats .chip:nth-child(2) {
-    width: 72px;
+    width: 78px;
   }
 
   .stats .chip:nth-child(3),
   .stats .chip:nth-child(4) {
-    width: 114px;
+    width: 126px;
   }
 }
