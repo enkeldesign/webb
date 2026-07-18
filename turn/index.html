@@ -16,6 +16,8 @@
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./vertical-drive.css">
   <link rel="stylesheet" href="./hud-tuning.css">
+  <link rel="stylesheet" href="./install-gate.css">
+  <script src="./install-gate.js"></script>
   <script type="importmap">
     {
       "imports": {
@@ -29,6 +31,37 @@
   <script src="./world-tuning.js"></script>
 </head>
 <body>
+  <section class="install-gate" id="installGate" aria-labelledby="installTitle">
+    <div class="install-shell">
+      <div class="install-art" aria-hidden="true">
+        <img class="install-icon" src="./favicon.svg" alt="">
+      </div>
+
+      <div class="install-card">
+        <span class="install-kicker">made for your phone</span>
+        <h1 id="installTitle">TURN</h1>
+        <p class="install-copy">
+          TURN is built to feel like a real mobile game. Install it to your Home Screen for fullscreen racing without the browser around it.
+        </p>
+        <div class="install-actions">
+          <button class="install-primary" id="installTurnButton" type="button">Install TURN</button>
+          <button class="install-secondary" id="playBrowserButton" type="button">Play in browser anyway</button>
+        </div>
+        <p class="install-note" id="installNote">Takes a few seconds. Your saved rivals stay on this device.</p>
+      </div>
+    </div>
+
+    <div class="install-guide" id="installGuide" role="dialog" aria-modal="true" aria-labelledby="installGuideTitle" hidden>
+      <div class="install-guide-card">
+        <div class="install-guide-head">
+          <h2 id="installGuideTitle">Add TURN to your Home Screen</h2>
+          <button class="install-close" id="installGuideClose" type="button" aria-label="Close install instructions">×</button>
+        </div>
+        <div class="install-steps" id="installSteps"></div>
+      </div>
+    </div>
+  </section>
+
   <div id="game" aria-label="Third-person motion-controlled arcade racing game"></div>
 
   <section class="panel" id="intro" aria-labelledby="title">
