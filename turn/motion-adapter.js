@@ -14,11 +14,45 @@ function replaceRequired(search, replacement, label) {
   source = next;
 }
 
-// Steering: keep the horizon correction exactly as it is, but invert only the car input.
+// Motion has two separate jobs:
+// 1. Horizon roll is absolute and follows gravity in the current screen orientation.
+// 2. Steering is relative to the player's chosen neutral steering position.
+// DeviceMotion coordinates stay in the phone's natural portrait coordinate system, so
+// compensate for the browser's current landscape orientation before using roll.
+replaceRequired(
+  'function motionPoseFromGravity(event) {',
+  `function getScreenOrientationAngle() {
+  const degrees = Number.isFinite(screen.orientation?.angle)
+    ? screen.orientation.angle
+    : Number(window.orientation || 0);
+  return THREE.MathUtils.degToRad(degrees);
+}
+
+function motionPoseFromGravity(event) {`,
+  'screen orientation helper'
+);
+
+replaceRequired(
+  '    roll: normalizeAngle(Math.atan2(gravity.x, -gravity.y)),',
+  '    roll: normalizeAngle(Math.atan2(gravity.x, -gravity.y) - getScreenOrientationAngle()),',
+  'landscape-aware absolute roll'
+);
+
+// Steering keeps the sensitivity the player liked, but uses the opposite sign from raw roll.
 replaceRequired(
   'state.steering = Math.sign(linearSteer) * Math.pow(Math.abs(linearSteer), 0.78);',
   'state.steering = -Math.sign(linearSteer) * Math.pow(Math.abs(linearSteer), 0.78);',
   'motion steering direction'
+);
+
+// The horizon must not use the steering calibration reference. A centered steering wheel
+// can be held at any physical angle, while the rendered horizon must always stay level with
+// the real-world horizon.
+replaceRequired(
+  `    const horizonRoll = normalizeAngle(state.roll - state.horizonRollReference);
+    camera.rotateZ(-horizonRoll);`,
+  '    camera.rotateZ(-state.roll);',
+  'absolute horizon stabilization'
 );
 
 // Return acceleration/braking to direct controls. Pitch is no longer used for driving.
