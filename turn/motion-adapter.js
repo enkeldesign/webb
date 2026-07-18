@@ -1,91 +1,189 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js';
+// TURN runtime adaptations.
+// Keep the main prototype readable while applying experimental control/rendering changes
+// before the module is evaluated.
 
-// TURN's horizon correction already has the right visual direction, while the
-// steering input from the same roll sensor needs the opposite sign. Feed the
-// game an inverted roll value, then invert Camera.rotateZ so only the horizon
-// correction keeps its existing direction.
-const nativeAddEventListener = window.addEventListener;
-window.addEventListener = function addEventListenerWithTurnMotion(type, listener, options) {
-  if (type !== 'devicemotion' || typeof listener !== 'function') {
-    return nativeAddEventListener.call(this, type, listener, options);
-  }
+globalThis.__turnAnalogGas = 0;
 
-  const wrappedListener = (event) => {
-    const gravity = event.accelerationIncludingGravity;
-    if (!gravity || gravity.x == null) {
-      listener.call(window, event);
-      return;
-    }
+const response = await fetch('./game.js', { cache: 'no-store' });
+if (!response.ok) throw new Error(`Could not load game.js (${response.status})`);
+let source = await response.text();
 
-    const correctedEvent = Object.create(event);
-    Object.defineProperty(correctedEvent, 'accelerationIncludingGravity', {
-      configurable: true,
-      enumerable: true,
-      value: {
-        x: -gravity.x,
-        y: gravity.y,
-        z: gravity.z
-      }
-    });
-
-    listener.call(window, correctedEvent);
-  };
-
-  return nativeAddEventListener.call(this, type, wrappedListener, options);
-};
-
-const nativeRotateZ = THREE.Object3D.prototype.rotateZ;
-THREE.Camera.prototype.rotateZ = function rotateZWithTurnHorizon(angle) {
-  return nativeRotateZ.call(this, -angle);
-};
-
-// The procedural wheels are CylinderGeometry objects whose visible geometry is
-// rotated so the axle lies on X. Track the immediate spinner parent so the
-// legacy Y-axis spin can be transferred to the physically correct X axis.
-const wheelSpinners = new Set();
-const nativeGroupAdd = THREE.Group.prototype.add;
-
-THREE.Group.prototype.add = function addAndFindTurnWheelSpinners(...objects) {
-  const result = nativeGroupAdd.apply(this, objects);
-
-  if (objects.length === 1 && this.children.length === 1) {
-    const candidate = objects[0];
-    const isOutlinedCylinder =
-      candidate?.isGroup &&
-      candidate.children?.length === 2 &&
-      candidate.children.every(
-        (child) => child.isMesh && child.geometry?.type === 'CylinderGeometry'
-      );
-
-    if (isOutlinedCylinder) wheelSpinners.add(this);
-  }
-
-  return result;
-};
-
-await import('./game.js');
-
-const tiltNeedle = document.querySelector('#tiltNeedle');
-
-function applyPostFrameFixes() {
-  for (const spinner of wheelSpinners) {
-    const ySpin = spinner.rotation.y;
-    if (Math.abs(ySpin) > 0.000001) {
-      spinner.rotation.x += ySpin;
-      spinner.rotation.y = 0;
-    }
-  }
-
-  // game.js still writes the old horizontal percentage. Reuse that value for
-  // the new vertical presentation: gas goes up, brake goes down.
-  if (tiltNeedle) {
-    const horizontalPercent = Number.parseFloat(tiltNeedle.style.left);
-    if (Number.isFinite(horizontalPercent)) {
-      tiltNeedle.style.setProperty('--tilt-top', `${100 - horizontalPercent}%`);
-    }
-  }
-
-  requestAnimationFrame(applyPostFrameFixes);
+function replaceRequired(search, replacement, label) {
+  const next = source.replace(search, replacement);
+  if (next === source) console.warn(`TURN patch not applied: ${label}`);
+  source = next;
 }
 
-requestAnimationFrame(applyPostFrameFixes);
+// Steering: keep the horizon correction exactly as it is, but invert only the car input.
+replaceRequired(
+  'state.steering = Math.sign(linearSteer) * Math.pow(Math.abs(linearSteer), 0.78);',
+  'state.steering = -Math.sign(linearSteer) * Math.pow(Math.abs(linearSteer), 0.78);',
+  'motion steering direction'
+);
+
+// Return acceleration/braking to direct controls. Pitch is no longer used for driving.
+replaceRequired(
+  /  const pitchDelta = state\.neutralPitch - state\.pitch;[\s\S]*?  state\.tiltDrive = Math\.sign\(pitchDelta\) \* Math\.pow\(driveMagnitude, 0\.72\);/,
+  '  state.tiltDrive = 0;',
+  'remove tilt drive input'
+);
+replaceRequired(
+  '  const tiltGas = Math.max(0, state.tiltDrive);',
+  '  const tiltGas = Math.max(0, globalThis.__turnAnalogGas || 0);',
+  'analog throttle input'
+);
+replaceRequired(
+  '  const tiltBrake = Math.max(0, -state.tiltDrive);',
+  '  const tiltBrake = 0;',
+  'remove tilt braking'
+);
+replaceRequired(
+  "bindHold(gasButton, 'touchGas');",
+  '// Gas is analog and handled by motion-adapter.js.',
+  'remove digital gas binding'
+);
+
+// Make the road read as one wide asphalt ribbon with flat red/white curbs.
+replaceRequired('const TRACK_WIDTH = 18;', 'const TRACK_WIDTH = 24;', 'wider road');
+
+const roadFunction = `function makeRoad() {
+  const roadPositions = [];
+  const roadIndices = [];
+
+  for (let i = 0; i <= TRACK_SAMPLES; i += 1) {
+    const sample = samples[i % TRACK_SAMPLES];
+    const left = sample.point.clone().addScaledVector(sample.normal, TRACK_WIDTH / 2);
+    const right = sample.point.clone().addScaledVector(sample.normal, -TRACK_WIDTH / 2);
+    left.y = 0.12;
+    right.y = 0.12;
+    roadPositions.push(left.x, left.y, left.z, right.x, right.y, right.z);
+  }
+
+  for (let i = 0; i < TRACK_SAMPLES; i += 1) {
+    const a = i * 2;
+    const b = a + 1;
+    const c = a + 2;
+    const d = a + 3;
+    roadIndices.push(a, b, c, b, d, c);
+  }
+
+  const roadGeometry = new THREE.BufferGeometry();
+  roadGeometry.setAttribute('position', new THREE.Float32BufferAttribute(roadPositions, 3));
+  roadGeometry.setIndex(roadIndices);
+  roadGeometry.computeVertexNormals();
+
+  const road = new THREE.Mesh(
+    roadGeometry,
+    new THREE.MeshStandardMaterial({ color: 0x686d73, roughness: 0.96, metalness: 0 })
+  );
+  road.receiveShadow = true;
+  world.add(road);
+
+  const curbWidth = 1.75;
+  const curbSegmentLength = 12;
+  const curbColors = [new THREE.Color(0xe63946), new THREE.Color(0xfff8e8)];
+
+  for (const side of [-1, 1]) {
+    const positions = [];
+    const colors = [];
+
+    for (let i = 0; i < TRACK_SAMPLES; i += 1) {
+      const current = samples[i];
+      const next = samples[(i + 1) % TRACK_SAMPLES];
+      const innerOffset = side * (TRACK_WIDTH / 2 - 0.05);
+      const outerOffset = side * (TRACK_WIDTH / 2 + curbWidth);
+
+      const a = current.point.clone().addScaledVector(current.normal, innerOffset).setY(0.155);
+      const b = current.point.clone().addScaledVector(current.normal, outerOffset).setY(0.155);
+      const c = next.point.clone().addScaledVector(next.normal, innerOffset).setY(0.155);
+      const d = next.point.clone().addScaledVector(next.normal, outerOffset).setY(0.155);
+
+      positions.push(
+        a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z,
+        b.x, b.y, b.z, d.x, d.y, d.z, c.x, c.y, c.z
+      );
+
+      const color = curbColors[Math.floor(i / curbSegmentLength) % 2];
+      for (let vertex = 0; vertex < 6; vertex += 1) {
+        colors.push(color.r, color.g, color.b);
+      }
+    }
+
+    const curbGeometry = new THREE.BufferGeometry();
+    curbGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    curbGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    curbGeometry.computeVertexNormals();
+
+    const curb = new THREE.Mesh(
+      curbGeometry,
+      new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0 })
+    );
+    curb.receiveShadow = true;
+    world.add(curb);
+  }
+}`;
+
+replaceRequired(
+  /function makeRoad\(\) \{[\s\S]*?\n\}\n\nfunction makeScenery\(\) \{/,
+  `${roadFunction}\n\nfunction makeScenery() {`,
+  'road rendering'
+);
+
+const moduleUrl = URL.createObjectURL(new Blob([source], { type: 'text/javascript' }));
+try {
+  await import(moduleUrl);
+} finally {
+  URL.revokeObjectURL(moduleUrl);
+}
+
+// Analog throttle: touch the pedal for a useful base input, drag upward for more
+// and downward for less. Releasing the pedal always returns throttle to zero.
+const gasButton = document.querySelector('#gasButton');
+let gasPointerId = null;
+let gasStartY = 0;
+const GAS_BASE = 0.42;
+const GAS_DRAG_RANGE = 72;
+
+function setAnalogGas(value) {
+  const throttle = Math.max(0, Math.min(1, value));
+  globalThis.__turnAnalogGas = throttle;
+  gasButton.style.setProperty('--gas-level', throttle.toFixed(3));
+  gasButton.textContent = throttle > 0 ? `Gas ${Math.round(throttle * 100)}%` : 'Gas';
+  gasButton.setAttribute('aria-label', throttle > 0 ? `Gas ${Math.round(throttle * 100)} percent` : 'Gas');
+}
+
+function releaseGas(event) {
+  if (gasPointerId === null || (event && event.pointerId !== gasPointerId)) return;
+  gasButton.releasePointerCapture?.(gasPointerId);
+  gasPointerId = null;
+  gasButton.classList.remove('is-dragging');
+  setAnalogGas(0);
+}
+
+gasButton.addEventListener('pointerdown', (event) => {
+  event.preventDefault();
+  gasPointerId = event.pointerId;
+  gasStartY = event.clientY;
+  gasButton.setPointerCapture?.(event.pointerId);
+  gasButton.classList.add('is-dragging');
+  setAnalogGas(GAS_BASE);
+});
+
+gasButton.addEventListener('pointermove', (event) => {
+  if (event.pointerId !== gasPointerId) return;
+  event.preventDefault();
+  const drag = (gasStartY - event.clientY) / GAS_DRAG_RANGE;
+  setAnalogGas(GAS_BASE + drag);
+});
+
+gasButton.addEventListener('pointerup', releaseGas);
+gasButton.addEventListener('pointercancel', releaseGas);
+gasButton.addEventListener('lostpointercapture', () => {
+  if (gasPointerId !== null) {
+    gasPointerId = null;
+    gasButton.classList.remove('is-dragging');
+    setAnalogGas(0);
+  }
+});
+
+setAnalogGas(0);
