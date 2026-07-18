@@ -236,39 +236,116 @@ function placeTracksideTown({ world, samples, trackWidth, buildings, garage, fou
   }
 }
 
-function placeAssetHorizon({ world, hill, cloud }) {
-  const mountainPalette = [0x657493, 0x7483a6, 0x596986, 0x8792ad];
+function getTrackCentroid(samples) {
+  const center = new THREE.Vector3();
 
-  for (let i = 0; i < 16; i += 1) {
+  for (const sample of samples) {
+    center.add(sample.point);
+  }
+
+  return center.multiplyScalar(1 / samples.length);
+}
+
+function placeAssetHorizon({ world, samples, hill, cloud }) {
+  const mountainPalette = [0x657493, 0x7483a6, 0x596986, 0x8792ad];
+  const centroid = getTrackCentroid(samples);
+
+  // Färre, större "bergsegment" som följer banans form.
+  const guideStep = 34;
+  const ridgePoints = [];
+
+  for (let i = 0; i < samples.length; i += guideStep) {
+    const sample = samples[i];
     const random = seeded01(700 + i);
-    const secondRandom = seeded01(800 + i);
-    const angle = (i / 16) * Math.PI * 2 + (random - 0.5) * 0.16;
-    const distance = 430 + random * 105;
+    const random2 = seeded01(800 + i);
+
+    // Tryck ut punkten bort från banans mitt så vi får en yttre
+    // "bergskedja" som följer trackens övergripande siluett.
+    const radial = sample.point.clone().sub(centroid).setY(0);
+
+    if (radial.lengthSq() < 0.0001) {
+      radial.set(sample.normal.x, 0, sample.normal.z);
+    }
+
+    radial.normalize();
+
+    // Huvudgrejen: stor offset ut från banan.
+    const baseOffset = 360 + random * 120;
+
+    // Lite tangentiell variation så det inte blir mekaniskt.
+    const tangentShift = (seeded01(900 + i) - 0.5) * 26;
+
+    const position = sample.point
+      .clone()
+      .addScaledVector(radial, baseOffset)
+      .addScaledVector(sample.tangent, tangentShift);
+
+    ridgePoints.push({
+      sample,
+      position,
+      radial,
+      random,
+      random2,
+      i
+    });
+  }
+
+  // Främre bergskedja
+  for (const point of ridgePoints) {
     const mountain = prepareModel(hill, {
-      targetHeight: 30 + secondRandom * 24,
+      targetHeight: 32 + point.random2 * 26,
       castShadow: false,
-      tint: mountainPalette[i % mountainPalette.length],
-      tintAmount: 0.9
+      tint: mountainPalette[point.i % mountainPalette.length],
+      tintAmount: 0.92
     });
 
-    const horizontalScale = 3.2 + seeded01(850 + i) * 2.6;
-    mountain.scale.multiply(new THREE.Vector3(horizontalScale, 0.68, horizontalScale));
-    mountain.position.set(
-      Math.cos(angle) * distance,
-      -7.5,
-      Math.sin(angle) * distance
+    const horizontalScale = 3.8 + seeded01(1000 + point.i) * 2.8;
+    mountain.scale.multiply(
+      new THREE.Vector3(horizontalScale, 0.62, horizontalScale)
     );
-    mountain.rotation.y = random * Math.PI * 2;
+
+    mountain.position.copy(point.position);
+    mountain.position.y = -8.5;
+    mountain.rotation.y =
+      Math.atan2(point.radial.x, point.radial.z) +
+      (seeded01(1100 + point.i) - 0.5) * 0.8;
+
     world.add(mountain);
   }
 
+  // Bakre bergskedja för mer horisontkänsla / lager-på-lager
+  for (let index = 0; index < ridgePoints.length; index += 2) {
+    const point = ridgePoints[index];
+    const farMountain = prepareModel(hill, {
+      targetHeight: 48 + point.random2 * 34,
+      castShadow: false,
+      tint: 0x7382a0,
+      tintAmount: 0.96
+    });
+
+    const horizontalScale = 5.2 + seeded01(1200 + point.i) * 3.6;
+    farMountain.scale.multiply(
+      new THREE.Vector3(horizontalScale, 0.58, horizontalScale)
+    );
+
+    farMountain.position.copy(point.position).addScaledVector(point.radial, 110);
+    farMountain.position.y = -13;
+    farMountain.rotation.y =
+      Math.atan2(point.radial.x, point.radial.z) +
+      (seeded01(1300 + point.i) - 0.5) * 0.6;
+
+    world.add(farMountain);
+  }
+
+  // Moln kan fortsätta vara mer cirkulärt placerade
   for (let i = 0; i < 12; i += 1) {
     const angle = (i / 12) * Math.PI * 2;
     const cloudModel = prepareModel(cloud, {
       targetSize: 34 + seeded01(900 + i) * 36,
       castShadow: false
     });
-    const distance = 300 + seeded01(950 + i) * 180;
+
+    const distance = 340 + seeded01(950 + i) * 180;
     cloudModel.position.set(
       Math.cos(angle) * distance,
       70 + seeded01(1000 + i) * 70,
