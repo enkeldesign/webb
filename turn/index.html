@@ -1038,7 +1038,7 @@
 
       if (state.sensorMode) {
         const viewRoll = normalizeAngle(state.roll - state.neutralRoll);
-        camera.rotateZ(viewRoll);
+        camera.rotateZ(-viewRoll);
       }
 
       camera.fov = THREE.MathUtils.lerp(camera.fov, 67 + speedRatio * 12, Math.min(1, dt * 4));
