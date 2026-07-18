@@ -3,11 +3,20 @@
   if (!orientation) return;
 
   const prototype = Object.getPrototypeOf(orientation);
-  const angleDescriptor = prototype && Object.getOwnPropertyDescriptor(prototype, 'angle');
-  const nativeAngleGetter = angleDescriptor?.get;
+  const ownAngleDescriptor = Object.getOwnPropertyDescriptor(orientation, 'angle');
+  const prototypeAngleDescriptor = prototype && Object.getOwnPropertyDescriptor(prototype, 'angle');
 
-  if (!nativeAngleGetter || angleDescriptor.configurable === false) {
-    console.info('TURN: ScreenOrientation angle could not be shimmed; using browser values as-is.');
+  let readBrowserAngle = null;
+  if (ownAngleDescriptor?.get) {
+    readBrowserAngle = () => ownAngleDescriptor.get.call(orientation);
+  } else if (ownAngleDescriptor && 'value' in ownAngleDescriptor) {
+    readBrowserAngle = () => ownAngleDescriptor.value;
+  } else if (prototypeAngleDescriptor?.get) {
+    readBrowserAngle = () => prototypeAngleDescriptor.get.call(orientation);
+  }
+
+  if (!readBrowserAngle) {
+    console.info('TURN: no readable ScreenOrientation angle; using browser values as-is.');
     return;
   }
 
@@ -33,33 +42,57 @@
 
   function resolvedAngle(screenAngle) {
     const normalizedScreenAngle = normalizeDegrees(screenAngle);
-    const screenMatchesViewport = angleIsLandscape(normalizedScreenAngle) === viewportIsLandscape();
+    const viewportLandscape = viewportIsLandscape();
+    const screenMatchesViewport = angleIsLandscape(normalizedScreenAngle) === viewportLandscape;
 
-    // Keep the normal Screen Orientation API path untouched when it agrees with the
-    // actual viewport. This is the path used by iPhone 16 and other working devices.
+    // Preserve the normal Screen Orientation API path when it agrees with the actual
+    // viewport. This keeps the existing iPhone 16 behaviour unchanged.
     if (normalizedScreenAngle != null && screenMatchesViewport) return normalizedScreenAngle;
 
-    // Some standalone iPad web apps can expose a portrait-like screen angle while their
-    // viewport is already landscape. WebKit's legacy orientation value still reflects the
-    // physical quarter-turn in that case, so use it only when it resolves the mismatch.
+    // Some standalone iPad web apps expose a portrait-like screen angle while their
+    // viewport is already landscape. WebKit's legacy orientation value can still reflect
+    // the physical quarter-turn, so use it only when it actually resolves that mismatch.
     const legacyAngle = normalizeDegrees(Number(window.orientation));
-    const legacyMatchesViewport = angleIsLandscape(legacyAngle) === viewportIsLandscape();
-    if (legacyAngle != null && legacyMatchesViewport) {
-      return legacyAngle;
-    }
+    const legacyMatchesViewport = angleIsLandscape(legacyAngle) === viewportLandscape;
+    if (legacyAngle != null && legacyMatchesViewport) return legacyAngle;
 
-    // Last resort: preserve the browser-provided value rather than guessing which
-    // landscape side the player is holding the device on.
+    // Last resort: keep the browser-provided angle rather than guessing which landscape
+    // side the player is holding the device on.
     return normalizedScreenAngle ?? 0;
   }
 
-  Object.defineProperty(prototype, 'angle', {
-    ...angleDescriptor,
-    get() {
-      const browserAngle = nativeAngleGetter.call(this);
-      return this === screen.orientation ? resolvedAngle(browserAngle) : browserAngle;
-    }
-  });
+  let installed = false;
 
-  console.info('TURN: adaptive screen-orientation compatibility enabled.');
+  // Prefer shadowing only this ScreenOrientation instance. That leaves the browser API
+  // untouched for everything else and works even when the prototype property is locked.
+  try {
+    Object.defineProperty(orientation, 'angle', {
+      configurable: true,
+      enumerable: ownAngleDescriptor?.enumerable ?? prototypeAngleDescriptor?.enumerable ?? true,
+      get() {
+        return resolvedAngle(readBrowserAngle());
+      }
+    });
+    installed = true;
+  } catch (_) {}
+
+  // Fallback for engines that do not allow an own property on ScreenOrientation.
+  if (!installed && prototypeAngleDescriptor?.get && prototypeAngleDescriptor.configurable !== false) {
+    try {
+      Object.defineProperty(prototype, 'angle', {
+        ...prototypeAngleDescriptor,
+        get() {
+          const browserAngle = prototypeAngleDescriptor.get.call(this);
+          return this === screen.orientation ? resolvedAngle(browserAngle) : browserAngle;
+        }
+      });
+      installed = true;
+    } catch (_) {}
+  }
+
+  console.info(
+    installed
+      ? 'TURN: adaptive screen-orientation compatibility enabled.'
+      : 'TURN: ScreenOrientation angle could not be shimmed; using browser values as-is.'
+  );
 })();
