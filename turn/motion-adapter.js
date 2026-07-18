@@ -15,10 +15,10 @@ function replaceRequired(search, replacement, label) {
 }
 
 // Motion has two separate jobs:
-// 1. Horizon roll is absolute and follows gravity in the current screen orientation.
+// 1. Horizon roll is absolute and follows gravity in screen coordinates.
 // 2. Steering is relative to the player's chosen neutral steering position.
-// DeviceMotion coordinates stay in the phone's natural portrait coordinate system, so
-// compensate for the browser's current landscape orientation before using roll.
+// DeviceMotion coordinates use the device's natural axes, so rotate the gravity vector
+// into the current screen axes before deriving roll. This works for both landscape sides.
 replaceRequired(
   'function motionPoseFromGravity(event) {',
   `function getScreenOrientationAngle() {
@@ -28,14 +28,23 @@ replaceRequired(
   return THREE.MathUtils.degToRad(degrees);
 }
 
+function getScreenSpaceRoll(gravity) {
+  const angle = getScreenOrientationAngle();
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  const screenX = gravity.x * cos + gravity.y * sin;
+  const screenY = -gravity.x * sin + gravity.y * cos;
+  return normalizeAngle(Math.atan2(screenX, -screenY));
+}
+
 function motionPoseFromGravity(event) {`,
-  'screen orientation helper'
+  'screen-space gravity helper'
 );
 
 replaceRequired(
   '    roll: normalizeAngle(Math.atan2(gravity.x, -gravity.y)),',
-  '    roll: normalizeAngle(Math.atan2(gravity.x, -gravity.y) - getScreenOrientationAngle()),',
-  'landscape-aware absolute roll'
+  '    roll: getScreenSpaceRoll(gravity),',
+  'screen-space absolute roll'
 );
 
 // Steering keeps the sensitivity the player liked, but uses the opposite sign from raw roll.
@@ -45,9 +54,7 @@ replaceRequired(
   'motion steering direction'
 );
 
-// The horizon must not use the steering calibration reference. A centered steering wheel
-// can be held at any physical angle, while the rendered horizon must always stay level with
-// the real-world horizon.
+// The horizon must not use the steering calibration reference.
 replaceRequired(
   `    const horizonRoll = normalizeAngle(state.roll - state.horizonRollReference);
     camera.rotateZ(-horizonRoll);`,
@@ -176,13 +183,13 @@ const gasButton = document.querySelector('#gasButton');
 let gasPointerId = null;
 let gasStartY = 0;
 const GAS_BASE = 0.42;
-const GAS_DRAG_RANGE = 72;
+const GAS_DRAG_RANGE = 110;
 
 function setAnalogGas(value) {
   const throttle = Math.max(0, Math.min(1, value));
   globalThis.__turnAnalogGas = throttle;
   gasButton.style.setProperty('--gas-level', throttle.toFixed(3));
-  gasButton.textContent = throttle > 0 ? `Gas ${Math.round(throttle * 100)}%` : 'Gas';
+  gasButton.textContent = 'Gas';
   gasButton.setAttribute('aria-label', throttle > 0 ? `Gas ${Math.round(throttle * 100)} percent` : 'Gas');
 }
 
