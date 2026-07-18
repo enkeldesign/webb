@@ -19,14 +19,14 @@
       <span class="kicker">motion drift prototype</span>
       <h1 id="title">TURN</h1>
       <p class="tagline">
-        Turn the phone to steer. Tilt it slightly forward for gas and back for brake. The car is now physically free instead of being locked to the track.
+        Turn the phone to steer. Press and drag the gas pedal up for more throttle or down for less. Brake stays on its own button.
       </p>
       <div class="actions">
         <button id="motionButton" type="button">Enable motion &amp; race</button>
         <button class="secondary" id="manualButton" type="button">Desktop / manual mode</button>
       </div>
       <p class="status" id="status" role="status">
-        Only a small forward/back tilt is needed for full input. Touch pedals still work and override tilt.
+        Steering uses phone rotation. Acceleration and braking are controlled with the on-screen pedals.
       </p>
     </div>
   </section>
@@ -51,7 +51,8 @@
 
     <div class="message" id="message" role="status"></div>
 
-    <div class="tilt-drive" aria-label="Gas and brake input">
+    <!-- Kept in the DOM for the current game module, but hidden by vertical-drive.css. -->
+    <div class="tilt-drive" aria-hidden="true">
       <span><b>brake</b><b>gas</b></span>
       <div class="tilt-track"><i class="tilt-needle" id="tiltNeedle"></i></div>
       <small class="tilt-value" id="tiltValue">neutral</small>
