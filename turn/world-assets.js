@@ -62,12 +62,27 @@ function prepareModel(source, {
   targetHeight = null,
   targetSize = null,
   outline = false,
-  castShadow = true
+  castShadow = true,
+  tint = null,
+  tintAmount = 0.75
 } = {}) {
   const model = source.clone(true);
+  const tintColor = tint == null ? null : new THREE.Color(tint);
 
   model.traverse((node) => {
     if (!node.isMesh) return;
+
+    if (tintColor && node.material) {
+      const sourceMaterials = Array.isArray(node.material) ? node.material : [node.material];
+      const tintedMaterials = sourceMaterials.map((material) => {
+        const clone = material.clone();
+        clone.color?.lerp(tintColor, tintAmount);
+        clone.roughness = Math.max(clone.roughness ?? 0.8, 0.82);
+        return clone;
+      });
+      node.material = Array.isArray(node.material) ? tintedMaterials : tintedMaterials[0];
+    }
+
     node.castShadow = castShadow;
     node.receiveShadow = true;
   });
@@ -116,10 +131,19 @@ function placeAlongTrack({
   castShadow = true,
   faceTrack = false,
   rotationOffset = 0,
-  stretch = null
+  stretch = null,
+  tint = null,
+  tintAmount = 0.75
 }) {
   const { sample, position } = trackPosition(samples, index, side, trackWidth, distance);
-  const model = prepareModel(source, { targetHeight, targetSize, outline, castShadow });
+  const model = prepareModel(source, {
+    targetHeight,
+    targetSize,
+    outline,
+    castShadow,
+    tint,
+    tintAmount
+  });
   model.position.add(position);
 
   if (stretch) model.scale.multiply(stretch);
@@ -212,24 +236,30 @@ function placeTracksideTown({ world, samples, trackWidth, buildings, garage, fou
   }
 }
 
-function placeAssetHorizon({ world, samples, trackWidth, hill, cloud }) {
-  for (let i = 0; i < 14; i += 1) {
-    const side = i % 2 === 0 ? 1 : -1;
+function placeAssetHorizon({ world, hill, cloud }) {
+  const mountainPalette = [0x657493, 0x7483a6, 0x596986, 0x8792ad];
+
+  for (let i = 0; i < 16; i += 1) {
     const random = seeded01(700 + i);
-    const mound = placeAlongTrack({
-      world,
-      samples,
-      trackWidth,
-      source: hill,
-      index: 25 + i * 53,
-      side,
-      distance: 125 + random * 95,
-      targetHeight: 25 + seeded01(800 + i) * 25,
+    const secondRandom = seeded01(800 + i);
+    const angle = (i / 16) * Math.PI * 2 + (random - 0.5) * 0.16;
+    const distance = 430 + random * 105;
+    const mountain = prepareModel(hill, {
+      targetHeight: 30 + secondRandom * 24,
       castShadow: false,
-      rotationOffset: random * Math.PI * 2,
-      stretch: new THREE.Vector3(2.2 + random * 1.8, 0.85, 2.2 + random * 1.8)
+      tint: mountainPalette[i % mountainPalette.length],
+      tintAmount: 0.9
     });
-    mound.position.y = -1.5;
+
+    const horizontalScale = 3.2 + seeded01(850 + i) * 2.6;
+    mountain.scale.multiply(new THREE.Vector3(horizontalScale, 0.68, horizontalScale));
+    mountain.position.set(
+      Math.cos(angle) * distance,
+      -7.5,
+      Math.sin(angle) * distance
+    );
+    mountain.rotation.y = random * Math.PI * 2;
+    world.add(mountain);
   }
 
   for (let i = 0; i < 12; i += 1) {
@@ -238,10 +268,10 @@ function placeAssetHorizon({ world, samples, trackWidth, hill, cloud }) {
       targetSize: 34 + seeded01(900 + i) * 36,
       castShadow: false
     });
-    const distance = 170 + seeded01(950 + i) * 150;
+    const distance = 300 + seeded01(950 + i) * 180;
     cloudModel.position.set(
       Math.cos(angle) * distance,
-      55 + seeded01(1000 + i) * 55,
+      70 + seeded01(1000 + i) * 70,
       Math.sin(angle) * distance
     );
     cloudModel.rotation.y = angle + Math.PI / 2;
@@ -321,7 +351,7 @@ export async function installKenneyWorld({ world, samples, trackWidth }) {
   }
 
   if (hill && cloud) {
-    placeAssetHorizon({ world, samples, trackWidth, hill, cloud });
+    placeAssetHorizon({ world, hill, cloud });
   }
 
   if (flag && garage) {
