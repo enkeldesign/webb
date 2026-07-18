@@ -3,14 +3,24 @@
   display: none !important;
 }
 
-/* Give the analog gas pedal vertical travel without moving the brake pedal. */
+/* The brake stays compact while gas becomes a tall analog pedal. */
 .pedals {
-  padding-top: 46px;
+  padding-top: 18px;
+  align-items: end;
 }
 
 .gas {
   --gas-level: 0;
-  transform: translateY(calc(var(--gas-level) * -42px));
+  width: clamp(92px, 13vw, 138px);
+  height: clamp(150px, 34vh, 245px);
+  border-radius: 999px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 12px 20px;
+  line-height: 1;
+  text-align: center;
+  transform: translateY(calc(var(--gas-level) * -18px));
   transition:
     transform 120ms cubic-bezier(.2, .8, .2, 1),
     box-shadow 120ms ease;
@@ -24,20 +34,23 @@
 
 .gas.is-dragging:active,
 .gas.is-dragging.is-down {
-  transform: translateY(calc(var(--gas-level) * -42px));
+  transform: translateY(calc(var(--gas-level) * -18px));
 }
 
 @media (max-height: 430px) {
   .pedals {
-    padding-top: 34px;
+    padding-top: 10px;
   }
 
   .gas {
-    transform: translateY(calc(var(--gas-level) * -32px));
+    width: clamp(84px, 12vw, 122px);
+    height: clamp(132px, 38vh, 190px);
+    padding-bottom: 16px;
+    transform: translateY(calc(var(--gas-level) * -14px));
   }
 
   .gas.is-dragging:active,
   .gas.is-dragging.is-down {
-    transform: translateY(calc(var(--gas-level) * -32px));
+    transform: translateY(calc(var(--gas-level) * -14px));
   }
 }
