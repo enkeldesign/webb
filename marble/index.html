@@ -3,36 +3,57 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-  <meta name="theme-color" content="#10151f">
+  <meta name="theme-color" content="#07111c">
   <title>Marble Lab</title>
   <link rel="stylesheet" href="./style.css">
   <script type="importmap">
     {
       "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.178.0/build/three.module.js"
+        "three": "https://cdn.jsdelivr.net/npm/three@0.178.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.178.0/examples/jsm/"
       }
     }
   </script>
 </head>
 <body>
-  <main id="app" aria-label="Marble Lab sandbox">
-    <canvas id="game" aria-label="3D marble run building area"></canvas>
+  <main id="app" data-mode="sandbox" aria-label="Marble Lab">
+    <canvas id="game" aria-label="3D marble construction area"></canvas>
+
+    <div id="loadingScreen" class="loading-screen">
+      <div class="loading-orbit"><span></span><span></span><span></span></div>
+      <strong>POWERING UP THE LAB</strong>
+      <small>Loading real physics...</small>
+    </div>
 
     <header class="topbar">
-      <div>
-        <p class="eyebrow">SANDBOX</p>
-        <h1>MARBLE LAB</h1>
+      <div class="brand-block">
+        <p class="eyebrow">MARBLE LAB</p>
+        <div class="mode-switch" aria-label="Game mode">
+          <button class="mode-button active" data-mode-button="sandbox" type="button">SANDBOX</button>
+          <button class="mode-button" data-mode-button="challenge" type="button">CHALLENGES</button>
+        </div>
       </div>
+
       <div class="top-actions">
+        <div class="star-counter" title="Stars earned in challenges"><span>★</span><strong id="starCount">0</strong></div>
+        <button id="soundButton" class="icon-button" type="button" aria-label="Toggle sound" title="Sound">♪</button>
         <button id="undoButton" class="icon-button" type="button" aria-label="Undo last action" title="Undo">↶</button>
-        <button id="clearButton" class="icon-button danger" type="button" aria-label="Clear board" title="Clear board">⌫</button>
+        <button id="clearButton" class="icon-button danger" type="button" aria-label="Clear build" title="Clear build">⌫</button>
       </div>
     </header>
 
+    <aside id="missionPanel" class="mission-panel">
+      <p id="missionKicker">SANDBOX</p>
+      <strong id="missionTitle">Build the impossible.</strong>
+      <span id="missionText">Connect anything to anything. Press Play and let physics judge your engineering.</span>
+      <div id="missionMeta" class="mission-meta"></div>
+    </aside>
+
     <aside id="selectionPanel" class="selection-panel" aria-live="polite">
       <div>
-        <span class="selection-label">Selected node</span>
-        <strong id="heightValue">Height 0</strong>
+        <span class="selection-label">Selected</span>
+        <strong id="selectedType">Node</strong>
+        <small id="heightValue">Height 0</small>
       </div>
       <div class="height-buttons">
         <button id="lowerButton" type="button" aria-label="Lower selected node">−</button>
@@ -41,36 +62,71 @@
     </aside>
 
     <section class="hint" id="hint">
-      <strong>Build a route.</strong>
-      <span>Place nodes, choose Track, then tap two nodes to connect them.</span>
+      <strong id="hintTitle">Build. Test. Break reality.</strong>
+      <span id="hintText">Place nodes, then use Track and tap two nodes to connect them.</span>
     </section>
 
     <nav class="tool-dock" aria-label="Build tools">
-      <button class="tool active" type="button" data-tool="node" aria-pressed="true">
-        <span class="tool-icon node-icon"></span>
-        <span>Node</span>
-      </button>
-      <button class="tool" type="button" data-tool="track" aria-pressed="false">
-        <span class="tool-icon track-icon">━</span>
-        <span>Track</span>
-      </button>
-      <button class="tool" type="button" data-tool="start" aria-pressed="false">
-        <span class="tool-icon start-icon">●</span>
-        <span>Start</span>
-      </button>
-      <button class="tool" type="button" data-tool="finish" aria-pressed="false">
-        <span class="tool-icon finish-icon">◆</span>
-        <span>Finish</span>
-      </button>
-      <button class="tool" type="button" data-tool="delete" aria-pressed="false">
-        <span class="tool-icon delete-icon">×</span>
-        <span>Delete</span>
-      </button>
+      <div class="tool-scroll">
+        <button class="tool active" type="button" data-tool="node" aria-pressed="true">
+          <span class="tool-icon node-icon"></span><span>Node</span>
+        </button>
+        <button class="tool" type="button" data-tool="track" aria-pressed="false">
+          <span class="tool-icon track-icon">╱</span><span>Track</span>
+        </button>
+        <button class="tool unlockable" type="button" data-tool="booster" aria-pressed="false" data-unlock="1">
+          <span class="tool-icon booster-icon">»</span><span>Boost</span><em>★1</em>
+        </button>
+        <button class="tool unlockable" type="button" data-tool="jump" aria-pressed="false" data-unlock="3">
+          <span class="tool-icon jump-icon">↥</span><span>Jump</span><em>★3</em>
+        </button>
+        <button class="tool unlockable" type="button" data-tool="magnet" aria-pressed="false" data-unlock="6">
+          <span class="tool-icon magnet-icon">U</span><span>Magnet</span><em>★6</em>
+        </button>
+        <button class="tool unlockable" type="button" data-tool="bumper" aria-pressed="false" data-unlock="9">
+          <span class="tool-icon bumper-icon">●</span><span>Bumper</span><em>★9</em>
+        </button>
+        <button class="tool" type="button" data-tool="start" aria-pressed="false">
+          <span class="tool-icon start-icon">●</span><span>Start</span>
+        </button>
+        <button class="tool" type="button" data-tool="finish" aria-pressed="false">
+          <span class="tool-icon finish-icon">◆</span><span>Finish</span>
+        </button>
+        <button class="tool" type="button" data-tool="delete" aria-pressed="false">
+          <span class="tool-icon delete-icon">×</span><span>Delete</span>
+        </button>
+      </div>
       <button id="playButton" class="play-button" type="button">
-        <span id="playIcon">▶</span>
-        <span id="playLabel">PLAY</span>
+        <span id="playIcon">▶</span><span id="playLabel">PLAY</span>
       </button>
     </nav>
+
+    <section id="challengeBrowser" class="challenge-browser" aria-label="Challenges" aria-hidden="true">
+      <div class="challenge-sheet">
+        <header>
+          <div>
+            <p class="eyebrow">CAMPAIGN</p>
+            <h2>THE IMPOSSIBLE LAB</h2>
+            <p>Beat experiments, earn stars and unlock stranger machines.</p>
+          </div>
+          <button id="closeChallenges" class="icon-button" type="button" aria-label="Close challenges">×</button>
+        </header>
+        <div id="challengeGrid" class="challenge-grid"></div>
+      </div>
+    </section>
+
+    <section id="resultPanel" class="result-panel" aria-hidden="true">
+      <div class="result-card">
+        <p class="eyebrow">EXPERIMENT COMPLETE</p>
+        <h2 id="resultTitle">Beautiful chaos.</h2>
+        <div id="resultStars" class="result-stars">★★★</div>
+        <p id="resultText"></p>
+        <div class="result-actions">
+          <button id="replayChallenge" type="button">REPLAY</button>
+          <button id="nextChallenge" class="primary" type="button">NEXT EXPERIMENT</button>
+        </div>
+      </div>
+    </section>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
   </main>
