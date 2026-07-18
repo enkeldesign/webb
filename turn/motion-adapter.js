@@ -18,7 +18,9 @@ function replaceRequired(search, replacement, label) {
 // 1. Horizon roll is absolute and follows gravity in screen coordinates.
 // 2. Steering is relative to the player's chosen neutral steering position.
 // DeviceMotion coordinates use the device's natural axes, so rotate the gravity vector
-// into the current screen axes before deriving roll. This works for both landscape sides.
+// into the current screen axes before deriving roll.
+// A horizon is 180-degree symmetric, so fold the result into the nearest upright half-turn
+// to prevent the camera from choosing the mathematically equivalent upside-down solution.
 replaceRequired(
   'function motionPoseFromGravity(event) {',
   `function getScreenOrientationAngle() {
@@ -34,7 +36,12 @@ function getScreenSpaceRoll(gravity) {
   const sin = Math.sin(angle);
   const screenX = gravity.x * cos + gravity.y * sin;
   const screenY = -gravity.x * sin + gravity.y * cos;
-  return normalizeAngle(Math.atan2(screenX, -screenY));
+  let roll = normalizeAngle(Math.atan2(screenX, -screenY));
+
+  if (roll > Math.PI / 2) roll -= Math.PI;
+  if (roll < -Math.PI / 2) roll += Math.PI;
+
+  return roll;
 }
 
 function motionPoseFromGravity(event) {`,
