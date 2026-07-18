@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <meta name="theme-color" content="#38d9ff">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>TURN — motion drift racer</title>
   <style>
     :root {
@@ -16,6 +18,15 @@
       --pink: #ff4fa3;
       --yellow: #ffd43b;
       --lime: #8ce99a;
+      --app-width: 100vw;
+      --app-height: 100vh;
+    }
+
+    @supports (height: 100dvh) {
+      :root {
+        --app-width: 100dvw;
+        --app-height: 100dvh;
+      }
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -33,17 +44,26 @@
 
     body {
       position: fixed;
-      inset: 0;
+      top: 0;
+      left: 0;
+      width: var(--app-width);
+      height: var(--app-height);
       font-weight: 800;
     }
 
     canvas { display: block; }
 
     #game {
-      position: fixed;
+      position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
+      overflow: hidden;
+    }
+
+    #game canvas {
+      width: 100% !important;
+      height: 100% !important;
     }
 
     button {
@@ -66,7 +86,7 @@
 
     .panel,
     .rotate-panel {
-      position: fixed;
+      position: absolute;
       inset: 0;
       z-index: 50;
       display: grid;
@@ -168,7 +188,7 @@
     }
 
     .hud {
-      position: fixed;
+      position: absolute;
       inset: 0;
       z-index: 10;
       pointer-events: none;
@@ -249,7 +269,7 @@
     .message.show { opacity: 1; }
 
     .controls {
-      position: fixed;
+      position: absolute;
       z-index: 20;
       left: max(12px, env(safe-area-inset-left));
       right: max(12px, env(safe-area-inset-right));
@@ -291,7 +311,7 @@
     .gas { background: var(--lime); width: clamp(82px, 14vw, 126px); height: clamp(82px, 14vw, 126px); }
 
     .manual-steer {
-      position: fixed;
+      position: absolute;
       left: 22%;
       right: 38%;
       bottom: 0;
@@ -367,6 +387,7 @@
   <script type="module">
     import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js';
 
+    const game = document.querySelector('#game');
     const intro = document.querySelector('#intro');
     const hud = document.querySelector('#hud');
     const controls = document.querySelector('#controls');
@@ -419,18 +440,29 @@
       messageTimer: 0
     };
 
+    function getViewportSize() {
+      const viewport = window.visualViewport;
+      const width = viewport?.width || document.documentElement.clientWidth || window.innerWidth;
+      const height = viewport?.height || document.documentElement.clientHeight || window.innerHeight;
+      return {
+        width: Math.max(1, Math.round(width)),
+        height: Math.max(1, Math.round(height))
+      };
+    }
+
+    const initialViewport = getViewportSize();
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x38d9ff);
     scene.fog = new THREE.Fog(0x74c0fc, 95, 360);
 
-    const camera = new THREE.PerspectiveCamera(68, innerWidth / innerHeight, 0.1, 800);
+    const camera = new THREE.PerspectiveCamera(68, initialViewport.width / initialViewport.height, 0.1, 800);
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-    renderer.setSize(innerWidth, innerHeight);
+    renderer.setSize(initialViewport.width, initialViewport.height);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    document.querySelector('#game').appendChild(renderer.domElement);
+    game.appendChild(renderer.domElement);
 
     const hemi = new THREE.HemisphereLight(0xffffff, 0x5b3a29, 2.6);
     scene.add(hemi);
@@ -757,7 +789,22 @@
       state.targetRoll = roll;
     }
 
+    function requestGameFullscreen() {
+      const root = document.documentElement;
+      const request = root.requestFullscreen || root.webkitRequestFullscreen;
+      if (!request || document.fullscreenElement || document.webkitFullscreenElement) {
+        return Promise.resolve(false);
+      }
+
+      try {
+        return Promise.resolve(request.call(root)).then(() => true).catch(() => false);
+      } catch (_) {
+        return Promise.resolve(false);
+      }
+    }
+
     async function requestMotion() {
+      const fullscreenPromise = requestGameFullscreen();
       try {
         if (typeof DeviceMotionEvent === 'undefined') throw new Error('Motion sensors are not available in this browser.');
         if (typeof DeviceMotionEvent.requestPermission === 'function') {
@@ -766,13 +813,13 @@
         }
         window.addEventListener('devicemotion', handleMotion, { passive: true });
         state.sensorMode = true;
-        startGame();
+        await startGame(fullscreenPromise);
       } catch (error) {
         status.textContent = `${error.message} Manual mode still works.`;
       }
     }
 
-    async function startGame() {
+    async function startGame(fullscreenPromise = Promise.resolve(false)) {
       state.running = true;
       state.lastFrame = performance.now();
       state.lapStartedAt = performance.now();
@@ -788,23 +835,25 @@
         }, 200);
       }
 
-      try {
-        await document.documentElement.requestFullscreen?.();
-      } catch (_) {}
+      await fullscreenPromise;
 
       try {
         await screen.orientation?.lock?.('landscape');
       } catch (_) {}
 
+      resize();
+      window.setTimeout(resize, 300);
+      window.setTimeout(resize, 900);
       showMessage('GO!');
     }
 
     function useManualMode() {
+      const fullscreenPromise = requestGameFullscreen();
       state.sensorMode = false;
       state.roll = 0;
       state.targetRoll = 0;
       state.neutralRoll = 0;
-      startGame();
+      startGame(fullscreenPromise);
     }
 
     function calibrate() {
@@ -1160,16 +1209,29 @@
       state.messageTimer = window.setTimeout(() => messageEl.classList.remove('show'), duration);
     }
 
+    let resizeFrame = 0;
     function resize() {
-      camera.aspect = innerWidth / innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-      renderer.setSize(innerWidth, innerHeight);
+      cancelAnimationFrame(resizeFrame);
+      resizeFrame = requestAnimationFrame(() => {
+        const { width, height } = getViewportSize();
+        document.documentElement.style.setProperty('--app-width', `${width}px`);
+        document.documentElement.style.setProperty('--app-height', `${height}px`);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+        renderer.setSize(width, height);
+      });
     }
 
     window.addEventListener('resize', resize, { passive: true });
     window.addEventListener('orientationchange', () => window.setTimeout(resize, 180), { passive: true });
+    window.addEventListener('pageshow', resize, { passive: true });
+    window.visualViewport?.addEventListener('resize', resize, { passive: true });
+    window.visualViewport?.addEventListener('scroll', resize, { passive: true });
+    document.addEventListener('fullscreenchange', resize, { passive: true });
+    document.addEventListener('webkitfullscreenchange', resize, { passive: true });
 
+    resize();
     loadGhost();
     updateHud();
 
