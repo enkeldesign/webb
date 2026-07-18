@@ -70,9 +70,11 @@ const gridRadius = 5;
 const heightStep = 0.82;
 const grid = new Map();
 const nodes = new Map();
+const tracks = new Set();
 const history = [];
 let currentTool = 'node';
 let selectedKey = null;
+let trackStartKey = null;
 let isRunning = false;
 let marble = null;
 let runState = null;
@@ -103,7 +105,6 @@ function axialToWorld(q, r) {
 }
 
 function keyOf(q, r) { return `${q},${r}`; }
-function parseKey(key) { return key.split(',').map(Number); }
 
 for (let q = -gridRadius; q <= gridRadius; q++) {
   const r1 = Math.max(-gridRadius, -q - gridRadius);
@@ -152,15 +153,6 @@ function pick(event) {
   setPointerFromEvent(event);
   raycaster.setFromCamera(pointer, camera);
   return raycaster.intersectObjects([buildLayer, board], true);
-}
-
-function neighborKeys(key) {
-  const [q, r] = parseKey(key);
-  return [
-    keyOf(q + 1, r), keyOf(q - 1, r),
-    keyOf(q, r + 1), keyOf(q, r - 1),
-    keyOf(q + 1, r - 1), keyOf(q - 1, r + 1),
-  ].filter(k => grid.has(k));
 }
 
 function nodeY(node) { return node.height * heightStep + 0.18; }
@@ -226,6 +218,14 @@ function makeNodeMesh(node) {
   node.mesh = group;
 }
 
+function trackId(aKey, bKey) {
+  return [aKey, bKey].sort().join('|');
+}
+
+function trackEnds(id) {
+  return id.split('|');
+}
+
 function addRailBetween(a, b) {
   const pa = a.mesh.position.clone();
   const pb = b.mesh.position.clone();
@@ -264,29 +264,30 @@ function rebuild() {
   railLayer.clear();
 
   for (const node of nodes.values()) makeNodeMesh(node);
-
-  const done = new Set();
-  for (const [key, node] of nodes) {
-    for (const nKey of neighborKeys(key)) {
-      if (!nodes.has(nKey)) continue;
-      const edgeId = [key, nKey].sort().join('|');
-      if (done.has(edgeId)) continue;
-      done.add(edgeId);
-      addRailBetween(node, nodes.get(nKey));
-    }
+  for (const id of tracks) {
+    const [aKey, bKey] = trackEnds(id);
+    const a = nodes.get(aKey);
+    const b = nodes.get(bKey);
+    if (a && b) addRailBetween(a, b);
   }
 
   refreshSelection();
 }
 
 function snapshot() {
-  return [...nodes.values()].map(n => ({ key: n.key, type: n.type, height: n.height }));
+  return {
+    nodes: [...nodes.values()].map(n => ({ key: n.key, type: n.type, height: n.height })),
+    tracks: [...tracks],
+  };
 }
 
 function restore(data) {
   nodes.clear();
-  for (const n of data) nodes.set(n.key, { ...n, mesh: null });
+  tracks.clear();
+  for (const n of data.nodes) nodes.set(n.key, { ...n, mesh: null });
+  for (const id of data.tracks) tracks.add(id);
   if (selectedKey && !nodes.has(selectedKey)) selectedKey = null;
+  trackStartKey = null;
   rebuild();
 }
 
@@ -313,25 +314,73 @@ function refreshSelection() {
 
 function setTool(tool) {
   currentTool = tool;
+  trackStartKey = null;
   for (const button of toolButtons) {
     const active = button.dataset.tool === tool;
     button.classList.toggle('active', active);
     button.setAttribute('aria-pressed', String(active));
   }
+  if (tool === 'track') showToast('Tap the first node');
 }
 
 function findSingleType(type) {
   return [...nodes.values()].find(n => n.type === type);
 }
 
+function removeTracksForNode(key) {
+  for (const id of [...tracks]) {
+    const [aKey, bKey] = trackEnds(id);
+    if (aKey === key || bKey === key) tracks.delete(id);
+  }
+}
+
+function useTrackTool(key) {
+  if (!nodes.has(key)) return;
+
+  if (!trackStartKey) {
+    trackStartKey = key;
+    selectedKey = key;
+    refreshSelection();
+    showToast('Now tap the second node');
+    return;
+  }
+
+  if (trackStartKey === key) {
+    showToast('Choose a different node');
+    return;
+  }
+
+  const id = trackId(trackStartKey, key);
+  if (tracks.has(id)) {
+    trackStartKey = null;
+    showToast('Those nodes are already connected');
+    return;
+  }
+
+  pushHistory();
+  tracks.add(id);
+  selectedKey = key;
+  trackStartKey = null;
+  rebuild();
+  hint.classList.add('hidden');
+  showToast('Track built');
+}
+
 function placeAt(key) {
   if (isRunning) return;
+
+  if (currentTool === 'track') {
+    useTrackTool(key);
+    return;
+  }
 
   if (currentTool === 'delete') {
     if (!nodes.has(key)) return;
     pushHistory();
     nodes.delete(key);
+    removeTracksForNode(key);
     if (selectedKey === key) selectedKey = null;
+    if (trackStartKey === key) trackStartKey = null;
     rebuild();
     return;
   }
@@ -368,6 +417,16 @@ function changeHeight(delta) {
   rebuild();
 }
 
+function connectedKeys(key) {
+  const result = [];
+  for (const id of tracks) {
+    const [aKey, bKey] = trackEnds(id);
+    if (aKey === key && nodes.has(bKey)) result.push(bKey);
+    if (bKey === key && nodes.has(aKey)) result.push(aKey);
+  }
+  return result;
+}
+
 function connectedPath(startKey, finishKey) {
   const queue = [startKey];
   const previous = new Map([[startKey, null]]);
@@ -375,8 +434,8 @@ function connectedPath(startKey, finishKey) {
   while (queue.length) {
     const key = queue.shift();
     if (key === finishKey) break;
-    for (const next of neighborKeys(key)) {
-      if (!nodes.has(next) || previous.has(next)) continue;
+    for (const next of connectedKeys(key)) {
+      if (previous.has(next)) continue;
       previous.set(next, key);
       queue.push(next);
     }
@@ -462,7 +521,7 @@ function updateMarble(dt) {
   const { path } = runState;
   const a = nodes.get(path[runState.segment]);
   const b = nodes.get(path[runState.segment + 1]);
-  if (!a || !b) return stopRun('Track changed');
+  if (!a || !b || !tracks.has(trackId(a.key, b.key))) return stopRun('Track changed');
 
   const p1 = a.mesh.position.clone();
   const p2 = b.mesh.position.clone();
@@ -544,11 +603,13 @@ undoButton.addEventListener('click', () => {
 });
 
 clearButton.addEventListener('click', () => {
-  if (!nodes.size) return;
+  if (!nodes.size && !tracks.size) return;
   if (isRunning) stopRun();
   pushHistory();
   nodes.clear();
+  tracks.clear();
   selectedKey = null;
+  trackStartKey = null;
   rebuild();
   hint.classList.remove('hidden');
 });
@@ -568,9 +629,14 @@ canvas.addEventListener('pointerup', event => {
   const nodeHit = hits.find(hit => hit.object.parent?.userData?.kind === 'node' || hit.object.userData?.kind === 'node');
   if (nodeHit) {
     const group = nodeHit.object.userData.kind === 'node' ? nodeHit.object : nodeHit.object.parent;
-    selectedKey = group.userData.key;
+    const key = group.userData.key;
+    if (currentTool === 'track') {
+      useTrackTool(key);
+      return;
+    }
+    selectedKey = key;
     refreshSelection();
-    if (currentTool === 'delete') placeAt(selectedKey);
+    if (currentTool === 'delete') placeAt(key);
     return;
   }
 
@@ -609,6 +675,7 @@ function seedDemo() {
     { key: '3,-1', type: 'finish', height: 0 },
   ];
   for (const n of demo) nodes.set(n.key, { ...n, mesh: null });
+  for (let i = 0; i < demo.length - 1; i++) tracks.add(trackId(demo[i].key, demo[i + 1].key));
   rebuild();
 }
 
