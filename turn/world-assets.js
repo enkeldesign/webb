@@ -270,7 +270,7 @@ function placeAssetHorizon({ world, samples, hill, cloud }) {
     radial.normalize();
 
     // Huvudgrejen: stor offset ut från banan.
-    const baseOffset = 360 + random * 120;
+    const baseOffset = 180 + random * 60;
 
     // Lite tangentiell variation så det inte blir mekaniskt.
     const tangentShift = (seeded01(900 + i) - 0.5) * 26;
