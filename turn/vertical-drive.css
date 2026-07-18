@@ -3,24 +3,26 @@
   display: none !important;
 }
 
-/* The brake stays compact while gas becomes a tall analog pedal. */
+/* The brake stays round while gas becomes a large analog pedal. */
 .pedals {
-  padding-top: 18px;
+  padding-top: 10px;
   align-items: end;
+  gap: clamp(12px, 1.6vw, 20px);
 }
 
 .gas {
   --gas-level: 0;
-  width: clamp(92px, 13vw, 138px);
-  height: clamp(150px, 34vh, 245px);
-  border-radius: 999px;
+  width: clamp(118px, 15vw, 170px);
+  height: clamp(190px, 42vh, 285px);
+  border-radius: clamp(52px, 7vw, 78px);
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding: 0 12px 20px;
+  padding: 0 14px 28px;
   line-height: 1;
   text-align: center;
-  transform: translateY(calc(var(--gas-level) * -18px));
+  font-size: clamp(0.8rem, 2vw, 1.1rem);
+  transform: translateY(calc(var(--gas-level) * -12px));
   transition:
     transform 120ms cubic-bezier(.2, .8, .2, 1),
     box-shadow 120ms ease;
@@ -34,23 +36,24 @@
 
 .gas.is-dragging:active,
 .gas.is-dragging.is-down {
-  transform: translateY(calc(var(--gas-level) * -18px));
+  transform: translateY(calc(var(--gas-level) * -12px));
 }
 
 @media (max-height: 430px) {
   .pedals {
-    padding-top: 10px;
+    padding-top: 4px;
   }
 
   .gas {
-    width: clamp(84px, 12vw, 122px);
-    height: clamp(132px, 38vh, 190px);
-    padding-bottom: 16px;
-    transform: translateY(calc(var(--gas-level) * -14px));
+    width: clamp(108px, 14vw, 148px);
+    height: clamp(172px, 46vh, 228px);
+    border-radius: clamp(48px, 6.5vw, 68px);
+    padding-bottom: 22px;
+    transform: translateY(calc(var(--gas-level) * -9px));
   }
 
   .gas.is-dragging:active,
   .gas.is-dragging.is-down {
-    transform: translateY(calc(var(--gas-level) * -14px));
+    transform: translateY(calc(var(--gas-level) * -9px));
   }
 }
