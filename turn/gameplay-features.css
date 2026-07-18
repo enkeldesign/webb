@@ -1,0 +1,272 @@
+.gas {
+  --boost-fill: 34%;
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      to bottom,
+      #ff5a5f 0 var(--boost-fill),
+      rgb(255 90 95 / 0.22) var(--boost-fill) 34%,
+      var(--lime) 34% 100%
+    );
+}
+
+.gas::after {
+  content: "BOOST";
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: clamp(0.52rem, 1.25vw, 0.72rem);
+  letter-spacing: 0.08em;
+  pointer-events: none;
+}
+
+.gas.is-boosting {
+  box-shadow:
+    7px 9px 0 var(--ink),
+    0 0 0 5px rgb(255 90 95 / 0.3);
+}
+
+.nuke-ghosts-button {
+  width: 46px;
+  min-width: 46px;
+  padding: 5px;
+  display: grid;
+  place-items: center;
+  background: #ff7b54;
+}
+
+.mushroom-cloud-icon {
+  position: relative;
+  display: block;
+  width: 29px;
+  height: 28px;
+}
+
+.mushroom-cloud-icon::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 2px;
+  height: 13px;
+  border: 3px solid var(--ink);
+  border-radius: 50% 50% 42% 42%;
+  background: var(--yellow);
+}
+
+.mushroom-cloud-icon::after {
+  content: "";
+  position: absolute;
+  left: 9px;
+  bottom: 2px;
+  width: 11px;
+  height: 15px;
+  border: 3px solid var(--ink);
+  border-top: 0;
+  border-radius: 2px 2px 7px 7px;
+  background: var(--paper);
+}
+
+.mushroom-cloud-icon i {
+  position: absolute;
+  z-index: 2;
+  left: 5px;
+  right: 5px;
+  bottom: 0;
+  height: 6px;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  background: #ff7b54;
+}
+
+.nuke-dialog {
+  width: min(520px, calc(100vw - 36px));
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+}
+
+.nuke-dialog::backdrop {
+  background: rgb(8 9 10 / 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.nuke-dialog-card {
+  padding: 28px;
+  border: 5px solid var(--ink);
+  border-radius: 28px;
+  background: var(--paper);
+  box-shadow: 11px 11px 0 var(--ink);
+  text-align: center;
+  transform: rotate(-1deg);
+}
+
+.nuke-dialog-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 12px;
+  display: grid;
+  place-items: center;
+  border: 4px solid var(--ink);
+  border-radius: 50%;
+  background: #ff7b54;
+}
+
+.nuke-dialog-icon .mushroom-cloud-icon {
+  transform: scale(1.65);
+}
+
+.nuke-dialog h2 {
+  margin: 0;
+  font-size: clamp(1.7rem, 6vw, 3rem);
+  line-height: 0.95;
+}
+
+.nuke-dialog p {
+  margin: 16px 0 22px;
+  font-size: clamp(0.9rem, 2.2vw, 1.15rem);
+}
+
+.nuke-dialog-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.nuke-dialog-actions button {
+  min-height: 50px;
+  padding: 10px 16px;
+  text-transform: uppercase;
+}
+
+.nuke-cancel { background: var(--paper); }
+.nuke-confirm { background: #ff5a5f; }
+
+.nuke-effect {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.nuke-flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  animation: turn-nuke-flash 900ms ease-out forwards;
+}
+
+.nuke-shockwave {
+  position: absolute;
+  left: 50%;
+  top: 55%;
+  width: 40px;
+  height: 40px;
+  border: 12px solid #fff4b8;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 8px #ff9f1c,
+    0 0 0 15px var(--ink);
+  transform: translate(-50%, -50%) scale(0.1);
+  animation: turn-nuke-wave 1050ms 150ms cubic-bezier(.1,.7,.2,1) forwards;
+}
+
+.nuke-mushroom {
+  position: absolute;
+  left: 50%;
+  bottom: 7%;
+  width: 230px;
+  height: 300px;
+  transform: translateX(-50%) scale(0.05);
+  transform-origin: 50% 100%;
+  animation: turn-nuke-cloud 1250ms 170ms cubic-bezier(.12,.8,.2,1) forwards;
+}
+
+.nuke-cap,
+.nuke-stem,
+.nuke-base {
+  position: absolute;
+  display: block;
+  border: 8px solid var(--ink);
+  background: #ffb020;
+}
+
+.nuke-cap {
+  left: 8px;
+  right: 8px;
+  top: 15px;
+  height: 125px;
+  border-radius: 50% 50% 40% 40%;
+  box-shadow: inset 0 24px 0 #ffe066;
+}
+
+.nuke-stem {
+  left: 82px;
+  top: 115px;
+  width: 68px;
+  height: 135px;
+  border-radius: 18px 18px 32px 32px;
+  background: #ff7b54;
+}
+
+.nuke-base {
+  left: 34px;
+  right: 34px;
+  bottom: 10px;
+  height: 64px;
+  border-radius: 50%;
+  background: #ff5a5f;
+}
+
+.turn-nuking #game,
+.turn-nuking .hud,
+.turn-nuking .controls {
+  animation: turn-nuke-shake 520ms 140ms linear both;
+}
+
+@keyframes turn-nuke-flash {
+  0%, 20% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes turn-nuke-wave {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(0.1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(25); }
+}
+
+@keyframes turn-nuke-cloud {
+  0% { opacity: 0; transform: translateX(-50%) scale(0.05); }
+  18% { opacity: 1; }
+  72% { opacity: 1; transform: translateX(-50%) scale(1); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-42px) scale(1.18); }
+}
+
+@keyframes turn-nuke-shake {
+  0%, 100% { translate: 0 0; }
+  15% { translate: -8px 4px; }
+  30% { translate: 7px -5px; }
+  45% { translate: -5px -4px; }
+  60% { translate: 6px 5px; }
+  75% { translate: -3px 2px; }
+}
+
+@media (max-height: 430px) {
+  .nuke-ghosts-button {
+    width: 42px;
+    min-width: 42px;
+    height: 38px;
+    min-height: 38px;
+  }
+
+  .mushroom-cloud-icon {
+    transform: scale(0.86);
+  }
+
+  .nuke-dialog-card {
+    padding: 20px;
+  }
+}
