@@ -1,0 +1,36 @@
+.stats {
+  flex-wrap: nowrap;
+}
+
+.stats .chip {
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.stats .chip:nth-child(1) {
+  width: clamp(108px, 12vw, 132px);
+}
+
+.stats .chip:nth-child(2) {
+  width: clamp(72px, 8vw, 92px);
+}
+
+.stats .chip:nth-child(3),
+.stats .chip:nth-child(4) {
+  width: clamp(112px, 13vw, 142px);
+}
+
+@media (max-height: 430px) {
+  .stats .chip:nth-child(1) {
+    width: 108px;
+  }
+
+  .stats .chip:nth-child(2) {
+    width: 72px;
+  }
+
+  .stats .chip:nth-child(3),
+  .stats .chip:nth-child(4) {
+    width: 114px;
+  }
+}
