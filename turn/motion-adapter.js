@@ -6,6 +6,7 @@ globalThis.__turnAnalogGas = 0;
 
 const KENNEY_SEDAN_URL =
   'https://cdn.jsdelivr.net/gh/wayne-wu/webgpu-crowd-simulation@8caf9be46ec35e26dc28b3ecae000d7aa4d0d177/public/sedan.glb';
+const WORLD_ASSETS_MODULE_URL = new URL('./world-assets.js', location.href).href;
 
 const response = await fetch('./game.js', { cache: 'no-store' });
 if (!response.ok) throw new Error(`Could not load game.js (${response.status})`);
@@ -20,8 +21,8 @@ function replaceRequired(search, replacement, label) {
 // Load glTF assets through the same Three.js version as the game.
 replaceRequired(
   "import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js';",
-  `import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js';\nimport { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';`,
-  'GLTFLoader import'
+  `import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js';\nimport { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';\nimport { installKenneyWorld } from '${WORLD_ASSETS_MODULE_URL}';`,
+  'GLTFLoader and world asset imports'
 );
 
 // Motion has two separate jobs:
@@ -185,6 +186,29 @@ replaceRequired(
   /function makeRoad\(\) \{[\s\S]*?\n\}\n\nfunction makeScenery\(\) \{/,
   `${roadFunction}\n\nfunction makeScenery() {`,
   'road rendering'
+);
+
+// Keep only the large continuous ground procedural. Everything sitting on top of it now
+// comes from Kenney models loaded by world-assets.js.
+const sceneryFunction = `function makeScenery() {
+  const ground = new THREE.Mesh(
+    new THREE.CircleGeometry(520, 96),
+    new THREE.MeshStandardMaterial({ color: 0x8ce99a, roughness: 1 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.02;
+  ground.receiveShadow = true;
+  world.add(ground);
+
+  installKenneyWorld({ world, samples, trackWidth: TRACK_WIDTH }).catch((error) => {
+    console.warn('TURN: world assets failed to install.', error);
+  });
+}`;
+
+replaceRequired(
+  /function makeScenery\(\) \{[\s\S]*?\n\}\n\nfunction makeStartArch\(\) \{/,
+  `${sceneryFunction}\n\nfunction makeStartArch() {`,
+  'Kenney world scenery'
 );
 
 // Test a real Kenney vehicle asset. The procedural car remains in the scene as an invisible
