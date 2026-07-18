@@ -20,6 +20,14 @@
     return;
   }
 
+  const SENSOR_OFFSETS = [0, 90, -90];
+  const SENSOR_CALIBRATION_SAMPLES = 8;
+  const sensorScores = new Array(SENSOR_OFFSETS.length).fill(0);
+  let sensorSamples = 0;
+  let sensorOffset = 0;
+  let sensorOffsetLocked = false;
+  let lastBaseAngle = null;
+
   function normalizeDegrees(value) {
     if (!Number.isFinite(value)) return null;
     let degrees = ((value % 360) + 360) % 360;
@@ -40,50 +48,115 @@
     return width > height;
   }
 
-  function resolvedAngle(screenAngle) {
+  function resolveBaseAngle(screenAngle) {
     const normalizedScreenAngle = normalizeDegrees(screenAngle);
     const viewportLandscape = viewportIsLandscape();
     const screenMatchesViewport = angleIsLandscape(normalizedScreenAngle) === viewportLandscape;
 
-    // Preserve the normal Screen Orientation API path when it agrees with the actual
-    // viewport. This keeps the existing iPhone 16 behaviour unchanged.
+    // Preserve the working iPhone path whenever the Screen Orientation API agrees with
+    // the actual viewport.
     if (normalizedScreenAngle != null && screenMatchesViewport) return normalizedScreenAngle;
 
-    // Some standalone iPad web apps expose a portrait-like screen angle while their
-    // viewport is already landscape. WebKit's legacy orientation value can still reflect
-    // the physical quarter-turn, so use it only when it actually resolves that mismatch.
+    // Older standalone iPads can report a portrait-like Screen Orientation angle while
+    // already rendering a landscape viewport. Prefer the legacy value only when it fixes
+    // that mismatch.
     const legacyAngle = normalizeDegrees(Number(window.orientation));
     const legacyMatchesViewport = angleIsLandscape(legacyAngle) === viewportLandscape;
     if (legacyAngle != null && legacyMatchesViewport) return legacyAngle;
 
-    // Last resort: keep the browser-provided angle rather than guessing which landscape
-    // side the player is holding the device on.
-    return normalizedScreenAngle ?? 0;
+    return normalizedScreenAngle ?? legacyAngle ?? 0;
   }
+
+  function foldedRollForAngle(gravity, angleDegrees) {
+    const angle = angleDegrees * Math.PI / 180;
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    const screenX = gravity.x * cos + gravity.y * sin;
+    const screenY = -gravity.x * sin + gravity.y * cos;
+    let roll = Math.atan2(screenX, -screenY);
+
+    while (roll > Math.PI) roll -= Math.PI * 2;
+    while (roll < -Math.PI) roll += Math.PI * 2;
+    if (roll > Math.PI / 2) roll -= Math.PI;
+    if (roll < -Math.PI / 2) roll += Math.PI;
+    return roll;
+  }
+
+  function resetSensorCalibration() {
+    sensorScores.fill(0);
+    sensorSamples = 0;
+    sensorOffset = 0;
+    sensorOffsetLocked = false;
+    lastBaseAngle = null;
+  }
+
+  function observeMotion(event) {
+    if (sensorOffsetLocked) return;
+
+    const gravity = event.accelerationIncludingGravity;
+    if (!gravity || gravity.x == null || gravity.y == null) return;
+    if (Math.hypot(gravity.x, gravity.y) < 0.8) return;
+
+    const baseAngle = resolveBaseAngle(readBrowserAngle());
+    if (lastBaseAngle != null && Math.abs(normalizeDegrees(baseAngle - lastBaseAngle) || 0) >= 90) {
+      resetSensorCalibration();
+    }
+    lastBaseAngle = baseAngle;
+
+    for (let index = 0; index < SENSOR_OFFSETS.length; index += 1) {
+      const candidateAngle = baseAngle + SENSOR_OFFSETS[index];
+      sensorScores[index] += Math.abs(foldedRollForAngle(gravity, candidateAngle));
+    }
+
+    sensorSamples += 1;
+    let bestIndex = 0;
+    for (let index = 1; index < sensorScores.length; index += 1) {
+      if (sensorScores[index] < sensorScores[bestIndex]) bestIndex = index;
+    }
+    sensorOffset = SENSOR_OFFSETS[bestIndex];
+
+    if (sensorSamples >= SENSOR_CALIBRATION_SAMPLES) {
+      sensorOffsetLocked = true;
+      console.info(`TURN: motion axis mapping locked at ${sensorOffset >= 0 ? '+' : ''}${sensorOffset}°.`);
+    }
+  }
+
+  function resolvedAngle() {
+    const baseAngle = resolveBaseAngle(readBrowserAngle());
+    return normalizeDegrees(baseAngle + sensorOffset) ?? 0;
+  }
+
+  // Register before the game adds its own devicemotion listener. Each sensor event can
+  // therefore update the mapping before TURN reads screen.orientation.angle for that frame.
+  window.addEventListener('devicemotion', observeMotion, { passive: true });
+  window.addEventListener('orientationchange', resetSensorCalibration, { passive: true });
+  document.addEventListener('click', (event) => {
+    if (event.target.closest?.('#motionButton, #calibrateButton')) resetSensorCalibration();
+  });
 
   let installed = false;
 
-  // Prefer shadowing only this ScreenOrientation instance. That leaves the browser API
-  // untouched for everything else and works even when the prototype property is locked.
+  // Prefer shadowing only this ScreenOrientation instance so the compatibility correction
+  // stays local to TURN.
   try {
     Object.defineProperty(orientation, 'angle', {
       configurable: true,
       enumerable: ownAngleDescriptor?.enumerable ?? prototypeAngleDescriptor?.enumerable ?? true,
       get() {
-        return resolvedAngle(readBrowserAngle());
+        return resolvedAngle();
       }
     });
     installed = true;
   } catch (_) {}
 
-  // Fallback for engines that do not allow an own property on ScreenOrientation.
+  // Fallback for WebKit versions that disallow an own property on ScreenOrientation.
   if (!installed && prototypeAngleDescriptor?.get && prototypeAngleDescriptor.configurable !== false) {
     try {
       Object.defineProperty(prototype, 'angle', {
         ...prototypeAngleDescriptor,
         get() {
-          const browserAngle = prototypeAngleDescriptor.get.call(this);
-          return this === screen.orientation ? resolvedAngle(browserAngle) : browserAngle;
+          if (this !== screen.orientation) return prototypeAngleDescriptor.get.call(this);
+          return resolvedAngle();
         }
       });
       installed = true;
@@ -92,7 +165,7 @@
 
   console.info(
     installed
-      ? 'TURN: adaptive screen-orientation compatibility enabled.'
+      ? 'TURN: adaptive motion-axis compatibility enabled.'
       : 'TURN: ScreenOrientation angle could not be shimmed; using browser values as-is.'
   );
 })();
