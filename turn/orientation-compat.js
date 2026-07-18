@@ -131,7 +131,7 @@
   window.addEventListener('devicemotion', observeMotion, { passive: true });
   window.addEventListener('orientationchange', resetSensorCalibration, { passive: true });
   document.addEventListener('click', (event) => {
-    if (event.target.closest?.('#motionButton, #calibrateButton')) resetSensorCalibration();
+    if (event.target.closest?.('#motionButton')) resetSensorCalibration();
   });
 
   let installed = false;
