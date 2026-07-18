@@ -1,693 +1,105 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.178.0/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.178.0/examples/jsm/controls/OrbitControls.js';
-
-const canvas = document.querySelector('#game');
-const playButton = document.querySelector('#playButton');
-const playLabel = document.querySelector('#playLabel');
-const playIcon = document.querySelector('#playIcon');
-const undoButton = document.querySelector('#undoButton');
-const clearButton = document.querySelector('#clearButton');
-const raiseButton = document.querySelector('#raiseButton');
-const lowerButton = document.querySelector('#lowerButton');
-const selectionPanel = document.querySelector('#selectionPanel');
-const heightValue = document.querySelector('#heightValue');
-const hint = document.querySelector('#hint');
-const toast = document.querySelector('#toast');
-const toolButtons = [...document.querySelectorAll('.tool')];
-
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0d121a);
-scene.fog = new THREE.Fog(0x0d121a, 28, 60);
-
-const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 120);
-camera.position.set(12, 15, 18);
-
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.setSize(innerWidth, innerHeight);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.15;
-
-const controls = new OrbitControls(camera, canvas);
-controls.enableDamping = true;
-controls.dampingFactor = 0.075;
-controls.target.set(0, 0.5, 0);
-controls.minDistance = 8;
-controls.maxDistance = 36;
-controls.maxPolarAngle = Math.PI * 0.47;
-controls.minPolarAngle = Math.PI * 0.18;
-controls.screenSpacePanning = false;
-controls.touches.ONE = THREE.TOUCH.ROTATE;
-controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
-
-scene.add(new THREE.HemisphereLight(0xcce8ff, 0x15171e, 2.2));
-const keyLight = new THREE.DirectionalLight(0xffffff, 3.1);
-keyLight.position.set(9, 18, 10);
-keyLight.castShadow = true;
-keyLight.shadow.mapSize.set(1024, 1024);
-keyLight.shadow.camera.left = -18;
-keyLight.shadow.camera.right = 18;
-keyLight.shadow.camera.top = 18;
-keyLight.shadow.camera.bottom = -18;
-scene.add(keyLight);
-
-const rim = new THREE.DirectionalLight(0x5ec8ff, 1.2);
-rim.position.set(-14, 8, -8);
-scene.add(rim);
-
-const board = new THREE.Group();
-const buildLayer = new THREE.Group();
-const railLayer = new THREE.Group();
-const fxLayer = new THREE.Group();
-scene.add(board, buildLayer, railLayer, fxLayer);
-
-const tileRadius = 1.08;
-const tileDepth = 0.22;
-const gridRadius = 5;
-const heightStep = 0.82;
-const grid = new Map();
-const nodes = new Map();
-const tracks = new Set();
-const history = [];
-let currentTool = 'node';
-let selectedKey = null;
-let trackStartKey = null;
-let isRunning = false;
-let marble = null;
-let runState = null;
-let pointerDown = null;
-let toastTimer = null;
-
-const colors = {
-  tile: 0x1b2430,
-  tileEdge: 0x304052,
-  tileHover: 0x41647a,
-  node: 0xe7edf4,
-  nodeSide: 0x8795a5,
-  start: 0x7ee787,
-  finish: 0xffd866,
-  rail: 0x8897a8,
-  railDark: 0x3f4b59,
-  marble: 0x66d7ff,
-};
-
-const tileGeometry = new THREE.CylinderGeometry(tileRadius, tileRadius, tileDepth, 6);
-const tileMaterial = new THREE.MeshStandardMaterial({ color: colors.tile, roughness: 0.68, metalness: 0.08 });
-const tileHoverMaterial = new THREE.MeshStandardMaterial({ color: colors.tileHover, roughness: 0.55, metalness: 0.12 });
-
-function axialToWorld(q, r) {
-  const x = tileRadius * Math.sqrt(3) * (q + r / 2);
-  const z = tileRadius * 1.5 * r;
-  return new THREE.Vector3(x, 0, z);
-}
-
-function keyOf(q, r) { return `${q},${r}`; }
-
-for (let q = -gridRadius; q <= gridRadius; q++) {
-  const r1 = Math.max(-gridRadius, -q - gridRadius);
-  const r2 = Math.min(gridRadius, -q + gridRadius);
-  for (let r = r1; r <= r2; r++) {
-    const key = keyOf(q, r);
-    const mesh = new THREE.Mesh(tileGeometry, tileMaterial);
-    const p = axialToWorld(q, r);
-    mesh.position.set(p.x, -tileDepth / 2, p.z);
-    mesh.receiveShadow = true;
-    mesh.userData.key = key;
-    mesh.userData.kind = 'tile';
-    board.add(mesh);
-    grid.set(key, mesh);
-  }
-}
-
-const floor = new THREE.Mesh(
-  new THREE.CircleGeometry(28, 64),
-  new THREE.MeshStandardMaterial({ color: 0x080b10, roughness: 0.95, metalness: 0 })
-);
-floor.rotation.x = -Math.PI / 2;
-floor.position.y = -0.25;
-floor.receiveShadow = true;
-scene.add(floor);
-
-const ring = new THREE.Mesh(
-  new THREE.RingGeometry(14.3, 14.55, 64),
-  new THREE.MeshBasicMaterial({ color: 0x253346, transparent: true, opacity: 0.55, side: THREE.DoubleSide })
-);
-ring.rotation.x = -Math.PI / 2;
-ring.position.y = -0.235;
-scene.add(ring);
-
-const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2();
-let hoveredTile = null;
-
-function setPointerFromEvent(event) {
-  const rect = canvas.getBoundingClientRect();
-  pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-  pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-}
-
-function pick(event) {
-  setPointerFromEvent(event);
-  raycaster.setFromCamera(pointer, camera);
-  return raycaster.intersectObjects([buildLayer, board], true);
-}
-
-function nodeY(node) { return node.height * heightStep + 0.18; }
-
-function makeNodeMesh(node) {
-  const group = new THREE.Group();
-  group.userData.key = node.key;
-  group.userData.kind = 'node';
-
-  const columnHeight = Math.max(0.18, node.height * heightStep + 0.18);
-  const stem = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.48, 0.58, columnHeight, 12),
-    new THREE.MeshStandardMaterial({ color: colors.nodeSide, roughness: 0.5, metalness: 0.22 })
-  );
-  stem.position.y = columnHeight / 2;
-  stem.castShadow = true;
-  stem.receiveShadow = true;
-  group.add(stem);
-
-  let topColor = colors.node;
-  if (node.type === 'start') topColor = colors.start;
-  if (node.type === 'finish') topColor = colors.finish;
-
-  const top = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.72, 0.72, 0.22, 18),
-    new THREE.MeshStandardMaterial({ color: topColor, roughness: 0.3, metalness: 0.25 })
-  );
-  top.position.y = columnHeight + 0.1;
-  top.castShadow = true;
-  top.receiveShadow = true;
-  group.add(top);
-
-  const channel = new THREE.Mesh(
-    new THREE.TorusGeometry(0.43, 0.075, 8, 24),
-    new THREE.MeshStandardMaterial({ color: colors.railDark, roughness: 0.45, metalness: 0.35 })
-  );
-  channel.rotation.x = Math.PI / 2;
-  channel.position.y = columnHeight + 0.22;
-  group.add(channel);
-
-  if (node.type === 'start') {
-    const beacon = new THREE.Mesh(
-      new THREE.SphereGeometry(0.18, 16, 12),
-      new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: colors.start, emissiveIntensity: 2.3 })
-    );
-    beacon.position.y = columnHeight + 0.45;
-    group.add(beacon);
-  }
-
-  if (node.type === 'finish') {
-    const gem = new THREE.Mesh(
-      new THREE.OctahedronGeometry(0.24),
-      new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: colors.finish, emissiveIntensity: 1.6 })
-    );
-    gem.position.y = columnHeight + 0.5;
-    gem.rotation.y = Math.PI / 4;
-    group.add(gem);
-  }
-
-  const tile = grid.get(node.key);
-  group.position.set(tile.position.x, 0, tile.position.z);
-  buildLayer.add(group);
-  node.mesh = group;
-}
-
-function trackId(aKey, bKey) {
-  return [aKey, bKey].sort().join('|');
-}
-
-function trackEnds(id) {
-  return id.split('|');
-}
-
-function addRailBetween(a, b) {
-  const pa = a.mesh.position.clone();
-  const pb = b.mesh.position.clone();
-  pa.y = nodeY(a) + 0.22;
-  pb.y = nodeY(b) + 0.22;
-
-  const delta = pb.clone().sub(pa);
-  const length = delta.length();
-  const middle = pa.clone().add(pb).multiplyScalar(0.5);
-  const railGroup = new THREE.Group();
-
-  const railMat = new THREE.MeshStandardMaterial({ color: colors.rail, roughness: 0.34, metalness: 0.38 });
-  const darkMat = new THREE.MeshStandardMaterial({ color: colors.railDark, roughness: 0.45, metalness: 0.28 });
-
-  for (const side of [-1, 1]) {
-    const cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, length, 8), railMat);
-    cylinder.position.copy(middle);
-    cylinder.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), delta.clone().normalize());
-
-    const horizontal = new THREE.Vector3(delta.x, 0, delta.z).normalize();
-    const lateral = new THREE.Vector3(-horizontal.z, 0, horizontal.x).multiplyScalar(0.19 * side);
-    cylinder.position.add(lateral);
-    cylinder.castShadow = true;
-    railGroup.add(cylinder);
-  }
-
-  const bed = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, length, 6), darkMat);
-  bed.position.copy(middle).add(new THREE.Vector3(0, -0.11, 0));
-  bed.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), delta.clone().normalize());
-  railGroup.add(bed);
-  railLayer.add(railGroup);
-}
-
-function rebuild() {
-  buildLayer.clear();
-  railLayer.clear();
-
-  for (const node of nodes.values()) makeNodeMesh(node);
-  for (const id of tracks) {
-    const [aKey, bKey] = trackEnds(id);
-    const a = nodes.get(aKey);
-    const b = nodes.get(bKey);
-    if (a && b) addRailBetween(a, b);
-  }
-
-  refreshSelection();
-}
-
-function snapshot() {
-  return {
-    nodes: [...nodes.values()].map(n => ({ key: n.key, type: n.type, height: n.height })),
-    tracks: [...tracks],
-  };
-}
-
-function restore(data) {
-  nodes.clear();
-  tracks.clear();
-  for (const n of data.nodes) nodes.set(n.key, { ...n, mesh: null });
-  for (const id of data.tracks) tracks.add(id);
-  if (selectedKey && !nodes.has(selectedKey)) selectedKey = null;
-  trackStartKey = null;
-  rebuild();
-}
-
-function pushHistory() {
-  history.push(snapshot());
-  if (history.length > 40) history.shift();
-}
-
-function showToast(message) {
-  toast.textContent = message;
-  toast.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove('show'), 1600);
-}
-
-function refreshSelection() {
-  if (!selectedKey || !nodes.has(selectedKey)) {
-    selectionPanel.classList.remove('visible');
-    return;
-  }
-  selectionPanel.classList.add('visible');
-  heightValue.textContent = `Height ${nodes.get(selectedKey).height}`;
-}
-
-function setTool(tool) {
-  currentTool = tool;
-  trackStartKey = null;
-  for (const button of toolButtons) {
-    const active = button.dataset.tool === tool;
-    button.classList.toggle('active', active);
-    button.setAttribute('aria-pressed', String(active));
-  }
-  if (tool === 'track') showToast('Tap the first node');
-}
-
-function findSingleType(type) {
-  return [...nodes.values()].find(n => n.type === type);
-}
-
-function removeTracksForNode(key) {
-  for (const id of [...tracks]) {
-    const [aKey, bKey] = trackEnds(id);
-    if (aKey === key || bKey === key) tracks.delete(id);
-  }
-}
-
-function useTrackTool(key) {
-  if (!nodes.has(key)) return;
-
-  if (!trackStartKey) {
-    trackStartKey = key;
-    selectedKey = key;
-    refreshSelection();
-    showToast('Now tap the second node');
-    return;
-  }
-
-  if (trackStartKey === key) {
-    showToast('Choose a different node');
-    return;
-  }
-
-  const id = trackId(trackStartKey, key);
-  if (tracks.has(id)) {
-    trackStartKey = null;
-    showToast('Those nodes are already connected');
-    return;
-  }
-
-  pushHistory();
-  tracks.add(id);
-  selectedKey = key;
-  trackStartKey = null;
-  rebuild();
-  hint.classList.add('hidden');
-  showToast('Track built');
-}
-
-function placeAt(key) {
-  if (isRunning) return;
-
-  if (currentTool === 'track') {
-    useTrackTool(key);
-    return;
-  }
-
-  if (currentTool === 'delete') {
-    if (!nodes.has(key)) return;
-    pushHistory();
-    nodes.delete(key);
-    removeTracksForNode(key);
-    if (selectedKey === key) selectedKey = null;
-    if (trackStartKey === key) trackStartKey = null;
-    rebuild();
-    return;
-  }
-
-  if (nodes.has(key)) {
-    selectedKey = key;
-    refreshSelection();
-    return;
-  }
-
-  if (currentTool === 'start' && findSingleType('start')) {
-    showToast('Only one Start for now');
-    return;
-  }
-  if (currentTool === 'finish' && findSingleType('finish')) {
-    showToast('Only one Finish for now');
-    return;
-  }
-
-  pushHistory();
-  nodes.set(key, { key, type: currentTool, height: currentTool === 'start' ? 2 : 0, mesh: null });
-  selectedKey = key;
-  rebuild();
-  hint.classList.add('hidden');
-}
-
-function changeHeight(delta) {
-  if (isRunning || !selectedKey || !nodes.has(selectedKey)) return;
-  const node = nodes.get(selectedKey);
-  const next = THREE.MathUtils.clamp(node.height + delta, 0, 6);
-  if (next === node.height) return;
-  pushHistory();
-  node.height = next;
-  rebuild();
-}
-
-function connectedKeys(key) {
-  const result = [];
-  for (const id of tracks) {
-    const [aKey, bKey] = trackEnds(id);
-    if (aKey === key && nodes.has(bKey)) result.push(bKey);
-    if (bKey === key && nodes.has(aKey)) result.push(aKey);
-  }
-  return result;
-}
-
-function connectedPath(startKey, finishKey) {
-  const queue = [startKey];
-  const previous = new Map([[startKey, null]]);
-
-  while (queue.length) {
-    const key = queue.shift();
-    if (key === finishKey) break;
-    for (const next of connectedKeys(key)) {
-      if (previous.has(next)) continue;
-      previous.set(next, key);
-      queue.push(next);
-    }
-  }
-
-  if (!previous.has(finishKey)) return null;
-  const path = [];
-  let current = finishKey;
-  while (current) {
-    path.unshift(current);
-    current = previous.get(current);
-  }
-  return path;
-}
-
-function createMarble() {
-  const mesh = new THREE.Mesh(
-    new THREE.SphereGeometry(0.23, 24, 18),
-    new THREE.MeshStandardMaterial({
-      color: 0xcaf4ff,
-      emissive: colors.marble,
-      emissiveIntensity: 0.65,
-      roughness: 0.12,
-      metalness: 0.62,
-    })
-  );
-  mesh.castShadow = true;
-  scene.add(mesh);
-  return mesh;
-}
-
-function stopRun(message = null) {
-  isRunning = false;
-  runState = null;
-  if (marble) {
-    scene.remove(marble);
-    marble.geometry.dispose();
-    marble.material.dispose();
-    marble = null;
-  }
-  playButton.classList.remove('running');
-  playIcon.textContent = '▶';
-  playLabel.textContent = 'PLAY';
-  controls.enabled = true;
-  if (message) showToast(message);
-}
-
-function startRun() {
-  const start = findSingleType('start');
-  const finish = findSingleType('finish');
-  if (!start || !finish) {
-    showToast('Add a Start and Finish first');
-    return;
-  }
-
-  const path = connectedPath(start.key, finish.key);
-  if (!path || path.length < 2) {
-    showToast('The route is not connected');
-    return;
-  }
-
-  marble = createMarble();
-  const startNode = nodes.get(path[0]);
-  marble.position.copy(startNode.mesh.position);
-  marble.position.y = nodeY(startNode) + 0.48;
-
-  runState = {
-    path,
-    segment: 0,
-    progress: 0,
-    speed: 2.1,
-    failed: false,
-  };
-  isRunning = true;
-  playButton.classList.add('running');
-  playIcon.textContent = '■';
-  playLabel.textContent = 'STOP';
-}
-
-function updateMarble(dt) {
-  if (!isRunning || !runState || !marble) return;
-
-  const { path } = runState;
-  const a = nodes.get(path[runState.segment]);
-  const b = nodes.get(path[runState.segment + 1]);
-  if (!a || !b || !tracks.has(trackId(a.key, b.key))) return stopRun('Track changed');
-
-  const p1 = a.mesh.position.clone();
-  const p2 = b.mesh.position.clone();
-  p1.y = nodeY(a) + 0.47;
-  p2.y = nodeY(b) + 0.47;
-
-  const distance = p1.distanceTo(p2);
-  const slope = (p1.y - p2.y) / Math.max(distance, 0.01);
-  runState.speed += slope * 4.6 * dt;
-  runState.speed -= 0.34 * dt;
-  runState.speed = Math.min(runState.speed, 6.5);
-
-  if (runState.speed < 0.34) {
-    stopRun('The marble ran out of speed');
-    return;
-  }
-
-  runState.progress += (runState.speed * dt) / distance;
-
-  while (runState.progress >= 1) {
-    runState.progress -= 1;
-    runState.segment++;
-    if (runState.segment >= path.length - 1) {
-      burstAt(marble.position);
-      stopRun('Finish!');
-      return;
-    }
-  }
-
-  const currentA = nodes.get(path[runState.segment]);
-  const currentB = nodes.get(path[runState.segment + 1]);
-  const ca = currentA.mesh.position.clone();
-  const cb = currentB.mesh.position.clone();
-  ca.y = nodeY(currentA) + 0.47;
-  cb.y = nodeY(currentB) + 0.47;
-  marble.position.lerpVectors(ca, cb, smoothstep(runState.progress));
-
-  const direction = cb.clone().sub(ca).normalize();
-  marble.rotateOnWorldAxis(new THREE.Vector3(direction.z, 0, -direction.x).normalize(), runState.speed * dt / 0.23);
-}
-
-function smoothstep(t) { return t * t * (3 - 2 * t); }
-
-function burstAt(position) {
-  for (let i = 0; i < 16; i++) {
-    const spark = new THREE.Mesh(
-      new THREE.SphereGeometry(0.045, 6, 4),
-      new THREE.MeshBasicMaterial({ color: i % 2 ? colors.finish : colors.marble })
-    );
-    spark.position.copy(position);
-    spark.userData.velocity = new THREE.Vector3((Math.random() - .5) * 4, Math.random() * 4 + 1, (Math.random() - .5) * 4);
-    spark.userData.life = 1;
-    fxLayer.add(spark);
-  }
-}
-
-function updateFx(dt) {
-  for (const child of [...fxLayer.children]) {
-    child.userData.velocity.y -= 6 * dt;
-    child.position.addScaledVector(child.userData.velocity, dt);
-    child.userData.life -= dt * 1.7;
-    child.scale.setScalar(Math.max(0, child.userData.life));
-    if (child.userData.life <= 0) fxLayer.remove(child);
-  }
-}
-
-for (const button of toolButtons) {
-  button.addEventListener('click', () => setTool(button.dataset.tool));
-}
-
-playButton.addEventListener('click', () => isRunning ? stopRun() : startRun());
-raiseButton.addEventListener('click', () => changeHeight(1));
-lowerButton.addEventListener('click', () => changeHeight(-1));
-
-undoButton.addEventListener('click', () => {
-  if (isRunning) stopRun();
-  if (!history.length) return showToast('Nothing to undo');
-  restore(history.pop());
-});
-
-clearButton.addEventListener('click', () => {
-  if (!nodes.size && !tracks.size) return;
-  if (isRunning) stopRun();
-  pushHistory();
-  nodes.clear();
-  tracks.clear();
-  selectedKey = null;
-  trackStartKey = null;
-  rebuild();
-  hint.classList.remove('hidden');
-});
-
-canvas.addEventListener('pointerdown', event => {
-  pointerDown = { x: event.clientX, y: event.clientY, time: performance.now() };
-});
-
-canvas.addEventListener('pointerup', event => {
-  if (!pointerDown || event.pointerType === 'touch' && event.isPrimary === false) return;
-  const moved = Math.hypot(event.clientX - pointerDown.x, event.clientY - pointerDown.y);
-  const elapsed = performance.now() - pointerDown.time;
-  pointerDown = null;
-  if (moved > 8 || elapsed > 650) return;
-
-  const hits = pick(event);
-  const nodeHit = hits.find(hit => hit.object.parent?.userData?.kind === 'node' || hit.object.userData?.kind === 'node');
-  if (nodeHit) {
-    const group = nodeHit.object.userData.kind === 'node' ? nodeHit.object : nodeHit.object.parent;
-    const key = group.userData.key;
-    if (currentTool === 'track') {
-      useTrackTool(key);
-      return;
-    }
-    selectedKey = key;
-    refreshSelection();
-    if (currentTool === 'delete') placeAt(key);
-    return;
-  }
-
-  const tileHit = hits.find(hit => hit.object.userData?.kind === 'tile');
-  if (tileHit) placeAt(tileHit.object.userData.key);
-});
-
-canvas.addEventListener('pointermove', event => {
-  if (event.pointerType !== 'mouse') return;
-  const hits = pick(event);
-  const tileHit = hits.find(hit => hit.object.userData?.kind === 'tile');
-  if (hoveredTile && hoveredTile !== tileHit?.object) hoveredTile.material = tileMaterial;
-  hoveredTile = tileHit?.object ?? null;
-  if (hoveredTile) hoveredTile.material = tileHoverMaterial;
-});
-
-canvas.addEventListener('pointerleave', () => {
-  if (hoveredTile) hoveredTile.material = tileMaterial;
-  hoveredTile = null;
-});
-
-window.addEventListener('resize', () => {
-  camera.aspect = innerWidth / innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-});
-
-function seedDemo() {
-  const demo = [
-    { key: '-3,1', type: 'start', height: 3 },
-    { key: '-2,1', type: 'node', height: 2 },
-    { key: '-1,1', type: 'node', height: 2 },
-    { key: '0,1', type: 'node', height: 1 },
-    { key: '1,0', type: 'node', height: 1 },
-    { key: '2,0', type: 'node', height: 0 },
-    { key: '3,-1', type: 'finish', height: 0 },
-  ];
-  for (const n of demo) nodes.set(n.key, { ...n, mesh: null });
-  for (let i = 0; i < demo.length - 1; i++) tracks.add(trackId(demo[i].key, demo[i + 1].key));
-  rebuild();
-}
-
-seedDemo();
-
-const clock = new THREE.Clock();
-function animate() {
-  requestAnimationFrame(animate);
-  const dt = Math.min(clock.getDelta(), 0.04);
-  controls.update();
-  updateMarble(dt);
-  updateFx(dt);
-  renderer.render(scene, camera);
-}
-animate();
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import RAPIER from 'https://unpkg.com/@dimforge/rapier3d-compat@0.19.3/rapier.mjs';
+await RAPIER.init();
+
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const ui={app:$('#app'),canvas:$('#game'),loading:$('#loadingScreen'),play:$('#playButton'),playLabel:$('#playLabel'),playIcon:$('#playIcon'),undo:$('#undoButton'),clear:$('#clearButton'),sound:$('#soundButton'),up:$('#raiseButton'),down:$('#lowerButton'),selection:$('#selectionPanel'),selectedType:$('#selectedType'),height:$('#heightValue'),hint:$('#hint'),hintTitle:$('#hintTitle'),hintText:$('#hintText'),toast:$('#toast'),missionKicker:$('#missionKicker'),missionTitle:$('#missionTitle'),missionText:$('#missionText'),missionMeta:$('#missionMeta'),stars:$('#starCount'),browser:$('#challengeBrowser'),grid:$('#challengeGrid'),closeBrowser:$('#closeChallenges'),result:$('#resultPanel'),resultTitle:$('#resultTitle'),resultStars:$('#resultStars'),resultText:$('#resultText'),replay:$('#replayChallenge'),next:$('#nextChallenge'),tools:$$('.tool'),modes:$$('[data-mode-button]')};
+const STEP=.86,R=1.05,GRID=5,BALL=.24,FIXED=1/60,PROG='marbleLabProgressV3',SAVE='marbleLabSandboxV3';
+const C={tile:0x142435,hover:0x284a64,node:0xe7f1f8,start:0x75f092,finish:0xffd96a,checkpoint:0x62dfff,booster:0xff9d5d,jump:0x79f0cf,magnet:0xff70b3,bumper:0xb99cff,rail:0xb9cad7,ball:0x74e7ff};
+const L={node:'Node',track:'Track',start:'Start',finish:'Finish',checkpoint:'Checkpoint',booster:'Booster',jump:'Jump pad',magnet:'Magnet',bumper:'Bumper',delete:'Delete'};
+const UNLOCK={node:0,track:0,booster:1,jump:3,magnet:6,bumper:9,start:0,finish:0,delete:0};
+const CH=[
+ ['first-drop','The First Drop','Three towers. Two tracks. One very brave marble.','Connect Start → checkpoint → Finish.',9,2,{track:2},[],[['-3,1','start',4],['0,1','checkpoint',2,0],['3,-1','finish',0]]],
+ ['uphill-battle','Uphill Battle','Gravity has made its opinion clear. Ignore it.','Use a Booster to conquer the uphill checkpoint.',12,4,{booster:1,node:1,track:4},['booster'],[['-4,1','start',1],['-1,0','checkpoint',3,0],['2,0','checkpoint',2,1],['4,-1','finish',0]]],
+ ['leap-of-faith','Leap of Faith','The shortest path between two points is occasionally airborne.','Use a Jump pad before the Finish.',13,4,{jump:1,node:2,track:4},['jump'],[['-4,2','start',4],['0,0','checkpoint',1,0],['4,-2','finish',0]]],
+ ['magnetic-personality','Magnetic Personality','Sometimes the best solution is invisible force.','Use a Magnet and visit both checkpoints.',15,5,{magnet:1,node:2,track:5},['magnet'],[['-4,0','start',4],['-1,2','checkpoint',2,0],['2,1','checkpoint',1,1],['4,-1','finish',0]]],
+ ['purple-chaos','Purple Chaos','A Bumper is a mistake with confidence. Make it useful.','Use a Bumper and hit every checkpoint.',17,6,{bumper:1,node:3,track:6},['bumper'],[['-4,2','start',5],['-2,-1','checkpoint',3,0],['1,1','checkpoint',2,1],['4,-2','finish',0]]],
+ ['the-gauntlet','The Gauntlet','Every machine. Every bad idea. One glorious run.','Use Booster, Jump, Magnet and Bumper in one machine.',22,9,{booster:1,jump:1,magnet:1,bumper:1,node:4,track:9},['booster','jump','magnet','bumper'],[['-5,2','start',6],['-2,1','checkpoint',4,0],['0,-1','checkpoint',3,1],['2,1','checkpoint',2,2],['5,-2','finish',0]]]
+].map((a,i)=>({id:a[0],name:a[1],description:a[2],objective:a[3],targetTime:a[4],targetTracks:a[5],inventory:a[6],required:a[7],nodes:a[8].map(n=>({key:n[0],type:n[1],height:n[2],order:n[3],fixed:true})),reward:['Unlock Booster','Master the Booster','Unlock Magnet','Unlock Bumper','Advanced Lab Access','You are the Lab'][i]}));
+
+let prog=(()=>{try{return JSON.parse(localStorage.getItem(PROG))||{completed:{}}}catch{return{completed:{}}}})(); prog.completed||={};
+let mode='sandbox',challenge=null,tool='node',selected=null,trackStart=null,running=false,sound=true,toastTimer,pointerDown,hovered,sandboxBackup,challengeStart;
+let world,body,ballMesh,ballLight,acc=0,runStart=0,elapsed=0,checkpointIndex=0,finishWarn=0,audio,cooldowns=new Map(),trailTick=0;
+const nodes=new Map(),tracks=new Map(),history=[],tiles=new Map();
+const stars=()=>Object.values(prog.completed).reduce((a,b)=>a+(+b||0),0), unlocked=t=>stars()>=(UNLOCK[t]??0), key=(a,b)=>`${a},${b}`, parse=k=>k.split(',').map(Number), pos=(q,r)=>new THREE.Vector3(R*Math.sqrt(3)*(q+r/2),0,R*1.5*r), tid=(a,b)=>[a,b].sort().join('|');
+const nodeY=n=>n.height*STEP+.22, point=n=>{const p=n.mesh?n.mesh.position.clone():pos(...parse(n.key));p.y=nodeY(n)+.27;return p};
+const currentChallenge=()=>challenge==null?null:CH[challenge];
+
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0x06101a); scene.fog=new THREE.FogExp2(0x06101a,.018);
+const camera=new THREE.PerspectiveCamera(44,innerWidth/innerHeight,.1,140); camera.position.set(13,15,20);
+const renderer=new THREE.WebGLRenderer({canvas:ui.canvas,antialias:true,powerPreference:'high-performance'}); renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
+const pmrem=new THREE.PMREMGenerator(renderer),room=new RoomEnvironment();scene.environment=pmrem.fromScene(room,.04).texture;room.dispose();pmrem.dispose();
+const controls=new OrbitControls(camera,ui.canvas);Object.assign(controls,{enableDamping:true,dampingFactor:.075,minDistance:7,maxDistance:38,maxPolarAngle:Math.PI*.49,minPolarAngle:Math.PI*.13,screenSpacePanning:false});controls.target.set(0,1.2,0);controls.touches.ONE=THREE.TOUCH.ROTATE;controls.touches.TWO=THREE.TOUCH.DOLLY_PAN;
+scene.add(new THREE.HemisphereLight(0xb9e9ff,0x07101b,1.8));const sun=new THREE.DirectionalLight(0xffffff,3.4);sun.position.set(8,18,11);sun.castShadow=true;sun.shadow.mapSize.set(1536,1536);Object.assign(sun.shadow.camera,{left:-19,right:19,top:19,bottom:-19});scene.add(sun);const rim=new THREE.DirectionalLight(0x49cfff,2);rim.position.set(-13,7,-10);scene.add(rim);
+const board=new THREE.Group(),build=new THREE.Group(),rails=new THREE.Group(),fx=new THREE.Group();scene.add(board,build,rails,fx);
+const tileGeo=new THREE.CylinderGeometry(R*.96,R,.2,6);tileGeo.rotateY(Math.PI/6);const tileMat=new THREE.MeshStandardMaterial({color:C.tile,roughness:.56,metalness:.25}),hoverMat=new THREE.MeshStandardMaterial({color:C.hover,roughness:.45,metalness:.3,emissive:0x173348,emissiveIntensity:.45});
+for(let q=-GRID;q<=GRID;q++)for(let r=Math.max(-GRID,-q-GRID);r<=Math.min(GRID,-q+GRID);r++){const k=key(q,r),m=new THREE.Mesh(tileGeo,tileMat),p=pos(q,r);m.position.set(p.x,-.1,p.z);m.receiveShadow=true;m.userData={kind:'tile',key:k};board.add(m);tiles.set(k,m)}
+const plate=new THREE.Mesh(new THREE.CylinderGeometry(11.3,11.7,.42,6),new THREE.MeshStandardMaterial({color:0x07111d,roughness:.38,metalness:.72}));plate.position.y=-.41;plate.rotation.y=Math.PI/6;board.add(plate);const floor=new THREE.Mesh(new THREE.CircleGeometry(34,80),new THREE.MeshStandardMaterial({color:0x02070c,roughness:.94}));floor.rotation.x=-Math.PI/2;floor.position.y=-.66;scene.add(floor);
+const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();
+
+function tone(f,d=.08,type='sine',v=.03){if(!sound)return;try{audio||=new(window.AudioContext||window.webkitAudioContext);const o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(v,audio.currentTime);g.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+d);o.connect(g).connect(audio.destination);o.start();o.stop(audio.currentTime+d)}catch{}}
+function toast(s,d=1600){ui.toast.textContent=s;ui.toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>ui.toast.classList.remove('show'),d)}
+function hint(a,b){ui.hintTitle.textContent=a;ui.hintText.textContent=b;ui.hint.classList.remove('hidden')}
+function clearLayer(l){for(const o of[...l.children]){o.traverse(x=>{x.geometry?.dispose?.();Array.isArray(x.material)?x.material.forEach(m=>m.dispose?.()):x.material?.dispose?.()});l.remove(o)}}
+function color(t){return C[t]??C.node}
+function nodeMesh(n){const g=new THREE.Group();g.userData={kind:'node',key:n.key};const h=Math.max(.2,n.height*STEP+.2),col=color(n.type);const stem=new THREE.Mesh(new THREE.CylinderGeometry(.47,.58,h,12),new THREE.MeshStandardMaterial({color:0x607487,roughness:.42,metalness:.62}));stem.position.y=h/2;stem.castShadow=true;g.add(stem);const top=new THREE.Mesh(new THREE.CylinderGeometry(.71,.64,.2,18),new THREE.MeshPhysicalMaterial({color:col,roughness:.23,metalness:.58,clearcoat:.65,emissive:col,emissiveIntensity:n.type==='node'?.02:.12}));top.position.y=h+.08;top.castShadow=true;g.add(top);const ring=new THREE.Mesh(new THREE.TorusGeometry(.42,.08,10,28),new THREE.MeshStandardMaterial({color:0x172838,roughness:.3,metalness:.72}));ring.rotation.x=Math.PI/2;ring.position.y=h+.24;g.add(ring);const halo=new THREE.Mesh(new THREE.TorusGeometry(.76,.022,6,36),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:selected===n.key||trackStart===n.key?.95:.12}));halo.rotation.x=Math.PI/2;halo.position.y=h+.01;g.add(halo);
+ if(n.type==='start'){const m=new THREE.Mesh(new THREE.SphereGeometry(.19,18,12),new THREE.MeshStandardMaterial({color:0xffffff,emissive:col,emissiveIntensity:3}));m.position.y=h+.49;g.add(m)}
+ if(n.type==='finish'){const m=new THREE.Mesh(new THREE.OctahedronGeometry(.28),new THREE.MeshPhysicalMaterial({color:0xffffff,emissive:col,emissiveIntensity:2}));m.position.y=h+.55;g.add(m)}
+ if(n.type==='checkpoint'){const m=new THREE.Mesh(new THREE.TorusGeometry(.33,.055,8,24),new THREE.MeshBasicMaterial({color:col}));m.position.y=h+.58;m.rotation.y=Math.PI/2;g.add(m)}
+ if(n.type==='booster')for(const z of[-.2,.08,.36]){const m=new THREE.Mesh(new THREE.ConeGeometry(.13,.26,3),new THREE.MeshBasicMaterial({color:0xffd0aa}));m.position.set(0,h+.36,z);m.rotation.x=Math.PI/2;g.add(m)}
+ if(n.type==='jump'){const m=new THREE.Mesh(new THREE.BoxGeometry(.72,.11,.58),new THREE.MeshPhysicalMaterial({color:col,metalness:.4,clearcoat:.5}));m.position.set(0,h+.34,.04);m.rotation.x=-.22;g.add(m)}
+ if(n.type==='magnet'){const m=new THREE.Mesh(new THREE.TorusGeometry(.29,.095,12,28,Math.PI*1.35),new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:.8}));m.position.y=h+.48;m.rotation.z=Math.PI*.82;g.add(m)}
+ if(n.type==='bumper'){const m=new THREE.Mesh(new THREE.SphereGeometry(.37,20,12,0,Math.PI*2,0,Math.PI/2),new THREE.MeshPhysicalMaterial({color:col,emissive:col,emissiveIntensity:.3,clearcoat:1}));m.position.y=h+.25;g.add(m)}
+ const t=tiles.get(n.key);g.position.set(t.position.x,0,t.position.z);build.add(g);n.mesh=g}
+function trackMesh(t){const a=nodes.get(t.a),b=nodes.get(t.b);if(!a||!b)return;const p1=point(a),p2=point(b),d=p2.clone().sub(p1),len=d.length(),dir=d.clone().normalize(),mid=p1.clone().add(p2).multiplyScalar(.5),q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),dir),qy=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),dir),x=new THREE.Vector3(1,0,0).applyQuaternion(q),g=new THREE.Group();g.userData={kind:'track',trackId:t.id};const bed=new THREE.Mesh(new THREE.BoxGeometry(.76,.075,len),new THREE.MeshStandardMaterial({color:0x182a3a,roughness:.36,metalness:.64}));bed.position.copy(mid);bed.position.y-=.09;bed.quaternion.copy(q);g.add(bed);for(const s of[-1,1]){const m=new THREE.Mesh(new THREE.CylinderGeometry(.065,.065,len,8),new THREE.MeshPhysicalMaterial({color:C.rail,roughness:.18,metalness:.88}));m.position.copy(mid).addScaledVector(x,s*.29);m.position.y+=.04;m.quaternion.copy(qy);m.userData.trackId=t.id;g.add(m)}rails.add(g)}
+function rebuild(){clearLayer(build);clearLayer(rails);nodes.forEach(nodeMesh);tracks.forEach(trackMesh);selectionUI()}
+function snapshot(){return{nodes:[...nodes.values()].map(({key,type,height,fixed=false,order})=>({key,type,height,fixed,order})),tracks:[...tracks.values()].map(x=>({...x}))}}
+function restore(s,save=true){nodes.clear();tracks.clear();for(const n of s?.nodes||[])nodes.set(n.key,{...n,mesh:null});for(const t of s?.tracks||[])tracks.set(t.id,{...t});selected=nodes.has(selected)?selected:null;trackStart=null;rebuild();if(save&&mode==='sandbox')saveSandbox();refreshUI()}
+function saveSandbox(){try{localStorage.setItem(SAVE,JSON.stringify(snapshot()))}catch{}}
+function loadSandbox(){try{return JSON.parse(localStorage.getItem(SAVE))}catch{return null}}
+function push(){history.push(snapshot());if(history.length>50)history.shift()}
+function seed(){[['-4,2','start',5],['-2,1','node',4],['0,1','node',3],['2,0','node',1],['4,-1','finish',0]].forEach(n=>nodes.set(n[0],{key:n[0],type:n[1],height:n[2],fixed:false,mesh:null}));[['-4,2','-2,1'],['-2,1','0,1'],['0,1','2,0'],['2,0','4,-1']].forEach(([a,b])=>{const id=tid(a,b);tracks.set(id,{id,a,b,fixed:false})});rebuild();saveSandbox()}
+function selectionUI(){const n=selected&&nodes.get(selected);ui.selection.classList.toggle('visible',!!n);if(n){ui.selectedType.textContent=L[n.type];ui.height.textContent=`Height ${n.height}${n.fixed?' · fixed':''}`}}
+function userTracks(){return[...tracks.values()].filter(x=>!x.fixed).length}function used(type){return[...nodes.values()].filter(n=>!n.fixed&&n.type===type).length}
+function remaining(type){const c=currentChallenge();if(!c)return Infinity;const max=c.inventory[type]??0;return Math.max(0,max-(type==='track'?userTracks():used(type)))}
+function can(type){return mode==='sandbox'?unlocked(type):type==='delete'||(currentChallenge()?.inventory[type]??0)>0}
+function toolUI(){ui.stars.textContent=stars();ui.tools.forEach(b=>{const t=b.dataset.tool,ok=can(t);b.classList.toggle('locked',!ok);b.setAttribute('aria-disabled',String(!ok));const em=b.querySelector('em');if(em){if(mode==='challenge'){em.textContent=`×${remaining(t)}`;em.style.display='block'}else{em.textContent=`★${UNLOCK[t]}`;em.style.display=''}}})}
+function mission(){const c=currentChallenge();if(mode==='challenge'&&c){const cps=c.nodes.filter(n=>n.type==='checkpoint').length;ui.missionKicker.textContent=`EXPERIMENT ${challenge+1} / ${CH.length}`;ui.missionTitle.textContent=c.name;ui.missionText.textContent=c.objective;ui.missionMeta.innerHTML=`<span>Checkpoints ${checkpointIndex}/${cps}</span><span>${Object.entries(c.inventory).map(([k,v])=>`${L[k]||k} ×${v}`).join(' · ')}</span>`}else{ui.missionKicker.textContent='SANDBOX';ui.missionTitle.textContent='Build the impossible.';ui.missionText.textContent='Connect anything to anything. Press Play and let real physics judge your engineering.';ui.missionMeta.innerHTML=`<span>★ ${stars()} earned</span><span>${tracks.size} tracks</span><span>${nodes.size} nodes</span>`}}
+function refreshUI(){toolUI();mission();selectionUI()}
+function setTool(t){if(!can(t))return toast(mode==='sandbox'?`Earn ${UNLOCK[t]} stars to unlock ${L[t]}`:'That part is not available here');tool=t;trackStart=null;ui.tools.forEach(b=>b.classList.toggle('active',b.dataset.tool===t));rebuild();hint(t==='track'?'Track tool armed.':`${L[t]} selected.`,t==='track'?'Tap two nodes to connect them. Distance does not matter.':t==='delete'?'Tap a node or track to remove it.':'Tap an empty hex to place it.')}
+function single(type){return[...nodes.values()].find(n=>n.type===type)}
+function place(k){if(running||!tiles.has(k)||['track','delete'].includes(tool))return;if(nodes.has(k)){selected=k;return rebuild()}if(!can(tool))return;if(mode==='challenge'&&remaining(tool)<=0)return toast(`No ${L[tool]}s left`);if(tool==='start'&&single('start'))return toast('Only one Start');if(tool==='finish'&&single('finish'))return toast('Only one Finish');push();nodes.set(k,{key:k,type:tool,height:tool==='start'?3:0,fixed:false,mesh:null});selected=k;rebuild();refreshUI();if(mode==='sandbox')saveSandbox();tone(360,.06)}
+function connect(k){if(!nodes.has(k))return;if(!trackStart){trackStart=k;selected=k;rebuild();return toast('Now tap the second node')}if(trackStart===k)return toast('Choose a different node');if(mode==='challenge'&&remaining('track')<=0){trackStart=null;rebuild();return toast('No tracks left')}const id=tid(trackStart,k);if(tracks.has(id)){trackStart=null;rebuild();return toast('Already connected')}push();tracks.set(id,{id,a:trackStart,b:k,fixed:false});selected=k;trackStart=null;rebuild();refreshUI();if(mode==='sandbox')saveSandbox();tone(520,.08,'triangle')}
+function delNode(k){const n=nodes.get(k);if(!n)return;if(n.fixed)return toast('That node is fixed');push();nodes.delete(k);for(const[id,t]of[...tracks])if(t.a===k||t.b===k)tracks.delete(id);selected=selected===k?null:selected;rebuild();refreshUI();if(mode==='sandbox')saveSandbox()}
+function delTrack(id){const t=tracks.get(id);if(!t)return;if(t.fixed)return toast('That track is fixed');push();tracks.delete(id);rebuild();refreshUI();if(mode==='sandbox')saveSandbox()}
+function height(d){const n=selected&&nodes.get(selected);if(!n||running)return;if(n.fixed)return toast('That node is fixed');const h=THREE.MathUtils.clamp(n.height+d,0,7);if(h===n.height)return;push();n.height=h;rebuild();if(mode==='sandbox')saveSandbox();tone(d>0?430:290,.05)}
+
+function addTrackCollider(t){const a=nodes.get(t.a),b=nodes.get(t.b);if(!a||!b)return;const p1=point(a),p2=point(b),d=p2.clone().sub(p1),len=d.length(),dir=d.clone().normalize(),mid=p1.clone().add(p2).multiplyScalar(.5),q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),dir),lx=new THREE.Vector3(1,0,0).applyQuaternion(q),ly=new THREE.Vector3(0,1,0).applyQuaternion(q);world.createCollider(RAPIER.ColliderDesc.cuboid(.37,.045,len/2).setTranslation(mid.x,mid.y-.095,mid.z).setRotation(q).setFriction(.72));for(const s of[-1,1]){const o=lx.clone().multiplyScalar(s*.39).addScaledVector(ly,.09);world.createCollider(RAPIER.ColliderDesc.cuboid(.055,.14,len/2).setTranslation(mid.x+o.x,mid.y+o.y,mid.z+o.z).setRotation(q).setFriction(.42))}}
+function buildWorld(){world?.free?.();world=new RAPIER.World({x:0,y:-9.81,z:0});nodes.forEach(n=>{const p=point(n);world.createCollider(RAPIER.ColliderDesc.cylinder(.075,.57).setTranslation(p.x,p.y-.13,p.z).setFriction(.68).setRestitution(n.type==='bumper'?.7:.04))});tracks.forEach(addTrackCollider)}
+function direction(k){const n=nodes.get(k),arr=[...tracks.values()].filter(t=>t.a===k||t.b===k).map(t=>{const o=nodes.get(t.a===k?t.b:t.a);return{d:point(o).sub(point(n)).normalize(),drop:nodeY(n)-nodeY(o)}}).sort((a,b)=>b.drop-a.drop);return arr[0]?.d||new THREE.Vector3(0,0,1)}
+function spawn(){const m=new THREE.Mesh(new THREE.SphereGeometry(BALL,28,20),new THREE.MeshPhysicalMaterial({color:0xcff9ff,emissive:C.ball,emissiveIntensity:.55,roughness:.08,metalness:.58,clearcoat:1}));m.castShadow=true;scene.add(m);const l=new THREE.PointLight(C.ball,3.5,4.5,2);scene.add(l);return[m,l]}
+function stop(msg){running=false;ui.play.classList.remove('running');ui.playIcon.textContent='▶';ui.playLabel.textContent='PLAY';if(ballMesh){scene.remove(ballMesh);ballMesh.geometry.dispose();ballMesh.material.dispose()}if(ballLight)scene.remove(ballLight);ballMesh=ballLight=body=null;world?.free?.();world=null;cooldowns.clear();if(msg)toast(msg);hint(mode==='challenge'?'Experiment paused.':'Build. Test. Break reality.',mode==='challenge'?'Adjust the machine and run it again.':'Place nodes, then use Track and tap two nodes to connect them.')}
+function start(){const s=single('start'),f=single('finish'),c=currentChallenge();if(!s||!f)return toast('Add a Start and Finish first');if(!tracks.size)return toast('Build at least one track');if(c)for(const t of c.required)if(![...nodes.values()].some(n=>n.type===t))return toast(`This experiment requires a ${L[t]}`);stop();buildWorld();[ballMesh,ballLight]=spawn();const p=point(s);body=world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(p.x,p.y+.34,p.z).setLinearDamping(.08).setAngularDamping(.05).setCcdEnabled(true));world.createCollider(RAPIER.ColliderDesc.ball(BALL).setDensity(1.1).setFriction(.58).setRestitution(.12),body);const d=direction(s.key);body.setLinvel({x:d.x*1.3,y:d.y*1.3,z:d.z*1.3},true);running=true;acc=0;runStart=performance.now();elapsed=0;checkpointIndex=0;cooldowns.clear();ui.play.classList.add('running');ui.playIcon.textContent='■';ui.playLabel.textContent='STOP';hint('Physics is live.','Move the camera while the marble runs.');mission();tone(190,.12,'sawtooth',.045)}
+function burst(p,col=C.ball,count=14){for(let i=0;i<count;i++){const m=new THREE.Mesh(new THREE.SphereGeometry(.04,6,4),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.9}));m.position.copy(p);m.userData.v=new THREE.Vector3((Math.random()-.5)*4.5,Math.random()*4+.5,(Math.random()-.5)*4.5);m.userData.life=.7+Math.random()*.4;fx.add(m)}}
+function specials(dt){const p0=body.translation(),p=new THREE.Vector3(p0.x,p0.y,p0.z),now=performance.now();for(const n of nodes.values()){if(!['booster','jump','magnet','bumper'].includes(n.type))continue;const q=point(n),dist=p.distanceTo(q);if(n.type==='magnet'&&dist<4.2&&dist>.2){const v=q.clone().sub(p).normalize().multiplyScalar((4.2-dist)*1.9*dt);body.applyImpulse({x:v.x,y:v.y*.45,z:v.z},true);continue}if(dist>.72||now<(cooldowns.get(n.key)||0))continue;cooldowns.set(n.key,now+900);const lv=body.linvel();let d=new THREE.Vector3(lv.x,lv.y,lv.z);d.lengthSq()<.2?d=direction(n.key):d.normalize();if(n.type==='booster'){d.multiplyScalar(4.8);d.y+=.22}else if(n.type==='jump'){d.multiplyScalar(2.1);d.y+=4.9}else{const side=new THREE.Vector3(-d.z,0,d.x).multiplyScalar((Math.random()>.5?1:-1)*1.25);d.multiplyScalar(2.6).add(side);d.y+=2.3}body.applyImpulse({x:d.x,y:d.y,z:d.z},true);burst(q,color(n.type),16);tone(n.type==='booster'?620:n.type==='jump'?430:260,.1,n.type==='bumper'?'square':'triangle',.04)}}
+function checkpoints(){return(currentChallenge()?.nodes||[]).filter(n=>n.type==='checkpoint').sort((a,b)=>(a.order??0)-(b.order??0))}
+function complete(){const c=currentChallenge();const f=single('finish');burst(point(f),C.finish,40);[523,659,784,1047].forEach((x,i)=>setTimeout(()=>tone(x,.18,'triangle',.045),i*80));if(!c)return stop('Success! Physics approves.');const earned=1+(elapsed<=c.targetTime)+(userTracks()<=c.targetTracks),old=prog.completed[c.id]||0;prog.completed[c.id]=Math.max(old,earned);localStorage.setItem(PROG,JSON.stringify(prog));stop();toolUI();renderChallenges();ui.resultTitle.textContent=earned===3?'Perfect engineering.':earned===2?'Beautiful machine.':'Experiment survived.';ui.resultStars.innerHTML=[0,1,2].map(i=>`<span class="${i<earned?'earned':''}">★</span>`).join('');ui.resultText.textContent=`${elapsed.toFixed(1)} seconds · ${userTracks()} tracks`;ui.result.classList.add('open');ui.result.setAttribute('aria-hidden','false');ui.next.style.display=challenge<CH.length-1?'':'none'}
+function checkGoals(){const p0=body.translation(),p=new THREE.Vector3(p0.x,p0.y,p0.z),cp=checkpoints();if(checkpointIndex<cp.length){const n=nodes.get(cp[checkpointIndex].key);if(p.distanceTo(point(n))<.72){checkpointIndex++;burst(point(n),C.checkpoint,20);toast(`Checkpoint ${checkpointIndex}/${cp.length}`,900);mission()}}const f=single('finish');if(f&&p.distanceTo(point(f))<.74){if(checkpointIndex<cp.length){if(performance.now()-finishWarn>1500){finishWarn=performance.now();toast('A checkpoint is still missing.')}}else complete()}if(p0.y<-4.5)stop('The marble escaped the laboratory');else if(elapsed>48)stop('Experiment timed out')}
+function step(dt){if(!running||!world||!body)return;acc=Math.min(acc+dt,.15);while(acc>=FIXED){world.timestep=FIXED;specials(FIXED);world.step();acc-=FIXED}elapsed=(performance.now()-runStart)/1000;const p=body.translation(),q=body.rotation();ballMesh.position.set(p.x,p.y,p.z);ballMesh.quaternion.set(q.x,q.y,q.z,q.w);ballLight.position.copy(ballMesh.position);checkGoals();trailTick+=dt;if(trailTick>.04){trailTick=0;const m=new THREE.Mesh(new THREE.SphereGeometry(.035,5,3),new THREE.MeshBasicMaterial({color:C.ball,transparent:true,opacity:.4}));m.position.copy(ballMesh.position);m.userData.v=new THREE.Vector3(0,.03,0);m.userData.life=.3;fx.add(m)}}
+function updateFx(dt){for(const m of[...fx.children]){m.userData.v.y-=5.5*dt;m.position.addScaledVector(m.userData.v,dt);m.userData.life-=dt*1.25;m.material.opacity=Math.max(0,m.userData.life);if(m.userData.life<=0){m.geometry.dispose();m.material.dispose();fx.remove(m)}}}
+
+function renderChallenges(){ui.grid.innerHTML='';CH.forEach((c,i)=>{const open=i===0||(prog.completed[CH[i-1].id]||0)>0,got=prog.completed[c.id]||0,b=document.createElement('button');b.type='button';b.className=`challenge-card${open?'':' locked'}`;b.innerHTML=`<span class="challenge-number">EXPERIMENT ${String(i+1).padStart(2,'0')}</span><h3>${c.name}</h3><p>${c.description}</p><div class="card-stars">${[0,1,2].map(x=>`<span class="${x<got?'earned':''}">★</span>`).join('')}</div><span class="reward">${open?c.reward:'LOCKED'}</span>`;b.onclick=()=>open?loadChallenge(i):tone(110,.08,'square');ui.grid.appendChild(b)})}
+function setMode(m){mode=m;ui.app.dataset.mode=m;ui.modes.forEach(b=>b.classList.toggle('active',b.dataset.modeButton===m));refreshUI()}
+function loadChallenge(i){if(running)stop();if(mode==='sandbox')sandboxBackup=snapshot();challenge=i;history.length=0;selected=trackStart=null;checkpointIndex=0;nodes.clear();tracks.clear();for(const n of CH[i].nodes)nodes.set(n.key,{...n,mesh:null});setMode('challenge');setTool(CH[i].inventory.track?'track':Object.keys(CH[i].inventory)[0]);challengeStart=snapshot();ui.browser.classList.remove('open');ui.browser.setAttribute('aria-hidden','true');hint(CH[i].name,CH[i].objective);tone(280,.09,'triangle')}
+function exitChallenge(){if(running)stop();challenge=null;history.length=0;selected=trackStart=null;setMode('sandbox');restore(sandboxBackup||loadSandbox()||{nodes:[],tracks:[]},false);if(!nodes.size)seed();sandboxBackup=null;setTool('node')}
+function ancestor(o,kind){while(o){if(o.userData?.kind===kind)return o.userData;if(kind==='track'&&o.userData?.trackId)return{kind,trackId:o.userData.trackId};o=o.parent}return null}
+function pick(e){const r=ui.canvas.getBoundingClientRect();mouse.x=(e.clientX-r.left)/r.width*2-1;mouse.y=-(e.clientY-r.top)/r.height*2+1;ray.setFromCamera(mouse,camera);return ray.intersectObjects([build,rails,board],true)}
+
+ui.tools.forEach(b=>b.onclick=()=>setTool(b.dataset.tool));ui.modes.forEach(b=>b.onclick=()=>{if(b.dataset.modeButton==='challenge'){renderChallenges();ui.browser.classList.add('open');ui.browser.setAttribute('aria-hidden','false')}else if(mode==='challenge')exitChallenge();else setMode('sandbox')});
+ui.closeBrowser.onclick=()=>{ui.browser.classList.remove('open');ui.browser.setAttribute('aria-hidden','true')};ui.browser.onclick=e=>{if(e.target===ui.browser)ui.closeBrowser.click()};ui.play.onclick=()=>running?stop():start();ui.up.onclick=()=>height(1);ui.down.onclick=()=>height(-1);ui.sound.onclick=()=>{sound=!sound;ui.sound.textContent=sound?'♪':'×';if(sound)tone(440)};ui.undo.onclick=()=>{if(running)stop();if(!history.length)return toast('Nothing to undo');restore(history.pop())};ui.clear.onclick=()=>{if(running)stop();if(mode==='challenge'){restore(challengeStart,false);history.length=0;checkpointIndex=0;return toast('Experiment reset')}if(nodes.size&&confirm('Clear the entire Marble Lab sandbox?')){push();nodes.clear();tracks.clear();selected=trackStart=null;rebuild();saveSandbox();refreshUI()}};ui.replay.onclick=()=>{ui.result.classList.remove('open');restore(challengeStart,false);checkpointIndex=0};ui.next.onclick=()=>{ui.result.classList.remove('open');if(challenge<CH.length-1)loadChallenge(challenge+1)};
+ui.canvas.addEventListener('pointerdown',e=>pointerDown={x:e.clientX,y:e.clientY,time:performance.now()});ui.canvas.addEventListener('pointerup',e=>{if(!pointerDown)return;const moved=Math.hypot(e.clientX-pointerDown.x,e.clientY-pointerDown.y),time=performance.now()-pointerDown.time;pointerDown=null;if(moved>9||time>650||running)return;const hits=pick(e),nh=hits.find(h=>ancestor(h.object,'node'));if(nh){const k=ancestor(nh.object,'node').key;if(tool==='track')connect(k);else if(tool==='delete')delNode(k);else{selected=k;rebuild()}return}const th=hits.find(h=>ancestor(h.object,'track'));if(th&&tool==='delete')return delTrack(ancestor(th.object,'track').trackId);const tile=hits.find(h=>h.object.userData?.kind==='tile');if(tile)place(tile.object.userData.key)});ui.canvas.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse')return;const t=pick(e).find(h=>h.object.userData?.kind==='tile')?.object;if(hovered&&hovered!==t)hovered.material=tileMat;hovered=t||null;if(hovered)hovered.material=hoverMat});ui.canvas.addEventListener('pointerleave',()=>{if(hovered)hovered.material=tileMat;hovered=null});window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+
+const saved=loadSandbox();if(saved?.nodes?.length)restore(saved,false);else seed();setMode('sandbox');setTool('node');renderChallenges();refreshUI();setTimeout(()=>ui.loading.classList.add('hidden'),250);
+const clock=new THREE.Clock();(function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.04);controls.update();step(dt);updateFx(dt);renderer.render(scene,camera)})();
