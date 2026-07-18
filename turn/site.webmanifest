@@ -1,0 +1,20 @@
+{
+  "id": "./",
+  "name": "TURN",
+  "short_name": "TURN",
+  "description": "A motion-controlled arcade drift racer.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#38d9ff",
+  "theme_color": "#38d9ff",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
