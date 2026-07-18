@@ -4,6 +4,9 @@
 
 globalThis.__turnAnalogGas = 0;
 
+const KENNEY_SEDAN_URL =
+  'https://cdn.jsdelivr.net/gh/wayne-wu/webgpu-crowd-simulation@8caf9be46ec35e26dc28b3ecae000d7aa4d0d177/public/sedan.glb';
+
 const response = await fetch('./game.js', { cache: 'no-store' });
 if (!response.ok) throw new Error(`Could not load game.js (${response.status})`);
 let source = await response.text();
@@ -13,6 +16,13 @@ function replaceRequired(search, replacement, label) {
   if (next === source) console.warn(`TURN patch not applied: ${label}`);
   source = next;
 }
+
+// Load glTF assets through the same Three.js version as the game.
+replaceRequired(
+  "import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js';",
+  `import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js';\nimport { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';`,
+  'GLTFLoader import'
+);
 
 // Motion has two separate jobs:
 // 1. Horizon roll is absolute and follows gravity in screen coordinates.
@@ -176,6 +186,98 @@ replaceRequired(
   `${roadFunction}\n\nfunction makeScenery() {`,
   'road rendering'
 );
+
+// Test a real Kenney vehicle asset. The procedural car remains in the scene as an invisible
+// fallback so physics, ghost logic, and wheel animation code do not need to know about loading.
+const ghostCarBlock = `const ghostCar = makeCar(0x38d9ff, 0.34);
+ghostCar.visible = false;
+ghostCar.traverse((node) => {
+  if (node.isMesh) node.castShadow = false;
+});
+world.add(ghostCar);`;
+
+const assetCarBlock = `${ghostCarBlock}
+
+const proceduralPlayerParts = [...playerCar.children];
+const proceduralGhostParts = [...ghostCar.children];
+
+function makeAssetCar(sourceModel, ghost = false) {
+  const model = sourceModel.clone(true);
+  model.rotation.y = Math.PI;
+  model.scale.setScalar(2.35);
+
+  const originalMeshes = [];
+  model.traverse((node) => {
+    if (node.isMesh) originalMeshes.push(node);
+  });
+
+  for (const node of originalMeshes) {
+    const sourceMaterials = Array.isArray(node.material) ? node.material : [node.material];
+    const styledMaterials = sourceMaterials.map((material) => {
+      const styled = material.clone();
+      const materialName = styled.name || '';
+
+      if (ghost) {
+        styled.transparent = true;
+        styled.opacity = 0.28;
+        styled.depthWrite = false;
+        styled.color?.lerp(new THREE.Color(0x38d9ff), 0.72);
+      } else if (/paint/i.test(materialName)) {
+        styled.color?.set(0xffd43b);
+      }
+
+      return styled;
+    });
+
+    node.material = Array.isArray(node.material) ? styledMaterials : styledMaterials[0];
+    node.castShadow = !ghost;
+    node.receiveShadow = true;
+
+    const outline = new THREE.Mesh(
+      node.geometry,
+      new THREE.MeshBasicMaterial({
+        color: 0x08090a,
+        side: THREE.BackSide,
+        transparent: ghost,
+        opacity: ghost ? 0.14 : 0.88
+      })
+    );
+    outline.scale.setScalar(1.045);
+    outline.castShadow = false;
+    node.add(outline);
+  }
+
+  model.updateMatrixWorld(true);
+  const bounds = new THREE.Box3().setFromObject(model);
+  const center = bounds.getCenter(new THREE.Vector3());
+  model.position.x -= center.x;
+  model.position.z -= center.z;
+  model.position.y -= bounds.min.y;
+
+  return model;
+}
+
+async function installCarAssets() {
+  try {
+    const loader = new GLTFLoader();
+    const gltf = await loader.loadAsync('${KENNEY_SEDAN_URL}');
+    const playerAsset = makeAssetCar(gltf.scene, false);
+    const ghostAsset = makeAssetCar(gltf.scene, true);
+
+    for (const part of proceduralPlayerParts) part.visible = false;
+    for (const part of proceduralGhostParts) part.visible = false;
+
+    playerCar.add(playerAsset);
+    ghostCar.add(ghostAsset);
+    console.info('TURN: Kenney sedan asset loaded.');
+  } catch (error) {
+    console.warn('TURN: car asset failed to load, using procedural fallback.', error);
+  }
+}
+
+installCarAssets();`;
+
+replaceRequired(ghostCarBlock, assetCarBlock, 'Kenney sedan asset');
 
 const moduleUrl = URL.createObjectURL(new Blob([source], { type: 'text/javascript' }));
 try {
