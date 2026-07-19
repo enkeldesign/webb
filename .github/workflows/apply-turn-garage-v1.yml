@@ -7,12 +7,14 @@ on:
     paths:
       - '.github/scripts/apply-turn-garage-v1.mjs'
       - '.github/workflows/apply-turn-garage-v1.yml'
+      - '.github/turn-garage-integration-trigger'
   pull_request:
     branches:
       - main
     paths:
       - '.github/scripts/apply-turn-garage-v1.mjs'
       - '.github/workflows/apply-turn-garage-v1.yml'
+      - '.github/turn-garage-integration-trigger'
 
 permissions:
   contents: write
