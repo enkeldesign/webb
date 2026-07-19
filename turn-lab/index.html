@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <base href="/turn/">
+  <meta name="theme-color" content="#38d9ff">
+  <meta name="application-name" content="TURN LAB">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="TURN LAB">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>TURN LAB — refactor test build</title>
+  <link rel="icon" href="/turn/apple-touch-icon-v4.png" type="image/png" sizes="180x180">
+  <link rel="apple-touch-icon" href="/turn/apple-touch-icon-v4.png" sizes="180x180">
+  <link rel="manifest" href="/turn-lab/site.webmanifest">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./vertical-drive.css">
+  <link rel="stylesheet" href="./hud-tuning.css">
+  <link rel="stylesheet" href="./install-gate.css">
+  <link rel="stylesheet" href="./gameplay-features.css">
+  <link rel="stylesheet" href="./gameplay-v2.css">
+  <link rel="stylesheet" href="./spectate-v3.css">
+  <script src="/turn-lab/lab-storage.js"></script>
+  <script src="./install-gate.js"></script>
+  <script src="./orientation-compat.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script src="./game-prepatch.js"></script>
+  <script src="./control-tuning.js"></script>
+  <script src="./gameplay-features.js"></script>
+  <script src="./race-polish.js"></script>
+  <script src="./lap-stability-v1.js"></script>
+  <script src="./spectate-v3.js"></script>
+  <script src="./ghost-runtime-fix-v1.js"></script>
+  <script src="./stability-polish-v1.js"></script>
+  <script src="./world-tuning.js"></script>
+  <script src="./world-art-tuning.js"></script>
+</head>
+<body>
+  <section class="install-gate" id="installGate" aria-labelledby="installTitle">
+    <div class="install-shell">
+      <div class="install-art" aria-hidden="true">
+        <img class="install-icon" src="/turn/apple-touch-icon-v4.png" alt="">
+      </div>
+
+      <div class="install-card">
+        <span class="install-kicker">safe refactor test build</span>
+        <h1 id="installTitle">TURN LAB</h1>
+        <p class="install-copy">
+          TURN LAB mirrors the current game so new architecture can be tested without touching the live TURN build.
+        </p>
+        <div class="install-actions">
+          <button class="install-primary" id="installTurnButton" type="button">Install TURN LAB</button>
+          <button class="install-secondary" id="playBrowserButton" type="button">Play in browser anyway</button>
+        </div>
+        <p class="install-note" id="installNote">LAB has its own save data. Your TURN records stay untouched.</p>
+      </div>
+    </div>
+
+    <div class="install-guide" id="installGuide" role="dialog" aria-modal="true" aria-labelledby="installGuideTitle" hidden>
+      <div class="install-guide-card">
+        <div class="install-guide-head">
+          <h2 id="installGuideTitle">Add TURN LAB to your Home Screen</h2>
+          <button class="install-close" id="installGuideClose" type="button" aria-label="Close install instructions">×</button>
+        </div>
+        <div class="install-steps" id="installSteps"></div>
+      </div>
+    </div>
+  </section>
+
+  <div id="game" aria-label="Third-person motion-controlled arcade racing game"></div>
+
+  <section class="panel" id="intro" aria-labelledby="title">
+    <div class="start-card">
+      <span class="kicker">refactor test build</span>
+      <h1 id="title">TURN LAB</h1>
+      <p class="tagline">
+        Turn the phone to steer. Press and drag the gas pedal up for more throttle or down for less. Brake stays on its own button.
+      </p>
+      <div class="actions">
+        <button id="motionButton" type="button">Enable motion &amp; race</button>
+        <button class="secondary" id="manualButton" type="button">Desktop / manual mode</button>
+      </div>
+      <p class="status" id="status" role="status">
+        Steering uses phone rotation. Acceleration and braking are controlled with the on-screen pedals.
+      </p>
+    </div>
+  </section>
+
+  <section class="rotate-panel" aria-label="Rotate device">
+    <div class="rotate-card">
+      <div class="rotate-phone" aria-hidden="true"></div>
+      <strong>Rotate to landscape</strong>
+    </div>
+  </section>
+
+  <div class="hud" id="hud" hidden>
+    <div class="topbar">
+      <div class="stats">
+        <div class="chip">speed<strong><span id="speed">0</span> km/h</strong></div>
+        <div class="chip">lap<strong id="lap">1</strong></div>
+        <div class="chip">time<strong id="lapTime">0:00.000</strong></div>
+        <div class="chip">best<strong id="bestTime">--:--.---</strong></div>
+      </div>
+      <div class="map-wrap"><canvas id="map" width="300" height="210" aria-label="Track map"></canvas></div>
+    </div>
+
+    <div class="message" id="message" role="status"></div>
+
+    <div class="tilt-drive" aria-hidden="true">
+      <span><b>brake</b><b>gas</b></span>
+      <div class="tilt-track"><i class="tilt-needle" id="tiltNeedle"></i></div>
+      <small class="tilt-value" id="tiltValue">neutral</small>
+    </div>
+  </div>
+
+  <div class="manual-steer" id="manualSteer" hidden></div>
+
+  <div class="controls" id="controls" hidden>
+    <div class="utility-group">
+      <button class="utility" id="calibrateButton" type="button">Center controls</button>
+      <button class="utility" id="resetButton" type="button">Reset car</button>
+    </div>
+    <div class="pedals">
+      <button class="pedal brake" id="brakeButton" type="button">Brake</button>
+      <button class="pedal gas" id="gasButton" type="button">Gas</button>
+    </div>
+  </div>
+
+  <script type="module" src="./motion-adapter.js"></script>
+</body>
+</html>
