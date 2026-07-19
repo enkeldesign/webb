@@ -1,0 +1,46 @@
+name: Apply TURN Lot r10 migration
+
+on:
+  push:
+    branches:
+      - turn-lot-polish-r10
+    paths:
+      - '.github/scripts/apply-turn-lot-r10.mjs'
+      - '.github/workflows/apply-turn-lot-r10.yml'
+      - '.github/turn-lot-r10-trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: turn-lot-polish-r10
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Apply guarded r10 migration
+        run: node .github/scripts/apply-turn-lot-r10.mjs
+
+      - name: Syntax-check TURN modules
+        run: find turn turn-lab -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
+
+      - name: Commit migrated references
+        run: |
+          if [ -z "$(git status --porcelain -- turn/main.js turn/index.html turn-lab/tests)" ]; then
+            echo 'TURN Lot r10 migration already applied.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add turn/main.js turn/index.html turn-lab/tests
+          git commit -m 'Wire TURN Lot r10 UI and build references [skip ci]'
+          git push origin HEAD:turn-lot-polish-r10
