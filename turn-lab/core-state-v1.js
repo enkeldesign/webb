@@ -1,5 +1,7 @@
 (() => {
   const upstreamFetch = window.fetch.bind(window);
+  const gameStateModuleUrl = new URL('/turn-lab/race/game-state.js', location.origin).href;
+  const lapSystemModuleUrl = new URL('/turn-lab/race/lap-system.js', location.origin).href;
 
   function replaceRequired(source, search, replacement, label) {
     const next = source.replace(search, replacement);
@@ -14,64 +16,52 @@
       source,
       "import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js';",
       `import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js';
-import { beginTimedLapState, completeLapState, updateLapProgressState } from '/turn-lab/race/lap-system.js';`,
-      'lap system module import'
-    );
-
-    source = replaceRequired(
-      source,
-      `const LAP_CHECKPOINTS = [0.18, 0.38, 0.58, 0.78];`,
-      `const LAP_CHECKPOINTS = [0.18, 0.38, 0.58, 0.78];
-const GAME_MODE = Object.freeze({
-  STAGED: 'staged',
-  RACING: 'racing',
-  SPECTATING: 'spectating'
-});`,
-      'game mode constants'
-    );
-
-    source = replaceRequired(
-      source,
-      `  lapCheckpointIndex: 0,
-  lapActive: false,`,
-      `  lapCheckpointIndex: 0,
-  mode: GAME_MODE.STAGED,
-  lapActive: false,`,
-      'canonical mode state'
+import { GAME_MODE, installGameModeState, prepareRaceStartState, resetRaceToStage, setGameModeState } from '${gameStateModuleUrl}';
+import { beginTimedLapState, completeLapState, updateLapProgressState } from '${lapSystemModuleUrl}';`,
+      'race module imports'
     );
 
     source = replaceRequired(
       source,
       `const scene = new THREE.Scene();`,
-      `Object.defineProperty(state, 'lapActive', {
-  configurable: true,
-  enumerable: true,
-  get() {
-    return state.mode === GAME_MODE.RACING;
-  },
-  set(active) {
-    if (active) {
-      state.mode = GAME_MODE.RACING;
-    } else if (state.mode === GAME_MODE.RACING) {
-      state.mode = GAME_MODE.STAGED;
-    }
-  }
-});
+      `installGameModeState(state);
 
 function setGameMode(mode) {
-  if (!Object.values(GAME_MODE).includes(mode)) {
-    console.warn('TURN: ignored unknown game mode', mode);
-    return state.mode;
-  }
-  state.mode = mode;
-  return state.mode;
+  return setGameModeState(state, mode);
 }
 
 globalThis.__turnGameModes = GAME_MODE;
 globalThis.__turnGetGameMode = () => state.mode;
 
 const scene = new THREE.Scene();`,
-      'game mode compatibility bridge'
+      'module-backed game mode state'
+    );
+
+    source = replaceRequired(
+      source,
+      /function resetCar\(showFeedback = true\) \{[\s\S]*?\n\}\n\nfunction motionPoseFromGravity/,
+      `function resetCar(showFeedback = true) {
+  resetRaceToStage({
+    state,
+    samples,
+    showFeedback,
+    showMessage,
+    setRacePosition: globalThis.__turnSetRacePosition
+  });
+}
+
+function motionPoseFromGravity`,
+      'module-backed staged reset'
+    );
+
+    source = replaceRequired(
+      source,
+      `  state.lastFrame = performance.now();
+  state.lapStartedAt = 0;
+  state.lapElapsed = 0;`,
+      `  state.lastFrame = performance.now();
+  prepareRaceStartState(state);`,
+      'module-backed race start timer'
     );
 
     source = replaceRequired(
