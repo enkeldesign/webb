@@ -1,0 +1,46 @@
+name: Apply TURN r12 balance and checkpoints
+
+on:
+  push:
+    branches:
+      - turn-balance-checkpoints-r12
+    paths:
+      - '.github/scripts/apply-turn-balance-r12.mjs'
+      - '.github/workflows/apply-turn-balance-r12.yml'
+      - '.github/turn-balance-r12-trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: turn-balance-checkpoints-r12
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Apply guarded r12 integration
+        run: node .github/scripts/apply-turn-balance-r12.mjs
+
+      - name: Syntax-check TURN modules
+        run: find turn turn-lab -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
+
+      - name: Commit integrated runtime
+        run: |
+          if [ -z "$(git status --porcelain -- turn turn-lab/tests)" ]; then
+            echo 'TURN r12 integration already applied.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add turn turn-lab/tests
+          git commit -m 'Integrate TURN r12 balance and anti-shortcut rules [skip ci]'
+          git push origin HEAD:turn-balance-checkpoints-r12
