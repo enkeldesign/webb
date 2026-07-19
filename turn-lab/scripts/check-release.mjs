@@ -37,7 +37,7 @@ const [index, app, main] = await Promise.all([
 assert.match(index, /TURN LAB v1\.0\.0 · Build 2026\.07\.19-r7/);
 assert.match(index, /<script type="module" src="\.\/app\.js\?build=20260719-r7"><\/script>/);
 
-const forbiddenRuntimeReferences = [
+const forbiddenEntryReferences = [
   'game-prepatch.js',
   'gameplay-features.js',
   'core-state-v1.js',
@@ -49,10 +49,26 @@ const forbiddenRuntimeReferences = [
   'lab-motion-loader.js'
 ];
 
-for (const name of forbiddenRuntimeReferences) {
+for (const name of forbiddenEntryReferences) {
   assert.equal(index.includes(name), false, `index.html still references ${name}`);
   assert.equal(app.includes(name), false, `app.js still references ${name}`);
-  assert.equal(main.includes(name), false, `main.js still references ${name}`);
+}
+
+const forbiddenMainImports = [
+  'game-prepatch.js',
+  'gameplay-features.js',
+  'core-state-v1.js',
+  'driving-core-v1.js',
+  'render-core-v1.js',
+  'motion-adapter.js',
+  'patch-capture-init.js',
+  'legacy-bootstrap.js',
+  'lab-motion-loader.js'
+];
+for (const name of forbiddenMainImports) {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const importPattern = new RegExp(`(?:from\\s+['\"]|import\\s*\\(\\s*['\"])[^'\"]*${escaped}`);
+  assert.equal(importPattern.test(main), false, `main.js still imports retired runtime ${name}`);
 }
 
 for (const required of [
