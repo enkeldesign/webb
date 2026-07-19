@@ -10,6 +10,14 @@
   function patchGameSource(input) {
     let source = input;
 
+    source = replaceRequired(
+      source,
+      "import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js';",
+      `import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js';
+import { beginTimedLapState, completeLapState } from '/turn-lab/race/lap-system.js';`,
+      'lap system module import'
+    );
+
     // Introduce one explicit race mode without forcing the remaining legacy systems to migrate
     // all at once. lapActive becomes a compatibility view over the canonical mode value.
     source = replaceRequired(
@@ -90,6 +98,19 @@ const scene = new THREE.Scene();`,
       'spectator mode exit'
     );
 
+    // The lap lifecycle now lives in a real ES module. Keep only thin adapters in the generated
+    // legacy game until the rest of the race loop moves out of source rewriting too.
+    source = replaceRequired(
+      source,
+      /function beginTimedLap\(now\) \{[\s\S]*?\n\}\n\nfunction updatePhysics/,
+      `function beginTimedLap(now) {
+  beginTimedLapState({ state, samples, now, showMessage });
+}
+
+function updatePhysics`,
+      'module-backed timed lap start'
+    );
+
     // Ghost identity lives in the spectator HUD. Keep 3D label allocation out of the race loop.
     source = replaceRequired(
       source,
@@ -102,73 +123,26 @@ function ensureCompetitorCars() {`,
       'disable 3D ghost labels'
     );
 
-    // Keep lap completion crash-safe and preserve the exact recorded start frame used by rivals.
     source = replaceRequired(
       source,
       /function completeLap\(now\) \{[\s\S]*?\n\}\n\nfunction saveGhost\(\) \{/,
       `function completeLap(now) {
-  const finishedTime = (now - state.lapStartedAt) / 1000;
-  const validLap = finishedTime > 5 && state.recording.length > 20;
-
-  if (validLap) {
-    const previousBest = state.bestTime;
-    let message = 'LAP ' + formatTime(finishedTime);
-
-    try {
-      const candidateFrames = state.recording.map((frame) => ({ ...frame }));
-      if (candidateFrames.length) {
-        const start = samples[0];
-        candidateFrames[0] = {
-          ...candidateFrames[0],
-          t: 0,
-          x: start.point.x,
-          z: start.point.z,
-          h: Math.atan2(start.tangent.x, start.tangent.z),
-          p: 0
-        };
-      }
-
-      const candidate = {
-        time: finishedTime,
-        hitAt: Date.now(),
-        frames: candidateFrames
-      };
-
-      const nextLaps = [...state.competitorLaps, candidate]
-        .filter((lap) => Number.isFinite(lap?.time) && Array.isArray(lap?.frames) && lap.frames.length > 20)
-        .sort((a, b) => a.time - b.time)
-        .slice(0, COMPETITOR_LIMIT);
-
-      const rank = nextLaps.indexOf(candidate);
-      state.competitorLaps = nextLaps;
-      state.bestTime = state.competitorLaps[0]?.time ?? Infinity;
-      state.ghostFrames = state.competitorLaps[0]?.frames ?? [];
-      state.ghostVisible = state.competitorLaps.length > 0;
-      saveGhost();
-
-      if (finishedTime < previousBest) {
-        message = 'NEW BEST ' + formatTime(finishedTime);
-      } else if (rank >= 0) {
-        message = 'TOP ' + (rank + 1) + ' LAP ' + formatTime(finishedTime);
-      }
-    } catch (error) {
+  completeLapState({
+    state,
+    samples,
+    now,
+    competitorLimit: COMPETITOR_LIMIT,
+    saveGhost,
+    showMessage,
+    onError(error) {
       console.error('TURN: completed lap could not be added to rivals, continuing race.', error);
       globalThis.__turnLastLapError = error;
     }
-
-    showMessage(message);
-  }
-
-  state.lapCheckpointIndex = 0;
-  state.lapActive = true;
-  state.lap += 1;
-  state.lapStartedAt = now;
-  state.lapElapsed = 0;
-  state.recording = [];
+  });
 }
 
 function saveGhost() {`,
-      'crash-safe lap completion'
+      'module-backed lap completion'
     );
 
     // Three.js clones JSON-style userData values. Never treat cloned wheel references as Object3D.
