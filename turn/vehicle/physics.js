@@ -16,7 +16,7 @@ export function updateVehiclePhysicsState({
   updateMotionInput(dt);
 
   const tuning = normalizeVehicleTuning(vehicleTuning || globalThis.__turnVehicleTuning);
-  const effectiveMaxSpeed = maxSpeed * tuning.topSpeedMultiplier;
+  const effectiveMaxSpeed = maxSpeed;
   const directGas = Math.max(0, Number(analogGas) || 0);
   const directBrake = 0;
   state.throttle = Math.max(directGas, state.touchGas ? 1 : 0);
@@ -134,7 +134,6 @@ export function updateVehiclePhysicsState({
 
 function normalizeVehicleTuning(tuning) {
   return {
-    topSpeedMultiplier: positiveNumber(tuning?.topSpeedMultiplier, 1),
     accelerationMultiplier: positiveNumber(tuning?.accelerationMultiplier, 1),
     controlMultiplier: positiveNumber(tuning?.controlMultiplier, 1),
     driftEngineMultiplier: positiveNumber(tuning?.driftEngineMultiplier, 0.93),
