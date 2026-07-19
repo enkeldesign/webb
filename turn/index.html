@@ -9,19 +9,27 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="TURN">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>TURN — motion drift racer</title>
-  <link rel="icon" href="./apple-touch-icon-v4.png" type="image/png" sizes="180x180">
-  <link rel="apple-touch-icon" href="./apple-touch-icon-v4.png" sizes="180x180">
-  <link rel="manifest" href="./site-v4.webmanifest">
-  <link rel="stylesheet" href="./styles.css">
-  <link rel="stylesheet" href="./vertical-drive.css">
-  <link rel="stylesheet" href="./hud-tuning.css">
-  <link rel="stylesheet" href="./install-gate.css">
-  <link rel="stylesheet" href="./gameplay-features.css">
-  <link rel="stylesheet" href="./gameplay-v2.css">
-  <link rel="stylesheet" href="./spectate-v3.css">
-  <script src="./install-gate.js"></script>
-  <script src="./orientation-compat.js"></script>
+  <title>TURN v1.0.0 · Build 2026.07.19-r7</title>
+  <script>
+    globalThis.__TURN_BUILD__ = Object.freeze({
+      version: '1.0.0',
+      id: '2026.07.19-r7',
+      cacheKey: '20260719-r7'
+    });
+  </script>
+  <link rel="icon" href="/turn/apple-touch-icon-v4.png" type="image/png" sizes="180x180">
+  <link rel="apple-touch-icon" href="/turn/apple-touch-icon-v4.png" sizes="180x180">
+  <link rel="manifest" href="./site.webmanifest?build=20260719-r7">
+  <link rel="stylesheet" href="./styles.css?build=20260719-r7">
+  <link rel="stylesheet" href="./vertical-drive.css?build=20260719-r7">
+  <link rel="stylesheet" href="./hud-tuning.css?build=20260719-r7">
+  <link rel="stylesheet" href="./install-gate.css?build=20260719-r7">
+  <link rel="stylesheet" href="./gameplay-features.css?build=20260719-r7">
+  <link rel="stylesheet" href="./gameplay-v2.css?build=20260719-r7">
+  <link rel="stylesheet" href="./spectate-v3.css?build=20260719-r7">
+
+  <script src="./install-gate.js?build=20260719-r7"></script>
+  <script src="./orientation-compat.js?build=20260719-r7"></script>
   <script type="importmap">
     {
       "imports": {
@@ -30,35 +38,25 @@
       }
     }
   </script>
-  <script src="./game-prepatch.js"></script>
-  <script src="./control-tuning.js"></script>
-  <script src="./gameplay-features.js"></script>
-  <script src="./race-polish.js"></script>
-  <script src="./lap-stability-v1.js"></script>
-  <script src="./spectate-v3.js"></script>
-  <script src="./ghost-runtime-fix-v1.js"></script>
-  <script src="./stability-polish-v1.js"></script>
-  <script src="./world-tuning.js"></script>
-  <script src="./world-art-tuning.js"></script>
 </head>
 <body>
   <section class="install-gate" id="installGate" aria-labelledby="installTitle">
     <div class="install-shell">
       <div class="install-art" aria-hidden="true">
-        <img class="install-icon" src="./apple-touch-icon-v4.png" alt="">
+        <img class="install-icon" src="/turn/apple-touch-icon-v4.png" alt="">
       </div>
 
       <div class="install-card">
-        <span class="install-kicker">made for your phone</span>
+        <span class="install-kicker">TURN v1.0.0 · Build 2026.07.19-r7</span>
         <h1 id="installTitle">TURN</h1>
         <p class="install-copy">
-          TURN is built to feel like a real mobile game. Install it to your Home Screen for fullscreen racing without the browser around it.
+          TURN is a motion-controlled arcade drift racer. Turn your device to steer and race your own best laps.
         </p>
         <div class="install-actions">
           <button class="install-primary" id="installTurnButton" type="button">Install TURN</button>
           <button class="install-secondary" id="playBrowserButton" type="button">Play in browser anyway</button>
         </div>
-        <p class="install-note" id="installNote">Takes a few seconds. Your saved rivals stay on this device.</p>
+        <p class="install-note" id="installNote">Install TURN for the best fullscreen experience. You can also play in your browser.</p>
       </div>
     </div>
 
@@ -77,7 +75,7 @@
 
   <section class="panel" id="intro" aria-labelledby="title">
     <div class="start-card">
-      <span class="kicker">motion drift prototype</span>
+      <span class="kicker">TURN v1.0.0 · Build 2026.07.19-r7</span>
       <h1 id="title">TURN</h1>
       <p class="tagline">
         Turn the phone to steer. Press and drag the gas pedal up for more throttle or down for less. Brake stays on its own button.
@@ -132,6 +130,6 @@
     </div>
   </div>
 
-  <script type="module" src="./motion-adapter.js"></script>
+  <script type="module" src="./app.js?build=20260719-r7"></script>
 </body>
 </html>
