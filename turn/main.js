@@ -10,7 +10,7 @@ import { GAME_MODE, installGameModeState, prepareRaceStartState, resetRaceToStag
 import { beginTimedLapState, completeLapState, updateLapProgressState } from './race/lap-system.js';
 import { recordReplayFrame, replayFrameAt } from './race/replay-system.js';
 import { RIVAL_LIMIT, loadRivalsState, saveRivalsState } from './race/rival-storage.js';
-import { showTheLot } from './garage/lot.js';
+import { showTheLot } from './garage/lot-r10.js';
 import { getCarDefinition, loadVehicleSelection, saveVehicleSelection } from './vehicle/catalog.js';
 import { createCarVisual } from './vehicle/car-models.js';
 

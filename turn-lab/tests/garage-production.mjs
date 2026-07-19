@@ -75,8 +75,8 @@ const [index, main, lapSystem, rivalStorage, controls, carModels] = await Promis
   fs.readFile(path.join(turnDir, 'vehicle/car-models.js'), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.1\.0 · Build 2026\.07\.19-r9/);
-assert.match(index, /\.\/garage\/lot\.css\?build=20260719-r9/);
+assert.match(index, /TURN v1\.1\.1 · Build 2026\.07\.19-r10/);
+assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260719-r10/);
 assert.match(main, /await showTheLot\(/, 'Start flow must enter The Lot before racing');
 assert.match(main, /maxSpeed: MAX_SPEED \* state\.vehicleTuning\.topSpeedMultiplier/, 'Selected top speed must reach physics');
 assert.match(main, /vehicleTuning: state\.vehicleTuning/, 'Selected handling profile must reach physics');
@@ -89,5 +89,14 @@ assert.match(rivalStorage, /normalizeVehicleColor\(lap\.carColor\)/, 'Loaded riv
 assert.match(controls, /boostDurationSeconds/, 'Boost drain must use the selected car boost tank stat');
 assert.match(catalogSource, /asset: `\.\/assets\/cars\/\$\{id\}\.glb`/, 'Vehicle catalog must point to vendored local car assets');
 assert.match(carModels, /loadCarSource\(car\.id\)/, 'Car model factory must load the catalog-selected vehicle');
+
+const lotR10 = await fs.readFile(path.join(turnDir, 'garage/lot-r10.js'), 'utf8');
+const lotR10Css = await fs.readFile(path.join(turnDir, 'garage/lot-r10.css'), 'utf8');
+assert.match(main, /garage\/lot-r10\.js/, 'Production must load the r10 Lot module');
+assert.match(lotR10, /MUTED_COLOR/, 'Unselected Lot cars must have a muted visual state');
+assert.match(lotR10, /selectedColor = DEFAULT_VEHICLE_COLOR/, 'Newly selected cars must return to the default yellow paint');
+assert.match(lotR10, /lot-viewbox/, 'The Lot must include a dedicated 3D car viewbox');
+assert.match(lotR10, /DRAG TO ROTATE/, 'The 3D car viewer must advertise drag rotation');
+assert.match(lotR10Css, /--lot-rail-width/, 'The stats and viewer rail must reserve space beside the parking lot');
 
 console.log('TURN garage production regression passed.');
