@@ -1,0 +1,39 @@
+name: TURN LAB regression suite
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'turn-lab/**'
+      - '.github/workflows/turn-lab-tests.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'turn-lab/**'
+      - '.github/workflows/turn-lab-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Syntax-check TURN modules
+        run: find turn-lab -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
+
+      - name: Run race and replay regression tests
+        run: node turn-lab/tests/regression.mjs
+
+      - name: Verify release architecture
+        run: node turn-lab/scripts/check-release.mjs
