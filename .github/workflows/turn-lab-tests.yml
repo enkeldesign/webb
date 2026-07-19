@@ -40,5 +40,8 @@ jobs:
       - name: Run production manual steering regression
         run: node turn-lab/tests/manual-steering-production.mjs
 
+      - name: Run production garage regression
+        run: node turn-lab/tests/garage-production.mjs
+
       - name: Verify release architecture
         run: node turn-lab/scripts/check-release.mjs
