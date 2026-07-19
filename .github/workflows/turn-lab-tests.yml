@@ -1,16 +1,18 @@
-name: TURN LAB regression suite
+name: TURN regression suite
 
 on:
   pull_request:
     branches:
       - main
     paths:
+      - 'turn/**'
       - 'turn-lab/**'
       - '.github/workflows/turn-lab-tests.yml'
   push:
     branches:
       - main
     paths:
+      - 'turn/**'
       - 'turn-lab/**'
       - '.github/workflows/turn-lab-tests.yml'
 
@@ -30,10 +32,13 @@ jobs:
           node-version: '24'
 
       - name: Syntax-check TURN modules
-        run: find turn-lab -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
+        run: find turn turn-lab -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
 
       - name: Run race and replay regression tests
         run: node turn-lab/tests/regression.mjs
+
+      - name: Run production manual steering regression
+        run: node turn-lab/tests/manual-steering-production.mjs
 
       - name: Verify release architecture
         run: node turn-lab/scripts/check-release.mjs
