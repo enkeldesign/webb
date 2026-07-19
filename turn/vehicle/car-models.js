@@ -5,6 +5,7 @@ import { getCarDefinition, makeGhostColor, normalizeVehicleColor } from './catal
 const loader = new GLTFLoader();
 const sourceCache = new Map();
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
+const TIRE_COLOR = 0x17191c;
 
 export async function preloadCarModels(carIds) {
   await Promise.all(carIds.map((carId) => loadCarSource(carId).catch(() => null)));
@@ -40,6 +41,7 @@ export async function createCarVisual({
         node,
         material,
         protected: isProtectedPart(node, material),
+        wheel: isWheelPart(node, material),
         explicitPaint: isExplicitPaint(node, material)
       };
       if (record.explicitPaint && !record.protected) explicitPaintCount += 1;
@@ -49,31 +51,42 @@ export async function createCarVisual({
 
   const paintMaterials = [];
   for (const record of meshRecords) {
-    const { node, material, protected: protectedPart, explicitPaint } = record;
+    const {
+      material,
+      protected: protectedPart,
+      wheel: wheelPart,
+      explicitPaint
+    } = record;
     const paintable = !protectedPart && (
       explicitPaint ||
       (explicitPaintCount === 0 && isFallbackPaintCandidate(material)) ||
       (car.pack !== 'car' && isFallbackPaintCandidate(material))
     );
 
-    if (paintable && material.color) {
+    if (wheelPart && material.color) {
+      // Several Kenney models ship with very bright wheel materials. Tires/wheels should
+      // remain visually grounded instead of inheriting white or body paint.
+      material.color.setHex(TIRE_COLOR);
+      if ('roughness' in material) material.roughness = Math.max(Number(material.roughness) || 0, 0.82);
+    } else if (paintable && material.color) {
       material.color.set(ghost ? ghostColor : requestedColor);
       paintMaterials.push(material);
-    } else if (ghost && material.color) {
-      material.color.lerp(new THREE.Color(ghostColor), protectedPart ? 0.46 : 0.72);
     }
 
+    // Personal rivals are solid cars. Their identity comes from the lighter body colour,
+    // not transparency, so they remain readable at speed and in Spectate mode.
     if (ghost) {
-      material.transparent = true;
-      material.opacity = protectedPart ? 0.22 : 0.34;
-      material.depthWrite = false;
+      material.transparent = false;
+      material.opacity = 1;
+      material.depthWrite = true;
+      material.needsUpdate = true;
     }
 
-    node.castShadow = !ghost;
-    node.receiveShadow = !ghost;
+    record.node.castShadow = true;
+    record.node.receiveShadow = true;
   }
 
-  if (outline) addOutlines(model, ghost);
+  if (outline) addOutlines(model);
   normalizeModelToGround(model, targetLength * car.visualScale);
 
   root.userData.turnCarId = car.id;
@@ -109,7 +122,7 @@ function assetUrl(relativePath) {
   return url.href;
 }
 
-function addOutlines(model, ghost) {
+function addOutlines(model) {
   const originals = [];
   model.traverse((node) => {
     if (node.isMesh) originals.push(node);
@@ -121,9 +134,9 @@ function addOutlines(model, ghost) {
       new THREE.MeshBasicMaterial({
         color: 0x08090a,
         side: THREE.BackSide,
-        transparent: ghost,
-        opacity: ghost ? 0.12 : 0.82,
-        depthWrite: !ghost
+        transparent: false,
+        opacity: 0.82,
+        depthWrite: true
       })
     );
     outline.scale.setScalar(1.035);
@@ -152,6 +165,11 @@ function normalizeModelToGround(model, targetLength) {
 function isProtectedPart(node, material) {
   const label = `${node.name || ''} ${material.name || ''}`.toLowerCase();
   return /wheel|tire|tyre|rubber|glass|window|windscreen|light|lamp|chrome|axle/.test(label);
+}
+
+function isWheelPart(node, material) {
+  const label = `${node.name || ''} ${material.name || ''}`.toLowerCase();
+  return /wheel|tire|tyre|rubber/.test(label);
 }
 
 function isExplicitPaint(node, material) {
