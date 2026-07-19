@@ -18,6 +18,53 @@ export function beginTimedLapState({ state, samples, now, showMessage }) {
   showMessage?.('GO!');
 }
 
+export function updateLapProgressState({
+  state,
+  nearestAfter,
+  samples,
+  trackWidth,
+  checkpoints,
+  now,
+  beginTimedLap,
+  completeLap,
+  recordGhostFrame
+}) {
+  const movingForwardOnTrack = state.velocity.dot(nearestAfter.sample.tangent) > 2;
+  const nextCheckpoint = checkpoints[state.lapCheckpointIndex];
+
+  if (
+    state.lapActive &&
+    nextCheckpoint != null &&
+    movingForwardOnTrack &&
+    state.lastProgress < nextCheckpoint &&
+    state.progress >= nextCheckpoint
+  ) {
+    state.lapCheckpointIndex += 1;
+  }
+
+  const crossedStart = state.lastProgress > 0.82 && state.progress < 0.18;
+  const movingForwardAtStart = state.velocity.dot(samples[0].tangent) > 5;
+  const crossedStartOnTrack = crossedStart && movingForwardAtStart && state.trackDistance < trackWidth * 0.8;
+
+  if (crossedStartOnTrack) {
+    if (!state.lapActive) {
+      beginTimedLap(now);
+    } else if (state.lapCheckpointIndex >= checkpoints.length) {
+      completeLap(now);
+    } else {
+      // Crossing the line without a full circuit starts a fresh timed attempt, never a lap.
+      beginTimedLap(now);
+    }
+  }
+
+  if (state.lapActive) {
+    state.lapElapsed = (now - state.lapStartedAt) / 1000;
+    recordGhostFrame();
+  } else {
+    state.lapElapsed = 0;
+  }
+}
+
 export function completeLapState({
   state,
   samples,
