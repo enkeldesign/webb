@@ -14,6 +14,19 @@ on:
       - 'turn-lab/driving-core-v1.js'
       - 'turn-lab/render-core-v1.js'
       - 'turn-lab/motion-adapter.js'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/turn-lab-static-main.yml'
+      - 'turn-lab/scripts/build-static-main.mjs'
+      - 'turn-lab/game.js'
+      - 'turn-lab/game-prepatch.js'
+      - 'turn-lab/gameplay-features.js'
+      - 'turn-lab/core-state-v1.js'
+      - 'turn-lab/driving-core-v1.js'
+      - 'turn-lab/render-core-v1.js'
+      - 'turn-lab/motion-adapter.js'
 
 permissions:
   contents: write
