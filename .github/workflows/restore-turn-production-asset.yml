@@ -1,0 +1,38 @@
+name: Restore preserved TURN production asset
+
+on:
+  push:
+    branches:
+      - turn-production-release-r7
+    paths:
+      - '.github/workflows/restore-turn-production-asset.yml'
+      - '.github/restore-turn-production-asset-trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out release branch
+        uses: actions/checkout@v4
+        with:
+          ref: turn-production-release-r7
+          fetch-depth: 0
+
+      - name: Restore preserved binary from rollback branch
+        run: |
+          git fetch origin turn-production-pre-refactor-20260719
+          git checkout origin/turn-production-pre-refactor-20260719 -- turn/app-icon.png.PNG
+
+      - name: Commit restored asset
+        run: |
+          if [ -z "$(git status --porcelain -- turn/app-icon.png.PNG)" ]; then
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add turn/app-icon.png.PNG
+          git commit -m 'Preserve legacy TURN app icon asset [skip ci]'
+          git push origin HEAD:turn-production-release-r7
