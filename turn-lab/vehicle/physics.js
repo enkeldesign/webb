@@ -6,6 +6,7 @@ export function updateVehiclePhysicsState({
   getForward,
   getRight,
   trackWidth,
+  trackSampleCount,
   maxSpeed,
   analogGas = 0,
   boostActive = false,
@@ -114,7 +115,7 @@ export function updateVehiclePhysicsState({
   state.trackDistance = nearestAfter.distance;
   state.offRoad = nearestAfter.distance > trackWidth * 0.58;
   state.lastProgress = state.progress;
-  state.progress = nearestAfter.index / 720;
+  state.progress = nearestAfter.index / trackSampleCount;
   state.nearestTrackIndex = nearestAfter.index;
 
   return nearestAfter;
