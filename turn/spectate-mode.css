@@ -1,0 +1,96 @@
+.spectate-button {
+  background: var(--cyan);
+}
+
+.spectate-bar {
+  position: absolute;
+  z-index: 120;
+  left: 50%;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transform: translateX(-50%) rotate(-1deg);
+  pointer-events: auto;
+}
+
+.spectate-bar button,
+.spectate-following {
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.spectate-bar button {
+  min-height: 48px;
+  padding: 8px 14px;
+  font: inherit;
+  text-transform: uppercase;
+}
+
+.spectate-close {
+  width: 48px;
+  padding: 0 !important;
+  background: var(--pink) !important;
+  font-size: 1.45rem !important;
+  line-height: 1;
+}
+
+.spectate-next {
+  background: var(--yellow) !important;
+}
+
+.spectate-following {
+  min-width: clamp(180px, 34vw, 360px);
+  padding: 7px 15px 9px;
+  text-align: center;
+}
+
+.spectate-following span {
+  display: block;
+  font-size: 0.5rem;
+  letter-spacing: 0.09em;
+}
+
+.spectate-following strong {
+  display: block;
+  margin-top: 2px;
+  overflow: hidden;
+  font-size: clamp(0.88rem, 2.2vw, 1.25rem);
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.turn-spectating .controls,
+.turn-spectating .boost-hud,
+.turn-spectating .race-position-hud {
+  display: none !important;
+}
+
+.turn-spectating .message {
+  opacity: 0 !important;
+}
+
+@media (max-height: 430px) {
+  .spectate-bar {
+    bottom: 8px;
+    gap: 7px;
+  }
+
+  .spectate-bar button {
+    min-height: 42px;
+    padding: 6px 10px;
+  }
+
+  .spectate-close {
+    width: 42px;
+  }
+
+  .spectate-following {
+    min-width: clamp(160px, 31vw, 290px);
+    padding: 5px 10px 7px;
+  }
+}
