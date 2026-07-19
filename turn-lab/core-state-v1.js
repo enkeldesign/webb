@@ -14,12 +14,10 @@
       source,
       "import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js';",
       `import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js';
-import { beginTimedLapState, completeLapState } from '/turn-lab/race/lap-system.js';`,
+import { beginTimedLapState, completeLapState, updateLapProgressState } from '/turn-lab/race/lap-system.js';`,
       'lap system module import'
     );
 
-    // Introduce one explicit race mode without forcing the remaining legacy systems to migrate
-    // all at once. lapActive becomes a compatibility view over the canonical mode value.
     source = replaceRequired(
       source,
       `const LAP_CHECKPOINTS = [0.18, 0.38, 0.58, 0.78];`,
@@ -76,8 +74,6 @@ const scene = new THREE.Scene();`,
       'game mode compatibility bridge'
     );
 
-    // Spectator state is still owned by the existing spectator feature for now, but it must keep
-    // the canonical game mode synchronized so later refactor steps can depend on one state model.
     source = replaceRequired(
       source,
       `  spectate.active = true;
@@ -98,8 +94,6 @@ const scene = new THREE.Scene();`,
       'spectator mode exit'
     );
 
-    // The lap lifecycle now lives in a real ES module. Keep only thin adapters in the generated
-    // legacy game until the rest of the race loop moves out of source rewriting too.
     source = replaceRequired(
       source,
       /function beginTimedLap\(now\) \{[\s\S]*?\n\}\n\nfunction updatePhysics/,
@@ -109,18 +103,6 @@ const scene = new THREE.Scene();`,
 
 function updatePhysics`,
       'module-backed timed lap start'
-    );
-
-    // Ghost identity lives in the spectator HUD. Keep 3D label allocation out of the race loop.
-    source = replaceRequired(
-      source,
-      /function refreshCompetitorLabels\(\) \{[\s\S]*?\n\}\n\nfunction ensureCompetitorCars\(\) \{/,
-      `function refreshCompetitorLabels() {
-  // Intentionally empty. Ghost labels are shown only in the spectator HUD.
-}
-
-function ensureCompetitorCars() {`,
-      'disable 3D ghost labels'
     );
 
     source = replaceRequired(
@@ -145,7 +127,67 @@ function saveGhost() {`,
       'module-backed lap completion'
     );
 
-    // Three.js clones JSON-style userData values. Never treat cloned wheel references as Object3D.
+    source = replaceRequired(
+      source,
+      `  const movingForwardOnTrack = state.velocity.dot(nearestAfter.sample.tangent) > 2;
+  const nextCheckpoint = LAP_CHECKPOINTS[state.lapCheckpointIndex];
+
+  if (
+    state.lapActive &&
+    nextCheckpoint != null &&
+    movingForwardOnTrack &&
+    state.lastProgress < nextCheckpoint &&
+    state.progress >= nextCheckpoint
+  ) {
+    state.lapCheckpointIndex += 1;
+  }
+
+  const crossedStart = state.lastProgress > 0.82 && state.progress < 0.18;
+  const movingForwardAtStart = state.velocity.dot(samples[0].tangent) > 5;
+  const crossedStartOnTrack = crossedStart && movingForwardAtStart && state.trackDistance < TRACK_WIDTH * 0.8;
+
+  if (crossedStartOnTrack) {
+    if (!state.lapActive) {
+      beginTimedLap(now);
+    } else if (state.lapCheckpointIndex >= LAP_CHECKPOINTS.length) {
+      completeLap(now);
+    } else {
+      // Crossing the line without a full circuit starts a fresh timed attempt, never a lap.
+      beginTimedLap(now);
+    }
+  }
+
+  if (state.lapActive) {
+    state.lapElapsed = (now - state.lapStartedAt) / 1000;
+    recordGhostFrame();
+  } else {
+    state.lapElapsed = 0;
+  }`,
+      `  updateLapProgressState({
+    state,
+    nearestAfter,
+    samples,
+    trackWidth: TRACK_WIDTH,
+    checkpoints: LAP_CHECKPOINTS,
+    now,
+    beginTimedLap,
+    completeLap,
+    recordGhostFrame
+  });`,
+      'module-backed checkpoint and start-line flow'
+    );
+
+    source = replaceRequired(
+      source,
+      /function refreshCompetitorLabels\(\) \{[\s\S]*?\n\}\n\nfunction ensureCompetitorCars\(\) \{/,
+      `function refreshCompetitorLabels() {
+  // Intentionally empty. Ghost labels are shown only in the spectator HUD.
+}
+
+function ensureCompetitorCars() {`,
+      'disable 3D ghost labels'
+    );
+
     source = replaceRequired(
       source,
       `    const car = ghostCar.clone(true);\n    car.visible = false;`,
@@ -160,7 +202,6 @@ function saveGhost() {`,
       'avoid wheel animation on cloned competitors'
     );
 
-    // Unknown historical timestamps are null. Avoid Number(null) turning them into 1970 dates.
     source = replaceRequired(
       source,
       `function spectateDateLabel(lap) {
@@ -181,7 +222,6 @@ function saveGhost() {`,
     return Number.isFinite(otherHitAt) && sameSpectateDate(new Date(otherHitAt), date);`
     );
 
-    // Preserve high-frame-rate handling and substep only slower frames instead of discarding time.
     source = replaceRequired(
       source,
       `renderer.setAnimationLoop((now) => {
