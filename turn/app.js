@@ -12,7 +12,8 @@ await import(withBuild('./main.js'));
 
 await Promise.all([
   import(withBuild('./render/world.js')),
-  import(withBuild('./ui/spectate.js'))
+  import(withBuild('./ui/spectate.js')),
+  import(withBuild('./ui/back-to-lot.js'))
 ]);
 
 console.info(`TURN: ${globalThis.__TURN_BUILD__?.id || 'development'} loaded from the static module graph.`);
