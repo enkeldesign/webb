@@ -82,31 +82,6 @@
 
     source = replaceRequired(
       source,
-      `function updatePhysics(dt, now) {`,
-      `function beginTimedLap(now) {
-  const start = samples[0];
-  state.lapActive = true;
-  state.lapCheckpointIndex = 0;
-  state.lapStartedAt = now;
-  state.lapElapsed = 0;
-  state.recording = [{
-    t: 0,
-    x: start.point.x,
-    z: start.point.z,
-    h: Math.atan2(start.tangent.x, start.tangent.z),
-    s: state.steering,
-    d: state.driftAmount,
-    p: 0
-  }];
-  showMessage('GO!');
-}
-
-function updatePhysics(dt, now) {`,
-      'timed lap start helper'
-    );
-
-    source = replaceRequired(
-      source,
       `  const enginePower = state.offRoad ? 29 : 43;
   state.velocity.addScaledVector(forward, state.throttle * enginePower * dt);`,
       `  const boostActive = Boolean(globalThis.__turnBoostActive);
@@ -186,71 +161,12 @@ function updatePhysics(dt, now) {`,
 
     source = replaceRequired(
       source,
-      `  const crossedStart = state.lastProgress > 0.82 && state.progress < 0.18;
-  const movingForwardAtStart = state.velocity.dot(samples[0].tangent) > 5;
-  if (crossedStart && movingForwardAtStart && state.trackDistance < TRACK_WIDTH * 0.8) completeLap(now);`,
-      `  const movingForwardOnTrack = state.velocity.dot(nearestAfter.sample.tangent) > 2;
-  const nextCheckpoint = LAP_CHECKPOINTS[state.lapCheckpointIndex];
-
-  if (
-    state.lapActive &&
-    nextCheckpoint != null &&
-    movingForwardOnTrack &&
-    state.lastProgress < nextCheckpoint &&
-    state.progress >= nextCheckpoint
-  ) {
-    state.lapCheckpointIndex += 1;
-  }
-
-  const crossedStart = state.lastProgress > 0.82 && state.progress < 0.18;
-  const movingForwardAtStart = state.velocity.dot(samples[0].tangent) > 5;
-  const crossedStartOnTrack = crossedStart && movingForwardAtStart && state.trackDistance < TRACK_WIDTH * 0.8;
-
-  if (crossedStartOnTrack) {
-    if (!state.lapActive) {
-      beginTimedLap(now);
-    } else if (state.lapCheckpointIndex >= LAP_CHECKPOINTS.length) {
-      completeLap(now);
-    } else {
-      // Crossing the line without a full circuit starts a fresh timed attempt, never a lap.
-      beginTimedLap(now);
-    }
-  }`,
-      'ordered checkpoints and start-line launch'
-    );
-
-    source = replaceRequired(
-      source,
-      `  state.lapElapsed = (now - state.lapStartedAt) / 1000;
-  recordGhostFrame();`,
-      `  if (state.lapActive) {
-    state.lapElapsed = (now - state.lapStartedAt) / 1000;
-    recordGhostFrame();
-  } else {
-    state.lapElapsed = 0;
-  }`,
-      'freeze lap clock before start'
-    );
-
-    source = replaceRequired(
-      source,
       `      d: state.driftAmount
     });`,
       `      d: state.driftAmount,
       p: state.progress
     });`,
       'record track progress for ranking'
-    );
-
-    source = replaceRequired(
-      source,
-      `  state.lap += 1;
-  state.lapStartedAt = now;`,
-      `  state.lapCheckpointIndex = 0;
-  state.lapActive = true;
-  state.lap += 1;
-  state.lapStartedAt = now;`,
-      'continue directly into next timed lap'
     );
 
     source = replaceRequired(
@@ -361,7 +277,7 @@ function updateDriveEffects(dt) {
 
   updateParticlePool(smokePool, dt, true);
   updateParticlePool(flamePool, dt, false);
-}`, 
+}`,
       'boost flames and drift smoke'
     );
 
@@ -375,7 +291,8 @@ function updateDriveEffects(dt) {
       'drive particle effects update'
     );
 
-    // Replace the single pink minimap stroke with four track-section colors.
+    // Replace the single pink minimap stroke with four track-section colors. Spectate later
+    // restores the unified pink map and adds the explicit start/finish marker.
     source = replaceRequired(
       source,
       `  mapCtx.strokeStyle = '#ff4fa3';
