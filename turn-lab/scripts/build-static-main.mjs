@@ -1,3 +1,4 @@
+// Deterministic one-shot build helper for materializing the verified runtime pipeline.
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import vm from 'node:vm';
