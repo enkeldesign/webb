@@ -14,70 +14,13 @@
   function patchGameSource(input) {
     let source = input;
 
-    // Slightly wider racing surface. This runs before motion-adapter.js, so its old 18 -> 24
-    // patch simply becomes a harmless no-op and the entire generated road uses this width.
     source = replaceRequired(source, 'const TRACK_WIDTH = 18;', 'const TRACK_WIDTH = 27;', 'wider road');
 
     source = replaceRequired(
       source,
       "const COMPETITOR_MIGRATION_KEY = 'turn-rival-timestamp-migration-v1';",
-      "const COMPETITOR_MIGRATION_KEY = 'turn-rival-timestamp-migration-v1';\nconst LAP_CHECKPOINTS = [0.18, 0.38, 0.58, 0.78];\nconst TRACK_SECTION_COLORS = ['#ff8fbd', '#2f855a', '#f6ad55', '#5c7cfa'];",
-      'race constants'
-    );
-
-    source = replaceRequired(
-      source,
-      '  competitorLaps: [],',
-      '  competitorLaps: [],\n  lapCheckpointIndex: 0,\n  lapActive: false,',
-      'lap start state'
-    );
-
-    source = replaceRequired(
-      source,
-      '  const start = samples[4];',
-      '  const startIndex = samples.length - 24;\n  const start = samples[startIndex];',
-      'stage car behind start line'
-    );
-
-    source = replaceRequired(
-      source,
-      `  state.progress = 4 / TRACK_SAMPLES;
-  state.lastProgress = state.progress;
-  state.nearestTrackIndex = 4;
-  if (showFeedback) showMessage('CAR RESET');`,
-      `  state.progress = startIndex / TRACK_SAMPLES;
-  state.lastProgress = state.progress;
-  state.nearestTrackIndex = startIndex;
-  state.lapCheckpointIndex = 0;
-  state.lapActive = false;
-  state.lapStartedAt = 0;
-  state.lapElapsed = 0;
-  state.recording = [];
-  globalThis.__turnSetRacePosition?.(null, state.competitorLaps.length + 1);
-  if (showFeedback) showMessage('READY FOR THE LINE');`,
-      'reset behind start with frozen timer'
-    );
-
-    source = replaceRequired(
-      source,
-      '  state.lapStartedAt = performance.now();',
-      '  state.lapStartedAt = 0;\n  state.lapElapsed = 0;',
-      'wait for start line before timing'
-    );
-
-    // Old recordings did not contain track progress. Fill it once during migration so ranking
-    // remains cheap in subsequent frames.
-    source = replaceRequired(
-      source,
-      '        const frames = lap.frames.map((frame) => ({ ...frame }));',
-      `        const frames = lap.frames.map((frame) => {
-          const copy = { ...frame };
-          if (!Number.isFinite(copy.p) && Number.isFinite(copy.x) && Number.isFinite(copy.z)) {
-            copy.p = findNearestTrack(copy).index / TRACK_SAMPLES;
-          }
-          return copy;
-        });`,
-      'migrate rival progress data'
+      "const COMPETITOR_MIGRATION_KEY = 'turn-rival-timestamp-migration-v1';\nconst TRACK_SECTION_COLORS = ['#ff8fbd', '#2f855a', '#f6ad55', '#5c7cfa'];",
+      'track section palette'
     );
 
     source = replaceRequired(
@@ -157,16 +100,6 @@
       '  const speedLimit = state.offRoad ? 46 : MAX_SPEED;',
       '  const speedLimit = state.offRoad ? (boostActive ? 72 : 64) : (boostActive ? MAX_SPEED * 1.32 : MAX_SPEED);',
       'off-road and boost speed ceilings'
-    );
-
-    source = replaceRequired(
-      source,
-      `      d: state.driftAmount
-    });`,
-      `      d: state.driftAmount,
-      p: state.progress
-    });`,
-      'record track progress for ranking'
     );
 
     source = replaceRequired(
@@ -291,8 +224,6 @@ function updateDriveEffects(dt) {
       'drive particle effects update'
     );
 
-    // Replace the single pink minimap stroke with four track-section colors. Spectate later
-    // restores the unified pink map and adds the explicit start/finish marker.
     source = replaceRequired(
       source,
       `  mapCtx.strokeStyle = '#ff4fa3';
@@ -530,8 +461,6 @@ function showMessage`,
       }, 1650);
     });
 
-    // Boost is an absolute zone on the pedal, not something latched by the initial touch.
-    // Pointer capture means the player can slide in and out of the red band without lifting.
     let gasPointerId = null;
     let boostRequested = false;
     let boostExhausted = false;
