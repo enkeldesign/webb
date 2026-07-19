@@ -1,14 +1,21 @@
 import { normalizeReplayFrames } from './replay-system.js';
+import {
+  DEFAULT_VEHICLE_COLOR,
+  DEFAULT_VEHICLE_ID,
+  normalizeVehicleColor,
+  normalizeVehicleId
+} from '../vehicle/catalog.js';
 
 export const RIVAL_LIMIT = 4;
 
 const GHOST_KEY = 'turn-three-ghost-v4';
 const COMPETITOR_KEY = 'turn-personal-rivals-v1';
+const LEGACY_RIVAL_COLORS = ['#38d9ff', '#ff4fa3', '#9775fa', '#ff922b'];
 
 export function saveRivalsState(state) {
   try {
     localStorage.setItem(COMPETITOR_KEY, JSON.stringify({
-      version: 2,
+      version: 3,
       laps: state.competitorLaps
     }));
     return true;
@@ -30,7 +37,13 @@ export function loadRivalsState({ state, samples, findNearestTrack }) {
         Array.isArray(oldGhost.frames) &&
         oldGhost.frames.length > 20
       ) {
-        laps = [{ time: oldGhost.bestTime, hitAt: null, frames: oldGhost.frames }];
+        laps = [{
+          time: oldGhost.bestTime,
+          hitAt: null,
+          carId: DEFAULT_VEHICLE_ID,
+          carColor: DEFAULT_VEHICLE_COLOR,
+          frames: oldGhost.frames
+        }];
       }
     }
 
@@ -39,9 +52,13 @@ export function loadRivalsState({ state, samples, findNearestTrack }) {
 
     state.competitorLaps = laps
       .filter(isValidLap)
-      .map((lap) => ({
+      .map((lap, index) => ({
         ...lap,
         hitAt: lap.hitAt != null && Number.isFinite(Number(lap.hitAt)) ? Number(lap.hitAt) : null,
+        carId: normalizeVehicleId(lap.carId),
+        carColor: lap.carColor
+          ? normalizeVehicleColor(lap.carColor)
+          : LEGACY_RIVAL_COLORS[index % LEGACY_RIVAL_COLORS.length],
         frames: normalizeReplayFrames(lap.frames, { startSample, findProgress })
       }))
       .sort((a, b) => a.time - b.time)
