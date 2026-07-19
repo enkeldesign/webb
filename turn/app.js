@@ -15,4 +15,4 @@ await Promise.all([
   import(withBuild('./ui/spectate.js'))
 ]);
 
-console.info(`TURN LAB: ${globalThis.__TURN_BUILD__?.id || 'development'} loaded from the static module graph.`);
+console.info(`TURN: ${globalThis.__TURN_BUILD__?.id || 'development'} loaded from the static module graph.`);
