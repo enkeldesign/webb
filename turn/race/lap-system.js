@@ -100,6 +100,8 @@ export function completeLapState({
       const candidate = {
         time: finishedTime,
         hitAt: Date.now(),
+        carId: state.vehicleId || 'sedan',
+        carColor: state.vehicleColor || '#ffd43b',
         frames: candidateFrames
       };
 
