@@ -39,8 +39,8 @@
     source = replaceRequired(
       source,
       "const GHOST_KEY = 'turn-three-ghost-v4';",
-      "const GHOST_KEY = 'turn-three-ghost-v4';\nconst COMPETITOR_KEY = 'turn-personal-rivals-v1';",
-      'competitor storage key'
+      "const GHOST_KEY = 'turn-three-ghost-v4';\nconst COMPETITOR_KEY = 'turn-personal-rivals-v1';\nconst COMPETITOR_LIMIT = 4;\nconst COMPETITOR_MIGRATION_KEY = 'turn-rival-timestamp-migration-v1';",
+      'competitor storage keys'
     );
 
     source = replaceRequired(
@@ -59,11 +59,10 @@
 const skidGeometry`,
       `world.add(ghostCar);
 
-const COMPETITOR_COLORS = [0x38d9ff, 0xff4fa3, 0x9775fa];
-const COMPETITOR_MAP_COLORS = ['#38d9ff', '#ff4fa3', '#9775fa'];
+const COMPETITOR_COLORS = [0x38d9ff, 0xff4fa3, 0x9775fa, 0xff922b];
+const COMPETITOR_MAP_COLORS = ['#38d9ff', '#ff4fa3', '#9775fa', '#ff922b'];
 const baseGhostChildCount = ghostCar.children.length;
 const competitorCars = [ghostCar];
-let competitorCarsStyled = false;
 
 function styleCompetitorCar(car, color) {
   car.traverse((node) => {
@@ -84,26 +83,135 @@ function styleCompetitorCar(car, color) {
   });
 }
 
+function sameLocalDate(a, b) {
+  return a.getFullYear() === b.getFullYear()
+    && a.getMonth() === b.getMonth()
+    && a.getDate() === b.getDate();
+}
+
+function ghostTimeLabel(date) {
+  return \\`${date.getHours().toString().padStart(2, '0')}.${date.getMinutes().toString().padStart(2, '0')}\\`;
+}
+
+function ghostNameForLap(lap, allLaps) {
+  const hitAt = Number(lap?.hitAt);
+  if (!Number.isFinite(hitAt)) return 'Previous record';
+
+  const date = new Date(hitAt);
+  const now = new Date();
+  const time = ghostTimeLabel(date);
+
+  if (sameLocalDate(date, now)) return \\`Today ${time}\\`;
+
+  const weekStart = new Date(now);
+  weekStart.setHours(0, 0, 0, 0);
+  const mondayOffset = (weekStart.getDay() + 6) % 7;
+  weekStart.setDate(weekStart.getDate() - mondayOffset);
+
+  if (date >= weekStart && date < now) {
+    const weekday = new Intl.DateTimeFormat('en', { weekday: 'long' }).format(date);
+    return \\`${weekday} ${time}\\`;
+  }
+
+  const duplicateDate = allLaps.filter((other) => {
+    const otherHitAt = Number(other?.hitAt);
+    return Number.isFinite(otherHitAt) && sameLocalDate(new Date(otherHitAt), date);
+  }).length > 1;
+
+  const month = new Intl.DateTimeFormat('en', { month: 'long' }).format(date);
+  const base = date.getFullYear() === now.getFullYear()
+    ? \\`${month} ${date.getDate()}\\`
+    : \\`${month} ${date.getDate()}, ${date.getFullYear()}\\`;
+
+  return duplicateDate ? \\`${base}, ${time}\\` : base;
+}
+
+function makeGhostLabel(text, color) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 640;
+  canvas.height = 112;
+  const ctx = canvas.getContext('2d');
+  const colorCss = \\`#${color.toString(16).padStart(6, '0')}\\`;
+
+  ctx.fillStyle = 'rgba(255, 248, 232, 0.96)';
+  ctx.strokeStyle = '#08090a';
+  ctx.lineWidth = 12;
+  ctx.beginPath();
+  ctx.roundRect(8, 8, 624, 96, 34);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = colorCss;
+  ctx.fillRect(30, 44, 30, 30);
+  ctx.strokeStyle = '#08090a';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(30, 44, 30, 30);
+
+  ctx.fillStyle = '#08090a';
+  ctx.font = '900 42px Inter, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 355, 57, 520);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.minFilter = THREE.LinearFilter;
+
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: texture,
+    transparent: true,
+    depthTest: false,
+    depthWrite: false
+  }));
+  sprite.scale.set(13.2, 2.3, 1);
+  sprite.position.set(0, 5.7, 0);
+  sprite.renderOrder = 50;
+  sprite.userData.turnGhostLabel = true;
+  sprite.userData.turnGhostLabelText = text;
+  return sprite;
+}
+
+function refreshCompetitorLabels() {
+  for (let i = 0; i < competitorCars.length; i += 1) {
+    const car = competitorCars[i];
+    const lap = state.competitorLaps[i];
+    const existing = car.children.find((child) => child.userData?.turnGhostLabel);
+
+    if (!lap) {
+      if (existing) car.remove(existing);
+      continue;
+    }
+
+    const text = ghostNameForLap(lap, state.competitorLaps);
+    if (existing?.userData?.turnGhostLabelText === text) continue;
+    if (existing) car.remove(existing);
+    car.add(makeGhostLabel(text, COMPETITOR_COLORS[i]));
+  }
+}
+
 function ensureCompetitorCars() {
   // The Kenney asset installer adds one child to ghostCar asynchronously.
   if (ghostCar.children.length <= baseGhostChildCount) return;
 
-  if (!competitorCarsStyled) {
-    styleCompetitorCar(ghostCar, COMPETITOR_COLORS[0]);
-    competitorCarsStyled = true;
-  }
-
-  while (competitorCars.length < 3) {
+  while (competitorCars.length < COMPETITOR_LIMIT) {
     const car = ghostCar.clone(true);
     car.visible = false;
-    styleCompetitorCar(car, COMPETITOR_COLORS[competitorCars.length]);
     world.add(car);
     competitorCars.push(car);
   }
+
+  for (let i = 0; i < competitorCars.length; i += 1) {
+    const car = competitorCars[i];
+    if (car.userData.turnCompetitorStyled) continue;
+    styleCompetitorCar(car, COMPETITOR_COLORS[i]);
+    car.userData.turnCompetitorStyled = true;
+  }
+
+  refreshCompetitorLabels();
 }
 
 const skidGeometry`,
-      'personal rival cars'
+      'personal rival cars and labels'
     );
 
     source = source.replace(
@@ -116,26 +224,28 @@ const skidGeometry`,
     const previousBest = state.bestTime;
     const candidate = {
       time: finishedTime,
+      hitAt: Date.now(),
       frames: state.recording.slice()
     };
 
     state.competitorLaps = [...state.competitorLaps, candidate]
       .filter((lap) => Number.isFinite(lap.time) && Array.isArray(lap.frames) && lap.frames.length > 20)
       .sort((a, b) => a.time - b.time)
-      .slice(0, 3);
+      .slice(0, COMPETITOR_LIMIT);
 
     state.bestTime = state.competitorLaps[0]?.time ?? Infinity;
     state.ghostFrames = state.competitorLaps[0]?.frames ?? [];
     state.ghostVisible = state.competitorLaps.length > 0;
     saveGhost();
+    refreshCompetitorLabels();
 
     const rank = state.competitorLaps.indexOf(candidate);
     if (finishedTime < previousBest) {
-      showMessage(\`NEW BEST \${formatTime(finishedTime)}\`);
+      showMessage(\\`NEW BEST ${formatTime(finishedTime)}\\`);
     } else if (rank >= 0) {
-      showMessage(\`TOP \${rank + 1} LAP \${formatTime(finishedTime)}\`);
+      showMessage(\\`TOP ${rank + 1} LAP ${formatTime(finishedTime)}\\`);
     } else {
-      showMessage(\`LAP \${formatTime(finishedTime)}\`);
+      showMessage(\\`LAP ${formatTime(finishedTime)}\\`);
     }
   }
 
@@ -149,7 +259,7 @@ function saveGhost() {
   try {
     localStorage.setItem(
       COMPETITOR_KEY,
-      JSON.stringify({ version: 1, laps: state.competitorLaps })
+      JSON.stringify({ version: 2, laps: state.competitorLaps })
     );
   } catch (_) {}
 }
@@ -172,10 +282,37 @@ function loadGhost() {
       }
     }
 
+    let migrationBase = Number(localStorage.getItem(COMPETITOR_MIGRATION_KEY));
+    if (!Number.isFinite(migrationBase)) {
+      migrationBase = Date.now();
+      localStorage.setItem(COMPETITOR_MIGRATION_KEY, String(migrationBase));
+    }
+
+    const start = samples[0];
+    const startHeading = Math.atan2(start.tangent.x, start.tangent.z);
+
     state.competitorLaps = laps
       .filter((lap) => Number.isFinite(lap?.time) && Array.isArray(lap?.frames) && lap.frames.length > 20)
+      .map((lap, index) => {
+        const frames = lap.frames.map((frame) => ({ ...frame }));
+        if (frames.length) {
+          frames[0] = {
+            ...frames[0],
+            t: 0,
+            x: start.point.x,
+            z: start.point.z,
+            h: startHeading,
+            p: 0
+          };
+        }
+        return {
+          ...lap,
+          hitAt: Number.isFinite(Number(lap.hitAt)) ? Number(lap.hitAt) : migrationBase - index * 60000,
+          frames
+        };
+      })
       .sort((a, b) => a.time - b.time)
-      .slice(0, 3);
+      .slice(0, COMPETITOR_LIMIT);
 
     state.bestTime = state.competitorLaps[0]?.time ?? Infinity;
     state.ghostFrames = state.competitorLaps[0]?.frames ?? [];
@@ -209,7 +346,10 @@ function lapFrameAt(lap, time) {
     z: THREE.MathUtils.lerp(a.z, b.z, alpha),
     h: lerpAngle(a.h, b.h, alpha),
     s: THREE.MathUtils.lerp(a.s, b.s, alpha),
-    d: THREE.MathUtils.lerp(a.d, b.d, alpha)
+    d: THREE.MathUtils.lerp(a.d, b.d, alpha),
+    p: Number.isFinite(a.p) && Number.isFinite(b.p)
+      ? THREE.MathUtils.lerp(a.p, b.p, alpha)
+      : null
   };
 }
 
@@ -230,7 +370,7 @@ function animateWheels(car, steering, speed, dt) {`
     const car = competitorCars[i];
     const lap = state.competitorLaps[i];
 
-    if (!lap) {
+    if (!lap || !state.lapActive) {
       car.visible = false;
       continue;
     }
@@ -261,18 +401,20 @@ function updateScene(dt) {`
     // Show every saved rival on the minimap instead of only the old single ghost.
     source = source.replace(
       /  if \(state\.ghostVisible\) \{[\s\S]*?\n  \}\n\}\n\nfunction formatTime/,
-      `  for (let i = 0; i < state.competitorLaps.length; i += 1) {
-    const rival = lapFrameAt(state.competitorLaps[i], state.lapElapsed);
-    if (!rival) continue;
+      `  if (state.lapActive) {
+    for (let i = 0; i < state.competitorLaps.length; i += 1) {
+      const rival = lapFrameAt(state.competitorLaps[i], state.lapElapsed);
+      if (!rival) continue;
 
-    const rivalPoint = mapPoint({ x: rival.x, z: rival.z });
-    mapCtx.beginPath();
-    mapCtx.arc(rivalPoint.x, rivalPoint.y, 6, 0, TAU);
-    mapCtx.fillStyle = COMPETITOR_MAP_COLORS[i] || '#38d9ff';
-    mapCtx.fill();
-    mapCtx.strokeStyle = '#08090a';
-    mapCtx.lineWidth = 3;
-    mapCtx.stroke();
+      const rivalPoint = mapPoint({ x: rival.x, z: rival.z });
+      mapCtx.beginPath();
+      mapCtx.arc(rivalPoint.x, rivalPoint.y, 6, 0, TAU);
+      mapCtx.fillStyle = COMPETITOR_MAP_COLORS[i] || '#38d9ff';
+      mapCtx.fill();
+      mapCtx.strokeStyle = '#08090a';
+      mapCtx.lineWidth = 3;
+      mapCtx.stroke();
+    }
   }
 }
 
