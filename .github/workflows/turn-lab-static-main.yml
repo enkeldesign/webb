@@ -54,7 +54,7 @@ jobs:
 
       - name: Commit generated core
         run: |
-          if git diff --quiet -- turn-lab/main.js; then
+          if [ -z "$(git status --porcelain -- turn-lab/main.js)" ]; then
             echo 'Static core is already up to date.'
             exit 0
           fi
