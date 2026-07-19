@@ -1,4 +1,11 @@
 (() => {
+  globalThis.__turnSpectateMode = {
+    active: false,
+    index: 0,
+    startedAt: 0,
+    elapsed: 0
+  };
+
   const upstreamFetch = window.fetch.bind(window);
 
   function replaceRequired(source, search, replacement, label) {
@@ -10,21 +17,7 @@
   function patchGameSource(input) {
     let source = input;
 
-    source = replaceRequired(
-      source,
-      '  lapActive: false,',
-      '  lapActive: false,\n  spectating: false,\n  spectateIndex: 0,\n  spectateStartedAt: 0,\n  spectateElapsed: 0,',
-      'spectator state'
-    );
-
-    source = replaceRequired(
-      source,
-      '  state.lapActive = false;\n  state.lapStartedAt = 0;',
-      '  state.lapActive = false;\n  state.spectating = false;\n  state.spectateElapsed = 0;\n  state.lapStartedAt = 0;',
-      'reset spectator state'
-    );
-
-    // Drift should still trade some pace for rotation, but not feel as punitive.
+    // Keep the lighter drift penalty from the previous pass without tying it to spectator state.
     source = replaceRequired(
       source,
       '(state.offRoad ? 36 : 43) * (driftHeld ? 0.86 : 1);',
@@ -38,18 +31,24 @@
       'lighter drift drag penalty'
     );
 
+    // Spectating uses a completely separate global replay clock. It cannot be enabled by lap
+    // logic, so a normal start-line crossing can never short-circuit player physics.
     source = replaceRequired(
       source,
       'function updatePhysics(dt, now) {\n  updateMotionInput(dt);',
       `function updatePhysics(dt, now) {
-  if (state.spectating) {
-    state.spectateElapsed = (now - state.spectateStartedAt) / 1000;
+  const spectate = globalThis.__turnSpectateMode;
+  if (spectate?.active) {
+    spectate.elapsed = (now - spectate.startedAt) / 1000;
+    state.velocity.set(0, 0, 0);
     state.speed = 0;
+    state.throttle = 0;
+    state.brake = 0;
     return;
   }
 
   updateMotionInput(dt);`,
-      'freeze player physics during spectate'
+      'isolated spectator physics pause'
     );
 
     source = replaceRequired(
@@ -57,29 +56,31 @@
       `function placePlayerCar(dt) {
   playerCar.position.copy(state.position);`,
       `function placePlayerCar(dt) {
-  playerCar.visible = !state.spectating;
-  if (state.spectating) return;
+  const spectate = globalThis.__turnSpectateMode;
+  playerCar.visible = !spectate?.active;
+  if (spectate?.active) return;
   playerCar.position.copy(state.position);`,
-      'hide player while spectating'
+      'hide player only during explicit spectate mode'
     );
 
     source = source.replace(
       /function placeCompetitorCars\(dt\) \{[\s\S]*?\n\}\n\nfunction updateScene\(dt\) \{/,
-      `function setCompetitorLabelVisibility(car, visible) {
+      `function hideCompetitorLabels(car) {
   for (const child of car.children) {
-    if (child.userData?.turnGhostLabel) child.visible = visible;
+    if (child.userData?.turnGhostLabel) child.visible = false;
   }
 }
 
 function placeCompetitorCars(dt) {
   ensureCompetitorCars();
-  const replayEnabled = state.lapActive || state.spectating;
-  const replayTime = state.spectating ? state.spectateElapsed : state.lapElapsed;
+  const spectate = globalThis.__turnSpectateMode;
+  const replayEnabled = state.lapActive || spectate?.active;
+  const replayTime = spectate?.active ? spectate.elapsed : state.lapElapsed;
 
   for (let i = 0; i < competitorCars.length; i += 1) {
     const car = competitorCars[i];
     const lap = state.competitorLaps[i];
-    setCompetitorLabelVisibility(car, Boolean(state.spectating && lap));
+    hideCompetitorLabels(car);
 
     if (!lap || !replayEnabled) {
       car.visible = false;
@@ -101,23 +102,26 @@ function placeCompetitorCars(dt) {
 }
 
 function updateSpectatorCamera(dt) {
-  const lap = state.competitorLaps[state.spectateIndex];
-  const frame = lap ? lapFrameAt(lap, state.spectateElapsed) : null;
+  const spectate = globalThis.__turnSpectateMode;
+  if (!spectate?.active) return;
+
+  const lap = state.competitorLaps[spectate.index];
+  const frame = lap ? lapFrameAt(lap, spectate.elapsed) : null;
   if (!frame) return;
 
   const focus = new THREE.Vector3(frame.x, 0.18, frame.z);
   const forward = new THREE.Vector3(Math.sin(frame.h), 0, Math.cos(frame.h));
-  const desiredCamera = focus.clone().addScaledVector(forward, -19);
-  desiredCamera.y = 8.8;
-  cameraPosition.lerp(desiredCamera, 1 - Math.exp(-dt * 5.2));
+  const desiredCamera = focus.clone().addScaledVector(forward, -18.5);
+  desiredCamera.y = 8.6;
+  cameraPosition.lerp(desiredCamera, 1 - Math.exp(-dt * 7.2));
   camera.position.copy(cameraPosition);
 
-  const desiredTarget = focus.clone().addScaledVector(forward, 15);
-  desiredTarget.y = 2.2;
-  cameraTarget.lerp(desiredTarget, 1 - Math.exp(-dt * 7.2));
+  const desiredTarget = focus.clone().addScaledVector(forward, 13.5);
+  desiredTarget.y = 2.15;
+  cameraTarget.lerp(desiredTarget, 1 - Math.exp(-dt * 9));
   camera.up.set(0, 1, 0);
   camera.lookAt(cameraTarget);
-  camera.fov = THREE.MathUtils.lerp(camera.fov, 73, Math.min(1, dt * 5));
+  camera.fov = THREE.MathUtils.lerp(camera.fov, 72, Math.min(1, dt * 6));
   camera.updateProjectionMatrix();
 }
 
@@ -132,7 +136,7 @@ function updateScene(dt) {`
       `  placePlayerCar(dt);
   placeCompetitorCars(dt);
 
-  if (state.spectating) {
+  if (globalThis.__turnSpectateMode?.active) {
     updateSpectatorCamera(dt);
     return;
   }
@@ -144,53 +148,71 @@ function updateScene(dt) {`
     source = replaceRequired(
       source,
       'function lapFrameAt(lap, time) {',
-      `function currentSpectateName() {
-  const lap = state.competitorLaps[state.spectateIndex];
-  return lap ? ghostNameForLap(lap, state.competitorLaps) : '';
+      `function spectateDateLabel(lap) {
+  if (!lap) return '';
+  const label = ghostNameForLap(lap, state.competitorLaps);
+  return label
+    .replace(/^Today\\s+/, 'Today, ')
+    .replace(/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\\s+/, '$1, ');
 }
 
-globalThis.__turnGetSpectateState = () => ({
-  available: Boolean(state.running && !state.lapActive && !state.spectating && state.competitorLaps.length),
-  spectating: state.spectating,
-  index: state.spectateIndex,
-  total: state.competitorLaps.length,
-  name: currentSpectateName()
-});
+globalThis.__turnGetSpectateState = () => {
+  const spectate = globalThis.__turnSpectateMode;
+  const lap = state.competitorLaps[spectate.index];
+  return {
+    available: Boolean(state.running && !state.lapActive && !spectate.active && state.competitorLaps.length),
+    spectating: Boolean(spectate.active),
+    index: spectate.index,
+    total: state.competitorLaps.length,
+    name: spectateDateLabel(lap),
+    record: lap ? formatTime(lap.time) : ''
+  };
+};
 
 globalThis.__turnStartSpectating = () => {
-  if (!state.running || state.lapActive || !state.competitorLaps.length) return false;
-  state.spectating = true;
-  state.spectateIndex = 0;
-  state.spectateStartedAt = performance.now();
-  state.spectateElapsed = 0;
+  const spectate = globalThis.__turnSpectateMode;
+  if (!state.running || state.lapActive || spectate.active || !state.competitorLaps.length) return false;
+
+  spectate.active = true;
+  spectate.index = 0;
+  spectate.startedAt = performance.now();
+  spectate.elapsed = 0;
+  state.velocity.set(0, 0, 0);
+  state.speed = 0;
   playerCar.visible = false;
+  globalThis.__turnAnalogGas = 0;
+  globalThis.__turnBoostActive = false;
+  globalThis.__turnDriftHeld = false;
   globalThis.__turnSetRacePosition?.(null, state.competitorLaps.length + 1);
   return true;
 };
 
 globalThis.__turnNextSpectator = () => {
-  if (!state.spectating || !state.competitorLaps.length) return false;
-  state.spectateIndex = (state.spectateIndex + 1) % state.competitorLaps.length;
+  const spectate = globalThis.__turnSpectateMode;
+  if (!spectate.active || !state.competitorLaps.length) return false;
+  spectate.index = (spectate.index + 1) % state.competitorLaps.length;
   return true;
 };
 
 globalThis.__turnStopSpectating = () => {
-  if (!state.spectating) return false;
-  state.spectating = false;
-  state.spectateElapsed = 0;
+  const spectate = globalThis.__turnSpectateMode;
+  if (!spectate.active) return false;
+
+  spectate.active = false;
+  spectate.elapsed = 0;
   playerCar.visible = true;
   for (const car of competitorCars) {
     car.visible = false;
-    setCompetitorLabelVisibility(car, false);
+    hideCompetitorLabels(car);
   }
   return true;
 };
 
 function lapFrameAt(lap, time) {`,
-      'spectator public API'
+      'isolated spectator public API'
     );
 
-    // Return the minimap to one clean course color and mark the start line explicitly.
+    // Keep the minimap visually simple and mark the start/finish line explicitly.
     source = source.replace(
       /  mapCtx\.lineWidth = 8;\n  for \(let section = 0; section < TRACK_SECTION_COLORS\.length; section \+= 1\) \{[\s\S]*?\n  \}/,
       `  mapCtx.strokeStyle = '#ff4fa3';
@@ -261,11 +283,15 @@ function lapFrameAt(lap, time) {`,
     bar.hidden = true;
     bar.innerHTML = `
       <button class="spectate-close" type="button" aria-label="Stop spectating">×</button>
-      <div class="spectate-following"><span>FOLLOWING</span><strong></strong></div>
+      <div class="spectate-following">
+        <strong class="spectate-name"></strong>
+        <b class="spectate-record"></b>
+      </div>
       <button class="spectate-next" type="button">NEXT &gt;</button>`;
     document.body.appendChild(bar);
 
-    const nameEl = bar.querySelector('strong');
+    const nameEl = bar.querySelector('.spectate-name');
+    const recordEl = bar.querySelector('.spectate-record');
     const closeButton = bar.querySelector('.spectate-close');
     const nextButton = bar.querySelector('.spectate-next');
 
@@ -313,7 +339,8 @@ function lapFrameAt(lap, time) {`,
         spectateButton.hidden = !state.available;
         bar.hidden = !state.spectating;
         document.body.classList.toggle('turn-spectating', state.spectating);
-        if (nameEl) nameEl.textContent = state.name || 'Ghost';
+        if (nameEl) nameEl.textContent = state.name || 'Previous record';
+        if (recordEl) recordEl.textContent = state.record || '--:--.---';
         if (nextButton) nextButton.hidden = state.total < 2;
       }
 
