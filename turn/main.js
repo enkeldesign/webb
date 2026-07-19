@@ -765,6 +765,47 @@ async function chooseVehicleAndStart(fullscreenPromise = Promise.resolve(false))
   await startGame(fullscreenPromise);
 }
 
+async function openLotFromRace() {
+  if (!state.running || document.body.classList.contains('turn-lot-open')) return false;
+
+  const spectateState = globalThis.__turnGetSpectateV3State?.();
+  if (spectateState?.active) {
+    globalThis.__turnStopSpectateV3?.();
+    document.body.classList.remove('turn-spectating');
+  }
+
+  const wasRunning = state.running;
+  state.running = false;
+  state.touchGas = false;
+  state.touchBrake = false;
+  state.manualSteering = 0;
+  globalThis.__turnAnalogGas = 0;
+  globalThis.__turnBoostActive = false;
+  globalThis.__turnDriftHeld = false;
+
+  hud.hidden = true;
+  controls.hidden = true;
+  manualSteer.hidden = true;
+
+  const selection = await showTheLot({
+    initialSelection: { carId: state.vehicleId, color: state.vehicleColor }
+  });
+
+  if (!selection) {
+    state.running = wasRunning;
+    state.lastFrame = performance.now();
+    hud.hidden = false;
+    controls.hidden = false;
+    manualSteer.hidden = state.sensorMode;
+    resize();
+    return false;
+  }
+
+  await applyVehicleSelection(selection);
+  await startGame();
+  return true;
+}
+
 async function startGame(fullscreenPromise = Promise.resolve(false)) {
   state.running = true;
   state.lastFrame = performance.now();
@@ -1289,6 +1330,7 @@ const turnRuntime = {
   lapFrameAt,
   GAME_MODE,
   setGameMode,
+  openLot: openLotFromRace,
   setRacePosition(position, total) {
     globalThis.__turnSetRacePosition?.(position, total);
   },
