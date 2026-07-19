@@ -36,4 +36,16 @@ jobs:
         run: node turn-lab/tests/regression.mjs
 
       - name: Verify release architecture
-        run: node turn-lab/scripts/check-release.mjs
+        shell: bash
+        run: |
+          set -o pipefail
+          node turn-lab/scripts/check-release.mjs 2>&1 | tee turn-release-check.log
+
+      - name: Upload release-check diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: turn-release-check
+          path: turn-release-check.log
+          if-no-files-found: error
+          retention-days: 1
