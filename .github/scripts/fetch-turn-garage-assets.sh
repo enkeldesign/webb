@@ -6,16 +6,19 @@ trap 'rm -rf "$work"' EXIT
 
 CAR_URL='https://kenney.nl/media/pages/assets/car-kit/1a312ec241-1775131960/kenney_car-kit.zip'
 TOY_URL='https://kenney.nl/media/pages/assets/toy-car-kit/42e19cc426-1736346027/kenney_toy-car-kit.zip'
+PROTOTYPE_URL='https://kenney.nl/media/pages/assets/prototype-kit/4d3b7073ed-1724832076/kenney_prototype-kit.zip'
 BRICK_URL='https://kenney.nl/media/pages/assets/brick-kit/46a22f3d08-1716981002/kenney_brick-kit.zip'
 
-mkdir -p "$work/car" "$work/toy" "$work/brick"
+mkdir -p "$work/car" "$work/toy" "$work/prototype" "$work/brick"
 
 curl -L --fail --retry 4 --retry-delay 2 "$CAR_URL" -o "$work/car.zip"
 curl -L --fail --retry 4 --retry-delay 2 "$TOY_URL" -o "$work/toy.zip"
+curl -L --fail --retry 4 --retry-delay 2 "$PROTOTYPE_URL" -o "$work/prototype.zip"
 curl -L --fail --retry 4 --retry-delay 2 "$BRICK_URL" -o "$work/brick.zip"
 
 unzip -q "$work/car.zip" -d "$work/car"
 unzip -q "$work/toy.zip" -d "$work/toy"
+unzip -q "$work/prototype.zip" -d "$work/prototype"
 unzip -q "$work/brick.zip" -d "$work/brick"
 
 {
@@ -24,6 +27,9 @@ unzip -q "$work/brick.zip" -d "$work/brick"
   echo
   echo '=== TOY CAR KIT GLB INVENTORY ==='
   find "$work/toy" -type f -iname '*.glb' -printf '%f\n' | sort -u
+  echo
+  echo '=== PROTOTYPE KIT VEHICLE GLBS ==='
+  find "$work/prototype" -type f -iname '*vehicle*.glb' -printf '%f\n' | sort -u
   echo
   echo '=== BRICK KIT GLB SAMPLE ==='
   find "$work/brick" -type f -iname '*.glb' -printf '%f\n' | sort -u | head -120
@@ -61,8 +67,8 @@ def find_exact(root: Path, wanted: str) -> Path:
     return matches[0]
 
 cars = [
-    ('convertible', work / 'toy', 'vehicleconvertible'),
-    ('classic', work / 'toy', 'vehicle'),
+    ('convertible', work / 'prototype', 'vehicleconvertible'),
+    ('classic', work / 'prototype', 'vehicle'),
     ('vintage-racer', work / 'toy', 'vehiclevintageracer'),
     ('toy-racer', work / 'toy', 'vehicleracer'),
     ('monster-truck', work / 'toy', 'vehiclemonstertruck'),
@@ -113,9 +119,9 @@ for i, source in enumerate(selected[:9], 1):
 
 Path('turn/assets/KENNEY-ASSETS.md').write_text(
     '# TURN vendored Kenney assets\n\n'
-    'The vehicle models in `cars/` are selected from Kenney Car Kit 3.1 and Toy Car Kit 1.2.\n'
+    'The vehicle models in `cars/` are selected from Kenney Prototype Kit 1.0, Toy Car Kit 1.2, and Car Kit 3.1.\n'
     'The scenery pieces in `lot-bricks/` are selected from Kenney Brick Kit 1.0.\n\n'
-    'All three packs are released under Creative Commons CC0 1.0. Attribution is not required.\n'
+    'All four packs are released under Creative Commons CC0 1.0. Attribution is not required.\n'
     'Original source: https://kenney.nl/assets\n',
     encoding='utf-8',
 )
