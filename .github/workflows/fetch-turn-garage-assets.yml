@@ -7,12 +7,14 @@ on:
     paths:
       - '.github/scripts/fetch-turn-garage-assets.sh'
       - '.github/workflows/fetch-turn-garage-assets.yml'
+      - '.github/turn-garage-assets-trigger'
   pull_request:
     branches:
       - main
     paths:
       - '.github/scripts/fetch-turn-garage-assets.sh'
       - '.github/workflows/fetch-turn-garage-assets.yml'
+      - '.github/turn-garage-assets-trigger'
 
 permissions:
   contents: write
