@@ -204,6 +204,13 @@ function ensureCompetitorCars() {`,
 
     source = replaceRequired(
       source,
+      `          hitAt: Number.isFinite(Number(lap.hitAt)) ? Number(lap.hitAt) : migrationBase - index * 60000,`,
+      `          hitAt: lap.hitAt != null && Number.isFinite(Number(lap.hitAt)) ? Number(lap.hitAt) : null,`,
+      'preserve unknown rival timestamps'
+    );
+
+    source = replaceRequired(
+      source,
       `function spectateDateLabel(lap) {
   const hitAt = Number(lap?.hitAt);
   if (!Number.isFinite(hitAt)) return 'Previous record';`,
