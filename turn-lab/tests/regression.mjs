@@ -198,7 +198,7 @@ test('timed lap starts with an exact pinned start frame', () => {
   assert.equal(message, 'GO!');
 });
 
-test('lap progress requires ordered forward checkpoints and routes start crossings correctly', () => {
+test('lap progress requires ordered physical checkpoint gates and routes start crossings correctly', () => {
   const samples = makeSamples();
   const state = makeState({ lapStartedAt: 1000, trackDistance: 1 });
   state.lapActive = true;
@@ -209,7 +209,7 @@ test('lap progress requires ordered forward checkpoints and routes start crossin
   let recorded = 0;
   const run = (now) => updateLapProgressState({
     state,
-    nearestAfter: { sample: samples[0] },
+    nearestAfter: { sample: samples[Math.round(state.progress * samples.length) % samples.length] },
     samples,
     trackWidth: 27,
     now,
@@ -218,25 +218,31 @@ test('lap progress requires ordered forward checkpoints and routes start crossin
     recordGhostFrame: () => { recorded += 1; }
   });
 
-  state.lastProgress = 0.17;
-  state.progress = 0.19;
-  run(2000);
-  assert.equal(state.lapCheckpointIndex, 1);
-  assert.equal(state.lapElapsed, 1);
-  assert.equal(recorded, 1);
+  assert.ok(LAP_CHECKPOINTS.length >= 10, 'checkpoint chain should be dense enough to reject major shortcuts');
 
-  state.velocity.set(-10, 0, 0);
-  state.lastProgress = 0.37;
-  state.progress = 0.39;
+  state.lastProgress = 0.07;
+  state.progress = 0.09;
+  state.position.set(70, 0, 140);
+  run(2000);
+  assert.equal(state.lapCheckpointIndex, 0, 'progress jumps far away from the checkpoint must not count');
+
+  const firstIndex = Math.round(LAP_CHECKPOINTS[0] * samples.length) % samples.length;
+  state.position.set(samples[firstIndex].point.x, 0, samples[firstIndex].point.z);
   run(2100);
+  assert.equal(state.lapCheckpointIndex, 1);
+  assert.equal(recorded, 2);
+
+  const secondIndex = Math.round(LAP_CHECKPOINTS[1] * samples.length) % samples.length;
+  state.position.set(samples[secondIndex].point.x, 0, samples[secondIndex].point.z);
+  state.velocity.set(-10, 0, 0);
+  run(2200);
   assert.equal(state.lapCheckpointIndex, 1, 'reverse movement must not claim a checkpoint');
 
   state.velocity.set(10, 0, 0);
-  state.lastProgress = 0.37;
-  state.progress = 0.39;
-  run(2200);
+  run(2300);
   assert.equal(state.lapCheckpointIndex, 2);
 
+  state.position.set(samples[0].point.x, 0, samples[0].point.z);
   state.lastProgress = 0.9;
   state.progress = 0.1;
   state.lapCheckpointIndex = 2;
@@ -248,7 +254,7 @@ test('lap progress requires ordered forward checkpoints and routes start crossin
   state.progress = 0.1;
   state.lapCheckpointIndex = LAP_CHECKPOINTS.length;
   run(4000);
-  assert.equal(completed, 1, 'full ordered circuit completes the lap');
+  assert.equal(completed, 1, 'full ordered physical checkpoint chain completes the lap');
 
   state.lapActive = false;
   state.lastProgress = 0.9;
