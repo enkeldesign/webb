@@ -9,27 +9,28 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="TURN">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>TURN v1.0.0 · Build 2026.07.19-r7</title>
+  <title>TURN v1.0.1 · Build 2026.07.19-r8</title>
   <script>
     globalThis.__TURN_BUILD__ = Object.freeze({
-      version: '1.0.0',
-      id: '2026.07.19-r7',
-      cacheKey: '20260719-r7'
+      version: '1.0.1',
+      id: '2026.07.19-r8',
+      cacheKey: '20260719-r8'
     });
   </script>
   <link rel="icon" href="/turn/apple-touch-icon-v4.png" type="image/png" sizes="180x180">
   <link rel="apple-touch-icon" href="/turn/apple-touch-icon-v4.png" sizes="180x180">
-  <link rel="manifest" href="./site.webmanifest?build=20260719-r7">
-  <link rel="stylesheet" href="./styles.css?build=20260719-r7">
-  <link rel="stylesheet" href="./vertical-drive.css?build=20260719-r7">
-  <link rel="stylesheet" href="./hud-tuning.css?build=20260719-r7">
-  <link rel="stylesheet" href="./install-gate.css?build=20260719-r7">
-  <link rel="stylesheet" href="./gameplay-features.css?build=20260719-r7">
-  <link rel="stylesheet" href="./gameplay-v2.css?build=20260719-r7">
-  <link rel="stylesheet" href="./spectate-v3.css?build=20260719-r7">
+  <link rel="manifest" href="./site.webmanifest?build=20260719-r8">
+  <link rel="stylesheet" href="./styles.css?build=20260719-r8">
+  <link rel="stylesheet" href="./vertical-drive.css?build=20260719-r8">
+  <link rel="stylesheet" href="./hud-tuning.css?build=20260719-r8">
+  <link rel="stylesheet" href="./install-gate.css?build=20260719-r8">
+  <link rel="stylesheet" href="./gameplay-features.css?build=20260719-r8">
+  <link rel="stylesheet" href="./gameplay-v2.css?build=20260719-r8">
+  <link rel="stylesheet" href="./spectate-v3.css?build=20260719-r8">
+  <link rel="stylesheet" href="./manual-steering.css?build=20260719-r8">
 
-  <script src="./install-gate.js?build=20260719-r7"></script>
-  <script src="./orientation-compat.js?build=20260719-r7"></script>
+  <script src="./install-gate.js?build=20260719-r8"></script>
+  <script src="./orientation-compat.js?build=20260719-r8"></script>
   <script type="importmap">
     {
       "imports": {
@@ -47,7 +48,7 @@
       </div>
 
       <div class="install-card">
-        <span class="install-kicker">TURN v1.0.0 · Build 2026.07.19-r7</span>
+        <span class="install-kicker">TURN v1.0.1 · Build 2026.07.19-r8</span>
         <h1 id="installTitle">TURN</h1>
         <p class="install-copy">
           TURN is a motion-controlled arcade drift racer. Turn your device to steer and race your own best laps.
@@ -75,7 +76,7 @@
 
   <section class="panel" id="intro" aria-labelledby="title">
     <div class="start-card">
-      <span class="kicker">TURN v1.0.0 · Build 2026.07.19-r7</span>
+      <span class="kicker">TURN v1.0.1 · Build 2026.07.19-r8</span>
       <h1 id="title">TURN</h1>
       <p class="tagline">
         Turn the phone to steer. Press and drag the gas pedal up for more throttle or down for less. Brake stays on its own button.
@@ -117,7 +118,18 @@
     </div>
   </div>
 
-  <div class="manual-steer" id="manualSteer" hidden></div>
+  <div
+    class="manual-steer"
+    id="manualSteer"
+    role="slider"
+    aria-label="Steering. Drag left or right."
+    aria-valuemin="-100"
+    aria-valuemax="100"
+    aria-valuenow="0"
+    hidden
+  >
+    <span class="manual-steer-knob" aria-hidden="true"></span>
+  </div>
 
   <div class="controls" id="controls" hidden>
     <div class="utility-group">
@@ -130,6 +142,6 @@
     </div>
   </div>
 
-  <script type="module" src="./app.js?build=20260719-r7"></script>
+  <script type="module" src="./app.js?build=20260719-r8"></script>
 </body>
 </html>
