@@ -94,14 +94,16 @@ const scene = new THREE.Scene();`,
       'spectator mode exit'
     );
 
+    // The lap lifecycle lives in a real ES module. Inject only the thin adapter the legacy
+    // physics loop still calls while the remaining race loop is migrated incrementally.
     source = replaceRequired(
       source,
-      /function beginTimedLap\(now\) \{[\s\S]*?\n\}\n\nfunction updatePhysics/,
+      `function updatePhysics(dt, now) {`,
       `function beginTimedLap(now) {
   beginTimedLapState({ state, samples, now, showMessage });
 }
 
-function updatePhysics`,
+function updatePhysics(dt, now) {`,
       'module-backed timed lap start'
     );
 
@@ -127,42 +129,16 @@ function saveGhost() {`,
       'module-backed lap completion'
     );
 
+    // Replace the original one-line finish check and always-on lap clock directly. The older
+    // gameplay layer no longer creates an intermediate checkpoint implementation first.
     source = replaceRequired(
       source,
-      `  const movingForwardOnTrack = state.velocity.dot(nearestAfter.sample.tangent) > 2;
-  const nextCheckpoint = LAP_CHECKPOINTS[state.lapCheckpointIndex];
-
-  if (
-    state.lapActive &&
-    nextCheckpoint != null &&
-    movingForwardOnTrack &&
-    state.lastProgress < nextCheckpoint &&
-    state.progress >= nextCheckpoint
-  ) {
-    state.lapCheckpointIndex += 1;
-  }
-
-  const crossedStart = state.lastProgress > 0.82 && state.progress < 0.18;
+      `  const crossedStart = state.lastProgress > 0.82 && state.progress < 0.18;
   const movingForwardAtStart = state.velocity.dot(samples[0].tangent) > 5;
-  const crossedStartOnTrack = crossedStart && movingForwardAtStart && state.trackDistance < TRACK_WIDTH * 0.8;
+  if (crossedStart && movingForwardAtStart && state.trackDistance < TRACK_WIDTH * 0.8) completeLap(now);
 
-  if (crossedStartOnTrack) {
-    if (!state.lapActive) {
-      beginTimedLap(now);
-    } else if (state.lapCheckpointIndex >= LAP_CHECKPOINTS.length) {
-      completeLap(now);
-    } else {
-      // Crossing the line without a full circuit starts a fresh timed attempt, never a lap.
-      beginTimedLap(now);
-    }
-  }
-
-  if (state.lapActive) {
-    state.lapElapsed = (now - state.lapStartedAt) / 1000;
-    recordGhostFrame();
-  } else {
-    state.lapElapsed = 0;
-  }`,
+  state.lapElapsed = (now - state.lapStartedAt) / 1000;
+  recordGhostFrame();`,
       `  updateLapProgressState({
     state,
     nearestAfter,
