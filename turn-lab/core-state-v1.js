@@ -126,21 +126,35 @@ function saveGhost() {`,
 
     source = replaceRequired(
       source,
-      /function saveGhost\(\) \{[\s\S]*?\n\}\n\nfunction loadGhost\(\) \{[\s\S]*?\n\}\n\nfunction lapFrameAt\(lap, time\) \{[\s\S]*?\n\}\n\nfunction ghostFrameAt/,
+      `function saveGhost() {
+  // Replaced by race/rival-storage.js through the core bridge.
+}`,
       `function saveGhost() {
   saveRivalsState(state);
-}
+}`,
+      'module-backed rival save'
+    );
 
-function loadGhost() {
+    source = replaceRequired(
+      source,
+      `function loadGhost() {
+  // Replaced by race/rival-storage.js through the core bridge.
+}`,
+      `function loadGhost() {
   loadRivalsState({ state, samples, findNearestTrack });
-}
+}`,
+      'module-backed rival load'
+    );
 
-function lapFrameAt(lap, time) {
+    source = replaceRequired(
+      source,
+      `function lapFrameAt(lap, time) {
+  return null;
+}`,
+      `function lapFrameAt(lap, time) {
   return replayFrameAt(lap, time);
-}
-
-function ghostFrameAt`,
-      'module-backed rival storage and replay interpolation'
+}`,
+      'module-backed replay interpolation'
     );
 
     source = replaceRequired(
