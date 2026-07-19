@@ -1,0 +1,51 @@
+name: Apply TURN garage integration
+
+on:
+  push:
+    branches:
+      - turn-lot-garage-v1
+    paths:
+      - '.github/scripts/apply-turn-garage-v1.mjs'
+      - '.github/workflows/apply-turn-garage-v1.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/scripts/apply-turn-garage-v1.mjs'
+      - '.github/workflows/apply-turn-garage-v1.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: turn-lot-garage-v1
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Apply guarded garage migration
+        run: node .github/scripts/apply-turn-garage-v1.mjs
+
+      - name: Syntax-check integrated runtime
+        run: find turn -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
+
+      - name: Commit integrated runtime
+        run: |
+          if [ -z "$(git status --porcelain -- turn/main.js turn/index.html)" ]; then
+            echo 'Garage integration is already applied.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add turn/main.js turn/index.html
+          git commit -m 'Integrate The Lot and selected vehicle runtime [skip ci]'
+          git push origin HEAD:turn-lot-garage-v1
