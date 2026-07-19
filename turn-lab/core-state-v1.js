@@ -2,6 +2,8 @@
   const upstreamFetch = window.fetch.bind(window);
   const gameStateModuleUrl = new URL('/turn-lab/race/game-state.js', location.origin).href;
   const lapSystemModuleUrl = new URL('/turn-lab/race/lap-system.js', location.origin).href;
+  const replaySystemModuleUrl = new URL('/turn-lab/race/replay-system.js', location.origin).href;
+  const rivalStorageModuleUrl = new URL('/turn-lab/race/rival-storage.js', location.origin).href;
 
   function replaceRequired(source, search, replacement, label) {
     const next = source.replace(search, replacement);
@@ -17,8 +19,24 @@
       "import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js';",
       `import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js';
 import { GAME_MODE, installGameModeState, prepareRaceStartState, resetRaceToStage, setGameModeState } from '${gameStateModuleUrl}';
-import { beginTimedLapState, completeLapState, updateLapProgressState } from '${lapSystemModuleUrl}';`,
+import { beginTimedLapState, completeLapState, updateLapProgressState } from '${lapSystemModuleUrl}';
+import { recordReplayFrame, replayFrameAt } from '${replaySystemModuleUrl}';
+import { RIVAL_LIMIT, loadRivalsState, saveRivalsState } from '${rivalStorageModuleUrl}';`,
       'race module imports'
+    );
+
+    // Preserve the verified lighter drift balance after removing the old spectator source patch.
+    source = replaceRequired(
+      source,
+      '(state.offRoad ? 36 : 43) * (driftHeld ? 0.86 : 1);',
+      '(state.offRoad ? 36 : 43) * (driftHeld ? 0.93 : 1);',
+      'lighter drift power penalty'
+    );
+    source = replaceRequired(
+      source,
+      '0.11 + speed * 0.0009 + (driftHeld ? 0.15 : 0);',
+      '0.11 + speed * 0.0009 + (driftHeld ? 0.085 : 0);',
+      'lighter drift drag penalty'
     );
 
     source = replaceRequired(
@@ -66,28 +84,6 @@ function motionPoseFromGravity`,
 
     source = replaceRequired(
       source,
-      `  spectate.active = true;
-  spectate.index = 0;`,
-      `  spectate.active = true;
-  setGameMode(GAME_MODE.SPECTATING);
-  spectate.index = 0;`,
-      'spectator mode entry'
-    );
-
-    source = replaceRequired(
-      source,
-      `  spectate.active = false;
-  spectate.elapsed = 0;`,
-      `  spectate.active = false;
-  setGameMode(GAME_MODE.STAGED);
-  spectate.elapsed = 0;`,
-      'spectator mode exit'
-    );
-
-    // The lap lifecycle lives in a real ES module. Inject only the thin adapter the legacy
-    // physics loop still calls while the remaining race loop is migrated incrementally.
-    source = replaceRequired(
-      source,
       `function updatePhysics(dt, now) {`,
       `function beginTimedLap(now) {
   beginTimedLapState({ state, samples, now, showMessage });
@@ -99,13 +95,24 @@ function updatePhysics(dt, now) {`,
 
     source = replaceRequired(
       source,
+      /function recordGhostFrame\(\) \{[\s\S]*?\n\}\n\nfunction completeLap/,
+      `function recordGhostFrame() {
+  recordReplayFrame(state);
+}
+
+function completeLap`,
+      'module-backed replay recording'
+    );
+
+    source = replaceRequired(
+      source,
       /function completeLap\(now\) \{[\s\S]*?\n\}\n\nfunction saveGhost\(\) \{/,
       `function completeLap(now) {
   completeLapState({
     state,
     samples,
     now,
-    competitorLimit: COMPETITOR_LIMIT,
+    competitorLimit: RIVAL_LIMIT,
     saveGhost,
     showMessage,
     onError(error) {
@@ -119,8 +126,25 @@ function saveGhost() {`,
       'module-backed lap completion'
     );
 
-    // Replace the original one-line finish check and always-on lap clock directly. The older
-    // gameplay layer no longer creates an intermediate checkpoint implementation first.
+    source = replaceRequired(
+      source,
+      /function saveGhost\(\) \{[\s\S]*?\n\}\n\nfunction loadGhost\(\) \{[\s\S]*?\n\}\n\nfunction lapFrameAt\(lap, time\) \{[\s\S]*?\n\}\n\nfunction ghostFrameAt/,
+      `function saveGhost() {
+  saveRivalsState(state);
+}
+
+function loadGhost() {
+  loadRivalsState({ state, samples, findNearestTrack });
+}
+
+function lapFrameAt(lap, time) {
+  return replayFrameAt(lap, time);
+}
+
+function ghostFrameAt`,
+      'module-backed rival storage and replay interpolation'
+    );
+
     source = replaceRequired(
       source,
       `  const crossedStart = state.lastProgress > 0.82 && state.progress < 0.18;
@@ -147,11 +171,11 @@ function saveGhost() {`,
       source,
       /function refreshCompetitorLabels\(\) \{[\s\S]*?\n\}\n\nfunction ensureCompetitorCars\(\) \{/,
       `function refreshCompetitorLabels() {
-  // Intentionally empty. Ghost labels are shown only in the spectator HUD.
+  // Ghost identity is owned by the standalone spectator HUD.
 }
 
 function ensureCompetitorCars() {`,
-      'disable 3D ghost labels'
+      'disable legacy 3D ghost labels'
     );
 
     source = replaceRequired(
@@ -163,36 +187,46 @@ function ensureCompetitorCars() {`,
 
     source = replaceRequired(
       source,
-      '    animateWheels(car, frame.s, 45, dt);',
-      `    if (car === ghostCar) animateWheels(car, frame.s, 45, dt);`,
-      'avoid wheel animation on cloned competitors'
+      `    car.rotation.y = frame.h + Math.PI;
+    car.rotation.z = -frame.s * 0.03;`,
+      `    car.rotation.y = frame.h + Math.PI;
+    car.rotation.z = -frame.s * 0.03;
+    if (car === ghostCar) animateWheels(car, frame.s, 45, dt);`,
+      'preserve safe rival wheel animation'
+    );
+
+    // Keep the verified simple pink minimap and explicit start/finish marker.
+    source = source.replace(
+      /  mapCtx\.lineWidth = 8;\n  for \(let section = 0; section < TRACK_SECTION_COLORS\.length; section \+= 1\) \{[\s\S]*?\n  \}/,
+      `  mapCtx.strokeStyle = '#ff4fa3';
+  mapCtx.lineWidth = 8;
+  mapCtx.stroke();
+
+  const startPoint = mapPoint(samples[0].point);
+  const beforeStart = mapPoint(samples[samples.length - 4].point);
+  const afterStart = mapPoint(samples[4].point);
+  const startDx = afterStart.x - beforeStart.x;
+  const startDy = afterStart.y - beforeStart.y;
+  const startLength = Math.max(0.001, Math.hypot(startDx, startDy));
+  const startNx = -startDy / startLength;
+  const startNy = startDx / startLength;
+  mapCtx.beginPath();
+  mapCtx.moveTo(startPoint.x - startNx * 11, startPoint.y - startNy * 11);
+  mapCtx.lineTo(startPoint.x + startNx * 11, startPoint.y + startNy * 11);
+  mapCtx.strokeStyle = '#08090a';
+  mapCtx.lineWidth = 9;
+  mapCtx.stroke();
+  mapCtx.strokeStyle = '#fff8e8';
+  mapCtx.lineWidth = 5;
+  mapCtx.stroke();`
     );
 
     source = replaceRequired(
       source,
-      `          hitAt: Number.isFinite(Number(lap.hitAt)) ? Number(lap.hitAt) : migrationBase - index * 60000,`,
-      `          hitAt: lap.hitAt != null && Number.isFinite(Number(lap.hitAt)) ? Number(lap.hitAt) : null,`,
-      'preserve unknown rival timestamps'
-    );
-
-    source = replaceRequired(
-      source,
-      `function spectateDateLabel(lap) {
-  const hitAt = Number(lap?.hitAt);
-  if (!Number.isFinite(hitAt)) return 'Previous record';`,
-      `function spectateDateLabel(lap) {
-  const rawHitAt = lap?.hitAt;
-  const hitAt = rawHitAt == null ? NaN : Number(rawHitAt);
-  if (!Number.isFinite(hitAt)) return 'Previous record';`,
-      'null-safe spectator timestamp'
-    );
-
-    source = source.replaceAll(
-      `    const otherHitAt = Number(other?.hitAt);
-    return Number.isFinite(otherHitAt) && sameSpectateDate(new Date(otherHitAt), date);`,
-      `    const rawOtherHitAt = other?.hitAt;
-    const otherHitAt = rawOtherHitAt == null ? NaN : Number(rawOtherHitAt);
-    return Number.isFinite(otherHitAt) && sameSpectateDate(new Date(otherHitAt), date);`
+      `function updateScene(dt) {`,
+      `function updateScene(dt) {
+  if (globalThis.__turnRuntime?.runSceneOverride?.(dt)) return;`,
+      'runtime scene override hook'
     );
 
     source = replaceRequired(
@@ -250,6 +284,41 @@ renderer.setAnimationLoop((now) => {
   renderer.render(scene, camera);
 });`,
       'frame-rate independent physics substeps'
+    );
+
+    source = replaceRequired(
+      source,
+      `const MAX_PHYSICS_STEP = 1 / 60;`,
+      `let turnSceneOverride = null;
+const turnRuntime = {
+  state,
+  samples,
+  camera,
+  cameraPosition,
+  cameraTarget,
+  playerCar,
+  ghostCar,
+  competitorCars,
+  ensureCompetitorCars,
+  animateWheels,
+  lapFrameAt,
+  GAME_MODE,
+  setGameMode,
+  setRacePosition(position, total) {
+    globalThis.__turnSetRacePosition?.(position, total);
+  },
+  setSceneOverride(override) {
+    turnSceneOverride = typeof override === 'function' ? override : null;
+  },
+  runSceneOverride(dt) {
+    return turnSceneOverride ? turnSceneOverride(dt) === true : false;
+  }
+};
+globalThis.__turnRuntime = turnRuntime;
+window.dispatchEvent(new CustomEvent('turn:runtime-ready', { detail: turnRuntime }));
+
+const MAX_PHYSICS_STEP = 1 / 60;`,
+      'publish TURN runtime bridge'
     );
 
     return source;
