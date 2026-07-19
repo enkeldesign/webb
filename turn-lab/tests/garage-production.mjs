@@ -87,6 +87,7 @@ assert.match(rivalStorage, /version: 3/, 'Rival storage schema must include vehi
 assert.match(rivalStorage, /normalizeVehicleId\(lap\.carId\)/, 'Loaded rivals must normalize stored car ids');
 assert.match(rivalStorage, /normalizeVehicleColor\(lap\.carColor\)/, 'Loaded rivals must normalize stored car colours');
 assert.match(controls, /boostDurationSeconds/, 'Boost drain must use the selected car boost tank stat');
-assert.match(carModels, /\.\/assets\/cars\//, 'Car model factory must use vendored local vehicle assets');
+assert.match(catalogSource, /asset: `\.\/assets\/cars\/\$\{id\}\.glb`/, 'Vehicle catalog must point to vendored local car assets');
+assert.match(carModels, /loadCarSource\(car\.id\)/, 'Car model factory must load the catalog-selected vehicle');
 
 console.log('TURN garage production regression passed.');
