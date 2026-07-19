@@ -1,0 +1,281 @@
+.install-gate {
+  position: absolute;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  overflow: auto;
+  padding:
+    max(22px, env(safe-area-inset-top))
+    max(22px, env(safe-area-inset-right))
+    max(22px, env(safe-area-inset-bottom))
+    max(22px, env(safe-area-inset-left));
+  background:
+    radial-gradient(circle at 12% 20%, rgb(255 212 59 / 0.95) 0 7%, transparent 7.5%),
+    radial-gradient(circle at 88% 76%, rgb(255 79 163 / 0.9) 0 10%, transparent 10.5%),
+    linear-gradient(145deg, #38d9ff 0 45%, #8ce99a 100%);
+  color: var(--ink);
+}
+
+html.turn-standalone .install-gate,
+.install-gate[hidden] {
+  display: none;
+}
+
+.install-shell {
+  width: min(920px, 96vw);
+  display: grid;
+  grid-template-columns: minmax(180px, 0.75fr) minmax(320px, 1.25fr);
+  gap: clamp(20px, 5vw, 54px);
+  align-items: center;
+}
+
+.install-art {
+  display: grid;
+  place-items: center;
+}
+
+.install-icon {
+  width: min(34vw, 260px);
+  aspect-ratio: 1;
+  border: 6px solid var(--ink);
+  border-radius: 24%;
+  background: var(--paper);
+  box-shadow: 12px 12px 0 var(--ink);
+  transform: rotate(-3deg);
+}
+
+.install-card {
+  padding: clamp(22px, 4vw, 42px);
+  border: 5px solid var(--ink);
+  border-radius: 28px;
+  background: rgb(255 248 232 / 0.96);
+  box-shadow: 12px 12px 0 var(--ink);
+}
+
+.install-kicker {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  background: var(--yellow);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.install-card h1 {
+  font-size: clamp(3.7rem, 10vw, 7rem);
+}
+
+.install-copy {
+  max-width: 34rem;
+  margin: 18px 0 24px;
+  font-size: clamp(1rem, 2.3vw, 1.28rem);
+  line-height: 1.25;
+}
+
+.install-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.install-actions button {
+  min-height: 58px;
+  padding: 12px 18px;
+  font-size: clamp(0.85rem, 2vw, 1rem);
+}
+
+.install-primary {
+  background: var(--pink);
+}
+
+.install-secondary {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  opacity: 0.72;
+}
+
+.install-secondary:active {
+  transform: none;
+  box-shadow: none;
+}
+
+.install-note {
+  min-height: 1.3em;
+  margin: 13px 0 0;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  opacity: 0.65;
+}
+
+.install-guide {
+  position: absolute;
+  inset: 0;
+  z-index: 130;
+  display: grid;
+  place-items: end center;
+  padding:
+    max(18px, env(safe-area-inset-top))
+    max(18px, env(safe-area-inset-right))
+    max(18px, calc(env(safe-area-inset-bottom) + 12px))
+    max(18px, env(safe-area-inset-left));
+  background: rgb(8 9 10 / 0.42);
+  backdrop-filter: blur(8px);
+}
+
+.install-guide[hidden] {
+  display: none;
+}
+
+.install-guide-card {
+  width: min(560px, 96vw);
+  padding: 22px;
+  border: 5px solid var(--ink);
+  border-radius: 26px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 10px 10px 0 var(--ink);
+}
+
+.install-guide-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.install-guide h2 {
+  margin: 0;
+  font-size: clamp(1.5rem, 5vw, 2.4rem);
+  line-height: 0.95;
+}
+
+.install-close {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.install-steps {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0 8px;
+}
+
+.install-step {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 3px solid var(--ink);
+  border-radius: 15px;
+  background: white;
+}
+
+.install-step-number,
+.share-symbol {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  background: var(--yellow);
+  font-size: 1.15rem;
+}
+
+.share-symbol {
+  position: relative;
+  font-size: 0;
+}
+
+.share-symbol::before {
+  content: "↑";
+  font-size: 1.7rem;
+  line-height: 1;
+  transform: translateY(-4px);
+}
+
+.share-symbol::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 7px;
+  height: 15px;
+  border: 3px solid var(--ink);
+  border-top: 0;
+  border-radius: 0 0 5px 5px;
+}
+
+.install-step strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.install-step span {
+  font-size: 0.78rem;
+  line-height: 1.25;
+  opacity: 0.72;
+}
+
+@media (orientation: portrait) {
+  .install-shell {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .install-icon {
+    width: min(32vw, 150px);
+  }
+
+  .install-card {
+    max-width: 560px;
+  }
+
+  .install-copy {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .install-shell {
+    grid-template-columns: 150px minmax(360px, 1fr);
+    gap: 26px;
+  }
+
+  .install-icon {
+    width: 138px;
+    border-width: 4px;
+    box-shadow: 7px 7px 0 var(--ink);
+  }
+
+  .install-card {
+    padding: 18px 22px;
+  }
+
+  .install-card h1 {
+    font-size: 3.7rem;
+  }
+
+  .install-copy {
+    margin: 9px 0 13px;
+    font-size: 0.92rem;
+  }
+
+  .install-actions button {
+    min-height: 44px;
+    padding: 7px 12px;
+  }
+}

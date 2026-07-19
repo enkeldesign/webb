@@ -3,17 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-  <base href="/turn/">
   <meta name="theme-color" content="#38d9ff">
   <meta name="application-name" content="TURN LAB">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="TURN LAB">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>TURN LAB — refactor test build</title>
+  <title>TURN LAB — independent refactor test build</title>
   <link rel="icon" href="/turn/apple-touch-icon-v4.png" type="image/png" sizes="180x180">
   <link rel="apple-touch-icon" href="/turn/apple-touch-icon-v4.png" sizes="180x180">
-  <link rel="manifest" href="/turn-lab/site.webmanifest">
+  <link rel="manifest" href="./site.webmanifest">
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./vertical-drive.css">
   <link rel="stylesheet" href="./hud-tuning.css">
@@ -21,7 +20,8 @@
   <link rel="stylesheet" href="./gameplay-features.css">
   <link rel="stylesheet" href="./gameplay-v2.css">
   <link rel="stylesheet" href="./spectate-v3.css">
-  <script src="/turn-lab/lab-storage.js"></script>
+  <script src="./lab-storage.js"></script>
+  <script src="./lab-game-alias.js"></script>
   <script src="./install-gate.js"></script>
   <script src="./orientation-compat.js"></script>
   <script type="importmap">
@@ -51,10 +51,10 @@
       </div>
 
       <div class="install-card">
-        <span class="install-kicker">safe refactor test build</span>
+        <span class="install-kicker">independent refactor test build</span>
         <h1 id="installTitle">TURN LAB</h1>
         <p class="install-copy">
-          TURN LAB mirrors the current game so new architecture can be tested without touching the live TURN build.
+          TURN LAB is an independent snapshot of the working game, ready to be refactored without touching live TURN.
         </p>
         <div class="install-actions">
           <button class="install-primary" id="installTurnButton" type="button">Install TURN LAB</button>
@@ -134,6 +134,6 @@
     </div>
   </div>
 
-  <script type="module" src="/turn-lab/lab-motion-loader.js"></script>
+  <script type="module" src="./lab-motion-loader.js"></script>
 </body>
 </html>

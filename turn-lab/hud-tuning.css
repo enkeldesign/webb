@@ -1,0 +1,49 @@
+.stats {
+  flex-wrap: nowrap;
+}
+
+.stats .chip {
+  min-width: 0;
+  height: clamp(58px, 8vh, 66px);
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.stats .chip strong,
+.stats .chip strong span {
+  white-space: nowrap;
+}
+
+.stats .chip:nth-child(1) {
+  width: clamp(124px, 14vw, 150px);
+}
+
+.stats .chip:nth-child(2) {
+  width: clamp(78px, 9vw, 98px);
+}
+
+.stats .chip:nth-child(3),
+.stats .chip:nth-child(4) {
+  width: clamp(122px, 14vw, 152px);
+}
+
+@media (max-height: 430px) {
+  .stats .chip {
+    height: 58px;
+  }
+
+  .stats .chip:nth-child(1) {
+    width: 124px;
+  }
+
+  .stats .chip:nth-child(2) {
+    width: 78px;
+  }
+
+  .stats .chip:nth-child(3),
+  .stats .chip:nth-child(4) {
+    width: 126px;
+  }
+}
