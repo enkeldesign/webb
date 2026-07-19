@@ -1,8 +1,6 @@
-// TURN LAB static game core.
-// Generated deterministically from verified 2026.07.19-r5; do not hand-edit.
+// TURN game core.
 
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { installKenneyWorld } from './world-assets.js';
 import { updateRaceCameraState } from './render/camera.js';
 import { updateHudState } from './ui/hud.js';
@@ -12,6 +10,9 @@ import { GAME_MODE, installGameModeState, prepareRaceStartState, resetRaceToStag
 import { beginTimedLapState, completeLapState, updateLapProgressState } from './race/lap-system.js';
 import { recordReplayFrame, replayFrameAt } from './race/replay-system.js';
 import { RIVAL_LIMIT, loadRivalsState, saveRivalsState } from './race/rival-storage.js';
+import { showTheLot } from './garage/lot.js';
+import { getCarDefinition, loadVehicleSelection, saveVehicleSelection } from './vehicle/catalog.js';
+import { createCarVisual } from './vehicle/car-models.js';
 
 const intro = document.querySelector('#intro');
 const hud = document.querySelector('#hud');
@@ -46,6 +47,8 @@ const COMPETITOR_KEY = 'turn-personal-rivals-v1';
 const COMPETITOR_LIMIT = 4;
 const COMPETITOR_MIGRATION_KEY = 'turn-rival-timestamp-migration-v1';
 const TRACK_SECTION_COLORS = ['#ff8fbd', '#2f855a', '#f6ad55', '#5c7cfa'];
+const initialVehicleSelection = loadVehicleSelection();
+const initialVehicleDefinition = getCarDefinition(initialVehicleSelection.carId);
 
 const state = {
   running: false,
@@ -83,9 +86,14 @@ const state = {
   recording: [],
   ghostVisible: false,
   competitorLaps: [],
+  vehicleId: initialVehicleSelection.carId,
+  vehicleColor: initialVehicleSelection.color,
+  vehicleTuning: initialVehicleDefinition.tuning,
   lastFrame: performance.now(),
   messageTimer: 0
 };
+
+globalThis.__turnVehicleTuning = state.vehicleTuning;
 
 installGameModeState(state);
 
@@ -417,126 +425,99 @@ world.add(ghostCar);
 
 const proceduralPlayerParts = [...playerCar.children];
 const proceduralGhostParts = [...ghostCar.children];
+playerCar.userData.turnProceduralParts = proceduralPlayerParts;
+ghostCar.userData.turnProceduralParts = proceduralGhostParts;
 
-function makeAssetCar(sourceModel, ghost = false) {
-  const model = sourceModel.clone(true);
-  model.rotation.y = Math.PI;
-  model.scale.setScalar(2.35);
+async function installCarVisual(root, { carId, color, ghost = false }) {
+  const key = `${carId}|${color}|${ghost ? 1 : 0}`;
+  if (root.userData.turnVisualKey === key || root.userData.turnVisualPendingKey === key) return;
 
-  const originalMeshes = [];
-  model.traverse((node) => {
-    if (node.isMesh) originalMeshes.push(node);
-  });
+  const generation = (root.userData.turnVisualGeneration || 0) + 1;
+  root.userData.turnVisualGeneration = generation;
+  root.userData.turnVisualPendingKey = key;
 
-  for (const node of originalMeshes) {
-    const sourceMaterials = Array.isArray(node.material) ? node.material : [node.material];
-    const styledMaterials = sourceMaterials.map((material) => {
-      const styled = material.clone();
-      const materialName = styled.name || '';
+  const visual = await createCarVisual({ carId, color, ghost, targetLength: 5.5, outline: true });
+  if (root.userData.turnVisualGeneration !== generation) return;
 
-      if (ghost) {
-        styled.transparent = true;
-        styled.opacity = 0.28;
-        styled.depthWrite = false;
-        styled.color?.lerp(new THREE.Color(0x38d9ff), 0.72);
-      } else if (/paint/i.test(materialName)) {
-        styled.color?.set(0xffd43b);
-      }
-
-      return styled;
-    });
-
-    node.material = Array.isArray(node.material) ? styledMaterials : styledMaterials[0];
-    node.castShadow = !ghost;
-    node.receiveShadow = true;
-
-    const outline = new THREE.Mesh(
-      node.geometry,
-      new THREE.MeshBasicMaterial({
-        color: 0x08090a,
-        side: THREE.BackSide,
-        transparent: ghost,
-        opacity: ghost ? 0.14 : 0.88
-      })
-    );
-    outline.scale.setScalar(1.045);
-    outline.castShadow = false;
-    node.add(outline);
+  for (const child of [...root.children]) {
+    if (child.userData?.turnAssetVisual) root.remove(child);
   }
+  for (const part of root.userData.turnProceduralParts || []) part.visible = false;
 
-  model.updateMatrixWorld(true);
-  const bounds = new THREE.Box3().setFromObject(model);
-  const center = bounds.getCenter(new THREE.Vector3());
-  model.position.x -= center.x;
-  model.position.z -= center.z;
-  model.position.y -= bounds.min.y;
-
-  return model;
+  visual.userData.turnAssetVisual = true;
+  root.add(visual);
+  root.userData.turnVisualKey = key;
+  root.userData.turnVisualPendingKey = null;
 }
 
-async function installCarAssets() {
+async function applyVehicleSelection(selection) {
+  const saved = saveVehicleSelection(selection);
+  const definition = getCarDefinition(saved.carId);
+  state.vehicleId = saved.carId;
+  state.vehicleColor = saved.color;
+  state.vehicleTuning = definition.tuning;
+  globalThis.__turnVehicleTuning = definition.tuning;
+
   try {
-    const loader = new GLTFLoader();
-    const gltf = await loader.loadAsync('https://cdn.jsdelivr.net/gh/wayne-wu/webgpu-crowd-simulation@8caf9be46ec35e26dc28b3ecae000d7aa4d0d177/public/sedan.glb');
-    const playerAsset = makeAssetCar(gltf.scene, false);
-    const ghostAsset = makeAssetCar(gltf.scene, true);
-
-    for (const part of proceduralPlayerParts) part.visible = false;
-    for (const part of proceduralGhostParts) part.visible = false;
-
-    playerCar.add(playerAsset);
-    ghostCar.add(ghostAsset);
-    console.info('TURN: Kenney sedan asset loaded.');
+    await installCarVisual(playerCar, {
+      carId: state.vehicleId,
+      color: state.vehicleColor,
+      ghost: false
+    });
   } catch (error) {
-    console.warn('TURN: car asset failed to load, using procedural fallback.', error);
+    console.warn('TURN: selected car model failed to load, using procedural fallback.', error);
+    for (const part of playerCar.userData.turnProceduralParts || []) part.visible = true;
   }
 }
 
-installCarAssets();
+void installCarVisual(playerCar, {
+  carId: state.vehicleId,
+  color: state.vehicleColor,
+  ghost: false
+}).catch((error) => console.warn('TURN: initial selected car failed to load.', error));
 
-const COMPETITOR_COLORS = [0x38d9ff, 0xff4fa3, 0x9775fa, 0xff922b];
 const COMPETITOR_MAP_COLORS = ['#38d9ff', '#ff4fa3', '#9775fa', '#ff922b'];
-const baseGhostChildCount = ghostCar.children.length;
 const competitorCars = [ghostCar];
-
-function styleCompetitorCar(car, color) {
-  car.traverse((node) => {
-    if (!node.isMesh || !node.material) return;
-    const materials = Array.isArray(node.material) ? node.material : [node.material];
-    const styled = materials.map((material) => {
-      const clone = material.clone();
-      clone.transparent = false;
-      clone.opacity = 1;
-      clone.depthWrite = true;
-      if (/paint/i.test(clone.name || '')) clone.color?.set(color);
-      return clone;
-    });
-    node.material = Array.isArray(node.material) ? styled : styled[0];
-    node.castShadow = true;
-  });
-}
 
 function refreshCompetitorLabels() {
   // Ghost identity is owned by the standalone spectator HUD.
 }
 
-function ensureCompetitorCars() {
-  if (ghostCar.children.length <= baseGhostChildCount) return;
+function createCompetitorCar() {
+  const car = makeCar(0x38d9ff, 0.34);
+  car.userData.turnProceduralParts = [...car.children];
+  car.visible = false;
+  car.traverse((node) => {
+    if (node.isMesh) node.castShadow = false;
+  });
+  world.add(car);
+  return car;
+}
 
+function ensureCompetitorCars() {
   while (competitorCars.length < COMPETITOR_LIMIT) {
-    const car = ghostCar.clone(true);
-    car.userData.frontWheelPivots = [];
-    car.userData.wheelSpinners = [];
-    car.visible = false;
-    world.add(car);
-    competitorCars.push(car);
+    competitorCars.push(createCompetitorCar());
   }
 
   for (let i = 0; i < competitorCars.length; i += 1) {
     const car = competitorCars[i];
-    if (car.userData.turnCompetitorStyled) continue;
-    styleCompetitorCar(car, COMPETITOR_COLORS[i]);
-    car.userData.turnCompetitorStyled = true;
+    const lap = state.competitorLaps[i];
+    if (!lap) continue;
+    void syncCompetitorVisual(car, lap);
+  }
+}
+
+async function syncCompetitorVisual(car, lap) {
+  const carId = lap.carId || 'sedan';
+  const color = lap.carColor || COMPETITOR_MAP_COLORS[competitorCars.indexOf(car)] || '#38d9ff';
+  try {
+    await installCarVisual(car, { carId, color, ghost: true });
+  } catch (error) {
+    const key = `${carId}|${color}|1`;
+    if (car.userData.turnVisualFailedKey !== key) {
+      car.userData.turnVisualFailedKey = key;
+      console.warn('TURN: rival car model failed to load, using procedural fallback.', error);
+    }
   }
 }
 
@@ -763,10 +744,25 @@ async function requestMotion() {
     }
     window.addEventListener('devicemotion', handleMotion, { passive: true });
     state.sensorMode = true;
-    await startGame(fullscreenPromise);
+    await chooseVehicleAndStart(fullscreenPromise);
   } catch (error) {
     status.textContent = `${error.message} Manual mode still works.`;
   }
+}
+
+async function chooseVehicleAndStart(fullscreenPromise = Promise.resolve(false)) {
+  intro.hidden = true;
+  const selection = await showTheLot({
+    initialSelection: { carId: state.vehicleId, color: state.vehicleColor }
+  });
+
+  if (!selection) {
+    intro.hidden = false;
+    return;
+  }
+
+  await applyVehicleSelection(selection);
+  await startGame(fullscreenPromise);
 }
 
 async function startGame(fullscreenPromise = Promise.resolve(false)) {
@@ -799,7 +795,7 @@ async function startGame(fullscreenPromise = Promise.resolve(false)) {
   showMessage('GO!');
 }
 
-function useManualMode() {
+async function useManualMode() {
   const fullscreenPromise = requestGameFullscreen();
   state.sensorMode = false;
   state.roll = 0;
@@ -809,7 +805,7 @@ function useManualMode() {
   state.pitch = 0;
   state.targetPitch = 0;
   state.neutralPitch = 0;
-  startGame(fullscreenPromise);
+  await chooseVehicleAndStart(fullscreenPromise);
 }
 
 function calibrate() {
@@ -921,10 +917,11 @@ function updatePhysics(dt, now) {
     getRight,
     trackWidth: TRACK_WIDTH,
     trackSampleCount: TRACK_SAMPLES,
-    maxSpeed: MAX_SPEED,
+    maxSpeed: MAX_SPEED * state.vehicleTuning.topSpeedMultiplier,
     analogGas: globalThis.__turnAnalogGas || 0,
     boostActive: Boolean(globalThis.__turnBoostActive),
-    driftHeld: Boolean(globalThis.__turnDriftHeld)
+    driftHeld: Boolean(globalThis.__turnDriftHeld),
+    vehicleTuning: state.vehicleTuning
   });
 
   updateLapProgressState({
