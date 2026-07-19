@@ -25,7 +25,6 @@ import { RIVAL_LIMIT, loadRivalsState, saveRivalsState } from '${rivalStorageMod
       'race module imports'
     );
 
-    // Preserve the verified lighter drift balance after removing the old spectator source patch.
     source = replaceRequired(
       source,
       '(state.offRoad ? 36 : 43) * (driftHeld ? 0.86 : 1);',
@@ -75,8 +74,7 @@ function motionPoseFromGravity`,
     source = replaceRequired(
       source,
       `  state.lastFrame = performance.now();
-  state.lapStartedAt = 0;
-  state.lapElapsed = 0;`,
+  state.lapStartedAt = performance.now();`,
       `  state.lastFrame = performance.now();
   prepareRaceStartState(state);`,
       'module-backed race start timer'
@@ -158,7 +156,6 @@ function ghostFrameAt`,
     nearestAfter,
     samples,
     trackWidth: TRACK_WIDTH,
-    checkpoints: LAP_CHECKPOINTS,
     now,
     beginTimedLap,
     completeLap,
@@ -195,7 +192,6 @@ function ensureCompetitorCars() {`,
       'preserve safe rival wheel animation'
     );
 
-    // Keep the verified simple pink minimap and explicit start/finish marker.
     source = source.replace(
       /  mapCtx\.lineWidth = 8;\n  for \(let section = 0; section < TRACK_SECTION_COLORS\.length; section \+= 1\) \{[\s\S]*?\n  \}/,
       `  mapCtx.strokeStyle = '#ff4fa3';
