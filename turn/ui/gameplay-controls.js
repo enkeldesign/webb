@@ -172,9 +172,15 @@ function installGameplayUi() {
   let boostCharge = 1;
   let previousTime = performance.now();
   const BOOST_ZONE = 0.34;
-  const BOOST_DRAIN_SECONDS = 2.0;
+  const DEFAULT_BOOST_DRAIN_SECONDS = 2.0;
   const BOOST_RECHARGE_SECONDS = 4.2;
   const DRIFT_RECHARGE_MULTIPLIER = 2.4;
+
+  function getBoostDrainSeconds() {
+    const duration = Number(globalThis.__turnVehicleTuning?.boostDurationSeconds);
+    if (!Number.isFinite(duration)) return DEFAULT_BOOST_DRAIN_SECONDS;
+    return Math.max(0.8, Math.min(5, duration));
+  }
 
   function updateBoostRequest(event) {
     if (gasPointerId === null || event.pointerId !== gasPointerId) return;
@@ -223,7 +229,7 @@ function installGameplayUi() {
     const active = boostRequested && !boostExhausted && boostCharge > 0.001;
 
     if (active) {
-      boostCharge = Math.max(0, boostCharge - dt / BOOST_DRAIN_SECONDS);
+      boostCharge = Math.max(0, boostCharge - dt / getBoostDrainSeconds());
       if (boostCharge <= 0) boostExhausted = true;
     } else {
       const rechargeMultiplier = globalThis.__turnDriftHeld ? DRIFT_RECHARGE_MULTIPLIER : 1;
