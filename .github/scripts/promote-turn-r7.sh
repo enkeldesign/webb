@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# One-shot promotion helper for verified TURN R7.
 asset_backup="$(mktemp -d)"
 trap 'rm -rf "$asset_backup"' EXIT
 
