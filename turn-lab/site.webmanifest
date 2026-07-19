@@ -1,0 +1,20 @@
+{
+  "id": "/turn-lab/",
+  "name": "TURN LAB",
+  "short_name": "TURN LAB",
+  "description": "A test build of the motion-controlled arcade drift racer TURN.",
+  "start_url": "/turn-lab/",
+  "scope": "/turn-lab/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#38d9ff",
+  "theme_color": "#38d9ff",
+  "icons": [
+    {
+      "src": "/turn/icon-192-v4.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
