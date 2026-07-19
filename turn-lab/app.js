@@ -6,8 +6,8 @@ function withBuild(path) {
   return url.href;
 }
 
-await import(withBuild('./ui/gameplay-controls.js'));
 await import(withBuild('./input/analog-gas.js'));
+await import(withBuild('./ui/gameplay-controls.js'));
 await import(withBuild('./main.js'));
 
 await Promise.all([
