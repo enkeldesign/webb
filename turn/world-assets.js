@@ -2,8 +2,10 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const CITY_BUILDER_COMMIT = '4535092b740b378b700efd9df9e27a631815b84a';
+const PLATFORMER_COMMIT = '3fa8a04b1c01ab23db43123d4ce814a34c3fc7f0';
 
 const CITY_BASE = `https://cdn.jsdelivr.net/gh/KenneyNL/Starter-Kit-City-Builder@${CITY_BUILDER_COMMIT}/models/`;
+const PLATFORMER_BASE = `https://cdn.jsdelivr.net/gh/KenneyNL/Starter-Kit-3D-Platformer@${PLATFORMER_COMMIT}/models/`;
 
 const ASSETS = {
   trees: `${CITY_BASE}grass-trees.glb`,
@@ -14,7 +16,7 @@ const ASSETS = {
   buildingC: `${CITY_BASE}building-small-c.glb`,
   buildingD: `${CITY_BASE}building-small-d.glb`,
   fountain: `${CITY_BASE}pavement-fountain.glb`,
-  flag: `${CITY_BASE}flag.glb`
+  flag: `${PLATFORMER_BASE}flag.glb`
 };
 
 const loader = new GLTFLoader();
