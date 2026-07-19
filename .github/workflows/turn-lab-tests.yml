@@ -43,5 +43,8 @@ jobs:
       - name: Run production garage regression
         run: node turn-lab/tests/garage-production.mjs
 
+      - name: Run balance and anti-shortcut regression
+        run: node turn-lab/tests/balance-and-checkpoints.mjs
+
       - name: Verify release architecture
         run: node turn-lab/scripts/check-release.mjs
