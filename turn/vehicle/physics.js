@@ -15,7 +15,8 @@ export function updateVehiclePhysicsState({
 }) {
   updateMotionInput(dt);
 
-  const tuning = normalizeVehicleTuning(vehicleTuning);
+  const tuning = normalizeVehicleTuning(vehicleTuning || globalThis.__turnVehicleTuning);
+  const effectiveMaxSpeed = maxSpeed * tuning.topSpeedMultiplier;
   const directGas = Math.max(0, Number(analogGas) || 0);
   const directBrake = 0;
   state.throttle = Math.max(directGas, state.touchGas ? 1 : 0);
@@ -56,7 +57,7 @@ export function updateVehiclePhysicsState({
   }
 
   speed = state.velocity.length();
-  const speedRatio = clamp(speed / maxSpeed, 0, 1);
+  const speedRatio = clamp(speed / effectiveMaxSpeed, 0, 1);
   const driftIntent = clamp(
     Math.abs(state.steering) * speedRatio * 0.9 +
       state.brake * Math.abs(state.steering) * 1.35 +
@@ -111,8 +112,8 @@ export function updateVehiclePhysicsState({
   state.velocity.multiplyScalar(Math.exp(-drag * dt));
 
   const speedLimit = state.offRoad
-    ? (boostActive ? maxSpeed * 0.82 : maxSpeed * 0.73)
-    : (boostActive ? maxSpeed * tuning.boostSpeedMultiplier : maxSpeed);
+    ? (boostActive ? effectiveMaxSpeed * 0.82 : effectiveMaxSpeed * 0.73)
+    : (boostActive ? effectiveMaxSpeed * tuning.boostSpeedMultiplier : effectiveMaxSpeed);
 
   speed = state.velocity.length();
   if (speed > speedLimit) state.velocity.multiplyScalar(speedLimit / speed);
@@ -133,6 +134,7 @@ export function updateVehiclePhysicsState({
 
 function normalizeVehicleTuning(tuning) {
   return {
+    topSpeedMultiplier: positiveNumber(tuning?.topSpeedMultiplier, 1),
     accelerationMultiplier: positiveNumber(tuning?.accelerationMultiplier, 1),
     controlMultiplier: positiveNumber(tuning?.controlMultiplier, 1),
     driftEngineMultiplier: positiveNumber(tuning?.driftEngineMultiplier, 0.93),
