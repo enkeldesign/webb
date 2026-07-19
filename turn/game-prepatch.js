@@ -10,7 +10,6 @@
   function patchGameSource(input) {
     let source = input;
 
-    // Keep the responsive steering range, but ignore tiny phone tremors and ease into changes.
     source = replaceRequired(
       source,
       `  const steeringRoll = normalizeAngle(state.roll - state.neutralRoll);
@@ -50,8 +49,6 @@
       'competitor lap state'
     );
 
-    // Preserve the original ghost block verbatim so motion-adapter.js can still replace it
-    // with the Kenney sedan asset. Extra rivals are cloned lazily once that asset has loaded.
     source = replaceRequired(
       source,
       `world.add(ghostCar);
@@ -67,7 +64,6 @@ const competitorCars = [ghostCar];
 function styleCompetitorCar(car, color) {
   car.traverse((node) => {
     if (!node.isMesh || !node.material) return;
-
     const materials = Array.isArray(node.material) ? node.material : [node.material];
     const styled = materials.map((material) => {
       const clone = material.clone();
@@ -77,7 +73,6 @@ function styleCompetitorCar(car, color) {
       if (/paint/i.test(clone.name || '')) clone.color?.set(color);
       return clone;
     });
-
     node.material = Array.isArray(node.material) ? styled : styled[0];
     node.castShadow = true;
   });
@@ -90,7 +85,8 @@ function sameLocalDate(a, b) {
 }
 
 function ghostTimeLabel(date) {
-  return \\`${date.getHours().toString().padStart(2, '0')}.${date.getMinutes().toString().padStart(2, '0')}\\`;
+  return date.getHours().toString().padStart(2, '0') + '.'
+    + date.getMinutes().toString().padStart(2, '0');
 }
 
 function ghostNameForLap(lap, allLaps) {
@@ -101,7 +97,7 @@ function ghostNameForLap(lap, allLaps) {
   const now = new Date();
   const time = ghostTimeLabel(date);
 
-  if (sameLocalDate(date, now)) return \\`Today ${time}\\`;
+  if (sameLocalDate(date, now)) return 'Today ' + time;
 
   const weekStart = new Date(now);
   weekStart.setHours(0, 0, 0, 0);
@@ -110,7 +106,7 @@ function ghostNameForLap(lap, allLaps) {
 
   if (date >= weekStart && date < now) {
     const weekday = new Intl.DateTimeFormat('en', { weekday: 'long' }).format(date);
-    return \\`${weekday} ${time}\\`;
+    return weekday + ' ' + time;
   }
 
   const duplicateDate = allLaps.filter((other) => {
@@ -120,10 +116,10 @@ function ghostNameForLap(lap, allLaps) {
 
   const month = new Intl.DateTimeFormat('en', { month: 'long' }).format(date);
   const base = date.getFullYear() === now.getFullYear()
-    ? \\`${month} ${date.getDate()}\\`
-    : \\`${month} ${date.getDate()}, ${date.getFullYear()}\\`;
+    ? month + ' ' + date.getDate()
+    : month + ' ' + date.getDate() + ', ' + date.getFullYear();
 
-  return duplicateDate ? \\`${base}, ${time}\\` : base;
+  return duplicateDate ? base + ', ' + time : base;
 }
 
 function makeGhostLabel(text, color) {
@@ -131,11 +127,11 @@ function makeGhostLabel(text, color) {
   canvas.width = 640;
   canvas.height = 112;
   const ctx = canvas.getContext('2d');
-  const colorCss = \\`#${color.toString(16).padStart(6, '0')}\\`;
+  const colorCss = '#' + color.toString(16).padStart(6, '0');
 
   ctx.fillStyle = 'rgba(255, 248, 232, 0.96)';
   ctx.strokeStyle = '#08090a';
-  ctx.lineWidth = 12;
+  ctx.lineWidth = 9;
   ctx.beginPath();
   ctx.roundRect(8, 8, 624, 96, 34);
   ctx.fill();
@@ -144,7 +140,7 @@ function makeGhostLabel(text, color) {
   ctx.fillStyle = colorCss;
   ctx.fillRect(30, 44, 30, 30);
   ctx.strokeStyle = '#08090a';
-  ctx.lineWidth = 6;
+  ctx.lineWidth = 5;
   ctx.strokeRect(30, 44, 30, 30);
 
   ctx.fillStyle = '#08090a';
@@ -176,12 +172,10 @@ function refreshCompetitorLabels() {
     const car = competitorCars[i];
     const lap = state.competitorLaps[i];
     const existing = car.children.find((child) => child.userData?.turnGhostLabel);
-
     if (!lap) {
       if (existing) car.remove(existing);
       continue;
     }
-
     const text = ghostNameForLap(lap, state.competitorLaps);
     if (existing?.userData?.turnGhostLabelText === text) continue;
     if (existing) car.remove(existing);
@@ -190,7 +184,6 @@ function refreshCompetitorLabels() {
 }
 
 function ensureCompetitorCars() {
-  // The Kenney asset installer adds one child to ghostCar asynchronously.
   if (ghostCar.children.length <= baseGhostChildCount) return;
 
   while (competitorCars.length < COMPETITOR_LIMIT) {
@@ -206,7 +199,6 @@ function ensureCompetitorCars() {
     styleCompetitorCar(car, COMPETITOR_COLORS[i]);
     car.userData.turnCompetitorStyled = true;
   }
-
   refreshCompetitorLabels();
 }
 
@@ -241,11 +233,11 @@ const skidGeometry`,
 
     const rank = state.competitorLaps.indexOf(candidate);
     if (finishedTime < previousBest) {
-      showMessage(\\`NEW BEST ${formatTime(finishedTime)}\\`);
+      showMessage('NEW BEST ' + formatTime(finishedTime));
     } else if (rank >= 0) {
-      showMessage(\\`TOP ${rank + 1} LAP ${formatTime(finishedTime)}\\`);
+      showMessage('TOP ' + (rank + 1) + ' LAP ' + formatTime(finishedTime));
     } else {
-      showMessage(\\`LAP ${formatTime(finishedTime)}\\`);
+      showMessage('LAP ' + formatTime(finishedTime));
     }
   }
 
@@ -257,10 +249,7 @@ const skidGeometry`,
 
 function saveGhost() {
   try {
-    localStorage.setItem(
-      COMPETITOR_KEY,
-      JSON.stringify({ version: 2, laps: state.competitorLaps })
-    );
+    localStorage.setItem(COMPETITOR_KEY, JSON.stringify({ version: 2, laps: state.competitorLaps }));
   } catch (_) {}
 }
 
@@ -269,15 +258,9 @@ function loadGhost() {
     const savedRivals = JSON.parse(localStorage.getItem(COMPETITOR_KEY));
     let laps = Array.isArray(savedRivals?.laps) ? savedRivals.laps : [];
 
-    // Migrate the old single best-lap ghost the first time this version is opened.
     if (!laps.length) {
       const oldGhost = JSON.parse(localStorage.getItem(GHOST_KEY));
-      if (
-        oldGhost &&
-        Number.isFinite(oldGhost.bestTime) &&
-        Array.isArray(oldGhost.frames) &&
-        oldGhost.frames.length > 20
-      ) {
+      if (oldGhost && Number.isFinite(oldGhost.bestTime) && Array.isArray(oldGhost.frames) && oldGhost.frames.length > 20) {
         laps = [{ time: oldGhost.bestTime, frames: oldGhost.frames }];
       }
     }
@@ -317,7 +300,6 @@ function loadGhost() {
     state.bestTime = state.competitorLaps[0]?.time ?? Infinity;
     state.ghostFrames = state.competitorLaps[0]?.frames ?? [];
     state.ghostVisible = state.competitorLaps.length > 0;
-
     if (state.competitorLaps.length) saveGhost();
   } catch (_) {}
 }
@@ -325,7 +307,6 @@ function loadGhost() {
 function lapFrameAt(lap, time) {
   const frames = lap?.frames || [];
   if (frames.length < 2) return null;
-
   const wrappedTime = Number.isFinite(lap.time) ? time % lap.time : time;
   let low = 0;
   let high = frames.length - 1;
@@ -347,9 +328,7 @@ function lapFrameAt(lap, time) {
     h: lerpAngle(a.h, b.h, alpha),
     s: THREE.MathUtils.lerp(a.s, b.s, alpha),
     d: THREE.MathUtils.lerp(a.d, b.d, alpha),
-    p: Number.isFinite(a.p) && Number.isFinite(b.p)
-      ? THREE.MathUtils.lerp(a.p, b.p, alpha)
-      : null
+    p: Number.isFinite(a.p) && Number.isFinite(b.p) ? THREE.MathUtils.lerp(a.p, b.p, alpha) : null
   };
 }
 
@@ -369,7 +348,6 @@ function animateWheels(car, steering, speed, dt) {`
   for (let i = 0; i < competitorCars.length; i += 1) {
     const car = competitorCars[i];
     const lap = state.competitorLaps[i];
-
     if (!lap || !state.lapActive) {
       car.visible = false;
       continue;
@@ -391,21 +369,14 @@ function animateWheels(car, steering, speed, dt) {`
 function updateScene(dt) {`
     );
 
-    source = replaceRequired(
-      source,
-      '  placeGhostCar(dt);',
-      '  placeCompetitorCars(dt);',
-      'personal rival placement'
-    );
+    source = replaceRequired(source, '  placeGhostCar(dt);', '  placeCompetitorCars(dt);', 'personal rival placement');
 
-    // Show every saved rival on the minimap instead of only the old single ghost.
     source = source.replace(
       /  if \(state\.ghostVisible\) \{[\s\S]*?\n  \}\n\}\n\nfunction formatTime/,
       `  if (state.lapActive) {
     for (let i = 0; i < state.competitorLaps.length; i += 1) {
       const rival = lapFrameAt(state.competitorLaps[i], state.lapElapsed);
       if (!rival) continue;
-
       const rivalPoint = mapPoint({ x: rival.x, z: rival.z });
       mapCtx.beginPath();
       mapCtx.arc(rivalPoint.x, rivalPoint.y, 6, 0, TAU);
@@ -426,12 +397,10 @@ function formatTime`
 
   window.fetch = async (input, init) => {
     const response = await nativeFetch(input, init);
-
     try {
       const rawUrl = typeof input === 'string' ? input : input?.url;
       const url = new URL(rawUrl, location.href);
       if (!url.pathname.endsWith('/turn/game.js')) return response;
-
       const source = await response.text();
       const patched = patchGameSource(source);
       return new Response(patched, {
