@@ -1,0 +1,88 @@
+.manual-steer {
+  --manual-steer-left: 50%;
+  position: absolute;
+  left: max(22px, env(safe-area-inset-left));
+  right: auto;
+  top: auto;
+  bottom: max(68px, calc(env(safe-area-inset-bottom) + 56px));
+  z-index: 18;
+  width: clamp(150px, 21vw, 220px);
+  height: clamp(102px, 15vw, 150px);
+  overflow: hidden;
+  border: 5px solid var(--ink);
+  border-radius: 30px;
+  background: var(--yellow);
+  box-shadow: 7px 7px 0 var(--ink);
+  touch-action: none;
+  cursor: ew-resize;
+}
+
+.manual-steer::before,
+.manual-steer::after {
+  position: absolute;
+  top: 50%;
+  z-index: 1;
+  color: var(--ink);
+  font-size: clamp(2.2rem, 5vw, 4rem);
+  font-weight: 1000;
+  line-height: 1;
+  transform: translateY(-54%);
+  pointer-events: none;
+}
+
+.manual-steer::before {
+  content: "←";
+  left: 7%;
+}
+
+.manual-steer::after {
+  content: "→";
+  right: 7%;
+}
+
+.manual-steer-knob {
+  position: absolute;
+  left: var(--manual-steer-left);
+  top: 50%;
+  z-index: 2;
+  width: clamp(66px, 9.5vw, 96px);
+  aspect-ratio: 1;
+  border: 5px solid var(--ink);
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 5px 7px 0 rgb(8 9 10 / 0.35);
+  transform: translate(-50%, -50%);
+  transition: left 110ms cubic-bezier(0.2, 0.9, 0.25, 1.15), box-shadow 100ms ease;
+  pointer-events: none;
+}
+
+.manual-steer.is-steering .manual-steer-knob {
+  transition: none;
+  box-shadow: 2px 3px 0 rgb(8 9 10 / 0.35);
+}
+
+.manual-steer-knob::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 22%;
+  aspect-ratio: 1;
+  border: 4px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+  transform: translate(-50%, -50%);
+}
+
+@media (max-height: 430px) {
+  .manual-steer {
+    bottom: max(58px, calc(env(safe-area-inset-bottom) + 50px));
+    width: clamp(145px, 20vw, 190px);
+    height: clamp(96px, 14vw, 126px);
+    border-radius: 26px;
+  }
+
+  .manual-steer-knob {
+    width: clamp(62px, 8.5vw, 82px);
+  }
+}
