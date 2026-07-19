@@ -2,6 +2,7 @@
   const upstreamFetch = window.fetch.bind(window);
   const artModuleUrl = new URL('./world-art-pass.js', location.href).href;
   const identityModuleUrl = new URL('./track-identity.js', location.href).href;
+  const intensityModuleUrl = new URL('./section-intensity.js', location.href).href;
 
   window.fetch = async (input, init) => {
     const response = await upstreamFetch(input, init);
@@ -15,13 +16,13 @@
       const importLine = "import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js';";
       source = source.replace(
         importLine,
-        `${importLine}\nimport { installArtPass } from '${artModuleUrl}';\nimport { installTrackIdentity } from '${identityModuleUrl}';`
+        `${importLine}\nimport { installArtPass } from '${artModuleUrl}';\nimport { installTrackIdentity } from '${identityModuleUrl}';\nimport { installSectionIntensity } from '${intensityModuleUrl}';`
       );
 
       const setupCall = `makeRoad();\nmakeScenery();`;
       source = source.replace(
         setupCall,
-        `${setupCall}\n\ninstallArtPass({\n  world,\n  scene,\n  samples,\n  trackWidth: TRACK_WIDTH\n}).catch((error) => {\n  console.warn('TURN: bold surroundings art pass failed, keeping base world.', error);\n});\n\ninstallTrackIdentity({\n  world,\n  samples,\n  trackWidth: TRACK_WIDTH\n});`
+        `${setupCall}\n\ninstallArtPass({\n  world,\n  scene,\n  samples,\n  trackWidth: TRACK_WIDTH\n}).catch((error) => {\n  console.warn('TURN: bold surroundings art pass failed, keeping base world.', error);\n});\n\ninstallTrackIdentity({\n  world,\n  samples,\n  trackWidth: TRACK_WIDTH\n});\n\ninstallSectionIntensity({\n  world,\n  samples,\n  trackWidth: TRACK_WIDTH\n});`
       );
 
       return new Response(source, {
