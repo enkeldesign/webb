@@ -10,9 +10,45 @@ if (!globalThis.__turnGameplayControlsInstalled) {
 function installGameplayUi() {
   const gasButton = document.querySelector('#gasButton');
   const brakeButton = document.querySelector('#brakeButton');
+  const calibrateButton = document.querySelector('#calibrateButton');
+  const manualSteer = document.querySelector('#manualSteer');
   const utilityGroup = document.querySelector('.utility-group');
   const hud = document.querySelector('#hud');
-  if (!gasButton || !brakeButton || !utilityGroup || !hud) return;
+  if (!gasButton || !brakeButton || !manualSteer || !utilityGroup || !hud) return;
+
+  let manualPointerId = null;
+
+  function setManualSteerVisual(event) {
+    if (manualPointerId !== null && event.pointerId !== manualPointerId) return;
+    const rect = manualSteer.getBoundingClientRect();
+    const x = Math.max(0, Math.min(1, (event.clientX - rect.left) / Math.max(1, rect.width)));
+    const position = x * 2 - 1;
+    manualSteer.style.setProperty('--manual-steer-left', `${50 + position * 28}%`);
+    manualSteer.setAttribute('aria-valuenow', String(Math.round(position * 100)));
+  }
+
+  function centerManualSteerVisual(event) {
+    if (manualPointerId !== null && event?.pointerId != null && event.pointerId !== manualPointerId) return;
+    manualPointerId = null;
+    manualSteer.classList.remove('is-steering');
+    manualSteer.style.setProperty('--manual-steer-left', '50%');
+    manualSteer.setAttribute('aria-valuenow', '0');
+  }
+
+  manualSteer.addEventListener('pointerdown', (event) => {
+    event.preventDefault();
+    manualPointerId = event.pointerId;
+    manualSteer.setPointerCapture?.(event.pointerId);
+    manualSteer.classList.add('is-steering');
+    setManualSteerVisual(event);
+  });
+  manualSteer.addEventListener('pointermove', (event) => {
+    if (manualPointerId === event.pointerId) setManualSteerVisual(event);
+  });
+  manualSteer.addEventListener('pointerup', centerManualSteerVisual);
+  manualSteer.addEventListener('pointercancel', centerManualSteerVisual);
+  manualSteer.addEventListener('lostpointercapture', centerManualSteerVisual);
+  calibrateButton?.addEventListener('click', () => centerManualSteerVisual());
 
   const positionHud = document.createElement('div');
   positionHud.className = 'race-position-hud';
@@ -169,11 +205,15 @@ function installGameplayUi() {
   gasButton.addEventListener('pointerup', releaseBoost);
   gasButton.addEventListener('pointercancel', releaseBoost);
   gasButton.addEventListener('lostpointercapture', releaseBoost);
-  window.addEventListener('blur', () => releaseBoost());
+  window.addEventListener('blur', () => {
+    releaseBoost();
+    centerManualSteerVisual();
+  });
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       releaseBoost();
       endDrift();
+      centerManualSteerVisual();
     }
   });
 
