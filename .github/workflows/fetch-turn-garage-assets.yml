@@ -48,3 +48,12 @@ jobs:
           git add turn/assets
           git commit -m 'Vendor selected Kenney garage assets [skip ci]'
           git push origin HEAD:turn-lot-garage-v1
+
+      - name: Upload archive inventory diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: turn-garage-inventory
+          path: turn-garage-inventory.txt
+          if-no-files-found: ignore
+          retention-days: 1
