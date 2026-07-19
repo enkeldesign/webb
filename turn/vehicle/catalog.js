@@ -22,7 +22,7 @@ const RAW_CARS = [
   ['race-future', 'Future Racer', 'car', { speed: 5, acceleration: 5, control: 4, drift: 1, boostPower: 5, boostDuration: 1 }, 0.96],
   ['race', 'Race Car', 'car', { speed: 5, acceleration: 5, control: 5, drift: 1, boostPower: 5, boostDuration: 1 }, 0.94],
   ['sedan-sports', 'Sport Sedan', 'car', { speed: 4, acceleration: 4, control: 4, drift: 2, boostPower: 4, boostDuration: 2 }, 0.98],
-  ['sedan', 'Sedan', 'car', { speed: 3, acceleration: 3, control: 4, drift: 3, boostPower: 3, boostDuration: 3 }, 1.00],
+  ['sedan', 'Sedan', 'car', { speed: 3, acceleration: 3, control: 3, drift: 3, boostPower: 3, boostDuration: 3 }, 1.00],
   ['suv', 'SUV', 'car', { speed: 3, acceleration: 3, control: 3, drift: 4, boostPower: 3, boostDuration: 4 }, 1.05],
   ['suv-luxury', 'Luxury SUV', 'car', { speed: 3, acceleration: 3, control: 4, drift: 4, boostPower: 3, boostDuration: 4 }, 1.06],
   ['hatchback-sports', 'Sport Hatch', 'car', { speed: 4, acceleration: 4, control: 5, drift: 3, boostPower: 3, boostDuration: 3 }, 0.96],
@@ -91,18 +91,19 @@ export function makeGhostColor(color) {
 
 export function deriveVehicleTuning(stats) {
   return {
-    topSpeedMultiplier: scaleStat(stats.speed, 0.84, 1.12),
-    accelerationMultiplier: scaleStat(stats.acceleration, 0.82, 1.16),
-    controlMultiplier: scaleStat(stats.control, 0.88, 1.14),
-    driftEngineMultiplier: scaleStat(stats.drift, 0.84, 0.99),
-    driftDragAdd: scaleStat(6 - stats.drift, 0.025, 0.14),
-    boostPowerMultiplier: scaleStat(stats.boostPower, 0.78, 1.26),
-    boostSpeedMultiplier: scaleStat(stats.boostPower, 1.23, 1.38),
-    boostDurationSeconds: scaleStat(stats.boostDuration, 1.25, 3.35)
+    // A 3/5 stat is the exact TURN v1.0 baseline. Lower and higher ratings fan out from there.
+    topSpeedMultiplier: centeredStat(stats.speed, [0.84, 0.92, 1, 1.06, 1.12]),
+    accelerationMultiplier: centeredStat(stats.acceleration, [0.82, 0.91, 1, 1.08, 1.16]),
+    controlMultiplier: centeredStat(stats.control, [0.88, 0.94, 1, 1.07, 1.14]),
+    driftEngineMultiplier: centeredStat(stats.drift, [0.84, 0.89, 0.93, 0.97, 0.99]),
+    driftDragAdd: centeredStat(stats.drift, [0.14, 0.112, 0.085, 0.055, 0.025]),
+    boostPowerMultiplier: centeredStat(stats.boostPower, [0.78, 0.89, 1, 1.13, 1.26]),
+    boostSpeedMultiplier: centeredStat(stats.boostPower, [1.23, 1.275, 1.32, 1.35, 1.38]),
+    boostDurationSeconds: centeredStat(stats.boostDuration, [1.2, 1.6, 2, 2.65, 3.4])
   };
 }
 
-function scaleStat(value, min, max) {
-  const normalized = Math.max(0, Math.min(1, (Number(value) - 1) / 4));
-  return min + (max - min) * normalized;
+function centeredStat(value, values) {
+  const index = Math.max(0, Math.min(4, Math.round(Number(value) || 3) - 1));
+  return values[index];
 }
