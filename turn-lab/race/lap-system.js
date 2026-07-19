@@ -1,4 +1,19 @@
-export const LAP_CHECKPOINTS = Object.freeze([0.18, 0.38, 0.58, 0.78]);
+export const LAP_CHECKPOINTS = Object.freeze([
+  0.08,
+  0.16,
+  0.24,
+  0.32,
+  0.40,
+  0.48,
+  0.56,
+  0.64,
+  0.72,
+  0.80,
+  0.88,
+  0.94
+]);
+
+const CHECKPOINT_GATE_RADIUS_FACTOR = 0.62;
 
 export function beginTimedLapState({ state, samples, now, showMessage }) {
   const start = samples[0];
@@ -31,22 +46,26 @@ export function updateLapProgressState({
   completeLap,
   recordGhostFrame
 }) {
-  const movingForwardOnTrack = state.velocity.dot(nearestAfter.sample.tangent) > 2;
   const nextCheckpoint = checkpoints[state.lapCheckpointIndex];
 
-  if (
-    state.lapActive &&
-    nextCheckpoint != null &&
-    movingForwardOnTrack &&
-    state.lastProgress < nextCheckpoint &&
-    state.progress >= nextCheckpoint
-  ) {
-    state.lapCheckpointIndex += 1;
+  if (state.lapActive && nextCheckpoint != null) {
+    const checkpointSample = checkpointSampleAt(samples, nextCheckpoint);
+    const movingForwardThroughGate = state.velocity.dot(checkpointSample.tangent) > 2;
+    const gateRadius = trackWidth * CHECKPOINT_GATE_RADIUS_FACTOR;
+    const dx = state.position.x - checkpointSample.point.x;
+    const dz = state.position.z - checkpointSample.point.z;
+    const insideCheckpointGate = dx * dx + dz * dz <= gateRadius * gateRadius;
+
+    if (movingForwardThroughGate && insideCheckpointGate) {
+      state.lapCheckpointIndex += 1;
+    }
   }
 
   const crossedStart = state.lastProgress > 0.82 && state.progress < 0.18;
   const movingForwardAtStart = state.velocity.dot(samples[0].tangent) > 5;
-  const crossedStartOnTrack = crossedStart && movingForwardAtStart && state.trackDistance < trackWidth * 0.8;
+  const crossedStartOnTrack = crossedStart
+    && movingForwardAtStart
+    && state.trackDistance < trackWidth * CHECKPOINT_GATE_RADIUS_FACTOR;
 
   if (crossedStartOnTrack) {
     if (!state.lapActive) {
@@ -54,7 +73,6 @@ export function updateLapProgressState({
     } else if (state.lapCheckpointIndex >= checkpoints.length) {
       completeLap(now);
     } else {
-      // Crossing the line without a full circuit starts a fresh timed attempt, never a lap.
       beginTimedLap(now);
     }
   }
@@ -100,6 +118,8 @@ export function completeLapState({
       const candidate = {
         time: finishedTime,
         hitAt: Date.now(),
+        carId: state.vehicleId || 'sedan',
+        carColor: state.vehicleColor || '#ffd43b',
         frames: candidateFrames
       };
 
@@ -135,6 +155,11 @@ export function completeLapState({
   state.recording = [];
 
   return { finishedTime, validLap };
+}
+
+function checkpointSampleAt(samples, progress) {
+  const index = Math.round(progress * samples.length) % samples.length;
+  return samples[index];
 }
 
 function formatLapTime(seconds) {

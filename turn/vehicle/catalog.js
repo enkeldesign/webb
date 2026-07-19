@@ -1,6 +1,7 @@
 export const DEFAULT_VEHICLE_ID = 'sedan';
 export const DEFAULT_VEHICLE_COLOR = '#ffd43b';
 export const VEHICLE_SELECTION_KEY = 'turn-vehicle-selection-v1';
+export const VEHICLE_STAT_BUDGET = 18;
 
 export const CAR_PALETTE = Object.freeze([
   Object.freeze({ name: 'Solar', value: '#ffd43b' }),
@@ -13,22 +14,24 @@ export const CAR_PALETTE = Object.freeze([
   Object.freeze({ name: 'Ice', value: '#f8f9fa' })
 ]);
 
+// Every car has exactly 18 stat points. The Sedan's 3/3/3/3/3/3 is the neutral baseline;
+// every other vehicle trades strengths for weaknesses instead of becoming a straight upgrade.
 const RAW_CARS = [
-  ['convertible', 'Convertible', 'prototype', { speed: 4, acceleration: 4, control: 4, drift: 3, boostPower: 4, boostDuration: 2 }, 0.98],
-  ['classic', 'Classic', 'prototype', { speed: 3, acceleration: 3, control: 4, drift: 4, boostPower: 3, boostDuration: 3 }, 1.00],
-  ['vintage-racer', 'Vintage Racer', 'toy', { speed: 5, acceleration: 4, control: 3, drift: 2, boostPower: 4, boostDuration: 2 }, 0.96],
-  ['toy-racer', 'Toy Racer', 'toy', { speed: 5, acceleration: 5, control: 5, drift: 1, boostPower: 5, boostDuration: 1 }, 0.94],
-  ['monster-truck', 'Monster Truck', 'toy', { speed: 2, acceleration: 3, control: 2, drift: 4, boostPower: 3, boostDuration: 4 }, 1.18],
-  ['race-future', 'Future Racer', 'car', { speed: 5, acceleration: 5, control: 4, drift: 1, boostPower: 5, boostDuration: 1 }, 0.96],
-  ['race', 'Race Car', 'car', { speed: 5, acceleration: 5, control: 5, drift: 1, boostPower: 5, boostDuration: 1 }, 0.94],
-  ['sedan-sports', 'Sport Sedan', 'car', { speed: 4, acceleration: 4, control: 4, drift: 2, boostPower: 4, boostDuration: 2 }, 0.98],
+  ['convertible', 'Convertible', 'prototype', { speed: 4, acceleration: 4, control: 4, drift: 2, boostPower: 3, boostDuration: 1 }, 0.98],
+  ['classic', 'Classic', 'prototype', { speed: 3, acceleration: 2, control: 4, drift: 4, boostPower: 2, boostDuration: 3 }, 1.00],
+  ['vintage-racer', 'Vintage Racer', 'toy', { speed: 5, acceleration: 4, control: 3, drift: 2, boostPower: 3, boostDuration: 1 }, 0.96],
+  ['toy-racer', 'Toy Racer', 'toy', { speed: 4, acceleration: 5, control: 5, drift: 1, boostPower: 2, boostDuration: 1 }, 0.94],
+  ['monster-truck', 'Monster Truck', 'toy', { speed: 2, acceleration: 3, control: 2, drift: 5, boostPower: 2, boostDuration: 4 }, 1.18],
+  ['race-future', 'Future Racer', 'car', { speed: 5, acceleration: 5, control: 3, drift: 1, boostPower: 3, boostDuration: 1 }, 0.96],
+  ['race', 'Race Car', 'car', { speed: 5, acceleration: 4, control: 4, drift: 1, boostPower: 3, boostDuration: 1 }, 0.94],
+  ['sedan-sports', 'Sport Sedan', 'car', { speed: 4, acceleration: 4, control: 4, drift: 2, boostPower: 2, boostDuration: 2 }, 0.98],
   ['sedan', 'Sedan', 'car', { speed: 3, acceleration: 3, control: 3, drift: 3, boostPower: 3, boostDuration: 3 }, 1.00],
-  ['suv', 'SUV', 'car', { speed: 3, acceleration: 3, control: 3, drift: 4, boostPower: 3, boostDuration: 4 }, 1.05],
-  ['suv-luxury', 'Luxury SUV', 'car', { speed: 3, acceleration: 3, control: 4, drift: 4, boostPower: 3, boostDuration: 4 }, 1.06],
-  ['hatchback-sports', 'Sport Hatch', 'car', { speed: 4, acceleration: 4, control: 5, drift: 3, boostPower: 3, boostDuration: 3 }, 0.96],
-  ['truck-flat', 'Flatbed', 'car', { speed: 2, acceleration: 2, control: 3, drift: 5, boostPower: 2, boostDuration: 5 }, 1.12],
-  ['truck', 'Truck', 'car', { speed: 2, acceleration: 2, control: 3, drift: 5, boostPower: 2, boostDuration: 5 }, 1.12],
-  ['van', 'Van', 'car', { speed: 2, acceleration: 3, control: 3, drift: 5, boostPower: 2, boostDuration: 5 }, 1.08]
+  ['suv', 'SUV', 'car', { speed: 3, acceleration: 3, control: 3, drift: 4, boostPower: 2, boostDuration: 3 }, 1.05],
+  ['suv-luxury', 'Luxury SUV', 'car', { speed: 3, acceleration: 3, control: 4, drift: 4, boostPower: 2, boostDuration: 2 }, 1.06],
+  ['hatchback-sports', 'Sport Hatch', 'car', { speed: 4, acceleration: 4, control: 5, drift: 2, boostPower: 2, boostDuration: 1 }, 0.96],
+  ['truck-flat', 'Flatbed', 'car', { speed: 2, acceleration: 2, control: 3, drift: 5, boostPower: 2, boostDuration: 4 }, 1.12],
+  ['truck', 'Truck', 'car', { speed: 2, acceleration: 2, control: 3, drift: 5, boostPower: 1, boostDuration: 5 }, 1.12],
+  ['van', 'Van', 'car', { speed: 2, acceleration: 3, control: 3, drift: 5, boostPower: 1, boostDuration: 4 }, 1.08]
 ];
 
 export const CAR_CATALOG = Object.freeze(RAW_CARS.map(([id, name, pack, stats, visualScale]) => Object.freeze({
@@ -87,6 +90,11 @@ export function makeGhostColor(color) {
   const b = parseInt(clean.slice(4, 6), 16);
   const mix = (channel) => Math.round(channel + (255 - channel) * 0.48).toString(16).padStart(2, '0');
   return `#${mix(r)}${mix(g)}${mix(b)}`;
+}
+
+export function getVehicleStatTotal(stats) {
+  return [stats?.speed, stats?.acceleration, stats?.control, stats?.drift, stats?.boostPower, stats?.boostDuration]
+    .reduce((total, value) => total + (Number(value) || 0), 0);
 }
 
 export function deriveVehicleTuning(stats) {

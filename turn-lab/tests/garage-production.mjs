@@ -54,7 +54,7 @@ assert.ok(race.tuning.topSpeedMultiplier > sedan.tuning.topSpeedMultiplier, 'Rac
 assert.ok(race.tuning.accelerationMultiplier > sedan.tuning.accelerationMultiplier, 'Race car should accelerate faster than Sedan');
 assert.ok(race.tuning.controlMultiplier > sedan.tuning.controlMultiplier, 'Race car should have more control than Sedan');
 assert.ok(race.tuning.driftDragAdd > sedan.tuning.driftDragAdd, 'Race car should pay a larger speed penalty while drifting');
-assert.ok(race.tuning.boostPowerMultiplier > sedan.tuning.boostPowerMultiplier, 'Race car should have stronger boost');
+assert.ok(race.tuning.boostPowerMultiplier >= sedan.tuning.boostPowerMultiplier, 'Race car boost should not be weaker than Sedan');
 assert.ok(race.tuning.boostDurationSeconds < sedan.tuning.boostDurationSeconds, 'Race car should have a shorter boost tank');
 
 assert.ok(truck.tuning.topSpeedMultiplier < sedan.tuning.topSpeedMultiplier, 'Truck should have less top speed than Sedan');
@@ -75,8 +75,8 @@ const [index, main, lapSystem, rivalStorage, controls, carModels] = await Promis
   fs.readFile(path.join(turnDir, 'vehicle/car-models.js'), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.1\.2 · Build 2026\.07\.19-r11/);
-assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260719-r11/);
+assert.match(index, /TURN v1\.1\.3 · Build 2026\.07\.19-r12/);
+assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260719-r12/);
 assert.match(main, /await showTheLot\(/, 'Start flow must enter The Lot before racing');
 assert.match(main, /maxSpeed: MAX_SPEED \* state\.vehicleTuning\.topSpeedMultiplier/, 'Selected top speed must reach physics');
 assert.match(main, /vehicleTuning: state\.vehicleTuning/, 'Selected handling profile must reach physics');

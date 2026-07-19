@@ -416,7 +416,7 @@ makeScenery();
 const playerCar = makeCar(0xffd43b, 1);
 world.add(playerCar);
 
-const ghostCar = makeCar(0x38d9ff, 0.34);
+const ghostCar = makeCar(0x38d9ff, 1);
 ghostCar.visible = false;
 ghostCar.traverse((node) => {
   if (node.isMesh) node.castShadow = false;
@@ -484,7 +484,7 @@ function refreshCompetitorLabels() {
 }
 
 function createCompetitorCar() {
-  const car = makeCar(0x38d9ff, 0.34);
+  const car = makeCar(0x38d9ff, 1);
   car.userData.turnProceduralParts = [...car.children];
   car.visible = false;
   car.traverse((node) => {
