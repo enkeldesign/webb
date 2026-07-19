@@ -1,0 +1,52 @@
+name: Build TURN LAB static core
+
+on:
+  push:
+    branches:
+      - turn-lab-static-main-batch-01
+    paths:
+      - '.github/workflows/turn-lab-static-main.yml'
+      - 'turn-lab/scripts/build-static-main.mjs'
+      - 'turn-lab/game.js'
+      - 'turn-lab/game-prepatch.js'
+      - 'turn-lab/gameplay-features.js'
+      - 'turn-lab/core-state-v1.js'
+      - 'turn-lab/driving-core-v1.js'
+      - 'turn-lab/render-core-v1.js'
+      - 'turn-lab/motion-adapter.js'
+
+permissions:
+  contents: write
+
+jobs:
+  build-static-main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: turn-lab-static-main-batch-01
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate static game core
+        run: node turn-lab/scripts/build-static-main.mjs
+
+      - name: Syntax-check generated module
+        run: node --input-type=module --check < turn-lab/main.js
+
+      - name: Commit generated core
+        run: |
+          if git diff --quiet -- turn-lab/main.js; then
+            echo 'Static core is already up to date.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add turn-lab/main.js
+          git commit -m 'Generate static TURN LAB game core [skip ci]'
+          git push origin HEAD:turn-lab-static-main-batch-01
