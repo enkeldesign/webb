@@ -1,3 +1,5 @@
+export const LAP_CHECKPOINTS = Object.freeze([0.18, 0.38, 0.58, 0.78]);
+
 export function beginTimedLapState({ state, samples, now, showMessage }) {
   const start = samples[0];
 
@@ -23,7 +25,7 @@ export function updateLapProgressState({
   nearestAfter,
   samples,
   trackWidth,
-  checkpoints,
+  checkpoints = LAP_CHECKPOINTS,
   now,
   beginTimedLap,
   completeLap,
