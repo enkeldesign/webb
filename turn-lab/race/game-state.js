@@ -6,6 +6,10 @@ export const GAME_MODE = Object.freeze({
 
 export function installGameModeState(state) {
   state.mode = GAME_MODE.STAGED;
+  state.lapCheckpointIndex = Number.isFinite(state.lapCheckpointIndex) ? state.lapCheckpointIndex : 0;
+  state.lapStartedAt = Number.isFinite(state.lapStartedAt) ? state.lapStartedAt : 0;
+  state.lapElapsed = Number.isFinite(state.lapElapsed) ? state.lapElapsed : 0;
+  state.recording = Array.isArray(state.recording) ? state.recording : [];
 
   Object.defineProperty(state, 'lapActive', {
     configurable: true,
