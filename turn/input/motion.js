@@ -16,7 +16,9 @@ export function motionPoseFromGravity(event) {
 
 export function updateMotionInputState({ state, dt, maxSteerRoll }) {
   if (!state.sensorMode) {
-    state.steering = lerp(state.steering, state.manualSteering, Math.min(1, dt * 10));
+    // Manual input is expressed in screen space (left = -1, right = +1), while
+    // TURN's vehicle yaw convention uses the opposite sign.
+    state.steering = lerp(state.steering, -state.manualSteering, Math.min(1, dt * 10));
     state.tiltDrive = 0;
     return;
   }
