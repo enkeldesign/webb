@@ -18,6 +18,17 @@ unzip -q "$work/car.zip" -d "$work/car"
 unzip -q "$work/toy.zip" -d "$work/toy"
 unzip -q "$work/brick.zip" -d "$work/brick"
 
+{
+  echo '=== CAR KIT GLB INVENTORY ==='
+  find "$work/car" -type f -iname '*.glb' -printf '%f\n' | sort -u
+  echo
+  echo '=== TOY CAR KIT GLB INVENTORY ==='
+  find "$work/toy" -type f -iname '*.glb' -printf '%f\n' | sort -u
+  echo
+  echo '=== BRICK KIT GLB SAMPLE ==='
+  find "$work/brick" -type f -iname '*.glb' -printf '%f\n' | sort -u | head -120
+} > turn-garage-inventory.txt
+
 rm -rf turn/assets/cars turn/assets/lot-bricks
 mkdir -p turn/assets/cars turn/assets/lot-bricks
 
@@ -45,9 +56,7 @@ def glbs(root: Path):
 def find_exact(root: Path, wanted: str) -> Path:
     matches = [p for p in glbs(root) if norm(p.stem) == wanted]
     if not matches:
-        inventory = '\n'.join(str(p.relative_to(root)) for p in glbs(root)[:250])
-        raise SystemExit(f'Could not find GLB normalized as {wanted!r} under {root}. Inventory:\n{inventory}')
-    # Prefer files in a Models/GLB style directory if duplicate formats/variants exist.
+        raise SystemExit(f'Could not find GLB normalized as {wanted!r} under {root}. See turn-garage-inventory.txt.')
     matches.sort(key=lambda p: (0 if 'glb' in norm(str(p.parent)) else 1, len(str(p))))
     return matches[0]
 
@@ -75,15 +84,11 @@ for dest, root, wanted in cars:
     shutil.copy2(source, target)
     print(f'car {dest}: {source.relative_to(root)} -> {target}')
 
-# The Lot only needs a small brick vocabulary. Pick compact pieces from the official
-# Brick Kit, rename them to stable local filenames, then combine/stack them in code.
 brick_files = glbs(work / 'brick')
 brick_files.sort(key=lambda p: (p.stat().st_size, str(p).lower()))
 if len(brick_files) < 8:
     raise SystemExit(f'Expected at least 8 Brick Kit GLBs, found {len(brick_files)}')
 
-# Spread selection through the smaller half so we do not accidentally choose eight
-# near-identical adjacent files while keeping payload modest.
 pool = brick_files[: max(16, len(brick_files) // 2)]
 indices = [0, len(pool)//9, len(pool)*2//9, len(pool)*3//9, len(pool)*4//9,
            len(pool)*5//9, len(pool)*6//9, len(pool)*7//9, len(pool)*8//9]
@@ -106,7 +111,6 @@ for i, source in enumerate(selected[:9], 1):
     shutil.copy2(source, target)
     print(f'brick {i:02d}: {source.relative_to(work / "brick")} -> {target}')
 
-# Keep a small provenance note next to the vendored assets.
 Path('turn/assets/KENNEY-ASSETS.md').write_text(
     '# TURN vendored Kenney assets\n\n'
     'The vehicle models in `cars/` are selected from Kenney Car Kit 3.1 and Toy Car Kit 1.2.\n'
