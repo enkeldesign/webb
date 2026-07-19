@@ -14,22 +14,22 @@
 
   const LOCAL_PREFIX = 'turn-lab:';
   const SESSION_PREFIX = 'turn-lab-session:';
-  const SEED_MARKER = LOCAL_PREFIX + '__seeded_from_turn_v1__';
+  const SEED_MARKER = LOCAL_PREFIX + '__seeded_from_turn_v2__';
   const COPY_ONCE_KEYS = [
     'turn-personal-rivals-v1',
     'turn-three-ghost-v4',
     'turn-rival-timestamp-migration-v1'
   ];
 
-  // Give LAB an initial copy of the player's current production ghosts, then diverge forever.
-  // Native Storage methods are used here because the namespace shim is installed just below.
+  // Seed this corrected LAB baseline once from the current production save, then diverge.
+  // Versioning the marker deliberately replaces data created in the earlier broken bootstrap.
   try {
     if (native.getItem.call(localStorageRef, SEED_MARKER) !== '1') {
       for (const key of COPY_ONCE_KEYS) {
         const labKey = LOCAL_PREFIX + key;
-        if (native.getItem.call(localStorageRef, labKey) != null) continue;
         const productionValue = native.getItem.call(localStorageRef, key);
         if (productionValue != null) native.setItem.call(localStorageRef, labKey, productionValue);
+        else native.removeItem.call(localStorageRef, labKey);
       }
       native.setItem.call(localStorageRef, SEED_MARKER, '1');
     }
