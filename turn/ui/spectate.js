@@ -170,8 +170,7 @@ function installPublicApi(runtime) {
 
 function installUi(runtime) {
   const utilityGroup = document.querySelector('.utility-group');
-  const gasButton = document.querySelector('#gasButton');
-  if (!utilityGroup || !gasButton) return;
+  if (!utilityGroup) return;
 
   const spectateButton = document.createElement('button');
   spectateButton.type = 'button';
@@ -203,37 +202,6 @@ function installUi(runtime) {
     document.body.classList.remove('turn-spectating');
   });
 
-  let gasPointerId = null;
-  let wasInBoostZone = false;
-  let previousCharge = Number(globalThis.__turnBoostCharge ?? 1);
-
-  function updateBoostZoneHaptic(event) {
-    if (gasPointerId === null || event.pointerId !== gasPointerId) return;
-    const rect = gasButton.getBoundingClientRect();
-    const inside = event.clientX >= rect.left && event.clientX <= rect.right
-      && event.clientY >= rect.top && event.clientY <= rect.bottom;
-    const inBoostZone = inside && event.clientY <= rect.top + rect.height * 0.34;
-    if (inBoostZone && !wasInBoostZone) safeVibrate(18);
-    wasInBoostZone = inBoostZone;
-  }
-
-  gasButton.addEventListener('pointerdown', (event) => {
-    gasPointerId = event.pointerId;
-    wasInBoostZone = false;
-    updateBoostZoneHaptic(event);
-  });
-  gasButton.addEventListener('pointermove', updateBoostZoneHaptic);
-
-  const releaseGasHaptic = (event) => {
-    if (gasPointerId !== null && event?.pointerId != null && event.pointerId !== gasPointerId) return;
-    gasPointerId = null;
-    wasInBoostZone = false;
-  };
-
-  gasButton.addEventListener('pointerup', releaseGasHaptic);
-  gasButton.addEventListener('pointercancel', releaseGasHaptic);
-  gasButton.addEventListener('lostpointercapture', releaseGasHaptic);
-
   function syncUi() {
     const current = globalThis.__turnGetSpectateV3State?.();
     if (current) {
@@ -244,12 +212,6 @@ function installUi(runtime) {
       recordEl.textContent = current.record || '';
       nextButton.hidden = current.total < 2;
     }
-
-    const charge = Number(globalThis.__turnBoostCharge ?? 1);
-    if (gasPointerId !== null && wasInBoostZone && previousCharge > 0.015 && charge <= 0.001) {
-      safeVibrate([28, 36, 62]);
-    }
-    previousCharge = charge;
     requestAnimationFrame(syncUi);
   }
 
@@ -304,12 +266,6 @@ function formatTime(seconds) {
   const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
   const ms = Math.floor((seconds % 1) * 1000).toString().padStart(3, '0');
   return `${minutes}:${secs}.${ms}`;
-}
-
-function safeVibrate(pattern) {
-  try {
-    navigator.vibrate?.(pattern);
-  } catch (_) {}
 }
 
 waitForRuntime();
