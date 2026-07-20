@@ -44,18 +44,20 @@ const [index, controls, css, analogGas, spectate] = await Promise.all([
   fs.readFile(new URL('../../turn/ui/spectate.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.2\.0 · Build 2026\.07\.19-r13/);
-assert.match(index, /drive-pad\.css\?build=20260719-r13/);
+assert.match(index, /TURN v1\.2\.1 · Build 2026\.07\.20-r14/);
+assert.match(index, /drive-pad\.css\?build=20260720-r14/);
 assert.match(controls, /className = 'drive-pad'/, 'Gameplay controls must create one unified drive pad');
 assert.match(controls, /return x < 0\.5 \? 'drift' : 'boost'/, 'Top drive pad must split into Drift and Boost');
 assert.match(controls, /return 'gas'/, 'Bottom drive pad must map to Gas');
 assert.match(controls, /globalThis\.__turnAnalogGas = nextZone \? 1 : 0/, 'All three drive zones must keep normal gas engaged');
 assert.match(controls, /globalThis\.__turnDriftHeld = nextZone === 'drift'/, 'Drift zone must add drift to gas');
 assert.match(controls, /boostRequested = nextZone === 'boost'/, 'Boost zone must add boost to gas');
-assert.match(controls, /boostRequested && !boostExhausted/, 'Boost must stay locked after exhaustion');
-assert.doesNotMatch(controls, /if \(!inBoostZone\) boostExhausted = false/, 'Sliding away from exhausted Boost must not re-arm it without lifting');
+assert.match(controls, /boostRequested && !boostExhausted/, 'Boost must stay locked while the thumb remains in Boost after exhaustion');
+assert.match(controls, /previousZone === 'boost' && nextZone !== 'boost'\) boostExhausted = false/, 'Leaving Boost for Gas or Drift must re-arm Boost without requiring pointer release');
 assert.match(controls, /Brake · Reverse/, 'Separate brake control must advertise reverse');
 assert.match(css, /\.drive-pad \{/);
+assert.match(css, /place-items: center/, 'Gas label must be vertically and horizontally centered');
+assert.match(css, /content: "LEAVE"/, 'Boost lock hint must explain that leaving the Boost zone re-arms it');
 assert.match(css, /\.brake-reverse \{/);
 assert.doesNotMatch(analogGas, /pointerdown/, 'Legacy analog gas pointer handling must stay retired');
 assert.doesNotMatch(spectate, /updateBoostZoneHaptic/, 'Spectator UI must not own obsolete gas-zone pointer state');

@@ -85,6 +85,9 @@
 .drive-pad .drive-gas-zone {
   position: relative;
   overflow: hidden;
+  display: grid;
+  place-items: center;
+  text-align: center;
   border-top: 4px solid var(--ink);
   background: #c8db08;
 }
@@ -123,7 +126,7 @@
 }
 
 .drive-boost-zone.is-locked::after {
-  content: "LIFT";
+  content: "LEAVE";
   position: absolute;
   right: 7px;
   bottom: 6px;

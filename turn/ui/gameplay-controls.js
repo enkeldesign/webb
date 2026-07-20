@@ -158,6 +158,7 @@ function installGameplayUi() {
   function setDriveZone(nextZone, { announce = true } = {}) {
     if (nextZone === driveZone) return;
     const previousZone = driveZone;
+    if (previousZone === 'boost' && nextZone !== 'boost') boostExhausted = false;
     driveZone = nextZone;
     globalThis.__turnAnalogGas = nextZone ? 1 : 0;
     globalThis.__turnDriftHeld = nextZone === 'drift';
