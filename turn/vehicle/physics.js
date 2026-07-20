@@ -33,34 +33,53 @@ export function updateVehiclePhysicsState({
   let lateralSpeed = state.velocity.dot(right);
   let speed = state.velocity.length();
 
+  const brakingOrReversing = state.brake > 0;
+  const driveThrottle = brakingOrReversing ? 0 : state.throttle;
+  const effectiveBoostActive = boostActive && !brakingOrReversing;
+
   const enginePower =
     (state.offRoad ? 36 : 43) *
     tuning.accelerationMultiplier *
     (driftHeld ? tuning.driftEngineMultiplier : 1);
-  const boostPower = boostActive
+  const boostPower = effectiveBoostActive
     ? (state.offRoad ? 16 : 36) * tuning.boostPowerMultiplier
     : 0;
   state.velocity.addScaledVector(
     forward,
-    (state.throttle * enginePower + boostPower) * dt
+    (driveThrottle * enginePower + boostPower) * dt
   );
 
   if (state.brake > 0) {
     const brakeStep = 62 * state.brake * dt;
     forwardSpeed = state.velocity.dot(forward);
-    if (Math.abs(forwardSpeed) > 0.05) {
+
+    if (forwardSpeed > 0.35) {
+      // First use of the control is always braking while the car still moves forward.
       state.velocity.addScaledVector(
         forward,
-        -Math.sign(forwardSpeed) * Math.min(Math.abs(forwardSpeed), brakeStep)
+        -Math.min(forwardSpeed, brakeStep)
       );
+    } else {
+      // Once forward motion is essentially gone, the same held control becomes reverse.
+      const reversePower = (state.offRoad ? 20 : 27) * tuning.accelerationMultiplier;
+      state.velocity.addScaledVector(forward, -reversePower * state.brake * dt);
+
+      const reverseSpeed = state.velocity.dot(forward);
+      const reverseSpeedLimit = effectiveMaxSpeed * 0.32;
+      if (reverseSpeed < -reverseSpeedLimit) {
+        state.velocity.addScaledVector(forward, -reverseSpeedLimit - reverseSpeed);
+      }
     }
+
+    forwardSpeed = state.velocity.dot(forward);
   }
 
   speed = state.velocity.length();
   const speedRatio = clamp(speed / effectiveMaxSpeed, 0, 1);
+  const brakeDriftInput = state.brake > 0 && forwardSpeed > 0 ? state.brake : 0;
   const driftIntent = clamp(
     Math.abs(state.steering) * speedRatio * 0.9 +
-      state.brake * Math.abs(state.steering) * 1.35 +
+      brakeDriftInput * Math.abs(state.steering) * 1.35 +
       Math.abs(lateralSpeed) / 22 +
       (driftHeld ? 0.48 + Math.abs(state.steering) * 0.5 : 0),
     0,
@@ -112,8 +131,8 @@ export function updateVehiclePhysicsState({
   state.velocity.multiplyScalar(Math.exp(-drag * dt));
 
   const speedLimit = state.offRoad
-    ? (boostActive ? effectiveMaxSpeed * 0.82 : effectiveMaxSpeed * 0.73)
-    : (boostActive ? effectiveMaxSpeed * tuning.boostSpeedMultiplier : effectiveMaxSpeed);
+    ? (effectiveBoostActive ? effectiveMaxSpeed * 0.82 : effectiveMaxSpeed * 0.73)
+    : (effectiveBoostActive ? effectiveMaxSpeed * tuning.boostSpeedMultiplier : effectiveMaxSpeed);
 
   speed = state.velocity.length();
   if (speed > speedLimit) state.velocity.multiplyScalar(speedLimit / speed);

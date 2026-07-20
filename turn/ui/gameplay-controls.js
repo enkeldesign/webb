@@ -14,7 +14,8 @@ function installGameplayUi() {
   const manualSteer = document.querySelector('#manualSteer');
   const utilityGroup = document.querySelector('.utility-group');
   const hud = document.querySelector('#hud');
-  if (!gasButton || !brakeButton || !manualSteer || !utilityGroup || !hud) return;
+  const pedals = gasButton?.parentElement;
+  if (!gasButton || !brakeButton || !manualSteer || !utilityGroup || !hud || !pedals) return;
 
   let manualPointerId = null;
 
@@ -78,35 +79,132 @@ function installGameplayUi() {
   boostHud.innerHTML = '<span>BOOST</span><div><i></i></div>';
   hud.appendChild(boostHud);
 
-  const brakeStack = document.createElement('div');
-  brakeStack.className = 'brake-stack';
-  brakeButton.parentNode.insertBefore(brakeStack, brakeButton);
+  const driveStack = document.createElement('div');
+  driveStack.className = 'drive-stack';
 
-  const driftButton = document.createElement('button');
-  driftButton.type = 'button';
-  driftButton.className = 'pedal drift';
-  driftButton.textContent = 'Drift';
-  driftButton.setAttribute('aria-label', 'Hold to drift');
-  brakeStack.append(driftButton, brakeButton);
+  const drivePad = document.createElement('div');
+  drivePad.className = 'drive-pad';
+  drivePad.setAttribute('role', 'group');
+  drivePad.setAttribute('aria-label', 'Drive control. Slide between Gas, Drift and Boost.');
+  drivePad.style.setProperty('--boost-charge', '100%');
 
-  let driftPointerId = null;
-  const endDrift = (event) => {
-    if (driftPointerId !== null && event?.pointerId != null && event.pointerId !== driftPointerId) return;
-    driftPointerId = null;
-    globalThis.__turnDriftHeld = false;
-    driftButton.classList.remove('is-down');
-  };
+  const driveTop = document.createElement('div');
+  driveTop.className = 'drive-pad-top';
 
-  driftButton.addEventListener('pointerdown', (event) => {
+  const driftZone = document.createElement('button');
+  driftZone.type = 'button';
+  driftZone.className = 'drive-zone drive-drift-zone';
+  driftZone.textContent = 'Drift';
+  driftZone.setAttribute('aria-label', 'Gas and drift');
+
+  const boostZone = document.createElement('button');
+  boostZone.type = 'button';
+  boostZone.className = 'drive-zone drive-boost-zone';
+  boostZone.textContent = 'Boost';
+  boostZone.setAttribute('aria-label', 'Gas and boost');
+
+  gasButton.classList.add('drive-gas-zone');
+  gasButton.textContent = 'Gas';
+  gasButton.setAttribute('aria-label', 'Gas');
+
+  brakeButton.classList.add('brake-reverse');
+  brakeButton.textContent = 'Brake · Reverse';
+  brakeButton.setAttribute('aria-label', 'Brake. Hold after stopping to reverse.');
+
+  driveTop.append(driftZone, boostZone);
+  drivePad.append(driveTop, gasButton);
+  driveStack.append(drivePad, brakeButton);
+  pedals.replaceChildren(driveStack);
+
+  let drivePointerId = null;
+  let driveZone = null;
+  let boostRequested = false;
+  let boostExhausted = false;
+  let boostCharge = 1;
+  let previousTime = performance.now();
+  const TOP_ZONE_SHARE = 0.42;
+  const DEFAULT_BOOST_DRAIN_SECONDS = 2.0;
+  const BOOST_RECHARGE_SECONDS = 4.2;
+  const DRIFT_RECHARGE_MULTIPLIER = 2.4;
+
+  function safeVibrate(pattern) {
+    try {
+      navigator.vibrate?.(pattern);
+    } catch (_) {}
+  }
+
+  function getBoostDrainSeconds() {
+    const duration = Number(globalThis.__turnVehicleTuning?.boostDurationSeconds);
+    if (!Number.isFinite(duration)) return DEFAULT_BOOST_DRAIN_SECONDS;
+    return Math.max(0.8, Math.min(5, duration));
+  }
+
+  function zoneFromPointer(event) {
+    const rect = drivePad.getBoundingClientRect();
+    const margin = 24;
+    if (
+      event.clientX < rect.left - margin ||
+      event.clientX > rect.right + margin ||
+      event.clientY < rect.top - margin ||
+      event.clientY > rect.bottom + margin
+    ) return null;
+
+    const x = Math.max(0, Math.min(1, (event.clientX - rect.left) / Math.max(1, rect.width)));
+    const y = Math.max(0, Math.min(1, (event.clientY - rect.top) / Math.max(1, rect.height)));
+    if (y < TOP_ZONE_SHARE) return x < 0.5 ? 'drift' : 'boost';
+    return 'gas';
+  }
+
+  function setDriveZone(nextZone, { announce = true } = {}) {
+    if (nextZone === driveZone) return;
+    const previousZone = driveZone;
+    driveZone = nextZone;
+    globalThis.__turnAnalogGas = nextZone ? 1 : 0;
+    globalThis.__turnDriftHeld = nextZone === 'drift';
+    boostRequested = nextZone === 'boost';
+
+    drivePad.dataset.driveZone = nextZone || '';
+    gasButton.classList.toggle('is-active', nextZone === 'gas');
+    driftZone.classList.toggle('is-active', nextZone === 'drift');
+    boostZone.classList.toggle('is-active', nextZone === 'boost');
+
+    if (announce && nextZone && nextZone !== previousZone && (nextZone === 'drift' || nextZone === 'boost')) {
+      safeVibrate(14);
+    }
+  }
+
+  function updateDrivePointer(event) {
+    if (drivePointerId === null || event.pointerId !== drivePointerId) return;
     event.preventDefault();
-    driftPointerId = event.pointerId;
-    driftButton.setPointerCapture?.(event.pointerId);
-    globalThis.__turnDriftHeld = true;
-    driftButton.classList.add('is-down');
+    setDriveZone(zoneFromPointer(event));
+  }
+
+  function releaseDrive(event) {
+    if (drivePointerId === null || (event?.pointerId != null && event.pointerId !== drivePointerId)) return;
+    const releasedPointerId = drivePointerId;
+    drivePointerId = null;
+    drivePad.releasePointerCapture?.(releasedPointerId);
+    setDriveZone(null, { announce: false });
+    boostRequested = false;
+    boostExhausted = false;
+    globalThis.__turnBoostActive = false;
+    drivePad.classList.remove('is-boosting', 'is-boost-locked');
+  }
+
+  drivePad.addEventListener('pointerdown', (event) => {
+    if (drivePointerId !== null) return;
+    event.preventDefault();
+    drivePointerId = event.pointerId;
+    boostExhausted = false;
+    drivePad.setPointerCapture?.(event.pointerId);
+    setDriveZone(zoneFromPointer(event), { announce: false });
   });
-  driftButton.addEventListener('pointerup', endDrift);
-  driftButton.addEventListener('pointercancel', endDrift);
-  driftButton.addEventListener('lostpointercapture', endDrift);
+  drivePad.addEventListener('pointermove', updateDrivePointer);
+  drivePad.addEventListener('pointerup', releaseDrive);
+  drivePad.addEventListener('pointercancel', releaseDrive);
+  drivePad.addEventListener('lostpointercapture', (event) => {
+    if (drivePointerId === event.pointerId) releaseDrive(event);
+  });
 
   const nukeButton = document.createElement('button');
   nukeButton.type = 'button';
@@ -166,59 +264,13 @@ function installGameplayUi() {
     }, 1650);
   });
 
-  let gasPointerId = null;
-  let boostRequested = false;
-  let boostExhausted = false;
-  let boostCharge = 1;
-  let previousTime = performance.now();
-  const BOOST_ZONE = 0.34;
-  const DEFAULT_BOOST_DRAIN_SECONDS = 2.0;
-  const BOOST_RECHARGE_SECONDS = 4.2;
-  const DRIFT_RECHARGE_MULTIPLIER = 2.4;
-
-  function getBoostDrainSeconds() {
-    const duration = Number(globalThis.__turnVehicleTuning?.boostDurationSeconds);
-    if (!Number.isFinite(duration)) return DEFAULT_BOOST_DRAIN_SECONDS;
-    return Math.max(0.8, Math.min(5, duration));
-  }
-
-  function updateBoostRequest(event) {
-    if (gasPointerId === null || event.pointerId !== gasPointerId) return;
-    const rect = gasButton.getBoundingClientRect();
-    const inside = event.clientY >= rect.top
-      && event.clientY <= rect.bottom
-      && event.clientX >= rect.left
-      && event.clientX <= rect.right;
-    const inBoostZone = inside && event.clientY - rect.top <= rect.height * BOOST_ZONE;
-    if (!inBoostZone) boostExhausted = false;
-    boostRequested = inBoostZone;
-  }
-
-  function releaseBoost(event) {
-    if (gasPointerId !== null && event?.pointerId != null && event.pointerId !== gasPointerId) return;
-    gasPointerId = null;
-    boostRequested = false;
-    boostExhausted = false;
-    globalThis.__turnBoostActive = false;
-    gasButton.classList.remove('is-boosting');
-  }
-
-  gasButton.addEventListener('pointerdown', (event) => {
-    gasPointerId = event.pointerId;
-    updateBoostRequest(event);
-  });
-  gasButton.addEventListener('pointermove', updateBoostRequest);
-  gasButton.addEventListener('pointerup', releaseBoost);
-  gasButton.addEventListener('pointercancel', releaseBoost);
-  gasButton.addEventListener('lostpointercapture', releaseBoost);
   window.addEventListener('blur', () => {
-    releaseBoost();
+    releaseDrive();
     centerManualSteerVisual();
   });
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
-      releaseBoost();
-      endDrift();
+      releaseDrive();
       centerManualSteerVisual();
     }
   });
@@ -230,7 +282,10 @@ function installGameplayUi() {
 
     if (active) {
       boostCharge = Math.max(0, boostCharge - dt / getBoostDrainSeconds());
-      if (boostCharge <= 0) boostExhausted = true;
+      if (boostCharge <= 0) {
+        boostExhausted = true;
+        safeVibrate([28, 36, 62]);
+      }
     } else {
       const rechargeMultiplier = globalThis.__turnDriftHeld ? DRIFT_RECHARGE_MULTIPLIER : 1;
       boostCharge = Math.min(1, boostCharge + dt * rechargeMultiplier / BOOST_RECHARGE_SECONDS);
@@ -239,13 +294,18 @@ function installGameplayUi() {
     const boosting = boostRequested && !boostExhausted && boostCharge > 0.001;
     globalThis.__turnBoostActive = boosting;
     globalThis.__turnBoostCharge = boostCharge;
-    gasButton.classList.toggle('is-boosting', boosting);
+    drivePad.classList.toggle('is-boosting', boosting);
+    drivePad.classList.toggle('is-boost-locked', boostRequested && boostExhausted);
+    boostZone.classList.toggle('is-locked', boostRequested && boostExhausted);
     boostHud.classList.toggle('is-boosting', boosting);
     boostHud.classList.toggle('is-drift-charging', globalThis.__turnDriftHeld && !boosting);
-    boostHud.style.setProperty('--boost-charge', (boostCharge * 100).toFixed(1) + '%');
+    const chargePercent = (boostCharge * 100).toFixed(1) + '%';
+    drivePad.style.setProperty('--boost-charge', chargePercent);
+    boostHud.style.setProperty('--boost-charge', chargePercent);
     boostHud.setAttribute('aria-label', 'Boost ' + Math.round(boostCharge * 100) + ' percent charged');
     requestAnimationFrame(updateBoost);
   }
 
+  setDriveZone(null, { announce: false });
   requestAnimationFrame(updateBoost);
 }
