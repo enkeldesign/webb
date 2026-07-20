@@ -2,17 +2,19 @@
 
 import * as THREE from 'three';
 import { installKenneyWorld } from './world-assets.js';
-import { updateRaceCameraState } from './render/camera.js';
-import { updateHudState } from './ui/hud.js';
+import { updateRaceCameraState } from './render/camera.js?build=20260720-r17';
+import { updateHudState } from './ui/hud.js?build=20260720-r17';
 import { motionPoseFromGravity as motionPoseFromGravityState, updateMotionInputState } from './input/motion.js';
-import { updateVehiclePhysicsState } from './vehicle/physics.js';
+import { updateVehiclePhysicsState } from './vehicle/physics.js?build=20260720-r17';
 import { GAME_MODE, installGameModeState, prepareRaceStartState, resetRaceToStage, setGameModeState } from './race/game-state.js';
 import { beginTimedLapState, completeLapState, updateLapProgressState } from './race/lap-system.js';
 import { recordReplayFrame, replayFrameAt } from './race/replay-system.js';
 import { RIVAL_LIMIT, loadRivalsState, saveRivalsState } from './race/rival-storage.js';
-import { showTheLot } from './garage/lot-r10.js';
+import { createTrackSpatialIndex } from './race/track-spatial-index.js?build=20260720-r17';
+import { showTheLot } from './garage/lot-r10.js?build=20260720-r17';
 import { getCarDefinition, loadVehicleSelection, saveVehicleSelection } from './vehicle/catalog.js';
-import { createCarVisual } from './vehicle/car-models.js';
+import { createCarVisual } from './vehicle/car-models.js?build=20260720-r17';
+import { installPerformanceMonitor, recordPerformanceFrame } from './performance-monitor.js?build=20260720-r17';
 
 const intro = document.querySelector('#intro');
 const hud = document.querySelector('#hud');
@@ -34,6 +36,7 @@ const mapCanvas = document.querySelector('#map');
 const mapCtx = mapCanvas.getContext('2d');
 const tiltNeedle = document.querySelector('#tiltNeedle');
 const tiltValue = document.querySelector('#tiltValue');
+const installGate = document.querySelector('#installGate');
 
 const TAU = Math.PI * 2;
 const TRACK_WIDTH = 27;
@@ -97,8 +100,16 @@ globalThis.__turnVehicleTuning = state.vehicleTuning;
 
 installGameModeState(state);
 
+function publishUiState(reason) {
+  window.dispatchEvent(new CustomEvent('turn:ui-state-change', {
+    detail: { reason, mode: state.mode, running: state.running }
+  }));
+}
+
 function setGameMode(mode) {
-  return setGameModeState(state, mode);
+  const result = setGameModeState(state, mode);
+  publishUiState('game-mode');
+  return result;
 }
 
 globalThis.__turnGameModes = GAME_MODE;
@@ -161,6 +172,12 @@ for (let i = 0; i < TRACK_SAMPLES; i += 1) {
   samples.push({ point, tangent, normal, distance: trackLength });
 }
 trackLength += samples[0].point.distanceTo(samples.at(-1).point);
+
+const trackSpatialIndex = createTrackSpatialIndex(samples, { cellSize: 32 });
+installPerformanceMonitor({
+  getMode: () => state.mode,
+  getTrackStats: () => trackSpatialIndex.getStats()
+});
 
 const blackMaterial = new THREE.MeshBasicMaterial({ color: 0x08090a, side: THREE.BackSide });
 
@@ -539,6 +556,7 @@ const smokePool = Array.from({ length: 24 }, () => {
   );
   mesh.visible = false;
   mesh.userData.life = 0;
+  mesh.userData.velocity = new THREE.Vector3();
   world.add(mesh);
   return mesh;
 });
@@ -555,6 +573,7 @@ const flamePool = Array.from({ length: 16 }, (_, index) => {
   );
   mesh.visible = false;
   mesh.userData.life = 0;
+  mesh.userData.velocity = new THREE.Vector3();
   world.add(mesh);
   return mesh;
 });
@@ -563,6 +582,12 @@ let smokeCursor = 0;
 let flameCursor = 0;
 let smokeCooldown = 0;
 let flameCooldown = 0;
+const effectForward = new THREE.Vector3();
+const effectRight = new THREE.Vector3();
+const effectRear = new THREE.Vector3();
+const effectPosition = new THREE.Vector3();
+const effectVelocity = new THREE.Vector3();
+const effectScale = new THREE.Vector3();
 
 function launchParticle(pool, cursor, position, velocity, life, scale, opacity) {
   const particle = pool[cursor % pool.length];
@@ -572,7 +597,7 @@ function launchParticle(pool, cursor, position, velocity, life, scale, opacity) 
   particle.material.opacity = opacity;
   particle.userData.life = life;
   particle.userData.maxLife = life;
-  particle.userData.velocity = velocity.clone();
+  particle.userData.velocity.copy(velocity);
   return cursor + 1;
 }
 
@@ -593,22 +618,23 @@ function updateParticlePool(pool, dt, smoke = false) {
 }
 
 function updateDriveEffects(dt) {
-  const forward = getForward().clone();
-  const right = getRight().clone();
-  const rear = state.position.clone().addScaledVector(forward, -3.2).setY(0.72);
+  effectForward.copy(getForward());
+  effectRight.copy(getRight());
+  effectRear.copy(state.position).addScaledVector(effectForward, -3.2).setY(0.72);
 
   flameCooldown -= dt;
   if (globalThis.__turnBoostActive && state.speed > 4 && flameCooldown <= 0) {
     for (const side of [-1, 1]) {
-      const position = rear.clone().addScaledVector(right, side * 0.78);
-      const velocity = forward.clone().multiplyScalar(-8 - state.speed * 0.08).add(new THREE.Vector3(0, 1.2, 0));
+      effectPosition.copy(effectRear).addScaledVector(effectRight, side * 0.78);
+      effectVelocity.copy(effectForward).multiplyScalar(-8 - state.speed * 0.08);
+      effectVelocity.y += 1.2;
       flameCursor = launchParticle(
         flamePool,
         flameCursor,
-        position,
-        velocity,
+        effectPosition,
+        effectVelocity,
         0.22,
-        new THREE.Vector3(0.5, 0.48, 1.8),
+        effectScale.set(0.5, 0.48, 1.8),
         0.95
       );
     }
@@ -618,15 +644,16 @@ function updateDriveEffects(dt) {
   smokeCooldown -= dt;
   if (globalThis.__turnDriftHeld && state.speed > 13 && Math.abs(state.steering) > 0.08 && smokeCooldown <= 0) {
     for (const side of [-1, 1]) {
-      const position = rear.clone().addScaledVector(right, side * 1.28).setY(0.45);
-      const velocity = right.clone().multiplyScalar(-side * state.steering * 2.8).add(new THREE.Vector3(0, 2.1, 0));
+      effectPosition.copy(effectRear).addScaledVector(effectRight, side * 1.28).setY(0.45);
+      effectVelocity.copy(effectRight).multiplyScalar(-side * state.steering * 2.8);
+      effectVelocity.y += 2.1;
       smokeCursor = launchParticle(
         smokePool,
         smokeCursor,
-        position,
-        velocity,
+        effectPosition,
+        effectVelocity,
         0.72,
-        new THREE.Vector3(0.78, 0.52, 0.78),
+        effectScale.set(0.78, 0.52, 0.78),
         0.42
       );
     }
@@ -665,19 +692,7 @@ function getRight(angle = state.heading) {
 }
 
 function findNearestTrack(position) {
-  let bestIndex = 0;
-  let bestDistanceSq = Infinity;
-  for (let i = 0; i < samples.length; i += 1) {
-    const point = samples[i].point;
-    const dx = position.x - point.x;
-    const dz = position.z - point.z;
-    const distanceSq = dx * dx + dz * dz;
-    if (distanceSq < bestDistanceSq) {
-      bestDistanceSq = distanceSq;
-      bestIndex = i;
-    }
-  }
-  return { index: bestIndex, sample: samples[bestIndex], distance: Math.sqrt(bestDistanceSq) };
+  return trackSpatialIndex.find(position);
 }
 
 function resetCar(showFeedback = true) {
@@ -688,6 +703,7 @@ function resetCar(showFeedback = true) {
     showMessage,
     setRacePosition: globalThis.__turnSetRacePosition
   });
+  publishUiState('race-reset');
 }
 
 function getScreenOrientationAngle() {
@@ -786,6 +802,7 @@ async function openLotFromRace() {
   hud.hidden = true;
   controls.hidden = true;
   manualSteer.hidden = true;
+  publishUiState('lot-open');
 
   const selection = await showTheLot({
     initialSelection: { carId: state.vehicleId, color: state.vehicleColor }
@@ -798,6 +815,7 @@ async function openLotFromRace() {
     controls.hidden = false;
     manualSteer.hidden = state.sensorMode;
     resize();
+    publishUiState('lot-cancelled');
     return false;
   }
 
@@ -814,6 +832,7 @@ async function startGame(fullscreenPromise = Promise.resolve(false)) {
   hud.hidden = false;
   controls.hidden = false;
   manualSteer.hidden = state.sensorMode;
+  publishUiState('race-started');
 
   if (state.sensorMode) {
     window.setTimeout(() => {
@@ -946,6 +965,7 @@ function updateMotionInput(dt) {
 
 function beginTimedLap(now) {
   beginTimedLapState({ state, samples, now, showMessage });
+  publishUiState('lap-started');
 }
 
 function updatePhysics(dt, now) {
@@ -994,6 +1014,7 @@ function completeLap(now) {
       globalThis.__turnLastLapError = error;
     }
   });
+  publishUiState('lap-completed');
 }
 
 function saveGhost() {
@@ -1002,6 +1023,7 @@ function saveGhost() {
 
 function loadGhost() {
   loadRivalsState({ state, samples, findNearestTrack });
+  publishUiState('rivals-loaded');
 }
 
 globalThis.__turnHasGhosts = () => state.competitorLaps.length > 0;
@@ -1020,6 +1042,7 @@ function resetRivals() {
   updateHud();
   showMessage('RIVALS RESET', 1800);
   window.dispatchEvent(new CustomEvent('turn:rivals-reset'));
+  publishUiState('rivals-reset');
 }
 
 globalThis.__turnResetRivals = resetRivals;
@@ -1319,6 +1342,7 @@ const turnRuntime = {
   trackWidth: TRACK_WIDTH,
   maxSpeed: MAX_SPEED,
   trackSampleCount: TRACK_SAMPLES,
+  trackSpatialIndex,
   findNearestTrack,
   getForward,
   getRight,
@@ -1346,11 +1370,31 @@ const turnRuntime = {
 };
 globalThis.__turnRuntime = turnRuntime;
 window.dispatchEvent(new CustomEvent('turn:runtime-ready', { detail: turnRuntime }));
+publishUiState('runtime-ready');
 
 const MAX_PHYSICS_STEP = 1 / 60;
 const MAX_FRAME_CATCHUP = 0.12;
+const HUD_UPDATE_INTERVAL_MS = 1000 / 30;
+let nextHudUpdateAt = 0;
+
+function mainSceneOcclusion() {
+  if (document.body.classList.contains('turn-lot-open')) return 'lot';
+  if (installGate && !installGate.hidden) return 'install gate';
+  return null;
+}
 
 renderer.setAnimationLoop((now) => {
+  globalThis.__turnUpdateGameplayControls?.(now);
+
+  const occlusion = mainSceneOcclusion();
+  if (occlusion) {
+    state.lastFrame = now;
+    if (occlusion !== 'lot') {
+      recordPerformanceFrame(`${occlusion} · paused`, [], now, { rendered: false });
+    }
+    return;
+  }
+
   const frameDt = Math.min(MAX_FRAME_CATCHUP, Math.max(0.001, (now - state.lastFrame) / 1000));
   const frameStart = now - frameDt * 1000;
   state.lastFrame = now;
@@ -1364,7 +1408,10 @@ renderer.setAnimationLoop((now) => {
     }
 
     updateScene(frameDt);
-    updateHud();
+    if (now >= nextHudUpdateAt) {
+      updateHud();
+      nextHudUpdateAt = now + HUD_UPDATE_INTERVAL_MS;
+    }
   } else {
     const preview = samples[Math.floor((now * 0.012) % TRACK_SAMPLES)];
     playerCar.position.copy(preview.point);
@@ -1377,4 +1424,5 @@ renderer.setAnimationLoop((now) => {
   }
 
   renderer.render(scene, camera);
+  recordPerformanceFrame(state.running ? state.mode : 'preview', renderer, now);
 });

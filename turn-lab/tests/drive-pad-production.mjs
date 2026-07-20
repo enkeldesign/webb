@@ -44,8 +44,8 @@ const [index, controls, css, analogGas, spectate] = await Promise.all([
   fs.readFile(new URL('../../turn/ui/spectate.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.0 · Build 2026\.07\.20-r15/);
-assert.match(index, /drive-pad\.css\?build=20260720-r15/);
+assert.match(index, /TURN v1\.3\.1 · Build 2026\.07\.20-r17/);
+assert.match(index, /drive-pad\.css\?build=20260720-r17/);
 assert.match(controls, /className = 'drive-pad'/, 'Gameplay controls must create one unified drive pad');
 assert.match(controls, /return x < 0\.5 \? 'drift' : 'boost'/, 'Top drive pad must split into Drift and Boost');
 assert.match(controls, /return 'gas'/, 'Bottom drive pad must map to Gas');

@@ -14,6 +14,7 @@ function installGameplayUi() {
   const manualSteer = document.querySelector('#manualSteer');
   const utilityGroup = document.querySelector('.utility-group');
   const hud = document.querySelector('#hud');
+  const controlsRoot = document.querySelector('#controls');
   const pedals = gasButton?.parentElement;
   if (!gasButton || !brakeButton || !manualSteer || !utilityGroup || !hud || !pedals) return;
 
@@ -56,22 +57,28 @@ function installGameplayUi() {
   positionHud.hidden = true;
   positionHud.innerHTML = '<span>POSITION</span><strong>1/1</strong>';
   hud.appendChild(positionHud);
+  const positionValue = positionHud.querySelector('strong');
   let lastPosition = null;
+  let lastPositionTotal = null;
 
   globalThis.__turnSetRacePosition = (position, total) => {
     if (position == null) {
-      positionHud.hidden = true;
+      if (!positionHud.hidden) positionHud.hidden = true;
       lastPosition = null;
+      lastPositionTotal = null;
       return;
     }
-    positionHud.hidden = false;
-    positionHud.querySelector('strong').textContent = position + '/' + total;
+    if (positionHud.hidden) positionHud.hidden = false;
+    if (position !== lastPosition || total !== lastPositionTotal) {
+      positionValue.textContent = position + '/' + total;
+    }
     if (lastPosition !== null && position !== lastPosition) {
       positionHud.classList.remove('position-pop');
       void positionHud.offsetWidth;
       positionHud.classList.add('position-pop');
     }
     lastPosition = position;
+    lastPositionTotal = total;
   };
 
   const boostHud = document.createElement('div');
@@ -126,6 +133,14 @@ function installGameplayUi() {
   const DEFAULT_BOOST_DRAIN_SECONDS = 2.0;
   const BOOST_RECHARGE_SECONDS = 4.2;
   const DRIFT_RECHARGE_MULTIPLIER = 2.4;
+  const BOOST_VISUAL_INTERVAL_MS = 1000 / 30;
+  let lastBoostVisualAt = -Infinity;
+  let boostVisualDirty = true;
+  let publishedBoosting = null;
+  let publishedLocked = null;
+  let publishedDriftCharging = null;
+  let publishedChargePercent = null;
+  let publishedAriaPercent = null;
 
   function safeVibrate(pattern) {
     try {
@@ -295,18 +310,50 @@ function installGameplayUi() {
     const boosting = boostRequested && !boostExhausted && boostCharge > 0.001;
     globalThis.__turnBoostActive = boosting;
     globalThis.__turnBoostCharge = boostCharge;
-    drivePad.classList.toggle('is-boosting', boosting);
-    drivePad.classList.toggle('is-boost-locked', boostRequested && boostExhausted);
-    boostZone.classList.toggle('is-locked', boostRequested && boostExhausted);
-    boostHud.classList.toggle('is-boosting', boosting);
-    boostHud.classList.toggle('is-drift-charging', globalThis.__turnDriftHeld && !boosting);
+    const locked = boostRequested && boostExhausted;
+    const driftCharging = globalThis.__turnDriftHeld && !boosting;
     const chargePercent = (boostCharge * 100).toFixed(1) + '%';
-    drivePad.style.setProperty('--boost-charge', chargePercent);
-    boostHud.style.setProperty('--boost-charge', chargePercent);
-    boostHud.setAttribute('aria-label', 'Boost ' + Math.round(boostCharge * 100) + ' percent charged');
-    requestAnimationFrame(updateBoost);
+    const ariaPercent = Math.round(boostCharge * 100);
+    const controlsVisible = !controlsRoot?.hidden && !document.hidden;
+    const stateChanged =
+      boosting !== publishedBoosting ||
+      locked !== publishedLocked ||
+      driftCharging !== publishedDriftCharging;
+    const visualDue = now - lastBoostVisualAt >= BOOST_VISUAL_INTERVAL_MS;
+
+    if (!controlsVisible) {
+      boostVisualDirty = true;
+      return;
+    }
+    if (!boostVisualDirty && !stateChanged && !visualDue) return;
+
+    if (boostVisualDirty || boosting !== publishedBoosting) {
+      drivePad.classList.toggle('is-boosting', boosting);
+      boostHud.classList.toggle('is-boosting', boosting);
+      publishedBoosting = boosting;
+    }
+    if (boostVisualDirty || locked !== publishedLocked) {
+      drivePad.classList.toggle('is-boost-locked', locked);
+      boostZone.classList.toggle('is-locked', locked);
+      publishedLocked = locked;
+    }
+    if (boostVisualDirty || driftCharging !== publishedDriftCharging) {
+      boostHud.classList.toggle('is-drift-charging', driftCharging);
+      publishedDriftCharging = driftCharging;
+    }
+    if (boostVisualDirty || chargePercent !== publishedChargePercent) {
+      drivePad.style.setProperty('--boost-charge', chargePercent);
+      boostHud.style.setProperty('--boost-charge', chargePercent);
+      publishedChargePercent = chargePercent;
+    }
+    if (boostVisualDirty || ariaPercent !== publishedAriaPercent) {
+      boostHud.setAttribute('aria-label', 'Boost ' + ariaPercent + ' percent charged');
+      publishedAriaPercent = ariaPercent;
+    }
+    boostVisualDirty = false;
+    lastBoostVisualAt = now;
   }
 
   setDriveZone(null, { announce: false });
-  requestAnimationFrame(updateBoost);
+  globalThis.__turnUpdateGameplayControls = updateBoost;
 }

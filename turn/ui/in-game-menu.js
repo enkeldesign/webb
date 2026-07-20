@@ -60,9 +60,9 @@ function install(runtime) {
       resetRivalsButton.hidden = !visibility.startActions;
       previousMenuState = visibility.menuState;
     }
-    requestAnimationFrame(syncMenu);
   }
 
+  window.addEventListener('turn:ui-state-change', syncMenu);
   syncMenu();
 }
 

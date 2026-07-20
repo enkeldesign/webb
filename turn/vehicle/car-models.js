@@ -82,7 +82,9 @@ export async function createCarVisual({
       material.needsUpdate = true;
     }
 
-    record.node.castShadow = true;
+    // Rivals remain fully shaded but do not trigger another shadow-map draw for every
+    // GLB mesh. The player's car keeps its grounding shadow.
+    record.node.castShadow = !ghost;
     record.node.receiveShadow = true;
   }
 

@@ -15,7 +15,13 @@ export function updateVehiclePhysicsState({
 }) {
   updateMotionInput(dt);
 
-  const tuning = normalizeVehicleTuning(vehicleTuning || globalThis.__turnVehicleTuning);
+  const tuning = vehicleTuning || globalThis.__turnVehicleTuning;
+  const accelerationMultiplier = positiveNumber(tuning?.accelerationMultiplier, 1);
+  const controlMultiplier = positiveNumber(tuning?.controlMultiplier, 1);
+  const driftEngineMultiplier = positiveNumber(tuning?.driftEngineMultiplier, 0.93);
+  const driftDragAdd = nonNegativeNumber(tuning?.driftDragAdd, 0.085);
+  const tuningBoostPowerMultiplier = positiveNumber(tuning?.boostPowerMultiplier, 1);
+  const tuningBoostSpeedMultiplier = positiveNumber(tuning?.boostSpeedMultiplier, 1.32);
   const effectiveMaxSpeed = maxSpeed;
   const directGas = Math.max(0, Number(analogGas) || 0);
   const directBrake = 0;
@@ -27,8 +33,8 @@ export function updateVehiclePhysicsState({
   state.trackDistance = nearestBefore.distance;
   state.offRoad = nearestBefore.distance > trackWidth * 0.58;
 
-  const forward = getForward().clone();
-  const right = getRight().clone();
+  const forward = getForward();
+  const right = getRight();
   let forwardSpeed = state.velocity.dot(forward);
   let lateralSpeed = state.velocity.dot(right);
   let speed = state.velocity.length();
@@ -39,10 +45,10 @@ export function updateVehiclePhysicsState({
 
   const enginePower =
     (state.offRoad ? 36 : 43) *
-    tuning.accelerationMultiplier *
-    (driftHeld ? tuning.driftEngineMultiplier : 1);
+    accelerationMultiplier *
+    (driftHeld ? driftEngineMultiplier : 1);
   const boostPower = effectiveBoostActive
-    ? (state.offRoad ? 16 : 36) * tuning.boostPowerMultiplier
+    ? (state.offRoad ? 16 : 36) * tuningBoostPowerMultiplier
     : 0;
   state.velocity.addScaledVector(
     forward,
@@ -61,7 +67,7 @@ export function updateVehiclePhysicsState({
       );
     } else {
       // Once forward motion is essentially gone, the same held control becomes reverse.
-      const reversePower = (state.offRoad ? 20 : 27) * tuning.accelerationMultiplier;
+      const reversePower = (state.offRoad ? 20 : 27) * accelerationMultiplier;
       state.velocity.addScaledVector(forward, -reversePower * state.brake * dt);
 
       const reverseSpeed = state.velocity.dot(forward);
@@ -98,12 +104,12 @@ export function updateVehiclePhysicsState({
     Math.sign(forwardSpeed || 1) *
     (0.18 + Math.abs(forwardSpeed) * 0.012) *
     steeringAuthority *
-    tuning.controlMultiplier *
+    controlMultiplier *
     (1 + state.driftAmount * 0.65 + (driftHeld ? 0.58 : 0));
 
   state.heading = normalizeAngle(state.heading + yawRate * dt);
 
-  const newRight = getRight().clone();
+  const newRight = getRight();
   lateralSpeed = state.velocity.dot(newRight);
 
   const grip = (
@@ -111,7 +117,7 @@ export function updateVehiclePhysicsState({
       ? lerp(3.4, 1.35, state.driftAmount)
       : lerp(11.5, 1.45, state.driftAmount)
   ) *
-    (0.92 + tuning.controlMultiplier * 0.08) *
+    (0.92 + controlMultiplier * 0.08) *
     (driftHeld ? 0.42 : 1);
 
   const lateralCorrection = 1 - Math.exp(-grip * dt);
@@ -127,12 +133,12 @@ export function updateVehiclePhysicsState({
 
   const drag = state.offRoad
     ? 0.34
-    : 0.11 + speed * 0.0009 + (driftHeld ? tuning.driftDragAdd : 0);
+    : 0.11 + speed * 0.0009 + (driftHeld ? driftDragAdd : 0);
   state.velocity.multiplyScalar(Math.exp(-drag * dt));
 
   const speedLimit = state.offRoad
     ? (effectiveBoostActive ? effectiveMaxSpeed * 0.82 : effectiveMaxSpeed * 0.73)
-    : (effectiveBoostActive ? effectiveMaxSpeed * tuning.boostSpeedMultiplier : effectiveMaxSpeed);
+    : (effectiveBoostActive ? effectiveMaxSpeed * tuningBoostSpeedMultiplier : effectiveMaxSpeed);
 
   speed = state.velocity.length();
   if (speed > speedLimit) state.velocity.multiplyScalar(speedLimit / speed);
@@ -149,17 +155,6 @@ export function updateVehiclePhysicsState({
   state.nearestTrackIndex = nearestAfter.index;
 
   return nearestAfter;
-}
-
-function normalizeVehicleTuning(tuning) {
-  return {
-    accelerationMultiplier: positiveNumber(tuning?.accelerationMultiplier, 1),
-    controlMultiplier: positiveNumber(tuning?.controlMultiplier, 1),
-    driftEngineMultiplier: positiveNumber(tuning?.driftEngineMultiplier, 0.93),
-    driftDragAdd: nonNegativeNumber(tuning?.driftDragAdd, 0.085),
-    boostPowerMultiplier: positiveNumber(tuning?.boostPowerMultiplier, 1),
-    boostSpeedMultiplier: positiveNumber(tuning?.boostSpeedMultiplier, 1.32)
-  };
 }
 
 function positiveNumber(value, fallback) {

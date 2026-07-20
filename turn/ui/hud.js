@@ -17,17 +17,18 @@ export function updateHudState({
   findNearestTrack,
   setRacePosition
 }) {
-  speedEl.textContent = Math.round(state.speed * 3.6);
-  lapEl.textContent = state.lap;
-  lapTimeEl.textContent = formatTime(state.lapElapsed);
-  bestTimeEl.textContent = formatTime(state.bestTime);
+  setText(speedEl, Math.round(state.speed * 3.6));
+  setText(lapEl, state.lap);
+  setText(lapTimeEl, formatTime(state.lapElapsed));
+  setText(bestTimeEl, formatTime(state.bestTime));
 
   const driveDisplay = state.throttle >= state.brake ? state.throttle : -state.brake;
   const drivePercent = Math.round(driveDisplay * 100);
-  tiltNeedle.style.left = `${50 + driveDisplay * 46}%`;
-  if (drivePercent > 2) tiltValue.textContent = `gas ${drivePercent}%`;
-  else if (drivePercent < -2) tiltValue.textContent = `brake ${Math.abs(drivePercent)}%`;
-  else tiltValue.textContent = 'neutral';
+  const needleLeft = `${50 + driveDisplay * 46}%`;
+  if (tiltNeedle.style.left !== needleLeft) tiltNeedle.style.left = needleLeft;
+  if (drivePercent > 2) setText(tiltValue, `gas ${drivePercent}%`);
+  else if (drivePercent < -2) setText(tiltValue, `brake ${Math.abs(drivePercent)}%`);
+  else setText(tiltValue, 'neutral');
 
   drawMap({
     state,
@@ -209,4 +210,9 @@ function formatTime(seconds) {
   const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
   const ms = Math.floor((seconds % 1) * 1000).toString().padStart(3, '0');
   return `${minutes}:${secs}.${ms}`;
+}
+
+function setText(element, value) {
+  const text = String(value);
+  if (element.textContent !== text) element.textContent = text;
 }
