@@ -166,8 +166,12 @@ function addOutlines(model) {
         color: 0x08090a,
         side: THREE.BackSide,
         transparent: false,
-        opacity: 0.82,
-        depthWrite: true
+        opacity: 1,
+        depthTest: true,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: 1,
+        polygonOffsetUnits: 1
       })
     );
     outline.scale.setScalar(1.035);
