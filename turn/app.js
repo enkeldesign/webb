@@ -16,4 +16,6 @@ await Promise.all([
   import(withBuild('./ui/back-to-lot.js'))
 ]);
 
+await import(withBuild('./ui/in-game-menu.js'));
+
 console.info(`TURN: ${globalThis.__TURN_BUILD__?.id || 'development'} loaded from the static module graph.`);

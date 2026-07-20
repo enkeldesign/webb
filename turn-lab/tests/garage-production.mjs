@@ -75,8 +75,8 @@ const [index, main, lapSystem, rivalStorage, controls, carModels] = await Promis
   fs.readFile(path.join(turnDir, 'vehicle/car-models.js'), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.2\.1 · Build 2026\.07\.20-r14/);
-assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260720-r14/);
+assert.match(index, /TURN v1\.3\.0 · Build 2026\.07\.20-r15/);
+assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260720-r15/);
 assert.match(main, /await showTheLot\(/, 'Start flow must enter The Lot before racing');
 assert.match(main, /maxSpeed: MAX_SPEED \* state\.vehicleTuning\.topSpeedMultiplier/, 'Selected top speed must reach physics');
 assert.match(main, /vehicleTuning: state\.vehicleTuning/, 'Selected handling profile must reach physics');
@@ -102,7 +102,7 @@ assert.match(lotR10Css, /--lot-rail-width/, 'The stats and viewer rail must rese
 const backToLot = await fs.readFile(path.join(turnDir, 'ui/back-to-lot.js'), 'utf8');
 assert.match(main, /openLot: openLotFromRace/, 'Race runtime must expose the Back to the Lot action');
 assert.match(main, /await showTheLot\(/, 'Back to the Lot must reuse the real Lot selector');
-assert.match(backToLot, /Back to the Lot/, 'Race UI must include the Back to the Lot button');
-assert.match(backToLot, /insertAdjacentElement\('afterend'/, 'Back to the Lot button must sit next to Reset Car');
+assert.match(backToLot, /Back to Lot/, 'Race UI must include the Back to Lot button');
+assert.match(backToLot, /back-to-lot-button/, 'Back to Lot must expose its menu hook');
 
 console.log('TURN garage production regression passed.');
