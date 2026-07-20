@@ -85,7 +85,7 @@ const [index, main, controls, menu, spectate, hud, physics, camera, cars, lot, m
   fs.readFile(new URL('../../turn/performance-monitor.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.7 · Build 2026\.07\.20-r23/);
+assert.match(index, /TURN v1\.3\.8 · Build 2026\.07\.20-r24/);
 assert.match(main, /mainSceneOcclusion/);
 assert.match(main, /HUD_UPDATE_INTERVAL_MS = 1000 \/ 30/);
 assert.match(main, /recordPerformanceFrame/);
@@ -104,6 +104,8 @@ assert.doesNotMatch(camera, /state\.position\.clone\(\)/);
 assert.match(cars, /record\.node\.castShadow = !ghost/);
 assert.doesNotMatch(lot, /root\.scale\.lerp\(new THREE\.Vector3/);
 assert.match(lot, /recordPerformanceFrame/);
+assert.match(lot, /new THREE\.InstancedMesh\(geometry, material, bricks\.length\)/, 'The brick wall must stay batched into one instanced draw call');
+assert.doesNotMatch(lot, /Promise\.all\(placements\.map/, 'The retired per-prop scenery loader must stay removed');
 assert.match(monitor, /turn:perf-snapshot/);
 assert.match(monitor, /trackChecksPerQuery/);
 

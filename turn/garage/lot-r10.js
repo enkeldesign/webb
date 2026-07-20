@@ -163,7 +163,7 @@ export function showTheLot({ initialSelection } = {}) {
     }
 
     installBrickScenery(lot).catch((error) => {
-      console.warn('TURN: The Lot Brick Kit scenery could not load.', error);
+      console.warn('TURN: The Lot brick wall could not load.', error);
     });
 
     function updateSelectionUi({ refreshViewer = true } = {}) {
@@ -560,45 +560,107 @@ function makeStats(vehicleStats) {
 }
 
 async function installBrickScenery(lot) {
-  const palette = [0xffd43b, 0xff4fa3, 0x38d9ff, 0x8ce99a, 0x9775fa];
-  const placements = [
-    [-23, 0, -13, 0], [-20, 0, -14, 0.25], [20, 0, -14, -0.2], [23, 0, -12, 0],
-    [-23, 0, 13, 0.3], [-19, 0, 14, 0], [19, 0, 14, 0], [23, 0, 12, -0.3], [0, 0, -15, 0]
-  ];
+  // Build a literal brick wall from the vendored Kenney 1x2 brick. Using one
+  // InstancedMesh keeps the entire wall to a single draw call on older devices.
+  const gltf = await lotLoader.loadAsync(brickUrl(1));
+  const sourceMesh = findFirstMesh(gltf.scene);
+  if (!sourceMesh?.geometry) throw new Error('Brick Kit 1x2 mesh is missing.');
 
-  await Promise.all(placements.map(async (placement, index) => {
-    const gltf = await lotLoader.loadAsync(brickUrl(index + 1));
-    const model = gltf.scene.clone(true);
-    const color = new THREE.Color(palette[index % palette.length]);
-    model.traverse((node) => {
-      if (!node.isMesh || !node.material) return;
-      const materials = Array.isArray(node.material) ? node.material : [node.material];
-      const clones = materials.map((material) => {
-        const clone = material.clone();
-        clone.color?.lerp(color, 0.72);
-        return clone;
-      });
-      node.material = Array.isArray(node.material) ? clones : clones[0];
-    });
-    normalizeProp(model, 3.2 + (index % 3) * 0.65);
-    model.position.set(placement[0], placement[1], placement[2]);
-    model.rotation.y = placement[3];
-    lot.add(model);
-  }));
+  const geometry = sourceMesh.geometry.clone();
+  geometry.computeBoundingBox();
+  const sourceSize = geometry.boundingBox.getSize(new THREE.Vector3());
+  const brickSize = new THREE.Vector3(1.34, 0.5, 0.56);
+  const brickScale = new THREE.Vector3(
+    brickSize.x / Math.max(0.001, sourceSize.x),
+    brickSize.y / Math.max(0.001, sourceSize.y),
+    brickSize.z / Math.max(0.001, sourceSize.z)
+  );
+
+  const bricks = [];
+  addBrickWallRun(bricks, {
+    axis: 'x',
+    from: -21.7,
+    to: 21.7,
+    fixed: -15.25,
+    rows: 5,
+    brickSize
+  });
+  addBrickWallRun(bricks, {
+    axis: 'z',
+    from: -14.55,
+    to: -9.25,
+    fixed: -22.35,
+    rows: 5,
+    brickSize
+  });
+  addBrickWallRun(bricks, {
+    axis: 'z',
+    from: -14.55,
+    to: -9.25,
+    fixed: 22.35,
+    rows: 5,
+    brickSize
+  });
+
+  const material = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    roughness: 0.96,
+    metalness: 0
+  });
+  const wall = new THREE.InstancedMesh(geometry, material, bricks.length);
+  wall.name = 'turn-literal-brick-wall';
+  wall.castShadow = false;
+  wall.receiveShadow = false;
+  wall.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+
+  const brickColors = [0x82483c, 0x925246, 0x754038, 0xa05b4c];
+  const matrix = new THREE.Matrix4();
+  const quaternion = new THREE.Quaternion();
+  const euler = new THREE.Euler();
+
+  bricks.forEach((brick, index) => {
+    euler.set(0, brick.rotationY, 0);
+    quaternion.setFromEuler(euler);
+    matrix.compose(brick.position, quaternion, brickScale);
+    wall.setMatrixAt(index, matrix);
+    wall.setColorAt(index, new THREE.Color(brickColors[brick.colorIndex % brickColors.length]));
+  });
+
+  wall.instanceMatrix.needsUpdate = true;
+  if (wall.instanceColor) wall.instanceColor.needsUpdate = true;
+  lot.add(wall);
 }
 
-function normalizeProp(model, targetSize) {
-  model.updateMatrixWorld(true);
-  const bounds = new THREE.Box3().setFromObject(model);
-  const size = bounds.getSize(new THREE.Vector3());
-  const maxSize = Math.max(0.001, size.x, size.y, size.z);
-  model.scale.setScalar(targetSize / maxSize);
-  model.updateMatrixWorld(true);
-  const nextBounds = new THREE.Box3().setFromObject(model);
-  const center = nextBounds.getCenter(new THREE.Vector3());
-  model.position.x -= center.x;
-  model.position.z -= center.z;
-  model.position.y -= nextBounds.min.y;
+function addBrickWallRun(target, { axis, from, to, fixed, rows, brickSize }) {
+  const brickStep = brickSize.x + 0.08;
+  const rowStep = brickSize.y + 0.06;
+  const runLength = to - from;
+  const columns = Math.floor(runLength / brickStep);
+  const rotationY = axis === 'z' ? Math.PI / 2 : 0;
+
+  for (let row = 0; row < rows; row += 1) {
+    const offset = row % 2 ? brickStep * 0.5 : 0;
+    for (let column = 0; column <= columns; column += 1) {
+      const along = from + column * brickStep + offset;
+      if (along > to) continue;
+      const position = axis === 'x'
+        ? new THREE.Vector3(along, 0.04 + row * rowStep, fixed)
+        : new THREE.Vector3(fixed, 0.04 + row * rowStep, along);
+      target.push({
+        position,
+        rotationY,
+        colorIndex: row * 3 + column
+      });
+    }
+  }
+}
+
+function findFirstMesh(root) {
+  let result = null;
+  root.traverse((node) => {
+    if (!result && node.isMesh) result = node;
+  });
+  return result;
 }
 
 function brickUrl(index) {
