@@ -1,0 +1,41 @@
+.utility-group[data-menu-state="staged"] {
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: center;
+  align-items: stretch;
+}
+
+.utility-group[data-menu-state="staged"] .utility,
+.utility-group[data-menu-state="racing"] .back-to-start-button {
+  min-height: 50px;
+  padding: 8px clamp(10px, 1.55vw, 18px);
+  border-radius: 14px;
+  white-space: nowrap;
+}
+
+.back-to-lot-button {
+  background: #ff7b54;
+}
+
+.back-to-start-button,
+.recalibrate-button,
+.reset-rivals-button {
+  background: var(--paper);
+}
+
+.utility-group[data-menu-state="hidden"] {
+  display: none;
+}
+
+@media (max-height: 430px) {
+  .utility-group[data-menu-state="staged"] {
+    gap: 7px;
+  }
+
+  .utility-group[data-menu-state="staged"] .utility,
+  .utility-group[data-menu-state="racing"] .back-to-start-button {
+    min-height: 40px;
+    padding: 6px clamp(8px, 1.2vw, 13px);
+    font-size: clamp(0.52rem, 1.18vw, 0.64rem);
+  }
+}
