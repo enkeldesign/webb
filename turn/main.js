@@ -1006,7 +1006,7 @@ function loadGhost() {
 
 globalThis.__turnHasGhosts = () => state.competitorLaps.length > 0;
 
-globalThis.__turnNukeGhosts = () => {
+function resetRivals() {
   state.competitorLaps = [];
   state.bestTime = Infinity;
   state.ghostFrames = [];
@@ -1018,9 +1018,12 @@ globalThis.__turnNukeGhosts = () => {
   for (const car of competitorCars) car.visible = false;
   refreshCompetitorLabels();
   updateHud();
-  showMessage('GHOSTS NUKED', 1800);
-  window.dispatchEvent(new CustomEvent('turn:ghosts-nuked'));
-};
+  showMessage('RIVALS RESET', 1800);
+  window.dispatchEvent(new CustomEvent('turn:rivals-reset'));
+}
+
+globalThis.__turnResetRivals = resetRivals;
+globalThis.__turnNukeGhosts = resetRivals;
 
 function lapFrameAt(lap, time) {
   return replayFrameAt(lap, time);
