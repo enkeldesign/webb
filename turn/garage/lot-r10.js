@@ -14,7 +14,7 @@ import { recordPerformanceFrame } from '../performance-monitor.js?build=20260720
 
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
 const lotLoader = new GLTFLoader();
-const MUTED_COLOR = new THREE.Color(0x9da5ab);
+const UNSELECTED_COLOR = new THREE.Color(0xeeeeee);
 const VIEWER_INITIAL_YAW = Math.PI - 0.55;
 
 export function showTheLot({ initialSelection } = {}) {
@@ -479,12 +479,10 @@ function applyLotCarPresentation(root, selected, selectedColor, selectedSecondar
       material.depthWrite = record.depthWrite;
       if (!record.paint && record.color && material.color) material.color.copy(record.color);
     } else {
-      material.transparent = true;
-      material.opacity = 0.46;
-      material.depthWrite = false;
-      if (record.color && material.color) {
-        material.color.copy(record.color).lerp(MUTED_COLOR, 0.88);
-      }
+      material.transparent = false;
+      material.opacity = 1;
+      material.depthWrite = true;
+      if (material.color) material.color.copy(UNSELECTED_COLOR);
     }
     material.needsUpdate = true;
   }

@@ -85,7 +85,7 @@ const [index, main, controls, menu, spectate, hud, physics, camera, cars, lot, m
   fs.readFile(new URL('../../turn/performance-monitor.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.4 · Build 2026\.07\.20-r20/);
+assert.match(index, /TURN v1\.3\.5 · Build 2026\.07\.20-r21/);
 assert.match(main, /mainSceneOcclusion/);
 assert.match(main, /HUD_UPDATE_INTERVAL_MS = 1000 \/ 30/);
 assert.match(main, /recordPerformanceFrame/);
