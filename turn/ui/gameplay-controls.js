@@ -1,11 +1,5 @@
-import { createBoostReservoir, updateBoostReservoir } from '../race/boost-reservoir.js';
-
 globalThis.__turnBoostActive = false;
 globalThis.__turnBoostCharge = 1;
-globalThis.__turnNitrousCharge = 0;
-globalThis.__turnNitrousActive = false;
-globalThis.__turnBoostPowerMultiplier = 1;
-globalThis.__turnBoostSpeedMultiplier = 1;
 globalThis.__turnDriftHeld = false;
 
 if (!globalThis.__turnGameplayControlsInstalled) {
@@ -82,9 +76,8 @@ function installGameplayUi() {
 
   const boostHud = document.createElement('div');
   boostHud.className = 'boost-hud';
-  boostHud.innerHTML = '<span>BOOST</span><div><i class="boost-normal"></i><i class="boost-nitrous"></i></div>';
+  boostHud.innerHTML = '<span>BOOST</span><div><i></i></div>';
   hud.appendChild(boostHud);
-  const boostLabel = boostHud.querySelector('span');
 
   const driveStack = document.createElement('div');
   driveStack.className = 'drive-stack';
@@ -94,8 +87,6 @@ function installGameplayUi() {
   drivePad.setAttribute('role', 'group');
   drivePad.setAttribute('aria-label', 'Drive control. Slide between Gas, Drift and Boost.');
   drivePad.style.setProperty('--boost-charge', '100%');
-  drivePad.style.setProperty('--boost-normal', '100%');
-  drivePad.style.setProperty('--boost-nitrous', '0%');
 
   const driveTop = document.createElement('div');
   driveTop.className = 'drive-pad-top';
@@ -129,7 +120,7 @@ function installGameplayUi() {
   let driveZone = null;
   let boostRequested = false;
   let boostExhausted = false;
-  let boostReservoir = createBoostReservoir(1, 0);
+  let boostCharge = 1;
   let previousTime = performance.now();
   const TOP_ZONE_SHARE = 0.42;
   const DEFAULT_BOOST_DRAIN_SECONDS = 2.0;
@@ -198,9 +189,6 @@ function installGameplayUi() {
     boostRequested = false;
     boostExhausted = false;
     globalThis.__turnBoostActive = false;
-    globalThis.__turnNitrousActive = false;
-    globalThis.__turnBoostPowerMultiplier = 1;
-    globalThis.__turnBoostSpeedMultiplier = 1;
     drivePad.classList.remove('is-boosting', 'is-boost-locked');
   }
 
@@ -291,58 +279,31 @@ function installGameplayUi() {
   function updateBoost(now) {
     const dt = Math.min(0.05, Math.max(0, (now - previousTime) / 1000));
     previousTime = now;
-    const inBoostAbilityZone = globalThis.__turnAbilityZoneType === 'boost';
-    const nextReservoir = updateBoostReservoir(boostReservoir, {
-      dt,
-      requested: boostRequested,
-      locked: boostExhausted,
-      inBoostZone: inBoostAbilityZone,
-      driftHeld: globalThis.__turnDriftHeld,
-      drainSeconds: getBoostDrainSeconds(),
-      rechargeSeconds: BOOST_RECHARGE_SECONDS,
-      driftRechargeMultiplier: DRIFT_RECHARGE_MULTIPLIER
-    });
-    boostReservoir = nextReservoir;
+    const active = boostRequested && !boostExhausted && boostCharge > 0.001;
 
-    if (nextReservoir.exhausted && !boostExhausted) {
-      boostExhausted = true;
-      safeVibrate([28, 36, 62]);
+    if (active) {
+      boostCharge = Math.max(0, boostCharge - dt / getBoostDrainSeconds());
+      if (boostCharge <= 0) {
+        boostExhausted = true;
+        safeVibrate([28, 36, 62]);
+      }
+    } else {
+      const rechargeMultiplier = globalThis.__turnDriftHeld ? DRIFT_RECHARGE_MULTIPLIER : 1;
+      boostCharge = Math.min(1, boostCharge + dt * rechargeMultiplier / BOOST_RECHARGE_SECONDS);
     }
 
-    const boosting = nextReservoir.boosting;
+    const boosting = boostRequested && !boostExhausted && boostCharge > 0.001;
     globalThis.__turnBoostActive = boosting;
-    globalThis.__turnBoostCharge = nextReservoir.charge;
-    globalThis.__turnNitrousCharge = nextReservoir.nitrousCharge;
-    globalThis.__turnNitrousActive = nextReservoir.nitrousActive;
-    globalThis.__turnBoostPowerMultiplier = nextReservoir.boostPowerMultiplier;
-    globalThis.__turnBoostSpeedMultiplier = nextReservoir.boostSpeedMultiplier;
+    globalThis.__turnBoostCharge = boostCharge;
     drivePad.classList.toggle('is-boosting', boosting);
-    drivePad.classList.toggle('is-nitrous', nextReservoir.nitrousActive);
-    drivePad.classList.toggle('has-nitrous', nextReservoir.nitrousCharge > 0.001);
-    drivePad.classList.toggle('is-boost-zone', inBoostAbilityZone);
     drivePad.classList.toggle('is-boost-locked', boostRequested && boostExhausted);
     boostZone.classList.toggle('is-locked', boostRequested && boostExhausted);
     boostHud.classList.toggle('is-boosting', boosting);
-    boostHud.classList.toggle('is-nitrous', nextReservoir.nitrousActive);
-    boostHud.classList.toggle('has-nitrous', nextReservoir.nitrousCharge > 0.001);
     boostHud.classList.toggle('is-drift-charging', globalThis.__turnDriftHeld && !boosting);
-    const chargePercent = (nextReservoir.charge * 100).toFixed(1) + '%';
-    const normalPercent = (nextReservoir.normalCharge * 100).toFixed(1) + '%';
-    const nitrousPercent = (nextReservoir.nitrousCharge * 100).toFixed(1) + '%';
+    const chargePercent = (boostCharge * 100).toFixed(1) + '%';
     drivePad.style.setProperty('--boost-charge', chargePercent);
-    drivePad.style.setProperty('--boost-normal', normalPercent);
-    drivePad.style.setProperty('--boost-nitrous', nitrousPercent);
     boostHud.style.setProperty('--boost-charge', chargePercent);
-    boostHud.style.setProperty('--boost-normal', normalPercent);
-    boostHud.style.setProperty('--boost-nitrous', nitrousPercent);
-    boostLabel.textContent = nextReservoir.nitrousActive
-      ? 'NITROUS'
-      : (nextReservoir.nitrousCharge > 0.001 ? 'BOOST · N₂O' : 'BOOST');
-    boostHud.setAttribute(
-      'aria-label',
-      'Boost ' + Math.round(nextReservoir.charge * 100) + ' percent charged, ' +
-        Math.round(nextReservoir.nitrousCharge * 100) + ' percent nitrous'
-    );
+    boostHud.setAttribute('aria-label', 'Boost ' + Math.round(boostCharge * 100) + ' percent charged');
     requestAnimationFrame(updateBoost);
   }
 

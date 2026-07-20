@@ -11,8 +11,6 @@
 
 .drive-pad {
   --boost-charge: 100%;
-  --boost-normal: 100%;
-  --boost-nitrous: 0%;
   position: relative;
   height: clamp(150px, 20vw, 210px);
   overflow: hidden;
@@ -70,8 +68,7 @@
   background:
     linear-gradient(
       to top,
-      #ff922b 0 var(--boost-normal),
-      #ef3340 var(--boost-normal) var(--boost-charge),
+      #ff6b6b 0 var(--boost-charge),
       #ffb2aa var(--boost-charge) 100%
     );
 }
@@ -117,8 +114,7 @@
   background:
     linear-gradient(
       to top,
-      #ff7a1a 0 var(--boost-normal),
-      #f20d4b var(--boost-normal) var(--boost-charge),
+      #ff3f4a 0 var(--boost-charge),
       #ff9a8e var(--boost-charge) 100%
     );
 }
@@ -127,31 +123,6 @@
   box-shadow:
     7px 8px 0 var(--ink),
     0 0 0 5px rgb(255 90 95 / 0.28);
-}
-
-.drive-pad.is-boost-zone .drive-boost-zone {
-  box-shadow: inset 0 0 0 6px rgb(255 248 232 / 0.58);
-}
-
-.drive-pad.is-nitrous {
-  box-shadow:
-    7px 8px 0 var(--ink),
-    0 0 0 6px rgb(239 51 64 / 0.42),
-    0 0 24px rgb(255 248 232 / 0.52);
-}
-
-.drive-pad.has-nitrous .drive-boost-zone:not(.is-locked)::after {
-  content: "N₂O";
-  position: absolute;
-  right: 7px;
-  bottom: 6px;
-  padding: 2px 5px;
-  border: 2px solid var(--ink);
-  border-radius: 999px;
-  background: #ef3340;
-  color: #fff8e8;
-  font-size: 0.44rem;
-  letter-spacing: 0.06em;
 }
 
 .drive-boost-zone.is-locked::after {
