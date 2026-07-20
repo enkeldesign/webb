@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import {
   CAR_CATALOG,
   DEFAULT_VEHICLE_COLOR,
@@ -12,8 +11,6 @@ import {
 import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js?build=20260720-r22';
 import { recordPerformanceFrame } from '../performance-monitor.js?build=20260720-r20';
 
-const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
-const lotLoader = new GLTFLoader();
 const UNSELECTED_COLOR = new THREE.Color(0x313131);
 const VIEWER_INITIAL_YAW = Math.PI - 0.55;
 
@@ -161,10 +158,6 @@ export function showTheLot({ initialSelection } = {}) {
         if (loadedCars >= CAR_CATALOG.length) loading.classList.add('is-done');
       });
     }
-
-    installBrickScenery(lot).catch((error) => {
-      console.warn('TURN: The Lot brick wall could not load.', error);
-    });
 
     function updateSelectionUi({ refreshViewer = true } = {}) {
       const car = getCarDefinition(selectedCarId);
@@ -557,114 +550,4 @@ function makeStats(vehicleStats) {
     row.innerHTML = `<span>${label}</span><i>${Array.from({ length: 5 }, (_, index) => `<b class="${index < value ? 'is-full' : ''}"></b>`).join('')}</i>`;
     return row;
   });
-}
-
-async function installBrickScenery(lot) {
-  // Build a literal brick wall from the vendored Kenney 1x2 brick. Using one
-  // InstancedMesh keeps the entire wall to a single draw call on older devices.
-  const gltf = await lotLoader.loadAsync(brickUrl(1));
-  const sourceMesh = findFirstMesh(gltf.scene);
-  if (!sourceMesh?.geometry) throw new Error('Brick Kit 1x2 mesh is missing.');
-
-  const geometry = sourceMesh.geometry.clone();
-  geometry.computeBoundingBox();
-  const sourceSize = geometry.boundingBox.getSize(new THREE.Vector3());
-  const brickSize = new THREE.Vector3(1.34, 0.5, 0.56);
-  const brickScale = new THREE.Vector3(
-    brickSize.x / Math.max(0.001, sourceSize.x),
-    brickSize.y / Math.max(0.001, sourceSize.y),
-    brickSize.z / Math.max(0.001, sourceSize.z)
-  );
-
-  const bricks = [];
-  addBrickWallRun(bricks, {
-    axis: 'x',
-    from: -21.7,
-    to: 21.7,
-    fixed: -15.25,
-    rows: 5,
-    brickSize
-  });
-  addBrickWallRun(bricks, {
-    axis: 'z',
-    from: -14.55,
-    to: -9.25,
-    fixed: -22.35,
-    rows: 5,
-    brickSize
-  });
-  addBrickWallRun(bricks, {
-    axis: 'z',
-    from: -14.55,
-    to: -9.25,
-    fixed: 22.35,
-    rows: 5,
-    brickSize
-  });
-
-  const material = new THREE.MeshStandardMaterial({
-    color: 0xffffff,
-    roughness: 0.96,
-    metalness: 0
-  });
-  const wall = new THREE.InstancedMesh(geometry, material, bricks.length);
-  wall.name = 'turn-literal-brick-wall';
-  wall.castShadow = false;
-  wall.receiveShadow = false;
-  wall.instanceMatrix.setUsage(THREE.StaticDrawUsage);
-
-  const brickColors = [0x82483c, 0x925246, 0x754038, 0xa05b4c];
-  const matrix = new THREE.Matrix4();
-  const quaternion = new THREE.Quaternion();
-  const euler = new THREE.Euler();
-
-  bricks.forEach((brick, index) => {
-    euler.set(0, brick.rotationY, 0);
-    quaternion.setFromEuler(euler);
-    matrix.compose(brick.position, quaternion, brickScale);
-    wall.setMatrixAt(index, matrix);
-    wall.setColorAt(index, new THREE.Color(brickColors[brick.colorIndex % brickColors.length]));
-  });
-
-  wall.instanceMatrix.needsUpdate = true;
-  if (wall.instanceColor) wall.instanceColor.needsUpdate = true;
-  lot.add(wall);
-}
-
-function addBrickWallRun(target, { axis, from, to, fixed, rows, brickSize }) {
-  const brickStep = brickSize.x + 0.08;
-  const rowStep = brickSize.y + 0.06;
-  const runLength = to - from;
-  const columns = Math.floor(runLength / brickStep);
-  const rotationY = axis === 'z' ? Math.PI / 2 : 0;
-
-  for (let row = 0; row < rows; row += 1) {
-    const offset = row % 2 ? brickStep * 0.5 : 0;
-    for (let column = 0; column <= columns; column += 1) {
-      const along = from + column * brickStep + offset;
-      if (along > to) continue;
-      const position = axis === 'x'
-        ? new THREE.Vector3(along, 0.04 + row * rowStep, fixed)
-        : new THREE.Vector3(fixed, 0.04 + row * rowStep, along);
-      target.push({
-        position,
-        rotationY,
-        colorIndex: row * 3 + column
-      });
-    }
-  }
-}
-
-function findFirstMesh(root) {
-  let result = null;
-  root.traverse((node) => {
-    if (!result && node.isMesh) result = node;
-  });
-  return result;
-}
-
-function brickUrl(index) {
-  const url = new URL(`../assets/lot-bricks/brick-prop-${String(index).padStart(2, '0')}.glb`, import.meta.url);
-  if (buildKey) url.searchParams.set('build', buildKey);
-  return url.href;
 }
