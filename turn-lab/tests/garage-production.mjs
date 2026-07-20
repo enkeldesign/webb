@@ -75,8 +75,8 @@ const [index, main, lapSystem, rivalStorage, controls, carModels] = await Promis
   fs.readFile(path.join(turnDir, 'vehicle/car-models.js'), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.2\.0 · Build 2026\.07\.19-r13/);
-assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260719-r13/);
+assert.match(index, /TURN v1\.2\.1 · Build 2026\.07\.20-r14/);
+assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260720-r14/);
 assert.match(main, /await showTheLot\(/, 'Start flow must enter The Lot before racing');
 assert.match(main, /maxSpeed: MAX_SPEED \* state\.vehicleTuning\.topSpeedMultiplier/, 'Selected top speed must reach physics');
 assert.match(main, /vehicleTuning: state\.vehicleTuning/, 'Selected handling profile must reach physics');
