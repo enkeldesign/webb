@@ -14,7 +14,7 @@ import { recordPerformanceFrame } from '../performance-monitor.js?build=20260720
 
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
 const lotLoader = new GLTFLoader();
-const UNSELECTED_COLOR = new THREE.Color(0xfcf6e7);
+const UNSELECTED_COLOR = new THREE.Color(0x313131);
 const VIEWER_INITIAL_YAW = Math.PI - 0.55;
 
 export function showTheLot({ initialSelection } = {}) {
