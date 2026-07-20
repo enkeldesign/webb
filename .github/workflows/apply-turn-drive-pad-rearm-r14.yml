@@ -1,0 +1,46 @@
+name: Apply TURN r14 drive pad rearm
+
+on:
+  push:
+    branches:
+      - turn-drive-pad-r13
+    paths:
+      - '.github/scripts/apply-turn-drive-pad-rearm-r14.mjs'
+      - '.github/workflows/apply-turn-drive-pad-rearm-r14.yml'
+      - '.github/turn-drive-pad-rearm-r14-trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out patch branch
+        uses: actions/checkout@v4
+        with:
+          ref: turn-drive-pad-r13
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Apply guarded r14 patch
+        run: node .github/scripts/apply-turn-drive-pad-rearm-r14.mjs
+
+      - name: Syntax-check TURN modules
+        run: find turn turn-lab -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
+
+      - name: Commit patched runtime
+        run: |
+          if [ -z "$(git status --porcelain -- turn turn-lab/tests)" ]; then
+            echo 'TURN r14 patch already applied.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add turn turn-lab/tests
+          git commit -m 'Apply TURN r14 drive pad rearm patch [skip ci]'
+          git push origin HEAD:turn-drive-pad-r13
