@@ -526,28 +526,11 @@ function makeLotGround(lot) {
   lot.add(centerLine);
 }
 
-function makeParkingPad(selected) {
-  const group = new THREE.Group();
-  const mesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(6.7, 5.9),
-    new THREE.MeshBasicMaterial({
-      color: selected ? 0x38d9ff : 0x61676d,
-      transparent: true,
-      opacity: selected ? 0.5 : 0.22
-    })
-  );
-  mesh.rotation.x = -Math.PI / 2;
-  group.add(mesh);
-  group.userData.turnPadMesh = mesh;
-  return group;
+function makeParkingPad() {
+  return new THREE.Group();
 }
 
-function setParkingPadSelected(platform, selected) {
-  const mesh = platform.userData.turnPadMesh;
-  if (!mesh) return;
-  mesh.material.color.set(selected ? 0x38d9ff : 0x61676d);
-  mesh.material.opacity = selected ? 0.5 : 0.22;
-}
+function setParkingPadSelected() {}
 
 function findCarId(object) {
   let node = object;
