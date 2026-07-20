@@ -3,9 +3,11 @@
 import * as THREE from 'three';
 import { installKenneyWorld } from './world-assets.js';
 import { updateRaceCameraState } from './render/camera.js';
+import { installAbilityZoneVisuals } from './render/ability-zones.js';
 import { updateHudState } from './ui/hud.js';
 import { motionPoseFromGravity as motionPoseFromGravityState, updateMotionInputState } from './input/motion.js';
-import { updateVehiclePhysicsState } from './vehicle/physics.js';
+import { updateVehiclePhysicsState } from './vehicle/physics.js?build=20260720-r16';
+import { ABILITY_ZONE_TYPE, findAbilityZoneAt } from './race/ability-zones.js';
 import { GAME_MODE, installGameModeState, prepareRaceStartState, resetRaceToStage, setGameModeState } from './race/game-state.js';
 import { beginTimedLapState, completeLapState, updateLapProgressState } from './race/lap-system.js';
 import { recordReplayFrame, replayFrameAt } from './race/replay-system.js';
@@ -90,10 +92,16 @@ const state = {
   vehicleColor: initialVehicleSelection.color,
   vehicleTuning: initialVehicleDefinition.tuning,
   lastFrame: performance.now(),
-  messageTimer: 0
+  messageTimer: 0,
+  abilityZoneId: null,
+  abilityZoneType: null,
+  abilityZoneActive: false
 };
 
 globalThis.__turnVehicleTuning = state.vehicleTuning;
+globalThis.__turnAbilityZoneId = null;
+globalThis.__turnAbilityZoneType = null;
+globalThis.__turnAbilityZoneActive = false;
 
 installGameModeState(state);
 
@@ -411,6 +419,11 @@ function makeCar(color = 0xffd43b, opacity = 1) {
 }
 
 makeRoad();
+const abilityZoneVisuals = installAbilityZoneVisuals({
+  world,
+  samples,
+  trackWidth: TRACK_WIDTH
+});
 makeScenery();
 
 const playerCar = makeCar(0xffd43b, 1);
@@ -602,13 +615,20 @@ function updateDriveEffects(dt) {
     for (const side of [-1, 1]) {
       const position = rear.clone().addScaledVector(right, side * 0.78);
       const velocity = forward.clone().multiplyScalar(-8 - state.speed * 0.08).add(new THREE.Vector3(0, 1.2, 0));
+      const nitrous = Boolean(globalThis.__turnNitrousActive);
+      const particle = flamePool[flameCursor % flamePool.length];
+      particle.material.color.setHex(
+        nitrous
+          ? (flameCursor % 2 ? 0xfff8e8 : 0xef3340)
+          : (flameCursor % 2 ? 0xff922b : 0xffd43b)
+      );
       flameCursor = launchParticle(
         flamePool,
         flameCursor,
         position,
         velocity,
-        0.22,
-        new THREE.Vector3(0.5, 0.48, 1.8),
+        nitrous ? 0.3 : 0.22,
+        nitrous ? new THREE.Vector3(0.62, 0.58, 2.45) : new THREE.Vector3(0.5, 0.48, 1.8),
         0.95
       );
     }
@@ -620,6 +640,11 @@ function updateDriveEffects(dt) {
     for (const side of [-1, 1]) {
       const position = rear.clone().addScaledVector(right, side * 1.28).setY(0.45);
       const velocity = right.clone().multiplyScalar(-side * state.steering * 2.8).add(new THREE.Vector3(0, 2.1, 0));
+      smokePool[smokeCursor % smokePool.length].material.color.setHex(
+        state.abilityZoneActive && state.abilityZoneType === ABILITY_ZONE_TYPE.DRIFT
+          ? 0x8dd7ff
+          : 0xb9c0c7
+      );
       smokeCursor = launchParticle(
         smokePool,
         smokeCursor,
@@ -782,6 +807,15 @@ async function openLotFromRace() {
   globalThis.__turnAnalogGas = 0;
   globalThis.__turnBoostActive = false;
   globalThis.__turnDriftHeld = false;
+  globalThis.__turnAbilityZoneId = null;
+  globalThis.__turnAbilityZoneType = null;
+  globalThis.__turnAbilityZoneActive = false;
+  state.abilityZoneId = null;
+  state.abilityZoneType = null;
+  state.abilityZoneActive = false;
+  document.body.dataset.abilityZone = '';
+  document.body.classList.remove('ability-zone-active');
+  abilityZoneVisuals.update(null);
 
   hud.hidden = true;
   controls.hidden = true;
@@ -948,7 +982,49 @@ function beginTimedLap(now) {
   beginTimedLapState({ state, samples, now, showMessage });
 }
 
+let publishedAbilityZoneType = null;
+let publishedAbilityZoneActive = false;
+
+function resolveCurrentAbilityZone(nearestTrack) {
+  const abilityZone = findAbilityZoneAt({
+    position: state.position,
+    nearestTrackIndex: nearestTrack.index,
+    samples,
+    trackWidth: TRACK_WIDTH
+  });
+  const driftHeld = Boolean(globalThis.__turnDriftHeld);
+  const boostActive = Boolean(globalThis.__turnBoostActive);
+
+  state.abilityZoneId = abilityZone?.id || null;
+  state.abilityZoneType = abilityZone?.type || null;
+  state.abilityZoneActive = Boolean(
+    abilityZone && (
+      (abilityZone.type === ABILITY_ZONE_TYPE.DRIFT && driftHeld) ||
+      (abilityZone.type === ABILITY_ZONE_TYPE.BOOST && boostActive)
+    )
+  );
+
+  globalThis.__turnAbilityZoneId = state.abilityZoneId;
+  globalThis.__turnAbilityZoneType = state.abilityZoneType;
+  globalThis.__turnAbilityZoneActive = state.abilityZoneActive;
+  if (
+    state.abilityZoneType !== publishedAbilityZoneType ||
+    state.abilityZoneActive !== publishedAbilityZoneActive
+  ) {
+    document.body.dataset.abilityZone = state.abilityZoneType || '';
+    document.body.classList.toggle('ability-zone-active', state.abilityZoneActive);
+    publishedAbilityZoneType = state.abilityZoneType;
+    publishedAbilityZoneActive = state.abilityZoneActive;
+  }
+  return abilityZone;
+}
+
 function updatePhysics(dt, now) {
+  const nearestTrackBefore = findNearestTrack(state.position);
+  const abilityZone = resolveCurrentAbilityZone(nearestTrackBefore);
+  const driftAssist = abilityZone?.type === ABILITY_ZONE_TYPE.DRIFT && globalThis.__turnDriftHeld
+    ? abilityZone
+    : null;
   const nearestAfter = updateVehiclePhysicsState({
     state,
     dt,
@@ -961,7 +1037,11 @@ function updatePhysics(dt, now) {
     maxSpeed: MAX_SPEED * state.vehicleTuning.topSpeedMultiplier,
     analogGas: globalThis.__turnAnalogGas || 0,
     boostActive: Boolean(globalThis.__turnBoostActive),
+    boostPowerMultiplier: globalThis.__turnBoostPowerMultiplier || 1,
+    boostSpeedMultiplier: globalThis.__turnBoostSpeedMultiplier || 1,
     driftHeld: Boolean(globalThis.__turnDriftHeld),
+    driftAssist,
+    nearestTrackBefore,
     vehicleTuning: state.vehicleTuning
   });
 
@@ -1082,6 +1162,7 @@ function updateScene(dt) {
   placePlayerCar(dt);
   placeCompetitorCars(dt);
   updateDriveEffects(dt);
+  abilityZoneVisuals.update(state.abilityZoneActive ? state.abilityZoneId : null);
   updateRaceCameraState({
     state,
     camera,
