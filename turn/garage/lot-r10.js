@@ -560,31 +560,68 @@ function makeStats(vehicleStats) {
 }
 
 async function installBrickScenery(lot) {
-  const palette = [0xffd43b, 0xff4fa3, 0x38d9ff, 0x8ce99a, 0x9775fa];
-  const placements = [
-    [-23, 0, -13, 0], [-20, 0, -14, 0.25], [20, 0, -14, -0.2], [23, 0, -12, 0],
-    [-23, 0, 13, 0.3], [-19, 0, 14, 0], [19, 0, 14, 0], [23, 0, 12, -0.3], [0, 0, -15, 0]
-  ];
+  // The prototype scattered nine oversized Brick Kit pieces around the whole perimeter.
+  // Keep the same lightweight vendored kit, but assemble three basic pieces into one
+  // deliberate pit-wall backdrop behind the cars so the scenery reads as architecture.
+  const [wallAsset, capAsset, slopeAsset] = await Promise.all([
+    lotLoader.loadAsync(brickUrl(4)),
+    lotLoader.loadAsync(brickUrl(2)),
+    lotLoader.loadAsync(brickUrl(8))
+  ]);
 
-  await Promise.all(placements.map(async (placement, index) => {
-    const gltf = await lotLoader.loadAsync(brickUrl(index + 1));
-    const model = gltf.scene.clone(true);
-    const color = new THREE.Color(palette[index % palette.length]);
-    model.traverse((node) => {
-      if (!node.isMesh || !node.material) return;
-      const materials = Array.isArray(node.material) ? node.material : [node.material];
-      const clones = materials.map((material) => {
-        const clone = material.clone();
-        clone.color?.lerp(color, 0.72);
-        return clone;
-      });
-      node.material = Array.isArray(node.material) ? clones : clones[0];
-    });
-    normalizeProp(model, 3.2 + (index % 3) * 0.65);
-    model.position.set(placement[0], placement[1], placement[2]);
-    model.rotation.y = placement[3];
-    lot.add(model);
+  const scenery = new THREE.Group();
+  scenery.name = 'turn-brick-pit-wall';
+  lot.add(scenery);
+
+  const wallXs = [-17.1, -10.25, -3.4, 3.4, 10.25, 17.1];
+  const charcoal = 0x25292e;
+  const cream = 0xfcf6e7;
+  const yellow = 0xffd43b;
+
+  for (const x of wallXs) {
+    scenery.add(makeBrickSceneryPiece(wallAsset.scene, {
+      color: charcoal,
+      targetSize: 6.7,
+      position: [x, 0.06, -14.45]
+    }));
+    scenery.add(makeBrickSceneryPiece(capAsset.scene, {
+      color: cream,
+      targetSize: 6.7,
+      position: [x, 1.4, -14.45]
+    }));
+  }
+
+  scenery.add(makeBrickSceneryPiece(slopeAsset.scene, {
+    color: yellow,
+    targetSize: 3.2,
+    position: [-21.65, 0.06, -14.45],
+    rotationY: Math.PI
   }));
+  scenery.add(makeBrickSceneryPiece(slopeAsset.scene, {
+    color: yellow,
+    targetSize: 3.2,
+    position: [21.65, 0.06, -14.45]
+  }));
+}
+
+function makeBrickSceneryPiece(source, { color, targetSize, position, rotationY = 0 }) {
+  const model = source.clone(true);
+  model.traverse((node) => {
+    if (!node.isMesh || !node.material) return;
+    const materials = Array.isArray(node.material) ? node.material : [node.material];
+    const clones = materials.map((material) => {
+      const clone = material.clone();
+      clone.color?.setHex(color);
+      return clone;
+    });
+    node.material = Array.isArray(node.material) ? clones : clones[0];
+    node.castShadow = false;
+    node.receiveShadow = false;
+  });
+  normalizeProp(model, targetSize);
+  model.position.set(...position);
+  model.rotation.y = rotationY;
+  return model;
 }
 
 function normalizeProp(model, targetSize) {
