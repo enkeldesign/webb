@@ -8,22 +8,40 @@ export function updateRaceCameraState({
   maxSpeed,
   dt
 }) {
-  const forward = getForward().clone();
-  const right = getRight().clone();
+  const forward = getForward();
+  const right = getRight();
   const speedRatio = clamp(state.speed / maxSpeed, 0, 1);
   const lateralVelocity = state.velocity.dot(right);
 
-  const desiredCamera = state.position
-    .clone()
-    .addScaledVector(forward, -(14 + speedRatio * 7))
-    .addScaledVector(right, -lateralVelocity * 0.11);
-  desiredCamera.y = 7.7 + speedRatio * 2.5;
-  cameraPosition.lerp(desiredCamera, 1 - Math.exp(-dt * 6.2));
+  const followDistance = 14 + speedRatio * 7;
+  const lateralOffset = lateralVelocity * 0.11;
+  const cameraResponse = 1 - Math.exp(-dt * 6.2);
+  cameraPosition.x = lerp(
+    cameraPosition.x,
+    state.position.x - forward.x * followDistance - right.x * lateralOffset,
+    cameraResponse
+  );
+  cameraPosition.y = lerp(cameraPosition.y, 7.7 + speedRatio * 2.5, cameraResponse);
+  cameraPosition.z = lerp(
+    cameraPosition.z,
+    state.position.z - forward.z * followDistance - right.z * lateralOffset,
+    cameraResponse
+  );
   camera.position.copy(cameraPosition);
 
-  const desiredTarget = state.position.clone().addScaledVector(forward, 15 + speedRatio * 12);
-  desiredTarget.y = 2.0;
-  cameraTarget.lerp(desiredTarget, 1 - Math.exp(-dt * 8.5));
+  const targetDistance = 15 + speedRatio * 12;
+  const targetResponse = 1 - Math.exp(-dt * 8.5);
+  cameraTarget.x = lerp(
+    cameraTarget.x,
+    state.position.x + forward.x * targetDistance,
+    targetResponse
+  );
+  cameraTarget.y = lerp(cameraTarget.y, 2, targetResponse);
+  cameraTarget.z = lerp(
+    cameraTarget.z,
+    state.position.z + forward.z * targetDistance,
+    targetResponse
+  );
   camera.up.set(0, 1, 0);
   camera.lookAt(cameraTarget);
 

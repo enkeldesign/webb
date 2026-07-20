@@ -7,7 +7,8 @@ import {
   getCarDefinition,
   normalizeVehicleSelection
 } from '../vehicle/catalog.js';
-import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js';
+import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js?build=20260720-r17';
+import { recordPerformanceFrame } from '../performance-monitor.js?build=20260720-r17';
 
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
 const lotLoader = new GLTFLoader();
@@ -272,13 +273,18 @@ export function showTheLot({ initialSelection } = {}) {
       for (const root of carRoots.values()) {
         const selected = Boolean(root.userData.turnLotSelected);
         const targetScale = selected ? 1.08 : 1;
-        root.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.12);
+        root.scale.setScalar(THREE.MathUtils.lerp(root.scale.x, targetScale, 0.12));
         root.position.y = selected ? 0.13 + Math.sin(elapsed * 3.1) * 0.07 : 0.08;
       }
       camera.position.x = Math.sin(elapsed * 0.12) * 1.5;
       camera.lookAt(0, 0, -1.5);
       renderer.render(scene, camera);
-      viewer.render(elapsed);
+      const viewerRendered = !viewbox.hidden && viewer.render(elapsed);
+      recordPerformanceFrame(
+        'lot',
+        viewerRendered ? [renderer, viewer.renderer] : renderer,
+        performance.now()
+      );
     });
   });
 }
@@ -340,6 +346,7 @@ function createViewer(host) {
   host.addEventListener('lostpointercapture', stopDrag);
 
   return {
+    renderer,
     async show(carId, color) {
       const request = ++generation;
       try {
@@ -370,12 +377,12 @@ function createViewer(host) {
       renderer.setSize(Math.round(rect.width), Math.round(rect.height), false);
     },
     render(elapsed) {
-      if (host.offsetParent === null) return;
       if (!dragging) yaw += 0.0024;
       stage.rotation.y = yaw;
       stage.rotation.x = pitch;
       if (visual) visual.position.y = Math.sin(elapsed * 2.1) * 0.04;
       renderer.render(scene, camera);
+      return true;
     },
     dispose() {
       generation += 1;
