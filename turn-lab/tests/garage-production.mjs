@@ -35,7 +35,7 @@ for (const id of expectedIds) {
 
 const brickFiles = (await fs.readdir(path.join(turnDir, 'assets/lot-bricks')))
   .filter((file) => file.endsWith('.glb'));
-assert.equal(brickFiles.length, 9, 'The vendored Kenney Brick Kit subset should remain available');
+assert.equal(brickFiles.length, 9, 'The vendored Kenney Brick Kit subset should remain available even though The Lot no longer renders it');
 
 const sedan = catalog.getCarDefinition('sedan');
 const race = catalog.getCarDefinition('race');
@@ -75,9 +75,9 @@ const [index, main, lapSystem, rivalStorage, controls, carModels] = await Promis
   fs.readFile(path.join(turnDir, 'vehicle/car-models.js'), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.8 · Build 2026\.07\.20-r24/);
-assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260720-r24/);
-assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-r10\.js\?build=20260720-r24"/, 'r24 must cache-bust the Lot module imported by the current static main graph');
+assert.match(index, /TURN v1\.3\.9 · Build 2026\.07\.20-r25/);
+assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260720-r25/);
+assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-r10\.js\?build=20260720-r25"/, 'r25 must cache-bust the Lot module imported by the current static main graph');
 assert.match(index, /"\.\/vehicle\/car-models\.js\?build=20260720-r19": "\.\/vehicle\/car-models\.js\?build=20260720-r22"/, 'The stable r22 outline module cache redirect must remain in place');
 assert.match(main, /await showTheLot\(/, 'Start flow must enter The Lot before racing');
 assert.match(main, /maxSpeed: MAX_SPEED \* state\.vehicleTuning\.topSpeedMultiplier/, 'Selected top speed must reach physics');
@@ -103,18 +103,14 @@ assert.match(lotR10, /if \(selected \|\| record\.outline\)/, 'Unselected Lot car
 assert.match(lotR10, /material\.transparent = false/, 'Unselected Lot car surfaces must remain opaque');
 assert.match(lotR10, /material\.opacity = 1/, 'Unselected Lot car surfaces must render at full opacity');
 assert.match(lotR10, /material\.depthWrite = true/, 'Unselected Lot car surfaces must write depth');
-assert.doesNotMatch(lotR10, /0xfcf6e7/, 'The retired warm cream unselected colour must stay removed');
-assert.doesNotMatch(lotR10, /0xeeeeee/, 'The retired cool gray unselected colour must stay removed');
 assert.doesNotMatch(lotR10, /material\.opacity = 0\.46/, 'The retired translucent unselected-car presentation must stay removed');
 assert.match(lotR10, /function makeParkingPad\(\) \{\s*return new THREE\.Group\(\);\s*\}/, 'The Lot parking pad must not render a coloured floor fill');
 assert.match(lotR10, /function setParkingPadSelected\(\) \{\}/, 'Selecting a car must not reintroduce the teal parking pad');
 assert.doesNotMatch(lotR10, /new THREE\.PlaneGeometry\(6\.7, 5\.9\)/, 'The retired parking pad fill geometry must stay removed');
-assert.match(lotR10, /lotLoader\.loadAsync\(brickUrl\(1\)\)/, 'The Lot brick wall must use the literal 1x2 brick asset');
-assert.match(lotR10, /new THREE\.InstancedMesh\(geometry, material, bricks\.length\)/, 'The brick wall must remain instanced for older-device performance');
-assert.match(lotR10, /turn-literal-brick-wall/, 'The Lot must include the deliberate brick-wall scenery group');
-assert.match(lotR10, /addBrickWallRun\(bricks/, 'The brick wall must use staggered repeated runs');
-assert.doesNotMatch(lotR10, /const palette = \[0xffd43b, 0xff4fa3, 0x38d9ff, 0x8ce99a, 0x9775fa\]/, 'The retired scattered prototype prop palette must stay removed');
-assert.doesNotMatch(lotR10, /\[-23, 0, -13, 0\]/, 'The retired scattered perimeter prop placement must stay removed');
+assert.doesNotMatch(lotR10, /GLTFLoader/, 'The clean Lot must not load decorative scenery assets');
+assert.doesNotMatch(lotR10, /installBrickScenery/, 'The brick wall must remain removed');
+assert.doesNotMatch(lotR10, /InstancedMesh/, 'The retired brick wall geometry must remain removed');
+assert.match(lotR10Css, /word-spacing: 0\.16em/, 'THE LOT must keep the increased word spacing');
 assert.match(lotR10, /selectedColor = selection\.color/, 'The Lot must restore the selected native body colour');
 assert.match(lotR10, /selectedSecondaryColor = selection\.secondaryColor/, 'The Lot must restore secondary paint');
 assert.match(lotR10, /lot-viewbox/, 'The Lot must include a dedicated 3D car viewbox');
