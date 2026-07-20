@@ -75,9 +75,10 @@ const [index, main, lapSystem, rivalStorage, controls, carModels] = await Promis
   fs.readFile(path.join(turnDir, 'vehicle/car-models.js'), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.5 · Build 2026\.07\.20-r21/);
-assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260720-r21/);
-assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-r10\.js\?build=20260720-r21"/, 'r21 must cache-bust the Lot module imported by the current static main graph');
+assert.match(index, /TURN v1\.3\.6 · Build 2026\.07\.20-r22/);
+assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260720-r22/);
+assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-r10\.js\?build=20260720-r22"/, 'r22 must cache-bust the Lot module imported by the current static main graph');
+assert.match(index, /"\.\/vehicle\/car-models\.js\?build=20260720-r19": "\.\/vehicle\/car-models\.js\?build=20260720-r22"/, 'r22 must cache-bust the shared car model module imported by the current static main graph');
 assert.match(main, /await showTheLot\(/, 'Start flow must enter The Lot before racing');
 assert.match(main, /maxSpeed: MAX_SPEED \* state\.vehicleTuning\.topSpeedMultiplier/, 'Selected top speed must reach physics');
 assert.match(main, /vehicleTuning: state\.vehicleTuning/, 'Selected handling profile must reach physics');
@@ -96,11 +97,13 @@ assert.match(carModels, /loadCarSource\(car\.id\)/, 'Car model factory must load
 const lotR10 = await fs.readFile(path.join(turnDir, 'garage/lot-r10.js'), 'utf8');
 const lotR10Css = await fs.readFile(path.join(turnDir, 'garage/lot-r10.css'), 'utf8');
 assert.match(main, /garage\/lot-r10\.js/, 'Production must load the r10 Lot module');
-assert.match(lotR10, /UNSELECTED_COLOR = new THREE\.Color\(0xeeeeee\)/, 'Unselected Lot cars must use the requested light gray presentation');
+assert.match(lotR10, /UNSELECTED_COLOR = new THREE\.Color\(0xfcf6e7\)/, 'Unselected Lot cars must use the requested warm cream presentation');
+assert.match(lotR10, /car-models\.js\?build=20260720-r22/, 'The Lot must load the r22 outline implementation');
 assert.match(lotR10, /if \(selected \|\| record\.outline\)/, 'Unselected Lot cars must preserve their original outline materials');
-assert.match(lotR10, /material\.transparent = false/, 'Unselected Lot car surfaces must be opaque to avoid transparent sorting flicker');
+assert.match(lotR10, /material\.transparent = false/, 'Unselected Lot car surfaces must remain opaque');
 assert.match(lotR10, /material\.opacity = 1/, 'Unselected Lot car surfaces must render at full opacity');
 assert.match(lotR10, /material\.depthWrite = true/, 'Unselected Lot car surfaces must write depth so outlines cannot show through them');
+assert.doesNotMatch(lotR10, /0xeeeeee/, 'The retired cool gray unselected colour must stay removed');
 assert.doesNotMatch(lotR10, /material\.opacity = 0\.46/, 'The retired translucent unselected-car presentation must stay removed');
 assert.match(lotR10, /selectedColor = selection\.color/, 'The Lot must restore the selected native body colour');
 assert.match(lotR10, /selectedSecondaryColor = selection\.secondaryColor/, 'The Lot must restore secondary paint');
