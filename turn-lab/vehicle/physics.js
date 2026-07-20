@@ -10,10 +10,13 @@ export function updateVehiclePhysicsState({
   maxSpeed,
   analogGas = 0,
   boostActive = false,
-  driftHeld = false
+  driftHeld = false,
+  vehicleTuning = null
 }) {
   updateMotionInput(dt);
 
+  const tuning = normalizeVehicleTuning(vehicleTuning || globalThis.__turnVehicleTuning);
+  const effectiveMaxSpeed = maxSpeed;
   const directGas = Math.max(0, Number(analogGas) || 0);
   const directBrake = 0;
   state.throttle = Math.max(directGas, state.touchGas ? 1 : 0);
@@ -30,29 +33,51 @@ export function updateVehiclePhysicsState({
   let lateralSpeed = state.velocity.dot(right);
   let speed = state.velocity.length();
 
-  const enginePower = (state.offRoad ? 36 : 43) * (driftHeld ? 0.93 : 1);
-  const boostPower = boostActive ? (state.offRoad ? 16 : 36) : 0;
+  const brakingOrReversing = state.brake > 0;
+  const driveThrottle = brakingOrReversing ? 0 : state.throttle;
+  const effectiveBoostActive = boostActive && !brakingOrReversing;
+
+  const enginePower =
+    (state.offRoad ? 36 : 43) *
+    tuning.accelerationMultiplier *
+    (driftHeld ? tuning.driftEngineMultiplier : 1);
+  const boostPower = effectiveBoostActive
+    ? (state.offRoad ? 16 : 36) * tuning.boostPowerMultiplier
+    : 0;
   state.velocity.addScaledVector(
     forward,
-    (state.throttle * enginePower + boostPower) * dt
+    (driveThrottle * enginePower + boostPower) * dt
   );
 
   if (state.brake > 0) {
     const brakeStep = 62 * state.brake * dt;
     forwardSpeed = state.velocity.dot(forward);
-    if (Math.abs(forwardSpeed) > 0.05) {
+
+    if (forwardSpeed > 0.35) {
       state.velocity.addScaledVector(
         forward,
-        -Math.sign(forwardSpeed) * Math.min(Math.abs(forwardSpeed), brakeStep)
+        -Math.min(forwardSpeed, brakeStep)
       );
+    } else {
+      const reversePower = (state.offRoad ? 20 : 27) * tuning.accelerationMultiplier;
+      state.velocity.addScaledVector(forward, -reversePower * state.brake * dt);
+
+      const reverseSpeed = state.velocity.dot(forward);
+      const reverseSpeedLimit = effectiveMaxSpeed * 0.32;
+      if (reverseSpeed < -reverseSpeedLimit) {
+        state.velocity.addScaledVector(forward, -reverseSpeedLimit - reverseSpeed);
+      }
     }
+
+    forwardSpeed = state.velocity.dot(forward);
   }
 
   speed = state.velocity.length();
-  const speedRatio = clamp(speed / maxSpeed, 0, 1);
+  const speedRatio = clamp(speed / effectiveMaxSpeed, 0, 1);
+  const brakeDriftInput = state.brake > 0 && forwardSpeed > 0 ? state.brake : 0;
   const driftIntent = clamp(
     Math.abs(state.steering) * speedRatio * 0.9 +
-      state.brake * Math.abs(state.steering) * 1.35 +
+      brakeDriftInput * Math.abs(state.steering) * 1.35 +
       Math.abs(lateralSpeed) / 22 +
       (driftHeld ? 0.48 + Math.abs(state.steering) * 0.5 : 0),
     0,
@@ -71,6 +96,7 @@ export function updateVehiclePhysicsState({
     Math.sign(forwardSpeed || 1) *
     (0.18 + Math.abs(forwardSpeed) * 0.012) *
     steeringAuthority *
+    tuning.controlMultiplier *
     (1 + state.driftAmount * 0.65 + (driftHeld ? 0.58 : 0));
 
   state.heading = normalizeAngle(state.heading + yawRate * dt);
@@ -82,7 +108,9 @@ export function updateVehiclePhysicsState({
     state.offRoad
       ? lerp(3.4, 1.35, state.driftAmount)
       : lerp(11.5, 1.45, state.driftAmount)
-  ) * (driftHeld ? 0.42 : 1);
+  ) *
+    (0.92 + tuning.controlMultiplier * 0.08) *
+    (driftHeld ? 0.42 : 1);
 
   const lateralCorrection = 1 - Math.exp(-grip * dt);
   state.velocity.addScaledVector(newRight, -lateralSpeed * lateralCorrection);
@@ -97,12 +125,12 @@ export function updateVehiclePhysicsState({
 
   const drag = state.offRoad
     ? 0.34
-    : 0.11 + speed * 0.0009 + (driftHeld ? 0.085 : 0);
+    : 0.11 + speed * 0.0009 + (driftHeld ? tuning.driftDragAdd : 0);
   state.velocity.multiplyScalar(Math.exp(-drag * dt));
 
   const speedLimit = state.offRoad
-    ? (boostActive ? 72 : 64)
-    : (boostActive ? maxSpeed * 1.32 : maxSpeed);
+    ? (effectiveBoostActive ? effectiveMaxSpeed * 0.82 : effectiveMaxSpeed * 0.73)
+    : (effectiveBoostActive ? effectiveMaxSpeed * tuning.boostSpeedMultiplier : effectiveMaxSpeed);
 
   speed = state.velocity.length();
   if (speed > speedLimit) state.velocity.multiplyScalar(speedLimit / speed);
@@ -119,6 +147,27 @@ export function updateVehiclePhysicsState({
   state.nearestTrackIndex = nearestAfter.index;
 
   return nearestAfter;
+}
+
+function normalizeVehicleTuning(tuning) {
+  return {
+    accelerationMultiplier: positiveNumber(tuning?.accelerationMultiplier, 1),
+    controlMultiplier: positiveNumber(tuning?.controlMultiplier, 1),
+    driftEngineMultiplier: positiveNumber(tuning?.driftEngineMultiplier, 0.93),
+    driftDragAdd: nonNegativeNumber(tuning?.driftDragAdd, 0.085),
+    boostPowerMultiplier: positiveNumber(tuning?.boostPowerMultiplier, 1),
+    boostSpeedMultiplier: positiveNumber(tuning?.boostSpeedMultiplier, 1.32)
+  };
+}
+
+function positiveNumber(value, fallback) {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? number : fallback;
+}
+
+function nonNegativeNumber(value, fallback) {
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? number : fallback;
 }
 
 function normalizeAngle(angle) {
