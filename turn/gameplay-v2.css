@@ -88,19 +88,19 @@
   background: linear-gradient(90deg, #38d9ff, #8ce99a);
 }
 
-.boost-hud[style*="--boost-charge: 100.0%"] {
+.boost-hud.is-boost-full-flash {
   animation: turn-boost-full-flash 520ms cubic-bezier(.16,.82,.24,1);
 }
 
-.boost-hud[style*="--boost-charge: 100.0%"] > div {
+.boost-hud.is-boost-full-flash > div {
   animation: turn-boost-full-bar-flash 520ms ease-out;
 }
 
-.boost-hud[style*="--boost-charge: 0.0%"] {
+.boost-hud.is-boost-empty-flash {
   animation: turn-boost-empty-flash 620ms cubic-bezier(.28,.78,.34,1);
 }
 
-.boost-hud[style*="--boost-charge: 0.0%"] > div {
+.boost-hud.is-boost-empty-flash > div {
   animation: turn-boost-empty-bar-flash 620ms ease-out;
 }
 
@@ -154,8 +154,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .boost-hud[style*="--boost-charge: 100.0%"],
-  .boost-hud[style*="--boost-charge: 0.0%"] {
+  .boost-hud.is-boost-full-flash,
+  .boost-hud.is-boost-empty-flash {
     animation: none;
   }
 }
