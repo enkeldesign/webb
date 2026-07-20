@@ -9,12 +9,12 @@ import {
   normalizeVehicleSecondaryColor,
   normalizeVehicleSelection
 } from '../vehicle/catalog.js?build=20260720-r20';
-import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js?build=20260720-r20';
+import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js?build=20260720-r22';
 import { recordPerformanceFrame } from '../performance-monitor.js?build=20260720-r20';
 
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
 const lotLoader = new GLTFLoader();
-const UNSELECTED_COLOR = new THREE.Color(0xeeeeee);
+const UNSELECTED_COLOR = new THREE.Color(0xfcf6e7);
 const VIEWER_INITIAL_YAW = Math.PI - 0.55;
 
 export function showTheLot({ initialSelection } = {}) {

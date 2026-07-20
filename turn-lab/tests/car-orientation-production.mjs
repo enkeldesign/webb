@@ -64,12 +64,18 @@ const [index, carModels, lot, main] = await Promise.all([
   fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.5 · Build 2026\.07\.20-r21/);
+assert.match(index, /TURN v1\.3\.6 · Build 2026\.07\.20-r22/);
 assert.match(
   carModels,
   /model\.rotation\.y = Math\.PI \+ car\.modelYawQuarterTurns \* Math\.PI \/ 2/,
   'The shared model factory must apply the catalog correction'
 );
+assert.match(carModels, /side: THREE\.BackSide/, 'Car outlines must remain inverted back-face shells');
+assert.match(carModels, /depthTest: true/, 'Car outlines must still respect the body depth buffer');
+assert.match(carModels, /depthWrite: false/, 'Car outlines must not write depth and compete with body surfaces');
+assert.match(carModels, /polygonOffset: true/, 'Car outlines must use a depth offset for stable close surface intersections');
+assert.match(carModels, /polygonOffsetFactor: 1/);
+assert.match(carModels, /polygonOffsetUnits: 1/);
 assert.match(lot, /visual\.rotation\.y = Math\.PI/, 'The Lot must map local -Z to the camera-facing direction');
 assert.match(lot, /VIEWER_INITIAL_YAW = Math\.PI - 0\.55/, 'The viewer must start on the normalized front');
 assert.match(main, /playerCar\.rotation\.y = state\.heading \+ Math\.PI/);
