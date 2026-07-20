@@ -57,20 +57,16 @@ assert.match(controls, /boostRequested = nextZone === 'boost'/, 'Boost zone must
 assert.match(controls, /boostRequested && !boostExhausted/, 'Boost must stay locked while the thumb remains in Boost after exhaustion');
 assert.match(controls, /previousZone === 'boost' && nextZone !== 'boost'\) boostExhausted = false/, 'Leaving Boost for Gas or Drift must re-arm Boost without requiring pointer release');
 assert.match(controls, /Brake · Reverse/, 'Separate brake control must advertise reverse');
+assert.match(controls, /becameEmpty = previousBoostCharge > 0\.001 && boostCharge <= 0\.001/, 'Empty feedback must trigger on the actual depletion transition');
+assert.match(controls, /becameFull = previousBoostCharge < 0\.999 && boostCharge >= 0\.999/, 'Full feedback must trigger only when recharge crosses the full threshold');
+assert.match(controls, /flashBoostHud\('is-boost-empty-flash'\)/, 'Empty boost must trigger its distinct HUD feedback class');
+assert.match(controls, /flashBoostHud\('is-boost-full-flash'\)/, 'Full boost must trigger its distinct HUD feedback class');
 assert.match(css, /\.drive-pad \{/);
 assert.match(css, /place-items: center/, 'Gas label must be vertically and horizontally centered');
 assert.match(css, /content: "LEAVE"/, 'Boost lock hint must explain that leaving the Boost zone re-arms it');
 assert.match(css, /\.brake-reverse \{/);
-assert.match(
-  gameplayCss,
-  /\.boost-hud\[style\*="--boost-charge: 100\.0%"\]/,
-  'Boost HUD must react when recharge reaches full capacity'
-);
-assert.match(
-  gameplayCss,
-  /\.boost-hud\[style\*="--boost-charge: 0\.0%"\]/,
-  'Boost HUD must react distinctly when the tank becomes empty'
-);
+assert.match(gameplayCss, /\.boost-hud\.is-boost-full-flash/, 'Boost HUD must visibly react when recharge reaches full capacity');
+assert.match(gameplayCss, /\.boost-hud\.is-boost-empty-flash/, 'Boost HUD must react distinctly when the tank becomes empty');
 assert.match(gameplayCss, /@keyframes turn-boost-full-flash/, 'Full boost feedback must have its own animation');
 assert.match(gameplayCss, /@keyframes turn-boost-empty-flash/, 'Empty boost feedback must have a distinct animation');
 assert.match(gameplayCss, /prefers-reduced-motion: reduce/, 'Boost feedback must respect reduced-motion preferences');
