@@ -1,0 +1,39 @@
+name: Force GitHub Pages rebuild for TURN r14
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/pages-rebuild-r14.trigger'
+
+permissions:
+  contents: read
+  pages: write
+
+jobs:
+  request-pages-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect Pages configuration
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/pages" \
+            --jq '{status, build_type, source, cname, html_url}'
+
+      - name: Request a fresh Pages build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/pages/builds" \
+            --jq '{status, url}'
+
+      - name: Inspect requested build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sleep 10
+          gh api "repos/${GITHUB_REPOSITORY}/pages/builds/latest" \
+            --jq '{status, error, commit, duration, created_at, updated_at}'
