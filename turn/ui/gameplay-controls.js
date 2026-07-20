@@ -207,24 +207,24 @@ function installGameplayUi() {
     if (drivePointerId === event.pointerId) releaseDrive(event);
   });
 
-  const nukeButton = document.createElement('button');
-  nukeButton.type = 'button';
-  nukeButton.className = 'utility nuke-ghosts-button';
-  nukeButton.setAttribute('aria-label', 'Nuke saved ghosts');
-  nukeButton.title = 'Nuke saved ghosts';
-  nukeButton.innerHTML = '<span class="mushroom-cloud-icon" aria-hidden="true"><i></i></span>';
-  utilityGroup.appendChild(nukeButton);
+  const resetRivalsButton = document.createElement('button');
+  resetRivalsButton.type = 'button';
+  resetRivalsButton.className = 'utility reset-rivals-button';
+  resetRivalsButton.textContent = 'Reset Rivals';
+  resetRivalsButton.setAttribute('aria-label', 'Reset saved rivals');
+  resetRivalsButton.title = 'Reset saved rivals';
+  utilityGroup.appendChild(resetRivalsButton);
 
   const dialog = document.createElement('dialog');
   dialog.className = 'nuke-dialog';
   dialog.innerHTML = `
     <form method="dialog" class="nuke-dialog-card">
       <div class="nuke-dialog-icon" aria-hidden="true"><span class="mushroom-cloud-icon"><i></i></span></div>
-      <h2>NUKE THE GHOSTS?</h2>
-      <p>Are you sure you want to nuke the ghosts?</p>
+      <h2>RESET RIVALS?</h2>
+      <p>Remove all saved rivals and their lap records?</p>
       <div class="nuke-dialog-actions">
         <button value="cancel" class="nuke-cancel">Cancel</button>
-        <button value="nuke" class="nuke-confirm">Nuke ghosts</button>
+        <button value="nuke" class="nuke-confirm">Reset rivals</button>
       </div>
     </form>`;
   document.body.appendChild(dialog);
@@ -248,7 +248,7 @@ function installGameplayUi() {
     else dialog.removeAttribute('open');
   }
 
-  nukeButton.addEventListener('click', () => {
+  resetRivalsButton.addEventListener('click', () => {
     if (typeof dialog.showModal === 'function') dialog.showModal();
     else dialog.setAttribute('open', '');
   });
@@ -258,7 +258,7 @@ function installGameplayUi() {
     closeNukeDialog();
     effect.hidden = false;
     document.body.classList.add('turn-nuking');
-    window.setTimeout(() => globalThis.__turnNukeGhosts?.(), 360);
+    window.setTimeout(() => globalThis.__turnResetRivals?.(), 360);
     window.setTimeout(() => {
       document.body.classList.remove('turn-nuking');
       effect.hidden = true;
