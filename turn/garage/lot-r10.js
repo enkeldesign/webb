@@ -8,9 +8,9 @@ import {
   normalizeVehicleColor,
   normalizeVehicleSecondaryColor,
   normalizeVehicleSelection
-} from '../vehicle/catalog.js?build=20260720-r19';
-import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js?build=20260720-r19';
-import { recordPerformanceFrame } from '../performance-monitor.js?build=20260720-r19';
+} from '../vehicle/catalog.js?build=20260720-r20';
+import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js?build=20260720-r20';
+import { recordPerformanceFrame } from '../performance-monitor.js?build=20260720-r20';
 
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
 const lotLoader = new GLTFLoader();
@@ -473,17 +473,17 @@ function applyLotCarPresentation(root, selected, selectedColor, selectedSecondar
 
   for (const record of records) {
     const { material } = record;
-    if (selected) {
+    if (selected || record.outline) {
       material.transparent = record.transparent;
       material.opacity = record.opacity;
       material.depthWrite = record.depthWrite;
       if (!record.paint && record.color && material.color) material.color.copy(record.color);
     } else {
       material.transparent = true;
-      material.opacity = record.outline ? 0.18 : 0.46;
+      material.opacity = 0.46;
       material.depthWrite = false;
       if (record.color && material.color) {
-        material.color.copy(record.color).lerp(MUTED_COLOR, record.outline ? 0.3 : 0.88);
+        material.color.copy(record.color).lerp(MUTED_COLOR, 0.88);
       }
     }
     material.needsUpdate = true;
