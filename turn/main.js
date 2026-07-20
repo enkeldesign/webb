@@ -2,19 +2,24 @@
 
 import * as THREE from 'three';
 import { installKenneyWorld } from './world-assets.js';
-import { updateRaceCameraState } from './render/camera.js?build=20260720-r18';
-import { updateHudState } from './ui/hud.js?build=20260720-r18';
+import { updateRaceCameraState } from './render/camera.js?build=20260720-r19';
+import { updateHudState } from './ui/hud.js?build=20260720-r19';
 import { motionPoseFromGravity as motionPoseFromGravityState, updateMotionInputState } from './input/motion.js';
-import { updateVehiclePhysicsState } from './vehicle/physics.js?build=20260720-r18';
+import { updateVehiclePhysicsState } from './vehicle/physics.js?build=20260720-r19';
 import { GAME_MODE, installGameModeState, prepareRaceStartState, resetRaceToStage, setGameModeState } from './race/game-state.js';
-import { beginTimedLapState, completeLapState, updateLapProgressState } from './race/lap-system.js';
+import { beginTimedLapState, completeLapState, updateLapProgressState } from './race/lap-system.js?build=20260720-r19';
 import { recordReplayFrame, replayFrameAt } from './race/replay-system.js';
-import { RIVAL_LIMIT, loadRivalsState, saveRivalsState } from './race/rival-storage.js';
-import { createTrackSpatialIndex } from './race/track-spatial-index.js?build=20260720-r18';
-import { showTheLot } from './garage/lot-r10.js?build=20260720-r18';
-import { getCarDefinition, loadVehicleSelection, saveVehicleSelection } from './vehicle/catalog.js?build=20260720-r18';
-import { createCarVisual } from './vehicle/car-models.js?build=20260720-r18';
-import { installPerformanceMonitor, recordPerformanceFrame } from './performance-monitor.js?build=20260720-r18';
+import { RIVAL_LIMIT, loadRivalsState, saveRivalsState } from './race/rival-storage.js?build=20260720-r19';
+import { createTrackSpatialIndex } from './race/track-spatial-index.js?build=20260720-r19';
+import { showTheLot } from './garage/lot-r10.js?build=20260720-r19';
+import {
+  DEFAULT_VEHICLE_SECONDARY_COLOR,
+  getCarDefinition,
+  loadVehicleSelection,
+  saveVehicleSelection
+} from './vehicle/catalog.js?build=20260720-r19';
+import { createCarVisual } from './vehicle/car-models.js?build=20260720-r19';
+import { installPerformanceMonitor, recordPerformanceFrame } from './performance-monitor.js?build=20260720-r19';
 
 const intro = document.querySelector('#intro');
 const hud = document.querySelector('#hud');
@@ -91,6 +96,7 @@ const state = {
   competitorLaps: [],
   vehicleId: initialVehicleSelection.carId,
   vehicleColor: initialVehicleSelection.color,
+  vehicleSecondaryColor: initialVehicleSelection.secondaryColor,
   vehicleTuning: initialVehicleDefinition.tuning,
   lastFrame: performance.now(),
   messageTimer: 0
@@ -445,15 +451,22 @@ const proceduralGhostParts = [...ghostCar.children];
 playerCar.userData.turnProceduralParts = proceduralPlayerParts;
 ghostCar.userData.turnProceduralParts = proceduralGhostParts;
 
-async function installCarVisual(root, { carId, color, ghost = false }) {
-  const key = `${carId}|${color}|${ghost ? 1 : 0}`;
+async function installCarVisual(root, { carId, color, secondaryColor, ghost = false }) {
+  const key = `${carId}|${color}|${secondaryColor}|${ghost ? 1 : 0}`;
   if (root.userData.turnVisualKey === key || root.userData.turnVisualPendingKey === key) return;
 
   const generation = (root.userData.turnVisualGeneration || 0) + 1;
   root.userData.turnVisualGeneration = generation;
   root.userData.turnVisualPendingKey = key;
 
-  const visual = await createCarVisual({ carId, color, ghost, targetLength: 5.5, outline: true });
+  const visual = await createCarVisual({
+    carId,
+    color,
+    secondaryColor,
+    ghost,
+    targetLength: 5.5,
+    outline: true
+  });
   if (root.userData.turnVisualGeneration !== generation) return;
 
   for (const child of [...root.children]) {
@@ -472,6 +485,7 @@ async function applyVehicleSelection(selection) {
   const definition = getCarDefinition(saved.carId);
   state.vehicleId = saved.carId;
   state.vehicleColor = saved.color;
+  state.vehicleSecondaryColor = saved.secondaryColor;
   state.vehicleTuning = definition.tuning;
   globalThis.__turnVehicleTuning = definition.tuning;
 
@@ -479,6 +493,7 @@ async function applyVehicleSelection(selection) {
     await installCarVisual(playerCar, {
       carId: state.vehicleId,
       color: state.vehicleColor,
+      secondaryColor: state.vehicleSecondaryColor,
       ghost: false
     });
   } catch (error) {
@@ -490,6 +505,7 @@ async function applyVehicleSelection(selection) {
 void installCarVisual(playerCar, {
   carId: state.vehicleId,
   color: state.vehicleColor,
+  secondaryColor: state.vehicleSecondaryColor,
   ghost: false
 }).catch((error) => console.warn('TURN: initial selected car failed to load.', error));
 
@@ -527,10 +543,11 @@ function ensureCompetitorCars() {
 async function syncCompetitorVisual(car, lap) {
   const carId = lap.carId || 'sedan';
   const color = lap.carColor || COMPETITOR_MAP_COLORS[competitorCars.indexOf(car)] || '#38d9ff';
+  const secondaryColor = lap.carSecondaryColor || DEFAULT_VEHICLE_SECONDARY_COLOR;
   try {
-    await installCarVisual(car, { carId, color, ghost: true });
+    await installCarVisual(car, { carId, color, secondaryColor, ghost: true });
   } catch (error) {
-    const key = `${carId}|${color}|1`;
+    const key = `${carId}|${color}|${secondaryColor}|1`;
     if (car.userData.turnVisualFailedKey !== key) {
       car.userData.turnVisualFailedKey = key;
       console.warn('TURN: rival car model failed to load, using procedural fallback.', error);
@@ -769,7 +786,11 @@ async function requestMotion() {
 async function chooseVehicleAndStart(fullscreenPromise = Promise.resolve(false)) {
   intro.hidden = true;
   const selection = await showTheLot({
-    initialSelection: { carId: state.vehicleId, color: state.vehicleColor }
+    initialSelection: {
+      carId: state.vehicleId,
+      color: state.vehicleColor,
+      secondaryColor: state.vehicleSecondaryColor
+    }
   });
 
   if (!selection) {
@@ -805,7 +826,11 @@ async function openLotFromRace() {
   publishUiState('lot-open');
 
   const selection = await showTheLot({
-    initialSelection: { carId: state.vehicleId, color: state.vehicleColor }
+    initialSelection: {
+      carId: state.vehicleId,
+      color: state.vehicleColor,
+      secondaryColor: state.vehicleSecondaryColor
+    }
   });
 
   if (!selection) {

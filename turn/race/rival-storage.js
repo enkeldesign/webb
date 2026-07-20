@@ -2,9 +2,11 @@ import { normalizeReplayFrames } from './replay-system.js';
 import {
   DEFAULT_VEHICLE_COLOR,
   DEFAULT_VEHICLE_ID,
+  DEFAULT_VEHICLE_SECONDARY_COLOR,
   normalizeVehicleColor,
-  normalizeVehicleId
-} from '../vehicle/catalog.js';
+  normalizeVehicleId,
+  normalizeVehicleSecondaryColor
+} from '../vehicle/catalog.js?build=20260720-r19';
 
 export const RIVAL_LIMIT = 4;
 
@@ -15,7 +17,7 @@ const LEGACY_RIVAL_COLORS = ['#38d9ff', '#ff4fa3', '#9775fa', '#ff922b'];
 export function saveRivalsState(state) {
   try {
     localStorage.setItem(COMPETITOR_KEY, JSON.stringify({
-      version: 3,
+      version: 4,
       laps: state.competitorLaps
     }));
     return true;
@@ -42,6 +44,7 @@ export function loadRivalsState({ state, samples, findNearestTrack }) {
           hitAt: null,
           carId: DEFAULT_VEHICLE_ID,
           carColor: DEFAULT_VEHICLE_COLOR,
+          carSecondaryColor: DEFAULT_VEHICLE_SECONDARY_COLOR,
           frames: oldGhost.frames
         }];
       }
@@ -59,6 +62,7 @@ export function loadRivalsState({ state, samples, findNearestTrack }) {
         carColor: lap.carColor
           ? normalizeVehicleColor(lap.carColor)
           : LEGACY_RIVAL_COLORS[index % LEGACY_RIVAL_COLORS.length],
+        carSecondaryColor: normalizeVehicleSecondaryColor(lap.carSecondaryColor),
         frames: normalizeReplayFrames(lap.frames, { startSample, findProgress })
       }))
       .sort((a, b) => a.time - b.time)

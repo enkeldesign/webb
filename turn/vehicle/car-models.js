@@ -1,6 +1,12 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { getCarDefinition, makeGhostColor, normalizeVehicleColor } from './catalog.js?build=20260720-r18';
+import {
+  DEFAULT_VEHICLE_SECONDARY_COLOR,
+  getCarDefinition,
+  makeGhostColor,
+  normalizeVehicleColor,
+  normalizeVehicleSecondaryColor
+} from './catalog.js?build=20260720-r19';
 
 const loader = new GLTFLoader();
 const sourceCache = new Map();
@@ -14,6 +20,7 @@ export async function preloadCarModels(carIds) {
 export async function createCarVisual({
   carId,
   color,
+  secondaryColor = DEFAULT_VEHICLE_SECONDARY_COLOR,
   ghost = false,
   targetLength = 5.4,
   outline = true
@@ -28,7 +35,9 @@ export async function createCarVisual({
   root.add(model);
 
   const requestedColor = normalizeVehicleColor(color);
+  const requestedSecondaryColor = normalizeVehicleSecondaryColor(secondaryColor);
   const ghostColor = makeGhostColor(requestedColor);
+  const ghostSecondaryColor = makeGhostColor(requestedSecondaryColor);
   const meshRecords = [];
   let explicitPaintCount = 0;
 
@@ -44,6 +53,7 @@ export async function createCarVisual({
         material,
         protected: isProtectedPart(node, material),
         wheel: isWheelPart(node, material),
+        secondaryPaint: isSecondaryPaint(node, car),
         explicitPaint: isExplicitPaint(node, material)
       };
       if (record.explicitPaint && !record.protected) explicitPaintCount += 1;
@@ -51,15 +61,17 @@ export async function createCarVisual({
     });
   });
 
-  const paintMaterials = [];
+  const primaryPaintMaterials = [];
+  const secondaryPaintMaterials = [];
   for (const record of meshRecords) {
     const {
       material,
       protected: protectedPart,
       wheel: wheelPart,
+      secondaryPaint,
       explicitPaint
     } = record;
-    const paintable = !protectedPart && (
+    const paintable = !protectedPart && !secondaryPaint && (
       explicitPaint ||
       (explicitPaintCount === 0 && isFallbackPaintCandidate(material)) ||
       (car.pack !== 'car' && isFallbackPaintCandidate(material))
@@ -70,9 +82,12 @@ export async function createCarVisual({
       // remain visually grounded instead of inheriting white or body paint.
       material.color.setHex(TIRE_COLOR);
       if ('roughness' in material) material.roughness = Math.max(Number(material.roughness) || 0, 0.82);
+    } else if (secondaryPaint && !protectedPart && material.color) {
+      material.color.set(ghost ? ghostSecondaryColor : requestedSecondaryColor);
+      secondaryPaintMaterials.push(material);
     } else if (paintable && material.color) {
       material.color.set(ghost ? ghostColor : requestedColor);
-      paintMaterials.push(material);
+      primaryPaintMaterials.push(material);
     }
 
     // Personal rivals are solid cars. Their identity comes from the lighter body colour,
@@ -95,22 +110,33 @@ export async function createCarVisual({
 
   root.userData.turnCarId = car.id;
   root.userData.turnCarColor = requestedColor;
+  root.userData.turnCarSecondaryColor = requestedSecondaryColor;
   root.userData.turnGhost = ghost;
   root.userData.turnModelYawQuarterTurns = car.modelYawQuarterTurns;
-  root.userData.turnPaintMaterials = paintMaterials;
+  root.userData.turnPrimaryPaintMaterials = primaryPaintMaterials;
+  root.userData.turnSecondaryPaintMaterials = secondaryPaintMaterials;
+  root.userData.turnPaintMaterials = [...primaryPaintMaterials, ...secondaryPaintMaterials];
   root.userData.frontWheelPivots = [];
   root.userData.wheelSpinners = [];
   return root;
 }
 
-export function recolorCarVisual(root, color) {
+export function recolorCarVisual(root, color, secondaryColor = root?.userData?.turnCarSecondaryColor) {
   const normalized = normalizeVehicleColor(color);
+  const normalizedSecondary = normalizeVehicleSecondaryColor(secondaryColor);
   const ghost = Boolean(root?.userData?.turnGhost);
   const displayColor = ghost ? makeGhostColor(normalized) : normalized;
-  for (const material of root?.userData?.turnPaintMaterials || []) {
+  const displaySecondary = ghost ? makeGhostColor(normalizedSecondary) : normalizedSecondary;
+  for (const material of root?.userData?.turnPrimaryPaintMaterials || []) {
     material.color?.set(displayColor);
   }
-  if (root?.userData) root.userData.turnCarColor = normalized;
+  for (const material of root?.userData?.turnSecondaryPaintMaterials || []) {
+    material.color?.set(displaySecondary);
+  }
+  if (root?.userData) {
+    root.userData.turnCarColor = normalized;
+    root.userData.turnCarSecondaryColor = normalizedSecondary;
+  }
 }
 
 async function loadCarSource(carId) {
@@ -175,6 +201,11 @@ function isProtectedPart(node, material) {
 function isWheelPart(node, material) {
   const label = `${node.name || ''} ${material.name || ''}`.toLowerCase();
   return /wheel|tire|tyre|rubber/.test(label);
+}
+
+function isSecondaryPaint(node, car) {
+  const name = String(node?.name || '').toLowerCase();
+  return (car.secondaryPaint?.meshNames || []).includes(name);
 }
 
 function isExplicitPaint(node, material) {

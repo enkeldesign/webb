@@ -236,27 +236,56 @@
 
 .lot-colors {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 5px;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 7px;
   margin: 8px 0 10px;
 }
 
-.lot-color {
-  width: 100%;
-  aspect-ratio: 1;
-  min-height: 0;
-  padding: 0;
-  border-width: 2px;
-  border-radius: 50%;
-  background: var(--lot-color);
+.lot-color-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 38px;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 4px 5px 4px 7px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--paper);
   box-shadow: 2px 2px 0 var(--ink);
+  cursor: pointer;
 }
 
-.lot-color[aria-pressed="true"] {
-  outline: 3px solid var(--paper);
-  outline-offset: -6px;
-  transform: translate(-1px, -1px) scale(1.12);
-  box-shadow: 4px 4px 0 var(--ink);
+.lot-color-control > span {
+  overflow: hidden;
+  font-size: 0.45rem;
+  letter-spacing: 0.055em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lot-color-input {
+  width: 38px;
+  height: 28px;
+  min-height: 0;
+  padding: 0;
+  border: 2px solid var(--ink);
+  border-radius: 7px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.lot-color-input::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+
+.lot-color-input::-webkit-color-swatch {
+  border: 0;
+  border-radius: 3px;
+}
+
+.lot-color-input:focus-visible {
+  outline: 3px solid var(--cyan);
+  outline-offset: 2px;
 }
 
 .lot-card-actions {

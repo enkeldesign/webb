@@ -123,6 +123,7 @@ export function completeLapState({
         hitAt: Date.now(),
         carId: state.vehicleId || 'sedan',
         carColor: state.vehicleColor || '#ffd43b',
+        carSecondaryColor: state.vehicleSecondaryColor || '#f8f9fa',
         frames: candidateFrames
       };
 

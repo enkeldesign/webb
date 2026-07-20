@@ -2,13 +2,15 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import {
   CAR_CATALOG,
-  CAR_PALETTE,
   DEFAULT_VEHICLE_COLOR,
+  DEFAULT_VEHICLE_SECONDARY_COLOR,
   getCarDefinition,
+  normalizeVehicleColor,
+  normalizeVehicleSecondaryColor,
   normalizeVehicleSelection
-} from '../vehicle/catalog.js?build=20260720-r18';
-import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js?build=20260720-r18';
-import { recordPerformanceFrame } from '../performance-monitor.js?build=20260720-r18';
+} from '../vehicle/catalog.js?build=20260720-r19';
+import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js?build=20260720-r19';
+import { recordPerformanceFrame } from '../performance-monitor.js?build=20260720-r19';
 
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
 const lotLoader = new GLTFLoader();
@@ -46,7 +48,7 @@ export function showTheLot({ initialSelection } = {}) {
             <strong></strong>
           </div>
           <div class="lot-stats"></div>
-          <div class="lot-colors" aria-label="Choose car colour"></div>
+          <div class="lot-colors" aria-label="Choose car paint colours"></div>
           <div class="lot-card-actions">
             <button class="lot-view-open" type="button" hidden>VIEW 3D</button>
             <button class="lot-race" type="button">RACE THIS CAR</button>
@@ -102,7 +104,8 @@ export function showTheLot({ initialSelection } = {}) {
     const carRoots = new Map();
     const platforms = new Map();
     let selectedCarId = selection.carId;
-    let selectedColor = DEFAULT_VEHICLE_COLOR;
+    let selectedColor = selection.color;
+    let selectedSecondaryColor = selection.secondaryColor;
     let disposed = false;
     let loadedCars = 0;
 
@@ -130,6 +133,7 @@ export function showTheLot({ initialSelection } = {}) {
       createCarVisual({
         carId: car.id,
         color: DEFAULT_VEHICLE_COLOR,
+        secondaryColor: DEFAULT_VEHICLE_SECONDARY_COLOR,
         targetLength: 5.15,
         outline: true
       }).then((visual) => {
@@ -143,7 +147,12 @@ export function showTheLot({ initialSelection } = {}) {
         rememberMaterialState(visual);
         lot.add(visual);
         carRoots.set(car.id, visual);
-        applyLotCarPresentation(visual, car.id === selectedCarId, selectedColor);
+        applyLotCarPresentation(
+          visual,
+          car.id === selectedCarId,
+          selectedColor,
+          selectedSecondaryColor
+        );
         loadedCars += 1;
         if (loadedCars >= CAR_CATALOG.length) loading.classList.add('is-done');
       }).catch((error) => {
@@ -161,7 +170,26 @@ export function showTheLot({ initialSelection } = {}) {
       const car = getCarDefinition(selectedCarId);
       title.textContent = car.name;
       stats.replaceChildren(...makeStats(car.stats));
-      colors.replaceChildren(...CAR_PALETTE.map((entry) => makeColorButton(entry)));
+      const paintControls = [makeColorInput({
+        label: 'Body',
+        value: selectedColor,
+        onInput(value) {
+          selectedColor = normalizeVehicleColor(value);
+          applySelectedPaint();
+        }
+      })];
+      if (car.secondaryPaint) {
+        paintControls.push(makeColorInput({
+          label: car.secondaryPaint.label,
+          value: selectedSecondaryColor,
+          secondary: true,
+          onInput(value) {
+            selectedSecondaryColor = normalizeVehicleSecondaryColor(value);
+            applySelectedPaint();
+          }
+        }));
+      }
+      colors.replaceChildren(...paintControls);
 
       for (const [carId, platform] of platforms) {
         setParkingPadSelected(platform, carId === selectedCarId);
@@ -170,39 +198,50 @@ export function showTheLot({ initialSelection } = {}) {
       for (const [carId, root] of carRoots) {
         const selected = carId === selectedCarId;
         root.userData.turnLotSelected = selected;
-        applyLotCarPresentation(root, selected, selectedColor);
+        applyLotCarPresentation(root, selected, selectedColor, selectedSecondaryColor);
       }
 
-      if (refreshViewer) void viewer.show(selectedCarId, selectedColor);
+      if (refreshViewer) void viewer.show(selectedCarId, selectedColor, selectedSecondaryColor);
     }
 
     function selectCar(carId) {
       if (!carId) return;
       const changedCar = carId !== selectedCarId;
       selectedCarId = carId;
-      if (changedCar) selectedColor = DEFAULT_VEHICLE_COLOR;
+      if (changedCar) {
+        selectedColor = DEFAULT_VEHICLE_COLOR;
+        selectedSecondaryColor = DEFAULT_VEHICLE_SECONDARY_COLOR;
+      }
       updateSelectionUi();
       navigator.vibrate?.(16);
     }
 
-    function makeColorButton(entry) {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'lot-color';
-      button.style.setProperty('--lot-color', entry.value);
-      button.title = entry.name;
-      button.setAttribute('aria-label', entry.name);
-      button.setAttribute('aria-pressed', String(entry.value === selectedColor));
-      button.addEventListener('click', () => {
-        selectedColor = entry.value;
-        const selectedRoot = carRoots.get(selectedCarId);
-        if (selectedRoot) applyLotCarPresentation(selectedRoot, true, selectedColor);
-        viewer.recolor(selectedColor);
-        colors.querySelectorAll('.lot-color').forEach((colorButton) => {
-          colorButton.setAttribute('aria-pressed', String(colorButton === button));
-        });
-      });
-      return button;
+    function makeColorInput({ label, value, secondary = false, onInput }) {
+      const control = document.createElement('label');
+      control.className = 'lot-color-control';
+
+      const name = document.createElement('span');
+      name.textContent = label.toUpperCase();
+
+      const input = document.createElement('input');
+      input.type = 'color';
+      input.className = 'lot-color-input';
+      input.value = secondary
+        ? normalizeVehicleSecondaryColor(value)
+        : normalizeVehicleColor(value);
+      input.setAttribute('aria-label', `Choose ${label.toLowerCase()} colour`);
+      input.addEventListener('input', () => onInput(input.value));
+
+      control.append(name, input);
+      return control;
+    }
+
+    function applySelectedPaint() {
+      const selectedRoot = carRoots.get(selectedCarId);
+      if (selectedRoot) {
+        applyLotCarPresentation(selectedRoot, true, selectedColor, selectedSecondaryColor);
+      }
+      viewer.recolor(selectedColor, selectedSecondaryColor);
     }
 
     renderer.domElement.addEventListener('pointerdown', (event) => {
@@ -230,7 +269,11 @@ export function showTheLot({ initialSelection } = {}) {
       viewer.resize();
     });
 
-    raceButton.addEventListener('click', () => finish({ carId: selectedCarId, color: selectedColor }));
+    raceButton.addEventListener('click', () => finish({
+      carId: selectedCarId,
+      color: selectedColor,
+      secondaryColor: selectedSecondaryColor
+    }));
     backButton.addEventListener('click', () => finish(null));
 
     const resizeObserver = new ResizeObserver(() => resize());
@@ -311,6 +354,8 @@ function createViewer(host) {
 
   let visual = null;
   let generation = 0;
+  let currentColor = DEFAULT_VEHICLE_COLOR;
+  let currentSecondaryColor = DEFAULT_VEHICLE_SECONDARY_COLOR;
   let yaw = VIEWER_INITIAL_YAW;
   let pitch = 0.08;
   let dragging = false;
@@ -348,12 +393,15 @@ function createViewer(host) {
 
   return {
     renderer,
-    async show(carId, color) {
+    async show(carId, color, secondaryColor) {
       const request = ++generation;
+      currentColor = normalizeVehicleColor(color);
+      currentSecondaryColor = normalizeVehicleSecondaryColor(secondaryColor);
       try {
         const next = await createCarVisual({
           carId,
-          color,
+          color: currentColor,
+          secondaryColor: currentSecondaryColor,
           targetLength: 6.4,
           outline: true
         });
@@ -361,14 +409,17 @@ function createViewer(host) {
         if (visual) stage.remove(visual);
         visual = next;
         stage.add(visual);
+        recolorCarVisual(visual, currentColor, currentSecondaryColor);
         yaw = VIEWER_INITIAL_YAW;
         pitch = 0.08;
       } catch (error) {
         console.warn('TURN: selected car could not load in the 3D viewer.', error);
       }
     },
-    recolor(color) {
-      if (visual) recolorCarVisual(visual, color);
+    recolor(color, secondaryColor) {
+      currentColor = normalizeVehicleColor(color);
+      currentSecondaryColor = normalizeVehicleSecondaryColor(secondaryColor);
+      if (visual) recolorCarVisual(visual, currentColor, currentSecondaryColor);
     },
     resize() {
       const rect = host.getBoundingClientRect();
@@ -416,7 +467,7 @@ function rememberMaterialState(root) {
   root.userData.turnLotMaterialState = records;
 }
 
-function applyLotCarPresentation(root, selected, selectedColor) {
+function applyLotCarPresentation(root, selected, selectedColor, selectedSecondaryColor) {
   rememberMaterialState(root);
   const records = root.userData.turnLotMaterialState || [];
 
@@ -438,7 +489,13 @@ function applyLotCarPresentation(root, selected, selectedColor) {
     material.needsUpdate = true;
   }
 
-  if (selected) recolorCarVisual(root, selectedColor || DEFAULT_VEHICLE_COLOR);
+  if (selected) {
+    recolorCarVisual(
+      root,
+      selectedColor || DEFAULT_VEHICLE_COLOR,
+      selectedSecondaryColor || DEFAULT_VEHICLE_SECONDARY_COLOR
+    );
+  }
 }
 
 function makeLotGround(lot) {

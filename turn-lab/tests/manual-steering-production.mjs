@@ -26,7 +26,7 @@ const css = await fs.readFile(new URL('../../turn/manual-steering.css', import.m
 
 assert.match(index, /role="slider"/);
 assert.match(index, /manual-steer-knob/);
-assert.match(index, /manual-steering\.css\?build=20260720-r18/);
+assert.match(index, /manual-steering\.css\?build=20260720-r19/);
 assert.match(css, /--manual-steer-left/);
 assert.match(css, /content: "←"/);
 assert.match(css, /content: "→"/);
