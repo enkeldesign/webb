@@ -2,19 +2,19 @@
 
 import * as THREE from 'three';
 import { installKenneyWorld } from './world-assets.js';
-import { updateRaceCameraState } from './render/camera.js?build=20260720-r17';
-import { updateHudState } from './ui/hud.js?build=20260720-r17';
+import { updateRaceCameraState } from './render/camera.js?build=20260720-r18';
+import { updateHudState } from './ui/hud.js?build=20260720-r18';
 import { motionPoseFromGravity as motionPoseFromGravityState, updateMotionInputState } from './input/motion.js';
-import { updateVehiclePhysicsState } from './vehicle/physics.js?build=20260720-r17';
+import { updateVehiclePhysicsState } from './vehicle/physics.js?build=20260720-r18';
 import { GAME_MODE, installGameModeState, prepareRaceStartState, resetRaceToStage, setGameModeState } from './race/game-state.js';
 import { beginTimedLapState, completeLapState, updateLapProgressState } from './race/lap-system.js';
 import { recordReplayFrame, replayFrameAt } from './race/replay-system.js';
 import { RIVAL_LIMIT, loadRivalsState, saveRivalsState } from './race/rival-storage.js';
-import { createTrackSpatialIndex } from './race/track-spatial-index.js?build=20260720-r17';
-import { showTheLot } from './garage/lot-r10.js?build=20260720-r17';
-import { getCarDefinition, loadVehicleSelection, saveVehicleSelection } from './vehicle/catalog.js';
-import { createCarVisual } from './vehicle/car-models.js?build=20260720-r17';
-import { installPerformanceMonitor, recordPerformanceFrame } from './performance-monitor.js?build=20260720-r17';
+import { createTrackSpatialIndex } from './race/track-spatial-index.js?build=20260720-r18';
+import { showTheLot } from './garage/lot-r10.js?build=20260720-r18';
+import { getCarDefinition, loadVehicleSelection, saveVehicleSelection } from './vehicle/catalog.js?build=20260720-r18';
+import { createCarVisual } from './vehicle/car-models.js?build=20260720-r18';
+import { installPerformanceMonitor, recordPerformanceFrame } from './performance-monitor.js?build=20260720-r18';
 
 const intro = document.querySelector('#intro');
 const hud = document.querySelector('#hud');

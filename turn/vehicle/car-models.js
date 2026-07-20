@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { getCarDefinition, makeGhostColor, normalizeVehicleColor } from './catalog.js';
+import { getCarDefinition, makeGhostColor, normalizeVehicleColor } from './catalog.js?build=20260720-r18';
 
 const loader = new GLTFLoader();
 const sourceCache = new Map();
@@ -22,7 +22,9 @@ export async function createCarVisual({
   const source = await loadCarSource(car.id);
   const root = new THREE.Group();
   const model = source.clone(true);
-  model.rotation.y = Math.PI;
+  // TURN's visual roots point down local -Z. The per-asset quarter turns first
+  // normalize the GLB's authored nose direction, then the shared half-turn aligns it.
+  model.rotation.y = Math.PI + car.modelYawQuarterTurns * Math.PI / 2;
   root.add(model);
 
   const requestedColor = normalizeVehicleColor(color);
@@ -94,6 +96,7 @@ export async function createCarVisual({
   root.userData.turnCarId = car.id;
   root.userData.turnCarColor = requestedColor;
   root.userData.turnGhost = ghost;
+  root.userData.turnModelYawQuarterTurns = car.modelYawQuarterTurns;
   root.userData.turnPaintMaterials = paintMaterials;
   root.userData.frontWheelPivots = [];
   root.userData.wheelSpinners = [];

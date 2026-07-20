@@ -6,13 +6,14 @@ import {
   DEFAULT_VEHICLE_COLOR,
   getCarDefinition,
   normalizeVehicleSelection
-} from '../vehicle/catalog.js';
-import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js?build=20260720-r17';
-import { recordPerformanceFrame } from '../performance-monitor.js?build=20260720-r17';
+} from '../vehicle/catalog.js?build=20260720-r18';
+import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js?build=20260720-r18';
+import { recordPerformanceFrame } from '../performance-monitor.js?build=20260720-r18';
 
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
 const lotLoader = new GLTFLoader();
 const MUTED_COLOR = new THREE.Color(0x9da5ab);
+const VIEWER_INITIAL_YAW = Math.PI - 0.55;
 
 export function showTheLot({ initialSelection } = {}) {
   return new Promise((resolve) => {
@@ -310,7 +311,7 @@ function createViewer(host) {
 
   let visual = null;
   let generation = 0;
-  let yaw = -0.55;
+  let yaw = VIEWER_INITIAL_YAW;
   let pitch = 0.08;
   let dragging = false;
   let pointerId = null;
@@ -360,7 +361,7 @@ function createViewer(host) {
         if (visual) stage.remove(visual);
         visual = next;
         stage.add(visual);
-        yaw = -0.55;
+        yaw = VIEWER_INITIAL_YAW;
         pitch = 0.08;
       } catch (error) {
         console.warn('TURN: selected car could not load in the 3D viewer.', error);
