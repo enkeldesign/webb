@@ -75,8 +75,8 @@ const [index, main, lapSystem, rivalStorage, controls, carModels] = await Promis
   fs.readFile(path.join(turnDir, 'vehicle/car-models.js'), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.3 · Build 2026\.07\.20-r19/);
-assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260720-r19/);
+assert.match(index, /TURN v1\.3\.4 · Build 2026\.07\.20-r20/);
+assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260720-r20/);
 assert.match(main, /await showTheLot\(/, 'Start flow must enter The Lot before racing');
 assert.match(main, /maxSpeed: MAX_SPEED \* state\.vehicleTuning\.topSpeedMultiplier/, 'Selected top speed must reach physics');
 assert.match(main, /vehicleTuning: state\.vehicleTuning/, 'Selected handling profile must reach physics');
@@ -96,6 +96,8 @@ const lotR10 = await fs.readFile(path.join(turnDir, 'garage/lot-r10.js'), 'utf8'
 const lotR10Css = await fs.readFile(path.join(turnDir, 'garage/lot-r10.css'), 'utf8');
 assert.match(main, /garage\/lot-r10\.js/, 'Production must load the r10 Lot module');
 assert.match(lotR10, /MUTED_COLOR/, 'Unselected Lot cars must have a muted visual state');
+assert.match(lotR10, /if \(selected \|\| record\.outline\)/, 'Unselected Lot cars must preserve their original outline materials');
+assert.doesNotMatch(lotR10, /record\.outline \? 0\.18/, 'Lot outlines must not become translucent when a car is unselected');
 assert.match(lotR10, /selectedColor = selection\.color/, 'The Lot must restore the selected native body colour');
 assert.match(lotR10, /selectedSecondaryColor = selection\.secondaryColor/, 'The Lot must restore secondary paint');
 assert.match(lotR10, /lot-viewbox/, 'The Lot must include a dedicated 3D car viewbox');

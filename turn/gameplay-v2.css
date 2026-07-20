@@ -88,6 +88,78 @@
   background: linear-gradient(90deg, #38d9ff, #8ce99a);
 }
 
+.boost-hud.is-boost-full-flash {
+  animation: turn-boost-full-flash 520ms cubic-bezier(.16,.82,.24,1);
+}
+
+.boost-hud.is-boost-full-flash > div {
+  animation: turn-boost-full-bar-flash 520ms ease-out;
+}
+
+.boost-hud.is-boost-empty-flash {
+  animation: turn-boost-empty-flash 620ms cubic-bezier(.28,.78,.34,1);
+}
+
+.boost-hud.is-boost-empty-flash > div {
+  animation: turn-boost-empty-bar-flash 620ms ease-out;
+}
+
+@keyframes turn-boost-full-flash {
+  0%, 100% { transform: translateX(-50%) rotate(-1deg) scale(1); }
+  24% { transform: translateX(-50%) rotate(2deg) scale(1.2); }
+  52% { transform: translateX(-50%) rotate(-2deg) scale(1.08); }
+  76% { transform: translateX(-50%) rotate(1deg) scale(1.14); }
+}
+
+@keyframes turn-boost-full-bar-flash {
+  0%, 100% {
+    background: rgb(255 248 232 / 0.82);
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+  28%, 72% {
+    background: #fff6a8;
+    box-shadow:
+      3px 3px 0 var(--ink),
+      0 0 0 7px rgb(56 217 255 / 0.5),
+      0 0 22px 10px rgb(255 212 59 / 0.58);
+  }
+  48% {
+    background: #ffffff;
+  }
+}
+
+@keyframes turn-boost-empty-flash {
+  0%, 100% { transform: translateX(-50%) rotate(-1deg); }
+  14% { transform: translateX(calc(-50% - 7px)) rotate(-5deg); }
+  28% { transform: translateX(calc(-50% + 7px)) rotate(4deg); }
+  42% { transform: translateX(calc(-50% - 5px)) rotate(-4deg); }
+  56% { transform: translateX(calc(-50% + 4px)) rotate(3deg); }
+  72% { transform: translateX(calc(-50% - 2px)) rotate(-2deg); }
+}
+
+@keyframes turn-boost-empty-bar-flash {
+  0%, 100% {
+    background: rgb(255 248 232 / 0.82);
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+  18%, 54% {
+    background: #ff5a5f;
+    box-shadow:
+      3px 3px 0 var(--ink),
+      0 0 0 6px rgb(255 90 95 / 0.48);
+  }
+  36%, 72% {
+    background: #fff8e8;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boost-hud.is-boost-full-flash,
+  .boost-hud.is-boost-empty-flash {
+    animation: none;
+  }
+}
+
 .race-position-hud {
   position: absolute;
   left: 38%;
