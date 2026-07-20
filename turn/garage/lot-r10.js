@@ -163,7 +163,7 @@ export function showTheLot({ initialSelection } = {}) {
     }
 
     installBrickScenery(lot).catch((error) => {
-      console.warn('TURN: The Lot Brick Kit scenery could not load.', error);
+      console.warn('TURN: The Lot brick wall could not load.', error);
     });
 
     function updateSelectionUi({ refreshViewer = true } = {}) {
@@ -560,82 +560,107 @@ function makeStats(vehicleStats) {
 }
 
 async function installBrickScenery(lot) {
-  // The prototype scattered nine oversized Brick Kit pieces around the whole perimeter.
-  // Keep the same lightweight vendored kit, but assemble three basic pieces into one
-  // deliberate pit-wall backdrop behind the cars so the scenery reads as architecture.
-  const [wallAsset, capAsset, slopeAsset] = await Promise.all([
-    lotLoader.loadAsync(brickUrl(4)),
-    lotLoader.loadAsync(brickUrl(2)),
-    lotLoader.loadAsync(brickUrl(8))
-  ]);
+  // Build a literal brick wall from the vendored Kenney 1x2 brick. Using one
+  // InstancedMesh keeps the entire wall to a single draw call on older devices.
+  const gltf = await lotLoader.loadAsync(brickUrl(1));
+  const sourceMesh = findFirstMesh(gltf.scene);
+  if (!sourceMesh?.geometry) throw new Error('Brick Kit 1x2 mesh is missing.');
 
-  const scenery = new THREE.Group();
-  scenery.name = 'turn-brick-pit-wall';
-  lot.add(scenery);
+  const geometry = sourceMesh.geometry.clone();
+  geometry.computeBoundingBox();
+  const sourceSize = geometry.boundingBox.getSize(new THREE.Vector3());
+  const brickSize = new THREE.Vector3(1.34, 0.5, 0.56);
+  const brickScale = new THREE.Vector3(
+    brickSize.x / Math.max(0.001, sourceSize.x),
+    brickSize.y / Math.max(0.001, sourceSize.y),
+    brickSize.z / Math.max(0.001, sourceSize.z)
+  );
 
-  const wallXs = [-17.1, -10.25, -3.4, 3.4, 10.25, 17.1];
-  const charcoal = 0x25292e;
-  const cream = 0xfcf6e7;
-  const yellow = 0xffd43b;
-
-  for (const x of wallXs) {
-    scenery.add(makeBrickSceneryPiece(wallAsset.scene, {
-      color: charcoal,
-      targetSize: 6.7,
-      position: [x, 0.06, -14.45]
-    }));
-    scenery.add(makeBrickSceneryPiece(capAsset.scene, {
-      color: cream,
-      targetSize: 6.7,
-      position: [x, 1.4, -14.45]
-    }));
-  }
-
-  scenery.add(makeBrickSceneryPiece(slopeAsset.scene, {
-    color: yellow,
-    targetSize: 3.2,
-    position: [-21.65, 0.06, -14.45],
-    rotationY: Math.PI
-  }));
-  scenery.add(makeBrickSceneryPiece(slopeAsset.scene, {
-    color: yellow,
-    targetSize: 3.2,
-    position: [21.65, 0.06, -14.45]
-  }));
-}
-
-function makeBrickSceneryPiece(source, { color, targetSize, position, rotationY = 0 }) {
-  const model = source.clone(true);
-  model.traverse((node) => {
-    if (!node.isMesh || !node.material) return;
-    const materials = Array.isArray(node.material) ? node.material : [node.material];
-    const clones = materials.map((material) => {
-      const clone = material.clone();
-      clone.color?.setHex(color);
-      return clone;
-    });
-    node.material = Array.isArray(node.material) ? clones : clones[0];
-    node.castShadow = false;
-    node.receiveShadow = false;
+  const bricks = [];
+  addBrickWallRun(bricks, {
+    axis: 'x',
+    from: -21.7,
+    to: 21.7,
+    fixed: -15.25,
+    rows: 5,
+    brickSize
   });
-  normalizeProp(model, targetSize);
-  model.position.set(...position);
-  model.rotation.y = rotationY;
-  return model;
+  addBrickWallRun(bricks, {
+    axis: 'z',
+    from: -14.55,
+    to: -9.25,
+    fixed: -22.35,
+    rows: 5,
+    brickSize
+  });
+  addBrickWallRun(bricks, {
+    axis: 'z',
+    from: -14.55,
+    to: -9.25,
+    fixed: 22.35,
+    rows: 5,
+    brickSize
+  });
+
+  const material = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    roughness: 0.96,
+    metalness: 0
+  });
+  const wall = new THREE.InstancedMesh(geometry, material, bricks.length);
+  wall.name = 'turn-literal-brick-wall';
+  wall.castShadow = false;
+  wall.receiveShadow = false;
+  wall.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+
+  const brickColors = [0x82483c, 0x925246, 0x754038, 0xa05b4c];
+  const matrix = new THREE.Matrix4();
+  const quaternion = new THREE.Quaternion();
+  const euler = new THREE.Euler();
+
+  bricks.forEach((brick, index) => {
+    euler.set(0, brick.rotationY, 0);
+    quaternion.setFromEuler(euler);
+    matrix.compose(brick.position, quaternion, brickScale);
+    wall.setMatrixAt(index, matrix);
+    wall.setColorAt(index, new THREE.Color(brickColors[brick.colorIndex % brickColors.length]));
+  });
+
+  wall.instanceMatrix.needsUpdate = true;
+  if (wall.instanceColor) wall.instanceColor.needsUpdate = true;
+  lot.add(wall);
 }
 
-function normalizeProp(model, targetSize) {
-  model.updateMatrixWorld(true);
-  const bounds = new THREE.Box3().setFromObject(model);
-  const size = bounds.getSize(new THREE.Vector3());
-  const maxSize = Math.max(0.001, size.x, size.y, size.z);
-  model.scale.setScalar(targetSize / maxSize);
-  model.updateMatrixWorld(true);
-  const nextBounds = new THREE.Box3().setFromObject(model);
-  const center = nextBounds.getCenter(new THREE.Vector3());
-  model.position.x -= center.x;
-  model.position.z -= center.z;
-  model.position.y -= nextBounds.min.y;
+function addBrickWallRun(target, { axis, from, to, fixed, rows, brickSize }) {
+  const brickStep = brickSize.x + 0.08;
+  const rowStep = brickSize.y + 0.06;
+  const runLength = to - from;
+  const columns = Math.floor(runLength / brickStep);
+  const rotationY = axis === 'z' ? Math.PI / 2 : 0;
+
+  for (let row = 0; row < rows; row += 1) {
+    const offset = row % 2 ? brickStep * 0.5 : 0;
+    for (let column = 0; column <= columns; column += 1) {
+      const along = from + column * brickStep + offset;
+      if (along > to) continue;
+      const position = axis === 'x'
+        ? new THREE.Vector3(along, 0.04 + row * rowStep, fixed)
+        : new THREE.Vector3(fixed, 0.04 + row * rowStep, along);
+      target.push({
+        position,
+        rotationY,
+        colorIndex: row * 3 + column
+      });
+    }
+  }
+}
+
+function findFirstMesh(root) {
+  let result = null;
+  root.traverse((node) => {
+    if (!result && node.isMesh) result = node;
+  });
+  return result;
 }
 
 function brickUrl(index) {
