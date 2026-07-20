@@ -128,6 +128,8 @@ function installGameplayUi() {
   let boostRequested = false;
   let boostExhausted = false;
   let boostCharge = 1;
+  let previousBoostCharge = boostCharge;
+  let boostFlashTimer = 0;
   let previousTime = performance.now();
   const TOP_ZONE_SHARE = 0.42;
   const DEFAULT_BOOST_DRAIN_SECONDS = 2.0;
@@ -146,6 +148,17 @@ function installGameplayUi() {
     try {
       navigator.vibrate?.(pattern);
     } catch (_) {}
+  }
+
+  function flashBoostHud(className) {
+    window.clearTimeout(boostFlashTimer);
+    boostHud.classList.remove('is-boost-full-flash', 'is-boost-empty-flash');
+    void boostHud.offsetWidth;
+    boostHud.classList.add(className);
+    boostFlashTimer = window.setTimeout(() => {
+      boostHud.classList.remove(className);
+      boostFlashTimer = 0;
+    }, 700);
   }
 
   function getBoostDrainSeconds() {
@@ -307,6 +320,10 @@ function installGameplayUi() {
       boostCharge = Math.min(1, boostCharge + dt * rechargeMultiplier / BOOST_RECHARGE_SECONDS);
     }
 
+    const becameEmpty = previousBoostCharge > 0.001 && boostCharge <= 0.001;
+    const becameFull = previousBoostCharge < 0.999 && boostCharge >= 0.999;
+    previousBoostCharge = boostCharge;
+
     const boosting = boostRequested && !boostExhausted && boostCharge > 0.001;
     globalThis.__turnBoostActive = boosting;
     globalThis.__turnBoostCharge = boostCharge;
@@ -325,6 +342,8 @@ function installGameplayUi() {
       boostVisualDirty = true;
       return;
     }
+    if (becameEmpty) flashBoostHud('is-boost-empty-flash');
+    else if (becameFull) flashBoostHud('is-boost-full-flash');
     if (!boostVisualDirty && !stateChanged && !visualDue) return;
 
     if (boostVisualDirty || boosting !== publishedBoosting) {
