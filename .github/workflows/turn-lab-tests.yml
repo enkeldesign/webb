@@ -46,6 +46,9 @@ jobs:
       - name: Run all-car orientation regression
         run: node turn-lab/tests/car-orientation-production.mjs
 
+      - name: Run native and secondary paint regression
+        run: node turn-lab/tests/native-paint-production.mjs
+
       - name: Run balance and anti-shortcut regression
         run: node turn-lab/tests/balance-and-checkpoints.mjs
 

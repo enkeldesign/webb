@@ -75,17 +75,19 @@ const [index, main, lapSystem, rivalStorage, controls, carModels] = await Promis
   fs.readFile(path.join(turnDir, 'vehicle/car-models.js'), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.2 · Build 2026\.07\.20-r18/);
-assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260720-r18/);
+assert.match(index, /TURN v1\.3\.3 · Build 2026\.07\.20-r19/);
+assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260720-r19/);
 assert.match(main, /await showTheLot\(/, 'Start flow must enter The Lot before racing');
 assert.match(main, /maxSpeed: MAX_SPEED \* state\.vehicleTuning\.topSpeedMultiplier/, 'Selected top speed must reach physics');
 assert.match(main, /vehicleTuning: state\.vehicleTuning/, 'Selected handling profile must reach physics');
 assert.doesNotMatch(main, /wayne-wu\/webgpu-crowd-simulation/, 'Production must not depend on the old remote Sedan model');
 assert.match(lapSystem, /carId: state\.vehicleId \|\| 'sedan'/, 'Completed laps must remember their car model');
 assert.match(lapSystem, /carColor: state\.vehicleColor \|\| '#ffd43b'/, 'Completed laps must remember their paint colour');
-assert.match(rivalStorage, /version: 3/, 'Rival storage schema must include vehicle metadata version');
+assert.match(lapSystem, /carSecondaryColor: state\.vehicleSecondaryColor \|\| '#f8f9fa'/, 'Completed laps must remember secondary paint');
+assert.match(rivalStorage, /version: 4/, 'Rival storage schema must include secondary paint metadata');
 assert.match(rivalStorage, /normalizeVehicleId\(lap\.carId\)/, 'Loaded rivals must normalize stored car ids');
 assert.match(rivalStorage, /normalizeVehicleColor\(lap\.carColor\)/, 'Loaded rivals must normalize stored car colours');
+assert.match(rivalStorage, /normalizeVehicleSecondaryColor\(lap\.carSecondaryColor\)/, 'Loaded rivals must normalize secondary paint');
 assert.match(controls, /boostDurationSeconds/, 'Boost drain must use the selected car boost tank stat');
 assert.match(catalogSource, /asset: `\.\/assets\/cars\/\$\{id\}\.glb`/, 'Vehicle catalog must point to vendored local car assets');
 assert.match(carModels, /loadCarSource\(car\.id\)/, 'Car model factory must load the catalog-selected vehicle');
@@ -94,7 +96,8 @@ const lotR10 = await fs.readFile(path.join(turnDir, 'garage/lot-r10.js'), 'utf8'
 const lotR10Css = await fs.readFile(path.join(turnDir, 'garage/lot-r10.css'), 'utf8');
 assert.match(main, /garage\/lot-r10\.js/, 'Production must load the r10 Lot module');
 assert.match(lotR10, /MUTED_COLOR/, 'Unselected Lot cars must have a muted visual state');
-assert.match(lotR10, /selectedColor = DEFAULT_VEHICLE_COLOR/, 'Newly selected cars must return to the default yellow paint');
+assert.match(lotR10, /selectedColor = selection\.color/, 'The Lot must restore the selected native body colour');
+assert.match(lotR10, /selectedSecondaryColor = selection\.secondaryColor/, 'The Lot must restore secondary paint');
 assert.match(lotR10, /lot-viewbox/, 'The Lot must include a dedicated 3D car viewbox');
 assert.match(lotR10, /DRAG TO ROTATE/, 'The 3D car viewer must advertise drag rotation');
 assert.match(lotR10Css, /--lot-rail-width/, 'The stats and viewer rail must reserve space beside the parking lot');

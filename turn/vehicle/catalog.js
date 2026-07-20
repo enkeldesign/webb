@@ -1,5 +1,6 @@
 export const DEFAULT_VEHICLE_ID = 'sedan';
 export const DEFAULT_VEHICLE_COLOR = '#ffd43b';
+export const DEFAULT_VEHICLE_SECONDARY_COLOR = '#f8f9fa';
 export const VEHICLE_SELECTION_KEY = 'turn-vehicle-selection-v1';
 export const VEHICLE_STAT_BUDGET = 18;
 
@@ -36,6 +37,15 @@ const RAW_CARS = [
   ['van', 'Van', 'car', { speed: 2, acceleration: 3, control: 3, drift: 5, boostPower: 1, boostDuration: 4 }, 1.08, 0]
 ];
 
+// The current GLBs use one atlas material per mesh. Roofs are part of the body mesh,
+// while Sport Sedan's spoiler is the one safe, separately addressable paint surface.
+const SECONDARY_PAINT_BY_ID = Object.freeze({
+  'sedan-sports': Object.freeze({
+    label: 'Spoiler',
+    meshNames: Object.freeze(['spoiler'])
+  })
+});
+
 export const CAR_CATALOG = Object.freeze(RAW_CARS.map(([
   id,
   name,
@@ -51,11 +61,12 @@ export const CAR_CATALOG = Object.freeze(RAW_CARS.map(([
   stats: Object.freeze({ ...stats }),
   visualScale,
   modelYawQuarterTurns,
+  secondaryPaint: SECONDARY_PAINT_BY_ID[id] || null,
   tuning: Object.freeze(deriveVehicleTuning(stats))
 })));
 
 const CAR_BY_ID = new Map(CAR_CATALOG.map((car) => [car.id, car]));
-const PALETTE_VALUES = new Set(CAR_PALETTE.map((color) => color.value.toLowerCase()));
+const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/;
 
 export function getCarDefinition(id) {
   return CAR_BY_ID.get(id) || CAR_BY_ID.get(DEFAULT_VEHICLE_ID);
@@ -67,13 +78,19 @@ export function normalizeVehicleId(id) {
 
 export function normalizeVehicleColor(color) {
   const value = typeof color === 'string' ? color.toLowerCase() : '';
-  return PALETTE_VALUES.has(value) ? value : DEFAULT_VEHICLE_COLOR;
+  return HEX_COLOR_PATTERN.test(value) ? value : DEFAULT_VEHICLE_COLOR;
+}
+
+export function normalizeVehicleSecondaryColor(color) {
+  const value = typeof color === 'string' ? color.toLowerCase() : '';
+  return HEX_COLOR_PATTERN.test(value) ? value : DEFAULT_VEHICLE_SECONDARY_COLOR;
 }
 
 export function normalizeVehicleSelection(selection) {
   return {
     carId: normalizeVehicleId(selection?.carId),
-    color: normalizeVehicleColor(selection?.color)
+    color: normalizeVehicleColor(selection?.color),
+    secondaryColor: normalizeVehicleSecondaryColor(selection?.secondaryColor)
   };
 }
 

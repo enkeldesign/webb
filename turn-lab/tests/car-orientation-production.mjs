@@ -64,7 +64,7 @@ const [index, carModels, lot, main] = await Promise.all([
   fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.2 · Build 2026\.07\.20-r18/);
+assert.match(index, /TURN v1\.3\.3 · Build 2026\.07\.20-r19/);
 assert.match(
   carModels,
   /model\.rotation\.y = Math\.PI \+ car\.modelYawQuarterTurns \* Math\.PI \/ 2/,
