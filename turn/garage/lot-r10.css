@@ -45,6 +45,7 @@
   margin-top: 8px;
   font-size: clamp(2.7rem, 8vw, 6.4rem);
   line-height: 0.72;
+  word-spacing: 0.16em;
 }
 
 .lot-heading p {
