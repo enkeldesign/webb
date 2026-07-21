@@ -170,6 +170,28 @@ function installGameplayUi() {
     return Math.max(0.8, Math.min(5, duration));
   }
 
+  function refillBoost() {
+    window.clearTimeout(boostFlashTimer);
+    boostFlashTimer = 0;
+    boostCharge = 1;
+    previousBoostCharge = 1;
+    boostExhausted = false;
+    globalThis.__turnBoostCharge = 1;
+    boostVisualDirty = true;
+    lastBoostVisualAt = -Infinity;
+    publishedChargePercent = null;
+    publishedAriaPercent = null;
+    publishedLocked = null;
+    drivePad.style.setProperty('--boost-charge', '100%');
+    boostHud.style.setProperty('--boost-charge', '100%');
+    boostHud.setAttribute('aria-label', 'Boost 100 percent charged');
+    drivePad.classList.remove('is-boost-locked');
+    boostZone.classList.remove('is-locked');
+    boostHud.classList.remove('is-boost-full-flash', 'is-boost-empty-flash');
+  }
+
+  globalThis.__turnRefillBoost = refillBoost;
+
   function zoneFromPointer(event) {
     const rect = drivePad.getBoundingClientRect();
     const margin = 24;
@@ -299,6 +321,9 @@ function installGameplayUi() {
   window.addEventListener('blur', () => {
     releaseDrive();
     centerManualSteerVisual();
+  });
+  window.addEventListener('turn:ui-state-change', (event) => {
+    if (event.detail?.reason === 'race-reset') refillBoost();
   });
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
