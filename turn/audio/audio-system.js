@@ -41,7 +41,7 @@ export function installTurnAudio() {
   document.addEventListener('keydown', unlockFromGesture, { capture: true });
   document.addEventListener('click', handleUiClick, { capture: true });
   document.addEventListener('visibilitychange', handleVisibilityChange, { passive: true });
-  window.addEventListener('pagehide', suspendContext, { passive: true });
+  window.addEventListener('pagehide', handlePageHide, { passive: true });
 
   return api;
 }
@@ -110,9 +110,9 @@ export function cue(name) {
 export function silence() {
   if (!context || context.state !== 'running') return;
   const now = context.currentTime;
-  smooth(engineGain.gain, 0, now, 0.05);
-  smooth(driftGain.gain, 0, now, 0.05);
-  smooth(boostGain.gain, 0, now, 0.05);
+  hardMute(engineGain.gain, now);
+  hardMute(driftGain.gain, now);
+  hardMute(boostGain.gain, now);
   lastBoostActive = false;
 }
 
@@ -312,6 +312,11 @@ function smooth(param, value, time, timeConstant) {
   param.setTargetAtTime(value, time, timeConstant);
 }
 
+function hardMute(param, time) {
+  param.cancelScheduledValues(time);
+  param.setValueAtTime(0, time);
+}
+
 function handleUiClick(event) {
   const button = event.target.closest?.('button');
   if (!button) return;
@@ -337,6 +342,11 @@ function handleVisibilityChange() {
     silence();
     suspendContext();
   }
+}
+
+function handlePageHide() {
+  silence();
+  suspendContext();
 }
 
 function suspendContext() {
