@@ -174,12 +174,14 @@
   }
 
   async function requestLandscapeLock() {
+    // Prefer the broad landscape lock so both physical turning directions remain valid.
+    // Some WebKit builds behave asymmetrically when pinned to an exact landscape side.
+    if (await tryOrientationLock('landscape')) return true;
+
     const exactType = preferredLandscapeLock === 'landscape'
       ? currentLandscapeLockType()
       : preferredLandscapeLock;
-
-    if (exactType !== 'landscape' && await tryOrientationLock(exactType)) return true;
-    return tryOrientationLock('landscape');
+    return exactType !== 'landscape' ? tryOrientationLock(exactType) : false;
   }
 
   globalThis.__turnRequestLandscapeLock = requestLandscapeLock;
@@ -271,11 +273,10 @@
   });
 
   // Safari may only accept an orientation request while processing a user interaction.
-  // Re-request on meaningful gestures so supported WebKit builds get every opportunity
-  // to keep the exact landscape side chosen at race start.
+  // Ask on actual game-start gestures, but do not re-lock on every GAS/DRIFT/BOOST touch.
   document.addEventListener('pointerdown', (event) => {
-    const startsGame = event.target.closest?.('#motionButton, #manualButton');
-    if (gameplayActive || startsGame) void requestLandscapeLock();
+    const startsGame = event.target.closest?.('#motionButton, #manualButton, .lot-race');
+    if (startsGame) void requestLandscapeLock();
   }, { passive: true, capture: true });
 
   document.addEventListener('click', (event) => {
