@@ -3,8 +3,10 @@ import fs from 'node:fs/promises';
 
 import {
   LAP_CHECKPOINTS,
+  crossedForwardGate,
   updateLapProgressState
 } from '../../turn/race/lap-system.js';
+import { resetRaceToStage } from '../../turn/race/game-state.js';
 
 const catalogSource = await fs.readFile(new URL('../../turn/vehicle/catalog.js', import.meta.url), 'utf8');
 const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
@@ -33,6 +35,20 @@ class Vec3 {
     this.z = z;
   }
 
+  copy(other) {
+    this.x = other.x;
+    this.y = other.y;
+    this.z = other.z;
+    return this;
+  }
+
+  set(x, y, z) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    return this;
+  }
+
   dot(other) {
     return this.x * other.x + this.y * other.y + this.z * other.z;
   }
@@ -51,7 +67,8 @@ const state = {
   velocity: new Vec3(10, 0, 0),
   lastProgress: 0.07,
   progress: 0.09,
-  trackDistance: 1
+  trackDistance: 1,
+  lapPreviousPosition: { x: 69, z: 40 }
 };
 
 let began = 0;
@@ -75,31 +92,100 @@ assert.equal(
 );
 
 const firstCheckpointIndex = Math.round(LAP_CHECKPOINTS[0] * samples.length) % samples.length;
-state.position = new Vec3(samples[firstCheckpointIndex].point.x, 0, 0);
+state.lapPreviousPosition = { x: firstCheckpointIndex - 2, z: -30 };
+state.position = new Vec3(firstCheckpointIndex + 2, 0, 30);
 run(1100);
-assert.equal(state.lapCheckpointIndex, 1, 'driving through the physical checkpoint gate must count');
+assert.equal(
+  state.lapCheckpointIndex,
+  1,
+  'a checkpoint crossed between physics samples must count even when neither sampled endpoint is inside the old circular gate'
+);
+assert.equal(began, 0, 'the swept checkpoint regression must not accidentally cross the start line');
 
 const secondCheckpointIndex = Math.round(LAP_CHECKPOINTS[1] * samples.length) % samples.length;
-state.position = new Vec3(samples[secondCheckpointIndex].point.x, 0, 0);
+state.lapPreviousPosition = { x: secondCheckpointIndex - 2, z: 0 };
+state.position = new Vec3(secondCheckpointIndex + 2, 0, 0);
 state.velocity = new Vec3(-10, 0, 0);
 run(1200);
 assert.equal(state.lapCheckpointIndex, 1, 'crossing a checkpoint backwards must not count');
 
+state.lapPreviousPosition = { x: secondCheckpointIndex - 2, z: 0 };
+state.position = new Vec3(secondCheckpointIndex + 2, 0, 0);
 state.velocity = new Vec3(10, 0, 0);
 run(1300);
-assert.equal(state.lapCheckpointIndex, 2, 'ordered forward checkpoint crossing must count');
+assert.equal(state.lapCheckpointIndex, 2, 'ordered forward swept checkpoint crossing must count');
 
-state.lastProgress = 0.9;
-state.progress = 0.1;
+assert.equal(
+  crossedForwardGate(
+    { x: -4, z: 10 },
+    { x: 4, z: 10 },
+    samples[0],
+    12
+  ),
+  true,
+  'a physical gate crossing should be detected from the swept car path'
+);
+assert.equal(
+  crossedForwardGate(
+    { x: -4, z: 20 },
+    { x: 4, z: 20 },
+    samples[0],
+    12
+  ),
+  false,
+  'crossing the gate plane too far from the track must remain invalid'
+);
+
+state.lastProgress = 0.4;
+state.progress = 0.4;
 state.lapCheckpointIndex = LAP_CHECKPOINTS.length - 1;
-state.position = new Vec3(0, 0, 0);
+state.lapPreviousPosition = { x: -2, z: 0 };
+state.position = new Vec3(2, 0, 0);
 run(1400);
 assert.equal(completed, 0, 'missing even one checkpoint must prevent lap completion');
 assert.equal(began, 1, 'an incomplete shortcut lap must restart the timed attempt');
 
-const [carModelsSource, mainSource] = await Promise.all([
+state.lastProgress = 0.4;
+state.progress = 0.4;
+state.lapCheckpointIndex = LAP_CHECKPOINTS.length;
+state.lapPreviousPosition = { x: -2, z: 0 };
+state.position = new Vec3(2, 0, 0);
+run(1500);
+assert.equal(completed, 1, 'the physical start gate must complete a full checkpoint chain without relying on progress wrap');
+
+state.lapActive = false;
+state.lastProgress = 0.4;
+state.progress = 0.4;
+state.lapPreviousPosition = { x: -2, z: 0 };
+state.position = new Vec3(2, 0, 0);
+run(1600);
+assert.equal(began, 2, 'the first physical forward start-line crossing must begin timing even when nearest-track progress does not wrap');
+
+const resetState = {
+  position: new Vec3(999, 0, 999),
+  velocity: new Vec3(4, 0, 2),
+  competitorLaps: [{}, {}],
+  lapPreviousPosition: { x: -999, z: -999 },
+  lapCheckpointIndex: 7,
+  lapStartedAt: 1234,
+  lapElapsed: 9,
+  recording: [{ t: 1 }],
+  lapActive: true,
+  mode: 'racing'
+};
+resetRaceToStage({ state: resetState, samples, showFeedback: false });
+assert.deepEqual(
+  resetState.lapPreviousPosition,
+  { x: resetState.position.x, z: resetState.position.z },
+  'reset must clear stale gate history so the next start crossing is measured from the reset position'
+);
+assert.equal(resetState.lapCheckpointIndex, 0, 'reset must clear checkpoint progress');
+assert.equal(resetState.lapActive, false, 'reset must return to staged pre-lap state');
+
+const [carModelsSource, mainSource, lapSystemSource] = await Promise.all([
   fs.readFile(new URL('../../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/race/lap-system.js', import.meta.url), 'utf8')
 ]);
 assert.match(carModelsSource, /const TIRE_COLOR = 0x17191c/, 'asset vehicle wheels must be forced to a dark tire colour');
 assert.match(carModelsSource, /material\.transparent = false/, 'ghost materials must be solid');
@@ -107,5 +193,7 @@ assert.match(carModelsSource, /material\.opacity = 1/, 'ghost materials must be 
 assert.match(carModelsSource, /ghost \? ghostColor : requestedColor/, 'ghost body paint must use the lighter precursor colour');
 assert.match(mainSource, /const ghostCar = makeCar\(0x38d9ff, 1\)/, 'procedural ghost fallback must also be solid');
 assert.match(mainSource, /const car = makeCar\(0x38d9ff, 1\)/, 'additional procedural rival fallbacks must also be solid');
+assert.match(lapSystemSource, /crossedForwardGate/, 'production lap registration must use swept physical gates');
+assert.match(lapSystemSource, /LAP_GATE_HALF_WIDTH_FACTOR = 0\.82/, 'legitimate laps must have modest verge tolerance around the road and curbs');
 
-console.log('TURN balance and anti-shortcut regression passed.');
+console.log('TURN balance, swept lap gates and anti-shortcut regression passed.');

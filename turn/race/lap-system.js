@@ -13,7 +13,11 @@ export const LAP_CHECKPOINTS = Object.freeze([
   0.94
 ]);
 
-const CHECKPOINT_GATE_RADIUS_FACTOR = 0.62;
+// The gate spans the whole road, both curbs and a modest amount of verge. The
+// ordered twelve-gate chain still prevents major shortcuts, while a legitimate
+// lap is no longer invalidated by briefly putting two wheels beyond a curb.
+const LAP_GATE_HALF_WIDTH_FACTOR = 0.82;
+const GATE_EPSILON = 1e-6;
 
 export function beginTimedLapState({ state, samples, now, showMessage }) {
   const start = samples[0];
@@ -22,6 +26,7 @@ export function beginTimedLapState({ state, samples, now, showMessage }) {
   state.lapCheckpointIndex = 0;
   state.lapStartedAt = now;
   state.lapElapsed = 0;
+  state.lapPreviousPosition = snapshotPosition(state.position);
   state.recording = [{
     t: 0,
     x: start.point.x,
@@ -46,28 +51,49 @@ export function updateLapProgressState({
   completeLap,
   recordGhostFrame
 }) {
+  const currentPosition = snapshotPosition(state.position);
+  const previousPosition = state.lapPreviousPosition || currentPosition;
+  const gateHalfWidth = trackWidth * LAP_GATE_HALF_WIDTH_FACTOR;
   const nextCheckpoint = checkpoints[state.lapCheckpointIndex];
 
   if (state.lapActive && nextCheckpoint != null) {
     const checkpointSample = checkpointSampleAt(samples, nextCheckpoint);
     const movingForwardThroughGate = state.velocity.dot(checkpointSample.tangent) > 2;
-    const gateRadius = trackWidth * CHECKPOINT_GATE_RADIUS_FACTOR;
-    const dx = state.position.x - checkpointSample.point.x;
-    const dz = state.position.z - checkpointSample.point.z;
-    const insideCheckpointGate = dx * dx + dz * dz <= gateRadius * gateRadius;
+    const crossedCheckpointGate = crossedForwardGate(
+      previousPosition,
+      currentPosition,
+      checkpointSample,
+      gateHalfWidth
+    );
 
-    // A checkpoint is a physical gate on the racing line, not merely a percentage of
-    // whichever bit of track happens to be nearest. This prevents lake/house shortcuts.
-    if (movingForwardThroughGate && insideCheckpointGate) {
+    // Keep a close-range fallback for the first frame after legacy/restored state,
+    // but normal play uses the swept crossing above so a gate cannot fall between
+    // two physics samples.
+    const insideCheckpointGate = !state.lapPreviousPosition
+      && distanceSquared(currentPosition, checkpointSample.point) <= gateHalfWidth * gateHalfWidth;
+
+    if (movingForwardThroughGate && (crossedCheckpointGate || insideCheckpointGate)) {
       state.lapCheckpointIndex += 1;
     }
   }
 
-  const crossedStart = state.lastProgress > 0.82 && state.progress < 0.18;
-  const movingForwardAtStart = state.velocity.dot(samples[0].tangent) > 5;
-  const crossedStartOnTrack = crossedStart
-    && movingForwardAtStart
-    && state.trackDistance < trackWidth * CHECKPOINT_GATE_RADIUS_FACTOR;
+  const startSample = samples[0];
+  const movingForwardAtStart = state.velocity.dot(startSample.tangent) > 5;
+  const crossedPhysicalStartGate = crossedForwardGate(
+    previousPosition,
+    currentPosition,
+    startSample,
+    gateHalfWidth
+  );
+
+  // Retain the old progress-wrap signal as a compatibility fallback, but require
+  // the car to actually be near the physical start gate. The physical swept gate
+  // is now the primary source of truth.
+  const crossedStartByProgress = state.lastProgress > 0.82 && state.progress < 0.18;
+  const nearPhysicalStart = distanceSquared(currentPosition, startSample.point)
+    <= gateHalfWidth * gateHalfWidth;
+  const crossedStartOnTrack = movingForwardAtStart
+    && (crossedPhysicalStartGate || (crossedStartByProgress && nearPhysicalStart));
 
   if (crossedStartOnTrack) {
     if (!state.lapActive) {
@@ -75,7 +101,9 @@ export function updateLapProgressState({
     } else if (state.lapCheckpointIndex >= checkpoints.length) {
       completeLap(now);
     } else {
-      // Crossing the line without every physical gate starts a fresh timed attempt, never a lap.
+      // Crossing the line without every ordered physical gate starts a fresh timed
+      // attempt. This preserves the anti-shortcut contract while avoiding false
+      // misses caused by point-sampled gates.
       beginTimedLap(now);
     }
   }
@@ -86,6 +114,8 @@ export function updateLapProgressState({
   } else {
     state.lapElapsed = 0;
   }
+
+  state.lapPreviousPosition = currentPosition;
 }
 
 export function completeLapState({
@@ -173,6 +203,39 @@ export function completeLapState({
   };
 }
 
+export function crossedForwardGate(previousPosition, currentPosition, gateSample, halfWidth) {
+  if (!previousPosition || !currentPosition || !gateSample?.point || !gateSample?.tangent) return false;
+
+  const tangentX = Number(gateSample.tangent.x) || 0;
+  const tangentZ = Number(gateSample.tangent.z) || 0;
+  const tangentLength = Math.hypot(tangentX, tangentZ);
+  if (tangentLength <= GATE_EPSILON) return false;
+
+  const tx = tangentX / tangentLength;
+  const tz = tangentZ / tangentLength;
+  const nx = -tz;
+  const nz = tx;
+  const centerX = Number(gateSample.point.x) || 0;
+  const centerZ = Number(gateSample.point.z) || 0;
+
+  const previousLongitudinal = (previousPosition.x - centerX) * tx
+    + (previousPosition.z - centerZ) * tz;
+  const currentLongitudinal = (currentPosition.x - centerX) * tx
+    + (currentPosition.z - centerZ) * tz;
+
+  if (!(previousLongitudinal <= 0 && currentLongitudinal > 0)) return false;
+
+  const longitudinalStep = currentLongitudinal - previousLongitudinal;
+  if (longitudinalStep <= GATE_EPSILON) return false;
+
+  const crossingT = Math.min(1, Math.max(0, -previousLongitudinal / longitudinalStep));
+  const crossingX = previousPosition.x + (currentPosition.x - previousPosition.x) * crossingT;
+  const crossingZ = previousPosition.z + (currentPosition.z - previousPosition.z) * crossingT;
+  const lateralDistance = Math.abs((crossingX - centerX) * nx + (crossingZ - centerZ) * nz);
+
+  return lateralDistance <= halfWidth;
+}
+
 function publishLapResult(detail) {
   if (typeof globalThis.dispatchEvent !== 'function' || typeof globalThis.CustomEvent !== 'function') return;
   globalThis.dispatchEvent(new globalThis.CustomEvent('turn:lap-result', { detail }));
@@ -181,4 +244,17 @@ function publishLapResult(detail) {
 function checkpointSampleAt(samples, progress) {
   const index = Math.round(progress * samples.length) % samples.length;
   return samples[index];
+}
+
+function snapshotPosition(position) {
+  return {
+    x: Number(position?.x) || 0,
+    z: Number(position?.z) || 0
+  };
+}
+
+function distanceSquared(a, b) {
+  const dx = (Number(a?.x) || 0) - (Number(b?.x) || 0);
+  const dz = (Number(a?.z) || 0) - (Number(b?.z) || 0);
+  return dx * dx + dz * dz;
 }
