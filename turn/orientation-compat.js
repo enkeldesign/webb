@@ -32,9 +32,11 @@
   let lastBaseAngle = null;
   let gameplayActive = false;
   let gameplayAngle = null;
+  let preferredLandscapeLock = 'landscape';
   let lastResolvedRoll = 0;
   let steeringNeutralRoll = 0;
   let steeringLimitLevel = 0;
+  let lockUnsupportedReported = false;
 
   function normalizeDegrees(value) {
     if (!Number.isFinite(value)) return null;
@@ -148,13 +150,39 @@
     document.body.classList.toggle('turn-steering-limit-hard', nextLevel >= 2);
   }
 
-  function requestLandscapeLock() {
+  function currentLandscapeLockType() {
+    const type = String(orientation.type || '');
+    if (type === 'landscape-primary' || type === 'landscape-secondary') return type;
+    return 'landscape';
+  }
+
+  async function tryOrientationLock(type) {
+    if (typeof orientation.lock !== 'function') {
+      if (!lockUnsupportedReported) {
+        lockUnsupportedReported = true;
+        console.info('TURN: OS orientation lock is not exposed by this WebKit build; using the in-game guard only.');
+      }
+      return false;
+    }
+
     try {
-      return Promise.resolve(orientation.lock?.('landscape')).catch(() => false);
+      await orientation.lock(type);
+      return true;
     } catch (_) {
-      return Promise.resolve(false);
+      return false;
     }
   }
+
+  async function requestLandscapeLock() {
+    const exactType = preferredLandscapeLock === 'landscape'
+      ? currentLandscapeLockType()
+      : preferredLandscapeLock;
+
+    if (exactType !== 'landscape' && await tryOrientationLock(exactType)) return true;
+    return tryOrientationLock('landscape');
+  }
+
+  globalThis.__turnRequestLandscapeLock = requestLandscapeLock;
 
   function setGameplayActive(active) {
     const nextActive = Boolean(active);
@@ -164,13 +192,15 @@
     document.body.classList.toggle('turn-race-active', gameplayActive);
 
     if (gameplayActive) {
+      preferredLandscapeLock = currentLandscapeLockType();
       gameplayAngle = computedAngle();
       steeringNeutralRoll = lastResolvedRoll;
       clearSteeringLimitFeedback();
       void requestLandscapeLock();
-      console.info(`TURN: race orientation guard locked at ${gameplayAngle}°.`);
+      console.info(`TURN: race orientation guard locked at ${gameplayAngle}° (${preferredLandscapeLock}).`);
     } else {
       gameplayAngle = null;
+      preferredLandscapeLock = 'landscape';
       clearSteeringLimitFeedback();
     }
   }
@@ -214,6 +244,10 @@
     updateSteeringLimitFeedback(lastResolvedRoll);
   }
 
+  function retryGameplayLock() {
+    if (gameplayActive) void requestLandscapeLock();
+  }
+
   // Register before the game adds its own devicemotion listener. Each sensor event can
   // therefore update the mapping before TURN reads screen.orientation.angle for that frame.
   window.addEventListener('devicemotion', observeMotion, { passive: true });
@@ -224,10 +258,25 @@
     }
     resetSensorCalibration();
   }, { passive: true });
+  orientation.addEventListener?.('change', retryGameplayLock, { passive: true });
+  window.addEventListener('pageshow', retryGameplayLock, { passive: true });
+  document.addEventListener('fullscreenchange', retryGameplayLock, { passive: true });
+  document.addEventListener('webkitfullscreenchange', retryGameplayLock, { passive: true });
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) retryGameplayLock();
+  }, { passive: true });
 
   window.addEventListener('turn:ui-state-change', (event) => {
     setGameplayActive(Boolean(event.detail?.running));
   });
+
+  // Safari may only accept an orientation request while processing a user interaction.
+  // Re-request on meaningful gestures so supported WebKit builds get every opportunity
+  // to keep the exact landscape side chosen at race start.
+  document.addEventListener('pointerdown', (event) => {
+    const startsGame = event.target.closest?.('#motionButton, #manualButton');
+    if (gameplayActive || startsGame) void requestLandscapeLock();
+  }, { passive: true, capture: true });
 
   document.addEventListener('click', (event) => {
     if (event.target.closest?.('#motionButton')) resetSensorCalibration();
