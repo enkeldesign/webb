@@ -76,6 +76,9 @@ function installGameplayUi() {
       positionHud.classList.remove('position-pop');
       void positionHud.offsetWidth;
       positionHud.classList.add('position-pop');
+      if (position < lastPosition) {
+        globalThis.__turnAudio?.cue('overtake', { places: lastPosition - position });
+      }
     }
     lastPosition = position;
     lastPositionTotal = total;
@@ -304,6 +307,21 @@ function installGameplayUi() {
     }
   });
 
+  function nearestRivalDistance(runtime, active) {
+    if (!active || !runtime?.state?.lapActive || !runtime?.playerCar?.position) return Infinity;
+    let nearestSquared = Infinity;
+    const player = runtime.playerCar.position;
+
+    for (const car of runtime.competitorCars || []) {
+      if (!car?.visible || !car.position) continue;
+      const dx = car.position.x - player.x;
+      const dz = car.position.z - player.z;
+      nearestSquared = Math.min(nearestSquared, dx * dx + dz * dz);
+    }
+
+    return Number.isFinite(nearestSquared) ? Math.sqrt(nearestSquared) : Infinity;
+  }
+
   function updateAudio(now, boosting) {
     const runtime = globalThis.__turnRuntime;
     const runtimeState = runtime?.state;
@@ -321,7 +339,9 @@ function installGameplayUi() {
       throttle: runtimeState?.throttle || 0,
       driftAmount: runtimeState?.driftAmount || 0,
       driftHeld: Boolean(globalThis.__turnDriftHeld),
-      boostActive: boosting
+      boostActive: boosting,
+      enginePitch: runtimeState?.vehicleTuning?.enginePitch || 1,
+      nearestRivalDistance: nearestRivalDistance(runtime, active)
     }, now);
   }
 
@@ -365,8 +385,13 @@ function installGameplayUi() {
       boostVisualDirty = true;
       return;
     }
-    if (becameEmpty) flashBoostHud('is-boost-empty-flash');
-    else if (becameFull) flashBoostHud('is-boost-full-flash');
+    if (becameEmpty) {
+      globalThis.__turnAudio?.cue('boost-empty');
+      flashBoostHud('is-boost-empty-flash');
+    } else if (becameFull) {
+      globalThis.__turnAudio?.cue('boost-full');
+      flashBoostHud('is-boost-full-flash');
+    }
     if (!boostVisualDirty && !stateChanged && !visualDue) return;
 
     if (boostVisualDirty || boosting !== publishedBoosting) {

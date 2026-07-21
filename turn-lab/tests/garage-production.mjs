@@ -4,43 +4,19 @@ import path from 'node:path';
 
 const root = process.cwd();
 const turnDir = path.join(root, 'turn');
-
 const catalogSource = await fs.readFile(path.join(turnDir, 'vehicle/catalog.js'), 'utf8');
 const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
-
-const expectedIds = [
-  'convertible',
-  'classic',
-  'vintage-racer',
-  'toy-racer',
-  'monster-truck',
-  'race-future',
-  'race',
-  'sedan-sports',
-  'sedan',
-  'suv',
-  'suv-luxury',
-  'hatchback-sports',
-  'truck-flat',
-  'truck',
-  'van'
-];
+const expectedIds = ['convertible','classic','vintage-racer','toy-racer','monster-truck','race-future','race','sedan-sports','sedan','suv','suv-luxury','hatchback-sports','truck-flat','truck','van'];
 
 assert.equal(catalog.CAR_CATALOG.length, 15, 'The Lot must contain exactly 15 cars');
 assert.deepEqual(catalog.CAR_CATALOG.map((car) => car.id), expectedIds, 'The Lot car order changed unexpectedly');
-
-for (const id of expectedIds) {
-  await fs.access(path.join(turnDir, `assets/cars/${id}.glb`));
-}
-
-const brickFiles = (await fs.readdir(path.join(turnDir, 'assets/lot-bricks')))
-  .filter((file) => file.endsWith('.glb'));
+for (const id of expectedIds) await fs.access(path.join(turnDir, `assets/cars/${id}.glb`));
+const brickFiles = (await fs.readdir(path.join(turnDir, 'assets/lot-bricks'))).filter((file) => file.endsWith('.glb'));
 assert.equal(brickFiles.length, 9, 'The vendored Kenney Brick Kit subset should remain available even though The Lot no longer renders it');
 
 const sedan = catalog.getCarDefinition('sedan');
 const race = catalog.getCarDefinition('race');
 const truck = catalog.getCarDefinition('truck');
-
 assert.equal(sedan.tuning.topSpeedMultiplier, 1, 'Sedan top speed must remain the v1.0 baseline');
 assert.equal(sedan.tuning.accelerationMultiplier, 1, 'Sedan acceleration must remain the v1.0 baseline');
 assert.equal(sedan.tuning.controlMultiplier, 1, 'Sedan control must remain the v1.0 baseline');
@@ -49,22 +25,18 @@ assert.equal(sedan.tuning.driftDragAdd, 0.085, 'Sedan drift drag must remain the
 assert.equal(sedan.tuning.boostPowerMultiplier, 1, 'Sedan boost power must remain the v1.0 baseline');
 assert.equal(sedan.tuning.boostSpeedMultiplier, 1.32, 'Sedan boost speed must remain the v1.0 baseline');
 assert.equal(sedan.tuning.boostDurationSeconds, 2, 'Sedan boost tank must remain the v1.0 baseline');
-
 assert.ok(race.tuning.topSpeedMultiplier > sedan.tuning.topSpeedMultiplier, 'Race car should have more top speed than Sedan');
 assert.ok(race.tuning.accelerationMultiplier > sedan.tuning.accelerationMultiplier, 'Race car should accelerate faster than Sedan');
 assert.ok(race.tuning.controlMultiplier > sedan.tuning.controlMultiplier, 'Race car should have more control than Sedan');
 assert.ok(race.tuning.driftDragAdd > sedan.tuning.driftDragAdd, 'Race car should pay a larger speed penalty while drifting');
 assert.ok(race.tuning.boostPowerMultiplier >= sedan.tuning.boostPowerMultiplier, 'Race car boost should not be weaker than Sedan');
 assert.ok(race.tuning.boostDurationSeconds < sedan.tuning.boostDurationSeconds, 'Race car should have a shorter boost tank');
-
 assert.ok(truck.tuning.topSpeedMultiplier < sedan.tuning.topSpeedMultiplier, 'Truck should have less top speed than Sedan');
 assert.ok(truck.tuning.accelerationMultiplier < sedan.tuning.accelerationMultiplier, 'Truck should accelerate slower than Sedan');
 assert.ok(truck.tuning.driftDragAdd < sedan.tuning.driftDragAdd, 'Truck should retain more speed while drifting');
 assert.ok(truck.tuning.boostPowerMultiplier < sedan.tuning.boostPowerMultiplier, 'Truck boost should be weaker than Sedan');
 assert.ok(truck.tuning.boostDurationSeconds > sedan.tuning.boostDurationSeconds, 'Truck should have a longer boost tank');
-
-const lighterGhost = catalog.makeGhostColor('#ff4fa3');
-assert.notEqual(lighterGhost, '#ff4fa3', 'Ghost colour should be a lighter nuance, not the original paint colour');
+assert.notEqual(catalog.makeGhostColor('#ff4fa3'), '#ff4fa3', 'Ghost colour should be a lighter nuance, not the original paint colour');
 
 const [index, main, lapSystem, rivalStorage, controls, carModels] = await Promise.all([
   fs.readFile(path.join(turnDir, 'index.html'), 'utf8'),
@@ -75,9 +47,9 @@ const [index, main, lapSystem, rivalStorage, controls, carModels] = await Promis
   fs.readFile(path.join(turnDir, 'vehicle/car-models.js'), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.11 · Build 2026\.07\.21-r27/);
-assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260721-r27/);
-assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-r10\.js\?build=20260720-r25"/, 'r27 must preserve the latest Lot module cache redirect');
+assert.match(index, /TURN v1\.3\.12 · Build 2026\.07\.21-r28/);
+assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260721-r28/);
+assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-r10\.js\?build=20260720-r25"/, 'r28 must preserve the latest Lot module cache redirect');
 assert.match(index, /"\.\/vehicle\/car-models\.js\?build=20260720-r19": "\.\/vehicle\/car-models\.js\?build=20260720-r22"/, 'The stable r22 outline module cache redirect must remain in place');
 assert.match(main, /await showTheLot\(/, 'Start flow must enter The Lot before racing');
 assert.match(main, /maxSpeed: MAX_SPEED \* state\.vehicleTuning\.topSpeedMultiplier/, 'Selected top speed must reach physics');
