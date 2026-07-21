@@ -1,0 +1,44 @@
+body.turn-race-active .rotate-panel {
+  display: none !important;
+}
+
+.hud::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  border: 0 solid var(--yellow);
+  border-radius: 18px;
+  opacity: 0;
+  box-shadow: inset 0 0 0 rgb(255 212 59 / 0);
+  transition:
+    border-width 110ms ease,
+    opacity 140ms ease,
+    box-shadow 140ms ease;
+}
+
+body.turn-steering-limit-near .hud::before {
+  border-width: 5px;
+  opacity: 0.42;
+  box-shadow: inset 0 0 22px rgb(255 212 59 / 0.2);
+  animation: turn-steering-limit-pulse 520ms ease-out both;
+}
+
+body.turn-steering-limit-hard .hud::before {
+  border-width: 8px;
+  opacity: 0.72;
+  box-shadow: inset 0 0 34px rgb(255 212 59 / 0.34);
+}
+
+@keyframes turn-steering-limit-pulse {
+  0% { opacity: 0; }
+  35% { opacity: 0.66; }
+  100% { opacity: 0.42; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.turn-steering-limit-near .hud::before {
+    animation: none;
+  }
+}
