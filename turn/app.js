@@ -12,6 +12,9 @@ installTurnAudio();
 const { installLapResultToast } = await import(withBuild('./ui/lap-result-toast.js'));
 installLapResultToast();
 
+const { installRivalOnboarding } = await import(withBuild('./ui/rival-onboarding.js'));
+installRivalOnboarding();
+
 await import(withBuild('./input/analog-gas.js'));
 await import(withBuild('./ui/gameplay-controls.js'));
 await import(withBuild('./main.js'));
