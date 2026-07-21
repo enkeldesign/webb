@@ -10,6 +10,9 @@ export function installGameModeState(state) {
   state.lapStartedAt = Number.isFinite(state.lapStartedAt) ? state.lapStartedAt : 0;
   state.lapElapsed = Number.isFinite(state.lapElapsed) ? state.lapElapsed : 0;
   state.recording = Array.isArray(state.recording) ? state.recording : [];
+  state.lapPreviousPosition = validPosition(state.lapPreviousPosition)
+    ? { x: Number(state.lapPreviousPosition.x), z: Number(state.lapPreviousPosition.z) }
+    : null;
 
   Object.defineProperty(state, 'lapActive', {
     configurable: true,
@@ -62,6 +65,7 @@ export function resetRaceToStage({
   state.lapActive = false;
   state.lapStartedAt = 0;
   state.lapElapsed = 0;
+  state.lapPreviousPosition = { x: state.position.x, z: state.position.z };
   state.recording = [];
 
   setRacePosition?.(null, state.competitorLaps.length + 1);
@@ -71,4 +75,8 @@ export function resetRaceToStage({
 export function prepareRaceStartState(state) {
   state.lapStartedAt = 0;
   state.lapElapsed = 0;
+}
+
+function validPosition(position) {
+  return Number.isFinite(Number(position?.x)) && Number.isFinite(Number(position?.z));
 }
