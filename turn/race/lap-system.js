@@ -89,11 +89,11 @@ export function updateLapProgressState({
     startGateHalfWidth
   );
 
-  const crossedStartByProgress = state.lastProgress > 0.82 && state.progress < 0.18;
-  const nearPhysicalStart = distanceSquared(currentPosition, startSample.point)
-    <= startGateHalfWidth * startGateHalfWidth;
-  const crossedStartOnTrack = movingForwardAtStart
-    && (crossedPhysicalStartGate || (crossedStartByProgress && nearPhysicalStart));
+  // The swept physical gate is the single source of truth for start and finish.
+  // Nearest-track progress can wrap before the car reaches the painted line, which
+  // previously caused one real crossing to be counted twice: once by progress and
+  // again by the physical gate.
+  const crossedStartOnTrack = movingForwardAtStart && crossedPhysicalStartGate;
 
   if (crossedStartOnTrack) {
     if (!state.lapActive) {

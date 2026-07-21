@@ -127,14 +127,15 @@ const [index, app, lapSystem, toast, css] = await Promise.all([
   fs.readFile(new URL('../../turn/lap-result-toast.css', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.20 · Build 2026\.07\.21-r36/);
-assert.match(index, /lap-result-toast\.css\?build=20260721-r36/);
-assert.match(index, /"\.\/race\/lap-system\.js\?build=20260720-r19": "\.\/race\/lap-system\.js\?build=20260721-r36"/, 'r36 must cache-bust the more forgiving lap system');
-assert.match(index, /"\.\/race\/game-state\.js": "\.\/race\/game-state\.js\?build=20260721-r34"/, 'r36 must preserve reliable reset gate-history state');
+assert.match(index, /TURN v1\.3\.21 · Build 2026\.07\.21-r38/);
+assert.match(index, /lap-result-toast\.css\?build=20260721-r38/);
+assert.match(index, /"\.\/race\/lap-system\.js\?build=20260720-r19": "\.\/race\/lap-system\.js\?build=20260721-r38"/, 'r38 must cache-bust the single-source physical lap system');
+assert.match(index, /"\.\/race\/game-state\.js": "\.\/race\/game-state\.js\?build=20260721-r34"/, 'r38 must preserve reliable reset gate-history state');
 assert.match(app, /installLapResultToast\(\)/, 'The toast must install before the game runtime starts');
 assert.match(lapSystem, /turn:lap-result/, 'Completed lap finish must publish one frozen result event');
 assert.match(lapSystem, /turn:lap-invalid/, 'Incomplete checkpoint chains must publish explicit invalid-lap feedback');
 assert.match(lapSystem, /suppressNextLapStartMessage = true/, 'Invalid-lap feedback must not be obscured by a competing GO message');
+assert.doesNotMatch(lapSystem, /crossedStartByProgress/, 'Start and finish must use only the swept physical line crossing');
 assert.match(lapSystem, /const completedLap = finishedTime > 5/, 'Result visibility must be separated from replay-save eligibility');
 assert.match(lapSystem, /const validLap = completedLap && state\.recording\.length > 20/, 'Ghost saving may still require a usable recording');
 assert.match(lapSystem, /if \(completedLap\) \{\s*publishLapResult/s, 'Every completed lap must publish a result, including last place and unsaved replays');

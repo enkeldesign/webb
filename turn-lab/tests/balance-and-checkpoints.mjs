@@ -163,6 +163,50 @@ state.position = new Vec3(2, 0, 0);
 run(1600);
 assert.equal(began, 2, 'the first physical forward start-line crossing must begin timing even when nearest-track progress does not wrap');
 
+const doubleTriggerState = {
+  lapActive: false,
+  lapCheckpointIndex: 0,
+  lapStartedAt: 0,
+  lapElapsed: 0,
+  position: new Vec3(-1, 0, 0),
+  velocity: new Vec3(10, 0, 0),
+  lastProgress: 0.96,
+  progress: 0.02,
+  trackDistance: 1,
+  lapPreviousPosition: { x: -2, z: 0 }
+};
+let doubleTriggerStarts = 0;
+const runDoubleTrigger = (now) => updateLapProgressState({
+  state: doubleTriggerState,
+  nearestAfter: { sample: samples[0] },
+  samples,
+  trackWidth: 27,
+  now,
+  beginTimedLap: () => {
+    doubleTriggerStarts += 1;
+    doubleTriggerState.lapActive = true;
+    doubleTriggerState.lapCheckpointIndex = 0;
+  },
+  completeLap: () => {},
+  recordGhostFrame: () => {}
+});
+
+runDoubleTrigger(1700);
+assert.equal(
+  doubleTriggerStarts,
+  0,
+  'nearest-track progress wrapping before the painted line must not start a lap early'
+);
+doubleTriggerState.lastProgress = 0.02;
+doubleTriggerState.progress = 0.03;
+doubleTriggerState.position = new Vec3(1, 0, 0);
+runDoubleTrigger(1800);
+assert.equal(
+  doubleTriggerStarts,
+  1,
+  'one physical start-line crossing must create exactly one lap start after an early progress wrap'
+);
+
 const resetState = {
   position: new Vec3(999, 0, 999),
   velocity: new Vec3(4, 0, 2),
@@ -199,5 +243,6 @@ assert.match(lapSystemSource, /crossedForwardGate/, 'production lap registration
 assert.match(lapSystemSource, /CHECKPOINT_GATE_HALF_WIDTH_FACTOR = 1\.05/, 'checkpoint gates must allow broad grass and verge racing lines');
 assert.match(lapSystemSource, /START_GATE_HALF_WIDTH_FACTOR = 0\.82/, 'start and finish must keep the established narrower crossing gate');
 assert.match(lapSystemSource, /turn:lap-invalid/, 'an incomplete checkpoint chain must report an invalid lap instead of failing silently');
+assert.doesNotMatch(lapSystemSource, /crossedStartByProgress/, 'start and finish must not retain the retired progress-wrap fallback');
 
-console.log('TURN forgiving swept lap gates and anti-shortcut regression passed.');
+console.log('TURN forgiving swept lap gates, single-source start line and anti-shortcut regression passed.');
