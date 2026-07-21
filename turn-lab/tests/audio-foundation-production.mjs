@@ -1,20 +1,22 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [index, app, audio, controls] = await Promise.all([
+const [index, app, audio, controls, catalogSource] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/audio-system.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/ui/gameplay-controls.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/ui/gameplay-controls.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/vehicle/catalog.js', import.meta.url), 'utf8')
 ]);
+const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
 
-assert.match(index, /TURN v1\.3\.10 · Build 2026\.07\.21-r26/);
-assert.match(index, /\.\/app\.js\?build=20260721-r26/);
+assert.match(index, /TURN v1\.3\.11 · Build 2026\.07\.21-r27/);
+assert.match(index, /\.\/app\.js\?build=20260721-r27/);
 
 assert.match(app, /import\(withBuild\('\.\/audio\/audio-system\.js'\)\)/, 'Production must load the central audio module');
 assert.match(app, /installTurnAudio\(\)/, 'The audio foundation must install before gameplay starts');
 assert.ok(
-  app.indexOf("./audio/audio-system.js") < app.indexOf("./ui/gameplay-controls.js"),
+  app.indexOf('./audio/audio-system.js') < app.indexOf('./ui/gameplay-controls.js'),
   'Audio must install before gameplay controls begin feeding it state'
 );
 
@@ -26,6 +28,32 @@ assert.match(audio, /unlock,\s*update,\s*cue,\s*silence/, 'The shared audio API 
 assert.match(audio, /function installEngineGraph\(/, 'The foundation must provide a continuous engine layer');
 assert.match(audio, /function installDriftGraph\(/, 'The foundation must provide a continuous drift layer');
 assert.match(audio, /function installBoostGraph\(/, 'The foundation must provide a continuous boost layer');
+assert.match(audio, /globalThis\.__turnVehicleTuning\?\.enginePitch/, 'Engine frequency must follow the selected car tuning');
+assert.match(audio, /engineBaseHz = \(52 \+ speedRatio \* 96 \+ throttle \* 24\) \* enginePitch/, 'Per-car pitch must multiply the whole engine baseline');
+
+assert.equal(catalog.getCarDefinition('sedan').tuning.enginePitch, 1, 'Sedan must remain the neutral engine pitch baseline');
+assert.equal(catalog.getCarDefinition('monster-truck').tuning.enginePitch, 0.62, 'Monster Truck must have the lowest deep engine baseline');
+assert.equal(catalog.getCarDefinition('race').tuning.enginePitch, 1.55, 'Race Car must have the highest F1-like engine baseline');
+assert.ok(
+  catalog.getCarDefinition('monster-truck').tuning.enginePitch < catalog.getCarDefinition('truck').tuning.enginePitch,
+  'Monster Truck must sit below the regular Truck in pitch'
+);
+assert.ok(
+  catalog.getCarDefinition('race').tuning.enginePitch > catalog.getCarDefinition('race-future').tuning.enginePitch,
+  'Race Car must remain the highest-pitched racer'
+);
+
+assert.match(audio, /regularSlipLevel = active \? slipIntent \* driftSpeed \* 0\.018 : 0/, 'Ordinary cornering slip must stay very quiet');
+assert.match(audio, /deliberateDriftLevel = active && driftHeld/, 'Holding DRIFT must add a distinct stronger tire layer');
+assert.match(audio, /const skidLevel = active && driftHeld/, 'Skid hiss must only wake up during deliberate DRIFT');
+assert.match(audio, /skidNoise\.buffer = makeNoiseBuffer\(context, 1\.1, 0\.1\)/, 'DRIFT must use a brighter separate skid texture');
+
+assert.match(audio, /case 'garage-open':/, 'The Lot must have a restrained entrance cue');
+assert.match(audio, /case 'car-select':/, 'The Lot car field must have a selection cue');
+assert.match(audio, /case 'paint-select':/, 'Native paint changes must have a small confirmation cue');
+assert.match(audio, /handleLotVisibilityChange/, 'The Lot entrance cue must follow the actual open state');
+assert.match(audio, /handleLotPointerDown/, 'The Lot car field must feed selection sound');
+assert.match(audio, /handleUiChange/, 'The Lot paint picker must feed paint sound');
 assert.match(audio, /case 'boost-start':/, 'Boost activation must have a distinct one-shot cue');
 assert.match(audio, /function handleUiClick\(/, 'UI buttons must receive lightweight procedural feedback');
 
@@ -45,4 +73,4 @@ assert.match(controls, /document\.body\.classList\.contains\('turn-lot-open'\)/,
 assert.match(controls, /driftAmount: runtimeState\?\.driftAmount \|\| 0/, 'Drift sound must follow the real physics drift state');
 assert.match(controls, /boostActive: boosting/, 'Boost sound must follow the post-lockout boost state');
 
-console.log('TURN sound foundation production regression passed.');
+console.log('TURN sound character production regression passed.');
