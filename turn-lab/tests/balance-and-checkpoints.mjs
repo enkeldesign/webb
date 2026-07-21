@@ -92,14 +92,15 @@ assert.equal(
 );
 
 const firstCheckpointIndex = Math.round(LAP_CHECKPOINTS[0] * samples.length) % samples.length;
-state.lapPreviousPosition = { x: firstCheckpointIndex - 30, z: 0 };
-state.position = new Vec3(firstCheckpointIndex + 30, 0, 0);
+state.lapPreviousPosition = { x: firstCheckpointIndex - 2, z: -30 };
+state.position = new Vec3(firstCheckpointIndex + 2, 0, 30);
 run(1100);
 assert.equal(
   state.lapCheckpointIndex,
   1,
   'a checkpoint crossed between physics samples must count even when neither sampled endpoint is inside the old circular gate'
 );
+assert.equal(began, 0, 'the swept checkpoint regression must not accidentally cross the start line');
 
 const secondCheckpointIndex = Math.round(LAP_CHECKPOINTS[1] * samples.length) % samples.length;
 state.lapPreviousPosition = { x: secondCheckpointIndex - 2, z: 0 };
