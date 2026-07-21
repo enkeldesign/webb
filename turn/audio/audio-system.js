@@ -11,11 +11,14 @@ let engineLow = null;
 let engineHigh = null;
 let driftGain = null;
 let driftFilter = null;
+let skidGain = null;
+let skidFilter = null;
 let boostGain = null;
 let boostFilter = null;
 let boostTone = null;
 let lastUpdateAt = -Infinity;
 let lastBoostActive = false;
+let lotOpen = false;
 let installed = false;
 
 export function installTurnAudio() {
@@ -38,10 +41,18 @@ export function installTurnAudio() {
   globalThis.__turnAudio = api;
 
   document.addEventListener('pointerdown', unlockFromGesture, { capture: true, passive: true });
+  document.addEventListener('pointerdown', handleLotPointerDown, { capture: true, passive: true });
   document.addEventListener('keydown', unlockFromGesture, { capture: true });
   document.addEventListener('click', handleUiClick, { capture: true });
+  document.addEventListener('change', handleUiChange, { capture: true });
   document.addEventListener('visibilitychange', handleVisibilityChange, { passive: true });
   window.addEventListener('pagehide', handlePageHide, { passive: true });
+
+  lotOpen = document.body?.classList.contains('turn-lot-open') || false;
+  if (document.body && typeof MutationObserver !== 'undefined') {
+    const lotObserver = new MutationObserver(handleLotVisibilityChange);
+    lotObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  }
 
   return api;
 }
@@ -73,24 +84,43 @@ export function update(frame = {}, now = performance.now()) {
   const driftAmount = clamp(Number(frame.driftAmount) || 0, 0, 1);
   const driftHeld = Boolean(frame.driftHeld);
   const boostActive = active && Boolean(frame.boostActive);
+  const enginePitch = clamp(
+    Number(frame.enginePitch ?? globalThis.__turnVehicleTuning?.enginePitch) || 1,
+    0.55,
+    1.7
+  );
   const audioNow = context.currentTime;
 
   const engineLevel = active
     ? 0.045 + speedRatio * 0.045 + throttle * 0.075
     : 0;
-  const engineBaseHz = 52 + speedRatio * 96 + throttle * 24;
+  const engineBaseHz = (52 + speedRatio * 96 + throttle * 24) * enginePitch;
   smooth(engineGain.gain, engineLevel, audioNow, 0.06);
   smooth(engineLow.frequency, engineBaseHz, audioNow, 0.045);
   smooth(engineHigh.frequency, engineBaseHz * 2.02, audioNow, 0.045);
-  smooth(engineFilter.frequency, 420 + speedRatio * 1450 + throttle * 420, audioNow, 0.06);
+  smooth(
+    engineFilter.frequency,
+    (420 + speedRatio * 1450 + throttle * 420) * (0.82 + enginePitch * 0.18),
+    audioNow,
+    0.06
+  );
 
-  const driftIntent = Math.max(driftAmount, driftHeld ? 0.5 : 0);
-  const driftSpeed = clamp((speed - 10) / 38, 0, 1);
-  const driftLevel = active
-    ? clamp((driftIntent - 0.14) / 0.76, 0, 1) * driftSpeed * 0.19
+  // Ordinary cornering can create a little physics slip, but it should sit far below
+  // the engine. Holding DRIFT adds a stronger tire layer plus a separate high skid hiss.
+  const slipIntent = clamp((driftAmount - 0.12) / 0.88, 0, 1);
+  const driftSpeed = clamp((speed - 10) / 42, 0, 1);
+  const regularSlipLevel = active ? slipIntent * driftSpeed * 0.018 : 0;
+  const deliberateDriftLevel = active && driftHeld
+    ? driftSpeed * (0.018 + slipIntent * 0.032)
     : 0;
-  smooth(driftGain.gain, driftLevel, audioNow, 0.045);
-  smooth(driftFilter.frequency, 920 + speedRatio * 1700, audioNow, 0.07);
+  const driftLevel = regularSlipLevel + deliberateDriftLevel;
+  const skidLevel = active && driftHeld
+    ? driftSpeed * clamp((driftAmount - 0.08) / 0.92, 0, 1) * 0.045
+    : 0;
+  smooth(driftGain.gain, driftLevel, audioNow, 0.05);
+  smooth(driftFilter.frequency, 720 + speedRatio * 1200, audioNow, 0.08);
+  smooth(skidGain.gain, skidLevel, audioNow, 0.045);
+  smooth(skidFilter.frequency, 2500 + speedRatio * 2800, audioNow, 0.055);
 
   const boostLevel = boostActive ? 0.16 : 0;
   smooth(boostGain.gain, boostLevel, audioNow, boostActive ? 0.035 : 0.09);
@@ -101,9 +131,9 @@ export function update(frame = {}, now = performance.now()) {
   lastBoostActive = boostActive;
 }
 
-export function cue(name) {
+export function cue(name, options = {}) {
   void unlock().then((ready) => {
-    if (ready) playCueNow(name);
+    if (ready) playCueNow(name, options);
   });
 }
 
@@ -112,6 +142,7 @@ export function silence() {
   const now = context.currentTime;
   hardMute(engineGain.gain, now);
   hardMute(driftGain.gain, now);
+  hardMute(skidGain.gain, now);
   hardMute(boostGain.gain, now);
   lastBoostActive = false;
 }
@@ -181,16 +212,33 @@ function installDriftGraph() {
 
   driftFilter = context.createBiquadFilter();
   driftFilter.type = 'bandpass';
-  driftFilter.frequency.value = 1200;
-  driftFilter.Q.value = 0.65;
+  driftFilter.frequency.value = 900;
+  driftFilter.Q.value = 0.58;
+
+  skidGain = context.createGain();
+  skidGain.gain.value = 0;
+
+  skidFilter = context.createBiquadFilter();
+  skidFilter.type = 'bandpass';
+  skidFilter.frequency.value = 3200;
+  skidFilter.Q.value = 1.05;
 
   const driftNoise = context.createBufferSource();
-  driftNoise.buffer = makeNoiseBuffer(context, 1.4);
+  driftNoise.buffer = makeNoiseBuffer(context, 1.4, 0.72);
   driftNoise.loop = true;
   driftNoise.connect(driftFilter);
   driftFilter.connect(driftGain);
   driftGain.connect(masterGain);
+
+  const skidNoise = context.createBufferSource();
+  skidNoise.buffer = makeNoiseBuffer(context, 1.1, 0.1);
+  skidNoise.loop = true;
+  skidNoise.connect(skidFilter);
+  skidFilter.connect(skidGain);
+  skidGain.connect(masterGain);
+
   driftNoise.start();
+  skidNoise.start();
 }
 
 function installBoostGraph() {
@@ -226,11 +274,15 @@ function installBoostGraph() {
   boostTone.start();
 }
 
-function playCueNow(name) {
+function playCueNow(name, options = {}) {
   if (!context || context.state !== 'running') return;
   const now = context.currentTime;
 
   switch (name) {
+    case 'garage-open':
+      playTone(260, 390, 0.11, 0.038, 'triangle', now);
+      playTone(430, 620, 0.12, 0.032, 'triangle', now + 0.07);
+      break;
     case 'ui-confirm':
       playTone(420, 610, 0.085, 0.075, 'triangle', now);
       playTone(610, 760, 0.09, 0.06, 'triangle', now + 0.07);
@@ -238,8 +290,14 @@ function playCueNow(name) {
     case 'ui-back':
       playTone(390, 250, 0.12, 0.06, 'triangle', now);
       break;
-    case 'car-select':
-      playTone(230, 340, 0.09, 0.055, 'square', now);
+    case 'car-select': {
+      const pitch = clamp(Number(options.enginePitch) || 1, 0.55, 1.7);
+      playTone(170 * pitch, 310 * pitch, 0.12, 0.052, 'square', now);
+      playNoiseBurst(now, 0.07, 0.022, 320 * pitch, 920 * pitch);
+      break;
+    }
+    case 'paint-select':
+      playTone(560, 760, 0.065, 0.032, 'triangle', now);
       break;
     case 'boost-start':
       playNoiseBurst(now, 0.18, 0.11, 720, 2400);
@@ -294,15 +352,17 @@ function playNoiseBurst(startAt, duration, level, lowHz, highHz) {
   source.stop(endAt + 0.02);
 }
 
-function makeNoiseBuffer(audioContext, seconds) {
+function makeNoiseBuffer(audioContext, seconds, smoothing = 0.72) {
   const frameCount = Math.max(1, Math.ceil(audioContext.sampleRate * seconds));
   const buffer = audioContext.createBuffer(1, frameCount, audioContext.sampleRate);
   const data = buffer.getChannelData(0);
   let previous = 0;
+  const memory = clamp(Number(smoothing) || 0, 0, 0.98);
+  const fresh = 1 - memory;
 
   for (let index = 0; index < frameCount; index += 1) {
     const white = Math.random() * 2 - 1;
-    previous = previous * 0.72 + white * 0.28;
+    previous = previous * memory + white * fresh;
     data[index] = previous;
   }
   return buffer;
@@ -315,6 +375,21 @@ function smooth(param, value, time, timeConstant) {
 function hardMute(param, time) {
   param.cancelScheduledValues(time);
   param.setValueAtTime(0, time);
+}
+
+function handleLotPointerDown(event) {
+  if (!event.target.closest?.('.lot-canvas-host')) return;
+  cue('car-select');
+}
+
+function handleUiChange(event) {
+  if (event.target.matches?.('.lot-color-input')) cue('paint-select');
+}
+
+function handleLotVisibilityChange() {
+  const nextLotOpen = document.body?.classList.contains('turn-lot-open') || false;
+  if (nextLotOpen && !lotOpen) cue('garage-open');
+  lotOpen = nextLotOpen;
 }
 
 function handleUiClick(event) {
