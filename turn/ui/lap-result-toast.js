@@ -95,7 +95,9 @@ export function installLapResultToast() {
   window.addEventListener('turn:lap-result', (event) => showResult(event.detail));
   window.addEventListener('turn:lap-invalid', (event) => showInvalid(event.detail));
   window.addEventListener('turn:ui-state-change', (event) => {
-    if (!event.detail?.running) hide({ immediate: true });
+    if (!event.detail?.running || event.detail?.reason === 'race-reset') {
+      hide({ immediate: true });
+    }
   });
 }
 
