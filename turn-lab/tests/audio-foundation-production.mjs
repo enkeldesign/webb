@@ -10,8 +10,8 @@ const [index, app, audio, controls, catalogSource] = await Promise.all([
 ]);
 const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
 
-assert.match(index, /TURN v1\.3\.20 · Build 2026\.07\.21-r36/);
-assert.match(index, /\.\/app\.js\?build=20260721-r36/);
+assert.match(index, /TURN v1\.4\.0 · Build 2026\.07\.21-r37/);
+assert.match(index, /\.\/app\.js\?build=20260721-r37/);
 assert.match(
   index,
   /"\.\/vehicle\/catalog\.js\?build=20260720-r19": "\.\/vehicle\/catalog\.js\?build=20260721-r35"/,
@@ -37,7 +37,7 @@ assert.match(audio, /unlock,\s*update,\s*cue,\s*silence/, 'The shared audio API 
 
 assert.match(audio, /function installEngineGraph\(/, 'The foundation must provide a continuous engine layer');
 assert.match(audio, /function installDriftGraph\(/, 'The foundation must provide a continuous drift layer');
-assert.match(audio, /function installBoostGraph\(/, 'The foundation must provide a continuous boost layer');
+assert.match(audio, /function installBoostGraph\(/, 'The foundation must provide a dedicated boost one-shot bus');
 assert.match(audio, /globalThis\.__turnVehicleTuning\?\.enginePitch/, 'Engine frequency must follow the selected car tuning');
 assert.match(audio, /engineBaseHz = \(52 \+ speedRatio \* 96 \+ throttle \* 24\) \* enginePitch \* boostEngineLift/, 'Per-car pitch and boost lift must stay connected to the engine bed');
 assert.match(audio, /const boostEngineLift = boostActive \? 1\.055 : 1/, 'Boost must lift the engine subtly rather than replace it');
@@ -58,17 +58,28 @@ assert.ok(
   'Race Car must remain the highest-pitched racer'
 );
 
-assert.match(audio, /regularScrubLevel = active \? slipIntent \* driftSpeed \* 0\.0055 : 0/, 'Ordinary cornering scrub must stay nearly subliminal');
+assert.match(audio, /regularScrubLevel = active \? slipIntent \* driftSpeed \* 0\.0032 : 0/, 'Ordinary cornering scrub must stay nearly subliminal');
 assert.match(audio, /deliberateScrubLevel = active && driftHeld/, 'Holding DRIFT must crossfade in stronger tire scrub');
+assert.match(audio, /const driftBedDuck = driftHeld \? 1 - strongSlip \* 0\.42 : 1/, 'Strong slip must duck the continuous spray-like bed beneath the squeal');
+assert.match(audio, /driftNoise\.buffer = makeNoiseBuffer\(context, 1\.6, 0\.92\)/, 'The friction bed must use smoother, darker noise than the old spray-like layer');
 assert.match(audio, /const gritLevel = active && driftHeld/, 'Deliberate DRIFT must add a separate low-mid grit layer');
 assert.match(audio, /gritNoise\.buffer = makeNoiseBuffer\(context, 1\.7, 0\.95\)/, 'Drift grit must use heavily smoothed low-frequency noise rather than spray-like hiss');
-assert.match(audio, /skidTone\.type = 'triangle'/, 'Strong drift must use a restrained tonal squeal instead of the retired bright white-noise skid bus');
+assert.match(audio, /skidTone\.type = 'triangle'/, 'Strong drift must keep a controlled tonal tire squeal');
+assert.match(audio, /skidTone\.frequency, 2600 \+ speedRatio \* 1800 \+ strongSlip \* 900/, 'The drift squeal must live substantially higher than the retired low whistle');
+assert.match(audio, /skidPulse\.buffer = makeSkidPulseBuffer\(context, 1\.25\)/, 'The squeal must use a reusable procedural grip-slip pulse buffer');
+assert.match(audio, /skidPulse\.playbackRate, 0\.8 \+ speedRatio \* 0\.35 \+ strongSlip \* 0\.55/, 'Skid chopping must accelerate with speed and slip');
+assert.match(audio, /skidPulseDepth\.gain\.value = 0\.965/, 'The chopped squeal must have deep articulation rather than mild tremolo');
+assert.match(audio, /function makeSkidPulseBuffer\(/, 'The skid articulation must remain procedural and deterministic');
+assert.match(audio, /skidWobbleDepth\.gain, 10 \+ strongSlip \* 22/, 'The high squeal must retain subtle pitch instability under hard slip');
 assert.doesNotMatch(audio, /skidNoise/, 'The spray-can-like bright skid noise loop must stay removed');
 
-assert.match(audio, /const boostLevel = boostActive \? 0\.024 : 0/, 'Boost sustain must remain quiet beneath the engine');
-assert.doesNotMatch(audio, /const boostLevel = boostActive \? 0\.16 : 0/, 'The old loud vacuum-like boost sustain must stay removed');
-assert.match(audio, /boostTone\.type = 'sine'/, 'Boost sustain must use a clean turbine-like tone');
-assert.match(audio, /case 'boost-start':/, 'Boost activation must have a layered aggressive one-shot');
+assert.match(audio, /case 'boost-start':\s*playBoostBlast\(now\);/s, 'Boost activation must trigger the dedicated short blast');
+assert.match(audio, /function playBoostBlast\(/, 'Boost must use a dedicated transient designer rather than a sustain loop');
+assert.match(audio, /const duration = 0\.105/, 'The main boost blast must stay around one tenth of a second');
+assert.match(audio, /source\.buffer = makeNoiseBuffer\(context, 0\.14, 0\.42\)/, 'The boost blast must include a brief broad pressure-noise transient');
+assert.match(audio, /no continuous oscillator\/noise bed/, 'The boost graph must remain one-shot only');
+assert.doesNotMatch(audio, /const boostLevel = boostActive/, 'Boost must not restore a continuous vacuum-like sustain level');
+assert.doesNotMatch(audio, /boostNoise\.loop|boostTone\.type/, 'Boost must not run a looping noise or turbine oscillator while held');
 assert.match(audio, /case 'boost-empty':/, 'Boost depletion must have its own cue');
 assert.match(audio, /case 'boost-full':/, 'Boost recharge completion must have its own cue');
 
@@ -107,4 +118,4 @@ assert.match(controls, /globalThis\.__turnAudio\?\.cue\('boost-full'\)/, 'The ex
 assert.match(controls, /if \(position < lastPosition\)/, 'Only an improved race position may trigger the overtake cue');
 assert.match(controls, /globalThis\.__turnAudio\?\.cue\('overtake'/, 'Position gains must feed the shared overtake cue');
 
-console.log('TURN drift, boost and rival sound production regression passed.');
+console.log('TURN chopped drift, transient boost and rival sound production regression passed.');
