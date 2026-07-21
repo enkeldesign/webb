@@ -45,7 +45,7 @@ assert.equal(summary.p95Ms, 50);
 assert.equal(summary.slowPercent, 40);
 assert.ok(Math.abs(summary.fps - 1000 / 30) < 1e-9);
 
-const [index, main, controls, menu, spectate, hud, physics, camera, cars, lot, monitor, audio] = await Promise.all([
+const [index, main, controls, menu, spectate, hud, physics, camera, cars, lot, monitor, audio, orientationCompat] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/gameplay-controls.js', import.meta.url), 'utf8'),
@@ -57,10 +57,11 @@ const [index, main, controls, menu, spectate, hud, physics, camera, cars, lot, m
   fs.readFile(new URL('../../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/performance-monitor.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/audio/audio-system.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/audio/audio-system.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/orientation-compat.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.12 · Build 2026\.07\.21-r28/);
+assert.match(index, /TURN v1\.3\.13 · Build 2026\.07\.21-r29/);
 assert.match(main, /mainSceneOcclusion/);
 assert.match(main, /HUD_UPDATE_INTERVAL_MS = 1000 \/ 30/);
 assert.match(main, /recordPerformanceFrame/);
@@ -82,6 +83,7 @@ assert.match(lot, /recordPerformanceFrame/);
 assert.doesNotMatch(lot, /GLTFLoader|InstancedMesh|installBrickScenery/, 'The clean Lot must not spend asset or draw-call budget on decorative wall scenery');
 assert.match(audio, /AUDIO_UPDATE_INTERVAL_MS = 1000 \/ 30/, 'Audio state must stay capped at 30 Hz');
 assert.doesNotMatch(audio, /requestAnimationFrame|setAnimationLoop|setInterval/, 'New sound cues must not add a second loop');
+assert.doesNotMatch(orientationCompat, /requestAnimationFrame|setAnimationLoop|setInterval/, 'The orientation guard must remain event-driven and add no render loop');
 assert.match(monitor, /turn:perf-snapshot/);
 assert.match(monitor, /trackChecksPerQuery/);
 

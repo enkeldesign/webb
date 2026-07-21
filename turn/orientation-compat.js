@@ -22,17 +22,32 @@
 
   const SENSOR_OFFSETS = [0, 90, -90];
   const SENSOR_CALIBRATION_SAMPLES = 8;
+  const STEERING_LIMIT_NEAR = 13 * Math.PI / 180;
+  const STEERING_LIMIT_HARD = 17 * Math.PI / 180;
+  const STEERING_LIMIT_CLEAR = 10.5 * Math.PI / 180;
   const sensorScores = new Array(SENSOR_OFFSETS.length).fill(0);
   let sensorSamples = 0;
   let sensorOffset = 0;
   let sensorOffsetLocked = false;
   let lastBaseAngle = null;
+  let gameplayActive = false;
+  let gameplayAngle = null;
+  let lastResolvedRoll = 0;
+  let steeringNeutralRoll = 0;
+  let steeringLimitLevel = 0;
 
   function normalizeDegrees(value) {
     if (!Number.isFinite(value)) return null;
     let degrees = ((value % 360) + 360) % 360;
     if (degrees > 180) degrees -= 360;
     return degrees;
+  }
+
+  function normalizeRadians(value) {
+    let angle = Number(value) || 0;
+    while (angle > Math.PI) angle -= Math.PI * 2;
+    while (angle < -Math.PI) angle += Math.PI * 2;
+    return angle;
   }
 
   function angleIsLandscape(value) {
@@ -90,48 +105,136 @@
     lastBaseAngle = null;
   }
 
-  function observeMotion(event) {
-    if (sensorOffsetLocked) return;
+  function computedAngle() {
+    const baseAngle = resolveBaseAngle(readBrowserAngle());
+    return normalizeDegrees(baseAngle + sensorOffset) ?? 0;
+  }
 
+  function resolvedAngle() {
+    return gameplayActive && gameplayAngle != null ? gameplayAngle : computedAngle();
+  }
+
+  function clearSteeringLimitFeedback() {
+    steeringLimitLevel = 0;
+    document.body.classList.remove('turn-steering-limit-near', 'turn-steering-limit-hard');
+  }
+
+  function pulseHaptic(pattern) {
+    try {
+      navigator.vibrate?.(pattern);
+    } catch (_) {}
+  }
+
+  function updateSteeringLimitFeedback(roll) {
+    if (!gameplayActive) {
+      clearSteeringLimitFeedback();
+      return;
+    }
+
+    const magnitude = Math.abs(normalizeRadians(roll - steeringNeutralRoll));
+    let nextLevel = steeringLimitLevel;
+
+    if (magnitude >= STEERING_LIMIT_HARD) nextLevel = 2;
+    else if (magnitude >= STEERING_LIMIT_NEAR) nextLevel = Math.max(1, nextLevel);
+    else if (magnitude <= STEERING_LIMIT_CLEAR) nextLevel = 0;
+    else if (steeringLimitLevel === 2 && magnitude < STEERING_LIMIT_NEAR) nextLevel = 1;
+
+    if (nextLevel > steeringLimitLevel) {
+      pulseHaptic(nextLevel === 2 ? [18, 26, 28] : 12);
+    }
+
+    steeringLimitLevel = nextLevel;
+    document.body.classList.toggle('turn-steering-limit-near', nextLevel >= 1);
+    document.body.classList.toggle('turn-steering-limit-hard', nextLevel >= 2);
+  }
+
+  function requestLandscapeLock() {
+    try {
+      return Promise.resolve(orientation.lock?.('landscape')).catch(() => false);
+    } catch (_) {
+      return Promise.resolve(false);
+    }
+  }
+
+  function setGameplayActive(active) {
+    const nextActive = Boolean(active);
+    if (nextActive === gameplayActive) return;
+
+    gameplayActive = nextActive;
+    document.body.classList.toggle('turn-race-active', gameplayActive);
+
+    if (gameplayActive) {
+      gameplayAngle = computedAngle();
+      steeringNeutralRoll = lastResolvedRoll;
+      clearSteeringLimitFeedback();
+      void requestLandscapeLock();
+      console.info(`TURN: race orientation guard locked at ${gameplayAngle}°.`);
+    } else {
+      gameplayAngle = null;
+      clearSteeringLimitFeedback();
+    }
+  }
+
+  function observeMotion(event) {
     const gravity = event.accelerationIncludingGravity;
     if (!gravity || gravity.x == null || gravity.y == null) return;
     if (Math.hypot(gravity.x, gravity.y) < 0.8) return;
 
     const baseAngle = resolveBaseAngle(readBrowserAngle());
-    if (lastBaseAngle != null && Math.abs(normalizeDegrees(baseAngle - lastBaseAngle) || 0) >= 90) {
-      resetSensorCalibration();
-    }
-    lastBaseAngle = baseAngle;
 
-    for (let index = 0; index < SENSOR_OFFSETS.length; index += 1) {
-      const candidateAngle = baseAngle + SENSOR_OFFSETS[index];
-      sensorScores[index] += Math.abs(foldedRollForAngle(gravity, candidateAngle));
+    if (!sensorOffsetLocked) {
+      if (
+        !gameplayActive &&
+        lastBaseAngle != null &&
+        Math.abs(normalizeDegrees(baseAngle - lastBaseAngle) || 0) >= 90
+      ) {
+        resetSensorCalibration();
+      }
+      lastBaseAngle = baseAngle;
+
+      for (let index = 0; index < SENSOR_OFFSETS.length; index += 1) {
+        const candidateAngle = baseAngle + SENSOR_OFFSETS[index];
+        sensorScores[index] += Math.abs(foldedRollForAngle(gravity, candidateAngle));
+      }
+
+      sensorSamples += 1;
+      let bestIndex = 0;
+      for (let index = 1; index < sensorScores.length; index += 1) {
+        if (sensorScores[index] < sensorScores[bestIndex]) bestIndex = index;
+      }
+      sensorOffset = SENSOR_OFFSETS[bestIndex];
+
+      if (sensorSamples >= SENSOR_CALIBRATION_SAMPLES) {
+        sensorOffsetLocked = true;
+        console.info(`TURN: motion axis mapping locked at ${sensorOffset >= 0 ? '+' : ''}${sensorOffset}°.`);
+      }
     }
 
-    sensorSamples += 1;
-    let bestIndex = 0;
-    for (let index = 1; index < sensorScores.length; index += 1) {
-      if (sensorScores[index] < sensorScores[bestIndex]) bestIndex = index;
-    }
-    sensorOffset = SENSOR_OFFSETS[bestIndex];
-
-    if (sensorSamples >= SENSOR_CALIBRATION_SAMPLES) {
-      sensorOffsetLocked = true;
-      console.info(`TURN: motion axis mapping locked at ${sensorOffset >= 0 ? '+' : ''}${sensorOffset}°.`);
-    }
-  }
-
-  function resolvedAngle() {
-    const baseAngle = resolveBaseAngle(readBrowserAngle());
-    return normalizeDegrees(baseAngle + sensorOffset) ?? 0;
+    lastResolvedRoll = foldedRollForAngle(gravity, resolvedAngle());
+    updateSteeringLimitFeedback(lastResolvedRoll);
   }
 
   // Register before the game adds its own devicemotion listener. Each sensor event can
   // therefore update the mapping before TURN reads screen.orientation.angle for that frame.
   window.addEventListener('devicemotion', observeMotion, { passive: true });
-  window.addEventListener('orientationchange', resetSensorCalibration, { passive: true });
+  window.addEventListener('orientationchange', () => {
+    if (gameplayActive) {
+      void requestLandscapeLock();
+      return;
+    }
+    resetSensorCalibration();
+  }, { passive: true });
+
+  window.addEventListener('turn:ui-state-change', (event) => {
+    setGameplayActive(Boolean(event.detail?.running));
+  });
+
   document.addEventListener('click', (event) => {
     if (event.target.closest?.('#motionButton')) resetSensorCalibration();
+    if (event.target.closest?.('#calibrateButton') && gameplayActive) {
+      steeringNeutralRoll = lastResolvedRoll;
+      clearSteeringLimitFeedback();
+    }
   });
 
   let installed = false;
@@ -165,7 +268,7 @@
 
   console.info(
     installed
-      ? 'TURN: adaptive motion-axis compatibility enabled.'
+      ? 'TURN: adaptive motion-axis compatibility and race orientation guard enabled.'
       : 'TURN: ScreenOrientation angle could not be shimmed; using browser values as-is.'
   );
 })();
