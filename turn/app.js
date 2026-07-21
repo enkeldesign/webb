@@ -9,6 +9,9 @@ function withBuild(path) {
 const { installTurnAudio } = await import(withBuild('./audio/audio-system.js'));
 installTurnAudio();
 
+const { installLapResultToast } = await import(withBuild('./ui/lap-result-toast.js'));
+installLapResultToast();
+
 await import(withBuild('./input/analog-gas.js'));
 await import(withBuild('./ui/gameplay-controls.js'));
 await import(withBuild('./main.js'));
