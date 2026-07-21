@@ -2,6 +2,8 @@ const AudioContextClass = globalThis.AudioContext || globalThis.webkitAudioConte
 
 const AUDIO_UPDATE_INTERVAL_MS = 1000 / 30;
 const MASTER_GAIN = 0.72;
+const RIVAL_NEAR_ENTER_METERS = 10;
+const RIVAL_NEAR_EXIT_METERS = 15;
 
 let context = null;
 let masterGain = null;
@@ -11,15 +13,20 @@ let engineLow = null;
 let engineHigh = null;
 let driftGain = null;
 let driftFilter = null;
+let gritGain = null;
+let gritFilter = null;
 let skidGain = null;
 let skidFilter = null;
+let skidTone = null;
 let boostGain = null;
 let boostFilter = null;
 let boostTone = null;
 let lastUpdateAt = -Infinity;
 let lastBoostActive = false;
+let rivalNearLatched = false;
 let lotOpen = false;
 let installed = false;
+const cueTimes = new Map();
 
 export function installTurnAudio() {
   if (installed) return globalThis.__turnAudio;
@@ -89,12 +96,15 @@ export function update(frame = {}, now = performance.now()) {
     0.55,
     1.7
   );
+  const nearestRivalDistance = Number(frame.nearestRivalDistance);
   const audioNow = context.currentTime;
 
+  // Boost lifts the existing engine slightly instead of replacing it with a loud effect bed.
+  const boostEngineLift = boostActive ? 1.055 : 1;
   const engineLevel = active
     ? 0.045 + speedRatio * 0.045 + throttle * 0.075
     : 0;
-  const engineBaseHz = (52 + speedRatio * 96 + throttle * 24) * enginePitch;
+  const engineBaseHz = (52 + speedRatio * 96 + throttle * 24) * enginePitch * boostEngineLift;
   smooth(engineGain.gain, engineLevel, audioNow, 0.06);
   smooth(engineLow.frequency, engineBaseHz, audioNow, 0.045);
   smooth(engineHigh.frequency, engineBaseHz * 2.02, audioNow, 0.045);
@@ -105,30 +115,40 @@ export function update(frame = {}, now = performance.now()) {
     0.06
   );
 
-  // Ordinary cornering can create a little physics slip, but it should sit far below
-  // the engine. Holding DRIFT adds a stronger tire layer plus a separate high skid hiss.
-  const slipIntent = clamp((driftAmount - 0.12) / 0.88, 0, 1);
+  // Drift should read as traction loss rather than broadband spray. Normal slip is nearly
+  // subliminal; deliberate DRIFT crossfades in tire scrub, low-mid body grit and a small squeal.
+  const slipIntent = clamp((driftAmount - 0.14) / 0.86, 0, 1);
+  const strongSlip = clamp((driftAmount - 0.32) / 0.68, 0, 1);
   const driftSpeed = clamp((speed - 10) / 42, 0, 1);
-  const regularSlipLevel = active ? slipIntent * driftSpeed * 0.018 : 0;
-  const deliberateDriftLevel = active && driftHeld
-    ? driftSpeed * (0.018 + slipIntent * 0.032)
+  const regularScrubLevel = active ? slipIntent * driftSpeed * 0.0055 : 0;
+  const deliberateScrubLevel = active && driftHeld
+    ? driftSpeed * (0.014 + slipIntent * 0.024)
     : 0;
-  const driftLevel = regularSlipLevel + deliberateDriftLevel;
+  const gritLevel = active && driftHeld
+    ? driftSpeed * (0.007 + slipIntent * 0.021)
+    : regularScrubLevel * 0.32;
   const skidLevel = active && driftHeld
-    ? driftSpeed * clamp((driftAmount - 0.08) / 0.92, 0, 1) * 0.045
+    ? driftSpeed * strongSlip * 0.012
     : 0;
-  smooth(driftGain.gain, driftLevel, audioNow, 0.05);
-  smooth(driftFilter.frequency, 720 + speedRatio * 1200, audioNow, 0.08);
-  smooth(skidGain.gain, skidLevel, audioNow, 0.045);
-  smooth(skidFilter.frequency, 2500 + speedRatio * 2800, audioNow, 0.055);
 
-  const boostLevel = boostActive ? 0.16 : 0;
-  smooth(boostGain.gain, boostLevel, audioNow, boostActive ? 0.035 : 0.09);
-  smooth(boostFilter.frequency, 1050 + speedRatio * 1000, audioNow, 0.05);
-  smooth(boostTone.frequency, 82 + speedRatio * 58, audioNow, 0.045);
+  smooth(driftGain.gain, regularScrubLevel + deliberateScrubLevel, audioNow, 0.075);
+  smooth(driftFilter.frequency, 820 + speedRatio * 980 + slipIntent * 260, audioNow, 0.085);
+  smooth(gritGain.gain, gritLevel, audioNow, 0.09);
+  smooth(gritFilter.frequency, 300 + speedRatio * 330 + slipIntent * 180, audioNow, 0.1);
+  smooth(skidGain.gain, skidLevel, audioNow, 0.08);
+  smooth(skidTone.frequency, 720 + speedRatio * 520 + strongSlip * 190, audioNow, 0.07);
+  smooth(skidFilter.frequency, 980 + speedRatio * 520, audioNow, 0.09);
+
+  // The boost sustain is intentionally quiet. Most of the character lives in the start cue.
+  const boostLevel = boostActive ? 0.024 : 0;
+  smooth(boostGain.gain, boostLevel, audioNow, boostActive ? 0.055 : 0.12);
+  smooth(boostFilter.frequency, 1150 + speedRatio * 1450, audioNow, 0.07);
+  smooth(boostTone.frequency, 430 + speedRatio * 430, audioNow, 0.06);
 
   if (boostActive && !lastBoostActive) playCueNow('boost-start');
   lastBoostActive = boostActive;
+
+  updateRivalProximity(active, nearestRivalDistance);
 }
 
 export function cue(name, options = {}) {
@@ -142,9 +162,11 @@ export function silence() {
   const now = context.currentTime;
   hardMute(engineGain.gain, now);
   hardMute(driftGain.gain, now);
+  hardMute(gritGain.gain, now);
   hardMute(skidGain.gain, now);
   hardMute(boostGain.gain, now);
   lastBoostActive = false;
+  rivalNearLatched = false;
 }
 
 function ensureGraph() {
@@ -209,36 +231,49 @@ function installEngineGraph() {
 function installDriftGraph() {
   driftGain = context.createGain();
   driftGain.gain.value = 0;
-
   driftFilter = context.createBiquadFilter();
   driftFilter.type = 'bandpass';
-  driftFilter.frequency.value = 900;
-  driftFilter.Q.value = 0.58;
+  driftFilter.frequency.value = 980;
+  driftFilter.Q.value = 0.72;
+
+  gritGain = context.createGain();
+  gritGain.gain.value = 0;
+  gritFilter = context.createBiquadFilter();
+  gritFilter.type = 'bandpass';
+  gritFilter.frequency.value = 420;
+  gritFilter.Q.value = 0.62;
 
   skidGain = context.createGain();
   skidGain.gain.value = 0;
-
   skidFilter = context.createBiquadFilter();
   skidFilter.type = 'bandpass';
-  skidFilter.frequency.value = 3200;
-  skidFilter.Q.value = 1.05;
+  skidFilter.frequency.value = 1150;
+  skidFilter.Q.value = 1.35;
 
   const driftNoise = context.createBufferSource();
-  driftNoise.buffer = makeNoiseBuffer(context, 1.4, 0.72);
+  driftNoise.buffer = makeNoiseBuffer(context, 1.6, 0.86);
   driftNoise.loop = true;
   driftNoise.connect(driftFilter);
   driftFilter.connect(driftGain);
   driftGain.connect(masterGain);
 
-  const skidNoise = context.createBufferSource();
-  skidNoise.buffer = makeNoiseBuffer(context, 1.1, 0.1);
-  skidNoise.loop = true;
-  skidNoise.connect(skidFilter);
+  const gritNoise = context.createBufferSource();
+  gritNoise.buffer = makeNoiseBuffer(context, 1.7, 0.95);
+  gritNoise.loop = true;
+  gritNoise.connect(gritFilter);
+  gritFilter.connect(gritGain);
+  gritGain.connect(masterGain);
+
+  skidTone = context.createOscillator();
+  skidTone.type = 'triangle';
+  skidTone.frequency.value = 820;
+  skidTone.connect(skidFilter);
   skidFilter.connect(skidGain);
   skidGain.connect(masterGain);
 
   driftNoise.start();
-  skidNoise.start();
+  gritNoise.start();
+  skidTone.start();
 }
 
 function installBoostGraph() {
@@ -247,22 +282,22 @@ function installBoostGraph() {
 
   boostFilter = context.createBiquadFilter();
   boostFilter.type = 'bandpass';
-  boostFilter.frequency.value = 1300;
-  boostFilter.Q.value = 0.45;
+  boostFilter.frequency.value = 1500;
+  boostFilter.Q.value = 1.2;
 
   const boostNoiseMix = context.createGain();
-  boostNoiseMix.gain.value = 0.8;
+  boostNoiseMix.gain.value = 0.12;
   const boostToneMix = context.createGain();
-  boostToneMix.gain.value = 0.28;
+  boostToneMix.gain.value = 0.58;
 
   const boostNoise = context.createBufferSource();
-  boostNoise.buffer = makeNoiseBuffer(context, 1.1);
+  boostNoise.buffer = makeNoiseBuffer(context, 1.3, 0.91);
   boostNoise.loop = true;
   boostNoise.connect(boostNoiseMix);
 
   boostTone = context.createOscillator();
-  boostTone.type = 'triangle';
-  boostTone.frequency.value = 82;
+  boostTone.type = 'sine';
+  boostTone.frequency.value = 430;
   boostTone.connect(boostToneMix);
 
   boostNoiseMix.connect(boostFilter);
@@ -274,9 +309,27 @@ function installBoostGraph() {
   boostTone.start();
 }
 
+function updateRivalProximity(active, distance) {
+  if (!active || !Number.isFinite(distance)) {
+    rivalNearLatched = false;
+    return;
+  }
+
+  if (!rivalNearLatched && distance <= RIVAL_NEAR_ENTER_METERS) {
+    rivalNearLatched = true;
+    playCueNow('car-near', {
+      intensity: clamp(1 - distance / RIVAL_NEAR_ENTER_METERS, 0.25, 1)
+    });
+    return;
+  }
+
+  if (rivalNearLatched && distance >= RIVAL_NEAR_EXIT_METERS) rivalNearLatched = false;
+}
+
 function playCueNow(name, options = {}) {
   if (!context || context.state !== 'running') return;
   const now = context.currentTime;
+  if (!cueAllowed(name, now)) return;
 
   switch (name) {
     case 'garage-open':
@@ -293,21 +346,61 @@ function playCueNow(name, options = {}) {
     case 'car-select': {
       const pitch = clamp(Number(options.enginePitch) || 1, 0.55, 1.7);
       playTone(170 * pitch, 310 * pitch, 0.12, 0.052, 'square', now);
-      playNoiseBurst(now, 0.07, 0.022, 320 * pitch, 920 * pitch);
+      playNoiseBurst(now, 0.07, 0.022, 320 * pitch, 920 * pitch, 0.84);
       break;
     }
     case 'paint-select':
       playTone(560, 760, 0.065, 0.032, 'triangle', now);
       break;
     case 'boost-start':
-      playNoiseBurst(now, 0.18, 0.11, 720, 2400);
-      playTone(92, 180, 0.18, 0.075, 'sawtooth', now);
+      // Spool, pressure punch, then a short whoosh. The quiet sustain takes over underneath.
+      playTone(260, 980, 0.18, 0.038, 'sine', now);
+      playTone(86, 54, 0.085, 0.05, 'triangle', now + 0.015);
+      playNoiseBurst(now + 0.025, 0.23, 0.045, 520, 3200, 0.84);
+      playTone(620, 1080, 0.19, 0.018, 'triangle', now + 0.035);
       break;
+    case 'boost-empty':
+      playTone(860, 230, 0.2, 0.034, 'sine', now);
+      playNoiseBurst(now + 0.025, 0.15, 0.035, 1300, 340, 0.91);
+      playTone(105, 62, 0.09, 0.04, 'triangle', now + 0.045);
+      break;
+    case 'boost-full':
+      playTone(470, 760, 0.08, 0.028, 'triangle', now);
+      playTone(760, 1120, 0.1, 0.021, 'sine', now + 0.07);
+      playNoiseBurst(now + 0.045, 0.07, 0.012, 900, 2100, 0.88);
+      break;
+    case 'overtake': {
+      const places = clamp(Number(options.places) || 1, 1, 4);
+      const lift = 1 + (places - 1) * 0.06;
+      playTone(240 * lift, 590 * lift, 0.16, 0.038, 'triangle', now);
+      playNoiseBurst(now + 0.025, 0.18, 0.028, 420, 1900, 0.88);
+      break;
+    }
+    case 'car-near': {
+      const intensity = clamp(Number(options.intensity) || 0.5, 0.25, 1);
+      playTone(150, 360 + intensity * 140, 0.14, 0.014 + intensity * 0.012, 'triangle', now);
+      playNoiseBurst(now, 0.16, 0.012 + intensity * 0.012, 300, 1200, 0.9);
+      break;
+    }
     case 'ui-tap':
     default:
       playTone(330, 420, 0.055, 0.038, 'triangle', now);
       break;
   }
+}
+
+function cueAllowed(name, now) {
+  const cooldown = name === 'car-near'
+    ? 1.2
+    : name === 'overtake'
+      ? 0.45
+      : 0;
+  if (!cooldown) return true;
+
+  const previous = cueTimes.get(name) ?? -Infinity;
+  if (now - previous < cooldown) return false;
+  cueTimes.set(name, now);
+  return true;
 }
 
 function playTone(startHz, endHz, duration, level, type, startAt) {
@@ -329,17 +422,17 @@ function playTone(startHz, endHz, duration, level, type, startAt) {
   oscillator.stop(endAt + 0.02);
 }
 
-function playNoiseBurst(startAt, duration, level, lowHz, highHz) {
+function playNoiseBurst(startAt, duration, level, lowHz, highHz, smoothing = 0.78) {
   const source = context.createBufferSource();
   const filter = context.createBiquadFilter();
   const gain = context.createGain();
   const endAt = startAt + duration;
 
-  source.buffer = makeNoiseBuffer(context, Math.max(0.2, duration));
+  source.buffer = makeNoiseBuffer(context, Math.max(0.2, duration), smoothing);
   filter.type = 'bandpass';
   filter.Q.value = 0.7;
-  filter.frequency.setValueAtTime(lowHz, startAt);
-  filter.frequency.exponentialRampToValueAtTime(highHz, endAt);
+  filter.frequency.setValueAtTime(Math.max(1, lowHz), startAt);
+  filter.frequency.exponentialRampToValueAtTime(Math.max(1, highHz), endAt);
 
   gain.gain.setValueAtTime(0.0001, startAt);
   gain.gain.exponentialRampToValueAtTime(level, startAt + 0.01);
