@@ -10,17 +10,17 @@ const [index, app, audio, controls, catalogSource] = await Promise.all([
 ]);
 const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
 
-assert.match(index, /TURN v1\.3\.18 · Build 2026\.07\.21-r34/);
-assert.match(index, /\.\/app\.js\?build=20260721-r34/);
+assert.match(index, /TURN v1\.3\.19 · Build 2026\.07\.21-r35/);
+assert.match(index, /\.\/app\.js\?build=20260721-r35/);
 assert.match(
   index,
-  /"\.\/vehicle\/catalog\.js\?build=20260720-r19": "\.\/vehicle\/catalog\.js\?build=20260721-r27"/,
-  'The main runtime catalog import must keep the r27 engine tuning cache redirect'
+  /"\.\/vehicle\/catalog\.js\?build=20260720-r19": "\.\/vehicle\/catalog\.js\?build=20260721-r35"/,
+  'The main runtime catalog import must cache-bust the r35 orientation correction'
 );
 assert.match(
   index,
-  /"\.\/vehicle\/catalog\.js\?build=20260720-r20": "\.\/vehicle\/catalog\.js\?build=20260721-r27"/,
-  'The Lot catalog import must keep the same r27 engine tuning'
+  /"\.\/vehicle\/catalog\.js\?build=20260720-r20": "\.\/vehicle\/catalog\.js\?build=20260721-r35"/,
+  'The Lot catalog import must use the same corrected r35 catalog'
 );
 
 assert.match(app, /import\(withBuild\('\.\/audio\/audio-system\.js'\)\)/, 'Production must load the central audio module');

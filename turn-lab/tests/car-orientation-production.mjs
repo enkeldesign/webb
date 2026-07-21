@@ -7,7 +7,7 @@ const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogS
 const expectedQuarterTurns = new Map([
   ['convertible', 1],
   ['classic', 1],
-  ['vintage-racer', 2],
+  ['vintage-racer', 0],
   ['toy-racer', 2],
   ['monster-truck', 2],
   ['race-future', 0],
@@ -21,6 +21,10 @@ const expectedQuarterTurns = new Map([
   ['truck', 0],
   ['van', 0]
 ]);
+
+// Vintage Racer's GLB wheel labels describe the axles opposite to the visible body nose.
+// Keep the visual orientation verified by gameplay instead of trusting those labels literally.
+const reversedWheelLabelAxes = new Set(['vintage-racer']);
 
 assert.equal(catalog.CAR_CATALOG.length, expectedQuarterTurns.size);
 
@@ -36,7 +40,10 @@ for (const car of catalog.CAR_CATALOG) {
   const wheelNodes = (json.nodes || []).filter((node) => /wheel/i.test(node.name || '') && node.translation);
   const front = averageWheelPosition(wheelNodes.filter((node) => wheelRole(node.name) === 'front'));
   const back = averageWheelPosition(wheelNodes.filter((node) => wheelRole(node.name) === 'back'));
-  const rawFront = { x: front.x - back.x, z: front.z - back.z };
+  const labelAxis = { x: front.x - back.x, z: front.z - back.z };
+  const rawFront = reversedWheelLabelAxes.has(car.id)
+    ? { x: -labelAxis.x, z: -labelAxis.z }
+    : labelAxis;
   const rawLength = Math.hypot(rawFront.x, rawFront.z);
   assert.ok(rawLength > 0.1, `${car.name} must expose a usable front/back wheel axis`);
 
@@ -64,7 +71,7 @@ const [index, carModels, lot, main] = await Promise.all([
   fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.18 · Build 2026\.07\.21-r34/);
+assert.match(index, /TURN v1\.3\.19 · Build 2026\.07\.21-r35/);
 assert.match(
   carModels,
   /model\.rotation\.y = Math\.PI \+ car\.modelYawQuarterTurns \* Math\.PI \/ 2/,
