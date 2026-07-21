@@ -119,19 +119,24 @@ try {
   else globalThis.dispatchEvent = originalDispatchEvent;
 }
 
-const [index, app, lapSystem, toast, css] = await Promise.all([
+const [index, app, lapSystem, gameState, toast, toastCss, onboarding, onboardingCss] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/race/lap-system.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/race/game-state.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/lap-result-toast.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/lap-result-toast.css', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/lap-result-toast.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/ui/rival-onboarding.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/rival-onboarding.css', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.21 · Build 2026\.07\.21-r38/);
-assert.match(index, /lap-result-toast\.css\?build=20260721-r38/);
-assert.match(index, /"\.\/race\/lap-system\.js\?build=20260720-r19": "\.\/race\/lap-system\.js\?build=20260721-r38"/, 'r38 must cache-bust the single-source physical lap system');
-assert.match(index, /"\.\/race\/game-state\.js": "\.\/race\/game-state\.js\?build=20260721-r34"/, 'r38 must preserve reliable reset gate-history state');
-assert.match(app, /installLapResultToast\(\)/, 'The toast must install before the game runtime starts');
+assert.match(index, /TURN v1\.3\.22 · Build 2026\.07\.22-r39/);
+assert.match(index, /lap-result-toast\.css\?build=20260722-r39/);
+assert.match(index, /rival-onboarding\.css\?build=20260722-r39/);
+assert.match(index, /"\.\/race\/lap-system\.js\?build=20260720-r19": "\.\/race\/lap-system\.js\?build=20260721-r38"/, 'r39 must preserve the corrected single-source physical lap system');
+assert.match(index, /"\.\/race\/game-state\.js": "\.\/race\/game-state\.js\?build=20260722-r39"/, 'r39 must cache-bust the restart-message removal');
+assert.match(app, /installLapResultToast\(\)/, 'The lap result toast must install before the game runtime starts');
+assert.match(app, /installRivalOnboarding\(\)/, 'The rival onboarding plate must install before the game runtime starts');
 assert.match(lapSystem, /turn:lap-result/, 'Completed lap finish must publish one frozen result event');
 assert.match(lapSystem, /turn:lap-invalid/, 'Incomplete checkpoint chains must publish explicit invalid-lap feedback');
 assert.match(lapSystem, /suppressNextLapStartMessage = true/, 'Invalid-lap feedback must not be obscured by a competing GO message');
@@ -144,15 +149,24 @@ assert.match(lapSystem, /raceRivals\.filter\(\(lap\) => lap\.time < finishedTime
 assert.match(toast, /TOAST_VISIBLE_MS = 4000/, 'The result should remain readable for a few seconds');
 assert.match(toast, /LAST LAP/, 'Valid laps must keep the requested result label');
 assert.match(toast, /LAP INVALID/, 'Invalid laps must replace LAST LAP with an explicit failure label');
-assert.match(toast, /MISSED CHECKPOINT/, 'Invalid checkpoint chains must explain why the lap did not count');
+assert.match(toast, /STAY ON THE TRACK!/, 'Invalid checkpoint chains must use player-facing track guidance');
+assert.doesNotMatch(toast, /MISSED CHECKPOINT/, 'Technical checkpoint language must stay out of the player-facing toast');
 assert.match(toast, /turn:lap-invalid/, 'The unified toast must listen for invalid-lap events');
 assert.match(toast, /lap-result-position/, 'The toast must show frozen finishing position');
 assert.match(toast, /lap-result-time/, 'The toast must show the completed lap time');
 assert.match(toast, /aria-live', 'polite'/, 'The result toast should be announced without interrupting gameplay');
-assert.match(css, /background: var\(--yellow\)/, 'The toast must share the yellow finish-result colour');
-assert.match(css, /left: 50%/, 'The lap toast must occupy the central finish-message position');
-assert.match(css, /top: 22%/, 'The lap toast must sit where the old TOP X LAP message appeared');
-assert.doesNotMatch(css, /left: max\(112px/, 'The retired lower-left toast placement must stay removed');
-assert.match(css, /prefers-reduced-motion: reduce/, 'Toast animation must respect reduced-motion preferences');
+assert.doesNotMatch(gameState, /READY FOR THE LINE/, 'Restart Lap must not show redundant ready-state feedback');
+assert.match(onboarding, /CHASE YOUR BEST/, 'The first rival must introduce the core chase-your-best loop');
+assert.match(onboarding, /reason === 'lap-completed'/, 'Onboarding must be tied to the first newly saved rival after a completed lap');
+assert.match(onboarding, /!hadRival && hasRival/, 'The onboarding plate must only trigger on the zero-to-one rival transition');
+assert.match(onboarding, /makeGhostColor\(color\)/, 'The onboarding plate must use the same lighter body colour as the ghost car');
+assert.match(onboarding, /RESULT_TOAST_HANDOFF_MS = 4300/, 'First-rival onboarding must wait until the lap-result toast has cleared');
+assert.match(toastCss, /background: var\(--yellow\)/, 'The lap toast must share the yellow finish-result colour');
+assert.match(toastCss, /left: 50%/, 'The lap toast must occupy the central finish-message position');
+assert.match(toastCss, /top: 22%/, 'The lap toast must sit where the old TOP X LAP message appeared');
+assert.doesNotMatch(toastCss, /left: max\(112px/, 'The retired lower-left toast placement must stay removed');
+assert.match(toastCss, /prefers-reduced-motion: reduce/, 'Toast animation must respect reduced-motion preferences');
+assert.match(onboardingCss, /background: var\(--rival-onboarding-color, var\(--yellow\)\)/, 'The onboarding plate must expose the rival colour through a CSS custom property');
+assert.match(onboardingCss, /border-radius: 999px/, 'The onboarding must keep the compact pill-plate language of the old READY message');
 
-console.log('TURN unified valid and invalid lap result toast regression passed.');
+console.log('TURN unified lap feedback and first-rival onboarding regression passed.');

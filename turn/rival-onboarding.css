@@ -1,0 +1,44 @@
+.rival-onboarding {
+  position: absolute;
+  z-index: 35;
+  left: 50%;
+  top: 22%;
+  padding: 7px 14px;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  background: var(--rival-onboarding-color, var(--yellow));
+  color: var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+  font-size: clamp(0.75rem, 2vw, 1rem);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, 8px) rotate(-2deg) scale(0.97);
+  transition: opacity 150ms ease, transform 190ms cubic-bezier(0.2, 0.85, 0.3, 1.16);
+}
+
+.rival-onboarding.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0) rotate(-2deg) scale(1);
+}
+
+.rival-onboarding.is-leaving {
+  opacity: 0;
+  transform: translate(-50%, 5px) rotate(-2deg) scale(0.98);
+}
+
+@media (max-height: 430px) {
+  .rival-onboarding {
+    top: 17%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rival-onboarding,
+  .rival-onboarding.is-visible,
+  .rival-onboarding.is-leaving {
+    transform: translateX(-50%) rotate(-2deg);
+    transition: opacity 120ms linear;
+  }
+}

@@ -69,7 +69,6 @@ export function resetRaceToStage({
   state.recording = [];
 
   setRacePosition?.(null, state.competitorLaps.length + 1);
-  if (showFeedback) showMessage?.('READY FOR THE LINE');
 }
 
 export function prepareRaceStartState(state) {

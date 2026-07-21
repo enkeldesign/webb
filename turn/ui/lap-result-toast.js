@@ -84,7 +84,7 @@ export function installLapResultToast() {
   function showInvalid(result) {
     label.textContent = 'LAP INVALID';
     position.textContent = result?.reason === 'missed-checkpoint'
-      ? 'MISSED CHECKPOINT'
+      ? 'STAY ON THE TRACK!'
       : 'TRY AGAIN';
     separator.hidden = true;
     time.hidden = true;
