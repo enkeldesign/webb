@@ -1,4 +1,4 @@
-import { makeGhostColor } from '../vehicle/catalog.js?build=20260720-r19';
+import { loadVehicleSelection, makeGhostColor } from '../vehicle/catalog.js?build=20260720-r19';
 
 const RESULT_TOAST_HANDOFF_MS = 4300;
 const ONBOARDING_VISIBLE_MS = 2800;
@@ -20,6 +20,7 @@ export function installRivalOnboarding() {
   plate.textContent = 'CHASE YOUR BEST';
   hud.appendChild(plate);
 
+  let hadRival = false;
   let showTimer = 0;
   let hideTimer = 0;
   let exitTimer = 0;
@@ -61,20 +62,34 @@ export function installRivalOnboarding() {
     hideTimer = window.setTimeout(() => hide(), ONBOARDING_VISIBLE_MS);
   }
 
-  function schedule(detail) {
+  function schedule() {
     clearTimers();
     plate.hidden = true;
     plate.classList.remove('is-visible', 'is-leaving');
+    const color = loadVehicleSelection().color;
     showTimer = window.setTimeout(() => {
       showTimer = 0;
-      reveal(detail?.color);
+      reveal(color);
     }, RESULT_TOAST_HANDOFF_MS);
   }
 
-  window.addEventListener('turn:first-rival', (event) => schedule(event.detail));
-  window.addEventListener('turn:rivals-reset', () => hide({ immediate: true }));
+  window.addEventListener('turn:rivals-reset', () => {
+    hadRival = false;
+    hide({ immediate: true });
+  });
+
   window.addEventListener('turn:ui-state-change', (event) => {
-    if (!event.detail?.running || event.detail?.reason === 'race-reset') {
+    const reason = event.detail?.reason;
+    const hasRival = Boolean(globalThis.__turnHasGhosts?.());
+
+    if (reason === 'rivals-loaded' || reason === 'race-started') {
+      hadRival = hasRival;
+    } else if (reason === 'lap-completed') {
+      if (!hadRival && hasRival) schedule();
+      hadRival = hasRival;
+    }
+
+    if (!event.detail?.running || reason === 'race-reset') {
       hide({ immediate: true });
     }
   });
