@@ -18,9 +18,12 @@ let gritFilter = null;
 let skidGain = null;
 let skidFilter = null;
 let skidTone = null;
+let skidChopGain = null;
+let skidPulse = null;
+let skidPulseDepth = null;
+let skidWobble = null;
+let skidWobbleDepth = null;
 let boostGain = null;
-let boostFilter = null;
-let boostTone = null;
 let lastUpdateAt = -Infinity;
 let lastBoostActive = false;
 let rivalNearLatched = false;
@@ -115,36 +118,34 @@ export function update(frame = {}, now = performance.now()) {
     0.06
   );
 
-  // Drift should read as traction loss rather than broadband spray. Normal slip is nearly
-  // subliminal; deliberate DRIFT crossfades in tire scrub, low-mid body grit and a small squeal.
+  // Drift is split into roles: a quiet friction bed, low-mid body grit, and a bright chopped
+  // squeal. Strong slip ducks the continuous bed so the tires read as grip/slip pulses, not spray.
   const slipIntent = clamp((driftAmount - 0.14) / 0.86, 0, 1);
   const strongSlip = clamp((driftAmount - 0.32) / 0.68, 0, 1);
   const driftSpeed = clamp((speed - 10) / 42, 0, 1);
-  const regularScrubLevel = active ? slipIntent * driftSpeed * 0.0055 : 0;
+  const regularScrubLevel = active ? slipIntent * driftSpeed * 0.0032 : 0;
   const deliberateScrubLevel = active && driftHeld
-    ? driftSpeed * (0.014 + slipIntent * 0.024)
+    ? driftSpeed * (0.006 + slipIntent * 0.011)
     : 0;
+  const driftBedDuck = driftHeld ? 1 - strongSlip * 0.42 : 1;
   const gritLevel = active && driftHeld
-    ? driftSpeed * (0.007 + slipIntent * 0.021)
+    ? driftSpeed * (0.007 + slipIntent * 0.018)
     : regularScrubLevel * 0.32;
   const skidLevel = active && driftHeld
-    ? driftSpeed * strongSlip * 0.012
+    ? driftSpeed * strongSlip * (0.012 + strongSlip * 0.008)
     : 0;
 
-  smooth(driftGain.gain, regularScrubLevel + deliberateScrubLevel, audioNow, 0.075);
-  smooth(driftFilter.frequency, 820 + speedRatio * 980 + slipIntent * 260, audioNow, 0.085);
+  smooth(driftGain.gain, (regularScrubLevel + deliberateScrubLevel) * driftBedDuck, audioNow, 0.075);
+  smooth(driftFilter.frequency, 680 + speedRatio * 620 + slipIntent * 180, audioNow, 0.085);
   smooth(gritGain.gain, gritLevel, audioNow, 0.09);
   smooth(gritFilter.frequency, 300 + speedRatio * 330 + slipIntent * 180, audioNow, 0.1);
-  smooth(skidGain.gain, skidLevel, audioNow, 0.08);
-  smooth(skidTone.frequency, 720 + speedRatio * 520 + strongSlip * 190, audioNow, 0.07);
-  smooth(skidFilter.frequency, 980 + speedRatio * 520, audioNow, 0.09);
+  smooth(skidGain.gain, skidLevel, audioNow, 0.055);
+  smooth(skidTone.frequency, 2600 + speedRatio * 1800 + strongSlip * 900, audioNow, 0.045);
+  smooth(skidFilter.frequency, 3300 + speedRatio * 2100 + strongSlip * 900, audioNow, 0.06);
+  smooth(skidPulse.playbackRate, 0.8 + speedRatio * 0.35 + strongSlip * 0.55, audioNow, 0.08);
+  smooth(skidWobbleDepth.gain, 10 + strongSlip * 22, audioNow, 0.09);
 
-  // The boost sustain is intentionally quiet. Most of the character lives in the start cue.
-  const boostLevel = boostActive ? 0.024 : 0;
-  smooth(boostGain.gain, boostLevel, audioNow, boostActive ? 0.055 : 0.12);
-  smooth(boostFilter.frequency, 1150 + speedRatio * 1450, audioNow, 0.07);
-  smooth(boostTone.frequency, 430 + speedRatio * 430, audioNow, 0.06);
-
+  // BOOST is a one-shot blast. The only continuous cue is the small engine pitch lift above.
   if (boostActive && !lastBoostActive) playCueNow('boost-start');
   lastBoostActive = boostActive;
 
@@ -164,7 +165,6 @@ export function silence() {
   hardMute(driftGain.gain, now);
   hardMute(gritGain.gain, now);
   hardMute(skidGain.gain, now);
-  hardMute(boostGain.gain, now);
   lastBoostActive = false;
   rivalNearLatched = false;
 }
@@ -233,8 +233,8 @@ function installDriftGraph() {
   driftGain.gain.value = 0;
   driftFilter = context.createBiquadFilter();
   driftFilter.type = 'bandpass';
-  driftFilter.frequency.value = 980;
-  driftFilter.Q.value = 0.72;
+  driftFilter.frequency.value = 900;
+  driftFilter.Q.value = 0.62;
 
   gritGain = context.createGain();
   gritGain.gain.value = 0;
@@ -247,11 +247,14 @@ function installDriftGraph() {
   skidGain.gain.value = 0;
   skidFilter = context.createBiquadFilter();
   skidFilter.type = 'bandpass';
-  skidFilter.frequency.value = 1150;
-  skidFilter.Q.value = 1.35;
+  skidFilter.frequency.value = 4200;
+  skidFilter.Q.value = 1.8;
+
+  skidChopGain = context.createGain();
+  skidChopGain.gain.value = 0.035;
 
   const driftNoise = context.createBufferSource();
-  driftNoise.buffer = makeNoiseBuffer(context, 1.6, 0.86);
+  driftNoise.buffer = makeNoiseBuffer(context, 1.6, 0.92);
   driftNoise.loop = true;
   driftNoise.connect(driftFilter);
   driftFilter.connect(driftGain);
@@ -266,47 +269,44 @@ function installDriftGraph() {
 
   skidTone = context.createOscillator();
   skidTone.type = 'triangle';
-  skidTone.frequency.value = 820;
+  skidTone.frequency.value = 3400;
   skidTone.connect(skidFilter);
-  skidFilter.connect(skidGain);
+  skidFilter.connect(skidChopGain);
+  skidChopGain.connect(skidGain);
   skidGain.connect(masterGain);
+
+  // A deterministic unipolar control buffer creates uneven, click-safe grip/slip pulses.
+  // Playback rate follows speed and slip, so a hard fast drift chatters faster than a lazy slide.
+  skidPulse = context.createBufferSource();
+  skidPulse.buffer = makeSkidPulseBuffer(context, 1.25);
+  skidPulse.loop = true;
+  skidPulse.playbackRate.value = 1;
+  skidPulseDepth = context.createGain();
+  skidPulseDepth.gain.value = 0.965;
+  skidPulse.connect(skidPulseDepth);
+  skidPulseDepth.connect(skidChopGain.gain);
+
+  // A few cents of independent pitch movement stops the high note becoming a static synth whistle.
+  skidWobble = context.createOscillator();
+  skidWobble.type = 'sine';
+  skidWobble.frequency.value = 8.3;
+  skidWobbleDepth = context.createGain();
+  skidWobbleDepth.gain.value = 10;
+  skidWobble.connect(skidWobbleDepth);
+  skidWobbleDepth.connect(skidTone.detune);
 
   driftNoise.start();
   gritNoise.start();
   skidTone.start();
+  skidPulse.start();
+  skidWobble.start();
 }
 
 function installBoostGraph() {
+  // Keep a dedicated bus for the boost transient, but no continuous oscillator/noise bed.
   boostGain = context.createGain();
-  boostGain.gain.value = 0;
-
-  boostFilter = context.createBiquadFilter();
-  boostFilter.type = 'bandpass';
-  boostFilter.frequency.value = 1500;
-  boostFilter.Q.value = 1.2;
-
-  const boostNoiseMix = context.createGain();
-  boostNoiseMix.gain.value = 0.12;
-  const boostToneMix = context.createGain();
-  boostToneMix.gain.value = 0.58;
-
-  const boostNoise = context.createBufferSource();
-  boostNoise.buffer = makeNoiseBuffer(context, 1.3, 0.91);
-  boostNoise.loop = true;
-  boostNoise.connect(boostNoiseMix);
-
-  boostTone = context.createOscillator();
-  boostTone.type = 'sine';
-  boostTone.frequency.value = 430;
-  boostTone.connect(boostToneMix);
-
-  boostNoiseMix.connect(boostFilter);
-  boostToneMix.connect(boostFilter);
-  boostFilter.connect(boostGain);
+  boostGain.gain.value = 1;
   boostGain.connect(masterGain);
-
-  boostNoise.start();
-  boostTone.start();
 }
 
 function updateRivalProximity(active, distance) {
@@ -353,11 +353,7 @@ function playCueNow(name, options = {}) {
       playTone(560, 760, 0.065, 0.032, 'triangle', now);
       break;
     case 'boost-start':
-      // Spool, pressure punch, then a short whoosh. The quiet sustain takes over underneath.
-      playTone(260, 980, 0.18, 0.038, 'sine', now);
-      playTone(86, 54, 0.085, 0.05, 'triangle', now + 0.015);
-      playNoiseBurst(now + 0.025, 0.23, 0.045, 520, 3200, 0.84);
-      playTone(620, 1080, 0.19, 0.018, 'triangle', now + 0.035);
+      playBoostBlast(now);
       break;
     case 'boost-empty':
       playTone(860, 230, 0.2, 0.034, 'sine', now);
@@ -403,7 +399,44 @@ function cueAllowed(name, now) {
   return true;
 }
 
-function playTone(startHz, endHz, duration, level, type, startAt) {
+function playBoostBlast(startAt) {
+  const duration = 0.105;
+  const endAt = startAt + duration;
+  const source = context.createBufferSource();
+  const highpass = context.createBiquadFilter();
+  const lowpass = context.createBiquadFilter();
+  const gain = context.createGain();
+
+  source.buffer = makeNoiseBuffer(context, 0.14, 0.42);
+
+  highpass.type = 'highpass';
+  highpass.frequency.value = 180;
+  highpass.Q.value = 0.55;
+
+  lowpass.type = 'lowpass';
+  lowpass.Q.value = 0.78;
+  lowpass.frequency.setValueAtTime(9600, startAt);
+  lowpass.frequency.exponentialRampToValueAtTime(1700, endAt);
+
+  gain.gain.setValueAtTime(0.0001, startAt);
+  gain.gain.exponentialRampToValueAtTime(0.046, startAt + 0.0025);
+  gain.gain.exponentialRampToValueAtTime(0.0001, endAt);
+
+  source.connect(highpass);
+  highpass.connect(lowpass);
+  lowpass.connect(gain);
+  gain.connect(boostGain);
+
+  source.start(startAt);
+  source.stop(endAt + 0.015);
+
+  // Three tiny components read as one compact pressure hit rather than a turbine spool.
+  playTone(145, 68, 0.075, 0.034, 'triangle', startAt, boostGain);
+  playTone(920, 280, 0.055, 0.021, 'triangle', startAt, boostGain);
+  playTone(2800, 1350, 0.06, 0.01, 'sine', startAt + 0.002, boostGain);
+}
+
+function playTone(startHz, endHz, duration, level, type, startAt, destination = masterGain) {
   const oscillator = context.createOscillator();
   const gain = context.createGain();
   const endAt = startAt + duration;
@@ -417,7 +450,7 @@ function playTone(startHz, endHz, duration, level, type, startAt) {
   gain.gain.exponentialRampToValueAtTime(0.0001, endAt);
 
   oscillator.connect(gain);
-  gain.connect(masterGain);
+  gain.connect(destination);
   oscillator.start(startAt);
   oscillator.stop(endAt + 0.02);
 }
@@ -458,6 +491,40 @@ function makeNoiseBuffer(audioContext, seconds, smoothing = 0.72) {
     previous = previous * memory + white * fresh;
     data[index] = previous;
   }
+  return buffer;
+}
+
+function makeSkidPulseBuffer(audioContext, seconds = 1.25) {
+  const frameCount = Math.max(1, Math.ceil(audioContext.sampleRate * seconds));
+  const buffer = audioContext.createBuffer(1, frameCount, audioContext.sampleRate);
+  const data = buffer.getChannelData(0);
+  const pattern = [0.052, 0.032, 0.071, 0.025, 0.044, 0.04, 0.064, 0.028, 0.057, 0.035, 0.078, 0.03];
+  let sampleIndex = 0;
+  let segmentIndex = 0;
+  let pulseOn = true;
+
+  while (sampleIndex < frameCount) {
+    const segmentSeconds = pattern[segmentIndex % pattern.length];
+    const segmentSamples = Math.max(1, Math.round(segmentSeconds * audioContext.sampleRate));
+    const pulseIndex = Math.floor(segmentIndex / 2);
+    const pulsePeak = 0.74 + ((pulseIndex * 37) % 22) / 100;
+
+    for (let localIndex = 0; localIndex < segmentSamples && sampleIndex < frameCount; localIndex += 1, sampleIndex += 1) {
+      if (!pulseOn) {
+        data[sampleIndex] = 0;
+        continue;
+      }
+
+      const phase = localIndex / Math.max(1, segmentSamples - 1);
+      const edge = clamp(Math.min(phase / 0.16, (1 - phase) / 0.24), 0, 1);
+      const easedEdge = Math.sin(edge * Math.PI * 0.5) ** 2;
+      data[sampleIndex] = pulsePeak * easedEdge;
+    }
+
+    pulseOn = !pulseOn;
+    segmentIndex += 1;
+  }
+
   return buffer;
 }
 
