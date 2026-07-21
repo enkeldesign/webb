@@ -98,7 +98,7 @@ run(1100);
 assert.equal(
   state.lapCheckpointIndex,
   1,
-  'a checkpoint crossed between physics samples must count even when neither sampled endpoint is inside the old circular gate'
+  'a checkpoint crossed between physics samples must count even when neither sampled endpoint is near the gate'
 );
 assert.equal(began, 0, 'the swept checkpoint regression must not accidentally cross the start line');
 
@@ -143,8 +143,10 @@ state.lapPreviousPosition = { x: -2, z: 0 };
 state.position = new Vec3(2, 0, 0);
 run(1400);
 assert.equal(completed, 0, 'missing even one checkpoint must prevent lap completion');
-assert.equal(began, 1, 'an incomplete shortcut lap must restart the timed attempt');
+assert.equal(began, 1, 'an incomplete lap must immediately restart the timed attempt at the finish line');
+assert.equal(state.suppressNextLapStartMessage, true, 'invalid-lap restart must suppress a competing GO message');
 
+state.suppressNextLapStartMessage = false;
 state.lastProgress = 0.4;
 state.progress = 0.4;
 state.lapCheckpointIndex = LAP_CHECKPOINTS.length;
@@ -194,6 +196,8 @@ assert.match(carModelsSource, /ghost \? ghostColor : requestedColor/, 'ghost bod
 assert.match(mainSource, /const ghostCar = makeCar\(0x38d9ff, 1\)/, 'procedural ghost fallback must also be solid');
 assert.match(mainSource, /const car = makeCar\(0x38d9ff, 1\)/, 'additional procedural rival fallbacks must also be solid');
 assert.match(lapSystemSource, /crossedForwardGate/, 'production lap registration must use swept physical gates');
-assert.match(lapSystemSource, /LAP_GATE_HALF_WIDTH_FACTOR = 0\.82/, 'legitimate laps must have modest verge tolerance around the road and curbs');
+assert.match(lapSystemSource, /CHECKPOINT_GATE_HALF_WIDTH_FACTOR = 1\.05/, 'checkpoint gates must allow broad grass and verge racing lines');
+assert.match(lapSystemSource, /START_GATE_HALF_WIDTH_FACTOR = 0\.82/, 'start and finish must keep the established narrower crossing gate');
+assert.match(lapSystemSource, /turn:lap-invalid/, 'an incomplete checkpoint chain must report an invalid lap instead of failing silently');
 
-console.log('TURN balance, swept lap gates and anti-shortcut regression passed.');
+console.log('TURN forgiving swept lap gates and anti-shortcut regression passed.');
