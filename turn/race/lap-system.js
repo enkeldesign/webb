@@ -23,6 +23,8 @@ const GATE_EPSILON = 1e-6;
 
 export function beginTimedLapState({ state, samples, now, showMessage }) {
   const start = samples[0];
+  const suppressStartMessage = state.suppressNextLapStartMessage === true;
+  state.suppressNextLapStartMessage = false;
 
   state.lapActive = true;
   state.lapCheckpointIndex = 0;
@@ -39,7 +41,7 @@ export function beginTimedLapState({ state, samples, now, showMessage }) {
     p: 0
   }];
 
-  showMessage?.('GO!');
+  if (!suppressStartMessage) showMessage?.('GO!');
 }
 
 export function updateLapProgressState({
@@ -69,9 +71,6 @@ export function updateLapProgressState({
       checkpointGateHalfWidth
     );
 
-    // Keep a close-range fallback for the first frame after legacy/restored state,
-    // but normal play uses the swept crossing above so a gate cannot fall between
-    // two physics samples.
     const insideCheckpointGate = !state.lapPreviousPosition
       && distanceSquared(currentPosition, checkpointSample.point)
         <= checkpointGateHalfWidth * checkpointGateHalfWidth;
@@ -90,9 +89,6 @@ export function updateLapProgressState({
     startGateHalfWidth
   );
 
-  // Retain the old progress-wrap signal as a compatibility fallback, but require
-  // the car to actually be near the physical start gate. The physical swept gate
-  // is now the primary source of truth.
   const crossedStartByProgress = state.lastProgress > 0.82 && state.progress < 0.18;
   const nearPhysicalStart = distanceSquared(currentPosition, startSample.point)
     <= startGateHalfWidth * startGateHalfWidth;
@@ -105,11 +101,9 @@ export function updateLapProgressState({
     } else if (state.lapCheckpointIndex >= checkpoints.length) {
       completeLap(now);
     } else {
-      // A failed anti-shortcut check should never be silent. The finish crossing
-      // also starts the next attempt, but without a competing GO message so the
-      // player has time to understand why the previous lap did not count.
       publishLapInvalid({ reason: 'missed-checkpoint' });
-      beginTimedLap(now, { showStartMessage: false });
+      state.suppressNextLapStartMessage = true;
+      beginTimedLap(now);
     }
   }
 
@@ -138,8 +132,6 @@ export function completeLapState({
   let finishingTotal = null;
 
   if (completedLap) {
-    // Freeze the race result before the saved top-four rival list is updated. The last-lap
-    // result is meaningful even when this run is too slow to become a saved rival.
     const raceRivals = state.competitorLaps
       .filter((lap) => Number.isFinite(lap?.time))
       .slice(0, competitorLimit);
