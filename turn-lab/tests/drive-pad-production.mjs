@@ -20,9 +20,9 @@ const [index, controls, css, gameplayCss, analogGas, spectate] = await Promise.a
   fs.readFile(new URL('../../turn/ui/spectate.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.19 · Build 2026\.07\.21-r35/);
-assert.match(index, /drive-pad\.css\?build=20260721-r35/);
-assert.match(index, /gameplay-v2\.css\?build=20260721-r35/);
+assert.match(index, /TURN v1\.3\.20 · Build 2026\.07\.21-r36/);
+assert.match(index, /drive-pad\.css\?build=20260721-r36/);
+assert.match(index, /gameplay-v2\.css\?build=20260721-r36/);
 assert.match(controls, /className = 'drive-pad'/, 'Gameplay controls must create one unified drive pad');
 assert.match(controls, /return x < 0\.5 \? 'drift' : 'boost'/, 'Top drive pad must split into Drift and Boost');
 assert.match(controls, /return 'gas'/, 'Bottom drive pad must map to Gas');
@@ -32,6 +32,10 @@ assert.match(controls, /boostRequested = nextZone === 'boost'/, 'Boost zone must
 assert.match(controls, /boostRequested && !boostExhausted/, 'Boost must stay locked while the thumb remains in Boost after exhaustion');
 assert.match(controls, /previousZone === 'boost' && nextZone !== 'boost'\) boostExhausted = false/, 'Leaving Boost for Gas or Drift must re-arm Boost without requiring pointer release');
 assert.match(controls, /Brake · Reverse/, 'Separate brake control must advertise reverse');
+assert.match(controls, /function refillBoost\(\)/, 'Gameplay controls must expose one reset-safe boost refill path');
+assert.match(controls, /boostCharge = 1;\s*previousBoostCharge = 1;\s*boostExhausted = false;/s, 'Restarting must fully refill and unlock boost without creating a recharge transition');
+assert.match(controls, /event\.detail\?\.reason === 'race-reset'\) refillBoost\(\)/, 'The race reset event must refill boost');
+assert.match(controls, /globalThis\.__turnRefillBoost = refillBoost/, 'Boost refill must remain reusable by the runtime');
 assert.match(controls, /becameEmpty = previousBoostCharge > 0\.001 && boostCharge <= 0\.001/, 'Empty feedback must trigger on the actual depletion transition');
 assert.match(controls, /becameFull = previousBoostCharge < 0\.999 && boostCharge >= 0\.999/, 'Full feedback must trigger only when recharge crosses the full threshold');
 assert.match(controls, /flashBoostHud\('is-boost-empty-flash'\)/, 'Empty boost must trigger its distinct HUD feedback class');
@@ -71,4 +75,4 @@ assert.ok(state.velocity.z < -0.1, 'Holding Brake after stopping must engage rev
 for (let i = 0; i < 100; i += 1) updateVehiclePhysicsState(physicsArgs);
 assert.ok(state.velocity.z >= -(80 * 0.32 + 0.5), 'Reverse must stay capped well below forward top speed');
 
-console.log('TURN unified drive pad and reverse regression passed.');
+console.log('TURN unified drive pad, restart boost refill and reverse regression passed.');
