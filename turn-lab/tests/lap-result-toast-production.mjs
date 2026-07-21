@@ -127,26 +127,31 @@ const [index, app, lapSystem, toast, css] = await Promise.all([
   fs.readFile(new URL('../../turn/lap-result-toast.css', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.19 · Build 2026\.07\.21-r35/);
-assert.match(index, /lap-result-toast\.css\?build=20260721-r35/);
-assert.match(index, /"\.\/race\/lap-system\.js\?build=20260720-r19": "\.\/race\/lap-system\.js\?build=20260721-r34"/, 'r35 must preserve the reliable r34 production lap system');
-assert.match(index, /"\.\/race\/game-state\.js": "\.\/race\/game-state\.js\?build=20260721-r34"/, 'r35 must preserve reset gate-history state');
+assert.match(index, /TURN v1\.3\.20 · Build 2026\.07\.21-r36/);
+assert.match(index, /lap-result-toast\.css\?build=20260721-r36/);
+assert.match(index, /"\.\/race\/lap-system\.js\?build=20260720-r19": "\.\/race\/lap-system\.js\?build=20260721-r36"/, 'r36 must cache-bust the more forgiving lap system');
+assert.match(index, /"\.\/race\/game-state\.js": "\.\/race\/game-state\.js\?build=20260721-r34"/, 'r36 must preserve reliable reset gate-history state');
 assert.match(app, /installLapResultToast\(\)/, 'The toast must install before the game runtime starts');
 assert.match(lapSystem, /turn:lap-result/, 'Completed lap finish must publish one frozen result event');
+assert.match(lapSystem, /turn:lap-invalid/, 'Incomplete checkpoint chains must publish explicit invalid-lap feedback');
+assert.match(lapSystem, /suppressNextLapStartMessage = true/, 'Invalid-lap feedback must not be obscured by a competing GO message');
 assert.match(lapSystem, /const completedLap = finishedTime > 5/, 'Result visibility must be separated from replay-save eligibility');
 assert.match(lapSystem, /const validLap = completedLap && state\.recording\.length > 20/, 'Ghost saving may still require a usable recording');
 assert.match(lapSystem, /if \(completedLap\) \{\s*publishLapResult/s, 'Every completed lap must publish a result, including last place and unsaved replays');
 assert.doesNotMatch(lapSystem, /TOP ['"] \+|NEW BEST|showMessage\?\.\(message\)/, 'The retired duplicate lap-ranking message must stay removed');
 assert.match(lapSystem, /raceRivals\.filter\(\(lap\) => lap\.time < finishedTime\)\.length/, 'Finish placement must be calculated against the rivals from the completed race');
 assert.match(toast, /TOAST_VISIBLE_MS = 4000/, 'The result should remain readable for a few seconds');
-assert.match(toast, /LAST LAP/, 'The toast must use the requested result label');
+assert.match(toast, /LAST LAP/, 'Valid laps must keep the requested result label');
+assert.match(toast, /LAP INVALID/, 'Invalid laps must replace LAST LAP with an explicit failure label');
+assert.match(toast, /MISSED CHECKPOINT/, 'Invalid checkpoint chains must explain why the lap did not count');
+assert.match(toast, /turn:lap-invalid/, 'The unified toast must listen for invalid-lap events');
 assert.match(toast, /lap-result-position/, 'The toast must show frozen finishing position');
 assert.match(toast, /lap-result-time/, 'The toast must show the completed lap time');
 assert.match(toast, /aria-live', 'polite'/, 'The result toast should be announced without interrupting gameplay');
 assert.match(css, /background: var\(--yellow\)/, 'The toast must share the yellow finish-result colour');
-assert.match(css, /left: 50%/, 'The last-lap toast must occupy the former central finish-message position');
-assert.match(css, /top: 22%/, 'The last-lap toast must sit where the old TOP X LAP message appeared');
+assert.match(css, /left: 50%/, 'The lap toast must occupy the central finish-message position');
+assert.match(css, /top: 22%/, 'The lap toast must sit where the old TOP X LAP message appeared');
 assert.doesNotMatch(css, /left: max\(112px/, 'The retired lower-left toast placement must stay removed');
 assert.match(css, /prefers-reduced-motion: reduce/, 'Toast animation must respect reduced-motion preferences');
 
-console.log('TURN reliable unified last-lap result regression passed.');
+console.log('TURN unified valid and invalid lap result toast regression passed.');

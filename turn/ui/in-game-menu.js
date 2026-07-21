@@ -28,8 +28,8 @@ function install(runtime) {
 
   runtime.__inGameMenuInstalled = true;
 
-  backToStartButton.textContent = 'Back to Start';
-  backToStartButton.setAttribute('aria-label', 'Return to the start');
+  backToStartButton.textContent = 'Restart Lap';
+  backToStartButton.setAttribute('aria-label', 'Restart the current lap from the start line');
   backToStartButton.classList.add('back-to-start-button');
 
   recalibrateButton.textContent = 'Recalibrate';

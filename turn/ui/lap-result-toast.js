@@ -24,7 +24,9 @@ export function installLapResultToast() {
   `;
   hud.appendChild(toast);
 
+  const label = toast.querySelector('span');
   const position = toast.querySelector('.lap-result-position');
+  const separator = toast.querySelector('i');
   const time = toast.querySelector('.lap-result-time');
   let hideTimer = 0;
   let exitTimer = 0;
@@ -42,7 +44,7 @@ export function installLapResultToast() {
 
     if (immediate) {
       toast.hidden = true;
-      toast.classList.remove('is-visible', 'is-leaving');
+      toast.classList.remove('is-visible', 'is-leaving', 'is-invalid');
       return;
     }
 
@@ -50,31 +52,52 @@ export function installLapResultToast() {
     toast.classList.add('is-leaving');
     exitTimer = window.setTimeout(() => {
       toast.hidden = true;
-      toast.classList.remove('is-leaving');
+      toast.classList.remove('is-leaving', 'is-invalid');
       exitTimer = 0;
     }, TOAST_EXIT_MS);
   }
 
-  function show(result) {
+  function reveal() {
+    clearTimers();
+    toast.hidden = false;
+    toast.classList.remove('is-visible', 'is-leaving');
+    void toast.offsetWidth;
+    toast.classList.add('is-visible');
+    hideTimer = window.setTimeout(() => hide(), TOAST_VISIBLE_MS);
+  }
+
+  function showResult(result) {
     const place = Number(result?.position);
     const total = Number(result?.total);
     const seconds = Number(result?.time);
     if (!Number.isFinite(place) || !Number.isFinite(total) || !Number.isFinite(seconds)) return;
 
-    clearTimers();
+    label.textContent = 'LAST LAP';
     position.textContent = `${Math.max(1, Math.round(place))}/${Math.max(1, Math.round(total))}`;
+    separator.hidden = false;
+    time.hidden = false;
     time.textContent = formatLapTime(seconds);
-    toast.hidden = false;
-    toast.classList.remove('is-visible', 'is-leaving');
-    void toast.offsetWidth;
-    toast.classList.add('is-visible');
-
-    hideTimer = window.setTimeout(() => hide(), TOAST_VISIBLE_MS);
+    toast.classList.remove('is-invalid');
+    reveal();
   }
 
-  window.addEventListener('turn:lap-result', (event) => show(event.detail));
+  function showInvalid(result) {
+    label.textContent = 'LAP INVALID';
+    position.textContent = result?.reason === 'missed-checkpoint'
+      ? 'MISSED CHECKPOINT'
+      : 'TRY AGAIN';
+    separator.hidden = true;
+    time.hidden = true;
+    toast.classList.add('is-invalid');
+    reveal();
+  }
+
+  window.addEventListener('turn:lap-result', (event) => showResult(event.detail));
+  window.addEventListener('turn:lap-invalid', (event) => showInvalid(event.detail));
   window.addEventListener('turn:ui-state-change', (event) => {
-    if (!event.detail?.running) hide({ immediate: true });
+    if (!event.detail?.running || event.detail?.reason === 'race-reset') {
+      hide({ immediate: true });
+    }
   });
 }
 

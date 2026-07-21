@@ -26,11 +26,13 @@ const [index, app, menu, controls, backToLot, main, css, spectate] = await Promi
   fs.readFile(new URL('../../turn/ui/spectate.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.19 · Build 2026\.07\.21-r35/);
-assert.match(index, /in-game-menu\.css\?build=20260721-r35/);
+assert.match(index, /TURN v1\.3\.20 · Build 2026\.07\.21-r36/);
+assert.match(index, /in-game-menu\.css\?build=20260721-r36/);
 assert.match(index, /id="calibrateButton"[^>]*>Recalibrate<\/button>/);
-assert.match(index, /id="resetButton"[^>]*>Back to Start<\/button>/);
+assert.match(index, /id="resetButton"[^>]*>Restart Lap<\/button>/);
 assert.match(app, /await import\(withBuild\('\.\/ui\/in-game-menu\.js'\)\)/);
+assert.match(menu, /backToStartButton\.textContent = 'Restart Lap'/, 'The race reset action should describe restarting the lap rather than navigating away');
+assert.match(menu, /Restart the current lap from the start line/, 'Restart Lap must expose an accurate accessible label');
 assert.match(menu, /inGameMenuVisibilityFor\(runtime\.state\.mode\)/, 'Menu visibility must follow the explicit game mode');
 assert.doesNotMatch(menu, /state\.speed/, 'Menu visibility must not infer race state from speed');
 assert.match(menu, /backToStartButton\.hidden = !visibility\.backToStart/);
@@ -47,4 +49,4 @@ assert.match(css, /\.utility-group\[data-menu-state="staged"\]/);
 assert.match(css, /\.utility-group\[data-menu-state="racing"\] \.back-to-start-button/);
 assert.match(css, /\.utility-group\[data-menu-state="hidden"\]/);
 
-console.log('TURN state-aware in-game menu regression passed.');
+console.log('TURN state-aware in-game menu and Restart Lap regression passed.');
