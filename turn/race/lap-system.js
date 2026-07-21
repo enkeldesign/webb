@@ -99,9 +99,16 @@ export function completeLapState({
 }) {
   const finishedTime = (now - state.lapStartedAt) / 1000;
   const validLap = finishedTime > 5 && state.recording.length > 20;
+  let finishingPosition = null;
+  let finishingTotal = null;
 
   if (validLap) {
     const previousBest = state.bestTime;
+    const raceRivals = state.competitorLaps
+      .filter((lap) => Number.isFinite(lap?.time))
+      .slice(0, competitorLimit);
+    finishingPosition = 1 + raceRivals.filter((lap) => lap.time < finishedTime).length;
+    finishingTotal = raceRivals.length + 1;
     let message = 'LAP ' + formatLapTime(finishedTime);
 
     try {
@@ -149,6 +156,11 @@ export function completeLapState({
     }
 
     showMessage?.(message);
+    publishLapResult({
+      position: finishingPosition,
+      total: finishingTotal,
+      time: finishedTime
+    });
   }
 
   state.lapCheckpointIndex = 0;
@@ -158,7 +170,17 @@ export function completeLapState({
   state.lapElapsed = 0;
   state.recording = [];
 
-  return { finishedTime, validLap };
+  return {
+    finishedTime,
+    validLap,
+    position: finishingPosition,
+    total: finishingTotal
+  };
+}
+
+function publishLapResult(detail) {
+  if (typeof globalThis.dispatchEvent !== 'function' || typeof globalThis.CustomEvent !== 'function') return;
+  globalThis.dispatchEvent(new globalThis.CustomEvent('turn:lap-result', { detail }));
 }
 
 function checkpointSampleAt(samples, progress) {
