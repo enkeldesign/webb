@@ -12,6 +12,16 @@ const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogS
 
 assert.match(index, /TURN v1\.3\.11 · Build 2026\.07\.21-r27/);
 assert.match(index, /\.\/app\.js\?build=20260721-r27/);
+assert.match(
+  index,
+  /"\.\/vehicle\/catalog\.js\?build=20260720-r19": "\.\/vehicle\/catalog\.js\?build=20260721-r27"/,
+  'The main runtime catalog import must be cache-busted for r27 engine tuning'
+);
+assert.match(
+  index,
+  /"\.\/vehicle\/catalog\.js\?build=20260720-r20": "\.\/vehicle\/catalog\.js\?build=20260721-r27"/,
+  'The Lot catalog import must resolve to the same r27 engine tuning'
+);
 
 assert.match(app, /import\(withBuild\('\.\/audio\/audio-system\.js'\)\)/, 'Production must load the central audio module');
 assert.match(app, /installTurnAudio\(\)/, 'The audio foundation must install before gameplay starts');
@@ -31,6 +41,10 @@ assert.match(audio, /function installBoostGraph\(/, 'The foundation must provide
 assert.match(audio, /globalThis\.__turnVehicleTuning\?\.enginePitch/, 'Engine frequency must follow the selected car tuning');
 assert.match(audio, /engineBaseHz = \(52 \+ speedRatio \* 96 \+ throttle \* 24\) \* enginePitch/, 'Per-car pitch must multiply the whole engine baseline');
 
+for (const car of catalog.CAR_CATALOG) {
+  assert.ok(Number.isFinite(car.tuning.enginePitch), `${car.name} must define an engine pitch baseline`);
+  assert.ok(car.tuning.enginePitch >= 0.55 && car.tuning.enginePitch <= 1.7, `${car.name} engine pitch must stay within the supported range`);
+}
 assert.equal(catalog.getCarDefinition('sedan').tuning.enginePitch, 1, 'Sedan must remain the neutral engine pitch baseline');
 assert.equal(catalog.getCarDefinition('monster-truck').tuning.enginePitch, 0.62, 'Monster Truck must have the lowest deep engine baseline');
 assert.equal(catalog.getCarDefinition('race').tuning.enginePitch, 1.55, 'Race Car must have the highest F1-like engine baseline');
