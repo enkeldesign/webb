@@ -58,6 +58,9 @@ jobs:
       - name: Run state-aware in-game menu regression
         run: node turn-lab/tests/in-game-menu-production.mjs
 
+      - name: Run lap result toast regression
+        run: node turn-lab/tests/lap-result-toast-production.mjs
+
       - name: Run production sound foundation regression
         run: node turn-lab/tests/audio-foundation-production.mjs
 

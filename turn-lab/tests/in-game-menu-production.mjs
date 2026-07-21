@@ -26,8 +26,8 @@ const [index, app, menu, controls, backToLot, main, css, spectate] = await Promi
   fs.readFile(new URL('../../turn/ui/spectate.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.15 · Build 2026\.07\.21-r31/);
-assert.match(index, /in-game-menu\.css\?build=20260721-r31/);
+assert.match(index, /TURN v1\.3\.16 · Build 2026\.07\.21-r32/);
+assert.match(index, /in-game-menu\.css\?build=20260721-r32/);
 assert.match(index, /id="calibrateButton"[^>]*>Recalibrate<\/button>/);
 assert.match(index, /id="resetButton"[^>]*>Back to Start<\/button>/);
 assert.match(app, /await import\(withBuild\('\.\/ui\/in-game-menu\.js'\)\)/);
