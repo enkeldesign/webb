@@ -1,3 +1,5 @@
+const MAX_SENSOR_CAMERA_ROLL = 18 * Math.PI / 180;
+
 export function updateRaceCameraState({
   state,
   camera,
@@ -45,10 +47,22 @@ export function updateRaceCameraState({
   camera.up.set(0, 1, 0);
   camera.lookAt(cameraTarget);
 
-  if (state.sensorMode) camera.rotateZ(-state.roll);
+  if (state.sensorMode) {
+    const neutralRoll = Number.isFinite(state.neutralRoll) ? state.neutralRoll : 0;
+    const relativeRoll = normalizeAngle(state.roll - neutralRoll);
+    const guardedRoll = clamp(relativeRoll, -MAX_SENSOR_CAMERA_ROLL, MAX_SENSOR_CAMERA_ROLL);
+    camera.rotateZ(-guardedRoll);
+  }
 
   camera.fov = lerp(camera.fov, 68 + speedRatio * 14, Math.min(1, dt * 4.5));
   camera.updateProjectionMatrix();
+}
+
+function normalizeAngle(angle) {
+  let value = Number(angle) || 0;
+  while (value > Math.PI) value -= Math.PI * 2;
+  while (value < -Math.PI) value += Math.PI * 2;
+  return value;
 }
 
 function lerp(a, b, t) {
