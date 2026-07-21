@@ -3,37 +3,12 @@ import fs from 'node:fs/promises';
 import { updateVehiclePhysicsState } from '../../turn/vehicle/physics.js';
 
 class Vec3 {
-  constructor(x = 0, y = 0, z = 0) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
-  }
-
-  clone() {
-    return new Vec3(this.x, this.y, this.z);
-  }
-
-  dot(other) {
-    return this.x * other.x + this.y * other.y + this.z * other.z;
-  }
-
-  addScaledVector(other, scale) {
-    this.x += other.x * scale;
-    this.y += other.y * scale;
-    this.z += other.z * scale;
-    return this;
-  }
-
-  multiplyScalar(scale) {
-    this.x *= scale;
-    this.y *= scale;
-    this.z *= scale;
-    return this;
-  }
-
-  length() {
-    return Math.hypot(this.x, this.y, this.z);
-  }
+  constructor(x = 0, y = 0, z = 0) { this.x = x; this.y = y; this.z = z; }
+  clone() { return new Vec3(this.x, this.y, this.z); }
+  dot(other) { return this.x * other.x + this.y * other.y + this.z * other.z; }
+  addScaledVector(other, scale) { this.x += other.x * scale; this.y += other.y * scale; this.z += other.z * scale; return this; }
+  multiplyScalar(scale) { this.x *= scale; this.y *= scale; this.z *= scale; return this; }
+  length() { return Math.hypot(this.x, this.y, this.z); }
 }
 
 const [index, controls, css, gameplayCss, analogGas, spectate] = await Promise.all([
@@ -45,9 +20,9 @@ const [index, controls, css, gameplayCss, analogGas, spectate] = await Promise.a
   fs.readFile(new URL('../../turn/ui/spectate.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.11 · Build 2026\.07\.21-r27/);
-assert.match(index, /drive-pad\.css\?build=20260721-r27/);
-assert.match(index, /gameplay-v2\.css\?build=20260721-r27/);
+assert.match(index, /TURN v1\.3\.12 · Build 2026\.07\.21-r28/);
+assert.match(index, /drive-pad\.css\?build=20260721-r28/);
+assert.match(index, /gameplay-v2\.css\?build=20260721-r28/);
 assert.match(controls, /className = 'drive-pad'/, 'Gameplay controls must create one unified drive pad');
 assert.match(controls, /return x < 0\.5 \? 'drift' : 'boost'/, 'Top drive pad must split into Drift and Boost');
 assert.match(controls, /return 'gas'/, 'Bottom drive pad must map to Gas');
@@ -77,52 +52,22 @@ const forward = new Vec3(0, 0, 1);
 const right = new Vec3(1, 0, 0);
 const trackSample = { point: new Vec3(), tangent: forward.clone(), normal: right.clone() };
 const state = {
-  position: new Vec3(),
-  velocity: new Vec3(0, 0, 5),
-  touchGas: true,
-  touchBrake: true,
-  throttle: 0,
-  brake: 0,
-  steering: 0,
-  driftAmount: 0,
-  heading: 0,
-  progress: 0,
-  lastProgress: 0,
-  nearestTrackIndex: 0,
-  trackDistance: 0,
-  offRoad: false,
-  speed: 5
+  position: new Vec3(), velocity: new Vec3(0, 0, 5), touchGas: true, touchBrake: true,
+  throttle: 0, brake: 0, steering: 0, driftAmount: 0, heading: 0, progress: 0,
+  lastProgress: 0, nearestTrackIndex: 0, trackDistance: 0, offRoad: false, speed: 5
 };
-
 const physicsArgs = {
-  state,
-  dt: 0.1,
-  updateMotionInput: () => {},
+  state, dt: 0.1, updateMotionInput: () => {},
   findNearestTrack: () => ({ index: 0, distance: 0, sample: trackSample }),
-  getForward: () => forward.clone(),
-  getRight: () => right.clone(),
-  trackWidth: 27,
-  trackSampleCount: 100,
-  maxSpeed: 80,
-  analogGas: 1,
-  boostActive: true,
-  driftHeld: false,
-  vehicleTuning: {
-    accelerationMultiplier: 1,
-    controlMultiplier: 1,
-    driftEngineMultiplier: 0.93,
-    driftDragAdd: 0.085,
-    boostPowerMultiplier: 1,
-    boostSpeedMultiplier: 1.32
-  }
+  getForward: () => forward.clone(), getRight: () => right.clone(),
+  trackWidth: 27, trackSampleCount: 100, maxSpeed: 80, analogGas: 1, boostActive: true, driftHeld: false,
+  vehicleTuning: { accelerationMultiplier: 1, controlMultiplier: 1, driftEngineMultiplier: 0.93, driftDragAdd: 0.085, boostPowerMultiplier: 1, boostSpeedMultiplier: 1.32 }
 };
 
 updateVehiclePhysicsState(physicsArgs);
 assert.ok(state.velocity.z <= 0.001, 'Brake must stop forward motion before reverse begins');
-
 updateVehiclePhysicsState(physicsArgs);
 assert.ok(state.velocity.z < -0.1, 'Holding Brake after stopping must engage reverse');
-
 for (let i = 0; i < 100; i += 1) updateVehiclePhysicsState(physicsArgs);
 assert.ok(state.velocity.z >= -(80 * 0.32 + 0.5), 'Reverse must stay capped well below forward top speed');
 
