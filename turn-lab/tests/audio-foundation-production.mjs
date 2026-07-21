@@ -10,12 +10,12 @@ const [index, app, audio, controls, catalogSource] = await Promise.all([
 ]);
 const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
 
-assert.match(index, /TURN v1\.3\.19 · Build 2026\.07\.21-r35/);
-assert.match(index, /\.\/app\.js\?build=20260721-r35/);
+assert.match(index, /TURN v1\.3\.20 · Build 2026\.07\.21-r36/);
+assert.match(index, /\.\/app\.js\?build=20260721-r36/);
 assert.match(
   index,
   /"\.\/vehicle\/catalog\.js\?build=20260720-r19": "\.\/vehicle\/catalog\.js\?build=20260721-r35"/,
-  'The main runtime catalog import must cache-bust the r35 orientation correction'
+  'The main runtime catalog import must preserve the r35 orientation correction'
 );
 assert.match(
   index,
