@@ -58,6 +58,9 @@ jobs:
       - name: Run state-aware in-game menu regression
         run: node turn-lab/tests/in-game-menu-production.mjs
 
+      - name: Run production sound foundation regression
+        run: node turn-lab/tests/audio-foundation-production.mjs
+
       - name: Run production performance and diagnostics regression
         run: node turn-lab/tests/performance-production.mjs
 
