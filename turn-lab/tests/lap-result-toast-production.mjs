@@ -14,18 +14,22 @@ function makeFrames(count = 25) {
   }));
 }
 
-function makeState({ recording = makeFrames(), lapElapsed = 13.5 } = {}) {
+function makeState({
+  recording = makeFrames(),
+  lapElapsed = 13.5,
+  rivalTimes = [10, 11, 12, 13]
+} = {}) {
   return {
-    competitorLaps: [10, 11, 12, 13].map((time) => ({ time, frames: makeFrames() })),
+    competitorLaps: rivalTimes.map((time) => ({ time, frames: makeFrames() })),
     recording,
     lapStartedAt: 0,
     lapCheckpointIndex: 12,
     lapActive: true,
     lap: 1,
     lapElapsed,
-    bestTime: 10,
+    bestTime: rivalTimes[0] ?? Infinity,
     ghostFrames: [],
-    ghostVisible: true,
+    ghostVisible: rivalTimes.length > 0,
     vehicleId: 'sedan',
     vehicleColor: '#ffd43b',
     vehicleSecondaryColor: '#f8f9fa'
@@ -84,6 +88,30 @@ try {
   assert.equal(shortRecordingResult.total, 5);
   assert.deepEqual(shortRecordingState.competitorLaps.map((lap) => lap.time), [10, 11, 12, 13]);
   assert.deepEqual(publishedResults.at(-1)?.detail, { position: 5, total: 5, time: 14 }, 'Every completed lap must publish the frozen last-lap result');
+
+  for (const rivalTimes of [[], [11, 14], [10, 11, 12, 13]]) {
+    const rivalCountState = makeState({
+      recording: makeFrames(5),
+      rivalTimes
+    });
+    const rivalCountResult = completeLapState({
+      state: rivalCountState,
+      samples,
+      now: 12500,
+      competitorLimit: 4,
+      saveGhost() {
+        assert.fail('The short diagnostic replay must not alter the saved rival list');
+      }
+    });
+
+    assert.equal(rivalCountResult.completedLap, true, `lap completion must not depend on having ${rivalTimes.length} rivals`);
+    assert.equal(rivalCountResult.total, rivalTimes.length + 1, 'only the displayed field size should follow rival count');
+    assert.equal(
+      rivalCountResult.position,
+      1 + rivalTimes.filter((time) => time < 12.5).length,
+      'placement must be calculated from available rival times without affecting lap validity'
+    );
+  }
 } finally {
   if (originalCustomEvent === undefined) delete globalThis.CustomEvent;
   else globalThis.CustomEvent = originalCustomEvent;
@@ -99,8 +127,10 @@ const [index, app, lapSystem, toast, css] = await Promise.all([
   fs.readFile(new URL('../../turn/lap-result-toast.css', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.17 · Build 2026\.07\.21-r33/);
-assert.match(index, /lap-result-toast\.css\?build=20260721-r33/);
+assert.match(index, /TURN v1\.3\.18 · Build 2026\.07\.21-r34/);
+assert.match(index, /lap-result-toast\.css\?build=20260721-r34/);
+assert.match(index, /"\.\/race\/lap-system\.js\?build=20260720-r19": "\.\/race\/lap-system\.js\?build=20260721-r34"/, 'r34 must cache-bust the production lap system');
+assert.match(index, /"\.\/race\/game-state\.js": "\.\/race\/game-state\.js\?build=20260721-r34"/, 'r34 must cache-bust reset gate-history state');
 assert.match(app, /installLapResultToast\(\)/, 'The toast must install before the game runtime starts');
 assert.match(lapSystem, /turn:lap-result/, 'Completed lap finish must publish one frozen result event');
 assert.match(lapSystem, /const completedLap = finishedTime > 5/, 'Result visibility must be separated from replay-save eligibility');
@@ -119,4 +149,4 @@ assert.match(css, /top: 22%/, 'The last-lap toast must sit where the old TOP X L
 assert.doesNotMatch(css, /left: max\(112px/, 'The retired lower-left toast placement must stay removed');
 assert.match(css, /prefers-reduced-motion: reduce/, 'Toast animation must respect reduced-motion preferences');
 
-console.log('TURN unified last-lap result toast production regression passed.');
+console.log('TURN reliable unified last-lap result regression passed.');
