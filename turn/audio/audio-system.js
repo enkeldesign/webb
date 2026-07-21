@@ -18,6 +18,7 @@ let boostFilter = null;
 let boostTone = null;
 let lastUpdateAt = -Infinity;
 let lastBoostActive = false;
+let lotOpen = false;
 let installed = false;
 
 export function installTurnAudio() {
@@ -40,10 +41,18 @@ export function installTurnAudio() {
   globalThis.__turnAudio = api;
 
   document.addEventListener('pointerdown', unlockFromGesture, { capture: true, passive: true });
+  document.addEventListener('pointerdown', handleLotPointerDown, { capture: true, passive: true });
   document.addEventListener('keydown', unlockFromGesture, { capture: true });
   document.addEventListener('click', handleUiClick, { capture: true });
+  document.addEventListener('change', handleUiChange, { capture: true });
   document.addEventListener('visibilitychange', handleVisibilityChange, { passive: true });
   window.addEventListener('pagehide', handlePageHide, { passive: true });
+
+  lotOpen = document.body?.classList.contains('turn-lot-open') || false;
+  if (document.body && typeof MutationObserver !== 'undefined') {
+    const lotObserver = new MutationObserver(handleLotVisibilityChange);
+    lotObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  }
 
   return api;
 }
@@ -75,7 +84,11 @@ export function update(frame = {}, now = performance.now()) {
   const driftAmount = clamp(Number(frame.driftAmount) || 0, 0, 1);
   const driftHeld = Boolean(frame.driftHeld);
   const boostActive = active && Boolean(frame.boostActive);
-  const enginePitch = clamp(Number(frame.enginePitch) || 1, 0.55, 1.7);
+  const enginePitch = clamp(
+    Number(frame.enginePitch ?? globalThis.__turnVehicleTuning?.enginePitch) || 1,
+    0.55,
+    1.7
+  );
   const audioNow = context.currentTime;
 
   const engineLevel = active
@@ -362,6 +375,21 @@ function smooth(param, value, time, timeConstant) {
 function hardMute(param, time) {
   param.cancelScheduledValues(time);
   param.setValueAtTime(0, time);
+}
+
+function handleLotPointerDown(event) {
+  if (!event.target.closest?.('.lot-canvas-host')) return;
+  cue('car-select');
+}
+
+function handleUiChange(event) {
+  if (event.target.matches?.('.lot-color-input')) cue('paint-select');
+}
+
+function handleLotVisibilityChange() {
+  const nextLotOpen = document.body?.classList.contains('turn-lot-open') || false;
+  if (nextLotOpen && !lotOpen) cue('garage-open');
+  lotOpen = nextLotOpen;
 }
 
 function handleUiClick(event) {
