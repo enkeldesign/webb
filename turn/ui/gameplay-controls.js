@@ -304,6 +304,27 @@ function installGameplayUi() {
     }
   });
 
+  function updateAudio(now, boosting) {
+    const runtime = globalThis.__turnRuntime;
+    const runtimeState = runtime?.state;
+    const spectating = runtimeState?.mode === runtime?.GAME_MODE?.SPECTATING;
+    const active = Boolean(runtimeState?.running) &&
+      !document.hidden &&
+      !document.body.classList.contains('turn-lot-open') &&
+      !spectating;
+    const tuningTopSpeed = Number(runtimeState?.vehicleTuning?.topSpeedMultiplier) || 1;
+
+    globalThis.__turnAudio?.update({
+      active,
+      speed: runtimeState?.speed || 0,
+      maxSpeed: (runtime?.maxSpeed || 88) * tuningTopSpeed,
+      throttle: runtimeState?.throttle || 0,
+      driftAmount: runtimeState?.driftAmount || 0,
+      driftHeld: Boolean(globalThis.__turnDriftHeld),
+      boostActive: boosting
+    }, now);
+  }
+
   function updateBoost(now) {
     const dt = Math.min(0.05, Math.max(0, (now - previousTime) / 1000));
     previousTime = now;
@@ -327,6 +348,8 @@ function installGameplayUi() {
     const boosting = boostRequested && !boostExhausted && boostCharge > 0.001;
     globalThis.__turnBoostActive = boosting;
     globalThis.__turnBoostCharge = boostCharge;
+    updateAudio(now, boosting);
+
     const locked = boostRequested && boostExhausted;
     const driftCharging = globalThis.__turnDriftHeld && !boosting;
     const chargePercent = (boostCharge * 100).toFixed(1) + '%';

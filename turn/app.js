@@ -6,6 +6,9 @@ function withBuild(path) {
   return url.href;
 }
 
+const { installTurnAudio } = await import(withBuild('./audio/audio-system.js'));
+installTurnAudio();
+
 await import(withBuild('./input/analog-gas.js'));
 await import(withBuild('./ui/gameplay-controls.js'));
 await import(withBuild('./main.js'));
