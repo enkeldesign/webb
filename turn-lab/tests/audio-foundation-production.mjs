@@ -10,8 +10,8 @@ const [index, app, audio, controls, catalogSource] = await Promise.all([
 ]);
 const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
 
-assert.match(index, /TURN v1\.3\.13 · Build 2026\.07\.21-r29/);
-assert.match(index, /\.\/app\.js\?build=20260721-r29/);
+assert.match(index, /TURN v1\.3\.14 · Build 2026\.07\.21-r30/);
+assert.match(index, /\.\/app\.js\?build=20260721-r30/);
 assert.match(
   index,
   /"\.\/vehicle\/catalog\.js\?build=20260720-r19": "\.\/vehicle\/catalog\.js\?build=20260721-r27"/,
