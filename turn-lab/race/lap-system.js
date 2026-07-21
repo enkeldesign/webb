@@ -91,23 +91,23 @@ export function completeLapState({
   now,
   competitorLimit,
   saveGhost,
+  showMessage,
   onError
 }) {
   const finishedTime = (now - state.lapStartedAt) / 1000;
-  const completedLap = finishedTime > 5;
-  const validLap = completedLap && state.recording.length > 20;
+  const validLap = finishedTime > 5 && state.recording.length > 20;
   let finishingPosition = null;
   let finishingTotal = null;
 
-  if (completedLap) {
+  if (validLap) {
+    const previousBest = state.bestTime;
     const raceRivals = state.competitorLaps
       .filter((lap) => Number.isFinite(lap?.time))
       .slice(0, competitorLimit);
     finishingPosition = 1 + raceRivals.filter((lap) => lap.time < finishedTime).length;
     finishingTotal = raceRivals.length + 1;
-  }
+    let message = 'LAP ' + formatLapTime(finishedTime);
 
-  if (validLap) {
     try {
       const candidateFrames = state.recording.map((frame) => ({ ...frame }));
       if (candidateFrames.length) {
@@ -130,20 +130,28 @@ export function completeLapState({
         frames: candidateFrames
       };
 
-      state.competitorLaps = [...state.competitorLaps, candidate]
+      const nextLaps = [...state.competitorLaps, candidate]
         .filter((lap) => Number.isFinite(lap?.time) && Array.isArray(lap?.frames) && lap.frames.length > 20)
         .sort((a, b) => a.time - b.time)
         .slice(0, competitorLimit);
+
+      const rank = nextLaps.indexOf(candidate);
+      state.competitorLaps = nextLaps;
       state.bestTime = state.competitorLaps[0]?.time ?? Infinity;
       state.ghostFrames = state.competitorLaps[0]?.frames ?? [];
       state.ghostVisible = state.competitorLaps.length > 0;
       saveGhost?.();
+
+      if (finishedTime < previousBest) {
+        message = 'NEW BEST ' + formatLapTime(finishedTime);
+      } else if (rank >= 0) {
+        message = 'TOP ' + (rank + 1) + ' LAP ' + formatLapTime(finishedTime);
+      }
     } catch (error) {
       onError?.(error);
     }
-  }
 
-  if (completedLap) {
+    showMessage?.(message);
     publishLapResult({
       position: finishingPosition,
       total: finishingTotal,
@@ -160,7 +168,6 @@ export function completeLapState({
 
   return {
     finishedTime,
-    completedLap,
     validLap,
     position: finishingPosition,
     total: finishingTotal
@@ -175,4 +182,12 @@ function publishLapResult(detail) {
 function checkpointSampleAt(samples, progress) {
   const index = Math.round(progress * samples.length) % samples.length;
   return samples[index];
+}
+
+function formatLapTime(seconds) {
+  if (!Number.isFinite(seconds)) return '--:--.---';
+  const minutes = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
+  const ms = Math.floor((seconds % 1) * 1000).toString().padStart(3, '0');
+  return `${minutes}:${secs}.${ms}`;
 }
