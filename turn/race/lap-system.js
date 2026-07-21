@@ -13,10 +13,12 @@ export const LAP_CHECKPOINTS = Object.freeze([
   0.94
 ]);
 
-// The gate spans the whole road, both curbs and a modest amount of verge. The
-// ordered twelve-gate chain still prevents major shortcuts, while a legitimate
-// lap is no longer invalidated by briefly putting two wheels beyond a curb.
-const LAP_GATE_HALF_WIDTH_FACTOR = 0.82;
+// Checkpoints are intentionally broader than the rendered road. TURN rewards
+// adventurous racing lines, so grass and verge excursions should still count as
+// a legitimate circuit. The ordered twelve-gate chain remains the anti-shortcut
+// mechanism. Start/finish stays narrower to avoid accidental lap crossings.
+const CHECKPOINT_GATE_HALF_WIDTH_FACTOR = 1.05;
+const START_GATE_HALF_WIDTH_FACTOR = 0.82;
 const GATE_EPSILON = 1e-6;
 
 export function beginTimedLapState({ state, samples, now, showMessage }) {
@@ -53,7 +55,8 @@ export function updateLapProgressState({
 }) {
   const currentPosition = snapshotPosition(state.position);
   const previousPosition = state.lapPreviousPosition || currentPosition;
-  const gateHalfWidth = trackWidth * LAP_GATE_HALF_WIDTH_FACTOR;
+  const checkpointGateHalfWidth = trackWidth * CHECKPOINT_GATE_HALF_WIDTH_FACTOR;
+  const startGateHalfWidth = trackWidth * START_GATE_HALF_WIDTH_FACTOR;
   const nextCheckpoint = checkpoints[state.lapCheckpointIndex];
 
   if (state.lapActive && nextCheckpoint != null) {
@@ -63,14 +66,15 @@ export function updateLapProgressState({
       previousPosition,
       currentPosition,
       checkpointSample,
-      gateHalfWidth
+      checkpointGateHalfWidth
     );
 
     // Keep a close-range fallback for the first frame after legacy/restored state,
     // but normal play uses the swept crossing above so a gate cannot fall between
     // two physics samples.
     const insideCheckpointGate = !state.lapPreviousPosition
-      && distanceSquared(currentPosition, checkpointSample.point) <= gateHalfWidth * gateHalfWidth;
+      && distanceSquared(currentPosition, checkpointSample.point)
+        <= checkpointGateHalfWidth * checkpointGateHalfWidth;
 
     if (movingForwardThroughGate && (crossedCheckpointGate || insideCheckpointGate)) {
       state.lapCheckpointIndex += 1;
@@ -83,7 +87,7 @@ export function updateLapProgressState({
     previousPosition,
     currentPosition,
     startSample,
-    gateHalfWidth
+    startGateHalfWidth
   );
 
   // Retain the old progress-wrap signal as a compatibility fallback, but require
@@ -91,7 +95,7 @@ export function updateLapProgressState({
   // is now the primary source of truth.
   const crossedStartByProgress = state.lastProgress > 0.82 && state.progress < 0.18;
   const nearPhysicalStart = distanceSquared(currentPosition, startSample.point)
-    <= gateHalfWidth * gateHalfWidth;
+    <= startGateHalfWidth * startGateHalfWidth;
   const crossedStartOnTrack = movingForwardAtStart
     && (crossedPhysicalStartGate || (crossedStartByProgress && nearPhysicalStart));
 
@@ -101,10 +105,11 @@ export function updateLapProgressState({
     } else if (state.lapCheckpointIndex >= checkpoints.length) {
       completeLap(now);
     } else {
-      // Crossing the line without every ordered physical gate starts a fresh timed
-      // attempt. This preserves the anti-shortcut contract while avoiding false
-      // misses caused by point-sampled gates.
-      beginTimedLap(now);
+      // A failed anti-shortcut check should never be silent. The finish crossing
+      // also starts the next attempt, but without a competing GO message so the
+      // player has time to understand why the previous lap did not count.
+      publishLapInvalid({ reason: 'missed-checkpoint' });
+      beginTimedLap(now, { showStartMessage: false });
     }
   }
 
@@ -237,8 +242,16 @@ export function crossedForwardGate(previousPosition, currentPosition, gateSample
 }
 
 function publishLapResult(detail) {
+  publishEvent('turn:lap-result', detail);
+}
+
+function publishLapInvalid(detail) {
+  publishEvent('turn:lap-invalid', detail);
+}
+
+function publishEvent(type, detail) {
   if (typeof globalThis.dispatchEvent !== 'function' || typeof globalThis.CustomEvent !== 'function') return;
-  globalThis.dispatchEvent(new globalThis.CustomEvent('turn:lap-result', { detail }));
+  globalThis.dispatchEvent(new globalThis.CustomEvent(type, { detail }));
 }
 
 function checkpointSampleAt(samples, progress) {
