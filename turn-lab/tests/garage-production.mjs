@@ -47,9 +47,9 @@ const [index, main, lapSystem, rivalStorage, controls, carModels] = await Promis
   fs.readFile(path.join(turnDir, 'vehicle/car-models.js'), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.14 · Build 2026\.07\.21-r30/);
-assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260721-r30/);
-assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-r10\.js\?build=20260720-r25"/, 'r30 must preserve the latest Lot module cache redirect');
+assert.match(index, /TURN v1\.3\.15 · Build 2026\.07\.21-r31/);
+assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260721-r31/);
+assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-r10\.js\?build=20260720-r25"/, 'r31 must preserve the latest Lot module cache redirect');
 assert.match(index, /"\.\/vehicle\/car-models\.js\?build=20260720-r19": "\.\/vehicle\/car-models\.js\?build=20260720-r22"/, 'The stable r22 outline module cache redirect must remain in place');
 assert.match(main, /await showTheLot\(/, 'Start flow must enter The Lot before racing');
 assert.match(main, /maxSpeed: MAX_SPEED \* state\.vehicleTuning\.topSpeedMultiplier/, 'Selected top speed must reach physics');

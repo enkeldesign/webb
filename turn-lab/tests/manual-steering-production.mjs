@@ -20,13 +20,13 @@ const [index, css, orientationGuardCss, orientationCompat, camera] = await Promi
   fs.readFile(new URL('../../turn/render/camera.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.14 · Build 2026\.07\.21-r30/);
+assert.match(index, /TURN v1\.3\.15 · Build 2026\.07\.21-r31/);
 assert.match(index, /role="slider"/);
 assert.match(index, /manual-steer-knob/);
-assert.match(index, /manual-steering\.css\?build=20260721-r30/);
-assert.match(index, /orientation-guard\.css\?build=20260721-r30/);
-assert.match(index, /orientation-compat\.js\?build=20260721-r30/);
-assert.match(index, /"\.\/render\/camera\.js\?build=20260720-r19": "\.\/render\/camera\.js\?build=20260721-r29"/, 'r30 must preserve the guarded race camera cache redirect');
+assert.match(index, /manual-steering\.css\?build=20260721-r31/);
+assert.match(index, /orientation-guard\.css\?build=20260721-r31/);
+assert.match(index, /orientation-compat\.js\?build=20260721-r31/);
+assert.match(index, /"\.\/render\/camera\.js\?build=20260720-r19": "\.\/render\/camera\.js\?build=20260721-r29"/, 'r31 must preserve the guarded race camera cache redirect');
 assert.match(index, /<strong>Rotate to landscape<\/strong>/, 'The pre-race landscape instruction must remain available');
 
 assert.match(css, /--manual-steer-left/);
@@ -43,11 +43,13 @@ assert.match(orientationCompat, /STEERING_LIMIT_HARD = 17 \* Math\.PI \/ 180/, '
 assert.match(orientationCompat, /document\.body\.classList\.toggle\('turn-race-active', gameplayActive\)/, 'Race lifecycle must control the orientation-warning suppression class');
 assert.match(orientationCompat, /gameplayAngle = computedAngle\(\)/, 'The race must freeze its starting motion-axis orientation');
 assert.match(orientationCompat, /return gameplayActive && gameplayAngle != null \? gameplayAngle : computedAngle\(\)/, 'Live viewport flips must not remap steering while racing');
-assert.match(orientationCompat, /preferredLandscapeLock = currentLandscapeLockType\(\)/, 'The guard must remember the exact landscape side selected at race start');
+assert.match(orientationCompat, /preferredLandscapeLock = currentLandscapeLockType\(\)/, 'The exact starting landscape side must remain available as a fallback');
 assert.match(orientationCompat, /await orientation\.lock\(type\)/, 'Supported browsers must receive an actual Screen Orientation lock request');
-assert.match(orientationCompat, /return tryOrientationLock\('landscape'\)/, 'Exact-side locking must fall back to generic landscape');
-assert.match(orientationCompat, /globalThis\.__turnRequestLandscapeLock = requestLandscapeLock/, 'The strongest landscape-lock request must be reusable by the runtime');
-assert.match(orientationCompat, /document\.addEventListener\('pointerdown'/, 'User gestures must retry the browser orientation lock');
+assert.match(orientationCompat, /if \(await tryOrientationLock\('landscape'\)\) return true/, 'Generic landscape must be preferred so both turning directions remain valid');
+assert.match(orientationCompat, /return exactType !== 'landscape' \? tryOrientationLock\(exactType\) : false/, 'Exact-side locking must be fallback-only');
+assert.match(orientationCompat, /#motionButton, #manualButton, \.lot-race/, 'Only actual game-start gestures should retry the browser orientation lock');
+assert.doesNotMatch(orientationCompat, /if \(gameplayActive \|\| startsGame\)/, 'Regular GAS, DRIFT and BOOST touches must not repeatedly re-lock orientation');
+assert.match(orientationCompat, /globalThis\.__turnRequestLandscapeLock = requestLandscapeLock/, 'The landscape-lock request must remain reusable by the runtime');
 assert.match(orientationCompat, /document\.addEventListener\('fullscreenchange'/, 'Entering fullscreen must retry the browser orientation lock');
 assert.match(orientationCompat, /window\.addEventListener\('pageshow'/, 'Returning to the web app must retry the browser orientation lock');
 assert.match(orientationCompat, /navigator\.vibrate\?\.\(pattern\)/, 'Approaching the guard should provide haptic feedback where supported');
