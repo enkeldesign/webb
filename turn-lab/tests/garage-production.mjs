@@ -50,14 +50,14 @@ const [index, main, lapSystem, rivalStorage, controls, carModels, lotWrapper] = 
   fs.readFile(path.join(turnDir, 'garage/lot-track-select.js'), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.6\.1 · Build 2026\.07\.22-r51/);
-assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260722-r51/);
-assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-track-select\.js\?build=20260722-r51"/, 'r51 must place track selection in front of the stable Lot implementation');
+assert.match(index, /TURN v1\.6\.2 · Build 2026\.07\.22-r52/);
+assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260722-r52/);
+assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-track-select\.js\?build=20260722-r52"/, 'r52 must place track selection in front of the stable Lot implementation');
 assert.match(lotWrapper, /showOriginalLot/, 'The track-first wrapper must still delegate car selection to the verified Lot implementation');
 assert.match(lotWrapper, /await chooseTrackBeforeLot\(\)/, 'The driver must pick a track before choosing the car');
-assert.match(lotWrapper, /track-manager\.js\?build=20260722-r51/, 'The Lot wrapper must load the r51 Airport polish runtime');
-assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r19": "\.\/vehicle\/catalog\.js\?build=20260722-r42"/, 'r51 must preserve the reduced Monster Truck scale in the main runtime');
-assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r20": "\.\/vehicle\/catalog\.js\?build=20260722-r42"/, 'r51 must preserve the same reduced Monster Truck scale inside The Lot');
+assert.match(lotWrapper, /track-manager\.js\?build=20260722-r52/, 'The Lot wrapper must load the r52 Airport run-off runtime');
+assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r19": "\.\/vehicle\/catalog\.js\?build=20260722-r42"/, 'r52 must preserve the reduced Monster Truck scale in the main runtime');
+assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r20": "\.\/vehicle\/catalog\.js\?build=20260722-r42"/, 'r52 must preserve the same reduced Monster Truck scale inside The Lot');
 assert.match(index, /"\.\/vehicle\/car-models\.js\?build=20260720-r19": "\.\/vehicle\/car-models\.js\?build=20260720-r22"/, 'The stable r22 outline module cache redirect must remain in place');
 assert.match(main, /await showTheLot\(/, 'Start flow must enter the track-first Lot wrapper before racing');
 assert.match(main, /maxSpeed: MAX_SPEED \* state\.vehicleTuning\.topSpeedMultiplier/, 'Selected top speed must reach physics');

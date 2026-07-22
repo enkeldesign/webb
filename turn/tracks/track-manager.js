@@ -9,7 +9,8 @@ import {
   normalizeTrackId,
   saveTrackSelection
 } from './catalog.js?build=20260722-r50';
-import { installAirportWorld } from './airport-world-r51.js?build=20260722-r51';
+import { installAirportWorld } from './airport-world-r52.js?build=20260722-r52';
+import { isForgivingTrackSurface } from './airport-runoff.js?build=20260722-r52';
 import { showTrackSelect } from '../ui/track-select.js?build=20260722-r51';
 
 let runtime = null;
@@ -120,6 +121,7 @@ function installRuntime(nextRuntime) {
 
   globalThis.__turnGetTrackId = () => activeTrackId;
   globalThis.__turnChooseTrack = () => chooseTrackBeforeLot();
+  globalThis.__turnIsForgivingSurface = (position) => isForgivingTrackSurface(activeTrackId, position);
   runtimeReadyResolve(runtime);
 }
 
