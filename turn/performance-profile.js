@@ -3,6 +3,7 @@ const DEFAULT_SHADOW_MAP_SIZE = 1024;
 const MIN_DPR_CAP = 0.75;
 const MAX_DPR_CAP = 2;
 const SHADOW_MAP_SIZES = new Set([256, 512, 1024]);
+const rendererPixelRatioSetters = new WeakMap();
 
 let installed = false;
 
@@ -71,10 +72,10 @@ export function installPerformanceProfile() {
 function applyRendererProfile(runtime, profile) {
   const { renderer, sun } = runtime;
 
-  if (!renderer.userData.turnBaseSetPixelRatio) {
-    renderer.userData.turnBaseSetPixelRatio = renderer.setPixelRatio.bind(renderer);
+  if (!rendererPixelRatioSetters.has(renderer)) {
+    rendererPixelRatioSetters.set(renderer, renderer.setPixelRatio.bind(renderer));
   }
-  const setBasePixelRatio = renderer.userData.turnBaseSetPixelRatio;
+  const setBasePixelRatio = rendererPixelRatioSetters.get(renderer);
   renderer.setPixelRatio = (value) => {
     const requested = Number(value);
     const safeRequested = Number.isFinite(requested) ? requested : 1;
