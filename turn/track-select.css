@@ -5,7 +5,7 @@
   display: grid;
   place-items: center;
   overflow: auto;
-  padding: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+  padding: max(12px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
   background:
     radial-gradient(circle at 18% 18%, rgb(255 255 255 / 0.36), transparent 24%),
     linear-gradient(145deg, #8be3ff 0%, #55c9ed 52%, #35b8e7 100%);
@@ -23,6 +23,7 @@
 
 .track-select-shell {
   width: min(1180px, 100%);
+  min-height: 0;
 }
 
 .track-select-head {
@@ -83,6 +84,7 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(14px, 2vw, 24px);
+  min-height: 0;
 }
 
 .track-card {
@@ -95,6 +97,7 @@
     "copy best";
   gap: 9px 16px;
   min-width: 0;
+  min-height: 0;
   padding: clamp(14px, 2vw, 22px);
   border: 5px solid var(--ink);
   border-radius: 28px;
@@ -210,7 +213,7 @@
 .track-card-preview {
   grid-area: preview;
   display: block;
-  height: clamp(112px, 23vh, 230px);
+  height: clamp(108px, 21vh, 220px);
   border: 4px solid var(--ink);
   border-radius: 20px;
   background:
@@ -266,24 +269,27 @@
   display: grid;
   align-content: end;
   min-width: 0;
+  overflow: hidden;
 }
 
 .track-card-name {
-  font-size: clamp(1.4rem, 3.5vw, 3rem);
+  min-width: 0;
+  font-size: clamp(1.3rem, 2.8vw, 2.55rem);
   line-height: 0.95;
   letter-spacing: -0.04em;
+  white-space: nowrap;
 }
 
 .track-card-description {
   margin-top: 5px;
-  font-size: clamp(0.72rem, 1.5vw, 1rem);
+  font-size: clamp(0.72rem, 1.45vw, 0.96rem);
   font-weight: 800;
 }
 
 .track-card-best {
   grid-area: best;
   align-self: end;
-  min-width: min(180px, 31vw);
+  min-width: clamp(118px, 15vw, 172px);
   padding: 9px 12px;
   border: 3px solid var(--ink);
   border-radius: 16px;
@@ -299,7 +305,7 @@
 
 .track-card-best strong {
   margin-top: 2px;
-  font-size: clamp(0.78rem, 1.8vw, 1.15rem);
+  font-size: clamp(0.78rem, 1.65vw, 1.1rem);
   white-space: nowrap;
 }
 
@@ -308,7 +314,7 @@
   align-items: center;
   justify-content: flex-end;
   gap: 18px;
-  margin-top: 24px;
+  margin-top: 18px;
 }
 
 .track-select-tip {
@@ -317,7 +323,7 @@
 
 .track-select-continue {
   min-width: min(360px, 52vw);
-  padding: 15px 22px;
+  padding: 14px 22px;
   border: 4px solid var(--ink);
   border-radius: 18px;
   background: #8ce99a;
@@ -328,39 +334,147 @@
   letter-spacing: 0.08em;
 }
 
-@media (max-height: 560px) {
+/* iPad and phone landscape are the primary TURN surfaces. Keep the entire chooser
+   inside one viewport instead of forcing the Continue action below the fold. */
+@media (max-height: 820px) and (orientation: landscape) {
   .track-select {
-    align-items: start;
+    place-items: stretch center;
+    overflow: hidden;
+    padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  }
+
+  .track-select-shell {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    width: min(1240px, 100%);
+    height: 100%;
+    min-height: 0;
   }
 
   .track-select-head {
-    margin-bottom: 10px;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 9px;
+  }
+
+  .track-select-kicker {
+    padding: 4px 10px;
+    border-width: 3px;
+    box-shadow: 3px 3px 0 var(--ink);
   }
 
   .track-select h2 {
-    font-size: clamp(2rem, 6.5vw, 4rem);
+    margin-top: 4px;
+    font-size: clamp(2rem, 5.4vw, 4.35rem);
+    line-height: 0.86;
   }
 
   .track-select-head p {
     display: none;
   }
 
+  .track-select-close {
+    width: 48px;
+    height: 48px;
+    border-width: 3px;
+    box-shadow: 4px 4px 0 var(--ink);
+    font-size: 1.7rem;
+  }
+
+  .track-select-grid {
+    min-height: 0;
+    gap: clamp(10px, 1.5vw, 18px);
+    align-items: stretch;
+  }
+
   .track-card {
-    padding: 11px 13px;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 6px 11px;
+    padding: clamp(9px, 1.25vw, 14px);
+    border-width: 4px;
+    border-radius: 24px;
+    box-shadow: 8px 8px 0 var(--ink);
   }
 
   .track-card-preview {
-    height: min(27vh, 135px);
+    height: auto;
+    min-height: 80px;
+    max-height: 21vh;
+    border-width: 3px;
+    border-radius: 17px;
+  }
+
+  .track-card-name {
+    font-size: clamp(1.2rem, 2.7vw, 2rem);
+  }
+
+  .track-card-description {
+    margin-top: 3px;
+    font-size: clamp(0.66rem, 1.25vw, 0.86rem);
+    line-height: 1.05;
+  }
+
+  .track-card-best {
+    min-width: clamp(108px, 13.5vw, 150px);
+    padding: 6px 9px;
+    border-width: 3px;
+    border-radius: 14px;
+  }
+
+  .track-card-best strong {
+    font-size: clamp(0.75rem, 1.45vw, 1rem);
   }
 
   .track-select-footer {
-    margin-top: 14px;
+    margin-top: 9px;
+    gap: 12px;
+  }
+
+  .track-select-continue {
+    min-width: min(330px, 46vw);
+    padding: 10px 18px;
+    border-width: 3px;
+    box-shadow: 5px 5px 0 var(--ink);
+    font-size: clamp(0.8rem, 1.65vw, 1.02rem);
+  }
+}
+
+@media (max-height: 610px) and (orientation: landscape) {
+  .track-select-kicker {
+    display: none;
+  }
+
+  .track-select h2 {
+    margin: 0;
+    font-size: clamp(1.8rem, 4.8vw, 3.4rem);
+  }
+
+  .track-card-preview {
+    max-height: 18vh;
+  }
+
+  .track-card-description,
+  .track-select-tip {
+    display: none;
+  }
+
+  .track-select-footer {
+    margin-top: 6px;
   }
 }
 
 @media (max-width: 760px) and (orientation: portrait) {
+  .track-select {
+    place-items: start center;
+    overflow: auto;
+  }
+
   .track-select-grid {
     grid-template-columns: 1fr;
+  }
+
+  .track-card-name {
+    white-space: normal;
   }
 }
 
