@@ -1,0 +1,446 @@
+import * as THREE from 'three';
+
+const INK = 0x08090a;
+const RUNWAY = 0x25292e;
+const TARMAC = 0x747d85;
+const CONCRETE = 0xaeb7bf;
+const WINDOW = 0x67d6f4;
+const YELLOW = 0xffd43b;
+const PINK = 0xff4fa3;
+const RED = 0xff5f67;
+const CREAM = 0xfff8e8;
+
+const blackOutlineMaterial = new THREE.MeshBasicMaterial({
+  color: INK,
+  side: THREE.BackSide
+});
+
+export function installAirportWorld({ scene, samples, trackWidth = 27 }) {
+  const world = new THREE.Group();
+  world.name = 'TURN Airport';
+  scene.add(world);
+
+  makeGround(world);
+  makeRunway(world);
+  makeRaceRoad(world, samples, trackWidth);
+  makeAirportBuildings(world);
+  makeAircraft(world);
+  makeGroundOperations(world);
+  makeDistantWorld(world);
+  makeStartGate(world, samples, trackWidth);
+
+  return world;
+}
+
+function outlinedMesh(geometry, material, scale = 1.035, { castShadow = true, receiveShadow = true } = {}) {
+  const group = new THREE.Group();
+  const outline = new THREE.Mesh(geometry, blackOutlineMaterial);
+  outline.scale.setScalar(scale);
+  outline.castShadow = false;
+  outline.receiveShadow = false;
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.castShadow = castShadow;
+  mesh.receiveShadow = receiveShadow;
+  group.add(outline, mesh);
+  return group;
+}
+
+function material(color, roughness = 0.82, metalness = 0) {
+  return new THREE.MeshStandardMaterial({ color, roughness, metalness });
+}
+
+function makeGround(world) {
+  const grass = new THREE.Mesh(
+    new THREE.PlaneGeometry(700, 560),
+    material(0xa9e98f, 1)
+  );
+  grass.rotation.x = -Math.PI / 2;
+  grass.position.y = -0.08;
+  grass.receiveShadow = true;
+  world.add(grass);
+
+  const airportBase = new THREE.Mesh(
+    new THREE.PlaneGeometry(520, 340),
+    material(CONCRETE, 0.98)
+  );
+  airportBase.rotation.x = -Math.PI / 2;
+  airportBase.position.set(15, -0.035, -4);
+  airportBase.receiveShadow = true;
+  world.add(airportBase);
+
+  const apron = new THREE.Mesh(
+    new THREE.PlaneGeometry(290, 125),
+    material(TARMAC, 0.96)
+  );
+  apron.rotation.x = -Math.PI / 2;
+  apron.position.set(45, 0.005, 113);
+  apron.receiveShadow = true;
+  world.add(apron);
+}
+
+function makeRunway(world) {
+  const runway = outlinedMesh(
+    new THREE.BoxGeometry(455, 0.1, 62),
+    material(RUNWAY, 0.98),
+    1.006,
+    { castShadow: false }
+  );
+  runway.position.set(0, 0.015, -127);
+  world.add(runway);
+
+  const white = material(CREAM, 0.88);
+  const dashGeometry = new THREE.BoxGeometry(13, 0.08, 0.8);
+  const dashes = new THREE.InstancedMesh(dashGeometry, white, 18);
+  const marker = new THREE.Object3D();
+  for (let index = 0; index < 18; index += 1) {
+    marker.position.set(-205 + index * 24, 0.12, -127);
+    marker.updateMatrix();
+    dashes.setMatrixAt(index, marker.matrix);
+  }
+  dashes.instanceMatrix.needsUpdate = true;
+  dashes.receiveShadow = true;
+  world.add(dashes);
+
+  for (const x of [-207, 207]) {
+    for (let stripe = -3; stripe <= 3; stripe += 1) {
+      const threshold = new THREE.Mesh(new THREE.BoxGeometry(17, 0.08, 2.2), white);
+      threshold.position.set(x, 0.12, -127 + stripe * 6.2);
+      threshold.receiveShadow = true;
+      world.add(threshold);
+    }
+  }
+
+  const lightGeometry = new THREE.SphereGeometry(0.42, 7, 5);
+  const lightMaterial = new THREE.MeshBasicMaterial({ color: 0xfff3a6 });
+  const lights = new THREE.InstancedMesh(lightGeometry, lightMaterial, 40);
+  let lightIndex = 0;
+  for (const z of [-157, -97]) {
+    for (let x = -215; x <= 215; x += 24) {
+      marker.position.set(x, 0.48, z);
+      marker.updateMatrix();
+      lights.setMatrixAt(lightIndex, marker.matrix);
+      lightIndex += 1;
+    }
+  }
+  lights.instanceMatrix.needsUpdate = true;
+  world.add(lights);
+}
+
+function makeRaceRoad(world, samples, trackWidth) {
+  const count = samples.length;
+  const roadPositions = [];
+  const roadColors = [];
+  const roadIndices = [];
+  const asphaltDark = new THREE.Color(0x34383d);
+  const asphaltLight = new THREE.Color(0x4a4f55);
+
+  for (let index = 0; index <= count; index += 1) {
+    const sample = samples[index % count];
+    const left = sample.point.clone().addScaledVector(sample.normal, trackWidth / 2).setY(0.17);
+    const right = sample.point.clone().addScaledVector(sample.normal, -trackWidth / 2).setY(0.17);
+    roadPositions.push(left.x, left.y, left.z, right.x, right.y, right.z);
+
+    const variation = THREE.MathUtils.clamp(
+      0.44 + Math.sin(index * 0.17) * 0.1 + Math.sin(index * 0.61 + 0.8) * 0.06,
+      0,
+      1
+    );
+    const color = asphaltDark.clone().lerp(asphaltLight, variation);
+    roadColors.push(color.r, color.g, color.b, color.r, color.g, color.b);
+  }
+
+  for (let index = 0; index < count; index += 1) {
+    const a = index * 2;
+    const b = a + 1;
+    const c = a + 2;
+    const d = a + 3;
+    roadIndices.push(a, c, b, b, c, d);
+  }
+
+  const roadGeometry = new THREE.BufferGeometry();
+  roadGeometry.setAttribute('position', new THREE.Float32BufferAttribute(roadPositions, 3));
+  roadGeometry.setAttribute('color', new THREE.Float32BufferAttribute(roadColors, 3));
+  roadGeometry.setIndex(roadIndices);
+  roadGeometry.computeVertexNormals();
+
+  const road = new THREE.Mesh(
+    roadGeometry,
+    new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      roughness: 0.98,
+      metalness: 0,
+      side: THREE.DoubleSide
+    })
+  );
+  road.receiveShadow = true;
+  world.add(road);
+
+  const curbWidth = 1.75;
+  const curbSegmentLength = 12;
+  const curbColors = [new THREE.Color(0xe63946), new THREE.Color(CREAM)];
+
+  for (const side of [-1, 1]) {
+    const positions = [];
+    const colors = [];
+    for (let index = 0; index < count; index += 1) {
+      const current = samples[index];
+      const next = samples[(index + 1) % count];
+      const innerOffset = side * (trackWidth / 2 - 0.05);
+      const outerOffset = side * (trackWidth / 2 + curbWidth);
+      const a = current.point.clone().addScaledVector(current.normal, innerOffset).setY(0.205);
+      const b = current.point.clone().addScaledVector(current.normal, outerOffset).setY(0.205);
+      const c = next.point.clone().addScaledVector(next.normal, innerOffset).setY(0.205);
+      const d = next.point.clone().addScaledVector(next.normal, outerOffset).setY(0.205);
+      positions.push(
+        a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z,
+        b.x, b.y, b.z, d.x, d.y, d.z, c.x, c.y, c.z
+      );
+      const color = curbColors[Math.floor(index / curbSegmentLength) % 2];
+      for (let vertex = 0; vertex < 6; vertex += 1) colors.push(color.r, color.g, color.b);
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    geometry.computeVertexNormals();
+    const curb = new THREE.Mesh(
+      geometry,
+      new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide })
+    );
+    curb.receiveShadow = true;
+    world.add(curb);
+  }
+
+  const dashStep = 8;
+  const dashGeometry = new THREE.BoxGeometry(0.34, 0.045, 5.2);
+  const dashMaterial = material(CREAM, 0.92);
+  const centreLine = new THREE.InstancedMesh(dashGeometry, dashMaterial, Math.ceil(count / dashStep));
+  const marker = new THREE.Object3D();
+  let cursor = 0;
+  for (let index = 0; index < count; index += dashStep) {
+    const sample = samples[index];
+    marker.position.copy(sample.point).setY(0.23);
+    marker.rotation.set(0, Math.atan2(sample.tangent.x, sample.tangent.z), 0);
+    marker.updateMatrix();
+    centreLine.setMatrixAt(cursor, marker.matrix);
+    cursor += 1;
+  }
+  centreLine.instanceMatrix.needsUpdate = true;
+  world.add(centreLine);
+}
+
+function makeAirportBuildings(world) {
+  const terminal = new THREE.Group();
+  const terminalBody = outlinedMesh(new THREE.BoxGeometry(118, 15, 24), material(0xf3ead7, 0.78), 1.018);
+  terminalBody.position.y = 7.5;
+  terminal.add(terminalBody);
+
+  const glass = material(WINDOW, 0.32, 0.08);
+  for (let x = -48; x <= 48; x += 12) {
+    const window = outlinedMesh(new THREE.BoxGeometry(8.5, 5.2, 0.45), glass, 1.025, { castShadow: false });
+    window.position.set(x, 8.5, -12.3);
+    terminal.add(window);
+  }
+
+  const roof = outlinedMesh(new THREE.BoxGeometry(126, 1.8, 28), material(0x39434d, 0.78), 1.015);
+  roof.position.y = 16.2;
+  terminal.add(roof);
+  terminal.position.set(48, 0, 158);
+  world.add(terminal);
+
+  for (const x of [10, 50, 90]) {
+    const bridge = outlinedMesh(new THREE.BoxGeometry(4.5, 4, 19), material(0xe8edf1, 0.8), 1.025);
+    bridge.position.set(x, 6.4, 139);
+    world.add(bridge);
+  }
+
+  const tower = new THREE.Group();
+  const shaft = outlinedMesh(new THREE.CylinderGeometry(5.2, 7.2, 29, 8), material(0xe6e0d5, 0.78), 1.03);
+  shaft.position.y = 14.5;
+  tower.add(shaft);
+  const cabin = outlinedMesh(new THREE.CylinderGeometry(10, 8.2, 7, 8), material(WINDOW, 0.3, 0.12), 1.035);
+  cabin.position.y = 31;
+  tower.add(cabin);
+  const cap = outlinedMesh(new THREE.CylinderGeometry(11.5, 11.5, 1.4, 8), material(0x34383d, 0.78), 1.03);
+  cap.position.y = 35;
+  tower.add(cap);
+  tower.position.set(-76, 0, 151);
+  world.add(tower);
+
+  for (const [x, z, color] of [[160, 148, 0x6b7280], [205, 122, 0x58616a]]) {
+    const hangar = new THREE.Group();
+    const body = outlinedMesh(new THREE.BoxGeometry(48, 20, 34), material(color, 0.9), 1.025);
+    body.position.y = 10;
+    hangar.add(body);
+    const door = outlinedMesh(new THREE.BoxGeometry(32, 13, 0.7), material(0x2d3339, 0.9), 1.025, { castShadow: false });
+    door.position.set(0, 6.8, -17.4);
+    hangar.add(door);
+    const stripe = new THREE.Mesh(new THREE.BoxGeometry(40, 1.2, 0.4), material(YELLOW, 0.8));
+    stripe.position.set(0, 17.2, -17.8);
+    hangar.add(stripe);
+    hangar.position.set(x, 0, z);
+    world.add(hangar);
+  }
+
+  const fuelZone = new THREE.Group();
+  for (const x of [-13, 0, 13]) {
+    const tank = outlinedMesh(new THREE.CylinderGeometry(5.2, 5.2, 14, 12), material(0xe8edf1, 0.72, 0.08), 1.028);
+    tank.rotation.z = Math.PI / 2;
+    tank.position.set(x, 5.6, 0);
+    fuelZone.add(tank);
+  }
+  fuelZone.position.set(-155, 0, 132);
+  world.add(fuelZone);
+}
+
+function makeAircraft(world) {
+  const planes = [
+    { position: [7, 1.4, 112], rotation: -0.08, color: 0xfff8e8, tail: PINK, scale: 1.05 },
+    { position: [91, 1.4, 111], rotation: 0.12, color: 0xfff8e8, tail: 0x38d9ff, scale: 0.95 },
+    { position: [151, 1.4, 68], rotation: -1.25, color: 0xe9eef2, tail: YELLOW, scale: 0.88 },
+    { position: [126, 1.4, -173], rotation: Math.PI / 2, color: 0xfff8e8, tail: RED, scale: 0.72 }
+  ];
+
+  for (const plane of planes) {
+    const model = makePlane(plane.color, plane.tail);
+    model.position.set(...plane.position);
+    model.rotation.y = plane.rotation;
+    model.scale.setScalar(plane.scale);
+    world.add(model);
+  }
+}
+
+function makePlane(bodyColor, tailColor) {
+  const plane = new THREE.Group();
+  const bodyMaterial = material(bodyColor, 0.52, 0.04);
+  const tailMaterial = material(tailColor, 0.58);
+  const darkMaterial = material(0x34383d, 0.82);
+
+  const fuselage = outlinedMesh(new THREE.BoxGeometry(4.2, 3.8, 25), bodyMaterial, 1.04);
+  fuselage.position.y = 3.4;
+  plane.add(fuselage);
+
+  const nose = outlinedMesh(new THREE.ConeGeometry(2.15, 5.5, 8), bodyMaterial, 1.04);
+  nose.rotation.x = Math.PI / 2;
+  nose.position.set(0, 3.4, -15.2);
+  plane.add(nose);
+
+  const wing = outlinedMesh(new THREE.BoxGeometry(24, 0.55, 5.8), bodyMaterial, 1.035);
+  wing.position.set(0, 3.25, -1);
+  plane.add(wing);
+
+  const tailWing = outlinedMesh(new THREE.BoxGeometry(10, 0.42, 3.2), tailMaterial, 1.04);
+  tailWing.position.set(0, 4.2, 10.2);
+  plane.add(tailWing);
+
+  const fin = outlinedMesh(new THREE.BoxGeometry(0.7, 6.5, 4.6), tailMaterial, 1.05);
+  fin.position.set(0, 6.5, 10.4);
+  fin.rotation.x = -0.18;
+  plane.add(fin);
+
+  for (const x of [-5.8, 5.8]) {
+    const engine = outlinedMesh(new THREE.CylinderGeometry(1.3, 1.3, 4.5, 10), darkMaterial, 1.04);
+    engine.rotation.x = Math.PI / 2;
+    engine.position.set(x, 2.25, -1.5);
+    plane.add(engine);
+  }
+
+  return plane;
+}
+
+function makeGroundOperations(world) {
+  const servicePalette = [YELLOW, 0xff922b, 0x38d9ff, PINK];
+  const servicePositions = [
+    [-18, 91, 0.1],
+    [58, 88, -0.2],
+    [126, 97, 0.4],
+    [-115, 114, -0.35],
+    [184, 81, 1.15]
+  ];
+
+  servicePositions.forEach(([x, z, rotation], index) => {
+    const vehicle = makeServiceVehicle(servicePalette[index % servicePalette.length]);
+    vehicle.position.set(x, 0.7, z);
+    vehicle.rotation.y = rotation;
+    world.add(vehicle);
+  });
+
+  const coneGeometry = new THREE.ConeGeometry(0.8, 2.2, 8);
+  const coneMaterial = material(0xff7b3d, 0.85);
+  const cones = new THREE.InstancedMesh(coneGeometry, coneMaterial, 28);
+  const marker = new THREE.Object3D();
+  for (let index = 0; index < 28; index += 1) {
+    const row = index < 14 ? 0 : 1;
+    marker.position.set(-8 + (index % 14) * 9, 1.1, 77 + row * 58);
+    marker.rotation.y = index * 0.31;
+    marker.updateMatrix();
+    cones.setMatrixAt(index, marker.matrix);
+  }
+  cones.instanceMatrix.needsUpdate = true;
+  world.add(cones);
+
+  for (const [x, z, rotation] of [[-45, 125, 0], [120, 138, 0.2], [-145, 83, -0.6]]) {
+    const cartTrain = new THREE.Group();
+    for (let cart = 0; cart < 3; cart += 1) {
+      const box = outlinedMesh(new THREE.BoxGeometry(4.4, 2.4, 5.2), material(0x737b84, 0.92), 1.035);
+      box.position.set(0, 1.6, cart * 6.2);
+      cartTrain.add(box);
+    }
+    cartTrain.position.set(x, 0, z);
+    cartTrain.rotation.y = rotation;
+    world.add(cartTrain);
+  }
+}
+
+function makeServiceVehicle(color) {
+  const vehicle = new THREE.Group();
+  const body = outlinedMesh(new THREE.BoxGeometry(5.5, 2.4, 8), material(color, 0.76), 1.05);
+  body.position.y = 1.8;
+  vehicle.add(body);
+  const cabin = outlinedMesh(new THREE.BoxGeometry(4.6, 2.8, 3.2), material(0xe8edf1, 0.62), 1.05);
+  cabin.position.set(0, 3.4, -1.5);
+  vehicle.add(cabin);
+  return vehicle;
+}
+
+function makeDistantWorld(world) {
+  const mountainColors = [0x718792, 0x8199a4, 0x637985];
+  const mountainPositions = [
+    [-290, 110, 100], [-250, -80, 82], [-130, 255, 104], [20, 285, 90],
+    [175, 255, 112], [310, 110, 92], [300, -95, 104]
+  ];
+  for (let index = 0; index < mountainPositions.length; index += 1) {
+    const [x, z, height] = mountainPositions[index];
+    const mountain = outlinedMesh(
+      new THREE.ConeGeometry(height * 0.72, height, 4),
+      material(mountainColors[index % mountainColors.length], 1),
+      1.018,
+      { castShadow: false, receiveShadow: false }
+    );
+    mountain.position.set(x, height / 2 - 6, z);
+    mountain.rotation.y = Math.PI / 4 + index * 0.16;
+    world.add(mountain);
+  }
+}
+
+function makeStartGate(world, samples, trackWidth) {
+  const start = samples[0];
+  const yaw = Math.atan2(start.tangent.x, start.tangent.z);
+  const gate = new THREE.Group();
+  const postGeometry = new THREE.BoxGeometry(1.5, 8.5, 1.5);
+  const beamGeometry = new THREE.BoxGeometry(trackWidth + 5, 2.3, 1.8);
+  for (const side of [-1, 1]) {
+    const post = outlinedMesh(postGeometry, material(0x39434d, 0.8), 1.07);
+    post.position.set(side * (trackWidth / 2 + 1.2), 4.25, 0);
+    gate.add(post);
+  }
+  const beam = outlinedMesh(beamGeometry, material(YELLOW, 0.72), 1.045);
+  beam.position.y = 8.5;
+  gate.add(beam);
+  const lightBar = new THREE.Mesh(new THREE.BoxGeometry(trackWidth - 5, 0.55, 2), new THREE.MeshBasicMaterial({ color: 0x38d9ff }));
+  lightBar.position.y = 8.4;
+  gate.add(lightBar);
+  gate.position.copy(start.point);
+  gate.rotation.y = yaw;
+  world.add(gate);
+}
