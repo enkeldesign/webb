@@ -19,8 +19,12 @@ export function performanceProfileFromSearch(
   }
 
   const perfEnabled = params.get('perf') === '1';
-  const requestedDpr = Number(params.get('dpr'));
-  const dprCap = perfEnabled && Number.isFinite(requestedDpr)
+  const dprRequest = perfEnabled ? params.get('dpr') : null;
+  const requestedDpr = dprRequest == null || String(dprRequest).trim() === ''
+    ? Number.NaN
+    : Number(dprRequest);
+  const hasDprOverride = perfEnabled && Number.isFinite(requestedDpr);
+  const dprCap = hasDprOverride
     ? clamp(requestedDpr, MIN_DPR_CAP, MAX_DPR_CAP)
     : DEFAULT_DPR_CAP;
 
@@ -30,11 +34,9 @@ export function performanceProfileFromSearch(
   const shadowMapSize = shadowsEnabled && SHADOW_MAP_SIZES.has(requestedShadowSize)
     ? requestedShadowSize
     : DEFAULT_SHADOW_MAP_SIZE;
+  const hasShadowOverride = perfEnabled && params.has('shadow');
 
-  const active = perfEnabled && (
-    params.has('dpr') ||
-    params.has('shadow')
-  );
+  const active = hasDprOverride || hasShadowOverride;
 
   return Object.freeze({
     active,
