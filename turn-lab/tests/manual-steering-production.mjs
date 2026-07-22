@@ -20,13 +20,13 @@ const [index, css, orientationGuardCss, orientationCompat, camera] = await Promi
   fs.readFile(new URL('../../turn/render/camera.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.26 · Build 2026\.07\.22-r43/);
+assert.match(index, /TURN v1\.3\.27 · Build 2026\.07\.22-r44/);
 assert.match(index, /role="slider"/);
 assert.match(index, /manual-steer-knob/);
-assert.match(index, /manual-steering\.css\?build=20260722-r43/);
-assert.match(index, /orientation-guard\.css\?build=20260722-r43/);
-assert.match(index, /orientation-compat\.js\?build=20260722-r43/);
-assert.match(index, /"\.\/render\/camera\.js\?build=20260720-r19": "\.\/render\/camera\.js\?build=20260721-r29"/, 'r43 must preserve the guarded race camera cache redirect');
+assert.match(index, /manual-steering\.css\?build=20260722-r44/);
+assert.match(index, /orientation-guard\.css\?build=20260722-r44/);
+assert.match(index, /orientation-compat\.js\?build=20260722-r44/);
+assert.match(index, /"\.\/render\/camera\.js\?build=20260720-r19": "\.\/render\/camera\.js\?build=20260721-r29"/, 'r44 must preserve the guarded race camera cache redirect');
 assert.match(index, /<strong>Rotate to landscape<\/strong>/, 'The pre-race landscape instruction must remain available');
 
 assert.match(css, /--manual-steer-left/);
