@@ -121,11 +121,11 @@ const [index, app, main, worldAssets, worldRender, controls, menu, spectate, hud
   fs.readFile(new URL('../../turn/orientation-compat.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.5\.0 · Build 2026\.07\.22-r47/);
-assert.match(index, /"\.\/race\/replay-system\.js": "\.\/race\/replay-system\.js\?build=20260722-r43"/, 'r47 must preserve the shared replay sampler cache');
-assert.match(index, /"\.\/race\/track-spatial-index\.js\?build=20260720-r19": "\.\/race\/track-spatial-index\.js\?build=20260722-r47"/, 'r47 must use the rebuildable bounded track search');
-assert.match(index, /"\.\/performance-monitor\.js\?build=20260720-r19": "\.\/performance-monitor\.js\?build=20260722-r43"/, 'r47 must preserve the diagnostics module');
-assert.match(index, /"\.\/world-assets\.js": "\.\/world-assets\.js\?build=20260722-r44"/, 'r47 must preserve both countryside tree-grounding passes');
+assert.match(index, /TURN v1\.5\.1 · Build 2026\.07\.22-r48/);
+assert.match(index, /"\.\/race\/replay-system\.js": "\.\/race\/replay-system\.js\?build=20260722-r43"/, 'r48 must preserve the shared replay sampler cache');
+assert.match(index, /"\.\/race\/track-spatial-index\.js\?build=20260720-r19": "\.\/race\/track-spatial-index\.js\?build=20260722-r47"/, 'r48 must preserve the rebuildable bounded track search');
+assert.match(index, /"\.\/performance-monitor\.js\?build=20260720-r19": "\.\/performance-monitor\.js\?build=20260722-r43"/, 'r48 must preserve the diagnostics module');
+assert.match(index, /"\.\/world-assets\.js": "\.\/world-assets\.js\?build=20260722-r44"/, 'r48 must preserve both countryside tree-grounding passes');
 assert.match(app, /installPerformanceProfile\(\)/, 'Renderer profile installation must run before the game runtime');
 assert.ok(app.indexOf('./performance-profile.js') < app.indexOf('./main.js'), 'The universal DPR cap must be ready before main.js creates the runtime');
 assert.match(profile, /DEFAULT_DPR_CAP = 1\.5/, 'The universal production DPR ceiling must stay at 1.5');
