@@ -32,10 +32,8 @@ else {
   }, { once: true });
 }
 
-export async function chooseTrackBeforeLot({ force = false } = {}) {
+export async function chooseTrackBeforeLot() {
   const currentRuntime = await runtimeReady;
-  if (!force && chosenThisSession) return activeTrackId;
-
   const selectedTrackId = await showTrackSelect({
     initialTrackId: chosenThisSession ? activeTrackId : loadTrackSelection()
   });
@@ -121,7 +119,7 @@ function installRuntime(nextRuntime) {
   installTrackAwareRivalReset(runtime);
 
   globalThis.__turnGetTrackId = () => activeTrackId;
-  globalThis.__turnChooseTrack = () => chooseTrackBeforeLot({ force: true });
+  globalThis.__turnChooseTrack = () => chooseTrackBeforeLot();
   runtimeReadyResolve(runtime);
 }
 
