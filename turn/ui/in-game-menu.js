@@ -20,6 +20,7 @@ function install(runtime) {
   const backToLotButton = document.querySelector('.back-to-lot-button');
   const resetRivalsButton = document.querySelector('.reset-rivals-button');
   const spectateButton = document.querySelector('.spectate-button');
+  const lapTimeChip = document.querySelector('#lapTime')?.closest('.chip');
 
   if (!utilityGroup || !backToStartButton || !recalibrateButton || !backToLotButton || !resetRivalsButton || !spectateButton) {
     requestAnimationFrame(() => install(runtime));
@@ -46,6 +47,43 @@ function install(runtime) {
   for (const button of buttonOrder) utilityGroup.appendChild(button);
 
   let previousMenuState = null;
+  let lapInvalid = false;
+  let invalidPulseTimer = 0;
+
+  function setRestartLapInvalid(nextInvalid, { pulse = false } = {}) {
+    const invalid = nextInvalid === true;
+    const becameInvalid = invalid && !lapInvalid;
+    lapInvalid = invalid;
+    backToStartButton.classList.toggle('is-lap-invalid', invalid);
+
+    if (!invalid) {
+      window.clearTimeout(invalidPulseTimer);
+      invalidPulseTimer = 0;
+      backToStartButton.classList.remove('is-lap-invalid-pulse');
+      return;
+    }
+
+    if (!pulse || !becameInvalid) return;
+    window.clearTimeout(invalidPulseTimer);
+    backToStartButton.classList.remove('is-lap-invalid-pulse');
+    void backToStartButton.offsetWidth;
+    backToStartButton.classList.add('is-lap-invalid-pulse');
+    invalidPulseTimer = window.setTimeout(() => {
+      backToStartButton.classList.remove('is-lap-invalid-pulse');
+      invalidPulseTimer = 0;
+    }, 760);
+  }
+
+  function syncLapValidity({ pulseOnEntry = true } = {}) {
+    const invalid = lapTimeChip?.classList.contains('is-invalid-lap') === true;
+    setRestartLapInvalid(invalid, { pulse: pulseOnEntry });
+  }
+
+  const lapValidityObserver = lapTimeChip && typeof MutationObserver === 'function'
+    ? new MutationObserver(() => syncLapValidity())
+    : null;
+  lapValidityObserver?.observe(lapTimeChip, { attributes: true, attributeFilter: ['class'] });
+
   function syncMenu() {
     const visibility = inGameMenuVisibilityFor(runtime.state.mode);
     if (visibility.menuState !== previousMenuState) {
@@ -62,8 +100,17 @@ function install(runtime) {
     }
   }
 
-  window.addEventListener('turn:ui-state-change', syncMenu);
+  window.addEventListener('turn:ui-state-change', (event) => {
+    syncMenu();
+    if (!event.detail?.running || event.detail?.reason === 'race-reset') {
+      setRestartLapInvalid(false);
+    } else {
+      syncLapValidity();
+    }
+  });
+
   syncMenu();
+  syncLapValidity({ pulseOnEntry: false });
 }
 
 waitForRuntime();

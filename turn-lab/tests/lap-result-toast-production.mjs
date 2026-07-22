@@ -134,11 +134,11 @@ const [index, app, lapSystem, gameState, hud, styles, toast, toastCss, onboardin
   fs.readFile(new URL('../../turn/rival-onboarding.css', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.28 · Build 2026\.07\.22-r45/);
-assert.match(index, /lap-result-toast\.css\?build=20260722-r45/);
-assert.match(index, /rival-onboarding\.css\?build=20260722-r45/);
-assert.match(index, /"\.\/race\/lap-system\.js\?build=20260720-r19": "\.\/race\/lap-system\.js\?build=20260722-r41"/, 'r45 must preserve the r41 early invalid-lap detector');
-assert.match(index, /"\.\/race\/game-state\.js": "\.\/race\/game-state\.js\?build=20260722-r41"/, 'r45 must preserve the r41 reset-safe invalid-lap state');
+assert.match(index, /TURN v1\.3\.29 · Build 2026\.07\.22-r46/);
+assert.match(index, /lap-result-toast\.css\?build=20260722-r46/);
+assert.match(index, /rival-onboarding\.css\?build=20260722-r46/);
+assert.match(index, /"\.\/race\/lap-system\.js\?build=20260720-r19": "\.\/race\/lap-system\.js\?build=20260722-r41"/, 'r46 must preserve the r41 early invalid-lap detector');
+assert.match(index, /"\.\/race\/game-state\.js": "\.\/race\/game-state\.js\?build=20260722-r41"/, 'r46 must preserve the r41 reset-safe invalid-lap state');
 assert.match(app, /installLapResultToast\(\)/, 'The lap result toast must install before the game runtime starts');
 assert.match(app, /installRivalOnboarding\(\)/, 'The rival onboarding plate must install before the game runtime starts');
 assert.match(lapSystem, /turn:lap-result/, 'Completed lap finish must publish one frozen result event');
@@ -182,7 +182,8 @@ assert.match(onboarding, /VIEWER_ROTATION_RADIANS_PER_SECOND = 0\.144/, 'The onb
 assert.match(onboarding, /VIEWER_FRAME_INTERVAL_MS = 1000 \/ 30/, 'The temporary onboarding renderer must stay capped at 30 fps on mobile');
 assert.match(onboarding, /renderer\.dispose\(\)/, 'The temporary onboarding renderer must be disposed after the reveal');
 assert.match(onboarding, /RESULT_TOAST_HANDOFF_MS = 4300/, 'First-rival onboarding must wait until the lap-result toast has cleared');
-assert.match(toastCss, /background: var\(--yellow\)/, 'The lap toast must share the yellow finish-result colour');
+assert.match(toastCss, /background: var\(--yellow\)/, 'Valid lap results must keep the yellow finish-result colour');
+assert.match(toastCss, /\.lap-result-toast\.is-invalid \{\s*background: #ff6b6b;/s, 'STAY ON THE TRACK must use the same red invalid-lap colour as the TIME card');
 assert.match(toastCss, /left: 50%/, 'The lap toast must occupy the central finish-message position');
 assert.match(toastCss, /top: 22%/, 'The lap toast must sit where the old TOP X LAP message appeared');
 assert.doesNotMatch(toastCss, /left: max\(112px/, 'The retired lower-left toast placement must stay removed');
@@ -192,4 +193,4 @@ assert.match(onboardingCss, /\.rival-onboarding-copy/, 'The CHASE YOUR BEST copy
 assert.match(onboardingCss, /background: var\(--rival-onboarding-color, var\(--yellow\)\)/, 'The onboarding plate must expose the rival colour through a CSS custom property');
 assert.match(onboardingCss, /border-radius: 999px/, 'The onboarding must keep the compact pill-plate language of the old READY message');
 
-console.log('TURN persistent INVALID LAP HUD, unified lap feedback and first-rival onboarding regression passed.');
+console.log('TURN persistent INVALID LAP HUD, red invalid toast and first-rival onboarding regression passed.');

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
 const buildId = new URL(import.meta.url).searchParams.get('build');
+const TREE_CLUSTER_SINK_RATIO = 0.07;
 
 function moduleUrl(relativePath) {
   const url = new URL(relativePath, import.meta.url);
@@ -33,6 +34,35 @@ function waitForRuntime() {
   window.addEventListener('turn:runtime-ready', (event) => {
     install(event.detail || globalThis.__turnRuntime);
   }, { once: true });
+}
+
+function groundLateTreeClusters(world, baselineChildren) {
+  const bounds = new THREE.Box3();
+  const size = new THREE.Vector3();
+  let groundedCount = 0;
+
+  for (const child of world.children) {
+    if (baselineChildren.has(child) || !child?.isGroup) continue;
+
+    bounds.setFromObject(child);
+    bounds.getSize(size);
+
+    // The late Kenney forest clusters are broad, ground-level groups between 8 and 16 m
+    // tall. Flags are narrow and clouds are elevated, so this keeps the grounding fix
+    // isolated to the slab-backed tree groups added by the beauty pass.
+    const treeCluster = bounds.min.y > -1.5
+      && bounds.min.y < 2.5
+      && size.y >= 6
+      && size.y <= 18
+      && size.x >= 5
+      && size.z >= 5;
+
+    if (!treeCluster) continue;
+    child.position.y -= size.y * TREE_CLUSTER_SINK_RATIO;
+    groundedCount += 1;
+  }
+
+  if (groundedCount) console.info(`TURN: grounded ${groundedCount} late tree clusters.`);
 }
 
 async function install(runtime) {
@@ -77,9 +107,12 @@ async function install(runtime) {
     installTrackIdentity({ world, samples, trackWidth });
     installSectionIntensity({ world, samples, trackWidth });
 
-    installWorldBeauty({ world, scene, samples, trackWidth, sun, hemi }).catch((error) => {
-      console.warn('TURN: world beauty pass failed, keeping base world.', error);
-    });
+    const beautyBaselineChildren = new Set(world.children);
+    installWorldBeauty({ world, scene, samples, trackWidth, sun, hemi })
+      .then(() => groundLateTreeClusters(world, beautyBaselineChildren))
+      .catch((error) => {
+        console.warn('TURN: world beauty pass failed, keeping base world.', error);
+      });
   } catch (error) {
     console.warn('TURN: standalone world bootstrap failed, keeping base world.', error);
   }
