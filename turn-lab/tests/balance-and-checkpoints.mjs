@@ -115,6 +115,31 @@ state.velocity = new Vec3(10, 0, 0);
 run(1300);
 assert.equal(state.lapCheckpointIndex, 2, 'ordered forward swept checkpoint crossing must count');
 
+const skippedGateState = {
+  lapActive: true,
+  lapInvalid: false,
+  lapCheckpointIndex: 0,
+  lapStartedAt: 0,
+  lapElapsed: 0,
+  position: new Vec3(secondCheckpointIndex + 2, 0, 0),
+  velocity: new Vec3(10, 0, 0),
+  progress: LAP_CHECKPOINTS[1],
+  trackDistance: 1,
+  lapPreviousPosition: { x: secondCheckpointIndex - 2, z: 0 }
+};
+updateLapProgressState({
+  state: skippedGateState,
+  nearestAfter: { sample: samples[secondCheckpointIndex] },
+  samples,
+  trackWidth: 27,
+  now: 1350,
+  beginTimedLap: () => assert.fail('crossing a later checkpoint must not restart the lap immediately'),
+  completeLap: () => assert.fail('crossing a later checkpoint must not complete the lap'),
+  recordGhostFrame: () => {}
+});
+assert.equal(skippedGateState.lapCheckpointIndex, 0, 'skipping the required checkpoint must not advance the ordered chain');
+assert.equal(skippedGateState.lapInvalid, true, 'crossing a later gate before the required one must permanently invalidate the current attempt');
+
 assert.equal(
   crossedForwardGate(
     { x: -4, z: 10 },
@@ -147,6 +172,7 @@ assert.equal(began, 1, 'an incomplete lap must immediately restart the timed att
 assert.equal(state.suppressNextLapStartMessage, true, 'invalid-lap restart must suppress a competing GO message');
 
 state.suppressNextLapStartMessage = false;
+state.lapInvalid = false;
 state.lastProgress = 0.4;
 state.progress = 0.4;
 state.lapCheckpointIndex = LAP_CHECKPOINTS.length;
@@ -213,6 +239,7 @@ const resetState = {
   competitorLaps: [{}, {}],
   lapPreviousPosition: { x: -999, z: -999 },
   lapCheckpointIndex: 7,
+  lapInvalid: true,
   lapStartedAt: 1234,
   lapElapsed: 9,
   recording: [{ t: 1 }],
@@ -226,12 +253,14 @@ assert.deepEqual(
   'reset must clear stale gate history so the next start crossing is measured from the reset position'
 );
 assert.equal(resetState.lapCheckpointIndex, 0, 'reset must clear checkpoint progress');
+assert.equal(resetState.lapInvalid, false, 'Restart Lap must clear the persistent invalid-lap state');
 assert.equal(resetState.lapActive, false, 'reset must return to staged pre-lap state');
 
-const [carModelsSource, mainSource, lapSystemSource] = await Promise.all([
+const [carModelsSource, mainSource, lapSystemSource, gameStateSource] = await Promise.all([
   fs.readFile(new URL('../../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/race/lap-system.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/race/lap-system.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/race/game-state.js', import.meta.url), 'utf8')
 ]);
 assert.match(carModelsSource, /const TIRE_COLOR = 0x17191c/, 'asset vehicle wheels must be forced to a dark tire colour');
 assert.match(carModelsSource, /material\.transparent = false/, 'ghost materials must be solid');
@@ -240,9 +269,12 @@ assert.match(carModelsSource, /ghost \? ghostColor : requestedColor/, 'ghost bod
 assert.match(mainSource, /const ghostCar = makeCar\(0x38d9ff, 1\)/, 'procedural ghost fallback must also be solid');
 assert.match(mainSource, /const car = makeCar\(0x38d9ff, 1\)/, 'additional procedural rival fallbacks must also be solid');
 assert.match(lapSystemSource, /crossedForwardGate/, 'production lap registration must use swept physical gates');
+assert.match(lapSystemSource, /crossedLaterCheckpointGate/, 'passing a later gate must expose the moment a lap becomes irrecoverably invalid');
+assert.match(lapSystemSource, /state\.lapInvalid = true/, 'skipped route detection must persist invalidity for the current attempt');
 assert.match(lapSystemSource, /CHECKPOINT_GATE_HALF_WIDTH_FACTOR = 1\.05/, 'checkpoint gates must allow broad grass and verge racing lines');
 assert.match(lapSystemSource, /START_GATE_HALF_WIDTH_FACTOR = 0\.82/, 'start and finish must keep the established narrower crossing gate');
 assert.match(lapSystemSource, /turn:lap-invalid/, 'an incomplete checkpoint chain must report an invalid lap instead of failing silently');
 assert.doesNotMatch(lapSystemSource, /crossedStartByProgress/, 'start and finish must not retain the retired progress-wrap fallback');
+assert.match(gameStateSource, /state\.lapInvalid = false/, 'race staging must clear invalid-lap status');
 
-console.log('TURN forgiving swept lap gates, single-source start line and anti-shortcut regression passed.');
+console.log('TURN forgiving swept lap gates, early invalid-lap state, single-source start line and anti-shortcut regression passed.');
