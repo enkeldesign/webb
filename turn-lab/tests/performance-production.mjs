@@ -100,11 +100,12 @@ assert.equal(summary.p95Ms, 50);
 assert.equal(summary.slowPercent, 40);
 assert.ok(Math.abs(summary.fps - 1000 / 30) < 1e-9);
 
-const [index, app, main, worldAssets, controls, menu, spectate, hud, physics, camera, cars, lot, monitor, profile, replay, audio, orientationCompat] = await Promise.all([
+const [index, app, main, worldAssets, worldRender, controls, menu, spectate, hud, physics, camera, cars, lot, monitor, profile, replay, audio, orientationCompat] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/world-assets.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/render/world.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/gameplay-controls.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/in-game-menu.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/spectate.js', import.meta.url), 'utf8'),
@@ -120,11 +121,11 @@ const [index, app, main, worldAssets, controls, menu, spectate, hud, physics, ca
   fs.readFile(new URL('../../turn/orientation-compat.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.28 · Build 2026\.07\.22-r45/);
-assert.match(index, /"\.\/race\/replay-system\.js": "\.\/race\/replay-system\.js\?build=20260722-r43"/, 'r45 must preserve the shared replay sampler cache');
-assert.match(index, /"\.\/race\/track-spatial-index\.js\?build=20260720-r19": "\.\/race\/track-spatial-index\.js\?build=20260722-r44"/, 'r45 must cache-bust the bounded track search');
-assert.match(index, /"\.\/performance-monitor\.js\?build=20260720-r19": "\.\/performance-monitor\.js\?build=20260722-r43"/, 'r45 must preserve the diagnostics module');
-assert.match(index, /"\.\/world-assets\.js": "\.\/world-assets\.js\?build=20260722-r44"/, 'r45 must cache-bust the buried tree presentation');
+assert.match(index, /TURN v1\.3\.29 · Build 2026\.07\.22-r46/);
+assert.match(index, /"\.\/race\/replay-system\.js": "\.\/race\/replay-system\.js\?build=20260722-r43"/, 'r46 must preserve the shared replay sampler cache');
+assert.match(index, /"\.\/race\/track-spatial-index\.js\?build=20260720-r19": "\.\/race\/track-spatial-index\.js\?build=20260722-r44"/, 'r46 must preserve the bounded track search');
+assert.match(index, /"\.\/performance-monitor\.js\?build=20260720-r19": "\.\/performance-monitor\.js\?build=20260722-r43"/, 'r46 must preserve the diagnostics module');
+assert.match(index, /"\.\/world-assets\.js": "\.\/world-assets\.js\?build=20260722-r44"/, 'r46 must preserve the first tree-belt grounding pass');
 assert.match(app, /installPerformanceProfile\(\)/, 'Renderer profile installation must run before the game runtime');
 assert.ok(app.indexOf('./performance-profile.js') < app.indexOf('./main.js'), 'The universal DPR cap must be ready before main.js creates the runtime');
 assert.match(profile, /DEFAULT_DPR_CAP = 1\.5/, 'The universal production DPR ceiling must stay at 1.5');
@@ -134,9 +135,14 @@ assert.doesNotMatch(profile, /if \(!profile\.active \|\| !runtime\?\.renderer\) 
 assert.match(profile, /renderer\.setPixelRatio = \(value\) =>/, 'The DPR cap must survive TURN resize calls');
 assert.match(profile, /renderer\.shadowMap\.enabled = profile\.shadowsEnabled/, 'Shadow A/B testing must remain available without a second loop');
 assert.doesNotMatch(profile, /requestAnimationFrame|setAnimationLoop|setInterval/, 'Performance profiles must add no animation loop');
-assert.match(worldAssets, /groundSink = 0/, 'Only explicitly sunk world assets may move below terrain');
-assert.match(worldAssets, /model\.position\.y -= groundSink/, 'Tree sinking must happen in shared placement rather than editing the source asset');
-assert.match(worldAssets, /groundSink: targetHeight \* 0\.07/, 'Tree cluster bases must be buried proportionally at both tree sizes');
+assert.match(worldAssets, /groundSink = 0/, 'Only explicitly sunk base-world assets may move below terrain');
+assert.match(worldAssets, /model\.position\.y -= groundSink/, 'The first tree belt must sink in shared placement rather than edit the source asset');
+assert.match(worldAssets, /groundSink: targetHeight \* 0\.07/, 'The first tree-belt bases must remain buried proportionally at both tree sizes');
+assert.match(worldRender, /TREE_CLUSTER_SINK_RATIO = 0\.07/, 'Late forest clusters must use the same proportional grounding as the first tree belt');
+assert.match(worldRender, /const beautyBaselineChildren = new Set\(world\.children\)/, 'Late tree grounding must only inspect scenery added by the beauty pass');
+assert.match(worldRender, /groundLateTreeClusters\(world, beautyBaselineChildren\)/, 'Late forest clusters must be grounded after asynchronous beauty assets finish loading');
+assert.match(worldRender, /size\.x >= 5\s*&& size\.z >= 5/, 'The late grounding filter must stay restricted to broad tree-cluster groups');
+assert.doesNotMatch(worldRender, /requestAnimationFrame|setAnimationLoop|setInterval/, 'Tree grounding must stay a one-time scenery setup cost');
 assert.match(replay, /const replayFrameCache = new WeakMap\(\)/, 'Replay interpolation must cache the last sample per saved lap');
 assert.match(replay, /return cached\.frame/, 'Repeated same-time replay lookups must take the cache fast path');
 assert.match(monitor, /profile: currentPerformanceProfile\(\)/, 'Every performance snapshot must record its active renderer profile');
@@ -166,4 +172,4 @@ assert.doesNotMatch(orientationCompat, /requestAnimationFrame|setAnimationLoop|s
 assert.match(monitor, /turn:perf-snapshot/);
 assert.match(monitor, /trackChecksPerQuery/);
 
-console.log(`TURN universal DPR, bounded spatial search and diagnostics regression passed (${(trackChecks / trackQueries).toFixed(1)} average on-track checks vs 720).`);
+console.log(`TURN universal DPR, complete tree grounding, bounded spatial search and diagnostics regression passed (${(trackChecks / trackQueries).toFixed(1)} average on-track checks vs 720).`);
