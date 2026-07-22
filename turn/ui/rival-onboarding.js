@@ -12,6 +12,8 @@ const RESULT_TOAST_HANDOFF_MS = 4300;
 const ONBOARDING_VISIBLE_MS = 3200;
 const ONBOARDING_EXIT_MS = 180;
 const VIEWER_INITIAL_YAW = Math.PI - 0.55;
+const VIEWER_ROTATION_RADIANS_PER_SECOND = 0.144;
+const VIEWER_FRAME_INTERVAL_MS = 1000 / 30;
 
 export function installRivalOnboarding() {
   if (globalThis.__turnRivalOnboardingInstalled) return;
@@ -89,6 +91,7 @@ export function installRivalOnboarding() {
     plate.hidden = false;
     plate.classList.remove('is-visible', 'is-leaving');
     preview?.resize();
+    preview?.start();
     void plate.offsetWidth;
     plate.classList.add('is-visible');
     hideTimer = window.setTimeout(() => hide(), ONBOARDING_VISIBLE_MS);
@@ -116,11 +119,6 @@ export function installRivalOnboarding() {
       reveal();
     }, RESULT_TOAST_HANDOFF_MS);
   }
-
-  globalThis.__turnRenderRivalOnboarding = (now) => {
-    if (!preview || plate.hidden) return null;
-    return preview.render(now) ? preview.renderer : null;
-  };
 
   window.addEventListener('turn:rivals-reset', () => {
     hadRival = false;
@@ -173,6 +171,10 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
 
   let visual = null;
   let disposed = false;
+  let active = false;
+  let animationFrame = 0;
+  let lastTickAt = 0;
+  let lastRenderAt = 0;
   let yaw = VIEWER_INITIAL_YAW;
   const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true;
 
@@ -183,6 +185,26 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
     camera.aspect = rect.width / rect.height;
     camera.updateProjectionMatrix();
     renderer.setSize(Math.round(rect.width), Math.round(rect.height), false);
+  };
+
+  const renderFrame = (now) => {
+    if (disposed) return;
+    stage.rotation.y = yaw;
+    stage.rotation.x = 0.08;
+    if (visual) visual.position.y = reducedMotion ? 0 : Math.sin((now / 1000) * 2.1) * 0.04;
+    renderer.render(scene, camera);
+  };
+
+  const tick = (now) => {
+    if (!active || disposed) return;
+    const dt = Math.min(0.1, Math.max(0, (now - lastTickAt) / 1000));
+    lastTickAt = now;
+    if (!reducedMotion) yaw += dt * VIEWER_ROTATION_RADIANS_PER_SECOND;
+    if (now - lastRenderAt >= VIEWER_FRAME_INTERVAL_MS) {
+      lastRenderAt = now;
+      renderFrame(now);
+    }
+    animationFrame = requestAnimationFrame(tick);
   };
 
   const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(resize) : null;
@@ -200,6 +222,7 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
     visual = next;
     stage.add(visual);
     resize();
+    if (active) renderFrame(performance.now());
   }).catch((error) => {
     if (disposed) return;
     console.warn('TURN: first rival could not load in the onboarding viewer.', error);
@@ -211,18 +234,21 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
   return {
     renderer,
     resize,
-    render(now) {
-      if (disposed) return false;
-      if (!reducedMotion) yaw += 0.0024;
-      stage.rotation.y = yaw;
-      stage.rotation.x = 0.08;
-      if (visual) visual.position.y = reducedMotion ? 0 : Math.sin((now / 1000) * 2.1) * 0.04;
-      renderer.render(scene, camera);
-      return true;
+    start() {
+      if (disposed || active) return;
+      active = true;
+      resize();
+      const now = performance.now();
+      lastTickAt = now;
+      lastRenderAt = 0;
+      renderFrame(now);
+      if (!reducedMotion) animationFrame = requestAnimationFrame(tick);
     },
     dispose() {
       if (disposed) return;
       disposed = true;
+      active = false;
+      cancelAnimationFrame(animationFrame);
       observer?.disconnect();
       renderer.dispose();
       renderer.domElement.remove();
