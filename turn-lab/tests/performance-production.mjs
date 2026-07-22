@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { createTrackSpatialIndex, findNearestTrackBruteForce } from '../../turn/race/track-spatial-index.js';
 import { performanceModeRequested, summarizeFrameSamples } from '../../turn/performance-monitor.js';
+import { performanceProfileFromSearch } from '../../turn/performance-profile.js';
+import { replayFrameAt } from '../../turn/race/replay-system.js';
 
 const samples = Array.from({ length: 720 }, (_, index) => {
   const angle = index / 720 * Math.PI * 2;
@@ -38,6 +40,54 @@ assert.equal(fallback.checks, samples.length);
 assert.equal(performanceModeRequested('?perf=1'), true);
 assert.equal(performanceModeRequested('?perf=0'), false);
 assert.equal(performanceModeRequested(''), false);
+
+const baselineProfile = performanceProfileFromSearch('?perf=1', 2);
+assert.equal(baselineProfile.active, false, 'Perf diagnostics alone must not change normal rendering');
+assert.equal(baselineProfile.dprCap, 2);
+assert.equal(baselineProfile.pixelRatio, 2);
+assert.equal(baselineProfile.shadowsEnabled, true);
+assert.equal(baselineProfile.shadowMapSize, 1024);
+
+const dprProfile = performanceProfileFromSearch('?perf=1&dpr=1.5', 2);
+assert.equal(dprProfile.active, true);
+assert.equal(dprProfile.dprCap, 1.5);
+assert.equal(dprProfile.pixelRatio, 1.5);
+assert.match(dprProfile.label, /DPR≤1\.50/);
+
+const lowDprProfile = performanceProfileFromSearch('?perf=1&dpr=0.2', 2);
+assert.equal(lowDprProfile.dprCap, 0.75, 'Diagnostic DPR overrides must stay within the safe lower bound');
+const highDprProfile = performanceProfileFromSearch('?perf=1&dpr=9', 3);
+assert.equal(highDprProfile.dprCap, 2, 'Diagnostic DPR overrides must never exceed the production cap');
+
+const shadowProfile = performanceProfileFromSearch('?perf=1&shadow=512', 2);
+assert.equal(shadowProfile.active, true);
+assert.equal(shadowProfile.shadowsEnabled, true);
+assert.equal(shadowProfile.shadowMapSize, 512);
+const noShadowProfile = performanceProfileFromSearch('?perf=1&shadow=off', 2);
+assert.equal(noShadowProfile.shadowsEnabled, false);
+assert.match(noShadowProfile.label, /shadows off/);
+const ignoredProfile = performanceProfileFromSearch('?dpr=1&shadow=off', 2);
+assert.equal(ignoredProfile.active, false, 'Renderer overrides must be ignored outside explicit perf mode');
+assert.equal(ignoredProfile.dprCap, 2);
+assert.equal(ignoredProfile.shadowsEnabled, true);
+
+const replayLap = {
+  time: 2,
+  frames: [
+    { t: 0, x: 0, z: 0, h: 0, s: 0, d: 0, p: 0 },
+    { t: 1, x: 10, z: 20, h: 0.5, s: 0.2, d: 0.4, p: 0.5 },
+    { t: 2, x: 20, z: 40, h: 1, s: 0.4, d: 0.8, p: 1 }
+  ]
+};
+const firstReplaySample = replayFrameAt(replayLap, 0.5);
+const repeatedReplaySample = replayFrameAt(replayLap, 0.5);
+assert.strictEqual(repeatedReplaySample, firstReplaySample, 'Repeated same-time rival sampling must reuse one interpolated frame');
+const laterReplaySample = replayFrameAt(replayLap, 0.6);
+assert.notStrictEqual(laterReplaySample, firstReplaySample, 'A new replay time must produce a fresh interpolation');
+replayLap.frames.push({ t: 3, x: 30, z: 60, h: 1.5, s: 0.6, d: 1, p: 1.5 });
+const changedReplaySample = replayFrameAt(replayLap, 0.6);
+assert.notStrictEqual(changedReplaySample, laterReplaySample, 'Changing the replay frame list must invalidate the one-sample cache');
+
 const summary = summarizeFrameSamples([10, 20, 30, 40, 50]);
 assert.equal(summary.averageMs, 30);
 assert.equal(summary.p50Ms, 30);
@@ -45,8 +95,9 @@ assert.equal(summary.p95Ms, 50);
 assert.equal(summary.slowPercent, 40);
 assert.ok(Math.abs(summary.fps - 1000 / 30) < 1e-9);
 
-const [index, main, controls, menu, spectate, hud, physics, camera, cars, lot, monitor, audio, orientationCompat] = await Promise.all([
+const [index, app, main, controls, menu, spectate, hud, physics, camera, cars, lot, monitor, profile, replay, audio, orientationCompat] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/gameplay-controls.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/in-game-menu.js', import.meta.url), 'utf8'),
@@ -57,11 +108,25 @@ const [index, main, controls, menu, spectate, hud, physics, camera, cars, lot, m
   fs.readFile(new URL('../../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/performance-monitor.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/performance-profile.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/race/replay-system.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/audio-system.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/orientation-compat.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.25 · Build 2026\.07\.22-r42/);
+assert.match(index, /TURN v1\.3\.26 · Build 2026\.07\.22-r43/);
+assert.match(index, /"\.\/race\/replay-system\.js": "\.\/race\/replay-system\.js\?build=20260722-r43"/, 'r43 must cache-bust the shared replay sampler');
+assert.match(index, /"\.\/performance-monitor\.js\?build=20260720-r19": "\.\/performance-monitor\.js\?build=20260722-r43"/, 'r43 must cache-bust the diagnostics module');
+assert.match(app, /installPerformanceProfile\(\)/, 'Renderer profile interception must install before the game runtime');
+assert.ok(app.indexOf('./performance-profile.js') < app.indexOf('./main.js'), 'Renderer profile interception must be ready before main.js creates the runtime');
+assert.match(profile, /params\.get\('perf'\) === '1'/, 'Renderer overrides must require explicit performance mode');
+assert.match(profile, /renderer\.setPixelRatio = \(value\) =>/, 'The DPR cap must survive TURN resize calls');
+assert.match(profile, /renderer\.shadowMap\.enabled = profile\.shadowsEnabled/, 'Shadow A/B testing must use the existing renderer without a second loop');
+assert.doesNotMatch(profile, /requestAnimationFrame|setAnimationLoop|setInterval/, 'Performance profiles must add no animation loop');
+assert.match(replay, /const replayFrameCache = new WeakMap\(\)/, 'Replay interpolation must cache the last sample per saved lap');
+assert.match(replay, /return cached\.frame/, 'Repeated same-time replay lookups must take the cache fast path');
+assert.match(monitor, /profile: currentPerformanceProfile\(\)/, 'Every performance snapshot must record its active renderer profile');
+assert.match(monitor, /actual DPR/, 'The overlay must distinguish requested profile from actual renderer DPR');
 assert.match(main, /mainSceneOcclusion/);
 assert.match(main, /HUD_UPDATE_INTERVAL_MS = 1000 \/ 30/);
 assert.match(main, /recordPerformanceFrame/);
@@ -87,4 +152,4 @@ assert.doesNotMatch(orientationCompat, /requestAnimationFrame|setAnimationLoop|s
 assert.match(monitor, /turn:perf-snapshot/);
 assert.match(monitor, /trackChecksPerQuery/);
 
-console.log(`TURN production performance and diagnostics regression passed (${(trackChecks / trackQueries).toFixed(1)} average on-track checks vs 720).`);
+console.log(`TURN production performance profiles and diagnostics regression passed (${(trackChecks / trackQueries).toFixed(1)} average on-track checks vs 720).`);
