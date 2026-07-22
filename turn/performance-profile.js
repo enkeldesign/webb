@@ -1,7 +1,7 @@
-const DEFAULT_DPR_CAP = 2;
+const DEFAULT_DPR_CAP = 1.5;
 const DEFAULT_SHADOW_MAP_SIZE = 1024;
 const MIN_DPR_CAP = 0.75;
-const MAX_DPR_CAP = 2;
+const MAX_DPR_CAP = 1.5;
 const SHADOW_MAP_SIZES = new Set([256, 512, 1024]);
 const rendererPixelRatioSetters = new WeakMap();
 
@@ -57,7 +57,7 @@ export function installPerformanceProfile() {
   globalThis.__turnPerformanceProfile = profile;
 
   const apply = (runtime) => {
-    if (!profile.active || !runtime?.renderer) return;
+    if (!runtime?.renderer) return;
     applyRendererProfile(runtime, profile);
   };
 

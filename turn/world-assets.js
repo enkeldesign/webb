@@ -131,7 +131,8 @@ function placeAlongTrack({
   rotationOffset = 0,
   stretch = null,
   tint = null,
-  tintAmount = 0.75
+  tintAmount = 0.75,
+  groundSink = 0
 }) {
   const { sample, position } = trackPosition(samples, index, side, trackWidth, distance);
   const model = prepareModel(source, {
@@ -143,6 +144,7 @@ function placeAlongTrack({
     tintAmount
   });
   model.position.add(position);
+  model.position.y -= groundSink;
 
   if (stretch) model.scale.multiply(stretch);
 
@@ -166,6 +168,7 @@ function placeTreeBelt({ world, samples, trackWidth, trees, tallTrees }) {
     const random = seeded01(i + 11);
     const secondRandom = seeded01(i * 3 + 7);
     const source = sources[i % sources.length];
+    const targetHeight = 7.5 + secondRandom * 7;
 
     placeAlongTrack({
       world,
@@ -175,7 +178,8 @@ function placeTreeBelt({ world, samples, trackWidth, trees, tallTrees }) {
       index: 17 + i * 37,
       side,
       distance: 17 + random * 42,
-      targetHeight: 7.5 + secondRandom * 7,
+      targetHeight,
+      groundSink: targetHeight * 0.07,
       castShadow: i % 3 === 0,
       rotationOffset: random * Math.PI * 2
     });

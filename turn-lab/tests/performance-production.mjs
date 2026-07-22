@@ -33,31 +33,35 @@ const trackQueries = checksAfterTrackPass.queryCount - checksBeforeTrackPass.que
 const trackChecks = checksAfterTrackPass.totalChecks - checksBeforeTrackPass.totalChecks;
 assert.ok(trackChecks / trackQueries < 120, 'Normal on-track queries should inspect far fewer than all 720 samples');
 
-const fallback = spatialIndex.find({ x: 5000, z: -5000 });
-const fallbackBrute = findNearestTrackBruteForce(samples, { x: 5000, z: -5000 });
-assert.equal(fallback.index, fallbackBrute.index, 'Far teleports must retain the exact full-scan fallback');
-assert.equal(fallback.checks, samples.length);
+for (const position of [{ x: 5000, z: -5000 }, { x: 0, z: 0 }]) {
+  const indexed = spatialIndex.find(position);
+  const brute = findNearestTrackBruteForce(samples, position);
+  assert.equal(indexed.index, brute.index, 'Wide off-track searches must preserve the exact nearest sample');
+  assert.ok(Math.abs(indexed.distance - brute.distance) < 1e-9);
+  assert.ok(indexed.checks < 160, `Wide off-track searches must avoid the old 720-sample spike, got ${indexed.checks}`);
+}
+
 assert.equal(performanceModeRequested('?perf=1'), true);
 assert.equal(performanceModeRequested('?perf=0'), false);
 assert.equal(performanceModeRequested(''), false);
 
 const baselineProfile = performanceProfileFromSearch('?perf=1', 2);
-assert.equal(baselineProfile.active, false, 'Perf diagnostics alone must not change normal rendering');
-assert.equal(baselineProfile.dprCap, 2);
-assert.equal(baselineProfile.pixelRatio, 2);
+assert.equal(baselineProfile.active, false, 'Perf diagnostics alone must not add a separate quality tier');
+assert.equal(baselineProfile.dprCap, 1.5, 'TURN must use one universal DPR 1.5 ceiling');
+assert.equal(baselineProfile.pixelRatio, 1.5);
 assert.equal(baselineProfile.shadowsEnabled, true);
 assert.equal(baselineProfile.shadowMapSize, 1024);
 
-const dprProfile = performanceProfileFromSearch('?perf=1&dpr=1.5', 2);
+const dprProfile = performanceProfileFromSearch('?perf=1&dpr=1.25', 2);
 assert.equal(dprProfile.active, true);
-assert.equal(dprProfile.dprCap, 1.5);
-assert.equal(dprProfile.pixelRatio, 1.5);
-assert.match(dprProfile.label, /DPR≤1\.50/);
+assert.equal(dprProfile.dprCap, 1.25);
+assert.equal(dprProfile.pixelRatio, 1.25);
+assert.match(dprProfile.label, /DPR≤1\.25/);
 
 const lowDprProfile = performanceProfileFromSearch('?perf=1&dpr=0.2', 2);
 assert.equal(lowDprProfile.dprCap, 0.75, 'Diagnostic DPR overrides must stay within the safe lower bound');
 const highDprProfile = performanceProfileFromSearch('?perf=1&dpr=9', 3);
-assert.equal(highDprProfile.dprCap, 2, 'Diagnostic DPR overrides must never exceed the production cap');
+assert.equal(highDprProfile.dprCap, 1.5, 'No diagnostic profile may exceed the universal production cap');
 
 const shadowProfile = performanceProfileFromSearch('?perf=1&shadow=512', 2);
 assert.equal(shadowProfile.active, true);
@@ -68,7 +72,8 @@ assert.equal(noShadowProfile.shadowsEnabled, false);
 assert.match(noShadowProfile.label, /shadows off/);
 const ignoredProfile = performanceProfileFromSearch('?dpr=1&shadow=off', 2);
 assert.equal(ignoredProfile.active, false, 'Renderer overrides must be ignored outside explicit perf mode');
-assert.equal(ignoredProfile.dprCap, 2);
+assert.equal(ignoredProfile.dprCap, 1.5);
+assert.equal(ignoredProfile.pixelRatio, 1.5, 'Normal play must still receive the universal DPR cap');
 assert.equal(ignoredProfile.shadowsEnabled, true);
 
 const replayLap = {
@@ -95,10 +100,11 @@ assert.equal(summary.p95Ms, 50);
 assert.equal(summary.slowPercent, 40);
 assert.ok(Math.abs(summary.fps - 1000 / 30) < 1e-9);
 
-const [index, app, main, controls, menu, spectate, hud, physics, camera, cars, lot, monitor, profile, replay, audio, orientationCompat] = await Promise.all([
+const [index, app, main, worldAssets, controls, menu, spectate, hud, physics, camera, cars, lot, monitor, profile, replay, audio, orientationCompat] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/world-assets.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/gameplay-controls.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/in-game-menu.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/spectate.js', import.meta.url), 'utf8'),
@@ -114,15 +120,23 @@ const [index, app, main, controls, menu, spectate, hud, physics, camera, cars, l
   fs.readFile(new URL('../../turn/orientation-compat.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.26 · Build 2026\.07\.22-r43/);
-assert.match(index, /"\.\/race\/replay-system\.js": "\.\/race\/replay-system\.js\?build=20260722-r43"/, 'r43 must cache-bust the shared replay sampler');
-assert.match(index, /"\.\/performance-monitor\.js\?build=20260720-r19": "\.\/performance-monitor\.js\?build=20260722-r43"/, 'r43 must cache-bust the diagnostics module');
-assert.match(app, /installPerformanceProfile\(\)/, 'Renderer profile interception must install before the game runtime');
-assert.ok(app.indexOf('./performance-profile.js') < app.indexOf('./main.js'), 'Renderer profile interception must be ready before main.js creates the runtime');
-assert.match(profile, /params\.get\('perf'\) === '1'/, 'Renderer overrides must require explicit performance mode');
+assert.match(index, /TURN v1\.3\.27 · Build 2026\.07\.22-r44/);
+assert.match(index, /"\.\/race\/replay-system\.js": "\.\/race\/replay-system\.js\?build=20260722-r43"/, 'r44 must preserve the shared replay sampler cache');
+assert.match(index, /"\.\/race\/track-spatial-index\.js\?build=20260720-r19": "\.\/race\/track-spatial-index\.js\?build=20260722-r44"/, 'r44 must cache-bust the bounded track search');
+assert.match(index, /"\.\/performance-monitor\.js\?build=20260720-r19": "\.\/performance-monitor\.js\?build=20260722-r43"/, 'r44 must preserve the diagnostics module');
+assert.match(index, /"\.\/world-assets\.js": "\.\/world-assets\.js\?build=20260722-r44"/, 'r44 must cache-bust the buried tree presentation');
+assert.match(app, /installPerformanceProfile\(\)/, 'Renderer profile installation must run before the game runtime');
+assert.ok(app.indexOf('./performance-profile.js') < app.indexOf('./main.js'), 'The universal DPR cap must be ready before main.js creates the runtime');
+assert.match(profile, /DEFAULT_DPR_CAP = 1\.5/, 'The universal production DPR ceiling must stay at 1.5');
+assert.match(profile, /MAX_DPR_CAP = 1\.5/, 'Diagnostics must never restore the retired DPR 2 tier');
+assert.match(profile, /if \(!runtime\?\.renderer\) return;/, 'The universal renderer profile must apply even without a diagnostic override');
+assert.doesNotMatch(profile, /if \(!profile\.active \|\| !runtime\?\.renderer\) return;/, 'Normal play must not bypass the universal DPR cap');
 assert.match(profile, /renderer\.setPixelRatio = \(value\) =>/, 'The DPR cap must survive TURN resize calls');
-assert.match(profile, /renderer\.shadowMap\.enabled = profile\.shadowsEnabled/, 'Shadow A/B testing must use the existing renderer without a second loop');
+assert.match(profile, /renderer\.shadowMap\.enabled = profile\.shadowsEnabled/, 'Shadow A/B testing must remain available without a second loop');
 assert.doesNotMatch(profile, /requestAnimationFrame|setAnimationLoop|setInterval/, 'Performance profiles must add no animation loop');
+assert.match(worldAssets, /groundSink = 0/, 'Only explicitly sunk world assets may move below terrain');
+assert.match(worldAssets, /model\.position\.y -= groundSink/, 'Tree sinking must happen in shared placement rather than editing the source asset');
+assert.match(worldAssets, /groundSink: targetHeight \* 0\.07/, 'Tree cluster bases must be buried proportionally at both tree sizes');
 assert.match(replay, /const replayFrameCache = new WeakMap\(\)/, 'Replay interpolation must cache the last sample per saved lap');
 assert.match(replay, /return cached\.frame/, 'Repeated same-time replay lookups must take the cache fast path');
 assert.match(monitor, /profile: currentPerformanceProfile\(\)/, 'Every performance snapshot must record its active renderer profile');
@@ -152,4 +166,4 @@ assert.doesNotMatch(orientationCompat, /requestAnimationFrame|setAnimationLoop|s
 assert.match(monitor, /turn:perf-snapshot/);
 assert.match(monitor, /trackChecksPerQuery/);
 
-console.log(`TURN production performance profiles and diagnostics regression passed (${(trackChecks / trackQueries).toFixed(1)} average on-track checks vs 720).`);
+console.log(`TURN universal DPR, bounded spatial search and diagnostics regression passed (${(trackChecks / trackQueries).toFixed(1)} average on-track checks vs 720).`);
