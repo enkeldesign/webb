@@ -236,6 +236,16 @@ h1 {
   letter-spacing: -0.04em;
 }
 
+.chip.is-invalid-lap {
+  background: #ff6b6b;
+}
+
+.chip.is-invalid-lap strong {
+  white-space: nowrap;
+  font-size: clamp(0.82rem, 2.2vw, 1.2rem);
+  letter-spacing: -0.025em;
+}
+
 .map-wrap {
   width: min(24vw, 184px);
   aspect-ratio: 1.45;
@@ -401,6 +411,7 @@ h1 {
 @media (max-height: 430px) {
   .chip { min-width: 70px; padding: 5px 7px 6px; }
   .chip strong { font-size: 0.95rem; }
+  .chip.is-invalid-lap strong { font-size: 0.82rem; }
   .map-wrap { width: min(21vw, 142px); }
   .message { top: 17%; }
   .tilt-drive { width: min(34vw, 240px); bottom: 8px; }
