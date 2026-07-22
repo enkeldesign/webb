@@ -61,7 +61,7 @@ const [index, main, controls, menu, spectate, hud, physics, camera, cars, lot, m
   fs.readFile(new URL('../../turn/orientation-compat.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.22 · Build 2026\.07\.22-r39/);
+assert.match(index, /TURN v1\.3\.23 · Build 2026\.07\.22-r40/);
 assert.match(main, /mainSceneOcclusion/);
 assert.match(main, /HUD_UPDATE_INTERVAL_MS = 1000 \/ 30/);
 assert.match(main, /recordPerformanceFrame/);
