@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- TURN r46 Invalid-lap restart cue and complete tree grounding -->
+<!-- TURN r47 Airport track and multi-track selection -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -10,45 +10,47 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="TURN">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>TURN v1.3.29 · Build 2026.07.22-r46</title>
+  <title>TURN v1.5.0 · Build 2026.07.22-r47</title>
   <script>
     globalThis.__TURN_BUILD__ = Object.freeze({
-      version: '1.3.29',
-      id: '2026.07.22-r46',
-      cacheKey: '20260722-r46'
+      version: '1.5.0',
+      id: '2026.07.22-r47',
+      cacheKey: '20260722-r47'
     });
   </script>
   <link rel="icon" href="./favicon-r45.ico" sizes="any">
   <link rel="icon" href="./favicon-32-r45.png" type="image/png" sizes="32x32">
   <link rel="apple-touch-icon" href="./apple-touch-icon-r45.png" sizes="180x180">
-  <link rel="manifest" href="./site.webmanifest?build=20260722-r46">
-  <link rel="stylesheet" href="./styles.css?build=20260722-r46">
-  <link rel="stylesheet" href="./vertical-drive.css?build=20260722-r46">
-  <link rel="stylesheet" href="./hud-tuning.css?build=20260722-r46">
-  <link rel="stylesheet" href="./install-gate.css?build=20260722-r46">
-  <link rel="stylesheet" href="./gameplay-features.css?build=20260722-r46">
-  <link rel="stylesheet" href="./gameplay-v2.css?build=20260722-r46">
-  <link rel="stylesheet" href="./drive-pad.css?build=20260722-r46">
-  <link rel="stylesheet" href="./in-game-menu.css?build=20260722-r46">
-  <link rel="stylesheet" href="./spectate-v3.css?build=20260722-r46">
-  <link rel="stylesheet" href="./manual-steering.css?build=20260722-r46">
-  <link rel="stylesheet" href="./orientation-guard.css?build=20260722-r46">
-  <link rel="stylesheet" href="./lap-result-toast.css?build=20260722-r46">
-  <link rel="stylesheet" href="./rival-onboarding.css?build=20260722-r46">
-  <link rel="stylesheet" href="./garage/lot-r10.css?build=20260722-r46">
+  <link rel="manifest" href="./site.webmanifest?build=20260722-r47">
+  <link rel="stylesheet" href="./styles.css?build=20260722-r47">
+  <link rel="stylesheet" href="./vertical-drive.css?build=20260722-r47">
+  <link rel="stylesheet" href="./hud-tuning.css?build=20260722-r47">
+  <link rel="stylesheet" href="./install-gate.css?build=20260722-r47">
+  <link rel="stylesheet" href="./gameplay-features.css?build=20260722-r47">
+  <link rel="stylesheet" href="./gameplay-v2.css?build=20260722-r47">
+  <link rel="stylesheet" href="./drive-pad.css?build=20260722-r47">
+  <link rel="stylesheet" href="./in-game-menu.css?build=20260722-r47">
+  <link rel="stylesheet" href="./spectate-v3.css?build=20260722-r47">
+  <link rel="stylesheet" href="./manual-steering.css?build=20260722-r47">
+  <link rel="stylesheet" href="./orientation-guard.css?build=20260722-r47">
+  <link rel="stylesheet" href="./lap-result-toast.css?build=20260722-r47">
+  <link rel="stylesheet" href="./rival-onboarding.css?build=20260722-r47">
+  <link rel="stylesheet" href="./track-select.css?build=20260722-r47">
+  <link rel="stylesheet" href="./garage/lot-r10.css?build=20260722-r47">
 
-  <script src="./install-gate.js?build=20260722-r46"></script>
-  <script src="./orientation-compat.js?build=20260722-r46"></script>
+  <script src="./install-gate.js?build=20260722-r47"></script>
+  <script src="./orientation-compat.js?build=20260722-r47"></script>
   <script type="importmap">
     {
       "imports": {
         "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
         "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/",
-        "./garage/lot-r10.js?build=20260720-r19": "./garage/lot-r10.js?build=20260720-r25",
+        "./garage/lot-r10.js?build=20260720-r19": "./garage/lot-track-select.js?build=20260722-r47",
         "./render/camera.js?build=20260720-r19": "./render/camera.js?build=20260721-r29",
         "./race/lap-system.js?build=20260720-r19": "./race/lap-system.js?build=20260722-r41",
         "./race/game-state.js": "./race/game-state.js?build=20260722-r41",
         "./race/replay-system.js": "./race/replay-system.js?build=20260722-r43",
+        "./race/rival-storage.js?build=20260720-r19": "./race/rival-storage.js?build=20260722-r47",
         "./race/track-spatial-index.js?build=20260720-r19": "./race/track-spatial-index.js?build=20260722-r44",
         "./performance-monitor.js?build=20260720-r19": "./performance-monitor.js?build=20260722-r43",
         "./world-assets.js": "./world-assets.js?build=20260722-r44",
@@ -67,7 +69,7 @@
       </div>
 
       <div class="install-card">
-        <span class="install-kicker">TURN v1.3.29 · Build 2026.07.22-r46</span>
+        <span class="install-kicker">TURN v1.5.0 · Build 2026.07.22-r47</span>
         <h1 id="installTitle">TURN</h1>
         <p class="install-copy">
           TURN is a motion-controlled arcade drift racer. Turn your device to steer and race your own best laps.
@@ -95,19 +97,19 @@
 
   <section class="panel" id="intro" aria-labelledby="title">
     <div class="start-card">
-      <span class="kicker">TURN v1.3.29 · Build 2026.07.22-r46</span>
+      <span class="kicker">TURN v1.5.0 · Build 2026.07.22-r47</span>
       <h1 class="start-logo-heading" id="title">
         <img class="start-logo" src="./icon-512-r45.png" alt="TURN">
       </h1>
       <p class="tagline">
-        Turn the phone to steer. Slide one thumb between Gas, Drift and Boost. Brake and reverse share a separate control.
+        Turn the device to steer. Slide one thumb between Gas, Drift and Boost. Brake and reverse share a separate control.
       </p>
       <div class="actions">
         <button id="motionButton" type="button">Enable motion &amp; race</button>
         <button class="secondary" id="manualButton" type="button">Desktop / manual mode</button>
       </div>
       <p class="status" id="status" role="status">
-        Steering uses phone rotation. Slide across the drive pad for gas, drift and boost.
+        Steering uses device rotation. Slide across the drive pad for gas, drift and boost.
       </p>
     </div>
   </section>
@@ -163,6 +165,6 @@
     </div>
   </div>
 
-  <script type="module" src="./app.js?build=20260722-r46"></script>
+  <script type="module" src="./app.js?build=20260722-r47"></script>
 </body>
 </html>
