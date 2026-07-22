@@ -17,6 +17,8 @@ assert.equal(brickFiles.length, 9, 'The vendored Kenney Brick Kit subset should 
 const sedan = catalog.getCarDefinition('sedan');
 const race = catalog.getCarDefinition('race');
 const truck = catalog.getCarDefinition('truck');
+const monsterTruck = catalog.getCarDefinition('monster-truck');
+assert.equal(monsterTruck.visualScale, 0.83, 'Monster Truck must stay at the reduced visual scale so it fits the shared 3D viewer and race field');
 assert.equal(sedan.tuning.topSpeedMultiplier, 1, 'Sedan top speed must remain the v1.0 baseline');
 assert.equal(sedan.tuning.accelerationMultiplier, 1, 'Sedan acceleration must remain the v1.0 baseline');
 assert.equal(sedan.tuning.controlMultiplier, 1, 'Sedan control must remain the v1.0 baseline');
@@ -47,10 +49,11 @@ const [index, main, lapSystem, rivalStorage, controls, carModels] = await Promis
   fs.readFile(path.join(turnDir, 'vehicle/car-models.js'), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.24 · Build 2026\.07\.22-r41/);
-assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260722-r41/);
-assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-r10\.js\?build=20260720-r25"/, 'r41 must preserve the latest Lot module cache redirect');
-assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r19": "\.\/vehicle\/catalog\.js\?build=20260721-r35"/, 'r41 must preserve the corrected Vintage Racer orientation');
+assert.match(index, /TURN v1\.3\.25 · Build 2026\.07\.22-r42/);
+assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260722-r42/);
+assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-r10\.js\?build=20260720-r25"/, 'r42 must preserve the latest Lot module cache redirect');
+assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r19": "\.\/vehicle\/catalog\.js\?build=20260722-r42"/, 'r42 must serve the reduced Monster Truck scale to the main runtime');
+assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r20": "\.\/vehicle\/catalog\.js\?build=20260722-r42"/, 'r42 must serve the same reduced Monster Truck scale inside The Lot');
 assert.match(index, /"\.\/vehicle\/car-models\.js\?build=20260720-r19": "\.\/vehicle\/car-models\.js\?build=20260720-r22"/, 'The stable r22 outline module cache redirect must remain in place');
 assert.match(main, /await showTheLot\(/, 'Start flow must enter The Lot before racing');
 assert.match(main, /maxSpeed: MAX_SPEED \* state\.vehicleTuning\.topSpeedMultiplier/, 'Selected top speed must reach physics');
