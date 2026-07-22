@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { resetRaceToStage } from '../race/game-state.js?build=20260722-r41';
-import { clearRivalsState, loadRivalsState } from '../race/rival-storage.js?build=20260722-r47';
+import { clearRivalsState, loadRivalsState } from '../race/rival-storage.js?build=20260722-r50';
 import {
   DEFAULT_TRACK_ID,
   createTrackRuntime,
@@ -8,9 +8,9 @@ import {
   loadTrackSelection,
   normalizeTrackId,
   saveTrackSelection
-} from './catalog.js?build=20260722-r47';
-import { installAirportWorld } from './airport-world-r49.js?build=20260722-r49';
-import { showTrackSelect } from '../ui/track-select.js?build=20260722-r47';
+} from './catalog.js?build=20260722-r50';
+import { installAirportWorld } from './airport-world-r50.js?build=20260722-r50';
+import { showTrackSelect } from '../ui/track-select.js?build=20260722-r50';
 
 let runtime = null;
 let runtimeReadyResolve = null;

@@ -3,8 +3,8 @@ import {
   getTrackPreviewPoints,
   loadTrackSelection,
   normalizeTrackId
-} from '../tracks/catalog.js?build=20260722-r47';
-import { getStoredBestTime } from '../race/rival-storage.js?build=20260722-r47';
+} from '../tracks/catalog.js?build=20260722-r50';
+import { getStoredBestTime } from '../race/rival-storage.js?build=20260722-r50';
 
 let activeRequest = null;
 

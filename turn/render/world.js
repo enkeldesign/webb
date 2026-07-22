@@ -83,6 +83,11 @@ async function install(runtime) {
     return;
   }
 
+  // Track selection can replace the shared runtime sample array while these art modules
+  // are still loading. Give Countryside scenery an immutable sample snapshot so a quick
+  // switch to Airport can never redirect late trees, buildings or flags onto Track 2.
+  const worldSamples = samples.slice();
+
   try {
     const {
       installWorldBeauty,
@@ -100,15 +105,15 @@ async function install(runtime) {
     }
 
     // Preserve the verified installation order from the generated legacy source.
-    installArtPass({ world, scene, samples, trackWidth }).catch((error) => {
+    installArtPass({ world, scene, samples: worldSamples, trackWidth }).catch((error) => {
       console.warn('TURN: bold surroundings art pass failed, keeping base world.', error);
     });
 
-    installTrackIdentity({ world, samples, trackWidth });
-    installSectionIntensity({ world, samples, trackWidth });
+    installTrackIdentity({ world, samples: worldSamples, trackWidth });
+    installSectionIntensity({ world, samples: worldSamples, trackWidth });
 
     const beautyBaselineChildren = new Set(world.children);
-    installWorldBeauty({ world, scene, samples, trackWidth, sun, hemi })
+    installWorldBeauty({ world, scene, samples: worldSamples, trackWidth, sun, hemi })
       .then(() => groundLateTreeClusters(world, beautyBaselineChildren))
       .catch((error) => {
         console.warn('TURN: world beauty pass failed, keeping base world.', error);
