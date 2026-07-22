@@ -34,7 +34,7 @@ const [index, lot, css, carModels, main, lapSystem, rivalStorage] = await Promis
   fs.readFile(new URL('../../turn/race/rival-storage.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.29 · Build 2026\.07\.22-r46/);
+assert.match(index, /TURN v1\.5\.0 · Build 2026\.07\.22-r47/);
 assert.match(lot, /input\.type = 'color'/, 'The Lot must invoke the browser or OS colour picker');
 assert.match(lot, /input\.addEventListener\('input'/, 'Native picker changes must preview immediately');
 assert.doesNotMatch(lot, /CAR_PALETTE|makeColorButton/, 'The production Lot must not render the custom palette');
@@ -45,7 +45,7 @@ assert.match(carModels, /isSecondaryPaint\(node, car\)/);
 assert.match(main, /vehicleSecondaryColor: initialVehicleSelection\.secondaryColor/);
 assert.match(main, /secondaryColor: state\.vehicleSecondaryColor/);
 assert.match(lapSystem, /carSecondaryColor: state\.vehicleSecondaryColor \|\| '#f8f9fa'/);
-assert.match(rivalStorage, /version: 4/);
+assert.match(rivalStorage, /version: 5/, 'Track-scoped rivals must preserve secondary paint metadata');
 assert.match(rivalStorage, /normalizeVehicleSecondaryColor\(lap\.carSecondaryColor\)/);
 
 console.log('TURN native and secondary paint regression passed.');
