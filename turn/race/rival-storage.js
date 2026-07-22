@@ -15,17 +15,31 @@ const GHOST_KEY = 'turn-three-ghost-v4';
 const COMPETITOR_KEY = 'turn-personal-rivals-v1';
 const LEGACY_RIVAL_COLORS = ['#38d9ff', '#ff4fa3', '#9775fa', '#ff922b'];
 
+/*
+ * Airport r50 changes the physical course, so its r47-r49 replay frames and best times
+ * cannot be compared fairly with the new layout. Countryside deliberately keeps the
+ * historical key and every other track remains stable unless it opts into a revision.
+ */
+const TRACK_STORAGE_REVISIONS = Object.freeze({
+  airport: 'airport-r50'
+});
+
 function normalizeTrackId(trackId) {
   return typeof trackId === 'string' && trackId.trim() ? trackId.trim() : DEFAULT_TRACK_ID;
 }
 
-function rivalKey(trackId) {
+function storageTrackId(trackId) {
   const normalized = normalizeTrackId(trackId);
+  return TRACK_STORAGE_REVISIONS[normalized] || normalized;
+}
+
+function rivalKey(trackId) {
+  const normalized = storageTrackId(trackId);
   return normalized === DEFAULT_TRACK_ID ? COMPETITOR_KEY : `${COMPETITOR_KEY}:${normalized}`;
 }
 
 function ghostKey(trackId) {
-  const normalized = normalizeTrackId(trackId);
+  const normalized = storageTrackId(trackId);
   return normalized === DEFAULT_TRACK_ID ? GHOST_KEY : `${GHOST_KEY}:${normalized}`;
 }
 
@@ -37,8 +51,9 @@ export function saveRivalsState(state, { trackId } = {}) {
   try {
     const activeTrackId = stateTrackId(state, trackId);
     localStorage.setItem(rivalKey(activeTrackId), JSON.stringify({
-      version: 5,
+      version: 6,
       trackId: activeTrackId,
+      trackRevision: storageTrackId(activeTrackId),
       laps: state.competitorLaps
     }));
     return true;
