@@ -130,11 +130,11 @@ const [index, app, lapSystem, gameState, toast, toastCss, onboarding, onboarding
   fs.readFile(new URL('../../turn/rival-onboarding.css', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.22 · Build 2026\.07\.22-r39/);
-assert.match(index, /lap-result-toast\.css\?build=20260722-r39/);
-assert.match(index, /rival-onboarding\.css\?build=20260722-r39/);
-assert.match(index, /"\.\/race\/lap-system\.js\?build=20260720-r19": "\.\/race\/lap-system\.js\?build=20260721-r38"/, 'r39 must preserve the corrected single-source physical lap system');
-assert.match(index, /"\.\/race\/game-state\.js": "\.\/race\/game-state\.js\?build=20260722-r39"/, 'r39 must cache-bust the restart-message removal');
+assert.match(index, /TURN v1\.3\.23 · Build 2026\.07\.22-r40/);
+assert.match(index, /lap-result-toast\.css\?build=20260722-r40/);
+assert.match(index, /rival-onboarding\.css\?build=20260722-r40/);
+assert.match(index, /"\.\/race\/lap-system\.js\?build=20260720-r19": "\.\/race\/lap-system\.js\?build=20260721-r38"/, 'r40 must preserve the corrected single-source physical lap system');
+assert.match(index, /"\.\/race\/game-state\.js": "\.\/race\/game-state\.js\?build=20260722-r39"/, 'r40 must preserve the restart-message removal');
 assert.match(app, /installLapResultToast\(\)/, 'The lap result toast must install before the game runtime starts');
 assert.match(app, /installRivalOnboarding\(\)/, 'The rival onboarding plate must install before the game runtime starts');
 assert.match(lapSystem, /turn:lap-result/, 'Completed lap finish must publish one frozen result event');
@@ -158,15 +158,27 @@ assert.match(toast, /aria-live', 'polite'/, 'The result toast should be announce
 assert.doesNotMatch(gameState, /READY FOR THE LINE/, 'Restart Lap must not show redundant ready-state feedback');
 assert.match(onboarding, /CHASE YOUR BEST/, 'The first rival must introduce the core chase-your-best loop');
 assert.match(onboarding, /reason === 'lap-completed'/, 'Onboarding must be tied to the first newly saved rival after a completed lap');
-assert.match(onboarding, /!hadRival && hasRival/, 'The onboarding plate must only trigger on the zero-to-one rival transition');
-assert.match(onboarding, /makeGhostColor\(color\)/, 'The onboarding plate must use the same lighter body colour as the ghost car');
+assert.match(onboarding, /!hadRival && hasRival\) schedule\(rivals\[0\]\)/, 'The onboarding must use the newly saved rival rather than the current selection');
+assert.match(onboarding, /rival\?\.carId/, 'The first-rival preview must use the saved ghost model');
+assert.match(onboarding, /rival\?\.carColor/, 'The first-rival preview must use the saved ghost body paint');
+assert.match(onboarding, /rival\?\.carSecondaryColor/, 'The first-rival preview must preserve saved secondary paint');
+assert.match(onboarding, /ghost: true/, 'The onboarding model must use the same lighter solid ghost treatment as race rivals');
+assert.match(onboarding, /targetLength: 6\.4/, 'The onboarding model must use the Lot 3D viewer presentation scale');
+assert.match(onboarding, /PerspectiveCamera\(34, 1, 0\.1, 60\)/, 'The onboarding model must reuse the Lot viewer camera language');
+assert.match(onboarding, /camera\.position\.set\(7\.8, 4\.8, 8\.8\)/, 'The onboarding model must use the Lot viewer camera position');
+assert.match(onboarding, /HemisphereLight\(0xffffff, 0x5b6770, 3\.2\)/, 'The onboarding model must use the Lot viewer ambient lighting');
+assert.match(onboarding, /VIEWER_ROTATION_RADIANS_PER_SECOND = 0\.144/, 'The onboarding preview must rotate at the same approximately 60fps Lot viewer speed');
+assert.match(onboarding, /VIEWER_FRAME_INTERVAL_MS = 1000 \/ 30/, 'The temporary onboarding renderer must stay capped at 30 fps on mobile');
+assert.match(onboarding, /renderer\.dispose\(\)/, 'The temporary onboarding renderer must be disposed after the reveal');
 assert.match(onboarding, /RESULT_TOAST_HANDOFF_MS = 4300/, 'First-rival onboarding must wait until the lap-result toast has cleared');
 assert.match(toastCss, /background: var\(--yellow\)/, 'The lap toast must share the yellow finish-result colour');
 assert.match(toastCss, /left: 50%/, 'The lap toast must occupy the central finish-message position');
 assert.match(toastCss, /top: 22%/, 'The lap toast must sit where the old TOP X LAP message appeared');
 assert.doesNotMatch(toastCss, /left: max\(112px/, 'The retired lower-left toast placement must stay removed');
 assert.match(toastCss, /prefers-reduced-motion: reduce/, 'Toast animation must respect reduced-motion preferences');
+assert.match(onboardingCss, /\.rival-onboarding-model/, 'The onboarding must reserve an adjacent host for the ghost model');
+assert.match(onboardingCss, /\.rival-onboarding-copy/, 'The CHASE YOUR BEST copy must remain a separate pill plate beside the model');
 assert.match(onboardingCss, /background: var\(--rival-onboarding-color, var\(--yellow\)\)/, 'The onboarding plate must expose the rival colour through a CSS custom property');
 assert.match(onboardingCss, /border-radius: 999px/, 'The onboarding must keep the compact pill-plate language of the old READY message');
 
-console.log('TURN unified lap feedback and first-rival onboarding regression passed.');
+console.log('TURN unified lap feedback and rotating first-rival onboarding regression passed.');
