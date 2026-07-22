@@ -2,48 +2,59 @@ const DEFAULT_CELL_SIZE = 32;
 const MAX_GRID_RADIUS_BEFORE_HIERARCHY = 2;
 const HIERARCHY_LEAF_SIZE = 8;
 
-export function createTrackSpatialIndex(samples, { cellSize = DEFAULT_CELL_SIZE } = {}) {
-  if (!Array.isArray(samples) || !samples.length) {
-    throw new TypeError('TURN track index needs at least one sample');
-  }
-
+export function createTrackSpatialIndex(initialSamples, { cellSize = DEFAULT_CELL_SIZE } = {}) {
   const size = positiveNumber(cellSize, DEFAULT_CELL_SIZE);
-  const columns = new Map();
+  let samples = null;
+  let columns = null;
   let minCellX = Infinity;
   let maxCellX = -Infinity;
   let minCellZ = Infinity;
   let maxCellZ = -Infinity;
+  let hierarchy = null;
   let queryCount = 0;
   let totalChecks = 0;
   let maxChecks = 0;
   let lastChecks = 0;
 
-  for (let index = 0; index < samples.length; index += 1) {
-    const point = samples[index]?.point;
-    if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.z)) {
-      throw new TypeError(`TURN track sample ${index} has no finite point`);
+  rebuild(initialSamples);
+
+  function rebuild(nextSamples) {
+    validateSamples(nextSamples);
+    samples = nextSamples;
+    columns = new Map();
+    minCellX = Infinity;
+    maxCellX = -Infinity;
+    minCellZ = Infinity;
+    maxCellZ = -Infinity;
+
+    for (let index = 0; index < samples.length; index += 1) {
+      const point = samples[index].point;
+      const cellX = Math.floor(point.x / size);
+      const cellZ = Math.floor(point.z / size);
+      let column = columns.get(cellX);
+      if (!column) {
+        column = new Map();
+        columns.set(cellX, column);
+      }
+      let bucket = column.get(cellZ);
+      if (!bucket) {
+        bucket = [];
+        column.set(cellZ, bucket);
+      }
+      bucket.push(index);
+      minCellX = Math.min(minCellX, cellX);
+      maxCellX = Math.max(maxCellX, cellX);
+      minCellZ = Math.min(minCellZ, cellZ);
+      maxCellZ = Math.max(maxCellZ, cellZ);
     }
 
-    const cellX = Math.floor(point.x / size);
-    const cellZ = Math.floor(point.z / size);
-    let column = columns.get(cellX);
-    if (!column) {
-      column = new Map();
-      columns.set(cellX, column);
-    }
-    let bucket = column.get(cellZ);
-    if (!bucket) {
-      bucket = [];
-      column.set(cellZ, bucket);
-    }
-    bucket.push(index);
-    minCellX = Math.min(minCellX, cellX);
-    maxCellX = Math.max(maxCellX, cellX);
-    minCellZ = Math.min(minCellZ, cellZ);
-    maxCellZ = Math.max(maxCellZ, cellZ);
+    hierarchy = buildTrackHierarchy(samples, 0, samples.length);
+    queryCount = 0;
+    totalChecks = 0;
+    maxChecks = 0;
+    lastChecks = 0;
+    return samples;
   }
-
-  const hierarchy = buildTrackHierarchy(samples, 0, samples.length);
 
   function find(position) {
     const x = Number(position?.x);
@@ -155,6 +166,9 @@ export function createTrackSpatialIndex(samples, { cellSize = DEFAULT_CELL_SIZE 
   return Object.freeze({
     cellSize: size,
     find,
+    replaceSamples(nextSamples) {
+      return rebuild(nextSamples);
+    },
     getStats() {
       return Object.freeze({ queryCount, totalChecks, maxChecks, lastChecks });
     }
@@ -184,6 +198,19 @@ export function findNearestTrackBruteForce(samples, position) {
     distance: Math.sqrt(bestDistanceSq),
     checks: samples.length
   };
+}
+
+function validateSamples(samples) {
+  if (!Array.isArray(samples) || !samples.length) {
+    throw new TypeError('TURN track index needs at least one sample');
+  }
+
+  for (let index = 0; index < samples.length; index += 1) {
+    const point = samples[index]?.point;
+    if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.z)) {
+      throw new TypeError(`TURN track sample ${index} has no finite point`);
+    }
+  }
 }
 
 function buildTrackHierarchy(samples, start, end) {

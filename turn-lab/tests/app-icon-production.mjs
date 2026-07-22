@@ -10,11 +10,11 @@ const index = fs.readFileSync(path.join(turnRoot, 'index.html'), 'utf8');
 const styles = fs.readFileSync(path.join(turnRoot, 'styles.css'), 'utf8');
 const manifest = JSON.parse(fs.readFileSync(path.join(turnRoot, 'site.webmanifest'), 'utf8'));
 
-assert.match(index, /TURN v1\.3\.29 · Build 2026\.07\.22-r46/);
+assert.match(index, /TURN v1\.5\.0 · Build 2026\.07\.22-r47/);
 assert.match(index, /<link rel="icon" href="\.\/favicon-r45\.ico" sizes="any">/);
 assert.match(index, /<link rel="icon" href="\.\/favicon-32-r45\.png" type="image\/png" sizes="32x32">/);
 assert.match(index, /<link rel="apple-touch-icon" href="\.\/apple-touch-icon-r45\.png" sizes="180x180">/);
-assert.match(index, /<link rel="manifest" href="\.\/site\.webmanifest\?build=20260722-r46">/);
+assert.match(index, /<link rel="manifest" href="\.\/site\.webmanifest\?build=20260722-r47">/);
 assert.match(index, /<img class="install-icon" src="\.\/icon-512-r45\.png" alt="">/);
 assert.match(index, /<h1 class="start-logo-heading" id="title">\s*<img class="start-logo" src="\.\/icon-512-r45\.png" alt="TURN">\s*<\/h1>/);
 assert.doesNotMatch(index, /apple-touch-icon-v4|icon-192-v4/);

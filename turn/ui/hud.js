@@ -82,9 +82,13 @@ function drawMap({ state, mapCanvas, mapCtx, samples, replayFrameAt }) {
 
 function getStaticMap(mapCanvas, samples) {
   const cached = mapCache.get(mapCanvas);
+  const firstSample = samples[0];
+  const lastSample = samples[samples.length - 1];
   if (
     cached &&
     cached.samples === samples &&
+    cached.firstSample === firstSample &&
+    cached.lastSample === lastSample &&
     cached.width === mapCanvas.width &&
     cached.height === mapCanvas.height
   ) {
@@ -135,6 +139,8 @@ function getStaticMap(mapCanvas, samples) {
 
   const value = {
     samples,
+    firstSample,
+    lastSample,
     width: mapCanvas.width,
     height: mapCanvas.height,
     canvas,
