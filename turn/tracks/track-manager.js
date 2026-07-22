@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { createTrackSpatialIndex } from '../race/track-spatial-index.js?build=20260722-r44';
 import { resetRaceToStage } from '../race/game-state.js?build=20260722-r41';
 import { clearRivalsState, loadRivalsState } from '../race/rival-storage.js?build=20260722-r47';
 import {
@@ -18,10 +17,7 @@ let runtimeReadyResolve = null;
 let activeTrackId = DEFAULT_TRACK_ID;
 let chosenThisSession = false;
 let countrysideSamples = null;
-let countrysideFind = null;
-let countrysideStats = null;
 let airportTrack = null;
-let airportIndex = null;
 let airportWorld = null;
 let dynamicWorld = null;
 
@@ -55,10 +51,13 @@ export async function activateTrack(trackId, currentRuntime = runtime) {
   const nextTrackId = normalizeTrackId(trackId);
   ensureTrackInfrastructure(currentRuntime);
 
+  if (typeof currentRuntime.trackSpatialIndex?.replaceSamples !== 'function') {
+    throw new Error('TURN: the active track index cannot rebuild for track changes.');
+  }
+
   if (nextTrackId === 'airport') {
     if (!airportTrack) {
       airportTrack = createTrackRuntime('airport', currentRuntime.trackSampleCount || 720);
-      airportIndex = createTrackSpatialIndex(airportTrack.samples, { cellSize: 32 });
     }
     if (!airportWorld) {
       airportWorld = installAirportWorld({
@@ -70,12 +69,12 @@ export async function activateTrack(trackId, currentRuntime = runtime) {
     }
 
     replaceSamples(currentRuntime.samples, airportTrack.samples);
-    routeSpatialIndex(currentRuntime.trackSpatialIndex, airportIndex.find.bind(airportIndex), airportIndex.getStats.bind(airportIndex));
+    currentRuntime.trackSpatialIndex.replaceSamples(currentRuntime.samples);
     currentRuntime.world.visible = false;
     airportWorld.visible = true;
   } else {
     replaceSamples(currentRuntime.samples, countrysideSamples);
-    routeSpatialIndex(currentRuntime.trackSpatialIndex, countrysideFind, countrysideStats);
+    currentRuntime.trackSpatialIndex.replaceSamples(currentRuntime.samples);
     currentRuntime.world.visible = true;
     if (airportWorld) airportWorld.visible = false;
   }
@@ -118,8 +117,6 @@ function installRuntime(nextRuntime) {
   runtime.state.trackId = DEFAULT_TRACK_ID;
   runtime.trackId = DEFAULT_TRACK_ID;
   countrysideSamples = runtime.samples.slice();
-  countrysideFind = runtime.trackSpatialIndex.find.bind(runtime.trackSpatialIndex);
-  countrysideStats = runtime.trackSpatialIndex.getStats.bind(runtime.trackSpatialIndex);
   ensureTrackInfrastructure(runtime);
   installTrackAwareRivalReset(runtime);
 
@@ -159,11 +156,6 @@ function isRaceParticle(node) {
 
 function replaceSamples(target, source) {
   target.splice(0, target.length, ...source);
-}
-
-function routeSpatialIndex(target, find, getStats) {
-  target.find = find;
-  target.getStats = getStats;
 }
 
 function applyTrackAtmosphere(currentRuntime, trackId) {
