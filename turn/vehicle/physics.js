@@ -31,7 +31,7 @@ export function updateVehiclePhysicsState({
   const nearestBefore = findNearestTrack(state.position);
   state.nearestTrackIndex = nearestBefore.index;
   state.trackDistance = nearestBefore.distance;
-  state.offRoad = nearestBefore.distance > trackWidth * 0.58;
+  state.offRoad = nearestBefore.distance > trackWidth * 0.58 && !isForgivingSurface(state.position);
 
   const forward = getForward();
   const right = getRight();
@@ -149,12 +149,20 @@ export function updateVehiclePhysicsState({
 
   const nearestAfter = findNearestTrack(state.position);
   state.trackDistance = nearestAfter.distance;
-  state.offRoad = nearestAfter.distance > trackWidth * 0.58;
+  state.offRoad = nearestAfter.distance > trackWidth * 0.58 && !isForgivingSurface(state.position);
   state.lastProgress = state.progress;
   state.progress = nearestAfter.index / trackSampleCount;
   state.nearestTrackIndex = nearestAfter.index;
 
   return nearestAfter;
+}
+
+function isForgivingSurface(position) {
+  try {
+    return globalThis.__turnIsForgivingSurface?.(position) === true;
+  } catch (_) {
+    return false;
+  }
 }
 
 function positiveNumber(value, fallback) {
