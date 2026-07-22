@@ -49,11 +49,11 @@ const [index, main, lapSystem, rivalStorage, controls, carModels] = await Promis
   fs.readFile(path.join(turnDir, 'vehicle/car-models.js'), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.28 · Build 2026\.07\.22-r45/);
-assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260722-r45/);
-assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-r10\.js\?build=20260720-r25"/, 'r45 must preserve the latest Lot module cache redirect');
-assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r19": "\.\/vehicle\/catalog\.js\?build=20260722-r42"/, 'r45 must preserve the reduced Monster Truck scale in the main runtime');
-assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r20": "\.\/vehicle\/catalog\.js\?build=20260722-r42"/, 'r45 must preserve the same reduced Monster Truck scale inside The Lot');
+assert.match(index, /TURN v1\.3\.29 · Build 2026\.07\.22-r46/);
+assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260722-r46/);
+assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-r10\.js\?build=20260720-r25"/, 'r46 must preserve the latest Lot module cache redirect');
+assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r19": "\.\/vehicle\/catalog\.js\?build=20260722-r42"/, 'r46 must preserve the reduced Monster Truck scale in the main runtime');
+assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r20": "\.\/vehicle\/catalog\.js\?build=20260722-r42"/, 'r46 must preserve the same reduced Monster Truck scale inside The Lot');
 assert.match(index, /"\.\/vehicle\/car-models\.js\?build=20260720-r19": "\.\/vehicle\/car-models\.js\?build=20260720-r22"/, 'The stable r22 outline module cache redirect must remain in place');
 assert.match(main, /await showTheLot\(/, 'Start flow must enter The Lot before racing');
 assert.match(main, /maxSpeed: MAX_SPEED \* state\.vehicleTuning\.topSpeedMultiplier/, 'Selected top speed must reach physics');
