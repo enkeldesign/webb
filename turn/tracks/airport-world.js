@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { createCarVisual } from '../vehicle/car-models.js?build=20260720-r19';
 
 const INK = 0x08090a;
 const RUNWAY = 0x25292e;
@@ -9,6 +11,30 @@ const YELLOW = 0xffd43b;
 const PINK = 0xff4fa3;
 const RED = 0xff5f67;
 const CREAM = 0xfff8e8;
+const TRACK_PROP_CLEARANCE = 25;
+const AIRCRAFT_CLEARANCE = 44;
+
+// This tiny low-poly aircraft was authored with Kenney AssetForge. It is an optional visual
+// enhancement only: TURN places a local procedural fallback first, so Airport remains playable
+// and visually complete if the external source is unavailable or the device is offline.
+const AIRCRAFT_ASSET_URL = 'https://raw.githubusercontent.com/crystal-bit/platform-3d/main/assets/airplane.glb';
+const aircraftLoader = new GLTFLoader();
+let aircraftSourcePromise = null;
+
+const AIRCRAFT_SLOTS = Object.freeze([
+  Object.freeze({ position: [-58, 0.35, 186], rotation: 0.08, scale: 1.05, targetLength: 25 }),
+  Object.freeze({ position: [133, 0.35, 190], rotation: -0.16, scale: 0.94, targetLength: 23 }),
+  Object.freeze({ position: [208, 0.35, 166], rotation: -1.22, scale: 0.82, targetLength: 20 }),
+  Object.freeze({ position: [108, 0.35, -190], rotation: Math.PI / 2, scale: 0.72, targetLength: 18 })
+]);
+
+const SERVICE_VEHICLE_SLOTS = Object.freeze([
+  Object.freeze({ carId: 'sedan', color: '#ffd43b', position: [-32, 0.2, 188], rotation: 1.36, targetLength: 6.1 }),
+  Object.freeze({ carId: 'van', color: '#38d9ff', position: [82, 0.2, 34], rotation: -0.32, targetLength: 7.2 }),
+  Object.freeze({ carId: 'truck', color: '#ff922b', position: [126, 0.2, 184], rotation: -0.1, targetLength: 8.4 }),
+  Object.freeze({ carId: 'truck-flat', color: '#ffd43b', position: [178, 0.2, 184], rotation: 0.18, targetLength: 8.8 }),
+  Object.freeze({ carId: 'suv', color: '#ff4fa3', position: [-112, 0.2, 172], rotation: -0.42, targetLength: 6.8 })
+]);
 
 const blackOutlineMaterial = new THREE.MeshBasicMaterial({
   color: INK,
@@ -24,21 +50,28 @@ export function installAirportWorld({ scene, samples, trackWidth = 27 }) {
   makeRunway(world);
   makeRaceRoad(world, samples, trackWidth);
   makeAirportBuildings(world);
-  makeAircraft(world);
-  makeGroundOperations(world);
+  const aircraftFallbacks = makeAircraftFallbacks(world, samples);
+  makeGroundOperations(world, samples);
   makeDistantWorld(world);
   makeStartGate(world, samples, trackWidth);
+
+  installAircraftAssets(world, samples, aircraftFallbacks).catch((error) => {
+    console.info('TURN: Airport aircraft asset unavailable; keeping the local fallback.', error);
+  });
+  installServiceVehicleAssets(world, samples).catch((error) => {
+    console.info('TURN: Airport service vehicle assets unavailable; keeping the apron clear.', error);
+  });
 
   return world;
 }
 
-function outlinedMesh(geometry, material, scale = 1.035, { castShadow = true, receiveShadow = true } = {}) {
+function outlinedMesh(geometry, meshMaterial, scale = 1.035, { castShadow = true, receiveShadow = true } = {}) {
   const group = new THREE.Group();
   const outline = new THREE.Mesh(geometry, blackOutlineMaterial);
   outline.scale.setScalar(scale);
   outline.castShadow = false;
   outline.receiveShadow = false;
-  const mesh = new THREE.Mesh(geometry, material);
+  const mesh = new THREE.Mesh(geometry, meshMaterial);
   mesh.castShadow = castShadow;
   mesh.receiveShadow = receiveShadow;
   group.add(outline, mesh);
@@ -249,8 +282,8 @@ function makeAirportBuildings(world) {
   world.add(terminal);
 
   for (const x of [10, 50, 90]) {
-    const bridge = outlinedMesh(new THREE.BoxGeometry(4.5, 4, 19), material(0xe8edf1, 0.8), 1.025);
-    bridge.position.set(x, 6.4, 139);
+    const bridge = outlinedMesh(new THREE.BoxGeometry(4.5, 4, 15), material(0xe8edf1, 0.8), 1.025);
+    bridge.position.set(x, 6.4, 146);
     world.add(bridge);
   }
 
@@ -289,25 +322,43 @@ function makeAirportBuildings(world) {
     tank.position.set(x, 5.6, 0);
     fuelZone.add(tank);
   }
-  fuelZone.position.set(-155, 0, 132);
+  fuelZone.position.set(-170, 0, 165);
   world.add(fuelZone);
 }
 
-function makeAircraft(world) {
-  const planes = [
-    { position: [7, 1.4, 112], rotation: -0.08, color: 0xfff8e8, tail: PINK, scale: 1.05 },
-    { position: [91, 1.4, 111], rotation: 0.12, color: 0xfff8e8, tail: 0x38d9ff, scale: 0.95 },
-    { position: [151, 1.4, 68], rotation: -1.25, color: 0xe9eef2, tail: YELLOW, scale: 0.88 },
-    { position: [126, 1.4, -173], rotation: Math.PI / 2, color: 0xfff8e8, tail: RED, scale: 0.72 }
-  ];
-
-  for (const plane of planes) {
-    const model = makePlane(plane.color, plane.tail);
-    model.position.set(...plane.position);
-    model.rotation.y = plane.rotation;
-    model.scale.setScalar(plane.scale);
-    world.add(model);
+function makeAircraftFallbacks(world, samples) {
+  const records = [];
+  for (let index = 0; index < AIRCRAFT_SLOTS.length; index += 1) {
+    const slot = AIRCRAFT_SLOTS[index];
+    const fallback = makePlane(CREAM, [PINK, 0x38d9ff, YELLOW, RED][index % 4]);
+    fallback.scale.setScalar(slot.scale);
+    const placed = placeScenerySafely(world, fallback, samples, slot, AIRCRAFT_CLEARANCE, `aircraft fallback ${index + 1}`);
+    if (placed) records.push({ slot, fallback });
   }
+  return records;
+}
+
+async function installAircraftAssets(world, samples, fallbackRecords) {
+  const source = await loadAircraftSource();
+  for (let index = 0; index < fallbackRecords.length; index += 1) {
+    const { slot, fallback } = fallbackRecords[index];
+    const root = new THREE.Group();
+    const model = source.clone(true);
+    prepareStaticAsset(model, { outline: true, castShadow: index < 2 });
+    normalizeModelToGround(model, slot.targetLength);
+    root.add(model);
+    root.rotation.y = slot.rotation;
+
+    if (!placeScenerySafely(world, root, samples, slot, AIRCRAFT_CLEARANCE, `aircraft asset ${index + 1}`)) continue;
+    world.remove(fallback);
+  }
+}
+
+function loadAircraftSource() {
+  if (!aircraftSourcePromise) {
+    aircraftSourcePromise = aircraftLoader.loadAsync(AIRCRAFT_ASSET_URL).then((gltf) => gltf.scene);
+  }
+  return aircraftSourcePromise;
 }
 
 function makePlane(bodyColor, tailColor) {
@@ -316,91 +367,164 @@ function makePlane(bodyColor, tailColor) {
   const tailMaterial = material(tailColor, 0.58);
   const darkMaterial = material(0x34383d, 0.82);
 
-  const fuselage = outlinedMesh(new THREE.BoxGeometry(4.2, 3.8, 25), bodyMaterial, 1.04);
-  fuselage.position.y = 3.4;
+  const fuselage = outlinedMesh(new THREE.CylinderGeometry(2.05, 1.75, 24, 10), bodyMaterial, 1.04);
+  fuselage.rotation.x = Math.PI / 2;
+  fuselage.position.y = 3.6;
   plane.add(fuselage);
 
-  const nose = outlinedMesh(new THREE.ConeGeometry(2.15, 5.5, 8), bodyMaterial, 1.04);
-  nose.rotation.x = Math.PI / 2;
-  nose.position.set(0, 3.4, -15.2);
+  const nose = outlinedMesh(new THREE.ConeGeometry(2.05, 5, 10), bodyMaterial, 1.04);
+  nose.rotation.x = -Math.PI / 2;
+  nose.position.set(0, 3.6, -14.5);
   plane.add(nose);
 
-  const wing = outlinedMesh(new THREE.BoxGeometry(24, 0.55, 5.8), bodyMaterial, 1.035);
-  wing.position.set(0, 3.25, -1);
+  const wing = outlinedMesh(new THREE.BoxGeometry(25, 0.48, 4.7), bodyMaterial, 1.035);
+  wing.position.set(0, 3.45, -1.5);
   plane.add(wing);
 
-  const tailWing = outlinedMesh(new THREE.BoxGeometry(10, 0.42, 3.2), tailMaterial, 1.04);
-  tailWing.position.set(0, 4.2, 10.2);
+  const tailWing = outlinedMesh(new THREE.BoxGeometry(10, 0.4, 3), tailMaterial, 1.04);
+  tailWing.position.set(0, 4.1, 9.7);
   plane.add(tailWing);
 
-  const fin = outlinedMesh(new THREE.BoxGeometry(0.7, 6.5, 4.6), tailMaterial, 1.05);
-  fin.position.set(0, 6.5, 10.4);
-  fin.rotation.x = -0.18;
+  const fin = outlinedMesh(new THREE.BoxGeometry(0.7, 6, 4.2), tailMaterial, 1.05);
+  fin.position.set(0, 6.5, 10.2);
+  fin.rotation.x = -0.2;
   plane.add(fin);
 
-  for (const x of [-5.8, 5.8]) {
-    const engine = outlinedMesh(new THREE.CylinderGeometry(1.3, 1.3, 4.5, 10), darkMaterial, 1.04);
+  for (const x of [-5.6, 5.6]) {
+    const engine = outlinedMesh(new THREE.CylinderGeometry(1.25, 1.25, 4.2, 10), darkMaterial, 1.04);
     engine.rotation.x = Math.PI / 2;
-    engine.position.set(x, 2.25, -1.5);
+    engine.position.set(x, 2.45, -1.7);
     plane.add(engine);
   }
 
   return plane;
 }
 
-function makeGroundOperations(world) {
-  const servicePalette = [YELLOW, 0xff922b, 0x38d9ff, PINK];
-  const servicePositions = [
-    [-18, 91, 0.1],
-    [58, 88, -0.2],
-    [126, 97, 0.4],
-    [-115, 114, -0.35],
-    [184, 81, 1.15]
-  ];
-
-  servicePositions.forEach(([x, z, rotation], index) => {
-    const vehicle = makeServiceVehicle(servicePalette[index % servicePalette.length]);
-    vehicle.position.set(x, 0.7, z);
-    vehicle.rotation.y = rotation;
-    world.add(vehicle);
-  });
-
+function makeGroundOperations(world, samples) {
   const coneGeometry = new THREE.ConeGeometry(0.8, 2.2, 8);
   const coneMaterial = material(0xff7b3d, 0.85);
-  const cones = new THREE.InstancedMesh(coneGeometry, coneMaterial, 28);
+  const coneSlots = [
+    [60, 28], [72, 30], [84, 31], [96, 32], [108, 34], [120, 36],
+    [66, 47], [78, 49], [90, 50], [102, 51], [114, 52], [126, 53]
+  ];
+  const cones = new THREE.InstancedMesh(coneGeometry, coneMaterial, coneSlots.length);
   const marker = new THREE.Object3D();
-  for (let index = 0; index < 28; index += 1) {
-    const row = index < 14 ? 0 : 1;
-    marker.position.set(-8 + (index % 14) * 9, 1.1, 77 + row * 58);
-    marker.rotation.y = index * 0.31;
+  let coneCursor = 0;
+  for (const [x, z] of coneSlots) {
+    if (minimumTrackDistance(samples, x, z) < TRACK_PROP_CLEARANCE) continue;
+    marker.position.set(x, 1.1, z);
+    marker.rotation.y = coneCursor * 0.31;
     marker.updateMatrix();
-    cones.setMatrixAt(index, marker.matrix);
+    cones.setMatrixAt(coneCursor, marker.matrix);
+    coneCursor += 1;
   }
+  cones.count = coneCursor;
   cones.instanceMatrix.needsUpdate = true;
   world.add(cones);
 
-  for (const [x, z, rotation] of [[-45, 125, 0], [120, 138, 0.2], [-145, 83, -0.6]]) {
+  const cartSlots = [
+    { position: [-92, 0, 18], rotation: -0.45 },
+    { position: [92, 0, 12], rotation: 0.18 },
+    { position: [142, 0, 32], rotation: 0.55 }
+  ];
+  for (const [index, slot] of cartSlots.entries()) {
     const cartTrain = new THREE.Group();
     for (let cart = 0; cart < 3; cart += 1) {
       const box = outlinedMesh(new THREE.BoxGeometry(4.4, 2.4, 5.2), material(0x737b84, 0.92), 1.035);
       box.position.set(0, 1.6, cart * 6.2);
       cartTrain.add(box);
     }
-    cartTrain.position.set(x, 0, z);
-    cartTrain.rotation.y = rotation;
-    world.add(cartTrain);
+    placeScenerySafely(world, cartTrain, samples, slot, TRACK_PROP_CLEARANCE + 4, `baggage carts ${index + 1}`);
   }
 }
 
-function makeServiceVehicle(color) {
-  const vehicle = new THREE.Group();
-  const body = outlinedMesh(new THREE.BoxGeometry(5.5, 2.4, 8), material(color, 0.76), 1.05);
-  body.position.y = 1.8;
-  vehicle.add(body);
-  const cabin = outlinedMesh(new THREE.BoxGeometry(4.6, 2.8, 3.2), material(0xe8edf1, 0.62), 1.05);
-  cabin.position.set(0, 3.4, -1.5);
-  vehicle.add(cabin);
-  return vehicle;
+async function installServiceVehicleAssets(world, samples) {
+  await Promise.all(SERVICE_VEHICLE_SLOTS.map(async (slot, index) => {
+    const visual = await createCarVisual({
+      carId: slot.carId,
+      color: slot.color,
+      targetLength: slot.targetLength,
+      outline: true
+    });
+    visual.rotation.y = slot.rotation;
+    visual.traverse((node) => {
+      if (node.isMesh) node.castShadow = false;
+    });
+    placeScenerySafely(world, visual, samples, slot, TRACK_PROP_CLEARANCE, `service vehicle ${index + 1}`);
+  }));
+}
+
+function placeScenerySafely(world, object, samples, slot, clearance, label) {
+  const [x, y = 0, z] = slot.position;
+  const distance = minimumTrackDistance(samples, x, z);
+  if (distance < clearance) {
+    console.warn(`TURN: skipped ${label}; ${distance.toFixed(1)}m from track is inside the ${clearance}m scenery clearance.`);
+    return false;
+  }
+  object.position.set(x, y, z);
+  if (Number.isFinite(slot.rotation)) object.rotation.y = slot.rotation;
+  world.add(object);
+  return true;
+}
+
+function minimumTrackDistance(samples, x, z) {
+  let bestDistanceSq = Infinity;
+  for (let index = 0; index < samples.length; index += 1) {
+    const point = samples[index].point;
+    const dx = x - point.x;
+    const dz = z - point.z;
+    const distanceSq = dx * dx + dz * dz;
+    if (distanceSq < bestDistanceSq) bestDistanceSq = distanceSq;
+  }
+  return Math.sqrt(bestDistanceSq);
+}
+
+function prepareStaticAsset(model, { outline = true, castShadow = false } = {}) {
+  const meshes = [];
+  model.traverse((node) => {
+    if (!node.isMesh || !node.material) return;
+    meshes.push(node);
+    const materials = Array.isArray(node.material) ? node.material : [node.material];
+    const cloned = materials.map((entry) => entry.clone());
+    node.material = Array.isArray(node.material) ? cloned : cloned[0];
+    node.castShadow = castShadow;
+    node.receiveShadow = true;
+  });
+
+  if (!outline) return;
+  for (const mesh of meshes) {
+    const outlineMeshNode = new THREE.Mesh(
+      mesh.geometry,
+      new THREE.MeshBasicMaterial({
+        color: INK,
+        side: THREE.BackSide,
+        depthTest: true,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: 1,
+        polygonOffsetUnits: 1
+      })
+    );
+    outlineMeshNode.scale.setScalar(1.025);
+    outlineMeshNode.castShadow = false;
+    outlineMeshNode.receiveShadow = false;
+    mesh.add(outlineMeshNode);
+  }
+}
+
+function normalizeModelToGround(model, targetLength) {
+  model.updateMatrixWorld(true);
+  const initialBounds = new THREE.Box3().setFromObject(model);
+  const initialSize = initialBounds.getSize(new THREE.Vector3());
+  const footprintLength = Math.max(0.001, initialSize.x, initialSize.z);
+  model.scale.multiplyScalar(targetLength / footprintLength);
+  model.updateMatrixWorld(true);
+
+  const bounds = new THREE.Box3().setFromObject(model);
+  const center = bounds.getCenter(new THREE.Vector3());
+  model.position.x -= center.x;
+  model.position.z -= center.z;
+  model.position.y -= bounds.min.y;
 }
 
 function makeDistantWorld(world) {
