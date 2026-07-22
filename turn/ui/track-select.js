@@ -84,18 +84,13 @@ function ensureOverlay() {
   overlay.innerHTML = `
     <div class="track-select-shell">
       <header class="track-select-head">
-        <div>
-          <span class="track-select-kicker">TURN WORLD TOUR</span>
-          <h2 id="trackSelectTitle">CHOOSE YOUR TRACK</h2>
-          <p>Pick the road first. Then choose the right car for the job.</p>
-        </div>
+        <h2 id="trackSelectTitle">CHOOSE YOUR TRACK</h2>
         <button class="track-select-close" type="button" aria-label="Close track selection">×</button>
       </header>
       <div class="track-select-grid">
         ${TRACK_CATALOG.map(renderTrackCard).join('')}
       </div>
       <footer class="track-select-footer">
-        <span class="track-select-tip">TRACK → CAR → RACE</span>
         <button class="track-select-continue" type="button">CONTINUE</button>
       </footer>
     </div>
@@ -120,12 +115,14 @@ function renderTrackCard(track) {
         <strong>${track.difficulty}</strong>
       </span>
       <span class="track-card-preview" aria-hidden="true">${preview}</span>
-      <span class="track-card-copy">
-        <strong class="track-card-name">${track.name.toUpperCase()}</strong>
-        <span class="track-card-description">${track.description}</span>
-      </span>
-      <span class="track-card-best" data-track-best="${track.id}">
-        <span>BEST</span><strong>--:--.---</strong>
+      <span class="track-card-summary">
+        <span class="track-card-choice">
+          <span class="track-card-choice-marker" aria-hidden="true"></span>
+          <strong class="track-card-name">${track.name.toUpperCase()}</strong>
+        </span>
+        <span class="track-card-best" data-track-best="${track.id}">
+          <span>BEST</span><strong>--:--.---</strong>
+        </span>
       </span>
     </button>
   `;
