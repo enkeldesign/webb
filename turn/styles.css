@@ -119,6 +119,20 @@ h1 {
   font-weight: 1000;
 }
 
+.start-logo-heading {
+  font-size: 0;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.start-logo {
+  display: block;
+  width: clamp(104px, 27vh, 210px);
+  max-width: 40vw;
+  height: auto;
+  border-radius: 22%;
+}
+
 .kicker {
   display: inline-block;
   margin-bottom: 16px;

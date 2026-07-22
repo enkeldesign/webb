@@ -134,11 +134,11 @@ const [index, app, lapSystem, gameState, hud, styles, toast, toastCss, onboardin
   fs.readFile(new URL('../../turn/rival-onboarding.css', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.27 · Build 2026\.07\.22-r44/);
-assert.match(index, /lap-result-toast\.css\?build=20260722-r44/);
-assert.match(index, /rival-onboarding\.css\?build=20260722-r44/);
-assert.match(index, /"\.\/race\/lap-system\.js\?build=20260720-r19": "\.\/race\/lap-system\.js\?build=20260722-r41"/, 'r44 must preserve the r41 early invalid-lap detector');
-assert.match(index, /"\.\/race\/game-state\.js": "\.\/race\/game-state\.js\?build=20260722-r41"/, 'r44 must preserve the r41 reset-safe invalid-lap state');
+assert.match(index, /TURN v1\.3\.28 · Build 2026\.07\.22-r45/);
+assert.match(index, /lap-result-toast\.css\?build=20260722-r45/);
+assert.match(index, /rival-onboarding\.css\?build=20260722-r45/);
+assert.match(index, /"\.\/race\/lap-system\.js\?build=20260720-r19": "\.\/race\/lap-system\.js\?build=20260722-r41"/, 'r45 must preserve the r41 early invalid-lap detector');
+assert.match(index, /"\.\/race\/game-state\.js": "\.\/race\/game-state\.js\?build=20260722-r41"/, 'r45 must preserve the r41 reset-safe invalid-lap state');
 assert.match(app, /installLapResultToast\(\)/, 'The lap result toast must install before the game runtime starts');
 assert.match(app, /installRivalOnboarding\(\)/, 'The rival onboarding plate must install before the game runtime starts');
 assert.match(lapSystem, /turn:lap-result/, 'Completed lap finish must publish one frozen result event');

@@ -49,6 +49,9 @@ jobs:
       - name: Run native and secondary paint regression
         run: node turn-lab/tests/native-paint-production.mjs
 
+      - name: Run app icon and PWA branding regression
+        run: node turn-lab/tests/app-icon-production.mjs
+
       - name: Run balance and anti-shortcut regression
         run: node turn-lab/tests/balance-and-checkpoints.mjs
 
