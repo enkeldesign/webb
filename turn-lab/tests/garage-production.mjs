@@ -50,14 +50,14 @@ const [index, main, lapSystem, rivalStorage, controls, carModels, lotWrapper] = 
   fs.readFile(path.join(turnDir, 'garage/lot-track-select.js'), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.5\.2 · Build 2026\.07\.22-r49/);
-assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260722-r49/);
-assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-track-select\.js\?build=20260722-r49"/, 'r49 must place track selection in front of the stable Lot implementation');
+assert.match(index, /TURN v1\.6\.0 · Build 2026\.07\.22-r50/);
+assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260722-r50/);
+assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-track-select\.js\?build=20260722-r50"/, 'r50 must place track selection in front of the stable Lot implementation');
 assert.match(lotWrapper, /showOriginalLot/, 'The track-first wrapper must still delegate car selection to the verified Lot implementation');
 assert.match(lotWrapper, /await chooseTrackBeforeLot\(\)/, 'The driver must pick a track before choosing the car');
-assert.match(lotWrapper, /track-manager\.js\?build=20260722-r49/, 'The Lot wrapper must load the footprint-aware Airport runtime');
-assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r19": "\.\/vehicle\/catalog\.js\?build=20260722-r42"/, 'r49 must preserve the reduced Monster Truck scale in the main runtime');
-assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r20": "\.\/vehicle\/catalog\.js\?build=20260722-r42"/, 'r49 must preserve the same reduced Monster Truck scale inside The Lot');
+assert.match(lotWrapper, /track-manager\.js\?build=20260722-r50/, 'The Lot wrapper must load the redesigned Airport runtime');
+assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r19": "\.\/vehicle\/catalog\.js\?build=20260722-r42"/, 'r50 must preserve the reduced Monster Truck scale in the main runtime');
+assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r20": "\.\/vehicle\/catalog\.js\?build=20260722-r42"/, 'r50 must preserve the same reduced Monster Truck scale inside The Lot');
 assert.match(index, /"\.\/vehicle\/car-models\.js\?build=20260720-r19": "\.\/vehicle\/car-models\.js\?build=20260720-r22"/, 'The stable r22 outline module cache redirect must remain in place');
 assert.match(main, /await showTheLot\(/, 'Start flow must enter the track-first Lot wrapper before racing');
 assert.match(main, /maxSpeed: MAX_SPEED \* state\.vehicleTuning\.topSpeedMultiplier/, 'Selected top speed must reach physics');
@@ -66,7 +66,8 @@ assert.doesNotMatch(main, /wayne-wu\/webgpu-crowd-simulation/, 'Production must 
 assert.match(lapSystem, /carId: state\.vehicleId \|\| 'sedan'/, 'Completed laps must remember their car model');
 assert.match(lapSystem, /carColor: state\.vehicleColor \|\| '#ffd43b'/, 'Completed laps must remember their paint colour');
 assert.match(lapSystem, /carSecondaryColor: state\.vehicleSecondaryColor \|\| '#f8f9fa'/, 'Completed laps must remember secondary paint');
-assert.match(rivalStorage, /version: 5/, 'Rival storage schema must include track identity and secondary paint metadata');
+assert.match(rivalStorage, /version: 6/, 'Rival storage schema must preserve track identity, geometry revision and secondary paint metadata');
+assert.match(rivalStorage, /trackRevision: storageTrackId\(activeTrackId\)/, 'Rival storage must identify geometry revisions');
 assert.match(rivalStorage, /normalizeVehicleId\(lap\.carId\)/, 'Loaded rivals must normalize stored car ids');
 assert.match(rivalStorage, /normalizeVehicleColor\(lap\.carColor\)/, 'Loaded rivals must normalize stored car colours');
 assert.match(rivalStorage, /normalizeVehicleSecondaryColor\(lap\.carSecondaryColor\)/, 'Loaded rivals must normalize secondary paint');
