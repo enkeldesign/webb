@@ -34,7 +34,7 @@ const [index, lot, css, carModels, main, lapSystem, rivalStorage] = await Promis
   fs.readFile(new URL('../../turn/race/rival-storage.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.23 · Build 2026\.07\.22-r40/);
+assert.match(index, /TURN v1\.3\.24 · Build 2026\.07\.22-r41/);
 assert.match(lot, /input\.type = 'color'/, 'The Lot must invoke the browser or OS colour picker');
 assert.match(lot, /input\.addEventListener\('input'/, 'Native picker changes must preview immediately');
 assert.doesNotMatch(lot, /CAR_PALETTE|makeColorButton/, 'The production Lot must not render the custom palette');

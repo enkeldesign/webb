@@ -28,6 +28,7 @@ export function beginTimedLapState({ state, samples, now, showMessage }) {
 
   state.lapActive = true;
   state.lapCheckpointIndex = 0;
+  state.lapInvalid = false;
   state.lapStartedAt = now;
   state.lapElapsed = 0;
   state.lapPreviousPosition = snapshotPosition(state.position);
@@ -61,7 +62,7 @@ export function updateLapProgressState({
   const startGateHalfWidth = trackWidth * START_GATE_HALF_WIDTH_FACTOR;
   const nextCheckpoint = checkpoints[state.lapCheckpointIndex];
 
-  if (state.lapActive && nextCheckpoint != null) {
+  if (state.lapActive && !state.lapInvalid && nextCheckpoint != null) {
     const checkpointSample = checkpointSampleAt(samples, nextCheckpoint);
     const movingForwardThroughGate = state.velocity.dot(checkpointSample.tangent) > 2;
     const crossedCheckpointGate = crossedForwardGate(
@@ -77,6 +78,18 @@ export function updateLapProgressState({
 
     if (movingForwardThroughGate && (crossedCheckpointGate || insideCheckpointGate)) {
       state.lapCheckpointIndex += 1;
+    } else if (crossedLaterCheckpointGate({
+      state,
+      previousPosition,
+      currentPosition,
+      samples,
+      checkpoints,
+      checkpointGateHalfWidth
+    })) {
+      // Crossing a later ordered gate proves that the required route was skipped.
+      // Keep timing internally for rival playback, but the HUD can stop presenting
+      // the attempt as a meaningful lap time from this point onward.
+      state.lapInvalid = true;
     }
   }
 
@@ -98,7 +111,7 @@ export function updateLapProgressState({
   if (crossedStartOnTrack) {
     if (!state.lapActive) {
       beginTimedLap(now);
-    } else if (state.lapCheckpointIndex >= checkpoints.length) {
+    } else if (!state.lapInvalid && state.lapCheckpointIndex >= checkpoints.length) {
       completeLap(now);
     } else {
       publishLapInvalid({ reason: 'missed-checkpoint' });
@@ -185,6 +198,7 @@ export function completeLapState({
   }
 
   state.lapCheckpointIndex = 0;
+  state.lapInvalid = false;
   state.lapActive = true;
   state.lap += 1;
   state.lapStartedAt = now;
@@ -231,6 +245,22 @@ export function crossedForwardGate(previousPosition, currentPosition, gateSample
   const lateralDistance = Math.abs((crossingX - centerX) * nx + (crossingZ - centerZ) * nz);
 
   return lateralDistance <= halfWidth;
+}
+
+function crossedLaterCheckpointGate({
+  state,
+  previousPosition,
+  currentPosition,
+  samples,
+  checkpoints,
+  checkpointGateHalfWidth
+}) {
+  for (let index = state.lapCheckpointIndex + 1; index < checkpoints.length; index += 1) {
+    const sample = checkpointSampleAt(samples, checkpoints[index]);
+    if (state.velocity.dot(sample.tangent) <= 2) continue;
+    if (crossedForwardGate(previousPosition, currentPosition, sample, checkpointGateHalfWidth)) return true;
+  }
+  return false;
 }
 
 function publishLapResult(detail) {

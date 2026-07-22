@@ -17,10 +17,12 @@ export function updateHudState({
   findNearestTrack,
   setRacePosition
 }) {
+  const lapInvalid = state.lapActive && state.lapInvalid === true;
   setText(speedEl, Math.round(state.speed * 3.6));
   setText(lapEl, state.lap);
-  setText(lapTimeEl, formatTime(state.lapElapsed));
+  setText(lapTimeEl, lapInvalid ? 'INVALID LAP' : formatTime(state.lapElapsed));
   setText(bestTimeEl, formatTime(state.bestTime));
+  lapTimeEl.closest?.('.chip')?.classList.toggle('is-invalid-lap', lapInvalid);
 
   const driveDisplay = state.throttle >= state.brake ? state.throttle : -state.brake;
   const drivePercent = Math.round(driveDisplay * 100);

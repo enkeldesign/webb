@@ -24,6 +24,7 @@ function makeState({
     recording,
     lapStartedAt: 0,
     lapCheckpointIndex: 12,
+    lapInvalid: false,
     lapActive: true,
     lap: 1,
     lapElapsed,
@@ -67,6 +68,7 @@ try {
   assert.equal(result.finishedTime, 13.5);
   assert.equal(result.position, 5, 'A lap slower than all four rivals must finish fifth');
   assert.equal(result.total, 5, 'The result must include the player plus the four rivals that actually raced');
+  assert.equal(state.lapInvalid, false, 'A newly started lap after a valid finish must begin clean');
   assert.deepEqual(state.competitorLaps.map((lap) => lap.time), [10, 11, 12, 13], 'A fifth-place lap need not replace a saved rival');
   assert.equal(publishedResults.at(-1)?.type, 'turn:lap-result');
   assert.deepEqual(publishedResults.at(-1)?.detail, { position: 5, total: 5, time: 13.5 });
@@ -119,26 +121,30 @@ try {
   else globalThis.dispatchEvent = originalDispatchEvent;
 }
 
-const [index, app, lapSystem, gameState, toast, toastCss, onboarding, onboardingCss] = await Promise.all([
+const [index, app, lapSystem, gameState, hud, styles, toast, toastCss, onboarding, onboardingCss] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/race/lap-system.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/race/game-state.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/ui/hud.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/styles.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/lap-result-toast.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/lap-result-toast.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/rival-onboarding.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/rival-onboarding.css', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.3\.23 · Build 2026\.07\.22-r40/);
-assert.match(index, /lap-result-toast\.css\?build=20260722-r40/);
-assert.match(index, /rival-onboarding\.css\?build=20260722-r40/);
-assert.match(index, /"\.\/race\/lap-system\.js\?build=20260720-r19": "\.\/race\/lap-system\.js\?build=20260721-r38"/, 'r40 must preserve the corrected single-source physical lap system');
-assert.match(index, /"\.\/race\/game-state\.js": "\.\/race\/game-state\.js\?build=20260722-r39"/, 'r40 must preserve the restart-message removal');
+assert.match(index, /TURN v1\.3\.24 · Build 2026\.07\.22-r41/);
+assert.match(index, /lap-result-toast\.css\?build=20260722-r41/);
+assert.match(index, /rival-onboarding\.css\?build=20260722-r41/);
+assert.match(index, /"\.\/race\/lap-system\.js\?build=20260720-r19": "\.\/race\/lap-system\.js\?build=20260722-r41"/, 'r41 must serve the early invalid-lap detector');
+assert.match(index, /"\.\/race\/game-state\.js": "\.\/race\/game-state\.js\?build=20260722-r41"/, 'r41 must serve reset-safe invalid-lap state');
 assert.match(app, /installLapResultToast\(\)/, 'The lap result toast must install before the game runtime starts');
 assert.match(app, /installRivalOnboarding\(\)/, 'The rival onboarding plate must install before the game runtime starts');
 assert.match(lapSystem, /turn:lap-result/, 'Completed lap finish must publish one frozen result event');
 assert.match(lapSystem, /turn:lap-invalid/, 'Incomplete checkpoint chains must publish explicit invalid-lap feedback');
+assert.match(lapSystem, /crossedLaterCheckpointGate/, 'Crossing a later gate before the required one must detect an irrecoverably invalid attempt');
+assert.match(lapSystem, /state\.lapInvalid = true/, 'The invalid attempt must stay marked until the next lap begins');
 assert.match(lapSystem, /suppressNextLapStartMessage = true/, 'Invalid-lap feedback must not be obscured by a competing GO message');
 assert.doesNotMatch(lapSystem, /crossedStartByProgress/, 'Start and finish must use only the swept physical line crossing');
 assert.match(lapSystem, /const completedLap = finishedTime > 5/, 'Result visibility must be separated from replay-save eligibility');
@@ -146,6 +152,11 @@ assert.match(lapSystem, /const validLap = completedLap && state\.recording\.leng
 assert.match(lapSystem, /if \(completedLap\) \{\s*publishLapResult/s, 'Every completed lap must publish a result, including last place and unsaved replays');
 assert.doesNotMatch(lapSystem, /TOP ['"] \+|NEW BEST|showMessage\?\.\(message\)/, 'The retired duplicate lap-ranking message must stay removed');
 assert.match(lapSystem, /raceRivals\.filter\(\(lap\) => lap\.time < finishedTime\)\.length/, 'Finish placement must be calculated against the rivals from the completed race');
+assert.match(gameState, /state\.lapInvalid = false/, 'Restart Lap and race staging must clear invalid-lap status');
+assert.match(hud, /lapInvalid \? 'INVALID LAP' : formatTime\(state\.lapElapsed\)/, 'The TIME card must stop displaying a running time once the lap is invalid');
+assert.match(hud, /classList\.toggle\('is-invalid-lap', lapInvalid\)/, 'The TIME card must expose a persistent invalid visual state');
+assert.match(styles, /\.chip\.is-invalid-lap \{\s*background: #ff6b6b;/s, 'Invalid laps must turn the TIME card red');
+assert.match(styles, /\.chip\.is-invalid-lap strong/, 'INVALID LAP must have dedicated compact typography');
 assert.match(toast, /TOAST_VISIBLE_MS = 4000/, 'The result should remain readable for a few seconds');
 assert.match(toast, /LAST LAP/, 'Valid laps must keep the requested result label');
 assert.match(toast, /LAP INVALID/, 'Invalid laps must replace LAST LAP with an explicit failure label');
@@ -181,4 +192,4 @@ assert.match(onboardingCss, /\.rival-onboarding-copy/, 'The CHASE YOUR BEST copy
 assert.match(onboardingCss, /background: var\(--rival-onboarding-color, var\(--yellow\)\)/, 'The onboarding plate must expose the rival colour through a CSS custom property');
 assert.match(onboardingCss, /border-radius: 999px/, 'The onboarding must keep the compact pill-plate language of the old READY message');
 
-console.log('TURN unified lap feedback and rotating first-rival onboarding regression passed.');
+console.log('TURN persistent INVALID LAP HUD, unified lap feedback and first-rival onboarding regression passed.');
