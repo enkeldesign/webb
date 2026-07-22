@@ -61,7 +61,7 @@ assert.equal(rebuilt.index, brute.index, 'Rebuilt track index must remain exact 
 assert.equal(rebuilt.sample, trackB[brute.index], 'Rebuilt index must return the active track sample object');
 assert.ok(spatialIndex.getStats().queryCount >= 1, 'Rebuilt index diagnostics must restart and record new-track queries');
 
-const [index, trackCatalog, trackManager, trackSelect, trackSelectCss, lotWrapper, airportWorld, spatialSource, rivalStorage] = await Promise.all([
+const [index, trackCatalog, trackManager, trackSelect, trackSelectCss, lotWrapper, airportWorld, spatialSource, rivalStorage, hud] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/track-manager.js', import.meta.url), 'utf8'),
@@ -70,7 +70,8 @@ const [index, trackCatalog, trackManager, trackSelect, trackSelectCss, lotWrappe
   fs.readFile(new URL('../../turn/garage/lot-track-select.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/airport-world.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/race/track-spatial-index.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/race/rival-storage.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/race/rival-storage.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/ui/hud.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(index, /TURN v1\.5\.0 · Build 2026\.07\.22-r47/);
@@ -101,6 +102,8 @@ assert.match(trackSelect, /TRACK → CAR → RACE/);
 assert.match(trackSelect, /getStoredBestTime\(track\.id\)/, 'Selector cards must show track-specific records');
 assert.match(trackSelectCss, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/, 'The two launch tracks must present as peer choices');
 
+assert.match(trackManager, /initialTrackId: chosenThisSession \? activeTrackId : loadTrackSelection\(\)/, 'Later Lot visits must reopen track choice with the current course preselected');
+assert.doesNotMatch(trackManager, /if \(!force && chosenThisSession\) return activeTrackId/, 'Track selection must not be skipped on later visits to The Lot');
 assert.match(trackManager, /replaceSamples\(currentRuntime\.samples, airportTrack\.samples\)/);
 assert.match(trackManager, /currentRuntime\.trackSpatialIndex\.replaceSamples\(currentRuntime\.samples\)/, 'The shared exact spatial index must rebuild when changing tracks');
 assert.match(trackManager, /currentRuntime\.world\.visible = false/);
@@ -109,6 +112,10 @@ assert.match(trackManager, /currentRuntime\.world\.visible = true/);
 assert.match(trackManager, /loadRivalsState\([\s\S]*trackId: nextTrackId/, 'Changing track must reload only that track’s rivals');
 assert.match(trackManager, /clearRivalsState\(currentRuntime\.state, \{ trackId: activeTrackId \}\)/, 'Reset Rivals must remain scoped to the active track');
 assert.doesNotMatch(trackManager, /setAnimationLoop|requestAnimationFrame|setInterval/, 'Track switching must not create another render loop');
+
+assert.match(hud, /cached\.firstSample === firstSample/, 'The minimap cache must notice when the shared samples array is repopulated for another track');
+assert.match(hud, /cached\.lastSample === lastSample/, 'The minimap cache must not reuse the previous track drawing after a course switch');
+assert.match(hud, /firstSample,\s*lastSample,/, 'The cached minimap must remember the active course sample identities');
 
 assert.match(spatialSource, /replaceSamples\(nextSamples\)/, 'The shared spatial index must expose a controlled rebuild hook');
 assert.match(spatialSource, /return rebuild\(nextSamples\)/);
@@ -125,7 +132,7 @@ assert.match(airportWorld, /new THREE\.BoxGeometry\(455, 0\.1, 62\)/, 'Airport m
 assert.doesNotMatch(airportWorld, /GLTFLoader|fetch\(|new Audio\(/, 'Airport scenery must stay deterministic and offline-friendly');
 assert.doesNotMatch(airportWorld, /setAnimationLoop|requestAnimationFrame|setInterval/, 'Airport scenery must add no independent animation loop');
 
-console.log('TURN multi-track selection, Airport world and track-scoped rival regression passed.');
+console.log('TURN multi-track selection, Airport world, minimap switching and track-scoped rival regression passed.');
 
 function makeSamples(points) {
   return points.map(([x, z]) => ({ point: { x, z } }));
