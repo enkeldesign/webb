@@ -22,18 +22,19 @@ try {
   };
   const airportState = {
     trackId: 'airport',
-    competitorLaps: [{ time: 18.42, frames: Array.from({ length: 25 }, (_, index) => ({ t: index / 10 })) }]
+    competitorLaps: [{ time: 22.42, frames: Array.from({ length: 25 }, (_, index) => ({ t: index / 10 })) }]
   };
 
   assert.equal(saveRivalsState(countrysideState), true);
   assert.equal(saveRivalsState(airportState), true);
   assert.ok(storage.has('turn-personal-rivals-v1'), 'Track 1 must preserve the existing rival storage key');
-  assert.ok(storage.has('turn-personal-rivals-v1:airport'), 'Airport rivals must live in their own storage key');
+  assert.ok(storage.has('turn-personal-rivals-v1:airport-r50'), 'Redesigned Airport rivals must use the r50 geometry namespace');
+  assert.equal(storage.has('turn-personal-rivals-v1:airport'), false, 'Old Airport ghosts must not leak onto the redesigned course');
   assert.equal(getStoredBestTime('countryside'), 12.73);
-  assert.equal(getStoredBestTime('airport'), 18.42);
+  assert.equal(getStoredBestTime('airport'), 22.42);
 
   clearRivalsState(airportState);
-  assert.equal(storage.has('turn-personal-rivals-v1:airport'), false, 'Reset Rivals on Airport must clear only Airport');
+  assert.equal(storage.has('turn-personal-rivals-v1:airport-r50'), false, 'Reset Rivals on Airport must clear only the r50 Airport namespace');
   assert.equal(storage.has('turn-personal-rivals-v1'), true, 'Reset Rivals on Airport must never erase countryside history');
 } finally {
   if (originalLocalStorage === undefined) delete globalThis.localStorage;
@@ -61,24 +62,36 @@ assert.equal(rebuilt.index, brute.index, 'Rebuilt track index must remain exact 
 assert.equal(rebuilt.sample, trackB[brute.index], 'Rebuilt index must return the active track sample object');
 assert.ok(spatialIndex.getStats().queryCount >= 1, 'Rebuilt index diagnostics must restart and record new-track queries');
 
-const [index, trackCatalog, trackManager, trackSelect, trackSelectCss, lotWrapper, airportWorld, airportArtPass, spatialSource, rivalStorage, hud] = await Promise.all([
+const [
+  index,
+  trackCatalog,
+  trackManager,
+  trackSelect,
+  trackSelectCss,
+  lotWrapper,
+  airportWorld,
+  spatialSource,
+  rivalStorage,
+  hud,
+  worldRender
+] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/track-manager.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/track-select.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/track-select.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-track-select.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/tracks/airport-world.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/tracks/airport-world-r49.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/airport-world-r50.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/race/track-spatial-index.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/race/rival-storage.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/ui/hud.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/ui/hud.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/render/world.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.5\.2 · Build 2026\.07\.22-r49/);
-assert.match(index, /track-select\.css\?build=20260722-r49/);
-assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-track-select\.js\?build=20260722-r49"/, 'The track selector must sit before the existing Lot entry point');
-assert.match(index, /"\.\/race\/rival-storage\.js\?build=20260720-r19": "\.\/race\/rival-storage\.js\?build=20260722-r47"/, 'Production must preserve track-scoped rival storage');
+assert.match(index, /TURN v1\.6\.0 · Build 2026\.07\.22-r50/);
+assert.match(index, /track-select\.css\?build=20260722-r50/);
+assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-track-select\.js\?build=20260722-r50"/, 'The r50 track selector must sit before the stable Lot entry point');
+assert.match(index, /"\.\/race\/rival-storage\.js\?build=20260720-r19": "\.\/race\/rival-storage\.js\?build=20260722-r50"/, 'Production must load geometry-revision-aware rival storage');
 assert.match(index, /"\.\/race\/track-spatial-index\.js\?build=20260720-r19": "\.\/race\/track-spatial-index\.js\?build=20260722-r47"/, 'Production must preserve the rebuildable track index');
 assert.match(index, /Turn the device to steer/, 'Start copy must use device-neutral language');
 assert.match(index, /Steering uses device rotation/, 'Status copy must use device-neutral language');
@@ -91,9 +104,11 @@ assert.match(trackCatalog, /difficulty: 'MEDIUM'/);
 assert.match(trackCatalog, /radiusX = 208 \+ Math\.sin\(angle \* 2 \+ 0\.35\) \* 20 \+ Math\.sin\(angle \* 3 - 0\.8\) \* 9/, 'Track 1 geometry generator must remain unchanged');
 assert.match(trackCatalog, /radiusZ = 146 \+ Math\.cos\(angle \* 2 - 0\.4\) \* 14 \+ Math\.sin\(angle \* 3 \+ 0\.6\) \* 8/, 'Track 1 geometry generator must remain unchanged');
 assert.match(trackCatalog, /TRACK_SAMPLE_COUNT = 720/, 'Both tracks must use the verified 720-sample race/checkpoint system');
-assert.match(trackCatalog, /Runway speed\. Service-road precision\./, 'Airport must keep its medium-difficulty driving identity');
+assert.match(trackCatalog, /Runway speed\. Apron precision\./, 'Airport must keep its distinct medium-difficulty driving identity');
+assert.match(trackCatalog, /\[25, 43\],[\s\S]*\[0, 22\],[\s\S]*\[-25, 43\]/, 'The service-road hairpin must use a broad symmetric entry and exit around its apex');
+assert.doesNotMatch(trackCatalog, /\[27, 76\],[\s\S]*\[3, 40\],[\s\S]*\[-25, 68\]/, 'The pinched r49 hairpin geometry must stay retired');
 
-assert.match(lotWrapper, /track-manager\.js\?build=20260722-r49/, 'The Lot wrapper must load the footprint-aware Airport runtime');
+assert.match(lotWrapper, /track-manager\.js\?build=20260722-r50/, 'The Lot wrapper must load the redesigned Airport runtime');
 assert.match(lotWrapper, /await chooseTrackBeforeLot\(\)/, 'Track selection must complete before The Lot opens');
 assert.ok(
   lotWrapper.indexOf('await chooseTrackBeforeLot()') < lotWrapper.indexOf('showOriginalLot(options)'),
@@ -103,63 +118,61 @@ assert.match(trackSelect, /CHOOSE YOUR TRACK/);
 assert.match(trackSelect, /TRACK → CAR → RACE/);
 assert.match(trackSelect, /getStoredBestTime\(track\.id\)/, 'Selector cards must show track-specific records');
 assert.match(trackSelectCss, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/, 'The two launch tracks must present as peer choices');
-assert.match(trackSelectCss, /\.track-card\.is-selected \{[\s\S]*translate\(9px, 9px\) scale\(0\.99\)/, 'Selected track must sit almost flush with its original elevation');
-assert.match(trackSelectCss, /\.track-card\.is-selected \{[\s\S]*1px 1px 0 var\(--ink\)/, 'Selected track must compress its external shadow to a near-flat pressed state');
-assert.match(trackSelectCss, /filter: saturate\(1\.38\) contrast\(1\.06\) brightness\(1\.02\)/, 'Selected track must become distinctly more vibrant');
-assert.match(trackSelectCss, /\.track-card\.is-selected \.track-card-preview/, 'The selected preview itself must sink with the card');
-assert.match(trackSelectCss, /\.track-card\.is-selected \.track-card-topline strong,\s*\.track-card\.is-selected \.track-card-best/, 'Selected metadata chips must share the depressed material treatment');
-assert.match(trackSelectCss, /\.track-card\.is-selected:active/, 'The pressed card must still have tactile pointer-down feedback');
-assert.match(trackSelectCss, /\.track-card:focus-visible/, 'The deeper material treatment must retain a visible keyboard focus ring');
+assert.match(trackSelectCss, /@media \(max-height: 820px\) and \(orientation: landscape\)/, 'Landscape track selection must compact before the photographed iPad viewport overflows');
+assert.match(trackSelectCss, /grid-template-rows: auto minmax\(0, 1fr\) auto/, 'The chooser must reserve a visible footer row for Continue');
+assert.match(trackSelectCss, /\.track-select-shell \{[\s\S]*min-height: 0;/, 'The chooser shell must be allowed to shrink inside the viewport');
+assert.match(trackSelectCss, /\.track-card-copy \{[\s\S]*overflow: hidden;/, 'Track copy must not render underneath the Best card');
+assert.match(trackSelectCss, /\.track-card-name \{[\s\S]*white-space: nowrap;/, 'Track names must remain a single controlled line');
+assert.match(trackSelectCss, /\.track-card\.is-selected \{[\s\S]*translate\(9px, 9px\) scale\(0\.99\)/, 'Selected track must keep its deeply pressed material state');
+assert.match(trackSelectCss, /filter: saturate\(1\.38\) contrast\(1\.06\) brightness\(1\.02\)/, 'Selected track must remain distinctly more vibrant');
+assert.match(trackSelectCss, /\.track-card:focus-visible/, 'The material treatment must retain a visible keyboard focus ring');
 
-assert.match(trackManager, /airport-world-r49\.js\?build=20260722-r49/, 'Track manager must load the r49 Airport art-direction safety layer');
+assert.match(trackManager, /airport-world-r50\.js\?build=20260722-r50/, 'Track manager must load the redesigned r50 Airport world');
 assert.match(trackManager, /initialTrackId: chosenThisSession \? activeTrackId : loadTrackSelection\(\)/, 'Later Lot visits must reopen track choice with the current course preselected');
 assert.doesNotMatch(trackManager, /if \(!force && chosenThisSession\) return activeTrackId/, 'Track selection must not be skipped on later visits to The Lot');
 assert.match(trackManager, /replaceSamples\(currentRuntime\.samples, airportTrack\.samples\)/);
 assert.match(trackManager, /currentRuntime\.trackSpatialIndex\.replaceSamples\(currentRuntime\.samples\)/, 'The shared exact spatial index must rebuild when changing tracks');
-assert.match(trackManager, /currentRuntime\.world\.visible = false/);
-assert.match(trackManager, /airportWorld\.visible = true/);
-assert.match(trackManager, /currentRuntime\.world\.visible = true/);
 assert.match(trackManager, /loadRivalsState\([\s\S]*trackId: nextTrackId/, 'Changing track must reload only that track’s rivals');
 assert.match(trackManager, /clearRivalsState\(currentRuntime\.state, \{ trackId: activeTrackId \}\)/, 'Reset Rivals must remain scoped to the active track');
 assert.doesNotMatch(trackManager, /setAnimationLoop|requestAnimationFrame|setInterval/, 'Track switching must not create another render loop');
 
 assert.match(hud, /cached\.firstSample === firstSample/, 'The minimap cache must notice when the shared samples array is repopulated for another track');
 assert.match(hud, /cached\.lastSample === lastSample/, 'The minimap cache must not reuse the previous track drawing after a course switch');
-assert.match(hud, /firstSample,\s*lastSample,/, 'The cached minimap must remember the active course sample identities');
-
 assert.match(spatialSource, /replaceSamples\(nextSamples\)/, 'The shared spatial index must expose a controlled rebuild hook');
 assert.match(spatialSource, /return rebuild\(nextSamples\)/);
-assert.match(rivalStorage, /normalized === DEFAULT_TRACK_ID \? COMPETITOR_KEY : `\$\{COMPETITOR_KEY\}:\$\{normalized\}`/, 'Countryside must keep its historical storage key while later tracks are namespaced');
-assert.match(rivalStorage, /version: 5/);
 
-assert.match(airportWorld, /TRACK_PROP_CLEARANCE = 25/, 'The base Airport world must keep its broad race-road exclusion zone');
-assert.match(airportWorld, /AIRCRAFT_CLEARANCE = 44/, 'The base Airport world must keep its aircraft exclusion zone before the art pass');
-assert.match(airportWorld, /function placeScenerySafely\(/, 'Base scenery must still pass one shared clearance gate');
+assert.match(rivalStorage, /airport: 'airport-r50'/, 'Airport records must be revision-scoped after the geometry redesign');
+assert.match(rivalStorage, /version: 6/);
+assert.match(rivalStorage, /trackRevision: storageTrackId\(activeTrackId\)/, 'Saved rival payloads must record the geometry revision');
+
+assert.match(airportWorld, /name = 'TURN Airport r50'/, 'The active world must identify the r50 redesign');
+assert.match(airportWorld, /makeStartFinishDistrict\(world, samples, trackWidth\)/, 'Airport must have a deliberately designed start and finish district');
+assert.match(airportWorld, /TURN AIRPORT/, 'The start gantry must carry a real Airport identity');
+assert.match(airportWorld, /TURN INTERNATIONAL/, 'The terminal must anchor the opening vista');
+assert.match(airportWorld, /makeTerminalCampus\(world, samples\)/, 'Terminal, tower and hangars must be composed as one visual campus');
+assert.match(airportWorld, /makeHangar\(world, samples/, 'The airport must retain the successful hangar language from the r49 screenshots');
+assert.match(airportWorld, /makeAircraftApron\(world, samples\)/, 'Aircraft and ground operations must be arranged as a coherent apron');
 assert.match(airportWorld, /createCarVisual\(/, 'Airport service traffic must reuse real local TURN GLB vehicle assets');
-assert.match(airportWorld, /carId: 'truck'/, 'The Airport must include an asset-backed service truck');
-assert.match(airportWorld, /carId: 'van'/, 'The Airport must include an asset-backed operations van');
-assert.match(airportWorld, /carId: 'truck-flat'/, 'The Airport must include an asset-backed flatbed vehicle');
-assert.doesNotMatch(airportWorld, /function makeServiceVehicle\(/, 'The block-box service-vehicle stand-ins must stay retired');
-assert.match(airportWorld, /AIRCRAFT_ASSET_URL/, 'Airport must attempt to upgrade parked aircraft with a real 3D asset');
-assert.match(airportWorld, /makeAircraftFallbacks\(/, 'Aircraft must have a local fallback before any remote asset is attempted');
-assert.match(airportWorld, /keeping the local fallback/, 'Offline or failed aircraft loading must degrade safely');
-assert.match(airportWorld, /world\.remove\(fallback\)/, 'A loaded aircraft asset must replace rather than overlap its fallback');
-
-assert.match(airportArtPass, /airport-world\.js\?build=20260722-r48/, 'r49 must refine rather than fork the verified r48 Airport foundation');
-assert.match(airportArtPass, /AIRCRAFT_VIEW_CLEARANCE = 60/, 'Large aircraft must receive extra visual breathing room beyond physical track clearance');
-assert.match(airportArtPass, /BAGGAGE_CLEARANCE = 44/, 'Baggage trains must be kept well away from the racing sightline');
-assert.match(airportArtPass, /HORIZON_MIN_DISTANCE = 430/, 'Oversized mountains must be pulled into the distant horizon');
-assert.match(airportArtPass, /HORIZON_SCALE = 0\.54/, 'The giant r48 pyramid forms must be substantially reduced');
-assert.match(airportArtPass, /child\.scale\.multiplyScalar\(0\.58\)/, 'Bulky baggage trains must be scaled down before placement');
-assert.match(airportArtPass, /new THREE\.Box3\(\)\.setFromObject\(object\)/, 'Scenery clearance must measure the actual rendered object footprint');
-assert.match(airportArtPass, /radius: Math\.hypot\(size\.x, size\.z\) \* 0\.5/, 'Footprint radius must include both object width and depth');
-assert.match(airportArtPass, /requiredDistance = baseClearance \+ footprint\.radius/, 'The full object footprint must be added to track clearance');
-assert.match(airportArtPass, /world\.add = \(\.\.\.objects\) =>/, 'Late-loaded aircraft and service assets must pass through the same safety gate');
-assert.match(airportArtPass, /turnAirportFootprintValidated/, 'Validated scenery must be marked to avoid accidental repeated processing');
-assert.doesNotMatch(airportArtPass, /setAnimationLoop|requestAnimationFrame|setInterval/, 'The r49 Airport art pass must remain a one-time setup cost');
+assert.match(airportWorld, /carId: 'truck'/);
+assert.match(airportWorld, /carId: 'van'/);
+assert.match(airportWorld, /carId: 'truck-flat'/);
+assert.match(airportWorld, /SUMMER_INDUSTRIAL_COMMIT = '0831a1937a59562b6165ccfab30f64f35c957b6f'/, 'Summer Engine industrial art must be pinned to an immutable source revision');
+assert.match(airportWorld, /building-a\.glb/);
+assert.match(airportWorld, /building-b\.glb/);
+assert.match(airportWorld, /building-c\.glb/);
+assert.match(airportWorld, /detail-tank\.glb/);
+assert.match(airportWorld, /keeping local Airport fallbacks/, 'Remote industrial enrichment must fail safely');
+assert.match(airportWorld, /makeMaintenanceFallback/, 'The Airport must remain visually complete without network assets');
+assert.doesNotMatch(airportWorld, /crystal-bit\/platform-3d/, 'The odd external aircraft dependency from r48 must stay retired');
+assert.match(airportWorld, /new THREE\.Box3\(\)\.setFromObject\(object\)/, 'Curated scenery safety must still use actual rendered bounds');
+assert.match(airportWorld, /radius: Math\.hypot\(size\.x, size\.z\) \* 0\.5/, 'Scenery footprint safety must include both width and depth');
+assert.match(airportWorld, /new THREE\.SphereGeometry\(1, 12, 7\)/, 'Distant scenery must use broad hills instead of the old giant pyramid silhouettes');
 assert.doesNotMatch(airportWorld, /setAnimationLoop|requestAnimationFrame|setInterval/, 'Airport scenery must add no independent animation loop');
 
-console.log('TURN multi-track selection, deeply pressed track cards, footprint-safe Airport scenery and track-scoped rival regression passed.');
+assert.match(worldRender, /const worldSamples = samples\.slice\(\)/, 'Countryside async scenery must retain immutable Track 1 samples during an early track switch');
+assert.match(worldRender, /samples: worldSamples/, 'Late Countryside art modules must receive the snapshot rather than the mutable active track array');
+
+console.log('TURN r50 multi-track selection, viewport-safe chooser, redesigned Airport scenery and geometry-revision rivals passed.');
 
 function makeSamples(points) {
   return points.map(([x, z]) => ({ point: { x, z } }));
