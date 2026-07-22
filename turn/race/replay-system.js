@@ -1,10 +1,24 @@
 const REPLAY_FRAME_INTERVAL = 0.045;
+const replayFrameCache = new WeakMap();
 
 export function replayFrameAt(lap, time) {
   const frames = lap?.frames || [];
   if (frames.length < 2) return null;
 
   const wrappedTime = Number.isFinite(lap?.time) && lap.time > 0 ? time % lap.time : time;
+  const cacheable = lap !== null && typeof lap === 'object';
+  if (cacheable) {
+    const cached = replayFrameCache.get(lap);
+    if (
+      cached &&
+      cached.frames === frames &&
+      cached.frameCount === frames.length &&
+      cached.time === wrappedTime
+    ) {
+      return cached.frame;
+    }
+  }
+
   let low = 0;
   let high = frames.length - 1;
 
@@ -18,8 +32,7 @@ export function replayFrameAt(lap, time) {
   const a = frames[Math.max(0, low - 1)];
   const span = Math.max(0.001, b.t - a.t);
   const alpha = clamp((wrappedTime - a.t) / span, 0, 1);
-
-  return {
+  const frame = {
     x: lerp(a.x, b.x, alpha),
     z: lerp(a.z, b.z, alpha),
     h: lerpAngle(a.h, b.h, alpha),
@@ -27,6 +40,16 @@ export function replayFrameAt(lap, time) {
     d: lerp(a.d, b.d, alpha),
     p: Number.isFinite(a.p) && Number.isFinite(b.p) ? lerp(a.p, b.p, alpha) : null
   };
+
+  if (cacheable) {
+    replayFrameCache.set(lap, {
+      frames,
+      frameCount: frames.length,
+      time: wrappedTime,
+      frame
+    });
+  }
+  return frame;
 }
 
 export function recordReplayFrame(state, interval = REPLAY_FRAME_INTERVAL) {

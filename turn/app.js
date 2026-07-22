@@ -6,6 +6,9 @@ function withBuild(path) {
   return url.href;
 }
 
+const { installPerformanceProfile } = await import(withBuild('./performance-profile.js'));
+installPerformanceProfile();
+
 const { installTurnAudio } = await import(withBuild('./audio/audio-system.js'));
 installTurnAudio();
 

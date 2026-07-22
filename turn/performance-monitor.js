@@ -98,6 +98,7 @@ export function installPerformanceMonitor({ getMode, getTrackStats } = {}) {
         label: activeLabel,
         mode: getMode?.() || null,
         samples: timeline.count,
+        profile: currentPerformanceProfile(),
         ...summary,
         ...render,
         trackChecksPerQuery: track.average
@@ -113,12 +114,24 @@ export function installPerformanceMonitor({ getMode, getTrackStats } = {}) {
 
   globalThis.__turnPerfMonitor = activeMonitor;
   globalThis.__turnGetPerfSnapshot = () => activeMonitor?.getSnapshot() || null;
-  panel.textContent = 'TURN PERF · collecting…';
+  panel.textContent = `TURN PERF · collecting…\n${currentPerformanceProfile().label}`;
   return activeMonitor;
 }
 
 export function recordPerformanceFrame(label, renderers, now, options) {
   activeMonitor?.record(label, renderers, now, options);
+}
+
+function currentPerformanceProfile() {
+  const profile = globalThis.__turnPerformanceProfile;
+  if (profile?.label) return profile;
+  return Object.freeze({
+    active: false,
+    dprCap: 2,
+    shadowsEnabled: true,
+    shadowMapSize: 1024,
+    label: 'DPR≤2.00 · shadows 1024'
+  });
 }
 
 function normalizeRenderers(renderers) {
@@ -165,9 +178,10 @@ function summarizeTrackChecks(current, previous) {
 function formatSnapshot(snapshot) {
   return [
     `TURN PERF · ${snapshot.label}`,
+    snapshot.profile?.label || 'DPR≤2.00 · shadows 1024',
     `${snapshot.fps.toFixed(1)} fps · p50 ${snapshot.p50Ms.toFixed(1)} · p95 ${snapshot.p95Ms.toFixed(1)} ms`,
     `${snapshot.drawCalls} calls · ${compactNumber(snapshot.triangles)} tris · ${snapshot.renderers} renderer${snapshot.renderers === 1 ? '' : 's'}`,
-    `${snapshot.geometries} geo · ${snapshot.textures} tex · DPR ${snapshot.pixelRatio.toFixed(2)}`,
+    `${snapshot.geometries} geo · ${snapshot.textures} tex · actual DPR ${snapshot.pixelRatio.toFixed(2)}`,
     `track ${snapshot.trackChecksPerQuery.toFixed(1)} checks/query · >33ms ${snapshot.slowPercent.toFixed(1)}%`
   ].join('\n');
 }

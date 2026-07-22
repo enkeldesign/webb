@@ -10,17 +10,17 @@ const [index, app, audio, controls, catalogSource] = await Promise.all([
 ]);
 const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
 
-assert.match(index, /TURN v1\.3\.25 · Build 2026\.07\.22-r42/);
-assert.match(index, /\.\/app\.js\?build=20260722-r42/);
+assert.match(index, /TURN v1\.3\.26 · Build 2026\.07\.22-r43/);
+assert.match(index, /\.\/app\.js\?build=20260722-r43/);
 assert.match(
   index,
   /"\.\/vehicle\/catalog\.js\?build=20260720-r19": "\.\/vehicle\/catalog\.js\?build=20260722-r42"/,
-  'The main runtime catalog import must use the r42 vehicle presentation catalog'
+  'The main runtime catalog import must preserve the r42 vehicle presentation catalog'
 );
 assert.match(
   index,
   /"\.\/vehicle\/catalog\.js\?build=20260720-r20": "\.\/vehicle\/catalog\.js\?build=20260722-r42"/,
-  'The Lot must use the same r42 vehicle presentation catalog'
+  'The Lot must preserve the same r42 vehicle presentation catalog'
 );
 
 assert.match(app, /import\(withBuild\('\.\/audio\/audio-system\.js'\)\)/, 'Production must load the central audio module');
