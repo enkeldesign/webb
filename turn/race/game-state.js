@@ -9,6 +9,7 @@ export function installGameModeState(state) {
   state.lapCheckpointIndex = Number.isFinite(state.lapCheckpointIndex) ? state.lapCheckpointIndex : 0;
   state.lapStartedAt = Number.isFinite(state.lapStartedAt) ? state.lapStartedAt : 0;
   state.lapElapsed = Number.isFinite(state.lapElapsed) ? state.lapElapsed : 0;
+  state.lapInvalid = state.lapInvalid === true;
   state.recording = Array.isArray(state.recording) ? state.recording : [];
   state.lapPreviousPosition = validPosition(state.lapPreviousPosition)
     ? { x: Number(state.lapPreviousPosition.x), z: Number(state.lapPreviousPosition.z) }
@@ -62,6 +63,7 @@ export function resetRaceToStage({
   state.lastProgress = state.progress;
   state.nearestTrackIndex = startIndex;
   state.lapCheckpointIndex = 0;
+  state.lapInvalid = false;
   state.lapActive = false;
   state.lapStartedAt = 0;
   state.lapElapsed = 0;
@@ -72,6 +74,7 @@ export function resetRaceToStage({
 }
 
 export function prepareRaceStartState(state) {
+  state.lapInvalid = false;
   state.lapStartedAt = 0;
   state.lapElapsed = 0;
 }
