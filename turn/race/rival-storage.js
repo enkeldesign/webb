@@ -10,14 +10,35 @@ import {
 
 export const RIVAL_LIMIT = 4;
 
+const DEFAULT_TRACK_ID = 'countryside';
 const GHOST_KEY = 'turn-three-ghost-v4';
 const COMPETITOR_KEY = 'turn-personal-rivals-v1';
 const LEGACY_RIVAL_COLORS = ['#38d9ff', '#ff4fa3', '#9775fa', '#ff922b'];
 
-export function saveRivalsState(state) {
+function normalizeTrackId(trackId) {
+  return typeof trackId === 'string' && trackId.trim() ? trackId.trim() : DEFAULT_TRACK_ID;
+}
+
+function rivalKey(trackId) {
+  const normalized = normalizeTrackId(trackId);
+  return normalized === DEFAULT_TRACK_ID ? COMPETITOR_KEY : `${COMPETITOR_KEY}:${normalized}`;
+}
+
+function ghostKey(trackId) {
+  const normalized = normalizeTrackId(trackId);
+  return normalized === DEFAULT_TRACK_ID ? GHOST_KEY : `${GHOST_KEY}:${normalized}`;
+}
+
+function stateTrackId(state, explicitTrackId) {
+  return normalizeTrackId(explicitTrackId || state?.trackId || DEFAULT_TRACK_ID);
+}
+
+export function saveRivalsState(state, { trackId } = {}) {
   try {
-    localStorage.setItem(COMPETITOR_KEY, JSON.stringify({
-      version: 4,
+    const activeTrackId = stateTrackId(state, trackId);
+    localStorage.setItem(rivalKey(activeTrackId), JSON.stringify({
+      version: 5,
+      trackId: activeTrackId,
       laps: state.competitorLaps
     }));
     return true;
@@ -26,13 +47,15 @@ export function saveRivalsState(state) {
   }
 }
 
-export function loadRivalsState({ state, samples, findNearestTrack }) {
+export function loadRivalsState({ state, samples, findNearestTrack, trackId }) {
+  const activeTrackId = stateTrackId(state, trackId);
+
   try {
-    const savedRivals = JSON.parse(localStorage.getItem(COMPETITOR_KEY));
+    const savedRivals = JSON.parse(localStorage.getItem(rivalKey(activeTrackId)));
     let laps = Array.isArray(savedRivals?.laps) ? savedRivals.laps : [];
 
-    if (!laps.length) {
-      const oldGhost = JSON.parse(localStorage.getItem(GHOST_KEY));
+    if (!laps.length && activeTrackId === DEFAULT_TRACK_ID) {
+      const oldGhost = JSON.parse(localStorage.getItem(ghostKey(activeTrackId)));
       if (
         oldGhost &&
         Number.isFinite(oldGhost.bestTime) &&
@@ -53,6 +76,7 @@ export function loadRivalsState({ state, samples, findNearestTrack }) {
     const startSample = samples[0];
     const findProgress = (frame) => findNearestTrack(frame).index / samples.length;
 
+    state.trackId = activeTrackId;
     state.competitorLaps = laps
       .filter(isValidLap)
       .map((lap, index) => ({
@@ -69,23 +93,43 @@ export function loadRivalsState({ state, samples, findNearestTrack }) {
       .slice(0, RIVAL_LIMIT);
 
     syncPrimaryRivalState(state);
-    if (state.competitorLaps.length) saveRivalsState(state);
+    if (state.competitorLaps.length) saveRivalsState(state, { trackId: activeTrackId });
     return state.competitorLaps;
   } catch (_) {
+    state.trackId = activeTrackId;
     state.competitorLaps = [];
     syncPrimaryRivalState(state);
     return state.competitorLaps;
   }
 }
 
-export function clearRivalsState(state) {
+export function clearRivalsState(state, { trackId } = {}) {
+  const activeTrackId = stateTrackId(state, trackId);
+  state.trackId = activeTrackId;
   state.competitorLaps = [];
   syncPrimaryRivalState(state);
 
   try {
-    localStorage.removeItem(COMPETITOR_KEY);
-    localStorage.removeItem(GHOST_KEY);
+    localStorage.removeItem(rivalKey(activeTrackId));
+    localStorage.removeItem(ghostKey(activeTrackId));
   } catch (_) {}
+}
+
+export function getStoredBestTime(trackId = DEFAULT_TRACK_ID) {
+  const activeTrackId = normalizeTrackId(trackId);
+  try {
+    const savedRivals = JSON.parse(localStorage.getItem(rivalKey(activeTrackId)));
+    const times = Array.isArray(savedRivals?.laps)
+      ? savedRivals.laps.map((lap) => Number(lap?.time)).filter(Number.isFinite)
+      : [];
+    if (times.length) return Math.min(...times);
+
+    if (activeTrackId === DEFAULT_TRACK_ID) {
+      const oldGhost = JSON.parse(localStorage.getItem(ghostKey(activeTrackId)));
+      if (Number.isFinite(Number(oldGhost?.bestTime))) return Number(oldGhost.bestTime);
+    }
+  } catch (_) {}
+  return Infinity;
 }
 
 export function syncPrimaryRivalState(state) {
