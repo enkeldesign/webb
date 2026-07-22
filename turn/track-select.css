@@ -100,10 +100,11 @@
   border-radius: 28px;
   background: color-mix(in srgb, var(--track-accent-soft) 52%, #fff8e8);
   color: var(--ink);
-  box-shadow: 9px 9px 0 var(--ink);
+  box-shadow: 10px 10px 0 var(--ink);
   text-align: left;
   font: inherit;
   transform: translate(0, 0) scale(1);
+  filter: saturate(0.78) brightness(0.98);
   transition:
     transform 150ms cubic-bezier(0.2, 0.8, 0.2, 1),
     background 150ms ease,
@@ -122,49 +123,71 @@
   transition: box-shadow 150ms ease;
 }
 
-.track-card:hover,
+.track-card:hover {
+  transform: translateY(-3px);
+  filter: saturate(0.9) brightness(1);
+}
+
 .track-card:focus-visible {
   transform: translateY(-3px);
+  outline: 5px solid #fff8e8;
+  outline-offset: 4px;
+  filter: saturate(0.94) brightness(1);
 }
 
 .track-card:active {
-  transform: translate(7px, 7px) scale(0.98);
+  transform: translate(8px, 8px) scale(0.985);
   box-shadow: 2px 2px 0 var(--ink);
 }
 
 .track-card.is-selected {
-  background: color-mix(in srgb, var(--track-accent) 94%, white 6%);
-  transform: translate(6px, 6px) scale(0.985);
+  background: color-mix(in srgb, var(--track-accent) 97%, white 3%);
+  transform: translate(9px, 9px) scale(0.99);
   box-shadow:
-    3px 3px 0 var(--ink),
-    inset 0 5px 0 rgb(255 255 255 / 0.24),
-    inset 0 -7px 0 rgb(8 9 10 / 0.12);
-  filter: saturate(1.2) contrast(1.03);
+    1px 1px 0 var(--ink),
+    inset 0 7px 0 rgb(255 255 255 / 0.3),
+    inset 0 -10px 0 rgb(8 9 10 / 0.18),
+    inset 0 0 28px rgb(255 255 255 / 0.12);
+  filter: saturate(1.38) contrast(1.06) brightness(1.02);
 }
 
 .track-card.is-selected:hover,
 .track-card.is-selected:focus-visible {
-  transform: translate(6px, 6px) scale(0.985);
+  transform: translate(9px, 9px) scale(0.99);
+  filter: saturate(1.42) contrast(1.07) brightness(1.03);
 }
 
 .track-card.is-selected:active {
-  transform: translate(8px, 8px) scale(0.975);
+  transform: translate(10px, 10px) scale(0.982);
   box-shadow:
-    1px 1px 0 var(--ink),
-    inset 0 5px 0 rgb(255 255 255 / 0.2),
-    inset 0 -7px 0 rgb(8 9 10 / 0.16);
+    0 0 0 var(--ink),
+    inset 0 8px 0 rgb(255 255 255 / 0.28),
+    inset 0 -11px 0 rgb(8 9 10 / 0.22),
+    inset 0 0 30px rgb(255 255 255 / 0.1);
 }
 
 .track-card.is-selected::after {
-  box-shadow: inset 0 0 0 5px rgb(255 255 255 / 0.74);
+  box-shadow:
+    inset 0 0 0 5px rgb(255 255 255 / 0.78),
+    inset 0 0 0 9px rgb(8 9 10 / 0.08);
 }
 
 .track-card.is-selected .track-card-preview {
-  transform: translateY(1px) scale(0.992);
-  filter: saturate(1.18) contrast(1.04);
+  transform: translate(2px, 3px) scale(0.992);
+  filter: saturate(1.32) contrast(1.07) brightness(1.02);
   box-shadow:
-    inset 0 4px 0 rgb(255 255 255 / 0.18),
-    inset 0 -5px 0 rgb(8 9 10 / 0.1);
+    1px 1px 0 var(--ink),
+    inset 0 5px 0 rgb(255 255 255 / 0.2),
+    inset 0 -7px 0 rgb(8 9 10 / 0.15);
+}
+
+.track-card.is-selected .track-card-topline strong,
+.track-card.is-selected .track-card-best {
+  transform: translate(2px, 2px);
+  box-shadow:
+    1px 1px 0 var(--ink),
+    inset 0 3px 0 rgb(255 255 255 / 0.24),
+    inset 0 -4px 0 rgb(8 9 10 / 0.1);
 }
 
 .track-card-topline {
@@ -181,6 +204,7 @@
   border-radius: 999px;
   background: #fff8e8;
   box-shadow: 3px 3px 0 var(--ink);
+  transition: transform 150ms ease, box-shadow 150ms ease;
 }
 
 .track-card-preview {
@@ -265,6 +289,7 @@
   border-radius: 16px;
   background: #fff8e8;
   box-shadow: 4px 4px 0 var(--ink);
+  transition: transform 150ms ease, box-shadow 150ms ease;
 }
 
 .track-card-best span,
@@ -342,7 +367,9 @@
 @media (prefers-reduced-motion: reduce) {
   .track-select,
   .track-card,
-  .track-card-preview {
+  .track-card-preview,
+  .track-card-topline strong,
+  .track-card-best {
     transition: none;
   }
 }

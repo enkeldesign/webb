@@ -100,7 +100,7 @@ assert.equal(summary.p95Ms, 50);
 assert.equal(summary.slowPercent, 40);
 assert.ok(Math.abs(summary.fps - 1000 / 30) < 1e-9);
 
-const [index, app, main, worldAssets, worldRender, controls, menu, spectate, hud, physics, camera, cars, lot, monitor, profile, replay, audio, orientationCompat] = await Promise.all([
+const [index, app, main, worldAssets, worldRender, controls, menu, spectate, hud, physics, camera, cars, lot, monitor, profile, replay, audio, orientationCompat, airportArtPass] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8'),
@@ -118,14 +118,15 @@ const [index, app, main, worldAssets, worldRender, controls, menu, spectate, hud
   fs.readFile(new URL('../../turn/performance-profile.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/race/replay-system.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/audio-system.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/orientation-compat.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/orientation-compat.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/airport-world-r49.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.5\.1 · Build 2026\.07\.22-r48/);
-assert.match(index, /"\.\/race\/replay-system\.js": "\.\/race\/replay-system\.js\?build=20260722-r43"/, 'r48 must preserve the shared replay sampler cache');
-assert.match(index, /"\.\/race\/track-spatial-index\.js\?build=20260720-r19": "\.\/race\/track-spatial-index\.js\?build=20260722-r47"/, 'r48 must preserve the rebuildable bounded track search');
-assert.match(index, /"\.\/performance-monitor\.js\?build=20260720-r19": "\.\/performance-monitor\.js\?build=20260722-r43"/, 'r48 must preserve the diagnostics module');
-assert.match(index, /"\.\/world-assets\.js": "\.\/world-assets\.js\?build=20260722-r44"/, 'r48 must preserve both countryside tree-grounding passes');
+assert.match(index, /TURN v1\.5\.2 · Build 2026\.07\.22-r49/);
+assert.match(index, /"\.\/race\/replay-system\.js": "\.\/race\/replay-system\.js\?build=20260722-r43"/, 'r49 must preserve the shared replay sampler cache');
+assert.match(index, /"\.\/race\/track-spatial-index\.js\?build=20260720-r19": "\.\/race\/track-spatial-index\.js\?build=20260722-r47"/, 'r49 must preserve the rebuildable bounded track search');
+assert.match(index, /"\.\/performance-monitor\.js\?build=20260720-r19": "\.\/performance-monitor\.js\?build=20260722-r43"/, 'r49 must preserve the diagnostics module');
+assert.match(index, /"\.\/world-assets\.js": "\.\/world-assets\.js\?build=20260722-r44"/, 'r49 must preserve both countryside tree-grounding passes');
 assert.match(app, /installPerformanceProfile\(\)/, 'Renderer profile installation must run before the game runtime');
 assert.ok(app.indexOf('./performance-profile.js') < app.indexOf('./main.js'), 'The universal DPR cap must be ready before main.js creates the runtime');
 assert.match(profile, /DEFAULT_DPR_CAP = 1\.5/, 'The universal production DPR ceiling must stay at 1.5');
@@ -169,6 +170,8 @@ assert.doesNotMatch(lot, /GLTFLoader|InstancedMesh|installBrickScenery/, 'The cl
 assert.match(audio, /AUDIO_UPDATE_INTERVAL_MS = 1000 \/ 30/, 'Audio state must stay capped at 30 Hz');
 assert.doesNotMatch(audio, /requestAnimationFrame|setAnimationLoop|setInterval/, 'New sound cues must not add a second loop');
 assert.doesNotMatch(orientationCompat, /requestAnimationFrame|setAnimationLoop|setInterval/, 'The orientation guard must remain event-driven and add no render loop');
+assert.doesNotMatch(airportArtPass, /requestAnimationFrame|setAnimationLoop|setInterval/, 'The Airport footprint art pass must stay a one-time setup cost');
+assert.match(airportArtPass, /new THREE\.Box3\(\)\.setFromObject\(object\)/, 'Airport safety must use measured object bounds without adding a runtime loop');
 assert.match(monitor, /turn:perf-snapshot/);
 assert.match(monitor, /trackChecksPerQuery/);
 

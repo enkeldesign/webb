@@ -9,7 +9,7 @@ import {
   normalizeTrackId,
   saveTrackSelection
 } from './catalog.js?build=20260722-r47';
-import { installAirportWorld } from './airport-world.js?build=20260722-r48';
+import { installAirportWorld } from './airport-world-r49.js?build=20260722-r49';
 import { showTrackSelect } from '../ui/track-select.js?build=20260722-r47';
 
 let runtime = null;
