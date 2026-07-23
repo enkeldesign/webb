@@ -130,21 +130,41 @@ export function clearRivalsState(state, { trackId } = {}) {
   } catch (_) {}
 }
 
-export function getStoredBestTime(trackId = DEFAULT_TRACK_ID) {
+export function getStoredBestLap(trackId = DEFAULT_TRACK_ID) {
   const activeTrackId = normalizeTrackId(trackId);
   try {
     const savedRivals = JSON.parse(localStorage.getItem(rivalKey(activeTrackId)));
-    const times = Array.isArray(savedRivals?.laps)
-      ? savedRivals.laps.map((lap) => Number(lap?.time)).filter(Number.isFinite)
-      : [];
-    if (times.length) return Math.min(...times);
+    const bestLap = Array.isArray(savedRivals?.laps)
+      ? savedRivals.laps.reduce((best, lap) => {
+        const time = Number(lap?.time);
+        if (!Number.isFinite(time)) return best;
+        if (!best || time < best.time) {
+          return {
+            time,
+            carId: normalizeVehicleId(lap?.carId)
+          };
+        }
+        return best;
+      }, null)
+      : null;
+    if (bestLap) return bestLap;
 
     if (activeTrackId === DEFAULT_TRACK_ID) {
       const oldGhost = JSON.parse(localStorage.getItem(ghostKey(activeTrackId)));
-      if (Number.isFinite(Number(oldGhost?.bestTime))) return Number(oldGhost.bestTime);
+      const legacyTime = Number(oldGhost?.bestTime);
+      if (Number.isFinite(legacyTime)) {
+        return {
+          time: legacyTime,
+          carId: DEFAULT_VEHICLE_ID
+        };
+      }
     }
   } catch (_) {}
-  return Infinity;
+  return null;
+}
+
+export function getStoredBestTime(trackId = DEFAULT_TRACK_ID) {
+  return getStoredBestLap(trackId)?.time ?? Infinity;
 }
 
 export function syncPrimaryRivalState(state) {
