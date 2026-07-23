@@ -100,7 +100,7 @@ assert.equal(summary.p95Ms, 50);
 assert.equal(summary.slowPercent, 40);
 assert.ok(Math.abs(summary.fps - 1000 / 30) < 1e-9);
 
-const [index, app, main, worldAssets, worldRender, controls, menu, spectate, hud, physics, camera, cars, lot, monitor, profile, replay, audio, orientationCompat, airportWorld, airportPolish] = await Promise.all([
+const [index, app, main, worldAssets, worldRender, controls, menu, spectate, hud, physics, camera, cars, lot, monitor, profile, replay, audio, orientationCompat, airportWorld, airportPolish, worldCollision] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8'),
@@ -120,14 +120,15 @@ const [index, app, main, worldAssets, worldRender, controls, menu, spectate, hud
   fs.readFile(new URL('../../turn/audio/audio-system.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/orientation-compat.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/airport-world-r50.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/tracks/airport-world-r51.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/tracks/airport-world-r51.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/race/world-collision.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.6\.2 · Build 2026\.07\.22-r52/);
-assert.match(index, /"\.\/race\/replay-system\.js": "\.\/race\/replay-system\.js\?build=20260722-r43"/, 'r52 must preserve the shared replay sampler cache');
-assert.match(index, /"\.\/race\/track-spatial-index\.js\?build=20260720-r19": "\.\/race\/track-spatial-index\.js\?build=20260722-r47"/, 'r52 must preserve the rebuildable bounded track search');
-assert.match(index, /"\.\/performance-monitor\.js\?build=20260720-r19": "\.\/performance-monitor\.js\?build=20260722-r43"/, 'r52 must preserve the diagnostics module');
-assert.match(index, /"\.\/world-assets\.js": "\.\/world-assets\.js\?build=20260722-r44"/, 'r52 must preserve both countryside tree-grounding passes');
+assert.match(index, /TURN v1\.7\.0 · Build 2026\.07\.23-r53/);
+assert.match(index, /"\.\/race\/replay-system\.js": "\.\/race\/replay-system\.js\?build=20260722-r43"/, 'r53 must preserve the shared replay sampler cache');
+assert.match(index, /"\.\/race\/track-spatial-index\.js\?build=20260720-r19": "\.\/race\/track-spatial-index\.js\?build=20260722-r47"/, 'r53 must preserve the rebuildable bounded track search');
+assert.match(index, /"\.\/performance-monitor\.js\?build=20260720-r19": "\.\/performance-monitor\.js\?build=20260722-r43"/, 'r53 must preserve the diagnostics module');
+assert.match(index, /"\.\/world-assets\.js": "\.\/world-assets\.js\?build=20260722-r44"/, 'r53 must preserve both countryside tree-grounding passes');
 assert.match(app, /installPerformanceProfile\(\)/, 'Renderer profile installation must run before the game runtime');
 assert.ok(app.indexOf('./performance-profile.js') < app.indexOf('./main.js'), 'The universal DPR cap must be ready before main.js creates the runtime');
 assert.match(profile, /DEFAULT_DPR_CAP = 1\.5/, 'The universal production DPR ceiling must stay at 1.5');
@@ -175,7 +176,8 @@ assert.doesNotMatch(orientationCompat, /requestAnimationFrame|setAnimationLoop|s
 assert.doesNotMatch(airportWorld, /requestAnimationFrame|setAnimationLoop|setInterval/, 'The redesigned Airport world must stay a one-time setup cost');
 assert.match(airportWorld, /new THREE\.Box3\(\)\.setFromObject\(object\)/, 'Airport safety must use measured object bounds without adding a runtime loop');
 assert.doesNotMatch(airportPolish, /requestAnimationFrame|setAnimationLoop|setInterval/, 'The r51 Airport polish layer must remain a one-time setup cost');
+assert.doesNotMatch(worldCollision, /requestAnimationFrame|setAnimationLoop|setInterval/, 'World containment must run inside the existing fixed physics step without adding another loop');
 assert.match(monitor, /turn:perf-snapshot/);
 assert.match(monitor, /trackChecksPerQuery/);
 
-console.log(`TURN universal DPR, complete tree grounding, rebuildable bounded spatial search and diagnostics regression passed (${(trackChecks / trackQueries).toFixed(1)} average on-track checks vs 720).`);
+console.log(`TURN universal DPR, world containment, complete tree grounding, rebuildable bounded spatial search and diagnostics regression passed (${(trackChecks / trackQueries).toFixed(1)} average on-track checks vs 720).`);
