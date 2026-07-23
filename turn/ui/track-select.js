@@ -4,7 +4,8 @@ import {
   loadTrackSelection,
   normalizeTrackId
 } from '../tracks/catalog.js?build=20260722-r50';
-import { getStoredBestTime } from '../race/rival-storage.js?build=20260722-r50';
+import { getStoredBestLap } from '../race/rival-storage.js?build=20260722-r50';
+import { getCarDefinition } from '../vehicle/catalog.js?build=20260720-r19';
 
 let activeRequest = null;
 
@@ -121,7 +122,9 @@ function renderTrackCard(track) {
           <strong class="track-card-name">${track.name.toUpperCase()}</strong>
         </span>
         <span class="track-card-best" data-track-best="${track.id}">
-          <span>BEST</span><strong>--:--.---</strong>
+          <span>BEST</span>
+          <strong class="track-card-best-time">--:--.---</strong>
+          <small class="track-card-best-car" hidden></small>
         </span>
       </span>
     </button>
@@ -159,9 +162,16 @@ function makePreviewSvg(trackId, accent) {
 
 function refreshBestTimes(overlay) {
   for (const track of TRACK_CATALOG) {
-    const best = getStoredBestTime(track.id);
-    const strong = overlay.querySelector(`[data-track-best="${track.id}"] strong`);
-    if (strong) strong.textContent = formatTime(best);
+    const bestLap = getStoredBestLap(track.id);
+    const bestBox = overlay.querySelector(`[data-track-best="${track.id}"]`);
+    const time = bestBox?.querySelector('.track-card-best-time');
+    const car = bestBox?.querySelector('.track-card-best-car');
+
+    if (time) time.textContent = formatTime(bestLap?.time ?? Infinity);
+    if (car) {
+      car.textContent = bestLap ? getCarDefinition(bestLap.carId).name.toUpperCase() : '';
+      car.hidden = !bestLap;
+    }
   }
 }
 
