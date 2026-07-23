@@ -19,6 +19,12 @@
   filter: none;
 }
 
+/* Press feedback is shared with every card and must not become another selection cue. */
+.track-card.is-selected:active {
+  transform: translate(8px, 8px) scale(0.985);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
 .track-card.is-selected::after {
   box-shadow: none;
 }
@@ -51,6 +57,10 @@
     align-self: center;
   }
 
+  .track-select-head {
+    margin-bottom: clamp(20px, 3.6vh, 30px);
+  }
+
   .track-select-grid {
     align-items: start;
   }
@@ -63,16 +73,43 @@
     box-shadow: 8px 8px 0 var(--ink);
   }
 
+  .track-card.is-selected:active {
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+
   .track-card-preview {
     height: clamp(82px, 23vh, 132px);
     min-height: 82px;
     max-height: none;
   }
+
+  .track-select-footer {
+    display: flex;
+    justify-content: center;
+    margin-top: clamp(24px, 4vh, 34px);
+  }
+
+  .track-select-continue {
+    grid-column: auto;
+    width: min(560px, 62vw);
+  }
 }
 
 @media (max-height: 610px) and (orientation: landscape) {
+  .track-select-head {
+    margin-bottom: 14px;
+  }
+
   .track-card-preview {
     height: clamp(68px, 20vh, 96px);
     min-height: 68px;
+  }
+
+  .track-select-footer {
+    margin-top: 18px;
+  }
+
+  .track-select-continue {
+    width: min(520px, 64vw);
   }
 }
