@@ -1,9 +1,42 @@
 /* TURN track chooser layout polish.
    Keep the selector compact and composed in landscape rather than stretching the cards
-   to consume every spare vertical pixel. */
+   to consume every spare vertical pixel. Selection is communicated only through colour,
+   the choice marker and the Continue button copy. */
 
 .track-select h2 {
   color: var(--ink);
+}
+
+.track-card.is-selected {
+  transform: translate(0, 0) scale(1);
+  box-shadow: 10px 10px 0 var(--ink);
+  filter: none;
+}
+
+.track-card.is-selected:hover,
+.track-card.is-selected:focus-visible {
+  transform: translateY(-3px);
+  filter: none;
+}
+
+.track-card.is-selected::after {
+  box-shadow: none;
+}
+
+.track-card.is-selected .track-card-preview {
+  transform: none;
+  filter: none;
+  box-shadow: none;
+}
+
+.track-card.is-selected .track-card-topline strong {
+  transform: none;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.track-card.is-selected .track-card-best {
+  transform: none;
+  box-shadow: 4px 4px 0 var(--ink);
 }
 
 @media (max-height: 820px) and (orientation: landscape) {
@@ -18,10 +51,6 @@
     align-self: center;
   }
 
-  .track-select-head {
-    margin-bottom: clamp(18px, 4vh, 28px);
-  }
-
   .track-select-grid {
     align-items: start;
   }
@@ -30,28 +59,20 @@
     align-self: start;
   }
 
+  .track-card.is-selected {
+    box-shadow: 8px 8px 0 var(--ink);
+  }
+
   .track-card-preview {
     height: clamp(82px, 23vh, 132px);
     min-height: 82px;
     max-height: none;
   }
-
-  .track-select-footer {
-    margin-top: clamp(12px, 2.4vh, 18px);
-  }
 }
 
 @media (max-height: 610px) and (orientation: landscape) {
-  .track-select-head {
-    margin-bottom: 12px;
-  }
-
   .track-card-preview {
     height: clamp(68px, 20vh, 96px);
     min-height: 68px;
-  }
-
-  .track-select-footer {
-    margin-top: 8px;
   }
 }
