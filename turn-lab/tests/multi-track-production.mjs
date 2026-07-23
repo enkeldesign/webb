@@ -103,10 +103,10 @@ const [
   fs.readFile(new URL('../../turn/render/world.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.6\.2 · Build 2026\.07\.22-r52/);
-assert.match(index, /track-select\.css\?build=20260722-r52/);
-assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-track-select\.js\?build=20260722-r52"/, 'The r52 track selector must sit before the stable Lot entry point');
-assert.match(index, /"\.\/vehicle\/physics\.js\?build=20260720-r19": "\.\/vehicle\/physics\.js\?build=20260722-r52"/, 'Production must cache-bust the run-off-aware vehicle physics');
+assert.match(index, /TURN v1\.7\.0 · Build 2026\.07\.23-r53/);
+assert.match(index, /track-select\.css\?build=20260723-r53/);
+assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-track-select\.js\?build=20260723-r53"/, 'The r53 track selector must sit before the stable Lot entry point');
+assert.match(index, /"\.\/vehicle\/physics\.js\?build=20260720-r19": "\.\/vehicle\/physics\.js\?build=20260723-r53"/, 'Production must cache-bust the collision-aware vehicle physics');
 assert.match(index, /"\.\/race\/rival-storage\.js\?build=20260720-r19": "\.\/race\/rival-storage\.js\?build=20260722-r50"/, 'Production must preserve geometry-revision-aware rival storage');
 assert.match(index, /"\.\/race\/track-spatial-index\.js\?build=20260720-r19": "\.\/race\/track-spatial-index\.js\?build=20260722-r47"/, 'Production must preserve the rebuildable track index');
 assert.match(index, /Turn the device to steer/, 'Start copy must use device-neutral language');
@@ -124,7 +124,7 @@ assert.match(trackCatalog, /Runway speed\. Apron precision\./, 'Airport must kee
 assert.match(trackCatalog, /\[25, 43\],[\s\S]*\[0, 22\],[\s\S]*\[-25, 43\]/, 'The service-road hairpin must use a broad symmetric entry and exit around its apex');
 assert.doesNotMatch(trackCatalog, /\[27, 76\],[\s\S]*\[3, 40\],[\s\S]*\[-25, 68\]/, 'The pinched r49 hairpin geometry must stay retired');
 
-assert.match(lotWrapper, /track-manager\.js\?build=20260722-r52/, 'The Lot wrapper must load the r52 Airport run-off runtime');
+assert.match(lotWrapper, /track-manager\.js\?build=20260722-r52/, 'The Lot wrapper must preserve the r52 Airport run-off runtime');
 assert.match(lotWrapper, /await chooseTrackBeforeLot\(\)/, 'Track selection must complete before The Lot opens');
 assert.ok(
   lotWrapper.indexOf('await chooseTrackBeforeLot()') < lotWrapper.indexOf('showOriginalLot(options)'),
@@ -147,7 +147,7 @@ assert.match(trackSelectCss, /\.track-card\.is-selected \{[\s\S]*translate\(9px,
 assert.match(trackSelectCss, /filter: saturate\(1\.38\) contrast\(1\.06\) brightness\(1\.02\)/, 'Selected track must remain distinctly more vibrant');
 assert.match(trackSelectCss, /\.track-card:focus-visible/, 'The material treatment must retain a visible keyboard focus ring');
 
-assert.match(trackManager, /airport-world-r52\.js\?build=20260722-r52/, 'Track manager must load the r52 Airport run-off layer');
+assert.match(trackManager, /airport-world-r52\.js\?build=20260722-r52/, 'Track manager must preserve the r52 Airport run-off layer');
 assert.match(trackManager, /__turnIsForgivingSurface = \(position\) => isForgivingTrackSurface\(activeTrackId, position\)/, 'Vehicle physics must receive forgiveness only from the active track');
 assert.match(trackManager, /initialTrackId: chosenThisSession \? activeTrackId : loadTrackSelection\(\)/, 'Later Lot visits must reopen track choice with the current course preselected');
 assert.doesNotMatch(trackManager, /if \(!force && chosenThisSession\) return activeTrackId/, 'Track selection must not be skipped on later visits to The Lot');
@@ -160,13 +160,14 @@ assert.doesNotMatch(trackManager, /setAnimationLoop|requestAnimationFrame|setInt
 assert.match(physics, /nearestBefore\.distance > trackWidth \* 0\.58 && !isForgivingSurface\(state\.position\)/, 'Forgiving bays must keep normal road physics before integration');
 assert.match(physics, /nearestAfter\.distance > trackWidth \* 0\.58 && !isForgivingSurface\(state\.position\)/, 'Forgiving bays must keep normal road physics after integration');
 assert.match(physics, /globalThis\.__turnIsForgivingSurface\?\.\(position\)/, 'The physics core must use one optional track-specific surface predicate');
+assert.match(physics, /resolveWorldCollisionState\(/, 'The physics core must resolve the new world containment layer');
 
 assert.match(hud, /cached\.firstSample === firstSample/, 'The minimap cache must notice when the shared samples array is repopulated for another track');
 assert.match(hud, /cached\.lastSample === lastSample/, 'The minimap cache must not reuse the previous track drawing after a course switch');
 assert.match(spatialSource, /replaceSamples\(nextSamples\)/, 'The shared spatial index must expose a controlled rebuild hook');
 assert.match(spatialSource, /return rebuild\(nextSamples\)/);
 
-assert.match(rivalStorage, /airport: 'airport-r50'/, 'Airport records must stay on the r50 geometry namespace because r52 does not change the course');
+assert.match(rivalStorage, /airport: 'airport-r50'/, 'Airport records must stay on the r50 geometry namespace because r53 does not change the course');
 assert.match(rivalStorage, /version: 6/);
 assert.match(rivalStorage, /trackRevision: storageTrackId\(activeTrackId\)/, 'Saved rival payloads must record the geometry revision');
 
@@ -198,7 +199,7 @@ assert.doesNotMatch(airportRunoffWorld, /setAnimationLoop|requestAnimationFrame|
 assert.match(worldRender, /const worldSamples = samples\.slice\(\)/, 'Countryside async scenery must retain immutable Track 1 samples during an early track switch');
 assert.match(worldRender, /samples: worldSamples/, 'Late Countryside art modules must receive the snapshot rather than the mutable active track array');
 
-console.log('TURN r52 Airport hairpin run-off, forgiving surface physics and preserved anti-shortcut geometry passed.');
+console.log('TURN r53 world containment, Airport hairpin run-off and preserved anti-shortcut geometry passed.');
 
 function makeSamples(points) {
   return points.map(([x, z]) => ({ point: { x, z } }));
