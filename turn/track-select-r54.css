@@ -45,6 +45,21 @@
   box-shadow: 4px 4px 0 var(--ink);
 }
 
+.track-card-best-car {
+  display: block;
+  margin-top: 3px;
+  font-size: clamp(0.58rem, 1.05vw, 0.74rem);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  opacity: 0.72;
+}
+
+.track-card-best-car[hidden] {
+  display: none;
+}
+
 @media (max-height: 820px) and (orientation: landscape) {
   .track-select {
     place-items: center;
