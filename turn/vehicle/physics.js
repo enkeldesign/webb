@@ -1,3 +1,5 @@
+import { resolveWorldCollisionState } from '../race/world-collision.js?build=20260723-r53';
+
 export function updateVehiclePhysicsState({
   state,
   dt,
@@ -147,12 +149,21 @@ export function updateVehiclePhysicsState({
   state.position.y = 0.18;
   state.speed = state.velocity.length();
 
-  const nearestAfter = findNearestTrack(state.position);
+  let nearestAfter = findNearestTrack(state.position);
+  const collision = resolveWorldCollisionState({
+    state,
+    trackId: state.trackId,
+    nearestTrack: nearestAfter,
+    collisionProfile: currentCollisionProfile()
+  });
+  if (collision.collided) nearestAfter = findNearestTrack(state.position);
+
   state.trackDistance = nearestAfter.distance;
   state.offRoad = nearestAfter.distance > trackWidth * 0.58 && !isForgivingSurface(state.position);
   state.lastProgress = state.progress;
   state.progress = nearestAfter.index / trackSampleCount;
   state.nearestTrackIndex = nearestAfter.index;
+  state.speed = state.velocity.length();
 
   return nearestAfter;
 }
@@ -162,6 +173,14 @@ function isForgivingSurface(position) {
     return globalThis.__turnIsForgivingSurface?.(position) === true;
   } catch (_) {
     return false;
+  }
+}
+
+function currentCollisionProfile() {
+  try {
+    return globalThis.__turnGetCollisionProfile?.() || null;
+  } catch (_) {
+    return null;
   }
 }
 
