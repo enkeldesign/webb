@@ -31,8 +31,11 @@ assert.match(ringSection, /for \(let component = 0; component < SKID_SAMPLE_STRI
 assert.match(ringSection, /const sampleIndex = \(skidHistoryStart \+ sampleOffset\) % SKID_HISTORY_CAPACITY/, 'Rendering must read newest-to-oldest through the ring');
 assert.match(ringSection, /state\.driftAmount > 0\.34 && state\.speed > 21/, 'The existing skid activation thresholds must remain unchanged');
 assert.match(ringSection, /addScaledVector\(getForward\(\), -2\.0\)/, 'The rear axle position must remain two units behind the car');
-assert.match(ringSection, /addScaledVector\(skidLateral, -1\.25\)\.setY\(0\.23\)/, 'The left wheel offset and ground height must remain unchanged');
-assert.match(ringSection, /addScaledVector\(skidLateral, 1\.25\)\.setY\(0\.23\)/, 'The right wheel offset and ground height must remain unchanged');
+assert.match(ringSection, /addScaledVector\(skidLateral, -1\.25\)/, 'The left wheel offset must remain unchanged');
+assert.match(ringSection, /addScaledVector\(skidLateral, 1\.25\)/, 'The right wheel offset must remain unchanged');
+assert.match(ringSection, /skidLeftWheel\.y = state\.position\.y \+ 0\.05/, 'The left skid must remain five centimetres above the current road surface');
+assert.match(ringSection, /skidRightWheel\.y = state\.position\.y \+ 0\.05/, 'The right skid must remain five centimetres above the current road surface');
+assert.doesNotMatch(ringSection, /\.setY\(0\.23\)/, 'Skids may no longer be pinned to flat world height');
 assert.match(ringSection, /cursor < SKID_MAX_DRAW_VERTICES/, 'Rendering must keep the existing visible vertex ceiling');
 assert.match(ringSection, /skidGeometry\.attributes\.position\.needsUpdate = true/);
 assert.match(ringSection, /skidGeometry\.setDrawRange\(0, cursor\)/);

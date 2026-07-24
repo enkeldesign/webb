@@ -1,4 +1,5 @@
 import { resolveWorldCollisionState } from '../race/world-collision.js?build=20260723-r53';
+import { trackPitch, trackSurfaceY } from '../tracks/elevation.js?build=20260725-r67';
 
 export function getVehicleSpeedLimit({
   offRoad = false,
@@ -187,7 +188,6 @@ export function updateVehiclePhysicsState({
   if (speed > speedLimit) state.velocity.multiplyScalar(speedLimit / speed);
 
   state.position.addScaledVector(state.velocity, dt);
-  state.position.y = 0.18;
   state.speed = state.velocity.length();
 
   let nearestAfter = findNearestTrack(state.position);
@@ -199,6 +199,8 @@ export function updateVehiclePhysicsState({
   });
   if (collision.collided) nearestAfter = findNearestTrack(state.position);
 
+  state.position.y = trackSurfaceY(nearestAfter.sample);
+  state.surfacePitch = trackPitch(nearestAfter.sample);
   state.trackDistance = nearestAfter.distance;
   state.offRoad = nearestAfter.distance > trackWidth * 0.58 && !isForgivingSurface(state.position);
   state.lastProgress = state.progress;

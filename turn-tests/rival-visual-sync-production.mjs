@@ -23,7 +23,9 @@ assert.doesNotMatch(syncSection, /requestAnimationFrame|setAnimationLoop|setInte
 
 const placementSection = section(main, 'function placeCompetitorCars(dt)', '\nfunction updateScene');
 assert.match(placementSection, /lapFrameAt\(lap, state\.lapElapsed\)/, 'The frame loop must continue sampling rival replay transforms');
-assert.match(placementSection, /car\.position\.set\(frame\.x, 0\.18, frame\.z\)/, 'Rival position must remain frame-driven');
+assert.match(placementSection, /trackSampleAtProgress\(samples, frame\.p\)/, 'Rival elevation must remain frame-driven from replay progress');
+assert.match(placementSection, /car\.position\.set\(frame\.x, trackSurfaceY\(surfaceSample\), frame\.z\)/, 'Rival X, Z and road height must remain frame-driven');
+assert.match(placementSection, /car\.rotation\.x = trackPitch\(surfaceSample\)/, 'Rival road pitch must remain visual-frame work');
 assert.match(placementSection, /car\.rotation\.y = frame\.h \+ Math\.PI/, 'Rival heading must remain frame-driven');
 assert.match(placementSection, /if \(car === ghostCar\) animateWheels\(car, frame\.s, 45, dt\)/, 'The primary ghost wheel animation must remain visual-frame work');
 assert.doesNotMatch(placementSection, /ensureCompetitorCars|syncCompetitorVisual|installCarVisual|createCarVisual/, 'The frame loop must perform no rival pool or model identity synchronisation');
