@@ -4,6 +4,39 @@ export const DEFAULT_VEHICLE_SECONDARY_COLOR = '#f8f9fa';
 export const VEHICLE_SELECTION_KEY = 'turn-vehicle-selection-v1';
 export const VEHICLE_STAT_BUDGET = 18;
 
+export const VEHICLE_STAT_LEGEND = Object.freeze([
+  Object.freeze({
+    key: 'speed',
+    label: 'TOP SPEED',
+    description: 'How fast the car can go without boost.'
+  }),
+  Object.freeze({
+    key: 'acceleration',
+    label: 'ACCELERATION',
+    description: 'How quickly the car reaches speed.'
+  }),
+  Object.freeze({
+    key: 'control',
+    label: 'CONTROL',
+    description: 'How precisely and quickly the car steers while gripping the road.'
+  }),
+  Object.freeze({
+    key: 'drift',
+    label: 'DRIFT',
+    description: 'How well the car retains speed and settles while drifting. Drift is always slower than Gas.'
+  }),
+  Object.freeze({
+    key: 'boostPower',
+    label: 'BOOST POWER',
+    description: 'How strongly boost accelerates the car and raises its speed limit.'
+  }),
+  Object.freeze({
+    key: 'boostDuration',
+    label: 'BOOST TANK',
+    description: 'How long a full boost charge lasts.'
+  })
+]);
+
 export const CAR_PALETTE = Object.freeze([
   Object.freeze({ name: 'Solar', value: '#ffd43b' }),
   Object.freeze({ name: 'Sky', value: '#38d9ff' }),
@@ -135,8 +168,9 @@ export function deriveVehicleTuning(stats) {
     topSpeedMultiplier: centeredStat(stats.speed, [0.84, 0.92, 1, 1.06, 1.12]),
     accelerationMultiplier: centeredStat(stats.acceleration, [0.82, 0.91, 1, 1.08, 1.16]),
     controlMultiplier: centeredStat(stats.control, [0.88, 0.94, 1, 1.07, 1.14]),
-    driftEngineMultiplier: centeredStat(stats.drift, [0.84, 0.89, 0.93, 0.97, 0.99]),
-    driftDragAdd: centeredStat(stats.drift, [0.14, 0.112, 0.085, 0.055, 0.025]),
+    driftEngineMultiplier: centeredStat(stats.drift, [0.78, 0.82, 0.86, 0.90, 0.94]),
+    driftDragAdd: centeredStat(stats.drift, [0.16, 0.13, 0.10, 0.075, 0.055]),
+    driftSpeedMultiplier: centeredStat(stats.drift, [0.76, 0.80, 0.84, 0.88, 0.92]),
     boostPowerMultiplier: centeredStat(stats.boostPower, [0.78, 0.89, 1, 1.13, 1.26]),
     boostSpeedMultiplier: centeredStat(stats.boostPower, [1.23, 1.275, 1.32, 1.35, 1.38]),
     boostDurationSeconds: centeredStat(stats.boostDuration, [1.2, 1.6, 2, 2.65, 3.4])
