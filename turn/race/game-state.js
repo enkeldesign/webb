@@ -1,3 +1,5 @@
+import { trackPitch, trackSurfaceY } from '../tracks/elevation.js?build=20260725-r67';
+
 export const GAME_MODE = Object.freeze({
   STAGED: 'staged',
   RACING: 'racing',
@@ -54,7 +56,8 @@ export function resetRaceToStage({
   const start = samples[startIndex];
 
   state.position.copy(start.point);
-  state.position.y = 0.18;
+  state.position.y = trackSurfaceY(start);
+  state.surfacePitch = trackPitch(start);
   state.velocity.set(0, 0, 0);
   state.heading = Math.atan2(start.tangent.x, start.tangent.z);
   state.speed = 0;
