@@ -1,0 +1,67 @@
+/* The Best badge uses a one-shot render of the actual stored GLB and paint.
+   It remains text-first, with the model as a compact visual confirmation. */
+
+.track-card-best {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(64px, 7.2vw, 86px);
+  align-items: center;
+  gap: clamp(4px, 0.7vw, 8px);
+  min-width: clamp(176px, 19vw, 226px);
+  padding: 5px 7px 5px 9px;
+}
+
+.track-card-best-copy {
+  min-width: 0;
+}
+
+.track-card-best-copy > span,
+.track-card-best-copy > strong,
+.track-card-best-copy > small {
+  display: block;
+}
+
+.track-card-best-model {
+  display: block;
+  width: 100%;
+  height: clamp(44px, 6.3vw, 62px);
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(2px 3px 0 rgb(8 9 10 / 0.34));
+}
+
+.track-card-best-model[hidden] {
+  display: none;
+}
+
+.track-card-best:not(:has(.track-card-best-model:not([hidden]))) {
+  grid-template-columns: 1fr;
+  min-width: clamp(112px, 13vw, 152px);
+  padding: 7px 10px;
+}
+
+@media (max-height: 820px) and (orientation: landscape) {
+  .track-card-best {
+    min-width: clamp(164px, 18vw, 210px);
+  }
+
+  .track-card-best-model {
+    height: clamp(40px, 5.6vw, 54px);
+  }
+}
+
+@media (max-height: 610px) and (orientation: landscape) {
+  .track-card-best {
+    min-width: clamp(148px, 17vw, 188px);
+    gap: 3px;
+    padding: 3px 5px 3px 7px;
+  }
+
+  .track-card-best-model {
+    height: clamp(34px, 5vw, 44px);
+  }
+
+  .track-card-best:not(:has(.track-card-best-model:not([hidden]))) {
+    min-width: 98px;
+    padding: 4px 7px;
+  }
+}
