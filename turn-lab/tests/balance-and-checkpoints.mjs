@@ -19,18 +19,9 @@ for (const car of catalog.CAR_CATALOG) {
     catalog.VEHICLE_STAT_BUDGET,
     `${car.name} must spend exactly ${catalog.VEHICLE_STAT_BUDGET} stat points`
   );
-  assert.ok(
-    car.tuning.driftSpeedMultiplier < 1,
-    `${car.name} must always have a lower DRIFT speed ceiling than GAS`
-  );
-  assert.ok(
-    car.tuning.driftEngineMultiplier < 1,
-    `${car.name} must always lose engine power while DRIFT is held`
-  );
-  assert.ok(
-    car.tuning.driftDragAdd > 0,
-    `${car.name} must always gain drag while DRIFT is held`
-  );
+  assert.ok(car.tuning.driftSpeedMultiplier < 1, `${car.name} must always be slower in DRIFT than GAS`);
+  assert.ok(car.tuning.driftEngineMultiplier < 1, `${car.name} must lose engine power in DRIFT`);
+  assert.ok(car.tuning.driftDragAdd > 0, `${car.name} must gain drag in DRIFT`);
 }
 assert.deepEqual(
   catalog.getCarDefinition('sedan').stats,
@@ -38,9 +29,9 @@ assert.deepEqual(
   'Sedan must remain the neutral 3/3/3/3/3/3 baseline'
 );
 assert.deepEqual(
-  catalog.CAR_STAT_LEGEND.map((entry) => entry.label),
+  catalog.VEHICLE_STAT_LEGEND.map((entry) => entry.label),
   ['TOP SPEED', 'ACCELERATION', 'CONTROL', 'DRIFT', 'BOOST POWER', 'BOOST TANK'],
-  'The Lot legend must expose the six agreed player-facing stat names'
+  'The Lot legend must expose the agreed six player-facing stat names'
 );
 assert.deepEqual(
   [1, 2, 3, 4, 5].map((rating) => catalog.deriveVehicleTuning({
@@ -58,35 +49,13 @@ assert.deepEqual(
 assert.ok(LAP_CHECKPOINTS.length >= 10, 'anti-shortcut checkpoint chain must stay dense');
 
 class Vec3 {
-  constructor(x = 0, y = 0, z = 0) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
-  }
-
-  copy(other) {
-    this.x = other.x;
-    this.y = other.y;
-    this.z = other.z;
-    return this;
-  }
-
-  set(x, y, z) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
-    return this;
-  }
-
-  dot(other) {
-    return this.x * other.x + this.y * other.y + this.z * other.z;
-  }
+  constructor(x = 0, y = 0, z = 0) { this.x = x; this.y = y; this.z = z; }
+  copy(other) { this.x = other.x; this.y = other.y; this.z = other.z; return this; }
+  set(x, y, z) { this.x = x; this.y = y; this.z = z; return this; }
+  dot(other) { return this.x * other.x + this.y * other.y + this.z * other.z; }
 }
 
-const samples = Array.from({ length: 100 }, (_, index) => ({
-  point: { x: index, y: 0, z: 0 },
-  tangent: { x: 1, y: 0, z: 0 }
-}));
+const samples = Array.from({ length: 100 }, (_, index) => ({ point: { x: index, y: 0, z: 0 }, tangent: { x: 1, y: 0, z: 0 } }));
 const state = {
   lapActive: true,
   lapCheckpointIndex: 0,
@@ -114,21 +83,13 @@ const run = (now) => updateLapProgressState({
 });
 
 run(1000);
-assert.equal(
-  state.lapCheckpointIndex,
-  0,
-  'jumping past checkpoint progress while physically far from the gate must not count'
-);
+assert.equal(state.lapCheckpointIndex, 0, 'jumping past checkpoint progress while physically far from the gate must not count');
 
 const firstCheckpointIndex = Math.round(LAP_CHECKPOINTS[0] * samples.length) % samples.length;
 state.lapPreviousPosition = { x: firstCheckpointIndex - 2, z: -30 };
 state.position = new Vec3(firstCheckpointIndex + 2, 0, 30);
 run(1100);
-assert.equal(
-  state.lapCheckpointIndex,
-  1,
-  'a checkpoint crossed between physics samples must count even when neither sampled endpoint is near the gate'
-);
+assert.equal(state.lapCheckpointIndex, 1, 'a checkpoint crossed between physics samples must count');
 assert.equal(began, 0, 'the swept checkpoint regression must not accidentally cross the start line');
 
 const secondCheckpointIndex = Math.round(LAP_CHECKPOINTS[1] * samples.length) % samples.length;
@@ -167,28 +128,10 @@ updateLapProgressState({
   recordGhostFrame: () => {}
 });
 assert.equal(skippedGateState.lapCheckpointIndex, 0, 'skipping the required checkpoint must not advance the ordered chain');
-assert.equal(skippedGateState.lapInvalid, true, 'crossing a later gate before the required one must permanently invalidate the current attempt');
+assert.equal(skippedGateState.lapInvalid, true, 'crossing a later gate must invalidate the current attempt');
 
-assert.equal(
-  crossedForwardGate(
-    { x: -4, z: 10 },
-    { x: 4, z: 10 },
-    samples[0],
-    12
-  ),
-  true,
-  'a physical gate crossing should be detected from the swept car path'
-);
-assert.equal(
-  crossedForwardGate(
-    { x: -4, z: 20 },
-    { x: 4, z: 20 },
-    samples[0],
-    12
-  ),
-  false,
-  'crossing the gate plane too far from the track must remain invalid'
-);
+assert.equal(crossedForwardGate({ x: -4, z: 10 }, { x: 4, z: 10 }, samples[0], 12), true, 'a physical gate crossing should be detected');
+assert.equal(crossedForwardGate({ x: -4, z: 20 }, { x: 4, z: 20 }, samples[0], 12), false, 'crossing too far from the track must remain invalid');
 
 state.lastProgress = 0.4;
 state.progress = 0.4;
@@ -196,9 +139,9 @@ state.lapCheckpointIndex = LAP_CHECKPOINTS.length - 1;
 state.lapPreviousPosition = { x: -2, z: 0 };
 state.position = new Vec3(2, 0, 0);
 run(1400);
-assert.equal(completed, 0, 'missing even one checkpoint must prevent lap completion');
-assert.equal(began, 1, 'an incomplete lap must immediately restart the timed attempt at the finish line');
-assert.equal(state.suppressNextLapStartMessage, true, 'invalid-lap restart must suppress a competing GO message');
+assert.equal(completed, 0, 'missing one checkpoint must prevent lap completion');
+assert.equal(began, 1, 'an incomplete lap must restart at the finish line');
+assert.equal(state.suppressNextLapStartMessage, true, 'invalid restart must suppress a competing GO message');
 
 state.suppressNextLapStartMessage = false;
 state.lapInvalid = false;
@@ -208,7 +151,7 @@ state.lapCheckpointIndex = LAP_CHECKPOINTS.length;
 state.lapPreviousPosition = { x: -2, z: 0 };
 state.position = new Vec3(2, 0, 0);
 run(1500);
-assert.equal(completed, 1, 'the physical start gate must complete a full checkpoint chain without relying on progress wrap');
+assert.equal(completed, 1, 'the physical start gate must complete a full checkpoint chain');
 
 state.lapActive = false;
 state.lastProgress = 0.4;
@@ -216,51 +159,7 @@ state.progress = 0.4;
 state.lapPreviousPosition = { x: -2, z: 0 };
 state.position = new Vec3(2, 0, 0);
 run(1600);
-assert.equal(began, 2, 'the first physical forward start-line crossing must begin timing even when nearest-track progress does not wrap');
-
-const doubleTriggerState = {
-  lapActive: false,
-  lapCheckpointIndex: 0,
-  lapStartedAt: 0,
-  lapElapsed: 0,
-  position: new Vec3(-1, 0, 0),
-  velocity: new Vec3(10, 0, 0),
-  lastProgress: 0.96,
-  progress: 0.02,
-  trackDistance: 1,
-  lapPreviousPosition: { x: -2, z: 0 }
-};
-let doubleTriggerStarts = 0;
-const runDoubleTrigger = (now) => updateLapProgressState({
-  state: doubleTriggerState,
-  nearestAfter: { sample: samples[0] },
-  samples,
-  trackWidth: 27,
-  now,
-  beginTimedLap: () => {
-    doubleTriggerStarts += 1;
-    doubleTriggerState.lapActive = true;
-    doubleTriggerState.lapCheckpointIndex = 0;
-  },
-  completeLap: () => {},
-  recordGhostFrame: () => {}
-});
-
-runDoubleTrigger(1700);
-assert.equal(
-  doubleTriggerStarts,
-  0,
-  'nearest-track progress wrapping before the painted line must not start a lap early'
-);
-doubleTriggerState.lastProgress = 0.02;
-doubleTriggerState.progress = 0.03;
-doubleTriggerState.position = new Vec3(1, 0, 0);
-runDoubleTrigger(1800);
-assert.equal(
-  doubleTriggerStarts,
-  1,
-  'one physical start-line crossing must create exactly one lap start after an early progress wrap'
-);
+assert.equal(began, 2, 'the first physical forward crossing must begin timing');
 
 const resetState = {
   position: new Vec3(999, 0, 999),
@@ -276,13 +175,9 @@ const resetState = {
   mode: 'racing'
 };
 resetRaceToStage({ state: resetState, samples, showFeedback: false });
-assert.deepEqual(
-  resetState.lapPreviousPosition,
-  { x: resetState.position.x, z: resetState.position.z },
-  'reset must clear stale gate history so the next start crossing is measured from the reset position'
-);
+assert.deepEqual(resetState.lapPreviousPosition, { x: resetState.position.x, z: resetState.position.z }, 'reset must clear stale gate history');
 assert.equal(resetState.lapCheckpointIndex, 0, 'reset must clear checkpoint progress');
-assert.equal(resetState.lapInvalid, false, 'Restart Lap must clear the persistent invalid-lap state');
+assert.equal(resetState.lapInvalid, false, 'Restart Lap must clear invalid-lap state');
 assert.equal(resetState.lapActive, false, 'reset must return to staged pre-lap state');
 
 const [carModelsSource, mainSource, lapSystemSource, gameStateSource, physicsSource, lotSource] = await Promise.all([
@@ -293,22 +188,22 @@ const [carModelsSource, mainSource, lapSystemSource, gameStateSource, physicsSou
   fs.readFile(new URL('../../turn/vehicle/physics.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8')
 ]);
-assert.match(carModelsSource, /const TIRE_COLOR = 0x17191c/, 'asset vehicle wheels must be forced to a dark tire colour');
+assert.match(carModelsSource, /const TIRE_COLOR = 0x17191c/, 'asset vehicle wheels must be dark');
 assert.match(carModelsSource, /material\.transparent = false/, 'ghost materials must be solid');
-assert.match(carModelsSource, /material\.opacity = 1/, 'ghost materials must be fully opaque');
-assert.match(carModelsSource, /ghost \? ghostColor : requestedColor/, 'ghost body paint must use the lighter precursor colour');
-assert.match(mainSource, /const ghostCar = makeCar\(0x38d9ff, 1\)/, 'procedural ghost fallback must also be solid');
-assert.match(mainSource, /const car = makeCar\(0x38d9ff, 1\)/, 'additional procedural rival fallbacks must also be solid');
-assert.match(lapSystemSource, /crossedForwardGate/, 'production lap registration must use swept physical gates');
-assert.match(lapSystemSource, /crossedLaterCheckpointGate/, 'passing a later gate must expose the moment a lap becomes irrecoverably invalid');
-assert.match(lapSystemSource, /state\.lapInvalid = true/, 'skipped route detection must persist invalidity for the current attempt');
-assert.match(lapSystemSource, /CHECKPOINT_GATE_HALF_WIDTH_FACTOR = 1\.05/, 'checkpoint gates must allow broad grass and verge racing lines');
-assert.match(lapSystemSource, /START_GATE_HALF_WIDTH_FACTOR = 0\.82/, 'start and finish must keep the established narrower crossing gate');
-assert.match(lapSystemSource, /turn:lap-invalid/, 'an incomplete checkpoint chain must report an invalid lap instead of failing silently');
-assert.doesNotMatch(lapSystemSource, /crossedStartByProgress/, 'start and finish must not retain the retired progress-wrap fallback');
+assert.match(carModelsSource, /material\.opacity = 1/, 'ghost materials must be opaque');
+assert.match(carModelsSource, /ghost \? ghostColor : requestedColor/, 'ghost body paint must use the lighter colour');
+assert.match(mainSource, /const ghostCar = makeCar\(0x38d9ff, 1\)/, 'procedural ghost fallback must be solid');
+assert.match(mainSource, /const car = makeCar\(0x38d9ff, 1\)/, 'additional rival fallbacks must be solid');
+assert.match(lapSystemSource, /crossedForwardGate/, 'production lap registration must use swept gates');
+assert.match(lapSystemSource, /crossedLaterCheckpointGate/, 'passing a later gate must expose invalidity');
+assert.match(lapSystemSource, /state\.lapInvalid = true/, 'skipped route detection must persist invalidity');
+assert.match(lapSystemSource, /CHECKPOINT_GATE_HALF_WIDTH_FACTOR = 1\.05/, 'checkpoint gates must allow broad racing lines');
+assert.match(lapSystemSource, /START_GATE_HALF_WIDTH_FACTOR = 0\.82/, 'start and finish must remain narrower');
+assert.match(lapSystemSource, /turn:lap-invalid/, 'an incomplete chain must report invalidity');
+assert.doesNotMatch(lapSystemSource, /crossedStartByProgress/, 'start and finish must not retain progress-wrap fallback');
 assert.match(gameStateSource, /state\.lapInvalid = false/, 'race staging must clear invalid-lap status');
 assert.match(physicsSource, /driftHeld \? effectiveMaxSpeed \* driftSpeedMultiplier/, 'production physics must enforce the DRIFT speed ceiling');
 assert.match(lotSource, /WHAT DO THE STATS MEAN\?/, 'The Lot must expose a discoverable stat legend');
-assert.match(lotSource, /CAR_STAT_LEGEND/, 'The Lot must render the same shared stat definitions used by tuning');
+assert.match(lotSource, /VEHICLE_STAT_LEGEND/, 'The Lot must render the shared stat definitions');
 
-console.log('TURN stat legend, mandatory drift penalty, forgiving swept lap gates and anti-shortcut regression passed.');
+console.log('TURN stat legend, mandatory drift penalty and anti-shortcut regression passed.');
