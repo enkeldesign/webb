@@ -11,7 +11,6 @@ on:
   push:
     branches:
       - main
-      - agent/turn-r60-lot-layout
     paths:
       - 'turn/**'
       - 'turn-lab/**'
