@@ -11,6 +11,52 @@ import {
 } from '../turn/tracks/elevation.js';
 import { updateVehiclePhysicsState } from '../turn/vehicle/physics.js';
 
+class Vec3 {
+  constructor(x = 0, y = 0, z = 0) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+  }
+
+  copy(other) {
+    this.x = Number(other?.x) || 0;
+    this.y = Number(other?.y) || 0;
+    this.z = Number(other?.z) || 0;
+    return this;
+  }
+
+  set(x, y, z) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    return this;
+  }
+
+  addScaledVector(other, scale) {
+    this.x += (Number(other?.x) || 0) * scale;
+    this.y += (Number(other?.y) || 0) * scale;
+    this.z += (Number(other?.z) || 0) * scale;
+    return this;
+  }
+
+  dot(other) {
+    return this.x * (Number(other?.x) || 0)
+      + this.y * (Number(other?.y) || 0)
+      + this.z * (Number(other?.z) || 0);
+  }
+
+  length() {
+    return Math.hypot(this.x, this.y, this.z);
+  }
+
+  multiplyScalar(scale) {
+    this.x *= scale;
+    this.y *= scale;
+    this.z *= scale;
+    return this;
+  }
+}
+
 const uphillSample = {
   point: { x: 12, y: 8.5, z: -4 },
   tangent: normalized({ x: 0, y: 0.2, z: 1 })
@@ -138,52 +184,6 @@ assert.doesNotMatch(replaySource, /y: state\.position\.y/, 'Elevation must not r
 assert.match(spatialSource, /const dx = x - point\.x;\s*const dz = z - point\.z;/, 'Track lookup intentionally remains exact in X/Z');
 
 console.log('TURN r67 elevation-aware runtime regression passed.');
-
-class Vec3 {
-  constructor(x = 0, y = 0, z = 0) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
-  }
-
-  copy(other) {
-    this.x = Number(other?.x) || 0;
-    this.y = Number(other?.y) || 0;
-    this.z = Number(other?.z) || 0;
-    return this;
-  }
-
-  set(x, y, z) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
-    return this;
-  }
-
-  addScaledVector(other, scale) {
-    this.x += (Number(other?.x) || 0) * scale;
-    this.y += (Number(other?.y) || 0) * scale;
-    this.z += (Number(other?.z) || 0) * scale;
-    return this;
-  }
-
-  dot(other) {
-    return this.x * (Number(other?.x) || 0)
-      + this.y * (Number(other?.y) || 0)
-      + this.z * (Number(other?.z) || 0);
-  }
-
-  length() {
-    return Math.hypot(this.x, this.y, this.z);
-  }
-
-  multiplyScalar(scale) {
-    this.x *= scale;
-    this.y *= scale;
-    this.z *= scale;
-    return this;
-  }
-}
 
 function normalized(vector) {
   const length = Math.hypot(vector.x, vector.y, vector.z) || 1;
