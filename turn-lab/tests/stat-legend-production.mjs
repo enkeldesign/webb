@@ -14,8 +14,9 @@ assert.match(
   'The DRIFT legend must state the permanent speed tradeoff'
 );
 
-const [index, wrapper, legendModule, legendCss, lotSource, physicsSource] = await Promise.all([
+const [index, releaseSource, wrapper, legendModule, legendCss, lotSource, physicsSource] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-track-select.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-stat-legend.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-stat-legend.css', import.meta.url), 'utf8'),
@@ -23,10 +24,15 @@ const [index, wrapper, legendModule, legendCss, lotSource, physicsSource] = awai
   fs.readFile(new URL('../../turn/vehicle/physics.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /lot-stat-legend\.css\?build=20260724-r59/, 'Production must load the stat-legend styling');
-assert.match(index, /lot-track-select\.js\?build=20260724-r60/, 'Production must cache-bust the compact Lot wrapper');
-assert.match(index, /vehicle\/physics\.js\?build=20260724-r59/, 'Production must cache-bust the mandatory DRIFT penalty');
-assert.match(index, /vehicle\/catalog\.js\?build=20260724-r59/, 'Production must cache-bust the shared stat definitions');
+const release = JSON.parse(releaseSource);
+const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
+assert.ok(importMapText, 'Production must expose its import map');
+const imports = JSON.parse(importMapText).imports;
+
+assert.match(index, new RegExp(`lot-stat-legend\\.css\\?build=${release.cacheKey}`), 'Production must load the stat-legend styling through the current release');
+assert.equal(imports['./garage/lot-r10.js?build=20260720-r19'], `./garage/lot-track-select.js?build=${release.cacheKey}`, 'Production must publish the compact Lot wrapper through the current release');
+assert.equal(imports['./vehicle/physics.js?build=20260720-r19'], `./vehicle/physics.js?build=${release.cacheKey}`, 'Production must publish the mandatory DRIFT penalty through the current release');
+assert.equal(imports['./vehicle/catalog.js?build=20260720-r19'], `./vehicle/catalog.js?build=${release.cacheKey}`, 'Production must publish the shared stat definitions through the current release');
 assert.match(wrapper, /const lotResult = showOriginalLot\(options\)/, 'The verified Lot must mount before the legend connects to it');
 assert.ok(
   wrapper.indexOf('showOriginalLot(options)') < wrapper.indexOf('installLotStatLegend()'),
@@ -34,7 +40,7 @@ assert.ok(
 );
 assert.match(legendModule, /VEHICLE_STAT_LEGEND/, 'The in-game legend must use the shared source of truth');
 assert.match(legendModule, /aria-modal/, 'The legend must open as an accessible modal');
-assert.match(legendModule, /WHAT DO THE STATS MEAN\?/, 'The legend trigger must be discoverable before r60 compacts it to an info icon');
+assert.match(legendModule, /WHAT DO THE STATS MEAN\?/, 'The legend trigger must be discoverable before the compact layout turns it into an info icon');
 assert.doesNotMatch(legendModule, /mountObserver|subtree: true/, 'The legend must not observe the whole game DOM');
 assert.match(legendModule, /statsObserver\.observe\(stats, \{ childList: true \}\)/, 'Only actual car-stat replacement must trigger relabelling');
 assert.match(legendModule, /label\.textContent !== definition\.label/, 'Relabelling must not rewrite unchanged labels');
@@ -46,4 +52,4 @@ assert.match(physicsSource, /baseSpeedLimit \* effectiveDriftSpeedMultiplier/, '
 assert.match(physicsSource, /3\.2 \* driftStabilityMultiplier/, 'The DRIFT stat must improve recovery from a slide');
 assert.match(physicsSource, /0\.42 \* driftStabilityMultiplier/, 'The DRIFT stat must improve lateral stability while the control is held');
 
-console.log('TURN shared in-game vehicle stat legend regression passed.');
+console.log(`TURN ${release.id} shared in-game vehicle stat legend passed.`);
