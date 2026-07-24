@@ -107,5 +107,8 @@ jobs:
       - name: Run event-driven rival visual regression
         run: node turn-tests/rival-visual-sync-production.mjs
 
+      - name: Run fixed skid history regression
+        run: node turn-tests/skid-ring-buffer-production.mjs
+
       - name: Verify production release architecture
         run: node turn-tests/release-production.mjs
