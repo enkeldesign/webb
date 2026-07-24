@@ -4,6 +4,15 @@ export const DEFAULT_VEHICLE_SECONDARY_COLOR = '#f8f9fa';
 export const VEHICLE_SELECTION_KEY = 'turn-vehicle-selection-v1';
 export const VEHICLE_STAT_BUDGET = 18;
 
+export const VEHICLE_STAT_LEGEND = Object.freeze([
+  Object.freeze({ key: 'speed', label: 'TOP SPEED', description: 'How fast the car can go without boost.' }),
+  Object.freeze({ key: 'acceleration', label: 'ACCELERATION', description: 'How quickly the car reaches speed.' }),
+  Object.freeze({ key: 'control', label: 'CONTROL', description: 'How precisely and quickly the car steers while gripping the road.' }),
+  Object.freeze({ key: 'drift', label: 'DRIFT', description: 'How well the car retains speed and settles while drifting. Drift is always slower than Gas.' }),
+  Object.freeze({ key: 'boostPower', label: 'BOOST POWER', description: 'How strongly boost accelerates the car and raises its speed limit.' }),
+  Object.freeze({ key: 'boostDuration', label: 'BOOST TANK', description: 'How long a full boost charge lasts.' })
+]);
+
 export const CAR_PALETTE = Object.freeze([
   Object.freeze({ name: 'Solar', value: '#ffd43b' }),
   Object.freeze({ name: 'Sky', value: '#38d9ff' }),
@@ -15,11 +24,6 @@ export const CAR_PALETTE = Object.freeze([
   Object.freeze({ name: 'Ice', value: '#f8f9fa' })
 ]);
 
-// Every car has exactly 18 stat points. The Sedan's 3/3/3/3/3/3 is the neutral baseline;
-// every other vehicle trades strengths for weaknesses instead of becoming a straight upgrade.
-// The vendored packs use three different authored front axes. modelYawQuarterTurns
-// rotates each raw GLB so every car has the same local front before TURN positions it.
-// enginePitch is an audio-only baseline multiplier: heavy vehicles sit lower, race cars higher.
 const RAW_CARS = [
   ['convertible', 'Convertible', 'prototype', { speed: 4, acceleration: 4, control: 4, drift: 2, boostPower: 3, boostDuration: 1 }, 0.98, 1, 1.08],
   ['classic', 'Classic', 'prototype', { speed: 3, acceleration: 2, control: 4, drift: 4, boostPower: 2, boostDuration: 3 }, 1.00, 1, 0.88],
@@ -38,24 +42,11 @@ const RAW_CARS = [
   ['van', 'Van', 'car', { speed: 2, acceleration: 3, control: 3, drift: 5, boostPower: 1, boostDuration: 4 }, 1.08, 0, 0.80]
 ];
 
-// The current GLBs use one atlas material per mesh. Roofs are part of the body mesh,
-// while Sport Sedan's spoiler is the one safe, separately addressable paint surface.
 const SECONDARY_PAINT_BY_ID = Object.freeze({
-  'sedan-sports': Object.freeze({
-    label: 'Spoiler',
-    meshNames: Object.freeze(['spoiler'])
-  })
+  'sedan-sports': Object.freeze({ label: 'Spoiler', meshNames: Object.freeze(['spoiler']) })
 });
 
-export const CAR_CATALOG = Object.freeze(RAW_CARS.map(([
-  id,
-  name,
-  pack,
-  stats,
-  visualScale,
-  modelYawQuarterTurns,
-  enginePitch
-]) => Object.freeze({
+export const CAR_CATALOG = Object.freeze(RAW_CARS.map(([id, name, pack, stats, visualScale, modelYawQuarterTurns, enginePitch]) => Object.freeze({
   id,
   name,
   pack,
@@ -64,10 +55,7 @@ export const CAR_CATALOG = Object.freeze(RAW_CARS.map(([
   visualScale,
   modelYawQuarterTurns,
   secondaryPaint: SECONDARY_PAINT_BY_ID[id] || null,
-  tuning: Object.freeze({
-    ...deriveVehicleTuning(stats),
-    enginePitch
-  })
+  tuning: Object.freeze({ ...deriveVehicleTuning(stats), enginePitch })
 })));
 
 const CAR_BY_ID = new Map(CAR_CATALOG.map((car) => [car.id, car]));
@@ -109,9 +97,7 @@ export function loadVehicleSelection() {
 
 export function saveVehicleSelection(selection) {
   const normalized = normalizeVehicleSelection(selection);
-  try {
-    localStorage.setItem(VEHICLE_SELECTION_KEY, JSON.stringify(normalized));
-  } catch (_) {}
+  try { localStorage.setItem(VEHICLE_SELECTION_KEY, JSON.stringify(normalized)); } catch (_) {}
   return normalized;
 }
 
@@ -131,12 +117,12 @@ export function getVehicleStatTotal(stats) {
 
 export function deriveVehicleTuning(stats) {
   return {
-    // A 3/5 stat is the exact TURN v1.0 baseline. Lower and higher ratings fan out from there.
     topSpeedMultiplier: centeredStat(stats.speed, [0.84, 0.92, 1, 1.06, 1.12]),
     accelerationMultiplier: centeredStat(stats.acceleration, [0.82, 0.91, 1, 1.08, 1.16]),
     controlMultiplier: centeredStat(stats.control, [0.88, 0.94, 1, 1.07, 1.14]),
-    driftEngineMultiplier: centeredStat(stats.drift, [0.84, 0.89, 0.93, 0.97, 0.99]),
-    driftDragAdd: centeredStat(stats.drift, [0.14, 0.112, 0.085, 0.055, 0.025]),
+    driftEngineMultiplier: centeredStat(stats.drift, [0.78, 0.82, 0.86, 0.90, 0.94]),
+    driftDragAdd: centeredStat(stats.drift, [0.16, 0.13, 0.10, 0.075, 0.055]),
+    driftSpeedMultiplier: centeredStat(stats.drift, [0.76, 0.80, 0.84, 0.88, 0.92]),
     boostPowerMultiplier: centeredStat(stats.boostPower, [0.78, 0.89, 1, 1.13, 1.26]),
     boostSpeedMultiplier: centeredStat(stats.boostPower, [1.23, 1.275, 1.32, 1.35, 1.38]),
     boostDurationSeconds: centeredStat(stats.boostDuration, [1.2, 1.6, 2, 2.65, 3.4])
