@@ -36,6 +36,9 @@ export const TRACK_RUNTIME_REGISTRY = Object.freeze(TRACK_CATALOG.map((definitio
 
   return Object.freeze({
     ...definition,
+    storageRevision: definition.storageRevision,
+    freeRoamDistance: definition.freeRoamDistance,
+    collisionProfile: definition.collisionProfile,
     createRuntime(sampleCount = TRACK_SAMPLE_COUNT) {
       return createTrackRuntime(definition.id, sampleCount);
     },
