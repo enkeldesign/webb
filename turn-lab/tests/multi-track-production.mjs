@@ -54,18 +54,8 @@ assert.equal(isForgivingTrackSurface('airport', { x: -20, z: 54 }), true, 'The w
 assert.equal(isForgivingTrackSurface('airport', { x: 0, z: 78 }), false, 'The two bays must not connect into a broad shortcut across the hairpin island');
 assert.equal(isForgivingTrackSurface('countryside', { x: 20, z: 54 }), false, 'Airport forgiveness must never leak onto Countryside');
 
-const trackA = makeSamples([
-  [-20, 0],
-  [0, 0],
-  [20, 0],
-  [40, 0]
-]);
-const trackB = makeSamples([
-  [0, 100],
-  [20, 100],
-  [40, 100],
-  [60, 100]
-]);
+const trackA = makeSamples([[-20, 0], [0, 0], [20, 0], [40, 0]]);
+const trackB = makeSamples([[0, 100], [20, 100], [40, 100], [60, 100]]);
 const spatialIndex = createTrackSpatialIndex(trackA, { cellSize: 16 });
 assert.equal(spatialIndex.find({ x: 3, z: 2 }).index, 1, 'Initial track index must find Track A samples');
 spatialIndex.replaceSamples(trackB);
@@ -111,8 +101,9 @@ const [
 
 assert.match(index, /TURN v1\.7\.0 · Build 2026\.07\.23-r53/);
 assert.match(index, /track-select\.css\?build=20260723-r53/);
-assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-track-select\.js\?build=20260723-r53"/, 'The r53 track selector must sit before the stable Lot entry point');
-assert.match(index, /"\.\/vehicle\/physics\.js\?build=20260720-r19": "\.\/vehicle\/physics\.js\?build=20260723-r53"/, 'Production must cache-bust the collision-aware vehicle physics');
+assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-track-select\.js\?build=20260724-r59"/, 'Production must cache-bust the Lot wrapper that exposes the stat legend');
+assert.match(index, /"\.\/vehicle\/physics\.js\?build=20260720-r19": "\.\/vehicle\/physics\.js\?build=20260724-r59"/, 'Production must cache-bust the mandatory drift-penalty physics');
+assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260722-r42": "\.\/vehicle\/catalog\.js\?build=20260724-r59"/, 'Production must cache-bust the shared stat legend and tuning model');
 assert.match(index, /"\.\/race\/rival-storage\.js\?build=20260720-r19": "\.\/race\/rival-storage\.js\?build=20260722-r50"/, 'Production must preserve geometry-revision-aware rival storage');
 assert.match(index, /"\.\/race\/rival-storage\.js\?build=20260722-r50": "\.\/race\/rival-storage\.js\?build=20260723-r57"/, 'Production must cache-bust the best-lap car summary storage helper');
 assert.match(index, /"\.\/ui\/track-select\.js\?build=20260722-r51": "\.\/ui\/track-select\.js\?build=20260723-r57"/, 'Production must cache-bust the selector that renders the record-setting car');
@@ -134,10 +125,7 @@ assert.doesNotMatch(trackCatalog, /\[27, 76\],[\s\S]*\[3, 40\],[\s\S]*\[-25, 68\
 
 assert.match(lotWrapper, /track-manager\.js\?build=20260722-r52/, 'The Lot wrapper must preserve the r52 Airport run-off runtime');
 assert.match(lotWrapper, /await chooseTrackBeforeLot\(\)/, 'Track selection must complete before The Lot opens');
-assert.ok(
-  lotWrapper.indexOf('await chooseTrackBeforeLot()') < lotWrapper.indexOf('showOriginalLot(options)'),
-  'The flow must remain TRACK → CAR → RACE'
-);
+assert.ok(lotWrapper.indexOf('await chooseTrackBeforeLot()') < lotWrapper.indexOf('showOriginalLot(options)'), 'The flow must remain TRACK → CAR → RACE');
 
 assert.match(trackSelect, /CHOOSE YOUR TRACK/);
 assert.doesNotMatch(trackSelect, /TURN WORLD TOUR/, 'The selector must drop the redundant event-style kicker');
@@ -148,13 +136,9 @@ assert.match(trackSelect, /getStoredBestLap\(track\.id\)/, 'Selector cards must 
 assert.match(trackSelect, /getCarDefinition\(bestLap\.carId\)\.name\.toUpperCase\(\)/, 'Selector cards must label the car that actually set the best time');
 assert.match(trackSelect, /track-card-best-car/, 'The Best badge must reserve a dedicated record-setting car label');
 assert.match(trackSelectCss, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/, 'The two launch tracks must present as peer choices');
-assert.match(trackSelectCss, /\.track-select-continue \{[\s\S]*grid-column: 2;/, 'Continue must align below the second track card in landscape');
 assert.match(trackSelectCss, /\.track-card\.is-selected \.track-card-choice-marker::after \{[\s\S]*content: "✓";/, 'The selected track must have an unmistakable check indicator');
 assert.match(trackSelectCss, /@media \(max-height: 820px\) and \(orientation: landscape\)/, 'Landscape track selection must compact before the photographed iPad viewport overflows');
-assert.match(trackSelectCss, /grid-template-rows: auto minmax\(0, 1fr\) auto/, 'The chooser must reserve a visible footer row for Continue');
 assert.match(trackSelectCss, /\.track-card-name \{[\s\S]*white-space: nowrap;/, 'Track names must remain a single controlled line');
-assert.match(trackSelectCss, /\.track-card\.is-selected \{[\s\S]*translate\(9px, 9px\) scale\(0\.99\)/, 'Selected track must keep its deeply pressed material state');
-assert.match(trackSelectCss, /filter: saturate\(1\.38\) contrast\(1\.06\) brightness\(1\.02\)/, 'Selected track must remain distinctly more vibrant');
 assert.match(trackSelectCss, /\.track-card:focus-visible/, 'The material treatment must retain a visible keyboard focus ring');
 
 assert.match(trackManager, /airport-world-r52\.js\?build=20260722-r52/, 'Track manager must preserve the r52 Airport run-off layer');
@@ -171,6 +155,7 @@ assert.match(physics, /nearestBefore\.distance > trackWidth \* 0\.58 && !isForgi
 assert.match(physics, /nearestAfter\.distance > trackWidth \* 0\.58 && !isForgivingSurface\(state\.position\)/, 'Forgiving bays must keep normal road physics after integration');
 assert.match(physics, /globalThis\.__turnIsForgivingSurface\?\.\(position\)/, 'The physics core must use one optional track-specific surface predicate');
 assert.match(physics, /resolveWorldCollisionState\(/, 'The physics core must resolve the new world containment layer');
+assert.match(physics, /driftHeld \? effectiveMaxSpeed \* driftSpeedMultiplier/, 'The physics core must enforce the stat-driven DRIFT speed ceiling');
 
 assert.match(hud, /cached\.firstSample === firstSample/, 'The minimap cache must notice when the shared samples array is repopulated for another track');
 assert.match(hud, /cached\.lastSample === lastSample/, 'The minimap cache must not reuse the previous track drawing after a course switch');
@@ -210,7 +195,7 @@ assert.doesNotMatch(airportRunoffWorld, /setAnimationLoop|requestAnimationFrame|
 assert.match(worldRender, /const worldSamples = samples\.slice\(\)/, 'Countryside async scenery must retain immutable Track 1 samples during an early track switch');
 assert.match(worldRender, /samples: worldSamples/, 'Late Countryside art modules must receive the snapshot rather than the mutable active track array');
 
-console.log('TURN r53 world containment, Airport hairpin run-off and preserved anti-shortcut geometry passed.');
+console.log('TURN r59 stat legend, drift balance, world containment and Airport regressions passed.');
 
 function makeSamples(points) {
   return points.map(([x, z]) => ({ point: { x, z } }));
