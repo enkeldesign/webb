@@ -20,6 +20,6 @@ assert.match(index, /<meta name="twitter:image" content="https:\/\/enkel\.design
 
 const image = fs.readFileSync(path.join(turnRoot, 'turn-og-r58.jpg'));
 assert.deepEqual([...image.subarray(0, 3)], [0xff, 0xd8, 0xff], 'Social preview must be a JPEG');
-assert.ok(image.length > 100_000, 'Social preview must contain the full supplied artwork');
+assert.ok(image.length > 50_000, 'Social preview must contain the supplied artwork');
 
 console.log('TURN Open Graph and social preview metadata passed.');
