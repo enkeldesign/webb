@@ -139,10 +139,15 @@ export function getStoredBestLap(trackId = DEFAULT_TRACK_ID) {
         const time = Number(lap?.time);
         if (!Number.isFinite(time)) return best;
         if (!best || time < best.time) {
-          return {
+          const summary = {
             time,
             carId: normalizeVehicleId(lap?.carId)
           };
+          if (lap?.carColor) summary.carColor = normalizeVehicleColor(lap.carColor);
+          if (lap?.carSecondaryColor) {
+            summary.carSecondaryColor = normalizeVehicleSecondaryColor(lap.carSecondaryColor);
+          }
+          return summary;
         }
         return best;
       }, null)

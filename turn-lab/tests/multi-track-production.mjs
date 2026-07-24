@@ -22,7 +22,13 @@ try {
     trackId: 'countryside',
     competitorLaps: [
       { time: 13.18, carId: 'sedan', frames: Array.from({ length: 25 }, (_, index) => ({ t: index / 10 })) },
-      { time: 12.73, carId: 'monster-truck', frames: Array.from({ length: 25 }, (_, index) => ({ t: index / 10 })) }
+      {
+        time: 12.73,
+        carId: 'monster-truck',
+        carColor: '#ff4fa3',
+        carSecondaryColor: '#abcdef',
+        frames: Array.from({ length: 25 }, (_, index) => ({ t: index / 10 }))
+      }
     ]
   };
   const airportState = {
@@ -37,8 +43,21 @@ try {
   assert.equal(storage.has('turn-personal-rivals-v1:airport'), false, 'Old Airport ghosts must not leak onto the redesigned course');
   assert.equal(getStoredBestTime('countryside'), 12.73);
   assert.equal(getStoredBestTime('airport'), 22.42);
-  assert.deepEqual(getStoredBestLap('countryside'), { time: 12.73, carId: 'monster-truck' }, 'Track 1 best summary must preserve the car that set the fastest time');
-  assert.deepEqual(getStoredBestLap('airport'), { time: 22.42, carId: 'race-future' }, 'Airport best summary must preserve the car that set the fastest time');
+  assert.deepEqual(
+    getStoredBestLap('countryside'),
+    {
+      time: 12.73,
+      carId: 'monster-truck',
+      carColor: '#ff4fa3',
+      carSecondaryColor: '#abcdef'
+    },
+    'Track 1 best summary must preserve the exact car and paint that set the fastest time'
+  );
+  assert.deepEqual(
+    getStoredBestLap('airport'),
+    { time: 22.42, carId: 'race-future' },
+    'Legacy records without paint metadata must keep their compact backward-compatible summary'
+  );
 
   clearRivalsState(airportState);
   assert.equal(storage.has('turn-personal-rivals-v1:airport-r50'), false, 'Reset Rivals on Airport must clear only the r50 Airport namespace');
@@ -111,12 +130,13 @@ const [
 
 assert.match(index, /TURN v1\.7\.0 · Build 2026\.07\.23-r53/);
 assert.match(index, /track-select\.css\?build=20260723-r53/);
-assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-track-select\.js\?build=20260724-r59"/, 'Production must cache-bust the Lot wrapper that installs the vehicle stat legend');
+assert.match(index, /track-select-r61\.css\?build=20260724-r61/, 'Production must load the record-car thumbnail layout');
+assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-track-select\.js\?build=20260724-r60"/, 'Production must preserve the compact r60 Lot layout');
 assert.match(index, /"\.\/vehicle\/physics\.js\?build=20260720-r19": "\.\/vehicle\/physics\.js\?build=20260724-r59"/, 'Production must cache-bust the mandatory DRIFT speed tradeoff');
 assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260722-r42": "\.\/vehicle\/catalog\.js\?build=20260724-r59"/, 'Production must cache-bust the shared vehicle stat definitions');
-assert.match(index, /"\.\/race\/rival-storage\.js\?build=20260720-r19": "\.\/race\/rival-storage\.js\?build=20260722-r50"/, 'Production must preserve geometry-revision-aware rival storage');
-assert.match(index, /"\.\/race\/rival-storage\.js\?build=20260722-r50": "\.\/race\/rival-storage\.js\?build=20260723-r57"/, 'Production must cache-bust the best-lap car summary storage helper');
-assert.match(index, /"\.\/ui\/track-select\.js\?build=20260722-r51": "\.\/ui\/track-select\.js\?build=20260723-r57"/, 'Production must cache-bust the selector that renders the record-setting car');
+assert.match(index, /"\.\/race\/rival-storage\.js\?build=20260720-r19": "\.\/race\/rival-storage\.js\?build=20260724-r61"/, 'Main runtime must publish paint-aware best-lap summaries');
+assert.match(index, /"\.\/race\/rival-storage\.js\?build=20260722-r50": "\.\/race\/rival-storage\.js\?build=20260724-r61"/, 'Track selector must receive the same paint-aware record storage');
+assert.match(index, /"\.\/ui\/track-select\.js\?build=20260722-r51": "\.\/ui\/track-select\.js\?build=20260724-r61"/, 'Production must publish the selector that renders the record-setting GLB');
 assert.match(index, /"\.\/race\/track-spatial-index\.js\?build=20260720-r19": "\.\/race\/track-spatial-index\.js\?build=20260722-r47"/, 'Production must preserve the rebuildable track index');
 assert.match(index, /Turn the device to steer/, 'Start copy must use device-neutral language');
 assert.match(index, /Steering uses device rotation/, 'Status copy must use device-neutral language');
@@ -147,7 +167,9 @@ assert.match(trackSelect, /track-card-choice-marker/, 'Each card must expose an 
 assert.match(trackSelect, /track-card-summary/, 'Track name and Best time must share one deliberate bottom row');
 assert.match(trackSelect, /getStoredBestLap\(track\.id\)/, 'Selector cards must read the track-specific best lap summary');
 assert.match(trackSelect, /getCarDefinition\(bestLap\.carId\)\.name\.toUpperCase\(\)/, 'Selector cards must label the car that actually set the best time');
-assert.match(trackSelect, /track-card-best-car/, 'The Best badge must reserve a dedicated record-setting car label');
+assert.match(trackSelect, /track-card-best-car/, 'The Best badge must retain the record-setting car label');
+assert.match(trackSelect, /track-card-best-model/, 'The Best badge must reserve a real model thumbnail');
+assert.match(trackSelect, /renderBestCarThumbnail\(bestLap\)/, 'The selector must render the stored car and paint rather than a generic icon');
 assert.match(trackSelectCss, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/, 'The two launch tracks must present as peer choices');
 assert.match(trackSelectCss, /\.track-select-continue \{[\s\S]*grid-column: 2;/, 'Continue must align below the second track card in landscape');
 assert.match(trackSelectCss, /\.track-card\.is-selected \.track-card-choice-marker::after \{[\s\S]*content: "✓";/, 'The selected track must have an unmistakable check indicator');
@@ -182,6 +204,8 @@ assert.match(rivalStorage, /airport: 'airport-r50'/, 'Airport records must stay 
 assert.match(rivalStorage, /version: 6/);
 assert.match(rivalStorage, /trackRevision: storageTrackId\(activeTrackId\)/, 'Saved rival payloads must record the geometry revision');
 assert.match(rivalStorage, /export function getStoredBestLap/, 'Storage must expose a compact best-lap summary for track selection');
+assert.match(rivalStorage, /summary\.carColor = normalizeVehicleColor\(lap\.carColor\)/, 'Paint-aware records must expose the exact primary colour');
+assert.match(rivalStorage, /summary\.carSecondaryColor = normalizeVehicleSecondaryColor\(lap\.carSecondaryColor\)/, 'Paint-aware records must expose the exact secondary colour');
 
 assert.match(airportWorld, /name = 'TURN Airport r50'/, 'The base Airport world must retain the successful r50 redesign');
 assert.match(airportWorld, /makeStartFinishDistrict\(world, samples, trackWidth\)/, 'Airport must have a deliberately designed start and finish district');
@@ -211,7 +235,7 @@ assert.doesNotMatch(airportRunoffWorld, /setAnimationLoop|requestAnimationFrame|
 assert.match(worldRender, /const worldSamples = samples\.slice\(\)/, 'Countryside async scenery must retain immutable Track 1 samples during an early track switch');
 assert.match(worldRender, /samples: worldSamples/, 'Late Countryside art modules must receive the snapshot rather than the mutable active track array');
 
-console.log('TURN r53 world containment, Airport hairpin run-off and preserved anti-shortcut geometry passed.');
+console.log('TURN r61 record-car thumbnails, Airport run-off and preserved anti-shortcut geometry passed.');
 
 function makeSamples(points) {
   return points.map(([x, z]) => ({ point: { x, z } }));
