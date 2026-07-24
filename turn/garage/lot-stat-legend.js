@@ -16,6 +16,8 @@ export function installLotStatLegend(root = document.body) {
   return () => {
     mountObserver.disconnect();
     statsObserver?.disconnect();
+    trigger?.remove();
+    dialog?.remove();
     trigger = null;
     dialog = null;
     previousFocus = null;
