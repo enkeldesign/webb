@@ -1,16 +1,23 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [index, selector, renderer, css] = await Promise.all([
+const [index, releaseSource, selector, renderer, css] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/track-select.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/track-best-car.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/track-select-r61.css', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /track-select-r61\.css\?build=20260724-r61/, 'Production must load the record-car thumbnail layout');
-assert.match(index, /"\.\/ui\/track-select\.js\?build=20260722-r51": "\.\/ui\/track-select\.js\?build=20260724-r61"/, 'Production must cache-bust the enhanced selector');
-assert.match(index, /"\.\/race\/rival-storage\.js\?build=20260722-r50": "\.\/race\/rival-storage\.js\?build=20260724-r61"/, 'The selector must receive paint-aware record summaries');
+const release = JSON.parse(releaseSource);
+const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
+assert.ok(importMapText, 'Production must expose its import map');
+const imports = JSON.parse(importMapText).imports;
+const releaseTarget = (path) => `${path}?build=${release.cacheKey}`;
+
+assert.match(index, new RegExp(`track-select-r61\\.css\\?build=${release.cacheKey}`), 'Production must load the record-car thumbnail layout through the current release');
+assert.equal(imports['./ui/track-select.js?build=20260722-r51'], releaseTarget('./ui/track-select.js'), 'Production must publish the enhanced selector');
+assert.equal(imports['./race/rival-storage.js?build=20260722-r50'], releaseTarget('./race/rival-storage.js'), 'The selector must receive paint-aware record summaries');
 
 assert.match(selector, /track-card-best-model/, 'Every Best badge must reserve a model thumbnail');
 assert.match(selector, /renderBestCarThumbnail\(bestLap\)/, 'Best badges must request the stored record car');
@@ -33,4 +40,4 @@ assert.match(css, /\.track-card-best-model \{[\s\S]*object-fit: contain/, 'Every
 assert.match(css, /@media \(max-height: 610px\) and \(orientation: landscape\)/, 'Short landscape devices must receive a compact thumbnail treatment');
 assert.match(css, /:has\(\.track-card-best-model:not\(\[hidden\]\)\)/, 'No-time cards must collapse back to the compact text-only badge');
 
-console.log('TURN track-specific record car 3D thumbnails passed.');
+console.log(`TURN ${release.id} track-specific record car 3D thumbnails passed.`);
