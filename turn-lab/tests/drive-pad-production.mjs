@@ -11,8 +11,9 @@ class Vec3 {
   length() { return Math.hypot(this.x, this.y, this.z); }
 }
 
-const [index, controls, css, gameplayCss, analogGas, spectate] = await Promise.all([
+const [index, releaseSource, controls, css, gameplayCss, analogGas, spectate] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/gameplay-controls.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/drive-pad.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/gameplay-v2.css', import.meta.url), 'utf8'),
@@ -20,9 +21,10 @@ const [index, controls, css, gameplayCss, analogGas, spectate] = await Promise.a
   fs.readFile(new URL('../../turn/ui/spectate.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.7\.0 · Build 2026\.07\.23-r53/);
-assert.match(index, /drive-pad\.css\?build=20260723-r53/);
-assert.match(index, /gameplay-v2\.css\?build=20260723-r53/);
+const release = JSON.parse(releaseSource);
+assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
+assert.match(index, new RegExp(`drive-pad\\.css\\?build=${release.cacheKey}`));
+assert.match(index, new RegExp(`gameplay-v2\\.css\\?build=${release.cacheKey}`));
 assert.match(controls, /className = 'drive-pad'/, 'Gameplay controls must create one unified drive pad');
 assert.match(controls, /return x < 0\.5 \? 'drift' : 'boost'/, 'Top drive pad must split into Drift and Boost');
 assert.match(controls, /return 'gas'/, 'Bottom drive pad must map to Gas');
@@ -75,4 +77,4 @@ assert.ok(state.velocity.z < -0.1, 'Holding Brake after stopping must engage rev
 for (let i = 0; i < 100; i += 1) updateVehiclePhysicsState(physicsArgs);
 assert.ok(state.velocity.z >= -(80 * 0.32 + 0.5), 'Reverse must stay capped well below forward top speed');
 
-console.log('TURN unified drive pad, restart boost refill and reverse regression passed.');
+console.log(`TURN ${release.id} unified drive pad, restart boost refill and reverse passed.`);

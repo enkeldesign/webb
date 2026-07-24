@@ -1,7 +1,8 @@
 const readonlyGlobals = {
   console: 'readonly',
   localStorage: 'readonly',
-  process: 'readonly'
+  process: 'readonly',
+  URL: 'readonly'
 };
 
 export default [

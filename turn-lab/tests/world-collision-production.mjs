@@ -78,15 +78,21 @@ const boxCollision = resolveWorldCollisionState({
 assert.equal(boxCollision.obstacles, 1, 'The collision foundation must support box colliders for buildings and large props');
 assert.ok(Math.abs(boxState.position.x) >= 6.5 || Math.abs(boxState.position.z) >= 8.5, 'Box collisions must eject the car beyond the expanded solid footprint');
 
-const [index, physics] = await Promise.all([
+const [index, releaseSource, physics] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/physics.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.7\.0 · Build 2026\.07\.23-r53/);
-assert.match(index, /"\.\/vehicle\/physics\.js\?build=20260720-r19": "\.\/vehicle\/physics\.js\?build=20260724-r59"/, 'Production must cache-bust the collision-aware r59 physics module');
+const release = JSON.parse(releaseSource);
+const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
+assert.ok(importMapText, 'Production must expose its import map');
+const imports = JSON.parse(importMapText).imports;
+
+assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
+assert.equal(imports['./vehicle/physics.js?build=20260720-r19'], `./vehicle/physics.js?build=${release.cacheKey}`, 'Production must publish the collision-aware physics module through the current release');
 assert.match(physics, /world-collision\.js\?build=20260723-r53/, 'Vehicle physics must load the world collision resolver');
 assert.match(physics, /resolveWorldCollisionState\(/, 'Every physics step must resolve the world boundary after movement');
 assert.match(physics, /if \(collision\.collided\) nearestAfter = findNearestTrack\(state\.position\)/, 'Track progress must be recomputed after a collision moves the car');
 
-console.log('TURN track-aware invisible world walls and collision foundation regression passed.');
+console.log(`TURN ${release.id} track-aware invisible world walls and collision foundation passed.`);

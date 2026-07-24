@@ -1,26 +1,31 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [index, app, audio, controls, catalogSource] = await Promise.all([
+const [index, releaseSource, app, audio, controls, catalogSource] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/audio-system.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/gameplay-controls.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/catalog.js', import.meta.url), 'utf8')
 ]);
 const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
+const release = JSON.parse(releaseSource);
+const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
+assert.ok(importMapText, 'Production must expose its import map');
+const imports = JSON.parse(importMapText).imports;
 
-assert.match(index, /TURN v1\.7\.0 · Build 2026\.07\.23-r53/);
-assert.match(index, /\.\/app\.js\?build=20260723-r53/);
-assert.match(
-  index,
-  /"\.\/vehicle\/catalog\.js\?build=20260720-r19": "\.\/vehicle\/catalog\.js\?build=20260724-r59"/,
-  'The main runtime must publish the r59 vehicle handling catalog'
+assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
+assert.match(index, new RegExp(`\\.\\/app\\.js\\?build=${release.cacheKey}`));
+assert.equal(
+  imports['./vehicle/catalog.js?build=20260720-r19'],
+  `./vehicle/catalog.js?build=${release.cacheKey}`,
+  'The main runtime must publish the current vehicle handling catalog'
 );
-assert.match(
-  index,
-  /"\.\/vehicle\/catalog\.js\?build=20260720-r20": "\.\/vehicle\/catalog\.js\?build=20260724-r59"/,
-  'The Lot must use the same r59 vehicle handling catalog'
+assert.equal(
+  imports['./vehicle/catalog.js?build=20260720-r20'],
+  `./vehicle/catalog.js?build=${release.cacheKey}`,
+  'The Lot must use the same current vehicle handling catalog'
 );
 
 assert.match(app, /import\(withBuild\('\.\/audio\/audio-system\.js'\)\)/, 'Production must load the central audio module');
@@ -95,4 +100,4 @@ assert.match(controls, /globalThis\.__turnAudio\?\.cue\('boost-full'\)/);
 assert.match(controls, /if \(position < lastPosition\)/);
 assert.match(controls, /globalThis\.__turnAudio\?\.cue\('overtake'/);
 
-console.log('TURN drift, boost and rival sound production regression passed.');
+console.log(`TURN ${release.id} drift, boost and rival sound production passed.`);

@@ -44,8 +44,9 @@ assert.ok(truck.tuning.boostPowerMultiplier < sedan.tuning.boostPowerMultiplier,
 assert.ok(truck.tuning.boostDurationSeconds > sedan.tuning.boostDurationSeconds, 'Truck should have a longer boost tank');
 assert.notEqual(catalog.makeGhostColor('#ff4fa3'), '#ff4fa3', 'Ghost colour should be a lighter nuance, not the original paint colour');
 
-const [index, main, lapSystem, rivalStorage, controls, carModels, lotWrapper] = await Promise.all([
+const [index, releaseSource, main, lapSystem, rivalStorage, controls, carModels, lotWrapper] = await Promise.all([
   fs.readFile(path.join(turnDir, 'index.html'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'release.json'), 'utf8'),
   fs.readFile(path.join(turnDir, 'main.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'race/lap-system.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'race/rival-storage.js'), 'utf8'),
@@ -54,16 +55,22 @@ const [index, main, lapSystem, rivalStorage, controls, carModels, lotWrapper] = 
   fs.readFile(path.join(turnDir, 'garage/lot-track-select.js'), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.7\.0 · Build 2026\.07\.23-r53/);
-assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260723-r53/);
-assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-track-select\.js\?build=20260724-r60"/, 'r60 must place the compact track-first wrapper in front of the stable Lot implementation');
+const release = JSON.parse(releaseSource);
+const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
+assert.ok(importMapText, 'Production must expose its import map');
+const imports = JSON.parse(importMapText).imports;
+const releaseTarget = (path) => `${path}?build=${release.cacheKey}`;
+
+assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
+assert.match(index, new RegExp(`\\.\\/garage\\/lot-r10\\.css\\?build=${release.cacheKey}`));
+assert.equal(imports['./garage/lot-r10.js?build=20260720-r19'], releaseTarget('./garage/lot-track-select.js'), 'The current release must place the compact track-first wrapper in front of the stable Lot implementation');
 assert.match(lotWrapper, /showOriginalLot/, 'The track-first wrapper must still delegate car selection to the verified Lot implementation');
 assert.match(lotWrapper, /await chooseTrackBeforeLot\(\)/, 'The driver must pick a track before choosing the car');
-assert.match(lotWrapper, /installLotLayout\(\)/, 'The compact r60 panel arrangement must be installed after The Lot mounts');
-assert.match(lotWrapper, /track-manager\.js\?build=20260722-r52/, 'r60 must preserve the verified r52 Airport run-off runtime');
-assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r19": "\.\/vehicle\/catalog\.js\?build=20260724-r59"/, 'r60 must preserve the shared vehicle stat definitions in the main runtime');
-assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r20": "\.\/vehicle\/catalog\.js\?build=20260724-r59"/, 'r60 must preserve the same handling model inside The Lot');
-assert.match(index, /"\.\/vehicle\/car-models\.js\?build=20260720-r19": "\.\/vehicle\/car-models\.js\?build=20260720-r22"/, 'The stable r22 outline module cache redirect must remain in place');
+assert.match(lotWrapper, /installLotLayout\(\)/, 'The compact panel arrangement must be installed after The Lot mounts');
+assert.match(lotWrapper, /track-manager\.js\?build=20260722-r52/, 'The wrapper must preserve the verified Airport run-off runtime');
+assert.equal(imports['./vehicle/catalog.js?build=20260720-r19'], releaseTarget('./vehicle/catalog.js'), 'The current release must publish the shared vehicle stat definitions in the main runtime');
+assert.equal(imports['./vehicle/catalog.js?build=20260720-r20'], releaseTarget('./vehicle/catalog.js'), 'The current release must publish the same handling model inside The Lot');
+assert.equal(imports['./vehicle/car-models.js?build=20260720-r19'], releaseTarget('./vehicle/car-models.js'), 'The current release must publish the stable outline module');
 assert.match(main, /await showTheLot\(/, 'Start flow must enter the track-first Lot wrapper before racing');
 assert.match(main, /maxSpeed: MAX_SPEED \* state\.vehicleTuning\.topSpeedMultiplier/, 'Selected top speed must reach physics');
 assert.match(main, /vehicleTuning: state\.vehicleTuning/, 'Selected handling profile must reach physics');
@@ -109,4 +116,4 @@ assert.match(main, /await showTheLot\(/, 'Back to the Lot must reuse the track-f
 assert.match(backToLot, /Back to Lot/, 'Race UI must include the Back to Lot button');
 assert.match(backToLot, /back-to-lot-button/, 'Back to Lot must expose its menu hook');
 
-console.log('TURN garage and track-first car selection regression passed.');
+console.log(`TURN ${release.id} garage and track-first car selection passed.`);

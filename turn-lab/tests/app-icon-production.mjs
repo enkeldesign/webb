@@ -7,14 +7,15 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const turnRoot = path.resolve(here, '../../turn');
 
 const index = fs.readFileSync(path.join(turnRoot, 'index.html'), 'utf8');
+const release = JSON.parse(fs.readFileSync(path.join(turnRoot, 'release.json'), 'utf8'));
 const styles = fs.readFileSync(path.join(turnRoot, 'styles.css'), 'utf8');
 const manifest = JSON.parse(fs.readFileSync(path.join(turnRoot, 'site.webmanifest'), 'utf8'));
 
-assert.match(index, /TURN v1\.7\.0 · Build 2026\.07\.23-r53/);
+assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(index, /<link rel="icon" href="\.\/favicon-r45\.ico" sizes="any">/);
 assert.match(index, /<link rel="icon" href="\.\/favicon-32-r45\.png" type="image\/png" sizes="32x32">/);
 assert.match(index, /<link rel="apple-touch-icon" href="\.\/apple-touch-icon-r45\.png" sizes="180x180">/);
-assert.match(index, /<link rel="manifest" href="\.\/site\.webmanifest\?build=20260723-r53">/);
+assert.match(index, new RegExp(`<link rel="manifest" href="\\.\\/site\\.webmanifest\\?build=${release.cacheKey}">`));
 assert.match(index, /<img class="install-icon" src="\.\/icon-512-r45\.png" alt="">/);
 assert.match(index, /<h1 class="start-logo-heading" id="title">\s*<img class="start-logo" src="\.\/icon-512-r45\.png" alt="TURN">\s*<\/h1>/);
 assert.doesNotMatch(index, /apple-touch-icon-v4|icon-192-v4/);
@@ -56,4 +57,4 @@ const icoSizes = Array.from({ length: 3 }, (_, index) => {
 });
 assert.deepEqual(icoSizes, [[16, 16], [32, 32], [48, 48]]);
 
-console.log('TURN production app icon, bookmarks and start-screen branding passed.');
+console.log(`TURN ${release.id} production app icon, bookmarks and start-screen branding passed.`);

@@ -96,6 +96,7 @@ assert.ok(spatialIndex.getStats().queryCount >= 1, 'Rebuilt track index diagnost
 
 const [
   index,
+  releaseSource,
   trackCatalog,
   trackManager,
   trackSelect,
@@ -112,6 +113,7 @@ const [
   worldRender
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/track-manager.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/track-select.js', import.meta.url), 'utf8'),
@@ -128,16 +130,22 @@ const [
   fs.readFile(new URL('../../turn/render/world.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.7\.0 · Build 2026\.07\.23-r53/);
-assert.match(index, /track-select\.css\?build=20260723-r53/);
-assert.match(index, /track-select-r61\.css\?build=20260724-r61/, 'Production must load the record-car thumbnail layout');
-assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-track-select\.js\?build=20260724-r60"/, 'Production must preserve the compact r60 Lot layout');
-assert.match(index, /"\.\/vehicle\/physics\.js\?build=20260720-r19": "\.\/vehicle\/physics\.js\?build=20260724-r59"/, 'Production must cache-bust the mandatory DRIFT speed tradeoff');
-assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260722-r42": "\.\/vehicle\/catalog\.js\?build=20260724-r59"/, 'Production must cache-bust the shared vehicle stat definitions');
-assert.match(index, /"\.\/race\/rival-storage\.js\?build=20260720-r19": "\.\/race\/rival-storage\.js\?build=20260724-r61"/, 'Main runtime must publish paint-aware best-lap summaries');
-assert.match(index, /"\.\/race\/rival-storage\.js\?build=20260722-r50": "\.\/race\/rival-storage\.js\?build=20260724-r61"/, 'Track selector must receive the same paint-aware record storage');
-assert.match(index, /"\.\/ui\/track-select\.js\?build=20260722-r51": "\.\/ui\/track-select\.js\?build=20260724-r61"/, 'Production must publish the selector that renders the record-setting GLB');
-assert.match(index, /"\.\/race\/track-spatial-index\.js\?build=20260720-r19": "\.\/race\/track-spatial-index\.js\?build=20260722-r47"/, 'Production must preserve the rebuildable track index');
+const release = JSON.parse(releaseSource);
+const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
+assert.ok(importMapText, 'Production must expose its import map');
+const imports = JSON.parse(importMapText).imports;
+const releaseTarget = (path) => `${path}?build=${release.cacheKey}`;
+
+assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
+assert.match(index, new RegExp(`track-select\\.css\\?build=${release.cacheKey}`));
+assert.match(index, new RegExp(`track-select-r61\\.css\\?build=${release.cacheKey}`), 'Production must load the record-car thumbnail layout through the current release');
+assert.equal(imports['./garage/lot-r10.js?build=20260720-r19'], releaseTarget('./garage/lot-track-select.js'), 'Production must preserve the compact Lot implementation');
+assert.equal(imports['./vehicle/physics.js?build=20260720-r19'], releaseTarget('./vehicle/physics.js'), 'Production must publish the mandatory DRIFT speed tradeoff');
+assert.equal(imports['./vehicle/catalog.js?build=20260722-r42'], releaseTarget('./vehicle/catalog.js'), 'Production must publish the shared vehicle stat definitions');
+assert.equal(imports['./race/rival-storage.js?build=20260720-r19'], releaseTarget('./race/rival-storage.js'), 'Main runtime must publish paint-aware best-lap summaries');
+assert.equal(imports['./race/rival-storage.js?build=20260722-r50'], releaseTarget('./race/rival-storage.js'), 'Track selector must receive the same paint-aware record storage');
+assert.equal(imports['./ui/track-select.js?build=20260722-r51'], releaseTarget('./ui/track-select.js'), 'Production must publish the selector that renders the record-setting GLB');
+assert.equal(imports['./race/track-spatial-index.js?build=20260720-r19'], releaseTarget('./race/track-spatial-index.js'), 'Production must preserve the rebuildable track index');
 assert.match(index, /Turn the device to steer/, 'Start copy must use device-neutral language');
 assert.match(index, /Steering uses device rotation/, 'Status copy must use device-neutral language');
 assert.doesNotMatch(index, /Turn the phone to steer|Steering uses phone rotation/, 'The retired phone-specific start copy must stay removed');
@@ -200,7 +208,7 @@ assert.match(hud, /cached\.lastSample === lastSample/, 'The minimap cache must n
 assert.match(spatialSource, /replaceSamples\(nextSamples\)/, 'The shared spatial index must expose a controlled rebuild hook');
 assert.match(spatialSource, /return rebuild\(nextSamples\)/);
 
-assert.match(rivalStorage, /airport: 'airport-r50'/, 'Airport records must stay on the r50 geometry namespace because r53 does not change the course');
+assert.match(rivalStorage, /airport: 'airport-r50'/, 'Airport records must stay on the r50 geometry namespace because r62 does not change the course');
 assert.match(rivalStorage, /version: 6/);
 assert.match(rivalStorage, /trackRevision: storageTrackId\(activeTrackId\)/, 'Saved rival payloads must record the geometry revision');
 assert.match(rivalStorage, /export function getStoredBestLap/, 'Storage must expose a compact best-lap summary for track selection');
@@ -235,7 +243,7 @@ assert.doesNotMatch(airportRunoffWorld, /setAnimationLoop|requestAnimationFrame|
 assert.match(worldRender, /const worldSamples = samples\.slice\(\)/, 'Countryside async scenery must retain immutable Track 1 samples during an early track switch');
 assert.match(worldRender, /samples: worldSamples/, 'Late Countryside art modules must receive the snapshot rather than the mutable active track array');
 
-console.log('TURN r61 record-car thumbnails, Airport run-off and preserved anti-shortcut geometry passed.');
+console.log(`TURN ${release.id} record-car thumbnails, Airport run-off and preserved anti-shortcut geometry passed.`);
 
 function makeSamples(points) {
   return points.map(([x, z]) => ({ point: { x, z } }));

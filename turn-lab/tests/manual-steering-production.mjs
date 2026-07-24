@@ -12,21 +12,27 @@ assert.equal(manualStep(-1), 1, 'manual left should steer the car left');
 assert.equal(manualStep(1), -1, 'manual right should steer the car right');
 assert.equal(manualStep(0), 0, 'centered manual steering should stay centered');
 
-const [index, css, orientationGuardCss, orientationCompat, camera] = await Promise.all([
+const [index, releaseSource, css, orientationGuardCss, orientationCompat, camera] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/manual-steering.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/orientation-guard.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/orientation-compat.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/render/camera.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.7\.0 · Build 2026\.07\.23-r53/);
+const release = JSON.parse(releaseSource);
+const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
+assert.ok(importMapText, 'Production must expose its import map');
+const imports = JSON.parse(importMapText).imports;
+
+assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(index, /role="slider"/);
 assert.match(index, /manual-steer-knob/);
-assert.match(index, /manual-steering\.css\?build=20260723-r53/);
-assert.match(index, /orientation-guard\.css\?build=20260723-r53/);
-assert.match(index, /orientation-compat\.js\?build=20260723-r53/);
-assert.match(index, /"\.\/render\/camera\.js\?build=20260720-r19": "\.\/render\/camera\.js\?build=20260721-r29"/, 'r53 must preserve the guarded race camera cache redirect');
+assert.match(index, new RegExp(`manual-steering\\.css\\?build=${release.cacheKey}`));
+assert.match(index, new RegExp(`orientation-guard\\.css\\?build=${release.cacheKey}`));
+assert.match(index, new RegExp(`orientation-compat\\.js\\?build=${release.cacheKey}`));
+assert.equal(imports['./render/camera.js?build=20260720-r19'], `./render/camera.js?build=${release.cacheKey}`, 'The current release must publish the guarded race camera');
 assert.match(index, /<strong>Rotate to landscape<\/strong>/, 'The pre-race landscape instruction must remain available');
 
 assert.match(css, /--manual-steer-left/);
@@ -60,4 +66,4 @@ assert.match(camera, /state\.roll - neutralRoll/, 'Camera horizon roll must be r
 assert.match(camera, /clamp\(relativeRoll, -MAX_SENSOR_CAMERA_ROLL, MAX_SENSOR_CAMERA_ROLL\)/, 'Camera roll must be hard-clamped at the guard limit');
 assert.doesNotMatch(camera, /camera\.rotateZ\(-state\.roll\)/, 'The camera must never again follow raw sensor roll toward a portrait flip');
 
-console.log('TURN manual steering and race orientation guard regression passed.');
+console.log(`TURN ${release.id} manual steering and race orientation guard passed.`);

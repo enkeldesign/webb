@@ -62,14 +62,16 @@ for (const car of catalog.CAR_CATALOG) {
   assert.ok(viewerFront.z > 0, `${car.name} must open on a front three-quarter view`);
 }
 
-const [index, carModels, lot, main] = await Promise.all([
+const [index, releaseSource, carModels, lot, main] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.7\.0 · Build 2026\.07\.23-r53/);
+const release = JSON.parse(releaseSource);
+assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(
   carModels,
   /model\.rotation\.y = Math\.PI \+ car\.modelYawQuarterTurns \* Math\.PI \/ 2/,
@@ -86,7 +88,7 @@ assert.match(lot, /VIEWER_INITIAL_YAW = Math\.PI - 0\.55/, 'The viewer must star
 assert.match(main, /playerCar\.rotation\.y = state\.heading \+ Math\.PI/);
 assert.match(main, /car\.rotation\.y = frame\.h \+ Math\.PI/);
 
-console.log('TURN car orientation regression passed for all 15 models.');
+console.log(`TURN ${release.id} car orientation passed for all 15 models.`);
 
 function readGlbJson(buffer, carId) {
   assert.equal(buffer.toString('utf8', 0, 4), 'glTF', `${carId} must remain a binary glTF`);
