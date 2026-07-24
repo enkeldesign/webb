@@ -49,7 +49,7 @@ jobs:
       - name: Run production garage regression
         run: node turn-lab/tests/garage-production.mjs
 
-      - name: Run sustained DRIFT speed penalty regression
+      - name: Run DRIFT handling contract regression
         run: node turn-lab/tests/vehicle-drift-production.mjs
 
       - name: Run vehicle stat legend regression
