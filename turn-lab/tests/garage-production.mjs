@@ -56,12 +56,13 @@ const [index, main, lapSystem, rivalStorage, controls, carModels, lotWrapper] = 
 
 assert.match(index, /TURN v1\.7\.0 · Build 2026\.07\.23-r53/);
 assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260723-r53/);
-assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-track-select\.js\?build=20260724-r59"/, 'r59 must place the enhanced track-first wrapper in front of the stable Lot implementation');
+assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-track-select\.js\?build=20260724-r60"/, 'r60 must place the compact track-first wrapper in front of the stable Lot implementation');
 assert.match(lotWrapper, /showOriginalLot/, 'The track-first wrapper must still delegate car selection to the verified Lot implementation');
 assert.match(lotWrapper, /await chooseTrackBeforeLot\(\)/, 'The driver must pick a track before choosing the car');
-assert.match(lotWrapper, /track-manager\.js\?build=20260722-r52/, 'r59 must preserve the verified r52 Airport run-off runtime');
-assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r19": "\.\/vehicle\/catalog\.js\?build=20260724-r59"/, 'r59 must publish the shared vehicle stat definitions in the main runtime');
-assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r20": "\.\/vehicle\/catalog\.js\?build=20260724-r59"/, 'r59 must publish the same handling model inside The Lot');
+assert.match(lotWrapper, /installLotLayout\(\)/, 'The compact r60 panel arrangement must be installed after The Lot mounts');
+assert.match(lotWrapper, /track-manager\.js\?build=20260722-r52/, 'r60 must preserve the verified r52 Airport run-off runtime');
+assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r19": "\.\/vehicle\/catalog\.js\?build=20260724-r59"/, 'r60 must preserve the shared vehicle stat definitions in the main runtime');
+assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r20": "\.\/vehicle\/catalog\.js\?build=20260724-r59"/, 'r60 must preserve the same handling model inside The Lot');
 assert.match(index, /"\.\/vehicle\/car-models\.js\?build=20260720-r19": "\.\/vehicle\/car-models\.js\?build=20260720-r22"/, 'The stable r22 outline module cache redirect must remain in place');
 assert.match(main, /await showTheLot\(/, 'Start flow must enter the track-first Lot wrapper before racing');
 assert.match(main, /maxSpeed: MAX_SPEED \* state\.vehicleTuning\.topSpeedMultiplier/, 'Selected top speed must reach physics');
