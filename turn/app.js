@@ -9,6 +9,9 @@ function withBuild(path) {
 const { installPerformanceProfile } = await import(withBuild('./performance-profile.js'));
 installPerformanceProfile();
 
+const { installCoveredRenderingGuard } = await import(withBuild('./render/covered-rendering.js'));
+installCoveredRenderingGuard();
+
 const { installTurnAudio } = await import(withBuild('./audio/audio-system.js'));
 installTurnAudio();
 
