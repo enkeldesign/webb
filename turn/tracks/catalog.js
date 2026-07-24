@@ -1,84 +1,79 @@
 import * as THREE from 'three';
+import {
+  DEFAULT_TRACK_ID,
+  TRACK_DEFINITIONS,
+  TRACK_SAMPLE_COUNT,
+  TRACK_SELECTION_KEY,
+  getTrackDefinitionData,
+  normalizeTrackId as normalizeConfiguredTrackId
+} from './definitions.js';
 
-export const DEFAULT_TRACK_ID = 'countryside';
-export const TRACK_SAMPLE_COUNT = 720;
-export const TRACK_SELECTION_KEY = 'turn-selected-track-v1';
+export {
+  DEFAULT_TRACK_ID,
+  TRACK_SAMPLE_COUNT,
+  TRACK_SELECTION_KEY
+} from './definitions.js';
 
-const TRACKS = [
-  {
-    id: 'countryside',
-    name: 'Countryside',
-    difficulty: 'EASY',
-    eyebrow: 'TRACK 1',
-    description: 'Fast, flowing and forgiving.',
-    accent: '#ff4fa3',
-    accentSoft: '#ffc2dd',
-    sky: 0x38d9ff,
-    fog: 0x74c0fc,
-    createControlPoints() {
-      return Array.from({ length: 18 }, (_, index) => {
-        const angle = (index / 18) * Math.PI * 2;
-        const radiusX = 208 + Math.sin(angle * 2 + 0.35) * 20 + Math.sin(angle * 3 - 0.8) * 9;
-        const radiusZ = 146 + Math.cos(angle * 2 - 0.4) * 14 + Math.sin(angle * 3 + 0.6) * 8;
-        return new THREE.Vector3(Math.cos(angle) * radiusX, 0, Math.sin(angle) * radiusZ);
-      });
-    }
+const CONTROL_POINT_FACTORIES = Object.freeze({
+  countryside() {
+    return Array.from({ length: 18 }, (_, index) => {
+      const angle = (index / 18) * Math.PI * 2;
+      const radiusX = 208 + Math.sin(angle * 2 + 0.35) * 20 + Math.sin(angle * 3 - 0.8) * 9;
+      const radiusZ = 146 + Math.cos(angle * 2 - 0.4) * 14 + Math.sin(angle * 3 + 0.6) * 8;
+      return new THREE.Vector3(Math.cos(angle) * radiusX, 0, Math.sin(angle) * radiusZ);
+    });
   },
-  {
-    id: 'airport',
-    name: 'Airport',
-    difficulty: 'MEDIUM',
-    eyebrow: 'TRACK 2',
-    description: 'Runway speed. Apron precision.',
-    accent: '#ffd43b',
-    accentSoft: '#fff0a6',
-    sky: 0x55c9ed,
-    fog: 0x9bdcf2,
-    createControlPoints() {
-      return [
-        [-205, -126],
-        [-120, -138],
-        [-20, -142],
-        [90, -140],
-        [175, -128],
-        [214, -100],
-        [232, -58],
-        [232, -12],
-        [218, 34],
-        [192, 70],
-        [154, 98],
-        [110, 118],
-        [75, 120],
-        [55, 108],
-        [42, 88],
-        [32, 65],
-        [25, 43],
-        [0, 22],
-        [-25, 43],
-        [-32, 65],
-        [-42, 88],
-        [-55, 108],
-        [-85, 121],
-        [-128, 126],
-        [-168, 112],
-        [-204, 84],
-        [-228, 45],
-        [-236, 2],
-        [-229, -45],
-        [-215, -88]
-      ].map(([x, z]) => new THREE.Vector3(x, 0, z));
-    }
+  airport() {
+    return [
+      [-205, -126],
+      [-120, -138],
+      [-20, -142],
+      [90, -140],
+      [175, -128],
+      [214, -100],
+      [232, -58],
+      [232, -12],
+      [218, 34],
+      [192, 70],
+      [154, 98],
+      [110, 118],
+      [75, 120],
+      [55, 108],
+      [42, 88],
+      [32, 65],
+      [25, 43],
+      [0, 22],
+      [-25, 43],
+      [-32, 65],
+      [-42, 88],
+      [-55, 108],
+      [-85, 121],
+      [-128, 126],
+      [-168, 112],
+      [-204, 84],
+      [-228, 45],
+      [-236, 2],
+      [-229, -45],
+      [-215, -88]
+    ].map(([x, z]) => new THREE.Vector3(x, 0, z));
   }
-];
+});
 
-export const TRACK_CATALOG = Object.freeze(TRACKS.map((track) => Object.freeze({ ...track })));
+export const TRACK_CATALOG = Object.freeze(TRACK_DEFINITIONS.map((definition) => {
+  const createControlPoints = CONTROL_POINT_FACTORIES[definition.id];
+  if (typeof createControlPoints !== 'function') {
+    throw new Error(`TURN: track ${definition.id} has no geometry factory.`);
+  }
+  return Object.freeze({ ...definition, createControlPoints });
+}));
 
 export function getTrackDefinition(trackId = DEFAULT_TRACK_ID) {
-  return TRACK_CATALOG.find((track) => track.id === trackId) || TRACK_CATALOG[0];
+  const normalized = getTrackDefinitionData(trackId).id;
+  return TRACK_CATALOG.find((track) => track.id === normalized) || TRACK_CATALOG[0];
 }
 
 export function normalizeTrackId(trackId) {
-  return getTrackDefinition(trackId).id;
+  return normalizeConfiguredTrackId(trackId);
 }
 
 export function loadTrackSelection() {

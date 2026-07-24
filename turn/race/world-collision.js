@@ -1,13 +1,17 @@
+import {
+  TRACK_DEFINITIONS,
+  getTrackFreeRoamDistance
+} from '../tracks/definitions.js';
+
 const DEFAULT_CAR_RADIUS = 2.6;
 const COLLISION_BOUNCE = 0.16;
 const COLLISION_TANGENT_RETENTION = 0.78;
 const MAX_COLLIDER_RESOLVES = 4;
 const EPSILON = 1e-6;
 
-export const WORLD_FREE_ROAM_DISTANCE = Object.freeze({
-  countryside: 170,
-  airport: 95
-});
+export const WORLD_FREE_ROAM_DISTANCE = Object.freeze(Object.fromEntries(
+  TRACK_DEFINITIONS.map((track) => [track.id, track.freeRoamDistance])
+));
 
 export function resolveWorldCollisionState({
   state,
@@ -24,7 +28,7 @@ export function resolveWorldCollisionState({
   let obstacles = 0;
   const freeRoamDistance = positiveNumber(
     collisionProfile?.freeRoamDistance,
-    WORLD_FREE_ROAM_DISTANCE[trackId] || WORLD_FREE_ROAM_DISTANCE.countryside
+    getTrackFreeRoamDistance(trackId)
   );
 
   if (nearestTrack?.sample?.point && Number.isFinite(nearestTrack.distance)) {

@@ -7,6 +7,7 @@ import {
   normalizeVehicleId,
   normalizeVehicleSecondaryColor
 } from '../vehicle/catalog.js?build=20260720-r19';
+import { getTrackStorageRevision } from '../tracks/definitions.js';
 
 export const RIVAL_LIMIT = 4;
 
@@ -15,22 +16,12 @@ const GHOST_KEY = 'turn-three-ghost-v4';
 const COMPETITOR_KEY = 'turn-personal-rivals-v1';
 const LEGACY_RIVAL_COLORS = ['#38d9ff', '#ff4fa3', '#9775fa', '#ff922b'];
 
-/*
- * Airport r50 changes the physical course, so its r47-r49 replay frames and best times
- * cannot be compared fairly with the new layout. Countryside deliberately keeps the
- * historical key and every other track remains stable unless it opts into a revision.
- */
-const TRACK_STORAGE_REVISIONS = Object.freeze({
-  airport: 'airport-r50'
-});
-
 function normalizeTrackId(trackId) {
   return typeof trackId === 'string' && trackId.trim() ? trackId.trim() : DEFAULT_TRACK_ID;
 }
 
 function storageTrackId(trackId) {
-  const normalized = normalizeTrackId(trackId);
-  return TRACK_STORAGE_REVISIONS[normalized] || normalized;
+  return getTrackStorageRevision(normalizeTrackId(trackId));
 }
 
 function rivalKey(trackId) {

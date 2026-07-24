@@ -3,25 +3,20 @@ import { resetRaceToStage } from '../race/game-state.js?build=20260722-r41';
 import { clearRivalsState, loadRivalsState } from '../race/rival-storage.js?build=20260722-r50';
 import {
   DEFAULT_TRACK_ID,
-  createTrackRuntime,
-  getTrackDefinition,
   loadTrackSelection,
   normalizeTrackId,
   saveTrackSelection
-} from './catalog.js?build=20260722-r50';
-import { installAirportWorld } from './airport-world-r52.js?build=20260722-r52';
-import { isForgivingTrackSurface } from './airport-runoff.js?build=20260722-r52';
+} from './catalog.js';
+import { getTrackRuntimeEntry } from './registry.js';
 import { showTrackSelect } from '../ui/track-select.js?build=20260722-r51';
 
 let runtime = null;
 let runtimeReadyResolve = null;
 let activeTrackId = DEFAULT_TRACK_ID;
 let chosenThisSession = false;
-let countrysideSamples = null;
-let airportTrack = null;
-let airportWorld = null;
 let dynamicWorld = null;
 
+const trackStates = new Map();
 const runtimeReady = new Promise((resolve) => {
   runtimeReadyResolve = resolve;
 });
@@ -48,41 +43,27 @@ export async function chooseTrackBeforeLot() {
 export async function activateTrack(trackId, currentRuntime = runtime) {
   currentRuntime ||= await runtimeReady;
   const nextTrackId = normalizeTrackId(trackId);
+  const nextTrack = getTrackRuntimeEntry(nextTrackId);
   ensureTrackInfrastructure(currentRuntime);
 
   if (typeof currentRuntime.trackSpatialIndex?.replaceSamples !== 'function') {
     throw new Error('TURN: the active track index cannot rebuild for track changes.');
   }
 
-  if (nextTrackId === 'airport') {
-    if (!airportTrack) {
-      airportTrack = createTrackRuntime('airport', currentRuntime.trackSampleCount || 720);
-    }
-    if (!airportWorld) {
-      airportWorld = installAirportWorld({
-        scene: currentRuntime.scene,
-        samples: airportTrack.samples,
-        trackWidth: currentRuntime.trackWidth
-      });
-      airportWorld.visible = false;
-    }
-
-    replaceSamples(currentRuntime.samples, airportTrack.samples);
-    currentRuntime.trackSpatialIndex.replaceSamples(currentRuntime.samples);
-    currentRuntime.world.visible = false;
-    airportWorld.visible = true;
-  } else {
-    replaceSamples(currentRuntime.samples, countrysideSamples);
-    currentRuntime.trackSpatialIndex.replaceSamples(currentRuntime.samples);
-    currentRuntime.world.visible = true;
-    if (airportWorld) airportWorld.visible = false;
+  const nextState = ensureTrackState(nextTrack, currentRuntime);
+  replaceSamples(currentRuntime.samples, nextState.trackRuntime.samples);
+  currentRuntime.trackSpatialIndex.replaceSamples(currentRuntime.samples);
+  for (const state of trackStates.values()) {
+    state.world.visible = state.entry.id === nextTrackId;
   }
 
   activeTrackId = nextTrackId;
   currentRuntime.trackId = nextTrackId;
+  currentRuntime.activeTrack = nextTrack;
+  currentRuntime.activeWorld = nextState.world;
   currentRuntime.state.trackId = nextTrackId;
   saveTrackSelection(nextTrackId);
-  applyTrackAtmosphere(currentRuntime, nextTrackId);
+  applyTrackAtmosphere(currentRuntime, nextTrack);
 
   for (const car of currentRuntime.competitorCars || []) car.visible = false;
   resetRaceToStage({
@@ -102,7 +83,7 @@ export async function activateTrack(trackId, currentRuntime = runtime) {
   window.dispatchEvent(new CustomEvent('turn:track-changed', {
     detail: {
       trackId: nextTrackId,
-      track: getTrackDefinition(nextTrackId)
+      track: nextTrack
     }
   }));
   publishUiState(currentRuntime, 'rivals-loaded');
@@ -115,14 +96,54 @@ function installRuntime(nextRuntime) {
   runtime = nextRuntime;
   runtime.state.trackId = DEFAULT_TRACK_ID;
   runtime.trackId = DEFAULT_TRACK_ID;
-  countrysideSamples = runtime.samples.slice();
+
+  const initialTrack = getTrackRuntimeEntry(DEFAULT_TRACK_ID);
+  trackStates.set(DEFAULT_TRACK_ID, {
+    entry: initialTrack,
+    trackRuntime: {
+      id: DEFAULT_TRACK_ID,
+      definition: initialTrack,
+      samples: runtime.samples.slice(),
+      sampleCount: runtime.samples.length
+    },
+    world: runtime.world
+  });
+  runtime.activeTrack = initialTrack;
+  runtime.activeWorld = runtime.world;
+
   ensureTrackInfrastructure(runtime);
   installTrackAwareRivalReset(runtime);
 
   globalThis.__turnGetTrackId = () => activeTrackId;
   globalThis.__turnChooseTrack = () => chooseTrackBeforeLot();
-  globalThis.__turnIsForgivingSurface = (position) => isForgivingTrackSurface(activeTrackId, position);
+  globalThis.__turnIsForgivingSurface = (position) => activeTrackEntry().isForgivingSurface(position);
+  globalThis.__turnGetCollisionProfile = () => activeTrackEntry().collisionProfile;
   runtimeReadyResolve(runtime);
+}
+
+function ensureTrackState(entry, currentRuntime) {
+  const existing = trackStates.get(entry.id);
+  if (existing) return existing;
+
+  const trackRuntime = entry.createRuntime(currentRuntime.trackSampleCount || 720);
+  const world = entry.installWorld({
+    scene: currentRuntime.scene,
+    samples: trackRuntime.samples,
+    trackWidth: currentRuntime.trackWidth,
+    initialWorld: currentRuntime.world,
+    runtime: currentRuntime,
+    trackRuntime
+  });
+  if (!world) throw new Error(`TURN: track ${entry.id} did not install a world.`);
+  world.visible = false;
+
+  const state = { entry, trackRuntime, world };
+  trackStates.set(entry.id, state);
+  return state;
+}
+
+function activeTrackEntry() {
+  return trackStates.get(activeTrackId)?.entry || getTrackRuntimeEntry(activeTrackId);
 }
 
 function ensureTrackInfrastructure(currentRuntime) {
@@ -158,8 +179,7 @@ function replaceSamples(target, source) {
   target.splice(0, target.length, ...source);
 }
 
-function applyTrackAtmosphere(currentRuntime, trackId) {
-  const track = getTrackDefinition(trackId);
+function applyTrackAtmosphere(currentRuntime, track) {
   currentRuntime.scene.background = new THREE.Color(track.sky);
   if (currentRuntime.scene.fog?.color) currentRuntime.scene.fog.color.setHex(track.fog);
 }

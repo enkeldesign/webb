@@ -2,7 +2,10 @@ const readonlyGlobals = {
   console: 'readonly',
   localStorage: 'readonly',
   process: 'readonly',
-  URL: 'readonly'
+  URL: 'readonly',
+  window: 'readonly',
+  document: 'readonly',
+  CustomEvent: 'readonly'
 };
 
 export default [
@@ -23,6 +26,9 @@ export default [
       'turn/vehicle/catalog.js',
       'turn/vehicle/physics.js',
       'turn/tracks/catalog.js',
+      'turn/tracks/definitions.js',
+      'turn/tracks/registry.js',
+      'turn/tracks/track-manager.js',
       'turn-tests/**/*.mjs'
     ],
     languageOptions: {
