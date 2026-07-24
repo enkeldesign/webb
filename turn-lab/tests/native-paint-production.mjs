@@ -24,8 +24,9 @@ const meshNodeNames = (sportSedanJson.nodes || []).filter((node) => Number.isInt
 assert.ok(meshNodeNames.includes('body'), 'Sport Sedan body must remain a separate primary mesh');
 assert.ok(meshNodeNames.includes('spoiler'), 'Sport Sedan spoiler must remain a separate secondary mesh');
 
-const [index, lot, css, carModels, main, lapSystem, rivalStorage] = await Promise.all([
+const [index, releaseSource, lot, css, carModels, main, lapSystem, rivalStorage] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
@@ -34,7 +35,8 @@ const [index, lot, css, carModels, main, lapSystem, rivalStorage] = await Promis
   fs.readFile(new URL('../../turn/race/rival-storage.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.7\.0 · Build 2026\.07\.23-r53/);
+const release = JSON.parse(releaseSource);
+assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(lot, /input\.type = 'color'/, 'The Lot must invoke the browser or OS colour picker');
 assert.match(lot, /input\.addEventListener\('input'/, 'Native picker changes must preview immediately');
 assert.doesNotMatch(lot, /CAR_PALETTE|makeColorButton/, 'The production Lot must not render the custom palette');
@@ -48,7 +50,7 @@ assert.match(lapSystem, /carSecondaryColor: state\.vehicleSecondaryColor \|\| '#
 assert.match(rivalStorage, /version: 6/, 'Track-scoped rivals must preserve geometry revision and secondary paint metadata');
 assert.match(rivalStorage, /normalizeVehicleSecondaryColor\(lap\.carSecondaryColor\)/);
 
-console.log('TURN native and secondary paint regression passed.');
+console.log(`TURN ${release.id} native and secondary paint passed.`);
 
 function readGlbJson(buffer) {
   assert.equal(buffer.toString('utf8', 0, 4), 'glTF');
