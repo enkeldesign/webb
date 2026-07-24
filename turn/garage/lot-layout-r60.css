@@ -32,9 +32,13 @@
   min-height: var(--lot-paint-rail-height);
   margin: 0;
   padding: 8px;
-  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   border-top: 3px solid var(--ink);
   background: rgb(255 248 232 / 0.98);
+}
+
+.lot-viewbox-with-paint .lot-colors:has(.lot-color-control:nth-child(2)) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .lot-viewbox-with-paint .lot-color-control {
