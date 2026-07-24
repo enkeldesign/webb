@@ -531,7 +531,10 @@ function ensureCompetitorCars() {
   while (competitorCars.length < COMPETITOR_LIMIT) {
     competitorCars.push(createCompetitorCar());
   }
+}
 
+function syncCompetitorVisuals() {
+  ensureCompetitorCars();
   for (let i = 0; i < competitorCars.length; i += 1) {
     const car = competitorCars[i];
     const lap = state.competitorLaps[i];
@@ -1039,6 +1042,7 @@ function completeLap(now) {
       globalThis.__turnLastLapError = error;
     }
   });
+  syncCompetitorVisuals();
   publishUiState('lap-completed');
 }
 
@@ -1048,6 +1052,7 @@ function saveGhost() {
 
 function loadGhost() {
   loadRivalsState({ state, samples, findNearestTrack });
+  syncCompetitorVisuals();
   publishUiState('rivals-loaded');
 }
 
@@ -1100,8 +1105,6 @@ function placePlayerCar(dt) {
 }
 
 function placeCompetitorCars(dt) {
-  ensureCompetitorCars();
-
   for (let i = 0; i < competitorCars.length; i += 1) {
     const car = competitorCars[i];
     const lap = state.competitorLaps[i];
@@ -1378,6 +1381,7 @@ const turnRuntime = {
   ghostCar,
   competitorCars,
   ensureCompetitorCars,
+  syncCompetitorVisuals,
   animateWheels,
   lapFrameAt,
   GAME_MODE,
