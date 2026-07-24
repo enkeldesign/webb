@@ -20,8 +20,9 @@ export function updateVehiclePhysicsState({
   const tuning = vehicleTuning || globalThis.__turnVehicleTuning;
   const accelerationMultiplier = positiveNumber(tuning?.accelerationMultiplier, 1);
   const controlMultiplier = positiveNumber(tuning?.controlMultiplier, 1);
-  const driftEngineMultiplier = positiveNumber(tuning?.driftEngineMultiplier, 0.93);
-  const driftDragAdd = nonNegativeNumber(tuning?.driftDragAdd, 0.085);
+  const driftEngineMultiplier = positiveNumber(tuning?.driftEngineMultiplier, 0.86);
+  const driftDragAdd = nonNegativeNumber(tuning?.driftDragAdd, 0.1);
+  const driftSpeedMultiplier = clamp(positiveNumber(tuning?.driftSpeedMultiplier, 0.84), 0.5, 0.99);
   const tuningBoostPowerMultiplier = positiveNumber(tuning?.boostPowerMultiplier, 1);
   const tuningBoostSpeedMultiplier = positiveNumber(tuning?.boostSpeedMultiplier, 1.32);
   const effectiveMaxSpeed = maxSpeed;
@@ -62,13 +63,11 @@ export function updateVehiclePhysicsState({
     forwardSpeed = state.velocity.dot(forward);
 
     if (forwardSpeed > 0.35) {
-      // First use of the control is always braking while the car still moves forward.
       state.velocity.addScaledVector(
         forward,
         -Math.min(forwardSpeed, brakeStep)
       );
     } else {
-      // Once forward motion is essentially gone, the same held control becomes reverse.
       const reversePower = (state.offRoad ? 20 : 27) * accelerationMultiplier;
       state.velocity.addScaledVector(forward, -reversePower * state.brake * dt);
 
@@ -138,9 +137,15 @@ export function updateVehiclePhysicsState({
     : 0.11 + speed * 0.0009 + (driftHeld ? driftDragAdd : 0);
   state.velocity.multiplyScalar(Math.exp(-drag * dt));
 
+  const normalRoadSpeedLimit = effectiveBoostActive
+    ? effectiveMaxSpeed * tuningBoostSpeedMultiplier
+    : effectiveMaxSpeed;
+  const driftRoadSpeedLimit = effectiveBoostActive
+    ? normalRoadSpeedLimit
+    : effectiveMaxSpeed * driftSpeedMultiplier;
   const speedLimit = state.offRoad
     ? (effectiveBoostActive ? effectiveMaxSpeed * 0.82 : effectiveMaxSpeed * 0.73)
-    : (effectiveBoostActive ? effectiveMaxSpeed * tuningBoostSpeedMultiplier : effectiveMaxSpeed);
+    : (driftHeld ? driftRoadSpeedLimit : normalRoadSpeedLimit);
 
   speed = state.velocity.length();
   if (speed > speedLimit) state.velocity.multiplyScalar(speedLimit / speed);
