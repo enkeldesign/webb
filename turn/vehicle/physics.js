@@ -1,5 +1,29 @@
 import { resolveWorldCollisionState } from '../race/world-collision.js?build=20260723-r53';
 
+export function getVehicleSpeedLimit({
+  offRoad = false,
+  boostActive = false,
+  maxSpeed,
+  boostSpeedMultiplier = 1.32,
+  driftHeld = false,
+  driftSpeedMultiplier = 0.84
+}) {
+  const effectiveMaxSpeed = positiveNumber(maxSpeed, 1);
+  const effectiveBoostSpeedMultiplier = positiveNumber(boostSpeedMultiplier, 1.32);
+  const effectiveDriftSpeedMultiplier = clamp(
+    positiveNumber(driftSpeedMultiplier, 0.84),
+    0.5,
+    0.99
+  );
+  const baseSpeedLimit = offRoad
+    ? (boostActive ? effectiveMaxSpeed * 0.82 : effectiveMaxSpeed * 0.73)
+    : (boostActive ? effectiveMaxSpeed * effectiveBoostSpeedMultiplier : effectiveMaxSpeed);
+
+  return driftHeld
+    ? baseSpeedLimit * effectiveDriftSpeedMultiplier
+    : baseSpeedLimit;
+}
+
 export function updateVehiclePhysicsState({
   state,
   dt,
@@ -20,8 +44,10 @@ export function updateVehiclePhysicsState({
   const tuning = vehicleTuning || globalThis.__turnVehicleTuning;
   const accelerationMultiplier = positiveNumber(tuning?.accelerationMultiplier, 1);
   const controlMultiplier = positiveNumber(tuning?.controlMultiplier, 1);
-  const driftEngineMultiplier = positiveNumber(tuning?.driftEngineMultiplier, 0.93);
-  const driftDragAdd = nonNegativeNumber(tuning?.driftDragAdd, 0.085);
+  const driftEngineMultiplier = positiveNumber(tuning?.driftEngineMultiplier, 0.86);
+  const driftDragAdd = nonNegativeNumber(tuning?.driftDragAdd, 0.1);
+  const driftSpeedMultiplier = clamp(positiveNumber(tuning?.driftSpeedMultiplier, 0.84), 0.5, 0.99);
+  const driftStabilityMultiplier = clamp(positiveNumber(tuning?.driftStabilityMultiplier, 1), 0.75, 1.25);
   const tuningBoostPowerMultiplier = positiveNumber(tuning?.boostPowerMultiplier, 1);
   const tuningBoostSpeedMultiplier = positiveNumber(tuning?.boostSpeedMultiplier, 1.32);
   const effectiveMaxSpeed = maxSpeed;
@@ -93,20 +119,26 @@ export function updateVehiclePhysicsState({
     0,
     1
   );
+  const driftResponseRate = driftIntent > state.driftAmount
+    ? 7
+    : 3.2 * driftStabilityMultiplier;
 
   state.driftAmount = lerp(
     state.driftAmount,
     driftIntent,
-    Math.min(1, dt * (driftIntent > state.driftAmount ? 7 : 3.2))
+    Math.min(1, dt * driftResponseRate)
   );
 
   const steeringAuthority = clamp(Math.abs(forwardSpeed) / 7, 0, 1);
+  const steeringStatMultiplier = driftHeld
+    ? lerp(1, controlMultiplier, 0.25)
+    : controlMultiplier;
   const yawRate =
     state.steering *
     Math.sign(forwardSpeed || 1) *
     (0.18 + Math.abs(forwardSpeed) * 0.012) *
     steeringAuthority *
-    controlMultiplier *
+    steeringStatMultiplier *
     (1 + state.driftAmount * 0.65 + (driftHeld ? 0.58 : 0));
 
   state.heading = normalizeAngle(state.heading + yawRate * dt);
@@ -114,13 +146,17 @@ export function updateVehiclePhysicsState({
   const newRight = getRight();
   lateralSpeed = state.velocity.dot(newRight);
 
+  const controlGripMultiplier = driftHeld
+    ? 1
+    : 0.92 + controlMultiplier * 0.08;
+  const driftGripMultiplier = driftHeld
+    ? 0.42 * driftStabilityMultiplier
+    : 1;
   const grip = (
     state.offRoad
       ? lerp(3.4, 1.35, state.driftAmount)
       : lerp(11.5, 1.45, state.driftAmount)
-  ) *
-    (0.92 + controlMultiplier * 0.08) *
-    (driftHeld ? 0.42 : 1);
+  ) * controlGripMultiplier * driftGripMultiplier;
 
   const lateralCorrection = 1 - Math.exp(-grip * dt);
   state.velocity.addScaledVector(newRight, -lateralSpeed * lateralCorrection);
@@ -138,9 +174,14 @@ export function updateVehiclePhysicsState({
     : 0.11 + speed * 0.0009 + (driftHeld ? driftDragAdd : 0);
   state.velocity.multiplyScalar(Math.exp(-drag * dt));
 
-  const speedLimit = state.offRoad
-    ? (effectiveBoostActive ? effectiveMaxSpeed * 0.82 : effectiveMaxSpeed * 0.73)
-    : (effectiveBoostActive ? effectiveMaxSpeed * tuningBoostSpeedMultiplier : effectiveMaxSpeed);
+  const speedLimit = getVehicleSpeedLimit({
+    offRoad: state.offRoad,
+    boostActive: effectiveBoostActive,
+    maxSpeed: effectiveMaxSpeed,
+    boostSpeedMultiplier: tuningBoostSpeedMultiplier,
+    driftHeld,
+    driftSpeedMultiplier
+  });
 
   speed = state.velocity.length();
   if (speed > speedLimit) state.velocity.multiplyScalar(speedLimit / speed);

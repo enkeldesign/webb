@@ -22,8 +22,10 @@ assert.equal(monsterTruck.visualScale, 0.83, 'Monster Truck must stay at the red
 assert.equal(sedan.tuning.topSpeedMultiplier, 1, 'Sedan top speed must remain the v1.0 baseline');
 assert.equal(sedan.tuning.accelerationMultiplier, 1, 'Sedan acceleration must remain the v1.0 baseline');
 assert.equal(sedan.tuning.controlMultiplier, 1, 'Sedan control must remain the v1.0 baseline');
-assert.equal(sedan.tuning.driftEngineMultiplier, 0.93, 'Sedan drift engine retention must remain the v1.0 baseline');
-assert.equal(sedan.tuning.driftDragAdd, 0.085, 'Sedan drift drag must remain the v1.0 baseline');
+assert.equal(sedan.tuning.driftEngineMultiplier, 0.86, 'Sedan must retain the agreed r59 engine penalty while drifting');
+assert.equal(sedan.tuning.driftDragAdd, 0.1, 'Sedan must retain the agreed r59 drift drag');
+assert.equal(sedan.tuning.driftSpeedMultiplier, 0.84, 'Sedan DRIFT must cap at 84% of its corresponding GAS speed limit');
+assert.equal(sedan.tuning.driftStabilityMultiplier, 1, 'Sedan must remain the neutral DRIFT stability baseline');
 assert.equal(sedan.tuning.boostPowerMultiplier, 1, 'Sedan boost power must remain the v1.0 baseline');
 assert.equal(sedan.tuning.boostSpeedMultiplier, 1.32, 'Sedan boost speed must remain the v1.0 baseline');
 assert.equal(sedan.tuning.boostDurationSeconds, 2, 'Sedan boost tank must remain the v1.0 baseline');
@@ -31,11 +33,13 @@ assert.ok(race.tuning.topSpeedMultiplier > sedan.tuning.topSpeedMultiplier, 'Rac
 assert.ok(race.tuning.accelerationMultiplier > sedan.tuning.accelerationMultiplier, 'Race car should accelerate faster than Sedan');
 assert.ok(race.tuning.controlMultiplier > sedan.tuning.controlMultiplier, 'Race car should have more control than Sedan');
 assert.ok(race.tuning.driftDragAdd > sedan.tuning.driftDragAdd, 'Race car should pay a larger speed penalty while drifting');
+assert.ok(race.tuning.driftStabilityMultiplier < sedan.tuning.driftStabilityMultiplier, 'Race car should be less settled in DRIFT than Sedan');
 assert.ok(race.tuning.boostPowerMultiplier >= sedan.tuning.boostPowerMultiplier, 'Race car boost should not be weaker than Sedan');
 assert.ok(race.tuning.boostDurationSeconds < sedan.tuning.boostDurationSeconds, 'Race car should have a shorter boost tank');
 assert.ok(truck.tuning.topSpeedMultiplier < sedan.tuning.topSpeedMultiplier, 'Truck should have less top speed than Sedan');
 assert.ok(truck.tuning.accelerationMultiplier < sedan.tuning.accelerationMultiplier, 'Truck should accelerate slower than Sedan');
 assert.ok(truck.tuning.driftDragAdd < sedan.tuning.driftDragAdd, 'Truck should retain more speed while drifting');
+assert.ok(truck.tuning.driftStabilityMultiplier > sedan.tuning.driftStabilityMultiplier, 'Truck should settle more cleanly in DRIFT than Sedan');
 assert.ok(truck.tuning.boostPowerMultiplier < sedan.tuning.boostPowerMultiplier, 'Truck boost should be weaker than Sedan');
 assert.ok(truck.tuning.boostDurationSeconds > sedan.tuning.boostDurationSeconds, 'Truck should have a longer boost tank');
 assert.notEqual(catalog.makeGhostColor('#ff4fa3'), '#ff4fa3', 'Ghost colour should be a lighter nuance, not the original paint colour');
@@ -52,12 +56,12 @@ const [index, main, lapSystem, rivalStorage, controls, carModels, lotWrapper] = 
 
 assert.match(index, /TURN v1\.7\.0 · Build 2026\.07\.23-r53/);
 assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260723-r53/);
-assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-track-select\.js\?build=20260723-r53"/, 'r53 must place track selection in front of the stable Lot implementation');
+assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-track-select\.js\?build=20260724-r59"/, 'r59 must place the enhanced track-first wrapper in front of the stable Lot implementation');
 assert.match(lotWrapper, /showOriginalLot/, 'The track-first wrapper must still delegate car selection to the verified Lot implementation');
 assert.match(lotWrapper, /await chooseTrackBeforeLot\(\)/, 'The driver must pick a track before choosing the car');
-assert.match(lotWrapper, /track-manager\.js\?build=20260722-r52/, 'r53 must preserve the verified r52 Airport run-off runtime');
-assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r19": "\.\/vehicle\/catalog\.js\?build=20260722-r42"/, 'r53 must preserve the reduced Monster Truck scale in the main runtime');
-assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r20": "\.\/vehicle\/catalog\.js\?build=20260722-r42"/, 'r53 must preserve the same reduced Monster Truck scale inside The Lot');
+assert.match(lotWrapper, /track-manager\.js\?build=20260722-r52/, 'r59 must preserve the verified r52 Airport run-off runtime');
+assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r19": "\.\/vehicle\/catalog\.js\?build=20260724-r59"/, 'r59 must publish the shared vehicle stat definitions in the main runtime');
+assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260720-r20": "\.\/vehicle\/catalog\.js\?build=20260724-r59"/, 'r59 must publish the same handling model inside The Lot');
 assert.match(index, /"\.\/vehicle\/car-models\.js\?build=20260720-r19": "\.\/vehicle\/car-models\.js\?build=20260720-r22"/, 'The stable r22 outline module cache redirect must remain in place');
 assert.match(main, /await showTheLot\(/, 'Start flow must enter the track-first Lot wrapper before racing');
 assert.match(main, /maxSpeed: MAX_SPEED \* state\.vehicleTuning\.topSpeedMultiplier/, 'Selected top speed must reach physics');

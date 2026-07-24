@@ -1,0 +1,150 @@
+.lot-stats-help {
+  width: 100%;
+  min-height: 34px;
+  margin: 0 0 8px;
+  padding: 6px 9px;
+  border-width: 2px;
+  border-radius: 10px;
+  background: var(--cyan);
+  box-shadow: 3px 3px 0 var(--ink);
+  font-size: clamp(0.48rem, 1.1vw, 0.64rem);
+  letter-spacing: 0.045em;
+}
+
+.lot-stats-help:focus-visible,
+.lot-stats-dialog-close:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+.lot-stats-dialog {
+  position: absolute;
+  z-index: 30;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding:
+    max(18px, env(safe-area-inset-top))
+    max(18px, env(safe-area-inset-right))
+    max(18px, env(safe-area-inset-bottom))
+    max(18px, env(safe-area-inset-left));
+  background: rgb(16 22 28 / 0.78);
+}
+
+.lot-stats-dialog[hidden] {
+  display: none;
+}
+
+.lot-stats-dialog-card {
+  width: min(680px, 100%);
+  max-height: 100%;
+  overflow: auto;
+  padding: clamp(14px, 2.4vw, 22px);
+  border: 4px solid var(--ink);
+  border-radius: 20px;
+  background: var(--paper);
+  box-shadow: 9px 9px 0 var(--ink);
+  overscroll-behavior: contain;
+}
+
+.lot-stats-dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 10px;
+  border-bottom: 4px solid var(--ink);
+}
+
+.lot-stats-dialog-head h2 {
+  margin: 0;
+  font-size: clamp(1.05rem, 3vw, 1.75rem);
+  line-height: 1;
+}
+
+.lot-stats-dialog-close {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  min-height: 0;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--pink);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.lot-stats-dialog-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 12px;
+}
+
+.lot-stats-dialog-item {
+  padding: 10px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: #fff8e8;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.lot-stats-dialog-item strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: clamp(0.62rem, 1.45vw, 0.82rem);
+  letter-spacing: 0.04em;
+}
+
+.lot-stats-dialog-item p,
+.lot-stats-dialog-rule {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  font-size: clamp(0.72rem, 1.55vw, 0.94rem);
+  font-weight: 750;
+  line-height: 1.28;
+}
+
+.lot-stats-dialog-rule {
+  margin-top: 12px;
+  padding: 9px 11px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: var(--yellow);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+@media (max-height: 500px), (max-width: 620px) {
+  .lot-stats-dialog-card {
+    padding: 12px;
+    border-width: 3px;
+    border-radius: 16px;
+    box-shadow: 6px 6px 0 var(--ink);
+  }
+
+  .lot-stats-dialog-head {
+    padding-bottom: 8px;
+    border-bottom-width: 3px;
+  }
+
+  .lot-stats-dialog-close {
+    width: 36px;
+    height: 36px;
+  }
+
+  .lot-stats-dialog-list {
+    gap: 7px;
+    margin-top: 9px;
+  }
+
+  .lot-stats-dialog-item {
+    padding: 8px;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+}
+
+@media (max-width: 520px) and (orientation: portrait) {
+  .lot-stats-dialog-list {
+    grid-template-columns: 1fr;
+  }
+}

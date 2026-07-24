@@ -111,8 +111,9 @@ const [
 
 assert.match(index, /TURN v1\.7\.0 · Build 2026\.07\.23-r53/);
 assert.match(index, /track-select\.css\?build=20260723-r53/);
-assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-track-select\.js\?build=20260723-r53"/, 'The r53 track selector must sit before the stable Lot entry point');
-assert.match(index, /"\.\/vehicle\/physics\.js\?build=20260720-r19": "\.\/vehicle\/physics\.js\?build=20260723-r53"/, 'Production must cache-bust the collision-aware vehicle physics');
+assert.match(index, /"\.\/garage\/lot-r10\.js\?build=20260720-r19": "\.\/garage\/lot-track-select\.js\?build=20260724-r59"/, 'Production must cache-bust the Lot wrapper that installs the vehicle stat legend');
+assert.match(index, /"\.\/vehicle\/physics\.js\?build=20260720-r19": "\.\/vehicle\/physics\.js\?build=20260724-r59"/, 'Production must cache-bust the mandatory DRIFT speed tradeoff');
+assert.match(index, /"\.\/vehicle\/catalog\.js\?build=20260722-r42": "\.\/vehicle\/catalog\.js\?build=20260724-r59"/, 'Production must cache-bust the shared vehicle stat definitions');
 assert.match(index, /"\.\/race\/rival-storage\.js\?build=20260720-r19": "\.\/race\/rival-storage\.js\?build=20260722-r50"/, 'Production must preserve geometry-revision-aware rival storage');
 assert.match(index, /"\.\/race\/rival-storage\.js\?build=20260722-r50": "\.\/race\/rival-storage\.js\?build=20260723-r57"/, 'Production must cache-bust the best-lap car summary storage helper');
 assert.match(index, /"\.\/ui\/track-select\.js\?build=20260722-r51": "\.\/ui\/track-select\.js\?build=20260723-r57"/, 'Production must cache-bust the selector that renders the record-setting car');

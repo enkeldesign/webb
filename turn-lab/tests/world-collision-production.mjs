@@ -84,7 +84,7 @@ const [index, physics] = await Promise.all([
 ]);
 
 assert.match(index, /TURN v1\.7\.0 · Build 2026\.07\.23-r53/);
-assert.match(index, /"\.\/vehicle\/physics\.js\?build=20260720-r19": "\.\/vehicle\/physics\.js\?build=20260723-r53"/, 'Production must cache-bust the collision-aware physics module');
+assert.match(index, /"\.\/vehicle\/physics\.js\?build=20260720-r19": "\.\/vehicle\/physics\.js\?build=20260724-r59"/, 'Production must cache-bust the collision-aware r59 physics module');
 assert.match(physics, /world-collision\.js\?build=20260723-r53/, 'Vehicle physics must load the world collision resolver');
 assert.match(physics, /resolveWorldCollisionState\(/, 'Every physics step must resolve the world boundary after movement');
 assert.match(physics, /if \(collision\.collided\) nearestAfter = findNearestTrack\(state\.position\)/, 'Track progress must be recomputed after a collision moves the car');

@@ -14,13 +14,13 @@ assert.match(index, /TURN v1\.7\.0 · Build 2026\.07\.23-r53/);
 assert.match(index, /\.\/app\.js\?build=20260723-r53/);
 assert.match(
   index,
-  /"\.\/vehicle\/catalog\.js\?build=20260720-r19": "\.\/vehicle\/catalog\.js\?build=20260722-r42"/,
-  'The main runtime catalog import must preserve the r42 vehicle presentation catalog'
+  /"\.\/vehicle\/catalog\.js\?build=20260720-r19": "\.\/vehicle\/catalog\.js\?build=20260724-r59"/,
+  'The main runtime must publish the r59 vehicle handling catalog'
 );
 assert.match(
   index,
-  /"\.\/vehicle\/catalog\.js\?build=20260720-r20": "\.\/vehicle\/catalog\.js\?build=20260722-r42"/,
-  'The Lot must preserve the same r42 vehicle presentation catalog'
+  /"\.\/vehicle\/catalog\.js\?build=20260720-r20": "\.\/vehicle\/catalog\.js\?build=20260724-r59"/,
+  'The Lot must use the same r59 vehicle handling catalog'
 );
 
 assert.match(app, /import\(withBuild\('\.\/audio\/audio-system\.js'\)\)/, 'Production must load the central audio module');
