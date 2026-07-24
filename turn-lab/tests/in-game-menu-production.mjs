@@ -15,8 +15,9 @@ assert.deepEqual(inGameMenuVisibilityFor(GAME_MODE.STAGED), { menuState: IN_GAME
 assert.deepEqual(inGameMenuVisibilityFor(GAME_MODE.RACING), { menuState: IN_GAME_MENU_STATE.RACING, backToStart: true, startActions: false });
 assert.deepEqual(inGameMenuVisibilityFor(GAME_MODE.SPECTATING), { menuState: IN_GAME_MENU_STATE.HIDDEN, backToStart: false, startActions: false });
 
-const [index, app, menu, controls, backToLot, main, css, spectate] = await Promise.all([
+const [index, releaseSource, app, menu, controls, backToLot, main, css, spectate] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/in-game-menu.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/gameplay-controls.js', import.meta.url), 'utf8'),
@@ -26,8 +27,9 @@ const [index, app, menu, controls, backToLot, main, css, spectate] = await Promi
   fs.readFile(new URL('../../turn/ui/spectate.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.7\.0 · Build 2026\.07\.23-r53/);
-assert.match(index, /in-game-menu\.css\?build=20260723-r53/);
+const release = JSON.parse(releaseSource);
+assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
+assert.match(index, new RegExp(`in-game-menu\\.css\\?build=${release.cacheKey}`));
 assert.match(index, /id="calibrateButton"[^>]*>Recalibrate<\/button>/);
 assert.match(index, /id="resetButton"[^>]*>Restart Lap<\/button>/);
 assert.match(app, /await import\(withBuild\('\.\/ui\/in-game-menu\.js'\)\)/);
@@ -58,4 +60,4 @@ assert.match(css, /@keyframes turn-restart-invalid-pulse/, 'The invalid restart 
 assert.match(css, /prefers-reduced-motion: reduce/, 'The restart cue must respect reduced-motion preferences');
 assert.match(css, /\.utility-group\[data-menu-state="hidden"\]/);
 
-console.log('TURN state-aware in-game menu and invalid-lap Restart Lap cue regression passed.');
+console.log(`TURN ${release.id} state-aware in-game menu and invalid-lap Restart Lap cue passed.`);
