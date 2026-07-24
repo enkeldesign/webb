@@ -7,6 +7,7 @@ export function updateRaceCameraState({
   cameraTarget,
   getForward,
   getRight,
+  samples,
   maxSpeed,
   dt
 }) {
@@ -14,6 +15,14 @@ export function updateRaceCameraState({
   const right = getRight();
   const speedRatio = clamp(state.speed / maxSpeed, 0, 1);
   const lateralVelocity = state.velocity.dot(right);
+  const roadY = finiteNumber(state.position?.y, 0);
+  const lookAheadCount = 18 + Math.round(speedRatio * 12);
+  const lookAheadIndex = Array.isArray(samples) && samples.length && Number.isFinite(state.nearestTrackIndex)
+    ? (state.nearestTrackIndex + lookAheadCount) % samples.length
+    : -1;
+  const lookAheadRoadY = lookAheadIndex >= 0
+    ? finiteNumber(samples[lookAheadIndex]?.point?.y, roadY)
+    : roadY;
 
   const followDistance = 14 + speedRatio * 7;
   const lateralOffset = lateralVelocity * 0.11;
@@ -23,7 +32,7 @@ export function updateRaceCameraState({
     state.position.x - forward.x * followDistance - right.x * lateralOffset,
     cameraResponse
   );
-  cameraPosition.y = lerp(cameraPosition.y, 7.7 + speedRatio * 2.5, cameraResponse);
+  cameraPosition.y = lerp(cameraPosition.y, roadY + 7.7 + speedRatio * 2.5, cameraResponse);
   cameraPosition.z = lerp(
     cameraPosition.z,
     state.position.z - forward.z * followDistance - right.z * lateralOffset,
@@ -38,7 +47,8 @@ export function updateRaceCameraState({
     state.position.x + forward.x * targetDistance,
     targetResponse
   );
-  cameraTarget.y = lerp(cameraTarget.y, 2, targetResponse);
+  const anticipatedRoadY = roadY + (lookAheadRoadY - roadY) * 0.35;
+  cameraTarget.y = lerp(cameraTarget.y, anticipatedRoadY + 2, targetResponse);
   cameraTarget.z = lerp(
     cameraTarget.z,
     state.position.z + forward.z * targetDistance,
@@ -71,4 +81,9 @@ function lerp(a, b, t) {
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
+}
+
+function finiteNumber(value, fallback) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
 }

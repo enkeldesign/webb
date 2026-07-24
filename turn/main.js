@@ -11,6 +11,7 @@ import { beginTimedLapState, completeLapState, updateLapProgressState } from './
 import { recordReplayFrame, replayFrameAt } from './race/replay-system.js';
 import { RIVAL_LIMIT, loadRivalsState, saveRivalsState } from './race/rival-storage.js?build=20260720-r19';
 import { createTrackSpatialIndex } from './race/track-spatial-index.js?build=20260720-r19';
+import { trackPitch, trackSampleAtProgress, trackSurfaceY } from './tracks/elevation.js?build=20260725-r67';
 import { showTheLot } from './garage/lot-r10.js?build=20260720-r19';
 import {
   DEFAULT_VEHICLE_SECONDARY_COLOR,
@@ -651,7 +652,8 @@ function updateParticlePool(pool, dt, smoke = false) {
 function updateDriveEffects(dt) {
   effectForward.copy(getForward());
   effectRight.copy(getRight());
-  effectRear.copy(state.position).addScaledVector(effectForward, -3.2).setY(0.72);
+  effectRear.copy(state.position).addScaledVector(effectForward, -3.2);
+  effectRear.y += 0.54;
 
   flameCooldown -= dt;
   if (globalThis.__turnBoostActive && state.speed > 4 && flameCooldown <= 0) {
@@ -675,7 +677,8 @@ function updateDriveEffects(dt) {
   smokeCooldown -= dt;
   if (globalThis.__turnDriftHeld && state.speed > 13 && Math.abs(state.steering) > 0.08 && smokeCooldown <= 0) {
     for (const side of [-1, 1]) {
-      effectPosition.copy(effectRear).addScaledVector(effectRight, side * 1.28).setY(0.45);
+      effectPosition.copy(effectRear).addScaledVector(effectRight, side * 1.28);
+      effectPosition.y = state.position.y + 0.27;
       effectVelocity.copy(effectRight).multiplyScalar(-side * state.steering * 2.8);
       effectVelocity.y += 2.1;
       smokeCursor = launchParticle(
@@ -1109,7 +1112,9 @@ function animateWheels(car, steering, speed, dt) {
 }
 
 function placePlayerCar(dt) {
+  const surfaceSample = samples[state.nearestTrackIndex] || findNearestTrack(state.position).sample;
   playerCar.position.copy(state.position);
+  playerCar.rotation.x = trackPitch(surfaceSample);
   playerCar.rotation.y = state.heading + Math.PI;
   playerCar.rotation.z = -state.steering * 0.035 - state.velocity.dot(getRight()) * 0.0025;
   animateWheels(playerCar, state.steering, state.speed, dt);
@@ -1130,8 +1135,10 @@ function placeCompetitorCars(dt) {
       continue;
     }
 
+    const surfaceSample = trackSampleAtProgress(samples, frame.p) || findNearestTrack(frame).sample;
     car.visible = true;
-    car.position.set(frame.x, 0.18, frame.z);
+    car.position.set(frame.x, trackSurfaceY(surfaceSample), frame.z);
+    car.rotation.x = trackPitch(surfaceSample);
     car.rotation.y = frame.h + Math.PI;
     car.rotation.z = -frame.s * 0.03;
     if (car === ghostCar) animateWheels(car, frame.s, 45, dt);
@@ -1151,6 +1158,7 @@ function updateScene(dt) {
     cameraTarget,
     getForward,
     getRight,
+    samples,
     maxSpeed: MAX_SPEED,
     dt
   });
@@ -1196,8 +1204,10 @@ function updateSkids() {
   if (state.driftAmount > 0.34 && state.speed > 21) {
     skidLateral.copy(getRight());
     skidRearCenter.copy(state.position).addScaledVector(getForward(), -2.0);
-    skidLeftWheel.copy(skidRearCenter).addScaledVector(skidLateral, -1.25).setY(0.23);
-    skidRightWheel.copy(skidRearCenter).addScaledVector(skidLateral, 1.25).setY(0.23);
+    skidLeftWheel.copy(skidRearCenter).addScaledVector(skidLateral, -1.25);
+    skidRightWheel.copy(skidRearCenter).addScaledVector(skidLateral, 1.25);
+    skidLeftWheel.y = state.position.y + 0.05;
+    skidRightWheel.y = state.position.y + 0.05;
     pushSkidSample(skidLeftWheel, skidRightWheel);
   } else {
     repeatLatestSkidSample();
@@ -1482,7 +1492,8 @@ renderer.setAnimationLoop((now) => {
   } else {
     const preview = samples[Math.floor((now * 0.012) % TRACK_SAMPLES)];
     playerCar.position.copy(preview.point);
-    playerCar.position.y = 0.18;
+    playerCar.position.y = trackSurfaceY(preview);
+    playerCar.rotation.x = trackPitch(preview);
     playerCar.rotation.y = Math.atan2(preview.tangent.x, preview.tangent.z) + Math.PI;
     animateWheels(playerCar, Math.sin(now * 0.001) * 0.3, 28, frameDt);
     camera.position.set(0, 110, 215);
