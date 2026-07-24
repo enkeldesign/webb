@@ -6,9 +6,10 @@ export async function showTheLot(options = {}) {
   const trackId = await chooseTrackBeforeLot();
   if (!trackId) return null;
 
+  const lotResult = showOriginalLot(options);
   const removeStatLegend = installLotStatLegend();
   try {
-    return await showOriginalLot(options);
+    return await lotResult;
   } finally {
     removeStatLegend();
   }
