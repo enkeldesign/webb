@@ -104,5 +104,8 @@ jobs:
       - name: Run covered rendering regression
         run: node turn-tests/covered-rendering-production.mjs
 
+      - name: Run event-driven rival visual regression
+        run: node turn-tests/rival-visual-sync-production.mjs
+
       - name: Verify production release architecture
         run: node turn-tests/release-production.mjs
