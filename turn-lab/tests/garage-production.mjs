@@ -25,6 +25,7 @@ assert.equal(sedan.tuning.controlMultiplier, 1, 'Sedan control must remain the v
 assert.equal(sedan.tuning.driftEngineMultiplier, 0.86, 'Sedan must retain the agreed r59 engine penalty while drifting');
 assert.equal(sedan.tuning.driftDragAdd, 0.1, 'Sedan must retain the agreed r59 drift drag');
 assert.equal(sedan.tuning.driftSpeedMultiplier, 0.84, 'Sedan DRIFT must cap at 84% of its corresponding GAS speed limit');
+assert.equal(sedan.tuning.driftStabilityMultiplier, 1, 'Sedan must remain the neutral DRIFT stability baseline');
 assert.equal(sedan.tuning.boostPowerMultiplier, 1, 'Sedan boost power must remain the v1.0 baseline');
 assert.equal(sedan.tuning.boostSpeedMultiplier, 1.32, 'Sedan boost speed must remain the v1.0 baseline');
 assert.equal(sedan.tuning.boostDurationSeconds, 2, 'Sedan boost tank must remain the v1.0 baseline');
@@ -32,11 +33,13 @@ assert.ok(race.tuning.topSpeedMultiplier > sedan.tuning.topSpeedMultiplier, 'Rac
 assert.ok(race.tuning.accelerationMultiplier > sedan.tuning.accelerationMultiplier, 'Race car should accelerate faster than Sedan');
 assert.ok(race.tuning.controlMultiplier > sedan.tuning.controlMultiplier, 'Race car should have more control than Sedan');
 assert.ok(race.tuning.driftDragAdd > sedan.tuning.driftDragAdd, 'Race car should pay a larger speed penalty while drifting');
+assert.ok(race.tuning.driftStabilityMultiplier < sedan.tuning.driftStabilityMultiplier, 'Race car should be less settled in DRIFT than Sedan');
 assert.ok(race.tuning.boostPowerMultiplier >= sedan.tuning.boostPowerMultiplier, 'Race car boost should not be weaker than Sedan');
 assert.ok(race.tuning.boostDurationSeconds < sedan.tuning.boostDurationSeconds, 'Race car should have a shorter boost tank');
 assert.ok(truck.tuning.topSpeedMultiplier < sedan.tuning.topSpeedMultiplier, 'Truck should have less top speed than Sedan');
 assert.ok(truck.tuning.accelerationMultiplier < sedan.tuning.accelerationMultiplier, 'Truck should accelerate slower than Sedan');
 assert.ok(truck.tuning.driftDragAdd < sedan.tuning.driftDragAdd, 'Truck should retain more speed while drifting');
+assert.ok(truck.tuning.driftStabilityMultiplier > sedan.tuning.driftStabilityMultiplier, 'Truck should settle more cleanly in DRIFT than Sedan');
 assert.ok(truck.tuning.boostPowerMultiplier < sedan.tuning.boostPowerMultiplier, 'Truck boost should be weaker than Sedan');
 assert.ok(truck.tuning.boostDurationSeconds > sedan.tuning.boostDurationSeconds, 'Truck should have a longer boost tank');
 assert.notEqual(catalog.makeGhostColor('#ff4fa3'), '#ff4fa3', 'Ghost colour should be a lighter nuance, not the original paint colour');
