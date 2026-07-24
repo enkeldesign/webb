@@ -3,11 +3,12 @@ import {
   CAR_CATALOG,
   DEFAULT_VEHICLE_COLOR,
   DEFAULT_VEHICLE_SECONDARY_COLOR,
+  VEHICLE_STAT_LEGEND,
   getCarDefinition,
   normalizeVehicleColor,
   normalizeVehicleSecondaryColor,
   normalizeVehicleSelection
-} from '../vehicle/catalog.js?build=20260720-r20';
+} from '../vehicle/catalog.js?build=20260724-r59';
 import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js?build=20260720-r22';
 import { recordPerformanceFrame } from '../performance-monitor.js?build=20260720-r20';
 
@@ -45,6 +46,8 @@ export function showTheLot({ initialSelection } = {}) {
             <strong></strong>
           </div>
           <div class="lot-stats"></div>
+          <button class="lot-stats-help" type="button" aria-expanded="false" aria-controls="lotStatsLegend">WHAT DO THE STATS MEAN?</button>
+          <section class="lot-stats-legend" id="lotStatsLegend" hidden aria-label="Vehicle stat legend"></section>
           <div class="lot-colors" aria-label="Choose car paint colours"></div>
           <div class="lot-card-actions">
             <button class="lot-view-open" type="button" hidden>VIEW 3D</button>
@@ -61,6 +64,8 @@ export function showTheLot({ initialSelection } = {}) {
     const host = overlay.querySelector('.lot-canvas-host');
     const title = overlay.querySelector('.lot-car-title strong');
     const stats = overlay.querySelector('.lot-stats');
+    const statsHelp = overlay.querySelector('.lot-stats-help');
+    const statsLegend = overlay.querySelector('.lot-stats-legend');
     const colors = overlay.querySelector('.lot-colors');
     const raceButton = overlay.querySelector('.lot-race');
     const backButton = overlay.querySelector('.lot-back');
@@ -69,6 +74,19 @@ export function showTheLot({ initialSelection } = {}) {
     const viewHost = overlay.querySelector('.lot-view-host');
     const viewClose = overlay.querySelector('.lot-view-close');
     const viewOpen = overlay.querySelector('.lot-view-open');
+
+    statsLegend.replaceChildren(...VEHICLE_STAT_LEGEND.map((entry) => {
+      const item = document.createElement('div');
+      item.className = 'lot-stats-legend-item';
+      item.innerHTML = `<strong>${entry.label}</strong><p>${entry.description}</p>`;
+      return item;
+    }));
+
+    statsHelp.addEventListener('click', () => {
+      const expanded = statsHelp.getAttribute('aria-expanded') === 'true';
+      statsHelp.setAttribute('aria-expanded', String(!expanded));
+      statsLegend.hidden = expanded;
+    });
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x8ed8ff);
@@ -339,154 +357,68 @@ function createViewer(host) {
 
   scene.add(new THREE.HemisphereLight(0xffffff, 0x5b6770, 3.2));
   const key = new THREE.DirectionalLight(0xfff2c9, 4.2);
-  key.position.set(-6, 10, 7);
+  key.position.set(-6, 9, 7);
   scene.add(key);
 
-  const stage = new THREE.Group();
-  scene.add(stage);
-
-  let visual = null;
-  let generation = 0;
-  let currentColor = DEFAULT_VEHICLE_COLOR;
-  let currentSecondaryColor = DEFAULT_VEHICLE_SECONDARY_COLOR;
+  let activeRoot = null;
+  let requestId = 0;
   let yaw = VIEWER_INITIAL_YAW;
-  let pitch = 0.08;
   let dragging = false;
-  let pointerId = null;
   let lastX = 0;
-  let lastY = 0;
+
+  function disposeActive() {
+    if (!activeRoot) return;
+    scene.remove(activeRoot);
+    activeRoot = null;
+  }
+
+  function show(carId, color, secondaryColor) {
+    const token = ++requestId;
+    return createCarVisual({ carId, color, secondaryColor, targetLength: 5.7, outline: true }).then((root) => {
+      if (token !== requestId) return;
+      disposeActive();
+      root.rotation.y = yaw;
+      scene.add(root);
+      activeRoot = root;
+    });
+  }
+
+  function recolor(color, secondaryColor) {
+    if (activeRoot) recolorCarVisual(activeRoot, color, secondaryColor);
+  }
+
+  function resize() {
+    const rect = host.getBoundingClientRect();
+    renderer.setSize(Math.max(1, rect.width), Math.max(1, rect.height), false);
+    camera.aspect = Math.max(1, rect.width) / Math.max(1, rect.height);
+    camera.updateProjectionMatrix();
+  }
+
+  function render() {
+    if (activeRoot) activeRoot.rotation.y = yaw;
+    renderer.render(scene, camera);
+    return true;
+  }
+
+  function dispose() {
+    disposeActive();
+    renderer.dispose();
+  }
 
   host.addEventListener('pointerdown', (event) => {
-    event.preventDefault();
     dragging = true;
-    pointerId = event.pointerId;
     lastX = event.clientX;
-    lastY = event.clientY;
     host.setPointerCapture?.(event.pointerId);
   });
-
   host.addEventListener('pointermove', (event) => {
-    if (!dragging || event.pointerId !== pointerId) return;
-    const dx = event.clientX - lastX;
-    const dy = event.clientY - lastY;
+    if (!dragging) return;
+    yaw += (event.clientX - lastX) * 0.012;
     lastX = event.clientX;
-    lastY = event.clientY;
-    yaw += dx * 0.012;
-    pitch = THREE.MathUtils.clamp(pitch + dy * 0.0035, -0.12, 0.24);
   });
+  host.addEventListener('pointerup', () => { dragging = false; });
+  host.addEventListener('pointercancel', () => { dragging = false; });
 
-  const stopDrag = (event) => {
-    if (pointerId !== null && event?.pointerId != null && event.pointerId !== pointerId) return;
-    dragging = false;
-    pointerId = null;
-  };
-  host.addEventListener('pointerup', stopDrag);
-  host.addEventListener('pointercancel', stopDrag);
-  host.addEventListener('lostpointercapture', stopDrag);
-
-  return {
-    renderer,
-    async show(carId, color, secondaryColor) {
-      const request = ++generation;
-      currentColor = normalizeVehicleColor(color);
-      currentSecondaryColor = normalizeVehicleSecondaryColor(secondaryColor);
-      try {
-        const next = await createCarVisual({
-          carId,
-          color: currentColor,
-          secondaryColor: currentSecondaryColor,
-          targetLength: 6.4,
-          outline: true
-        });
-        if (request !== generation) return;
-        if (visual) stage.remove(visual);
-        visual = next;
-        stage.add(visual);
-        recolorCarVisual(visual, currentColor, currentSecondaryColor);
-        yaw = VIEWER_INITIAL_YAW;
-        pitch = 0.08;
-      } catch (error) {
-        console.warn('TURN: selected car could not load in the 3D viewer.', error);
-      }
-    },
-    recolor(color, secondaryColor) {
-      currentColor = normalizeVehicleColor(color);
-      currentSecondaryColor = normalizeVehicleSecondaryColor(secondaryColor);
-      if (visual) recolorCarVisual(visual, currentColor, currentSecondaryColor);
-    },
-    resize() {
-      const rect = host.getBoundingClientRect();
-      if (!rect.width || !rect.height) return;
-      camera.aspect = rect.width / rect.height;
-      camera.updateProjectionMatrix();
-      renderer.setSize(Math.round(rect.width), Math.round(rect.height), false);
-    },
-    render(elapsed) {
-      if (!dragging) yaw += 0.0024;
-      stage.rotation.y = yaw;
-      stage.rotation.x = pitch;
-      if (visual) visual.position.y = Math.sin(elapsed * 2.1) * 0.04;
-      renderer.render(scene, camera);
-      return true;
-    },
-    dispose() {
-      generation += 1;
-      renderer.dispose();
-    }
-  };
-}
-
-function rememberMaterialState(root) {
-  if (root.userData.turnLotMaterialState) return;
-  const paintMaterials = new Set(root.userData.turnPaintMaterials || []);
-  const records = [];
-
-  root.traverse((node) => {
-    if (!node.isMesh || !node.material) return;
-    const materials = Array.isArray(node.material) ? node.material : [node.material];
-    for (const material of materials) {
-      records.push({
-        material,
-        paint: paintMaterials.has(material),
-        outline: Boolean(node.userData?.turnOutline),
-        color: material.color?.clone?.() || null,
-        transparent: material.transparent,
-        opacity: material.opacity,
-        depthWrite: material.depthWrite
-      });
-    }
-  });
-
-  root.userData.turnLotMaterialState = records;
-}
-
-function applyLotCarPresentation(root, selected, selectedColor, selectedSecondaryColor) {
-  rememberMaterialState(root);
-  const records = root.userData.turnLotMaterialState || [];
-
-  for (const record of records) {
-    const { material } = record;
-    if (selected || record.outline) {
-      material.transparent = record.transparent;
-      material.opacity = record.opacity;
-      material.depthWrite = record.depthWrite;
-      if (!record.paint && record.color && material.color) material.color.copy(record.color);
-    } else {
-      material.transparent = false;
-      material.opacity = 1;
-      material.depthWrite = true;
-      if (material.color) material.color.copy(UNSELECTED_COLOR);
-    }
-    material.needsUpdate = true;
-  }
-
-  if (selected) {
-    recolorCarVisual(
-      root,
-      selectedColor || DEFAULT_VEHICLE_COLOR,
-      selectedSecondaryColor || DEFAULT_VEHICLE_SECONDARY_COLOR
-    );
-  }
+  return { renderer, show, recolor, resize, render, dispose };
 }
 
 function makeLotGround(lot) {
@@ -496,34 +428,27 @@ function makeLotGround(lot) {
   );
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.02;
-  ground.receiveShadow = true;
   lot.add(ground);
+}
 
-  const stripeMaterial = new THREE.MeshBasicMaterial({ color: 0xfff8e8 });
-  for (let row = 0; row < 3; row += 1) {
-    const z = (1 - row) * 7.2;
-    for (let column = -2; column <= 3; column += 1) {
-      const stripe = new THREE.Mesh(new THREE.PlaneGeometry(0.14, 5.8), stripeMaterial);
-      stripe.rotation.x = -Math.PI / 2;
-      stripe.position.set((column - 0.5) * 8.1, 0.014, z);
-      lot.add(stripe);
-    }
-  }
-
-  const centerLine = new THREE.Mesh(
-    new THREE.PlaneGeometry(42, 0.22),
-    new THREE.MeshBasicMaterial({ color: 0xffd43b })
+function makeParkingPad(selected) {
+  const group = new THREE.Group();
+  const mesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(6.7, 5.9),
+    new THREE.MeshBasicMaterial({ color: selected ? 0x38d9ff : 0x61676d, transparent: true, opacity: selected ? 0.5 : 0.26 })
   );
-  centerLine.rotation.x = -Math.PI / 2;
-  centerLine.position.set(0, 0.016, 10.8);
-  lot.add(centerLine);
+  mesh.rotation.x = -Math.PI / 2;
+  group.add(mesh);
+  group.userData.turnPadMesh = mesh;
+  return group;
 }
 
-function makeParkingPad() {
-  return new THREE.Group();
+function setParkingPadSelected(platform, selected) {
+  const mesh = platform.userData.turnPadMesh;
+  if (!mesh) return;
+  mesh.material.color.set(selected ? 0x38d9ff : 0x61676d);
+  mesh.material.opacity = selected ? 0.5 : 0.26;
 }
-
-function setParkingPadSelected() {}
 
 function findCarId(object) {
   let node = object;
@@ -537,10 +462,10 @@ function findCarId(object) {
 function makeStats(vehicleStats) {
   const rows = [
     ['TOP SPEED', vehicleStats.speed],
-    ['ACCEL', vehicleStats.acceleration],
+    ['ACCELERATION', vehicleStats.acceleration],
     ['CONTROL', vehicleStats.control],
     ['DRIFT', vehicleStats.drift],
-    ['BOOST', vehicleStats.boostPower],
+    ['BOOST POWER', vehicleStats.boostPower],
     ['BOOST TANK', vehicleStats.boostDuration]
   ];
 
@@ -549,5 +474,30 @@ function makeStats(vehicleStats) {
     row.className = 'lot-stat';
     row.innerHTML = `<span>${label}</span><i>${Array.from({ length: 5 }, (_, index) => `<b class="${index < value ? 'is-full' : ''}"></b>`).join('')}</i>`;
     return row;
+  });
+}
+
+function rememberMaterialState(root) {
+  root.traverse((node) => {
+    if (!node.isMesh || !node.material) return;
+    const materials = Array.isArray(node.material) ? node.material : [node.material];
+    for (const material of materials) {
+      if (!material?.color) continue;
+      material.userData.turnOriginalColor = material.color.clone();
+    }
+  });
+}
+
+function applyLotCarPresentation(root, selected, color, secondaryColor) {
+  if (selected) {
+    recolorCarVisual(root, color, secondaryColor);
+    return;
+  }
+  root.traverse((node) => {
+    if (!node.isMesh || !node.material) return;
+    const materials = Array.isArray(node.material) ? node.material : [node.material];
+    for (const material of materials) {
+      if (material?.color) material.color.copy(UNSELECTED_COLOR);
+    }
   });
 }
