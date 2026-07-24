@@ -1,5 +1,6 @@
 import { showTheLot as showOriginalLot } from './lot-r10.js?build=20260720-r25';
 import { installLotStatLegend } from './lot-stat-legend.js?build=20260724-r59';
+import { installLotLayout } from './lot-layout-r60.js?build=20260724-r60';
 import { chooseTrackBeforeLot } from '../tracks/track-manager.js?build=20260722-r52';
 
 export async function showTheLot(options = {}) {
@@ -8,9 +9,11 @@ export async function showTheLot(options = {}) {
 
   const lotResult = showOriginalLot(options);
   const removeStatLegend = installLotStatLegend();
+  const removeLotLayout = installLotLayout();
   try {
     return await lotResult;
   } finally {
+    removeLotLayout();
     removeStatLegend();
   }
 }
