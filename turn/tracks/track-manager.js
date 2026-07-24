@@ -78,7 +78,7 @@ export async function activateTrack(trackId, currentRuntime = runtime) {
     findNearestTrack: currentRuntime.findNearestTrack,
     trackId: nextTrackId
   });
-  currentRuntime.ensureCompetitorCars?.();
+  currentRuntime.syncCompetitorVisuals?.();
 
   window.dispatchEvent(new CustomEvent('turn:track-changed', {
     detail: {
