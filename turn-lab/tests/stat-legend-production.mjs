@@ -27,13 +27,19 @@ assert.match(index, /lot-stat-legend\.css\?build=20260724-r59/, 'Production must
 assert.match(index, /lot-track-select\.js\?build=20260724-r59/, 'Production must cache-bust the enhanced Lot wrapper');
 assert.match(index, /vehicle\/physics\.js\?build=20260724-r59/, 'Production must cache-bust the mandatory DRIFT penalty');
 assert.match(index, /vehicle\/catalog\.js\?build=20260724-r59/, 'Production must cache-bust the shared stat definitions');
-assert.match(wrapper, /installLotStatLegend\(\)/, 'The Lot flow must install the stat legend before car selection');
+assert.match(wrapper, /const lotResult = showOriginalLot\(options\)/, 'The verified Lot must mount before the legend connects to it');
+assert.ok(
+  wrapper.indexOf('showOriginalLot(options)') < wrapper.indexOf('installLotStatLegend()'),
+  'Legend mounting must use the already-created synchronous Lot DOM'
+);
 assert.match(legendModule, /VEHICLE_STAT_LEGEND/, 'The in-game legend must use the shared source of truth');
 assert.match(legendModule, /aria-modal/, 'The legend must open as an accessible modal');
 assert.match(legendModule, /WHAT DO THE STATS MEAN\?/, 'The legend trigger must be discoverable');
-assert.match(legendModule, /mountObserver\.disconnect\(\)/, 'The broad Lot observer must disconnect as soon as the UI is mounted');
+assert.doesNotMatch(legendModule, /mountObserver|subtree: true/, 'The legend must not observe the whole game DOM');
 assert.match(legendModule, /statsObserver\.observe\(stats, \{ childList: true \}\)/, 'Only actual car-stat replacement must trigger relabelling');
-assert.match(legendModule, /label\.textContent !== definition\.label/, 'Relabelling must not observe and rewrite its own text endlessly');
+assert.match(legendModule, /label\.textContent !== definition\.label/, 'Relabelling must not rewrite unchanged labels');
+assert.match(legendModule, /trigger\.remove\(\)/, 'Legend cleanup must remove its injected trigger');
+assert.match(legendModule, /dialog\.remove\(\)/, 'Legend cleanup must remove its injected dialog');
 assert.match(legendCss, /\.lot-stats-dialog\[hidden\]/, 'The closed legend must stay out of layout and interaction');
 assert.match(lotSource, /\['ACCEL', vehicleStats\.acceleration\]/, 'The verified Lot renderer must remain otherwise untouched');
 assert.match(physicsSource, /baseSpeedLimit \* effectiveDriftSpeedMultiplier/, 'Production physics must apply the DRIFT penalty to the active speed limit');
