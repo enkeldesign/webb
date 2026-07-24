@@ -7,16 +7,19 @@ export function installLotStatLegend(root = document.body) {
   let trigger = null;
   let dialog = null;
   let previousFocus = null;
+  let statsObserver = null;
 
-  const observer = new MutationObserver(() => enhanceLot());
-  observer.observe(root, { childList: true, subtree: true });
+  const mountObserver = new MutationObserver(() => enhanceLot());
+  mountObserver.observe(root, { childList: true, subtree: true });
   enhanceLot();
 
   return () => {
-    observer.disconnect();
+    mountObserver.disconnect();
+    statsObserver?.disconnect();
     trigger = null;
     dialog = null;
     previousFocus = null;
+    statsObserver = null;
   };
 
   function enhanceLot() {
@@ -24,7 +27,11 @@ export function installLotStatLegend(root = document.body) {
     const stats = screen?.querySelector('.lot-stats');
     if (!screen || !stats) return;
 
+    mountObserver.disconnect();
     relabelStats(stats);
+    statsObserver = new MutationObserver(() => relabelStats(stats));
+    statsObserver.observe(stats, { childList: true });
+
     if (screen.querySelector('.lot-stats-help')) return;
 
     trigger = document.createElement('button');
@@ -45,7 +52,9 @@ export function installLotStatLegend(root = document.body) {
     const labels = stats.querySelectorAll('.lot-stat > span');
     labels.forEach((label, index) => {
       const definition = VEHICLE_STAT_LEGEND[index];
-      if (definition) label.textContent = definition.label;
+      if (definition && label.textContent !== definition.label) {
+        label.textContent = definition.label;
+      }
     });
   }
 
