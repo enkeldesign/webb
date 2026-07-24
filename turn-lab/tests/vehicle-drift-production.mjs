@@ -3,17 +3,24 @@ import assert from 'node:assert/strict';
 import { CAR_CATALOG, deriveVehicleTuning } from '../../turn/vehicle/catalog.js';
 import { getVehicleSpeedLimit } from '../../turn/vehicle/physics.js';
 
+const driftTunings = [1, 2, 3, 4, 5].map((drift) => deriveVehicleTuning({
+  speed: 3,
+  acceleration: 3,
+  control: 3,
+  drift,
+  boostPower: 3,
+  boostDuration: 3
+}));
+
 assert.deepEqual(
-  [1, 2, 3, 4, 5].map((drift) => deriveVehicleTuning({
-    speed: 3,
-    acceleration: 3,
-    control: 3,
-    drift,
-    boostPower: 3,
-    boostDuration: 3
-  }).driftSpeedMultiplier),
+  driftTunings.map((tuning) => tuning.driftSpeedMultiplier),
   [0.76, 0.8, 0.84, 0.88, 0.92],
   'DRIFT ratings must retain the agreed 24% to 8% speed-penalty curve'
+);
+assert.deepEqual(
+  driftTunings.map((tuning) => tuning.driftStabilityMultiplier),
+  [0.82, 0.91, 1, 1.09, 1.18],
+  'Higher DRIFT ratings must settle lateral motion more cleanly'
 );
 
 const drivingModes = [
@@ -27,6 +34,7 @@ for (const car of CAR_CATALOG) {
   assert.ok(car.tuning.driftEngineMultiplier < 1, `${car.name} must lose engine power in DRIFT`);
   assert.ok(car.tuning.driftDragAdd > 0, `${car.name} must gain drag in DRIFT`);
   assert.ok(car.tuning.driftSpeedMultiplier < 1, `${car.name} must have a DRIFT ceiling below GAS`);
+  assert.ok(car.tuning.driftStabilityMultiplier > 0, `${car.name} must have a valid DRIFT stability profile`);
 
   const maxSpeed = 88 * car.tuning.topSpeedMultiplier;
   for (const mode of drivingModes) {
@@ -56,4 +64,4 @@ for (const car of CAR_CATALOG) {
   }
 }
 
-console.log('TURN mandatory DRIFT speed penalty passed for all 15 cars and every speed-limit mode.');
+console.log('TURN DRIFT speed, engine, drag and stability contract passed for all 15 cars.');
