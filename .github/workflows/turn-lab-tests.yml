@@ -110,5 +110,8 @@ jobs:
       - name: Run fixed skid history regression
         run: node turn-tests/skid-ring-buffer-production.mjs
 
+      - name: Run elevation-aware runtime regression
+        run: node turn-tests/elevation-production.mjs
+
       - name: Verify production release architecture
         run: node turn-tests/release-production.mjs
