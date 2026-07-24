@@ -5,9 +5,11 @@ import {
   normalizeTrackId
 } from '../tracks/catalog.js?build=20260722-r50';
 import { getStoredBestLap } from '../race/rival-storage.js?build=20260722-r50';
-import { getCarDefinition } from '../vehicle/catalog.js?build=20260720-r19';
+import { getCarDefinition } from '../vehicle/catalog.js?build=20260724-r59';
+import { renderBestCarThumbnail } from './track-best-car.js?build=20260724-r61';
 
 let activeRequest = null;
+let bestPreviewGeneration = 0;
 
 export function showTrackSelect({ initialTrackId = loadTrackSelection() } = {}) {
   if (activeRequest) return activeRequest;
@@ -122,9 +124,12 @@ function renderTrackCard(track) {
           <strong class="track-card-name">${track.name.toUpperCase()}</strong>
         </span>
         <span class="track-card-best" data-track-best="${track.id}">
-          <span>BEST</span>
-          <strong class="track-card-best-time">--:--.---</strong>
-          <small class="track-card-best-car" hidden></small>
+          <span class="track-card-best-copy">
+            <span>BEST</span>
+            <strong class="track-card-best-time">--:--.---</strong>
+            <small class="track-card-best-car" hidden></small>
+          </span>
+          <img class="track-card-best-model" alt="" aria-hidden="true" draggable="false" hidden>
         </span>
       </span>
     </button>
@@ -161,17 +166,43 @@ function makePreviewSvg(trackId, accent) {
 }
 
 function refreshBestTimes(overlay) {
+  const generation = ++bestPreviewGeneration;
+
   for (const track of TRACK_CATALOG) {
     const bestLap = getStoredBestLap(track.id);
     const bestBox = overlay.querySelector(`[data-track-best="${track.id}"]`);
     const time = bestBox?.querySelector('.track-card-best-time');
     const car = bestBox?.querySelector('.track-card-best-car');
+    const model = bestBox?.querySelector('.track-card-best-model');
 
     if (time) time.textContent = formatTime(bestLap?.time ?? Infinity);
     if (car) {
       car.textContent = bestLap ? getCarDefinition(bestLap.carId).name.toUpperCase() : '';
       car.hidden = !bestLap;
     }
+    if (model) {
+      model.hidden = true;
+      model.removeAttribute('src');
+      delete model.dataset.previewKey;
+    }
+
+    if (!bestLap || !model) continue;
+
+    const previewKey = [
+      track.id,
+      bestLap.carId,
+      bestLap.carColor,
+      bestLap.carSecondaryColor
+    ].join(':');
+    model.dataset.previewKey = previewKey;
+
+    renderBestCarThumbnail(bestLap).then((source) => {
+      if (generation !== bestPreviewGeneration || model.dataset.previewKey !== previewKey) return;
+      model.src = source;
+      model.hidden = false;
+    }).catch((error) => {
+      console.warn(`TURN: could not render the ${track.name} record car.`, error);
+    });
   }
 }
 
