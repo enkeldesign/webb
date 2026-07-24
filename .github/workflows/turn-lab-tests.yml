@@ -49,6 +49,9 @@ jobs:
       - name: Run production garage regression
         run: node turn-lab/tests/garage-production.mjs
 
+      - name: Run vehicle stat legend and drift penalty regression
+        run: node turn-lab/tests/drift-penalty-production.mjs
+
       - name: Run all-car orientation regression
         run: node turn-lab/tests/car-orientation-production.mjs
 
