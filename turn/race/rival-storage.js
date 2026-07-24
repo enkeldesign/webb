@@ -139,14 +139,15 @@ export function getStoredBestLap(trackId = DEFAULT_TRACK_ID) {
         const time = Number(lap?.time);
         if (!Number.isFinite(time)) return best;
         if (!best || time < best.time) {
-          return {
+          const summary = {
             time,
-            carId: normalizeVehicleId(lap?.carId),
-            carColor: lap?.carColor
-              ? normalizeVehicleColor(lap.carColor)
-              : DEFAULT_VEHICLE_COLOR,
-            carSecondaryColor: normalizeVehicleSecondaryColor(lap?.carSecondaryColor)
+            carId: normalizeVehicleId(lap?.carId)
           };
+          if (lap?.carColor) summary.carColor = normalizeVehicleColor(lap.carColor);
+          if (lap?.carSecondaryColor) {
+            summary.carSecondaryColor = normalizeVehicleSecondaryColor(lap.carSecondaryColor);
+          }
+          return summary;
         }
         return best;
       }, null)
@@ -159,9 +160,7 @@ export function getStoredBestLap(trackId = DEFAULT_TRACK_ID) {
       if (Number.isFinite(legacyTime)) {
         return {
           time: legacyTime,
-          carId: DEFAULT_VEHICLE_ID,
-          carColor: DEFAULT_VEHICLE_COLOR,
-          carSecondaryColor: DEFAULT_VEHICLE_SECONDARY_COLOR
+          carId: DEFAULT_VEHICLE_ID
         };
       }
     }
