@@ -49,6 +49,9 @@ jobs:
       - name: Run production garage regression
         run: node turn-lab/tests/garage-production.mjs
 
+      - name: Run compact Lot layout regression
+        run: node turn-lab/tests/lot-layout-production.mjs
+
       - name: Run DRIFT handling contract regression
         run: node turn-lab/tests/vehicle-drift-production.mjs
 
