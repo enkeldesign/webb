@@ -101,5 +101,8 @@ jobs:
       - name: Run production performance and diagnostics regression
         run: node turn-lab/tests/performance-production.mjs
 
+      - name: Run covered rendering regression
+        run: node turn-tests/covered-rendering-production.mjs
+
       - name: Verify production release architecture
         run: node turn-tests/release-production.mjs

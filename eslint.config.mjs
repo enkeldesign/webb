@@ -23,6 +23,7 @@ export default [
       'turn/race/replay-system.js',
       'turn/race/rival-storage.js',
       'turn/race/track-spatial-index.js',
+      'turn/render/covered-rendering.js',
       'turn/vehicle/catalog.js',
       'turn/vehicle/physics.js',
       'turn/tracks/catalog.js',
