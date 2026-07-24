@@ -141,7 +141,11 @@ export function getStoredBestLap(trackId = DEFAULT_TRACK_ID) {
         if (!best || time < best.time) {
           return {
             time,
-            carId: normalizeVehicleId(lap?.carId)
+            carId: normalizeVehicleId(lap?.carId),
+            carColor: lap?.carColor
+              ? normalizeVehicleColor(lap.carColor)
+              : DEFAULT_VEHICLE_COLOR,
+            carSecondaryColor: normalizeVehicleSecondaryColor(lap?.carSecondaryColor)
           };
         }
         return best;
@@ -155,7 +159,9 @@ export function getStoredBestLap(trackId = DEFAULT_TRACK_ID) {
       if (Number.isFinite(legacyTime)) {
         return {
           time: legacyTime,
-          carId: DEFAULT_VEHICLE_ID
+          carId: DEFAULT_VEHICLE_ID,
+          carColor: DEFAULT_VEHICLE_COLOR,
+          carSecondaryColor: DEFAULT_VEHICLE_SECONDARY_COLOR
         };
       }
     }
