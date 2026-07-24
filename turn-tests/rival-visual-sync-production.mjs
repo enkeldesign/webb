@@ -21,10 +21,11 @@ assert.match(syncSection, /state\.competitorLaps\[i\]/, 'Identity sync must foll
 assert.match(syncSection, /void syncCompetitorVisual\(car, lap\)/, 'Only the explicit identity sync path may request model changes');
 assert.doesNotMatch(syncSection, /requestAnimationFrame|setAnimationLoop|setInterval/, 'Rival identity sync must create no recurring scheduler');
 
-const placementSection = section(main, 'function placeCompetitorCars(dt)', '\nfunction updateRivalContactState');
-assert.match(placementSection, /lapFrameAt\(lap, state\.lapElapsed\)/, 'The frame loop must continue updating rival transforms from replay frames');
-assert.match(placementSection, /car\.position\.lerp/, 'Rival transform smoothing must remain in the frame loop');
-assert.match(placementSection, /animateWheels\(car, frame\.s, state\.speed, dt\)/, 'Rival wheel animation must remain visual-frame work');
+const placementSection = section(main, 'function placeCompetitorCars(dt)', '\nfunction updateScene');
+assert.match(placementSection, /lapFrameAt\(lap, state\.lapElapsed\)/, 'The frame loop must continue sampling rival replay transforms');
+assert.match(placementSection, /car\.position\.set\(frame\.x, 0\.18, frame\.z\)/, 'Rival position must remain frame-driven');
+assert.match(placementSection, /car\.rotation\.y = frame\.h \+ Math\.PI/, 'Rival heading must remain frame-driven');
+assert.match(placementSection, /if \(car === ghostCar\) animateWheels\(car, frame\.s, 45, dt\)/, 'The primary ghost wheel animation must remain visual-frame work');
 assert.doesNotMatch(placementSection, /ensureCompetitorCars|syncCompetitorVisual|installCarVisual|createCarVisual/, 'The frame loop must perform no rival pool or model identity synchronisation');
 
 const lapSection = section(main, 'function completeLap(now)', '\nfunction saveGhost');
