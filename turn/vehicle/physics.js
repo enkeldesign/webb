@@ -1,5 +1,29 @@
 import { resolveWorldCollisionState } from '../race/world-collision.js?build=20260723-r53';
 
+export function getVehicleSpeedLimit({
+  offRoad = false,
+  boostActive = false,
+  maxSpeed,
+  boostSpeedMultiplier = 1.32,
+  driftHeld = false,
+  driftSpeedMultiplier = 0.84
+}) {
+  const effectiveMaxSpeed = positiveNumber(maxSpeed, 1);
+  const effectiveBoostSpeedMultiplier = positiveNumber(boostSpeedMultiplier, 1.32);
+  const effectiveDriftSpeedMultiplier = clamp(
+    positiveNumber(driftSpeedMultiplier, 0.84),
+    0.5,
+    0.99
+  );
+  const baseSpeedLimit = offRoad
+    ? (boostActive ? effectiveMaxSpeed * 0.82 : effectiveMaxSpeed * 0.73)
+    : (boostActive ? effectiveMaxSpeed * effectiveBoostSpeedMultiplier : effectiveMaxSpeed);
+
+  return driftHeld
+    ? baseSpeedLimit * effectiveDriftSpeedMultiplier
+    : baseSpeedLimit;
+}
+
 export function updateVehiclePhysicsState({
   state,
   dt,
@@ -139,12 +163,14 @@ export function updateVehiclePhysicsState({
     : 0.11 + speed * 0.0009 + (driftHeld ? driftDragAdd : 0);
   state.velocity.multiplyScalar(Math.exp(-drag * dt));
 
-  const baseSpeedLimit = state.offRoad
-    ? (effectiveBoostActive ? effectiveMaxSpeed * 0.82 : effectiveMaxSpeed * 0.73)
-    : (effectiveBoostActive ? effectiveMaxSpeed * tuningBoostSpeedMultiplier : effectiveMaxSpeed);
-  const speedLimit = driftHeld
-    ? baseSpeedLimit * driftSpeedMultiplier
-    : baseSpeedLimit;
+  const speedLimit = getVehicleSpeedLimit({
+    offRoad: state.offRoad,
+    boostActive: effectiveBoostActive,
+    maxSpeed: effectiveMaxSpeed,
+    boostSpeedMultiplier: tuningBoostSpeedMultiplier,
+    driftHeld,
+    driftSpeedMultiplier
+  });
 
   speed = state.velocity.length();
   if (speed > speedLimit) state.velocity.multiplyScalar(speedLimit / speed);
