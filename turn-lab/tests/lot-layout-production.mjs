@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [index, wrapper, layout, layoutCss, lot, legend] = await Promise.all([
+const [index, releaseSource, wrapper, layout, layoutCss, lot, legend] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-track-select.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-layout-r60.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-layout-r60.css', import.meta.url), 'utf8'),
@@ -10,12 +11,17 @@ const [index, wrapper, layout, layoutCss, lot, legend] = await Promise.all([
   fs.readFile(new URL('../../turn/garage/lot-stat-legend.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /lot-layout-r60\.css\?build=20260724-r60/, 'Production must load the compact r60 Lot layout');
-assert.match(index, /lot-track-select\.js\?build=20260724-r60/, 'Production must cache-bust the wrapper that installs the layout');
-assert.match(wrapper, /lot-layout-r60\.js\?build=20260724-r60/, 'The wrapper must import the r60 layout enhancer');
+const release = JSON.parse(releaseSource);
+const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
+assert.ok(importMapText, 'Production must expose its import map');
+const imports = JSON.parse(importMapText).imports;
+
+assert.match(index, new RegExp(`lot-layout-r60\\.css\\?build=${release.cacheKey}`), 'Production must load the compact Lot layout through the current release');
+assert.equal(imports['./garage/lot-r10.js?build=20260720-r19'], `./garage/lot-track-select.js?build=${release.cacheKey}`, 'Production must publish the wrapper that installs the compact layout');
+assert.match(wrapper, /lot-layout-r60\.js\?build=20260724-r60/, 'The wrapper must import the verified layout enhancer');
 assert.ok(
   wrapper.indexOf('installLotStatLegend()') < wrapper.indexOf('installLotLayout()'),
-  'The legend trigger must exist before r60 turns it into the Attributes info icon'
+  'The legend trigger must exist before the layout turns it into the Attributes info icon'
 );
 
 assert.match(layout, /viewbox\.appendChild\(colors\)/, 'Paint controls must move into the 3D view panel');
@@ -36,4 +42,4 @@ assert.match(layoutCss, /\.lot-view-close,[\s\S]*\.lot-view-open \{[\s\S]*displa
 assert.match(lot, /<div class="lot-colors" aria-label="Choose car paint colours"><\/div>/, 'The verified Lot must still own the live native paint controls');
 assert.match(legend, /aria-haspopup', 'dialog'/, 'The relocated info icon must still open the full stat legend');
 
-console.log('TURN compact 3D, paint and Attributes panel layout passed.');
+console.log(`TURN ${release.id} compact 3D, paint and Attributes panel layout passed.`);
