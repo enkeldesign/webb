@@ -19,11 +19,40 @@ for (const car of catalog.CAR_CATALOG) {
     catalog.VEHICLE_STAT_BUDGET,
     `${car.name} must spend exactly ${catalog.VEHICLE_STAT_BUDGET} stat points`
   );
+  assert.ok(
+    car.tuning.driftSpeedMultiplier < 1,
+    `${car.name} must always have a lower DRIFT speed ceiling than GAS`
+  );
+  assert.ok(
+    car.tuning.driftEngineMultiplier < 1,
+    `${car.name} must always lose engine power while DRIFT is held`
+  );
+  assert.ok(
+    car.tuning.driftDragAdd > 0,
+    `${car.name} must always gain drag while DRIFT is held`
+  );
 }
 assert.deepEqual(
   catalog.getCarDefinition('sedan').stats,
   { speed: 3, acceleration: 3, control: 3, drift: 3, boostPower: 3, boostDuration: 3 },
   'Sedan must remain the neutral 3/3/3/3/3/3 baseline'
+);
+assert.deepEqual(
+  catalog.CAR_STAT_LEGEND.map((entry) => entry.label),
+  ['TOP SPEED', 'ACCELERATION', 'CONTROL', 'DRIFT', 'BOOST POWER', 'BOOST TANK'],
+  'The Lot legend must expose the six agreed player-facing stat names'
+);
+assert.deepEqual(
+  [1, 2, 3, 4, 5].map((rating) => catalog.deriveVehicleTuning({
+    speed: 3,
+    acceleration: 3,
+    control: 3,
+    drift: rating,
+    boostPower: 3,
+    boostDuration: 3
+  }).driftSpeedMultiplier),
+  [0.76, 0.8, 0.84, 0.88, 0.92],
+  'DRIFT ratings must retain the agreed 24% to 8% speed penalty curve'
 );
 
 assert.ok(LAP_CHECKPOINTS.length >= 10, 'anti-shortcut checkpoint chain must stay dense');
@@ -256,11 +285,13 @@ assert.equal(resetState.lapCheckpointIndex, 0, 'reset must clear checkpoint prog
 assert.equal(resetState.lapInvalid, false, 'Restart Lap must clear the persistent invalid-lap state');
 assert.equal(resetState.lapActive, false, 'reset must return to staged pre-lap state');
 
-const [carModelsSource, mainSource, lapSystemSource, gameStateSource] = await Promise.all([
+const [carModelsSource, mainSource, lapSystemSource, gameStateSource, physicsSource, lotSource] = await Promise.all([
   fs.readFile(new URL('../../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/race/lap-system.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/race/game-state.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/race/game-state.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/vehicle/physics.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8')
 ]);
 assert.match(carModelsSource, /const TIRE_COLOR = 0x17191c/, 'asset vehicle wheels must be forced to a dark tire colour');
 assert.match(carModelsSource, /material\.transparent = false/, 'ghost materials must be solid');
@@ -276,5 +307,8 @@ assert.match(lapSystemSource, /START_GATE_HALF_WIDTH_FACTOR = 0\.82/, 'start and
 assert.match(lapSystemSource, /turn:lap-invalid/, 'an incomplete checkpoint chain must report an invalid lap instead of failing silently');
 assert.doesNotMatch(lapSystemSource, /crossedStartByProgress/, 'start and finish must not retain the retired progress-wrap fallback');
 assert.match(gameStateSource, /state\.lapInvalid = false/, 'race staging must clear invalid-lap status');
+assert.match(physicsSource, /driftHeld \? effectiveMaxSpeed \* driftSpeedMultiplier/, 'production physics must enforce the DRIFT speed ceiling');
+assert.match(lotSource, /WHAT DO THE STATS MEAN\?/, 'The Lot must expose a discoverable stat legend');
+assert.match(lotSource, /CAR_STAT_LEGEND/, 'The Lot must render the same shared stat definitions used by tuning');
 
-console.log('TURN forgiving swept lap gates, early invalid-lap state, single-source start line and anti-shortcut regression passed.');
+console.log('TURN stat legend, mandatory drift penalty, forgiving swept lap gates and anti-shortcut regression passed.');
