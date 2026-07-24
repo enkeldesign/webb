@@ -121,8 +121,9 @@ try {
   else globalThis.dispatchEvent = originalDispatchEvent;
 }
 
-const [index, app, lapSystem, gameState, hud, styles, toast, toastCss, onboarding, onboardingCss] = await Promise.all([
+const [index, releaseSource, app, lapSystem, gameState, hud, styles, toast, toastCss, onboarding, onboardingCss] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/race/lap-system.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/race/game-state.js', import.meta.url), 'utf8'),
@@ -134,11 +135,16 @@ const [index, app, lapSystem, gameState, hud, styles, toast, toastCss, onboardin
   fs.readFile(new URL('../../turn/rival-onboarding.css', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /TURN v1\.7\.0 · Build 2026\.07\.23-r53/);
-assert.match(index, /lap-result-toast\.css\?build=20260723-r53/);
-assert.match(index, /rival-onboarding\.css\?build=20260723-r53/);
-assert.match(index, /"\.\/race\/lap-system\.js\?build=20260720-r19": "\.\/race\/lap-system\.js\?build=20260722-r41"/, 'r53 must preserve the r41 early invalid-lap detector');
-assert.match(index, /"\.\/race\/game-state\.js": "\.\/race\/game-state\.js\?build=20260722-r41"/, 'r53 must preserve the r41 reset-safe invalid-lap state');
+const release = JSON.parse(releaseSource);
+const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
+assert.ok(importMapText, 'Production must expose its import map');
+const imports = JSON.parse(importMapText).imports;
+
+assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
+assert.match(index, new RegExp(`lap-result-toast\\.css\\?build=${release.cacheKey}`));
+assert.match(index, new RegExp(`rival-onboarding\\.css\\?build=${release.cacheKey}`));
+assert.equal(imports['./race/lap-system.js?build=20260720-r19'], `./race/lap-system.js?build=${release.cacheKey}`, 'The current release must publish the early invalid-lap detector');
+assert.equal(imports['./race/game-state.js'], `./race/game-state.js?build=${release.cacheKey}`, 'The current release must publish reset-safe invalid-lap state');
 assert.match(app, /installLapResultToast\(\)/, 'The lap result toast must install before the game runtime starts');
 assert.match(app, /installRivalOnboarding\(\)/, 'The rival onboarding plate must install before the game runtime starts');
 assert.match(lapSystem, /turn:lap-result/, 'Completed lap finish must publish one frozen result event');
@@ -193,4 +199,4 @@ assert.match(onboardingCss, /\.rival-onboarding-copy/, 'The CHASE YOUR BEST copy
 assert.match(onboardingCss, /background: var\(--rival-onboarding-color, var\(--yellow\)\)/, 'The onboarding plate must expose the rival colour through a CSS custom property');
 assert.match(onboardingCss, /border-radius: 999px/, 'The onboarding must keep the compact pill-plate language of the old READY message');
 
-console.log('TURN persistent INVALID LAP HUD, red invalid toast and first-rival onboarding regression passed.');
+console.log(`TURN ${release.id} persistent INVALID LAP HUD, red invalid toast and first-rival onboarding passed.`);
