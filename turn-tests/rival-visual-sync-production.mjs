@@ -35,7 +35,7 @@ assert.ok(
   'Rival identity must sync after the saved lap set has been updated'
 );
 
-const loadSection = section(main, 'function loadGhost()', '\nfunction clearGhosts');
+const loadSection = section(main, 'function loadGhost()', '\nglobalThis.__turnHasGhosts');
 assert.match(loadSection, /loadRivalsState\(/, 'Initial rival storage must still load through the shared race module');
 assert.match(loadSection, /syncCompetitorVisuals\(\)/, 'Initial rival loading must install the stored models once');
 assert.ok(
