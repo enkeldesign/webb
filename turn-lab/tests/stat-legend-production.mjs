@@ -24,7 +24,7 @@ const [index, wrapper, legendModule, legendCss, lotSource, physicsSource] = awai
 ]);
 
 assert.match(index, /lot-stat-legend\.css\?build=20260724-r59/, 'Production must load the stat-legend styling');
-assert.match(index, /lot-track-select\.js\?build=20260724-r59/, 'Production must cache-bust the enhanced Lot wrapper');
+assert.match(index, /lot-track-select\.js\?build=20260724-r60/, 'Production must cache-bust the compact Lot wrapper');
 assert.match(index, /vehicle\/physics\.js\?build=20260724-r59/, 'Production must cache-bust the mandatory DRIFT penalty');
 assert.match(index, /vehicle\/catalog\.js\?build=20260724-r59/, 'Production must cache-bust the shared stat definitions');
 assert.match(wrapper, /const lotResult = showOriginalLot\(options\)/, 'The verified Lot must mount before the legend connects to it');
@@ -34,7 +34,7 @@ assert.ok(
 );
 assert.match(legendModule, /VEHICLE_STAT_LEGEND/, 'The in-game legend must use the shared source of truth');
 assert.match(legendModule, /aria-modal/, 'The legend must open as an accessible modal');
-assert.match(legendModule, /WHAT DO THE STATS MEAN\?/, 'The legend trigger must be discoverable');
+assert.match(legendModule, /WHAT DO THE STATS MEAN\?/, 'The legend trigger must be discoverable before r60 compacts it to an info icon');
 assert.doesNotMatch(legendModule, /mountObserver|subtree: true/, 'The legend must not observe the whole game DOM');
 assert.match(legendModule, /statsObserver\.observe\(stats, \{ childList: true \}\)/, 'Only actual car-stat replacement must trigger relabelling');
 assert.match(legendModule, /label\.textContent !== definition\.label/, 'Relabelling must not rewrite unchanged labels');
