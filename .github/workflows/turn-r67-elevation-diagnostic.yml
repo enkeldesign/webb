@@ -1,0 +1,32 @@
+name: TURN r67 elevation diagnostic
+
+on:
+  push:
+    branches:
+      - agent/turn-r67-elevation-foundation
+    paths:
+      - '.github/workflows/turn-r67-elevation-diagnostic.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/turn-r67-elevation-foundation
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Capture focused test output
+        run: node turn-tests/elevation-production.mjs > turn-tests/elevation-diagnostic.txt 2>&1 || true
+      - name: Commit diagnostic
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn-tests/elevation-diagnostic.txt
+          git commit -m "TURN r67: capture elevation diagnostic"
+          git push origin HEAD:agent/turn-r67-elevation-foundation
