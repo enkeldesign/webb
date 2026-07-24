@@ -6,14 +6,18 @@ on:
       - main
     paths:
       - 'turn/**'
+      - 'turn-tests/**'
       - 'turn-lab/**'
+      - 'eslint.config.mjs'
       - '.github/workflows/turn-lab-tests.yml'
   push:
     branches:
       - main
     paths:
       - 'turn/**'
+      - 'turn-tests/**'
       - 'turn-lab/**'
+      - 'eslint.config.mjs'
       - '.github/workflows/turn-lab-tests.yml'
 
 permissions:
@@ -32,10 +36,13 @@ jobs:
           node-version: '24'
 
       - name: Syntax-check TURN modules
-        run: find turn turn-lab -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
+        run: find turn turn-tests turn-lab/tests turn-lab/scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
 
-      - name: Run race and replay regression tests
-        run: node turn-lab/tests/regression.mjs
+      - name: Lint TURN domain modules
+        run: npx --yes eslint@9.39.1
+
+      - name: Run production race and replay regression tests
+        run: node turn-tests/race-production.mjs
 
       - name: Run multi-track and Airport regression
         run: node turn-lab/tests/multi-track-production.mjs
