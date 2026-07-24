@@ -4,54 +4,38 @@ const DIALOG_ID = 'turnLotStatsLegend';
 const TITLE_ID = 'turnLotStatsLegendTitle';
 
 export function installLotStatLegend(root = document.body) {
-  let trigger = null;
-  let dialog = null;
-  let previousFocus = null;
-  let statsObserver = null;
+  const screen = root.querySelector('.lot-screen');
+  const stats = screen?.querySelector('.lot-stats');
+  if (!screen || !stats || screen.querySelector('.lot-stats-help')) return () => {};
 
-  const mountObserver = new MutationObserver(() => enhanceLot());
-  mountObserver.observe(root, { childList: true, subtree: true });
-  enhanceLot();
+  let previousFocus = null;
+  relabelStats(stats);
+
+  const statsObserver = new MutationObserver(() => relabelStats(stats));
+  statsObserver.observe(stats, { childList: true });
+
+  const trigger = document.createElement('button');
+  trigger.type = 'button';
+  trigger.className = 'lot-stats-help';
+  trigger.textContent = 'WHAT DO THE STATS MEAN?';
+  trigger.setAttribute('aria-haspopup', 'dialog');
+  trigger.setAttribute('aria-controls', DIALOG_ID);
+  trigger.setAttribute('aria-expanded', 'false');
+  trigger.addEventListener('click', openDialog);
+  stats.insertAdjacentElement('afterend', trigger);
+
+  const dialog = makeDialog();
+  screen.appendChild(dialog);
 
   return () => {
-    mountObserver.disconnect();
-    statsObserver?.disconnect();
-    trigger?.remove();
-    dialog?.remove();
-    trigger = null;
-    dialog = null;
+    statsObserver.disconnect();
+    trigger.remove();
+    dialog.remove();
     previousFocus = null;
-    statsObserver = null;
   };
 
-  function enhanceLot() {
-    const screen = root.querySelector('.lot-screen');
-    const stats = screen?.querySelector('.lot-stats');
-    if (!screen || !stats) return;
-
-    mountObserver.disconnect();
-    relabelStats(stats);
-    statsObserver = new MutationObserver(() => relabelStats(stats));
-    statsObserver.observe(stats, { childList: true });
-
-    if (screen.querySelector('.lot-stats-help')) return;
-
-    trigger = document.createElement('button');
-    trigger.type = 'button';
-    trigger.className = 'lot-stats-help';
-    trigger.textContent = 'WHAT DO THE STATS MEAN?';
-    trigger.setAttribute('aria-haspopup', 'dialog');
-    trigger.setAttribute('aria-controls', DIALOG_ID);
-    trigger.setAttribute('aria-expanded', 'false');
-    trigger.addEventListener('click', openDialog);
-    stats.insertAdjacentElement('afterend', trigger);
-
-    dialog = makeDialog();
-    screen.appendChild(dialog);
-  }
-
-  function relabelStats(stats) {
-    const labels = stats.querySelectorAll('.lot-stat > span');
+  function relabelStats(statsElement) {
+    const labels = statsElement.querySelectorAll('.lot-stat > span');
     labels.forEach((label, index) => {
       const definition = VEHICLE_STAT_LEGEND[index];
       if (definition && label.textContent !== definition.label) {
@@ -128,7 +112,6 @@ export function installLotStatLegend(root = document.body) {
   }
 
   function openDialog() {
-    if (!dialog || !trigger) return;
     previousFocus = document.activeElement;
     dialog.hidden = false;
     trigger.setAttribute('aria-expanded', 'true');
@@ -136,7 +119,6 @@ export function installLotStatLegend(root = document.body) {
   }
 
   function closeDialog() {
-    if (!dialog || !trigger) return;
     dialog.hidden = true;
     trigger.setAttribute('aria-expanded', 'false');
     if (previousFocus instanceof HTMLElement) previousFocus.focus();
