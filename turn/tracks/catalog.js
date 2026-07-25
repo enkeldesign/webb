@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { CLIFFSIDE_CONTROL_POINTS } from './cliffside-layout.js?build=20260725-r68';
+import { CLIFFSIDE_CONTROL_POINTS } from './cliffside-layout.js';
 import {
   DEFAULT_TRACK_ID,
   TRACK_DEFINITIONS,

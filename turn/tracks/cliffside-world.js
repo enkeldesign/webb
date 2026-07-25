@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { trackPitch } from './elevation.js?build=20260725-r67';
+import { trackPitch } from './elevation.js';
 
 const INK = 0x08090a;
 const CREAM = 0xfff8e8;
