@@ -74,10 +74,10 @@ function makeTerrainRibbon(world, samples, trackWidth) {
     const sample = samples[index % samples.length];
     const ridgeLift = 7 + Math.sin(index * 0.083) * 2.4 + Math.sin(index * 0.027 + 1.2) * 1.8;
     const profiles = [
-      { offset: -(half + 24), y: Math.max(SEA_LEVEL + 0.8, sample.point.y - 9.5) },
+      { offset: -(half + 18), y: Math.max(SEA_LEVEL + 0.8, sample.point.y - 9.5) },
       { offset: -(half + 2.8), y: sample.point.y - 0.34 },
       { offset: half + 3.2, y: sample.point.y - 0.38 },
-      { offset: half + 34, y: sample.point.y + ridgeLift }
+      { offset: half + 20, y: sample.point.y + ridgeLift }
     ];
 
     for (let profile = 0; profile < profiles.length; profile += 1) {
@@ -124,8 +124,8 @@ function makeTerrainRibbon(world, samples, trackWidth) {
   for (let index = 0; index < samples.length; index += 1) {
     const current = samples[index];
     const next = samples[(index + 1) % samples.length];
-    const currentTop = current.point.clone().addScaledVector(current.normal, -(half + 23.5));
-    const nextTop = next.point.clone().addScaledVector(next.normal, -(half + 23.5));
+    const currentTop = current.point.clone().addScaledVector(current.normal, -(half + 17.5));
+    const nextTop = next.point.clone().addScaledVector(next.normal, -(half + 17.5));
     currentTop.y = Math.max(SEA_LEVEL + 0.7, current.point.y - 9.3);
     nextTop.y = Math.max(SEA_LEVEL + 0.7, next.point.y - 9.3);
     skirtPositions.push(
@@ -466,13 +466,14 @@ function makeStartDistrict(world, samples, trackWidth) {
     const post = outlinedBox(1.4, 10, 1.4, material(CREAM, 0.82));
     post.position.copy(start.point).addScaledVector(start.normal, side * (trackWidth / 2 - 2.2));
     post.position.y = start.point.y + 5;
+    post.rotation.y = yaw;
     arch.add(post);
   }
   const banner = outlinedBox(trackWidth - 2, 2.7, 1.7, material(0xff6b6b, 0.82));
   banner.position.copy(start.point);
   banner.position.y = start.point.y + 10;
+  banner.rotation.y = yaw;
   arch.add(banner);
-  arch.rotation.y = yaw;
   group.add(arch);
 
   world.add(group);
