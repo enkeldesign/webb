@@ -1,4 +1,4 @@
-/* TURN r77 track postcards.
+/* TURN r80 track postcards.
    Each course keeps one clear colour identity, while the preview box becomes a tiny
    landscape poster with a track-coloured curb along its lower edge. Selection still
    relies only on the existing card colour, choice marker and Continue copy. */
@@ -16,6 +16,11 @@
 .track-card-cliffside {
   --track-card-paper: #d5f3ef;
   --track-card-fold: #a9ddd8;
+}
+
+.track-card-harbor {
+  --track-card-paper: #f9e2d2;
+  --track-card-fold: #e7c2a6;
 }
 
 .track-card:not(.is-selected):not(.is-locked) {
@@ -86,6 +91,13 @@
     linear-gradient(180deg, #b9e8f5 0 39%, #4ba8c8 39% 69%, #d8c28f 69% 100%);
 }
 
+.track-card-harbor .track-card-preview {
+  background:
+    linear-gradient(90deg, transparent 0 7%, #c95b35 7% 23%, transparent 23% 29%, #167b82 29% 46%, transparent 46% 53%, #f5c542 53% 68%, transparent 68% 74%, #3d6fbb 74% 92%, transparent 92%) 50% 47% / 88% 18% no-repeat,
+    linear-gradient(90deg, transparent 0 17%, #667278 17% 30%, transparent 30% 40%, #7d6960 40% 61%, transparent 61% 70%, #59636a 70% 84%, transparent 84%) 50% 23% / 100% 19% no-repeat,
+    linear-gradient(180deg, #b9e0e5 0 38%, #a8a79d 38% 72%, #287f9f 72% 100%);
+}
+
 .track-card-locked .track-card-preview {
   background:
     repeating-linear-gradient(135deg, rgb(255 255 255 / 0.12) 0 9px, transparent 9px 18px),
@@ -94,6 +106,10 @@
 
 .track-card-cliffside .track-card-difficulty {
   background: #82dfd8;
+}
+
+.track-card-harbor .track-card-difficulty {
+  background: #ffb778;
 }
 
 @media (prefers-reduced-motion: reduce) {
