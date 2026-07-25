@@ -182,7 +182,7 @@ assert.match(trackDefinitions, /storageRevision: 'airport-r50'/, 'Airport must e
 assert.match(trackDefinitions, /storageRevision: 'cliffside-r68'/, 'Cliffside must explicitly own its geometry revision');
 assert.match(trackDefinitions, /freeRoamDistance: 170/, 'Countryside must own its world envelope');
 assert.match(trackDefinitions, /freeRoamDistance: 95/, 'Airport must own its world envelope');
-assert.match(trackDefinitions, /freeRoamDistance: 78/, 'Cliffside must own its world envelope');
+assert.match(trackDefinitions, /freeRoamDistance: 15\.7/, 'Cliffside must own its curb-aligned containment envelope');
 assert.match(trackDefinitions, /collisionProfile: \{/, 'Every definition must expose a collision profile');
 
 assert.match(trackCatalog, /CONTROL_POINT_FACTORIES/, 'Geometry factories must remain separate from player-facing metadata');
