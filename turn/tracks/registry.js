@@ -7,6 +7,7 @@ import {
 } from './catalog.js';
 import { installAirportWorld } from './airport-world-r52.js?build=20260722-r52';
 import { installCliffsideWorld } from './cliffside-world.js';
+import { installHarborWorld } from './harbor-world.js';
 import { isForgivingTrackSurface } from './airport-runoff.js?build=20260722-r52';
 
 const WORLD_INSTALLERS = Object.freeze({
@@ -19,6 +20,9 @@ const WORLD_INSTALLERS = Object.freeze({
   },
   cliffside({ scene, samples, trackWidth }) {
     return installCliffsideWorld({ scene, samples, trackWidth });
+  },
+  harbor({ scene, samples, trackWidth }) {
+    return installHarborWorld({ scene, samples, trackWidth });
   }
 });
 
@@ -30,6 +34,9 @@ const FORGIVING_SURFACES = Object.freeze({
     return isForgivingTrackSurface('airport', position);
   },
   cliffside() {
+    return false;
+  },
+  harbor() {
     return false;
   }
 });

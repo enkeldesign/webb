@@ -58,21 +58,32 @@ const TRACKS = [
     },
     sky: 0x63c7ef,
     fog: 0xb5dded
+  },
+  {
+    id: 'harbor',
+    name: 'Harbor',
+    difficulty: 'HARD',
+    eyebrow: 'TRACK 4',
+    description: 'Switchbacks. Container canyons. Quayside speed.',
+    accent: '#ff8f3d',
+    accentSoft: '#ffd0a8',
+    storageRevision: 'harbor-r80',
+    freeRoamDistance: 20.5,
+    collisionProfile: {
+      freeRoamDistance: 20.5,
+      shoulderStartDistance: 14.5,
+      shoulderDrag: 1.8,
+      boundaryBounce: 0.035,
+      boundaryTangentRetention: 0.92,
+      boundaryMinimumRecoverySpeed: 5.8,
+      colliders: []
+    },
+    sky: 0x79c3d3,
+    fog: 0xb6d6d4
   }
 ];
 
-const PLACEHOLDERS = [
-  {
-    id: 'track-4-tba',
-    name: 'TBA',
-    difficulty: '',
-    eyebrow: 'TRACK 4',
-    description: 'A future TURN course.',
-    accent: '#8b8f94',
-    accentSoft: '#d1d3d5',
-    locked: true
-  }
-];
+const PLACEHOLDERS = [];
 
 export const TRACK_DEFINITIONS = Object.freeze(TRACKS.map((track) => Object.freeze({
   ...track,

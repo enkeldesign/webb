@@ -17,8 +17,9 @@ const tracks = Object.fromEntries(TRACK_DEFINITIONS.map((track) => [track.id, tr
 
 assert.equal(tracks.countryside.accent, '#ff4fa3', 'Countryside keeps its established pink identity');
 assert.equal(tracks.airport.accent, '#ffd43b', 'Airport keeps its established runway-yellow identity');
-assert.equal(tracks.cliffside.accent, '#26c7c3', 'Cliffside must use its new blue-green ocean identity');
-assert.equal(tracks.cliffside.accentSoft, '#bcefeb');
+assert.equal(tracks.cliffside.accent, '#26c7c3', 'Cliffside keeps its blue-green ocean identity');
+assert.equal(tracks.harbor.accent, '#ff8f3d', 'Harbor needs a distinct rust-orange dock identity');
+assert.equal(tracks.harbor.difficulty, 'HARD');
 assert.equal(new Set(TRACK_DEFINITIONS.map((track) => track.accent)).size, TRACK_DEFINITIONS.length, 'Every playable track needs a distinct accent');
 
 for (const track of TRACK_DEFINITIONS) {
@@ -35,9 +36,11 @@ for (const stylesheet of ['track-select-r77.css', 'track-select-r78.css', 'track
 assert.match(postcardCss, /\.track-card-countryside[\s\S]*--track-card-paper: #f7dce7/);
 assert.match(postcardCss, /\.track-card-airport[\s\S]*--track-card-paper: #fff4c7/);
 assert.match(postcardCss, /\.track-card-cliffside[\s\S]*--track-card-paper: #d5f3ef/);
+assert.match(postcardCss, /\.track-card-harbor[\s\S]*--track-card-paper: #f9e2d2/);
 assert.match(postcardCss, /\.track-card-preview::after[\s\S]*repeating-linear-gradient/, 'Every preview gets the small track-coloured curb motif');
 assert.match(postcardCss, /\.track-card-cliffside \.track-card-preview[\s\S]*#4ba8c8/, 'Cliffside preview must retain visible ocean blue');
-assert.match(postcardCss, /\.track-card-locked \.track-card-preview[\s\S]*repeating-linear-gradient/, 'The future slot keeps a quiet blueprint texture');
+assert.match(postcardCss, /\.track-card-harbor \.track-card-preview[\s\S]*#287f9f/, 'Harbor preview must retain visible quay water');
+assert.match(postcardCss, /\.track-card-harbor \.track-card-preview[\s\S]*#c95b35[\s\S]*#167b82[\s\S]*#f5c542/, 'Harbor postcard must read as a colourful container yard');
 
 const countrysideDepth = depthCss.match(/\.track-card-countryside \.track-card-preview \{([\s\S]*?)\n\}/)?.[1] || '';
 const firstHill = countrysideDepth.indexOf('radial-gradient(ellipse');
@@ -48,13 +51,13 @@ assert.match(runwayCss, /left: -8%;[\s\S]*bottom: 3%;[\s\S]*transform: rotate\(-
 assert.match(runwayCss, /width: 105%;[\s\S]*height: 20%/, 'Airport runway must stay shallow enough to finish below the terminal');
 assert.match(runwayCss, /repeating-linear-gradient\([\s\S]*90deg/, 'Airport runway must retain a dashed centre line along its new direction');
 assert.match(runwayCss, /inset 0 4px 0 #f3d34a[\s\S]*inset 0 -4px 0 #f3d34a/, 'Airport runway must retain yellow edge markings');
-assert.doesNotMatch(`${postcardCss}\n${depthCss}\n${runwayCss}`, /@keyframes|animation(?:-name)?:/, 'The visual refresh must add no looping or distracting motion');
+assert.doesNotMatch(`${postcardCss}\n${depthCss}\n${runwayCss}`, /@keyframes|animation(?:-name)?:/, 'Track postcards must add no looping or distracting motion');
 
 assert.match(chooserSource, /card\.setAttribute\('aria-pressed', String\(selected\)\)/, 'Selection remains programmatically exposed');
 assert.match(chooserSource, /CONTINUE TO \$\{track\?\.name\.toUpperCase\(\)/, 'Continue copy remains the explicit textual confirmation');
-assert.match(chooserSource, /track-card-choice-marker/, 'The existing radio-style marker remains the only extra visual choice indicator');
+assert.match(chooserSource, /track-card-choice-marker/, 'The radio-style marker remains the extra visual choice indicator');
 
-console.log(`TURN ${release.id} distinct track palette and readable postcard previews passed.`);
+console.log(`TURN ${release.id} four distinct track palettes and readable postcard previews passed.`);
 
 function contrastRatio(foreground, background) {
   const light = Math.max(relativeLuminance(foreground), relativeLuminance(background));

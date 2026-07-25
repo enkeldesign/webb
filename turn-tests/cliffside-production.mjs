@@ -27,20 +27,17 @@ const AIRPORT_CONTROL_POINTS = [
   [-229, 0, -45], [-215, 0, -88]
 ];
 
-assert.equal(TRACK_DEFINITIONS.length, 3, 'TURN must expose three playable tracks');
+assert.equal(TRACK_DEFINITIONS.length, 4, 'TURN must expose four playable tracks');
 assert.deepEqual(
   TRACK_DEFINITIONS.map(({ id, difficulty }) => ({ id, difficulty })),
   [
     { id: 'countryside', difficulty: 'EASY' },
     { id: 'airport', difficulty: 'MEDIUM' },
-    { id: 'cliffside', difficulty: 'MEDIUM' }
+    { id: 'cliffside', difficulty: 'MEDIUM' },
+    { id: 'harbor', difficulty: 'HARD' }
   ]
 );
-assert.equal(TRACK_PLACEHOLDERS.length, 1, 'The chooser must reserve exactly one future slot');
-assert.deepEqual(
-  TRACK_PLACEHOLDERS.map(({ id, name, locked }) => ({ id, name, locked })),
-  [{ id: 'track-4-tba', name: 'TBA', locked: true }]
-);
+assert.equal(TRACK_PLACEHOLDERS.length, 0, 'Harbor replaces the former Track 4 placeholder');
 assert.equal(getTrackStorageRevision('cliffside'), 'cliffside-r68');
 assert.equal(CLIFFSIDE_LAYOUT_RULES.minimumTurnRadiusComparedWithAirport, 'not-smaller');
 assert.equal(CLIFFSIDE_LAYOUT_RULES.verticalRoadOverlap, false);
@@ -96,6 +93,7 @@ try {
   });
   assert.equal(storage.has('turn-personal-rivals-v1'), false, 'Cliffside records must not leak into Countryside');
   assert.equal(storage.has('turn-personal-rivals-v1:airport-r50'), false, 'Cliffside records must not leak into Airport');
+  assert.equal(storage.has('turn-personal-rivals-v1:harbor-r80'), false, 'Cliffside records must not leak into Harbor');
   clearRivalsState(cliffsideState, { trackId: 'cliffside' });
   assert.equal(storage.has('turn-personal-rivals-v1:cliffside-r68'), false);
 } finally {
@@ -125,7 +123,8 @@ const [
 
 assert.match(definitionsSource, /id: 'cliffside'[\s\S]*difficulty: 'MEDIUM'/);
 assert.match(definitionsSource, /storageRevision: 'cliffside-r68'/);
-assert.match(definitionsSource, /id: 'track-4-tba'[\s\S]*locked: true/);
+assert.match(definitionsSource, /id: 'harbor'[\s\S]*difficulty: 'HARD'/);
+assert.doesNotMatch(definitionsSource, /id: 'track-4-tba'/);
 assert.match(catalogSource, /CLIFFSIDE_CONTROL_POINTS\.map\(\(\[x, y, z\]\) => new THREE\.Vector3\(x, y, z\)\)/);
 assert.match(catalogSource, /export const TRACK_SELECTION_CATALOG = Object\.freeze\(\[[\s\S]*TRACK_CATALOG,[\s\S]*TRACK_PLACEHOLDERS/);
 assert.match(registrySource, /installCliffsideWorld/);
@@ -141,18 +140,14 @@ assert.match(worldSource, /makeGuardrail\(world, samples, trackWidth\)/);
 assert.match(worldSource, /makeStoneGate\(world, samples, trackWidth\)/);
 assert.doesNotMatch(worldSource, /setAnimationLoop|requestAnimationFrame|setInterval/, 'The static track world must create no independent loop');
 
-assert.match(selectorSource, /TRACK_SELECTION_CATALOG\.map\(renderTrackCard\)/, 'The chooser must render playable tracks plus reserved slots');
+assert.match(selectorSource, /TRACK_SELECTION_CATALOG\.map\(renderTrackCard\)/, 'The chooser must render every playable track');
 assert.match(selectorSource, /\.track-card:not\(\[disabled\]\)/, 'Only playable cards may receive selection handlers');
-assert.match(selectorSource, /aria-disabled="true"[\s\S]*disabled/, 'The TBA slot must expose native and ARIA disabled semantics');
-assert.match(selectorSource, /for \(const track of TRACK_CATALOG\)/, 'Best-time loading must ignore placeholders');
+assert.match(selectorSource, /for \(const track of TRACK_CATALOG\)/, 'Best-time loading must iterate playable tracks');
 assert.match(selectorLayoutCss, /grid-template-rows: repeat\(2, minmax\(0, 1fr\)\)/, 'Landscape chooser must compose a two-by-two card grid');
-assert.match(selectorLayoutCss, /\.track-card\.is-locked/);
-assert.match(selectorLayoutCss, /cursor: not-allowed/);
-assert.match(selectorLayoutCss, /track-card-choice-marker::before/, 'The locked slot must communicate a lock rather than an empty radio');
 assert.match(selectorRecordCss, /border: 0;[\s\S]*background: transparent;/, 'Record cars must sit inside the compact card rather than another raised panel');
 
 console.log(
-  `TURN Cliffside passed: min radius ${cliffsideRadius.toFixed(2)} vs Airport ${airportRadius.toFixed(2)}, elevation ${minimumElevation.toFixed(1)} to ${maximumElevation.toFixed(1)}.`
+  `TURN Cliffside passed with four tracks: min radius ${cliffsideRadius.toFixed(2)} vs Airport ${airportRadius.toFixed(2)}, elevation ${minimumElevation.toFixed(1)} to ${maximumElevation.toFixed(1)}.`
 );
 
 function sampleCentripetalClosed(controlPoints, subdivisions) {
