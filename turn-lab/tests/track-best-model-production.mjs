@@ -14,6 +14,7 @@ const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/s
 assert.ok(importMapText, 'Production must expose its import map');
 const imports = JSON.parse(importMapText).imports;
 const releaseTarget = (path) => `${path}?build=${release.cacheKey}`;
+const bestLayoutBlock = css.match(/\.track-card-best \{[\s\S]*?\n\}/)?.[0] || '';
 
 assert.match(index, new RegExp(`track-select-r61\\.css\\?build=${release.cacheKey}`), 'Production must load the record-car thumbnail layout through the current release');
 assert.equal(imports['./ui/track-select.js?build=20260722-r51'], releaseTarget('./ui/track-select.js'), 'Production must publish the enhanced selector');
@@ -36,8 +37,10 @@ assert.match(renderer, /renderer\.dispose\(\)/, 'Each one-shot renderer must rel
 assert.match(renderer, /renderer\.forceContextLoss\?\.\(\)/, 'The temporary WebGL context must be explicitly released');
 assert.doesNotMatch(renderer, /requestAnimationFrame|setAnimationLoop|setInterval/, 'Record thumbnails must add no continuous render loop');
 
-assert.match(css, /\.track-card-best \{[\s\S]*grid-template-columns: max-content max-content;[\s\S]*justify-content: start;[\s\S]*width: fit-content;[\s\S]*background: transparent;/, 'BEST copy and car must form one left-anchored content cluster rather than stretching apart');
-assert.doesNotMatch(css, /grid-template-columns:[^;]*1fr[^;]*;/, 'The BEST layout must not use a flexible column that pushes the car away from the record copy');
+assert.match(bestLayoutBlock, /grid-template-columns: max-content max-content;/, 'BEST copy and car must use content-sized columns');
+assert.match(bestLayoutBlock, /justify-content: start;/, 'The BEST cluster must remain left anchored');
+assert.match(bestLayoutBlock, /width: fit-content;/, 'The BEST cluster must not stretch across the summary area');
+assert.doesNotMatch(bestLayoutBlock, /1fr/, 'The BEST layout must not use a flexible column that pushes the car away from the record copy');
 assert.match(css, /\.track-card-best-model \{[\s\S]*justify-self: start;[\s\S]*width: clamp\(120px, 10\.5vw, 174px\)[\s\S]*height: clamp\(75px, 8\.5vw, 110px\)[\s\S]*object-fit: contain/, 'The stored vehicle must use the available card space while retaining its proportions');
 assert.match(css, /@media \(max-height: 610px\) and \(orientation: landscape\)/, 'Short landscape devices must retain a fitted record-car treatment');
 assert.match(css, /\.track-card-coming-soon \{[\s\S]*grid-template-columns: minmax\(0, 1fr\)[\s\S]*width: 100%/, 'The locked card must not reserve an empty car column');
