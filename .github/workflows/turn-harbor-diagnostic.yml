@@ -36,9 +36,11 @@ jobs:
           printf '\nEXIT_STATUS=%s\n' "$status" >> multi-track.log
           exit 0
 
-      - name: Upload diagnostic log
+      - name: Upload diagnostic bundle
         uses: actions/upload-artifact@v4
         with:
-          name: harbor-multi-track-log
-          path: multi-track.log
+          name: harbor-multi-track-bundle
+          path: |
+            multi-track.log
+            turn-lab/tests/multi-track-production.mjs
           retention-days: 1
