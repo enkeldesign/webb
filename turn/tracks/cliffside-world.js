@@ -15,25 +15,27 @@ const OCEAN = 0x3e9fca;
 const GUARDRAIL = 0xe7edf1;
 const ROAD_HEIGHT = 0.12;
 const CURB_HEIGHT = 0.17;
+const SHOULDER_WIDTH = 4.45;
 const SEA_LEVEL = -16.5;
 
 export function installCliffsideWorld({ scene, samples, trackWidth = 27 }) {
   const world = new THREE.Group();
-  world.name = 'TURN Cliffside r69';
+  world.name = 'TURN Cliffside r72';
   scene.add(world);
 
   makeOcean(world);
   makeTerrainRibbon(world, samples, trackWidth);
   makeRoad(world, samples, trackWidth);
+  makeShoulders(world, samples, trackWidth);
   makeGuardrail(world, samples, trackWidth);
   makePineForest(world, samples, trackWidth);
   makeCliffRocks(world, samples, trackWidth);
   makeStoneGate(world, samples, trackWidth);
-  makeStartDistrict(world, samples, trackWidth);
+  makeStartArch(world, samples, trackWidth);
   makeDistantIslands(world);
 
   world.userData.turnCliffsideArtDirection = Object.freeze({
-    version: 'r69',
+    version: 'r72',
     elevatedRoad: true,
     oceanCliffs: true,
     linkedCurveRhythm: true,
@@ -75,8 +77,8 @@ function makeTerrainRibbon(world, samples, trackWidth) {
     const ridgeLift = 7 + Math.sin(index * 0.083) * 2.4 + Math.sin(index * 0.027 + 1.2) * 1.8;
     const profiles = [
       { offset: -(half + 18), y: Math.max(SEA_LEVEL + 0.8, sample.point.y - 9.5) },
-      { offset: -(half + 2.8), y: sample.point.y - 0.34 },
-      { offset: half + 3.2, y: sample.point.y - 0.38 },
+      { offset: -(half + 6.3), y: sample.point.y - 0.34 },
+      { offset: half + 6.3, y: sample.point.y - 0.38 },
       { offset: half + 20, y: sample.point.y + ridgeLift }
     ];
 
@@ -239,6 +241,45 @@ function makeCurbs(world, samples, trackWidth) {
   }
 }
 
+function makeShoulders(world, samples, trackWidth) {
+  const curbOuter = trackWidth / 2 + 1.65;
+  const shoulderOuter = curbOuter + SHOULDER_WIDTH;
+
+  for (const side of [-1, 1]) {
+    const positions = [];
+    const colors = [];
+    const innerColor = new THREE.Color(side < 0 ? 0xd9c99d : 0xc6b77d);
+    const outerColor = new THREE.Color(side < 0 ? 0xb79f75 : 0xa8a36a);
+
+    for (let index = 0; index < samples.length; index += 1) {
+      const current = samples[index];
+      const next = samples[(index + 1) % samples.length];
+      const a = elevatedOffset(current, side * curbOuter, ROAD_HEIGHT + 0.015);
+      const b = elevatedOffset(current, side * shoulderOuter, ROAD_HEIGHT - 0.015);
+      const c = elevatedOffset(next, side * curbOuter, ROAD_HEIGHT + 0.015);
+      const d = elevatedOffset(next, side * shoulderOuter, ROAD_HEIGHT - 0.015);
+      positions.push(
+        a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z,
+        b.x, b.y, b.z, d.x, d.y, d.z, c.x, c.y, c.z
+      );
+      for (const color of [innerColor, outerColor, innerColor, outerColor, outerColor, innerColor]) {
+        colors.push(color.r, color.g, color.b);
+      }
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    geometry.computeVertexNormals();
+    const shoulder = new THREE.Mesh(
+      geometry,
+      new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, side: THREE.DoubleSide })
+    );
+    shoulder.receiveShadow = true;
+    world.add(shoulder);
+  }
+}
+
 function makeCentreLine(world, samples) {
   const step = 10;
   const geometry = new THREE.BoxGeometry(0.34, 0.055, 5.2);
@@ -294,7 +335,7 @@ function makeGuardrail(world, samples, trackWidth) {
   for (let index = 0; index < samples.length; index += step) {
     const sample = samples[index];
     const next = samples[(index + step) % samples.length];
-    const outside = sample.point.clone().addScaledVector(sample.normal, -(trackWidth / 2 + 2.2));
+    const outside = sample.point.clone().addScaledVector(sample.normal, -(trackWidth / 2 + 8.7));
     outside.y = sample.point.y + 1.25;
     marker.position.copy(outside);
     marker.rotation.set(0, 0, 0);
@@ -436,33 +477,11 @@ function makeStoneGate(world, samples, trackWidth) {
   world.add(gate);
 }
 
-function makeStartDistrict(world, samples, trackWidth) {
+function makeStartArch(world, samples, trackWidth) {
   const start = samples[0];
   const yaw = Math.atan2(start.tangent.x, start.tangent.z);
-  const inner = start.point.clone().addScaledVector(start.normal, trackWidth / 2 + 10);
-  const group = new THREE.Group();
-  group.name = 'Cliffside Summit Start';
-
-  const deck = outlinedBox(34, 1.2, 22, material(0xd8bb89, 0.96));
-  deck.position.copy(inner);
-  const summitDeckY = start.point.y + 3.2;
-  deck.position.y = summitDeckY;
-  deck.rotation.y = yaw;
-  group.add(deck);
-
-  const cafe = outlinedBox(20, 8, 12, material(0xf7d9a6, 0.92));
-  cafe.position.copy(inner).addScaledVector(start.normal, 2);
-  cafe.position.y = summitDeckY + 4.6;
-  cafe.rotation.y = yaw;
-  group.add(cafe);
-
-  const roof = outlinedBox(23, 1.2, 15, material(0xff6b6b, 0.88));
-  roof.position.copy(cafe.position);
-  roof.position.y += 4.8;
-  roof.rotation.y = yaw;
-  group.add(roof);
-
   const arch = new THREE.Group();
+  arch.name = 'Cliffside Start Arch';
   for (const side of [-1, 1]) {
     const post = outlinedBox(1.4, 10, 1.4, material(CREAM, 0.82));
     post.position.copy(start.point).addScaledVector(start.normal, side * (trackWidth / 2 - 2.2));
@@ -475,9 +494,7 @@ function makeStartDistrict(world, samples, trackWidth) {
   banner.position.y = start.point.y + 10;
   banner.rotation.y = yaw;
   arch.add(banner);
-  group.add(arch);
-
-  world.add(group);
+  world.add(arch);
 }
 
 function makeDistantIslands(world) {
