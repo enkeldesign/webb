@@ -36,9 +36,10 @@ assert.match(renderer, /renderer\.dispose\(\)/, 'Each one-shot renderer must rel
 assert.match(renderer, /renderer\.forceContextLoss\?\.\(\)/, 'The temporary WebGL context must be explicitly released');
 assert.doesNotMatch(renderer, /requestAnimationFrame|setAnimationLoop|setInterval/, 'Record thumbnails must add no continuous render loop');
 
-assert.match(css, /\.track-card-best \{[\s\S]*display: flex;[\s\S]*background: transparent;[\s\S]*box-shadow: none;/, 'The Best row must remain compact inside each four-slot card');
-assert.match(css, /\.track-card-best-model \{[\s\S]*width: clamp\(44px, 5\.2vw, 68px\)[\s\S]*object-fit: contain/, 'Every vehicle shape must fit without distortion');
-assert.match(css, /@media \(max-height: 610px\) and \(orientation: landscape\)/, 'Short landscape devices must receive a compact thumbnail treatment');
+assert.match(css, /\.track-card-best \{[\s\S]*display: grid;[\s\S]*grid-template-columns: minmax\(90px, max-content\) minmax\(88px, 1fr\);[\s\S]*width: 100%;[\s\S]*background: transparent;/, 'The Best row must use the available summary width for copy and car');
+assert.match(css, /\.track-card-best-model \{[\s\S]*width: clamp\(86px, 8vw, 126px\)[\s\S]*height: clamp\(54px, 6\.8vw, 88px\)[\s\S]*object-fit: contain/, 'The stored vehicle must be large enough to read while retaining its proportions');
+assert.match(css, /@media \(max-height: 610px\) and \(orientation: landscape\)/, 'Short landscape devices must retain a fitted record-car treatment');
+assert.match(css, /\.track-card-coming-soon \{[\s\S]*grid-template-columns: minmax\(0, 1fr\)/, 'The locked card must not reserve an empty car column');
 assert.match(css, /\.track-card-best-model\[hidden\] \{[\s\S]*display: none;/, 'No-time cards must remove the decorative model from layout');
 
-console.log(`TURN ${release.id} track-specific record car 3D thumbnails passed.`);
+console.log(`TURN ${release.id} expanded track-specific record car layout passed.`);
