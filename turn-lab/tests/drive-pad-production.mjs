@@ -11,12 +11,26 @@ class Vec3 {
   length() { return Math.hypot(this.x, this.y, this.z); }
 }
 
-const [index, releaseSource, controls, css, gameplayCss, analogGas, spectate] = await Promise.all([
+const [
+  index,
+  releaseSource,
+  app,
+  controls,
+  positionLayout,
+  css,
+  gameplayCss,
+  positionCss,
+  analogGas,
+  spectate
+] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/gameplay-controls.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/ui/race-position-layout.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/drive-pad.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/gameplay-v2.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/position-hud-r83.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/input/analog-gas.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/spectate.js', import.meta.url), 'utf8')
 ]);
@@ -25,6 +39,20 @@ const release = JSON.parse(releaseSource);
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(index, new RegExp(`drive-pad\\.css\\?build=${release.cacheKey}`));
 assert.match(index, new RegExp(`gameplay-v2\\.css\\?build=${release.cacheKey}`));
+assert.match(index, new RegExp(`position-hud-r83\\.css\\?build=${release.cacheKey}`));
+assert.ok(
+  index.indexOf('gameplay-v2.css') < index.indexOf('position-hud-r83.css'),
+  'The topbar position override must load after the legacy gameplay HUD rules'
+);
+assert.match(app, /race-position-layout\.js/, 'The production module graph must install the position layout after gameplay controls');
+assert.match(positionLayout, /positionHud\.classList\.add\('chip'\)/, 'Race position must use the same chip component as the other topbar stats');
+assert.match(positionLayout, /lapChip\.after\(positionHud\)/, 'Race position must sit immediately after LAP');
+assert.doesNotMatch(positionLayout, /innerHTML|replaceChildren/, 'Moving the HUD must preserve the live position value node captured by gameplay controls');
+assert.match(positionCss, /\.stats \.race-position-hud \{[\s\S]*position: relative;/, 'Race position must no longer float over the car');
+assert.match(positionCss, /\.race-position-hud\[hidden\][\s\S]*visibility: hidden;/, 'The top row must reserve the position slot before a lap starts');
+assert.match(positionCss, /\.stats \.chip:nth-child\(3\)/, 'The third compact chip slot must belong to POSITION');
+assert.match(positionCss, /\.stats \.chip:nth-child\(5\)/, 'TIME and BEST must remain sized after inserting POSITION');
+assert.match(positionCss, /prefers-reduced-motion: reduce/, 'Position-change feedback must respect reduced motion');
 assert.match(controls, /className = 'drive-pad'/, 'Gameplay controls must create one unified drive pad');
 assert.match(controls, /return x < 0\.5 \? 'drift' : 'boost'/, 'Top drive pad must split into Drift and Boost');
 assert.match(controls, /return 'gas'/, 'Bottom drive pad must map to Gas');
@@ -77,4 +105,4 @@ assert.ok(state.velocity.z < -0.1, 'Holding Brake after stopping must engage rev
 for (let i = 0; i < 100; i += 1) updateVehiclePhysicsState(physicsArgs);
 assert.ok(state.velocity.z >= -(80 * 0.32 + 0.5), 'Reverse must stay capped well below forward top speed');
 
-console.log(`TURN ${release.id} unified drive pad, restart boost refill and reverse passed.`);
+console.log(`TURN ${release.id} unified drive pad, topbar position HUD, restart boost refill and reverse passed.`);
