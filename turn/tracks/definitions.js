@@ -36,6 +36,36 @@ const TRACKS = [
     },
     sky: 0x55c9ed,
     fog: 0x9bdcf2
+  },
+  {
+    id: 'cliffside',
+    name: 'Cliffside',
+    difficulty: 'HARD',
+    eyebrow: 'TRACK 3',
+    description: 'Linked curves. Mountain rhythm. Ocean drop.',
+    accent: '#ff6b6b',
+    accentSoft: '#ffd0c7',
+    storageRevision: 'cliffside-r68',
+    freeRoamDistance: 78,
+    collisionProfile: {
+      freeRoamDistance: 78,
+      colliders: []
+    },
+    sky: 0x63c7ef,
+    fog: 0xb5dded
+  }
+];
+
+const PLACEHOLDERS = [
+  {
+    id: 'track-4-tba',
+    name: 'TBA',
+    difficulty: '',
+    eyebrow: 'TRACK 4',
+    description: 'A future TURN course.',
+    accent: '#8b8f94',
+    accentSoft: '#d1d3d5',
+    locked: true
   }
 ];
 
@@ -46,6 +76,8 @@ export const TRACK_DEFINITIONS = Object.freeze(TRACKS.map((track) => Object.free
     colliders: Object.freeze([...(track.collisionProfile?.colliders || [])])
   })
 })));
+
+export const TRACK_PLACEHOLDERS = Object.freeze(PLACEHOLDERS.map((track) => Object.freeze({ ...track })));
 
 export function getTrackDefinitionData(trackId = DEFAULT_TRACK_ID) {
   return TRACK_DEFINITIONS.find((track) => track.id === trackId) || TRACK_DEFINITIONS[0];
