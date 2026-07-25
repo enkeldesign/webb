@@ -3,11 +3,12 @@ import fs from 'node:fs/promises';
 
 import { TRACK_DEFINITIONS } from '../turn/tracks/definitions.js';
 
-const [index, releaseSource, postcardCss, depthCss, chooserSource] = await Promise.all([
+const [index, releaseSource, postcardCss, depthCss, runwayCss, chooserSource] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/track-select-r77.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/track-select-r78.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/track-select-r79.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/track-select.js', import.meta.url), 'utf8')
 ]);
 
@@ -24,7 +25,7 @@ for (const track of TRACK_DEFINITIONS) {
   assert.ok(contrastRatio(track.accent, '#08090a') >= 4.5, `${track.name} accent must keep black text at WCAG AA contrast`);
 }
 
-for (const stylesheet of ['track-select-r77.css', 'track-select-r78.css']) {
+for (const stylesheet of ['track-select-r77.css', 'track-select-r78.css', 'track-select-r79.css']) {
   assert.match(
     index,
     new RegExp(`${stylesheet.replace('.', '\\.')}\\?build=${release.cacheKey}`),
@@ -42,10 +43,12 @@ const countrysideDepth = depthCss.match(/\.track-card-countryside \.track-card-p
 const firstHill = countrysideDepth.indexOf('radial-gradient(ellipse');
 const sun = countrysideDepth.indexOf('radial-gradient(circle');
 assert.ok(firstHill >= 0 && sun > firstHill, 'Countryside hills must paint above the sun so the sun sits behind the landscape');
-assert.match(depthCss, /\.track-card-airport \.track-card-preview::before[\s\S]*content: "27"/, 'Airport must show a recognizable runway number');
-assert.match(depthCss, /\.track-card-airport \.track-card-preview::before[\s\S]*clip-path: polygon\(42% 0, 58% 0, 100% 100%, 0 100%\)/, 'Airport runway must use clear perspective');
-assert.match(depthCss, /\.track-card-airport \.track-card-preview::before[\s\S]*repeating-linear-gradient/, 'Airport runway must include a dashed centre line');
-assert.doesNotMatch(`${postcardCss}\n${depthCss}`, /@keyframes|animation(?:-name)?:/, 'The visual refresh must add no looping or distracting motion');
+assert.match(depthCss, /\.track-card-airport \.track-card-preview::before[\s\S]*content: "27"/, 'Airport must keep a recognizable runway number');
+assert.match(runwayCss, /left: -8%;[\s\S]*bottom: 3%;[\s\S]*transform: rotate\(-8deg\)/, 'Airport runway must travel diagonally from the lower left across the foreground');
+assert.match(runwayCss, /width: 105%;[\s\S]*height: 20%/, 'Airport runway must stay shallow enough to finish below the terminal');
+assert.match(runwayCss, /repeating-linear-gradient\([\s\S]*90deg/, 'Airport runway must retain a dashed centre line along its new direction');
+assert.match(runwayCss, /inset 0 4px 0 #f3d34a[\s\S]*inset 0 -4px 0 #f3d34a/, 'Airport runway must retain yellow edge markings');
+assert.doesNotMatch(`${postcardCss}\n${depthCss}\n${runwayCss}`, /@keyframes|animation(?:-name)?:/, 'The visual refresh must add no looping or distracting motion');
 
 assert.match(chooserSource, /card\.setAttribute\('aria-pressed', String\(selected\)\)/, 'Selection remains programmatically exposed');
 assert.match(chooserSource, /CONTINUE TO \$\{track\?\.name\.toUpperCase\(\)/, 'Continue copy remains the explicit textual confirmation');
