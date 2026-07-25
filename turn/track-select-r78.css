@@ -1,0 +1,56 @@
+/* TURN r78 postcard depth patch.
+   Countryside now reads as a layered landscape, and Airport gets an unmistakable
+   runway in perspective behind the course map. */
+
+.track-card-countryside .track-card-preview {
+  background:
+    radial-gradient(ellipse at 22% 108%, #91d27c 0 46%, transparent 46.5%),
+    radial-gradient(ellipse at 82% 112%, #69bd72 0 51%, transparent 51.5%),
+    radial-gradient(circle at 79% 23%, #ffe066 0 9%, transparent 9.5%),
+    linear-gradient(180deg, #f5c9dc 0 55%, #dceca8 55% 100%);
+}
+
+.track-card-airport .track-card-preview {
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0 7%,
+      #87949d 7% 29%,
+      transparent 29% 35%,
+      #6f7d86 35% 66%,
+      transparent 66% 72%,
+      #8d99a1 72% 93%,
+      transparent 93% 100%
+    ) 0 35% / 100% 13% no-repeat,
+    linear-gradient(180deg, #caebf7 0 40%, #dfd0a5 40% 100%);
+}
+
+.track-card-airport .track-card-preview::before {
+  content: "27";
+  position: absolute;
+  z-index: 0;
+  inset: 33% 18% -1%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 10%;
+  clip-path: polygon(42% 0, 58% 0, 100% 100%, 0 100%);
+  background:
+    repeating-linear-gradient(
+      180deg,
+      transparent 0 12%,
+      #fff8e8 12% 19%,
+      transparent 19% 31%
+    ) 50% 4% / 8% 86% no-repeat,
+    linear-gradient(90deg, #f3d34a 0 3%, transparent 3% 97%, #f3d34a 97% 100%),
+    #515a61;
+  color: #fff8e8;
+  font-size: clamp(0.58rem, 1vw, 0.82rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-shadow: 1px 1px 0 rgb(8 9 10 / 0.55);
+  filter: drop-shadow(0 3px 0 rgb(8 9 10 / 0.2));
+  pointer-events: none;
+}
