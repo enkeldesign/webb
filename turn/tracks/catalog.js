@@ -1,7 +1,9 @@
 import * as THREE from 'three';
+import { CLIFFSIDE_CONTROL_POINTS } from './cliffside-layout.js';
 import {
   DEFAULT_TRACK_ID,
   TRACK_DEFINITIONS,
+  TRACK_PLACEHOLDERS,
   TRACK_SAMPLE_COUNT,
   TRACK_SELECTION_KEY,
   getTrackDefinitionData,
@@ -10,6 +12,7 @@ import {
 
 export {
   DEFAULT_TRACK_ID,
+  TRACK_PLACEHOLDERS,
   TRACK_SAMPLE_COUNT,
   TRACK_SELECTION_KEY
 } from './definitions.js';
@@ -56,6 +59,9 @@ const CONTROL_POINT_FACTORIES = Object.freeze({
       [-229, -45],
       [-215, -88]
     ].map(([x, z]) => new THREE.Vector3(x, 0, z));
+  },
+  cliffside() {
+    return CLIFFSIDE_CONTROL_POINTS.map(([x, y, z]) => new THREE.Vector3(x, y, z));
   }
 });
 
@@ -66,6 +72,11 @@ export const TRACK_CATALOG = Object.freeze(TRACK_DEFINITIONS.map((definition) =>
   }
   return Object.freeze({ ...definition, createControlPoints });
 }));
+
+export const TRACK_SELECTION_CATALOG = Object.freeze([
+  ...TRACK_CATALOG,
+  ...TRACK_PLACEHOLDERS
+]);
 
 export function getTrackDefinition(trackId = DEFAULT_TRACK_ID) {
   const normalized = getTrackDefinitionData(trackId).id;

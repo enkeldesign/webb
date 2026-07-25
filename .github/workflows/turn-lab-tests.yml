@@ -113,5 +113,8 @@ jobs:
       - name: Run elevation-aware runtime regression
         run: node turn-tests/elevation-production.mjs
 
+      - name: Run Cliffside and four-slot chooser regression
+        run: node turn-tests/cliffside-production.mjs
+
       - name: Verify production release architecture
         run: node turn-tests/release-production.mjs

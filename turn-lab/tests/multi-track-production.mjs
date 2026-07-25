@@ -23,13 +23,16 @@ assert.deepEqual(
   })),
   [
     { id: 'countryside', difficulty: 'EASY', storageRevision: 'countryside', freeRoamDistance: 170 },
-    { id: 'airport', difficulty: 'MEDIUM', storageRevision: 'airport-r50', freeRoamDistance: 95 }
+    { id: 'airport', difficulty: 'MEDIUM', storageRevision: 'airport-r50', freeRoamDistance: 95 },
+    { id: 'cliffside', difficulty: 'HARD', storageRevision: 'cliffside-r68', freeRoamDistance: 78 }
   ],
   'Every track must define identity, difficulty, storage revision and world envelope in one source of truth'
 );
 assert.equal(getTrackStorageRevision('airport'), 'airport-r50');
+assert.equal(getTrackStorageRevision('cliffside'), 'cliffside-r68');
 assert.equal(getTrackStorageRevision('future-track'), 'future-track', 'Unregistered future storage must not collapse into another track namespace');
 assert.equal(getTrackFreeRoamDistance('airport'), 95);
+assert.equal(getTrackFreeRoamDistance('cliffside'), 78);
 assert.equal(getTrackFreeRoamDistance('future-track'), 170, 'Unknown tracks must keep the safe Countryside fallback');
 
 const storage = new Map();
@@ -176,8 +179,10 @@ assert.match(index, /Steering uses device rotation/, 'Status copy must use devic
 
 assert.match(trackDefinitions, /storageRevision: 'countryside'/, 'Countryside must explicitly own its stable storage namespace');
 assert.match(trackDefinitions, /storageRevision: 'airport-r50'/, 'Airport must explicitly own its geometry revision');
+assert.match(trackDefinitions, /storageRevision: 'cliffside-r68'/, 'Cliffside must explicitly own its geometry revision');
 assert.match(trackDefinitions, /freeRoamDistance: 170/, 'Countryside must own its world envelope');
 assert.match(trackDefinitions, /freeRoamDistance: 95/, 'Airport must own its world envelope');
+assert.match(trackDefinitions, /freeRoamDistance: 78/, 'Cliffside must own its world envelope');
 assert.match(trackDefinitions, /collisionProfile: \{/, 'Every definition must expose a collision profile');
 
 assert.match(trackCatalog, /CONTROL_POINT_FACTORIES/, 'Geometry factories must remain separate from player-facing metadata');
@@ -214,7 +219,7 @@ assert.match(trackManager, /entry\.installWorld\(\{/, 'New tracks must install s
 assert.match(trackManager, /for \(const state of trackStates\.values\(\)\)/, 'World visibility must be generic across any number of tracks');
 assert.match(trackManager, /__turnIsForgivingSurface = \(position\) => activeTrackEntry\(\)\.isForgivingSurface\(position\)/, 'Physics must read the active track surface policy');
 assert.match(trackManager, /__turnGetCollisionProfile = \(\) => activeTrackEntry\(\)\.collisionProfile/, 'Physics must read the active track collision profile');
-assert.doesNotMatch(trackManager, /nextTrackId === 'airport'|airportTrack|airportWorld|countrysideSamples/, 'The manager must contain no two-track special cases');
+assert.doesNotMatch(trackManager, /nextTrackId === '(?:airport|cliffside)'|airportTrack|airportWorld|cliffsideTrack|cliffsideWorld|countrysideSamples/, 'The manager must contain no track-specific activation cases');
 assert.doesNotMatch(trackManager, /setAnimationLoop|requestAnimationFrame|setInterval/, 'Track switching must not create another render loop');
 
 assert.match(physics, /globalThis\.__turnIsForgivingSurface\?\.\(position\)/, 'The physics core must use the active registry surface predicate');
