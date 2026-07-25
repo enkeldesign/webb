@@ -20,7 +20,7 @@ export function updateHudState({
   const lapInvalid = state.lapActive && state.lapInvalid === true;
   setText(speedEl, Math.round(state.speed * 3.6));
   setText(lapEl, state.lap);
-  setText(lapTimeEl, lapInvalid ? 'INVALID LAP' : formatTime(state.lapElapsed));
+  setText(lapTimeEl, lapInvalid ? 'LAP VOID' : formatTime(state.lapElapsed));
   setText(bestTimeEl, formatTime(state.bestTime));
   lapTimeEl.closest?.('.chip')?.classList.toggle('is-invalid-lap', lapInvalid);
 
@@ -169,7 +169,6 @@ function updateRacePosition({
   for (const lap of state.competitorLaps) {
     const frame = replayFrameAt(lap, state.lapElapsed);
     if (!frame) continue;
-
     const progress = Number.isFinite(frame.p)
       ? frame.p
       : findNearestTrack(frame).index / trackSampleCount;
