@@ -1,0 +1,34 @@
+/* TURN r79 Airport postcard perspective.
+   The runway now crosses the foreground diagonally and stops below the terminal,
+   so it reads as apron-side pavement rather than a road passing through a building. */
+
+.track-card-airport .track-card-preview::before {
+  inset: auto;
+  left: -8%;
+  bottom: 3%;
+  width: 105%;
+  height: 20%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 0 0 16%;
+  clip-path: none;
+  transform: rotate(-8deg);
+  transform-origin: left center;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 13%,
+      #fff8e8 13% 17%,
+      transparent 17% 28%
+    ) 50% 50% / 84% 13% no-repeat,
+    #515a61;
+  box-shadow:
+    inset 0 4px 0 #f3d34a,
+    inset 0 -4px 0 #f3d34a,
+    0 3px 0 rgb(8 9 10 / 0.2);
+  color: #fff8e8;
+  text-shadow: 1px 1px 0 rgb(8 9 10 / 0.55);
+  filter: none;
+}
