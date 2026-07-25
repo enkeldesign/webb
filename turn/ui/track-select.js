@@ -1,5 +1,6 @@
 import {
   TRACK_CATALOG,
+  TRACK_SELECTION_CATALOG,
   getTrackPreviewPoints,
   loadTrackSelection,
   normalizeTrackId
@@ -16,7 +17,7 @@ export function showTrackSelect({ initialTrackId = loadTrackSelection() } = {}) 
 
   activeRequest = new Promise((resolve) => {
     const overlay = ensureOverlay();
-    const cards = [...overlay.querySelectorAll('.track-card')];
+    const cards = [...overlay.querySelectorAll('.track-card:not([disabled])')];
     const continueButton = overlay.querySelector('.track-select-continue');
     const closeButton = overlay.querySelector('.track-select-close');
     let selectedTrackId = normalizeTrackId(initialTrackId);
@@ -91,7 +92,7 @@ function ensureOverlay() {
         <button class="track-select-close" type="button" aria-label="Close track selection">×</button>
       </header>
       <div class="track-select-grid">
-        ${TRACK_CATALOG.map(renderTrackCard).join('')}
+        ${TRACK_SELECTION_CATALOG.map(renderTrackCard).join('')}
       </div>
       <footer class="track-select-footer">
         <button class="track-select-continue" type="button">CONTINUE</button>
@@ -104,20 +105,18 @@ function ensureOverlay() {
 }
 
 function renderTrackCard(track) {
+  if (track.locked) return renderLockedTrackCard(track);
+
   const preview = makePreviewSvg(track.id, track.accent);
   return `
     <button
       class="track-card track-card-${track.id}"
       type="button"
       data-track-id="${track.id}"
+      aria-label="${track.name}, ${track.difficulty} track"
       aria-pressed="false"
       style="--track-accent:${track.accent};--track-accent-soft:${track.accentSoft}"
     >
-      <span class="track-card-topline">
-        <span>${track.eyebrow}</span>
-        <strong>${track.difficulty}</strong>
-      </span>
-      <span class="track-card-preview" aria-hidden="true">${preview}</span>
       <span class="track-card-summary">
         <span class="track-card-choice">
           <span class="track-card-choice-marker" aria-hidden="true"></span>
@@ -125,13 +124,44 @@ function renderTrackCard(track) {
         </span>
         <span class="track-card-best" data-track-best="${track.id}">
           <span class="track-card-best-copy">
-            <span>BEST</span>
+            <span>BEST:</span>
             <strong class="track-card-best-time">--:--.---</strong>
             <small class="track-card-best-car" hidden></small>
           </span>
           <img class="track-card-best-model" alt="" aria-hidden="true" draggable="false" hidden>
         </span>
+        <strong class="track-card-difficulty">${track.difficulty}</strong>
       </span>
+      <span class="track-card-preview" aria-hidden="true">${preview}</span>
+    </button>
+  `;
+}
+
+function renderLockedTrackCard(track) {
+  return `
+    <button
+      class="track-card track-card-locked is-locked"
+      type="button"
+      data-track-id="${track.id}"
+      aria-label="${track.eyebrow}, ${track.name}, locked"
+      aria-disabled="true"
+      disabled
+      style="--track-accent:${track.accent};--track-accent-soft:${track.accentSoft}"
+    >
+      <span class="track-card-summary">
+        <span class="track-card-choice">
+          <span class="track-card-choice-marker" aria-hidden="true"></span>
+          <strong class="track-card-name">${track.name}</strong>
+        </span>
+        <span class="track-card-best track-card-coming-soon">
+          <span class="track-card-best-copy">
+            <span>BEST:</span>
+            <strong>COMING SOON</strong>
+          </span>
+        </span>
+        <strong class="track-card-difficulty">LOCKED</strong>
+      </span>
+      <span class="track-card-preview" aria-hidden="true">${makeLockedPreviewSvg()}</span>
     </button>
   `;
 }
@@ -161,6 +191,15 @@ function makePreviewSvg(trackId, accent) {
       <path class="track-preview-road" d="${path} Z"></path>
       <path class="track-preview-line" d="${path} Z" style="stroke:${accent}"></path>
       <circle class="track-preview-start" cx="${(offsetX + (points[0].x - minX) * scale).toFixed(1)}" cy="${(offsetY + (points[0].z - minZ) * scale).toFixed(1)}" r="7"></circle>
+    </svg>
+  `;
+}
+
+function makeLockedPreviewSvg() {
+  return `
+    <svg viewBox="0 0 320 185" focusable="false">
+      <path class="track-preview-shadow" d="M48 136 L48 62 Q50 28 84 40 L126 82 L174 42 Q194 28 216 44 L270 74 L270 142 L214 142 L177 116 L137 150 L76 150 Z"></path>
+      <path class="track-preview-road" d="M48 136 L48 62 Q50 28 84 40 L126 82 L174 42 Q194 28 216 44 L270 74 L270 142 L214 142 L177 116 L137 150 L76 150 Z"></path>
     </svg>
   `;
 }
