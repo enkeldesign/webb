@@ -1,40 +1,25 @@
-export const CLIFFSIDE_CONTROL_POINTS = Object.freeze([
-  [-185, 22, -112],
-  [-120, 22, -125],
-  [-50, 21, -128],
-  [30, 18, -112],
-  [95, 14, -80],
-  [145, 10, -35],
-  [170, 6, 20],
-  [165, 2, 75],
-  [135, -2, 120],
-  [90, -5, 145],
-  [42, -6, 145],
-  [5, -4, 122],
-  [-18, -1, 92],
-  [-12, 3, 55],
-  [20, 6, 28],
-  [58, 7, 20],
-  [82, 6, 45],
-  [72, 4, 78],
-  [42, 3, 95],
-  [5, 4, 92],
-  [-35, 6, 70],
-  [-72, 9, 42],
-  [-112, 12, 38],
-  [-150, 15, 58],
-  [-180, 18, 95],
-  [-220, 20, 110],
-  [-255, 18, 85],
-  [-270, 15, 40],
-  [-275, 16, -10],
-  [-260, 19, -55],
-  [-230, 21, -90]
-].map((point) => Object.freeze(point)));
+const CONTROL_POINT_COUNT = 32;
+
+export const CLIFFSIDE_CONTROL_POINTS = Object.freeze(Array.from(
+  { length: CONTROL_POINT_COUNT },
+  (_, index) => {
+    const angle = (index / CONTROL_POINT_COUNT) * Math.PI * 2;
+    const radius = 205
+      + Math.sin(angle * 3 + 0.45) * 28
+      + Math.sin(angle * 5 - 0.8) * 12
+      + Math.cos(angle * 2 + 0.2) * 16;
+    const x = Math.cos(angle) * radius * 1.15 - 35;
+    const y = 10
+      + Math.cos(angle + 0.6) * 12
+      + Math.sin(angle * 2 - 0.2) * 4;
+    const z = Math.sin(angle) * radius * 0.82 + 12;
+    return Object.freeze([x, y, z]);
+  }
+));
 
 export const CLIFFSIDE_LAYOUT_RULES = Object.freeze({
   minimumTurnRadiusComparedWithAirport: 'not-smaller',
   verticalRoadOverlap: false,
   minimumElevation: -6,
-  maximumElevation: 22
+  maximumElevation: 20
 });
