@@ -1,0 +1,122 @@
+.stats .race-position-hud {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  z-index: 1;
+  min-width: 0;
+  padding: 7px 10px 8px;
+  border-radius: 14px;
+  background: rgb(255 248 232 / 0.9);
+  text-align: left;
+  transform: none;
+  transform-origin: center;
+}
+
+.stats .race-position-hud[hidden] {
+  display: block !important;
+  visibility: hidden;
+}
+
+.stats .race-position-hud span {
+  display: block;
+  font-size: inherit;
+  letter-spacing: inherit;
+}
+
+.stats .race-position-hud strong {
+  display: block;
+  margin-top: 3px;
+  font-size: clamp(0.95rem, 2.5vw, 1.4rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.stats .chip:nth-child(2),
+.stats .chip:nth-child(3) {
+  width: clamp(68px, 8vw, 90px);
+}
+
+.stats .chip:nth-child(4),
+.stats .chip:nth-child(5) {
+  width: clamp(112px, 13vw, 146px);
+}
+
+.stats .race-position-hud.position-pop {
+  z-index: 2;
+  animation: turn-position-pop 360ms cubic-bezier(.16,.82,.24,1);
+}
+
+@keyframes turn-position-pop {
+  0%, 100% {
+    background: rgb(255 248 232 / 0.9);
+    transform: scale(1);
+  }
+
+  38% {
+    background: var(--yellow);
+    transform: scale(1.16) rotate(2deg);
+  }
+
+  72% {
+    transform: scale(1.06) rotate(-1deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stats .race-position-hud.position-pop {
+    animation: none;
+    background: var(--yellow);
+  }
+}
+
+@media (max-height: 430px) {
+  .stats .chip:nth-child(1) {
+    width: 112px;
+  }
+
+  .stats .chip:nth-child(2),
+  .stats .chip:nth-child(3) {
+    width: 68px;
+  }
+
+  .stats .chip:nth-child(4),
+  .stats .chip:nth-child(5) {
+    width: 112px;
+  }
+
+  .map-wrap {
+    width: min(20vw, 156px);
+  }
+}
+
+@media (max-width: 760px) and (orientation: landscape) {
+  .topbar {
+    gap: 8px;
+  }
+
+  .stats {
+    gap: 6px;
+  }
+
+  .stats .chip:nth-child(1) {
+    width: 108px;
+  }
+
+  .stats .chip:nth-child(2),
+  .stats .chip:nth-child(3) {
+    width: 64px;
+  }
+
+  .stats .chip:nth-child(4),
+  .stats .chip:nth-child(5) {
+    width: 112px;
+  }
+
+  .stats .race-position-hud span {
+    font-size: 0.5rem;
+  }
+
+  .map-wrap {
+    width: min(18vw, 132px);
+  }
+}
