@@ -19,7 +19,7 @@ const SEA_LEVEL = -16.5;
 
 export function installCliffsideWorld({ scene, samples, trackWidth = 27 }) {
   const world = new THREE.Group();
-  world.name = 'TURN Cliffside r68';
+  world.name = 'TURN Cliffside r69';
   scene.add(world);
 
   makeOcean(world);
@@ -33,7 +33,7 @@ export function installCliffsideWorld({ scene, samples, trackWidth = 27 }) {
   makeDistantIslands(world);
 
   world.userData.turnCliffsideArtDirection = Object.freeze({
-    version: 'r68',
+    version: 'r69',
     elevatedRoad: true,
     oceanCliffs: true,
     linkedCurveRhythm: true,
@@ -439,19 +439,20 @@ function makeStoneGate(world, samples, trackWidth) {
 function makeStartDistrict(world, samples, trackWidth) {
   const start = samples[0];
   const yaw = Math.atan2(start.tangent.x, start.tangent.z);
-  const inner = start.point.clone().addScaledVector(start.normal, trackWidth / 2 + 25);
+  const inner = start.point.clone().addScaledVector(start.normal, trackWidth / 2 + 10);
   const group = new THREE.Group();
   group.name = 'Cliffside Summit Start';
 
   const deck = outlinedBox(34, 1.2, 22, material(0xd8bb89, 0.96));
   deck.position.copy(inner);
-  deck.position.y = start.point.y - 0.1;
+  const summitDeckY = start.point.y + 3.2;
+  deck.position.y = summitDeckY;
   deck.rotation.y = yaw;
   group.add(deck);
 
   const cafe = outlinedBox(20, 8, 12, material(0xf7d9a6, 0.92));
   cafe.position.copy(inner).addScaledVector(start.normal, 2);
-  cafe.position.y = start.point.y + 4.5;
+  cafe.position.y = summitDeckY + 4.6;
   cafe.rotation.y = yaw;
   group.add(cafe);
 

@@ -33,7 +33,7 @@ assert.deepEqual(
   [
     { id: 'countryside', difficulty: 'EASY' },
     { id: 'airport', difficulty: 'MEDIUM' },
-    { id: 'cliffside', difficulty: 'HARD' }
+    { id: 'cliffside', difficulty: 'MEDIUM' }
   ]
 );
 assert.equal(TRACK_PLACEHOLDERS.length, 1, 'The chooser must reserve exactly one future slot');
@@ -123,7 +123,7 @@ const [
   fs.readFile(new URL('../turn/track-select-r61.css', import.meta.url), 'utf8')
 ]);
 
-assert.match(definitionsSource, /id: 'cliffside'[\s\S]*difficulty: 'HARD'/);
+assert.match(definitionsSource, /id: 'cliffside'[\s\S]*difficulty: 'MEDIUM'/);
 assert.match(definitionsSource, /storageRevision: 'cliffside-r68'/);
 assert.match(definitionsSource, /id: 'track-4-tba'[\s\S]*locked: true/);
 assert.match(catalogSource, /CLIFFSIDE_CONTROL_POINTS\.map\(\(\[x, y, z\]\) => new THREE\.Vector3\(x, y, z\)\)/);

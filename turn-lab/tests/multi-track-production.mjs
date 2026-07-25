@@ -24,7 +24,7 @@ assert.deepEqual(
   [
     { id: 'countryside', difficulty: 'EASY', storageRevision: 'countryside', freeRoamDistance: 170 },
     { id: 'airport', difficulty: 'MEDIUM', storageRevision: 'airport-r50', freeRoamDistance: 95 },
-    { id: 'cliffside', difficulty: 'HARD', storageRevision: 'cliffside-r68', freeRoamDistance: 78 }
+    { id: 'cliffside', difficulty: 'MEDIUM', storageRevision: 'cliffside-r68', freeRoamDistance: 15.7 }
   ],
   'Every track must define identity, difficulty, storage revision and world envelope in one source of truth'
 );
@@ -32,7 +32,7 @@ assert.equal(getTrackStorageRevision('airport'), 'airport-r50');
 assert.equal(getTrackStorageRevision('cliffside'), 'cliffside-r68');
 assert.equal(getTrackStorageRevision('future-track'), 'future-track', 'Unregistered future storage must not collapse into another track namespace');
 assert.equal(getTrackFreeRoamDistance('airport'), 95);
-assert.equal(getTrackFreeRoamDistance('cliffside'), 78);
+assert.equal(getTrackFreeRoamDistance('cliffside'), 15.7);
 assert.equal(getTrackFreeRoamDistance('future-track'), 170, 'Unknown tracks must keep the safe Countryside fallback');
 
 const storage = new Map();
