@@ -1,14 +1,16 @@
-/* The Best row uses the open summary area for a readable record and a generous
-   rendering of the actual stored GLB and paint. It remains content, not a raised panel. */
+/* The Best row groups the readable record and the actual stored GLB into one compact
+   cluster. It uses the available card space without letting a flexible column push the
+   vehicle away from its BEST label. */
 
 .track-card-best {
   display: grid;
-  grid-template-columns: minmax(90px, max-content) minmax(88px, 1fr);
+  grid-template-columns: max-content max-content;
   align-items: center;
-  column-gap: clamp(12px, 1.55vw, 24px);
+  justify-content: start;
+  column-gap: clamp(8px, 0.85vw, 14px);
   min-width: 0;
-  width: 100%;
-  max-width: 390px;
+  width: fit-content;
+  max-width: 100%;
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -35,7 +37,7 @@
 }
 
 .track-card-best-copy > strong {
-  font-size: clamp(0.88rem, 1.55vw, 1.16rem);
+  font-size: clamp(0.9rem, 1.6vw, 1.2rem);
   line-height: 1;
   white-space: nowrap;
 }
@@ -46,9 +48,9 @@
 
 .track-card-best-model {
   display: block;
-  justify-self: center;
-  width: clamp(86px, 8vw, 126px);
-  height: clamp(54px, 6.8vw, 88px);
+  justify-self: start;
+  width: clamp(120px, 10.5vw, 174px);
+  height: clamp(75px, 8.5vw, 110px);
   object-fit: contain;
   pointer-events: none;
   filter: drop-shadow(3px 4px 0 rgb(8 9 10 / 0.32));
@@ -60,6 +62,7 @@
 
 .track-card-coming-soon {
   grid-template-columns: minmax(0, 1fr);
+  width: 100%;
   max-width: 100%;
 }
 
@@ -69,9 +72,8 @@
 
 @media (max-height: 820px) and (orientation: landscape) {
   .track-card-best {
-    grid-template-columns: minmax(82px, max-content) minmax(74px, 1fr);
-    column-gap: clamp(9px, 1.2vw, 18px);
-    max-width: 340px;
+    grid-template-columns: max-content max-content;
+    column-gap: clamp(7px, 0.7vw, 11px);
   }
 
   .track-card-best-copy > span {
@@ -79,20 +81,18 @@
   }
 
   .track-card-best-copy > strong {
-    font-size: clamp(0.76rem, 1.25vw, 0.96rem);
+    font-size: clamp(0.78rem, 1.3vw, 1rem);
   }
 
   .track-card-best-model {
-    width: clamp(76px, 7.4vw, 112px);
-    height: clamp(50px, 6vw, 76px);
+    width: clamp(108px, 9.2vw, 152px);
+    height: clamp(68px, 7.4vw, 96px);
   }
 }
 
 @media (max-height: 610px) and (orientation: landscape) {
   .track-card-best {
-    grid-template-columns: minmax(72px, max-content) minmax(62px, 1fr);
-    column-gap: 8px;
-    max-width: 290px;
+    column-gap: 6px;
   }
 
   .track-card-best-copy > span {
@@ -100,11 +100,11 @@
   }
 
   .track-card-best-copy > strong {
-    font-size: clamp(0.66rem, 1.05vw, 0.82rem);
+    font-size: clamp(0.68rem, 1.08vw, 0.84rem);
   }
 
   .track-card-best-model {
-    width: clamp(64px, 6.2vw, 94px);
-    height: clamp(42px, 5.2vw, 64px);
+    width: clamp(84px, 7vw, 120px);
+    height: clamp(54px, 5.8vw, 76px);
   }
 }
