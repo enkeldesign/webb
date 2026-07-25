@@ -44,7 +44,7 @@ assert.ok(truck.tuning.boostPowerMultiplier < sedan.tuning.boostPowerMultiplier,
 assert.ok(truck.tuning.boostDurationSeconds > sedan.tuning.boostDurationSeconds, 'Truck should have a longer boost tank');
 assert.notEqual(catalog.makeGhostColor('#ff4fa3'), '#ff4fa3', 'Ghost colour should be a lighter nuance, not the original paint colour');
 
-const [index, releaseSource, main, lapSystem, rivalStorage, controls, carModels, lotWrapper] = await Promise.all([
+const [index, releaseSource, main, lapSystem, rivalStorage, controls, carModels, lotWrapper, trackIntro, trackIntroCss] = await Promise.all([
   fs.readFile(path.join(turnDir, 'index.html'), 'utf8'),
   fs.readFile(path.join(turnDir, 'release.json'), 'utf8'),
   fs.readFile(path.join(turnDir, 'main.js'), 'utf8'),
@@ -52,7 +52,9 @@ const [index, releaseSource, main, lapSystem, rivalStorage, controls, carModels,
   fs.readFile(path.join(turnDir, 'race/rival-storage.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'ui/gameplay-controls.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'vehicle/car-models.js'), 'utf8'),
-  fs.readFile(path.join(turnDir, 'garage/lot-track-select.js'), 'utf8')
+  fs.readFile(path.join(turnDir, 'garage/lot-track-select.js'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'ui/track-intro.js'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'track-intro.css'), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -63,11 +65,21 @@ const releaseTarget = (path) => `${path}?build=${release.cacheKey}`;
 
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(index, new RegExp(`\\.\\/garage\\/lot-r10\\.css\\?build=${release.cacheKey}`));
+assert.match(index, new RegExp(`\\.\\/track-intro\\.css\\?build=${release.cacheKey}`), 'The track intro styling must be published with the active release');
 assert.equal(imports['./garage/lot-r10.js?build=20260720-r19'], releaseTarget('./garage/lot-track-select.js'), 'The current release must place the compact track-first wrapper in front of the stable Lot implementation');
+assert.equal(imports['./ui/track-intro.js?build=20260725-r75'], releaseTarget('./ui/track-intro.js'), 'The current release must publish the track intro module');
 assert.match(lotWrapper, /showOriginalLot/, 'The track-first wrapper must still delegate car selection to the verified Lot implementation');
 assert.match(lotWrapper, /await chooseTrackBeforeLot\(\)/, 'The driver must pick a track before choosing the car');
 assert.match(lotWrapper, /installLotLayout\(\)/, 'The compact panel arrangement must be installed after The Lot mounts');
 assert.match(lotWrapper, /track-manager\.js\?build=20260722-r52/, 'The wrapper must preserve the verified Airport run-off runtime');
+assert.match(lotWrapper, /if \(selection\) await showTrackIntro\(trackId\)/, 'RACE THIS CAR must hold the aerial preview before gameplay starts');
+assert.match(trackIntro, /TRACK_INTRO_HOLD_MS = 2100/, 'The track overview must remain visible for a little over two seconds');
+assert.match(trackIntro, /getTrackDefinition\(trackId\)/, 'The intro must use the selected track definition');
+assert.match(trackIntro, /track-intro-name'\)\.textContent = track\.name/, 'The selected track name must be shown over the overview');
+assert.match(trackIntro, /aria-live', 'polite'/, 'The transient track title must be announced without interrupting other speech');
+assert.match(trackIntroCss, /pointer-events: none/, 'The title presentation must never trap gameplay input');
+assert.match(trackIntroCss, /prefers-reduced-motion: reduce/, 'The intro must respect reduced-motion preferences');
+assert.match(main, /camera\.position\.set\(0, 110, 215\)/, 'The existing aerial preview camera must remain the track-intro view');
 assert.equal(imports['./vehicle/catalog.js?build=20260720-r19'], releaseTarget('./vehicle/catalog.js'), 'The current release must publish the shared vehicle stat definitions in the main runtime');
 assert.equal(imports['./vehicle/catalog.js?build=20260720-r20'], releaseTarget('./vehicle/catalog.js'), 'The current release must publish the same handling model inside The Lot');
 assert.equal(imports['./vehicle/car-models.js?build=20260720-r19'], releaseTarget('./vehicle/car-models.js'), 'The current release must publish the stable outline module');
@@ -116,4 +128,4 @@ assert.match(main, /await showTheLot\(/, 'Back to the Lot must reuse the track-f
 assert.match(backToLot, /Back to Lot/, 'Race UI must include the Back to Lot button');
 assert.match(backToLot, /back-to-lot-button/, 'Back to Lot must expose its menu hook');
 
-console.log(`TURN ${release.id} garage and track-first car selection passed.`);
+console.log(`TURN ${release.id} garage, track-first selection and aerial intro passed.`);
