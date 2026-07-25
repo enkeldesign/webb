@@ -26,7 +26,7 @@ assert.deepEqual(
     { id: 'countryside', difficulty: 'EASY', storageRevision: 'countryside', freeRoamDistance: 170 },
     { id: 'airport', difficulty: 'MEDIUM', storageRevision: 'airport-r50', freeRoamDistance: 95 },
     { id: 'cliffside', difficulty: 'MEDIUM', storageRevision: 'cliffside-r68', freeRoamDistance: 22.2 },
-    { id: 'harbor', difficulty: 'HARD', storageRevision: 'harbor-r80', freeRoamDistance: 20.5 }
+    { id: 'harbor', difficulty: 'HARD', storageRevision: 'harbor-r80', freeRoamDistance: 170 }
   ],
   'Every track must define identity, difficulty, storage revision and world envelope in one source of truth'
 );
@@ -37,7 +37,7 @@ assert.equal(getTrackStorageRevision('harbor'), 'harbor-r80');
 assert.equal(getTrackStorageRevision('future-track'), 'future-track', 'Unregistered future storage must not collapse into another track namespace');
 assert.equal(getTrackFreeRoamDistance('airport'), 95);
 assert.equal(getTrackFreeRoamDistance('cliffside'), 22.2);
-assert.equal(getTrackFreeRoamDistance('harbor'), 20.5);
+assert.equal(getTrackFreeRoamDistance('harbor'), 170);
 assert.equal(getTrackFreeRoamDistance('future-track'), 170, 'Unknown tracks must keep the safe Countryside fallback');
 
 const storage = new Map();
@@ -68,7 +68,7 @@ try {
   };
   const harborState = {
     trackId: 'harbor',
-    competitorLaps: [{ time: 38.61, carId: 'sports-hatchback', frames: Array.from({ length: 25 }, (_, index) => ({ t: index / 10 })) }]
+    competitorLaps: [{ time: 38.61, carId: 'hatchback-sports', frames: Array.from({ length: 25 }, (_, index) => ({ t: index / 10 })) }]
   };
 
   assert.equal(saveRivalsState(countrysideState), true);
@@ -98,7 +98,7 @@ try {
   );
   assert.deepEqual(
     getStoredBestLap('harbor'),
-    { time: 38.61, carId: 'sports-hatchback' },
+    { time: 38.61, carId: 'hatchback-sports' },
     'Harbor must preserve its own best-lap summary'
   );
 
@@ -158,7 +158,9 @@ const [
   airportRunoff,
   airportRunoffWorld,
   harborLayout,
+  harborCollision,
   harborWorld,
+  harborPolish,
   physics,
   worldCollision,
   spatialSource,
@@ -180,7 +182,9 @@ const [
   fs.readFile(new URL('../../turn/tracks/airport-runoff.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/airport-world-r52.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/harbor-layout.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/harbor-collision.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/harbor-world.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/harbor-world-r81.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/physics.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/race/world-collision.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/race/track-spatial-index.js', import.meta.url), 'utf8'),
@@ -201,7 +205,8 @@ assert.equal(imports['./tracks/catalog.js'], releaseTarget('./tracks/catalog.js'
 assert.equal(imports['./tracks/definitions.js'], releaseTarget('./tracks/definitions.js'), 'Track metadata must publish through the current release');
 assert.equal(imports['./tracks/registry.js'], releaseTarget('./tracks/registry.js'), 'Track runtime contracts must publish through the current release');
 assert.equal(imports['./tracks/harbor-layout.js'], releaseTarget('./tracks/harbor-layout.js'), 'Harbor geometry must publish through the current release');
-assert.equal(imports['./tracks/harbor-world.js'], releaseTarget('./tracks/harbor-world.js'), 'Harbor scenery must publish through the current release');
+assert.equal(imports['./tracks/harbor-collision.js'], releaseTarget('./tracks/harbor-collision.js'), 'Harbor collision boundaries must publish through the current release');
+assert.equal(imports['./tracks/harbor-world.js'], releaseTarget('./tracks/harbor-world-r81.js'), 'Harbor scenery must publish through the r81 polish wrapper');
 assert.equal(imports['./tracks/track-manager.js?build=20260722-r52'], releaseTarget('./tracks/track-manager.js'), 'The Lot must receive the registry-driven manager');
 assert.match(index, /Turn the device to steer/, 'Start copy must use device-neutral language');
 assert.match(index, /Steering uses device rotation/, 'Status copy must use device-neutral language');
@@ -209,11 +214,12 @@ assert.match(index, /Steering uses device rotation/, 'Status copy must use devic
 assert.match(trackDefinitions, /storageRevision: 'countryside'/, 'Countryside must explicitly own its stable storage namespace');
 assert.match(trackDefinitions, /storageRevision: 'airport-r50'/, 'Airport must explicitly own its geometry revision');
 assert.match(trackDefinitions, /storageRevision: 'cliffside-r68'/, 'Cliffside must explicitly own its geometry revision');
-assert.match(trackDefinitions, /storageRevision: 'harbor-r80'/, 'Harbor must explicitly own its geometry revision');
+assert.match(trackDefinitions, /storageRevision: 'harbor-r80'/, 'Harbor geometry and records must retain their r80 namespace');
 assert.match(trackDefinitions, /freeRoamDistance: 170/, 'Countryside must own its world envelope');
 assert.match(trackDefinitions, /freeRoamDistance: 95/, 'Airport must own its world envelope');
 assert.match(trackDefinitions, /freeRoamDistance: 22\.2/, 'Cliffside must own its expanded shoulder-safe containment envelope');
-assert.match(trackDefinitions, /freeRoamDistance: 20\.5/, 'Harbor must keep its tight no-shortcut containment envelope');
+assert.match(trackDefinitions, /HARBOR_COLLISION_RULES\.freeRoamDistance/, 'Harbor must receive Countryside-style free roam from its collision contract');
+assert.match(trackDefinitions, /colliders: HARBOR_COLLIDERS/, 'Harbor must stop only at authored world objects and boundaries');
 assert.match(trackDefinitions, /id: 'harbor'[\s\S]*difficulty: 'HARD'/, 'Harbor must be TURN’s first HARD course');
 assert.match(trackDefinitions, /const PLACEHOLDERS = \[\]/, 'The fourth slot must no longer be locked');
 assert.match(trackDefinitions, /collisionProfile: \{/, 'Every definition must expose a collision profile');
@@ -278,18 +284,25 @@ assert.match(airportRunoffWorld, /installHairpinRunoff\(world\)/, 'The forgiving
 
 assert.match(harborLayout, /closedCourse: true/, 'Harbor must remain a closed lap');
 assert.match(harborLayout, /switchbackCount: 3/, 'Harbor must retain its three-switchback identity');
-assert.match(harborWorld, /name = 'TURN Harbor r80'/, 'Harbor must expose its world revision');
+assert.match(harborCollision, /freeRoamDistance: 170/, 'Harbor must match Countryside free-roam reach');
+assert.match(harborCollision, /harbor-quay-edge/, 'Harbor must stop the car at the quay edge');
+assert.match(harborCollision, /harbor-map-west/, 'Harbor must retain map perimeter containment');
+assert.match(harborCollision, /harbor-container-/, 'Harbor must stop the car at container stacks');
+assert.match(harborWorld, /name = 'TURN Harbor r80'/, 'The Harbor base world must retain its geometry revision');
 assert.match(harborWorld, /makeStartFinishDistrict\(world, samples, trackWidth\)/, 'Harbor must retain its start and finish district');
 assert.match(harborWorld, /makeContainerYards\(world\)/, 'Harbor must retain container-yard landmarks between its parallel lanes');
 assert.match(harborWorld, /makeQuayDistrict\(world\)/, 'Harbor must retain its quayside breathing section');
 assert.match(harborWorld, /makeHarborShips\(world\)/, 'Harbor must retain cargo-ship and tugboat scenery');
 assert.match(harborWorld, /Ship Cargo A\/B and Boat Tug/, 'Harbor watercraft must keep the documented Summer Engine art direction');
 assert.match(harborWorld, /new THREE\.InstancedMesh/, 'Repeated Harbor scenery must remain instanced');
-assert.doesNotMatch(harborWorld, /setAnimationLoop|requestAnimationFrame|setInterval/, 'Harbor scenery must add no independent animation loop');
+assert.match(harborPolish, /name = 'TURN Harbor r81'/, 'Production Harbor must expose the polished world revision');
+assert.match(harborPolish, /moveStartGateOffTheCurbs/, 'Harbor start posts must clear the curb');
+assert.match(harborPolish, /separateStartSightline/, 'Harbor start scenery must no longer overlap visually');
+assert.doesNotMatch(`${harborWorld}\n${harborPolish}`, /setAnimationLoop|requestAnimationFrame|setInterval/, 'Harbor scenery must add no independent animation loop');
 
 assert.match(worldRender, /const worldSamples = samples\.slice\(\)/, 'Countryside async scenery must retain immutable samples during a switch');
 
-console.log(`TURN ${release.id} generic four-track registry, isolated rivals and preserved course geometry passed.`);
+console.log(`TURN ${release.id} generic four-track registry, Harbor free roam, isolated rivals and preserved course geometry passed.`);
 
 function makeSamples(points) {
   return points.map(([x, z]) => ({ point: { x, z } }));

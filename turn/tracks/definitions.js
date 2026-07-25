@@ -1,3 +1,8 @@
+import {
+  HARBOR_COLLIDERS,
+  HARBOR_COLLISION_RULES
+} from './harbor-collision.js';
+
 export const DEFAULT_TRACK_ID = 'countryside';
 export const TRACK_SAMPLE_COUNT = 720;
 export const TRACK_SELECTION_KEY = 'turn-selected-track-v1';
@@ -68,15 +73,10 @@ const TRACKS = [
     accent: '#ff8f3d',
     accentSoft: '#ffd0a8',
     storageRevision: 'harbor-r80',
-    freeRoamDistance: 20.5,
+    freeRoamDistance: HARBOR_COLLISION_RULES.freeRoamDistance,
     collisionProfile: {
-      freeRoamDistance: 20.5,
-      shoulderStartDistance: 14.5,
-      shoulderDrag: 1.8,
-      boundaryBounce: 0.035,
-      boundaryTangentRetention: 0.92,
-      boundaryMinimumRecoverySpeed: 5.8,
-      colliders: []
+      freeRoamDistance: HARBOR_COLLISION_RULES.freeRoamDistance,
+      colliders: HARBOR_COLLIDERS
     },
     sky: 0x79c3d3,
     fog: 0xb6d6d4
