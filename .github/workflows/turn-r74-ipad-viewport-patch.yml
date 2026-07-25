@@ -1,0 +1,34 @@
+name: TURN r74 iPad viewport patch
+
+on:
+  push:
+    branches:
+      - agent/turn-r74-ipad-full-screen-height
+    paths:
+      - 'turn/scripts/patch-r74-ipad-screen-size.mjs'
+      - '.github/workflows/turn-r74-ipad-viewport-patch.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/turn-r74-ipad-full-screen-height
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Apply verified viewport patch
+        run: node turn/scripts/patch-r74-ipad-screen-size.mjs
+      - name: Commit patched runtime
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn/main.js
+          git diff --cached --quiet && exit 0
+          git commit -m "TURN r74: use full iPad screen height in standalone"
+          git push origin HEAD:agent/turn-r74-ipad-full-screen-height
