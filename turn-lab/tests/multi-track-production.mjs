@@ -24,7 +24,7 @@ assert.deepEqual(
   [
     { id: 'countryside', difficulty: 'EASY', storageRevision: 'countryside', freeRoamDistance: 170 },
     { id: 'airport', difficulty: 'MEDIUM', storageRevision: 'airport-r50', freeRoamDistance: 95 },
-    { id: 'cliffside', difficulty: 'MEDIUM', storageRevision: 'cliffside-r68', freeRoamDistance: 15.7 }
+    { id: 'cliffside', difficulty: 'MEDIUM', storageRevision: 'cliffside-r68', freeRoamDistance: 22.2 }
   ],
   'Every track must define identity, difficulty, storage revision and world envelope in one source of truth'
 );
@@ -32,7 +32,7 @@ assert.equal(getTrackStorageRevision('airport'), 'airport-r50');
 assert.equal(getTrackStorageRevision('cliffside'), 'cliffside-r68');
 assert.equal(getTrackStorageRevision('future-track'), 'future-track', 'Unregistered future storage must not collapse into another track namespace');
 assert.equal(getTrackFreeRoamDistance('airport'), 95);
-assert.equal(getTrackFreeRoamDistance('cliffside'), 15.7);
+assert.equal(getTrackFreeRoamDistance('cliffside'), 22.2);
 assert.equal(getTrackFreeRoamDistance('future-track'), 170, 'Unknown tracks must keep the safe Countryside fallback');
 
 const storage = new Map();
@@ -182,7 +182,7 @@ assert.match(trackDefinitions, /storageRevision: 'airport-r50'/, 'Airport must e
 assert.match(trackDefinitions, /storageRevision: 'cliffside-r68'/, 'Cliffside must explicitly own its geometry revision');
 assert.match(trackDefinitions, /freeRoamDistance: 170/, 'Countryside must own its world envelope');
 assert.match(trackDefinitions, /freeRoamDistance: 95/, 'Airport must own its world envelope');
-assert.match(trackDefinitions, /freeRoamDistance: 15\.7/, 'Cliffside must own its curb-aligned containment envelope');
+assert.match(trackDefinitions, /freeRoamDistance: 22\.2/, 'Cliffside must own its expanded shoulder-safe containment envelope');
 assert.match(trackDefinitions, /collisionProfile: \{/, 'Every definition must expose a collision profile');
 
 assert.match(trackCatalog, /CONTROL_POINT_FACTORIES/, 'Geometry factories must remain separate from player-facing metadata');

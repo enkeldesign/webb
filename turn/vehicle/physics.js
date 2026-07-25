@@ -195,7 +195,8 @@ export function updateVehiclePhysicsState({
     state,
     trackId: state.trackId,
     nearestTrack: nearestAfter,
-    collisionProfile: currentCollisionProfile()
+    collisionProfile: currentCollisionProfile(),
+    dt
   });
   if (collision.collided) nearestAfter = findNearestTrack(state.position);
 

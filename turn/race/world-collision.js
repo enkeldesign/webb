@@ -18,24 +18,46 @@ export function resolveWorldCollisionState({
   trackId = 'countryside',
   nearestTrack = null,
   collisionProfile = null,
-  carRadius = DEFAULT_CAR_RADIUS
+  carRadius = DEFAULT_CAR_RADIUS,
+  dt = 1 / 60
 }) {
   if (!state?.position || !state?.velocity) {
-    return { collided: false, boundary: false, obstacles: 0 };
+    return { collided: false, boundary: false, shoulder: false, obstacles: 0 };
   }
 
   let boundary = false;
+  let shoulder = false;
   let obstacles = 0;
   const freeRoamDistance = positiveNumber(
     collisionProfile?.freeRoamDistance,
     getTrackFreeRoamDistance(trackId)
   );
+  const limit = Math.max(1, freeRoamDistance - Math.max(0, Number(carRadius) || 0));
 
   if (nearestTrack?.sample?.point && Number.isFinite(nearestTrack.distance)) {
+    shoulder = applySoftShoulder({
+      state,
+      distance: nearestTrack.distance,
+      limit,
+      start: positiveNumber(collisionProfile?.shoulderStartDistance, Infinity),
+      drag: nonNegativeNumber(collisionProfile?.shoulderDrag, 0),
+      dt
+    });
     boundary = resolveTrackEnvelopeBoundary({
       state,
       nearestTrack,
-      limit: Math.max(1, freeRoamDistance - Math.max(0, Number(carRadius) || 0))
+      limit,
+      bounce: boundedNumber(collisionProfile?.boundaryBounce, COLLISION_BOUNCE, 0, 1),
+      tangentRetention: boundedNumber(
+        collisionProfile?.boundaryTangentRetention,
+        COLLISION_TANGENT_RETENTION,
+        0,
+        1
+      ),
+      minimumRecoverySpeed: nonNegativeNumber(
+        collisionProfile?.boundaryMinimumRecoverySpeed,
+        0
+      )
     });
   }
 
@@ -47,16 +69,36 @@ export function resolveWorldCollisionState({
   if (boundary || obstacles) {
     state.position.y = 0.18;
     state.speed = vectorLength(state.velocity);
+  } else if (shoulder) {
+    state.speed = vectorLength(state.velocity);
   }
 
   return {
     collided: boundary || obstacles > 0,
     boundary,
+    shoulder,
     obstacles
   };
 }
 
-function resolveTrackEnvelopeBoundary({ state, nearestTrack, limit }) {
+function applySoftShoulder({ state, distance, limit, start, drag, dt }) {
+  if (!Number.isFinite(start) || drag <= 0 || distance <= start || limit <= start) return false;
+  const intensity = clamp((distance - start) / (limit - start), 0, 1);
+  const seconds = clamp(Number(dt) || 0, 0, 0.1);
+  const damping = Math.exp(-drag * intensity * seconds);
+  state.velocity.x *= damping;
+  state.velocity.z *= damping;
+  return true;
+}
+
+function resolveTrackEnvelopeBoundary({
+  state,
+  nearestTrack,
+  limit,
+  bounce,
+  tangentRetention,
+  minimumRecoverySpeed
+}) {
   if (nearestTrack.distance <= limit) return false;
 
   const anchor = nearestTrack.sample.point;
@@ -75,8 +117,11 @@ function resolveTrackEnvelopeBoundary({ state, nearestTrack, limit }) {
   state.position.x = anchor.x + outwardX * limit;
   state.position.z = anchor.z + outwardZ * limit;
 
-  // The collision normal points back into the playable world.
-  applyCollisionResponse(state.velocity, -outwardX, -outwardZ);
+  applyCollisionResponse(state.velocity, -outwardX, -outwardZ, {
+    bounce,
+    tangentRetention,
+    minimumNormalSpeed: minimumRecoverySpeed
+  });
   return true;
 }
 
@@ -139,7 +184,11 @@ function resolveBoxCollider(state, collider, carRadius) {
   return true;
 }
 
-function applyCollisionResponse(velocity, normalX, normalZ) {
+function applyCollisionResponse(velocity, normalX, normalZ, {
+  bounce = COLLISION_BOUNCE,
+  tangentRetention = COLLISION_TANGENT_RETENTION,
+  minimumNormalSpeed = 0
+} = {}) {
   const vx = Number(velocity.x) || 0;
   const vz = Number(velocity.z) || 0;
   const normalSpeed = vx * normalX + vz * normalZ;
@@ -148,11 +197,11 @@ function applyCollisionResponse(velocity, normalX, normalZ) {
   const tangentX = -normalZ;
   const tangentZ = normalX;
   const tangentSpeed = vx * tangentX + vz * tangentZ;
-  const bouncedNormalSpeed = -normalSpeed * COLLISION_BOUNCE;
-  const retainedTangentSpeed = tangentSpeed * COLLISION_TANGENT_RETENTION;
+  const returnedNormalSpeed = Math.max(-normalSpeed * bounce, minimumNormalSpeed);
+  const retainedTangentSpeed = tangentSpeed * tangentRetention;
 
-  velocity.x = normalX * bouncedNormalSpeed + tangentX * retainedTangentSpeed;
-  velocity.z = normalZ * bouncedNormalSpeed + tangentZ * retainedTangentSpeed;
+  velocity.x = normalX * returnedNormalSpeed + tangentX * retainedTangentSpeed;
+  velocity.z = normalZ * returnedNormalSpeed + tangentZ * retainedTangentSpeed;
 }
 
 function vectorLength(vector) {
@@ -163,4 +212,18 @@ function vectorLength(vector) {
 function positiveNumber(value, fallback) {
   const number = Number(value);
   return Number.isFinite(number) && number > 0 ? number : fallback;
+}
+
+function nonNegativeNumber(value, fallback) {
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? number : fallback;
+}
+
+function boundedNumber(value, fallback, min, max) {
+  const number = Number(value);
+  return Number.isFinite(number) ? clamp(number, min, max) : fallback;
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
 }

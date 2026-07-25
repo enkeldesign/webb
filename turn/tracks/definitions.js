@@ -46,9 +46,14 @@ const TRACKS = [
     accent: '#ff6b6b',
     accentSoft: '#ffd0c7',
     storageRevision: 'cliffside-r68',
-    freeRoamDistance: 15.7,
+    freeRoamDistance: 22.2,
     collisionProfile: {
-      freeRoamDistance: 15.7,
+      freeRoamDistance: 22.2,
+      shoulderStartDistance: 15.2,
+      shoulderDrag: 1.65,
+      boundaryBounce: 0.04,
+      boundaryTangentRetention: 0.94,
+      boundaryMinimumRecoverySpeed: 5.5,
       colliders: []
     },
     sky: 0x63c7ef,
