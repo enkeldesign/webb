@@ -1,0 +1,40 @@
+export const CLIFFSIDE_CONTROL_POINTS = Object.freeze([
+  [-185, 22, -112],
+  [-120, 22, -125],
+  [-50, 21, -128],
+  [30, 18, -112],
+  [95, 14, -80],
+  [145, 10, -35],
+  [170, 6, 20],
+  [165, 2, 75],
+  [135, -2, 120],
+  [90, -5, 145],
+  [42, -6, 145],
+  [5, -4, 122],
+  [-18, -1, 92],
+  [-12, 3, 55],
+  [20, 6, 28],
+  [58, 7, 20],
+  [82, 6, 45],
+  [72, 4, 78],
+  [42, 3, 95],
+  [5, 4, 92],
+  [-35, 6, 70],
+  [-72, 9, 42],
+  [-112, 12, 38],
+  [-150, 15, 58],
+  [-180, 18, 95],
+  [-220, 20, 110],
+  [-255, 18, 85],
+  [-270, 15, 40],
+  [-275, 16, -10],
+  [-260, 19, -55],
+  [-230, 21, -90]
+].map((point) => Object.freeze(point)));
+
+export const CLIFFSIDE_LAYOUT_RULES = Object.freeze({
+  minimumTurnRadiusComparedWithAirport: 'not-smaller',
+  verticalRoadOverlap: false,
+  minimumElevation: -6,
+  maximumElevation: 22
+});
