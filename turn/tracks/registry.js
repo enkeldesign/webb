@@ -6,6 +6,7 @@ import {
   normalizeTrackId
 } from './catalog.js';
 import { installAirportWorld } from './airport-world-r52.js?build=20260722-r52';
+import { installCliffsideWorld } from './cliffside-world.js?build=20260725-r68';
 import { isForgivingTrackSurface } from './airport-runoff.js?build=20260722-r52';
 
 const WORLD_INSTALLERS = Object.freeze({
@@ -15,6 +16,9 @@ const WORLD_INSTALLERS = Object.freeze({
   },
   airport({ scene, samples, trackWidth }) {
     return installAirportWorld({ scene, samples, trackWidth });
+  },
+  cliffside({ scene, samples, trackWidth }) {
+    return installCliffsideWorld({ scene, samples, trackWidth });
   }
 });
 
@@ -24,6 +28,9 @@ const FORGIVING_SURFACES = Object.freeze({
   },
   airport(position) {
     return isForgivingTrackSurface('airport', position);
+  },
+  cliffside() {
+    return false;
   }
 });
 
