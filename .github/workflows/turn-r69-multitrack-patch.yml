@@ -1,0 +1,33 @@
+name: TURN r69 multi-track assertion
+
+on:
+  push:
+    branches:
+      - agent/turn-r69-cliffside-containment
+    paths:
+      - 'turn/scripts/patch-r69-multitrack.mjs'
+      - '.github/workflows/turn-r69-multitrack-patch.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/turn-r69-cliffside-containment
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node turn/scripts/patch-r69-multitrack.mjs
+      - name: Commit updated assertion
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn-lab/tests/multi-track-production.mjs
+          git diff --cached --quiet && exit 0
+          git commit -m "TURN r69: align multi-track containment guard"
+          git push origin HEAD:agent/turn-r69-cliffside-containment
