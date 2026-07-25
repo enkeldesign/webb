@@ -42,8 +42,16 @@ body {
   top: 0;
   left: 0;
   width: var(--app-width);
+  min-width: 100vw;
   height: var(--app-height);
+  min-height: 100vh;
   font-weight: 800;
+}
+
+@supports (height: 100lvh) {
+  body {
+    min-height: 100lvh;
+  }
 }
 
 canvas { display: block; }

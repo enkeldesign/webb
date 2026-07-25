@@ -128,8 +128,17 @@ scene.fog = new THREE.Fog(0x74c0fc, 180, 700);
 
 function getViewportSize() {
   const viewport = window.visualViewport;
-  const width = Math.max(1, Math.round(viewport?.width || window.innerWidth));
-  const height = Math.max(1, Math.round(viewport?.height || window.innerHeight));
+  const root = document.documentElement;
+  const width = Math.max(1, Math.round(Math.max(
+    Number(viewport?.width) || 0,
+    Number(window.innerWidth) || 0,
+    Number(root.clientWidth) || 0
+  )));
+  const height = Math.max(1, Math.round(Math.max(
+    Number(viewport?.height) || 0,
+    Number(window.innerHeight) || 0,
+    Number(root.clientHeight) || 0
+  )));
   return { width, height };
 }
 
