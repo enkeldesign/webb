@@ -43,8 +43,8 @@ const TRACKS = [
     difficulty: 'MEDIUM',
     eyebrow: 'TRACK 3',
     description: 'Linked curves. Mountain rhythm. Ocean flow.',
-    accent: '#ff6b6b',
-    accentSoft: '#ffd0c7',
+    accent: '#26c7c3',
+    accentSoft: '#bcefeb',
     storageRevision: 'cliffside-r68',
     freeRoamDistance: 22.2,
     collisionProfile: {

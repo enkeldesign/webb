@@ -53,6 +53,9 @@ jobs:
       - name: Run track record 3D model regression
         run: node turn-lab/tests/track-best-model-production.mjs
 
+      - name: Run track chooser palette and postcard regression
+        run: node turn-tests/track-select-visuals-production.mjs
+
       - name: Run world containment and collision regression
         run: node turn-lab/tests/world-collision-production.mjs
 
