@@ -5,7 +5,8 @@ const readonlyGlobals = {
   URL: 'readonly',
   window: 'readonly',
   document: 'readonly',
-  CustomEvent: 'readonly'
+  CustomEvent: 'readonly',
+  requestAnimationFrame: 'readonly'
 };
 
 export default [
@@ -25,9 +26,12 @@ export default [
       'turn/race/track-spatial-index.js',
       'turn/render/camera.js',
       'turn/render/covered-rendering.js',
+      'turn/ui/track-select.js',
       'turn/vehicle/catalog.js',
       'turn/vehicle/physics.js',
       'turn/tracks/catalog.js',
+      'turn/tracks/cliffside-layout.js',
+      'turn/tracks/cliffside-world.js',
       'turn/tracks/definitions.js',
       'turn/tracks/elevation.js',
       'turn/tracks/registry.js',
