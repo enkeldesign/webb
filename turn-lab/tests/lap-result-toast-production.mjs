@@ -121,7 +121,7 @@ try {
   else globalThis.dispatchEvent = originalDispatchEvent;
 }
 
-const [index, releaseSource, app, lapSystem, gameState, hud, styles, toast, toastCss, onboarding, onboardingCss] = await Promise.all([
+const [index, releaseSource, app, lapSystem, gameState, hud, styles, hudTuning, toast, toastCss, onboarding, onboardingCss] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
@@ -129,6 +129,7 @@ const [index, releaseSource, app, lapSystem, gameState, hud, styles, toast, toas
   fs.readFile(new URL('../../turn/race/game-state.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/hud.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/styles.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/hud-tuning.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/lap-result-toast.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/lap-result-toast.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/rival-onboarding.js', import.meta.url), 'utf8'),
@@ -159,13 +160,17 @@ assert.match(lapSystem, /if \(completedLap\) \{\s*publishLapResult/s, 'Every com
 assert.doesNotMatch(lapSystem, /TOP ['"] \+|NEW BEST|showMessage\?\.\(message\)/, 'The retired duplicate lap-ranking message must stay removed');
 assert.match(lapSystem, /raceRivals\.filter\(\(lap\) => lap\.time < finishedTime\)\.length/, 'Finish placement must be calculated against the rivals from the completed race');
 assert.match(gameState, /state\.lapInvalid = false/, 'Restart Lap and race staging must clear invalid-lap status');
-assert.match(hud, /lapInvalid \? 'INVALID LAP' : formatTime\(state\.lapElapsed\)/, 'The TIME card must stop displaying a running time once the lap is invalid');
+assert.match(hud, /lapInvalid \? 'LAP VOID' : formatTime\(state\.lapElapsed\)/, 'The TIME card must stop displaying a running time once the lap is void');
+assert.doesNotMatch(hud, /INVALID LAP/, 'Retired technical copy must not return to the TIME card');
 assert.match(hud, /classList\.toggle\('is-invalid-lap', lapInvalid\)/, 'The TIME card must expose a persistent invalid visual state');
-assert.match(styles, /\.chip\.is-invalid-lap \{\s*background: #ff6b6b;/s, 'Invalid laps must turn the TIME card red');
-assert.match(styles, /\.chip\.is-invalid-lap strong/, 'INVALID LAP must have dedicated compact typography');
+assert.match(styles, /\.chip\.is-invalid-lap \{\s*background: #ff6b6b;/s, 'Void laps must turn the TIME card red');
+assert.match(styles, /\.chip\.is-invalid-lap strong/, 'LAP VOID must retain dedicated compact typography');
+assert.match(hudTuning, /overflow: visible;/, 'Top HUD chips must avoid Safari rounded-overflow clipping seams');
+assert.doesNotMatch(hudTuning, /overflow: hidden;/, 'Top HUD chips must not reintroduce the clipping path that produced horizontal repaint seams');
 assert.match(toast, /TOAST_VISIBLE_MS = 4000/, 'The result should remain readable for a few seconds');
 assert.match(toast, /LAST LAP/, 'Valid laps must keep the requested result label');
-assert.match(toast, /LAP INVALID/, 'Invalid laps must replace LAST LAP with an explicit failure label');
+assert.match(toast, /LAP VOID/, 'Void laps must use the same concise wording as the TIME card');
+assert.doesNotMatch(toast, /LAP INVALID|INVALID LAP/, 'Retired invalid-lap wording must not remain in player-facing result feedback');
 assert.match(toast, /STAY ON THE TRACK!/, 'Invalid checkpoint chains must use player-facing track guidance');
 assert.doesNotMatch(toast, /MISSED CHECKPOINT/, 'Technical checkpoint language must stay out of the player-facing toast');
 assert.match(toast, /turn:lap-invalid/, 'The unified toast must listen for invalid-lap events');
@@ -189,7 +194,7 @@ assert.match(onboarding, /VIEWER_FRAME_INTERVAL_MS = 1000 \/ 30/, 'The temporary
 assert.match(onboarding, /renderer\.dispose\(\)/, 'The temporary onboarding renderer must be disposed after the reveal');
 assert.match(onboarding, /RESULT_TOAST_HANDOFF_MS = 4300/, 'First-rival onboarding must wait until the lap-result toast has cleared');
 assert.match(toastCss, /background: var\(--yellow\)/, 'Valid lap results must keep the yellow finish-result colour');
-assert.match(toastCss, /\.lap-result-toast\.is-invalid \{\s*background: #ff6b6b;/s, 'STAY ON THE TRACK must use the same red invalid-lap colour as the TIME card');
+assert.match(toastCss, /\.lap-result-toast\.is-invalid \{\s*background: #ff6b6b;/s, 'STAY ON THE TRACK must use the same red void-lap colour as the TIME card');
 assert.match(toastCss, /left: 50%/, 'The lap toast must occupy the central finish-message position');
 assert.match(toastCss, /top: 22%/, 'The lap toast must sit where the old TOP X LAP message appeared');
 assert.doesNotMatch(toastCss, /left: max\(112px/, 'The retired lower-left toast placement must stay removed');
@@ -199,4 +204,4 @@ assert.match(onboardingCss, /\.rival-onboarding-copy/, 'The CHASE YOUR BEST copy
 assert.match(onboardingCss, /background: var\(--rival-onboarding-color, var\(--yellow\)\)/, 'The onboarding plate must expose the rival colour through a CSS custom property');
 assert.match(onboardingCss, /border-radius: 999px/, 'The onboarding must keep the compact pill-plate language of the old READY message');
 
-console.log(`TURN ${release.id} persistent INVALID LAP HUD, red invalid toast and first-rival onboarding passed.`);
+console.log(`TURN ${release.id} persistent LAP VOID HUD, seam-free chips, red void toast and first-rival onboarding passed.`);
