@@ -116,5 +116,8 @@ jobs:
       - name: Run Cliffside and four-slot chooser regression
         run: node turn-tests/cliffside-production.mjs
 
+      - name: Run Cliffside containment regression
+        run: node turn-tests/cliffside-containment-production.mjs
+
       - name: Verify production release architecture
         run: node turn-tests/release-production.mjs
