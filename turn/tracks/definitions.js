@@ -40,15 +40,15 @@ const TRACKS = [
   {
     id: 'cliffside',
     name: 'Cliffside',
-    difficulty: 'HARD',
+    difficulty: 'MEDIUM',
     eyebrow: 'TRACK 3',
-    description: 'Linked curves. Mountain rhythm. Ocean drop.',
+    description: 'Linked curves. Mountain rhythm. Ocean flow.',
     accent: '#ff6b6b',
     accentSoft: '#ffd0c7',
     storageRevision: 'cliffside-r68',
-    freeRoamDistance: 78,
+    freeRoamDistance: 15.7,
     collisionProfile: {
-      freeRoamDistance: 78,
+      freeRoamDistance: 15.7,
       colliders: []
     },
     sky: 0x63c7ef,
