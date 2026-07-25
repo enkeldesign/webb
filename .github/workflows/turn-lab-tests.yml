@@ -119,5 +119,8 @@ jobs:
       - name: Run Cliffside containment regression
         run: node turn-tests/cliffside-containment-production.mjs
 
+      - name: Run full viewport coverage regression
+        run: node turn-tests/viewport-coverage-production.mjs
+
       - name: Verify production release architecture
         run: node turn-tests/release-production.mjs
