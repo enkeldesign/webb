@@ -68,7 +68,7 @@ try {
   };
   const harborState = {
     trackId: 'harbor',
-    competitorLaps: [{ time: 38.61, carId: 'sports-hatchback', frames: Array.from({ length: 25 }, (_, index) => ({ t: index / 10 })) }]
+    competitorLaps: [{ time: 38.61, carId: 'hatchback-sports', frames: Array.from({ length: 25 }, (_, index) => ({ t: index / 10 })) }]
   };
 
   assert.equal(saveRivalsState(countrysideState), true);
@@ -98,7 +98,7 @@ try {
   );
   assert.deepEqual(
     getStoredBestLap('harbor'),
-    { time: 38.61, carId: 'sports-hatchback' },
+    { time: 38.61, carId: 'hatchback-sports' },
     'Harbor must preserve its own best-lap summary'
   );
 
