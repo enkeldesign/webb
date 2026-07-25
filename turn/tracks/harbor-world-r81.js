@@ -8,6 +8,8 @@ const LEGACY_BEAM_DEPTH = 1.35;
 const START_POST_CLEARANCE = 4.8;
 const START_BEAM_OVERHANG = 1.1;
 const START_BEAM_LIFT = 0.75;
+const WEST_CARGO_START = Object.freeze({ x: -168, z: -236 });
+const WEST_CARGO_CLEAR = Object.freeze({ x: -84, z: -286, rotation: 0.14 });
 
 export function installHarborWorld(options) {
   const world = installHarborWorldR80(options);
@@ -20,6 +22,7 @@ export function installHarborWorld(options) {
     version: 'r81',
     startGateCurbClearance: true,
     separatedStartSightline: true,
+    cargoShipClearOfStartGate: true,
     gameplayGeometryUnchanged: true
   });
   return world;
@@ -64,10 +67,26 @@ function separateStartSightline(world) {
     && nearly(node.position.z, -196)
     && node.children.length === 5
   ));
-  if (!quayCrane) return;
+  if (quayCrane) {
+    quayCrane.position.x = -278;
+    quayCrane.name = 'Harbor west quay crane r81';
+  }
 
-  quayCrane.position.x = -278;
-  quayCrane.name = 'Harbor west quay crane r81';
+  const cargoShip = world.children.find((node) => (
+    node?.isGroup
+    && nearly(node.position.x, WEST_CARGO_START.x)
+    && nearly(node.position.z, WEST_CARGO_START.z)
+    && node.children.length > 10
+  ));
+  if (!cargoShip) {
+    console.warn('TURN: Harbor r81 could not find the west cargo ship to clear from the start gate.');
+    return;
+  }
+
+  cargoShip.position.x = WEST_CARGO_CLEAR.x;
+  cargoShip.position.z = WEST_CARGO_CLEAR.z;
+  cargoShip.rotation.y = WEST_CARGO_CLEAR.rotation;
+  cargoShip.name = 'Harbor west cargo ship r81';
 }
 
 function isLegacyStartGate(node, trackWidth) {
