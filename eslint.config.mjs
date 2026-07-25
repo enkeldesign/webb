@@ -32,6 +32,7 @@ export default [
       'turn/tracks/catalog.js',
       'turn/tracks/cliffside-layout.js',
       'turn/tracks/cliffside-world.js',
+      'turn/tracks/cliffside-world-r76.js',
       'turn/tracks/definitions.js',
       'turn/tracks/elevation.js',
       'turn/tracks/registry.js',

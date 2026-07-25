@@ -7,7 +7,7 @@ import { TRACK_DEFINITIONS } from '../turn/tracks/definitions.js';
 const cliffside = TRACK_DEFINITIONS.find((track) => track.id === 'cliffside');
 assert.ok(cliffside, 'Cliffside must remain a registered playable track');
 assert.equal(cliffside.difficulty, 'MEDIUM');
-assert.equal(cliffside.storageRevision, 'cliffside-r68', 'Scenery and containment polish must preserve records');
+assert.equal(cliffside.storageRevision, 'cliffside-r68', 'Scenery polish must preserve every existing record');
 assert.equal(cliffside.freeRoamDistance, 22.2, 'The final safety edge must sit well beyond the curb');
 assert.equal(cliffside.collisionProfile.shoulderStartDistance, 15.2);
 assert.equal(cliffside.collisionProfile.shoulderDrag, 1.65);
@@ -37,23 +37,57 @@ assert.ok(Math.abs(hillSide.state.position.x + 19.6) < 1e-9);
 assert.ok(hillSide.state.velocity.x >= 5.5, 'The invisible hill edge must push the car back into the shoulder');
 assert.ok(hillSide.state.velocity.z > 10, 'The hill edge must retain useful forward motion');
 
-const [definitionsSource, worldSource, physicsSource, collisionSource] = await Promise.all([
+const [
+  definitionsSource,
+  baseWorldSource,
+  scenicWorldSource,
+  physicsSource,
+  collisionSource,
+  indexSource,
+  releaseSource
+] = await Promise.all([
   fs.readFile(new URL('../turn/tracks/definitions.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/cliffside-world.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/cliffside-world-r76.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/vehicle/physics.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/race/world-collision.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/race/world-collision.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8')
 ]);
+const release = JSON.parse(releaseSource);
+const importMapText = indexSource.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
+assert.ok(importMapText, 'Production must expose the release import map');
+const imports = JSON.parse(importMapText).imports;
 
 assert.match(definitionsSource, /freeRoamDistance: 22\.2,[\s\S]*shoulderStartDistance: 15\.2[\s\S]*shoulderDrag: 1\.65/);
-assert.match(worldSource, /makeShoulders\(world, samples, trackWidth\)/, 'The extra driving buffer must be visually legible');
-assert.match(worldSource, /trackWidth \/ 2 \+ 8\.7/, 'The visible guardrail must sit beyond the usable shoulder');
-assert.match(worldSource, /function makeStartArch/, 'The start line may keep its lightweight arch');
-assert.doesNotMatch(worldSource, /makeStartDistrict|const cafe|const deck|const roof/, 'The summit building must be removed entirely');
-assert.match(worldSource, /world\.name = 'TURN Cliffside r72'/);
-assert.match(physicsSource, /collisionProfile: currentCollisionProfile\(\),[\s\S]*dt/, 'Shoulder drag must be frame-rate independent');
-assert.match(collisionSource, /minimumNormalSpeed: minimumRecoverySpeed/, 'The final edge must guarantee an inward escape speed');
+assert.match(baseWorldSource, /makeShoulders\(world, samples, trackWidth\)/, 'The extra driving buffer must remain visually legible');
+assert.match(baseWorldSource, /trackWidth \/ 2 \+ 8\.7/, 'The visible guardrail must remain beyond the usable shoulder');
+assert.match(baseWorldSource, /function makeStartArch/, 'The start line may keep its lightweight arch');
+assert.doesNotMatch(baseWorldSource, /makeStartDistrict|const cafe|const deck|const roof/, 'The retired summit building must stay removed');
+assert.match(baseWorldSource, /world\.name = 'TURN Cliffside r72'/, 'The verified gameplay world remains the untouched base layer');
 
-console.log('TURN r72 forgiving Cliffside shoulders and anti-stall recovery passed.');
+assert.match(scenicWorldSource, /installBaseCliffsideWorld\(options\)/, 'The scenic layer must wrap rather than replace the verified track world');
+assert.match(scenicWorldSource, /makeInnerHighlands\(world, samples, trackWidth, peakCentre\)/, 'The empty centre must be filled with a continuous highland mass');
+assert.match(scenicWorldSource, /makeGroundedPineForest\(world, samples, trackWidth, peakCentre\)/, 'The inner forest must be rebuilt against the new terrain');
+assert.match(scenicWorldSource, /groundY \+ TRUNK_HALF_HEIGHT \* scale/, 'Every replacement trunk must be seated on its computed ground surface');
+assert.match(scenicWorldSource, /hideLegacyInnerForest\(world\)/, 'The old water-standing pine instances must not remain visible');
+assert.match(scenicWorldSource, /new THREE\.InstancedMesh/, 'Repeated trees and rocks must retain batched rendering');
+assert.match(scenicWorldSource, /gameplayGeometryUnchanged: true/, 'The scenery wrapper must document its gameplay boundary');
+assert.doesNotMatch(
+  scenicWorldSource,
+  /resolveWorldCollisionState|collisionProfile|freeRoamDistance|shoulderDrag|boundaryTangentRetention|localStorage|state\./,
+  'The centre rebuild must not touch physics, collision, storage or race state'
+);
+assert.equal(
+  imports['./tracks/cliffside-world.js'],
+  `./tracks/cliffside-world-r76.js?build=${release.cacheKey}`,
+  'Production must route Cliffside through the scenery-only wrapper'
+);
+assert.match(scenicWorldSource, /world\.name = 'TURN Cliffside r76'/);
+assert.match(physicsSource, /collisionProfile: currentCollisionProfile\(\),[\s\S]*dt/, 'Shoulder drag must remain frame-rate independent');
+assert.match(collisionSource, /minimumNormalSpeed: minimumRecoverySpeed/, 'The final edge must keep its inward escape speed');
+
+console.log(`TURN ${release.id} natural Cliffside highlands and grounded forest passed.`);
 
 function collideFrom(position, velocity, dt = 1 / 60) {
   const state = {
