@@ -10,11 +10,17 @@ const START_BEAM_OVERHANG = 1.1;
 const START_BEAM_LIFT = 0.75;
 const WEST_CARGO_START = Object.freeze({ x: -168, z: -236 });
 const WEST_CARGO_CLEAR = Object.freeze({ x: -84, z: -286, rotation: 0.14 });
+const QUAY_WIDTH = 620;
+const QUAY_HEIGHT = 2.2;
+const QUAY_DEPTH = 34;
+const QUAY_Z = -174;
+const QUAY_SURFACE_Y = -1.12;
 
 export function installHarborWorld(options) {
   const world = installHarborWorldR80(options);
   moveStartGateOffTheCurbs(world, options.trackWidth || 27);
   separateStartSightline(world);
+  lowerQuayBelowRoad(world);
 
   world.name = 'TURN Harbor r81';
   world.userData.turnHarborArtDirection = Object.freeze({
@@ -23,6 +29,7 @@ export function installHarborWorld(options) {
     startGateCurbClearance: true,
     separatedStartSightline: true,
     cargoShipClearOfStartGate: true,
+    quaySurfaceHotfix: 'r82',
     gameplayGeometryUnchanged: true
   });
   return world;
@@ -87,6 +94,24 @@ function separateStartSightline(world) {
   cargoShip.position.z = WEST_CARGO_CLEAR.z;
   cargoShip.rotation.y = WEST_CARGO_CLEAR.rotation;
   cargoShip.name = 'Harbor west cargo ship r81';
+}
+
+function lowerQuayBelowRoad(world) {
+  const quay = world.children.find((node) => (
+    isBox(node, QUAY_WIDTH, QUAY_HEIGHT, QUAY_DEPTH)
+    && nearly(node.position.z, QUAY_Z)
+  ));
+
+  if (!quay) {
+    console.warn('TURN: Harbor r82 could not find the quay surface below the start straight.');
+    return;
+  }
+
+  // The quay top previously sat 0.02 units above the road ribbon and hid the
+  // asphalt on one side of the start straight. Keep concrete outside the curbs,
+  // but let the authored road remain the visible surface between them.
+  quay.position.y = QUAY_SURFACE_Y;
+  quay.name = 'Harbor quay below race road r82';
 }
 
 function isLegacyStartGate(node, trackWidth) {
