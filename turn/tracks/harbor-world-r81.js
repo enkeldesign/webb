@@ -20,7 +20,7 @@ export function installHarborWorld(options) {
   separateStartSightline(world);
   lowerQuayBelowRoad(world);
 
-  world.name = 'TURN Harbor r85';
+  world.name = 'TURN Harbor r81';
   world.userData.turnHarborArtDirection = Object.freeze({
     ...(world.userData.turnHarborArtDirection || {}),
     version: 'r85',
