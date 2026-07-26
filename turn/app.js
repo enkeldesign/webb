@@ -24,6 +24,9 @@ installRivalOnboarding();
 const { installSportsSedanEasterEggUi } = await import(withBuild('./vehicle/sports-sedan-easter-egg.js'));
 installSportsSedanEasterEggUi();
 
+const { installHarborHiddenFaceOrientation } = await import(withBuild('./tracks/harbor-hidden-face-r88.js'));
+installHarborHiddenFaceOrientation();
+
 await import(withBuild('./input/analog-gas.js'));
 await import(withBuild('./ui/gameplay-controls.js'));
 const { installRacePositionLayout } = await import(withBuild('./ui/race-position-layout.js'));
