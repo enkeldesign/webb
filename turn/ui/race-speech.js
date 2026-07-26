@@ -31,7 +31,6 @@ export function installRaceSpeech() {
   hud.append(positionAnnouncer, contextAnnouncer);
 
   let lastPosition = null;
-  let lastTotal = null;
   let contextTimer = 0;
   let suppressPositionUntil = -Infinity;
 
@@ -41,7 +40,6 @@ export function installRaceSpeech() {
     if (position == null) {
       positionValue.removeAttribute('aria-label');
       lastPosition = null;
-      lastTotal = null;
       return;
     }
 
@@ -58,7 +56,6 @@ export function installRaceSpeech() {
     }
 
     lastPosition = normalizedPosition;
-    lastTotal = normalizedTotal;
   };
 
   window.addEventListener('turn:lap-result', () => {
