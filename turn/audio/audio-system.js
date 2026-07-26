@@ -428,14 +428,17 @@ function updateDrivingGuidance(frame, { active, speed, offRoad, now }) {
 }
 
 function playTurnCue(direction, severity, proximity, now) {
-  const pan = clamp(direction * (0.62 + proximity * 0.28), -1, 1);
-  const level = 0.012 + severity * 0.014;
-  const left = direction < 0;
-  const start = left ? 720 + severity * 130 : 430 + severity * 80;
-  const end = left ? 470 - severity * 70 : 760 + severity * 150;
-  playTone(start, end, 0.105, level, 'sine', now, pan);
+  // Direction is deliberately encoded only by side: left curve in the left ear, right curve in
+  // the right ear. A bright overtone keeps the cue readable over deliberate tyre scrub.
+  const panMagnitude = 0.88 + proximity * 0.12;
+  const pan = direction < 0 ? -panMagnitude : panMagnitude;
+  const level = 0.024 + severity * 0.022;
+  const start = 1040 + severity * 140;
+  const end = 1280 + severity * 180;
+  playTone(start, end, 0.115, level, 'sine', now, pan);
+  playTone(start * 1.72, end * 1.72, 0.09, level * 0.34, 'sine', now + 0.008, pan);
   if (severity > 0.5) {
-    playTone(start * 0.92, end * 0.92, 0.09, level * 0.78, 'triangle', now + 0.105, pan);
+    playTone(start * 0.96, end * 0.96, 0.095, level * 0.8, 'triangle', now + 0.12, pan);
   }
 }
 
@@ -670,7 +673,7 @@ function handleUiClick(event) {
     cue('ui-confirm');
     return;
   }
-  if (button.matches('.lot-back, .lot-view-close, .nuke-cancel')) {
+  if (button.matches('.lot-back, .lot-view-close, .nuke-cancel, .sound-guide-close')) {
     cue('ui-back');
     return;
   }

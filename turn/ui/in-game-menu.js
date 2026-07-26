@@ -11,6 +11,86 @@ function waitForRuntime() {
   }, { once: true });
 }
 
+function createSoundGuide() {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'utility sound-guide-button';
+  button.textContent = 'Sound Guide';
+  button.setAttribute('aria-label', 'Open the driving sound guide');
+
+  const dialog = document.createElement('dialog');
+  dialog.className = 'sound-guide-dialog';
+  dialog.setAttribute('aria-labelledby', 'soundGuideTitle');
+  dialog.setAttribute('aria-describedby', 'soundGuideIntro');
+  dialog.innerHTML = `
+    <article class="sound-guide-card">
+      <header class="sound-guide-head">
+        <h2 id="soundGuideTitle">DRIVE BY SOUND</h2>
+        <button class="sound-guide-close" type="button" aria-label="Close sound guide">×</button>
+      </header>
+
+      <section aria-labelledby="soundGuideHow">
+        <h3 id="soundGuideHow">HOW TO DRIVE</h3>
+        <p id="soundGuideIntro">Use headphones. Follow the turn pulse, listen for the road edge, and let the tyre sound reveal your drift. If you leave the track, follow the low beacon back to the road.</p>
+      </section>
+
+      <section aria-labelledby="soundGuideLegend">
+        <h3 id="soundGuideLegend">SOUND GUIDE</h3>
+        <div class="sound-guide-list">
+          <section>
+            <h4>TURN PULSE</h4>
+            <p>A clear high pulse plays in the ear on the side the road curves. It repeats faster as the turn gets closer or tighter.</p>
+          </section>
+          <section>
+            <h4>ROAD EDGE</h4>
+            <p>A rough sound grows in the ear nearest the edge of the road.</p>
+          </section>
+          <section>
+            <h4>RECOVERY BEACON</h4>
+            <p>Two low pulses point toward the road when you are off-road.</p>
+          </section>
+          <section>
+            <h4>DRIFT</h4>
+            <p>Tyre sound moves toward the direction the car is sliding.</p>
+          </section>
+          <section>
+            <h4>RIVAL NEAR</h4>
+            <p>A short directional sound warns that another car is close and tells you which side it is on.</p>
+          </section>
+          <section>
+            <h4>WRONG WAY</h4>
+            <p>A double falling tone means the car is facing the wrong way. A final side tone points toward the correction.</p>
+          </section>
+        </div>
+      </section>
+    </article>`;
+  document.body.appendChild(dialog);
+
+  const closeButton = dialog.querySelector('.sound-guide-close');
+
+  function openGuide() {
+    void globalThis.__turnAudio?.unlock?.();
+    if (typeof dialog.showModal === 'function') dialog.showModal();
+    else dialog.setAttribute('open', '');
+    closeButton?.focus();
+  }
+
+  function closeGuide() {
+    if (typeof dialog.close === 'function' && dialog.open) dialog.close();
+    else dialog.removeAttribute('open');
+    button.focus();
+  }
+
+  button.addEventListener('click', openGuide);
+  closeButton?.addEventListener('click', closeGuide);
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog) closeGuide();
+  });
+  dialog.addEventListener('close', () => button.focus());
+
+  return { button, dialog };
+}
+
 function install(runtime) {
   if (!runtime || runtime.__inGameMenuInstalled) return;
 
@@ -28,6 +108,7 @@ function install(runtime) {
   }
 
   runtime.__inGameMenuInstalled = true;
+  const { button: soundGuideButton } = createSoundGuide();
 
   backToStartButton.textContent = 'Restart Lap';
   backToStartButton.setAttribute('aria-label', 'Restart the current lap from the start line');
@@ -40,6 +121,7 @@ function install(runtime) {
   const buttonOrder = [
     backToLotButton,
     recalibrateButton,
+    soundGuideButton,
     resetRivalsButton,
     spectateButton,
     backToStartButton
@@ -95,6 +177,7 @@ function install(runtime) {
       backToStartButton.hidden = !visibility.backToStart;
       backToLotButton.hidden = !visibility.startActions;
       recalibrateButton.hidden = !visibility.startActions;
+      soundGuideButton.hidden = !visibility.startActions;
       resetRivalsButton.hidden = !visibility.startActions;
       previousMenuState = visibility.menuState;
     }
