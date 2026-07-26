@@ -114,13 +114,27 @@ export const CAR_CATALOG = Object.freeze(RAW_CARS.map(([
 
 const CAR_BY_ID = new Map(CAR_CATALOG.map((car) => [car.id, car]));
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/;
+const SPORTS_SEDAN = CAR_BY_ID.get('sedan-sports');
 const MAXED_SPORTS_SEDAN_TUNING = Object.freeze({
   ...deriveVehicleTuning(MAXED_VEHICLE_STATS),
-  enginePitch: CAR_BY_ID.get('sedan-sports').tuning.enginePitch
+  enginePitch: SPORTS_SEDAN.tuning.enginePitch
 });
+const MAXED_SPORTS_SEDAN = Object.freeze({
+  ...SPORTS_SEDAN,
+  stats: MAXED_VEHICLE_STATS,
+  tuning: MAXED_SPORTS_SEDAN_TUNING
+});
+let activeVehicleSelection = null;
+
+function getBaseCarDefinition(id) {
+  return CAR_BY_ID.get(id) || CAR_BY_ID.get(DEFAULT_VEHICLE_ID);
+}
 
 export function getCarDefinition(id) {
-  return CAR_BY_ID.get(id) || CAR_BY_ID.get(DEFAULT_VEHICLE_ID);
+  const definition = getBaseCarDefinition(id);
+  return definition.id === 'sedan-sports' && isSportsSedanEasterEgg(activeVehicleSelection)
+    ? MAXED_SPORTS_SEDAN
+    : definition;
 }
 
 export function normalizeVehicleId(id) {
@@ -154,25 +168,27 @@ export function isSportsSedanEasterEgg(selection) {
 export function getEffectiveVehicleStats(selection) {
   return isSportsSedanEasterEgg(selection)
     ? MAXED_VEHICLE_STATS
-    : getCarDefinition(selection?.carId).stats;
+    : getBaseCarDefinition(selection?.carId).stats;
 }
 
 export function getEffectiveVehicleTuning(selection) {
   return isSportsSedanEasterEgg(selection)
     ? MAXED_SPORTS_SEDAN_TUNING
-    : getCarDefinition(selection?.carId).tuning;
+    : getBaseCarDefinition(selection?.carId).tuning;
 }
 
 export function loadVehicleSelection() {
   try {
-    return normalizeVehicleSelection(JSON.parse(localStorage.getItem(VEHICLE_SELECTION_KEY)));
+    activeVehicleSelection = normalizeVehicleSelection(JSON.parse(localStorage.getItem(VEHICLE_SELECTION_KEY)));
   } catch (_) {
-    return normalizeVehicleSelection(null);
+    activeVehicleSelection = normalizeVehicleSelection(null);
   }
+  return activeVehicleSelection;
 }
 
 export function saveVehicleSelection(selection) {
   const normalized = normalizeVehicleSelection(selection);
+  activeVehicleSelection = normalized;
   try {
     localStorage.setItem(VEHICLE_SELECTION_KEY, JSON.stringify(normalized));
   } catch (_) {}
