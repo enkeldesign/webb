@@ -61,10 +61,13 @@ assert.match(worldSource, /makeContainerYards\(world\)/);
 assert.match(worldSource, /makeQuayDistrict\(world\)/);
 assert.match(worldSource, /makeHarborShips\(world\)/);
 assert.match(worldSource, /Ship Cargo A\/B and Boat Tug/, 'Ship silhouettes must explicitly follow the Summer Engine watercraft direction');
+assert.match(worldSource, /makeCargoShip\(world, -168, -236, 1\.08, RUST, 0\.03\)/, 'The large west cargo ship must remain tightly docked beside the quay');
 assert.match(worldSource, /new THREE\.InstancedMesh/, 'Repeated Harbor scenery must use instancing');
 assert.match(polishSource, /moveStartGateOffTheCurbs/, 'The start posts must no longer overlap the curbs');
 assert.match(polishSource, /START_POST_CLEARANCE = 4\.8/, 'The start gate must retain deliberate curb clearance');
 assert.match(polishSource, /separateStartSightline/, 'The quay crane must not merge visually with the start gate');
+assert.match(polishSource, /cargoShipDockedAtQuay: true/, 'Harbor art direction must preserve the dramatic dockside ship placement');
+assert.doesNotMatch(polishSource, /WEST_CARGO_CLEAR|cargoShip\.position|cargoShip\.rotation/, 'The polish layer must not move the dockside cargo ship away from the quay');
 assert.match(collisionSource, /'container'/, 'Harbor must expose container collision');
 assert.doesNotMatch(`${worldSource}\n${polishSource}`, /setAnimationLoop|requestAnimationFrame|setInterval/, 'The static Harbor world must create no independent loop');
 

@@ -8,8 +8,6 @@ const LEGACY_BEAM_DEPTH = 1.35;
 const START_POST_CLEARANCE = 4.8;
 const START_BEAM_OVERHANG = 1.1;
 const START_BEAM_LIFT = 0.75;
-const WEST_CARGO_START = Object.freeze({ x: -168, z: -236 });
-const WEST_CARGO_CLEAR = Object.freeze({ x: -84, z: -286, rotation: 0.14 });
 const QUAY_WIDTH = 620;
 const QUAY_HEIGHT = 2.2;
 const QUAY_DEPTH = 34;
@@ -25,10 +23,10 @@ export function installHarborWorld(options) {
   world.name = 'TURN Harbor r81';
   world.userData.turnHarborArtDirection = Object.freeze({
     ...(world.userData.turnHarborArtDirection || {}),
-    version: 'r81',
+    version: 'r85',
     startGateCurbClearance: true,
     separatedStartSightline: true,
-    cargoShipClearOfStartGate: true,
+    cargoShipDockedAtQuay: true,
     quaySurfaceHotfix: 'r82',
     gameplayGeometryUnchanged: true
   });
@@ -79,21 +77,8 @@ function separateStartSightline(world) {
     quayCrane.name = 'Harbor west quay crane r81';
   }
 
-  const cargoShip = world.children.find((node) => (
-    node?.isGroup
-    && nearly(node.position.x, WEST_CARGO_START.x)
-    && nearly(node.position.z, WEST_CARGO_START.z)
-    && node.children.length > 10
-  ));
-  if (!cargoShip) {
-    console.warn('TURN: Harbor r81 could not find the west cargo ship to clear from the start gate.');
-    return;
-  }
-
-  cargoShip.position.x = WEST_CARGO_CLEAR.x;
-  cargoShip.position.z = WEST_CARGO_CLEAR.z;
-  cargoShip.rotation.y = WEST_CARGO_CLEAR.rotation;
-  cargoShip.name = 'Harbor west cargo ship r81';
+  // Keep the large west cargo ship at its original dockside position. Its close
+  // relationship to the quay gives the start straight the intended dramatic scale.
 }
 
 function lowerQuayBelowRoad(world) {
