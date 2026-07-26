@@ -48,9 +48,11 @@ assert.match(style, /max-height: 500px/, 'The new card must retain a compact pho
 assert.match(menu, /globalThis\.__turnDriveByEarEnabled === false/);
 assert.match(menu, /if \(soundGuideButton\) soundGuideButton\.hidden/, 'The Sound Guide must not advertise disabled processing');
 assert.match(audio, /DRIVE_BY_EAR_ENABLED = globalThis\.__turnDriveByEarEnabled !== false/);
+assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) \{[\s\S]*window\.addEventListener\('turn:pace-note'/, 'DBE off must not install pace-note listeners');
 assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) installRoadGuidanceGraph\(\)/, 'DBE off must not create the continuous road-noise graph');
 assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) \{[\s\S]*updateDrivingGuidance/, 'DBE off must skip continuous guidance processing');
 assert.match(audio, /DRIVE_BY_EAR_ENABLED \? createPannerNode\(\) : context\.createGain\(\)/, 'DBE off must avoid the spatial drift panner');
+assert.match(audio, /if \(roadGain\) hardMute\(roadGain\.gain, now\)/, 'Core silence must remain safe when the DBE graph was never created');
 assert.doesNotMatch(paceAudio, /AudioContext|webkitAudioContext/, 'The optional module must carry no dormant audio engine');
 
 console.log(`TURN ${release.id} Drive By Ear universal-default and true-off path passed.`);
