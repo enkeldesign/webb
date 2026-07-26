@@ -24,7 +24,7 @@ installRivalOnboarding();
 const { installSportsSedanEasterEggUi } = await import(withBuild('./vehicle/sports-sedan-easter-egg.js'));
 installSportsSedanEasterEggUi();
 
-const { installHarborHiddenFaceOrientation } = await import(withBuild('./tracks/harbor-hidden-face-r88.js'));
+const { installHarborHiddenFaceOrientation } = await import(withBuild('./tracks/harbor-hidden-face-r89.js'));
 installHarborHiddenFaceOrientation();
 
 await import(withBuild('./input/analog-gas.js'));

@@ -5,7 +5,7 @@ import fs from 'node:fs/promises';
 const [baseWorld, polishWorld, orientation] = await Promise.all([
   fs.readFile(new URL('../turn/tracks/harbor-world.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/harbor-world-r81.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/harbor-hidden-face-r88.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/tracks/harbor-hidden-face-r89.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(baseWorld, /\[202, 196, 76, 18, 38, 0x8e8371\]/, 'The warehouse hiding the face must retain its authored footprint');
@@ -16,10 +16,10 @@ assert.match(polishWorld, /HIDDEN_FACE_SIZE = Object\.freeze\(\{ width: 8\.8, he
 assert.match(polishWorld, /depthWrite: false/, 'The transparent decal must not create a rectangular depth artefact');
 assert.match(polishWorld, /turnEasterEgg = 'hidden-silo-face'/, 'The mesh must retain a diagnostic easter-egg identity');
 
-assert.match(orientation, /PLAYER_FACING_POSITION = Object\.freeze\(\{ x: 202\.65, y: 14\.4, z: 237\.55 \}\)/, 'The face must move onto the silo side visible from the player approach');
-assert.match(orientation, /PLAYER_FACING_ROTATION_Y = -Math\.PI \* 0\.675/, 'The face must turn toward the approaching player');
+assert.match(orientation, /PLAYER_FACING_POSITION = Object\.freeze\(\{ x: 217\.35, y: 14\.4, z: 237\.55 \}\)/, 'The face must sit on the opposite silo side requested by the player');
+assert.match(orientation, /PLAYER_FACING_ROTATION_Y = Math\.PI \* 0\.675/, 'The face must use the mirrored fixed yaw toward the approach');
 assert.match(orientation, /turn:track-changed/, 'The orientation must apply whenever Harbor becomes active');
-assert.match(orientation, /faces-player-approach/, 'The oriented face must retain a diagnostic identity');
+assert.match(orientation, /faces-player-approach-opposite-side/, 'The corrected face must retain a diagnostic identity');
 assert.doesNotMatch(`${polishWorld}\n${orientation}`, /setAnimationLoop|requestAnimationFrame|setInterval/, 'The static decal must add no render or polling loop');
 
 const encoded = polishWorld.match(/HIDDEN_FACE_DATA_URI = 'data:image\/png;base64,([^']+)'/)?.[1];
@@ -32,5 +32,6 @@ assert.ok(png.length < 5000, 'The hidden texture must remain lightweight on olde
 
 const warehouseFrontEdge = 196 + 38 / 2;
 assert.ok(237.55 > warehouseFrontEdge, 'The face must remain behind the warehouse from the normal racing approach');
+assert.equal(217.35 - 210, 210 - 202.65, 'The corrected placement must exactly mirror the mistaken r88 move across the silo centre');
 
-console.log('TURN Harbor hidden face now greets the exploring player without affecting gameplay.');
+console.log('TURN Harbor hidden silo face is mirrored to the player-visible side without affecting gameplay.');
