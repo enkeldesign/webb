@@ -59,6 +59,9 @@ jobs:
       - name: Run world containment and collision regression
         run: node turn-lab/tests/world-collision-production.mjs
 
+      - name: Run Harbor hidden face regression
+        run: node turn-tests/harbor-hidden-face-production.mjs
+
       - name: Run production manual steering regression
         run: node turn-lab/tests/manual-steering-production.mjs
 
