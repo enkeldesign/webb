@@ -20,6 +20,9 @@ const { installUniversalDrivingSoundscape } = await import(
 );
 installUniversalDrivingSoundscape();
 
+const { installPaceNotes } = await import(withBuild('./audio/pace-notes.js'));
+installPaceNotes();
+
 const { installLapResultToast } = await import(withBuild('./ui/lap-result-toast.js'));
 installLapResultToast();
 
