@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { updateVehiclePhysicsState } from '../../turn/vehicle/physics.js';
+import { spokenRivalCount } from '../../turn/ui/race-announcements.js';
+
+assert.equal(spokenRivalCount(1), 'one rival');
+assert.equal(spokenRivalCount(4), 'four rivals');
 
 class Vec3 {
   constructor(x = 0, y = 0, z = 0) { this.x = x; this.y = y; this.z = z; }
@@ -17,6 +21,7 @@ const [
   app,
   controls,
   positionLayout,
+  raceSpeech,
   css,
   gameplayCss,
   positionCss,
@@ -28,6 +33,7 @@ const [
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/gameplay-controls.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/race-position-layout.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/ui/race-speech.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/drive-pad.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/gameplay-v2.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/position-hud-r83.css', import.meta.url), 'utf8'),
@@ -45,6 +51,12 @@ assert.ok(
   'The topbar position override must load after the legacy gameplay HUD rules'
 );
 assert.match(app, /race-position-layout\.js/, 'The production module graph must install the position layout after gameplay controls');
+assert.match(app, /installRaceSpeech\(\)/, 'The production graph must install concise race speech before the runtime starts');
+assert.ok(
+  app.indexOf('./ui/gameplay-controls.js') < app.indexOf('./ui/race-speech.js')
+    && app.indexOf('./ui/race-speech.js') < app.indexOf('./main.js'),
+  'Race speech must wrap the position setter after controls create it and before the runtime publishes positions'
+);
 assert.match(positionLayout, /positionHud\.classList\.add\('chip'\)/, 'Race position must use the same chip component as the other topbar stats');
 assert.match(positionLayout, /lapChip\.after\(positionHud\)/, 'Race position must sit immediately after LAP');
 assert.doesNotMatch(positionLayout, /innerHTML|replaceChildren/, 'Moving the HUD must preserve the live position value node captured by gameplay controls');
@@ -52,7 +64,19 @@ assert.match(positionCss, /\.stats \.race-position-hud \{[\s\S]*position: relati
 assert.match(positionCss, /\.race-position-hud\[hidden\][\s\S]*visibility: hidden;/, 'The top row must reserve the position slot before a lap starts');
 assert.match(positionCss, /\.stats \.chip:nth-child\(3\)/, 'The third compact chip slot must belong to POSITION');
 assert.match(positionCss, /\.stats \.chip:nth-child\(5\)/, 'TIME and BEST must remain sized after inserting POSITION');
+assert.match(positionCss, /\.turn-sr-only \{[\s\S]*clip: rect\(0 0 0 0\)/, 'Dedicated announcers must stay visually hidden without leaving the accessibility tree');
 assert.match(positionCss, /prefers-reduced-motion: reduce/, 'Position-change feedback must respect reduced motion');
+assert.match(raceSpeech, /const positionAnnouncer = createAnnouncer\('race-position-announcer', 'assertive'\)/, 'Passing updates must use one fast assertive ordinal channel');
+assert.match(raceSpeech, /const contextAnnouncer = createAnnouncer\('race-context-announcer', 'polite'\)/, 'Start-line rival context must use a separate polite channel');
+assert.match(raceSpeech, /positionLabel\?\.setAttribute\('aria-hidden', 'true'\)/, 'The visual POSITION label must not be repeated beside its spoken value');
+assert.match(raceSpeech, /`Position, \$\{spokenPosition\(normalizedPosition, normalizedTotal\)\}`/, 'The visible 1/5 value must remain inspectable as first of five');
+assert.match(raceSpeech, /lastPosition !== null && normalizedPosition !== lastPosition/, 'Initial placement must stay quiet while every real position change is announced');
+assert.match(raceSpeech, /setLiveAnnouncement\(positionAnnouncer, ordinalWord\(normalizedPosition\)\)/, 'Passing or being passed must announce only the new ordinal');
+assert.match(raceSpeech, /reason === 'lap-started'/, 'Rival count must be tied to crossing the start line');
+assert.match(raceSpeech, /spokenRivalCount\(rivalCount\)/, 'The start line must announce one rival or four rivals rather than a player total');
+assert.match(raceSpeech, /turn:lap-result/, 'The position channel must coordinate with the longer frozen lap result');
+assert.match(raceSpeech, /performance\.now\(\) \+ LAP_RESULT_HANDOFF_MS/, 'A lap finish must suppress the immediate next-lap position echo');
+assert.doesNotMatch(raceSpeech, /VoiceOver|screenReader|blindMode|userAgent/i, 'The same race information must remain available without detecting disability');
 assert.match(controls, /className = 'drive-pad'/, 'Gameplay controls must create one unified drive pad');
 assert.match(controls, /Double tap and hold, then slide between Drift, Boost, Gas, and Brake or Reverse/, 'The drive group must explain its continuous VoiceOver gesture');
 assert.match(controls, /drivePad\.append\(driveTop, gasButton, brakeButton\)/, 'Brake and Reverse must live inside the same continuous drive surface');
@@ -114,4 +138,4 @@ assert.ok(state.velocity.z < -0.1, 'Holding Brake after stopping must engage rev
 for (let i = 0; i < 100; i += 1) updateVehiclePhysicsState(physicsArgs);
 assert.ok(state.velocity.z >= -(80 * 0.32 + 0.5), 'Reverse must stay capped well below forward top speed');
 
-console.log(`TURN ${release.id} four-zone drive pad, topbar position HUD, restart boost refill and reverse passed.`);
+console.log(`TURN ${release.id} four-zone drive pad, ordinal race speech, topbar position HUD, restart boost refill and reverse passed.`);
