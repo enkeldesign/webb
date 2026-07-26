@@ -81,11 +81,11 @@ function makeRuntime({
 }
 
 resetPaceNotePassage();
-const firstPass = updatePaceNoteState(makeRuntime({ progress: 0.2, speed: 25 }), { active: true });
+const firstPass = updatePaceNoteState(makeRuntime({ progress: 0.2, speed: 35 }), { active: true });
 assert.equal(firstPass?.id, 'airport-2', 'Entering sign 2 at normal speed must play right one');
-assert.equal(updatePaceNoteState(makeRuntime({ progress: 0.205, speed: 25 }), { active: true }), null, 'A sign must play only once per lap passage');
+assert.equal(updatePaceNoteState(makeRuntime({ progress: 0.205, speed: 35 }), { active: true }), null, 'A sign must play only once per lap passage');
 
-const nextLapPass = updatePaceNoteState(makeRuntime({ progress: 0.2, speed: 25, lap: 2 }), { active: true });
+const nextLapPass = updatePaceNoteState(makeRuntime({ progress: 0.2, speed: 35, lap: 2 }), { active: true });
 assert.equal(nextLapPass?.id, 'airport-2', 'A new lap must re-arm the authored signs');
 
 resetPaceNotePassage();
