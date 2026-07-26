@@ -107,8 +107,8 @@ jobs:
       - name: Run universal driving soundscape regression
         run: node turn-lab/tests/driving-soundscape-production.mjs
 
-      - name: Run AIRPORT auditory pace-note regression
-        run: node turn-lab/tests/airport-pace-notes-production.mjs
+      - name: Run all-track auditory pace-note regression
+        run: node turn-lab/tests/pace-notes-production.mjs
 
       - name: Run production performance and diagnostics regression
         run: node turn-lab/tests/performance-production.mjs
