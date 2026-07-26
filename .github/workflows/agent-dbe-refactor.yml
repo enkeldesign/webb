@@ -1,6 +1,12 @@
 name: Apply guarded DBE refactor
 
 on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
   push:
     branches:
       - 'agent/dbe-performance-r97'
@@ -13,12 +19,14 @@ permissions:
 
 jobs:
   refactor:
+    if: github.head_ref == 'agent/dbe-performance-r97' || github.ref_name == 'agent/dbe-performance-r97'
     runs-on: ubuntu-latest
     steps:
       - name: Check out branch
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Set up Node
         uses: actions/setup-node@v4
