@@ -6,7 +6,7 @@ import {
 } from './race-announcements.js';
 
 const START_CONTEXT_DELAY_MS = 320;
-const LAP_RESULT_HANDOFF_MS = 1600;
+const LAP_RESULT_HANDOFF_MS = 450;
 
 let installed = false;
 
