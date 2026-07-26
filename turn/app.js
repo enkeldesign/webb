@@ -34,6 +34,8 @@ installHarborHiddenFaceOrientation();
 
 await import(withBuild('./input/analog-gas.js'));
 await import(withBuild('./ui/gameplay-controls.js'));
+const { installRaceSpeech } = await import(withBuild('./ui/race-speech.js'));
+installRaceSpeech();
 const { installRacePositionLayout } = await import(withBuild('./ui/race-position-layout.js'));
 installRacePositionLayout();
 await import(withBuild('./main.js'));

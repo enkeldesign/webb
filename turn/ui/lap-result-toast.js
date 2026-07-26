@@ -1,3 +1,11 @@
+import {
+  lapResultAnnouncement,
+  lapVoidAnnouncement,
+  setLiveAnnouncement,
+  spokenLapTime,
+  spokenPosition
+} from './race-announcements.js';
+
 const TOAST_VISIBLE_MS = 4000;
 const TOAST_EXIT_MS = 220;
 
@@ -11,9 +19,7 @@ export function installLapResultToast() {
   const toast = document.createElement('div');
   toast.className = 'lap-result-toast';
   toast.hidden = true;
-  toast.setAttribute('role', 'status');
-  toast.setAttribute('aria-live', 'polite');
-  toast.setAttribute('aria-atomic', 'true');
+  toast.setAttribute('aria-label', 'Last lap result');
   toast.innerHTML = `
     <span>LAST LAP</span>
     <strong>
@@ -22,7 +28,12 @@ export function installLapResultToast() {
       <b class="lap-result-time">0:00.000</b>
     </strong>
   `;
-  hud.appendChild(toast);
+
+  const announcer = document.createElement('div');
+  announcer.className = 'turn-sr-only lap-result-announcer';
+  announcer.setAttribute('aria-live', 'polite');
+  announcer.setAttribute('aria-atomic', 'true');
+  hud.append(toast, announcer);
 
   const label = toast.querySelector('span');
   const position = toast.querySelector('.lap-result-position');
@@ -72,24 +83,33 @@ export function installLapResultToast() {
     const seconds = Number(result?.time);
     if (!Number.isFinite(place) || !Number.isFinite(total) || !Number.isFinite(seconds)) return;
 
+    const normalizedPlace = Math.max(1, Math.round(place));
+    const normalizedTotal = Math.max(1, Math.round(total));
     label.textContent = 'LAST LAP';
-    position.textContent = `${Math.max(1, Math.round(place))}/${Math.max(1, Math.round(total))}`;
+    position.textContent = `${normalizedPlace}/${normalizedTotal}`;
+    position.setAttribute('aria-label', `Position, ${spokenPosition(normalizedPlace, normalizedTotal)}`);
     separator.hidden = false;
     time.hidden = false;
     time.textContent = formatLapTime(seconds);
+    time.setAttribute('aria-label', `Lap time, ${spokenLapTime(seconds)}`);
     toast.classList.remove('is-invalid');
     reveal();
+    setLiveAnnouncement(announcer, lapResultAnnouncement({ position: normalizedPlace, time: seconds }));
   }
 
   function showInvalid(result) {
-    label.textContent = 'LAP VOID';
-    position.textContent = result?.reason === 'missed-checkpoint'
+    const guidance = result?.reason === 'missed-checkpoint'
       ? 'STAY ON THE TRACK!'
       : 'TRY AGAIN';
+    label.textContent = 'LAP VOID';
+    position.textContent = guidance;
+    position.setAttribute('aria-label', guidance);
     separator.hidden = true;
     time.hidden = true;
+    time.removeAttribute('aria-label');
     toast.classList.add('is-invalid');
     reveal();
+    setLiveAnnouncement(announcer, lapVoidAnnouncement(result?.reason));
   }
 
   window.addEventListener('turn:lap-result', (event) => showResult(event.detail));
@@ -97,6 +117,7 @@ export function installLapResultToast() {
   window.addEventListener('turn:ui-state-change', (event) => {
     if (!event.detail?.running || event.detail?.reason === 'race-reset') {
       hide({ immediate: true });
+      setLiveAnnouncement(announcer, '');
     }
   });
 }
