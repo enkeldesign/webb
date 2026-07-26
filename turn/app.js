@@ -12,16 +12,23 @@ installPerformanceProfile();
 const { installCoveredRenderingGuard } = await import(withBuild('./render/covered-rendering.js'));
 installCoveredRenderingGuard();
 
+const { installDriveByEarSetting } = await import(
+  withBuild('./ui/drive-by-ear-setting.js')
+);
+const driveByEarEnabled = installDriveByEarSetting();
+
 const { installTurnAudio } = await import(withBuild('./audio/audio-system.js'));
 installTurnAudio();
 
-const { installUniversalDrivingSoundscape } = await import(
-  withBuild('./audio/driving-soundscape.js')
-);
-installUniversalDrivingSoundscape();
+if (driveByEarEnabled) {
+  const { installUniversalDrivingSoundscape } = await import(
+    withBuild('./audio/driving-soundscape.js')
+  );
+  installUniversalDrivingSoundscape();
 
-const { installPaceNotes } = await import(withBuild('./audio/pace-notes.js'));
-installPaceNotes();
+  const { installPaceNotes } = await import(withBuild('./audio/pace-notes.js'));
+  installPaceNotes();
+}
 
 const { installLapResultToast } = await import(withBuild('./ui/lap-result-toast.js'));
 installLapResultToast();

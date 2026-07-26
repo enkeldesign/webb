@@ -116,7 +116,9 @@ function install(runtime) {
   }
 
   runtime.__inGameMenuInstalled = true;
-  const { button: soundGuideButton } = createSoundGuide();
+  const soundGuideButton = globalThis.__turnDriveByEarEnabled === false
+    ? null
+    : createSoundGuide().button;
 
   backToStartButton.textContent = 'Restart Lap';
   backToStartButton.setAttribute('aria-label', 'Restart the current lap from the start line');
@@ -133,7 +135,7 @@ function install(runtime) {
     resetRivalsButton,
     spectateButton,
     backToStartButton
-  ];
+  ].filter(Boolean);
   for (const button of buttonOrder) utilityGroup.appendChild(button);
 
   let previousMenuState = null;
@@ -185,7 +187,7 @@ function install(runtime) {
       backToStartButton.hidden = !visibility.backToStart;
       backToLotButton.hidden = !visibility.startActions;
       recalibrateButton.hidden = !visibility.startActions;
-      soundGuideButton.hidden = !visibility.startActions;
+      if (soundGuideButton) soundGuideButton.hidden = !visibility.startActions;
       resetRivalsButton.hidden = !visibility.startActions;
       previousMenuState = visibility.menuState;
     }

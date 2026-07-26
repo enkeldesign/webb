@@ -3,22 +3,19 @@ import {
   speedAdjustedPaceNoteTrigger
 } from '../tracks/pace-notes.js';
 
-const AudioContextClass = globalThis.AudioContext || globalThis.webkitAudioContext;
+const PACE_NOTE_UPDATE_INTERVAL_MS = 1000 / 30;
 const MIN_TRIGGER_SPEED = 5;
 const MIN_FORWARD_ALIGNMENT = 0.35;
-const NOTE_LEVEL = 0.052;
 const NOTE_DURATION_SECONDS = 0.055;
 const NOTE_STEP_SECONDS = 0.105;
 const GROUP_GAP_SECONDS = 0.22;
 
 let installed = false;
-let context = null;
-let masterGain = null;
 let wrappedAudio = null;
 let activeTrackId = null;
 let activeLapKey = null;
 let firedNoteIds = new Set();
-const activeSources = new Set();
+let lastCheckedAt = -Infinity;
 
 export function installPaceNotes() {
   if (installed) return wrappedAudio || globalThis.__turnAudio;
@@ -26,20 +23,19 @@ export function installPaceNotes() {
   if (!baseAudio) return null;
 
   installed = true;
-  installUnlockListeners();
   installResetListeners();
 
   wrappedAudio = Object.freeze({
-    unlock: (...args) => Promise.all([baseAudio.unlock(...args), unlock()]).then(([ready]) => ready),
+    unlock: (...args) => baseAudio.unlock(...args),
     update(frame = {}, now = performance.now()) {
-      updatePaceNoteState(globalThis.__turnRuntime, frame);
+      if (now - lastCheckedAt >= PACE_NOTE_UPDATE_INTERVAL_MS) {
+        updatePaceNoteState(globalThis.__turnRuntime, frame);
+        lastCheckedAt = now;
+      }
       baseAudio.update(frame, now);
     },
     cue: (...args) => baseAudio.cue(...args),
-    silence(...args) {
-      silencePaceNotes();
-      return baseAudio.silence(...args);
-    },
+    silence: (...args) => baseAudio.silence(...args),
     get available() {
       return baseAudio.available;
     },
@@ -76,6 +72,7 @@ export function updatePaceNoteState(runtime, frame = {}) {
     || frame.active === false
     || state.offRoad === true
     || speed < MIN_TRIGGER_SPEED
+    || firedNoteIds.size >= notes.length
   ) return null;
 
   const sampleCount = samples.length;
@@ -96,7 +93,6 @@ export function updatePaceNoteState(runtime, frame = {}) {
     if (!progressInRange(progress, trigger, note.triggerEnd)) continue;
 
     firedNoteIds.add(note.id);
-    playPaceNote(note.groups);
     publishPaceNote({
       id: note.id,
       trackId,
@@ -115,6 +111,7 @@ export function resetPaceNotePassage(trackId = null, lapKey = null) {
   activeTrackId = trackId;
   activeLapKey = lapKey;
   firedNoteIds = new Set();
+  lastCheckedAt = -Infinity;
 }
 
 export function progressInRange(progress, start, end) {
@@ -136,133 +133,29 @@ export function paceNoteDuration(groups = []) {
   return duration;
 }
 
-function installUnlockListeners() {
-  if (typeof document === 'undefined') return;
-  document.addEventListener('pointerdown', unlockFromGesture, { capture: true, passive: true });
-  document.addEventListener('keydown', unlockFromGesture, { capture: true });
-}
-
 function installResetListeners() {
   if (typeof window === 'undefined') return;
-  window.addEventListener('turn:track-changed', () => resetPaceNotePassage());
+  window.addEventListener('turn:track-changed', () => {
+    resetPaceNotePassage();
+    publishPaceNoteSilence();
+  });
   window.addEventListener('turn:ui-state-change', (event) => {
     const reason = event.detail?.reason;
     if (!event.detail?.running || reason === 'race-reset') {
       resetPaceNotePassage();
-      silencePaceNotes();
+      publishPaceNoteSilence();
     }
   });
-}
-
-function unlockFromGesture() {
-  void unlock();
-}
-
-async function unlock() {
-  if (!AudioContextClass) return false;
-  ensureGraph();
-  if (!context) return false;
-  if (context.state === 'running') return true;
-  try {
-    await context.resume();
-  } catch (_) {
-    return false;
-  }
-  return context.state === 'running';
-}
-
-function ensureGraph() {
-  if (context || !AudioContextClass) return;
-  try {
-    context = new AudioContextClass({ latencyHint: 'interactive' });
-  } catch (_) {
-    context = new AudioContextClass();
-  }
-
-  const compressor = context.createDynamicsCompressor();
-  compressor.threshold.value = -20;
-  compressor.knee.value = 8;
-  compressor.ratio.value = 3;
-  compressor.attack.value = 0.002;
-  compressor.release.value = 0.12;
-
-  masterGain = context.createGain();
-  masterGain.gain.value = 0.72;
-  masterGain.connect(compressor);
-  compressor.connect(context.destination);
-}
-
-function playPaceNote(groups = []) {
-  void unlock().then((ready) => {
-    if (!ready || !context || !masterGain) return;
-    let cursor = context.currentTime + 0.012;
-
-    groups.forEach((group, groupIndex) => {
-      const direction = Math.sign(Number(group?.direction) || 0);
-      const severity = clamp(Math.round(Number(group?.severity) || 1), 1, 3);
-      const pan = direction < 0 ? -0.96 : 0.96;
-
-      for (let index = 0; index < severity; index += 1) {
-        scheduleDryPaceBeep(cursor, pan, severity);
-        cursor += NOTE_STEP_SECONDS;
-      }
-
-      if (groupIndex < groups.length - 1) cursor += GROUP_GAP_SECONDS - NOTE_STEP_SECONDS;
-    });
-  });
-}
-
-function scheduleDryPaceBeep(startAt, pan, severity) {
-  const oscillator = context.createOscillator();
-  const gain = context.createGain();
-  const panner = createPanner();
-  const endAt = startAt + NOTE_DURATION_SECONDS;
-  const baseFrequency = 650 + severity * 38;
-
-  oscillator.type = 'triangle';
-  oscillator.frequency.setValueAtTime(baseFrequency, startAt);
-  oscillator.frequency.exponentialRampToValueAtTime(baseFrequency * 1.13, endAt);
-
-  gain.gain.setValueAtTime(0.0001, startAt);
-  gain.gain.exponentialRampToValueAtTime(NOTE_LEVEL, startAt + 0.006);
-  gain.gain.exponentialRampToValueAtTime(0.0001, endAt);
-
-  if (panner.pan) panner.pan.setValueAtTime(pan, startAt);
-  oscillator.connect(gain);
-  gain.connect(panner);
-  panner.connect(masterGain);
-
-  activeSources.add(oscillator);
-  oscillator.addEventListener('ended', () => {
-    activeSources.delete(oscillator);
-    oscillator.disconnect();
-    gain.disconnect();
-    panner.disconnect();
-  }, { once: true });
-
-  oscillator.start(startAt);
-  oscillator.stop(endAt + 0.01);
-}
-
-function createPanner() {
-  if (typeof context.createStereoPanner === 'function') return context.createStereoPanner();
-  const gain = context.createGain();
-  gain.pan = null;
-  return gain;
-}
-
-function silencePaceNotes() {
-  for (const source of activeSources) {
-    try {
-      source.stop();
-    } catch (_) {}
-  }
-  activeSources.clear();
 }
 
 function publishPaceNote(detail) {
   if (typeof globalThis.dispatchEvent !== 'function' || typeof globalThis.CustomEvent !== 'function') return;
   globalThis.dispatchEvent(new globalThis.CustomEvent('turn:pace-note', { detail }));
+}
+
+function publishPaceNoteSilence() {
+  if (typeof globalThis.dispatchEvent !== 'function' || typeof globalThis.CustomEvent !== 'function') return;
+  globalThis.dispatchEvent(new globalThis.CustomEvent('turn:pace-note-silence'));
 }
 
 function dot2(a, b) {
