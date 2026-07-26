@@ -29,6 +29,8 @@ assert.equal(driveByEarEnabled(storage), false);
 assert.equal(saveDriveByEarEnabled(true, storage), true);
 assert.equal(driveByEarEnabled(storage), true);
 assert.equal(driveByEarEnabled({ getItem: () => { throw new Error('blocked'); } }), true, 'Storage failures must preserve the universal default');
+assert.equal(saveDriveByEarEnabled(false, null), false, 'A missing storage backend must not pretend to save the preference');
+assert.equal(saveDriveByEarEnabled(false, { setItem: () => { throw new Error('blocked'); } }), false, 'A blocked storage write must be reported to the interface');
 
 assert.match(app, /installDriveByEarSetting/);
 assert.ok(app.indexOf('./ui/drive-by-ear-setting.js') < app.indexOf('./audio/audio-system.js'), 'The saved preference must be known before audio modules install');
@@ -37,6 +39,7 @@ assert.ok(app.indexOf('if (driveByEarEnabled)') < app.indexOf('./audio/driving-s
 assert.match(setting, /DRIVE BY EAR<sup>™<\/sup>/);
 assert.match(setting, /On by default for every player/);
 assert.match(setting, /may improve performance on older devices/);
+assert.match(setting, /blocked local storage/, 'The interface must explain why an unsaved preference cannot be applied');
 assert.match(setting, /requestAnimationFrame\(reload\)/, 'Changing the preference must reload into a clean module graph');
 assert.match(style, /\.drive-by-ear-card/);
 assert.match(style, /orientation: landscape/);
