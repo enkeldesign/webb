@@ -9,8 +9,9 @@ export function driveByEarEnabled(storage = getStorage()) {
 }
 
 export function saveDriveByEarEnabled(enabled, storage = getStorage()) {
+  if (!storage || typeof storage.setItem !== 'function') return false;
   try {
-    storage?.setItem(DRIVE_BY_EAR_STORAGE_KEY, enabled ? 'on' : 'off');
+    storage.setItem(DRIVE_BY_EAR_STORAGE_KEY, enabled ? 'on' : 'off');
     return true;
   } catch (_) {
     return false;
@@ -50,7 +51,13 @@ export function installDriveByEarSetting({ reload = reloadPage } = {}) {
   checkbox.setAttribute('aria-describedby', 'driveByEarHint');
   checkbox.addEventListener('change', () => {
     const nextEnabled = checkbox.checked;
-    saveDriveByEarEnabled(nextEnabled);
+    if (!saveDriveByEarEnabled(nextEnabled)) {
+      checkbox.checked = enabled;
+      card.dataset.enabled = String(enabled);
+      status.textContent = 'Drive By Ear could not be changed because this browser blocked local storage.';
+      return;
+    }
+
     globalThis.__turnDriveByEarEnabled = nextEnabled;
     card.dataset.enabled = String(nextEnabled);
     checkbox.disabled = true;
