@@ -11,9 +11,10 @@ import {
   updatePaceNoteState
 } from '../../turn/audio/pace-notes.js';
 
-const [releaseSource, app, paceAudio, paceMap, soundGuide] = await Promise.all([
+const [releaseSource, app, audio, paceAudio, paceMap, soundGuide] = await Promise.all([
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/audio/audio-system.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/pace-notes.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/pace-notes.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/in-game-menu.js', import.meta.url), 'utf8')
@@ -85,7 +86,8 @@ function makeRuntime({
   speed = 35,
   lap = 1,
   offRoad = false,
-  mode = 'racing'
+  mode = 'racing',
+  getForward = () => ({ x: 0, z: 1 })
 } = {}) {
   return {
     trackId,
@@ -102,7 +104,7 @@ function makeRuntime({
       offRoad,
       velocity: { x: 0, z: speed }
     },
-    getForward: () => ({ x: 0, z: 1 })
+    getForward
   };
 }
 
@@ -131,16 +133,43 @@ const airportProgress = triggerProgress('airport', 1);
 assert.equal(updatePaceNoteState(makeRuntime({ progress: airportProgress, offRoad: true }), { active: true }), null, 'Recovery must take priority over pace notes');
 assert.equal(updatePaceNoteState(makeRuntime({ progress: airportProgress, mode: 'spectating' }), { active: true }), null, 'Spectating must not trigger player navigation notes');
 
-assert.match(app, /installUniversalDrivingSoundscape\(\);[\s\S]*installPaceNotes\(\);/, 'Pace notes must wrap the completed universal soundscape before gameplay loads');
-assert.match(paceAudio, /baseAudio\.update\(frame, now\)/, 'Pace notes must reuse the central audio update cadence rather than add a render loop');
+resetPaceNotePassage();
+let forwardChecks = 0;
+const countedForward = () => {
+  forwardChecks += 1;
+  return { x: 0, z: 1 };
+};
+const notes = getTrackPaceNotes('airport');
+for (let index = 0; index < notes.length; index += 1) {
+  updatePaceNoteState(makeRuntime({
+    progress: triggerProgress('airport', index),
+    getForward: countedForward
+  }), { active: true });
+}
+const checksAfterFinalNote = forwardChecks;
+updatePaceNoteState(makeRuntime({
+  progress: triggerProgress('airport', notes.length - 1) + 0.002,
+  getForward: countedForward
+}), { active: true });
+assert.equal(forwardChecks, checksAfterFinalNote, 'Once every note has fired, the lap must skip geometry and heading work');
+
+assert.match(app, /const driveByEarEnabled = installDriveByEarSetting\(\)/);
+assert.match(app, /if \(driveByEarEnabled\) \{[\s\S]*installUniversalDrivingSoundscape\(\);[\s\S]*installPaceNotes\(\);/);
+assert.match(paceAudio, /PACE_NOTE_UPDATE_INTERVAL_MS = 1000 \/ 30/, 'Pace-note position checks must be capped at 30 Hz');
+assert.match(paceAudio, /now - lastCheckedAt >= PACE_NOTE_UPDATE_INTERVAL_MS/);
+assert.match(paceAudio, /baseAudio\.update\(frame, now\)/, 'Pace notes must remain inside the central audio update path');
+assert.match(paceAudio, /firedNoteIds\.size >= notes\.length/, 'A completed pace-note lap must take the fast path');
+assert.doesNotMatch(paceAudio, /AudioContext|webkitAudioContext|createOscillator|createDynamicsCompressor/, 'Pace notes must not create a second audio engine');
+assert.match(audio, /window\.addEventListener\('turn:pace-note', handlePaceNoteAudio\)/);
+assert.match(audio, /schedulePaceNoteBeep\(/);
+assert.match(audio, /panner\.connect\(masterGain\)/, 'Pace notes must enter the existing TURN master graph');
 assert.doesNotMatch(paceAudio, /requestAnimationFrame|setInterval/, 'Pace notes must not add another continuous loop');
 assert.match(paceAudio, /state\.offRoad === true/, 'Off-road recovery must suppress pace-note triggers');
 assert.match(paceAudio, /mode === 'spectating'/, 'Spectator mode must stay quiet');
-assert.match(paceAudio, /createStereoPanner/, 'Directional note groups must use stereo placement');
 for (const trackName of ['COUNTRYSIDE', 'AIRPORT', 'CLIFFSIDE', 'HARBOR']) {
   assert.match(paceMap, new RegExp(`const ${trackName}_PACE_NOTES`), `${trackName} must keep an explicit authored pace-note map`);
 }
 assert.match(soundGuide, /<h4>PACE NOTES<\/h4>/);
 assert.match(soundGuide, /Before major corners, one to three dry beeps/);
 
-console.log(`TURN ${release.id} all-track auditory pace notes passed.`);
+console.log(`TURN ${release.id} all-track auditory pace notes and shared audio graph passed.`);

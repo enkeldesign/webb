@@ -4,6 +4,10 @@ const AUDIO_UPDATE_INTERVAL_MS = 1000 / 30;
 const MASTER_GAIN = 0.72;
 const RIVAL_NEAR_ENTER_METERS = 10;
 const RIVAL_NEAR_EXIT_METERS = 15;
+const PACE_NOTE_LEVEL = 0.052;
+const PACE_NOTE_DURATION_SECONDS = 0.055;
+const PACE_NOTE_STEP_SECONDS = 0.105;
+const PACE_NOTE_GROUP_GAP_SECONDS = 0.22;
 
 let context = null;
 let masterGain = null;
@@ -35,6 +39,7 @@ let lastWrongWayCueAt = -Infinity;
 let lotOpen = false;
 let installed = false;
 const cueTimes = new Map();
+const activePaceNoteSources = new Set();
 
 export function installTurnAudio() {
   if (installed) return globalThis.__turnAudio;
@@ -62,6 +67,8 @@ export function installTurnAudio() {
   document.addEventListener('change', handleUiChange, { capture: true });
   document.addEventListener('visibilitychange', handleVisibilityChange, { passive: true });
   window.addEventListener('pagehide', handlePageHide, { passive: true });
+  window.addEventListener('turn:pace-note', handlePaceNoteAudio);
+  window.addEventListener('turn:pace-note-silence', stopPaceNoteSources);
 
   lotOpen = document.body?.classList.contains('turn-lot-open') || false;
   if (document.body && typeof MutationObserver !== 'undefined') {
@@ -193,6 +200,7 @@ export function silence() {
   hardMute(skidGain.gain, now);
   hardMute(boostGain.gain, now);
   hardMute(roadGain.gain, now);
+  stopPaceNoteSources();
   lastBoostActive = false;
   rivalNearLatched = false;
   resetGuidanceState();
@@ -461,6 +469,77 @@ function resetGuidanceState() {
   lastRecoveryCueAt = -Infinity;
   wrongWayStartedAt = null;
   lastWrongWayCueAt = -Infinity;
+}
+
+function handlePaceNoteAudio(event) {
+  const groups = Array.isArray(event.detail?.groups) ? event.detail.groups : [];
+  if (!groups.length) return;
+
+  void unlock().then((ready) => {
+    if (ready) schedulePaceNoteGroups(groups);
+  });
+}
+
+function schedulePaceNoteGroups(groups) {
+  if (!context || context.state !== 'running' || !masterGain) return;
+  let cursor = context.currentTime + 0.012;
+
+  groups.forEach((group, groupIndex) => {
+    const direction = Math.sign(Number(group?.direction) || 0);
+    const severity = clamp(Math.round(Number(group?.severity) || 1), 1, 3);
+    const pan = direction < 0 ? -0.96 : 0.96;
+
+    for (let index = 0; index < severity; index += 1) {
+      schedulePaceNoteBeep(cursor, pan, severity);
+      cursor += PACE_NOTE_STEP_SECONDS;
+    }
+
+    if (groupIndex < groups.length - 1) {
+      cursor += PACE_NOTE_GROUP_GAP_SECONDS - PACE_NOTE_STEP_SECONDS;
+    }
+  });
+}
+
+function schedulePaceNoteBeep(startAt, pan, severity) {
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  const panner = createPannerNode();
+  const endAt = startAt + PACE_NOTE_DURATION_SECONDS;
+  const baseFrequency = 650 + severity * 38;
+
+  oscillator.type = 'triangle';
+  oscillator.frequency.setValueAtTime(baseFrequency, startAt);
+  oscillator.frequency.exponentialRampToValueAtTime(baseFrequency * 1.13, endAt);
+
+  gain.gain.setValueAtTime(0.0001, startAt);
+  gain.gain.exponentialRampToValueAtTime(PACE_NOTE_LEVEL, startAt + 0.006);
+  gain.gain.exponentialRampToValueAtTime(0.0001, endAt);
+
+  if (panner.pan) panner.pan.setValueAtTime(pan, startAt);
+  oscillator.connect(gain);
+  gain.connect(panner);
+  panner.connect(masterGain);
+
+  const record = { oscillator, gain, panner };
+  activePaceNoteSources.add(record);
+  oscillator.addEventListener('ended', () => {
+    activePaceNoteSources.delete(record);
+    oscillator.disconnect();
+    gain.disconnect();
+    panner.disconnect();
+  }, { once: true });
+
+  oscillator.start(startAt);
+  oscillator.stop(endAt + 0.01);
+}
+
+function stopPaceNoteSources() {
+  for (const record of activePaceNoteSources) {
+    try {
+      record.oscillator.stop();
+    } catch (_) {}
+  }
+  activePaceNoteSources.clear();
 }
 
 function playCueNow(name, options = {}) {
