@@ -18,12 +18,20 @@ let gritFilter = null;
 let skidGain = null;
 let skidFilter = null;
 let skidTone = null;
+let driftPanner = null;
 let boostGain = null;
 let boostFilter = null;
 let boostTone = null;
+let roadGain = null;
+let roadFilter = null;
+let roadPanner = null;
 let lastUpdateAt = -Infinity;
 let lastBoostActive = false;
 let rivalNearLatched = false;
+let lastTurnCueAt = -Infinity;
+let lastRecoveryCueAt = -Infinity;
+let wrongWayStartedAt = null;
+let lastWrongWayCueAt = -Infinity;
 let lotOpen = false;
 let installed = false;
 const cueTimes = new Map();
@@ -97,6 +105,7 @@ export function update(frame = {}, now = performance.now()) {
     1.7
   );
   const nearestRivalDistance = Number(frame.nearestRivalDistance);
+  const nearestRivalPan = clamp(Number(frame.nearestRivalPan) || 0, -1, 1);
   const audioNow = context.currentTime;
 
   // Boost lifts the existing engine slightly instead of replacing it with a loud effect bed.
@@ -138,6 +147,23 @@ export function update(frame = {}, now = performance.now()) {
   smooth(skidGain.gain, skidLevel, audioNow, 0.08);
   smooth(skidTone.frequency, 720 + speedRatio * 520 + strongSlip * 190, audioNow, 0.07);
   smooth(skidFilter.frequency, 980 + speedRatio * 520, audioNow, 0.09);
+  smoothPan(driftPanner, clamp(Number(frame.driftPan) || 0, -1, 1), audioNow, 0.07);
+
+  // Road-edge sound is physical rather than a special accessibility alert. It emerges on the
+  // side nearest the edge and becomes rougher off road, so every player hears usable road position.
+  const edgeProximity = clamp(Number(frame.edgeProximity) || 0, 0, 1);
+  const recoveryUrgency = clamp(Number(frame.recoveryUrgency) || 0, 0, 1);
+  const offRoad = active && Boolean(frame.offRoad);
+  const edgeRumbleLevel = active ? Math.pow(edgeProximity, 1.65) * 0.018 : 0;
+  const offRoadLevel = offRoad ? 0.026 + recoveryUrgency * 0.026 : 0;
+  smooth(roadGain.gain, Math.max(edgeRumbleLevel, offRoadLevel), audioNow, offRoad ? 0.045 : 0.09);
+  smooth(
+    roadFilter.frequency,
+    offRoad ? 300 + recoveryUrgency * 620 : 180 + edgeProximity * 720,
+    audioNow,
+    0.08
+  );
+  smoothPan(roadPanner, clamp(Number(frame.edgePan) || 0, -1, 1), audioNow, 0.065);
 
   // The boost sustain is intentionally quiet. Most of the character lives in the start cue.
   const boostLevel = boostActive ? 0.024 : 0;
@@ -148,7 +174,8 @@ export function update(frame = {}, now = performance.now()) {
   if (boostActive && !lastBoostActive) playCueNow('boost-start');
   lastBoostActive = boostActive;
 
-  updateRivalProximity(active, nearestRivalDistance);
+  updateRivalProximity(active, nearestRivalDistance, nearestRivalPan);
+  updateDrivingGuidance(frame, { active, speed, offRoad, now: audioNow });
 }
 
 export function cue(name, options = {}) {
@@ -165,8 +192,10 @@ export function silence() {
   hardMute(gritGain.gain, now);
   hardMute(skidGain.gain, now);
   hardMute(boostGain.gain, now);
+  hardMute(roadGain.gain, now);
   lastBoostActive = false;
   rivalNearLatched = false;
+  resetGuidanceState();
 }
 
 function ensureGraph() {
@@ -193,6 +222,7 @@ function ensureGraph() {
   installEngineGraph();
   installDriftGraph();
   installBoostGraph();
+  installRoadGuidanceGraph();
 }
 
 function installEngineGraph() {
@@ -250,27 +280,30 @@ function installDriftGraph() {
   skidFilter.frequency.value = 1150;
   skidFilter.Q.value = 1.35;
 
+  driftPanner = createPannerNode();
+
   const driftNoise = context.createBufferSource();
   driftNoise.buffer = makeNoiseBuffer(context, 1.6, 0.86);
   driftNoise.loop = true;
   driftNoise.connect(driftFilter);
   driftFilter.connect(driftGain);
-  driftGain.connect(masterGain);
+  driftGain.connect(driftPanner);
 
   const gritNoise = context.createBufferSource();
   gritNoise.buffer = makeNoiseBuffer(context, 1.7, 0.95);
   gritNoise.loop = true;
   gritNoise.connect(gritFilter);
   gritFilter.connect(gritGain);
-  gritGain.connect(masterGain);
+  gritGain.connect(driftPanner);
 
   skidTone = context.createOscillator();
   skidTone.type = 'triangle';
   skidTone.frequency.value = 820;
   skidTone.connect(skidFilter);
   skidFilter.connect(skidGain);
-  skidGain.connect(masterGain);
+  skidGain.connect(driftPanner);
 
+  driftPanner.connect(masterGain);
   driftNoise.start();
   gritNoise.start();
   skidTone.start();
@@ -309,7 +342,28 @@ function installBoostGraph() {
   boostTone.start();
 }
 
-function updateRivalProximity(active, distance) {
+function installRoadGuidanceGraph() {
+  roadGain = context.createGain();
+  roadGain.gain.value = 0;
+
+  roadFilter = context.createBiquadFilter();
+  roadFilter.type = 'bandpass';
+  roadFilter.frequency.value = 220;
+  roadFilter.Q.value = 0.72;
+
+  roadPanner = createPannerNode();
+
+  const roadNoise = context.createBufferSource();
+  roadNoise.buffer = makeNoiseBuffer(context, 1.9, 0.92);
+  roadNoise.loop = true;
+  roadNoise.connect(roadFilter);
+  roadFilter.connect(roadGain);
+  roadGain.connect(roadPanner);
+  roadPanner.connect(masterGain);
+  roadNoise.start();
+}
+
+function updateRivalProximity(active, distance, pan = 0) {
   if (!active || !Number.isFinite(distance)) {
     rivalNearLatched = false;
     return;
@@ -318,12 +372,92 @@ function updateRivalProximity(active, distance) {
   if (!rivalNearLatched && distance <= RIVAL_NEAR_ENTER_METERS) {
     rivalNearLatched = true;
     playCueNow('car-near', {
-      intensity: clamp(1 - distance / RIVAL_NEAR_ENTER_METERS, 0.25, 1)
+      intensity: clamp(1 - distance / RIVAL_NEAR_ENTER_METERS, 0.25, 1),
+      pan
     });
     return;
   }
 
   if (rivalNearLatched && distance >= RIVAL_NEAR_EXIT_METERS) rivalNearLatched = false;
+}
+
+function updateDrivingGuidance(frame, { active, speed, offRoad, now }) {
+  if (!active) {
+    resetGuidanceState();
+    return;
+  }
+
+  const wrongWay = Boolean(frame.wrongWay);
+  if (wrongWay) {
+    if (wrongWayStartedAt === null) wrongWayStartedAt = now;
+    if (
+      now - wrongWayStartedAt >= 0.72
+      && now - lastWrongWayCueAt >= 1.9
+    ) {
+      playWrongWayCue(clamp(Number(frame.headingCorrectionPan) || 0, -1, 1), now);
+      lastWrongWayCueAt = now;
+    }
+  } else {
+    wrongWayStartedAt = null;
+    lastWrongWayCueAt = -Infinity;
+  }
+
+  if (offRoad) {
+    const urgency = clamp(Number(frame.recoveryUrgency) || 0, 0, 1);
+    const interval = 1.05 - urgency * 0.52;
+    if (speed > 1.5 && now - lastRecoveryCueAt >= interval) {
+      playRecoveryCue(clamp(Number(frame.recoveryPan) || 0, -1, 1), urgency, now);
+      lastRecoveryCueAt = now;
+    }
+    return;
+  }
+
+  lastRecoveryCueAt = -Infinity;
+  if (wrongWay || speed < 7) return;
+
+  const direction = Math.sign(Number(frame.turnDirection) || 0);
+  const severity = clamp(Number(frame.turnSeverity) || 0, 0, 1);
+  const proximity = clamp(Number(frame.turnProximity) || 0, 0, 1);
+  if (!direction || severity < 0.11) return;
+
+  const interval = clamp(1.42 - proximity * 0.58 - severity * 0.34, 0.46, 1.35);
+  if (now - lastTurnCueAt < interval) return;
+
+  playTurnCue(direction, severity, proximity, now);
+  lastTurnCueAt = now;
+}
+
+function playTurnCue(direction, severity, proximity, now) {
+  const pan = clamp(direction * (0.62 + proximity * 0.28), -1, 1);
+  const level = 0.012 + severity * 0.014;
+  const left = direction < 0;
+  const start = left ? 720 + severity * 130 : 430 + severity * 80;
+  const end = left ? 470 - severity * 70 : 760 + severity * 150;
+  playTone(start, end, 0.105, level, 'sine', now, pan);
+  if (severity > 0.5) {
+    playTone(start * 0.92, end * 0.92, 0.09, level * 0.78, 'triangle', now + 0.105, pan);
+  }
+}
+
+function playRecoveryCue(pan, urgency, now) {
+  const level = 0.017 + urgency * 0.016;
+  playTone(210 + urgency * 40, 330 + urgency * 120, 0.11, level, 'triangle', now, pan);
+  playTone(250 + urgency * 60, 390 + urgency * 150, 0.1, level * 0.82, 'triangle', now + 0.115, pan);
+}
+
+function playWrongWayCue(correctionPan, now) {
+  playTone(310, 170, 0.16, 0.028, 'square', now, 0);
+  playTone(280, 145, 0.16, 0.025, 'square', now + 0.19, 0);
+  if (Math.abs(correctionPan) > 0.08) {
+    playTone(360, 520, 0.11, 0.018, 'triangle', now + 0.39, correctionPan);
+  }
+}
+
+function resetGuidanceState() {
+  lastTurnCueAt = -Infinity;
+  lastRecoveryCueAt = -Infinity;
+  wrongWayStartedAt = null;
+  lastWrongWayCueAt = -Infinity;
 }
 
 function playCueNow(name, options = {}) {
@@ -378,8 +512,25 @@ function playCueNow(name, options = {}) {
     }
     case 'car-near': {
       const intensity = clamp(Number(options.intensity) || 0.5, 0.25, 1);
-      playTone(150, 360 + intensity * 140, 0.14, 0.014 + intensity * 0.012, 'triangle', now);
-      playNoiseBurst(now, 0.16, 0.012 + intensity * 0.012, 300, 1200, 0.9);
+      const pan = clamp(Number(options.pan) || 0, -1, 1);
+      playTone(
+        150,
+        360 + intensity * 140,
+        0.14,
+        0.014 + intensity * 0.012,
+        'triangle',
+        now,
+        pan
+      );
+      playNoiseBurst(
+        now,
+        0.16,
+        0.012 + intensity * 0.012,
+        300,
+        1200,
+        0.9,
+        pan
+      );
       break;
     }
     case 'ui-tap':
@@ -403,7 +554,7 @@ function cueAllowed(name, now) {
   return true;
 }
 
-function playTone(startHz, endHz, duration, level, type, startAt) {
+function playTone(startHz, endHz, duration, level, type, startAt, pan = 0) {
   const oscillator = context.createOscillator();
   const gain = context.createGain();
   const endAt = startAt + duration;
@@ -417,12 +568,20 @@ function playTone(startHz, endHz, duration, level, type, startAt) {
   gain.gain.exponentialRampToValueAtTime(0.0001, endAt);
 
   oscillator.connect(gain);
-  gain.connect(masterGain);
+  connectPanned(gain, pan);
   oscillator.start(startAt);
   oscillator.stop(endAt + 0.02);
 }
 
-function playNoiseBurst(startAt, duration, level, lowHz, highHz, smoothing = 0.78) {
+function playNoiseBurst(
+  startAt,
+  duration,
+  level,
+  lowHz,
+  highHz,
+  smoothing = 0.78,
+  pan = 0
+) {
   const source = context.createBufferSource();
   const filter = context.createBiquadFilter();
   const gain = context.createGain();
@@ -440,9 +599,26 @@ function playNoiseBurst(startAt, duration, level, lowHz, highHz, smoothing = 0.7
 
   source.connect(filter);
   filter.connect(gain);
-  gain.connect(masterGain);
+  connectPanned(gain, pan);
   source.start(startAt);
   source.stop(endAt + 0.02);
+}
+
+function connectPanned(node, pan) {
+  const panner = createPannerNode();
+  if (panner.pan) panner.pan.value = clamp(Number(pan) || 0, -1, 1);
+  node.connect(panner);
+  panner.connect(masterGain);
+}
+
+function createPannerNode() {
+  return typeof context.createStereoPanner === 'function'
+    ? context.createStereoPanner()
+    : context.createGain();
+}
+
+function smoothPan(node, value, time, timeConstant) {
+  if (node?.pan) smooth(node.pan, value, time, timeConstant);
 }
 
 function makeNoiseBuffer(audioContext, seconds, smoothing = 0.72) {
