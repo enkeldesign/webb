@@ -95,7 +95,10 @@ function installGameplayUi() {
   const drivePad = document.createElement('div');
   drivePad.className = 'drive-pad';
   drivePad.setAttribute('role', 'group');
-  drivePad.setAttribute('aria-label', 'Drive control. Slide between Gas, Drift and Boost.');
+  drivePad.setAttribute(
+    'aria-label',
+    'Drive control. Double tap and hold, then slide between Drift, Boost, Gas, and Brake or Reverse.'
+  );
   drivePad.style.setProperty('--boost-charge', '100%');
 
   const driveTop = document.createElement('div');
@@ -117,13 +120,13 @@ function installGameplayUi() {
   gasButton.textContent = 'Gas';
   gasButton.setAttribute('aria-label', 'Gas');
 
-  brakeButton.classList.add('brake-reverse');
+  brakeButton.classList.add('drive-brake-zone', 'brake-reverse');
   brakeButton.textContent = 'Brake · Reverse';
   brakeButton.setAttribute('aria-label', 'Brake. Hold after stopping to reverse.');
 
   driveTop.append(driftZone, boostZone);
-  drivePad.append(driveTop, gasButton);
-  driveStack.append(drivePad, brakeButton);
+  drivePad.append(driveTop, gasButton, brakeButton);
+  driveStack.append(drivePad);
   pedals.replaceChildren(driveStack);
 
   let drivePointerId = null;
@@ -134,7 +137,8 @@ function installGameplayUi() {
   let previousBoostCharge = boostCharge;
   let boostFlashTimer = 0;
   let previousTime = performance.now();
-  const TOP_ZONE_SHARE = 0.42;
+  const TOP_ZONE_SHARE = 0.32;
+  const BRAKE_ZONE_START = 0.76;
   const DEFAULT_BOOST_DRAIN_SECONDS = 2.0;
   const BOOST_RECHARGE_SECONDS = 4.2;
   const DRIFT_RECHARGE_MULTIPLIER = 2.4;
@@ -205,7 +209,13 @@ function installGameplayUi() {
     const x = Math.max(0, Math.min(1, (event.clientX - rect.left) / Math.max(1, rect.width)));
     const y = Math.max(0, Math.min(1, (event.clientY - rect.top) / Math.max(1, rect.height)));
     if (y < TOP_ZONE_SHARE) return x < 0.5 ? 'drift' : 'boost';
+    if (y >= BRAKE_ZONE_START) return 'brake';
     return 'gas';
+  }
+
+  function setBrakeInput(active) {
+    const runtimeState = globalThis.__turnRuntime?.state;
+    if (runtimeState) runtimeState.touchBrake = Boolean(active);
   }
 
   function setDriveZone(nextZone, { announce = true } = {}) {
@@ -213,27 +223,36 @@ function installGameplayUi() {
     const previousZone = driveZone;
     if (previousZone === 'boost' && nextZone !== 'boost') boostExhausted = false;
     driveZone = nextZone;
-    globalThis.__turnAnalogGas = nextZone ? 1 : 0;
+    const forwardDrive = nextZone === 'gas' || nextZone === 'drift' || nextZone === 'boost';
+    globalThis.__turnAnalogGas = forwardDrive ? 1 : 0;
     globalThis.__turnDriftHeld = nextZone === 'drift';
     boostRequested = nextZone === 'boost';
+    setBrakeInput(nextZone === 'brake');
 
     drivePad.dataset.driveZone = nextZone || '';
     gasButton.classList.toggle('is-active', nextZone === 'gas');
     driftZone.classList.toggle('is-active', nextZone === 'drift');
     boostZone.classList.toggle('is-active', nextZone === 'boost');
+    brakeButton.classList.toggle('is-active', nextZone === 'brake');
 
     if (announce && nextZone && nextZone !== previousZone && (nextZone === 'drift' || nextZone === 'boost')) {
       safeVibrate(14);
     }
   }
 
-  function updateDrivePointer(event) {
-    if (drivePointerId === null || event.pointerId !== drivePointerId) return;
+  function consumeDrivePointer(event) {
     event.preventDefault();
+    event.stopPropagation();
+  }
+
+  function updateDrivePointer(event) {
+    consumeDrivePointer(event);
+    if (drivePointerId === null || event.pointerId !== drivePointerId) return;
     setDriveZone(zoneFromPointer(event));
   }
 
   function releaseDrive(event) {
+    if (event) consumeDrivePointer(event);
     if (drivePointerId === null || (event?.pointerId != null && event.pointerId !== drivePointerId)) return;
     const releasedPointerId = drivePointerId;
     drivePointerId = null;
@@ -246,16 +265,16 @@ function installGameplayUi() {
   }
 
   drivePad.addEventListener('pointerdown', (event) => {
+    consumeDrivePointer(event);
     if (drivePointerId !== null) return;
-    event.preventDefault();
     drivePointerId = event.pointerId;
     boostExhausted = false;
     drivePad.setPointerCapture?.(event.pointerId);
     setDriveZone(zoneFromPointer(event), { announce: false });
-  });
-  drivePad.addEventListener('pointermove', updateDrivePointer);
-  drivePad.addEventListener('pointerup', releaseDrive);
-  drivePad.addEventListener('pointercancel', releaseDrive);
+  }, { capture: true });
+  drivePad.addEventListener('pointermove', updateDrivePointer, { capture: true });
+  drivePad.addEventListener('pointerup', releaseDrive, { capture: true });
+  drivePad.addEventListener('pointercancel', releaseDrive, { capture: true });
   drivePad.addEventListener('lostpointercapture', (event) => {
     if (drivePointerId === event.pointerId) releaseDrive(event);
   });

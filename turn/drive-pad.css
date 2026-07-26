@@ -5,17 +5,16 @@
 .drive-stack {
   width: clamp(190px, 24vw, 260px);
   display: grid;
-  gap: 10px;
   pointer-events: auto;
 }
 
 .drive-pad {
   --boost-charge: 100%;
   position: relative;
-  height: clamp(150px, 20vw, 210px);
+  height: clamp(190px, 26vw, 268px);
   overflow: hidden;
   display: grid;
-  grid-template-rows: 42% 58%;
+  grid-template-rows: 32% 44% 24%;
   border: 4px solid var(--ink);
   border-radius: 30px;
   background: var(--lime);
@@ -32,7 +31,8 @@
 }
 
 .drive-zone,
-.drive-pad .drive-gas-zone {
+.drive-pad .drive-gas-zone,
+.drive-pad .drive-brake-zone {
   min-width: 0;
   min-height: 0;
   width: 100%;
@@ -51,7 +51,8 @@
 }
 
 .drive-zone:active,
-.drive-pad .drive-gas-zone:active {
+.drive-pad .drive-gas-zone:active,
+.drive-pad .drive-brake-zone:active {
   transform: none;
   box-shadow: none;
 }
@@ -96,9 +97,21 @@
   content: none;
 }
 
+.drive-pad .drive-brake-zone {
+  display: grid;
+  place-items: center;
+  padding: 6px 12px;
+  border-top: 4px solid var(--ink);
+  background: var(--pink);
+  font-size: clamp(0.6rem, 1.45vw, 0.82rem);
+  letter-spacing: 0.035em;
+  white-space: nowrap;
+}
+
 .drive-pad[data-drive-zone="gas"] .drive-gas-zone,
 .drive-drift-zone.is-active,
-.drive-boost-zone.is-active {
+.drive-boost-zone.is-active,
+.drive-brake-zone.is-active {
   box-shadow: inset 0 0 0 6px rgb(255 248 232 / 0.78);
 }
 
@@ -108,6 +121,10 @@
 
 .drive-drift-zone.is-active {
   background: #38d9ff;
+}
+
+.drive-brake-zone.is-active {
+  background: #ff7ab7;
 }
 
 .drive-pad.is-boosting .drive-boost-zone {
@@ -138,36 +155,20 @@
   letter-spacing: 0.06em;
 }
 
-.brake-reverse {
-  width: 100%;
-  height: clamp(42px, 5.5vw, 58px);
-  min-height: 42px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: var(--pink);
-  font-size: clamp(0.6rem, 1.45vw, 0.82rem);
-  letter-spacing: 0.035em;
-  white-space: nowrap;
-}
-
-.brake-reverse.is-down {
-  background: #ff7ab7;
-}
-
 @media (max-height: 430px) {
   .drive-stack {
     width: clamp(174px, 23vw, 224px);
-    gap: 7px;
   }
 
   .drive-pad {
-    height: clamp(124px, 18vw, 158px);
+    height: clamp(174px, 23.5vw, 205px);
     border-width: 3px;
     border-radius: 24px;
     box-shadow: 5px 6px 0 var(--ink);
   }
 
-  .drive-pad .drive-gas-zone {
+  .drive-pad .drive-gas-zone,
+  .drive-pad .drive-brake-zone {
     border-top-width: 3px;
   }
 
@@ -177,10 +178,5 @@
 
   .drive-boost-zone {
     border-left-width: 1.5px;
-  }
-
-  .brake-reverse {
-    height: 40px;
-    min-height: 40px;
   }
 }
