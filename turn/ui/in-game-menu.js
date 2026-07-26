@@ -42,6 +42,10 @@ function createSoundGuide() {
             <p>A clear high pulse plays in the ear on the side the road curves. It repeats faster as the turn gets closer or tighter.</p>
           </section>
           <section>
+            <h4>PACE NOTES</h4>
+            <p>Before major Airport corners, one to three dry beeps play in the ear on the turn side. More beeps mean a tighter turn. Two groups describe linked corners in order.</p>
+          </section>
+          <section>
             <h4>ROAD EDGE</h4>
             <p>A rough sound grows in the ear nearest the edge of the road.</p>
           </section>
