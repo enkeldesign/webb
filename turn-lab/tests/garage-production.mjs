@@ -44,17 +44,59 @@ assert.ok(truck.tuning.boostPowerMultiplier < sedan.tuning.boostPowerMultiplier,
 assert.ok(truck.tuning.boostDurationSeconds > sedan.tuning.boostDurationSeconds, 'Truck should have a longer boost tank');
 assert.notEqual(catalog.makeGhostColor('#ff4fa3'), '#ff4fa3', 'Ghost colour should be a lighter nuance, not the original paint colour');
 
-const [index, releaseSource, main, lapSystem, rivalStorage, controls, carModels, lotWrapper, trackIntro, trackIntroCss] = await Promise.all([
+const easterEggSelection = {
+  carId: 'sedan-sports',
+  color: '#ffd43b',
+  secondaryColor: '#666'
+};
+assert.equal(catalog.normalizeVehicleSecondaryColor('#666'), '#666666', 'The three-digit spoiler code must canonicalize to its browser colour value');
+assert.equal(catalog.isSportsSedanEasterEgg(easterEggSelection), true, 'Only the Sport Sedan spoiler code should unlock the hidden setup');
+assert.equal(catalog.isSportsSedanEasterEgg({ ...easterEggSelection, carId: 'sedan' }), false, 'The same colour on another car must do nothing');
+assert.equal(catalog.isSportsSedanEasterEgg({ ...easterEggSelection, secondaryColor: '#666667' }), false, 'Near-miss colours must not unlock the setup');
+assert.deepEqual(catalog.getEffectiveVehicleStats(easterEggSelection), catalog.MAXED_VEHICLE_STATS, 'Every displayed hidden stat must reach 5/5');
+const hiddenTuning = catalog.getEffectiveVehicleTuning(easterEggSelection);
+const regularSportSedan = catalog.CAR_CATALOG.find((car) => car.id === 'sedan-sports');
+assert.ok(hiddenTuning.topSpeedMultiplier > regularSportSedan.tuning.topSpeedMultiplier, 'The hidden setup must raise top speed');
+assert.ok(hiddenTuning.accelerationMultiplier > regularSportSedan.tuning.accelerationMultiplier, 'The hidden setup must raise acceleration');
+assert.ok(hiddenTuning.controlMultiplier > regularSportSedan.tuning.controlMultiplier, 'The hidden setup must raise control');
+assert.ok(hiddenTuning.driftStabilityMultiplier > regularSportSedan.tuning.driftStabilityMultiplier, 'The hidden setup must raise drift stability');
+assert.ok(hiddenTuning.boostPowerMultiplier > regularSportSedan.tuning.boostPowerMultiplier, 'The hidden setup must raise boost power');
+assert.ok(hiddenTuning.boostDurationSeconds > regularSportSedan.tuning.boostDurationSeconds, 'The hidden setup must raise boost duration');
+assert.equal(hiddenTuning.enginePitch, regularSportSedan.tuning.enginePitch, 'The easter egg must not replace the car audio identity');
+
+const originalLocalStorage = globalThis.localStorage;
+const vehicleStorage = new Map();
+globalThis.localStorage = {
+  getItem(key) { return vehicleStorage.has(key) ? vehicleStorage.get(key) : null; },
+  setItem(key, value) { vehicleStorage.set(key, String(value)); },
+  removeItem(key) { vehicleStorage.delete(key); }
+};
+try {
+  const savedEgg = catalog.saveVehicleSelection(easterEggSelection);
+  assert.equal(savedEgg.secondaryColor, '#666666');
+  assert.deepEqual(catalog.getCarDefinition('sedan-sports').stats, catalog.MAXED_VEHICLE_STATS, 'The saved hidden selection must feed maxed stats into the unchanged game core');
+  assert.equal(catalog.getCarDefinition('sedan-sports').tuning, hiddenTuning, 'The saved hidden selection must feed maxed tuning into physics');
+  catalog.saveVehicleSelection({ ...easterEggSelection, secondaryColor: '#777777' });
+  assert.deepEqual(catalog.getCarDefinition('sedan-sports').stats, regularSportSedan.stats, 'Changing the spoiler colour must restore the canonical Sport Sedan immediately');
+} finally {
+  if (originalLocalStorage === undefined) delete globalThis.localStorage;
+  else globalThis.localStorage = originalLocalStorage;
+}
+
+const [index, releaseSource, app, main, lapSystem, lapPolicy, rivalStorage, controls, carModels, lotWrapper, trackIntro, trackIntroCss, easterEggUi] = await Promise.all([
   fs.readFile(path.join(turnDir, 'index.html'), 'utf8'),
   fs.readFile(path.join(turnDir, 'release.json'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'app.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'main.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'race/lap-system.js'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'race/lap-system-r86.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'race/rival-storage.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'ui/gameplay-controls.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'vehicle/car-models.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'garage/lot-track-select.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'ui/track-intro.js'), 'utf8'),
-  fs.readFile(path.join(turnDir, 'track-intro.css'), 'utf8')
+  fs.readFile(path.join(turnDir, 'track-intro.css'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'vehicle/sports-sedan-easter-egg.js'), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -68,6 +110,7 @@ assert.match(index, new RegExp(`\\.\\/garage\\/lot-r10\\.css\\?build=${release.c
 assert.match(index, new RegExp(`\\.\\/track-intro\\.css\\?build=${release.cacheKey}`), 'The track intro styling must be published with the active release');
 assert.equal(imports['./garage/lot-r10.js?build=20260720-r19'], releaseTarget('./garage/lot-track-select.js'), 'The current release must place the compact track-first wrapper in front of the stable Lot implementation');
 assert.equal(imports['./ui/track-intro.js?build=20260725-r75'], releaseTarget('./ui/track-intro.js'), 'The current release must publish the track intro module');
+assert.equal(imports['./race/lap-system.js?build=20260720-r19'], releaseTarget('./race/lap-system-r86.js'), 'The current release must publish the unranked lap policy');
 assert.match(lotWrapper, /showOriginalLot/, 'The track-first wrapper must still delegate car selection to the verified Lot implementation');
 assert.match(lotWrapper, /await chooseTrackBeforeLot\(\)/, 'The driver must pick a track before choosing the car');
 assert.match(lotWrapper, /installLotLayout\(\)/, 'The compact panel arrangement must be installed after The Lot mounts');
@@ -83,6 +126,7 @@ assert.match(main, /camera\.position\.set\(0, 110, 215\)/, 'The existing aerial 
 assert.equal(imports['./vehicle/catalog.js?build=20260720-r19'], releaseTarget('./vehicle/catalog.js'), 'The current release must publish the shared vehicle stat definitions in the main runtime');
 assert.equal(imports['./vehicle/catalog.js?build=20260720-r20'], releaseTarget('./vehicle/catalog.js'), 'The current release must publish the same handling model inside The Lot');
 assert.equal(imports['./vehicle/car-models.js?build=20260720-r19'], releaseTarget('./vehicle/car-models.js'), 'The current release must publish the stable outline module');
+assert.match(app, /installSportsSedanEasterEggUi\(\)/, 'The Lot stat reveal must install before the game runtime starts');
 assert.match(main, /await showTheLot\(/, 'Start flow must enter the track-first Lot wrapper before racing');
 assert.match(main, /maxSpeed: MAX_SPEED \* state\.vehicleTuning\.topSpeedMultiplier/, 'Selected top speed must reach physics');
 assert.match(main, /vehicleTuning: state\.vehicleTuning/, 'Selected handling profile must reach physics');
@@ -90,6 +134,8 @@ assert.doesNotMatch(main, /wayne-wu\/webgpu-crowd-simulation/, 'Production must 
 assert.match(lapSystem, /carId: state\.vehicleId \|\| 'sedan'/, 'Completed laps must remember their car model');
 assert.match(lapSystem, /carColor: state\.vehicleColor \|\| '#ffd43b'/, 'Completed laps must remember their paint colour');
 assert.match(lapSystem, /carSecondaryColor: state\.vehicleSecondaryColor \|\| '#f8f9fa'/, 'Completed laps must remember secondary paint');
+assert.match(lapPolicy, /isSportsSedanEasterEgg/, 'The record policy must recognize the hidden setup');
+assert.match(lapPolicy, /saveGhost: undefined/, 'The record policy must suppress persistent storage for the hidden setup');
 assert.match(rivalStorage, /version: 6/, 'Rival storage schema must preserve track identity, geometry revision and secondary paint metadata');
 assert.match(rivalStorage, /trackRevision: storageTrackId\(activeTrackId\)/, 'Rival storage must identify geometry revisions');
 assert.match(rivalStorage, /normalizeVehicleId\(lap\.carId\)/, 'Loaded rivals must normalize stored car ids');
@@ -97,7 +143,13 @@ assert.match(rivalStorage, /normalizeVehicleColor\(lap\.carColor\)/, 'Loaded riv
 assert.match(rivalStorage, /normalizeVehicleSecondaryColor\(lap\.carSecondaryColor\)/, 'Loaded rivals must normalize secondary paint');
 assert.match(controls, /boostDurationSeconds/, 'Boost drain must use the selected car boost tank stat');
 assert.match(catalogSource, /asset: `\.\/assets\/cars\/\$\{id\}\.glb`/, 'Vehicle catalog must point to vendored local car assets');
+assert.match(catalogSource, /SPORTS_SEDAN_EASTER_EGG_COLOR = '#666666'/, 'The hidden spoiler trigger must remain exact');
+assert.match(catalogSource, /MAXED_VEHICLE_STATS/, 'The hidden setup must use one shared max-stat definition');
 assert.match(carModels, /loadCarSource\(car\.id\)/, 'Car model factory must load the catalog-selected vehicle');
+assert.match(easterEggUi, /getEffectiveVehicleStats/, 'The Lot must render effective rather than canonical stats');
+assert.match(easterEggUi, /input\[type="color"\]/, 'The hidden setup must react to the native spoiler picker');
+assert.match(easterEggUi, /MutationObserver/, 'The stat reveal must follow The Lot lifecycle without polling');
+assert.doesNotMatch(easterEggUi, /setInterval|requestAnimationFrame|setAnimationLoop/, 'The easter egg UI must add no animation loop');
 
 const lotR10 = await fs.readFile(path.join(turnDir, 'garage/lot-r10.js'), 'utf8');
 const lotR10Css = await fs.readFile(path.join(turnDir, 'garage/lot-r10.css'), 'utf8');
@@ -128,4 +180,4 @@ assert.match(main, /await showTheLot\(/, 'Back to the Lot must reuse the track-f
 assert.match(backToLot, /Back to Lot/, 'Race UI must include the Back to Lot button');
 assert.match(backToLot, /back-to-lot-button/, 'Back to Lot must expose its menu hook');
 
-console.log(`TURN ${release.id} garage, track-first selection and aerial intro passed.`);
+console.log(`TURN ${release.id} garage, hidden Sports Sedan setup and aerial intro passed.`);

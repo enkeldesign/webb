@@ -3,6 +3,15 @@ export const DEFAULT_VEHICLE_COLOR = '#ffd43b';
 export const DEFAULT_VEHICLE_SECONDARY_COLOR = '#f8f9fa';
 export const VEHICLE_SELECTION_KEY = 'turn-vehicle-selection-v1';
 export const VEHICLE_STAT_BUDGET = 18;
+export const SPORTS_SEDAN_EASTER_EGG_COLOR = '#666666';
+export const MAXED_VEHICLE_STATS = Object.freeze({
+  speed: 5,
+  acceleration: 5,
+  control: 5,
+  drift: 5,
+  boostPower: 5,
+  boostDuration: 5
+});
 
 export const VEHICLE_STAT_LEGEND = Object.freeze([
   Object.freeze({
@@ -105,9 +114,27 @@ export const CAR_CATALOG = Object.freeze(RAW_CARS.map(([
 
 const CAR_BY_ID = new Map(CAR_CATALOG.map((car) => [car.id, car]));
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/;
+const SPORTS_SEDAN = CAR_BY_ID.get('sedan-sports');
+const MAXED_SPORTS_SEDAN_TUNING = Object.freeze({
+  ...deriveVehicleTuning(MAXED_VEHICLE_STATS),
+  enginePitch: SPORTS_SEDAN.tuning.enginePitch
+});
+const MAXED_SPORTS_SEDAN = Object.freeze({
+  ...SPORTS_SEDAN,
+  stats: MAXED_VEHICLE_STATS,
+  tuning: MAXED_SPORTS_SEDAN_TUNING
+});
+let activeVehicleSelection = null;
+
+function getBaseCarDefinition(id) {
+  return CAR_BY_ID.get(id) || CAR_BY_ID.get(DEFAULT_VEHICLE_ID);
+}
 
 export function getCarDefinition(id) {
-  return CAR_BY_ID.get(id) || CAR_BY_ID.get(DEFAULT_VEHICLE_ID);
+  const definition = getBaseCarDefinition(id);
+  return definition.id === 'sedan-sports' && isSportsSedanEasterEgg(activeVehicleSelection)
+    ? MAXED_SPORTS_SEDAN
+    : definition;
 }
 
 export function normalizeVehicleId(id) {
@@ -121,6 +148,7 @@ export function normalizeVehicleColor(color) {
 
 export function normalizeVehicleSecondaryColor(color) {
   const value = typeof color === 'string' ? color.toLowerCase() : '';
+  if (value === '#666') return SPORTS_SEDAN_EASTER_EGG_COLOR;
   return HEX_COLOR_PATTERN.test(value) ? value : DEFAULT_VEHICLE_SECONDARY_COLOR;
 }
 
@@ -132,16 +160,35 @@ export function normalizeVehicleSelection(selection) {
   };
 }
 
+export function isSportsSedanEasterEgg(selection) {
+  return normalizeVehicleId(selection?.carId) === 'sedan-sports'
+    && normalizeVehicleSecondaryColor(selection?.secondaryColor) === SPORTS_SEDAN_EASTER_EGG_COLOR;
+}
+
+export function getEffectiveVehicleStats(selection) {
+  return isSportsSedanEasterEgg(selection)
+    ? MAXED_VEHICLE_STATS
+    : getBaseCarDefinition(selection?.carId).stats;
+}
+
+export function getEffectiveVehicleTuning(selection) {
+  return isSportsSedanEasterEgg(selection)
+    ? MAXED_SPORTS_SEDAN_TUNING
+    : getBaseCarDefinition(selection?.carId).tuning;
+}
+
 export function loadVehicleSelection() {
   try {
-    return normalizeVehicleSelection(JSON.parse(localStorage.getItem(VEHICLE_SELECTION_KEY)));
+    activeVehicleSelection = normalizeVehicleSelection(JSON.parse(localStorage.getItem(VEHICLE_SELECTION_KEY)));
   } catch (_) {
-    return normalizeVehicleSelection(null);
+    activeVehicleSelection = normalizeVehicleSelection(null);
   }
+  return activeVehicleSelection;
 }
 
 export function saveVehicleSelection(selection) {
   const normalized = normalizeVehicleSelection(selection);
+  activeVehicleSelection = normalized;
   try {
     localStorage.setItem(VEHICLE_SELECTION_KEY, JSON.stringify(normalized));
   } catch (_) {}
