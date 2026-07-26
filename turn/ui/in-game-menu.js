@@ -54,6 +54,10 @@ function createSoundGuide() {
             <p>Tyre sound moves toward the direction the car is sliding.</p>
           </section>
           <section>
+            <h4>CORNER FLOW</h4>
+            <p>When the car settles into a clean turn, tyre grit softens and the engine note tightens slightly. A steadier sound means the car is flowing with the curve.</p>
+          </section>
+          <section>
             <h4>RIVAL NEAR</h4>
             <p>A short directional sound warns that another car is close and tells you which side it is on.</p>
           </section>

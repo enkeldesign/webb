@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {
+  applyCornerFlowToAudioFrame,
   createDrivingSoundscapeFrame,
   installUniversalDrivingSoundscape
 } from '../../turn/audio/driving-soundscape.js';
@@ -22,8 +23,11 @@ assert.ok(
 );
 
 assert.match(soundscape, /export function createDrivingSoundscapeFrame/);
+assert.match(soundscape, /export function applyCornerFlowToAudioFrame/);
 assert.match(soundscape, /export function installUniversalDrivingSoundscape/);
-assert.match(soundscape, /baseAudio\.update\(\{ \.\.\.cachedFrame, \.\.\.frame \}, now\)/);
+assert.match(soundscape, /baseAudio\.update\(applyCornerFlowToAudioFrame\(\{ \.\.\.cachedFrame, \.\.\.frame \}\), now\)/);
+assert.match(soundscape, /direction: -Math\.sign\(strongestAngle\)/, 'The verified production channel inversion must stay corrected at the turn source');
+assert.match(soundscape, /function scoreCornerFlow\(/);
 assert.doesNotMatch(soundscape, /VoiceOver|screenReader|blindMode|userAgent/i);
 
 assert.match(audio, /function installRoadGuidanceGraph\(/);
@@ -50,8 +54,9 @@ function makeSamples(turn = 'straight') {
     let tangent = forward;
     if (index >= 7) {
       const progress = Math.min(1, (index - 6) / 8);
-      if (turn === 'left') tangent = normalize({ x: -progress, y: 0, z: 1 - progress * 0.45 });
-      if (turn === 'right') tangent = normalize({ x: progress, y: 0, z: 1 - progress * 0.45 });
+      // TURN's track/minimap winding is mirrored relative to the raw signed X/Z angle.
+      if (turn === 'left') tangent = normalize({ x: progress, y: 0, z: 1 - progress * 0.45 });
+      if (turn === 'right') tangent = normalize({ x: -progress, y: 0, z: 1 - progress * 0.45 });
     }
     return {
       point: { x: 0, y: 0, z: index * 4 },
@@ -63,12 +68,14 @@ function makeSamples(turn = 'straight') {
 
 function makeRuntime({
   samples = makeSamples(),
-  position = { x: 0, y: 0, z: 0 },
+  nearestTrackIndex = 0,
+  position = { x: 0, y: 0, z: nearestTrackIndex * 4 },
   velocity = { x: 0, y: 0, z: 18 },
   speed = Math.hypot(velocity.x, velocity.z),
   trackDistance = Math.abs(position.x),
   offRoad = false,
   carForward = forward,
+  carRight = right,
   lapActive = true,
   rivals = []
 } = {}) {
@@ -76,7 +83,7 @@ function makeRuntime({
     trackWidth: 27,
     samples,
     state: {
-      nearestTrackIndex: 0,
+      nearestTrackIndex,
       position,
       velocity,
       speed,
@@ -86,19 +93,19 @@ function makeRuntime({
       lapActive
     },
     getForward: () => carForward,
-    getRight: () => right,
+    getRight: () => carRight,
     playerCar: { position },
     competitorCars: rivals
   };
 }
 
 const leftTurn = createDrivingSoundscapeFrame(makeRuntime({ samples: makeSamples('left') }));
-assert.equal(leftTurn.turnDirection, -1, 'A left bend must produce a left directional cue');
+assert.equal(leftTurn.turnDirection, -1, 'A left bend must produce a pulse in the left ear');
 assert.ok(leftTurn.turnSeverity > 0.1);
 assert.ok(Number.isFinite(leftTurn.turnDistance));
 
 const rightTurn = createDrivingSoundscapeFrame(makeRuntime({ samples: makeSamples('right') }));
-assert.equal(rightTurn.turnDirection, 1, 'A right bend must produce a right directional cue');
+assert.equal(rightTurn.turnDirection, 1, 'A right bend must produce a pulse in the right ear');
 
 const leftEdge = createDrivingSoundscapeFrame(makeRuntime({
   position: { x: -12, y: 0, z: 0 },
@@ -115,12 +122,32 @@ const offRoad = createDrivingSoundscapeFrame(makeRuntime({
 }));
 assert.equal(offRoad.offRoad, true);
 assert.ok(offRoad.recoveryUrgency > 0.5);
+assert.equal(offRoad.cornerFlow, 0, 'Recovery information must always take priority over corner-flow reward');
 
 const slidingRight = createDrivingSoundscapeFrame(makeRuntime({
   velocity: { x: 14, y: 0, z: 12 },
   speed: 18
 }));
 assert.ok(slidingRight.driftPan > 0.8, 'Existing tyre scrub must reveal the direction of lateral slip');
+
+const cornerSamples = makeSamples('left');
+const cornerIndex = 10;
+const cleanCorner = createDrivingSoundscapeFrame(makeRuntime({
+  samples: cornerSamples,
+  nearestTrackIndex: cornerIndex,
+  position: cornerSamples[cornerIndex].point,
+  velocity: { x: 3, y: 0, z: 21.8 },
+  speed: 22,
+  carForward: cornerSamples[cornerIndex].tangent
+}));
+assert.ok(cleanCorner.cornerSeverity > 0.05, 'Current curvature must be available to the corner-flow score');
+assert.ok(cleanCorner.cornerFlow > 0.15, 'A fast, aligned, on-road turn should produce audible corner flow');
+
+const rawAudioFrame = { driftAmount: 0.8, enginePitch: 1, cornerFlow: 0.75 };
+const flowedAudioFrame = applyCornerFlowToAudioFrame(rawAudioFrame);
+assert.ok(flowedAudioFrame.driftAmount < rawAudioFrame.driftAmount, 'A clean corner should soften tyre grit without changing physics');
+assert.ok(flowedAudioFrame.enginePitch > rawAudioFrame.enginePitch, 'A clean corner should tighten the audible engine note');
+assert.equal(rawAudioFrame.driftAmount, 0.8, 'Audio shaping must not mutate gameplay state');
 
 const wrongWay = createDrivingSoundscapeFrame(makeRuntime({
   carForward: { x: 0, y: 0, z: -1 },
@@ -154,10 +181,11 @@ assert.equal(forwardedFrame.active, true);
 assert.equal(forwardedFrame.speed, 22);
 assert.equal(forwardedFrame.turnDirection, -1);
 assert.ok('edgeProximity' in forwardedFrame);
+assert.ok('cornerFlow' in forwardedFrame);
 delete globalThis.__turnAudio;
 delete globalThis.__turnRuntime;
 
-console.log(`TURN ${release.id} universal driving soundscape production passed.`);
+console.log(`TURN ${release.id} universal driving soundscape and corner flow production passed.`);
 
 function normalize(vector) {
   const length = Math.hypot(vector.x, vector.y, vector.z);

@@ -18,7 +18,7 @@ export function installUniversalDrivingSoundscape() {
         cachedFrame = createDrivingSoundscapeFrame(globalThis.__turnRuntime);
         lastComputedAt = now;
       }
-      baseAudio.update({ ...cachedFrame, ...frame }, now);
+      baseAudio.update(applyCornerFlowToAudioFrame({ ...cachedFrame, ...frame }), now);
     },
     cue: (...args) => baseAudio.cue(...args),
     silence: (...args) => baseAudio.silence(...args),
@@ -37,6 +37,7 @@ export function installUniversalDrivingSoundscape() {
 const MIN_TURN_ANGLE = 0.11;
 const MIN_LOOKAHEAD_METERS = 28;
 const MAX_LOOKAHEAD_METERS = 72;
+const CURRENT_TURN_SAMPLE_SPAN = 6;
 
 export function createDrivingSoundscapeFrame(runtime) {
   const state = runtime?.state;
@@ -75,11 +76,21 @@ export function createDrivingSoundscapeFrame(runtime) {
   const driftPan = speed > 1 ? clamp(lateralSpeed / Math.max(8, speed * 0.72), -1, 1) : 0;
 
   const upcomingTurn = findUpcomingTurn(samples, index, speed);
+  const currentTurn = findCurrentTurn(samples, index);
   const headingAlignment = clamp(dot(forward, sample.tangent), -1, 1);
   const headingError = signedAngle(forward, sample.tangent);
   const headingCorrectionPan = clamp(headingError / (Math.PI * 0.5), -1, 1);
   const wrongWay = headingAlignment < -0.42 && speed > 7 && finiteNumber(state.brake, 0) < 0.1;
   const rival = nearestRivalFrame(runtime, right);
+  const cornerFlow = scoreCornerFlow({
+    turnSeverity: currentTurn.severity,
+    speed,
+    headingAlignment,
+    trackDistance,
+    roadHalfWidth,
+    lateralSpeed,
+    offRoad: Boolean(state.offRoad)
+  });
 
   return {
     signedTrackOffset,
@@ -94,12 +105,31 @@ export function createDrivingSoundscapeFrame(runtime) {
     turnSeverity: upcomingTurn.severity,
     turnDistance: upcomingTurn.distance,
     turnProximity: upcomingTurn.proximity,
+    cornerDirection: currentTurn.direction,
+    cornerSeverity: currentTurn.severity,
+    cornerFlow,
     headingAlignment,
     headingCorrectionPan,
     wrongWay,
     braking: finiteNumber(state.brake, 0) > 0.05,
     nearestRivalDistance: rival.distance,
     nearestRivalPan: rival.pan
+  };
+}
+
+export function applyCornerFlowToAudioFrame(frame = {}) {
+  const cornerFlow = clamp(Number(frame.cornerFlow) || 0, 0, 1);
+  if (cornerFlow <= 0) return frame;
+
+  const driftAmount = clamp(Number(frame.driftAmount) || 0, 0, 1);
+  const enginePitch = clamp(Number(frame.enginePitch) || 1, 0.55, 1.7);
+
+  return {
+    ...frame,
+    // A settled corner sounds cleaner rather than triggering a separate reward effect.
+    // Physics stays untouched: only the audible grit softens and the engine note tightens slightly.
+    driftAmount: driftAmount * (1 - cornerFlow * 0.24),
+    enginePitch: enginePitch * (1 + cornerFlow * 0.018)
   };
 }
 
@@ -117,6 +147,9 @@ export function emptyDrivingSoundscapeFrame() {
     turnSeverity: 0,
     turnDistance: Infinity,
     turnProximity: 0,
+    cornerDirection: 0,
+    cornerSeverity: 0,
+    cornerFlow: 0,
     headingAlignment: 1,
     headingCorrectionPan: 0,
     wrongWay: false,
@@ -152,11 +185,53 @@ function findUpcomingTurn(samples, startIndex, speed) {
   }
 
   return {
-    direction: Math.sign(strongestAngle),
+    // In TURN's X/Z world, signedAngle increases opposite to the listener's left/right convention.
+    // Negating it maps a road curving left to the left ear and a road curving right to the right ear.
+    direction: -Math.sign(strongestAngle),
     severity: clamp(Math.abs(strongestAngle) / (Math.PI * 0.55), 0, 1),
     distance: firstTurnDistance,
     proximity: clamp(1 - firstTurnDistance / lookahead, 0, 1)
   };
+}
+
+function findCurrentTurn(samples, index) {
+  const before = samples[normalizeIndex(index - CURRENT_TURN_SAMPLE_SPAN, samples.length)];
+  const after = samples[normalizeIndex(index + CURRENT_TURN_SAMPLE_SPAN, samples.length)];
+  if (!before?.tangent || !after?.tangent) return { direction: 0, severity: 0 };
+
+  const angle = signedAngle(before.tangent, after.tangent);
+  const severity = clamp(Math.abs(angle) / (Math.PI * 0.38), 0, 1);
+  return {
+    direction: severity > 0.035 ? -Math.sign(angle) : 0,
+    severity
+  };
+}
+
+function scoreCornerFlow({
+  turnSeverity,
+  speed,
+  headingAlignment,
+  trackDistance,
+  roadHalfWidth,
+  lateralSpeed,
+  offRoad
+}) {
+  if (offRoad || turnSeverity < 0.045 || speed < 7 || headingAlignment < 0.45) return 0;
+
+  const curvePresence = smoothstep(0.045, 0.2, turnSeverity);
+  const headingQuality = smoothstep(0.68, 0.985, headingAlignment);
+  const roadQuality = 1 - smoothstep(roadHalfWidth * 0.72, roadHalfWidth * 0.98, trackDistance);
+  const slipRatio = Math.abs(lateralSpeed) / Math.max(1, speed);
+  const targetSlip = 0.025 + turnSeverity * 0.16;
+  const slipTolerance = 0.16 + turnSeverity * 0.12;
+  const slipQuality = clamp(1 - Math.abs(slipRatio - targetSlip) / slipTolerance, 0, 1);
+  const speedQuality = smoothstep(7, 25, speed);
+  const balance = headingQuality * 0.45
+    + roadQuality * 0.25
+    + slipQuality * 0.2
+    + speedQuality * 0.1;
+
+  return curvePresence * smoothstep(0.58, 0.9, balance);
 }
 
 function nearestRivalFrame(runtime, right) {
