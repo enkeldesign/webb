@@ -3,6 +3,15 @@ export const DEFAULT_VEHICLE_COLOR = '#ffd43b';
 export const DEFAULT_VEHICLE_SECONDARY_COLOR = '#f8f9fa';
 export const VEHICLE_SELECTION_KEY = 'turn-vehicle-selection-v1';
 export const VEHICLE_STAT_BUDGET = 18;
+export const SPORTS_SEDAN_EASTER_EGG_COLOR = '#666666';
+export const MAXED_VEHICLE_STATS = Object.freeze({
+  speed: 5,
+  acceleration: 5,
+  control: 5,
+  drift: 5,
+  boostPower: 5,
+  boostDuration: 5
+});
 
 export const VEHICLE_STAT_LEGEND = Object.freeze([
   Object.freeze({
@@ -105,6 +114,10 @@ export const CAR_CATALOG = Object.freeze(RAW_CARS.map(([
 
 const CAR_BY_ID = new Map(CAR_CATALOG.map((car) => [car.id, car]));
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/;
+const MAXED_SPORTS_SEDAN_TUNING = Object.freeze({
+  ...deriveVehicleTuning(MAXED_VEHICLE_STATS),
+  enginePitch: CAR_BY_ID.get('sedan-sports').tuning.enginePitch
+});
 
 export function getCarDefinition(id) {
   return CAR_BY_ID.get(id) || CAR_BY_ID.get(DEFAULT_VEHICLE_ID);
@@ -121,6 +134,7 @@ export function normalizeVehicleColor(color) {
 
 export function normalizeVehicleSecondaryColor(color) {
   const value = typeof color === 'string' ? color.toLowerCase() : '';
+  if (value === '#666') return SPORTS_SEDAN_EASTER_EGG_COLOR;
   return HEX_COLOR_PATTERN.test(value) ? value : DEFAULT_VEHICLE_SECONDARY_COLOR;
 }
 
@@ -130,6 +144,23 @@ export function normalizeVehicleSelection(selection) {
     color: normalizeVehicleColor(selection?.color),
     secondaryColor: normalizeVehicleSecondaryColor(selection?.secondaryColor)
   };
+}
+
+export function isSportsSedanEasterEgg(selection) {
+  return normalizeVehicleId(selection?.carId) === 'sedan-sports'
+    && normalizeVehicleSecondaryColor(selection?.secondaryColor) === SPORTS_SEDAN_EASTER_EGG_COLOR;
+}
+
+export function getEffectiveVehicleStats(selection) {
+  return isSportsSedanEasterEgg(selection)
+    ? MAXED_VEHICLE_STATS
+    : getCarDefinition(selection?.carId).stats;
+}
+
+export function getEffectiveVehicleTuning(selection) {
+  return isSportsSedanEasterEgg(selection)
+    ? MAXED_SPORTS_SEDAN_TUNING
+    : getCarDefinition(selection?.carId).tuning;
 }
 
 export function loadVehicleSelection() {
