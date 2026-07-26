@@ -21,6 +21,9 @@ installLapResultToast();
 const { installRivalOnboarding } = await import(withBuild('./ui/rival-onboarding.js'));
 installRivalOnboarding();
 
+const { installSportsSedanEasterEggUi } = await import(withBuild('./vehicle/sports-sedan-easter-egg.js'));
+installSportsSedanEasterEggUi();
+
 await import(withBuild('./input/analog-gas.js'));
 await import(withBuild('./ui/gameplay-controls.js'));
 const { installRacePositionLayout } = await import(withBuild('./ui/race-position-layout.js'));
