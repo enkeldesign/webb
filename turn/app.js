@@ -15,6 +15,11 @@ installCoveredRenderingGuard();
 const { installTurnAudio } = await import(withBuild('./audio/audio-system.js'));
 installTurnAudio();
 
+const { installUniversalDrivingSoundscape } = await import(
+  withBuild('./audio/driving-soundscape.js')
+);
+installUniversalDrivingSoundscape();
+
 const { installLapResultToast } = await import(withBuild('./ui/lap-result-toast.js'));
 installLapResultToast();
 

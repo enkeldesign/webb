@@ -104,6 +104,9 @@ jobs:
       - name: Run production sound foundation regression
         run: node turn-lab/tests/audio-foundation-production.mjs
 
+      - name: Run universal driving soundscape regression
+        run: node turn-lab/tests/driving-soundscape-production.mjs
+
       - name: Run production performance and diagnostics regression
         run: node turn-lab/tests/performance-production.mjs
 
