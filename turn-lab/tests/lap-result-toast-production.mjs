@@ -1,6 +1,24 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { completeLapState } from '../../turn/race/lap-system-r86.js';
+import {
+  lapResultAnnouncement,
+  ordinalWord,
+  spokenLapTime,
+  spokenPosition
+} from '../../turn/ui/race-announcements.js';
+
+assert.equal(ordinalWord(1), 'first');
+assert.equal(ordinalWord(2), 'second');
+assert.equal(ordinalWord(3), 'third');
+assert.equal(ordinalWord(4), 'fourth');
+assert.equal(ordinalWord(5), 'fifth');
+assert.equal(spokenPosition(1, 5), 'first of five');
+assert.equal(spokenLapTime(75.346), 'one minute, fifteen point three four six seconds');
+assert.equal(
+  lapResultAnnouncement({ position: 1, time: 75.346 }),
+  'Last lap. First. One minute, fifteen point three four six seconds.'
+);
 
 function makeFrames(count = 25) {
   return Array.from({ length: count }, (_, index) => ({
@@ -173,6 +191,7 @@ assert.match(index, new RegExp(`lap-result-toast\\.css\\?build=${release.cacheKe
 assert.match(index, new RegExp(`rival-onboarding\\.css\\?build=${release.cacheKey}`));
 assert.equal(imports['./race/lap-system.js?build=20260720-r19'], `./race/lap-system-r86.js?build=${release.cacheKey}`, 'The current release must publish the unranked easter egg policy around the verified lap engine');
 assert.equal(imports['./race/game-state.js'], `./race/game-state.js?build=${release.cacheKey}`, 'The current release must publish reset-safe invalid-lap state');
+assert.equal(imports['./ui/race-announcements.js'], `./ui/race-announcements.js?build=${release.cacheKey}`, 'Shared spoken race formatting must follow the release cache key');
 assert.match(app, /installLapResultToast\(\)/, 'The lap result toast must install before the game runtime starts');
 assert.match(app, /installRivalOnboarding\(\)/, 'The rival onboarding plate must install before the game runtime starts');
 assert.match(lapSystem, /turn:lap-result/, 'Completed lap finish must publish one frozen result event');
@@ -207,7 +226,13 @@ assert.doesNotMatch(toast, /MISSED CHECKPOINT/, 'Technical checkpoint language m
 assert.match(toast, /turn:lap-invalid/, 'The unified toast must listen for invalid-lap events');
 assert.match(toast, /lap-result-position/, 'The toast must show frozen finishing position');
 assert.match(toast, /lap-result-time/, 'The toast must show the completed lap time');
-assert.match(toast, /aria-live', 'polite'/, 'The result toast should be announced without interrupting gameplay');
+assert.match(toast, /toast\.setAttribute\('aria-label', 'Last lap result'\)/, 'The visible result must remain inspectable without becoming another live region');
+assert.doesNotMatch(toast, /toast\.setAttribute\('role', 'status'\)/, 'The visible toast must not duplicate the dedicated announcer');
+assert.doesNotMatch(toast, /toast\.setAttribute\('aria-live'/, 'The visible toast must not announce each child mutation');
+assert.match(toast, /announcer\.setAttribute\('aria-live', 'polite'\)/, 'One dedicated polite live region must own the result announcement');
+assert.match(toast, /setLiveAnnouncement\(announcer, lapResultAnnouncement/, 'A valid result must be announced as one composed utterance');
+assert.match(toast, /Position, \$\{spokenPosition/, 'The visible fraction must expose an ordinal position when inspected');
+assert.match(toast, /Lap time, \$\{spokenLapTime/, 'The visible clock must expose the same time in speech-friendly form');
 assert.doesNotMatch(gameState, /READY FOR THE LINE/, 'Restart Lap must not show redundant ready-state feedback');
 assert.match(onboarding, /CHASE YOUR BEST/, 'The first rival must introduce the core chase-your-best loop');
 assert.match(onboarding, /reason === 'lap-completed'/, 'Onboarding must be tied to the first newly saved rival after a completed lap');
@@ -235,4 +260,4 @@ assert.match(onboardingCss, /\.rival-onboarding-copy/, 'The CHASE YOUR BEST copy
 assert.match(onboardingCss, /background: var\(--rival-onboarding-color, var\(--yellow\)\)/, 'The onboarding plate must expose the rival colour through a CSS custom property');
 assert.match(onboardingCss, /border-radius: 999px/, 'The onboarding must keep the compact pill-plate language of the old READY message');
 
-console.log(`TURN ${release.id} persistent LAP VOID HUD, unranked easter egg laps and first-rival onboarding passed.`);
+console.log(`TURN ${release.id} single-pass spoken lap results, persistent LAP VOID HUD and first-rival onboarding passed.`);
