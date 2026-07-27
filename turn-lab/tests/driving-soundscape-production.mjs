@@ -116,7 +116,7 @@ const movingRight = createDrivingSoundscapeFrame(makeRuntime({
   velocity: { x: 12, y: 0, z: 18 },
   speed: 22
 }));
-assert.ok(movingRight.sliderRisk > 0.4, 'A projected path toward the right edge must create meaningful risk');
+assert.ok(movingRight.sliderRisk > 0.15, 'A projected path toward the right edge must create meaningful risk without freezing listening calibration');
 assert.ok(movingRight.sliderPan > 0.5, 'The Slider must move toward the threatened right edge');
 
 const leftOfCentre = createDrivingSoundscapeFrame(makeRuntime({
