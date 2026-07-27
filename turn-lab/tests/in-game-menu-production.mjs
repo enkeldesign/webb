@@ -47,13 +47,26 @@ assert.match(menu, /button\.textContent = 'Sound Guide'/);
 assert.match(menu, /<h2 id="soundGuideTitle">DRIVE BY SOUND<\/h2>/);
 assert.match(menu, /<h3 id="soundGuideHow">HOW TO DRIVE<\/h3>/);
 assert.match(menu, /<h3 id="soundGuideLegend">SOUND GUIDE<\/h3>/);
-for (const heading of ['TURN PULSE', 'PACE NOTES', 'ROAD EDGE', 'RECOVERY BEACON', 'DRIFT', 'CORNER FLOW', 'RIVAL NEAR', 'WRONG WAY']) {
+for (const heading of [
+  'PACE NOTES',
+  'TURN RIBBON · AIRPORT',
+  'TRAJECTORY · AIRPORT',
+  'TURN PULSE · OTHER TRACKS',
+  'ROAD EDGE · OTHER TRACKS',
+  'RECOVERY BEACON',
+  'DRIFT',
+  'CORNER FLOW · OTHER TRACKS',
+  'RIVAL NEAR',
+  'WRONG WAY'
+]) {
   assert.match(menu, new RegExp(`<h4>${heading}<\\/h4>`), `Sound Guide must explain ${heading}`);
 }
 assert.match(menu, /side the road curves/, 'Turn guidance copy must describe direct left-ear and right-ear mapping');
 assert.match(menu, /It repeats faster as the turn gets closer or tighter/);
 assert.match(menu, /one to three dry beeps/, 'Pace-note copy must explain the authored severity vocabulary');
+assert.match(menu, /one delayed echo beep marks a long corner/, 'Pace-note copy must explain AIRPORT corner length as timing rather than another pitch vocabulary');
 assert.match(menu, /Two groups describe linked corners in order/, 'Pace-note copy must explain linked corner sequences');
+assert.match(menu, /Trajectory danger takes priority over the turn ribbon/, 'AIRPORT copy must explain that the shared texture cannot become two competing sounds');
 assert.match(menu, /tyre grit softens and the engine note tightens slightly/, 'Corner Flow copy must describe the continuous reward rather than a new alert');
 assert.match(menu, /dialog\.showModal/);
 assert.match(menu, /aria-labelledby', 'soundGuideTitle'/);

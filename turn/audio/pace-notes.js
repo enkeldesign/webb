@@ -99,7 +99,8 @@ export function updatePaceNoteState(runtime, frame = {}) {
       progress,
       trigger,
       speed,
-      groups: note.groups
+      authoredGroups: note.groups,
+      groups: paceNotePhraseGroups(note.groups)
     });
     return note;
   }
@@ -123,13 +124,38 @@ export function progressInRange(progress, start, end) {
     : value >= from || value <= to;
 }
 
+export function paceNoteLengthTailCount(length) {
+  return String(length || 'short').toLowerCase() === 'long' ? 1 : 0;
+}
+
+export function paceNotePhraseGroups(groups = []) {
+  const phrase = [];
+
+  for (const group of groups) {
+    phrase.push({ ...group });
+    const tailCount = paceNoteLengthTailCount(group?.length);
+    for (let index = 0; index < tailCount; index += 1) {
+      phrase.push({
+        direction: group?.direction,
+        severity: 1,
+        lengthMarker: true
+      });
+    }
+  }
+
+  return phrase;
+}
+
 export function paceNoteDuration(groups = []) {
+  const phrase = paceNotePhraseGroups(groups);
   let duration = 0;
-  groups.forEach((group, groupIndex) => {
+
+  phrase.forEach((group, groupIndex) => {
     const count = clamp(Math.round(Number(group?.severity) || 1), 1, 3);
     duration += NOTE_DURATION_SECONDS + (count - 1) * NOTE_STEP_SECONDS;
-    if (groupIndex < groups.length - 1) duration += GROUP_GAP_SECONDS;
+    if (groupIndex < phrase.length - 1) duration += GROUP_GAP_SECONDS;
   });
+
   return duration;
 }
 
