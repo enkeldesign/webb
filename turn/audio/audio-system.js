@@ -12,10 +12,17 @@ const DRIVE_BY_EAR_ENABLED = globalThis.__turnDriveByEarEnabled !== false;
 
 let context = null;
 let masterGain = null;
+let dynamicsBus = null;
+let guidanceBus = null;
+let routeBus = null;
+let worldBus = null;
+let safetyBus = null;
+
 let engineGain = null;
 let engineFilter = null;
 let engineLow = null;
 let engineHigh = null;
+
 let driftGain = null;
 let driftFilter = null;
 let gritGain = null;
@@ -23,20 +30,30 @@ let gritFilter = null;
 let skidGain = null;
 let skidFilter = null;
 let skidTone = null;
-let driftPanner = null;
+let driftMix = null;
+let driftCenterGain = null;
+let driftLeftGain = null;
+let driftRightGain = null;
+
 let boostGain = null;
 let boostFilter = null;
 let boostTone = null;
-let roadGain = null;
-let roadFilter = null;
-let roadPanner = null;
+
+let sliderGain = null;
+let sliderFilter = null;
+let sliderPanner = null;
+let recoveryGain = null;
+let recoveryFilter = null;
+let recoveryPanner = null;
+
 let lastUpdateAt = -Infinity;
 let lastBoostActive = false;
 let rivalNearLatched = false;
-let lastTurnCueAt = -Infinity;
 let lastRecoveryCueAt = -Infinity;
 let wrongWayStartedAt = null;
 let lastWrongWayCueAt = -Infinity;
+let routeDuckUntil = -Infinity;
+let safetyMode = 'none';
 let lotOpen = false;
 let installed = false;
 const cueTimes = new Map();
@@ -120,7 +137,32 @@ export function update(frame = {}, now = performance.now()) {
     : 0;
   const audioNow = context.currentTime;
 
-  // Boost lifts the existing engine slightly instead of replacing it with a loud effect bed.
+  const offRoad = DRIVE_BY_EAR_ENABLED && active && Boolean(frame.offRoad);
+  const wrongWay = DRIVE_BY_EAR_ENABLED && active && Boolean(frame.wrongWay);
+  const nextSafetyMode = offRoad ? 'recovery' : (wrongWay ? 'wrong-way' : 'none');
+  if (nextSafetyMode !== safetyMode) {
+    safetyMode = nextSafetyMode;
+    if (safetyMode !== 'none') stopPaceNoteSources();
+  }
+
+  const sliderPresence = DRIVE_BY_EAR_ENABLED
+    ? clamp(Number(frame.sliderPresence) || 0, 0, 1)
+    : 0;
+  const sliderRisk = DRIVE_BY_EAR_ENABLED
+    ? clamp(Number(frame.sliderRisk) || 0, 0, 1)
+    : 0;
+  const sliderActive = active && safetyMode === 'none' && sliderPresence > 0.01;
+  const routeActive = audioNow < routeDuckUntil && safetyMode === 'none';
+
+  const sliderDuck = sliderActive ? 0.78 - sliderRisk * 0.2 : 1;
+  const routeDuck = routeActive ? 0.7 : 1;
+  const safetyDuck = safetyMode !== 'none' ? 0.36 : 1;
+  smooth(dynamicsBus.gain, Math.min(sliderDuck, routeDuck, safetyDuck), audioNow, 0.055);
+  smooth(guidanceBus.gain, safetyMode === 'none' ? 1 : 0, audioNow, 0.035);
+  smooth(routeBus.gain, safetyMode === 'none' ? 1 : 0, audioNow, 0.025);
+  smooth(worldBus.gain, safetyMode === 'none' ? 1 : 0.42, audioNow, 0.05);
+  smooth(safetyBus.gain, safetyMode === 'none' ? 0 : 1, audioNow, 0.025);
+
   const boostEngineLift = boostActive ? 1.055 : 1;
   const engineLevel = active
     ? 0.045 + speedRatio * 0.045 + throttle * 0.075
@@ -136,8 +178,6 @@ export function update(frame = {}, now = performance.now()) {
     0.06
   );
 
-  // Drift should read as traction loss rather than broadband spray. Normal slip is nearly
-  // subliminal; deliberate DRIFT crossfades in tire scrub, low-mid body grit and a small squeal.
   const slipIntent = clamp((driftAmount - 0.14) / 0.86, 0, 1);
   const strongSlip = clamp((driftAmount - 0.32) / 0.68, 0, 1);
   const driftSpeed = clamp((speed - 10) / 42, 0, 1);
@@ -159,41 +199,42 @@ export function update(frame = {}, now = performance.now()) {
   smooth(skidGain.gain, skidLevel, audioNow, 0.08);
   smooth(skidTone.frequency, 720 + speedRatio * 520 + strongSlip * 190, audioNow, 0.07);
   smooth(skidFilter.frequency, 980 + speedRatio * 520, audioNow, 0.09);
-  if (DRIVE_BY_EAR_ENABLED) {
-    smoothPan(driftPanner, clamp(Number(frame.driftPan) || 0, -1, 1), audioNow, 0.07);
-  }
 
-  let offRoad = false;
-  if (DRIVE_BY_EAR_ENABLED) {
-    // Road-edge sound is physical rather than a special accessibility alert. It emerges on the
-    // side nearest the edge and becomes rougher off road, so every player hears usable road position.
-    const edgeProximity = clamp(Number(frame.edgeProximity) || 0, 0, 1);
-    const recoveryUrgency = clamp(Number(frame.recoveryUrgency) || 0, 0, 1);
-    offRoad = active && Boolean(frame.offRoad);
-    const edgeRumbleLevel = active ? Math.pow(edgeProximity, 1.65) * 0.018 : 0;
-    const offRoadLevel = offRoad ? 0.026 + recoveryUrgency * 0.026 : 0;
-    smooth(roadGain.gain, Math.max(edgeRumbleLevel, offRoadLevel), audioNow, offRoad ? 0.045 : 0.09);
-    smooth(
-      roadFilter.frequency,
-      offRoad ? 300 + recoveryUrgency * 620 : 180 + edgeProximity * 720,
-      audioNow,
-      0.08
-    );
-    smoothPan(roadPanner, clamp(Number(frame.edgePan) || 0, -1, 1), audioNow, 0.065);
-  }
+  // DRIFT describes loss of grip without issuing a second left/right instruction.
+  // More slip widens the centred tyre image rather than moving it to one ear.
+  const driftWidth = driftHeld
+    ? 0.32 + strongSlip * 0.68
+    : slipIntent * 0.18;
+  smooth(driftCenterGain.gain, 1 - driftWidth * 0.68, audioNow, 0.07);
+  smooth(driftLeftGain.gain, driftWidth * 0.34, audioNow, 0.07);
+  smooth(driftRightGain.gain, driftWidth * 0.34, audioNow, 0.07);
 
-  // The boost sustain is intentionally quiet. Most of the character lives in the start cue.
   const boostLevel = boostActive ? 0.024 : 0;
   smooth(boostGain.gain, boostLevel, audioNow, boostActive ? 0.055 : 0.12);
   smooth(boostFilter.frequency, 1150 + speedRatio * 1450, audioNow, 0.07);
   smooth(boostTone.frequency, 430 + speedRatio * 430, audioNow, 0.06);
 
-  if (boostActive && !lastBoostActive) playCueNow('boost-start');
+  if (DRIVE_BY_EAR_ENABLED) {
+    const sliderLevel = sliderActive
+      ? sliderPresence * (0.026 + sliderRisk * 0.04)
+      : 0;
+    smooth(sliderGain.gain, sliderLevel, audioNow, 0.06);
+    smooth(sliderFilter.frequency, 1250 + sliderRisk * 1250, audioNow, 0.07);
+    smoothPan(sliderPanner, clamp(Number(frame.sliderPan) || 0, -1, 1), audioNow, 0.055);
+
+    const recoveryUrgency = clamp(Number(frame.recoveryUrgency) || 0, 0, 1);
+    const recoveryLevel = offRoad ? 0.038 + recoveryUrgency * 0.052 : 0;
+    smooth(recoveryGain.gain, recoveryLevel, audioNow, offRoad ? 0.035 : 0.065);
+    smooth(recoveryFilter.frequency, 280 + recoveryUrgency * 720, audioNow, 0.06);
+    smoothPan(recoveryPanner, clamp(Number(frame.recoveryPan) || 0, -1, 1), audioNow, 0.045);
+  }
+
+  if (boostActive && !lastBoostActive && safetyMode === 'none') playCueNow('boost-start');
   lastBoostActive = boostActive;
 
-  updateRivalProximity(active, nearestRivalDistance, nearestRivalPan);
+  updateRivalProximity(active && safetyMode === 'none', nearestRivalDistance, nearestRivalPan);
   if (DRIVE_BY_EAR_ENABLED) {
-    updateDrivingGuidance(frame, { active, speed, offRoad, now: audioNow });
+    updateDrivingSafety(frame, { active, speed, offRoad, wrongWay, now: audioNow });
   }
 }
 
@@ -211,11 +252,12 @@ export function silence() {
   hardMute(gritGain.gain, now);
   hardMute(skidGain.gain, now);
   hardMute(boostGain.gain, now);
-  if (roadGain) hardMute(roadGain.gain, now);
+  if (sliderGain) hardMute(sliderGain.gain, now);
+  if (recoveryGain) hardMute(recoveryGain.gain, now);
   if (DRIVE_BY_EAR_ENABLED) stopPaceNoteSources();
   lastBoostActive = false;
   rivalNearLatched = false;
-  resetGuidanceState();
+  resetSafetyState();
 }
 
 function ensureGraph() {
@@ -239,10 +281,23 @@ function ensureGraph() {
   masterGain.connect(compressor);
   compressor.connect(context.destination);
 
+  dynamicsBus = makeBus(1);
+  guidanceBus = makeBus(1);
+  routeBus = makeBus(1);
+  worldBus = makeBus(1);
+  safetyBus = makeBus(0);
+
   installEngineGraph();
   installDriftGraph();
   installBoostGraph();
-  if (DRIVE_BY_EAR_ENABLED) installRoadGuidanceGraph();
+  if (DRIVE_BY_EAR_ENABLED) installDbeGraphs();
+}
+
+function makeBus(initialValue) {
+  const bus = context.createGain();
+  bus.gain.value = initialValue;
+  bus.connect(masterGain);
+  return bus;
 }
 
 function installEngineGraph() {
@@ -272,7 +327,7 @@ function installEngineGraph() {
   lowMix.connect(engineFilter);
   highMix.connect(engineFilter);
   engineFilter.connect(engineGain);
-  engineGain.connect(masterGain);
+  engineGain.connect(dynamicsBus);
 
   engineLow.start();
   engineHigh.start();
@@ -300,30 +355,45 @@ function installDriftGraph() {
   skidFilter.frequency.value = 1150;
   skidFilter.Q.value = 1.35;
 
-  driftPanner = DRIVE_BY_EAR_ENABLED ? createPannerNode() : context.createGain();
+  driftMix = context.createGain();
+  driftCenterGain = context.createGain();
+  driftLeftGain = context.createGain();
+  driftRightGain = context.createGain();
+  const leftPanner = createPannerNode();
+  const rightPanner = createPannerNode();
+  if (leftPanner.pan) leftPanner.pan.value = -0.72;
+  if (rightPanner.pan) rightPanner.pan.value = 0.72;
 
   const driftNoise = context.createBufferSource();
   driftNoise.buffer = makeNoiseBuffer(context, 1.6, 0.86);
   driftNoise.loop = true;
   driftNoise.connect(driftFilter);
   driftFilter.connect(driftGain);
-  driftGain.connect(driftPanner);
+  driftGain.connect(driftMix);
 
   const gritNoise = context.createBufferSource();
   gritNoise.buffer = makeNoiseBuffer(context, 1.7, 0.95);
   gritNoise.loop = true;
   gritNoise.connect(gritFilter);
   gritFilter.connect(gritGain);
-  gritGain.connect(driftPanner);
+  gritGain.connect(driftMix);
 
   skidTone = context.createOscillator();
   skidTone.type = 'triangle';
   skidTone.frequency.value = 820;
   skidTone.connect(skidFilter);
   skidFilter.connect(skidGain);
-  skidGain.connect(driftPanner);
+  skidGain.connect(driftMix);
 
-  driftPanner.connect(masterGain);
+  driftMix.connect(driftCenterGain);
+  driftMix.connect(driftLeftGain);
+  driftMix.connect(driftRightGain);
+  driftCenterGain.connect(dynamicsBus);
+  driftLeftGain.connect(leftPanner);
+  driftRightGain.connect(rightPanner);
+  leftPanner.connect(dynamicsBus);
+  rightPanner.connect(dynamicsBus);
+
   driftNoise.start();
   gritNoise.start();
   skidTone.start();
@@ -356,31 +426,46 @@ function installBoostGraph() {
   boostNoiseMix.connect(boostFilter);
   boostToneMix.connect(boostFilter);
   boostFilter.connect(boostGain);
-  boostGain.connect(masterGain);
+  boostGain.connect(dynamicsBus);
 
   boostNoise.start();
   boostTone.start();
 }
 
-function installRoadGuidanceGraph() {
-  roadGain = context.createGain();
-  roadGain.gain.value = 0;
+function installDbeGraphs() {
+  sliderGain = context.createGain();
+  sliderGain.gain.value = 0;
+  sliderFilter = context.createBiquadFilter();
+  sliderFilter.type = 'bandpass';
+  sliderFilter.frequency.value = 1450;
+  sliderFilter.Q.value = 1.05;
+  sliderPanner = createPannerNode();
 
-  roadFilter = context.createBiquadFilter();
-  roadFilter.type = 'bandpass';
-  roadFilter.frequency.value = 220;
-  roadFilter.Q.value = 0.72;
+  const sliderNoise = context.createBufferSource();
+  sliderNoise.buffer = makeNoiseBuffer(context, 2.1, 0.9);
+  sliderNoise.loop = true;
+  sliderNoise.connect(sliderFilter);
+  sliderFilter.connect(sliderGain);
+  sliderGain.connect(sliderPanner);
+  sliderPanner.connect(guidanceBus);
+  sliderNoise.start();
 
-  roadPanner = createPannerNode();
+  recoveryGain = context.createGain();
+  recoveryGain.gain.value = 0;
+  recoveryFilter = context.createBiquadFilter();
+  recoveryFilter.type = 'bandpass';
+  recoveryFilter.frequency.value = 320;
+  recoveryFilter.Q.value = 0.72;
+  recoveryPanner = createPannerNode();
 
-  const roadNoise = context.createBufferSource();
-  roadNoise.buffer = makeNoiseBuffer(context, 1.9, 0.92);
-  roadNoise.loop = true;
-  roadNoise.connect(roadFilter);
-  roadFilter.connect(roadGain);
-  roadGain.connect(roadPanner);
-  roadPanner.connect(masterGain);
-  roadNoise.start();
+  const recoveryNoise = context.createBufferSource();
+  recoveryNoise.buffer = makeNoiseBuffer(context, 1.9, 0.93);
+  recoveryNoise.loop = true;
+  recoveryNoise.connect(recoveryFilter);
+  recoveryFilter.connect(recoveryGain);
+  recoveryGain.connect(recoveryPanner);
+  recoveryPanner.connect(safetyBus);
+  recoveryNoise.start();
 }
 
 function updateRivalProximity(active, distance, pan = 0) {
@@ -401,13 +486,12 @@ function updateRivalProximity(active, distance, pan = 0) {
   if (rivalNearLatched && distance >= RIVAL_NEAR_EXIT_METERS) rivalNearLatched = false;
 }
 
-function updateDrivingGuidance(frame, { active, speed, offRoad, now }) {
+function updateDrivingSafety(frame, { active, speed, offRoad, wrongWay, now }) {
   if (!active) {
-    resetGuidanceState();
+    resetSafetyState();
     return;
   }
 
-  const wrongWay = Boolean(frame.wrongWay);
   if (wrongWay) {
     if (wrongWayStartedAt === null) wrongWayStartedAt = now;
     if (
@@ -433,59 +517,32 @@ function updateDrivingGuidance(frame, { active, speed, offRoad, now }) {
   }
 
   lastRecoveryCueAt = -Infinity;
-  if (wrongWay || speed < 7) return;
-
-  const direction = Math.sign(Number(frame.turnDirection) || 0);
-  const severity = clamp(Number(frame.turnSeverity) || 0, 0, 1);
-  const proximity = clamp(Number(frame.turnProximity) || 0, 0, 1);
-  if (!direction || severity < 0.11) return;
-
-  const interval = clamp(1.42 - proximity * 0.58 - severity * 0.34, 0.46, 1.35);
-  if (now - lastTurnCueAt < interval) return;
-
-  playTurnCue(direction, severity, proximity, now);
-  lastTurnCueAt = now;
-}
-
-function playTurnCue(direction, severity, proximity, now) {
-  // Direction is deliberately encoded only by side: left curve in the left ear, right curve in
-  // the right ear. A bright overtone keeps the cue readable over deliberate tyre scrub.
-  const panMagnitude = 0.88 + proximity * 0.12;
-  const pan = direction < 0 ? -panMagnitude : panMagnitude;
-  const level = 0.024 + severity * 0.022;
-  const start = 1040 + severity * 140;
-  const end = 1280 + severity * 180;
-  playTone(start, end, 0.115, level, 'sine', now, pan);
-  playTone(start * 1.72, end * 1.72, 0.09, level * 0.34, 'sine', now + 0.008, pan);
-  if (severity > 0.5) {
-    playTone(start * 0.96, end * 0.96, 0.095, level * 0.8, 'triangle', now + 0.12, pan);
-  }
 }
 
 function playRecoveryCue(pan, urgency, now) {
   const level = 0.017 + urgency * 0.016;
-  playTone(210 + urgency * 40, 330 + urgency * 120, 0.11, level, 'triangle', now, pan);
-  playTone(250 + urgency * 60, 390 + urgency * 150, 0.1, level * 0.82, 'triangle', now + 0.115, pan);
+  playTone(210 + urgency * 40, 330 + urgency * 120, 0.11, level, 'triangle', now, pan, safetyBus);
+  playTone(250 + urgency * 60, 390 + urgency * 150, 0.1, level * 0.82, 'triangle', now + 0.115, pan, safetyBus);
 }
 
 function playWrongWayCue(correctionPan, now) {
-  playTone(310, 170, 0.16, 0.028, 'square', now, 0);
-  playTone(280, 145, 0.16, 0.025, 'square', now + 0.19, 0);
+  playTone(310, 170, 0.16, 0.028, 'square', now, 0, safetyBus);
+  playTone(280, 145, 0.16, 0.025, 'square', now + 0.19, 0, safetyBus);
   if (Math.abs(correctionPan) > 0.08) {
-    playTone(360, 520, 0.11, 0.018, 'triangle', now + 0.39, correctionPan);
+    playTone(360, 520, 0.11, 0.018, 'triangle', now + 0.39, correctionPan, safetyBus);
   }
 }
 
-function resetGuidanceState() {
-  lastTurnCueAt = -Infinity;
+function resetSafetyState() {
   lastRecoveryCueAt = -Infinity;
   wrongWayStartedAt = null;
   lastWrongWayCueAt = -Infinity;
+  safetyMode = 'none';
 }
 
 function handlePaceNoteAudio(event) {
   const groups = Array.isArray(event.detail?.groups) ? event.detail.groups : [];
-  if (!groups.length) return;
+  if (!groups.length || safetyMode !== 'none') return;
 
   void unlock().then((ready) => {
     if (ready) schedulePaceNoteGroups(groups);
@@ -493,7 +550,7 @@ function handlePaceNoteAudio(event) {
 }
 
 function schedulePaceNoteGroups(groups) {
-  if (!context || context.state !== 'running' || !masterGain) return;
+  if (!context || context.state !== 'running' || !routeBus || safetyMode !== 'none') return;
   let cursor = context.currentTime + 0.012;
 
   groups.forEach((group, groupIndex) => {
@@ -510,6 +567,8 @@ function schedulePaceNoteGroups(groups) {
       cursor += PACE_NOTE_GROUP_GAP_SECONDS - PACE_NOTE_STEP_SECONDS;
     }
   });
+
+  routeDuckUntil = Math.max(routeDuckUntil, cursor + 0.05);
 }
 
 function schedulePaceNoteBeep(startAt, pan, severity) {
@@ -530,7 +589,7 @@ function schedulePaceNoteBeep(startAt, pan, severity) {
   if (panner.pan) panner.pan.setValueAtTime(pan, startAt);
   oscillator.connect(gain);
   gain.connect(panner);
-  panner.connect(masterGain);
+  panner.connect(routeBus);
 
   const record = { oscillator, gain, panner };
   activePaceNoteSources.add(record);
@@ -552,6 +611,7 @@ function stopPaceNoteSources() {
     } catch (_) {}
   }
   activePaceNoteSources.clear();
+  routeDuckUntil = -Infinity;
 }
 
 function playCueNow(name, options = {}) {
@@ -581,50 +641,33 @@ function playCueNow(name, options = {}) {
       playTone(560, 760, 0.065, 0.032, 'triangle', now);
       break;
     case 'boost-start':
-      // Spool, pressure punch, then a short whoosh. The quiet sustain takes over underneath.
-      playTone(260, 980, 0.18, 0.038, 'sine', now);
-      playTone(86, 54, 0.085, 0.05, 'triangle', now + 0.015);
-      playNoiseBurst(now + 0.025, 0.23, 0.045, 520, 3200, 0.84);
-      playTone(620, 1080, 0.19, 0.018, 'triangle', now + 0.035);
+      playTone(260, 980, 0.18, 0.038, 'sine', now, 0, dynamicsBus);
+      playTone(86, 54, 0.085, 0.05, 'triangle', now + 0.015, 0, dynamicsBus);
+      playNoiseBurst(now + 0.025, 0.23, 0.045, 520, 3200, 0.84, 0, dynamicsBus);
+      playTone(620, 1080, 0.19, 0.018, 'triangle', now + 0.035, 0, dynamicsBus);
       break;
     case 'boost-empty':
-      playTone(860, 230, 0.2, 0.034, 'sine', now);
-      playNoiseBurst(now + 0.025, 0.15, 0.035, 1300, 340, 0.91);
-      playTone(105, 62, 0.09, 0.04, 'triangle', now + 0.045);
+      playTone(860, 230, 0.2, 0.034, 'sine', now, 0, dynamicsBus);
+      playNoiseBurst(now + 0.025, 0.15, 0.035, 1300, 340, 0.91, 0, dynamicsBus);
+      playTone(105, 62, 0.09, 0.04, 'triangle', now + 0.045, 0, dynamicsBus);
       break;
     case 'boost-full':
-      playTone(470, 760, 0.08, 0.028, 'triangle', now);
-      playTone(760, 1120, 0.1, 0.021, 'sine', now + 0.07);
-      playNoiseBurst(now + 0.045, 0.07, 0.012, 900, 2100, 0.88);
+      playTone(470, 760, 0.08, 0.028, 'triangle', now, 0, dynamicsBus);
+      playTone(760, 1120, 0.1, 0.021, 'sine', now + 0.07, 0, dynamicsBus);
+      playNoiseBurst(now + 0.045, 0.07, 0.012, 900, 2100, 0.88, 0, dynamicsBus);
       break;
     case 'overtake': {
       const places = clamp(Number(options.places) || 1, 1, 4);
       const lift = 1 + (places - 1) * 0.06;
-      playTone(240 * lift, 590 * lift, 0.16, 0.038, 'triangle', now);
-      playNoiseBurst(now + 0.025, 0.18, 0.028, 420, 1900, 0.88);
+      playTone(240 * lift, 590 * lift, 0.16, 0.038, 'triangle', now, 0, worldBus);
+      playNoiseBurst(now + 0.025, 0.18, 0.028, 420, 1900, 0.88, 0, worldBus);
       break;
     }
     case 'car-near': {
       const intensity = clamp(Number(options.intensity) || 0.5, 0.25, 1);
       const pan = clamp(Number(options.pan) || 0, -1, 1);
-      playTone(
-        150,
-        360 + intensity * 140,
-        0.14,
-        0.014 + intensity * 0.012,
-        'triangle',
-        now,
-        pan
-      );
-      playNoiseBurst(
-        now,
-        0.16,
-        0.012 + intensity * 0.012,
-        300,
-        1200,
-        0.9,
-        pan
-      );
+      playTone(150, 360 + intensity * 140, 0.14, 0.014 + intensity * 0.012, 'triangle', now, pan, worldBus);
+      playNoiseBurst(now, 0.16, 0.012 + intensity * 0.012, 300, 1200, 0.9, pan, worldBus);
       break;
     }
     case 'ui-tap':
@@ -648,7 +691,7 @@ function cueAllowed(name, now) {
   return true;
 }
 
-function playTone(startHz, endHz, duration, level, type, startAt, pan = 0) {
+function playTone(startHz, endHz, duration, level, type, startAt, pan = 0, output = masterGain) {
   const oscillator = context.createOscillator();
   const gain = context.createGain();
   const endAt = startAt + duration;
@@ -662,7 +705,7 @@ function playTone(startHz, endHz, duration, level, type, startAt, pan = 0) {
   gain.gain.exponentialRampToValueAtTime(0.0001, endAt);
 
   oscillator.connect(gain);
-  connectPanned(gain, pan);
+  connectPanned(gain, pan, output);
   oscillator.start(startAt);
   oscillator.stop(endAt + 0.02);
 }
@@ -674,7 +717,8 @@ function playNoiseBurst(
   lowHz,
   highHz,
   smoothing = 0.78,
-  pan = 0
+  pan = 0,
+  output = masterGain
 ) {
   const source = context.createBufferSource();
   const filter = context.createBiquadFilter();
@@ -693,16 +737,16 @@ function playNoiseBurst(
 
   source.connect(filter);
   filter.connect(gain);
-  connectPanned(gain, pan);
+  connectPanned(gain, pan, output);
   source.start(startAt);
   source.stop(endAt + 0.02);
 }
 
-function connectPanned(node, pan) {
+function connectPanned(node, pan, output = masterGain) {
   const panner = createPannerNode();
   if (panner.pan) panner.pan.value = clamp(Number(pan) || 0, -1, 1);
   node.connect(panner);
-  panner.connect(masterGain);
+  panner.connect(output || masterGain);
 }
 
 function createPannerNode() {

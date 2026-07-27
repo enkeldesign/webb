@@ -49,25 +49,24 @@ assert.match(menu, /<h3 id="soundGuideHow">HOW TO DRIVE<\/h3>/);
 assert.match(menu, /<h3 id="soundGuideLegend">SOUND GUIDE<\/h3>/);
 for (const heading of [
   'PACE NOTES',
-  'TURN RIBBON · AIRPORT',
-  'TRAJECTORY · AIRPORT',
-  'TURN PULSE · OTHER TRACKS',
-  'ROAD EDGE · OTHER TRACKS',
-  'RECOVERY BEACON',
+  'TRAJECTORY SLIDER',
   'DRIFT',
-  'CORNER FLOW · OTHER TRACKS',
+  'RECOVERY BEACON',
+  'SOUND LAYERS',
   'RIVAL NEAR',
   'WRONG WAY'
 ]) {
   assert.match(menu, new RegExp(`<h4>${heading}<\\/h4>`), `Sound Guide must explain ${heading}`);
 }
-assert.match(menu, /side the road curves/, 'Turn guidance copy must describe direct left-ear and right-ear mapping');
-assert.match(menu, /It repeats faster as the turn gets closer or tighter/);
 assert.match(menu, /one to three dry beeps/, 'Pace-note copy must explain the authored severity vocabulary');
-assert.match(menu, /one delayed echo beep marks a long corner/, 'Pace-note copy must explain AIRPORT corner length as timing rather than another pitch vocabulary');
+assert.match(menu, /A delayed echo marks a long corner/, 'Pace-note copy must explain corner length through timing');
 assert.match(menu, /Two groups describe linked corners in order/, 'Pace-note copy must explain linked corner sequences');
-assert.match(menu, /Trajectory danger takes priority over the turn ribbon/, 'AIRPORT copy must explain that the shared texture cannot become two competing sounds');
-assert.match(menu, /tyre grit softens and the engine note tightens slightly/, 'Corner Flow copy must describe the continuous reward rather than a new alert');
+assert.match(menu, /combines where the car is with where its current motion will take it/, 'The guide must explain the Slider as present plus projected trajectory');
+assert.match(menu, /Steer away from it to bring it back toward the centre/, 'The Slider must have one unambiguous control rule');
+assert.match(menu, /Tyre sound stays centred/, 'DRIFT must no longer use directional steering semantics');
+assert.match(menu, /Strong(er)? drift spreads wider across both ears/, 'DRIFT must explain intensity through stereo width');
+assert.match(menu, /Engine, drift and boost automatically make space/, 'The guide must explain the layered mixer rather than encouraging louder cues');
+assert.doesNotMatch(menu, /TURN RIBBON|TURN PULSE|ROAD EDGE|CORNER FLOW|AIRPORT/, 'Retired DBE generations must disappear from the guide');
 assert.match(menu, /dialog\.showModal/);
 assert.match(menu, /aria-labelledby', 'soundGuideTitle'/);
 assert.match(menu, /closest\('\.chip'\)/, 'Restart Lap must follow the TIME card validity state rather than duplicate race logic');
@@ -91,4 +90,4 @@ assert.match(css, /@keyframes turn-restart-invalid-pulse/, 'The invalid restart 
 assert.match(css, /prefers-reduced-motion: reduce/, 'The restart cue must respect reduced-motion preferences');
 assert.match(css, /\.utility-group\[data-menu-state="hidden"\]/);
 
-console.log(`TURN ${release.id} state-aware in-game menu, Sound Guide and invalid-lap Restart Lap cue passed.`);
+console.log(`TURN ${release.id} state-aware in-game menu, DBE v2 Sound Guide and invalid-lap Restart Lap cue passed.`);
