@@ -35,11 +35,16 @@ assert.equal(saveDriveByEarEnabled(false, null), false);
 assert.equal(saveDriveByEarEnabled(false, { setItem: () => { throw new Error('blocked'); } }), false);
 
 assert.match(app, /installDriveByEarSetting/);
-assert.ok(app.indexOf('./ui/drive-by-ear-setting.js') < app.indexOf('./audio/audio-system.js'));
-assert.match(app, /if \(driveByEarEnabled\) \{/);
-assert.match(app, /if \(driveByEarEnabled\) \{[\s\S]*\.\/audio\/organic-ribbon\.js[\s\S]*installOrganicRibbon\(\)[\s\S]*\.\/audio\/driving-soundscape\.js/,
-  'The organic graph decorator must only load inside the DBE-enabled module branch');
-assert.ok(app.indexOf('if (driveByEarEnabled)') < app.indexOf('./audio/organic-ribbon.js'));
+assert.ok(app.indexOf('./ui/drive-by-ear-setting.js') < app.indexOf('./audio/organic-ribbon.js'));
+assert.match(app, /let organicRibbon = null/);
+assert.match(app, /if \(driveByEarEnabled\) \{\s*organicRibbon = await import\(withBuild\('\.\/audio\/organic-ribbon\.js'\)\);\s*organicRibbon\.prepareOrganicRibbonCapture\(\);\s*\}/,
+  'The optional organic module must prepare graph capture only when DBE is enabled');
+assert.ok(app.indexOf('prepareOrganicRibbonCapture()') < app.indexOf('./audio/audio-system.js'),
+  'DBE capture must be ready before core audio handlers can create the graph');
+assert.ok(app.indexOf('installTurnAudio()') < app.indexOf('installOrganicRibbon()'),
+  'The organic wrapper must install only after the core API exists');
+assert.match(app, /if \(driveByEarEnabled\) \{\s*organicRibbon\.installOrganicRibbon\(\);[\s\S]*\.\/audio\/driving-soundscape\.js/,
+  'The organic wrapper and soundscape must remain inside the DBE-enabled branch');
 assert.ok(app.indexOf('./audio/organic-ribbon.js') < app.indexOf('./audio/driving-soundscape.js'));
 assert.match(setting, /DRIVE BY EAR<sup>™<\/sup>/);
 assert.match(setting, /On by default for every player/);
@@ -59,6 +64,7 @@ assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) \{\s*const recoveryRibbon/,
   'DBE off must skip Slider and surface processing');
 assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) updateDrivingSafety/,
   'DBE off must skip Wrong Way processing');
+assert.match(organic, /export function prepareOrganicRibbonCapture\(\)/);
 assert.match(organic, /const baseAudio = globalThis\.__turnAudio/);
 assert.match(organic, /captureAudioFactories\(\)/,
   'Organic graph observation must never run when its optional module is not imported');
