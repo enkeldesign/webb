@@ -23,8 +23,8 @@ export function installUniversalDrivingSoundscape() {
       }
 
       const audioFrame = { ...cachedFrame, ...frame };
-      // The core engine's legacy off-road flag switches to a descriptive recovery beacon.
-      // DBE now keeps one normative rule instead: steer away from the intensified Slider.
+      // Keep the same Slider grammar beyond the road edge. The core audio engine's
+      // legacy off-road flag would replace it with a second, opposite recovery cue.
       if (cachedFrame.offRoad) audioFrame.offRoad = false;
       baseAudio.update(audioFrame, now);
     },
@@ -168,7 +168,6 @@ function createTrajectorySlider({
   // The slider combines where the car is with where its present motion will put it.
   // Prediction carries more weight, while current position keeps the cue stable at low speed.
   const projectedValue = clamp(currentNormalized * 0.36 + predictedNormalized * 0.64, -1.35, 1.35);
-  const outsideDirection = Math.sign(currentNormalized || projectedValue || 1);
   const offRoadDepth = offRoad
     ? clamp(
       (trackDistance - roadHalfWidth * 0.82) / Math.max(1, roadHalfWidth * 0.9),
@@ -176,15 +175,11 @@ function createTrajectorySlider({
       1
     )
     : 0;
-  // Once outside the road, keep the sound on the outside side. The player never has to
-  // reinterpret it as a beacon to follow: steer away from the sound until back on the road.
-  const value = offRoad
-    ? outsideDirection * Math.max(Math.abs(projectedValue), 1 + offRoadDepth * 0.35)
-    : projectedValue;
+  // Crossing the road edge changes urgency, never direction or control grammar.
+  // The same ribbon remains on the same steering side and simply becomes harder to miss.
+  const value = projectedValue;
   const magnitude = Math.abs(value);
   const speedPresence = offRoad ? 1 : smoothstep(1.5, 8, speed);
-  // Small corrections stay calm, but a trajectory already aimed at an edge must become obvious
-  // before the car reaches it. Off-road depth intensifies that same warning vocabulary.
   const baseRisk = smoothstep(0.18, 0.86, magnitude) * speedPresence;
   const risk = offRoad
     ? Math.max(baseRisk, 0.78 + offRoadDepth * 0.22)
@@ -202,10 +197,10 @@ function createTrajectorySlider({
     };
   }
 
-  const threatenedNormal = scale(predictedSample.normal, Math.sign(value));
-  const earSide = clamp(dot(threatenedNormal, right), -1, 1);
+  const guidanceNormal = scale(predictedSample.normal, Math.sign(value));
+  const earSide = clamp(dot(guidanceNormal, right), -1, 1);
   const panMagnitude = offRoad
-    ? 0.82 + offRoadDepth * 0.18
+    ? Math.max(smoothstep(0.04, 0.78, magnitude), 0.82 + offRoadDepth * 0.18)
     : smoothstep(0.04, 0.78, magnitude);
   const pan = clamp(earSide * panMagnitude, -1, 1);
 
