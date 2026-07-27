@@ -6,13 +6,14 @@ import {
   saveDriveByEarEnabled
 } from '../../turn/ui/drive-by-ear-setting.js';
 
-const [releaseSource, app, setting, style, menu, audio, paceAudio] = await Promise.all([
+const [releaseSource, app, setting, style, menu, audio, organic, paceAudio] = await Promise.all([
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/drive-by-ear-setting.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/drive-by-ear-setting.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/in-game-menu.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/audio-system.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/audio/organic-ribbon.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/pace-notes.js', import.meta.url), 'utf8')
 ]);
 const release = JSON.parse(releaseSource);
@@ -36,7 +37,10 @@ assert.equal(saveDriveByEarEnabled(false, { setItem: () => { throw new Error('bl
 assert.match(app, /installDriveByEarSetting/);
 assert.ok(app.indexOf('./ui/drive-by-ear-setting.js') < app.indexOf('./audio/audio-system.js'));
 assert.match(app, /if \(driveByEarEnabled\) \{/);
-assert.ok(app.indexOf('if (driveByEarEnabled)') < app.indexOf('./audio/driving-soundscape.js'));
+assert.match(app, /if \(driveByEarEnabled\) \{[\s\S]*\.\/audio\/organic-ribbon\.js[\s\S]*installOrganicRibbon\(\)[\s\S]*\.\/audio\/driving-soundscape\.js/,
+  'The organic graph decorator must only load inside the DBE-enabled module branch');
+assert.ok(app.indexOf('if (driveByEarEnabled)') < app.indexOf('./audio/organic-ribbon.js'));
+assert.ok(app.indexOf('./audio/organic-ribbon.js') < app.indexOf('./audio/driving-soundscape.js'));
 assert.match(setting, /DRIVE BY EAR<sup>™<\/sup>/);
 assert.match(setting, /On by default for every player/);
 assert.match(setting, /may improve performance on older devices/);
@@ -50,11 +54,18 @@ assert.match(menu, /if \(soundGuideButton\) soundGuideButton\.hidden/);
 assert.match(audio, /DRIVE_BY_EAR_ENABLED = globalThis\.__turnDriveByEarEnabled !== false/);
 assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) \{[\s\S]*window\.addEventListener\('turn:pace-note'/);
 assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) installDbeGraphs\(\)/,
-  'DBE off must not create tonal Slider or surface graphs');
+  'DBE off must not create Slider or surface graphs');
 assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) \{\s*const recoveryRibbon/,
-  'DBE off must skip tonal Slider and surface processing');
+  'DBE off must skip Slider and surface processing');
 assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) updateDrivingSafety/,
   'DBE off must skip Wrong Way processing');
+assert.match(organic, /const baseAudio = globalThis\.__turnAudio/);
+assert.match(organic, /captureAudioFactories\(\)/,
+  'Organic graph observation must never run when its optional module is not imported');
+assert.doesNotMatch(organic, /new AudioContext|new webkitAudioContext|HTMLAudioElement|new Audio\(|fetch\(/,
+  'Even when enabled, the organic layer must not create a dormant second engine or asset request');
+assert.match(organic, /baseAudio\.silence\(\.\.\.args\)/,
+  'Organic voices must remain controlled by the central Slider gain and silence path');
 assert.doesNotMatch(audio, /driftPanner|smoothPan\(drift/);
 assert.match(audio, /if \(sliderGain\) hardMute\(sliderGain\.gain, now\)/);
 assert.match(audio, /if \(surfaceGain\) hardMute\(surfaceGain\.gain, now\)/);
@@ -62,4 +73,4 @@ assert.doesNotMatch(audio, /recoveryGain|recoveryFilter|recoveryPanner|playRecov
   'The obsolete second recovery graph must remain deleted');
 assert.doesNotMatch(paceAudio, /AudioContext|webkitAudioContext/);
 
-console.log(`TURN ${release.id} Drive By Ear universal-default and tonal recovery true-off path passed.`);
+console.log(`TURN ${release.id} Drive By Ear universal-default and organic true-off path passed.`);
