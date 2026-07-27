@@ -100,8 +100,8 @@ function decorateCapturedRibbon() {
   const context = CAPTURED.contexts.at(-1);
   const sliderTone = findOscillatorNear(390, 12);
   const sliderHarmonic = findOscillatorNear(585, 18);
-  const sliderToneMix = findGainNear(0.78, 0.025);
-  const sliderHarmonicMix = findGainNear(0.14, 0.025);
+  const sliderToneMix = findGainNear(0.78, 0.012);
+  const sliderHarmonicMix = findGainNear(0.14, 0.012);
   const sliderFilter = CAPTURED.filters.find((filter) => (
     filter.type === 'lowpass'
     && Math.abs(filter.frequency.value - 1050) < 80
