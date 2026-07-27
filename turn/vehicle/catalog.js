@@ -1,4 +1,5 @@
 export const DEFAULT_VEHICLE_ID = 'classic';
+export const LEGACY_VEHICLE_ID = 'sedan';
 export const DEFAULT_VEHICLE_COLOR = '#ffd43b';
 export const DEFAULT_VEHICLE_SECONDARY_COLOR = '#f8f9fa';
 export const VEHICLE_SELECTION_KEY = 'turn-vehicle-selection-v1';
@@ -61,6 +62,7 @@ export const CAR_PALETTE = Object.freeze([
 // every other vehicle trades strengths for weaknesses instead of becoming a straight upgrade.
 // Training Car deliberately spends its budget on control, drift and a long boost tank so new
 // players and soundscape testers can drive slowly without losing the full TURN control vocabulary.
+// LEGACY_VEHICLE_ID preserves the Sedan identity of pre-catalog rivals that never stored a car id.
 // The vendored packs use three different authored front axes. modelYawQuarterTurns
 // rotates each raw GLB so every car has the same local front before TURN positions it.
 // enginePitch is an audio-only baseline multiplier: heavy vehicles sit lower, race cars higher.
