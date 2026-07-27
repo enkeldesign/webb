@@ -114,9 +114,9 @@ assert.ok(importMapText, 'Production must expose its import map');
 const imports = JSON.parse(importMapText).imports;
 const releaseTarget = (path) => `${path}?build=${release.cacheKey}`;
 
-assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\.')} · Build ${release.id.replaceAll('.', '\.')}`));
-assert.match(index, new RegExp(`\.\/garage\/lot-r10\.css\?build=${release.cacheKey}`));
-assert.match(index, new RegExp(`\.\/track-intro\.css\?build=${release.cacheKey}`), 'The track intro styling must be published with the active release');
+assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
+assert.match(index, new RegExp(`\\.\\/garage\\/lot-r10\\.css\\?build=${release.cacheKey}`));
+assert.match(index, new RegExp(`\\.\\/track-intro\\.css\\?build=${release.cacheKey}`), 'The track intro styling must be published with the active release');
 assert.equal(imports['./garage/lot-r10.js?build=20260720-r19'], releaseTarget('./garage/lot-track-select.js'), 'The current release must place the compact track-first wrapper in front of the stable Lot implementation');
 assert.equal(imports['./ui/track-intro.js?build=20260725-r75'], releaseTarget('./ui/track-intro.js'), 'The current release must publish the track intro module');
 assert.equal(imports['./race/lap-system.js?build=20260720-r19'], releaseTarget('./race/lap-system-r86.js'), 'The current release must publish the unranked lap policy');
