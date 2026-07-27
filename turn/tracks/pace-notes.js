@@ -3,6 +3,12 @@ export const PACE_NOTE_DIRECTION = Object.freeze({
   RIGHT: 1
 });
 
+export const PACE_NOTE_LENGTH = Object.freeze({
+  SHORT: 'short',
+  MEDIUM: 'medium',
+  LONG: 'long'
+});
+
 function createPaceNote(id, triggerStart, triggerEnd, groups) {
   return Object.freeze({
     id,
@@ -29,17 +35,37 @@ const COUNTRYSIDE_PACE_NOTES = Object.freeze([
 
 const AIRPORT_PACE_NOTES = Object.freeze([
   createPaceNote('airport-1', 0.948, 0.988, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2 }
+    {
+      direction: PACE_NOTE_DIRECTION.RIGHT,
+      severity: 2,
+      length: PACE_NOTE_LENGTH.MEDIUM
+    }
   ]),
   createPaceNote('airport-2', 0.155, 0.225, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 1 }
+    {
+      direction: PACE_NOTE_DIRECTION.RIGHT,
+      severity: 1,
+      length: PACE_NOTE_LENGTH.LONG
+    }
   ]),
   createPaceNote('airport-3', 0.385, 0.455, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2 },
-    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 3 }
+    {
+      direction: PACE_NOTE_DIRECTION.RIGHT,
+      severity: 2,
+      length: PACE_NOTE_LENGTH.LONG
+    },
+    {
+      direction: PACE_NOTE_DIRECTION.LEFT,
+      severity: 3,
+      length: PACE_NOTE_LENGTH.MEDIUM
+    }
   ]),
   createPaceNote('airport-4', 0.565, 0.625, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2 }
+    {
+      direction: PACE_NOTE_DIRECTION.RIGHT,
+      severity: 2,
+      length: PACE_NOTE_LENGTH.LONG
+    }
   ])
 ]);
 
