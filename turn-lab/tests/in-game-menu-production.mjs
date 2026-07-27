@@ -33,16 +33,16 @@ assert.match(index, new RegExp(`in-game-menu\\.css\\?build=${release.cacheKey}`)
 assert.match(index, /id="calibrateButton"[^>]*>Recalibrate<\/button>/);
 assert.match(index, /id="resetButton"[^>]*>Restart Lap<\/button>/);
 assert.match(app, /await import\(withBuild\('\.\/ui\/in-game-menu\.js'\)\)/);
-assert.match(menu, /backToStartButton\.textContent = 'Restart Lap'/, 'The race reset action should describe restarting the lap rather than navigating away');
-assert.match(menu, /Restart the current lap from the start line/, 'Restart Lap must expose an accurate accessible label');
-assert.match(menu, /inGameMenuVisibilityFor\(runtime\.state\.mode\)/, 'Menu visibility must follow the explicit game mode');
-assert.doesNotMatch(menu, /state\.speed/, 'Menu visibility must not infer race state from speed');
+assert.match(menu, /backToStartButton\.textContent = 'Restart Lap'/);
+assert.match(menu, /Restart the current lap from the start line/);
+assert.match(menu, /inGameMenuVisibilityFor\(runtime\.state\.mode\)/);
+assert.doesNotMatch(menu, /state\.speed/);
 assert.match(menu, /backToStartButton\.hidden = !visibility\.backToStart/);
 assert.match(menu, /backToLotButton\.hidden = !visibility\.startActions/);
 assert.match(menu, /recalibrateButton\.hidden = !visibility\.startActions/);
 assert.match(menu, /soundGuideButton\.hidden = !visibility\.startActions/);
 assert.match(menu, /resetRivalsButton\.hidden = !visibility\.startActions/);
-assert.match(menu, /const buttonOrder = \[\s*backToLotButton,\s*recalibrateButton,\s*soundGuideButton,\s*resetRivalsButton,\s*spectateButton,\s*backToStartButton\s*\]/, 'Start actions must include the Sound Guide in the requested order');
+assert.match(menu, /const buttonOrder = \[\s*backToLotButton,\s*recalibrateButton,\s*soundGuideButton,\s*resetRivalsButton,\s*spectateButton,\s*backToStartButton\s*\]/);
 assert.match(menu, /button\.textContent = 'Sound Guide'/);
 assert.match(menu, /<h2 id="soundGuideTitle">DRIVE BY SOUND<\/h2>/);
 assert.match(menu, /<h3 id="soundGuideHow">HOW TO DRIVE<\/h3>/);
@@ -58,37 +58,45 @@ for (const heading of [
 ]) {
   assert.match(menu, new RegExp(`<h4>${heading}<\\/h4>`), `Sound Guide must explain ${heading}`);
 }
-assert.match(menu, /one to three dry beeps/, 'Pace-note copy must explain the authored severity vocabulary');
-assert.match(menu, /A delayed echo marks a long corner/, 'Pace-note copy must explain corner length through timing');
-assert.match(menu, /Two groups describe linked corners in order/, 'Pace-note copy must explain linked corner sequences');
-assert.match(menu, /combines where the car is with where its current motion will take it/, 'The guide must explain the Slider as present plus projected trajectory');
-assert.match(menu, /Steer toward the slider sound/, 'The Slider must expose the correct toward-the-sound control rule');
-assert.match(menu, /same Slider intensifies and continues guiding you toward the road/, 'Off-road guidance must preserve the same grammar');
-assert.match(menu, /Tyre sound stays centred/, 'DRIFT must no longer use directional steering semantics');
-assert.match(menu, /Strong(er)? drift spreads wider across both ears/, 'DRIFT must explain intensity through stereo width');
-assert.match(menu, /Engine, drift and boost automatically make space/, 'The guide must explain the layered mixer rather than encouraging louder cues');
-assert.doesNotMatch(menu, /RECOVERY BEACON|Steer away|TURN RIBBON|TURN PULSE|ROAD EDGE|CORNER FLOW|AIRPORT/, 'Retired or contradictory DBE language must disappear from the guide');
+assert.match(menu, /one to three dry beeps/);
+assert.match(menu, /A delayed echo marks a long corner/);
+assert.match(menu, /Two groups describe linked corners in order/);
+assert.match(menu, /A soft tonal Slider guides your steering/,
+  'The guide must describe the quieter sustained timbre');
+assert.match(menu, /Steer toward it/,
+  'The one steering grammar must remain explicit');
+assert.match(menu, /centred gravel sound marks the surface/,
+  'Surface state must be explained as non-directional');
+assert.match(menu, /aims toward a point ahead on the racing line/,
+  'The guide must explain recovery as road plus heading alignment');
+assert.match(menu, /Follow it until the gravel fades/,
+  'Returning to asphalt must have an audible completion condition');
+assert.match(menu, /The Slider is directional\. Surface and drift stay centred/,
+  'The guide must distinguish steering from vehicle and surface information');
+assert.match(menu, /Off road, the Slider handles both route recovery and direction instead/,
+  'Wrong Way must not compete with off-road recovery');
+assert.doesNotMatch(menu, /RECOVERY BEACON|Steer away|continuous textured sound|TURN RIBBON|TURN PULSE|ROAD EDGE|CORNER FLOW|AIRPORT/);
 assert.match(menu, /dialog\.showModal/);
 assert.match(menu, /aria-labelledby', 'soundGuideTitle'/);
-assert.match(menu, /closest\('\.chip'\)/, 'Restart Lap must follow the TIME card validity state rather than duplicate race logic');
-assert.match(menu, /classList\.contains\('is-invalid-lap'\)/, 'The TIME card invalid class must be the shared source of truth');
-assert.match(menu, /new MutationObserver\(\(\) => syncLapValidity\(\)\)/, 'Invalid-lap feedback must remain event-driven rather than adding another loop');
-assert.match(menu, /classList\.toggle\('is-lap-invalid', invalid\)/, 'Restart Lap must stay red while the visible TIME card is invalid');
-assert.match(menu, /classList\.add\('is-lap-invalid-pulse'\)/, 'Restart Lap must pulse once when the lap first becomes invalid');
-assert.doesNotMatch(menu, /setInterval|setAnimationLoop/, 'Menu features must not add a polling loop');
+assert.match(menu, /closest\('\.chip'\)/);
+assert.match(menu, /classList\.contains\('is-invalid-lap'\)/);
+assert.match(menu, /new MutationObserver\(\(\) => syncLapValidity\(\)\)/);
+assert.match(menu, /classList\.toggle\('is-lap-invalid', invalid\)/);
+assert.match(menu, /classList\.add\('is-lap-invalid-pulse'\)/);
+assert.doesNotMatch(menu, /setInterval|setAnimationLoop/);
 assert.match(controls, /Reset Rivals/);
 assert.match(controls, /globalThis\.__turnResetRivals/);
 assert.match(backToLot, /Back to Lot/);
 assert.match(main, /globalThis\.__turnResetRivals = resetRivals/);
-assert.match(spectate, /spectateButton\.hidden = !current\.available/, 'Spectate must remain conditional on a saved rival');
+assert.match(spectate, /spectateButton\.hidden = !current\.available/);
 assert.match(css, /\.utility-group\[data-menu-state="staged"\]/);
 assert.match(css, /\.utility-group\[data-menu-state="racing"\] \.back-to-start-button/);
 assert.match(css, /\.sound-guide-dialog::backdrop/);
 assert.match(css, /\.sound-guide-list \{/);
 assert.match(css, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
-assert.match(css, /\.back-to-start-button\.is-lap-invalid \{\s*background: #ff6b6b;/s, 'Restart Lap must use the same invalid red as the TIME card');
-assert.match(css, /@keyframes turn-restart-invalid-pulse/, 'The invalid restart cue must pulse exactly through a dedicated one-shot animation');
-assert.match(css, /prefers-reduced-motion: reduce/, 'The restart cue must respect reduced-motion preferences');
+assert.match(css, /\.back-to-start-button\.is-lap-invalid \{\s*background: #ff6b6b;/s);
+assert.match(css, /@keyframes turn-restart-invalid-pulse/);
+assert.match(css, /prefers-reduced-motion: reduce/);
 assert.match(css, /\.utility-group\[data-menu-state="hidden"\]/);
 
-console.log(`TURN ${release.id} state-aware in-game menu, continuous Slider guide and invalid-lap Restart Lap cue passed.`);
+console.log(`TURN ${release.id} state-aware menu and recovery UX Sound Guide passed.`);

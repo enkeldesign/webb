@@ -21,12 +21,7 @@ export function installUniversalDrivingSoundscape() {
         cachedFrame = createDrivingSoundscapeFrame(globalThis.__turnRuntime);
         lastComputedAt = now;
       }
-
-      const audioFrame = { ...cachedFrame, ...frame };
-      // Keep the same Slider grammar beyond the road edge. The core audio engine's
-      // legacy off-road flag would replace it with a second, opposite recovery cue.
-      if (cachedFrame.offRoad) audioFrame.offRoad = false;
-      baseAudio.update(audioFrame, now);
+      baseAudio.update({ ...cachedFrame, ...frame }, now);
     },
     cue: (...args) => baseAudio.cue(...args),
     silence: (...args) => baseAudio.silence(...args),
@@ -69,8 +64,13 @@ export function createDrivingSoundscapeFrame(runtime) {
   const headingAlignment = clamp(dot(forward, sample.tangent), -1, 1);
   const headingError = signedAngle(forward, sample.tangent);
   const headingCorrectionPan = clamp(headingError / (Math.PI * 0.5), -1, 1);
-  const wrongWay = headingAlignment < -0.42 && speed > 7 && finiteNumber(state.brake, 0) < 0.1;
   const offRoad = Boolean(state.offRoad);
+  // Off-road recovery owns both road-finding and race-direction alignment.
+  // The generic Wrong Way alarm is reserved for a car that is still on the road.
+  const wrongWay = !offRoad
+    && headingAlignment < -0.42
+    && speed > 7
+    && finiteNumber(state.brake, 0) < 0.1;
 
   const slider = createTrajectorySlider({
     samples,
@@ -78,6 +78,7 @@ export function createDrivingSoundscapeFrame(runtime) {
     position: state.position,
     velocity,
     right,
+    forward,
     currentSample: sample,
     signedTrackOffset,
     trackDistance,
@@ -98,6 +99,10 @@ export function createDrivingSoundscapeFrame(runtime) {
     sliderRisk: slider.risk,
     sliderPan: slider.pan,
     sliderValue: slider.value,
+    sliderMode: slider.mode,
+    surfaceAmount: slider.surfaceAmount,
+    recoveryHeadingError: slider.recoveryHeadingError,
+    recoveryTargetDistance: slider.recoveryTargetDistance,
     offRoad,
     headingAlignment,
     headingCorrectionPan,
@@ -119,6 +124,10 @@ export function emptyDrivingSoundscapeFrame() {
     sliderRisk: 0,
     sliderPan: 0,
     sliderValue: 0,
+    sliderMode: 'road',
+    surfaceAmount: 0,
+    recoveryHeadingError: 0,
+    recoveryTargetDistance: 0,
     offRoad: false,
     headingAlignment: 1,
     headingCorrectionPan: 0,
@@ -135,6 +144,7 @@ function createTrajectorySlider({
   position,
   velocity,
   right,
+  forward,
   currentSample,
   signedTrackOffset,
   trackDistance,
@@ -144,6 +154,20 @@ function createTrajectorySlider({
   wrongWay
 }) {
   if (wrongWay || (!offRoad && speed < 1.5)) return emptyTrajectorySlider();
+
+  if (offRoad) {
+    return createRecoverySlider({
+      samples,
+      startIndex,
+      position,
+      right,
+      forward,
+      currentSample,
+      trackDistance,
+      roadHalfWidth,
+      speed
+    });
+  }
 
   const horizon = clamp(
     MIN_TRAJECTORY_HORIZON_SECONDS + speed * 0.014,
@@ -165,33 +189,24 @@ function createTrajectorySlider({
   const currentNormalized = clamp(signedTrackOffset / roadHalfWidth, -1.5, 1.5);
   const predictedNormalized = clamp(predictedTrackOffset / roadHalfWidth, -1.5, 1.5);
 
-  // The slider combines where the car is with where its present motion will put it.
+  // The road Slider combines where the car is with where its present motion will put it.
   // Prediction carries more weight, while current position keeps the cue stable at low speed.
-  const projectedValue = clamp(currentNormalized * 0.36 + predictedNormalized * 0.64, -1.35, 1.35);
-  const offRoadDepth = offRoad
-    ? clamp(
-      (trackDistance - roadHalfWidth * 0.82) / Math.max(1, roadHalfWidth * 0.9),
-      0,
-      1
-    )
-    : 0;
-  // Crossing the road edge changes urgency, never direction or control grammar.
-  // The same ribbon remains on the same steering side and simply becomes harder to miss.
-  const value = projectedValue;
+  const value = clamp(currentNormalized * 0.36 + predictedNormalized * 0.64, -1.35, 1.35);
   const magnitude = Math.abs(value);
-  const speedPresence = offRoad ? 1 : smoothstep(1.5, 8, speed);
-  const baseRisk = smoothstep(0.18, 0.86, magnitude) * speedPresence;
-  const risk = offRoad
-    ? Math.max(baseRisk, 0.78 + offRoadDepth * 0.22)
-    : baseRisk;
+  const speedPresence = smoothstep(1.5, 8, speed);
+  const risk = smoothstep(0.18, 0.86, magnitude) * speedPresence;
   const presence = speedPresence;
 
   if (magnitude < 0.015) {
     return {
+      mode: 'road',
       presence,
       risk,
       pan: 0,
       value,
+      surfaceAmount: 0,
+      recoveryHeadingError: 0,
+      recoveryTargetDistance: 0,
       predictedTrackOffset,
       predictedTrackDistance
     };
@@ -199,30 +214,109 @@ function createTrajectorySlider({
 
   const guidanceNormal = scale(predictedSample.normal, Math.sign(value));
   const earSide = clamp(dot(guidanceNormal, right), -1, 1);
-  const panMagnitude = offRoad
-    ? Math.max(smoothstep(0.04, 0.78, magnitude), 0.82 + offRoadDepth * 0.18)
-    : smoothstep(0.04, 0.78, magnitude);
+  const panMagnitude = smoothstep(0.04, 0.78, magnitude);
   const pan = clamp(earSide * panMagnitude, -1, 1);
 
   return {
+    mode: 'road',
     presence,
     risk,
     pan,
     value,
+    surfaceAmount: 0,
+    recoveryHeadingError: 0,
+    recoveryTargetDistance: 0,
     predictedTrackOffset,
     predictedTrackDistance
   };
 }
 
+function createRecoverySlider({
+  samples,
+  startIndex,
+  position,
+  right,
+  forward,
+  currentSample,
+  trackDistance,
+  roadHalfWidth,
+  speed
+}) {
+  const lookAheadDistance = clamp(
+    18 + trackDistance * 0.85 + speed * 0.55,
+    22,
+    90
+  );
+  const targetSample = sampleAheadByDistance(samples, startIndex, lookAheadDistance)
+    || currentSample;
+  const targetVector = subtract(targetSample.point, position);
+  const targetDirection = normalizedVector(targetVector);
+  if (!targetDirection) return emptyTrajectorySlider();
+
+  const lateral = clamp(dot(targetDirection, right), -1, 1);
+  const forwardness = clamp(dot(targetDirection, forward), -1, 1);
+  const turnAngle = signedAngle(forward, targetDirection);
+  const turnSign = Math.sign(turnAngle) || Math.sign(lateral) || 1;
+  const behindAmount = smoothstep(0.05, 0.86, -forwardness);
+  const lateralPan = clamp(lateral * 1.35, -1, 1);
+  const panMagnitude = Math.max(
+    Math.abs(lateralPan),
+    behindAmount * 0.94
+  );
+  const pan = clamp(turnSign * panMagnitude, -1, 1);
+
+  const offRoadDepth = clamp(
+    (trackDistance - roadHalfWidth * 0.82) / Math.max(1, roadHalfWidth * 2.2),
+    0,
+    1
+  );
+  const risk = 0.8 + offRoadDepth * 0.2;
+  const surfaceAmount = clamp(0.32 + offRoadDepth * 0.68, 0, 1);
+  const targetDistance = horizontalLength(targetVector);
+
+  return {
+    mode: 'recovery',
+    presence: 1,
+    risk,
+    pan,
+    value: clamp(turnAngle / Math.PI, -1, 1),
+    surfaceAmount,
+    recoveryHeadingError: Math.abs(turnAngle) / Math.PI,
+    recoveryTargetDistance: targetDistance,
+    predictedTrackOffset: 0,
+    predictedTrackDistance: trackDistance
+  };
+}
+
 function emptyTrajectorySlider() {
   return {
+    mode: 'road',
     presence: 0,
     risk: 0,
     pan: 0,
     value: 0,
+    surfaceAmount: 0,
+    recoveryHeadingError: 0,
+    recoveryTargetDistance: 0,
     predictedTrackOffset: 0,
     predictedTrackDistance: 0
   };
+}
+
+function sampleAheadByDistance(samples, startIndex, targetDistance) {
+  let travelled = 0;
+  let previous = samples[normalizeIndex(startIndex, samples.length)];
+  if (!previous?.point) return null;
+
+  for (let step = 1; step < samples.length; step += 1) {
+    const sample = samples[normalizeIndex(startIndex + step, samples.length)];
+    if (!sample?.point) continue;
+    travelled += horizontalDistance(previous.point, sample.point);
+    if (travelled >= targetDistance) return sample;
+    previous = sample;
+  }
+
+  return previous;
 }
 
 function nearestSampleInWindow(samples, startIndex, position, radius) {

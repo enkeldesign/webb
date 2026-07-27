@@ -31,7 +31,7 @@ function createSoundGuide() {
 
       <section aria-labelledby="soundGuideHow">
         <h3 id="soundGuideHow">HOW TO DRIVE</h3>
-        <p id="soundGuideIntro">Use headphones. Pace notes tell you what comes next. The Trajectory Slider combines where the car is with where its current motion will take it. Steer toward the slider sound. If you leave the track, the same Slider intensifies and continues guiding you toward the road.</p>
+        <p id="soundGuideIntro">Use headphones. Pace notes tell you what comes next. A soft tonal Slider guides your steering. Steer toward it. On the road it follows your trajectory. Off road, a centred gravel sound marks the surface while the Slider aims toward a point ahead on the racing line.</p>
       </section>
 
       <section aria-labelledby="soundGuideLegend">
@@ -43,7 +43,7 @@ function createSoundGuide() {
           </section>
           <section>
             <h4>TRAJECTORY SLIDER</h4>
-            <p>A continuous textured sound guides your steering. It grows stronger as a correction becomes more urgent. Steer toward the sound.</p>
+            <p>A soft continuous tone guides your steering. It becomes clearer as a correction grows more urgent. Steer toward the tone.</p>
           </section>
           <section>
             <h4>DRIFT</h4>
@@ -51,11 +51,11 @@ function createSoundGuide() {
           </section>
           <section>
             <h4>OFF ROAD</h4>
-            <p>The same Slider becomes stronger and keeps pointing toward the road. Continue steering toward the sound until the car is back on the track.</p>
+            <p>Centred gravel and bumps mean the tyres have left the asphalt. The tonal Slider remains the steering instruction and aims toward a point ahead on the racing line, helping you return facing the correct direction. Follow it until the gravel fades.</p>
           </section>
           <section>
             <h4>SOUND LAYERS</h4>
-            <p>Wrong Way replaces normal navigation. Pace notes briefly clear room for route information. Engine, drift and boost automatically make space whenever guidance needs to be heard.</p>
+            <p>The Slider is directional. Surface and drift stay centred. Wrong Way replaces normal navigation. Pace notes briefly clear room for route information. Engine, drift and boost automatically make space whenever guidance needs to be heard.</p>
           </section>
           <section>
             <h4>RIVAL NEAR</h4>
@@ -63,7 +63,7 @@ function createSoundGuide() {
           </section>
           <section>
             <h4>WRONG WAY</h4>
-            <p>A double falling tone means the car is facing the wrong way. A final side tone points toward the correction.</p>
+            <p>A double falling tone means the car is facing the wrong way while on the road. A final side tone points toward the correction. Off road, the Slider handles both route recovery and direction instead.</p>
           </section>
         </div>
       </section>

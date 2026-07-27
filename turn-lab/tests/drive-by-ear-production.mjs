@@ -29,32 +29,37 @@ assert.equal(saveDriveByEarEnabled(false, storage), true);
 assert.equal(driveByEarEnabled(storage), false);
 assert.equal(saveDriveByEarEnabled(true, storage), true);
 assert.equal(driveByEarEnabled(storage), true);
-assert.equal(driveByEarEnabled({ getItem: () => { throw new Error('blocked'); } }), true, 'Storage failures must preserve the universal default');
-assert.equal(saveDriveByEarEnabled(false, null), false, 'A missing storage backend must not pretend to save the preference');
-assert.equal(saveDriveByEarEnabled(false, { setItem: () => { throw new Error('blocked'); } }), false, 'A blocked storage write must be reported to the interface');
+assert.equal(driveByEarEnabled({ getItem: () => { throw new Error('blocked'); } }), true);
+assert.equal(saveDriveByEarEnabled(false, null), false);
+assert.equal(saveDriveByEarEnabled(false, { setItem: () => { throw new Error('blocked'); } }), false);
 
 assert.match(app, /installDriveByEarSetting/);
-assert.ok(app.indexOf('./ui/drive-by-ear-setting.js') < app.indexOf('./audio/audio-system.js'), 'The saved preference must be known before audio modules install');
+assert.ok(app.indexOf('./ui/drive-by-ear-setting.js') < app.indexOf('./audio/audio-system.js'));
 assert.match(app, /if \(driveByEarEnabled\) \{/);
 assert.ok(app.indexOf('if (driveByEarEnabled)') < app.indexOf('./audio/driving-soundscape.js'));
 assert.match(setting, /DRIVE BY EAR<sup>™<\/sup>/);
 assert.match(setting, /On by default for every player/);
 assert.match(setting, /may improve performance on older devices/);
-assert.match(setting, /blocked local storage/, 'The interface must explain why an unsaved preference cannot be applied');
-assert.match(setting, /requestAnimationFrame\(reload\)/, 'Changing the preference must reload into a clean module graph');
+assert.match(setting, /blocked local storage/);
+assert.match(setting, /requestAnimationFrame\(reload\)/);
 assert.match(style, /\.drive-by-ear-card/);
 assert.match(style, /orientation: landscape/);
-assert.match(style, /max-height: 500px/, 'The card must retain a compact phone-landscape layout');
+assert.match(style, /max-height: 500px/);
 assert.match(menu, /globalThis\.__turnDriveByEarEnabled === false/);
-assert.match(menu, /if \(soundGuideButton\) soundGuideButton\.hidden/, 'The Sound Guide must not advertise disabled processing');
+assert.match(menu, /if \(soundGuideButton\) soundGuideButton\.hidden/);
 assert.match(audio, /DRIVE_BY_EAR_ENABLED = globalThis\.__turnDriveByEarEnabled !== false/);
-assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) \{[\s\S]*window\.addEventListener\('turn:pace-note'/, 'DBE off must not install pace-note listeners');
-assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) installDbeGraphs\(\)/, 'DBE off must not create Slider or Recovery graphs');
-assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) \{\s*const sliderLevel/, 'DBE off must skip continuous Slider processing');
-assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) \{\s*updateDrivingSafety/, 'DBE off must skip Recovery and Wrong Way processing');
-assert.doesNotMatch(audio, /driftPanner|smoothPan\(drift/, 'DRIFT must remain centred regardless of the DBE preference');
-assert.match(audio, /if \(sliderGain\) hardMute\(sliderGain\.gain, now\)/, 'Core silence must remain safe when the Slider graph was never created');
-assert.match(audio, /if \(recoveryGain\) hardMute\(recoveryGain\.gain, now\)/, 'Core silence must remain safe when the Recovery graph was never created');
-assert.doesNotMatch(paceAudio, /AudioContext|webkitAudioContext/, 'The optional pace-note module must carry no dormant audio engine');
+assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) \{[\s\S]*window\.addEventListener\('turn:pace-note'/);
+assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) installDbeGraphs\(\)/,
+  'DBE off must not create tonal Slider or surface graphs');
+assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) \{\s*const recoveryRibbon/,
+  'DBE off must skip tonal Slider and surface processing');
+assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) updateDrivingSafety/,
+  'DBE off must skip Wrong Way processing');
+assert.doesNotMatch(audio, /driftPanner|smoothPan\(drift/);
+assert.match(audio, /if \(sliderGain\) hardMute\(sliderGain\.gain, now\)/);
+assert.match(audio, /if \(surfaceGain\) hardMute\(surfaceGain\.gain, now\)/);
+assert.doesNotMatch(audio, /recoveryGain|recoveryFilter|recoveryPanner|playRecoveryCue/,
+  'The obsolete second recovery graph must remain deleted');
+assert.doesNotMatch(paceAudio, /AudioContext|webkitAudioContext/);
 
-console.log(`TURN ${release.id} Drive By Ear universal-default and layered true-off path passed.`);
+console.log(`TURN ${release.id} Drive By Ear universal-default and tonal recovery true-off path passed.`);
