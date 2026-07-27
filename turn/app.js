@@ -17,14 +17,17 @@ const { installDriveByEarSetting } = await import(
 );
 const driveByEarEnabled = installDriveByEarSetting();
 
+let organicRibbon = null;
+if (driveByEarEnabled) {
+  organicRibbon = await import(withBuild('./audio/organic-ribbon.js'));
+  organicRibbon.prepareOrganicRibbonCapture();
+}
+
 const { installTurnAudio } = await import(withBuild('./audio/audio-system.js'));
 installTurnAudio();
 
 if (driveByEarEnabled) {
-  const { installOrganicRibbon } = await import(
-    withBuild('./audio/organic-ribbon.js')
-  );
-  installOrganicRibbon();
+  organicRibbon.installOrganicRibbon();
 
   const { installUniversalDrivingSoundscape } = await import(
     withBuild('./audio/driving-soundscape.js')
