@@ -1,7 +1,7 @@
 import { normalizeReplayFrames } from './replay-system.js';
 import {
   DEFAULT_VEHICLE_COLOR,
-  DEFAULT_VEHICLE_ID,
+  LEGACY_VEHICLE_ID,
   DEFAULT_VEHICLE_SECONDARY_COLOR,
   normalizeVehicleColor,
   normalizeVehicleId,
@@ -71,7 +71,7 @@ export function loadRivalsState({ state, samples, findNearestTrack, trackId }) {
         laps = [{
           time: oldGhost.bestTime,
           hitAt: null,
-          carId: DEFAULT_VEHICLE_ID,
+          carId: LEGACY_VEHICLE_ID,
           carColor: DEFAULT_VEHICLE_COLOR,
           carSecondaryColor: DEFAULT_VEHICLE_SECONDARY_COLOR,
           frames: oldGhost.frames
@@ -88,7 +88,7 @@ export function loadRivalsState({ state, samples, findNearestTrack, trackId }) {
       .map((lap, index) => ({
         ...lap,
         hitAt: lap.hitAt != null && Number.isFinite(Number(lap.hitAt)) ? Number(lap.hitAt) : null,
-        carId: normalizeVehicleId(lap.carId),
+        carId: lap.carId ? normalizeVehicleId(lap.carId) : LEGACY_VEHICLE_ID,
         carColor: lap.carColor
           ? normalizeVehicleColor(lap.carColor)
           : LEGACY_RIVAL_COLORS[index % LEGACY_RIVAL_COLORS.length],
@@ -132,7 +132,7 @@ export function getStoredBestLap(trackId = DEFAULT_TRACK_ID) {
         if (!best || time < best.time) {
           const summary = {
             time,
-            carId: normalizeVehicleId(lap?.carId)
+            carId: lap?.carId ? normalizeVehicleId(lap.carId) : LEGACY_VEHICLE_ID
           };
           if (lap?.carColor) summary.carColor = normalizeVehicleColor(lap.carColor);
           if (lap?.carSecondaryColor) {
@@ -151,7 +151,7 @@ export function getStoredBestLap(trackId = DEFAULT_TRACK_ID) {
       if (Number.isFinite(legacyTime)) {
         return {
           time: legacyTime,
-          carId: DEFAULT_VEHICLE_ID
+          carId: LEGACY_VEHICLE_ID
         };
       }
     }
