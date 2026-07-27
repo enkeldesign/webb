@@ -110,6 +110,7 @@ function installPublicApi(runtime) {
       available: Boolean(state.running && !state.lapActive && !spectate.active && state.competitorLaps.length),
       active: spectate.active,
       index: spectate.index,
+      rank: lap ? spectate.index + 1 : null,
       total: state.competitorLaps.length,
       name: spectateDateLabel(lap, state.competitorLaps),
       record: lap ? formatTime(lap.time) : ''
@@ -193,11 +194,12 @@ function installUi(runtime) {
   bar.hidden = true;
   bar.innerHTML = `
     <button class="spectate-close" type="button" aria-label="Stop spectating">×</button>
-    <div class="spectate-following"><strong></strong><b></b></div>
+    <div class="spectate-following"><strong><span class="spectate-rank"></span><span class="spectate-name"></span></strong><b></b></div>
     <button class="spectate-next" type="button">NEXT &gt;</button>`;
   document.body.appendChild(bar);
 
-  const nameEl = bar.querySelector('strong');
+  const rankEl = bar.querySelector('.spectate-rank');
+  const nameEl = bar.querySelector('.spectate-name');
   const recordEl = bar.querySelector('b');
   const closeButton = bar.querySelector('.spectate-close');
   const nextButton = bar.querySelector('.spectate-next');
@@ -217,6 +219,7 @@ function installUi(runtime) {
       spectateButton.hidden = !current.available;
       bar.hidden = !current.active;
       document.body.classList.toggle('turn-spectating', current.active);
+      rankEl.textContent = current.rank ? `${current.rank}.` : '';
       nameEl.textContent = current.name || 'Ghost';
       recordEl.textContent = current.record || '';
       nextButton.hidden = current.total < 2;
