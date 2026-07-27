@@ -14,15 +14,18 @@ const [releaseSource, app, audio, organic, soundscape] = await Promise.all([
 ]);
 const release = JSON.parse(releaseSource);
 
-assert.match(app, /import\(\s*withBuild\('\.\/audio\/organic-ribbon\.js'\)\s*\)/);
-assert.match(app, /installOrganicRibbon\(\)/);
+assert.match(app, /organicRibbon = await import\(withBuild\('\.\/audio\/organic-ribbon\.js'\)\)/);
+assert.match(app, /organicRibbon\.prepareOrganicRibbonCapture\(\)/);
+assert.match(app, /organicRibbon\.installOrganicRibbon\(\)/);
 assert.match(app, /import\(\s*withBuild\('\.\/audio\/driving-soundscape\.js'\)\s*\)/);
 assert.match(app, /installUniversalDrivingSoundscape\(\)/);
 assert.ok(
-  app.indexOf('./audio/audio-system.js') < app.indexOf('./audio/organic-ribbon.js')
-    && app.indexOf('./audio/organic-ribbon.js') < app.indexOf('./audio/driving-soundscape.js')
+  app.indexOf('./audio/organic-ribbon.js') < app.indexOf('./audio/audio-system.js')
+    && app.indexOf('prepareOrganicRibbonCapture()') < app.indexOf('./audio/audio-system.js')
+    && app.indexOf('installTurnAudio()') < app.indexOf('installOrganicRibbon()')
+    && app.indexOf('./audio/audio-system.js') < app.indexOf('./audio/driving-soundscape.js')
     && app.indexOf('./audio/driving-soundscape.js') < app.indexOf('./ui/gameplay-controls.js'),
-  'The organic ribbon must decorate the one central graph before the soundscape wraps it'
+  'Capture must exist before audio handlers can build the graph, then the organic layer must wrap it before the soundscape'
 );
 
 assert.match(soundscape, /export function createDrivingSoundscapeFrame/);
@@ -82,7 +85,12 @@ assert.match(audio, /const driftWidth = driftHeld/);
 assert.doesNotMatch(audio, /driftPanner|smoothPan\(drift/,
   'DRIFT must remain centred and width-based');
 
+assert.match(organic, /export function prepareOrganicRibbonCapture\(\)/);
+assert.match(organic, /prepared = true;\s*restoreFactories = captureAudioFactories\(\)/,
+  'Graph observation must be explicitly prepared before the core audio module exposes input handlers');
 assert.match(organic, /export function installOrganicRibbon\(\)/);
+assert.match(organic, /prepareOrganicRibbonCapture\(\);\s*installed = true/,
+  'Installation must remain safe when called directly while preserving the early-prepared path');
 assert.match(organic, /const baseAudio = globalThis\.__turnAudio/,
   'The organic layer must decorate and delegate to the existing audio engine');
 assert.doesNotMatch(organic, /new AudioContext|new webkitAudioContext|HTMLAudioElement|new Audio\(|fetch\(/,
@@ -107,6 +115,8 @@ assert.match(organic, /organicSub\.frequency\.value = sliderTone\.frequency\.val
 assert.match(organic, /makeOrganicNoiseBuffer\(context, 4\.8, 0\.992\)/,
   'The breath texture must be dark and highly correlated rather than hiss');
 assert.match(organic, /breathFilter\.frequency\.value = 310/);
+assert.match(organic, /rootTrim\.offset\.value = -0\.42/,
+  'Near-unison beating must preserve peak headroom rather than doubling the former voice');
 for (const slowRate of ['0.083', '0.097', '0.061']) {
   assert.match(organic, new RegExp(`frequency\\.value = ${slowRate.replace('.', '\\.')}\\b`),
     `The organic soundscape must include the ${slowRate} Hz slow cycle`);
