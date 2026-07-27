@@ -140,10 +140,10 @@ for (const trackId of ['countryside', 'airport', 'cliffside', 'harbor']) {
 }
 
 const nearLeftEdge = createDrivingSoundscapeFrame(makeRuntime({
-  position: { x: -12, y: 0, z: 16 },
+  position: { x: -10, y: 0, z: 16 },
   velocity: { x: 0, y: 0, z: 10 },
   speed: 10,
-  trackDistance: 12
+  trackDistance: 10
 }));
 const offRoadLeft = createDrivingSoundscapeFrame(makeRuntime({
   position: { x: -19, y: 0, z: 16 },
@@ -161,10 +161,10 @@ assert.equal('recoveryPan' in offRoadLeft, false);
 assert.equal('recoveryUrgency' in offRoadLeft, false);
 
 const nearRightEdge = createDrivingSoundscapeFrame(makeRuntime({
-  position: { x: 12, y: 0, z: 16 },
+  position: { x: 10, y: 0, z: 16 },
   velocity: { x: 0, y: 0, z: 10 },
   speed: 10,
-  trackDistance: 12
+  trackDistance: 10
 }));
 const offRoadRight = createDrivingSoundscapeFrame(makeRuntime({
   position: { x: 19, y: 0, z: 16 },
