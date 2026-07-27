@@ -61,9 +61,13 @@ for (const heading of [
 assert.match(menu, /one to three dry beeps/);
 assert.match(menu, /A delayed echo marks a long corner/);
 assert.match(menu, /Two groups describe linked corners in order/);
-assert.match(menu, /A soft tonal Slider guides your steering/,
-  'The guide must describe the quieter sustained timbre');
-assert.match(menu, /Steer toward it/,
+assert.match(menu, /A warm organic hum guides your steering/,
+  'The guide must introduce the reference-inspired sustained timbre');
+assert.match(menu, /A warm layered hum guides your steering/,
+  'The Slider section must describe the sound as a layered drone rather than one tone');
+assert.match(menu, /Slow breathing and gentle harmonics keep it comfortable/,
+  'The guide must explain why the procedural sound remains alive without changing meaning');
+assert.match(menu, /Steer toward the hum/,
   'The one steering grammar must remain explicit');
 assert.match(menu, /centred gravel sound marks the surface/,
   'Surface state must be explained as non-directional');
@@ -75,7 +79,8 @@ assert.match(menu, /The Slider is directional\. Surface and drift stay centred/,
   'The guide must distinguish steering from vehicle and surface information');
 assert.match(menu, /Off road, the Slider handles both route recovery and direction instead/,
   'Wrong Way must not compete with off-road recovery');
-assert.doesNotMatch(menu, /RECOVERY BEACON|Steer away|continuous textured sound|TURN RIBBON|TURN PULSE|ROAD EDGE|CORNER FLOW|AIRPORT/);
+assert.doesNotMatch(menu, /healing frequency|RECOVERY BEACON|Steer away|continuous textured sound|TURN RIBBON|TURN PULSE|ROAD EDGE|CORNER FLOW|AIRPORT/,
+  'The interface must describe the actual sound design without wellness claims or retired DBE language');
 assert.match(menu, /dialog\.showModal/);
 assert.match(menu, /aria-labelledby', 'soundGuideTitle'/);
 assert.match(menu, /closest\('\.chip'\)/);
@@ -99,4 +104,4 @@ assert.match(css, /@keyframes turn-restart-invalid-pulse/);
 assert.match(css, /prefers-reduced-motion: reduce/);
 assert.match(css, /\.utility-group\[data-menu-state="hidden"\]/);
 
-console.log(`TURN ${release.id} state-aware menu and recovery UX Sound Guide passed.`);
+console.log(`TURN ${release.id} state-aware menu and organic ribbon Sound Guide passed.`);
