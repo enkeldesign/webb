@@ -139,7 +139,7 @@ function decorateCapturedRibbon() {
   organicSub.frequency.value = sliderTone.frequency.value * 0.5;
   organicSub.detune.value = -1800;
   const subGain = context.createGain();
-  subGain.gain.value = 0.075;
+  subGain.gain.value = 0.055;
   organicSub.connect(subGain);
   subGain.connect(sliderFilter);
 
@@ -152,7 +152,7 @@ function decorateCapturedRibbon() {
   breathFilter.frequency.value = 310;
   breathFilter.Q.value = 0.35;
   const breathGain = context.createGain();
-  breathGain.gain.value = 0.024;
+  breathGain.gain.value = 0.016;
   breathSource.connect(breathFilter);
   breathFilter.connect(breathGain);
   breathGain.connect(sliderFilter);
@@ -162,9 +162,9 @@ function decorateCapturedRibbon() {
   breathLfo.type = 'sine';
   breathLfo.frequency.value = 0.083;
   const rootBreathDepth = context.createGain();
-  rootBreathDepth.gain.value = 0.045;
+  rootBreathDepth.gain.value = 0.03;
   const harmonicBreathDepth = context.createGain();
-  harmonicBreathDepth.gain.value = 0.012;
+  harmonicBreathDepth.gain.value = 0.008;
   breathLfo.connect(rootBreathDepth);
   breathLfo.connect(harmonicBreathDepth);
   rootBreathDepth.connect(sliderToneMix.gain);
@@ -188,16 +188,17 @@ function decorateCapturedRibbon() {
   colourLfo.connect(colourDepth);
   colourDepth.connect(sliderFilter.frequency);
 
-  // Keep headroom after adding the companion and sub layers.
+  // Two near-unison roots can reinforce one another. Trim both through their shared mix
+  // so the loud phase of the beat stays close to the former single-voice peak.
   const rootTrim = context.createConstantSource?.();
   if (rootTrim) {
-    rootTrim.offset.value = -0.15;
+    rootTrim.offset.value = -0.42;
     rootTrim.connect(sliderToneMix.gain);
     rootTrim.start();
   }
   const harmonicTrim = context.createConstantSource?.();
   if (harmonicTrim) {
-    harmonicTrim.offset.value = -0.025;
+    harmonicTrim.offset.value = -0.04;
     harmonicTrim.connect(sliderHarmonicMix.gain);
     harmonicTrim.start();
   }
