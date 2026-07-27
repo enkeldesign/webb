@@ -125,15 +125,7 @@ export function progressInRange(progress, start, end) {
 }
 
 export function paceNoteLengthTailCount(length) {
-  switch (String(length || 'short').toLowerCase()) {
-    case 'long':
-      return 2;
-    case 'medium':
-      return 1;
-    case 'short':
-    default:
-      return 0;
-  }
+  return String(length || 'short').toLowerCase() === 'long' ? 1 : 0;
 }
 
 export function paceNotePhraseGroups(groups = []) {
