@@ -80,17 +80,17 @@ assert.deepEqual(
     [PACE_NOTE_LENGTH.LONG, PACE_NOTE_LENGTH.MEDIUM],
     [PACE_NOTE_LENGTH.LONG]
   ],
-  'AIRPORT must author the broad sweep and long exits without changing the approved direction/severity grammar'
+  'AIRPORT must preserve the authored broad sweep and long exits without changing direction or severity'
 );
 for (const trackId of ['countryside', 'cliffside', 'harbor']) {
   assert.ok(
     getTrackPaceNotes(trackId).every((note) => note.groups.every((group) => group.length === undefined)),
-    `${trackId} must keep its current compact phrase unchanged`
+    `${trackId} must keep its currently authored compact phrase unchanged`
   );
 }
 
 assert.equal(paceNoteLengthTailCount(PACE_NOTE_LENGTH.MEDIUM), 0, 'The baseline medium phrase must stay clean');
-assert.equal(paceNoteLengthTailCount(PACE_NOTE_LENGTH.LONG), 1, 'A long AIRPORT corner must add exactly one sparse tail');
+assert.equal(paceNoteLengthTailCount(PACE_NOTE_LENGTH.LONG), 1, 'A long authored corner must add exactly one sparse tail');
 const longPhrase = paceNotePhraseGroups(airportNotes[1].groups);
 assert.equal(longPhrase.length, 2);
 assert.deepEqual(
@@ -104,7 +104,7 @@ assert.deepEqual(
   [[1, 2, false], [1, 1, true], [-1, 3, false]],
   'A long first corner must carry one tail before the linked direction changes'
 );
-assert.ok(paceNoteDuration(airportNotes[2].groups) < 1, 'The longest AIRPORT phrase must remain under one second');
+assert.ok(paceNoteDuration(airportNotes[2].groups) < 1, 'The longest authored phrase must remain under one second');
 assert.ok(
   paceNoteDuration([{ direction: 1, severity: 2 }, { direction: -1, severity: 3 }]) < 0.8,
   'Existing linked notes must remain as brief as before'
@@ -199,13 +199,14 @@ assert.match(app, /if \(driveByEarEnabled\) \{[\s\S]*installUniversalDrivingSoun
 assert.match(paceAudio, /PACE_NOTE_UPDATE_INTERVAL_MS = 1000 \/ 30/, 'Pace-note position checks must be capped at 30 Hz');
 assert.match(paceAudio, /now - lastCheckedAt >= PACE_NOTE_UPDATE_INTERVAL_MS/);
 assert.match(paceAudio, /baseAudio\.update\(frame, now\)/, 'Pace notes must remain inside the central audio update path');
-assert.match(paceAudio, /groups: paceNotePhraseGroups\(note\.groups\)/, 'Authored AIRPORT length must be translated before entering the existing audio graph');
+assert.match(paceAudio, /groups: paceNotePhraseGroups\(note\.groups\)/, 'Authored corner length must be translated before entering the central audio graph');
 assert.match(paceAudio, /lengthMarker: true/);
 assert.match(paceAudio, /firedNoteIds\.size >= notes\.length/, 'A completed pace-note lap must take the fast path');
 assert.doesNotMatch(paceAudio, /AudioContext|webkitAudioContext|createOscillator|createDynamicsCompressor/, 'Length phrases must not create a second audio engine');
 assert.match(audio, /window\.addEventListener\('turn:pace-note', handlePaceNoteAudio\)/);
 assert.match(audio, /schedulePaceNoteBeep\(/);
-assert.match(audio, /panner\.connect\(masterGain\)/, 'Pace notes and their long-corner tail must enter the existing TURN master graph');
+assert.match(audio, /panner\.connect\(routeBus\)/, 'Pace notes and long-corner tails must enter the central route layer');
+assert.match(audio, /routeDuckUntil = Math\.max/, 'Pace-note phrases must briefly clear room in the dynamics layer');
 assert.doesNotMatch(paceAudio, /requestAnimationFrame|setInterval|setTimeout/, 'Pace notes must not add another timing loop');
 assert.match(paceAudio, /state\.offRoad === true/, 'Off-road recovery must suppress pace-note triggers');
 assert.match(paceAudio, /mode === 'spectating'/, 'Spectator mode must stay quiet');
@@ -214,11 +215,10 @@ for (const trackName of ['COUNTRYSIDE', 'AIRPORT', 'CLIFFSIDE', 'HARBOR']) {
 }
 assert.match(paceMap, /export const PACE_NOTE_LENGTH/);
 assert.match(soundGuide, /<h4>PACE NOTES<\/h4>/);
-assert.match(soundGuide, /one delayed echo beep marks a long corner/);
-assert.match(soundGuide, /<h4>TURN RIBBON · AIRPORT<\/h4>/);
-assert.match(soundGuide, /<h4>TRAJECTORY · AIRPORT<\/h4>/);
-assert.match(soundGuide, /Trajectory danger takes priority over the turn ribbon/);
-assert.match(soundGuide, /<h4>ROAD EDGE · OTHER TRACKS<\/h4>/);
-assert.match(soundGuide, /<h4>CORNER FLOW · OTHER TRACKS<\/h4>/);
+assert.match(soundGuide, /A delayed echo marks a long corner when one is authored/);
+assert.match(soundGuide, /<h4>TRAJECTORY SLIDER<\/h4>/);
+assert.match(soundGuide, /<h4>SOUND LAYERS<\/h4>/);
+assert.match(soundGuide, /Pace notes briefly clear room for route information/);
+assert.doesNotMatch(soundGuide, /TURN RIBBON|TURN PULSE|ROAD EDGE|CORNER FLOW|AIRPORT/, 'The pace-note guide must not resurrect retired or track-specific DBE generations');
 
-console.log(`TURN ${release.id} AIRPORT pace-note length phrases and shared audio graph passed.`);
+console.log(`TURN ${release.id} all-track pace notes and layered route audio passed.`);
