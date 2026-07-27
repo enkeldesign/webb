@@ -96,7 +96,7 @@ assert.equal(longPhrase.length, 2);
 assert.deepEqual(
   longPhrase.map((group) => [group.direction, group.severity, group.lengthMarker === true]),
   [[1, 1, false], [1, 1, true]],
-  'The long-corner marker must be a later low single beep on the same side'
+  'The long-corner marker must be a delayed same-pitch echo on the same side'
 );
 const linkedAirportPhrase = paceNotePhraseGroups(airportNotes[2].groups);
 assert.deepEqual(
@@ -214,7 +214,7 @@ for (const trackName of ['COUNTRYSIDE', 'AIRPORT', 'CLIFFSIDE', 'HARBOR']) {
 }
 assert.match(paceMap, /export const PACE_NOTE_LENGTH/);
 assert.match(soundGuide, /<h4>PACE NOTES<\/h4>/);
-assert.match(soundGuide, /one lower trailing beep marks a long corner/);
+assert.match(soundGuide, /one delayed echo beep marks a long corner/);
 assert.match(soundGuide, /<h4>TURN RIBBON · AIRPORT<\/h4>/);
 assert.match(soundGuide, /<h4>TRAJECTORY · AIRPORT<\/h4>/);
 assert.match(soundGuide, /Trajectory danger takes priority over the turn ribbon/);
