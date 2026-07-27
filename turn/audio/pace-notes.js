@@ -7,8 +7,6 @@ const PACE_NOTE_UPDATE_INTERVAL_MS = 1000 / 30;
 const MIN_TRIGGER_SPEED = 5;
 const MIN_FORWARD_ALIGNMENT = 0.35;
 const NOTE_DURATION_SECONDS = 0.055;
-const NOTE_MEDIUM_DURATION_SECONDS = 0.13;
-const NOTE_LONG_DURATION_SECONDS = 0.21;
 const NOTE_STEP_SECONDS = 0.105;
 const GROUP_GAP_SECONDS = 0.22;
 
@@ -101,7 +99,8 @@ export function updatePaceNoteState(runtime, frame = {}) {
       progress,
       trigger,
       speed,
-      groups: note.groups
+      authoredGroups: note.groups,
+      groups: paceNotePhraseGroups(note.groups)
     });
     return note;
   }
@@ -125,30 +124,47 @@ export function progressInRange(progress, start, end) {
     : value >= from || value <= to;
 }
 
-export function paceNoteLengthDuration(length) {
+export function paceNoteLengthTailCount(length) {
   switch (String(length || 'short').toLowerCase()) {
     case 'long':
-      return NOTE_LONG_DURATION_SECONDS;
+      return 2;
     case 'medium':
-      return NOTE_MEDIUM_DURATION_SECONDS;
+      return 1;
     case 'short':
     default:
-      return NOTE_DURATION_SECONDS;
+      return 0;
   }
 }
 
-export function paceNoteDuration(groups = []) {
-  let cursor = 0;
-  let end = 0;
+export function paceNotePhraseGroups(groups = []) {
+  const phrase = [];
 
-  groups.forEach((group, groupIndex) => {
+  for (const group of groups) {
+    phrase.push({ ...group });
+    const tailCount = paceNoteLengthTailCount(group?.length);
+    for (let index = 0; index < tailCount; index += 1) {
+      phrase.push({
+        direction: group?.direction,
+        severity: 1,
+        lengthMarker: true
+      });
+    }
+  }
+
+  return phrase;
+}
+
+export function paceNoteDuration(groups = []) {
+  const phrase = paceNotePhraseGroups(groups);
+  let duration = 0;
+
+  phrase.forEach((group, groupIndex) => {
     const count = clamp(Math.round(Number(group?.severity) || 1), 1, 3);
-    const finalBeepStart = cursor + (count - 1) * NOTE_STEP_SECONDS;
-    end = Math.max(end, finalBeepStart + paceNoteLengthDuration(group?.length));
-    if (groupIndex < groups.length - 1) cursor = finalBeepStart + GROUP_GAP_SECONDS;
+    duration += NOTE_DURATION_SECONDS + (count - 1) * NOTE_STEP_SECONDS;
+    if (groupIndex < phrase.length - 1) duration += GROUP_GAP_SECONDS;
   });
 
-  return end;
+  return duration;
 }
 
 function installResetListeners() {
