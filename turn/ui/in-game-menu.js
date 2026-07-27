@@ -39,7 +39,7 @@ function createSoundGuide() {
         <div class="sound-guide-list">
           <section>
             <h4>PACE NOTES</h4>
-            <p>Before major corners, one to three dry beeps play in the ear on the turn side. More beeps mean a tighter turn. On Airport, one lower trailing beep marks a long corner. Two groups describe linked corners in order.</p>
+            <p>Before major corners, one to three dry beeps play in the ear on the turn side. More beeps mean a tighter turn. On Airport, one delayed echo beep marks a long corner. Two groups describe linked corners in order.</p>
           </section>
           <section>
             <h4>TURN RIBBON · AIRPORT</h4>
