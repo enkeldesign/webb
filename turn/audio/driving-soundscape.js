@@ -1,4 +1,12 @@
 const SOUNDSCAPE_UPDATE_INTERVAL_MS = 1000 / 30;
+const AIRPORT_TRACK_ID = 'airport';
+const MIN_TURN_ANGLE = 0.11;
+const MIN_LOOKAHEAD_METERS = 28;
+const MAX_LOOKAHEAD_METERS = 72;
+const CURRENT_TURN_SAMPLE_SPAN = 6;
+const MIN_TRAJECTORY_HORIZON_SECONDS = 0.48;
+const MAX_TRAJECTORY_HORIZON_SECONDS = 1.18;
+
 let installed = false;
 let lastComputedAt = -Infinity;
 let cachedFrame = null;
@@ -34,11 +42,6 @@ export function installUniversalDrivingSoundscape() {
   return enhancedAudio;
 }
 
-const MIN_TURN_ANGLE = 0.11;
-const MIN_LOOKAHEAD_METERS = 28;
-const MAX_LOOKAHEAD_METERS = 72;
-const CURRENT_TURN_SAMPLE_SPAN = 6;
-
 export function createDrivingSoundscapeFrame(runtime) {
   const state = runtime?.state;
   const samples = runtime?.samples;
@@ -52,16 +55,18 @@ export function createDrivingSoundscapeFrame(runtime) {
     return emptyDrivingSoundscapeFrame();
   }
 
+  const trackId = activeTrackId(runtime, state);
+  const airportHybrid = trackId === AIRPORT_TRACK_ID;
   const right = normalizedVector(runtime.getRight?.()) || rightFromHeading(state.heading);
   const forward = normalizedVector(runtime.getForward?.()) || forwardFromHeading(state.heading);
   const offset = subtract(state.position, sample.point);
   const signedTrackOffset = dot(offset, sample.normal);
   const trackDistance = finiteNumber(state.trackDistance, horizontalLength(offset));
   const roadHalfWidth = Math.max(1, finiteNumber(runtime.trackWidth, 27) * 0.5);
-  const edgeProximity = smoothstep(roadHalfWidth * 0.45, roadHalfWidth * 1.02, trackDistance);
+  const roadEdgeProximity = smoothstep(roadHalfWidth * 0.45, roadHalfWidth * 1.02, trackDistance);
   const offsetSign = signedTrackOffset === 0 ? 1 : Math.sign(signedTrackOffset);
   const edgeDirection = scale(sample.normal, offsetSign);
-  const edgePan = clamp(dot(edgeDirection, right), -1, 1);
+  const roadEdgePan = clamp(dot(edgeDirection, right), -1, 1);
 
   const recoveryDirection = normalizedVector(subtract(sample.point, state.position));
   const recoveryPan = recoveryDirection ? clamp(dot(recoveryDirection, right), -1, 1) : 0;
@@ -72,7 +77,10 @@ export function createDrivingSoundscapeFrame(runtime) {
   );
 
   const speed = Math.max(0, finiteNumber(state.speed, horizontalLength(state.velocity)));
-  const lateralSpeed = state.velocity ? dot(state.velocity, right) : 0;
+  const velocity = horizontalLength(state.velocity) > 0.25
+    ? state.velocity
+    : scale(forward, speed);
+  const lateralSpeed = dot(velocity, right);
   const driftPan = speed > 1 ? clamp(lateralSpeed / Math.max(8, speed * 0.72), -1, 1) : 0;
 
   const upcomingTurn = findUpcomingTurn(samples, index, speed);
@@ -81,39 +89,116 @@ export function createDrivingSoundscapeFrame(runtime) {
   const headingError = signedAngle(forward, sample.tangent);
   const headingCorrectionPan = clamp(headingError / (Math.PI * 0.5), -1, 1);
   const wrongWay = headingAlignment < -0.42 && speed > 7 && finiteNumber(state.brake, 0) < 0.1;
+  const offRoad = Boolean(state.offRoad);
   const rival = nearestRivalFrame(runtime, right);
-  const cornerFlow = scoreCornerFlow({
-    turnSeverity: currentTurn.severity,
-    speed,
-    headingAlignment,
-    trackDistance,
-    roadHalfWidth,
-    lateralSpeed,
-    offRoad: Boolean(state.offRoad)
-  });
+
+  const cornerFlow = airportHybrid
+    ? 0
+    : scoreCornerFlow({
+      turnSeverity: currentTurn.severity,
+      speed,
+      headingAlignment,
+      trackDistance,
+      roadHalfWidth,
+      lateralSpeed,
+      offRoad
+    });
+
+  const trajectory = airportHybrid
+    ? createTrajectoryCue({
+      samples,
+      startIndex: index,
+      position: state.position,
+      velocity,
+      right,
+      roadHalfWidth,
+      trackDistance,
+      speed,
+      offRoad,
+      wrongWay
+    })
+    : emptyTrajectoryCue();
+
+  const airportGuidance = airportHybrid
+    ? createAirportHybridGuidance({
+      trajectoryRisk: trajectory.risk,
+      trajectoryPan: trajectory.pan,
+      turnDirection: currentTurn.direction,
+      turnSeverity: currentTurn.severity,
+      speed,
+      offRoad,
+      wrongWay
+    })
+    : emptyAirportHybridGuidance();
 
   return {
+    trackId,
+    airportHybrid,
+    roadEdgeEnabled: !airportHybrid,
+    turnPulseEnabled: !airportHybrid,
     signedTrackOffset,
     trackDistance,
-    edgeProximity,
-    edgePan,
-    offRoad: Boolean(state.offRoad),
+    edgeProximity: airportHybrid ? airportGuidance.level : roadEdgeProximity,
+    edgePan: airportHybrid ? airportGuidance.pan : roadEdgePan,
+    offRoad,
     recoveryPan,
     recoveryUrgency,
     driftPan,
-    turnDirection: upcomingTurn.direction,
-    turnSeverity: upcomingTurn.severity,
-    turnDistance: upcomingTurn.distance,
-    turnProximity: upcomingTurn.proximity,
+    turnDirection: airportHybrid ? 0 : upcomingTurn.direction,
+    turnSeverity: airportHybrid ? 0 : upcomingTurn.severity,
+    turnDistance: airportHybrid ? Infinity : upcomingTurn.distance,
+    turnProximity: airportHybrid ? 0 : upcomingTurn.proximity,
     cornerDirection: currentTurn.direction,
     cornerSeverity: currentTurn.severity,
     cornerFlow,
+    trajectoryRisk: trajectory.risk,
+    trajectoryPan: trajectory.pan,
+    predictedTrackDistance: trajectory.predictedTrackDistance,
+    turnRibbonDirection: airportGuidance.ribbonDirection,
+    turnRibbonStrength: airportGuidance.ribbonStrength,
+    guidanceSource: airportGuidance.source,
     headingAlignment,
     headingCorrectionPan,
     wrongWay,
     braking: finiteNumber(state.brake, 0) > 0.05,
     nearestRivalDistance: rival.distance,
     nearestRivalPan: rival.pan
+  };
+}
+
+export function createAirportHybridGuidance({
+  trajectoryRisk = 0,
+  trajectoryPan = 0,
+  turnDirection = 0,
+  turnSeverity = 0,
+  speed = 0,
+  offRoad = false,
+  wrongWay = false
+} = {}) {
+  if (offRoad || wrongWay) return emptyAirportHybridGuidance();
+
+  const risk = clamp(finiteNumber(trajectoryRisk, 0), 0, 1);
+  const ribbonDirection = Math.sign(finiteNumber(turnDirection, 0));
+  const ribbonStrength = ribbonDirection
+    ? smoothstep(0.045, 0.2, finiteNumber(turnSeverity, 0))
+      * smoothstep(5, 18, finiteNumber(speed, 0))
+    : 0;
+  const ribbonLevel = ribbonStrength * 0.46;
+  const trajectoryWeight = ribbonStrength > 0
+    ? smoothstep(0.12, 0.62, risk)
+    : (risk > 0 ? 1 : 0);
+  const level = Math.max(risk, ribbonLevel * (1 - trajectoryWeight * 0.35));
+  const ribbonPan = ribbonDirection * 0.76;
+  const pan = level > 0
+    ? clamp(lerp(ribbonPan, clamp(finiteNumber(trajectoryPan, 0), -1, 1), trajectoryWeight), -1, 1)
+    : 0;
+
+  return {
+    level,
+    pan,
+    ribbonDirection,
+    ribbonStrength,
+    source: risk >= ribbonLevel && risk > 0 ? 'trajectory' : (ribbonStrength > 0 ? 'ribbon' : 'none')
   };
 }
 
@@ -135,6 +220,10 @@ export function applyCornerFlowToAudioFrame(frame = {}) {
 
 export function emptyDrivingSoundscapeFrame() {
   return {
+    trackId: '',
+    airportHybrid: false,
+    roadEdgeEnabled: true,
+    turnPulseEnabled: true,
     signedTrackOffset: 0,
     trackDistance: 0,
     edgeProximity: 0,
@@ -150,12 +239,89 @@ export function emptyDrivingSoundscapeFrame() {
     cornerDirection: 0,
     cornerSeverity: 0,
     cornerFlow: 0,
+    trajectoryRisk: 0,
+    trajectoryPan: 0,
+    predictedTrackDistance: 0,
+    turnRibbonDirection: 0,
+    turnRibbonStrength: 0,
+    guidanceSource: 'none',
     headingAlignment: 1,
     headingCorrectionPan: 0,
     wrongWay: false,
     braking: false,
     nearestRivalDistance: Infinity,
     nearestRivalPan: 0
+  };
+}
+
+function createTrajectoryCue({
+  samples,
+  startIndex,
+  position,
+  velocity,
+  right,
+  roadHalfWidth,
+  trackDistance,
+  speed,
+  offRoad,
+  wrongWay
+}) {
+  if (offRoad || wrongWay || speed < 2) return emptyTrajectoryCue();
+
+  const horizon = clamp(
+    MIN_TRAJECTORY_HORIZON_SECONDS + speed * 0.012,
+    MIN_TRAJECTORY_HORIZON_SECONDS,
+    MAX_TRAJECTORY_HORIZON_SECONDS
+  );
+  const predictedPosition = add(position, scale(velocity, horizon));
+  const searchRadius = Math.min(
+    Math.max(24, Math.round(samples.length * 0.18)),
+    Math.max(36, Math.round(34 + speed * 1.45))
+  );
+  const predictedSample = nearestSampleInWindow(samples, startIndex, predictedPosition, searchRadius);
+  if (!predictedSample?.point || !predictedSample?.normal) return emptyTrajectoryCue();
+
+  const predictedOffset = subtract(predictedPosition, predictedSample.point);
+  const signedPredictedOffset = dot(predictedOffset, predictedSample.normal);
+  const predictedTrackDistance = Math.abs(signedPredictedOffset);
+  const riskDistance = Math.max(predictedTrackDistance, trackDistance * 0.86);
+  const risk = smoothstep(roadHalfWidth * 0.42, roadHalfWidth * 1.02, riskDistance)
+    * smoothstep(2, 14, speed);
+  const threatSign = signedPredictedOffset === 0 ? 1 : Math.sign(signedPredictedOffset);
+  const threatDirection = scale(predictedSample.normal, threatSign);
+  const pan = clamp(dot(threatDirection, right), -1, 1);
+
+  return { risk, pan, predictedTrackDistance };
+}
+
+function nearestSampleInWindow(samples, startIndex, position, radius) {
+  let nearest = null;
+  let nearestDistance = Infinity;
+  const boundedRadius = Math.min(samples.length - 1, Math.max(1, Math.round(radius)));
+
+  for (let step = -boundedRadius; step <= boundedRadius; step += 1) {
+    const sample = samples[normalizeIndex(startIndex + step, samples.length)];
+    if (!sample?.point) continue;
+    const distance = horizontalDistance(position, sample.point);
+    if (distance >= nearestDistance) continue;
+    nearest = sample;
+    nearestDistance = distance;
+  }
+
+  return nearest;
+}
+
+function emptyTrajectoryCue() {
+  return { risk: 0, pan: 0, predictedTrackDistance: 0 };
+}
+
+function emptyAirportHybridGuidance() {
+  return {
+    level: 0,
+    pan: 0,
+    ribbonDirection: 0,
+    ribbonStrength: 0,
+    source: 'none'
   };
 }
 
@@ -255,6 +421,15 @@ function nearestRivalFrame(runtime, right) {
   return { distance: nearestDistance, pan: nearestPan };
 }
 
+function activeTrackId(runtime, state) {
+  return String(
+    runtime?.trackId
+    || state?.trackId
+    || globalThis.__turnGetTrackId?.()
+    || ''
+  ).toLowerCase();
+}
+
 function signedAngle(from, to) {
   const cross = finiteNumber(from?.z, 0) * finiteNumber(to?.x, 0)
     - finiteNumber(from?.x, 0) * finiteNumber(to?.z, 0);
@@ -285,6 +460,14 @@ function normalizedVector(vector) {
     x: finiteNumber(vector.x, 0) / length,
     y: finiteNumber(vector.y, 0) / length,
     z: finiteNumber(vector.z, 0) / length
+  };
+}
+
+function add(a, b) {
+  return {
+    x: finiteNumber(a?.x, 0) + finiteNumber(b?.x, 0),
+    y: finiteNumber(a?.y, 0) + finiteNumber(b?.y, 0),
+    z: finiteNumber(a?.z, 0) + finiteNumber(b?.z, 0)
   };
 }
 
@@ -329,6 +512,10 @@ function normalizeIndex(value, length) {
 function smoothstep(min, max, value) {
   const t = clamp((value - min) / Math.max(0.0001, max - min), 0, 1);
   return t * t * (3 - 2 * t);
+}
+
+function lerp(from, to, amount) {
+  return from + (to - from) * clamp(amount, 0, 1);
 }
 
 function finiteNumber(value, fallback = 0) {
