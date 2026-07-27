@@ -175,7 +175,9 @@ function createTrajectorySlider({
   const value = clamp(currentNormalized * 0.36 + predictedNormalized * 0.64, -1.35, 1.35);
   const magnitude = Math.abs(value);
   const speedPresence = smoothstep(1.5, 8, speed);
-  const risk = smoothstep(0.3, 0.94, magnitude) * speedPresence;
+  // Small corrections stay calm, but a trajectory already aimed at an edge must become obvious
+  // before the car reaches it. These curves deliberately open earlier than the original prototype.
+  const risk = smoothstep(0.18, 0.86, magnitude) * speedPresence;
   const presence = speedPresence;
 
   if (magnitude < 0.015) {
@@ -191,7 +193,7 @@ function createTrajectorySlider({
 
   const threatenedNormal = scale(predictedSample.normal, Math.sign(value));
   const earSide = clamp(dot(threatenedNormal, right), -1, 1);
-  const panMagnitude = smoothstep(0.08, 0.9, magnitude);
+  const panMagnitude = smoothstep(0.04, 0.78, magnitude);
   const pan = clamp(earSide * panMagnitude, -1, 1);
 
   return {
