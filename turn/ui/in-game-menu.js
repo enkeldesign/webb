@@ -31,7 +31,7 @@ function createSoundGuide() {
 
       <section aria-labelledby="soundGuideHow">
         <h3 id="soundGuideHow">HOW TO DRIVE</h3>
-        <p id="soundGuideIntro">Use headphones. Pace notes tell you what comes next. A soft tonal Slider guides your steering. Steer toward it. On the road it follows your trajectory. Off road, a centred gravel sound marks the surface while the Slider aims toward a point ahead on the racing line.</p>
+        <p id="soundGuideIntro">Use headphones. Pace notes tell you what comes next. A warm organic hum guides your steering. Steer toward it. On the road it follows your trajectory. Off road, a centred gravel sound marks the surface while the hum aims toward a point ahead on the racing line.</p>
       </section>
 
       <section aria-labelledby="soundGuideLegend">
@@ -43,7 +43,7 @@ function createSoundGuide() {
           </section>
           <section>
             <h4>TRAJECTORY SLIDER</h4>
-            <p>A soft continuous tone guides your steering. It becomes clearer as a correction grows more urgent. Steer toward the tone.</p>
+            <p>A warm layered hum guides your steering. Slow breathing and gentle harmonics keep it comfortable without changing its direction. It becomes clearer as a correction grows more urgent. Steer toward the hum.</p>
           </section>
           <section>
             <h4>DRIFT</h4>
@@ -51,7 +51,7 @@ function createSoundGuide() {
           </section>
           <section>
             <h4>OFF ROAD</h4>
-            <p>Centred gravel and bumps mean the tyres have left the asphalt. The tonal Slider remains the steering instruction and aims toward a point ahead on the racing line, helping you return facing the correct direction. Follow it until the gravel fades.</p>
+            <p>Centred gravel and bumps mean the tyres have left the asphalt. The organic Slider remains the steering instruction and aims toward a point ahead on the racing line, helping you return facing the correct direction. Follow it until the gravel fades.</p>
           </section>
           <section>
             <h4>SOUND LAYERS</h4>
