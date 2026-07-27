@@ -30,6 +30,7 @@ export function showTrackSelect({ initialTrackId = loadTrackSelection() } = {}) 
       }
       const track = TRACK_CATALOG.find((entry) => entry.id === selectedTrackId);
       continueButton.textContent = `CONTINUE TO ${track?.name.toUpperCase() || 'THE TRACK'}`;
+      continueButton.style.setProperty('--selected-track-accent', track?.accent || '#8ce99a');
     }
 
     function finish(result) {
