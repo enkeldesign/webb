@@ -31,7 +31,7 @@ function createSoundGuide() {
 
       <section aria-labelledby="soundGuideHow">
         <h3 id="soundGuideHow">HOW TO DRIVE</h3>
-        <p id="soundGuideIntro">Use headphones. Pace notes tell you what comes next. The Trajectory Slider combines where the car is with where its current motion will take it. Steer away from the slider sound until it settles near the centre. If you leave the track, the same Slider intensifies. Keep steering away from it.</p>
+        <p id="soundGuideIntro">Use headphones. Pace notes tell you what comes next. The Trajectory Slider combines where the car is with where its current motion will take it. Steer toward the slider sound. If you leave the track, the same Slider intensifies and continues guiding you toward the road.</p>
       </section>
 
       <section aria-labelledby="soundGuideLegend">
@@ -43,7 +43,7 @@ function createSoundGuide() {
           </section>
           <section>
             <h4>TRAJECTORY SLIDER</h4>
-            <p>A continuous textured sound stays near the centre when your position and projected path are safe. It moves toward the edge the car is likely to reach and grows stronger with risk. Steer away from it to bring it back toward the centre.</p>
+            <p>A continuous textured sound guides your steering. It grows stronger as a correction becomes more urgent. Steer toward the sound.</p>
           </section>
           <section>
             <h4>DRIFT</h4>
@@ -51,7 +51,7 @@ function createSoundGuide() {
           </section>
           <section>
             <h4>OFF ROAD</h4>
-            <p>The same Slider becomes stronger and stays on the outside side. Keep steering away from the sound until the car is back on the road.</p>
+            <p>The same Slider becomes stronger and keeps pointing toward the road. Continue steering toward the sound until the car is back on the track.</p>
           </section>
           <section>
             <h4>SOUND LAYERS</h4>
