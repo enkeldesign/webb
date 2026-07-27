@@ -30,9 +30,17 @@ assert.match(soundscape, /smoothstep\(0\.18, 0\.86, magnitude\)/,
   'Meaningful edge-bound trajectories must enter the risk curve early enough to be audible');
 assert.match(soundscape, /smoothstep\(0\.04, 0\.78, magnitude\)/,
   'Meaningful edge-bound trajectories must move clearly outside the stereo centre');
+assert.match(soundscape, /0\.78 \+ offRoadDepth \* 0\.22/,
+  'Leaving the road must intensify the existing Slider risk rather than start a second cue');
+assert.match(soundscape, /0\.82 \+ offRoadDepth \* 0\.18/,
+  'The off-road Slider must remain clearly on the outside side');
+assert.match(soundscape, /if \(cachedFrame\.offRoad\) audioFrame\.offRoad = false/,
+  'The legacy descriptive recovery mode must not receive the off-road flag');
 assert.match(soundscape, /sliderPresence: slider\.presence/);
 assert.match(soundscape, /sliderRisk: slider\.risk/);
 assert.match(soundscape, /sliderPan: slider\.pan/);
+assert.doesNotMatch(soundscape, /recoveryPan|recoveryUrgency/,
+  'The soundscape frame must expose no competing follow-the-beacon direction');
 assert.doesNotMatch(soundscape, /AIRPORT_TRACK_ID|airportHybrid|createAirportHybridGuidance/,
   'No track may retain a private DBE generation');
 assert.doesNotMatch(soundscape, /turnPulse|turnRibbon|cornerFlow|roadEdge|driftPan/,
@@ -54,12 +62,8 @@ assert.doesNotMatch(audio, /driftPanner|smoothPan\(drift/,
   'DRIFT must describe grip loss through centred width, not a competing steering direction');
 assert.doesNotMatch(audio, /playTurnCue|installRoadGuidanceGraph|edgeRumbleLevel/,
   'Turn Pulse and Road Edge must not survive inside the new mixer');
-assert.match(audio, /if \(safetyMode !== 'none'\) stopPaceNoteSources\(\)/,
-  'Recovery and Wrong Way must replace normal route guidance');
 assert.match(audio, /panner\.connect\(routeBus\)/,
   'Pace notes must live on the route layer');
-assert.match(audio, /recoveryPanner\.connect\(safetyBus\)/,
-  'Recovery must live on the safety layer');
 assert.match(audio, /case 'car-near':[\s\S]*worldBus/,
   'Directional rival information must remain a short world-object cue');
 
@@ -142,16 +146,28 @@ for (const trackId of ['countryside', 'airport', 'cliffside', 'harbor']) {
   assert.equal('airportHybrid' in frame, false, `${trackId} must expose no track-specific DBE flag`);
 }
 
-const offRoad = createDrivingSoundscapeFrame(makeRuntime({
+const offRoadLeft = createDrivingSoundscapeFrame(makeRuntime({
   position: { x: -19, y: 0, z: 16 },
+  velocity: { x: 0, y: 0, z: 10 },
+  speed: 10,
   trackDistance: 19,
   offRoad: true
 }));
-assert.equal(offRoad.offRoad, true);
-assert.equal(offRoad.sliderPresence, 0, 'The Slider must yield completely to recovery');
-assert.equal(offRoad.sliderRisk, 0);
-assert.ok(offRoad.recoveryUrgency > 0.5);
-assert.ok(offRoad.recoveryPan > 0.8, 'Recovery must point back toward road centre');
+assert.equal(offRoadLeft.offRoad, true);
+assert.equal(offRoadLeft.sliderPresence, 1, 'The Slider must continue at full presence off road');
+assert.ok(offRoadLeft.sliderRisk > 0.9, 'Leaving the road must intensify the same Slider');
+assert.ok(offRoadLeft.sliderPan < -0.82, 'When left of the road, sound must stay left so the player keeps steering right');
+assert.equal('recoveryPan' in offRoadLeft, false);
+assert.equal('recoveryUrgency' in offRoadLeft, false);
+
+const offRoadRight = createDrivingSoundscapeFrame(makeRuntime({
+  position: { x: 19, y: 0, z: 16 },
+  velocity: { x: 0, y: 0, z: 10 },
+  speed: 10,
+  trackDistance: 19,
+  offRoad: true
+}));
+assert.ok(offRoadRight.sliderPan > 0.82, 'When right of the road, sound must stay right so the player keeps steering left');
 
 const wrongWay = createDrivingSoundscapeFrame(makeRuntime({
   carForward: { x: 0, y: 0, z: -1 },
@@ -159,7 +175,7 @@ const wrongWay = createDrivingSoundscapeFrame(makeRuntime({
   speed: 20
 }));
 assert.equal(wrongWay.wrongWay, true);
-assert.equal(wrongWay.sliderPresence, 0, 'Wrong Way must replace normal Slider guidance');
+assert.equal(wrongWay.sliderPresence, 0, 'Wrong Way must still replace normal Slider guidance');
 
 const rivalLeft = createDrivingSoundscapeFrame(makeRuntime({
   rivals: [{
@@ -192,9 +208,23 @@ assert.equal(forwardedFrame.speed, 22);
 assert.ok(forwardedFrame.sliderPresence > 0.9);
 assert.ok(forwardedFrame.sliderRisk > 0.4);
 assert.ok(forwardedFrame.sliderPan > 0.6);
+
+globalThis.__turnRuntime = makeRuntime({
+  trackId: 'harbor',
+  position: { x: -19, y: 0, z: 16 },
+  velocity: { x: 0, y: 0, z: 10 },
+  speed: 10,
+  trackDistance: 19,
+  offRoad: true
+});
+enhancedAudio.update({ active: true, speed: 10 }, 200);
+assert.equal(forwardedFrame.offRoad, false, 'The base audio engine must not enter the opposite recovery-beacon grammar');
+assert.equal(forwardedFrame.sliderPresence, 1);
+assert.ok(forwardedFrame.sliderRisk > 0.9);
+assert.ok(forwardedFrame.sliderPan < -0.82);
 assert.equal('turnDirection' in forwardedFrame, false);
 assert.equal('cornerFlow' in forwardedFrame, false);
 delete globalThis.__turnAudio;
 delete globalThis.__turnRuntime;
 
-console.log(`TURN ${release.id} universal layered DBE v2 production passed.`);
+console.log(`TURN ${release.id} universal normative Slider production passed.`);
