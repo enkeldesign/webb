@@ -11,6 +11,7 @@ const FACTORY_NAMES = Object.freeze([
   ['createBiquadFilter', 'filters']
 ]);
 
+let prepared = false;
 let installed = false;
 let decorated = false;
 let restoreFactories = null;
@@ -18,13 +19,19 @@ let organicRoot = null;
 let organicSub = null;
 let organicContext = null;
 
+export function prepareOrganicRibbonCapture() {
+  if (prepared) return;
+  prepared = true;
+  restoreFactories = captureAudioFactories();
+}
+
 export function installOrganicRibbon() {
   if (installed) return globalThis.__turnAudio;
   const baseAudio = globalThis.__turnAudio;
   if (!baseAudio) return null;
 
+  prepareOrganicRibbonCapture();
   installed = true;
-  restoreFactories = captureAudioFactories();
 
   const enhancedAudio = Object.freeze({
     async unlock(...args) {
