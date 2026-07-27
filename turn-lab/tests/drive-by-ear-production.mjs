@@ -44,15 +44,17 @@ assert.match(setting, /blocked local storage/, 'The interface must explain why a
 assert.match(setting, /requestAnimationFrame\(reload\)/, 'Changing the preference must reload into a clean module graph');
 assert.match(style, /\.drive-by-ear-card/);
 assert.match(style, /orientation: landscape/);
-assert.match(style, /max-height: 500px/, 'The new card must retain a compact phone-landscape layout');
+assert.match(style, /max-height: 500px/, 'The card must retain a compact phone-landscape layout');
 assert.match(menu, /globalThis\.__turnDriveByEarEnabled === false/);
 assert.match(menu, /if \(soundGuideButton\) soundGuideButton\.hidden/, 'The Sound Guide must not advertise disabled processing');
 assert.match(audio, /DRIVE_BY_EAR_ENABLED = globalThis\.__turnDriveByEarEnabled !== false/);
 assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) \{[\s\S]*window\.addEventListener\('turn:pace-note'/, 'DBE off must not install pace-note listeners');
-assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) installRoadGuidanceGraph\(\)/, 'DBE off must not create the continuous road-noise graph');
-assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) \{[\s\S]*updateDrivingGuidance/, 'DBE off must skip continuous guidance processing');
-assert.match(audio, /DRIVE_BY_EAR_ENABLED \? createPannerNode\(\) : context\.createGain\(\)/, 'DBE off must avoid the spatial drift panner');
-assert.match(audio, /if \(roadGain\) hardMute\(roadGain\.gain, now\)/, 'Core silence must remain safe when the DBE graph was never created');
-assert.doesNotMatch(paceAudio, /AudioContext|webkitAudioContext/, 'The optional module must carry no dormant audio engine');
+assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) installDbeGraphs\(\)/, 'DBE off must not create Slider or Recovery graphs');
+assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) \{\s*const sliderLevel/, 'DBE off must skip continuous Slider processing');
+assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) \{\s*updateDrivingSafety/, 'DBE off must skip Recovery and Wrong Way processing');
+assert.doesNotMatch(audio, /driftPanner|smoothPan\(drift/, 'DRIFT must remain centred regardless of the DBE preference');
+assert.match(audio, /if \(sliderGain\) hardMute\(sliderGain\.gain, now\)/, 'Core silence must remain safe when the Slider graph was never created');
+assert.match(audio, /if \(recoveryGain\) hardMute\(recoveryGain\.gain, now\)/, 'Core silence must remain safe when the Recovery graph was never created');
+assert.doesNotMatch(paceAudio, /AudioContext|webkitAudioContext/, 'The optional pace-note module must carry no dormant audio engine');
 
-console.log(`TURN ${release.id} Drive By Ear universal-default and true-off path passed.`);
+console.log(`TURN ${release.id} Drive By Ear universal-default and layered true-off path passed.`);
