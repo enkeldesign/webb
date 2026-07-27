@@ -5,20 +5,24 @@ import {
   installUniversalDrivingSoundscape
 } from '../../turn/audio/driving-soundscape.js';
 
-const [releaseSource, app, audio, soundscape] = await Promise.all([
+const [releaseSource, app, audio, organic, soundscape] = await Promise.all([
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/audio-system.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/audio/organic-ribbon.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/driving-soundscape.js', import.meta.url), 'utf8')
 ]);
 const release = JSON.parse(releaseSource);
 
+assert.match(app, /import\(\s*withBuild\('\.\/audio\/organic-ribbon\.js'\)\s*\)/);
+assert.match(app, /installOrganicRibbon\(\)/);
 assert.match(app, /import\(\s*withBuild\('\.\/audio\/driving-soundscape\.js'\)\s*\)/);
 assert.match(app, /installUniversalDrivingSoundscape\(\)/);
 assert.ok(
-  app.indexOf('./audio/audio-system.js') < app.indexOf('./audio/driving-soundscape.js')
+  app.indexOf('./audio/audio-system.js') < app.indexOf('./audio/organic-ribbon.js')
+    && app.indexOf('./audio/organic-ribbon.js') < app.indexOf('./audio/driving-soundscape.js')
     && app.indexOf('./audio/driving-soundscape.js') < app.indexOf('./ui/gameplay-controls.js'),
-  'DBE must wrap the central audio engine before gameplay begins'
+  'The organic ribbon must decorate the one central graph before the soundscape wraps it'
 );
 
 assert.match(soundscape, /export function createDrivingSoundscapeFrame/);
@@ -53,13 +57,13 @@ for (const bus of ['dynamicsBus', 'guidanceBus', 'routeBus', 'worldBus', 'safety
   assert.match(audio, new RegExp(`let ${bus} = null`), `The central mixer must expose the ${bus} layer`);
 }
 assert.match(audio, /sliderTone\.type = 'sine'/,
-  'The sustained ribbon must use a soft tonal fundamental rather than broadband hiss');
+  'The base ribbon must remain a soft oscillator graph rather than broadband hiss');
 assert.match(audio, /sliderHarmonic\.type = 'triangle'/,
-  'A restrained harmonic must preserve localisation and character');
+  'The existing harmonic voice remains the stable graph anchor');
 assert.match(audio, /sliderFilter\.type = 'lowpass'/,
   'The ribbon must avoid the former sharp band-pass hiss');
 assert.doesNotMatch(audio, /const sliderNoise = context\.createBufferSource/,
-  'The continuous guidance source must no longer be a noise loop');
+  'The central guidance source must not regress to a noise loop');
 assert.match(audio, /const sliderFundamental = recoveryRibbon/,
   'Off-road recovery must retain the same tonal family with a distinct register');
 assert.match(audio, /surfaceNoise\.buffer = makeNoiseBuffer\(context, 2\.4, 0\.95\)/,
@@ -77,6 +81,40 @@ assert.doesNotMatch(audio, /recoveryGain|recoveryFilter|recoveryPanner|playRecov
 assert.match(audio, /const driftWidth = driftHeld/);
 assert.doesNotMatch(audio, /driftPanner|smoothPan\(drift/,
   'DRIFT must remain centred and width-based');
+
+assert.match(organic, /export function installOrganicRibbon\(\)/);
+assert.match(organic, /const baseAudio = globalThis\.__turnAudio/,
+  'The organic layer must decorate and delegate to the existing audio engine');
+assert.doesNotMatch(organic, /new AudioContext|new webkitAudioContext|HTMLAudioElement|new Audio\(|fetch\(/,
+  'The organic hum must use no second context, stream or audio asset');
+assert.match(organic, /captureAudioFactories\(\)/,
+  'The decorator must observe the existing graph rather than recreating it');
+assert.match(organic, /restoreFactories\?\.\(\);[\s\S]*organicRoot = context\.createOscillator\(\)/,
+  'Temporary AudioContext factory hooks must be restored before organic voices are added');
+assert.match(organic, /findOscillatorNear\(390, 12\)/);
+assert.match(organic, /findOscillatorNear\(585, 18\)/);
+assert.match(organic, /findGainNear\(0\.78, 0\.012\)/);
+assert.match(organic, /findGainNear\(0\.14, 0\.012\)/,
+  'The harmonic node signature must not confuse BOOST gain with the ribbon');
+assert.match(organic, /context\.createPeriodicWave/,
+  'The hum must have an organic harmonic spectrum rather than one bare sine');
+assert.match(organic, /sliderTone\.detune\.value = -1800/,
+  'The reference-inspired drone must move the ribbon into a grounded register');
+assert.match(organic, /organicRoot\.detune\.value = -1794\.5/,
+  'A micro-detuned companion must create slow acoustic beating');
+assert.match(organic, /organicSub\.frequency\.value = sliderTone\.frequency\.value \* 0\.5/,
+  'A restrained sub layer must anchor the sound');
+assert.match(organic, /makeOrganicNoiseBuffer\(context, 4\.8, 0\.992\)/,
+  'The breath texture must be dark and highly correlated rather than hiss');
+assert.match(organic, /breathFilter\.frequency\.value = 310/);
+for (const slowRate of ['0.083', '0.097', '0.061']) {
+  assert.match(organic, new RegExp(`frequency\\.value = ${slowRate.replace('.', '\\.')}\\b`),
+    `The organic soundscape must include the ${slowRate} Hz slow cycle`);
+}
+assert.match(organic, /baseAudio\.update\(frame, now\)/,
+  'The decorator must preserve the central update path');
+assert.match(organic, /baseAudio\.silence\(\.\.\.args\)/,
+  'The organic voices must remain downstream of the existing Slider gain and silence contract');
 
 const forward = { x: 0, y: 0, z: 1 };
 const right = { x: 1, y: 0, z: 0 };
@@ -251,4 +289,4 @@ assert.equal('cornerFlow' in forwardedFrame, false);
 delete globalThis.__turnAudio;
 delete globalThis.__turnRuntime;
 
-console.log(`TURN ${release.id} pleasant ribbon, surface state and pure-pursuit recovery passed.`);
+console.log(`TURN ${release.id} organic ribbon, surface state and pure-pursuit recovery passed.`);
