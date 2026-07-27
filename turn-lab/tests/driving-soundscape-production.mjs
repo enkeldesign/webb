@@ -26,6 +26,10 @@ assert.match(soundscape, /export function installUniversalDrivingSoundscape/);
 assert.match(soundscape, /function createTrajectorySlider\(/);
 assert.match(soundscape, /currentNormalized \* 0\.36 \+ predictedNormalized \* 0\.64/,
   'The slider must combine present road position with projected trajectory');
+assert.match(soundscape, /smoothstep\(0\.18, 0\.86, magnitude\)/,
+  'Meaningful edge-bound trajectories must enter the risk curve early enough to be audible');
+assert.match(soundscape, /smoothstep\(0\.04, 0\.78, magnitude\)/,
+  'Meaningful edge-bound trajectories must move clearly outside the stereo centre');
 assert.match(soundscape, /sliderPresence: slider\.presence/);
 assert.match(soundscape, /sliderRisk: slider\.risk/);
 assert.match(soundscape, /sliderPan: slider\.pan/);
@@ -116,8 +120,8 @@ const movingRight = createDrivingSoundscapeFrame(makeRuntime({
   velocity: { x: 12, y: 0, z: 18 },
   speed: 22
 }));
-assert.ok(movingRight.sliderRisk > 0.15, 'A projected path toward the right edge must create meaningful risk without freezing listening calibration');
-assert.ok(movingRight.sliderPan > 0.45, 'The Slider must move clearly toward the threatened right edge');
+assert.ok(movingRight.sliderRisk > 0.4, 'A projected path already aimed at the right edge must create strong audible risk');
+assert.ok(movingRight.sliderPan > 0.6, 'The Slider must move unmistakably toward the threatened right edge');
 
 const leftOfCentre = createDrivingSoundscapeFrame(makeRuntime({
   position: { x: -10, y: 0, z: 16 },
@@ -133,7 +137,8 @@ for (const trackId of ['countryside', 'airport', 'cliffside', 'harbor']) {
     speed: 22
   }));
   assert.ok(frame.sliderPresence > 0.9, `${trackId} must use the central Slider`);
-  assert.ok(frame.sliderPan > 0.45, `${trackId} must use identical trajectory semantics`);
+  assert.ok(frame.sliderRisk > 0.4, `${trackId} must expose the same strong edge-bound risk`);
+  assert.ok(frame.sliderPan > 0.6, `${trackId} must use identical trajectory semantics`);
   assert.equal('airportHybrid' in frame, false, `${trackId} must expose no track-specific DBE flag`);
 }
 
@@ -185,7 +190,8 @@ enhancedAudio.update({ active: true, speed: 22 }, 100);
 assert.equal(forwardedFrame.active, true);
 assert.equal(forwardedFrame.speed, 22);
 assert.ok(forwardedFrame.sliderPresence > 0.9);
-assert.ok(forwardedFrame.sliderPan > 0.45);
+assert.ok(forwardedFrame.sliderRisk > 0.4);
+assert.ok(forwardedFrame.sliderPan > 0.6);
 assert.equal('turnDirection' in forwardedFrame, false);
 assert.equal('cornerFlow' in forwardedFrame, false);
 delete globalThis.__turnAudio;
