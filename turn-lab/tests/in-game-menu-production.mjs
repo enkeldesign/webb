@@ -64,7 +64,7 @@ for (const heading of [
 assert.match(menu, /side the road curves/, 'Turn guidance copy must describe direct left-ear and right-ear mapping');
 assert.match(menu, /It repeats faster as the turn gets closer or tighter/);
 assert.match(menu, /one to three dry beeps/, 'Pace-note copy must explain the authored severity vocabulary');
-assert.match(menu, /one lower trailing beep marks a long corner/, 'Pace-note copy must explain AIRPORT corner length without inventing another sound family');
+assert.match(menu, /one delayed echo beep marks a long corner/, 'Pace-note copy must explain AIRPORT corner length as timing rather than another pitch vocabulary');
 assert.match(menu, /Two groups describe linked corners in order/, 'Pace-note copy must explain linked corner sequences');
 assert.match(menu, /Trajectory danger takes priority over the turn ribbon/, 'AIRPORT copy must explain that the shared texture cannot become two competing sounds');
 assert.match(menu, /tyre grit softens and the engine note tightens slightly/, 'Corner Flow copy must describe the continuous reward rather than a new alert');
