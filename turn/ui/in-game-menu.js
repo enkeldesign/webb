@@ -31,7 +31,7 @@ function createSoundGuide() {
 
       <section aria-labelledby="soundGuideHow">
         <h3 id="soundGuideHow">HOW TO DRIVE</h3>
-        <p id="soundGuideIntro">Use headphones. Pace notes announce major corners before you reach them. Listen to the live guidance for your line, and let the tyre sound reveal your drift. If you leave the track, follow the low beacon back to the road.</p>
+        <p id="soundGuideIntro">Use headphones. Pace notes tell you what comes next. The Trajectory Slider combines where the car is with where its current motion will take it. Steer away from the slider sound until it settles near the centre. If you leave the track, follow the low recovery beacon.</p>
       </section>
 
       <section aria-labelledby="soundGuideLegend">
@@ -39,35 +39,23 @@ function createSoundGuide() {
         <div class="sound-guide-list">
           <section>
             <h4>PACE NOTES</h4>
-            <p>Before major corners, one to three dry beeps play in the ear on the turn side. More beeps mean a tighter turn. On Airport, one delayed echo beep marks a long corner. Two groups describe linked corners in order.</p>
+            <p>Before major corners, one to three dry beeps play in the ear on the turn side. More beeps mean a tighter turn. A delayed echo marks a long corner when one is authored. Two groups describe linked corners in order.</p>
           </section>
           <section>
-            <h4>TURN RIBBON · AIRPORT</h4>
-            <p>A quiet road texture stays on the turn side from turn-in to corner exit, revealing the curve's timing and length.</p>
-          </section>
-          <section>
-            <h4>TRAJECTORY · AIRPORT</h4>
-            <p>The same road texture grows and moves toward the side your current path is likely to reach. Steer away from it. Trajectory danger takes priority over the turn ribbon, so the two never become separate competing sounds.</p>
-          </section>
-          <section>
-            <h4>TURN PULSE · OTHER TRACKS</h4>
-            <p>A clear high pulse plays in the ear on the side the road curves. It repeats faster as the turn gets closer or tighter.</p>
-          </section>
-          <section>
-            <h4>ROAD EDGE · OTHER TRACKS</h4>
-            <p>A rough sound grows in the ear nearest the edge of the road.</p>
-          </section>
-          <section>
-            <h4>RECOVERY BEACON</h4>
-            <p>Two low pulses point toward the road when you are off-road.</p>
+            <h4>TRAJECTORY SLIDER</h4>
+            <p>A continuous textured sound stays near the centre when your position and projected path are safe. It moves toward the edge the car is likely to reach and grows brighter and stronger with risk. Steer away from it to bring it back toward the centre.</p>
           </section>
           <section>
             <h4>DRIFT</h4>
-            <p>Tyre sound moves toward the direction the car is sliding.</p>
+            <p>Tyre sound stays centred. Stronger drift spreads wider across both ears, describing grip loss without becoming a competing steering instruction.</p>
           </section>
           <section>
-            <h4>CORNER FLOW · OTHER TRACKS</h4>
-            <p>When the car settles into a clean turn, tyre grit softens and the engine note tightens slightly. A steadier sound means the car is flowing with the curve.</p>
+            <h4>RECOVERY BEACON</h4>
+            <p>When you leave the road, normal guidance stops. A rough low sound and two pulses point toward the road.</p>
+          </section>
+          <section>
+            <h4>SOUND LAYERS</h4>
+            <p>Recovery and Wrong Way replace normal navigation. Pace notes briefly clear room for route information. Engine, drift and boost automatically make space whenever guidance needs to be heard.</p>
           </section>
           <section>
             <h4>RIVAL NEAR</h4>
