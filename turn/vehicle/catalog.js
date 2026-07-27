@@ -1,4 +1,4 @@
-export const DEFAULT_VEHICLE_ID = 'sedan';
+export const DEFAULT_VEHICLE_ID = 'classic';
 export const DEFAULT_VEHICLE_COLOR = '#ffd43b';
 export const DEFAULT_VEHICLE_SECONDARY_COLOR = '#f8f9fa';
 export const VEHICLE_SELECTION_KEY = 'turn-vehicle-selection-v1';
@@ -59,12 +59,14 @@ export const CAR_PALETTE = Object.freeze([
 
 // Every car has exactly 18 stat points. The Sedan's 3/3/3/3/3/3 is the neutral baseline;
 // every other vehicle trades strengths for weaknesses instead of becoming a straight upgrade.
+// Training Car deliberately spends its budget on control, drift and a long boost tank so new
+// players and soundscape testers can drive slowly without losing the full TURN control vocabulary.
 // The vendored packs use three different authored front axes. modelYawQuarterTurns
 // rotates each raw GLB so every car has the same local front before TURN positions it.
 // enginePitch is an audio-only baseline multiplier: heavy vehicles sit lower, race cars higher.
 const RAW_CARS = [
   ['convertible', 'Convertible', 'prototype', { speed: 4, acceleration: 4, control: 4, drift: 2, boostPower: 3, boostDuration: 1 }, 0.98, 1, 1.08],
-  ['classic', 'Classic', 'prototype', { speed: 3, acceleration: 2, control: 4, drift: 4, boostPower: 2, boostDuration: 3 }, 1.00, 1, 0.88],
+  ['classic', 'Training Car', 'prototype', { speed: 1, acceleration: 1, control: 5, drift: 5, boostPower: 1, boostDuration: 5 }, 1.00, 1, 0.88],
   ['vintage-racer', 'Vintage Racer', 'toy', { speed: 5, acceleration: 4, control: 3, drift: 2, boostPower: 3, boostDuration: 1 }, 0.96, 0, 1.28],
   ['toy-racer', 'Toy Racer', 'toy', { speed: 4, acceleration: 5, control: 5, drift: 1, boostPower: 2, boostDuration: 1 }, 0.94, 2, 1.18],
   ['monster-truck', 'Monster Truck', 'toy', { speed: 2, acceleration: 3, control: 2, drift: 5, boostPower: 2, boostDuration: 4 }, 0.83, 2, 0.62],
