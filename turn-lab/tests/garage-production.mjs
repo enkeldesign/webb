@@ -18,6 +18,14 @@ const sedan = catalog.getCarDefinition('sedan');
 const race = catalog.getCarDefinition('race');
 const truck = catalog.getCarDefinition('truck');
 const monsterTruck = catalog.getCarDefinition('monster-truck');
+const trainingCar = catalog.getCarDefinition('classic');
+assert.equal(catalog.DEFAULT_VEHICLE_ID, 'classic', 'New players must enter The Lot with the Training Car selected');
+assert.equal(trainingCar.name, 'Training Car', 'The repurposed Classic model must clearly advertise its learning role');
+assert.deepEqual(
+  trainingCar.stats,
+  { speed: 1, acceleration: 1, control: 5, drift: 5, boostPower: 1, boostDuration: 5 },
+  'Training Car must stay slow, forgiving and fully equipped for soundscape testing'
+);
 assert.equal(monsterTruck.visualScale, 0.83, 'Monster Truck must stay at the reduced visual scale so it fits the shared 3D viewer and race field');
 assert.equal(sedan.tuning.topSpeedMultiplier, 1, 'Sedan top speed must remain the v1.0 baseline');
 assert.equal(sedan.tuning.accelerationMultiplier, 1, 'Sedan acceleration must remain the v1.0 baseline');
@@ -72,6 +80,7 @@ globalThis.localStorage = {
   removeItem(key) { vehicleStorage.delete(key); }
 };
 try {
+  assert.equal(catalog.loadVehicleSelection().carId, 'classic', 'An empty profile must select Training Car without overwriting future player choices');
   const savedEgg = catalog.saveVehicleSelection(easterEggSelection);
   assert.equal(savedEgg.secondaryColor, '#666666');
   assert.deepEqual(catalog.getCarDefinition('sedan-sports').stats, catalog.MAXED_VEHICLE_STATS, 'The saved hidden selection must feed maxed stats into the unchanged game core');
@@ -105,9 +114,9 @@ assert.ok(importMapText, 'Production must expose its import map');
 const imports = JSON.parse(importMapText).imports;
 const releaseTarget = (path) => `${path}?build=${release.cacheKey}`;
 
-assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
-assert.match(index, new RegExp(`\\.\\/garage\\/lot-r10\\.css\\?build=${release.cacheKey}`));
-assert.match(index, new RegExp(`\\.\\/track-intro\\.css\\?build=${release.cacheKey}`), 'The track intro styling must be published with the active release');
+assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\.')} · Build ${release.id.replaceAll('.', '\.')}`));
+assert.match(index, new RegExp(`\.\/garage\/lot-r10\.css\?build=${release.cacheKey}`));
+assert.match(index, new RegExp(`\.\/track-intro\.css\?build=${release.cacheKey}`), 'The track intro styling must be published with the active release');
 assert.equal(imports['./garage/lot-r10.js?build=20260720-r19'], releaseTarget('./garage/lot-track-select.js'), 'The current release must place the compact track-first wrapper in front of the stable Lot implementation');
 assert.equal(imports['./ui/track-intro.js?build=20260725-r75'], releaseTarget('./ui/track-intro.js'), 'The current release must publish the track intro module');
 assert.equal(imports['./race/lap-system.js?build=20260720-r19'], releaseTarget('./race/lap-system-r86.js'), 'The current release must publish the unranked lap policy');
@@ -180,4 +189,4 @@ assert.match(main, /await showTheLot\(/, 'Back to the Lot must reuse the track-f
 assert.match(backToLot, /Back to Lot/, 'Race UI must include the Back to Lot button');
 assert.match(backToLot, /back-to-lot-button/, 'Back to Lot must expose its menu hook');
 
-console.log(`TURN ${release.id} garage, hidden Sports Sedan setup and aerial intro passed.`);
+console.log(`TURN ${release.id} garage, Training Car default, hidden Sports Sedan setup and aerial intro passed.`);
