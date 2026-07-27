@@ -6,6 +6,17 @@ function withBuild(path) {
   return url.href;
 }
 
+function installStylesheet(path, dataAttribute) {
+  if (document.querySelector(`link[${dataAttribute}]`)) return;
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = withBuild(path);
+  link.setAttribute(dataAttribute, '');
+  document.head.appendChild(link);
+}
+
+installStylesheet('./r104-polish.css', 'data-turn-r104-polish');
+
 const { installPerformanceProfile } = await import(withBuild('./performance-profile.js'));
 installPerformanceProfile();
 
@@ -22,6 +33,9 @@ if (driveByEarEnabled) {
   organicRibbon = await import(withBuild('./audio/organic-ribbon.js'));
   organicRibbon.prepareOrganicRibbonCapture();
 }
+
+const { installAudioPreferences } = await import(withBuild('./audio/audio-preferences.js'));
+installAudioPreferences({ driveByEarGraphAvailable: driveByEarEnabled });
 
 const { installTurnAudio } = await import(withBuild('./audio/audio-system.js'));
 installTurnAudio();
