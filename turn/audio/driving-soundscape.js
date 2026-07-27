@@ -21,7 +21,12 @@ export function installUniversalDrivingSoundscape() {
         cachedFrame = createDrivingSoundscapeFrame(globalThis.__turnRuntime);
         lastComputedAt = now;
       }
-      baseAudio.update({ ...cachedFrame, ...frame }, now);
+
+      const audioFrame = { ...cachedFrame, ...frame };
+      // Keep the same Slider grammar beyond the road edge. The core audio engine's
+      // legacy off-road flag would replace it with a second, opposite recovery cue.
+      if (cachedFrame.offRoad) audioFrame.offRoad = false;
+      baseAudio.update(audioFrame, now);
     },
     cue: (...args) => baseAudio.cue(...args),
     silence: (...args) => baseAudio.silence(...args),
@@ -67,14 +72,6 @@ export function createDrivingSoundscapeFrame(runtime) {
   const wrongWay = headingAlignment < -0.42 && speed > 7 && finiteNumber(state.brake, 0) < 0.1;
   const offRoad = Boolean(state.offRoad);
 
-  const recoveryDirection = normalizedVector(subtract(sample.point, state.position));
-  const recoveryPan = recoveryDirection ? clamp(dot(recoveryDirection, right), -1, 1) : 0;
-  const recoveryUrgency = clamp(
-    (trackDistance - roadHalfWidth * 0.82) / Math.max(1, roadHalfWidth * 0.95),
-    0,
-    1
-  );
-
   const slider = createTrajectorySlider({
     samples,
     startIndex: index,
@@ -83,6 +80,7 @@ export function createDrivingSoundscapeFrame(runtime) {
     right,
     currentSample: sample,
     signedTrackOffset,
+    trackDistance,
     roadHalfWidth,
     speed,
     offRoad,
@@ -101,8 +99,6 @@ export function createDrivingSoundscapeFrame(runtime) {
     sliderPan: slider.pan,
     sliderValue: slider.value,
     offRoad,
-    recoveryPan,
-    recoveryUrgency,
     headingAlignment,
     headingCorrectionPan,
     wrongWay,
@@ -124,8 +120,6 @@ export function emptyDrivingSoundscapeFrame() {
     sliderPan: 0,
     sliderValue: 0,
     offRoad: false,
-    recoveryPan: 0,
-    recoveryUrgency: 0,
     headingAlignment: 1,
     headingCorrectionPan: 0,
     wrongWay: false,
@@ -143,12 +137,13 @@ function createTrajectorySlider({
   right,
   currentSample,
   signedTrackOffset,
+  trackDistance,
   roadHalfWidth,
   speed,
   offRoad,
   wrongWay
 }) {
-  if (offRoad || wrongWay || speed < 1.5) return emptyTrajectorySlider();
+  if (wrongWay || (!offRoad && speed < 1.5)) return emptyTrajectorySlider();
 
   const horizon = clamp(
     MIN_TRAJECTORY_HORIZON_SECONDS + speed * 0.014,
@@ -172,12 +167,23 @@ function createTrajectorySlider({
 
   // The slider combines where the car is with where its present motion will put it.
   // Prediction carries more weight, while current position keeps the cue stable at low speed.
-  const value = clamp(currentNormalized * 0.36 + predictedNormalized * 0.64, -1.35, 1.35);
+  const projectedValue = clamp(currentNormalized * 0.36 + predictedNormalized * 0.64, -1.35, 1.35);
+  const offRoadDepth = offRoad
+    ? clamp(
+      (trackDistance - roadHalfWidth * 0.82) / Math.max(1, roadHalfWidth * 0.9),
+      0,
+      1
+    )
+    : 0;
+  // Crossing the road edge changes urgency, never direction or control grammar.
+  // The same ribbon remains on the same steering side and simply becomes harder to miss.
+  const value = projectedValue;
   const magnitude = Math.abs(value);
-  const speedPresence = smoothstep(1.5, 8, speed);
-  // Small corrections stay calm, but a trajectory already aimed at an edge must become obvious
-  // before the car reaches it. These curves deliberately open earlier than the original prototype.
-  const risk = smoothstep(0.18, 0.86, magnitude) * speedPresence;
+  const speedPresence = offRoad ? 1 : smoothstep(1.5, 8, speed);
+  const baseRisk = smoothstep(0.18, 0.86, magnitude) * speedPresence;
+  const risk = offRoad
+    ? Math.max(baseRisk, 0.78 + offRoadDepth * 0.22)
+    : baseRisk;
   const presence = speedPresence;
 
   if (magnitude < 0.015) {
@@ -191,9 +197,11 @@ function createTrajectorySlider({
     };
   }
 
-  const threatenedNormal = scale(predictedSample.normal, Math.sign(value));
-  const earSide = clamp(dot(threatenedNormal, right), -1, 1);
-  const panMagnitude = smoothstep(0.04, 0.78, magnitude);
+  const guidanceNormal = scale(predictedSample.normal, Math.sign(value));
+  const earSide = clamp(dot(guidanceNormal, right), -1, 1);
+  const panMagnitude = offRoad
+    ? Math.max(smoothstep(0.04, 0.78, magnitude), 0.82 + offRoadDepth * 0.18)
+    : smoothstep(0.04, 0.78, magnitude);
   const pan = clamp(earSide * panMagnitude, -1, 1);
 
   return {
