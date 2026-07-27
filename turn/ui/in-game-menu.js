@@ -31,7 +31,7 @@ function createSoundGuide() {
 
       <section aria-labelledby="soundGuideHow">
         <h3 id="soundGuideHow">HOW TO DRIVE</h3>
-        <p id="soundGuideIntro">Use headphones. Pace notes tell you what comes next. The Trajectory Slider combines where the car is with where its current motion will take it. Steer away from the slider sound until it settles near the centre. If you leave the track, follow the low recovery beacon.</p>
+        <p id="soundGuideIntro">Use headphones. Pace notes tell you what comes next. The Trajectory Slider combines where the car is with where its current motion will take it. Steer away from the slider sound until it settles near the centre. If you leave the track, the same Slider intensifies. Keep steering away from it.</p>
       </section>
 
       <section aria-labelledby="soundGuideLegend">
@@ -43,19 +43,19 @@ function createSoundGuide() {
           </section>
           <section>
             <h4>TRAJECTORY SLIDER</h4>
-            <p>A continuous textured sound stays near the centre when your position and projected path are safe. It moves toward the edge the car is likely to reach and grows brighter and stronger with risk. Steer away from it to bring it back toward the centre.</p>
+            <p>A continuous textured sound stays near the centre when your position and projected path are safe. It moves toward the edge the car is likely to reach and grows stronger with risk. Steer away from it to bring it back toward the centre.</p>
           </section>
           <section>
             <h4>DRIFT</h4>
             <p>Tyre sound stays centred. Stronger drift spreads wider across both ears, describing grip loss without becoming a competing steering instruction.</p>
           </section>
           <section>
-            <h4>RECOVERY BEACON</h4>
-            <p>When you leave the road, normal guidance stops. A rough low sound and two pulses point toward the road.</p>
+            <h4>OFF ROAD</h4>
+            <p>The same Slider becomes stronger and stays on the outside side. Keep steering away from the sound until the car is back on the road.</p>
           </section>
           <section>
             <h4>SOUND LAYERS</h4>
-            <p>Recovery and Wrong Way replace normal navigation. Pace notes briefly clear room for route information. Engine, drift and boost automatically make space whenever guidance needs to be heard.</p>
+            <p>Wrong Way replaces normal navigation. Pace notes briefly clear room for route information. Engine, drift and boost automatically make space whenever guidance needs to be heard.</p>
           </section>
           <section>
             <h4>RIVAL NEAR</h4>
