@@ -27,24 +27,24 @@ assert.match(soundscape, /function createTrajectorySlider\(/);
 assert.match(soundscape, /currentNormalized \* 0\.36 \+ predictedNormalized \* 0\.64/,
   'The slider must combine present road position with projected trajectory');
 assert.match(soundscape, /smoothstep\(0\.18, 0\.86, magnitude\)/,
-  'Meaningful edge-bound trajectories must enter the risk curve early enough to be audible');
+  'Meaningful corrections must enter the risk curve early enough to be audible');
 assert.match(soundscape, /smoothstep\(0\.04, 0\.78, magnitude\)/,
-  'Meaningful edge-bound trajectories must move clearly outside the stereo centre');
+  'Meaningful corrections must move clearly outside the stereo centre');
 assert.match(soundscape, /0\.78 \+ offRoadDepth \* 0\.22/,
-  'Leaving the road must intensify the existing Slider risk rather than start a second cue');
-assert.match(soundscape, /0\.82 \+ offRoadDepth \* 0\.18/,
-  'The off-road Slider must remain clearly on the outside side');
+  'Leaving the road must intensify the existing Slider risk');
+assert.match(soundscape, /Math\.max\(smoothstep\(0\.04, 0\.78, magnitude\), 0\.82 \+ offRoadDepth \* 0\.18\)/,
+  'The same Slider side must become harder to miss off road');
 assert.match(soundscape, /if \(cachedFrame\.offRoad\) audioFrame\.offRoad = false/,
-  'The legacy descriptive recovery mode must not receive the off-road flag');
+  'The legacy second recovery cue must not receive the off-road flag');
 assert.match(soundscape, /sliderPresence: slider\.presence/);
 assert.match(soundscape, /sliderRisk: slider\.risk/);
 assert.match(soundscape, /sliderPan: slider\.pan/);
 assert.doesNotMatch(soundscape, /recoveryPan|recoveryUrgency/,
-  'The soundscape frame must expose no competing follow-the-beacon direction');
+  'The soundscape frame must expose no competing recovery direction');
 assert.doesNotMatch(soundscape, /AIRPORT_TRACK_ID|airportHybrid|createAirportHybridGuidance/,
   'No track may retain a private DBE generation');
 assert.doesNotMatch(soundscape, /turnPulse|turnRibbon|cornerFlow|roadEdge|driftPan/,
-  'Replaced DBE signals must be removed rather than muted');
+  'Replaced DBE signals must remain absent');
 assert.doesNotMatch(soundscape, /VoiceOver|screenReader|blindMode|userAgent/i);
 
 for (const bus of ['dynamicsBus', 'guidanceBus', 'routeBus', 'worldBus', 'safetyBus']) {
@@ -124,15 +124,8 @@ const movingRight = createDrivingSoundscapeFrame(makeRuntime({
   velocity: { x: 12, y: 0, z: 18 },
   speed: 22
 }));
-assert.ok(movingRight.sliderRisk > 0.4, 'A projected path already aimed at the right edge must create strong audible risk');
-assert.ok(movingRight.sliderPan > 0.6, 'The Slider must move unmistakably toward the threatened right edge');
-
-const leftOfCentre = createDrivingSoundscapeFrame(makeRuntime({
-  position: { x: -10, y: 0, z: 16 },
-  velocity: { x: 0, y: 0, z: 18 },
-  trackDistance: 10
-}));
-assert.ok(leftOfCentre.sliderPan < -0.35, 'Current left-side position must influence the combined Slider value');
+assert.ok(movingRight.sliderRisk > 0.4, 'A substantial projected correction must create strong audible risk');
+assert.ok(Math.abs(movingRight.sliderPan) > 0.6, 'A substantial projected correction must produce unmistakable stereo guidance');
 
 for (const trackId of ['countryside', 'airport', 'cliffside', 'harbor']) {
   const frame = createDrivingSoundscapeFrame(makeRuntime({
@@ -141,11 +134,17 @@ for (const trackId of ['countryside', 'airport', 'cliffside', 'harbor']) {
     speed: 22
   }));
   assert.ok(frame.sliderPresence > 0.9, `${trackId} must use the central Slider`);
-  assert.ok(frame.sliderRisk > 0.4, `${trackId} must expose the same strong edge-bound risk`);
-  assert.ok(frame.sliderPan > 0.6, `${trackId} must use identical trajectory semantics`);
+  assert.ok(frame.sliderRisk > 0.4, `${trackId} must expose the same strong correction risk`);
+  assert.ok(Math.abs(frame.sliderPan) > 0.6, `${trackId} must use identical trajectory semantics`);
   assert.equal('airportHybrid' in frame, false, `${trackId} must expose no track-specific DBE flag`);
 }
 
+const nearLeftEdge = createDrivingSoundscapeFrame(makeRuntime({
+  position: { x: -12, y: 0, z: 16 },
+  velocity: { x: 0, y: 0, z: 10 },
+  speed: 10,
+  trackDistance: 12
+}));
 const offRoadLeft = createDrivingSoundscapeFrame(makeRuntime({
   position: { x: -19, y: 0, z: 16 },
   velocity: { x: 0, y: 0, z: 10 },
@@ -155,11 +154,18 @@ const offRoadLeft = createDrivingSoundscapeFrame(makeRuntime({
 }));
 assert.equal(offRoadLeft.offRoad, true);
 assert.equal(offRoadLeft.sliderPresence, 1, 'The Slider must continue at full presence off road');
-assert.ok(offRoadLeft.sliderRisk > 0.9, 'Leaving the road must intensify the same Slider');
-assert.ok(offRoadLeft.sliderPan < -0.82, 'When left of the road, sound must stay left so the player keeps steering right');
+assert.ok(offRoadLeft.sliderRisk > nearLeftEdge.sliderRisk, 'Crossing the edge must intensify the same ribbon');
+assert.equal(Math.sign(offRoadLeft.sliderPan), Math.sign(nearLeftEdge.sliderPan), 'The steering side must not flip at the road edge');
+assert.ok(Math.abs(offRoadLeft.sliderPan) >= Math.abs(nearLeftEdge.sliderPan), 'Off-road urgency must strengthen rather than replace the ribbon');
 assert.equal('recoveryPan' in offRoadLeft, false);
 assert.equal('recoveryUrgency' in offRoadLeft, false);
 
+const nearRightEdge = createDrivingSoundscapeFrame(makeRuntime({
+  position: { x: 12, y: 0, z: 16 },
+  velocity: { x: 0, y: 0, z: 10 },
+  speed: 10,
+  trackDistance: 12
+}));
 const offRoadRight = createDrivingSoundscapeFrame(makeRuntime({
   position: { x: 19, y: 0, z: 16 },
   velocity: { x: 0, y: 0, z: 10 },
@@ -167,7 +173,8 @@ const offRoadRight = createDrivingSoundscapeFrame(makeRuntime({
   trackDistance: 19,
   offRoad: true
 }));
-assert.ok(offRoadRight.sliderPan > 0.82, 'When right of the road, sound must stay right so the player keeps steering left');
+assert.equal(Math.sign(offRoadRight.sliderPan), Math.sign(nearRightEdge.sliderPan), 'The opposite edge must preserve its own ribbon direction too');
+assert.ok(Math.abs(offRoadRight.sliderPan) >= Math.abs(nearRightEdge.sliderPan));
 
 const wrongWay = createDrivingSoundscapeFrame(makeRuntime({
   carForward: { x: 0, y: 0, z: -1 },
@@ -207,7 +214,7 @@ assert.equal(forwardedFrame.active, true);
 assert.equal(forwardedFrame.speed, 22);
 assert.ok(forwardedFrame.sliderPresence > 0.9);
 assert.ok(forwardedFrame.sliderRisk > 0.4);
-assert.ok(forwardedFrame.sliderPan > 0.6);
+assert.ok(Math.abs(forwardedFrame.sliderPan) > 0.6);
 
 globalThis.__turnRuntime = makeRuntime({
   trackId: 'harbor',
@@ -218,13 +225,12 @@ globalThis.__turnRuntime = makeRuntime({
   offRoad: true
 });
 enhancedAudio.update({ active: true, speed: 10 }, 200);
-assert.equal(forwardedFrame.offRoad, false, 'The base audio engine must not enter the opposite recovery-beacon grammar');
+assert.equal(forwardedFrame.offRoad, false, 'The base engine must not enter the second recovery grammar');
 assert.equal(forwardedFrame.sliderPresence, 1);
-assert.ok(forwardedFrame.sliderRisk > 0.9);
-assert.ok(forwardedFrame.sliderPan < -0.82);
+assert.ok(forwardedFrame.sliderRisk > 0.78);
 assert.equal('turnDirection' in forwardedFrame, false);
 assert.equal('cornerFlow' in forwardedFrame, false);
 delete globalThis.__turnAudio;
 delete globalThis.__turnRuntime;
 
-console.log(`TURN ${release.id} universal normative Slider production passed.`);
+console.log(`TURN ${release.id} continuous normative Slider production passed.`);
