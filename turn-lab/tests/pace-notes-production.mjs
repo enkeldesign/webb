@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {
+  PACE_NOTE_LENGTH,
   getTrackPaceNotes,
   speedAdjustedPaceNoteTrigger
 } from '../../turn/tracks/pace-notes.js';
 import {
   paceNoteDuration,
+  paceNoteLengthTailCount,
+  paceNotePhraseGroups,
   progressInRange,
   resetPaceNotePassage,
   updatePaceNoteState
@@ -68,11 +71,49 @@ for (const [trackId, expectedGroups] of Object.entries(expectedMaps)) {
 }
 assert.equal(getTrackPaceNotes('unknown').length, 0, 'Tracks without authored data must remain quiet');
 
+const airportNotes = getTrackPaceNotes('airport');
+assert.deepEqual(
+  airportNotes.map((note) => note.groups.map((group) => group.length)),
+  [
+    [PACE_NOTE_LENGTH.MEDIUM],
+    [PACE_NOTE_LENGTH.LONG],
+    [PACE_NOTE_LENGTH.LONG, PACE_NOTE_LENGTH.MEDIUM],
+    [PACE_NOTE_LENGTH.LONG]
+  ],
+  'AIRPORT must author the broad sweep and long exits without changing the approved direction/severity grammar'
+);
+for (const trackId of ['countryside', 'cliffside', 'harbor']) {
+  assert.ok(
+    getTrackPaceNotes(trackId).every((note) => note.groups.every((group) => group.length === undefined)),
+    `${trackId} must keep its current compact phrase unchanged`
+  );
+}
+
+assert.equal(paceNoteLengthTailCount(PACE_NOTE_LENGTH.MEDIUM), 0, 'The baseline medium phrase must stay clean');
+assert.equal(paceNoteLengthTailCount(PACE_NOTE_LENGTH.LONG), 1, 'A long AIRPORT corner must add exactly one sparse tail');
+const longPhrase = paceNotePhraseGroups(airportNotes[1].groups);
+assert.equal(longPhrase.length, 2);
+assert.deepEqual(
+  longPhrase.map((group) => [group.direction, group.severity, group.lengthMarker === true]),
+  [[1, 1, false], [1, 1, true]],
+  'The long-corner marker must be a later low single beep on the same side'
+);
+const linkedAirportPhrase = paceNotePhraseGroups(airportNotes[2].groups);
+assert.deepEqual(
+  linkedAirportPhrase.map((group) => [group.direction, group.severity, group.lengthMarker === true]),
+  [[1, 2, false], [1, 1, true], [-1, 3, false]],
+  'A long first corner must carry one tail before the linked direction changes'
+);
+assert.ok(paceNoteDuration(airportNotes[2].groups) < 1, 'The longest AIRPORT phrase must remain under one second');
+assert.ok(
+  paceNoteDuration([{ direction: 1, severity: 2 }, { direction: -1, severity: 3 }]) < 0.8,
+  'Existing linked notes must remain as brief as before'
+);
+
 assert.equal(progressInRange(0.2, 0.1, 0.3), true);
 assert.equal(progressInRange(0.9, 0.95, 0.05), false);
 assert.equal(progressInRange(0.98, 0.95, 0.05), true, 'The generic trigger helper must support a zone that wraps over start/finish');
 assert.equal(progressInRange(0.02, 0.95, 0.05), true);
-assert.ok(paceNoteDuration([{ direction: 1, severity: 2 }, { direction: -1, severity: 3 }]) < 0.8, 'Linked notes must remain brief enough for racing');
 
 const samples = Array.from({ length: 720 }, (_, index) => ({
   point: { x: 0, z: index },
@@ -158,18 +199,26 @@ assert.match(app, /if \(driveByEarEnabled\) \{[\s\S]*installUniversalDrivingSoun
 assert.match(paceAudio, /PACE_NOTE_UPDATE_INTERVAL_MS = 1000 \/ 30/, 'Pace-note position checks must be capped at 30 Hz');
 assert.match(paceAudio, /now - lastCheckedAt >= PACE_NOTE_UPDATE_INTERVAL_MS/);
 assert.match(paceAudio, /baseAudio\.update\(frame, now\)/, 'Pace notes must remain inside the central audio update path');
+assert.match(paceAudio, /groups: paceNotePhraseGroups\(note\.groups\)/, 'Authored AIRPORT length must be translated before entering the existing audio graph');
+assert.match(paceAudio, /lengthMarker: true/);
 assert.match(paceAudio, /firedNoteIds\.size >= notes\.length/, 'A completed pace-note lap must take the fast path');
-assert.doesNotMatch(paceAudio, /AudioContext|webkitAudioContext|createOscillator|createDynamicsCompressor/, 'Pace notes must not create a second audio engine');
+assert.doesNotMatch(paceAudio, /AudioContext|webkitAudioContext|createOscillator|createDynamicsCompressor/, 'Length phrases must not create a second audio engine');
 assert.match(audio, /window\.addEventListener\('turn:pace-note', handlePaceNoteAudio\)/);
 assert.match(audio, /schedulePaceNoteBeep\(/);
-assert.match(audio, /panner\.connect\(masterGain\)/, 'Pace notes must enter the existing TURN master graph');
-assert.doesNotMatch(paceAudio, /requestAnimationFrame|setInterval/, 'Pace notes must not add another continuous loop');
+assert.match(audio, /panner\.connect\(masterGain\)/, 'Pace notes and their long-corner tail must enter the existing TURN master graph');
+assert.doesNotMatch(paceAudio, /requestAnimationFrame|setInterval|setTimeout/, 'Pace notes must not add another timing loop');
 assert.match(paceAudio, /state\.offRoad === true/, 'Off-road recovery must suppress pace-note triggers');
 assert.match(paceAudio, /mode === 'spectating'/, 'Spectator mode must stay quiet');
 for (const trackName of ['COUNTRYSIDE', 'AIRPORT', 'CLIFFSIDE', 'HARBOR']) {
   assert.match(paceMap, new RegExp(`const ${trackName}_PACE_NOTES`), `${trackName} must keep an explicit authored pace-note map`);
 }
+assert.match(paceMap, /export const PACE_NOTE_LENGTH/);
 assert.match(soundGuide, /<h4>PACE NOTES<\/h4>/);
-assert.match(soundGuide, /Before major corners, one to three dry beeps/);
+assert.match(soundGuide, /one lower trailing beep marks a long corner/);
+assert.match(soundGuide, /<h4>TURN RIBBON · AIRPORT<\/h4>/);
+assert.match(soundGuide, /<h4>TRAJECTORY · AIRPORT<\/h4>/);
+assert.match(soundGuide, /Trajectory danger takes priority over the turn ribbon/);
+assert.match(soundGuide, /<h4>ROAD EDGE · OTHER TRACKS<\/h4>/);
+assert.match(soundGuide, /<h4>CORNER FLOW · OTHER TRACKS<\/h4>/);
 
-console.log(`TURN ${release.id} all-track auditory pace notes and shared audio graph passed.`);
+console.log(`TURN ${release.id} AIRPORT pace-note length phrases and shared audio graph passed.`);
