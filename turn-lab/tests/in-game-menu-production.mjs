@@ -51,7 +51,7 @@ for (const heading of [
   'PACE NOTES',
   'TRAJECTORY SLIDER',
   'DRIFT',
-  'RECOVERY BEACON',
+  'OFF ROAD',
   'SOUND LAYERS',
   'RIVAL NEAR',
   'WRONG WAY'
@@ -62,11 +62,12 @@ assert.match(menu, /one to three dry beeps/, 'Pace-note copy must explain the au
 assert.match(menu, /A delayed echo marks a long corner/, 'Pace-note copy must explain corner length through timing');
 assert.match(menu, /Two groups describe linked corners in order/, 'Pace-note copy must explain linked corner sequences');
 assert.match(menu, /combines where the car is with where its current motion will take it/, 'The guide must explain the Slider as present plus projected trajectory');
-assert.match(menu, /Steer away from it to bring it back toward the centre/, 'The Slider must have one unambiguous control rule');
+assert.match(menu, /Steer toward the slider sound/, 'The Slider must expose the correct toward-the-sound control rule');
+assert.match(menu, /same Slider intensifies and continues guiding you toward the road/, 'Off-road guidance must preserve the same grammar');
 assert.match(menu, /Tyre sound stays centred/, 'DRIFT must no longer use directional steering semantics');
 assert.match(menu, /Strong(er)? drift spreads wider across both ears/, 'DRIFT must explain intensity through stereo width');
 assert.match(menu, /Engine, drift and boost automatically make space/, 'The guide must explain the layered mixer rather than encouraging louder cues');
-assert.doesNotMatch(menu, /TURN RIBBON|TURN PULSE|ROAD EDGE|CORNER FLOW|AIRPORT/, 'Retired DBE generations must disappear from the guide');
+assert.doesNotMatch(menu, /RECOVERY BEACON|Steer away|TURN RIBBON|TURN PULSE|ROAD EDGE|CORNER FLOW|AIRPORT/, 'Retired or contradictory DBE language must disappear from the guide');
 assert.match(menu, /dialog\.showModal/);
 assert.match(menu, /aria-labelledby', 'soundGuideTitle'/);
 assert.match(menu, /closest\('\.chip'\)/, 'Restart Lap must follow the TIME card validity state rather than duplicate race logic');
@@ -90,4 +91,4 @@ assert.match(css, /@keyframes turn-restart-invalid-pulse/, 'The invalid restart 
 assert.match(css, /prefers-reduced-motion: reduce/, 'The restart cue must respect reduced-motion preferences');
 assert.match(css, /\.utility-group\[data-menu-state="hidden"\]/);
 
-console.log(`TURN ${release.id} state-aware in-game menu, DBE v2 Sound Guide and invalid-lap Restart Lap cue passed.`);
+console.log(`TURN ${release.id} state-aware in-game menu, continuous Slider guide and invalid-lap Restart Lap cue passed.`);
