@@ -1,4 +1,5 @@
 import { IN_GAME_MENU_STATE, inGameMenuVisibilityFor } from './in-game-menu-state.js';
+import { saveDriveByEarEnabled } from './drive-by-ear-setting.js';
 
 function waitForRuntime() {
   if (globalThis.__turnRuntime) {
@@ -11,88 +12,175 @@ function waitForRuntime() {
   }, { once: true });
 }
 
-function createSoundGuide() {
+function createAudioPanel() {
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = 'utility sound-guide-button';
-  button.textContent = 'Sound Guide';
-  button.setAttribute('aria-label', 'Open the driving sound guide');
+  button.className = 'utility audio-settings-button';
+  button.textContent = 'Audio';
+  button.setAttribute('aria-label', 'Open audio settings');
 
   const dialog = document.createElement('dialog');
-  dialog.className = 'sound-guide-dialog';
-  dialog.setAttribute('aria-labelledby', 'soundGuideTitle');
-  dialog.setAttribute('aria-describedby', 'soundGuideIntro');
+  dialog.className = 'audio-settings-dialog';
+  dialog.setAttribute('aria-labelledby', 'audioSettingsTitle');
   dialog.innerHTML = `
-    <article class="sound-guide-card">
-      <header class="sound-guide-head">
-        <h2 id="soundGuideTitle">DRIVE BY SOUND</h2>
-        <button class="sound-guide-close" type="button" aria-label="Close sound guide">×</button>
+    <article class="audio-settings-card">
+      <header class="audio-settings-head">
+        <h2 id="audioSettingsTitle">AUDIO</h2>
+        <button class="audio-settings-close" type="button" aria-label="Close audio settings">×</button>
       </header>
 
-      <section aria-labelledby="soundGuideHow">
-        <h3 id="soundGuideHow">HOW TO DRIVE</h3>
-        <p id="soundGuideIntro">Use headphones. Pace notes tell you what comes next. A warm organic hum guides your steering. Steer toward it. On the road it follows your trajectory. Off road, a centred gravel sound marks the surface while the hum aims toward a point ahead on the racing line.</p>
-      </section>
+      <div class="audio-settings-list">
+        <label class="audio-setting-row" for="turnAudioEnabled">
+          <input id="turnAudioEnabled" type="checkbox">
+          <span>
+            <strong>Sound</strong>
+            <small>Turn every TURN sound on or off.</small>
+          </span>
+        </label>
 
-      <section aria-labelledby="soundGuideLegend">
-        <h3 id="soundGuideLegend">SOUND GUIDE</h3>
-        <div class="sound-guide-list">
-          <section>
-            <h4>PACE NOTES</h4>
-            <p>Before major corners, one to three dry beeps play in the ear on the turn side. More beeps mean a tighter turn. A delayed echo marks a long corner when one is authored. Two groups describe linked corners in order.</p>
-          </section>
-          <section>
-            <h4>TRAJECTORY SLIDER</h4>
-            <p>A warm layered hum guides your steering. Slow breathing and gentle harmonics keep it comfortable without changing its direction. It becomes clearer as a correction grows more urgent. Steer toward the hum.</p>
-          </section>
-          <section>
-            <h4>DRIFT</h4>
-            <p>Tyre sound stays centred. Stronger drift spreads wider across both ears, describing grip loss without becoming a competing steering instruction.</p>
-          </section>
-          <section>
-            <h4>OFF ROAD</h4>
-            <p>Centred gravel and bumps mean the tyres have left the asphalt. The organic Slider remains the steering instruction and aims toward a point ahead on the racing line, helping you return facing the correct direction. Follow it until the gravel fades.</p>
-          </section>
-          <section>
-            <h4>SOUND LAYERS</h4>
-            <p>The Slider is directional. Surface and drift stay centred. Wrong Way replaces normal navigation. Pace notes briefly clear room for route information. Engine, drift and boost automatically make space whenever guidance needs to be heard.</p>
-          </section>
-          <section>
-            <h4>RIVAL NEAR</h4>
-            <p>A short directional sound warns that another car is close and tells you which side it is on.</p>
-          </section>
-          <section>
-            <h4>WRONG WAY</h4>
-            <p>A double falling tone means the car is facing the wrong way while on the road. A final side tone points toward the correction. Off road, the Slider handles both route recovery and direction instead.</p>
-          </section>
-        </div>
-      </section>
+        <label class="audio-setting-row" for="turnDbeEnabled">
+          <input id="turnDbeEnabled" type="checkbox">
+          <span>
+            <strong>Drive By Ear™</strong>
+            <small>Spatial pace notes, trajectory guidance, recovery feedback and rival warnings.</small>
+          </span>
+        </label>
+
+        <section class="audio-balance-card" aria-labelledby="audioBalanceTitle">
+          <h3 id="audioBalanceTitle">Sound balance</h3>
+          <p>Keep the middle position for TURN's intended mix, or favour either the driving guidance or the car and world sounds.</p>
+          <input id="turnAudioBalance" type="range" min="0" max="100" step="1" value="50" aria-describedby="audioBalanceValue">
+          <div class="audio-balance-labels" aria-hidden="true">
+            <span>Other sounds</span>
+            <span>Drive By Ear</span>
+          </div>
+          <output id="audioBalanceValue" for="turnAudioBalance">Balanced</output>
+        </section>
+
+        <details class="audio-guide-card">
+          <summary>Drive By Ear sound guide</summary>
+          <p>Use headphones. Pace notes tell you what comes next. A warm organic hum guides your steering: steer toward it. On the road it follows your trajectory. Off road, centred gravel marks the surface while the hum aims toward a point ahead on the racing line.</p>
+          <p>Tyre and drift sounds stay centred, nearby-rival warnings are directional, and a double falling tone warns when you are facing the wrong way.</p>
+        </details>
+      </div>
+
+      <p class="audio-settings-status" role="status" aria-live="polite"></p>
     </article>`;
   document.body.appendChild(dialog);
 
-  const closeButton = dialog.querySelector('.sound-guide-close');
+  const closeButton = dialog.querySelector('.audio-settings-close');
+  const soundToggle = dialog.querySelector('#turnAudioEnabled');
+  const dbeToggle = dialog.querySelector('#turnDbeEnabled');
+  const balanceSlider = dialog.querySelector('#turnAudioBalance');
+  const balanceOutput = dialog.querySelector('#audioBalanceValue');
+  const status = dialog.querySelector('.audio-settings-status');
 
-  function openGuide() {
+  function preferenceApi() {
+    return globalThis.__turnAudioPreferences;
+  }
+
+  function balanceLabel(value) {
+    if (value < 45) return `${100 - value}% other sounds`;
+    if (value > 55) return `${value}% Drive By Ear`;
+    return 'Balanced';
+  }
+
+  function syncControls() {
+    const settings = preferenceApi()?.getSettings?.() || {
+      audioEnabled: true,
+      dbeEnabled: globalThis.__turnDriveByEarEnabled !== false,
+      balance: 0.5
+    };
+    soundToggle.checked = settings.audioEnabled !== false;
+    dbeToggle.checked = settings.dbeEnabled !== false;
+    const storedBalance = Number(settings.balance);
+    const balancePercent = Math.round((Number.isFinite(storedBalance) ? storedBalance : 0.5) * 100);
+    balanceSlider.value = String(balancePercent);
+    balanceOutput.value = balanceLabel(balancePercent);
+    balanceOutput.textContent = balanceOutput.value;
+  }
+
+  function openPanel() {
+    syncControls();
+    status.textContent = '';
     void globalThis.__turnAudio?.unlock?.();
     if (typeof dialog.showModal === 'function') dialog.showModal();
     else dialog.setAttribute('open', '');
     closeButton?.focus();
   }
 
-  function closeGuide() {
+  function closePanel() {
     if (typeof dialog.close === 'function' && dialog.open) dialog.close();
     else dialog.removeAttribute('open');
     button.focus();
   }
 
-  button.addEventListener('click', openGuide);
-  closeButton?.addEventListener('click', closeGuide);
+  button.addEventListener('click', openPanel);
+  closeButton?.addEventListener('click', closePanel);
   dialog.addEventListener('click', (event) => {
-    if (event.target === dialog) closeGuide();
+    if (event.target === dialog) closePanel();
   });
   dialog.addEventListener('close', () => button.focus());
 
+  soundToggle.addEventListener('change', () => {
+    const enabled = preferenceApi()?.setAudioEnabled?.(soundToggle.checked) ?? soundToggle.checked;
+    soundToggle.checked = enabled;
+    status.textContent = `Sound ${enabled ? 'on' : 'off'}.`;
+  });
+
+  dbeToggle.addEventListener('change', () => {
+    const enabled = dbeToggle.checked;
+    if (!saveDriveByEarEnabled(enabled)) {
+      dbeToggle.checked = !enabled;
+      status.textContent = 'Drive By Ear could not be changed because this browser blocked local storage.';
+      return;
+    }
+
+    const preferences = preferenceApi();
+    preferences?.setDriveByEarEnabled?.(enabled);
+
+    if (enabled && preferences?.driveByEarGraphAvailable === false) {
+      dbeToggle.disabled = true;
+      status.textContent = 'Drive By Ear enabled. Reloading TURN to build its audio system.';
+      requestAnimationFrame(() => globalThis.location?.reload());
+      return;
+    }
+
+    status.textContent = enabled
+      ? 'Drive By Ear on.'
+      : 'Drive By Ear off. Its processing will also stay unloaded next time TURN starts.';
+  });
+
+  balanceSlider.addEventListener('input', () => {
+    const value = Number(balanceSlider.value);
+    preferenceApi()?.setBalance?.(value / 100);
+    balanceOutput.value = balanceLabel(value);
+    balanceOutput.textContent = balanceOutput.value;
+  });
+  balanceSlider.addEventListener('change', () => {
+    status.textContent = `Sound balance: ${balanceLabel(Number(balanceSlider.value))}.`;
+  });
+
+  syncControls();
   return { button, dialog };
+}
+
+function simplifyResetRivalsFeedback() {
+  document.querySelector('.nuke-dialog-icon')?.remove();
+  document.querySelector('.nuke-effect')?.remove();
+
+  const dialog = document.querySelector('.nuke-dialog');
+  const confirmButton = dialog?.querySelector('.nuke-confirm');
+  if (!dialog || !confirmButton || confirmButton.dataset.simpleResetInstalled === 'true') return;
+  confirmButton.dataset.simpleResetInstalled = 'true';
+
+  confirmButton.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (typeof dialog.close === 'function' && dialog.open) dialog.close();
+    else dialog.removeAttribute('open');
+    globalThis.__turnResetRivals?.();
+  }, { capture: true });
 }
 
 function install(runtime) {
@@ -105,6 +193,7 @@ function install(runtime) {
   const resetRivalsButton = document.querySelector('.reset-rivals-button');
   const spectateButton = document.querySelector('.spectate-button');
   const lapTimeChip = document.querySelector('#lapTime')?.closest('.chip');
+  const boostHud = document.querySelector('.boost-hud');
 
   if (!utilityGroup || !backToStartButton || !recalibrateButton || !backToLotButton || !resetRivalsButton || !spectateButton) {
     requestAnimationFrame(() => install(runtime));
@@ -112,13 +201,15 @@ function install(runtime) {
   }
 
   runtime.__inGameMenuInstalled = true;
-  const soundGuideButton = globalThis.__turnDriveByEarEnabled === false
-    ? null
-    : createSoundGuide().button;
+  simplifyResetRivalsFeedback();
+  const audioButton = createAudioPanel().button;
 
   backToStartButton.textContent = 'Restart Lap';
   backToStartButton.setAttribute('aria-label', 'Restart the current lap from the start line');
   backToStartButton.classList.add('back-to-start-button');
+
+  backToLotButton.textContent = 'Leave Race';
+  backToLotButton.setAttribute('aria-label', 'Leave the race and choose another track');
 
   recalibrateButton.textContent = 'Recalibrate';
   recalibrateButton.setAttribute('aria-label', 'Recalibrate steering and tilt controls');
@@ -127,11 +218,11 @@ function install(runtime) {
   const buttonOrder = [
     backToLotButton,
     recalibrateButton,
-    soundGuideButton,
+    audioButton,
     resetRivalsButton,
     spectateButton,
     backToStartButton
-  ].filter(Boolean);
+  ];
   for (const button of buttonOrder) utilityGroup.appendChild(button);
 
   let previousMenuState = null;
@@ -167,6 +258,10 @@ function install(runtime) {
     setRestartLapInvalid(invalid, { pulse: pulseOnEntry });
   }
 
+  function syncBoostLabel(racing = runtime.state?.lapActive === true) {
+    boostHud?.classList.toggle('is-racing', racing);
+  }
+
   const lapValidityObserver = lapTimeChip && typeof MutationObserver === 'function'
     ? new MutationObserver(() => syncLapValidity())
     : null;
@@ -183,7 +278,7 @@ function install(runtime) {
       backToStartButton.hidden = !visibility.backToStart;
       backToLotButton.hidden = !visibility.startActions;
       recalibrateButton.hidden = !visibility.startActions;
-      if (soundGuideButton) soundGuideButton.hidden = !visibility.startActions;
+      audioButton.hidden = !visibility.startActions;
       resetRivalsButton.hidden = !visibility.startActions;
       previousMenuState = visibility.menuState;
     }
@@ -191,7 +286,9 @@ function install(runtime) {
 
   window.addEventListener('turn:ui-state-change', (event) => {
     syncMenu();
-    if (!event.detail?.running || event.detail?.reason === 'race-reset') {
+    const raceReset = event.detail?.reason === 'race-reset';
+    syncBoostLabel(event.detail?.running === true && !raceReset);
+    if (!event.detail?.running || raceReset) {
       setRestartLapInvalid(false);
     } else {
       syncLapValidity();
@@ -200,6 +297,7 @@ function install(runtime) {
 
   syncMenu();
   syncLapValidity({ pulseOnEntry: false });
+  syncBoostLabel();
 }
 
 waitForRuntime();

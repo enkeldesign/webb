@@ -1,0 +1,239 @@
+.nuke-dialog-icon,
+.nuke-effect {
+  display: none !important;
+}
+
+.audio-settings-button {
+  background: #38d9ff;
+}
+
+.audio-settings-dialog {
+  width: min(720px, calc(100vw - 28px));
+  max-width: none;
+  max-height: calc(100dvh - 28px);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  overflow: visible;
+}
+
+.audio-settings-dialog:not([open]) {
+  display: none;
+}
+
+.audio-settings-dialog::backdrop {
+  background: rgb(8 9 10 / 0.72);
+  backdrop-filter: blur(5px);
+}
+
+.audio-settings-card {
+  max-height: calc(100dvh - 28px);
+  padding: clamp(18px, 3vw, 30px);
+  overflow: auto;
+  border: 4px solid var(--ink);
+  border-radius: 22px;
+  background: var(--paper);
+  box-shadow: 0 18px 0 rgb(8 9 10 / 0.28);
+}
+
+.audio-settings-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.audio-settings-head h2,
+.audio-settings-card h3 {
+  margin: 0;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.audio-settings-head h2 {
+  font-size: clamp(1.65rem, 4.4vw, 2.8rem);
+}
+
+.audio-settings-close {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  background: #ff6b6b;
+  color: var(--ink);
+  font: inherit;
+  font-size: 1.55rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.audio-settings-list {
+  display: grid;
+  gap: 12px;
+}
+
+.audio-setting-row,
+.audio-balance-card,
+.audio-guide-card {
+  padding: 14px;
+  border: 3px solid var(--ink);
+  border-radius: 15px;
+  background: #fffdf6;
+}
+
+.audio-setting-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.audio-setting-row input {
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  accent-color: #20c997;
+}
+
+.audio-setting-row span {
+  display: grid;
+  gap: 3px;
+}
+
+.audio-setting-row strong,
+.audio-balance-card h3,
+.audio-guide-card summary {
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.audio-setting-row small,
+.audio-balance-card p,
+.audio-guide-card p,
+.audio-settings-status {
+  line-height: 1.38;
+}
+
+.audio-balance-card h3 {
+  font-size: 0.95rem;
+}
+
+.audio-balance-card p {
+  margin: 7px 0 12px;
+}
+
+.audio-balance-card input[type="range"] {
+  width: 100%;
+  min-height: 36px;
+  accent-color: #38d9ff;
+}
+
+.audio-balance-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 2px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.audio-guide-card summary {
+  cursor: pointer;
+}
+
+.audio-guide-card p {
+  margin: 9px 0 0;
+}
+
+.audio-settings-status {
+  min-height: 1.4em;
+  margin: 12px 2px 0;
+  font-weight: 800;
+}
+
+.audio-settings-button:focus-visible,
+.audio-settings-close:focus-visible,
+.audio-setting-row:focus-within,
+.audio-balance-card input:focus-visible,
+.audio-guide-card summary:focus-visible {
+  outline: 4px solid #ffd43b;
+  outline-offset: 3px;
+}
+
+.spectate-rank {
+  display: inline-block;
+  margin-right: 0.35em;
+  font-weight: 900;
+}
+
+.track-select-footer {
+  margin-top: clamp(20px, 3vh, 30px);
+}
+
+.track-select-continue {
+  background: var(--selected-track-accent, #8ce99a);
+}
+
+.boost-hud.is-racing > span {
+  display: none;
+}
+
+@media (max-height: 430px) {
+  .audio-settings-dialog {
+    width: min(820px, calc(100vw - 18px));
+    max-height: calc(100dvh - 18px);
+  }
+
+  .audio-settings-card {
+    max-height: calc(100dvh - 18px);
+    padding: 14px 17px 16px;
+    border-radius: 16px;
+  }
+
+  .audio-settings-head {
+    margin-bottom: 9px;
+  }
+
+  .audio-settings-head h2 {
+    font-size: clamp(1.35rem, 3.8vw, 2rem);
+  }
+
+  .audio-settings-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .audio-setting-row,
+  .audio-balance-card,
+  .audio-guide-card {
+    padding: 10px;
+    border-width: 2px;
+  }
+
+  .audio-balance-card,
+  .audio-guide-card {
+    min-width: 0;
+  }
+
+  .audio-setting-row small,
+  .audio-balance-card p,
+  .audio-guide-card p {
+    font-size: 0.78rem;
+  }
+
+  .track-select-footer {
+    margin-top: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .audio-settings-dialog {
+    scroll-behavior: auto;
+  }
+}

@@ -14,7 +14,7 @@ import {
   updatePaceNoteState
 } from '../../turn/audio/pace-notes.js';
 
-const [releaseSource, app, audio, paceAudio, paceMap, soundGuide] = await Promise.all([
+const [releaseSource, app, audio, paceAudio, paceMap, audioPanel] = await Promise.all([
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/audio-system.js', import.meta.url), 'utf8'),
@@ -214,11 +214,11 @@ for (const trackName of ['COUNTRYSIDE', 'AIRPORT', 'CLIFFSIDE', 'HARBOR']) {
   assert.match(paceMap, new RegExp(`const ${trackName}_PACE_NOTES`), `${trackName} must keep an explicit authored pace-note map`);
 }
 assert.match(paceMap, /export const PACE_NOTE_LENGTH/);
-assert.match(soundGuide, /<h4>PACE NOTES<\/h4>/);
-assert.match(soundGuide, /A delayed echo marks a long corner when one is authored/);
-assert.match(soundGuide, /<h4>TRAJECTORY SLIDER<\/h4>/);
-assert.match(soundGuide, /<h4>SOUND LAYERS<\/h4>/);
-assert.match(soundGuide, /Pace notes briefly clear room for route information/);
-assert.doesNotMatch(soundGuide, /TURN RIBBON|TURN PULSE|ROAD EDGE|CORNER FLOW|AIRPORT/, 'The pace-note guide must not resurrect retired or track-specific DBE generations');
+assert.match(audioPanel, /Drive By Ear sound guide/);
+assert.match(audioPanel, /Pace notes tell you what comes next/);
+assert.match(audioPanel, /A warm organic hum guides your steering/);
+assert.match(audioPanel, /Off road, centred gravel marks the surface/);
+assert.match(audioPanel, /nearby-rival warnings are directional/);
+assert.doesNotMatch(audioPanel, /TURN RIBBON|TURN PULSE|ROAD EDGE|CORNER FLOW|AIRPORT/, 'The audio guide must not resurrect retired or track-specific DBE generations');
 
 console.log(`TURN ${release.id} all-track pace notes and layered route audio passed.`);
