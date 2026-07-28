@@ -1,12 +1,20 @@
 // Generated from turn/app.js for TURN 2026.07.28-r110. Do not edit by hand.
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
 const productionModuleBase = new URL('/turn/', globalThis.location?.href || 'https://enkel.design/turn-next/');
+const platformModuleBase = new URL('/turn/platform/', globalThis.location?.href || 'https://enkel.design/turn-next/');
 
 function withBuild(path) {
   const url = new URL(path, productionModuleBase);
   if (buildKey) url.searchParams.set('build', buildKey);
   return url.href;
 }
+
+const { createWebPlatform } = await import(new URL('./web-platform.js', platformModuleBase).href);
+const { installTurnPlatform } = await import(new URL('./platform-context.js', platformModuleBase).href);
+installTurnPlatform(createWebPlatform());
+document.documentElement.dataset.turnPlatform = 'web-adapter';
+const turnNextBadgeDetail = document.querySelector('.turn-next-badge span');
+if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M1';
 
 function installStylesheet(path, dataAttribute) {
   if (document.querySelector(`link[${dataAttribute}]`)) return;

@@ -26,8 +26,22 @@ export function buildTurnNextApp(productionApp, release) {
   output = replaceRequired(
     output,
     "const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';\n\nfunction withBuild(path) {\n  const url = new URL(path, import.meta.url);",
-    "const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';\nconst productionModuleBase = new URL('/turn/', globalThis.location?.href || 'https://enkel.design/turn-next/');\n\nfunction withBuild(path) {\n  const url = new URL(path, productionModuleBase);",
+    "const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';\nconst productionModuleBase = new URL('/turn/', globalThis.location?.href || 'https://enkel.design/turn-next/');\nconst platformModuleBase = new URL('/turn/platform/', globalThis.location?.href || 'https://enkel.design/turn-next/');\n\nfunction withBuild(path) {\n  const url = new URL(path, productionModuleBase);",
     'module URL resolver'
+  );
+
+  output = replaceRequired(
+    output,
+    'function installStylesheet(path, dataAttribute) {',
+    `const { createWebPlatform } = await import(new URL('./web-platform.js', platformModuleBase).href);
+const { installTurnPlatform } = await import(new URL('./platform-context.js', platformModuleBase).href);
+installTurnPlatform(createWebPlatform());
+document.documentElement.dataset.turnPlatform = 'web-adapter';
+const turnNextBadgeDetail = document.querySelector('.turn-next-badge span');
+if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M1';
+
+function installStylesheet(path, dataAttribute) {`,
+    'platform composition point'
   );
 
   output = replaceRequired(
@@ -40,6 +54,14 @@ export function buildTurnNextApp(productionApp, release) {
   output = `// Generated from turn/app.js for TURN ${release.id}. Do not edit by hand.\n${output}`;
 
   assert.match(output, /const productionModuleBase = new URL\('\/turn\/'/);
+  assert.match(output, /const platformModuleBase = new URL\('\/turn\/platform\/'/);
+  assert.match(output, /installTurnPlatform\(createWebPlatform\(\)\)/);
+  assert.match(output, /dataset\.turnPlatform = 'web-adapter'/);
+  assert.match(output, /Platform M1/);
+  assert.ok(
+    output.indexOf('installTurnPlatform(createWebPlatform())') < output.indexOf("withBuild('./main.js')"),
+    'TURN NEXT must install its platform before the game core loads.'
+  );
   assert.match(output, /new URL\(path, productionModuleBase\)/);
   assert.doesNotMatch(output, /new URL\(path, import\.meta\.url\)/);
   assert.match(output, /TURN NEXT:/);
