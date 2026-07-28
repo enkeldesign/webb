@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'turn/**'
+      - 'turn-next/**'
       - 'turn-tests/**'
       - 'turn-lab/**'
       - 'eslint.config.mjs'
@@ -15,6 +16,7 @@ on:
       - main
     paths:
       - 'turn/**'
+      - 'turn-next/**'
       - 'turn-tests/**'
       - 'turn-lab/**'
       - 'eslint.config.mjs'
@@ -36,13 +38,19 @@ jobs:
           node-version: '24'
 
       - name: Syntax-check TURN modules
-        run: find turn turn-tests turn-lab/tests turn-lab/scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
+        run: find turn turn-next turn-tests turn-lab/tests turn-lab/scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
 
       - name: Lint TURN domain modules
         run: npx --yes eslint@9.39.1
 
       - name: Verify release source of truth
         run: node turn/scripts/release.mjs --check
+
+      - name: Verify TURN NEXT generated parity entry
+        run: node turn-next/scripts/build-parity-entry.mjs --check
+
+      - name: Run TURN NEXT isolation and identity regression
+        run: node turn-tests/turn-next-entry-production.mjs
 
       - name: Run production race and replay regression tests
         run: node turn-tests/race-production.mjs
