@@ -85,7 +85,7 @@ for (const requiredInstall of [
 assert.match(platformContext, /installTurnPlatform/);
 assert.match(platformContext, /requireTurnPlatform/);
 assert.match(platformContext, /validateTurnPlatform/);
-assert.doesNotMatch(platformContext, /window|document|screen|DeviceMotionEvent/, 'The platform context must remain environment-agnostic');
+assert.doesNotMatch(platformContext, /\b(?:window|document|screen|DeviceMotionEvent)\b/, 'The platform context must remain environment-agnostic');
 assert.match(webPlatform, /requestPermission/);
 assert.match(webPlatform, /addEventListener\('devicemotion'/);
 assert.match(webPlatform, /requestFullscreen/);
