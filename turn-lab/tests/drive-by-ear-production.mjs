@@ -6,7 +6,7 @@ import {
   saveDriveByEarEnabled
 } from '../../turn/ui/drive-by-ear-setting.js';
 
-const [releaseSource, app, setting, style, menu, audio, preferences, organic, paceAudio, polishStyle] = await Promise.all([
+const [releaseSource, app, setting, style, menu, audio, preferences, runtimeGuard, organic, paceAudio, polishStyle] = await Promise.all([
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/drive-by-ear-setting.js', import.meta.url), 'utf8'),
@@ -14,6 +14,7 @@ const [releaseSource, app, setting, style, menu, audio, preferences, organic, pa
   fs.readFile(new URL('../../turn/ui/in-game-menu.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/audio-system.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/audio-preferences.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/audio/audio-preference-runtime.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/organic-ribbon.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/pace-notes.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/r104-polish.css', import.meta.url), 'utf8')
@@ -50,6 +51,9 @@ assert.ok(app.indexOf('installTurnAudio()') < app.indexOf('installOrganicRibbon(
   'The organic wrapper must install only after the core API exists');
 assert.match(app, /if \(driveByEarEnabled\) \{\s*organicRibbon\.installOrganicRibbon\(\);[\s\S]*\.\/audio\/driving-soundscape\.js/,
   'The organic wrapper and soundscape must remain inside the DBE-enabled branch');
+assert.ok(app.indexOf('./audio/driving-soundscape.js') < app.indexOf('./audio/audio-preference-runtime.js'),
+  'The live preference guard must wrap the complete DBE soundscape');
+assert.match(app, /installAudioPreferenceRuntime\(\)/);
 
 assert.match(setting, /DRIVE BY EAR<sup>™<\/sup>/);
 assert.match(setting, /On by default for every player/);
@@ -71,6 +75,9 @@ assert.match(menu, /driveByEarGraphAvailable === false/,
 
 assert.match(preferences, /turn-audio-enabled-v1/);
 assert.match(preferences, /turn-audio-balance-v1/);
+assert.match(preferences, /const DEFAULT_BALANCE = 0\.5/);
+assert.match(preferences, /if \(stored == null \|\| stored === ''\) return DEFAULT_BALANCE/,
+  'An unset balance must retain the intended centre mix');
 assert.match(preferences, /const GRAPH_GAIN_ROLES/);
 assert.match(preferences, /'dynamics',[\s\S]*'guidance',[\s\S]*'route',[\s\S]*'world',[\s\S]*'safety'/);
 assert.match(preferences, /role === 'dynamics' \|\| role === 'world'/,
@@ -81,9 +88,19 @@ assert.match(preferences, /setGain\(state\.masterPreference, audioEnabled \? 1 :
 assert.match(preferences, /setGain\(state\.dbePreference, dbeEnabled \? dbeFactor : 0/);
 assert.match(preferences, /const dbeFactor = balance < DEFAULT_BALANCE/);
 assert.match(preferences, /const otherFactor = balance > DEFAULT_BALANCE/);
+assert.match(preferences, /replacePrototypeMethod/,
+  'Audio graph interception must fail safely on restrictive browser prototypes');
+assert.match(preferences, /routingAvailable = connectPatched && gainFactoryPatched/);
 assert.match(preferences, /globalThis\.__turnAudioPreferences = api/);
 assert.doesNotMatch(preferences, /new AudioContext|new webkitAudioContext/,
   'Preferences must route the existing graph rather than creating a second audio engine');
+
+assert.match(runtimeGuard, /const DBE_DISABLED_FRAME/);
+assert.match(runtimeGuard, /nearestRivalDistance: Infinity/,
+  'Live DBE off must also suppress the internally generated rival warning');
+assert.match(runtimeGuard, /settings\?\.dbeEnabled === false/);
+assert.match(runtimeGuard, /\{ \.\.\.frame, \.\.\.DBE_DISABLED_FRAME \}/);
+assert.doesNotMatch(runtimeGuard, /AudioContext|webkitAudioContext|new Audio\(/);
 
 assert.match(audio, /DRIVE_BY_EAR_ENABLED = globalThis\.__turnDriveByEarEnabled !== false/);
 assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) \{[\s\S]*window\.addEventListener\('turn:pace-note'/);
