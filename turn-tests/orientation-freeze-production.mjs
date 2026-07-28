@@ -12,7 +12,7 @@ assert.equal(normalizeDegrees(-270), 90);
 assert.equal(normalizeDegrees(540), 180);
 assert.equal(snapToQuarterTurn(43), 0);
 assert.equal(snapToQuarterTurn(47), 90);
-assert.equal(snapToQuarterTurn(-136), -180);
+assert.equal(snapToQuarterTurn(-136), 180);
 
 const portraitTurn = calculateOrientationFreezeTransform({
   lockedAngle: 90,
