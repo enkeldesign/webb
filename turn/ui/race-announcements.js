@@ -121,7 +121,7 @@ export function spokenLapTime(seconds) {
 }
 
 export function lapResultAnnouncement({ position, time } = {}) {
-  return `Last lap. ${capitalize(ordinalWord(position))}. ${capitalize(spokenLapTime(time))}.`;
+  return `Lap. ${capitalize(ordinalWord(position))}. ${capitalize(spokenLapTime(time))}.`;
 }
 
 export function lapVoidAnnouncement(reason) {
