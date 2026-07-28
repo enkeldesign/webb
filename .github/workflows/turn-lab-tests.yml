@@ -46,6 +46,9 @@ jobs:
       - name: Verify release source of truth
         run: node turn/scripts/release.mjs --check
 
+      - name: Verify TURN NEXT generated parity bootstrap
+        run: node turn-next/scripts/build-parity-app.mjs --check
+
       - name: Verify TURN NEXT generated parity entry
         run: node turn-next/scripts/build-parity-entry.mjs --check
 
