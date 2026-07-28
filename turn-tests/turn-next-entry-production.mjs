@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [productionIndex, nextIndex, storage, identity, manifestSource, releaseSource] = await Promise.all([
+const [productionIndex, productionApp, nextIndex, nextApp, storage, identity, manifestSource, releaseSource] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn-next/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/storage-bootstrap.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/identity.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/site.webmanifest', import.meta.url), 'utf8'),
@@ -23,12 +25,38 @@ assert.match(nextIndex, /\/turn-next\/storage-bootstrap\.js/);
 assert.match(nextIndex, /\/turn-next\/identity\.css/);
 assert.match(nextIndex, /\/turn-next\/identity\.js/);
 assert.match(nextIndex, /\/turn-next\/site\.webmanifest/);
-assert.match(nextIndex, /src="\.\/app\.js\?build=/, 'The parity entry must launch the production app through the /turn/ base URL');
+assert.match(nextIndex, /src="\/turn-next\/app\.js\?source=/, 'The parity entry must launch through its own staging bootstrap');
 assert.ok(
   nextIndex.indexOf('/turn-next/storage-bootstrap.js') < nextIndex.indexOf('./install-gate.js'),
   'Storage isolation must install before any production script can access storage'
 );
 assert.doesNotMatch(nextIndex, /href="\.\/site\.webmanifest/);
+
+assert.match(nextApp, /Generated from turn\/app\.js/);
+assert.match(nextApp, /const productionModuleBase = new URL\('\/turn\/'/);
+assert.match(nextApp, /new URL\(path, productionModuleBase\)/);
+assert.doesNotMatch(nextApp, /new URL\(path, import\.meta\.url\)/);
+assert.match(nextApp, /TURN NEXT:/);
+for (const requiredInstall of [
+  'installPerformanceProfile',
+  'installCoveredRenderingGuard',
+  'installDriveByEarSetting',
+  'prepareOrganicRibbonCapture',
+  'prepareRecoveryGuidanceCapture',
+  'preparePaceNotePriorityCapture',
+  'installTurnAudio',
+  'installPaceNotePriority',
+  'installUniversalDrivingSoundscape',
+  'installPaceNotes',
+  'installOffroadEarDirection',
+  'installRecoveryGuidance',
+  'installAudioPreferenceRuntime',
+  'installRaceSpeech',
+  'installRacePositionLayout'
+]) {
+  assert.ok(productionApp.includes(requiredInstall), `Production bootstrap must still contain ${requiredInstall}`);
+  assert.ok(nextApp.includes(requiredInstall), `TURN NEXT bootstrap must preserve ${requiredInstall}`);
+}
 
 assert.match(storage, /const LOCAL_PREFIX = 'turn-next:';/);
 assert.match(storage, /const SESSION_PREFIX = 'turn-next-session:';/);
