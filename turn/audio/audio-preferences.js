@@ -14,6 +14,7 @@ const nodeRoles = new WeakMap();
 const contextStates = new Set();
 let installed = false;
 let originalConnect = null;
+let routingAvailable = false;
 let audioEnabled = readBoolean(AUDIO_ENABLED_STORAGE_KEY, true);
 let dbeEnabled = globalThis.__turnDriveByEarEnabled !== false;
 let balance = readBalance();
@@ -25,8 +26,9 @@ export function installAudioPreferences({ driveByEarGraphAvailable = dbeEnabled 
 
   if (!installed) {
     installed = true;
-    patchAudioNodeConnect();
-    patchAudioContextFactories();
+    const connectPatched = patchAudioNodeConnect();
+    const gainFactoryPatched = patchAudioContextFactories();
+    routingAvailable = connectPatched && gainFactoryPatched;
   }
 
   const api = Object.freeze({
@@ -36,6 +38,9 @@ export function installAudioPreferences({ driveByEarGraphAvailable = dbeEnabled 
     setBalance,
     get graphReady() {
       return [...contextStates].some((state) => Boolean(state.masterPreference));
+    },
+    get routingAvailable() {
+      return routingAvailable;
     },
     get driveByEarGraphAvailable() {
       return dbeGraphAvailable;
@@ -51,7 +56,8 @@ export function getSettings() {
     audioEnabled,
     dbeEnabled,
     balance,
-    driveByEarGraphAvailable: dbeGraphAvailable
+    driveByEarGraphAvailable: dbeGraphAvailable,
+    routingAvailable
   });
 }
 
@@ -81,10 +87,15 @@ function patchAudioContextFactories() {
     globalThis.AudioContext?.prototype,
     globalThis.webkitAudioContext?.prototype
   ].filter(Boolean);
+  let patchedAny = false;
 
   for (const prototype of [...new Set(prototypes)]) {
     const currentCreateGain = prototype.createGain;
-    if (typeof currentCreateGain !== 'function' || currentCreateGain.__turnAudioPreferencesPatched) continue;
+    if (typeof currentCreateGain !== 'function') continue;
+    if (currentCreateGain.__turnAudioPreferencesPatched) {
+      patchedAny = true;
+      continue;
+    }
 
     function createTurnGain(...args) {
       const node = currentCreateGain.apply(this, args);
@@ -101,21 +112,28 @@ function patchAudioContextFactories() {
     }
 
     createTurnGain.__turnAudioPreferencesPatched = true;
-    prototype.createGain = createTurnGain;
+    patchedAny = replacePrototypeMethod(prototype, 'createGain', createTurnGain) || patchedAny;
   }
+
+  return patchedAny;
 }
 
 function patchAudioNodeConnect() {
   const prototype = globalThis.AudioNode?.prototype;
-  if (!prototype || typeof prototype.connect !== 'function') return;
-  if (prototype.connect.__turnAudioPreferencesPatched) return;
+  if (!prototype || typeof prototype.connect !== 'function') return false;
+  if (prototype.connect.__turnAudioPreferencesPatched) {
+    originalConnect = prototype.connect.__turnAudioPreferencesOriginal || null;
+    return Boolean(originalConnect);
+  }
 
   originalConnect = prototype.connect;
 
   function connectWithPreferences(destination, ...args) {
     const metadata = nodeRoles.get(this);
-    if (!metadata || !destination) {
-      return originalConnect.call(this, destination, ...args);
+    if (!metadata || !destination || !originalConnect) {
+      return originalConnect
+        ? originalConnect.call(this, destination, ...args)
+        : destination;
     }
 
     const { state, role } = metadata;
@@ -145,7 +163,28 @@ function patchAudioNodeConnect() {
   }
 
   connectWithPreferences.__turnAudioPreferencesPatched = true;
-  prototype.connect = connectWithPreferences;
+  connectWithPreferences.__turnAudioPreferencesOriginal = originalConnect;
+  return replacePrototypeMethod(prototype, 'connect', connectWithPreferences);
+}
+
+function replacePrototypeMethod(prototype, name, replacement) {
+  try {
+    prototype[name] = replacement;
+    if (prototype[name] === replacement) return true;
+  } catch (_) {}
+
+  try {
+    const descriptor = Object.getOwnPropertyDescriptor(prototype, name);
+    Object.defineProperty(prototype, name, {
+      ...descriptor,
+      configurable: true,
+      writable: true,
+      value: replacement
+    });
+    return prototype[name] === replacement;
+  } catch (_) {
+    return false;
+  }
 }
 
 function ensureContextState(context) {
@@ -184,13 +223,13 @@ function ensurePreferenceGain(state, key) {
 }
 
 function connectPreferenceToMaster(state, preference, flagKey) {
-  if (state[flagKey] || !state.master) return;
+  if (state[flagKey] || !state.master || !originalConnect) return;
   originalConnect.call(preference, state.master);
   state[flagKey] = true;
 }
 
 function connectOnce(state, source, destination, destinationKey) {
-  if (state[destinationKey] === destination) return;
+  if (state[destinationKey] === destination || !originalConnect) return;
   originalConnect.call(source, destination);
   state[destinationKey] = destination;
 }
@@ -218,7 +257,9 @@ function setGain(node, value, now) {
     node.gain.cancelScheduledValues(now);
     node.gain.setTargetAtTime(next, now, 0.025);
   } catch (_) {
-    node.gain.value = next;
+    try {
+      node.gain.value = next;
+    } catch (_) {}
   }
 }
 
@@ -230,7 +271,9 @@ function readBoolean(key, fallback) {
 }
 
 function readBalance() {
-  return clamp(Number(readStorage(AUDIO_BALANCE_STORAGE_KEY)), 0, 1, DEFAULT_BALANCE);
+  const stored = readStorage(AUDIO_BALANCE_STORAGE_KEY);
+  if (stored == null || stored === '') return DEFAULT_BALANCE;
+  return clamp(Number(stored), 0, 1, DEFAULT_BALANCE);
 }
 
 function readStorage(key) {
