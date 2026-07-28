@@ -58,17 +58,19 @@ export function createOffroadEarDirectionFrame(runtime, frame = {}) {
   if (!sample?.point) return {};
 
   const right = normalizedVector(runtime.getRight?.()) || rightFromHeading(state.heading);
-  const roadVector = subtract(sample.point, state.position);
-  const roadDirection = normalizedVector(roadVector);
-  if (!right || !roadDirection) return {};
+  const optimalRouteVector = subtract(sample.point, state.position);
+  const optimalRouteDirection = normalizedVector(optimalRouteVector);
+  if (!right || !optimalRouteDirection) return {};
 
-  // The nearest road point is the physical source of truth for the ear.
-  // A racing-line look-ahead may shape urgency, but it must never point away from asphalt.
-  const roadSide = clamp(dot(roadDirection, right), -1, 1);
-  if (Math.abs(roadSide) < 0.025) return {};
+  // One rule on asphalt and beyond it: the ribbon belongs to the ear on the side
+  // of the optimal route. TURN's established on-road mixer convention uses the
+  // inverse numeric pan sign, so crossing the road edge must not flip the cue.
+  const optimalRouteSide = clamp(dot(optimalRouteDirection, right), -1, 1);
+  if (Math.abs(optimalRouteSide) < 0.025) return {};
 
   const existingPan = clamp(Number(frame.sliderPan) || 0, -1, 1);
-  const geometricStrength = 0.58 + smoothstep(0.06, 0.82, Math.abs(roadSide)) * 0.38;
+  const geometricStrength = 0.58
+    + smoothstep(0.06, 0.82, Math.abs(optimalRouteSide)) * 0.38;
   const magnitude = clamp(
     Math.max(Math.abs(existingPan), geometricStrength),
     0.58,
@@ -76,7 +78,7 @@ export function createOffroadEarDirectionFrame(runtime, frame = {}) {
   );
 
   return {
-    sliderPan: Math.sign(roadSide) * magnitude
+    sliderPan: -Math.sign(optimalRouteSide) * magnitude
   };
 }
 
