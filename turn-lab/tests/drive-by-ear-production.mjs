@@ -17,6 +17,7 @@ const [
   runtimeGuard,
   organic,
   recovery,
+  offroadDirection,
   paceAudio,
   polishStyle
 ] = await Promise.all([
@@ -30,6 +31,7 @@ const [
   fs.readFile(new URL('../../turn/audio/audio-preference-runtime.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/organic-ribbon.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/recovery-guidance.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/audio/offroad-ear-direction.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/pace-notes.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/r104-polish.css', import.meta.url), 'utf8')
 ]);
@@ -71,10 +73,15 @@ assert.ok(app.indexOf('installTurnAudio()') < app.indexOf('installOrganicRibbon(
   'The organic wrapper must install only after the core API exists');
 assert.match(app, /if \(driveByEarEnabled\) \{\s*organicRibbon\.installOrganicRibbon\(\);[\s\S]*\.\/audio\/driving-soundscape\.js/,
   'The organic wrapper and soundscape must remain inside the DBE-enabled branch');
-assert.match(app, /installPaceNotes\(\);\s*recoveryGuidance\.installRecoveryGuidance\(\);/,
-  'The recovery wrapper must remain inside the DBE-enabled branch after route guidance');
+assert.match(
+  app,
+  /installPaceNotes\(\);[\s\S]*installOffroadEarDirection\(\);[\s\S]*recoveryGuidance\.installRecoveryGuidance\(\);/,
+  'Physical road-side correction must sit between route guidance and the outer recovery wrapper'
+);
 assert.ok(app.indexOf('./audio/driving-soundscape.js') < app.indexOf('./audio/audio-preference-runtime.js'),
   'The live preference guard must wrap the complete DBE soundscape');
+assert.ok(app.indexOf('installOffroadEarDirection()') < app.indexOf('./audio/audio-preference-runtime.js'),
+  'The live preference guard must also wrap off-road ear correction');
 assert.ok(app.indexOf('installRecoveryGuidance()') < app.indexOf('./audio/audio-preference-runtime.js'),
   'The live preference guard must also wrap continuous recovery guidance');
 assert.match(app, /installAudioPreferenceRuntime\(\)/);
@@ -148,6 +155,12 @@ assert.doesNotMatch(recovery, /new AudioContext|new webkitAudioContext|HTMLAudio
   'Recovery guidance must reuse the central audio graph without assets');
 assert.match(recovery, /updateWrongWayTone\(\{ active: false \}/,
   'Runtime DBE shutdown must explicitly fade the sustained wrong-way tone');
+assert.match(offroadDirection, /settings\?\.dbeEnabled !== false/,
+  'Live DBE off must bypass the physical-road correction layer');
+assert.match(offroadDirection, /globalThis\.__turnDriveByEarEnabled !== false/,
+  'True-off startup must leave physical-road correction unavailable');
+assert.doesNotMatch(offroadDirection, /AudioContext|webkitAudioContext|HTMLAudioElement|new Audio\(|fetch\(/,
+  'Ear correction must reuse the existing ribbon without another graph or asset');
 assert.doesNotMatch(audio, /driftPanner|smoothPan\(drift/);
 assert.match(audio, /if \(sliderGain\) hardMute\(sliderGain\.gain, now\)/);
 assert.match(audio, /if \(surfaceGain\) hardMute\(surfaceGain\.gain, now\)/);

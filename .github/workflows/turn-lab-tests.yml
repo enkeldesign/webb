@@ -110,6 +110,9 @@ jobs:
       - name: Run DBE recovery guidance regression
         run: node turn-lab/tests/recovery-guidance-production.mjs
 
+      - name: Run physical-road off-road ear-direction regression
+        run: node turn-lab/tests/offroad-ear-direction-production.mjs
+
       - name: Run all-track auditory pace-note regression
         run: node turn-lab/tests/pace-notes-production.mjs
 
