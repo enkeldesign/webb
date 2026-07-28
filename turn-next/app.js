@@ -2,6 +2,7 @@
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
 const productionModuleBase = new URL('/turn/', globalThis.location?.href || 'https://enkel.design/turn-next/');
 const platformModuleBase = new URL('/turn/platform/', globalThis.location?.href || 'https://enkel.design/turn-next/');
+const turnNextModuleBase = new URL('/turn-next/', globalThis.location?.href || 'https://enkel.design/turn-next/');
 
 function withBuild(path) {
   const url = new URL(path, productionModuleBase);
@@ -11,10 +12,15 @@ function withBuild(path) {
 
 const { createWebPlatform } = await import(new URL('./web-platform.js', platformModuleBase).href);
 const { installTurnPlatform } = await import(new URL('./platform-context.js', platformModuleBase).href);
-installTurnPlatform(createWebPlatform());
+const webPlatform = createWebPlatform();
+installTurnPlatform(webPlatform);
+const { installTurnNextOrientationFreeze } = await import(
+  new URL('./orientation-freeze.js?source=20260728-r110', turnNextModuleBase).href
+);
+installTurnNextOrientationFreeze({ platform: webPlatform });
 document.documentElement.dataset.turnPlatform = 'web-adapter';
 const turnNextBadgeDetail = document.querySelector('.turn-next-badge span');
-if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M1';
+if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M1 · Orientation M2';
 
 function installStylesheet(path, dataAttribute) {
   if (document.querySelector(`link[${dataAttribute}]`)) return;

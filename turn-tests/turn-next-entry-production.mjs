@@ -31,13 +31,16 @@ const manifest = JSON.parse(manifestSource);
 const release = JSON.parse(releaseSource);
 
 assert.match(productionIndex, new RegExp(`TURN v${release.version} · Build ${release.id}`));
-assert.match(nextIndex, /<base href="\/turn\/">/, 'TURN NEXT must reuse the current production module graph during the parity milestone');
+assert.match(nextIndex, /<base href="\/turn\/">/, 'TURN NEXT must reuse the current production module graph during the migration milestone');
 assert.match(nextIndex, /data-turn-deployment="next"/);
 assert.match(nextIndex, /<meta name="robots" content="noindex,nofollow">/);
 assert.match(nextIndex, /TURN NEXT · Source TURN/);
 assert.match(nextIndex, /class="turn-next-badge"/);
+assert.match(nextIndex, /id="turnAppViewport"/);
 assert.match(nextIndex, /\/turn-next\/storage-bootstrap\.js/);
+assert.match(nextIndex, /\/turn-next\/orientation-preflight\.js/);
 assert.match(nextIndex, /\/turn-next\/identity\.css/);
+assert.match(nextIndex, /\/turn-next\/orientation-freeze\.css/);
 assert.match(nextIndex, /\/turn-next\/identity\.js/);
 assert.match(nextIndex, /\/turn-next\/site\.webmanifest/);
 assert.match(nextIndex, /src="\/turn-next\/app\.js\?source=/, 'The parity entry must launch through its own staging bootstrap');
@@ -45,19 +48,30 @@ assert.ok(
   nextIndex.indexOf('/turn-next/storage-bootstrap.js') < nextIndex.indexOf('./install-gate.js'),
   'Storage isolation must install before any production script can access storage'
 );
+assert.ok(
+  nextIndex.indexOf('/turn-next/orientation-preflight.js') < nextIndex.indexOf('./orientation-compat.js'),
+  'Raw orientation capture must precede TURN orientation compatibility code'
+);
 assert.doesNotMatch(nextIndex, /href="\.\/site\.webmanifest/);
 
 assert.match(nextApp, /Generated from turn\/app\.js/);
 assert.match(nextApp, /const productionModuleBase = new URL\('\/turn\/'/);
 assert.match(nextApp, /const platformModuleBase = new URL\('\/turn\/platform\/'/);
-assert.match(nextApp, /installTurnPlatform\(createWebPlatform\(\)\)/);
+assert.match(nextApp, /const turnNextModuleBase = new URL\('\/turn-next\/'/);
+assert.match(nextApp, /const webPlatform = createWebPlatform\(\)/);
+assert.match(nextApp, /installTurnPlatform\(webPlatform\)/);
+assert.match(nextApp, /installTurnNextOrientationFreeze\(\{ platform: webPlatform \}\)/);
 assert.match(nextApp, /dataset\.turnPlatform = 'web-adapter'/);
-assert.match(nextApp, /Platform M1/, 'The visible staging badge must identify the active architecture milestone');
+assert.match(nextApp, /Platform M1 · Orientation M2/, 'The visible staging badge must identify the active architecture and orientation milestones');
 assert.ok(
-  nextApp.indexOf('installTurnPlatform(createWebPlatform())') < nextApp.indexOf("withBuild('./main.js')"),
+  nextApp.indexOf('installTurnPlatform(webPlatform)') < nextApp.indexOf("withBuild('./main.js')"),
   'The platform must be composed before main.js imports motion input'
 );
-assert.doesNotMatch(productionApp, /installTurnPlatform\(createWebPlatform\(\)\)/, 'Production must retain the proven browser fallback during this TURN NEXT milestone');
+assert.ok(
+  nextApp.indexOf('installTurnNextOrientationFreeze') < nextApp.indexOf("withBuild('./main.js')"),
+  'The visual orientation fallback must install before production resize handlers'
+);
+assert.doesNotMatch(productionApp, /installTurnPlatform\(webPlatform\)|installTurnNextOrientationFreeze/, 'Production must retain the proven browser path during this TURN NEXT experiment');
 assert.match(nextApp, /new URL\(path, productionModuleBase\)/);
 assert.doesNotMatch(nextApp, /new URL\(path, import\.meta\.url\)/);
 assert.match(nextApp, /TURN NEXT:/);
@@ -126,4 +140,4 @@ assert.deepEqual(
   }
 );
 
-console.log(`TURN NEXT isolated platform-composition entry for TURN ${release.id} passed.`);
+console.log(`TURN NEXT isolated Orientation M2 entry for TURN ${release.id} passed.`);
