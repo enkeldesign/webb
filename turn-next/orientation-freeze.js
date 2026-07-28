@@ -138,10 +138,15 @@ export function installTurnNextOrientationFreeze({
   }
 
   function scheduleApply() {
+    if (typeof windowRef.requestAnimationFrame !== 'function') {
+      applyTransform();
+      return;
+    }
+
     windowRef.cancelAnimationFrame?.(resizeFrame);
-    resizeFrame = windowRef.requestAnimationFrame?.(() => {
-      windowRef.requestAnimationFrame?.(applyTransform);
-    }) || 0;
+    resizeFrame = windowRef.requestAnimationFrame(() => {
+      windowRef.requestAnimationFrame(applyTransform);
+    });
   }
 
   function clearStabilizationTimers() {
@@ -191,7 +196,11 @@ export function installTurnNextOrientationFreeze({
     root.style.removeProperty('--turn-freeze-height');
     root.style.removeProperty('--turn-freeze-rotation');
     root.style.removeProperty('--turn-freeze-scale');
-    windowRef.dispatchEvent?.(new Event('resize'));
+
+    const EventType = windowRef.Event || environment.Event;
+    if (typeof EventType === 'function') {
+      windowRef.dispatchEvent?.(new EventType('resize'));
+    }
   }
 
   function handleUiState(event) {
