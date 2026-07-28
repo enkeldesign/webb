@@ -121,7 +121,7 @@ export function spokenLapTime(seconds) {
 }
 
 export function lapResultAnnouncement({ position, time } = {}) {
-  return `Lap. ${capitalize(ordinalWord(position))}. ${capitalize(spokenLapTime(time))}.`;
+  return `Lap. Position: ${ordinalWord(position)}. Time: ${spokenLapTime(time)}.`;
 }
 
 export function lapVoidAnnouncement(reason) {
@@ -146,9 +146,4 @@ export function setLiveAnnouncement(element, message) {
 function normalizeCount(value, fallback = 0) {
   const number = Math.round(Number(value));
   return Number.isFinite(number) && number >= 0 ? number : fallback;
-}
-
-function capitalize(value) {
-  const text = String(value || '');
-  return text ? text[0].toUpperCase() + text.slice(1) : text;
 }

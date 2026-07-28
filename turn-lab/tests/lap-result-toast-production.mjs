@@ -17,7 +17,7 @@ assert.equal(spokenPosition(1, 5), 'first of five');
 assert.equal(spokenLapTime(75.346), 'one minute, fifteen point three four six seconds');
 assert.equal(
   lapResultAnnouncement({ position: 1, time: 75.346 }),
-  'Lap. First. One minute, fifteen point three four six seconds.'
+  'Lap. Position: first. Time: one minute, fifteen point three four six seconds.'
 );
 
 function makeFrames(count = 25) {
