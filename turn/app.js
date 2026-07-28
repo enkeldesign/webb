@@ -38,6 +38,12 @@ if (driveByEarEnabled) {
   recoveryGuidance.prepareRecoveryGuidanceCapture();
 }
 
+let paceNotePriority = null;
+if (driveByEarEnabled) {
+  paceNotePriority = await import(withBuild('./audio/pace-note-priority.js'));
+  paceNotePriority.preparePaceNotePriorityCapture();
+}
+
 const { installAudioPreferences } = await import(withBuild('./audio/audio-preferences.js'));
 installAudioPreferences({ driveByEarGraphAvailable: driveByEarEnabled });
 
@@ -46,6 +52,7 @@ installTurnAudio();
 
 if (driveByEarEnabled) {
   organicRibbon.installOrganicRibbon();
+  paceNotePriority.installPaceNotePriority();
 
   const { installUniversalDrivingSoundscape } = await import(
     withBuild('./audio/driving-soundscape.js')
