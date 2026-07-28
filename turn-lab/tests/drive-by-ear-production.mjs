@@ -6,7 +6,20 @@ import {
   saveDriveByEarEnabled
 } from '../../turn/ui/drive-by-ear-setting.js';
 
-const [releaseSource, app, setting, style, menu, audio, preferences, runtimeGuard, organic, paceAudio, polishStyle] = await Promise.all([
+const [
+  releaseSource,
+  app,
+  setting,
+  style,
+  menu,
+  audio,
+  preferences,
+  runtimeGuard,
+  organic,
+  recovery,
+  paceAudio,
+  polishStyle
+] = await Promise.all([
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/drive-by-ear-setting.js', import.meta.url), 'utf8'),
@@ -16,6 +29,7 @@ const [releaseSource, app, setting, style, menu, audio, preferences, runtimeGuar
   fs.readFile(new URL('../../turn/audio/audio-preferences.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/audio-preference-runtime.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/organic-ribbon.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/audio/recovery-guidance.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/pace-notes.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/r104-polish.css', import.meta.url), 'utf8')
 ]);
@@ -40,10 +54,16 @@ assert.equal(saveDriveByEarEnabled(false, { setItem: () => { throw new Error('bl
 assert.match(app, /installDriveByEarSetting/);
 assert.ok(app.indexOf('./ui/drive-by-ear-setting.js') < app.indexOf('./audio/organic-ribbon.js'));
 assert.match(app, /let organicRibbon = null/);
-assert.match(app, /if \(driveByEarEnabled\) \{\s*organicRibbon = await import\(withBuild\('\.\/audio\/organic-ribbon\.js'\)\);\s*organicRibbon\.prepareOrganicRibbonCapture\(\);\s*\}/,
-  'The optional organic module must prepare graph capture only when DBE is enabled');
+assert.match(app, /let recoveryGuidance = null/);
+assert.match(
+  app,
+  /if \(driveByEarEnabled\) \{\s*organicRibbon = await import\(withBuild\('\.\/audio\/organic-ribbon\.js'\)\);\s*organicRibbon\.prepareOrganicRibbonCapture\(\);\s*recoveryGuidance = await import\(withBuild\('\.\/audio\/recovery-guidance\.js'\)\);\s*recoveryGuidance\.prepareRecoveryGuidanceCapture\(\);\s*\}/,
+  'Optional DBE graph decorators must prepare capture only when DBE is enabled'
+);
 assert.ok(app.indexOf('prepareOrganicRibbonCapture()') < app.indexOf('./audio/audio-preferences.js'),
   'Preference graph interception must preserve the organic capture ordering');
+assert.ok(app.indexOf('prepareRecoveryGuidanceCapture()') < app.indexOf('./audio/audio-preferences.js'),
+  'Wrong-way recovery capture must remain inside the true-off boundary and precede graph creation');
 assert.ok(app.indexOf('./audio/audio-preferences.js') < app.indexOf('./audio/audio-system.js'),
   'Preferences must be installed before the core graph is created');
 assert.match(app, /installAudioPreferences\(\{ driveByEarGraphAvailable: driveByEarEnabled \}\)/);
@@ -51,8 +71,12 @@ assert.ok(app.indexOf('installTurnAudio()') < app.indexOf('installOrganicRibbon(
   'The organic wrapper must install only after the core API exists');
 assert.match(app, /if \(driveByEarEnabled\) \{\s*organicRibbon\.installOrganicRibbon\(\);[\s\S]*\.\/audio\/driving-soundscape\.js/,
   'The organic wrapper and soundscape must remain inside the DBE-enabled branch');
+assert.match(app, /installPaceNotes\(\);\s*recoveryGuidance\.installRecoveryGuidance\(\);/,
+  'The recovery wrapper must remain inside the DBE-enabled branch after route guidance');
 assert.ok(app.indexOf('./audio/driving-soundscape.js') < app.indexOf('./audio/audio-preference-runtime.js'),
   'The live preference guard must wrap the complete DBE soundscape');
+assert.ok(app.indexOf('installRecoveryGuidance()') < app.indexOf('./audio/audio-preference-runtime.js'),
+  'The live preference guard must also wrap continuous recovery guidance');
 assert.match(app, /installAudioPreferenceRuntime\(\)/);
 
 assert.match(setting, /DRIVE BY EAR<sup>™<\/sup>/);
@@ -115,6 +139,15 @@ assert.match(organic, /captureAudioFactories\(\)/);
 assert.doesNotMatch(organic, /new AudioContext|new webkitAudioContext|HTMLAudioElement|new Audio\(|fetch\(/,
   'Even when enabled, the organic layer must not create a dormant second engine or asset request');
 assert.match(organic, /baseAudio\.silence\(\.\.\.args\)/);
+assert.match(recovery, /export function prepareRecoveryGuidanceCapture\(\)/);
+assert.match(recovery, /settings\?\.dbeEnabled !== false/,
+  'Live DBE off must silence the continuous wrong-way layer');
+assert.match(recovery, /globalThis\.__turnDriveByEarEnabled !== false/,
+  'True-off startup must keep recovery unavailable');
+assert.doesNotMatch(recovery, /new AudioContext|new webkitAudioContext|HTMLAudioElement|new Audio\(|fetch\(/,
+  'Recovery guidance must reuse the central audio graph without assets');
+assert.match(recovery, /updateWrongWayTone\(\{ active: false \}/,
+  'Runtime DBE shutdown must explicitly fade the sustained wrong-way tone');
 assert.doesNotMatch(audio, /driftPanner|smoothPan\(drift/);
 assert.match(audio, /if \(sliderGain\) hardMute\(sliderGain\.gain, now\)/);
 assert.match(audio, /if \(surfaceGain\) hardMute\(surfaceGain\.gain, now\)/);

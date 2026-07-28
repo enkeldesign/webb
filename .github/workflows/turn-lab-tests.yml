@@ -107,6 +107,9 @@ jobs:
       - name: Run universal driving soundscape regression
         run: node turn-lab/tests/driving-soundscape-production.mjs
 
+      - name: Run DBE recovery guidance regression
+        run: node turn-lab/tests/recovery-guidance-production.mjs
+
       - name: Run all-track auditory pace-note regression
         run: node turn-lab/tests/pace-notes-production.mjs
 

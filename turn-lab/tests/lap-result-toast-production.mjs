@@ -17,7 +17,7 @@ assert.equal(spokenPosition(1, 5), 'first of five');
 assert.equal(spokenLapTime(75.346), 'one minute, fifteen point three four six seconds');
 assert.equal(
   lapResultAnnouncement({ position: 1, time: 75.346 }),
-  'Last lap. First. One minute, fifteen point three four six seconds.'
+  'Lap. First. One minute, fifteen point three four six seconds.'
 );
 
 function makeFrames(count = 25) {
@@ -107,7 +107,7 @@ try {
   assert.equal(shortRecordingResult.position, 5);
   assert.equal(shortRecordingResult.total, 5);
   assert.deepEqual(shortRecordingState.competitorLaps.map((lap) => lap.time), [10, 11, 12, 13]);
-  assert.deepEqual(publishedResults.at(-1)?.detail, { position: 5, total: 5, time: 14 }, 'Every completed lap must publish the frozen last-lap result');
+  assert.deepEqual(publishedResults.at(-1)?.detail, { position: 5, total: 5, time: 14 }, 'Every completed lap must publish the frozen lap result');
 
   for (const rivalTimes of [[], [11, 14], [10, 11, 12, 13]]) {
     const rivalCountState = makeState({
@@ -218,7 +218,8 @@ assert.match(styles, /\.chip\.is-invalid-lap strong/, 'LAP VOID must retain dedi
 assert.match(hudTuning, /overflow: visible;/, 'Top HUD chips must avoid Safari rounded-overflow clipping seams');
 assert.doesNotMatch(hudTuning, /overflow: hidden;/, 'Top HUD chips must not reintroduce the clipping path that produced horizontal repaint seams');
 assert.match(toast, /TOAST_VISIBLE_MS = 4000/, 'The result should remain readable for a few seconds');
-assert.match(toast, /LAST LAP/, 'Valid laps must keep the requested result label');
+assert.match(toast, /<span>LAP<\/span>/, 'Valid laps must use the unambiguous LAP label');
+assert.doesNotMatch(toast, /LAST LAP/, 'The ambiguous LAST LAP label must stay removed');
 assert.match(toast, /LAP VOID/, 'Void laps must use the same concise wording as the TIME card');
 assert.doesNotMatch(toast, /LAP INVALID|INVALID LAP/, 'Retired invalid-lap wording must not remain in player-facing result feedback');
 assert.match(toast, /STAY ON THE TRACK!/, 'Invalid checkpoint chains must use player-facing track guidance');
@@ -226,7 +227,7 @@ assert.doesNotMatch(toast, /MISSED CHECKPOINT/, 'Technical checkpoint language m
 assert.match(toast, /turn:lap-invalid/, 'The unified toast must listen for invalid-lap events');
 assert.match(toast, /lap-result-position/, 'The toast must show frozen finishing position');
 assert.match(toast, /lap-result-time/, 'The toast must show the completed lap time');
-assert.match(toast, /toast\.setAttribute\('aria-label', 'Last lap result'\)/, 'The visible result must remain inspectable without becoming another live region');
+assert.match(toast, /toast\.setAttribute\('aria-label', 'Lap result'\)/, 'The visible result must remain inspectable without becoming another live region');
 assert.doesNotMatch(toast, /toast\.setAttribute\('role', 'status'\)/, 'The visible toast must not duplicate the dedicated announcer');
 assert.doesNotMatch(toast, /toast\.setAttribute\('aria-live'/, 'The visible toast must not announce each child mutation');
 assert.match(toast, /announcer\.setAttribute\('aria-live', 'polite'\)/, 'One dedicated polite live region must own the result announcement');
