@@ -58,6 +58,9 @@ jobs:
       - name: Run web platform and motion composition regression
         run: node turn-tests/platform-production.mjs
 
+      - name: Run TURN NEXT visual orientation freeze regression
+        run: node turn-tests/orientation-freeze-production.mjs
+
       - name: Run production race and replay regression tests
         run: node turn-tests/race-production.mjs
 
