@@ -6,19 +6,21 @@
 
 The first milestone deliberately runs the current production module graph from `/turn/`. It exists to establish a permanent test URL and safe deployment boundary before core systems are moved into the new canonical source tree.
 
-The entry page is generated from `turn/index.html` by:
+The staging bootstrap and entry page are generated from `turn/app.js` and `turn/index.html` by:
 
 ```text
+node turn-next/scripts/build-parity-app.mjs
 node turn-next/scripts/build-parity-entry.mjs
 ```
 
-CI verifies that the generated page remains synchronized:
+CI verifies that both generated files remain synchronized:
 
 ```text
+node turn-next/scripts/build-parity-app.mjs --check
 node turn-next/scripts/build-parity-entry.mjs --check
 ```
 
-Do not edit `turn-next/index.html` by hand. Edit the generator or production entry and regenerate it.
+Do not edit `turn-next/app.js` or `turn-next/index.html` by hand. Edit the generators or production sources and regenerate them.
 
 ## Safety boundaries
 
