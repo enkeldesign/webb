@@ -19,6 +19,8 @@ export default [
   },
   {
     files: [
+      'turn/input/motion.js',
+      'turn/platform/*.js',
       'turn/race/game-state.js',
       'turn/race/lap-system.js',
       'turn/race/replay-system.js',
