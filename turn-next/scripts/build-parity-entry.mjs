@@ -149,9 +149,15 @@ export function buildTurnNextEntry(productionIndex, release) {
     '<h1 class="start-logo-heading" id="title"><img class="start-logo" src="./icon-512-r45.png" alt="TURN"><span class="turn-next-card-label">NEXT</span></h1>',
     'start logo heading'
   );
+  output = replaceRequired(
+    output,
+    `<script type="module" src="./app.js?build=${release.cacheKey}"></script>`,
+    `<script type="module" src="/turn-next/app.js?source=${release.cacheKey}"></script>`,
+    'TURN NEXT bootstrap entry'
+  );
 
   assert.match(output, /<base href="\/turn\/">/);
-  assert.match(output, /src="\.\/app\.js\?build=/);
+  assert.match(output, /src="\/turn-next\/app\.js\?source=/);
   assert.match(output, /src="\/turn-next\/storage-bootstrap\.js/);
   assert.match(output, /href="\/turn-next\/site\.webmanifest/);
   assert.doesNotMatch(output, /href="\.\/site\.webmanifest/);
