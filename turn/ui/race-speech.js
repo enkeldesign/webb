@@ -1,4 +1,6 @@
 import {
+  lapResultAnnouncement,
+  lapVoidAnnouncement,
   ordinalWord,
   setLiveAnnouncement,
   spokenPosition,
@@ -6,9 +8,18 @@ import {
 } from './race-announcements.js';
 
 const START_CONTEXT_DELAY_MS = 320;
-const LAP_RESULT_HANDOFF_MS = 450;
+const SPEECH_START_BUFFER_MS = 900;
+const SPEECH_MS_PER_WORD = 440;
+const LAP_PRIORITY_MIN_MS = 3200;
+const LAP_PRIORITY_MAX_MS = 7200;
 
 let installed = false;
+
+export function lapAnnouncementPriorityMs(message) {
+  const words = String(message || '').trim().split(/\s+/).filter(Boolean).length;
+  const estimated = SPEECH_START_BUFFER_MS + words * SPEECH_MS_PER_WORD;
+  return Math.min(LAP_PRIORITY_MAX_MS, Math.max(LAP_PRIORITY_MIN_MS, estimated));
+}
 
 export function installRaceSpeech() {
   if (installed) return true;
@@ -32,7 +43,41 @@ export function installRaceSpeech() {
 
   let lastPosition = null;
   let contextTimer = 0;
-  let suppressPositionUntil = -Infinity;
+  let lapPriorityTimer = 0;
+  let lapPriorityUntil = -Infinity;
+  let pendingPositionAnnouncement = null;
+
+  function lapPriorityActive() {
+    return performance.now() < lapPriorityUntil;
+  }
+
+  function resetLapPriority() {
+    window.clearTimeout(lapPriorityTimer);
+    lapPriorityTimer = 0;
+    lapPriorityUntil = -Infinity;
+    pendingPositionAnnouncement = null;
+  }
+
+  function flushPendingPosition() {
+    lapPriorityTimer = 0;
+    lapPriorityUntil = -Infinity;
+    const pending = pendingPositionAnnouncement;
+    pendingPositionAnnouncement = null;
+    if (pending == null || lastPosition == null) return;
+    setLiveAnnouncement(positionAnnouncer, ordinalWord(lastPosition));
+  }
+
+  function beginLapPriority(message) {
+    window.clearTimeout(contextTimer);
+    contextTimer = 0;
+    window.clearTimeout(lapPriorityTimer);
+    pendingPositionAnnouncement = null;
+    setLiveAnnouncement(positionAnnouncer, '');
+
+    const priorityMs = lapAnnouncementPriorityMs(message);
+    lapPriorityUntil = performance.now() + priorityMs;
+    lapPriorityTimer = window.setTimeout(flushPendingPosition, priorityMs);
+  }
 
   globalThis.__turnSetRacePosition = (position, total) => {
     baseSetRacePosition(position, total);
@@ -40,6 +85,7 @@ export function installRaceSpeech() {
     if (position == null) {
       positionValue.removeAttribute('aria-label');
       lastPosition = null;
+      pendingPositionAnnouncement = null;
       return;
     }
 
@@ -51,15 +97,22 @@ export function installRaceSpeech() {
     );
 
     const changed = lastPosition !== null && normalizedPosition !== lastPosition;
-    if (changed && performance.now() >= suppressPositionUntil) {
+    if (lapPriorityActive()) {
+      if (changed || lastPosition === null) pendingPositionAnnouncement = normalizedPosition;
+    } else if (changed) {
+      resetLapPriority();
       setLiveAnnouncement(positionAnnouncer, ordinalWord(normalizedPosition));
     }
 
     lastPosition = normalizedPosition;
   };
 
-  window.addEventListener('turn:lap-result', () => {
-    suppressPositionUntil = performance.now() + LAP_RESULT_HANDOFF_MS;
+  window.addEventListener('turn:lap-result', (event) => {
+    beginLapPriority(lapResultAnnouncement(event.detail));
+  });
+
+  window.addEventListener('turn:lap-invalid', (event) => {
+    beginLapPriority(lapVoidAnnouncement(event.detail?.reason));
   });
 
   window.addEventListener('turn:ui-state-change', (event) => {
@@ -67,19 +120,22 @@ export function installRaceSpeech() {
 
     if (reason === 'lap-started') {
       window.clearTimeout(contextTimer);
-      const rivalCount = globalThis.__turnRuntime?.state?.competitorLaps?.length || 0;
-      if (rivalCount > 0) {
-        contextTimer = window.setTimeout(() => {
-          contextTimer = 0;
-          setLiveAnnouncement(contextAnnouncer, spokenRivalCount(rivalCount));
-        }, START_CONTEXT_DELAY_MS);
+      contextTimer = 0;
+      if (!lapPriorityActive()) {
+        const rivalCount = globalThis.__turnRuntime?.state?.competitorLaps?.length || 0;
+        if (rivalCount > 0) {
+          contextTimer = window.setTimeout(() => {
+            contextTimer = 0;
+            setLiveAnnouncement(contextAnnouncer, spokenRivalCount(rivalCount));
+          }, START_CONTEXT_DELAY_MS);
+        }
       }
     }
 
     if (!event.detail?.running || reason === 'race-reset') {
       window.clearTimeout(contextTimer);
       contextTimer = 0;
-      suppressPositionUntil = -Infinity;
+      resetLapPriority();
       setLiveAnnouncement(positionAnnouncer, '');
       setLiveAnnouncement(contextAnnouncer, '');
     }
