@@ -19,9 +19,9 @@ export function installLapResultToast() {
   const toast = document.createElement('div');
   toast.className = 'lap-result-toast';
   toast.hidden = true;
-  toast.setAttribute('aria-label', 'Last lap result');
+  toast.setAttribute('aria-label', 'Lap result');
   toast.innerHTML = `
-    <span>LAST LAP</span>
+    <span>LAP</span>
     <strong>
       <b class="lap-result-position">1/1</b>
       <i aria-hidden="true">•</i>
@@ -85,7 +85,7 @@ export function installLapResultToast() {
 
     const normalizedPlace = Math.max(1, Math.round(place));
     const normalizedTotal = Math.max(1, Math.round(total));
-    label.textContent = 'LAST LAP';
+    label.textContent = 'LAP';
     position.textContent = `${normalizedPlace}/${normalizedTotal}`;
     position.setAttribute('aria-label', `Position, ${spokenPosition(normalizedPlace, normalizedTotal)}`);
     separator.hidden = false;
