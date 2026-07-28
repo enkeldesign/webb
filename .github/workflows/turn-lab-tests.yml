@@ -55,6 +55,9 @@ jobs:
       - name: Run TURN NEXT isolation and identity regression
         run: node turn-tests/turn-next-entry-production.mjs
 
+      - name: Run web platform and motion composition regression
+        run: node turn-tests/platform-production.mjs
+
       - name: Run production race and replay regression tests
         run: node turn-tests/race-production.mjs
 
