@@ -93,7 +93,8 @@ function createAudioPanel() {
     };
     soundToggle.checked = settings.audioEnabled !== false;
     dbeToggle.checked = settings.dbeEnabled !== false;
-    const balancePercent = Math.round((Number(settings.balance) || 0.5) * 100);
+    const storedBalance = Number(settings.balance);
+    const balancePercent = Math.round((Number.isFinite(storedBalance) ? storedBalance : 0.5) * 100);
     balanceSlider.value = String(balancePercent);
     balanceOutput.value = balanceLabel(balancePercent);
     balanceOutput.textContent = balanceOutput.value;
