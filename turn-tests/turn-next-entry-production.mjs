@@ -1,7 +1,19 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [productionIndex, productionApp, nextIndex, nextApp, storage, identity, manifestSource, releaseSource] = await Promise.all([
+const [
+  productionIndex,
+  productionApp,
+  nextIndex,
+  nextApp,
+  storage,
+  identity,
+  manifestSource,
+  releaseSource,
+  platformContext,
+  webPlatform,
+  motionInput
+] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
@@ -9,7 +21,10 @@ const [productionIndex, productionApp, nextIndex, nextApp, storage, identity, ma
   fs.readFile(new URL('../turn-next/storage-bootstrap.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/identity.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/site.webmanifest', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/platform/platform-context.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/platform/web-platform.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/input/motion.js', import.meta.url), 'utf8')
 ]);
 
 const manifest = JSON.parse(manifestSource);
@@ -34,6 +49,15 @@ assert.doesNotMatch(nextIndex, /href="\.\/site\.webmanifest/);
 
 assert.match(nextApp, /Generated from turn\/app\.js/);
 assert.match(nextApp, /const productionModuleBase = new URL\('\/turn\/'/);
+assert.match(nextApp, /const platformModuleBase = new URL\('\/turn\/platform\/'/);
+assert.match(nextApp, /installTurnPlatform\(createWebPlatform\(\)\)/);
+assert.match(nextApp, /dataset\.turnPlatform = 'web-adapter'/);
+assert.match(nextApp, /Platform M1/, 'The visible staging badge must identify the active architecture milestone');
+assert.ok(
+  nextApp.indexOf('installTurnPlatform(createWebPlatform())') < nextApp.indexOf("withBuild('./main.js')"),
+  'The platform must be composed before main.js imports motion input'
+);
+assert.doesNotMatch(productionApp, /installTurnPlatform\(createWebPlatform\(\)\)/, 'Production must retain the proven browser fallback during this TURN NEXT milestone');
 assert.match(nextApp, /new URL\(path, productionModuleBase\)/);
 assert.doesNotMatch(nextApp, /new URL\(path, import\.meta\.url\)/);
 assert.match(nextApp, /TURN NEXT:/);
@@ -57,6 +81,18 @@ for (const requiredInstall of [
   assert.ok(productionApp.includes(requiredInstall), `Production bootstrap must still contain ${requiredInstall}`);
   assert.ok(nextApp.includes(requiredInstall), `TURN NEXT bootstrap must preserve ${requiredInstall}`);
 }
+
+assert.match(platformContext, /installTurnPlatform/);
+assert.match(platformContext, /requireTurnPlatform/);
+assert.match(platformContext, /validateTurnPlatform/);
+assert.doesNotMatch(platformContext, /window|document|screen|DeviceMotionEvent/, 'The platform context must remain environment-agnostic');
+assert.match(webPlatform, /requestPermission/);
+assert.match(webPlatform, /addEventListener\('devicemotion'/);
+assert.match(webPlatform, /requestFullscreen/);
+assert.match(webPlatform, /lockLandscape/);
+assert.match(motionInput, /getTurnPlatform/);
+assert.match(motionInput, /getTurnPlatform\(\)\?\.motion\?\.getScreenOrientationAngle/);
+assert.match(motionInput, /globalThis\.screen/, 'Production must retain its browser fallback until the adapter is promoted');
 
 assert.match(storage, /const LOCAL_PREFIX = 'turn-next:';/);
 assert.match(storage, /const SESSION_PREFIX = 'turn-next-session:';/);
@@ -90,4 +126,4 @@ assert.deepEqual(
   }
 );
 
-console.log(`TURN NEXT isolated parity entry for TURN ${release.id} passed.`);
+console.log(`TURN NEXT isolated platform-composition entry for TURN ${release.id} passed.`);
