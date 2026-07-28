@@ -1,3 +1,5 @@
+import { getTurnPlatform } from '../platform/platform-context.js';
+
 const STEERING_ENTER_THRESHOLD = degToRad(2.2);
 const STEERING_EXIT_THRESHOLD = degToRad(0.9);
 
@@ -73,10 +75,13 @@ function getScreenSpaceRoll(gravity) {
 }
 
 function getScreenOrientationAngle() {
+  const platformAngle = getTurnPlatform()?.motion?.getScreenOrientationAngle?.();
+  if (Number.isFinite(platformAngle)) return platformAngle;
+
   const degrees = Number.isFinite(globalThis.screen?.orientation?.angle)
     ? globalThis.screen.orientation.angle
     : Number(globalThis.window?.orientation || 0);
-  return degToRad(degrees);
+  return degToRad(Number.isFinite(degrees) ? degrees : 0);
 }
 
 function shortestAngle(from, to) {
