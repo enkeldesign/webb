@@ -29,9 +29,13 @@ const { installDriveByEarSetting } = await import(
 const driveByEarEnabled = installDriveByEarSetting();
 
 let organicRibbon = null;
+let recoveryGuidance = null;
 if (driveByEarEnabled) {
   organicRibbon = await import(withBuild('./audio/organic-ribbon.js'));
   organicRibbon.prepareOrganicRibbonCapture();
+
+  recoveryGuidance = await import(withBuild('./audio/recovery-guidance.js'));
+  recoveryGuidance.prepareRecoveryGuidanceCapture();
 }
 
 const { installAudioPreferences } = await import(withBuild('./audio/audio-preferences.js'));
@@ -50,6 +54,8 @@ if (driveByEarEnabled) {
 
   const { installPaceNotes } = await import(withBuild('./audio/pace-notes.js'));
   installPaceNotes();
+
+  recoveryGuidance.installRecoveryGuidance();
 }
 
 const { installAudioPreferenceRuntime } = await import(
