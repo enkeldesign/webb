@@ -4,8 +4,8 @@ import {
 } from '../tracks/pace-notes.js';
 
 const PACE_NOTE_UPDATE_INTERVAL_MS = 1000 / 30;
-const MIN_TRIGGER_SPEED = 5;
-const MIN_FORWARD_ALIGNMENT = 0.35;
+const MIN_FORWARD_SPEED = 0.25;
+const MAX_FORWARD_PROGRESS_DELTA = 0.22;
 const NOTE_DURATION_SECONDS = 0.055;
 const NOTE_STEP_SECONDS = 0.105;
 const GROUP_GAP_SECONDS = 0.22;
@@ -16,6 +16,7 @@ let activeTrackId = null;
 let activeLapKey = null;
 let firedNoteIds = new Set();
 let lastCheckedAt = -Infinity;
+let lastProgress = null;
 
 export function installPaceNotes() {
   if (installed) return wrappedAudio || globalThis.__turnAudio;
@@ -64,48 +65,54 @@ export function updatePaceNoteState(runtime, frame = {}) {
     resetPaceNotePassage(trackId, lapKey);
   }
 
-  const speed = Math.max(0, Number(state.speed) || Number(frame.speed) || 0);
   const mode = String(state.mode || '');
   if (
     state.running !== true
     || mode === 'spectating'
     || frame.active === false
-    || state.offRoad === true
-    || speed < MIN_TRIGGER_SPEED
     || firedNoteIds.size >= notes.length
   ) return null;
 
   const sampleCount = samples.length;
   const index = normalizeIndex(state.nearestTrackIndex, sampleCount);
   const sample = samples[index];
-  const forward = runtime.getForward?.();
-  const headingAlignment = dot2(forward, sample?.tangent);
-  const forwardSpeed = dot2(state.velocity, sample?.tangent);
-  if (headingAlignment < MIN_FORWARD_ALIGNMENT || forwardSpeed < 2) return null;
-
   const progress = normalizeProgress(
     Number.isFinite(Number(state.progress)) ? Number(state.progress) : index / sampleCount
   );
+  const previousProgress = lastProgress;
+  lastProgress = progress;
+
+  const forwardSpeed = dot2(state.velocity, sample?.tangent);
+  const crossedForward = previousProgress !== null
+    && forwardProgressDelta(previousProgress, progress) <= MAX_FORWARD_PROGRESS_DELTA;
+  if (forwardSpeed < MIN_FORWARD_SPEED && !crossedForward) return null;
+
+  const speed = Math.max(0, Number(state.speed) || Number(frame.speed) || 0);
+  const triggeredNotes = [];
 
   for (const note of notes) {
     if (firedNoteIds.has(note.id)) continue;
     const trigger = speedAdjustedPaceNoteTrigger(note, speed, runtime.maxSpeed);
-    if (!progressInRange(progress, trigger, note.triggerEnd)) continue;
+    const crossedTrigger = progressCrossedForward(previousProgress, progress, trigger);
+    const insideTriggerZone = progressInRange(progress, trigger, note.triggerEnd);
+    if (!crossedTrigger && !insideTriggerZone) continue;
 
     firedNoteIds.add(note.id);
-    publishPaceNote({
+    const detail = {
       id: note.id,
+      passageKey: `${lapKey}:${note.id}`,
       trackId,
       progress,
       trigger,
       speed,
       authoredGroups: note.groups,
       groups: paceNotePhraseGroups(note.groups)
-    });
-    return note;
+    };
+    publishPaceNote(detail);
+    triggeredNotes.push(note);
   }
 
-  return null;
+  return triggeredNotes[0] || null;
 }
 
 export function resetPaceNotePassage(trackId = null, lapKey = null) {
@@ -113,6 +120,7 @@ export function resetPaceNotePassage(trackId = null, lapKey = null) {
   activeLapKey = lapKey;
   firedNoteIds = new Set();
   lastCheckedAt = -Infinity;
+  lastProgress = null;
 }
 
 export function progressInRange(progress, start, end) {
@@ -122,6 +130,14 @@ export function progressInRange(progress, start, end) {
   return from <= to
     ? value >= from && value <= to
     : value >= from || value <= to;
+}
+
+export function progressCrossedForward(previousProgress, progress, target) {
+  if (!Number.isFinite(Number(previousProgress))) return false;
+  const advance = forwardProgressDelta(previousProgress, progress);
+  if (advance <= 0 || advance > MAX_FORWARD_PROGRESS_DELTA) return false;
+  const distanceToTarget = forwardProgressDelta(previousProgress, target);
+  return distanceToTarget > 0 && distanceToTarget <= advance;
 }
 
 export function paceNoteLengthTailCount(length) {
@@ -176,7 +192,10 @@ function installResetListeners() {
 
 function publishPaceNote(detail) {
   if (typeof globalThis.dispatchEvent !== 'function' || typeof globalThis.CustomEvent !== 'function') return;
-  globalThis.dispatchEvent(new globalThis.CustomEvent('turn:pace-note', { detail }));
+  const eventName = globalThis.__turnPaceNotePriorityReady === true
+    ? 'turn:pace-note-priority'
+    : 'turn:pace-note';
+  globalThis.dispatchEvent(new globalThis.CustomEvent(eventName, { detail }));
 }
 
 function publishPaceNoteSilence() {
@@ -187,6 +206,10 @@ function publishPaceNoteSilence() {
 function dot2(a, b) {
   return (Number(a?.x) || 0) * (Number(b?.x) || 0)
     + (Number(a?.z) || 0) * (Number(b?.z) || 0);
+}
+
+function forwardProgressDelta(from, to) {
+  return normalizeProgress(Number(to) - Number(from));
 }
 
 function normalizeIndex(value, length) {
