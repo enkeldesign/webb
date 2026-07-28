@@ -52,6 +52,11 @@ if (driveByEarEnabled) {
   installPaceNotes();
 }
 
+const { installAudioPreferenceRuntime } = await import(
+  withBuild('./audio/audio-preference-runtime.js')
+);
+installAudioPreferenceRuntime();
+
 const { installLapResultToast } = await import(withBuild('./ui/lap-result-toast.js'));
 installLapResultToast();
 
