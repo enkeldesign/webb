@@ -55,6 +55,13 @@ if (driveByEarEnabled) {
   const { installPaceNotes } = await import(withBuild('./audio/pace-notes.js'));
   installPaceNotes();
 
+  const { installOffroadEarDirection } = await import(
+    withBuild('./audio/offroad-ear-direction.js')
+  );
+  installOffroadEarDirection();
+
+  // Recovery remains the outer wrapper. Its candidate frame is then checked against
+  // the physical side of the nearest road point before reaching the central mixer.
   recoveryGuidance.installRecoveryGuidance();
 }
 
