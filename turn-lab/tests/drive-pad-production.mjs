@@ -2,9 +2,18 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { updateVehiclePhysicsState } from '../../turn/vehicle/physics.js';
 import { spokenRivalCount } from '../../turn/ui/race-announcements.js';
+import { lapAnnouncementPriorityMs } from '../../turn/ui/race-speech.js';
 
 assert.equal(spokenRivalCount(1), 'one rival');
 assert.equal(spokenRivalCount(4), 'four rivals');
+assert.ok(
+  lapAnnouncementPriorityMs('Lap. First. One minute, fifteen point three four six seconds.') >= 5000,
+  'A full lap summary needs a conservative uninterrupted VoiceOver window'
+);
+assert.ok(
+  lapAnnouncementPriorityMs('Lap void. Stay on the track.') >= 3200,
+  'A void-lap summary also needs priority over live race updates'
+);
 
 class Vec3 {
   constructor(x = 0, y = 0, z = 0) { this.x = x; this.y = y; this.z = z; }
@@ -66,16 +75,19 @@ assert.match(positionCss, /\.stats \.chip:nth-child\(3\)/, 'The third compact ch
 assert.match(positionCss, /\.stats \.chip:nth-child\(5\)/, 'TIME and BEST must remain sized after inserting POSITION');
 assert.match(positionCss, /\.turn-sr-only \{[\s\S]*clip: rect\(0 0 0 0\)/, 'Dedicated announcers must stay visually hidden without leaving the accessibility tree');
 assert.match(positionCss, /prefers-reduced-motion: reduce/, 'Position-change feedback must respect reduced motion');
-assert.match(raceSpeech, /const positionAnnouncer = createAnnouncer\('race-position-announcer', 'assertive'\)/, 'Passing updates must use one fast assertive ordinal channel');
+assert.match(raceSpeech, /const positionAnnouncer = createAnnouncer\('race-position-announcer', 'assertive'\)/, 'Passing updates must use one fast assertive ordinal channel outside lap summaries');
 assert.match(raceSpeech, /const contextAnnouncer = createAnnouncer\('race-context-announcer', 'polite'\)/, 'Start-line rival context must use a separate polite channel');
 assert.match(raceSpeech, /positionLabel\?\.setAttribute\('aria-hidden', 'true'\)/, 'The visual POSITION label must not be repeated beside its spoken value');
 assert.match(raceSpeech, /`Position, \$\{spokenPosition\(normalizedPosition, normalizedTotal\)\}`/, 'The visible 1/5 value must remain inspectable as first of five');
-assert.match(raceSpeech, /lastPosition !== null && normalizedPosition !== lastPosition/, 'Initial placement must stay quiet while every real position change is announced');
-assert.match(raceSpeech, /setLiveAnnouncement\(positionAnnouncer, ordinalWord\(normalizedPosition\)\)/, 'Passing or being passed must announce only the new ordinal');
-assert.match(raceSpeech, /reason === 'lap-started'/, 'Rival count must be tied to crossing the start line');
-assert.match(raceSpeech, /spokenRivalCount\(rivalCount\)/, 'The start line must announce one rival or four rivals rather than a player total');
-assert.match(raceSpeech, /turn:lap-result/, 'The position channel must coordinate with the longer frozen lap result');
-assert.match(raceSpeech, /performance\.now\(\) \+ LAP_RESULT_HANDOFF_MS/, 'A lap finish must suppress the immediate next-lap position echo');
+assert.match(raceSpeech, /lastPosition !== null && normalizedPosition !== lastPosition/, 'Initial placement must stay quiet outside lap-summary handoffs');
+assert.match(raceSpeech, /pendingPositionAnnouncement = normalizedPosition/, 'Position changes during a lap summary must collapse to the latest ordinal');
+assert.match(raceSpeech, /window\.setTimeout\(flushPendingPosition, priorityMs\)/, 'The newest position must be released only after the lap-priority window');
+assert.match(raceSpeech, /setLiveAnnouncement\(positionAnnouncer, ordinalWord\(lastPosition\)\)/, 'The deferred handoff must announce only the latest ordinal');
+assert.match(raceSpeech, /beginLapPriority\(lapResultAnnouncement\(event\.detail\)\)/, 'A valid lap result must start the speech priority window');
+assert.match(raceSpeech, /beginLapPriority\(lapVoidAnnouncement\(event\.detail\?\.reason\)\)/, 'A void lap must receive the same priority over live position changes');
+assert.match(raceSpeech, /if \(!lapPriorityActive\(\)\) \{[\s\S]*spokenRivalCount\(rivalCount\)/, 'Next-lap rival context must not slip into an active lap summary');
+assert.doesNotMatch(raceSpeech, /LAP_RESULT_HANDOFF_MS|suppressPositionUntil/, 'The retired 450 ms suppression must not return');
+assert.match(raceSpeech, /reason === 'lap-started'/, 'Rival count must remain tied to crossing the start line');
 assert.doesNotMatch(raceSpeech, /VoiceOver|screenReader|blindMode|userAgent/i, 'The same race information must remain available without detecting disability');
 assert.match(controls, /className = 'drive-pad'/, 'Gameplay controls must create one unified drive pad');
 assert.match(controls, /Double tap and hold, then slide between Drift, Boost, Gas, and Brake or Reverse/, 'The drive group must explain its continuous VoiceOver gesture');
@@ -138,4 +150,4 @@ assert.ok(state.velocity.z < -0.1, 'Holding Brake after stopping must engage rev
 for (let i = 0; i < 100; i += 1) updateVehiclePhysicsState(physicsArgs);
 assert.ok(state.velocity.z >= -(80 * 0.32 + 0.5), 'Reverse must stay capped well below forward top speed');
 
-console.log(`TURN ${release.id} four-zone drive pad, ordinal race speech, topbar position HUD, restart boost refill and reverse passed.`);
+console.log(`TURN ${release.id} four-zone drive pad, lap-priority race speech, topbar position HUD, restart boost refill and reverse passed.`);
