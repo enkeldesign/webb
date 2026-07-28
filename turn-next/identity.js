@@ -5,7 +5,9 @@
     while (walker.nextNode()) nodes.push(walker.currentNode);
 
     for (const node of nodes) {
-      node.nodeValue = node.nodeValue.replace(/\bTURN\b(?! NEXT)/g, 'TURN NEXT');
+      const current = node.nodeValue;
+      const next = current.replace(/\bTURN\b(?! NEXT)/g, 'TURN NEXT');
+      if (next !== current) node.nodeValue = next;
     }
   }
 
