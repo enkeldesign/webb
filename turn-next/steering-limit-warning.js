@@ -32,10 +32,12 @@ export function installTurnNextSteeringLimitWarning() {
   const announcedSides = { left: false, right: false };
   let flashTimer = 0;
   let audioTimer = 0;
+  let visualsActive = false;
 
   function clearVisuals() {
     window.clearTimeout(flashTimer);
     flashTimer = 0;
+    visualsActive = false;
     for (const overlay of Object.values(overlays)) {
       overlay.classList.remove('is-hard', 'is-flashing');
       overlay.style.opacity = '0';
@@ -81,10 +83,11 @@ export function installTurnNextSteeringLimitWarning() {
     const side = detail.side === 'left' || detail.side === 'right' ? detail.side : null;
 
     if (!detail.active || !side) {
-      clearVisuals();
+      if (visualsActive) clearVisuals();
       return;
     }
 
+    visualsActive = true;
     const activeOverlay = overlays[side];
     const inactiveOverlay = overlays[side === 'left' ? 'right' : 'left'];
     inactiveOverlay.classList.remove('is-hard', 'is-flashing');
@@ -107,7 +110,7 @@ export function installTurnNextSteeringLimitWarning() {
     if (!event.detail?.running) {
       window.clearTimeout(audioTimer);
       audioTimer = 0;
-      clearVisuals();
+      if (visualsActive) clearVisuals();
       announcer.textContent = '';
     }
   });
