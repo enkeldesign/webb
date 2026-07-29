@@ -39,6 +39,7 @@ export default [
       'turn/tracks/elevation.js',
       'turn/tracks/registry.js',
       'turn/tracks/track-manager.js',
+      'turn-next/safe-zone-bootstrap.js',
       'turn-tests/**/*.mjs'
     ],
     languageOptions: {
