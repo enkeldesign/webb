@@ -5,9 +5,11 @@
     degrees: SAFE_ZONE_DEGREES,
     steeringDegrees: SAFE_ZONE_DEGREES,
     horizonDegrees: SAFE_ZONE_DEGREES,
-    feedbackNearDegrees: 20,
+    feedbackNearDegrees: 19,
     feedbackHardDegrees: SAFE_ZONE_DEGREES,
-    feedbackClearDegrees: 17.5
+    feedbackHardRearmDegrees: 22,
+    feedbackClearDegrees: 17.5,
+    directionalFeedback: true
   });
 
   document.documentElement.dataset.turnMotionSafeZone = String(SAFE_ZONE_DEGREES);
