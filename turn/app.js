@@ -16,6 +16,7 @@ function installStylesheet(path, dataAttribute) {
 }
 
 installStylesheet('./r104-polish.css', 'data-turn-r104-polish');
+installStylesheet('./steering-limit-warning.css', 'data-turn-steering-limit-warning');
 
 const { installPerformanceProfile } = await import(withBuild('./performance-profile.js'));
 installPerformanceProfile();
@@ -49,6 +50,11 @@ installAudioPreferences({ driveByEarGraphAvailable: driveByEarEnabled });
 
 const { installTurnAudio } = await import(withBuild('./audio/audio-system.js'));
 installTurnAudio();
+
+const { installSteeringLimitWarning } = await import(
+  withBuild('./ui/steering-limit-warning.js')
+);
+installSteeringLimitWarning();
 
 if (driveByEarEnabled) {
   organicRibbon.installOrganicRibbon();
