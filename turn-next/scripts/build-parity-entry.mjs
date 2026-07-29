@@ -145,8 +145,8 @@ export function buildTurnNextEntry(productionIndex, release) {
   output = replaceRequired(output, sourceStartKicker, nextStartKicker, 'start build label');
   output = replaceRequired(
     output,
-    '<h1 class="start-logo-heading" id="title"><img class="start-logo" src="./icon-512-r45.png" alt="TURN"></h1>',
-    '<h1 class="start-logo-heading" id="title"><img class="start-logo" src="./icon-512-r45.png" alt="TURN"><span class="turn-next-card-label">NEXT</span></h1>',
+    '<h1 class="start-logo-heading" id="title"><img class="start-logo" src="./icon-512-r119.png" alt="TURN"></h1>',
+    '<h1 class="start-logo-heading" id="title"><img class="start-logo" src="./icon-512-r119.png" alt="TURN"><span class="turn-next-card-label">NEXT</span></h1>',
     'start logo heading'
   );
   output = replaceRequired(

@@ -12,21 +12,22 @@ const styles = fs.readFileSync(path.join(turnRoot, 'styles.css'), 'utf8');
 const manifest = JSON.parse(fs.readFileSync(path.join(turnRoot, 'site.webmanifest'), 'utf8'));
 
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
-assert.match(index, /<link rel="icon" href="\.\/favicon-r45\.ico" sizes="any">/);
-assert.match(index, /<link rel="icon" href="\.\/favicon-32-r45\.png" type="image\/png" sizes="32x32">/);
-assert.match(index, /<link rel="apple-touch-icon" href="\.\/apple-touch-icon-r45\.png" sizes="180x180">/);
+assert.match(index, /<link rel="icon" href="\.\/favicon-r119\.ico" sizes="any">/);
+assert.match(index, /<link rel="icon" href="\.\/favicon-32-r119\.png" type="image\/png" sizes="32x32">/);
+assert.match(index, /<link rel="apple-touch-icon" href="\.\/apple-touch-icon-r119\.png" sizes="180x180">/);
 assert.match(index, new RegExp(`<link rel="manifest" href="\\.\\/site\\.webmanifest\\?build=${release.cacheKey}">`));
-assert.match(index, /<img class="install-icon" src="\.\/icon-512-r45\.png" alt="">/);
-assert.match(index, /<h1 class="start-logo-heading" id="title">\s*<img class="start-logo" src="\.\/icon-512-r45\.png" alt="TURN">\s*<\/h1>/);
+assert.match(index, /<img class="install-icon" src="\.\/icon-512-r119\.png" alt="">/);
+assert.match(index, /<h1 class="start-logo-heading" id="title">\s*<img class="start-logo" src="\.\/icon-512-r119\.png" alt="TURN">\s*<\/h1>/);
 assert.doesNotMatch(index, /apple-touch-icon-v4|icon-192-v4/);
 
 assert.match(styles, /\.start-logo-heading\s*\{[^}]*font-size:\s*0;/s);
 assert.match(styles, /\.start-logo\s*\{[^}]*width:\s*clamp\(104px, 27vh, 210px\);[^}]*border-radius:\s*22%;/s);
 
 const expectedIcons = [
-  { src: '/turn/icon-192-r45.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-  { src: '/turn/icon-512-r45.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-  { src: '/turn/icon-maskable-512-r45.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+  { src: '/turn/icon-192-r119.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+  { src: '/turn/icon-512-r119.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+  { src: '/turn/icon-maskable-192-r119.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+  { src: '/turn/icon-maskable-512-r119.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
 ];
 assert.deepEqual(manifest.icons, expectedIcons);
 
@@ -41,13 +42,14 @@ function readPngSize(fileName) {
   return [data.readUInt32BE(16), data.readUInt32BE(20)];
 }
 
-assert.deepEqual(readPngSize('favicon-32-r45.png'), [32, 32]);
-assert.deepEqual(readPngSize('apple-touch-icon-r45.png'), [180, 180]);
-assert.deepEqual(readPngSize('icon-192-r45.png'), [192, 192]);
-assert.deepEqual(readPngSize('icon-512-r45.png'), [512, 512]);
-assert.deepEqual(readPngSize('icon-maskable-512-r45.png'), [512, 512]);
+assert.deepEqual(readPngSize('favicon-32-r119.png'), [32, 32]);
+assert.deepEqual(readPngSize('apple-touch-icon-r119.png'), [180, 180]);
+assert.deepEqual(readPngSize('icon-192-r119.png'), [192, 192]);
+assert.deepEqual(readPngSize('icon-512-r119.png'), [512, 512]);
+assert.deepEqual(readPngSize('icon-maskable-192-r119.png'), [192, 192]);
+assert.deepEqual(readPngSize('icon-maskable-512-r119.png'), [512, 512]);
 
-const ico = fs.readFileSync(path.join(turnRoot, 'favicon-r45.ico'));
+const ico = fs.readFileSync(path.join(turnRoot, 'favicon-r119.ico'));
 assert.equal(ico.readUInt16LE(0), 0, 'favicon ICO reserved field');
 assert.equal(ico.readUInt16LE(2), 1, 'favicon must be an icon');
 assert.equal(ico.readUInt16LE(4), 3, 'favicon must contain three sizes');
