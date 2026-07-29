@@ -9,15 +9,16 @@ export function installLotLayout(root = document.body) {
 
   viewbox.hidden = false;
   viewbox.classList.add('lot-viewbox-with-paint');
-  viewbox.setAttribute('aria-hidden', 'true');
-  viewbox.removeAttribute('aria-label');
 
-  // The paint controls are visually placed inside the 3D panel, but must remain
-  // outside its aria-hidden subtree so screen readers can reach them.
-  const paintA11yHost = document.createElement('section');
-  paintA11yHost.className = 'lot-paint-a11y-host';
-  paintA11yHost.appendChild(colors);
-  viewbox.insertAdjacentElement('afterend', paintA11yHost);
+  // The panel contains both the visual 3D preview and the interactive paint
+  // controls. Keep the panel itself in the accessibility tree, then hide only
+  // the decorative WebGL preview and its visual chrome.
+  viewbox.removeAttribute('aria-hidden');
+  viewbox.removeAttribute('aria-label');
+  viewbox.querySelector('.lot-viewbox-head')?.setAttribute('aria-hidden', 'true');
+  viewbox.querySelector('.lot-view-host')?.setAttribute('aria-hidden', 'true');
+  viewbox.querySelector(':scope > small')?.setAttribute('aria-hidden', 'true');
+  viewbox.appendChild(colors);
 
   screen.classList.remove('is-view-closed');
   screen.querySelector('.lot-view-close')?.remove();
