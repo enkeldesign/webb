@@ -7,24 +7,30 @@ const [
   nextIndex,
   nextApp,
   storage,
+  safeZoneBootstrap,
   identity,
   manifestSource,
   releaseSource,
   platformContext,
   webPlatform,
-  motionInput
+  motionInput,
+  cameraSource,
+  orientationCompat
 ] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/storage-bootstrap.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn-next/safe-zone-bootstrap.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/identity.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/site.webmanifest', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/platform/platform-context.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/platform/web-platform.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/input/motion.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/input/motion.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/render/camera.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/orientation-compat.js', import.meta.url), 'utf8')
 ]);
 
 const manifest = JSON.parse(manifestSource);
@@ -36,11 +42,9 @@ assert.match(nextIndex, /data-turn-deployment="next"/);
 assert.match(nextIndex, /<meta name="robots" content="noindex,nofollow">/);
 assert.match(nextIndex, /TURN NEXT · Source TURN/);
 assert.match(nextIndex, /class="turn-next-badge"/);
-assert.match(nextIndex, /id="turnAppViewport"/);
 assert.match(nextIndex, /\/turn-next\/storage-bootstrap\.js/);
-assert.match(nextIndex, /\/turn-next\/orientation-preflight\.js/);
+assert.match(nextIndex, /\/turn-next\/safe-zone-bootstrap\.js\?source=.*&stage=safe-zone-m3/);
 assert.match(nextIndex, /\/turn-next\/identity\.css/);
-assert.match(nextIndex, /\/turn-next\/orientation-freeze\.css/);
 assert.match(nextIndex, /\/turn-next\/identity\.js/);
 assert.match(nextIndex, /\/turn-next\/site\.webmanifest/);
 assert.match(nextIndex, /src="\/turn-next\/app\.js\?source=/, 'The parity entry must launch through its own staging bootstrap');
@@ -49,29 +53,25 @@ assert.ok(
   'Storage isolation must install before any production script can access storage'
 );
 assert.ok(
-  nextIndex.indexOf('/turn-next/orientation-preflight.js') < nextIndex.indexOf('./orientation-compat.js'),
-  'Raw orientation capture must precede TURN orientation compatibility code'
+  nextIndex.indexOf('/turn-next/safe-zone-bootstrap.js') < nextIndex.indexOf('./orientation-compat.js'),
+  'The 24-degree motion envelope must exist before orientation feedback initializes'
 );
+assert.doesNotMatch(nextIndex, /turnAppViewport|orientation-preflight|orientation-freeze/);
 assert.doesNotMatch(nextIndex, /href="\.\/site\.webmanifest/);
 
 assert.match(nextApp, /Generated from turn\/app\.js/);
 assert.match(nextApp, /const productionModuleBase = new URL\('\/turn\/'/);
 assert.match(nextApp, /const platformModuleBase = new URL\('\/turn\/platform\/'/);
-assert.match(nextApp, /const turnNextModuleBase = new URL\('\/turn-next\/'/);
 assert.match(nextApp, /const webPlatform = createWebPlatform\(\)/);
 assert.match(nextApp, /installTurnPlatform\(webPlatform\)/);
-assert.match(nextApp, /installTurnNextOrientationFreeze\(\{ platform: webPlatform \}\)/);
 assert.match(nextApp, /dataset\.turnPlatform = 'web-adapter'/);
-assert.match(nextApp, /Platform M1 · Orientation M2/, 'The visible staging badge must identify the active architecture and orientation milestones');
+assert.match(nextApp, /Platform M1 · Safe Zone M3/, 'The visible staging badge must identify the active platform and motion-safe-zone milestones');
+assert.doesNotMatch(nextApp, /turnNextModuleBase|orientation-freeze|installTurnNextOrientationFreeze|Orientation M2/);
 assert.ok(
   nextApp.indexOf('installTurnPlatform(webPlatform)') < nextApp.indexOf("withBuild('./main.js')"),
   'The platform must be composed before main.js imports motion input'
 );
-assert.ok(
-  nextApp.indexOf('installTurnNextOrientationFreeze') < nextApp.indexOf("withBuild('./main.js')"),
-  'The visual orientation fallback must install before production resize handlers'
-);
-assert.doesNotMatch(productionApp, /installTurnPlatform\(webPlatform\)|installTurnNextOrientationFreeze/, 'Production must retain the proven browser path during this TURN NEXT experiment');
+assert.doesNotMatch(productionApp, /installTurnPlatform\(webPlatform\)|Safe Zone M3/, 'Production must retain the proven browser bootstrap during this TURN NEXT experiment');
 assert.match(nextApp, /new URL\(path, productionModuleBase\)/);
 assert.doesNotMatch(nextApp, /new URL\(path, import\.meta\.url\)/);
 assert.match(nextApp, /TURN NEXT:/);
@@ -96,6 +96,14 @@ for (const requiredInstall of [
   assert.ok(nextApp.includes(requiredInstall), `TURN NEXT bootstrap must preserve ${requiredInstall}`);
 }
 
+assert.match(safeZoneBootstrap, /SAFE_ZONE_DEGREES = 24/);
+assert.match(safeZoneBootstrap, /steeringDegrees: SAFE_ZONE_DEGREES/);
+assert.match(safeZoneBootstrap, /horizonDegrees: SAFE_ZONE_DEGREES/);
+assert.match(safeZoneBootstrap, /feedbackNearDegrees: 20/);
+assert.match(safeZoneBootstrap, /feedbackHardDegrees: SAFE_ZONE_DEGREES/);
+assert.match(safeZoneBootstrap, /feedbackClearDegrees: 17\.5/);
+assert.match(safeZoneBootstrap, /data.*turnMotionSafeZone|dataset\.turnMotionSafeZone/);
+
 assert.match(platformContext, /installTurnPlatform/);
 assert.match(platformContext, /requireTurnPlatform/);
 assert.match(platformContext, /validateTurnPlatform/);
@@ -105,8 +113,14 @@ assert.match(webPlatform, /addEventListener\('devicemotion'/);
 assert.match(webPlatform, /requestFullscreen/);
 assert.match(webPlatform, /lockLandscape/);
 assert.match(motionInput, /getTurnPlatform/);
+assert.match(motionInput, /resolveSteeringRollLimit/);
+assert.match(motionInput, /__TURN_MOTION_SAFE_ZONE__/);
 assert.match(motionInput, /getTurnPlatform\(\)\?\.motion\?\.getScreenOrientationAngle/);
 assert.match(motionInput, /globalThis\.screen/, 'Production must retain its browser fallback until the adapter is promoted');
+assert.match(cameraSource, /resolveSensorCameraRollLimit/);
+assert.match(cameraSource, /__TURN_MOTION_SAFE_ZONE__/);
+assert.match(orientationCompat, /feedbackHardDegrees/);
+assert.match(orientationCompat, /__TURN_MOTION_SAFE_ZONE__/);
 
 assert.match(storage, /const LOCAL_PREFIX = 'turn-next:';/);
 assert.match(storage, /const SESSION_PREFIX = 'turn-next-session:';/);
@@ -140,4 +154,4 @@ assert.deepEqual(
   }
 );
 
-console.log(`TURN NEXT isolated Orientation M2 entry for TURN ${release.id} passed.`);
+console.log(`TURN NEXT isolated Safe Zone M3 entry for TURN ${release.id} passed.`);
