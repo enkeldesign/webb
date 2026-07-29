@@ -22,6 +22,8 @@ Orientation M2 therefore adds a TURN NEXT-only visual compensation prototype:
 - `orientation-freeze.css` provides the transformable application viewport.
 - The generated TURN NEXT entry wraps every visual surface in `#turnAppViewport`.
 
+Physical M2 testing exposed an incorrect half-turn assumption: when iOS completed a landscape-right to landscape-left flip, the operating system had already made the web view upright, but TURN NEXT added another 180-degree transform and rendered the game upside down. Orientation M2.1 preserves quarter-turn portrait compensation while resolving completed landscape-to-landscape flips to zero additional visual rotation.
+
 This is deliberately an experiment. It cannot stop the operating system’s own rotation animation or browser chrome from rotating. It tests whether TURN can visually compensate well enough in the PWA while preserving controls, aspect ratio and motion steering. A true host-level lock remains mandatory for native iOS and Android containers.
 
 The staging bootstrap and entry page are generated from `turn/app.js` and `turn/index.html` by:
@@ -48,7 +50,7 @@ Do not edit `turn-next/app.js` or `turn-next/index.html` by hand. Edit the gener
 - Its manifest uses the separate `/turn-next/` application id, start URL and scope.
 - The page is marked `noindex` and visibly labelled throughout gameplay.
 - The platform is installed once at startup and cannot be silently replaced later.
-- Orientation M2 activates only while gameplay is running and restores ordinary responsive behaviour outside the race.
+- Orientation M2.1 activates only while gameplay is running and restores ordinary responsive behaviour outside the race.
 
 ## Transitional architecture
 
