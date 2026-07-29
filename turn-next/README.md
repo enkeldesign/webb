@@ -2,7 +2,7 @@
 
 `/turn-next/` is TURN’s protected architecture test runtime.
 
-## Current milestone: platform composition and motion safe zone
+## Current milestone: platform composition, motion safe zone and directional limit feedback
 
 The physical parity baseline for TURN r110 has been confirmed on real devices. TURN NEXT now begins the architecture migration while continuing to load the proven production gameplay graph from `/turn/`.
 
@@ -22,11 +22,20 @@ Safe Zone M3 instead defines a deliberately limited web operating envelope:
 - `safe-zone-bootstrap.js` configures TURN NEXT at `-24°` to `+24°` relative to the calibrated position.
 - Steering remains active throughout that range and reaches full lock at `24°`.
 - Horizon levelling follows the device throughout the same range and clamps at `24°`.
-- Near-limit feedback begins at `20°`; hard-limit feedback begins at `24°` and clears below `17.5°`.
 - Beyond the safe zone, TURN adds no further horizon rotation or steering magnitude.
 - The browser remains responsible for any operating-system orientation flip beyond the usable range.
 
-The shared production modules now accept an optional safe-zone configuration, but production `/turn/` retains its existing steering, horizon and feedback limits when no configuration is installed. This lets TURN NEXT test the larger range without silently changing the live game.
+Limit M4 replaces the former whole-screen yellow border with directional feedback:
+
+- A red-to-transparent gradient appears only on the side being pushed.
+- The gradient begins fading in at `19°` and strengthens continuously toward the `24°` edge.
+- A fresh hard-edge crossing blinks briefly and then remains solid while the device stays at or beyond `24°`.
+- The hard-edge cue rearms below `22°`, preventing threshold jitter while ensuring a new audible cue on each genuine return to the limit.
+- Every fresh hard-edge crossing plays a short two-part cue through TURN’s existing audio system.
+- VoiceOver announces `Left steering limit reached.` and `Right steering limit reached.` only the first time each side is reached during a race session.
+- `prefers-reduced-motion` removes the blink while retaining the solid hard-edge warning.
+
+The shared production modules now accept an optional safe-zone configuration, but production `/turn/` retains its existing steering, horizon and feedback limits when no configuration is installed. This lets TURN NEXT test the larger range and directional warning without silently changing the live game.
 
 A true host-level orientation lock remains mandatory for native iOS and Android containers. The safe zone can be revisited once the native host controls interface orientation.
 
@@ -48,7 +57,7 @@ Do not edit `turn-next/app.js` or `turn-next/index.html` by hand. Edit the gener
 
 ## Safety boundaries
 
-- Production `/turn/` keeps its current motion limits unless a platform host explicitly installs a safe-zone configuration.
+- Production `/turn/` keeps its current motion limits and warning presentation unless a platform host explicitly installs a safe-zone configuration.
 - TURN NEXT prefixes all `localStorage` and `sessionStorage` keys before production modules load.
 - It never copies production records automatically.
 - Its manifest uses the separate `/turn-next/` application id, start URL and scope.
