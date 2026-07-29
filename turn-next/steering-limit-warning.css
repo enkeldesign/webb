@@ -1,0 +1,62 @@
+html[data-turn-deployment="next"] .hud::before {
+  display: none;
+}
+
+.turn-steering-limit-edge {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  z-index: 120;
+  width: clamp(88px, 18vw, 220px);
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 70ms linear,
+    filter 90ms linear;
+  will-change: opacity;
+}
+
+.turn-steering-limit-edge-left {
+  left: 0;
+  background: linear-gradient(
+    90deg,
+    rgb(255 20 20 / 0.92) 0%,
+    rgb(255 32 32 / 0.58) 34%,
+    rgb(255 44 44 / 0.18) 68%,
+    rgb(255 44 44 / 0) 100%
+  );
+}
+
+.turn-steering-limit-edge-right {
+  right: 0;
+  background: linear-gradient(
+    270deg,
+    rgb(255 20 20 / 0.92) 0%,
+    rgb(255 32 32 / 0.58) 34%,
+    rgb(255 44 44 / 0.18) 68%,
+    rgb(255 44 44 / 0) 100%
+  );
+}
+
+.turn-steering-limit-edge.is-hard {
+  filter: saturate(1.28) brightness(1.06);
+}
+
+.turn-steering-limit-edge.is-flashing {
+  animation: turn-steering-limit-edge-flash 520ms linear 1;
+}
+
+body:not(.turn-race-active) .turn-steering-limit-edge {
+  display: none;
+}
+
+@keyframes turn-steering-limit-edge-flash {
+  0%, 42%, 78%, 100% { opacity: 1; }
+  24%, 61% { opacity: 0.12; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .turn-steering-limit-edge.is-flashing {
+    animation: none;
+  }
+}
