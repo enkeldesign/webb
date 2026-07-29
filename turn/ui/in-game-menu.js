@@ -42,7 +42,7 @@ function createAudioPanel() {
           <input id="turnDbeEnabled" type="checkbox">
           <span>
             <strong>Drive By Ear™</strong>
-            <small>Spatial pace notes, trajectory guidance, recovery feedback and rival warnings.</small>
+            <small>Spatial pace notes, predictive steering guidance, recovery cues and rival warnings.</small>
           </span>
         </label>
 
@@ -58,9 +58,55 @@ function createAudioPanel() {
         </section>
 
         <details class="audio-guide-card">
-          <summary>Drive By Ear sound guide</summary>
-          <p>Use headphones. Pace notes tell you what comes next. A warm organic hum guides your steering: steer toward it. On the road it follows your trajectory. Off road, centred gravel marks the surface while the hum aims toward a point ahead on the racing line.</p>
-          <p>Tyre and drift sounds stay centred, nearby-rival warnings are directional, and a double falling tone warns when you are facing the wrong way.</p>
+          <summary>How Drive By Ear works</summary>
+          <div class="audio-guide-content">
+            <p class="audio-guide-intro">Drive By Ear™ turns the racing line, upcoming corners and nearby hazards into spatial sound. It is designed to make the track understandable without relying on sight, while also helping any player drive more consistently. Headphones give the clearest left and right guidance.</p>
+
+            <section class="audio-guide-section" aria-labelledby="dbeGuideBasics">
+              <h3 id="dbeGuideBasics">Start here</h3>
+              <ul class="audio-guide-basics">
+                <li>Use headphones and begin at a comfortable speed.</li>
+                <li>Steer <strong>toward</strong> the warm guiding hum.</li>
+                <li>Listen to pace notes before corners: the ear tells you the direction, and more beeps mean a tighter turn.</li>
+                <li>Engine, tyre and gravel sounds describe the car and surface. They are not steering instructions.</li>
+              </ul>
+            </section>
+
+            <section class="audio-guide-section" aria-labelledby="dbeGuideRibbon">
+              <h3 id="dbeGuideRibbon">The guiding ribbon</h3>
+              <p>On the road, the warm organic hum combines where the car is with where its current movement is likely to take it. The hum moves toward the side you should steer toward. As your trajectory becomes safer, it settles closer to the centre and softens. At higher speed it predicts farther ahead, so make smooth corrections rather than chasing every small movement.</p>
+            </section>
+
+            <section class="audio-guide-section" aria-labelledby="dbeGuidePaceNotes">
+              <h3 id="dbeGuidePaceNotes">Pace notes</h3>
+              <p>Before major corners, one to three short beeps play in the ear on the turn side. One beep means a gentler corner; three means tighter. A delayed extra beep on the same side marks a long corner. Separate groups describe linked corners in the order you will meet them.</p>
+            </section>
+
+            <section class="audio-guide-section" aria-labelledby="dbeGuideRecovery">
+              <h3 id="dbeGuideRecovery">Off-road recovery</h3>
+              <p>When you leave the road, a centred gravel texture tells you that the tyres are off the surface. The ribbon changes to recovery guidance and points toward a useful place to rejoin, rather than simply the nearest edge. Steer toward the hum until the normal on-road guidance returns.</p>
+            </section>
+
+            <section class="audio-guide-section" aria-labelledby="dbeGuideDrift">
+              <h3 id="dbeGuideDrift">Drift and grip</h3>
+              <p>Tyre noise stays centred. As the car loses more grip, the sound spreads wider across both ears. This tells you how much the car is sliding without becoming a second steering command.</p>
+            </section>
+
+            <section class="audio-guide-section" aria-labelledby="dbeGuideRivals">
+              <h3 id="dbeGuideRivals">Nearby rivals</h3>
+              <p>A short directional cue sounds when a rival comes close. It plays from the side of the nearby car. Treat it as a heads-up rather than a continuous tracker.</p>
+            </section>
+
+            <section class="audio-guide-section" aria-labelledby="dbeGuideWrongWay">
+              <h3 id="dbeGuideWrongWay">Wrong way</h3>
+              <p>If you are on the road but facing the wrong direction, normal navigation makes room for a low warning. A repeating double falling tone confirms the problem; the warning and final side tone indicate which way to turn. Continue turning until the regular ribbon returns.</p>
+            </section>
+
+            <section class="audio-guide-section" aria-labelledby="dbeGuideMix">
+              <h3 id="dbeGuideMix">Sound balance and priority</h3>
+              <p>TURN automatically lowers engine, drift and boost when guidance needs room. Pace notes are deliberately prominent. Use Sound balance above to favour Drive By Ear or the car and world sounds; the middle position is TURN's intended mix.</p>
+            </section>
+          </div>
         </details>
       </div>
 
