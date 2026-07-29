@@ -16,12 +16,12 @@ const webPlatform = createWebPlatform();
 installTurnPlatform(webPlatform);
 document.documentElement.dataset.turnPlatform = 'web-adapter';
 const turnNextBadgeDetail = document.querySelector('.turn-next-badge span');
-if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M1 · Safe Zone M3 · Limit M4.1';
+if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M1 · Safe Zone M3 · Limit M4.2';
 
 const steadyLimitStylesheet = document.createElement('link');
 steadyLimitStylesheet.rel = 'stylesheet';
 steadyLimitStylesheet.href = new URL(
-  './steering-limit-warning.css?source=20260728-r110&stage=steady-limit-m4-1',
+  './steering-limit-warning.css?source=20260728-r110&stage=inertial-limit-m4-2',
   turnNextModuleBase
 ).href;
 steadyLimitStylesheet.setAttribute('data-turn-next-steady-limit', '');
@@ -72,7 +72,7 @@ const { installTurnAudio } = await import(withBuild('./audio/audio-system.js'));
 installTurnAudio();
 
 const { installTurnNextSteeringLimitWarning } = await import(
-  new URL('./steering-limit-warning.js?source=20260728-r110&stage=steady-limit-m4-1', turnNextModuleBase).href
+  new URL('./steering-limit-warning.js?source=20260728-r110&stage=inertial-limit-m4-2', turnNextModuleBase).href
 );
 installTurnNextSteeringLimitWarning();
 
