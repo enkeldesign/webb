@@ -60,7 +60,7 @@ function createAudioPanel() {
         <details class="audio-guide-card">
           <summary>Drive By Ear sound guide</summary>
           <div class="audio-guide-content">
-            <p class="audio-guide-intro">Drive By Ear™ turns the racing line, upcoming corners and nearby hazards into spatial sound. Pace notes tell you what comes next, while continuous guidance helps with the turn you are making now. It is designed to make the track understandable without relying on sight, while also helping any player drive more consistently. Headphones give the clearest left and right guidance.</p>
+            <p class="audio-guide-intro">Drive By Ear™ turns the racing line, upcoming corners and nearby hazards into spatial sound. Pace notes tell you what comes next, while continuous guidance helps with the turn you are making now. It is designed to make the track understandable without relying on sight, while also helping any player drive more consistently. It works alongside screen readers so menus, spoken race information and spatial driving guidance can be used together. Headphones give the clearest left and right guidance.</p>
 
             <section class="audio-guide-section" aria-labelledby="dbeGuideBasics">
               <h3 id="dbeGuideBasics">Start here</h3>
@@ -100,6 +100,11 @@ function createAudioPanel() {
             <section class="audio-guide-section" aria-labelledby="dbeGuideWrongWay">
               <h3 id="dbeGuideWrongWay">Wrong way</h3>
               <p>If you are on the road but facing the wrong direction, normal navigation makes room for a low warning. A repeating double falling tone confirms the problem; the warning and final side tone indicate which way to turn. Continue turning until the regular ribbon returns.</p>
+            </section>
+
+            <section class="audio-guide-section" aria-labelledby="dbeGuideScreenReaders">
+              <h3 id="dbeGuideScreenReaders">With a screen reader</h3>
+              <p>Drive By Ear is designed to work alongside screen readers, including VoiceOver. The screen reader presents menus, controls, race position and lap results; DBE provides the continuous spatial information needed to steer and stay on course. Together they are intended to provide a complete non-visual way to play TURN, from choosing a car and track to completing a race.</p>
             </section>
 
             <section class="audio-guide-section" aria-labelledby="dbeGuideMix">
