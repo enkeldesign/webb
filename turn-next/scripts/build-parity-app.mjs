@@ -39,12 +39,12 @@ const webPlatform = createWebPlatform();
 installTurnPlatform(webPlatform);
 document.documentElement.dataset.turnPlatform = 'web-adapter';
 const turnNextBadgeDetail = document.querySelector('.turn-next-badge span');
-if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M1 · Safe Zone M3 · Limit M4.1';
+if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M1 · Safe Zone M3 · Limit M4.2';
 
 const steadyLimitStylesheet = document.createElement('link');
 steadyLimitStylesheet.rel = 'stylesheet';
 steadyLimitStylesheet.href = new URL(
-  './steering-limit-warning.css?source=${release.cacheKey}&stage=steady-limit-m4-1',
+  './steering-limit-warning.css?source=${release.cacheKey}&stage=inertial-limit-m4-2',
   turnNextModuleBase
 ).href;
 steadyLimitStylesheet.setAttribute('data-turn-next-steady-limit', '');
@@ -60,7 +60,7 @@ function installStylesheet(path, dataAttribute) {`,
     `installTurnAudio();
 
 const { installTurnNextSteeringLimitWarning } = await import(
-  new URL('./steering-limit-warning.js?source=${release.cacheKey}&stage=steady-limit-m4-1', turnNextModuleBase).href
+  new URL('./steering-limit-warning.js?source=${release.cacheKey}&stage=inertial-limit-m4-2', turnNextModuleBase).href
 );
 installTurnNextSteeringLimitWarning();`,
     'directional limit warning composition point'
@@ -80,11 +80,11 @@ installTurnNextSteeringLimitWarning();`,
   assert.match(output, /const turnNextModuleBase = new URL\('\/turn-next\/'/);
   assert.match(output, /installTurnPlatform\(webPlatform\)/);
   assert.match(output, /data-turn-next-steady-limit/);
-  assert.match(output, /steering-limit-warning\.css\?source=.*&stage=steady-limit-m4-1/);
+  assert.match(output, /steering-limit-warning\.css\?source=.*&stage=inertial-limit-m4-2/);
   assert.match(output, /installTurnNextSteeringLimitWarning\(\)/);
-  assert.match(output, /steering-limit-warning\.js\?source=.*&stage=steady-limit-m4-1/);
+  assert.match(output, /steering-limit-warning\.js\?source=.*&stage=inertial-limit-m4-2/);
   assert.match(output, /dataset\.turnPlatform = 'web-adapter'/);
-  assert.match(output, /Platform M1 · Safe Zone M3 · Limit M4\.1/);
+  assert.match(output, /Platform M1 · Safe Zone M3 · Limit M4\.2/);
   assert.doesNotMatch(output, /orientation-freeze|installTurnNextOrientationFreeze|Orientation M2/);
   assert.ok(
     output.indexOf('installTurnPlatform(webPlatform)') < output.indexOf("withBuild('./main.js')"),
