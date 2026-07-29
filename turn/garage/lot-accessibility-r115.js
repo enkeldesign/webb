@@ -34,10 +34,14 @@ export function installLotAccessibility(root = document.body) {
     if (!button) continue;
 
     const description = document.createElement('span');
-    description.id = `lot-${car.id}-attributes`;
-    description.textContent = describeVehicleStats(car.stats);
+    description.id = `lot-${car.id}-complete-label`;
+    const existingLabel = button.getAttribute('aria-label') || car.name;
+    description.textContent = `${existingLabel} ${describeVehicleStats(car.stats)}`;
     descriptions.appendChild(description);
-    button.setAttribute('aria-describedby', description.id);
+
+    // aria-labelledby takes precedence over aria-label. That keeps the complete
+    // name, appearance and attributes stable even when the Lot refreshes aria-label.
+    button.setAttribute('aria-labelledby', description.id);
   }
 
   carPicker.insertAdjacentElement('afterend', descriptions);
