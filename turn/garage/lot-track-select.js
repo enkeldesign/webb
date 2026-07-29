@@ -1,7 +1,7 @@
 import { showTheLot as showOriginalLot } from './lot-r10.js?build=20260720-r25';
 import { installLotStatLegend } from './lot-stat-legend.js?build=20260724-r59';
 import { installLotLayout } from './lot-layout-r60.js?build=20260729-r116';
-import { installLotAccessibility } from './lot-accessibility-r115.js?build=20260729-r116';
+import { installLotAccessibility } from './lot-accessibility-r117.js?build=20260729-r117';
 import { chooseTrackBeforeLot } from '../tracks/track-manager.js?build=20260722-r52';
 import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
 
