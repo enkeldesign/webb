@@ -58,9 +58,9 @@ function createAudioPanel() {
         </section>
 
         <details class="audio-guide-card">
-          <summary>How Drive By Ear works</summary>
+          <summary>Drive By Ear sound guide</summary>
           <div class="audio-guide-content">
-            <p class="audio-guide-intro">Drive By Ear™ turns the racing line, upcoming corners and nearby hazards into spatial sound. It is designed to make the track understandable without relying on sight, while also helping any player drive more consistently. Headphones give the clearest left and right guidance.</p>
+            <p class="audio-guide-intro">Drive By Ear™ turns the racing line, upcoming corners and nearby hazards into spatial sound. Pace notes tell you what comes next, while continuous guidance helps with the turn you are making now. It is designed to make the track understandable without relying on sight, while also helping any player drive more consistently. Headphones give the clearest left and right guidance.</p>
 
             <section class="audio-guide-section" aria-labelledby="dbeGuideBasics">
               <h3 id="dbeGuideBasics">Start here</h3>
@@ -74,7 +74,7 @@ function createAudioPanel() {
 
             <section class="audio-guide-section" aria-labelledby="dbeGuideRibbon">
               <h3 id="dbeGuideRibbon">The guiding ribbon</h3>
-              <p>On the road, the warm organic hum combines where the car is with where its current movement is likely to take it. The hum moves toward the side you should steer toward. As your trajectory becomes safer, it settles closer to the centre and softens. At higher speed it predicts farther ahead, so make smooth corrections rather than chasing every small movement.</p>
+              <p>A warm organic hum guides your steering. On the road, it combines where the car is with where its current movement is likely to take it. The hum moves toward the side you should steer toward. As your trajectory becomes safer, it settles closer to the centre and softens. At higher speed it predicts farther ahead, so make smooth corrections rather than chasing every small movement.</p>
             </section>
 
             <section class="audio-guide-section" aria-labelledby="dbeGuidePaceNotes">
@@ -84,7 +84,7 @@ function createAudioPanel() {
 
             <section class="audio-guide-section" aria-labelledby="dbeGuideRecovery">
               <h3 id="dbeGuideRecovery">Off-road recovery</h3>
-              <p>When you leave the road, a centred gravel texture tells you that the tyres are off the surface. The ribbon changes to recovery guidance and points toward a useful place to rejoin, rather than simply the nearest edge. Steer toward the hum until the normal on-road guidance returns.</p>
+              <p>Off road, centred gravel marks the surface. The ribbon changes to recovery guidance and points toward a useful place to rejoin, rather than simply the nearest edge. Steer toward the hum until normal on-road guidance returns.</p>
             </section>
 
             <section class="audio-guide-section" aria-labelledby="dbeGuideDrift">
@@ -94,7 +94,7 @@ function createAudioPanel() {
 
             <section class="audio-guide-section" aria-labelledby="dbeGuideRivals">
               <h3 id="dbeGuideRivals">Nearby rivals</h3>
-              <p>A short directional cue sounds when a rival comes close. It plays from the side of the nearby car. Treat it as a heads-up rather than a continuous tracker.</p>
+              <p>Nearby-rival warnings are directional. A short cue sounds when a rival comes close and plays from the side of the nearby car. Treat it as a heads-up rather than a continuous tracker.</p>
             </section>
 
             <section class="audio-guide-section" aria-labelledby="dbeGuideWrongWay">
