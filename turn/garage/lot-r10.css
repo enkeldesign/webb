@@ -30,26 +30,15 @@
   text-shadow: 2px 2px 0 rgb(255 248 232 / 0.72);
 }
 
-.lot-heading > span {
-  display: inline-block;
-  padding: 4px 8px;
-  border: 2px solid var(--ink);
-  border-radius: 999px;
-  background: var(--yellow);
-  box-shadow: 3px 3px 0 var(--ink);
-  font-size: clamp(0.52rem, 1.25vw, 0.72rem);
-  letter-spacing: 0.08em;
-}
-
 .lot-heading h1 {
-  margin-top: 8px;
+  margin: 0;
   font-size: clamp(2.7rem, 8vw, 6.4rem);
   line-height: 0.72;
   word-spacing: 0.16em;
 }
 
 .lot-heading p {
-  margin: 9px 0 0;
+  margin: 18px 0 0;
   font-size: clamp(0.7rem, 1.65vw, 1rem);
 }
 
@@ -65,6 +54,41 @@
   background: var(--pink);
   font-size: 1.65rem;
   line-height: 1;
+}
+
+.lot-car-picker {
+  position: absolute;
+  z-index: 3;
+  inset: 0 var(--lot-rail-width) 0 0;
+  pointer-events: none;
+}
+
+.lot-car-option {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  pointer-events: auto;
+}
+
+.lot-car-option:focus-visible {
+  top: max(118px, calc(env(safe-area-inset-top) + 106px));
+  left: max(14px, env(safe-area-inset-left));
+  width: auto;
+  height: auto;
+  padding: 8px 12px;
+  clip: auto;
+  clip-path: none;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  box-shadow: 4px 4px 0 var(--ink);
+  font-size: 0.72rem;
 }
 
 .lot-side {
@@ -196,6 +220,12 @@
   text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.lot-car-description {
+  margin: 7px 0 0;
+  font-size: 0.58rem;
+  line-height: 1.35;
 }
 
 .lot-stats {
@@ -350,10 +380,11 @@
 @media (max-height: 430px) {
   .lot-screen { --lot-rail-width: clamp(248px, 32vw, 300px); }
   .lot-heading h1 { font-size: clamp(2.5rem, 7vw, 4.8rem); }
-  .lot-heading p { display: none; }
+  .lot-heading p { margin-top: 14px; }
   .lot-side { top: max(62px, calc(env(safe-area-inset-top) + 54px)); gap: 7px; }
   .lot-viewbox { flex-basis: 36%; border-width: 3px; box-shadow: 5px 5px 0 var(--ink); }
   .lot-card { padding: 9px; border-width: 3px; box-shadow: 5px 5px 0 var(--ink); }
+  .lot-car-description { display: none; }
   .lot-stats { gap: 2px; margin: 6px 0; }
   .lot-stat { grid-template-columns: 68px 1fr; }
   .lot-stat > span { font-size: 0.43rem; }
