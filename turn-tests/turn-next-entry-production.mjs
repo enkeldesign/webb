@@ -70,10 +70,12 @@ assert.match(nextApp, /const platformModuleBase = new URL\('\/turn\/platform\/'/
 assert.match(nextApp, /const turnNextModuleBase = new URL\('\/turn-next\/'/);
 assert.match(nextApp, /const webPlatform = createWebPlatform\(\)/);
 assert.match(nextApp, /installTurnPlatform\(webPlatform\)/);
+assert.match(nextApp, /data-turn-next-steady-limit/);
+assert.match(nextApp, /steering-limit-warning\.css\?source=.*&stage=steady-limit-m4-1/);
 assert.match(nextApp, /installTurnNextSteeringLimitWarning\(\)/);
-assert.match(nextApp, /steering-limit-warning\.js\?source=.*&stage=directional-limit-m4/);
+assert.match(nextApp, /steering-limit-warning\.js\?source=.*&stage=steady-limit-m4-1/);
 assert.match(nextApp, /dataset\.turnPlatform = 'web-adapter'/);
-assert.match(nextApp, /Platform M1 · Safe Zone M3 · Limit M4/, 'The visible staging badge must identify the active platform, safe-zone and directional-limit milestones');
+assert.match(nextApp, /Platform M1 · Safe Zone M3 · Limit M4\.1/, 'The visible staging badge must identify the active platform, safe-zone and steady-limit milestones');
 assert.doesNotMatch(nextApp, /orientation-freeze|installTurnNextOrientationFreeze|Orientation M2/);
 assert.ok(
   nextApp.indexOf('installTurnPlatform(webPlatform)') < nextApp.indexOf("withBuild('./main.js')"),
@@ -122,9 +124,14 @@ assert.match(steeringLimitWarning, /Left steering limit reached\./);
 assert.match(steeringLimitWarning, /Right steering limit reached\./);
 assert.match(steeringLimitWarning, /aria-live', 'assertive'/);
 assert.match(steeringLimitWarning, /__turnAudio/);
+assert.match(steeringLimitWarning, /steeringLimitVisualGrowth/);
+assert.doesNotMatch(steeringLimitWarning, /FLASH_DURATION|is-flashing|function flash/);
 assert.match(steeringLimitWarningCss, /turn-steering-limit-edge-left/);
 assert.match(steeringLimitWarningCss, /turn-steering-limit-edge-right/);
-assert.match(steeringLimitWarningCss, /turn-steering-limit-edge-flash/);
+assert.match(steeringLimitWarningCss, /width: clamp\(56px, 10vw, 124px\)/);
+assert.match(steeringLimitWarningCss, /opacity 420ms/);
+assert.match(steeringLimitWarningCss, /transform 420ms/);
+assert.doesNotMatch(steeringLimitWarningCss, /animation|@keyframes|is-flashing/);
 
 assert.match(platformContext, /installTurnPlatform/);
 assert.match(platformContext, /requireTurnPlatform/);
@@ -178,4 +185,4 @@ assert.deepEqual(
   }
 );
 
-console.log(`TURN NEXT isolated Limit M4 entry for TURN ${release.id} passed.`);
+console.log(`TURN NEXT isolated Limit M4.1 entry for TURN ${release.id} passed.`);

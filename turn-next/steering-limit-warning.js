@@ -1,6 +1,8 @@
 const LIMIT_EVENT = 'turn:steering-limit-feedback';
-const FLASH_DURATION_MS = 520;
 const SECOND_TONE_DELAY_MS = 90;
+const MIN_VISIBLE_OPACITY = 0.1;
+const MIN_VISIBLE_GROWTH = 0.22;
+const HIDDEN_GROWTH = 0.08;
 
 let installed = false;
 
@@ -12,9 +14,14 @@ export function steeringLimitAnnouncement(side) {
 
 export function steeringLimitVisualOpacity(detail = {}) {
   if (!detail.active) return 0;
-  if (detail.hard) return 1;
   const intensity = clamp(Number(detail.intensity) || 0, 0, 1);
-  return 0.08 + intensity * 0.72;
+  return MIN_VISIBLE_OPACITY + intensity * (1 - MIN_VISIBLE_OPACITY);
+}
+
+export function steeringLimitVisualGrowth(detail = {}) {
+  if (!detail.active) return HIDDEN_GROWTH;
+  const intensity = clamp(Number(detail.intensity) || 0, 0, 1);
+  return MIN_VISIBLE_GROWTH + intensity * (1 - MIN_VISIBLE_GROWTH);
 }
 
 export function installTurnNextSteeringLimitWarning() {
@@ -30,18 +37,21 @@ export function installTurnNextSteeringLimitWarning() {
   document.body.append(overlays.left, overlays.right, announcer);
 
   const announcedSides = { left: false, right: false };
-  let flashTimer = 0;
   let audioTimer = 0;
   let visualsActive = false;
 
-  function clearVisuals() {
-    window.clearTimeout(flashTimer);
-    flashTimer = 0;
+  function setOverlayTarget(overlay, detail) {
+    const active = Boolean(detail?.active);
+    overlay.classList.toggle('is-active', active);
+    overlay.style.setProperty('--turn-limit-opacity', String(steeringLimitVisualOpacity(detail)));
+    overlay.style.setProperty('--turn-limit-growth', String(steeringLimitVisualGrowth(detail)));
+  }
+
+  function softenVisuals() {
     visualsActive = false;
-    for (const overlay of Object.values(overlays)) {
-      overlay.classList.remove('is-hard', 'is-flashing');
-      overlay.style.opacity = '0';
-    }
+    const hidden = { active: false, intensity: 0 };
+    setOverlayTarget(overlays.left, hidden);
+    setOverlayTarget(overlays.right, hidden);
   }
 
   function resetRaceAnnouncements() {
@@ -68,36 +78,22 @@ export function installTurnNextSteeringLimitWarning() {
     });
   }
 
-  function flash(overlay) {
-    window.clearTimeout(flashTimer);
-    overlay.classList.remove('is-flashing');
-    void overlay.offsetWidth;
-    overlay.classList.add('is-flashing');
-    flashTimer = window.setTimeout(() => {
-      overlay.classList.remove('is-flashing');
-    }, FLASH_DURATION_MS);
-  }
-
   function handleLimitFeedback(event) {
     const detail = event.detail || {};
     const side = detail.side === 'left' || detail.side === 'right' ? detail.side : null;
 
     if (!detail.active || !side) {
-      if (visualsActive) clearVisuals();
+      if (visualsActive) softenVisuals();
       return;
     }
 
     visualsActive = true;
     const activeOverlay = overlays[side];
     const inactiveOverlay = overlays[side === 'left' ? 'right' : 'left'];
-    inactiveOverlay.classList.remove('is-hard', 'is-flashing');
-    inactiveOverlay.style.opacity = '0';
-
-    activeOverlay.style.opacity = String(steeringLimitVisualOpacity(detail));
-    activeOverlay.classList.toggle('is-hard', Boolean(detail.hard));
+    setOverlayTarget(inactiveOverlay, { active: false, intensity: 0 });
+    setOverlayTarget(activeOverlay, detail);
 
     if (detail.enteredHard) {
-      flash(activeOverlay);
       playLimitCue();
       announceLimit(side);
     }
@@ -110,7 +106,7 @@ export function installTurnNextSteeringLimitWarning() {
     if (!event.detail?.running) {
       window.clearTimeout(audioTimer);
       audioTimer = 0;
-      if (visualsActive) clearVisuals();
+      if (visualsActive) softenVisuals();
       announcer.textContent = '';
     }
   });
@@ -122,6 +118,8 @@ function createEdge(side) {
   const edge = document.createElement('div');
   edge.className = `turn-steering-limit-edge turn-steering-limit-edge-${side}`;
   edge.setAttribute('aria-hidden', 'true');
+  edge.style.setProperty('--turn-limit-opacity', '0');
+  edge.style.setProperty('--turn-limit-growth', String(HIDDEN_GROWTH));
   return edge;
 }
 
