@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - turn-icon-r119-release
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -13,10 +16,11 @@ jobs:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
-      - name: Check out branch
+      - name: Check out source branch
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
