@@ -47,7 +47,7 @@ assert.match(legendModule, /label\.textContent !== definition\.label/, 'Relabell
 assert.match(legendModule, /trigger\.remove\(\)/, 'Legend cleanup must remove its injected trigger');
 assert.match(legendModule, /dialog\.remove\(\)/, 'Legend cleanup must remove its injected dialog');
 assert.match(legendCss, /\.lot-stats-dialog\[hidden\]/, 'The closed legend must stay out of layout and interaction');
-assert.match(lotSource, /\['ACCEL', vehicleStats\.acceleration\]/, 'The verified Lot renderer must remain otherwise untouched');
+assert.match(lotSource, /\['ACCELERATION', vehicleStats\.acceleration\]/, 'The Lot renderer must expose the full agreed attribute name');
 assert.match(physicsSource, /baseSpeedLimit \* effectiveDriftSpeedMultiplier/, 'Production physics must apply the DRIFT penalty to the active speed limit');
 assert.match(physicsSource, /3\.2 \* driftStabilityMultiplier/, 'The DRIFT stat must improve recovery from a slide');
 assert.match(physicsSource, /0\.42 \* driftStabilityMultiplier/, 'The DRIFT stat must improve lateral stability while the control is held');
