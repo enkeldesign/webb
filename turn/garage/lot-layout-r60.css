@@ -2,6 +2,7 @@
   --lot-paint-rail-height: 58px;
   flex: 1 1 auto;
   min-height: 136px;
+  overflow: visible;
 }
 
 .lot-viewbox-with-paint .lot-viewbox-head {
@@ -23,25 +24,31 @@
   bottom: calc(var(--lot-paint-rail-height) + 7px);
 }
 
-.lot-viewbox-with-paint .lot-colors {
-  position: absolute;
-  z-index: 3;
-  right: 0;
-  bottom: 0;
-  left: 0;
+.lot-paint-a11y-host {
+  position: relative;
+  z-index: 5;
+  flex: 0 0 var(--lot-paint-rail-height);
+  min-height: var(--lot-paint-rail-height);
+  margin-top: calc(-1 * var(--lot-paint-rail-height));
+  pointer-events: auto;
+}
+
+.lot-paint-a11y-host .lot-colors {
+  display: grid;
   min-height: var(--lot-paint-rail-height);
   margin: 0;
   padding: 8px;
   grid-template-columns: 1fr;
   border-top: 3px solid var(--ink);
+  border-radius: 0 0 14px 14px;
   background: rgb(255 248 232 / 0.98);
 }
 
-.lot-viewbox-with-paint .lot-colors:has(.lot-color-control:nth-child(2)) {
+.lot-paint-a11y-host .lot-colors:has(.lot-color-control:nth-child(2)) {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.lot-viewbox-with-paint .lot-color-control {
+.lot-paint-a11y-host .lot-color-control {
   min-width: 0;
   min-height: 39px;
   box-shadow: none;
@@ -90,18 +97,18 @@
     flex-basis: auto;
   }
 
-  .lot-viewbox-with-paint .lot-colors {
+  .lot-paint-a11y-host .lot-colors {
     gap: 5px;
     padding: 6px;
   }
 
-  .lot-viewbox-with-paint .lot-color-control {
+  .lot-paint-a11y-host .lot-color-control {
     min-height: 34px;
     grid-template-columns: minmax(0, 1fr) 32px;
     padding: 3px 4px 3px 6px;
   }
 
-  .lot-viewbox-with-paint .lot-color-input {
+  .lot-paint-a11y-host .lot-color-input {
     width: 32px;
     height: 25px;
   }
