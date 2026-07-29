@@ -20,6 +20,7 @@ export default [
   {
     files: [
       'turn/input/motion.js',
+      'turn/motion-safe-zone.js',
       'turn/platform/*.js',
       'turn/race/game-state.js',
       'turn/race/lap-system.js',
@@ -28,6 +29,7 @@ export default [
       'turn/race/track-spatial-index.js',
       'turn/render/camera.js',
       'turn/render/covered-rendering.js',
+      'turn/ui/steering-limit-warning.js',
       'turn/ui/track-select.js',
       'turn/vehicle/catalog.js',
       'turn/vehicle/physics.js',
@@ -39,8 +41,6 @@ export default [
       'turn/tracks/elevation.js',
       'turn/tracks/registry.js',
       'turn/tracks/track-manager.js',
-      'turn-next/safe-zone-bootstrap.js',
-      'turn-next/steering-limit-warning.js',
       'turn-tests/**/*.mjs'
     ],
     languageOptions: {
