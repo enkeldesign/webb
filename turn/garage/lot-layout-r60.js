@@ -11,7 +11,13 @@ export function installLotLayout(root = document.body) {
   viewbox.classList.add('lot-viewbox-with-paint');
   viewbox.setAttribute('aria-hidden', 'true');
   viewbox.removeAttribute('aria-label');
-  viewbox.appendChild(colors);
+
+  // The paint controls are visually placed inside the 3D panel, but must remain
+  // outside its aria-hidden subtree so screen readers can reach them.
+  const paintA11yHost = document.createElement('div');
+  paintA11yHost.className = 'lot-paint-a11y-host';
+  paintA11yHost.appendChild(colors);
+  viewbox.insertAdjacentElement('afterend', paintA11yHost);
 
   screen.classList.remove('is-view-closed');
   screen.querySelector('.lot-view-close')?.remove();
