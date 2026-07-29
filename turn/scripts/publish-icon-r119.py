@@ -77,6 +77,16 @@ def main() -> None:
     index = replace_required(index, './icon-512-r45.png', './icon-512-r119.png', 'visible TURN icon')
     index_path.write_text(index, encoding='utf-8')
 
+    parity_builder_path = ROOT / 'turn-next' / 'scripts' / 'build-parity-entry.mjs'
+    parity_builder = parity_builder_path.read_text(encoding='utf-8')
+    parity_builder = replace_required(
+        parity_builder,
+        './icon-512-r45.png',
+        './icon-512-r119.png',
+        'TURN NEXT canonical start icon',
+    )
+    parity_builder_path.write_text(parity_builder, encoding='utf-8')
+
     test_path = ROOT / 'turn-lab' / 'tests' / 'app-icon-production.mjs'
     test = test_path.read_text(encoding='utf-8').replace('r45', 'r119')
     test = replace_required(
