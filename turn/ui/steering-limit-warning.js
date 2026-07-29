@@ -36,7 +36,7 @@ export function steeringLimitInertialStep(current, target, elapsedMs, timeConsta
   return current + (target - current) * blend;
 }
 
-export function installTurnNextSteeringLimitWarning() {
+export function installSteeringLimitWarning() {
   if (installed) return true;
   if (!document.body) return false;
   installed = true;

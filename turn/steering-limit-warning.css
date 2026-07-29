@@ -1,13 +1,9 @@
-html[data-turn-deployment="next"] .hud::before {
-  display: none;
-}
-
 .turn-steering-limit-edge {
   position: fixed;
   top: 0;
   bottom: 0;
   z-index: 120;
-  width: clamp(28px, 5vw, 62px);
+  width: clamp(34px, 9vw, 75px);
   pointer-events: none;
   opacity: var(--turn-limit-opacity, 0);
   transform: scaleX(var(--turn-limit-growth, 0.12));

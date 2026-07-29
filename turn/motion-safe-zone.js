@@ -13,5 +13,5 @@
   });
 
   document.documentElement.dataset.turnMotionSafeZone = String(SAFE_ZONE_DEGREES);
-  console.info(`TURN NEXT: motion safe zone configured at ±${SAFE_ZONE_DEGREES}°.`);
+  console.info(`TURN: motion safe zone configured at ±${SAFE_ZONE_DEGREES}°.`);
 })();

@@ -2,63 +2,68 @@
 
 `/turn-next/` is TURN’s protected architecture test runtime.
 
-## Current milestone: platform composition, motion safe zone and directional limit feedback
+## Current milestone: product parity before Platform M5
 
-The physical parity baseline for TURN r110 has been confirmed on real devices. TURN NEXT now begins the architecture migration while continuing to load the proven production gameplay graph from `/turn/`.
+TURN NEXT now runs the same canonical motion safe zone and steering-limit warning as production TURN.
 
-Its first explicit seam is the platform layer:
+Completed foundations:
 
-- `turn/platform/platform-context.js` owns the runtime platform contract.
-- `turn/platform/web-platform.js` implements motion, fullscreen and orientation services for browsers.
-- TURN NEXT installs that web platform before `main.js` loads.
-- `turn/input/motion.js` consumes the installed orientation port when present and retains the existing browser fallback for production TURN.
+- isolated TURN NEXT URL, PWA identity and storage namespace
+- generated entry and bootstrap synchronized with production
+- explicit platform contract and browser adapter
+- platform-provided orientation-angle lookup in TURN NEXT
+- physically validated `-24°` to `+24°` steering and horizon envelope
+- physically validated inertial directional steering-limit warning
+- audible limit cue on every rearmed hard crossing
+- first-per-side VoiceOver announcement during each race
 
-Platform M1 confirmed that the new route matches production, but physical testing also confirmed that iOS can still rotate the web view when it does not expose or accept the Screen Orientation lock request.
+## Canonical motion safe zone
 
-Orientation M2 attempted to counter-rotate the whole application after browser orientation changes. Physical testing showed that this was based on the wrong UX model and introduced an upside-down landscape regression. The visual-freeze experiment has therefore been removed completely.
+The accepted Safe Zone M3 and Limit M4.2 behavior is no longer a TURN NEXT override.
 
-Safe Zone M3 instead defines a deliberately limited web operating envelope:
+Production and TURN NEXT both load:
 
-- `safe-zone-bootstrap.js` configures TURN NEXT at `-24°` to `+24°` relative to the calibrated position.
-- Steering remains active throughout that range and reaches full lock at `24°`.
-- Horizon levelling follows the device throughout the same range and clamps at `24°`.
-- Beyond the safe zone, TURN adds no further horizon rotation or steering magnitude.
-- The browser remains responsible for any operating-system orientation flip beyond the usable range.
+- `turn/motion-safe-zone.js`
+- `turn/ui/steering-limit-warning.js`
+- `turn/steering-limit-warning.css`
 
-Limit M4 replaces the former whole-screen yellow border with directional feedback:
+The shared behavior is:
 
-- A red-to-transparent gradient appears only on the side being pushed.
-- The gradient begins fading in at `19°` and strengthens continuously toward the `24°` edge.
-- The hard-edge cue rearms below `22°`, preventing threshold jitter while ensuring a new audible cue on each genuine return to the limit.
-- Every fresh hard-edge crossing plays a short two-part cue through TURN’s existing audio system.
-- VoiceOver announces `Left steering limit reached.` and `Right steering limit reached.` only the first time each side is reached during a race session.
+- steering and horizon levelling remain active from `-24°` to `+24°`
+- visual warning begins at `19°`
+- hard-edge audio and haptic feedback begins at `24°`
+- the hard-edge cue rearms below `22°`
+- visual warning fully clears below `17.5°`
+- the red gradient appears only on the side being pushed
+- the gradient has a `300ms` threshold hold, `360ms` attack and `780ms` release
+- the maximum gradient width is `75px`
+- there are no keyframes, blink classes or flashing hard-edge states
 
-Limit M4.1 removed all visual flashing and replaced the hard-edge animation with continuously changing width and opacity.
+The former yellow whole-screen warning and the staging-only safe-zone/warning assets have been removed.
 
-Limit M4.2 adds true visual inertia after physical testing still showed threshold shimmer and nervous movement during fast curves:
+## Next architecture milestone: Platform M5
 
-- The maximum gradient is halved again, from `10vw / 124px` to `5vw / 62px`.
-- CSS transitions no longer chase every sensor update.
-- A request-animation-frame controller owns the displayed opacity and width independently from the latest sensor target.
-- A brief `300ms` hold absorbs momentary drops below the `19°` visibility threshold.
-- Increasing warning strength uses a `360ms` exponential time constant.
-- Decreasing warning strength uses a slower `780ms` exponential time constant.
-- The visual therefore approaches and recedes continuously instead of repeatedly restarting a transition.
-- There are no keyframes, blink classes, opacity flashes or abrupt visual changes at the `24°` edge.
-- Audio, haptics and the first-per-side VoiceOver announcements remain unchanged and still use the existing `22°` hard-cue rearm threshold.
+The next extraction routes the complete motion lifecycle through the existing platform contract:
 
-The shared production modules now accept an optional safe-zone configuration, but production `/turn/` retains its existing steering, horizon and feedback limits when no configuration is installed. This lets TURN NEXT test the larger range and directional warning without silently changing the live game.
+- motion availability
+- iOS permission request
+- `devicemotion` subscription
+- deterministic listener cleanup
 
-A true host-level orientation lock remains mandatory for native iOS and Android containers. The safe zone can be revisited once the native host controls interface orientation.
+Fullscreen must still be requested synchronously from the user gesture before TURN awaits motion permission.
 
-The staging bootstrap and entry page are generated from `turn/app.js` and `turn/index.html` by:
+TURN NEXT will use the platform route first. Production keeps its current direct-browser motion startup until automated and physical parity pass.
+
+## Generation
+
+The staging bootstrap and entry page are generated from `turn/app.js` and `turn/index.html`:
 
 ```text
 node turn-next/scripts/build-parity-app.mjs
 node turn-next/scripts/build-parity-entry.mjs
 ```
 
-CI verifies that both generated files remain synchronized:
+CI verifies both files remain synchronized:
 
 ```text
 node turn-next/scripts/build-parity-app.mjs --check
@@ -69,7 +74,6 @@ Do not edit `turn-next/app.js` or `turn-next/index.html` by hand. Edit the gener
 
 ## Safety boundaries
 
-- Production `/turn/` keeps its current motion limits and warning presentation unless a platform host explicitly installs a safe-zone configuration.
 - TURN NEXT prefixes all `localStorage` and `sessionStorage` keys before production modules load.
 - It never copies production records automatically.
 - Its manifest uses the separate `/turn-next/` application id, start URL and scope.
@@ -77,9 +81,7 @@ Do not edit `turn-next/app.js` or `turn-next/index.html` by hand. Edit the gener
 - The platform is installed once at startup and cannot be silently replaced later.
 - TURN NEXT contains no whole-viewport orientation transform, frozen drawing buffer or counter-rotation wrapper.
 
-## Transitional architecture
-
-Reusing `/turn/` modules remains temporary and intentional. TURN NEXT will replace dependencies one subsystem at a time behind explicit interfaces, with production parity checked after every slice.
+## Target architecture
 
 The target remains one canonical source tree that can build:
 

@@ -1,8 +1,7 @@
-// Generated from turn/app.js for TURN 2026.07.28-r110. Do not edit by hand.
+// Generated from turn/app.js for TURN 2026.07.29-r111. Do not edit by hand.
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
 const productionModuleBase = new URL('/turn/', globalThis.location?.href || 'https://enkel.design/turn-next/');
 const platformModuleBase = new URL('/turn/platform/', globalThis.location?.href || 'https://enkel.design/turn-next/');
-const turnNextModuleBase = new URL('/turn-next/', globalThis.location?.href || 'https://enkel.design/turn-next/');
 
 function withBuild(path) {
   const url = new URL(path, productionModuleBase);
@@ -16,16 +15,7 @@ const webPlatform = createWebPlatform();
 installTurnPlatform(webPlatform);
 document.documentElement.dataset.turnPlatform = 'web-adapter';
 const turnNextBadgeDetail = document.querySelector('.turn-next-badge span');
-if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M1 · Safe Zone M3 · Limit M4.2';
-
-const steadyLimitStylesheet = document.createElement('link');
-steadyLimitStylesheet.rel = 'stylesheet';
-steadyLimitStylesheet.href = new URL(
-  './steering-limit-warning.css?source=20260728-r110&stage=inertial-limit-m4-2',
-  turnNextModuleBase
-).href;
-steadyLimitStylesheet.setAttribute('data-turn-next-steady-limit', '');
-document.head.appendChild(steadyLimitStylesheet);
+if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M1 · Product Parity';
 
 function installStylesheet(path, dataAttribute) {
   if (document.querySelector(`link[${dataAttribute}]`)) return;
@@ -37,6 +27,7 @@ function installStylesheet(path, dataAttribute) {
 }
 
 installStylesheet('./r104-polish.css', 'data-turn-r104-polish');
+installStylesheet('./steering-limit-warning.css', 'data-turn-steering-limit-warning');
 
 const { installPerformanceProfile } = await import(withBuild('./performance-profile.js'));
 installPerformanceProfile();
@@ -71,10 +62,10 @@ installAudioPreferences({ driveByEarGraphAvailable: driveByEarEnabled });
 const { installTurnAudio } = await import(withBuild('./audio/audio-system.js'));
 installTurnAudio();
 
-const { installTurnNextSteeringLimitWarning } = await import(
-  new URL('./steering-limit-warning.js?source=20260728-r110&stage=inertial-limit-m4-2', turnNextModuleBase).href
+const { installSteeringLimitWarning } = await import(
+  withBuild('./ui/steering-limit-warning.js')
 );
-installTurnNextSteeringLimitWarning();
+installSteeringLimitWarning();
 
 if (driveByEarEnabled) {
   organicRibbon.installOrganicRibbon();
