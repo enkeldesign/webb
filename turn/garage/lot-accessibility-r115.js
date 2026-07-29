@@ -12,12 +12,12 @@ const STAT_FIELDS = Object.freeze([
 export function installLotAccessibility(root = document.body) {
   const screen = root.querySelector('.lot-screen');
   const carPicker = screen?.querySelector('.lot-car-picker');
-  const paintHost = screen?.querySelector('.lot-paint-a11y-host');
+  const paintPanel = screen?.querySelector('.lot-viewbox');
   const colors = screen?.querySelector('.lot-colors');
   const card = screen?.querySelector('.lot-card');
   const stats = screen?.querySelector('.lot-stats');
 
-  if (!screen || !carPicker || !paintHost || !colors || !card || !stats) return () => {};
+  if (!screen || !carPicker || !paintPanel || !colors || !card || !stats) return () => {};
 
   const chooseCarHeading = makeHiddenHeading('lot-choose-car-heading', 'Choose car');
   carPicker.insertAdjacentElement('beforebegin', chooseCarHeading);
@@ -47,8 +47,7 @@ export function installLotAccessibility(root = document.body) {
   carPicker.insertAdjacentElement('afterend', descriptions);
 
   const paintHeading = makeHiddenHeading('lot-paint-heading', 'Choose car colour');
-  paintHost.prepend(paintHeading);
-  paintHost.setAttribute('aria-labelledby', paintHeading.id);
+  colors.insertAdjacentElement('beforebegin', paintHeading);
   colors.setAttribute('role', 'group');
   colors.setAttribute('aria-labelledby', paintHeading.id);
   colors.removeAttribute('aria-label');
