@@ -26,7 +26,7 @@ export function buildTurnNextApp(productionApp, release) {
   output = replaceRequired(
     output,
     "const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';\n\nfunction withBuild(path) {\n  const url = new URL(path, import.meta.url);",
-    "const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';\nconst productionModuleBase = new URL('/turn/', globalThis.location?.href || 'https://enkel.design/turn-next/');\nconst platformModuleBase = new URL('/turn/platform/', globalThis.location?.href || 'https://enkel.design/turn-next/');\nconst turnNextModuleBase = new URL('/turn-next/', globalThis.location?.href || 'https://enkel.design/turn-next/');\n\nfunction withBuild(path) {\n  const url = new URL(path, productionModuleBase);",
+    "const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';\nconst productionModuleBase = new URL('/turn/', globalThis.location?.href || 'https://enkel.design/turn-next/');\nconst platformModuleBase = new URL('/turn/platform/', globalThis.location?.href || 'https://enkel.design/turn-next/');\n\nfunction withBuild(path) {\n  const url = new URL(path, productionModuleBase);",
     'module URL resolver'
   );
 
@@ -37,13 +37,9 @@ export function buildTurnNextApp(productionApp, release) {
 const { installTurnPlatform } = await import(new URL('./platform-context.js', platformModuleBase).href);
 const webPlatform = createWebPlatform();
 installTurnPlatform(webPlatform);
-const { installTurnNextOrientationFreeze } = await import(
-  new URL('./orientation-freeze.js?source=${release.cacheKey}&stage=orientation-m2-1', turnNextModuleBase).href
-);
-installTurnNextOrientationFreeze({ platform: webPlatform });
 document.documentElement.dataset.turnPlatform = 'web-adapter';
 const turnNextBadgeDetail = document.querySelector('.turn-next-badge span');
-if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M1 · Orientation M2.1';
+if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M1 · Safe Zone M3';
 
 function installStylesheet(path, dataAttribute) {`,
     'platform composition point'
@@ -60,19 +56,13 @@ function installStylesheet(path, dataAttribute) {`,
 
   assert.match(output, /const productionModuleBase = new URL\('\/turn\/'/);
   assert.match(output, /const platformModuleBase = new URL\('\/turn\/platform\/'/);
-  assert.match(output, /const turnNextModuleBase = new URL\('\/turn-next\/'/);
   assert.match(output, /installTurnPlatform\(webPlatform\)/);
-  assert.match(output, /installTurnNextOrientationFreeze\(\{ platform: webPlatform \}\)/);
-  assert.match(output, /orientation-freeze\.js\?source=.*&stage=orientation-m2-1/);
   assert.match(output, /dataset\.turnPlatform = 'web-adapter'/);
-  assert.match(output, /Platform M1 · Orientation M2\.1/);
+  assert.match(output, /Platform M1 · Safe Zone M3/);
+  assert.doesNotMatch(output, /orientation-freeze|installTurnNextOrientationFreeze|Orientation M2/);
   assert.ok(
     output.indexOf('installTurnPlatform(webPlatform)') < output.indexOf("withBuild('./main.js')"),
     'TURN NEXT must install its platform before the game core loads.'
-  );
-  assert.ok(
-    output.indexOf('installTurnNextOrientationFreeze') < output.indexOf("withBuild('./main.js')"),
-    'TURN NEXT must install visual orientation compensation before the game core loads.'
   );
   assert.match(output, /new URL\(path, productionModuleBase\)/);
   assert.doesNotMatch(output, /new URL\(path, import\.meta\.url\)/);

@@ -2,6 +2,7 @@ import { getTurnPlatform } from '../platform/platform-context.js';
 
 const STEERING_ENTER_THRESHOLD = degToRad(2.2);
 const STEERING_EXIT_THRESHOLD = degToRad(0.9);
+const MAX_CONFIGURED_SAFE_ZONE_DEGREES = 45;
 
 export function motionPoseFromGravity(event) {
   const gravity = event?.accelerationIncludingGravity;
@@ -14,6 +15,23 @@ export function motionPoseFromGravity(event) {
     roll: getScreenSpaceRoll(gravity),
     pitch: Math.atan2(gravity.z, planarGravity)
   };
+}
+
+export function resolveSteeringRollLimit(
+  fallbackRadians,
+  configuration = globalThis.__TURN_MOTION_SAFE_ZONE__
+) {
+  const configuredDegrees = Number(configuration?.steeringDegrees ?? configuration?.degrees);
+  if (
+    Number.isFinite(configuredDegrees)
+    && configuredDegrees > 0
+    && configuredDegrees <= MAX_CONFIGURED_SAFE_ZONE_DEGREES
+  ) {
+    return degToRad(configuredDegrees);
+  }
+
+  const fallback = Number(fallbackRadians);
+  return Number.isFinite(fallback) && fallback > 0 ? fallback : degToRad(14);
 }
 
 export function updateMotionInputState({ state, dt, maxSteerRoll }) {
@@ -30,6 +48,7 @@ export function updateMotionInputState({ state, dt, maxSteerRoll }) {
 
   const steeringRoll = normalizeAngle(state.roll - state.neutralRoll);
   const steeringMagnitude = Math.abs(steeringRoll);
+  const steeringRollLimit = resolveSteeringRollLimit(maxSteerRoll);
 
   state.steeringEngaged ??= false;
 
@@ -41,7 +60,7 @@ export function updateMotionInputState({ state, dt, maxSteerRoll }) {
 
   let desiredSteering = 0;
   if (state.steeringEngaged) {
-    const availableRoll = Math.max(0.001, maxSteerRoll - STEERING_EXIT_THRESHOLD);
+    const availableRoll = Math.max(0.001, steeringRollLimit - STEERING_EXIT_THRESHOLD);
     const linearSteer = clamp(
       (steeringMagnitude - STEERING_EXIT_THRESHOLD) / availableRoll,
       0,

@@ -12,13 +12,14 @@ assert.equal(manualStep(-1), 1, 'manual left should steer the car left');
 assert.equal(manualStep(1), -1, 'manual right should steer the car right');
 assert.equal(manualStep(0), 0, 'centered manual steering should stay centered');
 
-const [index, releaseSource, css, orientationGuardCss, orientationCompat, camera] = await Promise.all([
+const [index, releaseSource, css, orientationGuardCss, orientationCompat, camera, motion] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/manual-steering.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/orientation-guard.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/orientation-compat.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/render/camera.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/render/camera.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/input/motion.js', import.meta.url), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -44,8 +45,10 @@ assert.match(orientationGuardCss, /turn-steering-limit-near/, 'Approaching the s
 assert.match(orientationGuardCss, /turn-steering-limit-hard/, 'The hard steering guard must have stronger visual feedback');
 assert.match(orientationGuardCss, /prefers-reduced-motion: reduce/, 'Orientation feedback must respect reduced-motion preferences');
 
-assert.match(orientationCompat, /STEERING_LIMIT_NEAR = 13 \* Math\.PI \/ 180/, 'Steering-limit feedback must begin before the camera guard');
-assert.match(orientationCompat, /STEERING_LIMIT_HARD = 17 \* Math\.PI \/ 180/, 'The stronger warning must arrive just before the 18-degree camera clamp');
+assert.match(orientationCompat, /configuredDegrees\('degrees', 17\)/, 'Production must retain the existing 17-degree hard-feedback fallback');
+assert.match(orientationCompat, /configuredHardLimitDegrees - 4/, 'Near feedback must remain four degrees before the configured hard limit');
+assert.match(orientationCompat, /configuredHardLimitDegrees - 6\.5/, 'Feedback hysteresis must clear below the configured limit');
+assert.match(orientationCompat, /globalThis\.__TURN_MOTION_SAFE_ZONE__/, 'A host may configure a different motion-safe envelope');
 assert.match(orientationCompat, /document\.body\.classList\.toggle\('turn-race-active', gameplayActive\)/, 'Race lifecycle must control the orientation-warning suppression class');
 assert.match(orientationCompat, /gameplayAngle = computedAngle\(\)/, 'The race must freeze its starting motion-axis orientation');
 assert.match(orientationCompat, /return gameplayActive && gameplayAngle != null \? gameplayAngle : computedAngle\(\)/, 'Live viewport flips must not remap steering while racing');
@@ -61,9 +64,13 @@ assert.match(orientationCompat, /window\.addEventListener\('pageshow'/, 'Returni
 assert.match(orientationCompat, /navigator\.vibrate\?\.\(pattern\)/, 'Approaching the guard should provide haptic feedback where supported');
 assert.match(orientationCompat, /window\.addEventListener\('turn:ui-state-change'/, 'The guard must follow the actual race lifecycle rather than viewport shape alone');
 
-assert.match(camera, /MAX_SENSOR_CAMERA_ROLL = 18 \* Math\.PI \/ 180/, 'Race camera roll must stop before device over-rotation');
+assert.match(camera, /DEFAULT_MAX_SENSOR_CAMERA_ROLL = 18 \* Math\.PI \/ 180/, 'Production horizon levelling must retain its existing 18-degree fallback');
+assert.match(camera, /resolveSensorCameraRollLimit/, 'The camera must accept a host-configured safe-zone clamp');
 assert.match(camera, /state\.roll - neutralRoll/, 'Camera horizon roll must be relative to the calibrated steering neutral');
-assert.match(camera, /clamp\(relativeRoll, -MAX_SENSOR_CAMERA_ROLL, MAX_SENSOR_CAMERA_ROLL\)/, 'Camera roll must be hard-clamped at the guard limit');
+assert.match(camera, /clamp\(relativeRoll, -maxSensorCameraRoll, maxSensorCameraRoll\)/, 'Camera roll must be hard-clamped at the resolved safe-zone limit');
 assert.doesNotMatch(camera, /camera\.rotateZ\(-state\.roll\)/, 'The camera must never again follow raw sensor roll toward a portrait flip');
 
-console.log(`TURN ${release.id} manual steering and race orientation guard passed.`);
+assert.match(motion, /resolveSteeringRollLimit/);
+assert.match(motion, /return Number\.isFinite\(fallback\) && fallback > 0 \? fallback : degToRad\(14\)/, 'Production steering must retain its existing 14-degree fallback');
+
+console.log(`TURN ${release.id} manual steering and configurable race orientation guard passed.`);

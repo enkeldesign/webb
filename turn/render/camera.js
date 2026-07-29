@@ -1,4 +1,19 @@
-const MAX_SENSOR_CAMERA_ROLL = 18 * Math.PI / 180;
+const DEFAULT_MAX_SENSOR_CAMERA_ROLL = 18 * Math.PI / 180;
+const MAX_CONFIGURED_SAFE_ZONE_DEGREES = 45;
+
+export function resolveSensorCameraRollLimit(
+  configuration = globalThis.__TURN_MOTION_SAFE_ZONE__
+) {
+  const configuredDegrees = Number(configuration?.horizonDegrees ?? configuration?.degrees);
+  if (
+    Number.isFinite(configuredDegrees)
+    && configuredDegrees > 0
+    && configuredDegrees <= MAX_CONFIGURED_SAFE_ZONE_DEGREES
+  ) {
+    return configuredDegrees * Math.PI / 180;
+  }
+  return DEFAULT_MAX_SENSOR_CAMERA_ROLL;
+}
 
 export function updateRaceCameraState({
   state,
@@ -60,7 +75,8 @@ export function updateRaceCameraState({
   if (state.sensorMode) {
     const neutralRoll = Number.isFinite(state.neutralRoll) ? state.neutralRoll : 0;
     const relativeRoll = normalizeAngle(state.roll - neutralRoll);
-    const guardedRoll = clamp(relativeRoll, -MAX_SENSOR_CAMERA_ROLL, MAX_SENSOR_CAMERA_ROLL);
+    const maxSensorCameraRoll = resolveSensorCameraRollLimit();
+    const guardedRoll = clamp(relativeRoll, -maxSensorCameraRoll, maxSensorCameraRoll);
     camera.rotateZ(-guardedRoll);
   }
 
