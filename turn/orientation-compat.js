@@ -20,11 +20,31 @@
     return;
   }
 
+  const MAX_CONFIGURED_SAFE_ZONE_DEGREES = 45;
+  const motionSafeZone = globalThis.__TURN_MOTION_SAFE_ZONE__;
+
+  function configuredDegrees(key, fallback) {
+    const value = Number(motionSafeZone?.[key]);
+    return Number.isFinite(value) && value > 0 && value <= MAX_CONFIGURED_SAFE_ZONE_DEGREES
+      ? value
+      : fallback;
+  }
+
+  const configuredHardLimitDegrees = configuredDegrees(
+    'feedbackHardDegrees',
+    configuredDegrees('degrees', 17)
+  );
   const SENSOR_OFFSETS = [0, 90, -90];
   const SENSOR_CALIBRATION_SAMPLES = 8;
-  const STEERING_LIMIT_NEAR = 13 * Math.PI / 180;
-  const STEERING_LIMIT_HARD = 17 * Math.PI / 180;
-  const STEERING_LIMIT_CLEAR = 10.5 * Math.PI / 180;
+  const STEERING_LIMIT_NEAR = configuredDegrees(
+    'feedbackNearDegrees',
+    Math.max(1, configuredHardLimitDegrees - 4)
+  ) * Math.PI / 180;
+  const STEERING_LIMIT_HARD = configuredHardLimitDegrees * Math.PI / 180;
+  const STEERING_LIMIT_CLEAR = configuredDegrees(
+    'feedbackClearDegrees',
+    Math.max(1, configuredHardLimitDegrees - 6.5)
+  ) * Math.PI / 180;
   const sensorScores = new Array(SENSOR_OFFSETS.length).fill(0);
   let sensorSamples = 0;
   let sensorOffset = 0;
