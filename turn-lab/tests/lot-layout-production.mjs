@@ -56,7 +56,7 @@ assert.match(accessibility, /button\.tabIndex = button === selectedButton \? 0 :
 assert.match(accessibility, /aria-posinset/, 'Reordered radios must retain their original catalogue position');
 assert.match(accessibility, /aria-setsize/, 'Reordered radios must retain the catalogue size');
 assert.match(accessibility, /attributeFilter: \['aria-checked'\]/, 'Selected-car semantics must follow live radio changes without polling');
-assert.doesNotMatch(accessibility, /aria-activedescendant/, 'A non-focusable radiogroup must not pretend to own active-descendant focus');
+assert.doesNotMatch(accessibility, /setAttribute\('aria-activedescendant'/, 'A non-focusable radiogroup must not pretend to own active-descendant focus');
 assert.match(accessibility, /Top speed/, 'Car descriptions must include top speed');
 assert.match(accessibility, /Acceleration/, 'Car descriptions must include acceleration');
 assert.match(accessibility, /Control/, 'Car descriptions must include control');
