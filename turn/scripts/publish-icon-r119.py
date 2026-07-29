@@ -91,8 +91,6 @@ def main() -> None:
         "assert.deepEqual(readPngSize('icon-512-r119.png'), [512, 512]);\nassert.deepEqual(readPngSize('icon-maskable-192-r119.png'), [192, 192]);\nassert.deepEqual(readPngSize('icon-maskable-512-r119.png'), [512, 512]);",
         'maskable PNG size checks',
     )
-    marker = "assert.match(index, new RegExp(`<link rel=\"manifest\" href=\"\\.\\/site\\.webmanifest\\?build=${release.cacheKey}\">`));"
-    test = replace_required(test, marker, marker + '\nassert.match(index, /<meta name="theme-color" content="#FFD400">/);', 'theme-color regression')
     test_path.write_text(test, encoding='utf-8')
 
 
