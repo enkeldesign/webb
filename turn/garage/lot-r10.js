@@ -13,41 +13,60 @@ import { recordPerformanceFrame } from '../performance-monitor.js?build=20260720
 
 const UNSELECTED_COLOR = new THREE.Color(0x313131);
 const VIEWER_INITIAL_YAW = Math.PI - 0.55;
+const CAR_DESCRIPTIONS = Object.freeze({
+  convertible: 'A low, open-top sports car with a long bonnet and compact cabin.',
+  classic: 'A small, upright classic car with rounded bodywork and a friendly shape.',
+  'vintage-racer': 'A narrow vintage racing car with exposed wheels and a long nose.',
+  'toy-racer': 'A compact single-seat racing car with exposed wheels and a playful toy-like shape.',
+  'monster-truck': 'A tall off-road truck with oversized tyres and a short, chunky body.',
+  'race-future': 'A sleek futuristic racing car with a low cockpit and aerodynamic body.',
+  race: 'A low single-seat race car with exposed wheels and a large rear wing.',
+  'sedan-sports': 'A sporty four-door sedan with a low stance and rear spoiler.',
+  sedan: 'A balanced four-door family car with a conventional three-box shape.',
+  suv: 'A high-riding sport utility vehicle with a broad body and practical proportions.',
+  'suv-luxury': 'A large premium SUV with a tall body, wide grille and substantial presence.',
+  'hatchback-sports': 'A compact sporty hatchback with a short rear and planted stance.',
+  'truck-flat': 'A work truck with a cab at the front and an open flatbed behind it.',
+  truck: 'A sturdy pickup truck with a separate cab and cargo bed.',
+  van: 'A tall enclosed van with a boxy body and short bonnet.'
+});
 
 export function showTheLot({ initialSelection } = {}) {
   return new Promise((resolve) => {
     const selection = normalizeVehicleSelection(initialSelection);
     const overlay = document.createElement('section');
     overlay.className = 'lot-screen';
-    overlay.setAttribute('aria-label', 'The Lot car selection');
+    overlay.setAttribute('aria-labelledby', 'lot-title');
     overlay.innerHTML = `
       <div class="lot-canvas-host" aria-hidden="true"></div>
       <header class="lot-heading">
-        <span>TURN GARAGE</span>
-        <h1>THE LOT</h1>
+        <h1 id="lot-title">THE LOT</h1>
         <p>Pick a ride. Then paint it.</p>
       </header>
       <button class="lot-back" type="button" aria-label="Back to start">×</button>
 
+      <div class="lot-car-picker" role="radiogroup" aria-label="Choose a car"></div>
+
       <div class="lot-side">
-        <section class="lot-viewbox" aria-label="Rotatable 3D view of selected car">
+        <section class="lot-viewbox" aria-hidden="true">
           <div class="lot-viewbox-head">
             <span>3D VIEW</span>
-            <button class="lot-view-close" type="button" aria-label="Close 3D car view">×</button>
+            <button class="lot-view-close" type="button" tabindex="-1">×</button>
           </div>
           <div class="lot-view-host"></div>
           <small>DRAG TO ROTATE</small>
         </section>
 
-        <aside class="lot-card" aria-live="polite">
+        <aside class="lot-card">
           <div class="lot-car-title">
             <span>YOUR RIDE</span>
             <strong></strong>
           </div>
+          <p class="lot-car-description"></p>
           <div class="lot-stats"></div>
           <div class="lot-colors" aria-label="Choose car paint colours"></div>
           <div class="lot-card-actions">
-            <button class="lot-view-open" type="button" hidden>VIEW 3D</button>
+            <button class="lot-view-open" type="button" hidden aria-hidden="true" tabindex="-1">VIEW 3D</button>
             <button class="lot-race" type="button">RACE THIS CAR</button>
           </div>
         </aside>
@@ -60,15 +79,15 @@ export function showTheLot({ initialSelection } = {}) {
 
     const host = overlay.querySelector('.lot-canvas-host');
     const title = overlay.querySelector('.lot-car-title strong');
+    const description = overlay.querySelector('.lot-car-description');
     const stats = overlay.querySelector('.lot-stats');
     const colors = overlay.querySelector('.lot-colors');
+    const carPicker = overlay.querySelector('.lot-car-picker');
     const raceButton = overlay.querySelector('.lot-race');
     const backButton = overlay.querySelector('.lot-back');
     const loading = overlay.querySelector('.lot-loading');
     const viewbox = overlay.querySelector('.lot-viewbox');
     const viewHost = overlay.querySelector('.lot-view-host');
-    const viewClose = overlay.querySelector('.lot-view-close');
-    const viewOpen = overlay.querySelector('.lot-view-open');
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x8ed8ff);
@@ -100,11 +119,24 @@ export function showTheLot({ initialSelection } = {}) {
     const hitTargets = [];
     const carRoots = new Map();
     const platforms = new Map();
+    const carButtons = new Map();
     let selectedCarId = selection.carId;
     let selectedColor = selection.color;
     let selectedSecondaryColor = selection.secondaryColor;
     let disposed = false;
     let loadedCars = 0;
+
+    for (const car of CAR_CATALOG) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'lot-car-option';
+      button.setAttribute('role', 'radio');
+      button.dataset.carId = car.id;
+      button.textContent = car.name;
+      button.addEventListener('click', () => selectCar(car.id));
+      carPicker.appendChild(button);
+      carButtons.set(car.id, button);
+    }
 
     const positions = CAR_CATALOG.map((car, index) => ({
       car,
@@ -162,13 +194,24 @@ export function showTheLot({ initialSelection } = {}) {
     function updateSelectionUi({ refreshViewer = true } = {}) {
       const car = getCarDefinition(selectedCarId);
       title.textContent = car.name;
+      description.textContent = CAR_DESCRIPTIONS[car.id] || 'A selectable car in The Lot.';
       stats.replaceChildren(...makeStats(car.stats));
+      raceButton.setAttribute('aria-label', `Race the ${car.name}`);
+
+      for (const [carId, button] of carButtons) {
+        const selected = carId === selectedCarId;
+        button.setAttribute('aria-checked', String(selected));
+        button.tabIndex = selected ? 0 : -1;
+        button.setAttribute('aria-label', `${getCarDefinition(carId).name}. ${CAR_DESCRIPTIONS[carId] || ''}`.trim());
+      }
+
       const paintControls = [makeColorInput({
         label: 'Body',
         value: selectedColor,
         onInput(value) {
           selectedColor = normalizeVehicleColor(value);
           applySelectedPaint();
+          updatePaintAccessibleNames();
         }
       })];
       if (car.secondaryPaint) {
@@ -179,10 +222,12 @@ export function showTheLot({ initialSelection } = {}) {
           onInput(value) {
             selectedSecondaryColor = normalizeVehicleSecondaryColor(value);
             applySelectedPaint();
+            updatePaintAccessibleNames();
           }
         }));
       }
       colors.replaceChildren(...paintControls);
+      updatePaintAccessibleNames();
 
       for (const [carId, platform] of platforms) {
         setParkingPadSelected(platform, carId === selectedCarId);
@@ -197,7 +242,7 @@ export function showTheLot({ initialSelection } = {}) {
       if (refreshViewer) void viewer.show(selectedCarId, selectedColor, selectedSecondaryColor);
     }
 
-    function selectCar(carId) {
+    function selectCar(carId, { focus = false } = {}) {
       if (!carId) return;
       const changedCar = carId !== selectedCarId;
       selectedCarId = carId;
@@ -206,12 +251,26 @@ export function showTheLot({ initialSelection } = {}) {
         selectedSecondaryColor = DEFAULT_VEHICLE_SECONDARY_COLOR;
       }
       updateSelectionUi();
+      if (focus) carButtons.get(carId)?.focus();
       navigator.vibrate?.(16);
     }
+
+    carPicker.addEventListener('keydown', (event) => {
+      const currentIndex = CAR_CATALOG.findIndex((car) => car.id === selectedCarId);
+      let nextIndex = currentIndex;
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') nextIndex = (currentIndex + 1) % CAR_CATALOG.length;
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') nextIndex = (currentIndex - 1 + CAR_CATALOG.length) % CAR_CATALOG.length;
+      if (event.key === 'Home') nextIndex = 0;
+      if (event.key === 'End') nextIndex = CAR_CATALOG.length - 1;
+      if (nextIndex === currentIndex) return;
+      event.preventDefault();
+      selectCar(CAR_CATALOG[nextIndex].id, { focus: true });
+    });
 
     function makeColorInput({ label, value, secondary = false, onInput }) {
       const control = document.createElement('label');
       control.className = 'lot-color-control';
+      control.dataset.paintLabel = label;
 
       const name = document.createElement('span');
       name.textContent = label.toUpperCase();
@@ -222,11 +281,19 @@ export function showTheLot({ initialSelection } = {}) {
       input.value = secondary
         ? normalizeVehicleSecondaryColor(value)
         : normalizeVehicleColor(value);
-      input.setAttribute('aria-label', `Choose ${label.toLowerCase()} colour`);
       input.addEventListener('input', () => onInput(input.value));
 
       control.append(name, input);
       return control;
+    }
+
+    function updatePaintAccessibleNames() {
+      colors.querySelectorAll('.lot-color-control').forEach((control) => {
+        const input = control.querySelector('input');
+        const label = control.dataset.paintLabel || 'Paint';
+        const colourName = describeHexColor(input.value);
+        input.setAttribute('aria-label', `${label} colour. ${colourName}`);
+      });
     }
 
     function applySelectedPaint() {
@@ -245,21 +312,6 @@ export function showTheLot({ initialSelection } = {}) {
       const hits = raycaster.intersectObjects([...hitTargets, ...carRoots.values()], true);
       const carId = hits.map((hit) => findCarId(hit.object)).find(Boolean);
       selectCar(carId);
-    });
-
-    viewClose.addEventListener('click', () => {
-      viewbox.hidden = true;
-      viewOpen.hidden = false;
-      overlay.classList.add('is-view-closed');
-      resize();
-    });
-
-    viewOpen.addEventListener('click', () => {
-      viewbox.hidden = false;
-      viewOpen.hidden = true;
-      overlay.classList.remove('is-view-closed');
-      resize();
-      viewer.resize();
     });
 
     raceButton.addEventListener('click', () => finish({
@@ -537,17 +589,56 @@ function findCarId(object) {
 function makeStats(vehicleStats) {
   const rows = [
     ['TOP SPEED', vehicleStats.speed],
-    ['ACCEL', vehicleStats.acceleration],
+    ['ACCELERATION', vehicleStats.acceleration],
     ['CONTROL', vehicleStats.control],
     ['DRIFT', vehicleStats.drift],
-    ['BOOST', vehicleStats.boostPower],
+    ['BOOST POWER', vehicleStats.boostPower],
     ['BOOST TANK', vehicleStats.boostDuration]
   ];
 
   return rows.map(([label, value]) => {
     const row = document.createElement('div');
     row.className = 'lot-stat';
-    row.innerHTML = `<span>${label}</span><i>${Array.from({ length: 5 }, (_, index) => `<b class="${index < value ? 'is-full' : ''}"></b>`).join('')}</i>`;
+    row.setAttribute('aria-label', `${label}. ${value} out of 5.`);
+    row.innerHTML = `<span aria-hidden="true">${label}</span><i aria-hidden="true">${Array.from({ length: 5 }, (_, index) => `<b class="${index < value ? 'is-full' : ''}"></b>`).join('')}</i>`;
     return row;
   });
+}
+
+function describeHexColor(hex) {
+  const clean = String(hex || '').replace('#', '').trim();
+  if (!/^[0-9a-f]{6}$/i.test(clean)) return 'custom colour';
+  const r = parseInt(clean.slice(0, 2), 16) / 255;
+  const g = parseInt(clean.slice(2, 4), 16) / 255;
+  const b = parseInt(clean.slice(4, 6), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const lightness = (max + min) / 2;
+  const delta = max - min;
+  const saturation = delta === 0 ? 0 : delta / (1 - Math.abs(2 * lightness - 1));
+  let hue = 0;
+  if (delta !== 0) {
+    if (max === r) hue = 60 * (((g - b) / delta) % 6);
+    else if (max === g) hue = 60 * (((b - r) / delta) + 2);
+    else hue = 60 * (((r - g) / delta) + 4);
+  }
+  if (hue < 0) hue += 360;
+
+  if (lightness < 0.09) return 'black';
+  if (lightness > 0.94 && saturation < 0.16) return 'white';
+  if (saturation < 0.12) {
+    if (lightness < 0.32) return 'dark grey';
+    if (lightness > 0.72) return 'light grey';
+    return 'grey';
+  }
+
+  const names = [
+    [15, 'red'], [42, 'orange'], [68, 'yellow'], [105, 'yellow green'],
+    [165, 'green'], [195, 'turquoise'], [225, 'blue'], [255, 'indigo'],
+    [285, 'violet'], [330, 'magenta'], [360, 'red']
+  ];
+  const base = names.find(([limit]) => hue < limit)?.[1] || 'red';
+  if (lightness < 0.28) return `dark ${base}`;
+  if (lightness > 0.74) return `light ${base}`;
+  return base;
 }
