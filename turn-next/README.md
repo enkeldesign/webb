@@ -33,15 +33,19 @@ Limit M4 replaces the former whole-screen yellow border with directional feedbac
 - Every fresh hard-edge crossing plays a short two-part cue through TURN’s existing audio system.
 - VoiceOver announces `Left steering limit reached.` and `Right steering limit reached.` only the first time each side is reached during a race session.
 
-Limit M4.1 removes all visual flashing and makes the warning continuously damped:
+Limit M4.1 removed all visual flashing and replaced the hard-edge animation with continuously changing width and opacity.
 
-- The maximum gradient width is reduced from `18vw / 220px` to `10vw / 124px`.
-- At first visibility the gradient occupies only a small part of that width and has low opacity.
-- Both width and opacity grow continuously with the measured limit intensity and reach full strength at `24°`.
-- Approaching the limit uses a soft `260ms` transition.
-- Returning from the limit uses a slower `420ms` transition so hovering around `19°` cannot create rapid on/off blooming.
-- There are no CSS keyframes, blink classes or opacity flashes.
-- Audio, haptics and the first-per-side VoiceOver announcements remain unchanged.
+Limit M4.2 adds true visual inertia after physical testing still showed threshold shimmer and nervous movement during fast curves:
+
+- The maximum gradient is halved again, from `10vw / 124px` to `5vw / 62px`.
+- CSS transitions no longer chase every sensor update.
+- A request-animation-frame controller owns the displayed opacity and width independently from the latest sensor target.
+- A brief `300ms` hold absorbs momentary drops below the `19°` visibility threshold.
+- Increasing warning strength uses a `360ms` exponential time constant.
+- Decreasing warning strength uses a slower `780ms` exponential time constant.
+- The visual therefore approaches and recedes continuously instead of repeatedly restarting a transition.
+- There are no keyframes, blink classes, opacity flashes or abrupt visual changes at the `24°` edge.
+- Audio, haptics and the first-per-side VoiceOver announcements remain unchanged and still use the existing `22°` hard-cue rearm threshold.
 
 The shared production modules now accept an optional safe-zone configuration, but production `/turn/` retains its existing steering, horizon and feedback limits when no configuration is installed. This lets TURN NEXT test the larger range and directional warning without silently changing the live game.
 
