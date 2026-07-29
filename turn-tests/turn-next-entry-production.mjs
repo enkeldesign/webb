@@ -134,7 +134,8 @@ assert.doesNotMatch(steeringLimitWarning, /FLASH_DURATION|is-flashing|function f
 assert.match(steeringLimitWarningCss, /turn-steering-limit-edge-left/);
 assert.match(steeringLimitWarningCss, /turn-steering-limit-edge-right/);
 assert.match(steeringLimitWarningCss, /width: clamp\(28px, 5vw, 62px\)/);
-assert.doesNotMatch(steeringLimitWarningCss, /transition|animation|@keyframes|is-flashing/);
+assert.match(steeringLimitWarningCss, /transition: none/);
+assert.doesNotMatch(steeringLimitWarningCss, /transition-duration|animation|@keyframes|is-flashing/);
 
 assert.match(platformContext, /installTurnPlatform/);
 assert.match(platformContext, /requireTurnPlatform/);
