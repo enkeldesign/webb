@@ -34,7 +34,7 @@ export function installDriveByEarSetting({ reload = reloadPage } = {}) {
   card.innerHTML = `
     <div class="drive-by-ear-copy">
       <h2 id="driveByEarTitle">DRIVE BY EAR<sup>™</sup></h2>
-      <p>Spatial sound turns the track into something you can follow by ear: corner pace notes, road-edge feedback, recovery guidance, drift direction and nearby rivals.</p>
+      <p>Spatial sound helps you read the racing line, upcoming corners, grip, off-road recovery and nearby rivals.</p>
     </div>
     <label class="drive-by-ear-toggle" for="driveByEarToggle">
       <input id="driveByEarToggle" type="checkbox">

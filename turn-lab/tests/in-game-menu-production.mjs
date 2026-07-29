@@ -56,7 +56,31 @@ assert.match(menu, /id="turnAudioEnabled"/);
 assert.match(menu, /id="turnDbeEnabled"/);
 assert.match(menu, /id="turnAudioBalance" type="range"/);
 assert.match(menu, /Other sounds/);
-assert.match(menu, /Drive By Ear sound guide/);
+assert.match(menu, /<summary>Drive By Ear sound guide<\/summary>/);
+assert.match(menu, /class="audio-guide-intro"/);
+assert.match(menu, /class="audio-guide-basics"/);
+assert.match(menu, /Steer <strong>toward<\/strong> the warm guiding hum/);
+assert.doesNotMatch(menu, /steer away/i, 'The current ribbon points toward the correction and must never inherit the retired Slider instruction');
+for (const heading of [
+  'Start here',
+  'The guiding ribbon',
+  'Pace notes',
+  'Off-road recovery',
+  'Drift and grip',
+  'Nearby rivals',
+  'Wrong way',
+  'Sound balance and priority'
+]) {
+  assert.ok(menu.includes(`>${heading}<`), `The DBE guide must include ${heading}`);
+}
+assert.match(menu, /Pace notes tell you what comes next/);
+assert.match(menu, /one to three short beeps/);
+assert.match(menu, /delayed extra beep on the same side marks a long corner/);
+assert.match(menu, /Off road, centred gravel marks the surface/);
+assert.match(menu, /Tyre noise stays centred/);
+assert.match(menu, /heads-up rather than a continuous tracker/);
+assert.match(menu, /repeating double falling tone/);
+assert.match(menu, /Pace notes are deliberately prominent/);
 assert.match(menu, /saveDriveByEarEnabled\(enabled\)/);
 assert.match(menu, /setAudioEnabled/);
 assert.match(menu, /setDriveByEarEnabled/);
@@ -100,8 +124,12 @@ assert.match(menuCss, /prefers-reduced-motion: reduce/);
 assert.match(menuCss, /\.utility-group\[data-menu-state="hidden"\]/);
 assert.match(polishCss, /\.nuke-dialog-icon,\s*\.nuke-effect \{\s*display: none !important;/s);
 assert.match(polishCss, /\.audio-settings-dialog::backdrop/);
+assert.match(polishCss, /\.audio-guide-content/);
+assert.match(polishCss, /\.audio-guide-basics/);
+assert.match(polishCss, /\.audio-guide-section/);
+assert.match(polishCss, /\.audio-guide-card\[open\] \{\s*grid-column: 1 \/ -1;/s, 'The expanded guide must use the full compact landscape dialog width');
 assert.match(polishCss, /\.track-select-continue \{\s*background: var\(--selected-track-accent/s);
 assert.match(polishCss, /\.boost-hud\.is-racing > span \{\s*display: none;/s);
 assert.match(polishCss, /\.spectate-rank/);
 
-console.log(`TURN ${release.id} r104 menu, spectate, track selection and boost-label regressions passed.`);
+console.log(`TURN ${release.id} menu and expanded Drive By Ear guide regressions passed.`);
