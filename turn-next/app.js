@@ -1,4 +1,4 @@
-// Generated from turn/app.js for TURN 2026.07.30-r119. Do not edit by hand.
+// Generated from turn/app.js for TURN 2026.07.29-r118. Do not edit by hand.
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
 const productionModuleBase = new URL('/turn/', globalThis.location?.href || 'https://enkel.design/turn-next/');
 const platformModuleBase = new URL('/turn/platform/', globalThis.location?.href || 'https://enkel.design/turn-next/');
