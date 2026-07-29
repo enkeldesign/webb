@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import {
   calculateOrientationFreezeTransform,
   normalizeDegrees,
+  resolveOrientationFreezeRotation,
   snapToQuarterTurn
 } from '../turn-next/orientation-freeze.js';
 
@@ -13,6 +14,11 @@ assert.equal(normalizeDegrees(540), 180);
 assert.equal(snapToQuarterTurn(43), 0);
 assert.equal(snapToQuarterTurn(47), 90);
 assert.equal(snapToQuarterTurn(-136), 180);
+
+assert.equal(resolveOrientationFreezeRotation(90, 0), -90);
+assert.equal(resolveOrientationFreezeRotation(-90, 0), 90);
+assert.equal(resolveOrientationFreezeRotation(90, -90), 0);
+assert.equal(resolveOrientationFreezeRotation(-90, 90), 0);
 
 const portraitTurn = calculateOrientationFreezeTransform({
   lockedAngle: 90,
@@ -46,8 +52,25 @@ const oppositeLandscape = calculateOrientationFreezeTransform({
   viewportWidth: 844,
   viewportHeight: 390
 });
-assert.equal(oppositeLandscape.rotation, 180, 'The opposite landscape side must counter-rotate by a half turn');
+assert.equal(
+  oppositeLandscape.rotation,
+  0,
+  'The OS-completed landscape-side flip must remain upright without a duplicate half-turn'
+);
 assert.equal(oppositeLandscape.scale, 1);
+assert.equal(oppositeLandscape.rotatedWidth, 844);
+assert.equal(oppositeLandscape.rotatedHeight, 390);
+
+const oppositeLandscapeReverse = calculateOrientationFreezeTransform({
+  lockedAngle: -90,
+  currentAngle: 90,
+  logicalWidth: 844,
+  logicalHeight: 390,
+  viewportWidth: 844,
+  viewportHeight: 390
+});
+assert.equal(oppositeLandscapeReverse.rotation, 0);
+assert.equal(oppositeLandscapeReverse.scale, 1);
 
 const constrainedViewport = calculateOrientationFreezeTransform({
   lockedAngle: 90,
@@ -91,12 +114,15 @@ assert.match(preflight, /__TURN_NEXT_ORIENTATION_PREFLIGHT__/);
 assert.match(preflight, /getViewportSize/);
 
 assert.match(nextApp, /installTurnNextOrientationFreeze/);
-assert.match(nextApp, /Platform M1 · Orientation M2/);
+assert.match(nextApp, /Platform M1 · Orientation M2\.1/);
+assert.match(nextApp, /orientation-freeze\.js\?source=.*&stage=orientation-m2-1/);
 assert.ok(
   nextApp.indexOf('installTurnNextOrientationFreeze') < nextApp.indexOf("withBuild('./main.js')"),
   'Visual compensation must install before the production game core registers resize handlers'
 );
 
+assert.match(freezeSource, /resolveOrientationFreezeRotation/);
+assert.match(freezeSource, /Math\.abs\(rotation\) === HALF_TURN_DEGREES \? 0 : rotation/);
 assert.match(freezeSource, /turn:ui-state-change/);
 assert.match(freezeSource, /turn:runtime-ready/);
 assert.match(freezeSource, /renderer\.setSize = function setOrientationAwareSize/);

@@ -15,6 +15,16 @@ export function snapToQuarterTurn(value) {
   );
 }
 
+export function resolveOrientationFreezeRotation(lockedAngle, currentAngle) {
+  const rotation = snapToQuarterTurn(Number(currentAngle) - Number(lockedAngle));
+
+  // WebKit already turns the rendered page upright when it completes a flip from one
+  // landscape side to the other. Applying another half-turn here duplicates that OS
+  // correction and leaves TURN upside down. Only portrait quarter-turn states need
+  // visual compensation from the frozen landscape viewport.
+  return Math.abs(rotation) === HALF_TURN_DEGREES ? 0 : rotation;
+}
+
 export function calculateOrientationFreezeTransform({
   lockedAngle,
   currentAngle,
@@ -27,7 +37,7 @@ export function calculateOrientationFreezeTransform({
   const height = Math.max(1, Number(logicalHeight) || 1);
   const availableWidth = Math.max(1, Number(viewportWidth) || 1);
   const availableHeight = Math.max(1, Number(viewportHeight) || 1);
-  const rotation = snapToQuarterTurn(Number(currentAngle) - Number(lockedAngle));
+  const rotation = resolveOrientationFreezeRotation(lockedAngle, currentAngle);
   const swapsAxes = Math.abs(rotation) % HALF_TURN_DEGREES === QUARTER_TURN_DEGREES;
   const rotatedWidth = swapsAxes ? height : width;
   const rotatedHeight = swapsAxes ? width : height;

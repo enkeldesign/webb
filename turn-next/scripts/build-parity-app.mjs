@@ -38,12 +38,12 @@ const { installTurnPlatform } = await import(new URL('./platform-context.js', pl
 const webPlatform = createWebPlatform();
 installTurnPlatform(webPlatform);
 const { installTurnNextOrientationFreeze } = await import(
-  new URL('./orientation-freeze.js?source=${release.cacheKey}', turnNextModuleBase).href
+  new URL('./orientation-freeze.js?source=${release.cacheKey}&stage=orientation-m2-1', turnNextModuleBase).href
 );
 installTurnNextOrientationFreeze({ platform: webPlatform });
 document.documentElement.dataset.turnPlatform = 'web-adapter';
 const turnNextBadgeDetail = document.querySelector('.turn-next-badge span');
-if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M1 · Orientation M2';
+if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M1 · Orientation M2.1';
 
 function installStylesheet(path, dataAttribute) {`,
     'platform composition point'
@@ -63,8 +63,9 @@ function installStylesheet(path, dataAttribute) {`,
   assert.match(output, /const turnNextModuleBase = new URL\('\/turn-next\/'/);
   assert.match(output, /installTurnPlatform\(webPlatform\)/);
   assert.match(output, /installTurnNextOrientationFreeze\(\{ platform: webPlatform \}\)/);
+  assert.match(output, /orientation-freeze\.js\?source=.*&stage=orientation-m2-1/);
   assert.match(output, /dataset\.turnPlatform = 'web-adapter'/);
-  assert.match(output, /Platform M1 · Orientation M2/);
+  assert.match(output, /Platform M1 · Orientation M2\.1/);
   assert.ok(
     output.indexOf('installTurnPlatform(webPlatform)') < output.indexOf("withBuild('./main.js')"),
     'TURN NEXT must install its platform before the game core loads.'

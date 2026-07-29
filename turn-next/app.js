@@ -15,12 +15,12 @@ const { installTurnPlatform } = await import(new URL('./platform-context.js', pl
 const webPlatform = createWebPlatform();
 installTurnPlatform(webPlatform);
 const { installTurnNextOrientationFreeze } = await import(
-  new URL('./orientation-freeze.js?source=20260728-r110', turnNextModuleBase).href
+  new URL('./orientation-freeze.js?source=20260728-r110&stage=orientation-m2-1', turnNextModuleBase).href
 );
 installTurnNextOrientationFreeze({ platform: webPlatform });
 document.documentElement.dataset.turnPlatform = 'web-adapter';
 const turnNextBadgeDetail = document.querySelector('.turn-next-badge span');
-if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M1 · Orientation M2';
+if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M1 · Orientation M2.1';
 
 function installStylesheet(path, dataAttribute) {
   if (document.querySelector(`link[${dataAttribute}]`)) return;
