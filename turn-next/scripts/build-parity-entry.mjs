@@ -100,7 +100,7 @@ export function buildTurnNextEntry(productionIndex, release) {
   output = replaceRequired(
     output,
     `</script><link rel="icon"`,
-    `</script><script src="/turn-next/storage-bootstrap.js?source=${release.cacheKey}"></script><script src="/turn-next/safe-zone-bootstrap.js?source=${release.cacheKey}&stage=safe-zone-m3"></script><link rel="icon"`,
+    `</script><script src="/turn-next/storage-bootstrap.js?source=${release.cacheKey}"></script><script src="/turn-next/safe-zone-bootstrap.js?source=${release.cacheKey}&stage=directional-limit-m4"></script><link rel="icon"`,
     'staging bootstrap insertion point'
   );
   output = replaceRequired(
@@ -112,8 +112,8 @@ export function buildTurnNextEntry(productionIndex, release) {
   output = replaceRequired(
     output,
     `<link rel="stylesheet" href="./garage/lot-layout-r60.css?build=${release.cacheKey}">`,
-    `<link rel="stylesheet" href="./garage/lot-layout-r60.css?build=${release.cacheKey}"><link rel="stylesheet" href="/turn-next/identity.css?source=${release.cacheKey}"><script defer src="/turn-next/identity.js?source=${release.cacheKey}"></script>`,
-    'TURN NEXT identity assets insertion point'
+    `<link rel="stylesheet" href="./garage/lot-layout-r60.css?build=${release.cacheKey}"><link rel="stylesheet" href="/turn-next/identity.css?source=${release.cacheKey}"><link rel="stylesheet" href="/turn-next/steering-limit-warning.css?source=${release.cacheKey}&stage=directional-limit-m4"><script defer src="/turn-next/identity.js?source=${release.cacheKey}"></script>`,
+    'TURN NEXT identity and directional warning assets insertion point'
   );
   output = replaceRequired(
     output,
@@ -157,7 +157,8 @@ export function buildTurnNextEntry(productionIndex, release) {
   );
 
   assert.match(output, /<base href="\/turn\/">/);
-  assert.match(output, /src="\/turn-next\/safe-zone-bootstrap\.js\?source=.*&stage=safe-zone-m3"/);
+  assert.match(output, /src="\/turn-next\/safe-zone-bootstrap\.js\?source=.*&stage=directional-limit-m4"/);
+  assert.match(output, /href="\/turn-next\/steering-limit-warning\.css\?source=.*&stage=directional-limit-m4"/);
   assert.match(output, /src="\/turn-next\/app\.js\?source=/);
   assert.match(output, /src="\/turn-next\/storage-bootstrap\.js/);
   assert.match(output, /href="\/turn-next\/site\.webmanifest/);

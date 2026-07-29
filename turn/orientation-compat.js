@@ -22,6 +22,7 @@
 
   const MAX_CONFIGURED_SAFE_ZONE_DEGREES = 45;
   const motionSafeZone = globalThis.__TURN_MOTION_SAFE_ZONE__;
+  const directionalFeedbackEnabled = motionSafeZone?.directionalFeedback === true;
 
   function configuredDegrees(key, fallback) {
     const value = Number(motionSafeZone?.[key]);
@@ -34,6 +35,13 @@
     'feedbackHardDegrees',
     configuredDegrees('degrees', 17)
   );
+  const configuredHardRearmDegrees = Math.min(
+    configuredHardLimitDegrees,
+    configuredDegrees(
+      'feedbackHardRearmDegrees',
+      Math.max(1, configuredHardLimitDegrees - 1.5)
+    )
+  );
   const SENSOR_OFFSETS = [0, 90, -90];
   const SENSOR_CALIBRATION_SAMPLES = 8;
   const STEERING_LIMIT_NEAR = configuredDegrees(
@@ -41,6 +49,7 @@
     Math.max(1, configuredHardLimitDegrees - 4)
   ) * Math.PI / 180;
   const STEERING_LIMIT_HARD = configuredHardLimitDegrees * Math.PI / 180;
+  const STEERING_LIMIT_HARD_REARM = configuredHardRearmDegrees * Math.PI / 180;
   const STEERING_LIMIT_CLEAR = configuredDegrees(
     'feedbackClearDegrees',
     Math.max(1, configuredHardLimitDegrees - 6.5)
@@ -56,6 +65,9 @@
   let lastResolvedRoll = 0;
   let steeringNeutralRoll = 0;
   let steeringLimitLevel = 0;
+  let hardLimitLatched = false;
+  let directionalFeedbackActive = false;
+  let lastFeedbackSide = null;
   let lockUnsupportedReported = false;
 
   function normalizeDegrees(value) {
@@ -70,6 +82,10 @@
     while (angle > Math.PI) angle -= Math.PI * 2;
     while (angle < -Math.PI) angle += Math.PI * 2;
     return angle;
+  }
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
   }
 
   function angleIsLandscape(value) {
@@ -136,9 +152,42 @@
     return gameplayActive && gameplayAngle != null ? gameplayAngle : computedAngle();
   }
 
+  function dispatchDirectionalFeedback(relativeRoll, { enteredHard = false, forceClear = false } = {}) {
+    if (!directionalFeedbackEnabled) return;
+
+    const magnitude = Math.abs(relativeRoll);
+    const side = relativeRoll < 0 ? 'left' : relativeRoll > 0 ? 'right' : lastFeedbackSide;
+    const active = !forceClear && Boolean(side) && magnitude >= STEERING_LIMIT_NEAR;
+    if (!active && !directionalFeedbackActive && !forceClear) return;
+
+    const hard = active && magnitude >= STEERING_LIMIT_HARD;
+    const range = Math.max(0.001, STEERING_LIMIT_HARD - STEERING_LIMIT_NEAR);
+    const intensity = active
+      ? clamp((magnitude - STEERING_LIMIT_NEAR) / range, 0, 1)
+      : 0;
+
+    window.dispatchEvent(new CustomEvent('turn:steering-limit-feedback', {
+      detail: {
+        active,
+        side: active ? side : null,
+        intensity,
+        hard,
+        enteredHard: active && Boolean(enteredHard),
+        magnitudeDegrees: magnitude * 180 / Math.PI,
+        nearDegrees: STEERING_LIMIT_NEAR * 180 / Math.PI,
+        hardDegrees: STEERING_LIMIT_HARD * 180 / Math.PI
+      }
+    }));
+
+    directionalFeedbackActive = active;
+    lastFeedbackSide = active ? side : null;
+  }
+
   function clearSteeringLimitFeedback() {
     steeringLimitLevel = 0;
+    hardLimitLatched = false;
     document.body.classList.remove('turn-steering-limit-near', 'turn-steering-limit-hard');
+    dispatchDirectionalFeedback(0, { forceClear: true });
   }
 
   function pulseHaptic(pattern) {
@@ -153,8 +202,17 @@
       return;
     }
 
-    const magnitude = Math.abs(normalizeRadians(roll - steeringNeutralRoll));
+    const relativeRoll = normalizeRadians(roll - steeringNeutralRoll);
+    const magnitude = Math.abs(relativeRoll);
     let nextLevel = steeringLimitLevel;
+    let enteredHard = false;
+
+    if (!hardLimitLatched && magnitude >= STEERING_LIMIT_HARD) {
+      hardLimitLatched = true;
+      enteredHard = true;
+    } else if (hardLimitLatched && magnitude <= STEERING_LIMIT_HARD_REARM) {
+      hardLimitLatched = false;
+    }
 
     if (magnitude >= STEERING_LIMIT_HARD) nextLevel = 2;
     else if (magnitude >= STEERING_LIMIT_NEAR) nextLevel = Math.max(1, nextLevel);
@@ -168,6 +226,7 @@
     steeringLimitLevel = nextLevel;
     document.body.classList.toggle('turn-steering-limit-near', nextLevel >= 1);
     document.body.classList.toggle('turn-steering-limit-hard', nextLevel >= 2);
+    dispatchDirectionalFeedback(relativeRoll, { enteredHard });
   }
 
   function currentLandscapeLockType() {
