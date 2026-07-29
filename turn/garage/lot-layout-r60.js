@@ -9,7 +9,8 @@ export function installLotLayout(root = document.body) {
 
   viewbox.hidden = false;
   viewbox.classList.add('lot-viewbox-with-paint');
-  viewbox.setAttribute('aria-label', 'Rotatable 3D view and paint controls for selected car');
+  viewbox.setAttribute('aria-hidden', 'true');
+  viewbox.removeAttribute('aria-label');
   viewbox.appendChild(colors);
 
   screen.classList.remove('is-view-closed');
