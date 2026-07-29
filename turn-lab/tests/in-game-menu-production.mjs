@@ -56,11 +56,11 @@ assert.match(menu, /id="turnAudioEnabled"/);
 assert.match(menu, /id="turnDbeEnabled"/);
 assert.match(menu, /id="turnAudioBalance" type="range"/);
 assert.match(menu, /Other sounds/);
-assert.match(menu, /<summary>How Drive By Ear works<\/summary>/);
+assert.match(menu, /<summary>Drive By Ear sound guide<\/summary>/);
 assert.match(menu, /class="audio-guide-intro"/);
 assert.match(menu, /class="audio-guide-basics"/);
 assert.match(menu, /Steer <strong>toward<\/strong> the warm guiding hum/);
-assert.doesNotMatch(menu, /steer away|Steer away/i, 'The current ribbon points toward the correction and must never inherit the retired Slider instruction');
+assert.doesNotMatch(menu, /steer away/i, 'The current ribbon points toward the correction and must never inherit the retired Slider instruction');
 for (const heading of [
   'Start here',
   'The guiding ribbon',
@@ -71,11 +71,12 @@ for (const heading of [
   'Wrong way',
   'Sound balance and priority'
 ]) {
-  assert.match(menu, new RegExp(`>${heading.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&')}<`), `The DBE guide must include ${heading}`);
+  assert.ok(menu.includes(`>${heading}<`), `The DBE guide must include ${heading}`);
 }
+assert.match(menu, /Pace notes tell you what comes next/);
 assert.match(menu, /one to three short beeps/);
 assert.match(menu, /delayed extra beep on the same side marks a long corner/);
-assert.match(menu, /centred gravel texture/);
+assert.match(menu, /Off road, centred gravel marks the surface/);
 assert.match(menu, /Tyre noise stays centred/);
 assert.match(menu, /heads-up rather than a continuous tracker/);
 assert.match(menu, /repeating double falling tone/);
