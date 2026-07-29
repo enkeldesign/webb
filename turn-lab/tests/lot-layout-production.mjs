@@ -45,7 +45,9 @@ assert.doesNotMatch(layout, /MutationObserver|setAnimationLoop|requestAnimationF
 assert.match(accessibility, /makeHiddenHeading\('lot-choose-car-heading', 'Choose car'\)/, 'Screen-reader users must be able to navigate directly to the car chooser');
 assert.match(accessibility, /makeHiddenHeading\('lot-paint-heading', 'Choose car colour'\)/, 'Screen-reader users must be able to jump beyond the car list to paint controls');
 assert.match(accessibility, /makeHiddenHeading\('lot-car-info-heading', 'Car information'\)/, 'Screen-reader users must be able to jump directly to selected-car information');
-assert.match(accessibility, /button\.setAttribute\('aria-describedby', description\.id\)/, 'Every car option must reference its complete attribute description');
+assert.match(accessibility, /existingLabel = button\.getAttribute\('aria-label'\) \|\| car\.name/, 'The complete car label must retain its name and visual description');
+assert.match(accessibility, /button\.setAttribute\('aria-labelledby', description\.id\)/, 'Every car option must use its complete label as the accessible name');
+assert.match(accessibility, /aria-labelledby takes precedence over aria-label/, 'The complete car name must remain stable when The Lot refreshes its shorter aria-label');
 assert.match(accessibility, /Top speed/, 'Car descriptions must include top speed');
 assert.match(accessibility, /Acceleration/, 'Car descriptions must include acceleration');
 assert.match(accessibility, /Control/, 'Car descriptions must include control');
