@@ -69,6 +69,7 @@ for (const heading of [
   'Drift and grip',
   'Nearby rivals',
   'Wrong way',
+  'With a screen reader',
   'Sound balance and priority'
 ]) {
   assert.ok(menu.includes(`>${heading}<`), `The DBE guide must include ${heading}`);
@@ -80,6 +81,10 @@ assert.match(menu, /Off road, centred gravel marks the surface/);
 assert.match(menu, /Tyre noise stays centred/);
 assert.match(menu, /heads-up rather than a continuous tracker/);
 assert.match(menu, /repeating double falling tone/);
+assert.match(menu, /works alongside screen readers/);
+assert.match(menu, /including VoiceOver/);
+assert.match(menu, /menus, controls, race position and lap results/);
+assert.match(menu, /complete non-visual way to play TURN/);
 assert.match(menu, /Pace notes are deliberately prominent/);
 assert.match(menu, /saveDriveByEarEnabled\(enabled\)/);
 assert.match(menu, /setAudioEnabled/);
