@@ -212,7 +212,8 @@ assert.match(warningCss, /linear-gradient\(\s*270deg/);
 assert.match(warningCss, /transform: scaleX\(var\(--turn-limit-growth/);
 assert.match(warningCss, /transform-origin: left center/);
 assert.match(warningCss, /transform-origin: right center/);
-assert.doesNotMatch(warningCss, /transition|animation|@keyframes|is-flashing/);
+assert.match(warningCss, /transition: none/);
+assert.doesNotMatch(warningCss, /transition-duration|animation|@keyframes|is-flashing/);
 
 for (const removedPath of [
   '../turn-next/orientation-preflight.js',
