@@ -100,8 +100,8 @@ export function buildTurnNextEntry(productionIndex, release) {
   output = replaceRequired(
     output,
     `</script><link rel="icon"`,
-    `</script><script src="/turn-next/storage-bootstrap.js?source=${release.cacheKey}"></script><script src="/turn-next/orientation-preflight.js?source=${release.cacheKey}"></script><link rel="icon"`,
-    'staging preflight insertion point'
+    `</script><script src="/turn-next/storage-bootstrap.js?source=${release.cacheKey}"></script><script src="/turn-next/safe-zone-bootstrap.js?source=${release.cacheKey}&stage=safe-zone-m3"></script><link rel="icon"`,
+    'staging bootstrap insertion point'
   );
   output = replaceRequired(
     output,
@@ -112,14 +112,14 @@ export function buildTurnNextEntry(productionIndex, release) {
   output = replaceRequired(
     output,
     `<link rel="stylesheet" href="./garage/lot-layout-r60.css?build=${release.cacheKey}">`,
-    `<link rel="stylesheet" href="./garage/lot-layout-r60.css?build=${release.cacheKey}"><link rel="stylesheet" href="/turn-next/identity.css?source=${release.cacheKey}"><link rel="stylesheet" href="/turn-next/orientation-freeze.css?source=${release.cacheKey}"><script defer src="/turn-next/identity.js?source=${release.cacheKey}"></script>`,
-    'TURN NEXT identity and orientation assets insertion point'
+    `<link rel="stylesheet" href="./garage/lot-layout-r60.css?build=${release.cacheKey}"><link rel="stylesheet" href="/turn-next/identity.css?source=${release.cacheKey}"><script defer src="/turn-next/identity.js?source=${release.cacheKey}"></script>`,
+    'TURN NEXT identity assets insertion point'
   );
   output = replaceRequired(
     output,
     '</head><body><section class="install-gate"',
-    `</head><body><div id="turnAppViewport"><aside class="turn-next-badge" role="note" aria-label="TURN NEXT architecture test runtime. Source ${sourceTitle}."><strong>TURN NEXT</strong><span>Source ${release.id}</span></aside><section class="install-gate"`,
-    'body staging viewport insertion point'
+    `</head><body><aside class="turn-next-badge" role="note" aria-label="TURN NEXT architecture test runtime. Source ${sourceTitle}."><strong>TURN NEXT</strong><span>Source ${release.id}</span></aside><section class="install-gate"`,
+    'body staging badge insertion point'
   );
   output = replaceRequired(output, sourceKicker, nextInstallKicker, 'install build label');
   output = replaceRequired(output, '<h1 id="installTitle">TURN</h1>', '<h1 id="installTitle">TURN NEXT</h1>', 'install heading');
@@ -152,21 +152,20 @@ export function buildTurnNextEntry(productionIndex, release) {
   output = replaceRequired(
     output,
     `<script type="module" src="./app.js?build=${release.cacheKey}"></script>`,
-    `</div><script type="module" src="/turn-next/app.js?source=${release.cacheKey}"></script>`,
-    'TURN NEXT bootstrap entry and viewport closure'
+    `<script type="module" src="/turn-next/app.js?source=${release.cacheKey}"></script>`,
+    'TURN NEXT bootstrap entry'
   );
 
   assert.match(output, /<base href="\/turn\/">/);
-  assert.match(output, /id="turnAppViewport"/);
-  assert.match(output, /src="\/turn-next\/orientation-preflight\.js\?source=/);
-  assert.match(output, /href="\/turn-next\/orientation-freeze\.css\?source=/);
+  assert.match(output, /src="\/turn-next\/safe-zone-bootstrap\.js\?source=.*&stage=safe-zone-m3"/);
   assert.match(output, /src="\/turn-next\/app\.js\?source=/);
   assert.match(output, /src="\/turn-next\/storage-bootstrap\.js/);
   assert.match(output, /href="\/turn-next\/site\.webmanifest/);
+  assert.doesNotMatch(output, /turnAppViewport|orientation-preflight|orientation-freeze/);
   assert.doesNotMatch(output, /href="\.\/site\.webmanifest/);
   assert.ok(
-    output.indexOf('/turn-next/orientation-preflight.js') < output.indexOf('./orientation-compat.js'),
-    'Raw orientation must be captured before TURN patches ScreenOrientation.angle.'
+    output.indexOf('/turn-next/safe-zone-bootstrap.js') < output.indexOf('./orientation-compat.js'),
+    'The motion safe zone must be configured before TURN installs orientation feedback.'
   );
 
   return output;
