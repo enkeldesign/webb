@@ -40,6 +40,7 @@ export default [
       'turn/tracks/registry.js',
       'turn/tracks/track-manager.js',
       'turn-next/safe-zone-bootstrap.js',
+      'turn-next/steering-limit-warning.js',
       'turn-tests/**/*.mjs'
     ],
     languageOptions: {
