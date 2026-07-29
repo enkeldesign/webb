@@ -94,7 +94,7 @@ function createAudioPanel() {
 
             <section class="audio-guide-section" aria-labelledby="dbeGuideRivals">
               <h3 id="dbeGuideRivals">Nearby rivals</h3>
-              <p>Nearby-rival warnings are directional. A short cue sounds when a rival comes close and plays from the side of the nearby car. Treat it as a heads-up rather than a continuous tracker.</p>
+              <p>A short cue sounds when a rival comes close. These nearby-rival warnings are directional and play from the side of the nearby car. Treat the cue as a heads-up rather than a continuous tracker.</p>
             </section>
 
             <section class="audio-guide-section" aria-labelledby="dbeGuideWrongWay">
