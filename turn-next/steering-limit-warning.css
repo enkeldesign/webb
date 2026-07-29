@@ -11,6 +11,7 @@ html[data-turn-deployment="next"] .hud::before {
   pointer-events: none;
   opacity: var(--turn-limit-opacity, 0);
   transform: scaleX(var(--turn-limit-growth, 0.12));
+  transition: none;
   will-change: opacity, transform;
 }
 
