@@ -26,7 +26,7 @@ export function buildTurnNextApp(productionApp, release) {
   output = replaceRequired(
     output,
     "const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';\n\nfunction withBuild(path) {\n  const url = new URL(path, import.meta.url);",
-    "const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';\nconst productionModuleBase = new URL('/turn/', globalThis.location?.href || 'https://enkel.design/turn-next/');\nconst platformModuleBase = new URL('/turn/platform/', globalThis.location?.href || 'https://enkel.design/turn-next/');\n\nfunction withBuild(path) {\n  const url = new URL(path, productionModuleBase);",
+    "const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';\nconst productionModuleBase = new URL('/turn/', globalThis.location?.href || 'https://enkel.design/turn-next/');\nconst platformModuleBase = new URL('/turn/platform/', globalThis.location?.href || 'https://enkel.design/turn-next/');\nconst turnNextModuleBase = new URL('/turn-next/', globalThis.location?.href || 'https://enkel.design/turn-next/');\n\nfunction withBuild(path) {\n  const url = new URL(path, productionModuleBase);",
     'module URL resolver'
   );
 
@@ -39,10 +39,22 @@ const webPlatform = createWebPlatform();
 installTurnPlatform(webPlatform);
 document.documentElement.dataset.turnPlatform = 'web-adapter';
 const turnNextBadgeDetail = document.querySelector('.turn-next-badge span');
-if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M1 · Safe Zone M3';
+if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M1 · Safe Zone M3 · Limit M4';
 
 function installStylesheet(path, dataAttribute) {`,
     'platform composition point'
+  );
+
+  output = replaceRequired(
+    output,
+    'installTurnAudio();',
+    `installTurnAudio();
+
+const { installTurnNextSteeringLimitWarning } = await import(
+  new URL('./steering-limit-warning.js?source=${release.cacheKey}&stage=directional-limit-m4', turnNextModuleBase).href
+);
+installTurnNextSteeringLimitWarning();`,
+    'directional limit warning composition point'
   );
 
   output = replaceRequired(
@@ -56,13 +68,20 @@ function installStylesheet(path, dataAttribute) {`,
 
   assert.match(output, /const productionModuleBase = new URL\('\/turn\/'/);
   assert.match(output, /const platformModuleBase = new URL\('\/turn\/platform\/'/);
+  assert.match(output, /const turnNextModuleBase = new URL\('\/turn-next\/'/);
   assert.match(output, /installTurnPlatform\(webPlatform\)/);
+  assert.match(output, /installTurnNextSteeringLimitWarning\(\)/);
+  assert.match(output, /steering-limit-warning\.js\?source=.*&stage=directional-limit-m4/);
   assert.match(output, /dataset\.turnPlatform = 'web-adapter'/);
-  assert.match(output, /Platform M1 · Safe Zone M3/);
+  assert.match(output, /Platform M1 · Safe Zone M3 · Limit M4/);
   assert.doesNotMatch(output, /orientation-freeze|installTurnNextOrientationFreeze|Orientation M2/);
   assert.ok(
     output.indexOf('installTurnPlatform(webPlatform)') < output.indexOf("withBuild('./main.js')"),
     'TURN NEXT must install its platform before the game core loads.'
+  );
+  assert.ok(
+    output.indexOf('installTurnNextSteeringLimitWarning()') < output.indexOf("withBuild('./main.js')"),
+    'TURN NEXT must install directional limit feedback before the game core starts.'
   );
   assert.match(output, /new URL\(path, productionModuleBase\)/);
   assert.doesNotMatch(output, /new URL\(path, import\.meta\.url\)/);
