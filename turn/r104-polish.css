@@ -114,6 +114,7 @@
 .audio-setting-row small,
 .audio-balance-card p,
 .audio-guide-card p,
+.audio-guide-basics,
 .audio-settings-status {
   line-height: 1.38;
 }
@@ -149,6 +150,44 @@
 
 .audio-guide-card p {
   margin: 9px 0 0;
+}
+
+.audio-guide-content {
+  display: grid;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.audio-guide-content .audio-guide-intro {
+  margin: 0;
+  font-weight: 750;
+}
+
+.audio-guide-section {
+  display: grid;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 2px solid rgb(8 9 10 / 0.14);
+}
+
+.audio-guide-section h3 {
+  font-size: 0.86rem;
+  letter-spacing: 0.045em;
+}
+
+.audio-guide-section p {
+  margin: 0;
+}
+
+.audio-guide-basics {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.audio-guide-basics strong {
+  font-weight: 950;
 }
 
 .audio-settings-status {
@@ -221,9 +260,23 @@
     min-width: 0;
   }
 
+  .audio-guide-card[open] {
+    grid-column: 1 / -1;
+  }
+
+  .audio-guide-content {
+    gap: 10px;
+  }
+
+  .audio-guide-section {
+    gap: 4px;
+    padding-top: 9px;
+  }
+
   .audio-setting-row small,
   .audio-balance-card p,
-  .audio-guide-card p {
+  .audio-guide-card p,
+  .audio-guide-basics {
     font-size: 0.78rem;
   }
 
