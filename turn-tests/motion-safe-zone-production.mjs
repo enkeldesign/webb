@@ -10,6 +10,7 @@ import {
 } from '../turn/render/camera.js';
 import {
   steeringLimitAnnouncement,
+  steeringLimitVisualGrowth,
   steeringLimitVisualOpacity
 } from '../turn-next/steering-limit-warning.js';
 
@@ -122,9 +123,13 @@ approximately(
 approximately(measuredCameraRoll(32, undefined), toRadians(-18), 1e-9);
 
 assert.equal(steeringLimitVisualOpacity({ active: false }), 0);
-approximately(steeringLimitVisualOpacity({ active: true, intensity: 0 }), 0.08);
-approximately(steeringLimitVisualOpacity({ active: true, intensity: 0.5 }), 0.44);
+approximately(steeringLimitVisualOpacity({ active: true, intensity: 0 }), 0.1);
+approximately(steeringLimitVisualOpacity({ active: true, intensity: 0.5 }), 0.55);
 assert.equal(steeringLimitVisualOpacity({ active: true, intensity: 1, hard: true }), 1);
+approximately(steeringLimitVisualGrowth({ active: false }), 0.08);
+approximately(steeringLimitVisualGrowth({ active: true, intensity: 0 }), 0.22);
+approximately(steeringLimitVisualGrowth({ active: true, intensity: 0.5 }), 0.61);
+assert.equal(steeringLimitVisualGrowth({ active: true, intensity: 1, hard: true }), 1);
 assert.equal(steeringLimitAnnouncement('left'), 'Left steering limit reached.');
 assert.equal(steeringLimitAnnouncement('right'), 'Right steering limit reached.');
 assert.equal(steeringLimitAnnouncement(null), 'Steering limit reached.');
@@ -155,9 +160,11 @@ assert.ok(
   nextIndex.indexOf('/turn-next/safe-zone-bootstrap.js') < nextIndex.indexOf('./orientation-compat.js'),
   'The safe-zone configuration must load before orientation feedback'
 );
-assert.match(nextApp, /Platform M1 · Safe Zone M3 · Limit M4/);
+assert.match(nextApp, /Platform M1 · Safe Zone M3 · Limit M4\.1/);
+assert.match(nextApp, /data-turn-next-steady-limit/);
+assert.match(nextApp, /steering-limit-warning\.css\?source=.*&stage=steady-limit-m4-1/);
 assert.match(nextApp, /installTurnNextSteeringLimitWarning\(\)/);
-assert.match(nextApp, /steering-limit-warning\.js\?source=.*&stage=directional-limit-m4/);
+assert.match(nextApp, /steering-limit-warning\.js\?source=.*&stage=steady-limit-m4-1/);
 assert.ok(
   nextApp.indexOf('installTurnNextSteeringLimitWarning()') < nextApp.indexOf("withBuild('./main.js')"),
   'Directional warning must install before the race core starts'
@@ -176,11 +183,20 @@ assert.match(warningRuntime, /announcedSides = \{ left: false, right: false \}/)
 assert.match(warningRuntime, /reason === 'race-started'/);
 assert.match(warningRuntime, /audio\?\.cue\?\.\('ui-back'\)/);
 assert.match(warningRuntime, /__turnAudio\?\.cue\?\.\('ui-tap'\)/);
+assert.match(warningRuntime, /--turn-limit-opacity/);
+assert.match(warningRuntime, /--turn-limit-growth/);
+assert.doesNotMatch(warningRuntime, /FLASH_DURATION|is-flashing|function flash/);
 assert.match(warningCss, /html\[data-turn-deployment="next"\] \.hud::before/);
+assert.match(warningCss, /width: clamp\(56px, 10vw, 124px\)/);
 assert.match(warningCss, /linear-gradient\(\s*90deg/);
 assert.match(warningCss, /linear-gradient\(\s*270deg/);
-assert.match(warningCss, /turn-steering-limit-edge-flash/);
-assert.match(warningCss, /prefers-reduced-motion: reduce/);
+assert.match(warningCss, /transform: scaleX\(var\(--turn-limit-growth/);
+assert.match(warningCss, /transform-origin: left center/);
+assert.match(warningCss, /transform-origin: right center/);
+assert.match(warningCss, /opacity 420ms/);
+assert.match(warningCss, /transform 420ms/);
+assert.match(warningCss, /transition-duration: 260ms/);
+assert.doesNotMatch(warningCss, /animation|@keyframes|is-flashing/);
 
 for (const removedPath of [
   '../turn-next/orientation-preflight.js',
@@ -197,4 +213,4 @@ for (const removedPath of [
 if (previousConfiguration === undefined) delete globalThis.__TURN_MOTION_SAFE_ZONE__;
 else globalThis.__TURN_MOTION_SAFE_ZONE__ = previousConfiguration;
 
-console.log('TURN NEXT 24-degree safe zone and directional limit warning passed.');
+console.log('TURN NEXT 24-degree safe zone and non-flashing directional limit warning passed.');
