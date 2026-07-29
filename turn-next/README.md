@@ -2,7 +2,7 @@
 
 `/turn-next/` is TURN’s protected architecture test runtime.
 
-## Current milestone: platform composition and visual orientation freeze
+## Current milestone: platform composition and motion safe zone
 
 The physical parity baseline for TURN r110 has been confirmed on real devices. TURN NEXT now begins the architecture migration while continuing to load the proven production gameplay graph from `/turn/`.
 
@@ -15,16 +15,20 @@ Its first explicit seam is the platform layer:
 
 Platform M1 confirmed that the new route matches production, but physical testing also confirmed that iOS can still rotate the web view when it does not expose or accept the Screen Orientation lock request.
 
-Orientation M2 therefore adds a TURN NEXT-only visual compensation prototype:
+Orientation M2 attempted to counter-rotate the whole application after browser orientation changes. Physical testing showed that this was based on the wrong UX model and introduced an upside-down landscape regression. The visual-freeze experiment has therefore been removed completely.
 
-- `orientation-preflight.js` captures the browser’s native orientation getter before TURN installs its motion-axis compatibility shim.
-- `orientation-freeze.js` captures the logical race viewport, counter-rotates the whole visual application after browser orientation changes and keeps the Three.js camera and drawing buffer at the locked logical size.
-- `orientation-freeze.css` provides the transformable application viewport.
-- The generated TURN NEXT entry wraps every visual surface in `#turnAppViewport`.
+Safe Zone M3 instead defines a deliberately limited web operating envelope:
 
-Physical M2 testing exposed an incorrect half-turn assumption: when iOS completed a landscape-right to landscape-left flip, the operating system had already made the web view upright, but TURN NEXT added another 180-degree transform and rendered the game upside down. Orientation M2.1 preserves quarter-turn portrait compensation while resolving completed landscape-to-landscape flips to zero additional visual rotation.
+- `safe-zone-bootstrap.js` configures TURN NEXT at `-24°` to `+24°` relative to the calibrated position.
+- Steering remains active throughout that range and reaches full lock at `24°`.
+- Horizon levelling follows the device throughout the same range and clamps at `24°`.
+- Near-limit feedback begins at `20°`; hard-limit feedback begins at `24°` and clears below `17.5°`.
+- Beyond the safe zone, TURN adds no further horizon rotation or steering magnitude.
+- The browser remains responsible for any operating-system orientation flip beyond the usable range.
 
-This is deliberately an experiment. It cannot stop the operating system’s own rotation animation or browser chrome from rotating. It tests whether TURN can visually compensate well enough in the PWA while preserving controls, aspect ratio and motion steering. A true host-level lock remains mandatory for native iOS and Android containers.
+The shared production modules now accept an optional safe-zone configuration, but production `/turn/` retains its existing steering, horizon and feedback limits when no configuration is installed. This lets TURN NEXT test the larger range without silently changing the live game.
+
+A true host-level orientation lock remains mandatory for native iOS and Android containers. The safe zone can be revisited once the native host controls interface orientation.
 
 The staging bootstrap and entry page are generated from `turn/app.js` and `turn/index.html` by:
 
@@ -44,13 +48,13 @@ Do not edit `turn-next/app.js` or `turn-next/index.html` by hand. Edit the gener
 
 ## Safety boundaries
 
-- Production `/turn/` keeps its proven direct browser fallback and has no visual-freeze code.
+- Production `/turn/` keeps its current motion limits unless a platform host explicitly installs a safe-zone configuration.
 - TURN NEXT prefixes all `localStorage` and `sessionStorage` keys before production modules load.
 - It never copies production records automatically.
 - Its manifest uses the separate `/turn-next/` application id, start URL and scope.
 - The page is marked `noindex` and visibly labelled throughout gameplay.
 - The platform is installed once at startup and cannot be silently replaced later.
-- Orientation M2.1 activates only while gameplay is running and restores ordinary responsive behaviour outside the race.
+- TURN NEXT contains no whole-viewport orientation transform, frozen drawing buffer or counter-rotation wrapper.
 
 ## Transitional architecture
 
