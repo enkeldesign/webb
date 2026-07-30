@@ -22,14 +22,14 @@ export function buildTurnNextApp(productionApp, release) {
   output = replaceRequired(
     output,
     "const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';\n\nfunction withBuild(path) {\n  const url = new URL(path, import.meta.url);",
-    "const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';\nconst productionModuleBase = new URL('/turn/', globalThis.location?.href || 'https://enkel.design/turn-next/');\nconst platformModuleBase = new URL('/turn/platform/', globalThis.location?.href || 'https://enkel.design/turn-next/');\n\nfunction withBuild(path) {\n  const url = new URL(path, productionModuleBase);",
+    "const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';\nconst productionModuleBase = new URL('/turn/', globalThis.location?.href || 'https://enkel.design/turn-next/');\nconst platformModuleBase = new URL('/turn/platform/', globalThis.location?.href || 'https://enkel.design/turn-next/');\nconst stagingModuleBase = new URL('/turn-next/', globalThis.location?.href || 'https://enkel.design/turn-next/');\n\nfunction withBuild(path) {\n  const url = new URL(path, productionModuleBase);",
     'module URL resolver'
   );
 
   output = replaceRequired(
     output,
     'function installStylesheet(path, dataAttribute) {',
-    "const { createWebPlatform } = await import(new URL('./web-platform.js', platformModuleBase).href);\nconst { installTurnPlatform } = await import(new URL('./platform-context.js', platformModuleBase).href);\nconst webPlatform = createWebPlatform();\ninstallTurnPlatform(webPlatform);\ndocument.documentElement.dataset.turnPlatform = 'web-adapter';\nconst turnNextBadgeDetail = document.querySelector('.turn-next-badge span');\nif (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M1 · Product Parity';\n\nfunction installStylesheet(path, dataAttribute) {",
+    "const { createWebPlatform } = await import(new URL('./web-platform.js', platformModuleBase).href);\nconst { installTurnPlatform } = await import(new URL('./platform-context.js', platformModuleBase).href);\nconst { installMotionLifecycleBridge } = await import(\n  new URL(`./motion-lifecycle-bridge.js?source=${buildKey}`, stagingModuleBase).href\n);\nconst webPlatform = createWebPlatform();\ninstallTurnPlatform(webPlatform);\nconst motionLifecycle = installMotionLifecycleBridge({ platform: webPlatform });\nglobalThis.__turnNextMotionLifecycle = motionLifecycle;\ndocument.documentElement.dataset.turnPlatform = 'web-adapter';\ndocument.documentElement.dataset.turnMotionLifecycle = 'platform-m5';\nconst turnNextBadgeDetail = document.querySelector('.turn-next-badge span');\nif (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M5 · Motion Lifecycle';\n\nfunction installStylesheet(path, dataAttribute) {",
     'platform composition point'
   );
 
@@ -44,12 +44,17 @@ export function buildTurnNextApp(productionApp, release) {
 
   assert.match(output, /const productionModuleBase = new URL\('\/turn\/'/);
   assert.match(output, /const platformModuleBase = new URL\('\/turn\/platform\/'/);
+  assert.match(output, /const stagingModuleBase = new URL\('\/turn-next\/'/);
   assert.match(output, /installTurnPlatform\(webPlatform\)/);
+  assert.match(output, /installMotionLifecycleBridge\(\{ platform: webPlatform \}\)/);
+  assert.match(output, /__turnNextMotionLifecycle = motionLifecycle/);
+  assert.match(output, /turnMotionLifecycle = 'platform-m5'/);
   assert.match(output, /installStylesheet\('\.\/steering-limit-warning\.css'/);
   assert.match(output, /installSteeringLimitWarning\(\)/);
-  assert.match(output, /Platform M1 · Product Parity/);
+  assert.match(output, /Platform M5 · Motion Lifecycle/);
   assert.doesNotMatch(output, /turn-next\/steering-limit-warning|installTurnNextSteeringLimitWarning/);
   assert.ok(output.indexOf('installTurnPlatform(webPlatform)') < output.indexOf("withBuild('./main.js')"));
+  assert.ok(output.indexOf('installMotionLifecycleBridge({ platform: webPlatform })') < output.indexOf("withBuild('./main.js')"));
   assert.ok(output.indexOf('installSteeringLimitWarning()') < output.indexOf("withBuild('./main.js')"));
   assert.match(output, /new URL\(path, productionModuleBase\)/);
   assert.match(output, /TURN NEXT:/);
