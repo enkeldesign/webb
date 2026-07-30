@@ -1,3 +1,4 @@
+# One-shot migration workflow; it removes itself after committing the generated slice.
 name: Apply TURN NEXT Platform M5
 
 on:
