@@ -152,13 +152,14 @@ export function buildTurnNextEntry(productionIndex, release) {
   output = replaceRequired(
     output,
     `<script type="module" src="./app.js?build=${release.cacheKey}"></script>`,
-    `<script type="module" src="/turn-next/app.js?source=${release.cacheKey}"></script>`,
+    `<script type="module" src="/turn-next/app.js?source=${release.cacheKey}-m5.1"></script>`,
     'TURN NEXT bootstrap entry'
   );
+  output += '\n';
 
   assert.match(output, /<base href="\/turn\/">/);
   assert.match(output, /src="\.\/motion-safe-zone\.js\?build=/);
-  assert.match(output, /src="\/turn-next\/app\.js\?source=/);
+  assert.match(output, /src="\/turn-next\/app\.js\?source=.*-m5\.1"/);
   assert.match(output, /src="\/turn-next\/storage-bootstrap\.js/);
   assert.match(output, /href="\/turn-next\/site\.webmanifest/);
   assert.doesNotMatch(output, /turn-next\/safe-zone-bootstrap|turn-next\/steering-limit-warning/);
