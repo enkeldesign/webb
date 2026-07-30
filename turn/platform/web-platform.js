@@ -12,6 +12,11 @@ export function createWebPlatform(environment = globalThis) {
   const removeWindowEventListener = typeof windowRef?.removeEventListener === 'function'
     ? windowRef.removeEventListener.bind(windowRef)
     : null;
+  const defaultFullscreenRoot = documentRef?.documentElement;
+  const requestDefaultFullscreen = defaultFullscreenRoot?.requestFullscreen;
+  const requestDefaultWebkitFullscreen = defaultFullscreenRoot?.webkitRequestFullscreen;
+  const screenOrientation = screenRef?.orientation;
+  const lockScreenOrientation = screenOrientation?.lock;
 
   const motion = Object.freeze({
     isAvailable() {
@@ -55,8 +60,10 @@ export function createWebPlatform(environment = globalThis) {
   });
 
   const display = Object.freeze({
-    async requestFullscreen(root = documentRef?.documentElement) {
-      const request = root?.requestFullscreen || root?.webkitRequestFullscreen;
+    async requestFullscreen(root = defaultFullscreenRoot) {
+      const request = root === defaultFullscreenRoot
+        ? (requestDefaultFullscreen || requestDefaultWebkitFullscreen)
+        : (root?.requestFullscreen || root?.webkitRequestFullscreen);
       if (
         typeof request !== 'function'
         || documentRef?.fullscreenElement
@@ -74,11 +81,10 @@ export function createWebPlatform(environment = globalThis) {
     },
 
     async lockLandscape() {
-      const orientation = screenRef?.orientation;
-      if (typeof orientation?.lock !== 'function') return false;
+      if (typeof lockScreenOrientation !== 'function') return false;
 
       try {
-        await orientation.lock('landscape');
+        await lockScreenOrientation.call(screenOrientation, 'landscape');
         return true;
       } catch (_) {
         return false;
