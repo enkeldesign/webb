@@ -170,7 +170,7 @@ export function buildTurnNextEntry(productionIndex, release) {
     'The canonical motion safe zone must load before orientation feedback.'
   );
 
-  return output;
+  return output.endsWith('\n') ? output : `${output}\n`;
 }
 
 async function main() {
