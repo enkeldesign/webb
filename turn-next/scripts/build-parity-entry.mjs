@@ -155,6 +155,7 @@ export function buildTurnNextEntry(productionIndex, release) {
     `<script type="module" src="/turn-next/app.js?source=${release.cacheKey}-m5.1"></script>`,
     'TURN NEXT bootstrap entry'
   );
+  output += '\n';
 
   assert.match(output, /<base href="\/turn\/">/);
   assert.match(output, /src="\.\/motion-safe-zone\.js\?build=/);
