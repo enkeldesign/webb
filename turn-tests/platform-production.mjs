@@ -10,6 +10,7 @@ import {
 import { createWebPlatform } from '../turn/platform/web-platform.js';
 import { motionPoseFromGravity, updateMotionInputState } from '../turn/input/motion.js';
 import { installMotionLifecycleBridge } from '../turn-next/motion-lifecycle-bridge.js';
+import { installDisplayLifecycleBridge } from '../turn-next/display-lifecycle-bridge.js';
 
 const EPSILON = 1e-9;
 
@@ -67,6 +68,16 @@ const fakeWindow = {
 const originalWindowAdd = fakeWindow.addEventListener;
 const originalWindowRemove = fakeWindow.removeEventListener;
 
+const orientation = {
+  angle: 90,
+  async lock(value) {
+    landscapeLocks += 1;
+    assert.equal(value, 'landscape');
+  }
+};
+const originalRequestFullscreen = root.requestFullscreen;
+const originalOrientationLock = orientation.lock;
+
 const fakeEnvironment = {
   DeviceMotionEvent: FakeDeviceMotionEvent,
   document: {
@@ -74,15 +85,7 @@ const fakeEnvironment = {
     fullscreenElement: null,
     webkitFullscreenElement: null
   },
-  screen: {
-    orientation: {
-      angle: 90,
-      async lock(value) {
-        landscapeLocks += 1;
-        assert.equal(value, 'landscape');
-      }
-    }
-  },
+  screen: { orientation },
   window: fakeWindow
 };
 
@@ -132,9 +135,9 @@ updateMotionInputState({ state: manualState, dt: 0.1, maxSteerRoll: Math.PI / 4 
 assert.equal(manualState.steering, -1);
 assert.equal(manualState.tiltDrive, 0);
 
-const bridge = installMotionLifecycleBridge({ platform, environment: fakeEnvironment });
-assert.equal(bridge.route, 'platform');
-assert.equal(bridge.isAvailable(), true);
+const motionBridge = installMotionLifecycleBridge({ platform, environment: fakeEnvironment });
+assert.equal(motionBridge.route, 'platform');
+assert.equal(motionBridge.isAvailable(), true);
 assert.notEqual(fakeEnvironment.DeviceMotionEvent, FakeDeviceMotionEvent, 'M5 must provide TURN NEXT with a permission bridge');
 const legacyPermissionState = await fakeEnvironment.DeviceMotionEvent.requestPermission();
 assert.equal(
@@ -150,7 +153,7 @@ const motionAddsBeforeBridge = addedEvents.filter(({ type }) => type === 'device
 fakeWindow.addEventListener('devicemotion', bridgeListenerA, { passive: false });
 assert.equal(subscribed, bridgeListenerA);
 assert.deepEqual(subscribedOptions, { passive: true }, 'The platform owns motion listener options');
-assert.equal(bridge.isSubscribed(), true);
+assert.equal(motionBridge.isSubscribed(), true);
 assert.equal(
   addedEvents.filter(({ type }) => type === 'devicemotion').length,
   motionAddsBeforeBridge + 1,
@@ -169,13 +172,41 @@ assert.equal(removed, bridgeListenerA, 'Replacing a listener must clean up the p
 assert.equal(subscribed, bridgeListenerB);
 fakeWindow.removeEventListener('devicemotion', bridgeListenerB);
 assert.equal(removed, bridgeListenerB);
-assert.equal(bridge.isSubscribed(), false);
+assert.equal(motionBridge.isSubscribed(), false);
+
+const displayBridge = installDisplayLifecycleBridge({ platform, environment: fakeEnvironment });
+assert.equal(displayBridge.route, 'platform');
+assert.notEqual(root.requestFullscreen, originalRequestFullscreen, 'M6 must own the legacy fullscreen request');
+assert.notEqual(orientation.lock, originalOrientationLock, 'M6 must own the legacy landscape lock');
+
+const fullscreenRequestA = root.requestFullscreen();
+const fullscreenRequestB = root.requestFullscreen();
+assert.equal(fullscreenRequestA, fullscreenRequestB, 'Concurrent fullscreen requests must share one platform operation');
+assert.equal(displayBridge.isFullscreenPending(), true);
+await fullscreenRequestA;
+assert.equal(fullscreenRequests, 2, 'The legacy fullscreen call must route into platform.display.requestFullscreen() exactly once');
+assert.equal(displayBridge.getFullscreenAttempts(), 1);
+assert.equal(displayBridge.isFullscreenPending(), false);
+
+const landscapeRequestA = orientation.lock('landscape');
+const landscapeRequestB = orientation.lock('landscape-primary');
+assert.equal(landscapeRequestA, landscapeRequestB, 'Concurrent landscape locks must share one platform operation');
+assert.equal(displayBridge.isLandscapePending(), true);
+await landscapeRequestA;
+assert.equal(landscapeLocks, 2, 'The legacy orientation call must route into platform.display.lockLandscape() exactly once');
+assert.equal(displayBridge.getLandscapeAttempts(), 1);
+assert.equal(displayBridge.isLandscapePending(), false);
 
 const ordinaryListener = () => {};
 fakeWindow.addEventListener('resize', ordinaryListener, { passive: true });
 assert.ok(addedEvents.some(({ type, listener: received }) => type === 'resize' && received === ordinaryListener));
-assert.equal(bridge.uninstall(), true);
-assert.equal(bridge.uninstall(), false, 'M5 uninstall must be idempotent');
+assert.equal(displayBridge.uninstall(), true);
+assert.equal(displayBridge.uninstall(), false, 'M6 uninstall must be idempotent');
+assert.equal(root.requestFullscreen, originalRequestFullscreen);
+assert.equal(orientation.lock, originalOrientationLock);
+assert.equal(Object.hasOwn(root, 'webkitRequestFullscreen'), false);
+assert.equal(motionBridge.uninstall(), true);
+assert.equal(motionBridge.uninstall(), false, 'M5 uninstall must be idempotent');
 assert.equal(fakeWindow.addEventListener, originalWindowAdd);
 assert.equal(fakeWindow.removeEventListener, originalWindowRemove);
 assert.equal(fakeEnvironment.DeviceMotionEvent, FakeDeviceMotionEvent);
@@ -201,23 +232,37 @@ assert.equal(await unavailablePlatform.display.lockLandscape(), false);
 
 const productionApp = fs.readFileSync(new URL('../turn/app.js', import.meta.url), 'utf8');
 const nextApp = fs.readFileSync(new URL('../turn-next/app.js', import.meta.url), 'utf8');
-const bridgeSource = fs.readFileSync(new URL('../turn-next/motion-lifecycle-bridge.js', import.meta.url), 'utf8');
+const motionBridgeSource = fs.readFileSync(new URL('../turn-next/motion-lifecycle-bridge.js', import.meta.url), 'utf8');
+const displayBridgeSource = fs.readFileSync(new URL('../turn-next/display-lifecycle-bridge.js', import.meta.url), 'utf8');
 const webPlatformSource = fs.readFileSync(new URL('../turn/platform/web-platform.js', import.meta.url), 'utf8');
 
-assert.doesNotMatch(productionApp, /installMotionLifecycleBridge|turnMotionLifecycle/, 'Production must retain the proven browser launch path during M5');
+assert.doesNotMatch(productionApp, /installMotionLifecycleBridge|installDisplayLifecycleBridge|turnDisplayLifecycle/, 'Production must retain the proven browser launch path during M5 and M6');
 assert.match(nextApp, /installMotionLifecycleBridge\(\{ platform: webPlatform \}\)/);
+assert.match(nextApp, /installDisplayLifecycleBridge\(\{ platform: webPlatform \}\)/);
 assert.match(nextApp, /turnMotionLifecycle = 'platform-m5'/);
-assert.match(nextApp, /Platform M5 · Motion Lifecycle/);
+assert.match(nextApp, /turnDisplayLifecycle = 'platform-m6'/);
+assert.match(nextApp, /Platform M5–M6 · Motion \+ Display Lifecycle/);
 assert.ok(
   nextApp.indexOf('installMotionLifecycleBridge({ platform: webPlatform })')
     < nextApp.indexOf("withBuild('./main.js')"),
   'The M5 bridge must own motion before the canonical runtime registers its legacy listener'
 );
-assert.match(bridgeSource, /await motion\.requestPermission\(\);[\s\S]*return 'granted';/);
-assert.match(bridgeSource, /motion\.subscribe\(listener\)/);
-assert.match(bridgeSource, /launchPending && !intro\.hidden/);
-assert.match(bridgeSource, /type === 'devicemotion'/);
+assert.ok(
+  nextApp.indexOf('installDisplayLifecycleBridge({ platform: webPlatform })')
+    < nextApp.indexOf("withBuild('./main.js')"),
+  'The M6 bridge must own display requests before the canonical runtime launches'
+);
+assert.match(motionBridgeSource, /await motion\.requestPermission\(\);[\s\S]*return 'granted';/);
+assert.match(motionBridgeSource, /motion\.subscribe\(listener\)/);
+assert.match(motionBridgeSource, /launchPending && !intro\.hidden/);
+assert.match(motionBridgeSource, /type === 'devicemotion'/);
+assert.match(displayBridgeSource, /display\.requestFullscreen\(root\)/);
+assert.match(displayBridgeSource, /display\.lockLandscape\(\)/);
+assert.match(displayBridgeSource, /fullscreenPending/);
+assert.match(displayBridgeSource, /landscapePending/);
 assert.match(webPlatformSource, /addWindowEventListener = typeof windowRef\?\.addEventListener/);
 assert.match(webPlatformSource, /removeWindowEventListener = typeof windowRef\?\.removeEventListener/);
+assert.match(webPlatformSource, /requestDefaultFullscreen = defaultFullscreenRoot\?\.requestFullscreen/);
+assert.match(webPlatformSource, /lockScreenOrientation = screenOrientation\?\.lock/);
 
-console.log('TURN web platform contract and TURN NEXT Platform M5 motion lifecycle passed.');
+console.log('TURN web platform contract and TURN NEXT Platform M5–M6 lifecycles passed.');

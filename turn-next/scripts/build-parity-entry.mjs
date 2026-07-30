@@ -105,8 +105,8 @@ export function buildTurnNextEntry(productionIndex, release) {
   );
   output = replaceRequired(
     output,
-    `<link rel="manifest" href="./site.webmanifest?build=${release.cacheKey}-icon-20260730">`,
-    `<link rel="manifest" href="/turn-next/site.webmanifest?source=${release.cacheKey}-icon-20260730">`,
+    `<link rel="manifest" href="./site.webmanifest?build=${release.cacheKey}-icon-20260730-1136">`,
+    `<link rel="manifest" href="/turn-next/site.webmanifest?source=${release.cacheKey}-icon-20260730-1136">`,
     'manifest link'
   );
   output = replaceRequired(
@@ -145,23 +145,23 @@ export function buildTurnNextEntry(productionIndex, release) {
   output = replaceRequired(output, sourceStartKicker, nextStartKicker, 'start build label');
   output = replaceRequired(
     output,
-    '<h1 class="start-logo-heading" id="title"><img class="start-logo" src="./TURNicon.PNG?icon=20260730" alt="TURN"></h1>',
-    '<h1 class="start-logo-heading" id="title"><img class="start-logo" src="./TURNicon.PNG?icon=20260730" alt="TURN"><span class="turn-next-card-label">NEXT</span></h1>',
+    '<h1 class="start-logo-heading" id="title"><img class="start-logo" src="./TURNicon.PNG?icon=20260730-1136" alt="TURN"></h1>',
+    '<h1 class="start-logo-heading" id="title"><img class="start-logo" src="./TURNicon.PNG?icon=20260730-1136" alt="TURN"><span class="turn-next-card-label">NEXT</span></h1>',
     'start logo heading'
   );
   output = replaceRequired(
     output,
     `<script type="module" src="./app.js?build=${release.cacheKey}"></script>`,
-    `<script type="module" src="/turn-next/app.js?source=${release.cacheKey}-m5.1"></script>`,
+    `<script type="module" src="/turn-next/app.js?source=${release.cacheKey}-m6"></script>`,
     'TURN NEXT bootstrap entry'
   );
 
   assert.match(output, /<base href="\/turn\/">/);
   assert.match(output, /src="\.\/motion-safe-zone\.js\?build=/);
-  assert.match(output, /src="\/turn-next\/app\.js\?source=.*-m5\.1"/);
+  assert.match(output, /src="\/turn-next\/app\.js\?source=.*-m6"/);
   assert.match(output, /src="\/turn-next\/storage-bootstrap\.js/);
-  assert.match(output, /href="\/turn-next\/site\.webmanifest\?source=.*-icon-20260730"/);
-  assert.match(output, /TURNicon\.PNG\?icon=20260730/);
+  assert.match(output, /href="\/turn-next\/site\.webmanifest\?source=.*-icon-20260730-1136"/);
+  assert.match(output, /TURNicon\.PNG\?icon=20260730-1136/);
   assert.doesNotMatch(output, /turn-next\/safe-zone-bootstrap|turn-next\/steering-limit-warning/);
   assert.doesNotMatch(output, /turnAppViewport|orientation-preflight|orientation-freeze/);
   assert.doesNotMatch(output, /href="\.\/site\.webmanifest/);
@@ -170,7 +170,7 @@ export function buildTurnNextEntry(productionIndex, release) {
     'The canonical motion safe zone must load before orientation feedback.'
   );
 
-  return output;
+  return output.endsWith('\n') ? output : `${output}\n`;
 }
 
 async function main() {

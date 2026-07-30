@@ -16,6 +16,7 @@ const [
   platformContext,
   webPlatform,
   motionLifecycleBridge,
+  displayLifecycleBridge,
   motionInput,
   cameraSource,
   orientationCompat,
@@ -35,6 +36,7 @@ const [
   fs.readFile(new URL('../turn/platform/platform-context.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/platform/web-platform.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/motion-lifecycle-bridge.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn-next/display-lifecycle-bridge.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/input/motion.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/render/camera.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/orientation-compat.js', import.meta.url), 'utf8'),
@@ -61,7 +63,7 @@ assert.match(nextIndex, /\.\/motion-safe-zone\.js\?build=/);
 assert.match(nextIndex, /\/turn-next\/identity\.css/);
 assert.match(nextIndex, /\/turn-next\/identity\.js/);
 assert.match(nextIndex, /\/turn-next\/site\.webmanifest/);
-assert.match(nextIndex, /src="\/turn-next\/app\.js\?source=/);
+assert.match(nextIndex, /src="\/turn-next\/app\.js\?source=.*-m6"/);
 assert.doesNotMatch(nextIndex, /turn-next\/safe-zone-bootstrap|turn-next\/steering-limit-warning/);
 assert.ok(
   nextIndex.indexOf('/turn-next/storage-bootstrap.js') < nextIndex.indexOf('./install-gate.js'),
@@ -81,17 +83,23 @@ assert.match(nextApp, /const stagingModuleBase = new URL\('\/turn-next\/'/);
 assert.match(nextApp, /const webPlatform = createWebPlatform\(\)/);
 assert.match(nextApp, /installTurnPlatform\(webPlatform\)/);
 assert.match(nextApp, /installMotionLifecycleBridge\(\{ platform: webPlatform \}\)/);
+assert.match(nextApp, /installDisplayLifecycleBridge\(\{ platform: webPlatform \}\)/);
 assert.match(nextApp, /dataset\.turnPlatform = 'web-adapter'/);
 assert.match(nextApp, /dataset\.turnMotionLifecycle = 'platform-m5'/);
-assert.match(nextApp, /Platform M5 · Motion Lifecycle/);
+assert.match(nextApp, /dataset\.turnDisplayLifecycle = 'platform-m6'/);
+assert.match(nextApp, /Platform M5–M6 · Motion \+ Display Lifecycle/);
 assert.doesNotMatch(nextApp, /turnNextModuleBase|turn-next\/steering-limit-warning|installTurnNextSteeringLimitWarning/);
 assert.ok(
   nextApp.indexOf('installTurnPlatform(webPlatform)') < nextApp.indexOf("withBuild('./main.js')"),
-  'The platform must be composed before main.js imports motion input'
+  'The platform must be composed before main.js imports browser-dependent systems'
 );
 assert.ok(
   nextApp.indexOf('installMotionLifecycleBridge({ platform: webPlatform })') < nextApp.indexOf("withBuild('./main.js')"),
   'Platform M5 must own legacy permission and subscription calls before main.js loads'
+);
+assert.ok(
+  nextApp.indexOf('installDisplayLifecycleBridge({ platform: webPlatform })') < nextApp.indexOf("withBuild('./main.js')"),
+  'Platform M6 must own legacy fullscreen and landscape calls before main.js loads'
 );
 assert.match(nextApp, /new URL\(path, productionModuleBase\)/);
 assert.doesNotMatch(nextApp, /new URL\(path, import\.meta\.url\)/);
@@ -164,6 +172,8 @@ assert.doesNotMatch(platformContext, /\b(?:window|document|screen|DeviceMotionEv
 assert.match(webPlatform, /requestMotionPermission = motionEventType\?\.requestPermission/);
 assert.match(webPlatform, /addWindowEventListener\('devicemotion'/);
 assert.match(webPlatform, /removeWindowEventListener\?\.\('devicemotion'/);
+assert.match(webPlatform, /requestDefaultFullscreen = defaultFullscreenRoot\?\.requestFullscreen/);
+assert.match(webPlatform, /lockScreenOrientation = screenOrientation\?\.lock/);
 assert.match(webPlatform, /requestFullscreen/);
 assert.match(webPlatform, /lockLandscape/);
 assert.match(motionLifecycleBridge, /motion\.requestPermission\(\)/);
@@ -171,6 +181,10 @@ assert.match(motionLifecycleBridge, /motion\.subscribe\(listener\)/);
 assert.match(motionLifecycleBridge, /type === 'devicemotion'/);
 assert.match(motionLifecycleBridge, /launchPending && !intro\.hidden/);
 assert.doesNotMatch(motionLifecycleBridge, /pagehide/, 'M5 must preserve production background/resume listener behavior');
+assert.match(displayLifecycleBridge, /display\.requestFullscreen\(root\)/);
+assert.match(displayLifecycleBridge, /display\.lockLandscape\(\)/);
+assert.match(displayLifecycleBridge, /fullscreenPending/);
+assert.match(displayLifecycleBridge, /landscapePending/);
 assert.match(motionInput, /getTurnPlatform/);
 assert.match(motionInput, /resolveSteeringRollLimit/);
 assert.match(motionInput, /__TURN_MOTION_SAFE_ZONE__/);
@@ -216,4 +230,4 @@ assert.deepEqual(
   }
 );
 
-console.log(`TURN NEXT Platform M5 entry for TURN ${release.id} passed.`);
+console.log(`TURN NEXT Platform M5–M6 entry for TURN ${release.id} passed.`);

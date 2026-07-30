@@ -15,14 +15,20 @@ const { installTurnPlatform } = await import(new URL('./platform-context.js', pl
 const { installMotionLifecycleBridge } = await import(
   new URL(`./motion-lifecycle-bridge.js?source=${buildKey}-m5.1`, stagingModuleBase).href
 );
+const { installDisplayLifecycleBridge } = await import(
+  new URL(`./display-lifecycle-bridge.js?source=${buildKey}-m6`, stagingModuleBase).href
+);
 const webPlatform = createWebPlatform();
 installTurnPlatform(webPlatform);
 const motionLifecycle = installMotionLifecycleBridge({ platform: webPlatform });
+const displayLifecycle = installDisplayLifecycleBridge({ platform: webPlatform });
 globalThis.__turnNextMotionLifecycle = motionLifecycle;
+globalThis.__turnNextDisplayLifecycle = displayLifecycle;
 document.documentElement.dataset.turnPlatform = 'web-adapter';
 document.documentElement.dataset.turnMotionLifecycle = 'platform-m5';
+document.documentElement.dataset.turnDisplayLifecycle = 'platform-m6';
 const turnNextBadgeDetail = document.querySelector('.turn-next-badge span');
-if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M5 · Motion Lifecycle';
+if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M5–M6 · Motion + Display Lifecycle';
 
 function installStylesheet(path, dataAttribute) {
   if (document.querySelector(`link[${dataAttribute}]`)) return;
