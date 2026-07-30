@@ -48,6 +48,27 @@ function replaceProperty(target, key, value) {
   };
 }
 
+function createBridgedMotionEvent(originalMotionEvent, requestPermission) {
+  function TurnMotionEventBridge(...args) {
+    if (!originalMotionEvent) return undefined;
+    const constructor = new.target === TurnMotionEventBridge
+      ? originalMotionEvent
+      : (new.target || originalMotionEvent);
+    return Reflect.construct(originalMotionEvent, args, constructor);
+  }
+
+  if (originalMotionEvent) {
+    Object.setPrototypeOf(TurnMotionEventBridge, originalMotionEvent);
+    TurnMotionEventBridge.prototype = originalMotionEvent.prototype;
+  }
+
+  Object.defineProperty(TurnMotionEventBridge, 'requestPermission', {
+    configurable: true,
+    value: requestPermission
+  });
+  return TurnMotionEventBridge;
+}
+
 export function installMotionLifecycleBridge({
   platform,
   environment = globalThis
@@ -110,32 +131,22 @@ export function installMotionLifecycleBridge({
   const restoreRemove = replaceProperty(windowRef, 'removeEventListener', patchedRemoveEventListener);
 
   const originalMotionEvent = environment.DeviceMotionEvent || windowRef?.DeviceMotionEvent;
-  let restoreEnvironmentMotion = () => {};
-  let restoreWindowMotion = () => {};
-
-  if (originalMotionEvent) {
-    const bridgedMotionEvent = new Proxy(originalMotionEvent, {
-      get(target, property, receiver) {
-        if (property === 'requestPermission') {
-          return async () => {
-            launchPending = true;
-            try {
-              return await motion.requestPermission();
-            } catch (error) {
-              launchPending = false;
-              throw error;
-            }
-          };
-        }
-        return Reflect.get(target, property, receiver);
+  const bridgedMotionEvent = createBridgedMotionEvent(
+    originalMotionEvent,
+    async () => {
+      launchPending = true;
+      try {
+        return await motion.requestPermission();
+      } catch (error) {
+        launchPending = false;
+        throw error;
       }
-    });
-
-    restoreEnvironmentMotion = replaceProperty(environment, 'DeviceMotionEvent', bridgedMotionEvent);
-    if (windowRef !== environment) {
-      restoreWindowMotion = replaceProperty(windowRef, 'DeviceMotionEvent', bridgedMotionEvent);
     }
-  }
+  );
+  const restoreEnvironmentMotion = replaceProperty(environment, 'DeviceMotionEvent', bridgedMotionEvent);
+  const restoreWindowMotion = windowRef !== environment
+    ? replaceProperty(windowRef, 'DeviceMotionEvent', bridgedMotionEvent)
+    : () => {};
 
   const intro = documentRef?.querySelector?.('#intro');
   const manualButton = documentRef?.querySelector?.('#manualButton');
@@ -148,11 +159,9 @@ export function installMotionLifecycleBridge({
   const onUiStateChange = (event) => {
     if (event?.detail?.reason === 'race-started') launchPending = false;
   };
-  const onPageHide = () => stopSubscription();
   const onManualLaunch = () => cancelPendingLaunch();
 
   originalAddEventListener.call(windowRef, 'turn:ui-state-change', onUiStateChange);
-  originalAddEventListener.call(windowRef, 'pagehide', onPageHide);
   manualButton?.addEventListener?.('click', onManualLaunch, { capture: true });
 
   const Observer = environment.MutationObserver || windowRef?.MutationObserver;
@@ -170,7 +179,6 @@ export function installMotionLifecycleBridge({
     introObserver?.disconnect();
     manualButton?.removeEventListener?.('click', onManualLaunch, { capture: true });
     originalRemoveEventListener?.call(windowRef, 'turn:ui-state-change', onUiStateChange);
-    originalRemoveEventListener?.call(windowRef, 'pagehide', onPageHide);
     restoreWindowMotion();
     restoreEnvironmentMotion();
     restoreRemove();
