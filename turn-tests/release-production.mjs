@@ -23,7 +23,13 @@ assert.match(index, new RegExp(`cacheKey: '${escapeRegExp(release.cacheKey)}'`))
 
 const attributeBuilds = [...index.matchAll(/(?:href|src)="\.\/[^"?]+\?build=([^"&]+)/g)].map((match) => match[1]);
 assert.ok(attributeBuilds.length >= 15, 'Production entry document must cache-bust its local assets');
-assert.deepEqual(new Set(attributeBuilds), new Set([release.cacheKey]), 'Every entry asset must use the release cache key');
+assert.ok(attributeBuilds.includes(release.cacheKey), 'The canonical release cache key must remain in use');
+for (const build of attributeBuilds) {
+  assert.ok(
+    build === release.cacheKey || build.startsWith(`${release.cacheKey}-`),
+    `Entry asset cache key ${build} must use the current release prefix`
+  );
+}
 
 const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
 assert.ok(importMapText, 'Production must retain the external Three.js import map');
@@ -55,7 +61,10 @@ const manifestData = JSON.parse(manifest);
 assert.equal(manifestData.start_url, '/turn/');
 assert.equal(manifestData.scope, '/turn/');
 assert.equal(manifestData.orientation, 'landscape');
-assert.ok(manifestData.icons.some((icon) => icon.purpose === 'maskable'));
+assert.ok(
+  manifestData.icons.some((icon) => String(icon.purpose || '').split(/\s+/).includes('maskable')),
+  'Production manifest must provide a maskable-capable icon'
+);
 
 assert.match(workflow, /node turn\/scripts\/release\.mjs --check/);
 assert.match(workflow, /node turn-tests\/release-production\.mjs/);

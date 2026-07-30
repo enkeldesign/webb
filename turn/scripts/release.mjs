@@ -32,7 +32,9 @@ export function renderReleaseIndex(source, release) {
       `globalThis.__TURN_BUILD__ = Object.freeze({\n      version: '${release.version}',\n      id: '${release.id}',\n      cacheKey: '${release.cacheKey}'\n    });`
     )
     .replace(/TURN v\d+\.\d+\.\d+ · Build \d{4}\.\d{2}\.\d{2}-r\d+/g, `TURN v${release.version} · Build ${release.id}`)
-    .replace(/((?:href|src)="\.\/[^"?]+\?build=)[^"&]+/g, `$1${release.cacheKey}`);
+    // Update the canonical build prefix while preserving an explicit per-asset
+    // revision such as "-icon-20260730" after it.
+    .replace(/((?:href|src)="\.\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`);
 
   output = output.replace(
     /<script type="importmap">\s*([\s\S]*?)\s*<\/script>/,

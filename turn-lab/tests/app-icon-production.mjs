@@ -1,60 +1,64 @@
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const turnRoot = path.resolve(here, '../../turn');
+const turnNextRoot = path.resolve(here, '../../turn-next');
 
 const index = fs.readFileSync(path.join(turnRoot, 'index.html'), 'utf8');
+const nextIndex = fs.readFileSync(path.join(turnNextRoot, 'index.html'), 'utf8');
 const release = JSON.parse(fs.readFileSync(path.join(turnRoot, 'release.json'), 'utf8'));
 const styles = fs.readFileSync(path.join(turnRoot, 'styles.css'), 'utf8');
 const manifest = JSON.parse(fs.readFileSync(path.join(turnRoot, 'site.webmanifest'), 'utf8'));
+const nextManifest = JSON.parse(fs.readFileSync(path.join(turnNextRoot, 'site.webmanifest'), 'utf8'));
 
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
-assert.match(index, /<link rel="icon" href="\.\/favicon-r45\.ico" sizes="any">/);
-assert.match(index, /<link rel="icon" href="\.\/favicon-32-r45\.png" type="image\/png" sizes="32x32">/);
-assert.match(index, /<link rel="apple-touch-icon" href="\.\/apple-touch-icon-r45\.png" sizes="180x180">/);
-assert.match(index, new RegExp(`<link rel="manifest" href="\\.\\/site\\.webmanifest\\?build=${release.cacheKey}">`));
-assert.match(index, /<img class="install-icon" src="\.\/icon-512-r45\.png" alt="">/);
-assert.match(index, /<h1 class="start-logo-heading" id="title">\s*<img class="start-logo" src="\.\/icon-512-r45\.png" alt="TURN">\s*<\/h1>/);
-assert.doesNotMatch(index, /apple-touch-icon-v4|icon-192-v4/);
+
+for (const source of [index, nextIndex]) {
+  assert.match(source, /<link rel="icon" href="\.\/TURNicon\.PNG\?icon=20260730" type="image\/png" sizes="1254x1254">/);
+  assert.match(source, /<link rel="apple-touch-icon" href="\.\/TURNicon\.PNG\?icon=20260730" sizes="1254x1254">/);
+  assert.match(source, /<img class="install-icon" src="\.\/TURNicon\.PNG\?icon=20260730" alt="">/);
+  assert.match(source, /<img class="start-logo" src="\.\/TURNicon\.PNG\?icon=20260730" alt="TURN">/);
+  assert.doesNotMatch(source, /favicon-r45|apple-touch-icon-r45|icon-512-r45/);
+}
+
+assert.match(index, /<link rel="manifest" href="\.\/site\.webmanifest\?build=20260729-r118-icon-20260730">/);
+assert.match(nextIndex, /<link rel="manifest" href="\/turn-next\/site\.webmanifest\?source=20260729-r118-icon-20260730">/);
 
 assert.match(styles, /\.start-logo-heading\s*\{[^}]*font-size:\s*0;/s);
 assert.match(styles, /\.start-logo\s*\{[^}]*width:\s*clamp\(104px, 27vh, 210px\);[^}]*border-radius:\s*22%;/s);
 
 const expectedIcons = [
-  { src: '/turn/icon-192-r45.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-  { src: '/turn/icon-512-r45.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-  { src: '/turn/icon-maskable-512-r45.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+  {
+    src: '/turn/TURNicon.PNG?icon=20260730',
+    sizes: '1254x1254',
+    type: 'image/png',
+    purpose: 'any maskable'
+  }
 ];
 assert.deepEqual(manifest.icons, expectedIcons);
+assert.deepEqual(nextManifest.icons, expectedIcons);
 
-function readPngSize(fileName) {
-  const data = fs.readFileSync(path.join(turnRoot, fileName));
-  assert.deepEqual(
-    [...data.subarray(0, 8)],
-    [137, 80, 78, 71, 13, 10, 26, 10],
-    `${fileName} must be a PNG`
-  );
-  assert.ok(data.length > 1000, `${fileName} must contain the supplied artwork`);
-  return [data.readUInt32BE(16), data.readUInt32BE(20)];
-}
+const icon = fs.readFileSync(path.join(turnRoot, 'TURNicon.PNG'));
+assert.deepEqual(
+  [...icon.subarray(0, 8)],
+  [137, 80, 78, 71, 13, 10, 26, 10],
+  'TURNicon.PNG must be a PNG'
+);
+assert.deepEqual([icon.readUInt32BE(16), icon.readUInt32BE(20)], [1254, 1254]);
+assert.ok(icon.length > 1000, 'TURNicon.PNG must contain the supplied artwork');
+const blobSha = crypto
+  .createHash('sha1')
+  .update(`blob ${icon.length}\0`)
+  .update(icon)
+  .digest('hex');
+assert.equal(
+  blobSha,
+  '8a4057fe5fb8e642514981caacfafc67fa965254',
+  'All icon surfaces must remain tied to the exact user-supplied TURNicon.PNG blob'
+);
 
-assert.deepEqual(readPngSize('favicon-32-r45.png'), [32, 32]);
-assert.deepEqual(readPngSize('apple-touch-icon-r45.png'), [180, 180]);
-assert.deepEqual(readPngSize('icon-192-r45.png'), [192, 192]);
-assert.deepEqual(readPngSize('icon-512-r45.png'), [512, 512]);
-assert.deepEqual(readPngSize('icon-maskable-512-r45.png'), [512, 512]);
-
-const ico = fs.readFileSync(path.join(turnRoot, 'favicon-r45.ico'));
-assert.equal(ico.readUInt16LE(0), 0, 'favicon ICO reserved field');
-assert.equal(ico.readUInt16LE(2), 1, 'favicon must be an icon');
-assert.equal(ico.readUInt16LE(4), 3, 'favicon must contain three sizes');
-const icoSizes = Array.from({ length: 3 }, (_, index) => {
-  const offset = 6 + index * 16;
-  return [ico[offset] || 256, ico[offset + 1] || 256];
-});
-assert.deepEqual(icoSizes, [[16, 16], [32, 32], [48, 48]]);
-
-console.log(`TURN ${release.id} production app icon, bookmarks and start-screen branding passed.`);
+console.log(`TURN ${release.id} supplied app icon, favicon, bookmarks and start-screen branding passed.`);
