@@ -1,3 +1,4 @@
+# Temporary PR fallback; the trusted push workflow on main now performs the migration.
 name: Run TURN NEXT Platform M5 migration
 
 on:
