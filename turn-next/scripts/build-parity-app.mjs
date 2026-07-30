@@ -29,7 +29,7 @@ export function buildTurnNextApp(productionApp, release) {
   output = replaceRequired(
     output,
     'function installStylesheet(path, dataAttribute) {',
-    "const { createWebPlatform } = await import(new URL('./web-platform.js', platformModuleBase).href);\nconst { installTurnPlatform } = await import(new URL('./platform-context.js', platformModuleBase).href);\nconst { installMotionLifecycleBridge } = await import(\n  new URL(`./motion-lifecycle-bridge.js?source=${buildKey}`, stagingModuleBase).href\n);\nconst webPlatform = createWebPlatform();\ninstallTurnPlatform(webPlatform);\nconst motionLifecycle = installMotionLifecycleBridge({ platform: webPlatform });\nglobalThis.__turnNextMotionLifecycle = motionLifecycle;\ndocument.documentElement.dataset.turnPlatform = 'web-adapter';\ndocument.documentElement.dataset.turnMotionLifecycle = 'platform-m5';\nconst turnNextBadgeDetail = document.querySelector('.turn-next-badge span');\nif (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M5 · Motion Lifecycle';\n\nfunction installStylesheet(path, dataAttribute) {",
+    "const { createWebPlatform } = await import(new URL('./web-platform.js', platformModuleBase).href);\nconst { installTurnPlatform } = await import(new URL('./platform-context.js', platformModuleBase).href);\nconst { installMotionLifecycleBridge } = await import(\n  new URL(`./motion-lifecycle-bridge.js?source=${buildKey}-m5.1`, stagingModuleBase).href\n);\nconst webPlatform = createWebPlatform();\ninstallTurnPlatform(webPlatform);\nconst motionLifecycle = installMotionLifecycleBridge({ platform: webPlatform });\nglobalThis.__turnNextMotionLifecycle = motionLifecycle;\ndocument.documentElement.dataset.turnPlatform = 'web-adapter';\ndocument.documentElement.dataset.turnMotionLifecycle = 'platform-m5';\nconst turnNextBadgeDetail = document.querySelector('.turn-next-badge span');\nif (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M5 · Motion Lifecycle';\n\nfunction installStylesheet(path, dataAttribute) {",
     'platform composition point'
   );
 
@@ -45,6 +45,7 @@ export function buildTurnNextApp(productionApp, release) {
   assert.match(output, /const productionModuleBase = new URL\('\/turn\/'/);
   assert.match(output, /const platformModuleBase = new URL\('\/turn\/platform\/'/);
   assert.match(output, /const stagingModuleBase = new URL\('\/turn-next\/'/);
+  assert.match(output, /motion-lifecycle-bridge\.js\?source=\$\{buildKey\}-m5\.1/);
   assert.match(output, /installTurnPlatform\(webPlatform\)/);
   assert.match(output, /installMotionLifecycleBridge\(\{ platform: webPlatform \}\)/);
   assert.match(output, /__turnNextMotionLifecycle = motionLifecycle/);

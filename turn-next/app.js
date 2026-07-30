@@ -13,7 +13,7 @@ function withBuild(path) {
 const { createWebPlatform } = await import(new URL('./web-platform.js', platformModuleBase).href);
 const { installTurnPlatform } = await import(new URL('./platform-context.js', platformModuleBase).href);
 const { installMotionLifecycleBridge } = await import(
-  new URL(`./motion-lifecycle-bridge.js?source=${buildKey}`, stagingModuleBase).href
+  new URL(`./motion-lifecycle-bridge.js?source=${buildKey}-m5.1`, stagingModuleBase).href
 );
 const webPlatform = createWebPlatform();
 installTurnPlatform(webPlatform);
