@@ -2,6 +2,7 @@
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
 const productionModuleBase = new URL('/turn/', globalThis.location?.href || 'https://enkel.design/turn-next/');
 const platformModuleBase = new URL('/turn/platform/', globalThis.location?.href || 'https://enkel.design/turn-next/');
+const stagingModuleBase = new URL('/turn-next/', globalThis.location?.href || 'https://enkel.design/turn-next/');
 
 function withBuild(path) {
   const url = new URL(path, productionModuleBase);
@@ -11,11 +12,17 @@ function withBuild(path) {
 
 const { createWebPlatform } = await import(new URL('./web-platform.js', platformModuleBase).href);
 const { installTurnPlatform } = await import(new URL('./platform-context.js', platformModuleBase).href);
+const { installMotionLifecycleBridge } = await import(
+  new URL(`./motion-lifecycle-bridge.js?source=${buildKey}`, stagingModuleBase).href
+);
 const webPlatform = createWebPlatform();
 installTurnPlatform(webPlatform);
+const motionLifecycle = installMotionLifecycleBridge({ platform: webPlatform });
+globalThis.__turnNextMotionLifecycle = motionLifecycle;
 document.documentElement.dataset.turnPlatform = 'web-adapter';
+document.documentElement.dataset.turnMotionLifecycle = 'platform-m5';
 const turnNextBadgeDetail = document.querySelector('.turn-next-badge span');
-if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M1 · Product Parity';
+if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M5 · Motion Lifecycle';
 
 function installStylesheet(path, dataAttribute) {
   if (document.querySelector(`link[${dataAttribute}]`)) return;

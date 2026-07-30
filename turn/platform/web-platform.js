@@ -5,6 +5,13 @@ export function createWebPlatform(environment = globalThis) {
   const documentRef = environment.document || windowRef.document;
   const screenRef = environment.screen || windowRef.screen;
   const motionEventType = environment.DeviceMotionEvent || windowRef.DeviceMotionEvent;
+  const requestMotionPermission = motionEventType?.requestPermission;
+  const addWindowEventListener = typeof windowRef?.addEventListener === 'function'
+    ? windowRef.addEventListener.bind(windowRef)
+    : null;
+  const removeWindowEventListener = typeof windowRef?.removeEventListener === 'function'
+    ? windowRef.removeEventListener.bind(windowRef)
+    : null;
 
   const motion = Object.freeze({
     isAvailable() {
@@ -24,9 +31,8 @@ export function createWebPlatform(environment = globalThis) {
         throw new Error('Motion sensors are not available in this browser.');
       }
 
-      const request = motionEventType?.requestPermission;
-      if (typeof request === 'function') {
-        const permission = await request.call(motionEventType);
+      if (typeof requestMotionPermission === 'function') {
+        const permission = await requestMotionPermission.call(motionEventType);
         if (permission !== 'granted') {
           throw new Error('Motion permission was not granted.');
         }
@@ -36,15 +42,15 @@ export function createWebPlatform(environment = globalThis) {
     },
 
     subscribe(listener) {
-      if (typeof listener !== 'function') {
-        throw new TypeError('TURN motion listener must be a function.');
+      if (typeof listener !== 'function' && typeof listener?.handleEvent !== 'function') {
+        throw new TypeError('TURN motion listener must be callable.');
       }
-      if (typeof windowRef?.addEventListener !== 'function') {
+      if (!addWindowEventListener) {
         throw new Error('Motion events are not available in this environment.');
       }
 
-      windowRef.addEventListener('devicemotion', listener, { passive: true });
-      return () => windowRef.removeEventListener?.('devicemotion', listener);
+      addWindowEventListener('devicemotion', listener, { passive: true });
+      return () => removeWindowEventListener?.('devicemotion', listener);
     }
   });
 

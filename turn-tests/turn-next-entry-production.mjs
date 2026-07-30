@@ -15,6 +15,7 @@ const [
   releaseSource,
   platformContext,
   webPlatform,
+  motionLifecycleBridge,
   motionInput,
   cameraSource,
   orientationCompat,
@@ -33,6 +34,7 @@ const [
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/platform/platform-context.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/platform/web-platform.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn-next/motion-lifecycle-bridge.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/input/motion.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/render/camera.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/orientation-compat.js', import.meta.url), 'utf8'),
@@ -75,14 +77,21 @@ assert.doesNotMatch(nextIndex, /href="\.\/site\.webmanifest/);
 assert.match(nextApp, /Generated from turn\/app\.js/);
 assert.match(nextApp, /const productionModuleBase = new URL\('\/turn\/'/);
 assert.match(nextApp, /const platformModuleBase = new URL\('\/turn\/platform\/'/);
+assert.match(nextApp, /const stagingModuleBase = new URL\('\/turn-next\/'/);
 assert.match(nextApp, /const webPlatform = createWebPlatform\(\)/);
 assert.match(nextApp, /installTurnPlatform\(webPlatform\)/);
+assert.match(nextApp, /installMotionLifecycleBridge\(\{ platform: webPlatform \}\)/);
 assert.match(nextApp, /dataset\.turnPlatform = 'web-adapter'/);
-assert.match(nextApp, /Platform M1 · Product Parity/);
+assert.match(nextApp, /dataset\.turnMotionLifecycle = 'platform-m5'/);
+assert.match(nextApp, /Platform M5 · Motion Lifecycle/);
 assert.doesNotMatch(nextApp, /turnNextModuleBase|turn-next\/steering-limit-warning|installTurnNextSteeringLimitWarning/);
 assert.ok(
   nextApp.indexOf('installTurnPlatform(webPlatform)') < nextApp.indexOf("withBuild('./main.js')"),
   'The platform must be composed before main.js imports motion input'
+);
+assert.ok(
+  nextApp.indexOf('installMotionLifecycleBridge({ platform: webPlatform })') < nextApp.indexOf("withBuild('./main.js')"),
+  'Platform M5 must own legacy permission and subscription calls before main.js loads'
 );
 assert.match(nextApp, /new URL\(path, productionModuleBase\)/);
 assert.doesNotMatch(nextApp, /new URL\(path, import\.meta\.url\)/);
@@ -152,10 +161,16 @@ assert.match(platformContext, /installTurnPlatform/);
 assert.match(platformContext, /requireTurnPlatform/);
 assert.match(platformContext, /validateTurnPlatform/);
 assert.doesNotMatch(platformContext, /\b(?:window|document|screen|DeviceMotionEvent)\b/);
-assert.match(webPlatform, /requestPermission/);
-assert.match(webPlatform, /addEventListener\('devicemotion'/);
+assert.match(webPlatform, /requestMotionPermission = motionEventType\?\.requestPermission/);
+assert.match(webPlatform, /addWindowEventListener\('devicemotion'/);
+assert.match(webPlatform, /removeWindowEventListener\?\.\('devicemotion'/);
 assert.match(webPlatform, /requestFullscreen/);
 assert.match(webPlatform, /lockLandscape/);
+assert.match(motionLifecycleBridge, /motion\.requestPermission\(\)/);
+assert.match(motionLifecycleBridge, /motion\.subscribe\(listener\)/);
+assert.match(motionLifecycleBridge, /type === 'devicemotion'/);
+assert.match(motionLifecycleBridge, /launchPending && !intro\.hidden/);
+assert.doesNotMatch(motionLifecycleBridge, /pagehide/, 'M5 must preserve production background/resume listener behavior');
 assert.match(motionInput, /getTurnPlatform/);
 assert.match(motionInput, /resolveSteeringRollLimit/);
 assert.match(motionInput, /__TURN_MOTION_SAFE_ZONE__/);
@@ -201,4 +216,4 @@ assert.deepEqual(
   }
 );
 
-console.log(`TURN NEXT product-parity entry for TURN ${release.id} passed.`);
+console.log(`TURN NEXT Platform M5 entry for TURN ${release.id} passed.`);
