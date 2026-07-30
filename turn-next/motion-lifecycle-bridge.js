@@ -136,7 +136,10 @@ export function installMotionLifecycleBridge({
     async () => {
       launchPending = true;
       try {
-        return await motion.requestPermission();
+        await motion.requestPermission();
+        // The canonical platform port returns true or throws, while TURN's current
+        // browser launch path still consumes the DeviceMotionEvent API contract.
+        return 'granted';
       } catch (error) {
         launchPending = false;
         throw error;

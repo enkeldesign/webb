@@ -136,7 +136,12 @@ const bridge = installMotionLifecycleBridge({ platform, environment: fakeEnviron
 assert.equal(bridge.route, 'platform');
 assert.equal(bridge.isAvailable(), true);
 assert.notEqual(fakeEnvironment.DeviceMotionEvent, FakeDeviceMotionEvent, 'M5 must provide TURN NEXT with a permission bridge');
-assert.equal(await fakeEnvironment.DeviceMotionEvent.requestPermission(), true);
+const legacyPermissionState = await fakeEnvironment.DeviceMotionEvent.requestPermission();
+assert.equal(
+  legacyPermissionState,
+  'granted',
+  'The M5 bridge must preserve the DeviceMotionEvent permission result consumed by the current launch path'
+);
 assert.equal(permissionRequests, 2, 'The legacy launch call must route into platform.motion.requestPermission()');
 
 const bridgeListenerA = () => {};
@@ -208,7 +213,7 @@ assert.ok(
     < nextApp.indexOf("withBuild('./main.js')"),
   'The M5 bridge must own motion before the canonical runtime registers its legacy listener'
 );
-assert.match(bridgeSource, /motion\.requestPermission\(\)/);
+assert.match(bridgeSource, /await motion\.requestPermission\(\);[\s\S]*return 'granted';/);
 assert.match(bridgeSource, /motion\.subscribe\(listener\)/);
 assert.match(bridgeSource, /launchPending && !intro\.hidden/);
 assert.match(bridgeSource, /type === 'devicemotion'/);
