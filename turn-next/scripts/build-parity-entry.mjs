@@ -152,13 +152,13 @@ export function buildTurnNextEntry(productionIndex, release) {
   output = replaceRequired(
     output,
     `<script type="module" src="./app.js?build=${release.cacheKey}"></script>`,
-    `<script type="module" src="/turn-next/app.js?source=${release.cacheKey}-m5.1"></script>`,
+    `<script type="module" src="/turn-next/app.js?source=${release.cacheKey}-m6"></script>`,
     'TURN NEXT bootstrap entry'
   );
 
   assert.match(output, /<base href="\/turn\/">/);
   assert.match(output, /src="\.\/motion-safe-zone\.js\?build=/);
-  assert.match(output, /src="\/turn-next\/app\.js\?source=.*-m5\.1"/);
+  assert.match(output, /src="\/turn-next\/app\.js\?source=.*-m6"/);
   assert.match(output, /src="\/turn-next\/storage-bootstrap\.js/);
   assert.match(output, /href="\/turn-next\/site\.webmanifest\?source=.*-icon-20260730"/);
   assert.match(output, /TURNicon\.PNG\?icon=20260730/);
