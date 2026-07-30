@@ -1,0 +1,365 @@
+# One-shot migration workflow; it removes itself after committing the generated slice.
+name: Apply TURN NEXT Platform M5
+
+on:
+  push:
+    branches:
+      - agent/turn-next-platform-m5
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/turn-next-platform-m5
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Apply motion lifecycle migration
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cat > turn/platform/motion-session.js <<'EOF'
+          function once(callback) {
+            let active = true;
+            return () => {
+              if (!active) return false;
+              active = false;
+              callback();
+              return true;
+            };
+          }
+
+          export function createMotionSession({
+            platform = null,
+            environment = globalThis,
+            listener
+          } = {}) {
+            if (typeof listener !== 'function') {
+              throw new TypeError('TURN motion session requires a listener.');
+            }
+
+            const windowRef = environment.window || environment;
+            const motionEventType = environment.DeviceMotionEvent || windowRef?.DeviceMotionEvent;
+            const platformMotion = platform?.motion;
+            const usesPlatform = Boolean(
+              platformMotion
+              && typeof platformMotion.isAvailable === 'function'
+              && typeof platformMotion.requestPermission === 'function'
+              && typeof platformMotion.subscribe === 'function'
+            );
+
+            let releaseSubscription = null;
+
+            function isAvailable() {
+              return usesPlatform
+                ? platformMotion.isAvailable()
+                : typeof motionEventType !== 'undefined' && motionEventType !== null;
+            }
+
+            async function requestPermission() {
+              if (usesPlatform) return platformMotion.requestPermission();
+              if (!isAvailable()) {
+                throw new Error('Motion sensors are not available in this browser.');
+              }
+
+              const request = motionEventType?.requestPermission;
+              if (typeof request === 'function') {
+                const permission = await request.call(motionEventType);
+                if (permission !== 'granted') {
+                  throw new Error('Motion permission was not granted.');
+                }
+              }
+
+              return true;
+            }
+
+            function stop() {
+              if (!releaseSubscription) return false;
+              const release = releaseSubscription;
+              releaseSubscription = null;
+              return release();
+            }
+
+            function start() {
+              stop();
+              if (!isAvailable()) {
+                throw new Error('Motion sensors are not available in this browser.');
+              }
+
+              if (usesPlatform) {
+                const unsubscribe = platformMotion.subscribe(listener);
+                if (typeof unsubscribe !== 'function') {
+                  throw new TypeError('TURN platform motion subscription must return a cleanup function.');
+                }
+                releaseSubscription = once(unsubscribe);
+              } else {
+                if (typeof windowRef?.addEventListener !== 'function') {
+                  throw new Error('Motion events are not available in this environment.');
+                }
+                windowRef.addEventListener('devicemotion', listener, { passive: true });
+                releaseSubscription = once(() => {
+                  windowRef.removeEventListener?.('devicemotion', listener);
+                });
+              }
+
+              return stop;
+            }
+
+            return Object.freeze({
+              route: usesPlatform ? 'platform' : 'browser-fallback',
+              isAvailable,
+              requestPermission,
+              start,
+              stop,
+              isSubscribed: () => releaseSubscription !== null
+            });
+          }
+          EOF
+
+          cat > turn-tests/motion-lifecycle-production.mjs <<'EOF'
+          import assert from 'node:assert/strict';
+          import fs from 'node:fs';
+
+          import { createMotionSession } from '../turn/platform/motion-session.js';
+
+          const listener = () => {};
+          let platformPermissionRequests = 0;
+          let platformSubscriptions = 0;
+          let platformReleases = 0;
+          let fallbackAdds = 0;
+
+          const platform = {
+            kind: 'test',
+            motion: {
+              isAvailable: () => true,
+              async requestPermission() {
+                platformPermissionRequests += 1;
+                return true;
+              },
+              subscribe(receivedListener) {
+                assert.equal(receivedListener, listener);
+                platformSubscriptions += 1;
+                return () => {
+                  platformReleases += 1;
+                };
+              }
+            }
+          };
+
+          const platformSession = createMotionSession({
+            platform,
+            listener,
+            environment: {
+              DeviceMotionEvent: class {},
+              window: {
+                addEventListener() {
+                  fallbackAdds += 1;
+                }
+              }
+            }
+          });
+
+          assert.equal(platformSession.route, 'platform');
+          assert.equal(platformSession.isAvailable(), true);
+          assert.equal(await platformSession.requestPermission(), true);
+          assert.equal(platformPermissionRequests, 1);
+          platformSession.start();
+          assert.equal(platformSubscriptions, 1);
+          assert.equal(platformSession.isSubscribed(), true);
+          platformSession.start();
+          assert.equal(platformSubscriptions, 2, 'Restarting a sensor session must replace rather than duplicate its listener');
+          assert.equal(platformReleases, 1);
+          assert.equal(fallbackAdds, 0, 'TURN NEXT must not fall through to browser globals after platform composition');
+          assert.equal(platformSession.stop(), true);
+          assert.equal(platformReleases, 2);
+          assert.equal(platformSession.stop(), false, 'Cleanup must be idempotent');
+          assert.equal(platformSession.isSubscribed(), false);
+
+          let fallbackPermissionRequests = 0;
+          let fallbackListener = null;
+          let fallbackOptions = null;
+          let fallbackRemoved = null;
+          class GrantedMotionEvent {
+            static async requestPermission() {
+              fallbackPermissionRequests += 1;
+              return 'granted';
+            }
+          }
+          const fallbackEnvironment = {
+            DeviceMotionEvent: GrantedMotionEvent,
+            window: {
+              addEventListener(type, receivedListener, options) {
+                assert.equal(type, 'devicemotion');
+                fallbackListener = receivedListener;
+                fallbackOptions = options;
+              },
+              removeEventListener(type, receivedListener) {
+                assert.equal(type, 'devicemotion');
+                fallbackRemoved = receivedListener;
+              }
+            }
+          };
+          const fallbackSession = createMotionSession({ environment: fallbackEnvironment, listener });
+          assert.equal(fallbackSession.route, 'browser-fallback');
+          assert.equal(await fallbackSession.requestPermission(), true);
+          assert.equal(fallbackPermissionRequests, 1);
+          fallbackSession.start();
+          assert.equal(fallbackListener, listener);
+          assert.deepEqual(fallbackOptions, { passive: true });
+          fallbackSession.stop();
+          assert.equal(fallbackRemoved, listener);
+
+          class DeniedMotionEvent {
+            static async requestPermission() {
+              return 'denied';
+            }
+          }
+          const deniedSession = createMotionSession({
+            environment: { DeviceMotionEvent: DeniedMotionEvent, window: {} },
+            listener
+          });
+          await assert.rejects(() => deniedSession.requestPermission(), /was not granted/);
+
+          const unavailableSession = createMotionSession({ environment: { window: {} }, listener });
+          assert.equal(unavailableSession.isAvailable(), false);
+          await assert.rejects(() => unavailableSession.requestPermission(), /not available/);
+          assert.throws(() => unavailableSession.start(), /not available/);
+          assert.throws(() => createMotionSession(), /requires a listener/);
+
+          const main = fs.readFileSync(new URL('../turn/main.js', import.meta.url), 'utf8');
+          const productionApp = fs.readFileSync(new URL('../turn/app.js', import.meta.url), 'utf8');
+          const nextApp = fs.readFileSync(new URL('../turn-next/app.js', import.meta.url), 'utf8');
+
+          assert.match(main, /createMotionSession\(\{\s*platform: getTurnPlatform\(\),\s*listener: handleMotion/s);
+          assert.doesNotMatch(main, /typeof DeviceMotionEvent|DeviceMotionEvent\.requestPermission/);
+          assert.doesNotMatch(main, /addEventListener\(['"]devicemotion/);
+          assert.ok(
+            main.indexOf('const fullscreenPromise = requestGameFullscreen();')
+              < main.indexOf('await motionSession.requestPermission();'),
+            'Fullscreen must still be requested synchronously from the launch gesture before awaiting iOS motion permission'
+          );
+          assert.ok(
+            main.indexOf('await motionSession.requestPermission();')
+              < main.indexOf('motionSession.start();'),
+            'The sensor listener must not start before permission succeeds'
+          );
+          assert.match(main, /if \(!started\) \{\s*motionSession\.stop\(\);\s*state\.sensorMode = false;/s);
+          assert.match(main, /catch \(error\) \{\s*motionSession\.stop\(\);\s*state\.sensorMode = false;/s);
+          assert.match(main, /async function useManualMode\(\) \{\s*const fullscreenPromise = requestGameFullscreen\(\);\s*motionSession\.stop\(\);/s);
+          assert.doesNotMatch(productionApp, /installTurnPlatform\(/, 'Production must retain the browser fallback during M5 physical testing');
+          assert.match(nextApp, /installTurnPlatform\(webPlatform\)/);
+          assert.match(nextApp, /Platform M5 · Motion Lifecycle/);
+          assert.ok(
+            nextApp.indexOf('installTurnPlatform(webPlatform)') < nextApp.indexOf("withBuild('./main.js')"),
+            'TURN NEXT must compose the platform before the canonical runtime creates its motion session'
+          );
+
+          console.log('TURN NEXT Platform M5 motion lifecycle and production fallback passed.');
+          EOF
+
+          python <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new, label):
+              text = Path(path).read_text()
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected one {label}, found {count}')
+              Path(path).write_text(text.replace(old, new, 1))
+
+          main_path = 'turn/main.js'
+          replace_once(
+              main_path,
+              "import { motionPoseFromGravity as motionPoseFromGravityState, updateMotionInputState } from './input/motion.js';\n",
+              "import { motionPoseFromGravity as motionPoseFromGravityState, updateMotionInputState } from './input/motion.js';\nimport { getTurnPlatform } from './platform/platform-context.js';\nimport { createMotionSession } from './platform/motion-session.js';\n",
+              'motion platform imports'
+          )
+
+          replace_once(
+              main_path,
+              "function handleMotion(event) {\n  const pose = motionPoseFromGravity(event);\n  if (!pose) return;\n  state.motionSeen = true;\n  state.targetRoll = pose.roll;\n  state.targetPitch = pose.pitch;\n}\n\nfunction requestGameFullscreen() {",
+              "function handleMotion(event) {\n  const pose = motionPoseFromGravity(event);\n  if (!pose) return;\n  state.motionSeen = true;\n  state.targetRoll = pose.roll;\n  state.targetPitch = pose.pitch;\n}\n\nconst motionSession = createMotionSession({\n  platform: getTurnPlatform(),\n  listener: handleMotion\n});\n\nfunction requestGameFullscreen() {",
+              'motion session composition'
+          )
+
+          replace_once(
+              main_path,
+              "async function requestMotion() {\n  const fullscreenPromise = requestGameFullscreen();\n  try {\n    if (typeof DeviceMotionEvent === 'undefined') throw new Error('Motion sensors are not available in this browser.');\n    if (typeof DeviceMotionEvent.requestPermission === 'function') {\n      const permission = await DeviceMotionEvent.requestPermission();\n      if (permission !== 'granted') throw new Error('Motion permission was not granted.');\n    }\n    window.addEventListener('devicemotion', handleMotion, { passive: true });\n    state.sensorMode = true;\n    await chooseVehicleAndStart(fullscreenPromise);\n  } catch (error) {\n    status.textContent = `${error.message} Manual mode still works.`;\n  }\n}\n",
+              "async function requestMotion() {\n  const fullscreenPromise = requestGameFullscreen();\n  try {\n    if (!motionSession.isAvailable()) {\n      throw new Error('Motion sensors are not available in this browser.');\n    }\n    await motionSession.requestPermission();\n    motionSession.start();\n    state.sensorMode = true;\n    const started = await chooseVehicleAndStart(fullscreenPromise);\n    if (!started) {\n      motionSession.stop();\n      state.sensorMode = false;\n    }\n  } catch (error) {\n    motionSession.stop();\n    state.sensorMode = false;\n    status.textContent = `${error.message} Manual mode still works.`;\n  }\n}\n",
+              'motion launch lifecycle'
+          )
+
+          replace_once(
+              main_path,
+              "  if (!selection) {\n    intro.hidden = false;\n    return;\n  }\n\n  await applyVehicleSelection(selection);\n  await startGame(fullscreenPromise);\n}\n",
+              "  if (!selection) {\n    intro.hidden = false;\n    return false;\n  }\n\n  await applyVehicleSelection(selection);\n  await startGame(fullscreenPromise);\n  return true;\n}\n",
+              'launch result contract'
+          )
+
+          replace_once(
+              main_path,
+              "async function useManualMode() {\n  const fullscreenPromise = requestGameFullscreen();\n  state.sensorMode = false;",
+              "async function useManualMode() {\n  const fullscreenPromise = requestGameFullscreen();\n  motionSession.stop();\n  state.sensorMode = false;",
+              'manual-mode sensor cleanup'
+          )
+
+          generator = Path('turn-next/scripts/build-parity-app.mjs')
+          text = generator.read_text()
+          text = text.replace("Platform M1 · Product Parity", "Platform M5 · Motion Lifecycle")
+          if text.count("Platform M5 · Motion Lifecycle") != 2:
+              raise SystemExit('TURN NEXT app generator did not receive both M5 badge updates')
+          generator.write_text(text)
+
+          workflow = Path('.github/workflows/turn-lab-tests.yml')
+          text = workflow.read_text()
+          marker = "      - name: Run web platform and motion composition regression\n        run: node turn-tests/platform-production.mjs\n\n"
+          addition = marker + "      - name: Run TURN NEXT motion lifecycle regression\n        run: node turn-tests/motion-lifecycle-production.mjs\n\n"
+          if text.count(marker) != 1:
+              raise SystemExit('Could not locate platform regression step')
+          workflow.write_text(text.replace(marker, addition, 1))
+
+          readme = Path('turn-next/README.md')
+          readme_text = readme.read_text()
+          section = """
+
+          ## Platform M5: motion lifecycle
+
+          TURN NEXT composes the web platform before the canonical game runtime loads. The runtime now creates one owned motion session that uses `motion.isAvailable()`, `motion.requestPermission()` and `motion.subscribe()` when a platform is installed. Production TURN deliberately keeps the browser fallback until iPhone, iPad, manual-mode and VoiceOver parity have been physically verified.
+
+          Fullscreen remains a synchronous browser request from the launch gesture during M5. Display ownership moves separately in Platform M6.
+          """
+          if '## Platform M5: motion lifecycle' in readme_text:
+              raise SystemExit('Platform M5 README section already exists')
+          readme.write_text(readme_text.rstrip() + section + '\n')
+          PY
+
+          node turn-next/scripts/build-parity-app.mjs
+          node turn-next/scripts/build-parity-entry.mjs
+          node --check turn/platform/motion-session.js
+          node --check turn/main.js
+          node turn-next/scripts/build-parity-app.mjs --check
+          node turn-next/scripts/build-parity-entry.mjs --check
+          node turn-tests/platform-production.mjs
+          node turn-tests/motion-lifecycle-production.mjs
+
+          rm .github/workflows/turn-next-m5-apply.yml
+
+      - name: Commit generated M5 slice
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "Route TURN NEXT motion lifecycle through platform"
+          git push origin HEAD:agent/turn-next-platform-m5
