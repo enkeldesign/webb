@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 
 import {
   getTurnPlatform,
@@ -8,6 +9,7 @@ import {
 } from '../turn/platform/platform-context.js';
 import { createWebPlatform } from '../turn/platform/web-platform.js';
 import { motionPoseFromGravity, updateMotionInputState } from '../turn/input/motion.js';
+import { installMotionLifecycleBridge } from '../turn-next/motion-lifecycle-bridge.js';
 
 const EPSILON = 1e-9;
 
@@ -32,6 +34,8 @@ let landscapeLocks = 0;
 let subscribed = null;
 let subscribedOptions = null;
 let removed = null;
+const addedEvents = [];
+const removedEvents = [];
 
 class FakeDeviceMotionEvent {
   static async requestPermission() {
@@ -45,6 +49,23 @@ const root = {
     fullscreenRequests += 1;
   }
 };
+
+const fakeWindow = {
+  orientation: 0,
+  addEventListener(type, listener, options) {
+    addedEvents.push({ type, listener, options });
+    if (type === 'devicemotion') {
+      subscribed = listener;
+      subscribedOptions = options;
+    }
+  },
+  removeEventListener(type, listener, options) {
+    removedEvents.push({ type, listener, options });
+    if (type === 'devicemotion') removed = listener;
+  }
+};
+const originalWindowAdd = fakeWindow.addEventListener;
+const originalWindowRemove = fakeWindow.removeEventListener;
 
 const fakeEnvironment = {
   DeviceMotionEvent: FakeDeviceMotionEvent,
@@ -62,18 +83,7 @@ const fakeEnvironment = {
       }
     }
   },
-  window: {
-    orientation: 0,
-    addEventListener(type, listener, options) {
-      assert.equal(type, 'devicemotion');
-      subscribed = listener;
-      subscribedOptions = options;
-    },
-    removeEventListener(type, listener) {
-      assert.equal(type, 'devicemotion');
-      removed = listener;
-    }
-  }
+  window: fakeWindow
 };
 
 const platform = createWebPlatform(fakeEnvironment);
@@ -122,6 +132,49 @@ updateMotionInputState({ state: manualState, dt: 0.1, maxSteerRoll: Math.PI / 4 
 assert.equal(manualState.steering, -1);
 assert.equal(manualState.tiltDrive, 0);
 
+const bridge = installMotionLifecycleBridge({ platform, environment: fakeEnvironment });
+assert.equal(bridge.route, 'platform');
+assert.equal(bridge.isAvailable(), true);
+assert.notEqual(fakeEnvironment.DeviceMotionEvent, FakeDeviceMotionEvent, 'M5 must provide TURN NEXT with a permission bridge');
+assert.equal(await fakeEnvironment.DeviceMotionEvent.requestPermission(), true);
+assert.equal(permissionRequests, 2, 'The legacy launch call must route into platform.motion.requestPermission()');
+
+const bridgeListenerA = () => {};
+const bridgeListenerB = () => {};
+const motionAddsBeforeBridge = addedEvents.filter(({ type }) => type === 'devicemotion').length;
+fakeWindow.addEventListener('devicemotion', bridgeListenerA, { passive: false });
+assert.equal(subscribed, bridgeListenerA);
+assert.deepEqual(subscribedOptions, { passive: true }, 'The platform owns motion listener options');
+assert.equal(bridge.isSubscribed(), true);
+assert.equal(
+  addedEvents.filter(({ type }) => type === 'devicemotion').length,
+  motionAddsBeforeBridge + 1,
+  'The bridge must create exactly one platform subscription'
+);
+
+fakeWindow.addEventListener('devicemotion', bridgeListenerA);
+assert.equal(
+  addedEvents.filter(({ type }) => type === 'devicemotion').length,
+  motionAddsBeforeBridge + 1,
+  'Registering the same listener twice must not duplicate the platform subscription'
+);
+
+fakeWindow.addEventListener('devicemotion', bridgeListenerB);
+assert.equal(removed, bridgeListenerA, 'Replacing a listener must clean up the previous subscription');
+assert.equal(subscribed, bridgeListenerB);
+fakeWindow.removeEventListener('devicemotion', bridgeListenerB);
+assert.equal(removed, bridgeListenerB);
+assert.equal(bridge.isSubscribed(), false);
+
+const ordinaryListener = () => {};
+fakeWindow.addEventListener('resize', ordinaryListener, { passive: true });
+assert.ok(addedEvents.some(({ type, listener: received }) => type === 'resize' && received === ordinaryListener));
+assert.equal(bridge.uninstall(), true);
+assert.equal(bridge.uninstall(), false, 'M5 uninstall must be idempotent');
+assert.equal(fakeWindow.addEventListener, originalWindowAdd);
+assert.equal(fakeWindow.removeEventListener, originalWindowRemove);
+assert.equal(fakeEnvironment.DeviceMotionEvent, FakeDeviceMotionEvent);
+
 class DeniedDeviceMotionEvent {
   static async requestPermission() {
     return 'denied';
@@ -141,4 +194,25 @@ await assert.rejects(() => unavailablePlatform.motion.requestPermission(), /not 
 assert.equal(await unavailablePlatform.display.requestFullscreen(), false);
 assert.equal(await unavailablePlatform.display.lockLandscape(), false);
 
-console.log('TURN web platform contract and TURN NEXT motion composition passed.');
+const productionApp = fs.readFileSync(new URL('../turn/app.js', import.meta.url), 'utf8');
+const nextApp = fs.readFileSync(new URL('../turn-next/app.js', import.meta.url), 'utf8');
+const bridgeSource = fs.readFileSync(new URL('../turn-next/motion-lifecycle-bridge.js', import.meta.url), 'utf8');
+const webPlatformSource = fs.readFileSync(new URL('../turn/platform/web-platform.js', import.meta.url), 'utf8');
+
+assert.doesNotMatch(productionApp, /installMotionLifecycleBridge|turnMotionLifecycle/, 'Production must retain the proven browser launch path during M5');
+assert.match(nextApp, /installMotionLifecycleBridge\(\{ platform: webPlatform \}\)/);
+assert.match(nextApp, /turnMotionLifecycle = 'platform-m5'/);
+assert.match(nextApp, /Platform M5 · Motion Lifecycle/);
+assert.ok(
+  nextApp.indexOf('installMotionLifecycleBridge({ platform: webPlatform })')
+    < nextApp.indexOf("withBuild('./main.js')"),
+  'The M5 bridge must own motion before the canonical runtime registers its legacy listener'
+);
+assert.match(bridgeSource, /motion\.requestPermission\(\)/);
+assert.match(bridgeSource, /motion\.subscribe\(listener\)/);
+assert.match(bridgeSource, /launchPending && !intro\.hidden/);
+assert.match(bridgeSource, /type === 'devicemotion'/);
+assert.match(webPlatformSource, /addWindowEventListener = typeof windowRef\?\.addEventListener/);
+assert.match(webPlatformSource, /removeWindowEventListener = typeof windowRef\?\.removeEventListener/);
+
+console.log('TURN web platform contract and TURN NEXT Platform M5 motion lifecycle passed.');
