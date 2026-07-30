@@ -1,0 +1,62 @@
+name: Run TURN NEXT Platform M5 migration
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/turn-next-m5-apply.yml'
+      - '.github/workflows/turn-next-m5-pr-apply.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Extract and run the one-shot migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          from pathlib import Path
+
+          lines = Path('.github/workflows/turn-next-m5-apply.yml').read_text().splitlines()
+          start_marker = '      - name: Apply motion lifecycle migration'
+          end_marker = '      - name: Commit generated M5 slice'
+          start = lines.index(start_marker)
+          end = lines.index(end_marker)
+          run_index = next(i for i in range(start, end) if lines[i] == '        run: |')
+          body = []
+          for line in lines[run_index + 1:end]:
+              if line.startswith('          '):
+                  body.append(line[10:])
+              elif not line.strip():
+                  body.append('')
+              else:
+                  raise SystemExit(f'Unexpected migration indentation: {line!r}')
+          Path('/tmp/apply-turn-m5.sh').write_text('\n'.join(body) + '\n')
+          PY
+          bash /tmp/apply-turn-m5.sh
+          rm .github/workflows/turn-next-m5-pr-apply.yml
+
+      - name: Commit generated M5 slice
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "Route TURN NEXT motion lifecycle through platform"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
