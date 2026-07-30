@@ -192,7 +192,7 @@ for (const appSource of [productionApp, nextApp]) {
   );
 }
 
-assert.match(nextApp, /Platform M5 · Motion Lifecycle/);
+assert.match(nextApp, /Platform M5–M6 · Motion \+ Display Lifecycle/);
 assert.doesNotMatch(nextIndex, /turn-next\/safe-zone-bootstrap|turn-next\/steering-limit-warning/);
 assert.doesNotMatch(nextApp, /turn-next\/steering-limit-warning|installTurnNextSteeringLimitWarning/);
 assert.match(orientationCompat, /feedbackNearDegrees/);
