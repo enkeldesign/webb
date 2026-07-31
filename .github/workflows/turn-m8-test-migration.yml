@@ -27,30 +27,29 @@ jobs:
           python - <<'PY'
           from pathlib import Path
 
-          replacements = {
-              'turn-tests/platform-production.mjs': [
-                  ('Platform M5–M8 · Motion \+ Display \+ Session Lifecycle',
-                   'Platform M5–M8 · Motion \+ Display \+ Session \+ Home'),
-              ],
-              'turn-tests/motion-safe-zone-production.mjs': [
-                  ('Platform M5–M8 · Motion \+ Display \+ Session Lifecycle',
-                   'Platform M5–M8 · Motion \+ Display \+ Session \+ Home'),
-              ],
-              'turn-tests/session-orchestrator-production.mjs': [
-                  ("console.log('TURN NEXT Platform M7 race-session orchestration passed.');",
-                   "console.log('TURN NEXT Platform M7–M8 race-session orchestration passed.');"),
-              ],
-          }
-
-          for filename, pairs in replacements.items():
+          for filename in [
+              'turn-tests/platform-production.mjs',
+              'turn-tests/motion-safe-zone-production.mjs',
+          ]:
               path = Path(filename)
-              source = path.read_text()
-              for old, new in pairs:
-                  count = source.count(old)
-                  if count != 1:
-                      raise SystemExit(f'{filename}: expected one match for {old!r}, found {count}')
-                  source = source.replace(old, new)
-              path.write_text(source)
+              lines = path.read_text().splitlines(keepends=True)
+              matches = [
+                  index for index, line in enumerate(lines)
+                  if 'Platform M5–M8' in line and 'Session Lifecycle' in line
+              ]
+              if len(matches) != 1:
+                  raise SystemExit(f'{filename}: expected one M8 badge line, found {len(matches)}')
+              index = matches[0]
+              lines[index] = lines[index].replace('Session Lifecycle', 'Session \\+ Home')
+              path.write_text(''.join(lines))
+
+          session_path = Path('turn-tests/session-orchestrator-production.mjs')
+          session_source = session_path.read_text()
+          old = "console.log('TURN NEXT Platform M7 race-session orchestration passed.');"
+          new = "console.log('TURN NEXT Platform M7–M8 race-session orchestration passed.');"
+          if session_source.count(old) != 1:
+              raise SystemExit('Session test must contain exactly one M7 completion message.')
+          session_path.write_text(session_source.replace(old, new))
           PY
 
       - name: Commit migrated tests
