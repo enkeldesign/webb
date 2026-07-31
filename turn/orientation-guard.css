@@ -1,3 +1,88 @@
+html,
+body {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+  background: #08090a;
+}
+
+body {
+  position: fixed;
+  inset: 0;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+#game,
+.m8-home,
+.rotate-panel {
+  position: fixed;
+  inset: 0;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+#intro {
+  display: none !important;
+}
+
+.m8-home-fixed-layout .m8-home-head {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.m8-home-fixed-layout .m8-home-logo {
+  align-self: stretch;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.m8-home-fixed-layout .m8-home-pitch {
+  padding-top: max(8px, env(safe-area-inset-top));
+  padding-bottom: 8px;
+}
+
+.m8-home-fixed-layout .m8-home-build {
+  margin-top: max(8px, env(safe-area-inset-top));
+  margin-bottom: 8px;
+}
+
 body.turn-race-active .rotate-panel {
   display: none !important;
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .m8-home-fixed-layout .m8-home-head {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .m8-home-fixed-layout .m8-home-pitch {
+    padding-top: max(5px, env(safe-area-inset-top));
+    padding-bottom: 5px;
+  }
+
+  .m8-home-fixed-layout .m8-home-build {
+    margin-top: max(5px, env(safe-area-inset-top));
+    margin-bottom: 5px;
+  }
+}
+
+@media (max-width: 760px) and (orientation: portrait) {
+  .m8-home-fixed-layout .m8-home-head {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .m8-home-fixed-layout .m8-home-pitch {
+    padding-top: max(5px, env(safe-area-inset-top));
+    padding-bottom: 5px;
+  }
 }
