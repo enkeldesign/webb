@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - turn-next-platform-m7-session-orchestrator
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
