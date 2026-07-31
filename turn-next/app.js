@@ -48,7 +48,9 @@ installPerformanceProfile();
 const { installCoveredRenderingGuard } = await import(withBuild('./render/covered-rendering.js'));
 installCoveredRenderingGuard();
 
-const { installDriveByEarSetting } = await import(withBuild('./ui/drive-by-ear-setting.js'));
+const { installDriveByEarSetting } = await import(
+  withBuild('./ui/drive-by-ear-setting.js')
+);
 const driveByEarEnabled = installDriveByEarSetting();
 
 let organicRibbon = null;
@@ -73,26 +75,36 @@ installAudioPreferences({ driveByEarGraphAvailable: driveByEarEnabled });
 const { installTurnAudio } = await import(withBuild('./audio/audio-system.js'));
 installTurnAudio();
 
-const { installSteeringLimitWarning } = await import(withBuild('./ui/steering-limit-warning.js'));
+const { installSteeringLimitWarning } = await import(
+  withBuild('./ui/steering-limit-warning.js')
+);
 installSteeringLimitWarning();
 
 if (driveByEarEnabled) {
   organicRibbon.installOrganicRibbon();
   paceNotePriority.installPaceNotePriority();
 
-  const { installUniversalDrivingSoundscape } = await import(withBuild('./audio/driving-soundscape.js'));
+  const { installUniversalDrivingSoundscape } = await import(
+    withBuild('./audio/driving-soundscape.js')
+  );
   installUniversalDrivingSoundscape();
 
   const { installPaceNotes } = await import(withBuild('./audio/pace-notes.js'));
   installPaceNotes();
 
-  const { installOffroadEarDirection } = await import(withBuild('./audio/offroad-ear-direction.js'));
+  const { installOffroadEarDirection } = await import(
+    withBuild('./audio/offroad-ear-direction.js')
+  );
   installOffroadEarDirection();
 
+  // Recovery remains the outer wrapper. Its candidate frame is then checked against
+  // the physical side of the nearest road point before reaching the central mixer.
   recoveryGuidance.installRecoveryGuidance();
 }
 
-const { installAudioPreferenceRuntime } = await import(withBuild('./audio/audio-preference-runtime.js'));
+const { installAudioPreferenceRuntime } = await import(
+  withBuild('./audio/audio-preference-runtime.js')
+);
 installAudioPreferenceRuntime();
 
 const { installLapResultToast } = await import(withBuild('./ui/lap-result-toast.js'));
