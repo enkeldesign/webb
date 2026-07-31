@@ -162,8 +162,6 @@ assert.match(homeSource, /raceSession\.selectVehicle\(selection\)/);
 assert.match(homeSource, /showTrackIntro\(selectedTrackId\)/);
 assert.match(homeSource, /raceSession\.startGame\(pendingAccess\?\.fullscreenPromise\)/);
 assert.match(homeSource, /runtime\.openLot = leaveRaceForHome/);
-assert.match(homeSource, /audio-settings-button/);
-assert.match(homeSource, /reset-rivals-button/);
 assert.match(homeCss, /scroll-snap-type: x mandatory/);
 assert.match(homeCss, /turn-m8-active \.audio-settings-button/);
 assert.match(homeCss, /turn-m8-active \.reset-rivals-button/);

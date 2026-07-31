@@ -6,7 +6,8 @@ const readonlyGlobals = {
   window: 'readonly',
   document: 'readonly',
   CustomEvent: 'readonly',
-  requestAnimationFrame: 'readonly'
+  requestAnimationFrame: 'readonly',
+  MutationObserver: 'readonly'
 };
 
 export default [
@@ -19,6 +20,7 @@ export default [
   },
   {
     files: [
+      'turn-next/m8-home.js',
       'turn/input/motion.js',
       'turn/motion-safe-zone.js',
       'turn/platform/*.js',

@@ -242,15 +242,16 @@ assert.match(nextApp, /installDisplayLifecycleBridge\(\{ platform: webPlatform \
 assert.match(nextApp, /turnMotionLifecycle = 'platform-m5'/);
 assert.match(nextApp, /turnDisplayLifecycle = 'platform-m6'/);
 assert.match(nextApp, /turnSessionLifecycle = 'orchestrator-m7'/);
-assert.match(nextApp, /Platform M5–M7 · Motion \+ Display \+ Session Lifecycle/);
+assert.match(nextApp, /turnHomeLifecycle = 'home-m8'/);
+assert.match(nextApp, /Platform M5–M8 · Motion \+ Display \+ Session Lifecycle/);
 assert.ok(
   nextApp.indexOf('installMotionLifecycleBridge({ platform: webPlatform })')
-    < nextApp.indexOf('main.js?source=${buildKey}-m7'),
+    < nextApp.indexOf('main.js?source=${buildKey}-m8'),
   'The M5 bridge must own motion before the canonical runtime registers its legacy listener'
 );
 assert.ok(
   nextApp.indexOf('installDisplayLifecycleBridge({ platform: webPlatform })')
-    < nextApp.indexOf('main.js?source=${buildKey}-m7'),
+    < nextApp.indexOf('main.js?source=${buildKey}-m8'),
   'The M6 bridge must own display requests before the canonical runtime launches'
 );
 assert.match(motionBridgeSource, /await motion\.requestPermission\(\);[\s\S]*return 'granted';/);
@@ -266,4 +267,4 @@ assert.match(webPlatformSource, /removeWindowEventListener = typeof windowRef\?\
 assert.match(webPlatformSource, /requestDefaultFullscreen = defaultFullscreenRoot\?\.requestFullscreen/);
 assert.match(webPlatformSource, /lockScreenOrientation = screenOrientation\?\.lock/);
 
-console.log('TURN web platform contract and TURN NEXT Platform M5–M7 lifecycles passed.');
+console.log('TURN web platform contract and TURN NEXT Platform M5–M8 lifecycles passed.');
