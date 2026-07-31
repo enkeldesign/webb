@@ -57,21 +57,13 @@ const steeringState = {
   tiltDrive: 0
 };
 
-updateMotionInputState({
-  state: steeringState,
-  dt: 1,
-  maxSteerRoll: toRadians(14)
-});
+updateMotionInputState({ state: steeringState, dt: 1, maxSteerRoll: toRadians(14) });
 assert.ok(steeringState.steering < -0.999, 'Steering must saturate at the canonical +24-degree boundary');
 
 steeringState.roll = 0;
 steeringState.targetRoll = toRadians(-32);
 steeringState.steering = 0;
-updateMotionInputState({
-  state: steeringState,
-  dt: 1,
-  maxSteerRoll: toRadians(14)
-});
+updateMotionInputState({ state: steeringState, dt: 1, maxSteerRoll: toRadians(14) });
 assert.ok(steeringState.steering > 0.999, 'Steering must saturate at the canonical -24-degree boundary');
 
 function measuredCameraRoll(rollDegrees, configuration) {
@@ -85,8 +77,6 @@ function measuredCameraRoll(rollDegrees, configuration) {
     fov: 68,
     updateProjectionMatrix() {}
   };
-  const cameraPosition = { x: 0, y: 0, z: 0 };
-  const cameraTarget = { x: 0, y: 0, z: 0 };
   const state = {
     speed: 0,
     velocity: { dot() { return 0; } },
@@ -100,8 +90,8 @@ function measuredCameraRoll(rollDegrees, configuration) {
   updateRaceCameraState({
     state,
     camera,
-    cameraPosition,
-    cameraTarget,
+    cameraPosition: { x: 0, y: 0, z: 0 },
+    cameraTarget: { x: 0, y: 0, z: 0 },
     getForward: () => ({ x: 0, z: 1 }),
     getRight: () => ({ x: 1, z: 0 }),
     samples: [],
@@ -111,16 +101,8 @@ function measuredCameraRoll(rollDegrees, configuration) {
   return rotation;
 }
 
-approximately(
-  measuredCameraRoll(32, globalThis.__TURN_MOTION_SAFE_ZONE__),
-  toRadians(-24),
-  1e-9
-);
-approximately(
-  measuredCameraRoll(-32, globalThis.__TURN_MOTION_SAFE_ZONE__),
-  toRadians(24),
-  1e-9
-);
+approximately(measuredCameraRoll(32, globalThis.__TURN_MOTION_SAFE_ZONE__), toRadians(-24), 1e-9);
+approximately(measuredCameraRoll(-32, globalThis.__TURN_MOTION_SAFE_ZONE__), toRadians(24), 1e-9);
 approximately(measuredCameraRoll(32, undefined), toRadians(-18), 1e-9);
 
 assert.equal(steeringLimitVisualOpacity({ active: false }), 0);
@@ -134,14 +116,9 @@ assert.equal(steeringLimitVisualGrowth({ active: true, intensity: 1, hard: true 
 
 const attackAfterOneTau = steeringLimitInertialStep(0, 1, 360, 360);
 approximately(attackAfterOneTau, 1 - Math.exp(-1));
-assert.ok(attackAfterOneTau > 0 && attackAfterOneTau < 1, 'Inertial attack must approach without snapping');
 const releaseAfterOneTau = steeringLimitInertialStep(1, 0, 780, 780);
 approximately(releaseAfterOneTau, Math.exp(-1));
-assert.ok(releaseAfterOneTau > 0 && releaseAfterOneTau < 1, 'Inertial release must retain visible energy');
-assert.ok(
-  steeringLimitInertialStep(1, 0, 16, 780) > steeringLimitInertialStep(1, 0, 16, 360),
-  'Release must be slower than attack for softer threshold behavior'
-);
+assert.ok(steeringLimitInertialStep(1, 0, 16, 780) > steeringLimitInertialStep(1, 0, 16, 360));
 
 assert.equal(steeringLimitAnnouncement('left'), 'Left steering limit reached.');
 assert.equal(steeringLimitAnnouncement('right'), 'Right steering limit reached.');
@@ -183,22 +160,16 @@ for (const indexSource of [productionIndex, nextIndex]) {
   );
 }
 
-for (const appSource of [productionApp, nextApp]) {
-  assert.match(appSource, /installStylesheet\('\.\/steering-limit-warning\.css'/);
-  assert.match(appSource, /installSteeringLimitWarning\(\)/);
-}
+assert.match(productionApp, /installStylesheet\('\.\/steering-limit-warning\.css'/);
+assert.match(productionApp, /installSteeringLimitWarning\(\)/);
 assert.ok(
   productionApp.indexOf('installSteeringLimitWarning()') < productionApp.indexOf("withBuild('./main.js')"),
-  'Production warning must install before the race core starts'
+  'The canonical warning must install before the race core starts'
 );
-assert.ok(
-  nextApp.indexOf('installSteeringLimitWarning()') < nextApp.indexOf('main.js?source=${buildKey}-m8'),
-  'TURN NEXT warning must install before the M8 race core starts'
-);
+assert.match(nextApp, /new URL\('\/turn\/app\.js'/);
+assert.doesNotMatch(nextApp, /installSteeringLimitWarning|steering-limit-warning\.css/);
 
-assert.match(nextApp, /Platform M5–M8 · Motion \+ Display \+ Session \+ Home/);
 assert.doesNotMatch(nextIndex, /turn-next\/safe-zone-bootstrap|turn-next\/steering-limit-warning/);
-assert.doesNotMatch(nextApp, /turn-next\/steering-limit-warning|installTurnNextSteeringLimitWarning/);
 assert.match(orientationCompat, /feedbackNearDegrees/);
 assert.match(orientationCompat, /feedbackHardDegrees/);
 assert.match(orientationCompat, /feedbackHardRearmDegrees/);
@@ -228,14 +199,10 @@ for (const removedPath of [
   '../turn-next/orientation-freeze.js',
   '../turn-next/orientation-freeze.css'
 ]) {
-  await assert.rejects(
-    fs.access(new URL(removedPath, import.meta.url)),
-    undefined,
-    `${removedPath} must remain absent`
-  );
+  await assert.rejects(fs.access(new URL(removedPath, import.meta.url)), undefined, `${removedPath} must remain absent`);
 }
 
 if (previousConfiguration === undefined) delete globalThis.__TURN_MOTION_SAFE_ZONE__;
 else globalThis.__TURN_MOTION_SAFE_ZONE__ = previousConfiguration;
 
-console.log('Canonical TURN 24-degree safe zone and inertial directional warning passed.');
+console.log('Canonical TURN 24-degree safe zone, inertial warning and NEXT wrapper passed.');
