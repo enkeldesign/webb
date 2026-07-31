@@ -11,8 +11,34 @@
     }
   }
 
+  function makeHiddenHook(tagName, id) {
+    const element = document.createElement(tagName);
+    element.id = id;
+    element.hidden = true;
+    element.setAttribute('aria-hidden', 'true');
+    if (tagName === 'button') element.type = 'button';
+    return element;
+  }
+
+  function retireLegacyStartPanel() {
+    const intro = document.querySelector('#intro');
+    if (!intro) return;
+
+    intro.hidden = true;
+    intro.className = 'turn-next-legacy-intro-shell';
+    intro.setAttribute('aria-hidden', 'true');
+    intro.removeAttribute('aria-labelledby');
+    intro.replaceChildren(
+      makeHiddenHook('button', 'motionButton'),
+      makeHiddenHook('button', 'manualButton'),
+      makeHiddenHook('p', 'status')
+    );
+    document.documentElement.dataset.turnLegacyStart = 'retired';
+  }
+
   function installIdentity() {
     document.documentElement.dataset.turnDeployment = 'next';
+    retireLegacyStartPanel();
 
     const gate = document.querySelector('#installGate');
     if (gate) {
