@@ -33,6 +33,27 @@ html[data-turn-deployment="next"] #intro {
   display: none !important;
 }
 
+html[data-turn-deployment="next"] .m8-home-fixed-layout .m8-home-head {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+html[data-turn-deployment="next"] .m8-home-fixed-layout .m8-home-logo {
+  align-self: stretch;
+  object-fit: contain;
+  object-position: left center;
+}
+
+html[data-turn-deployment="next"] .m8-home-fixed-layout .m8-home-pitch {
+  padding-top: max(8px, env(safe-area-inset-top));
+  padding-bottom: 8px;
+}
+
+html[data-turn-deployment="next"] .m8-home-fixed-layout .m8-home-build {
+  margin-top: max(8px, env(safe-area-inset-top));
+  margin-bottom: 8px;
+}
+
 .turn-next-badge {
   position: fixed;
   z-index: 100000;
@@ -67,6 +88,35 @@ html[data-turn-deployment="next"] #intro {
   border-radius: 999px;
   font: 900 0.72rem/1 system-ui, sans-serif;
   vertical-align: middle;
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  html[data-turn-deployment="next"] .m8-home-fixed-layout .m8-home-head {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  html[data-turn-deployment="next"] .m8-home-fixed-layout .m8-home-pitch {
+    padding-top: max(5px, env(safe-area-inset-top));
+    padding-bottom: 5px;
+  }
+
+  html[data-turn-deployment="next"] .m8-home-fixed-layout .m8-home-build {
+    margin-top: max(5px, env(safe-area-inset-top));
+    margin-bottom: 5px;
+  }
+}
+
+@media (max-width: 760px) and (orientation: portrait) {
+  html[data-turn-deployment="next"] .m8-home-fixed-layout .m8-home-head {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  html[data-turn-deployment="next"] .m8-home-fixed-layout .m8-home-pitch {
+    padding-top: max(5px, env(safe-area-inset-top));
+    padding-bottom: 5px;
+  }
 }
 
 @media (max-height: 430px) {
