@@ -159,7 +159,7 @@ if (buildLabel) {
   buildLabel.textContent = `TURN V${release?.version || ''} · BUILD ${(release?.id || '').toUpperCase()}`;
 }
 const { installM8HomeFixedLayout } = await import(
-  withBuild('./m8-home-fixed-layout.js?revision=m8.6-logo')
+  withBuild('./m8-home-fixed-layout.js?revision=m8.7-home-polish')
 );
 await installM8HomeFixedLayout();
 document.documentElement.dataset.turnHomeLifecycle = 'home-m8';
