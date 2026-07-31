@@ -49,6 +49,9 @@ jobs:
       - name: Verify TURN NEXT generated parity bootstrap
         run: node turn-next/scripts/build-parity-app.mjs --check
 
+      - name: Verify TURN NEXT generated parity main
+        run: node turn-next/scripts/build-parity-main.mjs --check
+
       - name: Verify TURN NEXT generated parity entry
         run: node turn-next/scripts/build-parity-entry.mjs --check
 
@@ -57,6 +60,9 @@ jobs:
 
       - name: Run web platform and motion composition regression
         run: node turn-tests/platform-production.mjs
+
+      - name: Run TURN NEXT race-session orchestration regression
+        run: node turn-tests/session-orchestrator-production.mjs
 
       - name: Run TURN NEXT motion safe-zone regression
         run: node turn-tests/motion-safe-zone-production.mjs
