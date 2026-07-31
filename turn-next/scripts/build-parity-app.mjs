@@ -43,7 +43,7 @@ export function buildTurnNextApp(productionApp, release) {
   output = replaceRequired(
     output,
     "await import(withBuild('./ui/in-game-menu.js'));",
-    "await import(withBuild('./ui/in-game-menu.js'));\nconst m8StyleAttribute = 'data-turn-m8-home-styles';\nif (!document.querySelector(`link[${m8StyleAttribute}]`)) {\n  const stylesheet = document.createElement('link');\n  stylesheet.rel = 'stylesheet';\n  stylesheet.href = new URL(`./m8-home.css?source=${buildKey}-m8`, stagingModuleBase).href;\n  stylesheet.setAttribute(m8StyleAttribute, '');\n  document.head.appendChild(stylesheet);\n}\nconst { installM8HomeNavigation } = await import(\n  new URL(`./m8-home.js?source=${buildKey}-m8`, stagingModuleBase).href\n);\nawait installM8HomeNavigation();\nconst { installM8HomeFixedLayout } = await import(\n  new URL(`./m8-home-fixed-layout.js?source=${buildKey}-m8.1`, stagingModuleBase).href\n);\nawait installM8HomeFixedLayout();\ndocument.documentElement.dataset.turnHomeLifecycle = 'home-m8';",
+    "await import(withBuild('./ui/in-game-menu.js'));\nconst m8StyleAttribute = 'data-turn-m8-home-styles';\nif (!document.querySelector(`link[${m8StyleAttribute}]`)) {\n  const stylesheet = document.createElement('link');\n  stylesheet.rel = 'stylesheet';\n  stylesheet.href = new URL(`./m8-home.css?source=${buildKey}-m8`, stagingModuleBase).href;\n  stylesheet.setAttribute(m8StyleAttribute, '');\n  document.head.appendChild(stylesheet);\n}\nconst { installM8HomeNavigation } = await import(\n  new URL(`./m8-home.js?source=${buildKey}-m8`, stagingModuleBase).href\n);\nawait installM8HomeNavigation();\nconst { installM8HomeFixedLayout } = await import(\n  new URL(`./m8-home-fixed-layout.js?source=${buildKey}-m8.2`, stagingModuleBase).href\n);\nawait installM8HomeFixedLayout();\ndocument.documentElement.dataset.turnHomeLifecycle = 'home-m8';",
     'M8 home composition point'
   );
 
@@ -73,7 +73,7 @@ export function buildTurnNextApp(productionApp, release) {
   assert.match(output, /main\.js\?source=\$\{buildKey\}-m8/);
   assert.match(output, /m8-home\.css\?source=\$\{buildKey\}-m8/);
   assert.match(output, /m8-home\.js\?source=\$\{buildKey\}-m8/);
-  assert.match(output, /m8-home-fixed-layout\.js\?source=\$\{buildKey\}-m8\.1/);
+  assert.match(output, /m8-home-fixed-layout\.js\?source=\$\{buildKey\}-m8\.2/);
   assert.match(output, /installM8HomeNavigation\(\)/);
   assert.match(output, /installM8HomeFixedLayout\(\)/);
   assert.match(output, /installStylesheet\('\.\/steering-limit-warning\.css'/);
