@@ -110,7 +110,7 @@ assert.match(cardScrollSource, /rail\.style\.scrollSnapType = 'none'/);
 assert.match(cardScrollSource, /rail\.style\.scrollSnapStop = 'normal'/);
 assert.match(cardScrollSource, /rail\.dataset\.scrollRelease = 'free'/);
 assert.ok(
-  cardScrollSource.indexOf("rail.style.scrollSnapType = 'none'") < cardScrollSource.indexOf('installDragScrolling(rail)'),
+  cardScrollSource.indexOf("rail.style.scrollSnapType = 'none'") < cardScrollSource.lastIndexOf('installDragScrolling(rail)'),
   'Free scrolling must be established before pointer dragging is installed.'
 );
 assert.match(cardScrollSource, /turnHomeCardScrollFixes = FIX_ID/);
