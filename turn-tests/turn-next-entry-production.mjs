@@ -67,7 +67,7 @@ assert.match(nextIndex, /\.\/motion-safe-zone\.js\?build=/);
 assert.match(nextIndex, /\/turn-next\/identity\.css/);
 assert.match(nextIndex, /\/turn-next\/identity\.js/);
 assert.match(nextIndex, /\/turn-next\/site\.webmanifest/);
-assert.match(nextIndex, /src="\/turn-next\/app\.js\?source=.*-m8"/);
+assert.match(nextIndex, /src="\/turn-next\/app\.js\?source=.*-m8\.4"/);
 assert.doesNotMatch(nextIndex, /turn-next\/safe-zone-bootstrap|turn-next\/steering-limit-warning/);
 assert.ok(
   nextIndex.indexOf('/turn-next/storage-bootstrap.js') < nextIndex.indexOf('./install-gate.js'),
@@ -96,7 +96,9 @@ assert.match(nextApp, /dataset\.turnHomeLifecycle = 'home-m8'/);
 assert.match(nextApp, /main\.js\?source=\$\{buildKey\}-m8/);
 assert.match(nextApp, /m8-home\.css\?source=\$\{buildKey\}-m8/);
 assert.match(nextApp, /m8-home\.js\?source=\$\{buildKey\}-m8/);
+assert.match(nextApp, /m8-home-fixed-layout\.js\?source=\$\{buildKey\}-m8\.4/);
 assert.match(nextApp, /installM8HomeNavigation\(\)/);
+assert.match(nextApp, /installM8HomeFixedLayout\(\)/);
 assert.match(nextApp, /Platform M5–M8 · Motion \+ Display \+ Session \+ Home/);
 assert.doesNotMatch(nextApp, /turnNextModuleBase|turn-next\/steering-limit-warning|installTurnNextSteeringLimitWarning/);
 assert.ok(
