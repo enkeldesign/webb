@@ -16,22 +16,29 @@
   grid-template-rows: minmax(0, 1fr);
   column-gap: clamp(18px, 2.5vw, 34px);
   min-height: 0;
-  padding: max(8px, env(safe-area-inset-top)) max(22px, env(safe-area-inset-right)) 8px max(10px, env(safe-area-inset-left));
+  padding: 0 max(22px, env(safe-area-inset-right)) 0 0;
   border-bottom: 5px solid var(--m8-ink);
 }
 
 .m8-home-fixed-layout .m8-home-logo {
   grid-row: 1;
-  width: clamp(84px, 10vw, 126px);
+  align-self: stretch;
+  justify-self: start;
+  display: block;
+  width: auto;
   height: 100%;
+  max-width: 100%;
   max-height: none;
-  object-fit: cover;
+  aspect-ratio: 1;
+  object-fit: contain;
+  object-position: left center;
   filter: none;
 }
 
 .m8-home-fixed-layout .m8-home-pitch {
   grid-row: 1;
   align-self: center;
+  padding-block: max(8px, env(safe-area-inset-top)) 8px;
 }
 
 .m8-home-fixed-layout .m8-home-pitch p {
@@ -45,6 +52,7 @@
 .m8-home-fixed-layout .m8-home-build {
   align-self: center;
   justify-self: end;
+  margin-block: max(8px, env(safe-area-inset-top)) 8px;
   padding: 6px 10px;
   background: transparent;
   font-size: clamp(0.62rem, 1vw, 0.82rem);
@@ -145,7 +153,7 @@
   min-width: 0;
   min-height: 0;
   padding-left: clamp(14px, 2vw, 24px);
-  border-left: 5px solid var(--m8-ink);
+  border-left: 0;
 }
 
 .m8-home-fixed-layout .m8-home-menu h2 {
@@ -215,11 +223,19 @@
 
   .m8-home-fixed-layout .m8-home-head {
     grid-template-columns: clamp(68px, 10vw, 84px) minmax(150px, 1fr) auto;
-    padding-block: 5px;
+    padding-block: 0;
   }
 
   .m8-home-fixed-layout .m8-home-logo {
-    width: clamp(68px, 10vw, 84px);
+    width: auto;
+  }
+
+  .m8-home-fixed-layout .m8-home-pitch {
+    padding-block: max(5px, env(safe-area-inset-top)) 5px;
+  }
+
+  .m8-home-fixed-layout .m8-home-build {
+    margin-block: max(5px, env(safe-area-inset-top)) 5px;
   }
 
   .m8-home-fixed-layout .m8-home-pitch p {
@@ -257,7 +273,7 @@
 
   .m8-home-fixed-layout .m8-home-menu {
     padding-left: 12px;
-    border-left-width: 4px;
+    border-left: 0;
   }
 
   .m8-home-fixed-layout .m8-home-menu h2 {
@@ -297,11 +313,15 @@
 
   .m8-home-fixed-layout .m8-home-head {
     grid-template-columns: 82px minmax(0, 1fr);
-    padding: 5px 12px;
+    padding: 0 12px 0 0;
   }
 
   .m8-home-fixed-layout .m8-home-logo {
-    width: 82px;
+    width: auto;
+  }
+
+  .m8-home-fixed-layout .m8-home-pitch {
+    padding-block: max(5px, env(safe-area-inset-top)) 5px;
   }
 
   .m8-home-fixed-layout .m8-home-build {
