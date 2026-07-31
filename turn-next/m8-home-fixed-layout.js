@@ -1,12 +1,12 @@
 const STYLE_ATTRIBUTE = 'data-turn-m8-fixed-home-styles';
-const LAYOUT_ID = 'fixed-grid-v2';
+const LAYOUT_ID = 'fixed-grid-v3';
 
 function installStylesheet() {
   if (document.querySelector(`link[${STYLE_ATTRIBUTE}]`)) return;
   const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
   const stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet';
-  stylesheet.href = `/turn-next/m8-home-fixed-layout.css?source=${buildKey}-m8.1`;
+  stylesheet.href = `/turn-next/m8-home-fixed-layout.css?source=${buildKey}-m8.2`;
   stylesheet.setAttribute(STYLE_ATTRIBUTE, '');
   document.head.appendChild(stylesheet);
 }
@@ -95,12 +95,19 @@ export async function installM8HomeFixedLayout() {
   home.dataset.m8HomeLayout = LAYOUT_ID;
   document.documentElement.dataset.turnHomeLayout = LAYOUT_ID;
 
+  const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
+  const { installM8HomeCardScrollFixes } = await import(
+    `/turn-next/m8-home-card-scroll-fixes.js?source=${buildKey}-m8.2`
+  );
+  const cardScrollFixes = await installM8HomeCardScrollFixes();
+
   globalThis.__turnNextHomeLayout = Object.freeze({
     id: LAYOUT_ID,
     home,
     trackBrowser,
     menu,
-    raceButton
+    raceButton,
+    cardScrollFixes
   });
   return globalThis.__turnNextHomeLayout;
 }
