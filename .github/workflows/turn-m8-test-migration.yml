@@ -29,12 +29,12 @@ jobs:
 
           replacements = {
               'turn-tests/platform-production.mjs': [
-                  ('Platform M5–M8 · Motion \\+ Display \\+ Session Lifecycle',
-                   'Platform M5–M8 · Motion \\+ Display \\+ Session \\+ Home'),
+                  ('Platform M5–M8 · Motion \+ Display \+ Session Lifecycle',
+                   'Platform M5–M8 · Motion \+ Display \+ Session \+ Home'),
               ],
               'turn-tests/motion-safe-zone-production.mjs': [
-                  ('Platform M5–M8 · Motion \\+ Display \\+ Session Lifecycle',
-                   'Platform M5–M8 · Motion \\+ Display \\+ Session \\+ Home'),
+                  ('Platform M5–M8 · Motion \+ Display \+ Session Lifecycle',
+                   'Platform M5–M8 · Motion \+ Display \+ Session \+ Home'),
               ],
               'turn-tests/session-orchestrator-production.mjs': [
                   ("console.log('TURN NEXT Platform M7 race-session orchestration passed.');",
