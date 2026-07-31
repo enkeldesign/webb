@@ -11,6 +11,7 @@ const [
   steeringLimitWarning,
   steeringLimitWarningCss,
   identity,
+  identityCss,
   manifestSource,
   releaseSource,
   platformContext,
@@ -33,6 +34,7 @@ const [
   fs.readFile(new URL('../turn/ui/steering-limit-warning.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/steering-limit-warning.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/identity.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn-next/identity.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/site.webmanifest', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/platform/platform-context.js', import.meta.url), 'utf8'),
@@ -64,14 +66,24 @@ assert.match(nextIndex, /TURN NEXT · Source TURN/);
 assert.match(nextIndex, /class="turn-next-badge"/);
 assert.match(nextIndex, /\/turn-next\/storage-bootstrap\.js/);
 assert.match(nextIndex, /\.\/motion-safe-zone\.js\?build=/);
-assert.match(nextIndex, /\/turn-next\/identity\.css/);
-assert.match(nextIndex, /\/turn-next\/identity\.js/);
+assert.match(nextIndex, /\/turn-next\/identity\.css\?source=.*-m8\.5/);
+assert.match(nextIndex, /\/turn-next\/identity\.js\?source=.*-m8\.5/);
 assert.match(nextIndex, /\/turn-next\/site\.webmanifest/);
 assert.match(nextIndex, /src="\/turn-next\/app\.js\?source=.*-m8\.4"/);
+assert.match(nextIndex, /id="installGate"/);
+assert.match(nextIndex, /Add TURN NEXT to your Home Screen/);
 assert.doesNotMatch(nextIndex, /turn-next\/safe-zone-bootstrap|turn-next\/steering-limit-warning/);
 assert.ok(
   nextIndex.indexOf('/turn-next/storage-bootstrap.js') < nextIndex.indexOf('./install-gate.js'),
   'Storage isolation must install before production scripts access storage'
+);
+assert.ok(
+  nextIndex.indexOf('/turn-next/identity.css') < nextIndex.indexOf('/turn-next/app.js'),
+  'The no-flash identity stylesheet must load before the M8 application bootstrap'
+);
+assert.ok(
+  nextIndex.indexOf('/turn-next/identity.js') < nextIndex.indexOf('/turn-next/app.js'),
+  'The legacy start panel must be retired before the M8 application bootstrap'
 );
 assert.ok(
   nextIndex.indexOf('./motion-safe-zone.js') < nextIndex.indexOf('./orientation-compat.js'),
@@ -79,6 +91,21 @@ assert.ok(
 );
 assert.doesNotMatch(nextIndex, /turnAppViewport|orientation-preflight|orientation-freeze/);
 assert.doesNotMatch(nextIndex, /href="\.\/site\.webmanifest/);
+
+assert.match(identity, /function retireLegacyStartPanel\(\)/);
+assert.match(identity, /intro\.hidden = true/);
+assert.match(identity, /intro\.replaceChildren\(/);
+assert.match(identity, /makeHiddenHook\('button', 'motionButton'\)/);
+assert.match(identity, /makeHiddenHook\('button', 'manualButton'\)/);
+assert.match(identity, /makeHiddenHook\('p', 'status'\)/);
+assert.match(identity, /turnLegacyStart = 'retired'/);
+assert.match(identityCss, /html\[data-turn-deployment="next"\] #intro[\s\S]*display: none !important/);
+assert.match(identityCss, /html\[data-turn-deployment="next"\] body[\s\S]*position: fixed[\s\S]*inset: 0/);
+assert.match(identityCss, /html\[data-turn-deployment="next"\] #game,[\s\S]*\.m8-home,[\s\S]*\.rotate-panel[\s\S]*position: fixed[\s\S]*inset: 0/);
+assert.match(identityCss, /min-width: 0/);
+assert.match(identityCss, /min-height: 0/);
+assert.match(identityCss, /background: #08090a/);
+assert.doesNotMatch(identityCss, /100lvh|min-height:\s*100vh/);
 
 assert.match(nextApp, /Generated from turn\/app\.js/);
 assert.match(nextApp, /const productionModuleBase = new URL\('\/turn\/'/);
