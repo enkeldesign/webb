@@ -86,6 +86,64 @@ export function createRaceSessionOrchestrator({
     }
   }
 
+  function stopDrivingInputs() {
+    state.touchGas = false;
+    state.touchBrake = false;
+    state.manualSteering = 0;
+    environment.__turnAnalogGas = 0;
+    environment.__turnBoostActive = false;
+    environment.__turnDriftHeld = false;
+  }
+
+  function stopSpectating() {
+    const spectateState = environment.__turnGetSpectateV3State?.();
+    if (!spectateState?.active) return;
+    environment.__turnStopSpectateV3?.();
+    documentRef?.body?.classList?.remove?.('turn-spectating');
+  }
+
+  function resetManualMotionState() {
+    state.sensorMode = false;
+    state.roll = 0;
+    state.targetRoll = 0;
+    state.neutralRoll = 0;
+    state.horizonRollReference = 0;
+    state.pitch = 0;
+    state.targetPitch = 0;
+    state.neutralPitch = 0;
+  }
+
+  async function prepareMotionAccess() {
+    phase = 'authorizing';
+    const fullscreenPromise = requestGameFullscreen();
+    const MotionEvent = motionEventType(environment, windowRef);
+    if (typeof MotionEvent === 'undefined') {
+      phase = 'idle';
+      throw new Error('Motion sensors are not available in this browser.');
+    }
+    if (typeof MotionEvent.requestPermission === 'function') {
+      const permission = await MotionEvent.requestPermission();
+      if (permission !== 'granted') {
+        phase = 'idle';
+        throw new Error('Motion permission was not granted.');
+      }
+    }
+    if (typeof windowRef?.addEventListener !== 'function') {
+      phase = 'idle';
+      throw new Error('Motion sensors are not available in this browser.');
+    }
+    windowRef.addEventListener('devicemotion', receiveMotion, { passive: true });
+    state.sensorMode = true;
+    return Object.freeze({ mode: 'motion', fullscreenPromise });
+  }
+
+  function prepareManualAccess() {
+    phase = 'authorizing';
+    const fullscreenPromise = requestGameFullscreen();
+    resetManualMotionState();
+    return Object.freeze({ mode: 'manual', fullscreenPromise });
+  }
+
   async function startGame(fullscreenPromise = Promise.resolve(false)) {
     phase = 'starting';
     state.running = true;
@@ -120,6 +178,12 @@ export function createRaceSessionOrchestrator({
     return true;
   }
 
+  async function selectVehicle(selection) {
+    if (!selection) return false;
+    await applySelection(selection);
+    return true;
+  }
+
   async function chooseRaceSetupAndStart(fullscreenPromise = Promise.resolve(false)) {
     phase = 'choosing';
     intro.hidden = true;
@@ -133,27 +197,14 @@ export function createRaceSessionOrchestrator({
       return false;
     }
 
-    await applySelection(selection);
+    await selectVehicle(selection);
     return startGame(fullscreenPromise);
   }
 
   async function requestMotion() {
-    const fullscreenPromise = requestGameFullscreen();
     try {
-      const MotionEvent = motionEventType(environment, windowRef);
-      if (typeof MotionEvent === 'undefined') {
-        throw new Error('Motion sensors are not available in this browser.');
-      }
-      if (typeof MotionEvent.requestPermission === 'function') {
-        const permission = await MotionEvent.requestPermission();
-        if (permission !== 'granted') throw new Error('Motion permission was not granted.');
-      }
-      if (typeof windowRef?.addEventListener !== 'function') {
-        throw new Error('Motion sensors are not available in this browser.');
-      }
-      windowRef.addEventListener('devicemotion', receiveMotion, { passive: true });
-      state.sensorMode = true;
-      return await chooseRaceSetupAndStart(fullscreenPromise);
+      const access = await prepareMotionAccess();
+      return await chooseRaceSetupAndStart(access.fullscreenPromise);
     } catch (error) {
       phase = 'idle';
       status.textContent = `${errorMessage(error)} Manual mode still works.`;
@@ -162,36 +213,18 @@ export function createRaceSessionOrchestrator({
   }
 
   async function useManualMode() {
-    const fullscreenPromise = requestGameFullscreen();
-    state.sensorMode = false;
-    state.roll = 0;
-    state.targetRoll = 0;
-    state.neutralRoll = 0;
-    state.horizonRollReference = 0;
-    state.pitch = 0;
-    state.targetPitch = 0;
-    state.neutralPitch = 0;
-    return chooseRaceSetupAndStart(fullscreenPromise);
+    const access = prepareManualAccess();
+    return chooseRaceSetupAndStart(access.fullscreenPromise);
   }
 
   async function openLotFromRace() {
     if (!state.running || documentRef?.body?.classList?.contains?.('turn-lot-open')) return false;
 
-    const spectateState = environment.__turnGetSpectateV3State?.();
-    if (spectateState?.active) {
-      environment.__turnStopSpectateV3?.();
-      documentRef?.body?.classList?.remove?.('turn-spectating');
-    }
-
+    stopSpectating();
     const wasRunning = state.running;
     phase = 'lot';
     state.running = false;
-    state.touchGas = false;
-    state.touchBrake = false;
-    state.manualSteering = 0;
-    environment.__turnAnalogGas = 0;
-    environment.__turnBoostActive = false;
-    environment.__turnDriftHeld = false;
+    stopDrivingInputs();
 
     hud.hidden = true;
     controls.hidden = true;
@@ -214,17 +247,34 @@ export function createRaceSessionOrchestrator({
       return false;
     }
 
-    await applySelection(selection);
+    await selectVehicle(selection);
     return startGame();
+  }
+
+  function leaveRace() {
+    stopSpectating();
+    phase = 'home';
+    state.running = false;
+    stopDrivingInputs();
+    intro.hidden = true;
+    hud.hidden = true;
+    controls.hidden = true;
+    manualSteer.hidden = true;
+    publish('home-open');
+    return true;
   }
 
   return Object.freeze({
     route: 'session-orchestrator',
     requestGameFullscreen,
+    prepareMotionAccess,
+    prepareManualAccess,
     requestMotion,
     useManualMode,
     chooseRaceSetupAndStart,
+    selectVehicle,
     openLotFromRace,
+    leaveRace,
     startGame,
     getPhase: () => phase
   });
