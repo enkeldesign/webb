@@ -59,7 +59,7 @@ const fakeWindow = {
     if (type === 'devicemotion') removed = listener;
     if (eventListeners.get(type) === listener) eventListeners.delete(type);
   },
-  setTimeout
+  setTimeout: globalThis.setTimeout
 };
 const fakeDocument = {
   documentElement: root,
@@ -76,7 +76,7 @@ const fakeEnvironment = {
   document: fakeDocument,
   screen: { orientation },
   window: fakeWindow,
-  performance
+  performance: globalThis.performance
 };
 
 const platform = createWebPlatform(fakeEnvironment);
