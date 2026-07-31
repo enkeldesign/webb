@@ -26,7 +26,7 @@ for (const source of [index, nextIndex]) {
 }
 
 assert.match(index, /<link rel="manifest" href="\.\/site\.webmanifest\?build=20260729-r118-icon-20260730-1136">/);
-assert.match(nextIndex, /<link rel="manifest" href="\/turn-next\/site\.webmanifest\?source=20260729-r118-icon-20260730-1136">/);
+assert.match(nextIndex, /<link rel="manifest" href="\/turn-next\/site\.webmanifest\?source=20260729-r118-icon-20260730-1136-m8\.5">/);
 
 assert.match(styles, /\.start-logo-heading\s*\{[^}]*font-size:\s*0;/s);
 assert.match(styles, /\.start-logo\s*\{[^}]*width:\s*clamp\(104px, 27vh, 210px\);[^}]*border-radius:\s*22%;/s);
@@ -41,6 +41,8 @@ const expectedIcons = [
 ];
 assert.deepEqual(manifest.icons, expectedIcons);
 assert.deepEqual(nextManifest.icons, expectedIcons);
+assert.equal(nextManifest.background_color, '#08090a');
+assert.equal(nextManifest.theme_color, '#08090a');
 
 const icon = fs.readFileSync(path.join(turnRoot, 'TURNicon.PNG'));
 assert.deepEqual(
