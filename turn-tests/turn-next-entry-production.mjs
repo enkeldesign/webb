@@ -20,7 +20,9 @@ const [
   motionInput,
   cameraSource,
   orientationCompat,
-  orientationGuardCss
+  orientationGuardCss,
+  homeSource,
+  homeCss
 ] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
@@ -40,7 +42,9 @@ const [
   fs.readFile(new URL('../turn/input/motion.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/render/camera.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/orientation-compat.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/orientation-guard.css', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/orientation-guard.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn-next/m8-home.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn-next/m8-home.css', import.meta.url), 'utf8')
 ]);
 
 const manifest = JSON.parse(manifestSource);
@@ -63,7 +67,7 @@ assert.match(nextIndex, /\.\/motion-safe-zone\.js\?build=/);
 assert.match(nextIndex, /\/turn-next\/identity\.css/);
 assert.match(nextIndex, /\/turn-next\/identity\.js/);
 assert.match(nextIndex, /\/turn-next\/site\.webmanifest/);
-assert.match(nextIndex, /src="\/turn-next\/app\.js\?source=.*-m7"/);
+assert.match(nextIndex, /src="\/turn-next\/app\.js\?source=.*-m8"/);
 assert.doesNotMatch(nextIndex, /turn-next\/safe-zone-bootstrap|turn-next\/steering-limit-warning/);
 assert.ok(
   nextIndex.indexOf('/turn-next/storage-bootstrap.js') < nextIndex.indexOf('./install-gate.js'),
@@ -88,20 +92,28 @@ assert.match(nextApp, /dataset\.turnPlatform = 'web-adapter'/);
 assert.match(nextApp, /dataset\.turnMotionLifecycle = 'platform-m5'/);
 assert.match(nextApp, /dataset\.turnDisplayLifecycle = 'platform-m6'/);
 assert.match(nextApp, /dataset\.turnSessionLifecycle = 'orchestrator-m7'/);
-assert.match(nextApp, /main\.js\?source=\$\{buildKey\}-m7/);
-assert.match(nextApp, /Platform M5–M7 · Motion \+ Display \+ Session Lifecycle/);
+assert.match(nextApp, /dataset\.turnHomeLifecycle = 'home-m8'/);
+assert.match(nextApp, /main\.js\?source=\$\{buildKey\}-m8/);
+assert.match(nextApp, /m8-home\.css\?source=\$\{buildKey\}-m8/);
+assert.match(nextApp, /m8-home\.js\?source=\$\{buildKey\}-m8/);
+assert.match(nextApp, /installM8HomeNavigation\(\)/);
+assert.match(nextApp, /Platform M5–M8 · Motion \+ Display \+ Session \+ Home/);
 assert.doesNotMatch(nextApp, /turnNextModuleBase|turn-next\/steering-limit-warning|installTurnNextSteeringLimitWarning/);
 assert.ok(
-  nextApp.indexOf('installTurnPlatform(webPlatform)') < nextApp.indexOf('main.js?source=${buildKey}-m7'),
+  nextApp.indexOf('installTurnPlatform(webPlatform)') < nextApp.indexOf('main.js?source=${buildKey}-m8'),
   'The platform must be composed before main.js imports browser-dependent systems'
 );
 assert.ok(
-  nextApp.indexOf('installMotionLifecycleBridge({ platform: webPlatform })') < nextApp.indexOf('main.js?source=${buildKey}-m7'),
+  nextApp.indexOf('installMotionLifecycleBridge({ platform: webPlatform })') < nextApp.indexOf('main.js?source=${buildKey}-m8'),
   'Platform M5 must own legacy permission and subscription calls before main.js loads'
 );
 assert.ok(
-  nextApp.indexOf('installDisplayLifecycleBridge({ platform: webPlatform })') < nextApp.indexOf('main.js?source=${buildKey}-m7'),
+  nextApp.indexOf('installDisplayLifecycleBridge({ platform: webPlatform })') < nextApp.indexOf('main.js?source=${buildKey}-m8'),
   'Platform M6 must own legacy fullscreen and landscape calls before main.js loads'
+);
+assert.ok(
+  nextApp.indexOf("withBuild('./ui/in-game-menu.js')") < nextApp.indexOf('installM8HomeNavigation()'),
+  'M8 must consolidate the already-composed race menu rather than racing it during startup'
 );
 assert.match(nextApp, /new URL\(path, productionModuleBase\)/);
 assert.doesNotMatch(nextApp, /new URL\(path, import\.meta\.url\)/);
@@ -135,8 +147,26 @@ assert.ok(
   productionApp.indexOf('installSteeringLimitWarning()') < productionApp.indexOf("withBuild('./main.js')")
 );
 assert.ok(
-  nextApp.indexOf('installSteeringLimitWarning()') < nextApp.indexOf('main.js?source=${buildKey}-m7')
+  nextApp.indexOf('installSteeringLimitWarning()') < nextApp.indexOf('main.js?source=${buildKey}-m8')
 );
+
+assert.match(homeSource, /TILT\. DRIFT\.[\s\S]*BEAT YOUR BEST\./);
+assert.match(homeSource, /HOW TO PLAY/);
+assert.match(homeSource, /SETTINGS/);
+assert.match(homeSource, /m8-track-rail/);
+assert.match(homeSource, /TRACK_SELECTION_CATALOG\.map\(renderTrackCard\)/);
+assert.match(homeSource, /showTheLot\(\{ initialSelection: selectedVehicle\(runtime\) \}\)/);
+assert.match(homeSource, /raceSession\.prepareMotionAccess\(\)/);
+assert.match(homeSource, /raceSession\.prepareManualAccess\(\)/);
+assert.match(homeSource, /raceSession\.selectVehicle\(selection\)/);
+assert.match(homeSource, /showTrackIntro\(selectedTrackId\)/);
+assert.match(homeSource, /raceSession\.startGame\(pendingAccess\?\.fullscreenPromise\)/);
+assert.match(homeSource, /runtime\.openLot = leaveRaceForHome/);
+assert.match(homeSource, /audio-settings-button/);
+assert.match(homeSource, /reset-rivals-button/);
+assert.match(homeCss, /scroll-snap-type: x mandatory/);
+assert.match(homeCss, /turn-m8-active \.audio-settings-button/);
+assert.match(homeCss, /turn-m8-active \.reset-rivals-button/);
 
 assert.match(safeZoneSource, /SAFE_ZONE_DEGREES = 24/);
 assert.match(safeZoneSource, /steeringDegrees: SAFE_ZONE_DEGREES/);
@@ -232,4 +262,4 @@ assert.deepEqual(
   }
 );
 
-console.log(`TURN NEXT Platform M5–M7 entry for TURN ${release.id} passed.`);
+console.log(`TURN NEXT Platform M5–M8 entry for TURN ${release.id} passed.`);
