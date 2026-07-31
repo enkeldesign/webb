@@ -64,6 +64,9 @@ jobs:
       - name: Run TURN NEXT race-session orchestration regression
         run: node turn-tests/session-orchestrator-production.mjs
 
+      - name: Run TURN NEXT home navigation regression
+        run: node turn-tests/home-navigation-production.mjs
+
       - name: Run TURN NEXT motion safe-zone regression
         run: node turn-tests/motion-safe-zone-production.mjs
 
