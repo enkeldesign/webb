@@ -1,5 +1,5 @@
 const STYLE_ATTRIBUTE = 'data-turn-m8-card-scroll-fixes';
-const FIX_ID = 'card-scroll-v1';
+const FIX_ID = 'card-scroll-v2';
 const DRAG_THRESHOLD_PX = 7;
 const CLICK_SUPPRESSION_MS = 360;
 
@@ -8,7 +8,7 @@ function installStylesheet() {
   const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
   const stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet';
-  stylesheet.href = `/turn-next/m8-home-card-scroll-fixes.css?source=${buildKey}-m8.2`;
+  stylesheet.href = `/turn-next/m8-home-card-scroll-fixes.css?source=${buildKey}-m8.3`;
   stylesheet.setAttribute(STYLE_ATTRIBUTE, '');
   document.head.appendChild(stylesheet);
 }
@@ -197,6 +197,13 @@ export async function installM8HomeCardScrollFixes() {
   const home = rail.closest('.m8-home');
   if (!home) throw new Error('TURN M8 card and scroll fixes could not find Home.');
   if (home.dataset.m8CardScrollFixes === FIX_ID) return globalThis.__turnNextHomeCardScrollFixes;
+
+  // The compact grid is only slightly taller than its viewport. Vertical snap points
+  // pulled it back to the first row after pointer release, making the bottom row
+  // impossible to leave fully visible. Free scrolling must preserve the released position.
+  rail.style.scrollSnapType = 'none';
+  rail.style.scrollSnapStop = 'normal';
+  rail.dataset.scrollRelease = 'free';
 
   const { viewport, indicator, thumb } = installScrollIndicator(rail);
   if (!indicator || !thumb) throw new Error('TURN M8 could not create the track scroll indicator.');
