@@ -1,3 +1,38 @@
+html[data-turn-deployment="next"],
+html[data-turn-deployment="next"] body {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+  background: #08090a;
+}
+
+html[data-turn-deployment="next"] body {
+  position: fixed;
+  inset: 0;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+html[data-turn-deployment="next"] #game,
+html[data-turn-deployment="next"] .m8-home,
+html[data-turn-deployment="next"] .rotate-panel {
+  position: fixed;
+  inset: 0;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+html[data-turn-deployment="next"] #intro {
+  display: none !important;
+}
+
 .turn-next-badge {
   position: fixed;
   z-index: 100000;
