@@ -36,8 +36,15 @@ export function buildTurnNextApp(productionApp, release) {
   output = replaceRequired(
     output,
     "await import(withBuild('./main.js'));",
-    "await import(new URL(`./main.js?source=${buildKey}-m8`, stagingModuleBase).href);\ndocument.documentElement.dataset.turnSessionLifecycle = 'orchestrator-m7';\nconst m8StyleAttribute = 'data-turn-m8-home-styles';\nif (!document.querySelector(`link[${m8StyleAttribute}]`)) {\n  const stylesheet = document.createElement('link');\n  stylesheet.rel = 'stylesheet';\n  stylesheet.href = new URL(`./m8-home.css?source=${buildKey}-m8`, stagingModuleBase).href;\n  stylesheet.setAttribute(m8StyleAttribute, '');\n  document.head.appendChild(stylesheet);\n}\nconst { installM8HomeNavigation } = await import(\n  new URL(`./m8-home.js?source=${buildKey}-m8`, stagingModuleBase).href\n);\nawait installM8HomeNavigation();\ndocument.documentElement.dataset.turnHomeLifecycle = 'home-m8';",
-    'M8 race-session and home entry'
+    "await import(new URL(`./main.js?source=${buildKey}-m8`, stagingModuleBase).href);\ndocument.documentElement.dataset.turnSessionLifecycle = 'orchestrator-m7';",
+    'M8 race-session entry'
+  );
+
+  output = replaceRequired(
+    output,
+    "await import(withBuild('./ui/in-game-menu.js'));",
+    "await import(withBuild('./ui/in-game-menu.js'));\nconst m8StyleAttribute = 'data-turn-m8-home-styles';\nif (!document.querySelector(`link[${m8StyleAttribute}]`)) {\n  const stylesheet = document.createElement('link');\n  stylesheet.rel = 'stylesheet';\n  stylesheet.href = new URL(`./m8-home.css?source=${buildKey}-m8`, stagingModuleBase).href;\n  stylesheet.setAttribute(m8StyleAttribute, '');\n  document.head.appendChild(stylesheet);\n}\nconst { installM8HomeNavigation } = await import(\n  new URL(`./m8-home.js?source=${buildKey}-m8`, stagingModuleBase).href\n);\nawait installM8HomeNavigation();\ndocument.documentElement.dataset.turnHomeLifecycle = 'home-m8';",
+    'M8 home composition point'
   );
 
   output = replaceRequired(
@@ -75,7 +82,7 @@ export function buildTurnNextApp(productionApp, release) {
   assert.ok(output.indexOf('installMotionLifecycleBridge({ platform: webPlatform })') < output.indexOf('main.js?source=${buildKey}-m8'));
   assert.ok(output.indexOf('installDisplayLifecycleBridge({ platform: webPlatform })') < output.indexOf('main.js?source=${buildKey}-m8'));
   assert.ok(output.indexOf('installSteeringLimitWarning()') < output.indexOf('main.js?source=${buildKey}-m8'));
-  assert.ok(output.indexOf('main.js?source=${buildKey}-m8') < output.indexOf('installM8HomeNavigation()'));
+  assert.ok(output.indexOf("withBuild('./ui/in-game-menu.js')") < output.indexOf('installM8HomeNavigation()'));
   assert.match(output, /new URL\(path, productionModuleBase\)/);
   assert.match(output, /TURN NEXT:/);
 
