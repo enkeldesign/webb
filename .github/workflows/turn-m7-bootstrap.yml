@@ -1,0 +1,41 @@
+name: TURN M7 bootstrap
+
+on:
+  push:
+    branches:
+      - turn-next-platform-m7-session-orchestrator
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out M7 branch
+        uses: actions/checkout@v4
+        with:
+          ref: turn-next-platform-m7-session-orchestrator
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Apply M7 extraction
+        run: node turn-next/scripts/apply-m7-session.mjs
+
+      - name: Remove bootstrap machinery
+        run: |
+          rm turn-next/scripts/apply-m7-session.mjs
+          rm .github/workflows/turn-m7-bootstrap.yml
+
+      - name: Commit generated M7 runtime
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Generate TURN NEXT M7 session runtime"
+          git push origin HEAD:turn-next-platform-m7-session-orchestrator
