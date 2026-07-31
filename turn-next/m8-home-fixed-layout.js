@@ -1,12 +1,12 @@
 const STYLE_ATTRIBUTE = 'data-turn-m8-fixed-home-styles';
-const LAYOUT_ID = 'fixed-grid-v3';
+const LAYOUT_ID = 'fixed-grid-v4';
 
 function installStylesheet() {
   if (document.querySelector(`link[${STYLE_ATTRIBUTE}]`)) return;
   const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
   const stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet';
-  stylesheet.href = `/turn-next/m8-home-fixed-layout.css?source=${buildKey}-m8.2`;
+  stylesheet.href = `/turn-next/m8-home-fixed-layout.css?source=${buildKey}-m8.3`;
   stylesheet.setAttribute(STYLE_ATTRIBUTE, '');
   document.head.appendChild(stylesheet);
 }
@@ -97,7 +97,7 @@ export async function installM8HomeFixedLayout() {
 
   const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
   const { installM8HomeCardScrollFixes } = await import(
-    `/turn-next/m8-home-card-scroll-fixes.js?source=${buildKey}-m8.2`
+    `/turn-next/m8-home-card-scroll-fixes.js?source=${buildKey}-m8.3`
   );
   const cardScrollFixes = await installM8HomeCardScrollFixes();
 
