@@ -6,8 +6,8 @@ import { fileURLToPath } from 'node:url';
 
 const repositoryRoot = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const productionMainPath = path.join(repositoryRoot, 'turn', 'main.js');
-const releasePath = path.join(repositoryRoot, 'turn', 'release.json');
-const outputPath = path.join(repositoryRoot, 'turn-next', 'main.js');
+const releasePath = path.join(repositoryRoot, 'turn/release.json');
+const outputPath = path.join(repositoryRoot, 'turn-next/main.js');
 
 function replaceRequired(source, search, replacement, label) {
   const firstIndex = source.indexOf(search);
@@ -32,7 +32,7 @@ export function buildTurnNextMain(productionMain, release) {
   output = replaceRequired(
     output,
     "import { GAME_MODE, installGameModeState, prepareRaceStartState, resetRaceToStage, setGameModeState } from '/turn/race/game-state.js';",
-    "import { GAME_MODE, installGameModeState, prepareRaceStartState, resetRaceToStage, setGameModeState } from '/turn/race/game-state.js';\nimport { createRaceSessionOrchestrator } from '/turn/race/session-orchestrator.js';",
+    `import { GAME_MODE, installGameModeState, prepareRaceStartState, resetRaceToStage, setGameModeState } from '/turn/race/game-state.js';\nimport { createRaceSessionOrchestrator } from '/turn/race/session-orchestrator.js?source=${release.cacheKey}-m8';`,
     'race session import'
   );
 
@@ -74,6 +74,7 @@ globalThis.__turnNextRaceSession = raceSession;
   output = `// Generated from turn/main.js for TURN ${release.id}. Do not edit by hand.\n${output}`;
 
   assert.match(output, /createRaceSessionOrchestrator/);
+  assert.match(output, new RegExp(`session-orchestrator\\.js\\?source=${release.cacheKey}-m8`));
   assert.match(output, /showRaceSetup: showTheLot/);
   assert.match(output, /__turnNextRaceSession = raceSession/);
   assert.match(output, /motionButton\.addEventListener\('click', raceSession\.requestMotion\)/);

@@ -225,6 +225,58 @@ assert.deepEqual(lotAccepted.published, ['lot-open', 'race-started']);
 assert.equal(lotAccepted.state.running, true);
 assert.equal(lotAccepted.orchestrator.getPhase(), 'racing');
 
+const deferredMotion = createHarness({ selections: [] });
+const motionAccess = await deferredMotion.orchestrator.prepareMotionAccess();
+assert.equal(motionAccess.mode, 'motion');
+assert.equal(deferredMotion.state.sensorMode, true);
+assert.equal(deferredMotion.orchestrator.getPhase(), 'authorizing');
+assert.equal(deferredMotion.fullscreenRequests, 1);
+assert.ok(deferredMotion.order.indexOf('fullscreen') < deferredMotion.order.indexOf('permission'));
+assert.equal(deferredMotion.order.includes('show-setup'), false, 'M8 must not open setup while requesting motion access');
+await motionAccess.fullscreenPromise;
+
+const deferredManual = createHarness({ selections: [] });
+deferredManual.state.roll = 1;
+deferredManual.state.targetRoll = 1;
+deferredManual.state.neutralRoll = 1;
+deferredManual.state.horizonRollReference = 1;
+deferredManual.state.pitch = 1;
+deferredManual.state.targetPitch = 1;
+deferredManual.state.neutralPitch = 1;
+const manualAccess = deferredManual.orchestrator.prepareManualAccess();
+assert.equal(manualAccess.mode, 'manual');
+assert.equal(deferredManual.state.sensorMode, false);
+assert.equal(deferredManual.order.includes('show-setup'), false, 'M8 manual access must not open setup');
+for (const key of ['roll', 'targetRoll', 'neutralRoll', 'horizonRollReference', 'pitch', 'targetPitch', 'neutralPitch']) {
+  assert.equal(deferredManual.state[key], 0, 'Deferred manual access must reset ' + key);
+}
+
+const selectionOnly = createHarness({ selections: [] });
+const selectedCar = { carId: 'suv', color: '#112233', secondaryColor: '#445566' };
+assert.equal(await selectionOnly.orchestrator.selectVehicle(selectedCar), true);
+assert.deepEqual(selectionOnly.applied, [selectedCar]);
+assert.equal(await selectionOnly.orchestrator.selectVehicle(null), false);
+
+const leaveRace = createHarness({ selections: [] });
+leaveRace.state.running = true;
+leaveRace.elements.hud.hidden = false;
+leaveRace.elements.controls.hidden = false;
+leaveRace.elements.manualSteer.hidden = false;
+assert.equal(leaveRace.orchestrator.leaveRace(), true);
+assert.equal(leaveRace.orchestrator.getPhase(), 'home');
+assert.equal(leaveRace.state.running, false);
+assert.equal(leaveRace.state.touchGas, false);
+assert.equal(leaveRace.state.touchBrake, false);
+assert.equal(leaveRace.state.manualSteering, 0);
+assert.equal(leaveRace.environment.__turnAnalogGas, 0);
+assert.equal(leaveRace.environment.__turnBoostActive, false);
+assert.equal(leaveRace.environment.__turnDriftHeld, false);
+assert.equal(leaveRace.elements.intro.hidden, true);
+assert.equal(leaveRace.elements.hud.hidden, true);
+assert.equal(leaveRace.elements.controls.hidden, true);
+assert.equal(leaveRace.elements.manualSteer.hidden, true);
+assert.deepEqual(leaveRace.published, ['home-open']);
+
 const unavailable = createHarness({ selections: [] });
 delete unavailable.environment.DeviceMotionEvent;
 delete unavailable.environment.window.DeviceMotionEvent;
@@ -244,18 +296,20 @@ assert.match(productionMain, /async function openLotFromRace\(\)/);
 assert.doesNotMatch(productionMain, /createRaceSessionOrchestrator/);
 assert.match(nextMain, /Generated from turn\/main\.js/);
 assert.match(nextMain, /createRaceSessionOrchestrator/);
+assert.match(nextMain, /session-orchestrator\.js\?source=20260729-r118-m8/);
 assert.match(nextMain, /showRaceSetup: showTheLot/);
 assert.match(nextMain, /motionButton\.addEventListener\('click', raceSession\.requestMotion\)/);
 assert.match(nextMain, /manualButton\.addEventListener\('click', raceSession\.useManualMode\)/);
 assert.match(nextMain, /openLot: raceSession\.openLotFromRace/);
+assert.match(nextApp, /turnHomeLifecycle = 'home-m8'/);
 assert.doesNotMatch(nextMain, /async function requestMotion\(\)|async function openLotFromRace\(\)|async function startGame\(/);
-assert.match(nextApp, /main\.js\?source=\$\{buildKey\}-m7/);
+assert.match(nextApp, /main\.js\?source=\$\{buildKey\}-m8/);
 assert.ok(
   nextApp.indexOf('installDisplayLifecycleBridge({ platform: webPlatform })')
-    < nextApp.indexOf("new URL(`./main.js?source=${buildKey}-m7`"),
+    < nextApp.indexOf("new URL(`./main.js?source=${buildKey}-m8`"),
   'M5 and M6 must install before the M7 session runtime'
 );
 assert.match(generator, /replaceRangeRequired/);
 assert.match(generator, /raceSession = createRaceSessionOrchestrator/);
 
-console.log('TURN NEXT Platform M7 race-session orchestration passed.');
+console.log('TURN NEXT Platform M7–M8 race-session orchestration passed.');

@@ -28,7 +28,7 @@ document.documentElement.dataset.turnPlatform = 'web-adapter';
 document.documentElement.dataset.turnMotionLifecycle = 'platform-m5';
 document.documentElement.dataset.turnDisplayLifecycle = 'platform-m6';
 const turnNextBadgeDetail = document.querySelector('.turn-next-badge span');
-if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M5–M7 · Motion + Display + Session Lifecycle';
+if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M5–M8 · Motion + Display + Session + Home';
 
 function installStylesheet(path, dataAttribute) {
   if (document.querySelector(`link[${dataAttribute}]`)) return;
@@ -125,7 +125,7 @@ const { installRaceSpeech } = await import(withBuild('./ui/race-speech.js'));
 installRaceSpeech();
 const { installRacePositionLayout } = await import(withBuild('./ui/race-position-layout.js'));
 installRacePositionLayout();
-await import(new URL(`./main.js?source=${buildKey}-m7`, stagingModuleBase).href);
+await import(new URL(`./main.js?source=${buildKey}-m8`, stagingModuleBase).href);
 document.documentElement.dataset.turnSessionLifecycle = 'orchestrator-m7';
 
 await Promise.all([
@@ -135,5 +135,18 @@ await Promise.all([
 ]);
 
 await import(withBuild('./ui/in-game-menu.js'));
+const m8StyleAttribute = 'data-turn-m8-home-styles';
+if (!document.querySelector(`link[${m8StyleAttribute}]`)) {
+  const stylesheet = document.createElement('link');
+  stylesheet.rel = 'stylesheet';
+  stylesheet.href = new URL(`./m8-home.css?source=${buildKey}-m8`, stagingModuleBase).href;
+  stylesheet.setAttribute(m8StyleAttribute, '');
+  document.head.appendChild(stylesheet);
+}
+const { installM8HomeNavigation } = await import(
+  new URL(`./m8-home.js?source=${buildKey}-m8`, stagingModuleBase).href
+);
+await installM8HomeNavigation();
+document.documentElement.dataset.turnHomeLifecycle = 'home-m8';
 
-console.info(`TURN NEXT: ${globalThis.__TURN_BUILD__?.id || 'development'} loaded through the isolated staging bootstrap.`);
+console.info(`TURN NEXT: ${globalThis.__TURN_BUILD__?.id || 'development'} loaded through the isolated M8 staging bootstrap.`);

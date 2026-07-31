@@ -192,11 +192,11 @@ assert.ok(
   'Production warning must install before the race core starts'
 );
 assert.ok(
-  nextApp.indexOf('installSteeringLimitWarning()') < nextApp.indexOf('main.js?source=${buildKey}-m7'),
-  'TURN NEXT warning must install before the M7 race core starts'
+  nextApp.indexOf('installSteeringLimitWarning()') < nextApp.indexOf('main.js?source=${buildKey}-m8'),
+  'TURN NEXT warning must install before the M8 race core starts'
 );
 
-assert.match(nextApp, /Platform M5–M7 · Motion \+ Display \+ Session Lifecycle/);
+assert.match(nextApp, /Platform M5–M8 · Motion \+ Display \+ Session \+ Home/);
 assert.doesNotMatch(nextIndex, /turn-next\/safe-zone-bootstrap|turn-next\/steering-limit-warning/);
 assert.doesNotMatch(nextApp, /turn-next\/steering-limit-warning|installTurnNextSteeringLimitWarning/);
 assert.match(orientationCompat, /feedbackNearDegrees/);

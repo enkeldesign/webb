@@ -1,0 +1,627 @@
+:root {
+  --m8-yellow: #ffbd12;
+  --m8-blue: #68c8f2;
+  --m8-cream: #fff8e8;
+  --m8-pink: #ff4fa3;
+  --m8-ink: #08090a;
+}
+
+.m8-home {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  overflow: auto;
+  color: var(--m8-ink);
+  background:
+    radial-gradient(circle at 82% 29%, #ff8caf 0 8%, transparent 8.3%),
+    radial-gradient(circle at 13% 84%, #ffe087 0 7%, transparent 7.3%),
+    linear-gradient(to bottom, var(--m8-yellow) 0 30%, var(--m8-blue) 30% 100%);
+}
+
+.m8-home[hidden] {
+  display: none;
+}
+
+.m8-home-shell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: 100%;
+  min-height: 100%;
+}
+
+.m8-home-head {
+  position: relative;
+  display: grid;
+  grid-template-columns: clamp(150px, 18vw, 260px) minmax(220px, 1fr) auto;
+  grid-template-rows: auto 1fr;
+  align-items: center;
+  column-gap: clamp(20px, 3vw, 46px);
+  min-height: clamp(190px, 30vh, 285px);
+  padding: max(14px, env(safe-area-inset-top)) max(28px, env(safe-area-inset-right)) 20px max(28px, env(safe-area-inset-left));
+}
+
+.m8-home-logo {
+  grid-row: 1 / 3;
+  align-self: stretch;
+  width: 100%;
+  height: 100%;
+  max-height: 250px;
+  object-fit: contain;
+  filter: drop-shadow(8px 8px 0 var(--m8-ink));
+}
+
+.m8-home-pitch {
+  grid-row: 1 / 3;
+  align-self: center;
+  min-width: 0;
+}
+
+.m8-home-pitch p {
+  margin: 0 0 clamp(12px, 2vh, 20px);
+  max-width: 18ch;
+  font-size: clamp(1.65rem, 3.25vw, 3.25rem);
+  font-weight: 950;
+  line-height: 0.91;
+  letter-spacing: -0.055em;
+}
+
+.m8-how-button,
+.m8-home-settings,
+.m8-track-continue,
+.m8-track-scroll-buttons button,
+.m8-dialog button {
+  border: 4px solid var(--m8-ink);
+  color: var(--m8-ink);
+  background: var(--m8-cream);
+  box-shadow: 7px 7px 0 var(--m8-ink);
+  font: inherit;
+  font-weight: 950;
+}
+
+.m8-how-button {
+  min-width: min(310px, 100%);
+  padding: 13px 24px;
+  border-radius: 20px;
+  background: var(--m8-pink);
+  font-size: clamp(1rem, 2vw, 1.6rem);
+  letter-spacing: 0.025em;
+}
+
+.m8-home-build {
+  align-self: start;
+  justify-self: end;
+  padding: 7px 12px;
+  border-radius: 7px;
+  background: rgb(255 248 232 / 0.58);
+  font-size: clamp(0.68rem, 1.2vw, 0.95rem);
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.m8-home-settings {
+  align-self: center;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 18px;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  font-size: clamp(1rem, 2vw, 1.6rem);
+  letter-spacing: 0.035em;
+}
+
+.m8-home-settings span {
+  font-size: 1.25em;
+}
+
+.m8-home-main {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  min-height: 0;
+  padding: clamp(18px, 3vh, 30px) max(24px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+}
+
+.m8-track-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: clamp(12px, 2vh, 20px);
+}
+
+.m8-track-heading-row h1 {
+  margin: 0;
+  padding: 5px clamp(16px, 4vw, 60px);
+  border-radius: 7px;
+  background: rgb(136 232 255 / 0.48);
+  font-size: clamp(1.8rem, 4.2vw, 4rem);
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+}
+
+.m8-track-scroll-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.m8-track-scroll-buttons button {
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--m8-pink);
+  font-size: 2.3rem;
+  line-height: 0.8;
+}
+
+.m8-track-scroll-buttons button:disabled {
+  opacity: 0.35;
+  box-shadow: 3px 3px 0 var(--m8-ink);
+}
+
+.m8-track-rail {
+  display: flex;
+  align-items: stretch;
+  gap: clamp(18px, 2.2vw, 30px);
+  min-width: 0;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 3px max(14vw, 70px) 15px 4px;
+  scroll-padding-inline: 4px max(14vw, 70px);
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-inline: contain;
+  scrollbar-color: var(--m8-ink) rgb(255 248 232 / 0.5);
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.m8-track-rail .track-card {
+  flex: 0 0 clamp(350px, 40vw, 590px);
+  width: clamp(350px, 40vw, 590px);
+  min-height: clamp(220px, 36vh, 400px);
+  scroll-snap-align: start;
+  scroll-snap-stop: normal;
+}
+
+.m8-track-rail .track-card-preview {
+  height: clamp(110px, 21vh, 210px);
+}
+
+.m8-track-rail .track-card-summary {
+  grid-template-columns: minmax(0, 1fr) minmax(120px, auto);
+}
+
+.m8-track-rail .track-card-difficulty {
+  grid-column: 1;
+  justify-self: start;
+  padding: 4px 18px;
+  border: 4px solid var(--m8-ink);
+  border-radius: 999px;
+  background: var(--m8-cream);
+  font-size: clamp(0.72rem, 1.2vw, 0.98rem);
+  letter-spacing: 0.12em;
+}
+
+.m8-track-rail .track-card-best {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.m8-track-rail .track-card-best-model {
+  width: clamp(48px, 6vw, 84px);
+  height: 46px;
+  object-fit: contain;
+}
+
+.m8-track-continue {
+  justify-self: center;
+  width: min(860px, 78vw);
+  margin-top: clamp(10px, 1.5vh, 18px);
+  padding: 10px 24px;
+  border-radius: 999px;
+  background: var(--selected-track-accent, var(--m8-pink));
+  font-size: clamp(0.9rem, 1.8vw, 1.3rem);
+  letter-spacing: 0.09em;
+}
+
+.m8-home-status {
+  min-height: 1.3em;
+  margin: 10px 0 0;
+  text-align: center;
+  font-weight: 850;
+}
+
+.m8-how-button:hover,
+.m8-home-settings:hover,
+.m8-track-continue:hover,
+.m8-track-scroll-buttons button:hover:not(:disabled),
+.m8-dialog button:hover {
+  transform: translateY(-2px);
+}
+
+.m8-how-button:active,
+.m8-track-continue:active,
+.m8-track-scroll-buttons button:active:not(:disabled),
+.m8-dialog button:active {
+  transform: translate(6px, 6px);
+  box-shadow: 1px 1px 0 var(--m8-ink);
+}
+
+.m8-how-button:focus-visible,
+.m8-home-settings:focus-visible,
+.m8-track-continue:focus-visible,
+.m8-track-scroll-buttons button:focus-visible,
+.m8-dialog :focus-visible {
+  outline: 5px solid var(--m8-cream);
+  outline-offset: 4px;
+}
+
+.turn-m8-active .audio-settings-button,
+.turn-m8-active .reset-rivals-button {
+  display: none !important;
+}
+
+.turn-home-open .turn-next-badge {
+  display: none;
+}
+
+.lot-race-status {
+  min-height: 1.25em;
+  margin: 0 0 8px;
+  max-width: 42ch;
+  font-size: 0.8rem;
+  font-weight: 850;
+  line-height: 1.25;
+}
+
+.m8-dialog {
+  width: min(1040px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--m8-ink);
+  overflow: visible;
+}
+
+.m8-dialog::backdrop {
+  background: rgb(8 9 10 / 0.62);
+  backdrop-filter: blur(5px);
+}
+
+.m8-dialog-card {
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  padding: clamp(18px, 3vw, 34px);
+  border: 6px solid var(--m8-ink);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 91% 8%, rgb(255 79 163 / 0.35), transparent 18%),
+    var(--m8-cream);
+  box-shadow: 12px 12px 0 var(--m8-ink);
+}
+
+.m8-dialog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 22px;
+}
+
+.m8-dialog-head span {
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.m8-dialog-head h2 {
+  margin: 2px 0 0;
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+}
+
+.m8-dialog-head > button {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--m8-pink);
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.m8-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.m8-guide-grid section {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 13px;
+  padding: 16px;
+  border: 4px solid var(--m8-ink);
+  border-radius: 20px;
+  background: white;
+  box-shadow: 5px 5px 0 var(--m8-ink);
+}
+
+.m8-guide-grid section > strong {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--m8-yellow);
+  font-size: 1.3rem;
+}
+
+.m8-guide-grid h3,
+.m8-setting-card h3 {
+  margin: 0 0 6px;
+  font-size: 1.12rem;
+}
+
+.m8-guide-grid p,
+.m8-setting-card p {
+  margin: 0;
+  line-height: 1.42;
+}
+
+.m8-guide-wide {
+  grid-column: 1 / -1;
+  background: #eaf9ef !important;
+}
+
+.m8-settings-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.m8-setting-card {
+  min-width: 0;
+  padding: 18px;
+  border: 4px solid var(--m8-ink);
+  border-radius: 20px;
+  background: white;
+  box-shadow: 5px 5px 0 var(--m8-ink);
+}
+
+.m8-setting-card legend,
+.m8-setting-card > h3 {
+  padding: 0 5px;
+  font-size: 1.25rem;
+  font-weight: 950;
+}
+
+.m8-steering-setting label,
+.m8-toggle-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  margin-top: 12px;
+  cursor: pointer;
+}
+
+.m8-steering-setting input,
+.m8-toggle-row input {
+  width: 28px;
+  height: 28px;
+  accent-color: var(--m8-pink);
+}
+
+.m8-steering-setting strong,
+.m8-toggle-row strong,
+.m8-steering-setting small,
+.m8-toggle-row small,
+.m8-balance-row strong,
+.m8-balance-row small {
+  display: block;
+}
+
+.m8-steering-setting small,
+.m8-toggle-row small,
+.m8-balance-row small {
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+.m8-motion-note {
+  margin-top: 10px !important;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.m8-balance-row {
+  display: block;
+  margin-top: 18px;
+}
+
+#m8AudioBalance {
+  width: 100%;
+  margin: 14px 0 3px;
+  accent-color: var(--m8-pink);
+}
+
+.m8-balance-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  font-size: 0.75rem;
+  font-weight: 850;
+}
+
+#m8AudioBalanceValue {
+  display: block;
+  margin-top: 8px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.m8-record-setting {
+  grid-column: 1 / -1;
+}
+
+.m8-reset-rivals,
+.m8-reset-cancel,
+.m8-reset-confirm-button {
+  margin-top: 14px;
+  padding: 9px 16px;
+  border-radius: 14px;
+  background: var(--m8-yellow) !important;
+}
+
+.m8-reset-confirm {
+  margin-top: 14px;
+  padding: 14px;
+  border: 3px dashed var(--m8-ink);
+  border-radius: 14px;
+  background: #fff2f7;
+}
+
+.m8-reset-confirm-button {
+  margin-left: 8px;
+  background: var(--m8-pink) !important;
+}
+
+.m8-settings-status {
+  min-height: 1.4em;
+  margin: 18px 0 0;
+  font-weight: 850;
+}
+
+@media (max-height: 760px) and (orientation: landscape) {
+  .m8-home-head {
+    grid-template-columns: clamp(125px, 16vw, 210px) minmax(210px, 1fr) auto;
+    min-height: 28vh;
+    padding-top: max(8px, env(safe-area-inset-top));
+    padding-bottom: 10px;
+  }
+
+  .m8-home-logo {
+    max-height: 190px;
+  }
+
+  .m8-home-pitch p {
+    margin-bottom: 8px;
+    font-size: clamp(1.35rem, 2.8vw, 2.35rem);
+  }
+
+  .m8-how-button {
+    padding: 9px 18px;
+    font-size: clamp(0.86rem, 1.6vw, 1.15rem);
+  }
+
+  .m8-home-main {
+    padding-top: 12px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+
+  .m8-track-heading-row {
+    margin-bottom: 8px;
+  }
+
+  .m8-track-heading-row h1 {
+    font-size: clamp(1.45rem, 3.5vw, 2.6rem);
+  }
+
+  .m8-track-scroll-buttons button {
+    width: 42px;
+    height: 42px;
+    font-size: 1.9rem;
+  }
+
+  .m8-track-rail .track-card {
+    flex-basis: clamp(315px, 39vw, 500px);
+    width: clamp(315px, 39vw, 500px);
+    min-height: 205px;
+    padding: 10px;
+    gap: 6px;
+  }
+
+  .m8-track-rail .track-card-preview {
+    min-height: 80px;
+    height: 17vh;
+  }
+
+  .m8-track-continue {
+    margin-top: 6px;
+    padding-block: 7px;
+  }
+}
+
+@media (max-width: 760px) and (orientation: portrait) {
+  .m8-home {
+    background: linear-gradient(to bottom, var(--m8-yellow) 0 35%, var(--m8-blue) 35% 100%);
+  }
+
+  .m8-home-head {
+    grid-template-columns: 110px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    min-height: auto;
+    padding: 14px;
+  }
+
+  .m8-home-logo {
+    grid-row: 1 / 3;
+    max-height: 155px;
+  }
+
+  .m8-home-pitch {
+    grid-row: 1;
+  }
+
+  .m8-home-build {
+    display: none;
+  }
+
+  .m8-home-settings {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
+    padding-left: 0;
+  }
+
+  .m8-track-heading-row h1 {
+    font-size: 1.75rem;
+  }
+
+  .m8-track-rail {
+    padding-right: 15vw;
+  }
+
+  .m8-track-rail .track-card {
+    flex-basis: min(82vw, 460px);
+    width: min(82vw, 460px);
+  }
+
+  .m8-guide-grid,
+  .m8-settings-list {
+    grid-template-columns: 1fr;
+  }
+
+  .m8-guide-wide,
+  .m8-record-setting {
+    grid-column: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .m8-home *,
+  .m8-dialog * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}

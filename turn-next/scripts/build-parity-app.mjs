@@ -29,21 +29,28 @@ export function buildTurnNextApp(productionApp, release) {
   output = replaceRequired(
     output,
     'function installStylesheet(path, dataAttribute) {',
-    "const { createWebPlatform } = await import(new URL('./web-platform.js', platformModuleBase).href);\nconst { installTurnPlatform } = await import(new URL('./platform-context.js', platformModuleBase).href);\nconst { installMotionLifecycleBridge } = await import(\n  new URL(`./motion-lifecycle-bridge.js?source=${buildKey}-m5.1`, stagingModuleBase).href\n);\nconst { installDisplayLifecycleBridge } = await import(\n  new URL(`./display-lifecycle-bridge.js?source=${buildKey}-m6`, stagingModuleBase).href\n);\nconst webPlatform = createWebPlatform();\ninstallTurnPlatform(webPlatform);\nconst motionLifecycle = installMotionLifecycleBridge({ platform: webPlatform });\nconst displayLifecycle = installDisplayLifecycleBridge({ platform: webPlatform });\nglobalThis.__turnNextMotionLifecycle = motionLifecycle;\nglobalThis.__turnNextDisplayLifecycle = displayLifecycle;\ndocument.documentElement.dataset.turnPlatform = 'web-adapter';\ndocument.documentElement.dataset.turnMotionLifecycle = 'platform-m5';\ndocument.documentElement.dataset.turnDisplayLifecycle = 'platform-m6';\nconst turnNextBadgeDetail = document.querySelector('.turn-next-badge span');\nif (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M5–M7 · Motion + Display + Session Lifecycle';\n\nfunction installStylesheet(path, dataAttribute) {",
+    "const { createWebPlatform } = await import(new URL('./web-platform.js', platformModuleBase).href);\nconst { installTurnPlatform } = await import(new URL('./platform-context.js', platformModuleBase).href);\nconst { installMotionLifecycleBridge } = await import(\n  new URL(`./motion-lifecycle-bridge.js?source=${buildKey}-m5.1`, stagingModuleBase).href\n);\nconst { installDisplayLifecycleBridge } = await import(\n  new URL(`./display-lifecycle-bridge.js?source=${buildKey}-m6`, stagingModuleBase).href\n);\nconst webPlatform = createWebPlatform();\ninstallTurnPlatform(webPlatform);\nconst motionLifecycle = installMotionLifecycleBridge({ platform: webPlatform });\nconst displayLifecycle = installDisplayLifecycleBridge({ platform: webPlatform });\nglobalThis.__turnNextMotionLifecycle = motionLifecycle;\nglobalThis.__turnNextDisplayLifecycle = displayLifecycle;\ndocument.documentElement.dataset.turnPlatform = 'web-adapter';\ndocument.documentElement.dataset.turnMotionLifecycle = 'platform-m5';\ndocument.documentElement.dataset.turnDisplayLifecycle = 'platform-m6';\nconst turnNextBadgeDetail = document.querySelector('.turn-next-badge span');\nif (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M5–M8 · Motion + Display + Session + Home';\n\nfunction installStylesheet(path, dataAttribute) {",
     'platform composition point'
   );
 
   output = replaceRequired(
     output,
     "await import(withBuild('./main.js'));",
-    "await import(new URL(`./main.js?source=${buildKey}-m7`, stagingModuleBase).href);\ndocument.documentElement.dataset.turnSessionLifecycle = 'orchestrator-m7';",
-    'M7 race-session entry'
+    "await import(new URL(`./main.js?source=${buildKey}-m8`, stagingModuleBase).href);\ndocument.documentElement.dataset.turnSessionLifecycle = 'orchestrator-m7';",
+    'M8 race-session entry'
+  );
+
+  output = replaceRequired(
+    output,
+    "await import(withBuild('./ui/in-game-menu.js'));",
+    "await import(withBuild('./ui/in-game-menu.js'));\nconst m8StyleAttribute = 'data-turn-m8-home-styles';\nif (!document.querySelector(`link[${m8StyleAttribute}]`)) {\n  const stylesheet = document.createElement('link');\n  stylesheet.rel = 'stylesheet';\n  stylesheet.href = new URL(`./m8-home.css?source=${buildKey}-m8`, stagingModuleBase).href;\n  stylesheet.setAttribute(m8StyleAttribute, '');\n  document.head.appendChild(stylesheet);\n}\nconst { installM8HomeNavigation } = await import(\n  new URL(`./m8-home.js?source=${buildKey}-m8`, stagingModuleBase).href\n);\nawait installM8HomeNavigation();\ndocument.documentElement.dataset.turnHomeLifecycle = 'home-m8';",
+    'M8 home composition point'
   );
 
   output = replaceRequired(
     output,
     "console.info(`TURN: ${globalThis.__TURN_BUILD__?.id || 'development'} loaded from the static module graph.`);",
-    "console.info(`TURN NEXT: ${globalThis.__TURN_BUILD__?.id || 'development'} loaded through the isolated staging bootstrap.`);",
+    "console.info(`TURN NEXT: ${globalThis.__TURN_BUILD__?.id || 'development'} loaded through the isolated M8 staging bootstrap.`);",
     'bootstrap completion log'
   );
 
@@ -62,15 +69,20 @@ export function buildTurnNextApp(productionApp, release) {
   assert.match(output, /turnMotionLifecycle = 'platform-m5'/);
   assert.match(output, /turnDisplayLifecycle = 'platform-m6'/);
   assert.match(output, /turnSessionLifecycle = 'orchestrator-m7'/);
-  assert.match(output, /main\.js\?source=\$\{buildKey\}-m7/);
+  assert.match(output, /turnHomeLifecycle = 'home-m8'/);
+  assert.match(output, /main\.js\?source=\$\{buildKey\}-m8/);
+  assert.match(output, /m8-home\.css\?source=\$\{buildKey\}-m8/);
+  assert.match(output, /m8-home\.js\?source=\$\{buildKey\}-m8/);
+  assert.match(output, /installM8HomeNavigation\(\)/);
   assert.match(output, /installStylesheet\('\.\/steering-limit-warning\.css'/);
   assert.match(output, /installSteeringLimitWarning\(\)/);
-  assert.match(output, /Platform M5–M7 · Motion \+ Display \+ Session Lifecycle/);
+  assert.match(output, /Platform M5–M8 · Motion \+ Display \+ Session \+ Home/);
   assert.doesNotMatch(output, /turn-next\/steering-limit-warning|installTurnNextSteeringLimitWarning/);
-  assert.ok(output.indexOf('installTurnPlatform(webPlatform)') < output.indexOf('main.js?source=${buildKey}-m7'));
-  assert.ok(output.indexOf('installMotionLifecycleBridge({ platform: webPlatform })') < output.indexOf('main.js?source=${buildKey}-m7'));
-  assert.ok(output.indexOf('installDisplayLifecycleBridge({ platform: webPlatform })') < output.indexOf('main.js?source=${buildKey}-m7'));
-  assert.ok(output.indexOf('installSteeringLimitWarning()') < output.indexOf('main.js?source=${buildKey}-m7'));
+  assert.ok(output.indexOf('installTurnPlatform(webPlatform)') < output.indexOf('main.js?source=${buildKey}-m8'));
+  assert.ok(output.indexOf('installMotionLifecycleBridge({ platform: webPlatform })') < output.indexOf('main.js?source=${buildKey}-m8'));
+  assert.ok(output.indexOf('installDisplayLifecycleBridge({ platform: webPlatform })') < output.indexOf('main.js?source=${buildKey}-m8'));
+  assert.ok(output.indexOf('installSteeringLimitWarning()') < output.indexOf('main.js?source=${buildKey}-m8'));
+  assert.ok(output.indexOf("withBuild('./ui/in-game-menu.js')") < output.indexOf('installM8HomeNavigation()'));
   assert.match(output, /new URL\(path, productionModuleBase\)/);
   assert.match(output, /TURN NEXT:/);
 
