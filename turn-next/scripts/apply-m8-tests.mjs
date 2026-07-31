@@ -72,7 +72,7 @@ assert.equal(manualAccess.mode, 'manual');
 assert.equal(deferredManual.state.sensorMode, false);
 assert.equal(deferredManual.order.includes('show-setup'), false, 'M8 manual access must not open setup');
 for (const key of ['roll', 'targetRoll', 'neutralRoll', 'horizonRollReference', 'pitch', 'targetPitch', 'neutralPitch']) {
-  assert.equal(deferredManual.state[key], 0, \\`Deferred manual access must reset \\${key}\\`);
+  assert.equal(deferredManual.state[key], 0, 'Deferred manual access must reset ' + key);
 }
 
 const selectionOnly = createHarness({ selections: [] });
@@ -175,7 +175,7 @@ for (const requiredCopy of [
   'On-screen steering',
   'RESET RIVALS'
 ]) {
-  assert.ok(homeSource.includes(requiredCopy), \\`M8 Home must contain \\${requiredCopy}\\`);
+  assert.ok(homeSource.includes(requiredCopy), 'M8 Home must contain ' + requiredCopy);
 }
 
 assert.match(homeSource, /TRACK_SELECTION_CATALOG\\.map\\(renderTrackCard\\)/);
