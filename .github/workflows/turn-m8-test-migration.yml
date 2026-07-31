@@ -1,0 +1,39 @@
+name: TURN M8 test migration
+
+on:
+  push:
+    branches:
+      - turn-next-m8-home-navigation
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out M8 branch
+        uses: actions/checkout@v4
+        with:
+          ref: turn-next-m8-home-navigation
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Apply M8 permanent test contracts
+        run: node turn-next/scripts/apply-m8-tests.mjs
+
+      - name: Remove one-shot migration script
+        run: rm turn-next/scripts/apply-m8-tests.mjs
+
+      - name: Commit migrated tests
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Add TURN NEXT M8 navigation contracts"
+          git push origin HEAD:turn-next-m8-home-navigation
