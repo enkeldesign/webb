@@ -8,20 +8,24 @@
 .m8-home-card-scroll-fixes .m8-track-rail {
   height: 100%;
   padding-right: 25px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scroll-snap-type: none !important;
   scrollbar-width: none;
-  touch-action: none;
-  cursor: grab;
+  touch-action: pan-y pinch-zoom;
   user-select: none;
+  -webkit-overflow-scrolling: touch;
   -webkit-user-select: none;
+}
+
+.m8-home-card-scroll-fixes .m8-track-rail .track-card,
+.m8-home-card-scroll-fixes .m8-track-rail .track-card * {
+  touch-action: pan-y pinch-zoom;
 }
 
 .m8-home-card-scroll-fixes .m8-track-rail::-webkit-scrollbar {
   display: none;
-}
-
-.m8-home-card-scroll-fixes .m8-track-rail.is-drag-scrolling {
-  cursor: grabbing;
-  scroll-snap-type: none;
 }
 
 .m8-home-card-scroll-fixes .m8-track-scroll-indicator {
