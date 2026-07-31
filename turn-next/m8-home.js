@@ -486,7 +486,7 @@ export async function installM8HomeNavigation() {
 
       <main class="m8-home-main">
         <div class="m8-track-heading-row">
-          <h1 id="m8HomeTitle">CHOOSE YOUR TRACK</h1>
+          <h1 id="m8HomeTitle" tabindex="-1">CHOOSE YOUR TRACK</h1>
           <div class="m8-track-scroll-buttons" aria-label="Scroll tracks">
             <button class="m8-track-previous" type="button" aria-label="Scroll to previous tracks">‹</button>
             <button class="m8-track-next" type="button" aria-label="Scroll to more tracks">›</button>
@@ -657,9 +657,6 @@ export async function installM8HomeNavigation() {
   runtime.openLot = leaveRaceForHome;
   runtime.openHome = leaveRaceForHome;
   document.documentElement.dataset.turnHomeLifecycle = 'home-m8';
-  const badge = document.querySelector('.turn-next-badge span');
-  if (badge && !badge.textContent.includes('Home M8')) badge.textContent += ' · Home M8';
-
   globalThis.__turnNextHome = Object.freeze({
     route: 'home-m8',
     showHome,

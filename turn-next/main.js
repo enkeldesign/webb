@@ -8,7 +8,7 @@ import { updateHudState } from '/turn/ui/hud.js?build=20260720-r19';
 import { motionPoseFromGravity as motionPoseFromGravityState, updateMotionInputState } from '/turn/input/motion.js';
 import { updateVehiclePhysicsState } from '/turn/vehicle/physics.js?build=20260720-r19';
 import { GAME_MODE, installGameModeState, prepareRaceStartState, resetRaceToStage, setGameModeState } from '/turn/race/game-state.js';
-import { createRaceSessionOrchestrator } from '/turn/race/session-orchestrator.js';
+import { createRaceSessionOrchestrator } from '/turn/race/session-orchestrator.js?source=20260729-r118-m8';
 import { beginTimedLapState, completeLapState, updateLapProgressState } from '/turn/race/lap-system.js?build=20260720-r19';
 import { recordReplayFrame, replayFrameAt } from '/turn/race/replay-system.js';
 import { RIVAL_LIMIT, loadRivalsState, saveRivalsState } from '/turn/race/rival-storage.js?build=20260720-r19';
