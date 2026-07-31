@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - turn-next-m8-home-navigation
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
