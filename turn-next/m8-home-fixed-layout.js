@@ -1,20 +1,14 @@
-const FIXED_STYLE_ATTRIBUTE = 'data-turn-m8-fixed-home-styles';
-const LOGO_STYLE_ATTRIBUTE = 'data-turn-m8-logo-tile-styles';
-const LAYOUT_ID = 'fixed-grid-v6';
+const STYLE_ATTRIBUTE = 'data-turn-m8-fixed-home-styles';
+const LAYOUT_ID = 'fixed-grid-v5';
 
-function installStylesheet(path, attribute) {
-  if (document.querySelector(`link[${attribute}]`)) return;
+function installStylesheet() {
+  if (document.querySelector(`link[${STYLE_ATTRIBUTE}]`)) return;
   const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
   const stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet';
-  stylesheet.href = `/turn-next/${path}?source=${buildKey}-m8.6`;
-  stylesheet.setAttribute(attribute, '');
+  stylesheet.href = `/turn-next/m8-home-fixed-layout.css?source=${buildKey}-m8.4`;
+  stylesheet.setAttribute(STYLE_ATTRIBUTE, '');
   document.head.appendChild(stylesheet);
-}
-
-function installStylesheets() {
-  installStylesheet('m8-home-fixed-layout.css', FIXED_STYLE_ATTRIBUTE);
-  installStylesheet('m8-home-logo-tile.css', LOGO_STYLE_ATTRIBUTE);
 }
 
 function waitForHome() {
@@ -39,7 +33,7 @@ function spokenTrackName(rawName) {
 }
 
 export async function installM8HomeFixedLayout() {
-  installStylesheets();
+  installStylesheet();
   const home = await waitForHome();
   if (home.dataset.m8HomeLayout === LAYOUT_ID) return globalThis.__turnNextHomeLayout;
 
