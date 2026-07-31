@@ -22,21 +22,41 @@ jobs:
           ref: turn-next-m8-home-navigation
           fetch-depth: 0
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
+      - name: Finish M8 permanent test contracts
+        run: |
+          python - <<'PY'
+          from pathlib import Path
 
-      - name: Apply M8 permanent test contracts
-        run: node turn-next/scripts/apply-m8-tests.mjs
+          replacements = {
+              'turn-tests/platform-production.mjs': [
+                  ('Platform M5–M8 · Motion \\+ Display \\+ Session Lifecycle',
+                   'Platform M5–M8 · Motion \\+ Display \\+ Session \\+ Home'),
+              ],
+              'turn-tests/motion-safe-zone-production.mjs': [
+                  ('Platform M5–M8 · Motion \\+ Display \\+ Session Lifecycle',
+                   'Platform M5–M8 · Motion \\+ Display \\+ Session \\+ Home'),
+              ],
+              'turn-tests/session-orchestrator-production.mjs': [
+                  ("console.log('TURN NEXT Platform M7 race-session orchestration passed.');",
+                   "console.log('TURN NEXT Platform M7–M8 race-session orchestration passed.');"),
+              ],
+          }
 
-      - name: Remove one-shot migration script
-        run: rm turn-next/scripts/apply-m8-tests.mjs
+          for filename, pairs in replacements.items():
+              path = Path(filename)
+              source = path.read_text()
+              for old, new in pairs:
+                  count = source.count(old)
+                  if count != 1:
+                      raise SystemExit(f'{filename}: expected one match for {old!r}, found {count}')
+                  source = source.replace(old, new)
+              path.write_text(source)
+          PY
 
       - name: Commit migrated tests
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "Add TURN NEXT M8 navigation contracts"
+          git add turn-tests/platform-production.mjs turn-tests/motion-safe-zone-production.mjs turn-tests/session-orchestrator-production.mjs
+          git commit -m "Finish TURN NEXT M8 test contracts"
           git push origin HEAD:turn-next-m8-home-navigation
