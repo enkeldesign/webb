@@ -312,4 +312,4 @@ assert.ok(
 assert.match(generator, /replaceRangeRequired/);
 assert.match(generator, /raceSession = createRaceSessionOrchestrator/);
 
-console.log('TURN NEXT Platform M7 race-session orchestration passed.');
+console.log('TURN NEXT Platform M7–M8 race-session orchestration passed.');

@@ -196,7 +196,7 @@ assert.ok(
   'TURN NEXT warning must install before the M8 race core starts'
 );
 
-assert.match(nextApp, /Platform M5–M8 · Motion \+ Display \+ Session Lifecycle/);
+assert.match(nextApp, /Platform M5–M8 · Motion \+ Display \+ Session \+ Home/);
 assert.doesNotMatch(nextIndex, /turn-next\/safe-zone-bootstrap|turn-next\/steering-limit-warning/);
 assert.doesNotMatch(nextApp, /turn-next\/steering-limit-warning|installTurnNextSteeringLimitWarning/);
 assert.match(orientationCompat, /feedbackNearDegrees/);

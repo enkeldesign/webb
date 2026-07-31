@@ -243,7 +243,7 @@ assert.match(nextApp, /turnMotionLifecycle = 'platform-m5'/);
 assert.match(nextApp, /turnDisplayLifecycle = 'platform-m6'/);
 assert.match(nextApp, /turnSessionLifecycle = 'orchestrator-m7'/);
 assert.match(nextApp, /turnHomeLifecycle = 'home-m8'/);
-assert.match(nextApp, /Platform M5–M8 · Motion \+ Display \+ Session Lifecycle/);
+assert.match(nextApp, /Platform M5–M8 · Motion \+ Display \+ Session \+ Home/);
 assert.ok(
   nextApp.indexOf('installMotionLifecycleBridge({ platform: webPlatform })')
     < nextApp.indexOf('main.js?source=${buildKey}-m8'),
