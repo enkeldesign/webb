@@ -144,7 +144,7 @@ assert.match(lotWrapper, /showOriginalLot/);
 assert.match(lotWrapper, /await chooseTrackBeforeLot\(\)/);
 assert.match(lotWrapper, /installLotLayout\(\)/);
 assert.match(lotWrapper, /track-manager\.js\?build=20260722-r52/);
-assert.match(originalLot, /export async function showTheLot/);
+assert.match(originalLot, /export function showTheLot/);
 
 assert.match(home, /activateTrack\(selectedTrackId, runtime\)/);
 assert.match(home, /showTheLot\(\{ initialSelection: selectedVehicle\(runtime\) \}\)/);
