@@ -1,26 +1,28 @@
+// Generated from turn/main.js for TURN 2026.07.29-r118. Do not edit by hand.
 // TURN game core.
 
 import * as THREE from 'three';
-import { installKenneyWorld } from './world-assets.js';
-import { updateRaceCameraState } from './render/camera.js?build=20260720-r19';
-import { updateHudState } from './ui/hud.js?build=20260720-r19';
-import { motionPoseFromGravity as motionPoseFromGravityState, updateMotionInputState } from './input/motion.js';
-import { updateVehiclePhysicsState } from './vehicle/physics.js?build=20260720-r19';
-import { GAME_MODE, installGameModeState, prepareRaceStartState, resetRaceToStage, setGameModeState } from './race/game-state.js';
-import { beginTimedLapState, completeLapState, updateLapProgressState } from './race/lap-system.js?build=20260720-r19';
-import { recordReplayFrame, replayFrameAt } from './race/replay-system.js';
-import { RIVAL_LIMIT, loadRivalsState, saveRivalsState } from './race/rival-storage.js?build=20260720-r19';
-import { createTrackSpatialIndex } from './race/track-spatial-index.js?build=20260720-r19';
-import { trackPitch, trackSampleAtProgress, trackSurfaceY } from './tracks/elevation.js?build=20260725-r67';
-import { showTheLot } from './garage/lot-r10.js?build=20260720-r19';
+import { installKenneyWorld } from '/turn/world-assets.js';
+import { updateRaceCameraState } from '/turn/render/camera.js?build=20260720-r19';
+import { updateHudState } from '/turn/ui/hud.js?build=20260720-r19';
+import { motionPoseFromGravity as motionPoseFromGravityState, updateMotionInputState } from '/turn/input/motion.js';
+import { updateVehiclePhysicsState } from '/turn/vehicle/physics.js?build=20260720-r19';
+import { GAME_MODE, installGameModeState, prepareRaceStartState, resetRaceToStage, setGameModeState } from '/turn/race/game-state.js';
+import { createRaceSessionOrchestrator } from '/turn/race/session-orchestrator.js?source=20260729-r118-m8';
+import { beginTimedLapState, completeLapState, updateLapProgressState } from '/turn/race/lap-system.js?build=20260720-r19';
+import { recordReplayFrame, replayFrameAt } from '/turn/race/replay-system.js';
+import { RIVAL_LIMIT, loadRivalsState, saveRivalsState } from '/turn/race/rival-storage.js?build=20260720-r19';
+import { createTrackSpatialIndex } from '/turn/race/track-spatial-index.js?build=20260720-r19';
+import { trackPitch, trackSampleAtProgress, trackSurfaceY } from '/turn/tracks/elevation.js?build=20260725-r67';
+import { showTheLot } from '/turn/garage/lot-r10.js?build=20260720-r19';
 import {
   DEFAULT_VEHICLE_SECONDARY_COLOR,
   getCarDefinition,
   loadVehicleSelection,
   saveVehicleSelection
-} from './vehicle/catalog.js?build=20260720-r19';
-import { createCarVisual } from './vehicle/car-models.js?build=20260720-r19';
-import { installPerformanceMonitor, recordPerformanceFrame } from './performance-monitor.js?build=20260720-r19';
+} from '/turn/vehicle/catalog.js?build=20260720-r19';
+import { createCarVisual } from '/turn/vehicle/car-models.js?build=20260720-r19';
+import { installPerformanceMonitor, recordPerformanceFrame } from '/turn/performance-monitor.js?build=20260720-r19';
 
 const intro = document.querySelector('#intro');
 const hud = document.querySelector('#hud');
@@ -812,142 +814,19 @@ function handleMotion(event) {
   state.targetPitch = pose.pitch;
 }
 
-function requestGameFullscreen() {
-  const root = document.documentElement;
-  const request = root.requestFullscreen || root.webkitRequestFullscreen;
-  if (!request || document.fullscreenElement || document.webkitFullscreenElement) return Promise.resolve(false);
-  try {
-    return Promise.resolve(request.call(root)).then(() => true).catch(() => false);
-  } catch (_) {
-    return Promise.resolve(false);
-  }
-}
-
-async function requestMotion() {
-  const fullscreenPromise = requestGameFullscreen();
-  try {
-    if (typeof DeviceMotionEvent === 'undefined') throw new Error('Motion sensors are not available in this browser.');
-    if (typeof DeviceMotionEvent.requestPermission === 'function') {
-      const permission = await DeviceMotionEvent.requestPermission();
-      if (permission !== 'granted') throw new Error('Motion permission was not granted.');
-    }
-    window.addEventListener('devicemotion', handleMotion, { passive: true });
-    state.sensorMode = true;
-    await chooseVehicleAndStart(fullscreenPromise);
-  } catch (error) {
-    status.textContent = `${error.message} Manual mode still works.`;
-  }
-}
-
-async function chooseVehicleAndStart(fullscreenPromise = Promise.resolve(false)) {
-  intro.hidden = true;
-  const selection = await showTheLot({
-    initialSelection: {
-      carId: state.vehicleId,
-      color: state.vehicleColor,
-      secondaryColor: state.vehicleSecondaryColor
-    }
-  });
-
-  if (!selection) {
-    intro.hidden = false;
-    return;
-  }
-
-  await applyVehicleSelection(selection);
-  await startGame(fullscreenPromise);
-}
-
-async function openLotFromRace() {
-  if (!state.running || document.body.classList.contains('turn-lot-open')) return false;
-
-  const spectateState = globalThis.__turnGetSpectateV3State?.();
-  if (spectateState?.active) {
-    globalThis.__turnStopSpectateV3?.();
-    document.body.classList.remove('turn-spectating');
-  }
-
-  const wasRunning = state.running;
-  state.running = false;
-  state.touchGas = false;
-  state.touchBrake = false;
-  state.manualSteering = 0;
-  globalThis.__turnAnalogGas = 0;
-  globalThis.__turnBoostActive = false;
-  globalThis.__turnDriftHeld = false;
-
-  hud.hidden = true;
-  controls.hidden = true;
-  manualSteer.hidden = true;
-  publishUiState('lot-open');
-
-  const selection = await showTheLot({
-    initialSelection: {
-      carId: state.vehicleId,
-      color: state.vehicleColor,
-      secondaryColor: state.vehicleSecondaryColor
-    }
-  });
-
-  if (!selection) {
-    state.running = wasRunning;
-    state.lastFrame = performance.now();
-    hud.hidden = false;
-    controls.hidden = false;
-    manualSteer.hidden = state.sensorMode;
-    resize();
-    publishUiState('lot-cancelled');
-    return false;
-  }
-
-  await applyVehicleSelection(selection);
-  await startGame();
-  return true;
-}
-
-async function startGame(fullscreenPromise = Promise.resolve(false)) {
-  state.running = true;
-  state.lastFrame = performance.now();
-  prepareRaceStartState(state);
-  intro.hidden = true;
-  hud.hidden = false;
-  controls.hidden = false;
-  manualSteer.hidden = state.sensorMode;
-  publishUiState('race-started');
-
-  if (state.sensorMode) {
-    window.setTimeout(() => {
-      state.neutralRoll = state.targetRoll;
-      state.horizonRollReference = state.targetRoll;
-      state.roll = state.targetRoll;
-      state.neutralPitch = state.targetPitch;
-      state.pitch = state.targetPitch;
-    }, 220);
-  }
-
-  await fullscreenPromise;
-  try {
-    await screen.orientation?.lock?.('landscape');
-  } catch (_) {}
-
-  resize();
-  window.setTimeout(resize, 300);
-  window.setTimeout(resize, 900);
-  showMessage('GO!');
-}
-
-async function useManualMode() {
-  const fullscreenPromise = requestGameFullscreen();
-  state.sensorMode = false;
-  state.roll = 0;
-  state.targetRoll = 0;
-  state.neutralRoll = 0;
-  state.horizonRollReference = 0;
-  state.pitch = 0;
-  state.targetPitch = 0;
-  state.neutralPitch = 0;
-  await chooseVehicleAndStart(fullscreenPromise);
-}
+const raceSession = createRaceSessionOrchestrator({
+  state,
+  elements: { intro, hud, controls, manualSteer, status },
+  environment: globalThis,
+  showRaceSetup: showTheLot,
+  applyVehicleSelection,
+  prepareRaceStartState,
+  publishUiState,
+  handleMotion,
+  resize,
+  showMessage
+});
+globalThis.__turnNextRaceSession = raceSession;
 
 function calibrate() {
   if (state.sensorMode) {
@@ -1026,8 +905,8 @@ window.addEventListener('keyup', (event) => {
   if (key === 'arrowdown' || key === 's' || key === ' ') state.touchBrake = false;
 });
 
-motionButton.addEventListener('click', requestMotion);
-manualButton.addEventListener('click', useManualMode);
+motionButton.addEventListener('click', raceSession.requestMotion);
+manualButton.addEventListener('click', raceSession.useManualMode);
 calibrateButton.addEventListener('click', calibrate);
 resetButton.addEventListener('click', () => resetCar());
 
@@ -1473,7 +1352,7 @@ const turnRuntime = {
   lapFrameAt,
   GAME_MODE,
   setGameMode,
-  openLot: openLotFromRace,
+  openLot: raceSession.openLotFromRace,
   setRacePosition(position, total) {
     globalThis.__turnSetRacePosition?.(position, total);
   },
