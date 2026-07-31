@@ -28,7 +28,7 @@ document.documentElement.dataset.turnPlatform = 'web-adapter';
 document.documentElement.dataset.turnMotionLifecycle = 'platform-m5';
 document.documentElement.dataset.turnDisplayLifecycle = 'platform-m6';
 const turnNextBadgeDetail = document.querySelector('.turn-next-badge span');
-if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M5–M6 · Motion + Display Lifecycle';
+if (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M5–M7 · Motion + Display + Session Lifecycle';
 
 function installStylesheet(path, dataAttribute) {
   if (document.querySelector(`link[${dataAttribute}]`)) return;
@@ -125,7 +125,8 @@ const { installRaceSpeech } = await import(withBuild('./ui/race-speech.js'));
 installRaceSpeech();
 const { installRacePositionLayout } = await import(withBuild('./ui/race-position-layout.js'));
 installRacePositionLayout();
-await import(withBuild('./main.js'));
+await import(new URL(`./main.js?source=${buildKey}-m7`, stagingModuleBase).href);
+document.documentElement.dataset.turnSessionLifecycle = 'orchestrator-m7';
 
 await Promise.all([
   import(withBuild('./render/world.js')),

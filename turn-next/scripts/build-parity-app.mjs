@@ -29,8 +29,15 @@ export function buildTurnNextApp(productionApp, release) {
   output = replaceRequired(
     output,
     'function installStylesheet(path, dataAttribute) {',
-    "const { createWebPlatform } = await import(new URL('./web-platform.js', platformModuleBase).href);\nconst { installTurnPlatform } = await import(new URL('./platform-context.js', platformModuleBase).href);\nconst { installMotionLifecycleBridge } = await import(\n  new URL(`./motion-lifecycle-bridge.js?source=${buildKey}-m5.1`, stagingModuleBase).href\n);\nconst { installDisplayLifecycleBridge } = await import(\n  new URL(`./display-lifecycle-bridge.js?source=${buildKey}-m6`, stagingModuleBase).href\n);\nconst webPlatform = createWebPlatform();\ninstallTurnPlatform(webPlatform);\nconst motionLifecycle = installMotionLifecycleBridge({ platform: webPlatform });\nconst displayLifecycle = installDisplayLifecycleBridge({ platform: webPlatform });\nglobalThis.__turnNextMotionLifecycle = motionLifecycle;\nglobalThis.__turnNextDisplayLifecycle = displayLifecycle;\ndocument.documentElement.dataset.turnPlatform = 'web-adapter';\ndocument.documentElement.dataset.turnMotionLifecycle = 'platform-m5';\ndocument.documentElement.dataset.turnDisplayLifecycle = 'platform-m6';\nconst turnNextBadgeDetail = document.querySelector('.turn-next-badge span');\nif (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M5–M6 · Motion + Display Lifecycle';\n\nfunction installStylesheet(path, dataAttribute) {",
+    "const { createWebPlatform } = await import(new URL('./web-platform.js', platformModuleBase).href);\nconst { installTurnPlatform } = await import(new URL('./platform-context.js', platformModuleBase).href);\nconst { installMotionLifecycleBridge } = await import(\n  new URL(`./motion-lifecycle-bridge.js?source=${buildKey}-m5.1`, stagingModuleBase).href\n);\nconst { installDisplayLifecycleBridge } = await import(\n  new URL(`./display-lifecycle-bridge.js?source=${buildKey}-m6`, stagingModuleBase).href\n);\nconst webPlatform = createWebPlatform();\ninstallTurnPlatform(webPlatform);\nconst motionLifecycle = installMotionLifecycleBridge({ platform: webPlatform });\nconst displayLifecycle = installDisplayLifecycleBridge({ platform: webPlatform });\nglobalThis.__turnNextMotionLifecycle = motionLifecycle;\nglobalThis.__turnNextDisplayLifecycle = displayLifecycle;\ndocument.documentElement.dataset.turnPlatform = 'web-adapter';\ndocument.documentElement.dataset.turnMotionLifecycle = 'platform-m5';\ndocument.documentElement.dataset.turnDisplayLifecycle = 'platform-m6';\nconst turnNextBadgeDetail = document.querySelector('.turn-next-badge span');\nif (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M5–M7 · Motion + Display + Session Lifecycle';\n\nfunction installStylesheet(path, dataAttribute) {",
     'platform composition point'
+  );
+
+  output = replaceRequired(
+    output,
+    "await import(withBuild('./main.js'));",
+    "await import(new URL(`./main.js?source=${buildKey}-m7`, stagingModuleBase).href);\ndocument.documentElement.dataset.turnSessionLifecycle = 'orchestrator-m7';",
+    'M7 race-session entry'
   );
 
   output = replaceRequired(
@@ -54,14 +61,16 @@ export function buildTurnNextApp(productionApp, release) {
   assert.match(output, /__turnNextDisplayLifecycle = displayLifecycle/);
   assert.match(output, /turnMotionLifecycle = 'platform-m5'/);
   assert.match(output, /turnDisplayLifecycle = 'platform-m6'/);
+  assert.match(output, /turnSessionLifecycle = 'orchestrator-m7'/);
+  assert.match(output, /main\.js\?source=\$\{buildKey\}-m7/);
   assert.match(output, /installStylesheet\('\.\/steering-limit-warning\.css'/);
   assert.match(output, /installSteeringLimitWarning\(\)/);
-  assert.match(output, /Platform M5–M6 · Motion \+ Display Lifecycle/);
+  assert.match(output, /Platform M5–M7 · Motion \+ Display \+ Session Lifecycle/);
   assert.doesNotMatch(output, /turn-next\/steering-limit-warning|installTurnNextSteeringLimitWarning/);
-  assert.ok(output.indexOf('installTurnPlatform(webPlatform)') < output.indexOf("withBuild('./main.js')"));
-  assert.ok(output.indexOf('installMotionLifecycleBridge({ platform: webPlatform })') < output.indexOf("withBuild('./main.js')"));
-  assert.ok(output.indexOf('installDisplayLifecycleBridge({ platform: webPlatform })') < output.indexOf("withBuild('./main.js')"));
-  assert.ok(output.indexOf('installSteeringLimitWarning()') < output.indexOf("withBuild('./main.js')"));
+  assert.ok(output.indexOf('installTurnPlatform(webPlatform)') < output.indexOf('main.js?source=${buildKey}-m7'));
+  assert.ok(output.indexOf('installMotionLifecycleBridge({ platform: webPlatform })') < output.indexOf('main.js?source=${buildKey}-m7'));
+  assert.ok(output.indexOf('installDisplayLifecycleBridge({ platform: webPlatform })') < output.indexOf('main.js?source=${buildKey}-m7'));
+  assert.ok(output.indexOf('installSteeringLimitWarning()') < output.indexOf('main.js?source=${buildKey}-m7'));
   assert.match(output, /new URL\(path, productionModuleBase\)/);
   assert.match(output, /TURN NEXT:/);
 

@@ -186,13 +186,17 @@ for (const indexSource of [productionIndex, nextIndex]) {
 for (const appSource of [productionApp, nextApp]) {
   assert.match(appSource, /installStylesheet\('\.\/steering-limit-warning\.css'/);
   assert.match(appSource, /installSteeringLimitWarning\(\)/);
-  assert.ok(
-    appSource.indexOf('installSteeringLimitWarning()') < appSource.indexOf("withBuild('./main.js')"),
-    'The canonical warning must install before the race core starts'
-  );
 }
+assert.ok(
+  productionApp.indexOf('installSteeringLimitWarning()') < productionApp.indexOf("withBuild('./main.js')"),
+  'Production warning must install before the race core starts'
+);
+assert.ok(
+  nextApp.indexOf('installSteeringLimitWarning()') < nextApp.indexOf('main.js?source=${buildKey}-m7'),
+  'TURN NEXT warning must install before the M7 race core starts'
+);
 
-assert.match(nextApp, /Platform M5–M6 · Motion \+ Display Lifecycle/);
+assert.match(nextApp, /Platform M5–M7 · Motion \+ Display \+ Session Lifecycle/);
 assert.doesNotMatch(nextIndex, /turn-next\/safe-zone-bootstrap|turn-next\/steering-limit-warning/);
 assert.doesNotMatch(nextApp, /turn-next\/steering-limit-warning|installTurnNextSteeringLimitWarning/);
 assert.match(orientationCompat, /feedbackNearDegrees/);
