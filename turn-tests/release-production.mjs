@@ -3,23 +3,33 @@ import fs from 'node:fs/promises';
 
 import { checkReleaseFiles, loadReleaseDefinition } from '../turn/scripts/release.mjs';
 
-const [release, index, app, main, manifest, workflow] = await Promise.all([
+const [release, index, app, main, manifest, workflow, nextApp, nextIndex] = await Promise.all([
   loadReleaseDefinition(),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/site.webmanifest', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../.github/workflows/turn-lab-tests.yml', import.meta.url), 'utf8')
+  fs.readFile(new URL('../.github/workflows/turn-lab-tests.yml', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn-next/app.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8')
 ]);
 
 await checkReleaseFiles();
 
 const visibleBuild = `TURN v${release.version} · Build ${release.id}`;
 assert.match(index, new RegExp(escapeRegExp(`<title>${visibleBuild}</title>`)));
-assert.equal(index.split(visibleBuild).length - 1, 3, 'Title, install gate and start card must share one visible release identity');
+assert.equal(
+  index.split(visibleBuild).length - 1,
+  2,
+  'Title and install onboarding must share the static release identity; Home receives it from the runtime source of truth'
+);
 assert.match(index, new RegExp(`version: '${escapeRegExp(release.version)}'`));
 assert.match(index, new RegExp(`id: '${escapeRegExp(release.id)}'`));
 assert.match(index, new RegExp(`cacheKey: '${escapeRegExp(release.cacheKey)}'`));
+assert.match(app, /const release = globalThis\.__TURN_BUILD__/);
+assert.match(app, /buildLabel\.textContent = `TURN V\$\{release\?\.version \|\| ''\} · BUILD \$\{\(release\?\.id \|\| ''\)\.toUpperCase\(\)\}`/);
+assert.match(app, /retireLegacyStartPanel\(\)/);
+assert.doesNotMatch(index, /class="start-card"/);
 
 const attributeBuilds = [...index.matchAll(/(?:href|src)="\.\/[^"?]+\?build=([^"&]+)/g)].map((match) => match[1]);
 assert.ok(attributeBuilds.length >= 15, 'Production entry document must cache-bust its local assets');
@@ -42,14 +52,22 @@ for (const [specifier, target] of Object.entries(importMap.imports)) {
 
 assert.match(app, /const buildKey = globalThis\.__TURN_BUILD__\?\.cacheKey/);
 assert.match(app, /function withBuild\(path\)/);
+assert.match(app, /installTurnPlatform\(webPlatform\)/);
+assert.match(app, /installMotionLifecycleBridge\(\{ platform: webPlatform \}\)/);
+assert.match(app, /installDisplayLifecycleBridge\(\{ platform: webPlatform \}\)/);
 assert.match(app, /await import\(withBuild\('\.\/main\.js'\)\)/);
+assert.match(app, /installM8HomeNavigation\(\)/);
+assert.match(app, /installM8HomeFixedLayout\(\)/);
+assert.ok(app.indexOf('installTurnPlatform(webPlatform)') < app.indexOf("withBuild('./main.js')"));
+assert.ok(app.indexOf("withBuild('./main.js')") < app.indexOf('installM8HomeNavigation()'));
 
 for (const anchor of [
-  "from './race/game-state.js'",
-  "from './race/lap-system.js?build=20260720-r19'",
-  "from './race/replay-system.js'",
-  "from './race/rival-storage.js?build=20260720-r19'",
-  "from './vehicle/physics.js?build=20260720-r19'",
+  "from '/turn/race/game-state.js'",
+  "from '/turn/race/lap-system.js?build=20260720-r19'",
+  "from '/turn/race/replay-system.js'",
+  "from '/turn/race/rival-storage.js?build=20260720-r19'",
+  "from '/turn/vehicle/physics.js?build=20260720-r19'",
+  'createRaceSessionOrchestrator',
   'updateVehiclePhysicsState({',
   'updateLapProgressState({',
   'globalThis.__turnRuntime = turnRuntime;'
@@ -61,16 +79,24 @@ const manifestData = JSON.parse(manifest);
 assert.equal(manifestData.start_url, '/turn/');
 assert.equal(manifestData.scope, '/turn/');
 assert.equal(manifestData.orientation, 'landscape');
+assert.equal(manifestData.background_color, '#08090a');
+assert.equal(manifestData.theme_color, '#08090a');
 assert.ok(
   manifestData.icons.some((icon) => String(icon.purpose || '').split(/\s+/).includes('maskable')),
   'Production manifest must provide a maskable-capable icon'
 );
 
+assert.match(nextIndex, new RegExp(`TURN NEXT · Source ${escapeRegExp(visibleBuild)}`));
+assert.match(nextIndex, new RegExp(`/turn-next/app\\.js\\?source=${escapeRegExp(release.cacheKey)}-promoted`));
+assert.match(nextApp, /new URL\('\/turn\/app\.js'/);
+assert.match(nextApp, /await import\(url\.href\)/);
+assert.doesNotMatch(nextApp, /installM8HomeNavigation|installMotionLifecycleBridge/);
+
 assert.match(workflow, /node turn\/scripts\/release\.mjs --check/);
 assert.match(workflow, /node turn-tests\/release-production\.mjs/);
 assert.doesNotMatch(workflow, /node turn-lab\/scripts\/check-release\.mjs/, 'CI must verify the production release rather than the retired playable lab snapshot');
 
-console.log(`TURN ${release.id} production release architecture passed.`);
+console.log(`TURN ${release.id} promoted M5–M8 production release architecture passed.`);
 
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

@@ -1,46 +1,141 @@
 <!doctype html>
-<!-- TURN 2026.07.29-r118 release identity -->
-<html lang="en" data-turn-deployment="next"><head><base href="/turn/"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"><meta name="theme-color" content="#08090a"><meta name="application-name" content="TURN NEXT"><meta name="robots" content="noindex,nofollow"><meta name="description" content="TURN NEXT is the isolated architecture test runtime for TURN."><link rel="canonical" href="https://enkel.design/turn-next/"><meta property="og:type" content="website"><meta property="og:site_name" content="TURN NEXT"><meta property="og:title" content="TURN NEXT — Architecture test runtime"><meta property="og:description" content="An isolated staging runtime used to verify TURN architecture changes."><meta property="og:url" content="https://enkel.design/turn-next/"><meta property="og:image" content="https://enkel.design/turn/turn-og-r58.jpg"><meta property="og:image:secure_url" content="https://enkel.design/turn/turn-og-r58.jpg"><meta property="og:image:type" content="image/jpeg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="TURN game artwork showing a tilted phone with a level racing horizon."><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="TURN NEXT — Architecture test runtime"><meta name="twitter:description" content="An isolated staging runtime used to verify TURN architecture changes."><meta name="twitter:image" content="https://enkel.design/turn/turn-og-r58.jpg"><meta name="twitter:image:alt" content="TURN game artwork showing a tilted phone with a level racing horizon."><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="TURN NEXT"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><title>TURN NEXT · Source TURN v1.24.7 · Build 2026.07.29-r118</title><script>
+<!-- TURN 2026.07.31-r120 release identity -->
+<html lang="en" data-turn-deployment="next"><head>
+  <base href="/turn/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#08090a">
+  <meta name="application-name" content="TURN NEXT">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="TURN NEXT is the isolated test channel for TURN.">
+  <link rel="canonical" href="https://enkel.design/turn-next/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="TURN NEXT">
+  <meta property="og:title" content="TURN NEXT — Test channel">
+  <meta property="og:description" content="An isolated test channel running TURN’s canonical production runtime with separate records.">
+  <meta property="og:url" content="https://enkel.design/turn-next/">
+  <meta property="og:image" content="https://enkel.design/turn/turn-og-r58.jpg">
+  <meta property="og:image:secure_url" content="https://enkel.design/turn/turn-og-r58.jpg">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="TURN game artwork showing a tilted phone with a level racing horizon.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="TURN NEXT — Test channel">
+  <meta name="twitter:description" content="An isolated test channel running TURN’s canonical production runtime with separate records.">
+  <meta name="twitter:image" content="https://enkel.design/turn/turn-og-r58.jpg">
+  <meta name="twitter:image:alt" content="TURN game artwork showing a tilted phone with a level racing horizon.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="TURN NEXT">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>TURN NEXT · Source TURN v1.25.0 · Build 2026.07.31-r120</title>
+  <script>
     globalThis.__TURN_BUILD__ = Object.freeze({
-      version: '1.24.7',
-      id: '2026.07.29-r118',
-      cacheKey: '20260729-r118'
+      version: '1.25.0',
+      id: '2026.07.31-r120',
+      cacheKey: '20260731-r120'
     });
-  </script><script src="/turn-next/storage-bootstrap.js?source=20260729-r118"></script><link rel="icon" href="./TURNicon.PNG?icon=20260730-1136" type="image/png" sizes="1136x1136"><link rel="apple-touch-icon" href="./TURNicon.PNG?icon=20260730-1136" sizes="1136x1136"><link rel="manifest" href="/turn-next/site.webmanifest?source=20260729-r118-icon-20260730-1136-m8.5"><link rel="stylesheet" href="./styles.css?build=20260729-r118"><link rel="stylesheet" href="./vertical-drive.css?build=20260729-r118"><link rel="stylesheet" href="./hud-tuning.css?build=20260729-r118"><link rel="stylesheet" href="./install-gate.css?build=20260729-r118"><link rel="stylesheet" href="./gameplay-features.css?build=20260729-r118"><link rel="stylesheet" href="./gameplay-v2.css?build=20260729-r118"><link rel="stylesheet" href="./position-hud-r83.css?build=20260729-r118"><link rel="stylesheet" href="./drive-pad.css?build=20260729-r118"><link rel="stylesheet" href="./in-game-menu.css?build=20260729-r118"><link rel="stylesheet" href="./spectate-v3.css?build=20260729-r118"><link rel="stylesheet" href="./manual-steering.css?build=20260729-r118"><link rel="stylesheet" href="./orientation-guard.css?build=20260729-r118"><link rel="stylesheet" href="./lap-result-toast.css?build=20260729-r118"><link rel="stylesheet" href="./rival-onboarding.css?build=20260729-r118"><link rel="stylesheet" href="./track-select.css?build=20260729-r118"><link rel="stylesheet" href="./track-select-r54.css?build=20260729-r118"><link rel="stylesheet" href="./track-select-r61.css?build=20260729-r118"><link rel="stylesheet" href="./track-select-r77.css?build=20260729-r118"><link rel="stylesheet" href="./track-select-r78.css?build=20260729-r118"><link rel="stylesheet" href="./track-select-r79.css?build=20260729-r118"><link rel="stylesheet" href="./track-intro.css?build=20260729-r118"><link rel="stylesheet" href="./garage/lot-r10.css?build=20260729-r118"><link rel="stylesheet" href="./garage/lot-stat-legend.css?build=20260729-r118"><link rel="stylesheet" href="./garage/lot-layout-r60.css?build=20260729-r118"><link rel="stylesheet" href="/turn-next/identity.css?source=20260729-r118-m8.5-logo"><script defer src="/turn-next/identity.js?source=20260729-r118-m8.5-logo"></script><script src="./install-gate.js?build=20260729-r118"></script><script src="./motion-safe-zone.js?build=20260729-r118"></script><script src="./orientation-compat.js?build=20260729-r118"></script><script type="importmap">
+  </script>
+  <script src="/turn-next/storage-bootstrap.js?source=20260731-r120"></script>
+  <link rel="icon" href="./TURNicon.PNG?icon=20260730-1136" type="image/png" sizes="1136x1136">
+  <link rel="apple-touch-icon" href="./TURNicon.PNG?icon=20260730-1136" sizes="1136x1136">
+  <link rel="manifest" href="/turn-next/site.webmanifest?source=20260731-r120-icon-20260730-1136-m8.5">
+  <link rel="stylesheet" href="./styles.css?build=20260731-r120">
+  <link rel="stylesheet" href="./vertical-drive.css?build=20260731-r120">
+  <link rel="stylesheet" href="./hud-tuning.css?build=20260731-r120">
+  <link rel="stylesheet" href="./install-gate.css?build=20260731-r120">
+  <link rel="stylesheet" href="./gameplay-features.css?build=20260731-r120">
+  <link rel="stylesheet" href="./gameplay-v2.css?build=20260731-r120">
+  <link rel="stylesheet" href="./position-hud-r83.css?build=20260731-r120">
+  <link rel="stylesheet" href="./drive-pad.css?build=20260731-r120">
+  <link rel="stylesheet" href="./in-game-menu.css?build=20260731-r120">
+  <link rel="stylesheet" href="./spectate-v3.css?build=20260731-r120">
+  <link rel="stylesheet" href="./manual-steering.css?build=20260731-r120">
+  <link rel="stylesheet" href="./orientation-guard.css?build=20260731-r120">
+  <link rel="stylesheet" href="./lap-result-toast.css?build=20260731-r120">
+  <link rel="stylesheet" href="./rival-onboarding.css?build=20260731-r120">
+  <link rel="stylesheet" href="./track-select.css?build=20260731-r120">
+  <link rel="stylesheet" href="./track-select-r54.css?build=20260731-r120">
+  <link rel="stylesheet" href="./track-select-r61.css?build=20260731-r120">
+  <link rel="stylesheet" href="./track-select-r77.css?build=20260731-r120">
+  <link rel="stylesheet" href="./track-select-r78.css?build=20260731-r120">
+  <link rel="stylesheet" href="./track-select-r79.css?build=20260731-r120">
+  <link rel="stylesheet" href="./track-intro.css?build=20260731-r120">
+  <link rel="stylesheet" href="./garage/lot-r10.css?build=20260731-r120">
+  <link rel="stylesheet" href="./garage/lot-stat-legend.css?build=20260731-r120">
+  <link rel="stylesheet" href="./garage/lot-layout-r60.css?build=20260731-r120">
+  <link rel="stylesheet" href="/turn-next/identity.css?source=20260731-r120-m8.5-logo">
+  <script defer src="/turn-next/identity.js?source=20260731-r120-m8.5-logo"></script>
+  <script src="./install-gate.js?build=20260731-r120"></script>
+  <script src="./motion-safe-zone.js?build=20260731-r120"></script>
+  <script src="./orientation-compat.js?build=20260731-r120"></script>
+  <script type="importmap">
     {
       "imports": {
         "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
         "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/",
-        "./garage/lot-r10.js?build=20260720-r19": "./garage/lot-track-select.js?build=20260729-r118",
-        "./render/camera.js?build=20260720-r19": "./render/camera.js?build=20260729-r118",
-        "./race/lap-system.js?build=20260720-r19": "./race/lap-system-r86.js?build=20260729-r118",
-        "./race/game-state.js": "./race/game-state.js?build=20260729-r118",
-        "./race/replay-system.js": "./race/replay-system.js?build=20260729-r118",
-        "./race/rival-storage.js?build=20260720-r19": "./race/rival-storage.js?build=20260729-r118",
-        "./race/rival-storage.js?build=20260722-r50": "./race/rival-storage.js?build=20260729-r118",
-        "./race/track-spatial-index.js?build=20260720-r19": "./race/track-spatial-index.js?build=20260729-r118",
-        "./performance-monitor.js?build=20260720-r19": "./performance-monitor.js?build=20260729-r118",
-        "./world-assets.js": "./world-assets.js?build=20260729-r118",
-        "./vehicle/physics.js?build=20260720-r19": "./vehicle/physics.js?build=20260729-r118",
-        "./vehicle/catalog.js?build=20260720-r19": "./vehicle/catalog.js?build=20260729-r118",
-        "./vehicle/catalog.js?build=20260720-r20": "./vehicle/catalog.js?build=20260729-r118",
-        "./vehicle/catalog.js?build=20260722-r42": "./vehicle/catalog.js?build=20260729-r118",
-        "./vehicle/car-models.js?build=20260720-r19": "./vehicle/car-models.js?build=20260729-r118",
-        "./ui/race-announcements.js": "./ui/race-announcements.js?build=20260729-r118",
-        "./ui/track-select.js?build=20260722-r51": "./ui/track-select.js?build=20260729-r118",
-        "./ui/track-intro.js?build=20260725-r75": "./ui/track-intro.js?build=20260729-r118",
-        "./tracks/catalog.js?build=20260722-r50": "./tracks/catalog.js?build=20260729-r118",
-        "./tracks/catalog.js": "./tracks/catalog.js?build=20260729-r118",
-        "./tracks/cliffside-layout.js": "./tracks/cliffside-layout.js?build=20260729-r118",
-        "./tracks/cliffside-world.js": "./tracks/cliffside-world-r76.js?build=20260729-r118",
-        "./tracks/harbor-collision.js": "./tracks/harbor-collision.js?build=20260729-r118",
-        "./tracks/harbor-layout.js": "./tracks/harbor-layout.js?build=20260729-r118",
-        "./tracks/harbor-world.js": "./tracks/harbor-world-r81.js?build=20260729-r118",
-        "./tracks/definitions.js": "./tracks/definitions.js?build=20260729-r118",
-        "./tracks/elevation.js": "./tracks/elevation.js?build=20260729-r118",
-        "./tracks/pace-notes.js": "./tracks/pace-notes.js?build=20260729-r118",
-        "./tracks/registry.js": "./tracks/registry.js?build=20260729-r118",
-        "./tracks/track-manager.js?build=20260722-r52": "./tracks/track-manager.js?build=20260729-r118"
+        "./garage/lot-r10.js?build=20260720-r19": "./garage/lot-track-select.js?build=20260731-r120",
+        "./render/camera.js?build=20260720-r19": "./render/camera.js?build=20260731-r120",
+        "./race/lap-system.js?build=20260720-r19": "./race/lap-system-r86.js?build=20260731-r120",
+        "./race/game-state.js": "./race/game-state.js?build=20260731-r120",
+        "./race/replay-system.js": "./race/replay-system.js?build=20260731-r120",
+        "./race/rival-storage.js?build=20260720-r19": "./race/rival-storage.js?build=20260731-r120",
+        "./race/rival-storage.js?build=20260722-r50": "./race/rival-storage.js?build=20260731-r120",
+        "./race/track-spatial-index.js?build=20260720-r19": "./race/track-spatial-index.js?build=20260731-r120",
+        "./performance-monitor.js?build=20260720-r19": "./performance-monitor.js?build=20260731-r120",
+        "./world-assets.js": "./world-assets.js?build=20260731-r120",
+        "./vehicle/physics.js?build=20260720-r19": "./vehicle/physics.js?build=20260731-r120",
+        "./vehicle/catalog.js?build=20260720-r19": "./vehicle/catalog.js?build=20260731-r120",
+        "./vehicle/catalog.js?build=20260720-r20": "./vehicle/catalog.js?build=20260731-r120",
+        "./vehicle/catalog.js?build=20260722-r42": "./vehicle/catalog.js?build=20260731-r120",
+        "./vehicle/car-models.js?build=20260720-r19": "./vehicle/car-models.js?build=20260731-r120",
+        "./ui/race-announcements.js": "./ui/race-announcements.js?build=20260731-r120",
+        "./ui/track-select.js?build=20260722-r51": "./ui/track-select.js?build=20260731-r120",
+        "./ui/track-intro.js?build=20260725-r75": "./ui/track-intro.js?build=20260731-r120",
+        "./tracks/catalog.js?build=20260722-r50": "./tracks/catalog.js?build=20260731-r120",
+        "./tracks/catalog.js": "./tracks/catalog.js?build=20260731-r120",
+        "./tracks/cliffside-layout.js": "./tracks/cliffside-layout.js?build=20260731-r120",
+        "./tracks/cliffside-world.js": "./tracks/cliffside-world-r76.js?build=20260731-r120",
+        "./tracks/harbor-collision.js": "./tracks/harbor-collision.js?build=20260731-r120",
+        "./tracks/harbor-layout.js": "./tracks/harbor-layout.js?build=20260731-r120",
+        "./tracks/harbor-world.js": "./tracks/harbor-world-r81.js?build=20260731-r120",
+        "./tracks/definitions.js": "./tracks/definitions.js?build=20260731-r120",
+        "./tracks/elevation.js": "./tracks/elevation.js?build=20260731-r120",
+        "./tracks/pace-notes.js": "./tracks/pace-notes.js?build=20260731-r120",
+        "./tracks/registry.js": "./tracks/registry.js?build=20260731-r120",
+        "./tracks/track-manager.js?build=20260722-r52": "./tracks/track-manager.js?build=20260731-r120"
       }
     }
-  </script></head><body><aside class="turn-next-badge" role="note" aria-label="TURN NEXT architecture test runtime. Source TURN v1.24.7 · Build 2026.07.29-r118."><strong>TURN NEXT</strong><span>Source 2026.07.29-r118</span></aside><section class="install-gate" id="installGate" aria-labelledby="installTitle"><div class="install-shell"><div class="install-art" aria-hidden="true"><img class="install-icon" src="./TURNicon.PNG?icon=20260730-1136" alt=""></div><div class="install-card"><span class="install-kicker">TURN NEXT · Source TURN v1.24.7 · Build 2026.07.29-r118</span><h1 id="installTitle">TURN NEXT</h1><p class="install-copy">This is TURN’s isolated architecture test runtime. It uses production gameplay modules with separate test records.</p><div class="install-actions"><button id="installTurnButton" class="install-primary" type="button">Install TURN NEXT</button><button class="install-secondary" id="playBrowserButton" type="button">Play in browser anyway</button></div><p class="install-note" id="installNote">TURN NEXT cannot overwrite production TURN records. You can install it alongside TURN.</p></div></div><div class="install-guide" id="installGuide" role="dialog" aria-modal="true" aria-labelledby="installGuideTitle" hidden><div class="install-guide-card"><div class="install-guide-head"><h2 id="installGuideTitle">Add TURN NEXT to your Home Screen</h2><button class="install-close" id="installGuideClose" type="button" aria-label="Close install instructions">×</button></div><div class="install-steps" id="installSteps"></div></div></div></section><div id="game" aria-label="Third-person motion-controlled arcade racing game"></div><section class="panel" id="intro" aria-labelledby="title"><div class="start-card"><span class="kicker">TURN NEXT · Source TURN v1.24.7 · Build 2026.07.29-r118</span><h1 class="start-logo-heading" id="title"><img class="start-logo" src="./TURNicon.PNG?icon=20260730-1136" alt="TURN"><span class="turn-next-card-label">NEXT</span></h1><p class="tagline">Turn the device to steer. Slide one thumb between Gas, Drift, Boost, Brake and Reverse.</p><div class="actions"><button id="motionButton" type="button">Enable motion &amp; race</button><button class="secondary" id="manualButton" type="button">Desktop / manual mode</button></div><p class="status" id="status" role="status">Steering uses device rotation. Keep one thumb down and slide across all drive controls.</p></div></section><section class="rotate-panel" aria-label="Rotate device"><div class="rotate-card"><div class="rotate-phone" aria-hidden="true"></div><strong>Rotate to landscape</strong></div></section><div class="hud" id="hud" hidden><div class="topbar"><div class="stats"><div class="chip">speed<strong><span id="speed">0</span> km/h</strong></div><div class="chip">lap<strong id="lap">1</strong></div><div class="chip">time<strong id="lapTime">0:00.000</strong></div><div class="chip">best<strong id="bestTime">--:--.---</strong></div></div><div class="map-wrap"><canvas id="map" width="300" height="210" aria-label="Track map"></canvas></div></div><div class="message" id="message" role="status"></div><div class="tilt-drive" aria-hidden="true"><span><b>brake</b><b>gas</b></span><div class="tilt-track"><i class="tilt-needle" id="tiltNeedle"></i></div><small class="tilt-value" id="tiltValue">neutral</small></div></div><div class="manual-steer" id="manualSteer" role="slider" aria-label="Steering. Drag left or right." aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0" hidden><span class="manual-steer-knob" aria-hidden="true"></span></div><div class="controls" id="controls" hidden><div class="utility-group"><button class="utility" id="calibrateButton" type="button">Recalibrate</button><button class="utility" id="resetButton" type="button">Restart Lap</button></div><div class="pedals"><button class="pedal brake" id="brakeButton" type="button">Brake</button><button class="pedal gas" id="gasButton" type="button">Gas</button></div></div><script type="module" src="/turn-next/app.js?source=20260729-r118-m8.4"></script></body></html>
+  </script>
+</head><body>
+  <aside class="turn-next-badge" role="note" aria-label="TURN NEXT test channel. Source TURN v1.25.0, build 2026.07.31-r120."><strong>TURN NEXT</strong><span>Source 2026.07.31-r120 · canonical runtime</span></aside>
+  <section class="install-gate" id="installGate" aria-labelledby="installTitle">
+    <div class="install-shell">
+      <div class="install-art" aria-hidden="true"><img class="install-icon" src="./TURNicon.PNG?icon=20260730-1136" alt=""></div>
+      <div class="install-card">
+        <span class="install-kicker">TURN NEXT · Source TURN v1.25.0 · Build 2026.07.31-r120</span>
+        <h1 id="installTitle">TURN NEXT</h1>
+        <p class="install-copy">TURN NEXT runs the canonical TURN game with separate test records.</p>
+        <div class="install-actions">
+          <button id="installTurnButton" class="install-primary" type="button">Install TURN NEXT</button>
+          <button class="install-secondary" id="playBrowserButton" type="button">Play in browser anyway</button>
+        </div>
+        <p class="install-note" id="installNote">TURN NEXT cannot overwrite production TURN records. You can install it alongside TURN.</p>
+      </div>
+    </div>
+    <div class="install-guide" id="installGuide" role="dialog" aria-modal="true" aria-labelledby="installGuideTitle" hidden>
+      <div class="install-guide-card">
+        <div class="install-guide-head"><h2 id="installGuideTitle">Add TURN NEXT to your Home Screen</h2><button class="install-close" id="installGuideClose" type="button" aria-label="Close install instructions">×</button></div>
+        <div class="install-steps" id="installSteps"></div>
+      </div>
+    </div>
+  </section>
+  <div id="game" aria-label="Third-person motion-controlled arcade racing game"></div>
+  <section class="panel" id="intro" hidden aria-hidden="true"><button id="motionButton" type="button" hidden></button><button id="manualButton" type="button" hidden></button><p id="status" role="status" hidden></p></section>
+  <section class="rotate-panel" aria-label="Rotate device"><div class="rotate-card"><div class="rotate-phone" aria-hidden="true"></div><strong>Rotate to landscape</strong></div></section>
+  <div class="hud" id="hud" hidden><div class="topbar"><div class="stats"><div class="chip">speed<strong><span id="speed">0</span> km/h</strong></div><div class="chip">lap<strong id="lap">1</strong></div><div class="chip">time<strong id="lapTime">0:00.000</strong></div><div class="chip">best<strong id="bestTime">--:--.---</strong></div></div><div class="map-wrap"><canvas id="map" width="300" height="210" aria-label="Track map"></canvas></div></div><div class="message" id="message" role="status"></div><div class="tilt-drive" aria-hidden="true"><span><b>brake</b><b>gas</b></span><div class="tilt-track"><i class="tilt-needle" id="tiltNeedle"></i></div><small class="tilt-value" id="tiltValue">neutral</small></div></div>
+  <div class="manual-steer" id="manualSteer" role="slider" aria-label="Steering. Drag left or right." aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0" hidden><span class="manual-steer-knob" aria-hidden="true"></span></div>
+  <div class="controls" id="controls" hidden><div class="utility-group"><button class="utility" id="calibrateButton" type="button">Recalibrate</button><button class="utility" id="resetButton" type="button">Restart Lap</button></div><div class="pedals"><button class="pedal brake" id="brakeButton" type="button">Brake</button><button class="pedal gas" id="gasButton" type="button">Gas</button></div></div>
+  <script type="module" src="/turn-next/app.js?source=20260731-r120-promoted"></script>
+</body></html>

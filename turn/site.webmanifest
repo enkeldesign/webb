@@ -7,8 +7,8 @@
   "scope": "/turn/",
   "display": "fullscreen",
   "orientation": "landscape",
-  "background_color": "#38d9ff",
-  "theme_color": "#38d9ff",
+  "background_color": "#08090a",
+  "theme_color": "#08090a",
   "icons": [
     {
       "src": "/turn/TURNicon.PNG?icon=20260730-1136",

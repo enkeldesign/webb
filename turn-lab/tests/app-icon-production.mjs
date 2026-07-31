@@ -10,8 +10,9 @@ const turnNextRoot = path.resolve(here, '../../turn-next');
 
 const index = fs.readFileSync(path.join(turnRoot, 'index.html'), 'utf8');
 const nextIndex = fs.readFileSync(path.join(turnNextRoot, 'index.html'), 'utf8');
+const homeSource = fs.readFileSync(path.join(turnRoot, 'm8-home.js'), 'utf8');
+const orientationGuard = fs.readFileSync(path.join(turnRoot, 'orientation-guard.css'), 'utf8');
 const release = JSON.parse(fs.readFileSync(path.join(turnRoot, 'release.json'), 'utf8'));
-const styles = fs.readFileSync(path.join(turnRoot, 'styles.css'), 'utf8');
 const manifest = JSON.parse(fs.readFileSync(path.join(turnRoot, 'site.webmanifest'), 'utf8'));
 const nextManifest = JSON.parse(fs.readFileSync(path.join(turnNextRoot, 'site.webmanifest'), 'utf8'));
 
@@ -21,15 +22,16 @@ for (const source of [index, nextIndex]) {
   assert.match(source, /<link rel="icon" href="\.\/TURNicon\.PNG\?icon=20260730-1136" type="image\/png" sizes="1136x1136">/);
   assert.match(source, /<link rel="apple-touch-icon" href="\.\/TURNicon\.PNG\?icon=20260730-1136" sizes="1136x1136">/);
   assert.match(source, /<img class="install-icon" src="\.\/TURNicon\.PNG\?icon=20260730-1136" alt="">/);
-  assert.match(source, /<img class="start-logo" src="\.\/TURNicon\.PNG\?icon=20260730-1136" alt="TURN">/);
   assert.doesNotMatch(source, /favicon-r45|apple-touch-icon-r45|icon-512-r45/);
 }
 
-assert.match(index, /<link rel="manifest" href="\.\/site\.webmanifest\?build=20260729-r118-icon-20260730-1136">/);
-assert.match(nextIndex, /<link rel="manifest" href="\/turn-next\/site\.webmanifest\?source=20260729-r118-icon-20260730-1136-m8\.5">/);
+assert.match(homeSource, /<img class="m8-home-logo" src="\/turn\/TURNicon\.PNG\?icon=\$\{ICON_REVISION\}" alt="TURN">/);
+assert.match(homeSource, /ICON_REVISION = '20260730-1136'/);
+assert.match(orientationGuard, /\.m8-home-fixed-layout \.m8-home-logo[\s\S]*object-fit: contain/);
+assert.match(orientationGuard, /object-position: left center/);
 
-assert.match(styles, /\.start-logo-heading\s*\{[^}]*font-size:\s*0;/s);
-assert.match(styles, /\.start-logo\s*\{[^}]*width:\s*clamp\(104px, 27vh, 210px\);[^}]*border-radius:\s*22%;/s);
+assert.match(index, new RegExp(`<link rel="manifest" href="\\.\\/site\\.webmanifest\\?build=${release.cacheKey}-icon-20260730-1136">`));
+assert.match(nextIndex, new RegExp(`<link rel="manifest" href="\\/turn-next\\/site\\.webmanifest\\?source=${release.cacheKey}-icon-20260730-1136-m8\\.5">`));
 
 const expectedIcons = [
   {
@@ -41,6 +43,8 @@ const expectedIcons = [
 ];
 assert.deepEqual(manifest.icons, expectedIcons);
 assert.deepEqual(nextManifest.icons, expectedIcons);
+assert.equal(manifest.background_color, '#08090a');
+assert.equal(manifest.theme_color, '#08090a');
 assert.equal(nextManifest.background_color, '#08090a');
 assert.equal(nextManifest.theme_color, '#08090a');
 
@@ -63,4 +67,4 @@ assert.equal(
   'All icon surfaces must remain tied to the exact current user-supplied TURNicon.PNG blob'
 );
 
-console.log(`TURN ${release.id} supplied app icon, favicon, bookmarks and start-screen branding passed.`);
+console.log(`TURN ${release.id} supplied app icon, favicon, bookmarks, install onboarding and Home branding passed.`);

@@ -8,18 +8,20 @@ const [
   fixedLayoutCss,
   cardScrollSource,
   cardScrollCss,
+  orientationGuardCss,
   productionApp,
   productionMain,
   nextApp,
   nextMain,
   orchestrator
 ] = await Promise.all([
-  fs.readFile(new URL('../turn-next/m8-home.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-next/m8-home.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-next/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-next/m8-home-fixed-layout.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-next/m8-home-card-scroll-fixes.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-next/m8-home-card-scroll-fixes.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/m8-home.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/m8-home.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/m8-home-fixed-layout.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/m8-home-card-scroll-fixes.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/m8-home-card-scroll-fixes.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/orientation-guard.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/app.js', import.meta.url), 'utf8'),
@@ -27,14 +29,16 @@ const [
   fs.readFile(new URL('../turn/race/session-orchestrator.js', import.meta.url), 'utf8')
 ]);
 
-assert.doesNotMatch(productionApp, /installM8HomeNavigation|m8-home-fixed-layout|installM8HomeFixedLayout|m8-home-card-scroll/);
-assert.doesNotMatch(productionMain, /createRaceSessionOrchestrator/);
-assert.match(nextApp, /installM8HomeNavigation/);
-assert.match(nextApp, /installM8HomeFixedLayout/);
-assert.match(nextApp, /m8-home-fixed-layout\.js\?source=\$\{buildKey\}-m8\.4/);
-assert.ok(nextApp.indexOf('installM8HomeNavigation()') < nextApp.indexOf('installM8HomeFixedLayout()'));
-assert.match(nextApp, /turnHomeLifecycle = 'home-m8'/);
-assert.match(nextMain, /session-orchestrator\.js\?source=20260729-r118-m8/);
+assert.match(productionApp, /installM8HomeNavigation/);
+assert.match(productionApp, /installM8HomeFixedLayout/);
+assert.match(productionApp, /installStylesheet\('\.\/m8-home\.css'/);
+assert.ok(productionApp.indexOf('installM8HomeNavigation()') < productionApp.indexOf('installM8HomeFixedLayout()'));
+assert.match(productionApp, /turnHomeLifecycle = 'home-m8'/);
+assert.match(productionApp, /retireLegacyStartPanel\(\)/);
+assert.match(productionMain, /createRaceSessionOrchestrator/);
+assert.equal(nextMain, productionMain, 'TURN NEXT must run the canonical M7 main runtime');
+assert.match(nextApp, /new URL\('\/turn\/app\.js'/);
+assert.doesNotMatch(nextApp, /installM8HomeNavigation|installM8HomeFixedLayout|m8-home-card-scroll/);
 
 for (const requiredCopy of [
   'TILT. DRIFT.',
@@ -47,7 +51,7 @@ for (const requiredCopy of [
   'On-screen steering',
   'RESET RIVALS'
 ]) {
-  assert.ok(homeSource.includes(requiredCopy), 'M8 Home must contain ' + requiredCopy);
+  assert.ok(homeSource.includes(requiredCopy), `M8 Home must contain ${requiredCopy}`);
 }
 
 assert.match(homeSource, /TRACK_SELECTION_CATALOG\.map\(renderTrackCard\)/);
@@ -79,7 +83,7 @@ assert.match(fixedLayoutSource, /oldScrollButtons\.hidden = true/);
 assert.match(fixedLayoutSource, /raceButton\.textContent = 'RACE'/);
 assert.match(fixedLayoutSource, /Race on \$\{spokenTrackName\(selectedTrackName\)\}/);
 assert.match(fixedLayoutSource, /new MutationObserver\(syncRaceLabel\)/);
-assert.match(fixedLayoutSource, /m8-home-card-scroll-fixes\.js\?source=\$\{buildKey\}-m8\.4/);
+assert.match(fixedLayoutSource, /\/turn\/m8-home-card-scroll-fixes\.js\?build=\$\{buildKey\}-m8\.4/);
 assert.match(fixedLayoutSource, /installM8HomeCardScrollFixes\(\)/);
 assert.match(fixedLayoutSource, /turnHomeLayout = LAYOUT_ID/);
 
@@ -121,6 +125,12 @@ assert.match(cardScrollCss, /\.track-card-preview[\s\S]*grid-row: 1 \/ 3/);
 assert.match(cardScrollCss, /\.track-card-best[\s\S]*grid-row: 3/);
 assert.match(cardScrollCss, /\.track-card-best-model[\s\S]*justify-self: end/);
 
+assert.match(orientationGuardCss, /#intro[\s\S]*display: none !important/);
+assert.match(orientationGuardCss, /\.m8-home-fixed-layout \.m8-home-head[\s\S]*padding-top: 0/);
+assert.match(orientationGuardCss, /\.m8-home-fixed-layout \.m8-home-logo[\s\S]*object-fit: contain/);
+assert.match(orientationGuardCss, /object-position: left center/);
+assert.doesNotMatch(orientationGuardCss, /100lvh/);
+
 assert.match(orchestrator, /async function prepareMotionAccess\(\)/);
 assert.match(orchestrator, /function prepareManualAccess\(\)/);
 assert.match(orchestrator, /async function selectVehicle\(selection\)/);
@@ -128,4 +138,4 @@ assert.match(orchestrator, /function leaveRace\(\)/);
 assert.match(orchestrator, /publish\('home-open'\)/);
 assert.match(orchestrator, /phase = 'home'/);
 
-console.log('TURN NEXT M8 native track scrolling and navigation contracts passed.');
+console.log('TURN production M8 Home, native track scrolling, logo tile and NEXT wrapper contracts passed.');
