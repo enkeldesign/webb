@@ -9,6 +9,7 @@ const [
   cardScrollSource,
   cardScrollCss,
   orientationGuardCss,
+  productionIndex,
   productionApp,
   productionMain,
   nextApp,
@@ -22,6 +23,7 @@ const [
   fs.readFile(new URL('../turn/m8-home-card-scroll-fixes.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home-card-scroll-fixes.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/orientation-guard.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/app.js', import.meta.url), 'utf8'),
@@ -32,9 +34,11 @@ const [
 assert.match(productionApp, /installM8HomeNavigation/);
 assert.match(productionApp, /installM8HomeFixedLayout/);
 assert.match(productionApp, /installStylesheet\('\.\/m8-home\.css'/);
+assert.match(productionApp, /m8-home-fixed-layout\.js\?revision=m8\.6-logo/);
 assert.ok(productionApp.indexOf('installM8HomeNavigation()') < productionApp.indexOf('installM8HomeFixedLayout()'));
 assert.match(productionApp, /turnHomeLifecycle = 'home-m8'/);
 assert.match(productionApp, /retireLegacyStartPanel\(\)/);
+assert.match(productionIndex, /app\.js\?build=20260731-r120-logo-final/);
 assert.match(productionMain, /createRaceSessionOrchestrator/);
 assert.equal(nextMain, productionMain, 'TURN NEXT must run the canonical M7 main runtime');
 assert.match(nextApp, /new URL\('\/turn\/app\.js'/);
@@ -76,7 +80,8 @@ assert.match(homeCss, /turn-m8-active \.audio-settings-button/);
 assert.match(homeCss, /turn-m8-active \.reset-rivals-button/);
 assert.match(homeCss, /prefers-reduced-motion/);
 
-assert.match(fixedLayoutSource, /const LAYOUT_ID = 'fixed-grid-v5'/);
+assert.match(fixedLayoutSource, /const LAYOUT_ID = 'fixed-grid-v6'/);
+assert.match(fixedLayoutSource, /m8-home-fixed-layout\.css\?build=\$\{buildKey\}-m8\.6-logo/);
 assert.match(fixedLayoutSource, /trackBrowser\.append\(headingRow, rail\)/);
 assert.match(fixedLayoutSource, /menu\.append\(settingsButton, howButton, status, raceButton\)/);
 assert.match(fixedLayoutSource, /oldScrollButtons\.hidden = true/);
@@ -97,8 +102,12 @@ assert.match(fixedLayoutCss, /-webkit-overflow-scrolling: touch/);
 assert.match(fixedLayoutCss, /\.m8-home-fixed-layout \.m8-home-menu/);
 assert.match(fixedLayoutCss, /\.m8-home-fixed-layout \.m8-home-status[\s\S]*margin: auto 0 10px/);
 assert.match(fixedLayoutCss, /\.m8-home-fixed-layout \.m8-track-continue[\s\S]*background: var\(--m8-pink\)/);
-assert.match(fixedLayoutCss, /@media \(max-height: 560px\) and \(orientation: landscape\)/);
-assert.match(fixedLayoutCss, /@media \(max-width: 760px\) and \(orientation: portrait\)/);
+assert.match(fixedLayoutCss, /\.m8-home-fixed-layout \.m8-home-head[\s\S]*padding: 0 max\(22px, env\(safe-area-inset-right\)\) 0 max\(10px, env\(safe-area-inset-left\)\)/);
+assert.match(fixedLayoutCss, /\.m8-home-fixed-layout \.m8-home-logo[\s\S]*width: auto[\s\S]*height: 100%[\s\S]*aspect-ratio: 1[\s\S]*object-fit: contain[\s\S]*object-position: left center/);
+assert.doesNotMatch(fixedLayoutCss, /object-fit: cover/);
+assert.doesNotMatch(fixedLayoutCss, /padding-block: 5px/);
+assert.match(fixedLayoutCss, /@media \(max-height: 560px\) and \(orientation: landscape\)[\s\S]*\.m8-home-fixed-layout \.m8-home-head[\s\S]*padding-block: 0/);
+assert.match(fixedLayoutCss, /@media \(max-width: 760px\) and \(orientation: portrait\)[\s\S]*\.m8-home-fixed-layout \.m8-home-head[\s\S]*padding: 0 12px/);
 assert.match(fixedLayoutCss, /prefers-reduced-motion/);
 
 assert.match(cardScrollSource, /const FIX_ID = 'native-scroll-v1'/);
@@ -138,4 +147,4 @@ assert.match(orchestrator, /function leaveRace\(\)/);
 assert.match(orchestrator, /publish\('home-open'\)/);
 assert.match(orchestrator, /phase = 'home'/);
 
-console.log('TURN production M8 Home, native track scrolling, logo tile and NEXT wrapper contracts passed.');
+console.log('TURN production M8 Home, native track scrolling, final logo cascade and NEXT wrapper contracts passed.');
