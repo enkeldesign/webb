@@ -27,13 +27,13 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Apply M7 extraction
-        run: node turn-next/scripts/apply-m7-session.mjs
+      - name: Apply M7 runtime extraction
+        run: node turn-next/scripts/apply-m7-runtime-only.mjs
 
-      - name: Remove bootstrap machinery
+      - name: Remove one-shot migration scripts
         run: |
           rm turn-next/scripts/apply-m7-session.mjs
-          rm .github/workflows/turn-m7-bootstrap.yml
+          rm turn-next/scripts/apply-m7-runtime-only.mjs
 
       - name: Commit generated M7 runtime
         run: |
