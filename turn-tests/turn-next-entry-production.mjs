@@ -57,7 +57,7 @@ assert.equal(release.cacheKey, '20260731-r120');
 
 assert.match(productionIndex, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(productionIndex, /<meta name="theme-color" content="#08090a">/);
-assert.match(productionIndex, new RegExp(`src="\\.\\/app\\.js\\?build=${release.cacheKey}"`));
+assert.match(productionIndex, new RegExp(`src="\\.\\/app\\.js\\?build=${release.cacheKey}(?:-[^"]+)?"`));
 assert.match(productionIndex, /id="intro" hidden aria-hidden="true"/);
 assert.match(productionIndex, /id="motionButton"/);
 assert.match(productionIndex, /id="manualButton"/);
