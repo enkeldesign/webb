@@ -27,8 +27,8 @@ await update('turn-next/scripts/build-parity-app.mjs', (source) => {
   let output = source;
   output = replaceRequired(
     output,
-    "document.documentElement.dataset.turnDisplayLifecycle = 'platform-m6';\nconst turnNextBadgeDetail = document.querySelector('.turn-next-badge span');\nif (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M5–M6 · Motion + Display Lifecycle';",
-    "document.documentElement.dataset.turnDisplayLifecycle = 'platform-m6';\nconst turnNextBadgeDetail = document.querySelector('.turn-next-badge span');\nif (turnNextBadgeDetail) turnNextBadgeDetail.textContent += ' · Platform M5–M7 · Motion + Display + Session Lifecycle';",
+    ' · Platform M5–M6 · Motion + Display Lifecycle',
+    ' · Platform M5–M7 · Motion + Display + Session Lifecycle',
     'M6 staging badge'
   );
   output = replaceRequired(
