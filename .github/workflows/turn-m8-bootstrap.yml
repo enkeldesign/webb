@@ -1,0 +1,39 @@
+name: TURN M8 bootstrap
+
+on:
+  push:
+    branches:
+      - turn-next-m8-home-navigation
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out M8 branch
+        uses: actions/checkout@v4
+        with:
+          ref: turn-next-m8-home-navigation
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Generate M8 parity files
+        run: node turn-next/scripts/apply-m8-generated.mjs
+
+      - name: Remove one-shot generator
+        run: rm turn-next/scripts/apply-m8-generated.mjs
+
+      - name: Commit generated M8 files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Generate TURN NEXT M8 parity files"
+          git push origin HEAD:turn-next-m8-home-navigation
