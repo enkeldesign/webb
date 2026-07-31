@@ -148,7 +148,7 @@ const { installM8HomeNavigation } = await import(
 );
 await installM8HomeNavigation();
 const { installM8HomeFixedLayout } = await import(
-  new URL(`./m8-home-fixed-layout.js?source=${buildKey}-m8.3`, stagingModuleBase).href
+  new URL(`./m8-home-fixed-layout.js?source=${buildKey}-m8.4`, stagingModuleBase).href
 );
 await installM8HomeFixedLayout();
 document.documentElement.dataset.turnHomeLifecycle = 'home-m8';
