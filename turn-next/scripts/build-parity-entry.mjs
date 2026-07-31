@@ -118,7 +118,7 @@ export function buildTurnNextEntry(productionIndex, release) {
   output = replaceRequired(
     output,
     `<link rel="stylesheet" href="./garage/lot-layout-r60.css?build=${release.cacheKey}">`,
-    `<link rel="stylesheet" href="./garage/lot-layout-r60.css?build=${release.cacheKey}"><link rel="stylesheet" href="/turn-next/identity.css?source=${release.cacheKey}-m8.6"><script defer src="/turn-next/identity.js?source=${release.cacheKey}-m8.6"></script>`,
+    `<link rel="stylesheet" href="./garage/lot-layout-r60.css?build=${release.cacheKey}"><link rel="stylesheet" href="/turn-next/identity.css?source=${release.cacheKey}-m8.5-logo"><script defer src="/turn-next/identity.js?source=${release.cacheKey}-m8.5-logo"></script>`,
     'TURN NEXT identity assets insertion point'
   );
   output = replaceRequired(
@@ -166,8 +166,8 @@ export function buildTurnNextEntry(productionIndex, release) {
   assert.match(output, /<meta name="theme-color" content="#08090a">/);
   assert.match(output, /src="\.\/motion-safe-zone\.js\?build=/);
   assert.match(output, /src="\/turn-next\/app\.js\?source=.*-m8\.4"/);
-  assert.match(output, /href="\/turn-next\/identity\.css\?source=.*-m8\.6"/);
-  assert.match(output, /src="\/turn-next\/identity\.js\?source=.*-m8\.6"/);
+  assert.match(output, /href="\/turn-next\/identity\.css\?source=.*-m8\.5-logo"/);
+  assert.match(output, /src="\/turn-next\/identity\.js\?source=.*-m8\.5-logo"/);
   assert.match(output, /src="\/turn-next\/storage-bootstrap\.js/);
   assert.match(output, /href="\/turn-next\/site\.webmanifest\?source=.*-icon-20260730-1136-m8\.5"/);
   assert.match(output, /TURNicon\.PNG\?icon=20260730-1136/);
