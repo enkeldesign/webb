@@ -1,12 +1,12 @@
 const STYLE_ATTRIBUTE = 'data-turn-m8-fixed-home-styles';
-const LAYOUT_ID = 'fixed-grid-v5';
+const LAYOUT_ID = 'fixed-grid-v6';
 
 function installStylesheet() {
   if (document.querySelector(`link[${STYLE_ATTRIBUTE}]`)) return;
   const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
   const stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet';
-  stylesheet.href = `/turn/m8-home-fixed-layout.css?build=${buildKey}-m8.4`;
+  stylesheet.href = `/turn/m8-home-fixed-layout.css?build=${buildKey}-m8.6-logo`;
   stylesheet.setAttribute(STYLE_ATTRIBUTE, '');
   document.head.appendChild(stylesheet);
 }
