@@ -26,6 +26,7 @@ export default [
       'turn/race/lap-system.js',
       'turn/race/replay-system.js',
       'turn/race/rival-storage.js',
+      'turn/race/session-orchestrator.js',
       'turn/race/track-spatial-index.js',
       'turn/render/camera.js',
       'turn/render/covered-rendering.js',

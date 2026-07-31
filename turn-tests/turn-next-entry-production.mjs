@@ -63,7 +63,7 @@ assert.match(nextIndex, /\.\/motion-safe-zone\.js\?build=/);
 assert.match(nextIndex, /\/turn-next\/identity\.css/);
 assert.match(nextIndex, /\/turn-next\/identity\.js/);
 assert.match(nextIndex, /\/turn-next\/site\.webmanifest/);
-assert.match(nextIndex, /src="\/turn-next\/app\.js\?source=.*-m6"/);
+assert.match(nextIndex, /src="\/turn-next\/app\.js\?source=.*-m7"/);
 assert.doesNotMatch(nextIndex, /turn-next\/safe-zone-bootstrap|turn-next\/steering-limit-warning/);
 assert.ok(
   nextIndex.indexOf('/turn-next/storage-bootstrap.js') < nextIndex.indexOf('./install-gate.js'),
@@ -87,18 +87,20 @@ assert.match(nextApp, /installDisplayLifecycleBridge\(\{ platform: webPlatform \
 assert.match(nextApp, /dataset\.turnPlatform = 'web-adapter'/);
 assert.match(nextApp, /dataset\.turnMotionLifecycle = 'platform-m5'/);
 assert.match(nextApp, /dataset\.turnDisplayLifecycle = 'platform-m6'/);
-assert.match(nextApp, /Platform M5–M6 · Motion \+ Display Lifecycle/);
+assert.match(nextApp, /dataset\.turnSessionLifecycle = 'orchestrator-m7'/);
+assert.match(nextApp, /main\.js\?source=\$\{buildKey\}-m7/);
+assert.match(nextApp, /Platform M5–M7 · Motion \+ Display \+ Session Lifecycle/);
 assert.doesNotMatch(nextApp, /turnNextModuleBase|turn-next\/steering-limit-warning|installTurnNextSteeringLimitWarning/);
 assert.ok(
-  nextApp.indexOf('installTurnPlatform(webPlatform)') < nextApp.indexOf("withBuild('./main.js')"),
+  nextApp.indexOf('installTurnPlatform(webPlatform)') < nextApp.indexOf('main.js?source=${buildKey}-m7'),
   'The platform must be composed before main.js imports browser-dependent systems'
 );
 assert.ok(
-  nextApp.indexOf('installMotionLifecycleBridge({ platform: webPlatform })') < nextApp.indexOf("withBuild('./main.js')"),
+  nextApp.indexOf('installMotionLifecycleBridge({ platform: webPlatform })') < nextApp.indexOf('main.js?source=${buildKey}-m7'),
   'Platform M5 must own legacy permission and subscription calls before main.js loads'
 );
 assert.ok(
-  nextApp.indexOf('installDisplayLifecycleBridge({ platform: webPlatform })') < nextApp.indexOf("withBuild('./main.js')"),
+  nextApp.indexOf('installDisplayLifecycleBridge({ platform: webPlatform })') < nextApp.indexOf('main.js?source=${buildKey}-m7'),
   'Platform M6 must own legacy fullscreen and landscape calls before main.js loads'
 );
 assert.match(nextApp, /new URL\(path, productionModuleBase\)/);
@@ -133,7 +135,7 @@ assert.ok(
   productionApp.indexOf('installSteeringLimitWarning()') < productionApp.indexOf("withBuild('./main.js')")
 );
 assert.ok(
-  nextApp.indexOf('installSteeringLimitWarning()') < nextApp.indexOf("withBuild('./main.js')")
+  nextApp.indexOf('installSteeringLimitWarning()') < nextApp.indexOf('main.js?source=${buildKey}-m7')
 );
 
 assert.match(safeZoneSource, /SAFE_ZONE_DEGREES = 24/);
@@ -230,4 +232,4 @@ assert.deepEqual(
   }
 );
 
-console.log(`TURN NEXT Platform M5–M6 entry for TURN ${release.id} passed.`);
+console.log(`TURN NEXT Platform M5–M7 entry for TURN ${release.id} passed.`);
