@@ -1,0 +1,251 @@
+.m8-home-card-scroll-fixes .m8-track-scroll-viewport {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.m8-home-card-scroll-fixes .m8-track-rail {
+  height: 100%;
+  padding-right: 25px;
+  scrollbar-width: none;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.m8-home-card-scroll-fixes .m8-track-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.m8-home-card-scroll-fixes .m8-track-rail.is-drag-scrolling {
+  cursor: grabbing;
+  scroll-snap-type: none;
+}
+
+.m8-home-card-scroll-fixes .m8-track-scroll-indicator {
+  position: absolute;
+  top: 3px;
+  right: 2px;
+  bottom: 14px;
+  width: 15px;
+  border: 3px solid var(--m8-ink);
+  border-radius: 999px;
+  background: var(--m8-cream);
+  box-shadow: 2px 2px 0 var(--m8-ink);
+  pointer-events: none;
+}
+
+.m8-home-card-scroll-fixes .m8-track-scroll-indicator[hidden] {
+  display: none;
+}
+
+.m8-home-card-scroll-fixes .m8-track-scroll-thumb {
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  top: 0;
+  min-height: 24px;
+  border-radius: 999px;
+  background: var(--m8-yellow);
+  box-shadow: inset 0 0 0 2px var(--m8-ink);
+}
+
+.m8-home-card-scroll-fixes .m8-track-scroll-indicator::before,
+.m8-home-card-scroll-fixes .m8-track-scroll-indicator::after {
+  position: absolute;
+  left: 50%;
+  z-index: 2;
+  width: 0;
+  height: 0;
+  content: '';
+  transform: translateX(-50%);
+  border-inline: 3px solid transparent;
+}
+
+.m8-home-card-scroll-fixes .m8-track-scroll-indicator::before {
+  top: 4px;
+  border-bottom: 5px solid var(--m8-ink);
+}
+
+.m8-home-card-scroll-fixes .m8-track-scroll-indicator::after {
+  bottom: 4px;
+  border-top: 5px solid var(--m8-ink);
+}
+
+.m8-home-card-scroll-fixes .m8-track-scroll-indicator.is-at-start::before,
+.m8-home-card-scroll-fixes .m8-track-scroll-indicator.is-at-end::after {
+  opacity: 0.25;
+}
+
+.m8-home-card-scroll-fixes .m8-track-rail .track-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(112px, 43%);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  align-items: start;
+  gap: 5px clamp(8px, 1vw, 13px);
+  overflow: hidden;
+}
+
+.m8-home-card-scroll-fixes .m8-track-rail .track-card-summary {
+  display: contents;
+}
+
+.m8-home-card-scroll-fixes .m8-track-rail .track-card-choice {
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  align-self: start;
+}
+
+.m8-home-card-scroll-fixes .m8-track-rail .track-card-choice-marker {
+  flex: 0 0 auto;
+}
+
+.m8-home-card-scroll-fixes .m8-track-rail .track-card-name {
+  min-width: 0;
+  overflow: hidden;
+  font-size: clamp(1rem, 2vw, 1.72rem);
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.m8-home-card-scroll-fixes .m8-track-rail .track-card-difficulty {
+  grid-column: 1;
+  grid-row: 2;
+  align-self: start;
+  justify-self: start;
+  margin: 1px 0 0;
+  padding: 3px clamp(12px, 1.4vw, 18px);
+  font-size: clamp(0.62rem, 1vw, 0.82rem);
+  line-height: 1;
+}
+
+.m8-home-card-scroll-fixes .m8-track-rail .track-card-preview {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  align-self: start;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: clamp(76px, 12vh, 112px);
+  margin: 0;
+}
+
+.m8-home-card-scroll-fixes .m8-track-rail .track-card-best {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  align-self: end;
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(72px, 1fr);
+  align-items: end;
+  gap: 10px;
+  min-width: 0;
+  margin-top: 2px;
+}
+
+.m8-home-card-scroll-fixes .m8-track-rail .track-card-best-copy {
+  align-self: end;
+  min-width: 0;
+  text-align: left;
+}
+
+.m8-home-card-scroll-fixes .m8-track-rail .track-card-best-copy > span,
+.m8-home-card-scroll-fixes .m8-track-rail .track-card-best-copy > strong,
+.m8-home-card-scroll-fixes .m8-track-rail .track-card-best-copy > small {
+  display: block;
+}
+
+.m8-home-card-scroll-fixes .m8-track-rail .track-card-best-copy > span {
+  margin-bottom: 1px;
+  font-size: clamp(0.62rem, 1vw, 0.82rem);
+  line-height: 1;
+  letter-spacing: 0.08em;
+}
+
+.m8-home-card-scroll-fixes .m8-track-rail .track-card-best-time {
+  font-size: clamp(1rem, 1.85vw, 1.5rem);
+  line-height: 1;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.m8-home-card-scroll-fixes .m8-track-rail .track-card-best-car {
+  max-width: 19ch;
+  overflow: hidden;
+  font-size: clamp(0.62rem, 1vw, 0.84rem);
+  line-height: 1.05;
+  letter-spacing: 0.07em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.m8-home-card-scroll-fixes .m8-track-rail .track-card-best-model {
+  justify-self: end;
+  align-self: end;
+  width: clamp(72px, 9vw, 118px);
+  height: clamp(43px, 7vh, 70px);
+  object-fit: contain;
+  margin: 0 4px 0 0;
+}
+
+.m8-home-card-scroll-fixes .m8-track-rail .track-card-coming-soon {
+  grid-template-columns: 1fr;
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .m8-home-card-scroll-fixes .m8-track-rail {
+    padding-right: 22px;
+  }
+
+  .m8-home-card-scroll-fixes .m8-track-scroll-indicator {
+    bottom: 10px;
+    width: 13px;
+    border-width: 2px;
+  }
+
+  .m8-home-card-scroll-fixes .m8-track-rail .track-card {
+    grid-template-columns: minmax(0, 1fr) minmax(98px, 42%);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    gap: 3px 8px;
+  }
+
+  .m8-home-card-scroll-fixes .m8-track-rail .track-card-name {
+    font-size: clamp(0.92rem, 1.85vw, 1.25rem);
+  }
+
+  .m8-home-card-scroll-fixes .m8-track-rail .track-card-preview {
+    height: 70px;
+  }
+
+  .m8-home-card-scroll-fixes .m8-track-rail .track-card-best {
+    gap: 6px;
+  }
+
+  .m8-home-card-scroll-fixes .m8-track-rail .track-card-best-model {
+    width: clamp(60px, 8vw, 88px);
+    height: 42px;
+  }
+}
+
+@media (max-width: 760px) and (orientation: portrait) {
+  .m8-home-card-scroll-fixes .m8-track-rail {
+    padding-right: 22px;
+  }
+
+  .m8-home-card-scroll-fixes .m8-track-rail .track-card {
+    grid-template-columns: minmax(0, 1fr) minmax(108px, 40%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .m8-home-card-scroll-fixes .m8-track-rail {
+    scroll-behavior: auto !important;
+  }
+}
