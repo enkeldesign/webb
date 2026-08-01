@@ -7,6 +7,7 @@ const PACE_NOTE_UPDATE_INTERVAL_MS = 1000 / 30;
 const MIN_FORWARD_SPEED = 0.25;
 const MAX_FORWARD_PROGRESS_DELTA = 0.22;
 const NOTE_DURATION_SECONDS = 0.055;
+const LONG_NOTE_DURATION_SECONDS = 0.17;
 const NOTE_STEP_SECONDS = 0.105;
 const GROUP_GAP_SECONDS = 0.22;
 
@@ -141,39 +142,40 @@ export function progressCrossedForward(previousProgress, progress, target) {
   return distanceToTarget > 0 && distanceToTarget <= advance;
 }
 
-export function paceNoteLengthTailCount(length) {
-  return String(length || 'short').toLowerCase() === 'long' ? 1 : 0;
-}
-
 export function paceNotePhraseGroups(groups = []) {
-  const phrase = [];
-
-  for (const group of groups) {
-    phrase.push({ ...group });
-    const tailCount = paceNoteLengthTailCount(group?.length);
-    for (let index = 0; index < tailCount; index += 1) {
-      phrase.push({
-        direction: group?.direction,
-        severity: 1,
-        lengthMarker: true
-      });
-    }
-  }
-
-  return phrase;
+  return groups.map((group) => Object.freeze({
+    ...group,
+    finalBeepDurationSeconds: isLongCorner(group?.length)
+      ? LONG_NOTE_DURATION_SECONDS
+      : NOTE_DURATION_SECONDS
+  }));
 }
 
 export function paceNoteDuration(groups = []) {
   const phrase = paceNotePhraseGroups(groups);
-  let duration = 0;
+  let cursor = 0;
+  let phraseEnd = 0;
 
   phrase.forEach((group, groupIndex) => {
     const count = clamp(Math.round(Number(group?.severity) || 1), 1, 3);
-    duration += NOTE_DURATION_SECONDS + (count - 1) * NOTE_STEP_SECONDS;
-    if (groupIndex < phrase.length - 1) duration += GROUP_GAP_SECONDS;
+    for (let index = 0; index < count; index += 1) {
+      const duration = index === count - 1
+        ? group.finalBeepDurationSeconds
+        : NOTE_DURATION_SECONDS;
+      phraseEnd = Math.max(phraseEnd, cursor + duration);
+      cursor += NOTE_STEP_SECONDS;
+    }
+
+    if (groupIndex < phrase.length - 1) {
+      cursor += GROUP_GAP_SECONDS - NOTE_STEP_SECONDS;
+    }
   });
 
-  return duration;
+  return phraseEnd;
+}
+
+function isLongCorner(length) {
+  return String(length || '').toLowerCase() === 'long';
 }
 
 function installResetListeners() {

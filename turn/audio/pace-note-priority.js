@@ -2,6 +2,7 @@ const PACE_NOTE_EVENT = 'turn:pace-note-priority';
 const PACE_NOTE_SILENCE_EVENT = 'turn:pace-note-silence';
 const PACE_NOTE_LEVEL = 0.084;
 const PACE_NOTE_DURATION_SECONDS = 0.055;
+const PACE_NOTE_LONG_DURATION_SECONDS = 0.17;
 const PACE_NOTE_STEP_SECONDS = 0.105;
 const PACE_NOTE_GROUP_GAP_SECONDS = 0.22;
 const PACE_NOTE_PHRASE_GAP_SECONDS = 0.07;
@@ -190,6 +191,7 @@ function handleContextStateChange() {
 
 function schedulePaceNoteGroups(groups, startAt) {
   let cursor = startAt;
+  let phraseEndAt = startAt;
 
   groups.forEach((group, groupIndex) => {
     const direction = Math.sign(Number(group?.direction) || 0);
@@ -197,7 +199,11 @@ function schedulePaceNoteGroups(groups, startAt) {
     const pan = direction < 0 ? -0.96 : 0.96;
 
     for (let index = 0; index < severity; index += 1) {
-      schedulePaceNoteBeep(cursor, pan, severity);
+      const duration = index === severity - 1
+        ? paceNoteFinalBeepDuration(group)
+        : PACE_NOTE_DURATION_SECONDS;
+      schedulePaceNoteBeep(cursor, pan, severity, duration);
+      phraseEndAt = Math.max(phraseEndAt, cursor + duration);
       cursor += PACE_NOTE_STEP_SECONDS;
     }
 
@@ -206,10 +212,18 @@ function schedulePaceNoteGroups(groups, startAt) {
     }
   });
 
-  return cursor;
+  return Math.max(cursor, phraseEndAt);
 }
 
-function schedulePaceNoteBeep(startAt, pan, severity) {
+function paceNoteFinalBeepDuration(group) {
+  return clamp(
+    Number(group?.finalBeepDurationSeconds) || PACE_NOTE_DURATION_SECONDS,
+    PACE_NOTE_DURATION_SECONDS,
+    PACE_NOTE_LONG_DURATION_SECONDS
+  );
+}
+
+function schedulePaceNoteBeep(startAt, pan, severity, duration = PACE_NOTE_DURATION_SECONDS) {
   const context = CAPTURED_GRAPH.context;
   if (!context || context.state !== 'running' || !priorityBus) {
     throw new Error('Pace-note audio graph is not ready');
@@ -218,7 +232,7 @@ function schedulePaceNoteBeep(startAt, pan, severity) {
   const oscillator = context.createOscillator();
   const gain = context.createGain();
   const panner = createPannerNode(context);
-  const endAt = startAt + PACE_NOTE_DURATION_SECONDS;
+  const endAt = startAt + duration;
   const baseFrequency = 650 + severity * 38;
 
   oscillator.type = 'triangle';
