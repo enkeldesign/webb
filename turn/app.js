@@ -56,6 +56,10 @@ document.documentElement.dataset.turnDisplayLifecycle = 'platform-m6';
 
 installStylesheet('./r104-polish.css', 'data-turn-r104-polish');
 installStylesheet('./steering-limit-warning.css', 'data-turn-steering-limit-warning');
+installStylesheet(
+  './garage/lot-layout-r60.css?revision=r121-viewer',
+  'data-turn-lot-layout-r121'
+);
 
 const { installPerformanceProfile } = await import(withBuild('./performance-profile.js'));
 installPerformanceProfile();
@@ -131,6 +135,11 @@ installSportsSedanEasterEggUi();
 
 const { installHarborHiddenFaceOrientation } = await import(withBuild('./tracks/harbor-hidden-face-r89.js'));
 installHarborHiddenFaceOrientation();
+
+const { installLotEnhancementRuntime } = await import(
+  withBuild('./garage/lot-enhancement-runtime.js?revision=r121')
+);
+installLotEnhancementRuntime();
 
 await import(withBuild('./input/analog-gas.js'));
 await import(withBuild('./ui/gameplay-controls.js'));
