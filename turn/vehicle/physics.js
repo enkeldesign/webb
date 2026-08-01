@@ -52,6 +52,7 @@ export function updateVehiclePhysicsState({
   const tuningBoostPowerMultiplier = positiveNumber(tuning?.boostPowerMultiplier, 1);
   const tuningBoostSpeedMultiplier = positiveNumber(tuning?.boostSpeedMultiplier, 1.32);
   const effectiveMaxSpeed = maxSpeed;
+  const activeTrackSampleCount = positiveNumber(state.trackSampleCount, trackSampleCount);
   const directGas = Math.max(0, Number(analogGas) || 0);
   const directBrake = 0;
   state.throttle = Math.max(directGas, state.touchGas ? 1 : 0);
@@ -205,7 +206,7 @@ export function updateVehiclePhysicsState({
   state.trackDistance = nearestAfter.distance;
   state.offRoad = nearestAfter.distance > trackWidth * 0.58 && !isForgivingSurface(state.position);
   state.lastProgress = state.progress;
-  state.progress = nearestAfter.index / trackSampleCount;
+  state.progress = nearestAfter.index / activeTrackSampleCount;
   state.nearestTrackIndex = nearestAfter.index;
   state.speed = state.velocity.length();
 
