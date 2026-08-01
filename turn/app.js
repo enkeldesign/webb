@@ -56,6 +56,10 @@ document.documentElement.dataset.turnDisplayLifecycle = 'platform-m6';
 
 installStylesheet('./r104-polish.css', 'data-turn-r104-polish');
 installStylesheet('./steering-limit-warning.css', 'data-turn-steering-limit-warning');
+installStylesheet(
+  './garage/lot-layout-r60.css?revision=r121-viewer',
+  'data-turn-lot-layout-r121'
+);
 
 const { installPerformanceProfile } = await import(withBuild('./performance-profile.js'));
 installPerformanceProfile();
