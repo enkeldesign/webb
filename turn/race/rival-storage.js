@@ -121,6 +121,26 @@ export function clearRivalsState(state, { trackId } = {}) {
   } catch (_) {}
 }
 
+export function clearAllRivalsState(state, trackIds = []) {
+  const activeTrackId = stateTrackId(state);
+  const normalizedTrackIds = [...new Set([
+    activeTrackId,
+    ...trackIds
+  ].map(normalizeTrackId))];
+
+  try {
+    for (const trackId of normalizedTrackIds) {
+      localStorage.removeItem(rivalKey(trackId));
+      localStorage.removeItem(ghostKey(trackId));
+    }
+  } catch (_) {}
+
+  state.trackId = activeTrackId;
+  state.competitorLaps = [];
+  syncPrimaryRivalState(state);
+  return normalizedTrackIds.length;
+}
+
 export function getStoredBestLap(trackId = DEFAULT_TRACK_ID) {
   const activeTrackId = normalizeTrackId(trackId);
   try {
