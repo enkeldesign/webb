@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 
 import { checkReleaseFiles, loadReleaseDefinition } from '../turn/scripts/release.mjs';
 
-const [release, index, app, main, manifest, workflow, nextApp, nextIndex] = await Promise.all([
+const [release, index, app, main, manifest, workflow, nextApp, nextIndex, installGate, installGateCss, orientationGuardCss] = await Promise.all([
   loadReleaseDefinition(),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
@@ -11,7 +11,10 @@ const [release, index, app, main, manifest, workflow, nextApp, nextIndex] = awai
   fs.readFile(new URL('../turn/site.webmanifest', import.meta.url), 'utf8'),
   fs.readFile(new URL('../.github/workflows/turn-lab-tests.yml', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/app.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/install-gate.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/install-gate.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/orientation-guard.css', import.meta.url), 'utf8')
 ]);
 
 await checkReleaseFiles();
@@ -26,10 +29,24 @@ assert.equal(
 assert.match(index, new RegExp(`version: '${escapeRegExp(release.version)}'`));
 assert.match(index, new RegExp(`id: '${escapeRegExp(release.id)}'`));
 assert.match(index, new RegExp(`cacheKey: '${escapeRegExp(release.cacheKey)}'`));
+assert.match(index, new RegExp(`install-gate\\.js\\?build=${escapeRegExp(release.cacheKey)}-browser-consent`));
+assert.match(index, new RegExp(`install-gate\\.css\\?build=${escapeRegExp(release.cacheKey)}-browser-consent`));
+assert.match(index, new RegExp(`orientation-guard\\.css\\?build=${escapeRegExp(release.cacheKey)}-home-portrait`));
+assert.match(index, new RegExp(`app\\.js\\?build=${escapeRegExp(release.cacheKey)}-browser-consent`));
+assert.match(index, /Return to landscape/);
+assert.match(app, /const launchReady = globalThis\.__turnLaunchReady/);
+assert.match(app, /await launchReady/);
+assert.ok(app.indexOf('await launchReady') < app.indexOf('retireLegacyStartPanel()'));
 assert.match(app, /const release = globalThis\.__TURN_BUILD__/);
 assert.match(app, /buildLabel\.textContent = `TURN V\$\{release\?\.version \|\| ''\} · BUILD \$\{\(release\?\.id \|\| ''\)\.toUpperCase\(\)\}`/);
 assert.match(app, /retireLegacyStartPanel\(\)/);
 assert.doesNotMatch(index, /class="start-card"/);
+
+assert.match(installGate, /globalThis\.__turnLaunchReady = launchReady/);
+assert.match(installGate, /browserButton\.addEventListener\('click', \(\) => startBrowserGame\(gate\)\)/);
+assert.doesNotMatch(installGate, /sessionStorage|turn-play-in-browser/);
+assert.match(installGateCss, /\.install-gate \{[\s\S]*z-index: 2000/);
+assert.match(orientationGuardCss, /\.rotate-panel \{[\s\S]*z-index: 1700/);
 
 const attributeBuilds = [...index.matchAll(/(?:href|src)="\.\/[^"?]+\?build=([^"&]+)/g)].map((match) => match[1]);
 assert.ok(attributeBuilds.length >= 15, 'Production entry document must cache-bust its local assets');
@@ -87,8 +104,10 @@ assert.ok(
 );
 
 assert.match(nextIndex, new RegExp(`TURN NEXT · Source ${escapeRegExp(visibleBuild)}`));
-assert.match(nextIndex, new RegExp(`/turn-next/app\\.js\\?source=${escapeRegExp(release.cacheKey)}-promoted`));
+assert.match(nextIndex, new RegExp(`/turn-next/app\\.js\\?source=${escapeRegExp(release.cacheKey)}-browser-consent`));
+assert.match(nextIndex, /Return to landscape/);
 assert.match(nextApp, /new URL\('\/turn\/app\.js'/);
+assert.match(nextApp, /browser-consent/);
 assert.match(nextApp, /await import\(url\.href\)/);
 assert.doesNotMatch(nextApp, /installM8HomeNavigation|installMotionLifecycleBridge/);
 
@@ -96,7 +115,7 @@ assert.match(workflow, /node turn\/scripts\/release\.mjs --check/);
 assert.match(workflow, /node turn-tests\/release-production\.mjs/);
 assert.doesNotMatch(workflow, /node turn-lab\/scripts\/check-release\.mjs/, 'CI must verify the production release rather than the retired playable lab snapshot');
 
-console.log(`TURN ${release.id} promoted M5–M8 production release architecture passed.`);
+console.log(`TURN ${release.id} browser-consent and Home portrait release architecture passed.`);
 
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
