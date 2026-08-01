@@ -93,9 +93,83 @@
   grid-template-columns: 1fr;
 }
 
+.lot-race {
+  background: var(--pink);
+}
+
 .lot-view-close,
 .lot-view-open {
   display: none !important;
+}
+
+@media (max-height: 520px) {
+  .lot-side {
+    top: max(62px, calc(env(safe-area-inset-top) + 54px));
+    gap: 7px;
+  }
+
+  .lot-viewbox {
+    border-width: 3px;
+    box-shadow: 5px 5px 0 var(--ink);
+  }
+
+  .lot-viewbox-with-paint {
+    --lot-paint-rail-height: 50px;
+    min-height: 140px;
+  }
+
+  .lot-viewbox-with-paint .lot-colors {
+    gap: 5px;
+    padding: 5px 6px;
+  }
+
+  .lot-viewbox-with-paint .lot-color-control {
+    min-height: 35px;
+    grid-template-columns: minmax(0, 1fr) 34px;
+    padding: 3px 4px 3px 6px;
+  }
+
+  .lot-viewbox-with-paint .lot-color-input {
+    width: 34px;
+    height: 26px;
+  }
+
+  .lot-viewbox-with-paint > small {
+    bottom: calc(var(--lot-paint-rail-height) + 5px);
+  }
+
+  .lot-card {
+    padding: 9px;
+    border-width: 3px;
+    box-shadow: 5px 5px 0 var(--ink);
+  }
+
+  .lot-car-title {
+    padding-bottom: 5px;
+  }
+
+  .lot-car-description {
+    margin-top: 5px;
+    line-height: 1.25;
+  }
+
+  .lot-stats {
+    gap: 2px;
+    margin: 6px 0;
+  }
+
+  .lot-stat {
+    grid-template-columns: 68px 1fr;
+    gap: 6px;
+  }
+
+  .lot-stat > span {
+    font-size: 0.43rem;
+  }
+
+  .lot-stat i {
+    height: 6px;
+  }
 }
 
 @media (max-height: 430px) {
