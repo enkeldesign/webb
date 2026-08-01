@@ -1,5 +1,10 @@
+.m8-home.m8-home-fixed-layout .m8-home-main .m8-track-heading-row h1,
 .m8-home.m8-home-fixed-layout .m8-home-main .m8-home-menu h2 {
   font-family: inherit;
+  font-style: normal;
+  font-variant: normal;
   font-weight: 950;
+  font-stretch: normal;
+  line-height: 0.95;
   letter-spacing: -0.035em;
 }

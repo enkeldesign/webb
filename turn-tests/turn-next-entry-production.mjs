@@ -70,7 +70,7 @@ assert.match(productionIndex, new RegExp(`src="\\.\\/install-gate\\.js\\?build=$
 assert.match(productionIndex, new RegExp(`href="\\.\\/install-gate\\.css\\?build=${release.cacheKey}-social-browser"`));
 assert.match(productionIndex, new RegExp(`href="\\.\\/orientation-guard\\.css\\?build=${release.cacheKey}-home-portrait"`));
 assert.match(productionIndex, new RegExp(`src="\\.\\/live-steering-setting\\.js\\?build=${release.cacheKey}-live-steering"`));
-assert.match(productionIndex, new RegExp(`href="\\.\\/m8-menu-font-fix\\.css\\?build=${release.cacheKey}-menu-font"`));
+assert.match(productionIndex, new RegExp(`href="\\.\\/m8-menu-font-fix\\.css\\?build=${release.cacheKey}-menu-font-v2"`));
 assert.match(productionIndex, /ROTATE YOUR DEVICE TO LANDSCAPE/);
 assert.match(productionIndex, /aria-label="Rotate your device to landscape"/);
 assert.doesNotMatch(productionIndex, /Return to landscape/);
@@ -141,9 +141,14 @@ assert.match(liveSteeringSource, /raceSession\.prepareManualAccess\(\)/);
 assert.match(liveSteeringSource, /__turnMotionLifecycle\?\.stop\?\.\(\)/);
 assert.match(liveSteeringSource, /steering-mode-changed/);
 assert.match(liveSteeringSource, /saveSteeringMode\(activeMode\)/);
+assert.match(menuFontCss, /\.m8-home\.m8-home-fixed-layout \.m8-home-main \.m8-track-heading-row h1,/);
 assert.match(menuFontCss, /\.m8-home\.m8-home-fixed-layout \.m8-home-main \.m8-home-menu h2/);
 assert.match(menuFontCss, /font-family: inherit/);
+assert.match(menuFontCss, /font-style: normal/);
+assert.match(menuFontCss, /font-variant: normal/);
 assert.match(menuFontCss, /font-weight: 950/);
+assert.match(menuFontCss, /font-stretch: normal/);
+assert.match(menuFontCss, /line-height: 0\.95/);
 assert.match(menuFontCss, /letter-spacing: -0\.035em/);
 
 assert.match(nextIndex, /data-turn-deployment="next"/);
@@ -156,7 +161,7 @@ assert.match(nextIndex, new RegExp(`install-gate\\.js\\?build=${release.cacheKey
 assert.match(nextIndex, new RegExp(`install-gate\\.css\\?build=${release.cacheKey}-social-browser`));
 assert.match(nextIndex, new RegExp(`orientation-guard\\.css\\?build=${release.cacheKey}-home-portrait`));
 assert.match(nextIndex, new RegExp(`live-steering-setting\\.js\\?build=${release.cacheKey}-live-steering`));
-assert.match(nextIndex, new RegExp(`m8-menu-font-fix\\.css\\?build=${release.cacheKey}-menu-font`));
+assert.match(nextIndex, new RegExp(`m8-menu-font-fix\\.css\\?build=${release.cacheKey}-menu-font-v2`));
 assert.match(nextIndex, /ROTATE YOUR DEVICE TO LANDSCAPE/);
 assert.match(nextIndex, /aria-label="Rotate your device to landscape"/);
 assert.doesNotMatch(nextIndex, /Return to landscape/);
