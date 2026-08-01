@@ -159,9 +159,11 @@
     const copied = await writeClipboardText(gameAddress);
 
     if (copied) {
-      button.textContent = 'Game address copied';
+      button.textContent = `${appName} address copied`;
       button.dataset.copied = 'true';
-      if (status) status.textContent = `Copied. Paste it into ${browserContext.preferredBrowser}.`;
+      if (status) {
+        status.textContent = `Copied. Now open ${browserContext.preferredBrowser} and paste the address.`;
+      }
       return;
     }
 
@@ -171,7 +173,9 @@
       fallbackInput.select();
       fallbackInput.setSelectionRange(0, fallbackInput.value.length);
     }
-    if (status) status.textContent = `Copy the selected address, then paste it into ${browserContext.preferredBrowser}.`;
+    if (status) {
+      status.textContent = `Copy the selected address, then open ${browserContext.preferredBrowser} and paste it into the address bar.`;
+    }
   }
 
   function installStep(number, title, detail, className = '') {
@@ -184,17 +188,17 @@
 
   function externalBrowserStep(number) {
     const source = browserContext.containerName
-      ? `This page is open inside ${browserContext.containerName}.`
-      : 'This page appears to be open inside another app.';
+      ? `You’re viewing ${appName} inside ${browserContext.containerName}.`
+      : `You’re viewing ${appName} inside another app.`;
     return `
       <div class="install-step install-step-open-browser">
         <div class="install-step-number" aria-hidden="true">${number}</div>
         <div>
-          <strong>Open in your device’s browser</strong>
-          <span>${source} Not inside a social media app. Copy the game address, then paste it into ${browserContext.preferredBrowser}.</span>
-          <button class="install-copy-address" type="button" data-copy-game-address>Copy game address</button>
+          <strong>Open ${appName} in ${browserContext.preferredBrowser}</strong>
+          <span>${source} Copy the address, then open ${browserContext.preferredBrowser} and paste it into the address bar.</span>
+          <button class="install-copy-address" type="button" data-copy-game-address>Copy ${appName} address</button>
           <label class="install-address-fallback" hidden>
-            <span>Game address</span>
+            <span>${appName} address</span>
             <input type="text" value="${gameAddress}" readonly>
           </label>
           <span class="install-copy-status" role="status" aria-live="polite"></span>
@@ -211,46 +215,47 @@
       : browserContext.name;
 
     if (browserContext.ios) {
-      const menuTitle = ['safari', 'chrome', 'edge'].includes(targetId)
-        ? 'Tap …, then Share'
-        : `Open ${targetName}’s menu, then Share`;
-      const menuDetail = ['safari', 'chrome', 'edge'].includes(targetId)
-        ? `In ${targetName}, tap the … menu and choose Share.`
-        : `Open the menu in ${targetName} and choose Share.`;
+      const usesEllipsisMenu = ['safari', 'chrome', 'edge'].includes(targetId);
+      const menuTitle = usesEllipsisMenu
+        ? `In ${targetName}, tap …, then Share`
+        : `In ${targetName}, open the menu, then Share`;
+      const menuDetail = usesEllipsisMenu
+        ? `After ${appName} opens, tap … and choose Share.`
+        : `After ${appName} opens, open the browser menu and choose Share.`;
       return [
         installStep(startNumber, menuTitle, menuDetail),
-        installStep(startNumber + 1, 'Add to Home Screen', 'Scroll the share sheet if you do not see it immediately.'),
-        installStep(startNumber + 2, `Open ${appName} from the icon`, 'It will launch fullscreen like an app from then on.')
+        installStep(startNumber + 1, 'Choose Add to Home Screen', 'Scroll down in the Share sheet if it is not visible.'),
+        installStep(startNumber + 2, `Open ${appName} from your Home Screen`, `From now on, ${appName} opens fullscreen like an app.`)
       ].join('');
     }
 
     if (browserContext.android && targetId === 'samsung') {
       return [
-        installStep(startNumber, 'Tap ☰ in Samsung Internet', 'Open the browser menu.'),
-        installStep(startNumber + 1, 'Add the page to your Home screen', 'Choose Add page to, then Home screen.'),
-        installStep(startNumber + 2, `Open ${appName} from the icon`, 'It will launch in its standalone game view.')
+        installStep(startNumber, 'In Samsung Internet, tap ☰', `After ${appName} opens, tap ☰ to open the browser menu.`),
+        installStep(startNumber + 1, 'Choose Add page to, then Home screen', 'Confirm when Samsung Internet asks.'),
+        installStep(startNumber + 2, `Open ${appName} from your Home screen`, `From now on, ${appName} opens in its standalone game view.`)
       ].join('');
     }
 
     if (browserContext.android) {
       return [
-        installStep(startNumber, `Tap ⋮ in ${targetName}`, 'Open the browser menu.'),
-        installStep(startNumber + 1, `Install ${appName}`, 'Choose Install app or Add to Home screen.'),
-        installStep(startNumber + 2, `Open ${appName} from the icon`, 'It will launch in its standalone game view.')
+        installStep(startNumber, `In ${targetName}, tap ⋮`, `After ${appName} opens, tap ⋮ to open the browser menu.`),
+        installStep(startNumber + 1, `Choose Install ${appName}`, 'Depending on the browser, this may be called Add to Home screen.'),
+        installStep(startNumber + 2, `Open ${appName} from your Home screen`, `From now on, ${appName} opens in its standalone game view.`)
       ].join('');
     }
 
     if (targetId === 'safari') {
       return [
-        installStep(startNumber, 'Open Safari’s File menu', 'Choose Add to Dock.'),
-        installStep(startNumber + 1, `Open ${appName} from the new icon`, 'It will launch in its standalone game view.')
+        installStep(startNumber, 'In Safari, open the File menu', 'Choose Add to Dock.'),
+        installStep(startNumber + 1, `Open ${appName} from the Dock`, `From now on, ${appName} opens in its standalone game view.`)
       ].join('');
     }
 
     return [
-      installStep(startNumber, `Open ${targetName}’s menu`, `Look for Install ${appName}, Install app or Add to Home Screen.`),
-      installStep(startNumber + 1, `Install ${appName}`, 'Confirm the installation when your browser asks.'),
-      installStep(startNumber + 2, 'Launch from the new icon', `${appName} will open in its standalone game view.`)
+      installStep(startNumber, `Open ${targetName}’s menu`, `Choose Install ${appName} or Add to Home Screen.`),
+      installStep(startNumber + 1, `Confirm the installation`, `Your browser will add ${appName} to your apps.`),
+      installStep(startNumber + 2, `Open ${appName} from the new icon`, `${appName} will open in its standalone game view.`)
     ].join('');
   }
 
@@ -279,7 +284,8 @@
     gate.hidden = false;
 
     if (browserContext.needsExternalBrowserStep) {
-      note.textContent = `For reliable installation, open this page in ${browserContext.preferredBrowser}. You can still play here.`;
+      const currentApp = browserContext.containerName || 'this app';
+      note.textContent = `To install ${appName}, open it in ${browserContext.preferredBrowser}. You can still play inside ${currentApp}.`;
     } else if (browserContext.id !== 'unknown') {
       note.textContent = `Install ${appName} from ${browserContext.name} for the best fullscreen experience. You can also play here.`;
     }
