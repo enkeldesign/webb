@@ -1,7 +1,7 @@
 .install-gate {
   position: absolute;
   inset: 0;
-  z-index: 120;
+  z-index: 2000;
   display: grid;
   place-items: center;
   overflow: auto;
@@ -116,7 +116,7 @@ html.turn-standalone .install-gate,
 .install-guide {
   position: absolute;
   inset: 0;
-  z-index: 130;
+  z-index: 2010;
   display: grid;
   place-items: end center;
   padding:
