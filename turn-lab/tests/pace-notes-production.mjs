@@ -7,7 +7,6 @@ import {
 } from '../../turn/tracks/pace-notes.js';
 import {
   paceNoteDuration,
-  paceNoteLengthTailCount,
   paceNotePhraseGroups,
   progressCrossedForward,
   progressInRange,
@@ -91,20 +90,38 @@ for (const trackId of ['countryside', 'cliffside', 'harbor']) {
   );
 }
 
-assert.equal(paceNoteLengthTailCount(PACE_NOTE_LENGTH.MEDIUM), 0, 'The baseline medium phrase must stay clean');
-assert.equal(paceNoteLengthTailCount(PACE_NOTE_LENGTH.LONG), 1, 'A long authored corner must add exactly one sparse tail');
-const longPhrase = paceNotePhraseGroups(airportNotes[1].groups);
-assert.equal(longPhrase.length, 2);
-assert.deepEqual(
-  longPhrase.map((group) => [group.direction, group.severity, group.lengthMarker === true]),
-  [[1, 1, false], [1, 1, true]],
-  'The long-corner marker must be a delayed same-pitch echo on the same side'
+const regularTightPhrase = paceNotePhraseGroups([{ direction: 1, severity: 3 }]);
+const longTightPhrase = paceNotePhraseGroups([{ direction: 1, severity: 3, length: PACE_NOTE_LENGTH.LONG }]);
+assert.equal(regularTightPhrase.length, 1, 'A regular tight curve must remain one three-beep group');
+assert.equal(longTightPhrase.length, 1, 'A long tight curve must not gain a fourth beep');
+assert.equal(regularTightPhrase[0].finalBeepDurationSeconds, 0.055);
+assert.equal(longTightPhrase[0].finalBeepDurationSeconds, 0.17, 'A long curve must hold its existing final beep');
+assert.equal('lengthMarker' in longTightPhrase[0], false, 'The retired extra-tail marker must not return');
+assert.ok(
+  paceNoteDuration(longTightPhrase) > paceNoteDuration(regularTightPhrase),
+  'bip-bip-beep must last longer than bip-bip-bip without changing beep count'
 );
+
+const longMediumPhrase = paceNotePhraseGroups([{
+  direction: -1,
+  severity: 2,
+  length: PACE_NOTE_LENGTH.LONG
+}]);
+assert.deepEqual(
+  longMediumPhrase.map((group) => [group.direction, group.severity, group.finalBeepDurationSeconds]),
+  [[-1, 2, 0.17]],
+  'A long medium curve must encode bip-beep as one two-beep group'
+);
+
 const linkedAirportPhrase = paceNotePhraseGroups(airportNotes[2].groups);
 assert.deepEqual(
-  linkedAirportPhrase.map((group) => [group.direction, group.severity, group.lengthMarker === true]),
-  [[1, 2, false], [1, 1, true], [-1, 3, false]],
-  'A long first corner must carry one tail before the linked direction changes'
+  linkedAirportPhrase.map((group) => [
+    group.direction,
+    group.severity,
+    group.finalBeepDurationSeconds
+  ]),
+  [[1, 2, 0.17], [-1, 3, 0.055]],
+  'A linked phrase must hold only the final beep of the authored long first corner before direction changes'
 );
 assert.ok(paceNoteDuration(airportNotes[2].groups) < 1, 'The longest authored phrase must remain under one second');
 assert.ok(
@@ -229,7 +246,9 @@ assert.match(paceAudio, /now - lastCheckedAt >= PACE_NOTE_UPDATE_INTERVAL_MS/);
 assert.match(paceAudio, /baseAudio\.update\(frame, now\)/, 'Pace-note detection must remain inside the central audio update path');
 assert.match(paceAudio, /progressCrossedForward\(previousProgress, progress, trigger\)/, 'Skipped progress windows must still trigger');
 assert.match(paceAudio, /groups: paceNotePhraseGroups\(note\.groups\)/, 'Authored corner length must be translated before entering playback');
-assert.match(paceAudio, /lengthMarker: true/);
+assert.match(paceAudio, /LONG_NOTE_DURATION_SECONDS = 0\.17/);
+assert.match(paceAudio, /finalBeepDurationSeconds:/);
+assert.doesNotMatch(paceAudio, /lengthMarker|paceNoteLengthTailCount/, 'Long curves must not synthesize an extra beep group');
 assert.match(paceAudio, /firedNoteIds\.size >= notes\.length/, 'A completed pace-note lap must take the fast path');
 assert.match(paceAudio, /turn:pace-note-priority/, 'Production must dispatch into the reliable priority queue');
 assert.doesNotMatch(paceAudio, /state\.offRoad === true/, 'Off-road recovery must not suppress an upcoming corner');
@@ -242,6 +261,11 @@ assert.match(priorityAudio, /context\.addEventListener\?\.\('statechange'/, 'Aut
 assert.match(priorityAudio, /priorityBus\.connect\(masterGain\)/, 'Pace notes must use the shared context while bypassing route and safety muting');
 assert.match(priorityAudio, /panner\.connect\(priorityBus\)/);
 assert.match(priorityAudio, /PACE_NOTE_LEVEL = 0\.084/, 'The critical route phrase must remain prominent in the app mix');
+assert.match(priorityAudio, /PACE_NOTE_LONG_DURATION_SECONDS = 0\.17/);
+assert.match(priorityAudio, /index === severity - 1[\s\S]*paceNoteFinalBeepDuration\(group\)/, 'Only the final regular beep may be lengthened');
+assert.match(priorityAudio, /schedulePaceNoteBeep\(cursor, pan, severity, duration\)/, 'Playback must hold the final beep rather than schedule a tail');
+assert.match(priorityAudio, /const endAt = startAt \+ duration/);
+assert.doesNotMatch(priorityAudio, /lengthMarker/, 'Priority playback must not depend on the retired extra-beep marker');
 assert.doesNotMatch(priorityAudio, /safetyMode|offRoadLatched/, 'Ribbon, recovery and wrong-way state must never veto a queued pace note');
 assert.doesNotMatch(priorityAudio, /new AudioContext|new webkitAudioContext|new Audio\(|fetch\(/, 'Priority playback must reuse TURN’s one AudioContext and generated tones');
 assert.doesNotMatch(priorityAudio, /requestAnimationFrame|setInterval|setTimeout/, 'Reliability must use existing updates and state changes rather than another loop');
@@ -259,4 +283,4 @@ assert.match(audioPanel, /Off road, centred gravel marks the surface/);
 assert.match(audioPanel, /nearby-rival warnings are directional/);
 assert.doesNotMatch(audioPanel, /TURN RIBBON|TURN PULSE|ROAD EDGE|CORNER FLOW|AIRPORT/, 'The audio guide must not resurrect retired or track-specific DBE generations');
 
-console.log(`TURN ${release.id} frame-safe, interruption-resilient priority pace notes passed.`);
+console.log(`TURN ${release.id} final-beep long-curve encoding and priority pace notes passed.`);
