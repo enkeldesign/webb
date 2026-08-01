@@ -3,6 +3,15 @@ import { enhanceLotNow } from './lot-enhancement-runtime.js?revision=r121&build=
 import { chooseTrackBeforeLot } from '../tracks/track-manager.js?build=20260722-r52';
 import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
 
+export async function showTheLot(options = {}) {
+  const trackId = await chooseTrackBeforeLot();
+  if (!trackId) return null;
+
+  const selection = await showEnhancedLot(options);
+  if (selection) await showTrackIntro(trackId);
+  return selection;
+}
+
 export async function showEnhancedLot(options = {}) {
   const lotResult = showOriginalLot(options);
   const removeEnhancements = enhanceLotNow();
@@ -12,13 +21,4 @@ export async function showEnhancedLot(options = {}) {
   } finally {
     removeEnhancements();
   }
-}
-
-export async function showTheLot(options = {}) {
-  const trackId = await chooseTrackBeforeLot();
-  if (!trackId) return null;
-
-  const selection = await showEnhancedLot(options);
-  if (selection) await showTrackIntro(trackId);
-  return selection;
 }
