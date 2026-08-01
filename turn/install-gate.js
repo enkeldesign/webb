@@ -8,6 +8,23 @@
   document.documentElement.classList.toggle('turn-browser', !isStandalone);
 
   let deferredInstallPrompt = null;
+  let releaseBrowserLaunch = null;
+  let browserLaunchReleased = false;
+
+  const launchReady = isStandalone
+    ? Promise.resolve({ mode: 'standalone' })
+    : new Promise((resolve) => {
+      releaseBrowserLaunch = () => {
+        if (browserLaunchReleased) return;
+        browserLaunchReleased = true;
+        document.documentElement.classList.add('turn-browser-launched');
+        resolve({ mode: 'browser' });
+        document.dispatchEvent(new CustomEvent('turn-browser-play'));
+      };
+    });
+
+  globalThis.__turnLaunchReady = launchReady;
+  globalThis.__turnStartBrowserGame = releaseBrowserLaunch;
 
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
@@ -20,11 +37,10 @@
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   }
 
-  function hideGateForBrowserSession(gate) {
-    try {
-      sessionStorage.setItem('turn-play-in-browser', '1');
-    } catch (_) {}
+  function startBrowserGame(gate) {
+    if (isStandalone) return;
     gate.hidden = true;
+    releaseBrowserLaunch?.();
   }
 
   function initInstallGate() {
@@ -44,13 +60,8 @@
       return;
     }
 
-    try {
-      if (sessionStorage.getItem('turn-play-in-browser') === '1') {
-        gate.hidden = true;
-        return;
-      }
-    } catch (_) {}
-
+    // Browser launch is deliberately never remembered. Every fresh page load remains on
+    // installation onboarding until the player explicitly chooses Play in browser.
     gate.hidden = false;
 
     function showManualGuide() {
@@ -113,7 +124,7 @@
     }
 
     installButton.addEventListener('click', requestInstall);
-    browserButton.addEventListener('click', () => hideGateForBrowserSession(gate));
+    browserButton.addEventListener('click', () => startBrowserGame(gate));
     guideClose.addEventListener('click', () => { guide.hidden = true; });
     guide.addEventListener('click', (event) => {
       if (event.target === guide) guide.hidden = true;
