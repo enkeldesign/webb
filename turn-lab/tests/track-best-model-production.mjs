@@ -48,27 +48,28 @@ assert.match(bestLayoutBlock, /grid-template-columns: max-content max-content;/,
 assert.match(bestLayoutBlock, /justify-content: start;/, 'The BEST cluster must remain left anchored');
 assert.match(bestLayoutBlock, /width: fit-content;/, 'The BEST cluster must not stretch across the summary area');
 assert.doesNotMatch(bestLayoutBlock, /1fr/, 'The BEST layout must not use a flexible column that pushes the car away from the record copy');
-assert.match(css, /\.track-card-best-model \{[\s\S]*justify-self: start;[\s\S]*width: clamp\(120px, 10\.5vw, 174px\)[\s\S]*height: clamp\(75px, 8\.5vw, 110px\)[\s\S]*object-fit: contain/, 'The stored vehicle must use the available card space while retaining its proportions');
+assert.match(css, /\.track-card-best-model \{[\s\S]*justify-self: start;[\s\S]*width: clamp\(120px, 10\.5vw, 174px\)[\s\S]*height: clamp\(75px, 8\.5vw, 110px\)[\s\S]*object-fit: contain/, 'The base stored-vehicle layout must retain its proportions');
 assert.match(css, /@media \(max-height: 610px\) and \(orientation: landscape\)/, 'Short landscape devices must retain a fitted record-car treatment');
 assert.match(css, /\.track-card-coming-soon \{[\s\S]*grid-template-columns: minmax\(0, 1fr\)[\s\S]*width: 100%/, 'The locked card must not reserve an empty car column');
 assert.match(css, /\.track-card-best-model\[hidden\] \{[\s\S]*display: none;/, 'No-time cards must remove the decorative model from layout');
 
-assert.match(app, /m8-record-car-scale\.css\?revision=r123-cropped-alignment/, 'The corrected record-car override must load after the fixed Home layout');
+assert.match(app, /m8-record-car-scale\.css\?revision=r124-balanced-crop/, 'The balanced cropped-car override must load after the fixed Home layout');
 assert.ok(
-  app.indexOf('await installM8HomeFixedLayout()') < app.indexOf('m8-record-car-scale.css?revision=r123-cropped-alignment'),
-  'The record-car alignment override must win the M8 layout cascade'
+  app.indexOf('await installM8HomeFixedLayout()') < app.indexOf('m8-record-car-scale.css?revision=r124-balanced-crop'),
+  'The balanced record-car override must win the M8 layout cascade'
 );
-assert.match(scaleCss, /grid-template-columns: max-content max-content/, 'The enlarged BEST row must keep the car immediately beside the record copy');
-assert.match(scaleCss, /justify-content: start/, 'The enlarged BEST cluster must stay left anchored');
-assert.match(scaleCss, /width: fit-content/, 'The enlarged BEST row must hug its content instead of spanning the card');
-assert.doesNotMatch(scaleCss, /minmax\(144px, 1fr\)/, 'The enlarged car column must not flex and drift toward the right edge');
+assert.match(scaleCss, /grid-template-columns: max-content max-content/, 'The BEST row must keep the car immediately beside the record copy');
+assert.match(scaleCss, /justify-content: start/, 'The BEST cluster must stay left anchored');
+assert.match(scaleCss, /width: fit-content/, 'The BEST row must hug its content instead of spanning the card');
+assert.doesNotMatch(scaleCss, /minmax\(144px, 1fr\)/, 'The car column must not flex and drift toward the right edge');
 assert.match(scaleCss, /column-gap: clamp\(8px, 1vw, 14px\)/, 'The standard layout must retain a small deliberate gap between copy and car');
-assert.match(scaleCss, /justify-self: start/, 'The enlarged car must align to the beginning of its content-sized column');
+assert.match(scaleCss, /justify-self: start/, 'The cropped car must align to the beginning of its content-sized column');
 assert.match(scaleCss, /object-position: left center/, 'The visible car must hug the copy side of its image box');
-assert.match(scaleCss, /width: clamp\(144px, 18vw, 236px\)/, 'The standard record car must remain twice the previous M8 width');
-assert.match(scaleCss, /height: clamp\(86px, 14vh, 140px\)/, 'The standard record car must remain twice the previous M8 height');
-assert.match(scaleCss, /width: clamp\(120px, 16vw, 176px\)/, 'Short landscape cards must keep the doubled record car');
-assert.match(scaleCss, /height: 84px/, 'Short landscape record cars must retain twice their former height');
+assert.match(scaleCss, /width: clamp\(92px, 9vw, 126px\)/, 'The cropped standard car must be clearly visible without dominating the card');
+assert.match(scaleCss, /height: clamp\(54px, 8vh, 74px\)/, 'The standard car height must fit beside the BEST copy');
+assert.match(scaleCss, /width: clamp\(82px, 10vw, 112px\)/, 'Short landscape cards must use the smaller balanced car');
+assert.match(scaleCss, /height: 58px/, 'Short landscape record cars must stay within the BEST row');
+assert.doesNotMatch(scaleCss, /width: clamp\(144px, 18vw, 236px\)|height: clamp\(86px, 14vh, 140px\)/, 'The post-crop oversized dimensions must not return');
 
 assert.doesNotMatch(app, /installPlayerMapMarker|player-map-marker\.js/, 'The runtime must not install a second player-marker overlay');
 assert.match(hud, /const PLAYER_MAP_RADIUS = 9;/, 'The canonical local-player marker must be larger than six-pixel rival dots');
@@ -83,4 +84,4 @@ assert.ok(
 );
 assert.doesNotMatch(hud, /queueMicrotask|requestAnimationFrame|setInterval/, 'The player marker must remain part of the existing synchronous HUD paint');
 
-console.log(`TURN ${release.id} cropped left-aligned record cars and one top-layer canonical player marker passed.`);
+console.log(`TURN ${release.id} balanced cropped record cars and one top-layer canonical player marker passed.`);
