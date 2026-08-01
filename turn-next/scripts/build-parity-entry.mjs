@@ -27,8 +27,12 @@ async function main() {
   assert.match(current, new RegExp(`install-gate\\.js\\?build=${release.cacheKey}-social-browser`));
   assert.match(current, new RegExp(`install-gate\\.css\\?build=${release.cacheKey}-social-browser`));
   assert.match(current, new RegExp(`orientation-guard\\.css\\?build=${release.cacheKey}-home-portrait`));
+  assert.match(current, new RegExp(`live-steering-setting\\.js\\?build=${release.cacheKey}-live-steering`));
+  assert.match(current, new RegExp(`m8-menu-font-fix\\.css\\?build=${release.cacheKey}-menu-font`));
   assert.match(current, /id="installGate"/);
-  assert.match(current, /Return to landscape/);
+  assert.match(current, /ROTATE YOUR DEVICE TO LANDSCAPE/);
+  assert.match(current, /aria-label="Rotate your device to landscape"/);
+  assert.doesNotMatch(current, /Return to landscape/);
   assert.match(current, /id="intro" hidden aria-hidden="true"/);
   assert.match(current, /id="motionButton"/);
   assert.match(current, /id="manualButton"/);
