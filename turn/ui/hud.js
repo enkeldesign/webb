@@ -1,4 +1,9 @@
 const RIVAL_MAP_COLORS = ['#38d9ff', '#ff4fa3', '#9775fa', '#ff922b'];
+const PLAYER_MAP_FILL = '#ffff09';
+const PLAYER_MAP_INK = '#000000';
+const PLAYER_MAP_RADIUS = 9;
+const PLAYER_MAP_BORDER_WIDTH = 4;
+const PLAYER_MAP_INNER_RADIUS = 3;
 const mapCache = new WeakMap();
 
 export function updateHudState({
@@ -54,30 +59,43 @@ function drawMap({ state, mapCanvas, mapCtx, samples, replayFrameAt }) {
   mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
   mapCtx.drawImage(staticMap.canvas, 0, 0);
 
-  const playerPoint = staticMap.mapPoint(state.position);
-  mapCtx.beginPath();
-  mapCtx.arc(playerPoint.x, playerPoint.y, 8, 0, Math.PI * 2);
-  mapCtx.fillStyle = '#ffd43b';
-  mapCtx.fill();
-  mapCtx.strokeStyle = '#08090a';
-  mapCtx.lineWidth = 4;
-  mapCtx.stroke();
+  if (state.lapActive) {
+    for (let index = 0; index < state.competitorLaps.length; index += 1) {
+      const rival = replayFrameAt(state.competitorLaps[index], state.lapElapsed);
+      if (!rival) continue;
 
-  if (!state.lapActive) return;
-
-  for (let index = 0; index < state.competitorLaps.length; index += 1) {
-    const rival = replayFrameAt(state.competitorLaps[index], state.lapElapsed);
-    if (!rival) continue;
-
-    const rivalPoint = staticMap.mapPoint(rival);
-    mapCtx.beginPath();
-    mapCtx.arc(rivalPoint.x, rivalPoint.y, 6, 0, Math.PI * 2);
-    mapCtx.fillStyle = RIVAL_MAP_COLORS[index] || RIVAL_MAP_COLORS[0];
-    mapCtx.fill();
-    mapCtx.strokeStyle = '#08090a';
-    mapCtx.lineWidth = 3;
-    mapCtx.stroke();
+      const rivalPoint = staticMap.mapPoint(rival);
+      mapCtx.beginPath();
+      mapCtx.arc(rivalPoint.x, rivalPoint.y, 6, 0, Math.PI * 2);
+      mapCtx.fillStyle = RIVAL_MAP_COLORS[index] || RIVAL_MAP_COLORS[0];
+      mapCtx.fill();
+      mapCtx.strokeStyle = '#08090a';
+      mapCtx.lineWidth = 3;
+      mapCtx.stroke();
+    }
   }
+
+  // Compute and paint the local player exactly once, after every rival. Keeping this
+  // inside the canonical map pass guarantees identical geometry and permanent top order.
+  const playerPoint = staticMap.mapPoint(state.position);
+  drawPlayerMapMarker(mapCtx, playerPoint);
+}
+
+function drawPlayerMapMarker(context, point) {
+  context.save();
+  context.beginPath();
+  context.arc(point.x, point.y, PLAYER_MAP_RADIUS, 0, Math.PI * 2);
+  context.fillStyle = PLAYER_MAP_FILL;
+  context.fill();
+  context.strokeStyle = PLAYER_MAP_INK;
+  context.lineWidth = PLAYER_MAP_BORDER_WIDTH;
+  context.stroke();
+
+  context.beginPath();
+  context.arc(point.x, point.y, PLAYER_MAP_INNER_RADIUS, 0, Math.PI * 2);
+  context.fillStyle = PLAYER_MAP_INK;
+  context.fill();
+  context.restore();
 }
 
 function getStaticMap(mapCanvas, samples) {
