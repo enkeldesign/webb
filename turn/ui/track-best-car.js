@@ -8,6 +8,8 @@ import {
 
 const THUMBNAIL_WIDTH = 240;
 const THUMBNAIL_HEIGHT = 140;
+const THUMBNAIL_ALPHA_THRESHOLD = 8;
+const THUMBNAIL_CROP_PADDING = 5;
 const thumbnailCache = new Map();
 let renderQueue = Promise.resolve();
 
@@ -75,12 +77,67 @@ async function renderThumbnail({ carId, color, secondaryColor }) {
     visual.rotation.y = Math.PI - 0.55;
     scene.add(visual);
     renderer.render(scene, camera);
-    return renderer.domElement.toDataURL('image/png');
+    return croppedThumbnailDataUrl(renderer.domElement);
   } finally {
     if (visual) disposeVisualMaterials(visual);
     renderer.dispose();
     renderer.forceContextLoss?.();
   }
+}
+
+function croppedThumbnailDataUrl(sourceCanvas) {
+  const samplingCanvas = document.createElement('canvas');
+  samplingCanvas.width = sourceCanvas.width;
+  samplingCanvas.height = sourceCanvas.height;
+  const samplingContext = samplingCanvas.getContext('2d', { willReadFrequently: true });
+  samplingContext.drawImage(sourceCanvas, 0, 0);
+
+  const pixels = samplingContext.getImageData(
+    0,
+    0,
+    samplingCanvas.width,
+    samplingCanvas.height
+  ).data;
+  let minX = samplingCanvas.width;
+  let minY = samplingCanvas.height;
+  let maxX = -1;
+  let maxY = -1;
+
+  for (let y = 0; y < samplingCanvas.height; y += 1) {
+    for (let x = 0; x < samplingCanvas.width; x += 1) {
+      const alpha = pixels[(y * samplingCanvas.width + x) * 4 + 3];
+      if (alpha <= THUMBNAIL_ALPHA_THRESHOLD) continue;
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+    }
+  }
+
+  if (maxX < minX || maxY < minY) return sourceCanvas.toDataURL('image/png');
+
+  const cropX = Math.max(0, minX - THUMBNAIL_CROP_PADDING);
+  const cropY = Math.max(0, minY - THUMBNAIL_CROP_PADDING);
+  const cropRight = Math.min(samplingCanvas.width - 1, maxX + THUMBNAIL_CROP_PADDING);
+  const cropBottom = Math.min(samplingCanvas.height - 1, maxY + THUMBNAIL_CROP_PADDING);
+  const cropWidth = cropRight - cropX + 1;
+  const cropHeight = cropBottom - cropY + 1;
+
+  const croppedCanvas = document.createElement('canvas');
+  croppedCanvas.width = cropWidth;
+  croppedCanvas.height = cropHeight;
+  croppedCanvas.getContext('2d').drawImage(
+    sourceCanvas,
+    cropX,
+    cropY,
+    cropWidth,
+    cropHeight,
+    0,
+    0,
+    cropWidth,
+    cropHeight
+  );
+  return croppedCanvas.toDataURL('image/png');
 }
 
 function disposeVisualMaterials(root) {
