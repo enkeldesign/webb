@@ -29,8 +29,8 @@ assert.equal(
 assert.match(index, new RegExp(`version: '${escapeRegExp(release.version)}'`));
 assert.match(index, new RegExp(`id: '${escapeRegExp(release.id)}'`));
 assert.match(index, new RegExp(`cacheKey: '${escapeRegExp(release.cacheKey)}'`));
-assert.match(index, new RegExp(`install-gate\\.js\\?build=${escapeRegExp(release.cacheKey)}-browser-consent`));
-assert.match(index, new RegExp(`install-gate\\.css\\?build=${escapeRegExp(release.cacheKey)}-browser-consent`));
+assert.match(index, new RegExp(`install-gate\\.js\\?build=${escapeRegExp(release.cacheKey)}-social-browser`));
+assert.match(index, new RegExp(`install-gate\\.css\\?build=${escapeRegExp(release.cacheKey)}-social-browser`));
 assert.match(index, new RegExp(`orientation-guard\\.css\\?build=${escapeRegExp(release.cacheKey)}-home-portrait`));
 assert.match(index, new RegExp(`app\\.js\\?build=${escapeRegExp(release.cacheKey)}-browser-consent`));
 assert.match(index, /Return to landscape/);
@@ -45,7 +45,15 @@ assert.doesNotMatch(index, /class="start-card"/);
 assert.match(installGate, /globalThis\.__turnLaunchReady = launchReady/);
 assert.match(installGate, /browserButton\.addEventListener\('click', \(\) => startBrowserGame\(gate\)\)/);
 assert.doesNotMatch(installGate, /sessionStorage|turn-play-in-browser/);
+assert.match(installGate, /Open in your device’s browser/);
+assert.match(installGate, /Not inside a social media app/);
+assert.match(installGate, /data-copy-game-address/);
+assert.match(installGate, /navigator\.clipboard\?\.writeText/);
+assert.match(installGate, /document\.execCommand\?\.\('copy'\)/);
+assert.match(installGate, /const gamePath = isNextDeployment \? '\/turn-next\/' : '\/turn\/'/);
 assert.match(installGateCss, /\.install-gate \{[\s\S]*z-index: 2000/);
+assert.match(installGateCss, /\.install-copy-address \{/);
+assert.match(installGateCss, /\.install-guide-card \{[\s\S]*max-height: 100%[\s\S]*overflow: auto/);
 assert.match(orientationGuardCss, /\.rotate-panel \{[\s\S]*z-index: 1700/);
 
 const attributeBuilds = [...index.matchAll(/(?:href|src)="\.\/[^"?]+\?build=([^"&]+)/g)].map((match) => match[1]);
@@ -105,6 +113,8 @@ assert.ok(
 
 assert.match(nextIndex, new RegExp(`TURN NEXT · Source ${escapeRegExp(visibleBuild)}`));
 assert.match(nextIndex, new RegExp(`/turn-next/app\\.js\\?source=${escapeRegExp(release.cacheKey)}-browser-consent`));
+assert.match(nextIndex, new RegExp(`install-gate\\.js\\?build=${escapeRegExp(release.cacheKey)}-social-browser`));
+assert.match(nextIndex, new RegExp(`install-gate\\.css\\?build=${escapeRegExp(release.cacheKey)}-social-browser`));
 assert.match(nextIndex, /Return to landscape/);
 assert.match(nextApp, /new URL\('\/turn\/app\.js'/);
 assert.match(nextApp, /browser-consent/);
@@ -115,7 +125,7 @@ assert.match(workflow, /node turn\/scripts\/release\.mjs --check/);
 assert.match(workflow, /node turn-tests\/release-production\.mjs/);
 assert.doesNotMatch(workflow, /node turn-lab\/scripts\/check-release\.mjs/, 'CI must verify the production release rather than the retired playable lab snapshot');
 
-console.log(`TURN ${release.id} browser-consent and Home portrait release architecture passed.`);
+console.log(`TURN ${release.id} browser-consent, social-browser onboarding and Home portrait release architecture passed.`);
 
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

@@ -62,8 +62,8 @@ assert.equal(release.cacheKey, '20260731-r120');
 assert.match(productionIndex, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(productionIndex, /<meta name="theme-color" content="#08090a">/);
 assert.match(productionIndex, new RegExp(`src="\\.\\/app\\.js\\?build=${release.cacheKey}-browser-consent"`));
-assert.match(productionIndex, new RegExp(`src="\\.\\/install-gate\\.js\\?build=${release.cacheKey}-browser-consent"`));
-assert.match(productionIndex, new RegExp(`href="\\.\\/install-gate\\.css\\?build=${release.cacheKey}-browser-consent"`));
+assert.match(productionIndex, new RegExp(`src="\\.\\/install-gate\\.js\\?build=${release.cacheKey}-social-browser"`));
+assert.match(productionIndex, new RegExp(`href="\\.\\/install-gate\\.css\\?build=${release.cacheKey}-social-browser"`));
 assert.match(productionIndex, new RegExp(`href="\\.\\/orientation-guard\\.css\\?build=${release.cacheKey}-home-portrait"`));
 assert.match(productionIndex, /Return to landscape/);
 assert.match(productionIndex, /id="intro" hidden aria-hidden="true"/);
@@ -103,8 +103,22 @@ assert.ok(
   installGateSource.indexOf('gate.hidden = true') < installGateSource.indexOf('releaseBrowserLaunch?.()'),
   'The browser onboarding must leave the screen only as the explicit play action releases the runtime'
 );
+assert.match(installGateSource, /const gamePath = isNextDeployment \? '\/turn-next\/' : '\/turn\/'/);
+assert.match(installGateSource, /Open in your device’s browser/);
+assert.match(installGateSource, /Not inside a social media app/);
+assert.match(installGateSource, /data-copy-game-address/);
+assert.match(installGateSource, /navigator\.clipboard\?\.writeText/);
+assert.match(installGateSource, /document\.execCommand\?\.\('copy'\)/);
+assert.match(installGateSource, /guideSteps\.addEventListener\('click'/);
+assert.match(installGateSource, /Game address copied/);
+assert.match(installGateSource, /install-address-fallback/);
+assert.match(installGateSource, /Add \$\{appName\} to your Home Screen/);
 assert.match(installGateCss, /\.install-gate \{[\s\S]*z-index: 2000/);
-assert.match(installGateCss, /\.install-guide \{[\s\S]*z-index: 2010/);
+assert.match(installGateCss, /\.install-guide \{[\s\S]*z-index: 2010[\s\S]*overflow: auto/);
+assert.match(installGateCss, /\.install-guide-card \{[\s\S]*max-height: 100%[\s\S]*overflow: auto/);
+assert.match(installGateCss, /\.install-copy-address \{/);
+assert.match(installGateCss, /\.install-address-fallback\[hidden\]/);
+assert.match(installGateCss, /\.install-copy-status:empty/);
 
 assert.match(nextIndex, /data-turn-deployment="next"/);
 assert.match(nextIndex, /<base href="\/turn\/">/);
@@ -112,7 +126,8 @@ assert.match(nextIndex, /<meta name="robots" content="noindex,nofollow">/);
 assert.match(nextIndex, new RegExp(`TURN NEXT · Source TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(nextIndex, new RegExp(`/turn-next/storage-bootstrap\\.js\\?source=${release.cacheKey}`));
 assert.match(nextIndex, new RegExp(`/turn-next/app\\.js\\?source=${release.cacheKey}-browser-consent`));
-assert.match(nextIndex, new RegExp(`install-gate\\.js\\?build=${release.cacheKey}-browser-consent`));
+assert.match(nextIndex, new RegExp(`install-gate\\.js\\?build=${release.cacheKey}-social-browser`));
+assert.match(nextIndex, new RegExp(`install-gate\\.css\\?build=${release.cacheKey}-social-browser`));
 assert.match(nextIndex, new RegExp(`orientation-guard\\.css\\?build=${release.cacheKey}-home-portrait`));
 assert.match(nextIndex, /Return to landscape/);
 assert.ok(nextIndex.indexOf('/turn-next/storage-bootstrap.js') < nextIndex.indexOf('/turn-next/app.js'));
@@ -190,4 +205,4 @@ assert.deepEqual(
   }
 );
 
-console.log(`TURN ${release.id} requires browser consent and keeps Home behind the portrait guard; TURN NEXT mirrors both contracts.`);
+console.log(`TURN ${release.id} requires browser consent, starts installation outside social apps and keeps Home behind the portrait guard; TURN NEXT mirrors all contracts.`);
