@@ -65,8 +65,14 @@ assert.doesNotMatch(index, /class="start-card"/);
 assert.match(installGate, /globalThis\.__turnLaunchReady = launchReady/);
 assert.match(installGate, /browserButton\.addEventListener\('click', \(\) => startBrowserGame\(gate\)\)/);
 assert.doesNotMatch(installGate, /sessionStorage|turn-play-in-browser/);
-assert.match(installGate, /Open in your device’s browser/);
-assert.match(installGate, /Not inside a social media app/);
+assert.match(installGate, /Open \$\{appName\} in \$\{browserContext\.preferredBrowser\}/);
+assert.match(installGate, /You’re viewing \$\{appName\} inside \$\{browserContext\.containerName\}/);
+assert.match(installGate, /Copy the address, then open \$\{browserContext\.preferredBrowser\} and paste it into the address bar/);
+assert.match(installGate, /Copy \$\{appName\} address/);
+assert.match(installGate, /In \$\{targetName\}, tap …, then Share/);
+assert.match(installGate, /Choose Add to Home Screen/);
+assert.match(installGate, /Open \$\{appName\} from your Home Screen/);
+assert.doesNotMatch(installGate, /Not inside a social media app|Open in your device’s browser/);
 assert.match(installGate, /data-copy-game-address/);
 assert.match(installGate, /navigator\.clipboard\?\.writeText/);
 assert.match(installGate, /document\.execCommand\?\.\('copy'\)/);
@@ -157,7 +163,7 @@ assert.match(workflow, /node turn\/scripts\/release\.mjs --check/);
 assert.match(workflow, /node turn-tests\/release-production\.mjs/);
 assert.doesNotMatch(workflow, /node turn-lab\/scripts\/check-release\.mjs/, 'CI must verify the production release rather than the retired playable lab snapshot');
 
-console.log(`TURN ${release.id} browser consent, social onboarding, live steering and clearer landscape guidance passed.`);
+console.log(`TURN ${release.id} browser consent, clearer social onboarding, live steering and landscape guidance passed.`);
 
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
