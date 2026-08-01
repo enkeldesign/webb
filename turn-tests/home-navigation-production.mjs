@@ -32,7 +32,7 @@ const [
 assert.match(productionApp, /installM8HomeNavigation/);
 assert.match(productionApp, /installM8HomeFixedLayout/);
 assert.match(productionApp, /installStylesheet\('\.\/m8-home\.css'/);
-assert.match(productionApp, /m8-home-fixed-layout\.js\?revision=m8\.7-home-polish/);
+assert.match(productionApp, /m8-home-fixed-layout\.js\?revision=m8\.8-full-track-names/);
 assert.ok(productionApp.indexOf('installM8HomeNavigation()') < productionApp.indexOf('installM8HomeFixedLayout()'));
 assert.match(productionApp, /turnHomeLifecycle = 'home-m8'/);
 assert.match(productionApp, /retireLegacyStartPanel\(\)/);
