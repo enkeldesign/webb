@@ -1,12 +1,15 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [index, releaseSource, selector, renderer, css] = await Promise.all([
+const [index, releaseSource, app, selector, renderer, css, scaleCss, playerMarker] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/track-select.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/track-best-car.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/track-select-r61.css', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/track-select-r61.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/m8-record-car-scale.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/ui/player-map-marker.js', import.meta.url), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -46,4 +49,29 @@ assert.match(css, /@media \(max-height: 610px\) and \(orientation: landscape\)/,
 assert.match(css, /\.track-card-coming-soon \{[\s\S]*grid-template-columns: minmax\(0, 1fr\)[\s\S]*width: 100%/, 'The locked card must not reserve an empty car column');
 assert.match(css, /\.track-card-best-model\[hidden\] \{[\s\S]*display: none;/, 'No-time cards must remove the decorative model from layout');
 
-console.log(`TURN ${release.id} clustered track-specific record car layout passed.`);
+assert.match(app, /m8-record-car-scale\.css\?revision=r122/, 'The enlarged record-car override must load after the fixed Home layout');
+assert.ok(
+  app.indexOf('await installM8HomeFixedLayout()') < app.indexOf("m8-record-car-scale.css?revision=r122"),
+  'The record-car scale override must win the M8 layout cascade'
+);
+assert.match(scaleCss, /grid-template-columns: minmax\(0, auto\) minmax\(144px, 1fr\)/, 'The BEST row must reserve room for the doubled car');
+assert.match(scaleCss, /width: clamp\(144px, 18vw, 236px\)/, 'The standard record car must be twice the previous M8 width');
+assert.match(scaleCss, /height: clamp\(86px, 14vh, 140px\)/, 'The standard record car must be twice the previous M8 height');
+assert.match(scaleCss, /width: clamp\(120px, 16vw, 176px\)/, 'Short landscape cards must also double the record car');
+assert.match(scaleCss, /height: 84px/, 'Short landscape record cars must retain twice their former height');
+
+assert.match(app, /player-map-marker\.js\?revision=r122/, 'The player marker enhancement must be installed by the canonical runtime');
+assert.ok(
+  app.indexOf("await import(withBuild('./main.js'))") < app.indexOf('installPlayerMapMarker()'),
+  'The marker must patch the live map context only after the canonical map exists'
+);
+assert.match(playerMarker, /const PLAYER_RADIUS = 9;/, 'The local player marker must be larger than six-pixel rival dots');
+assert.match(playerMarker, /const PLAYER_FILL = '#ffff00';/, 'The local player marker must use the requested yellow');
+assert.match(playerMarker, /const PLAYER_INK = '#000000';/, 'The local player marker border and centre must be black');
+assert.match(playerMarker, /const PLAYER_INNER_RADIUS = 3;/, 'The player marker must have a visible black centre dot');
+assert.match(playerMarker, /const PLAYER_BORDER_WIDTH = 4;/, 'The yellow marker must retain a strong black outline');
+assert.match(playerMarker, /context\.clearRect = \(\.\.\.args\) =>/, 'The enhancement must attach to the existing map paint cycle');
+assert.match(playerMarker, /queueMicrotask\(\(\) => \{[\s\S]*drawPlayerMarker\(\)/, 'The local player must repaint after rivals and remain the top map layer');
+assert.doesNotMatch(playerMarker, /requestAnimationFrame|setInterval/, 'The map emphasis must not add a second continuous animation loop');
+
+console.log(`TURN ${release.id} enlarged record cars and top-layer player map marker passed.`);

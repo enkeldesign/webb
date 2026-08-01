@@ -153,6 +153,10 @@ installRaceSpeech();
 const { installRacePositionLayout } = await import(withBuild('./ui/race-position-layout.js'));
 installRacePositionLayout();
 await import(withBuild('./main.js'));
+const { installPlayerMapMarker } = await import(
+  withBuild('./ui/player-map-marker.js?revision=r122')
+);
+installPlayerMapMarker();
 document.documentElement.dataset.turnSessionLifecycle = 'orchestrator-m7';
 globalThis.__turnRaceSession = globalThis.__turnNextRaceSession;
 
@@ -176,4 +180,8 @@ const { installM8HomeFixedLayout } = await import(
   withBuild('./m8-home-fixed-layout.js?revision=m8.8-full-track-names')
 );
 await installM8HomeFixedLayout();
+installStylesheet(
+  './m8-record-car-scale.css?revision=r122',
+  'data-turn-m8-record-car-scale'
+);
 document.documentElement.dataset.turnHomeLifecycle = 'home-m8';

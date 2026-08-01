@@ -1,0 +1,19 @@
+.m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes .m8-track-rail .track-card-best {
+  grid-template-columns: minmax(0, auto) minmax(144px, 1fr);
+}
+
+.m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes .m8-track-rail .track-card-best-model {
+  width: clamp(144px, 18vw, 236px);
+  height: clamp(86px, 14vh, 140px);
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes .m8-track-rail .track-card-best {
+    grid-template-columns: minmax(0, auto) minmax(120px, 1fr);
+  }
+
+  .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes .m8-track-rail .track-card-best-model {
+    width: clamp(120px, 16vw, 176px);
+    height: 84px;
+  }
+}
