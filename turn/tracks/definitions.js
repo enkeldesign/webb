@@ -102,7 +102,16 @@ const TRACKS = [
       colliders: []
     },
     sky: 0x070b1b,
-    fog: 0x11162b
+    fog: 0x11162b,
+    fogNear: 250,
+    fogFar: 880,
+    lighting: {
+      hemisphereSky: 0x5370a8,
+      hemisphereGround: 0x0b0d16,
+      hemisphereIntensity: 0.72,
+      directionalColor: 0x9eb9ff,
+      directionalIntensity: 0.68
+    }
   }
 ];
 
@@ -121,6 +130,7 @@ const PLACEHOLDERS = [
 
 export const TRACK_DEFINITIONS = Object.freeze(TRACKS.map((track) => Object.freeze({
   ...track,
+  lighting: Object.freeze({ ...(track.lighting || {}) }),
   collisionProfile: Object.freeze({
     ...track.collisionProfile,
     colliders: Object.freeze([...(track.collisionProfile?.colliders || [])])
