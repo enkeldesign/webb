@@ -19,6 +19,7 @@ assert.equal(tracks.countryside.accent, '#ff4fa3', 'Countryside keeps its establ
 assert.equal(tracks.airport.accent, '#ffd43b', 'Airport keeps its established runway-yellow identity');
 assert.equal(tracks.cliffside.accent, '#26c7c3', 'Cliffside keeps its blue-green ocean identity');
 assert.equal(tracks.harbor.accent, '#ff8f3d', 'Harbor needs a distinct rust-orange dock identity');
+assert.equal(tracks['midnight-city'].accent, '#9d7cff', 'Midnight City keeps its established violet identity');
 assert.equal(tracks.harbor.difficulty, 'HARD');
 assert.equal(new Set(TRACK_DEFINITIONS.map((track) => track.accent)).size, TRACK_DEFINITIONS.length, 'Every playable track needs a distinct accent');
 
@@ -37,6 +38,11 @@ assert.match(postcardCss, /\.track-card-countryside[\s\S]*--track-card-paper: #f
 assert.match(postcardCss, /\.track-card-airport[\s\S]*--track-card-paper: #fff4c7/);
 assert.match(postcardCss, /\.track-card-cliffside[\s\S]*--track-card-paper: #d5f3ef/);
 assert.match(postcardCss, /\.track-card-harbor[\s\S]*--track-card-paper: #f9e2d2/);
+assert.match(
+  postcardCss,
+  /\.track-card-midnight-city[\s\S]*--track-card-paper: #e3dcff[\s\S]*--track-card-fold: #cfc2f4/,
+  'Unselected Midnight City must have a visible pastel violet card rather than inheriting the blue page background'
+);
 assert.match(postcardCss, /\.track-card-preview::after[\s\S]*repeating-linear-gradient/, 'Every preview gets the small track-coloured curb motif');
 assert.match(postcardCss, /\.track-card-cliffside \.track-card-preview[\s\S]*#4ba8c8/, 'Cliffside preview must retain visible ocean blue');
 assert.match(postcardCss, /\.track-card-harbor \.track-card-preview[\s\S]*#287f9f/, 'Harbor preview must retain visible quay water');
@@ -57,7 +63,7 @@ assert.match(chooserSource, /card\.setAttribute\('aria-pressed', String\(selecte
 assert.match(chooserSource, /CONTINUE TO \$\{track\?\.name\.toUpperCase\(\)/, 'Continue copy remains the explicit textual confirmation');
 assert.match(chooserSource, /track-card-choice-marker/, 'The radio-style marker remains the extra visual choice indicator');
 
-console.log(`TURN ${release.id} four distinct track palettes and readable postcard previews passed.`);
+console.log(`TURN ${release.id} five distinct track palettes and readable postcard previews passed.`);
 
 function contrastRatio(foreground, background) {
   const light = Math.max(relativeLuminance(foreground), relativeLuminance(background));
