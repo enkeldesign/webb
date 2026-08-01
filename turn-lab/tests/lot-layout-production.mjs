@@ -1,10 +1,23 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [index, releaseSource, wrapper, layout, layoutCss, lot, legend, accessibility] = await Promise.all([
+const [
+  index,
+  releaseSource,
+  app,
+  wrapper,
+  enhancementRuntime,
+  layout,
+  layoutCss,
+  lot,
+  legend,
+  accessibility
+] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-track-select.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/lot-enhancement-runtime.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-layout-r60.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-layout-r60.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8'),
@@ -17,18 +30,40 @@ const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/s
 assert.ok(importMapText, 'Production must expose its import map');
 const imports = JSON.parse(importMapText).imports;
 
-assert.match(index, new RegExp(`lot-layout-r60\\.css\\?build=${release.cacheKey}`), 'Production must load the compact Lot layout through the current release');
-assert.equal(imports['./garage/lot-r10.js?build=20260720-r19'], `./garage/lot-track-select.js?build=${release.cacheKey}`, 'Production must publish the wrapper that installs the compact layout');
-assert.match(wrapper, /lot-layout-r60\.js\?build=20260729-r116/, 'The wrapper must import the verified shared-panel layout enhancer');
-assert.match(wrapper, /lot-accessibility-r118\.js\?build=20260729-r118/, 'The wrapper must install the current Lot accessibility enhancer');
+assert.match(index, new RegExp(`lot-layout-r60\\.css\\?build=${release.cacheKey}`), 'Production must retain the baseline Lot layout stylesheet');
+assert.match(index, new RegExp(`app\\.js\\?build=${release.cacheKey}-lot-restored`), 'Production must cache-bust the route-independent Lot fix');
+assert.equal(imports['./garage/lot-r10.js?build=20260720-r19'], `./garage/lot-track-select.js?build=${release.cacheKey}`, 'Production must retain the track-first compatibility wrapper');
+
+assert.match(app, /lot-layout-r60\.css\?revision=r121-viewer/, 'The expanded viewer stylesheet must load after the baseline cascade');
+assert.match(app, /lot-enhancement-runtime\.js\?revision=r121/, 'Production must load the route-independent Lot enhancer');
+assert.match(app, /installLotEnhancementRuntime\(\)/, 'Production must install the Lot enhancer once');
 assert.ok(
-  wrapper.indexOf('installLotStatLegend()') < wrapper.indexOf('installLotLayout()'),
+  app.indexOf('installLotEnhancementRuntime()') < app.indexOf("withBuild('./main.js')"),
+  'The Lot enhancement observer must exist before any route can open The Lot'
+);
+
+assert.match(wrapper, /lot-enhancement-runtime\.js\?revision=r121&build=20260731-r120/, 'The compatibility wrapper must share the exact enhancement module instance');
+assert.match(wrapper, /export async function showEnhancedLot/, 'The enhanced active-track Lot must remain reusable without another track chooser');
+assert.match(wrapper, /const removeEnhancements = enhanceLotNow\(\)/, 'The compatibility wrapper must synchronously enhance before the first paint');
+assert.match(wrapper, /await chooseTrackBeforeLot\(\)/, 'The compatibility route must still choose a track before The Lot');
+assert.doesNotMatch(wrapper, /installLotLayout|installLotStatLegend|installLotAccessibility/, 'Enhancement ownership must not drift back into one navigation wrapper');
+
+assert.match(enhancementRuntime, /ENHANCEMENT_ID = 'enhanced-lot-r121'/, 'The restored Lot contract must have an explicit identity');
+assert.match(enhancementRuntime, /activeEnhancements = new WeakMap\(\)/, 'Enhancements must be idempotent per Lot screen');
+assert.match(enhancementRuntime, /installLotStatLegend\(scope\)/, 'Every Lot route must receive the stat legend');
+assert.match(enhancementRuntime, /installLotLayout\(scope\)/, 'Every Lot route must receive the shared 3D and paint layout');
+assert.match(enhancementRuntime, /installLotAccessibility\(scope\)/, 'Every Lot route must receive the r118 accessibility model');
+assert.ok(
+  enhancementRuntime.indexOf('installLotStatLegend(scope)') < enhancementRuntime.indexOf('installLotLayout(scope)'),
   'The legend trigger must exist before the layout turns it into the Attributes info icon'
 );
 assert.ok(
-  wrapper.indexOf('installLotLayout()') < wrapper.indexOf('installLotAccessibility()'),
-  'Accessibility landmarks must be attached after the paint controls reach their final DOM position'
+  enhancementRuntime.indexOf('installLotLayout(scope)') < enhancementRuntime.indexOf('installLotAccessibility(scope)'),
+  'Accessibility landmarks must attach after paint reaches its final DOM position'
 );
+assert.match(enhancementRuntime, /new MutationObserver\(sync\)/, 'The runtime must catch M8 and any future Lot route');
+assert.match(enhancementRuntime, /if \(active\) return active\.release/, 'Repeated route helpers must not install duplicate observers or headings');
+assert.match(enhancementRuntime, /released = true/, 'Cleanup must be safe when both the route and observer release the same screen');
 
 assert.match(layout, /viewbox\.removeAttribute\('aria-hidden'\)/, 'The shared 3D and paint panel must remain in the accessibility tree');
 assert.match(layout, /lot-viewbox-head'\)\?\.setAttribute\('aria-hidden', 'true'\)/, 'Decorative 3D chrome must remain hidden from assistive technology');
@@ -69,14 +104,16 @@ assert.match(accessibility, /card\.setAttribute\('role', 'region'\)/, 'Selected-
 assert.doesNotMatch(accessibility, /setInterval|requestAnimationFrame|setAnimationLoop/, 'The accessibility enhancer must not add polling or animation work');
 
 assert.match(layoutCss, /\.lot-a11y-only \{[\s\S]*clip-path: inset\(50%\)/, 'Navigation headings and summaries must be visually hidden without leaving the accessibility tree');
-assert.match(layoutCss, /--lot-paint-rail-height: 58px/, 'The 3D panel must reserve a deliberate paint-control rail');
+assert.match(layoutCss, /--lot-paint-rail-height: 54px/, 'Paint controls must use a compact dock to protect the 3D preview');
+assert.match(layoutCss, /min-height: clamp\(150px, 28vh, 230px\)/, 'The 3D viewer must receive a meaningful responsive minimum height');
 assert.match(layoutCss, /flex: 1 1 auto/, 'The 3D panel must receive the remaining rail height instead of being squashed');
 assert.match(layoutCss, /\.lot-viewbox-with-paint \.lot-colors \{[\s\S]*border-top: 3px solid var\(--ink\)/, 'Accessible paint controls must preserve their visual dock inside the 3D card');
 assert.match(layoutCss, /\.lot-card-actions \{[\s\S]*grid-template-columns: 1fr/, 'The lower card must reserve its action row for Race only');
 assert.match(layoutCss, /\.lot-stats-help \{[\s\S]*border-radius: 50%/, 'The Attributes help control must read as a conventional circular info icon');
 assert.match(layoutCss, /\.lot-view-close,[\s\S]*\.lot-view-open \{[\s\S]*display: none !important/, 'No dormant 3D close or reopen affordance may flash during setup');
+assert.match(layoutCss, /@media \(max-height: 430px\)[\s\S]*min-height: 120px/, 'Short iPhone landscapes must keep the viewer without pushing Race off-screen');
 
 assert.match(lot, /<div class="lot-colors" aria-label="Choose car paint colours"><\/div>/, 'The verified Lot must still own the live native paint controls before enhancement');
 assert.match(legend, /aria-haspopup', 'dialog'/, 'The relocated info icon must still open the full stat legend');
 
-console.log(`TURN ${release.id} explicit selected-car summary and current-radio navigation passed.`);
+console.log(`TURN ${release.id} route-independent enhanced Lot, expanded viewer and selected-car accessibility passed.`);
