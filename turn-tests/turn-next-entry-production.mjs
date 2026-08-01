@@ -19,6 +19,8 @@ const [
   installGateSource,
   installGateCss,
   orientationGuardCss,
+  liveSteeringSource,
+  menuFontCss,
   homeSource,
   homeCss,
   fixedLayoutSource,
@@ -43,6 +45,8 @@ const [
   fs.readFile(new URL('../turn/install-gate.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/install-gate.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/orientation-guard.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/live-steering-setting.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/m8-menu-font-fix.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
@@ -65,7 +69,11 @@ assert.match(productionIndex, new RegExp(`src="\\.\\/app\\.js\\?build=${release.
 assert.match(productionIndex, new RegExp(`src="\\.\\/install-gate\\.js\\?build=${release.cacheKey}-social-browser"`));
 assert.match(productionIndex, new RegExp(`href="\\.\\/install-gate\\.css\\?build=${release.cacheKey}-social-browser"`));
 assert.match(productionIndex, new RegExp(`href="\\.\\/orientation-guard\\.css\\?build=${release.cacheKey}-home-portrait"`));
-assert.match(productionIndex, /Return to landscape/);
+assert.match(productionIndex, new RegExp(`src="\\.\\/live-steering-setting\\.js\\?build=${release.cacheKey}-live-steering"`));
+assert.match(productionIndex, new RegExp(`href="\\.\\/m8-menu-font-fix\\.css\\?build=${release.cacheKey}-menu-font"`));
+assert.match(productionIndex, /ROTATE YOUR DEVICE TO LANDSCAPE/);
+assert.match(productionIndex, /aria-label="Rotate your device to landscape"/);
+assert.doesNotMatch(productionIndex, /Return to landscape/);
 assert.match(productionIndex, /id="intro" hidden aria-hidden="true"/);
 assert.match(productionIndex, /id="motionButton"/);
 assert.match(productionIndex, /id="manualButton"/);
@@ -120,6 +128,17 @@ assert.match(installGateCss, /\.install-copy-address \{/);
 assert.match(installGateCss, /\.install-address-fallback\[hidden\]/);
 assert.match(installGateCss, /\.install-copy-status:empty/);
 
+assert.match(liveSteeringSource, /input\[name="m8Steering"\]:checked/);
+assert.match(liveSteeringSource, /raceSession\.prepareMotionAccess\(\)/);
+assert.match(liveSteeringSource, /raceSession\.prepareManualAccess\(\)/);
+assert.match(liveSteeringSource, /__turnMotionLifecycle\?\.stop\?\.\(\)/);
+assert.match(liveSteeringSource, /steering-mode-changed/);
+assert.match(liveSteeringSource, /saveSteeringMode\(activeMode\)/);
+assert.match(menuFontCss, /\.m8-home\.m8-home-fixed-layout \.m8-home-main \.m8-home-menu h2/);
+assert.match(menuFontCss, /font-family: inherit/);
+assert.match(menuFontCss, /font-weight: 950/);
+assert.match(menuFontCss, /letter-spacing: -0\.035em/);
+
 assert.match(nextIndex, /data-turn-deployment="next"/);
 assert.match(nextIndex, /<base href="\/turn\/">/);
 assert.match(nextIndex, /<meta name="robots" content="noindex,nofollow">/);
@@ -129,7 +148,11 @@ assert.match(nextIndex, new RegExp(`/turn-next/app\\.js\\?source=${release.cache
 assert.match(nextIndex, new RegExp(`install-gate\\.js\\?build=${release.cacheKey}-social-browser`));
 assert.match(nextIndex, new RegExp(`install-gate\\.css\\?build=${release.cacheKey}-social-browser`));
 assert.match(nextIndex, new RegExp(`orientation-guard\\.css\\?build=${release.cacheKey}-home-portrait`));
-assert.match(nextIndex, /Return to landscape/);
+assert.match(nextIndex, new RegExp(`live-steering-setting\\.js\\?build=${release.cacheKey}-live-steering`));
+assert.match(nextIndex, new RegExp(`m8-menu-font-fix\\.css\\?build=${release.cacheKey}-menu-font`));
+assert.match(nextIndex, /ROTATE YOUR DEVICE TO LANDSCAPE/);
+assert.match(nextIndex, /aria-label="Rotate your device to landscape"/);
+assert.doesNotMatch(nextIndex, /Return to landscape/);
 assert.ok(nextIndex.indexOf('/turn-next/storage-bootstrap.js') < nextIndex.indexOf('/turn-next/app.js'));
 assert.match(nextIndex, /\/turn-next\/identity\.css/);
 assert.match(nextIndex, /\/turn-next\/identity\.js/);
@@ -205,4 +228,4 @@ assert.deepEqual(
   }
 );
 
-console.log(`TURN ${release.id} requires browser consent, starts installation outside social apps and keeps Home behind the portrait guard; TURN NEXT mirrors all contracts.`);
+console.log(`TURN ${release.id} requires browser consent, applies staged steering changes immediately and gives first-use landscape guidance; TURN NEXT mirrors all contracts.`);
