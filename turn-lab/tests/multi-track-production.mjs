@@ -122,7 +122,7 @@ const [definitions, catalog, registry, manager, world, home] = await Promise.all
   fs.readFile(new URL('../../turn/tracks/catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/registry.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/track-manager.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/tracks/midnight-city-world-r6.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/midnight-city-world-r7.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/m8-home.js', import.meta.url), 'utf8')
 ]);
 
@@ -132,20 +132,20 @@ assert.match(definitions, /sampleCount: 1080/);
 assert.match(definitions, /fogNear: 250[\s\S]*fogFar: 880/);
 assert.match(definitions, /id: 'track-6-tba'[\s\S]*locked: true/);
 assert.match(catalog, /MIDNIGHT_CITY_CONTROL_POINTS\.map/);
-assert.match(registry, /midnight-city-world-r6\.js\?build=20260801-r6/);
+assert.match(registry, /midnight-city-world-r7\.js\?build=20260801-r7/);
 assert.match(registry, /definition\.sampleCount \|\| sampleCount/);
 assert.doesNotMatch(manager, /nextTrackId === 'midnight-city'/, 'The generic track manager must not gain a Midnight City special case');
 assert.match(manager, /lighting\.hemisphereIntensity \?\? 2\.7/);
 assert.match(manager, /track\.fogNear/);
-assert.match(world, /installMidnightCityWorld as installMidnightCityWorldR5/);
-assert.match(world, /installTracksideCommons/);
-assert.match(world, /TURN Commons road-facing promenade/);
-assert.match(world, /TURN Commons reflecting pond/);
-assert.match(world, /TURN Commons illuminated footbridge/);
-assert.match(world, /Midnight City showcase fountain fallback/);
-assert.match(world, /redirectAsyncFountainAsset/);
+assert.match(world, /installMidnightCityWorld as installMidnightCityWorldR6/);
+assert.match(world, /installReadableSignBacks/);
+assert.match(world, /reverse\.rotation\.y = Math\.PI/);
+assert.match(world, /label: 'VIOLET GARDENS'[\s\S]*x: -590[\s\S]*z: -125/);
+assert.match(world, /label: 'SUNRISE PARK'[\s\S]*x: 570[\s\S]*z: 145/);
+assert.match(world, /relocateSecondaryParks/);
+assert.match(world, /track-facing entrance/);
+assert.match(world, /rebuildParkTrees/);
 assert.match(world, /new THREE\.InstancedMesh/);
-assert.match(world, /new THREE\.CanvasTexture/);
 assert.match(world, /noDynamicLightsAdded: true/);
 assert.doesNotMatch(world, /setAnimationLoop|requestAnimationFrame|setInterval/, 'Static city scenery must not add an independent loop');
 assert.match(home, /TRACK_SELECTION_CATALOG\.map\(renderTrackCard\)/, 'Home must render the playable city and TBA teaser from the shared catalog');
