@@ -24,7 +24,8 @@ async function main() {
   assert.match(current, /\/turn-next\/identity\.css/);
   assert.match(current, /\/turn-next\/identity\.js/);
   assert.match(current, new RegExp(`/turn-next/app\\.js\\?source=${release.cacheKey}-browser-consent`));
-  assert.match(current, new RegExp(`install-gate\\.js\\?build=${release.cacheKey}-browser-consent`));
+  assert.match(current, new RegExp(`install-gate\\.js\\?build=${release.cacheKey}-social-browser`));
+  assert.match(current, new RegExp(`install-gate\\.css\\?build=${release.cacheKey}-social-browser`));
   assert.match(current, new RegExp(`orientation-guard\\.css\\?build=${release.cacheKey}-home-portrait`));
   assert.match(current, /id="installGate"/);
   assert.match(current, /Return to landscape/);
