@@ -18,6 +18,7 @@ const [
   css,
   orientationGuardCss,
   orientationCompat,
+  liveSteering,
   camera,
   motion,
   safeZone,
@@ -29,6 +30,7 @@ const [
   fs.readFile(new URL('../../turn/manual-steering.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/orientation-guard.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/orientation-compat.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/live-steering-setting.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/render/camera.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/input/motion.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/motion-safe-zone.js', import.meta.url), 'utf8'),
@@ -48,16 +50,35 @@ assert.match(index, new RegExp(`manual-steering\\.css\\?build=${release.cacheKey
 assert.match(index, new RegExp(`orientation-guard\\.css\\?build=${release.cacheKey}`));
 assert.match(index, new RegExp(`motion-safe-zone\\.js\\?build=${release.cacheKey}`));
 assert.match(index, new RegExp(`orientation-compat\\.js\\?build=${release.cacheKey}`));
+assert.match(index, new RegExp(`live-steering-setting\\.js\\?build=${release.cacheKey}-live-steering`));
 assert.ok(
   index.indexOf('./motion-safe-zone.js') < index.indexOf('./orientation-compat.js'),
   'The canonical motion safe zone must load before orientation feedback'
 );
+assert.ok(
+  index.indexOf('./orientation-compat.js') < index.indexOf('./live-steering-setting.js'),
+  'Live steering changes must use the installed motion compatibility bridge'
+);
 assert.equal(imports['./render/camera.js?build=20260720-r19'], `./render/camera.js?build=${release.cacheKey}`, 'The current release must publish the guarded race camera');
-assert.match(index, /<strong>Return to landscape<\/strong>/, 'The pre-race landscape instruction must remain available above Home');
+assert.match(index, /<strong>ROTATE YOUR DEVICE TO LANDSCAPE<\/strong>/, 'The first-encounter landscape instruction must describe the required action');
+assert.match(index, /aria-label="Rotate your device to landscape"/);
+assert.doesNotMatch(index, /Return to landscape/);
 
 assert.match(css, /--manual-steer-left/);
 assert.match(css, /content: "←"/);
 assert.match(css, /content: "→"/);
+
+assert.match(liveSteering, /input\[name="m8Steering"\]:checked/);
+assert.match(liveSteering, /if \(!state\?\.running \|\| document\.body\.classList\.contains\('turn-home-open'\)\) return/);
+assert.match(liveSteering, /raceSession\.prepareMotionAccess\(\)/);
+assert.match(liveSteering, /raceSession\.prepareManualAccess\(\)/);
+assert.match(liveSteering, /__turnMotionLifecycle\?\.stop\?\.\(\)/);
+assert.match(liveSteering, /manualSteer\.hidden = true/);
+assert.match(liveSteering, /manualSteer\.hidden = false/);
+assert.match(liveSteering, /steering-mode-changed/);
+assert.match(liveSteering, /Steering changed to device rotation for this race\./);
+assert.match(liveSteering, /Steering changed to the on-screen control for this race\./);
+assert.match(liveSteering, /saveSteeringMode\(activeMode\)/, 'A failed motion permission change must restore the actual active preference');
 
 assert.match(orientationGuardCss, /body\.turn-race-active \.rotate-panel/, 'The portrait warning must stay hidden during an active race');
 assert.match(orientationGuardCss, /\.rotate-panel \{[\s\S]*z-index: 1700/, 'The portrait warning must sit above the M8 Home screen');
@@ -110,4 +131,4 @@ assert.doesNotMatch(camera, /camera\.rotateZ\(-state\.roll\)/, 'The camera must 
 assert.match(motion, /resolveSteeringRollLimit/);
 assert.match(motion, /return Number\.isFinite\(fallback\) && fallback > 0 \? fallback : degToRad\(14\)/, 'Motion input must retain a safe fallback when no host configuration exists');
 
-console.log(`TURN ${release.id} manual steering and canonical race orientation guard passed.`);
+console.log(`TURN ${release.id} manual and live steering plus canonical race orientation guard passed.`);

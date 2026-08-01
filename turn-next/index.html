@@ -65,11 +65,13 @@
   <link rel="stylesheet" href="./garage/lot-r10.css?build=20260731-r120">
   <link rel="stylesheet" href="./garage/lot-stat-legend.css?build=20260731-r120">
   <link rel="stylesheet" href="./garage/lot-layout-r60.css?build=20260731-r120">
+  <link rel="stylesheet" href="./m8-menu-font-fix.css?build=20260731-r120-menu-font">
   <link rel="stylesheet" href="/turn-next/identity.css?source=20260731-r120-m8.5-logo">
   <script defer src="/turn-next/identity.js?source=20260731-r120-m8.5-logo"></script>
   <script src="./install-gate.js?build=20260731-r120-social-browser"></script>
   <script src="./motion-safe-zone.js?build=20260731-r120"></script>
   <script src="./orientation-compat.js?build=20260731-r120"></script>
+  <script src="./live-steering-setting.js?build=20260731-r120-live-steering"></script>
   <script type="importmap">
     {
       "imports": {
@@ -133,7 +135,7 @@
   </section>
   <div id="game" aria-label="Third-person motion-controlled arcade racing game"></div>
   <section class="panel" id="intro" hidden aria-hidden="true"><button id="motionButton" type="button" hidden></button><button id="manualButton" type="button" hidden></button><p id="status" role="status" hidden></p></section>
-  <section class="rotate-panel" aria-label="Return device to landscape"><div class="rotate-card"><div class="rotate-phone" aria-hidden="true"></div><strong>Return to landscape</strong></div></section>
+  <section class="rotate-panel" aria-label="Rotate your device to landscape"><div class="rotate-card"><div class="rotate-phone" aria-hidden="true"></div><strong>ROTATE YOUR DEVICE TO LANDSCAPE</strong></div></section>
   <div class="hud" id="hud" hidden><div class="topbar"><div class="stats"><div class="chip">speed<strong><span id="speed">0</span> km/h</strong></div><div class="chip">lap<strong id="lap">1</strong></div><div class="chip">time<strong id="lapTime">0:00.000</strong></div><div class="chip">best<strong id="bestTime">--:--.---</strong></div></div><div class="map-wrap"><canvas id="map" width="300" height="210" aria-label="Track map"></canvas></div></div><div class="message" id="message" role="status"></div><div class="tilt-drive" aria-hidden="true"><span><b>brake</b><b>gas</b></span><div class="tilt-track"><i class="tilt-needle" id="tiltNeedle"></i></div><small class="tilt-value" id="tiltValue">neutral</small></div></div>
   <div class="manual-steer" id="manualSteer" role="slider" aria-label="Steering. Drag left or right." aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0" hidden><span class="manual-steer-knob" aria-hidden="true"></span></div>
   <div class="controls" id="controls" hidden><div class="utility-group"><button class="utility" id="calibrateButton" type="button">Recalibrate</button><button class="utility" id="resetButton" type="button">Restart Lap</button></div><div class="pedals"><button class="pedal brake" id="brakeButton" type="button">Brake</button><button class="pedal gas" id="gasButton" type="button">Gas</button></div></div>
