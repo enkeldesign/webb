@@ -41,7 +41,7 @@
   <link rel="stylesheet" href="./styles.css?build=20260731-r120">
   <link rel="stylesheet" href="./vertical-drive.css?build=20260731-r120">
   <link rel="stylesheet" href="./hud-tuning.css?build=20260731-r120">
-  <link rel="stylesheet" href="./install-gate.css?build=20260731-r120">
+  <link rel="stylesheet" href="./install-gate.css?build=20260731-r120-browser-consent">
   <link rel="stylesheet" href="./gameplay-features.css?build=20260731-r120">
   <link rel="stylesheet" href="./gameplay-v2.css?build=20260731-r120">
   <link rel="stylesheet" href="./position-hud-r83.css?build=20260731-r120">
@@ -49,7 +49,7 @@
   <link rel="stylesheet" href="./in-game-menu.css?build=20260731-r120">
   <link rel="stylesheet" href="./spectate-v3.css?build=20260731-r120">
   <link rel="stylesheet" href="./manual-steering.css?build=20260731-r120">
-  <link rel="stylesheet" href="./orientation-guard.css?build=20260731-r120">
+  <link rel="stylesheet" href="./orientation-guard.css?build=20260731-r120-home-portrait">
   <link rel="stylesheet" href="./lap-result-toast.css?build=20260731-r120">
   <link rel="stylesheet" href="./rival-onboarding.css?build=20260731-r120">
   <link rel="stylesheet" href="./track-select.css?build=20260731-r120">
@@ -62,7 +62,7 @@
   <link rel="stylesheet" href="./garage/lot-r10.css?build=20260731-r120">
   <link rel="stylesheet" href="./garage/lot-stat-legend.css?build=20260731-r120">
   <link rel="stylesheet" href="./garage/lot-layout-r60.css?build=20260731-r120">
-  <script src="./install-gate.js?build=20260731-r120"></script>
+  <script src="./install-gate.js?build=20260731-r120-browser-consent"></script>
   <script src="./motion-safe-zone.js?build=20260731-r120"></script>
   <script src="./orientation-compat.js?build=20260731-r120"></script>
   <script type="importmap">
@@ -134,7 +134,7 @@
     <button id="manualButton" type="button" hidden></button>
     <p id="status" role="status" hidden>Steering uses device rotation</p>
   </section>
-  <section class="rotate-panel" aria-label="Rotate device"><div class="rotate-card"><div class="rotate-phone" aria-hidden="true"></div><strong>Rotate to landscape</strong></div></section>
+  <section class="rotate-panel" aria-label="Return device to landscape"><div class="rotate-card"><div class="rotate-phone" aria-hidden="true"></div><strong>Return to landscape</strong></div></section>
   <div class="hud" id="hud" hidden>
     <div class="topbar"><div class="stats"><div class="chip">speed<strong><span id="speed">0</span> km/h</strong></div><div class="chip">lap<strong id="lap">1</strong></div><div class="chip">time<strong id="lapTime">0:00.000</strong></div><div class="chip">best<strong id="bestTime">--:--.---</strong></div></div><div class="map-wrap"><canvas id="map" width="300" height="210" aria-label="Track map"></canvas></div></div>
     <div class="message" id="message" role="status"></div>
@@ -142,5 +142,5 @@
   </div>
   <div class="manual-steer" id="manualSteer" role="slider" aria-label="Steering. Drag left or right." aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0" hidden><span class="manual-steer-knob" aria-hidden="true"></span></div>
   <div class="controls" id="controls" hidden><div class="utility-group"><button class="utility" id="calibrateButton" type="button">Recalibrate</button><button class="utility" id="resetButton" type="button">Restart Lap</button></div><div class="pedals"><button class="pedal brake" id="brakeButton" type="button">Brake</button><button class="pedal gas" id="gasButton" type="button">Gas</button></div></div>
-  <script type="module" src="./app.js?build=20260731-r120-lot-restored"></script>
+  <script type="module" src="./app.js?build=20260731-r120-browser-consent"></script>
 </body></html>

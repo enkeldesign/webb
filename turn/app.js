@@ -1,3 +1,8 @@
+const launchReady = globalThis.__turnLaunchReady;
+if (launchReady && typeof launchReady.then === 'function') {
+  await launchReady;
+}
+
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
 const moduleBase = new URL('/turn/', globalThis.location?.href || 'https://enkel.design/turn/');
 

@@ -16,6 +16,8 @@ const [
   webPlatform,
   motionLifecycleBridge,
   displayLifecycleBridge,
+  installGateSource,
+  installGateCss,
   orientationGuardCss,
   homeSource,
   homeCss,
@@ -38,6 +40,8 @@ const [
   fs.readFile(new URL('../turn/platform/web-platform.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/motion-lifecycle-bridge.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/display-lifecycle-bridge.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/install-gate.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/install-gate.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/orientation-guard.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home.css', import.meta.url), 'utf8'),
@@ -57,13 +61,23 @@ assert.equal(release.cacheKey, '20260731-r120');
 
 assert.match(productionIndex, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(productionIndex, /<meta name="theme-color" content="#08090a">/);
-assert.match(productionIndex, new RegExp(`src="\\.\\/app\\.js\\?build=${release.cacheKey}(?:-[^"]+)?"`));
+assert.match(productionIndex, new RegExp(`src="\\.\\/app\\.js\\?build=${release.cacheKey}-browser-consent"`));
+assert.match(productionIndex, new RegExp(`src="\\.\\/install-gate\\.js\\?build=${release.cacheKey}-browser-consent"`));
+assert.match(productionIndex, new RegExp(`href="\\.\\/install-gate\\.css\\?build=${release.cacheKey}-browser-consent"`));
+assert.match(productionIndex, new RegExp(`href="\\.\\/orientation-guard\\.css\\?build=${release.cacheKey}-home-portrait"`));
+assert.match(productionIndex, /Return to landscape/);
 assert.match(productionIndex, /id="intro" hidden aria-hidden="true"/);
 assert.match(productionIndex, /id="motionButton"/);
 assert.match(productionIndex, /id="manualButton"/);
 assert.match(productionIndex, /id="status"/);
 assert.doesNotMatch(productionIndex, /class="start-card"|Enable motion &amp; race|Desktop \/ manual mode/);
 
+assert.match(productionApp, /const launchReady = globalThis\.__turnLaunchReady/);
+assert.match(productionApp, /await launchReady/);
+assert.ok(
+  productionApp.indexOf('await launchReady') < productionApp.indexOf('retireLegacyStartPanel()'),
+  'No TURN runtime or Home setup may run before browser launch consent resolves'
+);
 assert.match(productionApp, /retireLegacyStartPanel\(\)/);
 assert.match(productionApp, /createWebPlatform/);
 assert.match(productionApp, /installTurnPlatform\(webPlatform\)/);
@@ -79,12 +93,28 @@ assert.match(productionMain, /createRaceSessionOrchestrator/);
 assert.match(productionMain, /openLot: raceSession\.openLotFromRace/);
 assert.equal(nextMain, productionMain, 'TURN NEXT main must mirror canonical TURN exactly');
 
+assert.match(installGateSource, /globalThis\.__turnLaunchReady = launchReady/);
+assert.match(installGateSource, /Promise\.resolve\(\{ mode: 'standalone' \}\)/);
+assert.match(installGateSource, /browserButton\.addEventListener\('click', \(\) => startBrowserGame\(gate\)\)/);
+assert.match(installGateSource, /releaseBrowserLaunch\?\.\(\)/);
+assert.match(installGateSource, /gate\.hidden = false/);
+assert.doesNotMatch(installGateSource, /sessionStorage|turn-play-in-browser/);
+assert.ok(
+  installGateSource.indexOf('gate.hidden = true') < installGateSource.indexOf('releaseBrowserLaunch?.()'),
+  'The browser onboarding must leave the screen only as the explicit play action releases the runtime'
+);
+assert.match(installGateCss, /\.install-gate \{[\s\S]*z-index: 2000/);
+assert.match(installGateCss, /\.install-guide \{[\s\S]*z-index: 2010/);
+
 assert.match(nextIndex, /data-turn-deployment="next"/);
 assert.match(nextIndex, /<base href="\/turn\/">/);
 assert.match(nextIndex, /<meta name="robots" content="noindex,nofollow">/);
 assert.match(nextIndex, new RegExp(`TURN NEXT · Source TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(nextIndex, new RegExp(`/turn-next/storage-bootstrap\\.js\\?source=${release.cacheKey}`));
-assert.match(nextIndex, new RegExp(`/turn-next/app\\.js\\?source=${release.cacheKey}-promoted`));
+assert.match(nextIndex, new RegExp(`/turn-next/app\\.js\\?source=${release.cacheKey}-browser-consent`));
+assert.match(nextIndex, new RegExp(`install-gate\\.js\\?build=${release.cacheKey}-browser-consent`));
+assert.match(nextIndex, new RegExp(`orientation-guard\\.css\\?build=${release.cacheKey}-home-portrait`));
+assert.match(nextIndex, /Return to landscape/);
 assert.ok(nextIndex.indexOf('/turn-next/storage-bootstrap.js') < nextIndex.indexOf('/turn-next/app.js'));
 assert.match(nextIndex, /\/turn-next\/identity\.css/);
 assert.match(nextIndex, /\/turn-next\/identity\.js/);
@@ -92,6 +122,7 @@ assert.match(nextIndex, /\/turn-next\/site\.webmanifest/);
 assert.doesNotMatch(nextIndex, /class="start-card"|Enable motion &amp; race|Desktop \/ manual mode/);
 
 assert.match(nextApp, /new URL\('\/turn\/app\.js'/);
+assert.match(nextApp, /browser-consent/);
 assert.match(nextApp, /await import\(url\.href\)/);
 assert.doesNotMatch(nextApp, /installMotionLifecycleBridge|installDisplayLifecycleBridge|installM8HomeNavigation|installM8HomeFixedLayout/);
 
@@ -107,6 +138,7 @@ assert.match(displayLifecycleBridge, /display\.lockLandscape\(\)/);
 assert.match(homeSource, /TRACK_SELECTION_CATALOG\.map\(renderTrackCard\)/);
 assert.match(homeSource, /raceSession\.prepareMotionAccess\(\)/);
 assert.match(homeSource, /runtime\.openLot = leaveRaceForHome/);
+assert.match(homeCss, /\.m8-home \{[\s\S]*z-index: 1400/);
 assert.match(homeCss, /turn-m8-active \.audio-settings-button/);
 assert.match(fixedLayoutSource, /installM8HomeCardScrollFixes\(\)/);
 assert.match(fixedLayoutCss, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
@@ -117,6 +149,7 @@ assert.match(cardScrollCss, /-webkit-overflow-scrolling: touch/);
 
 assert.match(orientationGuardCss, /#intro[\s\S]*display: none !important/);
 assert.match(orientationGuardCss, /body[\s\S]*position: fixed/);
+assert.match(orientationGuardCss, /\.rotate-panel \{[\s\S]*z-index: 1700/);
 assert.match(orientationGuardCss, /object-fit: contain/);
 assert.doesNotMatch(orientationGuardCss, /100lvh/);
 
@@ -157,4 +190,4 @@ assert.deepEqual(
   }
 );
 
-console.log(`TURN ${release.id} owns M5–M8; TURN NEXT is an isolated canonical wrapper.`);
+console.log(`TURN ${release.id} requires browser consent and keeps Home behind the portrait guard; TURN NEXT mirrors both contracts.`);
