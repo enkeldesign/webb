@@ -47,7 +47,7 @@ assert.match(districtSource, /new THREE\.InstancedMesh\(geometry, material, tota
 
 assert.match(districtSource, /installDistrictDetails/);
 assert.match(districtSource, /makeDistrictSign/);
-assert.match(districtSource, /MIDNIGHT CITY r4/);
+assert.match(districtSource, /TURN Midnight City r4/);
 assert.match(districtSource, /externalAssetFiles: false/);
 assert.doesNotMatch(
   districtSource,
