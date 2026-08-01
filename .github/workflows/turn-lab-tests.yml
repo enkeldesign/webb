@@ -145,6 +145,9 @@ jobs:
       - name: Run all-track auditory pace-note regression
         run: node turn-lab/tests/pace-notes-production.mjs
 
+      - name: Audit Midnight City pace notes against route geometry
+        run: node turn-tests/midnight-city-pace-note-map-production.mjs
+
       - name: Run Drive By Ear preference and shutdown regression
         run: node turn-lab/tests/drive-by-ear-production.mjs
 
