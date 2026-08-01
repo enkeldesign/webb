@@ -112,13 +112,20 @@ assert.ok(
   'The browser onboarding must leave the screen only as the explicit play action releases the runtime'
 );
 assert.match(installGateSource, /const gamePath = isNextDeployment \? '\/turn-next\/' : '\/turn\/'/);
-assert.match(installGateSource, /Open in your device’s browser/);
-assert.match(installGateSource, /Not inside a social media app/);
+assert.match(installGateSource, /Open \$\{appName\} in \$\{browserContext\.preferredBrowser\}/);
+assert.match(installGateSource, /You’re viewing \$\{appName\} inside \$\{browserContext\.containerName\}/);
+assert.match(installGateSource, /Copy the address, then open \$\{browserContext\.preferredBrowser\} and paste it into the address bar/);
+assert.match(installGateSource, /Copy \$\{appName\} address/);
+assert.match(installGateSource, /In \$\{targetName\}, tap …, then Share/);
+assert.match(installGateSource, /Choose Add to Home Screen/);
+assert.match(installGateSource, /Open \$\{appName\} from your Home Screen/);
+assert.match(installGateSource, /\$\{appName\} address copied/);
+assert.match(installGateSource, /Copied\. Now open \$\{browserContext\.preferredBrowser\} and paste the address/);
+assert.doesNotMatch(installGateSource, /Not inside a social media app|Open in your device’s browser|Game address copied/);
 assert.match(installGateSource, /data-copy-game-address/);
 assert.match(installGateSource, /navigator\.clipboard\?\.writeText/);
 assert.match(installGateSource, /document\.execCommand\?\.\('copy'\)/);
 assert.match(installGateSource, /guideSteps\.addEventListener\('click'/);
-assert.match(installGateSource, /Game address copied/);
 assert.match(installGateSource, /install-address-fallback/);
 assert.match(installGateSource, /Add \$\{appName\} to your Home Screen/);
 assert.match(installGateCss, /\.install-gate \{[\s\S]*z-index: 2000/);
@@ -228,4 +235,4 @@ assert.deepEqual(
   }
 );
 
-console.log(`TURN ${release.id} requires browser consent, applies staged steering changes immediately and gives first-use landscape guidance; TURN NEXT mirrors all contracts.`);
+console.log(`TURN ${release.id} requires browser consent, uses concise social-browser instructions and mirrors all contracts in TURN NEXT.`);
