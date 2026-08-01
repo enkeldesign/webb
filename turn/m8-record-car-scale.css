@@ -8,8 +8,8 @@
 
 .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes .m8-track-rail .track-card-best-model {
   justify-self: start;
-  width: clamp(144px, 18vw, 236px);
-  height: clamp(86px, 14vh, 140px);
+  width: clamp(92px, 9vw, 126px);
+  height: clamp(54px, 8vh, 74px);
   margin: 0;
   object-position: left center;
 }
@@ -21,7 +21,7 @@
   }
 
   .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes .m8-track-rail .track-card-best-model {
-    width: clamp(120px, 16vw, 176px);
-    height: 84px;
+    width: clamp(82px, 10vw, 112px);
+    height: 58px;
   }
 }
