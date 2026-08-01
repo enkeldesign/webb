@@ -8,8 +8,88 @@
   const gamePath = isNextDeployment ? '/turn-next/' : '/turn/';
   const gameAddress = new URL(gamePath, window.location.href).href;
 
+  function detectBrowserContext() {
+    const userAgent = navigator.userAgent || '';
+    const platform = navigator.platform || '';
+    const brandText = Array.from(navigator.userAgentData?.brands || [])
+      .map((brand) => brand.brand)
+      .join(' ');
+    const ios = /iPad|iPhone|iPod/i.test(userAgent) ||
+      (platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const android = /Android/i.test(userAgent);
+    const mobile = ios || android || /Mobile/i.test(userAgent);
+
+    const containerRules = [
+      [/Instagram/i, 'Instagram'],
+      [/FBAN|FBAV/i, 'Facebook'],
+      [/TikTok|musical_ly/i, 'TikTok'],
+      [/Twitter/i, 'X'],
+      [/Snapchat/i, 'Snapchat'],
+      [/LinkedInApp/i, 'LinkedIn'],
+      [/Pinterest/i, 'Pinterest'],
+      [/\bLine\//i, 'LINE'],
+      [/MicroMessenger|WeChat/i, 'WeChat'],
+      [/KAKAOTALK/i, 'KakaoTalk'],
+      [/\bGSA\//i, 'the Google app'],
+      [/Threads/i, 'Threads'],
+      [/Telegram/i, 'Telegram'],
+      [/WhatsApp/i, 'WhatsApp']
+    ];
+    const containerName = containerRules.find(([pattern]) => pattern.test(userAgent))?.[1] || '';
+    const androidWebView = android && (
+      /\bwv\b/i.test(userAgent) ||
+      /; wv\)/i.test(userAgent) ||
+      (/Version\/4\.0/i.test(userAgent) && /Chrome\//i.test(userAgent))
+    );
+    const iosDeviceBrowser = /Version\/[\d.]+.*Safari\//i.test(userAgent) ||
+      /CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo/i.test(userAgent);
+    const iosWebView = ios && !iosDeviceBrowser;
+    const embedded = Boolean(containerName) || androidWebView || iosWebView;
+
+    let id = 'unknown';
+    let name = 'your browser';
+    if (/EdgiOS|EdgA|Edg\//i.test(userAgent) || /Microsoft Edge/i.test(brandText)) {
+      id = 'edge';
+      name = 'Edge';
+    } else if (/OPiOS|OPR\//i.test(userAgent) || /Opera/i.test(brandText)) {
+      id = 'opera';
+      name = 'Opera';
+    } else if (/CriOS|Chrome\//i.test(userAgent) || /Google Chrome|Chromium/i.test(brandText)) {
+      id = 'chrome';
+      name = 'Chrome';
+    } else if (/FxiOS|Firefox\//i.test(userAgent)) {
+      id = 'firefox';
+      name = 'Firefox';
+    } else if (/SamsungBrowser\//i.test(userAgent)) {
+      id = 'samsung';
+      name = 'Samsung Internet';
+    } else if (/DuckDuckGo/i.test(userAgent)) {
+      id = 'duckduckgo';
+      name = 'DuckDuckGo';
+    } else if (/Safari\//i.test(userAgent) && !/Chrome|Chromium|Android/i.test(userAgent)) {
+      id = 'safari';
+      name = 'Safari';
+    }
+
+    return Object.freeze({
+      id,
+      name,
+      ios,
+      android,
+      mobile,
+      embedded,
+      containerName,
+      preferredBrowser: ios ? 'Safari' : android ? 'Chrome' : 'your device’s browser',
+      needsExternalBrowserStep: embedded || (mobile && id === 'unknown')
+    });
+  }
+
+  const browserContext = detectBrowserContext();
+
   document.documentElement.classList.toggle('turn-standalone', isStandalone);
   document.documentElement.classList.toggle('turn-browser', !isStandalone);
+  document.documentElement.classList.toggle('turn-embedded-browser', browserContext.embedded);
+  document.documentElement.dataset.turnBrowser = browserContext.id;
 
   let deferredInstallPrompt = null;
   let releaseBrowserLaunch = null;
@@ -35,11 +115,6 @@
     deferredInstallPrompt = event;
     document.dispatchEvent(new CustomEvent('turn-install-ready'));
   });
-
-  function isIOSLike() {
-    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  }
 
   function startBrowserGame(gate) {
     if (isStandalone) return;
@@ -86,7 +161,7 @@
     if (copied) {
       button.textContent = 'Game address copied';
       button.dataset.copied = 'true';
-      if (status) status.textContent = 'Copied. Paste it into Safari, Chrome or your usual browser.';
+      if (status) status.textContent = `Copied. Paste it into ${browserContext.preferredBrowser}.`;
       return;
     }
 
@@ -96,7 +171,87 @@
       fallbackInput.select();
       fallbackInput.setSelectionRange(0, fallbackInput.value.length);
     }
-    if (status) status.textContent = 'Copy the selected address, then paste it into your browser.';
+    if (status) status.textContent = `Copy the selected address, then paste it into ${browserContext.preferredBrowser}.`;
+  }
+
+  function installStep(number, title, detail, className = '') {
+    return `
+      <div class="install-step${className ? ` ${className}` : ''}">
+        <div class="install-step-number" aria-hidden="true">${number}</div>
+        <div><strong>${title}</strong><span>${detail}</span></div>
+      </div>`;
+  }
+
+  function externalBrowserStep(number) {
+    const source = browserContext.containerName
+      ? `This page is open inside ${browserContext.containerName}.`
+      : 'This page appears to be open inside another app.';
+    return `
+      <div class="install-step install-step-open-browser">
+        <div class="install-step-number" aria-hidden="true">${number}</div>
+        <div>
+          <strong>Open in your device’s browser</strong>
+          <span>${source} Not inside a social media app. Copy the game address, then paste it into ${browserContext.preferredBrowser}.</span>
+          <button class="install-copy-address" type="button" data-copy-game-address>Copy game address</button>
+          <label class="install-address-fallback" hidden>
+            <span>Game address</span>
+            <input type="text" value="${gameAddress}" readonly>
+          </label>
+          <span class="install-copy-status" role="status" aria-live="polite"></span>
+        </div>
+      </div>`;
+  }
+
+  function manualInstallSteps(startNumber) {
+    const targetId = browserContext.needsExternalBrowserStep
+      ? (browserContext.ios ? 'safari' : browserContext.android ? 'chrome' : browserContext.id)
+      : browserContext.id;
+    const targetName = browserContext.needsExternalBrowserStep
+      ? browserContext.preferredBrowser
+      : browserContext.name;
+
+    if (browserContext.ios) {
+      const menuTitle = ['safari', 'chrome', 'edge'].includes(targetId)
+        ? 'Tap …, then Share'
+        : `Open ${targetName}’s menu, then Share`;
+      const menuDetail = ['safari', 'chrome', 'edge'].includes(targetId)
+        ? `In ${targetName}, tap the … menu and choose Share.`
+        : `Open the menu in ${targetName} and choose Share.`;
+      return [
+        installStep(startNumber, menuTitle, menuDetail),
+        installStep(startNumber + 1, 'Add to Home Screen', 'Scroll the share sheet if you do not see it immediately.'),
+        installStep(startNumber + 2, `Open ${appName} from the icon`, 'It will launch fullscreen like an app from then on.')
+      ].join('');
+    }
+
+    if (browserContext.android && targetId === 'samsung') {
+      return [
+        installStep(startNumber, 'Tap ☰ in Samsung Internet', 'Open the browser menu.'),
+        installStep(startNumber + 1, 'Add the page to your Home screen', 'Choose Add page to, then Home screen.'),
+        installStep(startNumber + 2, `Open ${appName} from the icon`, 'It will launch in its standalone game view.')
+      ].join('');
+    }
+
+    if (browserContext.android) {
+      return [
+        installStep(startNumber, `Tap ⋮ in ${targetName}`, 'Open the browser menu.'),
+        installStep(startNumber + 1, `Install ${appName}`, 'Choose Install app or Add to Home screen.'),
+        installStep(startNumber + 2, `Open ${appName} from the icon`, 'It will launch in its standalone game view.')
+      ].join('');
+    }
+
+    if (targetId === 'safari') {
+      return [
+        installStep(startNumber, 'Open Safari’s File menu', 'Choose Add to Dock.'),
+        installStep(startNumber + 1, `Open ${appName} from the new icon`, 'It will launch in its standalone game view.')
+      ].join('');
+    }
+
+    return [
+      installStep(startNumber, `Open ${targetName}’s menu`, `Look for Install ${appName}, Install app or Add to Home Screen.`),
+      installStep(startNumber + 1, `Install ${appName}`, 'Confirm the installation when your browser asks.'),
+      installStep(startNumber + 2, 'Launch from the new icon', `${appName} will open in its standalone game view.`)
+    ].join('');
   }
 
   function initInstallGate() {
@@ -123,53 +278,25 @@
     // installation onboarding until the player explicitly chooses Play in browser.
     gate.hidden = false;
 
+    if (browserContext.needsExternalBrowserStep) {
+      note.textContent = `For reliable installation, open this page in ${browserContext.preferredBrowser}. You can still play here.`;
+    } else if (browserContext.id !== 'unknown') {
+      note.textContent = `Install ${appName} from ${browserContext.name} for the best fullscreen experience. You can also play here.`;
+    }
+
     function showManualGuide() {
-      const ios = isIOSLike();
-      guideTitle.textContent = ios ? `Add ${appName} to your Home Screen` : `Install ${appName}`;
+      guideTitle.textContent = browserContext.mobile
+        ? `Add ${appName} to your Home Screen`
+        : `Install ${appName}`;
 
-      const openInBrowserStep = `
-        <div class="install-step install-step-open-browser">
-          <div class="install-step-number" aria-hidden="true">1</div>
-          <div>
-            <strong>Open in your device’s browser</strong>
-            <span>Not inside a social media app. Copy the game address, then paste it into Safari, Chrome or your usual browser.</span>
-            <button class="install-copy-address" type="button" data-copy-game-address>Copy game address</button>
-            <label class="install-address-fallback" hidden>
-              <span>Game address</span>
-              <input type="text" value="${gameAddress}" readonly>
-            </label>
-            <span class="install-copy-status" role="status" aria-live="polite"></span>
-          </div>
-        </div>`;
-
-      guideSteps.innerHTML = ios
-        ? `${openInBrowserStep}
-          <div class="install-step">
-            <div class="install-step-number" aria-hidden="true">2</div>
-            <div><strong>Tap Share</strong><span>Use the Share button in your browser toolbar.</span></div>
-          </div>
-          <div class="install-step">
-            <div class="install-step-number" aria-hidden="true">3</div>
-            <div><strong>Add to Home Screen</strong><span>Scroll the share sheet if you do not see it immediately.</span></div>
-          </div>
-          <div class="install-step">
-            <div class="install-step-number" aria-hidden="true">4</div>
-            <div><strong>Open ${appName} from the icon</strong><span>It will launch fullscreen like an app from then on.</span></div>
-          </div>`
-        : `${openInBrowserStep}
-          <div class="install-step">
-            <div class="install-step-number" aria-hidden="true">2</div>
-            <div><strong>Open your browser menu</strong><span>Look for Install app or Add to Home Screen.</span></div>
-          </div>
-          <div class="install-step">
-            <div class="install-step-number" aria-hidden="true">3</div>
-            <div><strong>Install ${appName}</strong><span>Confirm the installation when your browser asks.</span></div>
-          </div>
-          <div class="install-step">
-            <div class="install-step-number" aria-hidden="true">4</div>
-            <div><strong>Launch from the new icon</strong><span>${appName} will open in its standalone game view.</span></div>
-          </div>`;
-
+      let nextStep = 1;
+      let steps = '';
+      if (browserContext.needsExternalBrowserStep) {
+        steps += externalBrowserStep(nextStep);
+        nextStep += 1;
+      }
+      steps += manualInstallSteps(nextStep);
+      guideSteps.innerHTML = steps;
       guide.hidden = false;
     }
 
@@ -209,7 +336,7 @@
     });
 
     document.addEventListener('turn-install-ready', () => {
-      note.textContent = `Your browser can install ${appName} directly.`;
+      note.textContent = `${browserContext.name === 'your browser' ? 'This browser' : browserContext.name} can install ${appName} directly.`;
     });
 
     window.addEventListener('appinstalled', () => {
