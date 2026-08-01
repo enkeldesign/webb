@@ -176,6 +176,10 @@ const { installHowToPlayGuide } = await import(
   withBuild('./ui/how-to-play-guide.js?revision=r126-dbe-disclosure')
 );
 installHowToPlayGuide();
+const { installHomeRivalReset } = await import(
+  withBuild('./ui/home-rival-reset.js?revision=r126-all-tracks')
+);
+installHomeRivalReset();
 const buildLabel = document.querySelector('.m8-home-build');
 if (buildLabel) {
   const release = globalThis.__TURN_BUILD__;
