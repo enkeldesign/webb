@@ -105,6 +105,10 @@ const [
   controls,
   carModels,
   lotWrapper,
+  lotEnhancementRuntime,
+  lotLayout,
+  lotLayoutCss,
+  lotAccessibility,
   originalLot,
   trackIntro,
   trackIntroCss,
@@ -121,6 +125,10 @@ const [
   fs.readFile(path.join(turnDir, 'ui/gameplay-controls.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'vehicle/car-models.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'garage/lot-track-select.js'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'garage/lot-enhancement-runtime.js'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'garage/lot-layout-r60.js'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'garage/lot-layout-r60.css'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'garage/lot-accessibility-r118.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'garage/lot-r10.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'ui/track-intro.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'track-intro.css'), 'utf8'),
@@ -136,15 +144,44 @@ const releaseTarget = (filePath) => `${filePath}?build=${release.cacheKey}`;
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(index, new RegExp(`\\.\\/garage\\/lot-r10\\.css\\?build=${release.cacheKey}`));
 assert.match(index, new RegExp(`\\.\\/track-intro\\.css\\?build=${release.cacheKey}`));
+assert.match(index, new RegExp(`src="\\.\\/app\\.js\\?build=${release.cacheKey}-lot-restored"`));
 assert.equal(imports['./garage/lot-r10.js?build=20260720-r19'], releaseTarget('./garage/lot-track-select.js'));
 assert.equal(imports['./ui/track-intro.js?build=20260725-r75'], releaseTarget('./ui/track-intro.js'));
 assert.equal(imports['./race/lap-system.js?build=20260720-r19'], releaseTarget('./race/lap-system-r86.js'));
 
+assert.match(app, /lot-layout-r60\.css\?revision=r121-viewer/);
+assert.match(app, /installLotEnhancementRuntime/);
+assert.match(app, /lot-enhancement-runtime\.js\?revision=r121/);
+assert.ok(app.indexOf('installLotEnhancementRuntime()') < app.indexOf("withBuild('./main.js')"));
+
 assert.match(lotWrapper, /showOriginalLot/);
+assert.match(lotWrapper, /export async function showEnhancedLot/);
+assert.match(lotWrapper, /enhanceLotNow\(\)/);
 assert.match(lotWrapper, /await chooseTrackBeforeLot\(\)/);
-assert.match(lotWrapper, /installLotLayout\(\)/);
 assert.match(lotWrapper, /track-manager\.js\?build=20260722-r52/);
+assert.doesNotMatch(lotWrapper, /installLotLayout|installLotStatLegend|installLotAccessibility/);
 assert.match(originalLot, /export function showTheLot/);
+
+assert.match(lotEnhancementRuntime, /ENHANCEMENT_ID = 'enhanced-lot-r121'/);
+assert.match(lotEnhancementRuntime, /activeEnhancements = new WeakMap\(\)/);
+assert.match(lotEnhancementRuntime, /installLotStatLegend\(scope\)/);
+assert.match(lotEnhancementRuntime, /installLotLayout\(scope\)/);
+assert.match(lotEnhancementRuntime, /installLotAccessibility\(scope\)/);
+assert.match(lotEnhancementRuntime, /new MutationObserver\(sync\)/);
+assert.match(lotEnhancementRuntime, /screen\.dataset\.lotEnhancements = ENHANCEMENT_ID/);
+
+assert.match(lotLayout, /viewbox\.appendChild\(colors\)/);
+assert.match(lotLayout, /attributesHeading\.replaceChildren\(document\.createTextNode\('ATTRIBUTES'\)\)/);
+assert.match(lotLayout, /lot-viewbox-with-paint/);
+assert.match(lotLayoutCss, /\.lot-viewbox-with-paint[\s\S]*flex: 1 1 auto/);
+assert.match(lotLayoutCss, /min-height: clamp\(150px, 28vh, 230px\)/);
+assert.match(lotLayoutCss, /--lot-paint-rail-height: 54px/);
+assert.match(lotLayoutCss, /\.lot-viewbox-with-paint \.lot-view-host[\s\S]*inset: 0 0 var\(--lot-paint-rail-height\)/);
+assert.match(lotLayoutCss, /\.lot-view-close,[\s\S]*\.lot-view-open[\s\S]*display: none !important/);
+assert.match(lotAccessibility, /lot-selected-car-summary/);
+assert.match(lotAccessibility, /Choose car/);
+assert.match(lotAccessibility, /Choose car colour/);
+assert.match(lotAccessibility, /Car information/);
 
 assert.match(home, /activateTrack\(selectedTrackId, runtime\)/);
 assert.match(home, /showTheLot\(\{ initialSelection: selectedVehicle\(runtime\) \}\)/);
@@ -191,4 +228,4 @@ assert.match(carModels, /loadCarSource\(car\.id\)/);
 assert.match(easterEggUi, /getEffectiveVehicleStats/);
 assert.match(easterEggUi, /input\[type="color"\]/);
 
-console.log(`TURN ${release.id} garage, M8 Home-to-Lot route, Training Car and hidden Sport Sedan setup passed.`);
+console.log(`TURN ${release.id} enhanced Lot route, expanded 3D viewer, accessibility and garage setup passed.`);
