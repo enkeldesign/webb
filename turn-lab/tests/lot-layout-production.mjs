@@ -31,7 +31,7 @@ assert.ok(importMapText, 'Production must expose its import map');
 const imports = JSON.parse(importMapText).imports;
 
 assert.match(index, new RegExp(`lot-layout-r60\\.css\\?build=${release.cacheKey}`), 'Production must retain the baseline Lot layout stylesheet');
-assert.match(index, new RegExp(`app\\.js\\?build=${release.cacheKey}-lot-restored`), 'Production must cache-bust the route-independent Lot fix');
+assert.match(index, new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent`), 'Production must cache-bust the browser-gated canonical runtime');
 assert.equal(imports['./garage/lot-r10.js?build=20260720-r19'], `./garage/lot-track-select.js?build=${release.cacheKey}`, 'Production must retain the track-first compatibility wrapper');
 
 assert.match(app, /lot-layout-r60\.css\?revision=r121-viewer-r122-fit/, 'The fitted Lot rail stylesheet must bypass the previous viewer cache');
