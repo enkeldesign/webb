@@ -8,6 +8,7 @@ import {
 import { installAirportWorld } from './airport-world-r52.js?build=20260722-r52';
 import { installCliffsideWorld } from './cliffside-world.js';
 import { installHarborWorld } from './harbor-world.js';
+import { installMidnightCityWorld } from './midnight-city-world.js';
 import { isForgivingTrackSurface } from './airport-runoff.js?build=20260722-r52';
 
 const WORLD_INSTALLERS = Object.freeze({
@@ -23,6 +24,9 @@ const WORLD_INSTALLERS = Object.freeze({
   },
   harbor({ scene, samples, trackWidth }) {
     return installHarborWorld({ scene, samples, trackWidth });
+  },
+  'midnight-city'({ scene, samples, trackWidth }) {
+    return installMidnightCityWorld({ scene, samples, trackWidth });
   }
 });
 
@@ -37,6 +41,9 @@ const FORGIVING_SURFACES = Object.freeze({
     return false;
   },
   harbor() {
+    return false;
+  },
+  'midnight-city'() {
     return false;
   }
 });
@@ -54,7 +61,7 @@ export const TRACK_RUNTIME_REGISTRY = Object.freeze(TRACK_CATALOG.map((definitio
     freeRoamDistance: definition.freeRoamDistance,
     collisionProfile: definition.collisionProfile,
     createRuntime(sampleCount = TRACK_SAMPLE_COUNT) {
-      return createTrackRuntime(definition.id, sampleCount);
+      return createTrackRuntime(definition.id, definition.sampleCount || sampleCount);
     },
     installWorld,
     isForgivingSurface
