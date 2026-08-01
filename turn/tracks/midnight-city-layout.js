@@ -64,7 +64,7 @@ export const MIDNIGHT_CITY_LAYOUT_RULES = Object.freeze({
   repeatedFullWidthSerpentine: false,
   buildingsShapeRoute: true,
   minimumVisualHairpinRadius: 30,
-  targetLengthComparedWithHarbor: 'at-least-three-times',
+  targetLengthComparedWithHarbor: 'at-least-two-times',
   verticalRoadOverlap: false,
   primaryDifficulty: 'high-speed endurance, district transitions and braking memory'
 });
