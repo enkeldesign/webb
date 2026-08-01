@@ -89,7 +89,9 @@ if (driveByEarEnabled) {
 
 let paceNotePriority = null;
 if (driveByEarEnabled) {
-  paceNotePriority = await import(withBuild('./audio/pace-note-priority.js'));
+  paceNotePriority = await import(
+    withBuild('./audio/pace-note-priority.js?revision=r123-final-hold')
+  );
   paceNotePriority.preparePaceNotePriorityCapture();
 }
 
@@ -113,7 +115,9 @@ if (driveByEarEnabled) {
   );
   installUniversalDrivingSoundscape();
 
-  const { installPaceNotes } = await import(withBuild('./audio/pace-notes.js'));
+  const { installPaceNotes } = await import(
+    withBuild('./audio/pace-notes.js?revision=r123-final-hold')
+  );
   installPaceNotes();
 
   const { installOffroadEarDirection } = await import(
