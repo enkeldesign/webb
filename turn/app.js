@@ -177,7 +177,11 @@ if (buildLabel) {
   buildLabel.textContent = `TURN V${release?.version || ''} · BUILD ${(release?.id || '').toUpperCase()}`;
 }
 const { installM8HomeFixedLayout } = await import(
-  withBuild('./m8-home-fixed-layout.js?revision=m8.9-record-car-scale')
+  withBuild('./m8-home-fixed-layout.js?revision=m8.8-full-track-names')
 );
 await installM8HomeFixedLayout();
+installStylesheet(
+  './m8-record-car-scale.css?revision=r122',
+  'data-turn-m8-record-car-scale'
+);
 document.documentElement.dataset.turnHomeLifecycle = 'home-m8';
