@@ -54,10 +54,15 @@ assert.ok(
   app.indexOf('await installM8HomeFixedLayout()') < app.indexOf("m8-record-car-scale.css?revision=r122"),
   'The record-car scale override must win the M8 layout cascade'
 );
-assert.match(scaleCss, /grid-template-columns: minmax\(0, auto\) minmax\(144px, 1fr\)/, 'The BEST row must reserve room for the doubled car');
-assert.match(scaleCss, /width: clamp\(144px, 18vw, 236px\)/, 'The standard record car must be twice the previous M8 width');
-assert.match(scaleCss, /height: clamp\(86px, 14vh, 140px\)/, 'The standard record car must be twice the previous M8 height');
-assert.match(scaleCss, /width: clamp\(120px, 16vw, 176px\)/, 'Short landscape cards must also double the record car');
+assert.match(scaleCss, /grid-template-columns: max-content max-content/, 'The enlarged BEST row must keep the car immediately beside the record copy');
+assert.match(scaleCss, /justify-content: start/, 'The enlarged BEST cluster must stay left anchored');
+assert.match(scaleCss, /width: fit-content/, 'The enlarged BEST row must hug its content instead of spanning the card');
+assert.doesNotMatch(scaleCss, /minmax\(144px, 1fr\)/, 'The enlarged car column must not flex and drift toward the right edge');
+assert.match(scaleCss, /column-gap: clamp\(8px, 1vw, 14px\)/, 'The standard layout must retain a small deliberate gap between copy and car');
+assert.match(scaleCss, /justify-self: start/, 'The enlarged car must align to the beginning of its content-sized column');
+assert.match(scaleCss, /width: clamp\(144px, 18vw, 236px\)/, 'The standard record car must remain twice the previous M8 width');
+assert.match(scaleCss, /height: clamp\(86px, 14vh, 140px\)/, 'The standard record car must remain twice the previous M8 height');
+assert.match(scaleCss, /width: clamp\(120px, 16vw, 176px\)/, 'Short landscape cards must keep the doubled record car');
 assert.match(scaleCss, /height: 84px/, 'Short landscape record cars must retain twice their former height');
 
 assert.match(app, /player-map-marker\.js\?revision=r122/, 'The player marker enhancement must be installed by the canonical runtime');
@@ -74,4 +79,4 @@ assert.match(playerMarker, /context\.clearRect = \(\.\.\.args\) =>/, 'The enhanc
 assert.match(playerMarker, /queueMicrotask\(\(\) => \{[\s\S]*drawPlayerMarker\(\)/, 'The local player must repaint after rivals and remain the top map layer');
 assert.doesNotMatch(playerMarker, /requestAnimationFrame|setInterval/, 'The map emphasis must not add a second continuous animation loop');
 
-console.log(`TURN ${release.id} enlarged record cars and top-layer player map marker passed.`);
+console.log(`TURN ${release.id} enlarged left-aligned record cars and top-layer player map marker passed.`);
