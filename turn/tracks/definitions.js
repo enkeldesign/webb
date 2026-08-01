@@ -80,10 +80,44 @@ const TRACKS = [
     },
     sky: 0x79c3d3,
     fog: 0xb6d6d4
+  },
+  {
+    id: 'midnight-city',
+    name: 'Midnight City',
+    difficulty: 'HARD',
+    eyebrow: 'TRACK 5',
+    description: 'Boulevard speed. Neon corners. A full-city endurance lap.',
+    accent: '#9d7cff',
+    accentSoft: '#d8ccff',
+    storageRevision: 'midnight-city-r1',
+    sampleCount: 1080,
+    freeRoamDistance: 34,
+    collisionProfile: {
+      freeRoamDistance: 34,
+      shoulderStartDistance: 19.8,
+      shoulderDrag: 1.55,
+      boundaryBounce: 0.04,
+      boundaryTangentRetention: 0.94,
+      boundaryMinimumRecoverySpeed: 6,
+      colliders: []
+    },
+    sky: 0x070b1b,
+    fog: 0x11162b
   }
 ];
 
-const PLACEHOLDERS = [];
+const PLACEHOLDERS = [
+  {
+    id: 'track-6-tba',
+    name: 'TBA',
+    difficulty: '???',
+    eyebrow: 'TRACK 6',
+    description: 'The next district is still under construction.',
+    accent: '#8c98a8',
+    accentSoft: '#d7dde5',
+    locked: true
+  }
+];
 
 export const TRACK_DEFINITIONS = Object.freeze(TRACKS.map((track) => Object.freeze({
   ...track,
