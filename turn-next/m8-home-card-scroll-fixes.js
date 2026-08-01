@@ -1,12 +1,12 @@
 const STYLE_ATTRIBUTE = 'data-turn-m8-card-scroll-fixes';
-const FIX_ID = 'native-scroll-v1';
+const FIX_ID = 'native-scroll-full-track-names-v3';
 
 function installStylesheet() {
   if (document.querySelector(`link[${STYLE_ATTRIBUTE}]`)) return;
   const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
   const stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet';
-  stylesheet.href = `/turn-next/m8-home-card-scroll-fixes.css?source=${buildKey}-m8.4`;
+  stylesheet.href = `/turn-next/m8-home-card-scroll-fixes.css?source=${buildKey}-m8.8-full-track-names`;
   stylesheet.setAttribute(STYLE_ATTRIBUTE, '');
   document.head.appendChild(stylesheet);
 }
