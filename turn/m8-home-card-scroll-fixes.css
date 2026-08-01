@@ -85,7 +85,7 @@
 
 .m8-home-card-scroll-fixes .m8-track-rail .track-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(112px, 43%);
+  grid-template-columns: minmax(0, 1fr) minmax(108px, 39%);
   grid-template-rows: auto auto minmax(0, 1fr);
   align-items: start;
   gap: 5px clamp(8px, 1vw, 13px);
@@ -101,7 +101,7 @@
   grid-row: 1;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
+  align-items: start;
   gap: 8px;
   min-width: 0;
   align-self: start;
@@ -109,15 +109,21 @@
 
 .m8-home-card-scroll-fixes .m8-track-rail .track-card-choice-marker {
   flex: 0 0 auto;
+  margin-top: 1px;
 }
 
 .m8-home-card-scroll-fixes .m8-track-rail .track-card-name {
   min-width: 0;
-  overflow: hidden;
-  font-size: clamp(1rem, 2vw, 1.72rem);
-  line-height: 1;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  max-width: 100%;
+  overflow: visible;
+  font-size: clamp(0.88rem, 1.55vw, 1.38rem);
+  line-height: 0.9;
+  letter-spacing: -0.045em;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
 }
 
 .m8-home-card-scroll-fixes .m8-track-rail .track-card-difficulty {
@@ -215,13 +221,14 @@
   }
 
   .m8-home-card-scroll-fixes .m8-track-rail .track-card {
-    grid-template-columns: minmax(0, 1fr) minmax(98px, 42%);
+    grid-template-columns: minmax(0, 1fr) minmax(94px, 38%);
     grid-template-rows: auto auto minmax(0, 1fr);
     gap: 3px 8px;
   }
 
   .m8-home-card-scroll-fixes .m8-track-rail .track-card-name {
-    font-size: clamp(0.92rem, 1.85vw, 1.25rem);
+    font-size: clamp(0.8rem, 1.42vw, 1.08rem);
+    line-height: 0.88;
   }
 
   .m8-home-card-scroll-fixes .m8-track-rail .track-card-preview {
@@ -244,7 +251,7 @@
   }
 
   .m8-home-card-scroll-fixes .m8-track-rail .track-card {
-    grid-template-columns: minmax(0, 1fr) minmax(108px, 40%);
+    grid-template-columns: minmax(0, 1fr) minmax(104px, 38%);
   }
 }
 
