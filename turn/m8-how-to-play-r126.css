@@ -1,0 +1,115 @@
+.m8-dbe-guide {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 3px solid var(--m8-ink);
+}
+
+.m8-dbe-guide > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 14px;
+  border: 3px solid var(--m8-ink);
+  border-radius: 14px;
+  color: var(--m8-ink);
+  background: var(--m8-yellow);
+  box-shadow: 4px 4px 0 var(--m8-ink);
+  cursor: pointer;
+  list-style: none;
+  font-weight: 950;
+  line-height: 1.2;
+}
+
+.m8-dbe-guide > summary::-webkit-details-marker {
+  display: none;
+}
+
+.m8-dbe-guide > summary::after {
+  content: "+";
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--m8-ink);
+  border-radius: 50%;
+  background: var(--m8-cream);
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.m8-dbe-guide[open] > summary::after {
+  content: "−";
+}
+
+.m8-dbe-guide > summary:focus-visible {
+  outline: 5px solid var(--m8-pink);
+  outline-offset: 4px;
+}
+
+.m8-dbe-guide-content {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.m8-dbe-guide-intro,
+.m8-dbe-guide-basics,
+.m8-dbe-guide-screen-reader {
+  grid-column: 1 / -1;
+}
+
+.m8-dbe-guide-intro {
+  padding: 0 2px;
+  font-weight: 800;
+}
+
+.m8-dbe-guide-basics,
+.m8-dbe-guide-section {
+  min-width: 0;
+  padding: 13px 14px;
+  border: 2px solid var(--m8-ink);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 0.78);
+}
+
+.m8-dbe-guide-content h4 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  line-height: 1.15;
+}
+
+.m8-dbe-guide-content ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  line-height: 1.4;
+}
+
+.m8-dbe-guide-content li + li {
+  margin-top: 5px;
+}
+
+@media (max-width: 720px) {
+  .m8-dbe-guide-content {
+    grid-template-columns: 1fr;
+  }
+
+  .m8-dbe-guide-intro,
+  .m8-dbe-guide-basics,
+  .m8-dbe-guide-screen-reader {
+    grid-column: auto;
+  }
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .m8-dbe-guide-content {
+    gap: 10px;
+  }
+
+  .m8-dbe-guide-basics,
+  .m8-dbe-guide-section {
+    padding: 10px 12px;
+  }
+}
