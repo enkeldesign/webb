@@ -7,7 +7,7 @@ import {
 } from '../tracks/catalog.js?build=20260722-r50';
 import { getStoredBestLap } from '../race/rival-storage.js?build=20260722-r50';
 import { getCarDefinition } from '../vehicle/catalog.js?build=20260724-r59';
-import { renderBestCarThumbnail } from './track-best-car.js?build=20260724-r61';
+import { renderBestCarThumbnail } from './track-best-car.js?build=20260801-r123-crop';
 
 let activeRequest = null;
 let bestPreviewGeneration = 0;
