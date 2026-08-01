@@ -11,6 +11,7 @@
   width: clamp(144px, 18vw, 236px);
   height: clamp(86px, 14vh, 140px);
   margin: 0;
+  object-position: left center;
 }
 
 @media (max-height: 560px) and (orientation: landscape) {
