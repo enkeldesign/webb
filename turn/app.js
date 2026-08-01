@@ -177,7 +177,7 @@ const { installM8HomeFixedLayout } = await import(
 );
 await installM8HomeFixedLayout();
 installStylesheet(
-  './m8-record-car-scale.css?revision=r123-cropped-alignment',
+  './m8-record-car-scale.css?revision=r124-balanced-crop',
   'data-turn-m8-record-car-scale'
 );
 document.documentElement.dataset.turnHomeLifecycle = 'home-m8';
