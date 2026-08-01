@@ -107,39 +107,46 @@ const HARBOR_PACE_NOTES = Object.freeze([
 ]);
 
 const MIDNIGHT_CITY_PACE_NOTES = Object.freeze([
-  createPaceNote('midnight-city-1', 0.108, 0.136, [
+  createPaceNote('midnight-city-1', 0.102, 0.128, [
     { direction: PACE_NOTE_DIRECTION.LEFT, severity: 2, length: PACE_NOTE_LENGTH.LONG }
   ]),
-  createPaceNote('midnight-city-2', 0.142, 0.169, [
-    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
+  createPaceNote('midnight-city-2', 0.145, 0.176, [
+    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.LONG }
   ]),
-  createPaceNote('midnight-city-3', 0.252, 0.280, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
-  ]),
-  createPaceNote('midnight-city-4', 0.282, 0.310, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG }
-  ]),
-  createPaceNote('midnight-city-5', 0.386, 0.414, [
-    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
-  ]),
-  createPaceNote('midnight-city-6', 0.415, 0.443, [
-    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 2, length: PACE_NOTE_LENGTH.LONG }
-  ]),
-  createPaceNote('midnight-city-7', 0.528, 0.558, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
-  ]),
-  createPaceNote('midnight-city-8', 0.560, 0.592, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG }
-  ]),
-  createPaceNote('midnight-city-9', 0.690, 0.725, [
-    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 2, length: PACE_NOTE_LENGTH.LONG },
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG }
-  ]),
-  createPaceNote('midnight-city-10', 0.824, 0.858, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
-  ]),
-  createPaceNote('midnight-city-11', 0.974, 0.998, [
+  createPaceNote('midnight-city-3', 0.232, 0.262, [
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.MEDIUM },
     { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.SHORT }
+  ]),
+  createPaceNote('midnight-city-4', 0.266, 0.292, [
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
+  ]),
+  createPaceNote('midnight-city-5', 0.338, 0.372, [
+    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 2, length: PACE_NOTE_LENGTH.MEDIUM },
+    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
+  ]),
+  createPaceNote('midnight-city-6', 0.450, 0.480, [
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
+  ]),
+  createPaceNote('midnight-city-7', 0.490, 0.520, [
+    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
+  ]),
+  createPaceNote('midnight-city-8', 0.622, 0.656, [
+    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 2, length: PACE_NOTE_LENGTH.LONG },
+    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
+  ]),
+  createPaceNote('midnight-city-9', 0.722, 0.754, [
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.MEDIUM },
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
+  ]),
+  createPaceNote('midnight-city-10', 0.818, 0.852, [
+    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 2, length: PACE_NOTE_LENGTH.MEDIUM },
+    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
+  ]),
+  createPaceNote('midnight-city-11', 0.906, 0.938, [
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
+  ]),
+  createPaceNote('midnight-city-12', 0.958, 0.982, [
+    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 2, length: PACE_NOTE_LENGTH.MEDIUM }
   ])
 ]);
 

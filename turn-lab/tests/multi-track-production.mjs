@@ -31,7 +31,7 @@ assert.deepEqual(
     { id: 'airport', difficulty: 'MEDIUM', storageRevision: 'airport-r50', freeRoamDistance: 95 },
     { id: 'cliffside', difficulty: 'MEDIUM', storageRevision: 'cliffside-r68', freeRoamDistance: 22.2 },
     { id: 'harbor', difficulty: 'HARD', storageRevision: 'harbor-r80', freeRoamDistance: 170 },
-    { id: 'midnight-city', difficulty: 'HARD', storageRevision: 'midnight-city-r1', freeRoamDistance: 34 }
+    { id: 'midnight-city', difficulty: 'HARD', storageRevision: 'midnight-city-r2', freeRoamDistance: 34 }
   ],
   'Every playable track must own identity, difficulty, record namespace and containment in one source of truth'
 );
@@ -40,7 +40,7 @@ assert.deepEqual(
   [{ id: 'track-6-tba', name: 'TBA', locked: true }],
   'Track 6 must remain a visible but non-playable teaser'
 );
-assert.equal(getTrackStorageRevision('midnight-city'), 'midnight-city-r1');
+assert.equal(getTrackStorageRevision('midnight-city'), 'midnight-city-r2');
 assert.equal(getTrackFreeRoamDistance('midnight-city'), 34);
 assert.equal(getTrackStorageRevision('future-track'), 'future-track');
 assert.equal(getTrackFreeRoamDistance('future-track'), 170);
@@ -48,13 +48,23 @@ assert.equal(getTrackFreeRoamDistance('future-track'), 170);
 const midnightLength = closedPolylineLength(MIDNIGHT_CITY_CONTROL_POINTS);
 const harborLength = closedPolylineLength(HARBOR_CONTROL_POINTS);
 assert.ok(
-  midnightLength >= harborLength * 3,
-  `Midnight City must be significantly longer than Harbor (${midnightLength.toFixed(0)} vs ${harborLength.toFixed(0)})`
+  midnightLength >= harborLength * 2,
+  `Midnight City must remain more than twice as long as Harbor (${midnightLength.toFixed(0)} vs ${harborLength.toFixed(0)})`
 );
 assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.cityGridRows, 5);
 assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.outerRingReturn, true);
+assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.districtCount, 4);
+assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.districtAvenues, true);
+assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.repeatedFullWidthSerpentine, false);
+assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.buildingsShapeRoute, true);
+assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.minimumVisualHairpinRadius, 30);
+assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.targetLengthComparedWithHarbor, 'at-least-two-times');
 assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.verticalRoadOverlap, false);
 assert.equal(findProperIntersections(MIDNIGHT_CITY_CONTROL_POINTS).length, 0, 'Midnight City control streets must not cross each other');
+assert.ok(
+  maximumControlTurn(MIDNIGHT_CITY_CONTROL_POINTS) < 110,
+  'Midnight City must not contain a near-reversal that makes offset track borders fold into themselves'
+);
 
 const storage = new Map();
 const originalLocalStorage = globalThis.localStorage;
@@ -69,7 +79,7 @@ try {
     { trackId: 'countryside', time: 12.73, key: 'turn-personal-rivals-v1' },
     { trackId: 'airport', time: 22.42, key: 'turn-personal-rivals-v1:airport-r50' },
     { trackId: 'harbor', time: 38.61, key: 'turn-personal-rivals-v1:harbor-r80' },
-    { trackId: 'midnight-city', time: 104.82, key: 'turn-personal-rivals-v1:midnight-city-r1' }
+    { trackId: 'midnight-city', time: 104.82, key: 'turn-personal-rivals-v1:midnight-city-r2' }
   ];
 
   for (const entry of states) {
@@ -87,7 +97,7 @@ try {
   }
 
   clearRivalsState({ trackId: 'midnight-city', competitorLaps: [] });
-  assert.equal(storage.has('turn-personal-rivals-v1:midnight-city-r1'), false);
+  assert.equal(storage.has('turn-personal-rivals-v1:midnight-city-r2'), false);
   assert.equal(storage.has('turn-personal-rivals-v1:harbor-r80'), true, 'Resetting Midnight City must preserve Harbor records');
   assert.equal(storage.has('turn-personal-rivals-v1'), true, 'Resetting Midnight City must preserve Countryside records');
 } finally {
@@ -112,22 +122,25 @@ const [definitions, catalog, registry, manager, world, home] = await Promise.all
   fs.readFile(new URL('../../turn/tracks/catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/registry.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/track-manager.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/tracks/midnight-city-world.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/midnight-city-world-r4.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/m8-home.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(definitions, /id: 'midnight-city'[\s\S]*difficulty: 'HARD'/);
+assert.match(definitions, /storageRevision: 'midnight-city-r2'/);
 assert.match(definitions, /sampleCount: 1080/);
 assert.match(definitions, /fogNear: 250[\s\S]*fogFar: 880/);
 assert.match(definitions, /id: 'track-6-tba'[\s\S]*locked: true/);
 assert.match(catalog, /MIDNIGHT_CITY_CONTROL_POINTS\.map/);
-assert.match(registry, /installMidnightCityWorld/);
+assert.match(registry, /midnight-city-world-r4\.js\?build=20260801-r4/);
 assert.match(registry, /definition\.sampleCount \|\| sampleCount/);
 assert.doesNotMatch(manager, /nextTrackId === 'midnight-city'/, 'The generic track manager must not gain a Midnight City special case');
 assert.match(manager, /lighting\.hemisphereIntensity \?\? 2\.7/);
 assert.match(manager, /track\.fogNear/);
-assert.match(world, /makeStreetLights\(world, samples, trackWidth\)/);
-assert.match(world, /makeDistantSkyline\(world\)/);
+assert.match(world, /removeThickStreetBorders/);
+assert.match(world, /installDistrictBuildings/);
+assert.match(world, /installWindowBands/);
+assert.match(world, /installLampPostPools/);
 assert.match(world, /new THREE\.InstancedMesh/);
 assert.match(world, /new THREE\.CanvasTexture/);
 assert.match(world, /externalAssetFiles: false/);
@@ -144,6 +157,24 @@ function closedPolylineLength(points) {
     length += Math.hypot(next[0] - current[0], next[2] - current[2]);
   }
   return length;
+}
+
+function maximumControlTurn(points) {
+  let maximum = 0;
+  for (let index = 0; index < points.length; index += 1) {
+    const previous = points[(index - 1 + points.length) % points.length];
+    const current = points[index];
+    const next = points[(index + 1) % points.length];
+    const incoming = [current[0] - previous[0], current[2] - previous[2]];
+    const outgoing = [next[0] - current[0], next[2] - current[2]];
+    const incomingLength = Math.hypot(...incoming);
+    const outgoingLength = Math.hypot(...outgoing);
+    const cosine = (
+      incoming[0] * outgoing[0] + incoming[1] * outgoing[1]
+    ) / Math.max(1e-9, incomingLength * outgoingLength);
+    maximum = Math.max(maximum, Math.acos(Math.max(-1, Math.min(1, cosine))) * 180 / Math.PI);
+  }
+  return maximum;
 }
 
 function makeSamples(points) {
