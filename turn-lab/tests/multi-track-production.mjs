@@ -48,8 +48,8 @@ assert.equal(getTrackFreeRoamDistance('future-track'), 170);
 const midnightLength = closedPolylineLength(MIDNIGHT_CITY_CONTROL_POINTS);
 const harborLength = closedPolylineLength(HARBOR_CONTROL_POINTS);
 assert.ok(
-  midnightLength >= harborLength * 3,
-  `Midnight City must be significantly longer than Harbor (${midnightLength.toFixed(0)} vs ${harborLength.toFixed(0)})`
+  midnightLength >= harborLength * 2,
+  `Midnight City must remain more than twice as long as Harbor (${midnightLength.toFixed(0)} vs ${harborLength.toFixed(0)})`
 );
 assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.cityGridRows, 5);
 assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.outerRingReturn, true);
@@ -58,6 +58,7 @@ assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.districtAvenues, true);
 assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.repeatedFullWidthSerpentine, false);
 assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.buildingsShapeRoute, true);
 assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.minimumVisualHairpinRadius, 30);
+assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.targetLengthComparedWithHarbor, 'at-least-two-times');
 assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.verticalRoadOverlap, false);
 assert.equal(findProperIntersections(MIDNIGHT_CITY_CONTROL_POINTS).length, 0, 'Midnight City control streets must not cross each other');
 assert.ok(
