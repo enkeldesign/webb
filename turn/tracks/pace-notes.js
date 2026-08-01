@@ -106,11 +106,49 @@ const HARBOR_PACE_NOTES = Object.freeze([
   ])
 ]);
 
+const MIDNIGHT_CITY_PACE_NOTES = Object.freeze([
+  createPaceNote('midnight-city-1', 0.108, 0.136, [
+    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 2, length: PACE_NOTE_LENGTH.LONG }
+  ]),
+  createPaceNote('midnight-city-2', 0.142, 0.169, [
+    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
+  ]),
+  createPaceNote('midnight-city-3', 0.252, 0.280, [
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
+  ]),
+  createPaceNote('midnight-city-4', 0.282, 0.310, [
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG }
+  ]),
+  createPaceNote('midnight-city-5', 0.386, 0.414, [
+    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
+  ]),
+  createPaceNote('midnight-city-6', 0.415, 0.443, [
+    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 2, length: PACE_NOTE_LENGTH.LONG }
+  ]),
+  createPaceNote('midnight-city-7', 0.528, 0.558, [
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
+  ]),
+  createPaceNote('midnight-city-8', 0.560, 0.592, [
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG }
+  ]),
+  createPaceNote('midnight-city-9', 0.690, 0.725, [
+    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 2, length: PACE_NOTE_LENGTH.LONG },
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG }
+  ]),
+  createPaceNote('midnight-city-10', 0.824, 0.858, [
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
+  ]),
+  createPaceNote('midnight-city-11', 0.974, 0.998, [
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.SHORT }
+  ])
+]);
+
 const PACE_NOTE_MAPS = Object.freeze({
   countryside: COUNTRYSIDE_PACE_NOTES,
   airport: AIRPORT_PACE_NOTES,
   cliffside: CLIFFSIDE_PACE_NOTES,
-  harbor: HARBOR_PACE_NOTES
+  harbor: HARBOR_PACE_NOTES,
+  'midnight-city': MIDNIGHT_CITY_PACE_NOTES
 });
 
 const EMPTY_PACE_NOTES = Object.freeze([]);

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { CLIFFSIDE_CONTROL_POINTS } from './cliffside-layout.js';
 import { HARBOR_CONTROL_POINTS } from './harbor-layout.js';
+import { MIDNIGHT_CITY_CONTROL_POINTS } from './midnight-city-layout.js';
 import {
   DEFAULT_TRACK_ID,
   TRACK_DEFINITIONS,
@@ -66,6 +67,9 @@ const CONTROL_POINT_FACTORIES = Object.freeze({
   },
   harbor() {
     return HARBOR_CONTROL_POINTS.map(([x, y, z]) => new THREE.Vector3(x, y, z));
+  },
+  'midnight-city'() {
+    return MIDNIGHT_CITY_CONTROL_POINTS.map(([x, y, z]) => new THREE.Vector3(x, y, z));
   }
 });
 

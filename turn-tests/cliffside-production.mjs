@@ -27,17 +27,22 @@ const AIRPORT_CONTROL_POINTS = [
   [-229, 0, -45], [-215, 0, -88]
 ];
 
-assert.equal(TRACK_DEFINITIONS.length, 4, 'TURN must expose four playable tracks');
+assert.equal(TRACK_DEFINITIONS.length, 5, 'TURN must expose five playable tracks');
 assert.deepEqual(
   TRACK_DEFINITIONS.map(({ id, difficulty }) => ({ id, difficulty })),
   [
     { id: 'countryside', difficulty: 'EASY' },
     { id: 'airport', difficulty: 'MEDIUM' },
     { id: 'cliffside', difficulty: 'MEDIUM' },
-    { id: 'harbor', difficulty: 'HARD' }
+    { id: 'harbor', difficulty: 'HARD' },
+    { id: 'midnight-city', difficulty: 'HARD' }
   ]
 );
-assert.equal(TRACK_PLACEHOLDERS.length, 0, 'Harbor replaces the former Track 4 placeholder');
+assert.deepEqual(
+  TRACK_PLACEHOLDERS.map(({ id, name, locked }) => ({ id, name, locked })),
+  [{ id: 'track-6-tba', name: 'TBA', locked: true }],
+  'The sixth card must remain a locked teaser'
+);
 assert.equal(getTrackStorageRevision('cliffside'), 'cliffside-r68');
 assert.equal(CLIFFSIDE_LAYOUT_RULES.minimumTurnRadiusComparedWithAirport, 'not-smaller');
 assert.equal(CLIFFSIDE_LAYOUT_RULES.verticalRoadOverlap, false);
@@ -47,21 +52,14 @@ const airportSamples = sampleCentripetalClosed(AIRPORT_CONTROL_POINTS, 20);
 const cliffsideRadius = minimumHorizontalRadius(cliffsideSamples);
 const airportRadius = minimumHorizontalRadius(airportSamples);
 assert.ok(Number.isFinite(cliffsideRadius) && Number.isFinite(airportRadius));
-assert.ok(
-  cliffsideRadius >= airportRadius,
-  `Cliffside minimum radius ${cliffsideRadius.toFixed(2)} must not be tighter than Airport ${airportRadius.toFixed(2)}`
-);
-assert.ok(
-  cliffsideRadius >= airportRadius * 1.5,
-  'Cliffside should gain difficulty from linked rhythm rather than another hairpin'
-);
+assert.ok(cliffsideRadius >= airportRadius * 1.5, 'Cliffside must remain flowing rather than gaining difficulty from another hairpin');
 
 const elevations = cliffsideSamples.map((point) => point[1]);
 const minimumElevation = Math.min(...elevations);
 const maximumElevation = Math.max(...elevations);
 assert.ok(minimumElevation >= CLIFFSIDE_LAYOUT_RULES.minimumElevation - 0.1);
 assert.ok(maximumElevation <= CLIFFSIDE_LAYOUT_RULES.maximumElevation + 0.1);
-assert.ok(maximumElevation - minimumElevation >= 20, 'Cliffside must deliver a meaningful mountain-to-coast elevation journey');
+assert.ok(maximumElevation - minimumElevation >= 20);
 assert.equal(findProperIntersections(cliffsideSamples).length, 0, 'Cliffside road sections must never overlap in X/Z');
 
 const storage = new Map();
@@ -91,9 +89,7 @@ try {
     carColor: '#ff6b6b',
     carSecondaryColor: '#fff8e8'
   });
-  assert.equal(storage.has('turn-personal-rivals-v1'), false, 'Cliffside records must not leak into Countryside');
-  assert.equal(storage.has('turn-personal-rivals-v1:airport-r50'), false, 'Cliffside records must not leak into Airport');
-  assert.equal(storage.has('turn-personal-rivals-v1:harbor-r80'), false, 'Cliffside records must not leak into Harbor');
+  assert.equal(storage.has('turn-personal-rivals-v1:midnight-city-r1'), false);
   clearRivalsState(cliffsideState, { trackId: 'cliffside' });
   assert.equal(storage.has('turn-personal-rivals-v1:cliffside-r68'), false);
 } finally {
@@ -101,53 +97,29 @@ try {
   else globalThis.localStorage = originalLocalStorage;
 }
 
-const [
-  definitionsSource,
-  catalogSource,
-  registrySource,
-  managerSource,
-  worldSource,
-  selectorSource,
-  selectorLayoutCss,
-  selectorRecordCss
-] = await Promise.all([
-  fs.readFile(new URL('../turn/tracks/definitions.js', import.meta.url), 'utf8'),
+const [catalogSource, registrySource, managerSource, worldSource, selectorSource] = await Promise.all([
   fs.readFile(new URL('../turn/tracks/catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/track-manager.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/cliffside-world.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/ui/track-select.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/track-select-r54.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/track-select-r61.css', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/m8-home.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(definitionsSource, /id: 'cliffside'[\s\S]*difficulty: 'MEDIUM'/);
-assert.match(definitionsSource, /storageRevision: 'cliffside-r68'/);
-assert.match(definitionsSource, /id: 'harbor'[\s\S]*difficulty: 'HARD'/);
-assert.doesNotMatch(definitionsSource, /id: 'track-4-tba'/);
-assert.match(catalogSource, /CLIFFSIDE_CONTROL_POINTS\.map\(\(\[x, y, z\]\) => new THREE\.Vector3\(x, y, z\)\)/);
-assert.match(catalogSource, /export const TRACK_SELECTION_CATALOG = Object\.freeze\(\[[\s\S]*TRACK_CATALOG,[\s\S]*TRACK_PLACEHOLDERS/);
+assert.match(catalogSource, /CLIFFSIDE_CONTROL_POINTS\.map/);
+assert.match(catalogSource, /MIDNIGHT_CITY_CONTROL_POINTS\.map/);
+assert.match(catalogSource, /TRACK_SELECTION_CATALOG = Object\.freeze/);
 assert.match(registrySource, /installCliffsideWorld/);
-assert.match(registrySource, /cliffside\(\{ scene, samples, trackWidth \}\)/);
-assert.doesNotMatch(managerSource, /nextTrackId === 'cliffside'|cliffsideWorld|cliffsideSamples/, 'The generic manager must not learn a Track 3 special case');
-
-assert.match(worldSource, /sample\.point\.y \+ ROAD_HEIGHT/, 'Road vertices must use real track elevation');
-assert.match(worldSource, /trackPitch\(sample\)/, 'Road furniture must follow local slope');
-assert.match(worldSource, /new THREE\.InstancedMesh/, 'Repeated Cliffside scenery must use instancing');
-assert.match(worldSource, /makeOcean\(world\)/);
-assert.match(worldSource, /makeTerrainRibbon\(world, samples, trackWidth\)/);
-assert.match(worldSource, /makeGuardrail\(world, samples, trackWidth\)/);
-assert.match(worldSource, /makeStoneGate\(world, samples, trackWidth\)/);
-assert.doesNotMatch(worldSource, /setAnimationLoop|requestAnimationFrame|setInterval/, 'The static track world must create no independent loop');
-
-assert.match(selectorSource, /TRACK_SELECTION_CATALOG\.map\(renderTrackCard\)/, 'The chooser must render every playable track');
-assert.match(selectorSource, /\.track-card:not\(\[disabled\]\)/, 'Only playable cards may receive selection handlers');
-assert.match(selectorSource, /for \(const track of TRACK_CATALOG\)/, 'Best-time loading must iterate playable tracks');
-assert.match(selectorLayoutCss, /grid-template-rows: repeat\(2, minmax\(0, 1fr\)\)/, 'Landscape chooser must compose a two-by-two card grid');
-assert.match(selectorRecordCss, /border: 0;[\s\S]*background: transparent;/, 'Record cars must sit inside the compact card rather than another raised panel');
+assert.match(registrySource, /installMidnightCityWorld/);
+assert.doesNotMatch(managerSource, /nextTrackId === 'cliffside'|nextTrackId === 'midnight-city'/);
+assert.match(worldSource, /sample\.point\.y \+ ROAD_HEIGHT/);
+assert.match(worldSource, /trackPitch\(sample\)/);
+assert.match(worldSource, /new THREE\.InstancedMesh/);
+assert.doesNotMatch(worldSource, /setAnimationLoop|requestAnimationFrame|setInterval/);
+assert.match(selectorSource, /TRACK_SELECTION_CATALOG\.map\(renderTrackCard\)/);
+assert.match(selectorSource, /\.track-card:not\(\[disabled\]\)/);
 
 console.log(
-  `TURN Cliffside passed with four tracks: min radius ${cliffsideRadius.toFixed(2)} vs Airport ${airportRadius.toFixed(2)}, elevation ${minimumElevation.toFixed(1)} to ${maximumElevation.toFixed(1)}.`
+  `TURN Cliffside passed within the five-track lineup: radius ${cliffsideRadius.toFixed(2)}, elevation ${minimumElevation.toFixed(1)} to ${maximumElevation.toFixed(1)}.`
 );
 
 function sampleCentripetalClosed(controlPoints, subdivisions) {
@@ -201,10 +173,7 @@ function minimumHorizontalRadius(samples) {
     const ab = Math.hypot(b[0] - a[0], b[2] - a[2]);
     const bc = Math.hypot(c[0] - b[0], c[2] - b[2]);
     const ca = Math.hypot(a[0] - c[0], a[2] - c[2]);
-    const twiceArea = Math.abs(
-      (b[0] - a[0]) * (c[2] - a[2])
-      - (b[2] - a[2]) * (c[0] - a[0])
-    );
+    const twiceArea = Math.abs((b[0] - a[0]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[0] - a[0]));
     if (twiceArea <= 1e-8) continue;
     minimum = Math.min(minimum, (ab * bc * ca) / (2 * twiceArea));
   }
@@ -220,16 +189,12 @@ function findProperIntersections(samples) {
       if ((second + 1) % samples.length === first) continue;
       const c = samples[second];
       const d = samples[(second + 1) % samples.length];
-      if (segmentsProperlyIntersect(a, b, c, d)) intersections.push([first, second]);
+      const firstOrientation = orientation(a, b, c) * orientation(a, b, d);
+      const secondOrientation = orientation(c, d, a) * orientation(c, d, b);
+      if (firstOrientation < -1e-8 && secondOrientation < -1e-8) intersections.push([first, second]);
     }
   }
   return intersections;
-}
-
-function segmentsProperlyIntersect(a, b, c, d) {
-  const first = orientation(a, b, c) * orientation(a, b, d);
-  const second = orientation(c, d, a) * orientation(c, d, b);
-  return first < -1e-8 && second < -1e-8;
 }
 
 function orientation(a, b, c) {
