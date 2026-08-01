@@ -180,8 +180,27 @@ function replaceSamples(target, source) {
 }
 
 function applyTrackAtmosphere(currentRuntime, track) {
+  const lighting = track.lighting || {};
   currentRuntime.scene.background = new THREE.Color(track.sky);
-  if (currentRuntime.scene.fog?.color) currentRuntime.scene.fog.color.setHex(track.fog);
+
+  if (currentRuntime.scene.fog?.color) {
+    currentRuntime.scene.fog.color.setHex(track.fog);
+    currentRuntime.scene.fog.near = Number.isFinite(track.fogNear) ? track.fogNear : 180;
+    currentRuntime.scene.fog.far = Number.isFinite(track.fogFar) ? track.fogFar : 700;
+  }
+
+  const hemisphere = currentRuntime.scene.children.find((node) => node.isHemisphereLight);
+  if (hemisphere) {
+    hemisphere.color.setHex(lighting.hemisphereSky ?? 0xffffff);
+    hemisphere.groundColor.setHex(lighting.hemisphereGround ?? 0x5b3a29);
+    hemisphere.intensity = lighting.hemisphereIntensity ?? 2.7;
+  }
+
+  const directional = currentRuntime.scene.children.find((node) => node.isDirectionalLight);
+  if (directional) {
+    directional.color.setHex(lighting.directionalColor ?? 0xfff1c1);
+    directional.intensity = lighting.directionalIntensity ?? 4.3;
+  }
 }
 
 function installTrackAwareRivalReset(currentRuntime) {
