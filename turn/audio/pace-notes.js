@@ -76,9 +76,10 @@ export function updatePaceNoteState(runtime, frame = {}) {
   const sampleCount = samples.length;
   const index = normalizeIndex(state.nearestTrackIndex, sampleCount);
   const sample = samples[index];
-  const progress = normalizeProgress(
-    Number.isFinite(Number(state.progress)) ? Number(state.progress) : index / sampleCount
-  );
+  // The nearest physical sample is the source of truth. Some tracks deliberately use
+  // more samples than TURN's original 720-point course, so a stale generic progress
+  // denominator must never move their pace notes earlier or make them disappear.
+  const progress = normalizeProgress(index / sampleCount);
   const previousProgress = lastProgress;
   lastProgress = progress;
 
