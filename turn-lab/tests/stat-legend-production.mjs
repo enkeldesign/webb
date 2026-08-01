@@ -14,10 +14,11 @@ assert.match(
   'The DRIFT legend must state the permanent speed tradeoff'
 );
 
-const [index, releaseSource, wrapper, legendModule, legendCss, lotSource, physicsSource] = await Promise.all([
+const [index, releaseSource, wrapper, enhancementRuntime, legendModule, legendCss, lotSource, physicsSource] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-track-select.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/lot-enhancement-runtime.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-stat-legend.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-stat-legend.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8'),
@@ -33,15 +34,20 @@ assert.match(index, new RegExp(`lot-stat-legend\\.css\\?build=${release.cacheKey
 assert.equal(imports['./garage/lot-r10.js?build=20260720-r19'], `./garage/lot-track-select.js?build=${release.cacheKey}`, 'Production must publish the compact Lot wrapper through the current release');
 assert.equal(imports['./vehicle/physics.js?build=20260720-r19'], `./vehicle/physics.js?build=${release.cacheKey}`, 'Production must publish the mandatory DRIFT penalty through the current release');
 assert.equal(imports['./vehicle/catalog.js?build=20260720-r19'], `./vehicle/catalog.js?build=${release.cacheKey}`, 'Production must publish the shared stat definitions through the current release');
-assert.match(wrapper, /const lotResult = showOriginalLot\(options\)/, 'The verified Lot must mount before the legend connects to it');
+assert.match(wrapper, /const lotResult = showOriginalLot\(options\)/, 'The verified Lot must mount synchronously before enhancement');
 assert.ok(
-  wrapper.indexOf('showOriginalLot(options)') < wrapper.indexOf('installLotStatLegend()'),
-  'Legend mounting must use the already-created synchronous Lot DOM'
+  wrapper.indexOf('showOriginalLot(options)') < wrapper.indexOf('enhanceLotNow()'),
+  'Enhancement must connect to the already-created synchronous Lot DOM'
+);
+assert.match(enhancementRuntime, /installLotStatLegend\(scope\)/, 'Every Lot route must mount the shared stat legend');
+assert.ok(
+  enhancementRuntime.indexOf('installLotStatLegend(scope)') < enhancementRuntime.indexOf('installLotLayout(scope)'),
+  'The legend trigger must exist before the compact layout turns it into an info icon'
 );
 assert.match(legendModule, /VEHICLE_STAT_LEGEND/, 'The in-game legend must use the shared source of truth');
 assert.match(legendModule, /aria-modal/, 'The legend must open as an accessible modal');
 assert.match(legendModule, /WHAT DO THE STATS MEAN\?/, 'The legend trigger must be discoverable before the compact layout turns it into an info icon');
-assert.doesNotMatch(legendModule, /mountObserver|subtree: true/, 'The legend must not observe the whole game DOM');
+assert.doesNotMatch(legendModule, /mountObserver|subtree: true/, 'The legend module must not observe the whole game DOM');
 assert.match(legendModule, /statsObserver\.observe\(stats, \{ childList: true \}\)/, 'Only actual car-stat replacement must trigger relabelling');
 assert.match(legendModule, /label\.textContent !== definition\.label/, 'Relabelling must not rewrite unchanged labels');
 assert.match(legendModule, /trigger\.remove\(\)/, 'Legend cleanup must remove its injected trigger');
@@ -52,4 +58,4 @@ assert.match(physicsSource, /baseSpeedLimit \* effectiveDriftSpeedMultiplier/, '
 assert.match(physicsSource, /3\.2 \* driftStabilityMultiplier/, 'The DRIFT stat must improve recovery from a slide');
 assert.match(physicsSource, /0\.42 \* driftStabilityMultiplier/, 'The DRIFT stat must improve lateral stability while the control is held');
 
-console.log(`TURN ${release.id} shared in-game vehicle stat legend passed.`);
+console.log(`TURN ${release.id} route-independent shared vehicle stat legend passed.`);
