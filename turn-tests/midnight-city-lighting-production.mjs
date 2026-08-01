@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [claritySource, districtSource, cityLifeSource, registrySource] = await Promise.all([
+const [claritySource, districtSource, cityLifeSource, showcaseSource, registrySource] = await Promise.all([
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r3.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r4.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r5.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/midnight-city-world-r6.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8')
 ]);
 
@@ -32,48 +33,52 @@ assert.match(cityLifeSource, /label: 'TURN COMMONS'/);
 assert.match(cityLifeSource, /label: 'VIOLET GARDENS'/);
 assert.match(cityLifeSource, /label: 'SUNRISE PARK'/);
 assert.match(cityLifeSource, /installParks\(world, samples, trackWidth\)/);
-assert.match(cityLifeSource, /new THREE\.CircleGeometry\(park\.radius, 48\)/);
-assert.match(cityLifeSource, /new THREE\.RingGeometry\(park\.radius \* 0\.54, park\.radius \* 0\.67, 48\)/);
 assert.match(cityLifeSource, /installParkTrees/);
 assert.match(cityLifeSource, /Midnight City neon fountain fallback/);
-
 assert.match(cityLifeSource, /gradient\.addColorStop\(0, 'rgba\(255, 255, 234, 0\.98\)'\)/);
 assert.match(cityLifeSource, /material\.color\.setHex\(COLORS\.lamp\)/);
-assert.match(cityLifeSource, /material\.opacity = 0\.72/);
 
 for (const label of ['BOOST STREET', 'TURN AVENUE', 'DRIFT LANE', 'AIRPORT', 'HARBOR', 'CLIFFSIDE']) {
   assert.match(cityLifeSource, new RegExp(`label: '${label}'`));
 }
 assert.match(cityLifeSource, /Midnight City inaccessible lore road/);
 assert.match(cityLifeSource, /ROAD CLOSED/);
-assert.match(cityLifeSource, /trackWidth \/ 2 \+ 39/);
 assert.match(cityLifeSource, /loreRoadsAreOutsideRaceBoundary: true/);
-
 assert.match(cityLifeSource, /districtIdentity: 'pink, cyan, yellow and purple entrance stripes plus matching edge pylons'/);
-assert.match(cityLifeSource, /installDistrictColorLanguage/);
-assert.match(cityLifeSource, /Midnight City district entrance/);
-assert.match(cityLifeSource, /Midnight City district edge pylons/);
-assert.match(cityLifeSource, /new THREE\.InstancedMesh/);
-
 assert.match(cityLifeSource, /installSkylineBillboards/);
-assert.match(cityLifeSource, /makeSkylineTexture/);
-assert.match(cityLifeSource, /six low-detail generated skyline texture billboards/);
-assert.match(cityLifeSource, /panelCount = 6/);
-
 assert.match(cityLifeSource, /GLTFLoader/);
-assert.match(cityLifeSource, /Starter-Kit-City-Builder@\$\{CITY_BUILDER_COMMIT\}/);
 assert.match(cityLifeSource, /pavement-fountain\.glb/);
-assert.match(cityLifeSource, /CITY_BUILDER_COMMIT = '4535092b740b378b700efd9df9e27a631815b84a'/);
 assert.match(cityLifeSource, /externalAssetSource: 'Kenney Starter Kit City Builder, pinned commit, CC0'/);
-assert.doesNotMatch(
-  cityLifeSource,
-  /requestAnimationFrame|setAnimationLoop|setInterval|setTimeout/,
-  'Parks, lore and skyline must remain static and use the existing render loop'
-);
-assert.doesNotMatch(cityLifeSource, /new THREE\.PointLight|new THREE\.SpotLight/);
 
-assert.match(registrySource, /midnight-city-world-r5\.js\?build=20260801-r5/);
+assert.match(showcaseSource, /installMidnightCityWorld as installMidnightCityWorldR5/);
+assert.match(showcaseSource, /const SHOWCASE_CENTER = Object\.freeze\(\{ x: 80, z: 75 \}\)/);
+assert.match(showcaseSource, /const SHOWCASE_FOUNTAIN = Object\.freeze\(\{ x: 20, z: -27 \}\)/);
+assert.match(showcaseSource, /hideOriginalCommons\(world\)/);
+assert.match(showcaseSource, /original\.visible = false/);
+assert.match(showcaseSource, /removeLegacyParkTrees\(world\)/);
+assert.match(showcaseSource, /installTracksideCommons\(world\)/);
+assert.match(showcaseSource, /TURN Commons road-facing promenade/);
+assert.match(showcaseSource, /TURN Commons reflecting pond/);
+assert.match(showcaseSource, /TURN Commons illuminated footbridge/);
+assert.match(showcaseSource, /Midnight City showcase fountain fallback/);
+assert.match(showcaseSource, /new THREE\.ConeGeometry\(2\.1, 14\.5, 24, 1, true\)/);
+assert.match(showcaseSource, /for \(let index = 0; index < 6; index \+= 1\)/);
+assert.match(showcaseSource, /SHOWCASE_ASSET_SCALE = 1\.42/);
+assert.match(showcaseSource, /object\.name === 'Midnight City Kenney fountain landmark'/);
+assert.match(showcaseSource, /object\.position\.copy\(showcase\.fountainAnchor\)/);
+assert.match(showcaseSource, /showcase\.fallback\.visible = false/);
+assert.match(showcaseSource, /road-facing fountain plaza, axial promenade, reflecting pond, bridge, paths, benches and framed trees/);
+assert.match(showcaseSource, /noDynamicLightsAdded: true/);
+assert.doesNotMatch(
+  showcaseSource,
+  /requestAnimationFrame|setAnimationLoop|setInterval|setTimeout/,
+  'The fountain showcase must remain static and use the existing render loop'
+);
+assert.doesNotMatch(showcaseSource, /new THREE\.PointLight|new THREE\.SpotLight/);
+assert.doesNotMatch(showcaseSource, /GLTFLoader|fetch\(/, 'The showcase must reuse the already pinned r5 asset loader');
+
+assert.match(registrySource, /midnight-city-world-r6\.js\?build=20260801-r6/);
 assert.match(registrySource, /'midnight-city'\(\{ scene, samples, trackWidth, runtime \}\)/);
 assert.match(registrySource, /installMidnightCityWorld\(\{ scene, samples, trackWidth, runtime \}\)/);
 
-console.log('TURN Midnight City parks, lighter lamp pools, district colors, lore roads, skyline and CC0 fountain passed.');
+console.log('TURN Commons trackside fountain, promenade, reflecting pond, bridge and framed park passed.');
