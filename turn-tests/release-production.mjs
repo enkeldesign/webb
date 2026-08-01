@@ -49,7 +49,7 @@ assert.match(index, new RegExp(`install-gate\\.js\\?build=${escapeRegExp(release
 assert.match(index, new RegExp(`install-gate\\.css\\?build=${escapeRegExp(release.cacheKey)}-social-browser`));
 assert.match(index, new RegExp(`orientation-guard\\.css\\?build=${escapeRegExp(release.cacheKey)}-home-portrait`));
 assert.match(index, new RegExp(`live-steering-setting\\.js\\?build=${escapeRegExp(release.cacheKey)}-live-steering`));
-assert.match(index, new RegExp(`m8-menu-font-fix\\.css\\?build=${escapeRegExp(release.cacheKey)}-menu-font-v2`));
+assert.match(index, new RegExp(`m8-menu-font-fix\\.css\\?build=${escapeRegExp(release.cacheKey)}-menu-font-v3`));
 assert.match(index, new RegExp(`app\\.js\\?build=${escapeRegExp(release.cacheKey)}-browser-consent`));
 assert.match(index, /ROTATE YOUR DEVICE TO LANDSCAPE/);
 assert.match(index, /aria-label="Rotate your device to landscape"/);
@@ -89,6 +89,7 @@ assert.match(liveSteering, /state\?\.running/);
 assert.match(menuFontCss, /\.m8-home\.m8-home-fixed-layout \.m8-home-main \.m8-track-heading-row h1,/);
 assert.match(menuFontCss, /\.m8-home\.m8-home-fixed-layout \.m8-home-main \.m8-home-menu h2/);
 assert.match(menuFontCss, /font-family: inherit/);
+assert.match(menuFontCss, /font-size: clamp\(1\.65rem, 3\.2vw, 3rem\)/);
 assert.match(menuFontCss, /font-style: normal/);
 assert.match(menuFontCss, /font-variant: normal/);
 assert.match(menuFontCss, /font-weight: 950/);
@@ -156,7 +157,7 @@ assert.match(nextIndex, new RegExp(`/turn-next/app\\.js\\?source=${escapeRegExp(
 assert.match(nextIndex, new RegExp(`install-gate\\.js\\?build=${escapeRegExp(release.cacheKey)}-social-browser`));
 assert.match(nextIndex, new RegExp(`install-gate\\.css\\?build=${escapeRegExp(release.cacheKey)}-social-browser`));
 assert.match(nextIndex, new RegExp(`live-steering-setting\\.js\\?build=${escapeRegExp(release.cacheKey)}-live-steering`));
-assert.match(nextIndex, new RegExp(`m8-menu-font-fix\\.css\\?build=${escapeRegExp(release.cacheKey)}-menu-font-v2`));
+assert.match(nextIndex, new RegExp(`m8-menu-font-fix\\.css\\?build=${escapeRegExp(release.cacheKey)}-menu-font-v3`));
 assert.match(nextIndex, /ROTATE YOUR DEVICE TO LANDSCAPE/);
 assert.doesNotMatch(nextIndex, /Return to landscape/);
 assert.match(nextApp, /new URL\('\/turn\/app\.js'/);
@@ -168,7 +169,7 @@ assert.match(workflow, /node turn\/scripts\/release\.mjs --check/);
 assert.match(workflow, /node turn-tests\/release-production\.mjs/);
 assert.doesNotMatch(workflow, /node turn-lab\/scripts\/check-release\.mjs/, 'CI must verify the production release rather than the retired playable lab snapshot');
 
-console.log(`TURN ${release.id} browser consent, clearer social onboarding, live steering and landscape guidance passed.`);
+console.log(`TURN ${release.id} browser consent, clearer social onboarding, equal Home heading size, live steering and landscape guidance passed.`);
 
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
