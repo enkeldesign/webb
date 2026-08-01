@@ -8,7 +8,7 @@ import {
 import { installAirportWorld } from './airport-world-r52.js?build=20260722-r52';
 import { installCliffsideWorld } from './cliffside-world.js';
 import { installHarborWorld } from './harbor-world.js';
-import { installMidnightCityWorld } from './midnight-city-world-r4.js?build=20260801-r4';
+import { installMidnightCityWorld } from './midnight-city-world-r5.js?build=20260801-r5';
 import { isForgivingTrackSurface } from './airport-runoff.js?build=20260722-r52';
 
 const WORLD_INSTALLERS = Object.freeze({
