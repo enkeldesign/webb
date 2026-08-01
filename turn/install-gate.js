@@ -191,7 +191,7 @@
         <div class="install-step-number" aria-hidden="true">${number}</div>
         <div>
           <strong>Open in your device’s browser</strong>
-          <span>${source} Copy the game address, then paste it into ${browserContext.preferredBrowser}.</span>
+          <span>${source} Not inside a social media app. Copy the game address, then paste it into ${browserContext.preferredBrowser}.</span>
           <button class="install-copy-address" type="button" data-copy-game-address>Copy game address</button>
           <label class="install-address-fallback" hidden>
             <span>Game address</span>
