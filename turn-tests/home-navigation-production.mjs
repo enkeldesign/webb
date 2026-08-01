@@ -85,7 +85,7 @@ assert.match(fixedLayoutSource, /oldScrollButtons\.hidden = true/);
 assert.match(fixedLayoutSource, /raceButton\.textContent = 'RACE'/);
 assert.match(fixedLayoutSource, /Race on \$\{spokenTrackName\(selectedTrackName\)\}/);
 assert.match(fixedLayoutSource, /new MutationObserver\(syncRaceLabel\)/);
-assert.match(fixedLayoutSource, /\/turn\/m8-home-card-scroll-fixes\.js\?build=\$\{buildKey\}-m8\.7-divider/);
+assert.match(fixedLayoutSource, /\/turn\/m8-home-card-scroll-fixes\.js\?build=\$\{buildKey\}-m8\.8-full-track-names/);
 assert.match(fixedLayoutSource, /installM8HomeCardScrollFixes\(\)/);
 assert.match(fixedLayoutSource, /turnHomeLayout = LAYOUT_ID/);
 
@@ -109,8 +109,8 @@ assert.match(fixedLayoutCss, /@media \(max-height: 560px\) and \(orientation: la
 assert.match(fixedLayoutCss, /@media \(max-width: 760px\) and \(orientation: portrait\)[\s\S]*\.m8-home-fixed-layout \.m8-home-head[\s\S]*padding: 0 12px 0 0/);
 assert.match(fixedLayoutCss, /prefers-reduced-motion/);
 
-assert.match(cardScrollSource, /const FIX_ID = 'native-scroll-divider-v2'/);
-assert.match(cardScrollSource, /m8-home-card-scroll-fixes\.css\?build=\$\{buildKey\}-m8\.7-divider/);
+assert.match(cardScrollSource, /const FIX_ID = 'native-scroll-full-track-names-v3'/);
+assert.match(cardScrollSource, /m8-home-card-scroll-fixes\.css\?build=\$\{buildKey\}-m8\.8-full-track-names/);
 assert.match(cardScrollSource, /m8-track-scroll-indicator/);
 assert.match(cardScrollSource, /ResizeObserver/);
 assert.match(cardScrollSource, /rail\.style\.scrollSnapType = 'none'/);
@@ -133,6 +133,9 @@ assert.match(cardScrollCss, /\.track-card-difficulty[\s\S]*grid-row: 2/);
 assert.match(cardScrollCss, /\.track-card-preview[\s\S]*grid-row: 1 \/ 3/);
 assert.match(cardScrollCss, /\.track-card-best[\s\S]*grid-row: 3/);
 assert.match(cardScrollCss, /\.track-card-best-model[\s\S]*justify-self: end/);
+assert.match(cardScrollCss, /grid-template-columns: minmax\(0, 1fr\) minmax\(108px, 39%\)/);
+assert.match(cardScrollCss, /\.track-card-name[\s\S]*text-overflow: clip[\s\S]*white-space: normal/);
+assert.doesNotMatch(cardScrollCss, /\.track-card-name[\s\S]{0,240}text-overflow: ellipsis/);
 
 assert.match(orientationGuardCss, /#intro[\s\S]*display: none !important/);
 assert.match(orientationGuardCss, /\.m8-home-fixed-layout \.m8-home-head[\s\S]*padding-top: 0/);
@@ -147,4 +150,4 @@ assert.match(orchestrator, /function leaveRace\(\)/);
 assert.match(orchestrator, /publish\('home-open'\)/);
 assert.match(orchestrator, /phase = 'home'/);
 
-console.log('TURN production M8 Home, native scrollbar divider, flush logo and NEXT wrapper contracts passed.');
+console.log('TURN production M8 Home, complete track names, native scrollbar divider and NEXT wrapper contracts passed.');
