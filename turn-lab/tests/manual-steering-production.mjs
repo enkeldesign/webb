@@ -53,13 +53,14 @@ assert.ok(
   'The canonical motion safe zone must load before orientation feedback'
 );
 assert.equal(imports['./render/camera.js?build=20260720-r19'], `./render/camera.js?build=${release.cacheKey}`, 'The current release must publish the guarded race camera');
-assert.match(index, /<strong>Rotate to landscape<\/strong>/, 'The pre-race landscape instruction must remain available');
+assert.match(index, /<strong>Return to landscape<\/strong>/, 'The pre-race landscape instruction must remain available above Home');
 
 assert.match(css, /--manual-steer-left/);
 assert.match(css, /content: "←"/);
 assert.match(css, /content: "→"/);
 
 assert.match(orientationGuardCss, /body\.turn-race-active \.rotate-panel/, 'The portrait warning must stay hidden during an active race');
+assert.match(orientationGuardCss, /\.rotate-panel \{[\s\S]*z-index: 1700/, 'The portrait warning must sit above the M8 Home screen');
 assert.doesNotMatch(orientationGuardCss, /\.hud::before|turn-steering-limit-pulse|@keyframes/, 'The obsolete whole-screen warning must remain removed');
 
 assert.match(safeZone, /SAFE_ZONE_DEGREES = 24/);
