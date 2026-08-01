@@ -1,10 +1,16 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
 
 import { MIDNIGHT_CITY_CONTROL_POINTS } from '../turn/tracks/midnight-city-layout.js';
 import {
   PACE_NOTE_DIRECTION,
-  getTrackPaceNotes
+  getTrackPaceNotes,
+  speedAdjustedPaceNoteTrigger
 } from '../turn/tracks/pace-notes.js';
+import {
+  resetPaceNotePassage,
+  updatePaceNoteState
+} from '../turn/audio/pace-notes.js';
 
 const notes = getTrackPaceNotes('midnight-city');
 const expectedDirections = [
@@ -42,7 +48,55 @@ for (const note of notes) {
   }
 }
 
-console.log('TURN Midnight City pace notes match the rebuilt route geometry.');
+const [gameStateSource, physicsSource, paceAudioSource] = await Promise.all([
+  fs.readFile(new URL('../turn/race/game-state.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/vehicle/physics.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/audio/pace-notes.js', import.meta.url), 'utf8')
+]);
+assert.match(gameStateSource, /state\.trackSampleCount = samples\.length/);
+assert.match(physicsSource, /activeTrackSampleCount = positiveNumber\(state\.trackSampleCount, trackSampleCount\)/);
+assert.match(physicsSource, /state\.progress = nearestAfter\.index \/ activeTrackSampleCount/);
+assert.match(paceAudioSource, /const progress = normalizeProgress\(index \/ sampleCount\)/);
+assert.doesNotMatch(
+  paceAudioSource,
+  /Number\.isFinite\(Number\(state\.progress\)\) \? Number\(state\.progress\)/,
+  'Pace-note timing must not trust a progress value normalized with another track’s sample count'
+);
+
+const sampleCount = 1080;
+const speed = 35;
+const firstTrigger = speedAdjustedPaceNoteTrigger(notes[0], speed, 88) + 0.001;
+const nearestTrackIndex = Math.ceil(firstTrigger * sampleCount);
+const physicalProgress = nearestTrackIndex / sampleCount;
+const staleLegacyProgress = nearestTrackIndex / 720;
+const samples = Array.from({ length: sampleCount }, () => ({
+  tangent: { x: 0, z: 1 }
+}));
+const runtime = {
+  trackId: 'midnight-city',
+  maxSpeed: 88,
+  samples,
+  state: {
+    trackId: 'midnight-city',
+    running: true,
+    mode: 'racing',
+    lap: 1,
+    nearestTrackIndex,
+    progress: staleLegacyProgress,
+    speed,
+    velocity: { x: 0, z: speed }
+  }
+};
+
+assert.ok(staleLegacyProgress > physicalProgress * 1.49, 'The video regression must reproduce the old 1080/720 timing distortion');
+resetPaceNotePassage();
+assert.equal(
+  updatePaceNoteState(runtime, { active: true })?.id,
+  'midnight-city-1',
+  'The first note must follow physical 1080-sample progress instead of firing a later note roughly one-third of a lap early'
+);
+
+console.log('TURN Midnight City pace notes match route geometry and physical 1080-sample timing.');
 
 function controlPointTurns(points) {
   const segmentLengths = points.map((point, index) => distance2d(point, points[(index + 1) % points.length]));
