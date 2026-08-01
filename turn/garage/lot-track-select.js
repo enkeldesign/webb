@@ -1,5 +1,5 @@
 import { showTheLot as showOriginalLot } from './lot-r10.js?build=20260720-r25';
-import { enhanceLotNow } from './lot-enhancement-runtime.js?build=20260801-r121';
+import { enhanceLotNow } from './lot-enhancement-runtime.js?revision=r121&build=20260731-r120';
 import { chooseTrackBeforeLot } from '../tracks/track-manager.js?build=20260722-r52';
 import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
 
