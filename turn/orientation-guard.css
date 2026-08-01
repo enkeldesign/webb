@@ -29,6 +29,12 @@ body {
   min-height: 0;
 }
 
+/* M8 Home sits at z-index 1400. Keep the portrait interception above it while
+   leaving the browser installation gate as the topmost pre-launch surface. */
+.rotate-panel {
+  z-index: 1700;
+}
+
 #intro {
   display: none !important;
 }
