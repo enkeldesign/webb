@@ -1,11 +1,19 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [claritySource, districtSource, cityLifeSource, showcaseSource, registrySource] = await Promise.all([
+const [
+  claritySource,
+  districtSource,
+  cityLifeSource,
+  showcaseSource,
+  signParkSource,
+  registrySource
+] = await Promise.all([
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r3.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r4.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r5.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r6.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/midnight-city-world-r7.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8')
 ]);
 
@@ -77,8 +85,30 @@ assert.doesNotMatch(
 assert.doesNotMatch(showcaseSource, /new THREE\.PointLight|new THREE\.SpotLight/);
 assert.doesNotMatch(showcaseSource, /GLTFLoader|fetch\(/, 'The showcase must reuse the already pinned r5 asset loader');
 
-assert.match(registrySource, /midnight-city-world-r6\.js\?build=20260801-r6/);
+assert.match(signParkSource, /installMidnightCityWorld as installMidnightCityWorldR6/);
+assert.match(signParkSource, /installReadableSignBacks\(world\)/);
+assert.match(signParkSource, /node\.name\?\.startsWith\('Midnight City neon sign '\)/);
+assert.match(signParkSource, /node\.name\?\.startsWith\('Midnight City district sign '\)/);
+assert.match(signParkSource, /node\.name === 'Midnight City showcase park title TURN COMMONS'/);
+assert.match(signParkSource, /material\.side = THREE\.FrontSide/);
+assert.match(signParkSource, /reverse\.rotation\.y = Math\.PI/);
+assert.match(signParkSource, /signTechnique: 'separate front-facing planes on each side, never mirrored DoubleSide text'/);
+assert.match(signParkSource, /label: 'VIOLET GARDENS'[\s\S]*x: -590[\s\S]*z: -125/);
+assert.match(signParkSource, /label: 'SUNRISE PARK'[\s\S]*x: 570[\s\S]*z: 145/);
+assert.match(signParkSource, /relocateSecondaryParks\(world\)/);
+assert.match(signParkSource, /Midnight City \$\{park\.label\} track-facing entrance/);
+assert.match(signParkSource, /rebuildParkTrees\(world\)/);
+assert.match(signParkSource, /Midnight City trackside park tree trunks r7/);
+assert.match(signParkSource, /noDynamicLightsAdded: true/);
+assert.doesNotMatch(
+  signParkSource,
+  /requestAnimationFrame|setAnimationLoop|setInterval|setTimeout/,
+  'Readable signs and trackside parks must remain static'
+);
+assert.doesNotMatch(signParkSource, /new THREE\.PointLight|new THREE\.SpotLight|GLTFLoader|fetch\(/);
+
+assert.match(registrySource, /midnight-city-world-r7\.js\?build=20260801-r7/);
 assert.match(registrySource, /'midnight-city'\(\{ scene, samples, trackWidth, runtime \}\)/);
 assert.match(registrySource, /installMidnightCityWorld\(\{ scene, samples, trackWidth, runtime \}\)/);
 
-console.log('TURN Commons trackside fountain, promenade, reflecting pond, bridge and framed park passed.');
+console.log('TURN Midnight City readable signs, trackside parks and fountain showcase passed.');
