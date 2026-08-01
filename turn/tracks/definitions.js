@@ -86,10 +86,10 @@ const TRACKS = [
     name: 'Midnight City',
     difficulty: 'HARD',
     eyebrow: 'TRACK 5',
-    description: 'Boulevard speed. Neon corners. A full-city endurance lap.',
+    description: 'District avenues. Neon corners. A full-city endurance lap.',
     accent: '#9d7cff',
     accentSoft: '#d8ccff',
-    storageRevision: 'midnight-city-r1',
+    storageRevision: 'midnight-city-r2',
     sampleCount: 1080,
     freeRoamDistance: 34,
     collisionProfile: {
