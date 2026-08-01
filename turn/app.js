@@ -132,6 +132,11 @@ installSportsSedanEasterEggUi();
 const { installHarborHiddenFaceOrientation } = await import(withBuild('./tracks/harbor-hidden-face-r89.js'));
 installHarborHiddenFaceOrientation();
 
+const { installLotEnhancementRuntime } = await import(
+  withBuild('./garage/lot-enhancement-runtime.js?revision=r121')
+);
+installLotEnhancementRuntime();
+
 await import(withBuild('./input/analog-gas.js'));
 await import(withBuild('./ui/gameplay-controls.js'));
 const { installRaceSpeech } = await import(withBuild('./ui/race-speech.js'));
