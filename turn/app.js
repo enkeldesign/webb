@@ -222,11 +222,11 @@ const { installM8HomeFixedLayout } = await import(
 );
 await installM8HomeFixedLayout();
 installStylesheet(
-  './home-feedback-r135.css?revision=r135-inclusive-feedback',
+  './home-feedback-r135.css?revision=r137-feedback-above-fold',
   'data-turn-home-feedback'
 );
 const { installHomeFeedback } = await import(
-  withBuild('./ui/home-feedback.js?revision=r135-inclusive-feedback')
+  withBuild('./ui/home-feedback.js?revision=r137-feedback-above-fold')
 );
 installHomeFeedback();
 installStylesheet(
