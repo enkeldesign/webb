@@ -87,6 +87,10 @@
   scrollbar-gutter: stable;
 }
 
+.m8-feedback-dialog .m8-dialog-head {
+  margin-bottom: clamp(14px, 2vh, 20px);
+}
+
 .m8-feedback-content {
   max-width: 66ch;
 }
@@ -118,7 +122,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 14px;
-  margin-top: 24px;
+  margin-top: clamp(16px, 2.5vh, 22px);
 }
 
 .m8-feedback-email,
@@ -161,31 +165,27 @@
 
 .m8-feedback-email:focus-visible,
 .m8-feedback-copy:focus-visible,
-.m8-feedback-attribution a:focus-visible,
 .m8-about-content a:focus-visible {
   outline: 5px solid var(--m8-blue);
   outline-offset: 4px;
 }
 
 .m8-feedback-status {
-  min-height: 1.5em;
-  margin-top: 16px !important;
+  min-height: 0;
+  margin-top: 0 !important;
   font-weight: 850;
 }
 
-.m8-feedback-attribution {
-  margin-top: 22px;
-  padding-top: 18px;
-  border-top: 3px solid var(--m8-ink);
+.m8-feedback-status:not(:empty) {
+  min-height: 1.5em;
+  margin-top: 16px !important;
 }
 
-.m8-feedback-attribution p,
 .m8-about-content p:not(.m8-about-lead) {
   font-size: 0.88rem;
   line-height: 1.48;
 }
 
-.m8-feedback-attribution a,
 .m8-about-content a {
   color: inherit;
   font-weight: 900;
@@ -218,11 +218,6 @@
 
   .m8-feedback-actions {
     margin-top: 16px;
-  }
-
-  .m8-feedback-attribution {
-    margin-top: 16px;
-    padding-top: 14px;
   }
 }
 
