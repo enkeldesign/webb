@@ -64,6 +64,6 @@ assert.match(design, /<fieldset class="form-card">[\s\S]*<legend>Steering<\/lege
 assert.match(design, /<section class="form-card" aria-labelledby="designAudioTitle">[\s\S]*<h3 id="designAudioTitle">Audio<\/h3>/);
 assert.match(design, /<input type="radio" name="designSteering" checked>/);
 assert.match(design, /<input type="checkbox" checked>/);
-assert.match(design, /<details class="disclosure-sample">[\s\S]*<summary><span class="disclosure-symbol" aria-hidden="true"><\/span><span>Explore the Drive By Ear sounds<\/span><\/summary>/);
+assert.match(design, /<details class="disclosure-sample"[^>]*>[\s\S]*<summary><span class="disclosure-symbol" aria-hidden="true"><\/span><span>Explore the Drive By Ear sounds<\/span><\/summary>/);
 
 console.log('TURN native form controls, headings and disclosure system passed.');
