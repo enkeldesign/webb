@@ -35,10 +35,15 @@ export function resolveSteeringRollLimit(
 }
 
 export function updateMotionInputState({ state, dt, maxSteerRoll }) {
-  if (!state.sensorMode) {
-    // Manual input is expressed in screen space (left = -1, right = +1), while
-    // TURN's vehicle yaw convention uses the opposite sign.
-    state.steering = lerp(state.steering, -state.manualSteering, Math.min(1, dt * 10));
+  const manualSteering = clamp(Number(state.manualSteering) || 0, -1, 1);
+  const manualOverride = Math.abs(manualSteering) > 0.001;
+
+  if (!state.sensorMode || manualOverride) {
+    // Manual and external-keyboard input is expressed in screen space
+    // (left = -1, right = +1), while TURN's vehicle yaw convention uses
+    // the opposite sign. A held keyboard direction temporarily overrides
+    // motion steering and hands control back to the sensor on release.
+    state.steering = lerp(state.steering, -manualSteering, Math.min(1, dt * 10));
     state.tiltDrive = 0;
     return;
   }
