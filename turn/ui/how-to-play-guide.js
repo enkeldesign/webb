@@ -1,4 +1,4 @@
-const GUIDE_VERSION = 'r126-dbe-disclosure';
+const GUIDE_VERSION = 'r127-full-drive-by-ear-name';
 const PACE_NOTE_EXPLANATION = 'Before major corners, one to three beeps play in the ear on the turn side. One beep means a gentler corner, two means medium and three means tight. A long corner keeps the same number of beeps but holds the final beep longer: bip-beeeep for a long medium corner and bip-bip-beeeep for a long tight corner. Separate groups describe linked corners in the order you will meet them.';
 
 export function installHowToPlayGuide(root = document) {
@@ -8,7 +8,7 @@ export function installHowToPlayGuide(root = document) {
 
   updateDriftAndBoostCopy(dialog);
   installDriveByEarDisclosure(dialog);
-  updateAudioPanelPaceNoteCopy(root);
+  updateAudioPanelCopy(root);
 
   dialog.dataset.guideVersion = GUIDE_VERSION;
   document.documentElement.dataset.turnHowToPlayGuide = GUIDE_VERSION;
@@ -85,17 +85,23 @@ function installDriveByEarDisclosure(dialog) {
 
           <div class="m8-dbe-guide-section m8-dbe-guide-screen-reader" aria-labelledby="m8DbeScreenReader">
             <h4 id="m8DbeScreenReader">With a screen reader</h4>
-            <p>Drive By Ear is designed to work alongside screen readers, including VoiceOver. The screen reader presents menus, controls, position and lap results; DBE supplies the continuous spatial information needed to steer and stay on course. Together they are intended to provide a complete non-visual way to play TURN.</p>
+            <p>Drive By Ear is designed to work alongside screen readers, including VoiceOver. The screen reader presents menus, controls, position and lap results; Drive By Ear supplies the continuous spatial information needed to steer and stay on course. Together they are intended to provide a complete non-visual way to play TURN.</p>
           </div>
         </div>
       </details>
     </div>`;
 }
 
-function updateAudioPanelPaceNoteCopy(root) {
-  const heading = root.querySelector('#dbeGuidePaceNotes');
-  const paragraph = heading?.parentElement?.querySelector('p');
-  if (paragraph) paragraph.textContent = PACE_NOTE_EXPLANATION;
+function updateAudioPanelCopy(root) {
+  const paceHeading = root.querySelector('#dbeGuidePaceNotes');
+  const paceParagraph = paceHeading?.parentElement?.querySelector('p');
+  if (paceParagraph) paceParagraph.textContent = PACE_NOTE_EXPLANATION;
+
+  const screenReaderHeading = root.querySelector('#dbeGuideScreenReaders');
+  const screenReaderParagraph = screenReaderHeading?.parentElement?.querySelector('p');
+  if (screenReaderParagraph) {
+    screenReaderParagraph.textContent = 'Drive By Ear is designed to work alongside screen readers, including VoiceOver. The screen reader presents menus, controls, race position and lap results; Drive By Ear provides the continuous spatial information needed to steer and stay on course. Together they are intended to provide a complete non-visual way to play TURN, from choosing a car and track to completing a race.';
+  }
 }
 
 function findGuideSection(dialog, headingText) {
