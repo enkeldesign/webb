@@ -39,9 +39,13 @@ export function installDeviceSupportMessage({ environment = globalThis } = {}) {
   if (mobileDevice) {
     title.textContent = 'ROTATE YOUR DEVICE TO LANDSCAPE';
     detail.textContent = 'TURN uses the device as a steering wheel while racing.';
+    panel.style.removeProperty('display');
   } else {
     title.textContent = 'TURN IS MADE FOR PHONES AND TABLETS';
     detail.textContent = 'Open TURN on a phone or tablet. Rotate that device to landscape before racing.';
+    // The desktop message is a support boundary, not an orientation hint. Keep it
+    // visible even when a desktop browser window happens to be wider than tall.
+    panel.style.setProperty('display', 'grid', 'important');
   }
 
   card.querySelector('.turn-device-support-detail')?.remove();
