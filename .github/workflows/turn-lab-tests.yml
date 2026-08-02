@@ -61,6 +61,9 @@ jobs:
       - name: Run web platform and motion composition regression
         run: node turn-tests/platform-production.mjs
 
+      - name: Run external keyboard and desktop support gate regression
+        run: node turn-tests/external-keyboard-and-device-gate-production.mjs
+
       - name: Run TURN NEXT race-session orchestration regression
         run: node turn-tests/session-orchestrator-production.mjs
 
