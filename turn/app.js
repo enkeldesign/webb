@@ -73,6 +73,15 @@ document.documentElement.dataset.turnPlatform = 'web-adapter';
 document.documentElement.dataset.turnMotionLifecycle = 'platform-m5';
 document.documentElement.dataset.turnDisplayLifecycle = 'platform-m6';
 
+installStylesheet(
+  './device-support-message-r138.css?revision=r138-desktop-gate',
+  'data-turn-device-support-message'
+);
+const { installDeviceSupportMessage } = await import(
+  withBuild('./ui/device-support-message.js?revision=r138-desktop-gate')
+);
+installDeviceSupportMessage();
+
 installStylesheet('./r104-polish.css', 'data-turn-r104-polish');
 installStylesheet('./steering-limit-warning.css', 'data-turn-steering-limit-warning');
 installStylesheet(
@@ -168,6 +177,10 @@ installLotEnhancementRuntime();
 
 await import(withBuild('./input/analog-gas.js'));
 await import(withBuild('./ui/gameplay-controls.js'));
+const { installExternalKeyboardControls } = await import(
+  withBuild('./input/external-keyboard-controls.js?revision=r138-mobile-external-keyboard')
+);
+installExternalKeyboardControls();
 const { installRaceSpeech } = await import(withBuild('./ui/race-speech.js'));
 installRaceSpeech();
 const { installRacePositionLayout } = await import(withBuild('./ui/race-position-layout.js'));
