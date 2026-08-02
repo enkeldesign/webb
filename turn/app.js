@@ -194,8 +194,12 @@ installStylesheet(
   'data-turn-midnight-city-postcard'
 );
 installStylesheet(
-  './m8-how-to-play-r126.css?revision=r134-contained-disclosure',
+  './m8-how-to-play-r126.css?revision=r141-form-disclosure',
   'data-turn-m8-how-to-play'
+);
+installStylesheet(
+  './settings-components-r141.css?revision=r141-form-disclosure',
+  'data-turn-settings-components'
 );
 installStylesheet('./rival-reset-context-r127.css', 'data-turn-rival-reset-context');
 const { installM8HomeNavigation } = await import(
@@ -205,7 +209,7 @@ const home = await installM8HomeNavigation();
 globalThis.__turnHome = home;
 motionPermissionCancelRecovery.resume(home, globalThis.__turnRuntime);
 const { installHowToPlayGuide } = await import(
-  withBuild('./ui/how-to-play-guide.js?revision=r134-contained-disclosure')
+  withBuild('./ui/how-to-play-guide.js?revision=r141-form-disclosure')
 );
 installHowToPlayGuide();
 const { installHomeRivalReset } = await import(
