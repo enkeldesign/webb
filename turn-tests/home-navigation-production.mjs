@@ -30,6 +30,7 @@ const [
 ]);
 
 assert.match(productionApp, /installM8HomeNavigation/);
+assert.match(productionApp, /m8-home\.js\?revision=r131-motion-permission-retry/);
 assert.match(productionApp, /installM8HomeFixedLayout/);
 assert.match(productionApp, /installStylesheet\('\.\/m8-home\.css'/);
 assert.match(productionApp, /m8-home-fixed-layout\.js\?revision=m8\.9-track-title-alignment/);
@@ -72,6 +73,28 @@ assert.match(homeSource, /showHome\(\{ focus: true \}\)/);
 assert.match(homeSource, /turn-steering-mode-v1/);
 assert.match(homeSource, /saveDriveByEarEnabled/);
 assert.match(homeSource, /__turnResetRivals/);
+
+const lotRaceGateStart = homeSource.indexOf('function installLotRaceGate');
+const lotRaceGateEnd = homeSource.indexOf('export async function installM8HomeNavigation');
+assert.ok(lotRaceGateStart >= 0 && lotRaceGateEnd > lotRaceGateStart, 'Home must keep a dedicated Race This Car access gate');
+const lotRaceGateSource = homeSource.slice(lotRaceGateStart, lotRaceGateEnd);
+assert.match(
+  homeSource,
+  /function motionPermissionWasDismissed\(error\) \{[\s\S]*Motion permission was not granted\./,
+  'A cancelled motion prompt must be recognized as a retryable dismissal'
+);
+assert.match(lotRaceGateSource, /status\.textContent = '';/, 'Each Race This Car attempt starts with no stale permission message');
+assert.match(
+  lotRaceGateSource,
+  /catch \(error\) \{[\s\S]*if \(!motionPermissionWasDismissed\(error\)\) \{[\s\S]*Choose on-screen steering in Settings/,
+  'Only genuine motion errors should show the fallback information; cancelling the prompt stays silent'
+);
+assert.match(
+  lotRaceGateSource,
+  /raceButton\.addEventListener\('click', gate, true\);/,
+  'The motion gate remains armed so the next Race This Car press requests permission again'
+);
+assert.match(lotRaceGateSource, /raceButton\.disabled = false;[\s\S]*raceButton\.focus\(\);/);
 
 assert.match(homeCss, /turn-m8-active \.audio-settings-button/);
 assert.match(homeCss, /turn-m8-active \.reset-rivals-button/);
@@ -152,4 +175,4 @@ assert.match(orchestrator, /function leaveRace\(\)/);
 assert.match(orchestrator, /publish\('home-open'\)/);
 assert.match(orchestrator, /phase = 'home'/);
 
-console.log('TURN production M8 Home, larger aligned track names, native scrollbar divider and NEXT wrapper contracts passed.');
+console.log('TURN production M8 Home, retryable motion permission, larger aligned track names, native scrollbar divider and NEXT wrapper contracts passed.');

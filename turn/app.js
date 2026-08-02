@@ -176,7 +176,9 @@ installStylesheet(
 );
 installStylesheet('./m8-how-to-play-r126.css', 'data-turn-m8-how-to-play');
 installStylesheet('./rival-reset-context-r127.css', 'data-turn-rival-reset-context');
-const { installM8HomeNavigation } = await import(withBuild('./m8-home.js'));
+const { installM8HomeNavigation } = await import(
+  withBuild('./m8-home.js?revision=r131-motion-permission-retry')
+);
 const home = await installM8HomeNavigation();
 globalThis.__turnHome = home;
 const { installHowToPlayGuide } = await import(
