@@ -1,4 +1,4 @@
-@import url('./design-semantic.css?revision=r139-semantic-system');
+@import url('./design-semantic.css?revision=r140-difficulty-system');
 
 .m8-home-fixed-layout .m8-feedback-button {
   align-self: auto;
@@ -48,13 +48,21 @@
   margin: 0;
 }
 
+/* Visually a text link; semantically a button because it opens a dialog. */
 .m8-home-fixed-layout .m8-about-trigger {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+  min-height: auto;
   margin: 0;
-  padding: 2px 10px 4px;
+  padding: 3px 10px 5px;
   border: 0;
   border-radius: 4px;
   background: transparent;
   color: inherit;
+  box-shadow: none !important;
+  text-shadow: none;
+  transform: none !important;
   font: inherit;
   font-size: clamp(0.62rem, 1vw, 0.82rem);
   font-weight: 900;
@@ -67,6 +75,14 @@
 }
 
 .m8-home-fixed-layout .m8-about-trigger:hover {
+  box-shadow: none !important;
+  transform: none !important;
+  text-decoration-thickness: 3px;
+}
+
+.m8-home-fixed-layout .m8-about-trigger:active {
+  box-shadow: none !important;
+  transform: none !important;
   text-decoration-thickness: 3px;
 }
 
