@@ -1,4 +1,4 @@
-const GUIDE_VERSION = 'r134-contained-drive-by-ear-disclosure';
+const GUIDE_VERSION = 'r141-form-disclosure-system';
 const PACE_NOTE_EXPLANATION = 'Before major corners, one to three beeps play in the ear on the turn side. One beep means a gentler corner, two means medium and three means tight. A long corner keeps the same number of beeps but holds the final beep longer: bip-beeeep for a long medium corner and bip-bip-beeeep for a long tight corner. Separate groups describe linked corners in the order you will meet them.';
 
 export function installHowToPlayGuide(root = document) {
@@ -34,7 +34,7 @@ function installDriveByEarDisclosure(dialog) {
       <p>Drive By Ear turns the racing line, upcoming corners, grip, surfaces, recovery and nearby rivals into spatial sound. Steer toward the warm guiding hum. Headphones provide the clearest left and right information. Together with a screen reader, it is designed to support complete non-visual play.</p>
 
       <details class="m8-dbe-guide">
-        <summary>Explore the Drive By Ear sounds</summary>
+        <summary><span class="m8-disclosure-symbol" aria-hidden="true"></span><span>Explore the Drive By Ear sounds</span></summary>
         <div class="m8-dbe-guide-panel">
           <div class="m8-dbe-guide-content">
             <p class="m8-dbe-guide-intro">The sounds have different jobs. Guidance tells you where to steer, pace notes tell you what is coming next, and car or surface sounds tell you what is happening now.</p>
