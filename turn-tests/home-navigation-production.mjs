@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
+import { installMotionPermissionCancelRecovery } from '../turn/ui/motion-permission-cancel-recovery.js';
+
 const [
   homeSource,
   homeCss,
@@ -32,6 +34,7 @@ const [
 ]);
 
 assert.match(productionApp, /installM8HomeNavigation/);
+assert.match(productionApp, /m8-home\.js\?revision=r131-motion-permission-retry/);
 assert.match(productionApp, /installM8HomeFixedLayout/);
 assert.match(productionApp, /installStylesheet\('\.\/m8-home\.css'/);
 assert.match(productionApp, /m8-home-fixed-layout\.js\?revision=m8\.9-track-title-alignment/);
@@ -74,22 +77,28 @@ assert.match(homeSource, /showHome\(\{ focus: true \}\)/);
 assert.match(homeSource, /turn-steering-mode-v1/);
 assert.match(homeSource, /saveDriveByEarEnabled/);
 assert.match(homeSource, /__turnResetRivals/);
-assert.match(homeSource, /function motionPermissionWasDismissed\(error\)/);
+
+const lotRaceGateStart = homeSource.indexOf('function installLotRaceGate');
+const lotRaceGateEnd = homeSource.indexOf('export async function installM8HomeNavigation');
+assert.ok(lotRaceGateStart >= 0 && lotRaceGateEnd > lotRaceGateStart, 'Home must keep a dedicated Race This Car access gate');
+const lotRaceGateSource = homeSource.slice(lotRaceGateStart, lotRaceGateEnd);
 assert.match(
   homeSource,
-  /if \(!motionPermissionWasDismissed\(error\)\) \{[\s\S]*Choose on-screen steering in Settings to continue without motion\./,
-  'The Lot must keep real motion failures visible while treating a cancelled prompt separately'
+  /function motionPermissionWasDismissed\(error\) \{[\s\S]*Motion permission was not granted\./,
+  'A cancelled motion prompt must be recognized as a retryable dismissal'
 );
-assert.doesNotMatch(
-  homeSource,
-  /if \(motionPermissionWasDismissed\(error\)\)[\s\S]{0,220}status\.textContent/,
-  'Cancelling the native motion prompt must not create redundant status copy'
+assert.match(lotRaceGateSource, /status\.textContent = '';/, 'Each Race This Car attempt starts with no stale permission message');
+assert.match(
+  lotRaceGateSource,
+  /catch \(error\) \{[\s\S]*if \(!motionPermissionWasDismissed\(error\)\) \{[\s\S]*Choose on-screen steering in Settings/,
+  'Only genuine motion errors should show the fallback information; cancelling the prompt stays silent'
 );
 assert.match(
-  homeSource,
-  /raceButton\.disabled = false;[\s\S]*raceButton\.focus\(\);/,
-  'The Race This Car button must be restored after a failed permission attempt'
+  lotRaceGateSource,
+  /raceButton\.addEventListener\('click', gate, true\);/,
+  'The motion gate remains armed while a fresh-document retry is prepared'
 );
+assert.match(lotRaceGateSource, /raceButton\.disabled = false;[\s\S]*raceButton\.focus\(\);/);
 
 assert.match(productionApp, /installMotionPermissionCancelRecovery/);
 assert.match(productionApp, /motion-permission-cancel-recovery\.js\?revision=r132-fresh-document/);
@@ -109,6 +118,106 @@ assert.match(
 );
 assert.match(retrySource, /void home\.continueToTrack\(\)/, 'The retry must return the player directly to The Lot');
 assert.doesNotMatch(retrySource, /textContent|aria-live/, 'The fresh-document recovery must not add permission-denied UI copy');
+
+const retryValues = new Map();
+const retryStorage = {
+  getItem(key) {
+    return retryValues.get(key) ?? null;
+  },
+  setItem(key, value) {
+    retryValues.set(key, String(value));
+  },
+  removeItem(key) {
+    retryValues.delete(key);
+  }
+};
+
+class DismissedMotionEvent {}
+Object.defineProperty(DismissedMotionEvent, 'requestPermission', {
+  configurable: true,
+  value: async () => {
+    throw new Error('Motion permission was not granted.');
+  }
+});
+
+let reloads = 0;
+const bodyPaint = {
+  dataset: { paintLabel: 'Body' },
+  querySelector() {
+    return { value: '#123456' };
+  }
+};
+const spoilerPaint = {
+  dataset: { paintLabel: 'Spoiler' },
+  querySelector() {
+    return { value: '#654321' };
+  }
+};
+const dismissedEnvironment = {
+  DeviceMotionEvent: DismissedMotionEvent,
+  document: {
+    body: { classList: { contains: (name) => name === 'turn-lot-open' } },
+    querySelector(selector) {
+      if (selector === '.lot-car-option[aria-checked="true"]') {
+        return { dataset: { carId: 'sedan-sports' } };
+      }
+      return null;
+    },
+    querySelectorAll(selector) {
+      return selector === '.lot-color-control' ? [bodyPaint, spoilerPaint] : [];
+    }
+  },
+  sessionStorage: retryStorage,
+  location: {
+    reload() {
+      reloads += 1;
+    }
+  },
+  __turnHome: { getSelectedTrackId: () => 'midnight-city' }
+};
+
+installMotionPermissionCancelRecovery({ environment: dismissedEnvironment });
+void DismissedMotionEvent.requestPermission();
+await new Promise((resolve) => setTimeout(resolve, 0));
+assert.equal(reloads, 1, 'Cancelling permission must create a fresh document so iOS can prompt again');
+assert.ok(retryValues.has('turn-motion-permission-retry-v2'), 'The retry route must be saved before reload');
+
+class FreshMotionEvent {}
+Object.defineProperty(FreshMotionEvent, 'requestPermission', {
+  configurable: true,
+  value: async () => 'granted'
+});
+let continued = 0;
+const resumedRuntime = {
+  state: {
+    vehicleId: 'classic',
+    vehicleColor: '#ffffff',
+    vehicleSecondaryColor: '#ffffff'
+  }
+};
+const freshEnvironment = {
+  DeviceMotionEvent: FreshMotionEvent,
+  document: { body: { classList: { contains: () => false } } },
+  sessionStorage: retryStorage,
+  location: { reload() {} },
+  requestAnimationFrame(callback) {
+    callback();
+    return 1;
+  },
+  __turnRuntime: resumedRuntime
+};
+const freshRecovery = installMotionPermissionCancelRecovery({ environment: freshEnvironment });
+assert.equal(freshRecovery.resume({
+  continueToTrack() {
+    continued += 1;
+    return Promise.resolve(true);
+  }
+}, resumedRuntime), true);
+assert.equal(continued, 1, 'The fresh document must reopen The Lot automatically');
+assert.equal(resumedRuntime.state.vehicleId, 'sedan-sports');
+assert.equal(resumedRuntime.state.vehicleColor, '#123456');
+assert.equal(resumedRuntime.state.vehicleSecondaryColor, '#654321');
+assert.equal(retryValues.has('turn-motion-permission-retry-v2'), false, 'The retry route is consumed only once');
 
 assert.match(homeCss, /turn-m8-active \.audio-settings-button/);
 assert.match(homeCss, /turn-m8-active \.reset-rivals-button/);
@@ -189,4 +298,4 @@ assert.match(orchestrator, /function leaveRace\(\)/);
 assert.match(orchestrator, /publish\('home-open'\)/);
 assert.match(orchestrator, /phase = 'home'/);
 
-console.log('TURN production M8 Home, recoverable motion permission, larger aligned track names, native scrollbar divider and NEXT wrapper contracts passed.');
+console.log('TURN production M8 Home, fresh-document motion permission recovery, larger aligned track names, native scrollbar divider and NEXT wrapper contracts passed.');
