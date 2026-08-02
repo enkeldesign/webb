@@ -15,7 +15,7 @@ const [
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r5.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r6.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r7.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/midnight-city-world-r10.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/midnight-city-world-r11.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8')
 ]);
 
@@ -72,11 +72,21 @@ assert.match(easterEggSource, /new URL\('\.\.\/LILYA\.PNG', import\.meta\.url\)\
 assert.match(easterEggSource, /x: -500\.70[\s\S]*y: 11\.96[\s\S]*z: 40\.20/);
 assert.match(easterEggSource, /maxWidth: 46[\s\S]*maxHeight: 21/);
 assert.match(easterEggSource, /const LILYA_WALL_NORMAL = new THREE\.Vector3\(-1, 0, 0\)/);
+assert.match(easterEggSource, /const LILYA_MAX_TRACK_ALIGNMENT = -0\.62/);
+assert.match(easterEggSource, /const LILYA_DISCOVERY_HOLD_MS = 650/);
 assert.match(easterEggSource, /side: THREE\.FrontSide/);
 assert.match(easterEggSource, /portrait\.rotation\.y = -Math\.PI \/ 2/);
-assert.match(easterEggSource, /armViewTriggeredTextureLoad\(world, portrait\)/);
+assert.match(easterEggSource, /armWrongWayTextureLoad\(world, portrait, options\)/);
 assert.match(easterEggSource, /wallToCamera\.dot\(LILYA_WALL_NORMAL\) < LILYA_MIN_FRONT_DOT/);
 assert.match(easterEggSource, /cameraForward\.dot\(cameraToWall\) < LILYA_MIN_VIEW_DOT/);
+assert.match(easterEggSource, /playerFacesAgainstRaceDirection\(runtime, trackSamples\)/);
+assert.match(easterEggSource, /state\?\.running !== true/);
+assert.match(easterEggSource, /const forwardX = Math\.sin\(state\.heading\)/);
+assert.match(easterEggSource, /const forwardZ = Math\.cos\(state\.heading\)/);
+assert.match(easterEggSource, /return trackAlignment <= LILYA_MAX_TRACK_ALIGNMENT/);
+assert.match(easterEggSource, /now - discoveryStartedAt < LILYA_DISCOVERY_HOLD_MS/);
+assert.match(easterEggSource, /hiddenLilyaWrongWayOnly: true/);
+assert.match(easterEggSource, /hiddenLilyaDiscoveryHoldMs: LILYA_DISCOVERY_HOLD_MS/);
 assert.match(easterEggSource, /texture\.generateMipmaps = false/);
 assert.match(
   easterEggSource,
@@ -90,8 +100,8 @@ assert.doesNotMatch(
   'The hidden portrait must use the existing render loop without adding timers or lights'
 );
 
-assert.match(registrySource, /midnight-city-world-r10\.js\?build=20260802-r10/);
+assert.match(registrySource, /midnight-city-world-r11\.js\?build=20260802-r11/);
 assert.match(registrySource, /'midnight-city'\(\{ scene, samples, trackWidth, runtime \}\)/);
 assert.match(registrySource, /installMidnightCityWorld\(\{ scene, samples, trackWidth, runtime \}\)/);
 
-console.log('TURN Midnight City lighting, scenery and corrected lazy LILYA wall placement passed.');
+console.log('TURN Midnight City lighting, scenery and wrong-way-only lazy LILYA placement passed.');
