@@ -11,9 +11,10 @@ const [app, guide, css, homeReset, resetCss, rivalStorage, trackManager] = await
   fs.readFile(new URL('../turn/tracks/track-manager.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(app, /installStylesheet\('\.\/m8-how-to-play-r126\.css', 'data-turn-m8-how-to-play'\)/);
+assert.match(app, /m8-how-to-play-r126\.css\?revision=r134-contained-disclosure/);
+assert.match(app, /data-turn-m8-how-to-play/);
 assert.match(app, /installStylesheet\('\.\/rival-reset-context-r127\.css', 'data-turn-rival-reset-context'\)/);
-assert.match(app, /how-to-play-guide\.js\?revision=r127-full-name/);
+assert.match(app, /how-to-play-guide\.js\?revision=r134-contained-disclosure/);
 assert.match(app, /installHowToPlayGuide\(\)/);
 assert.match(app, /home-rival-reset\.js\?revision=r127-contextual/);
 assert.match(app, /installHomeRivalReset\(\)/);
@@ -26,9 +27,15 @@ assert.ok(
   'The contextual reset enhancer must run only after the shared Settings dialog exists'
 );
 
+assert.match(guide, /GUIDE_VERSION = 'r134-contained-drive-by-ear-disclosure'/);
 assert.match(guide, /Holding <strong>DRIFT<\/strong> also charges <strong>BOOST<\/strong> faster/);
 assert.match(guide, /<details class="m8-dbe-guide">/);
 assert.match(guide, /<summary>Explore the Drive By Ear sounds<\/summary>/);
+assert.match(
+  guide,
+  /<summary>Explore the Drive By Ear sounds<\/summary>[\s\S]*<div class="m8-dbe-guide-panel">[\s\S]*<div class="m8-dbe-guide-content">/,
+  'Every expanded help section must remain inside one visual disclosure panel'
+);
 assert.match(guide, /Guiding ribbon/);
 assert.match(guide, /Pace notes/);
 assert.match(guide, /Drift and grip/);
@@ -50,10 +57,18 @@ assert.match(guide, /bip-bip-beeeep for a long tight corner/);
 assert.doesNotMatch(guide, /delayed extra beep|extra one-beep group|lengthMarker/);
 assert.match(guide, /root\.querySelector\('#dbeGuidePaceNotes'\)/, 'The in-race audio guide must receive the corrected long-corner language too');
 
+assert.match(css, /\.m8-how-dialog[\s\S]*-webkit-text-size-adjust: 100%[\s\S]*text-size-adjust: 100%/, 'Opening details must not trigger iOS text autosizing');
+assert.match(css, /\.m8-how-dialog \.m8-dialog-card[\s\S]*overscroll-behavior-y: contain/);
+assert.match(css, /scroll-padding-block-end: max\(32px, env\(safe-area-inset-bottom\)\)/);
+assert.match(css, /scrollbar-gutter: stable/, 'The dialog width must remain stable when expanded content creates a scrollbar');
+assert.match(css, /\.m8-dbe-guide[\s\S]*border: 3px solid[\s\S]*border-radius: 16px[\s\S]*overflow: clip/, 'The summary and expanded content must share one containing card');
 assert.match(css, /\.m8-dbe-guide > summary/);
 assert.match(css, /cursor: pointer/);
+assert.match(css, /\.m8-dbe-guide\[open\] > summary[\s\S]*border-bottom: 3px solid/, 'The expanded panel must stay visibly attached below the summary');
 assert.match(css, /summary:focus-visible/);
-assert.match(css, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+assert.match(css, /\.m8-dbe-guide-panel[\s\S]*padding: 14px 14px max\(36px, env\(safe-area-inset-bottom\)\)[\s\S]*overflow-anchor: none/, 'The bottom screen-reader card needs settling room without scroll anchoring');
+assert.match(css, /\.m8-dbe-guide-content[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+assert.match(css, /\.m8-dbe-guide-content p,[\s\S]*font-size: 1rem/, 'Expanded paragraphs keep the same explicit text size');
 assert.match(css, /@media \(max-width: 720px\)[\s\S]*grid-template-columns: 1fr/);
 assert.doesNotMatch(`${guide}\n${css}`, /setInterval|setTimeout|@keyframes|animation:/, 'Help content must add no runtime loop or distracting motion');
 
@@ -91,4 +106,4 @@ assert.match(rivalStorage, /syncPrimaryRivalState\(state\)/);
 assert.match(trackManager, /clearRivalsState\(currentRuntime\.state, \{ trackId: activeTrackId \}\)/, 'The race reset implementation must clear only the current track storage key');
 assert.match(trackManager, /globalThis\.__turnResetRivals = resetCurrentTrackRivals/);
 
-console.log('TURN full Drive By Ear UX naming and contextual all-track/current-track rival reset passed.');
+console.log('TURN contained and scroll-stable Drive By Ear help plus contextual rival reset passed.');
