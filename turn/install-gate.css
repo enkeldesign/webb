@@ -1,3 +1,5 @@
+@import url('./design-semantic.css?revision=r139-semantic-system');
+
 .install-gate {
   position: absolute;
   inset: 0;

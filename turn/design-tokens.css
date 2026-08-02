@@ -1,0 +1,86 @@
+:root {
+  color-scheme: dark;
+
+  /* Primitive colour families. */
+  --turn-ink: #08090a;
+  --turn-paper: #fff8e8;
+  --turn-white: #fffdf6;
+  --turn-road: #44494f;
+  --turn-muted: #d6d0c2;
+
+  --turn-yellow-600: #ffbd12;
+  --turn-yellow-400: #ffd43b;
+  --turn-yellow-200: #ffe087;
+
+  --turn-blue-600: #35b8e7;
+  --turn-blue-500: #38d9ff;
+  --turn-blue-300: #68c8f2;
+  --turn-blue-200: #8ed8ff;
+
+  --turn-pink-500: #ff4fa3;
+  --turn-pink-200: #ff8caf;
+
+  --turn-red-500: #ff6b6b;
+  --turn-red-200: #ff9b91;
+
+  --turn-green-500: #8ce99a;
+  --turn-green-200: #d9f5c2;
+
+  --turn-orange-500: #ff7b54;
+  --turn-orange-200: #ffb89f;
+
+  /* Semantic UI roles. */
+  --turn-surface-page: var(--turn-paper);
+  --turn-surface-raised: var(--turn-white);
+  --turn-action-primary: var(--turn-pink-500);
+  --turn-action-utility: var(--turn-paper);
+  --turn-action-information: var(--turn-blue-500);
+  --turn-action-success: var(--turn-green-500);
+  --turn-action-warning: var(--turn-yellow-400);
+  --turn-action-danger: var(--turn-red-500);
+  --turn-action-navigation: var(--turn-orange-500);
+
+  /* Driving-control roles. */
+  --turn-control-gas: var(--turn-green-500);
+  --turn-control-drift: var(--turn-blue-500);
+  --turn-control-boost: var(--turn-yellow-400);
+  --turn-control-boost-empty: var(--turn-yellow-200);
+  --turn-control-brake: var(--turn-orange-500);
+
+  /* Geometry. */
+  --turn-border-micro: 2px;
+  --turn-border-compact: 3px;
+  --turn-border-default: 4px;
+  --turn-border-heavy: 6px;
+  --turn-radius-micro: 8px;
+  --turn-radius-compact: 12px;
+  --turn-radius-default: 18px;
+  --turn-radius-hero: 28px;
+  --turn-radius-pill: 999px;
+  --turn-radius-circle: 50%;
+  --turn-shadow-compact: 3px 3px 0 var(--turn-ink);
+  --turn-shadow-default: 7px 7px 0 var(--turn-ink);
+  --turn-shadow-hero: 12px 12px 0 var(--turn-ink);
+
+  /* Spacing. */
+  --turn-space-1: 4px;
+  --turn-space-2: 8px;
+  --turn-space-3: 12px;
+  --turn-space-4: 16px;
+  --turn-space-6: 24px;
+  --turn-space-8: 32px;
+  --turn-space-12: 48px;
+
+  /* Backwards-compatible production aliases. */
+  --ink: var(--turn-ink);
+  --paper: var(--turn-paper);
+  --cyan: var(--turn-blue-500);
+  --pink: var(--turn-pink-500);
+  --yellow: var(--turn-yellow-400);
+  --lime: var(--turn-green-500);
+  --m8-ink: var(--turn-ink);
+  --m8-cream: var(--turn-paper);
+  --m8-pink: var(--turn-pink-500);
+  --m8-yellow: var(--turn-yellow-600);
+  --m8-blue: var(--turn-blue-300);
+}
