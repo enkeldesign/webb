@@ -62,7 +62,7 @@ document.documentElement.dataset.turnDisplayLifecycle = 'platform-m6';
 installStylesheet('./r104-polish.css', 'data-turn-r104-polish');
 installStylesheet('./steering-limit-warning.css', 'data-turn-steering-limit-warning');
 installStylesheet(
-  './garage/lot-layout-r60.css?revision=r121-viewer-r122-fit',
+  './garage/lot-layout-r60.css?revision=r128-super-sedan-notice',
   'data-turn-lot-layout-r121'
 );
 
@@ -139,7 +139,9 @@ installLapResultToast();
 const { installRivalOnboarding } = await import(withBuild('./ui/rival-onboarding.js'));
 installRivalOnboarding();
 
-const { installSportsSedanEasterEggUi } = await import(withBuild('./vehicle/sports-sedan-easter-egg.js'));
+const { installSportsSedanEasterEggUi } = await import(
+  withBuild('./vehicle/sports-sedan-easter-egg.js?revision=r128-unlock-notice')
+);
 installSportsSedanEasterEggUi();
 
 const { installHarborHiddenFaceOrientation } = await import(withBuild('./tracks/harbor-hidden-face-r89.js'));
