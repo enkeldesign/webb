@@ -25,6 +25,7 @@
   align-self: stretch;
   justify-self: start;
   display: block;
+  box-sizing: border-box;
   width: auto;
   height: 100%;
   max-width: 100%;
@@ -32,6 +33,7 @@
   aspect-ratio: 1;
   object-fit: contain;
   object-position: left center;
+  border-inline-end: 5px solid var(--m8-ink);
   filter: none;
 }
 
