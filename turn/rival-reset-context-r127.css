@@ -1,0 +1,14 @@
+.m8-settings-dialog .m8-reset-rivals,
+.m8-settings-dialog .m8-reset-confirm-button {
+  background: var(--m8-yellow) !important;
+}
+
+.m8-settings-dialog .m8-reset-rivals.is-all-tracks,
+.m8-settings-dialog .m8-reset-confirm-button.is-all-tracks {
+  background: #ff9b91 !important;
+}
+
+.utility-group .reset-rivals-button,
+.nuke-dialog .nuke-confirm {
+  background: #ffd43b !important;
+}
