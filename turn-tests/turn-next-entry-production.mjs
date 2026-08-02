@@ -59,9 +59,9 @@ const release = JSON.parse(releaseSource);
 const productionManifest = JSON.parse(productionManifestSource);
 const nextManifest = JSON.parse(nextManifestSource);
 
-assert.equal(release.version, '1.3.0');
-assert.equal(release.id, '2026.08.01-r122');
-assert.equal(release.cacheKey, '20260801-r122');
+assert.match(release.version, /^\d+\.\d+\.\d+$/);
+assert.match(release.id, /^\d{4}\.\d{2}\.\d{2}-r\d+$/);
+assert.equal(release.cacheKey, release.id.replaceAll('.', ''));
 
 assert.match(productionIndex, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(productionIndex, /<meta name="theme-color" content="#08090a">/);

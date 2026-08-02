@@ -1,4 +1,4 @@
-@import url('./design-tokens.css?revision=r139-semantic-system');
+@import url('./design-tokens.css?revision=r140-difficulty-system');
 
 /*
   Normative production roles.
@@ -20,6 +20,29 @@
 .m8-home-fixed-layout .m8-how-button,
 .m8-home-fixed-layout .m8-feedback-button {
   background: var(--turn-action-utility) !important;
+}
+
+/* Difficulty is always expressed by text plus a stable supporting colour. */
+.track-card-countryside .track-card-difficulty,
+.track-card[data-track-difficulty="easy"] .track-card-difficulty {
+  background: var(--turn-difficulty-easy) !important;
+}
+
+.track-card-airport .track-card-difficulty,
+.track-card-cliffside .track-card-difficulty,
+.track-card[data-track-difficulty="medium"] .track-card-difficulty {
+  background: var(--turn-difficulty-medium) !important;
+}
+
+.track-card-harbor .track-card-difficulty,
+.track-card-midnight-city .track-card-difficulty,
+.track-card[data-track-difficulty="hard"] .track-card-difficulty {
+  background: var(--turn-difficulty-hard) !important;
+}
+
+.track-card-locked .track-card-difficulty,
+.track-card[data-track-difficulty="locked"] .track-card-difficulty {
+  background: var(--turn-difficulty-locked) !important;
 }
 
 /* Close, leave and back always communicate navigation or context change. */
