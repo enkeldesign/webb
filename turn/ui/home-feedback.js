@@ -1,6 +1,6 @@
 const FEEDBACK_EMAIL = 'erik@enkel.design';
 const FEEDBACK_SUBJECT = 'TURN feedback';
-const FEEDBACK_VERSION = 'r135-inclusive-feedback-attribution';
+const FEEDBACK_VERSION = 'r136-about-turn';
 
 let installed = false;
 
@@ -62,6 +62,12 @@ async function copyEmailAddress(button, status) {
   }
 }
 
+function attributionMarkup() {
+  return `
+    <p>TURN is shaped by inclusive and universal design, with accessibility built into the game from the start.</p>
+    <p>© 2026 <a href="https://enkel.design/" target="_blank" rel="noreferrer">enkel.design</a>. Created by Erik Jansson, aided by OpenAI Codex. Drive By Ear™ is inspired by <a href="https://ceal.cs.columbia.edu/rad/" target="_blank" rel="noreferrer">RAD – Racing Auditory Display</a>.</p>`;
+}
+
 function createFeedbackDialog() {
   const dialog = document.createElement('dialog');
   dialog.className = 'm8-dialog m8-feedback-dialog';
@@ -85,13 +91,67 @@ function createFeedbackDialog() {
         <p class="m8-feedback-status" role="status" aria-live="polite"></p>
 
         <footer class="m8-feedback-attribution">
-          <p>TURN is shaped by inclusive and universal design, with accessibility built into the game from the start.</p>
-          <p>© 2026 <a href="https://enkel.design/" target="_blank" rel="noreferrer">enkel.design</a>. Created by Erik Jansson, aided by OpenAI Codex. Drive By Ear™ is inspired by <a href="https://ceal.cs.columbia.edu/rad/" target="_blank" rel="noreferrer">RAD – Racing Auditory Display</a>.</p>
+          ${attributionMarkup()}
         </footer>
       </div>
     </article>`;
   document.body.appendChild(dialog);
   return dialog;
+}
+
+function createAboutDialog() {
+  const dialog = document.createElement('dialog');
+  dialog.className = 'm8-dialog m8-about-dialog';
+  dialog.setAttribute('aria-labelledby', 'm8AboutTitle');
+  dialog.innerHTML = `
+    <article class="m8-dialog-card m8-about-card">
+      <header class="m8-dialog-head">
+        <div><span>THE GAME</span><h2 id="m8AboutTitle">ABOUT TURN</h2></div>
+        <button type="button" data-dialog-close aria-label="Close About TURN">×</button>
+      </header>
+
+      <div class="m8-about-content">
+        <p class="m8-about-lead">TURN is a racing game about tilt steering, personal rivals and learning to drive by ear.</p>
+        ${attributionMarkup()}
+      </div>
+    </article>`;
+  document.body.appendChild(dialog);
+  return dialog;
+}
+
+function installDialogBehavior(dialog, trigger, onClose = null) {
+  const closeButton = dialog.querySelector('[data-dialog-close]');
+  trigger.addEventListener('click', () => openDialog(dialog, trigger));
+  closeButton.addEventListener('click', () => closeDialog(dialog));
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog) closeDialog(dialog);
+  });
+  dialog.addEventListener('close', () => {
+    onClose?.();
+    dialog.__turnReturnFocus?.focus?.();
+  });
+}
+
+function createAboutTrigger() {
+  const header = document.querySelector('.m8-home-head');
+  const buildLabel = header?.querySelector('.m8-home-build');
+  if (!header || !buildLabel) {
+    throw new Error('TURN About could not find the Home build information.');
+  }
+
+  const meta = document.createElement('div');
+  meta.className = 'm8-home-meta';
+  buildLabel.replaceWith(meta);
+  meta.appendChild(buildLabel);
+
+  const trigger = document.createElement('button');
+  trigger.type = 'button';
+  trigger.className = 'm8-about-trigger';
+  trigger.textContent = 'ABOUT TURN';
+  trigger.setAttribute('aria-haspopup', 'dialog');
+  meta.appendChild(trigger);
+
+  return { meta, trigger, buildLabel };
 }
 
 export function installHomeFeedback() {
@@ -103,37 +163,41 @@ export function installHomeFeedback() {
     throw new Error('TURN feedback could not find the complete Home menu.');
   }
 
-  const trigger = document.createElement('button');
-  trigger.type = 'button';
-  trigger.className = 'm8-feedback-button';
-  trigger.textContent = 'GIVE FEEDBACK';
-  trigger.setAttribute('aria-haspopup', 'dialog');
-  menu.insertBefore(trigger, status);
+  const feedbackTrigger = document.createElement('button');
+  feedbackTrigger.type = 'button';
+  feedbackTrigger.className = 'm8-feedback-button';
+  feedbackTrigger.textContent = 'GIVE FEEDBACK';
+  feedbackTrigger.setAttribute('aria-haspopup', 'dialog');
+  menu.insertBefore(feedbackTrigger, status);
 
-  const dialog = createFeedbackDialog();
-  const closeButton = dialog.querySelector('[data-dialog-close]');
-  const copyButton = dialog.querySelector('.m8-feedback-copy');
-  const feedbackStatus = dialog.querySelector('.m8-feedback-status');
+  const { meta, trigger: aboutTrigger, buildLabel } = createAboutTrigger();
+  const feedbackDialog = createFeedbackDialog();
+  const aboutDialog = createAboutDialog();
+  const copyButton = feedbackDialog.querySelector('.m8-feedback-copy');
+  const feedbackStatus = feedbackDialog.querySelector('.m8-feedback-status');
 
-  trigger.addEventListener('click', () => openDialog(dialog, trigger));
-  closeButton.addEventListener('click', () => closeDialog(dialog));
-  copyButton.addEventListener('click', () => copyEmailAddress(copyButton, feedbackStatus));
-  dialog.addEventListener('click', (event) => {
-    if (event.target === dialog) closeDialog(dialog);
-  });
-  dialog.addEventListener('close', () => {
+  installDialogBehavior(feedbackDialog, feedbackTrigger, () => {
     feedbackStatus.textContent = '';
-    dialog.__turnReturnFocus?.focus?.();
   });
+  installDialogBehavior(aboutDialog, aboutTrigger);
+  copyButton.addEventListener('click', () => copyEmailAddress(copyButton, feedbackStatus));
 
   installed = true;
   globalThis.__turnHomeFeedback = Object.freeze({
     version: FEEDBACK_VERSION,
     email: FEEDBACK_EMAIL,
-    trigger,
-    dialog,
-    open: () => openDialog(dialog, trigger),
-    close: () => closeDialog(dialog)
+    trigger: feedbackTrigger,
+    dialog: feedbackDialog,
+    open: () => openDialog(feedbackDialog, feedbackTrigger),
+    close: () => closeDialog(feedbackDialog),
+    about: Object.freeze({
+      meta,
+      trigger: aboutTrigger,
+      buildLabel,
+      dialog: aboutDialog,
+      open: () => openDialog(aboutDialog, aboutTrigger),
+      close: () => closeDialog(aboutDialog)
+    })
   });
   return globalThis.__turnHomeFeedback;
 }
