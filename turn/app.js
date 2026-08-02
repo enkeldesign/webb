@@ -54,9 +54,17 @@ installTurnPlatform(webPlatform);
 const motionLifecycle = installMotionLifecycleBridge({ platform: webPlatform });
 const displayLifecycle = installDisplayLifecycleBridge({ platform: webPlatform });
 const { installMotionPermissionCancelRecovery } = await import(
-  withBuild('./ui/motion-permission-cancel-recovery.js?revision=r132-fresh-document')
+  withBuild('./ui/motion-permission-cancel-recovery.js?revision=r134-dialog-event')
 );
 const motionPermissionCancelRecovery = installMotionPermissionCancelRecovery();
+installStylesheet(
+  './motion-permission-dialog-r134.css?revision=r134-denied-dialog',
+  'data-turn-motion-permission-dialog'
+);
+const { installMotionPermissionDeniedDialog } = await import(
+  withBuild('./ui/motion-permission-denied-dialog.js?revision=r134-denied-dialog')
+);
+installMotionPermissionDeniedDialog();
 globalThis.__turnMotionLifecycle = motionLifecycle;
 globalThis.__turnDisplayLifecycle = displayLifecycle;
 document.documentElement.dataset.turnPlatform = 'web-adapter';
@@ -183,7 +191,10 @@ installStylesheet(
   './m8-midnight-city-postcard-r130.css?revision=r130-neon-skyline',
   'data-turn-midnight-city-postcard'
 );
-installStylesheet('./m8-how-to-play-r126.css', 'data-turn-m8-how-to-play');
+installStylesheet(
+  './m8-how-to-play-r126.css?revision=r134-contained-disclosure',
+  'data-turn-m8-how-to-play'
+);
 installStylesheet('./rival-reset-context-r127.css', 'data-turn-rival-reset-context');
 const { installM8HomeNavigation } = await import(
   withBuild('./m8-home.js?revision=r131-motion-permission-retry')
@@ -192,7 +203,7 @@ const home = await installM8HomeNavigation();
 globalThis.__turnHome = home;
 motionPermissionCancelRecovery.resume(home, globalThis.__turnRuntime);
 const { installHowToPlayGuide } = await import(
-  withBuild('./ui/how-to-play-guide.js?revision=r127-full-name')
+  withBuild('./ui/how-to-play-guide.js?revision=r134-contained-disclosure')
 );
 installHowToPlayGuide();
 const { installHomeRivalReset } = await import(
