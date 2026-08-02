@@ -1,0 +1,47 @@
+name: Normalize TURN design specimen
+
+on:
+  push:
+    branches:
+      - 'agent/turn-design-system-specimen'
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/turn-design-system-specimen
+
+      - name: Normalize specimen-only CSS
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('turn/design.html')
+          source = path.read_text()
+          replacements = {
+              'var(--paper)': 'var(--turn-paper)',
+              'var(--yellow-400)': 'var(--turn-yellow-400)',
+              'border: 5px solid var(--turn-ink);': 'border: var(--turn-border-default) solid var(--turn-ink);',
+              'border: 1.5px solid var(--turn-ink);': 'border: var(--turn-border-micro) solid var(--turn-ink);',
+          }
+          for old, new in replacements.items():
+              source = source.replace(old, new)
+          path.write_text(source)
+          PY
+
+      - name: Commit normalized specimen
+        run: |
+          if git diff --quiet -- turn/design.html; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn/design.html
+          git commit -m "Normalize design specimen token usage"
+          git push origin HEAD:agent/turn-design-system-specimen
