@@ -149,7 +149,8 @@ assert.equal(imports['./garage/lot-r10.js?build=20260720-r19'], releaseTarget('.
 assert.equal(imports['./ui/track-intro.js?build=20260725-r75'], releaseTarget('./ui/track-intro.js'));
 assert.equal(imports['./race/lap-system.js?build=20260720-r19'], releaseTarget('./race/lap-system-r86.js'));
 
-assert.match(app, /lot-layout-r60\.css\?revision=r121-viewer/);
+assert.match(app, /lot-layout-r60\.css\?revision=r121-viewer-r122-fit-r128-super-sedan-notice/);
+assert.match(app, /sports-sedan-easter-egg\.js\?revision=r128-unlock-notice/);
 assert.match(app, /installLotEnhancementRuntime/);
 assert.match(app, /lot-enhancement-runtime\.js\?revision=r121/);
 assert.ok(app.indexOf('installLotEnhancementRuntime()') < app.indexOf("withBuild('./main.js')"));
@@ -178,6 +179,9 @@ assert.match(lotLayoutCss, /min-height: clamp\(150px, 28vh, 230px\)/);
 assert.match(lotLayoutCss, /--lot-paint-rail-height: 54px/);
 assert.match(lotLayoutCss, /\.lot-viewbox-with-paint \.lot-view-host[\s\S]*inset: 0 0 var\(--lot-paint-rail-height\)/);
 assert.match(lotLayoutCss, /\.lot-view-close,[\s\S]*\.lot-view-open[\s\S]*display: none !important/);
+assert.match(lotLayoutCss, /\.lot-secret-notice \{[\s\S]*background: #d9f5c2[\s\S]*border: 3px solid var\(--ink\)/);
+assert.match(lotLayoutCss, /\.lot-secret-notice\[hidden\][\s\S]*display: none/);
+assert.match(lotLayoutCss, /\.lot-secret-notice-chip[\s\S]*background: var\(--yellow\)/);
 assert.match(lotAccessibility, /lot-selected-car-summary/);
 assert.match(lotAccessibility, /Choose car/);
 assert.match(lotAccessibility, /Choose car colour/);
@@ -226,6 +230,17 @@ assert.match(catalogSource, /SPORTS_SEDAN_EASTER_EGG_COLOR = '#666666'/);
 assert.match(catalogSource, /MAXED_VEHICLE_STATS/);
 assert.match(carModels, /loadCarSource\(car\.id\)/);
 assert.match(easterEggUi, /getEffectiveVehicleStats/);
+assert.match(easterEggUi, /isSportsSedanEasterEgg/);
+assert.match(easterEggUi, /\.lot-car-option\[aria-checked="true"\]/, 'The enhancer must identify the selected car independently of the renamed visible heading');
 assert.match(easterEggUi, /input\[type="color"\]/);
+assert.match(easterEggUi, /displayedName = unlocked \? 'Super Sedan' : car\.name/);
+assert.match(easterEggUi, /Race the \$\{displayedName\}/, 'The race button must expose the temporary Super Sedan name');
+assert.match(easterEggUi, /SECRET UNLOCKED/);
+assert.match(easterEggUi, /color code #666/);
+assert.match(easterEggUi, /Lap results with this secret car are not saved/);
+assert.match(easterEggUi, /Super Sedan unlocked\. Spoiler color code #666/);
+assert.match(easterEggUi, /notice\.setAttribute\('role', 'status'\)/);
+assert.match(easterEggUi, /notice\.setAttribute\('aria-live', 'polite'\)/);
+assert.match(easterEggUi, /card\.insertBefore\(notice, actions \|\| null\)/, 'The explanation must sit immediately before RACE THIS CAR');
 
 console.log(`TURN ${release.id} enhanced Lot route, expanded 3D viewer, accessibility and garage setup passed.`);
