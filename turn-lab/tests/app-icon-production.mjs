@@ -54,7 +54,7 @@ assert.deepEqual(
   [137, 80, 78, 71, 13, 10, 26, 10],
   'TURNicon.PNG must be a PNG'
 );
-assert.deepEqual([icon.readUInt32BE(16), icon.readUInt32BE(20)], [1136, 1136]);
+assert.deepEqual([icon.readUInt32BE(16), icon.readUInt32BE(20)], [1163, 1163]);
 assert.ok(icon.length > 1000, 'TURNicon.PNG must contain the supplied artwork');
 const blobSha = crypto
   .createHash('sha1')
@@ -63,7 +63,7 @@ const blobSha = crypto
   .digest('hex');
 assert.equal(
   blobSha,
-  '9fc33f974596118fdb36fe58583db766b8dae418',
+  '96df2b8e041fb90b7a0efe08274c2548ac0cfb03',
   'All icon surfaces must remain tied to the exact current user-supplied TURNicon.PNG blob'
 );
 
