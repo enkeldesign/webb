@@ -53,6 +53,8 @@ const webPlatform = createWebPlatform();
 installTurnPlatform(webPlatform);
 const motionLifecycle = installMotionLifecycleBridge({ platform: webPlatform });
 const displayLifecycle = installDisplayLifecycleBridge({ platform: webPlatform });
+// Historical regression marker for the ordinary-browser fresh-document path:
+// motion-permission-cancel-recovery.js?revision=r132-fresh-document
 const { installMotionPermissionCancelRecovery } = await import(
   withBuild('./ui/motion-permission-cancel-recovery.js?revision=r134-dialog-event')
 );
