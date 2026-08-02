@@ -1,4 +1,4 @@
-const GUIDE_VERSION = 'r134-contained-drive-by-ear-disclosure';
+const GUIDE_VERSION = 'r138-external-keyboard-controls';
 const PACE_NOTE_EXPLANATION = 'Before major corners, one to three beeps play in the ear on the turn side. One beep means a gentler corner, two means medium and three means tight. A long corner keeps the same number of beeps but holds the final beep longer: bip-beeeep for a long medium corner and bip-bip-beeeep for a long tight corner. Separate groups describe linked corners in the order you will meet them.';
 
 export function installHowToPlayGuide(root = document) {
@@ -20,7 +20,7 @@ function updateDriftAndBoostCopy(dialog) {
   const paragraph = section?.querySelector('p');
   if (!paragraph) return;
 
-  paragraph.innerHTML = 'DRIFT helps the car rotate but costs grip. Holding <strong>DRIFT</strong> also charges <strong>BOOST</strong> faster, so a controlled slide can prepare the next burst. BOOST gives speed but can make the next corner harder. Fast laps come from balancing both.';
+  paragraph.innerHTML = 'DRIFT helps the car rotate but costs grip. Holding <strong>DRIFT</strong> also charges <strong>BOOST</strong> faster, so a controlled slide can prepare the next burst. BOOST gives speed but can make the next corner harder. Fast laps come from balancing both. With an external keyboard, use Arrow keys or W, A, S and D to drive; Q or Shift for DRIFT; E or Control for BOOST; Space for BRAKE/REVERSE; and R to restart the lap.';
 }
 
 function installDriveByEarDisclosure(dialog) {
