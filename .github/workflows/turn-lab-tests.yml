@@ -67,6 +67,9 @@ jobs:
       - name: Run TURN NEXT home navigation regression
         run: node turn-tests/home-navigation-production.mjs
 
+      - name: Run standalone motion cancellation regression
+        run: node turn-tests/motion-permission-standalone-production.mjs
+
       - name: Run Home help and all-track rival reset regression
         run: node turn-tests/how-to-play-guide-production.mjs
 
