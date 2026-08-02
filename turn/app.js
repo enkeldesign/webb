@@ -218,7 +218,7 @@ const home = await installM8HomeNavigation();
 globalThis.__turnHome = home;
 motionPermissionCancelRecovery.resume(home, globalThis.__turnRuntime);
 const { installHowToPlayGuide } = await import(
-  withBuild('./ui/how-to-play-guide.js?revision=r134-contained-disclosure')
+  withBuild('./ui/how-to-play-guide.js?revision=r138-external-keyboard-controls')
 );
 installHowToPlayGuide();
 const { installHomeRivalReset } = await import(
