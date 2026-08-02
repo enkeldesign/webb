@@ -40,6 +40,12 @@
   --turn-action-danger: var(--turn-red-500);
   --turn-action-navigation: var(--turn-orange-500);
 
+  /* Difficulty communicates challenge, not success or failure. */
+  --turn-difficulty-easy: var(--turn-green-200);
+  --turn-difficulty-medium: var(--turn-yellow-200);
+  --turn-difficulty-hard: var(--turn-red-200);
+  --turn-difficulty-locked: var(--turn-muted);
+
   /* Driving-control roles. */
   --turn-control-gas: var(--turn-green-500);
   --turn-control-drift: var(--turn-blue-500);
