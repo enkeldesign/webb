@@ -178,7 +178,7 @@ const dismissedEnvironment = {
 
 installMotionPermissionCancelRecovery({ environment: dismissedEnvironment });
 void DismissedMotionEvent.requestPermission();
-await new Promise((resolve) => setTimeout(resolve, 0));
+await new Promise((resolve) => globalThis.setTimeout(resolve, 0));
 assert.equal(reloads, 1, 'Cancelling permission must create a fresh document so iOS can prompt again');
 assert.ok(retryValues.has('turn-motion-permission-retry-v2'), 'The retry route must be saved before reload');
 
