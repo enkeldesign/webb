@@ -14,7 +14,7 @@ const [app, guide, css, homeReset, resetCss, rivalStorage, trackManager] = await
 assert.match(app, /m8-how-to-play-r126\.css\?revision=r134-contained-disclosure/);
 assert.match(app, /data-turn-m8-how-to-play/);
 assert.match(app, /installStylesheet\('\.\/rival-reset-context-r127\.css', 'data-turn-rival-reset-context'\)/);
-assert.match(app, /how-to-play-guide\.js\?revision=r134-contained-disclosure/);
+assert.match(app, /how-to-play-guide\.js\?revision=r138-external-keyboard-controls/);
 assert.match(app, /installHowToPlayGuide\(\)/);
 assert.match(app, /home-rival-reset\.js\?revision=r127-contextual/);
 assert.match(app, /installHomeRivalReset\(\)/);
@@ -27,8 +27,13 @@ assert.ok(
   'The contextual reset enhancer must run only after the shared Settings dialog exists'
 );
 
-assert.match(guide, /GUIDE_VERSION = 'r134-contained-drive-by-ear-disclosure'/);
+assert.match(guide, /GUIDE_VERSION = 'r138-external-keyboard-controls'/);
 assert.match(guide, /Holding <strong>DRIFT<\/strong> also charges <strong>BOOST<\/strong> faster/);
+assert.match(
+  guide,
+  /Arrow keys or W, A, S and D to drive; Q or Shift for DRIFT; E or Control for BOOST; Space for BRAKE\/REVERSE; and R to restart the lap/,
+  'How to Play must expose the complete external keyboard map'
+);
 assert.match(guide, /<details class="m8-dbe-guide">/);
 assert.match(guide, /<summary>Explore the Drive By Ear sounds<\/summary>/);
 assert.match(
