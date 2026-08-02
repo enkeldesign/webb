@@ -73,6 +73,9 @@ jobs:
       - name: Run TURN design-system specimen regression
         run: node turn-tests/design-system-production.mjs
 
+      - name: Run native form and disclosure regression
+        run: node turn-tests/form-disclosure-system.mjs
+
       - name: Run track intro showcase camera regression
         run: node turn-tests/track-intro-camera-production.mjs
 

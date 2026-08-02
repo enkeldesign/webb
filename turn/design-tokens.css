@@ -40,6 +40,13 @@
   --turn-action-danger: var(--turn-red-500);
   --turn-action-navigation: var(--turn-orange-500);
 
+  /* Native form and disclosure roles. */
+  --turn-form-control-idle: var(--turn-paper);
+  --turn-form-control-selected: var(--turn-pink-500);
+  --turn-form-control-focus: var(--turn-blue-500);
+  --turn-disclosure-trigger: var(--turn-blue-300);
+  --turn-disclosure-panel: var(--turn-paper);
+
   /* Difficulty communicates challenge, not success or failure. */
   --turn-difficulty-easy: var(--turn-green-200);
   --turn-difficulty-medium: var(--turn-yellow-200);

@@ -1,20 +1,23 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [app, guide, css, homeReset, resetCss, rivalStorage, trackManager] = await Promise.all([
+const [app, guide, css, components, homeReset, resetCss, rivalStorage, trackManager] = await Promise.all([
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/how-to-play-guide.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-how-to-play-r126.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/settings-components-r141.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/home-rival-reset.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/rival-reset-context-r127.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/race/rival-storage.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/track-manager.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(app, /m8-how-to-play-r126\.css\?revision=r134-contained-disclosure/);
+assert.match(app, /m8-how-to-play-r126\.css\?revision=r141-form-disclosure/);
+assert.match(app, /settings-components-r141\.css\?revision=r141-form-disclosure/);
 assert.match(app, /data-turn-m8-how-to-play/);
+assert.match(app, /data-turn-settings-components/);
 assert.match(app, /installStylesheet\('\.\/rival-reset-context-r127\.css', 'data-turn-rival-reset-context'\)/);
-assert.match(app, /how-to-play-guide\.js\?revision=r134-contained-disclosure/);
+assert.match(app, /how-to-play-guide\.js\?revision=r141-form-disclosure/);
 assert.match(app, /installHowToPlayGuide\(\)/);
 assert.match(app, /home-rival-reset\.js\?revision=r127-contextual/);
 assert.match(app, /installHomeRivalReset\(\)/);
@@ -27,14 +30,21 @@ assert.ok(
   'The contextual reset enhancer must run only after the shared Settings dialog exists'
 );
 
-assert.match(guide, /GUIDE_VERSION = 'r134-contained-drive-by-ear-disclosure'/);
+assert.match(guide, /GUIDE_VERSION = 'r141-form-disclosure-system'/);
 assert.match(guide, /Holding <strong>DRIFT<\/strong> also charges <strong>BOOST<\/strong> faster/);
 assert.match(guide, /<details class="m8-dbe-guide">/);
-assert.match(guide, /<summary>Explore the Drive By Ear sounds<\/summary>/);
 assert.match(
   guide,
-  /<summary>Explore the Drive By Ear sounds<\/summary>[\s\S]*<div class="m8-dbe-guide-panel">[\s\S]*<div class="m8-dbe-guide-content">/,
+  /<summary><span class="m8-disclosure-symbol" aria-hidden="true"><\/span><span>Explore the Drive By Ear sounds<\/span><\/summary>/
+);
+assert.match(
+  guide,
+  /<summary><span class="m8-disclosure-symbol" aria-hidden="true"><\/span><span>Explore the Drive By Ear sounds<\/span><\/summary>[\s\S]*<div class="m8-dbe-guide-panel">[\s\S]*<div class="m8-dbe-guide-content">/,
   'Every expanded help section must remain inside one visual disclosure panel'
+);
+assert.ok(
+  guide.indexOf('m8-disclosure-symbol') < guide.indexOf('Explore the Drive By Ear sounds'),
+  'The decorative state symbol must be grouped immediately before the summary label'
 );
 assert.match(guide, /Guiding ribbon/);
 assert.match(guide, /Pace notes/);
@@ -70,7 +80,14 @@ assert.match(css, /\.m8-dbe-guide-panel[\s\S]*padding: 14px 14px max\(36px, env\
 assert.match(css, /\.m8-dbe-guide-content[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
 assert.match(css, /\.m8-dbe-guide-content p,[\s\S]*font-size: 1rem/, 'Expanded paragraphs keep the same explicit text size');
 assert.match(css, /@media \(max-width: 720px\)[\s\S]*grid-template-columns: 1fr/);
-assert.doesNotMatch(`${guide}\n${css}`, /setInterval|setTimeout|@keyframes|animation:/, 'Help content must add no runtime loop or distracting motion');
+
+assert.match(components, /\.m8-guide-wide[\s\S]*background: var\(--turn-surface-raised\) !important/);
+assert.match(components, /\.m8-dbe-guide > summary[\s\S]*background: var\(--turn-disclosure-trigger\)/);
+assert.match(components, /\.m8-disclosure-symbol::before[\s\S]*content: '\+'/);
+assert.match(components, /\.m8-dbe-guide\[open\] \.m8-disclosure-symbol::before[\s\S]*content: '−'/);
+assert.match(components, /\.m8-dbe-guide-panel,[\s\S]*background: var\(--turn-disclosure-panel\)/);
+assert.doesNotMatch(components, /#eaf9ef/);
+assert.doesNotMatch(`${guide}\n${css}\n${components}`, /setInterval|setTimeout|@keyframes|animation:/, 'Help content must add no runtime loop or distracting motion');
 
 assert.match(homeReset, /function homeIsOpen\(\)/);
 assert.match(homeReset, /document\.body\.classList\.contains\('turn-home-open'\)/);
@@ -81,7 +98,7 @@ assert.match(homeReset, /RESET ALL RIVALS/);
 assert.match(homeReset, /Remove the recorded personal rivals for \$\{track\.name\}/);
 assert.match(homeReset, /Rivals on other tracks will be kept/);
 assert.match(homeReset, /resetButton\.textContent = 'RESET RIVALS'/);
-assert.match(homeReset, /resetTarget\.textContent = track\.name\.toUpperCase\(\)/);
+assert.match(homeReset, /Remove the saved personal rivals and lap records for \$\{track\.name\}/);
 assert.match(homeReset, /clearAllRivalsState/);
 assert.match(homeReset, /TRACK_CATALOG\.map\(\(entry\) => entry\.id\)/);
 assert.match(homeReset, /globalThis\.__turnResetRivals\?\.\(\)/, 'The race Settings path must use the existing active-track reset only');
@@ -106,4 +123,4 @@ assert.match(rivalStorage, /syncPrimaryRivalState\(state\)/);
 assert.match(trackManager, /clearRivalsState\(currentRuntime\.state, \{ trackId: activeTrackId \}\)/, 'The race reset implementation must clear only the current track storage key');
 assert.match(trackManager, /globalThis\.__turnResetRivals = resetCurrentTrackRivals/);
 
-console.log('TURN contained and scroll-stable Drive By Ear help plus contextual rival reset passed.');
+console.log('TURN native disclosure help, scroll stability and contextual rival reset passed.');
