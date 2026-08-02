@@ -30,11 +30,59 @@
   outline-offset: 4px;
 }
 
+.m8-home-fixed-layout .m8-home-meta {
+  grid-column: 3;
+  grid-row: 1;
+  align-self: center;
+  justify-self: end;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  margin-block: max(8px, env(safe-area-inset-top)) 8px;
+}
+
+.m8-home-fixed-layout .m8-home-meta .m8-home-build {
+  margin: 0;
+}
+
+.m8-home-fixed-layout .m8-about-trigger {
+  margin: 0;
+  padding: 2px 10px 4px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: clamp(0.62rem, 1vw, 0.82rem);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: 0.025em;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+}
+
+.m8-home-fixed-layout .m8-about-trigger:hover {
+  text-decoration-thickness: 3px;
+}
+
+.m8-home-fixed-layout .m8-about-trigger:focus-visible {
+  outline: 4px solid var(--m8-blue);
+  outline-offset: 2px;
+}
+
 .m8-feedback-dialog {
   width: min(760px, calc(100vw - 32px));
 }
 
-.m8-feedback-card {
+.m8-about-dialog {
+  width: min(660px, calc(100vw - 32px));
+}
+
+.m8-feedback-card,
+.m8-about-card {
   overscroll-behavior-y: contain;
   scrollbar-gutter: stable;
 }
@@ -43,17 +91,24 @@
   max-width: 66ch;
 }
 
-.m8-feedback-content p {
+.m8-about-content {
+  max-width: 60ch;
+}
+
+.m8-feedback-content p,
+.m8-about-content p {
   margin: 0;
   font-size: 1rem;
   line-height: 1.5;
 }
 
-.m8-feedback-content p + p {
+.m8-feedback-content p + p,
+.m8-about-content p + p {
   margin-top: 12px;
 }
 
-.m8-feedback-lead {
+.m8-feedback-lead,
+.m8-about-lead {
   font-size: clamp(1.08rem, 2vw, 1.3rem) !important;
   font-weight: 850;
   line-height: 1.38 !important;
@@ -106,7 +161,8 @@
 
 .m8-feedback-email:focus-visible,
 .m8-feedback-copy:focus-visible,
-.m8-feedback-attribution a:focus-visible {
+.m8-feedback-attribution a:focus-visible,
+.m8-about-content a:focus-visible {
   outline: 5px solid var(--m8-blue);
   outline-offset: 4px;
 }
@@ -123,12 +179,14 @@
   border-top: 3px solid var(--m8-ink);
 }
 
-.m8-feedback-attribution p {
+.m8-feedback-attribution p,
+.m8-about-content p:not(.m8-about-lead) {
   font-size: 0.88rem;
   line-height: 1.48;
 }
 
-.m8-feedback-attribution a {
+.m8-feedback-attribution a,
+.m8-about-content a {
   color: inherit;
   font-weight: 900;
   text-decoration-thickness: 2px;
@@ -144,11 +202,17 @@
     font-size: 0.82rem;
   }
 
-  .m8-feedback-dialog .m8-dialog-card {
+  .m8-home-fixed-layout .m8-home-meta {
+    margin-block: max(5px, env(safe-area-inset-top)) 5px;
+  }
+
+  .m8-feedback-dialog .m8-dialog-card,
+  .m8-about-dialog .m8-dialog-card {
     padding: 18px 22px max(18px, env(safe-area-inset-bottom));
   }
 
-  .m8-feedback-dialog .m8-dialog-head {
+  .m8-feedback-dialog .m8-dialog-head,
+  .m8-about-dialog .m8-dialog-head {
     margin-bottom: 14px;
   }
 
@@ -165,6 +229,10 @@
 @media (max-width: 760px) and (orientation: portrait) {
   .m8-home-fixed-layout .m8-home-menu {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .m8-home-fixed-layout .m8-home-meta {
+    display: none;
   }
 
   .m8-home-fixed-layout .m8-feedback-button {
@@ -189,7 +257,8 @@
 @media (prefers-reduced-motion: reduce) {
   .m8-feedback-email,
   .m8-feedback-copy,
-  .m8-feedback-button {
+  .m8-feedback-button,
+  .m8-about-trigger {
     transition: none !important;
   }
 }
