@@ -7,6 +7,7 @@ const [
   cityLifeSource,
   showcaseSource,
   signParkSource,
+  easterEggSource,
   registrySource
 ] = await Promise.all([
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r3.js', import.meta.url), 'utf8'),
@@ -14,6 +15,7 @@ const [
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r5.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r6.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r7.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/midnight-city-world-r8.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8')
 ]);
 
@@ -107,8 +109,22 @@ assert.doesNotMatch(
 );
 assert.doesNotMatch(signParkSource, /new THREE\.PointLight|new THREE\.SpotLight|GLTFLoader|fetch\(/);
 
-assert.match(registrySource, /midnight-city-world-r7\.js\?build=20260801-r7/);
+await fs.access(new URL('../turn/LILYA.PNG', import.meta.url));
+assert.match(easterEggSource, /installMidnightCityWorld as installMidnightCityWorldR7/);
+assert.match(easterEggSource, /new URL\('\.\.\/LILYA\.PNG', import\.meta\.url\)\.href/);
+assert.match(easterEggSource, /x: -495\.42[\s\S]*y: 29\.8[\s\S]*z: 113\.29/);
+assert.match(easterEggSource, /side: THREE\.FrontSide/);
+assert.match(easterEggSource, /portrait\.rotation\.y = -Math\.PI \/ 2/);
+assert.match(easterEggSource, /hiddenLilyaPlacement: 'west face of the Neon Quarter building, visible from the reverse approach'/);
+assert.match(easterEggSource, /gameplayGeometryUnchanged: true/);
+assert.doesNotMatch(
+  easterEggSource,
+  /requestAnimationFrame|setAnimationLoop|setInterval|setTimeout|new THREE\.PointLight|new THREE\.SpotLight/,
+  'The hidden portrait must remain a static visual detail'
+);
+
+assert.match(registrySource, /midnight-city-world-r8\.js\?build=20260802-r8/);
 assert.match(registrySource, /'midnight-city'\(\{ scene, samples, trackWidth, runtime \}\)/);
 assert.match(registrySource, /installMidnightCityWorld\(\{ scene, samples, trackWidth, runtime \}\)/);
 
-console.log('TURN Midnight City readable signs, trackside parks and fountain showcase passed.');
+console.log('TURN Midnight City readable signs, parks, showcase and hidden portrait passed.');
