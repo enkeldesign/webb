@@ -189,7 +189,7 @@ if (buildLabel) {
   buildLabel.textContent = `TURN V${release?.version || ''} · BUILD ${(release?.id || '').toUpperCase()}`;
 }
 const { installM8HomeFixedLayout } = await import(
-  withBuild('./m8-home-fixed-layout.js?revision=m8.8-full-track-names')
+  withBuild('./m8-home-fixed-layout.js?revision=m8.9-track-title-alignment')
 );
 await installM8HomeFixedLayout();
 installStylesheet(
