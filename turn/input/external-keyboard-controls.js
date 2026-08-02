@@ -19,8 +19,33 @@ export const EXTERNAL_KEYBOARD_BINDINGS = Object.freeze({
   KeyR: 'restart'
 });
 
+const FALLBACK_KEY_BINDINGS = Object.freeze({
+  arrowleft: 'steer-left',
+  a: 'steer-left',
+  arrowright: 'steer-right',
+  d: 'steer-right',
+  arrowup: 'gas',
+  w: 'gas',
+  arrowdown: 'brake',
+  s: 'brake',
+  ' ': 'brake',
+  spacebar: 'brake',
+  q: 'drift',
+  shift: 'drift',
+  e: 'boost',
+  control: 'boost',
+  ctrl: 'boost',
+  r: 'restart'
+});
+
 export function keyboardActionForCode(code) {
   return EXTERNAL_KEYBOARD_BINDINGS[String(code || '')] || null;
+}
+
+export function keyboardActionForEvent(event = {}) {
+  return keyboardActionForCode(event.code)
+    || FALLBACK_KEY_BINDINGS[String(event.key || '').toLowerCase()]
+    || null;
 }
 
 export function installExternalKeyboardControls({ environment = globalThis } = {}) {
@@ -58,10 +83,11 @@ export function installExternalKeyboardControls({ environment = globalThis } = {
   );
   setSteeringVisual(manualSteer, 0);
 
-  const heldCodes = new Map();
+  const heldKeys = new Map();
   let keyboardPointerActive = false;
   let activeDriveZone = null;
   let activeSteering = 0;
+  let pointerBridgeFailed = false;
   let released = false;
 
   function runtimeState() {
@@ -81,7 +107,8 @@ export function installExternalKeyboardControls({ environment = globalThis } = {
   }
 
   function interactiveTarget(target) {
-    if (!(target instanceof environment.Element)) return false;
+    const ElementConstructor = environment.Element;
+    if (typeof ElementConstructor !== 'function' || !(target instanceof ElementConstructor)) return false;
     if (target.closest('.drive-pad, #manualSteer')) return false;
     return Boolean(target.closest(
       'a, button, input, select, textarea, summary, [contenteditable="true"], [role="button"], [role="radio"], [role="slider"]'
@@ -95,7 +122,7 @@ export function installExternalKeyboardControls({ environment = globalThis } = {
   }
 
   function activeActions() {
-    return new Set(heldCodes.values());
+    return new Set(heldKeys.values());
   }
 
   function requestedDriveZone(actions) {
@@ -159,6 +186,13 @@ export function installExternalKeyboardControls({ environment = globalThis } = {
         return originalRelease?.call(this, pointerId);
       };
       target.dispatchEvent(createKeyboardPointerEvent(type, target));
+      return true;
+    } catch (error) {
+      if (!pointerBridgeFailed) {
+        pointerBridgeFailed = true;
+        console.warn('TURN: external keyboard could not enter the unified drive surface.', error);
+      }
+      return false;
     } finally {
       if (hadOwnSet) drivePad.setPointerCapture = originalSet;
       else delete drivePad.setPointerCapture;
@@ -171,10 +205,10 @@ export function installExternalKeyboardControls({ environment = globalThis } = {
     if (nextZone === activeDriveZone) return;
 
     if (!keyboardPointerActive && nextZone) {
-      dispatchKeyboardPointer('pointerdown', nextZone);
+      if (!dispatchKeyboardPointer('pointerdown', nextZone)) return;
       keyboardPointerActive = true;
     } else if (keyboardPointerActive && nextZone) {
-      dispatchKeyboardPointer('pointermove', nextZone);
+      if (!dispatchKeyboardPointer('pointermove', nextZone)) return;
     } else if (keyboardPointerActive) {
       dispatchKeyboardPointer('pointerup', activeDriveZone);
       keyboardPointerActive = false;
@@ -198,8 +232,8 @@ export function installExternalKeyboardControls({ environment = globalThis } = {
   }
 
   function releaseAllInputs() {
-    if (!heldCodes.size && !keyboardPointerActive && activeSteering === 0) return;
-    heldCodes.clear();
+    if (!heldKeys.size && !keyboardPointerActive && activeSteering === 0) return;
+    heldKeys.clear();
     syncSteering(0);
     syncDriveZone(null);
   }
@@ -209,8 +243,12 @@ export function installExternalKeyboardControls({ environment = globalThis } = {
     event.stopImmediatePropagation();
   }
 
+  function keyIdentifier(event) {
+    return String(event.code || event.key || '');
+  }
+
   function onKeyDown(event) {
-    const action = keyboardActionForCode(event.code);
+    const action = keyboardActionForEvent(event);
     if (!action || !acceptsDrivingInput(event)) return;
     consume(event);
 
@@ -219,18 +257,20 @@ export function installExternalKeyboardControls({ environment = globalThis } = {
       return;
     }
 
-    if (heldCodes.has(event.code)) return;
-    heldCodes.set(event.code, action);
+    const identifier = keyIdentifier(event);
+    if (heldKeys.has(identifier)) return;
+    heldKeys.set(identifier, action);
     syncInputs();
   }
 
   function onKeyUp(event) {
-    const action = keyboardActionForCode(event.code);
+    const action = keyboardActionForEvent(event);
     if (!action) return;
 
-    if (heldCodes.has(event.code)) {
+    const identifier = keyIdentifier(event);
+    if (heldKeys.has(identifier)) {
       consume(event);
-      heldCodes.delete(event.code);
+      heldKeys.delete(identifier);
       syncInputs();
       return;
     }
@@ -253,17 +293,13 @@ export function installExternalKeyboardControls({ environment = globalThis } = {
     if (interactiveTarget(event.target)) releaseAllInputs();
   }
 
-  const overlayObserver = typeof environment.MutationObserver === 'function'
-    ? new environment.MutationObserver(() => {
-      if (heldCodes.size && hasBlockingOverlay()) releaseAllInputs();
-    })
-    : null;
-  overlayObserver?.observe(documentRef.body, {
-    subtree: true,
-    childList: true,
-    attributes: true,
-    attributeFilter: ['open', 'hidden']
-  });
+  function onDocumentClick() {
+    const checkAfterClick = () => {
+      if (heldKeys.size && hasBlockingOverlay()) releaseAllInputs();
+    };
+    if (typeof environment.queueMicrotask === 'function') environment.queueMicrotask(checkAfterClick);
+    else Promise.resolve().then(checkAfterClick);
+  }
 
   windowRef.addEventListener('keydown', onKeyDown, { capture: true });
   windowRef.addEventListener('keyup', onKeyUp, { capture: true });
@@ -271,6 +307,7 @@ export function installExternalKeyboardControls({ environment = globalThis } = {
   windowRef.addEventListener('turn:ui-state-change', onUiStateChange);
   documentRef.addEventListener('visibilitychange', onVisibilityChange);
   documentRef.addEventListener('focusin', onFocusIn);
+  documentRef.addEventListener('click', onDocumentClick, { capture: true });
 
   const api = Object.freeze({
     installed: true,
@@ -279,13 +316,13 @@ export function installExternalKeyboardControls({ environment = globalThis } = {
       if (released) return;
       released = true;
       releaseAllInputs();
-      overlayObserver?.disconnect();
       windowRef.removeEventListener('keydown', onKeyDown, { capture: true });
       windowRef.removeEventListener('keyup', onKeyUp, { capture: true });
       windowRef.removeEventListener('blur', releaseAllInputs);
       windowRef.removeEventListener('turn:ui-state-change', onUiStateChange);
       documentRef.removeEventListener('visibilitychange', onVisibilityChange);
       documentRef.removeEventListener('focusin', onFocusIn);
+      documentRef.removeEventListener('click', onDocumentClick, { capture: true });
       if (environment.__turnExternalKeyboardControls === api) {
         delete environment.__turnExternalKeyboardControls;
       }
