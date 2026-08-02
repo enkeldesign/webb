@@ -13,7 +13,8 @@ const [
   productionMain,
   nextApp,
   nextMain,
-  orchestrator
+  orchestrator,
+  retrySource
 ] = await Promise.all([
   fs.readFile(new URL('../turn/m8-home.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home.css', import.meta.url), 'utf8'),
@@ -26,11 +27,11 @@ const [
   fs.readFile(new URL('../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/main.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/race/session-orchestrator.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/race/session-orchestrator.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/ui/motion-permission-cancel-recovery.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(productionApp, /installM8HomeNavigation/);
-assert.match(productionApp, /m8-home\.js\?revision=r131-motion-permission-retry/);
 assert.match(productionApp, /installM8HomeFixedLayout/);
 assert.match(productionApp, /installStylesheet\('\.\/m8-home\.css'/);
 assert.match(productionApp, /m8-home-fixed-layout\.js\?revision=m8\.9-track-title-alignment/);
@@ -73,28 +74,41 @@ assert.match(homeSource, /showHome\(\{ focus: true \}\)/);
 assert.match(homeSource, /turn-steering-mode-v1/);
 assert.match(homeSource, /saveDriveByEarEnabled/);
 assert.match(homeSource, /__turnResetRivals/);
-
-const lotRaceGateStart = homeSource.indexOf('function installLotRaceGate');
-const lotRaceGateEnd = homeSource.indexOf('export async function installM8HomeNavigation');
-assert.ok(lotRaceGateStart >= 0 && lotRaceGateEnd > lotRaceGateStart, 'Home must keep a dedicated Race This Car access gate');
-const lotRaceGateSource = homeSource.slice(lotRaceGateStart, lotRaceGateEnd);
+assert.match(homeSource, /function motionPermissionWasDismissed\(error\)/);
 assert.match(
   homeSource,
-  /function motionPermissionWasDismissed\(error\) \{[\s\S]*Motion permission was not granted\./,
-  'A cancelled motion prompt must be recognized as a retryable dismissal'
+  /if \(!motionPermissionWasDismissed\(error\)\) \{[\s\S]*Choose on-screen steering in Settings to continue without motion\./,
+  'The Lot must keep real motion failures visible while treating a cancelled prompt separately'
 );
-assert.match(lotRaceGateSource, /status\.textContent = '';/, 'Each Race This Car attempt starts with no stale permission message');
+assert.doesNotMatch(
+  homeSource,
+  /if \(motionPermissionWasDismissed\(error\)\)[\s\S]{0,220}status\.textContent/,
+  'Cancelling the native motion prompt must not create redundant status copy'
+);
 assert.match(
-  lotRaceGateSource,
-  /catch \(error\) \{[\s\S]*if \(!motionPermissionWasDismissed\(error\)\) \{[\s\S]*Choose on-screen steering in Settings/,
-  'Only genuine motion errors should show the fallback information; cancelling the prompt stays silent'
+  homeSource,
+  /raceButton\.disabled = false;[\s\S]*raceButton\.focus\(\);/,
+  'The Race This Car button must be restored after a failed permission attempt'
+);
+
+assert.match(productionApp, /installMotionPermissionCancelRecovery/);
+assert.match(productionApp, /motion-permission-cancel-recovery\.js\?revision=r132-fresh-document/);
+assert.match(productionApp, /motionPermissionCancelRecovery\.resume\(home, globalThis\.__turnRuntime\)/);
+assert.match(retrySource, /turn-motion-permission-retry-v2/);
+assert.match(retrySource, /\.lot-car-option\[aria-checked="true"\]/);
+assert.match(retrySource, /\.lot-color-control/);
+assert.match(
+  retrySource,
+  /permissionWasDismissed\(error\)[\s\S]*saveRetryState\(environment, documentRef\)[\s\S]*reload\(environment\)[\s\S]*return waitForever\(\)/,
+  'A cancelled iOS permission prompt must reload into a fresh document instead of silently swallowing every later denial'
 );
 assert.match(
-  lotRaceGateSource,
-  /raceButton\.addEventListener\('click', gate, true\);/,
-  'The motion gate remains armed so the next Race This Car press requests permission again'
+  retrySource,
+  /runtime\.state\.vehicleId[\s\S]*runtime\.state\.vehicleColor[\s\S]*runtime\.state\.vehicleSecondaryColor/,
+  'The selected car and paint must survive the fresh-document retry'
 );
-assert.match(lotRaceGateSource, /raceButton\.disabled = false;[\s\S]*raceButton\.focus\(\);/);
+assert.match(retrySource, /void home\.continueToTrack\(\)/, 'The retry must return the player directly to The Lot');
+assert.doesNotMatch(retrySource, /textContent|aria-live/, 'The fresh-document recovery must not add permission-denied UI copy');
 
 assert.match(homeCss, /turn-m8-active \.audio-settings-button/);
 assert.match(homeCss, /turn-m8-active \.reset-rivals-button/);
@@ -175,4 +189,4 @@ assert.match(orchestrator, /function leaveRace\(\)/);
 assert.match(orchestrator, /publish\('home-open'\)/);
 assert.match(orchestrator, /phase = 'home'/);
 
-console.log('TURN production M8 Home, retryable motion permission, larger aligned track names, native scrollbar divider and NEXT wrapper contracts passed.');
+console.log('TURN production M8 Home, recoverable motion permission, larger aligned track names, native scrollbar divider and NEXT wrapper contracts passed.');
