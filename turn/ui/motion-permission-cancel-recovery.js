@@ -1,6 +1,6 @@
 const RETRY_STORAGE_KEY = 'turn-motion-permission-retry-v2';
 const DENIED_MESSAGE = 'Motion permission was not granted.';
-const BLOCKED_MESSAGE = 'Motion access is still blocked by iOS. Close and reopen TURN to try device rotation again.';
+const MOTION_BLOCKED_EVENT = 'turn:motion-permission-blocked';
 const MAX_RETRY_AGE_MS = 2 * 60 * 1000;
 
 function permissionWasDismissed(error) {
@@ -13,6 +13,26 @@ function isStandaloneApp(environment) {
     return environment.matchMedia?.('(display-mode: standalone)')?.matches === true;
   } catch (_) {
     return false;
+  }
+}
+
+function notifyMotionPermissionBlocked(environment) {
+  const dispatch = () => {
+    if (typeof environment.dispatchEvent !== 'function') return;
+    const EventConstructor = environment.CustomEvent || globalThis.CustomEvent;
+    const detail = Object.freeze({ reason: 'permission-denied' });
+    const event = typeof EventConstructor === 'function'
+      ? new EventConstructor(MOTION_BLOCKED_EVENT, { detail })
+      : { type: MOTION_BLOCKED_EVENT, detail };
+    environment.dispatchEvent(event);
+  };
+
+  if (typeof environment.setTimeout === 'function') {
+    environment.setTimeout(dispatch, 0);
+  } else if (typeof environment.queueMicrotask === 'function') {
+    environment.queueMicrotask(dispatch);
+  } else {
+    dispatch();
   }
 }
 
@@ -114,8 +134,8 @@ export function installMotionPermissionCancelRecovery({ environment = globalThis
 
           if (permissionWasDismissed(error) && lotOpen && standaloneApp) {
             standaloneDismissals += 1;
-            if (standaloneDismissals === 1) throw error;
-            throw new Error(BLOCKED_MESSAGE);
+            if (standaloneDismissals > 1) notifyMotionPermissionBlocked(environment);
+            throw error;
           }
 
           if (
