@@ -67,6 +67,9 @@ jobs:
       - name: Run TURN NEXT home navigation regression
         run: node turn-tests/home-navigation-production.mjs
 
+      - name: Run inclusive Home feedback and attribution regression
+        run: node turn-tests/home-feedback-production.mjs
+
       - name: Run track intro showcase camera regression
         run: node turn-tests/track-intro-camera-production.mjs
 

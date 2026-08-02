@@ -222,6 +222,14 @@ const { installM8HomeFixedLayout } = await import(
 );
 await installM8HomeFixedLayout();
 installStylesheet(
+  './home-feedback-r135.css?revision=r135-inclusive-feedback',
+  'data-turn-home-feedback'
+);
+const { installHomeFeedback } = await import(
+  withBuild('./ui/home-feedback.js?revision=r135-inclusive-feedback')
+);
+installHomeFeedback();
+installStylesheet(
   './m8-record-car-scale.css?revision=r124-balanced-crop',
   'data-turn-m8-record-car-scale'
 );
