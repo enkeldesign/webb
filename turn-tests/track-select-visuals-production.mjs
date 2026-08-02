@@ -3,12 +3,23 @@ import fs from 'node:fs/promises';
 
 import { TRACK_DEFINITIONS } from '../turn/tracks/definitions.js';
 
-const [index, releaseSource, postcardCss, depthCss, runwayCss, chooserSource] = await Promise.all([
+const [
+  index,
+  releaseSource,
+  postcardCss,
+  depthCss,
+  runwayCss,
+  midnightCss,
+  appSource,
+  chooserSource
+] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/track-select-r77.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/track-select-r78.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/track-select-r79.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/m8-midnight-city-postcard-r130.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/track-select.js', import.meta.url), 'utf8')
 ]);
 
@@ -57,7 +68,31 @@ assert.match(runwayCss, /left: -8%;[\s\S]*bottom: 3%;[\s\S]*transform: rotate\(-
 assert.match(runwayCss, /width: 105%;[\s\S]*height: 20%/, 'Airport runway must stay shallow enough to finish below the terminal');
 assert.match(runwayCss, /repeating-linear-gradient\([\s\S]*90deg/, 'Airport runway must retain a dashed centre line along its new direction');
 assert.match(runwayCss, /inset 0 4px 0 #f3d34a[\s\S]*inset 0 -4px 0 #f3d34a/, 'Airport runway must retain yellow edge markings');
-assert.doesNotMatch(`${postcardCss}\n${depthCss}\n${runwayCss}`, /@keyframes|animation(?:-name)?:/, 'Track postcards must add no looping or distracting motion');
+
+assert.match(
+  appSource,
+  /m8-midnight-city-postcard-r130\.css\?revision=r130-neon-skyline/,
+  'Home must load the Midnight City postcard through its own cache-busted stylesheet'
+);
+assert.match(appSource, /data-turn-midnight-city-postcard/);
+assert.match(
+  midnightCss,
+  /\.track-card-midnight-city \.track-card-preview[\s\S]*#0b1024[\s\S]*#151a35/,
+  'Midnight City needs a clearly dark night-sky preview background'
+);
+assert.match(
+  midnightCss,
+  /\.track-card-midnight-city \.track-card-preview::before[\s\S]*#141a35[\s\S]*#0f162d[\s\S]*#181630[\s\S]*#101934/,
+  'Midnight City must include a layered skyline behind the course map'
+);
+assert.match(
+  midnightCss,
+  /#ff4fa3[\s\S]*#5de4ff[\s\S]*#ffd36c[\s\S]*#9d7cff/,
+  'The skyline needs the game world’s pink, cyan, yellow and violet neon details'
+);
+assert.match(midnightCss, /drop-shadow\(0 0 5px rgb\(157 124 255 \/ 0\.42\)\)/, 'The violet route gets a restrained static neon glow');
+assert.match(midnightCss, /\.track-card-midnight-city \.track-preview-road[\s\S]*stroke: #3f455a/, 'The road must stay readable against the dark skyline');
+assert.doesNotMatch(`${postcardCss}\n${depthCss}\n${runwayCss}\n${midnightCss}`, /@keyframes|animation(?:-name)?:/, 'Track postcards must add no looping or distracting motion');
 
 assert.match(chooserSource, /card\.setAttribute\('aria-pressed', String\(selected\)\)/, 'Selection remains programmatically exposed');
 assert.match(chooserSource, /CONTINUE TO \$\{track\?\.name\.toUpperCase\(\)/, 'Continue copy remains the explicit textual confirmation');
