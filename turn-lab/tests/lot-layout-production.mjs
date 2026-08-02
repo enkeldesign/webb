@@ -34,7 +34,7 @@ assert.match(index, new RegExp(`lot-layout-r60\\.css\\?build=${release.cacheKey}
 assert.match(index, new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent`), 'Production must cache-bust the browser-gated canonical runtime');
 assert.equal(imports['./garage/lot-r10.js?build=20260720-r19'], `./garage/lot-track-select.js?build=${release.cacheKey}`, 'Production must retain the track-first compatibility wrapper');
 
-assert.match(app, /lot-layout-r60\.css\?revision=r121-viewer-r122-fit/, 'The fitted Lot rail stylesheet must bypass the previous viewer cache');
+assert.match(app, /lot-layout-r60\.css\?revision=r121-viewer-r122-fit-r128-super-sedan-notice-r129-race-button-fit/, 'The Super Sedan fit stylesheet must bypass the previous notice cache');
 assert.match(app, /lot-enhancement-runtime\.js\?revision=r121/, 'Production must load the route-independent Lot enhancer');
 assert.match(app, /installLotEnhancementRuntime\(\)/, 'Production must install the Lot enhancer once');
 assert.ok(
@@ -108,15 +108,20 @@ assert.match(layoutCss, /--lot-paint-rail-height: 54px/, 'Paint controls must us
 assert.match(layoutCss, /min-height: clamp\(150px, 28vh, 230px\)/, 'The 3D viewer must receive a meaningful responsive minimum height');
 assert.match(layoutCss, /flex: 1 1 auto/, 'The 3D panel must receive the remaining rail height instead of being squashed');
 assert.match(layoutCss, /\.lot-viewbox-with-paint \.lot-colors \{[\s\S]*border-top: 3px solid var\(--ink\)/, 'Accessible paint controls must preserve their visual dock inside the 3D card');
-assert.match(layoutCss, /\.lot-card-actions \{[\s\S]*grid-template-columns: 1fr/, 'The lower card must reserve its action row for Race only');
+assert.match(layoutCss, /\.lot-card-actions \{[\s\S]*grid-template-columns: 1fr[\s\S]*margin-top: 4px/, 'Race This Car must follow the secret notice with only the explicit minimum gap');
+assert.match(layoutCss, /\.lot-secret-notice \{[\s\S]*margin: 8px 0 0/, 'The secret notice must not reserve an additional bottom margin above Race This Car');
+assert.match(layoutCss, /\.lot-screen\.is-super-sedan-unlocked \.lot-card \{[\s\S]*display: flex[\s\S]*flex-direction: column/, 'The unlocked card must keep the notice and action in one deterministic vertical flow');
+assert.match(layoutCss, /\.lot-screen\.is-super-sedan-unlocked \.lot-viewbox-with-paint \{[\s\S]*min-height: clamp\(132px, 22vh, 176px\)/, 'The temporary secret message must borrow enough rail height to keep Race This Car above the fold');
 assert.match(layoutCss, /\.lot-stats-help \{[\s\S]*border-radius: 50%/, 'The Attributes help control must read as a conventional circular info icon');
 assert.match(layoutCss, /\.lot-race \{[\s\S]*background: var\(--pink\)/, 'Race This Car must use the pink action treatment shown in the fitted design');
 assert.match(layoutCss, /\.lot-view-close,[\s\S]*\.lot-view-open \{[\s\S]*display: none !important/, 'No dormant 3D close or reopen affordance may flash during setup');
 assert.match(layoutCss, /@media \(max-height: 520px\)[\s\S]*\.lot-side \{[\s\S]*top: max\(62px,[\s\S]*\.lot-card \{[\s\S]*padding: 9px/, 'Tablet-sized short landscapes must compact the rail before Race can leave the viewport');
+assert.match(layoutCss, /@media \(max-height: 520px\)[\s\S]*\.lot-screen\.is-super-sedan-unlocked \.lot-viewbox-with-paint \{[\s\S]*min-height: 112px/, 'Short tablet landscapes must give the unlocked action enough room');
 assert.match(layoutCss, /@media \(max-height: 520px\)[\s\S]*min-height: 140px/, 'The fitted layout must preserve a useful 3D preview on short tablet landscapes');
+assert.match(layoutCss, /@media \(max-height: 430px\)[\s\S]*\.lot-screen\.is-super-sedan-unlocked \.lot-viewbox-with-paint \{[\s\S]*min-height: 96px/, 'Short iPhone landscapes must prioritise the unlocked race action without removing the viewer');
 assert.match(layoutCss, /@media \(max-height: 430px\)[\s\S]*min-height: 120px/, 'Short iPhone landscapes must keep the viewer without pushing Race off-screen');
 
 assert.match(lot, /<div class="lot-colors" aria-label="Choose car paint colours"><\/div>/, 'The verified Lot must still own the live native paint controls before enhancement');
 assert.match(legend, /aria-haspopup', 'dialog'/, 'The relocated info icon must still open the full stat legend');
 
-console.log(`TURN ${release.id} route-independent enhanced Lot, fitted short-landscape rail and selected-car accessibility passed.`);
+console.log(`TURN ${release.id} route-independent enhanced Lot, fitted Super Sedan action rail and selected-car accessibility passed.`);
