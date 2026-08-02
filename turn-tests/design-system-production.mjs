@@ -45,6 +45,13 @@ for (const token of [
   assert.match(design, new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 }
 
+assert.doesNotMatch(design, /var\(--paper\)|var\(--yellow-400\)/, 'Specimens must use the normative token names');
+assert.doesNotMatch(
+  design,
+  /border:\s*(?:1\.5|5)px solid var\(--turn-ink\)/,
+  'Reusable specimen components must stay on the normative border scale'
+);
+
 assert.match(design, /2, 3, 7, 8, 10, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22, 24, 26, 28 and 30px/);
 assert.match(design, /1\.5, 2, 3, 4, 5 and 6px/);
 assert.match(design, /#ff4fa3, #ff7ab7, #ff8caf, #ff8fab/);
