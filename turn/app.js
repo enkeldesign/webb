@@ -166,6 +166,11 @@ await import(withBuild('./main.js'));
 document.documentElement.dataset.turnSessionLifecycle = 'orchestrator-m7';
 globalThis.__turnRaceSession = globalThis.__turnNextRaceSession;
 
+const { installTrackIntroCamera } = await import(
+  withBuild('./render/track-intro-camera.js?revision=r133-midnight-downtown')
+);
+installTrackIntroCamera();
+
 await Promise.all([
   import(withBuild('./render/world.js')),
   import(withBuild('./ui/spectate.js')),
