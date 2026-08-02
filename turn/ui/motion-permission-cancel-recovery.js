@@ -1,9 +1,19 @@
 const RETRY_STORAGE_KEY = 'turn-motion-permission-retry-v2';
 const DENIED_MESSAGE = 'Motion permission was not granted.';
+const BLOCKED_MESSAGE = 'Motion access is still blocked by iOS. Close and reopen TURN to try device rotation again.';
 const MAX_RETRY_AGE_MS = 2 * 60 * 1000;
 
 function permissionWasDismissed(error) {
   return error instanceof Error && error.message === DENIED_MESSAGE;
+}
+
+function isStandaloneApp(environment) {
+  if (environment.navigator?.standalone === true) return true;
+  try {
+    return environment.matchMedia?.('(display-mode: standalone)')?.matches === true;
+  } catch (_) {
+    return false;
+  }
 }
 
 function readCurrentLotSelection(documentRef) {
@@ -88,15 +98,26 @@ export function installMotionPermissionCancelRecovery({ environment = globalThis
   const retryState = takeRetryState(environment);
   const MotionEvent = environment.DeviceMotionEvent;
   const requestPermission = MotionEvent?.requestPermission;
+  const standaloneApp = isStandaloneApp(environment);
+  let standaloneDismissals = 0;
 
   if (typeof requestPermission === 'function') {
     Object.defineProperty(MotionEvent, 'requestPermission', {
       configurable: true,
       value: async function requestPermissionWithCancelRecovery(...args) {
         try {
-          return await requestPermission.apply(this, args);
+          const permission = await requestPermission.apply(this, args);
+          standaloneDismissals = 0;
+          return permission;
         } catch (error) {
           const lotOpen = documentRef?.body?.classList?.contains?.('turn-lot-open');
+
+          if (permissionWasDismissed(error) && lotOpen && standaloneApp) {
+            standaloneDismissals += 1;
+            if (standaloneDismissals === 1) throw error;
+            throw new Error(BLOCKED_MESSAGE);
+          }
+
           if (
             permissionWasDismissed(error)
             && lotOpen
@@ -112,7 +133,9 @@ export function installMotionPermissionCancelRecovery({ environment = globalThis
   }
 
   return Object.freeze({
-    route: 'fresh-document-motion-retry',
+    route: standaloneApp
+      ? 'standalone-motion-denial-recovery'
+      : 'fresh-document-motion-retry',
     resume(home, runtime = environment.__turnRuntime) {
       if (!retryState || typeof home?.continueToTrack !== 'function') return false;
       applySelection(runtime, retryState.selection);
