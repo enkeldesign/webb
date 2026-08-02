@@ -97,7 +97,7 @@ export async function installM8HomeFixedLayout() {
 
   const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
   const { installM8HomeCardScrollFixes } = await import(
-    `/turn/m8-home-card-scroll-fixes.js?build=${buildKey}-m8.8-full-track-names`
+    `/turn/m8-home-card-scroll-fixes.js?build=${buildKey}-m8.9-track-title-alignment`
   );
   const cardScrollFixes = await installM8HomeCardScrollFixes();
 
