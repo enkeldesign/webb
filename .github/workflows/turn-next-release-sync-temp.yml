@@ -1,0 +1,68 @@
+name: Synchronize TURN NEXT release identity
+
+on:
+  push:
+    branches:
+      - agent/turn-difficulty-about-release
+
+permissions:
+  contents: write
+
+jobs:
+  synchronize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/turn-difficulty-about-release
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Generate parity wrappers
+        run: |
+          node turn-next/scripts/build-parity-app.mjs
+          node turn-next/scripts/build-parity-main.mjs
+
+      - name: Synchronize TURN NEXT entry metadata
+        run: |
+          python3 - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+
+          release = json.loads(Path('turn/release.json').read_text())
+          path = Path('turn-next/index.html')
+          source = path.read_text()
+
+          old_version = re.search(r"version: '(\d+\.\d+\.\d+)'", source).group(1)
+          old_id = re.search(r"id: '(\d{4}\.\d{2}\.\d{2}-r\d+)'", source).group(1)
+          old_cache = re.search(r"cacheKey: '(\d{8}-r\d+)'", source).group(1)
+
+          source = source.replace(f'<!-- TURN {old_id} release identity -->', f'<!-- TURN {release["id"]} release identity -->')
+          source = source.replace(f'TURN NEXT · Source TURN v{old_version} · Build {old_id}', f'TURN NEXT · Source TURN v{release["version"]} · Build {release["id"]}')
+          source = source.replace(f"version: '{old_version}'", f"version: '{release['version']}'")
+          source = source.replace(f"id: '{old_id}'", f"id: '{release['id']}'")
+          source = source.replace(f"cacheKey: '{old_cache}'", f"cacheKey: '{release['cacheKey']}'")
+          source = source.replace(old_cache, release['cacheKey'])
+          path.write_text(source)
+          PY
+
+      - name: Verify generated parity
+        run: |
+          node turn-next/scripts/build-parity-app.mjs --check
+          node turn-next/scripts/build-parity-main.mjs --check
+          node turn-next/scripts/build-parity-entry.mjs --check
+
+      - name: Commit generated parity files
+        run: |
+          if git diff --quiet -- turn-next/app.js turn-next/main.js turn-next/index.html; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn-next/app.js turn-next/main.js turn-next/index.html
+          git commit -m "Synchronize TURN NEXT with v1.3.1"
+          git push origin HEAD:agent/turn-difficulty-about-release
