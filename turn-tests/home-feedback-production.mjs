@@ -21,7 +21,7 @@ assert.match(feedback, /FEEDBACK_EMAIL = 'erik@enkel\.design'/);
 assert.match(feedback, /trigger\.textContent = 'GIVE FEEDBACK'/);
 assert.match(feedback, /trigger\.setAttribute\('aria-haspopup', 'dialog'\)/);
 assert.match(feedback, /menu\.insertBefore\(trigger, status\)/, 'GIVE FEEDBACK must sit with the other Home menu actions, before status and RACE');
-assert.match(feedback, /class="m8-dialog m8-feedback-dialog"/);
+assert.match(feedback, /dialog\.className = 'm8-dialog m8-feedback-dialog'/);
 assert.match(feedback, /aria-labelledby', 'm8FeedbackTitle'/);
 assert.match(feedback, /<h2 id="m8FeedbackTitle">GIVE FEEDBACK<\/h2>/);
 assert.match(feedback, /Found a bug, an accessibility barrier or something that made TURN harder to use/);
