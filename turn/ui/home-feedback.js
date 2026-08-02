@@ -1,11 +1,13 @@
 const FEEDBACK_EMAIL = 'erik@enkel.design';
 const FEEDBACK_SUBJECT = 'TURN feedback';
-const FEEDBACK_VERSION = 'r136-about-turn';
+const FEEDBACK_VERSION = 'r137-feedback-above-fold';
 
 let installed = false;
 
 function openDialog(dialog, trigger) {
   dialog.__turnReturnFocus = trigger;
+  const card = dialog.querySelector('.m8-dialog-card');
+  if (card) card.scrollTop = 0;
   if (typeof dialog.showModal === 'function') dialog.showModal();
   else dialog.setAttribute('open', '');
   dialog.querySelector('[data-dialog-close]')?.focus();
@@ -64,7 +66,7 @@ async function copyEmailAddress(button, status) {
 
 function attributionMarkup() {
   return `
-    <p>TURN is shaped by inclusive and universal design, with accessibility built into the game from the start.</p>
+    <p>TURN is shaped by inclusive and universal design so everyone can play, regardless of ability or how they interact with the game.</p>
     <p>© 2026 <a href="https://enkel.design/" target="_blank" rel="noreferrer">enkel.design</a>. Created by Erik Jansson, aided by OpenAI Codex. Drive By Ear™ is inspired by <a href="https://ceal.cs.columbia.edu/rad/" target="_blank" rel="noreferrer">RAD – Racing Auditory Display</a>.</p>`;
 }
 
@@ -89,10 +91,6 @@ function createFeedbackDialog() {
           <button class="m8-feedback-copy" type="button">COPY EMAIL ADDRESS</button>
         </div>
         <p class="m8-feedback-status" role="status" aria-live="polite"></p>
-
-        <footer class="m8-feedback-attribution">
-          ${attributionMarkup()}
-        </footer>
       </div>
     </article>`;
   document.body.appendChild(dialog);
