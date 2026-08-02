@@ -1,0 +1,103 @@
+@import url('./design-tokens.css?revision=r139-semantic-system');
+
+/*
+  Normative production roles.
+  Existing component selectors remain intact; this layer only assigns shared
+  semantic colour and shape decisions.
+*/
+
+/* Main forward flow: one colour and one shape. */
+.install-primary,
+.m8-home-fixed-layout .m8-track-continue,
+.track-select-continue,
+.lot-race {
+  border-radius: var(--turn-radius-pill) !important;
+  background: var(--turn-action-primary) !important;
+}
+
+/* Home menu utilities deliberately step back from the selected-track action. */
+.m8-home-fixed-layout .m8-home-settings,
+.m8-home-fixed-layout .m8-how-button,
+.m8-home-fixed-layout .m8-feedback-button {
+  background: var(--turn-action-utility) !important;
+}
+
+/* Close, leave and back always communicate navigation or context change. */
+.install-close,
+.track-select-close,
+.lot-back,
+.lot-view-close,
+.lot-stats-dialog-close,
+.spectate-close,
+.sound-guide-close,
+.m8-dialog-head > button,
+.back-to-lot-button,
+[data-turn-navigation-action] {
+  background: var(--turn-action-navigation) !important;
+}
+
+/* Driving controls use stable, literal semantics. */
+.drive-drift-zone,
+.drift {
+  background: var(--turn-control-drift) !important;
+}
+
+.drive-pad .drive-gas-zone,
+.gas {
+  background: var(--turn-control-gas) !important;
+}
+
+.drive-pad .drive-brake-zone,
+.brake {
+  background: var(--turn-control-brake) !important;
+}
+
+.drive-boost-zone {
+  background:
+    linear-gradient(
+      to top,
+      var(--turn-control-boost) 0 var(--boost-charge),
+      var(--turn-control-boost-empty) var(--boost-charge) 100%
+    ) !important;
+}
+
+.drive-pad.is-boosting .drive-boost-zone {
+  background:
+    linear-gradient(
+      to top,
+      var(--turn-yellow-600) 0 var(--boost-charge),
+      var(--turn-control-boost-empty) var(--boost-charge) 100%
+    ) !important;
+}
+
+.drive-pad[data-drive-zone="gas"] .drive-gas-zone,
+.drive-drift-zone.is-active,
+.drive-brake-zone.is-active {
+  box-shadow: inset 0 0 0 6px rgb(255 248 232 / 0.78);
+}
+
+.drive-pad[data-drive-zone="gas"] .drive-gas-zone {
+  background: var(--turn-control-gas) !important;
+}
+
+.drive-drift-zone.is-active {
+  background: var(--turn-control-drift) !important;
+}
+
+.drive-brake-zone.is-active {
+  background: var(--turn-control-brake) !important;
+}
+
+.drive-pad.is-boosting {
+  box-shadow:
+    7px 8px 0 var(--turn-ink),
+    0 0 0 5px rgb(255 212 59 / 0.32) !important;
+}
+
+.boost-hud i {
+  background: linear-gradient(90deg, var(--turn-yellow-600), var(--turn-control-boost)) !important;
+}
+
+.boost-hud.is-drift-charging i {
+  background: linear-gradient(90deg, var(--turn-control-drift), var(--turn-control-gas)) !important;
+}
