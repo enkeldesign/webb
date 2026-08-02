@@ -169,15 +169,16 @@ await Promise.all([
 await import(withBuild('./ui/in-game-menu.js'));
 installStylesheet('./m8-home.css', 'data-turn-m8-home-styles');
 installStylesheet('./m8-how-to-play-r126.css', 'data-turn-m8-how-to-play');
+installStylesheet('./rival-reset-context-r127.css', 'data-turn-rival-reset-context');
 const { installM8HomeNavigation } = await import(withBuild('./m8-home.js'));
 const home = await installM8HomeNavigation();
 globalThis.__turnHome = home;
 const { installHowToPlayGuide } = await import(
-  withBuild('./ui/how-to-play-guide.js?revision=r126-dbe-disclosure')
+  withBuild('./ui/how-to-play-guide.js?revision=r127-full-name')
 );
 installHowToPlayGuide();
 const { installHomeRivalReset } = await import(
-  withBuild('./ui/home-rival-reset.js?revision=r126-all-tracks')
+  withBuild('./ui/home-rival-reset.js?revision=r127-contextual')
 );
 installHomeRivalReset();
 const buildLabel = document.querySelector('.m8-home-build');
