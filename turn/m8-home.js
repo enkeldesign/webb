@@ -49,6 +49,10 @@ function motionAvailable() {
   return typeof globalThis.DeviceMotionEvent !== 'undefined';
 }
 
+function motionPermissionWasDismissed(error) {
+  return error instanceof Error && error.message === 'Motion permission was not granted.';
+}
+
 function loadSteeringMode() {
   const fallback = motionAvailable() ? STEERING_MODE.MOTION : STEERING_MODE.MANUAL;
   try {
@@ -446,7 +450,9 @@ function installLotRaceGate({ raceSession, getSteeringMode, onAccessReady }) {
       raceButton.disabled = false;
       raceButton.click();
     } catch (error) {
-      status.textContent = `${error instanceof Error ? error.message : 'The race could not start.'} Choose on-screen steering in Settings to continue without motion.`;
+      if (!motionPermissionWasDismissed(error)) {
+        status.textContent = `${error instanceof Error ? error.message : 'The race could not start.'} Choose on-screen steering in Settings to continue without motion.`;
+      }
       raceButton.disabled = false;
       raceButton.focus();
     }
