@@ -62,7 +62,7 @@ document.documentElement.dataset.turnDisplayLifecycle = 'platform-m6';
 installStylesheet('./r104-polish.css', 'data-turn-r104-polish');
 installStylesheet('./steering-limit-warning.css', 'data-turn-steering-limit-warning');
 installStylesheet(
-  './garage/lot-layout-r60.css?revision=r128-super-sedan-notice',
+  './garage/lot-layout-r60.css?revision=r121-viewer-r122-fit-r128-super-sedan-notice',
   'data-turn-lot-layout-r121'
 );
 
