@@ -106,6 +106,10 @@ function ensureUnlockNotice(lot) {
   notice.setAttribute('role', 'status');
   notice.setAttribute('aria-live', 'polite');
   notice.setAttribute('aria-atomic', 'true');
+  notice.setAttribute(
+    'aria-label',
+    'Super Sedan unlocked. Spoiler color code #666 maxes every attribute. Lap results with this secret car are not saved.'
+  );
   notice.innerHTML = `
     <span class="lot-secret-notice-chip">SECRET UNLOCKED</span>
     <p>Spoiler <strong>color code #666</strong> maxes every attribute. Lap results with this secret car are not saved.</p>
