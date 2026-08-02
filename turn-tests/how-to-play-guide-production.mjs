@@ -46,7 +46,7 @@ assert.match(guide, /Wrong way/);
 assert.match(guide, /With a screen reader/);
 assert.match(guide, /Headphones provide the clearest left and right information/);
 assert.match(guide, /complete non-visual play/);
-assert.match(guide, /Drive By Ear supplies the continuous spatial information/);
+assert.match(guide, /Drive By Ear supplies the spatial information needed to steer and stay on course/);
 assert.match(guide, /Drive By Ear provides the continuous spatial information/);
 assert.match(guide, /root\.querySelector\('#dbeGuideScreenReaders'\)/, 'The in-race guide must replace its abbreviated screen-reader copy before it can be shown');
 assert.doesNotMatch(guide, /[;.]\s*DBE\s+(?:supplies|provides)/, 'Player-facing help must always spell out Drive By Ear');
