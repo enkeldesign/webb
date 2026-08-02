@@ -53,6 +53,10 @@ const webPlatform = createWebPlatform();
 installTurnPlatform(webPlatform);
 const motionLifecycle = installMotionLifecycleBridge({ platform: webPlatform });
 const displayLifecycle = installDisplayLifecycleBridge({ platform: webPlatform });
+const { installMotionPermissionCancelRecovery } = await import(
+  withBuild('./ui/motion-permission-cancel-recovery.js?revision=r132-fresh-document')
+);
+const motionPermissionCancelRecovery = installMotionPermissionCancelRecovery();
 globalThis.__turnMotionLifecycle = motionLifecycle;
 globalThis.__turnDisplayLifecycle = displayLifecycle;
 document.documentElement.dataset.turnPlatform = 'web-adapter';
@@ -181,6 +185,7 @@ const { installM8HomeNavigation } = await import(
 );
 const home = await installM8HomeNavigation();
 globalThis.__turnHome = home;
+motionPermissionCancelRecovery.resume(home, globalThis.__turnRuntime);
 const { installHowToPlayGuide } = await import(
   withBuild('./ui/how-to-play-guide.js?revision=r127-full-name')
 );

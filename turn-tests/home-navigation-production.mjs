@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
+import { installMotionPermissionCancelRecovery } from '../turn/ui/motion-permission-cancel-recovery.js';
+
 const [
   homeSource,
   homeCss,
@@ -13,7 +15,8 @@ const [
   productionMain,
   nextApp,
   nextMain,
-  orchestrator
+  orchestrator,
+  retrySource
 ] = await Promise.all([
   fs.readFile(new URL('../turn/m8-home.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home.css', import.meta.url), 'utf8'),
@@ -26,7 +29,8 @@ const [
   fs.readFile(new URL('../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/main.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/race/session-orchestrator.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/race/session-orchestrator.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/ui/motion-permission-cancel-recovery.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(productionApp, /installM8HomeNavigation/);
@@ -92,9 +96,128 @@ assert.match(
 assert.match(
   lotRaceGateSource,
   /raceButton\.addEventListener\('click', gate, true\);/,
-  'The motion gate remains armed so the next Race This Car press requests permission again'
+  'The motion gate remains armed while a fresh-document retry is prepared'
 );
 assert.match(lotRaceGateSource, /raceButton\.disabled = false;[\s\S]*raceButton\.focus\(\);/);
+
+assert.match(productionApp, /installMotionPermissionCancelRecovery/);
+assert.match(productionApp, /motion-permission-cancel-recovery\.js\?revision=r132-fresh-document/);
+assert.match(productionApp, /motionPermissionCancelRecovery\.resume\(home, globalThis\.__turnRuntime\)/);
+assert.match(retrySource, /turn-motion-permission-retry-v2/);
+assert.match(retrySource, /\.lot-car-option\[aria-checked="true"\]/);
+assert.match(retrySource, /\.lot-color-control/);
+assert.match(
+  retrySource,
+  /permissionWasDismissed\(error\)[\s\S]*saveRetryState\(environment, documentRef\)[\s\S]*reload\(environment\)[\s\S]*return waitForever\(\)/,
+  'A cancelled iOS permission prompt must reload into a fresh document instead of silently swallowing every later denial'
+);
+assert.match(
+  retrySource,
+  /runtime\.state\.vehicleId[\s\S]*runtime\.state\.vehicleColor[\s\S]*runtime\.state\.vehicleSecondaryColor/,
+  'The selected car and paint must survive the fresh-document retry'
+);
+assert.match(retrySource, /void home\.continueToTrack\(\)/, 'The retry must return the player directly to The Lot');
+assert.doesNotMatch(retrySource, /textContent|aria-live/, 'The fresh-document recovery must not add permission-denied UI copy');
+
+const retryValues = new Map();
+const retryStorage = {
+  getItem(key) {
+    return retryValues.get(key) ?? null;
+  },
+  setItem(key, value) {
+    retryValues.set(key, String(value));
+  },
+  removeItem(key) {
+    retryValues.delete(key);
+  }
+};
+
+class DismissedMotionEvent {}
+Object.defineProperty(DismissedMotionEvent, 'requestPermission', {
+  configurable: true,
+  value: async () => {
+    throw new Error('Motion permission was not granted.');
+  }
+});
+
+let reloads = 0;
+const bodyPaint = {
+  dataset: { paintLabel: 'Body' },
+  querySelector() {
+    return { value: '#123456' };
+  }
+};
+const spoilerPaint = {
+  dataset: { paintLabel: 'Spoiler' },
+  querySelector() {
+    return { value: '#654321' };
+  }
+};
+const dismissedEnvironment = {
+  DeviceMotionEvent: DismissedMotionEvent,
+  document: {
+    body: { classList: { contains: (name) => name === 'turn-lot-open' } },
+    querySelector(selector) {
+      if (selector === '.lot-car-option[aria-checked="true"]') {
+        return { dataset: { carId: 'sedan-sports' } };
+      }
+      return null;
+    },
+    querySelectorAll(selector) {
+      return selector === '.lot-color-control' ? [bodyPaint, spoilerPaint] : [];
+    }
+  },
+  sessionStorage: retryStorage,
+  location: {
+    reload() {
+      reloads += 1;
+    }
+  },
+  __turnHome: { getSelectedTrackId: () => 'midnight-city' }
+};
+
+installMotionPermissionCancelRecovery({ environment: dismissedEnvironment });
+void DismissedMotionEvent.requestPermission();
+await new Promise((resolve) => globalThis.setTimeout(resolve, 0));
+assert.equal(reloads, 1, 'Cancelling permission must create a fresh document so iOS can prompt again');
+assert.ok(retryValues.has('turn-motion-permission-retry-v2'), 'The retry route must be saved before reload');
+
+class FreshMotionEvent {}
+Object.defineProperty(FreshMotionEvent, 'requestPermission', {
+  configurable: true,
+  value: async () => 'granted'
+});
+let continued = 0;
+const resumedRuntime = {
+  state: {
+    vehicleId: 'classic',
+    vehicleColor: '#ffffff',
+    vehicleSecondaryColor: '#ffffff'
+  }
+};
+const freshEnvironment = {
+  DeviceMotionEvent: FreshMotionEvent,
+  document: { body: { classList: { contains: () => false } } },
+  sessionStorage: retryStorage,
+  location: { reload() {} },
+  requestAnimationFrame(callback) {
+    callback();
+    return 1;
+  },
+  __turnRuntime: resumedRuntime
+};
+const freshRecovery = installMotionPermissionCancelRecovery({ environment: freshEnvironment });
+assert.equal(freshRecovery.resume({
+  continueToTrack() {
+    continued += 1;
+    return Promise.resolve(true);
+  }
+}, resumedRuntime), true);
+assert.equal(continued, 1, 'The fresh document must reopen The Lot automatically');
+assert.equal(resumedRuntime.state.vehicleId, 'sedan-sports');
+assert.equal(resumedRuntime.state.vehicleColor, '#123456');
+assert.equal(resumedRuntime.state.vehicleSecondaryColor, '#654321');
+assert.equal(retryValues.has('turn-motion-permission-retry-v2'), false, 'The retry route is consumed only once');
 
 assert.match(homeCss, /turn-m8-active \.audio-settings-button/);
 assert.match(homeCss, /turn-m8-active \.reset-rivals-button/);
@@ -175,4 +298,4 @@ assert.match(orchestrator, /function leaveRace\(\)/);
 assert.match(orchestrator, /publish\('home-open'\)/);
 assert.match(orchestrator, /phase = 'home'/);
 
-console.log('TURN production M8 Home, retryable motion permission, larger aligned track names, native scrollbar divider and NEXT wrapper contracts passed.');
+console.log('TURN production M8 Home, fresh-document motion permission recovery, larger aligned track names, native scrollbar divider and NEXT wrapper contracts passed.');
