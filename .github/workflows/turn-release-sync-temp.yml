@@ -1,0 +1,36 @@
+name: Synchronize TURN release identity
+
+on:
+  push:
+    branches:
+      - agent/turn-difficulty-about-release
+
+permissions:
+  contents: write
+
+jobs:
+  synchronize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/turn-difficulty-about-release
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Generate release identity
+        run: node turn/scripts/release.mjs --write
+
+      - name: Commit generated index
+        run: |
+          if git diff --quiet -- turn/index.html; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn/index.html
+          git commit -m "Synchronize TURN v1.3.1 release identity"
+          git push origin HEAD:agent/turn-difficulty-about-release
