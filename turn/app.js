@@ -170,6 +170,10 @@ await Promise.all([
 
 await import(withBuild('./ui/in-game-menu.js'));
 installStylesheet('./m8-home.css', 'data-turn-m8-home-styles');
+installStylesheet(
+  './m8-midnight-city-postcard-r130.css?revision=r130-neon-skyline',
+  'data-turn-midnight-city-postcard'
+);
 installStylesheet('./m8-how-to-play-r126.css', 'data-turn-m8-how-to-play');
 installStylesheet('./rival-reset-context-r127.css', 'data-turn-rival-reset-context');
 const { installM8HomeNavigation } = await import(withBuild('./m8-home.js'));
