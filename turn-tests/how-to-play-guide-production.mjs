@@ -1,18 +1,21 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [app, guide, css, homeReset, rivalStorage] = await Promise.all([
+const [app, guide, css, homeReset, resetCss, rivalStorage, trackManager] = await Promise.all([
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/how-to-play-guide.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-how-to-play-r126.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/home-rival-reset.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/race/rival-storage.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/rival-reset-context-r127.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/race/rival-storage.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/track-manager.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(app, /installStylesheet\('\.\/m8-how-to-play-r126\.css', 'data-turn-m8-how-to-play'\)/);
-assert.match(app, /how-to-play-guide\.js\?revision=r126-dbe-disclosure/);
+assert.match(app, /installStylesheet\('\.\/rival-reset-context-r127\.css', 'data-turn-rival-reset-context'\)/);
+assert.match(app, /how-to-play-guide\.js\?revision=r127-full-name/);
 assert.match(app, /installHowToPlayGuide\(\)/);
-assert.match(app, /home-rival-reset\.js\?revision=r126-all-tracks/);
+assert.match(app, /home-rival-reset\.js\?revision=r127-contextual/);
 assert.match(app, /installHomeRivalReset\(\)/);
 assert.ok(
   app.indexOf('await installM8HomeNavigation()') < app.indexOf('installHowToPlayGuide()'),
@@ -20,7 +23,7 @@ assert.ok(
 );
 assert.ok(
   app.indexOf('await installM8HomeNavigation()') < app.indexOf('installHomeRivalReset()'),
-  'The all-track reset enhancer must run only after the Home settings dialog exists'
+  'The contextual reset enhancer must run only after the shared Settings dialog exists'
 );
 
 assert.match(guide, /Holding <strong>DRIFT<\/strong> also charges <strong>BOOST<\/strong> faster/);
@@ -36,6 +39,10 @@ assert.match(guide, /Wrong way/);
 assert.match(guide, /With a screen reader/);
 assert.match(guide, /Headphones provide the clearest left and right information/);
 assert.match(guide, /complete non-visual play/);
+assert.match(guide, /Drive By Ear supplies the continuous spatial information/);
+assert.match(guide, /Drive By Ear provides the continuous spatial information/);
+assert.match(guide, /root\.querySelector\('#dbeGuideScreenReaders'\)/, 'The in-race guide must replace its abbreviated screen-reader copy before it can be shown');
+assert.doesNotMatch(guide, /[;.]\s*DBE\s+(?:supplies|provides)/, 'Player-facing help must always spell out Drive By Ear');
 
 assert.match(guide, /A long corner keeps the same number of beeps but holds the final beep longer/);
 assert.match(guide, /bip-beeeep for a long medium corner/);
@@ -48,23 +55,40 @@ assert.match(css, /cursor: pointer/);
 assert.match(css, /summary:focus-visible/);
 assert.match(css, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
 assert.match(css, /@media \(max-width: 720px\)[\s\S]*grid-template-columns: 1fr/);
-assert.doesNotMatch(`${guide}\n${css}`, /requestAnimationFrame|setInterval|setTimeout|@keyframes|animation:/, 'Help content must add no runtime loop or distracting motion');
+assert.doesNotMatch(`${guide}\n${css}`, /setInterval|setTimeout|@keyframes|animation:/, 'Help content must add no runtime loop or distracting motion');
 
+assert.match(homeReset, /function homeIsOpen\(\)/);
+assert.match(homeReset, /document\.body\.classList\.contains\('turn-home-open'\)/);
+assert.match(homeReset, /const allTracks = homeIsOpen\(\)/);
 assert.match(homeReset, /Remove every recorded personal rival from every track/);
 assert.match(homeReset, /To reset only one track, use Settings at that track’s start line/);
 assert.match(homeReset, /RESET ALL RIVALS/);
-assert.match(homeReset, /resetTarget\.textContent = 'ALL TRACKS'/);
+assert.match(homeReset, /Remove the recorded personal rivals for \$\{track\.name\}/);
+assert.match(homeReset, /Rivals on other tracks will be kept/);
+assert.match(homeReset, /resetButton\.textContent = 'RESET RIVALS'/);
+assert.match(homeReset, /resetTarget\.textContent = track\.name\.toUpperCase\(\)/);
 assert.match(homeReset, /clearAllRivalsState/);
-assert.match(homeReset, /TRACK_CATALOG\.map\(\(track\) => track\.id\)/);
-assert.match(homeReset, /Personal rivals reset on all tracks/);
-assert.match(homeReset, /event\.stopImmediatePropagation\(\)/, 'Home must replace the old selected-track reset handlers rather than also running them');
-assert.match(homeReset, /delete model\.dataset\.previewKey/, 'Pending BEST thumbnails must not reappear after an all-track reset');
-assert.doesNotMatch(homeReset, /activateTrack|__turnResetRivals/, 'Home reset must not cycle the live runtime through every track or reuse the track-specific race action');
+assert.match(homeReset, /TRACK_CATALOG\.map\(\(entry\) => entry\.id\)/);
+assert.match(homeReset, /globalThis\.__turnResetRivals\?\.\(\)/, 'The race Settings path must use the existing active-track reset only');
+assert.match(homeReset, /clearTrackCardRecord\(root, track\.id\)/);
+assert.match(homeReset, /Personal rivals reset for \$\{track\.name\}/);
+assert.match(homeReset, /raceResetButton\.textContent = 'RESET RIVALS'/);
+assert.match(homeReset, /Remove the saved personal rivals and lap records for \$\{track\.name\}/);
+assert.match(homeReset, /event\.stopImmediatePropagation\(\)/, 'The contextual handler must replace the old fixed-scope handlers rather than also running them');
+assert.match(homeReset, /delete model\.dataset\.previewKey/, 'Pending BEST thumbnails must not reappear after any reset');
+assert.doesNotMatch(homeReset, /activateTrack/, 'Resetting rivals must never change tracks behind the player');
+
+assert.match(resetCss, /\.m8-reset-rivals\.is-all-tracks/);
+assert.match(resetCss, /#ff9b91/, 'RESET ALL RIVALS must use a light warning red');
+assert.match(resetCss, /\.m8-settings-dialog \.m8-reset-rivals,[\s\S]*background: var\(--m8-yellow\) !important/, 'The active-track Settings action must retain the standard yellow treatment');
+assert.match(resetCss, /\.utility-group \.reset-rivals-button,[\s\S]*#ffd43b/, 'The direct start-line reset action must also remain yellow');
 
 assert.match(rivalStorage, /export function clearAllRivalsState\(state, trackIds = \[\]\)/);
 assert.match(rivalStorage, /localStorage\.removeItem\(rivalKey\(trackId\)\)/);
 assert.match(rivalStorage, /localStorage\.removeItem\(ghostKey\(trackId\)\)/);
 assert.match(rivalStorage, /state\.trackId = activeTrackId/, 'An all-track reset must preserve the runtime’s active track');
 assert.match(rivalStorage, /syncPrimaryRivalState\(state\)/);
+assert.match(trackManager, /clearRivalsState\(currentRuntime\.state, \{ trackId: activeTrackId \}\)/, 'The race reset implementation must clear only the current track storage key');
+assert.match(trackManager, /globalThis\.__turnResetRivals = resetCurrentTrackRivals/);
 
-console.log('TURN How to Play, detailed Drive By Ear disclosure and Home all-track rival reset passed.');
+console.log('TURN full Drive By Ear UX naming and contextual all-track/current-track rival reset passed.');
