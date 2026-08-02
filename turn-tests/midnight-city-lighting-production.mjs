@@ -15,7 +15,7 @@ const [
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r5.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r6.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/midnight-city-world-r7.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/midnight-city-world-r8.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/midnight-city-world-r9.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8')
 ]);
 
@@ -112,19 +112,28 @@ assert.doesNotMatch(signParkSource, /new THREE\.PointLight|new THREE\.SpotLight|
 await fs.access(new URL('../turn/LILYA.PNG', import.meta.url));
 assert.match(easterEggSource, /installMidnightCityWorld as installMidnightCityWorldR7/);
 assert.match(easterEggSource, /new URL\('\.\.\/LILYA\.PNG', import\.meta\.url\)\.href/);
-assert.match(easterEggSource, /x: -495\.42[\s\S]*y: 29\.8[\s\S]*z: 113\.29/);
+assert.match(easterEggSource, /x: -474\.52[\s\S]*y: 29\.8[\s\S]*z: 140\.12/);
 assert.match(easterEggSource, /side: THREE\.FrontSide/);
-assert.match(easterEggSource, /portrait\.rotation\.y = -Math\.PI \/ 2/);
-assert.match(easterEggSource, /hiddenLilyaPlacement: 'west face of the Neon Quarter building, visible from the reverse approach'/);
+assert.match(easterEggSource, /portrait\.rotation\.y = 0/);
+assert.match(easterEggSource, /armViewTriggeredTextureLoad\(world, portrait\)/);
+assert.match(easterEggSource, /world\.getObjectByName\('Midnight City race road'\)/);
+assert.match(easterEggSource, /road\.onBeforeRender = viewTriggeredLoad/);
+assert.match(easterEggSource, /camera\.getWorldPosition\(cameraPosition\)/);
+assert.match(easterEggSource, /camera\.getWorldDirection\(cameraForward\)/);
+assert.match(easterEggSource, /cameraForward\.dot\(cameraToWall\) < LILYA_MIN_VIEW_DOT/);
+assert.match(easterEggSource, /loadLilyaTexture\(portrait\)/);
+assert.match(easterEggSource, /texture\.generateMipmaps = false/);
+assert.match(easterEggSource, /hiddenLilyaPlacement: 'north road-facing facade of the Neon Quarter building, visible from the reverse approach'/);
+assert.match(easterEggSource, /hiddenLilyaLazyLoad: lazyLoadArmed/);
 assert.match(easterEggSource, /gameplayGeometryUnchanged: true/);
 assert.doesNotMatch(
   easterEggSource,
   /requestAnimationFrame|setAnimationLoop|setInterval|setTimeout|new THREE\.PointLight|new THREE\.SpotLight/,
-  'The hidden portrait must remain a static visual detail'
+  'The hidden portrait must use the existing render loop without adding timers or lights'
 );
 
-assert.match(registrySource, /midnight-city-world-r8\.js\?build=20260802-r8/);
+assert.match(registrySource, /midnight-city-world-r9\.js\?build=20260802-r9/);
 assert.match(registrySource, /'midnight-city'\(\{ scene, samples, trackWidth, runtime \}\)/);
 assert.match(registrySource, /installMidnightCityWorld\(\{ scene, samples, trackWidth, runtime \}\)/);
 
-console.log('TURN Midnight City readable signs, parks, showcase and hidden portrait passed.');
+console.log('TURN Midnight City readable signs, parks, showcase and lazy hidden portrait passed.');
