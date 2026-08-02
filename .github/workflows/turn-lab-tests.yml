@@ -67,6 +67,9 @@ jobs:
       - name: Run TURN NEXT home navigation regression
         run: node turn-tests/home-navigation-production.mjs
 
+      - name: Run track intro showcase camera regression
+        run: node turn-tests/track-intro-camera-production.mjs
+
       - name: Run standalone motion cancellation regression
         run: node turn-tests/motion-permission-standalone-production.mjs
 
