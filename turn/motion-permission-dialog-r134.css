@@ -1,0 +1,87 @@
+.turn-motion-denied-dialog {
+  width: min(520px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #08090a;
+  overflow: visible;
+}
+
+.turn-motion-denied-dialog::backdrop {
+  background: rgb(8 9 10 / 0.72);
+  backdrop-filter: blur(5px);
+}
+
+.turn-motion-denied-card {
+  padding: clamp(22px, 4vw, 34px);
+  border: 6px solid #08090a;
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 92% 9%, rgb(255 79 163 / 0.32), transparent 24%),
+    #fff8e8;
+  box-shadow: 10px 10px 0 #08090a;
+  text-align: left;
+}
+
+.turn-motion-denied-kicker {
+  display: inline-block;
+  padding: 6px 11px;
+  border: 3px solid #08090a;
+  border-radius: 999px;
+  background: #ffd43b;
+  font-size: 0.78rem;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  line-height: 1;
+}
+
+.turn-motion-denied-card h2 {
+  margin: 14px 0 10px;
+  font-size: clamp(2rem, 8vw, 3.6rem);
+  font-weight: 1000;
+  line-height: 0.9;
+  letter-spacing: -0.055em;
+}
+
+.turn-motion-denied-card p {
+  margin: 0;
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  font-weight: 780;
+  line-height: 1.35;
+}
+
+.turn-motion-denied-card button {
+  width: 100%;
+  margin-top: 22px;
+  padding: 12px 18px;
+  border: 4px solid #08090a;
+  border-radius: 15px;
+  background: #ff4fa3;
+  color: #08090a;
+  box-shadow: 4px 4px 0 #08090a;
+  font: inherit;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+}
+
+.turn-motion-denied-card button:focus-visible {
+  outline: 5px solid #5de4ff;
+  outline-offset: 4px;
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .turn-motion-denied-card {
+    padding: 18px 22px;
+  }
+
+  .turn-motion-denied-card h2 {
+    margin-block: 10px 7px;
+    font-size: clamp(1.7rem, 6vw, 2.7rem);
+  }
+
+  .turn-motion-denied-card button {
+    margin-top: 14px;
+    padding-block: 9px;
+  }
+}
