@@ -149,7 +149,7 @@ assert.equal(imports['./garage/lot-r10.js?build=20260720-r19'], releaseTarget('.
 assert.equal(imports['./ui/track-intro.js?build=20260725-r75'], releaseTarget('./ui/track-intro.js'));
 assert.equal(imports['./race/lap-system.js?build=20260720-r19'], releaseTarget('./race/lap-system-r86.js'));
 
-assert.match(app, /lot-layout-r60\.css\?revision=r128-super-sedan-notice/);
+assert.match(app, /lot-layout-r60\.css\?revision=r121-viewer-r122-fit-r128-super-sedan-notice/);
 assert.match(app, /sports-sedan-easter-egg\.js\?revision=r128-unlock-notice/);
 assert.match(app, /installLotEnhancementRuntime/);
 assert.match(app, /lot-enhancement-runtime\.js\?revision=r121/);
@@ -238,6 +238,7 @@ assert.match(easterEggUi, /Race the \$\{displayedName\}/, 'The race button must 
 assert.match(easterEggUi, /SECRET UNLOCKED/);
 assert.match(easterEggUi, /color code #666/);
 assert.match(easterEggUi, /Lap results with this secret car are not saved/);
+assert.match(easterEggUi, /Super Sedan unlocked\. Spoiler color code #666/);
 assert.match(easterEggUi, /notice\.setAttribute\('role', 'status'\)/);
 assert.match(easterEggUi, /notice\.setAttribute\('aria-live', 'polite'\)/);
 assert.match(easterEggUi, /card\.insertBefore\(notice, actions \|\| null\)/, 'The explanation must sit immediately before RACE THIS CAR');
