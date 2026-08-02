@@ -86,7 +86,7 @@ function installDriveByEarDisclosure(dialog) {
 
             <div class="m8-dbe-guide-section m8-dbe-guide-screen-reader" aria-labelledby="m8DbeScreenReader">
               <h4 id="m8DbeScreenReader">With a screen reader</h4>
-              <p>Drive By Ear is designed to work alongside screen readers, including VoiceOver. The screen reader presents menus, controls, position and lap results; Drive By Ear supplies the continuous spatial information needed to steer and stay on course. Together they are intended to provide a complete non-visual way to play TURN.</p>
+              <p>Drive By Ear is designed to work alongside screen readers. The screen reader presents menus, controls, continuous position updates and lap results; Drive By Ear supplies the spatial information needed to steer and stay on course. Together they are intended to provide a complete non-visual way to play TURN.</p>
             </div>
           </div>
         </div>
