@@ -73,19 +73,26 @@ assert.match(carModels, /periodMs = reducedMotion \? 1400/);
 assert.match(carModels, /globalThis\.__turnBoostActive/);
 
 assert.match(emergencyLiveries, /police:[\s\S]*primary: 0x0b0d10[\s\S]*secondary: 0xf8f9fa/);
-assert.match(emergencyLiveries, /ambulance:[\s\S]*primary: 0xf8f9fa[\s\S]*secondary: 0xd92d20/);
+assert.match(emergencyLiveries, /ambulance:[\s\S]*primary: 0xf8f9fa[\s\S]*secondary: 0xd92d20[\s\S]*accent: 'rear-side-stripe'/);
 assert.match(emergencyLiveries, /firetruck:[\s\S]*primary: 0xd92d20[\s\S]*secondary: 0xffd43b/);
 assert.match(emergencyLiveries, /applyFixedEmergencyLivery/);
 assert.match(emergencyLiveries, /turnEmergencyLiveryAccent/);
+assert.match(emergencyLiveries, /length: size\.z \* 0\.52/);
 assert.match(emergencyLiveries, /createBaseCarVisual/);
 assert.doesNotMatch(emergencyLiveries, /turnEmergencyLightRig|PointLight|AdditiveBlending/);
 
 assert.match(lot, /SERVICE LIVERY/);
 assert.match(lotCss, /\.lot-fixed-livery/);
+assert.match(fixedLiveryUi, /emergencyVehicleNames/);
+assert.match(fixedLiveryUi, /colors\.childNodes\.length > 0/);
 assert.match(fixedLiveryUi, /colors\.replaceChildren\(\)/);
-assert.match(fixedLiveryUi, /colors\.hidden = true/);
+assert.doesNotMatch(fixedLiveryUi, /colors\.hidden = true/);
 assert.match(fixedLiveryUi, /colors\.hidden = false/);
+assert.match(fixedLiveryUi, /colors\.setAttribute\('aria-hidden', 'true'\)/);
 assert.match(lotTrackSelect, /installFixedLiveryUiGuard/);
+assert.match(lotTrackSelect, /emergency-paint-empty-v3/);
+assert.match(index, /syncFixedLiveryRail/);
+assert.match(index, /emergencyVehicleNames/);
 assert.doesNotMatch(fixedLiveryUi, /input|type=['"]color|SERVICE LIGHTS/);
 
 for (const html of [index, nextIndex]) {
@@ -100,4 +107,4 @@ assert.match(audio, /emergencySirenFrequency/);
 assert.match(audio, /sirenActive = boostActive/);
 assert.match(license, /Creative Commons CC0 1\.0 Universal/);
 
-console.log('TURN emergency vehicles, fixed liveries, lights and sirens passed.');
+console.log('TURN emergency vehicles, fixed liveries, empty paint rail, lights and sirens passed.');
