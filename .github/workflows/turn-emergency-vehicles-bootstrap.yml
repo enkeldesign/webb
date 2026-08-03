@@ -39,11 +39,10 @@ jobs:
       - name: Synchronize release identity
         run: node turn/scripts/release.mjs --write
 
-      - name: Synchronize TURN NEXT generated parity files
+      - name: Synchronize TURN NEXT generated app and main
         run: |
           node turn-next/scripts/build-parity-app.mjs --write
           node turn-next/scripts/build-parity-main.mjs --write
-          node turn-next/scripts/build-parity-entry.mjs --write
 
       - name: Syntax-check changed modules
         run: |
