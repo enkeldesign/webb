@@ -14,7 +14,7 @@ const EMERGENCY_LIVERY_BY_ID = Object.freeze({
   ambulance: Object.freeze({
     primary: 0xf8f9fa,
     secondary: 0xd92d20,
-    accent: 'side-stripe'
+    accent: 'rear-side-stripe'
   }),
   firetruck: Object.freeze({
     primary: 0xd92d20,
@@ -112,6 +112,13 @@ function installSecondaryAccent(root, model, color, accent) {
       height: size.y * 0.29,
       y: bounds.min.y + size.y * 0.48,
       z: center.z + size.z * 0.03
+    });
+  } else if (accent === 'rear-side-stripe') {
+    addSidePair({
+      length: size.z * 0.38,
+      height: Math.max(0.08, size.y * 0.09),
+      y: bounds.min.y + size.y * 0.49,
+      z: center.z + size.z * 0.22
     });
   } else {
     addSidePair({

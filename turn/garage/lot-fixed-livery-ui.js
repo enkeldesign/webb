@@ -5,11 +5,14 @@ export function installFixedLiveryUiGuard() {
       const fixedLivery = colors.querySelector('.lot-fixed-livery');
       if (fixedLivery) {
         colors.replaceChildren();
-        colors.hidden = true;
+        // Keep the rail for layout stability; the retired behavior was: colors.hidden = true.
+        colors.hidden = false;
+        colors.setAttribute('aria-hidden', 'true');
         colors.removeAttribute('aria-label');
-        viewbox?.classList.remove('lot-viewbox-with-paint');
+        viewbox?.classList.add('lot-viewbox-with-paint');
       } else if (colors.children.length > 0) {
         colors.hidden = false;
+        colors.removeAttribute('aria-hidden');
         viewbox?.classList.add('lot-viewbox-with-paint');
       }
     }
