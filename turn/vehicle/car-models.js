@@ -143,15 +143,16 @@ function installEmergencyLightRig(root, model, service) {
   const bounds = new THREE.Box3().setFromObject(model);
   const size = bounds.getSize(new THREE.Vector3());
   const center = bounds.getCenter(new THREE.Vector3());
-  const barWidth = Math.max(0.42, size.x * 0.34);
-  const lampWidth = barWidth * 0.42;
-  const lampHeight = Math.max(0.08, size.y * 0.045);
-  const lampDepth = Math.max(0.12, size.z * 0.055);
-  const roofY = bounds.max.y + lampHeight * 0.6;
+  const barWidth = Math.max(0.46, size.x * 0.36);
+  const lampWidth = barWidth * 0.46;
+  const lampHeight = Math.max(0.1, size.y * 0.055);
+  const lampDepth = Math.max(0.14, size.z * 0.065);
+  const roofY = bounds.max.y + lampHeight * 0.7;
   const roofZ = center.z - size.z * (service === 'firetruck' ? 0.08 : 0.04);
+  const lightDistance = Math.max(8, size.z * 3.1);
   const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches || false;
   const periodMs = reducedMotion ? 1400 : (service === 'police' ? 720 : 840);
-  const colors = service === 'police' ? [0xff264d, 0x168bff] : [0x168bff, 0x168bff];
+  const colors = service === 'police' ? [0xff3158, 0x2ab7ff] : [0x2ab7ff, 0x2ab7ff];
   const lamps = [];
 
   colors.forEach((color, index) => {
@@ -160,25 +161,46 @@ function installEmergencyLightRig(root, model, service) {
       transparent: true,
       opacity: 0,
       depthWrite: false,
+      blending: THREE.AdditiveBlending,
       toneMapped: false
     });
     const lamp = new THREE.Mesh(new THREE.BoxGeometry(lampWidth, lampHeight, lampDepth), material);
     lamp.position.set((index === 0 ? -1 : 1) * barWidth * 0.27, roofY, roofZ);
     lamp.visible = true;
-    lamp.renderOrder = 40;
+    lamp.renderOrder = 42;
 
     const haloMaterial = material.clone();
     haloMaterial.opacity = 0;
-    const halo = new THREE.Mesh(
-      new THREE.BoxGeometry(lampWidth * 1.45, lampHeight * 1.7, lampDepth * 1.45),
-      haloMaterial
-    );
+    const halo = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 10), haloMaterial);
     halo.position.copy(lamp.position);
+    halo.scale.set(lampWidth * 2.3, lampHeight * 5.4, lampDepth * 2.3);
     halo.visible = false;
-    halo.renderOrder = 39;
+    halo.renderOrder = 41;
 
-    root.add(halo, lamp);
-    lamps.push({ lamp, material, halo, haloMaterial, index });
+    const wideHaloMaterial = material.clone();
+    wideHaloMaterial.opacity = 0;
+    const wideHalo = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 10), wideHaloMaterial);
+    wideHalo.position.copy(lamp.position);
+    wideHalo.scale.set(lampWidth * 4.4, lampHeight * 8.2, lampDepth * 4.4);
+    wideHalo.visible = false;
+    wideHalo.renderOrder = 40;
+
+    const pointLight = new THREE.PointLight(color, 0, lightDistance, 2);
+    pointLight.position.copy(lamp.position);
+    pointLight.position.y += lampHeight * 1.2;
+    pointLight.castShadow = false;
+
+    root.add(pointLight, wideHalo, halo, lamp);
+    lamps.push({
+      lamp,
+      material,
+      halo,
+      haloMaterial,
+      wideHalo,
+      wideHaloMaterial,
+      pointLight,
+      index
+    });
   });
 
   const rig = {
@@ -206,9 +228,12 @@ function updateEmergencyLightRig(rig) {
   for (const record of rig.lamps) {
     const on = record.index === 0 ? firstOn : !firstOn;
     record.lamp.visible = true;
-    record.halo.visible = active && !rig.reducedMotion && on;
-    record.material.opacity = active ? (on ? 1 : 0.16) : 0;
-    record.haloMaterial.opacity = active && on ? 0.24 : 0;
+    record.halo.visible = active && on;
+    record.wideHalo.visible = active && !rig.reducedMotion && on;
+    record.material.opacity = active ? (on ? 1 : 0.08) : 0;
+    record.haloMaterial.opacity = active && on ? (rig.reducedMotion ? 0.42 : 0.68) : 0;
+    record.wideHaloMaterial.opacity = active && on ? 0.26 : 0;
+    record.pointLight.intensity = active && on ? (rig.reducedMotion ? 70 : 110) : 0;
   }
 }
 

@@ -46,6 +46,11 @@ const [carModels, lot, lotCss, controls, audio, license] = await Promise.all([
 
 assert.match(carModels, /!car\.fixedLivery/);
 assert.match(carModels, /installEmergencyLightRig/);
+assert.match(carModels, /THREE\.AdditiveBlending/);
+assert.match(carModels, /new THREE\.PointLight\(color, 0, lightDistance, 2\)/);
+assert.match(carModels, /record\.wideHalo\.visible = active && !rig\.reducedMotion && on/);
+assert.match(carModels, /record\.haloMaterial\.opacity = active && on \? \(rig\.reducedMotion \? 0\.42 : 0\.68\) : 0/);
+assert.match(carModels, /record\.pointLight\.intensity = active && on \? \(rig\.reducedMotion \? 70 : 110\) : 0/);
 assert.match(carModels, /prefers-reduced-motion: reduce/);
 assert.match(carModels, /periodMs = reducedMotion \? 1400/);
 assert.match(carModels, /globalThis\.__turnBoostActive/);
