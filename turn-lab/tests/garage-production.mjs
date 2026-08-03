@@ -212,7 +212,8 @@ assert.doesNotMatch(main, /wayne-wu\/webgpu-crowd-simulation/);
 
 assert.equal(imports['./vehicle/catalog.js?build=20260720-r19'], releaseTarget('./vehicle/catalog.js'));
 assert.equal(imports['./vehicle/catalog.js?build=20260720-r20'], releaseTarget('./vehicle/catalog.js'));
-assert.equal(imports['./vehicle/car-models.js?build=20260720-r19'], releaseTarget('./vehicle/car-models.js'));
+assert.equal(imports['./vehicle/car-models.js?build=20260720-r19'], releaseTarget('./vehicle/emergency-livery-models.js'));
+assert.equal(imports['./vehicle/car-models.js?build=20260720-r22'], releaseTarget('./vehicle/emergency-livery-models.js'));
 assert.match(app, /installSportsSedanEasterEggUi\(\)/);
 assert.match(lapSystem, /carId: state\.vehicleId \|\| 'sedan'/);
 assert.match(lapSystem, /carColor: state\.vehicleColor \|\| '#ffd43b'/);
