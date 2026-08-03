@@ -151,6 +151,9 @@ jobs:
       - name: Run lap result toast regression
         run: node turn-lab/tests/lap-result-toast-production.mjs
 
+      - name: Run achievement system regression
+        run: node turn-lab/tests/achievements-production.mjs
+
       - name: Run production sound foundation regression
         run: node turn-lab/tests/audio-foundation-production.mjs
 

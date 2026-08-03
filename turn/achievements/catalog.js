@@ -1,0 +1,93 @@
+export const TRACK_IDS = Object.freeze([
+  'countryside',
+  'airport',
+  'cliffside',
+  'harbor',
+  'midnight-city'
+]);
+
+export const TRAINING_CAR_ID = 'classic';
+
+export const CATEGORY = Object.freeze({
+  ONBOARDING: 'onboarding',
+  WAYS_TO_PLAY: 'ways-to-play',
+  EXPLORATION: 'exploration',
+  RACING: 'racing'
+});
+
+export const CATEGORY_LABELS = Object.freeze({
+  [CATEGORY.ONBOARDING]: 'Getting started',
+  [CATEGORY.WAYS_TO_PLAY]: 'Ways to play',
+  [CATEGORY.EXPLORATION]: 'Exploration',
+  [CATEGORY.RACING]: 'Racing'
+});
+
+export const TRACK_NAMES = Object.freeze({
+  countryside: 'Countryside',
+  airport: 'Airport',
+  cliffside: 'Cliffside',
+  harbor: 'Harbor',
+  'midnight-city': 'Midnight City'
+});
+
+export const VEHICLE_NAMES = Object.freeze({
+  convertible: 'Convertible',
+  classic: 'Training Car',
+  'vintage-racer': 'Vintage Racer',
+  'toy-racer': 'Toy Racer',
+  'monster-truck': 'Monster Truck',
+  'race-future': 'Future Racer',
+  race: 'Race Car',
+  'sedan-sports': 'Sport Sedan',
+  sedan: 'Sedan',
+  suv: 'SUV',
+  firetruck: 'Fire Truck',
+  police: 'Police Car',
+  ambulance: 'Ambulance',
+  truck: 'Truck',
+  van: 'Van'
+});
+
+export const ICONS = Object.freeze({
+  flag: '<svg viewBox="0 0 24 24"><path d="M5 21V4"></path><path d="M6 5h11l-2.5 3L17 11H6"></path><path d="M3 21h6"></path></svg>',
+  restart: '<svg viewBox="0 0 24 24"><path d="M4 9V4l4 3"></path><path d="M5 7a8 8 0 1 1-1 8"></path><path d="M12 8v5l3 2"></path></svg>',
+  charge: '<svg viewBox="0 0 24 24"><path d="M7 4h8v16H7Z"></path><path d="M9 2h4"></path><path d="m13 7-3 5h3l-2 5"></path><path d="M18 9c2 1 3 3 3 5"></path></svg>',
+  wind: '<svg viewBox="0 0 24 24"><path d="M4 8h10c3 0 3-4 0-4-2 0-2 2-2 2"></path><path d="M3 12h14c4 0 4 6 0 6-2 0-3-2-2-3"></path><path d="M5 16h6"></path></svg>',
+  flow: '<svg viewBox="0 0 24 24"><path d="M3 12c3-6 6-6 9 0s6 6 9 0c-3-6-6-6-9 0s-6 6-9 0Z"></path></svg>',
+  spectate: '<svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6S2.5 12 2.5 12Z"></path><circle cx="12" cy="12" r="2.5"></circle><path d="m17 17 4 4"></path></svg>',
+  rival: '<svg viewBox="0 0 24 24"><path d="M3 15h8l2-5h5l3 5v4h-2"></path><path d="M5 19H3v-4"></path><circle cx="7" cy="19" r="2"></circle><circle cx="17" cy="19" r="2"></circle><path d="M4 10h6l1-3h4"></path></svg>',
+  level: '<svg viewBox="0 0 24 24"><path d="M3 8h18v8H3Z"></path><circle cx="12" cy="12" r="2"></circle><path d="M6 12h2M16 12h2"></path></svg>',
+  wheel: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="3"></circle><path d="M12 3v6M4.2 8.2l5.2 3M19.8 8.2l-5.2 3M7 19l3-5.2M17 19l-3-5.2"></path></svg>',
+  map: '<svg viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"></path><path d="M9 3v15M15 6v15"></path></svg>',
+  blind: '<svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6S2.5 12 2.5 12Z"></path><circle cx="12" cy="12" r="2.5"></circle><path d="M4 4l16 16"></path></svg>',
+  route: '<svg viewBox="0 0 24 24"><circle cx="5" cy="18" r="2"></circle><circle cx="19" cy="6" r="2"></circle><path d="M7 18h3c3 0 3-5 6-5h1M17 6h-3c-3 0-3 4-6 4H5"></path></svg>',
+  trophy: '<svg viewBox="0 0 24 24"><path d="M7 4h10v4c0 4-2 7-5 8-3-1-5-4-5-8V4Z"></path><path d="M7 6H4v2c0 2 1 3 4 4M17 6h3v2c0 2-1 3-4 4M9 20h6M12 16v4"></path></svg>'
+});
+
+export const ACHIEVEMENTS = Object.freeze([
+  Object.freeze({ id: 'first-turn', category: CATEGORY.ONBOARDING, points: 25, title: 'FIRST TURN', description: 'Finish any valid lap.', icon: 'flag' }),
+  Object.freeze({ id: 'take-it-from-the-top', category: CATEGORY.ONBOARDING, points: 25, title: 'TAKE IT FROM THE TOP', description: 'Use Restart Lap after the current lap becomes void.', icon: 'restart' }),
+  Object.freeze({ id: 'charge-through-it', category: CATEGORY.ONBOARDING, points: 25, title: 'CHARGE THROUGH IT', description: 'Recharge at least 25% of the Boost meter while drifting in one lap.', icon: 'charge', progressMax: 25 }),
+  Object.freeze({ id: 'second-wind', category: CATEGORY.ONBOARDING, points: 25, title: 'SECOND WIND', description: 'Run Boost empty, let it recharge, then activate Boost again.', icon: 'wind' }),
+  Object.freeze({ id: 'flow-state', category: CATEGORY.ONBOARDING, points: 50, title: 'FLOW STATE', description: 'Finish a valid lap using only Drift and Boost for forward drive.', recommendation: 'Recommended: Training Car · Countryside', icon: 'flow' }),
+  Object.freeze({ id: 'watch-and-learn', category: CATEGORY.ONBOARDING, points: 25, title: 'WATCH AND LEARN', description: 'Spectate a rival for five seconds, then return to the start.', icon: 'spectate', progressMax: 5 }),
+  Object.freeze({ id: 'your-own-rival', category: CATEGORY.ONBOARDING, points: 25, title: 'YOUR OWN RIVAL', description: 'Finish a valid lap with one of your saved rivals on the track.', icon: 'rival' }),
+  Object.freeze({ id: 'level-head', category: CATEGORY.ONBOARDING, points: 25, title: 'LEVEL HEAD', description: 'Recalibrate, then finish a valid lap.', icon: 'level' }),
+  Object.freeze({ id: 'new-wheels', category: CATEGORY.ONBOARDING, points: 25, title: 'NEW WHEELS', description: 'Finish a valid lap with a vehicle other than the Training Car.', icon: 'wheel' }),
+  Object.freeze({ id: 'new-ground', category: CATEGORY.ONBOARDING, points: 25, title: 'NEW GROUND', description: 'Finish valid laps on two different tracks.', icon: 'map', progressMax: 2 }),
+  Object.freeze({ id: 'trust-your-ears', category: CATEGORY.WAYS_TO_PLAY, points: 50, title: 'TRUST YOUR EARS', description: 'Finish a valid lap with Blank screen mode on from start to finish.', icon: 'blind' }),
+  Object.freeze({ id: 'around-the-turn', category: CATEGORY.EXPLORATION, points: 100, title: 'AROUND THE TURN', description: 'Finish a valid lap on every track.', icon: 'route', progressMax: TRACK_IDS.length }),
+  Object.freeze({ id: 'ahead-of-yourself', category: CATEGORY.RACING, points: 50, title: 'AHEAD OF YOURSELF', description: 'Finish first in a lap with at least one saved rival.', icon: 'trophy' })
+]);
+
+export const ONBOARDING_ACHIEVEMENT_IDS = Object.freeze(
+  ACHIEVEMENTS
+    .filter((achievement) => achievement.category === CATEGORY.ONBOARDING)
+    .map((achievement) => achievement.id)
+);
+
+const ACHIEVEMENT_BY_ID = new Map(ACHIEVEMENTS.map((achievement) => [achievement.id, achievement]));
+
+export function getAchievement(id) {
+  return ACHIEVEMENT_BY_ID.get(id) || null;
+}
