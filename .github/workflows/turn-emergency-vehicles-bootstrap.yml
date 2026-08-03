@@ -1,6 +1,12 @@
 name: Bootstrap TURN emergency vehicles
 
 on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/scripts/implement_turn_emergency_vehicles.py'
+      - '.github/workflows/turn-emergency-vehicles-bootstrap.yml'
   push:
     branches:
       - agent/turn-emergency-vehicles
