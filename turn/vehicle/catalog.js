@@ -59,10 +59,15 @@ export const CAR_PALETTE = Object.freeze([
 ]);
 
 // Global balance adjustments are kept separate from each GLB's authored normalization.
-// They follow the shared model factory into The Lot, race, rivals, Spectate and previews.
+// Convertible and Training Car use these sizes on every surface.
 const VISUAL_SIZE_MULTIPLIER_BY_ID = Object.freeze({
   convertible: 0.6,
-  classic: 0.6,
+  classic: 0.6
+});
+
+// Featured adjustments are only used in the standard Lot lineup and during a race.
+// Compact previews and the expanded 3D viewer retain the authored model scale.
+const FEATURED_VISUAL_SIZE_MULTIPLIER_BY_ID = Object.freeze({
   'monster-truck': 1.2
 });
 
@@ -117,6 +122,7 @@ export const CAR_CATALOG = Object.freeze(RAW_CARS.map(([
   stats: Object.freeze({ ...stats }),
   visualScale,
   visualSizeMultiplier: VISUAL_SIZE_MULTIPLIER_BY_ID[id] || 1,
+  featuredVisualSizeMultiplier: FEATURED_VISUAL_SIZE_MULTIPLIER_BY_ID[id] || 1,
   modelYawQuarterTurns,
   secondaryPaint: SECONDARY_PAINT_BY_ID[id] || null,
   tuning: Object.freeze({

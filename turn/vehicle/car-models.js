@@ -12,6 +12,10 @@ const loader = new GLTFLoader();
 const sourceCache = new Map();
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
 const TIRE_COLOR = 0x17191c;
+// Existing production surfaces use stable target lengths: 5.15 for the standard
+// Lot lineup and 5.5 for race cars. The expanded viewer and record thumbnails use
+// 6.4 and intentionally keep the authored scale.
+const FEATURED_SURFACE_TARGET_LENGTHS = new Set([5.15, 5.5]);
 
 export async function preloadCarModels(carIds) {
   await Promise.all(carIds.map((carId) => loadCarSource(carId).catch(() => null)));
@@ -106,7 +110,13 @@ export async function createCarVisual({
   }
 
   if (outline) addOutlines(model);
-  const effectiveVisualScale = car.visualScale * car.visualSizeMultiplier;
+  const featuredSurface = FEATURED_SURFACE_TARGET_LENGTHS.has(targetLength);
+  const featuredVisualSizeMultiplier = featuredSurface
+    ? car.featuredVisualSizeMultiplier
+    : 1;
+  const effectiveVisualScale = car.visualScale
+    * car.visualSizeMultiplier
+    * featuredVisualSizeMultiplier;
   normalizeModelToGround(model, targetLength * effectiveVisualScale);
 
   root.userData.turnCarId = car.id;
@@ -115,6 +125,8 @@ export async function createCarVisual({
   root.userData.turnGhost = ghost;
   root.userData.turnModelYawQuarterTurns = car.modelYawQuarterTurns;
   root.userData.turnVisualSizeMultiplier = car.visualSizeMultiplier;
+  root.userData.turnFeaturedVisualSizeMultiplier = featuredVisualSizeMultiplier;
+  root.userData.turnFeaturedVisualSurface = featuredSurface;
   root.userData.turnEffectiveVisualScale = effectiveVisualScale;
   root.userData.turnPrimaryPaintMaterials = primaryPaintMaterials;
   root.userData.turnSecondaryPaintMaterials = secondaryPaintMaterials;

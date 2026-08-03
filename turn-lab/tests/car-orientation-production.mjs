@@ -40,9 +40,12 @@ const expectedVisualScales = new Map([
   ['van', 1.08]
 ]);
 
-const expectedSizeMultipliers = new Map([
+const expectedGlobalSizeMultipliers = new Map([
   ['convertible', 0.6],
-  ['classic', 0.6],
+  ['classic', 0.6]
+]);
+
+const expectedFeaturedSizeMultipliers = new Map([
   ['monster-truck', 1.2]
 ]);
 
@@ -66,8 +69,13 @@ for (const car of catalog.CAR_CATALOG) {
   );
   assert.equal(
     car.visualSizeMultiplier,
-    expectedSizeMultipliers.get(car.id) || 1,
+    expectedGlobalSizeMultipliers.get(car.id) || 1,
     `${car.name} must keep its globally shared size multiplier`
+  );
+  assert.equal(
+    car.featuredVisualSizeMultiplier,
+    expectedFeaturedSizeMultipliers.get(car.id) || 1,
+    `${car.name} must keep its Lot-and-race featured multiplier`
   );
 
   const glb = await fs.readFile(new URL(`../../turn/assets/cars/${car.id}.glb`, import.meta.url));
@@ -102,14 +110,20 @@ const trainingCar = catalog.getCarDefinition('classic');
 const monsterTruck = catalog.getCarDefinition('monster-truck');
 assertClose(convertible.visualScale * convertible.visualSizeMultiplier, 0.588, 'Convertible effective visual scale');
 assertClose(trainingCar.visualScale * trainingCar.visualSizeMultiplier, 0.6, 'Training Car effective visual scale');
-assertClose(monsterTruck.visualScale * monsterTruck.visualSizeMultiplier, 0.996, 'Monster Truck effective visual scale');
+assertClose(monsterTruck.visualScale * monsterTruck.visualSizeMultiplier, 0.83, 'Monster Truck compact visual scale');
+assertClose(
+  monsterTruck.visualScale * monsterTruck.visualSizeMultiplier * monsterTruck.featuredVisualSizeMultiplier,
+  0.996,
+  'Monster Truck Lot-and-race visual scale'
+);
 
-const [index, releaseSource, carModels, lot, main] = await Promise.all([
+const [index, releaseSource, carModels, lot, main, trackBestCar] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/ui/track-best-car.js', import.meta.url), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -121,15 +135,28 @@ assert.match(
 );
 assert.match(
   carModels,
-  /effectiveVisualScale = car\.visualScale \* car\.visualSizeMultiplier/,
-  'The shared model factory must combine authored normalization with global size balance'
+  /FEATURED_SURFACE_TARGET_LENGTHS = new Set\(\[5\.15, 5\.5\]\)/,
+  'Only the standard Lot lineup and race target lengths may use featured sizing'
+);
+assert.match(carModels, /featuredSurface = FEATURED_SURFACE_TARGET_LENGTHS\.has\(targetLength\)/);
+assert.match(
+  carModels,
+  /featuredVisualSizeMultiplier = featuredSurface[\s\S]*\? car\.featuredVisualSizeMultiplier[\s\S]*: 1/,
+  'Featured sizing must be opt-in by surface'
+);
+assert.match(
+  carModels,
+  /effectiveVisualScale = car\.visualScale[\s\S]*\* car\.visualSizeMultiplier[\s\S]*\* featuredVisualSizeMultiplier/,
+  'The shared model factory must combine authored, global and featured scaling'
 );
 assert.match(
   carModels,
   /normalizeModelToGround\(model, targetLength \* effectiveVisualScale\)/,
-  'Every model surface must receive the same effective size through the shared factory'
+  'Every model surface must receive its resolved scale through the shared factory'
 );
 assert.match(carModels, /turnVisualSizeMultiplier = car\.visualSizeMultiplier/);
+assert.match(carModels, /turnFeaturedVisualSizeMultiplier = featuredVisualSizeMultiplier/);
+assert.match(carModels, /turnFeaturedVisualSurface = featuredSurface/);
 assert.match(carModels, /turnEffectiveVisualScale = effectiveVisualScale/);
 assert.match(carModels, /side: THREE\.BackSide/, 'Car outlines must remain inverted back-face shells');
 assert.match(carModels, /depthTest: true/, 'Car outlines must still respect the body depth buffer');
@@ -137,12 +164,25 @@ assert.match(carModels, /depthWrite: false/, 'Car outlines must not write depth 
 assert.match(carModels, /polygonOffset: true/, 'Car outlines must use a depth offset for stable close surface intersections');
 assert.match(carModels, /polygonOffsetFactor: 1/);
 assert.match(carModels, /polygonOffsetUnits: 1/);
+
+assert.match(lot, /targetLength: 5\.15/, 'The standard Lot lineup must use the featured surface size');
+assert.match(lot, /targetLength: 6\.4/, 'The expanded 3D viewer must retain its compact-safe size');
+assert.equal((lot.match(/targetLength: 5\.15/g) || []).length, 1);
+assert.equal((lot.match(/targetLength: 6\.4/g) || []).length, 1);
+assert.match(main, /targetLength: 5\.5/, 'Race cars and rivals must use the featured surface size');
+assert.match(trackBestCar, /targetLength: 6\.4/, 'Home record thumbnails must retain their compact-safe size');
+assert.doesNotMatch(
+  carModels,
+  /FEATURED_SURFACE_TARGET_LENGTHS = new Set\(\[[^\]]*6\.4/,
+  'Expanded 3D and record-preview target lengths must never receive featured sizing'
+);
+
 assert.match(lot, /visual\.rotation\.y = Math\.PI/, 'The Lot must map local -Z to the camera-facing direction');
 assert.match(lot, /VIEWER_INITIAL_YAW = Math\.PI - 0\.55/, 'The viewer must start on the normalized front');
 assert.match(main, /playerCar\.rotation\.y = state\.heading \+ Math\.PI/);
 assert.match(main, /car\.rotation\.y = frame\.h \+ Math\.PI/);
 
-console.log(`TURN ${release.id} car orientation and shared visual sizing passed for all 15 models.`);
+console.log(`TURN ${release.id} car orientation and surface-specific visual sizing passed for all 15 models.`);
 
 function assertClose(actual, expected, label) {
   assert.ok(
