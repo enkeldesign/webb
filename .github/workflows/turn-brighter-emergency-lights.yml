@@ -27,7 +27,15 @@ jobs:
           fetch-depth: 0
 
       - name: Apply high-visibility emergency light pass
-        run: python .github/scripts/brighten-turn-emergency-lights.py
+        run: |
+          python .github/scripts/brighten-turn-emergency-lights.py
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('turn-tests/design-system-production.mjs')
+          text = path.read_text(encoding='utf-8')
+          text = text.replace(r'2026\.08\.03-R125', r'2026\.08\.03-R126')
+          path.write_text(text, encoding='utf-8')
+          PY
 
       - name: Synchronize release and TURN NEXT parity
         run: |
