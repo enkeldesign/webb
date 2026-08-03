@@ -56,7 +56,7 @@ function installStyles() {
       width: 50px;
       min-width: 50px;
       min-height: 50px;
-      padding: 9px;
+      padding: 4px;
       place-items: center;
       align-self: stretch;
       border-radius: 12px;
@@ -64,6 +64,10 @@ function installStyles() {
       color: #08090a;
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
+    }
+
+    .utility-group[data-menu-state="staged"] .turn-screen-blank-control {
+      padding: 4px;
     }
 
     .turn-screen-blank-control[data-state="active"] {
@@ -76,7 +80,7 @@ function installStyles() {
       height: var(--turn-screen-blank-height, 50px);
       min-height: var(--turn-screen-blank-height, 50px);
       margin: 0;
-      padding: var(--turn-screen-blank-padding, 9px);
+      padding: var(--turn-screen-blank-padding, 4px);
       align-self: auto;
       border-width: var(--turn-screen-blank-border-width, 3px);
       border-radius: var(--turn-screen-blank-radius, 12px);
@@ -90,7 +94,7 @@ function installStyles() {
       overflow: visible;
       fill: none;
       stroke: currentColor;
-      stroke-width: 2.2;
+      stroke-width: 2.4;
       stroke-linecap: round;
       stroke-linejoin: round;
     }
@@ -129,7 +133,11 @@ function installStyles() {
         width: 40px;
         min-width: 40px;
         min-height: 40px;
-        padding: 7px;
+        padding: 3px;
+      }
+
+      .utility-group[data-menu-state="staged"] .turn-screen-blank-control {
+        padding: 3px;
       }
 
       .turn-screen-blank-toast {

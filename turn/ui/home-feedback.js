@@ -1,6 +1,6 @@
 const FEEDBACK_EMAIL = 'erik@enkel.design';
 const FEEDBACK_SUBJECT = 'TURN feedback';
-const FEEDBACK_VERSION = 'r137-feedback-above-fold';
+const FEEDBACK_VERSION = 'r147-achievement-menu-order';
 
 let installed = false;
 
@@ -152,6 +152,22 @@ function createAboutTrigger() {
   return { meta, trigger, buildLabel };
 }
 
+function alignAchievementsTrigger(menu, feedbackTrigger) {
+  const achievementsTrigger = menu.querySelector('.m8-achievements-button');
+  if (!achievementsTrigger) return null;
+
+  // Reuse the complete Give Feedback button typography and geometry so the two
+  // destinations remain perfectly aligned at every responsive breakpoint.
+  achievementsTrigger.classList.add('m8-feedback-button');
+  achievementsTrigger.style.setProperty(
+    'background',
+    'var(--turn-action-success, #8ce99a)',
+    'important'
+  );
+  feedbackTrigger.after(achievementsTrigger);
+  return achievementsTrigger;
+}
+
 export function installHomeFeedback() {
   if (installed) return globalThis.__turnHomeFeedback;
 
@@ -167,6 +183,7 @@ export function installHomeFeedback() {
   feedbackTrigger.textContent = 'GIVE FEEDBACK';
   feedbackTrigger.setAttribute('aria-haspopup', 'dialog');
   menu.insertBefore(feedbackTrigger, status);
+  const achievementsTrigger = alignAchievementsTrigger(menu, feedbackTrigger);
 
   const { meta, trigger: aboutTrigger, buildLabel } = createAboutTrigger();
   const feedbackDialog = createFeedbackDialog();
@@ -185,6 +202,7 @@ export function installHomeFeedback() {
     version: FEEDBACK_VERSION,
     email: FEEDBACK_EMAIL,
     trigger: feedbackTrigger,
+    achievementsTrigger,
     dialog: feedbackDialog,
     open: () => openDialog(feedbackDialog, feedbackTrigger),
     close: () => closeDialog(feedbackDialog),

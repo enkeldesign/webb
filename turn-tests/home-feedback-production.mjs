@@ -16,11 +16,18 @@ assert.ok(
   'The feedback and About actions must be installed only after the fixed Home interface exists'
 );
 
-assert.match(feedback, /FEEDBACK_VERSION = 'r137-feedback-above-fold'/);
+assert.match(feedback, /FEEDBACK_VERSION = 'r147-achievement-menu-order'/);
 assert.match(feedback, /FEEDBACK_EMAIL = 'erik@enkel\.design'/);
 assert.match(feedback, /feedbackTrigger\.textContent = 'GIVE FEEDBACK'/);
 assert.match(feedback, /feedbackTrigger\.setAttribute\('aria-haspopup', 'dialog'\)/);
 assert.match(feedback, /menu\.insertBefore\(feedbackTrigger, status\)/, 'GIVE FEEDBACK must sit with the other Home menu actions, before status and RACE');
+assert.match(feedback, /function alignAchievementsTrigger\(menu, feedbackTrigger\)/);
+assert.match(feedback, /achievementsTrigger\.classList\.add\('m8-feedback-button'\)/,
+  'Achievements must reuse the complete Give Feedback typography and geometry');
+assert.match(feedback, /var\(--turn-action-success, #8ce99a\)/,
+  'The Home Achievements destination must use the semantic success action');
+assert.match(feedback, /feedbackTrigger\.after\(achievementsTrigger\)/,
+  'Achievements must be placed directly after Give Feedback');
 assert.match(feedback, /dialog\.className = 'm8-dialog m8-feedback-dialog'/);
 assert.match(feedback, /aria-labelledby', 'm8FeedbackTitle'/);
 assert.match(feedback, /<h2 id="m8FeedbackTitle">GIVE FEEDBACK<\/h2>/);
