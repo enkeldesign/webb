@@ -102,11 +102,11 @@ await prepareDriveByEarRuntime();
 // Runtime-loader regression markers. These operations now live in drive-by-ear-runtime.js,
 // but their ordering relative to the central graph remains a production contract:
 // organicRibbon = await import(withBuild('./audio/organic-ribbon.js'))
-// organicRibbon.prepareOrganicRibbonCapture()
+// organicRibbon.prepareOrganicRibbonCapture();
 // recoveryGuidance = await import(withBuild('./audio/recovery-guidance.js'))
-// recoveryGuidance.prepareRecoveryGuidanceCapture()
+// recoveryGuidance.prepareRecoveryGuidanceCapture();
 // paceNotePriority = await import(withBuild('./audio/pace-note-priority.js?revision=r123-final-hold'))
-// paceNotePriority.preparePaceNotePriorityCapture()
+// paceNotePriority.preparePaceNotePriorityCapture();
 
 // Keep the central guidance graph ready so audio-only mode can start without reloading.
 // The player's stored setting is restored immediately after graph construction.
@@ -119,15 +119,15 @@ installTurnAudio();
 audioPreferences.setDriveByEarEnabled(driveByEarEnabled);
 
 // Runtime-loader regression markers for the post-graph wrapper order:
-// organicRibbon.installOrganicRibbon()
-// paceNotePriority.installPaceNotePriority()
+// organicRibbon.installOrganicRibbon();
+// paceNotePriority.installPaceNotePriority();
 // import(withBuild('./audio/driving-soundscape.js'))
-// installUniversalDrivingSoundscape()
+// installUniversalDrivingSoundscape();
 // import(withBuild('./audio/pace-notes.js?revision=r123-final-hold'))
-// installPaceNotes()
+// installPaceNotes();
 // withBuild('./audio/offroad-ear-direction.js')
-// installOffroadEarDirection()
-// recoveryGuidance.installRecoveryGuidance()
+// installOffroadEarDirection();
+// recoveryGuidance.installRecoveryGuidance();
 
 const { installSteeringLimitWarning } = await import(
   withBuild('./ui/steering-limit-warning.js')
