@@ -1,6 +1,11 @@
 name: Synchronize TURN emergency release metadata
 
 on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/turn-emergency-release-sync.yml'
   push:
     branches:
       - agent/turn-emergency-vehicles
