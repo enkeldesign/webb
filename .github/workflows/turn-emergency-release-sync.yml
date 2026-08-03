@@ -32,12 +32,11 @@ jobs:
           from pathlib import Path
 
           replacements = {
-              '1.3.2': '1.4.0',
               '2026.08.02-r124': '2026.08.03-r125',
-              '20260802-r124': '20260803-r125',
-              'V1.3.2 · BUILD 2026.08.02-R124': 'V1.4.0 · BUILD 2026.08.03-R125',
-              r'1\.3\.2': r'1\.4\.0',
               r'2026\.08\.02-r124': r'2026\.08\.03-r125',
+              '1.3.2': '1.4.0',
+              r'1\.3\.2': r'1\.4\.0',
+              '20260802-r124': '20260803-r125',
           }
           for name in ['turn/design.html', 'turn-tests/design-system-production.mjs']:
               path = Path(name)
@@ -56,4 +55,6 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add turn/design.html turn-tests/design-system-production.mjs
           git commit -m 'Synchronize design system with TURN v1.4.0'
+          git fetch origin agent/turn-emergency-vehicles
+          git rebase origin/agent/turn-emergency-vehicles
           git push origin HEAD:agent/turn-emergency-vehicles
