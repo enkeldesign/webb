@@ -1,0 +1,52 @@
+name: Synchronize TURN emergency release metadata
+
+on:
+  push:
+    branches:
+      - agent/turn-emergency-vehicles
+    paths:
+      - '.github/workflows/turn-emergency-release-sync.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  synchronize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/turn-emergency-vehicles
+          fetch-depth: 0
+
+      - name: Synchronize design-system release references
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          replacements = {
+              '1.3.2': '1.4.0',
+              '2026.08.02-r124': '2026.08.03-r125',
+              '20260802-r124': '20260803-r125',
+              'V1.3.2 · BUILD 2026.08.02-R124': 'V1.4.0 · BUILD 2026.08.03-R125',
+          }
+          for name in ['turn/design.html', 'turn-tests/design-system-production.mjs']:
+              path = Path(name)
+              text = path.read_text(encoding='utf-8')
+              for old, new in replacements.items():
+                  text = text.replace(old, new)
+              path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Verify design-system regression
+        run: node turn-tests/design-system-production.mjs
+
+      - name: Commit synchronized metadata
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add turn/design.html turn-tests/design-system-production.mjs
+          git commit -m 'Synchronize design system with TURN v1.4.0'
+          git push origin HEAD:agent/turn-emergency-vehicles
