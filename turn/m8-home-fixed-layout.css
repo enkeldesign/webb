@@ -25,7 +25,7 @@
   align-self: stretch;
   justify-self: start;
   display: block;
-  box-sizing: border-box;
+  box-sizing: content-box;
   width: auto;
   height: 100%;
   max-width: 100%;
