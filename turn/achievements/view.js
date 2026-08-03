@@ -7,7 +7,7 @@ import {
   TRACK_NAMES,
   VEHICLE_NAMES,
   TRACK_IDS
-} from './catalog.js?revision=r144-achievements';
+} from './catalog.js?revision=r146-achievement-expansion';
 
 const TOAST_VISIBLE_MS = 3600;
 const ATTENTION_VISIBLE_MS = 900;
@@ -36,6 +36,13 @@ export function allOnboardingComplete(store) {
 function progressFor(achievement, store, session) {
   if (achievement.id === 'new-ground') return Math.min(2, store.state.progress.tracks.length);
   if (achievement.id === 'around-the-turn') return Math.min(TRACK_IDS.length, store.state.progress.tracks.length);
+  if (achievement.id === 'beyond-sight') return Math.min(TRACK_IDS.length, store.state.progress.blankTracks.length);
+  if (achievement.id === 'listen-closely') {
+    return Math.min(10, Math.floor((session.listenCloselyMs || 0) / 1000));
+  }
+  if (achievement.id === 'night-shift-sheriff') {
+    return Math.min(4, session.currentLap?.nightShift?.overtakenRivals?.size || 0);
+  }
   if (achievement.id === 'charge-through-it') {
     return Math.min(25, Math.round((session.currentLap?.driftChargeGained || 0) * 100));
   }
@@ -92,7 +99,7 @@ function installStylesheet() {
   const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
   const stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet';
-  stylesheet.href = `/turn/achievements.css?build=${buildKey}-r145-button-notifications`;
+  stylesheet.href = `/turn/achievements.css?build=${buildKey}-r146-achievement-expansion`;
   stylesheet.setAttribute('data-turn-achievements', '');
   document.head.appendChild(stylesheet);
 }

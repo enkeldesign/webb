@@ -7,6 +7,8 @@ export const TRACK_IDS = Object.freeze([
 ]);
 
 export const TRAINING_CAR_ID = 'classic';
+export const POLICE_CAR_ID = 'police';
+export const MIDNIGHT_CITY_ID = 'midnight-city';
 
 export const CATEGORY = Object.freeze({
   ONBOARDING: 'onboarding',
@@ -60,8 +62,11 @@ export const ICONS = Object.freeze({
   wheel: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="3"></circle><path d="M12 3v6M4.2 8.2l5.2 3M19.8 8.2l-5.2 3M7 19l3-5.2M17 19l-3-5.2"></path></svg>',
   map: '<svg viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"></path><path d="M9 3v15M15 6v15"></path></svg>',
   blind: '<svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6S2.5 12 2.5 12Z"></path><circle cx="12" cy="12" r="2.5"></circle><path d="M4 4l16 16"></path></svg>',
+  listen: '<svg viewBox="0 0 24 24"><path d="M15.5 16.5c0 3-1.7 5-4.5 5-2.4 0-4-1.6-4-4V9a5 5 0 0 1 10 0c0 2.4-1.2 3.8-3.3 5.1-1.1.7-1.7 1.5-1.7 2.9"></path><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.2-.6 1.9-1.8 2.7"></path><path d="M19 7c1 1.3 1.5 2.7 1.5 4.5"></path></svg>',
+  blindRoute: '<svg viewBox="0 0 24 24"><circle cx="5" cy="18" r="2"></circle><circle cx="19" cy="6" r="2"></circle><path d="M7 18h3c3 0 3-5 6-5h1M17 6h-3c-3 0-3 4-6 4H5"></path><path d="M4 4l16 16"></path></svg>',
   route: '<svg viewBox="0 0 24 24"><circle cx="5" cy="18" r="2"></circle><circle cx="19" cy="6" r="2"></circle><path d="M7 18h3c3 0 3-5 6-5h1M17 6h-3c-3 0-3 4-6 4H5"></path></svg>',
-  trophy: '<svg viewBox="0 0 24 24"><path d="M7 4h10v4c0 4-2 7-5 8-3-1-5-4-5-8V4Z"></path><path d="M7 6H4v2c0 2 1 3 4 4M17 6h3v2c0 2-1 3-4 4M9 20h6M12 16v4"></path></svg>'
+  trophy: '<svg viewBox="0 0 24 24"><path d="M7 4h10v4c0 4-2 7-5 8-3-1-5-4-5-8V4Z"></path><path d="M7 6H4v2c0 2 1 3 4 4M17 6h3v2c0 2-1 3-4 4M9 20h6M12 16v4"></path></svg>',
+  siren: '<svg viewBox="0 0 24 24"><path d="M7 16v-5a5 5 0 0 1 10 0v5"></path><path d="M5 16h14v4H5Z"></path><path d="M12 2v3M4.5 5.5l2 2M19.5 5.5l-2 2M2 12h3M19 12h3"></path></svg>'
 });
 
 export const ACHIEVEMENTS = Object.freeze([
@@ -75,9 +80,12 @@ export const ACHIEVEMENTS = Object.freeze([
   Object.freeze({ id: 'level-head', category: CATEGORY.ONBOARDING, points: 25, title: 'LEVEL HEAD', description: 'Recalibrate, then finish a valid lap.', icon: 'level' }),
   Object.freeze({ id: 'new-wheels', category: CATEGORY.ONBOARDING, points: 25, title: 'NEW WHEELS', description: 'Finish a valid lap with a vehicle other than the Training Car.', icon: 'wheel' }),
   Object.freeze({ id: 'new-ground', category: CATEGORY.ONBOARDING, points: 25, title: 'NEW GROUND', description: 'Finish valid laps on two different tracks.', icon: 'map', progressMax: 2 }),
-  Object.freeze({ id: 'trust-your-ears', category: CATEGORY.WAYS_TO_PLAY, points: 50, title: 'TRUST YOUR EARS', description: 'Finish a valid lap with Blank screen mode on from start to finish.', icon: 'blind' }),
+  Object.freeze({ id: 'trust-your-ears', category: CATEGORY.WAYS_TO_PLAY, points: 200, title: 'TRUST YOUR EARS', description: 'Finish a valid lap with Blank screen mode on from start to finish.', icon: 'blind' }),
+  Object.freeze({ id: 'listen-closely', category: CATEGORY.WAYS_TO_PLAY, points: 50, title: 'LISTEN CLOSELY', description: 'Set Sound balance to at least 75% Drive By Ear, then drive for ten seconds with Blank screen mode on.', recommendation: 'Recommended for non-visual driving: 90% Drive By Ear', icon: 'listen', progressMax: 10 }),
+  Object.freeze({ id: 'beyond-sight', category: CATEGORY.WAYS_TO_PLAY, points: 300, title: 'BEYOND SIGHT', description: 'Finish a valid lap on every track with Blank screen mode on from start to finish.', icon: 'blindRoute', progressMax: TRACK_IDS.length }),
   Object.freeze({ id: 'around-the-turn', category: CATEGORY.EXPLORATION, points: 100, title: 'AROUND THE TURN', description: 'Finish a valid lap on every track.', icon: 'route', progressMax: TRACK_IDS.length }),
-  Object.freeze({ id: 'ahead-of-yourself', category: CATEGORY.RACING, points: 50, title: 'AHEAD OF YOURSELF', description: 'Finish first in a lap with at least one saved rival.', icon: 'trophy' })
+  Object.freeze({ id: 'ahead-of-yourself', category: CATEGORY.RACING, points: 50, title: 'AHEAD OF YOURSELF', description: 'Finish first in a lap with at least one saved rival.', icon: 'trophy' }),
+  Object.freeze({ id: 'night-shift-sheriff', category: CATEGORY.RACING, points: 100, title: 'NIGHT SHIFT SHERIFF', description: 'In Midnight City, use the Police Car to beat four non-police rivals. Overtake each one while Boost is active.', icon: 'siren', progressMax: 4 })
 ]);
 
 export const ONBOARDING_ACHIEVEMENT_IDS = Object.freeze(
