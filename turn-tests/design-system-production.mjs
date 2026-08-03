@@ -19,37 +19,107 @@ assert.doesNotMatch(design, /https?:\/\//i, 'The reference page must remain depe
 assert.match(design, /href="\.\/design-tokens\.css\?revision=r141-form-disclosure"/);
 assert.match(design, /href="\.\/design-semantic\.css\?revision=r141-form-disclosure"/);
 
+const primitivePalette = new Map([
+  ['--turn-ink', '#08090a'],
+  ['--turn-paper', '#fff8e8'],
+  ['--turn-white', '#fffdf6'],
+  ['--turn-road', '#44494f'],
+  ['--turn-muted', '#d6d0c2'],
+  ['--turn-yellow-600', '#ffbd12'],
+  ['--turn-yellow-400', '#ffd43b'],
+  ['--turn-yellow-200', '#ffe087'],
+  ['--turn-blue-600', '#35b8e7'],
+  ['--turn-blue-500', '#38d9ff'],
+  ['--turn-blue-300', '#68c8f2'],
+  ['--turn-blue-200', '#8ed8ff'],
+  ['--turn-pink-500', '#ff4fa3'],
+  ['--turn-pink-200', '#ff8caf'],
+  ['--turn-red-500', '#ff6b6b'],
+  ['--turn-red-200', '#ff9b91'],
+  ['--turn-green-500', '#8ce99a'],
+  ['--turn-green-200', '#d9f5c2'],
+  ['--turn-orange-500', '#ff7b54'],
+  ['--turn-orange-200', '#ffb89f']
+]);
+
+assert.equal(
+  [...design.matchAll(/class="swatch" data-token="([^"]+)"/g)].length,
+  primitivePalette.size,
+  'The reference must show every primitive colour exactly once'
+);
+
+for (const [token, value] of primitivePalette) {
+  assert.ok(tokens.includes(`${token}: ${value}`), `Missing primitive definition ${token}: ${value}`);
+  assert.ok(design.includes(`data-token="${token}"`), `Missing primitive swatch ${token}`);
+  assert.ok(design.includes(`<code>${token}</code>`), `Missing visible primitive variable name ${token}`);
+  assert.ok(design.includes(`<span>${value}</span>`), `Missing visible primitive value ${value}`);
+}
+
+const semanticMappings = new Map([
+  ['--turn-surface-page', '--turn-paper'],
+  ['--turn-surface-raised', '--turn-white'],
+  ['--turn-action-primary', '--turn-pink-500'],
+  ['--turn-action-utility', '--turn-paper'],
+  ['--turn-action-information', '--turn-blue-500'],
+  ['--turn-action-success', '--turn-green-500'],
+  ['--turn-action-warning', '--turn-yellow-400'],
+  ['--turn-action-danger', '--turn-red-500'],
+  ['--turn-action-navigation', '--turn-orange-500'],
+  ['--turn-form-control-idle', '--turn-paper'],
+  ['--turn-form-control-selected', '--turn-pink-500'],
+  ['--turn-form-control-focus', '--turn-blue-500'],
+  ['--turn-disclosure-trigger', '--turn-blue-300'],
+  ['--turn-disclosure-panel', '--turn-paper'],
+  ['--turn-difficulty-easy', '--turn-green-200'],
+  ['--turn-difficulty-medium', '--turn-yellow-200'],
+  ['--turn-difficulty-hard', '--turn-red-200'],
+  ['--turn-difficulty-locked', '--turn-muted'],
+  ['--turn-control-gas', '--turn-green-500'],
+  ['--turn-control-drift', '--turn-blue-500'],
+  ['--turn-control-boost', '--turn-yellow-400'],
+  ['--turn-control-boost-empty', '--turn-yellow-200'],
+  ['--turn-control-brake', '--turn-orange-500']
+]);
+
+assert.equal(
+  [...design.matchAll(/data-semantic="([^"]+)"/g)].length,
+  semanticMappings.size,
+  'The reference must show every semantic colour role exactly once'
+);
+
+for (const [semanticToken, primitiveToken] of semanticMappings) {
+  const definition = `${semanticToken}: var(${primitiveToken})`;
+  assert.ok(tokens.includes(definition), `Missing semantic mapping ${definition}`);
+  assert.ok(design.includes(`data-semantic="${semanticToken}"`), `Missing semantic reference row ${semanticToken}`);
+  assert.ok(design.includes(`<code>${semanticToken}</code>`), `Missing visible semantic variable ${semanticToken}`);
+  assert.ok(design.includes(`<code>var(${primitiveToken})</code>`), `Missing visible semantic mapping ${semanticToken} to ${primitiveToken}`);
+}
+
+const compatibilityAliases = new Map([
+  ['--ink', '--turn-ink'],
+  ['--paper', '--turn-paper'],
+  ['--cyan', '--turn-blue-500'],
+  ['--pink', '--turn-pink-500'],
+  ['--yellow', '--turn-yellow-400'],
+  ['--lime', '--turn-green-500'],
+  ['--m8-ink', '--turn-ink'],
+  ['--m8-cream', '--turn-paper'],
+  ['--m8-pink', '--turn-pink-500'],
+  ['--m8-yellow', '--turn-yellow-600'],
+  ['--m8-blue', '--turn-blue-300']
+]);
+
+for (const [alias, target] of compatibilityAliases) {
+  assert.ok(tokens.includes(`${alias}: var(${target})`), `Missing compatibility alias ${alias}`);
+  assert.ok(design.includes(`<code>${alias}</code>`), `Missing visible compatibility alias ${alias}`);
+  assert.ok(design.includes(`<code>var(${target})</code>`), `Missing visible compatibility target ${target}`);
+}
+
 for (const token of [
-  '--turn-ink',
-  '--turn-paper',
-  '--turn-yellow-600',
-  '--turn-yellow-400',
-  '--turn-yellow-200',
-  '--turn-blue-500',
-  '--turn-blue-300',
-  '--turn-pink-500',
-  '--turn-red-500',
-  '--turn-red-200',
-  '--turn-green-500',
-  '--turn-green-200',
-  '--turn-orange-500',
-  '--turn-action-primary',
-  '--turn-action-utility',
-  '--turn-action-danger',
-  '--turn-action-navigation',
-  '--turn-form-control-idle',
-  '--turn-form-control-selected',
-  '--turn-form-control-focus',
-  '--turn-disclosure-trigger',
-  '--turn-disclosure-panel',
-  '--turn-difficulty-easy',
-  '--turn-difficulty-medium',
-  '--turn-difficulty-hard',
-  '--turn-difficulty-locked',
-  '--turn-control-gas',
-  '--turn-control-drift',
-  '--turn-control-boost',
-  '--turn-control-brake',
+  '--turn-border-micro',
+  '--turn-border-compact',
+  '--turn-border-default',
+  '--turn-border-heavy',
   '--turn-radius-micro',
   '--turn-radius-compact',
   '--turn-radius-default',
@@ -60,37 +130,7 @@ for (const token of [
   '--turn-shadow-default',
   '--turn-shadow-hero'
 ]) {
-  assert.ok(tokens.includes(token), `Missing design token ${token}`);
-}
-
-for (const mapping of [
-  '--turn-difficulty-easy: var(--turn-green-200)',
-  '--turn-difficulty-medium: var(--turn-yellow-200)',
-  '--turn-difficulty-hard: var(--turn-red-200)',
-  '--turn-form-control-idle: var(--turn-paper)',
-  '--turn-form-control-selected: var(--turn-pink-500)',
-  '--turn-form-control-focus: var(--turn-blue-500)',
-  '--turn-disclosure-trigger: var(--turn-blue-300)',
-  '--turn-disclosure-panel: var(--turn-paper)',
-  '--turn-control-gas: var(--turn-green-500)',
-  '--turn-control-drift: var(--turn-blue-500)',
-  '--turn-control-boost: var(--turn-yellow-400)',
-  '--turn-control-brake: var(--turn-orange-500)'
-]) {
-  assert.ok(tokens.includes(mapping), `Missing semantic mapping ${mapping}`);
-}
-
-for (const alias of [
-  '--ink: var(--turn-ink)',
-  '--paper: var(--turn-paper)',
-  '--pink: var(--turn-pink-500)',
-  '--m8-ink: var(--turn-ink)',
-  '--m8-cream: var(--turn-paper)',
-  '--m8-pink: var(--turn-pink-500)',
-  '--m8-yellow: var(--turn-yellow-600)',
-  '--m8-blue: var(--turn-blue-300)'
-]) {
-  assert.ok(tokens.includes(alias), `Missing compatibility alias ${alias}`);
+  assert.ok(tokens.includes(token), `Missing geometry or elevation token ${token}`);
 }
 
 assert.match(semantic, /\.install-primary,[\s\S]*\.m8-home-fixed-layout \.m8-track-continue,[\s\S]*\.track-select-continue,[\s\S]*\.lot-race/);
@@ -119,7 +159,14 @@ for (const section of ['audit', 'colour', 'patterns', 'screens', 'migration']) {
   assert.match(design, new RegExp(`href="#${section}"`));
 }
 
+for (const colourLayer of ['primitive-palette', 'semantic-mappings', 'compatibility-aliases']) {
+  assert.match(design, new RegExp(`id="${colourLayer}"`));
+}
+
 for (const decision of [
+  'Primitive palette',
+  'Semantic variables and mappings',
+  'Compatibility aliases',
   'Primary action',
   'Utility',
   'Navigation',
@@ -174,4 +221,4 @@ assert.match(index, /id: '2026\.08\.02-r124'/);
 assert.match(index, /cacheKey: '20260802-r124'/);
 assert.match(design, /TURN V1\.3\.2 · BUILD 2026\.08\.02-R124/);
 
-console.log('TURN semantic design system, native components and current release reference passed.');
+console.log('TURN primitive palette, semantic mappings, compatibility aliases and component reference passed.');
