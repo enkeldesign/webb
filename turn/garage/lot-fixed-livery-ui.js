@@ -1,11 +1,18 @@
 export function installFixedLiveryUiGuard() {
+  const emergencyVehicleNames = new Set(['Fire Truck', 'Police Car', 'Ambulance']);
+
   const update = () => {
-    for (const colors of document.querySelectorAll('.lot-colors')) {
-      const viewbox = colors.closest('.lot-screen')?.querySelector('.lot-viewbox');
+    for (const screen of document.querySelectorAll('.lot-screen')) {
+      const colors = screen.querySelector('.lot-colors');
+      if (!colors) continue;
+
+      const selectedName = screen.querySelector('.lot-car-title strong')?.textContent?.trim() || '';
       const fixedLivery = colors.querySelector('.lot-fixed-livery');
-      if (fixedLivery) {
-        colors.replaceChildren();
-        // Keep the rail for layout stability; the retired behavior was: colors.hidden = true.
+      const fixedVehicle = Boolean(fixedLivery) || emergencyVehicleNames.has(selectedName);
+      const viewbox = screen.querySelector('.lot-viewbox');
+
+      if (fixedVehicle) {
+        if (colors.childNodes.length > 0) colors.replaceChildren();
         colors.hidden = false;
         colors.setAttribute('aria-hidden', 'true');
         colors.removeAttribute('aria-label');
@@ -19,7 +26,11 @@ export function installFixedLiveryUiGuard() {
   };
 
   const observer = new MutationObserver(update);
-  observer.observe(document.body, { childList: true, subtree: true });
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    characterData: true
+  });
   update();
 
   return () => observer.disconnect();
