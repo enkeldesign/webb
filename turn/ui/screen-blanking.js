@@ -1,4 +1,5 @@
 import { IN_GAME_MENU_STATE, inGameMenuVisibilityFor } from './in-game-menu-state.js';
+import { driveByEarEnabled } from './drive-by-ear-setting.js';
 
 const CONTROL_STATE = Object.freeze({
   IDLE: 'idle',
@@ -44,7 +45,8 @@ function installStyles() {
     }
 
     .turn-screen-blank-overlay[hidden],
-    .turn-screen-blank-control[hidden] {
+    .turn-screen-blank-control[hidden],
+    .turn-screen-blank-toast[hidden] {
       display: none;
     }
 
@@ -57,7 +59,7 @@ function installStyles() {
       padding: 9px;
       place-items: center;
       align-self: stretch;
-      border-radius: 50%;
+      border-radius: 12px;
       background: var(--paper, #fffdf6);
       color: #08090a;
       touch-action: manipulation;
@@ -66,16 +68,20 @@ function installStyles() {
 
     .turn-screen-blank-control[data-state="active"] {
       position: fixed;
-      left: max(16px, calc(env(safe-area-inset-left) + 10px));
-      bottom: max(14px, calc(env(safe-area-inset-bottom) + 10px));
+      left: var(--turn-screen-blank-left, 16px);
+      top: var(--turn-screen-blank-top, auto);
       z-index: 2147483001;
-      width: 54px;
-      min-width: 54px;
-      height: 54px;
-      min-height: 54px;
-      padding: 10px;
-      border-width: 4px;
-      box-shadow: 5px 6px 0 rgba(8, 9, 10, 0.86);
+      width: var(--turn-screen-blank-width, 50px);
+      min-width: var(--turn-screen-blank-width, 50px);
+      height: var(--turn-screen-blank-height, 50px);
+      min-height: var(--turn-screen-blank-height, 50px);
+      margin: 0;
+      padding: var(--turn-screen-blank-padding, 9px);
+      align-self: auto;
+      border-width: var(--turn-screen-blank-border-width, 3px);
+      border-radius: var(--turn-screen-blank-radius, 12px);
+      background: #ff7b54;
+      box-shadow: var(--turn-screen-blank-shadow, 5px 5px 0 #08090a);
     }
 
     .turn-screen-blank-control svg {
@@ -98,20 +104,27 @@ function installStyles() {
       outline-offset: 4px;
     }
 
-    .turn-screen-blank-status {
+    .turn-screen-blank-toast {
       position: fixed;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
+      left: 50%;
+      top: max(16px, calc(env(safe-area-inset-top) + 10px));
+      z-index: 2147483002;
+      width: min(620px, calc(100vw - 32px));
+      padding: 10px 14px;
+      border: 3px solid #08090a;
+      border-radius: 14px;
+      background: var(--paper, #fffdf6);
+      color: #08090a;
+      box-shadow: 5px 5px 0 #08090a;
+      transform: translateX(-50%);
+      text-align: center;
+      font-size: clamp(0.72rem, 1.7vw, 0.92rem);
+      line-height: 1.25;
+      pointer-events: none;
     }
 
     @media (max-height: 430px) {
-      .turn-screen-blank-control:not([data-state="active"]) {
+      .turn-screen-blank-control {
         flex-basis: 40px;
         width: 40px;
         min-width: 40px;
@@ -119,16 +132,11 @@ function installStyles() {
         padding: 7px;
       }
 
-      .turn-screen-blank-control[data-state="active"] {
-        left: max(12px, calc(env(safe-area-inset-left) + 8px));
-        bottom: max(10px, calc(env(safe-area-inset-bottom) + 8px));
-        width: 48px;
-        min-width: 48px;
-        height: 48px;
-        min-height: 48px;
-        padding: 9px;
-        border-width: 3px;
-        box-shadow: 4px 5px 0 rgba(8, 9, 10, 0.86);
+      .turn-screen-blank-toast {
+        top: max(10px, calc(env(safe-area-inset-top) + 6px));
+        width: min(700px, calc(100vw - 20px));
+        padding: 7px 11px;
+        font-size: 0.7rem;
       }
     }
   `;
@@ -155,22 +163,44 @@ export function installScreenBlanking(runtime = globalThis.__turnRuntime) {
   button.className = 'utility turn-screen-blank-control';
   button.hidden = true;
 
-  const status = document.createElement('p');
-  status.className = 'turn-screen-blank-status';
-  status.setAttribute('role', 'status');
-  status.setAttribute('aria-live', 'polite');
-  status.setAttribute('aria-atomic', 'true');
+  const toast = document.createElement('p');
+  toast.className = 'turn-screen-blank-toast';
+  toast.hidden = true;
+  toast.setAttribute('role', 'status');
+  toast.setAttribute('aria-live', 'polite');
+  toast.setAttribute('aria-atomic', 'true');
 
-  document.body.append(status, overlay);
+  document.body.append(toast, overlay);
 
   let state = CONTROL_STATE.IDLE;
   let armedTimer = 0;
+  let toastTimer = 0;
+  let activationPromise = null;
+  let temporarilyEnabledDriveByEar = false;
 
-  function announce(message) {
-    status.textContent = '';
-    requestAnimationFrame(() => {
-      status.textContent = message;
-    });
+  function notify(message, duration = 3200) {
+    window.clearTimeout(toastTimer);
+    toast.textContent = message;
+    toast.hidden = false;
+    toastTimer = window.setTimeout(() => {
+      toast.hidden = true;
+      toastTimer = 0;
+    }, duration);
+  }
+
+  function captureButtonPlacement() {
+    const rect = button.getBoundingClientRect();
+    const computed = globalThis.getComputedStyle?.(button);
+    button.style.setProperty('--turn-screen-blank-left', `${rect.left}px`);
+    button.style.setProperty('--turn-screen-blank-top', `${rect.top}px`);
+    button.style.setProperty('--turn-screen-blank-width', `${rect.width}px`);
+    button.style.setProperty('--turn-screen-blank-height', `${rect.height}px`);
+    if (computed) {
+      button.style.setProperty('--turn-screen-blank-padding', computed.padding);
+      button.style.setProperty('--turn-screen-blank-border-width', computed.borderWidth);
+      button.style.setProperty('--turn-screen-blank-radius', computed.borderRadius);
+      button.style.setProperty('--turn-screen-blank-shadow', computed.boxShadow);
+    }
   }
 
   function placeButton() {
@@ -200,13 +230,26 @@ export function installScreenBlanking(runtime = globalThis.__turnRuntime) {
     armedTimer = 0;
   }
 
+  function restoreChosenDriveByEarSetting() {
+    if (!temporarilyEnabledDriveByEar) return false;
+    temporarilyEnabledDriveByEar = false;
+    const chosenSetting = driveByEarEnabled();
+    globalThis.__turnAudioPreferences?.setDriveByEarEnabled?.(chosenSetting);
+    return true;
+  }
+
   function setIdle({ announceChange = false, keepFocus = true } = {}) {
     const wasActive = state === CONTROL_STATE.ACTIVE;
     clearArmTimer();
     state = CONTROL_STATE.IDLE;
     render();
     syncVisibility();
-    if (announceChange && wasActive) announce('Screen shown.');
+    const restoredDriveByEar = wasActive && restoreChosenDriveByEarSetting();
+    if (announceChange && wasActive) {
+      notify(restoredDriveByEar
+        ? 'Screen shown. Drive By Ear returned to your chosen setting.'
+        : 'Screen shown.');
+    }
     if (keepFocus && !button.hidden) button.focus({ preventScroll: true });
   }
 
@@ -214,7 +257,10 @@ export function installScreenBlanking(runtime = globalThis.__turnRuntime) {
     clearArmTimer();
     state = CONTROL_STATE.ARMED;
     render();
-    announce('Tap again to blank the screen. The race and controls will continue.');
+    const chosenSetting = driveByEarEnabled();
+    notify(chosenSetting
+      ? 'Tap again to blank the screen. The race and controls will continue.'
+      : 'Tap again to blank the screen. Drive By Ear will turn on temporarily and return to your chosen setting afterwards.', 5000);
     armedTimer = window.setTimeout(() => {
       if (state !== CONTROL_STATE.ARMED) return;
       state = CONTROL_STATE.IDLE;
@@ -222,13 +268,61 @@ export function installScreenBlanking(runtime = globalThis.__turnRuntime) {
     }, 5000);
   }
 
-  function activate() {
+  async function enableDriveByEarForAudioOnly() {
+    const preferences = globalThis.__turnAudioPreferences;
+    if (!preferences?.setDriveByEarEnabled) return false;
+
+    const chosenSetting = driveByEarEnabled();
+    const ensureRuntime = globalThis.__turnEnsureDriveByEarRuntime;
+    if (typeof ensureRuntime === 'function') {
+      const ready = await ensureRuntime();
+      if (!ready) return false;
+    } else if (preferences.getSettings?.().dbeEnabled === false) {
+      return false;
+    }
+
+    temporarilyEnabledDriveByEar = !chosenSetting;
+    preferences.setDriveByEarEnabled(true);
+    await globalThis.__turnAudio?.unlock?.();
+    return true;
+  }
+
+  async function activate() {
+    if (activationPromise) return activationPromise;
     clearArmTimer();
-    state = CONTROL_STATE.ACTIVE;
-    render();
-    syncVisibility();
-    button.focus({ preventScroll: true });
-    announce('Screen blanked. Show screen button focused.');
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+
+    activationPromise = (async () => {
+      const ready = await enableDriveByEarForAudioOnly();
+      if (state !== CONTROL_STATE.ARMED) {
+        restoreChosenDriveByEarSetting();
+        return;
+      }
+
+      if (!ready) {
+        state = CONTROL_STATE.IDLE;
+        render();
+        syncVisibility();
+        notify('Audio-only driving could not start because Drive By Ear is unavailable.');
+        return;
+      }
+
+      captureButtonPlacement();
+      state = CONTROL_STATE.ACTIVE;
+      render();
+      syncVisibility();
+      button.focus({ preventScroll: true });
+      notify(temporarilyEnabledDriveByEar
+        ? 'Drive By Ear is on for audio-only driving. Your chosen setting will return when the screen is shown.'
+        : 'Screen blanked. Drive By Ear is on.');
+    })().finally(() => {
+      activationPromise = null;
+      button.disabled = false;
+      button.removeAttribute('aria-busy');
+    });
+
+    return activationPromise;
   }
 
   function syncVisibility() {
@@ -236,9 +330,8 @@ export function installScreenBlanking(runtime = globalThis.__turnRuntime) {
     const gameplayVisible = controls.hidden !== true;
 
     if ((!gameplayVisible || visibility.menuState === IN_GAME_MENU_STATE.HIDDEN) && state === CONTROL_STATE.ACTIVE) {
-      clearArmTimer();
-      state = CONTROL_STATE.IDLE;
-      render();
+      setIdle({ announceChange: false, keepFocus: false });
+      return;
     }
 
     if (visibility.menuState !== IN_GAME_MENU_STATE.STAGED && state === CONTROL_STATE.ARMED) {
@@ -258,7 +351,7 @@ export function installScreenBlanking(runtime = globalThis.__turnRuntime) {
       return;
     }
     if (state === CONTROL_STATE.ARMED) {
-      activate();
+      void activate();
       return;
     }
     arm();
@@ -280,5 +373,5 @@ export function installScreenBlanking(runtime = globalThis.__turnRuntime) {
 
   render();
   syncVisibility();
-  return { button, overlay };
+  return { button, overlay, toast };
 }
