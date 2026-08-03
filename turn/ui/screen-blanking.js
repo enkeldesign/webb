@@ -66,6 +66,10 @@ function installStyles() {
       -webkit-tap-highlight-color: transparent;
     }
 
+    .utility-group[data-menu-state="staged"] .turn-screen-blank-control {
+      padding: 4px;
+    }
+
     .turn-screen-blank-control[data-state="active"] {
       position: fixed;
       left: var(--turn-screen-blank-left, 16px);
@@ -129,6 +133,10 @@ function installStyles() {
         width: 40px;
         min-width: 40px;
         min-height: 40px;
+        padding: 3px;
+      }
+
+      .utility-group[data-menu-state="staged"] .turn-screen-blank-control {
         padding: 3px;
       }
 
