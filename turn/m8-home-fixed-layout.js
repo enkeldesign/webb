@@ -106,6 +106,11 @@ export async function installM8HomeFixedLayout() {
   );
   const achievements = installAchievements(globalThis.__turnRuntime);
 
+  const { installDriveByEarTraining } = await import(
+    `/turn/training/drive-by-ear-training.js?build=${buildKey}-r149-dbe-training`
+  );
+  const driveByEarTraining = await installDriveByEarTraining(globalThis.__turnRuntime);
+
   globalThis.__turnHomeLayout = Object.freeze({
     id: LAYOUT_ID,
     home,
@@ -113,7 +118,8 @@ export async function installM8HomeFixedLayout() {
     menu,
     raceButton,
     cardScrollFixes,
-    achievements
+    achievements,
+    driveByEarTraining
   });
   return globalThis.__turnHomeLayout;
 }
