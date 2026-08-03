@@ -91,23 +91,13 @@ const { installDriveByEarSetting } = await import(
 );
 const driveByEarEnabled = installDriveByEarSetting();
 
-let organicRibbon = null;
-let recoveryGuidance = null;
-if (driveByEarEnabled) {
-  organicRibbon = await import(withBuild('./audio/organic-ribbon.js'));
-  organicRibbon.prepareOrganicRibbonCapture();
-
-  recoveryGuidance = await import(withBuild('./audio/recovery-guidance.js'));
-  recoveryGuidance.prepareRecoveryGuidanceCapture();
-}
-
-let paceNotePriority = null;
-if (driveByEarEnabled) {
-  paceNotePriority = await import(
-    withBuild('./audio/pace-note-priority.js?revision=r123-final-hold')
-  );
-  paceNotePriority.preparePaceNotePriorityCapture();
-}
+const {
+  prepareDriveByEarRuntime,
+  ensureDriveByEarRuntime
+} = await import(
+  withBuild('./audio/drive-by-ear-runtime.js?revision=r143-temporary-audio-only')
+);
+await prepareDriveByEarRuntime();
 
 const { installAudioPreferences } = await import(withBuild('./audio/audio-preferences.js'));
 installAudioPreferences({ driveByEarGraphAvailable: driveByEarEnabled });
@@ -120,27 +110,8 @@ const { installSteeringLimitWarning } = await import(
 );
 installSteeringLimitWarning();
 
-if (driveByEarEnabled) {
-  organicRibbon.installOrganicRibbon();
-  paceNotePriority.installPaceNotePriority();
-
-  const { installUniversalDrivingSoundscape } = await import(
-    withBuild('./audio/driving-soundscape.js')
-  );
-  installUniversalDrivingSoundscape();
-
-  const { installPaceNotes } = await import(
-    withBuild('./audio/pace-notes.js?revision=r123-final-hold')
-  );
-  installPaceNotes();
-
-  const { installOffroadEarDirection } = await import(
-    withBuild('./audio/offroad-ear-direction.js')
-  );
-  installOffroadEarDirection();
-
-  recoveryGuidance.installRecoveryGuidance();
-}
+globalThis.__turnEnsureDriveByEarRuntime = ensureDriveByEarRuntime;
+if (driveByEarEnabled) await ensureDriveByEarRuntime();
 
 const { installAudioPreferenceRuntime } = await import(
   withBuild('./audio/audio-preference-runtime.js')
@@ -189,7 +160,7 @@ await Promise.all([
 
 await import(withBuild('./ui/in-game-menu.js'));
 const { installScreenBlanking } = await import(
-  withBuild('./ui/screen-blanking.js?revision=r142-audio-only-screen')
+  withBuild('./ui/screen-blanking.js?revision=r143-temporary-dbe-position')
 );
 installScreenBlanking(globalThis.__turnRuntime);
 installStylesheet('./m8-home.css', 'data-turn-m8-home-styles');
