@@ -99,11 +99,15 @@ const {
 );
 await prepareDriveByEarRuntime();
 
+// Keep the central guidance graph ready so audio-only mode can start without reloading.
+// The player's stored setting is restored immediately after graph construction.
+globalThis.__turnDriveByEarEnabled = true;
 const { installAudioPreferences } = await import(withBuild('./audio/audio-preferences.js'));
-installAudioPreferences({ driveByEarGraphAvailable: driveByEarEnabled });
+const audioPreferences = installAudioPreferences({ driveByEarGraphAvailable: driveByEarEnabled });
 
 const { installTurnAudio } = await import(withBuild('./audio/audio-system.js'));
 installTurnAudio();
+audioPreferences.setDriveByEarEnabled(driveByEarEnabled);
 
 const { installSteeringLimitWarning } = await import(
   withBuild('./ui/steering-limit-warning.js')
