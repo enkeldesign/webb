@@ -1,0 +1,195 @@
+.turn-dbe-training-home {
+  background: var(--turn-action-information, #38d9ff) !important;
+}
+
+.turn-dbe-training-how,
+.turn-dbe-training-settings {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 14px;
+  border: 3px solid var(--turn-ink, #08090a);
+  border-radius: 14px;
+  background: var(--turn-surface-information, #b9f3ff);
+  color: var(--turn-ink, #08090a);
+  box-shadow: 4px 4px 0 var(--turn-ink, #08090a);
+}
+
+.turn-dbe-training-how p,
+.turn-dbe-training-settings p {
+  margin: 0;
+}
+
+.turn-dbe-training-how button,
+.turn-dbe-training-settings button,
+.turn-dbe-training-actions button {
+  min-height: 44px;
+  padding: 9px 14px;
+  border: 3px solid var(--turn-ink, #08090a);
+  border-radius: 999px;
+  background: var(--turn-action-information, #38d9ff);
+  color: var(--turn-ink, #08090a);
+  box-shadow: 4px 4px 0 var(--turn-ink, #08090a);
+  font: inherit;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.turn-dbe-training-settings {
+  margin-top: 16px;
+}
+
+.turn-dbe-training-settings p {
+  font-weight: 800;
+}
+
+.turn-dbe-training-dialog .m8-dialog-card {
+  width: min(760px, calc(100vw - 28px));
+  max-height: min(86dvh, 720px);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.turn-dbe-training-copy {
+  display: grid;
+  gap: 15px;
+  padding: clamp(16px, 3vw, 26px);
+}
+
+.turn-dbe-training-copy > p,
+.turn-dbe-training-copy li {
+  margin: 0;
+  font-size: clamp(0.95rem, 1.7vw, 1.12rem);
+  line-height: 1.45;
+}
+
+.turn-dbe-training-copy ol {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding-inline-start: 1.5em;
+}
+
+.turn-dbe-training-visual-hint {
+  padding: 12px 14px;
+  border: 3px solid var(--turn-ink, #08090a);
+  border-radius: 12px;
+  background: var(--turn-warning-soft, #fff1a8);
+  font-weight: 800;
+}
+
+.turn-dbe-training-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.turn-dbe-training-actions button:not([data-training-primary]) {
+  background: var(--turn-action-exit, #ff922b);
+}
+
+.turn-dbe-training-actions button[data-training-primary] {
+  background: var(--turn-action-primary, #ff4fa3);
+}
+
+.turn-dbe-training-how button:focus-visible,
+.turn-dbe-training-settings button:focus-visible,
+.turn-dbe-training-actions button:focus-visible,
+.turn-dbe-training-home:focus-visible {
+  outline: 4px solid var(--turn-focus, #ffd43b);
+  outline-offset: 4px;
+}
+
+.turn-dbe-training-hud {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  left: 50%;
+  z-index: 120;
+  display: grid;
+  min-width: min(360px, calc(100vw - 180px));
+  padding: 8px 14px;
+  border: 3px solid #08090a;
+  border-radius: 14px;
+  background: #b9f3ff;
+  color: #08090a;
+  box-shadow: 5px 5px 0 #08090a;
+  transform: translateX(-50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+.turn-dbe-training-hud[hidden] {
+  display: none;
+}
+
+.turn-dbe-training-hud span {
+  font-size: clamp(0.62rem, 1.25vw, 0.76rem);
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.turn-dbe-training-hud strong {
+  font-size: clamp(0.86rem, 1.8vw, 1.12rem);
+  line-height: 1.05;
+}
+
+.turn-dbe-training-active .turn-dbe-training-hidden-map,
+.turn-dbe-training-active .topbar .chip:nth-child(2),
+.turn-dbe-training-active .topbar .chip:nth-child(3),
+.turn-dbe-training-active .topbar .chip:nth-child(4),
+.turn-dbe-training-active .spectate-button,
+.turn-dbe-training-active .turn-race-achievements-button,
+.turn-dbe-training-active .m8-race-settings-button {
+  display: none !important;
+}
+
+.turn-dbe-training-active .topbar {
+  pointer-events: none;
+}
+
+@media (max-height: 480px) and (orientation: landscape) {
+  .turn-dbe-training-dialog .m8-dialog-card {
+    max-height: calc(100dvh - 16px);
+  }
+
+  .turn-dbe-training-copy {
+    gap: 9px;
+    padding: 12px 16px 14px;
+  }
+
+  .turn-dbe-training-copy > p,
+  .turn-dbe-training-copy li {
+    font-size: 0.82rem;
+    line-height: 1.3;
+  }
+
+  .turn-dbe-training-copy ol {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px 22px;
+  }
+
+  .turn-dbe-training-actions button {
+    min-height: 38px;
+    padding-block: 7px;
+    font-size: 0.76rem;
+  }
+
+  .turn-dbe-training-hud {
+    top: max(7px, env(safe-area-inset-top));
+    padding: 5px 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .turn-dbe-training-how button,
+  .turn-dbe-training-settings button,
+  .turn-dbe-training-actions button,
+  .turn-dbe-training-home {
+    transition: none !important;
+  }
+}
