@@ -9,43 +9,198 @@
   <link rel="stylesheet" href="./design-tokens.css?revision=r141-form-disclosure">
   <link rel="stylesheet" href="./design-semantic.css?revision=r141-form-disclosure">
   <style>
-    :root { font-family: Inter, ui-rounded, system-ui, sans-serif; color-scheme: light; }
+    :root {
+      font-family: Inter, ui-rounded, system-ui, sans-serif;
+      color-scheme: light;
+    }
+
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; background: var(--turn-ink); }
     body { margin: 0; background: var(--turn-ink); color: var(--turn-paper); font-weight: 800; line-height: 1.45; }
     button, input, summary { font: inherit; }
     a { color: inherit; }
-    a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible { outline: 5px solid var(--turn-form-control-focus); outline-offset: 4px; }
-    .skip-link { position: fixed; z-index: 100; top: 12px; left: 12px; padding: 10px 14px; border: 4px solid var(--turn-ink); border-radius: var(--turn-radius-compact); background: var(--turn-yellow-400); color: var(--turn-ink); box-shadow: var(--turn-shadow-default); transform: translateY(-180%); }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    summary:focus-visible {
+      outline: 5px solid var(--turn-form-control-focus);
+      outline-offset: 4px;
+    }
+
+    .skip-link {
+      position: fixed;
+      z-index: 100;
+      top: 12px;
+      left: 12px;
+      padding: 10px 14px;
+      border: 4px solid var(--turn-ink);
+      border-radius: var(--turn-radius-compact);
+      background: var(--turn-yellow-400);
+      color: var(--turn-ink);
+      box-shadow: var(--turn-shadow-default);
+      transform: translateY(-180%);
+    }
+
     .skip-link:focus { transform: none; }
-    .hero { padding: clamp(48px, 9vw, 110px) max(24px, calc((100vw - 1180px) / 2)); background: linear-gradient(145deg, var(--turn-blue-500), var(--turn-green-500)); color: var(--turn-ink); }
-    .hero-inner { width: min(1180px, 100%); margin: auto; display: grid; grid-template-columns: 1fr auto; gap: 36px; align-items: center; }
-    .hero h1 { max-width: 8ch; margin: 18px 0 12px; font-size: clamp(4rem, 12vw, 8rem); line-height: .75; letter-spacing: -.08em; }
+
+    .hero {
+      padding: clamp(48px, 9vw, 110px) max(24px, calc((100vw - 1180px) / 2));
+      background: linear-gradient(145deg, var(--turn-blue-500), var(--turn-green-500));
+      color: var(--turn-ink);
+    }
+
+    .hero-inner {
+      width: min(1180px, 100%);
+      margin: auto;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 36px;
+      align-items: center;
+    }
+
+    .hero h1 {
+      max-width: 8ch;
+      margin: 18px 0 12px;
+      font-size: clamp(4rem, 12vw, 8rem);
+      line-height: .75;
+      letter-spacing: -.08em;
+    }
+
     .hero p { max-width: 58rem; margin: 0; font-size: clamp(1rem, 2vw, 1.35rem); }
     .hero img { width: min(220px, 30vw); border: 6px solid var(--turn-ink); border-radius: 24%; background: var(--turn-paper); box-shadow: var(--turn-shadow-hero); }
     .eyebrow, .kicker, .token-label { font-size: .72rem; font-weight: 950; letter-spacing: .15em; text-transform: uppercase; }
-    .eyebrow { display: inline-block; padding: 7px 11px; border: 3px solid var(--turn-ink); border-radius: var(--turn-radius-pill); background: var(--turn-yellow-400); box-shadow: var(--turn-shadow-compact); }
-    .section-nav { position: sticky; z-index: 50; top: 0; display: flex; gap: 8px; overflow-x: auto; padding: 10px max(18px, calc((100vw - 1180px) / 2)); border-block: 4px solid var(--turn-ink); background: rgb(255 248 232 / .97); color: var(--turn-ink); }
+
+    .eyebrow {
+      display: inline-block;
+      padding: 7px 11px;
+      border: 3px solid var(--turn-ink);
+      border-radius: var(--turn-radius-pill);
+      background: var(--turn-yellow-400);
+      box-shadow: var(--turn-shadow-compact);
+    }
+
+    .section-nav {
+      position: sticky;
+      z-index: 50;
+      top: 0;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 10px max(18px, calc((100vw - 1180px) / 2));
+      border-block: 4px solid var(--turn-ink);
+      background: rgb(255 248 232 / .97);
+      color: var(--turn-ink);
+    }
+
     .section-nav a { flex: 0 0 auto; padding: 8px 12px; border-radius: var(--turn-radius-pill); text-decoration: none; }
     .section-nav a:hover { background: var(--turn-yellow-400); }
     main { width: min(1180px, 100%); margin: auto; padding: 72px 24px 120px; }
     section { scroll-margin-top: 74px; margin-top: 100px; }
     section:first-child { margin-top: 0; }
-    .section-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, .55fr); gap: 28px; align-items: end; margin-bottom: 28px; }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(250px, .55fr);
+      gap: 28px;
+      align-items: end;
+      margin-bottom: 28px;
+    }
+
     .section-head h2 { margin: 7px 0 0; font-size: clamp(2.2rem, 5vw, 4.2rem); line-height: .9; letter-spacing: -.055em; }
     .section-head p { margin: 0; color: rgb(255 248 232 / .78); }
     .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
-    .card, .board { padding: 22px; border: 4px solid var(--turn-ink); border-radius: var(--turn-radius-default); background: var(--turn-paper); color: var(--turn-ink); box-shadow: var(--turn-shadow-default); }
+
+    .card,
+    .board {
+      padding: 22px;
+      border: 4px solid var(--turn-ink);
+      border-radius: var(--turn-radius-default);
+      background: var(--turn-paper);
+      color: var(--turn-ink);
+      box-shadow: var(--turn-shadow-default);
+    }
+
     .card h3 { margin: 8px 0; }
     .card p { margin: 0; }
     .board { display: grid; gap: 28px; }
-    .table-wrap { overflow-x: auto; border: 4px solid var(--turn-ink); border-radius: var(--turn-radius-default); background: var(--turn-paper); box-shadow: var(--turn-shadow-default); }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 4px solid var(--turn-ink);
+      border-radius: var(--turn-radius-default);
+      background: var(--turn-paper);
+      box-shadow: var(--turn-shadow-default);
+    }
+
     table { width: 100%; min-width: 760px; border-collapse: collapse; color: var(--turn-ink); text-align: left; }
     th, td { padding: 14px 16px; border-bottom: 2px solid var(--turn-ink); vertical-align: top; }
     th { background: var(--turn-yellow-400); font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; }
     tr:last-child td { border-bottom: 0; }
+    td code { font-size: .82rem; font-weight: 800; }
+
+    .colour-layer + .colour-layer { margin-top: 44px; }
+    .colour-layer-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, .45fr); gap: 22px; align-items: end; margin-bottom: 18px; }
+    .colour-layer-head h3 { margin: 6px 0 0; font-size: clamp(1.6rem, 3.5vw, 2.7rem); line-height: .95; }
+    .colour-layer-head p { margin: 0; color: rgb(255 248 232 / .76); }
+
+    .palette-family + .palette-family { margin-top: 22px; }
+    .palette-family h4 { margin: 0 0 10px; font-size: 1rem; letter-spacing: .08em; text-transform: uppercase; }
+    .palette-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+
+    .swatch {
+      min-width: 0;
+      overflow: hidden;
+      border: 4px solid var(--turn-ink);
+      border-radius: var(--turn-radius-compact);
+      background: var(--turn-paper);
+      color: var(--turn-ink);
+      box-shadow: var(--turn-shadow-compact);
+    }
+
+    .swatch-colour {
+      min-height: 94px;
+      border-bottom: 4px solid var(--turn-ink);
+      background: var(--swatch);
+    }
+
+    .swatch-copy { display: grid; gap: 3px; padding: 11px 12px 13px; }
+    .swatch-copy code { overflow-wrap: anywhere; font-size: .76rem; font-weight: 900; }
+    .swatch-copy span { font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; }
+
+    .mapping-preview {
+      display: inline-block;
+      width: 34px;
+      height: 24px;
+      margin-right: 8px;
+      border: 3px solid var(--turn-ink);
+      border-radius: var(--turn-radius-micro);
+      background: var(--mapping);
+      vertical-align: middle;
+    }
+
+    .mapping-group td {
+      padding-block: 9px;
+      background: color-mix(in srgb, var(--turn-blue-200) 38%, var(--turn-paper));
+      font-size: .72rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .alias-note { margin: 14px 0 0; color: rgb(255 248 232 / .76); font-size: .9rem; }
     .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 12px; }
-    .button-sample, .difficulty, .icon-button { display: inline-grid; place-items: center; border: 4px solid var(--turn-ink); color: var(--turn-ink); font-weight: 950; text-transform: uppercase; }
+
+    .button-sample,
+    .difficulty,
+    .icon-button {
+      display: inline-grid;
+      place-items: center;
+      border: 4px solid var(--turn-ink);
+      color: var(--turn-ink);
+      font-weight: 950;
+      text-transform: uppercase;
+    }
+
     .button-sample { min-height: 52px; padding: 10px 18px; border-radius: var(--turn-radius-default); background: var(--turn-action-utility); box-shadow: var(--turn-shadow-default); }
     .button-sample.primary { border-radius: var(--turn-radius-pill); background: var(--turn-action-primary); }
     .button-sample.navigation { background: var(--turn-action-navigation); }
@@ -55,7 +210,18 @@
     .difficulty.medium { background: var(--turn-difficulty-medium); }
     .difficulty.hard { background: var(--turn-difficulty-hard); }
     .difficulty.locked { background: var(--turn-difficulty-locked); }
-    .metadata-pattern { display: inline-grid; justify-items: end; gap: 3px; padding: 18px; border: 4px solid var(--turn-ink); border-radius: var(--turn-radius-default); background: var(--turn-yellow-600); box-shadow: var(--turn-shadow-default); }
+
+    .metadata-pattern {
+      display: inline-grid;
+      justify-items: end;
+      gap: 3px;
+      padding: 18px;
+      border: 4px solid var(--turn-ink);
+      border-radius: var(--turn-radius-default);
+      background: var(--turn-yellow-600);
+      box-shadow: var(--turn-shadow-default);
+    }
+
     .metadata-pattern span { font-size: .78rem; letter-spacing: .1em; }
     .about-link { appearance: none; padding: 3px 0 5px; border: 0; background: transparent; color: inherit; font-weight: 950; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: .18em; cursor: pointer; }
     .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; align-items: start; }
@@ -103,21 +269,269 @@
     .migration { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; counter-reset: steps; }
     .migration li { counter-increment: steps; padding: 16px; border: 4px solid var(--turn-ink); border-radius: var(--turn-radius-default); background: var(--turn-paper); color: var(--turn-ink); box-shadow: var(--turn-shadow-compact); }
     footer { padding: 40px 24px; border-top: 4px solid var(--turn-ink); background: var(--turn-yellow-600); color: var(--turn-ink); text-align: center; }
-    @media (max-width: 820px) { .hero-inner, .section-head, .grid, .form-grid, .two-col { grid-template-columns: 1fr; } .track-grid { grid-template-columns: 1fr; } }
-    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+    @media (max-width: 980px) {
+      .palette-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 820px) {
+      .hero-inner,
+      .section-head,
+      .grid,
+      .form-grid,
+      .two-col,
+      .colour-layer-head { grid-template-columns: 1fr; }
+      .track-grid { grid-template-columns: 1fr; }
+      .palette-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 480px) {
+      .palette-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
   </style>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to the design system</a>
-  <header class="hero"><div class="hero-inner"><div><span class="eyebrow">Normative production system</span><h1>TURN DESIGN SYSTEM</h1><p>A living reference built from TURN’s actual interaction patterns. Standardize the grammar, not the personality.</p></div><img src="./TURNicon.PNG" alt="TURN app icon"></div></header>
-  <nav class="section-nav" aria-label="Design system sections"><a href="#audit">Audit</a><a href="#colour">Colour</a><a href="#patterns">Patterns</a><a href="#screens">Game pages</a><a href="#migration">Migration</a></nav>
+
+  <header class="hero">
+    <div class="hero-inner">
+      <div>
+        <span class="eyebrow">Normative production system</span>
+        <h1>TURN DESIGN SYSTEM</h1>
+        <p>A living reference built from TURN’s actual interaction patterns. Standardize the grammar, not the personality.</p>
+      </div>
+      <img src="./TURNicon.PNG" alt="TURN app icon">
+    </div>
+  </header>
+
+  <nav class="section-nav" aria-label="Design system sections">
+    <a href="#audit">Audit</a>
+    <a href="#colour">Colour</a>
+    <a href="#patterns">Patterns</a>
+    <a href="#screens">Game pages</a>
+    <a href="#migration">Migration</a>
+  </nav>
+
   <main id="main">
-    <section id="audit"><div class="section-head"><div><span class="kicker">01 · Current state</span><h2>One system beneath the character.</h2></div><p>TURN keeps its black ink, warm paper, hard shadows and saturated colour while reusable controls receive stable semantics.</p></div><div class="grid"><article class="card"><span class="token-label">Keep</span><h3>TURN personality</h3><p>Chunky outlines, offset shadows, large type and playful colour fields.</p></article><article class="card"><span class="token-label">Consolidate</span><h3>Native controls</h3><p>Radio buttons, Checkboxes, range inputs, headings and disclosures share one visual grammar.</p></article><article class="card"><span class="token-label">Retire</span><h3>One-off meaning</h3><p>Green is not used merely because a section is special, and component type does not determine heading appearance.</p></article></div><div class="table-wrap" style="margin-top:24px" tabindex="0" role="region" aria-label="Normative design inventory"><table><thead><tr><th>Area</th><th>Normative rule</th><th>Use</th></tr></thead><tbody><tr><td>Primary action</td><td>Pink 500 and pill</td><td>Install TURN, Race this track, Race this car</td></tr><tr><td>Utility</td><td>Paper</td><td>Settings, How to Play, Give Feedback</td></tr><tr><td>Navigation</td><td>Orange 500</td><td>Close, Back, Leave, Brake · Reverse</td></tr><tr><td>Difficulty</td><td>Easy green 200, Medium yellow 200, Hard red 200</td><td>Text remains mandatory</td></tr><tr><td>Form controls</td><td>Paper idle, Pink selected, Blue focus</td><td>Native radio, checkbox and range semantics</td></tr><tr><td>Disclosure</td><td>Blue trigger, Paper panel</td><td>Native details and summary</td></tr></tbody></table></div></section>
-    <section id="colour"><div class="section-head"><div><span class="kicker">02 · Colour semantics</span><h2>Colour explains purpose.</h2></div><p>Danger remains red, navigation orange, primary flow pink, information blue and utility surfaces paper.</p></div><div class="board"><div><span class="token-label">Difficulty</span><div class="row"><span class="difficulty easy">Easy</span><span class="difficulty medium">Medium</span><span class="difficulty hard">Hard</span><span class="difficulty locked">Locked</span></div><p>Colour reinforces progression but never replaces the label.</p></div><div><span class="token-label">Driving</span><div class="row"><span class="button-sample" style="background:var(--turn-control-gas)">Gas</span><span class="button-sample" style="background:var(--turn-control-drift)">Drift</span><span class="button-sample" style="background:var(--turn-control-boost)">Boost</span><span class="button-sample" style="background:var(--turn-control-brake)">Brake · Reverse</span></div></div></div></section>
-    <section id="patterns"><div class="section-head"><div><span class="kicker">03 · Interaction patterns</span><h2>Semantics stay native. Visuals stay TURN.</h2></div><p>HTML structure communicates meaning. Shared tokens and component rules communicate visual hierarchy.</p></div><div class="board"><div><span class="token-label">Forward flow</span><div class="row"><span class="button-sample primary">Install TURN</span><span class="button-sample primary">Race this track</span><span class="button-sample primary">Race this car</span></div></div><div><span class="token-label">Utility and Navigation</span><div class="row"><span class="button-sample">Settings</span><span class="button-sample">How to Play</span><span class="button-sample">Give Feedback</span><span class="button-sample navigation">Leave race</span><span class="icon-button" aria-label="Close-button specimen">×</span></div></div><div><span class="token-label">Header metadata</span><div style="margin-top:12px"><span class="metadata-pattern"><span>TURN V1.3.2 · BUILD 2026.08.02-R124</span><button class="about-link" type="button">ABOUT TURN</button></span></div><p><strong>ABOUT TURN is visually a link but semantically a button</strong> because it opens a dialog.</p></div><div><span class="token-label">Native form controls</span><div class="form-grid" style="margin-top:18px"><fieldset class="form-card"><legend>Steering</legend><label class="form-option"><input type="radio" name="designSteering" checked><span><strong>Device rotation</strong><small>Turn the whole device like a steering wheel.</small></span></label><label class="form-option"><input type="radio" name="designSteering"><span><strong>On-screen steering</strong><small>Use the steering control or a keyboard.</small></span></label></fieldset><section class="form-card" aria-labelledby="designAudioTitle"><h3 id="designAudioTitle">Audio</h3><label class="form-option"><input type="checkbox" checked><span><strong>Sound</strong><small>Turn every TURN sound on or off.</small></span></label><label class="form-option"><input type="checkbox"><span><strong>Drive By Ear™</strong><small>Spatial steering guidance and race information.</small></span></label></section></div><p><strong>Legend and heading elements share one floating card-title treatment.</strong> Radio buttons and Checkboxes use the same shell and differ through a clear selected state.</p></div><div><span class="token-label">Disclosure</span><details class="disclosure-sample" style="margin-top:12px"><summary><span class="disclosure-symbol" aria-hidden="true"></span><span>Explore the Drive By Ear sounds</span></summary><div class="disclosure-panel"><p><strong>Blue trigger, Paper panel.</strong> The decorative state symbol sits directly before the summary text. The native details element communicates expanded and collapsed state.</p></div></details></div></div></section>
-    <section id="screens"><div class="section-head"><div><span class="kicker">04 · Example implementation</span><h2>Actual components, not substitute illustrations.</h2></div><p>Game content is labelled rather than imitated. The system demonstrates the surrounding controls and hierarchy.</p></div><div class="screens"><article class="screen-item"><h3>Install</h3><div class="screen" role="img" aria-label="TURN install page design specimen"><div class="screen-head"><strong>TURN</strong><span>TURN V1.3.2 · BUILD 2026.08.02-R124</span></div><div class="placeholder">INSTALL ART</div><div class="row"><span class="button-sample primary">Install TURN</span></div></div></article><article class="screen-item"><h3>Home and track selection</h3><div class="screen" role="img" aria-label="TURN Home and track-selection design specimen"><div class="screen-head"><strong>CHOOSE YOUR TRACK</strong><span class="about-link">ABOUT TURN</span></div><div class="two-col"><div class="track-grid"><div class="track-card"><div class="top"><strong>COUNTRYSIDE</strong><span class="difficulty easy">Easy</span></div><div class="placeholder">TRACK PREVIEW</div></div><div class="track-card"><div class="top"><strong>AIRPORT</strong><span class="difficulty medium">Medium</span></div><div class="placeholder">TRACK PREVIEW</div></div><div class="track-card"><div class="top"><strong>HARBOR</strong><span class="difficulty hard">Hard</span></div><div class="placeholder">TRACK PREVIEW</div></div></div><div class="menu"><span class="button-sample">Settings</span><span class="button-sample">How to Play</span><span class="button-sample">Give Feedback</span><span class="button-sample primary">Race this track</span></div></div></div></article><article class="screen-item"><h3>The Lot</h3><div class="screen" role="img" aria-label="TURN The Lot design specimen"><div class="two-col"><div class="placeholder">3D CAR VIEW</div><div class="card"><h3>SPORTS SEDAN</h3><p>Top speed · Acceleration · Control · Drift</p><div class="row"><span class="button-sample primary">Race this car</span></div></div></div></div></article><article class="screen-item"><h3>Race</h3><div class="screen" role="img" aria-label="TURN race HUD and control design specimen"><div class="hud"><span class="chip">Speed 86 km/h</span><span class="chip">Lap 2</span><span class="chip">Position 3/5</span><span class="chip">Time 0:34.822</span></div><div class="placeholder">GAME VIEW</div><div class="drive-pad"><div class="drive-top"><span>Drift</span><span>Boost</span></div><div class="gas-zone">Gas</div><div class="brake-zone">Brake · Reverse</div></div></div></article><article class="screen-item"><h3>Dialog</h3><div class="screen" role="img" aria-label="TURN How to Play dialog design specimen"><div class="screen-head"><strong>HOW TO PLAY</strong><span class="icon-button">×</span></div><div class="card"><h3>Drive By Ear™</h3><p>Paper content card with a Blue informational disclosure.</p><details class="disclosure-sample" style="margin-top:14px"><summary><span class="disclosure-symbol" aria-hidden="true"></span><span>Explore the Drive By Ear sounds</span></summary><div class="disclosure-panel"><p>Guidance, pace notes, grip, surfaces and recovery.</p></div></details></div></div></article></div></section>
-    <section id="migration"><div class="section-head"><div><span class="kicker">05 · Adoption</span><h2>The first two migration steps are live.</h2></div><p>Shared tokens and compatibility aliases are in production. Native form controls and disclosures now join the normative system.</p></div><ol class="migration"><li><strong>Shared token file: complete.</strong> Primitive and semantic roles live in <code>design-tokens.css</code>.</li><li><strong>Compatibility aliases: complete.</strong> Existing variables resolve to normative primitives.</li><li><strong>Native components: active.</strong> Settings headings, radios, checkboxes, range input and disclosures use shared rules.</li><li><strong>Continue incrementally.</strong> Normalize geometry component family by component family.</li></ol></section>
+    <section id="audit">
+      <div class="section-head">
+        <div><span class="kicker">01 · Current state</span><h2>One system beneath the character.</h2></div>
+        <p>TURN keeps its black ink, warm paper, hard shadows and saturated colour while reusable controls receive stable semantics.</p>
+      </div>
+      <div class="grid">
+        <article class="card"><span class="token-label">Keep</span><h3>TURN personality</h3><p>Chunky outlines, offset shadows, large type and playful colour fields.</p></article>
+        <article class="card"><span class="token-label">Consolidate</span><h3>Native controls</h3><p>Radio buttons, Checkboxes, range inputs, headings and disclosures share one visual grammar.</p></article>
+        <article class="card"><span class="token-label">Retire</span><h3>One-off meaning</h3><p>Green is not used merely because a section is special, and component type does not determine heading appearance.</p></article>
+      </div>
+      <div class="table-wrap" style="margin-top:24px" tabindex="0" role="region" aria-label="Normative design inventory">
+        <table>
+          <thead><tr><th>Area</th><th>Normative rule</th><th>Use</th></tr></thead>
+          <tbody>
+            <tr><td>Primary action</td><td>Pink 500 and pill</td><td>Install TURN, Race this track, Race this car</td></tr>
+            <tr><td>Utility</td><td>Paper</td><td>Settings, How to Play, Give Feedback</td></tr>
+            <tr><td>Navigation</td><td>Orange 500</td><td>Close, Back, Leave, Brake · Reverse</td></tr>
+            <tr><td>Difficulty</td><td>Easy green 200, Medium yellow 200, Hard red 200</td><td>Text remains mandatory</td></tr>
+            <tr><td>Form controls</td><td>Paper idle, Pink selected, Blue focus</td><td>Native radio, checkbox and range semantics</td></tr>
+            <tr><td>Disclosure</td><td>Blue trigger, Paper panel</td><td>Native details and summary</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="colour">
+      <div class="section-head">
+        <div><span class="kicker">02 · Colour system</span><h2>Primitive values first. Meaning second.</h2></div>
+        <p>Components use semantic variables. Semantic variables map to the primitive palette. Raw colours stay available for expressive track art, but reusable interface elements do not choose colours ad hoc.</p>
+      </div>
+
+      <div class="colour-layer" id="primitive-palette">
+        <div class="colour-layer-head">
+          <div><span class="token-label">Layer 1</span><h3>Primitive palette</h3></div>
+          <p>Every normative colour value in <code>design-tokens.css</code>, shown without semantic interpretation.</p>
+        </div>
+
+        <div class="palette-family">
+          <h4>Neutral</h4>
+          <div class="palette-grid" aria-label="Neutral primitive colours">
+            <article class="swatch" data-token="--turn-ink"><div class="swatch-colour" style="--swatch:#08090a"></div><div class="swatch-copy"><code>--turn-ink</code><span>#08090a</span></div></article>
+            <article class="swatch" data-token="--turn-paper"><div class="swatch-colour" style="--swatch:#fff8e8"></div><div class="swatch-copy"><code>--turn-paper</code><span>#fff8e8</span></div></article>
+            <article class="swatch" data-token="--turn-white"><div class="swatch-colour" style="--swatch:#fffdf6"></div><div class="swatch-copy"><code>--turn-white</code><span>#fffdf6</span></div></article>
+            <article class="swatch" data-token="--turn-road"><div class="swatch-colour" style="--swatch:#44494f"></div><div class="swatch-copy"><code>--turn-road</code><span>#44494f</span></div></article>
+            <article class="swatch" data-token="--turn-muted"><div class="swatch-colour" style="--swatch:#d6d0c2"></div><div class="swatch-copy"><code>--turn-muted</code><span>#d6d0c2</span></div></article>
+          </div>
+        </div>
+
+        <div class="palette-family">
+          <h4>Yellow</h4>
+          <div class="palette-grid" aria-label="Yellow primitive colours">
+            <article class="swatch" data-token="--turn-yellow-600"><div class="swatch-colour" style="--swatch:#ffbd12"></div><div class="swatch-copy"><code>--turn-yellow-600</code><span>#ffbd12</span></div></article>
+            <article class="swatch" data-token="--turn-yellow-400"><div class="swatch-colour" style="--swatch:#ffd43b"></div><div class="swatch-copy"><code>--turn-yellow-400</code><span>#ffd43b</span></div></article>
+            <article class="swatch" data-token="--turn-yellow-200"><div class="swatch-colour" style="--swatch:#ffe087"></div><div class="swatch-copy"><code>--turn-yellow-200</code><span>#ffe087</span></div></article>
+          </div>
+        </div>
+
+        <div class="palette-family">
+          <h4>Blue</h4>
+          <div class="palette-grid" aria-label="Blue primitive colours">
+            <article class="swatch" data-token="--turn-blue-600"><div class="swatch-colour" style="--swatch:#35b8e7"></div><div class="swatch-copy"><code>--turn-blue-600</code><span>#35b8e7</span></div></article>
+            <article class="swatch" data-token="--turn-blue-500"><div class="swatch-colour" style="--swatch:#38d9ff"></div><div class="swatch-copy"><code>--turn-blue-500</code><span>#38d9ff</span></div></article>
+            <article class="swatch" data-token="--turn-blue-300"><div class="swatch-colour" style="--swatch:#68c8f2"></div><div class="swatch-copy"><code>--turn-blue-300</code><span>#68c8f2</span></div></article>
+            <article class="swatch" data-token="--turn-blue-200"><div class="swatch-colour" style="--swatch:#8ed8ff"></div><div class="swatch-copy"><code>--turn-blue-200</code><span>#8ed8ff</span></div></article>
+          </div>
+        </div>
+
+        <div class="palette-family">
+          <h4>Pink</h4>
+          <div class="palette-grid" aria-label="Pink primitive colours">
+            <article class="swatch" data-token="--turn-pink-500"><div class="swatch-colour" style="--swatch:#ff4fa3"></div><div class="swatch-copy"><code>--turn-pink-500</code><span>#ff4fa3</span></div></article>
+            <article class="swatch" data-token="--turn-pink-200"><div class="swatch-colour" style="--swatch:#ff8caf"></div><div class="swatch-copy"><code>--turn-pink-200</code><span>#ff8caf</span></div></article>
+          </div>
+        </div>
+
+        <div class="palette-family">
+          <h4>Red</h4>
+          <div class="palette-grid" aria-label="Red primitive colours">
+            <article class="swatch" data-token="--turn-red-500"><div class="swatch-colour" style="--swatch:#ff6b6b"></div><div class="swatch-copy"><code>--turn-red-500</code><span>#ff6b6b</span></div></article>
+            <article class="swatch" data-token="--turn-red-200"><div class="swatch-colour" style="--swatch:#ff9b91"></div><div class="swatch-copy"><code>--turn-red-200</code><span>#ff9b91</span></div></article>
+          </div>
+        </div>
+
+        <div class="palette-family">
+          <h4>Green</h4>
+          <div class="palette-grid" aria-label="Green primitive colours">
+            <article class="swatch" data-token="--turn-green-500"><div class="swatch-colour" style="--swatch:#8ce99a"></div><div class="swatch-copy"><code>--turn-green-500</code><span>#8ce99a</span></div></article>
+            <article class="swatch" data-token="--turn-green-200"><div class="swatch-colour" style="--swatch:#d9f5c2"></div><div class="swatch-copy"><code>--turn-green-200</code><span>#d9f5c2</span></div></article>
+          </div>
+        </div>
+
+        <div class="palette-family">
+          <h4>Orange</h4>
+          <div class="palette-grid" aria-label="Orange primitive colours">
+            <article class="swatch" data-token="--turn-orange-500"><div class="swatch-colour" style="--swatch:#ff7b54"></div><div class="swatch-copy"><code>--turn-orange-500</code><span>#ff7b54</span></div></article>
+            <article class="swatch" data-token="--turn-orange-200"><div class="swatch-colour" style="--swatch:#ffb89f"></div><div class="swatch-copy"><code>--turn-orange-200</code><span>#ffb89f</span></div></article>
+          </div>
+        </div>
+      </div>
+
+      <div class="colour-layer" id="semantic-mappings">
+        <div class="colour-layer-head">
+          <div><span class="token-label">Layer 2</span><h3>Semantic variables and mappings</h3></div>
+          <p>These are the variables components should consume. The final column explains the stable meaning, not a specific screen.</p>
+        </div>
+
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Semantic colour variable mappings">
+          <table>
+            <thead><tr><th>Preview</th><th>Semantic variable</th><th>Maps to</th><th>Normative use</th></tr></thead>
+            <tbody>
+              <tr class="mapping-group"><td colspan="4">Surfaces</td></tr>
+              <tr data-semantic="--turn-surface-page"><td><span class="mapping-preview" style="--mapping:var(--turn-surface-page)"></span></td><td><code>--turn-surface-page</code></td><td><code>var(--turn-paper)</code></td><td>Default light page and panel surface.</td></tr>
+              <tr data-semantic="--turn-surface-raised"><td><span class="mapping-preview" style="--mapping:var(--turn-surface-raised)"></span></td><td><code>--turn-surface-raised</code></td><td><code>var(--turn-white)</code></td><td>Cards and controls raised above Paper.</td></tr>
+
+              <tr class="mapping-group"><td colspan="4">Actions</td></tr>
+              <tr data-semantic="--turn-action-primary"><td><span class="mapping-preview" style="--mapping:var(--turn-action-primary)"></span></td><td><code>--turn-action-primary</code></td><td><code>var(--turn-pink-500)</code></td><td>Main forward flow: Install and Race.</td></tr>
+              <tr data-semantic="--turn-action-utility"><td><span class="mapping-preview" style="--mapping:var(--turn-action-utility)"></span></td><td><code>--turn-action-utility</code></td><td><code>var(--turn-paper)</code></td><td>Quiet tools such as Settings and How to Play.</td></tr>
+              <tr data-semantic="--turn-action-information"><td><span class="mapping-preview" style="--mapping:var(--turn-action-information)"></span></td><td><code>--turn-action-information</code></td><td><code>var(--turn-blue-500)</code></td><td>Information and active guidance.</td></tr>
+              <tr data-semantic="--turn-action-success"><td><span class="mapping-preview" style="--mapping:var(--turn-action-success)"></span></td><td><code>--turn-action-success</code></td><td><code>var(--turn-green-500)</code></td><td>Confirmed successful state, not generic emphasis.</td></tr>
+              <tr data-semantic="--turn-action-warning"><td><span class="mapping-preview" style="--mapping:var(--turn-action-warning)"></span></td><td><code>--turn-action-warning</code></td><td><code>var(--turn-yellow-400)</code></td><td>Attention and reversible caution.</td></tr>
+              <tr data-semantic="--turn-action-danger"><td><span class="mapping-preview" style="--mapping:var(--turn-action-danger)"></span></td><td><code>--turn-action-danger</code></td><td><code>var(--turn-red-500)</code></td><td>Invalid, destructive and error states.</td></tr>
+              <tr data-semantic="--turn-action-navigation"><td><span class="mapping-preview" style="--mapping:var(--turn-action-navigation)"></span></td><td><code>--turn-action-navigation</code></td><td><code>var(--turn-orange-500)</code></td><td>Close, Back, Leave and Brake · Reverse.</td></tr>
+
+              <tr class="mapping-group"><td colspan="4">Native forms and disclosures</td></tr>
+              <tr data-semantic="--turn-form-control-idle"><td><span class="mapping-preview" style="--mapping:var(--turn-form-control-idle)"></span></td><td><code>--turn-form-control-idle</code></td><td><code>var(--turn-paper)</code></td><td>Unselected radio and checkbox surface.</td></tr>
+              <tr data-semantic="--turn-form-control-selected"><td><span class="mapping-preview" style="--mapping:var(--turn-form-control-selected)"></span></td><td><code>--turn-form-control-selected</code></td><td><code>var(--turn-pink-500)</code></td><td>Selected radio and checkbox state.</td></tr>
+              <tr data-semantic="--turn-form-control-focus"><td><span class="mapping-preview" style="--mapping:var(--turn-form-control-focus)"></span></td><td><code>--turn-form-control-focus</code></td><td><code>var(--turn-blue-500)</code></td><td>Visible keyboard focus.</td></tr>
+              <tr data-semantic="--turn-disclosure-trigger"><td><span class="mapping-preview" style="--mapping:var(--turn-disclosure-trigger)"></span></td><td><code>--turn-disclosure-trigger</code></td><td><code>var(--turn-blue-300)</code></td><td>Informational disclosure summary.</td></tr>
+              <tr data-semantic="--turn-disclosure-panel"><td><span class="mapping-preview" style="--mapping:var(--turn-disclosure-panel)"></span></td><td><code>--turn-disclosure-panel</code></td><td><code>var(--turn-paper)</code></td><td>Expanded disclosure content.</td></tr>
+
+              <tr class="mapping-group"><td colspan="4">Difficulty</td></tr>
+              <tr data-semantic="--turn-difficulty-easy"><td><span class="mapping-preview" style="--mapping:var(--turn-difficulty-easy)"></span></td><td><code>--turn-difficulty-easy</code></td><td><code>var(--turn-green-200)</code></td><td>Easy label support colour.</td></tr>
+              <tr data-semantic="--turn-difficulty-medium"><td><span class="mapping-preview" style="--mapping:var(--turn-difficulty-medium)"></span></td><td><code>--turn-difficulty-medium</code></td><td><code>var(--turn-yellow-200)</code></td><td>Medium label support colour.</td></tr>
+              <tr data-semantic="--turn-difficulty-hard"><td><span class="mapping-preview" style="--mapping:var(--turn-difficulty-hard)"></span></td><td><code>--turn-difficulty-hard</code></td><td><code>var(--turn-red-200)</code></td><td>Hard label support colour, distinct from danger.</td></tr>
+              <tr data-semantic="--turn-difficulty-locked"><td><span class="mapping-preview" style="--mapping:var(--turn-difficulty-locked)"></span></td><td><code>--turn-difficulty-locked</code></td><td><code>var(--turn-muted)</code></td><td>Unavailable or future track.</td></tr>
+
+              <tr class="mapping-group"><td colspan="4">Driving controls</td></tr>
+              <tr data-semantic="--turn-control-gas"><td><span class="mapping-preview" style="--mapping:var(--turn-control-gas)"></span></td><td><code>--turn-control-gas</code></td><td><code>var(--turn-green-500)</code></td><td>Gas.</td></tr>
+              <tr data-semantic="--turn-control-drift"><td><span class="mapping-preview" style="--mapping:var(--turn-control-drift)"></span></td><td><code>--turn-control-drift</code></td><td><code>var(--turn-blue-500)</code></td><td>Drift.</td></tr>
+              <tr data-semantic="--turn-control-boost"><td><span class="mapping-preview" style="--mapping:var(--turn-control-boost)"></span></td><td><code>--turn-control-boost</code></td><td><code>var(--turn-yellow-400)</code></td><td>Available Boost charge.</td></tr>
+              <tr data-semantic="--turn-control-boost-empty"><td><span class="mapping-preview" style="--mapping:var(--turn-control-boost-empty)"></span></td><td><code>--turn-control-boost-empty</code></td><td><code>var(--turn-yellow-200)</code></td><td>Unfilled Boost meter.</td></tr>
+              <tr data-semantic="--turn-control-brake"><td><span class="mapping-preview" style="--mapping:var(--turn-control-brake)"></span></td><td><code>--turn-control-brake</code></td><td><code>var(--turn-orange-500)</code></td><td>Brake and Reverse.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="colour-layer" id="compatibility-aliases">
+        <div class="colour-layer-head">
+          <div><span class="token-label">Bridge layer</span><h3>Compatibility aliases</h3></div>
+          <p>Existing selectors remain stable while migration continues. New components should use the <code>--turn-*</code> variables above.</p>
+        </div>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Compatibility colour aliases">
+          <table>
+            <thead><tr><th>Existing variable</th><th>Normative target</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td><code>--ink</code></td><td><code>var(--turn-ink)</code></td><td>Compatibility alias</td></tr>
+              <tr><td><code>--paper</code></td><td><code>var(--turn-paper)</code></td><td>Compatibility alias</td></tr>
+              <tr><td><code>--cyan</code></td><td><code>var(--turn-blue-500)</code></td><td>Compatibility alias</td></tr>
+              <tr><td><code>--pink</code></td><td><code>var(--turn-pink-500)</code></td><td>Compatibility alias</td></tr>
+              <tr><td><code>--yellow</code></td><td><code>var(--turn-yellow-400)</code></td><td>Compatibility alias</td></tr>
+              <tr><td><code>--lime</code></td><td><code>var(--turn-green-500)</code></td><td>Compatibility alias</td></tr>
+              <tr><td><code>--m8-ink</code></td><td><code>var(--turn-ink)</code></td><td>Home compatibility alias</td></tr>
+              <tr><td><code>--m8-cream</code></td><td><code>var(--turn-paper)</code></td><td>Home compatibility alias</td></tr>
+              <tr><td><code>--m8-pink</code></td><td><code>var(--turn-pink-500)</code></td><td>Home compatibility alias</td></tr>
+              <tr><td><code>--m8-yellow</code></td><td><code>var(--turn-yellow-600)</code></td><td>Home compatibility alias</td></tr>
+              <tr><td><code>--m8-blue</code></td><td><code>var(--turn-blue-300)</code></td><td>Home compatibility alias</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="alias-note">Rule: aliases preserve existing visuals. They are not a second design system.</p>
+      </div>
+
+      <div class="colour-layer">
+        <div class="board">
+          <div><span class="token-label">Difficulty in use</span><div class="row"><span class="difficulty easy">Easy</span><span class="difficulty medium">Medium</span><span class="difficulty hard">Hard</span><span class="difficulty locked">Locked</span></div><p>Colour reinforces progression but never replaces the label.</p></div>
+          <div><span class="token-label">Driving in use</span><div class="row"><span class="button-sample" style="background:var(--turn-control-gas)">Gas</span><span class="button-sample" style="background:var(--turn-control-drift)">Drift</span><span class="button-sample" style="background:var(--turn-control-boost)">Boost</span><span class="button-sample" style="background:var(--turn-control-brake)">Brake · Reverse</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="patterns">
+      <div class="section-head"><div><span class="kicker">03 · Interaction patterns</span><h2>Semantics stay native. Visuals stay TURN.</h2></div><p>HTML structure communicates meaning. Shared tokens and component rules communicate visual hierarchy.</p></div>
+      <div class="board">
+        <div><span class="token-label">Forward flow</span><div class="row"><span class="button-sample primary">Install TURN</span><span class="button-sample primary">Race this track</span><span class="button-sample primary">Race this car</span></div></div>
+        <div><span class="token-label">Utility and Navigation</span><div class="row"><span class="button-sample">Settings</span><span class="button-sample">How to Play</span><span class="button-sample">Give Feedback</span><span class="button-sample navigation">Leave race</span><span class="icon-button" aria-label="Close-button specimen">×</span></div></div>
+        <div><span class="token-label">Header metadata</span><div style="margin-top:12px"><span class="metadata-pattern"><span>TURN V1.3.2 · BUILD 2026.08.02-R124</span><button class="about-link" type="button">ABOUT TURN</button></span></div><p><strong>ABOUT TURN is visually a link but semantically a button</strong> because it opens a dialog.</p></div>
+        <div><span class="token-label">Native form controls</span><div class="form-grid" style="margin-top:18px"><fieldset class="form-card"><legend>Steering</legend><label class="form-option"><input type="radio" name="designSteering" checked><span><strong>Device rotation</strong><small>Turn the whole device like a steering wheel.</small></span></label><label class="form-option"><input type="radio" name="designSteering"><span><strong>On-screen steering</strong><small>Use the steering control or a keyboard.</small></span></label></fieldset><section class="form-card" aria-labelledby="designAudioTitle"><h3 id="designAudioTitle">Audio</h3><label class="form-option"><input type="checkbox" checked><span><strong>Sound</strong><small>Turn every TURN sound on or off.</small></span></label><label class="form-option"><input type="checkbox"><span><strong>Drive By Ear™</strong><small>Spatial steering guidance and race information.</small></span></label></section></div><p><strong>Legend and heading elements share one floating card-title treatment.</strong> Radio buttons and Checkboxes use the same shell and differ through a clear selected state.</p></div>
+        <div><span class="token-label">Disclosure</span><details class="disclosure-sample" style="margin-top:12px"><summary><span class="disclosure-symbol" aria-hidden="true"></span><span>Explore the Drive By Ear sounds</span></summary><div class="disclosure-panel"><p><strong>Blue trigger, Paper panel.</strong> The decorative state symbol sits directly before the summary text. The native details element communicates expanded and collapsed state.</p></div></details></div>
+      </div>
+    </section>
+
+    <section id="screens">
+      <div class="section-head"><div><span class="kicker">04 · Example implementation</span><h2>Actual components, not substitute illustrations.</h2></div><p>Game content is labelled rather than imitated. The system demonstrates the surrounding controls and hierarchy.</p></div>
+      <div class="screens">
+        <article class="screen-item"><h3>Install</h3><div class="screen" role="img" aria-label="TURN install page design specimen"><div class="screen-head"><strong>TURN</strong><span>TURN V1.3.2 · BUILD 2026.08.02-R124</span></div><div class="placeholder">INSTALL ART</div><div class="row"><span class="button-sample primary">Install TURN</span></div></div></article>
+        <article class="screen-item"><h3>Home and track selection</h3><div class="screen" role="img" aria-label="TURN Home and track-selection design specimen"><div class="screen-head"><strong>CHOOSE YOUR TRACK</strong><span class="about-link">ABOUT TURN</span></div><div class="two-col"><div class="track-grid"><div class="track-card"><div class="top"><strong>COUNTRYSIDE</strong><span class="difficulty easy">Easy</span></div><div class="placeholder">TRACK PREVIEW</div></div><div class="track-card"><div class="top"><strong>AIRPORT</strong><span class="difficulty medium">Medium</span></div><div class="placeholder">TRACK PREVIEW</div></div><div class="track-card"><div class="top"><strong>HARBOR</strong><span class="difficulty hard">Hard</span></div><div class="placeholder">TRACK PREVIEW</div></div></div><div class="menu"><span class="button-sample">Settings</span><span class="button-sample">How to Play</span><span class="button-sample">Give Feedback</span><span class="button-sample primary">Race this track</span></div></div></div></article>
+        <article class="screen-item"><h3>The Lot</h3><div class="screen" role="img" aria-label="TURN The Lot design specimen"><div class="two-col"><div class="placeholder">3D CAR VIEW</div><div class="card"><h3>SPORTS SEDAN</h3><p>Top speed · Acceleration · Control · Drift</p><div class="row"><span class="button-sample primary">Race this car</span></div></div></div></div></article>
+        <article class="screen-item"><h3>Race</h3><div class="screen" role="img" aria-label="TURN race HUD and control design specimen"><div class="hud"><span class="chip">Speed 86 km/h</span><span class="chip">Lap 2</span><span class="chip">Position 3/5</span><span class="chip">Time 0:34.822</span></div><div class="placeholder">GAME VIEW</div><div class="drive-pad"><div class="drive-top"><span>Drift</span><span>Boost</span></div><div class="gas-zone">Gas</div><div class="brake-zone">Brake · Reverse</div></div></div></article>
+        <article class="screen-item"><h3>Dialog</h3><div class="screen" role="img" aria-label="TURN How to Play dialog design specimen"><div class="screen-head"><strong>HOW TO PLAY</strong><span class="icon-button">×</span></div><div class="card"><h3>Drive By Ear™</h3><p>Paper content card with a Blue informational disclosure.</p><details class="disclosure-sample" style="margin-top:14px"><summary><span class="disclosure-symbol" aria-hidden="true"></span><span>Explore the Drive By Ear sounds</span></summary><div class="disclosure-panel"><p>Guidance, pace notes, grip, surfaces and recovery.</p></div></details></div></div></article>
+      </div>
+    </section>
+
+    <section id="migration">
+      <div class="section-head"><div><span class="kicker">05 · Adoption</span><h2>The first two migration steps are live.</h2></div><p>Shared tokens and compatibility aliases are in production. Native form controls and disclosures now join the normative system.</p></div>
+      <ol class="migration">
+        <li><strong>Shared token file: complete.</strong> Primitive and semantic roles live in <code>design-tokens.css</code>.</li>
+        <li><strong>Compatibility aliases: complete.</strong> Existing variables resolve to normative primitives.</li>
+        <li><strong>Native components: active.</strong> Settings headings, radios, checkboxes, range input and disclosures use shared rules.</li>
+        <li><strong>Continue incrementally.</strong> Normalize geometry component family by component family.</li>
+      </ol>
+    </section>
   </main>
+
   <footer><strong>TURN Design System</strong><br>Preserve the personality. Standardize the rules underneath it.</footer>
 </body>
 </html>
