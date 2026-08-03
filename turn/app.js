@@ -188,6 +188,10 @@ await Promise.all([
 ]);
 
 await import(withBuild('./ui/in-game-menu.js'));
+const { installScreenBlanking } = await import(
+  withBuild('./ui/screen-blanking.js?revision=r142-audio-only-screen')
+);
+installScreenBlanking(globalThis.__turnRuntime);
 installStylesheet('./m8-home.css', 'data-turn-m8-home-styles');
 installStylesheet(
   './m8-midnight-city-postcard-r130.css?revision=r130-neon-skyline',
