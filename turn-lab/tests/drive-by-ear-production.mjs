@@ -15,10 +15,12 @@ const [
   audio,
   preferences,
   runtimeGuard,
+  runtimeLoader,
   organic,
   recovery,
   offroadDirection,
   paceAudio,
+  screenBlanking,
   polishStyle
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
@@ -29,10 +31,12 @@ const [
   fs.readFile(new URL('../../turn/audio/audio-system.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/audio-preferences.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/audio-preference-runtime.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/audio/drive-by-ear-runtime.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/organic-ribbon.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/recovery-guidance.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/offroad-ear-direction.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/audio/pace-notes.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/ui/screen-blanking.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/r104-polish.css', import.meta.url), 'utf8')
 ]);
 const release = JSON.parse(releaseSource);
@@ -54,37 +58,35 @@ assert.equal(saveDriveByEarEnabled(false, null), false);
 assert.equal(saveDriveByEarEnabled(false, { setItem: () => { throw new Error('blocked'); } }), false);
 
 assert.match(app, /installDriveByEarSetting/);
-assert.ok(app.indexOf('./ui/drive-by-ear-setting.js') < app.indexOf('./audio/organic-ribbon.js'));
-assert.match(app, /let organicRibbon = null/);
-assert.match(app, /let recoveryGuidance = null/);
-assert.match(
-  app,
-  /if \(driveByEarEnabled\) \{\s*organicRibbon = await import\(withBuild\('\.\/audio\/organic-ribbon\.js'\)\);\s*organicRibbon\.prepareOrganicRibbonCapture\(\);\s*recoveryGuidance = await import\(withBuild\('\.\/audio\/recovery-guidance\.js'\)\);\s*recoveryGuidance\.prepareRecoveryGuidanceCapture\(\);\s*\}/,
-  'Optional DBE graph decorators must prepare capture only when DBE is enabled'
-);
-assert.ok(app.indexOf('prepareOrganicRibbonCapture()') < app.indexOf('./audio/audio-preferences.js'),
-  'Preference graph interception must preserve the organic capture ordering');
-assert.ok(app.indexOf('prepareRecoveryGuidanceCapture()') < app.indexOf('./audio/audio-preferences.js'),
-  'Wrong-way recovery capture must remain inside the true-off boundary and precede graph creation');
+assert.match(app, /prepareDriveByEarRuntime/);
+assert.match(app, /ensureDriveByEarRuntime/);
+assert.ok(app.indexOf('./ui/drive-by-ear-setting.js') < app.indexOf('./audio/drive-by-ear-runtime.js'));
+assert.ok(app.indexOf('await prepareDriveByEarRuntime()') < app.indexOf('./audio/audio-preferences.js'),
+  'Drive By Ear graph capture must be prepared before preference interception and graph creation');
+assert.match(app, /globalThis\.__turnDriveByEarEnabled = true/,
+  'The central guidance graph must be constructed even when the stored preference is off');
+assert.ok(app.indexOf('globalThis.__turnDriveByEarEnabled = true') < app.indexOf('./audio/audio-system.js'));
 assert.ok(app.indexOf('./audio/audio-preferences.js') < app.indexOf('./audio/audio-system.js'),
   'Preferences must be installed before the core graph is created');
 assert.match(app, /installAudioPreferences\(\{ driveByEarGraphAvailable: driveByEarEnabled \}\)/);
-assert.ok(app.indexOf('installTurnAudio()') < app.indexOf('installOrganicRibbon()'),
-  'The organic wrapper must install only after the core API exists');
-assert.match(app, /if \(driveByEarEnabled\) \{\s*organicRibbon\.installOrganicRibbon\(\);[\s\S]*\.\/audio\/driving-soundscape\.js/,
-  'The organic wrapper and soundscape must remain inside the DBE-enabled branch');
-assert.match(
-  app,
-  /installPaceNotes\(\);[\s\S]*installOffroadEarDirection\(\);[\s\S]*recoveryGuidance\.installRecoveryGuidance\(\);/,
-  'Physical road-side correction must sit between route guidance and the outer recovery wrapper'
-);
-assert.ok(app.indexOf('./audio/driving-soundscape.js') < app.indexOf('./audio/audio-preference-runtime.js'),
-  'The live preference guard must wrap the complete DBE soundscape');
-assert.ok(app.indexOf('installOffroadEarDirection()') < app.indexOf('./audio/audio-preference-runtime.js'),
-  'The live preference guard must also wrap off-road ear correction');
-assert.ok(app.indexOf('installRecoveryGuidance()') < app.indexOf('./audio/audio-preference-runtime.js'),
-  'The live preference guard must also wrap continuous recovery guidance');
+assert.match(app, /installTurnAudio\(\);\s*audioPreferences\.setDriveByEarEnabled\(driveByEarEnabled\);/,
+  'The stored preference must be restored immediately after the always-ready graph is built');
+assert.match(app, /globalThis\.__turnEnsureDriveByEarRuntime = ensureDriveByEarRuntime/);
+assert.match(app, /if \(driveByEarEnabled\) await ensureDriveByEarRuntime\(\)/,
+  'The optional Drive By Ear wrappers should still install eagerly only for players who selected them');
+assert.ok(app.indexOf('if (driveByEarEnabled) await ensureDriveByEarRuntime()') < app.indexOf('./audio/audio-preference-runtime.js'),
+  'The preference guard must wrap the complete eager Drive By Ear runtime');
 assert.match(app, /installAudioPreferenceRuntime\(\)/);
+
+assert.match(runtimeLoader, /export function prepareDriveByEarRuntime\(\)/);
+assert.match(runtimeLoader, /prepareOrganicRibbonCapture\(\)/);
+assert.match(runtimeLoader, /prepareRecoveryGuidanceCapture\(\)/);
+assert.match(runtimeLoader, /preparePaceNotePriorityCapture\(\)/);
+assert.match(runtimeLoader, /export async function ensureDriveByEarRuntime\(\)/);
+assert.match(runtimeLoader, /installOrganicRibbon\(\);[\s\S]*installPaceNotePriority\(\);[\s\S]*installUniversalDrivingSoundscape\(\);[\s\S]*installPaceNotes\(\);[\s\S]*installOffroadEarDirection\(\);[\s\S]*installRecoveryGuidance\(\);/,
+  'Lazy activation must install the complete Drive By Ear stack in the established wrapper order');
+assert.match(runtimeLoader, /globalThis\.__turnDriveByEarRuntimeReady = true/);
+assert.match(runtimeLoader, /console\.error\('TURN: Drive By Ear could not be started\.'/);
 
 assert.match(setting, /DRIVE BY EAR<sup>™<\/sup>/);
 assert.match(setting, /On by default for every player/);
@@ -102,7 +104,7 @@ assert.match(menu, /id="turnAudioBalance"/);
 assert.match(menu, /saveDriveByEarEnabled\(enabled\)/);
 assert.match(menu, /setDriveByEarEnabled/);
 assert.match(menu, /driveByEarGraphAvailable === false/,
-  'Enabling DBE after a true-off startup must rebuild the intentionally absent graph');
+  'The normal settings path may still reload after a stored off startup, while audio-only mode uses the prepared runtime directly');
 
 assert.match(preferences, /turn-audio-enabled-v1/);
 assert.match(preferences, /turn-audio-balance-v1/);
@@ -114,7 +116,7 @@ assert.match(preferences, /'dynamics',[\s\S]*'guidance',[\s\S]*'route',[\s\S]*'w
 assert.match(preferences, /role === 'dynamics' \|\| role === 'world'/,
   'Engine, drift, boost and world cues must share the other-sounds side of the balance');
 assert.match(preferences, /role === 'guidance' \|\| role === 'route' \|\| role === 'safety'/,
-  'Slider, pace notes and safety cues must share the DBE side of the balance');
+  'Slider, pace notes and safety cues must share the Drive By Ear side of the balance');
 assert.match(preferences, /setGain\(state\.masterPreference, audioEnabled \? 1 : 0/);
 assert.match(preferences, /setGain\(state\.dbePreference, dbeEnabled \? dbeFactor : 0/);
 assert.match(preferences, /const dbeFactor = balance < DEFAULT_BALANCE/);
@@ -128,37 +130,32 @@ assert.doesNotMatch(preferences, /new AudioContext|new webkitAudioContext/,
 
 assert.match(runtimeGuard, /const DBE_DISABLED_FRAME/);
 assert.match(runtimeGuard, /nearestRivalDistance: Infinity/,
-  'Live DBE off must also suppress the internally generated rival warning');
+  'Live Drive By Ear off must also suppress the internally generated rival warning');
 assert.match(runtimeGuard, /settings\?\.dbeEnabled === false/);
 assert.match(runtimeGuard, /\{ \.\.\.frame, \.\.\.DBE_DISABLED_FRAME \}/);
 assert.doesNotMatch(runtimeGuard, /AudioContext|webkitAudioContext|new Audio\(/);
 
 assert.match(audio, /DRIVE_BY_EAR_ENABLED = globalThis\.__turnDriveByEarEnabled !== false/);
 assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) \{[\s\S]*window\.addEventListener\('turn:pace-note'/);
-assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) installDbeGraphs\(\)/,
-  'DBE off must not create Slider or surface graphs');
-assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) \{\s*const recoveryRibbon/,
-  'DBE off must skip Slider and surface processing');
-assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) updateDrivingSafety/,
-  'DBE off must skip Wrong Way processing');
+assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) installDbeGraphs\(\)/);
+assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) \{\s*const recoveryRibbon/);
+assert.match(audio, /if \(DRIVE_BY_EAR_ENABLED\) updateDrivingSafety/);
 assert.match(organic, /export function prepareOrganicRibbonCapture\(\)/);
 assert.match(organic, /captureAudioFactories\(\)/);
 assert.doesNotMatch(organic, /new AudioContext|new webkitAudioContext|HTMLAudioElement|new Audio\(|fetch\(/,
-  'Even when enabled, the organic layer must not create a dormant second engine or asset request');
+  'The organic layer must not create a dormant second engine or asset request');
 assert.match(organic, /baseAudio\.silence\(\.\.\.args\)/);
 assert.match(recovery, /export function prepareRecoveryGuidanceCapture\(\)/);
 assert.match(recovery, /settings\?\.dbeEnabled !== false/,
-  'Live DBE off must silence the continuous wrong-way layer');
-assert.match(recovery, /globalThis\.__turnDriveByEarEnabled !== false/,
-  'True-off startup must keep recovery unavailable');
+  'Live Drive By Ear off must silence the continuous wrong-way layer');
+assert.match(recovery, /globalThis\.__turnDriveByEarEnabled !== false/);
 assert.doesNotMatch(recovery, /new AudioContext|new webkitAudioContext|HTMLAudioElement|new Audio\(|fetch\(/,
   'Recovery guidance must reuse the central audio graph without assets');
 assert.match(recovery, /updateWrongWayTone\(\{ active: false \}/,
-  'Runtime DBE shutdown must explicitly fade the sustained wrong-way tone');
+  'Runtime Drive By Ear shutdown must explicitly fade the sustained wrong-way tone');
 assert.match(offroadDirection, /settings\?\.dbeEnabled !== false/,
-  'Live DBE off must bypass the physical-road correction layer');
-assert.match(offroadDirection, /globalThis\.__turnDriveByEarEnabled !== false/,
-  'True-off startup must leave physical-road correction unavailable');
+  'Live Drive By Ear off must bypass the physical-road correction layer');
+assert.match(offroadDirection, /globalThis\.__turnDriveByEarEnabled !== false/);
 assert.doesNotMatch(offroadDirection, /AudioContext|webkitAudioContext|HTMLAudioElement|new Audio\(|fetch\(/,
   'Ear correction must reuse the existing ribbon without another graph or asset');
 assert.doesNotMatch(audio, /driftPanner|smoothPan\(drift/);
@@ -166,7 +163,25 @@ assert.match(audio, /if \(sliderGain\) hardMute\(sliderGain\.gain, now\)/);
 assert.match(audio, /if \(surfaceGain\) hardMute\(surfaceGain\.gain, now\)/);
 assert.doesNotMatch(audio, /recoveryGain|recoveryFilter|recoveryPanner|playRecoveryCue/);
 assert.doesNotMatch(paceAudio, /AudioContext|webkitAudioContext/);
+
+assert.match(screenBlanking, /driveByEarEnabled/);
+assert.match(screenBlanking, /globalThis\.__turnEnsureDriveByEarRuntime/);
+assert.match(screenBlanking, /preferences\.setDriveByEarEnabled\(true\)/,
+  'Entering audio-only mode must temporarily activate Drive By Ear');
+assert.match(screenBlanking, /setDriveByEarEnabled\?\.\(chosenSetting\)/,
+  'Showing the screen must restore the stored Drive By Ear choice');
+assert.match(screenBlanking, /Drive By Ear will turn on temporarily/);
+assert.match(screenBlanking, /Drive By Ear is on for audio-only driving/);
+assert.match(screenBlanking, /Drive By Ear returned to your chosen setting/);
+assert.match(screenBlanking, /getBoundingClientRect\(\)/);
+assert.match(screenBlanking, /--turn-screen-blank-left/);
+assert.match(screenBlanking, /--turn-screen-blank-top/);
+assert.match(screenBlanking, /background: #ff7b54/,
+  'The active show-screen control should use the back-navigation orange');
+assert.match(screenBlanking, /className = 'turn-screen-blank-toast'/);
+assert.match(screenBlanking, /role', 'status'/);
+
 assert.match(polishStyle, /\.audio-settings-dialog/);
 assert.match(polishStyle, /\.audio-balance-card/);
 
-console.log(`TURN ${release.id} live audio preferences and Drive By Ear true-off path passed.`);
+console.log(`TURN ${release.id} temporary audio-only Drive By Ear integration passed.`);
