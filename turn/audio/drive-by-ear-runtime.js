@@ -2,13 +2,20 @@ let preparationPromise = null;
 let installationPromise = null;
 let installed = false;
 
+function withBuild(path) {
+  const url = new URL(path, import.meta.url);
+  const buildKey = globalThis.__TURN_BUILD__?.cacheKey;
+  if (buildKey) url.searchParams.set('build', buildKey);
+  return url.href;
+}
+
 export function prepareDriveByEarRuntime() {
   if (preparationPromise) return preparationPromise;
 
   preparationPromise = Promise.all([
-    import('./organic-ribbon.js'),
-    import('./recovery-guidance.js'),
-    import('./pace-note-priority.js?revision=r123-final-hold')
+    import(withBuild('./organic-ribbon.js')),
+    import(withBuild('./recovery-guidance.js')),
+    import(withBuild('./pace-note-priority.js?revision=r123-final-hold'))
   ]).then(([organicRibbon, recoveryGuidance, paceNotePriority]) => {
     organicRibbon.prepareOrganicRibbonCapture();
     recoveryGuidance.prepareRecoveryGuidanceCapture();
@@ -31,9 +38,9 @@ export async function ensureDriveByEarRuntime() {
   installationPromise = (async () => {
     const prepared = await prepareDriveByEarRuntime();
     const [drivingSoundscape, paceNotes, offroadEarDirection] = await Promise.all([
-      import('./driving-soundscape.js'),
-      import('./pace-notes.js?revision=r123-final-hold'),
-      import('./offroad-ear-direction.js')
+      import(withBuild('./driving-soundscape.js')),
+      import(withBuild('./pace-notes.js?revision=r123-final-hold')),
+      import(withBuild('./offroad-ear-direction.js'))
     ]);
 
     prepared.organicRibbon.installOrganicRibbon();
