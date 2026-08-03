@@ -106,13 +106,16 @@ export async function createCarVisual({
   }
 
   if (outline) addOutlines(model);
-  normalizeModelToGround(model, targetLength * car.visualScale);
+  const effectiveVisualScale = car.visualScale * car.visualSizeMultiplier;
+  normalizeModelToGround(model, targetLength * effectiveVisualScale);
 
   root.userData.turnCarId = car.id;
   root.userData.turnCarColor = requestedColor;
   root.userData.turnCarSecondaryColor = requestedSecondaryColor;
   root.userData.turnGhost = ghost;
   root.userData.turnModelYawQuarterTurns = car.modelYawQuarterTurns;
+  root.userData.turnVisualSizeMultiplier = car.visualSizeMultiplier;
+  root.userData.turnEffectiveVisualScale = effectiveVisualScale;
   root.userData.turnPrimaryPaintMaterials = primaryPaintMaterials;
   root.userData.turnSecondaryPaintMaterials = secondaryPaintMaterials;
   root.userData.turnPaintMaterials = [...primaryPaintMaterials, ...secondaryPaintMaterials];

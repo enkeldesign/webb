@@ -22,17 +22,52 @@ const expectedQuarterTurns = new Map([
   ['van', 0]
 ]);
 
+const expectedVisualScales = new Map([
+  ['convertible', 0.98],
+  ['classic', 1],
+  ['vintage-racer', 0.96],
+  ['toy-racer', 0.94],
+  ['monster-truck', 0.83],
+  ['race-future', 0.96],
+  ['race', 0.94],
+  ['sedan-sports', 0.98],
+  ['sedan', 1],
+  ['suv', 1.05],
+  ['suv-luxury', 1.06],
+  ['hatchback-sports', 0.96],
+  ['truck-flat', 1.12],
+  ['truck', 1.12],
+  ['van', 1.08]
+]);
+
+const expectedSizeMultipliers = new Map([
+  ['convertible', 0.6],
+  ['classic', 0.6],
+  ['monster-truck', 1.2]
+]);
+
 // Vintage Racer's GLB wheel labels describe the axles opposite to the visible body nose.
 // Keep the visual orientation verified by gameplay instead of trusting those labels literally.
 const reversedWheelLabelAxes = new Set(['vintage-racer']);
 
 assert.equal(catalog.CAR_CATALOG.length, expectedQuarterTurns.size);
+assert.equal(catalog.CAR_CATALOG.length, expectedVisualScales.size);
 
 for (const car of catalog.CAR_CATALOG) {
   assert.equal(
     car.modelYawQuarterTurns,
     expectedQuarterTurns.get(car.id),
     `${car.name} must keep its verified GLB orientation correction`
+  );
+  assert.equal(
+    car.visualScale,
+    expectedVisualScales.get(car.id),
+    `${car.name} must keep its authored model-normalization scale`
+  );
+  assert.equal(
+    car.visualSizeMultiplier,
+    expectedSizeMultipliers.get(car.id) || 1,
+    `${car.name} must keep its globally shared size multiplier`
   );
 
   const glb = await fs.readFile(new URL(`../../turn/assets/cars/${car.id}.glb`, import.meta.url));
@@ -62,6 +97,13 @@ for (const car of catalog.CAR_CATALOG) {
   assert.ok(viewerFront.z > 0, `${car.name} must open on a front three-quarter view`);
 }
 
+const convertible = catalog.getCarDefinition('convertible');
+const trainingCar = catalog.getCarDefinition('classic');
+const monsterTruck = catalog.getCarDefinition('monster-truck');
+assertClose(convertible.visualScale * convertible.visualSizeMultiplier, 0.588, 'Convertible effective visual scale');
+assertClose(trainingCar.visualScale * trainingCar.visualSizeMultiplier, 0.6, 'Training Car effective visual scale');
+assertClose(monsterTruck.visualScale * monsterTruck.visualSizeMultiplier, 0.996, 'Monster Truck effective visual scale');
+
 const [index, releaseSource, carModels, lot, main] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
@@ -77,6 +119,18 @@ assert.match(
   /model\.rotation\.y = Math\.PI \+ car\.modelYawQuarterTurns \* Math\.PI \/ 2/,
   'The shared model factory must apply the catalog correction'
 );
+assert.match(
+  carModels,
+  /effectiveVisualScale = car\.visualScale \* car\.visualSizeMultiplier/,
+  'The shared model factory must combine authored normalization with global size balance'
+);
+assert.match(
+  carModels,
+  /normalizeModelToGround\(model, targetLength \* effectiveVisualScale\)/,
+  'Every model surface must receive the same effective size through the shared factory'
+);
+assert.match(carModels, /turnVisualSizeMultiplier = car\.visualSizeMultiplier/);
+assert.match(carModels, /turnEffectiveVisualScale = effectiveVisualScale/);
 assert.match(carModels, /side: THREE\.BackSide/, 'Car outlines must remain inverted back-face shells');
 assert.match(carModels, /depthTest: true/, 'Car outlines must still respect the body depth buffer');
 assert.match(carModels, /depthWrite: false/, 'Car outlines must not write depth and compete with body surfaces');
@@ -88,7 +142,14 @@ assert.match(lot, /VIEWER_INITIAL_YAW = Math\.PI - 0\.55/, 'The viewer must star
 assert.match(main, /playerCar\.rotation\.y = state\.heading \+ Math\.PI/);
 assert.match(main, /car\.rotation\.y = frame\.h \+ Math\.PI/);
 
-console.log(`TURN ${release.id} car orientation passed for all 15 models.`);
+console.log(`TURN ${release.id} car orientation and shared visual sizing passed for all 15 models.`);
+
+function assertClose(actual, expected, label) {
+  assert.ok(
+    Math.abs(actual - expected) < 1e-12,
+    `${label} must equal ${expected}; received ${actual}`
+  );
+}
 
 function readGlbJson(buffer, carId) {
   assert.equal(buffer.toString('utf8', 0, 4), 'glTF', `${carId} must remain a binary glTF`);

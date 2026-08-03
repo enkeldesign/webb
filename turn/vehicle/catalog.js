@@ -58,6 +58,14 @@ export const CAR_PALETTE = Object.freeze([
   Object.freeze({ name: 'Ice', value: '#f8f9fa' })
 ]);
 
+// Global balance adjustments are kept separate from each GLB's authored normalization.
+// They follow the shared model factory into The Lot, race, rivals, Spectate and previews.
+const VISUAL_SIZE_MULTIPLIER_BY_ID = Object.freeze({
+  convertible: 0.6,
+  classic: 0.6,
+  'monster-truck': 1.2
+});
+
 // Every car has exactly 18 stat points. The Sedan's 3/3/3/3/3/3 is the neutral baseline;
 // every other vehicle trades strengths for weaknesses instead of becoming a straight upgrade.
 // Training Car deliberately spends its budget on control, drift and a long boost tank so new
@@ -108,6 +116,7 @@ export const CAR_CATALOG = Object.freeze(RAW_CARS.map(([
   asset: `./assets/cars/${id}.glb`,
   stats: Object.freeze({ ...stats }),
   visualScale,
+  visualSizeMultiplier: VISUAL_SIZE_MULTIPLIER_BY_ID[id] || 1,
   modelYawQuarterTurns,
   secondaryPaint: SECONDARY_PAINT_BY_ID[id] || null,
   tuning: Object.freeze({
