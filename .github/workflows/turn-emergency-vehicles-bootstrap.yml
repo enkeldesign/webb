@@ -1,0 +1,70 @@
+name: Bootstrap TURN emergency vehicles
+
+on:
+  push:
+    branches:
+      - agent/turn-emergency-vehicles
+    paths:
+      - '.github/scripts/implement_turn_emergency_vehicles.py'
+      - '.github/workflows/turn-emergency-vehicles-bootstrap.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  implement:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/turn-emergency-vehicles
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Add Kenney emergency vehicles and TURN behaviour
+        run: python .github/scripts/implement_turn_emergency_vehicles.py
+
+      - name: Synchronize release identity
+        run: node turn/scripts/release.mjs --write
+
+      - name: Synchronize TURN NEXT generated parity files
+        run: |
+          node turn-next/scripts/build-parity-app.mjs --write
+          node turn-next/scripts/build-parity-main.mjs --write
+          node turn-next/scripts/build-parity-entry.mjs --write
+
+      - name: Syntax-check changed modules
+        run: |
+          node --check turn/vehicle/catalog.js
+          node --check turn/vehicle/car-models.js
+          node --check turn/garage/lot-r10.js
+          node --check turn/ui/gameplay-controls.js
+          node --check turn/audio/audio-system.js
+          node --check turn-lab/tests/emergency-vehicles-production.mjs
+
+      - name: Lint TURN domain modules
+        run: npx --yes eslint@9.39.1
+
+      - name: Run focused vehicle regressions
+        run: |
+          node turn/scripts/release.mjs --check
+          node turn-lab/tests/emergency-vehicles-production.mjs
+          node turn-lab/tests/garage-production.mjs
+          node turn-lab/tests/car-orientation-production.mjs
+          node turn-lab/tests/native-paint-production.mjs
+          node turn-lab/tests/drive-pad-production.mjs
+          node turn-lab/tests/audio-foundation-production.mjs
+
+      - name: Commit implementation
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add turn turn-next turn-lab .github/workflows/turn-lab-tests.yml
+          git commit -m 'Add emergency vehicles with boost lights and sirens'
+          git push origin HEAD:agent/turn-emergency-vehicles
