@@ -11,8 +11,8 @@
   "theme_color": "#08090a",
   "icons": [
     {
-      "src": "/turn/TURNicon.PNG?icon=20260730-1136",
-      "sizes": "1136x1136",
+      "src": "/turn/TURNicon.PNG?icon=20260803-profile-512",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
