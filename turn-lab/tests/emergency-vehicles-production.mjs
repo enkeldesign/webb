@@ -35,13 +35,30 @@ assert.equal(catalog.normalizeVehicleId('suv-luxury'), 'firetruck');
 assert.equal(catalog.normalizeVehicleId('hatchback-sports'), 'police');
 assert.equal(catalog.normalizeVehicleId('truck-flat'), 'ambulance');
 
-const [carModels, lot, lotCss, controls, audio, license] = await Promise.all([
+const [
+  carModels,
+  emergencyLiveries,
+  lot,
+  lotCss,
+  fixedLiveryUi,
+  lotTrackSelect,
+  controls,
+  audio,
+  license,
+  index,
+  nextIndex
+] = await Promise.all([
   fs.readFile(path.join(turnDir, 'vehicle/car-models.js'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'vehicle/emergency-livery-models.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'garage/lot-r10.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'garage/lot-r10.css'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'garage/lot-fixed-livery-ui.js'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'garage/lot-track-select.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'ui/gameplay-controls.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'audio/audio-system.js'), 'utf8'),
-  fs.readFile(path.join(turnDir, 'assets/cars/KENNEY-CAR-KIT.md'), 'utf8')
+  fs.readFile(path.join(turnDir, 'assets/cars/KENNEY-CAR-KIT.md'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'index.html'), 'utf8'),
+  fs.readFile(path.join(root, 'turn-next/index.html'), 'utf8')
 ]);
 
 assert.match(carModels, /!car\.fixedLivery/);
@@ -54,8 +71,28 @@ assert.match(carModels, /record\.pointLight\.intensity = active && on \? \(rig\.
 assert.match(carModels, /prefers-reduced-motion: reduce/);
 assert.match(carModels, /periodMs = reducedMotion \? 1400/);
 assert.match(carModels, /globalThis\.__turnBoostActive/);
+
+assert.match(emergencyLiveries, /police:[\s\S]*primary: 0x0b0d10[\s\S]*secondary: 0xf8f9fa/);
+assert.match(emergencyLiveries, /ambulance:[\s\S]*primary: 0xf8f9fa[\s\S]*secondary: 0xd92d20/);
+assert.match(emergencyLiveries, /firetruck:[\s\S]*primary: 0xd92d20[\s\S]*secondary: 0xffd43b/);
+assert.match(emergencyLiveries, /applyFixedEmergencyLivery/);
+assert.match(emergencyLiveries, /turnEmergencyLiveryAccent/);
+assert.match(emergencyLiveries, /createBaseCarVisual/);
+assert.doesNotMatch(emergencyLiveries, /turnEmergencyLightRig|PointLight|AdditiveBlending/);
+
 assert.match(lot, /SERVICE LIVERY/);
 assert.match(lotCss, /\.lot-fixed-livery/);
+assert.match(fixedLiveryUi, /colors\.replaceChildren\(\)/);
+assert.match(fixedLiveryUi, /colors\.hidden = true/);
+assert.match(fixedLiveryUi, /colors\.hidden = false/);
+assert.match(lotTrackSelect, /installFixedLiveryUiGuard/);
+assert.doesNotMatch(fixedLiveryUi, /input|type=['"]color|SERVICE LIGHTS/);
+
+for (const html of [index, nextIndex]) {
+  assert.match(html, /"\.\/vehicle\/car-models\.js\?build=20260720-r19": "\.\/vehicle\/emergency-livery-models\.js\?build=20260803-r126"/);
+  assert.match(html, /"\.\/vehicle\/car-models\.js\?build=20260720-r22": "\.\/vehicle\/emergency-livery-models\.js\?build=20260803-r126"/);
+}
+
 assert.match(controls, /vehicleId: runtimeState\?\.vehicleId/);
 assert.match(audio, /EMERGENCY_SERVICE_BY_VEHICLE_ID/);
 assert.match(audio, /installEmergencySirenGraph/);
@@ -63,4 +100,4 @@ assert.match(audio, /emergencySirenFrequency/);
 assert.match(audio, /sirenActive = boostActive/);
 assert.match(license, /Creative Commons CC0 1\.0 Universal/);
 
-console.log('TURN emergency vehicles, lights and sirens passed.');
+console.log('TURN emergency vehicles, fixed liveries, lights and sirens passed.');
