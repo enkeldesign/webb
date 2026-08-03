@@ -2,19 +2,29 @@ import {
   ACHIEVEMENTS,
   TRACK_IDS,
   TRAINING_CAR_ID
-} from './catalog.js?revision=r144-achievements';
+} from './catalog.js?revision=r146-achievement-expansion';
 import {
   createAchievementStore,
   normalizeAchievementState
-} from './store.js?revision=r144-achievements';
+} from './store.js?revision=r146-achievement-expansion';
 import {
   allOnboardingComplete,
   createAchievementView
-} from './view.js?revision=r144-achievements';
+} from './view.js?revision=r146-achievement-expansion';
+import {
+  completedNightShiftSheriff,
+  createNightShiftAttempt,
+  sampleNightShiftOvertakes
+} from './night-shift.js?revision=r146-achievement-expansion';
+import { replayFrameAt } from '../race/replay-system.js?revision=r146-achievement-expansion';
 
 const SPECTATE_REQUIRED_MS = 5000;
+const LISTEN_CLOSELY_REQUIRED_MS = 10000;
+const LISTEN_CLOSELY_MIN_BALANCE = 0.75;
+const LISTEN_CLOSELY_MIN_SPEED = 1;
 const LAP_TOAST_DELAY_MS = 4400;
 const SAMPLE_INTERVAL_MS = 100;
+const MAX_SAMPLE_DELTA_MS = 250;
 
 function validCompletedLap(detail) {
   const time = Number(detail?.time);
@@ -37,10 +47,14 @@ function makeLapAttempt(runtime, drivePad, recalibratedPending) {
   const zone = drivePad.dataset.driveZone || '';
   const blank = currentBlankScreenState();
   const state = runtime.state;
+  const trackId = state.trackId || globalThis.__turnGetTrackId?.() || '';
+  const vehicleId = state.vehicleId || '';
+  const rivals = Array.isArray(state.competitorLaps) ? [...state.competitorLaps] : [];
+
   return {
-    trackId: state.trackId || globalThis.__turnGetTrackId?.() || '',
-    vehicleId: state.vehicleId || '',
-    rivalCountAtStart: Array.isArray(state.competitorLaps) ? state.competitorLaps.length : 0,
+    trackId,
+    vehicleId,
+    rivalCountAtStart: rivals.length,
     recalibrated: recalibratedPending,
     blankFromStart: blank,
     blankThroughout: blank,
@@ -48,7 +62,8 @@ function makeLapAttempt(runtime, drivePad, recalibratedPending) {
     usedDrift: zone === 'drift' || globalThis.__turnDriftHeld === true,
     usedBoost: zone === 'boost' || globalThis.__turnBoostActive === true,
     driftChargeGained: 0,
-    lastBoostCharge: Number(globalThis.__turnBoostCharge) || 0
+    lastBoostCharge: Number(globalThis.__turnBoostCharge) || 0,
+    nightShift: createNightShiftAttempt({ trackId, vehicleId, rivals })
   };
 }
 
@@ -71,6 +86,8 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     pendingTrackEntryPulse: false,
     pendingToastAchievements: [],
     toastTimer: 0,
+    listenCloselyMs: 0,
+    lastSampleAt: performance.now(),
     secondWind: {
       sawActiveBoost: false,
       sawEmpty: false,
@@ -110,12 +127,41 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     return unlocked;
   }
 
+  function sampleListenClosely(state, elapsedMs) {
+    if (store.isUnlocked('listen-closely')) return;
+    const settings = globalThis.__turnAudioPreferences?.getSettings?.();
+    const balance = Number(settings?.balance);
+    const qualifies = state.lapActive === true
+      && Number(state.speed) > LISTEN_CLOSELY_MIN_SPEED
+      && currentBlankScreenState()
+      && settings?.dbeEnabled !== false
+      && Number.isFinite(balance)
+      && balance >= LISTEN_CLOSELY_MIN_BALANCE
+      && document.visibilityState !== 'hidden';
+
+    if (!qualifies) {
+      session.listenCloselyMs = 0;
+      return;
+    }
+
+    session.listenCloselyMs += elapsedMs;
+    if (session.listenCloselyMs >= LISTEN_CLOSELY_REQUIRED_MS) {
+      unlock(['listen-closely'], unlockContext(runtime), { delay: -1 });
+    }
+  }
+
   function sampleDrivingState() {
+    const now = performance.now();
+    const elapsedMs = Math.min(MAX_SAMPLE_DELTA_MS, Math.max(0, now - session.lastSampleAt));
+    session.lastSampleAt = now;
+
     const state = runtime.state;
     const charge = Math.max(0, Math.min(1, Number(globalThis.__turnBoostCharge) || 0));
     const boostActive = globalThis.__turnBoostActive === true;
     const driftHeld = globalThis.__turnDriftHeld === true;
     const zone = drivePad.dataset.driveZone || '';
+
+    sampleListenClosely(state, elapsedMs);
 
     if (state.lapInvalid === true) {
       session.currentLapVoid = true;
@@ -138,6 +184,12 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
         }
       }
       session.currentLap.lastBoostCharge = charge;
+
+      sampleNightShiftOvertakes(session.currentLap.nightShift, {
+        playerProgress: state.progress,
+        lapElapsed: state.lapElapsed,
+        boostActive
+      }, replayFrameAt);
     }
 
     const secondWind = session.secondWind;
@@ -173,7 +225,16 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
       candidates.push('ahead-of-yourself');
     }
     if (attempt.flowEligible && attempt.usedDrift && attempt.usedBoost) candidates.push('flow-state');
-    if (attempt.blankFromStart && attempt.blankThroughout) candidates.push('trust-your-ears');
+    if (attempt.blankFromStart && attempt.blankThroughout) {
+      store.addBlankTrack(context.trackId);
+      candidates.push('trust-your-ears');
+      if (TRACK_IDS.every((trackId) => store.state.progress.blankTracks.includes(trackId))) {
+        candidates.push('beyond-sight');
+      }
+    }
+    if (completedNightShiftSheriff(attempt.nightShift, detail)) {
+      candidates.push('night-shift-sheriff');
+    }
     if (store.state.progress.tracks.length >= 2) candidates.push('new-ground');
     if (TRACK_IDS.every((trackId) => store.state.progress.tracks.includes(trackId))) {
       candidates.push('around-the-turn');
@@ -231,6 +292,7 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
       }
       session.currentLapVoid = false;
       session.currentLap = null;
+      session.listenCloselyMs = 0;
     }
     if (reason === 'spectate-started') session.spectateStartedAt = performance.now();
     if (reason === 'spectate-stopped') {
@@ -246,6 +308,7 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
       session.currentLap = null;
       session.currentLapVoid = false;
       session.spectateStartedAt = 0;
+      session.listenCloselyMs = 0;
     }
     syncRaceTriggerVisibility();
     view.render();
