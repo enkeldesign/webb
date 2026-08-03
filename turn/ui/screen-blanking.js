@@ -218,7 +218,13 @@ export function installScreenBlanking(runtime = globalThis.__turnRuntime) {
       return;
     }
 
-    // The control is a real member of the race menu row and its first focusable item.
+    // Leave Race occupies the same first slot as Restart Lap. The optional
+    // non-visual action follows it so the destructive/navigation position is stable.
+    const leaveRaceButton = utilityGroup.querySelector('.back-to-lot-button');
+    if (leaveRaceButton?.parentElement === utilityGroup) {
+      leaveRaceButton.after(button);
+      return;
+    }
     utilityGroup.prepend(button);
   }
 
