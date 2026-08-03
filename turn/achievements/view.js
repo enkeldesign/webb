@@ -190,7 +190,8 @@ export function createAchievementView({ store, session, utilityGroup }) {
   }
 
   installStylesheet();
-  const homeTrigger = createTrigger('m8-achievements-button');
+  const homeTrigger = createTrigger('m8-home-settings m8-achievements-button');
+  homeTrigger.style.setProperty('background', 'var(--turn-action-success, #8ce99a)');
   const raceTrigger = createTrigger('utility turn-race-achievements-button', 'Achievements');
   if (feedbackButton) homeMenu.insertBefore(homeTrigger, feedbackButton);
   else homeMenu.insertBefore(homeTrigger, homeStatus);
