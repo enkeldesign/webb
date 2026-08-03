@@ -107,7 +107,7 @@ export async function installM8HomeFixedLayout() {
   const achievements = installAchievements(globalThis.__turnRuntime);
 
   const { installDriveByEarTraining } = await import(
-    `/turn/training/drive-by-ear-training.js?build=${buildKey}-r149-dbe-training`
+    `/turn/training/drive-by-ear-training.js?build=${buildKey}-r150-dbe-training-refinement`
   );
   const driveByEarTraining = await installDriveByEarTraining(globalThis.__turnRuntime);
 
