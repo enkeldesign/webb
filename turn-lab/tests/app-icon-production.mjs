@@ -19,24 +19,24 @@ const nextManifest = JSON.parse(fs.readFileSync(path.join(turnNextRoot, 'site.we
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 
 for (const source of [index, nextIndex]) {
-  assert.match(source, /<link rel="icon" href="\.\/TURNicon\.PNG\?icon=20260730-1136" type="image\/png" sizes="1136x1136">/);
-  assert.match(source, /<link rel="apple-touch-icon" href="\.\/TURNicon\.PNG\?icon=20260730-1136" sizes="1136x1136">/);
-  assert.match(source, /<img class="install-icon" src="\.\/TURNicon\.PNG\?icon=20260730-1136" alt="">/);
+  assert.match(source, /<link rel="icon" href="\.\/TURNicon\.PNG\?icon=20260803-profile-512" type="image\/png" sizes="512x512">/);
+  assert.match(source, /<link rel="apple-touch-icon" href="\.\/TURNicon\.PNG\?icon=20260803-profile-512" sizes="512x512">/);
+  assert.match(source, /<img class="install-icon" src="\.\/TURNicon\.PNG\?icon=20260803-profile-512" alt="">/);
   assert.doesNotMatch(source, /favicon-r45|apple-touch-icon-r45|icon-512-r45/);
 }
 
 assert.match(homeSource, /<img class="m8-home-logo" src="\/turn\/TURNicon\.PNG\?icon=\$\{ICON_REVISION\}" alt="TURN">/);
-assert.match(homeSource, /ICON_REVISION = '20260730-1136'/);
+assert.match(homeSource, /ICON_REVISION = '20260803-profile-512'/);
 assert.match(orientationGuard, /\.m8-home-fixed-layout \.m8-home-logo[\s\S]*object-fit: contain/);
 assert.match(orientationGuard, /object-position: left center/);
 
-assert.match(index, new RegExp(`<link rel="manifest" href="\\.\\/site\\.webmanifest\\?build=${release.cacheKey}-icon-20260730-1136">`));
-assert.match(nextIndex, new RegExp(`<link rel="manifest" href="\\/turn-next\\/site\\.webmanifest\\?source=${release.cacheKey}-icon-20260730-1136-m8\\.5">`));
+assert.match(index, new RegExp(`<link rel="manifest" href="\\.\\/site\\.webmanifest\\?build=${release.cacheKey}-icon-20260803-profile-512">`));
+assert.match(nextIndex, new RegExp(`<link rel="manifest" href="\\/turn-next\\/site\\.webmanifest\\?source=${release.cacheKey}-icon-20260803-profile-512-m8\\.5">`));
 
 const expectedIcons = [
   {
-    src: '/turn/TURNicon.PNG?icon=20260730-1136',
-    sizes: '1136x1136',
+    src: '/turn/TURNicon.PNG?icon=20260803-profile-512',
+    sizes: '512x512',
     type: 'image/png',
     purpose: 'any maskable'
   }
@@ -54,7 +54,7 @@ assert.deepEqual(
   [137, 80, 78, 71, 13, 10, 26, 10],
   'TURNicon.PNG must be a PNG'
 );
-assert.deepEqual([icon.readUInt32BE(16), icon.readUInt32BE(20)], [1163, 1163]);
+assert.deepEqual([icon.readUInt32BE(16), icon.readUInt32BE(20)], [512, 512]);
 assert.ok(icon.length > 1000, 'TURNicon.PNG must contain the supplied artwork');
 const blobSha = crypto
   .createHash('sha1')
@@ -63,7 +63,7 @@ const blobSha = crypto
   .digest('hex');
 assert.equal(
   blobSha,
-  '96df2b8e041fb90b7a0efe08274c2548ac0cfb03',
+  '8917377dc6368f9d543a118f764710433d79da01',
   'All icon surfaces must remain tied to the exact current user-supplied TURNicon.PNG blob'
 );
 

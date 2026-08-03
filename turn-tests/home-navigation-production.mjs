@@ -248,6 +248,8 @@ assert.match(fixedLayoutCss, /\.m8-home-fixed-layout \.m8-home-status[\s\S]*marg
 assert.match(fixedLayoutCss, /\.m8-home-fixed-layout \.m8-track-continue[\s\S]*background: var\(--m8-pink\)/);
 assert.match(fixedLayoutCss, /\.m8-home-fixed-layout \.m8-home-head[\s\S]*padding: 0 max\(22px, env\(safe-area-inset-right\)\) 0 0/);
 assert.match(fixedLayoutCss, /\.m8-home-fixed-layout \.m8-home-logo[\s\S]*width: auto[\s\S]*height: 100%[\s\S]*aspect-ratio: 1[\s\S]*object-fit: contain[\s\S]*object-position: left center/);
+assert.match(fixedLayoutCss, /\.m8-home-fixed-layout \.m8-home-logo[\s\S]*box-sizing: border-box[\s\S]*box-shadow: 5px 0 0 var\(--m8-ink\)/);
+assert.doesNotMatch(fixedLayoutCss, /border-inline-end: 5px solid var\(--m8-ink\)/);
 assert.doesNotMatch(fixedLayoutCss, /object-fit: cover/);
 assert.doesNotMatch(fixedLayoutCss, /padding-block: 5px/);
 assert.match(fixedLayoutCss, /@media \(max-height: 560px\) and \(orientation: landscape\)[\s\S]*\.m8-home-fixed-layout \.m8-home-head[\s\S]*padding-block: 0/);

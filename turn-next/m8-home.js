@@ -15,7 +15,7 @@ import { saveDriveByEarEnabled } from '/turn/ui/drive-by-ear-setting.js?source=2
 
 const STEERING_MODE_KEY = 'turn-steering-mode-v1';
 const STEERING_MODE = Object.freeze({ MOTION: 'motion', MANUAL: 'manual' });
-const ICON_REVISION = '20260730-1136';
+const ICON_REVISION = '20260803-profile-512';
 
 let installed = false;
 let previewGeneration = 0;
