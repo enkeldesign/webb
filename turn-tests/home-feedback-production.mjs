@@ -16,14 +16,20 @@ assert.ok(
   'The feedback and About actions must be installed only after the fixed Home interface exists'
 );
 
-assert.match(feedback, /FEEDBACK_VERSION = 'r147-achievement-menu-order'/);
+assert.match(feedback, /FEEDBACK_VERSION = 'r148-achievement-font-match'/);
 assert.match(feedback, /FEEDBACK_EMAIL = 'erik@enkel\.design'/);
 assert.match(feedback, /feedbackTrigger\.textContent = 'GIVE FEEDBACK'/);
 assert.match(feedback, /feedbackTrigger\.setAttribute\('aria-haspopup', 'dialog'\)/);
 assert.match(feedback, /menu\.insertBefore\(feedbackTrigger, status\)/, 'GIVE FEEDBACK must sit with the other Home menu actions, before status and RACE');
 assert.match(feedback, /function alignAchievementsTrigger\(menu, feedbackTrigger\)/);
+assert.match(feedback, /achievementsTrigger\.classList\.remove\('m8-home-settings'\)/,
+  'Achievements must drop the Settings class that scales descendant spans to 1.25em');
 assert.match(feedback, /achievementsTrigger\.classList\.add\('m8-feedback-button'\)/,
   'Achievements must reuse the complete Give Feedback typography and geometry');
+assert.ok(
+  feedback.indexOf("classList.remove('m8-home-settings')") < feedback.indexOf("classList.add('m8-feedback-button')"),
+  'The conflicting Settings typography must be removed before Give Feedback styling is applied'
+);
 assert.match(feedback, /var\(--turn-action-success, #8ce99a\)/,
   'The Home Achievements destination must use the semantic success action');
 assert.match(feedback, /feedbackTrigger\.after\(achievementsTrigger\)/,

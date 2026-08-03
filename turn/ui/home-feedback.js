@@ -1,6 +1,6 @@
 const FEEDBACK_EMAIL = 'erik@enkel.design';
 const FEEDBACK_SUBJECT = 'TURN feedback';
-const FEEDBACK_VERSION = 'r147-achievement-menu-order';
+const FEEDBACK_VERSION = 'r148-achievement-font-match';
 
 let installed = false;
 
@@ -156,8 +156,9 @@ function alignAchievementsTrigger(menu, feedbackTrigger) {
   const achievementsTrigger = menu.querySelector('.m8-achievements-button');
   if (!achievementsTrigger) return null;
 
-  // Reuse the complete Give Feedback button typography and geometry so the two
-  // destinations remain perfectly aligned at every responsive breakpoint.
+  // The temporary Settings class also enlarges every descendant span to 1.25em.
+  // Remove it before reusing Give Feedback so the label matches the other menu text exactly.
+  achievementsTrigger.classList.remove('m8-home-settings');
   achievementsTrigger.classList.add('m8-feedback-button');
   achievementsTrigger.style.setProperty(
     'background',
