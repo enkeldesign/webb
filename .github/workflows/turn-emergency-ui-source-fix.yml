@@ -1,0 +1,174 @@
+name: Apply TURN emergency vehicle UI source fix
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/turn-emergency-ui-source-fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Apply source-level fixes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          import textwrap
+
+          lot_path = Path('turn/garage/lot-r10.js')
+          lot = lot_path.read_text(encoding='utf-8')
+          old = textwrap.dedent("""
+                if (car.fixedLivery) {
+                  const livery = document.createElement('div');
+                  livery.className = 'lot-color-control lot-fixed-livery';
+                  livery.innerHTML = '<span>PAINT</span><strong>SERVICE LIVERY</strong>';
+                  livery.setAttribute('aria-label', `${car.name} uses its fixed service livery`);
+                  colors.replaceChildren(livery);
+                  colors.setAttribute('aria-label', 'Fixed service livery');
+                } else {
+          """).lstrip('\n')
+          new = textwrap.dedent("""
+                if (car.fixedLivery) {
+                  colors.replaceChildren();
+                  colors.hidden = false;
+                  colors.setAttribute('aria-hidden', 'true');
+                  colors.removeAttribute('aria-label');
+                } else {
+                  colors.hidden = false;
+                  colors.removeAttribute('aria-hidden');
+          """).lstrip('\n')
+          if old not in lot:
+              raise SystemExit('Fixed-livery block did not match current source')
+          lot_path.write_text(lot.replace(old, new, 1), encoding='utf-8')
+
+          guard_path = Path('turn/garage/lot-fixed-livery-ui.js')
+          guard_path.write_text(textwrap.dedent("""
+          export function installFixedLiveryUiGuard() {
+            const update = () => {
+              for (const colors of document.querySelectorAll('.lot-colors')) {
+                const viewbox = colors.closest('.lot-screen')?.querySelector('.lot-viewbox');
+                const fixedLivery = colors.querySelector('.lot-fixed-livery');
+                if (fixedLivery) {
+                  colors.replaceChildren();
+                  colors.hidden = false;
+                  colors.setAttribute('aria-hidden', 'true');
+                  colors.removeAttribute('aria-label');
+                  viewbox?.classList.add('lot-viewbox-with-paint');
+                } else if (colors.children.length > 0) {
+                  colors.hidden = false;
+                  colors.removeAttribute('aria-hidden');
+                  viewbox?.classList.add('lot-viewbox-with-paint');
+                }
+              }
+            };
+
+            const observer = new MutationObserver(update);
+            observer.observe(document.body, { childList: true, subtree: true });
+            update();
+
+            return () => observer.disconnect();
+          }
+          """).lstrip(), encoding='utf-8')
+
+          wrapper_path = Path('turn/garage/lot-track-select.js')
+          wrapper = wrapper_path.read_text(encoding='utf-8')
+          wrapper = wrapper.replace(
+              '20260803-r126-emergency-paint-empty-v2',
+              '20260803-r127-emergency-paint-source'
+          )
+          wrapper_path.write_text(wrapper, encoding='utf-8')
+
+          livery_path = Path('turn/vehicle/emergency-livery-models.js')
+          livery = livery_path.read_text(encoding='utf-8')
+          if 'length: size.z * 0.38' not in livery:
+              raise SystemExit('Ambulance stripe length did not match current source')
+          livery = livery.replace('length: size.z * 0.38', 'length: size.z * 0.52', 1)
+          livery_path.write_text(livery, encoding='utf-8')
+
+          test_path = Path('turn-lab/tests/emergency-vehicles-production.mjs')
+          test = test_path.read_text(encoding='utf-8')
+          test = test.replace(
+              "assert.match(emergencyLiveries, /ambulance:[\\s\\S]*primary: 0xf8f9fa[\\s\\S]*secondary: 0xd92d20/);",
+              "assert.match(emergencyLiveries, /ambulance:[\\s\\S]*primary: 0xf8f9fa[\\s\\S]*secondary: 0xd92d20[\\s\\S]*accent: 'rear-side-stripe'/);"
+          )
+          test = test.replace(
+              "assert.match(emergencyLiveries, /turnEmergencyLiveryAccent/);",
+              "assert.match(emergencyLiveries, /turnEmergencyLiveryAccent/);\nassert.match(emergencyLiveries, /length: size\\.z \\* 0\\.52/);"
+          )
+          test = test.replace(
+              "assert.match(lot, /SERVICE LIVERY/);",
+              "assert.doesNotMatch(lot, /SERVICE LIVERY/);\nassert.match(lot, /if \\(car\\.fixedLivery\\)[\\s\\S]*colors\\.replaceChildren\\(\\)[\\s\\S]*colors\\.setAttribute\\('aria-hidden', 'true'\\)/);"
+          )
+          test = test.replace(
+              "assert.match(fixedLiveryUi, /colors\\.hidden = true/);",
+              "assert.doesNotMatch(fixedLiveryUi, /colors\\.hidden = true/);\nassert.match(fixedLiveryUi, /colors\\.setAttribute\\('aria-hidden', 'true'\\)/);"
+          )
+          test = test.replace('20260803-r126', '20260803-r127')
+          test_path.write_text(test, encoding='utf-8')
+
+          release_path = Path('turn/release.json')
+          release = json.loads(release_path.read_text(encoding='utf-8'))
+          release.update({
+              'version': '1.4.0',
+              'id': '2026.08.03-r127',
+              'cacheKey': '20260803-r127'
+          })
+          release_path.write_text(json.dumps(release, indent=2) + '\n', encoding='utf-8')
+
+          for name in [
+              'turn/design.html',
+              'turn-tests/design-system-production.mjs',
+              'turn-next/index.html'
+          ]:
+              path = Path(name)
+              text = path.read_text(encoding='utf-8')
+              text = text.replace('2026.08.03-r126', '2026.08.03-r127')
+              text = text.replace('20260803-r126', '20260803-r127')
+              text = text.replace('2026.08.03-R126', '2026.08.03-R127')
+              text = text.replace(r'2026\.08\.03-r126', r'2026\.08\.03-r127')
+              path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Synchronize generated release files
+        run: |
+          node turn/scripts/release.mjs --write
+          node turn-next/scripts/build-parity-app.mjs
+          node turn-next/scripts/build-parity-main.mjs
+          node turn-next/scripts/build-parity-entry.mjs
+
+      - name: Verify focused regressions
+        run: |
+          node --check turn/garage/lot-r10.js
+          node --check turn/garage/lot-fixed-livery-ui.js
+          node --check turn/vehicle/emergency-livery-models.js
+          node turn-lab/tests/emergency-vehicles-production.mjs
+          node turn-lab/tests/garage-production.mjs
+          node turn-lab/tests/lot-layout-production.mjs
+          node turn-tests/design-system-production.mjs
+          node turn/scripts/release.mjs --check
+          node turn-next/scripts/build-parity-app.mjs --check
+          node turn-next/scripts/build-parity-main.mjs --check
+          node turn-next/scripts/build-parity-entry.mjs --check
+
+      - name: Commit source fix and remove helper
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/turn-emergency-ui-source-fix.yml
+          git add turn turn-next turn-tests turn-lab/tests
+          git commit -m 'Fix emergency paint rail at source'
+          git pull --rebase origin main
+          git push origin HEAD:main
