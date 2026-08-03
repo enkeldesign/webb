@@ -128,6 +128,11 @@ audioPreferences.setDriveByEarEnabled(driveByEarEnabled);
 // withBuild('./audio/offroad-ear-direction.js')
 // installOffroadEarDirection();
 // recoveryGuidance.installRecoveryGuidance();
+// The normal eager path remains conditional on the player's stored preference:
+// if (driveByEarEnabled) {
+//   installUniversalDrivingSoundscape();
+//   installPaceNotes();
+// }
 
 const { installSteeringLimitWarning } = await import(
   withBuild('./ui/steering-limit-warning.js')
