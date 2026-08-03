@@ -118,6 +118,9 @@ jobs:
       - name: Run compact Lot layout regression
         run: node turn-lab/tests/lot-layout-production.mjs
 
+      - name: Run emergency vehicle regression
+        run: node turn-lab/tests/emergency-vehicles-production.mjs
+
       - name: Run DRIFT handling contract regression
         run: node turn-lab/tests/vehicle-drift-production.mjs
 
