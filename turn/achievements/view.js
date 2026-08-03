@@ -10,6 +10,7 @@ import {
 } from './catalog.js?revision=r144-achievements';
 
 const TOAST_VISIBLE_MS = 3600;
+const ATTENTION_VISIBLE_MS = 900;
 
 function formatTime(seconds) {
   if (!Number.isFinite(seconds)) return '';
@@ -28,12 +29,8 @@ function contextLine(record) {
   return parts.join(' · ');
 }
 
-export function nextOnboardingId(store) {
-  return ONBOARDING_ACHIEVEMENT_IDS.find((id) => !store.isUnlocked(id)) || '';
-}
-
 export function allOnboardingComplete(store) {
-  return !nextOnboardingId(store);
+  return ONBOARDING_ACHIEVEMENT_IDS.every((id) => store.isUnlocked(id));
 }
 
 function progressFor(achievement, store, session) {
@@ -56,17 +53,15 @@ function statusFor(achievement, store, session) {
   return 'LOCKED';
 }
 
-function achievementCard(achievement, store, session, nextId) {
+function achievementCard(achievement, store, session) {
   const unlocked = store.isUnlocked(achievement.id);
   const record = store.state.unlocked[achievement.id];
   const progress = progressFor(achievement, store, session);
   const status = statusFor(achievement, store, session);
-  const recommended = !unlocked && achievement.id === nextId;
   const classes = [
     'turn-achievement-card',
-    unlocked ? 'is-unlocked' : 'is-locked',
-    recommended ? 'is-recommended' : ''
-  ].filter(Boolean).join(' ');
+    unlocked ? 'is-unlocked' : 'is-locked'
+  ].join(' ');
   const progressMarkup = achievement.progressMax && !unlocked
     ? `<div class="turn-achievement-progress">
         <span>${progress || 0} of ${achievement.progressMax}</span>
@@ -88,7 +83,7 @@ function achievementCard(achievement, store, session, nextId) {
         ${progressMarkup}
         ${context ? `<small>Unlocked · ${context}</small>` : ''}
       </div>
-      <strong class="turn-achievement-status">${recommended ? 'NEXT' : status === 'UNLOCKED' ? '✓ UNLOCKED' : status}</strong>
+      <strong class="turn-achievement-status">${status === 'UNLOCKED' ? '✓ UNLOCKED' : status}</strong>
     </article>`;
 }
 
@@ -97,7 +92,7 @@ function installStylesheet() {
   const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
   const stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet';
-  stylesheet.href = `/turn/achievements.css?build=${buildKey}-r144-achievements`;
+  stylesheet.href = `/turn/achievements.css?build=${buildKey}-r145-button-notifications`;
   stylesheet.setAttribute('data-turn-achievements', '');
   document.head.appendChild(stylesheet);
 }
@@ -107,10 +102,10 @@ function createTrigger(className, label = 'ACHIEVEMENTS') {
   button.type = 'button';
   button.className = className;
   button.setAttribute('aria-haspopup', 'dialog');
+  button.setAttribute('aria-label', 'Achievements');
   button.innerHTML = `
-    <span class="turn-achievements-trigger-icon" aria-hidden="true">${ICONS.trophy}</span>
     <span class="turn-achievements-trigger-label">${label}</span>
-    <span class="turn-achievements-trigger-badge" hidden></span>`;
+    <span class="turn-achievements-trigger-badge" aria-hidden="true" hidden></span>`;
   return button;
 }
 
@@ -215,6 +210,7 @@ export function createAchievementView({ store, session, utilityGroup }) {
   const applyFilter = installFilters(dialog);
   let returnFocus = null;
   let toastHideTimer = 0;
+  let attentionTimer = 0;
 
   function render() {
     const unlockedCount = Object.keys(store.state.unlocked).length;
@@ -227,30 +223,29 @@ export function createAchievementView({ store, session, utilityGroup }) {
     points.textContent = String(totalPoints);
     percent.textContent = `${completion}%`;
     storageNote.hidden = store.storageAvailable();
-    const nextId = nextOnboardingId(store);
     list.innerHTML = ACHIEVEMENTS
-      .map((achievement) => achievementCard(achievement, store, session, nextId))
+      .map((achievement) => achievementCard(achievement, store, session))
       .join('');
     applyFilter();
   }
 
   function syncTriggers() {
     const unseenCount = store.unseenIds().length;
-    const incompleteOnboarding = !allOnboardingComplete(store);
     for (const button of [homeTrigger, raceTrigger]) {
       const badge = button.querySelector('.turn-achievements-trigger-badge');
       if (unseenCount > 0) {
-        badge.textContent = `NEW ${unseenCount}`;
+        badge.textContent = unseenCount > 9 ? '9+' : String(unseenCount);
         badge.hidden = false;
-      } else if (incompleteOnboarding) {
-        badge.textContent = 'NEXT';
-        badge.hidden = false;
+        button.setAttribute(
+          'aria-label',
+          `Achievements, ${unseenCount} new achievement${unseenCount === 1 ? '' : 's'}`
+        );
       } else {
         badge.hidden = true;
         badge.textContent = '';
+        button.setAttribute('aria-label', 'Achievements');
       }
       button.classList.toggle('has-unseen-achievements', unseenCount > 0);
-      button.classList.remove('is-achievement-next');
     }
     raceTrigger.hidden = utilityGroup.dataset.menuState !== 'staged';
   }
@@ -280,14 +275,18 @@ export function createAchievementView({ store, session, utilityGroup }) {
   dialog.addEventListener('close', () => returnFocus?.focus?.());
 
   function pulseRaceTrigger() {
-    raceTrigger.classList.remove('is-achievement-pulsing');
-    if (globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
-      raceTrigger.classList.add('is-achievement-next');
-      return;
-    }
+    window.clearTimeout(attentionTimer);
+    raceTrigger.classList.remove('is-achievement-pulsing', 'is-achievement-attention');
     void raceTrigger.offsetWidth;
-    raceTrigger.classList.add('is-achievement-pulsing');
-    window.setTimeout(() => raceTrigger.classList.remove('is-achievement-pulsing'), 2300);
+    if (globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      raceTrigger.classList.add('is-achievement-attention');
+    } else {
+      raceTrigger.classList.add('is-achievement-pulsing');
+    }
+    attentionTimer = window.setTimeout(() => {
+      raceTrigger.classList.remove('is-achievement-pulsing', 'is-achievement-attention');
+      attentionTimer = 0;
+    }, ATTENTION_VISIBLE_MS);
   }
 
   function showToastBatch(batch) {
