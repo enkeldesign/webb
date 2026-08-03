@@ -115,7 +115,7 @@ function installSecondaryAccent(root, model, color, accent) {
     });
   } else if (accent === 'rear-side-stripe') {
     addSidePair({
-      length: size.z * 0.38,
+      length: size.z * 0.52,
       height: Math.max(0.08, size.y * 0.09),
       y: bounds.min.y + size.y * 0.49,
       z: center.z + size.z * 0.22
