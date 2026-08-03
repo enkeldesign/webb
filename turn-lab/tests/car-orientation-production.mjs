@@ -100,9 +100,9 @@ for (const car of catalog.CAR_CATALOG) {
 const convertible = catalog.getCarDefinition('convertible');
 const trainingCar = catalog.getCarDefinition('classic');
 const monsterTruck = catalog.getCarDefinition('monster-truck');
-assert.equal(convertible.visualScale * convertible.visualSizeMultiplier, 0.588);
-assert.equal(trainingCar.visualScale * trainingCar.visualSizeMultiplier, 0.6);
-assert.equal(monsterTruck.visualScale * monsterTruck.visualSizeMultiplier, 0.996);
+assertClose(convertible.visualScale * convertible.visualSizeMultiplier, 0.588, 'Convertible effective visual scale');
+assertClose(trainingCar.visualScale * trainingCar.visualSizeMultiplier, 0.6, 'Training Car effective visual scale');
+assertClose(monsterTruck.visualScale * monsterTruck.visualSizeMultiplier, 0.996, 'Monster Truck effective visual scale');
 
 const [index, releaseSource, carModels, lot, main] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
@@ -143,6 +143,13 @@ assert.match(main, /playerCar\.rotation\.y = state\.heading \+ Math\.PI/);
 assert.match(main, /car\.rotation\.y = frame\.h \+ Math\.PI/);
 
 console.log(`TURN ${release.id} car orientation and shared visual sizing passed for all 15 models.`);
+
+function assertClose(actual, expected, label) {
+  assert.ok(
+    Math.abs(actual - expected) < 1e-12,
+    `${label} must equal ${expected}; received ${actual}`
+  );
+}
 
 function readGlbJson(buffer, carId) {
   assert.equal(buffer.toString('utf8', 0, 4), 'glTF', `${carId} must remain a binary glTF`);
