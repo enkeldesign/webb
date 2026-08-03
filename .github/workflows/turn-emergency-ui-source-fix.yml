@@ -172,3 +172,5 @@ jobs:
           git commit -m 'Fix emergency paint rail at source'
           git pull --rebase origin main
           git push origin HEAD:main
+
+# Second push: the workflow already exists on main, so this change triggers it.
