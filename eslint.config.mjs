@@ -7,6 +7,7 @@ const readonlyGlobals = {
   document: 'readonly',
   CustomEvent: 'readonly',
   requestAnimationFrame: 'readonly',
+  cancelAnimationFrame: 'readonly',
   MutationObserver: 'readonly'
 };
 
@@ -32,6 +33,7 @@ export default [
       'turn/race/track-spatial-index.js',
       'turn/render/camera.js',
       'turn/render/covered-rendering.js',
+      'turn/training/*.js',
       'turn/ui/steering-limit-warning.js',
       'turn/ui/track-select.js',
       'turn/vehicle/catalog.js',
