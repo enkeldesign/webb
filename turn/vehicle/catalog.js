@@ -71,6 +71,19 @@ const FEATURED_VISUAL_SIZE_MULTIPLIER_BY_ID = Object.freeze({
   'monster-truck': 1.2
 });
 
+const EMERGENCY_SERVICE_BY_ID = Object.freeze({
+  firetruck: 'firetruck',
+  police: 'police',
+  ambulance: 'ambulance'
+});
+
+const FIXED_LIVERY_IDS = new Set(Object.keys(EMERGENCY_SERVICE_BY_ID));
+const RETIRED_VEHICLE_REPLACEMENTS = Object.freeze({
+  'suv-luxury': 'firetruck',
+  'hatchback-sports': 'police',
+  'truck-flat': 'ambulance'
+});
+
 // Every car has exactly 18 stat points. The Sedan's 3/3/3/3/3/3 is the neutral baseline;
 // every other vehicle trades strengths for weaknesses instead of becoming a straight upgrade.
 // Training Car deliberately spends its budget on control, drift and a long boost tank so new
@@ -90,9 +103,9 @@ const RAW_CARS = [
   ['sedan-sports', 'Sport Sedan', 'car', { speed: 4, acceleration: 4, control: 4, drift: 2, boostPower: 2, boostDuration: 2 }, 0.98, 0, 1.12],
   ['sedan', 'Sedan', 'car', { speed: 3, acceleration: 3, control: 3, drift: 3, boostPower: 3, boostDuration: 3 }, 1.00, 0, 1.00],
   ['suv', 'SUV', 'car', { speed: 3, acceleration: 3, control: 3, drift: 4, boostPower: 2, boostDuration: 3 }, 1.05, 0, 0.90],
-  ['suv-luxury', 'Luxury SUV', 'car', { speed: 3, acceleration: 3, control: 4, drift: 4, boostPower: 2, boostDuration: 2 }, 1.06, 0, 0.84],
-  ['hatchback-sports', 'Sport Hatch', 'car', { speed: 4, acceleration: 4, control: 5, drift: 2, boostPower: 2, boostDuration: 1 }, 0.96, 0, 1.18],
-  ['truck-flat', 'Flatbed', 'car', { speed: 2, acceleration: 2, control: 3, drift: 5, boostPower: 2, boostDuration: 4 }, 1.12, 0, 0.72],
+  ['firetruck', 'Fire Truck', 'car', { speed: 2, acceleration: 2, control: 4, drift: 4, boostPower: 1, boostDuration: 5 }, 1.10, 0, 0.66],
+  ['police', 'Police Car', 'car', { speed: 4, acceleration: 3, control: 3, drift: 2, boostPower: 1, boostDuration: 5 }, 0.98, 0, 1.10],
+  ['ambulance', 'Ambulance', 'car', { speed: 3, acceleration: 2, control: 3, drift: 4, boostPower: 1, boostDuration: 5 }, 1.05, 0, 0.78],
   ['truck', 'Truck', 'car', { speed: 2, acceleration: 2, control: 3, drift: 5, boostPower: 1, boostDuration: 5 }, 1.12, 0, 0.68],
   ['van', 'Van', 'car', { speed: 2, acceleration: 3, control: 3, drift: 5, boostPower: 1, boostDuration: 4 }, 1.08, 0, 0.80]
 ];
@@ -125,6 +138,8 @@ export const CAR_CATALOG = Object.freeze(RAW_CARS.map(([
   featuredVisualSizeMultiplier: FEATURED_VISUAL_SIZE_MULTIPLIER_BY_ID[id] || 1,
   modelYawQuarterTurns,
   secondaryPaint: SECONDARY_PAINT_BY_ID[id] || null,
+  emergencyService: EMERGENCY_SERVICE_BY_ID[id] || null,
+  fixedLivery: FIXED_LIVERY_IDS.has(id),
   tuning: Object.freeze({
     ...deriveVehicleTuning(stats),
     enginePitch
@@ -157,7 +172,8 @@ export function getCarDefinition(id) {
 }
 
 export function normalizeVehicleId(id) {
-  return CAR_BY_ID.has(id) ? id : DEFAULT_VEHICLE_ID;
+  const replacement = RETIRED_VEHICLE_REPLACEMENTS[id] || id;
+  return CAR_BY_ID.has(replacement) ? replacement : DEFAULT_VEHICLE_ID;
 }
 
 export function normalizeVehicleColor(color) {

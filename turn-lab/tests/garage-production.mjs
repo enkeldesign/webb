@@ -8,8 +8,8 @@ const catalogSource = await fs.readFile(path.join(turnDir, 'vehicle/catalog.js')
 const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
 const expectedIds = [
   'convertible', 'classic', 'vintage-racer', 'toy-racer', 'monster-truck',
-  'race-future', 'race', 'sedan-sports', 'sedan', 'suv', 'suv-luxury',
-  'hatchback-sports', 'truck-flat', 'truck', 'van'
+  'race-future', 'race', 'sedan-sports', 'sedan', 'suv', 'firetruck',
+  'police', 'ambulance', 'truck', 'van'
 ];
 
 assert.equal(catalog.CAR_CATALOG.length, 15, 'The Lot must contain exactly 15 cars');
