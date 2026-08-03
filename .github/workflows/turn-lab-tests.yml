@@ -23,7 +23,7 @@ on:
       - '.github/workflows/turn-lab-tests.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   regression:
@@ -31,72 +31,6 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
-
-      - name: Synchronize current TURN icon
-        if: github.event_name == 'pull_request'
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          old_revision = '20260730-1136'
-          new_revision = '20260803-profile-512'
-
-          for filename in [
-              'turn/index.html',
-              'turn-next/index.html',
-              'turn/m8-home.js',
-              'turn-next/m8-home.js',
-              'turn/site.webmanifest',
-              'turn-next/site.webmanifest',
-              'turn-lab/tests/app-icon-production.mjs',
-          ]:
-              path = Path(filename)
-              source = path.read_text()
-              source = source.replace(old_revision, new_revision)
-              source = source.replace('1136x1136', '512x512')
-              path.write_text(source)
-
-          test_path = Path('turn-lab/tests/app-icon-production.mjs')
-          test_source = test_path.read_text()
-          test_source = test_source.replace('[1163, 1163]', '[512, 512]')
-          test_source = test_source.replace(
-              '96df2b8e041fb90b7a0efe08274c2548ac0cfb03',
-              '8917377dc6368f9d543a118f764710433d79da01'
-          )
-          test_path.write_text(test_source)
-
-          css_path = Path('turn/m8-home-fixed-layout.css')
-          css = css_path.read_text()
-          css = css.replace('box-sizing: content-box;', 'box-sizing: border-box;', 1)
-          css = css.replace(
-              'border-inline-end: 5px solid var(--m8-ink);',
-              'box-shadow: 5px 0 0 var(--m8-ink);',
-              1
-          )
-          css_path.write_text(css)
-
-          navigation_test_path = Path('turn-tests/home-navigation-production.mjs')
-          navigation_test = navigation_test_path.read_text()
-          anchor = "assert.match(fixedLayoutCss, /\\.m8-home-fixed-layout \\.m8-home-logo[\\s\\S]*width: auto[\\s\\S]*height: 100%[\\s\\S]*aspect-ratio: 1[\\s\\S]*object-fit: contain[\\s\\S]*object-position: left center/);"
-          addition = anchor + "\nassert.match(fixedLayoutCss, /\\.m8-home-fixed-layout \\.m8-home-logo[\\s\\S]*box-sizing: border-box[\\s\\S]*box-shadow: 5px 0 0 var\\(--m8-ink\\)/);\nassert.doesNotMatch(fixedLayoutCss, /border-inline-end: 5px solid var\\(--m8-ink\\)/);"
-          if anchor in navigation_test and 'box-shadow: 5px 0 0 var\\(--m8-ink\\)' not in navigation_test:
-              navigation_test = navigation_test.replace(anchor, addition, 1)
-          navigation_test_path.write_text(navigation_test)
-
-          remaining = []
-          for root in ['turn', 'turn-next', 'turn-tests', 'turn-lab']:
-              for path in Path(root).rglob('*'):
-                  if path.is_file() and path.suffix.lower() in {'.html', '.js', '.mjs', '.json', '.webmanifest', '.css'}:
-                      try:
-                          if old_revision in path.read_text():
-                              remaining.append(str(path))
-                      except UnicodeDecodeError:
-                          pass
-          if remaining:
-              raise SystemExit(f'Old icon revision remains in: {remaining}')
-          PY
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -261,15 +195,3 @@ jobs:
 
       - name: Verify production release architecture
         run: node turn-tests/release-production.mjs
-
-      - name: Commit synchronized icon references
-        if: github.event_name == 'pull_request'
-        run: |
-          if git diff --quiet; then
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add turn turn-next turn-tests turn-lab/tests
-          git commit -m "Synchronize TURN icon surfaces"
-          git push origin HEAD:${{ github.head_ref }}
