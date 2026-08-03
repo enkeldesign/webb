@@ -1,38 +1,45 @@
 .m8-achievements-button,
 .turn-race-achievements-button {
   position: relative;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  border: var(--turn-border-default, 4px) solid var(--turn-ink, #08090a);
   background: var(--turn-action-success, #8ce99a);
   color: var(--turn-ink, #08090a);
-  box-shadow: var(--turn-shadow-default, 7px 7px 0 #08090a);
   font-weight: 950;
   text-transform: uppercase;
 }
 
-.m8-achievements-button {
-  min-height: 54px;
-  padding: 10px 14px;
-  border-radius: var(--turn-radius-default, 18px);
-  text-align: left;
+.turn-achievements-trigger-label {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.turn-race-achievements-button {
-  min-height: 50px;
-  padding-inline: 12px;
-}
-
-.turn-achievements-trigger-icon {
+.turn-achievements-trigger-badge {
+  position: absolute;
+  z-index: 2;
+  top: -11px;
+  right: -11px;
   display: grid;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
   place-items: center;
+  border: var(--turn-border-compact, 3px) solid var(--turn-ink, #08090a);
+  border-radius: 50%;
+  background: var(--turn-action-warning, #ffd43b);
+  color: var(--turn-ink, #08090a);
+  box-shadow: var(--turn-shadow-compact, 3px 3px 0 #08090a);
+  font-size: .68rem;
+  line-height: 1;
+  letter-spacing: 0;
+  pointer-events: none;
 }
 
-.turn-achievements-trigger-icon svg,
+.turn-achievements-trigger-badge[hidden] {
+  display: none;
+}
+
 .turn-achievement-icon svg,
 .turn-achievement-toast-icon svg {
   width: 100%;
@@ -44,39 +51,20 @@
   stroke-linejoin: round;
 }
 
-.turn-achievements-trigger-badge {
-  padding: 3px 7px;
-  border: var(--turn-border-compact, 3px) solid var(--turn-ink, #08090a);
-  border-radius: var(--turn-radius-pill, 999px);
-  background: var(--turn-action-warning, #ffd43b);
-  font-size: .64rem;
-  line-height: 1.1;
-  letter-spacing: .08em;
-  white-space: nowrap;
-}
-
-.m8-achievements-button.has-unseen-achievements,
-.turn-race-achievements-button.has-unseen-achievements {
-  box-shadow:
-    var(--turn-shadow-default, 7px 7px 0 #08090a),
-    0 0 0 5px rgb(255 212 59 / .55);
-}
-
-.m8-achievements-button.is-achievement-next,
-.turn-race-achievements-button.is-achievement-next {
-  outline: 3px solid var(--turn-action-warning, #ffd43b);
-  outline-offset: 3px;
-}
-
 @keyframes turn-achievement-pulse {
   0%, 100% { transform: scale(1); }
-  18% { transform: scale(1.06); }
-  36% { transform: scale(1); }
+  42% { transform: scale(1.06); }
+  72% { transform: scale(.99); }
 }
 
 .turn-race-achievements-button.is-achievement-pulsing {
-  animation: turn-achievement-pulse 720ms ease-in-out 3;
+  animation: turn-achievement-pulse 760ms cubic-bezier(.2, .85, .3, 1.2) 1;
   transform-origin: center;
+}
+
+.turn-race-achievements-button.is-achievement-attention {
+  outline: 4px solid var(--turn-action-warning, #ffd43b);
+  outline-offset: 3px;
 }
 
 .turn-achievements-dialog {
@@ -225,13 +213,6 @@
   background: color-mix(in srgb, var(--turn-green-200, #d9f5c2) 72%, var(--turn-white, #fffdf6));
 }
 
-.turn-achievement-card.is-recommended {
-  background: color-mix(in srgb, var(--turn-blue-200, #8ed8ff) 52%, var(--turn-white, #fffdf6));
-  box-shadow:
-    var(--turn-shadow-compact, 3px 3px 0 #08090a),
-    0 0 0 4px var(--turn-action-warning, #ffd43b);
-}
-
 .turn-achievement-icon {
   display: grid;
   width: 78px;
@@ -244,7 +225,7 @@
   box-shadow: var(--turn-shadow-compact, 3px 3px 0 #08090a);
 }
 
-.turn-achievement-card.is-locked:not(.is-recommended) .turn-achievement-icon {
+.turn-achievement-card.is-locked .turn-achievement-icon {
   background: var(--turn-muted, #d6d0c2);
 }
 
@@ -279,10 +260,6 @@
   font-size: .65rem;
   letter-spacing: .07em;
   white-space: nowrap;
-}
-
-.turn-achievement-card.is-recommended .turn-achievement-status {
-  background: var(--turn-action-warning, #ffd43b);
 }
 
 .turn-achievement-progress {
@@ -401,6 +378,15 @@
 }
 
 @media (max-height: 430px) and (orientation: landscape) {
+  .turn-achievements-trigger-badge {
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    border-width: 2px;
+    font-size: .58rem;
+  }
+
   .turn-achievements-dialog {
     width: min(1040px, calc(100vw - 16px));
     max-height: calc(100vh - 12px);
@@ -439,8 +425,6 @@
 @media (prefers-reduced-motion: reduce) {
   .turn-race-achievements-button.is-achievement-pulsing {
     animation: none;
-    outline: 3px solid var(--turn-action-warning, #ffd43b);
-    outline-offset: 3px;
   }
 
   .turn-achievement-toast {

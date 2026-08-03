@@ -103,24 +103,46 @@ assert.match(runtime, /turn:lap-invalid/);
 assert.match(runtime, /turn:track-changed/);
 assert.match(runtime, /turn:achievements-updated/);
 assert.match(runtime, /pendingTrackEntryPulse/);
+assert.match(runtime, /!allOnboardingComplete\(store\)/,
+  'The track-entry prompt should stop after Getting Started is complete');
 
 assert.match(view, /aria-live', 'polite'/);
 assert.match(view, /role="progressbar"/);
 assert.match(view, /data-achievement-filter="onboarding"/);
 assert.match(view, /store\.markAllSeen\(\)/);
 assert.match(view, /prefers-reduced-motion: reduce/);
+assert.match(view, /ATTENTION_VISIBLE_MS = 900/);
 assert.match(view, /is-achievement-pulsing/);
-assert.match(view, /createTrigger\('m8-achievements-button'/);
+assert.match(view, /is-achievement-attention/);
+assert.match(view, /createTrigger\('m8-home-settings m8-achievements-button'/,
+  'The Home trigger should reuse the canonical menu-button geometry');
 assert.match(view, /createTrigger\('utility turn-race-achievements-button'/);
+assert.match(view, /badge\.textContent = unseenCount > 9 \? '9\+' : String\(unseenCount\)/,
+  'Unseen achievements should use a compact numeric notification circle');
+assert.match(view, /Achievements, \$\{unseenCount\} new achievement/);
+assert.match(view, /ONBOARDING_ACHIEVEMENT_IDS\.every/,
+  'Getting Started should be unordered rather than prescribing a next achievement');
+assert.doesNotMatch(view, /turn-achievements-trigger-icon/,
+  'Achievement destination buttons should remain text-only');
+assert.doesNotMatch(view, /badge\.textContent = 'NEXT'/,
+  'Incomplete onboarding must not create a NEXT badge');
+assert.doesNotMatch(view, /is-achievement-next/);
+assert.doesNotMatch(view, /recommended \? 'NEXT'/,
+  'Achievement cards should not impose a linear next challenge');
 
 assert.match(style, /\.m8-achievements-button/);
 assert.match(style, /\.turn-race-achievements-button/);
+assert.match(style, /\.turn-achievements-trigger-badge[\s\S]*position: absolute/);
+assert.match(style, /\.turn-achievements-trigger-badge[\s\S]*border-radius: 50%/);
 assert.match(style, /\.turn-achievements-dialog/);
 assert.match(style, /\.turn-achievement-toast/);
 assert.match(style, /@keyframes turn-achievement-pulse/);
-assert.match(style, /animation: turn-achievement-pulse 720ms ease-in-out 3/);
+assert.match(style, /animation: turn-achievement-pulse 760ms[^;]* 1/,
+  'The staged Achievements button should pulse once, not repeatedly');
 assert.match(style, /@media \(prefers-reduced-motion: reduce\)/);
 assert.match(style, /var\(--turn-action-success/);
+assert.doesNotMatch(style, /turn-achievements-trigger-icon/);
+assert.doesNotMatch(style, /is-achievement-next/);
 
 assert.match(designTokens, /--turn-action-success: var\(--turn-green-500\)/);
 assert.match(fixedLayout, /installAchievements/);
