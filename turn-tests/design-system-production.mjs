@@ -219,6 +219,6 @@ assert.match(index, /TURN v1\.4\.0 · Build 2026\.08\.03-r125/);
 assert.match(index, /version: '1\.4\.0'/);
 assert.match(index, /id: '2026\.08\.03-r125'/);
 assert.match(index, /cacheKey: '20260803-r125'/);
-assert.match(design, /TURN V1\.4\.0 · BUILD 2026\.08\.02-R124/);
+assert.match(design, /TURN V1\.4\.0 · BUILD 2026\.08\.03-R125/);
 
 console.log('TURN primitive palette, semantic mappings, compatibility aliases and component reference passed.');
