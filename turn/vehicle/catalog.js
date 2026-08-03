@@ -58,6 +58,14 @@ export const CAR_PALETTE = Object.freeze([
   Object.freeze({ name: 'Ice', value: '#f8f9fa' })
 ]);
 
+// Global balance adjustments are kept separate from each GLB's authored normalization.
+// They follow the shared model factory into The Lot, race, rivals, Spectate and previews.
+const VISUAL_SIZE_MULTIPLIER_BY_ID = Object.freeze({
+  convertible: 0.6,
+  classic: 0.6,
+  'monster-truck': 1.2
+});
+
 // Every car has exactly 18 stat points. The Sedan's 3/3/3/3/3/3 is the neutral baseline;
 // every other vehicle trades strengths for weaknesses instead of becoming a straight upgrade.
 // Training Car deliberately spends its budget on control, drift and a long boost tank so new
@@ -65,14 +73,13 @@ export const CAR_PALETTE = Object.freeze([
 // LEGACY_VEHICLE_ID preserves the Sedan identity of pre-catalog rivals that never stored a car id.
 // The vendored packs use three different authored front axes. modelYawQuarterTurns
 // rotates each raw GLB so every car has the same local front before TURN positions it.
-// visualScale is global: it follows the model through The Lot, race, rivals, Spectate and previews.
 // enginePitch is an audio-only baseline multiplier: heavy vehicles sit lower, race cars higher.
 const RAW_CARS = [
-  ['convertible', 'Convertible', 'prototype', { speed: 4, acceleration: 4, control: 4, drift: 2, boostPower: 3, boostDuration: 1 }, 0.588, 1, 1.08],
-  ['classic', 'Training Car', 'prototype', { speed: 1, acceleration: 1, control: 5, drift: 5, boostPower: 1, boostDuration: 5 }, 0.60, 1, 0.88],
+  ['convertible', 'Convertible', 'prototype', { speed: 4, acceleration: 4, control: 4, drift: 2, boostPower: 3, boostDuration: 1 }, 0.98, 1, 1.08],
+  ['classic', 'Training Car', 'prototype', { speed: 1, acceleration: 1, control: 5, drift: 5, boostPower: 1, boostDuration: 5 }, 1.00, 1, 0.88],
   ['vintage-racer', 'Vintage Racer', 'toy', { speed: 5, acceleration: 4, control: 3, drift: 2, boostPower: 3, boostDuration: 1 }, 0.96, 0, 1.28],
   ['toy-racer', 'Toy Racer', 'toy', { speed: 4, acceleration: 5, control: 5, drift: 1, boostPower: 2, boostDuration: 1 }, 0.94, 2, 1.18],
-  ['monster-truck', 'Monster Truck', 'toy', { speed: 2, acceleration: 3, control: 2, drift: 5, boostPower: 2, boostDuration: 4 }, 0.996, 2, 0.62],
+  ['monster-truck', 'Monster Truck', 'toy', { speed: 2, acceleration: 3, control: 2, drift: 5, boostPower: 2, boostDuration: 4 }, 0.83, 2, 0.62],
   ['race-future', 'Future Racer', 'car', { speed: 5, acceleration: 5, control: 3, drift: 1, boostPower: 3, boostDuration: 1 }, 0.96, 0, 1.42],
   ['race', 'Race Car', 'car', { speed: 5, acceleration: 4, control: 4, drift: 1, boostPower: 3, boostDuration: 1 }, 0.94, 0, 1.55],
   ['sedan-sports', 'Sport Sedan', 'car', { speed: 4, acceleration: 4, control: 4, drift: 2, boostPower: 2, boostDuration: 2 }, 0.98, 0, 1.12],
@@ -109,6 +116,7 @@ export const CAR_CATALOG = Object.freeze(RAW_CARS.map(([
   asset: `./assets/cars/${id}.glb`,
   stats: Object.freeze({ ...stats }),
   visualScale,
+  visualSizeMultiplier: VISUAL_SIZE_MULTIPLIER_BY_ID[id] || 1,
   modelYawQuarterTurns,
   secondaryPaint: SECONDARY_PAINT_BY_ID[id] || null,
   tuning: Object.freeze({
