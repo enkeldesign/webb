@@ -49,22 +49,33 @@ function installStyles() {
     }
 
     .turn-screen-blank-control {
+      display: grid;
+      flex: 0 0 50px;
+      width: 50px;
+      min-width: 50px;
+      min-height: 50px;
+      padding: 9px;
+      place-items: center;
+      align-self: stretch;
+      border-radius: 50%;
+      background: var(--paper, #fffdf6);
+      color: #08090a;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .turn-screen-blank-control[data-state="active"] {
       position: fixed;
       left: max(16px, calc(env(safe-area-inset-left) + 10px));
       bottom: max(14px, calc(env(safe-area-inset-bottom) + 10px));
       z-index: 2147483001;
-      display: grid;
       width: 54px;
+      min-width: 54px;
       height: 54px;
+      min-height: 54px;
       padding: 10px;
-      place-items: center;
-      border: 4px solid #08090a;
-      border-radius: 50%;
-      background: var(--paper, #fffdf6);
-      color: #08090a;
+      border-width: 4px;
       box-shadow: 5px 6px 0 rgba(8, 9, 10, 0.86);
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
     }
 
     .turn-screen-blank-control svg {
@@ -100,11 +111,21 @@ function installStyles() {
     }
 
     @media (max-height: 430px) {
-      .turn-screen-blank-control {
+      .turn-screen-blank-control:not([data-state="active"]) {
+        flex-basis: 40px;
+        width: 40px;
+        min-width: 40px;
+        min-height: 40px;
+        padding: 7px;
+      }
+
+      .turn-screen-blank-control[data-state="active"] {
         left: max(12px, calc(env(safe-area-inset-left) + 8px));
         bottom: max(10px, calc(env(safe-area-inset-bottom) + 8px));
         width: 48px;
+        min-width: 48px;
         height: 48px;
+        min-height: 48px;
         padding: 9px;
         border-width: 3px;
         box-shadow: 4px 5px 0 rgba(8, 9, 10, 0.86);
@@ -116,10 +137,14 @@ function installStyles() {
 
 export function installScreenBlanking(runtime = globalThis.__turnRuntime) {
   if (!runtime || runtime.__screenBlankingInstalled) return null;
+
+  const controls = document.querySelector('#controls');
+  const utilityGroup = controls?.querySelector('.utility-group');
+  if (!controls || !utilityGroup) return null;
+
   runtime.__screenBlankingInstalled = true;
   installStyles();
 
-  const controls = document.querySelector('#controls');
   const overlay = document.createElement('div');
   overlay.className = 'turn-screen-blank-overlay';
   overlay.hidden = true;
@@ -127,7 +152,7 @@ export function installScreenBlanking(runtime = globalThis.__turnRuntime) {
 
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = 'turn-screen-blank-control';
+  button.className = 'utility turn-screen-blank-control';
   button.hidden = true;
 
   const status = document.createElement('p');
@@ -136,11 +161,7 @@ export function installScreenBlanking(runtime = globalThis.__turnRuntime) {
   status.setAttribute('aria-live', 'polite');
   status.setAttribute('aria-atomic', 'true');
 
-  // The restore control is deliberately the first focusable element in DOM order.
-  // This avoids a positive tabindex while still making it the first Tab stop.
-  document.body.prepend(button);
-  button.after(status);
-  document.body.appendChild(overlay);
+  document.body.append(status, overlay);
 
   let state = CONTROL_STATE.IDLE;
   let armedTimer = 0;
@@ -152,8 +173,20 @@ export function installScreenBlanking(runtime = globalThis.__turnRuntime) {
     });
   }
 
+  function placeButton() {
+    if (state === CONTROL_STATE.ACTIVE) {
+      // Escaping the controls stacking context keeps the restore button above the black overlay.
+      document.body.prepend(button);
+      return;
+    }
+
+    // The control is a real member of the race menu row and its first focusable item.
+    utilityGroup.prepend(button);
+  }
+
   function render() {
     button.dataset.state = state;
+    placeButton();
     button.innerHTML = ICONS[state];
     button.setAttribute('aria-label', LABELS[state]);
     button.setAttribute('aria-pressed', state === CONTROL_STATE.ACTIVE ? 'true' : 'false');
@@ -200,7 +233,7 @@ export function installScreenBlanking(runtime = globalThis.__turnRuntime) {
 
   function syncVisibility() {
     const visibility = inGameMenuVisibilityFor(runtime.state?.mode);
-    const gameplayVisible = controls?.hidden !== true;
+    const gameplayVisible = controls.hidden !== true;
 
     if ((!gameplayVisible || visibility.menuState === IN_GAME_MENU_STATE.HIDDEN) && state === CONTROL_STATE.ACTIVE) {
       clearArmTimer();
@@ -238,7 +271,7 @@ export function installScreenBlanking(runtime = globalThis.__turnRuntime) {
   });
 
   window.addEventListener('turn:ui-state-change', syncVisibility);
-  if (controls && typeof MutationObserver === 'function') {
+  if (typeof MutationObserver === 'function') {
     new MutationObserver(syncVisibility).observe(controls, {
       attributes: true,
       attributeFilter: ['hidden']
