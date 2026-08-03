@@ -16,7 +16,7 @@ export function createNightShiftAttempt({ trackId = '', vehicleId = '', rivals =
   return {
     eligible,
     rivals: rivalSnapshot,
-    rivalStates: rivalSnapshot.map(() => ({ wasBehind: false })),
+    rivalStates: rivalSnapshot.map(() => ({ previousRelation: 0 })),
     overtakenRivals: new Set()
   };
 }
@@ -56,15 +56,10 @@ export function sampleNightShiftOvertakes(
         : 0;
     const rivalState = attempt.rivalStates[index];
 
-    if (relation < 0) {
-      rivalState.wasBehind = true;
-      return;
+    if (relation > 0 && rivalState.previousRelation <= 0 && boostActive) {
+      attempt.overtakenRivals.add(index);
     }
-
-    if (relation > 0 && rivalState.wasBehind) {
-      if (boostActive) attempt.overtakenRivals.add(index);
-      rivalState.wasBehind = false;
-    }
+    rivalState.previousRelation = relation;
   });
 
   return attempt.overtakenRivals.size;
