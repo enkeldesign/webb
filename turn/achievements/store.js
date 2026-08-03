@@ -1,17 +1,20 @@
 import {
   TRACK_IDS,
   getAchievement
-} from './catalog.js?revision=r144-achievements';
+} from './catalog.js?revision=r146-achievement-expansion';
 
 export const ACHIEVEMENT_STORAGE_KEY = 'turn-achievements-v1';
-const STORAGE_VERSION = 1;
+const STORAGE_VERSION = 2;
 
 function defaultStoredState() {
   return {
     version: STORAGE_VERSION,
     unlocked: {},
     seen: [],
-    progress: { tracks: [] }
+    progress: {
+      tracks: [],
+      blankTracks: []
+    }
   };
 }
 
@@ -42,7 +45,8 @@ export function normalizeAchievementState(value) {
     unlocked,
     seen: normalizedStringArray(value.seen).filter((id) => Boolean(unlocked[id])),
     progress: {
-      tracks: normalizedStringArray(value.progress?.tracks, TRACK_IDS)
+      tracks: normalizedStringArray(value.progress?.tracks, TRACK_IDS),
+      blankTracks: normalizedStringArray(value.progress?.blankTracks, TRACK_IDS)
     }
   };
 }
@@ -91,11 +95,22 @@ export function createAchievementStore(storage = globalThis.localStorage) {
     return achievement;
   }
 
-  function addTrack(trackId) {
-    if (!TRACK_IDS.includes(trackId) || state.progress.tracks.includes(trackId)) return false;
-    state.progress.tracks.push(trackId);
+  function addProgressTrack(key, trackId) {
+    const collection = state.progress[key];
+    if (!Array.isArray(collection) || !TRACK_IDS.includes(trackId) || collection.includes(trackId)) {
+      return false;
+    }
+    collection.push(trackId);
     save();
     return true;
+  }
+
+  function addTrack(trackId) {
+    return addProgressTrack('tracks', trackId);
+  }
+
+  function addBlankTrack(trackId) {
+    return addProgressTrack('blankTracks', trackId);
   }
 
   function markAllSeen() {
@@ -113,6 +128,7 @@ export function createAchievementStore(storage = globalThis.localStorage) {
     isUnlocked,
     unlock,
     addTrack,
+    addBlankTrack,
     markAllSeen,
     unseenIds,
     storageAvailable: () => storageAvailable
