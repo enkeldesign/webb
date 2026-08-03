@@ -15,9 +15,9 @@ const expectedQuarterTurns = new Map([
   ['sedan-sports', 0],
   ['sedan', 0],
   ['suv', 0],
-  ['suv-luxury', 0],
-  ['hatchback-sports', 0],
-  ['truck-flat', 0],
+  ['firetruck', 0],
+  ['police', 0],
+  ['ambulance', 0],
   ['truck', 0],
   ['van', 0]
 ]);
@@ -33,9 +33,9 @@ const expectedVisualScales = new Map([
   ['sedan-sports', 0.98],
   ['sedan', 1],
   ['suv', 1.05],
-  ['suv-luxury', 1.06],
-  ['hatchback-sports', 0.96],
-  ['truck-flat', 1.12],
+  ['firetruck', 1.10],
+  ['police', 0.98],
+  ['ambulance', 1.05],
   ['truck', 1.12],
   ['van', 1.08]
 ]);

@@ -9,6 +9,11 @@ const PACE_NOTE_DURATION_SECONDS = 0.055;
 const PACE_NOTE_STEP_SECONDS = 0.105;
 const PACE_NOTE_GROUP_GAP_SECONDS = 0.22;
 const DRIVE_BY_EAR_ENABLED = globalThis.__turnDriveByEarEnabled !== false;
+const EMERGENCY_SERVICE_BY_VEHICLE_ID = Object.freeze({
+  firetruck: 'firetruck',
+  police: 'police',
+  ambulance: 'ambulance'
+});
 
 let context = null;
 let masterGain = null;
@@ -38,6 +43,11 @@ let driftRightGain = null;
 let boostGain = null;
 let boostFilter = null;
 let boostTone = null;
+
+let sirenGain = null;
+let sirenFilter = null;
+let sirenTone = null;
+let sirenHarmonic = null;
 
 let sliderGain = null;
 let sliderFilter = null;
@@ -132,6 +142,8 @@ export function update(frame = {}, now = performance.now()) {
   const driftAmount = clamp(Number(frame.driftAmount) || 0, 0, 1);
   const driftHeld = Boolean(frame.driftHeld);
   const boostActive = active && Boolean(frame.boostActive);
+  const emergencyService = EMERGENCY_SERVICE_BY_VEHICLE_ID[String(frame.vehicleId || '')] || null;
+  const sirenActive = boostActive && Boolean(emergencyService);
   const enginePitch = clamp(
     Number(frame.enginePitch ?? globalThis.__turnVehicleTuning?.enginePitch) || 1,
     0.55,
@@ -222,6 +234,7 @@ export function update(frame = {}, now = performance.now()) {
   smooth(boostGain.gain, boostLevel, audioNow, boostActive ? 0.055 : 0.12);
   smooth(boostFilter.frequency, 1150 + speedRatio * 1450, audioNow, 0.07);
   smooth(boostTone.frequency, 430 + speedRatio * 430, audioNow, 0.06);
+  updateEmergencySiren(sirenActive, emergencyService, audioNow);
 
   if (DRIVE_BY_EAR_ENABLED) {
     const recoveryRibbon = sliderMode === 'recovery';
@@ -250,7 +263,7 @@ export function update(frame = {}, now = performance.now()) {
     smooth(surfacePulseDepth.gain, surfaceActive ? 0.002 + surfaceAmount * 0.004 : 0, audioNow, 0.09);
   }
 
-  if (boostActive && !lastBoostActive && safetyMode === 'none') playCueNow('boost-start');
+  if (boostActive && !lastBoostActive && safetyMode === 'none' && !emergencyService) playCueNow('boost-start');
   lastBoostActive = boostActive;
 
   updateRivalProximity(active && !offRoad && !wrongWay, nearestRivalDistance, nearestRivalPan);
@@ -271,6 +284,7 @@ export function silence() {
   hardMute(gritGain.gain, now);
   hardMute(skidGain.gain, now);
   hardMute(boostGain.gain, now);
+  if (sirenGain) hardMute(sirenGain.gain, now);
   if (sliderGain) hardMute(sliderGain.gain, now);
   if (surfaceGain) hardMute(surfaceGain.gain, now);
   if (DRIVE_BY_EAR_ENABLED) stopPaceNoteSources();
@@ -309,6 +323,7 @@ function ensureGraph() {
   installEngineGraph();
   installDriftGraph();
   installBoostGraph();
+  installEmergencySirenGraph();
   if (DRIVE_BY_EAR_ENABLED) installDbeGraphs();
 }
 
@@ -449,6 +464,67 @@ function installBoostGraph() {
 
   boostNoise.start();
   boostTone.start();
+}
+
+
+function installEmergencySirenGraph() {
+  sirenGain = context.createGain();
+  sirenGain.gain.value = 0;
+
+  sirenFilter = context.createBiquadFilter();
+  sirenFilter.type = 'lowpass';
+  sirenFilter.frequency.value = 2400;
+  sirenFilter.Q.value = 0.55;
+
+  const fundamentalMix = context.createGain();
+  fundamentalMix.gain.value = 0.72;
+  const harmonicMix = context.createGain();
+  harmonicMix.gain.value = 0.18;
+
+  sirenTone = context.createOscillator();
+  sirenTone.type = 'triangle';
+  sirenTone.frequency.value = 620;
+  sirenTone.connect(fundamentalMix);
+
+  sirenHarmonic = context.createOscillator();
+  sirenHarmonic.type = 'sine';
+  sirenHarmonic.frequency.value = 930;
+  sirenHarmonic.connect(harmonicMix);
+
+  fundamentalMix.connect(sirenFilter);
+  harmonicMix.connect(sirenFilter);
+  sirenFilter.connect(sirenGain);
+  sirenGain.connect(dynamicsBus);
+  sirenTone.start();
+  sirenHarmonic.start();
+}
+
+function updateEmergencySiren(active, service, now) {
+  if (!sirenGain || !sirenTone || !sirenHarmonic) return;
+  if (!active) {
+    smooth(sirenGain.gain, 0, now, 0.09);
+    return;
+  }
+
+  const frequency = emergencySirenFrequency(service, now);
+  const level = service === 'firetruck' ? 0.033 : 0.029;
+  smooth(sirenGain.gain, level, now, 0.035);
+  smooth(sirenTone.frequency, frequency, now, service === 'police' ? 0.035 : 0.055);
+  smooth(sirenHarmonic.frequency, frequency * 1.5, now, 0.045);
+  smooth(sirenFilter.frequency, service === 'firetruck' ? 1800 : 2300, now, 0.08);
+}
+
+function emergencySirenFrequency(service, now) {
+  if (service === 'firetruck') {
+    return Math.floor(now / 0.58) % 2 === 0 ? 430 : 570;
+  }
+  if (service === 'ambulance') {
+    return Math.floor(now / 0.42) % 2 === 0 ? 610 : 820;
+  }
+
+  const phase = (now % 1.18) / 1.18;
+  const triangle = phase < 0.5 ? phase * 2 : (1 - phase) * 2;
+  return 710 + triangle * 360;
 }
 
 function installDbeGraphs() {

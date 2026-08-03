@@ -24,9 +24,9 @@ const CAR_DESCRIPTIONS = Object.freeze({
   'sedan-sports': 'A sporty four-door sedan with a low stance and rear spoiler.',
   sedan: 'A balanced four-door family car with a conventional three-box shape.',
   suv: 'A high-riding sport utility vehicle with a broad body and practical proportions.',
-  'suv-luxury': 'A large premium SUV with a tall body, wide grille and substantial presence.',
-  'hatchback-sports': 'A compact sporty hatchback with a short rear and planted stance.',
-  'truck-flat': 'A work truck with a cab at the front and an open flatbed behind it.',
+  firetruck: 'A heavy fire engine with roof equipment, blue emergency lights and a deep two-tone siren.',
+  police: 'A quick patrol car with a red-and-blue light bar and an urgent electronic siren.',
+  ambulance: 'A stable emergency van with blue roof lights and a clear hi-lo siren.',
   truck: 'A sturdy pickup truck with a separate cab and cargo bed.',
   van: 'A tall enclosed van with a boxy body and short bonnet.'
 });
@@ -41,7 +41,7 @@ export function showTheLot({ initialSelection } = {}) {
       <div class="lot-canvas-host" aria-hidden="true"></div>
       <header class="lot-heading">
         <h1 id="lot-title">THE LOT</h1>
-        <p>Pick a ride. Then paint it.</p>
+        <p>Pick a ride. Then hit the road.</p>
       </header>
       <button class="lot-back" type="button" aria-label="Back to start">×</button>
 
@@ -205,29 +205,39 @@ export function showTheLot({ initialSelection } = {}) {
         button.setAttribute('aria-label', `${getCarDefinition(carId).name}. ${CAR_DESCRIPTIONS[carId] || ''}`.trim());
       }
 
-      const paintControls = [makeColorInput({
-        label: 'Body',
-        value: selectedColor,
-        onInput(value) {
-          selectedColor = normalizeVehicleColor(value);
-          applySelectedPaint();
-          updatePaintAccessibleNames();
-        }
-      })];
-      if (car.secondaryPaint) {
-        paintControls.push(makeColorInput({
-          label: car.secondaryPaint.label,
-          value: selectedSecondaryColor,
-          secondary: true,
+      if (car.fixedLivery) {
+        const livery = document.createElement('div');
+        livery.className = 'lot-color-control lot-fixed-livery';
+        livery.innerHTML = '<span>PAINT</span><strong>SERVICE LIVERY</strong>';
+        livery.setAttribute('aria-label', `${car.name} uses its fixed service livery`);
+        colors.replaceChildren(livery);
+        colors.setAttribute('aria-label', 'Fixed service livery');
+      } else {
+        const paintControls = [makeColorInput({
+          label: 'Body',
+          value: selectedColor,
           onInput(value) {
-            selectedSecondaryColor = normalizeVehicleSecondaryColor(value);
+            selectedColor = normalizeVehicleColor(value);
             applySelectedPaint();
             updatePaintAccessibleNames();
           }
-        }));
+        })];
+        if (car.secondaryPaint) {
+          paintControls.push(makeColorInput({
+            label: car.secondaryPaint.label,
+            value: selectedSecondaryColor,
+            secondary: true,
+            onInput(value) {
+              selectedSecondaryColor = normalizeVehicleSecondaryColor(value);
+              applySelectedPaint();
+              updatePaintAccessibleNames();
+            }
+          }));
+        }
+        colors.replaceChildren(...paintControls);
+        colors.setAttribute('aria-label', 'Choose car paint colours');
+        updatePaintAccessibleNames();
       }
-      colors.replaceChildren(...paintControls);
-      updatePaintAccessibleNames();
 
       for (const [carId, platform] of platforms) {
         setParkingPadSelected(platform, carId === selectedCarId);

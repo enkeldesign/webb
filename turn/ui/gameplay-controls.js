@@ -384,6 +384,7 @@ function installGameplayUi() {
       driftAmount: runtimeState?.driftAmount || 0,
       driftHeld: Boolean(globalThis.__turnDriftHeld),
       boostActive: boosting,
+      vehicleId: runtimeState?.vehicleId || '',
       enginePitch: runtimeState?.vehicleTuning?.enginePitch || 1,
       nearestRivalDistance: nearestRivalDistance(runtime, active)
     }, now);

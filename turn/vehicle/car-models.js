@@ -75,7 +75,7 @@ export async function createCarVisual({
       secondaryPaint,
       explicitPaint
     } = record;
-    const paintable = !protectedPart && !secondaryPaint && (
+    const paintable = !car.fixedLivery && !protectedPart && !secondaryPaint && (
       explicitPaint ||
       (explicitPaintCount === 0 && isFallbackPaintCandidate(material)) ||
       (car.pack !== 'car' && isFallbackPaintCandidate(material))
@@ -118,6 +118,7 @@ export async function createCarVisual({
     * car.visualSizeMultiplier
     * featuredVisualSizeMultiplier;
   normalizeModelToGround(model, targetLength * effectiveVisualScale);
+  if (car.emergencyService && !ghost) installEmergencyLightRig(root, model, car.emergencyService);
 
   root.userData.turnCarId = car.id;
   root.userData.turnCarColor = requestedColor;
@@ -134,6 +135,81 @@ export async function createCarVisual({
   root.userData.frontWheelPivots = [];
   root.userData.wheelSpinners = [];
   return root;
+}
+
+
+function installEmergencyLightRig(root, model, service) {
+  model.updateMatrixWorld(true);
+  const bounds = new THREE.Box3().setFromObject(model);
+  const size = bounds.getSize(new THREE.Vector3());
+  const center = bounds.getCenter(new THREE.Vector3());
+  const barWidth = Math.max(0.42, size.x * 0.34);
+  const lampWidth = barWidth * 0.42;
+  const lampHeight = Math.max(0.08, size.y * 0.045);
+  const lampDepth = Math.max(0.12, size.z * 0.055);
+  const roofY = bounds.max.y + lampHeight * 0.6;
+  const roofZ = center.z - size.z * (service === 'firetruck' ? 0.08 : 0.04);
+  const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches || false;
+  const periodMs = reducedMotion ? 1400 : (service === 'police' ? 720 : 840);
+  const colors = service === 'police' ? [0xff264d, 0x168bff] : [0x168bff, 0x168bff];
+  const lamps = [];
+
+  colors.forEach((color, index) => {
+    const material = new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      toneMapped: false
+    });
+    const lamp = new THREE.Mesh(new THREE.BoxGeometry(lampWidth, lampHeight, lampDepth), material);
+    lamp.position.set((index === 0 ? -1 : 1) * barWidth * 0.27, roofY, roofZ);
+    lamp.visible = true;
+    lamp.renderOrder = 40;
+
+    const haloMaterial = material.clone();
+    haloMaterial.opacity = 0;
+    const halo = new THREE.Mesh(
+      new THREE.BoxGeometry(lampWidth * 1.45, lampHeight * 1.7, lampDepth * 1.45),
+      haloMaterial
+    );
+    halo.position.copy(lamp.position);
+    halo.visible = false;
+    halo.renderOrder = 39;
+
+    root.add(halo, lamp);
+    lamps.push({ lamp, material, halo, haloMaterial, index });
+  });
+
+  const rig = {
+    service,
+    lamps,
+    periodMs,
+    reducedMotion,
+    lastFrameAt: -Infinity
+  };
+  root.userData.turnEmergencyService = service;
+  root.userData.turnEmergencyLightRig = rig;
+  for (const record of lamps) {
+    record.lamp.onBeforeRender = () => updateEmergencyLightRig(rig);
+  }
+}
+
+function updateEmergencyLightRig(rig) {
+  const now = performance.now();
+  if (now === rig.lastFrameAt) return;
+  rig.lastFrameAt = now;
+  const active = Boolean(globalThis.__turnBoostActive);
+  const phase = (now % rig.periodMs) / rig.periodMs;
+  const firstOn = phase < 0.5;
+
+  for (const record of rig.lamps) {
+    const on = record.index === 0 ? firstOn : !firstOn;
+    record.lamp.visible = true;
+    record.halo.visible = active && !rig.reducedMotion && on;
+    record.material.opacity = active ? (on ? 1 : 0.16) : 0;
+    record.haloMaterial.opacity = active && on ? 0.24 : 0;
+  }
 }
 
 export function recolorCarVisual(root, color, secondaryColor = root?.userData?.turnCarSecondaryColor) {
