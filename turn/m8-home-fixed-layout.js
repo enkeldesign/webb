@@ -101,13 +101,19 @@ export async function installM8HomeFixedLayout() {
   );
   const cardScrollFixes = await installM8HomeCardScrollFixes();
 
+  const { installAchievements } = await import(
+    `/turn/achievements.js?build=${buildKey}-r144-achievements`
+  );
+  const achievements = installAchievements(globalThis.__turnRuntime);
+
   globalThis.__turnHomeLayout = Object.freeze({
     id: LAYOUT_ID,
     home,
     trackBrowser,
     menu,
     raceButton,
-    cardScrollFixes
+    cardScrollFixes,
+    achievements
   });
   return globalThis.__turnHomeLayout;
 }
