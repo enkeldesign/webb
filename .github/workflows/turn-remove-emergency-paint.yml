@@ -1,0 +1,119 @@
+name: Apply TURN emergency paint cleanup
+
+on:
+  push:
+    branches:
+      - agent/remove-emergency-paint-control
+    paths:
+      - '.github/workflows/turn-remove-emergency-paint.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/remove-emergency-paint-control
+          fetch-depth: 0
+
+      - name: Remove emergency vehicle paint control
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+
+          lot_path = Path('turn/garage/lot-r10.js')
+          source = lot_path.read_text(encoding='utf-8')
+          old = '''      if (car.fixedLivery) {
+            const livery = document.createElement('div');
+            livery.className = 'lot-color-control lot-fixed-livery';
+            livery.innerHTML = '<span>PAINT</span><strong>SERVICE LIVERY</strong>';
+            livery.setAttribute('aria-label', `${car.name} uses its fixed service livery`);
+            colors.replaceChildren(livery);
+            colors.setAttribute('aria-label', 'Fixed service livery');
+          } else {
+          '''
+          new = '''      if (car.fixedLivery) {
+            colors.replaceChildren();
+            colors.hidden = true;
+            colors.removeAttribute('aria-label');
+          } else {
+            colors.hidden = false;
+          '''
+          old = old.replace('\n          ', '\n').lstrip('\n')
+          new = new.replace('\n          ', '\n').lstrip('\n')
+          if old not in source:
+              raise SystemExit('Fixed-livery UI block did not match current main')
+          lot_path.write_text(source.replace(old, new, 1), encoding='utf-8')
+
+          test_path = Path('turn-lab/tests/emergency-vehicles-production.mjs')
+          test_source = test_path.read_text(encoding='utf-8')
+          anchor = "assert.match(lotCss, /\\.lot-fixed-livery/);\n"
+          addition = (
+              anchor
+              + "assert.match(lot, /colors\\.hidden = true/);\n"
+              + "assert.match(lot, /colors\\.hidden = false/);\n"
+              + "assert.doesNotMatch(lot, /SERVICE LIVERY/);\n"
+          )
+          if anchor not in test_source:
+              raise SystemExit('Emergency vehicle test anchor did not match current main')
+          test_path.write_text(test_source.replace(anchor, addition, 1), encoding='utf-8')
+
+          release_path = Path('turn/release.json')
+          release = json.loads(release_path.read_text(encoding='utf-8'))
+          release.update({
+              'version': '1.4.0',
+              'id': '2026.08.03-r127',
+              'cacheKey': '20260803-r127'
+          })
+          release_path.write_text(json.dumps(release, indent=2) + '\n', encoding='utf-8')
+
+          for name in [
+              'turn/design.html',
+              'turn-tests/design-system-production.mjs',
+              'turn-next/index.html'
+          ]:
+              path = Path(name)
+              text = path.read_text(encoding='utf-8')
+              text = text.replace('2026.08.03-r126', '2026.08.03-r127')
+              text = text.replace('20260803-r126', '20260803-r127')
+              text = text.replace('2026.08.03-R126', '2026.08.03-R127')
+              text = text.replace(r'2026\.08\.03-r126', r'2026\.08\.03-r127')
+              path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Synchronize release and TURN NEXT parity
+        run: |
+          node turn/scripts/release.mjs --write
+          node turn-next/scripts/build-parity-app.mjs
+          node turn-next/scripts/build-parity-main.mjs
+          node turn-next/scripts/build-parity-entry.mjs
+
+      - name: Verify focused regressions
+        run: |
+          node --check turn/garage/lot-r10.js
+          node turn-lab/tests/emergency-vehicles-production.mjs
+          node turn-tests/design-system-production.mjs
+          node turn/scripts/release.mjs --check
+          node turn-next/scripts/build-parity-app.mjs --check
+          node turn-next/scripts/build-parity-main.mjs --check
+          node turn-next/scripts/build-parity-entry.mjs --check
+
+      - name: Commit emergency paint cleanup
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add turn turn-next turn-tests turn-lab/tests
+          if git diff --cached --quiet; then
+            echo 'No generated changes to commit.'
+            exit 0
+          fi
+          git commit -m 'Remove emergency vehicle paint control'
+          git fetch origin agent/remove-emergency-paint-control
+          git rebase origin/agent/remove-emergency-paint-control
+          git push origin HEAD:agent/remove-emergency-paint-control
