@@ -91,8 +91,8 @@ function installSecondaryAccent(root, model, color, accent) {
     polygonOffsetUnits: -2
   });
 
-  const sideDepth = Math.max(0.022, size.x * 0.007);
-  const sideX = size.x * 0.5 + sideDepth * 0.55;
+  const sideDepth = Math.max(0.028, size.x * 0.014);
+  const sideX = size.x * 0.405;
   const addSidePair = ({ length, height, y, z }) => {
     for (const direction of [-1, 1]) {
       const panel = new THREE.Mesh(
