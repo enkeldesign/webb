@@ -1,0 +1,45 @@
+name: TURN Drive By Ear training regression
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'turn/training/**'
+      - 'turn/m8-home-fixed-layout.js'
+      - 'turn-tests/drive-by-ear-training-production.mjs'
+      - 'eslint.config.mjs'
+      - '.github/workflows/turn-dbe-training-tests.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'turn/training/**'
+      - 'turn/m8-home-fixed-layout.js'
+      - 'turn-tests/drive-by-ear-training-production.mjs'
+      - 'eslint.config.mjs'
+      - '.github/workflows/turn-dbe-training-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  training:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Syntax-check training modules
+        run: node --check turn/training/drive-by-ear-training.js && node --check turn-tests/drive-by-ear-training-production.mjs
+
+      - name: Lint training modules
+        run: npx --yes eslint@9.39.1 turn/training/drive-by-ear-training.js turn-tests/drive-by-ear-training-production.mjs
+
+      - name: Run Drive By Ear training regression
+        run: node turn-tests/drive-by-ear-training-production.mjs
