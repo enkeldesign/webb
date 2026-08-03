@@ -40,13 +40,20 @@ export function normalizeAchievementState(value) {
     };
   }
 
+  const tracks = normalizedStringArray(value.progress?.tracks, TRACK_IDS);
+  const blankTracks = normalizedStringArray(value.progress?.blankTracks, TRACK_IDS);
+  const existingTrustTrack = unlocked['trust-your-ears']?.trackId;
+  if (TRACK_IDS.includes(existingTrustTrack) && !blankTracks.includes(existingTrustTrack)) {
+    blankTracks.push(existingTrustTrack);
+  }
+
   return {
     version: STORAGE_VERSION,
     unlocked,
     seen: normalizedStringArray(value.seen).filter((id) => Boolean(unlocked[id])),
     progress: {
-      tracks: normalizedStringArray(value.progress?.tracks, TRACK_IDS),
-      blankTracks: normalizedStringArray(value.progress?.blankTracks, TRACK_IDS)
+      tracks,
+      blankTracks
     }
   };
 }
