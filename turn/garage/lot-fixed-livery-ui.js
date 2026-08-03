@@ -5,6 +5,7 @@ export function installFixedLiveryUiGuard() {
       const fixedLivery = colors.querySelector('.lot-fixed-livery');
       if (fixedLivery) {
         colors.replaceChildren();
+        // Keep the rail for layout stability; the retired behavior was: colors.hidden = true.
         colors.hidden = false;
         colors.setAttribute('aria-hidden', 'true');
         colors.removeAttribute('aria-label');
