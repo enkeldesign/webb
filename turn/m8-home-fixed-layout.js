@@ -100,7 +100,7 @@ export async function installM8HomeFixedLayout() {
   const cardScrollFixes = await installM8HomeCardScrollFixes();
 
   const { installAchievements } = await import(
-    `/turn/achievements.js?build=${buildKey}-r146-achievement-expansion`
+    `/turn/achievements.js?build=${buildKey}-r152-developer-time-trials`
   );
   const achievements = installAchievements(globalThis.__turnRuntime);
 
