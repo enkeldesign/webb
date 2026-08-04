@@ -83,10 +83,8 @@
 }
 
 .lot-paint-lock-copy {
-  display: flex;
+  display: block;
   min-width: 0;
-  align-items: baseline;
-  gap: .34em;
   overflow: hidden;
   font-size: clamp(.72rem, 1.7vw, 1rem);
   line-height: 1;
@@ -94,21 +92,11 @@
 }
 
 .lot-paint-lock-copy strong {
+  display: block;
   overflow: hidden;
   font-size: 1em;
   font-weight: 900;
   text-overflow: ellipsis;
-}
-
-.lot-paint-lock-copy i {
-  font-style: normal;
-  font-weight: 950;
-}
-
-.lot-paint-lock-copy b {
-  font-size: .78em;
-  font-weight: 950;
-  letter-spacing: .06em;
 }
 
 .lot-paint-lock {
@@ -118,10 +106,11 @@
   box-sizing: border-box;
   padding: 7px;
   place-items: center;
-  border: 2px solid currentColor;
+  border: 2px solid var(--turn-ink, #08090a);
   border-radius: 10px;
-  background: var(--turn-action-warning, #ffd43b);
+  background: var(--lot-paint-lock-background, var(--turn-action-warning, #ffd43b));
   box-shadow: 3px 3px 0 var(--turn-ink, #08090a);
+  color: var(--lot-paint-lock-foreground, var(--turn-ink, #08090a));
   pointer-events: none;
 }
 
