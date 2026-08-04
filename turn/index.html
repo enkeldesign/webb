@@ -96,11 +96,8 @@
         });
         syncFixedLiveryRail();
       };
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', start, { once: true });
-      } else {
-        start();
-      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+      else start();
     })();
   </script>
   <script type="importmap">
@@ -108,7 +105,7 @@
       "imports": {
         "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
         "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/",
-        "./garage/lot-r10.js?build=20260720-r19": "./garage/lot-track-select.js?build=20260803-r126",
+        "./garage/lot-r10.js?build=20260720-r19": "./garage/lot-track-select.js?build=20260804-r157",
         "./render/camera.js?build=20260720-r19": "./render/camera.js?build=20260803-r126",
         "./race/lap-system.js?build=20260720-r19": "./race/lap-system-r86.js?build=20260803-r126",
         "./race/game-state.js": "./race/game-state.js?build=20260803-r126",
@@ -119,11 +116,11 @@
         "./performance-monitor.js?build=20260720-r19": "./performance-monitor.js?build=20260803-r126",
         "./world-assets.js": "./world-assets.js?build=20260803-r126",
         "./vehicle/physics.js?build=20260720-r19": "./vehicle/physics.js?build=20260803-r126",
-        "./vehicle/catalog.js?build=20260720-r19": "./vehicle/catalog.js?build=20260803-r126",
-        "./vehicle/catalog.js?build=20260720-r20": "./vehicle/catalog.js?build=20260803-r126",
-        "./vehicle/catalog.js?build=20260722-r42": "./vehicle/catalog.js?build=20260803-r126",
-        "./vehicle/car-models.js?build=20260720-r19": "./vehicle/emergency-livery-models.js?build=20260803-r126",
-        "./vehicle/car-models.js?build=20260720-r22": "./vehicle/emergency-livery-models.js?build=20260803-r126",
+        "./vehicle/catalog.js?build=20260720-r19": "./vehicle/catalog.js?build=20260804-r157-factory-colors",
+        "./vehicle/catalog.js?build=20260720-r20": "./vehicle/catalog.js?build=20260804-r157-factory-colors",
+        "./vehicle/catalog.js?build=20260722-r42": "./vehicle/catalog.js?build=20260804-r157-factory-colors",
+        "./vehicle/car-models.js?build=20260720-r19": "./vehicle/emergency-livery-models.js?build=20260804-r157-display-p3",
+        "./vehicle/car-models.js?build=20260720-r22": "./vehicle/emergency-livery-models.js?build=20260804-r157-display-p3",
         "./ui/race-announcements.js": "./ui/race-announcements.js?build=20260803-r126",
         "./ui/track-select.js?build=20260722-r51": "./ui/track-select.js?build=20260803-r126",
         "./ui/track-intro.js?build=20260725-r75": "./ui/track-intro.js?build=20260803-r126",
@@ -181,5 +178,5 @@
   </div>
   <div class="manual-steer" id="manualSteer" role="slider" aria-label="Steering. Drag left or right." aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0" hidden><span class="manual-steer-knob" aria-hidden="true"></span></div>
   <div class="controls" id="controls" hidden><div class="utility-group"><button class="utility" id="calibrateButton" type="button">Recalibrate</button><button class="utility" id="resetButton" type="button">Restart Lap</button></div><div class="pedals"><button class="pedal brake" id="brakeButton" type="button">Brake</button><button class="pedal gas" id="gasButton" type="button">Gas</button></div></div>
-  <script type="module" src="./app.js?build=20260803-r126-browser-consent"></script>
+  <script type="module" src="./app.js?build=20260804-r157-hidden-paint-p3"></script>
 </body></html>
