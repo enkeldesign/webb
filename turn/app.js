@@ -3,6 +3,98 @@ if (launchReady && typeof launchReady.then === 'function') {
   await launchReady;
 }
 
+function installStartupCover() {
+  const gate = document.querySelector('#installGate');
+  if (!gate) return Object.freeze({ finish() {} });
+
+  let style = document.querySelector('#turn-startup-cover-style');
+  if (!style) {
+    style = document.createElement('style');
+    style.id = 'turn-startup-cover-style';
+    style.textContent = `
+      .install-gate.turn-startup-loading {
+        display: grid !important;
+      }
+      .install-gate.turn-startup-loading .install-shell {
+        grid-template-columns: minmax(150px, .7fr) minmax(280px, 1.3fr);
+      }
+      .install-gate.turn-startup-loading .install-kicker,
+      .install-gate.turn-startup-loading .install-actions,
+      .install-gate.turn-startup-loading .install-note {
+        display: none !important;
+      }
+      .install-gate.turn-startup-loading .install-copy {
+        margin-bottom: 18px;
+        font-weight: 900;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+      }
+      .turn-startup-spinner {
+        width: 42px;
+        height: 42px;
+        box-sizing: border-box;
+        border: 6px solid var(--turn-muted, #d6d0c2);
+        border-top-color: var(--turn-action-information, #38d9ff);
+        border-radius: 50%;
+        animation: turn-startup-spin 800ms linear infinite;
+      }
+      @keyframes turn-startup-spin {
+        to { transform: rotate(360deg); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .turn-startup-spinner {
+          animation: none;
+          border-color: var(--turn-action-information, #38d9ff);
+        }
+      }
+      /* A fixed inset is more reliable than an early 100dvh measurement in
+         standalone iOS landscape. The stale dynamic viewport caused the
+         black footer until an orientation change forced a remeasurement. */
+      .m8-home.m8-home-fixed-layout {
+        inset: 0 !important;
+        height: auto !important;
+        min-height: 0 !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  const title = gate.querySelector('.install-card h1');
+  const copy = gate.querySelector('.install-copy');
+  const card = gate.querySelector('.install-card');
+  const guide = gate.querySelector('.install-guide');
+  guide?.setAttribute('hidden', '');
+  if (title) title.textContent = 'TURN';
+  if (copy) {
+    copy.textContent = 'Loading TURN';
+    copy.setAttribute('role', 'status');
+    copy.setAttribute('aria-live', 'polite');
+  }
+  if (card && !card.querySelector('.turn-startup-spinner')) {
+    const spinner = document.createElement('div');
+    spinner.className = 'turn-startup-spinner';
+    spinner.setAttribute('aria-hidden', 'true');
+    card.appendChild(spinner);
+  }
+
+  gate.hidden = false;
+  gate.classList.add('turn-startup-loading');
+  gate.style.setProperty('display', 'grid');
+  document.documentElement.classList.add('turn-startup-pending');
+
+  return Object.freeze({
+    finish() {
+      document.documentElement.classList.remove('turn-startup-pending');
+      document.documentElement.classList.add('turn-home-ready');
+      gate.classList.remove('turn-startup-loading');
+      gate.style.removeProperty('display');
+      gate.hidden = true;
+      document.dispatchEvent(new CustomEvent('turn:home-ready'));
+    }
+  });
+}
+
+const startupCover = installStartupCover();
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
 const moduleBase = new URL('/turn/', globalThis.location?.href || 'https://enkel.design/turn/');
 
@@ -173,7 +265,7 @@ installHarborHiddenFaceOrientation();
 // Historical regression marker for the original Trophy Road Lot enhancement bundle:
 // lot-enhancement-runtime.js?revision=r121&trophy-road=r154
 const { installLotEnhancementRuntime } = await import(
-  withBuild('./garage/lot-enhancement-runtime.js?revision=r121&trophy-road=r157&paint=r159-paint-lock-observer')
+  withBuild('./garage/lot-enhancement-runtime.js?revision=r121&trophy-road=r159&paint=r159-paint-lock-observer')
 );
 installLotEnhancementRuntime();
 
@@ -223,7 +315,7 @@ installStylesheet(
 );
 installStylesheet('./rival-reset-context-r127.css', 'data-turn-rival-reset-context');
 const { installM8HomeNavigation } = await import(
-  withBuild('./m8-home.js?revision=r131-motion-permission-retry&trophy-road=r157')
+  withBuild('./m8-home.js?revision=r131-motion-permission-retry&trophy-road=r159')
 );
 const home = await installM8HomeNavigation();
 globalThis.__turnHome = home;
@@ -242,7 +334,7 @@ if (buildLabel) {
   buildLabel.textContent = `TURN V${release?.version || ''} · BUILD ${(release?.id || '').toUpperCase()}`;
 }
 const { installM8HomeFixedLayout } = await import(
-  withBuild('./m8-home-fixed-layout.js?revision=m8.9-track-title-alignment&trophy-road=r157&hotfix=r158-race-freeze')
+  withBuild('./m8-home-fixed-layout.js?revision=m8.9-track-title-alignment&trophy-road=r159')
 );
 await installM8HomeFixedLayout();
 installStylesheet(
@@ -258,3 +350,5 @@ installStylesheet(
   'data-turn-m8-record-car-scale'
 );
 document.documentElement.dataset.turnHomeLifecycle = 'home-m8';
+await new Promise((resolve) => requestAnimationFrame(resolve));
+startupCover.finish();
