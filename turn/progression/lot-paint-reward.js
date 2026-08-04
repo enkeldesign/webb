@@ -40,7 +40,7 @@ function contrastingInk(hexColor) {
       : ((channel + 0.055) / 1.055) ** 2.4
   ));
   const luminance = linear[0] * 0.2126 + linear[1] * 0.7152 + linear[2] * 0.0722;
-  return luminance > 0.36 ? '#08090a' : '#fffdf6';
+  return luminance > 0.18 ? '#08090a' : '#fffdf6';
 }
 
 export function gateLotPaintNow(root = document.body) {
