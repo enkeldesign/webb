@@ -13,6 +13,7 @@ on:
       - 'turn/training/**'
       - 'turn-tests/pace-note-geometry-audit.mjs'
       - 'turn-tests/pace-note-migration-report.mjs'
+      - 'turn-tests/pace-note-compiled-report.mjs'
       - '.github/workflows/turn-pace-note-geometry.yml'
   push:
     branches:
@@ -26,6 +27,7 @@ on:
       - 'turn/training/**'
       - 'turn-tests/pace-note-geometry-audit.mjs'
       - 'turn-tests/pace-note-migration-report.mjs'
+      - 'turn-tests/pace-note-compiled-report.mjs'
       - '.github/workflows/turn-pace-note-geometry.yml'
 
 permissions:
@@ -47,10 +49,13 @@ jobs:
         run: npm install --no-save --no-package-lock three@0.184.0
 
       - name: Syntax-check pace-note geometry tools
-        run: node --check turn/tracks/pace-note-geometry.js && node --check turn-tests/pace-note-geometry-audit.mjs && node --check turn-tests/pace-note-migration-report.mjs
+        run: node --check turn/tracks/pace-note-geometry.js && node --check turn/tracks/pace-note-compiler.js && node --check turn/tracks/pace-note-recipes.js && node --check turn-tests/pace-note-geometry-audit.mjs && node --check turn-tests/pace-note-migration-report.mjs && node --check turn-tests/pace-note-compiled-report.mjs
 
       - name: Audit every track and Drive By Ear 101
         run: node turn-tests/pace-note-geometry-audit.mjs
 
       - name: Report semantic migration anchors
         run: node turn-tests/pace-note-migration-report.mjs
+
+      - name: Report compiled classifications
+        run: node turn-tests/pace-note-compiled-report.mjs
