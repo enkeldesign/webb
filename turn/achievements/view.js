@@ -7,7 +7,10 @@ import {
   TRACK_NAMES,
   VEHICLE_NAMES,
   TRACK_IDS
-} from './catalog.js?revision=r146-achievement-expansion';
+} from './catalog.js?revision=r152-developer-time-trials';
+import {
+  TIME_TRIAL_ACHIEVEMENT_IDS
+} from './time-trials.js?revision=r152-developer-time-trials';
 
 const TOAST_VISIBLE_MS = 3600;
 const ATTENTION_VISIBLE_MS = 900;
@@ -37,6 +40,9 @@ function progressFor(achievement, store, session) {
   if (achievement.id === 'new-ground') return Math.min(2, store.state.progress.tracks.length);
   if (achievement.id === 'around-the-turn') return Math.min(TRACK_IDS.length, store.state.progress.tracks.length);
   if (achievement.id === 'beyond-sight') return Math.min(TRACK_IDS.length, store.state.progress.blankTracks.length);
+  if (achievement.id === 'faster-than-the-dev') {
+    return TIME_TRIAL_ACHIEVEMENT_IDS.filter((id) => store.isUnlocked(id)).length;
+  }
   if (achievement.id === 'listen-closely') {
     return Math.min(10, Math.floor((session.listenCloselyMs || 0) / 1000));
   }
@@ -139,6 +145,7 @@ function createDialog() {
         <div class="turn-achievements-filters" aria-label="Achievement filters">
           <button type="button" aria-pressed="true" data-achievement-filter="all">ALL</button>
           <button type="button" aria-pressed="false" data-achievement-filter="onboarding">GETTING STARTED</button>
+          <button type="button" aria-pressed="false" data-achievement-filter="time-trials">TIME TRIALS</button>
           <button type="button" aria-pressed="false" data-achievement-filter="unlocked">UNLOCKED</button>
         </div>
         <div class="turn-achievements-list"></div>
@@ -171,6 +178,7 @@ function installFilters(dialog) {
     for (const card of dialog.querySelectorAll('.turn-achievement-card')) {
       const visible = current === 'all'
         || (current === 'onboarding' && card.dataset.achievementCategory === CATEGORY.ONBOARDING)
+        || (current === 'time-trials' && card.dataset.achievementCategory === CATEGORY.TIME_TRIALS)
         || (current === 'unlocked' && card.dataset.achievementStatus === 'unlocked');
       card.hidden = !visible;
     }
