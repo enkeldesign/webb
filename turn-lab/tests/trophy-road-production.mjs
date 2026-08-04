@@ -24,6 +24,7 @@ const [
   lotGate,
   view,
   feedback,
+  showcase,
   runtime,
   app,
   fixedLayout,
@@ -37,6 +38,7 @@ const [
   fs.readFile(new URL('../../turn/progression/lot-trophy-gate.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/view.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/trophy-road-feedback.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/achievements/trophy-road-showcase.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/runtime.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
@@ -188,10 +190,18 @@ assert.match(roadSource, /LOCK_ICON/);
 assert.match(roadSource, /showTrophyUnlockNotice/);
 assert.match(roadSource, /PREPARED_STORAGE = new WeakSet/);
 assert.match(roadSource, /globalThis\.__turnAchievements\?\.store/);
+assert.match(roadSource, /future: '[^']*circle cx="18" cy="39"[^']*circle cx="49" cy="39"/,
+  'The Future Racer reward marker should use a recognisable race-car silhouette');
 assert.doesNotMatch(roadSource, /clearRivals|resetRivals|rival-storage/);
 
 assert.match(homeGate, /showTrophyUnlockNotice/);
-assert.match(homeGate, /continueButton\.disabled = true/);
+assert.match(homeGate, /continueButton\.toggleAttribute\('aria-disabled'/);
+assert.match(homeGate, /event\.stopImmediatePropagation\(\)/,
+  'The locked Race action must explain the lock without starting the race');
+assert.match(homeGate, /turn-track-lock-icon/);
+assert.match(homeGate, /LOCK_ICON/);
+assert.doesNotMatch(homeGate, /continueButton\.disabled = true/,
+  'A natively disabled Race button cannot provide the required lock explanation');
 assert.match(homeGate, /card\.addEventListener\('click'/);
 assert.doesNotMatch(homeGate, /fallbackCard\?\.click/,
   'Locked tracks should remain selected and inspectable instead of silently moving selection');
@@ -211,6 +221,14 @@ assert.ok(
 );
 assert.match(feedback, /TROPHY_ROAD_VIEWPORT_THRESHOLD/);
 assert.match(feedback, /turn-trophy-road-scroll/);
+assert.match(feedback, /turn-trophy-road-scroll-button/);
+assert.match(feedback, /Scroll Trophy Road/);
+assert.match(feedback, /scrollBy\(\{/);
+assert.match(feedback, /pointerdown/);
+assert.match(feedback, /pointermove/);
+assert.match(feedback, /setPointerCapture/);
+assert.match(feedback, /createTrophyRoadShowcase/);
+assert.match(feedback, /TROPHY_ROAD_REWARD_ICONS/);
 assert.match(feedback, /selectedByPlayer = ''/);
 assert.match(feedback, /clearSelection\(\)/);
 assert.match(feedback, /resetView\(\)/);
@@ -223,6 +241,17 @@ assert.match(feedback, /activeStatuses/);
 assert.match(feedback, /categoryMatch && statusMatch/);
 assert.match(feedback, /id: 'locked'/);
 assert.match(feedback, /LOCK_ICON/);
+
+assert.match(showcase, /createCarVisual/);
+assert.match(showcase, /'race-future'/);
+assert.match(showcase, /'firetruck'/);
+assert.match(showcase, /'ambulance'/);
+assert.match(showcase, /'police'/);
+assert.match(showcase, /renderer\.setAnimationLoop\(render\)/);
+assert.match(showcase, /visual\.rotation\.y/);
+assert.match(showcase, /aria-hidden/);
+assert.match(showcase, /ResizeObserver/);
+
 assert.match(runtime, /turn:trophy-road-updated/);
 assert.match(runtime, /showRewardToastBatch/);
 assert.match(runtime, /store\.syncRewards\(\)/);
@@ -231,10 +260,13 @@ assert.ok(
   app.indexOf('prepareTrophyRoadProfile();') < app.indexOf("await import(withBuild('./main.js'))"),
   'Grandfathering must be prepared before the runtime loads the saved vehicle selection'
 );
-assert.match(app, /trophy-road\.js\?revision=r154-trophy-road-feedback/);
+assert.match(app, /trophy-road\.js\?revision=r155-trophy-road-polish/);
+assert.match(app, /trophy-road\.css\?revision=r155-trophy-road-polish/);
+assert.match(app, /m8-home-fixed-layout\.js\?revision=m8\.9-track-title-alignment&trophy-road=r155/);
 assert.match(app, /lot-enhancement-runtime\.js\?revision=r121&trophy-road=r154/);
 assert.match(fixedLayout, /installM8TrophyGate/);
 assert.match(fixedLayout, /installTrophyRoadFeedback/);
+assert.match(fixedLayout, /r155-trophy-road-polish/);
 assert.ok(
   fixedLayout.indexOf('installM8TrophyGate') < fixedLayout.indexOf('installAchievements'),
   'Track access should be gated before achievement UI is installed'
@@ -245,13 +277,24 @@ assert.ok(
   'The accessibility layer should capture the complete locked vehicle names'
 );
 assert.match(roadCss, /overflow-x: auto/);
+assert.match(roadCss, /touch-action: pan-y/);
+assert.match(roadCss, /turn-trophy-road-scroll-button/);
 assert.match(roadCss, /translate\(-50%, -50%\)/);
 assert.match(roadCss, /turn-trophy-road-marker-lock/);
+assert.match(roadCss, /turn-track-lock-icon/);
+assert.match(roadCss, /color-mix\(in srgb, var\(--turn-action-success/,
+  'The filled Trophy Road segment needs stronger contrast from the unfilled rail');
+assert.match(roadCss, /turn-trophy-road-detail-model-host/);
+assert.match(roadCss, /turn-trophy-road-detail p[\s\S]*font-size: \.82rem/);
+assert.match(roadCss, /text-align: left/);
 assert.match(roadCss, /turn-unlock-notice/);
+assert.match(roadCss, /aria-disabled="true"/);
+assert.doesNotMatch(roadCss, /content: '🔒'/,
+  'Trophy Road track locks should use the shared vector lock rather than an emoji');
 assert.match(roadCss, /@media \(prefers-reduced-motion: reduce\)/);
 
 assert.match(vehicleCatalog, /\['vintage-racer',[\s\S]*speed: 4, acceleration: 4, control: 3, drift: 2, boostPower: 3, boostDuration: 2/);
 assert.match(vehicleCatalog, /\['race', 'Race Car',[\s\S]*speed: 5, acceleration: 4, control: 4, drift: 2, boostPower: 2, boostDuration: 1/);
 assert.match(workflow, /Run Trophy Road progression regression/);
 
-console.log('TURN Trophy Road feedback and progression regression passed.');
+console.log('TURN Trophy Road interaction, presentation and progression regression passed.');
