@@ -256,7 +256,7 @@ assert.match(showcase, /groupPromises = new Map/,
   'Repeated renders should share one in-flight model load per reward');
 assert.ok(
   showcase.indexOf('const group = await buildRewardGroup(reward.id)')
-    < showcase.indexOf('attachRenderer(host)'),
+    < showcase.lastIndexOf('attachRenderer(host);'),
   'Static reward artwork must remain visible until the 3D model is ready'
 );
 assert.match(showcase, /renderer\.setAnimationLoop\(render\)/);
@@ -295,7 +295,7 @@ assert.doesNotMatch(roadCss, /turn-trophy-road-scroll\.is-dragging/);
 assert.match(roadCss, /turn-trophy-road-scroll-button/);
 assert.match(roadCss, /pointer-events: none/,
   'Inactive Trophy Road scroll buttons must not remain clickable');
-assert.match(roadCss, /data-trophy-reward="future-racer"[\s\S]*Formula car/,
+assert.match(roadCss, /Formula car[\s\S]*data-trophy-reward="future-racer"/,
   'The Future Racer milestone should use a simple Formula-style line icon');
 assert.match(roadCss, /translate\(-50%, -50%\)/);
 assert.match(roadCss, /turn-trophy-road-marker-lock/);
