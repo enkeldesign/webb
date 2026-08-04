@@ -70,6 +70,17 @@ export function gateLotPaintNow(root = document.body) {
     });
   }
 
+  function ensureLockLabel() {
+    let label = colors.querySelector('.lot-paint-lock-copy');
+    if (label) return label;
+    label = document.createElement('span');
+    label.className = 'lot-paint-lock-copy';
+    label.setAttribute('aria-hidden', 'true');
+    label.innerHTML = '<strong>Paintjob</strong><i>•</i><b>LOCKED</b>';
+    colors.prepend(label);
+    return label;
+  }
+
   function ensureLockIcon() {
     let icon = colors.querySelector('.lot-paint-lock');
     if (icon) return icon;
@@ -77,8 +88,13 @@ export function gateLotPaintNow(root = document.body) {
     icon.className = 'lot-paint-lock';
     icon.setAttribute('aria-hidden', 'true');
     icon.innerHTML = LOCK_ICON;
-    colors.prepend(icon);
+    colors.append(icon);
     return icon;
+  }
+
+  function removeLockPresentation() {
+    colors.querySelector('.lot-paint-lock-copy')?.remove();
+    colors.querySelector('.lot-paint-lock')?.remove();
   }
 
   function setLockedInteraction(locked) {
@@ -88,13 +104,14 @@ export function gateLotPaintNow(root = document.body) {
       colors.tabIndex = 0;
       colors.setAttribute(
         'aria-label',
-        `Vehicle paint controls locked. Paintjob unlocks at ${threshold} trophies on Trophy Road.`
+        `Paintjob locked. Vehicle paint controls unlock at ${threshold} trophies on Trophy Road.`
       );
+      ensureLockLabel();
       ensureLockIcon();
       return;
     }
 
-    colors.querySelector('.lot-paint-lock')?.remove();
+    removeLockPresentation();
     if (originalRole == null) colors.removeAttribute('role');
     else colors.setAttribute('role', originalRole);
     if (originalTabIndex == null) colors.removeAttribute('tabindex');
@@ -140,8 +157,8 @@ export function gateLotPaintNow(root = document.body) {
   }
 
   const observer = new MutationObserver(sync);
-  // Observe only the car picker. The lock icon lives in the separate colour
-  // panel, so adding or removing it cannot recursively trigger this observer.
+  // Observe only the car picker. The lock presentation lives in the separate
+  // paint rail, so adding or removing it cannot recursively trigger this observer.
   observer.observe(picker, {
     childList: true,
     subtree: true,
@@ -178,7 +195,7 @@ export function gateLotPaintNow(root = document.body) {
     raceButton.removeEventListener('click', sync, { capture: true });
     colors.removeEventListener('click', handleLockedAreaClick);
     colors.removeEventListener('keydown', handleLockedAreaKeydown);
-    colors.querySelector('.lot-paint-lock')?.remove();
+    removeLockPresentation();
     for (const control of colors.querySelectorAll('.lot-color-control')) {
       control.hidden = false;
       const input = control.querySelector('input');

@@ -213,14 +213,14 @@ assert.match(design, /@media \(prefers-reduced-motion: reduce\)/);
 
 const releaseDefinition = JSON.parse(release);
 assert.deepEqual(releaseDefinition, {
-  version: '1.5.0',
-  id: '2026.08.04-r159',
-  cacheKey: '20260804-r159'
+  version: '1.5.1',
+  id: '2026.08.05-r160',
+  cacheKey: '20260805-r160'
 });
-assert.match(index, /TURN v1\.5\.0 · Build 2026\.08\.04-r159/);
-assert.match(index, /version: '1\.5\.0'/);
-assert.match(index, /id: '2026\.08\.04-r159'/);
-assert.match(index, /cacheKey: '20260804-r159'/);
+assert.match(index, /TURN v1\.5\.1 · Build 2026\.08\.05-r160/);
+assert.match(index, /version: '1\.5\.1'/);
+assert.match(index, /id: '2026\.08\.05-r160'/);
+assert.match(index, /cacheKey: '20260805-r160'/);
 assert.match(design, /TURN V\d+\.\d+\.\d+ · BUILD \d{4}\.\d{2}\.\d{2}-R\d+/);
 
 console.log('TURN primitive palette, semantic mappings, compatibility aliases and component reference passed.');

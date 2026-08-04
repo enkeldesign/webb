@@ -12,14 +12,14 @@ const [releaseSource, index, nextIndex, app, fixedLayout, unreadMarkers] = await
 
 const release = JSON.parse(releaseSource);
 assert.deepEqual(release, {
-  version: '1.5.0',
-  id: '2026.08.04-r159',
-  cacheKey: '20260804-r159'
+  version: '1.5.1',
+  id: '2026.08.05-r160',
+  cacheKey: '20260805-r160'
 });
-assert.match(index, /TURN v1\.5\.0 · Build 2026\.08\.04-r159/);
-assert.match(index, /app\.js\?build=20260804-r159-browser-consent-r159-startup-polish/);
-assert.match(nextIndex, /TURN NEXT · Source TURN v1\.5\.0 · Build 2026\.08\.04-r159/);
-assert.match(nextIndex, /turn-next\/app\.js\?source=20260804-r159-browser-consent/);
+assert.match(index, /TURN v1\.5\.1 · Build 2026\.08\.05-r160/);
+assert.match(index, /app\.js\?build=20260805-r160-browser-consent-r160-reward-detail-paint-rail/);
+assert.match(nextIndex, /TURN NEXT · Source TURN v1\.5\.1 · Build 2026\.08\.05-r160/);
+assert.match(nextIndex, /turn-next\/app\.js\?source=20260805-r160-browser-consent/);
 
 assert.match(app, /function installStartupCover\(\)/);
 assert.match(app, /copy\.textContent = 'Loading TURN'/);
@@ -43,4 +43,4 @@ assert.match(unreadMarkers, /Newly unlocked achievement\./);
 assert.match(unreadMarkers, /new MutationObserver\(queueDecoration\)/);
 assert.match(unreadMarkers, /listObserver\.observe\(list, \{ childList: true \}\)/);
 
-console.log('TURN 1.5.0 startup cover, fixed Home viewport and unread achievement markers passed.');
+console.log('TURN 1.5.1 startup cover, fixed Home viewport and unread achievement markers passed.');
