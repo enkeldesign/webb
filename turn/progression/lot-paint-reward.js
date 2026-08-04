@@ -84,42 +84,49 @@ export function gateLotPaintNow(root = document.body) {
     if (syncing) return;
     syncing = true;
 
-    const carId = selectedCarId(screen);
-    const car = CAR_BY_ID.get(carId);
-    const paintUnlocked = isPaintUnlocked();
-    const changedCar = Boolean(carId) && carId !== lastCarId;
-    const controls = [...colors.querySelectorAll('.lot-color-control:not(.lot-fixed-livery)')];
+    try {
+      const carId = selectedCarId(screen);
+      const car = CAR_BY_ID.get(carId);
+      const paintUnlocked = isPaintUnlocked();
+      const changedCar = Boolean(carId) && carId !== lastCarId;
+      const controls = [...colors.querySelectorAll('.lot-color-control:not(.lot-fixed-livery)')];
 
-    if (car && !car.fixedLivery && (!paintUnlocked || changedCar)) forceFactoryPaint(carId);
+      if (car && !car.fixedLivery && (!paintUnlocked || changedCar)) forceFactoryPaint(carId);
 
-    const locked = Boolean(car && !car.fixedLivery && !paintUnlocked);
-    colors.classList.toggle('is-paint-locked', locked);
-    colors.querySelector('.lot-paint-lock')?.remove();
+      const locked = Boolean(car && !car.fixedLivery && !paintUnlocked);
+      colors.classList.toggle('is-paint-locked', locked);
 
-    for (const control of controls) {
-      control.hidden = locked;
-      const input = control.querySelector('input');
-      if (input) input.disabled = locked;
+      for (const control of controls) {
+        control.hidden = locked;
+        const input = control.querySelector('input');
+        if (input) input.disabled = locked;
+      }
+
+      if (locked) {
+        ensureLockNotice();
+        colors.setAttribute('aria-label', 'Vehicle paint controls locked');
+      } else {
+        colors.querySelector('.lot-paint-lock')?.remove();
+        if (car && !car.fixedLivery) {
+          colors.setAttribute('aria-label', 'Choose car paint colours');
+        }
+      }
+
+      if (!paintWasUnlocked && paintUnlocked) {
+        window.dispatchEvent(new CustomEvent('turn:paint-controls-unlocked'));
+      }
+      paintWasUnlocked = paintUnlocked;
+      lastCarId = carId;
+      screen.dataset.turnPaintUnlocked = String(paintUnlocked);
+    } finally {
+      syncing = false;
     }
-
-    if (locked) {
-      ensureLockNotice();
-      colors.setAttribute('aria-label', 'Vehicle paint controls locked');
-    } else if (car && !car.fixedLivery) {
-      colors.setAttribute('aria-label', 'Choose car paint colours');
-    }
-
-    if (!paintWasUnlocked && paintUnlocked) {
-      window.dispatchEvent(new CustomEvent('turn:paint-controls-unlocked'));
-    }
-    paintWasUnlocked = paintUnlocked;
-    lastCarId = carId;
-    screen.dataset.turnPaintUnlocked = String(paintUnlocked);
-    syncing = false;
   }
 
   const observer = new MutationObserver(sync);
-  observer.observe(screen, {
+  // Observe only the car picker. The lock notice lives in the separate colour
+  // panel, so adding or removing it cannot recursively trigger this observer.
+  observer.observe(picker, {
     childList: true,
     subtree: true,
     attributes: true,
