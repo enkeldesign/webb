@@ -1,77 +1,107 @@
 import {
-  TROPHY_ICON,
   isTrackUnlocked,
-  rewardForTrack
-} from './trophy-road.js?revision=r153-trophy-road';
+  rewardForTrack,
+  showTrophyUnlockNotice
+} from './trophy-road.js?revision=r154-trophy-road-feedback';
 
 const LOCKED_TRACK_ID = 'midnight-city';
 
 export function installM8TrophyGate(homeApi = globalThis.__turnNextHome) {
   const home = document.querySelector('.m8-home');
   const card = home?.querySelector(`[data-track-id="${LOCKED_TRACK_ID}"]`);
-  const fallbackCard = home?.querySelector('[data-track-id="countryside"]');
   const continueButton = home?.querySelector('.m8-track-continue');
-  const status = home?.querySelector('.m8-home-status');
+  const choiceMarker = card?.querySelector('.track-card-choice-marker');
   const reward = rewardForTrack(LOCKED_TRACK_ID);
   if (!home || !card || !continueButton || !reward) return null;
 
   const originalLabel = card.getAttribute('aria-label') || 'Midnight City, hard track';
-  const lock = document.createElement('span');
-  lock.className = 'track-card-trophy-lock';
-  lock.innerHTML = `<span aria-hidden="true">${TROPHY_ICON}</span><strong>${reward.threshold} TROPHIES</strong>`;
-  card.appendChild(lock);
 
   function locked() {
     return !isTrackUnlocked(LOCKED_TRACK_ID);
   }
 
+  function selected() {
+    return homeApi?.getSelectedTrackId?.() === LOCKED_TRACK_ID
+      || card.getAttribute('aria-pressed') === 'true';
+  }
+
   function explainLock() {
-    if (status) {
-      status.textContent = `${reward.shortTitle} unlocks at ${reward.threshold} trophies on Trophy Road.`;
+    showTrophyUnlockNotice({ reward, itemName: reward.shortTitle });
+  }
+
+  function setRaceLocked(isLockedSelection) {
+    continueButton.classList.toggle('is-trophy-locked', isLockedSelection);
+    if (isLockedSelection) {
+      continueButton.dataset.trophyLocked = 'true';
+      if (!continueButton.disabled) {
+        continueButton.disabled = true;
+        continueButton.dataset.trophyGateDisabled = 'true';
+      }
+      continueButton.setAttribute(
+        'aria-label',
+        `Race on ${reward.shortTitle}, locked. Unlocks at ${reward.threshold} trophies.`
+      );
+      return;
     }
+
+    delete continueButton.dataset.trophyLocked;
+    if (continueButton.dataset.trophyGateDisabled === 'true') {
+      continueButton.disabled = false;
+      delete continueButton.dataset.trophyGateDisabled;
+    }
+    if (selected()) continueButton.setAttribute('aria-label', `Race on ${reward.shortTitle}`);
   }
 
   function sync() {
     const isLocked = locked();
     card.dataset.trophyLocked = String(isLocked);
     card.classList.toggle('is-trophy-locked', isLocked);
-    card.setAttribute('aria-disabled', String(isLocked));
     card.setAttribute(
       'aria-label',
       isLocked
-        ? `${reward.shortTitle}, locked. Unlocks at ${reward.threshold} trophies.`
+        ? `${reward.shortTitle}, locked. Unlocks at ${reward.threshold} trophies. Select for unlock information.`
         : originalLabel
     );
-    lock.hidden = !isLocked;
-
-    if (isLocked && card.getAttribute('aria-pressed') === 'true') {
-      fallbackCard?.click();
-    }
+    if (choiceMarker) choiceMarker.dataset.trophyLock = String(isLocked);
+    setRaceLocked(isLocked && selected());
   }
 
-  card.addEventListener('click', (event) => {
-    if (!locked()) return;
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    explainLock();
-    card.focus();
-  }, { capture: true });
+  card.addEventListener('click', () => {
+    if (locked()) explainLock();
+    sync();
+  });
 
   continueButton.addEventListener('click', (event) => {
-    if (homeApi?.getSelectedTrackId?.() !== LOCKED_TRACK_ID || !locked()) return;
+    if (!selected() || !locked()) return;
     event.preventDefault();
     event.stopImmediatePropagation();
     explainLock();
     card.focus();
   }, { capture: true });
 
-  window.addEventListener('turn:trophy-road-updated', sync);
-  window.addEventListener('storage', (event) => {
-    if (event.key === 'turn-achievements-v1') sync();
+  const selectionObserver = new MutationObserver(sync);
+  selectionObserver.observe(card, {
+    attributes: true,
+    attributeFilter: ['aria-pressed']
   });
+
+  const handleStorage = (event) => {
+    if (event.key === 'turn-achievements-v1') sync();
+  };
+  window.addEventListener('turn:trophy-road-updated', sync);
+  window.addEventListener('storage', handleStorage);
   sync();
 
-  const api = Object.freeze({ sync, card, reward });
+  const api = Object.freeze({
+    sync,
+    card,
+    reward,
+    disconnect() {
+      selectionObserver.disconnect();
+      window.removeEventListener('turn:trophy-road-updated', sync);
+      window.removeEventListener('storage', handleStorage);
+    }
+  });
   globalThis.__turnM8TrophyGate = api;
   return api;
 }
