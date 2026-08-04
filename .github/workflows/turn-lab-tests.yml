@@ -154,6 +154,9 @@ jobs:
       - name: Run achievement system regression
         run: node turn-lab/tests/achievements-production.mjs
 
+      - name: Run Trophy Road progression regression
+        run: node turn-lab/tests/trophy-road-production.mjs
+
       - name: Run production sound foundation regression
         run: node turn-lab/tests/audio-foundation-production.mjs
 

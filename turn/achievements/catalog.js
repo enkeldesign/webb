@@ -1,7 +1,7 @@
 import {
   TIME_TRIALS,
   TIME_TRIAL_ACHIEVEMENT_IDS
-} from './time-trials.js?revision=r152-developer-time-trials';
+} from './time-trials.js?revision=r153-trophy-road';
 
 export const TRACK_IDS = Object.freeze([
   'countryside',
@@ -78,26 +78,26 @@ export const ICONS = Object.freeze({
 });
 
 export const ACHIEVEMENTS = Object.freeze([
-  Object.freeze({ id: 'first-turn', category: CATEGORY.ONBOARDING, points: 25, title: 'FIRST TURN', description: 'Finish any valid lap.', icon: 'flag' }),
-  Object.freeze({ id: 'take-it-from-the-top', category: CATEGORY.ONBOARDING, points: 25, title: 'TAKE IT FROM THE TOP', description: 'Use Restart Lap after the current lap becomes void.', icon: 'restart' }),
-  Object.freeze({ id: 'charge-through-it', category: CATEGORY.ONBOARDING, points: 25, title: 'CHARGE THROUGH IT', description: 'Recharge at least 25% of the Boost meter while drifting in one lap.', icon: 'charge', progressMax: 25 }),
-  Object.freeze({ id: 'second-wind', category: CATEGORY.ONBOARDING, points: 25, title: 'SECOND WIND', description: 'Run Boost empty, let it recharge, then activate Boost again.', icon: 'wind' }),
-  Object.freeze({ id: 'flow-state', category: CATEGORY.ONBOARDING, points: 50, title: 'FLOW STATE', description: 'Finish a valid lap using only Drift and Boost for forward drive.', recommendation: 'Recommended: Training Car · Countryside', icon: 'flow' }),
-  Object.freeze({ id: 'watch-and-learn', category: CATEGORY.ONBOARDING, points: 25, title: 'WATCH AND LEARN', description: 'Spectate a rival for five seconds, then return to the start.', icon: 'spectate', progressMax: 5 }),
-  Object.freeze({ id: 'your-own-rival', category: CATEGORY.ONBOARDING, points: 25, title: 'YOUR OWN RIVAL', description: 'Finish a valid lap with one of your saved rivals on the track.', icon: 'rival' }),
-  Object.freeze({ id: 'level-head', category: CATEGORY.ONBOARDING, points: 25, title: 'LEVEL HEAD', description: 'Recalibrate, then finish a valid lap.', icon: 'level' }),
-  Object.freeze({ id: 'new-wheels', category: CATEGORY.ONBOARDING, points: 25, title: 'NEW WHEELS', description: 'Finish a valid lap with a vehicle other than the Training Car.', icon: 'wheel' }),
-  Object.freeze({ id: 'new-ground', category: CATEGORY.ONBOARDING, points: 25, title: 'NEW GROUND', description: 'Finish valid laps on two different tracks.', icon: 'map', progressMax: 2 }),
-  Object.freeze({ id: 'trust-your-ears', category: CATEGORY.WAYS_TO_PLAY, points: 200, title: 'TRUST YOUR EARS', description: 'Finish a valid lap with Blank screen mode on from start to finish.', icon: 'blind' }),
-  Object.freeze({ id: 'listen-closely', category: CATEGORY.WAYS_TO_PLAY, points: 50, title: 'LISTEN CLOSELY', description: 'Set Sound balance to at least 75% Drive By Ear, then drive for ten seconds with Blank screen mode on.', recommendation: 'Recommended for non-visual driving: 90% Drive By Ear', icon: 'listen', progressMax: 10 }),
-  Object.freeze({ id: 'beyond-sight', category: CATEGORY.WAYS_TO_PLAY, points: 300, title: 'BEYOND SIGHT', description: 'Finish a valid lap on every track with Blank screen mode on from start to finish.', icon: 'blindRoute', progressMax: TRACK_IDS.length }),
-  Object.freeze({ id: 'around-the-turn', category: CATEGORY.EXPLORATION, points: 100, title: 'AROUND THE TURN', description: 'Finish a valid lap on every track.', icon: 'route', progressMax: TRACK_IDS.length }),
-  Object.freeze({ id: 'ahead-of-yourself', category: CATEGORY.RACING, points: 50, title: 'AHEAD OF YOURSELF', description: 'Finish first in a lap with at least one saved rival.', icon: 'trophy' }),
-  Object.freeze({ id: 'night-shift-sheriff', category: CATEGORY.RACING, points: 100, title: 'NIGHT SHIFT SHERIFF', description: 'In Midnight City, use the Police Car to beat four non-police rivals. Overtake each one while Boost is active.', icon: 'siren', progressMax: 4 }),
+  Object.freeze({ id: 'first-turn', category: CATEGORY.ONBOARDING, trophies: 25, title: 'FIRST TURN', description: 'Finish any valid lap.', icon: 'flag' }),
+  Object.freeze({ id: 'take-it-from-the-top', category: CATEGORY.ONBOARDING, trophies: 25, title: 'TAKE IT FROM THE TOP', description: 'Use Restart Lap after the current lap becomes void.', icon: 'restart' }),
+  Object.freeze({ id: 'charge-through-it', category: CATEGORY.ONBOARDING, trophies: 25, title: 'CHARGE THROUGH IT', description: 'Recharge at least 25% of the Boost meter while drifting in one lap.', icon: 'charge', progressMax: 25 }),
+  Object.freeze({ id: 'second-wind', category: CATEGORY.ONBOARDING, trophies: 25, title: 'SECOND WIND', description: 'Run Boost empty, let it recharge, then activate Boost again.', icon: 'wind' }),
+  Object.freeze({ id: 'flow-state', category: CATEGORY.ONBOARDING, trophies: 50, title: 'FLOW STATE', description: 'Finish a valid lap using only Drift and Boost for forward drive.', recommendation: 'Recommended: Training Car · Countryside', icon: 'flow' }),
+  Object.freeze({ id: 'watch-and-learn', category: CATEGORY.ONBOARDING, trophies: 25, title: 'WATCH AND LEARN', description: 'Spectate a rival for five seconds, then return to the start.', icon: 'spectate', progressMax: 5 }),
+  Object.freeze({ id: 'your-own-rival', category: CATEGORY.ONBOARDING, trophies: 25, title: 'YOUR OWN RIVAL', description: 'Finish a valid lap with one of your saved rivals on the track.', icon: 'rival' }),
+  Object.freeze({ id: 'level-head', category: CATEGORY.ONBOARDING, trophies: 25, title: 'LEVEL HEAD', description: 'Recalibrate, then finish a valid lap.', icon: 'level' }),
+  Object.freeze({ id: 'new-wheels', category: CATEGORY.ONBOARDING, trophies: 25, title: 'NEW WHEELS', description: 'Finish a valid lap with a vehicle other than the Training Car.', icon: 'wheel' }),
+  Object.freeze({ id: 'new-ground', category: CATEGORY.ONBOARDING, trophies: 25, title: 'NEW GROUND', description: 'Finish valid laps on two different tracks.', icon: 'map', progressMax: 2 }),
+  Object.freeze({ id: 'trust-your-ears', category: CATEGORY.WAYS_TO_PLAY, trophies: 200, title: 'TRUST YOUR EARS', description: 'Finish a valid lap with Blank screen mode on from start to finish.', icon: 'blind' }),
+  Object.freeze({ id: 'listen-closely', category: CATEGORY.WAYS_TO_PLAY, trophies: 50, title: 'LISTEN CLOSELY', description: 'Set Sound balance to at least 75% Drive By Ear, then drive for ten seconds with Blank screen mode on.', recommendation: 'Recommended for non-visual driving: 90% Drive By Ear', icon: 'listen', progressMax: 10 }),
+  Object.freeze({ id: 'beyond-sight', category: CATEGORY.WAYS_TO_PLAY, trophies: 300, title: 'BEYOND SIGHT', description: 'Finish a valid lap on every track with Blank screen mode on from start to finish.', icon: 'blindRoute', progressMax: TRACK_IDS.length }),
+  Object.freeze({ id: 'around-the-turn', category: CATEGORY.EXPLORATION, trophies: 100, title: 'AROUND THE TURN', description: 'Finish a valid lap on every track.', icon: 'route', progressMax: TRACK_IDS.length }),
+  Object.freeze({ id: 'ahead-of-yourself', category: CATEGORY.RACING, trophies: 50, title: 'AHEAD OF YOURSELF', description: 'Finish first in a lap with at least one saved rival.', icon: 'trophy' }),
+  Object.freeze({ id: 'night-shift-sheriff', category: CATEGORY.RACING, trophies: 100, title: 'NIGHT SHIFT SHERIFF', description: 'In Midnight City, use the Police Car to beat four non-police rivals. Overtake each one while Boost is active.', icon: 'siren', progressMax: 4 }),
   ...TIME_TRIALS.map((trial) => Object.freeze({
     id: trial.id,
     category: CATEGORY.TIME_TRIALS,
-    points: 25,
+    trophies: 25,
     title: trial.title,
     description: trial.description,
     recommendation: 'Recommended: Future Racer',
@@ -106,7 +106,7 @@ export const ACHIEVEMENTS = Object.freeze([
   Object.freeze({
     id: 'faster-than-the-dev',
     category: CATEGORY.TIME_TRIALS,
-    points: 100,
+    trophies: 100,
     title: 'FASTER THAN THE DEV',
     description: 'Beat every developer target time.',
     recommendation: 'The target times were set with the Future Racer.',

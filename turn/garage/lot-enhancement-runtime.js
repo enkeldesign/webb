@@ -1,8 +1,10 @@
 import { installLotStatLegend } from './lot-stat-legend.js?build=20260724-r59';
 import { installLotLayout } from './lot-layout-r60.js?build=20260729-r116';
 import { installLotAccessibility } from './lot-accessibility-r118.js?build=20260729-r118';
+import { gateLotNow } from '../progression/lot-trophy-gate.js?revision=r153-trophy-road';
 
 const ENHANCEMENT_ID = 'enhanced-lot-r121';
+const TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r153-trophy-road';
 const activeEnhancements = new WeakMap();
 
 function findLotScreen(root) {
@@ -18,6 +20,9 @@ export function enhanceLotNow(root = document.body) {
   if (active) return active.release;
 
   const scope = screen.parentElement || document.body;
+  // Trophy gating runs first so the accessibility layer captures complete
+  // locked-state names for every vehicle radio.
+  const removeTrophyGate = gateLotNow(scope);
   const removeStatLegend = installLotStatLegend(scope);
   const removeLayout = installLotLayout(scope);
   const removeAccessibility = installLotAccessibility(scope);
@@ -29,6 +34,7 @@ export function enhanceLotNow(root = document.body) {
     removeAccessibility();
     removeLayout();
     removeStatLegend();
+    removeTrophyGate();
     activeEnhancements.delete(screen);
     delete screen.dataset.lotEnhancements;
   };
@@ -57,6 +63,7 @@ export function installLotEnhancementRuntime(root = document.body) {
 
   const runtime = Object.freeze({
     id: ENHANCEMENT_ID,
+    trophyRoadId: TROPHY_ROAD_ENHANCEMENT_ID,
     sync,
     disconnect() {
       observer.disconnect();
@@ -68,5 +75,6 @@ export function installLotEnhancementRuntime(root = document.body) {
 
   globalThis.__turnLotEnhancements = runtime;
   document.documentElement.dataset.turnLotEnhancements = ENHANCEMENT_ID;
+  document.documentElement.dataset.turnTrophyRoadLot = TROPHY_ROAD_ENHANCEMENT_ID;
   return runtime;
 }
