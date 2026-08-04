@@ -53,7 +53,7 @@ assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r160-bottom-paint-rail/
 assert.match(app, /lot-enhancement-runtime\.js\?revision=r121&trophy-road=r159&paint=r159-paint-lock-observer/);
 assert.match(
   index,
-  new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r159-startup-polish`)
+  new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r160-reward-detail-paint-rail`)
 );
 
 console.log('TURN locked Paintjob rail remains compact, explainable, below the viewer and free from observer loops.');
