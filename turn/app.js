@@ -242,7 +242,7 @@ if (buildLabel) {
   buildLabel.textContent = `TURN V${release?.version || ''} · BUILD ${(release?.id || '').toUpperCase()}`;
 }
 const { installM8HomeFixedLayout } = await import(
-  withBuild('./m8-home-fixed-layout.js?revision=m8.9-track-title-alignment&trophy-road=r157')
+  withBuild('./m8-home-fixed-layout.js?revision=m8.9-track-title-alignment&trophy-road=r158-race-freeze-hotfix')
 );
 await installM8HomeFixedLayout();
 installStylesheet(
