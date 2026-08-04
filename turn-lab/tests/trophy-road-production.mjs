@@ -190,8 +190,6 @@ assert.match(roadSource, /LOCK_ICON/);
 assert.match(roadSource, /showTrophyUnlockNotice/);
 assert.match(roadSource, /PREPARED_STORAGE = new WeakSet/);
 assert.match(roadSource, /globalThis\.__turnAchievements\?\.store/);
-assert.match(roadSource, /future: '[^']*circle cx="18" cy="39"[^']*circle cx="49" cy="39"/,
-  'The Future Racer reward marker should use a recognisable race-car silhouette');
 assert.doesNotMatch(roadSource, /clearRivals|resetRivals|rival-storage/);
 
 assert.match(homeGate, /showTrophyUnlockNotice/);
@@ -225,12 +223,18 @@ assert.match(feedback, /turn-trophy-road-scroll/);
 assert.match(feedback, /turn-trophy-road-scroll-button/);
 assert.match(feedback, /Scroll Trophy Road/);
 assert.match(feedback, /scrollBy\(\{/);
-assert.match(feedback, /pointerdown/);
-assert.match(feedback, /pointermove/);
-assert.match(feedback, /setPointerCapture/);
+assert.match(feedback, /previousButton\.disabled = atStart/,
+  'The left scroll button must be truly inactive at the start of the road');
+assert.match(feedback, /syncScrollButtons: updateScrollButtons/);
+assert.doesNotMatch(feedback, /pointerdown|pointermove|setPointerCapture/,
+  'Custom Trophy Road drag scrolling should remain disabled until it is reliable');
 assert.match(feedback, /createTrophyRoadShowcase/);
 assert.match(feedback, /TROPHY_ROAD_REWARD_ICONS/);
 assert.match(feedback, /selectedByPlayer = ''/);
+assert.match(feedback, /selectedByPlayer = marker\.dataset\.trophyReward;[\s\S]*preserveUserSelection\(\);/,
+  'Reward details must synchronize after the base view finishes the same click');
+assert.doesNotMatch(feedback, /queueMicrotask\(preserveUserSelection\)/,
+  'Reward selection must not race a deferred duplicate render');
 assert.match(feedback, /clearSelection\(\)/);
 assert.match(feedback, /resetView\(\)/);
 assert.match(feedback, /CATEGORY\.WAYS_TO_PLAY/);
@@ -248,6 +252,13 @@ assert.match(showcase, /'race-future'/);
 assert.match(showcase, /'firetruck'/);
 assert.match(showcase, /'ambulance'/);
 assert.match(showcase, /'police'/);
+assert.match(showcase, /groupPromises = new Map/,
+  'Repeated renders should share one in-flight model load per reward');
+assert.ok(
+  showcase.indexOf('const group = await buildRewardGroup(reward.id)')
+    < showcase.lastIndexOf('attachRenderer(host);'),
+  'Static reward artwork must remain visible until the 3D model is ready'
+);
 assert.match(showcase, /renderer\.setAnimationLoop\(render\)/);
 assert.match(showcase, /visual\.rotation\.y/);
 assert.match(showcase, /aria-hidden/);
@@ -261,13 +272,13 @@ assert.ok(
   app.indexOf('prepareTrophyRoadProfile();') < app.indexOf("await import(withBuild('./main.js'))"),
   'Grandfathering must be prepared before the runtime loads the saved vehicle selection'
 );
-assert.match(app, /trophy-road\.js\?revision=r155-trophy-road-polish/);
-assert.match(app, /trophy-road\.css\?revision=r155-trophy-road-polish/);
-assert.match(app, /m8-home-fixed-layout\.js\?revision=m8\.9-track-title-alignment&trophy-road=r155/);
+assert.match(app, /trophy-road\.js\?revision=r156-trophy-road-selection/);
+assert.match(app, /trophy-road\.css\?revision=r156-trophy-road-selection/);
+assert.match(app, /m8-home-fixed-layout\.js\?revision=m8\.9-track-title-alignment&trophy-road=r156/);
 assert.match(app, /lot-enhancement-runtime\.js\?revision=r121&trophy-road=r154/);
 assert.match(fixedLayout, /installM8TrophyGate/);
 assert.match(fixedLayout, /installTrophyRoadFeedback/);
-assert.match(fixedLayout, /r155-trophy-road-polish/);
+assert.match(fixedLayout, /r156-trophy-road-selection/);
 assert.ok(
   fixedLayout.indexOf('installM8TrophyGate') < fixedLayout.indexOf('installAchievements'),
   'Track access should be gated before achievement UI is installed'
@@ -279,7 +290,13 @@ assert.ok(
 );
 assert.match(roadCss, /overflow-x: auto/);
 assert.match(roadCss, /touch-action: pan-y/);
+assert.match(roadCss, /cursor: default/);
+assert.doesNotMatch(roadCss, /turn-trophy-road-scroll\.is-dragging/);
 assert.match(roadCss, /turn-trophy-road-scroll-button/);
+assert.match(roadCss, /pointer-events: none/,
+  'Inactive Trophy Road scroll buttons must not remain clickable');
+assert.match(roadCss, /Formula car[\s\S]*data-trophy-reward="future-racer"/,
+  'The Future Racer milestone should use a simple Formula-style line icon');
 assert.match(roadCss, /translate\(-50%, -50%\)/);
 assert.match(roadCss, /turn-trophy-road-marker-lock/);
 assert.match(roadCss, /turn-track-lock-icon/);

@@ -80,11 +80,11 @@ installStylesheet(
   'data-turn-lot-layout-r121'
 );
 installStylesheet(
-  './progression/trophy-road.css?revision=r155-trophy-road-polish',
+  './progression/trophy-road.css?revision=r156-trophy-road-selection',
   'data-turn-trophy-road'
 );
 const { prepareTrophyRoadProfile } = await import(
-  withBuild('./progression/trophy-road.js?revision=r155-trophy-road-polish')
+  withBuild('./progression/trophy-road.js?revision=r156-trophy-road-selection')
 );
 prepareTrophyRoadProfile();
 
@@ -217,7 +217,7 @@ installStylesheet(
 );
 installStylesheet('./rival-reset-context-r127.css', 'data-turn-rival-reset-context');
 const { installM8HomeNavigation } = await import(
-  withBuild('./m8-home.js?revision=r131-motion-permission-retry&trophy-road=r155')
+  withBuild('./m8-home.js?revision=r131-motion-permission-retry&trophy-road=r154')
 );
 const home = await installM8HomeNavigation();
 globalThis.__turnHome = home;
@@ -236,7 +236,7 @@ if (buildLabel) {
   buildLabel.textContent = `TURN V${release?.version || ''} · BUILD ${(release?.id || '').toUpperCase()}`;
 }
 const { installM8HomeFixedLayout } = await import(
-  withBuild('./m8-home-fixed-layout.js?revision=m8.9-track-title-alignment&trophy-road=r155')
+  withBuild('./m8-home-fixed-layout.js?revision=m8.9-track-title-alignment&trophy-road=r156')
 );
 await installM8HomeFixedLayout();
 installStylesheet(

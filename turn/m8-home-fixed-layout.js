@@ -110,7 +110,7 @@ export async function installM8HomeFixedLayout() {
   );
   const achievements = installAchievements(globalThis.__turnRuntime);
   const { installTrophyRoadFeedback } = await import(
-    `/turn/achievements/trophy-road-feedback.js?build=${buildKey}-r155-trophy-road-polish`
+    `/turn/achievements/trophy-road-feedback.js?build=${buildKey}-r156-trophy-road-selection`
   );
   const trophyRoadFeedback = installTrophyRoadFeedback(achievements);
 

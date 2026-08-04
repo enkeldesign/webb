@@ -69,11 +69,13 @@
   stroke-linejoin: round;
 }
 
-.turn-trophy-road-scroll-button:disabled {
+.turn-trophy-road-scroll-button:disabled,
+.turn-trophy-road-scroll-button[aria-disabled="true"] {
   background: var(--turn-muted, #d6d0c2);
   box-shadow: none;
   cursor: default;
-  opacity: .45;
+  opacity: .32;
+  pointer-events: none;
 }
 
 .turn-trophy-road-scroll {
@@ -85,13 +87,8 @@
   scrollbar-color: var(--turn-ink, #08090a) var(--turn-muted, #d6d0c2);
   scrollbar-width: thin;
   touch-action: pan-y;
-  cursor: grab;
+  cursor: default;
   -webkit-overflow-scrolling: touch;
-}
-
-.turn-trophy-road-scroll.is-dragging {
-  cursor: grabbing;
-  user-select: none;
 }
 
 .turn-trophy-road-scroll:focus-visible {
@@ -171,6 +168,20 @@
   width: 32px;
   height: 25px;
   place-items: center;
+}
+
+/* A compact side-profile Formula car: front wing, long nose, cockpit and rear wing. */
+.turn-trophy-road-marker[data-trophy-reward="future-racer"] .turn-trophy-road-marker-icon svg {
+  display: none;
+}
+
+.turn-trophy-road-marker[data-trophy-reward="future-racer"] .turn-trophy-road-marker-icon::before {
+  content: '';
+  width: 100%;
+  height: 100%;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 48'%3E%3Cpath d='M3 32h12l7-5 4-10h10l5 9h10l3-8h7v7h-7l7 7v5H4Z' fill='none' stroke='black' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M23 27h28M29 17l5 10M5 27v-6h13M52 18h9M53 24h8' fill='none' stroke='black' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='18' cy='39' r='5' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle cx='49' cy='39' r='5' fill='none' stroke='black' stroke-width='3'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 48'%3E%3Cpath d='M3 32h12l7-5 4-10h10l5 9h10l3-8h7v7h-7l7 7v5H4Z' fill='none' stroke='black' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M23 27h28M29 17l5 10M5 27v-6h13M52 18h9M53 24h8' fill='none' stroke='black' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='18' cy='39' r='5' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle cx='49' cy='39' r='5' fill='none' stroke='black' stroke-width='3'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
 .turn-trophy-road-marker svg,
@@ -279,9 +290,15 @@
   content: 'LOADING 3D…';
   display: grid;
   grid-area: 1 / 1;
-  place-items: center;
-  font-size: .62rem;
+  place-items: end center;
+  padding-bottom: 4px;
+  font-size: .56rem;
   letter-spacing: .08em;
+}
+
+.turn-trophy-road-detail-model-host.is-loading > svg {
+  grid-area: 1 / 1;
+  opacity: .7;
 }
 
 .turn-trophy-road-detail span {
