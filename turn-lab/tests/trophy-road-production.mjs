@@ -46,16 +46,14 @@ function createMemoryStorage(initial = {}) {
     },
     removeItem(key) {
       memory.delete(key);
-    },
-    snapshot() {
-      return new Map(memory);
     }
   };
 }
 
 assert.equal(TROPHY_ROAD_STORAGE_KEY, 'turn-achievements-v1');
 assert.equal(TROPHY_ROAD_STORAGE_VERSION, 3);
-assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 500);
+assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 1300,
+  'The visible road should continue through the complete current trophy collection');
 assert.deepEqual(
   TROPHY_ROAD_REWARDS.map(({ id, threshold }) => [id, threshold]),
   [
@@ -144,9 +142,11 @@ const permanentReward = normalizeAchievementState({
 assert.deepEqual(permanentReward.rewards.unlocked, ['emergency-pack'],
   'Once awarded, a reward must remain owned even if thresholds change later');
 
+assert.match(roadSource, /TROPHY_ROAD_MAX_THRESHOLD = 1300/);
 assert.match(roadSource, /threshold: 200/);
 assert.match(roadSource, /threshold: 400/);
 assert.match(roadSource, /threshold: 500/);
+assert.match(roadSource, /turn-drive-by-ear-v1/);
 assert.match(roadSource, /prepareTrophyRoadProfile/);
 assert.match(roadSource, /Number\(state\.version \|\| 0\) < TROPHY_ROAD_STORAGE_VERSION/);
 assert.doesNotMatch(roadSource, /clearRivals|resetRivals|rival-storage/);
