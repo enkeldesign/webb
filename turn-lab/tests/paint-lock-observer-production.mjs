@@ -17,8 +17,8 @@ assert.match(paintGate, /observer\.observe\(picker,/,
   'Paint synchronization must observe the car picker rather than the whole Lot screen');
 assert.doesNotMatch(paintGate, /observer\.observe\(screen,/,
   'The lock presentation must not be inside the paint observer target');
-assert.match(syncBody, /setLockedInteraction\(locked\)/,
-  'Paint synchronization must retain or remove the compact rail according to the current state');
+assert.match(syncBody, /setLockedInteraction\(locked, carId\)/,
+  'Paint synchronization must retain the compact rail and recolour its lock for the current car');
 assert.doesNotMatch(syncBody, /lot-paint-lock[\s\S]*remove\(\);[\s\S]*if \(locked\)/,
   'A synchronization pass must never remove and immediately recreate its own lock icon');
 assert.match(paintGate, /try \{[\s\S]*\} finally \{[\s\S]*syncing = false/,
@@ -30,7 +30,16 @@ assert.match(paintGate, /colors\.addEventListener\('keydown', handleLockedAreaKe
 assert.match(paintGate, /colors\.setAttribute\('role', 'button'\)/);
 assert.match(paintGate, /colors\.tabIndex = 0/);
 assert.match(paintGate, /lot-paint-lock-copy/);
-assert.match(paintGate, /<strong>Paintjob<\/strong><i>•<\/i><b>LOCKED<\/b>/);
+assert.match(paintGate, /<strong>PAINTJOB<\/strong>/);
+assert.doesNotMatch(paintGate, /<i>•<\/i>|<b>LOCKED<\/b>/,
+  'Visible lock-status copy must not crowd out the Paintjob label');
+assert.match(paintGate, /function contrastingInk\(hexColor\)/);
+assert.match(paintGate, /luminance > 0\.36 \? '#08090a' : '#fffdf6'/,
+  'The lock glyph must switch between dark and light ink according to the car colour');
+assert.match(paintGate, /--lot-paint-lock-background/);
+assert.match(paintGate, /--lot-paint-lock-foreground/);
+assert.match(paintGate, /getVehicleDefaultColor\(carId\)/,
+  'The locked swatch must represent the selected car factory colour');
 assert.doesNotMatch(paintGate, /document\.createElement\('button'\)[\s\S]*lot-paint-lock/,
   'The compact lock must not create a nested oversized button');
 assert.match(paintCss, /\.lot-colors\.is-paint-locked[\s\S]*min-height: 54px/);
@@ -48,12 +57,17 @@ const paintLockRule = paintCss.match(/\.lot-paint-lock\s*\{([\s\S]*?)\}/)?.[1] |
 assert.ok(paintLockRule, 'The compact paint lock must have its own CSS rule');
 assert.match(paintLockRule, /width: 36px/);
 assert.match(paintLockRule, /height: 36px/);
+assert.match(paintLockRule, /background: var\(--lot-paint-lock-background/);
+assert.match(paintLockRule, /color: var\(--lot-paint-lock-foreground/);
+assert.match(paintLockRule, /border: 2px solid var\(--turn-ink/,
+  'The swatch keeps the TURN black outline even when the lock glyph needs white contrast');
 assert.doesNotMatch(paintLockRule, /width: 100%/);
-assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r160-bottom-paint-rail/);
-assert.match(app, /lot-enhancement-runtime\.js\?revision=r121&trophy-road=r159&paint=r159-paint-lock-observer/);
+assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r161-car-colour-lock/);
+assert.match(app, /trophy-road-r157\.css\?revision=r161-car-colour-lock/);
+assert.match(app, /lot-enhancement-runtime\.js\?revision=r121&trophy-road=r159&paint=r161-car-colour-lock/);
 assert.match(
   index,
   new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r160-reward-detail-paint-rail`)
 );
 
-console.log('TURN locked Paintjob rail remains compact, explainable, below the viewer and free from observer loops.');
+console.log('TURN Paintjob rail shows the full label and a contrast-safe factory-colour lock swatch.');
