@@ -30,6 +30,19 @@ function setInputValue(input, value) {
   input.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
+function contrastingInk(hexColor) {
+  const match = /^#([0-9a-f]{6})$/i.exec(hexColor || '');
+  if (!match) return '#08090a';
+  const channels = [0, 2, 4].map((offset) => Number.parseInt(match[1].slice(offset, offset + 2), 16) / 255);
+  const linear = channels.map((channel) => (
+    channel <= 0.04045
+      ? channel / 12.92
+      : ((channel + 0.055) / 1.055) ** 2.4
+  ));
+  const luminance = linear[0] * 0.2126 + linear[1] * 0.7152 + linear[2] * 0.0722;
+  return luminance > 0.36 ? '#08090a' : '#fffdf6';
+}
+
 export function gateLotPaintNow(root = document.body) {
   const screen = findLotScreen(root);
   if (!screen) return () => {};
@@ -76,19 +89,27 @@ export function gateLotPaintNow(root = document.body) {
     label = document.createElement('span');
     label.className = 'lot-paint-lock-copy';
     label.setAttribute('aria-hidden', 'true');
-    label.innerHTML = '<strong>Paintjob</strong><i>•</i><b>LOCKED</b>';
+    label.innerHTML = '<strong>PAINTJOB</strong>';
     colors.prepend(label);
     return label;
   }
 
-  function ensureLockIcon() {
+  function applyLockColour(icon, carId) {
+    const bodyColour = getVehicleDefaultColor(carId);
+    icon.style.setProperty('--lot-paint-lock-background', bodyColour);
+    icon.style.setProperty('--lot-paint-lock-foreground', contrastingInk(bodyColour));
+  }
+
+  function ensureLockIcon(carId) {
     let icon = colors.querySelector('.lot-paint-lock');
-    if (icon) return icon;
-    icon = document.createElement('span');
-    icon.className = 'lot-paint-lock';
-    icon.setAttribute('aria-hidden', 'true');
-    icon.innerHTML = LOCK_ICON;
-    colors.append(icon);
+    if (!icon) {
+      icon = document.createElement('span');
+      icon.className = 'lot-paint-lock';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.innerHTML = LOCK_ICON;
+      colors.append(icon);
+    }
+    applyLockColour(icon, carId);
     return icon;
   }
 
@@ -97,7 +118,7 @@ export function gateLotPaintNow(root = document.body) {
     colors.querySelector('.lot-paint-lock')?.remove();
   }
 
-  function setLockedInteraction(locked) {
+  function setLockedInteraction(locked, carId) {
     if (locked) {
       const threshold = reward()?.threshold || 500;
       colors.setAttribute('role', 'button');
@@ -107,7 +128,7 @@ export function gateLotPaintNow(root = document.body) {
         `Paintjob locked. Vehicle paint controls unlock at ${threshold} trophies on Trophy Road.`
       );
       ensureLockLabel();
-      ensureLockIcon();
+      ensureLockIcon(carId);
       return;
     }
 
@@ -140,7 +161,7 @@ export function gateLotPaintNow(root = document.body) {
         if (input) input.disabled = locked;
       }
 
-      setLockedInteraction(locked);
+      setLockedInteraction(locked, carId);
       if (!locked && car && !car.fixedLivery) {
         colors.setAttribute('aria-label', 'Choose car paint colours');
       }
