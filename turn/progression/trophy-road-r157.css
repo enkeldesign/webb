@@ -48,32 +48,80 @@
 }
 
 .lot-colors.is-paint-locked {
-  position: relative;
   min-height: 54px;
   display: grid;
   place-items: center;
-  border: var(--turn-border-compact, 3px) solid var(--turn-ink, #08090a);
-  border-radius: var(--turn-radius-compact, 12px);
-  background: var(--turn-action-warning, #ffd43b);
   color: var(--turn-ink, #08090a);
-  box-shadow: var(--turn-shadow-compact, 3px 3px 0 #08090a);
   cursor: help;
+}
+
+/* The locked state remains the paint rail below the 3D preview. A more general
+   lock rule must never restore normal flow and cover the viewer. */
+.lot-viewbox-with-paint .lot-colors.is-paint-locked {
+  position: absolute;
+  z-index: 4;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  box-sizing: border-box;
+  min-height: var(--lot-paint-rail-height, 54px);
+  margin: 0;
+  padding: 7px 10px 7px 14px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  place-items: center stretch;
+  border: 0;
+  border-top: 3px solid var(--turn-ink, #08090a);
+  border-radius: 0;
+  background: var(--turn-surface-raised, #fffdf6);
+  box-shadow: none;
 }
 
 .lot-colors.is-paint-locked:focus-visible {
   outline: 4px solid var(--turn-action-information, #38d9ff);
-  outline-offset: 3px;
+  outline-offset: -6px;
+}
+
+.lot-paint-lock-copy {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: .34em;
+  overflow: hidden;
+  font-size: clamp(.72rem, 1.7vw, 1rem);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.lot-paint-lock-copy strong {
+  overflow: hidden;
+  font-size: 1em;
+  font-weight: 900;
+  text-overflow: ellipsis;
+}
+
+.lot-paint-lock-copy i {
+  font-style: normal;
+  font-weight: 950;
+}
+
+.lot-paint-lock-copy b {
+  font-size: .78em;
+  font-weight: 950;
+  letter-spacing: .06em;
 }
 
 .lot-paint-lock {
   display: grid;
   width: 36px;
   height: 36px;
+  box-sizing: border-box;
   padding: 7px;
   place-items: center;
   border: 2px solid currentColor;
   border-radius: 10px;
-  background: var(--turn-surface-raised, #fffdf6);
+  background: var(--turn-action-warning, #ffd43b);
+  box-shadow: 3px 3px 0 var(--turn-ink, #08090a);
   pointer-events: none;
 }
 
@@ -90,9 +138,20 @@
     min-height: 44px;
   }
 
+  .lot-viewbox-with-paint .lot-colors.is-paint-locked {
+    min-height: var(--lot-paint-rail-height, 47px);
+    padding: 5px 7px 5px 10px;
+  }
+
+  .lot-paint-lock-copy {
+    font-size: .68rem;
+  }
+
   .lot-paint-lock {
     width: 30px;
     height: 30px;
     padding: 5px;
+    border-radius: 8px;
+    box-shadow: 2px 2px 0 var(--turn-ink, #08090a);
   }
 }
