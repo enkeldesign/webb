@@ -144,9 +144,9 @@ function createDialog() {
           <div class="turn-achievements-summary-main">
             <strong id="turnAchievementsSummaryTitle">0 OF ${ACHIEVEMENTS.length} UNLOCKED</strong>
             <div class="turn-trophy-road">
-              <div class="turn-trophy-road-track" role="progressbar" aria-label="Trophy Road progress" aria-valuemin="0" aria-valuemax="${TROPHY_ROAD_MAX_THRESHOLD}" aria-valuenow="0">
-                <i></i>
-                <div class="turn-trophy-road-markers"></div>
+              <div class="turn-trophy-road-track">
+                <div class="turn-trophy-road-progress" role="progressbar" aria-label="Trophy Road progress" aria-valuemin="0" aria-valuemax="${TROPHY_ROAD_MAX_THRESHOLD}" aria-valuenow="0"><i></i></div>
+                <div class="turn-trophy-road-markers" aria-label="Trophy Road rewards"></div>
               </div>
             </div>
           </div>
@@ -238,7 +238,7 @@ export function createAchievementView({ store, session, utilityGroup }) {
   const rewardToast = createToast('turn-achievement-toast turn-trophy-reward-toast', 'TROPHY ROAD REWARD');
   const list = dialog.querySelector('.turn-achievements-list');
   const totalTitle = dialog.querySelector('#turnAchievementsSummaryTitle');
-  const trophyRoad = dialog.querySelector('.turn-trophy-road-track');
+  const trophyRoad = dialog.querySelector('.turn-trophy-road-progress');
   const trophyRoadFill = trophyRoad.querySelector('i');
   const trophyRoadMarkers = dialog.querySelector('.turn-trophy-road-markers');
   const trophyRoadDetail = dialog.querySelector('.turn-trophy-road-detail');
