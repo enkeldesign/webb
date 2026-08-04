@@ -1,3 +1,8 @@
+import {
+  TIME_TRIALS,
+  TIME_TRIAL_ACHIEVEMENT_IDS
+} from './time-trials.js?revision=r152-developer-time-trials';
+
 export const TRACK_IDS = Object.freeze([
   'countryside',
   'airport',
@@ -14,14 +19,16 @@ export const CATEGORY = Object.freeze({
   ONBOARDING: 'onboarding',
   WAYS_TO_PLAY: 'ways-to-play',
   EXPLORATION: 'exploration',
-  RACING: 'racing'
+  RACING: 'racing',
+  TIME_TRIALS: 'time-trials'
 });
 
 export const CATEGORY_LABELS = Object.freeze({
   [CATEGORY.ONBOARDING]: 'Getting started',
   [CATEGORY.WAYS_TO_PLAY]: 'Ways to play',
   [CATEGORY.EXPLORATION]: 'Exploration',
-  [CATEGORY.RACING]: 'Racing'
+  [CATEGORY.RACING]: 'Racing',
+  [CATEGORY.TIME_TRIALS]: 'Time trials'
 });
 
 export const TRACK_NAMES = Object.freeze({
@@ -66,7 +73,8 @@ export const ICONS = Object.freeze({
   blindRoute: '<svg viewBox="0 0 24 24"><circle cx="5" cy="18" r="2"></circle><circle cx="19" cy="6" r="2"></circle><path d="M7 18h3c3 0 3-5 6-5h1M17 6h-3c-3 0-3 4-6 4H5"></path><path d="M4 4l16 16"></path></svg>',
   route: '<svg viewBox="0 0 24 24"><circle cx="5" cy="18" r="2"></circle><circle cx="19" cy="6" r="2"></circle><path d="M7 18h3c3 0 3-5 6-5h1M17 6h-3c-3 0-3 4-6 4H5"></path></svg>',
   trophy: '<svg viewBox="0 0 24 24"><path d="M7 4h10v4c0 4-2 7-5 8-3-1-5-4-5-8V4Z"></path><path d="M7 6H4v2c0 2 1 3 4 4M17 6h3v2c0 2-1 3-4 4M9 20h6M12 16v4"></path></svg>',
-  siren: '<svg viewBox="0 0 24 24"><path d="M7 16v-5a5 5 0 0 1 10 0v5"></path><path d="M5 16h14v4H5Z"></path><path d="M12 2v3M4.5 5.5l2 2M19.5 5.5l-2 2M2 12h3M19 12h3"></path></svg>'
+  siren: '<svg viewBox="0 0 24 24"><path d="M7 16v-5a5 5 0 0 1 10 0v5"></path><path d="M5 16h14v4H5Z"></path><path d="M12 2v3M4.5 5.5l2 2M19.5 5.5l-2 2M2 12h3M19 12h3"></path></svg>',
+  stopwatch: '<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"></circle><path d="M9 2h6M12 5V2M18 7l2-2M12 13l3-3"></path></svg>'
 });
 
 export const ACHIEVEMENTS = Object.freeze([
@@ -85,7 +93,26 @@ export const ACHIEVEMENTS = Object.freeze([
   Object.freeze({ id: 'beyond-sight', category: CATEGORY.WAYS_TO_PLAY, points: 300, title: 'BEYOND SIGHT', description: 'Finish a valid lap on every track with Blank screen mode on from start to finish.', icon: 'blindRoute', progressMax: TRACK_IDS.length }),
   Object.freeze({ id: 'around-the-turn', category: CATEGORY.EXPLORATION, points: 100, title: 'AROUND THE TURN', description: 'Finish a valid lap on every track.', icon: 'route', progressMax: TRACK_IDS.length }),
   Object.freeze({ id: 'ahead-of-yourself', category: CATEGORY.RACING, points: 50, title: 'AHEAD OF YOURSELF', description: 'Finish first in a lap with at least one saved rival.', icon: 'trophy' }),
-  Object.freeze({ id: 'night-shift-sheriff', category: CATEGORY.RACING, points: 100, title: 'NIGHT SHIFT SHERIFF', description: 'In Midnight City, use the Police Car to beat four non-police rivals. Overtake each one while Boost is active.', icon: 'siren', progressMax: 4 })
+  Object.freeze({ id: 'night-shift-sheriff', category: CATEGORY.RACING, points: 100, title: 'NIGHT SHIFT SHERIFF', description: 'In Midnight City, use the Police Car to beat four non-police rivals. Overtake each one while Boost is active.', icon: 'siren', progressMax: 4 }),
+  ...TIME_TRIALS.map((trial) => Object.freeze({
+    id: trial.id,
+    category: CATEGORY.TIME_TRIALS,
+    points: 25,
+    title: trial.title,
+    description: trial.description,
+    recommendation: 'Recommended: Future Racer',
+    icon: 'stopwatch'
+  })),
+  Object.freeze({
+    id: 'faster-than-the-dev',
+    category: CATEGORY.TIME_TRIALS,
+    points: 100,
+    title: 'FASTER THAN THE DEV',
+    description: 'Beat every developer target time.',
+    recommendation: 'The target times were set with the Future Racer.',
+    icon: 'trophy',
+    progressMax: TIME_TRIAL_ACHIEVEMENT_IDS.length
+  })
 ]);
 
 export const ONBOARDING_ACHIEVEMENT_IDS = Object.freeze(
