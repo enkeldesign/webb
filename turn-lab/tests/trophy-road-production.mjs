@@ -310,10 +310,16 @@ assert.doesNotMatch(feedback, /pointerdown|pointermove|setPointerCapture/,
 assert.match(feedback, /createTrophyRoadShowcase/);
 assert.match(feedback, /TROPHY_ROAD_REWARD_ICONS/);
 assert.match(feedback, /selectedByPlayer = ''/);
-assert.match(feedback, /selectedByPlayer = marker\.dataset\.trophyReward;[\s\S]*preserveUserSelection\(\);/,
-  'Reward details must synchronize after the base view finishes the same click');
+assert.match(feedback, /selectedByPlayer = markerSelectionId\(marker\)/);
+assert.match(feedback, /\{ capture: true \}\)/,
+  'Reward selection must be captured before the base view replaces nested SVG event targets');
+assert.match(feedback, /The base view rebuilds every reward button/);
 assert.doesNotMatch(feedback, /queueMicrotask\(preserveUserSelection\)/,
   'Reward selection must not race a deferred duplicate render');
+assert.match(feedback, /TBA_MILESTONE[\s\S]*threshold: 1000/);
+assert.match(feedback, /data-trophy-placeholder/);
+assert.match(feedback, /renderTbaDetail/);
+assert.match(feedback, /Future Trophy Road reward is reserved here|future Trophy Road reward is reserved here/);
 assert.match(feedback, /reward\.type === 'feature'/,
   'Paintjob should retain its static reward artwork rather than requesting a vehicle showcase');
 assert.match(feedback, /clearSelection\(\)/);
@@ -430,4 +436,4 @@ assert.match(emergencyLiveries, /makeWideGamutSpec/);
 
 assert.match(workflow, /Run Trophy Road progression regression/);
 
-console.log('TURN Trophy Road paint, Monster, wide-gamut and progression regression passed.');
+console.log('TURN Trophy Road first-tap, TBA, paint, Monster and wide-gamut regression passed.');

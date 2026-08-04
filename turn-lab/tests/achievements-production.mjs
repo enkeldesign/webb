@@ -122,8 +122,14 @@ for (const id of ['find-lilya', 'find-darvid', 'satans-sedan']) {
   assert.equal(achievement?.trophies, 25, `${id} should award 25 trophies`);
   assert.equal(achievement?.category, 'exploration');
 }
-assert.equal(ACHIEVEMENTS.find((item) => item.id === 'find-lilya')?.title, 'FIND LILYA!');
-assert.equal(ACHIEVEMENTS.find((item) => item.id === 'find-darvid')?.title, 'FIND DARVID!');
+assert.equal(
+  ACHIEVEMENTS.find((item) => item.id === 'find-lilya')?.title,
+  'FIND LILYA AFTER MIDNIGHT!'
+);
+assert.equal(
+  ACHIEVEMENTS.find((item) => item.id === 'find-darvid')?.title,
+  'FIND DARVID AT THE HARBOR!'
+);
 assert.equal(ACHIEVEMENTS.find((item) => item.id === 'satans-sedan')?.title, 'SATAN’S SEDAN');
 
 assert.deepEqual(
@@ -269,6 +275,8 @@ assert.doesNotMatch(catalog, /points:/);
 assert.match(secretCatalog, /id: 'find-lilya'/);
 assert.match(secretCatalog, /id: 'find-darvid'/);
 assert.match(secretCatalog, /id: 'satans-sedan'/);
+assert.match(secretCatalog, /title: 'FIND LILYA AFTER MIDNIGHT!'/);
+assert.match(secretCatalog, /title: 'FIND DARVID AT THE HARBOR!'/);
 assert.match(secretCatalog, /title: 'SATAN’S SEDAN'/);
 assert.equal((secretCatalog.match(/trophies: 25/g) || []).length, 3);
 assert.equal((secretCatalog.match(/hidden: true/g) || []).length, 3);

@@ -4,7 +4,7 @@ export const SECRET_ACHIEVEMENTS = Object.freeze([
     category: 'exploration',
     trophies: 25,
     hidden: true,
-    title: 'FIND LILYA!',
+    title: 'FIND LILYA AFTER MIDNIGHT!',
     description: 'Find the hidden Lilya portrait in Midnight City.',
     icon: 'spectate'
   }),
@@ -13,7 +13,7 @@ export const SECRET_ACHIEVEMENTS = Object.freeze([
     category: 'exploration',
     trophies: 25,
     hidden: true,
-    title: 'FIND DARVID!',
+    title: 'FIND DARVID AT THE HARBOR!',
     description: 'Find Darvid’s hidden face in Harbor.',
     icon: 'spectate'
   }),
