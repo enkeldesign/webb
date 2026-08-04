@@ -172,7 +172,7 @@ installStylesheet(
   'data-turn-lot-layout-r121'
 );
 installStylesheet(
-  './progression/trophy-road-r157.css?revision=r157-paint-monster',
+  './progression/trophy-road-r157.css?revision=r161-car-colour-lock',
   'data-turn-trophy-road'
 );
 const { prepareTrophyRoadProfile } = await import(
@@ -266,7 +266,7 @@ installHarborHiddenFaceOrientation();
 // lot-enhancement-runtime.js?revision=r121&trophy-road=r154
 // lot-enhancement-runtime.js?revision=r121&trophy-road=r157
 const { installLotEnhancementRuntime } = await import(
-  withBuild('./garage/lot-enhancement-runtime.js?revision=r121&trophy-road=r159&paint=r159-paint-lock-observer')
+  withBuild('./garage/lot-enhancement-runtime.js?revision=r121&trophy-road=r159&paint=r161-car-colour-lock')
 );
 installLotEnhancementRuntime();
 
