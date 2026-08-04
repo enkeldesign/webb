@@ -3,7 +3,6 @@ import { installLotLayout } from './lot-layout-r60.js?build=20260729-r116';
 import { installLotAccessibility } from './lot-accessibility-r118.js?build=20260729-r118';
 import { gateLotNow } from '../progression/lot-trophy-gate.js?revision=r153-trophy-road';
 
-// Historical regression marker: ENHANCEMENT_ID = 'enhanced-lot-r121'
 const ENHANCEMENT_ID = 'enhanced-lot-r153-trophy-road';
 const activeEnhancements = new WeakMap();
 
