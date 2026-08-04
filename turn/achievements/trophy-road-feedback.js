@@ -1,5 +1,5 @@
 import { CATEGORY } from './catalog.js?revision=r157-hidden-achievements';
-import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r157-paint-monster';
+import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r160-reward-detail-sync';
 import {
   LOCK_ICON,
   TROPHY_ROAD_MAX_THRESHOLD,
@@ -33,7 +33,7 @@ function ensureFeedbackStylesheet() {
   if (!stylesheet) {
     stylesheet = document.createElement('link');
     stylesheet.rel = 'stylesheet';
-    stylesheet.href = `/turn/progression/trophy-road-r157.css?build=${buildKey}-r157-paint-monster`;
+    stylesheet.href = `/turn/progression/trophy-road-r157.css?build=${buildKey}-r160-reward-detail-sync`;
     stylesheet.setAttribute('data-turn-trophy-road-feedback', '');
   }
   document.head.appendChild(stylesheet);
@@ -211,6 +211,7 @@ function installRoadBehavior({ achievements, summary }) {
   const showcase = createTrophyRoadShowcase();
   let selectedByPlayer = '';
   let geometryFrame = 0;
+  let selectionSyncQueued = false;
 
   function updateScrollButtons() {
     const maximum = Math.max(0, summary.scroll.scrollWidth - summary.scroll.clientWidth);
@@ -265,16 +266,68 @@ function installRoadBehavior({ achievements, summary }) {
     }
   }
 
+  function renderedSelection() {
+    const selected = markers.querySelector(
+      '[data-trophy-reward].is-selected, [data-trophy-reward][aria-pressed="true"]'
+    );
+    return selected?.dataset.trophyReward || '';
+  }
+
+  function restoreStaticRewardIcon(reward, host) {
+    host.classList.remove('turn-trophy-road-detail-model-host', 'is-loading');
+    delete host.dataset.trophyRewardModel;
+    const icon = TROPHY_ROAD_REWARD_ICONS[reward.icon];
+    if (icon) host.innerHTML = icon;
+  }
+
   function syncShowcase() {
     const reward = getTrophyRoadReward(selectedByPlayer);
     const host = summary.detail?.querySelector('.turn-trophy-road-detail-icon');
-    if (!reward || !host || reward.type === 'track' || reward.type === 'feature') {
+    if (!reward || !host) {
       showcase.clear();
       return;
     }
+
+    if (reward.type === 'track' || reward.type === 'feature') {
+      showcase.clear();
+      restoreStaticRewardIcon(reward, host);
+      return;
+    }
+
     host.classList.add('turn-trophy-road-detail-model-host');
     void showcase.show(reward, host);
     if (dialog?.open) showcase.resume();
+  }
+
+  function preserveUserSelection({ adoptRendered = false } = {}) {
+    decorateMarkers();
+    roadGeometry();
+    if (adoptRendered || !selectedByPlayer) {
+      selectedByPlayer = renderedSelection() || selectedByPlayer;
+    }
+    if (!selectedByPlayer) {
+      showcase.clear();
+      if (summary.detail) summary.detail.hidden = true;
+      if (summary.help) summary.help.hidden = false;
+      return;
+    }
+    for (const marker of markers.querySelectorAll('[data-trophy-reward]')) {
+      const selected = marker.dataset.trophyReward === selectedByPlayer;
+      marker.classList.toggle('is-selected', selected);
+      marker.setAttribute('aria-pressed', String(selected));
+    }
+    if (summary.detail) summary.detail.hidden = false;
+    if (summary.help) summary.help.hidden = true;
+    syncShowcase();
+  }
+
+  function queueSelectionSync({ adoptRendered = true } = {}) {
+    if (selectionSyncQueued) return;
+    selectionSyncQueued = true;
+    queueMicrotask(() => {
+      selectionSyncQueued = false;
+      preserveUserSelection({ adoptRendered });
+    });
   }
 
   function clearSelection() {
@@ -291,21 +344,9 @@ function installRoadBehavior({ achievements, summary }) {
     if (summary.help) summary.help.hidden = false;
   }
 
-  function preserveUserSelection() {
-    decorateMarkers();
-    roadGeometry();
-    if (!selectedByPlayer) {
-      clearSelection();
-      return;
-    }
-    for (const marker of markers.querySelectorAll('[data-trophy-reward]')) {
-      const selected = marker.dataset.trophyReward === selectedByPlayer;
-      marker.classList.toggle('is-selected', selected);
-      marker.setAttribute('aria-pressed', String(selected));
-    }
-    if (summary.detail) summary.detail.hidden = false;
-    if (summary.help) summary.help.hidden = true;
-    syncShowcase();
+  function releaseSelection() {
+    selectedByPlayer = '';
+    showcase.clear();
   }
 
   function scrollRoad(direction) {
@@ -330,10 +371,10 @@ function installRoadBehavior({ achievements, summary }) {
     const marker = event.target.closest('[data-trophy-reward]');
     if (!marker) return;
     selectedByPlayer = marker.dataset.trophyReward;
-    preserveUserSelection();
+    queueSelectionSync();
   });
 
-  const markerObserver = new MutationObserver(preserveUserSelection);
+  const markerObserver = new MutationObserver(() => queueSelectionSync());
   markerObserver.observe(markers, { childList: true });
 
   function alignToProgress() {
@@ -350,11 +391,12 @@ function installRoadBehavior({ achievements, summary }) {
 
   window.addEventListener('resize', roadGeometry, { passive: true });
   dialog?.addEventListener('close', showcase.pause);
-  clearSelection();
-  preserveUserSelection();
+  preserveUserSelection({ adoptRendered: true });
   updateScrollButtons();
   return Object.freeze({
     clearSelection,
+    releaseSelection,
+    syncRenderedSelection: () => preserveUserSelection({ adoptRendered: true }),
     alignToProgress,
     syncScrollButtons: updateScrollButtons,
     pauseShowcase: showcase.pause,
@@ -382,21 +424,22 @@ export function installTrophyRoadFeedback(achievements = globalThis.__turnAchiev
 
   function resetView() {
     filters.reset();
-    road.clearSelection();
+    road.syncRenderedSelection();
     summary.scroll.scrollLeft = 0;
     road.syncScrollButtons();
   }
 
   const openObserver = new MutationObserver(() => {
     if (!dialog.hasAttribute('open')) return;
-    resetView();
+    filters.reset();
+    road.syncRenderedSelection();
     road.alignToProgress();
   });
   openObserver.observe(dialog, { attributes: true, attributeFilter: ['open'] });
-  dialog.addEventListener('close', resetView);
-
-  achievements.homeTrigger?.addEventListener('click', resetView);
-  achievements.raceTrigger?.addEventListener('click', resetView);
+  dialog.addEventListener('close', () => {
+    road.releaseSelection();
+    filters.reset();
+  });
 
   installed = Object.freeze({
     reset: resetView,
