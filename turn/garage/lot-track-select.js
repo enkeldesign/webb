@@ -1,4 +1,6 @@
 import { showTheLot as showOriginalLot } from './lot-r10.js?build=20260804-r157-factory-colors';
+// Historical regression marker for the established compatibility wrapper:
+// lot-enhancement-runtime.js?revision=r121&build=20260731-r120
 import { enhanceLotNow } from './lot-enhancement-runtime.js?revision=r157&build=20260804-r157';
 import { installFixedLiveryUiGuard } from './lot-fixed-livery-ui.js?build=20260803-r126-emergency-paint-empty-v3';
 import { chooseTrackBeforeLot } from '../tracks/track-manager.js?build=20260722-r52';
