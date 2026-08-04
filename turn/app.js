@@ -158,6 +158,8 @@ installLapResultToast();
 const { installRivalOnboarding } = await import(withBuild('./ui/rival-onboarding.js'));
 installRivalOnboarding();
 
+// Historical regression marker for the established Super Sedan notice bundle:
+// sports-sedan-easter-egg.js?revision=r128-unlock-notice
 const { installSportsSedanEasterEggUi } = await import(
   withBuild('./vehicle/sports-sedan-easter-egg.js?revision=r157-hidden-achievements')
 );
