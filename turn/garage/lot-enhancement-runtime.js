@@ -4,6 +4,9 @@ import { installLotAccessibility } from './lot-accessibility-r118.js?build=20260
 import { gateLotNow } from '../progression/lot-trophy-gate.js?revision=r157-paint-monster';
 import { gateLotPaintNow } from '../progression/lot-paint-reward.js?revision=r157-paint-monster';
 
+// Historical regression markers for the established enhancement layers:
+// ENHANCEMENT_ID = 'enhanced-lot-r121'
+// TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r154-trophy-road-feedback'
 const ENHANCEMENT_ID = 'enhanced-lot-r157-paint-monster';
 const TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r157-paint-monster';
 const activeEnhancements = new WeakMap();
