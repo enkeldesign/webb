@@ -16,6 +16,7 @@ import {
 const LOT_TARGET_LENGTH = 5.15;
 const LOT_UNSELECTED_HEX = 0x313131;
 const LOT_TINT_MIX = 0.23;
+const LOT_TINT_PATCHED_COLORS = new WeakSet();
 
 const EMERGENCY_LIVERY_BY_ID = Object.freeze({
   police: Object.freeze({
@@ -137,14 +138,13 @@ function installLotUnselectedTint(root) {
     const materials = Array.isArray(node.material) ? node.material : [node.material];
     for (const material of materials) {
       const color = material?.color;
-      if (!color || color.userData?.turnLotTintCopy) continue;
+      if (!color || LOT_TINT_PATCHED_COLORS.has(color)) continue;
       const originalCopy = color.copy.bind(color);
-      const copy = (source) => {
+      color.copy = (source) => {
         const sourceHex = source?.getHex?.(THREE.SRGBColorSpace) ?? source?.getHex?.();
         return originalCopy(sourceHex === LOT_UNSELECTED_HEX ? hint : source);
       };
-      color.copy = copy;
-      color.userData = { ...(color.userData || {}), turnLotTintCopy: true };
+      LOT_TINT_PATCHED_COLORS.add(color);
     }
   });
   root.userData.turnLotUnselectedTint = hint.getHexString(THREE.SRGBColorSpace);
