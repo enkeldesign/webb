@@ -108,6 +108,10 @@ export async function installM8HomeFixedLayout() {
     `/turn/achievements.js?build=${buildKey}-r157-hidden-achievements`
   );
   const achievements = installAchievements(globalThis.__turnRuntime);
+  const { installAchievementUnreadMarkers } = await import(
+    `/turn/achievements/unread-markers.js?build=${buildKey}-r159-unread-cards`
+  );
+  const achievementUnreadMarkers = installAchievementUnreadMarkers(achievements);
   const { installSecretAchievements } = await import(
     `/turn/achievements/secret-achievements.js?build=${buildKey}-r157-hidden-achievements`
   );
@@ -131,6 +135,7 @@ export async function installM8HomeFixedLayout() {
     cardScrollFixes,
     trophyGate,
     achievements,
+    achievementUnreadMarkers,
     secretAchievements,
     trophyRoadFeedback,
     driveByEarTraining
