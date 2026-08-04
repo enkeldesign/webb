@@ -1,12 +1,12 @@
-import { CATEGORY } from './catalog.js?revision=r153-trophy-road';
-import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r156-trophy-road-selection';
+import { CATEGORY } from './catalog.js?revision=r157-hidden-achievements';
+import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r157-paint-monster';
 import {
   LOCK_ICON,
   TROPHY_ROAD_MAX_THRESHOLD,
   TROPHY_ROAD_REWARD_ICONS,
   TROPHY_ROAD_VIEWPORT_THRESHOLD,
   getTrophyRoadReward
-} from '../progression/trophy-road.js?revision=r156-trophy-road-selection';
+} from '../progression/trophy-road.js?revision=r157-paint-monster';
 
 const EDGE_PX = 34;
 const CATEGORY_FILTERS = Object.freeze([
@@ -33,7 +33,7 @@ function ensureFeedbackStylesheet() {
   if (!stylesheet) {
     stylesheet = document.createElement('link');
     stylesheet.rel = 'stylesheet';
-    stylesheet.href = `/turn/progression/trophy-road.css?build=${buildKey}-r156-trophy-road-selection`;
+    stylesheet.href = `/turn/progression/trophy-road-r157.css?build=${buildKey}-r157-paint-monster`;
     stylesheet.setAttribute('data-turn-trophy-road-feedback', '');
   }
   document.head.appendChild(stylesheet);
@@ -268,7 +268,7 @@ function installRoadBehavior({ achievements, summary }) {
   function syncShowcase() {
     const reward = getTrophyRoadReward(selectedByPlayer);
     const host = summary.detail?.querySelector('.turn-trophy-road-detail-icon');
-    if (!reward || !host || reward.type === 'track') {
+    if (!reward || !host || reward.type === 'track' || reward.type === 'feature') {
       showcase.clear();
       return;
     }
@@ -326,8 +326,6 @@ function installRoadBehavior({ achievements, summary }) {
     scrollRoad(event.key === 'ArrowLeft' ? -1 : 1);
   });
 
-  // The base achievement view renders the selected reward first. This later
-  // bubble listener then attaches the correct 3D showcase to that finished card.
   markers.addEventListener('click', (event) => {
     const marker = event.target.closest('[data-trophy-reward]');
     if (!marker) return;
