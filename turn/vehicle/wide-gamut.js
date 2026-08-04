@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
 const DISPLAY_P3_QUERY = 'color(display-p3 1 0 0)';
+const RENDERER_PATCH = Symbol.for('turn.display-p3.renderer-patch');
 const P3_ACCENTS_BY_FALLBACK = Object.freeze({
   '#00aabb': Object.freeze([0, 0.68, 0.74]),
   '#38d9ff': Object.freeze([0.05, 0.82, 1]),
@@ -63,6 +64,18 @@ export function configureRendererWideGamut(renderer) {
   return supportsDisplayP3();
 }
 
+export function installWideGamutRendererPatch() {
+  const prototype = THREE.WebGLRenderer?.prototype;
+  if (!prototype || prototype[RENDERER_PATCH]) return false;
+  const originalSetSize = prototype.setSize;
+  prototype.setSize = function turnWideGamutSetSize(...args) {
+    configureRendererWideGamut(this);
+    return originalSetSize.apply(this, args);
+  };
+  Object.defineProperty(prototype, RENDERER_PATCH, { value: true });
+  return true;
+}
+
 function fallbackHex(color) {
   if (!color?.getHexString) return '';
   try {
@@ -73,9 +86,10 @@ function fallbackHex(color) {
 }
 
 function enhanceColor(color) {
-  const p3 = P3_ACCENTS_BY_FALLBACK[fallbackHex(color)];
+  const fallback = fallbackHex(color);
+  const p3 = P3_ACCENTS_BY_FALLBACK[fallback];
   if (!p3) return false;
-  setThreeColor(color, makeWideGamutSpec(fallbackHex(color), p3));
+  setThreeColor(color, makeWideGamutSpec(fallback, p3));
   return true;
 }
 
@@ -87,9 +101,16 @@ export function enhanceWideGamutScene(root) {
     if (!node?.material) return;
     const materials = Array.isArray(node.material) ? node.material : [node.material];
     for (const material of materials) {
-      if (enhanceColor(material?.color)) enhanced += 1;
-      if (enhanceColor(material?.emissive)) enhanced += 1;
-      if (enhanced && material) material.needsUpdate = true;
+      let materialEnhanced = false;
+      if (enhanceColor(material?.color)) {
+        enhanced += 1;
+        materialEnhanced = true;
+      }
+      if (enhanceColor(material?.emissive)) {
+        enhanced += 1;
+        materialEnhanced = true;
+      }
+      if (materialEnhanced) material.needsUpdate = true;
     }
   });
   return enhanced;
@@ -100,6 +121,7 @@ export function installWideGamutRuntime(runtime = globalThis.__turnRuntime) {
     return globalThis.__turnWideGamutRuntime || null;
   }
 
+  installWideGamutRendererPatch();
   const apply = () => {
     configureRendererWideGamut(runtime.renderer);
     enhanceWideGamutScene(runtime.scene || runtime.world);
@@ -110,6 +132,7 @@ export function installWideGamutRuntime(runtime = globalThis.__turnRuntime) {
     apply();
     requestAnimationFrame(apply);
     globalThis.setTimeout?.(apply, 180);
+    globalThis.setTimeout?.(apply, 900);
   };
 
   window.addEventListener('turn:track-changed', scheduleApply);
