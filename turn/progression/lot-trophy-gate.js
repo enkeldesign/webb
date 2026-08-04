@@ -3,7 +3,7 @@ import {
   isVehicleUnlocked,
   rewardForVehicle,
   showTrophyUnlockNotice
-} from './trophy-road.js?revision=r154-trophy-road-feedback';
+} from './trophy-road.js?revision=r157-paint-monster';
 
 const FALLBACK_VEHICLE_ID = 'classic';
 const activeGates = new WeakMap();
@@ -40,11 +40,8 @@ export function gateLotNow(root = document.body) {
       const reward = rewardForVehicle(button.dataset.carId);
       const locked = Boolean(reward) && !isVehicleUnlocked(button.dataset.carId);
       button.classList.toggle('is-trophy-locked', locked);
-      if (reward) {
-        button.dataset.trophyLockLabel = `${reward.threshold} TROPHIES`;
-      } else {
-        delete button.dataset.trophyLockLabel;
-      }
+      if (reward) button.dataset.trophyLockLabel = `${reward.threshold} TROPHIES`;
+      else delete button.dataset.trophyLockLabel;
       const name = button.textContent.trim() || 'Vehicle';
       button.setAttribute(
         'aria-label',
@@ -62,7 +59,7 @@ export function gateLotNow(root = document.body) {
     const lock = document.createElement('span');
     lock.className = 'lot-selected-car-lock';
     lock.setAttribute('aria-hidden', 'true');
-    lock.textContent = '🔒 ';
+    lock.innerHTML = LOCK_ICON;
     carTitle.prepend(lock);
   }
 
@@ -72,10 +69,7 @@ export function gateLotNow(root = document.body) {
     if (locked) {
       raceButton.dataset.trophyLocked = 'true';
       raceButton.innerHTML = `<span class="lot-race-lock-icon" aria-hidden="true">${LOCK_ICON}</span><span>RACE THIS CAR</span>`;
-      raceButton.setAttribute(
-        'aria-label',
-        `${selectedName} is locked. Unlocks at ${reward.threshold} trophies on Trophy Road.`
-      );
+      raceButton.setAttribute('aria-label', `${selectedName} is locked. Unlocks at ${reward.threshold} trophies on Trophy Road.`);
       return;
     }
 

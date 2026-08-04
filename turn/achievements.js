@@ -1,13 +1,13 @@
 export {
   ACHIEVEMENTS,
   ONBOARDING_ACHIEVEMENT_IDS
-} from './achievements/catalog.js?revision=r153-trophy-road';
+} from './achievements/catalog.js?revision=r157-hidden-achievements';
 export {
   ACHIEVEMENT_STORAGE_KEY,
   loadAchievementState,
   normalizeAchievementState,
   totalAvailableTrophies
-} from './achievements/store.js?revision=r153-trophy-road';
+} from './achievements/store.js?revision=r157-hidden-achievements';
 export {
   TIME_TRIALS,
   TIME_TRIAL_ACHIEVEMENT_IDS,
@@ -20,6 +20,7 @@ export {
   TROPHY_ROAD_MAX_THRESHOLD,
   isTrackUnlocked,
   isVehicleUnlocked,
+  isPaintUnlocked,
   prepareTrophyRoadProfile
-} from './progression/trophy-road.js?revision=r153-trophy-road';
-export { installAchievements } from './achievements/runtime.js?revision=r153-trophy-road';
+} from './progression/trophy-road.js?revision=r157-paint-monster';
+export { installAchievements } from './achievements/runtime.js?revision=r157-hidden-achievements';

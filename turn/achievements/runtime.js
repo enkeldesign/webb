@@ -2,15 +2,15 @@ import {
   ACHIEVEMENTS,
   TRACK_IDS,
   TRAINING_CAR_ID
-} from './catalog.js?revision=r153-trophy-road';
+} from './catalog.js?revision=r157-hidden-achievements';
 import {
   createAchievementStore,
   normalizeAchievementState
-} from './store.js?revision=r153-trophy-road';
+} from './store.js?revision=r157-hidden-achievements';
 import {
   allOnboardingComplete,
   createAchievementView
-} from './view.js?revision=r153-trophy-road';
+} from './view.js?revision=r157-hidden-achievements';
 import {
   completedNightShiftSheriff,
   createNightShiftAttempt,

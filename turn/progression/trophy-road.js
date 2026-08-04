@@ -1,6 +1,6 @@
 export const TROPHY_ROAD_STORAGE_KEY = 'turn-achievements-v1';
-export const TROPHY_ROAD_STORAGE_VERSION = 3;
-export const TROPHY_ROAD_MAX_THRESHOLD = 1300;
+export const TROPHY_ROAD_STORAGE_VERSION = 4;
+export const TROPHY_ROAD_MAX_THRESHOLD = 1375;
 export const TROPHY_ROAD_VIEWPORT_THRESHOLD = 600;
 
 export const TROPHY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 4h10v4c0 4-2 7-5 8-3-1-5-4-5-8V4Z"></path><path d="M7 6H4v2c0 2 1 3 4 4M17 6h3v2c0 2-1 3-4 4M9 20h6M12 16v4"></path></svg>';
@@ -8,8 +8,10 @@ export const LOCK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable=
 
 export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
   skyline: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M3 43h58M8 43V24h10v19M21 43V13h13v30M37 43V20h8v23M48 43V9h10v34"></path><path d="M11 29h3M11 35h3M25 19h4M25 26h4M25 33h4M51 15h3M51 22h3M51 29h3"></path><path d="M8 8a8 8 0 1 0 9 9A7 7 0 0 1 8 8Z"></path></svg>',
+  future: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M5 32h8l7-7h9l5-8h8l5 8h9l4 7v7H5Z"></path><path d="M21 25h26M36 17l5 8M47 13h12v6H45"></path><circle cx="17" cy="39" r="5"></circle><circle cx="50" cy="39" r="5"></circle><path d="M2 22h12M1 16h17M7 28h9"></path></svg>',
+  paint: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M10 7h29v13H10Z"></path><path d="M39 11h8c5 0 7 3 7 7v4H31v8"></path><path d="M27 28h8v16h-8Z"></path><path d="M15 12h18M15 16h12"></path></svg>',
   emergency: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M18 35V21a14 14 0 0 1 28 0v14"></path><path d="M12 35h40v9H12Z"></path><path d="M32 2v7M9 9l6 6M55 9l-6 6M3 25h8M53 25h8"></path><path d="M24 34V22a8 8 0 0 1 16 0v12"></path></svg>',
-  future: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M5 32h10l6-8h12l5-9h8l4 9h7l4 7v7H6Z"></path><path d="M25 24h22M39 15l4 9M47 12h12v6H45"></path><circle cx="18" cy="39" r="5"></circle><circle cx="49" cy="39" r="5"></circle><path d="M2 21h12M1 15h17M8 27h9"></path></svg>'
+  monster: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M10 28h8l5-10h20l7 10h5v9H9Z"></path><path d="M28 18v10M23 28h27M45 22h8l4 6"></path><circle cx="18" cy="38" r="8"></circle><circle cx="48" cy="38" r="8"></circle><circle cx="18" cy="38" r="3"></circle><circle cx="48" cy="38" r="3"></circle></svg>'
 });
 
 export const TROPHY_ROAD_REWARDS = Object.freeze([
@@ -34,6 +36,16 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     description: 'Unlock a high-speed racing vehicle built for advanced laps and hard time-trial targets.'
   }),
   Object.freeze({
+    id: 'paintjob',
+    threshold: 500,
+    title: 'PAINTJOB',
+    shortTitle: 'Paintjob',
+    type: 'feature',
+    featureId: 'vehicle-paint',
+    icon: 'paint',
+    description: 'Unlock body and secondary paint controls in The Lot. Every vehicle keeps its own distinctive factory colour until then.'
+  }),
+  Object.freeze({
     id: 'emergency-pack',
     threshold: 600,
     title: 'EMERGENCY!',
@@ -42,21 +54,31 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     vehicleIds: Object.freeze(['firetruck', 'ambulance', 'police']),
     icon: 'emergency',
     description: 'Unlock the Fire Truck, Ambulance and Police Car. During Boost, their emergency lights flash and their sirens sound. All three have maximum Boost tanks.'
+  }),
+  Object.freeze({
+    id: 'monster',
+    threshold: 700,
+    title: 'MONSTER',
+    shortTitle: 'Monster Truck',
+    type: 'vehicle',
+    vehicleIds: Object.freeze(['monster-truck']),
+    icon: 'monster',
+    description: 'Unlock the Monster Truck: a dark military-green heavyweight with enormous tyres, strong drift stability and a long Boost tank.'
   })
 ]);
 
 const REWARD_BY_ID = new Map(TROPHY_ROAD_REWARDS.map((reward) => [reward.id, reward]));
 const REWARD_BY_TRACK = new Map(
-  TROPHY_ROAD_REWARDS
-    .filter((reward) => reward.trackId)
-    .map((reward) => [reward.trackId, reward])
+  TROPHY_ROAD_REWARDS.filter((reward) => reward.trackId).map((reward) => [reward.trackId, reward])
 );
 const REWARD_BY_VEHICLE = new Map(
-  TROPHY_ROAD_REWARDS.flatMap((reward) =>
-    (reward.vehicleIds || []).map((vehicleId) => [vehicleId, reward])
-  )
+  TROPHY_ROAD_REWARDS.flatMap((reward) => (reward.vehicleIds || []).map((vehicleId) => [vehicleId, reward]))
+);
+const REWARD_BY_FEATURE = new Map(
+  TROPHY_ROAD_REWARDS.filter((reward) => reward.featureId).map((reward) => [reward.featureId, reward])
 );
 const PREPARED_STORAGE = new WeakSet();
+const VERSION_THREE_GRANDFATHERED_REWARDS = Object.freeze(['paintjob', 'monster']);
 
 let unlockNotice = null;
 let unlockNoticeTimer = 0;
@@ -71,6 +93,17 @@ export function rewardForTrack(trackId) {
 
 export function rewardForVehicle(vehicleId) {
   return REWARD_BY_VEHICLE.get(vehicleId) || null;
+}
+
+export function rewardForFeature(featureId) {
+  return REWARD_BY_FEATURE.get(featureId) || null;
+}
+
+export function grandfatheredRewardIdsForVersion(version) {
+  const numericVersion = Number(version) || 0;
+  if (numericVersion < 3) return TROPHY_ROAD_REWARDS.map((reward) => reward.id);
+  if (numericVersion === 3) return [...VERSION_THREE_GRANDFATHERED_REWARDS];
+  return [];
 }
 
 export function rewardIdsForTrophies(trophies) {
@@ -107,10 +140,7 @@ export function showTrophyUnlockNotice({ reward, itemName = reward?.shortTitle }
   notice.querySelector('strong').textContent = `LOCKED · ${reward.threshold} TROPHIES`;
   notice.querySelector('.turn-unlock-notice-copy > span').textContent =
     `${name} unlocks on Trophy Road. Complete achievements to reach ${reward.threshold} trophies.`;
-  notice.setAttribute(
-    'aria-label',
-    `${name} is locked. Unlocks at ${reward.threshold} trophies on Trophy Road.`
-  );
+  notice.setAttribute('aria-label', `${name} is locked. Unlocks at ${reward.threshold} trophies on Trophy Road.`);
   notice.hidden = false;
   notice.classList.remove('is-visible');
   void notice.offsetWidth;
@@ -169,9 +199,7 @@ function hasLegacyTurnProfile(storage) {
     const length = Number(storage?.length) || 0;
     for (let index = 0; index < length; index += 1) {
       const key = storage?.key?.(index) || '';
-      if (key.startsWith('turn-personal-rivals-v1:') || key.startsWith('turn-three-ghost-v4:')) {
-        return true;
-      }
+      if (key.startsWith('turn-personal-rivals-v1:') || key.startsWith('turn-three-ghost-v4:')) return true;
     }
   } catch (_) {}
   return false;
@@ -183,14 +211,10 @@ export function prepareTrophyRoadProfile(storage = globalThis.localStorage) {
     const existing = safeParse(raw);
     if (existing) return existing;
 
-    // Legacy detection runs once per Storage object. A setting created later in
-    // the same fresh session must not accidentally grandfather a new player.
     if (preparationAlreadyChecked(storage)) return null;
     markPreparationChecked(storage);
     if (!hasLegacyTurnProfile(storage)) return null;
 
-    // A version-2 shell lets the achievement store recognise a pre-Trophy Road
-    // profile and permanently grandfather the content that was previously open.
     const legacyShell = {
       version: 2,
       unlocked: {},
@@ -215,17 +239,15 @@ export function readTrophyRoadSnapshot(storage = globalThis.localStorage) {
     }
   }
 
-  const isLegacyProfile = Boolean(state) && Number(state.version || 0) < TROPHY_ROAD_STORAGE_VERSION;
-  const unlockedRewardIds = isLegacyProfile
-    ? TROPHY_ROAD_REWARDS.map((reward) => reward.id)
-    : [...new Set(
-        Array.isArray(state?.rewards?.unlocked)
-          ? state.rewards.unlocked.filter((id) => REWARD_BY_ID.has(id))
-          : []
-      )];
+  const sourceVersion = Number(state?.version || 0);
+  const stored = Array.isArray(state?.rewards?.unlocked)
+    ? state.rewards.unlocked.filter((id) => REWARD_BY_ID.has(id))
+    : [];
+  const migrated = state ? grandfatheredRewardIdsForVersion(sourceVersion) : [];
+  const unlockedRewardIds = [...new Set([...stored, ...migrated])];
 
   return Object.freeze({
-    isLegacyProfile,
+    isLegacyProfile: Boolean(state) && sourceVersion < 3,
     unlockedRewardIds: Object.freeze(unlockedRewardIds)
   });
 }
@@ -245,4 +267,13 @@ export function isTrackUnlocked(trackId, storage = globalThis.localStorage) {
 export function isVehicleUnlocked(vehicleId, storage = globalThis.localStorage) {
   const reward = rewardForVehicle(vehicleId);
   return !reward || isTrophyRoadRewardUnlocked(reward.id, storage);
+}
+
+export function isFeatureUnlocked(featureId, storage = globalThis.localStorage) {
+  const reward = rewardForFeature(featureId);
+  return !reward || isTrophyRoadRewardUnlocked(reward.id, storage);
+}
+
+export function isPaintUnlocked(storage = globalThis.localStorage) {
+  return isFeatureUnlocked('vehicle-paint', storage);
 }

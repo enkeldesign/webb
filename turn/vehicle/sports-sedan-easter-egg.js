@@ -1,3 +1,5 @@
+import { signalSecretAchievement } from '../achievements/secret-events.js?revision=r157-hidden-achievements';
+
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
 const catalogUrl = new URL('./catalog.js', import.meta.url);
 if (buildKey) catalogUrl.searchParams.set('build', buildKey);
@@ -94,6 +96,14 @@ function syncUnlockPresentation(lot, car, unlocked) {
 
   notice.hidden = !unlocked;
   lot.classList.toggle('is-super-sedan-unlocked', unlocked);
+
+  if (unlocked && lot.dataset.turnSatansSedanFound !== 'true') {
+    lot.dataset.turnSatansSedanFound = 'true';
+    signalSecretAchievement('satans-sedan', {
+      trackId: globalThis.__turnRuntime?.state?.trackId || '',
+      vehicleId: 'sedan-sports'
+    });
+  }
 }
 
 function ensureUnlockNotice(lot) {

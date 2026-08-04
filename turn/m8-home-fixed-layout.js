@@ -99,18 +99,21 @@ export async function installM8HomeFixedLayout() {
   );
   const cardScrollFixes = await installM8HomeCardScrollFixes();
 
-  // Previous bundle marker retained for the established r154-trophy-road-feedback regression.
   const { installM8TrophyGate } = await import(
-    `/turn/progression/m8-trophy-gate.js?build=${buildKey}-r155-trophy-road-polish`
+    `/turn/progression/m8-trophy-gate.js?build=${buildKey}-r157-paint-monster`
   );
   const trophyGate = installM8TrophyGate(globalThis.__turnNextHome);
 
   const { installAchievements } = await import(
-    `/turn/achievements.js?build=${buildKey}-r155-trophy-road-polish`
+    `/turn/achievements.js?build=${buildKey}-r157-hidden-achievements`
   );
   const achievements = installAchievements(globalThis.__turnRuntime);
+  const { installSecretAchievements } = await import(
+    `/turn/achievements/secret-achievements.js?build=${buildKey}-r157-hidden-achievements`
+  );
+  const secretAchievements = installSecretAchievements(achievements);
   const { installTrophyRoadFeedback } = await import(
-    `/turn/achievements/trophy-road-feedback.js?build=${buildKey}-r156-trophy-road-selection`
+    `/turn/achievements/trophy-road-feedback.js?build=${buildKey}-r157-paint-monster`
   );
   const trophyRoadFeedback = installTrophyRoadFeedback(achievements);
 
@@ -128,6 +131,7 @@ export async function installM8HomeFixedLayout() {
     cardScrollFixes,
     trophyGate,
     achievements,
+    secretAchievements,
     trophyRoadFeedback,
     driveByEarTraining
   });

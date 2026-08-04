@@ -3,22 +3,37 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import {
   DEFAULT_VEHICLE_SECONDARY_COLOR,
   getCarDefinition,
+  getVehicleDefaultColorSpec,
+  getVehicleDefaultSecondaryColorSpec,
   makeGhostColor,
   normalizeVehicleColor,
   normalizeVehicleSecondaryColor
-} from './catalog.js?build=20260720-r19';
+} from './catalog.js?build=20260804-r157-factory-colors';
+import {
+  makeWideGamutSpec,
+  setThreeColor
+} from './wide-gamut.js?revision=r157-display-p3';
 
 const loader = new GLTFLoader();
 const sourceCache = new Map();
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
 const TIRE_COLOR = 0x17191c;
-// Existing production surfaces use stable target lengths: 5.15 for the standard
-// Lot lineup and 5.5 for race cars. The expanded viewer and record thumbnails use
-// 6.4 and intentionally keep the authored scale.
 const FEATURED_SURFACE_TARGET_LENGTHS = new Set([5.15, 5.5]);
 
 export async function preloadCarModels(carIds) {
   await Promise.all(carIds.map((carId) => loadCarSource(carId).catch(() => null)));
+}
+
+function primaryColorSpec(car, color) {
+  return color === car.defaultColor
+    ? getVehicleDefaultColorSpec(car.id)
+    : makeWideGamutSpec(color);
+}
+
+function secondaryColorSpec(car, color) {
+  return color === car.defaultSecondaryColor
+    ? getVehicleDefaultSecondaryColorSpec(car.id)
+    : makeWideGamutSpec(color);
 }
 
 export async function createCarVisual({
@@ -33,13 +48,16 @@ export async function createCarVisual({
   const source = await loadCarSource(car.id);
   const root = new THREE.Group();
   const model = source.clone(true);
-  // TURN's visual roots point down local -Z. The per-asset quarter turns first
-  // normalize the GLB's authored nose direction, then the shared half-turn aligns it.
   model.rotation.y = Math.PI + car.modelYawQuarterTurns * Math.PI / 2;
   root.add(model);
 
-  const requestedColor = normalizeVehicleColor(color);
-  const requestedSecondaryColor = normalizeVehicleSecondaryColor(secondaryColor);
+  const requestedColor = normalizeVehicleColor(color, car.defaultColor);
+  const requestedSecondaryColor = normalizeVehicleSecondaryColor(
+    secondaryColor,
+    car.defaultSecondaryColor
+  );
+  const requestedColorSpec = primaryColorSpec(car, requestedColor);
+  const requestedSecondaryColorSpec = secondaryColorSpec(car, requestedSecondaryColor);
   const ghostColor = makeGhostColor(requestedColor);
   const ghostSecondaryColor = makeGhostColor(requestedSecondaryColor);
   const meshRecords = [];
@@ -76,26 +94,22 @@ export async function createCarVisual({
       explicitPaint
     } = record;
     const paintable = !car.fixedLivery && !protectedPart && !secondaryPaint && (
-      explicitPaint ||
-      (explicitPaintCount === 0 && isFallbackPaintCandidate(material)) ||
-      (car.pack !== 'car' && isFallbackPaintCandidate(material))
+      explicitPaint
+      || (explicitPaintCount === 0 && isFallbackPaintCandidate(material))
+      || (car.pack !== 'car' && isFallbackPaintCandidate(material))
     );
 
     if (wheelPart && material.color) {
-      // Several Kenney models ship with very bright wheel materials. Tires/wheels should
-      // remain visually grounded instead of inheriting white or body paint.
       material.color.setHex(TIRE_COLOR);
       if ('roughness' in material) material.roughness = Math.max(Number(material.roughness) || 0, 0.82);
     } else if (secondaryPaint && !protectedPart && material.color) {
-      material.color.set(ghost ? ghostSecondaryColor : requestedSecondaryColor);
+      setThreeColor(material.color, ghost ? ghostSecondaryColor : requestedSecondaryColorSpec);
       secondaryPaintMaterials.push(material);
     } else if (paintable && material.color) {
-      material.color.set(ghost ? ghostColor : requestedColor);
+      setThreeColor(material.color, ghost ? ghostColor : requestedColorSpec);
       primaryPaintMaterials.push(material);
     }
 
-    // Personal rivals are solid cars. Their identity comes from the lighter body colour,
-    // not transparency, so they remain readable at speed and in Spectate mode.
     if (ghost) {
       material.transparent = false;
       material.opacity = 1;
@@ -103,17 +117,13 @@ export async function createCarVisual({
       material.needsUpdate = true;
     }
 
-    // Rivals remain fully shaded but do not trigger another shadow-map draw for every
-    // GLB mesh. The player's car keeps its grounding shadow.
     record.node.castShadow = !ghost;
     record.node.receiveShadow = true;
   }
 
   if (outline) addOutlines(model);
   const featuredSurface = FEATURED_SURFACE_TARGET_LENGTHS.has(targetLength);
-  const featuredVisualSizeMultiplier = featuredSurface
-    ? car.featuredVisualSizeMultiplier
-    : 1;
+  const featuredVisualSizeMultiplier = featuredSurface ? car.featuredVisualSizeMultiplier : 1;
   const effectiveVisualScale = car.visualScale
     * car.visualSizeMultiplier
     * featuredVisualSizeMultiplier;
@@ -137,7 +147,6 @@ export async function createCarVisual({
   return root;
 }
 
-
 function installEmergencyLightRig(root, model, service) {
   model.updateMatrixWorld(true);
   const bounds = new THREE.Box3().setFromObject(model);
@@ -152,18 +161,21 @@ function installEmergencyLightRig(root, model, service) {
   const lightDistance = Math.max(8, size.z * 3.1);
   const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches || false;
   const periodMs = reducedMotion ? 1400 : (service === 'police' ? 720 : 840);
-  const colors = service === 'police' ? [0xff3158, 0x2ab7ff] : [0x2ab7ff, 0x2ab7ff];
+  const colors = service === 'police'
+    ? [makeWideGamutSpec('#ff3158'), makeWideGamutSpec('#2ab7ff')]
+    : [makeWideGamutSpec('#2ab7ff'), makeWideGamutSpec('#2ab7ff')];
   const lamps = [];
 
-  colors.forEach((color, index) => {
+  colors.forEach((colorSpec, index) => {
     const material = new THREE.MeshBasicMaterial({
-      color,
+      color: 0xffffff,
       transparent: true,
       opacity: 0,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
       toneMapped: false
     });
+    setThreeColor(material.color, colorSpec);
     const lamp = new THREE.Mesh(new THREE.BoxGeometry(lampWidth, lampHeight, lampDepth), material);
     lamp.position.set((index === 0 ? -1 : 1) * barWidth * 0.27, roofY, roofZ);
     lamp.visible = true;
@@ -185,36 +197,20 @@ function installEmergencyLightRig(root, model, service) {
     wideHalo.visible = false;
     wideHalo.renderOrder = 40;
 
-    const pointLight = new THREE.PointLight(color, 0, lightDistance, 2);
+    const pointLight = new THREE.PointLight(0xffffff, 0, lightDistance, 2);
+    setThreeColor(pointLight.color, colorSpec);
     pointLight.position.copy(lamp.position);
     pointLight.position.y += lampHeight * 1.2;
     pointLight.castShadow = false;
 
     root.add(pointLight, wideHalo, halo, lamp);
-    lamps.push({
-      lamp,
-      material,
-      halo,
-      haloMaterial,
-      wideHalo,
-      wideHaloMaterial,
-      pointLight,
-      index
-    });
+    lamps.push({ lamp, material, halo, haloMaterial, wideHalo, wideHaloMaterial, pointLight, index });
   });
 
-  const rig = {
-    service,
-    lamps,
-    periodMs,
-    reducedMotion,
-    lastFrameAt: -Infinity
-  };
+  const rig = { service, lamps, periodMs, reducedMotion, lastFrameAt: -Infinity };
   root.userData.turnEmergencyService = service;
   root.userData.turnEmergencyLightRig = rig;
-  for (const record of lamps) {
-    record.lamp.onBeforeRender = () => updateEmergencyLightRig(rig);
-  }
+  for (const record of lamps) record.lamp.onBeforeRender = () => updateEmergencyLightRig(rig);
 }
 
 function updateEmergencyLightRig(rig) {
@@ -238,16 +234,19 @@ function updateEmergencyLightRig(rig) {
 }
 
 export function recolorCarVisual(root, color, secondaryColor = root?.userData?.turnCarSecondaryColor) {
-  const normalized = normalizeVehicleColor(color);
-  const normalizedSecondary = normalizeVehicleSecondaryColor(secondaryColor);
+  const car = getCarDefinition(root?.userData?.turnCarId);
+  const normalized = normalizeVehicleColor(color, car.defaultColor);
+  const normalizedSecondary = normalizeVehicleSecondaryColor(secondaryColor, car.defaultSecondaryColor);
   const ghost = Boolean(root?.userData?.turnGhost);
-  const displayColor = ghost ? makeGhostColor(normalized) : normalized;
-  const displaySecondary = ghost ? makeGhostColor(normalizedSecondary) : normalizedSecondary;
+  const displayColor = ghost ? makeGhostColor(normalized) : primaryColorSpec(car, normalized);
+  const displaySecondary = ghost
+    ? makeGhostColor(normalizedSecondary)
+    : secondaryColorSpec(car, normalizedSecondary);
   for (const material of root?.userData?.turnPrimaryPaintMaterials || []) {
-    material.color?.set(displayColor);
+    setThreeColor(material.color, displayColor);
   }
   for (const material of root?.userData?.turnSecondaryPaintMaterials || []) {
-    material.color?.set(displaySecondary);
+    setThreeColor(material.color, displaySecondary);
   }
   if (root?.userData) {
     root.userData.turnCarColor = normalized;
