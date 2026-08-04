@@ -83,6 +83,10 @@ assert.equal(isTrackUnlocked('midnight-city', freshStorage), false);
 assert.equal(isVehicleUnlocked('classic', freshStorage), true);
 assert.equal(isVehicleUnlocked('police', freshStorage), false);
 assert.equal(isVehicleUnlocked('race-future', freshStorage), false);
+freshStorage.setItem('turn-drive-by-ear-v1', 'false');
+assert.equal(prepareTrophyRoadProfile(freshStorage), null,
+  'A setting created later in a fresh session must not retroactively grandfather the player');
+assert.deepEqual(readTrophyRoadSnapshot(freshStorage).unlockedRewardIds, []);
 
 const legacyWithoutAchievements = createMemoryStorage({
   'turn-vehicle-selection-v1': JSON.stringify({ carId: 'police' })
@@ -132,6 +136,17 @@ assert.deepEqual(store.unseenRewardIds(), ['midnight-city', 'emergency-pack', 'f
 store.markAllSeen();
 assert.deepEqual(store.unseenRewardIds(), []);
 
+const previousAchievements = globalThis.__turnAchievements;
+const blockedStorage = {
+  getItem() { throw new Error('blocked'); },
+  setItem() { throw new Error('blocked'); }
+};
+globalThis.__turnAchievements = { store };
+assert.equal(isVehicleUnlocked('police', blockedStorage), true,
+  'Session-only rewards must open content even when persistent browser storage is blocked');
+if (previousAchievements === undefined) delete globalThis.__turnAchievements;
+else globalThis.__turnAchievements = previousAchievements;
+
 const permanentReward = normalizeAchievementState({
   version: 3,
   unlocked: {},
@@ -147,6 +162,9 @@ assert.match(roadSource, /threshold: 200/);
 assert.match(roadSource, /threshold: 400/);
 assert.match(roadSource, /threshold: 500/);
 assert.match(roadSource, /turn-drive-by-ear-v1/);
+assert.match(roadSource, /PREPARED_STORAGE = new WeakSet/);
+assert.match(roadSource, /preparationAlreadyChecked/);
+assert.match(roadSource, /globalThis\.__turnAchievements\?\.store/);
 assert.match(roadSource, /prepareTrophyRoadProfile/);
 assert.match(roadSource, /Number\(state\.version \|\| 0\) < TROPHY_ROAD_STORAGE_VERSION/);
 assert.doesNotMatch(roadSource, /clearRivals|resetRivals|rival-storage/);
