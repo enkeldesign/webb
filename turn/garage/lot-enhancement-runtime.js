@@ -1,10 +1,11 @@
 import { installLotStatLegend } from './lot-stat-legend.js?build=20260724-r59';
 import { installLotLayout } from './lot-layout-r60.js?build=20260729-r116';
 import { installLotAccessibility } from './lot-accessibility-r118.js?build=20260729-r118';
-import { gateLotNow } from '../progression/lot-trophy-gate.js?revision=r154-trophy-road-feedback';
+import { gateLotNow } from '../progression/lot-trophy-gate.js?revision=r157-paint-monster';
+import { gateLotPaintNow } from '../progression/lot-paint-reward.js?revision=r157-paint-monster';
 
-const ENHANCEMENT_ID = 'enhanced-lot-r121';
-const TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r154-trophy-road-feedback';
+const ENHANCEMENT_ID = 'enhanced-lot-r157-paint-monster';
+const TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r157-paint-monster';
 const activeEnhancements = new WeakMap();
 
 function findLotScreen(root) {
@@ -20,9 +21,8 @@ export function enhanceLotNow(root = document.body) {
   if (active) return active.release;
 
   const scope = screen.parentElement || document.body;
-  // Trophy gating runs first so the accessibility layer captures complete
-  // locked-state names for every vehicle radio.
   const removeTrophyGate = gateLotNow(scope);
+  const removePaintGate = gateLotPaintNow(scope);
   const removeStatLegend = installLotStatLegend(scope);
   const removeLayout = installLotLayout(scope);
   const removeAccessibility = installLotAccessibility(scope);
@@ -34,6 +34,7 @@ export function enhanceLotNow(root = document.body) {
     removeAccessibility();
     removeLayout();
     removeStatLegend();
+    removePaintGate();
     removeTrophyGate();
     activeEnhancements.delete(screen);
     delete screen.dataset.lotEnhancements;
