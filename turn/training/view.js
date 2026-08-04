@@ -20,10 +20,29 @@ export function installTrainingView({ revision, openTraining, isTrainingActive }
 
 export function showTrainingDialog(dialog, focusSelector = '[data-training-primary]') {
   const card = dialog.querySelector('.m8-dialog-card');
-  if (card) card.scrollTop = 0;
   if (typeof dialog.showModal === 'function') dialog.showModal();
   else dialog.setAttribute('open', '');
-  dialog.querySelector(focusSelector)?.focus();
+
+  // Focusing the first part button made iOS scroll the long introduction down to
+  // that button. Keep initial focus at the visible top of the introductory modal.
+  const requestedTarget = dialog.querySelector(focusSelector);
+  const focusTarget = dialog.classList.contains('turn-dbe-training-intro-dialog')
+    ? dialog.querySelector('[data-training-cancel]') || requestedTarget
+    : requestedTarget;
+
+  resetDialogScroll(dialog, card);
+  try {
+    focusTarget?.focus({ preventScroll: true });
+  } catch (_) {
+    focusTarget?.focus?.();
+  }
+
+  // WebKit may apply a delayed focus scroll after showModal(). Reset on the next
+  // two frames so the heading remains visible when the dialog has fully settled.
+  requestAnimationFrame(() => {
+    resetDialogScroll(dialog, card);
+    requestAnimationFrame(() => resetDialogScroll(dialog, card));
+  });
 }
 
 export function hideTrainingDialog(dialog) {
@@ -81,6 +100,15 @@ export function renderTrainingNavigation(navigation, index) {
       : 'No next training part'
   );
   navigation.hidden = false;
+}
+
+function resetDialogScroll(dialog, card) {
+  dialog.scrollTop = 0;
+  if (!card) return;
+  card.scrollTop = 0;
+  try {
+    card.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  } catch (_) {}
 }
 
 function installStylesheet(revision) {
