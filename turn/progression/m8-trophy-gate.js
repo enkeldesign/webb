@@ -45,9 +45,9 @@ export function installM8TrophyGate(homeApi = globalThis.__turnNextHome) {
 
   function setRaceLocked(isLockedSelection) {
     continueButton.classList.toggle('is-trophy-locked', isLockedSelection);
-    continueButton.toggleAttribute('aria-disabled', isLockedSelection);
     if (isLockedSelection) {
       continueButton.dataset.trophyLocked = 'true';
+      continueButton.setAttribute('aria-disabled', 'true');
       continueButton.setAttribute(
         'aria-label',
         `Race on ${reward.shortTitle}, locked. Unlocks at ${reward.threshold} trophies.`
@@ -56,6 +56,7 @@ export function installM8TrophyGate(homeApi = globalThis.__turnNextHome) {
     }
 
     delete continueButton.dataset.trophyLocked;
+    continueButton.removeAttribute('aria-disabled');
     if (selected()) continueButton.setAttribute('aria-label', `Race on ${reward.shortTitle}`);
   }
 
