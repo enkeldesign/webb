@@ -1,12 +1,12 @@
 import { CATEGORY } from './catalog.js?revision=r153-trophy-road';
-import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r155-trophy-road-polish';
+import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r156-trophy-road-selection';
 import {
   LOCK_ICON,
   TROPHY_ROAD_MAX_THRESHOLD,
   TROPHY_ROAD_REWARD_ICONS,
   TROPHY_ROAD_VIEWPORT_THRESHOLD,
   getTrophyRoadReward
-} from '../progression/trophy-road.js?revision=r155-trophy-road-polish';
+} from '../progression/trophy-road.js?revision=r156-trophy-road-selection';
 
 const EDGE_PX = 34;
 const CATEGORY_FILTERS = Object.freeze([
@@ -33,7 +33,7 @@ function ensureFeedbackStylesheet() {
   if (!stylesheet) {
     stylesheet = document.createElement('link');
     stylesheet.rel = 'stylesheet';
-    stylesheet.href = `/turn/progression/trophy-road.css?build=${buildKey}-r155-trophy-road-polish`;
+    stylesheet.href = `/turn/progression/trophy-road.css?build=${buildKey}-r156-trophy-road-selection`;
     stylesheet.setAttribute('data-turn-trophy-road-feedback', '');
   }
   document.head.appendChild(stylesheet);
@@ -84,7 +84,7 @@ function prepareSummary(dialog) {
     scroll = document.createElement('div');
     scroll.className = 'turn-trophy-road-scroll';
     scroll.tabIndex = 0;
-    scroll.setAttribute('aria-label', 'Trophy Road. Drag, use arrow keys, or use the scroll buttons for later rewards.');
+    scroll.setAttribute('aria-label', 'Trophy Road. Use arrow keys or the scroll buttons for later rewards.');
     content = document.createElement('div');
     content.className = 'turn-trophy-road-content';
     scroll.appendChild(content);
@@ -211,15 +211,15 @@ function installRoadBehavior({ achievements, summary }) {
   const showcase = createTrophyRoadShowcase();
   let selectedByPlayer = '';
   let geometryFrame = 0;
-  let dragPointerId = null;
-  let dragStartX = 0;
-  let dragStartScrollLeft = 0;
-  let dragged = false;
 
   function updateScrollButtons() {
     const maximum = Math.max(0, summary.scroll.scrollWidth - summary.scroll.clientWidth);
-    summary.previousButton.disabled = summary.scroll.scrollLeft <= 1;
-    summary.nextButton.disabled = summary.scroll.scrollLeft >= maximum - 1;
+    const atStart = summary.scroll.scrollLeft <= 1;
+    const atEnd = maximum <= 1 || summary.scroll.scrollLeft >= maximum - 1;
+    summary.previousButton.disabled = atStart;
+    summary.previousButton.setAttribute('aria-disabled', String(atStart));
+    summary.nextButton.disabled = atEnd;
+    summary.nextButton.setAttribute('aria-disabled', String(atEnd));
   }
 
   function roadGeometry() {
@@ -326,39 +326,14 @@ function installRoadBehavior({ achievements, summary }) {
     scrollRoad(event.key === 'ArrowLeft' ? -1 : 1);
   });
 
-  summary.scroll.addEventListener('pointerdown', (event) => {
-    if (event.button !== 0 || event.target.closest('button')) return;
-    dragPointerId = event.pointerId;
-    dragStartX = event.clientX;
-    dragStartScrollLeft = summary.scroll.scrollLeft;
-    dragged = false;
-    summary.scroll.classList.add('is-dragging');
-    summary.scroll.setPointerCapture?.(event.pointerId);
-  });
-  summary.scroll.addEventListener('pointermove', (event) => {
-    if (event.pointerId !== dragPointerId) return;
-    const distance = event.clientX - dragStartX;
-    if (Math.abs(distance) > 4) dragged = true;
-    summary.scroll.scrollLeft = dragStartScrollLeft - distance;
-    if (dragged) event.preventDefault();
-  });
-  const stopDragging = (event) => {
-    if (dragPointerId == null || (event?.pointerId != null && event.pointerId !== dragPointerId)) return;
-    summary.scroll.classList.remove('is-dragging');
-    dragPointerId = null;
-    dragged = false;
-    updateScrollButtons();
-  };
-  summary.scroll.addEventListener('pointerup', stopDragging);
-  summary.scroll.addEventListener('pointercancel', stopDragging);
-  summary.scroll.addEventListener('lostpointercapture', stopDragging);
-
+  // The base achievement view renders the selected reward first. This later
+  // bubble listener then attaches the correct 3D showcase to that finished card.
   markers.addEventListener('click', (event) => {
     const marker = event.target.closest('[data-trophy-reward]');
-    if (!marker || dragged) return;
+    if (!marker) return;
     selectedByPlayer = marker.dataset.trophyReward;
-    queueMicrotask(preserveUserSelection);
-  }, { capture: true });
+    preserveUserSelection();
+  });
 
   const markerObserver = new MutationObserver(preserveUserSelection);
   markerObserver.observe(markers, { childList: true });
@@ -383,6 +358,7 @@ function installRoadBehavior({ achievements, summary }) {
   return Object.freeze({
     clearSelection,
     alignToProgress,
+    syncScrollButtons: updateScrollButtons,
     pauseShowcase: showcase.pause,
     disconnect() {
       cancelAnimationFrame(geometryFrame);
@@ -410,6 +386,7 @@ export function installTrophyRoadFeedback(achievements = globalThis.__turnAchiev
     filters.reset();
     road.clearSelection();
     summary.scroll.scrollLeft = 0;
+    road.syncScrollButtons();
   }
 
   const openObserver = new MutationObserver(() => {
