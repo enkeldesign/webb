@@ -170,7 +170,7 @@ const { installHarborHiddenFaceOrientation } = await import(withBuild('./tracks/
 installHarborHiddenFaceOrientation();
 
 const { installLotEnhancementRuntime } = await import(
-  withBuild('./garage/lot-enhancement-runtime.js?revision=r153-trophy-road')
+  withBuild('./garage/lot-enhancement-runtime.js?revision=r121&trophy-road=r153')
 );
 installLotEnhancementRuntime();
 
