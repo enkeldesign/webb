@@ -109,6 +109,7 @@ const [
   lotLayout,
   lotLayoutCss,
   lotAccessibility,
+  lotTrophyGate,
   originalLot,
   trackIntro,
   trackIntroCss,
@@ -129,6 +130,7 @@ const [
   fs.readFile(path.join(turnDir, 'garage/lot-layout-r60.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'garage/lot-layout-r60.css'), 'utf8'),
   fs.readFile(path.join(turnDir, 'garage/lot-accessibility-r118.js'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'progression/lot-trophy-gate.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'garage/lot-r10.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'ui/track-intro.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'track-intro.css'), 'utf8'),
@@ -152,7 +154,7 @@ assert.equal(imports['./race/lap-system.js?build=20260720-r19'], releaseTarget('
 assert.match(app, /lot-layout-r60\.css\?revision=r121-viewer-r122-fit-r128-super-sedan-notice/);
 assert.match(app, /sports-sedan-easter-egg\.js\?revision=r128-unlock-notice/);
 assert.match(app, /installLotEnhancementRuntime/);
-assert.match(app, /lot-enhancement-runtime\.js\?revision=r121/);
+assert.match(app, /lot-enhancement-runtime\.js\?revision=r153-trophy-road/);
 assert.ok(app.indexOf('installLotEnhancementRuntime()') < app.indexOf("withBuild('./main.js')"));
 
 assert.match(lotWrapper, /showOriginalLot/);
@@ -163,13 +165,21 @@ assert.match(lotWrapper, /track-manager\.js\?build=20260722-r52/);
 assert.doesNotMatch(lotWrapper, /installLotLayout|installLotStatLegend|installLotAccessibility/);
 assert.match(originalLot, /export function showTheLot/);
 
-assert.match(lotEnhancementRuntime, /ENHANCEMENT_ID = 'enhanced-lot-r121'/);
+assert.match(lotEnhancementRuntime, /ENHANCEMENT_ID = 'enhanced-lot-r153-trophy-road'/);
 assert.match(lotEnhancementRuntime, /activeEnhancements = new WeakMap\(\)/);
+assert.match(lotEnhancementRuntime, /gateLotNow\(scope\)/);
 assert.match(lotEnhancementRuntime, /installLotStatLegend\(scope\)/);
 assert.match(lotEnhancementRuntime, /installLotLayout\(scope\)/);
 assert.match(lotEnhancementRuntime, /installLotAccessibility\(scope\)/);
+assert.ok(
+  lotEnhancementRuntime.indexOf('gateLotNow(scope)') < lotEnhancementRuntime.indexOf('installLotAccessibility(scope)'),
+  'Trophy locks must be included in the accessible car names before the accessibility enhancer runs'
+);
 assert.match(lotEnhancementRuntime, /new MutationObserver\(sync\)/);
 assert.match(lotEnhancementRuntime, /screen\.dataset\.lotEnhancements = ENHANCEMENT_ID/);
+assert.match(lotTrophyGate, /FALLBACK_VEHICLE_ID = 'classic'/);
+assert.match(lotTrophyGate, /raceButton\.disabled = locked/);
+assert.match(lotTrophyGate, /aria-disabled/);
 
 assert.match(lotLayout, /viewbox\.appendChild\(colors\)/);
 assert.match(lotLayout, /attributesHeading\.replaceChildren\(document\.createTextNode\('ATTRIBUTES'\)\)/);
@@ -244,4 +254,4 @@ assert.match(easterEggUi, /notice\.setAttribute\('role', 'status'\)/);
 assert.match(easterEggUi, /notice\.setAttribute\('aria-live', 'polite'\)/);
 assert.match(easterEggUi, /card\.insertBefore\(notice, actions \|\| null\)/, 'The explanation must sit immediately before RACE THIS CAR');
 
-console.log(`TURN ${release.id} enhanced Lot route, expanded 3D viewer, accessibility and garage setup passed.`);
+console.log(`TURN ${release.id} enhanced Lot route, Trophy Road gating, accessibility and garage setup passed.`);
