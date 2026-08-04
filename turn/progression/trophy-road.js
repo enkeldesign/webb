@@ -1,8 +1,10 @@
 export const TROPHY_ROAD_STORAGE_KEY = 'turn-achievements-v1';
 export const TROPHY_ROAD_STORAGE_VERSION = 3;
 export const TROPHY_ROAD_MAX_THRESHOLD = 1300;
+export const TROPHY_ROAD_VIEWPORT_THRESHOLD = 600;
 
 export const TROPHY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 4h10v4c0 4-2 7-5 8-3-1-5-4-5-8V4Z"></path><path d="M7 6H4v2c0 2 1 3 4 4M17 6h3v2c0 2-1 3-4 4M9 20h6M12 16v4"></path></svg>';
+export const LOCK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="10" width="14" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"></path></svg>';
 
 export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
   skyline: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M3 43h58M8 43V24h10v19M21 43V13h13v30M37 43V20h8v23M48 43V9h10v34"></path><path d="M11 29h3M11 35h3M25 19h4M25 26h4M25 33h4M51 15h3M51 22h3M51 29h3"></path><path d="M8 8a8 8 0 1 0 9 9A7 7 0 0 1 8 8Z"></path></svg>',
@@ -13,7 +15,7 @@ export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
 export const TROPHY_ROAD_REWARDS = Object.freeze([
   Object.freeze({
     id: 'midnight-city',
-    threshold: 200,
+    threshold: 300,
     title: 'MIDNIGHT CITY',
     shortTitle: 'Midnight City',
     type: 'track',
@@ -22,24 +24,24 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     description: 'Unlock TURN’s night-time city track, with neon streets, technical corners and the longest lap in the current track collection.'
   }),
   Object.freeze({
-    id: 'emergency-pack',
-    threshold: 400,
-    title: 'EMERGENCY!',
-    shortTitle: 'Emergency Pack',
-    type: 'vehicle-pack',
-    vehicleIds: Object.freeze(['firetruck', 'ambulance', 'police']),
-    icon: 'emergency',
-    description: 'Unlock the Fire Truck, Ambulance and Police Car. During Boost, their emergency lights flash and their sirens sound. All three have maximum Boost tanks.'
-  }),
-  Object.freeze({
     id: 'future-racer',
-    threshold: 500,
+    threshold: 400,
     title: 'FUTURE RACER',
     shortTitle: 'Future Racer',
     type: 'vehicle',
     vehicleIds: Object.freeze(['race-future']),
     icon: 'future',
     description: 'Unlock a high-speed racing vehicle built for advanced laps and hard time-trial targets.'
+  }),
+  Object.freeze({
+    id: 'emergency-pack',
+    threshold: 600,
+    title: 'EMERGENCY!',
+    shortTitle: 'Emergency Pack',
+    type: 'vehicle-pack',
+    vehicleIds: Object.freeze(['firetruck', 'ambulance', 'police']),
+    icon: 'emergency',
+    description: 'Unlock the Fire Truck, Ambulance and Police Car. During Boost, their emergency lights flash and their sirens sound. All three have maximum Boost tanks.'
   })
 ]);
 
@@ -55,6 +57,9 @@ const REWARD_BY_VEHICLE = new Map(
   )
 );
 const PREPARED_STORAGE = new WeakSet();
+
+let unlockNotice = null;
+let unlockNoticeTimer = 0;
 
 export function getTrophyRoadReward(id) {
   return REWARD_BY_ID.get(id) || null;
@@ -73,6 +78,52 @@ export function rewardIdsForTrophies(trophies) {
   return TROPHY_ROAD_REWARDS
     .filter((reward) => total >= reward.threshold)
     .map((reward) => reward.id);
+}
+
+function ensureUnlockNotice() {
+  if (unlockNotice?.isConnected) return unlockNotice;
+  const documentRef = globalThis.document;
+  if (!documentRef?.body) return null;
+
+  unlockNotice = documentRef.createElement('div');
+  unlockNotice.className = 'turn-unlock-notice';
+  unlockNotice.hidden = true;
+  unlockNotice.setAttribute('role', 'status');
+  unlockNotice.setAttribute('aria-live', 'polite');
+  unlockNotice.setAttribute('aria-atomic', 'true');
+  unlockNotice.innerHTML = `
+    <span class="turn-unlock-notice-icon" aria-hidden="true">${LOCK_ICON}</span>
+    <span class="turn-unlock-notice-copy"><strong></strong><span></span></span>`;
+  documentRef.body.appendChild(unlockNotice);
+  return unlockNotice;
+}
+
+export function showTrophyUnlockNotice({ reward, itemName = reward?.shortTitle } = {}) {
+  if (!reward) return null;
+  const notice = ensureUnlockNotice();
+  if (!notice) return null;
+
+  const name = itemName || reward.shortTitle;
+  notice.querySelector('strong').textContent = `LOCKED · ${reward.threshold} TROPHIES`;
+  notice.querySelector('.turn-unlock-notice-copy > span').textContent =
+    `${name} unlocks on Trophy Road. Complete achievements to reach ${reward.threshold} trophies.`;
+  notice.setAttribute(
+    'aria-label',
+    `${name} is locked. Unlocks at ${reward.threshold} trophies on Trophy Road.`
+  );
+  notice.hidden = false;
+  notice.classList.remove('is-visible');
+  void notice.offsetWidth;
+  notice.classList.add('is-visible');
+
+  globalThis.clearTimeout?.(unlockNoticeTimer);
+  unlockNoticeTimer = globalThis.setTimeout?.(() => {
+    notice.classList.remove('is-visible');
+    globalThis.setTimeout?.(() => {
+      if (!notice.classList.contains('is-visible')) notice.hidden = true;
+    }, 180);
+  }, 4200) || 0;
+  return notice;
 }
 
 function safeParse(raw) {
