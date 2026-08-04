@@ -64,7 +64,11 @@ const [
 assert.match(carModels, /!car\.fixedLivery/);
 assert.match(carModels, /installEmergencyLightRig/);
 assert.match(carModels, /THREE\.AdditiveBlending/);
-assert.match(carModels, /new THREE\.PointLight\(color, 0, lightDistance, 2\)/);
+assert.match(carModels, /new THREE\.PointLight\(0xffffff, 0, lightDistance, 2\)/);
+assert.match(carModels, /setThreeColor\(pointLight\.color, colorSpec\)/,
+  'Emergency point lights should use Display P3 when the renderer supports it');
+assert.match(carModels, /makeWideGamutSpec\('#ff3158'\)/);
+assert.match(carModels, /makeWideGamutSpec\('#2ab7ff'\)/);
 assert.match(carModels, /record\.wideHalo\.visible = active && !rig\.reducedMotion && on/);
 assert.match(carModels, /record\.haloMaterial\.opacity = active && on \? \(rig\.reducedMotion \? 0\.42 : 0\.68\) : 0/);
 assert.match(carModels, /record\.pointLight\.intensity = active && on \? \(rig\.reducedMotion \? 70 : 110\) : 0/);
@@ -72,13 +76,15 @@ assert.match(carModels, /prefers-reduced-motion: reduce/);
 assert.match(carModels, /periodMs = reducedMotion \? 1400/);
 assert.match(carModels, /globalThis\.__turnBoostActive/);
 
-assert.match(emergencyLiveries, /police:[\s\S]*primary: 0x0b0d10[\s\S]*secondary: 0xf8f9fa/);
-assert.match(emergencyLiveries, /ambulance:[\s\S]*primary: 0xf8f9fa[\s\S]*secondary: 0xd92d20[\s\S]*accent: 'rear-side-stripe'/);
-assert.match(emergencyLiveries, /firetruck:[\s\S]*primary: 0xd92d20[\s\S]*secondary: 0xffd43b/);
+assert.match(emergencyLiveries, /police:[\s\S]*primary: makeWideGamutSpec\('#0b0d10'[\s\S]*secondary: makeWideGamutSpec\('#f8f9fa'/);
+assert.match(emergencyLiveries, /ambulance:[\s\S]*primary: makeWideGamutSpec\('#f8f9fa'[\s\S]*secondary: makeWideGamutSpec\('#d92d20'[\s\S]*accent: 'rear-side-stripe'/);
+assert.match(emergencyLiveries, /firetruck:[\s\S]*primary: makeWideGamutSpec\('#d92d20'[\s\S]*secondary: makeWideGamutSpec\('#ffcc00'/);
 assert.match(emergencyLiveries, /applyFixedEmergencyLivery/);
 assert.match(emergencyLiveries, /turnEmergencyLiveryAccent/);
 assert.match(emergencyLiveries, /length: size\.z \* 0\.52/);
 assert.match(emergencyLiveries, /createBaseCarVisual/);
+assert.match(emergencyLiveries, /installLotUnselectedTint/,
+  'Unselected Lot vehicles should retain a subtle hint of their factory colour');
 assert.doesNotMatch(emergencyLiveries, /turnEmergencyLightRig|PointLight|AdditiveBlending/);
 
 assert.match(lot, /SERVICE LIVERY/);
@@ -107,4 +113,4 @@ assert.match(audio, /emergencySirenFrequency/);
 assert.match(audio, /sirenActive = boostActive/);
 assert.match(license, /Creative Commons CC0 1\.0 Universal/);
 
-console.log('TURN emergency vehicles, fixed liveries, empty paint rail, lights and sirens passed.');
+console.log('TURN emergency vehicles, fixed liveries, wide-gamut lights, Lot tint and sirens passed.');
