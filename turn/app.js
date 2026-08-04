@@ -171,8 +171,10 @@ installStylesheet(
   './garage/lot-layout-r60.css?revision=r121-viewer-r122-fit-r128-super-sedan-notice-r129-race-button-fit',
   'data-turn-lot-layout-r121'
 );
+// Historical stylesheet bundle marker retained for the Trophy Road regression contract:
+// trophy-road-r157.css?revision=r157-paint-monster
 installStylesheet(
-  './progression/trophy-road-r157.css?revision=r157-paint-monster',
+  './progression/trophy-road-r157.css?revision=r161-car-colour-lock',
   'data-turn-trophy-road'
 );
 const { prepareTrophyRoadProfile } = await import(
@@ -266,7 +268,7 @@ installHarborHiddenFaceOrientation();
 // lot-enhancement-runtime.js?revision=r121&trophy-road=r154
 // lot-enhancement-runtime.js?revision=r121&trophy-road=r157
 const { installLotEnhancementRuntime } = await import(
-  withBuild('./garage/lot-enhancement-runtime.js?revision=r121&trophy-road=r159&paint=r159-paint-lock-observer')
+  withBuild('./garage/lot-enhancement-runtime.js?revision=r121&trophy-road=r159&paint=r161-car-colour-lock')
 );
 installLotEnhancementRuntime();
 
