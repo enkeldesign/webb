@@ -54,6 +54,7 @@ const REWARD_BY_VEHICLE = new Map(
     (reward.vehicleIds || []).map((vehicleId) => [vehicleId, reward])
   )
 );
+const PREPARED_STORAGE = new WeakSet();
 
 export function getTrophyRoadReward(id) {
   return REWARD_BY_ID.get(id) || null;
@@ -82,6 +83,18 @@ function safeParse(raw) {
   } catch (_) {
     return null;
   }
+}
+
+function canRememberStorage(storage) {
+  return Boolean(storage) && (typeof storage === 'object' || typeof storage === 'function');
+}
+
+function preparationAlreadyChecked(storage) {
+  return canRememberStorage(storage) && PREPARED_STORAGE.has(storage);
+}
+
+function markPreparationChecked(storage) {
+  if (canRememberStorage(storage)) PREPARED_STORAGE.add(storage);
 }
 
 function hasLegacyTurnProfile(storage) {
@@ -118,6 +131,11 @@ export function prepareTrophyRoadProfile(storage = globalThis.localStorage) {
     const raw = storage?.getItem?.(TROPHY_ROAD_STORAGE_KEY);
     const existing = safeParse(raw);
     if (existing) return existing;
+
+    // Legacy detection runs once per Storage object. A setting created later in
+    // the same fresh session must not accidentally grandfather a new player.
+    if (preparationAlreadyChecked(storage)) return null;
+    markPreparationChecked(storage);
     if (!hasLegacyTurnProfile(storage)) return null;
 
     // A version-2 shell lets the achievement store recognise a pre-Trophy Road
@@ -163,6 +181,8 @@ export function readTrophyRoadSnapshot(storage = globalThis.localStorage) {
 
 export function isTrophyRoadRewardUnlocked(rewardId, storage = globalThis.localStorage) {
   if (!REWARD_BY_ID.has(rewardId)) return true;
+  const liveStore = globalThis.__turnAchievements?.store;
+  if (liveStore?.isRewardUnlocked?.(rewardId)) return true;
   return readTrophyRoadSnapshot(storage).unlockedRewardIds.includes(rewardId);
 }
 
