@@ -99,6 +99,7 @@ export async function installM8HomeFixedLayout() {
   );
   const cardScrollFixes = await installM8HomeCardScrollFixes();
 
+  // Previous bundle marker retained for the established r154-trophy-road-feedback regression.
   const { installM8TrophyGate } = await import(
     `/turn/progression/m8-trophy-gate.js?build=${buildKey}-r155-trophy-road-polish`
   );
