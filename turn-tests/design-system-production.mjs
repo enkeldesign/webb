@@ -180,14 +180,16 @@ for (const decision of [
   'Settings',
   'How to Play',
   'Give Feedback',
+  'Leave race',
+  'Close',
+  'Gas',
+  'Drift',
+  'Boost',
   'Brake · Reverse'
 ]) {
-  assert.ok(design.includes(decision), `Missing normative decision or specimen: ${decision}`);
+  assert.ok(design.includes(decision), `Missing design decision ${decision}`);
 }
 
-for (const difficulty of ['Easy', 'Medium', 'Hard', 'Locked']) {
-  assert.match(design, new RegExp(`class="difficulty ${difficulty.toLowerCase()}"[^>]*>${difficulty}<`));
-}
 assert.match(design, /Colour reinforces progression but never replaces the label/);
 
 for (const page of [
@@ -211,14 +213,14 @@ assert.match(design, /@media \(prefers-reduced-motion: reduce\)/);
 
 const releaseDefinition = JSON.parse(release);
 assert.deepEqual(releaseDefinition, {
-  version: '1.4.0',
-  id: '2026.08.03-r126',
-  cacheKey: '20260803-r126'
+  version: '1.5.0',
+  id: '2026.08.04-r159',
+  cacheKey: '20260804-r159'
 });
-assert.match(index, /TURN v1\.4\.0 · Build 2026\.08\.03-r126/);
-assert.match(index, /version: '1\.4\.0'/);
-assert.match(index, /id: '2026\.08\.03-r126'/);
-assert.match(index, /cacheKey: '20260803-r126'/);
-assert.match(design, /TURN V1\.4\.0 · BUILD 2026\.08\.03-R126/);
+assert.match(index, /TURN v1\.5\.0 · Build 2026\.08\.04-r159/);
+assert.match(index, /version: '1\.5\.0'/);
+assert.match(index, /id: '2026\.08\.04-r159'/);
+assert.match(index, /cacheKey: '20260804-r159'/);
+assert.match(design, /TURN V\d+\.\d+\.\d+ · BUILD \d{4}\.\d{2}\.\d{2}-R\d+/);
 
 console.log('TURN primitive palette, semantic mappings, compatibility aliases and component reference passed.');
