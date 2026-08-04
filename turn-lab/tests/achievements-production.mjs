@@ -143,8 +143,8 @@ assert.deepEqual(normalized.seen, ['first-turn']);
 assert.deepEqual(normalized.progress.tracks, ['airport']);
 assert.deepEqual(normalized.progress.blankTracks, ['countryside', 'midnight-city'],
   'Existing Trust Your Ears unlocks should seed Beyond Sight progress during migration');
-assert.deepEqual(normalized.rewards.unlocked, ['midnight-city'],
-  'Earned trophies should automatically unlock crossed Trophy Road milestones');
+assert.deepEqual(normalized.rewards.unlocked, [],
+  'A 275-trophy profile must remain below the new 300-trophy first milestone');
 
 const memory = new Map();
 const storage = {
@@ -166,6 +166,7 @@ assert.ok(store.state.progress.blankTracks.includes('harbor'));
 assert.equal(store.unlock('ahead-of-yourself', { trackId: 'harbor' })?.id, 'ahead-of-yourself');
 assert.ok(store.isUnlocked('ahead-of-yourself'));
 assert.equal(store.trophyTotal(), 300);
+assert.deepEqual(store.syncRewards().map((reward) => reward.id), ['midnight-city']);
 assert.equal(store.isRewardUnlocked('midnight-city'), true);
 assert.doesNotMatch(storeSource, /rival-storage|clearRivalsState|clearAllRivalsState/,
   'Rival reset implementation must remain independent from persistent achievements and rewards');
@@ -349,7 +350,7 @@ assert.doesNotMatch(style, /is-achievement-next/);
 assert.match(designTokens, /--turn-action-success: var\(--turn-green-500\)/);
 assert.match(fixedLayout, /installAchievements/);
 assert.match(fixedLayout, /installM8TrophyGate/);
-assert.match(fixedLayout, /r153-trophy-road/);
+assert.match(fixedLayout, /r154-trophy-road-feedback/);
 assert.ok(fixedLayout.indexOf('installM8HomeCardScrollFixes') < fixedLayout.indexOf('installAchievements'),
   'Achievements should join the completed fixed Home layout after track scrolling is installed');
 assert.match(workflow, /Run achievement system regression/);

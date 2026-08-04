@@ -154,7 +154,7 @@ assert.equal(imports['./race/lap-system.js?build=20260720-r19'], releaseTarget('
 assert.match(app, /lot-layout-r60\.css\?revision=r121-viewer-r122-fit-r128-super-sedan-notice/);
 assert.match(app, /sports-sedan-easter-egg\.js\?revision=r128-unlock-notice/);
 assert.match(app, /installLotEnhancementRuntime/);
-assert.match(app, /lot-enhancement-runtime\.js\?revision=r153-trophy-road/);
+assert.match(app, /lot-enhancement-runtime\.js\?revision=r121&trophy-road=r154/);
 assert.ok(app.indexOf('installLotEnhancementRuntime()') < app.indexOf("withBuild('./main.js')"));
 
 assert.match(lotWrapper, /showOriginalLot/);
@@ -165,7 +165,8 @@ assert.match(lotWrapper, /track-manager\.js\?build=20260722-r52/);
 assert.doesNotMatch(lotWrapper, /installLotLayout|installLotStatLegend|installLotAccessibility/);
 assert.match(originalLot, /export function showTheLot/);
 
-assert.match(lotEnhancementRuntime, /ENHANCEMENT_ID = 'enhanced-lot-r153-trophy-road'/);
+assert.match(lotEnhancementRuntime, /ENHANCEMENT_ID = 'enhanced-lot-r121'/);
+assert.match(lotEnhancementRuntime, /TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r154-trophy-road-feedback'/);
 assert.match(lotEnhancementRuntime, /activeEnhancements = new WeakMap\(\)/);
 assert.match(lotEnhancementRuntime, /gateLotNow\(scope\)/);
 assert.match(lotEnhancementRuntime, /installLotStatLegend\(scope\)/);
@@ -179,7 +180,9 @@ assert.match(lotEnhancementRuntime, /new MutationObserver\(sync\)/);
 assert.match(lotEnhancementRuntime, /screen\.dataset\.lotEnhancements = ENHANCEMENT_ID/);
 assert.match(lotTrophyGate, /FALLBACK_VEHICLE_ID = 'classic'/);
 assert.match(lotTrophyGate, /raceButton\.disabled = locked/);
-assert.match(lotTrophyGate, /aria-disabled/);
+assert.match(lotTrophyGate, /lot-selected-car-lock/);
+assert.match(lotTrophyGate, /showTrophyUnlockNotice/);
+assert.doesNotMatch(lotTrophyGate, /colors\.hidden|carPicker\.hidden/);
 
 assert.match(lotLayout, /viewbox\.appendChild\(colors\)/);
 assert.match(lotLayout, /attributesHeading\.replaceChildren\(document\.createTextNode\('ATTRIBUTES'\)\)/);
