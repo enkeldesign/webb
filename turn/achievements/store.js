@@ -1,10 +1,18 @@
 import {
+  ACHIEVEMENTS,
   TRACK_IDS,
   getAchievement
-} from './catalog.js?revision=r152-developer-time-trials';
+} from './catalog.js?revision=r153-trophy-road';
+import {
+  TROPHY_ROAD_REWARDS,
+  TROPHY_ROAD_STORAGE_KEY,
+  TROPHY_ROAD_STORAGE_VERSION,
+  getTrophyRoadReward,
+  rewardIdsForTrophies
+} from '../progression/trophy-road.js?revision=r153-trophy-road';
 
-export const ACHIEVEMENT_STORAGE_KEY = 'turn-achievements-v1';
-const STORAGE_VERSION = 2;
+export const ACHIEVEMENT_STORAGE_KEY = TROPHY_ROAD_STORAGE_KEY;
+const STORAGE_VERSION = TROPHY_ROAD_STORAGE_VERSION;
 
 function defaultStoredState() {
   return {
@@ -14,6 +22,10 @@ function defaultStoredState() {
     progress: {
       tracks: [],
       blankTracks: []
+    },
+    rewards: {
+      unlocked: [],
+      seen: []
     }
   };
 }
@@ -22,6 +34,13 @@ function normalizedStringArray(value, allowed = null) {
   if (!Array.isArray(value)) return [];
   const unique = [...new Set(value.filter((item) => typeof item === 'string'))];
   return allowed ? unique.filter((item) => allowed.includes(item)) : unique;
+}
+
+function totalTrophiesFromUnlocked(unlocked) {
+  return Object.keys(unlocked).reduce((total, id) => {
+    const trophies = Number(getAchievement(id)?.trophies);
+    return total + (Number.isFinite(trophies) ? trophies : 0);
+  }, 0);
 }
 
 export function normalizeAchievementState(value) {
@@ -47,6 +66,17 @@ export function normalizeAchievementState(value) {
     blankTracks.push(existingTrustTrack);
   }
 
+  const rewardIds = TROPHY_ROAD_REWARDS.map((reward) => reward.id);
+  const legacyProfile = Number(value.version || 0) < STORAGE_VERSION;
+  const earnedRewardIds = rewardIdsForTrophies(totalTrophiesFromUnlocked(unlocked));
+  const storedRewardIds = normalizedStringArray(value.rewards?.unlocked, rewardIds);
+  const unlockedRewards = legacyProfile
+    ? [...rewardIds]
+    : [...new Set([...storedRewardIds, ...earnedRewardIds])];
+  const storedSeenRewards = normalizedStringArray(value.rewards?.seen, rewardIds)
+    .filter((id) => unlockedRewards.includes(id));
+  const seenRewards = legacyProfile ? [...unlockedRewards] : storedSeenRewards;
+
   return {
     version: STORAGE_VERSION,
     unlocked,
@@ -54,6 +84,10 @@ export function normalizeAchievementState(value) {
     progress: {
       tracks,
       blankTracks
+    },
+    rewards: {
+      unlocked: unlockedRewards,
+      seen: seenRewards
     }
   };
 }
@@ -89,6 +123,14 @@ export function createAchievementStore(storage = globalThis.localStorage) {
     return Boolean(state.unlocked[id]);
   }
 
+  function trophyTotal() {
+    return totalTrophiesFromUnlocked(state.unlocked);
+  }
+
+  function isRewardUnlocked(id) {
+    return state.rewards.unlocked.includes(id);
+  }
+
   function unlock(id, context = {}) {
     const achievement = getAchievement(id);
     if (!achievement || isUnlocked(id)) return null;
@@ -100,6 +142,18 @@ export function createAchievementStore(storage = globalThis.localStorage) {
     };
     save();
     return achievement;
+  }
+
+  function syncRewards() {
+    const newlyUnlocked = [];
+    for (const rewardId of rewardIdsForTrophies(trophyTotal())) {
+      if (isRewardUnlocked(rewardId)) continue;
+      state.rewards.unlocked.push(rewardId);
+      const reward = getTrophyRoadReward(rewardId);
+      if (reward) newlyUnlocked.push(reward);
+    }
+    if (newlyUnlocked.length) save();
+    return newlyUnlocked;
   }
 
   function addProgressTrack(key, trackId) {
@@ -122,6 +176,7 @@ export function createAchievementStore(storage = globalThis.localStorage) {
 
   function markAllSeen() {
     state.seen = Object.keys(state.unlocked);
+    state.rewards.seen = [...state.rewards.unlocked];
     save();
   }
 
@@ -130,14 +185,36 @@ export function createAchievementStore(storage = globalThis.localStorage) {
     return Object.keys(state.unlocked).filter((id) => !seen.has(id));
   }
 
+  function unseenRewardIds() {
+    const seen = new Set(state.rewards.seen);
+    return state.rewards.unlocked.filter((id) => !seen.has(id));
+  }
+
+  function unseenCount() {
+    return unseenIds().length + unseenRewardIds().length;
+  }
+
+  // Persist version and migration changes immediately, even when no new
+  // achievement is unlocked during this session.
+  save();
+
   return Object.freeze({
     state,
     isUnlocked,
     unlock,
+    trophyTotal,
+    isRewardUnlocked,
+    syncRewards,
     addTrack,
     addBlankTrack,
     markAllSeen,
     unseenIds,
+    unseenRewardIds,
+    unseenCount,
     storageAvailable: () => storageAvailable
   });
+}
+
+export function totalAvailableTrophies() {
+  return ACHIEVEMENTS.reduce((total, achievement) => total + achievement.trophies, 0);
 }
