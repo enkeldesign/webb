@@ -1,19 +1,25 @@
 export const PACE_NOTE_GEOMETRY_DEFAULTS = Object.freeze({
-  curvatureWindowMetres: 20,
-  smoothingWindowMetres: 14,
-  enterCurvature: 0.0032,
-  exitCurvature: 0.0018,
-  maximumStraightGapMetres: 18,
-  sameDirectionMergeGapMetres: 28,
-  minimumCurveLengthMetres: 16,
-  minimumTurnAngleRadians: 0.16,
-  gentleRadiusMetres: 105,
-  tightRadiusMetres: 52,
-  shortCurveMetres: 48,
-  longCurveMetres: 96,
-  minimumLeadMetres: 18,
-  maximumLeadMetres: 150,
-  maximumLinkedGapMetres: 95
+  curvatureWindowMetres: 18,
+  smoothingWindowMetres: 12,
+  minimumPeakCurvature: 0.003,
+  peakNeighborhoodMetres: 30,
+  minimumPeakSeparationMetres: 52,
+  curveEdgeFraction: 0.34,
+  minimumEdgeCurvature: 0.00125,
+  maximumEdgeGapMetres: 14,
+  maximumCurveHalfLengthMetres: 150,
+  minimumCurveLengthMetres: 14,
+  minimumTurnAngleRadians: 0.14,
+  gentleRadiusMetres: 72,
+  tightRadiusMetres: 36,
+  mediumTurnAngleRadians: 1.75,
+  tightTurnAngleRadians: 2.55,
+  shortCurveMetres: 52,
+  longCurveMetres: 108,
+  mediumLengthTurnAngleRadians: 1.2,
+  minimumLeadMetres: 16,
+  maximumLeadMetres: 230,
+  maximumLinkedGapMetres: 125
 });
 
 export function analyzePaceNoteGeometry(samples, options = {}) {
@@ -22,35 +28,41 @@ export function analyzePaceNoteGeometry(samples, options = {}) {
   const route = normalizeRoute(samples, closed);
   if (route.samples.length < 8 || route.trackLength <= 0) return Object.freeze([]);
 
-  const averageStep = route.trackLength / route.samples.length;
+  const averageStep = route.trackLength / Math.max(1, route.samples.length - (closed ? 0 : 1));
   const curvatureRadius = Math.max(1, Math.round(settings.curvatureWindowMetres / averageStep / 2));
   const smoothingRadius = Math.max(0, Math.round(settings.smoothingWindowMetres / averageStep / 2));
   const rawCurvature = route.samples.map((_, index) => localCurvature(route, index, curvatureRadius));
-  const curvature = rawCurvature.map((_, index) => {
-    let weighted = 0;
-    let weight = 0;
-    for (let offset = -smoothingRadius; offset <= smoothingRadius; offset += 1) {
-      const sampleIndex = routeIndex(index + offset, route.samples.length, closed);
-      if (sampleIndex == null) continue;
-      const localWeight = smoothingRadius > 0 ? smoothingRadius + 1 - Math.abs(offset) : 1;
-      weighted += rawCurvature[sampleIndex] * localWeight;
-      weight += localWeight;
-    }
-    return weight > 0 ? weighted / weight : 0;
-  });
+  const curvature = smoothValues(rawCurvature, smoothingRadius, closed);
+  const peakNeighborhood = Math.max(1, Math.round(settings.peakNeighborhoodMetres / averageStep));
+  const minimumPeakSeparation = Math.max(1, Math.round(settings.minimumPeakSeparationMetres / averageStep));
 
-  const order = orderedIndices(curvature, closed);
-  const preliminary = detectCurveRanges(route, curvature, order, settings, closed);
-  const merged = mergeCurveRanges(route, curvature, preliminary, settings, closed);
-  const curves = merged
-    .map((range, index) => describeCurve(route, curvature, range, settings, closed, index))
+  const candidates = curvature
+    .map((value, index) => ({ index, value, magnitude: Math.abs(value) }))
+    .filter(({ magnitude }) => magnitude >= settings.minimumPeakCurvature)
+    .filter(({ index, magnitude }) => isLocalPeak(curvature, index, magnitude, peakNeighborhood, closed))
+    .sort((a, b) => b.magnitude - a.magnitude);
+
+  const accepted = [];
+  for (const candidate of candidates) {
+    if (accepted.some((peak) => circularIndexDistance(
+      peak.index,
+      candidate.index,
+      route.samples.length,
+      closed
+    ) < minimumPeakSeparation)) continue;
+    accepted.push(candidate);
+  }
+
+  const curves = accepted
+    .map((peak) => describePeakCurve(route, curvature, peak, settings, averageStep))
     .filter((curve) => (
       curve.lengthMetres >= settings.minimumCurveLengthMetres
       && Math.abs(curve.turnAngleRadians) >= settings.minimumTurnAngleRadians
-    ));
+    ))
+    .sort((a, b) => a.peakDistance - b.peakDistance)
+    .map((curve, index) => Object.freeze({ ...curve, index }));
 
-  curves.sort((a, b) => a.startDistance - b.startDistance);
-  return Object.freeze(curves.map((curve, index) => Object.freeze({ ...curve, index })));
+  return Object.freeze(curves);
 }
 
 export function auditAuthoredPaceNotes({
@@ -60,6 +72,7 @@ export function auditAuthoredPaceNotes({
   closed = true,
   options = {}
 }) {
+  const settings = Object.freeze({ ...PACE_NOTE_GEOMETRY_DEFAULTS, ...options });
   const curves = analyzePaceNoteGeometry(samples, { ...options, closed });
   const route = normalizeRoute(samples, closed);
   const entries = [];
@@ -112,7 +125,6 @@ export function auditAuthoredPaceNotes({
     const fastLeadMetres = firstCurve
       ? forwardRouteDistance(route.trackLength, triggerStart * route.trackLength, firstCurve.startDistance)
       : null;
-    const settings = { ...PACE_NOTE_GEOMETRY_DEFAULTS, ...options };
 
     if (slowLeadMetres != null && (
       slowLeadMetres < settings.minimumLeadMetres
@@ -158,30 +170,30 @@ export function matchFollowingCurves({
   const candidates = (curves || [])
     .map((curve) => ({
       curve,
-      lead: forwardRouteDistance(trackLength, approachDistance, curve.startDistance)
+      peakLead: forwardRouteDistance(trackLength, approachDistance, curve.peakDistance)
     }))
-    .filter(({ lead }) => lead >= 1 && lead <= settings.maximumLeadMetres)
-    .sort((a, b) => a.lead - b.lead);
+    .filter(({ peakLead }) => peakLead >= 1 && peakLead <= settings.maximumLeadMetres + settings.maximumCurveHalfLengthMetres)
+    .sort((a, b) => a.peakLead - b.peakLead);
 
   if (!candidates.length || count <= 0) {
     return Object.freeze({ curves: Object.freeze([]), leads: Object.freeze([]) });
   }
 
   const selected = [candidates[0].curve];
-  const leads = [candidates[0].lead];
+  const leads = [candidates[0].peakLead];
   while (selected.length < count) {
     const previous = selected.at(-1);
     const nextCandidates = (curves || [])
       .filter((curve) => !selected.includes(curve))
       .map((curve) => ({
         curve,
-        gap: forwardRouteDistance(trackLength, previous.endDistance, curve.startDistance)
+        gap: forwardRouteDistance(trackLength, previous.peakDistance, curve.peakDistance)
       }))
-      .filter(({ gap }) => gap >= 0 && gap <= settings.maximumLinkedGapMetres)
+      .filter(({ gap }) => gap >= settings.minimumPeakSeparationMetres * 0.6 && gap <= settings.maximumLinkedGapMetres)
       .sort((a, b) => a.gap - b.gap);
     if (!nextCandidates.length) break;
     selected.push(nextCandidates[0].curve);
-    leads.push(forwardRouteDistance(trackLength, approachDistance, nextCandidates[0].curve.startDistance));
+    leads.push(forwardRouteDistance(trackLength, approachDistance, nextCandidates[0].curve.peakDistance));
   }
 
   return Object.freeze({ curves: Object.freeze(selected), leads: Object.freeze(leads) });
@@ -195,6 +207,90 @@ export function forwardRouteDistance(trackLength, fromDistance, toDistance) {
 
 export function directionName(direction) {
   return Number(direction) < 0 ? 'left' : 'right';
+}
+
+function describePeakCurve(route, curvature, peak, settings, averageStep) {
+  const sign = Math.sign(peak.value) || 1;
+  const threshold = Math.max(settings.minimumEdgeCurvature, peak.magnitude * settings.curveEdgeFraction);
+  const maximumSteps = Math.max(2, Math.round(settings.maximumCurveHalfLengthMetres / averageStep));
+  const allowedGapSteps = Math.max(1, Math.round(settings.maximumEdgeGapMetres / averageStep));
+  const before = expandFromPeak(route, curvature, peak.index, -1, sign, threshold, maximumSteps, allowedGapSteps);
+  const after = expandFromPeak(route, curvature, peak.index, 1, sign, threshold, maximumSteps, allowedGapSteps);
+  const indices = [...before.reverse(), peak.index, ...after];
+  const uniqueIndices = uniqueInOrder(indices);
+  const startIndex = uniqueIndices[0];
+  const endIndex = uniqueIndices.at(-1);
+  let lengthMetres = 0;
+  let turnAngleRadians = 0;
+
+  for (let position = 1; position < uniqueIndices.length; position += 1) {
+    const previousIndex = uniqueIndices[position - 1];
+    const index = uniqueIndices[position];
+    lengthMetres += routeDistanceBetween(route, previousIndex, index);
+    turnAngleRadians += signedHeadingDelta(
+      route.samples[previousIndex].tangent,
+      route.samples[index].tangent
+    );
+  }
+
+  const radiusMetres = peak.magnitude > 0 ? 1 / peak.magnitude : Infinity;
+  const absoluteAngle = Math.abs(turnAngleRadians);
+  const severity = radiusMetres <= settings.tightRadiusMetres || absoluteAngle >= settings.tightTurnAngleRadians
+    ? 3
+    : radiusMetres <= settings.gentleRadiusMetres || absoluteAngle >= settings.mediumTurnAngleRadians
+      ? 2
+      : 1;
+  const length = lengthMetres >= settings.longCurveMetres || absoluteAngle >= settings.tightTurnAngleRadians
+    ? 'long'
+    : lengthMetres >= settings.shortCurveMetres || absoluteAngle >= settings.mediumLengthTurnAngleRadians
+      ? 'medium'
+      : 'short';
+  const startDistance = route.cumulative[startIndex] || 0;
+  const peakDistance = route.cumulative[peak.index] || 0;
+  const endDistance = route.cumulative[endIndex] || peakDistance;
+
+  return {
+    startIndex,
+    peakIndex: peak.index,
+    endIndex,
+    startDistance,
+    peakDistance,
+    endDistance,
+    startProgress: route.trackLength > 0 ? startDistance / route.trackLength : 0,
+    peakProgress: route.trackLength > 0 ? peakDistance / route.trackLength : 0,
+    endProgress: route.trackLength > 0 ? endDistance / route.trackLength : 0,
+    lengthMetres,
+    turnAngleRadians,
+    peakCurvature: peak.magnitude,
+    radiusMetres,
+    direction: turnAngleRadians < 0 ? -1 : 1,
+    severity,
+    length
+  };
+}
+
+function expandFromPeak(route, curvature, peakIndex, direction, sign, threshold, maximumSteps, allowedGapSteps) {
+  const values = [];
+  let gap = 0;
+  for (let step = 1; step <= maximumSteps; step += 1) {
+    const index = routeIndex(peakIndex + direction * step, route.samples.length, route.closed);
+    if (index == null || index === peakIndex) break;
+    const value = curvature[index];
+    const sameDirection = Math.sign(value) === sign || Math.abs(value) < 1e-9;
+    if (sameDirection && Math.abs(value) >= threshold) {
+      values.push(index);
+      gap = 0;
+      continue;
+    }
+    if (sameDirection && gap < allowedGapSteps) {
+      values.push(index);
+      gap += 1;
+      continue;
+    }
+    if (gap > 0) values.splice(-gap);
+    break;
+  }
+  return values;
 }
 
 function normalizeRoute(samples, closed) {
@@ -220,157 +316,42 @@ function localCurvature(route, index, radius) {
   const beforeIndex = routeIndex(index - radius, route.samples.length, route.closed);
   const afterIndex = routeIndex(index + radius, route.samples.length, route.closed);
   if (beforeIndex == null || afterIndex == null || beforeIndex === afterIndex) return 0;
-  const before = route.samples[beforeIndex];
-  const after = route.samples[afterIndex];
-  const angle = signedHeadingDelta(before.tangent, after.tangent);
+  const angle = signedHeadingDelta(
+    route.samples[beforeIndex].tangent,
+    route.samples[afterIndex].tangent
+  );
   const distance = routeDistanceBetween(route, beforeIndex, afterIndex);
   return distance > 0.001 ? angle / distance : 0;
 }
 
-function orderedIndices(curvature, closed) {
-  const indices = curvature.map((_, index) => index);
-  if (!closed || !indices.length) return indices;
-  let cut = 0;
-  for (let index = 1; index < curvature.length; index += 1) {
-    if (Math.abs(curvature[index]) < Math.abs(curvature[cut])) cut = index;
-  }
-  return [...indices.slice(cut), ...indices.slice(0, cut)];
+function smoothValues(values, radius, closed) {
+  return values.map((_, index) => {
+    let weighted = 0;
+    let weight = 0;
+    for (let offset = -radius; offset <= radius; offset += 1) {
+      const sampleIndex = routeIndex(index + offset, values.length, closed);
+      if (sampleIndex == null) continue;
+      const localWeight = radius > 0 ? radius + 1 - Math.abs(offset) : 1;
+      weighted += values[sampleIndex] * localWeight;
+      weight += localWeight;
+    }
+    return weight > 0 ? weighted / weight : 0;
+  });
 }
 
-function detectCurveRanges(route, curvature, order, settings, closed) {
-  const ranges = [];
-  const averageStep = route.trackLength / route.samples.length;
-  const allowedGap = Math.max(1, Math.round(settings.maximumStraightGapMetres / averageStep));
-  let active = null;
-
-  for (let position = 0; position < order.length; position += 1) {
-    const index = order[position];
-    const value = curvature[index];
-    const magnitude = Math.abs(value);
-    const sign = Math.sign(value);
-
-    if (!active) {
-      if (magnitude >= settings.enterCurvature) {
-        active = { indices: [index], sign, gap: 0 };
-      }
-      continue;
-    }
-
-    const sameDirection = sign === 0 || sign === active.sign;
-    if (sameDirection && magnitude >= settings.exitCurvature) {
-      active.indices.push(index);
-      active.gap = 0;
-      continue;
-    }
-
-    if (sameDirection && active.gap < allowedGap) {
-      active.indices.push(index);
-      active.gap += 1;
-      continue;
-    }
-
-    trimRangeGap(active);
-    if (active.indices.length) ranges.push(active);
-    active = magnitude >= settings.enterCurvature
-      ? { indices: [index], sign, gap: 0 }
-      : null;
+function isLocalPeak(values, index, magnitude, radius, closed) {
+  for (let offset = -radius; offset <= radius; offset += 1) {
+    if (offset === 0) continue;
+    const sampleIndex = routeIndex(index + offset, values.length, closed);
+    if (sampleIndex == null) continue;
+    if (Math.abs(values[sampleIndex]) > magnitude) return false;
   }
-
-  if (active) {
-    trimRangeGap(active);
-    if (active.indices.length) ranges.push(active);
-  }
-
-  return ranges.map((range) => ({
-    indices: range.indices,
-    sign: range.sign,
-    closed
-  }));
+  return true;
 }
 
-function trimRangeGap(range) {
-  if (range.gap > 0) range.indices.splice(-range.gap);
-  range.gap = 0;
-}
-
-function mergeCurveRanges(route, curvature, ranges, settings, closed) {
-  if (ranges.length < 2) return ranges;
-  const merged = [];
-  for (const range of ranges) {
-    const previous = merged.at(-1);
-    if (!previous || previous.sign !== range.sign) {
-      merged.push({ ...range, indices: [...range.indices] });
-      continue;
-    }
-    const gap = routeDistanceBetween(route, previous.indices.at(-1), range.indices[0]);
-    if (gap <= settings.sameDirectionMergeGapMetres) {
-      const bridge = indicesBetween(previous.indices.at(-1), range.indices[0], route.samples.length, closed);
-      previous.indices.push(...bridge.slice(1), ...range.indices.slice(1));
-    } else {
-      merged.push({ ...range, indices: [...range.indices] });
-    }
-  }
-  return merged;
-}
-
-function describeCurve(route, curvature, range, settings, closed, fallbackIndex) {
-  const indices = uniqueInOrder(range.indices);
-  const startIndex = indices[0] ?? fallbackIndex;
-  const endIndex = indices.at(-1) ?? startIndex;
-  let lengthMetres = 0;
-  let turnAngleRadians = 0;
-  let peakCurvature = 0;
-
-  for (let position = 0; position < indices.length; position += 1) {
-    const index = indices[position];
-    peakCurvature = Math.max(peakCurvature, Math.abs(curvature[index]));
-    if (position === 0) continue;
-    const previousIndex = indices[position - 1];
-    lengthMetres += routeDistanceBetween(route, previousIndex, index);
-    turnAngleRadians += signedHeadingDelta(
-      route.samples[previousIndex].tangent,
-      route.samples[index].tangent
-    );
-  }
-
-  const direction = turnAngleRadians < 0 ? -1 : 1;
-  const radiusMetres = peakCurvature > 0 ? 1 / peakCurvature : Infinity;
-  const severity = radiusMetres >= settings.gentleRadiusMetres
-    ? 1
-    : radiusMetres <= settings.tightRadiusMetres
-      ? 3
-      : 2;
-  const length = lengthMetres >= settings.longCurveMetres
-    ? 'long'
-    : lengthMetres < settings.shortCurveMetres
-      ? 'short'
-      : 'medium';
-  const startDistance = route.cumulative[startIndex] || 0;
-  const endDistance = route.cumulative[endIndex] || startDistance;
-  const centerDistance = advanceDistance(
-    route.trackLength,
-    startDistance,
-    lengthMetres / 2,
-    closed
-  );
-
-  return {
-    startIndex,
-    endIndex,
-    startDistance,
-    centerDistance,
-    endDistance,
-    startProgress: route.trackLength > 0 ? startDistance / route.trackLength : 0,
-    centerProgress: route.trackLength > 0 ? centerDistance / route.trackLength : 0,
-    endProgress: route.trackLength > 0 ? endDistance / route.trackLength : 0,
-    lengthMetres,
-    turnAngleRadians,
-    peakCurvature,
-    radiusMetres,
-    direction,
-    severity,
-    length
-  };
+function circularIndexDistance(a, b, length, closed) {
+  const direct = Math.abs(a - b);
+  return closed ? Math.min(direct, length - direct) : direct;
 }
 
 function routeDistanceBetween(route, fromIndex, toIndex) {
@@ -379,22 +360,6 @@ function routeDistanceBetween(route, fromIndex, toIndex) {
   const to = route.cumulative[toIndex] || 0;
   if (!route.closed || to >= from) return Math.max(0, to - from);
   return route.trackLength - from + to;
-}
-
-function indicesBetween(from, to, length, closed) {
-  const values = [from];
-  let current = from;
-  let guard = 0;
-  while (current !== to && guard <= length) {
-    current += 1;
-    if (current >= length) {
-      if (!closed) break;
-      current = 0;
-    }
-    values.push(current);
-    guard += 1;
-  }
-  return values;
 }
 
 function routeIndex(index, length, closed) {
@@ -410,11 +375,6 @@ function uniqueInOrder(values) {
     seen.add(value);
     return true;
   });
-}
-
-function advanceDistance(trackLength, start, distance, closed) {
-  const value = start + distance;
-  return closed && trackLength > 0 ? value % trackLength : Math.min(trackLength, value);
 }
 
 function signedHeadingDelta(from, to) {
