@@ -18,12 +18,17 @@
 .turn-trophy-road-track {
   position: relative;
   height: 18px;
+}
+
+.turn-trophy-road-progress {
+  height: 100%;
+  overflow: hidden;
   border: var(--turn-border-compact, 3px) solid var(--turn-ink, #08090a);
   border-radius: var(--turn-radius-pill, 999px);
   background: var(--turn-muted, #d6d0c2);
 }
 
-.turn-trophy-road-track > i {
+.turn-trophy-road-progress > i {
   display: block;
   width: var(--turn-trophy-road-progress, 0%);
   height: 100%;
