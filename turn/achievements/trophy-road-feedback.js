@@ -9,13 +9,6 @@ import {
 } from '../progression/trophy-road.js?revision=r157-paint-monster';
 
 const EDGE_PX = 34;
-const TBA_MILESTONE = Object.freeze({
-  id: 'tba-1000',
-  threshold: 1000,
-  title: 'TBA',
-  description: 'A future Trophy Road reward is reserved here. Details to be announced.'
-});
-const TBA_ICON = '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><circle cx="32" cy="24" r="18"></circle><path d="M24 18c1-6 15-7 16 0 1 5-7 6-8 11M32 36h.01"></path></svg>';
 const CATEGORY_FILTERS = Object.freeze([
   Object.freeze({ id: CATEGORY.ONBOARDING, label: 'GETTING STARTED' }),
   Object.freeze({ id: CATEGORY.WAYS_TO_PLAY, label: 'WAYS TO PLAY' }),
@@ -219,40 +212,6 @@ function installRoadBehavior({ achievements, summary }) {
   let selectedByPlayer = '';
   let geometryFrame = 0;
 
-  function markerSelectionId(marker) {
-    return marker?.dataset?.trophyReward || marker?.dataset?.trophyPlaceholder || '';
-  }
-
-  function ensureTbaMarker() {
-    let marker = markers.querySelector(`[data-trophy-placeholder="${TBA_MILESTONE.id}"]`);
-    if (marker) return marker;
-
-    marker = document.createElement('button');
-    marker.type = 'button';
-    marker.className = 'turn-trophy-road-marker is-locked is-tba';
-    marker.dataset.trophyPlaceholder = TBA_MILESTONE.id;
-    marker.dataset.trophyThreshold = String(TBA_MILESTONE.threshold);
-    marker.setAttribute('aria-pressed', 'false');
-    marker.setAttribute(
-      'aria-label',
-      `${TBA_MILESTONE.title}. ${TBA_MILESTONE.threshold} trophies. Future reward details to be announced.`
-    );
-    marker.innerHTML = `<span class="turn-trophy-road-marker-icon" aria-hidden="true">${TBA_ICON}</span><b>${TBA_MILESTONE.threshold}</b>`;
-    markers.appendChild(marker);
-    return marker;
-  }
-
-  function renderTbaDetail() {
-    if (!summary.detail) return;
-    summary.detail.innerHTML = `
-      <div class="turn-trophy-road-detail-icon" aria-hidden="true">${TBA_ICON}</div>
-      <div>
-        <span>${TBA_MILESTONE.threshold} TROPHIES · TBA</span>
-        <h3>${TBA_MILESTONE.title}</h3>
-        <p>${TBA_MILESTONE.description}</p>
-      </div>`;
-  }
-
   function updateScrollButtons() {
     const maximum = Math.max(0, summary.scroll.scrollWidth - summary.scroll.clientWidth);
     const atStart = summary.scroll.scrollLeft <= 1;
@@ -273,13 +232,12 @@ function installRoadBehavior({ achievements, summary }) {
       const contentWidth = Math.ceil(contentRoadWidth + EDGE_PX * 2);
       summary.content.style.width = `${contentWidth}px`;
 
-      for (const marker of markers.querySelectorAll('[data-trophy-reward], [data-trophy-placeholder]')) {
+      for (const marker of markers.querySelectorAll('[data-trophy-reward]')) {
         const reward = getTrophyRoadReward(marker.dataset.trophyReward);
-        const threshold = reward?.threshold ?? Number(marker.dataset.trophyThreshold);
-        if (!Number.isFinite(threshold)) continue;
+        if (!reward) continue;
         marker.style.setProperty(
           '--turn-trophy-road-position',
-          `${EDGE_PX + (threshold / TROPHY_ROAD_MAX_THRESHOLD) * contentRoadWidth}px`
+          `${EDGE_PX + (reward.threshold / TROPHY_ROAD_MAX_THRESHOLD) * contentRoadWidth}px`
         );
       }
       updateScrollButtons();
@@ -288,7 +246,6 @@ function installRoadBehavior({ achievements, summary }) {
   }
 
   function decorateMarkers() {
-    ensureTbaMarker();
     for (const marker of markers.querySelectorAll('[data-trophy-reward]')) {
       const reward = getTrophyRoadReward(marker.dataset.trophyReward);
       const icon = marker.querySelector('span');
@@ -311,13 +268,7 @@ function installRoadBehavior({ achievements, summary }) {
   function syncShowcase() {
     const reward = getTrophyRoadReward(selectedByPlayer);
     const host = summary.detail?.querySelector('.turn-trophy-road-detail-icon');
-    if (
-      selectedByPlayer === TBA_MILESTONE.id
-      || !reward
-      || !host
-      || reward.type === 'track'
-      || reward.type === 'feature'
-    ) {
+    if (!reward || !host || reward.type === 'track' || reward.type === 'feature') {
       showcase.clear();
       return;
     }
@@ -329,7 +280,7 @@ function installRoadBehavior({ achievements, summary }) {
   function clearSelection() {
     selectedByPlayer = '';
     showcase.clear();
-    for (const marker of markers.querySelectorAll('[data-trophy-reward], [data-trophy-placeholder]')) {
+    for (const marker of markers.querySelectorAll('[data-trophy-reward]')) {
       marker.classList.remove('is-selected');
       marker.setAttribute('aria-pressed', 'false');
     }
@@ -347,12 +298,11 @@ function installRoadBehavior({ achievements, summary }) {
       clearSelection();
       return;
     }
-    for (const marker of markers.querySelectorAll('[data-trophy-reward], [data-trophy-placeholder]')) {
-      const selected = markerSelectionId(marker) === selectedByPlayer;
+    for (const marker of markers.querySelectorAll('[data-trophy-reward]')) {
+      const selected = marker.dataset.trophyReward === selectedByPlayer;
       marker.classList.toggle('is-selected', selected);
       marker.setAttribute('aria-pressed', String(selected));
     }
-    if (selectedByPlayer === TBA_MILESTONE.id) renderTbaDetail();
     if (summary.detail) summary.detail.hidden = false;
     if (summary.help) summary.help.hidden = true;
     syncShowcase();
@@ -376,15 +326,12 @@ function installRoadBehavior({ achievements, summary }) {
     scrollRoad(event.key === 'ArrowLeft' ? -1 : 1);
   });
 
-  // The base view rebuilds every reward button during its bubble-phase click handler.
-  // Capture the connected marker first so nested SVG taps cannot lose their selection
-  // when WebKit detaches the original event target before this enhancement can read it.
   markers.addEventListener('click', (event) => {
-    const marker = event.target.closest('[data-trophy-reward], [data-trophy-placeholder]');
+    const marker = event.target.closest('[data-trophy-reward]');
     if (!marker) return;
-    selectedByPlayer = markerSelectionId(marker);
-    if (marker.dataset.trophyPlaceholder) preserveUserSelection();
-  }, { capture: true });
+    selectedByPlayer = marker.dataset.trophyReward;
+    preserveUserSelection();
+  });
 
   const markerObserver = new MutationObserver(preserveUserSelection);
   markerObserver.observe(markers, { childList: true });

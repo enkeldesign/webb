@@ -65,7 +65,10 @@ assert.equal(release.cacheKey, release.id.replaceAll('.', ''));
 
 assert.match(productionIndex, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(productionIndex, /<meta name="theme-color" content="#08090a">/);
-assert.match(productionIndex, new RegExp(`src="\\.\\/app\\.js\\?build=${release.cacheKey}-browser-consent"`));
+assert.match(
+  productionIndex,
+  new RegExp(`src="\\.\\/app\\.js\\?build=${release.cacheKey}-browser-consent(?:-[^"]+)?"`)
+);
 assert.match(productionIndex, new RegExp(`src="\\.\\/install-gate\\.js\\?build=${release.cacheKey}-social-browser"`));
 assert.match(productionIndex, new RegExp(`href="\\.\\/install-gate\\.css\\?build=${release.cacheKey}-social-browser"`));
 assert.match(productionIndex, new RegExp(`href="\\.\\/orientation-guard\\.css\\?build=${release.cacheKey}-home-portrait"`));

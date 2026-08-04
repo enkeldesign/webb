@@ -113,7 +113,7 @@ export async function installM8HomeFixedLayout() {
   );
   const secretAchievements = installSecretAchievements(achievements);
   const { installTrophyRoadFeedback } = await import(
-    `/turn/achievements/trophy-road-feedback.js?build=${buildKey}-r157-paint-monster`
+    `/turn/achievements/trophy-road-feedback.js?build=${buildKey}-r158-race-freeze-hotfix`
   );
   const trophyRoadFeedback = installTrophyRoadFeedback(achievements);
 
