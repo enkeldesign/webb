@@ -4,8 +4,13 @@ import {
   ACHIEVEMENTS,
   ACHIEVEMENT_STORAGE_KEY,
   ONBOARDING_ACHIEVEMENT_IDS,
+  TIME_TRIALS,
+  TIME_TRIAL_ACHIEVEMENT_IDS,
+  TIME_TRIAL_MASTER_ID,
+  completedAllTimeTrials,
   loadAchievementState,
-  normalizeAchievementState
+  normalizeAchievementState,
+  qualifyingTimeTrial
 } from '../../turn/achievements.js';
 import { createAchievementStore } from '../../turn/achievements/store.js';
 import {
@@ -14,12 +19,13 @@ import {
   sampleNightShiftOvertakes
 } from '../../turn/achievements/night-shift.js';
 
-const [catalog, storeSource, runtime, view, nightShiftSource, style, fixedLayout, workflow, designTokens] = await Promise.all([
+const [catalog, storeSource, runtime, view, nightShiftSource, timeTrialSource, style, fixedLayout, workflow, designTokens] = await Promise.all([
   fs.readFile(new URL('../../turn/achievements/catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/store.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/runtime.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/view.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/night-shift.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/achievements/time-trials.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../.github/workflows/turn-lab-tests.yml', import.meta.url), 'utf8'),
@@ -27,12 +33,15 @@ const [catalog, storeSource, runtime, view, nightShiftSource, style, fixedLayout
 ]);
 
 assert.equal(ACHIEVEMENT_STORAGE_KEY, 'turn-achievements-v1');
-assert.equal(ACHIEVEMENTS.length, 16, 'TURN should ship the expanded sixteen-achievement collection');
+assert.equal(ACHIEVEMENTS.length, 22, 'TURN should ship twenty-two achievements including the developer time trials');
 assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 10, 'Getting Started should remain a focused ten-achievement collection');
+assert.equal(TIME_TRIALS.length, 5, 'Every current track should have one hard time trial');
+assert.equal(TIME_TRIAL_ACHIEVEMENT_IDS.length, 5);
+assert.equal(TIME_TRIAL_MASTER_ID, 'faster-than-the-dev');
 assert.equal(
   ACHIEVEMENTS.reduce((total, achievement) => total + achievement.points, 0),
-  1075,
-  'Achievement point values should reflect the flagship non-visual challenges'
+  1300,
+  'Five 25-point trials plus the 100-point developer challenge should bring the collection to 1300 points'
 );
 assert.deepEqual(
   ACHIEVEMENTS.map((achievement) => achievement.id),
@@ -52,7 +61,13 @@ assert.deepEqual(
     'beyond-sight',
     'around-the-turn',
     'ahead-of-yourself',
-    'night-shift-sheriff'
+    'night-shift-sheriff',
+    'countryside-sprint',
+    'airport-sprint',
+    'cliffside-sprint',
+    'harbor-sprint',
+    'midnight-sprint',
+    'faster-than-the-dev'
   ]
 );
 assert.equal(ACHIEVEMENTS.find((achievement) => achievement.id === 'flow-state')?.points, 50);
@@ -68,6 +83,33 @@ assert.equal(ACHIEVEMENTS.find((achievement) => achievement.id === 'night-shift-
 assert.match(ACHIEVEMENTS.find((achievement) => achievement.id === 'night-shift-sheriff')?.description || '', /Police Car/);
 assert.match(ACHIEVEMENTS.find((achievement) => achievement.id === 'night-shift-sheriff')?.description || '', /Boost is active/);
 
+assert.deepEqual(
+  TIME_TRIALS.map(({ trackId, targetSeconds }) => [trackId, targetSeconds]),
+  [
+    ['countryside', 13],
+    ['airport', 20],
+    ['cliffside', 17],
+    ['harbor', 25],
+    ['midnight-city', 60]
+  ]
+);
+for (const trial of TIME_TRIALS) {
+  const achievement = ACHIEVEMENTS.find((item) => item.id === trial.id);
+  assert.equal(achievement?.category, 'time-trials');
+  assert.equal(achievement?.points, 25);
+  assert.match(achievement?.recommendation || '', /Future Racer/);
+  assert.equal(qualifyingTimeTrial(trial.trackId, trial.targetSeconds - 0.001)?.id, trial.id);
+  assert.equal(qualifyingTimeTrial(trial.trackId, trial.targetSeconds), null,
+    `${trial.title} must require a time strictly below the target`);
+}
+assert.equal(qualifyingTimeTrial('invented', 1), null);
+assert.equal(ACHIEVEMENTS.find((achievement) => achievement.id === TIME_TRIAL_MASTER_ID)?.points, 100);
+assert.match(ACHIEVEMENTS.find((achievement) => achievement.id === TIME_TRIAL_MASTER_ID)?.title || '', /FASTER THAN THE DEV/);
+assert.equal(completedAllTimeTrials(() => true), true);
+assert.equal(completedAllTimeTrials((id) => id !== 'harbor-sprint'), false);
+assert.equal(completedAllTimeTrials((id) => id !== 'harbor-sprint', 'harbor-sprint'), true,
+  'The final qualifying lap should count while the individual achievement is still pending');
+
 const empty = normalizeAchievementState(null);
 assert.deepEqual(empty.progress.tracks, []);
 assert.deepEqual(empty.progress.blankTracks, []);
@@ -79,6 +121,7 @@ const normalized = normalizeAchievementState({
   unlocked: {
     'first-turn': { unlockedAt: 123, trackId: 'countryside', vehicleId: 'classic', time: 42.5 },
     'trust-your-ears': { unlockedAt: 124, trackId: 'midnight-city', vehicleId: 'police', time: 91.2 },
+    'countryside-sprint': { unlockedAt: 125, trackId: 'countryside', vehicleId: 'race-future', time: 12.8 },
     invented: { unlockedAt: 456 }
   },
   seen: ['first-turn', 'invented', 'first-turn'],
@@ -87,7 +130,7 @@ const normalized = normalizeAchievementState({
     blankTracks: ['countryside', 'countryside', 'invented']
   }
 });
-assert.deepEqual(Object.keys(normalized.unlocked), ['first-turn', 'trust-your-ears']);
+assert.deepEqual(Object.keys(normalized.unlocked), ['first-turn', 'trust-your-ears', 'countryside-sprint']);
 assert.deepEqual(normalized.seen, ['first-turn']);
 assert.deepEqual(normalized.progress.tracks, ['airport']);
 assert.deepEqual(normalized.progress.blankTracks, ['countryside', 'midnight-city'],
@@ -100,7 +143,10 @@ const storage = {
 };
 assert.equal(loadAchievementState(storage).storageAvailable, true);
 memory.set(ACHIEVEMENT_STORAGE_KEY, JSON.stringify(normalized));
-assert.deepEqual(Object.keys(loadAchievementState(storage).state.unlocked), ['first-turn', 'trust-your-ears']);
+assert.deepEqual(
+  Object.keys(loadAchievementState(storage).state.unlocked),
+  ['first-turn', 'trust-your-ears', 'countryside-sprint']
+);
 assert.equal(loadAchievementState({ getItem: () => { throw new Error('blocked'); } }).storageAvailable, false);
 
 const store = createAchievementStore(storage);
@@ -144,6 +190,13 @@ assert.equal(createNightShiftAttempt({
   rivals: [...rivals.slice(0, 3), { carId: 'police', time: 90, progress: 0.5 }]
 }).eligible, false, 'Police rivals should make Night Shift Sheriff ineligible');
 
+assert.match(catalog, /TIME_TRIALS/);
+assert.match(catalog, /TIME_TRIAL_ACHIEVEMENT_IDS/);
+assert.match(catalog, /TIME_TRIALS: 'time-trials'/);
+assert.match(catalog, /id: 'faster-than-the-dev'/);
+assert.match(catalog, /title: 'FASTER THAN THE DEV'/);
+assert.match(catalog, /points: 100/);
+assert.match(catalog, /Recommended: Future Racer/);
 assert.match(catalog, /category: CATEGORY\.ONBOARDING/);
 assert.match(catalog, /id: 'flow-state'/);
 assert.match(catalog, /id: 'trust-your-ears'/);
@@ -158,6 +211,15 @@ assert.match(storeSource, /state\.progress\[key\]/);
 assert.match(storeSource, /addBlankTrack/);
 assert.match(storeSource, /existingTrustTrack/);
 assert.match(storeSource, /markAllSeen/);
+
+assert.match(timeTrialSource, /targetSeconds: 13/);
+assert.match(timeTrialSource, /targetSeconds: 20/);
+assert.match(timeTrialSource, /targetSeconds: 17/);
+assert.match(timeTrialSource, /targetSeconds: 25/);
+assert.match(timeTrialSource, /targetSeconds: 60/);
+assert.match(timeTrialSource, /seconds >= trial\.targetSeconds/,
+  'Matching a developer target exactly must not unlock an under-target achievement');
+assert.match(timeTrialSource, /TIME_TRIAL_MASTER_ID = 'faster-than-the-dev'/);
 
 assert.match(nightShiftSource, /RIVAL_COUNT = 4/);
 assert.match(nightShiftSource, /MIDNIGHT_CITY_ID/);
@@ -189,6 +251,15 @@ assert.match(runtime, /candidates\.push\('beyond-sight'\)/);
 assert.match(runtime, /sampleNightShiftOvertakes/);
 assert.match(runtime, /completedNightShiftSheriff/);
 assert.match(runtime, /candidates\.push\('night-shift-sheriff'\)/);
+assert.match(runtime, /getStoredBestLap/,
+  'Existing saved best laps should be recognised when the new achievements first load');
+assert.match(runtime, /function importStoredTimeTrials\(\)/);
+assert.match(runtime, /unlockSilently\(entries\)/,
+  'Imported records should create unread achievements without interrupting Home with an unlock toast');
+assert.match(runtime, /const timeTrial = qualifyingTimeTrial\(context\.trackId, context\.time\)/);
+assert.match(runtime, /candidates\.push\(timeTrial\.id\)/);
+assert.match(runtime, /candidates\.push\(TIME_TRIAL_MASTER_ID\)/);
+assert.match(runtime, /completedAllTimeTrials/);
 assert.match(runtime, /turn-screen-blanked/);
 assert.match(runtime, /reason === 'lap-started'/);
 assert.match(runtime, /reason === 'race-reset'/);
@@ -205,6 +276,10 @@ assert.match(runtime, /!allOnboardingComplete\(store\)/,
 assert.match(view, /aria-live', 'polite'/);
 assert.match(view, /role="progressbar"/);
 assert.match(view, /data-achievement-filter="onboarding"/);
+assert.match(view, /data-achievement-filter="time-trials"/);
+assert.match(view, /CATEGORY\.TIME_TRIALS/);
+assert.match(view, /achievement\.id === 'faster-than-the-dev'/);
+assert.match(view, /TIME_TRIAL_ACHIEVEMENT_IDS\.filter/);
 assert.match(view, /store\.markAllSeen\(\)/);
 assert.match(view, /prefers-reduced-motion: reduce/);
 assert.match(view, /ATTENTION_VISIBLE_MS = 900/);
@@ -245,10 +320,10 @@ assert.doesNotMatch(style, /is-achievement-next/);
 
 assert.match(designTokens, /--turn-action-success: var\(--turn-green-500\)/);
 assert.match(fixedLayout, /installAchievements/);
-assert.match(fixedLayout, /r146-achievement-expansion/);
+assert.match(fixedLayout, /r152-developer-time-trials/);
 assert.ok(fixedLayout.indexOf('installM8HomeCardScrollFixes') < fixedLayout.indexOf('installAchievements'),
   'Achievements should join the completed fixed Home layout after track scrolling is installed');
 assert.match(workflow, /Run achievement system regression/);
 assert.match(workflow, /node turn-lab\/tests\/achievements-production\.mjs/);
 
-console.log('TURN expanded achievement system regression passed.');
+console.log('TURN developer time trial achievement regression passed.');

@@ -2,21 +2,28 @@ import {
   ACHIEVEMENTS,
   TRACK_IDS,
   TRAINING_CAR_ID
-} from './catalog.js?revision=r146-achievement-expansion';
+} from './catalog.js?revision=r152-developer-time-trials';
 import {
   createAchievementStore,
   normalizeAchievementState
-} from './store.js?revision=r146-achievement-expansion';
+} from './store.js?revision=r152-developer-time-trials';
 import {
   allOnboardingComplete,
   createAchievementView
-} from './view.js?revision=r146-achievement-expansion';
+} from './view.js?revision=r152-developer-time-trials';
 import {
   completedNightShiftSheriff,
   createNightShiftAttempt,
   sampleNightShiftOvertakes
 } from './night-shift.js?revision=r146-achievement-expansion';
+import {
+  TIME_TRIALS,
+  TIME_TRIAL_MASTER_ID,
+  completedAllTimeTrials,
+  qualifyingTimeTrial
+} from './time-trials.js?revision=r152-developer-time-trials';
 import { replayFrameAt } from '../race/replay-system.js?revision=r146-achievement-expansion';
+import { getStoredBestLap } from '../race/rival-storage.js';
 
 const SPECTATE_REQUIRED_MS = 5000;
 const LISTEN_CLOSELY_REQUIRED_MS = 10000;
@@ -97,6 +104,13 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
   };
   const view = createAchievementView({ store, session, utilityGroup });
 
+  function announceAchievementUpdate(unlocked) {
+    if (!unlocked.length) return;
+    window.dispatchEvent(new CustomEvent('turn:achievements-updated', {
+      detail: { unlocked: unlocked.map((achievement) => achievement.id) }
+    }));
+  }
+
   function scheduleToastFlush(delay = 0) {
     window.clearTimeout(session.toastTimer);
     session.toastTimer = window.setTimeout(() => {
@@ -120,11 +134,52 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
       .map((id) => store.unlock(id, context))
       .filter(Boolean);
     if (!unlocked.length) return [];
-    window.dispatchEvent(new CustomEvent('turn:achievements-updated', {
-      detail: { unlocked: unlocked.map((achievement) => achievement.id) }
-    }));
+    announceAchievementUpdate(unlocked);
     queueUnlocked(unlocked, options);
     return unlocked;
+  }
+
+  function unlockSilently(entries) {
+    const unlocked = entries
+      .map(({ id, context }) => store.unlock(id, context))
+      .filter(Boolean);
+    if (!unlocked.length) return [];
+    announceAchievementUpdate(unlocked);
+    view.syncTriggers();
+    view.render();
+    return unlocked;
+  }
+
+  function importStoredTimeTrials() {
+    const entries = [];
+    const pendingIds = new Set();
+
+    for (const trial of TIME_TRIALS) {
+      const bestLap = getStoredBestLap(trial.trackId);
+      const qualified = qualifyingTimeTrial(trial.trackId, bestLap?.time);
+      if (!qualified) continue;
+      pendingIds.add(qualified.id);
+      entries.push({
+        id: qualified.id,
+        context: {
+          trackId: trial.trackId,
+          vehicleId: bestLap?.carId || '',
+          time: Number(bestLap?.time)
+        }
+      });
+    }
+
+    const completesSet = completedAllTimeTrials(
+      (id) => store.isUnlocked(id) || pendingIds.has(id)
+    );
+    if (completesSet) {
+      entries.push({
+        id: TIME_TRIAL_MASTER_ID,
+        context: { trackId: '', vehicleId: '', time: null }
+      });
+    }
+
+    unlockSilently(entries);
   }
 
   function sampleListenClosely(state, elapsedMs) {
@@ -240,6 +295,14 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
       candidates.push('around-the-turn');
     }
 
+    const timeTrial = qualifyingTimeTrial(context.trackId, context.time);
+    if (timeTrial) {
+      candidates.push(timeTrial.id);
+      if (completedAllTimeTrials((id) => store.isUnlocked(id), timeTrial.id)) {
+        candidates.push(TIME_TRIAL_MASTER_ID);
+      }
+    }
+
     unlock(candidates, context, { delay: LAP_TOAST_DELAY_MS });
     session.currentLap = null;
     session.currentLapVoid = false;
@@ -319,6 +382,7 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     : null;
   menuObserver?.observe(utilityGroup, { attributes: true, attributeFilter: ['data-menu-state'] });
 
+  importStoredTimeTrials();
   window.setInterval(sampleDrivingState, SAMPLE_INTERVAL_MS);
   syncRaceTriggerVisibility();
 

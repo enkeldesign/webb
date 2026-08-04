@@ -1,7 +1,7 @@
 import {
   TRACK_IDS,
   getAchievement
-} from './catalog.js?revision=r146-achievement-expansion';
+} from './catalog.js?revision=r152-developer-time-trials';
 
 export const ACHIEVEMENT_STORAGE_KEY = 'turn-achievements-v1';
 const STORAGE_VERSION = 2;
