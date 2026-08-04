@@ -1,5 +1,6 @@
 export const TROPHY_ROAD_STORAGE_KEY = 'turn-achievements-v1';
 export const TROPHY_ROAD_STORAGE_VERSION = 3;
+export const TROPHY_ROAD_MAX_THRESHOLD = 1300;
 
 export const TROPHY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 4h10v4c0 4-2 7-5 8-3-1-5-4-5-8V4Z"></path><path d="M7 6H4v2c0 2 1 3 4 4M17 6h3v2c0 2-1 3-4 4M9 20h6M12 16v4"></path></svg>';
 
@@ -41,10 +42,6 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     description: 'Unlock a high-speed racing vehicle built for advanced laps and hard time-trial targets.'
   })
 ]);
-
-export const TROPHY_ROAD_MAX_THRESHOLD = Math.max(
-  ...TROPHY_ROAD_REWARDS.map((reward) => reward.threshold)
-);
 
 const REWARD_BY_ID = new Map(TROPHY_ROAD_REWARDS.map((reward) => [reward.id, reward]));
 const REWARD_BY_TRACK = new Map(
@@ -92,7 +89,7 @@ function hasLegacyTurnProfile(storage) {
     'turn-vehicle-selection-v1',
     'turn-selected-track-v1',
     'turn-steering-mode-v1',
-    'turn-drive-by-ear-enabled-v1',
+    'turn-drive-by-ear-v1',
     'turn-personal-rivals-v1',
     'turn-three-ghost-v4'
   ];
