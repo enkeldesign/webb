@@ -80,11 +80,11 @@ installStylesheet(
   'data-turn-lot-layout-r121'
 );
 installStylesheet(
-  './progression/trophy-road.css?revision=r153-trophy-road',
+  './progression/trophy-road.css?revision=r154-trophy-road-feedback',
   'data-turn-trophy-road'
 );
 const { prepareTrophyRoadProfile } = await import(
-  withBuild('./progression/trophy-road.js?revision=r153-trophy-road')
+  withBuild('./progression/trophy-road.js?revision=r154-trophy-road-feedback')
 );
 prepareTrophyRoadProfile();
 
@@ -169,10 +169,10 @@ installSportsSedanEasterEggUi();
 const { installHarborHiddenFaceOrientation } = await import(withBuild('./tracks/harbor-hidden-face-r89.js'));
 installHarborHiddenFaceOrientation();
 
-// Trophy Road bundle identity: lot-enhancement-runtime.js?revision=r153-trophy-road
+// Trophy Road bundle identity: lot-enhancement-runtime.js?revision=r154-trophy-road-feedback
 // The leading r121 query remains to preserve the established static contract.
 const { installLotEnhancementRuntime } = await import(
-  withBuild('./garage/lot-enhancement-runtime.js?revision=r121&trophy-road=r153')
+  withBuild('./garage/lot-enhancement-runtime.js?revision=r121&trophy-road=r154')
 );
 installLotEnhancementRuntime();
 
@@ -217,7 +217,7 @@ installStylesheet(
 );
 installStylesheet('./rival-reset-context-r127.css', 'data-turn-rival-reset-context');
 const { installM8HomeNavigation } = await import(
-  withBuild('./m8-home.js?revision=r131-motion-permission-retry&trophy-road=r153')
+  withBuild('./m8-home.js?revision=r131-motion-permission-retry&trophy-road=r154')
 );
 const home = await installM8HomeNavigation();
 globalThis.__turnHome = home;
@@ -236,7 +236,7 @@ if (buildLabel) {
   buildLabel.textContent = `TURN V${release?.version || ''} · BUILD ${(release?.id || '').toUpperCase()}`;
 }
 const { installM8HomeFixedLayout } = await import(
-  withBuild('./m8-home-fixed-layout.js?revision=m8.9-track-title-alignment&trophy-road=r153')
+  withBuild('./m8-home-fixed-layout.js?revision=m8.9-track-title-alignment&trophy-road=r154')
 );
 await installM8HomeFixedLayout();
 installStylesheet(
