@@ -34,8 +34,8 @@ assert.match(paintGate, /<strong>PAINTJOB<\/strong>/);
 assert.doesNotMatch(paintGate, /<i>•<\/i>|<b>LOCKED<\/b>/,
   'Visible lock-status copy must not crowd out the Paintjob label');
 assert.match(paintGate, /function contrastingInk\(hexColor\)/);
-assert.match(paintGate, /luminance > 0\.36 \? '#08090a' : '#fffdf6'/,
-  'The lock glyph must switch between dark and light ink according to the car colour');
+assert.match(paintGate, /luminance > 0\.18 \? '#08090a' : '#fffdf6'/,
+  'The lock glyph must use whichever TURN ink gives the stronger colour contrast');
 assert.match(paintGate, /--lot-paint-lock-background/);
 assert.match(paintGate, /--lot-paint-lock-foreground/);
 assert.match(paintGate, /getVehicleDefaultColor\(carId\)/,
