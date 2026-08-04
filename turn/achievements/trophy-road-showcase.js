@@ -33,40 +33,43 @@ export function createTrophyRoadShowcase() {
   let disposed = false;
   let resizeObserver = null;
   const groups = new Map();
+  const groupPromises = new Map();
   const clock = new THREE.Clock();
 
-  function ensureRenderer(host) {
-    if (!renderer) {
-      scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera(34, 1, 0.1, 80);
-      scene.add(new THREE.HemisphereLight(0xffffff, 0x4c5963, 3.2));
-      const key = new THREE.DirectionalLight(0xfff2c9, 4.1);
-      key.position.set(-7, 10, 8);
-      scene.add(key);
-      const fill = new THREE.DirectionalLight(0x8ed8ff, 1.8);
-      fill.position.set(8, 4, -5);
-      scene.add(fill);
-      stage = new THREE.Group();
-      scene.add(stage);
+  function ensureRenderer() {
+    if (renderer) return;
 
-      renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        alpha: true,
-        powerPreference: 'high-performance'
-      });
-      renderer.outputColorSpace = THREE.SRGBColorSpace;
-      renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio || 1, 1.35));
-      renderer.setClearColor(0x000000, 0);
-      resizeObserver = new ResizeObserver(resize);
-    }
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(34, 1, 0.1, 80);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x4c5963, 3.2));
+    const key = new THREE.DirectionalLight(0xfff2c9, 4.1);
+    key.position.set(-7, 10, 8);
+    scene.add(key);
+    const fill = new THREE.DirectionalLight(0x8ed8ff, 1.8);
+    fill.position.set(8, 4, -5);
+    scene.add(fill);
+    stage = new THREE.Group();
+    scene.add(stage);
 
-    if (activeHost !== host) {
-      resizeObserver?.disconnect();
-      activeHost = host;
-      activeHost.replaceChildren(renderer.domElement);
-      resizeObserver?.observe(activeHost);
-      resize();
-    }
+    renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: 'high-performance'
+    });
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio || 1, 1.35));
+    renderer.setClearColor(0x000000, 0);
+    resizeObserver = new ResizeObserver(resize);
+  }
+
+  function attachRenderer(host) {
+    ensureRenderer();
+    if (activeHost === host && renderer.domElement.parentElement === host) return;
+    resizeObserver?.disconnect();
+    activeHost = host;
+    activeHost.replaceChildren(renderer.domElement);
+    resizeObserver?.observe(activeHost);
+    resize();
   }
 
   function configureCamera(rewardId) {
@@ -82,29 +85,39 @@ export function createTrophyRoadShowcase() {
 
   async function buildRewardGroup(rewardId) {
     if (groups.has(rewardId)) return groups.get(rewardId);
+    if (groupPromises.has(rewardId)) return groupPromises.get(rewardId);
     const definitions = REWARD_CARS[rewardId];
     if (!definitions) return null;
 
-    const group = new THREE.Group();
-    const visuals = await Promise.all(definitions.map(async (definition, index) => {
-      const visual = await createCarVisual({
-        carId: definition.carId,
-        color: DEFAULT_VEHICLE_COLOR,
-        secondaryColor: DEFAULT_VEHICLE_SECONDARY_COLOR,
-        targetLength: definition.targetLength,
-        outline: true
-      });
-      visual.position.set(definition.x, 0, 0);
-      visual.rotation.y = definition.yaw;
-      visual.userData.turnRewardBaseX = definition.x;
-      visual.userData.turnRewardBaseYaw = definition.yaw;
-      visual.userData.turnRewardPhase = index * 1.7;
-      group.add(visual);
-      return visual;
-    }));
-    group.userData.turnRewardVisuals = visuals;
-    groups.set(rewardId, group);
-    return group;
+    const request = (async () => {
+      const group = new THREE.Group();
+      const visuals = await Promise.all(definitions.map(async (definition, index) => {
+        const visual = await createCarVisual({
+          carId: definition.carId,
+          color: DEFAULT_VEHICLE_COLOR,
+          secondaryColor: DEFAULT_VEHICLE_SECONDARY_COLOR,
+          targetLength: definition.targetLength,
+          outline: true
+        });
+        visual.position.set(definition.x, 0, 0);
+        visual.rotation.y = definition.yaw;
+        visual.userData.turnRewardBaseX = definition.x;
+        visual.userData.turnRewardBaseYaw = definition.yaw;
+        visual.userData.turnRewardPhase = index * 1.7;
+        group.add(visual);
+        return visual;
+      }));
+      group.userData.turnRewardVisuals = visuals;
+      groups.set(rewardId, group);
+      return group;
+    })();
+
+    groupPromises.set(rewardId, request);
+    try {
+      return await request;
+    } finally {
+      groupPromises.delete(rewardId);
+    }
   }
 
   async function show(reward, host) {
@@ -114,7 +127,7 @@ export function createTrophyRoadShowcase() {
     }
 
     const request = ++generation;
-    ensureRenderer(host);
+    ensureRenderer();
     activeRewardId = reward.id;
     configureCamera(reward.id);
     host.dataset.trophyRewardModel = reward.id;
@@ -124,15 +137,17 @@ export function createTrophyRoadShowcase() {
     try {
       const group = await buildRewardGroup(reward.id);
       if (disposed || request !== generation || !group) return false;
+
       if (activeGroup && activeGroup.parent === stage) stage.remove(activeGroup);
       activeGroup = group;
       stage.add(group);
+      attachRenderer(host);
       host.classList.remove('is-loading');
       resize();
       resume();
       return true;
     } catch (error) {
-      host.classList.remove('is-loading');
+      if (request === generation) host.classList.remove('is-loading');
       console.warn(`TURN: could not load the ${reward.shortTitle} Trophy Road preview.`, error);
       return false;
     }
@@ -177,10 +192,13 @@ export function createTrophyRoadShowcase() {
     activeRewardId = '';
     if (activeGroup && activeGroup.parent === stage) stage.remove(activeGroup);
     activeGroup = null;
+    resizeObserver?.disconnect();
     if (activeHost) {
       delete activeHost.dataset.trophyRewardModel;
       activeHost.classList.remove('is-loading');
     }
+    renderer?.domElement?.remove();
+    activeHost = null;
   }
 
   function dispose() {
@@ -192,6 +210,7 @@ export function createTrophyRoadShowcase() {
     renderer = null;
     activeHost = null;
     groups.clear();
+    groupPromises.clear();
   }
 
   return Object.freeze({
