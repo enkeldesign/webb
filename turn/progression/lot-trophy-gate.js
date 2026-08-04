@@ -28,6 +28,7 @@ export function gateLotNow(root = document.body) {
 
   const carPicker = screen.querySelector('.lot-car-picker');
   const raceButton = screen.querySelector('.lot-race');
+  const carTitle = screen.querySelector('.lot-car-title strong');
   if (!carPicker || !raceButton) return () => {};
 
   let initialSelectionChecked = false;
@@ -52,6 +53,17 @@ export function gateLotNow(root = document.body) {
           : name
       );
     }
+  }
+
+  function setTitleLocked(locked) {
+    if (!carTitle) return;
+    carTitle.querySelector('.lot-selected-car-lock')?.remove();
+    if (!locked) return;
+    const lock = document.createElement('span');
+    lock.className = 'lot-selected-car-lock';
+    lock.setAttribute('aria-hidden', 'true');
+    lock.textContent = '🔒 ';
+    carTitle.prepend(lock);
   }
 
   function setRaceLocked({ locked, reward, selectedName }) {
@@ -94,6 +106,7 @@ export function gateLotNow(root = document.body) {
     }
 
     screen.dataset.trophyVehicleLocked = String(locked);
+    setTitleLocked(locked);
     setRaceLocked({ locked, reward, selectedName });
     if (locked && selectedId !== lastAnnouncedCarId) {
       lastAnnouncedCarId = selectedId;
@@ -125,6 +138,7 @@ export function gateLotNow(root = document.body) {
     raceButton.classList.remove('is-trophy-locked');
     delete raceButton.dataset.trophyLocked;
     delete screen.dataset.trophyVehicleLocked;
+    carTitle?.querySelector('.lot-selected-car-lock')?.remove();
     activeGates.delete(screen);
   };
   activeGates.set(screen, { release });
