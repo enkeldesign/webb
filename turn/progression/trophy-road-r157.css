@@ -48,56 +48,33 @@
 }
 
 .lot-colors.is-paint-locked {
-  min-height: 78px;
-}
-
-.lot-paint-lock {
+  position: relative;
+  min-height: 54px;
   display: grid;
-  width: 100%;
-  min-height: 72px;
-  grid-template-columns: 44px minmax(0, 1fr);
-  grid-template-rows: auto auto;
-  gap: 0 10px;
-  align-items: center;
-  padding: 8px 12px;
+  place-items: center;
   border: var(--turn-border-compact, 3px) solid var(--turn-ink, #08090a);
   border-radius: var(--turn-radius-compact, 12px);
   background: var(--turn-action-warning, #ffd43b);
   color: var(--turn-ink, #08090a);
   box-shadow: var(--turn-shadow-compact, 3px 3px 0 #08090a);
-  text-align: left;
   cursor: help;
 }
 
-.lot-paint-lock > span {
-  grid-row: 1 / 3;
+.lot-colors.is-paint-locked:focus-visible {
+  outline: 4px solid var(--turn-action-information, #38d9ff);
+  outline-offset: 3px;
+}
+
+.lot-paint-lock {
   display: grid;
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   padding: 7px;
   place-items: center;
   border: 2px solid currentColor;
   border-radius: 10px;
   background: var(--turn-surface-raised, #fffdf6);
-}
-
-.lot-paint-lock strong,
-.lot-paint-lock small {
-  display: block;
-  min-width: 0;
-}
-
-.lot-paint-lock strong {
-  align-self: end;
-  font-size: .86rem;
-  line-height: 1;
-}
-
-.lot-paint-lock small {
-  align-self: start;
-  font-size: .62rem;
-  font-weight: 900;
-  letter-spacing: .08em;
+  pointer-events: none;
 }
 
 .turn-achievement-card.is-hidden-achievement .turn-achievement-icon {
@@ -110,26 +87,12 @@
 
 @media (max-height: 430px) and (orientation: landscape) {
   .lot-colors.is-paint-locked {
-    min-height: 58px;
+    min-height: 44px;
   }
 
   .lot-paint-lock {
-    min-height: 54px;
-    grid-template-columns: 34px minmax(0, 1fr);
-    padding: 5px 8px;
-  }
-
-  .lot-paint-lock > span {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     padding: 5px;
-  }
-
-  .lot-paint-lock strong {
-    font-size: .72rem;
-  }
-
-  .lot-paint-lock small {
-    font-size: .52rem;
   }
 }
