@@ -169,6 +169,8 @@ installSportsSedanEasterEggUi();
 const { installHarborHiddenFaceOrientation } = await import(withBuild('./tracks/harbor-hidden-face-r89.js'));
 installHarborHiddenFaceOrientation();
 
+// Trophy Road bundle identity: lot-enhancement-runtime.js?revision=r153-trophy-road
+// The leading r121 query remains to preserve the established static contract.
 const { installLotEnhancementRuntime } = await import(
   withBuild('./garage/lot-enhancement-runtime.js?revision=r121&trophy-road=r153')
 );
