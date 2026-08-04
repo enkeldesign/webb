@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import {
-  DEFAULT_VEHICLE_COLOR,
-  DEFAULT_VEHICLE_SECONDARY_COLOR
-} from '../vehicle/catalog.js?build=20260720-r20';
-import { createCarVisual } from '../vehicle/car-models.js?build=20260720-r22';
+  getVehicleDefaultColor,
+  getVehicleDefaultSecondaryColor
+} from '../vehicle/catalog.js?build=20260804-r157-factory-colors';
+import { createCarVisual } from '../vehicle/car-models.js?build=20260804-r157-display-p3';
+import { configureRendererWideGamut } from '../vehicle/wide-gamut.js?revision=r157-display-p3';
 
 const REWARD_CARS = Object.freeze({
   'future-racer': Object.freeze([
@@ -13,6 +14,9 @@ const REWARD_CARS = Object.freeze({
     Object.freeze({ carId: 'firetruck', x: -3.45, targetLength: 3.65, yaw: Math.PI - 0.38 }),
     Object.freeze({ carId: 'ambulance', x: 0, targetLength: 3.65, yaw: Math.PI - 0.55 }),
     Object.freeze({ carId: 'police', x: 3.45, targetLength: 3.65, yaw: Math.PI - 0.72 })
+  ]),
+  monster: Object.freeze([
+    Object.freeze({ carId: 'monster-truck', x: 0, targetLength: 6.0, yaw: Math.PI - 0.55 })
   ])
 });
 
@@ -56,7 +60,7 @@ export function createTrophyRoadShowcase() {
       alpha: true,
       powerPreference: 'high-performance'
     });
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    configureRendererWideGamut(renderer);
     renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio || 1, 1.35));
     renderer.setClearColor(0x000000, 0);
     resizeObserver = new ResizeObserver(resize);
@@ -77,6 +81,9 @@ export function createTrophyRoadShowcase() {
     if (rewardId === 'emergency-pack') {
       camera.position.set(8.8, 5.2, 12.2);
       camera.lookAt(0, 1.05, 0);
+    } else if (rewardId === 'monster') {
+      camera.position.set(8.7, 5.8, 10.5);
+      camera.lookAt(0, 1.55, 0);
     } else {
       camera.position.set(7.6, 4.7, 8.8);
       camera.lookAt(0, 1.05, 0);
@@ -94,8 +101,8 @@ export function createTrophyRoadShowcase() {
       const visuals = await Promise.all(definitions.map(async (definition, index) => {
         const visual = await createCarVisual({
           carId: definition.carId,
-          color: DEFAULT_VEHICLE_COLOR,
-          secondaryColor: DEFAULT_VEHICLE_SECONDARY_COLOR,
+          color: getVehicleDefaultColor(definition.carId),
+          secondaryColor: getVehicleDefaultSecondaryColor(definition.carId),
           targetLength: definition.targetLength,
           outline: true
         });
