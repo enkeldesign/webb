@@ -67,7 +67,7 @@ assert.match(app, /trophy-road-r157\.css\?revision=r161-car-colour-lock/);
 assert.match(app, /lot-enhancement-runtime\.js\?revision=r121&trophy-road=r159&paint=r161-car-colour-lock/);
 assert.match(
   index,
-  new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r160-reward-detail-paint-rail`)
+  new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r161-paint-lock-colour`)
 );
 
 console.log('TURN Paintjob rail shows the full label and a contrast-safe factory-colour lock swatch.');
