@@ -3,7 +3,7 @@ import {
   getVehicleDefaultColor,
   getVehicleDefaultSecondaryColor
 } from '../vehicle/catalog.js?build=20260804-r157-factory-colors';
-import { createCarVisual } from '../vehicle/car-models.js?build=20260804-r157-display-p3';
+import { createCarVisual } from '../vehicle/emergency-livery-models.js?build=20260804-r157-display-p3';
 import { configureRendererWideGamut } from '../vehicle/wide-gamut.js?revision=r157-display-p3';
 
 const REWARD_CARS = Object.freeze({
