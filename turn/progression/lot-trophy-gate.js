@@ -93,6 +93,7 @@ export function gateLotNow(root = document.body) {
       }
     }
 
+    screen.dataset.trophyVehicleLocked = String(locked);
     setRaceLocked({ locked, reward, selectedName });
     if (locked && selectedId !== lastAnnouncedCarId) {
       lastAnnouncedCarId = selectedId;
@@ -123,6 +124,7 @@ export function gateLotNow(root = document.body) {
     window.removeEventListener('storage', handleStorage);
     raceButton.classList.remove('is-trophy-locked');
     delete raceButton.dataset.trophyLocked;
+    delete screen.dataset.trophyVehicleLocked;
     activeGates.delete(screen);
   };
   activeGates.set(screen, { release });
