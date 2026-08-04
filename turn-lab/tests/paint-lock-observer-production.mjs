@@ -32,8 +32,11 @@ assert.match(paintGate, /colors\.tabIndex = 0/);
 assert.doesNotMatch(paintGate, /document\.createElement\('button'\)[\s\S]*lot-paint-lock/,
   'The compact lock must not create a nested oversized button');
 assert.match(paintCss, /\.lot-colors\.is-paint-locked[\s\S]*min-height: 54px/);
-assert.match(paintCss, /\.lot-paint-lock[\s\S]*width: 36px[\s\S]*height: 36px/);
-assert.doesNotMatch(paintCss, /\.lot-paint-lock[\s\S]*width: 100%/);
+const paintLockRule = paintCss.match(/\.lot-paint-lock\s*\{([\s\S]*?)\}/)?.[1] || '';
+assert.ok(paintLockRule, 'The compact paint lock must have its own CSS rule');
+assert.match(paintLockRule, /width: 36px/);
+assert.match(paintLockRule, /height: 36px/);
+assert.doesNotMatch(paintLockRule, /width: 100%/);
 assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r159-paint-lock-observer/);
 assert.match(app, /lot-enhancement-runtime\.js\?revision=r121&trophy-road=r159&paint=r159-paint-lock-observer/);
 assert.match(
