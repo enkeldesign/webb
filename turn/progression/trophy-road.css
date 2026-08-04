@@ -1,0 +1,318 @@
+@import url('../design-semantic.css?revision=r140-difficulty-system');
+
+/* The Home destination inherits the exact Give Feedback typography and geometry. */
+.m8-home-fixed-layout .m8-achievements-button {
+  background: var(--turn-action-success, #8ce99a);
+}
+
+.turn-achievements-summary-main {
+  min-width: 0;
+}
+
+.turn-trophy-road {
+  position: relative;
+  margin-top: 10px;
+  padding: 30px 4px 16px;
+}
+
+.turn-trophy-road-track {
+  position: relative;
+  height: 18px;
+  border: var(--turn-border-compact, 3px) solid var(--turn-ink, #08090a);
+  border-radius: var(--turn-radius-pill, 999px);
+  background: var(--turn-muted, #d6d0c2);
+}
+
+.turn-trophy-road-track > i {
+  display: block;
+  width: var(--turn-trophy-road-progress, 0%);
+  height: 100%;
+  overflow: hidden;
+  border-radius: inherit;
+  background: var(--turn-action-success, #8ce99a);
+}
+
+.turn-trophy-road-markers {
+  position: absolute;
+  inset: 0;
+}
+
+.turn-trophy-road-marker {
+  position: absolute;
+  left: var(--turn-trophy-road-position, 0%);
+  top: 50%;
+  display: grid;
+  width: 54px;
+  height: 54px;
+  padding: 5px;
+  place-items: center;
+  border: 3px solid var(--turn-ink, #08090a);
+  border-radius: 14px;
+  background: var(--turn-surface-raised, #fffdf6);
+  color: var(--turn-ink, #08090a);
+  box-shadow: var(--turn-shadow-compact, 3px 3px 0 #08090a);
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+}
+
+.turn-trophy-road-marker:first-child {
+  transform: translate(-35%, -50%);
+}
+
+.turn-trophy-road-marker:last-child {
+  transform: translate(-65%, -50%);
+}
+
+.turn-trophy-road-marker > span {
+  display: grid;
+  width: 31px;
+  height: 25px;
+  place-items: center;
+}
+
+.turn-trophy-road-marker svg,
+.turn-trophy-road-detail-icon svg,
+.turn-achievements-trophy-total svg,
+.turn-trophy-reward-toast .turn-achievement-toast-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.turn-trophy-road-marker > b {
+  font-size: .55rem;
+  line-height: 1;
+}
+
+.turn-trophy-road-marker.is-unlocked {
+  background: var(--turn-action-success, #8ce99a);
+}
+
+.turn-trophy-road-marker.is-locked {
+  background: var(--turn-muted, #d6d0c2);
+  filter: grayscale(.7);
+}
+
+.turn-trophy-road-marker.is-selected {
+  outline: 4px solid var(--turn-action-information, #38d9ff);
+  outline-offset: 3px;
+}
+
+.turn-trophy-road-detail {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 18px;
+  align-items: center;
+  min-height: 122px;
+  padding: 14px 18px;
+  border: var(--turn-border-default, 4px) solid var(--turn-ink, #08090a);
+  border-radius: var(--turn-radius-default, 18px);
+  background: var(--turn-action-success, #8ce99a);
+}
+
+.turn-trophy-road-detail-icon {
+  display: grid;
+  width: 112px;
+  height: 82px;
+  padding: 8px;
+  place-items: center;
+}
+
+.turn-trophy-road-detail span {
+  display: block;
+  font-size: .68rem;
+  font-weight: 950;
+  letter-spacing: .11em;
+}
+
+.turn-trophy-road-detail h3 {
+  margin: 3px 0 5px;
+  font-size: clamp(1.15rem, 2.4vw, 1.65rem);
+  line-height: 1;
+}
+
+.turn-trophy-road-detail p {
+  margin: 0;
+  line-height: 1.3;
+}
+
+.turn-achievements-trophy-total strong {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.turn-achievements-trophy-total i {
+  display: inline-grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+}
+
+.turn-achievements-trophy-total b {
+  font: inherit;
+}
+
+.turn-trophy-reward-toast {
+  background: var(--turn-action-warning, #ffd43b);
+}
+
+/* Trophy-locked track cards remain visible and explain the milestone. */
+.track-card[data-trophy-locked="true"] {
+  cursor: pointer;
+}
+
+.track-card[data-trophy-locked="true"] .track-card-preview,
+.track-card[data-trophy-locked="true"] .track-card-best {
+  filter: grayscale(.7) brightness(.68);
+  opacity: .58;
+}
+
+.track-card-trophy-lock {
+  position: absolute;
+  inset: auto 18px 18px auto;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border: 3px solid var(--m8-ink, #08090a);
+  border-radius: 999px;
+  background: var(--m8-yellow, #ffbd12);
+  box-shadow: 4px 4px 0 var(--m8-ink, #08090a);
+  font-size: clamp(.68rem, 1.25vw, .9rem);
+  font-weight: 950;
+  letter-spacing: .06em;
+  white-space: nowrap;
+}
+
+.track-card-trophy-lock svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.track-card-trophy-lock[hidden] {
+  display: none;
+}
+
+.track-card[data-trophy-locked="true"] .track-card-choice-marker::after {
+  content: '×';
+  display: grid;
+  place-items: center;
+  font-size: .8em;
+}
+
+/* Locked vehicles can be inspected, but never selected for a race. */
+.lot-car-option.is-trophy-locked {
+  position: relative;
+  opacity: .72;
+}
+
+.lot-car-option.is-trophy-locked::after {
+  content: attr(data-trophy-lock-label);
+  display: block;
+  margin-top: 2px;
+  font-size: .58em;
+  line-height: 1;
+  letter-spacing: .04em;
+}
+
+.lot-lock-message {
+  display: grid;
+  gap: 5px;
+  padding: 10px 12px;
+  border: 3px solid var(--turn-ink, #08090a);
+  border-radius: var(--turn-radius-compact, 12px);
+  background: var(--turn-action-warning, #ffd43b);
+  color: var(--turn-ink, #08090a);
+  box-shadow: var(--turn-shadow-compact, 3px 3px 0 #08090a);
+}
+
+.lot-lock-message strong {
+  font-size: .82rem;
+  letter-spacing: .06em;
+}
+
+.lot-lock-message small {
+  line-height: 1.25;
+}
+
+.lot-race:disabled {
+  cursor: not-allowed;
+  filter: grayscale(.35);
+  opacity: .78;
+}
+
+@media (max-width: 720px) {
+  .turn-trophy-road-detail {
+    grid-template-columns: 78px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .turn-trophy-road-detail-icon {
+    width: 74px;
+    height: 62px;
+  }
+
+  .turn-trophy-road-marker {
+    width: 46px;
+    height: 46px;
+  }
+
+  .turn-trophy-road-marker > span {
+    width: 27px;
+    height: 21px;
+  }
+}
+
+@media (max-height: 430px) and (orientation: landscape) {
+  .turn-trophy-road {
+    padding-top: 24px;
+    padding-bottom: 11px;
+  }
+
+  .turn-trophy-road-marker {
+    width: 42px;
+    height: 42px;
+    padding: 4px;
+    border-width: 2px;
+  }
+
+  .turn-trophy-road-marker > span {
+    width: 25px;
+    height: 19px;
+  }
+
+  .turn-trophy-road-detail {
+    min-height: 88px;
+    grid-template-columns: 82px minmax(0, 1fr);
+    padding: 8px 12px;
+  }
+
+  .turn-trophy-road-detail-icon {
+    width: 78px;
+    height: 62px;
+  }
+
+  .turn-trophy-road-detail p {
+    font-size: .76rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .turn-trophy-road-marker,
+  .track-card[data-trophy-locked="true"] {
+    transition: none;
+  }
+}
