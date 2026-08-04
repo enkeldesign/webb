@@ -7,10 +7,17 @@ import {
   TRACK_NAMES,
   VEHICLE_NAMES,
   TRACK_IDS
-} from './catalog.js?revision=r152-developer-time-trials';
+} from './catalog.js?revision=r153-trophy-road';
 import {
   TIME_TRIAL_ACHIEVEMENT_IDS
-} from './time-trials.js?revision=r152-developer-time-trials';
+} from './time-trials.js?revision=r153-trophy-road';
+import {
+  TROPHY_ICON,
+  TROPHY_ROAD_MAX_THRESHOLD,
+  TROPHY_ROAD_REWARDS,
+  TROPHY_ROAD_REWARD_ICONS,
+  getTrophyRoadReward
+} from '../progression/trophy-road.js?revision=r153-trophy-road';
 
 const TOAST_VISIBLE_MS = 3600;
 const ATTENTION_VISIBLE_MS = 900;
@@ -89,7 +96,7 @@ function achievementCard(achievement, store, session) {
     <article class="${classes}" data-achievement-category="${achievement.category}" data-achievement-status="${status.toLowerCase().replace(' ', '-')}">
       <div class="turn-achievement-icon" aria-hidden="true">${ICONS[achievement.icon]}</div>
       <div class="turn-achievement-copy">
-        <span>${CATEGORY_LABELS[achievement.category]} · ${achievement.points} points</span>
+        <span>${CATEGORY_LABELS[achievement.category]} · ${achievement.trophies} trophies</span>
         <h4>${achievement.title}</h4>
         <p>${achievement.description}</p>
         ${achievement.recommendation && !unlocked ? `<small>${achievement.recommendation}</small>` : ''}
@@ -105,7 +112,7 @@ function installStylesheet() {
   const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
   const stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet';
-  stylesheet.href = `/turn/achievements.css?build=${buildKey}-r146-achievement-expansion`;
+  stylesheet.href = `/turn/achievements.css?build=${buildKey}-r153-trophy-road`;
   stylesheet.setAttribute('data-turn-achievements', '');
   document.head.appendChild(stylesheet);
 }
@@ -134,12 +141,18 @@ function createDialog() {
       </header>
       <div class="turn-achievements-content">
         <section class="turn-achievements-summary" aria-labelledby="turnAchievementsSummaryTitle">
-          <div>
+          <div class="turn-achievements-summary-main">
             <strong id="turnAchievementsSummaryTitle">0 OF ${ACHIEVEMENTS.length} UNLOCKED</strong>
-            <div class="turn-achievements-total-progress" role="progressbar" aria-label="Total achievement completion" aria-valuemin="0" aria-valuemax="${ACHIEVEMENTS.length}" aria-valuenow="0"><i></i></div>
+            <div class="turn-trophy-road">
+              <div class="turn-trophy-road-track" role="progressbar" aria-label="Trophy Road progress" aria-valuemin="0" aria-valuemax="${TROPHY_ROAD_MAX_THRESHOLD}" aria-valuenow="0">
+                <i></i>
+                <div class="turn-trophy-road-markers"></div>
+              </div>
+            </div>
           </div>
-          <p><span>POINTS</span><strong class="turn-achievements-points">0</strong></p>
+          <p class="turn-achievements-trophy-total"><span>TROPHIES</span><strong><i aria-hidden="true">${TROPHY_ICON}</i><b>0</b></strong></p>
           <p><span>COMPLETION</span><strong class="turn-achievements-percent">0%</strong></p>
+          <div class="turn-trophy-road-detail" aria-live="polite"></div>
         </section>
         <p class="turn-achievements-storage-note" hidden>Achievement progress is available for this session but cannot be saved because local storage is unavailable.</p>
         <div class="turn-achievements-filters" aria-label="Achievement filters">
@@ -155,16 +168,16 @@ function createDialog() {
   return dialog;
 }
 
-function createToast() {
+function createToast(className, label) {
   const toast = document.createElement('div');
-  toast.className = 'turn-achievement-toast';
+  toast.className = className;
   toast.hidden = true;
   toast.setAttribute('role', 'status');
   toast.setAttribute('aria-live', 'polite');
   toast.setAttribute('aria-atomic', 'true');
   toast.innerHTML = `
     <div class="turn-achievement-toast-icon" aria-hidden="true"></div>
-    <div><span>ACHIEVEMENT UNLOCKED</span><strong></strong></div>
+    <div><span>${label}</span><strong></strong></div>
     <b></b>`;
   document.body.appendChild(toast);
   return toast;
@@ -195,6 +208,13 @@ function installFilters(dialog) {
   return apply;
 }
 
+function initialRewardSelection(store) {
+  const unseen = store.unseenRewardIds()[0];
+  if (unseen) return unseen;
+  const next = TROPHY_ROAD_REWARDS.find((reward) => !store.isRewardUnlocked(reward.id));
+  return next?.id || TROPHY_ROAD_REWARDS.at(-1)?.id || '';
+}
+
 export function createAchievementView({ store, session, utilityGroup }) {
   const homeMenu = document.querySelector('.m8-home-menu');
   const homeStatus = homeMenu?.querySelector('.m8-home-status');
@@ -205,39 +225,92 @@ export function createAchievementView({ store, session, utilityGroup }) {
   }
 
   installStylesheet();
-  const homeTrigger = createTrigger('m8-home-settings m8-achievements-button');
+  const homeTrigger = createTrigger('m8-feedback-button m8-achievements-button');
   homeTrigger.style.setProperty('background', 'var(--turn-action-success, #8ce99a)');
   const raceTrigger = createTrigger('utility turn-race-achievements-button', 'Achievements');
-  if (feedbackButton) homeMenu.insertBefore(homeTrigger, feedbackButton);
+  if (feedbackButton) feedbackButton.after(homeTrigger);
   else homeMenu.insertBefore(homeTrigger, homeStatus);
   if (spectateButton) utilityGroup.insertBefore(raceTrigger, spectateButton);
   else utilityGroup.appendChild(raceTrigger);
 
   const dialog = createDialog();
-  const toast = createToast();
+  const toast = createToast('turn-achievement-toast', 'ACHIEVEMENT UNLOCKED');
+  const rewardToast = createToast('turn-achievement-toast turn-trophy-reward-toast', 'TROPHY ROAD REWARD');
   const list = dialog.querySelector('.turn-achievements-list');
   const totalTitle = dialog.querySelector('#turnAchievementsSummaryTitle');
-  const totalProgress = dialog.querySelector('.turn-achievements-total-progress');
-  const totalProgressFill = totalProgress.querySelector('i');
-  const points = dialog.querySelector('.turn-achievements-points');
+  const trophyRoad = dialog.querySelector('.turn-trophy-road-track');
+  const trophyRoadFill = trophyRoad.querySelector('i');
+  const trophyRoadMarkers = dialog.querySelector('.turn-trophy-road-markers');
+  const trophyRoadDetail = dialog.querySelector('.turn-trophy-road-detail');
+  const trophyTotal = dialog.querySelector('.turn-achievements-trophy-total b');
   const percent = dialog.querySelector('.turn-achievements-percent');
   const storageNote = dialog.querySelector('.turn-achievements-storage-note');
   const closeButton = dialog.querySelector('[data-dialog-close]');
   const applyFilter = installFilters(dialog);
+  let selectedRewardId = '';
   let returnFocus = null;
   let toastHideTimer = 0;
+  let rewardToastHideTimer = 0;
   let attentionTimer = 0;
+
+  function renderTrophyRoad(total) {
+    if (!selectedRewardId || !getTrophyRoadReward(selectedRewardId)) {
+      selectedRewardId = initialRewardSelection(store);
+    }
+    const nextReward = TROPHY_ROAD_REWARDS.find((reward) => !store.isRewardUnlocked(reward.id));
+    trophyRoad.setAttribute('aria-valuenow', String(Math.min(total, TROPHY_ROAD_MAX_THRESHOLD)));
+    trophyRoad.setAttribute(
+      'aria-valuetext',
+      nextReward
+        ? `${total} trophies. ${Math.max(0, nextReward.threshold - total)} trophies until ${nextReward.shortTitle}.`
+        : `${total} trophies. Every current Trophy Road reward is unlocked.`
+    );
+    trophyRoadFill.style.setProperty(
+      '--turn-trophy-road-progress',
+      `${Math.min(100, (total / TROPHY_ROAD_MAX_THRESHOLD) * 100)}%`
+    );
+    trophyRoadMarkers.innerHTML = TROPHY_ROAD_REWARDS.map((reward) => {
+      const unlocked = store.isRewardUnlocked(reward.id);
+      const selected = reward.id === selectedRewardId;
+      const position = Math.min(100, (reward.threshold / TROPHY_ROAD_MAX_THRESHOLD) * 100);
+      return `<button
+        type="button"
+        class="turn-trophy-road-marker ${unlocked ? 'is-unlocked' : 'is-locked'} ${selected ? 'is-selected' : ''}"
+        data-trophy-reward="${reward.id}"
+        style="--turn-trophy-road-position:${position}%"
+        aria-pressed="${selected}"
+        aria-label="${reward.shortTitle}. ${reward.threshold} trophies. ${unlocked ? 'Unlocked' : 'Locked'}"
+      ><span aria-hidden="true">${TROPHY_ROAD_REWARD_ICONS[reward.icon]}</span><b>${reward.threshold}</b></button>`;
+    }).join('');
+
+    const reward = getTrophyRoadReward(selectedRewardId) || TROPHY_ROAD_REWARDS[0];
+    const unlocked = store.isRewardUnlocked(reward.id);
+    const remaining = Math.max(0, reward.threshold - total);
+    trophyRoadDetail.innerHTML = `
+      <div class="turn-trophy-road-detail-icon" aria-hidden="true">${TROPHY_ROAD_REWARD_ICONS[reward.icon]}</div>
+      <div>
+        <span>${reward.threshold} TROPHIES · ${unlocked ? 'UNLOCKED' : `${remaining} TO GO`}</span>
+        <h3>${reward.title}</h3>
+        <p>${reward.description}</p>
+      </div>`;
+  }
+
+  trophyRoadMarkers.addEventListener('click', (event) => {
+    const marker = event.target.closest('[data-trophy-reward]');
+    if (!marker) return;
+    selectedRewardId = marker.dataset.trophyReward;
+    renderTrophyRoad(store.trophyTotal());
+    trophyRoadMarkers.querySelector(`[data-trophy-reward="${selectedRewardId}"]`)?.focus();
+  });
 
   function render() {
     const unlockedCount = Object.keys(store.state.unlocked).length;
-    const totalPoints = ACHIEVEMENTS.reduce((sum, achievement) =>
-      sum + (store.isUnlocked(achievement.id) ? achievement.points : 0), 0);
+    const trophies = store.trophyTotal();
     const completion = Math.round((unlockedCount / ACHIEVEMENTS.length) * 100);
     totalTitle.textContent = `${unlockedCount} OF ${ACHIEVEMENTS.length} UNLOCKED`;
-    totalProgress.setAttribute('aria-valuenow', String(unlockedCount));
-    totalProgressFill.style.setProperty('--turn-achievement-progress', `${completion}%`);
-    points.textContent = String(totalPoints);
+    trophyTotal.textContent = String(trophies);
     percent.textContent = `${completion}%`;
+    renderTrophyRoad(trophies);
     storageNote.hidden = store.storageAvailable();
     list.innerHTML = ACHIEVEMENTS
       .map((achievement) => achievementCard(achievement, store, session))
@@ -246,7 +319,7 @@ export function createAchievementView({ store, session, utilityGroup }) {
   }
 
   function syncTriggers() {
-    const unseenCount = store.unseenIds().length;
+    const unseenCount = store.unseenCount();
     for (const button of [homeTrigger, raceTrigger]) {
       const badge = button.querySelector('.turn-achievements-trigger-badge');
       if (unseenCount > 0) {
@@ -254,7 +327,7 @@ export function createAchievementView({ store, session, utilityGroup }) {
         badge.hidden = false;
         button.setAttribute(
           'aria-label',
-          `Achievements, ${unseenCount} new achievement${unseenCount === 1 ? '' : 's'}`
+          `Achievements, ${unseenCount} new item${unseenCount === 1 ? '' : 's'}`
         );
       } else {
         badge.hidden = true;
@@ -268,6 +341,7 @@ export function createAchievementView({ store, session, utilityGroup }) {
 
   function open(trigger) {
     returnFocus = trigger;
+    selectedRewardId = initialRewardSelection(store);
     render();
     if (typeof dialog.showModal === 'function') dialog.showModal();
     else dialog.setAttribute('open', '');
@@ -305,32 +379,48 @@ export function createAchievementView({ store, session, utilityGroup }) {
     }, ATTENTION_VISIBLE_MS);
   }
 
-  function showToastBatch(batch) {
+  function showToast(toastElement, batch, { reward = false } = {}) {
     if (!batch.length) return;
-    window.clearTimeout(toastHideTimer);
+    const timerKey = reward ? 'reward' : 'achievement';
+    if (timerKey === 'reward') window.clearTimeout(rewardToastHideTimer);
+    else window.clearTimeout(toastHideTimer);
     const first = batch[0];
-    const total = batch.reduce((sum, achievement) => sum + achievement.points, 0);
-    toast.querySelector('.turn-achievement-toast-icon').innerHTML = batch.length === 1
-      ? ICONS[first.icon]
-      : ICONS.trophy;
-    toast.querySelector('span').textContent = batch.length === 1
-      ? 'ACHIEVEMENT UNLOCKED'
-      : `${batch.length} ACHIEVEMENTS UNLOCKED`;
-    toast.querySelector('strong').textContent = batch.length === 1
+    const total = reward
+      ? 0
+      : batch.reduce((sum, achievement) => sum + achievement.trophies, 0);
+    toastElement.querySelector('.turn-achievement-toast-icon').innerHTML = reward
+      ? TROPHY_ROAD_REWARD_ICONS[first.icon]
+      : (batch.length === 1 ? ICONS[first.icon] : ICONS.trophy);
+    toastElement.querySelector('span').textContent = reward
+      ? (batch.length === 1 ? 'TROPHY ROAD REWARD' : `${batch.length} TROPHY ROAD REWARDS`)
+      : (batch.length === 1 ? 'ACHIEVEMENT UNLOCKED' : `${batch.length} ACHIEVEMENTS UNLOCKED`);
+    toastElement.querySelector('strong').textContent = batch.length === 1
       ? first.title
       : `${first.title} + ${batch.length - 1} MORE`;
-    toast.querySelector('b').textContent = `+${total} POINTS`;
-    toast.setAttribute('aria-label', batch.length === 1
-      ? `Achievement unlocked. ${first.title}. ${first.points} points.`
-      : `${batch.length} achievements unlocked. ${batch.map((achievement) => achievement.title).join(', ')}. ${total} points.`);
-    toast.hidden = false;
-    toast.classList.remove('is-visible');
-    void toast.offsetWidth;
-    toast.classList.add('is-visible');
-    toastHideTimer = window.setTimeout(() => {
-      toast.classList.remove('is-visible');
-      window.setTimeout(() => { toast.hidden = true; }, 220);
+    toastElement.querySelector('b').textContent = reward
+      ? 'UNLOCKED'
+      : `+${total} TROPHIES`;
+    toastElement.setAttribute('aria-label', reward
+      ? `${batch.length === 1 ? 'Trophy Road reward unlocked' : `${batch.length} Trophy Road rewards unlocked`}. ${batch.map((item) => item.shortTitle).join(', ')}.`
+      : `${batch.length === 1 ? 'Achievement unlocked' : `${batch.length} achievements unlocked`}. ${batch.map((achievement) => achievement.title).join(', ')}. ${total} trophies.`);
+    toastElement.hidden = false;
+    toastElement.classList.remove('is-visible');
+    void toastElement.offsetWidth;
+    toastElement.classList.add('is-visible');
+    const timer = window.setTimeout(() => {
+      toastElement.classList.remove('is-visible');
+      window.setTimeout(() => { toastElement.hidden = true; }, 220);
     }, TOAST_VISIBLE_MS);
+    if (timerKey === 'reward') rewardToastHideTimer = timer;
+    else toastHideTimer = timer;
+  }
+
+  function showToastBatch(batch) {
+    showToast(toast, batch);
+  }
+
+  function showRewardToastBatch(batch) {
+    showToast(rewardToast, batch, { reward: true });
   }
 
   render();
@@ -340,10 +430,12 @@ export function createAchievementView({ store, session, utilityGroup }) {
     raceTrigger,
     dialog,
     toast,
+    rewardToast,
     render,
     syncTriggers,
     pulseRaceTrigger,
     showToastBatch,
+    showRewardToastBatch,
     open,
     close
   });
