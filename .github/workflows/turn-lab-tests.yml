@@ -157,6 +157,9 @@ jobs:
       - name: Run Trophy Road progression regression
         run: node turn-lab/tests/trophy-road-production.mjs
 
+      - name: Run Lot paint observer freeze regression
+        run: node turn-lab/tests/paint-lock-observer-production.mjs
+
       - name: Run production sound foundation regression
         run: node turn-lab/tests/audio-foundation-production.mjs
 
