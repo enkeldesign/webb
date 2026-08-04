@@ -1,8 +1,9 @@
 import {
+  LOCK_ICON,
   isTrackUnlocked,
   rewardForTrack,
   showTrophyUnlockNotice
-} from './trophy-road.js?revision=r154-trophy-road-feedback';
+} from './trophy-road.js?revision=r155-trophy-road-polish';
 
 const LOCKED_TRACK_ID = 'midnight-city';
 
@@ -29,14 +30,24 @@ export function installM8TrophyGate(homeApi = globalThis.__turnNextHome) {
     showTrophyUnlockNotice({ reward, itemName: reward.shortTitle });
   }
 
+  function syncChoiceLockIcon(isLocked) {
+    if (!choiceMarker) return;
+    let icon = choiceMarker.querySelector('.turn-track-lock-icon');
+    if (isLocked && !icon) {
+      icon = document.createElement('span');
+      icon.className = 'turn-track-lock-icon';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.innerHTML = LOCK_ICON;
+      choiceMarker.appendChild(icon);
+    }
+    icon?.toggleAttribute('hidden', !isLocked);
+  }
+
   function setRaceLocked(isLockedSelection) {
     continueButton.classList.toggle('is-trophy-locked', isLockedSelection);
     if (isLockedSelection) {
       continueButton.dataset.trophyLocked = 'true';
-      if (!continueButton.disabled) {
-        continueButton.disabled = true;
-        continueButton.dataset.trophyGateDisabled = 'true';
-      }
+      continueButton.setAttribute('aria-disabled', 'true');
       continueButton.setAttribute(
         'aria-label',
         `Race on ${reward.shortTitle}, locked. Unlocks at ${reward.threshold} trophies.`
@@ -45,10 +56,7 @@ export function installM8TrophyGate(homeApi = globalThis.__turnNextHome) {
     }
 
     delete continueButton.dataset.trophyLocked;
-    if (continueButton.dataset.trophyGateDisabled === 'true') {
-      continueButton.disabled = false;
-      delete continueButton.dataset.trophyGateDisabled;
-    }
+    continueButton.removeAttribute('aria-disabled');
     if (selected()) continueButton.setAttribute('aria-label', `Race on ${reward.shortTitle}`);
   }
 
@@ -63,6 +71,7 @@ export function installM8TrophyGate(homeApi = globalThis.__turnNextHome) {
         : originalLabel
     );
     if (choiceMarker) choiceMarker.dataset.trophyLock = String(isLocked);
+    syncChoiceLockIcon(isLocked);
     setRaceLocked(isLocked && selected());
   }
 

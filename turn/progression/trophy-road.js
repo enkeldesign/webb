@@ -9,7 +9,7 @@ export const LOCK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable=
 export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
   skyline: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M3 43h58M8 43V24h10v19M21 43V13h13v30M37 43V20h8v23M48 43V9h10v34"></path><path d="M11 29h3M11 35h3M25 19h4M25 26h4M25 33h4M51 15h3M51 22h3M51 29h3"></path><path d="M8 8a8 8 0 1 0 9 9A7 7 0 0 1 8 8Z"></path></svg>',
   emergency: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M18 35V21a14 14 0 0 1 28 0v14"></path><path d="M12 35h40v9H12Z"></path><path d="M32 2v7M9 9l6 6M55 9l-6 6M3 25h8M53 25h8"></path><path d="M24 34V22a8 8 0 0 1 16 0v12"></path></svg>',
-  future: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M7 31h7l6-12h23l9 12h5v9h-6"></path><path d="M13 40H7v-9M22 40h20"></path><circle cx="18" cy="40" r="5"></circle><circle cx="47" cy="40" r="5"></circle><path d="M24 19l5-8h10l4 8M28 25h17M4 20h10M1 14h18"></path></svg>'
+  future: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M5 32h10l6-8h12l5-9h8l4 9h7l4 7v7H6Z"></path><path d="M25 24h22M39 15l4 9M47 12h12v6H45"></path><circle cx="18" cy="39" r="5"></circle><circle cx="49" cy="39" r="5"></circle><path d="M2 21h12M1 15h17M8 27h9"></path></svg>'
 });
 
 export const TROPHY_ROAD_REWARDS = Object.freeze([
