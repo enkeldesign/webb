@@ -54,9 +54,14 @@ export function updatePaceNoteState(runtime, frame = {}) {
   const state = runtime?.state;
   const samples = runtime?.samples;
   const trackId = String(runtime?.trackId || state?.trackId || globalThis.__turnGetTrackId?.() || '');
-  const notes = getTrackPaceNotes(trackId);
 
-  if (!state || !Array.isArray(samples) || !notes.length) {
+  if (!state || !Array.isArray(samples)) {
+    resetPaceNotePassage(trackId || null, null);
+    return null;
+  }
+
+  const notes = getTrackPaceNotes(trackId, samples);
+  if (!notes.length) {
     resetPaceNotePassage(trackId || null, null);
     return null;
   }
