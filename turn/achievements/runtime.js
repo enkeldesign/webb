@@ -2,15 +2,15 @@ import {
   ACHIEVEMENTS,
   TRACK_IDS,
   TRAINING_CAR_ID
-} from './catalog.js?revision=r152-developer-time-trials';
+} from './catalog.js?revision=r153-trophy-road';
 import {
   createAchievementStore,
   normalizeAchievementState
-} from './store.js?revision=r152-developer-time-trials';
+} from './store.js?revision=r153-trophy-road';
 import {
   allOnboardingComplete,
   createAchievementView
-} from './view.js?revision=r152-developer-time-trials';
+} from './view.js?revision=r153-trophy-road';
 import {
   completedNightShiftSheriff,
   createNightShiftAttempt,
@@ -21,7 +21,7 @@ import {
   TIME_TRIAL_MASTER_ID,
   completedAllTimeTrials,
   qualifyingTimeTrial
-} from './time-trials.js?revision=r152-developer-time-trials';
+} from './time-trials.js?revision=r153-trophy-road';
 import { replayFrameAt } from '../race/replay-system.js?revision=r146-achievement-expansion';
 import { getStoredBestLap } from '../race/rival-storage.js';
 
@@ -30,6 +30,7 @@ const LISTEN_CLOSELY_REQUIRED_MS = 10000;
 const LISTEN_CLOSELY_MIN_BALANCE = 0.75;
 const LISTEN_CLOSELY_MIN_SPEED = 1;
 const LAP_TOAST_DELAY_MS = 4400;
+const REWARD_TOAST_OFFSET_MS = 3900;
 const SAMPLE_INTERVAL_MS = 100;
 const MAX_SAMPLE_DELTA_MS = 250;
 
@@ -92,7 +93,9 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     spectateStartedAt: 0,
     pendingTrackEntryPulse: false,
     pendingToastAchievements: [],
+    pendingToastRewards: [],
     toastTimer: 0,
+    rewardToastTimer: 0,
     listenCloselyMs: 0,
     lastSampleAt: performance.now(),
     secondWind: {
@@ -111,11 +114,29 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     }));
   }
 
+  function announceRewardUpdate(rewards) {
+    if (!rewards.length) return;
+    window.dispatchEvent(new CustomEvent('turn:trophy-road-updated', {
+      detail: {
+        unlocked: rewards.map((reward) => reward.id),
+        trophies: store.trophyTotal()
+      }
+    }));
+  }
+
   function scheduleToastFlush(delay = 0) {
     window.clearTimeout(session.toastTimer);
     session.toastTimer = window.setTimeout(() => {
       session.toastTimer = 0;
       view.showToastBatch(session.pendingToastAchievements.splice(0));
+    }, delay);
+  }
+
+  function scheduleRewardToastFlush(delay = 0) {
+    window.clearTimeout(session.rewardToastTimer);
+    session.rewardToastTimer = window.setTimeout(() => {
+      session.rewardToastTimer = 0;
+      view.showRewardToastBatch(session.pendingToastRewards.splice(0));
     }, delay);
   }
 
@@ -129,6 +150,29 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     if (delay >= 0) scheduleToastFlush(delay);
   }
 
+  function queueRewards(rewards, { delay = 0 } = {}) {
+    for (const reward of rewards) {
+      if (!reward || session.pendingToastRewards.some((item) => item.id === reward.id)) continue;
+      session.pendingToastRewards.push(reward);
+    }
+    view.syncTriggers();
+    view.render();
+    if (delay >= 0) scheduleRewardToastFlush(delay);
+  }
+
+  function syncRewards({ delay = 0, silent = false } = {}) {
+    const rewards = store.syncRewards();
+    if (!rewards.length) return [];
+    announceRewardUpdate(rewards);
+    if (silent) {
+      view.syncTriggers();
+      view.render();
+    } else {
+      queueRewards(rewards, { delay });
+    }
+    return rewards;
+  }
+
   function unlock(ids, context, options = {}) {
     const unlocked = ids
       .map((id) => store.unlock(id, context))
@@ -136,6 +180,10 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     if (!unlocked.length) return [];
     announceAchievementUpdate(unlocked);
     queueUnlocked(unlocked, options);
+    const rewardDelay = options.delay >= 0
+      ? options.delay + REWARD_TOAST_OFFSET_MS
+      : -1;
+    syncRewards({ delay: rewardDelay });
     return unlocked;
   }
 
@@ -145,6 +193,7 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
       .filter(Boolean);
     if (!unlocked.length) return [];
     announceAchievementUpdate(unlocked);
+    syncRewards({ silent: true });
     view.syncTriggers();
     view.render();
     return unlocked;
@@ -318,6 +367,11 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     if (!view.raceTrigger.hidden && session.pendingToastAchievements.length) {
       scheduleToastFlush(300);
     }
+    if (!view.raceTrigger.hidden && session.pendingToastRewards.length) {
+      scheduleRewardToastFlush(
+        session.pendingToastAchievements.length ? REWARD_TOAST_OFFSET_MS : 300
+      );
+    }
   }
 
   calibrateButton.addEventListener('click', () => {
@@ -350,8 +404,13 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     if (reason === 'race-reset') {
       if (session.currentLapVoid) {
         unlock(['take-it-from-the-top'], unlockContext(runtime), { delay: 300 });
-      } else if (session.pendingToastAchievements.length) {
-        scheduleToastFlush(300);
+      } else {
+        if (session.pendingToastAchievements.length) scheduleToastFlush(300);
+        if (session.pendingToastRewards.length) {
+          scheduleRewardToastFlush(
+            session.pendingToastAchievements.length ? REWARD_TOAST_OFFSET_MS : 300
+          );
+        }
       }
       session.currentLapVoid = false;
       session.currentLap = null;
@@ -396,6 +455,7 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     open: view.open,
     close: view.close,
     unlock: (id, context = {}) => unlock([id], context, { delay: 0 }),
+    getTrophies: () => store.trophyTotal(),
     getState: () => normalizeAchievementState(store.state)
   });
   globalThis.__turnAchievements = api;
