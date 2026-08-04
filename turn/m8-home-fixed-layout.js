@@ -99,8 +99,13 @@ export async function installM8HomeFixedLayout() {
   );
   const cardScrollFixes = await installM8HomeCardScrollFixes();
 
+  const { installM8TrophyGate } = await import(
+    `/turn/progression/m8-trophy-gate.js?build=${buildKey}-r153-trophy-road`
+  );
+  const trophyGate = installM8TrophyGate(globalThis.__turnNextHome);
+
   const { installAchievements } = await import(
-    `/turn/achievements.js?build=${buildKey}-r152-developer-time-trials`
+    `/turn/achievements.js?build=${buildKey}-r153-trophy-road`
   );
   const achievements = installAchievements(globalThis.__turnRuntime);
 
@@ -116,6 +121,7 @@ export async function installM8HomeFixedLayout() {
     menu,
     raceButton,
     cardScrollFixes,
+    trophyGate,
     achievements,
     driveByEarTraining
   });
