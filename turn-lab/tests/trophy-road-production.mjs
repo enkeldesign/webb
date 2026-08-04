@@ -188,7 +188,7 @@ assert.ok(
 );
 assert.match(lotEnhancement, /gateLotNow/);
 assert.ok(
-  lotEnhancement.indexOf('gateLotNow') < lotEnhancement.indexOf('installLotAccessibility'),
+  lotEnhancement.indexOf('gateLotNow(scope)') < lotEnhancement.indexOf('installLotAccessibility(scope)'),
   'The accessibility layer should capture the complete locked vehicle names'
 );
 assert.match(roadCss, /@media \(prefers-reduced-motion: reduce\)/);
