@@ -16,13 +16,16 @@ const [training, view, css, fixedLayout] = await Promise.all([
   fs.readFile(new URL('../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(fixedLayout, /training\/drive-by-ear-training\.js\?build=\$\{buildKey\}-r150-dbe-training-refinement/);
+assert.match(fixedLayout, /training\/drive-by-ear-training\.js\?build=\$\{buildKey\}-r151-dbe-training-device-fixes/);
 assert.match(fixedLayout, /installDriveByEarTraining\(globalThis\.__turnRuntime\)/);
 assert.match(fixedLayout, /driveByEarTraining/);
 
 assert.equal(TRAINING_STAGES.length, 5, 'Training must contain exactly five authored parts');
 assert.equal(FINISH_PROGRESS, 0.94);
-assert.ok(RAIL_ASSIST_START < ROAD_HALF_WIDTH, 'The slippery guide assist must begin when the car reaches a rail');
+assert.ok(
+  RAIL_ASSIST_START > ROAD_HALF_WIDTH && RAIL_ASSIST_START < ROAD_HALF_WIDTH + 1,
+  'The slippery guide assist must begin at the visible rail rather than inside the road'
+);
 assert.ok(RECOVERY_LIMIT > ROAD_HALF_WIDTH + 8, 'The invisible safety zone must remain wider than the road');
 
 const [part1, part2, part3, part4, part5] = TRAINING_STAGES;
@@ -34,7 +37,8 @@ assert.equal(part1.outerLimit, RECOVERY_LIMIT);
 assert.equal(part2.notes.length, 2, 'Part 2 must contain only the gentle right and broader left');
 assert.deepEqual(
   part2.notes.map(({ direction, severity, long }) => [direction, severity, long]),
-  [[1, 1, false], [-1, 2, false]]
+  [[-1, 1, false], [1, 2, false]],
+  'Training ear values must use the physical-device mapping: right negative, left positive'
 );
 assert.ok(part2.notes[0].progress <= 0.10, 'The first Part 2 BIP must play on the long straight');
 assert.ok(part2.notes[1].progress <= 0.49, 'The second Part 2 cue must play before its curve');
@@ -43,7 +47,7 @@ assert.ok(part2.points[3][1] >= 180, 'Part 2 must begin with a long straight');
 assert.equal(part3.notes.length, 1);
 assert.deepEqual(
   [part3.notes[0].direction, part3.notes[0].severity, part3.notes[0].long],
-  [1, 1, false]
+  [-1, 1, false]
 );
 assert.ok(part3.notes[0].progress <= 0.17, 'Part 3 BIP must play well before the gentle right');
 assert.equal(part3.startOffset, -(ROAD_HALF_WIDTH + 4));
@@ -51,15 +55,27 @@ assert.equal(part3.startOffset, -(ROAD_HALF_WIDTH + 4));
 assert.equal(part4.notes.length, 1, 'Part 4 must describe one uninterrupted curve');
 assert.deepEqual(
   [part4.notes[0].direction, part4.notes[0].severity, part4.notes[0].long],
-  [-1, 3, true],
-  'Part 4 must play BIP BIP BEEP in the left ear for one long tight left'
+  [1, 3, true],
+  'Part 4 must play BIP BIP BEEP in the physically verified left ear'
 );
 assert.match(part4.lead, /BIP BIP BEEP/);
 assert.match(part4.lead, /held final BEEP/);
 
 assert.equal(part5.notes.length, 3);
-assert.ok(part5.points[3][1] >= 180, 'Part 5 must begin with a long straight');
-assert.match(part5.visualHint, /never crosses itself/);
+assert.ok(part5.points[3][1] >= 210, 'Part 5 must begin with a long straight');
+assert.deepEqual(
+  part5.notes.map(({ direction, severity, long }) => [direction, severity, long]),
+  [[-1, 1, false], [-1, 2, false], [1, 2, true]],
+  'Part 5 must end with BIP BIP right followed by BIP BEEP left'
+);
+assert.equal(
+  part5.notes[1].progress,
+  part5.notes[2].progress,
+  'The final right-left pair must enqueue as one linked pace-note sequence'
+);
+assert.match(part5.lead, /BIP BIP in the right ear/);
+assert.match(part5.lead, /BIP BEEP in the left/);
+assert.match(part5.visualHint, /final two curves follow closely/);
 
 for (const stage of TRAINING_STAGES) {
   assertCourseHasSpace(stage);
@@ -93,6 +109,16 @@ assert.match(view, /maximum-steering two-tone/);
 assert.match(view, /These sounds are not corner instructions/);
 assert.match(view, /The ear gives the turn side/);
 assert.match(view, /held final BEEP means the curve continues/);
+assert.match(view, /dialog\.classList\.contains\('turn-dbe-training-intro-dialog'\)/);
+assert.match(view, /dialog\.querySelector\('\[data-training-cancel\]'\)/);
+assert.match(view, /focus\(\{ preventScroll: true \}\)/);
+assert.equal(
+  (view.match(/requestAnimationFrame\(\(\) =>/g) || []).length >= 2,
+  true,
+  'The long introduction must reset its scroll after WebKit applies delayed focus scrolling'
+);
+assert.match(view, /card\.scrollTop = 0/);
+assert.match(view, /behavior: 'instant'/);
 
 assert.match(training, /setAudioEnabled\?\.\(true\)/);
 assert.match(training, /setDriveByEarEnabled\?\.\(true\)/);
@@ -110,7 +136,7 @@ assert.match(css, /data-training-race-restart/);
 assert.match(css, /\.turn-dbe-training-race-nav\[hidden\]/);
 assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
 
-console.log('TURN Drive By Ear 101 course spacing, cues, navigation and slippery rails passed.');
+console.log('TURN Drive By Ear 101 device cue mapping, modal position and linked sequence passed.');
 
 function assertCourseHasSpace(stage) {
   const points = stage.points.map(([x, z]) => ({ x, z }));

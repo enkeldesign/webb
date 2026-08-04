@@ -4,12 +4,17 @@ export const TRAINING_CAR_ID = 'classic';
 export const SAMPLE_COUNT = 720;
 export const FINISH_PROGRESS = 0.94;
 export const ROAD_HALF_WIDTH = 13.5;
-export const RAIL_ASSIST_START = ROAD_HALF_WIDTH - 1.8;
+// The visible tube begins just outside the asphalt. Starting assistance inside the
+// road made the car react before touching anything and felt arbitrary on device.
+export const RAIL_ASSIST_START = ROAD_HALF_WIDTH + 0.35;
 export const RECOVERY_LIMIT = ROAD_HALF_WIDTH + 10;
 export const SAFETY_ASSIST_START = RECOVERY_LIMIT - 4;
 
-const LEFT = -1;
-const RIGHT = 1;
+// Physical landscape-device testing shows the shared priority panner reaches the
+// opposite ear for these authored training-course turns. Keep the stage definitions
+// semantic and map course left/right to the ear values that players actually hear.
+const LEFT = 1;
+const RIGHT = -1;
 const note = (progress, direction, severity, long = false) => Object.freeze({
   progress,
   direction,
@@ -85,18 +90,21 @@ export const TRAINING_STAGES = Object.freeze([
   stage({
     id: 'dbe-training-5',
     title: 'Drive by ear',
-    menuSummary: 'Combine ribbon, pace notes and recovery on an open course.',
-    lead: 'Put it together on a spacious course. Follow the ribbon, listen ahead for a gentle right, a broader left and a long right, and use gravel plus recovery guidance if you leave the road.',
-    visualHint: 'The route never crosses itself. Try Blank screen mode, or keep the course visible and repeat any part from the navigation controls.',
+    menuSummary: 'Combine the ribbon with a linked right–left pace-note sequence.',
+    lead: 'Put it together on a spacious course. After the first gentle right, listen for a linked sequence: BIP BIP in the right ear, then BIP BEEP in the left for the long curve immediately after it. Use gravel plus recovery guidance if you leave the road.',
+    visualHint: 'The final two curves follow closely without crossing the route. Try Blank screen mode, or keep the course visible and repeat any part from the navigation controls.',
     guideRails: false,
     startOffset: 0,
     outerLimit: RECOVERY_LIMIT,
     points: [
-      [0, 0], [0, 60], [0, 120], [0, 180], [5, 225], [20, 265],
-      [50, 295], [90, 315], [140, 320], [200, 320], [260, 320],
-      [310, 330], [350, 355], [375, 390], [385, 435], [385, 490],
-      [385, 550], [395, 600], [420, 640], [460, 665], [515, 675], [575, 675]
+      [0, 0], [0, 70], [0, 140], [0, 210], [5, 250], [20, 285],
+      [50, 310], [90, 325], [140, 330], [200, 330], [260, 330],
+      [305, 325], [340, 305], [360, 275], [368, 235], [368, 195],
+      [375, 160], [395, 130], [425, 108], [465, 95], [510, 94],
+      [560, 102], [615, 110], [680, 110]
     ],
-    notes: [note(0.08, RIGHT, 1), note(0.39, LEFT, 2), note(0.68, RIGHT, 2, true)]
+    // The matching progress values intentionally enqueue one linked phrase:
+    // BIP BIP right, followed by BIP BEEP left.
+    notes: [note(0.08, RIGHT, 1), note(0.43, RIGHT, 2), note(0.43, LEFT, 2, true)]
   })
 ]);

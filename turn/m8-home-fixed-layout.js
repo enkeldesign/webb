@@ -14,7 +14,6 @@ function installStylesheet() {
 function waitForHome() {
   const existing = document.querySelector('.m8-home');
   if (existing) return Promise.resolve(existing);
-
   return new Promise((resolve) => {
     const observer = new MutationObserver(() => {
       const home = document.querySelector('.m8-home');
@@ -67,7 +66,6 @@ export async function installM8HomeFixedLayout() {
   settingsButton.textContent = 'SETTINGS';
   howButton.textContent = 'HOW TO PLAY';
   raceButton.classList.add('m8-race-button');
-
   menu.append(settingsButton, howButton, status, raceButton);
 
   if (oldScrollButtons) {
@@ -107,7 +105,7 @@ export async function installM8HomeFixedLayout() {
   const achievements = installAchievements(globalThis.__turnRuntime);
 
   const { installDriveByEarTraining } = await import(
-    `/turn/training/drive-by-ear-training.js?build=${buildKey}-r150-dbe-training-refinement`
+    `/turn/training/drive-by-ear-training.js?build=${buildKey}-r151-dbe-training-device-fixes`
   );
   const driveByEarTraining = await installDriveByEarTraining(globalThis.__turnRuntime);
 
