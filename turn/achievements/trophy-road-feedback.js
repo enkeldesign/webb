@@ -3,6 +3,7 @@ import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r15
 import {
   LOCK_ICON,
   TROPHY_ROAD_MAX_THRESHOLD,
+  TROPHY_ROAD_REWARD_ICONS,
   TROPHY_ROAD_VIEWPORT_THRESHOLD,
   getTrophyRoadReward
 } from '../progression/trophy-road.js?revision=r155-trophy-road-polish';
@@ -248,7 +249,12 @@ function installRoadBehavior({ achievements, summary }) {
     for (const marker of markers.querySelectorAll('[data-trophy-reward]')) {
       const reward = getTrophyRoadReward(marker.dataset.trophyReward);
       const icon = marker.querySelector('span');
-      if (icon) icon.classList.add('turn-trophy-road-marker-icon');
+      if (icon) {
+        icon.classList.add('turn-trophy-road-marker-icon');
+        if (reward?.icon && TROPHY_ROAD_REWARD_ICONS[reward.icon]) {
+          icon.innerHTML = TROPHY_ROAD_REWARD_ICONS[reward.icon];
+        }
+      }
       if (reward && !store.isRewardUnlocked(reward.id) && !marker.querySelector('.turn-trophy-road-marker-lock')) {
         const lock = document.createElement('i');
         lock.className = 'turn-trophy-road-marker-lock';
@@ -340,6 +346,7 @@ function installRoadBehavior({ achievements, summary }) {
     if (dragPointerId == null || (event?.pointerId != null && event.pointerId !== dragPointerId)) return;
     summary.scroll.classList.remove('is-dragging');
     dragPointerId = null;
+    dragged = false;
     updateScrollButtons();
   };
   summary.scroll.addEventListener('pointerup', stopDragging);
