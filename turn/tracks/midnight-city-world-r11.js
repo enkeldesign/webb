@@ -1,10 +1,9 @@
 import * as THREE from 'three';
+import { signalSecretAchievement } from '../achievements/secret-events.js?revision=r157-hidden-achievements';
 import { installMidnightCityWorld as installMidnightCityWorldR7 } from './midnight-city-world-r7.js?base=20260801-r7';
 
 const LILYA_TEXTURE_URL = new URL('../LILYA.PNG', import.meta.url).href;
 
-// This is the surviving low Neon Quarter building inside the western hairpin.
-// The portrait belongs on its west facade, the vertical wall marked in the map close-up.
 const LILYA_WALL = Object.freeze({
   x: -500.70,
   y: 11.96,
@@ -87,9 +86,7 @@ function armWrongWayTextureLoad(world, portrait, options = {}) {
   let loadStarted = false;
 
   function restoreRoadRenderHook() {
-    if (road.onBeforeRender === wrongWayTriggeredLoad) {
-      road.onBeforeRender = previousOnBeforeRender;
-    }
+    if (road.onBeforeRender === wrongWayTriggeredLoad) road.onBeforeRender = previousOnBeforeRender;
   }
 
   function resetDiscoveryHold() {
@@ -139,7 +136,7 @@ function armWrongWayTextureLoad(world, portrait, options = {}) {
 
     loadStarted = true;
     restoreRoadRenderHook();
-    loadLilyaTexture(portrait);
+    loadLilyaTexture(portrait, runtime);
   }
 
   road.onBeforeRender = wrongWayTriggeredLoad;
@@ -150,13 +147,7 @@ function armWrongWayTextureLoad(world, portrait, options = {}) {
 function playerFacesAgainstRaceDirection(runtime, trackSamples) {
   const state = runtime?.state;
   const sample = trackSamples[state?.nearestTrackIndex];
-  if (
-    state?.running !== true
-    || !Number.isFinite(state.heading)
-    || !sample?.tangent
-  ) {
-    return false;
-  }
+  if (state?.running !== true || !Number.isFinite(state.heading) || !sample?.tangent) return false;
 
   const forwardX = Math.sin(state.heading);
   const forwardZ = Math.cos(state.heading);
@@ -164,7 +155,7 @@ function playerFacesAgainstRaceDirection(runtime, trackSamples) {
   return trackAlignment <= LILYA_MAX_TRACK_ALIGNMENT;
 }
 
-function loadLilyaTexture(portrait) {
+function loadLilyaTexture(portrait, runtime) {
   new THREE.TextureLoader().load(
     LILYA_TEXTURE_URL,
     (texture) => {
@@ -188,6 +179,11 @@ function loadLilyaTexture(portrait) {
       portrait.material.needsUpdate = true;
       portrait.scale.set(width, height, 1);
       portrait.visible = true;
+      portrait.userData.turnSecretAchievementFound = true;
+      signalSecretAchievement('find-lilya', {
+        trackId: 'midnight-city',
+        vehicleId: runtime?.state?.vehicleId || ''
+      });
     },
     undefined,
     (error) => {
