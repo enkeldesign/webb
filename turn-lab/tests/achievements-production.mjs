@@ -350,7 +350,7 @@ assert.doesNotMatch(style, /is-achievement-next/);
 assert.match(designTokens, /--turn-action-success: var\(--turn-green-500\)/);
 assert.match(fixedLayout, /installAchievements/);
 assert.match(fixedLayout, /installM8TrophyGate/);
-assert.match(fixedLayout, /r153-trophy-road/);
+assert.match(fixedLayout, /r154-trophy-road-feedback/);
 assert.ok(fixedLayout.indexOf('installM8HomeCardScrollFixes') < fixedLayout.indexOf('installAchievements'),
   'Achievements should join the completed fixed Home layout after track scrolling is installed');
 assert.match(workflow, /Run achievement system regression/);
