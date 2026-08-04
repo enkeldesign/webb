@@ -46,7 +46,8 @@ const [
   audio,
   license,
   index,
-  nextIndex
+  nextIndex,
+  releaseSource
 ] = await Promise.all([
   fs.readFile(path.join(turnDir, 'vehicle/car-models.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'vehicle/emergency-livery-models.js'), 'utf8'),
@@ -58,8 +59,10 @@ const [
   fs.readFile(path.join(turnDir, 'audio/audio-system.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'assets/cars/KENNEY-CAR-KIT.md'), 'utf8'),
   fs.readFile(path.join(turnDir, 'index.html'), 'utf8'),
-  fs.readFile(path.join(root, 'turn-next/index.html'), 'utf8')
+  fs.readFile(path.join(root, 'turn-next/index.html'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'release.json'), 'utf8')
 ]);
+const release = JSON.parse(releaseSource);
 
 assert.match(carModels, /!car\.fixedLivery/);
 assert.match(carModels, /installEmergencyLightRig/);
@@ -101,9 +104,16 @@ assert.match(index, /syncFixedLiveryRail/);
 assert.match(index, /emergencyVehicleNames/);
 assert.doesNotMatch(fixedLiveryUi, /input|type=['"]color|SERVICE LIGHTS/);
 
+const escapedBuild = release.cacheKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 for (const html of [index, nextIndex]) {
-  assert.match(html, /"\.\/vehicle\/car-models\.js\?build=20260720-r19": "\.\/vehicle\/emergency-livery-models\.js\?build=20260803-r126"/);
-  assert.match(html, /"\.\/vehicle\/car-models\.js\?build=20260720-r22": "\.\/vehicle\/emergency-livery-models\.js\?build=20260803-r126"/);
+  assert.match(
+    html,
+    new RegExp(`"\\.\\/vehicle\\/car-models\\.js\\?build=20260720-r19": "\\.\\/vehicle\\/emergency-livery-models\\.js\\?build=${escapedBuild}"`)
+  );
+  assert.match(
+    html,
+    new RegExp(`"\\.\\/vehicle\\/car-models\\.js\\?build=20260720-r22": "\\.\\/vehicle\\/emergency-livery-models\\.js\\?build=${escapedBuild}"`)
+  );
 }
 
 assert.match(controls, /vehicleId: runtimeState\?\.vehicleId/);
