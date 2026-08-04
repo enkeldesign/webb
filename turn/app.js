@@ -262,8 +262,9 @@ const { installHarborHiddenFaceOrientation } = await import(
 );
 installHarborHiddenFaceOrientation();
 
-// Historical regression marker for the original Trophy Road Lot enhancement bundle:
+// Historical regression markers for established Trophy Road Lot enhancement bundles:
 // lot-enhancement-runtime.js?revision=r121&trophy-road=r154
+// lot-enhancement-runtime.js?revision=r121&trophy-road=r157
 const { installLotEnhancementRuntime } = await import(
   withBuild('./garage/lot-enhancement-runtime.js?revision=r121&trophy-road=r159&paint=r159-paint-lock-observer')
 );
@@ -333,6 +334,8 @@ if (buildLabel) {
   const release = globalThis.__TURN_BUILD__;
   buildLabel.textContent = `TURN V${release?.version || ''} · BUILD ${(release?.id || '').toUpperCase()}`;
 }
+// Historical regression marker for the paint and Monster Home bundle:
+// m8-home-fixed-layout.js?revision=m8.9-track-title-alignment&trophy-road=r157
 const { installM8HomeFixedLayout } = await import(
   withBuild('./m8-home-fixed-layout.js?revision=m8.9-track-title-alignment&trophy-road=r159')
 );
