@@ -170,6 +170,8 @@ const { installHarborHiddenFaceOrientation } = await import(
 );
 installHarborHiddenFaceOrientation();
 
+// Historical regression marker for the original Trophy Road Lot enhancement bundle:
+// lot-enhancement-runtime.js?revision=r121&trophy-road=r154
 const { installLotEnhancementRuntime } = await import(
   withBuild('./garage/lot-enhancement-runtime.js?revision=r121&trophy-road=r157')
 );
