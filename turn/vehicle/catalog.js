@@ -1,6 +1,6 @@
 export const DEFAULT_VEHICLE_ID = 'classic';
 export const LEGACY_VEHICLE_ID = 'sedan';
-export const DEFAULT_VEHICLE_COLOR = '#ffd43b';
+export const DEFAULT_VEHICLE_COLOR = '#ffcc00';
 export const DEFAULT_VEHICLE_SECONDARY_COLOR = '#f8f9fa';
 export const VEHICLE_SELECTION_KEY = 'turn-vehicle-selection-v1';
 export const VEHICLE_STAT_BUDGET = 18;
@@ -15,41 +15,17 @@ export const MAXED_VEHICLE_STATS = Object.freeze({
 });
 
 export const VEHICLE_STAT_LEGEND = Object.freeze([
-  Object.freeze({
-    key: 'speed',
-    label: 'TOP SPEED',
-    description: 'How fast the car can go without boost.'
-  }),
-  Object.freeze({
-    key: 'acceleration',
-    label: 'ACCELERATION',
-    description: 'How quickly the car reaches speed.'
-  }),
-  Object.freeze({
-    key: 'control',
-    label: 'CONTROL',
-    description: 'How precisely and quickly the car steers while gripping the road.'
-  }),
-  Object.freeze({
-    key: 'drift',
-    label: 'DRIFT',
-    description: 'How well the car retains speed and settles while drifting. Drift is always slower than Gas.'
-  }),
-  Object.freeze({
-    key: 'boostPower',
-    label: 'BOOST POWER',
-    description: 'How strongly boost accelerates the car and raises its speed limit.'
-  }),
-  Object.freeze({
-    key: 'boostDuration',
-    label: 'BOOST TANK',
-    description: 'How long a full boost charge lasts.'
-  })
+  Object.freeze({ key: 'speed', label: 'TOP SPEED', description: 'How fast the car can go without boost.' }),
+  Object.freeze({ key: 'acceleration', label: 'ACCELERATION', description: 'How quickly the car reaches speed.' }),
+  Object.freeze({ key: 'control', label: 'CONTROL', description: 'How precisely and quickly the car steers while gripping the road.' }),
+  Object.freeze({ key: 'drift', label: 'DRIFT', description: 'How well the car retains speed and settles while drifting. Drift is always slower than Gas.' }),
+  Object.freeze({ key: 'boostPower', label: 'BOOST POWER', description: 'How strongly boost accelerates the car and raises its speed limit.' }),
+  Object.freeze({ key: 'boostDuration', label: 'BOOST TANK', description: 'How long a full boost charge lasts.' })
 ]);
 
 export const CAR_PALETTE = Object.freeze([
-  Object.freeze({ name: 'Solar', value: '#ffd43b' }),
-  Object.freeze({ name: 'Sky', value: '#38d9ff' }),
+  Object.freeze({ name: 'Solar', value: '#ffcc00' }),
+  Object.freeze({ name: 'Future Cyan', value: '#00aabb' }),
   Object.freeze({ name: 'Bubblegum', value: '#ff4fa3' }),
   Object.freeze({ name: 'Lime', value: '#8ce99a' }),
   Object.freeze({ name: 'Orange', value: '#ff922b' }),
@@ -58,25 +34,34 @@ export const CAR_PALETTE = Object.freeze([
   Object.freeze({ name: 'Ice', value: '#f8f9fa' })
 ]);
 
-// Global balance adjustments are kept separate from each GLB's authored normalization.
-// Convertible and Training Car use these sizes on every surface.
-const VISUAL_SIZE_MULTIPLIER_BY_ID = Object.freeze({
-  convertible: 0.6,
-  classic: 0.6
+const DEFAULT_COLOR_BY_ID = Object.freeze({
+  convertible: Object.freeze({ fallback: '#a8327a', p3: Object.freeze([0.66, 0.14, 0.43]) }),
+  classic: Object.freeze({ fallback: '#ffcc00', p3: Object.freeze([1, 0.76, 0]) }),
+  'vintage-racer': Object.freeze({ fallback: '#8b5a2b', p3: Object.freeze([0.52, 0.29, 0.12]) }),
+  'toy-racer': Object.freeze({ fallback: '#2d5ea8', p3: Object.freeze([0.12, 0.31, 0.68]) }),
+  'monster-truck': Object.freeze({ fallback: '#3f5a3c', p3: Object.freeze([0.21, 0.35, 0.19]) }),
+  'race-future': Object.freeze({ fallback: '#00aabb', p3: Object.freeze([0, 0.68, 0.74]) }),
+  race: Object.freeze({ fallback: '#b93632', p3: Object.freeze([0.72, 0.12, 0.12]) }),
+  'sedan-sports': Object.freeze({ fallback: '#5e3c87', p3: Object.freeze([0.36, 0.19, 0.56]) }),
+  sedan: Object.freeze({ fallback: '#2b6a70', p3: Object.freeze([0.12, 0.41, 0.43]) }),
+  suv: Object.freeze({ fallback: '#7b4f2d', p3: Object.freeze([0.47, 0.25, 0.12]) }),
+  firetruck: Object.freeze({ fallback: '#d92d20', p3: Object.freeze([0.82, 0.08, 0.04]) }),
+  police: Object.freeze({ fallback: '#0b0d10', p3: Object.freeze([0.035, 0.045, 0.06]) }),
+  ambulance: Object.freeze({ fallback: '#f8f9fa', p3: Object.freeze([0.95, 0.97, 0.98]) }),
+  truck: Object.freeze({ fallback: '#3f5368', p3: Object.freeze([0.22, 0.32, 0.43]) }),
+  van: Object.freeze({ fallback: '#5d503f', p3: Object.freeze([0.34, 0.29, 0.21]) })
 });
 
-// Featured adjustments are only used in the standard Lot lineup and during a race.
-// Compact previews and the expanded 3D viewer retain the authored model scale.
-const FEATURED_VISUAL_SIZE_MULTIPLIER_BY_ID = Object.freeze({
-  'monster-truck': 1.2
+const DEFAULT_SECONDARY_COLOR_BY_ID = Object.freeze({
+  'sedan-sports': Object.freeze({ fallback: '#252a35', p3: Object.freeze([0.13, 0.15, 0.21]) }),
+  firetruck: Object.freeze({ fallback: '#ffcc00', p3: Object.freeze([1, 0.76, 0]) }),
+  police: Object.freeze({ fallback: '#f8f9fa', p3: Object.freeze([0.95, 0.97, 0.98]) }),
+  ambulance: Object.freeze({ fallback: '#d92d20', p3: Object.freeze([0.82, 0.08, 0.04]) })
 });
 
-const EMERGENCY_SERVICE_BY_ID = Object.freeze({
-  firetruck: 'firetruck',
-  police: 'police',
-  ambulance: 'ambulance'
-});
-
+const VISUAL_SIZE_MULTIPLIER_BY_ID = Object.freeze({ convertible: 0.6, classic: 0.6 });
+const FEATURED_VISUAL_SIZE_MULTIPLIER_BY_ID = Object.freeze({ 'monster-truck': 1.2 });
+const EMERGENCY_SERVICE_BY_ID = Object.freeze({ firetruck: 'firetruck', police: 'police', ambulance: 'ambulance' });
 const FIXED_LIVERY_IDS = new Set(Object.keys(EMERGENCY_SERVICE_BY_ID));
 const RETIRED_VEHICLE_REPLACEMENTS = Object.freeze({
   'suv-luxury': 'firetruck',
@@ -84,14 +69,6 @@ const RETIRED_VEHICLE_REPLACEMENTS = Object.freeze({
   'truck-flat': 'ambulance'
 });
 
-// Every car has exactly 18 stat points. The Sedan's 3/3/3/3/3/3 is the neutral baseline;
-// every other vehicle trades strengths for weaknesses instead of becoming a straight upgrade.
-// Training Car deliberately spends its budget on control, drift and a long boost tank so new
-// players and soundscape testers can drive slowly without losing the full TURN control vocabulary.
-// LEGACY_VEHICLE_ID preserves the Sedan identity of pre-catalog rivals that never stored a car id.
-// The vendored packs use three different authored front axes. modelYawQuarterTurns
-// rotates each raw GLB so every car has the same local front before TURN positions it.
-// enginePitch is an audio-only baseline multiplier: heavy vehicles sit lower, race cars higher.
 const RAW_CARS = [
   ['convertible', 'Convertible', 'prototype', { speed: 4, acceleration: 4, control: 4, drift: 2, boostPower: 3, boostDuration: 1 }, 0.98, 1, 1.08],
   ['classic', 'Training Car', 'prototype', { speed: 1, acceleration: 1, control: 5, drift: 5, boostPower: 1, boostDuration: 5 }, 1.00, 1, 0.88],
@@ -110,23 +87,12 @@ const RAW_CARS = [
   ['van', 'Van', 'car', { speed: 2, acceleration: 3, control: 3, drift: 5, boostPower: 1, boostDuration: 4 }, 1.08, 0, 0.80]
 ];
 
-// The current GLBs use one atlas material per mesh. Roofs are part of the body mesh,
-// while Sport Sedan's spoiler is the one safe, separately addressable paint surface.
 const SECONDARY_PAINT_BY_ID = Object.freeze({
-  'sedan-sports': Object.freeze({
-    label: 'Spoiler',
-    meshNames: Object.freeze(['spoiler'])
-  })
+  'sedan-sports': Object.freeze({ label: 'Spoiler', meshNames: Object.freeze(['spoiler']) })
 });
 
 export const CAR_CATALOG = Object.freeze(RAW_CARS.map(([
-  id,
-  name,
-  pack,
-  stats,
-  visualScale,
-  modelYawQuarterTurns,
-  enginePitch
+  id, name, pack, stats, visualScale, modelYawQuarterTurns, enginePitch
 ]) => Object.freeze({
   id,
   name,
@@ -137,27 +103,21 @@ export const CAR_CATALOG = Object.freeze(RAW_CARS.map(([
   visualSizeMultiplier: VISUAL_SIZE_MULTIPLIER_BY_ID[id] || 1,
   featuredVisualSizeMultiplier: FEATURED_VISUAL_SIZE_MULTIPLIER_BY_ID[id] || 1,
   modelYawQuarterTurns,
+  defaultColor: DEFAULT_COLOR_BY_ID[id]?.fallback || DEFAULT_VEHICLE_COLOR,
+  defaultColorP3: DEFAULT_COLOR_BY_ID[id]?.p3 || null,
+  defaultSecondaryColor: DEFAULT_SECONDARY_COLOR_BY_ID[id]?.fallback || DEFAULT_VEHICLE_SECONDARY_COLOR,
+  defaultSecondaryColorP3: DEFAULT_SECONDARY_COLOR_BY_ID[id]?.p3 || null,
   secondaryPaint: SECONDARY_PAINT_BY_ID[id] || null,
   emergencyService: EMERGENCY_SERVICE_BY_ID[id] || null,
   fixedLivery: FIXED_LIVERY_IDS.has(id),
-  tuning: Object.freeze({
-    ...deriveVehicleTuning(stats),
-    enginePitch
-  })
+  tuning: Object.freeze({ ...deriveVehicleTuning(stats), enginePitch })
 })));
 
 const CAR_BY_ID = new Map(CAR_CATALOG.map((car) => [car.id, car]));
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/;
 const SPORTS_SEDAN = CAR_BY_ID.get('sedan-sports');
-const MAXED_SPORTS_SEDAN_TUNING = Object.freeze({
-  ...deriveVehicleTuning(MAXED_VEHICLE_STATS),
-  enginePitch: SPORTS_SEDAN.tuning.enginePitch
-});
-const MAXED_SPORTS_SEDAN = Object.freeze({
-  ...SPORTS_SEDAN,
-  stats: MAXED_VEHICLE_STATS,
-  tuning: MAXED_SPORTS_SEDAN_TUNING
-});
+const MAXED_SPORTS_SEDAN_TUNING = Object.freeze({ ...deriveVehicleTuning(MAXED_VEHICLE_STATS), enginePitch: SPORTS_SEDAN.tuning.enginePitch });
+const MAXED_SPORTS_SEDAN = Object.freeze({ ...SPORTS_SEDAN, stats: MAXED_VEHICLE_STATS, tuning: MAXED_SPORTS_SEDAN_TUNING });
 let activeVehicleSelection = null;
 
 function getBaseCarDefinition(id) {
@@ -176,22 +136,41 @@ export function normalizeVehicleId(id) {
   return CAR_BY_ID.has(replacement) ? replacement : DEFAULT_VEHICLE_ID;
 }
 
-export function normalizeVehicleColor(color) {
-  const value = typeof color === 'string' ? color.toLowerCase() : '';
-  return HEX_COLOR_PATTERN.test(value) ? value : DEFAULT_VEHICLE_COLOR;
+export function getVehicleDefaultColorSpec(id) {
+  const car = getBaseCarDefinition(id);
+  return Object.freeze({ fallback: car.defaultColor, p3: car.defaultColorP3 });
 }
 
-export function normalizeVehicleSecondaryColor(color) {
+export function getVehicleDefaultSecondaryColorSpec(id) {
+  const car = getBaseCarDefinition(id);
+  return Object.freeze({ fallback: car.defaultSecondaryColor, p3: car.defaultSecondaryColorP3 });
+}
+
+export function getVehicleDefaultColor(id) {
+  return getBaseCarDefinition(id).defaultColor;
+}
+
+export function getVehicleDefaultSecondaryColor(id) {
+  return getBaseCarDefinition(id).defaultSecondaryColor;
+}
+
+export function normalizeVehicleColor(color, fallback = DEFAULT_VEHICLE_COLOR) {
+  const value = typeof color === 'string' ? color.toLowerCase() : '';
+  return HEX_COLOR_PATTERN.test(value) ? value : fallback;
+}
+
+export function normalizeVehicleSecondaryColor(color, fallback = DEFAULT_VEHICLE_SECONDARY_COLOR) {
   const value = typeof color === 'string' ? color.toLowerCase() : '';
   if (value === '#666') return SPORTS_SEDAN_EASTER_EGG_COLOR;
-  return HEX_COLOR_PATTERN.test(value) ? value : DEFAULT_VEHICLE_SECONDARY_COLOR;
+  return HEX_COLOR_PATTERN.test(value) ? value : fallback;
 }
 
 export function normalizeVehicleSelection(selection) {
+  const carId = normalizeVehicleId(selection?.carId);
   return {
-    carId: normalizeVehicleId(selection?.carId),
-    color: normalizeVehicleColor(selection?.color),
-    secondaryColor: normalizeVehicleSecondaryColor(selection?.secondaryColor)
+    carId,
+    color: normalizeVehicleColor(selection?.color, getVehicleDefaultColor(carId)),
+    secondaryColor: normalizeVehicleSecondaryColor(selection?.secondaryColor, getVehicleDefaultSecondaryColor(carId))
   };
 }
 
@@ -201,15 +180,11 @@ export function isSportsSedanEasterEgg(selection) {
 }
 
 export function getEffectiveVehicleStats(selection) {
-  return isSportsSedanEasterEgg(selection)
-    ? MAXED_VEHICLE_STATS
-    : getBaseCarDefinition(selection?.carId).stats;
+  return isSportsSedanEasterEgg(selection) ? MAXED_VEHICLE_STATS : getBaseCarDefinition(selection?.carId).stats;
 }
 
 export function getEffectiveVehicleTuning(selection) {
-  return isSportsSedanEasterEgg(selection)
-    ? MAXED_SPORTS_SEDAN_TUNING
-    : getBaseCarDefinition(selection?.carId).tuning;
+  return isSportsSedanEasterEgg(selection) ? MAXED_SPORTS_SEDAN_TUNING : getBaseCarDefinition(selection?.carId).tuning;
 }
 
 export function loadVehicleSelection() {
@@ -224,9 +199,7 @@ export function loadVehicleSelection() {
 export function saveVehicleSelection(selection) {
   const normalized = normalizeVehicleSelection(selection);
   activeVehicleSelection = normalized;
-  try {
-    localStorage.setItem(VEHICLE_SELECTION_KEY, JSON.stringify(normalized));
-  } catch (_) {}
+  try { localStorage.setItem(VEHICLE_SELECTION_KEY, JSON.stringify(normalized)); } catch (_) {}
   return normalized;
 }
 
@@ -246,7 +219,6 @@ export function getVehicleStatTotal(stats) {
 
 export function deriveVehicleTuning(stats) {
   return {
-    // A 3/5 stat is the exact TURN v1.0 baseline. Lower and higher ratings fan out from there.
     topSpeedMultiplier: centeredStat(stats.speed, [0.84, 0.92, 1, 1.06, 1.12]),
     accelerationMultiplier: centeredStat(stats.acceleration, [0.82, 0.91, 1, 1.08, 1.16]),
     controlMultiplier: centeredStat(stats.control, [0.88, 0.94, 1, 1.07, 1.14]),
