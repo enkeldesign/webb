@@ -195,7 +195,8 @@ assert.match(roadSource, /future: '[^']*circle cx="18" cy="39"[^']*circle cx="49
 assert.doesNotMatch(roadSource, /clearRivals|resetRivals|rival-storage/);
 
 assert.match(homeGate, /showTrophyUnlockNotice/);
-assert.match(homeGate, /continueButton\.toggleAttribute\('aria-disabled'/);
+assert.match(homeGate, /continueButton\.setAttribute\('aria-disabled', 'true'\)/);
+assert.match(homeGate, /continueButton\.removeAttribute\('aria-disabled'\)/);
 assert.match(homeGate, /event\.stopImmediatePropagation\(\)/,
   'The locked Race action must explain the lock without starting the race');
 assert.match(homeGate, /turn-track-lock-icon/);
