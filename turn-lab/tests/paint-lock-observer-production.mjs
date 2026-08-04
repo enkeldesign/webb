@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [paintGate, paintCss, lotRuntime, app, index, releaseSource] = await Promise.all([
+const [lotGate, paintGate, paintCss, lotRuntime, app, index, releaseSource] = await Promise.all([
+  fs.readFile(new URL('../../turn/progression/lot-trophy-gate.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/progression/lot-paint-reward.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/progression/trophy-road-r157.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-enhancement-runtime.js', import.meta.url), 'utf8'),
@@ -62,12 +63,22 @@ assert.match(paintLockRule, /color: var\(--lot-paint-lock-foreground/);
 assert.match(paintLockRule, /border: 2px solid var\(--turn-ink/,
   'The swatch keeps the TURN black outline even when the lock glyph needs white contrast');
 assert.doesNotMatch(paintLockRule, /width: 100%/);
+
+assert.match(lotGate, /function dismissVisibleUnlockNotice\(\)/);
+assert.match(lotGate, /\.turn-unlock-notice\.is-visible/);
+assert.match(lotGate, /notice\.classList\.remove\('is-visible'\)/);
+assert.match(lotGate, /if \(lastAnnouncedCarId\) dismissVisibleUnlockNotice\(\)/,
+  'Selecting an available vehicle after a locked one must remove the stale lock notice');
+assert.match(lotGate, /if \(lastAnnouncedCarId\) dismissVisibleUnlockNotice\(\);[\s\S]*raceButton\.classList\.remove/,
+  'Leaving The Lot must not leave a vehicle lock notice behind');
+
+assert.match(lotRuntime, /lot-trophy-gate\.js\?revision=r162-dismiss-unlocked-car-toast/);
 assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r161-car-colour-lock/);
 assert.match(app, /trophy-road-r157\.css\?revision=r161-car-colour-lock/);
-assert.match(app, /lot-enhancement-runtime\.js\?revision=r121&trophy-road=r159&paint=r161-car-colour-lock/);
+assert.match(app, /lot-enhancement-runtime\.js\?revision=r121&trophy-road=r159&paint=r161-car-colour-lock&toast=r162-dismiss-unlocked-car/);
 assert.match(
   index,
-  new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r161-paint-lock-colour`)
+  new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r162-dismiss-unlocked-car-toast`)
 );
 
-console.log('TURN Paintjob rail shows the full label and a contrast-safe factory-colour lock swatch.');
+console.log('TURN Lot lock feedback and Paintjob rail regressions passed.');
