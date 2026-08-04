@@ -1,0 +1,135 @@
+@import url('./trophy-road.css?revision=r156-trophy-road-selection');
+
+:root {
+  --turn-wide-future: rgb(0 170 187);
+  --turn-wide-monster: rgb(63 90 60);
+  --turn-wide-paint: rgb(255 204 0);
+}
+
+@supports (color: color(display-p3 1 0 0)) {
+  :root {
+    --turn-wide-future: color(display-p3 0 .68 .74);
+    --turn-wide-monster: color(display-p3 .21 .35 .19);
+    --turn-wide-paint: color(display-p3 1 .76 0);
+  }
+}
+
+.turn-trophy-road-marker[data-trophy-reward="future-racer"].is-unlocked {
+  background: var(--turn-wide-future);
+}
+
+.turn-trophy-road-marker[data-trophy-reward="paintjob"].is-unlocked {
+  background: var(--turn-wide-paint);
+}
+
+.turn-trophy-road-marker[data-trophy-reward="monster"].is-unlocked {
+  background: var(--turn-wide-monster);
+  color: var(--turn-white, #fffdf6);
+}
+
+.lot-selected-car-lock {
+  display: inline-grid;
+  width: .9em;
+  height: .9em;
+  margin-right: .18em;
+  place-items: center;
+  vertical-align: -.08em;
+}
+
+.lot-selected-car-lock svg,
+.lot-paint-lock svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.lot-colors.is-paint-locked {
+  min-height: 78px;
+}
+
+.lot-paint-lock {
+  display: grid;
+  width: 100%;
+  min-height: 72px;
+  grid-template-columns: 44px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: 0 10px;
+  align-items: center;
+  padding: 8px 12px;
+  border: var(--turn-border-compact, 3px) solid var(--turn-ink, #08090a);
+  border-radius: var(--turn-radius-compact, 12px);
+  background: var(--turn-action-warning, #ffd43b);
+  color: var(--turn-ink, #08090a);
+  box-shadow: var(--turn-shadow-compact, 3px 3px 0 #08090a);
+  text-align: left;
+  cursor: help;
+}
+
+.lot-paint-lock > span {
+  grid-row: 1 / 3;
+  display: grid;
+  width: 42px;
+  height: 42px;
+  padding: 7px;
+  place-items: center;
+  border: 2px solid currentColor;
+  border-radius: 10px;
+  background: var(--turn-surface-raised, #fffdf6);
+}
+
+.lot-paint-lock strong,
+.lot-paint-lock small {
+  display: block;
+  min-width: 0;
+}
+
+.lot-paint-lock strong {
+  align-self: end;
+  font-size: .86rem;
+  line-height: 1;
+}
+
+.lot-paint-lock small {
+  align-self: start;
+  font-size: .62rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.turn-achievement-card.is-hidden-achievement .turn-achievement-icon {
+  background: var(--turn-muted, #d6d0c2);
+}
+
+.turn-achievement-card.is-hidden-achievement .turn-achievement-copy p {
+  font-style: italic;
+}
+
+@media (max-height: 430px) and (orientation: landscape) {
+  .lot-colors.is-paint-locked {
+    min-height: 58px;
+  }
+
+  .lot-paint-lock {
+    min-height: 54px;
+    grid-template-columns: 34px minmax(0, 1fr);
+    padding: 5px 8px;
+  }
+
+  .lot-paint-lock > span {
+    width: 32px;
+    height: 32px;
+    padding: 5px;
+  }
+
+  .lot-paint-lock strong {
+    font-size: .72rem;
+  }
+
+  .lot-paint-lock small {
+    font-size: .52rem;
+  }
+}
