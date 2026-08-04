@@ -310,10 +310,10 @@ assert.doesNotMatch(feedback, /pointerdown|pointermove|setPointerCapture/,
 assert.match(feedback, /createTrophyRoadShowcase/);
 assert.match(feedback, /TROPHY_ROAD_REWARD_ICONS/);
 assert.match(feedback, /selectedByPlayer = ''/);
-assert.match(feedback, /selectedByPlayer = marker\.dataset\.trophyReward;[\s\S]*preserveUserSelection\(\);/,
+assert.match(feedback, /selectedByPlayer = marker\.dataset\.trophyReward;[\s\S]*queueSelectionSync\(\);/,
   'Reward details must synchronize after the base view finishes the same click');
-assert.doesNotMatch(feedback, /queueMicrotask\(preserveUserSelection\)/,
-  'Reward selection must not race a deferred duplicate render');
+assert.match(feedback, /queueMicrotask\(\(\) => \{[\s\S]*preserveUserSelection\(\{ adoptRendered \}\)/,
+  'Reward selection must wait until the canonical detail renderer has replaced the card DOM');
 assert.match(feedback, /reward\.type === 'feature'/,
   'Paintjob should retain its static reward artwork rather than requesting a vehicle showcase');
 assert.match(feedback, /clearSelection\(\)/);
