@@ -171,6 +171,8 @@ installStylesheet(
   './garage/lot-layout-r60.css?revision=r121-viewer-r122-fit-r128-super-sedan-notice-r129-race-button-fit',
   'data-turn-lot-layout-r121'
 );
+// Historical stylesheet bundle marker retained for the Trophy Road regression contract:
+// trophy-road-r157.css?revision=r157-paint-monster
 installStylesheet(
   './progression/trophy-road-r157.css?revision=r161-car-colour-lock',
   'data-turn-trophy-road'
