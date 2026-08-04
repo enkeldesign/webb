@@ -20,6 +20,15 @@ function selectedCarButton(carPicker) {
     || carPicker.querySelector('.lot-car-option');
 }
 
+function dismissVisibleUnlockNotice() {
+  const notice = globalThis.document?.querySelector?.('.turn-unlock-notice.is-visible');
+  if (!notice) return;
+  notice.classList.remove('is-visible');
+  globalThis.setTimeout?.(() => {
+    if (!notice.classList.contains('is-visible')) notice.hidden = true;
+  }, 180);
+}
+
 export function gateLotNow(root = document.body) {
   const screen = findLotScreen(root);
   if (!screen) return () => {};
@@ -106,6 +115,7 @@ export function gateLotNow(root = document.body) {
       lastAnnouncedCarId = selectedId;
       showTrophyUnlockNotice({ reward, itemName: selectedName });
     } else if (!locked) {
+      if (lastAnnouncedCarId) dismissVisibleUnlockNotice();
       lastAnnouncedCarId = '';
     }
     syncing = false;
@@ -129,6 +139,7 @@ export function gateLotNow(root = document.body) {
     observer.disconnect();
     window.removeEventListener('turn:trophy-road-updated', sync);
     window.removeEventListener('storage', handleStorage);
+    if (lastAnnouncedCarId) dismissVisibleUnlockNotice();
     raceButton.classList.remove('is-trophy-locked');
     delete raceButton.dataset.trophyLocked;
     delete screen.dataset.trophyVehicleLocked;

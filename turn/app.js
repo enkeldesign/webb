@@ -268,7 +268,7 @@ installHarborHiddenFaceOrientation();
 // lot-enhancement-runtime.js?revision=r121&trophy-road=r154
 // lot-enhancement-runtime.js?revision=r121&trophy-road=r157
 const { installLotEnhancementRuntime } = await import(
-  withBuild('./garage/lot-enhancement-runtime.js?revision=r121&trophy-road=r159&paint=r161-car-colour-lock')
+  withBuild('./garage/lot-enhancement-runtime.js?revision=r121&trophy-road=r159&paint=r161-car-colour-lock&toast=r162-dismiss-unlocked-car')
 );
 installLotEnhancementRuntime();
 

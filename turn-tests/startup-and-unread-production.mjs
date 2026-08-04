@@ -17,7 +17,7 @@ assert.deepEqual(release, {
   cacheKey: '20260805-r160'
 });
 assert.match(index, /TURN v1\.5\.1 · Build 2026\.08\.05-r160/);
-assert.match(index, /app\.js\?build=20260805-r160-browser-consent-r161-paint-lock-colour/);
+assert.match(index, /app\.js\?build=20260805-r160-browser-consent-r162-dismiss-unlocked-car-toast/);
 assert.match(nextIndex, /TURN NEXT · Source TURN v1\.5\.1 · Build 2026\.08\.05-r160/);
 assert.match(nextIndex, /turn-next\/app\.js\?source=20260805-r160-browser-consent/);
 
