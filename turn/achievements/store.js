@@ -2,14 +2,15 @@ import {
   ACHIEVEMENTS,
   TRACK_IDS,
   getAchievement
-} from './catalog.js?revision=r153-trophy-road';
+} from './catalog.js?revision=r157-hidden-achievements';
 import {
   TROPHY_ROAD_REWARDS,
   TROPHY_ROAD_STORAGE_KEY,
   TROPHY_ROAD_STORAGE_VERSION,
   getTrophyRoadReward,
+  grandfatheredRewardIdsForVersion,
   rewardIdsForTrophies
-} from '../progression/trophy-road.js?revision=r153-trophy-road';
+} from '../progression/trophy-road.js?revision=r157-paint-monster';
 
 export const ACHIEVEMENT_STORAGE_KEY = TROPHY_ROAD_STORAGE_KEY;
 const STORAGE_VERSION = TROPHY_ROAD_STORAGE_VERSION;
@@ -66,16 +67,19 @@ export function normalizeAchievementState(value) {
     blankTracks.push(existingTrustTrack);
   }
 
+  const sourceVersion = Number(value.version || 0);
   const rewardIds = TROPHY_ROAD_REWARDS.map((reward) => reward.id);
-  const legacyProfile = Number(value.version || 0) < STORAGE_VERSION;
   const earnedRewardIds = rewardIdsForTrophies(totalTrophiesFromUnlocked(unlocked));
   const storedRewardIds = normalizedStringArray(value.rewards?.unlocked, rewardIds);
-  const unlockedRewards = legacyProfile
-    ? [...rewardIds]
-    : [...new Set([...storedRewardIds, ...earnedRewardIds])];
+  const migratedRewardIds = grandfatheredRewardIdsForVersion(sourceVersion);
+  const unlockedRewards = [...new Set([
+    ...storedRewardIds,
+    ...earnedRewardIds,
+    ...migratedRewardIds
+  ])];
   const storedSeenRewards = normalizedStringArray(value.rewards?.seen, rewardIds)
     .filter((id) => unlockedRewards.includes(id));
-  const seenRewards = legacyProfile ? [...unlockedRewards] : storedSeenRewards;
+  const seenRewards = [...new Set([...storedSeenRewards, ...migratedRewardIds])];
 
   return {
     version: STORAGE_VERSION,
@@ -194,8 +198,6 @@ export function createAchievementStore(storage = globalThis.localStorage) {
     return unseenIds().length + unseenRewardIds().length;
   }
 
-  // Persist version and migration changes immediately, even when no new
-  // achievement is unlocked during this session.
   save();
 
   return Object.freeze({
