@@ -1,7 +1,9 @@
 import {
+  LOCK_ICON,
   isVehicleUnlocked,
-  rewardForVehicle
-} from './trophy-road.js?revision=r153-trophy-road';
+  rewardForVehicle,
+  showTrophyUnlockNotice
+} from './trophy-road.js?revision=r154-trophy-road-feedback';
 
 const FALLBACK_VEHICLE_ID = 'classic';
 const activeGates = new WeakMap();
@@ -26,17 +28,10 @@ export function gateLotNow(root = document.body) {
 
   const carPicker = screen.querySelector('.lot-car-picker');
   const raceButton = screen.querySelector('.lot-race');
-  const colors = screen.querySelector('.lot-colors');
-  const description = screen.querySelector('.lot-car-description');
-  if (!carPicker || !raceButton || !colors || !description) return () => {};
-
-  const lockMessage = document.createElement('div');
-  lockMessage.className = 'lot-lock-message';
-  lockMessage.hidden = true;
-  lockMessage.setAttribute('role', 'status');
-  description.insertAdjacentElement('afterend', lockMessage);
+  if (!carPicker || !raceButton) return () => {};
 
   let initialSelectionChecked = false;
+  let lastAnnouncedCarId = '';
   let syncing = false;
 
   function decorateButtons() {
@@ -44,7 +39,6 @@ export function gateLotNow(root = document.body) {
       const reward = rewardForVehicle(button.dataset.carId);
       const locked = Boolean(reward) && !isVehicleUnlocked(button.dataset.carId);
       button.classList.toggle('is-trophy-locked', locked);
-      button.setAttribute('aria-disabled', String(locked));
       if (reward) {
         button.dataset.trophyLockLabel = `${reward.threshold} TROPHIES`;
       } else {
@@ -54,10 +48,28 @@ export function gateLotNow(root = document.body) {
       button.setAttribute(
         'aria-label',
         locked
-          ? `${name}. Locked. Unlocks at ${reward.threshold} trophies on Trophy Road.`
+          ? `${name}. Locked. Unlocks at ${reward.threshold} trophies on Trophy Road. Select for unlock information.`
           : name
       );
     }
+  }
+
+  function setRaceLocked({ locked, reward, selectedName }) {
+    raceButton.disabled = locked;
+    raceButton.classList.toggle('is-trophy-locked', locked);
+    if (locked) {
+      raceButton.dataset.trophyLocked = 'true';
+      raceButton.innerHTML = `<span class="lot-race-lock-icon" aria-hidden="true">${LOCK_ICON}</span><span>RACE THIS CAR</span>`;
+      raceButton.setAttribute(
+        'aria-label',
+        `${selectedName} is locked. Unlocks at ${reward.threshold} trophies on Trophy Road.`
+      );
+      return;
+    }
+
+    delete raceButton.dataset.trophyLocked;
+    raceButton.textContent = 'RACE THIS CAR';
+    raceButton.setAttribute('aria-label', `Race the ${selectedName}`);
   }
 
   function sync() {
@@ -67,6 +79,7 @@ export function gateLotNow(root = document.body) {
 
     const selected = selectedCarButton(carPicker);
     const selectedId = selected?.dataset.carId || '';
+    const selectedName = selected?.textContent.trim() || 'Vehicle';
     const reward = rewardForVehicle(selectedId);
     const locked = Boolean(reward) && !isVehicleUnlocked(selectedId);
 
@@ -80,20 +93,12 @@ export function gateLotNow(root = document.body) {
       }
     }
 
-    colors.hidden = locked;
-    raceButton.disabled = locked;
-    if (locked) {
-      raceButton.textContent = `UNLOCKS AT ${reward.threshold} TROPHIES`;
-      raceButton.setAttribute(
-        'aria-label',
-        `${reward.shortTitle} is locked. Unlocks at ${reward.threshold} trophies on Trophy Road.`
-      );
-      lockMessage.innerHTML = `<strong>UNLOCKS AT ${reward.threshold} TROPHIES</strong><small>${reward.description}</small>`;
-      lockMessage.hidden = false;
-    } else {
-      raceButton.textContent = 'RACE THIS CAR';
-      lockMessage.hidden = true;
-      lockMessage.replaceChildren();
+    setRaceLocked({ locked, reward, selectedName });
+    if (locked && selectedId !== lastAnnouncedCarId) {
+      lastAnnouncedCarId = selectedId;
+      showTrophyUnlockNotice({ reward, itemName: selectedName });
+    } else if (!locked) {
+      lastAnnouncedCarId = '';
     }
     syncing = false;
   }
@@ -105,11 +110,19 @@ export function gateLotNow(root = document.body) {
     attributes: true,
     attributeFilter: ['aria-checked']
   });
+  const handleStorage = (event) => {
+    if (event.key === 'turn-achievements-v1') sync();
+  };
+  window.addEventListener('turn:trophy-road-updated', sync);
+  window.addEventListener('storage', handleStorage);
   sync();
 
   const release = () => {
     observer.disconnect();
-    lockMessage.remove();
+    window.removeEventListener('turn:trophy-road-updated', sync);
+    window.removeEventListener('storage', handleStorage);
+    raceButton.classList.remove('is-trophy-locked');
+    delete raceButton.dataset.trophyLocked;
     activeGates.delete(screen);
   };
   activeGates.set(screen, { release });
