@@ -20,13 +20,36 @@ import {
   sampleNightShiftOvertakes
 } from '../../turn/achievements/night-shift.js';
 
-const [catalog, storeSource, runtime, view, nightShiftSource, timeTrialSource, style, fixedLayout, workflow, designTokens] = await Promise.all([
+const [
+  catalog,
+  secretCatalog,
+  secretEvents,
+  secretRuntime,
+  storeSource,
+  runtime,
+  view,
+  nightShiftSource,
+  timeTrialSource,
+  lilyaSource,
+  darvidSource,
+  sedanSource,
+  style,
+  fixedLayout,
+  workflow,
+  designTokens
+] = await Promise.all([
   fs.readFile(new URL('../../turn/achievements/catalog.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/achievements/secret-catalog.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/achievements/secret-events.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/achievements/secret-achievements.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/store.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/runtime.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/view.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/night-shift.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/time-trials.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/midnight-city-world-r11.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/harbor-hidden-face-r89.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/vehicle/sports-sedan-easter-egg.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../.github/workflows/turn-lab-tests.yml', import.meta.url), 'utf8'),
@@ -34,16 +57,18 @@ const [catalog, storeSource, runtime, view, nightShiftSource, timeTrialSource, s
 ]);
 
 assert.equal(ACHIEVEMENT_STORAGE_KEY, 'turn-achievements-v1');
-assert.equal(ACHIEVEMENTS.length, 22, 'TURN should ship twenty-two achievements including the developer time trials');
-assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 10, 'Getting Started should remain a focused ten-achievement collection');
+assert.equal(ACHIEVEMENTS.length, 25,
+  'TURN should ship twenty-five achievements including three hidden discoveries');
+assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 10,
+  'Getting Started should remain a focused ten-achievement collection');
 assert.equal(TIME_TRIALS.length, 5, 'Every current track should have one hard time trial');
 assert.equal(TIME_TRIAL_ACHIEVEMENT_IDS.length, 5);
 assert.equal(TIME_TRIAL_MASTER_ID, 'faster-than-the-dev');
-assert.equal(totalAvailableTrophies(), 1300);
+assert.equal(totalAvailableTrophies(), 1375);
 assert.equal(
   ACHIEVEMENTS.reduce((total, achievement) => total + achievement.trophies, 0),
-  1300,
-  'The current collection should contain 1300 permanent trophies'
+  1375,
+  'The current collection should contain 1375 permanent trophies'
 );
 assert.ok(ACHIEVEMENTS.every((achievement) => Number.isFinite(achievement.trophies)));
 assert.ok(ACHIEVEMENTS.every((achievement) => !Object.hasOwn(achievement, 'points')));
@@ -66,6 +91,9 @@ assert.deepEqual(
     'around-the-turn',
     'ahead-of-yourself',
     'night-shift-sheriff',
+    'find-lilya',
+    'find-darvid',
+    'satans-sedan',
     'countryside-sprint',
     'airport-sprint',
     'cliffside-sprint',
@@ -74,6 +102,7 @@ assert.deepEqual(
     'faster-than-the-dev'
   ]
 );
+
 assert.equal(ACHIEVEMENTS.find((achievement) => achievement.id === 'flow-state')?.trophies, 50);
 assert.match(ACHIEVEMENTS.find((achievement) => achievement.id === 'flow-state')?.description || '', /Drift and Boost/);
 assert.match(ACHIEVEMENTS.find((achievement) => achievement.id === 'flow-state')?.recommendation || '', /Training Car · Countryside/);
@@ -86,6 +115,16 @@ assert.equal(ACHIEVEMENTS.find((achievement) => achievement.id === 'beyond-sight
 assert.equal(ACHIEVEMENTS.find((achievement) => achievement.id === 'night-shift-sheriff')?.trophies, 100);
 assert.match(ACHIEVEMENTS.find((achievement) => achievement.id === 'night-shift-sheriff')?.description || '', /Police Car/);
 assert.match(ACHIEVEMENTS.find((achievement) => achievement.id === 'night-shift-sheriff')?.description || '', /Boost is active/);
+
+for (const id of ['find-lilya', 'find-darvid', 'satans-sedan']) {
+  const achievement = ACHIEVEMENTS.find((item) => item.id === id);
+  assert.equal(achievement?.hidden, true, `${id} must remain a hidden achievement`);
+  assert.equal(achievement?.trophies, 25, `${id} should award 25 trophies`);
+  assert.equal(achievement?.category, 'exploration');
+}
+assert.equal(ACHIEVEMENTS.find((item) => item.id === 'find-lilya')?.title, 'FIND LILYA!');
+assert.equal(ACHIEVEMENTS.find((item) => item.id === 'find-darvid')?.title, 'FIND DARVID!');
+assert.equal(ACHIEVEMENTS.find((item) => item.id === 'satans-sedan')?.title, 'SATAN’S SEDAN');
 
 assert.deepEqual(
   TIME_TRIALS.map(({ trackId, targetSeconds }) => [trackId, targetSeconds]),
@@ -115,7 +154,7 @@ assert.equal(completedAllTimeTrials((id) => id !== 'harbor-sprint', 'harbor-spri
   'The final qualifying lap should count while the individual achievement is still pending');
 
 const empty = normalizeAchievementState(null);
-assert.equal(empty.version, 3);
+assert.equal(empty.version, 4);
 assert.deepEqual(empty.progress.tracks, []);
 assert.deepEqual(empty.progress.blankTracks, []);
 assert.deepEqual(empty.rewards.unlocked, []);
@@ -138,13 +177,16 @@ const normalized = normalizeAchievementState({
   },
   rewards: { unlocked: [], seen: [] }
 });
+assert.equal(normalized.version, 4);
 assert.deepEqual(Object.keys(normalized.unlocked), ['first-turn', 'trust-your-ears', 'countryside-sprint']);
 assert.deepEqual(normalized.seen, ['first-turn']);
 assert.deepEqual(normalized.progress.tracks, ['airport']);
 assert.deepEqual(normalized.progress.blankTracks, ['countryside', 'midnight-city'],
   'Existing Trust Your Ears unlocks should seed Beyond Sight progress during migration');
-assert.deepEqual(normalized.rewards.unlocked, [],
-  'A 275-trophy profile must remain below the new 300-trophy first milestone');
+assert.deepEqual(normalized.rewards.unlocked, ['paintjob', 'monster'],
+  'Profiles created before the new gates must retain paint and Monster Truck access');
+assert.deepEqual(normalized.rewards.seen, ['paintjob', 'monster'],
+  'Grandfathered rewards must not create misleading new-reward notifications');
 
 const memory = new Map();
 const storage = {
@@ -168,6 +210,8 @@ assert.ok(store.isUnlocked('ahead-of-yourself'));
 assert.equal(store.trophyTotal(), 300);
 assert.deepEqual(store.syncRewards().map((reward) => reward.id), ['midnight-city']);
 assert.equal(store.isRewardUnlocked('midnight-city'), true);
+assert.equal(store.isRewardUnlocked('paintjob'), true);
+assert.equal(store.isRewardUnlocked('monster'), true);
 assert.doesNotMatch(storeSource, /rival-storage|clearRivalsState|clearAllRivalsState/,
   'Rival reset implementation must remain independent from persistent achievements and rewards');
 
@@ -203,6 +247,8 @@ assert.equal(createNightShiftAttempt({
   rivals: [...rivals.slice(0, 3), { carId: 'police', time: 90, progress: 0.5 }]
 }).eligible, false, 'Police rivals should make Night Shift Sheriff ineligible');
 
+assert.match(catalog, /SECRET_ACHIEVEMENTS/);
+assert.match(catalog, /secret: '<svg/);
 assert.match(catalog, /TIME_TRIALS/);
 assert.match(catalog, /TIME_TRIAL_ACHIEVEMENT_IDS/);
 assert.match(catalog, /TIME_TRIALS: 'time-trials'/);
@@ -219,8 +265,29 @@ assert.match(catalog, /id: 'around-the-turn'/);
 assert.match(catalog, /id: 'ahead-of-yourself'/);
 assert.match(catalog, /id: 'night-shift-sheriff'/);
 assert.doesNotMatch(catalog, /points:/);
+
+assert.match(secretCatalog, /id: 'find-lilya'/);
+assert.match(secretCatalog, /id: 'find-darvid'/);
+assert.match(secretCatalog, /id: 'satans-sedan'/);
+assert.match(secretCatalog, /title: 'SATAN’S SEDAN'/);
+assert.equal((secretCatalog.match(/trophies: 25/g) || []).length, 3);
+assert.equal((secretCatalog.match(/hidden: true/g) || []).length, 3);
+assert.match(secretEvents, /turn:secret-achievement/);
+assert.match(secretEvents, /__turnPendingSecretAchievementIds/);
+assert.match(secretRuntime, /Hidden achievement\. The title is your clue\./);
+assert.match(secretRuntime, /achievement\.hidden/);
+assert.match(secretRuntime, /achievements\.unlock\(achievementId, context\)/);
+assert.match(secretRuntime, /takePendingSecretAchievementIds/);
+assert.match(lilyaSource, /signalSecretAchievement\('find-lilya'/);
+assert.match(lilyaSource, /turnSecretAchievementFound/);
+assert.match(darvidSource, /signalSecretAchievement\('find-darvid'/);
+assert.match(darvidSource, /DISCOVERY_HOLD_MS = 550/);
+assert.match(sedanSource, /signalSecretAchievement\('satans-sedan'/);
+assert.match(sedanSource, /color code #666/);
+
 assert.match(storeSource, /ACHIEVEMENT_STORAGE_KEY = TROPHY_ROAD_STORAGE_KEY/);
 assert.match(storeSource, /STORAGE_VERSION = TROPHY_ROAD_STORAGE_VERSION/);
+assert.match(storeSource, /grandfatheredRewardIdsForVersion/);
 assert.match(storeSource, /state\.progress\[key\]/);
 assert.match(storeSource, /addBlankTrack/);
 assert.match(storeSource, /existingTrustTrack/);
@@ -349,12 +416,14 @@ assert.doesNotMatch(style, /is-achievement-next/);
 
 assert.match(designTokens, /--turn-action-success: var\(--turn-green-500\)/);
 assert.match(fixedLayout, /installAchievements/);
+assert.match(fixedLayout, /installSecretAchievements/);
 assert.match(fixedLayout, /installM8TrophyGate/);
-assert.match(fixedLayout, /r154-trophy-road-feedback/);
+assert.match(fixedLayout, /r157-hidden-achievements/);
+assert.match(fixedLayout, /r157-paint-monster/);
 assert.ok(fixedLayout.indexOf('installM8HomeCardScrollFixes') < fixedLayout.indexOf('installAchievements'),
   'Achievements should join the completed fixed Home layout after track scrolling is installed');
 assert.match(workflow, /Run achievement system regression/);
 assert.match(workflow, /node turn-lab\/tests\/achievements-production\.mjs/);
 assert.match(workflow, /Run Trophy Road progression regression/);
 
-console.log('TURN Trophy Road achievement regression passed.');
+console.log('TURN hidden and Trophy Road achievement regression passed.');
