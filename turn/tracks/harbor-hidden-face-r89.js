@@ -51,7 +51,7 @@ function armDarvidDiscovery(face) {
 
     const runtime = globalThis.__turnRuntime;
     const camera = args[2];
-    if (runtime?.state?.running !== true || runtime?.state?.trackId !== 'harbor' || !camera?.isCamera) {
+    if (runtime?.state?.running !== true || runtime?.trackId !== 'harbor' || !camera?.isCamera) {
       discoveryStartedAt = null;
       return;
     }
