@@ -1,0 +1,1343 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#fff8e8">
+  <title>POSTAL — Portrait systems prototype</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #08090a;
+      --paper: #fff8e8;
+      --surface: #fffdf6;
+      --road: #44494f;
+      --muted: #d6d0c2;
+      --yellow: #ffd43b;
+      --blue: #38d9ff;
+      --pink: #ff4fa3;
+      --red: #ff6b6b;
+      --green: #8ce99a;
+      --orange: #ff7b54;
+      --border: 4px;
+      --radius: 18px;
+      --radius-small: 12px;
+      --shadow: 6px 6px 0 var(--ink);
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-6: 24px;
+      --safe-bottom: max(12px, env(safe-area-inset-bottom));
+      font-family: Inter, ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif;
+      font-synthesis: none;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--paper);
+    }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      background:
+        linear-gradient(rgb(8 9 10 / 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(8 9 10 / 0.035) 1px, transparent 1px),
+        var(--paper);
+      background-size: 24px 24px;
+      color: var(--ink);
+    }
+
+    button {
+      font: inherit;
+    }
+
+    button,
+    [role="button"] {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    button:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 4px solid var(--blue);
+      outline-offset: 3px;
+    }
+
+    .skip-link {
+      position: fixed;
+      z-index: 100;
+      top: 8px;
+      left: 8px;
+      padding: 10px 14px;
+      border: 3px solid var(--ink);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--ink);
+      font-weight: 900;
+      transform: translateY(-160%);
+    }
+
+    .skip-link:focus {
+      transform: translateY(0);
+    }
+
+    .app-shell {
+      width: min(100%, 520px);
+      min-height: 100dvh;
+      margin: 0 auto;
+      padding: max(12px, env(safe-area-inset-top)) 12px calc(92px + var(--safe-bottom));
+    }
+
+    .topbar {
+      position: sticky;
+      z-index: 20;
+      top: 8px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 14px;
+      padding: 12px;
+      border: var(--border) solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .brand {
+      min-width: 0;
+    }
+
+    .brand-name {
+      display: block;
+      overflow: hidden;
+      font-size: clamp(1.25rem, 6vw, 1.75rem);
+      font-weight: 1000;
+      letter-spacing: 0.04em;
+      line-height: 1;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .shift-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 8px;
+      margin-top: 5px;
+      font-size: 0.78rem;
+      font-weight: 850;
+    }
+
+    .time-controls {
+      display: flex;
+      gap: 6px;
+    }
+
+    .time-button {
+      min-width: 46px;
+      min-height: 46px;
+      padding: 7px 10px;
+      border: 3px solid var(--ink);
+      border-radius: 999px;
+      background: var(--paper);
+      color: var(--ink);
+      font-weight: 1000;
+      box-shadow: 3px 3px 0 var(--ink);
+    }
+
+    .time-button[aria-pressed="true"] {
+      background: var(--yellow);
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 var(--ink);
+    }
+
+    .status-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .metric {
+      min-width: 0;
+      padding: 10px 8px;
+      border: 3px solid var(--ink);
+      border-radius: var(--radius-small);
+      background: var(--surface);
+      text-align: center;
+      box-shadow: 3px 3px 0 var(--ink);
+    }
+
+    .metric-label {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      display: block;
+      margin-top: 2px;
+      font-size: 1.1rem;
+      font-weight: 1000;
+    }
+
+    .metric[data-state="risk"] {
+      background: var(--yellow);
+    }
+
+    .metric[data-state="danger"] {
+      background: var(--red);
+    }
+
+    .metric[data-state="good"] {
+      background: var(--green);
+    }
+
+    main {
+      display: block;
+    }
+
+    .view[hidden] {
+      display: none;
+    }
+
+    .view-header {
+      margin: 0 2px 14px;
+    }
+
+    .eyebrow {
+      margin: 0 0 4px;
+      font-size: 0.72rem;
+      font-weight: 1000;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      overflow-wrap: anywhere;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.8rem, 9vw, 2.6rem);
+      line-height: 0.95;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.35rem;
+      line-height: 1.05;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 1.05rem;
+      line-height: 1.1;
+    }
+
+    .lede {
+      margin: 9px 0 0;
+      max-width: 42ch;
+      font-size: 0.95rem;
+      font-weight: 650;
+      line-height: 1.35;
+    }
+
+    .stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .card {
+      padding: 14px;
+      border: var(--border) solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .card--critical {
+      background: var(--yellow);
+    }
+
+    .card--resolved {
+      background: var(--green);
+    }
+
+    .card-kicker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 0.72rem;
+      font-weight: 1000;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .badge {
+      display: inline-flex;
+      min-height: 28px;
+      align-items: center;
+      padding: 3px 9px;
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+      background: var(--surface);
+      font-size: 0.72rem;
+      font-weight: 1000;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .badge--danger {
+      background: var(--red);
+    }
+
+    .badge--info {
+      background: var(--blue);
+    }
+
+    .badge--good {
+      background: var(--green);
+    }
+
+    .card p {
+      margin: 8px 0 0;
+      line-height: 1.35;
+    }
+
+    .trend {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 9px;
+      align-items: center;
+      margin-top: 13px;
+      font-size: 0.8rem;
+      font-weight: 900;
+    }
+
+    .trend-track {
+      height: 13px;
+      overflow: hidden;
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+      background: var(--surface);
+    }
+
+    .trend-fill {
+      display: block;
+      width: 72%;
+      height: 100%;
+      background:
+        repeating-linear-gradient(
+          135deg,
+          var(--red) 0 10px,
+          var(--yellow) 10px 20px
+        );
+      transition: width 180ms ease;
+    }
+
+    .actions {
+      display: grid;
+      gap: 9px;
+      margin-top: 14px;
+    }
+
+    .actions--two {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .action {
+      min-height: 52px;
+      padding: 10px 12px;
+      border: 3px solid var(--ink);
+      border-radius: 999px;
+      background: var(--pink);
+      color: var(--ink);
+      font-weight: 1000;
+      line-height: 1.1;
+      box-shadow: 4px 4px 0 var(--ink);
+    }
+
+    .action:active {
+      transform: translate(3px, 3px);
+      box-shadow: 1px 1px 0 var(--ink);
+    }
+
+    .action--utility {
+      background: var(--surface);
+    }
+
+    .action--info {
+      background: var(--blue);
+    }
+
+    .action--warning {
+      background: var(--orange);
+    }
+
+    .action--success {
+      background: var(--green);
+    }
+
+    .action[disabled] {
+      cursor: not-allowed;
+      opacity: 0.55;
+      filter: grayscale(0.4);
+    }
+
+    .subtle {
+      color: #34373b;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .network {
+      position: relative;
+      min-height: 430px;
+      overflow: hidden;
+      border: var(--border) solid var(--ink);
+      border-radius: 26px;
+      background:
+        radial-gradient(circle at 30% 20%, rgb(56 217 255 / 0.25), transparent 34%),
+        linear-gradient(165deg, #d9f5c2, #fff8e8 55%, #8ed8ff);
+      box-shadow: var(--shadow);
+    }
+
+    .network::before {
+      content: "";
+      position: absolute;
+      inset: 22px 32px 32px 68px;
+      border: 5px solid var(--ink);
+      border-radius: 45% 55% 38% 62% / 35% 44% 56% 65%;
+      background: rgb(255 253 246 / 0.72);
+      transform: rotate(-7deg);
+    }
+
+    .route {
+      position: absolute;
+      z-index: 2;
+      height: 7px;
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+      background: var(--road);
+      transform-origin: left center;
+    }
+
+    .route--risk {
+      height: 9px;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          var(--red) 0 15px,
+          var(--yellow) 15px 30px
+        );
+    }
+
+    .route-a {
+      top: 124px;
+      left: 116px;
+      width: 175px;
+      transform: rotate(42deg);
+    }
+
+    .route-b {
+      top: 257px;
+      left: 145px;
+      width: 150px;
+      transform: rotate(-18deg);
+    }
+
+    .route-c {
+      top: 300px;
+      left: 87px;
+      width: 125px;
+      transform: rotate(72deg);
+    }
+
+    .node {
+      position: absolute;
+      z-index: 4;
+      display: grid;
+      width: 86px;
+      min-height: 64px;
+      place-items: center;
+      padding: 8px;
+      border: 3px solid var(--ink);
+      border-radius: 18px;
+      background: var(--surface);
+      color: var(--ink);
+      text-align: center;
+      box-shadow: 4px 4px 0 var(--ink);
+    }
+
+    .node strong {
+      font-size: 0.8rem;
+      line-height: 1;
+    }
+
+    .node span {
+      margin-top: 3px;
+      font-size: 0.67rem;
+      font-weight: 900;
+    }
+
+    .node--risk {
+      background: var(--yellow);
+    }
+
+    .node--selected {
+      outline: 5px solid var(--pink);
+      outline-offset: 3px;
+    }
+
+    .node-a {
+      top: 73px;
+      left: 72px;
+    }
+
+    .node-b {
+      top: 197px;
+      right: 32px;
+    }
+
+    .node-c {
+      bottom: 43px;
+      left: 78px;
+    }
+
+    .node-d {
+      bottom: 79px;
+      right: 38px;
+    }
+
+    .map-legend {
+      position: absolute;
+      z-index: 5;
+      right: 10px;
+      bottom: 10px;
+      left: 10px;
+      display: grid;
+      gap: 5px;
+      padding: 9px 10px;
+      border: 3px solid var(--ink);
+      border-radius: 14px;
+      background: rgb(255 253 246 / 0.95);
+      font-size: 0.72rem;
+      font-weight: 900;
+    }
+
+    .legend-line {
+      display: flex;
+      gap: 7px;
+      align-items: center;
+    }
+
+    .legend-swatch {
+      width: 42px;
+      height: 10px;
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+      background: var(--road);
+    }
+
+    .legend-swatch--risk {
+      background:
+        repeating-linear-gradient(
+          90deg,
+          var(--red) 0 8px,
+          var(--yellow) 8px 16px
+        );
+    }
+
+    .process {
+      display: grid;
+      gap: 10px;
+    }
+
+    .process-row {
+      display: grid;
+      grid-template-columns: minmax(92px, 0.8fr) minmax(0, 1.4fr) auto;
+      gap: 8px;
+      align-items: center;
+      padding: 10px;
+      border: 3px solid var(--ink);
+      border-radius: 14px;
+      background: var(--surface);
+    }
+
+    .process-name {
+      font-size: 0.78rem;
+      font-weight: 1000;
+      line-height: 1.05;
+    }
+
+    .capacity {
+      height: 18px;
+      overflow: hidden;
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+      background: var(--paper);
+    }
+
+    .capacity > span {
+      display: block;
+      height: 100%;
+      background: var(--green);
+    }
+
+    .capacity > .capacity-risk {
+      background:
+        repeating-linear-gradient(
+          135deg,
+          var(--red) 0 8px,
+          var(--yellow) 8px 16px
+        );
+    }
+
+    .process-value {
+      font-size: 0.75rem;
+      font-weight: 1000;
+      white-space: nowrap;
+    }
+
+    .staff-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin-top: 12px;
+    }
+
+    .staff-card {
+      padding: 11px;
+      border: 3px solid var(--ink);
+      border-radius: 14px;
+      background: var(--paper);
+    }
+
+    .staff-card strong {
+      display: block;
+      font-size: 0.8rem;
+    }
+
+    .staff-card span {
+      display: block;
+      margin-top: 5px;
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+
+    .timeline {
+      position: relative;
+      display: grid;
+      gap: 12px;
+      margin: 14px 0 0;
+      padding-left: 23px;
+    }
+
+    .timeline::before {
+      content: "";
+      position: absolute;
+      top: 7px;
+      bottom: 7px;
+      left: 7px;
+      width: 6px;
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+      background: var(--road);
+    }
+
+    .event {
+      position: relative;
+      padding: 10px 11px;
+      border: 3px solid var(--ink);
+      border-radius: 14px;
+      background: var(--surface);
+    }
+
+    .event::before {
+      content: "";
+      position: absolute;
+      top: 14px;
+      left: -25px;
+      width: 15px;
+      height: 15px;
+      border: 3px solid var(--ink);
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    .event--error {
+      background: #fff0d6;
+    }
+
+    .event--error::before {
+      border-radius: 4px;
+      background: var(--red);
+      transform: rotate(45deg);
+    }
+
+    .event time {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 0.7rem;
+      font-weight: 1000;
+    }
+
+    .event strong {
+      display: block;
+      font-size: 0.88rem;
+    }
+
+    .event p {
+      margin: 4px 0 0;
+      font-size: 0.78rem;
+    }
+
+    .signature {
+      margin-top: 12px;
+      padding: 11px;
+      border: 3px dashed var(--ink);
+      border-radius: 14px;
+      background: var(--blue);
+    }
+
+    .signature[hidden] {
+      display: none;
+    }
+
+    .signature strong {
+      display: block;
+      font-size: 0.88rem;
+    }
+
+    .signature p {
+      margin: 5px 0 0;
+      font-size: 0.8rem;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      z-index: 50;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+      width: min(100%, 520px);
+      margin: 0 auto;
+      padding: 9px 10px var(--safe-bottom);
+      border-top: var(--border) solid var(--ink);
+      background: var(--surface);
+      box-shadow: 0 -6px 0 rgb(8 9 10 / 0.12);
+    }
+
+    .nav-button {
+      min-width: 0;
+      min-height: 58px;
+      padding: 7px 4px;
+      border: 3px solid var(--ink);
+      border-radius: 16px;
+      background: var(--paper);
+      color: var(--ink);
+      font-size: 0.68rem;
+      font-weight: 1000;
+      line-height: 1.05;
+      box-shadow: 3px 3px 0 var(--ink);
+    }
+
+    .nav-button[aria-current="page"] {
+      background: var(--pink);
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 var(--ink);
+    }
+
+    .nav-icon {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 1.15rem;
+      line-height: 1;
+    }
+
+    .toast {
+      position: fixed;
+      z-index: 80;
+      right: 16px;
+      bottom: calc(92px + var(--safe-bottom));
+      left: 16px;
+      width: min(calc(100% - 32px), 480px);
+      margin: 0 auto;
+      padding: 12px 14px;
+      border: 3px solid var(--ink);
+      border-radius: 16px;
+      background: var(--ink);
+      color: var(--surface);
+      font-weight: 850;
+      box-shadow: 5px 5px 0 var(--pink);
+    }
+
+    .toast[hidden] {
+      display: none;
+    }
+
+    .sr-only {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+    }
+
+    @media (min-width: 700px) {
+      .app-shell {
+        padding-inline: 18px;
+      }
+    }
+
+    @media (max-width: 370px) {
+      .topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .time-controls {
+        justify-content: flex-start;
+      }
+
+      .actions--two,
+      .staff-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .network {
+        min-height: 400px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.001ms !important;
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to current view</a>
+
+  <div class="app-shell">
+    <header class="topbar" aria-label="Shift controls">
+      <div class="brand">
+        <span class="brand-name">POSTAL</span>
+        <span class="shift-meta">
+          <span>Shift 3</span>
+          <span aria-hidden="true">·</span>
+          <span id="clock">17:42</span>
+          <span aria-hidden="true">·</span>
+          <span id="shiftState">Running</span>
+        </span>
+      </div>
+      <div class="time-controls" aria-label="Simulation speed">
+        <button class="time-button" id="pauseButton" type="button" aria-pressed="false" aria-label="Pause simulation">Ⅱ</button>
+        <button class="time-button" data-speed="1" type="button" aria-pressed="true" aria-label="Run simulation at normal speed">1×</button>
+        <button class="time-button" data-speed="2" type="button" aria-pressed="false" aria-label="Run simulation at double speed">2×</button>
+      </div>
+    </header>
+
+    <section class="status-strip" aria-label="Current network status">
+      <div class="metric" id="serviceMetric" data-state="risk">
+        <span class="metric-label">On time</span>
+        <strong class="metric-value" id="serviceValue">91%</strong>
+      </div>
+      <div class="metric" id="backlogMetric" data-state="danger">
+        <span class="metric-label">Backlog</span>
+        <strong class="metric-value" id="backlogValue">84</strong>
+      </div>
+      <div class="metric" id="riskMetric" data-state="risk">
+        <span class="metric-label">At risk</span>
+        <strong class="metric-value" id="riskValue">18</strong>
+      </div>
+    </section>
+
+    <main id="main" tabindex="-1">
+      <section class="view" id="view-operations" data-view="operations" aria-labelledby="operationsTitle">
+        <header class="view-header">
+          <p class="eyebrow">Live operations</p>
+          <h1 id="operationsTitle">Protect the shift.</h1>
+          <p class="lede">Alerts are grouped by consequence. Deal with the immediate deadline, then investigate why the same pattern keeps returning.</p>
+        </header>
+
+        <div class="stack">
+          <article class="card card--critical" id="primaryIncident">
+            <div class="card-kicker">
+              <span class="badge badge--danger">Critical</span>
+              <span>18:20 departure</span>
+              <span>38 min left</span>
+            </div>
+            <h2>Northbound express flow may miss departure</h2>
+            <p><strong>18 packages</strong> are waiting for Express lane A. The queue is rising faster than it is being processed.</p>
+            <div class="trend" aria-label="Express queue is rising. 72 percent of safe capacity used.">
+              <span>Rising</span>
+              <span class="trend-track" aria-hidden="true"><span class="trend-fill" id="queueTrend"></span></span>
+              <span id="queuePercent">72%</span>
+            </div>
+            <div class="actions actions--two">
+              <button class="action action--info" id="inspectIncidentButton" type="button">Inspect incident</button>
+              <button class="action action--warning" id="moveStaffButton" type="button">Move 2 staff</button>
+            </div>
+            <p class="subtle" id="incidentHint">Moving staff protects this departure, but previous shifts show a recurring route error in the same flow.</p>
+          </article>
+
+          <article class="card">
+            <div class="card-kicker">
+              <span class="badge badge--info">Forecast</span>
+              <span>18:05 arrival wave</span>
+            </div>
+            <h2>Urban pickup points will fill unevenly</h2>
+            <p>Central lockers are forecast to reach 96% capacity. Western service points have spare room but add 14 minutes to last-mile routes.</p>
+            <div class="actions">
+              <button class="action action--utility" type="button" data-toast="Locker balancing is noted for the planning phase.">Review after departure</button>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-kicker">
+              <span class="badge badge--good">Stable</span>
+              <span>Coastal route</span>
+            </div>
+            <h2>Reserve van restored local collection</h2>
+            <p>The temporary vehicle is carrying 73% capacity and remains available for the 19:10 collection wave.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="view" id="view-network" data-view="network" aria-labelledby="networkTitle" hidden>
+        <header class="view-header">
+          <p class="eyebrow">Regional network</p>
+          <h1 id="networkTitle">Follow the pressure.</h1>
+          <p class="lede">The striped route and labelled nodes repeat the same risk shown in the operations feed. Select the terminal to continue.</p>
+        </header>
+
+        <div class="network" role="img" aria-label="Regional network. Sundsvall terminal is selected and at risk. The northbound route to Härnösand has a timing risk. Timrå and Matfors are stable.">
+          <span class="route route-a route--risk" aria-hidden="true"></span>
+          <span class="route route-b" aria-hidden="true"></span>
+          <span class="route route-c" aria-hidden="true"></span>
+
+          <button class="node node-a node--risk node--selected" type="button" data-open-terminal>
+            <strong>Sundsvall</strong>
+            <span>Terminal · Risk</span>
+          </button>
+          <button class="node node-b node--risk" type="button" data-toast="Härnösand is waiting for the 18:20 express departure.">
+            <strong>Härnösand</strong>
+            <span>18 packages at risk</span>
+          </button>
+          <button class="node node-c" type="button" data-toast="Timrå depot is stable.">
+            <strong>Timrå</strong>
+            <span>Stable</span>
+          </button>
+          <button class="node node-d" type="button" data-toast="Matfors depot is stable.">
+            <strong>Matfors</strong>
+            <span>Stable</span>
+          </button>
+
+          <div class="map-legend" aria-hidden="true">
+            <div class="legend-line"><span class="legend-swatch legend-swatch--risk"></span> Timing risk</div>
+            <div class="legend-line"><span class="legend-swatch"></span> Stable route</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 14px;">
+          <h2>Structured network summary</h2>
+          <p><strong>Highest consequence:</strong> Sundsvall → Härnösand express connection. Queue rising; 18 packages may miss departure.</p>
+          <div class="actions">
+            <button class="action action--info" type="button" data-open-terminal>Open Sundsvall terminal</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-terminal" data-view="terminal" aria-labelledby="terminalTitle" hidden>
+        <header class="view-header">
+          <p class="eyebrow">Sundsvall terminal</p>
+          <h1 id="terminalTitle">Find the bottleneck.</h1>
+          <p class="lede">Capacity is adequate overall. The express lane is overloaded before one specific cutoff while the standard lane has spare labour.</p>
+        </header>
+
+        <article class="card">
+          <div class="card-kicker">
+            <span class="badge badge--danger">18:20 cutoff</span>
+            <span id="terminalStaffState">4 staff on express</span>
+          </div>
+          <div class="process" aria-label="Terminal process capacity">
+            <div class="process-row">
+              <span class="process-name">Inbound scan</span>
+              <span class="capacity" aria-label="Inbound scan at 48 percent capacity"><span style="width: 48%"></span></span>
+              <span class="process-value">48%</span>
+            </div>
+            <div class="process-row">
+              <span class="process-name">Express lane A</span>
+              <span class="capacity" aria-label="Express lane A at 92 percent capacity"><span class="capacity-risk" id="expressCapacity" style="width: 92%"></span></span>
+              <span class="process-value" id="expressValue">92%</span>
+            </div>
+            <div class="process-row">
+              <span class="process-name">Standard lane B</span>
+              <span class="capacity" aria-label="Standard lane B at 43 percent capacity"><span style="width: 43%"></span></span>
+              <span class="process-value">43%</span>
+            </div>
+            <div class="process-row">
+              <span class="process-name">Outbound staging</span>
+              <span class="capacity" aria-label="Outbound staging at 61 percent capacity"><span style="width: 61%"></span></span>
+              <span class="process-value">61%</span>
+            </div>
+          </div>
+
+          <div class="staff-grid" aria-label="Staff allocation">
+            <div class="staff-card">
+              <strong>Express sort</strong>
+              <span id="expressStaff">4 staff · overloaded</span>
+            </div>
+            <div class="staff-card">
+              <strong>Standard sort</strong>
+              <span id="standardStaff">6 staff · spare capacity</span>
+            </div>
+          </div>
+
+          <div class="actions actions--two">
+            <button class="action action--warning" id="terminalMoveStaffButton" type="button">Move 2 staff</button>
+            <button class="action action--utility" id="holdTruckButton" type="button">Hold truck 3 min</button>
+          </div>
+          <p class="subtle" id="terminalTradeoff">Holding the truck protects these packages but reduces the downstream transfer margin in Härnösand.</p>
+        </article>
+
+        <article class="card" style="margin-top: 14px;">
+          <div class="card-kicker">
+            <span class="badge badge--info">Recurring pattern</span>
+            <span>12 packages · 3 shifts</span>
+          </div>
+          <h2>Some northbound express packages entered the wrong lane</h2>
+          <p>Capacity pressure explains today’s queue. It does not explain why the same destination group repeatedly enters Standard lane B first.</p>
+          <div class="actions">
+            <button class="action action--info" type="button" data-open-case>Inspect representative package</button>
+          </div>
+        </article>
+      </section>
+
+      <section class="view" id="view-cases" data-view="cases" aria-labelledby="casesTitle" hidden>
+        <header class="view-header">
+          <p class="eyebrow">Package case</p>
+          <h1 id="casesTitle">Trace the anomaly.</h1>
+          <p class="lede">Package SE-0428-771 is one example. Compare its planned and actual journey, then find others with the same signature.</p>
+        </header>
+
+        <article class="card" id="packageCard">
+          <div class="card-kicker">
+            <span class="badge badge--danger" id="packageStatusBadge">Promise at risk</span>
+            <span>Express</span>
+            <span>Härnösand</span>
+          </div>
+          <h2>SE-0428-771</h2>
+          <p><strong>Planned:</strong> Inbound scan → Express lane A → 18:20 northbound departure.</p>
+          <p><strong>Actual:</strong> Inbound scan → Standard lane B → manual correction → Express lane A.</p>
+
+          <div class="timeline" aria-label="Package event history">
+            <div class="event">
+              <time datetime="2026-08-05T17:31">17:31</time>
+              <strong>Arrived at Sundsvall terminal</strong>
+              <p>Scanned as Express, destination Härnösand.</p>
+            </div>
+            <div class="event event--error">
+              <time datetime="2026-08-05T17:32">17:32</time>
+              <strong>Routed to Standard lane B</strong>
+              <p>Fallback rule “North zone after 17:30” overrode the Express service rule.</p>
+            </div>
+            <div class="event">
+              <time datetime="2026-08-05T17:38">17:38</time>
+              <strong>Manually corrected</strong>
+              <p>Moved to Express lane A, adding six minutes of avoidable handling.</p>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="action action--info" id="findSimilarButton" type="button">Find similar cases</button>
+          </div>
+
+          <div class="signature" id="signaturePanel" hidden>
+            <strong>Shared signature found: 12 packages</strong>
+            <p>All are Express packages for the north zone, scanned after 17:30. The fallback rule is evaluated before the service rule.</p>
+            <div class="actions">
+              <button class="action action--success" id="fixRuleButton" type="button">Prioritise Express rule</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="card" id="verificationCard" style="margin-top: 14px;" hidden>
+          <div class="card-kicker">
+            <span class="badge badge--good">Verification</span>
+            <span>New packages</span>
+          </div>
+          <h2>The failure signature has stopped</h2>
+          <p id="verificationCopy">0 of 0 newly scanned matching packages were misrouted after the rule change.</p>
+          <div class="actions">
+            <button class="action action--info" id="advanceButton" type="button">Advance 3 minutes</button>
+          </div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <nav class="bottom-nav" aria-label="Primary game views">
+    <button class="nav-button" type="button" data-view-target="operations" aria-current="page">
+      <span class="nav-icon" aria-hidden="true">!</span>
+      Operations
+    </button>
+    <button class="nav-button" type="button" data-view-target="network">
+      <span class="nav-icon" aria-hidden="true">◇</span>
+      Network
+    </button>
+    <button class="nav-button" type="button" data-view-target="terminal">
+      <span class="nav-icon" aria-hidden="true">▦</span>
+      Terminal
+    </button>
+    <button class="nav-button" type="button" data-view-target="cases">
+      <span class="nav-icon" aria-hidden="true">⌕</span>
+      Cases
+    </button>
+  </nav>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <div class="sr-only" id="liveRegion" aria-live="assertive" aria-atomic="true"></div>
+
+  <script>
+    const state = {
+      paused: false,
+      speed: 1,
+      staffMoved: false,
+      truckHeld: false,
+      ruleFixed: false,
+      verificationStep: 0,
+      currentView: 'operations',
+      timeMinutes: 17 * 60 + 42
+    };
+
+    const views = [...document.querySelectorAll('[data-view]')];
+    const navButtons = [...document.querySelectorAll('[data-view-target]')];
+    const toast = document.querySelector('#toast');
+    const liveRegion = document.querySelector('#liveRegion');
+    let toastTimer = 0;
+
+    function formatTime(totalMinutes) {
+      const hours = Math.floor(totalMinutes / 60) % 24;
+      const minutes = totalMinutes % 60;
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    }
+
+    function announce(message, assertive = false) {
+      if (assertive) {
+        liveRegion.textContent = '';
+        window.setTimeout(() => {
+          liveRegion.textContent = message;
+        }, 20);
+      }
+
+      window.clearTimeout(toastTimer);
+      toast.textContent = message;
+      toast.hidden = false;
+      toastTimer = window.setTimeout(() => {
+        toast.hidden = true;
+      }, 4200);
+    }
+
+    function showView(name, options = {}) {
+      state.currentView = name;
+
+      views.forEach((view) => {
+        view.hidden = view.dataset.view !== name;
+      });
+
+      navButtons.forEach((button) => {
+        const isCurrent = button.dataset.viewTarget === name;
+        if (isCurrent) {
+          button.setAttribute('aria-current', 'page');
+        } else {
+          button.removeAttribute('aria-current');
+        }
+      });
+
+      if (options.focus !== false) {
+        document.querySelector('#main').focus({ preventScroll: true });
+        window.scrollTo({ top: 0, behavior: 'auto' });
+      }
+    }
+
+    function updateTimeControls() {
+      document.querySelector('#pauseButton').setAttribute('aria-pressed', String(state.paused));
+      document.querySelector('#pauseButton').setAttribute(
+        'aria-label',
+        state.paused ? 'Resume simulation' : 'Pause simulation'
+      );
+      document.querySelector('#shiftState').textContent = state.paused ? 'Paused' : `Running ${state.speed}×`;
+      document.querySelectorAll('[data-speed]').forEach((button) => {
+        button.setAttribute('aria-pressed', String(!state.paused && Number(button.dataset.speed) === state.speed));
+      });
+    }
+
+    function moveStaff() {
+      if (state.staffMoved) {
+        announce('Two staff are already supporting Express lane A.');
+        return;
+      }
+
+      state.staffMoved = true;
+      document.querySelector('#queueTrend').style.width = '48%';
+      document.querySelector('#queuePercent').textContent = '48%';
+      document.querySelector('#expressCapacity').style.width = '68%';
+      document.querySelector('#expressValue').textContent = '68%';
+      document.querySelector('#terminalStaffState').textContent = '6 staff on express';
+      document.querySelector('#expressStaff').textContent = '6 staff · recovering';
+      document.querySelector('#standardStaff').textContent = '4 staff · adequate';
+      document.querySelector('#backlogValue').textContent = '71';
+      document.querySelector('#riskValue').textContent = '9';
+      document.querySelector('#incidentHint').textContent =
+        'The departure is now likely to leave on time. The recurring route error still affects future northbound Express packages.';
+      document.querySelector('#primaryIncident').classList.remove('card--critical');
+      document.querySelector('#primaryIncident').style.background = 'var(--surface)';
+      document.querySelectorAll('#moveStaffButton, #terminalMoveStaffButton').forEach((button) => {
+        button.disabled = true;
+        button.textContent = '2 staff moved';
+      });
+      announce('Two staff moved to Express lane A. Immediate risk reduced from 18 packages to 9. Root cause remains unresolved.', true);
+    }
+
+    function holdTruck() {
+      if (state.truckHeld) {
+        announce('The 18:20 truck is already held for three minutes.');
+        return;
+      }
+
+      state.truckHeld = true;
+      document.querySelector('#holdTruckButton').disabled = true;
+      document.querySelector('#holdTruckButton').textContent = 'Truck held 3 min';
+      document.querySelector('#terminalTradeoff').textContent =
+        'Departure now leaves at 18:23. These packages gain time, but Härnösand has only seven minutes for its downstream transfer.';
+      announce('Truck held for three minutes. Current packages gain time; downstream transfer margin is reduced.');
+    }
+
+    function revealSignature() {
+      document.querySelector('#signaturePanel').hidden = false;
+      document.querySelector('#findSimilarButton').disabled = true;
+      document.querySelector('#findSimilarButton').textContent = '12 similar found';
+      announce('Twelve similar cases found. All matched the north-zone fallback rule after 17:30.', true);
+      document.querySelector('#signaturePanel').scrollIntoView({ block: 'nearest', behavior: 'auto' });
+    }
+
+    function fixRule() {
+      if (state.ruleFixed) {
+        return;
+      }
+
+      state.ruleFixed = true;
+      state.paused = true;
+      updateTimeControls();
+
+      document.querySelector('#fixRuleButton').disabled = true;
+      document.querySelector('#fixRuleButton').textContent = 'Express rule prioritised';
+      document.querySelector('#signaturePanel').style.background = 'var(--green)';
+      document.querySelector('#packageStatusBadge').textContent = 'Cause corrected';
+      document.querySelector('#packageStatusBadge').classList.remove('badge--danger');
+      document.querySelector('#packageStatusBadge').classList.add('badge--good');
+      document.querySelector('#verificationCard').hidden = false;
+      document.querySelector('#serviceValue').textContent = state.staffMoved ? '94%' : '92%';
+      document.querySelector('#serviceMetric').dataset.state = 'good';
+      announce('Routing policy corrected. Simulation paused automatically so the effect can be verified.', true);
+      document.querySelector('#verificationCard').scrollIntoView({ block: 'nearest', behavior: 'auto' });
+    }
+
+    function advanceVerification() {
+      if (!state.ruleFixed) {
+        return;
+      }
+
+      state.verificationStep += 1;
+      state.timeMinutes += 3;
+      document.querySelector('#clock').textContent = formatTime(state.timeMinutes);
+
+      const checked = state.verificationStep * 4;
+      document.querySelector('#verificationCopy').textContent =
+        `0 of ${checked} newly scanned matching packages were misrouted after the rule change.`;
+
+      if (state.verificationStep >= 3) {
+        document.querySelector('#advanceButton').disabled = true;
+        document.querySelector('#advanceButton').textContent = 'Pattern verified';
+        document.querySelector('#verificationCard').classList.add('card--resolved');
+        document.querySelector('#riskValue').textContent = state.staffMoved ? '2' : '6';
+        document.querySelector('#riskMetric').dataset.state = 'good';
+        announce('Verification complete. Twelve matching packages followed the correct route. The recurring failure signature has stopped.', true);
+      } else {
+        announce(`Four more matching packages processed correctly. ${checked} verified so far.`);
+      }
+    }
+
+    navButtons.forEach((button) => {
+      button.addEventListener('click', () => showView(button.dataset.viewTarget));
+    });
+
+    document.querySelector('#pauseButton').addEventListener('click', () => {
+      state.paused = !state.paused;
+      updateTimeControls();
+      announce(state.paused ? 'Simulation paused.' : `Simulation resumed at ${state.speed} times speed.`);
+    });
+
+    document.querySelectorAll('[data-speed]').forEach((button) => {
+      button.addEventListener('click', () => {
+        state.speed = Number(button.dataset.speed);
+        state.paused = false;
+        updateTimeControls();
+        announce(`Simulation running at ${state.speed} times speed.`);
+      });
+    });
+
+    document.querySelector('#inspectIncidentButton').addEventListener('click', () => showView('terminal'));
+    document.querySelectorAll('[data-open-terminal]').forEach((button) => {
+      button.addEventListener('click', () => showView('terminal'));
+    });
+    document.querySelectorAll('[data-open-case]').forEach((button) => {
+      button.addEventListener('click', () => showView('cases'));
+    });
+
+    document.querySelector('#moveStaffButton').addEventListener('click', moveStaff);
+    document.querySelector('#terminalMoveStaffButton').addEventListener('click', moveStaff);
+    document.querySelector('#holdTruckButton').addEventListener('click', holdTruck);
+    document.querySelector('#findSimilarButton').addEventListener('click', revealSignature);
+    document.querySelector('#fixRuleButton').addEventListener('click', fixRule);
+    document.querySelector('#advanceButton').addEventListener('click', advanceVerification);
+
+    document.querySelectorAll('[data-toast]').forEach((button) => {
+      button.addEventListener('click', () => announce(button.dataset.toast));
+    });
+
+    updateTimeControls();
+    showView('operations', { focus: false });
+  </script>
+</body>
+</html>
