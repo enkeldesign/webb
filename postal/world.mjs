@@ -124,6 +124,7 @@ export class PostalWorld {
     this.runningVisualTime = 0;
     this.cameraBlend = 1;
     this.state = {
+      shiftId: 'first-rounds',
       started: false,
       paused: true,
       stage: 'brief',
@@ -132,10 +133,15 @@ export class PostalWorld {
       ruleFixed: false,
       verified: 0,
       completed: false,
-      speed: 1
+      speed: 1,
+      activeHotspots: [],
+      hotspotLabels: {},
+      hotspotTones: {},
+      hotspotIcons: {}
     };
     this.interactiveRoots = [];
     this.hotspots = new Map();
+    this.hotspotStateKey = '';
     this.packages = [];
     this.operators = [];
     this.networkTrucks = [];
@@ -384,6 +390,18 @@ export class PostalWorld {
     group.add(warningRoot);
     this.warningRoot = warningRoot;
 
+    const scannerWarningRoot = new THREE.Group();
+    scannerWarningRoot.position.set(-2.85, 1.62, 0.75);
+    const scannerWarningRing = new THREE.Mesh(
+      new THREE.TorusGeometry(0.48, 0.075, 8, 28),
+      material(0xff9a55, { emissive: 0xff665e, emissiveIntensity: 1.25 })
+    );
+    scannerWarningRing.rotation.x = Math.PI / 2;
+    scannerWarningRoot.add(scannerWarningRing);
+    scannerWarningRoot.visible = false;
+    group.add(scannerWarningRoot);
+    this.scannerWarningRoot = scannerWarningRoot;
+
     this.createOperators(group);
     this.createPackages(group);
 
@@ -400,11 +418,13 @@ export class PostalWorld {
     group.add(standardHit);
     this.markInteractive(standardHit, 'standard-lane');
     this.markInteractive(this.truck, 'truck');
+    this.markInteractive(this.scanner, 'scanner');
 
     this.registerHotspot('express-lane', 'Express A', '↗', 'blue', group, new THREE.Vector3(3.1, 1.45, -1.4));
     this.registerHotspot('standard-lane', 'Standard B', '→', 'yellow', group, new THREE.Vector3(3.1, 1.3, 2.35));
     this.registerHotspot('truck', '18:20 truck', '▰', 'yellow', group, new THREE.Vector3(5.3, 1.75, -1.75));
     this.registerHotspot('parcel', 'Trace parcel', '!', 'danger', group, new THREE.Vector3(2.75, 1.3, 2.35));
+    this.registerHotspot('scanner', 'Scanner 2', '◆', 'orange', group, new THREE.Vector3(-2.85, 2.05, 0.75));
   }
 
   addLaneMarker(parent, z, color, name) {
@@ -543,12 +563,30 @@ export class PostalWorld {
       new THREE.Vector3(0, 0.16, -3.25)
     ];
     const routeCurve = new THREE.CatmullRomCurve3(routePoints);
+    this.networkPrimaryCurve = routeCurve;
     const route = new THREE.Mesh(
       new THREE.TubeGeometry(routeCurve, 40, 0.085, 8, false),
       material(0xff665e, { emissive: 0xff4c44, emissiveIntensity: 1.2 })
     );
     group.add(route);
     this.networkRiskRoute = route;
+
+    const altRoutePoints = [
+      new THREE.Vector3(0, 0.19, 3.1),
+      new THREE.Vector3(-2.2, 0.19, 2.05),
+      new THREE.Vector3(-4.0, 0.19, 1.65),
+      new THREE.Vector3(-2.8, 0.19, -1.2),
+      new THREE.Vector3(0, 0.19, -3.25)
+    ];
+    const altRouteCurve = new THREE.CatmullRomCurve3(altRoutePoints, false, 'centripetal', 0.35);
+    const altRoute = new THREE.Mesh(
+      new THREE.TubeGeometry(altRouteCurve, 58, 0.075, 8, false),
+      material(0x38c7f3, { emissive: 0x1589bb, emissiveIntensity: 0.7, opacity: 0.92 })
+    );
+    altRoute.visible = false;
+    group.add(altRoute);
+    this.networkAltCurve = altRouteCurve;
+    this.networkAltRoute = altRoute;
 
     for (let index = 0; index < 2; index += 1) {
       const truck = this.makeAsset('truck', { targetSize: 0.72 });
@@ -558,6 +596,22 @@ export class PostalWorld {
       group.add(truck);
       this.networkTrucks.push(truck);
     }
+
+    const snowGeometry = new THREE.BufferGeometry();
+    const snowPositions = new Float32Array(90 * 3);
+    for (let index = 0; index < 90; index += 1) {
+      snowPositions[index * 3] = -7 + seeded(index + 130) * 14;
+      snowPositions[index * 3 + 1] = 0.6 + seeded(index + 170) * 8;
+      snowPositions[index * 3 + 2] = -5 + seeded(index + 210) * 10;
+    }
+    snowGeometry.setAttribute('position', new THREE.BufferAttribute(snowPositions, 3));
+    const snow = new THREE.Points(
+      snowGeometry,
+      new THREE.PointsMaterial({ color: 0xfffdf5, size: 0.095, transparent: true, opacity: 0.82, depthWrite: false })
+    );
+    snow.visible = false;
+    group.add(snow);
+    this.networkSnow = snow;
 
     const riskRing = new THREE.Mesh(
       new THREE.RingGeometry(0.78, 1.04, 28),
@@ -665,12 +719,13 @@ export class PostalWorld {
     button.innerHTML = `<span class="world-hotspot-icon" aria-hidden="true">${icon}</span><span>${label}</span>`;
     button.addEventListener('click', () => this.callbacks.onHotspot?.(id));
     this.hotspotLayer.append(button);
-    this.hotspots.set(id, { id, anchor, button, group, tone });
+    this.hotspots.set(id, { id, anchor, button, group, tone, label, icon });
     return anchor;
   }
 
   setMode(mode, immediate = false) {
     if (!CAMERA_PRESETS[mode]) return;
+    if (!this.camera || !this.terminalGroup || !this.networkGroup || !this.caseGroup) return;
     this.mode = mode;
     this.terminalGroup.visible = mode === 'terminal';
     this.networkGroup.visible = mode === 'network';
@@ -695,32 +750,34 @@ export class PostalWorld {
     if (!previous.signatureFound && this.state.signatureFound) {
       this.matchRevealStartedAt = this.elapsed;
     }
-    if (previous.staffMoved !== this.state.staffMoved || previous.ruleFixed !== this.state.ruleFixed || previous.stage !== this.state.stage) {
+    const nextHotspotStateKey = JSON.stringify([
+      this.state.started,
+      this.state.completed,
+      this.state.activeHotspots,
+      this.state.hotspotLabels,
+      this.state.hotspotTones,
+      this.state.hotspotIcons
+    ]);
+    if (nextHotspotStateKey !== this.hotspotStateKey) {
+      this.hotspotStateKey = nextHotspotStateKey;
       this.updateHotspotVisibility();
     }
   }
 
   updateHotspotVisibility() {
+    const activeHotspots = new Set(this.state.activeHotspots || []);
     for (const [id, hotspot] of this.hotspots) {
-      let visible = hotspot.group.visible && this.state.started && !this.state.completed;
-      if (id === 'parcel') visible &&= ['investigate', 'compare', 'rule'].includes(this.state.stage);
-      if (id === 'case-similar') visible &&= this.state.signatureFound;
-      if (id === 'case-package') visible &&= this.state.packageSelected;
-      if (id === 'express-lane' || id === 'standard-lane' || id === 'truck') visible &&= this.mode === 'terminal';
-      if (id.startsWith('network-')) visible &&= this.mode === 'network';
+      const visible = hotspot.group.visible
+        && this.state.started
+        && !this.state.completed
+        && activeHotspots.has(id);
       hotspot.button.dataset.visible = String(visible);
       hotspot.button.tabIndex = visible ? 0 : -1;
       hotspot.button.hidden = !visible;
-
-      if ((id === 'parcel' || id === 'network-harnosand') && this.state.ruleFixed) {
-        hotspot.button.dataset.tone = 'good';
-      } else {
-        hotspot.button.dataset.tone = hotspot.tone;
-      }
-
-      if (id === 'network-harnosand') {
-        hotspot.button.querySelector('.world-hotspot-icon').textContent = this.state.ruleFixed ? '✓' : '!';
-      }
+      hotspot.button.dataset.tone = this.state.hotspotTones?.[id] || hotspot.tone;
+      hotspot.button.querySelector('.world-hotspot-icon').textContent = this.state.hotspotIcons?.[id] || hotspot.icon;
+      hotspot.button.querySelector('span:last-child').textContent = this.state.hotspotLabels?.[id] || hotspot.label;
+      hotspot.button.setAttribute('aria-label', this.state.hotspotLabels?.[id] || hotspot.label);
     }
   }
 
@@ -766,9 +823,15 @@ export class PostalWorld {
       const data = parcel.userData;
       const cycle = (flowTime * data.speed + data.offset) % 1;
       const onInput = cycle < 0.34;
-      const localT = onInput ? cycle / 0.34 : (cycle - 0.34) / 0.66;
+      let localT = onInput ? cycle / 0.34 : (cycle - 0.34) / 0.66;
       const intendedExpress = data.service === 'express';
-      const usesWrongLane = data.misrouted && !this.state.ruleFixed;
+      const usesWrongLane = this.state.shiftId === 'northbound' && data.misrouted && !this.state.ruleFixed;
+      const scannerBlocked = this.state.shiftId === 'scanner-fever'
+        && !this.state.scannerFixed
+        && !this.state.scannerBypassed;
+      if (scannerBlocked && onInput && localT > 0.58) {
+        localT = 0.58 + (localT - 0.58) * 0.035;
+      }
       const route = intendedExpress && !usesWrongLane ? this.expressCurve : this.standardCurve;
       let routeT = localT;
       if (usesWrongLane && !this.state.staffMoved && routeT > 0.72) routeT = 0.72 + (routeT - 0.72) * 0.08;
@@ -791,12 +854,24 @@ export class PostalWorld {
     });
 
     if (this.warningRoot) {
-      const warningVisible = !this.state.ruleFixed;
+      const warningVisible = this.state.shiftId === 'northbound' && !this.state.ruleFixed;
       this.warningRoot.visible = warningVisible;
       if (!REDUCED_MOTION) {
         const pulse = 1 + Math.sin(this.elapsed * 5) * 0.12;
         this.warningRoot.scale.setScalar(pulse);
         this.warningRoot.rotation.y += delta * 0.9;
+      }
+    }
+
+    if (this.scannerWarningRoot) {
+      const scannerWarningVisible = this.state.shiftId === 'scanner-fever'
+        && !this.state.scannerFixed
+        && !this.state.scannerBypassed;
+      this.scannerWarningRoot.visible = scannerWarningVisible;
+      if (scannerWarningVisible && !REDUCED_MOTION) {
+        const pulse = 1 + Math.sin(this.elapsed * 4.2) * 0.1;
+        this.scannerWarningRoot.scale.setScalar(pulse);
+        this.scannerWarningRoot.rotation.y += delta * 0.65;
       }
     }
 
@@ -808,27 +883,51 @@ export class PostalWorld {
 
   updateNetwork(delta) {
     if (!this.networkGroup) return;
+    const snowShift = this.state.shiftId === 'snow-window';
+    const useInland = snowShift && this.state.routeChoice === 'inland';
     this.networkTrucks.forEach((truck, index) => {
       const t = (this.runningVisualTime * 0.035 + truck.userData.offset) % 1;
-      const position = truck.userData.curve.getPointAt(t);
-      const tangent = truck.userData.curve.getTangentAt(t);
+      const activeCurve = useInland ? this.networkAltCurve : this.networkPrimaryCurve || truck.userData.curve;
+      const position = activeCurve.getPointAt(t);
+      const tangent = activeCurve.getTangentAt(t);
       truck.position.copy(position);
       truck.rotation.y = Math.atan2(tangent.x, tangent.z) + Math.PI;
       if (!REDUCED_MOTION) truck.position.y += Math.sin(this.elapsed * 4 + index) * 0.015;
     });
     if (this.networkRiskRoute) {
-      const fixed = this.state.ruleFixed;
-      this.networkRiskRoute.material.color.setHex(fixed ? 0x79e29f : 0xff665e);
-      this.networkRiskRoute.material.emissive.setHex(fixed ? 0x249a60 : 0xff4c44);
-      this.networkRiskRoute.material.emissiveIntensity = fixed ? 0.55 : 1.2;
+      const safe = this.state.ruleFixed || (snowShift && this.state.routeChoice === 'coast' && this.state.stage === 'dispatch');
+      this.networkRiskRoute.material.color.setHex(safe ? 0x79e29f : snowShift ? 0xff9a55 : 0xff665e);
+      this.networkRiskRoute.material.emissive.setHex(safe ? 0x249a60 : 0xff4c44);
+      this.networkRiskRoute.material.emissiveIntensity = safe ? 0.55 : 1.2;
+    }
+    if (this.networkAltRoute) {
+      this.networkAltRoute.visible = snowShift
+        && (this.state.stage === 'weather-route' || this.state.routeChoice === 'inland' || this.state.stage === 'dispatch');
+      this.networkAltRoute.material.color.setHex(useInland ? 0x79e29f : 0x38c7f3);
+      this.networkAltRoute.material.emissive.setHex(useInland ? 0x249a60 : 0x1589bb);
+      this.networkAltRoute.material.emissiveIntensity = useInland ? 0.9 : 0.5;
     }
     if (this.networkRiskRing) {
-      const fixed = this.state.ruleFixed;
+      const fixed = this.state.ruleFixed || (snowShift && this.state.stage === 'dispatch');
       this.networkRiskRing.material.color.setHex(fixed ? 0x79e29f : 0xff665e);
       if (!REDUCED_MOTION) {
         const pulse = 1 + Math.sin(this.elapsed * 3.8) * 0.1;
         this.networkRiskRing.scale.setScalar(pulse);
         this.networkRiskRing.rotation.z += delta * 0.25;
+      }
+    }
+    if (this.networkSnow) {
+      this.networkSnow.visible = snowShift;
+      if (snowShift && !REDUCED_MOTION) {
+        const positions = this.networkSnow.geometry.attributes.position;
+        for (let index = 0; index < positions.count; index += 1) {
+          let y = positions.getY(index) - delta * (0.85 + (index % 5) * 0.08);
+          if (y < 0.25) y = 7.5 + (index % 7) * 0.15;
+          positions.setY(index, y);
+          positions.setX(index, positions.getX(index) + delta * 0.08);
+          if (positions.getX(index) > 7.2) positions.setX(index, -7.2);
+        }
+        positions.needsUpdate = true;
       }
     }
   }
@@ -859,6 +958,7 @@ export class PostalWorld {
   }
 
   updateHotspotPositions() {
+    if (!this.camera) return;
     const width = this.canvas.clientWidth;
     const height = this.canvas.clientHeight;
     if (!width || !height) return;
