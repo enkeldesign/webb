@@ -144,7 +144,7 @@ export async function installM8HomeFixedLayout() {
     achievements
   });
   const { installTrophyRoadFeedback } = await import(
-    `/turn/achievements/trophy-road-feedback.js?build=${buildKey}-r160-reward-detail-sync`
+    `/turn/achievements/trophy-road-feedback.js?build=${buildKey}-r166-bella-records`
   );
   const trophyRoadFeedback = installTrophyRoadFeedback(achievements);
 
