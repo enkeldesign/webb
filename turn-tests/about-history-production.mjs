@@ -24,8 +24,8 @@ const [
 ]);
 
 for (const entry of [productionEntry, nextEntry]) {
-  assert.match(entry, /about-history-bootstrap\.js\?revision=r163-modal-system/,
-    'Production and TURN NEXT must load the same canonical About history enhancement');
+  assert.match(entry, /about-history-bootstrap\.js\?revision=r164-design-navigation/,
+    'Production and TURN NEXT must load the same refreshed About history enhancement');
 }
 
 assert.match(bootstrap, /CHANGELOG[\s\S]*CURRENT_RELEASE[\s\S]*DEVELOPMENT_HISTORY/);
