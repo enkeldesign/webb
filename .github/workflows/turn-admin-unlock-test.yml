@@ -1,0 +1,41 @@
+name: TURN admin unlock regression
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'turn/testing/admin-unlock-sequence.js'
+      - 'turn/live-steering-setting.js'
+      - 'turn/achievements/**'
+      - 'turn/progression/**'
+      - 'turn-lab/tests/admin-unlock-production.mjs'
+      - '.github/workflows/turn-admin-unlock-test.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'turn/testing/admin-unlock-sequence.js'
+      - 'turn/live-steering-setting.js'
+      - 'turn/achievements/**'
+      - 'turn/progression/**'
+      - 'turn-lab/tests/admin-unlock-production.mjs'
+      - '.github/workflows/turn-admin-unlock-test.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  admin-unlock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Run hidden admin unlock regression
+        run: node turn-lab/tests/admin-unlock-production.mjs
