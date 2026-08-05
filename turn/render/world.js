@@ -15,7 +15,7 @@ async function loadWorldModules() {
     import(moduleUrl('../world-art-pass.js')),
     import(moduleUrl('../track-identity.js')),
     import(moduleUrl('../section-intensity.js')),
-    import(moduleUrl('../tracks/countryside-bella-r166.js?revision=r166-bella-records'))
+    import(moduleUrl('../tracks/countryside-bella-r166.js?revision=r167-bella-palette-scale'))
   ]);
 
   return {
