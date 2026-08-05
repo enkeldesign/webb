@@ -27,12 +27,22 @@ const [
   fs.readFile(new URL('../turn/design-navigation.css', import.meta.url), 'utf8')
 ]);
 
-for (const entry of [productionEntry, nextEntry]) {
-  assert.match(entry, /about-history-bootstrap\.js\?revision=r164-design-navigation/,
-    'Production and TURN NEXT must load the shared About entry module');
-}
+assert.match(productionEntry, /about-history-bootstrap-r165\.js\?revision=r165-browser-about/,
+  'The public website must load the browser-aware About implementation directly');
+assert.ok(
+  productionEntry.indexOf('about-history-bootstrap-r165.js') < productionEntry.indexOf('./app.js?build='),
+  'Website About must load before the game module waits for explicit browser launch'
+);
+assert.match(nextEntry, /about-history-bootstrap\.js\?revision=r164-design-navigation/,
+  'TURN NEXT may continue through the stable shared About entry module');
 assert.match(bootstrapEntry, /about-history-bootstrap-r165\.js\?revision=r165-browser-about/,
   'The stable About entry must route to the browser-aware implementation');
+
+assert.match(productionEntry, /href="\.\/browser-install-r165\.css\?revision=r165-browser-about"/);
+assert.match(productionEntry, /id="installAboutButton"[\s\S]*aria-haspopup="dialog"[\s\S]*>ABOUT TURN<\/button>/);
+assert.match(productionEntry, /id="installTurnButton"[\s\S]*id="installNote"[\s\S]*id="playBrowserButton"/,
+  'Install, recommendation and browser-play controls must appear in the requested order');
+assert.match(productionEntry, /Install TURN as a home screen web app for the best fullscreen experience\. You can also play here, but it is not recommended\./);
 
 assert.match(bootstrap, /CHANGELOG[\s\S]*CURRENT_RELEASE[\s\S]*DEVELOPMENT_HISTORY/);
 assert.match(bootstrap, /const INSTALL_NOTE[\s\S]*Install TURN as a home screen web app for the best fullscreen experience\. You can also play here, but it is not recommended\./);
