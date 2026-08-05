@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - 'turn/index.html'
       - 'turn/testing/admin-unlock-sequence.js'
       - 'turn/live-steering-setting.js'
       - 'turn/achievements/**'
@@ -15,6 +16,7 @@ on:
     branches:
       - main
     paths:
+      - 'turn/index.html'
       - 'turn/testing/admin-unlock-sequence.js'
       - 'turn/live-steering-setting.js'
       - 'turn/achievements/**'
