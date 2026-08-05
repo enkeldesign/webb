@@ -8,9 +8,8 @@ import {
 import { ACHIEVEMENTS, TRACK_IDS } from '../../turn/achievements/catalog.js';
 import { TROPHY_ROAD_REWARDS } from '../../turn/progression/trophy-road.js';
 
-const [source, loaderSource, indexSource] = await Promise.all([
+const [source, indexSource] = await Promise.all([
   fs.readFile(new URL('../../turn/testing/admin-unlock-sequence.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/live-steering-setting.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8')
 ]);
 
@@ -78,10 +77,13 @@ assert.match(source, /armyTracks: \[\.\.\.TRACK_IDS\]/);
 assert.match(source, /cleanTracks: \[\.\.\.TRACK_IDS\]/);
 assert.doesNotMatch(source, /turn:achievements-updated|turn:trophy-road-updated|turn:secret-achievement/,
   'The admin path must not emit achievement or reward events');
-assert.match(loaderSource, /admin-unlock-sequence\.js\?revision=r174-admin-unlock/);
-assert.match(loaderSource, /installAdminUnlockSequence\(\)/);
+assert.match(source, /installAdminUnlockSequence\(\);\s*$/,
+  'The isolated production module must install itself');
 assert.match(indexSource,
-  /live-steering-setting\.js\?build=20260805-r160-live-steering-r174-admin-unlock/,
-  'The production entry must publish a fresh loader cache identity');
+  /<script type="module" src="\.\/testing\/admin-unlock-sequence\.js\?revision=r174-admin-unlock"><\/script>/,
+  'The production entry must publish the hidden recognizer with its own cache identity');
+assert.match(indexSource,
+  /src="\.\/live-steering-setting\.js\?build=20260805-r160-live-steering"/,
+  'The hidden recognizer must not disturb the canonical steering entry');
 
 console.log('TURN hidden admin unlock sequence regression passed.');
