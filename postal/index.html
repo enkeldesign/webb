@@ -9,7 +9,7 @@
   <meta name="format-detection" content="telephone=no">
   <meta name="description" content="POSTAL is a portrait-friendly parcel network management game set in Sweden.">
   <title>POSTAL — Every package has a promise</title>
-  <link rel="stylesheet" href="./styles.css?build=20260805-visual-game-r1">
+  <link rel="stylesheet" href="./styles.css?build=20260805-campaign-r3">
   <script type="importmap">
     {
       "imports": {
@@ -45,26 +45,26 @@
       </div>
 
       <div class="shift-line">
-        <span class="shift-place">SUNDSVALL · SHIFT 3</span>
-        <span class="shift-clock" id="clock">17:42</span>
+        <span class="shift-place" id="shiftPlace">SUNDSVALL · FIRST SHIFT</span>
+        <span class="shift-clock" id="clock">08:05</span>
         <span class="shift-state" id="shiftState">READY</span>
       </div>
 
       <section class="metrics" aria-label="Network performance">
         <div class="metric metric--service" id="serviceMetric">
-          <span class="metric-icon" aria-hidden="true">✓</span>
-          <span class="metric-label">On time</span>
-          <strong id="serviceValue">91%</strong>
+          <span class="metric-icon" id="serviceIcon" aria-hidden="true">✓</span>
+          <span class="metric-label" id="serviceLabel">On time</span>
+          <strong id="serviceValue">98%</strong>
         </div>
         <div class="metric metric--backlog" id="backlogMetric">
-          <span class="metric-icon" aria-hidden="true">▦</span>
-          <span class="metric-label">In flow</span>
-          <strong id="backlogValue">84</strong>
+          <span class="metric-icon" id="backlogIcon" aria-hidden="true">▦</span>
+          <span class="metric-label" id="backlogLabel">In flow</span>
+          <strong id="backlogValue">6</strong>
         </div>
         <div class="metric metric--risk" id="riskMetric" data-level="warning">
-          <span class="metric-icon" aria-hidden="true">!</span>
-          <span class="metric-label">At risk</span>
-          <strong id="riskValue">18</strong>
+          <span class="metric-icon" id="riskIcon" aria-hidden="true">!</span>
+          <span class="metric-label" id="riskLabel">At risk</span>
+          <strong id="riskValue">0</strong>
         </div>
       </section>
     </header>
@@ -84,18 +84,18 @@
         <strong id="sceneTitle">Sundsvall</strong>
       </div>
 
-      <div class="mission-pill" id="missionPill" aria-live="polite">
+      <div class="mission-pill" id="missionPill">
         <span class="mission-symbol" aria-hidden="true">↗</span>
         <span>
-          <small id="missionLabel">NORTHBOUND EXPRESS</small>
-          <strong id="missionTime">DEPARTS 18:20 · 38 MIN</strong>
+          <small id="missionLabel">FIRST ROUNDS</small>
+          <strong id="missionTime">4 SHORT TASKS · NO PRESSURE</strong>
         </span>
       </div>
 
       <div class="hotspot-layer" id="hotspotLayer" aria-label="Interactive locations in the current scene"></div>
 
       <p class="sr-only" id="sceneSummary">
-        Sundsvall terminal. Express lane A is overloaded. Eighteen northbound parcels are at risk before the 18:20 departure.
+        Sundsvall terminal. The guided first shift begins with the blue Express lane.
       </p>
     </main>
 
@@ -103,12 +103,12 @@
       <div class="deck-grabber" aria-hidden="true"></div>
       <div class="command-content" id="commandContent">
         <div class="command-copy">
-          <span class="command-kicker">SHIFT BRIEF</span>
-          <h1 id="commandTitle">The northbound run needs you.</h1>
-          <p id="commandText">Watch the parcel flow, protect the departure and find out why blue Express parcels keep reaching the yellow lane.</p>
+          <span class="command-kicker">FIRST SHIFT · GUIDED</span>
+          <h1 id="commandTitle">Meet the parcel flow.</h1>
+          <p id="commandText">Four small actions introduce the terminal. Nothing moves until you are ready.</p>
         </div>
         <div class="command-actions" id="commandActions">
-          <button class="game-button game-button--primary" id="deckStartButton" type="button">Start shift</button>
+          <button class="game-button game-button--primary" id="deckStartButton" type="button">Start first shift</button>
         </div>
       </div>
     </section>
@@ -135,7 +135,7 @@
     <div class="welcome-card">
       <div class="welcome-logo" aria-hidden="true">
         <span class="welcome-box"><i></i></span>
-        <span class="welcome-word">POSTAL</span>
+        <span class="welcome-word" id="welcomeTitle">POSTAL</span>
       </div>
       <p class="welcome-tagline">Every package has a promise.</p>
       <div class="brief-card">
@@ -146,29 +146,42 @@
           <span class="brief-line"></span>
           <span class="brief-node"></span>
         </div>
-        <span class="brief-label">TONIGHT'S CHALLENGE</span>
-        <strong>Save the 18:20 northbound express.</strong>
-        <span>Sundsvall → Härnösand · about 5 minutes</span>
+        <span class="brief-label">FIRST SHIFT · GUIDED</span>
+        <strong>Learn the terminal one action at a time.</strong>
+        <span>Four short tasks · no clock pressure</span>
       </div>
-      <button class="game-button game-button--primary welcome-start" id="startButton" type="button">Start the shift</button>
-      <p class="welcome-note">Best played in portrait with sound on. The shift can be paused at any time.</p>
+      <button class="game-button game-button--primary welcome-start" id="startButton" type="button">Start first shift</button>
+      <p class="welcome-note">After this, four different shifts open: systems, network routing, queue triage and parcel investigation.</p>
+    </div>
+  </section>
+
+  <section class="campaign-screen" id="campaignScreen" aria-labelledby="campaignTitle" hidden>
+    <div class="campaign-scrim" aria-hidden="true"></div>
+    <div class="campaign-panel">
+      <header class="campaign-head">
+        <div>
+          <span class="command-kicker">SUNDSVALL REGION</span>
+          <h2 id="campaignTitle">Choose your next shift</h2>
+          <p id="campaignProgress">Four operations are open.</p>
+        </div>
+        <div class="campaign-stamp" id="campaignStamp" aria-hidden="true">1/5</div>
+      </header>
+      <div class="shift-list" id="shiftList"></div>
+      <p class="campaign-note">Each shift uses a different kind of play. Scanner and parcel details change when replayed.</p>
     </div>
   </section>
 
   <section class="result-screen" id="resultScreen" aria-labelledby="resultTitle" hidden>
     <div class="result-rays" aria-hidden="true"></div>
     <div class="result-card">
-      <span class="result-kicker">SHIFT COMPLETE</span>
+      <span class="result-kicker" id="resultKicker">SHIFT COMPLETE</span>
       <div class="result-grade" id="resultGrade" aria-label="Grade A">A</div>
       <h2 id="resultTitle">Promises kept.</h2>
       <p id="resultSummary">The northbound truck left on time and the recurring routing error is gone.</p>
-      <div class="result-stats" aria-label="Shift results">
-        <div><span>Saved</span><strong id="resultSaved">18</strong></div>
-        <div><span>On time</span><strong id="resultOnTime">98%</strong></div>
-        <div><span>Score</span><strong id="resultScore">1,240</strong></div>
-      </div>
+      <div class="result-stats" id="resultStats" aria-label="Shift results"></div>
       <div class="result-medals" id="resultMedals" aria-label="Shift achievements"></div>
-      <button class="game-button game-button--primary" id="replayButton" type="button">Play the shift again</button>
+      <button class="game-button game-button--primary" id="nextShiftButton" type="button">Choose next shift</button>
+      <button class="game-button game-button--quiet" id="replayButton" type="button">Replay this shift</button>
       <button class="text-button" id="resultDetailsButton" type="button" aria-haspopup="dialog">See the shift report</button>
     </div>
   </section>
@@ -185,36 +198,12 @@
     <div class="dialog-scroll">
       <p class="dialog-intro" id="detailsIntro">The northbound Express lane is the highest-consequence issue in the network.</p>
 
-      <dl class="detail-metrics">
-        <div><dt>Time</dt><dd id="detailTime">17:42</dd></div>
-        <div><dt>On time</dt><dd id="detailService">91%</dd></div>
-        <div><dt>At risk</dt><dd id="detailRisk">18 parcels</dd></div>
-        <div><dt>Departure</dt><dd id="detailDeparture">18:20</dd></div>
-      </dl>
-
-      <section class="dialog-section" aria-labelledby="laneTableTitle">
-        <h3 id="laneTableTitle">Terminal lanes</h3>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th scope="col">Lane</th><th scope="col">Load</th><th scope="col">Crew</th><th scope="col">State</th></tr></thead>
-            <tbody>
-              <tr><th scope="row">Inbound scan</th><td>48%</td><td>2</td><td>Stable</td></tr>
-              <tr><th scope="row">Express A</th><td id="detailExpressLoad">92%</td><td id="detailExpressCrew">4</td><td id="detailExpressState">Overloaded</td></tr>
-              <tr><th scope="row">Standard B</th><td id="detailStandardLoad">43%</td><td id="detailStandardCrew">6</td><td id="detailStandardState">Spare capacity</td></tr>
-              <tr><th scope="row">Outbound</th><td>61%</td><td>2</td><td>Stable</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="dialog-section" aria-labelledby="caseDetailTitle">
-        <h3 id="caseDetailTitle">Selected parcel</h3>
-        <p id="detailCase">No parcel selected. Blue floor markers identify Express service; yellow markers identify Standard service.</p>
-      </section>
+      <dl class="detail-metrics" id="detailMetrics"></dl>
+      <div id="detailScenario"></div>
 
       <details class="help-disclosure">
         <summary>How to play</summary>
-        <p>Tap highlighted objects in the 3D world or use the large action buttons below it. Pause whenever you need more time. Terminal, Network and Parcel views always expose the same shift state.</p>
+        <p>Tap highlighted objects in the miniature world or use the matching large action below it. The first shift introduces one action at a time. Later shifts let you pause, inspect and choose between trade-offs.</p>
       </details>
 
       <details class="help-disclosure">
@@ -224,7 +213,7 @@
 
       <details class="help-disclosure">
         <summary>Credits</summary>
-        <p>3D models and interface sounds are from Kenney asset packs under CC0. POSTAL is an original fictional game and does not reproduce any real operator network.</p>
+        <p>3D models are from Kenney asset packs under CC0. The warm interface tones are synthesized in the browser. POSTAL is an original fictional game and does not reproduce any real operator network.</p>
       </details>
     </div>
   </dialog>
@@ -232,6 +221,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
   <div class="sr-only" id="assertiveLive" aria-live="assertive" aria-atomic="true"></div>
 
-  <script type="module" src="./main.mjs?build=20260805-visual-game-r1"></script>
+  <script type="module" src="./main.mjs?build=20260805-campaign-r3"></script>
 </body>
 </html>

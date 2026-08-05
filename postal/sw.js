@@ -1,4 +1,4 @@
-const CACHE_NAME = 'postal-visual-game-20260805-r2';
+const CACHE_NAME = 'postal-campaign-20260805-r3';
 const CORE_ASSETS = [
   './',
   './index.html',
