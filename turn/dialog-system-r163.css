@@ -1,0 +1,152 @@
+/*
+ * TURN dialog system
+ *
+ * Normative anatomy:
+ * dialog.turn-dialog
+ *   article.turn-dialog__surface
+ *     header.turn-dialog__header
+ *     .turn-dialog__body
+ *     .turn-dialog__actions (optional)
+ *
+ * Size is a content decision, not an ad-hoc width:
+ * compact · standard · wide · reader
+ */
+
+:where(.m8-dialog) {
+  --turn-dialog-inline-size: min(1040px, calc(100vw - 32px));
+  --turn-dialog-block-size: calc(100vh - 32px);
+  --turn-dialog-block-size: calc(100dvh - 32px);
+  --turn-dialog-padding: clamp(18px, 3vw, 34px);
+  --turn-dialog-radius: var(--turn-radius-hero, 30px);
+  --turn-dialog-border: var(--turn-border-strong, 6px);
+  --turn-dialog-shadow: var(--turn-shadow-hero, 12px 12px 0 var(--turn-ink, #08090a));
+  width: var(--turn-dialog-inline-size);
+  max-width: none;
+  max-height: none;
+}
+
+:where(.m8-dialog-card) {
+  box-sizing: border-box;
+  max-height: var(--turn-dialog-block-size);
+  padding: var(--turn-dialog-padding);
+  border-width: var(--turn-dialog-border);
+  border-radius: var(--turn-dialog-radius);
+  box-shadow: var(--turn-dialog-shadow);
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.turn-dialog--compact {
+  --turn-dialog-inline-size: min(660px, calc(100vw - 32px));
+}
+
+.turn-dialog--standard {
+  --turn-dialog-inline-size: min(760px, calc(100vw - 32px));
+}
+
+.turn-dialog--wide {
+  --turn-dialog-inline-size: min(1040px, calc(100vw - 32px));
+}
+
+.turn-dialog--reader {
+  --turn-dialog-inline-size: calc(100vw - 24px);
+  --turn-dialog-block-size: calc(100vh - 24px);
+  --turn-dialog-block-size: calc(100dvh - 24px);
+  --turn-dialog-padding: clamp(16px, 2.4vw, 28px);
+}
+
+.turn-dialog__surface {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.turn-dialog__header {
+  flex: 0 0 auto;
+}
+
+.turn-dialog__body {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
+}
+
+.turn-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.turn-dialog--reader .turn-dialog__surface {
+  height: var(--turn-dialog-block-size);
+  overflow: hidden;
+}
+
+.turn-dialog--reader .turn-dialog__header {
+  margin-bottom: clamp(12px, 2vh, 20px);
+}
+
+.turn-dialog--reader .turn-dialog__body {
+  flex: 1 1 auto;
+}
+
+/* Existing production dialogs mapped to the normative size scale. */
+.m8-about-dialog,
+.turn-motion-denied-dialog {
+  --turn-dialog-inline-size: min(660px, calc(100vw - 32px));
+}
+
+.m8-feedback-dialog,
+.audio-settings-dialog {
+  --turn-dialog-inline-size: min(760px, calc(100vw - 32px));
+}
+
+.m8-how-dialog,
+.m8-settings-dialog,
+.turn-achievements-dialog,
+.turn-dbe-training-intro-dialog,
+.turn-dbe-training-part-dialog {
+  --turn-dialog-inline-size: min(1040px, calc(100vw - 32px));
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  :where(.m8-dialog) {
+    --turn-dialog-block-size: calc(100vh - 16px);
+    --turn-dialog-block-size: calc(100dvh - 16px);
+    --turn-dialog-padding: 16px 20px max(16px, env(safe-area-inset-bottom));
+  }
+
+  .turn-dialog--reader {
+    --turn-dialog-inline-size: calc(100vw - 12px);
+    --turn-dialog-block-size: calc(100vh - 12px);
+    --turn-dialog-block-size: calc(100dvh - 12px);
+  }
+
+  :where(.m8-dialog-head h2) {
+    font-size: clamp(1.65rem, 5vw, 2.8rem);
+  }
+
+  :where(.m8-dialog-head > button) {
+    width: 46px;
+    height: 46px;
+  }
+}
+
+@media (max-width: 760px) and (orientation: portrait) {
+  :where(.m8-dialog) {
+    --turn-dialog-inline-size: calc(100vw - 20px);
+    --turn-dialog-block-size: calc(100vh - 20px);
+    --turn-dialog-block-size: calc(100dvh - 20px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .turn-dialog,
+  .turn-dialog * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
