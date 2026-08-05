@@ -14,7 +14,9 @@ const BELLA_HEIGHT = 5.2;
 const BELLA_SCALE = 0.58;
 const BELLA_PERCH_HEIGHT = 8.25;
 const BELLA_EYE_SPACING_RATIO = 0.17;
-const BELLA_EYE_HEIGHT_RATIO = 0.6;
+const BELLA_EYE_HEIGHT_RATIO = 0.53;
+const BELLA_EYE_RADIUS_RATIO = 0.092;
+const BELLA_EYE_MIN_RADIUS = 0.26;
 const REQUIRED_VEHICLE_ID = 'firetruck';
 const DISCOVERY_DISTANCE = 76;
 const DISCOVERY_DISTANCE_SQUARED = DISCOVERY_DISTANCE * DISCOVERY_DISTANCE;
@@ -183,7 +185,7 @@ function eyeGradientMaterial() {
 function addBellaEyes(holder, bounds) {
   const size = bounds.getSize(new THREE.Vector3());
   const center = bounds.getCenter(new THREE.Vector3());
-  const eyeRadius = Math.max(size.x * 0.078, 0.22);
+  const eyeRadius = Math.max(size.x * BELLA_EYE_RADIUS_RATIO, BELLA_EYE_MIN_RADIUS);
   const eyeSpacing = size.x * BELLA_EYE_SPACING_RATIO;
   const eyeY = bounds.min.y + size.y * BELLA_EYE_HEIGHT_RATIO;
   const eyeZ = bounds.min.z - size.z * 0.018;
@@ -398,7 +400,7 @@ export async function installCountrysideBella({ world, samples, trackWidth, runt
   world.userData.turnBellaDiscovery = Object.freeze({
     model: 'Kenney Cube Pets animal-cat',
     palette: 'Bella cream, seal brown and white paws; exact #F4EADA / #382C1F coat; #44CCFF gradient eyes',
-    eyePlacement: 'lowered to 60% of model height and separated to 17% of model width per side',
+    eyePlacement: 'lowered to 53% of model height, separated to 17% of model width per side and enlarged by about 18%',
     facing: 'Kenney source rotated 180 degrees before coat masking and eye placement',
     rescueScene: 'Bella perched clearly above a dedicated branch with visibly green leaves',
     requiredVehicle: 'Fire Truck',
