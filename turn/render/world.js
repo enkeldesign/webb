@@ -10,13 +10,14 @@ function moduleUrl(relativePath) {
 }
 
 async function loadWorldModules() {
-  const [beauty, art, identity, intensity, bella, bellaFinal] = await Promise.all([
+  const [beauty, art, identity, intensity, bella, bellaFinal, bellaRescue] = await Promise.all([
     import(moduleUrl('../world-beauty.js')),
     import(moduleUrl('../world-art-pass.js')),
     import(moduleUrl('../track-identity.js')),
     import(moduleUrl('../section-intensity.js')),
-    import(moduleUrl('../tracks/countryside-bella-r166.js?revision=r168-bella-markings-eyes-foliage-r169-facing-palette-r170-eye-placement-r171-cute-eyes-r172-final-tune')),
-    import(moduleUrl('../tracks/countryside-bella-final-r172.js?revision=r172-final-tune'))
+    import(moduleUrl('../tracks/countryside-bella-r166.js?revision=r168-bella-markings-eyes-foliage-r169-facing-palette-r170-eye-placement-r171-cute-eyes-r172-final-tune-r173-rescue')),
+    import(moduleUrl('../tracks/countryside-bella-final-r172.js?revision=r172-final-tune-r173-rescue')),
+    import(moduleUrl('../tracks/countryside-bella-rescue-r173.js?revision=r173-ground-and-meow'))
   ]);
 
   return {
@@ -25,7 +26,8 @@ async function loadWorldModules() {
     installTrackIdentity: identity.installTrackIdentity,
     installSectionIntensity: intensity.installSectionIntensity,
     installCountrysideBella: bella.installCountrysideBella,
-    applyBellaFinalVisuals: bellaFinal.applyBellaFinalVisuals
+    applyBellaFinalVisuals: bellaFinal.applyBellaFinalVisuals,
+    installBellaRescueBehavior: bellaRescue.installBellaRescueBehavior
   };
 }
 
@@ -99,7 +101,8 @@ async function install(runtime) {
       installTrackIdentity,
       installSectionIntensity,
       installCountrysideBella,
-      applyBellaFinalVisuals
+      applyBellaFinalVisuals,
+      installBellaRescueBehavior
     } = await loadWorldModules();
 
     // Compatibility helper retained from the previous world tuning layer.
@@ -118,7 +121,10 @@ async function install(runtime) {
     installTrackIdentity({ world, samples: worldSamples, trackWidth });
     installSectionIntensity({ world, samples: worldSamples, trackWidth });
     installCountrysideBella({ world, samples: worldSamples, trackWidth, runtime })
-      .then(applyBellaFinalVisuals)
+      .then((bellaRoot) => {
+        applyBellaFinalVisuals(bellaRoot);
+        installBellaRescueBehavior({ root: bellaRoot, runtime });
+      })
       .catch((error) => {
         console.warn('TURN: Bella discovery failed, keeping the rest of Countryside.', error);
       });
