@@ -3,13 +3,16 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const root = new URL('../', import.meta.url);
-const [html, main, sim, world, styles, worker] = await Promise.all([
+const [html, main, sim, world, styles, worker, managementSim, managementUi, managementStyles] = await Promise.all([
   readFile(new URL('index.html', root), 'utf8'),
   readFile(new URL('main.mjs', root), 'utf8'),
   readFile(new URL('sim.mjs', root), 'utf8'),
   readFile(new URL('world.mjs', root), 'utf8'),
   readFile(new URL('styles.css', root), 'utf8'),
-  readFile(new URL('sw.js', root), 'utf8')
+  readFile(new URL('sw.js', root), 'utf8'),
+  readFile(new URL('management-sim.mjs', root), 'utf8'),
+  readFile(new URL('management-ui.mjs', root), 'utf8'),
+  readFile(new URL('management.css', root), 'utf8')
 ]);
 
 test('every JavaScript ID selector has a matching unique HTML element', () => {
@@ -69,6 +72,33 @@ test('fresh-player onboarding remains guided while the live command deck has no 
   assert.match(styles, /\.command-content\[data-layout="live"\]/);
 });
 
+test('teams and vehicles have a compact semantic planner and matching assignments affect work', () => {
+  assert.match(managementUi, /resource-plan-toggle/);
+  assert.match(managementUi, /data-resource-id/);
+  assert.match(managementUi, /Tap a resource to move it to the next lane or route/);
+  assert.match(managementStyles, /\.resource-roster[\s\S]*overflow-x: auto/);
+  assert.match(managementStyles, /\.resource-card\[data-busy="true"\]/);
+  assert.match(managementSim, /processingDurationWithPlan/);
+  assert.match(managementSim, /resource\.assignment === job\.target \? 0\.78 : 1\.22/);
+});
+
+test('regional and national trucks are direct canvas interactions with semantic alternatives', () => {
+  assert.match(managementUi, /ensureTruckHotspots/);
+  assert.match(managementUi, /world\.markInteractive\(truck, hotspotId\)/);
+  assert.match(managementUi, /world\.registerHotspot\(hotspotId/);
+  assert.match(managementUi, /postal-resource-activate/);
+  assert.match(managementSim, /resource-R1|`resource-\$\{shortId\}`/);
+});
+
+test('completed live shifts can close the report and continue into recurring overtime', () => {
+  assert.match(managementUi, /continueOperationsButton/);
+  assert.match(managementUi, /Keep operating/);
+  assert.match(managementSim, /continue-operations/);
+  assert.match(managementSim, /state\.overtime = true/);
+  assert.match(managementSim, /addOvertimeWave/);
+  assert.match(html, /After a report, keep operating for endless waves/);
+});
+
 test('runtime uses only short low-pass synthesized feedback', () => {
   assert.doesNotMatch(main, /new Audio\s*\(/);
   assert.doesNotMatch(main, /assets\/audio/);
@@ -121,9 +151,14 @@ test('portrait live controls are compact, horizontally scrollable and status-ind
   assert.match(styles, /\.parcel-deadline\[data-late="true"\]/);
   assert.match(styles, /\.game-shell\[data-play-mode="live"\] \.command-deck/);
   assert.match(styles, /@media \(max-height: 700px\)[\s\S]*data-play-mode="live"/);
+  assert.match(managementStyles, /@media \(max-height: 700px\)/);
 });
 
-test('new build markers bypass the previous campaign service worker cache', () => {
+test('new build markers and offline assets bypass the previous live cache', () => {
   assert.match(html, /build=20260805-live-r4/);
-  assert.match(worker, /postal-live-20260805-r4/);
+  assert.match(html, /build=20260806-management-r1/);
+  assert.match(worker, /postal-live-20260806-r5/);
+  assert.match(worker, /management-sim\.mjs/);
+  assert.match(worker, /management-ui\.mjs/);
+  assert.match(worker, /management\.css/);
 });
