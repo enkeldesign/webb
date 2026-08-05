@@ -20,6 +20,10 @@
   --turn-dialog-radius: var(--turn-radius-hero, 30px);
   --turn-dialog-border: var(--turn-border-strong, 6px);
   --turn-dialog-shadow: var(--turn-shadow-hero, 12px 12px 0 var(--turn-ink, #08090a));
+}
+
+/* The compound selector deliberately outranks the older .m8-dialog width. */
+.m8-dialog.turn-dialog {
   width: var(--turn-dialog-inline-size);
   max-width: none;
   max-height: none;
@@ -27,13 +31,17 @@
 
 :where(.m8-dialog-card) {
   box-sizing: border-box;
-  max-height: var(--turn-dialog-block-size);
   padding: var(--turn-dialog-padding);
   border-width: var(--turn-dialog-border);
   border-radius: var(--turn-dialog-radius);
   box-shadow: var(--turn-dialog-shadow);
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
+}
+
+/* Likewise, the normative surface owns the block-size contract. */
+.m8-dialog-card.turn-dialog__surface {
+  max-height: var(--turn-dialog-block-size);
 }
 
 .turn-dialog--compact {
