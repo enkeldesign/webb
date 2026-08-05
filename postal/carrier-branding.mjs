@@ -3,10 +3,10 @@ import { ShiftSimulation } from './sim.mjs';
 const PATCH_FLAG = Symbol.for('postal.carrierBrandingPatch');
 
 export const CARRIER_BRANDING = Object.freeze({
-  nordpost: Object.freeze({ name: 'NordPost', code: 'NP', tone: 'blue' }),
-  dlh: Object.freeze({ name: 'DLH', code: 'DLH', tone: 'yellow' }),
-  brang: Object.freeze({ name: 'Brang', code: 'B', tone: 'green' }),
-  usp: Object.freeze({ name: 'DB Stänker', code: 'DBS', tone: 'red' })
+  nordpost: Object.freeze({ name: 'NordPost', code: 'NP', tone: 'blue', color: '#00A6D6' }),
+  dlh: Object.freeze({ name: 'DLH', code: 'DLH', tone: 'yellow', color: '#FFCC00' }),
+  brang: Object.freeze({ name: 'Brang', code: 'B', tone: 'green', color: '#59B847' }),
+  usp: Object.freeze({ name: 'DB Stänker', code: 'DBS', tone: 'red', color: '#EC0016' })
 });
 
 export function applyCarrierBranding(job) {
@@ -39,6 +39,23 @@ function patchSimulation() {
   };
 }
 
+function installCarrierColors() {
+  if (document.querySelector('#postalCarrierColors')) return;
+  const style = document.createElement('style');
+  style.id = 'postalCarrierColors';
+  style.textContent = `
+    .parcel-batch[data-tone="blue"] .carrier-code,
+    .carrier-legend [data-tone="blue"] { background: ${CARRIER_BRANDING.nordpost.color} !important; color: #10131a; }
+    .parcel-batch[data-tone="yellow"] .carrier-code,
+    .carrier-legend [data-tone="yellow"] { background: ${CARRIER_BRANDING.dlh.color} !important; color: #10131a; }
+    .parcel-batch[data-tone="green"] .carrier-code,
+    .carrier-legend [data-tone="green"] { background: ${CARRIER_BRANDING.brang.color} !important; color: #10131a; }
+    .parcel-batch[data-tone="red"] .carrier-code,
+    .carrier-legend [data-tone="red"] { background: ${CARRIER_BRANDING.usp.color} !important; color: #fff; }
+  `;
+  document.head.append(style);
+}
+
 function updateCarrierLegends(root = document) {
   root.querySelectorAll?.('.carrier-legend').forEach((legend) => {
     const entries = [
@@ -60,6 +77,7 @@ function updateCarrierLegends(root = document) {
 patchSimulation();
 
 if (typeof document !== 'undefined') {
+  installCarrierColors();
   updateCarrierLegends();
   const observer = new MutationObserver((records) => {
     for (const record of records) {
