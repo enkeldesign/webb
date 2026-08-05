@@ -1853,3 +1853,388 @@ tbody tr:last-child td {
     forced-color-adjust: none;
   }
 }
+
+/* Live operations — the parcel batches are the game controls. */
+.operation-layer {
+  position: absolute;
+  z-index: 12;
+  right: 8px;
+  bottom: 8px;
+  left: 8px;
+  display: grid;
+  gap: 5px;
+  pointer-events: none;
+}
+
+.operation-layer[hidden],
+.operation-empty[hidden],
+.parcel-rack[hidden],
+.fallback-targets[hidden] {
+  display: none;
+}
+
+.operation-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 8px;
+  color: white;
+  filter: drop-shadow(0 2px 0 rgb(16 19 26 / 0.9));
+}
+
+.operation-head > div {
+  display: grid;
+}
+
+.operation-level {
+  font-size: 0.5rem;
+  font-weight: 1000;
+  letter-spacing: 0.12em;
+}
+
+.operation-head strong {
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.resource-chip {
+  padding: 4px 7px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: rgb(255 248 232 / 0.95);
+  color: var(--ink);
+  font-size: 0.55rem;
+  font-weight: 950;
+  filter: none;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.parcel-rack {
+  display: flex;
+  gap: 7px;
+  min-width: 0;
+  padding: 2px 4px 5px 1px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-color: var(--yellow) rgb(16 19 26 / 0.4);
+  pointer-events: auto;
+}
+
+.parcel-batch {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto 1fr auto;
+  width: 94px;
+  min-width: 94px;
+  height: 88px;
+  padding: 5px 6px 8px;
+  overflow: hidden;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: var(--paper-bright);
+  box-shadow: 3px 3px 0 var(--ink);
+  scroll-snap-align: start;
+  text-align: left;
+}
+
+.parcel-batch::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 7px;
+  border-bottom: 2px solid var(--ink);
+  background: var(--yellow);
+}
+
+.parcel-batch[data-tone="red"]::before { background: var(--red); }
+.parcel-batch[data-tone="green"]::before { background: var(--green); }
+.parcel-batch[data-tone="blue"]::before { background: var(--blue); }
+
+.parcel-batch[aria-pressed="true"] {
+  background: #e9e4ff;
+  outline: 4px solid var(--yellow);
+  outline-offset: -5px;
+  transform: translateY(-3px);
+}
+
+.parcel-batch[data-status="queued"] {
+  background: #fff1b8;
+}
+
+.parcel-batch[data-status="processing"] {
+  background: #d7f4df;
+}
+
+.parcel-batch[disabled] {
+  opacity: 0.92;
+  cursor: default;
+}
+
+.carrier-code {
+  z-index: 1;
+  grid-column: 1 / -1;
+  margin-top: 5px;
+  font-size: 0.5rem;
+  font-weight: 1000;
+  letter-spacing: 0.05em;
+}
+
+.parcel-cube {
+  position: relative;
+  display: block;
+  width: 28px;
+  height: 25px;
+  align-self: center;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  background: var(--yellow);
+  box-shadow: 2px 2px 0 rgb(16 19 26 / 0.28);
+}
+
+.parcel-cube::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 8px;
+  width: 7px;
+  height: 25px;
+  border-inline: 1px solid var(--ink);
+  background: var(--paper-bright);
+}
+
+.parcel-cube i {
+  position: absolute;
+  z-index: 1;
+  right: 2px;
+  bottom: 3px;
+  width: 7px;
+  height: 5px;
+  border: 1px solid var(--ink);
+  background: var(--paper-bright);
+}
+
+.parcel-cube[data-service="express"] {
+  background: var(--blue);
+}
+
+.parcel-route {
+  display: grid;
+  min-width: 0;
+  align-self: center;
+  justify-items: end;
+}
+
+.parcel-route strong {
+  font-size: 0.68rem;
+  font-weight: 1000;
+  line-height: 1;
+}
+
+.parcel-route small {
+  max-width: 48px;
+  overflow: hidden;
+  font-size: 0.48rem;
+  font-weight: 900;
+  text-overflow: ellipsis;
+}
+
+.parcel-deadline {
+  grid-column: 1 / -1;
+  justify-self: end;
+  font-size: 0.58rem;
+  font-weight: 1000;
+  font-variant-numeric: tabular-nums;
+}
+
+.parcel-deadline[data-late="true"] {
+  padding-inline: 3px;
+  background: var(--red);
+}
+
+.parcel-progress {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 5px;
+  border-top: 1px solid var(--ink);
+  background: var(--paper-dim);
+}
+
+.parcel-progress i {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--green-deep);
+  transition: width 120ms linear;
+}
+
+.operation-empty {
+  width: fit-content;
+  margin: 0;
+  padding: 7px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: rgb(121 226 159 / 0.94);
+  font-size: 0.65rem;
+  font-weight: 950;
+  box-shadow: 2px 2px 0 var(--ink);
+  pointer-events: none;
+}
+
+.fallback-targets {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+  padding: 2px 3px 5px 1px;
+  overflow-x: auto;
+  pointer-events: auto;
+}
+
+.fallback-targets button {
+  min-width: max-content;
+  min-height: 44px;
+  padding: 7px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper-bright);
+  font-size: 0.62rem;
+  font-weight: 1000;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.fallback-targets button[data-tone="blue"] { background: #d6f5ff; }
+.fallback-targets button[data-tone="yellow"] { background: #fff1a6; }
+.fallback-targets button[data-tone="green"],
+.fallback-targets button[data-tone="good"] { background: #cdf6d9; }
+.fallback-targets button[data-tone="danger"] { background: #ffd5ca; }
+
+.tab-count {
+  position: absolute;
+  top: 3px;
+  right: 11%;
+  display: grid;
+  min-width: 20px;
+  height: 20px;
+  place-items: center;
+  padding-inline: 3px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--yellow);
+  font-size: 0.52rem;
+  font-weight: 1000;
+  line-height: 1;
+}
+
+.tab-count[hidden] {
+  display: none;
+}
+
+.tab-count[data-danger="true"] {
+  background: var(--red);
+  animation: beacon-pulse 800ms ease-in-out infinite alternate;
+}
+
+.game-shell[data-play-mode="live"] .command-deck {
+  min-height: 88px;
+  padding-block: 10px 8px;
+}
+
+.command-content[data-layout="live"] {
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 65px;
+  gap: 10px;
+}
+
+.command-content[data-layout="live"] .command-copy h1 {
+  font-size: clamp(0.92rem, 4vw, 1.14rem);
+}
+
+.command-content[data-layout="live"] .command-copy p {
+  margin-top: 3px;
+  font-size: 0.68rem;
+  -webkit-line-clamp: 1;
+}
+
+.command-content[data-layout="live"] .command-actions {
+  min-width: 82px;
+  justify-items: end;
+}
+
+.carrier-legend {
+  display: grid;
+  grid-template-columns: repeat(2, 33px);
+  gap: 4px;
+}
+
+.carrier-legend span {
+  display: grid;
+  height: 25px;
+  place-items: center;
+  border: 2px solid var(--ink);
+  border-radius: 7px;
+  background: var(--yellow);
+  font-size: 0.48rem;
+  font-weight: 1000;
+}
+
+.carrier-legend span[data-tone="red"] { background: var(--red); }
+.carrier-legend span[data-tone="green"] { background: var(--green); }
+.carrier-legend span[data-tone="blue"] { background: var(--blue); }
+
+.live-alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 7px;
+  border: 2px solid var(--ink);
+  border-radius: 9px;
+  background: #ffd5ca;
+  font-size: 0.58rem;
+  font-weight: 1000;
+}
+
+.live-alert > span {
+  display: grid;
+  width: 21px;
+  height: 21px;
+  place-items: center;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--red);
+}
+
+.shift-card[disabled] {
+  opacity: 0.56;
+  filter: grayscale(0.5);
+  box-shadow: none;
+}
+
+@media (max-height: 700px) {
+  .game-shell[data-play-mode="live"] .command-deck {
+    min-height: 76px;
+    padding-block: 7px 6px;
+  }
+
+  .command-content[data-layout="live"] {
+    min-height: 58px;
+  }
+
+  .parcel-batch {
+    width: 88px;
+    min-width: 88px;
+    height: 80px;
+  }
+}
+
+@media (forced-colors: active) {
+  .parcel-batch,
+  .resource-chip,
+  .tab-count {
+    forced-color-adjust: none;
+  }
+}
