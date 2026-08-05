@@ -1,0 +1,186 @@
+.operation-head {
+  flex-wrap: wrap;
+}
+
+.resource-plan-toggle {
+  min-height: 36px;
+  margin-left: auto;
+  padding: 6px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--blue);
+  box-shadow: 2px 2px 0 var(--ink);
+  font-size: 0.7rem;
+  font-weight: 950;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.resource-plan-toggle[aria-expanded="true"] {
+  background: var(--yellow);
+  box-shadow: 1px 1px 0 var(--ink);
+  transform: translate(1px, 1px);
+}
+
+.resource-planner {
+  margin: 8px 0 5px;
+  padding: 9px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-small);
+  background: rgb(255 253 245 / 0.96);
+  box-shadow: var(--shadow-small);
+}
+
+.resource-planner[hidden],
+.resource-plan-toggle[hidden],
+.management-board-button[hidden],
+#continueOperationsButton[hidden] {
+  display: none;
+}
+
+.resource-planner-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 7px;
+}
+
+.resource-planner-head div {
+  display: grid;
+  gap: 1px;
+}
+
+.resource-planner-head span,
+.resource-planner-head p {
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 850;
+  line-height: 1.15;
+}
+
+.resource-planner-head span {
+  color: var(--purple);
+  letter-spacing: 0.08em;
+}
+
+.resource-planner-head strong {
+  font-size: 0.88rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.resource-planner-head p {
+  max-width: 190px;
+  color: rgb(16 19 26 / 0.72);
+  text-align: right;
+}
+
+.resource-roster {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 1px 1px 4px;
+  scrollbar-width: thin;
+}
+
+.resource-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-width: 154px;
+  min-height: 54px;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 8px;
+  border: 2px solid var(--ink);
+  border-radius: 11px;
+  background: var(--paper-bright);
+  box-shadow: 2px 2px 0 var(--ink);
+  text-align: left;
+}
+
+.resource-card[data-busy="true"] {
+  background: color-mix(in srgb, var(--orange) 28%, var(--paper-bright));
+}
+
+.resource-card:active {
+  box-shadow: none;
+  transform: translate(2px, 2px);
+}
+
+.resource-card-icon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--yellow);
+  font-size: 0.9rem;
+}
+
+.resource-card-copy {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+
+.resource-card-copy strong,
+.resource-card-copy span,
+.resource-card-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resource-card-copy strong {
+  font-size: 0.78rem;
+}
+
+.resource-card-copy span {
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.resource-card-copy small {
+  color: rgb(16 19 26 / 0.68);
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.resource-card-cycle {
+  font-size: 1.1rem;
+  font-weight: 950;
+}
+
+.management-board-button span {
+  font-size: 1.1rem;
+}
+
+.result-card #continueOperationsButton {
+  width: 100%;
+}
+
+@media (max-height: 700px) {
+  .resource-planner {
+    margin-top: 5px;
+    padding: 6px;
+  }
+
+  .resource-planner-head p {
+    display: none;
+  }
+
+  .resource-card {
+    min-width: 138px;
+    min-height: 46px;
+    padding: 5px 7px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resource-plan-toggle,
+  .resource-card {
+    transition: none;
+  }
+}
