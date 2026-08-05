@@ -4,7 +4,9 @@ import fs from 'node:fs/promises';
 const [
   productionEntry,
   nextEntry,
+  bootstrapEntry,
   bootstrap,
+  browserInstallCss,
   content,
   dialogCss,
   historyCss,
@@ -15,6 +17,8 @@ const [
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/about-history-bootstrap.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/ui/about-history-bootstrap-r165.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/browser-install-r165.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/content/about-history.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/dialog-system-r163.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/about-history-r163.css', import.meta.url), 'utf8'),
@@ -23,17 +27,44 @@ const [
   fs.readFile(new URL('../turn/design-navigation.css', import.meta.url), 'utf8')
 ]);
 
-for (const entry of [productionEntry, nextEntry]) {
-  assert.match(entry, /about-history-bootstrap\.js\?revision=r164-design-navigation/,
-    'Production and TURN NEXT must load the same refreshed About history enhancement');
-}
+assert.match(productionEntry, /about-history-bootstrap-r165\.js\?revision=r165-browser-about/,
+  'The public website must load the browser-aware About implementation directly');
+assert.ok(
+  productionEntry.indexOf('about-history-bootstrap-r165.js') < productionEntry.indexOf('./app.js?build='),
+  'Website About must load before the game module waits for explicit browser launch'
+);
+assert.match(nextEntry, /about-history-bootstrap\.js\?revision=r164-design-navigation/,
+  'TURN NEXT may continue through the stable shared About entry module');
+assert.match(bootstrapEntry, /about-history-bootstrap-r165\.js\?revision=r165-browser-about/,
+  'The stable About entry must route to the browser-aware implementation');
+
+assert.match(productionEntry, /href="\.\/browser-install-r165\.css\?revision=r165-browser-about"/);
+assert.match(productionEntry, /id="installAboutButton"[\s\S]*aria-haspopup="dialog"[\s\S]*>ABOUT TURN<\/button>/);
+assert.match(productionEntry, /id="installTurnButton"[\s\S]*id="installNote"[\s\S]*id="playBrowserButton"/,
+  'Install, recommendation and browser-play controls must appear in the requested order');
+assert.match(productionEntry, /Install TURN as a home screen web app for the best fullscreen experience\. You can also play here, but it is not recommended\./);
 
 assert.match(bootstrap, /CHANGELOG[\s\S]*CURRENT_RELEASE[\s\S]*DEVELOPMENT_HISTORY/);
+assert.match(bootstrap, /const INSTALL_NOTE[\s\S]*Install TURN as a home screen web app for the best fullscreen experience\. You can also play here, but it is not recommended\./);
+assert.match(bootstrap, /function installWebsiteAbout\(\)/);
+assert.match(bootstrap, /id = 'installAboutButton'/);
+assert.match(bootstrap, /aria-haspopup', 'dialog'/);
+assert.match(bootstrap, /className = 'm8-dialog m8-about-dialog install-about-dialog'/);
+assert.match(bootstrap, /aria-labelledby', 'turnWebsiteAboutTitle'/);
+assert.match(bootstrap, /<h2 id="turnWebsiteAboutTitle">ABOUT TURN<\/h2>/);
+assert.match(bootstrap, /actions\.append\(installButton, note, browserButton\)/,
+  'The browser-only note must sit between Install TURN and Play in browser anyway');
+assert.match(bootstrap, /trigger\.addEventListener\('click', \(\) => openDialog\(aboutDialog, trigger\)\)/);
+assert.match(bootstrap, /aboutDialog\.addEventListener\('close', restoreTrigger\)/,
+  'Closing website About must return focus to the version-strip trigger');
+assert.doesNotMatch(bootstrap, /__turnStartBrowserGame|turn-browser-play|releaseBrowserLaunch/,
+  'Opening or closing website About must never release the browser game launch gate');
+
 assert.match(bootstrap, /className = 'm8-dialog turn-dialog turn-dialog--reader turn-history-dialog'/);
-assert.match(bootstrap, /aria-labelledby', 'turnHistoryTitle'/);
+assert.match(bootstrap, /scope === 'website' \? 'turnWebsiteHistory' : 'turnHistory'/);
 assert.match(bootstrap, /role="tablist" aria-label="TURN history sections"/);
-assert.match(bootstrap, /role="tab"[\s\S]*aria-selected="true"[\s\S]*aria-controls="turnHistoryDevelopmentPanel"/);
-assert.match(bootstrap, /role="tabpanel"[\s\S]*aria-labelledby="turnHistoryDevelopmentTab"/);
+assert.match(bootstrap, /role="tab"[\s\S]*aria-selected="true"/);
+assert.match(bootstrap, /role="tabpanel"/);
 assert.match(bootstrap, /event\.key === 'ArrowRight'/);
 assert.match(bootstrap, /event\.key === 'ArrowLeft'/);
 assert.match(bootstrap, /event\.key === 'Home'/);
@@ -48,10 +79,21 @@ assert.match(bootstrap, /HISTORY &amp; CHANGELOG/);
 assert.match(bootstrap, /href="\/turn\/design\.html"/,
   'The About action must open the main TURN design system');
 assert.match(bootstrap, />DESIGN SYSTEM<\/a>/);
+assert.match(bootstrap, /installStylesheet\('\.\.\/m8-home\.css/);
 assert.match(bootstrap, /installStylesheet\('\.\.\/dialog-system-r163\.css/);
 assert.match(bootstrap, /installStylesheet\('\.\.\/about-history-r163\.css/);
+assert.match(bootstrap, /installStylesheet\('\.\.\/browser-install-r165\.css/);
 assert.doesNotMatch(bootstrap, /setInterval|@keyframes|animation:/,
   'History and dialog behaviour must not add timing loops or decorative animation');
+
+assert.match(browserInstallCss, /html\.turn-browser:not\(\.turn-browser-launched\)[\s\S]*overflow-x: clip/);
+assert.match(browserInstallCss, /\.install-gate[\s\S]*justify-items: center[\s\S]*overflow-x: clip/);
+assert.match(browserInstallCss, /\.install-shell[\s\S]*width: min\(920px, 100%\)/);
+assert.match(browserInstallCss, /\.install-shell[\s\S]*grid-template-columns: minmax\(0, 0\.75fr\) minmax\(0, 1\.25fr\)/);
+assert.match(browserInstallCss, /\.install-art,[\s\S]*\.install-card[\s\S]*min-width: 0/);
+assert.match(browserInstallCss, /\.install-guide-card[\s\S]*width: min\(560px, 100%\)/);
+assert.match(browserInstallCss, /\.install-about-trigger[\s\S]*text-decoration: underline/);
+assert.match(browserInstallCss, /@media \(max-height: 500px\) and \(orientation: landscape\)[\s\S]*minmax\(0, 1fr\)/);
 
 const historyEntries = (content.match(/period:/g) || []).length;
 const changelogDays = (content.match(/date:/g) || []).length;
@@ -120,4 +162,4 @@ assert.match(designNavigation, /\.design-page-nav a\[aria-current='page'\]/);
 assert.match(designNavigation, /\.section-nav\.design-section-nav/);
 assert.match(designNavigation, /prefers-reduced-motion: reduce/);
 
-console.log('TURN About history, changelog, dialog system and design-system navigation regression passed.');
+console.log('TURN website About, history, dialog system and design-system navigation regression passed.');

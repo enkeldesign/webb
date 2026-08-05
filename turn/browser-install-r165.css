@@ -1,0 +1,149 @@
+/* Browser installation page refinements and website-only About trigger. */
+
+html.turn-browser:not(.turn-browser-launched),
+html.turn-browser:not(.turn-browser-launched) body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.install-gate {
+  box-sizing: border-box;
+  justify-items: center;
+  overflow-x: clip;
+  overflow-y: auto;
+}
+
+.install-shell {
+  box-sizing: border-box;
+  width: min(920px, 100%);
+  max-width: 100%;
+  min-width: 0;
+  margin-inline: auto;
+  padding: 0 14px 14px;
+  grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
+}
+
+.install-art,
+.install-card {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.install-card {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.install-icon {
+  max-width: 100%;
+}
+
+.install-kicker {
+  display: inline-flex;
+  max-width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.36em;
+  line-height: 1.25;
+}
+
+.install-kicker-separator {
+  opacity: 0.72;
+}
+
+.install-about-trigger {
+  appearance: none;
+  min-height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  box-shadow: none;
+  font: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.16em;
+  text-transform: inherit;
+}
+
+.install-about-trigger:hover {
+  transform: none;
+}
+
+.install-about-trigger:active {
+  transform: none;
+  box-shadow: none;
+}
+
+.install-about-trigger:focus-visible {
+  outline: 4px solid var(--turn-form-control-focus, var(--cyan));
+  outline-offset: 4px;
+}
+
+.install-actions {
+  align-items: stretch;
+}
+
+.install-actions .install-note {
+  margin: 4px auto 0;
+  max-width: 52ch;
+  min-height: 0;
+  text-align: center;
+}
+
+.install-actions .install-secondary {
+  justify-self: center;
+  width: fit-content;
+  min-height: 44px;
+  margin-top: 0;
+}
+
+.install-guide {
+  box-sizing: border-box;
+  overflow-x: clip;
+}
+
+.install-guide-card {
+  width: min(560px, 100%);
+  max-width: 100%;
+}
+
+.install-about-dialog {
+  z-index: 2200;
+}
+
+@media (orientation: portrait) {
+  .install-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .install-card {
+    margin-inline: auto;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .install-shell {
+    grid-template-columns: minmax(120px, 150px) minmax(0, 1fr);
+    gap: clamp(18px, 3vw, 26px);
+  }
+
+  .install-actions .install-note {
+    font-size: 0.68rem;
+  }
+}
+
+@media (max-width: 620px) {
+  .install-shell {
+    padding-inline: 8px;
+  }
+
+  .install-kicker {
+    justify-content: center;
+  }
+}
