@@ -8,14 +8,23 @@ const BELLA_MODEL_URL =
   'https://cdn.jsdelivr.net/gh/satoLG/defend_the_crystal@99136ff0d498d327d912528be5c1931d24d6a8d1/apps/web/public/models/pets/animal-cat.glb';
 const BELLA_SAMPLE_INDEX = 500;
 const BELLA_SIDE = -1;
-const BELLA_DISTANCE_FROM_ROAD = 48;
-const BELLA_TANGENT_OFFSET = 8;
+const BELLA_DISTANCE_FROM_ROAD = 42;
+const BELLA_TANGENT_OFFSET = 18;
 const BELLA_HEIGHT = 5.2;
+const BELLA_PERCH_HEIGHT = 8.25;
 const REQUIRED_VEHICLE_ID = 'firetruck';
-const DISCOVERY_DISTANCE = 58;
+const DISCOVERY_DISTANCE = 76;
 const DISCOVERY_DISTANCE_SQUARED = DISCOVERY_DISTANCE * DISCOVERY_DISTANCE;
-const DISCOVERY_VIEW_DOT = 0.58;
+const DISCOVERY_VIEW_DOT = 0.55;
 const DISCOVERY_HOLD_MS = 650;
+
+const BELLA_PALETTE = Object.freeze({
+  cream: 0xe8d9bd,
+  sealBrown: 0x5a3828,
+  paws: 0xf7f2e7,
+  eyes: 0x4aa8ff,
+  pupils: 0x090b0e
+});
 
 const loader = new GLTFLoader();
 let sourcePromise = null;
@@ -44,7 +53,7 @@ function outlinedPrimitive(geometry, fillMaterial, outlineScale = 1.065) {
 }
 
 function recolorSourceModel(scene) {
-  const cream = new THREE.Color(0xe8d9bd);
+  const cream = new THREE.Color(BELLA_PALETTE.cream);
   scene.traverse((node) => {
     if (!node.isMesh && !node.isSkinnedMesh) return;
     const sourceMaterials = Array.isArray(node.material) ? node.material : [node.material];
@@ -76,17 +85,32 @@ function normalizeCat(scene) {
   return scene;
 }
 
-function addBellaMarkings(holder) {
-  const dark = material(0x241d1b);
-  const white = material(0xf7f2e7);
+function addBellaEyes(holder) {
+  const blue = material(BELLA_PALETTE.eyes, 0.48);
+  const black = material(BELLA_PALETTE.pupils, 0.62);
+  for (const x of [-0.48, 0.48]) {
+    const iris = outlinedPrimitive(new THREE.BoxGeometry(0.34, 0.28, 0.12), blue, 1.035);
+    iris.position.set(x, 4.08, 1.43);
+    holder.add(iris);
 
-  const face = outlinedPrimitive(new THREE.BoxGeometry(1.65, 1.35, 0.42), dark, 1.045);
-  face.position.set(0, 3.82, 1.13);
+    const pupil = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.18, 0.05), black);
+    pupil.position.set(x, 4.08, 1.51);
+    pupil.castShadow = true;
+    holder.add(pupil);
+  }
+}
+
+function addBellaMarkings(holder) {
+  const dark = material(BELLA_PALETTE.sealBrown);
+  const paws = material(BELLA_PALETTE.paws);
+
+  const face = outlinedPrimitive(new THREE.BoxGeometry(1.92, 1.55, 0.46), dark, 1.045);
+  face.position.set(0, 3.8, 1.16);
   holder.add(face);
 
-  for (const x of [-0.55, 0.55]) {
-    const ear = outlinedPrimitive(new THREE.ConeGeometry(0.42, 0.95, 4), dark, 1.055);
-    ear.position.set(x, 4.86, 0.92);
+  for (const x of [-0.58, 0.58]) {
+    const ear = outlinedPrimitive(new THREE.ConeGeometry(0.44, 1.02, 4), dark, 1.055);
+    ear.position.set(x, 4.9, 0.94);
     ear.rotation.y = Math.PI / 4;
     holder.add(ear);
   }
@@ -101,20 +125,22 @@ function addBellaMarkings(holder) {
     const leg = outlinedPrimitive(new THREE.BoxGeometry(0.62, 1.35, 0.62), dark, 1.045);
     leg.position.set(x, y, z);
     holder.add(leg);
-    const paw = outlinedPrimitive(new THREE.BoxGeometry(0.72, 0.38, 0.82), white, 1.045);
+    const paw = outlinedPrimitive(new THREE.BoxGeometry(0.72, 0.38, 0.82), paws, 1.045);
     paw.position.set(x, 0.28, z + 0.08);
     holder.add(paw);
   }
 
-  const tail = outlinedPrimitive(new THREE.BoxGeometry(0.54, 0.54, 2.7), dark, 1.05);
-  tail.position.set(-1.18, 1.45, -1.58);
+  const tail = outlinedPrimitive(new THREE.BoxGeometry(0.56, 0.56, 2.75), dark, 1.05);
+  tail.position.set(-1.18, 1.48, -1.58);
   tail.rotation.set(-0.34, 0.36, -0.18);
   holder.add(tail);
+
+  addBellaEyes(holder);
 }
 
 function createFallbackCat() {
   const holder = new THREE.Group();
-  const cream = material(0xe8d9bd);
+  const cream = material(BELLA_PALETTE.cream);
   const body = outlinedPrimitive(new THREE.BoxGeometry(2.55, 2.25, 3.05), cream);
   body.position.y = 2.05;
   holder.add(body);
@@ -124,20 +150,67 @@ function createFallbackCat() {
   return holder;
 }
 
+function createRescueTree() {
+  const tree = new THREE.Group();
+  tree.name = 'Bella rescue tree';
+  tree.userData.turnBellaRescueTree = true;
+
+  const bark = material(0x684027, 1);
+  const leafDark = material(0x1f653b, 1);
+  const leafLight = material(0x2f8750, 1);
+
+  const trunk = outlinedPrimitive(new THREE.CylinderGeometry(0.82, 1.15, 10.4, 7), bark, 1.035);
+  trunk.position.set(-1.9, 5.2, -0.9);
+  trunk.rotation.z = -0.05;
+  tree.add(trunk);
+
+  const branch = outlinedPrimitive(new THREE.CylinderGeometry(0.48, 0.7, 6.4, 7), bark, 1.035);
+  branch.position.set(0.45, 7.65, -0.22);
+  branch.rotation.z = Math.PI / 2 - 0.12;
+  tree.add(branch);
+
+  const rearBranch = outlinedPrimitive(new THREE.CylinderGeometry(0.38, 0.58, 4.2, 7), bark, 1.035);
+  rearBranch.position.set(-2.95, 8.35, -1.05);
+  rearBranch.rotation.z = -0.62;
+  tree.add(rearBranch);
+
+  const leafGeometry = new THREE.DodecahedronGeometry(1, 0);
+  const leafClusters = [
+    [-2.75, 10.75, -1.2, 2.65, leafDark],
+    [-4.45, 9.8, -0.95, 2.1, leafLight],
+    [-1.25, 12.35, -1.45, 2.05, leafLight],
+    [4.15, 10.75, -1.15, 2.15, leafDark]
+  ];
+  for (const [x, y, z, scale, fill] of leafClusters) {
+    const crown = outlinedPrimitive(leafGeometry, fill, 1.035);
+    crown.position.set(x, y, z);
+    crown.scale.set(scale, scale * 0.9, scale);
+    tree.add(crown);
+  }
+
+  return tree;
+}
+
 async function createBellaModel() {
-  const holder = new THREE.Group();
+  const root = new THREE.Group();
+  const cat = new THREE.Group();
   try {
     const gltf = await loadKenneyCat();
-    holder.add(normalizeCat(gltf.scene));
+    cat.add(normalizeCat(gltf.scene));
   } catch (error) {
     console.warn('TURN: Kenney Cube Pets cat could not load; using Bella fallback.', error);
-    holder.add(createFallbackCat());
+    cat.add(createFallbackCat());
   }
-  addBellaMarkings(holder);
-  holder.name = 'Countryside Bella · Kenney Cube Pets cat';
-  holder.userData.turnEasterEgg = 'save-bella';
-  holder.userData.turnBellaRequiredVehicle = REQUIRED_VEHICLE_ID;
-  return holder;
+  addBellaMarkings(cat);
+  cat.position.set(1.35, BELLA_PERCH_HEIGHT, 0.22);
+  cat.name = 'Bella perched on rescue branch';
+
+  root.add(createRescueTree(), cat);
+  root.name = 'Countryside Bella rescue · Kenney Cube Pets cat';
+  root.userData.turnEasterEgg = 'save-bella';
+  root.userData.turnBellaRequiredVehicle = REQUIRED_VEHICLE_ID;
+  root.userData.turnBellaFocus = cat;
+  return root;
 }
 
 function sampleAt(samples, index) {
@@ -153,7 +226,7 @@ function placeBella(model, samples, trackWidth) {
   const inward = sample.normal.clone().multiplyScalar(-BELLA_SIDE);
   model.rotation.y = Math.atan2(inward.x, inward.z);
   model.userData.turnBellaPlacement =
-    'south-west Countryside forest edge beside the trackside building near sample 500';
+    'perched visibly on a dedicated branch at the south-west Countryside forest edge near sample 500';
   return model;
 }
 
@@ -162,6 +235,7 @@ function armBellaDiscovery(model, runtime) {
     || model.getObjectByProperty('isSkinnedMesh', true);
   if (!renderAnchor) return false;
 
+  const bellaFocus = model.userData.turnBellaFocus || model;
   const bellaPosition = new THREE.Vector3();
   const cameraPosition = new THREE.Vector3();
   const cameraForward = new THREE.Vector3();
@@ -182,7 +256,7 @@ function armBellaDiscovery(model, runtime) {
       return;
     }
 
-    model.getWorldPosition(bellaPosition);
+    bellaFocus.getWorldPosition(bellaPosition);
     camera.getWorldPosition(cameraPosition);
     if (cameraPosition.distanceToSquared(bellaPosition) > DISCOVERY_DISTANCE_SQUARED) {
       discoveryStartedAt = null;
@@ -223,7 +297,8 @@ export async function installCountrysideBella({ world, samples, trackWidth, runt
   armBellaDiscovery(bella, runtime || globalThis.__turnRuntime);
   world.userData.turnBellaDiscovery = Object.freeze({
     model: 'Kenney Cube Pets animal-cat',
-    palette: 'Bella cream, seal brown and white paws',
+    palette: 'Bella cream, seal brown and white paws; blue eyes',
+    rescueScene: 'Bella perched clearly above a dedicated branch, clear of the trunk',
     requiredVehicle: 'Fire Truck',
     sampleIndex: BELLA_SAMPLE_INDEX,
     discoveryHoldMs: DISCOVERY_HOLD_MS
