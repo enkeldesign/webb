@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const root = new URL('../', import.meta.url);
-const [html, main, sim, world, styles, worker, managementSim, managementUi, managementStyles] = await Promise.all([
+const [html, main, sim, world, styles, worker, managementSim, managementUi, managementStyles, bootstrap, carrierBranding] = await Promise.all([
   readFile(new URL('index.html', root), 'utf8'),
   readFile(new URL('main.mjs', root), 'utf8'),
   readFile(new URL('sim.mjs', root), 'utf8'),
@@ -12,7 +12,9 @@ const [html, main, sim, world, styles, worker, managementSim, managementUi, mana
   readFile(new URL('sw.js', root), 'utf8'),
   readFile(new URL('management-sim.mjs', root), 'utf8'),
   readFile(new URL('management-ui.mjs', root), 'utf8'),
-  readFile(new URL('management.css', root), 'utf8')
+  readFile(new URL('management.css', root), 'utf8'),
+  readFile(new URL('bootstrap.mjs', root), 'utf8'),
+  readFile(new URL('carrier-branding.mjs', root), 'utf8')
 ]);
 
 test('every JavaScript ID selector has a matching unique HTML element', () => {
@@ -47,6 +49,26 @@ test('teams and vehicles have a dismissible semantic planner', () => {
   assert.match(managementUi, /closePlanner\(\{ restoreFocus: true \}\)/);
   assert.match(managementStyles, /\.resource-planner[\s\S]*position: fixed/);
   assert.match(managementSim, /processingDurationWithPlan/);
+});
+
+test('POSTAL starts core gameplay before the management controls install', () => {
+  const mainImport = bootstrap.indexOf("await import('./main.mjs?build=20260806-layout-r1')");
+  const managementImport = bootstrap.indexOf("await import('./management-ui.mjs?build=20260806-management-r2')");
+  assert.ok(mainImport >= 0);
+  assert.ok(managementImport > mainImport);
+  assert.match(html, /bootstrap\.mjs\?build=20260806-carriers-r1/);
+  assert.doesNotMatch(html, /<script type="module" src="\.\/main\.mjs/);
+  assert.doesNotMatch(html, /<script type="module" src="\.\/management-ui\.mjs/);
+});
+
+test('carrier branding matches the supplied fictional identities', () => {
+  assert.match(carrierBranding, /nordpost:[\s\S]*tone: 'blue'/);
+  assert.match(carrierBranding, /dlh:[\s\S]*tone: 'yellow'/);
+  assert.match(carrierBranding, /brang:[\s\S]*tone: 'green'/);
+  assert.match(carrierBranding, /usp:[\s\S]*name: 'DB Stänker'[\s\S]*code: 'DBS'[\s\S]*tone: 'red'/);
+  assert.match(carrierBranding, /updateCarrierLegends/);
+  assert.match(html, /DB Stänker brings larger national batches/);
+  assert.doesNotMatch(html, />USP</);
 });
 
 test('communication is separated from the 3D action area', () => {
@@ -94,9 +116,10 @@ test('no-WebGL mode preserves semantic controls', () => {
 });
 
 test('new build markers and offline assets bypass the previous cache', () => {
-  assert.match(html, /build=20260806-layout-r1/);
-  assert.match(html, /build=20260806-management-r2/);
-  assert.match(worker, /postal-live-20260806-r6/);
+  assert.match(html, /build=20260806-carriers-r1/);
+  assert.match(worker, /postal-live-20260806-r7/);
+  assert.match(worker, /bootstrap\.mjs/);
+  assert.match(worker, /carrier-branding\.mjs/);
   assert.match(worker, /management-ui\.mjs/);
   assert.match(worker, /management\.css/);
 });
