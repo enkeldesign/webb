@@ -1,0 +1,12 @@
+TURN — Bella source asset
+
+Asset: animal-cat.glb
+Collection: Cube Pets
+Creator: Kenney
+Official collection page: https://kenney.nl/assets/cube-pets
+License: CC0 1.0
+
+TURN loads a pinned copy of the cat model from:
+https://cdn.jsdelivr.net/gh/satoLG/defend_the_crystal@99136ff0d498d327d912528be5c1931d24d6a8d1/apps/web/public/models/pets/animal-cat.glb
+
+The model is recoloured and supplemented with simple geometry to resemble Bella. TURN includes a procedural fallback cat so the discovery remains available if the external model cannot be loaded.

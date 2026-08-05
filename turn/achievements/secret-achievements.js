@@ -1,5 +1,5 @@
-import { ACHIEVEMENTS, ICONS } from './catalog.js?revision=r157-hidden-achievements';
-import { takePendingSecretAchievementIds } from './secret-events.js?revision=r157-hidden-achievements';
+import { ACHIEVEMENTS, ICONS } from './catalog.js?revision=r166-bella-records';
+import { takePendingSecretAchievementIds } from './secret-events.js?revision=r166-bella-records';
 
 const HIDDEN_BY_ID = new Map(
   ACHIEVEMENTS.filter((achievement) => achievement.hidden)
@@ -26,7 +26,13 @@ function decorateHiddenCards(achievements) {
 
     const description = card.querySelector('.turn-achievement-copy p');
     const icon = card.querySelector('.turn-achievement-icon');
-    if (description) description.textContent = 'Hidden achievement. The title is your clue.';
+    const lockedDescription = Object.hasOwn(achievement, 'lockedDescription')
+      ? achievement.lockedDescription
+      : 'Hidden achievement. The title is your clue.';
+    if (description) {
+      if (lockedDescription) description.textContent = lockedDescription;
+      else description.remove();
+    }
     if (icon && ICONS.secret) icon.innerHTML = ICONS.secret;
     card.querySelectorAll('.turn-achievement-copy small, .turn-achievement-progress').forEach((node) => node.remove());
   }

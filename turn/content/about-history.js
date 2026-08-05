@@ -109,12 +109,12 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     period: '3–5 August',
     title: 'Achievements become Trophy Road',
     paragraphs: [
-      'An offline-first achievement collection grew from onboarding challenges into non-visual play, developer time trials, Police Car challenges and hidden discoveries.',
+      'An offline-first achievement collection grew from onboarding challenges into non-visual play, developer time trials, emergency-vehicle challenges, all-track rival and clean-driving goals, and hidden discoveries including Bella in Countryside.',
       'Points became permanent trophies. Trophy Road now unlocks Midnight City, Future Racer, Paintjob, the Emergency Pack and Monster Truck while grandfathering existing profiles.',
       'A serious Home-to-Lot freeze was eventually traced to a Paintjob MutationObserver that repeatedly changed the subtree it watched. The fix narrowed ownership and added a regression for the self-triggering pattern.'
     ],
     milestones: [
-      '25 achievements and 1,375 available trophies',
+      '28 achievements and 1,700 available trophies',
       'Persistent content rewards and legacy-player migration',
       'Critical observer-loop diagnosis and prevention'
     ]
@@ -124,12 +124,12 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     title: 'Current stabilization',
     paragraphs: [
       'TURN 1.5.0 added a branded loading cover, stable iOS Home sizing, compact Paintjob locking and new-achievement markers.',
-      'TURN 1.5.1 corrected Trophy Road’s initial reward card, transitions between 3D and line-art previews and the Paintjob lower rail. Later main-branch hotfixes colour the locked swatch from the selected car and dismiss stale vehicle-lock messaging.',
+      'TURN 1.5.1 corrected Trophy Road’s initial reward card, transitions between 3D and line-art previews and the Paintjob lower rail. Later main-branch hotfixes colour the locked swatch from the selected car, dismiss stale vehicle-lock messaging, publish the development history, standardize dialogs and improve the public installation page.',
       'The game is now in a refinement and hardening phase: five tracks, fifteen garage slots, local rivals, a mature non-visual audio system, assistive-technology navigation and persistent progression.'
     ],
     milestones: [
       'Canonical release: TURN 1.5.1 · 2026.08.05-r160',
-      'Post-r160 Paintjob and lock-toast fixes',
+      'Post-r160 interface, progression and achievement expansion',
       'Sixty-plus production regression gates plus DBE training tests'
     ]
   }
@@ -273,7 +273,8 @@ export const CHANGELOG = Object.freeze([
     date: '5 August',
     entries: [
       ['1.5.1 r160', 'Trophy Road initial-card and preview-transition fixes; Paintjob lower rail.'],
-      ['Post-r160', 'Car-coloured Paintjob lock, contrast-safe icon, stale vehicle-lock toast dismissal and “one oh one” screen-reader pronunciation for Drive By Ear 101.']
+      ['Post-r160 interface work', 'Car-coloured Paintjob lock, stale lock-toast dismissal, “one oh one” pronunciation, in-game history, normative dialogs, unified design-system navigation and website About.'],
+      ['Achievement expansion', 'Harder developer records, FIND LILYA!, FIND DARVID!, Fire Truck-only SAVE BELLA!, AN ARMY OF ME and ON COURSE, OF COURSE.']
     ]
   }
 ]);

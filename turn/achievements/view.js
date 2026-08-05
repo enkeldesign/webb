@@ -7,17 +7,17 @@ import {
   TRACK_NAMES,
   VEHICLE_NAMES,
   TRACK_IDS
-} from './catalog.js?revision=r157-hidden-achievements';
+} from './catalog.js?revision=r166-bella-records';
 import {
   TIME_TRIAL_ACHIEVEMENT_IDS
-} from './time-trials.js?revision=r153-trophy-road';
+} from './time-trials.js?revision=r166-bella-records';
 import {
   TROPHY_ICON,
   TROPHY_ROAD_MAX_THRESHOLD,
   TROPHY_ROAD_REWARDS,
   TROPHY_ROAD_REWARD_ICONS,
   getTrophyRoadReward
-} from '../progression/trophy-road.js?revision=r157-paint-monster';
+} from '../progression/trophy-road.js?revision=r166-bella-records';
 
 const TOAST_VISIBLE_MS = 3600;
 const ATTENTION_VISIBLE_MS = 900;
@@ -112,7 +112,7 @@ function installStylesheet() {
   const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
   const stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet';
-  stylesheet.href = `/turn/achievements.css?build=${buildKey}-r157-hidden-achievements`;
+  stylesheet.href = `/turn/achievements.css?build=${buildKey}-r166-bella-records`;
   stylesheet.setAttribute('data-turn-achievements', '');
   document.head.appendChild(stylesheet);
 }

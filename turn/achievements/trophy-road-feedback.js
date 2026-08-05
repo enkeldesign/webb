@@ -1,4 +1,4 @@
-import { CATEGORY } from './catalog.js?revision=r157-hidden-achievements';
+import { CATEGORY } from './catalog.js?revision=r166-bella-records';
 import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r160-reward-detail-sync';
 import {
   LOCK_ICON,
@@ -6,7 +6,7 @@ import {
   TROPHY_ROAD_REWARD_ICONS,
   TROPHY_ROAD_VIEWPORT_THRESHOLD,
   getTrophyRoadReward
-} from '../progression/trophy-road.js?revision=r157-paint-monster';
+} from '../progression/trophy-road.js?revision=r166-bella-records';
 
 const EDGE_PX = 34;
 const CATEGORY_FILTERS = Object.freeze([
@@ -33,7 +33,7 @@ function ensureFeedbackStylesheet() {
   if (!stylesheet) {
     stylesheet = document.createElement('link');
     stylesheet.rel = 'stylesheet';
-    stylesheet.href = `/turn/progression/trophy-road-r157.css?build=${buildKey}-r160-reward-detail-sync`;
+    stylesheet.href = `/turn/progression/trophy-road-r157.css?build=${buildKey}-r166-bella-records`;
     stylesheet.setAttribute('data-turn-trophy-road-feedback', '');
   }
   document.head.appendChild(stylesheet);

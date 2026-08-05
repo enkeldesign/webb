@@ -2,7 +2,7 @@ import {
   ACHIEVEMENTS,
   TRACK_IDS,
   getAchievement
-} from './catalog.js?revision=r157-hidden-achievements';
+} from './catalog.js?revision=r166-bella-records';
 import {
   TROPHY_ROAD_REWARDS,
   TROPHY_ROAD_STORAGE_KEY,
@@ -10,7 +10,7 @@ import {
   getTrophyRoadReward,
   grandfatheredRewardIdsForVersion,
   rewardIdsForTrophies
-} from '../progression/trophy-road.js?revision=r157-paint-monster';
+} from '../progression/trophy-road.js?revision=r166-bella-records';
 
 export const ACHIEVEMENT_STORAGE_KEY = TROPHY_ROAD_STORAGE_KEY;
 const STORAGE_VERSION = TROPHY_ROAD_STORAGE_VERSION;

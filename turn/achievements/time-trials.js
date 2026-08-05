@@ -2,37 +2,37 @@ export const TIME_TRIALS = Object.freeze([
   Object.freeze({
     id: 'countryside-sprint',
     trackId: 'countryside',
-    targetSeconds: 13,
+    targetSeconds: 12,
     title: 'COUNTRYSIDE SPRINT',
-    description: 'Finish Countryside in under 13 seconds.'
+    description: 'Finish Countryside in under 12 seconds.'
   }),
   Object.freeze({
     id: 'airport-sprint',
     trackId: 'airport',
-    targetSeconds: 20,
+    targetSeconds: 17,
     title: 'AIRPORT SPRINT',
-    description: 'Finish Airport in under 20 seconds.'
+    description: 'Finish Airport in under 17 seconds.'
   }),
   Object.freeze({
     id: 'cliffside-sprint',
     trackId: 'cliffside',
-    targetSeconds: 17,
+    targetSeconds: 16,
     title: 'CLIFFSIDE SPRINT',
-    description: 'Finish Cliffside in under 17 seconds.'
+    description: 'Finish Cliffside in under 16 seconds.'
   }),
   Object.freeze({
     id: 'harbor-sprint',
     trackId: 'harbor',
-    targetSeconds: 25,
+    targetSeconds: 24,
     title: 'HARBOR SPRINT',
-    description: 'Finish Harbor in under 25 seconds.'
+    description: 'Finish Harbor in under 24 seconds.'
   }),
   Object.freeze({
     id: 'midnight-sprint',
     trackId: 'midnight-city',
-    targetSeconds: 60,
+    targetSeconds: 55,
     title: 'MIDNIGHT SPRINT',
-    description: 'Finish Midnight City in under one minute.'
+    description: 'Finish Midnight City in under 55 seconds.'
   })
 ]);
 

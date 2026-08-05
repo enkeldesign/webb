@@ -125,7 +125,7 @@ export async function installM8HomeFixedLayout() {
   const trophyGate = installM8TrophyGate(globalThis.__turnNextHome);
 
   const { installAchievements } = await import(
-    `/turn/achievements.js?build=${buildKey}-r157-hidden-achievements`
+    `/turn/achievements.js?build=${buildKey}-r166-bella-records`
   );
   const achievements = installAchievements(globalThis.__turnRuntime);
   const { installAchievementUnreadMarkers } = await import(
@@ -133,11 +133,18 @@ export async function installM8HomeFixedLayout() {
   );
   const achievementUnreadMarkers = installAchievementUnreadMarkers(achievements);
   const { installSecretAchievements } = await import(
-    `/turn/achievements/secret-achievements.js?build=${buildKey}-r157-hidden-achievements`
+    `/turn/achievements/secret-achievements.js?build=${buildKey}-r166-bella-records`
   );
   const secretAchievements = installSecretAchievements(achievements);
+  const { installAchievementChallengeExpansion } = await import(
+    `/turn/achievements/challenge-expansion-r166.js?build=${buildKey}-r166-bella-records`
+  );
+  const achievementChallengeExpansion = installAchievementChallengeExpansion({
+    runtime: globalThis.__turnRuntime,
+    achievements
+  });
   const { installTrophyRoadFeedback } = await import(
-    `/turn/achievements/trophy-road-feedback.js?build=${buildKey}-r160-reward-detail-sync`
+    `/turn/achievements/trophy-road-feedback.js?build=${buildKey}-r166-bella-records`
   );
   const trophyRoadFeedback = installTrophyRoadFeedback(achievements);
 
@@ -158,6 +165,7 @@ export async function installM8HomeFixedLayout() {
     achievements,
     achievementUnreadMarkers,
     secretAchievements,
+    achievementChallengeExpansion,
     trophyRoadFeedback,
     driveByEarTraining
   });

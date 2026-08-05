@@ -10,18 +10,20 @@ function moduleUrl(relativePath) {
 }
 
 async function loadWorldModules() {
-  const [beauty, art, identity, intensity] = await Promise.all([
+  const [beauty, art, identity, intensity, bella] = await Promise.all([
     import(moduleUrl('../world-beauty.js')),
     import(moduleUrl('../world-art-pass.js')),
     import(moduleUrl('../track-identity.js')),
-    import(moduleUrl('../section-intensity.js'))
+    import(moduleUrl('../section-intensity.js')),
+    import(moduleUrl('../tracks/countryside-bella-r166.js?revision=r166-bella-records'))
   ]);
 
   return {
     installWorldBeauty: beauty.installWorldBeauty,
     installArtPass: art.installArtPass,
     installTrackIdentity: identity.installTrackIdentity,
-    installSectionIntensity: intensity.installSectionIntensity
+    installSectionIntensity: intensity.installSectionIntensity,
+    installCountrysideBella: bella.installCountrysideBella
   };
 }
 
@@ -93,7 +95,8 @@ async function install(runtime) {
       installWorldBeauty,
       installArtPass,
       installTrackIdentity,
-      installSectionIntensity
+      installSectionIntensity,
+      installCountrysideBella
     } = await loadWorldModules();
 
     // Compatibility helper retained from the previous world tuning layer.
@@ -111,6 +114,9 @@ async function install(runtime) {
 
     installTrackIdentity({ world, samples: worldSamples, trackWidth });
     installSectionIntensity({ world, samples: worldSamples, trackWidth });
+    installCountrysideBella({ world, samples: worldSamples, trackWidth, runtime }).catch((error) => {
+      console.warn('TURN: Bella discovery failed, keeping the rest of Countryside.', error);
+    });
 
     const beautyBaselineChildren = new Set(world.children);
     installWorldBeauty({ world, scene, samples: worldSamples, trackWidth, sun, hemi })

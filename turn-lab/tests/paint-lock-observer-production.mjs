@@ -78,7 +78,7 @@ assert.match(app, /trophy-road-r157\.css\?revision=r161-car-colour-lock/);
 assert.match(app, /lot-enhancement-runtime\.js\?revision=r121&trophy-road=r159&paint=r161-car-colour-lock&toast=r162-dismiss-unlocked-car/);
 assert.match(
   index,
-  new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r162-dismiss-unlocked-car-toast`)
+  new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r166-bella-records`)
 );
 
 console.log('TURN Lot lock feedback and Paintjob rail regressions passed.');

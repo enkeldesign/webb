@@ -2,15 +2,15 @@ import {
   ACHIEVEMENTS,
   TRACK_IDS,
   TRAINING_CAR_ID
-} from './catalog.js?revision=r157-hidden-achievements';
+} from './catalog.js?revision=r166-bella-records';
 import {
   createAchievementStore,
   normalizeAchievementState
-} from './store.js?revision=r157-hidden-achievements';
+} from './store.js?revision=r166-bella-records';
 import {
   allOnboardingComplete,
   createAchievementView
-} from './view.js?revision=r157-hidden-achievements';
+} from './view.js?revision=r166-bella-records';
 import {
   completedNightShiftSheriff,
   createNightShiftAttempt,
@@ -21,7 +21,7 @@ import {
   TIME_TRIAL_MASTER_ID,
   completedAllTimeTrials,
   qualifyingTimeTrial
-} from './time-trials.js?revision=r153-trophy-road';
+} from './time-trials.js?revision=r166-bella-records';
 import { replayFrameAt } from '../race/replay-system.js?revision=r146-achievement-expansion';
 import { getStoredBestLap } from '../race/rival-storage.js';
 

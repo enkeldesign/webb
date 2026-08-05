@@ -1,6 +1,6 @@
 export const TROPHY_ROAD_STORAGE_KEY = 'turn-achievements-v1';
 export const TROPHY_ROAD_STORAGE_VERSION = 4;
-export const TROPHY_ROAD_MAX_THRESHOLD = 1375;
+export const TROPHY_ROAD_MAX_THRESHOLD = 1700;
 export const TROPHY_ROAD_VIEWPORT_THRESHOLD = 600;
 
 export const TROPHY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 4h10v4c0 4-2 7-5 8-3-1-5-4-5-8V4Z"></path><path d="M7 6H4v2c0 2 1 3 4 4M17 6h3v2c0 2-1 3-4 4M9 20h6M12 16v4"></path></svg>';
@@ -135,7 +135,6 @@ export function showTrophyUnlockNotice({ reward, itemName = reward?.shortTitle }
   if (!reward) return null;
   const notice = ensureUnlockNotice();
   if (!notice) return null;
-
   const name = itemName || reward.shortTitle;
   notice.querySelector('strong').textContent = `LOCKED · ${reward.threshold} TROPHIES`;
   notice.querySelector('.turn-unlock-notice-copy > span').textContent =
@@ -145,7 +144,6 @@ export function showTrophyUnlockNotice({ reward, itemName = reward?.shortTitle }
   notice.classList.remove('is-visible');
   void notice.offsetWidth;
   notice.classList.add('is-visible');
-
   globalThis.clearTimeout?.(unlockNoticeTimer);
   unlockNoticeTimer = globalThis.setTimeout?.(() => {
     notice.classList.remove('is-visible');
@@ -210,7 +208,6 @@ export function prepareTrophyRoadProfile(storage = globalThis.localStorage) {
     const raw = storage?.getItem?.(TROPHY_ROAD_STORAGE_KEY);
     const existing = safeParse(raw);
     if (existing) return existing;
-
     if (preparationAlreadyChecked(storage)) return null;
     markPreparationChecked(storage);
     if (!hasLegacyTurnProfile(storage)) return null;
