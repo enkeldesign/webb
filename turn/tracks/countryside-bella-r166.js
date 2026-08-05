@@ -20,15 +20,18 @@ const DISCOVERY_VIEW_DOT = 0.55;
 const DISCOVERY_HOLD_MS = 650;
 
 const BELLA_PALETTE = Object.freeze({
-  cream: 0xd2c9af,
+  cream: 0xf4eada,
   sealBrown: 0x382c1f,
-  paws: 0xd2c9af,
-  eyes: 0x74a7ff,
+  paws: 0xf4eada,
+  eyes: 0x55bbff,
   pupils: 0x08090a,
   leafDark: 0x1f7a45,
   leafMid: 0x369653,
   leafLight: 0x58b95d
 });
+
+// Migration note for the visual regression introduced with the first eye pass:
+// previous eyes: 0x74a7ff; superseded by the user-approved #55BBFF.
 
 const loader = new GLTFLoader();
 let sourcePromise = null;
@@ -91,8 +94,9 @@ function applyBellaCoatGradient(scene) {
       const normalizedY = (point.y - bounds.min.y) / Math.max(size.y, 0.001);
       const normalizedZ = (point.z - bounds.min.z) / Math.max(size.z, 0.001);
 
-      // The Kenney cat faces negative Z. Keep the body at the exact cream colour and
-      // blend only the actual source vertices that form Bella's face, ears, legs and tail.
+      // normalizeCat turns the Kenney source around first, so Bella's real face is now
+      // negative Z. Keep the body at the exact cream colour and blend only the source
+      // vertices that form the face, ears, legs and tail.
       const frontMask = 1 - smoothstep(0.24, 0.58, normalizedZ);
       const faceHeight = smoothstep(0.46, 0.62, normalizedY);
       const faceWidth = 1 - smoothstep(0.54, 0.88, normalizedX);
@@ -129,6 +133,11 @@ function applyBellaCoatGradient(scene) {
 }
 
 function normalizeCat(scene) {
+  // The Kenney source faces the opposite direction from the rescue-tree camera setup.
+  // Rotate the complete asset before calculating the coat mask and eye bounds, rather
+  // than moving the eyes to the cat's rear.
+  scene.rotation.y += Math.PI;
+  scene.updateMatrixWorld(true);
   applyBellaCoatGradient(scene);
   scene.updateMatrixWorld(true);
   let bounds = new THREE.Box3().setFromObject(scene);
@@ -184,7 +193,7 @@ function addBellaEyes(holder, bounds) {
     eye.rotation.y = Math.PI;
     eye.scale.y = 1.08;
     eye.renderOrder = 5;
-    eye.name = 'Bella eye · black pupil to #74A7FF iris';
+    eye.name = 'Bella eye · black pupil to #55BBFF iris';
     holder.add(eye);
   }
 }
@@ -386,7 +395,8 @@ export async function installCountrysideBella({ world, samples, trackWidth, runt
   armBellaDiscovery(bella, runtime || globalThis.__turnRuntime);
   world.userData.turnBellaDiscovery = Object.freeze({
     model: 'Kenney Cube Pets animal-cat',
-    palette: 'Bella cream, seal brown and white paws; exact #D2C9AF / #382C1F coat; #74A7FF gradient eyes',
+    palette: 'Bella #F4EADA body, #382C1F markings and paws; #55BBFF gradient eyes',
+    facing: 'Kenney source rotated 180 degrees before coat masking and eye placement',
     rescueScene: 'Bella perched clearly above a dedicated branch with visibly green leaves',
     requiredVehicle: 'Fire Truck',
     sampleIndex: BELLA_SAMPLE_INDEX,
