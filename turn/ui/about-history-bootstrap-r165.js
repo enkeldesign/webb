@@ -263,10 +263,7 @@ function createWebsiteAboutDialog() {
   return dialog;
 }
 
-function installWebsiteAbout() {
-  if (websiteInstalled) return globalThis.__turnWebsiteAbout;
-  if (document.documentElement.classList.contains('turn-standalone')) return null;
-
+function syncInstallGatePresentation() {
   const gate = document.querySelector('#installGate');
   const kicker = gate?.querySelector('.install-kicker');
   const actions = gate?.querySelector('.install-actions');
@@ -275,6 +272,19 @@ function installWebsiteAbout() {
   const note = gate?.querySelector('#installNote');
   if (!gate || !kicker || !actions || !installButton || !browserButton || !note) return null;
 
+  note.textContent = INSTALL_NOTE;
+  actions.append(installButton, note, browserButton);
+  return { gate, kicker, note };
+}
+
+function installWebsiteAbout() {
+  if (document.documentElement.classList.contains('turn-standalone')) return null;
+
+  const presentation = syncInstallGatePresentation();
+  if (!presentation) return null;
+  if (websiteInstalled) return globalThis.__turnWebsiteAbout;
+
+  const { gate, kicker, note } = presentation;
   let trigger = gate.querySelector('#installAboutButton');
   if (!trigger) {
     const separator = document.createElement('span');
@@ -290,9 +300,6 @@ function installWebsiteAbout() {
     trigger.textContent = 'ABOUT TURN';
     kicker.append(separator, trigger);
   }
-
-  note.textContent = INSTALL_NOTE;
-  actions.append(installButton, note, browserButton);
 
   const aboutDialog = createWebsiteAboutDialog();
   const historyDialog = createHistoryDialog('website');
@@ -384,5 +391,10 @@ function start() {
   });
 }
 
-if (document.readyState === 'complete') start();
-else document.addEventListener('DOMContentLoaded', start, { once: true });
+start();
+
+if (document.readyState !== 'complete') {
+  document.addEventListener('DOMContentLoaded', () => {
+    installWebsiteAbout();
+  }, { once: true });
+}
