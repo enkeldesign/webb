@@ -10,10 +10,12 @@
   <link rel="stylesheet" href="./design-semantic.css?revision=r141-form-disclosure">
   <link rel="stylesheet" href="./m8-home.css?revision=r163-dialog-reference">
   <link rel="stylesheet" href="./dialog-system-r163.css?revision=r163-modal-pattern">
+  <link rel="stylesheet" href="./design-navigation.css?revision=r164-design-navigation">
   <style>
     :root {
       font-family: Inter, ui-rounded, system-ui, sans-serif;
       color-scheme: light;
+      --design-page-width: 1120px;
       --m8-ink: var(--turn-ink);
       --m8-cream: var(--turn-paper);
       --m8-pink: var(--turn-pink-500);
@@ -28,22 +30,26 @@
     code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
     a:focus-visible, button:focus-visible { outline: 5px solid var(--turn-form-control-focus); outline-offset: 4px; }
 
+    .skip-link {
+      position: fixed;
+      z-index: 100;
+      top: 12px;
+      left: 12px;
+      padding: 10px 14px;
+      border: 4px solid var(--turn-ink);
+      border-radius: var(--turn-radius-compact);
+      background: var(--turn-yellow-400);
+      color: var(--turn-ink);
+      box-shadow: var(--turn-shadow-default);
+      transform: translateY(-180%);
+    }
+
+    .skip-link:focus { transform: none; }
+
     .hero {
       padding: clamp(40px, 8vw, 96px) max(22px, calc((100vw - 1120px) / 2));
       background: linear-gradient(145deg, var(--turn-blue-500), var(--turn-green-500));
       color: var(--turn-ink);
-    }
-
-    .hero-nav { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 28px; }
-    .hero-nav a {
-      padding: 8px 13px;
-      border: 3px solid var(--turn-ink);
-      border-radius: var(--turn-radius-pill);
-      background: var(--turn-paper);
-      box-shadow: var(--turn-shadow-compact);
-      font-size: .78rem;
-      font-weight: 950;
-      text-decoration: none;
     }
 
     .eyebrow {
@@ -155,17 +161,25 @@
   </style>
 </head>
 <body>
-  <header class="hero">
-    <nav class="hero-nav" aria-label="Design system navigation">
-      <a href="./design.html">← Main design system</a>
-      <a href="./">Open TURN</a>
-    </nav>
-    <span class="eyebrow">Normative component pattern</span>
-    <h1>TURN DIALOGS</h1>
-    <p>One interaction model and one visual anatomy, with deliberate size variants for short decisions, settings, rich tools and long-form reading.</p>
+  <a class="skip-link" href="#main">Skip to dialog guidance</a>
+
+  <header class="hero design-page-hero">
+    <div class="design-page-shell">
+      <nav class="design-page-nav" aria-label="Design system pages">
+        <a href="./design.html">Design system</a>
+        <a href="./design-dialogs.html" aria-current="page">Dialogs</a>
+        <a href="/turn/" target="_blank" rel="noopener noreferrer">Open TURN</a>
+      </nav>
+      <div class="design-page-hero-content">
+        <span class="eyebrow">Normative component pattern</span>
+        <h1>TURN DIALOGS</h1>
+        <p>One interaction model and one visual anatomy, with deliberate size variants for short decisions, settings, rich tools and long-form reading.</p>
+      </div>
+      <a class="design-page-scroll" href="#dialog-sections"><span aria-hidden="true">↓</span> Explore dialog guidance</a>
+    </div>
   </header>
 
-  <nav class="section-nav" aria-label="Dialog design sections">
+  <nav id="dialog-sections" class="section-nav design-section-nav" aria-label="Dialog design sections">
     <a href="#principles">Principles</a>
     <a href="#inventory">Inventory</a>
     <a href="#anatomy">Anatomy</a>
@@ -174,7 +188,7 @@
     <a href="#specimen">Specimen</a>
   </nav>
 
-  <main>
+  <main id="main">
     <section id="principles">
       <div class="section-head">
         <div><span class="kicker">01 · Decision</span><h2>Standardize the shell, not the content.</h2></div>
