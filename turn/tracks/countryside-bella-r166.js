@@ -23,8 +23,11 @@ const BELLA_PALETTE = Object.freeze({
   cream: 0xd2c9af,
   sealBrown: 0x382c1f,
   paws: 0xd2c9af,
-  eyes: 0x4aa8ff,
-  pupils: 0x090b0e
+  eyes: 0x74a7ff,
+  pupils: 0x08090a,
+  leafDark: 0x1f7a45,
+  leafMid: 0x369653,
+  leafLight: 0x58b95d
 });
 
 const loader = new GLTFLoader();
@@ -66,6 +69,7 @@ function applyBellaCoatGradient(scene) {
   scene.updateMatrixWorld(true);
   const bounds = new THREE.Box3().setFromObject(scene);
   const size = bounds.getSize(new THREE.Vector3());
+  const center = bounds.getCenter(new THREE.Vector3());
   const point = new THREE.Vector3();
   const light = new THREE.Color(BELLA_PALETTE.cream);
   const dark = new THREE.Color(BELLA_PALETTE.sealBrown);
@@ -82,17 +86,30 @@ function applyBellaCoatGradient(scene) {
     for (let index = 0; index < positions.count; index += 1) {
       point.fromBufferAttribute(positions, index);
       node.localToWorld(point);
+
+      const normalizedX = Math.abs(point.x - center.x) / Math.max(size.x * 0.5, 0.001);
       const normalizedY = (point.y - bounds.min.y) / Math.max(size.y, 0.001);
       const normalizedZ = (point.z - bounds.min.z) / Math.max(size.z, 0.001);
 
-      // The Kenney cat exposes essentially one coat material. Blend the exact light coat
-      // toward the exact seal-brown markings at the face and lower legs; the dedicated
-      // marking geometry below supplies the solid face, legs and tail silhouette.
-      const faceMask = smoothstep(0.56, 0.84, normalizedZ)
-        * smoothstep(0.4, 0.58, normalizedY);
-      const legMask = 1 - smoothstep(0.14, 0.34, normalizedY);
-      const darkMix = Math.max(faceMask * 0.72, legMask * 0.58);
+      // The Kenney cat faces negative Z. Keep the body at the exact cream colour and
+      // blend only the actual source vertices that form Bella's face, ears, legs and tail.
+      const frontMask = 1 - smoothstep(0.24, 0.58, normalizedZ);
+      const faceHeight = smoothstep(0.46, 0.62, normalizedY);
+      const faceWidth = 1 - smoothstep(0.54, 0.88, normalizedX);
+      const faceMask = frontMask * faceHeight * faceWidth;
 
+      const earMask = frontMask * smoothstep(0.78, 0.94, normalizedY);
+      const legHeight = 1 - smoothstep(0.17, 0.37, normalizedY);
+      const legColumns = smoothstep(0.26, 0.5, normalizedX);
+      const legMask = legHeight * legColumns;
+
+      const tailDepth = smoothstep(0.68, 0.92, normalizedZ);
+      const tailLower = smoothstep(0.08, 0.2, normalizedY);
+      const tailUpper = 1 - smoothstep(0.58, 0.76, normalizedY);
+      const tailSide = smoothstep(0.54, 0.86, normalizedX);
+      const tailMask = tailDepth * tailLower * tailUpper * tailSide;
+
+      const darkMix = Math.max(faceMask, earMask, legMask, tailMask);
       mixed.copy(light).lerp(dark, darkMix);
       colors[index * 3] = mixed.r;
       colors[index * 3 + 1] = mixed.g;
@@ -124,68 +141,92 @@ function normalizeCat(scene) {
   return scene;
 }
 
-function addBellaEyes(holder) {
-  const blue = flatColorMaterial(BELLA_PALETTE.eyes);
-  const black = flatColorMaterial(BELLA_PALETTE.pupils);
-  for (const x of [-0.48, 0.48]) {
-    const iris = outlinedPrimitive(new THREE.BoxGeometry(0.34, 0.28, 0.12), blue, 1.035);
-    iris.position.set(x, 4.08, 1.43);
-    holder.add(iris);
-
-    const pupil = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.18, 0.05), black);
-    pupil.position.set(x, 4.08, 1.51);
-    pupil.castShadow = true;
-    holder.add(pupil);
-  }
+function eyeGradientMaterial() {
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      irisColor: { value: new THREE.Color(BELLA_PALETTE.eyes) },
+      pupilColor: { value: new THREE.Color(BELLA_PALETTE.pupils) }
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 irisColor;
+      uniform vec3 pupilColor;
+      varying vec2 vUv;
+      void main() {
+        float radius = length((vUv - vec2(0.5)) * 2.0);
+        float pupilToIris = smoothstep(0.22, 0.82, radius);
+        gl_FragColor = vec4(mix(pupilColor, irisColor, pupilToIris), 1.0);
+      }
+    `,
+    side: THREE.DoubleSide,
+    toneMapped: false
+  });
 }
 
-function addBellaMarkings(holder) {
-  const dark = flatColorMaterial(BELLA_PALETTE.sealBrown);
-  const paws = flatColorMaterial(BELLA_PALETTE.paws);
+function addBellaEyes(holder, bounds) {
+  const size = bounds.getSize(new THREE.Vector3());
+  const center = bounds.getCenter(new THREE.Vector3());
+  const eyeRadius = Math.max(size.x * 0.078, 0.22);
+  const eyeSpacing = size.x * 0.13;
+  const eyeY = bounds.min.y + size.y * 0.67;
+  const eyeZ = bounds.min.z - size.z * 0.018;
+  const gradient = eyeGradientMaterial();
 
-  const face = outlinedPrimitive(new THREE.BoxGeometry(1.92, 1.55, 0.46), dark, 1.045);
-  face.position.set(0, 3.8, 1.16);
-  holder.add(face);
-
-  for (const x of [-0.58, 0.58]) {
-    const ear = outlinedPrimitive(new THREE.ConeGeometry(0.44, 1.02, 4), dark, 1.055);
-    ear.position.set(x, 4.9, 0.94);
-    ear.rotation.y = Math.PI / 4;
-    holder.add(ear);
+  for (const xOffset of [-eyeSpacing, eyeSpacing]) {
+    const eye = new THREE.Mesh(new THREE.CircleGeometry(eyeRadius, 18), gradient);
+    eye.position.set(center.x + xOffset, eyeY, eyeZ);
+    eye.rotation.y = Math.PI;
+    eye.scale.y = 1.08;
+    eye.renderOrder = 5;
+    eye.name = 'Bella eye · black pupil to #74A7FF iris';
+    holder.add(eye);
   }
-
-  const legPositions = [
-    [-0.83, 0.92, 0.82],
-    [0.83, 0.92, 0.82],
-    [-0.83, 0.92, -0.72],
-    [0.83, 0.92, -0.72]
-  ];
-  for (const [x, y, z] of legPositions) {
-    const leg = outlinedPrimitive(new THREE.BoxGeometry(0.62, 1.35, 0.62), dark, 1.045);
-    leg.position.set(x, y, z);
-    holder.add(leg);
-    const paw = outlinedPrimitive(new THREE.BoxGeometry(0.72, 0.38, 0.82), paws, 1.045);
-    paw.position.set(x, 0.28, z + 0.08);
-    holder.add(paw);
-  }
-
-  const tail = outlinedPrimitive(new THREE.BoxGeometry(0.56, 0.56, 2.75), dark, 1.05);
-  tail.position.set(-1.18, 1.48, -1.58);
-  tail.rotation.set(-0.34, 0.36, -0.18);
-  holder.add(tail);
-
-  addBellaEyes(holder);
 }
 
 function createFallbackCat() {
   const holder = new THREE.Group();
   const cream = flatColorMaterial(BELLA_PALETTE.cream);
+  const dark = flatColorMaterial(BELLA_PALETTE.sealBrown);
+  const paws = flatColorMaterial(BELLA_PALETTE.paws);
+
   const body = outlinedPrimitive(new THREE.BoxGeometry(2.55, 2.25, 3.05), cream);
   body.position.y = 2.05;
   holder.add(body);
+
   const head = outlinedPrimitive(new THREE.BoxGeometry(2.2, 1.95, 1.9), cream);
-  head.position.set(0, 3.65, 1.15);
+  head.position.set(0, 3.65, -1.15);
   holder.add(head);
+
+  const face = outlinedPrimitive(new THREE.BoxGeometry(1.42, 1.38, 0.24), dark, 1.035);
+  face.position.set(0, 3.62, -2.17);
+  holder.add(face);
+
+  for (const x of [-0.58, 0.58]) {
+    const ear = outlinedPrimitive(new THREE.ConeGeometry(0.44, 1.02, 4), dark, 1.045);
+    ear.position.set(x, 4.9, -1.18);
+    ear.rotation.y = Math.PI / 4;
+    holder.add(ear);
+  }
+
+  for (const [x, z] of [[-0.83, -0.72], [0.83, -0.72], [-0.83, 0.72], [0.83, 0.72]]) {
+    const leg = outlinedPrimitive(new THREE.BoxGeometry(0.62, 1.35, 0.62), dark, 1.04);
+    leg.position.set(x, 0.92, z);
+    holder.add(leg);
+    const paw = outlinedPrimitive(new THREE.BoxGeometry(0.72, 0.38, 0.82), paws, 1.04);
+    paw.position.set(x, 0.28, z - 0.08);
+    holder.add(paw);
+  }
+
+  const tail = outlinedPrimitive(new THREE.BoxGeometry(0.56, 0.56, 2.75), dark, 1.045);
+  tail.position.set(-1.18, 1.48, 1.58);
+  tail.rotation.set(0.34, -0.36, -0.18);
+  holder.add(tail);
   return holder;
 }
 
@@ -194,11 +235,13 @@ function createRescueTree() {
   tree.name = 'Bella rescue tree';
   tree.userData.turnBellaRescueTree = true;
   tree.userData.turnBellaFoliage = 'green';
+  tree.userData.turnBellaFoliagePalette = '#1F7A45 / #369653 / #58B95D';
 
   const bark = material(0x684027, 1);
-  // Unlit foliage keeps the leaves recognisably green under Countryside's warm sun.
-  const leafDark = flatColorMaterial(0x236b3f);
-  const leafLight = flatColorMaterial(0x48a85f);
+  // Unlit foliage keeps every rescue-tree leaf visibly green under Countryside's warm sun.
+  const leafDark = flatColorMaterial(BELLA_PALETTE.leafDark);
+  const leafMid = flatColorMaterial(BELLA_PALETTE.leafMid);
+  const leafLight = flatColorMaterial(BELLA_PALETTE.leafLight);
 
   const trunk = outlinedPrimitive(new THREE.CylinderGeometry(0.82, 1.15, 10.4, 7), bark, 1.035);
   trunk.position.set(-1.9, 5.2, -0.9);
@@ -219,8 +262,10 @@ function createRescueTree() {
   const leafClusters = [
     [-2.75, 10.75, -1.2, 2.65, leafDark],
     [-4.45, 9.8, -0.95, 2.1, leafLight],
-    [-1.25, 12.35, -1.45, 2.05, leafLight],
-    [4.15, 10.75, -1.15, 2.15, leafDark]
+    [-1.25, 12.35, -1.45, 2.05, leafMid],
+    [4.15, 10.75, -1.15, 2.15, leafDark],
+    [1.15, 9.7, 1.3, 1.65, leafMid],
+    [3.15, 9.35, 1.2, 1.45, leafLight]
   ];
   for (const [x, y, z, scale, fill] of leafClusters) {
     const crown = outlinedPrimitive(leafGeometry, fill, 1.035);
@@ -242,7 +287,9 @@ async function createBellaModel() {
     console.warn('TURN: Kenney Cube Pets cat could not load; using Bella fallback.', error);
     cat.add(createFallbackCat());
   }
-  addBellaMarkings(cat);
+
+  cat.updateMatrixWorld(true);
+  addBellaEyes(cat, new THREE.Box3().setFromObject(cat));
   cat.scale.setScalar(BELLA_SCALE);
   cat.position.set(1.35, BELLA_PERCH_HEIGHT, 0.22);
   cat.name = 'Bella perched on rescue branch';
@@ -339,8 +386,8 @@ export async function installCountrysideBella({ world, samples, trackWidth, runt
   armBellaDiscovery(bella, runtime || globalThis.__turnRuntime);
   world.userData.turnBellaDiscovery = Object.freeze({
     model: 'Kenney Cube Pets animal-cat',
-    palette: 'Bella cream, seal brown and white paws; exact #D2C9AF / #382C1F coat; blue eyes',
-    rescueScene: 'Bella perched clearly above a dedicated branch, clear of the trunk',
+    palette: 'Bella cream, seal brown and white paws; exact #D2C9AF / #382C1F coat; #74A7FF gradient eyes',
+    rescueScene: 'Bella perched clearly above a dedicated branch with visibly green leaves',
     requiredVehicle: 'Fire Truck',
     sampleIndex: BELLA_SAMPLE_INDEX,
     discoveryHoldMs: DISCOVERY_HOLD_MS
