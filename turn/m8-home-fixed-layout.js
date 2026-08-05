@@ -31,6 +31,26 @@ function spokenTrackName(rawName) {
     .replace(/(^|\s)\p{L}/gu, (character) => character.toLocaleUpperCase('en'));
 }
 
+function installDriveByEarSpokenLabels(training) {
+  const spokenName = 'Drive By Ear one oh one';
+  training.entryPoints?.homeButton?.setAttribute('aria-label', spokenName);
+  training.entryPoints?.howCallout
+    ?.querySelector('[data-turn-dbe-training-entry]')
+    ?.setAttribute('aria-label', `Start ${spokenName}`);
+  training.entryPoints?.settingsCallout
+    ?.querySelector('[data-turn-dbe-training-entry]')
+    ?.setAttribute('aria-label', `Try ${spokenName}`);
+  training.introDialog
+    ?.querySelector('#turnDbeTrainingTitle')
+    ?.setAttribute('aria-label', spokenName);
+  training.introDialog
+    ?.querySelector('[data-training-cancel]')
+    ?.setAttribute('aria-label', `Close ${spokenName}`);
+  training.partDialog
+    ?.querySelector('[data-training-leave]')
+    ?.setAttribute('aria-label', `Leave ${spokenName}`);
+}
+
 export async function installM8HomeFixedLayout() {
   installStylesheet();
   const home = await waitForHome();
@@ -125,6 +145,7 @@ export async function installM8HomeFixedLayout() {
     `/turn/training/drive-by-ear-training.js?build=${buildKey}-r151-dbe-training-device-fixes`
   );
   const driveByEarTraining = await installDriveByEarTraining(globalThis.__turnRuntime);
+  installDriveByEarSpokenLabels(driveByEarTraining);
 
   globalThis.__turnHomeLayout = Object.freeze({
     id: LAYOUT_ID,
