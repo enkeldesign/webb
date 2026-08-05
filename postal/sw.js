@@ -1,11 +1,14 @@
-const CACHE_NAME = 'postal-live-20260805-r4';
+const CACHE_NAME = 'postal-live-20260806-r5';
 const CORE_ASSETS = [
   './',
   './index.html',
   './styles.css',
+  './management.css',
   './main.mjs',
   './sim.mjs',
   './world.mjs',
+  './management-sim.mjs',
+  './management-ui.mjs',
   './vendor/three.module.min.js',
   './vendor/three.core.min.js',
   './vendor/addons/loaders/GLTFLoader.js',
