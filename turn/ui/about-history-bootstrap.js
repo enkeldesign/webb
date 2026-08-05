@@ -250,17 +250,19 @@ function waitForAbout() {
   if (existing) return Promise.resolve(existing);
 
   return new Promise((resolve) => {
-    let attempts = 0;
+    let settled = false;
     const check = () => {
+      if (settled) return;
       const about = findAboutApi();
-      if (about) {
-        resolve(about);
-        return;
-      }
-      attempts += 1;
-      if (attempts < 600) requestAnimationFrame(check);
-      else throw new Error('TURN history could not find About TURN.');
+      if (!about) return;
+      settled = true;
+      resolve(about);
     };
+
+    // Home readiness is the stable lifecycle boundary. The one animation-frame
+    // check closes the tiny race where About was installed between the initial
+    // lookup and this listener being registered. No polling runs while a player
+    // remains on installation onboarding.
     document.addEventListener('turn:home-ready', check, { once: true });
     requestAnimationFrame(check);
   });
