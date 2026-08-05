@@ -36,6 +36,10 @@ assert.ok(
 assert.match(fixedLayout, /achievements\/unread-markers\.js\?build=\$\{buildKey\}-r159-unread-cards/);
 assert.match(fixedLayout, /installAchievementUnreadMarkers\(achievements\)/);
 assert.match(fixedLayout, /achievementUnreadMarkers,/);
+assert.match(fixedLayout, /function installDriveByEarSpokenLabels\(training\)/);
+assert.match(fixedLayout, /const spokenName = 'Drive By Ear one oh one'/);
+assert.match(fixedLayout, /homeButton\?\.setAttribute\('aria-label', spokenName\)/);
+assert.match(fixedLayout, /installDriveByEarSpokenLabels\(driveByEarTraining\)/);
 assert.match(unreadMarkers, /new Set\(achievements\.store\.unseenIds\(\)\)/);
 assert.match(unreadMarkers, /addEventListener\('click', captureBeforeOpen, \{ capture: true \}\)/);
 assert.match(unreadMarkers, /turn-achievement-unread-dot/);
@@ -43,4 +47,4 @@ assert.match(unreadMarkers, /Newly unlocked achievement\./);
 assert.match(unreadMarkers, /new MutationObserver\(queueDecoration\)/);
 assert.match(unreadMarkers, /listObserver\.observe\(list, \{ childList: true \}\)/);
 
-console.log('TURN 1.5.1 startup cover, fixed Home viewport and unread achievement markers passed.');
+console.log('TURN 1.5.1 startup cover, fixed Home viewport, spoken training labels and unread achievement markers passed.');
