@@ -1,4 +1,4 @@
-const CACHE_NAME = 'postal-live-20260806-r5';
+const CACHE_NAME = 'postal-live-20260806-r6';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -37,7 +37,6 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
-
       return fetch(event.request).then((response) => {
         if (response.ok || response.type === 'opaque') {
           const copy = response.clone();
