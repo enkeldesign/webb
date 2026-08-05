@@ -1,69 +1,43 @@
-# POSTAL portrait interaction prototype
+# POSTAL visual game slice
 
-This directory contains a non-production, mobile-portrait prototype for the POSTAL game concept.
+POSTAL is a mobile-portrait parcel-network management game set in Sweden. This directory contains a polished, playable shift rather than the earlier interaction prototype.
 
-## Product decisions represented here
+## Playable shift
 
-- **Primary play context:** mobile portrait, with one-handed touch use as the default.
-- **Secondary context:** wider tablet and desktop layouts may enhance the presentation later, but must not be required for complete play.
-- **Session shape:** a 10–20 minute live shift, surrounded by short preparation and postmortem phases.
-- **Time model:** pausable real time with speed controls and optional automatic pause for critical incidents.
-- **Primary mobile surface:** an operations feed that ranks consequences and deadlines. The map supports orientation and investigation; it is not the only way to understand or control the network.
-- **Core loop:** read the flow → protect the shift → trace an anomaly → correlate similar packages → correct the system → verify recovery.
-- **Depth strategy:** keep the number of systems bounded, but make timing, staffing, capacity, routing, package promises and disruption interact.
-- **Package identity:** every package can have a coherent history, while ordinary package flows may be aggregated internally.
-- **Accessibility:** map, terminal, incident and package states must also be available as structured semantic views.
+The 18:20 northbound Express flow is at risk in Sundsvall. The player can:
 
-## Prototype question
+1. read the animated parcel flow and protect the departure;
+2. rebalance crew or accept the downstream cost of holding the truck;
+3. trace an Express parcel that entered the Standard lane;
+4. light up matching parcels and identify the shared routing signature;
+5. correct the rule order;
+6. verify twelve later parcels in live flow;
+7. dispatch the truck and receive a graded shift report.
 
-Can a player understand, diagnose and correct a systemic parcel failure comfortably on a portrait phone without the game feeling like a dashboard or a reduced desktop interface?
+The shift is pausable, supports 1× and 2× time, and takes roughly five minutes on a first playthrough.
 
-The prototype focuses on:
+## Presentation
 
-1. Consequence-ranked alerts.
-2. Persistent context across Operations, Network, Terminal and Cases views.
-3. A representative package trace.
-4. Finding similar package failures.
-5. Distinguishing symptom relief from a root-cause correction.
-6. Verifying that a correction changed later package outcomes.
+- A fixed isometric 3D terminal, regional diorama and parcel-inspection scene replace the former CSS-drawn map and explanatory card stack.
+- The world uses small CC0 Kenney assets vendored under `assets/`; see [`assets/ATTRIBUTION.md`](./assets/ATTRIBUTION.md).
+- The required three.js modules are vendored locally, so the game world does not depend on a third-party CDN at runtime.
+- Consequential detail stays available on demand through the structured Shift details dialog.
+- The interface is portrait-first and remains usable on narrow and short phone viewports.
 
-## Deliberate exclusions
+## Accessibility
 
-- No selected game engine.
-- No production simulation architecture.
-- No Kenney assets.
-- No final visual presentation decision between 2D and orthographic 3D.
-- No national campaign, economy or progression system.
-- No attempt to reproduce real operator networks.
+- Every consequential canvas state is repeated in semantic HTML.
+- Projected world hotspots are real buttons with accessible names.
+- Colour is paired with labels, shapes and patterns.
+- Opening detailed information pauses the simulation and restores the previous running state on close.
+- The game responds to reduced-motion preferences and pauses when the page becomes hidden.
+- Full play does not depend on precise canvas picking; every required action is also exposed as a large HTML control.
 
-## Suggested first playtest
+## Local run and checks
 
-Ask the player to:
+Serve the repository root over HTTP and open `/postal/`.
 
-1. Identify the most important current risk.
-2. Protect the immediate departure.
-3. Explain why moving staff helps but does not solve the recurring error.
-4. Inspect one affected package.
-5. Find the common pattern.
-6. correct the routing rule.
-7. Verify that newly processed packages no longer show the same signature.
-
-Observe:
-
-- where the player first looks;
-- whether bottom navigation feels natural;
-- whether the map is useful or merely decorative;
-- whether the package trace explains the failure;
-- whether the distinction between temporary intervention and systemic fix is clear;
-- whether the interface feels playful enough;
-- whether the default pace feels exciting rather than stressful;
-- whether any important information depends on colour or motion.
-
-## Next decisions after testing
-
-- Whether Operations or Network should be the default home view.
-- Whether four primary destinations are too many for portrait navigation.
-- Whether terminal operation should use top-down 2D or fixed orthographic 3D.
-- How much information should appear inline versus in bottom sheets.
-- Which actions deserve automatic pause.
-- Whether the package-investigation sequence is enjoyable enough to remain a central repeated mechanic.
+```sh
+python -m http.server 4173
+node --test postal/tests/sim.test.mjs
+```
