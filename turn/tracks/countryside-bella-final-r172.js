@@ -6,6 +6,26 @@ const SEAL_BROWN = new THREE.Color(0x382c1f);
 const FINAL_EYE_HEIGHT_RATIO = 0.5;
 const FINAL_EYE_SCALE = 1.1;
 
+function getCatLocalBounds(cat, eyes) {
+  cat.updateMatrixWorld(true);
+  const bounds = new THREE.Box3().makeEmpty();
+  const meshBounds = new THREE.Box3();
+  const worldToCat = cat.matrixWorld.clone().invert();
+  const meshToCat = new THREE.Matrix4();
+
+  cat.traverse((node) => {
+    if (!node.isMesh || eyes.includes(node) || !node.geometry) return;
+    if (!node.geometry.boundingBox) node.geometry.computeBoundingBox();
+    if (!node.geometry.boundingBox) return;
+
+    meshToCat.multiplyMatrices(worldToCat, node.matrixWorld);
+    meshBounds.copy(node.geometry.boundingBox).applyMatrix4(meshToCat);
+    bounds.union(meshBounds);
+  });
+
+  return bounds;
+}
+
 function remapCoatVertexColors(cat, eyes) {
   const coatVector = SEAL_BROWN.clone().sub(PREVIOUS_CREAM);
   const coatLengthSquared = Math.max(coatVector.lengthSq(), Number.EPSILON);
@@ -49,11 +69,7 @@ export function applyBellaFinalVisuals(root) {
     if (node.isMesh && node.name?.startsWith('Bella eye')) eyes.push(node);
   });
 
-  for (const eye of eyes) eye.visible = false;
-  cat.updateMatrixWorld(true);
-  const bounds = new THREE.Box3().setFromObject(cat);
-  for (const eye of eyes) eye.visible = true;
-
+  const bounds = getCatLocalBounds(cat, eyes);
   if (!bounds.isEmpty()) {
     const size = bounds.getSize(new THREE.Vector3());
     const eyeY = bounds.min.y + size.y * FINAL_EYE_HEIGHT_RATIO;
