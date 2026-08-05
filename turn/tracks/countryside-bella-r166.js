@@ -395,7 +395,7 @@ export async function installCountrysideBella({ world, samples, trackWidth, runt
   armBellaDiscovery(bella, runtime || globalThis.__turnRuntime);
   world.userData.turnBellaDiscovery = Object.freeze({
     model: 'Kenney Cube Pets animal-cat',
-    palette: 'Bella #F4EADA body, #382C1F markings and paws; #55BBFF gradient eyes',
+    palette: 'Bella cream, seal brown and white paws; exact #F4EADA / #382C1F coat; #55BBFF gradient eyes',
     facing: 'Kenney source rotated 180 degrees before coat masking and eye placement',
     rescueScene: 'Bella perched clearly above a dedicated branch with visibly green leaves',
     requiredVehicle: 'Fire Truck',
