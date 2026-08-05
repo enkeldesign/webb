@@ -1,9 +1,11 @@
-const CACHE_NAME = 'postal-live-20260806-r6';
+const CACHE_NAME = 'postal-live-20260806-r7';
 const CORE_ASSETS = [
   './',
   './index.html',
   './styles.css',
   './management.css',
+  './bootstrap.mjs',
+  './carrier-branding.mjs',
   './main.mjs',
   './sim.mjs',
   './world.mjs',
