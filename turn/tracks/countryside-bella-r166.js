@@ -121,7 +121,6 @@ function createFallbackCat() {
   const head = outlinedPrimitive(new THREE.BoxGeometry(2.2, 1.95, 1.9), cream);
   head.position.set(0, 3.65, 1.15);
   holder.add(head);
-  addBellaMarkings(holder);
   return holder;
 }
 
