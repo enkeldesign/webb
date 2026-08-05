@@ -13,6 +13,8 @@ const BELLA_TANGENT_OFFSET = 18;
 const BELLA_HEIGHT = 5.2;
 const BELLA_SCALE = 0.58;
 const BELLA_PERCH_HEIGHT = 8.25;
+const BELLA_EYE_SPACING_RATIO = 0.17;
+const BELLA_EYE_HEIGHT_RATIO = 0.6;
 const REQUIRED_VEHICLE_ID = 'firetruck';
 const DISCOVERY_DISTANCE = 76;
 const DISCOVERY_DISTANCE_SQUARED = DISCOVERY_DISTANCE * DISCOVERY_DISTANCE;
@@ -23,15 +25,15 @@ const BELLA_PALETTE = Object.freeze({
   cream: 0xf4eada,
   sealBrown: 0x382c1f,
   paws: 0xf4eada,
-  eyes: 0x55bbff,
+  eyes: 0x44ccff,
   pupils: 0x08090a,
   leafDark: 0x1f7a45,
   leafMid: 0x369653,
   leafLight: 0x58b95d
 });
 
-// Migration note for the visual regression introduced with the first eye pass:
-// previous eyes: 0x74a7ff; superseded by the user-approved #55BBFF.
+// Migration notes for the visual regression introduced with the first eye pass:
+// previous eyes: 0x74a7ff; previous eyes: 0x55bbff; superseded by #44CCFF.
 
 const loader = new GLTFLoader();
 let sourcePromise = null;
@@ -182,8 +184,8 @@ function addBellaEyes(holder, bounds) {
   const size = bounds.getSize(new THREE.Vector3());
   const center = bounds.getCenter(new THREE.Vector3());
   const eyeRadius = Math.max(size.x * 0.078, 0.22);
-  const eyeSpacing = size.x * 0.13;
-  const eyeY = bounds.min.y + size.y * 0.67;
+  const eyeSpacing = size.x * BELLA_EYE_SPACING_RATIO;
+  const eyeY = bounds.min.y + size.y * BELLA_EYE_HEIGHT_RATIO;
   const eyeZ = bounds.min.z - size.z * 0.018;
   const gradient = eyeGradientMaterial();
 
@@ -193,7 +195,7 @@ function addBellaEyes(holder, bounds) {
     eye.rotation.y = Math.PI;
     eye.scale.y = 1.08;
     eye.renderOrder = 5;
-    eye.name = 'Bella eye · black pupil to #55BBFF iris';
+    eye.name = 'Bella eye · black pupil to #44CCFF iris';
     holder.add(eye);
   }
 }
@@ -395,7 +397,8 @@ export async function installCountrysideBella({ world, samples, trackWidth, runt
   armBellaDiscovery(bella, runtime || globalThis.__turnRuntime);
   world.userData.turnBellaDiscovery = Object.freeze({
     model: 'Kenney Cube Pets animal-cat',
-    palette: 'Bella cream, seal brown and white paws; exact #F4EADA / #382C1F coat; #55BBFF gradient eyes',
+    palette: 'Bella cream, seal brown and white paws; exact #F4EADA / #382C1F coat; #44CCFF gradient eyes',
+    eyePlacement: 'lowered to 60% of model height and separated to 17% of model width per side',
     facing: 'Kenney source rotated 180 degrees before coat masking and eye placement',
     rescueScene: 'Bella perched clearly above a dedicated branch with visibly green leaves',
     requiredVehicle: 'Fire Truck',
