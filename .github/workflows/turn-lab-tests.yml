@@ -160,6 +160,9 @@ jobs:
       - name: Run achievement system regression
         run: node turn-lab/tests/achievements-production.mjs
 
+      - name: Run Bella rescue and directional meow regression
+        run: node turn-lab/tests/bella-rescue-production.mjs
+
       - name: Run Trophy Road progression regression
         run: node turn-lab/tests/trophy-road-production.mjs
 
