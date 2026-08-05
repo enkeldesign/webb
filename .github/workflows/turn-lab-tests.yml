@@ -73,6 +73,9 @@ jobs:
       - name: Run inclusive Home feedback and attribution regression
         run: node turn-tests/home-feedback-production.mjs
 
+      - name: Run About history and dialog-system regression
+        run: node turn-tests/about-history-production.mjs
+
       - name: Run TURN design-system specimen regression
         run: node turn-tests/design-system-production.mjs
 
