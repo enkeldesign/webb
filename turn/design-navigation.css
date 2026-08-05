@@ -120,15 +120,60 @@
 
 @media (max-height: 620px) and (orientation: landscape) {
   .hero.design-page-hero {
-    min-height: auto;
+    position: relative;
+    height: 100vh;
+    height: 100svh;
+    min-height: 100vh;
+    min-height: 100svh;
+    overflow: hidden;
+    padding-top: max(12px, env(safe-area-inset-top)) !important;
+    padding-bottom: max(52px, calc(env(safe-area-inset-bottom) + 42px)) !important;
+  }
+
+  .design-page-nav {
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .design-page-nav a {
+    min-height: 38px;
+    padding: 6px 11px;
+    font-size: .7rem;
   }
 
   .design-page-hero-content {
-    padding-block: 18px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .design-page-hero h1 {
+    margin-block: 10px 8px;
+    font-size: clamp(3rem, 6.8vw, 4.5rem);
+  }
+
+  .design-page-hero p {
+    font-size: clamp(.82rem, 1.55vw, 1rem);
+  }
+
+  .design-page-hero .hero-inner img {
+    width: min(160px, 20vw);
   }
 
   .design-page-scroll {
-    align-self: flex-start;
+    position: absolute;
+    z-index: 2;
+    left: 50%;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    min-height: 38px;
+    margin: 0;
+    padding: 6px 12px;
+    font-size: .68rem;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+
+  .design-page-scroll:active {
+    transform: translate(calc(-50% + 4px), 4px);
   }
 }
 
