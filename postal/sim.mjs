@@ -1,9 +1,62 @@
 export const INITIAL_TIME = 17 * 60 + 42;
-export const BASE_DEPARTURE = 18 * 60 + 20;
-export const VERIFY_TARGET = 12;
 
-const ONBOARDING_VERIFY_TARGET = 6;
-const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+export const LEVELS = Object.freeze(['terminal', 'network', 'sweden']);
+
+export const LEVEL_LABELS = Object.freeze({
+  terminal: 'Town',
+  network: 'Region',
+  sweden: 'Sweden'
+});
+
+export const CARRIERS = Object.freeze({
+  nordpost: {
+    id: 'nordpost',
+    name: 'NordPost',
+    code: 'NP',
+    tone: 'yellow',
+    defaultService: 'standard',
+    units: [3, 4, 2, 5],
+    promiseAdjust: 5
+  },
+  dlh: {
+    id: 'dlh',
+    name: 'DLH',
+    code: 'DLH',
+    tone: 'red',
+    defaultService: 'express',
+    units: [1, 2, 1, 3],
+    promiseAdjust: -6
+  },
+  brang: {
+    id: 'brang',
+    name: 'Brang',
+    code: 'B',
+    tone: 'green',
+    defaultService: 'standard',
+    units: [1, 2, 2, 1],
+    promiseAdjust: -2
+  },
+  usp: {
+    id: 'usp',
+    name: 'USP',
+    code: 'USP',
+    tone: 'blue',
+    defaultService: 'express',
+    units: [4, 3, 5, 3],
+    promiseAdjust: 7
+  }
+});
+
+const DESTINATIONS = Object.freeze({
+  north: { id: 'north', code: 'NORTH', name: 'Sundsvall north', path: ['terminal'] },
+  centre: { id: 'centre', code: 'CENTRE', name: 'Sundsvall centre', path: ['terminal'] },
+  harbour: { id: 'harbour', code: 'HARBOUR', name: 'Sundsvall harbour', path: ['terminal'] },
+  harnosand: { id: 'harnosand', code: 'HND', name: 'Härnösand', path: ['terminal', 'network'] },
+  timra: { id: 'timra', code: 'TMR', name: 'Timrå', path: ['terminal', 'network'] },
+  matfors: { id: 'matfors', code: 'MTF', name: 'Matfors', path: ['terminal', 'network'] },
+  stockholm: { id: 'stockholm', code: 'STH', name: 'Stockholm', path: ['terminal', 'network', 'sweden'] },
+  gothenburg: { id: 'gothenburg', code: 'GBG', name: 'Gothenburg', path: ['terminal', 'network', 'sweden'] }
+});
 
 export const SHIFT_CATALOG = Object.freeze([
   {
@@ -14,137 +67,148 @@ export const SHIFT_CATALOG = Object.freeze([
     shiftLabel: 'SUNDSVALL · FIRST SHIFT',
     kind: 'Guided shift',
     duration: '2 min',
-    mechanic: 'Watch · Move · Scan · Send',
-    description: 'Meet the parcel flow one action at a time. There is no clock pressure.',
+    mechanic: 'Select · Sort · Route',
+    description: 'Learn the live controls without a deadline.',
     startScene: 'terminal',
     tone: 'yellow',
     startTime: 8 * 60 + 5,
-    departure: 8 * 60 + 20,
-    metricLabels: ['On time', 'In flow', 'At risk'],
-    metricIcons: ['✓', '▦', '!']
+    activeLevels: ['terminal', 'network'],
+    capacity: { terminal: 1, network: 1, sweden: 0 },
+    durationSeconds: 999,
+    promiseSeconds: 999,
+    jobs: 1,
+    spawnEvery: 999,
+    carriers: ['dlh'],
+    destinations: ['harnosand'],
+    incidents: []
   },
   {
-    id: 'northbound',
+    id: 'town-rush',
     number: 2,
-    title: 'Northbound promises',
-    place: 'Sundsvall → Härnösand',
+    title: 'After-work rush',
+    place: 'Sundsvall',
     shiftLabel: 'SUNDSVALL · SHIFT 2',
-    kind: 'Systems shift',
-    duration: '5 min',
-    mechanic: 'Capacity · Investigation · Rules',
-    description: 'Protect a departure, trace a wrong turn and repair the system behind it.',
+    kind: 'Town rush',
+    duration: '2–3 min',
+    mechanic: 'Two lanes · Four carriers',
+    description: 'Keep both sorting lanes moving as partner vans arrive.',
     startScene: 'terminal',
     tone: 'blue',
     startTime: INITIAL_TIME,
-    departure: BASE_DEPARTURE,
-    metricLabels: ['On time', 'In flow', 'At risk'],
-    metricIcons: ['✓', '▦', '!']
+    activeLevels: ['terminal'],
+    capacity: { terminal: 2, network: 0, sweden: 0 },
+    durationSeconds: 78,
+    promiseSeconds: 30,
+    jobs: 15,
+    spawnEvery: 5,
+    carriers: ['nordpost', 'dlh', 'brang', 'usp'],
+    destinations: ['north', 'centre', 'harbour'],
+    incidents: [{ id: 'scanner-1', type: 'scanner-jam', level: 'terminal', target: 'scanner', at: 38 }]
   },
   {
-    id: 'snow-window',
+    id: 'region-pulse',
     number: 3,
-    title: 'Snow over E4',
-    place: 'Mid Sweden network',
-    shiftLabel: 'REGION MID · SHIFT 3',
-    kind: 'Network shift',
-    duration: '4 min',
-    mechanic: 'Read demand · Allocate · Reroute',
-    description: 'One spare truck, three depots and a closing weather window. Choose what moves.',
-    startScene: 'network',
+    title: 'Region pulse',
+    place: 'Mid Sweden',
+    shiftLabel: 'MID SWEDEN · SHIFT 3',
+    kind: 'Town + region',
+    duration: '3 min',
+    mechanic: 'Sort teams · Route trucks',
+    description: 'Sort in Sundsvall while three regional depots call for trucks.',
+    startScene: 'terminal',
     tone: 'purple',
     startTime: 5 * 60 + 48,
-    departure: 6 * 60 + 30,
-    metricLabels: ['Coverage', 'Waiting', 'At risk'],
-    metricIcons: ['⌁', '▰', '!']
+    activeLevels: ['terminal', 'network'],
+    capacity: { terminal: 2, network: 2, sweden: 0 },
+    durationSeconds: 108,
+    promiseSeconds: 50,
+    jobs: 20,
+    spawnEvery: 5.1,
+    carriers: ['nordpost', 'dlh', 'brang', 'usp'],
+    destinations: ['harnosand', 'timra', 'matfors', 'harnosand', 'timra'],
+    directHigherEvery: 5,
+    incidents: [{ id: 'snow-1', type: 'snow-route', level: 'network', target: 'network-detour', at: 52 }]
   },
   {
-    id: 'scanner-fever',
+    id: 'sweden-night',
     number: 4,
-    title: 'Scanner fever',
-    place: 'Sundsvall terminal',
-    shiftLabel: 'SUNDSVALL · SHIFT 4',
-    kind: 'Triage shift',
-    duration: '4 min',
-    mechanic: 'Diagnose · Prioritise · Recover',
-    description: 'A scanner has stopped. Order the waiting promises, then choose how to recover.',
-    startScene: 'terminal',
+    title: 'Sweden by night',
+    place: 'National network',
+    shiftLabel: 'SWEDEN · SHIFT 4',
+    kind: 'National shift',
+    duration: '3–4 min',
+    mechanic: 'Town · Region · Sweden',
+    description: 'Feed Stockholm and Gothenburg while local work keeps arriving.',
+    startScene: 'sweden',
     tone: 'orange',
-    startTime: 14 * 60 + 6,
-    departure: 14 * 60 + 40,
-    metricLabels: ['Accuracy', 'Queue', 'At risk'],
-    metricIcons: ['◆', '▦', '!']
+    startTime: 21 * 60 + 5,
+    activeLevels: ['terminal', 'network', 'sweden'],
+    capacity: { terminal: 2, network: 2, sweden: 2 },
+    durationSeconds: 138,
+    promiseSeconds: 68,
+    jobs: 25,
+    spawnEvery: 5.15,
+    carriers: ['usp', 'nordpost', 'dlh', 'brang'],
+    destinations: ['stockholm', 'gothenburg', 'timra', 'stockholm', 'harnosand', 'gothenburg'],
+    directHigherEvery: 4,
+    incidents: [
+      { id: 'scanner-2', type: 'scanner-jam', level: 'terminal', target: 'scanner', at: 47 },
+      { id: 'dock-1', type: 'hub-gridlock', level: 'sweden', target: 'sweden-relief', at: 82 }
+    ]
   },
   {
-    id: 'priority-parcel',
+    id: 'friday-surge',
     number: 5,
-    title: 'Priority parcel',
-    place: 'Regional recovery',
-    shiftLabel: 'REGION MID · SHIFT 5',
-    kind: 'Investigation shift',
+    title: 'Friday surge',
+    place: 'National network',
+    shiftLabel: 'SWEDEN · FRIDAY SURGE',
+    kind: 'Peak shift',
     duration: '4 min',
-    mechanic: 'Trace · Deduce · Recover',
-    description: 'Find a temperature-controlled parcel from its scan trail and get it moving.',
-    startScene: 'case',
+    mechanic: 'All levels · Live disruptions',
+    description: 'Everything is open, everything is arriving, and every second matters.',
+    startScene: 'terminal',
     tone: 'pink',
-    startTime: 20 * 60 + 32,
-    departure: 21 * 60 + 10,
-    metricLabels: ['Cold chain', 'Min left', 'At risk'],
-    metricIcons: ['◇', '◷', '!']
+    startTime: 16 * 60 + 12,
+    activeLevels: ['terminal', 'network', 'sweden'],
+    capacity: { terminal: 2, network: 2, sweden: 2 },
+    durationSeconds: 168,
+    promiseSeconds: 62,
+    jobs: 32,
+    spawnEvery: 4.75,
+    carriers: ['nordpost', 'dlh', 'brang', 'usp'],
+    destinations: ['stockholm', 'harnosand', 'gothenburg', 'timra', 'centre', 'stockholm', 'matfors', 'gothenburg'],
+    directHigherEvery: 3,
+    incidents: [
+      { id: 'scanner-3', type: 'scanner-jam', level: 'terminal', target: 'scanner', at: 34 },
+      { id: 'snow-2', type: 'snow-route', level: 'network', target: 'network-detour', at: 73 },
+      { id: 'dock-2', type: 'hub-gridlock', level: 'sweden', target: 'sweden-relief', at: 112 }
+    ]
   }
 ]);
 
 const SHIFT_BY_ID = new Map(SHIFT_CATALOG.map((shift) => [shift.id, shift]));
+const TARGET_LABELS = Object.freeze({
+  'express-lane': 'Express A',
+  'standard-lane': 'Standard B',
+  'network-sundsvall': 'National gate',
+  'network-harnosand': 'Härnösand',
+  'network-timra': 'Timrå',
+  'network-matfors': 'Matfors',
+  'sweden-sundsvall': 'Sundsvall',
+  'sweden-stockholm': 'Stockholm',
+  'sweden-gothenburg': 'Gothenburg',
+  scanner: 'Scanner 2',
+  'network-detour': 'Inland road',
+  'sweden-relief': 'Relief dock'
+});
 
-const TRIAGE_VARIANTS = Object.freeze([
-  [
-    { id: 'medicine', label: 'Chilled medicine', promise: '28 min', priority: 1, tone: 'pink' },
-    { id: 'express', label: 'Express documents', promise: '51 min', priority: 2, tone: 'blue' },
-    { id: 'economy', label: 'Economy returns', promise: 'Tomorrow', priority: 3, tone: 'yellow' }
-  ],
-  [
-    { id: 'flight', label: 'Airport connection', promise: '19 min', priority: 1, tone: 'blue' },
-    { id: 'sample', label: 'Laboratory sample', promise: '44 min', priority: 2, tone: 'pink' },
-    { id: 'returns', label: 'Shop returns', promise: 'Tomorrow', priority: 3, tone: 'yellow' }
-  ],
-  [
-    { id: 'parts', label: 'Repair parts', promise: '24 min', priority: 1, tone: 'orange' },
-    { id: 'signed', label: 'Signed delivery', promise: '63 min', priority: 2, tone: 'blue' },
-    { id: 'catalogue', label: 'Catalogues', promise: '2 days', priority: 3, tone: 'yellow' }
-  ]
-]);
+const INCIDENT_LABELS = Object.freeze({
+  'scanner-jam': 'Scanner jam',
+  'snow-route': 'Snow on E4',
+  'hub-gridlock': 'National dock blocked'
+});
 
-const CASE_VARIANTS = Object.freeze([
-  {
-    parcelId: 'SE-8841-204',
-    correctLocation: 'dock-3',
-    evidence: ['Inbound scan · 20:11', 'No outbound confirmation', 'Handheld ping · Dock 3 · 20:18'],
-    locations: [
-      { id: 'dock-3', label: 'Dock 3' },
-      { id: 'truck-7', label: 'Truck 7' },
-      { id: 'timra', label: 'Timrå depot' }
-    ]
-  },
-  {
-    parcelId: 'SE-2930-117',
-    correctLocation: 'timra',
-    evidence: ['Sundsvall outbound · 20:05', 'Timrå arrival group · 20:21', 'No final cage scan'],
-    locations: [
-      { id: 'cage-4', label: 'Sundsvall cage 4' },
-      { id: 'timra', label: 'Timrå inbound' },
-      { id: 'truck-7', label: 'Truck 7' }
-    ]
-  },
-  {
-    parcelId: 'SE-7105-663',
-    correctLocation: 'truck-7',
-    evidence: ['Dock 3 scan · 20:09', 'Truck 7 load list · matched', 'No Härnösand arrival scan'],
-    locations: [
-      { id: 'truck-7', label: 'Truck 7' },
-      { id: 'harnosand', label: 'Härnösand depot' },
-      { id: 'dock-3', label: 'Dock 3' }
-    ]
-  }
-]);
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
 export function getShiftDefinition(id = 'first-rounds') {
   return SHIFT_BY_ID.get(id) || SHIFT_BY_ID.get('first-rounds');
@@ -157,302 +221,305 @@ export function formatClock(totalMinutes) {
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 }
 
+export function formatSeconds(totalSeconds) {
+  const seconds = Math.max(0, Math.ceil(totalSeconds));
+  const minutes = Math.floor(seconds / 60);
+  return `${minutes}:${String(seconds % 60).padStart(2, '0')}`;
+}
+
 export function getStage(state) {
   if (state.completed) return 'complete';
   if (!state.started) return 'brief';
   return state.stage;
 }
 
-function baseState(shiftId, variant) {
+function destinationFor(id) {
+  return DESTINATIONS[id] || DESTINATIONS.centre;
+}
+
+function targetForJob(job, level = job.stage) {
+  if (level === 'terminal') return job.service === 'express' ? 'express-lane' : 'standard-lane';
+  if (level === 'network') {
+    return ['harnosand', 'timra', 'matfors'].includes(job.destinationId)
+      ? `network-${job.destinationId}`
+      : 'network-sundsvall';
+  }
+  if (level === 'sweden') return `sweden-${job.destinationId}`;
+  return '';
+}
+
+function buildJobs(shift, variant) {
+  const jobs = [];
+  for (let index = 0; index < shift.jobs; index += 1) {
+    const carrierId = shift.carriers[(index + variant) % shift.carriers.length];
+    const carrier = CARRIERS[carrierId];
+    const destinationStep = shift.destinations.length % 2 === 0 ? shift.destinations.length - 1 : 2;
+    const destinationId = shift.destinations[(index * destinationStep + variant) % shift.destinations.length];
+    const destination = destinationFor(destinationId);
+    let path = destination.path.filter((level) => shift.activeLevels.includes(level));
+    let directLevel = 0;
+    if (shift.directHigherEvery && index > 1 && (index + variant + 1) % shift.directHigherEvery === 0) {
+      directLevel = Math.min(path.length - 1, 1 + ((index + variant) % Math.max(1, path.length - 1)));
+    }
+    path = path.slice(directLevel);
+    const units = carrier.units[(index + variant * 2) % carrier.units.length];
+    const jitter = ((index * 17 + variant * 11) % 7) * 0.16;
+    const at = shift.id === 'first-rounds' ? 0 : 1.25 + index * shift.spawnEvery + jitter;
+    const service = index % 7 === 5
+      ? (carrier.defaultService === 'express' ? 'standard' : 'express')
+      : carrier.defaultService;
+    const promise = shift.promiseSeconds + carrier.promiseAdjust + path.length * 10 - units * 0.6;
+
+    jobs.push({
+      id: shift.id === 'first-rounds' ? 'TRAINING-01' : `${carrier.code}-${String(index + 1).padStart(2, '0')}`,
+      carrierId,
+      carrierName: carrier.name,
+      carrierCode: carrier.code,
+      carrierTone: carrier.tone,
+      destinationId,
+      destinationName: destination.name,
+      destinationCode: destination.code,
+      service,
+      units,
+      path,
+      pathIndex: 0,
+      stage: path[0],
+      target: '',
+      scheduledAt: at,
+      arrivedAt: null,
+      deadline: at + promise,
+      status: 'scheduled',
+      startedAt: null,
+      completesAt: null,
+      queueOrder: null,
+      deliveredAt: null,
+      late: false,
+      missed: false,
+      history: []
+    });
+  }
+  return jobs;
+}
+
+function buildIncidents(shift) {
+  return shift.incidents.map((incident) => ({
+    ...incident,
+    label: INCIDENT_LABELS[incident.type],
+    active: false,
+    resolved: false,
+    triggeredAt: null,
+    resolvedAt: null
+  }));
+}
+
+export function createInitialState(shiftId = 'first-rounds', variant = 0) {
   const shift = getShiftDefinition(shiftId);
+  const normalizedVariant = Math.max(0, Math.floor(variant || 0));
   return {
     shiftId: shift.id,
-    variant,
+    variant: normalizedVariant,
     started: false,
     completed: false,
     paused: true,
     speed: 1,
     stage: 'brief',
+    elapsed: 0,
     time: shift.startTime,
-    departure: shift.departure,
+    durationSeconds: shift.durationSeconds,
+    selectedJobId: null,
+    jobs: buildJobs(shift, normalizedVariant),
+    incidents: buildIncidents(shift),
+    capacity: { ...shift.capacity },
+    queueSequence: 0,
+    delivered: 0,
+    onTimeDelivered: 0,
+    missed: 0,
+    mistakes: 0,
+    combo: 0,
+    bestCombo: 0,
+    score: shift.id === 'first-rounds' ? 300 : 0,
     onTime: 100,
     backlog: 0,
     risk: 0,
-    score: 400,
-    saved: 0,
-    lateMinutes: 0,
-    lastMinute: Math.floor(shift.startTime),
     outcome: null,
-    events: [],
-    staffMoved: false,
-    truckHeld: false,
-    packageSelected: false,
-    signatureFound: false,
-    ruleFixed: false,
-    verified: 0,
-    expressCrew: 4,
-    standardCrew: 6,
-    expressLoad: 62,
-    standardLoad: 42,
-    downstreamMargin: 10,
-    laneInspected: false,
-    scannerInspected: false,
-    inspectedDepots: [],
-    allocation: null,
-    routeChoice: null,
-    delivered: 0,
-    deliveryTarget: 0,
-    triageQueue: [],
-    triageOrder: [],
-    triageMistakes: 0,
-    scannerFixed: false,
-    scannerBypassed: false,
-    processed: 0,
-    caseData: null,
-    clueChoice: null,
-    locationCorrect: false,
-    recoveryChoice: null,
-    deliveryProgress: 0
+    events: []
   };
 }
 
-export function createInitialState(shiftId = 'first-rounds', variant = 0) {
-  const normalizedVariant = Math.max(0, Math.floor(variant || 0));
-  const state = baseState(shiftId, normalizedVariant);
-
-  switch (state.shiftId) {
-    case 'first-rounds':
-      Object.assign(state, {
-        onTime: 98,
-        backlog: 6,
-        risk: 0,
-        score: 300,
-        expressCrew: 2,
-        standardCrew: 4,
-        expressLoad: 54,
-        standardLoad: 31
-      });
-      break;
-    case 'northbound':
-      Object.assign(state, {
-        onTime: 91,
-        backlog: 84,
-        risk: 18,
-        score: 600,
-        expressLoad: 92,
-        standardLoad: 43
-      });
-      break;
-    case 'snow-window':
-      Object.assign(state, {
-        onTime: 72,
-        backlog: 49,
-        risk: 23,
-        score: 520
-      });
-      break;
-    case 'scanner-fever':
-      Object.assign(state, {
-        onTime: 96,
-        backlog: 31,
-        risk: 7,
-        score: 500,
-        expressLoad: 84,
-        standardLoad: 69,
-        triageQueue: TRIAGE_VARIANTS[normalizedVariant % TRIAGE_VARIANTS.length].map((parcel) => ({ ...parcel }))
-      });
-      break;
-    case 'priority-parcel':
-      Object.assign(state, {
-        onTime: 100,
-        backlog: 38,
-        risk: 1,
-        score: 480,
-        packageSelected: false,
-        caseData: {
-          ...CASE_VARIANTS[normalizedVariant % CASE_VARIANTS.length],
-          evidence: [...CASE_VARIANTS[normalizedVariant % CASE_VARIANTS.length].evidence],
-          locations: CASE_VARIANTS[normalizedVariant % CASE_VARIANTS.length].locations.map((location) => ({ ...location }))
-        }
-      });
-      break;
-  }
-
-  return state;
+function cloneJob(job) {
+  return { ...job, path: [...job.path], history: [...job.history] };
 }
 
-function canRun(state) {
+function activeJobs(state) {
+  return state.jobs.filter((job) => !['scheduled', 'delivered', 'missed'].includes(job.status));
+}
+
+function busyAtLevel(state, level) {
+  return state.jobs.filter((job) => job.stage === level && job.status === 'processing').length;
+}
+
+function waitingAtLevel(state, level) {
+  return state.jobs.filter((job) => job.stage === level && ['waiting', 'queued'].includes(job.status)).length;
+}
+
+function canControlTime(state) {
   if (!state.started || state.completed) return false;
-  if (state.shiftId === 'northbound') return !['compare', 'rule', 'dispatch'].includes(state.stage);
-  return ['coach-watch', 'weather-run', 'jam-run', 'case-run'].includes(state.stage);
-}
-
-function activeHotspots(state) {
-  const stage = getStage(state);
-  switch (state.shiftId) {
-    case 'first-rounds':
-      if (stage === 'tour') return ['express-lane'];
-      if (stage === 'coach-move') return ['express-lane', 'standard-lane'];
-      if (stage === 'coach-scan') return ['scanner'];
-      if (stage === 'coach-watch') return ['express-lane', 'truck'];
-      if (stage === 'dispatch') return ['truck'];
-      return [];
-    case 'northbound': {
-      const network = ['network-sundsvall', 'network-harnosand', 'network-timra', 'network-matfors'];
-      if (stage === 'protect') return ['express-lane', 'standard-lane', 'truck', ...network];
-      if (stage === 'investigate') return ['parcel', 'express-lane', 'standard-lane', 'truck', ...network];
-      if (stage === 'compare') return ['case-package'];
-      if (stage === 'rule') return ['case-package', 'case-similar'];
-      if (stage === 'verify') return ['express-lane', 'standard-lane', 'truck', ...network];
-      if (stage === 'dispatch') return ['truck', ...network];
-      return [];
-    }
-    case 'snow-window':
-      return ['network-sundsvall', 'network-harnosand', 'network-timra', 'network-matfors'];
-    case 'scanner-fever':
-      if (stage === 'jam-diagnose') return ['scanner', 'parcel'];
-      if (stage === 'jam-triage' || stage === 'jam-repair') return ['scanner', 'parcel', 'express-lane', 'standard-lane'];
-      if (stage === 'jam-run' || stage === 'dispatch') return ['scanner', 'express-lane', 'standard-lane', 'truck'];
-      return [];
-    case 'priority-parcel':
-      if (stage === 'case-inspect' || stage === 'case-clue') return ['case-package'];
-      if (stage === 'case-plan' || stage === 'case-run' || stage === 'dispatch') {
-        return ['case-package', 'network-sundsvall', 'network-harnosand', 'network-timra', 'network-matfors'];
-      }
-      return [];
-    default:
-      return [];
-  }
+  if (state.shiftId !== 'first-rounds') return true;
+  return ['coach-town-run', 'coach-region-run'].includes(state.stage);
 }
 
 function availableScenes(state) {
-  switch (state.shiftId) {
-    case 'first-rounds':
-    case 'scanner-fever':
-      return ['terminal'];
-    case 'snow-window':
-      return ['network'];
-    case 'priority-parcel':
-      return state.stage === 'case-inspect' || state.stage === 'case-clue' ? ['case'] : ['case', 'network'];
-    case 'northbound':
-      return state.packageSelected ? ['terminal', 'network', 'case'] : ['terminal', 'network'];
-    default:
-      return ['terminal'];
+  const shift = getShiftDefinition(state.shiftId);
+  if (state.shiftId !== 'first-rounds') return [...shift.activeLevels];
+  if (['coach-open-region', 'coach-region-select', 'coach-region-target', 'coach-region-run', 'complete'].includes(getStage(state))) {
+    return ['terminal', 'network'];
   }
+  return ['terminal'];
+}
+
+function liveTargetIds(state) {
+  const ids = [];
+  const scenes = availableScenes(state);
+  if (scenes.includes('terminal')) ids.push('express-lane', 'standard-lane');
+  if (scenes.includes('network')) ids.push('network-sundsvall', 'network-harnosand', 'network-timra', 'network-matfors');
+  if (scenes.includes('sweden')) ids.push('sweden-sundsvall', 'sweden-stockholm', 'sweden-gothenburg');
+  return ids;
+}
+
+function activeHotspots(state) {
+  if (!state.started || state.completed) return [];
+  if (state.shiftId === 'first-rounds') {
+    if (state.stage === 'coach-town-target') return ['express-lane'];
+    if (state.stage === 'coach-region-target') return ['network-harnosand'];
+    return [];
+  }
+  return [
+    ...liveTargetIds(state),
+    ...state.incidents.filter((incident) => incident.active).map((incident) => incident.target)
+  ];
 }
 
 function hotspotPresentation(state) {
-  if (state.shiftId === 'first-rounds') {
-    return {
-      labels: { 'express-lane': '1 · Express A', 'standard-lane': 'Standard B', scanner: '3 · Scanner', truck: '4 · Send van' },
-      icons: { 'express-lane': '1', scanner: '3', truck: '4' }
-    };
-  }
-  if (state.shiftId === 'scanner-fever') {
-    return {
-      labels: { scanner: state.scannerFixed ? 'Scanner restored' : 'Scanner 2 · stopped', parcel: 'Blocked parcels' },
-      tones: { scanner: state.scannerFixed ? 'good' : 'danger', parcel: 'danger' },
-      icons: { scanner: state.scannerFixed ? '✓' : '!', parcel: '▦' }
-    };
-  }
-  if (state.shiftId === 'snow-window') {
-    return {
-      labels: {
-        'network-harnosand': 'Härnösand · 14 urgent',
-        'network-timra': 'Timrå · 26 waiting',
-        'network-matfors': 'Matfors · 9 waiting',
-        'network-sundsvall': 'Spare truck'
-      },
-      tones: {
-        'network-harnosand': state.allocation === 'harnosand' ? 'good' : 'danger',
-        'network-timra': state.allocation === 'timra' ? 'good' : 'yellow',
-        'network-matfors': state.routeChoice === 'inland' ? 'blue' : 'yellow'
-      }
-    };
-  }
-  if (state.shiftId === 'priority-parcel') {
-    return {
-      labels: {
-        'case-package': state.caseData?.parcelId || 'Priority parcel',
-        'network-sundsvall': 'Sundsvall',
-        'network-harnosand': 'Härnösand',
-        'network-timra': 'Timrå',
-        'network-matfors': 'Matfors'
-      },
-      tones: { 'case-package': state.locationCorrect ? 'good' : 'danger' }
-    };
-  }
-  return {
-    labels: {},
-    tones: {
-      parcel: state.ruleFixed ? 'good' : 'danger',
-      'network-harnosand': state.ruleFixed ? 'good' : 'danger'
-    },
-    icons: { 'network-harnosand': state.ruleFixed ? '✓' : '!' }
+  const labels = {};
+  const tones = {
+    'express-lane': 'blue',
+    'standard-lane': 'yellow',
+    'network-sundsvall': 'purple',
+    'network-harnosand': 'blue',
+    'network-timra': 'yellow',
+    'network-matfors': 'green',
+    'sweden-sundsvall': 'yellow',
+    'sweden-stockholm': 'blue',
+    'sweden-gothenburg': 'green'
   };
+  const icons = {};
+  const targetStatus = {};
+
+  for (const id of liveTargetIds(state)) {
+    const level = id.startsWith('network-') ? 'network' : id.startsWith('sweden-') ? 'sweden' : 'terminal';
+    const processing = state.jobs.filter((job) => job.target === id && job.status === 'processing').length;
+    const queued = state.jobs.filter((job) => job.target === id && job.status === 'queued').length;
+    const load = processing + queued;
+    labels[id] = load ? `${TARGET_LABELS[id]} · ${load}` : TARGET_LABELS[id];
+    icons[id] = processing ? '●' : queued ? '◷' : id.includes('lane') ? (id.startsWith('express') ? '↗' : '■') : '○';
+    targetStatus[id] = { level, processing, queued, label: TARGET_LABELS[id] };
+  }
+
+  for (const incident of state.incidents.filter((item) => item.active)) {
+    labels[incident.target] = incident.type === 'scanner-jam'
+      ? 'Clear scanner jam'
+      : incident.type === 'snow-route'
+        ? 'Open inland detour'
+        : 'Open relief dock';
+    tones[incident.target] = 'danger';
+    icons[incident.target] = '!';
+  }
+
+  return { labels, tones, icons, targetStatus };
+}
+
+function recalculate(state) {
+  const active = activeJobs(state);
+  state.delivered = state.jobs.filter((job) => job.status === 'delivered').length;
+  state.onTimeDelivered = state.jobs.filter((job) => job.status === 'delivered' && !job.late).length;
+  state.missed = state.jobs.filter((job) => job.status === 'missed').length;
+  state.backlog = active.length;
+  const resolved = state.delivered + state.missed;
+  state.onTime = resolved ? Math.round((state.onTimeDelivered / resolved) * 100) : 100;
+  const dueSoon = active.filter((job) => job.deadline - state.elapsed <= 12).length;
+  const activeIncidents = state.incidents.filter((incident) => incident.active).length;
+  state.risk = dueSoon + state.missed + activeIncidents * 2;
 }
 
 export class ShiftSimulation {
   constructor(onChange = () => {}, shiftId = 'first-rounds', options = {}) {
-    this.shiftId = getShiftDefinition(shiftId).id;
+    this.shift = getShiftDefinition(shiftId);
+    this.shiftId = this.shift.id;
     this.variant = Math.max(0, Math.floor(options.variant || 0));
     this.state = createInitialState(this.shiftId, this.variant);
     this.onChange = onChange;
-    this.progressAccumulator = 0;
   }
 
   emit(type, message = '', data = {}) {
+    recalculate(this.state);
     const event = { type, message, data, at: formatClock(this.state.time) };
-    this.state.events = [...this.state.events.slice(-15), event];
+    this.state.events = [...this.state.events.slice(-20), event];
     this.onChange(this.snapshot(), event);
     return event;
   }
 
   snapshot() {
+    recalculate(this.state);
     const presentation = hotspotPresentation(this.state);
+    const levelCounts = Object.fromEntries(LEVELS.map((level) => [level, waitingAtLevel(this.state, level)]));
+    const resourceStatus = Object.fromEntries(LEVELS.map((level) => [level, {
+      capacity: this.state.capacity[level] || 0,
+      busy: busyAtLevel(this.state, level),
+      waiting: waitingAtLevel(this.state, level)
+    }]));
+    const selectedJob = this.state.jobs.find((job) => job.id === this.state.selectedJobId) || null;
     return {
       ...this.state,
+      jobs: this.state.jobs.map(cloneJob),
+      incidents: this.state.incidents.map((incident) => ({ ...incident })),
+      capacity: { ...this.state.capacity },
       events: [...this.state.events],
-      inspectedDepots: [...this.state.inspectedDepots],
-      triageQueue: this.state.triageQueue.map((parcel) => ({ ...parcel })),
-      triageOrder: [...this.state.triageOrder],
-      caseData: this.state.caseData ? {
-        ...this.state.caseData,
-        evidence: [...this.state.caseData.evidence],
-        locations: this.state.caseData.locations.map((location) => ({ ...location }))
-      } : null,
       stage: getStage(this.state),
-      canRun: canRun(this.state),
+      canRun: canControlTime(this.state),
       activeHotspots: activeHotspots(this.state),
       availableScenes: availableScenes(this.state),
-      hotspotLabels: presentation.labels || {},
-      hotspotTones: presentation.tones || {},
-      hotspotIcons: presentation.icons || {}
+      hotspotLabels: presentation.labels,
+      hotspotTones: presentation.tones,
+      hotspotIcons: presentation.icons,
+      targetStatus: presentation.targetStatus,
+      levelCounts,
+      resourceStatus,
+      selectedJob: selectedJob ? cloneJob(selectedJob) : null,
+      remainingSeconds: Math.max(0, this.shift.durationSeconds - this.state.elapsed),
+      arrivalsComplete: this.state.jobs.every((job) => job.status !== 'scheduled')
     };
   }
 
   start() {
     if (this.state.started) return false;
     this.state.started = true;
-    this.state.score += 40;
-    const starts = {
-      'first-rounds': ['tour', true, 'First shift started. Begin with the blue Express lane.'],
-      northbound: ['protect', false, 'Northbound Express departs at 18:20.'],
-      'snow-window': ['weather-scan', true, 'Snow shift started. Inspect all three depots before assigning the spare truck.'],
-      'scanner-fever': ['jam-diagnose', true, 'Scanner 2 has stopped. Inspect the machine and the blocked flow.'],
-      'priority-parcel': ['case-inspect', true, 'Priority recovery started. Inspect the temperature-controlled parcel trail.']
-    };
-    const [stage, paused, message] = starts[this.state.shiftId];
-    this.state.stage = stage;
-    this.state.paused = paused;
-    this.emit('start', message);
+    this.spawnArrivals();
+    if (this.shiftId === 'first-rounds') {
+      this.state.stage = 'coach-select';
+      this.state.paused = true;
+      this.emit('start', 'First shift started. Select the waiting DLH parcel.');
+    } else {
+      this.state.stage = 'live';
+      this.state.paused = false;
+      this.emit('start', `${this.shift.title} is live.`);
+    }
     return true;
   }
 
   setPaused(paused) {
-    if (!canRun(this.state)) return false;
+    if (!canControlTime(this.state)) return false;
     this.state.paused = Boolean(paused);
-    this.emit(paused ? 'pause' : 'resume', paused ? 'Shift paused.' : `Shift running at ${this.state.speed} times speed.`);
+    this.emit(paused ? 'pause' : 'resume', paused ? 'Shift paused.' : `Live at ${this.state.speed} times speed.`);
     return true;
   }
 
@@ -461,445 +528,260 @@ export class ShiftSimulation {
   }
 
   setSpeed(speed) {
-    if (!canRun(this.state)) return false;
+    if (!canControlTime(this.state)) return false;
     this.state.speed = speed === 2 ? 2 : 1;
     this.state.paused = false;
-    this.emit('speed', `Shift running at ${this.state.speed} times speed.`);
+    this.emit('speed', `Live at ${this.state.speed} times speed.`);
     return true;
   }
 
   perform(action, value = null) {
     if (!this.state.started || this.state.completed) return false;
-    switch (this.state.shiftId) {
-      case 'first-rounds':
-        return this.performOnboarding(action);
-      case 'northbound':
-        return this.performNorthbound(action);
-      case 'snow-window':
-        return this.performSnow(action, value);
-      case 'scanner-fever':
-        return this.performScanner(action, value);
-      case 'priority-parcel':
-        return this.performPriority(action, value);
-      default:
-        return false;
-    }
+    if (action === 'select-job') return this.selectJob(value);
+    if (action === 'route-selected') return this.routeSelected(value);
+    if (action === 'resolve-incident') return this.resolveIncident(value);
+    if (action === 'visit-level') return this.visitLevel(value);
+    return false;
   }
 
-  performOnboarding(action) {
-    if (action === 'inspect-express' && this.state.stage === 'tour') {
-      this.state.laneInspected = true;
-      this.state.stage = 'coach-move';
-      this.state.score += 60;
-      this.emit('inspect', 'Express A carries the promises that leave first. Now give it the spare crew.');
+  selectJob(jobId) {
+    const job = this.state.jobs.find((item) => item.id === jobId);
+    if (!job || job.status !== 'waiting') return false;
+    this.state.selectedJobId = job.id;
+    if (this.shiftId === 'first-rounds') {
+      if (this.state.stage === 'coach-select' && job.stage === 'terminal') this.state.stage = 'coach-town-target';
+      else if (this.state.stage === 'coach-region-select' && job.stage === 'network') this.state.stage = 'coach-region-target';
+      else return false;
+    }
+    this.emit('select', `${job.carrierName} batch selected: ${job.destinationName}, ${job.units} parcels.`, { jobId });
+    return true;
+  }
+
+  routeSelected(target) {
+    const job = this.state.jobs.find((item) => item.id === this.state.selectedJobId);
+    if (!job || job.status !== 'waiting') return false;
+    const expected = targetForJob(job);
+    if (target !== expected) {
+      if (this.shiftId === 'first-rounds') return false;
+      this.state.mistakes += 1;
+      this.state.combo = 0;
+      this.state.score = Math.max(0, this.state.score - 35);
+      job.deadline -= 2;
+      this.emit('mistake', `${job.carrierCode} is marked for ${TARGET_LABELS[expected]}.`, { jobId: job.id, expected });
       return true;
     }
-    if (action === 'move-staff' && this.state.stage === 'coach-move') {
-      this.state.staffMoved = true;
-      this.state.expressCrew = 4;
-      this.state.standardCrew = 2;
-      this.state.expressLoad = 38;
-      this.state.standardLoad = 44;
-      this.state.stage = 'coach-scan';
-      this.state.score += 90;
-      this.emit('staff', 'Two operators moved to Express A. The blue lane is clearing.');
-      return true;
+
+    this.state.selectedJobId = null;
+    job.target = target;
+    job.queueOrder = ++this.state.queueSequence;
+    if (busyAtLevel(this.state, job.stage) < (this.state.capacity[job.stage] || 0)) {
+      this.startProcessing(job);
+    } else {
+      job.status = 'queued';
+      job.history.push(`${formatClock(this.state.time)} · queued for ${TARGET_LABELS[target]}`);
+      this.emit('queue', `${job.carrierCode} queued for ${TARGET_LABELS[target]}.`, { jobId: job.id, level: job.stage });
     }
-    if (action === 'inspect-scanner' && this.state.stage === 'coach-scan') {
-      this.state.scannerInspected = true;
-      this.state.stage = 'coach-run';
-      this.state.score += 60;
-      this.emit('inspect', 'The scanner reads each promise and sends the parcel to its lane. The flow is ready.');
-      return true;
-    }
-    if (action === 'resume' && this.state.stage === 'coach-run') {
-      this.state.stage = 'coach-watch';
+
+    if (this.shiftId === 'first-rounds') {
+      this.state.stage = job.stage === 'terminal' ? 'coach-town-run' : 'coach-region-run';
       this.state.paused = false;
-      this.emit('resume', 'Flow running. Watch six parcels reach the correct lane.');
-      return true;
     }
-    if (action === 'dispatch' && this.state.stage === 'dispatch') return this.finishShift();
-    return false;
+    return true;
   }
 
-  performNorthbound(action) {
-    if (action === 'move-staff' && !this.state.staffMoved && ['protect', 'investigate'].includes(this.state.stage)) {
-      this.state.staffMoved = true;
-      this.state.expressCrew = 6;
-      this.state.standardCrew = 4;
-      this.state.expressLoad = 68;
-      this.state.standardLoad = 57;
-      this.state.risk = Math.max(9, this.state.risk - 9);
-      this.state.backlog = Math.max(70, this.state.backlog - 13);
-      this.state.onTime = Math.max(this.state.onTime, 94);
-      this.state.stage = 'investigate';
-      this.state.score += 180;
-      this.emit('staff', 'Two operators moved to Express A. The immediate departure risk is falling.');
-      return true;
-    }
-    if (action === 'hold-truck' && this.state.stage === 'protect' && !this.state.truckHeld) {
-      this.state.truckHeld = true;
-      this.state.departure += 3;
-      this.state.downstreamMargin -= 3;
-      this.state.risk = Math.max(12, this.state.risk - 4);
-      this.state.score -= 60;
-      this.state.stage = 'investigate';
-      this.emit('hold', 'Truck held for three minutes. Current parcels gain time; the transfer loses margin.');
-      return true;
-    }
-    if (action === 'trace-package' && this.state.stage === 'investigate' && !this.state.packageSelected) {
-      this.state.packageSelected = true;
-      this.state.paused = true;
-      this.state.stage = 'compare';
-      this.state.score += 70;
-      this.emit('package', 'Parcel SE-0428-771 selected. The shift paused for inspection.');
-      return true;
-    }
-    if (action === 'find-similar' && this.state.stage === 'compare' && !this.state.signatureFound) {
-      this.state.signatureFound = true;
-      this.state.stage = 'rule';
-      this.state.score += 120;
-      this.emit('signature', 'Twelve matching Express parcels share the same after-17:30 fallback rule.');
-      return true;
-    }
-    if (action === 'fix-rule' && this.state.stage === 'rule' && !this.state.ruleFixed) {
-      this.state.ruleFixed = true;
-      this.state.paused = true;
-      this.state.stage = 'verify';
-      this.state.score += 300;
-      this.state.onTime = Math.max(this.state.onTime, 96);
-      this.emit('rule', 'Express service now takes priority over the north-zone fallback. Run the flow to verify it.');
-      return true;
-    }
-    if (action === 'resume' && this.state.stage === 'verify') return this.setPaused(false);
-    if (action === 'speed-up' && this.state.stage === 'verify') return this.setSpeed(2);
-    if (action === 'dispatch' && this.state.stage === 'dispatch') return this.finishShift();
-    return false;
+  startProcessing(job) {
+    job.status = 'processing';
+    job.startedAt = this.state.elapsed;
+    job.completesAt = this.state.elapsed + this.processingDuration(job);
+    job.history.push(`${formatClock(this.state.time)} · ${TARGET_LABELS[job.target]} started`);
+    this.emit('work', `${TARGET_LABELS[job.target]} started ${job.carrierCode}.`, { jobId: job.id, level: job.stage });
   }
 
-  performSnow(action, value) {
-    if (action === 'inspect-depot' && this.state.stage === 'weather-scan') {
-      if (!['harnosand', 'timra', 'matfors'].includes(value) || this.state.inspectedDepots.includes(value)) return false;
-      this.state.inspectedDepots = [...this.state.inspectedDepots, value];
-      const messages = {
-        harnosand: 'Härnösand: 14 urgent parcels, including blood samples due at 07:00.',
-        timra: 'Timrå: 26 standard parcels. Their promises allow a later departure.',
-        matfors: 'Matfors: 9 next-day parcels and the open inland road north.'
-      };
-      this.state.score += 35;
-      if (this.state.inspectedDepots.length === 3) this.state.stage = 'weather-allocate';
-      this.emit('inspect', messages[value]);
-      return true;
-    }
-    if (action === 'allocate-truck' && this.state.stage === 'weather-allocate') {
-      if (!['harnosand', 'timra', 'matfors'].includes(value)) return false;
-      this.state.allocation = value;
-      this.state.deliveryTarget = { harnosand: 14, timra: 26, matfors: 9 }[value];
-      this.state.risk = value === 'harnosand' ? 9 : 20;
-      this.state.score += value === 'harnosand' ? 220 : 70;
-      this.state.stage = 'weather-route';
-      this.emit('allocate', `The spare truck is assigned to ${value === 'harnosand' ? 'Härnösand' : value === 'timra' ? 'Timrå' : 'Matfors'}. Choose its road.`);
-      return true;
-    }
-    if (action === 'choose-route' && this.state.stage === 'weather-route') {
-      if (!['coast', 'inland'].includes(value)) return false;
-      this.state.routeChoice = value;
-      this.state.stage = 'weather-run';
-      this.state.paused = true;
-      this.state.risk += value === 'coast' ? 5 : -4;
-      this.state.score += value === 'inland' ? 180 : 40;
-      this.emit('route', value === 'inland'
-        ? 'The truck will detour inland via Matfors. Longer, but open and reliable.'
-        : 'The truck will test the snowy coast road. It is shorter, but delay risk remains.');
-      return true;
-    }
-    if (action === 'resume' && this.state.stage === 'weather-run') return this.setPaused(false);
-    if (action === 'speed-up' && this.state.stage === 'weather-run') return this.setSpeed(2);
-    if (action === 'dispatch' && this.state.stage === 'dispatch') return this.finishShift();
-    return false;
+  processingDuration(job) {
+    const base = { terminal: 5.2, network: 8.4, sweden: 10.8 }[job.stage] || 6;
+    const unitFactor = 1 + Math.max(0, job.units - 1) * 0.12;
+    const incident = this.state.incidents.find((item) => item.active && item.level === job.stage);
+    const incidentFactor = incident
+      ? incident.type === 'scanner-jam' ? 1.75 : incident.type === 'snow-route' ? 1.55 : 1.65
+      : 1;
+    return base * unitFactor * incidentFactor;
   }
 
-  performScanner(action, value) {
-    if (action === 'inspect-scanner' && this.state.stage === 'jam-diagnose') {
-      this.state.scannerInspected = true;
-      this.state.stage = 'jam-triage';
-      this.state.score += 75;
-      this.emit('inspect', 'A crushed label is blocking Scanner 2. Three promise groups are waiting for manual release.');
-      return true;
+  resolveIncident(target) {
+    const incident = this.state.incidents.find((item) => item.active && item.target === target);
+    if (!incident) return false;
+    incident.active = false;
+    incident.resolved = true;
+    incident.resolvedAt = this.state.elapsed;
+    this.state.score += 90;
+    for (const job of this.state.jobs.filter((item) => item.status === 'processing' && item.stage === incident.level)) {
+      const remaining = Math.max(0.5, job.completesAt - this.state.elapsed);
+      job.completesAt = this.state.elapsed + remaining * 0.72;
     }
-    if (action === 'prioritize' && this.state.stage === 'jam-triage') {
-      const parcel = this.state.triageQueue.find((item) => item.id === value);
-      if (!parcel || this.state.triageOrder.includes(value)) return false;
-      const expected = [...this.state.triageQueue].sort((a, b) => a.priority - b.priority)[this.state.triageOrder.length];
-      this.state.triageOrder = [...this.state.triageOrder, value];
-      if (expected.id === value) {
-        this.state.score += 70;
+    this.emit('repair', `${incident.label} cleared.`, { incidentId: incident.id, level: incident.level });
+    return true;
+  }
+
+  visitLevel(level) {
+    if (!availableScenes(this.state).includes(level)) return false;
+    const selected = this.state.jobs.find((job) => job.id === this.state.selectedJobId);
+    if (selected && selected.stage !== level) {
+      this.state.selectedJobId = null;
+      this.emit('deselect', `Selection cleared. ${selected.carrierCode} remains in ${LEVEL_LABELS[selected.stage]}.`);
+    }
+    if (this.shiftId === 'first-rounds' && this.state.stage === 'coach-open-region' && level === 'network') {
+      this.state.stage = 'coach-region-select';
+      this.emit('coach', 'Regional view open. Select the DLH batch waiting for Härnösand.');
+    }
+    return true;
+  }
+
+  spawnArrivals() {
+    let spawned = 0;
+    for (const job of this.state.jobs) {
+      if (job.status !== 'scheduled' || job.scheduledAt > this.state.elapsed) continue;
+      job.status = 'waiting';
+      job.arrivedAt = this.state.elapsed;
+      job.target = targetForJob(job);
+      job.history.push(`${formatClock(this.state.time)} · arrived at ${LEVEL_LABELS[job.stage]}`);
+      spawned += 1;
+    }
+    if (spawned && this.shiftId !== 'first-rounds') {
+      this.emit('arrival', `${spawned} new ${spawned === 1 ? 'batch' : 'batches'} arrived.`, { count: spawned });
+    }
+  }
+
+  triggerIncidents() {
+    for (const incident of this.state.incidents) {
+      if (incident.resolved || incident.active || incident.at > this.state.elapsed) continue;
+      incident.active = true;
+      incident.triggeredAt = this.state.elapsed;
+      this.emit('incident', `${incident.label} needs attention in ${LEVEL_LABELS[incident.level]}.`, {
+        incidentId: incident.id,
+        level: incident.level
+      });
+    }
+  }
+
+  completeProcessing() {
+    const completed = this.state.jobs
+      .filter((job) => job.status === 'processing' && job.completesAt <= this.state.elapsed)
+      .sort((a, b) => a.completesAt - b.completesAt);
+    for (const job of completed) this.advanceJob(job);
+    for (const level of LEVELS) this.startQueued(level);
+  }
+
+  advanceJob(job) {
+    job.pathIndex += 1;
+    job.startedAt = null;
+    job.completesAt = null;
+    job.queueOrder = null;
+    job.target = '';
+
+    if (job.pathIndex < job.path.length) {
+      job.stage = job.path[job.pathIndex];
+      job.status = 'waiting';
+      job.arrivedAt = this.state.elapsed;
+      job.target = targetForJob(job);
+      job.history.push(`${formatClock(this.state.time)} · ready in ${LEVEL_LABELS[job.stage]}`);
+      if (this.shiftId === 'first-rounds') {
+        this.state.stage = 'coach-open-region';
+        this.state.paused = true;
+        this.emit('coach', 'The town sort is complete. Open Region to finish the route.');
       } else {
-        this.state.triageMistakes += 1;
-        this.state.risk += 2;
-        this.state.score -= 25;
+        this.emit('handoff', `${job.carrierCode} reached ${LEVEL_LABELS[job.stage]}.`, { jobId: job.id, level: job.stage });
       }
-      if (this.state.triageOrder.length === this.state.triageQueue.length) this.state.stage = 'jam-repair';
-      this.emit('triage', `${parcel.label} released ${this.state.triageOrder.length} of ${this.state.triageQueue.length}.`);
-      return true;
+      return;
     }
-    if (action === 'repair-scanner' && this.state.stage === 'jam-repair') {
-      this.state.scannerFixed = true;
-      this.state.stage = 'jam-run';
-      this.state.paused = true;
-      this.state.risk = Math.max(2, this.state.risk - 5);
-      this.state.onTime = Math.max(97, this.state.onTime);
-      this.state.score += 230;
-      this.emit('repair', 'Crushed label cleared and Scanner 2 calibrated. Run the queue through it.');
-      return true;
+
+    job.status = 'delivered';
+    job.deliveredAt = this.state.elapsed;
+    job.late = job.deliveredAt > job.deadline;
+    job.history.push(`${formatClock(this.state.time)} · delivered${job.late ? ' late' : ' on time'}`);
+    if (job.late) {
+      this.state.combo = 0;
+      this.state.score = Math.max(0, this.state.score - 20);
+    } else {
+      this.state.combo += 1;
+      this.state.bestCombo = Math.max(this.state.bestCombo, this.state.combo);
+      const margin = Math.max(0, job.deadline - job.deliveredAt);
+      this.state.score += Math.round(90 + margin * 3 + Math.min(this.state.combo, 8) * 14);
     }
-    if (action === 'bypass-scanner' && this.state.stage === 'jam-repair') {
-      this.state.scannerBypassed = true;
-      this.state.stage = 'jam-run';
-      this.state.paused = true;
-      this.state.risk += 4;
-      this.state.onTime = 91;
-      this.state.score += 60;
-      this.emit('repair', 'The queue is moving through manual scan. It is faster now, but less accurate.');
-      return true;
+
+    if (this.shiftId === 'first-rounds') {
+      this.finishShift(true);
+    } else {
+      this.emit(job.late ? 'late' : 'delivered', `${job.carrierCode} reached ${job.destinationName}${job.late ? ' late' : ' on time'}.`, { jobId: job.id });
     }
-    if (action === 'resume' && this.state.stage === 'jam-run') return this.setPaused(false);
-    if (action === 'speed-up' && this.state.stage === 'jam-run') return this.setSpeed(2);
-    if (action === 'dispatch' && this.state.stage === 'dispatch') return this.finishShift();
-    return false;
   }
 
-  performPriority(action, value) {
-    if (action === 'inspect-case' && this.state.stage === 'case-inspect' && !this.state.packageSelected) {
-      this.state.packageSelected = true;
-      this.state.stage = 'case-clue';
-      this.state.score += 80;
-      this.emit('package', `${this.state.caseData.parcelId} scan trail opened. Three events narrow down its location.`);
-      return true;
+  startQueued(level) {
+    const capacity = this.state.capacity[level] || 0;
+    while (busyAtLevel(this.state, level) < capacity) {
+      const next = this.state.jobs
+        .filter((job) => job.stage === level && job.status === 'queued')
+        .sort((a, b) => a.queueOrder - b.queueOrder)[0];
+      if (!next) break;
+      this.startProcessing(next);
     }
-    if (action === 'choose-location' && this.state.stage === 'case-clue') {
-      if (!this.state.caseData.locations.some((location) => location.id === value)) return false;
-      this.state.clueChoice = value;
-      this.state.locationCorrect = value === this.state.caseData.correctLocation;
-      this.state.stage = 'case-plan';
-      this.state.score += this.state.locationCorrect ? 220 : 55;
-      this.state.risk += this.state.locationCorrect ? 0 : 2;
-      this.emit('deduce', this.state.locationCorrect
-        ? 'The scan trail fits. The parcel has been found and secured.'
-        : 'The team searched there first, then followed the handheld scan to the parcel. Time was lost.');
-      return true;
+  }
+
+  expirePromises() {
+    for (const job of activeJobs(this.state)) {
+      if (!job.late && this.state.elapsed > job.deadline) {
+        job.late = true;
+        this.state.combo = 0;
+        this.emit('warning', `${job.carrierCode} to ${job.destinationCode} is now late.`, { jobId: job.id, level: job.stage });
+      }
+      if (job.status === 'waiting' && this.state.elapsed > job.deadline + 28) {
+        job.status = 'missed';
+        job.missed = true;
+        if (this.state.selectedJobId === job.id) this.state.selectedJobId = null;
+        this.state.score = Math.max(0, this.state.score - 70);
+        this.emit('missed', `${job.carrierCode} collection left without its batch.`, { jobId: job.id, level: job.stage });
+      }
     }
-    if (action === 'choose-recovery' && this.state.stage === 'case-plan') {
-      if (!['courier', 'linehaul', 'scheduled'].includes(value)) return false;
-      this.state.recoveryChoice = value;
-      this.state.stage = 'case-run';
-      this.state.paused = true;
-      this.state.score += value === 'courier' ? 190 : value === 'linehaul' ? 90 : 20;
-      if (value === 'scheduled') this.state.risk += 3;
-      this.emit('route', {
-        courier: 'A direct courier has the parcel and active temperature control.',
-        linehaul: 'The linehaul is held for the handoff. It can make the promise with little margin.',
-        scheduled: 'The parcel joins the scheduled transfer. Its delivery promise is now at risk.'
-      }[value]);
-      return true;
+  }
+
+  shouldFinish() {
+    if (this.shiftId === 'first-rounds') return false;
+    const noFuture = this.state.jobs.every((job) => job.status !== 'scheduled');
+    const noActive = this.state.jobs.every((job) => ['delivered', 'missed'].includes(job.status));
+    return noFuture && noActive;
+  }
+
+  enforceHardStop() {
+    if (this.state.elapsed < this.shift.durationSeconds + 48) return;
+    for (const job of activeJobs(this.state)) {
+      job.status = 'missed';
+      job.missed = true;
     }
-    if (action === 'resume' && this.state.stage === 'case-run') return this.setPaused(false);
-    if (action === 'speed-up' && this.state.stage === 'case-run') return this.setSpeed(2);
-    if (action === 'dispatch' && this.state.stage === 'dispatch') return this.finishShift();
-    return false;
-  }
-
-  moveStaff() {
-    return this.perform('move-staff');
-  }
-
-  holdTruck() {
-    return this.perform('hold-truck');
-  }
-
-  selectPackage() {
-    return this.perform(this.state.shiftId === 'priority-parcel' ? 'inspect-case' : 'trace-package');
-  }
-
-  findSimilar() {
-    return this.perform('find-similar');
-  }
-
-  fixRule() {
-    return this.perform('fix-rule');
-  }
-
-  completeShift() {
-    return this.perform('dispatch');
   }
 
   tick(realSeconds) {
-    if (!this.state.started || this.state.paused || this.state.completed || !canRun(this.state)) return;
-    const gameMinutes = Math.max(0, realSeconds) * this.state.speed * 0.24;
-    this.state.time += gameMinutes;
-
-    switch (this.state.shiftId) {
-      case 'first-rounds':
-        this.tickOnboarding(gameMinutes);
-        break;
-      case 'northbound':
-        this.tickNorthbound(gameMinutes);
-        break;
-      case 'snow-window':
-        this.tickSnow(gameMinutes);
-        break;
-      case 'scanner-fever':
-        this.tickScanner(gameMinutes);
-        break;
-      case 'priority-parcel':
-        this.tickPriority(gameMinutes);
-        break;
+    if (!this.state.started || this.state.paused || this.state.completed || !canControlTime(this.state)) return;
+    let remaining = Math.max(0, realSeconds) * this.state.speed;
+    while (remaining > 0 && !this.state.completed && !this.state.paused) {
+      const step = Math.min(0.25, remaining);
+      remaining -= step;
+      this.state.elapsed += step;
+      this.state.time = this.shift.startTime + this.state.elapsed * 0.42;
+      this.spawnArrivals();
+      this.triggerIncidents();
+      this.completeProcessing();
+      this.expirePromises();
+      this.enforceHardStop();
+      if (this.shouldFinish()) this.finishShift(true);
     }
-
-    this.onChange(this.snapshot(), { type: 'tick' });
+    if (!this.state.completed) this.onChange(this.snapshot(), { type: 'tick' });
   }
 
-  tickOnboarding(gameMinutes) {
-    this.progressAccumulator += gameMinutes;
-    while (this.progressAccumulator >= 0.62 && this.state.verified < ONBOARDING_VERIFY_TARGET) {
-      this.progressAccumulator -= 0.62;
-      this.state.verified += 1;
-      this.state.backlog = Math.max(0, ONBOARDING_VERIFY_TARGET - this.state.verified);
-      this.state.score += 12;
-    }
-    if (this.state.verified === ONBOARDING_VERIFY_TARGET && this.state.stage === 'coach-watch') {
-      this.state.stage = 'dispatch';
-      this.state.paused = true;
-      this.emit('verified', 'Six promises reached the right lane. The morning van is ready.');
-    }
-  }
-
-  tickNorthbound(gameMinutes) {
-    if (this.state.ruleFixed) {
-      this.progressAccumulator += gameMinutes;
-      while (this.progressAccumulator >= 0.72 && this.state.verified < VERIFY_TARGET) {
-        this.progressAccumulator -= 0.72;
-        this.state.verified += 1;
-        this.state.risk = Math.max(2, this.state.risk - (this.state.verified % 3 === 0 ? 1 : 0));
-        this.state.backlog = Math.max(52, this.state.backlog - 1);
-        this.state.score += 8;
-      }
-      if (this.state.verified === VERIFY_TARGET && this.state.stage === 'verify') {
-        this.state.onTime = Math.max(this.state.onTime, this.state.staffMoved ? 98 : 95);
-        this.state.stage = 'dispatch';
-        this.state.paused = true;
-        this.emit('verified', 'Twelve later parcels reached Express A correctly. The recurring failure has stopped.');
-      }
-    }
-
-    const minute = Math.floor(this.state.time);
-    while (this.state.lastMinute < minute) {
-      this.state.lastMinute += 1;
-      this.stepNorthboundMinute();
-    }
-
-    if (this.state.time >= this.state.departure && this.state.verified < VERIFY_TARGET) {
-      this.state.lateMinutes = Math.floor(this.state.time - this.state.departure) + 1;
-      this.state.onTime = clamp(this.state.onTime - 0.18 * gameMinutes, 72, 100);
-    }
-  }
-
-  stepNorthboundMinute() {
-    if (!this.state.staffMoved) {
-      this.state.expressLoad = clamp(this.state.expressLoad + 0.55, 0, 100);
-      this.state.backlog = clamp(this.state.backlog + 1, 0, 999);
-      if (!this.state.ruleFixed && this.state.lastMinute % 3 === 0) {
-        this.state.risk = clamp(this.state.risk + 1, 0, 99);
-        this.state.onTime = clamp(this.state.onTime - 0.2, 0, 100);
-      }
-    } else {
-      this.state.expressLoad = clamp(this.state.expressLoad - 0.38, 42, 100);
-      if (this.state.lastMinute % 2 === 0) this.state.backlog = Math.max(52, this.state.backlog - 1);
-      if (this.state.ruleFixed && this.state.lastMinute % 2 === 0) this.state.risk = Math.max(2, this.state.risk - 1);
-    }
-  }
-
-  tickSnow(gameMinutes) {
-    const reliability = this.state.routeChoice === 'inland' ? 1 : 0.62;
-    this.progressAccumulator += gameMinutes * reliability;
-    while (this.progressAccumulator >= 0.62 && this.state.delivered < this.state.deliveryTarget) {
-      this.progressAccumulator -= 0.62;
-      this.state.delivered += 1;
-      this.state.backlog = Math.max(0, this.state.backlog - 1);
-      if (this.state.delivered % 3 === 0) this.state.risk = Math.max(this.state.allocation === 'harnosand' ? 2 : 9, this.state.risk - 1);
-      this.state.score += 9;
-    }
-    this.state.onTime = clamp(72 + (this.state.delivered / Math.max(1, this.state.deliveryTarget)) * 26, 0, 99);
-    if (this.state.delivered === this.state.deliveryTarget && this.state.stage === 'weather-run') {
-      this.state.stage = 'dispatch';
-      this.state.paused = true;
-      this.emit('verified', 'The assigned parcels reached their depot. The weather window is closing behind the truck.');
-    }
-  }
-
-  tickScanner(gameMinutes) {
-    const rate = this.state.scannerFixed ? 1 : 0.72;
-    this.progressAccumulator += gameMinutes * rate;
-    while (this.progressAccumulator >= 0.45 && this.state.processed < 31) {
-      this.progressAccumulator -= 0.45;
-      this.state.processed += 1;
-      this.state.backlog = Math.max(0, 31 - this.state.processed);
-      if (this.state.processed % 5 === 0) this.state.risk = Math.max(this.state.scannerFixed ? 1 : 4, this.state.risk - 1);
-      this.state.score += this.state.scannerFixed ? 8 : 4;
-    }
-    if (this.state.processed === 31 && this.state.stage === 'jam-run') {
-      this.state.stage = 'dispatch';
-      this.state.paused = true;
-      this.emit('verified', 'The full queue has cleared. Scanner accuracy is stable.');
-    }
-  }
-
-  tickPriority(gameMinutes) {
-    const rate = { courier: 4.8, linehaul: 3.4, scheduled: 2.35 }[this.state.recoveryChoice] || 0;
-    this.state.deliveryProgress = clamp(this.state.deliveryProgress + gameMinutes * rate, 0, 100);
-    this.state.backlog = Math.max(0, Math.ceil(this.state.departure - this.state.time));
-    if (this.state.time > this.state.departure) {
-      this.state.risk = Math.max(2, this.state.risk + gameMinutes * 0.12);
-      this.state.onTime = clamp(this.state.onTime - gameMinutes * 0.5, 70, 100);
-    }
-    if (this.state.deliveryProgress >= 100 && this.state.stage === 'case-run') {
-      this.state.deliveryProgress = 100;
-      this.state.stage = 'dispatch';
-      this.state.paused = true;
-      this.emit('verified', 'The recipient has the parcel. Temperature remained inside the safe range.');
-    }
-  }
-
-  finishShift() {
-    if (this.state.completed || this.state.stage !== 'dispatch') return false;
+  finishShift(force = false) {
+    if (this.state.completed || (!force && !this.shouldFinish())) return false;
     this.state.completed = true;
     this.state.paused = true;
-    this.state.lateMinutes = Math.max(0, Math.floor(this.state.time - this.state.departure));
-
-    if (this.state.shiftId === 'northbound') {
-      this.state.time = Math.max(this.state.time, this.state.departure);
-      this.state.saved = Math.max(12, 18 - this.state.lateMinutes * 2);
-      this.state.risk = Math.max(0, 18 - this.state.saved);
-      this.state.backlog = Math.max(48, this.state.backlog - 8);
-      this.state.onTime = clamp(this.state.onTime - this.state.lateMinutes * 2, 0, 99);
-      if (!this.state.truckHeld) this.state.score += 120;
-      if (this.state.lateMinutes === 0) this.state.score += 140;
-    } else if (this.state.shiftId === 'first-rounds') {
-      this.state.saved = ONBOARDING_VERIFY_TARGET;
-      this.state.onTime = 100;
-      this.state.score += 120;
-    } else if (this.state.shiftId === 'snow-window') {
-      this.state.saved = this.state.delivered;
-      if (this.state.allocation === 'harnosand') this.state.score += 120;
-    } else if (this.state.shiftId === 'scanner-fever') {
-      this.state.saved = this.state.processed;
-      if (this.state.scannerFixed) this.state.score += 100;
-    } else if (this.state.shiftId === 'priority-parcel') {
-      this.state.saved = 1;
-      this.state.onTime = this.state.recoveryChoice === 'courier' ? 100 : this.state.recoveryChoice === 'linehaul' ? 96 : 86;
-    }
-
-    this.state.score = Math.max(0, Math.round(this.state.score));
+    this.state.stage = 'complete';
+    recalculate(this.state);
     this.state.outcome = createOutcome(this.state);
     this.emit('complete', this.state.outcome.summary);
     return true;
@@ -907,126 +789,60 @@ export class ShiftSimulation {
 
   reset() {
     this.state = createInitialState(this.shiftId, this.variant);
-    this.progressAccumulator = 0;
-    this.emit('reset', 'Shift reset.');
+    this.emit('reset');
   }
 }
 
 export function createOutcome(state) {
   if (state.shiftId === 'first-rounds') {
     return {
+      kicker: 'FIRST SHIFT COMPLETE',
       grade: '✓',
       gradeLabel: 'Training complete',
-      kicker: 'FIRST SHIFT COMPLETE',
-      title: 'You are on the roster.',
-      summary: 'You read the flow, moved the team, checked the scanner and sent the van. Four very different shifts are now open.',
-      medals: [
-        { icon: '1', label: 'First shift' },
-        { icon: '↗', label: 'Promises moving' }
-      ],
+      title: 'You have the route.',
+      summary: 'Select the batch, tap its marked destination, and keep an eye on every level. The live shifts are open.',
+      score: state.score,
       stats: [
-        { label: 'Parcels', value: '6 / 6' },
-        { label: 'On time', value: '100%' },
-        { label: 'Score', value: state.score.toLocaleString('en-SE') }
+        { label: 'Town sort', value: 'Done' },
+        { label: 'Regional route', value: 'Done' },
+        { label: 'Pressure', value: 'None' }
       ],
-      score: state.score
+      medals: [{ icon: '↗', label: 'Ready for live work' }]
     };
   }
 
-  if (state.shiftId === 'northbound') {
-    const cleanFix = state.ruleFixed && state.staffMoved;
-    const onTime = state.lateMinutes === 0;
-    const grade = cleanFix && onTime && !state.truckHeld ? 'A+' : cleanFix && onTime ? 'A' : onTime ? 'B' : 'C';
-    const medals = [];
-    if (state.staffMoved) medals.push({ icon: '↔', label: 'Crew whisperer' });
-    if (state.ruleFixed) medals.push({ icon: '◆', label: 'Root cause found' });
-    if (!state.truckHeld) medals.push({ icon: '↗', label: 'Clean departure' });
-    return {
-      grade,
-      gradeLabel: `Grade ${grade}`,
-      kicker: 'SHIFT COMPLETE',
-      title: 'Promises kept.',
-      summary: onTime
-        ? 'The northbound truck left on time and the recurring routing error is gone.'
-        : `The error is gone. The truck left ${state.lateMinutes} minutes late, with recovery already under way.`,
-      medals,
-      stats: [
-        { label: 'Saved', value: String(state.saved) },
-        { label: 'On time', value: `${Math.round(state.onTime)}%` },
-        { label: 'Score', value: state.score.toLocaleString('en-SE') }
-      ],
-      score: state.score
-    };
-  }
+  recalculate(state);
+  const totalResolved = state.delivered + state.missed;
+  const service = totalResolved ? Math.round((state.onTimeDelivered / totalResolved) * 100) : 0;
+  const grade = service >= 94 && state.missed === 0 && state.mistakes <= 1
+    ? 'A+'
+    : service >= 86 && state.missed <= 1
+      ? 'A'
+      : service >= 74
+        ? 'B'
+        : service >= 60
+          ? 'C'
+          : 'D';
+  const title = grade === 'A+' ? 'The network sang.' : grade === 'A' ? 'Promises kept.' : grade === 'B' ? 'A solid recovery.' : 'The backlog bit back.';
+  const summary = `${state.onTimeDelivered} of ${totalResolved} batches made their promise across the live network.`;
+  const medals = [];
+  if (state.missed === 0) medals.push({ icon: '✓', label: 'Nothing left behind' });
+  if (state.mistakes === 0 && state.delivered > 0 && state.missed === 0) medals.push({ icon: '◆', label: 'Perfect sorting' });
+  if (state.bestCombo >= 6) medals.push({ icon: '×', label: `${state.bestCombo} flow combo` });
+  if (state.incidents.length && state.incidents.every((incident) => incident.resolved)) medals.push({ icon: '!', label: 'Every disruption cleared' });
 
-  if (state.shiftId === 'snow-window') {
-    const urgentFirst = state.allocation === 'harnosand';
-    const reliableRoute = state.routeChoice === 'inland';
-    const grade = urgentFirst && reliableRoute ? 'A+' : urgentFirst || reliableRoute ? 'A' : 'B';
-    return {
-      grade,
-      gradeLabel: `Grade ${grade}`,
-      kicker: 'WEATHER WINDOW CLOSED',
-      title: urgentFirst ? 'The urgent load got through.' : 'The network adapted.',
-      summary: urgentFirst
-        ? 'The spare truck protected the most time-sensitive promises before the snow closed in.'
-        : 'The assigned route moved, but the urgent Härnösand promises needed a second recovery plan.',
-      medals: [
-        reliableRoute ? { icon: '⌁', label: 'Inland navigator' } : { icon: '❄', label: 'Snow runner' },
-        urgentFirst ? { icon: '◇', label: 'Urgent first' } : { icon: '▰', label: 'Capacity moved' }
-      ],
-      stats: [
-        { label: 'Delivered', value: String(state.delivered) },
-        { label: 'Coverage', value: `${Math.round(state.onTime)}%` },
-        { label: 'Score', value: state.score.toLocaleString('en-SE') }
-      ],
-      score: state.score
-    };
-  }
-
-  if (state.shiftId === 'scanner-fever') {
-    const grade = state.scannerFixed && state.triageMistakes === 0 ? 'A+' : state.scannerFixed ? 'A' : state.triageMistakes <= 1 ? 'B' : 'C';
-    return {
-      grade,
-      gradeLabel: `Grade ${grade}`,
-      kicker: 'QUEUE CLEARED',
-      title: state.scannerFixed ? 'Scanner 2 is healthy.' : 'Manual flow held the line.',
-      summary: state.scannerFixed
-        ? 'The right promises moved first, the obstruction is gone and automated accuracy is restored.'
-        : 'The queue moved, but the next shift still needs to repair and recalibrate the scanner.',
-      medals: [
-        state.triageMistakes === 0 ? { icon: '1', label: 'Perfect priority' } : { icon: '▦', label: 'Queue cleared' },
-        state.scannerFixed ? { icon: '◆', label: 'Clean repair' } : { icon: '↔', label: 'Manual recovery' }
-      ],
-      stats: [
-        { label: 'Processed', value: String(state.processed) },
-        { label: 'Accuracy', value: `${Math.round(state.onTime)}%` },
-        { label: 'Score', value: state.score.toLocaleString('en-SE') }
-      ],
-      score: state.score
-    };
-  }
-
-  const correctFind = state.locationCorrect;
-  const direct = state.recoveryChoice === 'courier';
-  const grade = correctFind && direct ? 'A+' : correctFind || direct ? 'A' : state.recoveryChoice === 'linehaul' ? 'B' : 'C';
   return {
+    kicker: 'SHIFT COMPLETE',
     grade,
     gradeLabel: `Grade ${grade}`,
-    kicker: 'DELIVERY CONFIRMED',
-    title: 'Cold chain intact.',
-    summary: correctFind && direct
-      ? 'The scan trail led straight to the parcel and a direct courier protected every minute of its promise.'
-      : 'The parcel arrived safely. The recovery took a detour, but its temperature stayed inside range.',
-    medals: [
-      correctFind ? { icon: '◇', label: 'Sharp detective' } : { icon: '□', label: 'Parcel recovered' },
-      direct ? { icon: '↗', label: 'Direct handoff' } : { icon: '⌁', label: 'Connection made' }
-    ],
+    title,
+    summary,
+    score: Math.round(state.score),
     stats: [
-      { label: 'Delivered', value: '1 / 1' },
-      { label: 'Cold chain', value: `${Math.round(state.onTime)}%` },
-      { label: 'Score', value: state.score.toLocaleString('en-SE') }
+      { label: 'On time', value: `${service}%` },
+      { label: 'Delivered', value: state.delivered },
+      { label: 'Best combo', value: `${state.bestCombo}×` }
     ],
-    score: state.score
+    medals: medals.length ? medals : [{ icon: '↗', label: 'Shift completed' }]
   };
 }

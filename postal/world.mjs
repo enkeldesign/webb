@@ -56,6 +56,11 @@ const CAMERA_PRESETS = Object.freeze({
     target: new THREE.Vector3(0, 0, 0),
     fov: 39
   },
+  sweden: {
+    position: new THREE.Vector3(10.8, 17.8, 15.8),
+    target: new THREE.Vector3(0, 0, 0.25),
+    fov: 39
+  },
   case: {
     position: new THREE.Vector3(7.5, 7.4, 10.5),
     target: new THREE.Vector3(0, 1.15, 0),
@@ -134,6 +139,10 @@ export class PostalWorld {
       verified: 0,
       completed: false,
       speed: 1,
+      jobs: [],
+      incidents: [],
+      levelCounts: { terminal: 0, network: 0, sweden: 0 },
+      resourceStatus: {},
       activeHotspots: [],
       hotspotLabels: {},
       hotspotTones: {},
@@ -145,6 +154,9 @@ export class PostalWorld {
     this.packages = [];
     this.operators = [];
     this.networkTrucks = [];
+    this.swedenTrucks = [];
+    this.swedenCurves = {};
+    this.swedenHubRings = {};
     this.caseBoxes = [];
     this.matchRevealStartedAt = null;
     this.lastFrameTime = performance.now();
@@ -208,10 +220,13 @@ export class PostalWorld {
     this.terminalGroup.name = 'Sundsvall terminal';
     this.networkGroup = new THREE.Group();
     this.networkGroup.name = 'Regional network';
+    this.swedenGroup = new THREE.Group();
+    this.swedenGroup.name = 'Sweden network';
     this.caseGroup = new THREE.Group();
     this.caseGroup.name = 'Parcel case';
-    this.scene.add(this.terminalGroup, this.networkGroup, this.caseGroup);
+    this.scene.add(this.terminalGroup, this.networkGroup, this.swedenGroup, this.caseGroup);
     this.networkGroup.visible = false;
+    this.swedenGroup.visible = false;
     this.caseGroup.visible = false;
 
     this.resizeObserver = new ResizeObserver(() => this.resize());
@@ -258,6 +273,7 @@ export class PostalWorld {
 
     this.buildTerminal();
     this.buildNetwork();
+    this.buildSweden();
     this.buildCase();
     this.setMode('terminal', true);
     this.callbacks.onReady?.();
@@ -631,6 +647,110 @@ export class PostalWorld {
     this.registerHotspot('network-harnosand', 'Härnösand', '!', 'danger', group, new THREE.Vector3(0, 2.25, -3.45));
     this.registerHotspot('network-timra', 'Timrå', '✓', 'good', group, new THREE.Vector3(4.0, 1.75, 1.75));
     this.registerHotspot('network-matfors', 'Matfors', '✓', 'good', group, new THREE.Vector3(-4.1, 1.7, 1.65));
+    this.registerHotspot('network-detour', 'Open inland detour', '!', 'danger', group, new THREE.Vector3(-2.8, 1.05, -0.65));
+  }
+
+  buildSweden() {
+    const group = this.swedenGroup;
+    const ocean = addPrimitiveBox(group, [14.4, 0.5, 11.2], [0, -0.38, 0.2], 0x2f8eae);
+    ocean.material.roughness = 0.65;
+
+    const landPieces = [
+      [[3.1, 0.34, 3.7], [1.05, -0.06, -3.25], 0.10],
+      [[4.4, 0.34, 3.25], [0.35, -0.04, -0.55], -0.08],
+      [[5.2, 0.34, 3.5], [-0.45, -0.02, 2.3], 0.12],
+      [[2.4, 0.3, 1.7], [-2.65, 0, 3.2], -0.18]
+    ];
+    landPieces.forEach(([size, position, rotation]) => {
+      const piece = addPrimitiveBox(group, size, position, 0x86ba78, rotation);
+      piece.material.roughness = 1;
+    });
+
+    for (let index = 0; index < 22; index += 1) {
+      const north = index < 8;
+      const x = (north ? 0.25 : -0.25) + (seeded(index + 310) - 0.5) * (north ? 2.3 : 4.5);
+      const z = north ? -4.25 + seeded(index + 340) * 3.2 : -0.7 + seeded(index + 340) * 5.2;
+      this.placeAsset(group, index % 4 === 0 ? 'tallTrees' : 'trees', [x, 0.04, z], {
+        targetHeight: 0.55 + seeded(index + 370) * 0.55,
+        rotationY: seeded(index + 400) * Math.PI * 2,
+        castShadow: index % 3 === 0
+      });
+    }
+
+    const hubs = {
+      sundsvall: { position: [1.1, 0.03, -2.5], building: 'garage', height: 1.45, tone: 0xffd43b },
+      stockholm: { position: [1.05, 0.03, 1.15], building: 'buildingC', height: 1.75, tone: 0x38c7f3 },
+      gothenburg: { position: [-2.55, 0.03, 2.5], building: 'buildingB', height: 1.6, tone: 0x79e29f }
+    };
+
+    for (const [id, hub] of Object.entries(hubs)) {
+      const road = this.placeAsset(group, 'roadIntersection', [hub.position[0], -0.03, hub.position[2]], {
+        targetSize: 1.7,
+        rotationY: id === 'gothenburg' ? Math.PI / 2 : 0,
+        castShadow: false
+      });
+      const building = this.placeAsset(group, hub.building, hub.position, {
+        targetHeight: hub.height,
+        rotationY: id === 'gothenburg' ? Math.PI / 2 : Math.PI
+      });
+      const ring = new THREE.Mesh(
+        new THREE.RingGeometry(0.72, 0.94, 28),
+        new THREE.MeshBasicMaterial({ color: hub.tone, transparent: true, opacity: 0.72, side: THREE.DoubleSide })
+      );
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.set(hub.position[0], 0.08, hub.position[2]);
+      group.add(ring);
+      this.swedenHubRings[id] = ring;
+      this.markInteractive(road, `sweden-${id}`);
+      this.markInteractive(building, `sweden-${id}`);
+    }
+
+    const sundsvallPoint = new THREE.Vector3(1.1, 0.18, -2.5);
+    const stockholmPoint = new THREE.Vector3(1.05, 0.18, 1.15);
+    const gothenburgPoint = new THREE.Vector3(-2.55, 0.18, 2.5);
+    const stockholmCurve = new THREE.CatmullRomCurve3([
+      sundsvallPoint,
+      new THREE.Vector3(1.65, 0.18, -0.7),
+      stockholmPoint
+    ], false, 'centripetal', 0.35);
+    const gothenburgCurve = new THREE.CatmullRomCurve3([
+      sundsvallPoint,
+      new THREE.Vector3(-0.15, 0.2, -0.1),
+      new THREE.Vector3(-1.5, 0.2, 1.45),
+      gothenburgPoint
+    ], false, 'centripetal', 0.35);
+    this.swedenCurves.stockholm = stockholmCurve;
+    this.swedenCurves.gothenburg = gothenburgCurve;
+
+    const stockholmRoute = new THREE.Mesh(
+      new THREE.TubeGeometry(stockholmCurve, 48, 0.075, 8, false),
+      material(0x38c7f3, { emissive: 0x1589bb, emissiveIntensity: 0.72 })
+    );
+    const gothenburgRoute = new THREE.Mesh(
+      new THREE.TubeGeometry(gothenburgCurve, 58, 0.075, 8, false),
+      material(0xffd43b, { emissive: 0xf4b62f, emissiveIntensity: 0.65 })
+    );
+    group.add(stockholmRoute, gothenburgRoute);
+    this.swedenRoutes = { stockholm: stockholmRoute, gothenburg: gothenburgRoute };
+
+    for (let index = 0; index < 3; index += 1) {
+      const truck = this.makeAsset('truck', { targetSize: 0.72 });
+      truck.userData.offset = index * 0.31;
+      truck.userData.destination = index % 2 === 0 ? 'stockholm' : 'gothenburg';
+      group.add(truck);
+      this.swedenTrucks.push(truck);
+    }
+
+    const partnerColors = [0xffd43b, 0xff665e, 0x79e29f, 0x38c7f3];
+    partnerColors.forEach((color, index) => {
+      const x = -4.55 + index * 0.72;
+      addPrimitiveBox(group, [0.52, 0.18, 0.75], [x, 0.1, 4.25], color, (index - 1.5) * 0.04);
+    });
+
+    this.registerHotspot('sweden-sundsvall', 'Sundsvall hub', '○', 'yellow', group, new THREE.Vector3(1.35, 2.65, -2.6));
+    this.registerHotspot('sweden-stockholm', 'Stockholm hub', '○', 'blue', group, new THREE.Vector3(1.4, 1.75, 1.1));
+    this.registerHotspot('sweden-gothenburg', 'Gothenburg hub', '○', 'good', group, new THREE.Vector3(-2.8, 2.65, 2.7));
+    this.registerHotspot('sweden-relief', 'Open relief dock', '!', 'danger', group, new THREE.Vector3(-0.3, 1.15, 3.55));
   }
 
   buildCase() {
@@ -725,10 +845,11 @@ export class PostalWorld {
 
   setMode(mode, immediate = false) {
     if (!CAMERA_PRESETS[mode]) return;
-    if (!this.camera || !this.terminalGroup || !this.networkGroup || !this.caseGroup) return;
+    if (!this.camera || !this.terminalGroup || !this.networkGroup || !this.swedenGroup || !this.caseGroup) return;
     this.mode = mode;
     this.terminalGroup.visible = mode === 'terminal';
     this.networkGroup.visible = mode === 'network';
+    this.swedenGroup.visible = mode === 'sweden';
     this.caseGroup.visible = mode === 'case';
     const preset = CAMERA_PRESETS[mode];
     this.cameraDesiredPosition.copy(preset.position);
@@ -803,6 +924,7 @@ export class PostalWorld {
     this.updateCamera(delta);
     this.updateTerminal(delta);
     this.updateNetwork(delta);
+    this.updateSweden(delta);
     this.updateCase(delta);
     this.updateHotspotPositions();
     this.renderer.render(this.scene, this.camera);
@@ -819,16 +941,14 @@ export class PostalWorld {
   updateTerminal(delta) {
     if (!this.terminalGroup) return;
     const flowTime = this.runningVisualTime;
+    const scannerBlocked = this.state.incidents?.some((incident) => incident.active && incident.type === 'scanner-jam');
     this.packages.forEach((parcel, index) => {
       const data = parcel.userData;
       const cycle = (flowTime * data.speed + data.offset) % 1;
       const onInput = cycle < 0.34;
       let localT = onInput ? cycle / 0.34 : (cycle - 0.34) / 0.66;
       const intendedExpress = data.service === 'express';
-      const usesWrongLane = this.state.shiftId === 'northbound' && data.misrouted && !this.state.ruleFixed;
-      const scannerBlocked = this.state.shiftId === 'scanner-fever'
-        && !this.state.scannerFixed
-        && !this.state.scannerBypassed;
+      const usesWrongLane = false;
       if (scannerBlocked && onInput && localT > 0.58) {
         localT = 0.58 + (localT - 0.58) * 0.035;
       }
@@ -845,8 +965,10 @@ export class PostalWorld {
       data.marker.scale.setScalar(usesWrongLane ? 1.2 : 1);
     });
 
+    const expressPressure = (this.state.jobs || []).filter((job) => job.stage === 'terminal' && job.target === 'express-lane' && ['waiting', 'queued', 'processing'].includes(job.status)).length;
+    const standardPressure = (this.state.jobs || []).filter((job) => job.stage === 'terminal' && job.target === 'standard-lane' && ['waiting', 'queued', 'processing'].includes(job.status)).length;
     this.operators.forEach((operator, index) => {
-      const target = this.state.staffMoved && operator.userData.moveToExpress
+      const target = expressPressure > standardPressure && operator.userData.moveToExpress
         ? operator.userData.expressTarget
         : operator.userData.home;
       operator.position.lerp(target, REDUCED_MOTION ? 1 : Math.min(1, delta * 2.4));
@@ -854,7 +976,7 @@ export class PostalWorld {
     });
 
     if (this.warningRoot) {
-      const warningVisible = this.state.shiftId === 'northbound' && !this.state.ruleFixed;
+      const warningVisible = (this.state.levelCounts?.terminal || 0) >= 4 && !scannerBlocked;
       this.warningRoot.visible = warningVisible;
       if (!REDUCED_MOTION) {
         const pulse = 1 + Math.sin(this.elapsed * 5) * 0.12;
@@ -864,9 +986,7 @@ export class PostalWorld {
     }
 
     if (this.scannerWarningRoot) {
-      const scannerWarningVisible = this.state.shiftId === 'scanner-fever'
-        && !this.state.scannerFixed
-        && !this.state.scannerBypassed;
+      const scannerWarningVisible = scannerBlocked;
       this.scannerWarningRoot.visible = scannerWarningVisible;
       if (scannerWarningVisible && !REDUCED_MOTION) {
         const pulse = 1 + Math.sin(this.elapsed * 4.2) * 0.1;
@@ -883,8 +1003,10 @@ export class PostalWorld {
 
   updateNetwork(delta) {
     if (!this.networkGroup) return;
-    const snowShift = this.state.shiftId === 'snow-window';
-    const useInland = snowShift && this.state.routeChoice === 'inland';
+    const snowIncident = this.state.incidents?.find((incident) => incident.type === 'snow-route');
+    const snowActive = Boolean(snowIncident?.active);
+    const useInland = Boolean(snowIncident?.resolved);
+    const regionalBusy = this.state.resourceStatus?.network?.busy || 0;
     this.networkTrucks.forEach((truck, index) => {
       const t = (this.runningVisualTime * 0.035 + truck.userData.offset) % 1;
       const activeCurve = useInland ? this.networkAltCurve : this.networkPrimaryCurve || truck.userData.curve;
@@ -892,24 +1014,24 @@ export class PostalWorld {
       const tangent = activeCurve.getTangentAt(t);
       truck.position.copy(position);
       truck.rotation.y = Math.atan2(tangent.x, tangent.z) + Math.PI;
+      truck.visible = index < Math.max(1, regionalBusy);
       if (!REDUCED_MOTION) truck.position.y += Math.sin(this.elapsed * 4 + index) * 0.015;
     });
     if (this.networkRiskRoute) {
-      const safe = this.state.ruleFixed || (snowShift && this.state.routeChoice === 'coast' && this.state.stage === 'dispatch');
-      this.networkRiskRoute.material.color.setHex(safe ? 0x79e29f : snowShift ? 0xff9a55 : 0xff665e);
+      const safe = !snowActive;
+      this.networkRiskRoute.material.color.setHex(safe ? 0x79e29f : 0xff665e);
       this.networkRiskRoute.material.emissive.setHex(safe ? 0x249a60 : 0xff4c44);
       this.networkRiskRoute.material.emissiveIntensity = safe ? 0.55 : 1.2;
     }
     if (this.networkAltRoute) {
-      this.networkAltRoute.visible = snowShift
-        && (this.state.stage === 'weather-route' || this.state.routeChoice === 'inland' || this.state.stage === 'dispatch');
+      this.networkAltRoute.visible = snowActive || useInland;
       this.networkAltRoute.material.color.setHex(useInland ? 0x79e29f : 0x38c7f3);
       this.networkAltRoute.material.emissive.setHex(useInland ? 0x249a60 : 0x1589bb);
       this.networkAltRoute.material.emissiveIntensity = useInland ? 0.9 : 0.5;
     }
     if (this.networkRiskRing) {
-      const fixed = this.state.ruleFixed || (snowShift && this.state.stage === 'dispatch');
-      this.networkRiskRing.material.color.setHex(fixed ? 0x79e29f : 0xff665e);
+      const regionalPressure = (this.state.levelCounts?.network || 0) > 2;
+      this.networkRiskRing.material.color.setHex(snowActive || regionalPressure ? 0xff665e : 0x79e29f);
       if (!REDUCED_MOTION) {
         const pulse = 1 + Math.sin(this.elapsed * 3.8) * 0.1;
         this.networkRiskRing.scale.setScalar(pulse);
@@ -917,8 +1039,8 @@ export class PostalWorld {
       }
     }
     if (this.networkSnow) {
-      this.networkSnow.visible = snowShift;
-      if (snowShift && !REDUCED_MOTION) {
+      this.networkSnow.visible = snowActive;
+      if (snowActive && !REDUCED_MOTION) {
         const positions = this.networkSnow.geometry.attributes.position;
         for (let index = 0; index < positions.count; index += 1) {
           let y = positions.getY(index) - delta * (0.85 + (index % 5) * 0.08);
@@ -929,6 +1051,42 @@ export class PostalWorld {
         }
         positions.needsUpdate = true;
       }
+    }
+  }
+
+  updateSweden(delta) {
+    if (!this.swedenGroup) return;
+    const processing = (this.state.jobs || []).filter((job) => job.stage === 'sweden' && job.status === 'processing');
+    this.swedenTrucks.forEach((truck, index) => {
+      const job = processing[index];
+      const destination = job?.destinationId === 'gothenburg' ? 'gothenburg' : job?.destinationId === 'stockholm' ? 'stockholm' : truck.userData.destination;
+      const activeCurve = this.swedenCurves[destination] || this.swedenCurves.stockholm;
+      const t = (this.runningVisualTime * 0.028 + truck.userData.offset) % 1;
+      const position = activeCurve.getPointAt(t);
+      const tangent = activeCurve.getTangentAt(t);
+      truck.position.copy(position);
+      truck.rotation.y = Math.atan2(tangent.x, tangent.z) + Math.PI;
+      truck.visible = index < Math.max(1, processing.length);
+      if (!REDUCED_MOTION) truck.position.y += Math.sin(this.elapsed * 3.5 + index) * 0.016;
+    });
+
+    const hubIncident = this.state.incidents?.some((incident) => incident.active && incident.type === 'hub-gridlock');
+    for (const [id, ring] of Object.entries(this.swedenHubRings)) {
+      const waiting = (this.state.jobs || []).filter((job) => job.stage === 'sweden'
+        && ['waiting', 'queued'].includes(job.status)
+        && (job.destinationId === id || id === 'sundsvall' && job.target === 'sweden-sundsvall')).length;
+      const danger = waiting >= 2 || (id === 'stockholm' && hubIncident);
+      ring.material.color.setHex(danger ? 0xff665e : id === 'stockholm' ? 0x38c7f3 : id === 'gothenburg' ? 0x79e29f : 0xffd43b);
+      if (!REDUCED_MOTION) {
+        const pulse = 1 + Math.sin(this.elapsed * (danger ? 4.2 : 2.1) + id.length) * (danger ? 0.12 : 0.045);
+        ring.scale.setScalar(pulse);
+        ring.rotation.z += delta * (danger ? 0.28 : 0.08);
+      }
+    }
+
+    if (this.swedenRoutes) {
+      this.swedenRoutes.stockholm.material.emissiveIntensity = hubIncident ? 1.3 : 0.72;
+      this.swedenRoutes.stockholm.material.color.setHex(hubIncident ? 0xff665e : 0x38c7f3);
     }
   }
 
