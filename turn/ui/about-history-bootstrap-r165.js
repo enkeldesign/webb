@@ -317,7 +317,9 @@ function installWebsiteAbout() {
   trigger.addEventListener('click', () => openDialog(aboutDialog, trigger));
 
   document.addEventListener('turn-install-ready', () => {
-    if (!aboutDialog.open) note.textContent = INSTALL_NOTE;
+    queueMicrotask(() => {
+      note.textContent = INSTALL_NOTE;
+    });
   });
 
   websiteInstalled = true;
