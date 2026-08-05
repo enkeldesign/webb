@@ -7,7 +7,6 @@ on:
     paths:
       - 'turn/index.html'
       - 'turn/testing/admin-unlock-sequence.js'
-      - 'turn/live-steering-setting.js'
       - 'turn/achievements/**'
       - 'turn/progression/**'
       - 'turn-lab/tests/admin-unlock-production.mjs'
@@ -18,7 +17,6 @@ on:
     paths:
       - 'turn/index.html'
       - 'turn/testing/admin-unlock-sequence.js'
-      - 'turn/live-steering-setting.js'
       - 'turn/achievements/**'
       - 'turn/progression/**'
       - 'turn-lab/tests/admin-unlock-production.mjs'
