@@ -179,3 +179,5 @@ export function installAdminUnlockSequence({
   globalThis[INSTALL_FLAG] = api;
   return api;
 }
+
+installAdminUnlockSequence();
