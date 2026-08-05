@@ -248,8 +248,21 @@ assert.match(bellaSource, /vehicleId: REQUIRED_VEHICLE_ID/);
 assert.match(bellaSource, /Bella cream, seal brown and white paws/);
 assert.match(bellaSource, /using Bella fallback/,
   'Bella must remain discoverable if the external model cannot load');
+assert.match(bellaSource, /eyes: 0x74a7ff/,
+  'Bella eyes must use the requested exact #74A7FF blue');
+assert.match(bellaSource, /frontMask = 1 - smoothstep/,
+  'The coat mask must use the Kenney cat’s negative-Z face rather than painting its back');
+assert.match(bellaSource, /bounds\.min\.z - size\.z \* 0\.018/,
+  'Bella eyes must sit just outside the actual negative-Z face bounds');
+assert.match(bellaSource, /pupilToIris = smoothstep/,
+  'Bella eyes must retain the radial black-to-blue pupil gradient');
+assert.match(bellaSource, /leafDark: 0x1f7a45/);
+assert.match(bellaSource, /turnBellaFoliagePalette/,
+  'The dedicated rescue tree must retain an explicit green foliage contract');
 assert.match(worldSource, /installCountrysideBella/);
 assert.match(worldSource, /countryside-bella-r166\.js/);
+assert.match(worldSource, /r168-bella-markings-eyes-foliage/,
+  'The world loader must cache-bust the corrected Bella visual module');
 
 assert.match(runtime, /catalog\.js\?revision=r166-bella-records/);
 assert.match(runtime, /view\.js\?revision=r166-bella-records/);
