@@ -10,6 +10,7 @@
   <meta name="description" content="POSTAL is a portrait-friendly real-time parcel network game set in Sweden.">
   <title>POSTAL — Every package has a promise</title>
   <link rel="stylesheet" href="./styles.css?build=20260805-live-r4">
+  <link rel="stylesheet" href="./management.css?build=20260806-management-r1">
   <script type="importmap">
     {
       "imports": {
@@ -164,7 +165,7 @@
         <span>Town → region · no deadline</span>
       </div>
       <button class="game-button game-button--primary welcome-start" id="startButton" type="button">Start first shift</button>
-      <p class="welcome-note">After training, shifts run continuously. Watch the miniature network and act before promises expire.</p>
+      <p class="welcome-note">After training, shifts run continuously. Plan teams and trucks, watch the miniature network and act before promises expire.</p>
     </div>
   </section>
 
@@ -180,7 +181,7 @@
         <div class="campaign-stamp" id="campaignStamp" aria-hidden="true">1/5</div>
       </header>
       <div class="shift-list" id="shiftList"></div>
-      <p class="campaign-note">Each shift adds pressure and another live level. Replays vary carrier and arrival order.</p>
+      <p class="campaign-note">Each shift adds pressure and another live level. Replays vary carrier and arrival order. After a report, keep operating for endless waves.</p>
     </div>
   </section>
 
@@ -215,7 +216,7 @@
 
       <details class="help-disclosure">
         <summary>How to play</summary>
-        <p>Select a waiting parcel batch, then tap the lane, depot or hub printed on its marker. Blue arrows use Express A; yellow squares use Standard B. Occupied teams and vehicles take the next routed batch automatically. Switch levels when their badges appear.</p>
+        <p>Select a waiting parcel batch, then tap the lane, depot or hub printed on its marker. Blue arrows use Express A; yellow squares use Standard B. Use Plan teams, Plan trucks or Plan linehauls to move resources toward specific work: a matching assignment completes faster. Trucks in the regional and national miniature can also be tapped directly. Switch levels when their badges appear.</p>
       </details>
 
       <details class="help-disclosure">
@@ -240,5 +241,6 @@
   <div class="sr-only" id="assertiveLive" aria-live="assertive" aria-atomic="true"></div>
 
   <script type="module" src="./main.mjs?build=20260805-live-r4"></script>
+  <script type="module" src="./management-ui.mjs?build=20260806-management-r1"></script>
 </body>
 </html>
