@@ -2,18 +2,22 @@
   flex-wrap: wrap;
 }
 
-.resource-plan-toggle {
-  min-height: 36px;
-  margin-left: auto;
+.resource-plan-toggle,
+.investigate-button {
+  min-height: 34px;
   padding: 6px 10px;
   border: 2px solid var(--ink);
   border-radius: 999px;
-  background: var(--blue);
   box-shadow: 2px 2px 0 var(--ink);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 950;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.resource-plan-toggle {
+  margin-left: auto;
+  background: var(--blue);
 }
 
 .resource-plan-toggle[aria-expanded="true"] {
@@ -22,76 +26,100 @@
   transform: translate(1px, 1px);
 }
 
-.resource-planner {
-  margin: 8px 0 5px;
-  padding: 9px;
-  border: 2px solid var(--ink);
-  border-radius: var(--radius-small);
-  background: rgb(255 253 245 / 0.96);
-  box-shadow: var(--shadow-small);
+.resource-planner,
+.package-investigation {
+  position: fixed;
+  z-index: 260;
+  right: max(10px, calc((100vw - 620px) / 2 + 10px));
+  bottom: calc(76px + var(--safe-bottom));
+  left: max(10px, calc((100vw - 620px) / 2 + 10px));
+  max-height: min(54dvh, 430px);
+  overflow: auto;
+  padding: 12px;
+  border: 3px solid var(--ink);
+  border-radius: 18px;
+  background: var(--paper-bright);
+  box-shadow: 6px 6px 0 var(--ink);
 }
 
 .resource-planner[hidden],
 .resource-plan-toggle[hidden],
 .management-board-button[hidden],
-#continueOperationsButton[hidden] {
+#continueOperationsButton[hidden],
+.package-investigation[hidden],
+.investigate-button[hidden] {
   display: none;
 }
 
-.resource-planner-head {
+.resource-planner-head,
+.investigation-head {
   display: flex;
   align-items: start;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 7px;
 }
 
-.resource-planner-head div {
+.resource-planner-head div,
+.investigation-head div {
   display: grid;
-  gap: 1px;
+  gap: 2px;
 }
 
 .resource-planner-head span,
-.resource-planner-head p {
-  margin: 0;
-  font-size: 0.62rem;
-  font-weight: 850;
-  line-height: 1.15;
-}
-
-.resource-planner-head span {
+.investigation-head span,
+.communication-rail-label {
   color: var(--purple);
+  font-size: 0.62rem;
+  font-weight: 900;
   letter-spacing: 0.08em;
 }
 
-.resource-planner-head strong {
-  font-size: 0.88rem;
-  line-height: 1;
+.resource-planner-head strong,
+.investigation-head strong {
+  font-size: 0.95rem;
+  line-height: 1.05;
   text-transform: uppercase;
 }
 
-.resource-planner-head p {
-  max-width: 190px;
+.planner-close,
+.investigation-close {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 2px 2px 0 var(--ink);
+  font-size: 1.25rem;
+  font-weight: 1000;
+}
+
+.resource-planner-help {
+  margin: 8px 0;
   color: rgb(16 19 26 / 0.72);
-  text-align: right;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.25;
 }
 
 .resource-roster {
   display: flex;
-  gap: 7px;
+  gap: 8px;
   overflow-x: auto;
-  padding: 1px 1px 4px;
+  padding: 1px 1px 5px;
   scrollbar-width: thin;
 }
 
 .resource-card {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  min-width: 154px;
-  min-height: 54px;
+  min-width: 160px;
+  min-height: 58px;
   align-items: center;
   gap: 7px;
-  padding: 7px 8px;
+  padding: 8px;
   border: 2px solid var(--ink);
   border-radius: 11px;
   background: var(--paper-bright);
@@ -161,26 +189,155 @@
   width: 100%;
 }
 
-@media (max-height: 700px) {
-  .resource-planner {
-    margin-top: 5px;
-    padding: 6px;
-  }
+.communication-rail {
+  position: relative;
+  z-index: 34;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 3px 8px;
+  min-height: 50px;
+  padding: 7px 10px;
+  border-top: 3px solid var(--ink);
+  background: var(--paper);
+}
 
-  .resource-planner-head p {
-    display: none;
+.communication-rail-label {
+  grid-column: 1;
+}
+
+.communication-rail strong {
+  grid-column: 1;
+  overflow: hidden;
+  font-size: 0.72rem;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.investigate-button {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  background: var(--yellow);
+}
+
+.game-shell[data-play-mode="live"] .command-deck {
+  display: none;
+}
+
+.game-shell[data-play-mode="live"] {
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+}
+
+.package-investigation {
+  display: grid;
+  gap: 10px;
+}
+
+.investigation-body {
+  display: grid;
+  gap: 10px;
+}
+
+.investigation-summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: #d8f5ff;
+}
+
+.investigation-package {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: var(--yellow);
+  font-size: 1.6rem;
+}
+
+.investigation-summary div {
+  display: grid;
+  gap: 2px;
+}
+
+.investigation-summary strong {
+  font-size: 0.9rem;
+}
+
+.investigation-summary span,
+.investigation-summary small,
+.investigation-history,
+.investigation-evidence {
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.investigation-history {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 22px;
+}
+
+.investigation-evidence {
+  padding: 9px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: var(--paper);
+}
+
+.investigation-evidence > span {
+  color: var(--purple);
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.investigation-evidence ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.toast {
+  top: auto !important;
+  right: max(12px, calc((100vw - 620px) / 2 + 12px)) !important;
+  bottom: calc(136px + var(--safe-bottom)) !important;
+  left: auto !important;
+  max-width: min(78vw, 330px);
+  pointer-events: none;
+}
+
+@media (max-height: 700px) {
+  .resource-planner,
+  .package-investigation {
+    bottom: calc(69px + var(--safe-bottom));
+    max-height: 48dvh;
+    padding: 9px;
   }
 
   .resource-card {
-    min-width: 138px;
-    min-height: 46px;
-    padding: 5px 7px;
+    min-width: 140px;
+    min-height: 48px;
+    padding: 6px 7px;
+  }
+
+  .communication-rail {
+    min-height: 44px;
+    padding-block: 5px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .resource-plan-toggle,
-  .resource-card {
+  .resource-card,
+  .investigate-button {
     transition: none;
   }
 }
