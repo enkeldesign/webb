@@ -8,9 +8,10 @@ import {
 import { ACHIEVEMENTS, TRACK_IDS } from '../../turn/achievements/catalog.js';
 import { TROPHY_ROAD_REWARDS } from '../../turn/progression/trophy-road.js';
 
-const [source, loaderSource] = await Promise.all([
+const [source, loaderSource, indexSource] = await Promise.all([
   fs.readFile(new URL('../../turn/testing/admin-unlock-sequence.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/live-steering-setting.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/live-steering-setting.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8')
 ]);
 
 assert.deepEqual(ADMIN_UNLOCK_SEQUENCE, [
@@ -79,5 +80,8 @@ assert.doesNotMatch(source, /turn:achievements-updated|turn:trophy-road-updated|
   'The admin path must not emit achievement or reward events');
 assert.match(loaderSource, /admin-unlock-sequence\.js\?revision=r174-admin-unlock/);
 assert.match(loaderSource, /installAdminUnlockSequence\(\)/);
+assert.match(indexSource,
+  /live-steering-setting\.js\?build=20260805-r160-live-steering-r174-admin-unlock/,
+  'The production entry must publish a fresh loader cache identity');
 
 console.log('TURN hidden admin unlock sequence regression passed.');
