@@ -197,7 +197,7 @@ function compactAboutDialog(aboutDialog, historyDialog, tabs) {
     <p class="m8-about-credits">© 2026 <a href="https://enkel.design/" target="_blank" rel="noreferrer">enkel.design</a>. Created by Erik Jansson, aided by OpenAI Codex. Drive By Ear™ is inspired by <a href="https://ceal.cs.columbia.edu/rad/" target="_blank" rel="noreferrer">RAD – Racing Auditory Display</a>.</p>
     <div class="m8-about-actions turn-dialog__actions">
       <button class="m8-about-history" type="button" aria-haspopup="dialog">HISTORY &amp; CHANGELOG</button>
-      <a class="m8-about-design-system" href="/turn/design-dialogs.html" target="_blank" rel="noreferrer">DESIGN SYSTEM</a>
+      <a class="m8-about-design-system" href="/turn/design.html" target="_blank" rel="noreferrer">DESIGN SYSTEM</a>
     </div>`;
 
   const historyButton = content.querySelector('.m8-about-history');

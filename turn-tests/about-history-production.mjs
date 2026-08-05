@@ -8,7 +8,9 @@ const [
   content,
   dialogCss,
   historyCss,
-  designReference
+  designMain,
+  designReference,
+  designNavigation
 ] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
@@ -16,12 +18,14 @@ const [
   fs.readFile(new URL('../turn/content/about-history.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/dialog-system-r163.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/about-history-r163.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/design-dialogs.html', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/design.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/design-dialogs.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/design-navigation.css', import.meta.url), 'utf8')
 ]);
 
 for (const entry of [productionEntry, nextEntry]) {
-  assert.match(entry, /about-history-bootstrap\.js\?revision=r163-modal-system/,
-    'Production and TURN NEXT must load the same canonical About history enhancement');
+  assert.match(entry, /about-history-bootstrap\.js\?revision=r164-design-navigation/,
+    'Production and TURN NEXT must load the same refreshed About history enhancement');
 }
 
 assert.match(bootstrap, /CHANGELOG[\s\S]*CURRENT_RELEASE[\s\S]*DEVELOPMENT_HISTORY/);
@@ -41,7 +45,8 @@ assert.match(bootstrap, /aboutDialog\.showModal\(\)/,
 assert.match(bootstrap, /historyButton\.focus\(\{ preventScroll: true \}\)/,
   'Focus should return to the History and Changelog action inside the restored About dialog');
 assert.match(bootstrap, /HISTORY &amp; CHANGELOG/);
-assert.match(bootstrap, /href="\/turn\/design-dialogs\.html"/);
+assert.match(bootstrap, /href="\/turn\/design\.html"/,
+  'The About action must open the main TURN design system');
 assert.match(bootstrap, />DESIGN SYSTEM<\/a>/);
 assert.match(bootstrap, /installStylesheet\('\.\.\/dialog-system-r163\.css/);
 assert.match(bootstrap, /installStylesheet\('\.\.\/about-history-r163\.css/);
@@ -94,4 +99,25 @@ assert.match(designReference, /Do not stack modal dialogs/);
 assert.match(designReference, /href="\.\/design\.html"/,
   'The dialog reference must remain connected to the main design system');
 
-console.log('TURN About history, changelog and normative dialog-system regression passed.');
+for (const designPage of [designMain, designReference]) {
+  assert.match(designPage, /href="\.\/design-navigation\.css\?revision=r164-design-navigation"/,
+    'Every design-system page must use the shared navigation pattern');
+  assert.match(designPage, /class="design-page-nav" aria-label="Design system pages"/);
+  assert.match(designPage, />Design system<\/a>[\s\S]*>Dialogs<\/a>[\s\S]*>Open TURN<\/a>/,
+    'Design-system pages must expose the same page navigation in the same order');
+  assert.match(designPage, /href="\/turn\/" target="_blank" rel="noopener noreferrer">Open TURN<\/a>/,
+    'Open TURN must use a fresh browsing context so mobile Safari cannot carry the documentation viewport scale into the game');
+  assert.match(designPage, /class="design-page-scroll" href="#[^"]+"/,
+    'Every design-system hero must visibly indicate that content continues below');
+  assert.match(designPage, /class="section-nav design-section-nav"/,
+    'Every design-system page must use the shared section-navigation treatment');
+}
+
+assert.match(designMain, /href="\.\/design\.html" aria-current="page">Design system<\/a>/);
+assert.match(designReference, /href="\.\/design-dialogs\.html" aria-current="page">Dialogs<\/a>/);
+assert.match(designNavigation, /min-height: 100svh/);
+assert.match(designNavigation, /\.design-page-nav a\[aria-current='page'\]/);
+assert.match(designNavigation, /\.section-nav\.design-section-nav/);
+assert.match(designNavigation, /prefers-reduced-motion: reduce/);
+
+console.log('TURN About history, changelog, dialog system and design-system navigation regression passed.');

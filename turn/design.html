@@ -8,10 +8,12 @@
   <title>TURN Design System</title>
   <link rel="stylesheet" href="./design-tokens.css?revision=r141-form-disclosure">
   <link rel="stylesheet" href="./design-semantic.css?revision=r141-form-disclosure">
+  <link rel="stylesheet" href="./design-navigation.css?revision=r164-design-navigation">
   <style>
     :root {
       font-family: Inter, ui-rounded, system-ui, sans-serif;
       color-scheme: light;
+      --design-page-width: 1180px;
     }
 
     * { box-sizing: border-box; }
@@ -298,18 +300,28 @@
 <body>
   <a class="skip-link" href="#main">Skip to the design system</a>
 
-  <header class="hero">
-    <div class="hero-inner">
-      <div>
-        <span class="eyebrow">Normative production system</span>
-        <h1>TURN DESIGN SYSTEM</h1>
-        <p>A living reference built from TURN’s actual interaction patterns. Standardize the grammar, not the personality.</p>
+  <header class="hero design-page-hero">
+    <div class="design-page-shell">
+      <nav class="design-page-nav" aria-label="Design system pages">
+        <a href="./design.html" aria-current="page">Design system</a>
+        <a href="./design-dialogs.html">Dialogs</a>
+        <a href="/turn/" target="_blank" rel="noopener noreferrer">Open TURN</a>
+      </nav>
+      <div class="design-page-hero-content">
+        <div class="hero-inner">
+          <div>
+            <span class="eyebrow">Normative production system</span>
+            <h1>TURN DESIGN SYSTEM</h1>
+            <p>A living reference built from TURN’s actual interaction patterns. Standardize the grammar, not the personality.</p>
+          </div>
+          <img src="./TURNicon.PNG" alt="TURN app icon">
+        </div>
       </div>
-      <img src="./TURNicon.PNG" alt="TURN app icon">
+      <a class="design-page-scroll" href="#design-sections"><span aria-hidden="true">↓</span> Explore the system</a>
     </div>
   </header>
 
-  <nav class="section-nav" aria-label="Design system sections">
+  <nav id="design-sections" class="section-nav design-section-nav" aria-label="Design system sections">
     <a href="#audit">Audit</a>
     <a href="#colour">Colour</a>
     <a href="#patterns">Patterns</a>
