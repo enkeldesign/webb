@@ -106,7 +106,10 @@ assert.match(content, /5 August/);
 assert.match(content, /TURN 1\.5\.1/);
 assert.match(content, /2026\.08\.05-r160/);
 assert.match(content, /one oh one/);
-assert.match(content, /25 achievements and 1,375 available trophies/);
+assert.match(content, /28 achievements and 1,700 available trophies/);
+assert.match(content, /SAVE BELLA!/);
+assert.match(content, /AN ARMY OF ME/);
+assert.match(content, /ON COURSE, OF COURSE/);
 assert.match(content, /Paintjob MutationObserver/);
 
 for (const size of ['compact', 'standard', 'wide', 'reader']) {
