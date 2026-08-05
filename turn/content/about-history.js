@@ -1,0 +1,285 @@
+export const DEVELOPMENT_HISTORY = Object.freeze([
+  {
+    period: '18–19 July 2026',
+    title: 'From sensor experiment to modular racer',
+    paragraphs: [
+      'TURN began as a mobile prototype built around one unusual idea: hold a phone or tablet in landscape and rotate it like a steering wheel.',
+      'The first day established the Three.js road, motion steering, touch driving, drift-oriented physics, lap timing, saved rivals and PWA installation. TURN LAB then split the fast prototype into explicit race, input, physics, rendering, replay, track and interface modules before the verified R7 runtime replaced production.'
+    ],
+    milestones: [
+      'Sensor-steered prototype and Three.js world',
+      'Mobile HUD, touch controls and personal rival recordings',
+      'Protected TURN LAB refactor and R7 production baseline'
+    ]
+  },
+  {
+    period: '19–22 July',
+    title: 'The Lot and dependable racing',
+    paragraphs: [
+      'TURN became a small racing game rather than a single-car experiment. The Lot introduced fifteen vehicles, a rotating 3D viewer, paint and an eighteen-point stat budget built around trade-offs.',
+      'The same period made racing trustworthy: ordered swept checkpoints, a physical start and finish line, brake-before-reverse behaviour, clearer lap results, restart handling and systematic model-orientation corrections.'
+    ],
+    milestones: [
+      'Fifteen-car garage with balanced attributes',
+      'Unified thumb-operated drive surface',
+      'Reliable checkpoints, lap validity and result presentation'
+    ]
+  },
+  {
+    period: '22–25 July',
+    title: 'One course becomes a track platform',
+    paragraphs: [
+      'Countryside gained Airport, then Cliffside and Harbor. Each track exposed another hard-coded assumption and pushed the runtime toward a generic registry for identity, storage, atmosphere, collision, elevation and activation.',
+      'Track cards evolved into postcards with best times and the actual record-setting car. World containment, scenery colliders, elevation-aware presentation and event-driven rendering work prepared the game for continued expansion.'
+    ],
+    milestones: [
+      'Airport, elevated Cliffside and Harbor',
+      'Track-scoped records and generic runtime registry',
+      'World collision, elevation and performance architecture'
+    ]
+  },
+  {
+    period: '26–28 July',
+    title: 'Drive By Ear becomes a driving language',
+    paragraphs: [
+      'Engine and tyre feedback expanded into Drive By Ear: spatial guidance designed to help every player and, together with a screen reader, support complete non-visual play.',
+      'Early separate cues were consolidated into a layered hierarchy with an organic steering ribbon, off-road recovery, wrong-way priority, directional rivals and hand-authored pace notes. Device recordings repeatedly corrected channel direction, recovery meaning, speech priority and rare note loss.'
+    ],
+    milestones: [
+      'All-track pace notes and central audio mixer',
+      'One consistent steer-toward-the-sound rule',
+      'Delivery-critical route guidance and screen-reader race speech'
+    ]
+  },
+  {
+    period: '28–31 July',
+    title: 'TURN NEXT validates the platform refactor',
+    paragraphs: [
+      'TURN NEXT was created as an isolated PWA with separate storage, then used to stage motion, display and race-session architecture without putting production records at risk.',
+      'A whole-screen orientation-freeze experiment was rejected after physical iOS testing. The accepted web solution became a truthful ±24° operating envelope with directional, non-flashing visual feedback plus audio, haptics and first-per-side screen-reader announcements.',
+      'The M5–M8 programme also replaced the old startup loop with Home → track → The Lot → introduction → race.'
+    ],
+    milestones: [
+      'Platform-owned motion and display lifecycle',
+      'Validated 24° steering and horizon safe zone',
+      'Home, consolidated Settings and central session orchestration'
+    ]
+  },
+  {
+    period: '29 July–2 August',
+    title: 'Accessibility becomes structural',
+    paragraphs: [
+      'Accessibility work changed information architecture and interaction rather than merely adding labels. The Lot became a keyboard-friendly radio group with complete car descriptions, human-readable paint colours and deliberate heading navigation.',
+      'VoiceOver testing invalidated two plausible ARIA techniques, so TURN replaced them with real hidden summary text and selected-first DOM ordering. Dialog focus return, installation guidance, motion-denial recovery, external-keyboard controls and non-visual instructions were hardened in the same period.'
+    ],
+    milestones: [
+      'Complete keyboard and assistive-technology car selection',
+      'Composed lap speech and managed position announcements',
+      'Browser-aware installation and truthful device support'
+    ]
+  },
+  {
+    period: '31 July–2 August',
+    title: 'Midnight City and a living design system',
+    paragraphs: [
+      'Midnight City became TURN’s fifth and longest track. Its first boulevard layout was rebuilt into distinct districts with parks, skyline, neon lore, a cinematic introduction and a deliberately hidden LILYA portrait.',
+      'The longer 1,080-sample route exposed a progress-normalisation defect that moved pace notes to two-thirds of their intended positions. Geometry-backed direction tests and sample-aware timing now protect the track.',
+      'A living design-system reference and shared semantic tokens established stable colour, control, form, disclosure, radius, border and shadow rules without flattening track personality.'
+    ],
+    milestones: [
+      'Five-track game with a long night-city course',
+      'Geometry-backed Midnight City pace-note validation',
+      'Production semantic tokens and design reference'
+    ]
+  },
+  {
+    period: '3 August',
+    title: 'Emergency vehicles and blank-screen play',
+    paragraphs: [
+      'Fire Truck, Police Car and Ambulance replaced three garage vehicles. Fixed service liveries, large Boost tanks, flashing lights and vehicle-specific procedural sirens made Boost part of each vehicle’s identity.',
+      'Blank-screen mode then covered the visual game with true black while retaining controls, tilt steering, audio and assistive-technology access. Drive By Ear can be enabled temporarily for that session without overwriting the player’s preference.'
+    ],
+    milestones: [
+      'Three fixed-livery emergency vehicles',
+      'Boost-controlled lights and sirens',
+      'Audio-only play with temporary Drive By Ear activation'
+    ]
+  },
+  {
+    period: '3–5 August',
+    title: 'Achievements become Trophy Road',
+    paragraphs: [
+      'An offline-first achievement collection grew from onboarding challenges into non-visual play, developer time trials, Police Car challenges and hidden discoveries.',
+      'Points became permanent trophies. Trophy Road now unlocks Midnight City, Future Racer, Paintjob, the Emergency Pack and Monster Truck while grandfathering existing profiles.',
+      'A serious Home-to-Lot freeze was eventually traced to a Paintjob MutationObserver that repeatedly changed the subtree it watched. The fix narrowed ownership and added a regression for the self-triggering pattern.'
+    ],
+    milestones: [
+      '25 achievements and 1,375 available trophies',
+      'Persistent content rewards and legacy-player migration',
+      'Critical observer-loop diagnosis and prevention'
+    ]
+  },
+  {
+    period: '4–5 August',
+    title: 'Current stabilization',
+    paragraphs: [
+      'TURN 1.5.0 added a branded loading cover, stable iOS Home sizing, compact Paintjob locking and new-achievement markers.',
+      'TURN 1.5.1 corrected Trophy Road’s initial reward card, transitions between 3D and line-art previews and the Paintjob lower rail. Later main-branch hotfixes colour the locked swatch from the selected car and dismiss stale vehicle-lock messaging.',
+      'The game is now in a refinement and hardening phase: five tracks, fifteen garage slots, local rivals, a mature non-visual audio system, assistive-technology navigation and persistent progression.'
+    ],
+    milestones: [
+      'Canonical release: TURN 1.5.1 · 2026.08.05-r160',
+      'Post-r160 Paintjob and lock-toast fixes',
+      'Sixty-plus production regression gates plus DBE training tests'
+    ]
+  }
+]);
+
+export const CHANGELOG = Object.freeze([
+  {
+    date: '18 July 2026',
+    entries: [
+      ['Prototype', 'Sensor steering, Three.js road and world, touch driving, lap timing, saved rivals and first PWA work.']
+    ]
+  },
+  {
+    date: '19 July',
+    entries: [
+      ['R7', 'Verified modular TURN LAB runtime promoted to production.'],
+      ['1.0.1 r8', 'Correct manual steering and visible on-screen steering.'],
+      ['1.1.0–1.1.3 r9–r12', 'The Lot, fifteen cars, viewer, balanced stats and ordered checkpoints.'],
+      ['1.2.0–1.2.1 r13–r14', 'Continuous Gas/Drift/Boost pad, Brake · Reverse and Boost rearming.']
+    ]
+  },
+  {
+    date: '20 July',
+    entries: [
+      ['1.3.0 r15', 'State-aware race menu.'],
+      ['1.4.0 r16 — reverted', 'Ability Zones and nitrous removed after device testing.'],
+      ['1.3.1–1.3.9 r17–r25', 'Performance, orientation, paint, outlines and repeated Lot simplification.']
+    ]
+  },
+  {
+    date: '21 July',
+    entries: [
+      ['1.3.10–1.3.15 r26–r31', 'Procedural audio, vehicle sound identity and stronger landscape handling.'],
+      ['1.3.16–1.3.21 r32–r38', 'Lap-result toast, swept gates, invalid-lap state and physical start/finish ownership.'],
+      ['1.4.0 r37 — reverted', 'Audio redesign rolled back after real-device regressions.']
+    ]
+  },
+  {
+    date: '22 July',
+    entries: [
+      ['1.3.22–1.3.29 r39–r46', 'Rival onboarding, immediate invalid-lap feedback, mobile performance and new icon package.'],
+      ['1.5.0–1.6.2 r47–r52', 'Airport, track selection, track-scoped records and forgiving hairpin run-off.']
+    ]
+  },
+  {
+    date: '23–24 July',
+    entries: [
+      ['1.7.0 r53', 'World containment and reusable scenery collision.'],
+      ['1.7.1–1.7.6 r62–r67', 'Release source of truth, generic track registry, covered-render pause, event-driven rivals, skid ring buffer and elevation foundation.']
+    ]
+  },
+  {
+    date: '25 July',
+    entries: [
+      ['1.8.0–1.8.6 r68–r74', 'Cliffside, forgiving shoulders and iOS/iPad viewport coverage.'],
+      ['1.9.0–1.9.4 r75–r79', 'Track introductions, Cliffside highlands and track postcard identities.'],
+      ['1.10.0–1.10.5 r80–r85', 'Harbor, free roaming, top-HUD position and LAP VOID wording.']
+    ]
+  },
+  {
+    date: '26 July',
+    entries: [
+      ['1.11.0–1.11.3 r86–r89', 'Super Sedan secret and hidden Harbor face.'],
+      ['1.12.0 r90', 'Brake/Reverse joins the continuous four-zone drive surface.'],
+      ['1.13.0–1.15.0 r91–r95', 'Universal soundscape, Sound Guide, race speech and first Airport pace notes.']
+    ]
+  },
+  {
+    date: '27 July',
+    entries: [
+      ['1.16.0–1.17.0 r96–r97', 'Pace notes on every track and a true Drive By Ear off path.'],
+      ['1.18.0–1.22.0 r98–r103', 'RAD prototype, Training Car, unified Trajectory Slider, pure-pursuit recovery and organic hum.'],
+      ['r104', 'Audio controls, sound balance, Spectate rank and race-UI polish.']
+    ]
+  },
+  {
+    date: '28 July',
+    entries: [
+      ['1.23.1–1.23.6 r105–r110', 'Recovery direction, speech priority, exact lap wording and delivery-critical pace notes.'],
+      ['TURN NEXT M1–M4.2', 'Isolated staging, platform contract, rejected orientation freeze, accepted 24° safe zone and non-flashing inertial warning.']
+    ]
+  },
+  {
+    date: '29 July',
+    entries: [
+      ['1.24.0 r111', 'Validated 24° steering/horizon envelope promoted to production.'],
+      ['1.24.1–1.24.2 r112–r113', 'Expanded Drive By Ear guide and screen-reader compatibility explanation.'],
+      ['1.24.3–1.24.7 r114–r118', 'Accessible Lot navigation, unified 3D/paint panel and VoiceOver-correct selected-car structure.']
+    ]
+  },
+  {
+    date: '30 July',
+    entries: [
+      ['1.24.8 r119 — reverted', 'Generated icon suite rolled back after visual review.'],
+      ['TURN NEXT M5–M7', 'Platform motion/display lifecycle and central race-session orchestration.']
+    ]
+  },
+  {
+    date: '31 July',
+    entries: [
+      ['TURN NEXT M8', 'Track chooser becomes Home; native iOS scrolling, fixed layout and retired legacy startup screen.'],
+      ['1.25.0 r120', 'M5–M8 promoted to production; Home → track → The Lot → race.'],
+      ['Post-r120 fixes', 'Restore enhanced Lot, keep race action visible and make installation guidance browser-aware.'],
+      ['Midnight City', 'First long night-track implementation.']
+    ]
+  },
+  {
+    date: '1 August',
+    entries: [
+      ['Midnight City rebuild', 'District route, parks, skyline, cinematic intro and deliberate hidden LILYA discovery.'],
+      ['Pace-note corrections', 'Mirrored directions fixed and 1,080/720 progress distortion removed.'],
+      ['1.3.0 r121', 'Human-facing version line reset from 1.25.0 for clearer reading.'],
+      ['r122 and hotfixes', 'Record-car thumbnails, canonical player marker, expanded help and contextual rival reset.'],
+      ['Accessibility', 'External-keyboard route, desktop support gate and motion-denial recovery.']
+    ]
+  },
+  {
+    date: '2 August',
+    entries: [
+      ['1.3.1–1.3.2 r123–r124', 'Semantic difficulty, form-control and disclosure design system.'],
+      ['Design/brand fixes', 'Profile-aligned icon, complete palette reference and vehicle-size balancing.']
+    ]
+  },
+  {
+    date: '3 August',
+    entries: [
+      ['1.4.0 r125 and r126', 'Emergency vehicles, fixed liveries, lights and sirens.'],
+      ['Blank screen', 'True-black audio-only play with temporary Drive By Ear activation.'],
+      ['Achievements', 'Onboarding, non-visual, Police and developer time-trial challenges.'],
+      ['Trophy Road', 'Permanent trophies, reward gates, hidden achievements and existing-player migration.'],
+      ['Critical hotfixes', 'Race-freeze investigation and actual Paintjob observer-loop correction.']
+    ]
+  },
+  {
+    date: '4 August',
+    entries: [
+      ['1.5.0 r159', 'Branded loading cover, stable iOS Home surface, compact Paintjob lock and unread achievement dots.']
+    ]
+  },
+  {
+    date: '5 August',
+    entries: [
+      ['1.5.1 r160', 'Trophy Road initial-card and preview-transition fixes; Paintjob lower rail.'],
+      ['Post-r160', 'Car-coloured Paintjob lock, contrast-safe icon, stale vehicle-lock toast dismissal and “one oh one” screen-reader pronunciation for Drive By Ear 101.']
+    ]
+  }
+]);
+
+export const CURRENT_RELEASE = Object.freeze({
+  version: '1.5.1',
+  build: '2026.08.05-r160',
+  note: 'The repository also contains post-r160 fixes documented in the final changelog entry.'
+});
