@@ -113,14 +113,4 @@
     if (!input?.matches?.('input[name="m8Steering"]:checked')) return;
     void applySteeringModeDuringRace(input);
   });
-
-  const adminModuleUrl = new URL(
-    './testing/admin-unlock-sequence.js?revision=r174-admin-unlock',
-    document.currentScript?.src || globalThis.location?.href
-  );
-  import(adminModuleUrl.href)
-    .then(({ installAdminUnlockSequence }) => installAdminUnlockSequence())
-    .catch((error) => {
-      console.warn('TURN: hidden test-profile sequence could not install.', error);
-    });
 })();
