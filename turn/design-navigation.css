@@ -1,7 +1,6 @@
 /* Shared navigation and hero-continuation pattern for TURN design-system pages. */
 
-.design-page-hero {
-  --design-page-width: 1180px;
+.hero.design-page-hero {
   min-height: 100vh;
   min-height: 100svh;
   display: flex;
@@ -10,7 +9,7 @@
 }
 
 .design-page-shell {
-  width: min(var(--design-page-width), 100%);
+  width: min(var(--design-page-width, 1180px), 100%);
   margin: 0 auto;
   display: flex;
   flex: 1 1 auto;
@@ -93,7 +92,7 @@
   line-height: .8;
 }
 
-.design-section-nav {
+.section-nav.design-section-nav {
   position: sticky;
   z-index: 50;
   top: 0;
@@ -107,20 +106,20 @@
   scrollbar-width: thin;
 }
 
-.design-section-nav a {
+.section-nav.design-section-nav a {
   flex: 0 0 auto;
   padding: 8px 12px;
   border-radius: var(--turn-radius-pill);
   text-decoration: none;
 }
 
-.design-section-nav a:hover,
-.design-section-nav a:focus-visible {
+.section-nav.design-section-nav a:hover,
+.section-nav.design-section-nav a:focus-visible {
   background: var(--turn-yellow-400);
 }
 
 @media (max-height: 620px) and (orientation: landscape) {
-  .design-page-hero {
+  .hero.design-page-hero {
     min-height: auto;
   }
 
