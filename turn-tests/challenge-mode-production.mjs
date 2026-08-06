@@ -51,12 +51,20 @@ assert.match(bootstrapSource, /challenge-mode\.css\?revision=r182-race-my-ghost/
 assert.match(bootstrapSource, /if \(request\.hasChallenge\) globalThis\.__turnStartBrowserGame\?\.\(\)/);
 assert.match(bootstrapSource, /installChallengeSharing/);
 assert.match(bootstrapSource, /createChallengeSession/);
+assert.match(bootstrapSource, /await waitForHomeReady\(\);[\s\S]*await challengeSession\.launch\(\)/,
+  'The challenge must hide the fully constructed Home rather than racing its installation lifecycle');
+assert.match(bootstrapSource, /globalThis\.__turnHome[\s\S]*dataset\.turnHomeLifecycle === 'home-m8'/,
+  'Challenge launch must use the canonical Home-ready boundary');
 
 assert.match(sessionSource, /'sol-countryside-r1'/,
   'TURN NEXT must ship one short stable challenge for device testing');
 assert.match(sessionSource, /challengerName: 'SOL'/);
 assert.match(sessionSource, /time: 65/);
 assert.match(sessionSource, /await activateTrack\(challenge\.trackId, runtime\)/);
+assert.match(sessionSource, /const denominator = Math\.max\(1, samples\.length - 1\)/);
+assert.match(sessionSource, /t: definition\.time \* index \/ denominator/);
+assert.match(sessionSource, /p: index \/ denominator/,
+  'The built-in challenge must reach its exact target time and full track progress');
 assert.match(sessionSource, /await raceSession\.selectVehicle\(challengeVehicle\(challenge\)\)/,
   'The recipient and ghost must use the challenge vehicle');
 assert.match(sessionSource, /runtime\.state\.competitorLaps = \[state\.challengeLap\]/,
@@ -66,6 +74,11 @@ assert.match(sessionSource, /state\.personalRivals = cloneLaps\(runtime\.state\.
 assert.match(sessionSource, /\.sort\(\(a, b\) => a\.time - b\.time\)[\s\S]*\.slice\(0, RIVAL_LIMIT\)/,
   'Every valid attempt must still compete for the player’s private top four');
 assert.match(sessionSource, /saveRivalsState\(\{[\s\S]*competitorLaps: state\.personalRivals/);
+assert.ok(
+  sessionSource.indexOf("document.querySelector('#resetButton')?.click();")
+    < sessionSource.indexOf('await raceSession.startGame(access.fullscreenPromise)'),
+  'Accepting must reset both cars to the canonical stage before the challenge begins'
+);
 
 assert.match(sessionSource, /Beat \$\{escapeHtml\(challenge\.challengerName\)\}’s ghost\. Race as many laps as you need\./);
 assert.doesNotMatch(sessionSource, /watch[^\n]*then[^\n]*(race|run)/i,
