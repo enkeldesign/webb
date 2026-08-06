@@ -23,13 +23,14 @@ export const ADMIN_UNLOCK_SEQUENCE = Object.freeze([
   'track:airport',
   'track:cliffside',
   'track:harbor',
-  'vehicle:race',
+  'action:race',
   'vehicle:convertible',
   'action:race-this-car'
 ]);
 
 const INSTALL_FLAG = '__turnAdminUnlockSequenceInstalled';
 const ADMIN_UNLOCK_MARKER = 'turn-admin-unlock-v1';
+const FINAL_VEHICLE_ID = 'convertible';
 
 function parseStoredState(storage) {
   try {
@@ -81,6 +82,18 @@ export function advanceAdminUnlockSequence(currentIndex, token) {
   });
 }
 
+export function completeAdminUnlockFromLot(currentIndex, selectedVehicleId) {
+  if (selectedVehicleId !== FINAL_VEHICLE_ID) {
+    return Object.freeze({ nextIndex: 0, completed: false });
+  }
+
+  let index = currentIndex;
+  if (ADMIN_UNLOCK_SEQUENCE[index] === `vehicle:${FINAL_VEHICLE_ID}`) {
+    index = advanceAdminUnlockSequence(index, `vehicle:${FINAL_VEHICLE_ID}`).nextIndex;
+  }
+  return advanceAdminUnlockSequence(index, 'action:race-this-car');
+}
+
 function copyStateIntoLiveStore(snapshot) {
   const liveState = globalThis.__turnAchievements?.store?.state;
   if (!liveState) return;
@@ -126,18 +139,18 @@ export function unlockEverythingForTesting(storage = globalThis.localStorage) {
   return true;
 }
 
-function tokenFromClick(event) {
-  const target = event.target;
-  if (!(target instanceof Element)) return '';
-
+function homeTokenFromClick(target) {
   const track = target.closest('.track-card[data-track-id]:not([disabled])');
   if (track) return `track:${track.dataset.trackId || ''}`;
-
-  const vehicle = target.closest('.lot-car-option[data-car-id]');
-  if (vehicle) return `vehicle:${vehicle.dataset.carId || ''}`;
-
-  if (target.closest('.lot-race')) return 'action:race-this-car';
+  if (target.closest('.m8-track-continue')) return 'action:race';
   return '';
+}
+
+function selectedVehicleFromLot(lotScreen, rememberedVehicleId = '') {
+  if (rememberedVehicleId) return rememberedVehicleId;
+  return lotScreen
+    ?.querySelector('.lot-car-option[data-car-id][aria-checked="true"]')
+    ?.dataset.carId || '';
 }
 
 export function installAdminUnlockSequence({
@@ -149,20 +162,59 @@ export function installAdminUnlockSequence({
   if (globalThis[INSTALL_FLAG]) return globalThis[INSTALL_FLAG];
 
   let sequenceIndex = 0;
+  let lotArmed = false;
+  let rememberedVehicleId = '';
+
+  function resetSequence() {
+    sequenceIndex = 0;
+    lotArmed = false;
+    rememberedVehicleId = '';
+  }
 
   const handleClick = (event) => {
-    const token = tokenFromClick(event);
-    if (!token) return;
+    const target = event.target;
+    if (!(target instanceof Element)) return;
 
-    const result = advanceAdminUnlockSequence(sequenceIndex, token);
-    sequenceIndex = result.nextIndex;
-    if (!result.completed) return;
+    const homeToken = homeTokenFromClick(target);
+    if (homeToken) {
+      const result = advanceAdminUnlockSequence(sequenceIndex, homeToken);
+      sequenceIndex = result.nextIndex;
+      lotArmed = homeToken === 'action:race'
+        && ADMIN_UNLOCK_SEQUENCE[sequenceIndex] === `vehicle:${FINAL_VEHICLE_ID}`;
+      if (!lotArmed) rememberedVehicleId = '';
+      return;
+    }
 
-    if (!unlockEverythingForTesting(storage)) return;
+    if (!lotArmed) return;
+    const lotScreen = target.closest('.lot-screen');
+    if (!lotScreen) return;
 
-    // The existing Home and Lot were rendered from the pre-unlock snapshot. Stop the
-    // normal race action and reload once so every track, vehicle and paint control is
-    // rebuilt from the complete test profile without emitting achievement events.
+    const vehicle = target.closest('.lot-car-option[data-car-id]');
+    if (vehicle) {
+      rememberedVehicleId = vehicle.dataset.carId || '';
+      if (rememberedVehicleId === FINAL_VEHICLE_ID
+          && ADMIN_UNLOCK_SEQUENCE[sequenceIndex] === `vehicle:${FINAL_VEHICLE_ID}`) {
+        sequenceIndex = advanceAdminUnlockSequence(
+          sequenceIndex,
+          `vehicle:${FINAL_VEHICLE_ID}`
+        ).nextIndex;
+      }
+      return;
+    }
+
+    if (target.closest('.lot-back')) {
+      resetSequence();
+      return;
+    }
+
+    if (!target.closest('.lot-race')) return;
+    const selectedVehicleId = selectedVehicleFromLot(lotScreen, rememberedVehicleId);
+    const result = completeAdminUnlockFromLot(sequenceIndex, selectedVehicleId);
+    resetSequence();
+    if (!result.completed || !unlockEverythingForTesting(storage)) return;
+
+    // The current Home and Lot were rendered from the pre-unlock snapshot. Stop this
+    // race launch and reload once so every gate rebuilds from the silent test profile.
     event.preventDefault();
     event.stopImmediatePropagation();
     globalThis.setTimeout?.(reload, 0);
