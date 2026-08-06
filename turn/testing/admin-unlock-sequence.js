@@ -1,8 +1,4 @@
 import {
-  ACHIEVEMENTS,
-  TRACK_IDS
-} from '../achievements/catalog.js?revision=r166-bella-records';
-import {
   ACHIEVEMENT_STORAGE_KEY,
   normalizeAchievementState
 } from '../achievements/store.js?revision=r166-bella-records';
@@ -30,7 +26,9 @@ export const ADMIN_UNLOCK_SEQUENCE = Object.freeze([
 
 const INSTALL_FLAG = '__turnAdminUnlockSequenceInstalled';
 const ADMIN_UNLOCK_MARKER = 'turn-admin-unlock-v1';
+const ADMIN_REWARD_PROFILE_VERSION = 2;
 const FINAL_VEHICLE_ID = 'convertible';
+const LEGACY_TIMESTAMP_TOLERANCE_MS = 5000;
 
 function parseStoredState(storage) {
   try {
@@ -41,27 +39,61 @@ function parseStoredState(storage) {
   }
 }
 
-export function createAdminUnlockedState(existing, timestamp = Date.now()) {
-  const state = normalizeAchievementState(existing);
-  const achievementIds = ACHIEVEMENTS.map((achievement) => achievement.id);
-  const rewardIds = TROPHY_ROAD_REWARDS.map((reward) => reward.id);
+function readLegacyAdminTimestamp(storage) {
+  try {
+    const raw = storage?.getItem?.(ADMIN_UNLOCK_MARKER);
+    if (!raw) return null;
 
-  for (const achievementId of achievementIds) {
-    if (state.unlocked[achievementId]) continue;
-    state.unlocked[achievementId] = {
-      unlockedAt: timestamp,
-      trackId: '',
-      vehicleId: '',
-      time: null
-    };
+    const numeric = Number(raw);
+    if (Number.isFinite(numeric)) return numeric;
+
+    const marker = JSON.parse(raw);
+    if (Number(marker?.version) >= ADMIN_REWARD_PROFILE_VERSION) return null;
+    const timestamp = Number(marker?.activatedAt);
+    return Number.isFinite(timestamp) ? timestamp : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function isLegacyAdminAchievementRecord(record, legacyAdminTimestamp) {
+  if (!Number.isFinite(Number(legacyAdminTimestamp))) return false;
+  const unlockedAt = Number(record?.unlockedAt);
+  const time = record?.time;
+  return Number.isFinite(unlockedAt)
+    && Math.abs(unlockedAt - Number(legacyAdminTimestamp)) <= LEGACY_TIMESTAMP_TOLERANCE_MS
+    && record?.trackId === ''
+    && record?.vehicleId === ''
+    && (time == null || Number(time) === 0);
+}
+
+export function createAdminRewardState(existing, legacyAdminTimestamp = null) {
+  const snapshot = normalizeAchievementState(existing);
+  const rewardIds = TROPHY_ROAD_REWARDS.map((reward) => reward.id);
+  let removedLegacyAchievements = false;
+
+  for (const [achievementId, record] of Object.entries(snapshot.unlocked)) {
+    if (!isLegacyAdminAchievementRecord(record, legacyAdminTimestamp)) continue;
+    delete snapshot.unlocked[achievementId];
+    removedLegacyAchievements = true;
   }
 
-  state.seen = [...achievementIds];
-  state.progress.tracks = [...TRACK_IDS];
-  state.progress.blankTracks = [...TRACK_IDS];
-  state.rewards.unlocked = [...rewardIds];
-  state.rewards.seen = [...rewardIds];
-  return state;
+  if (removedLegacyAchievements) {
+    snapshot.seen = snapshot.seen.filter((achievementId) => Boolean(snapshot.unlocked[achievementId]));
+    // The previous admin implementation overwrote these collections with all tracks.
+    // Their earlier values cannot be recovered, so reset them rather than leaving
+    // achievement progress falsely complete.
+    snapshot.progress.tracks = [];
+    snapshot.progress.blankTracks = [];
+  }
+
+  snapshot.rewards.unlocked = [...rewardIds];
+  snapshot.rewards.seen = [...rewardIds];
+
+  return Object.freeze({
+    snapshot,
+    repairedLegacyAdminState: removedLegacyAchievements
+  });
 }
 
 export function advanceAdminUnlockSequence(currentIndex, token) {
@@ -110,32 +142,47 @@ function copyStateIntoLiveStore(snapshot) {
   };
 }
 
-function copyChallengeProgressIntoLiveRuntime(progress) {
-  const liveProgress = globalThis.__turnAchievementChallengeExpansion?.progress;
-  if (!liveProgress) return;
-  liveProgress.armyTracks = [...progress.armyTracks];
-  liveProgress.cleanTracks = [...progress.cleanTracks];
-}
-
-export function unlockEverythingForTesting(storage = globalThis.localStorage) {
-  const snapshot = createAdminUnlockedState(parseStoredState(storage));
-  const challengeProgress = {
-    armyTracks: [...TRACK_IDS],
-    cleanTracks: [...TRACK_IDS]
-  };
-
+function resetLegacyChallengeProgress(storage) {
+  const progress = { armyTracks: [], cleanTracks: [] };
   try {
-    storage?.setItem?.(ACHIEVEMENT_STORAGE_KEY, JSON.stringify(snapshot));
-    storage?.setItem?.(CHALLENGE_PROGRESS_STORAGE_KEY, JSON.stringify(challengeProgress));
-    storage?.setItem?.(ADMIN_UNLOCK_MARKER, String(Date.now()));
+    storage?.setItem?.(CHALLENGE_PROGRESS_STORAGE_KEY, JSON.stringify(progress));
   } catch (_) {
     return false;
   }
 
+  const liveProgress = globalThis.__turnAchievementChallengeExpansion?.progress;
+  if (liveProgress) {
+    liveProgress.armyTracks = [];
+    liveProgress.cleanTracks = [];
+  }
+  return true;
+}
+
+export function unlockRewardsForTesting(storage = globalThis.localStorage) {
+  const legacyAdminTimestamp = readLegacyAdminTimestamp(storage);
+  const { snapshot, repairedLegacyAdminState } = createAdminRewardState(
+    parseStoredState(storage),
+    legacyAdminTimestamp
+  );
+  const marker = {
+    version: ADMIN_REWARD_PROFILE_VERSION,
+    activatedAt: Date.now(),
+    rewardsOnly: true
+  };
+
+  try {
+    storage?.setItem?.(ACHIEVEMENT_STORAGE_KEY, JSON.stringify(snapshot));
+    storage?.setItem?.(ADMIN_UNLOCK_MARKER, JSON.stringify(marker));
+  } catch (_) {
+    return false;
+  }
+
+  if (repairedLegacyAdminState) resetLegacyChallengeProgress(storage);
   copyStateIntoLiveStore(snapshot);
-  copyChallengeProgressIntoLiveRuntime(challengeProgress);
-  document.documentElement.dataset.turnAdminUnlocked = 'true';
-  console.info('TURN: hidden test profile unlocked.');
+  if (globalThis.document?.documentElement) {
+    globalThis.document.documentElement.dataset.turnAdminRewardsUnlocked = 'true';
+  }
+  console.info('TURN: hidden test rewards unlocked.');
   return true;
 }
 
@@ -211,10 +258,10 @@ export function installAdminUnlockSequence({
     const selectedVehicleId = selectedVehicleFromLot(lotScreen, rememberedVehicleId);
     const result = completeAdminUnlockFromLot(sequenceIndex, selectedVehicleId);
     resetSequence();
-    if (!result.completed || !unlockEverythingForTesting(storage)) return;
+    if (!result.completed || !unlockRewardsForTesting(storage)) return;
 
     // The current Home and Lot were rendered from the pre-unlock snapshot. Stop this
-    // race launch and reload once so every gate rebuilds from the silent test profile.
+    // race launch and reload once so every reward gate rebuilds from the test profile.
     event.preventDefault();
     event.stopImmediatePropagation();
     globalThis.setTimeout?.(reload, 0);

@@ -4,9 +4,8 @@ import {
   ADMIN_UNLOCK_SEQUENCE,
   advanceAdminUnlockSequence,
   completeAdminUnlockFromLot,
-  createAdminUnlockedState
+  createAdminRewardState
 } from '../../turn/testing/admin-unlock-sequence.js';
-import { ACHIEVEMENTS, TRACK_IDS } from '../../turn/achievements/catalog.js';
 import { TROPHY_ROAD_REWARDS } from '../../turn/progression/trophy-road.js';
 
 const [source, indexSource] = await Promise.all([
@@ -61,6 +60,7 @@ const explicitConvertibleIndex = advanceAdminUnlockSequence(
 assert.equal(completeAdminUnlockFromLot(explicitConvertibleIndex, 'convertible').completed, true,
   'Selecting Convertible after entering The Lot must also complete');
 
+const rewardIds = TROPHY_ROAD_REWARDS.map(({ id }) => id);
 const existing = {
   version: 4,
   unlocked: {
@@ -71,46 +71,90 @@ const existing = {
       time: 18
     }
   },
-  seen: [],
+  seen: ['first-turn'],
   progress: { tracks: ['countryside'], blankTracks: [] },
   rewards: { unlocked: [], seen: [] }
 };
-const unlocked = createAdminUnlockedState(existing, 456);
-const achievementIds = ACHIEVEMENTS.map(({ id }) => id);
-const rewardIds = TROPHY_ROAD_REWARDS.map(({ id }) => id);
+const preserved = createAdminRewardState(existing).snapshot;
+assert.deepEqual(Object.keys(preserved.unlocked), ['first-turn'],
+  'The admin sequence must not create achievement records');
+assert.deepEqual(preserved.seen, ['first-turn']);
+assert.deepEqual(preserved.progress.tracks, ['countryside']);
+assert.deepEqual(preserved.progress.blankTracks, []);
+assert.deepEqual(preserved.rewards.unlocked, rewardIds);
+assert.deepEqual(preserved.rewards.seen, rewardIds);
+assert.equal(preserved.unlocked['first-turn'].unlockedAt, 123,
+  'Real achievement history must be preserved');
 
-assert.deepEqual(Object.keys(unlocked.unlocked).sort(), [...achievementIds].sort());
-assert.deepEqual(unlocked.seen, achievementIds);
-assert.deepEqual(unlocked.progress.tracks, TRACK_IDS);
-assert.deepEqual(unlocked.progress.blankTracks, TRACK_IDS);
-assert.deepEqual(unlocked.rewards.unlocked, rewardIds);
-assert.deepEqual(unlocked.rewards.seen, rewardIds);
-assert.equal(unlocked.unlocked['first-turn'].unlockedAt, 123,
-  'Existing achievement history must be preserved');
-assert.equal(unlocked.unlocked['save-bella'].unlockedAt, 456);
+const cleanProfile = createAdminRewardState(null).snapshot;
+assert.deepEqual(cleanProfile.unlocked, {},
+  'A new testing profile must receive rewards without any achievements');
+assert.deepEqual(cleanProfile.seen, []);
+assert.deepEqual(cleanProfile.rewards.unlocked, rewardIds);
+
+const allTracks = ['countryside', 'airport', 'cliffside', 'harbor', 'midnight-city'];
+const legacyAdminProfile = {
+  version: 4,
+  unlocked: {
+    'first-turn': {
+      unlockedAt: 123,
+      trackId: 'countryside',
+      vehicleId: 'classic',
+      time: 18
+    },
+    'save-bella': {
+      unlockedAt: 456,
+      trackId: '',
+      vehicleId: '',
+      time: null
+    },
+    'beyond-sight': {
+      unlockedAt: 456,
+      trackId: '',
+      vehicleId: '',
+      time: null
+    }
+  },
+  seen: ['first-turn', 'save-bella', 'beyond-sight'],
+  progress: { tracks: allTracks, blankTracks: allTracks },
+  rewards: { unlocked: rewardIds, seen: rewardIds }
+};
+const repaired = createAdminRewardState(legacyAdminProfile, 458);
+assert.equal(repaired.repairedLegacyAdminState, true);
+assert.deepEqual(Object.keys(repaired.snapshot.unlocked), ['first-turn'],
+  'Re-running the corrected sequence must remove achievements fabricated by the old admin path');
+assert.deepEqual(repaired.snapshot.seen, ['first-turn']);
+assert.deepEqual(repaired.snapshot.progress.tracks, []);
+assert.deepEqual(repaired.snapshot.progress.blankTracks, []);
+assert.deepEqual(repaired.snapshot.rewards.unlocked, rewardIds);
+assert.equal(repaired.snapshot.unlocked['save-bella'], undefined,
+  'SAVE BELLA! must remain available for real rescue testing');
 
 assert.match(source, /target\.closest\('\.m8-track-continue'\)/,
   'The Home RACE action must be the separator that opens The Lot');
 assert.match(source, /aria-checked="true"/,
   'The final action must detect a Convertible that was already selected on Lot entry');
 assert.match(source, /completeAdminUnlockFromLot\(sequenceIndex, selectedVehicleId\)/);
+assert.match(source, /unlockRewardsForTesting\(storage\)/);
+assert.match(source, /snapshot\.rewards\.unlocked = \[\.\.\.rewardIds\]/);
+assert.match(source, /resetLegacyChallengeProgress\(storage\)/,
+  'The corrected path must clear challenge progress polluted by the old all-achievement unlock');
+assert.doesNotMatch(source, /ACHIEVEMENTS|TRACK_IDS/,
+  'The admin module must not enumerate achievements or fake all-track progress');
+assert.doesNotMatch(source, /turn:achievements-updated|turn:trophy-road-updated|turn:secret-achievement/,
+  'The admin path must not emit achievement or reward events');
 assert.match(source, /documentRef\.addEventListener\('click', handleClick, true\)/);
 assert.match(source, /event\.preventDefault\(\)/);
 assert.match(source, /event\.stopImmediatePropagation\(\)/);
 assert.match(source, /globalThis\.setTimeout\?\.\(reload, 0\)/,
-  'The final action must reload so all pre-rendered gates rebuild unlocked');
-assert.match(source, /CHALLENGE_PROGRESS_STORAGE_KEY/);
-assert.match(source, /armyTracks: \[\.\.\.TRACK_IDS\]/);
-assert.match(source, /cleanTracks: \[\.\.\.TRACK_IDS\]/);
-assert.doesNotMatch(source, /turn:achievements-updated|turn:trophy-road-updated|turn:secret-achievement/,
-  'The admin path must not emit achievement or reward events');
+  'The final action must reload so all pre-rendered reward gates rebuild unlocked');
 assert.match(source, /installAdminUnlockSequence\(\);\s*$/,
   'The isolated production module must install itself');
 assert.match(indexSource,
-  /<script type="module" src="\.\/testing\/admin-unlock-sequence\.js\?revision=r175-admin-unlock"><\/script>/,
-  'The production entry must publish the corrected recognizer with a fresh cache identity');
+  /<script type="module" src="\.\/testing\/admin-unlock-sequence\.js\?revision=r176-admin-rewards"><\/script>/,
+  'The production entry must publish the rewards-only recognizer with a fresh cache identity');
 assert.match(indexSource,
   /src="\.\/live-steering-setting\.js\?build=20260805-r160-live-steering"/,
   'The hidden recognizer must not disturb the canonical steering entry');
 
-console.log('TURN hidden admin unlock sequence regression passed.');
+console.log('TURN rewards-only admin unlock regression passed.');
