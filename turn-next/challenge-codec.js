@@ -206,11 +206,11 @@ function finite(value) {
 }
 
 async function streamBytes(bytes, stream) {
+  const bufferPromise = new Response(stream.readable).arrayBuffer();
   const writer = stream.writable.getWriter();
   await writer.write(bytes);
   await writer.close();
-  const buffer = await new Response(stream.readable).arrayBuffer();
-  return new Uint8Array(buffer);
+  return new Uint8Array(await bufferPromise);
 }
 
 function bytesToBase64Url(bytes) {
