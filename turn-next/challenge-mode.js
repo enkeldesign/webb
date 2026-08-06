@@ -22,6 +22,7 @@ async function install() {
 
   if (!request.hasChallenge) return;
   try {
+    await waitForHomeReady();
     await challengeSession.launch();
   } catch (error) {
     console.error('TURN NEXT: challenge could not open.', error);
@@ -53,6 +54,26 @@ function waitForRuntime() {
     window.addEventListener('turn:runtime-ready', () => {
       if (!check()) requestAnimationFrame(check);
     }, { once: true });
+  });
+}
+
+function waitForHomeReady() {
+  const ready = () => Boolean(
+    globalThis.__turnHome
+    && document.documentElement.dataset.turnHomeLifecycle === 'home-m8'
+  );
+  if (ready()) return Promise.resolve();
+
+  return new Promise((resolve) => {
+    let settled = false;
+    const check = () => {
+      if (settled || !ready()) return;
+      settled = true;
+      document.removeEventListener('turn:home-ready', check);
+      resolve();
+    };
+    document.addEventListener('turn:home-ready', check);
+    requestAnimationFrame(check);
   });
 }
 
