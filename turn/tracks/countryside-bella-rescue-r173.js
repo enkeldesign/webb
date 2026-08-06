@@ -7,21 +7,18 @@ const MEOW_RANGE_METERS = 108;
 const MEOW_CLOSE_METERS = 24;
 const MEOW_MIN_INTERVAL_MS = 2400;
 const MEOW_MAX_INTERVAL_MS = 5600;
-const UPDATE_INTERVAL_MS = 160;
-const RESCUE_SIREN_HOLD_MS = 320;
+const UPDATE_INTERVAL_MS = 120;
 
-// Bella's root is rotated so local +Z points back towards the road. The rescue area
-// therefore occupies only negative local Z: the broad clearing behind the tree shown
-// to the player. It is approximately seven Fire-Truck lengths wide and six long.
+// The frame is derived from the real road geometry rather than Bella's visual rotation.
+// Positive depth points from the closest road sample through the tree and into the
+// clearing behind it. A small negative allowance includes the base of the trunk while
+// remaining many metres outside the racing surface.
 const RESCUE_ZONE = Object.freeze({
-  halfWidth: 22,
-  nearZ: -1.5,
-  farZ: -36
+  halfWidth: 30,
+  nearDepth: -7,
+  farDepth: 50
 });
 
-// Local to the dedicated rescue-tree group, beside the trunk and on the same protected
-// scenery patch as the rescue zone. Bella remains stationary because the source has no
-// walking animation.
 const SAFE_GROUND_POSITION = Object.freeze({ x: 4.8, y: 0.08, z: -3.2 });
 
 const AudioContextClass = globalThis.AudioContext || globalThis.webkitAudioContext;
@@ -41,7 +38,9 @@ function savedInProfile() {
 }
 
 function playerPosition(runtime) {
-  return runtime?.playerCar?.position || runtime?.state?.position || null;
+  // Physics state is canonical. The rendered car can lag a frame during fast off-road
+  // motion, which is enough to miss a hidden trigger at Fire Truck speed.
+  return runtime?.state?.position || runtime?.playerCar?.position || null;
 }
 
 function horizontalDistance(a, b) {
@@ -162,7 +161,7 @@ function moveBellaToGround(root, { announce = false } = {}) {
     movement: 'stationary',
     sourceAnimationClips: 0,
     reason: 'The pinned Kenney Cube Pets cat contains no animation section or walking clip.',
-    trackSafety: 'Fixed scenery-local position inside the rescue patch; Bella cannot enter the road.'
+    trackSafety: 'Fixed scenery-local position beside the tree; Bella cannot enter the road.'
   });
   cat.updateMatrixWorld(true);
   root.updateMatrixWorld(true);
@@ -171,13 +170,62 @@ function moveBellaToGround(root, { announce = false } = {}) {
   return true;
 }
 
-function insideRescueZone(root, player, localPosition) {
+function nearestRoadSample(runtime, treeWorldPosition) {
+  let nearest = null;
+  let nearestDistanceSquared = Infinity;
+  for (const sample of runtime?.samples || []) {
+    const point = sample?.point;
+    if (!point) continue;
+    const dx = Number(treeWorldPosition.x) - Number(point.x || 0);
+    const dz = Number(treeWorldPosition.z) - Number(point.z || 0);
+    const distanceSquared = dx * dx + dz * dz;
+    if (distanceSquared >= nearestDistanceSquared) continue;
+    nearestDistanceSquared = distanceSquared;
+    nearest = sample;
+  }
+  return nearest;
+}
+
+function rescueFrame(runtime, root, frame) {
   root.updateWorldMatrix(true, false);
-  localPosition.copy(player);
-  root.worldToLocal(localPosition);
-  return Math.abs(localPosition.x) <= RESCUE_ZONE.halfWidth
-    && localPosition.z <= RESCUE_ZONE.nearZ
-    && localPosition.z >= RESCUE_ZONE.farZ;
+  root.getWorldPosition(frame.tree);
+  const nearest = nearestRoadSample(runtime, frame.tree);
+  if (nearest?.point) {
+    frame.outward.set(
+      frame.tree.x - Number(nearest.point.x || 0),
+      0,
+      frame.tree.z - Number(nearest.point.z || 0)
+    );
+  } else {
+    // Safe fallback: local -Z was the intended rear direction in the original setup.
+    frame.outward.set(0, 0, -1).applyQuaternion(root.getWorldQuaternion(frame.quaternion));
+  }
+  if (frame.outward.lengthSq() < 0.001) return false;
+  frame.outward.normalize();
+  frame.across.set(-frame.outward.z, 0, frame.outward.x);
+  return true;
+}
+
+function insideRescueZone(runtime, root, player, frame) {
+  if (!rescueFrame(runtime, root, frame)) return false;
+  frame.relative.set(
+    Number(player?.x || 0) - frame.tree.x,
+    0,
+    Number(player?.z || 0) - frame.tree.z
+  );
+  const depth = frame.relative.dot(frame.outward);
+  const across = frame.relative.dot(frame.across);
+  return Math.abs(across) <= RESCUE_ZONE.halfWidth
+    && depth >= RESCUE_ZONE.nearDepth
+    && depth <= RESCUE_ZONE.farDepth;
+}
+
+function sirenControlActive() {
+  if (globalThis.__turnBoostActive === true) return true;
+  const boostControl = document.querySelector('.drive-boost-zone');
+  return boostControl?.classList.contains('is-active') === true
+    && boostControl.classList.contains('is-locked') === false
+    && Number(globalThis.__turnBoostCharge) > 0.001;
 }
 
 export function installBellaRescueBehavior({ root, runtime = globalThis.__turnRuntime } = {}) {
@@ -191,25 +239,28 @@ export function installBellaRescueBehavior({ root, runtime = globalThis.__turnRu
 
   let lastMeowAt = -Infinity;
   let wasInRange = false;
-  let rescueSirenStartedAt = null;
   let disposed = false;
   const bellaWorldPosition = new THREE.Vector3();
-  const rescueLocalPosition = new THREE.Vector3();
+  const frame = {
+    tree: new THREE.Vector3(),
+    relative: new THREE.Vector3(),
+    outward: new THREE.Vector3(),
+    across: new THREE.Vector3(),
+    quaternion: new THREE.Quaternion()
+  };
 
   function rescueFromStoredAchievement({ announce = false } = {}) {
     moveBellaToGround(root, { announce });
   }
 
   function completeInteractiveRescue(player) {
-    // Move Bella first. The achievement signal is emitted only after the visual state is
-    // already correct, so the toast and the cat can never disagree again.
     if (!moveBellaToGround(root, { announce: true })) return false;
     root.userData.turnSecretAchievementFound = true;
     signalSecretAchievement(SAVE_BELLA_ID, {
       trackId: 'countryside',
       vehicleId: REQUIRED_VEHICLE_ID,
       rescueConfirmed: true,
-      rescueMethod: 'fire-truck-siren-zone',
+      rescueMethod: 'fire-truck-siren-road-derived-zone',
       rescuePosition: {
         x: Number(player?.x || 0),
         z: Number(player?.z || 0)
@@ -233,27 +284,19 @@ export function installBellaRescueBehavior({ root, runtime = globalThis.__turnRu
 
     const state = runtime?.state;
     const player = playerPosition(runtime);
-    const eligible = state?.running === true
+    const eligible = (state?.running === true || state?.lapActive === true)
       && activeTrackId(runtime) === 'countryside'
-      && state.vehicleId === REQUIRED_VEHICLE_ID
+      && String(state?.vehicleId || '').toLowerCase() === REQUIRED_VEHICLE_ID
       && player;
     if (!eligible || document.hidden) {
       wasInRange = false;
-      rescueSirenStartedAt = null;
       return;
     }
 
-    const now = performance.now();
-    const inRescueZone = insideRescueZone(root, player, rescueLocalPosition);
-    const sirenActive = globalThis.__turnBoostActive === true;
-    if (inRescueZone && sirenActive) {
-      if (rescueSirenStartedAt == null) rescueSirenStartedAt = now;
-      if (now - rescueSirenStartedAt >= RESCUE_SIREN_HOLD_MS) {
-        completeInteractiveRescue(player);
-        return;
-      }
-    } else {
-      rescueSirenStartedAt = null;
+    const inRescueZone = insideRescueZone(runtime, root, player, frame);
+    if (inRescueZone && sirenControlActive()) {
+      completeInteractiveRescue(player);
+      return;
     }
 
     cat.getWorldPosition(bellaWorldPosition);
@@ -264,6 +307,7 @@ export function installBellaRescueBehavior({ root, runtime = globalThis.__turnRu
       return;
     }
 
+    const now = performance.now();
     const proximity = clamp(
       1 - (distance - MEOW_CLOSE_METERS) / (MEOW_RANGE_METERS - MEOW_CLOSE_METERS),
       0,
@@ -287,19 +331,18 @@ export function installBellaRescueBehavior({ root, runtime = globalThis.__turnRu
   const timer = window.setInterval(sample, UPDATE_INTERVAL_MS);
 
   root.userData.turnBellaRescueZone = Object.freeze({
-    shape: 'rear clearing rectangle',
+    shape: 'road-derived rear clearing rectangle',
     widthMeters: RESCUE_ZONE.halfWidth * 2,
-    lengthMeters: Math.abs(RESCUE_ZONE.farZ - RESCUE_ZONE.nearZ),
-    localBounds: Object.freeze({
-      minX: -RESCUE_ZONE.halfWidth,
-      maxX: RESCUE_ZONE.halfWidth,
-      nearZ: RESCUE_ZONE.nearZ,
-      farZ: RESCUE_ZONE.farZ
+    lengthMeters: RESCUE_ZONE.farDepth - RESCUE_ZONE.nearDepth,
+    depthBounds: Object.freeze({
+      near: RESCUE_ZONE.nearDepth,
+      far: RESCUE_ZONE.farDepth
     }),
+    orientation: 'Calculated from the nearest real Countryside road sample through Bella’s tree.',
     requiredVehicle: 'Fire Truck',
-    requiredAction: 'Hold Boost to sound the siren',
-    sirenHoldMs: RESCUE_SIREN_HOLD_MS,
-    trackSafety: 'Only negative local Z is eligible; the track-facing side of the tree is excluded.'
+    requiredAction: 'Use Boost to sound the siren',
+    triggerSamplingMs: UPDATE_INTERVAL_MS,
+    trackSafety: 'The road-derived outward axis excludes the racing surface and track-facing side.'
   });
   root.userData.turnBellaMeowAccessibility = Object.freeze({
     vehicle: 'Fire Truck',
