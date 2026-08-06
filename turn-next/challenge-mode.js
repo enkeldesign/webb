@@ -2,6 +2,7 @@ import { createChallengeSession, readChallengeRequest } from '/turn-next/challen
 import { installChallengeSharing } from '/turn-next/challenge-sharing.js?revision=r182-race-my-ghost';
 import { createChallengeUi } from '/turn-next/challenge-ui.js?revision=r182-race-my-ghost';
 
+installChallengeStyles();
 const request = readChallengeRequest();
 if (request.hasChallenge) globalThis.__turnStartBrowserGame?.();
 
@@ -26,6 +27,15 @@ async function install() {
     console.error('TURN NEXT: challenge could not open.', error);
     showFatalChallenge(ui, error instanceof Error ? error.message : 'This challenge could not be opened.');
   }
+}
+
+function installChallengeStyles() {
+  if (document.querySelector('link[data-turn-next-challenge-style]')) return;
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = '/turn-next/challenge-mode.css?revision=r182-race-my-ghost';
+  link.dataset.turnNextChallengeStyle = '';
+  document.head.appendChild(link);
 }
 
 function waitForRuntime() {
