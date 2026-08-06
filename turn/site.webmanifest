@@ -3,7 +3,7 @@
   "name": "TURN",
   "short_name": "TURN",
   "description": "A motion-controlled arcade drift racer where you race your own best laps.",
-  "start_url": "/turn/",
+  "start_url": "/turn/?shell=20260806-r179",
   "scope": "/turn/",
   "display": "fullscreen",
   "orientation": "landscape",
