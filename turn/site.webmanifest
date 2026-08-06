@@ -5,10 +5,11 @@
   "description": "A motion-controlled arcade drift racer where you race your own best laps.",
   "start_url": "/turn/",
   "scope": "/turn/",
-  "display": "fullscreen",
+  "display": "standalone",
+  "display_override": ["standalone"],
   "orientation": "landscape",
-  "background_color": "#08090a",
-  "theme_color": "#08090a",
+  "background_color": "#38d9ff",
+  "theme_color": "#38d9ff",
   "icons": [
     {
       "src": "/turn/TURNicon.PNG?icon=20260803-profile-512",
