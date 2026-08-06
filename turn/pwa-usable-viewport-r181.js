@@ -87,7 +87,6 @@
     const camera = runtime.camera;
     const canvas = renderer.domElement;
     const nativeSetSize = renderer.setSize.bind(renderer);
-    let applying = false;
     let animationFrame = 0;
     let settleTimers = [];
 
@@ -96,10 +95,7 @@
       const { width, height } = usableViewportSize();
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
-
-      applying = true;
       nativeSetSize(width, height, false);
-      applying = false;
 
       canvas.style.setProperty('width', '100%', 'important');
       canvas.style.setProperty('height', '100%', 'important');
@@ -119,7 +115,6 @@
     }
 
     renderer.setSize = function useUsableViewportInsteadOfPhysicalScreen() {
-      if (applying) return nativeSetSize(...arguments);
       queueSync();
       return renderer;
     };
