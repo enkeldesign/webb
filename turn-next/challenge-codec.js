@@ -59,7 +59,7 @@ export function challengeFromLap({
 export function normalizeChallenge(value) {
   const source = value && typeof value === 'object' ? value : {};
   const time = Number(source.time);
-  const frames = normalizeFrames(source.frames);
+  const frames = downsampleFrames(source.frames);
   const trackId = String(source.trackId || '').trim();
   const carId = String(source.carId || '').trim();
 
