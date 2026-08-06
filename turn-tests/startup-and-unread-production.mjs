@@ -21,10 +21,13 @@ assert.match(index, /TURN v1\.5\.1 · Build 2026\.08\.05-r160/);
 assert.match(index, /app\.js\?build=20260805-r160-browser-consent-r176-bella-road-derived-zone/);
 assert.match(index, /countryside-bella-rescue-hotfix-r176\.js\?revision=r176-video-proven-rescue/,
   'The canonical startup document must replace cached Bella rescue behavior independently');
-assert.match(index, /startup-viewport-r177\.js\?revision=r177-cold-start-rotation-crop/);
+assert.match(index, /startup-viewport-r177\.js\?revision=r178-landscape-first-containment/);
+assert.match(index, /id="turn-landscape-launch-containment-r178"/,
+  'The full-screen containment fix must exist in the startup document before modules execute');
 assert.match(nextIndex, /TURN NEXT · Source TURN v1\.5\.1 · Build 2026\.08\.05-r160/);
 assert.match(nextIndex, /turn-next\/app\.js\?source=20260805-r160-browser-consent-r166-bella-records/);
-assert.match(nextIndex, /startup-viewport-r177\.js\?revision=r177-cold-start-rotation-crop/);
+assert.match(nextIndex, /startup-viewport-r177\.js\?revision=r178-landscape-first-containment/);
+assert.match(nextIndex, /id="turn-landscape-launch-containment-r178"/);
 
 assert.match(app, /function installStartupCover\(\)/);
 assert.match(app, /copy\.textContent = 'Loading TURN'/);
@@ -41,10 +44,18 @@ assert.ok(
 assert.match(responsiveStartup, /SLOW_LOADING_MESSAGE_DELAY_MS = 1400/,
   'Expectation-setting copy must appear only when startup is genuinely taking time');
 assert.match(responsiveStartup, /note\.textContent = 'This might take a minute\.'/);
-assert.match(responsiveStartup, /note\.hidden = true/);
-assert.match(responsiveStartup, /if \(loading\(\)\) note\.hidden = false/);
-assert.match(responsiveStartup, /document\.addEventListener\('turn:home-ready',[\s\S]*clearExpectation\(\)/,
+assert.match(responsiveStartup, /note\.setAttribute\('aria-live', 'polite'\)/);
+assert.match(responsiveStartup, /const launchStartedAt = performance\.now\(\)/,
+  'The message delay must be based on actual launch elapsed time rather than one mutation callback');
+assert.match(responsiveStartup, /function poll\(\)/);
+assert.match(responsiveStartup, /elapsed >= SLOW_LOADING_MESSAGE_DELAY_MS && loadingCoverIsActive\(\)/);
+assert.match(responsiveStartup, /note\.hidden = false/);
+assert.match(responsiveStartup, /timer = window\.setTimeout\(poll, 100\)/,
+  'A cover that becomes active after the threshold must still receive the message');
+assert.match(responsiveStartup, /document\.addEventListener\('turn:home-ready', stop, \{ once: true \}\)/,
   'The slow-start message must disappear with the loading cover');
+assert.doesNotMatch(responsiveStartup, /new MutationObserver\(syncExpectation\)/,
+  'Slow-start guidance must not depend on the class mutation that was missed on device');
 assert.match(responsiveStartup, /link\.rel = 'modulepreload'/);
 assert.match(responsiveStartup, /'\.\/main\.js'/);
 assert.match(responsiveStartup, /'\.\/render\/world\.js\?revision=r175-bella-broad-rear-zone'/);
@@ -52,7 +63,7 @@ assert.match(responsiveStartup, /'\.\/m8-home\.js\?revision=r131-motion-permissi
 assert.match(responsiveStartup, /'\.\/m8-home-fixed-layout\.js\?revision=m8\.9-track-title-alignment&trophy-road=r159&achievements=r166-bella-records&bella-rescue=r174-siren-zone'/);
 assert.match(responsiveStartup, /three@0\.184\.0\/build\/three\.module\.js/,
   'The large shared Three.js dependency must begin downloading before the sequential app graph reaches main.js');
-assert.match(responsiveStartup, /without[\s\S]*changing initialization order|changing initialization order/,
+assert.match(responsiveStartup, /without running game modules prematurely|keep execution in app\.js's established/,
   'The optimization must preload bytes without executing game modules out of order');
 
 assert.match(fixedLayout, /achievements\/unread-markers\.js\?build=\$\{buildKey\}-r159-unread-cards/);
@@ -69,4 +80,4 @@ assert.match(unreadMarkers, /Newly unlocked achievement\./);
 assert.match(unreadMarkers, /new MutationObserver\(queueDecoration\)/);
 assert.match(unreadMarkers, /listObserver\.observe\(list, \{ childList: true \}\)/);
 
-console.log('TURN 1.5.1 cold-start preload, delayed loading guidance, fixed Home viewport, spoken training labels and unread achievement markers passed.');
+console.log('TURN 1.5.1 cold-start preload, deterministic loading guidance, landscape-first containment, spoken training labels and unread achievement markers passed.');
