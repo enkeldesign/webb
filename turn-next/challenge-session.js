@@ -133,19 +133,20 @@ export function createChallengeSession({ runtime, raceSession, ui, request }) {
 
   function materializeBuiltInChallenge(definition) {
     const frames = runtime.samples.map((sample, index, samples) => {
+      const denominator = Math.max(1, samples.length - 1);
       const previous = samples[(index - 2 + samples.length) % samples.length];
       const next = samples[(index + 2) % samples.length];
       const previousHeading = Math.atan2(previous.tangent.x, previous.tangent.z);
       const nextHeading = Math.atan2(next.tangent.x, next.tangent.z);
       const steering = normalizeAngle(nextHeading - previousHeading) * 3.2;
       return {
-        t: definition.time * index / samples.length,
+        t: definition.time * index / denominator,
         x: sample.point.x,
         z: sample.point.z,
         h: Math.atan2(sample.tangent.x, sample.tangent.z),
         s: THREE.MathUtils.clamp(steering, -1, 1),
         d: Math.min(1, Math.abs(steering) * 0.75),
-        p: index / samples.length
+        p: index / denominator
       };
     });
     const track = getTrackDefinition(definition.trackId);
@@ -232,9 +233,14 @@ export function createChallengeSession({ runtime, raceSession, ui, request }) {
       access = raceSession.prepareManualAccess();
     }
 
+    document.querySelector('#resetButton')?.click();
+    useChallengeAsOnlyRival();
     await raceSession.startGame(access.fullscreenPromise);
     runtime.setGameMode(GAME_MODE.STAGED);
     runtime.state.velocity.set(0, 0, 0);
+    const message = document.querySelector('#message');
+    message?.classList.remove('show');
+    if (message) message.textContent = '';
     ui.showBar();
     ui.setAttemptStatus('READY WHEN YOU ARE', { persist: true });
   }
