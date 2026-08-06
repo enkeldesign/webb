@@ -133,7 +133,7 @@ export async function installM8HomeFixedLayout() {
   );
   const achievementUnreadMarkers = installAchievementUnreadMarkers(achievements);
   const { installSecretAchievements } = await import(
-    `/turn/achievements/secret-achievements.js?build=${buildKey}-r166-bella-records`
+    `/turn/achievements/secret-achievements.js?build=${buildKey}-r174-bella-siren-zone`
   );
   const secretAchievements = installSecretAchievements(achievements);
   const { installAchievementChallengeExpansion } = await import(
