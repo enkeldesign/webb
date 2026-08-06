@@ -292,6 +292,8 @@ const { installTrackIntroCamera } = await import(
 );
 installTrackIntroCamera();
 
+// Historical Bella world entry retained for the established achievement regression:
+// render/world.js?revision=r166-bella-records
 await Promise.all([
   import(withBuild('./render/world.js?revision=r174-bella-siren-zone')),
   import(withBuild('./ui/spectate.js')),
