@@ -1,6 +1,7 @@
 import { ACHIEVEMENTS, ICONS } from './catalog.js?revision=r166-bella-records';
-import { takePendingSecretAchievementIds } from './secret-events.js?revision=r166-bella-records';
+import { takePendingSecretAchievements } from './secret-events.js?revision=r174-bella-siren-zone';
 
+const SAVE_BELLA_ID = 'save-bella';
 const HIDDEN_BY_ID = new Map(
   ACHIEVEMENTS.filter((achievement) => achievement.hidden)
     .map((achievement) => [achievement.id, achievement])
@@ -10,6 +11,10 @@ const HIDDEN_BY_TITLE = new Map(
 );
 
 let installed = null;
+
+function validSecretContext(achievementId, context = {}) {
+  return achievementId !== SAVE_BELLA_ID || context.rescueConfirmed === true;
+}
 
 function decorateHiddenCards(achievements) {
   const dialog = achievements?.dialog;
@@ -43,6 +48,7 @@ export function installSecretAchievements(achievements = globalThis.__turnAchiev
   if (!achievements?.store || !achievements?.unlock || !achievements?.dialog) return null;
 
   const unlockId = (achievementId, context = {}) => {
+    if (!validSecretContext(achievementId, context)) return false;
     if (!HIDDEN_BY_ID.has(achievementId) || achievements.store.isUnlocked(achievementId)) return false;
     achievements.unlock(achievementId, context);
     decorateHiddenCards(achievements);
@@ -54,7 +60,9 @@ export function installSecretAchievements(achievements = globalThis.__turnAchiev
   };
   globalThis.addEventListener?.('turn:secret-achievement', handleSecret);
 
-  for (const achievementId of takePendingSecretAchievementIds()) unlockId(achievementId);
+  for (const pending of takePendingSecretAchievements()) {
+    unlockId(pending.achievementId, pending.context);
+  }
 
   const list = achievements.dialog.querySelector('.turn-achievements-list');
   const observer = typeof MutationObserver === 'function' && list
