@@ -5,7 +5,8 @@ import {
   decodeChallenge,
   encodeChallenge,
   makeBuiltInChallengeUrl,
-  makeChallengeUrl
+  makeChallengeUrl,
+  normalizeChallenge
 } from '../turn-next/challenge-codec.js';
 
 const [
@@ -92,6 +93,8 @@ assert.match(sharingSource, /navigator\.share/);
 assert.match(sharingSource, /navigator\.clipboard\.writeText/);
 assert.match(codecSource, /CompressionStream\('gzip'\)/);
 assert.match(codecSource, /DecompressionStream\('gzip'\)/);
+assert.match(codecSource, /const frames = downsampleFrames\(source\.frames\)/,
+  'Direct and built-in challenge definitions must be evenly reduced rather than truncated');
 assert.match(codecSource, /const bufferPromise = new Response\(stream\.readable\)\.arrayBuffer\(\)/,
   'Large replay compression must begin reading before writing to avoid stream backpressure stalls');
 assert.match(storageSource, /const LOCAL_PREFIX = 'turn-next:';/,
@@ -126,19 +129,51 @@ const challenge = challengeFromLap({
     frames
   }
 });
-assert.ok(challenge.frames.length <= 900);
+assert.ok(challenge.frames.length <= 450);
 assert.ok(challenge.frames.at(-1).t > 64.99,
   'Replay downsampling must retain the finish rather than truncating long recordings');
 const encoded = await encodeChallenge(challenge);
+assert.ok(encoded.length < 10000,
+  `A realistic challenge link must remain practical for messaging; received ${encoded.length} encoded characters`);
 const decoded = await decodeChallenge(encoded);
 assert.equal(decoded.challengerName, 'Erik');
 assert.equal(decoded.trackId, 'countryside');
 assert.equal(decoded.carId, 'sedan-sports');
+assert.equal(decoded.time, 65);
 assert.ok(decoded.frames.length > 20);
+assert.ok(decoded.frames.at(-1).t > 64.99);
+assert.ok(Math.abs(decoded.frames.at(-1).x - challenge.frames.at(-1).x) < 0.011,
+  'Compact replay positions must retain centimetre-level precision');
 assert.match(makeChallengeUrl(encoded), /^https:\/\/enkel\.design\/turn-next\/#challenge=/);
 assert.equal(
   makeBuiltInChallengeUrl('sol-countryside-r1', { reply: 'give-up', responder: 'Erik' }),
   'https://enkel.design/turn-next/?challenge=sol-countryside-r1&reply=give-up&responder=Erik'
 );
 
-console.log('TURN NEXT Race My Ghost challenge, repeat attempts, top-four isolation and reply links passed.');
+const builtInStyleFrames = Array.from({ length: 720 }, (_, index) => ({
+  t: 65 * index / 719,
+  x: index,
+  z: index / 2,
+  h: index / 720,
+  s: 0,
+  d: 0,
+  p: index / 719
+}));
+const builtInStyleChallenge = normalizeChallenge({
+  v: 1,
+  challengerName: 'SOL',
+  trackId: 'countryside',
+  trackRevision: 'countryside',
+  trackName: 'Countryside',
+  time: 65,
+  carId: 'sedan-sports',
+  carColor: '#ff4fa3',
+  carSecondaryColor: '#252a35',
+  frames: builtInStyleFrames
+});
+assert.ok(builtInStyleChallenge.frames.length <= 450);
+assert.ok(builtInStyleChallenge.frames.at(-1).t > 64.99,
+  'The stable built-in device challenge must retain its finish frame');
+assert.equal(builtInStyleChallenge.frames.at(-1).x, 719);
+
+console.log('TURN NEXT Race My Ghost challenge, repeat attempts, top-four isolation, compact links and replies passed.');
