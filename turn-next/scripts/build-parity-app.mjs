@@ -27,6 +27,7 @@ async function main() {
     );
     assert.match(current, /await import\(url\.href\)/);
     assert.doesNotMatch(current, /installMotionLifecycleBridge|installM8HomeNavigation/);
+    await import('../../turn-tests/challenge-mode-production.mjs');
     console.log(`TURN NEXT bootstrap wraps canonical TURN ${release.id} with Race My Ghost routing.`);
     return;
   }
