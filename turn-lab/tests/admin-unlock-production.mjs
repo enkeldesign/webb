@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import {
   ADMIN_UNLOCK_SEQUENCE,
   advanceAdminUnlockSequence,
+  completeAdminUnlockFromLot,
   createAdminUnlockedState
 } from '../../turn/testing/admin-unlock-sequence.js';
 import { ACHIEVEMENTS, TRACK_IDS } from '../../turn/achievements/catalog.js';
@@ -23,12 +24,17 @@ assert.deepEqual(ADMIN_UNLOCK_SEQUENCE, [
   'track:airport',
   'track:cliffside',
   'track:harbor',
-  'vehicle:race',
+  'action:race',
   'vehicle:convertible',
   'action:race-this-car'
 ]);
 
 let index = 0;
+for (const irrelevant of ['action:race-this-car', 'track:harbor', 'vehicle:convertible']) {
+  index = advanceAdminUnlockSequence(index, irrelevant).nextIndex;
+  assert.equal(index, 0, 'Activity before the first Countryside selection must not matter');
+}
+
 for (let step = 0; step < ADMIN_UNLOCK_SEQUENCE.length; step += 1) {
   const result = advanceAdminUnlockSequence(index, ADMIN_UNLOCK_SEQUENCE[step]);
   assert.equal(result.completed, step === ADMIN_UNLOCK_SEQUENCE.length - 1);
@@ -38,6 +44,22 @@ assert.equal(index, 0, 'The recognizer must reset after a completed sequence');
 assert.equal(advanceAdminUnlockSequence(4, 'track:harbor').nextIndex, 0);
 assert.equal(advanceAdminUnlockSequence(4, 'track:countryside').nextIndex, 1,
   'A mismatch matching the first token should immediately restart the sequence');
+
+let lotEntryIndex = 0;
+for (const token of ADMIN_UNLOCK_SEQUENCE.slice(0, 10)) {
+  lotEntryIndex = advanceAdminUnlockSequence(lotEntryIndex, token).nextIndex;
+}
+assert.equal(ADMIN_UNLOCK_SEQUENCE[lotEntryIndex], 'vehicle:convertible');
+assert.equal(completeAdminUnlockFromLot(lotEntryIndex, 'convertible').completed, true,
+  'Convertible already selected on Lot entry must complete without another vehicle click');
+assert.equal(completeAdminUnlockFromLot(lotEntryIndex, 'classic').completed, false,
+  'RACE THIS CAR must not complete while another vehicle is selected');
+const explicitConvertibleIndex = advanceAdminUnlockSequence(
+  lotEntryIndex,
+  'vehicle:convertible'
+).nextIndex;
+assert.equal(completeAdminUnlockFromLot(explicitConvertibleIndex, 'convertible').completed, true,
+  'Selecting Convertible after entering The Lot must also complete');
 
 const existing = {
   version: 4,
@@ -67,6 +89,11 @@ assert.equal(unlocked.unlocked['first-turn'].unlockedAt, 123,
   'Existing achievement history must be preserved');
 assert.equal(unlocked.unlocked['save-bella'].unlockedAt, 456);
 
+assert.match(source, /target\.closest\('\.m8-track-continue'\)/,
+  'The Home RACE action must be the separator that opens The Lot');
+assert.match(source, /aria-checked="true"/,
+  'The final action must detect a Convertible that was already selected on Lot entry');
+assert.match(source, /completeAdminUnlockFromLot\(sequenceIndex, selectedVehicleId\)/);
 assert.match(source, /documentRef\.addEventListener\('click', handleClick, true\)/);
 assert.match(source, /event\.preventDefault\(\)/);
 assert.match(source, /event\.stopImmediatePropagation\(\)/);
@@ -80,8 +107,8 @@ assert.doesNotMatch(source, /turn:achievements-updated|turn:trophy-road-updated|
 assert.match(source, /installAdminUnlockSequence\(\);\s*$/,
   'The isolated production module must install itself');
 assert.match(indexSource,
-  /<script type="module" src="\.\/testing\/admin-unlock-sequence\.js\?revision=r174-admin-unlock"><\/script>/,
-  'The production entry must publish the hidden recognizer with its own cache identity');
+  /<script type="module" src="\.\/testing\/admin-unlock-sequence\.js\?revision=r175-admin-unlock"><\/script>/,
+  'The production entry must publish the corrected recognizer with a fresh cache identity');
 assert.match(indexSource,
   /src="\.\/live-steering-setting\.js\?build=20260805-r160-live-steering"/,
   'The hidden recognizer must not disturb the canonical steering entry');
