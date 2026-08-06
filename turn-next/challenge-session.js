@@ -35,7 +35,7 @@ const BUILT_IN_CHALLENGES = Object.freeze({
   'sol-countryside-r1': Object.freeze({
     challengerName: 'SOL',
     trackId: 'countryside',
-    time: 65,
+    time: 13.5,
     carId: 'sedan-sports',
     carColor: '#ff4fa3',
     carSecondaryColor: '#252a35'
