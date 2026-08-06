@@ -2,7 +2,7 @@ import {
   CHANGELOG,
   CURRENT_RELEASE,
   DEVELOPMENT_HISTORY
-} from '../content/about-history.js?revision=r163-modal-system';
+} from '../content/about-history.js?build=20260806-r161';
 
 const REVISION = 'r165-browser-about';
 const INSTALL_NOTE =
@@ -68,7 +68,7 @@ function historyMarkup() {
 }
 
 function changelogMarkup() {
-  return CHANGELOG.map((release) => `
+  return [...CHANGELOG].reverse().map((release) => `
     <article class="turn-changelog-release">
       <time>${escapeMarkup(release.date)}</time>
       <h3>${escapeMarkup(release.entries[0]?.[0] || release.date)}</h3>
