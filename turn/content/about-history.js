@@ -120,16 +120,16 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     ]
   },
   {
-    period: '4–5 August',
+    period: '4–6 August',
     title: 'Current stabilization',
     paragraphs: [
       'TURN 1.5.0 added a branded loading cover, stable iOS Home sizing, compact Paintjob locking and new-achievement markers.',
-      'TURN 1.5.1 corrected Trophy Road’s initial reward card, transitions between 3D and line-art previews and the Paintjob lower rail. Later main-branch hotfixes colour the locked swatch from the selected car, dismiss stale vehicle-lock messaging, publish the development history, standardize dialogs and improve the public installation page.',
+      'TURN 1.5.1 corrected Trophy Road’s initial reward card, transitions between 3D and line-art previews and the Paintjob lower rail. TURN 1.5.2 consolidates the later interface, progression, achievement and accessibility work together with the corrected usable iOS standalone viewport.',
       'The game is now in a refinement and hardening phase: five tracks, fifteen garage slots, local rivals, a mature non-visual audio system, assistive-technology navigation and persistent progression.'
     ],
     milestones: [
-      'Canonical release: TURN 1.5.1 · 2026.08.05-r160',
-      'Post-r160 interface, progression and achievement expansion',
+      'Canonical release: TURN 1.5.2 · 2026.08.06-r161',
+      'Post-r160 interface, progression, achievement and viewport stabilization',
       'Sixty-plus production regression gates plus DBE training tests'
     ]
   }
@@ -276,11 +276,17 @@ export const CHANGELOG = Object.freeze([
       ['Post-r160 interface work', 'Car-coloured Paintjob lock, stale lock-toast dismissal, “one oh one” pronunciation, in-game history, normative dialogs, unified design-system navigation and website About.'],
       ['Achievement expansion', 'Harder developer records, FIND LILYA!, FIND DARVID!, Fire Truck-only SAVE BELLA!, AN ARMY OF ME and ON COURSE, OF COURSE.']
     ]
+  },
+  {
+    date: '6 August',
+    entries: [
+      ['1.5.2 r161', 'Consolidates post-r160 interface, progression, achievement and accessibility work; corrects the usable iOS standalone viewport and refreshes release caches.']
+    ]
   }
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.5.1',
-  build: '2026.08.05-r160',
-  note: 'The repository also contains post-r160 fixes documented in the final changelog entry.'
+  version: '1.5.2',
+  build: '2026.08.06-r161',
+  note: 'Patch release consolidating the 5–6 August stabilization work.'
 });
