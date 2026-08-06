@@ -34,6 +34,7 @@
       try {
         globalThis.sessionStorage.setItem(PWA_REDIRECT_GUARD, '1');
       } catch (_) {}
+      // Only the query changes: origin, path, manifest ID, scope and local storage stay intact.
       launchUrl.searchParams.set('shell', PWA_SHELL_REVISION);
       globalThis.__turnPwaShellRecovery = Object.freeze({
         revision: PWA_SHELL_REVISION,
