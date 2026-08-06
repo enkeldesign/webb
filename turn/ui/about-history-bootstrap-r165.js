@@ -68,7 +68,7 @@ function historyMarkup() {
 }
 
 function changelogMarkup() {
-  return CHANGELOG.map((release) => `
+  return [...CHANGELOG].reverse().map((release) => `
     <article class="turn-changelog-release">
       <time>${escapeMarkup(release.date)}</time>
       <h3>${escapeMarkup(release.entries[0]?.[0] || release.date)}</h3>

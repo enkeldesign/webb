@@ -27,8 +27,8 @@ const [
   fs.readFile(new URL('../turn/design-navigation.css', import.meta.url), 'utf8')
 ]);
 
-assert.match(productionEntry, /about-history-bootstrap-r165\.js\?revision=r165-browser-about/,
-  'The public website must load the browser-aware About implementation directly');
+assert.match(productionEntry, /about-history-bootstrap-r165\.js\?build=20260806-r161-r167-changelog-order/,
+  'The public website must load the newest-first browser-aware About implementation directly');
 assert.ok(
   productionEntry.indexOf('about-history-bootstrap-r165.js') < productionEntry.indexOf('./app.js?build='),
   'Website About must load before the game module waits for explicit browser launch'
@@ -45,6 +45,8 @@ assert.match(productionEntry, /id="installTurnButton"[\s\S]*id="installNote"[\s\
 assert.match(productionEntry, /Install TURN as a home screen web app for the best fullscreen experience\. You can also play here, but it is not recommended\./);
 
 assert.match(bootstrap, /CHANGELOG[\s\S]*CURRENT_RELEASE[\s\S]*DEVELOPMENT_HISTORY/);
+assert.match(bootstrap, /return \[\.\.\.CHANGELOG\]\.reverse\(\)\.map\(/,
+  'The changelog must render newest entries first without mutating its source data');
 assert.match(bootstrap, /const INSTALL_NOTE[\s\S]*Install TURN as a home screen web app for the best fullscreen experience\. You can also play here, but it is not recommended\./);
 assert.match(bootstrap, /function installWebsiteAbout\(\)/);
 assert.match(bootstrap, /id = 'installAboutButton'/);
