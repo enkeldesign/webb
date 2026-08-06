@@ -15,9 +15,9 @@ async function loadWorldModules() {
     import(moduleUrl('../world-art-pass.js')),
     import(moduleUrl('../track-identity.js')),
     import(moduleUrl('../section-intensity.js')),
-    import(moduleUrl('../tracks/countryside-bella-r166.js?revision=r168-bella-markings-eyes-foliage-r169-facing-palette-r170-eye-placement-r171-cute-eyes-r172-final-tune-r173-rescue-r174-siren-zone')),
-    import(moduleUrl('../tracks/countryside-bella-final-r172.js?revision=r172-final-tune-r173-rescue-r174-siren-zone')),
-    import(moduleUrl('../tracks/countryside-bella-rescue-r173.js?revision=r174-siren-rescue-zone'))
+    import(moduleUrl('../tracks/countryside-bella-r166.js?revision=r168-bella-markings-eyes-foliage-r169-facing-palette-r170-eye-placement-r171-cute-eyes-r172-final-tune-r173-rescue-r174-siren-zone-r175-broad-rear-zone')),
+    import(moduleUrl('../tracks/countryside-bella-final-r172.js?revision=r172-final-tune-r173-rescue-r174-siren-zone-r175-broad-rear-zone')),
+    import(moduleUrl('../tracks/countryside-bella-rescue-r173.js?revision=r175-broad-rear-rescue-zone'))
   ]);
 
   return {
