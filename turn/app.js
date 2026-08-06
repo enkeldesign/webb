@@ -293,7 +293,7 @@ const { installTrackIntroCamera } = await import(
 installTrackIntroCamera();
 
 await Promise.all([
-  import(withBuild('./render/world.js?revision=r166-bella-records')),
+  import(withBuild('./render/world.js?revision=r174-bella-siren-zone')),
   import(withBuild('./ui/spectate.js')),
   import(withBuild('./ui/back-to-lot.js'))
 ]);
@@ -339,7 +339,7 @@ if (buildLabel) {
 // Historical regression marker for the paint and Monster Home bundle:
 // m8-home-fixed-layout.js?revision=m8.9-track-title-alignment&trophy-road=r157
 const { installM8HomeFixedLayout } = await import(
-  withBuild('./m8-home-fixed-layout.js?revision=m8.9-track-title-alignment&trophy-road=r159&achievements=r166-bella-records')
+  withBuild('./m8-home-fixed-layout.js?revision=m8.9-track-title-alignment&trophy-road=r159&achievements=r166-bella-records&bella-rescue=r174-siren-zone')
 );
 await installM8HomeFixedLayout();
 installStylesheet(
