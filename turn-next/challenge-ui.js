@@ -109,7 +109,11 @@ export function createChallengeUi() {
   function playerName() {
     const input = modal?.querySelector('.turn-challenge-name-field input');
     const name = normalizeChallengeName(input?.value);
-    try { localStorage.setItem(PLAYER_NAME_KEY, name); } catch (_) {}
+    try {
+      localStorage.setItem(PLAYER_NAME_KEY, name);
+    } catch (_) {
+      // Private browsing can reject optional nickname persistence.
+    }
     if (input) input.value = name;
     return name;
   }
@@ -158,6 +162,10 @@ export function escapeHtml(value) {
 }
 
 function loadPlayerName() {
-  try { return normalizeChallengeName(localStorage.getItem(PLAYER_NAME_KEY)); } catch (_) {}
+  try {
+    return normalizeChallengeName(localStorage.getItem(PLAYER_NAME_KEY));
+  } catch (_) {
+    // Use the anonymous fallback when local storage is unavailable.
+  }
   return 'A TURN PLAYER';
 }
