@@ -17,7 +17,9 @@ assert.deepEqual(release, {
   cacheKey: '20260805-r160'
 });
 assert.match(index, /TURN v1\.5\.1 · Build 2026\.08\.05-r160/);
-assert.match(index, /app\.js\?build=20260805-r160-browser-consent-r166-bella-records/);
+assert.match(index, /app\.js\?build=20260805-r160-browser-consent-r176-bella-road-derived-zone/);
+assert.match(index, /countryside-bella-rescue-hotfix-r176\.js\?revision=r176-video-proven-rescue/,
+  'The canonical startup document must replace cached Bella rescue behavior independently');
 assert.match(nextIndex, /TURN NEXT · Source TURN v1\.5\.1 · Build 2026\.08\.05-r160/);
 assert.match(nextIndex, /turn-next\/app\.js\?source=20260805-r160-browser-consent-r166-bella-records/);
 
@@ -47,4 +49,4 @@ assert.match(unreadMarkers, /Newly unlocked achievement\./);
 assert.match(unreadMarkers, /new MutationObserver\(queueDecoration\)/);
 assert.match(unreadMarkers, /listObserver\.observe\(list, \{ childList: true \}\)/);
 
-console.log('TURN 1.5.1 startup cover, fixed Home viewport, spoken training labels and unread achievement markers passed.');
+console.log('TURN 1.5.1 startup cover, refreshed Bella graph, fixed Home viewport, spoken training labels and unread achievement markers passed.');
