@@ -59,7 +59,7 @@ assert.match(bootstrapSource, /globalThis\.__turnHome[\s\S]*dataset\.turnHomeLif
 assert.match(sessionSource, /'sol-countryside-r1'/,
   'TURN NEXT must ship one short stable challenge for device testing');
 assert.match(sessionSource, /challengerName: 'SOL'/);
-assert.match(sessionSource, /time: 65/);
+assert.match(sessionSource, /time: 13\.5/);
 assert.match(sessionSource, /await activateTrack\(challenge\.trackId, runtime\)/);
 assert.match(sessionSource, /const denominator = Math\.max\(1, samples\.length - 1\)/);
 assert.match(sessionSource, /t: definition\.time \* index \/ denominator/);
