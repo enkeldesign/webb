@@ -2,7 +2,7 @@ import {
   CHANGELOG,
   CURRENT_RELEASE,
   DEVELOPMENT_HISTORY
-} from '../content/about-history.js?revision=r163-modal-system';
+} from '../content/about-history.js?build=20260806-r161';
 
 const REVISION = 'r165-browser-about';
 const INSTALL_NOTE =
