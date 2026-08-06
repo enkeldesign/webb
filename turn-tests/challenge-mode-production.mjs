@@ -10,6 +10,7 @@ import {
 
 const [
   productionIndex,
+  nextIndex,
   nextApp,
   bootstrapSource,
   sessionSource,
@@ -21,6 +22,7 @@ const [
   storageSource
 ] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/challenge-mode.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/challenge-session.js', import.meta.url), 'utf8'),
@@ -34,6 +36,11 @@ const [
 
 assert.doesNotMatch(productionIndex, /challenge-mode|challenge-codec|RACE MY GHOST/,
   'The prototype must remain isolated from production TURN');
+assert.match(nextIndex, /TURN NEXT · Source TURN v1\.5\.2 · Build 2026\.08\.06-r161/);
+assert.match(nextIndex, /"\/turn\/tracks\/track-manager\.js\?build=20260805-r160": "\/turn\/tracks\/track-manager\.js\?source=20260729-r118-m8"/,
+  'Challenge mode must reuse TURN NEXT’s canonical Track Manager singleton');
+assert.match(nextIndex, /"\/turn\/tracks\/catalog\.js\?build=20260805-r160": "\/turn\/tracks\/catalog\.js\?source=20260729-r118-m8"/);
+assert.match(nextIndex, /"\/turn\/vehicle\/catalog\.js\?build=20260805-r160": "\/turn\/vehicle\/catalog\.js\?source=20260729-r118-m8"/);
 assert.match(nextApp, /\/turn-next\/challenge-mode\.js\?revision=r182-race-my-ghost/);
 assert.ok(
   nextApp.indexOf('/turn-next/challenge-mode.js') < nextApp.indexOf("new URL('/turn/app.js'"),
