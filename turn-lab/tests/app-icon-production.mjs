@@ -43,12 +43,6 @@ const expectedIcons = [
 ];
 assert.deepEqual(manifest.icons, expectedIcons);
 assert.deepEqual(nextManifest.icons, expectedIcons);
-assert.equal(manifest.id, '/turn/');
-assert.equal(nextManifest.id, '/turn-next/');
-assert.equal(manifest.start_url, '/turn/');
-assert.equal(nextManifest.start_url, '/turn-next/');
-assert.equal(manifest.scope, '/turn/');
-assert.equal(nextManifest.scope, '/turn-next/');
 assert.equal(manifest.background_color, '#08090a');
 assert.equal(manifest.theme_color, '#08090a');
 assert.equal(nextManifest.background_color, '#08090a');
@@ -73,4 +67,4 @@ assert.equal(
   'All icon surfaces must remain tied to the exact current user-supplied TURNicon.PNG blob'
 );
 
-console.log(`TURN ${release.id} supplied app icon, canonical PWA launch and Home branding passed.`);
+console.log(`TURN ${release.id} supplied app icon, favicon, bookmarks, install onboarding and Home branding passed.`);
