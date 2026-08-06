@@ -78,6 +78,17 @@ function installResponsiveViewportStyle() {
       overflow: hidden !important;
       background: var(--turn-color-cyan, var(--cyan, #38d9ff)) !important;
     }
+    html body .install-gate,
+    html body .m8-home.m8-home-fixed-layout {
+      position: fixed !important;
+      inset: auto !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: var(--turn-stage-width) !important;
+      height: var(--turn-stage-height) !important;
+      min-width: 0 !important;
+      min-height: 0 !important;
+    }
     #game canvas {
       position: absolute !important;
       inset: auto !important;
@@ -198,8 +209,20 @@ function fitRacingSurface(width, height) {
   const viewportAspect = width / Math.max(1, height);
   const renderAspect = Math.max(viewportAspect, MIN_RACING_ASPECT);
   const viewportArea = width * height;
-  const bufferHeight = Math.max(1, Math.round(Math.sqrt(viewportArea / renderAspect)));
-  const bufferWidth = Math.max(1, Math.round(bufferHeight * renderAspect));
+  let bufferWidth;
+  let bufferHeight;
+
+  if (viewportAspect < MIN_RACING_ASPECT) {
+    // Exact 16:9 integer multiples guarantee that the iPad drawing buffer, camera and
+    // centred CSS cover have the same ratio. The buffer area stays close to the previous
+    // 4:3 workload, so crop-not-stretch does not become a performance regression.
+    const aspectUnit = Math.max(1, Math.round(Math.sqrt(viewportArea / (16 * 9))));
+    bufferWidth = aspectUnit * 16;
+    bufferHeight = aspectUnit * 9;
+  } else {
+    bufferWidth = width;
+    bufferHeight = height;
+  }
 
   const coverHeight = renderAspect >= viewportAspect
     ? height
@@ -219,7 +242,8 @@ function fitRacingSurface(width, height) {
 }
 
 function applyStageSize(width, height, fit = null) {
-  const rootStyle = document.documentElement.style;
+  const root = document.documentElement;
+  const rootStyle = root.style;
   rootStyle.setProperty('--app-width', `${width}px`);
   rootStyle.setProperty('--app-height', `${height}px`);
   rootStyle.setProperty('--turn-stage-width', `${width}px`);
@@ -228,6 +252,8 @@ function applyStageSize(width, height, fit = null) {
     rootStyle.setProperty('--turn-racing-cover-width', `${fit.coverWidth}px`);
     rootStyle.setProperty('--turn-racing-cover-height', `${fit.coverHeight}px`);
   }
+  root.dataset.turnViewportFit = 'crop-not-stretch';
+  root.dataset.turnViewportSize = `${width}x${height}`;
 }
 
 function installResponsiveRenderer(runtime) {
@@ -262,8 +288,6 @@ function installResponsiveRenderer(runtime) {
     canvas.style.setProperty('left', '50%', 'important');
     canvas.style.setProperty('transform', 'translate(-50%, -50%)', 'important');
 
-    document.documentElement.dataset.turnViewportFit = 'crop-not-stretch';
-    document.documentElement.dataset.turnViewportSize = `${width}x${height}`;
     document.documentElement.dataset.turnRenderAspect = fit.renderAspect.toFixed(4);
   }
 
@@ -314,5 +338,6 @@ function waitForRuntime() {
 installResponsiveViewportStyle();
 preloadCriticalStartupGraph();
 installSlowLoadingMessage();
-applyStageSize(...Object.values(targetViewportSize()));
+const initialStage = targetViewportSize();
+applyStageSize(initialStage.width, initialStage.height);
 waitForRuntime();
