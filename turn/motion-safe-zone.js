@@ -10,6 +10,8 @@
     ? '/turn-next/site.webmanifest'
     : '/turn/site.webmanifest';
 
+  // This synchronous script runs before orientation and game startup. Keep the PWA
+  // document-shell recovery above the normal motion safe-zone configuration.
   // PR #351's document shell can remain in iOS's installed-web-app cache even after
   // Safari has fetched the reverted production page. Remove its inline containment
   // rule immediately if an older standalone shell executes this refreshed bootstrap.
