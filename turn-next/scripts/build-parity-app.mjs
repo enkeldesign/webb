@@ -9,7 +9,7 @@ const releasePath = path.join(repositoryRoot, 'turn', 'release.json');
 const outputPath = path.join(repositoryRoot, 'turn-next', 'app.js');
 
 export function buildTurnNextApp(release) {
-  return `// Generated from the canonical TURN v${release.version} runtime. Do not edit by hand.\nconst buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';\nconst url = new URL('/turn/app.js', globalThis.location?.href || 'https://enkel.design/turn-next/');\nif (buildKey) url.searchParams.set('build', \`${'${buildKey}'}-browser-consent-r166-bella-records\`);\nawait import(url.href);\nconsole.info(\`TURN NEXT: \${globalThis.__TURN_BUILD__?.id || 'development'} loaded through the canonical TURN runtime.\`);\n`;
+  return `// Generated from the canonical TURN v${release.version} runtime. Do not edit by hand.\nawait import('/turn-next/challenge-mode.js?revision=r182-race-my-ghost');\nconst buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';\nconst url = new URL('/turn/app.js', globalThis.location?.href || 'https://enkel.design/turn-next/');\nif (buildKey) url.searchParams.set('build', \`${'${buildKey}'}-browser-consent-r166-bella-records\`);\nawait import(url.href);\nconsole.info(\`TURN NEXT: \${globalThis.__TURN_BUILD__?.id || 'development'} loaded through the canonical TURN runtime.\`);\n`;
 }
 
 async function main() {
@@ -20,9 +20,15 @@ async function main() {
     const current = await fs.readFile(outputPath, 'utf8').catch(() => null);
     assert.equal(current, generated, 'turn-next/app.js is stale. Run node turn-next/scripts/build-parity-app.mjs.');
     assert.match(current, /browser-consent-r166-bella-records/);
+    assert.match(current, /challenge-mode\.js\?revision=r182-race-my-ghost/);
+    assert.ok(
+      current.indexOf('challenge-mode.js') < current.indexOf("new URL('/turn/app.js'"),
+      'TURN NEXT challenge routing must release browser consent before canonical TURN loads'
+    );
     assert.match(current, /await import\(url\.href\)/);
     assert.doesNotMatch(current, /installMotionLifecycleBridge|installM8HomeNavigation/);
-    console.log(`TURN NEXT bootstrap wraps canonical TURN ${release.id}.`);
+    await import('../../turn-tests/challenge-mode-production.mjs');
+    console.log(`TURN NEXT bootstrap wraps canonical TURN ${release.id} with Race My Ghost routing.`);
     return;
   }
 
