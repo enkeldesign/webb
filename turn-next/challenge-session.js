@@ -442,7 +442,9 @@ function loadSteeringMode() {
   try {
     if (localStorage.getItem(STEERING_MODE_KEY) === 'motion'
       && typeof DeviceMotionEvent !== 'undefined') return 'motion';
-  } catch (_) {}
+  } catch (_) {
+    // Manual steering remains available when preference storage is blocked.
+  }
   return 'manual';
 }
 
