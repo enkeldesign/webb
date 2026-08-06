@@ -177,8 +177,11 @@ function downsampleFrames(frames) {
   const stride = Math.ceil(normalized.length / MAX_FRAMES);
   const sampled = normalized.filter((_, index) => index % stride === 0);
   const last = normalized.at(-1);
-  if (last && sampled.at(-1) !== last) sampled.push(last);
-  return sampled.slice(0, MAX_FRAMES);
+  if (last && sampled.at(-1) !== last) {
+    if (sampled.length >= MAX_FRAMES) sampled[MAX_FRAMES - 1] = last;
+    else sampled.push(last);
+  }
+  return sampled;
 }
 
 function normalizeReply(reply) {
