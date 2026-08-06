@@ -12,7 +12,6 @@ const index = fs.readFileSync(path.join(turnRoot, 'index.html'), 'utf8');
 const nextIndex = fs.readFileSync(path.join(turnNextRoot, 'index.html'), 'utf8');
 const homeSource = fs.readFileSync(path.join(turnRoot, 'm8-home.js'), 'utf8');
 const orientationGuard = fs.readFileSync(path.join(turnRoot, 'orientation-guard.css'), 'utf8');
-const shellRecovery = fs.readFileSync(path.join(turnRoot, 'motion-safe-zone.js'), 'utf8');
 const release = JSON.parse(fs.readFileSync(path.join(turnRoot, 'release.json'), 'utf8'));
 const manifest = JSON.parse(fs.readFileSync(path.join(turnRoot, 'site.webmanifest'), 'utf8'));
 const nextManifest = JSON.parse(fs.readFileSync(path.join(turnNextRoot, 'site.webmanifest'), 'utf8'));
@@ -44,30 +43,16 @@ const expectedIcons = [
 ];
 assert.deepEqual(manifest.icons, expectedIcons);
 assert.deepEqual(nextManifest.icons, expectedIcons);
-assert.equal(manifest.id, '/turn/', 'The production manifest identity must remain stable while its launch URL is versioned');
-assert.equal(nextManifest.id, '/turn-next/', 'TURN NEXT must retain its independent stable manifest identity');
-assert.equal(manifest.start_url, '/turn/?shell=20260806-r179');
-assert.equal(nextManifest.start_url, '/turn-next/?shell=20260806-r179');
+assert.equal(manifest.id, '/turn/');
+assert.equal(nextManifest.id, '/turn-next/');
+assert.equal(manifest.start_url, '/turn/');
+assert.equal(nextManifest.start_url, '/turn-next/');
 assert.equal(manifest.scope, '/turn/');
 assert.equal(nextManifest.scope, '/turn-next/');
 assert.equal(manifest.background_color, '#08090a');
 assert.equal(manifest.theme_color, '#08090a');
 assert.equal(nextManifest.background_color, '#08090a');
 assert.equal(nextManifest.theme_color, '#08090a');
-
-assert.match(shellRecovery, /PWA_SHELL_REVISION = '20260806-r179'/);
-assert.match(shellRecovery, /#turn-landscape-launch-containment-r178/,
-  'A cached PR #351 document must have its harmful inline containment rule removed immediately');
-assert.match(shellRecovery, /manifest\.href = `\$\{manifestPath\}\?shell=\$\{PWA_SHELL_REVISION\}`/,
-  'The active document must retarget its manifest to a versioned URL');
-assert.match(shellRecovery, /if \(isStandalone\)/,
-  'Only installed standalone contexts may perform the document-shell handoff');
-assert.match(shellRecovery, /sessionStorage\.getItem\(PWA_REDIRECT_GUARD\)/);
-assert.match(shellRecovery, /launchUrl\.searchParams\.set\('shell', PWA_SHELL_REVISION\)/);
-assert.match(shellRecovery, /window\.location\.replace\(launchUrl\.href\)/,
-  'The standalone handoff must request a genuinely new same-origin document without adding browser history');
-assert.match(shellRecovery, /return;[\s\S]*const SAFE_ZONE_DEGREES = 24/,
-  'No game bootstrap may continue in the stale document after navigation begins');
 
 const icon = fs.readFileSync(path.join(turnRoot, 'TURNicon.PNG'));
 assert.deepEqual(
@@ -88,4 +73,4 @@ assert.equal(
   'All icon surfaces must remain tied to the exact current user-supplied TURNicon.PNG blob'
 );
 
-console.log(`TURN ${release.id} supplied app icon, versioned standalone shell recovery and Home branding passed.`);
+console.log(`TURN ${release.id} supplied app icon, canonical PWA launch and Home branding passed.`);
