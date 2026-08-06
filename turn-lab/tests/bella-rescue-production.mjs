@@ -12,16 +12,22 @@ const [behavior, secretEvents, secretAchievements, world, app, homeLayout] = awa
 
 assert.match(behavior, /SAVE_BELLA_ID = 'save-bella'/);
 assert.match(behavior, /REQUIRED_VEHICLE_ID = 'firetruck'/);
-assert.match(behavior, /RESCUE_SIREN_HOLD_MS = 360/);
-assert.match(behavior, /RESCUE_ZONE = Object\.freeze\(\{[\s\S]*centerX: 0,[\s\S]*centerZ: -5\.5,[\s\S]*radiusX: 12,[\s\S]*radiusZ: 10\.5/,
-  'SAVE BELLA! must use a compact elliptical rescue patch around the off-road tree area');
-assert.match(behavior, /normalizedX \* normalizedX \+ normalizedZ \* normalizedZ <= 1/,
-  'The rescue trigger must be bounded by the configured ellipse rather than broad camera distance');
+assert.match(behavior, /RESCUE_SIREN_HOLD_MS = 320/);
+assert.match(behavior, /RESCUE_ZONE = Object\.freeze\(\{[\s\S]*halfWidth: 22,[\s\S]*nearZ: -1\.5,[\s\S]*farZ: -36/,
+  'SAVE BELLA! must cover a broad clearing several Fire-Truck lengths behind the tree');
+assert.match(behavior, /Math\.abs\(localPosition\.x\) <= RESCUE_ZONE\.halfWidth/);
+assert.match(behavior, /localPosition\.z <= RESCUE_ZONE\.nearZ/);
+assert.match(behavior, /localPosition\.z >= RESCUE_ZONE\.farZ/,
+  'The rescue trigger must be a large bounded rear clearing rather than a small ellipse');
+assert.match(behavior, /Only negative local Z is eligible/,
+  'The complete track-facing side of Bella’s tree must remain excluded');
+assert.match(behavior, /root\.updateWorldMatrix\(true, false\)/,
+  'Zone sampling must use the current rendered tree transform');
 assert.match(behavior, /globalThis\.__turnBoostActive === true/,
   'The Fire Truck siren must be active before Bella can be rescued');
 assert.match(behavior, /inRescueZone && sirenActive/);
 assert.match(behavior, /now - rescueSirenStartedAt >= RESCUE_SIREN_HOLD_MS/,
-  'The siren must remain active briefly inside the rescue patch to avoid drive-by triggers');
+  'The siren must remain active briefly inside the rescue clearing to avoid drive-by triggers');
 assert.match(behavior, /state\.vehicleId === REQUIRED_VEHICLE_ID/,
   'Only the Fire Truck can complete the rescue');
 assert.match(behavior, /activeTrackId\(runtime\) === 'countryside'/);
@@ -77,13 +83,13 @@ assert.match(behavior, /voice\.frequency\.exponentialRampToValueAtTime/,
 assert.match(behavior, /if \(root\.userData\.turnBellaRescued\) return;/,
   'Directional discovery meows must stop after Bella is safe');
 
-assert.match(world, /countryside-bella-rescue-r173\.js\?revision=r174-siren-rescue-zone/);
+assert.match(world, /countryside-bella-rescue-r173\.js\?revision=r175-broad-rear-rescue-zone/);
 assert.match(world, /applyBellaFinalVisuals\(bellaRoot\);\s*installBellaRescueBehavior\(\{ root: bellaRoot, runtime \}\);/,
   'Rescue behavior must install after Bella’s final approved visual treatment');
-assert.match(app, /render\/world\.js\?revision=r174-bella-siren-zone/,
-  'The production app must request the corrected world module under a fresh cache identity');
+assert.match(app, /render\/world\.js\?revision=r175-bella-broad-rear-zone/,
+  'The production app must request the expanded rescue clearing under a fresh cache identity');
 assert.match(app, /bella-rescue=r174-siren-zone/,
-  'The Home layout must also load the corrected secret-achievement validator');
+  'The Home layout must continue to load the corrected secret-achievement validator');
 assert.match(homeLayout, /secret-achievements\.js\?build=\$\{buildKey\}-r174-bella-siren-zone/);
 
-console.log('TURN Bella siren rescue zone, ground transition and directional meow regression passed.');
+console.log('TURN Bella broad rear rescue clearing, siren trigger, ground transition and directional meow regression passed.');

@@ -8,15 +8,15 @@ const MEOW_CLOSE_METERS = 24;
 const MEOW_MIN_INTERVAL_MS = 2400;
 const MEOW_MAX_INTERVAL_MS = 5600;
 const UPDATE_INTERVAL_MS = 160;
-const RESCUE_SIREN_HOLD_MS = 360;
+const RESCUE_SIREN_HOLD_MS = 320;
 
-// A compact ellipse around the tree on the off-road scenery patch. The rescue tree is
-// more than 40 metres from the road, so this area cannot overlap the racing surface.
+// Bella's root is rotated so local +Z points back towards the road. The rescue area
+// therefore occupies only negative local Z: the broad clearing behind the tree shown
+// to the player. It is approximately seven Fire-Truck lengths wide and six long.
 const RESCUE_ZONE = Object.freeze({
-  centerX: 0,
-  centerZ: -5.5,
-  radiusX: 12,
-  radiusZ: 10.5
+  halfWidth: 22,
+  nearZ: -1.5,
+  farZ: -36
 });
 
 // Local to the dedicated rescue-tree group, beside the trunk and on the same protected
@@ -172,11 +172,12 @@ function moveBellaToGround(root, { announce = false } = {}) {
 }
 
 function insideRescueZone(root, player, localPosition) {
+  root.updateWorldMatrix(true, false);
   localPosition.copy(player);
   root.worldToLocal(localPosition);
-  const normalizedX = (localPosition.x - RESCUE_ZONE.centerX) / RESCUE_ZONE.radiusX;
-  const normalizedZ = (localPosition.z - RESCUE_ZONE.centerZ) / RESCUE_ZONE.radiusZ;
-  return normalizedX * normalizedX + normalizedZ * normalizedZ <= 1;
+  return Math.abs(localPosition.x) <= RESCUE_ZONE.halfWidth
+    && localPosition.z <= RESCUE_ZONE.nearZ
+    && localPosition.z >= RESCUE_ZONE.farZ;
 }
 
 export function installBellaRescueBehavior({ root, runtime = globalThis.__turnRuntime } = {}) {
@@ -286,13 +287,19 @@ export function installBellaRescueBehavior({ root, runtime = globalThis.__turnRu
   const timer = window.setInterval(sample, UPDATE_INTERVAL_MS);
 
   root.userData.turnBellaRescueZone = Object.freeze({
-    shape: 'ellipse',
-    center: Object.freeze({ x: RESCUE_ZONE.centerX, z: RESCUE_ZONE.centerZ }),
-    radii: Object.freeze({ x: RESCUE_ZONE.radiusX, z: RESCUE_ZONE.radiusZ }),
+    shape: 'rear clearing rectangle',
+    widthMeters: RESCUE_ZONE.halfWidth * 2,
+    lengthMeters: Math.abs(RESCUE_ZONE.farZ - RESCUE_ZONE.nearZ),
+    localBounds: Object.freeze({
+      minX: -RESCUE_ZONE.halfWidth,
+      maxX: RESCUE_ZONE.halfWidth,
+      nearZ: RESCUE_ZONE.nearZ,
+      farZ: RESCUE_ZONE.farZ
+    }),
     requiredVehicle: 'Fire Truck',
     requiredAction: 'Hold Boost to sound the siren',
     sirenHoldMs: RESCUE_SIREN_HOLD_MS,
-    trackSafety: 'The ellipse is isolated to the off-road patch around the rescue tree.'
+    trackSafety: 'Only negative local Z is eligible; the track-facing side of the tree is excluded.'
   });
   root.userData.turnBellaMeowAccessibility = Object.freeze({
     vehicle: 'Fire Truck',
