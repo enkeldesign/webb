@@ -3,7 +3,7 @@
   "name": "TURN NEXT",
   "short_name": "TURN NEXT",
   "description": "The isolated architecture test runtime for TURN.",
-  "start_url": "/turn-next/?shell=20260806-r179",
+  "start_url": "/turn-next/",
   "scope": "/turn-next/",
   "display": "fullscreen",
   "orientation": "landscape",
