@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { signalSecretAchievement } from '../achievements/secret-events.js?revision=r166-bella-records';
 
 const SAVE_BELLA_ID = 'save-bella';
 const REQUIRED_VEHICLE_ID = 'firetruck';
@@ -7,11 +8,21 @@ const MEOW_CLOSE_METERS = 24;
 const MEOW_MIN_INTERVAL_MS = 2400;
 const MEOW_MAX_INTERVAL_MS = 5600;
 const UPDATE_INTERVAL_MS = 160;
-const RESCUE_MOVE_DELAY_MS = 80;
+const RESCUE_SIREN_HOLD_MS = 360;
 
-// Local to the dedicated rescue-tree group. Positive Z remains on the protected
-// scenery side of the tree and the large X offset clears both trunk and branch.
-const SAFE_GROUND_POSITION = Object.freeze({ x: 5.4, y: 0.08, z: 2.2 });
+// A compact ellipse around the tree on the off-road scenery patch. The rescue tree is
+// more than 40 metres from the road, so this area cannot overlap the racing surface.
+const RESCUE_ZONE = Object.freeze({
+  centerX: 0,
+  centerZ: -5.5,
+  radiusX: 12,
+  radiusZ: 10.5
+});
+
+// Local to the dedicated rescue-tree group, beside the trunk and on the same protected
+// scenery patch as the rescue zone. Bella remains stationary because the source has no
+// walking animation.
+const SAFE_GROUND_POSITION = Object.freeze({ x: 4.8, y: 0.08, z: -3.2 });
 
 const AudioContextClass = globalThis.AudioContext || globalThis.webkitAudioContext;
 let meowContext = null;
@@ -151,11 +162,21 @@ function moveBellaToGround(root, { announce = false } = {}) {
     movement: 'stationary',
     sourceAnimationClips: 0,
     reason: 'The pinned Kenney Cube Pets cat contains no animation section or walking clip.',
-    trackSafety: 'Fixed scenery-local position; Bella cannot enter the road.'
+    trackSafety: 'Fixed scenery-local position inside the rescue patch; Bella cannot enter the road.'
   });
+  cat.updateMatrixWorld(true);
+  root.updateMatrixWorld(true);
 
   if (announce) scheduleMeow({ pan: 0, intensity: 0.72, rescued: true });
   return true;
+}
+
+function insideRescueZone(root, player, localPosition) {
+  localPosition.copy(player);
+  root.worldToLocal(localPosition);
+  const normalizedX = (localPosition.x - RESCUE_ZONE.centerX) / RESCUE_ZONE.radiusX;
+  const normalizedZ = (localPosition.z - RESCUE_ZONE.centerZ) / RESCUE_ZONE.radiusZ;
+  return normalizedX * normalizedX + normalizedZ * normalizedZ <= 1;
 }
 
 export function installBellaRescueBehavior({ root, runtime = globalThis.__turnRuntime } = {}) {
@@ -169,25 +190,44 @@ export function installBellaRescueBehavior({ root, runtime = globalThis.__turnRu
 
   let lastMeowAt = -Infinity;
   let wasInRange = false;
+  let rescueSirenStartedAt = null;
   let disposed = false;
   const bellaWorldPosition = new THREE.Vector3();
+  const rescueLocalPosition = new THREE.Vector3();
 
-  function rescue({ announce = false } = {}) {
-    if (root.userData.turnBellaRescued) return;
-    window.setTimeout(() => moveBellaToGround(root, { announce }), RESCUE_MOVE_DELAY_MS);
+  function rescueFromStoredAchievement({ announce = false } = {}) {
+    moveBellaToGround(root, { announce });
+  }
+
+  function completeInteractiveRescue(player) {
+    // Move Bella first. The achievement signal is emitted only after the visual state is
+    // already correct, so the toast and the cat can never disagree again.
+    if (!moveBellaToGround(root, { announce: true })) return false;
+    root.userData.turnSecretAchievementFound = true;
+    signalSecretAchievement(SAVE_BELLA_ID, {
+      trackId: 'countryside',
+      vehicleId: REQUIRED_VEHICLE_ID,
+      rescueConfirmed: true,
+      rescueMethod: 'fire-truck-siren-zone',
+      rescuePosition: {
+        x: Number(player?.x || 0),
+        z: Number(player?.z || 0)
+      }
+    });
+    return true;
   }
 
   function handleSecretAchievement(event) {
-    if (event.detail?.achievementId === SAVE_BELLA_ID) rescue({ announce: true });
+    if (event.detail?.achievementId === SAVE_BELLA_ID) rescueFromStoredAchievement({ announce: true });
   }
 
   function handleAchievementUpdate(event) {
-    if (event.detail?.unlocked?.includes?.(SAVE_BELLA_ID)) rescue({ announce: true });
+    if (event.detail?.unlocked?.includes?.(SAVE_BELLA_ID)) rescueFromStoredAchievement({ announce: true });
   }
 
   function sample() {
     if (disposed) return;
-    if (savedInProfile()) rescue();
+    if (savedInProfile()) rescueFromStoredAchievement();
     if (root.userData.turnBellaRescued) return;
 
     const state = runtime?.state;
@@ -198,7 +238,21 @@ export function installBellaRescueBehavior({ root, runtime = globalThis.__turnRu
       && player;
     if (!eligible || document.hidden) {
       wasInRange = false;
+      rescueSirenStartedAt = null;
       return;
+    }
+
+    const now = performance.now();
+    const inRescueZone = insideRescueZone(root, player, rescueLocalPosition);
+    const sirenActive = globalThis.__turnBoostActive === true;
+    if (inRescueZone && sirenActive) {
+      if (rescueSirenStartedAt == null) rescueSirenStartedAt = now;
+      if (now - rescueSirenStartedAt >= RESCUE_SIREN_HOLD_MS) {
+        completeInteractiveRescue(player);
+        return;
+      }
+    } else {
+      rescueSirenStartedAt = null;
     }
 
     cat.getWorldPosition(bellaWorldPosition);
@@ -209,7 +263,6 @@ export function installBellaRescueBehavior({ root, runtime = globalThis.__turnRu
       return;
     }
 
-    const now = performance.now();
     const proximity = clamp(
       1 - (distance - MEOW_CLOSE_METERS) / (MEOW_RANGE_METERS - MEOW_CLOSE_METERS),
       0,
@@ -232,6 +285,15 @@ export function installBellaRescueBehavior({ root, runtime = globalThis.__turnRu
   globalThis.addEventListener('turn:achievements-updated', handleAchievementUpdate);
   const timer = window.setInterval(sample, UPDATE_INTERVAL_MS);
 
+  root.userData.turnBellaRescueZone = Object.freeze({
+    shape: 'ellipse',
+    center: Object.freeze({ x: RESCUE_ZONE.centerX, z: RESCUE_ZONE.centerZ }),
+    radii: Object.freeze({ x: RESCUE_ZONE.radiusX, z: RESCUE_ZONE.radiusZ }),
+    requiredVehicle: 'Fire Truck',
+    requiredAction: 'Hold Boost to sound the siren',
+    sirenHoldMs: RESCUE_SIREN_HOLD_MS,
+    trackSafety: 'The ellipse is isolated to the off-road patch around the rescue tree.'
+  });
   root.userData.turnBellaMeowAccessibility = Object.freeze({
     vehicle: 'Fire Truck',
     rangeMeters: MEOW_RANGE_METERS,
