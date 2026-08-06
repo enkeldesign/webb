@@ -10,7 +10,6 @@ import {
 
 const [
   productionIndex,
-  nextIndex,
   nextApp,
   bootstrapSource,
   sessionSource,
@@ -22,7 +21,6 @@ const [
   storageSource
 ] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/challenge-mode.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/challenge-session.js', import.meta.url), 'utf8'),
@@ -87,6 +85,8 @@ assert.match(sharingSource, /navigator\.share/);
 assert.match(sharingSource, /navigator\.clipboard\.writeText/);
 assert.match(codecSource, /CompressionStream\('gzip'\)/);
 assert.match(codecSource, /DecompressionStream\('gzip'\)/);
+assert.match(codecSource, /const bufferPromise = new Response\(stream\.readable\)\.arrayBuffer\(\)/,
+  'Large replay compression must begin reading before writing to avoid stream backpressure stalls');
 assert.match(storageSource, /const LOCAL_PREFIX = 'turn-next:';/,
   'Challenge attempts must remain isolated from production TURN records');
 
@@ -97,14 +97,14 @@ assert.match(cssSource, /\.turn-challenge-share-best/);
 assert.match(cssSource, /\.lap-result-toast \[data-share-lap-challenge\]/);
 assert.match(cssSource, /:focus-visible/);
 
-const frames = Array.from({ length: 1300 }, (_, index) => ({
-  t: index * 0.05,
+const frames = Array.from({ length: 1800 }, (_, index) => ({
+  t: 65 * index / 1799,
   x: index * 0.08,
   z: index * 0.04,
   h: index * 0.001,
   s: 0,
   d: 0,
-  p: index / 1300
+  p: index / 1799
 }));
 const challenge = challengeFromLap({
   challengerName: 'Erik',
@@ -120,7 +120,7 @@ const challenge = challengeFromLap({
   }
 });
 assert.ok(challenge.frames.length <= 900);
-assert.ok(challenge.frames.at(-1).t > 64,
+assert.ok(challenge.frames.at(-1).t > 64.99,
   'Replay downsampling must retain the finish rather than truncating long recordings');
 const encoded = await encodeChallenge(challenge);
 const decoded = await decodeChallenge(encoded);
