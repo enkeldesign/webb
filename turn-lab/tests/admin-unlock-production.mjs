@@ -91,7 +91,7 @@ assert.equal(unlocked.unlocked['save-bella'].unlockedAt, 456);
 
 assert.match(source, /target\.closest\('\.m8-track-continue'\)/,
   'The Home RACE action must be the separator that opens The Lot');
-assert.match(source, /aria-checked=\\"true\\"/,
+assert.match(source, /aria-checked="true"/,
   'The final action must detect a Convertible that was already selected on Lot entry');
 assert.match(source, /completeAdminUnlockFromLot\(sequenceIndex, selectedVehicleId\)/);
 assert.match(source, /documentRef\.addEventListener\('click', handleClick, true\)/);
