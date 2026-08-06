@@ -5,10 +5,11 @@
   "description": "The isolated architecture test runtime for TURN.",
   "start_url": "/turn-next/",
   "scope": "/turn-next/",
-  "display": "fullscreen",
+  "display": "standalone",
+  "display_override": ["standalone"],
   "orientation": "landscape",
-  "background_color": "#08090a",
-  "theme_color": "#08090a",
+  "background_color": "#38d9ff",
+  "theme_color": "#38d9ff",
   "icons": [
     {
       "src": "/turn/TURNicon.PNG?icon=20260803-profile-512",
