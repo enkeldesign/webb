@@ -1,6 +1,6 @@
 const MIN_RACING_ASPECT = 16 / 9;
 const SLOW_LOADING_MESSAGE_DELAY_MS = 1400;
-const ORIENTATION_SETTLE_DELAYS_MS = Object.freeze([0, 70, 180, 420, 900]);
+const ORIENTATION_SETTLE_DELAYS_MS = Object.freeze([0, 70, 180, 420, 900, 1600]);
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
 const moduleBase = new URL('/turn/', globalThis.location?.href || 'https://enkel.design/turn/');
 
@@ -21,9 +21,8 @@ function preloadModule(path, { crossOrigin = false } = {}) {
 }
 
 function preloadCriticalStartupGraph() {
-  // These modules sit late in the current sequential startup chain. Starting their
-  // downloads immediately removes much of the first-install network waterfall without
-  // changing initialization order or running game code early.
+  // Start the slow downloads immediately, but keep execution in app.js's established
+  // order. This shortens a fresh install without running game modules prematurely.
   for (const path of [
     './platform/web-platform.js',
     './platform/platform-context.js',
@@ -47,8 +46,6 @@ function installResponsiveViewportStyle() {
   style.id = 'turn-responsive-viewport-r177-style';
   style.textContent = `
     :root {
-      --turn-stage-width: 100vw;
-      --turn-stage-height: 100vh;
       --turn-racing-cover-width: 100vw;
       --turn-racing-cover-height: 100vh;
     }
@@ -58,36 +55,32 @@ function installResponsiveViewportStyle() {
       overflow: hidden !important;
       background: var(--turn-color-cyan, var(--cyan, #38d9ff)) !important;
     }
+    html {
+      width: 100% !important;
+      height: 100% !important;
+    }
     body {
       position: fixed !important;
-      inset: auto !important;
-      top: 0 !important;
-      left: 0 !important;
-      width: var(--turn-stage-width) !important;
-      height: var(--turn-stage-height) !important;
+      inset: 0 !important;
+      width: auto !important;
+      height: auto !important;
+      min-width: 0 !important;
+      min-height: 0 !important;
+    }
+    #game,
+    html body .install-gate,
+    html body .rotate-panel,
+    html body .m8-home.m8-home-fixed-layout {
+      position: fixed !important;
+      inset: 0 !important;
+      width: auto !important;
+      height: auto !important;
       min-width: 0 !important;
       min-height: 0 !important;
     }
     #game {
-      position: fixed !important;
-      inset: auto !important;
-      top: 0 !important;
-      left: 0 !important;
-      width: var(--turn-stage-width) !important;
-      height: var(--turn-stage-height) !important;
       overflow: hidden !important;
       background: var(--turn-color-cyan, var(--cyan, #38d9ff)) !important;
-    }
-    html body .install-gate,
-    html body .m8-home.m8-home-fixed-layout {
-      position: fixed !important;
-      inset: auto !important;
-      top: 0 !important;
-      left: 0 !important;
-      width: var(--turn-stage-width) !important;
-      height: var(--turn-stage-height) !important;
-      min-width: 0 !important;
-      min-height: 0 !important;
     }
     #game canvas {
       position: absolute !important;
@@ -124,40 +117,44 @@ function installSlowLoadingMessage() {
     note = document.createElement('p');
     note.className = 'turn-startup-expectation';
     note.textContent = 'This might take a minute.';
+    note.setAttribute('role', 'status');
+    note.setAttribute('aria-live', 'polite');
     note.hidden = true;
     copy.insertAdjacentElement('afterend', note);
   }
 
+  const launchStartedAt = performance.now();
   let timer = 0;
-  const loading = () => gate.classList.contains('turn-startup-loading')
-    || document.documentElement.classList.contains('turn-startup-pending');
+  let finished = false;
 
-  function clearExpectation() {
+  function loadingCoverIsActive() {
+    return gate.classList.contains('turn-startup-loading')
+      || document.documentElement.classList.contains('turn-startup-pending')
+      || gate.style.display === 'grid';
+  }
+
+  function stop() {
+    finished = true;
     window.clearTimeout(timer);
     timer = 0;
     note.hidden = true;
   }
 
-  function syncExpectation() {
-    if (!loading()) {
-      clearExpectation();
+  function poll() {
+    if (finished || document.documentElement.classList.contains('turn-home-ready')) {
+      stop();
       return;
     }
-    if (timer || !note.hidden) return;
-    timer = window.setTimeout(() => {
-      timer = 0;
-      if (loading()) note.hidden = false;
-    }, SLOW_LOADING_MESSAGE_DELAY_MS);
+
+    const elapsed = performance.now() - launchStartedAt;
+    if (elapsed >= SLOW_LOADING_MESSAGE_DELAY_MS && loadingCoverIsActive()) {
+      note.hidden = false;
+    }
+    timer = window.setTimeout(poll, 100);
   }
 
-  const observer = new MutationObserver(syncExpectation);
-  observer.observe(gate, { attributes: true, attributeFilter: ['class', 'hidden'] });
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-  document.addEventListener('turn:home-ready', () => {
-    clearExpectation();
-    observer.disconnect();
-  }, { once: true });
-  syncExpectation();
+  document.addEventListener('turn:home-ready', stop, { once: true });
+  timer = window.setTimeout(poll, SLOW_LOADING_MESSAGE_DELAY_MS);
 }
 
 function isStandaloneDisplayMode() {
@@ -169,6 +166,15 @@ function isStandaloneDisplayMode() {
 
 function validSize(width, height) {
   return Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0;
+}
+
+function orientSize(width, height, landscape) {
+  if (!validSize(width, height)) return null;
+  const longSide = Math.max(width, height);
+  const shortSide = Math.min(width, height);
+  return landscape
+    ? { width: longSide, height: shortSide }
+    : { width: shortSide, height: longSide };
 }
 
 function liveViewportSize() {
@@ -187,22 +193,56 @@ function liveViewportSize() {
   };
 }
 
-function standaloneScreenSize(live) {
-  if (!isStandaloneDisplayMode()) return null;
-  const reportedWidth = Math.max(Number(screen.width) || 0, Number(screen.availWidth) || 0);
-  const reportedHeight = Math.max(Number(screen.height) || 0, Number(screen.availHeight) || 0);
-  if (!validSize(reportedWidth, reportedHeight)) return null;
+function viewportIsLandscape(live) {
+  if (window.matchMedia?.('(orientation: landscape)').matches) return true;
+  if (window.matchMedia?.('(orientation: portrait)').matches) return false;
+  const type = String(screen.orientation?.type || '');
+  if (type.startsWith('landscape')) return true;
+  if (type.startsWith('portrait')) return false;
+  const legacyAngle = Math.abs(Number(window.orientation));
+  if (legacyAngle === 90) return true;
+  return live.width >= live.height;
+}
 
-  const longSide = Math.max(reportedWidth, reportedHeight);
-  const shortSide = Math.min(reportedWidth, reportedHeight);
-  return live.width >= live.height
-    ? { width: longSide, height: shortSide }
-    : { width: shortSide, height: longSide };
+function measureCssViewport(cssText) {
+  if (!document.body) return null;
+  const probe = document.createElement('div');
+  probe.setAttribute('aria-hidden', 'true');
+  probe.style.cssText = `${cssText};position:fixed;visibility:hidden;pointer-events:none;z-index:-2147483648;`;
+  document.body.appendChild(probe);
+  const rect = probe.getBoundingClientRect();
+  probe.remove();
+  return validSize(rect.width, rect.height)
+    ? { width: rect.width, height: rect.height }
+    : null;
 }
 
 function targetViewportSize() {
   const live = liveViewportSize();
-  return standaloneScreenSize(live) || live;
+  if (!isStandaloneDisplayMode()) return live;
+
+  const landscape = viewportIsLandscape(live);
+  const candidates = [
+    orientSize(live.width, live.height, landscape),
+    orientSize(Number(screen.width), Number(screen.height), landscape),
+    orientSize(Number(screen.availWidth), Number(screen.availHeight), landscape),
+    orientSize(Number(window.outerWidth), Number(window.outerHeight), landscape),
+    orientSize(
+      measureCssViewport('inset:0;width:auto;height:auto')?.width,
+      measureCssViewport('inset:0;width:auto;height:auto')?.height,
+      landscape
+    ),
+    orientSize(
+      measureCssViewport('inset:auto;left:0;top:0;width:100lvw;height:100lvh')?.width,
+      measureCssViewport('inset:auto;left:0;top:0;width:100lvw;height:100lvh')?.height,
+      landscape
+    )
+  ].filter(Boolean);
+
+  return {
+    width: Math.max(1, Math.round(Math.max(...candidates.map((size) => size.width)))),
+    height: Math.max(1, Math.round(Math.max(...candidates.map((size) => size.height))))
+  };
 }
 
 function fitRacingSurface(width, height) {
@@ -213,9 +253,6 @@ function fitRacingSurface(width, height) {
   let bufferHeight;
 
   if (viewportAspect < MIN_RACING_ASPECT) {
-    // Exact 16:9 integer multiples guarantee that the iPad drawing buffer, camera and
-    // centred CSS cover have the same ratio. The buffer area stays close to the previous
-    // 4:3 workload, so crop-not-stretch does not become a performance regression.
     const aspectUnit = Math.max(1, Math.round(Math.sqrt(viewportArea / (16 * 9))));
     bufferWidth = aspectUnit * 16;
     bufferHeight = aspectUnit * 9;
@@ -246,8 +283,6 @@ function applyStageSize(width, height, fit = null) {
   const rootStyle = root.style;
   rootStyle.setProperty('--app-width', `${width}px`);
   rootStyle.setProperty('--app-height', `${height}px`);
-  rootStyle.setProperty('--turn-stage-width', `${width}px`);
-  rootStyle.setProperty('--turn-stage-height', `${height}px`);
   if (fit) {
     rootStyle.setProperty('--turn-racing-cover-width', `${fit.coverWidth}px`);
     rootStyle.setProperty('--turn-racing-cover-height', `${fit.coverHeight}px`);
