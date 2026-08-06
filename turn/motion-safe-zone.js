@@ -4,7 +4,7 @@
   const isStandalone =
     window.matchMedia('(display-mode: standalone)').matches ||
     window.matchMedia('(display-mode: fullscreen)').matches ||
-    navigator.standalone === true;
+    globalThis.navigator.standalone === true;
   const isNextDeployment = document.documentElement.dataset.turnDeployment === 'next';
   const manifestPath = isNextDeployment
     ? '/turn-next/site.webmanifest'
@@ -27,12 +27,12 @@
     const currentRevision = launchUrl.searchParams.get('shell');
     let alreadyRedirected = false;
     try {
-      alreadyRedirected = sessionStorage.getItem(PWA_REDIRECT_GUARD) === '1';
+      alreadyRedirected = globalThis.sessionStorage.getItem(PWA_REDIRECT_GUARD) === '1';
     } catch (_) {}
 
     if (currentRevision !== PWA_SHELL_REVISION && !alreadyRedirected) {
       try {
-        sessionStorage.setItem(PWA_REDIRECT_GUARD, '1');
+        globalThis.sessionStorage.setItem(PWA_REDIRECT_GUARD, '1');
       } catch (_) {}
       launchUrl.searchParams.set('shell', PWA_SHELL_REVISION);
       globalThis.__turnPwaShellRecovery = Object.freeze({
