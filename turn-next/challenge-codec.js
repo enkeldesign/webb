@@ -1,8 +1,14 @@
 const CHALLENGE_SCHEMA_VERSION = 1;
+const WIRE_VERSION = 1;
 const HASH_KEY = 'challenge';
 const MAX_NAME_LENGTH = 24;
-const MAX_FRAMES = 900;
+const MAX_FRAMES = 450;
 const MIN_FRAMES = 21;
+const TIME_SCALE = 1000;
+const POSITION_SCALE = 100;
+const HEADING_SCALE = 10000;
+const CONTROL_SCALE = 1000;
+const PROGRESS_SCALE = 1000000;
 
 export function formatChallengeTime(seconds) {
   if (!Number.isFinite(seconds)) return '--:--.---';
@@ -81,7 +87,7 @@ export function normalizeChallenge(value) {
 
 export async function encodeChallenge(challenge) {
   const normalized = normalizeChallenge(challenge);
-  const json = JSON.stringify(normalized);
+  const json = JSON.stringify(toWireChallenge(normalized));
   const bytes = new TextEncoder().encode(json);
 
   if (typeof CompressionStream === 'function') {
@@ -89,7 +95,7 @@ export async function encodeChallenge(challenge) {
       const compressed = await streamBytes(bytes, new CompressionStream('gzip'));
       return `gz.${bytesToBase64Url(compressed)}`;
     } catch (_) {
-      // The raw fallback keeps sharing functional in older WebKit builds.
+      // The compact raw fallback keeps sharing functional in older WebKit builds.
     }
   }
 
@@ -113,7 +119,8 @@ export async function decodeChallenge(encoded) {
     throw new Error('This challenge link uses an unknown encoding.');
   }
 
-  return normalizeChallenge(JSON.parse(new TextDecoder().decode(bytes)));
+  const parsed = JSON.parse(new TextDecoder().decode(bytes));
+  return normalizeChallenge(parsed?.w === WIRE_VERSION ? fromWireChallenge(parsed) : parsed);
 }
 
 export function challengeHash(encoded) {
@@ -149,6 +156,103 @@ export function makeBuiltInChallengeUrl(challengeId, {
   if (reply) url.searchParams.set('reply', reply);
   if (responder) url.searchParams.set('responder', normalizeChallengeName(responder));
   return url.href;
+}
+
+function toWireChallenge(challenge) {
+  let previous = null;
+  const frames = challenge.frames.map((frame) => {
+    const current = [
+      quantize(frame.t, TIME_SCALE),
+      quantize(frame.x, POSITION_SCALE),
+      quantize(frame.z, POSITION_SCALE),
+      quantize(frame.h, HEADING_SCALE),
+      quantize(frame.s, CONTROL_SCALE),
+      quantize(frame.d, CONTROL_SCALE),
+      quantize(frame.p ?? 0, PROGRESS_SCALE)
+    ];
+    const row = previous
+      ? [
+        current[0] - previous[0],
+        current[1] - previous[1],
+        current[2] - previous[2],
+        current[3],
+        current[4],
+        current[5],
+        current[6] - previous[6]
+      ]
+      : current;
+    previous = current;
+    return row;
+  });
+
+  return {
+    w: WIRE_VERSION,
+    v: challenge.v,
+    n: challenge.challengerName,
+    ti: challenge.trackId,
+    tr: challenge.trackRevision,
+    tn: challenge.trackName,
+    tm: quantize(challenge.time, TIME_SCALE),
+    c: challenge.carId,
+    pc: challenge.carColor,
+    sc: challenge.carSecondaryColor,
+    f: frames,
+    r: challenge.replyTo ? [
+      challenge.replyTo.kind === 'win' ? 'w' : 'g',
+      challenge.replyTo.opponent,
+      Number.isFinite(challenge.replyTo.previousTime)
+        ? quantize(challenge.replyTo.previousTime, TIME_SCALE)
+        : null
+    ] : null
+  };
+}
+
+function fromWireChallenge(wire) {
+  let previous = null;
+  const frames = Array.isArray(wire.f) ? wire.f.map((row, index) => {
+    if (!Array.isArray(row) || row.length < 7) return null;
+    const current = index === 0
+      ? row.map((value) => integer(value))
+      : [
+        previous[0] + integer(row[0]),
+        previous[1] + integer(row[1]),
+        previous[2] + integer(row[2]),
+        integer(row[3]),
+        integer(row[4]),
+        integer(row[5]),
+        previous[6] + integer(row[6])
+      ];
+    previous = current;
+    return {
+      t: current[0] / TIME_SCALE,
+      x: current[1] / POSITION_SCALE,
+      z: current[2] / POSITION_SCALE,
+      h: current[3] / HEADING_SCALE,
+      s: current[4] / CONTROL_SCALE,
+      d: current[5] / CONTROL_SCALE,
+      p: current[6] / PROGRESS_SCALE
+    };
+  }).filter(Boolean) : [];
+
+  const reply = Array.isArray(wire.r) ? {
+    kind: wire.r[0] === 'w' ? 'win' : wire.r[0] === 'g' ? 'give-up' : '',
+    opponent: wire.r[1],
+    previousTime: wire.r[2] == null ? null : integer(wire.r[2]) / TIME_SCALE
+  } : null;
+
+  return {
+    v: wire.v,
+    challengerName: wire.n,
+    trackId: wire.ti,
+    trackRevision: wire.tr,
+    trackName: wire.tn,
+    time: integer(wire.tm) / TIME_SCALE,
+    carId: wire.c,
+    carColor: wire.pc,
+    carSecondaryColor: wire.sc,
+    frames,
+    replyTo: reply
+  };
 }
 
 function normalizeFrames(frames, { limit = MAX_FRAMES } = {}) {
@@ -198,6 +302,15 @@ function normalizeReply(reply) {
 function normalizeHex(value, fallback) {
   const clean = String(value || '').toLowerCase();
   return /^#[0-9a-f]{6}$/.test(clean) ? clean : fallback;
+}
+
+function quantize(value, scale) {
+  return Math.round(finite(value) * scale);
+}
+
+function integer(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.round(number) : 0;
 }
 
 function finite(value) {
