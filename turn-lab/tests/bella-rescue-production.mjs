@@ -1,10 +1,13 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [behavior, secretEvents, world] = await Promise.all([
+const [behavior, secretEvents, secretAchievements, world, app, homeLayout] = await Promise.all([
   fs.readFile(new URL('../../turn/tracks/countryside-bella-rescue-r173.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/secret-events.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/render/world.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/achievements/secret-achievements.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/render/world.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(behavior, /SAVE_BELLA_ID = 'save-bella'/);
@@ -46,8 +49,13 @@ assert.doesNotMatch(behavior, /RESCUE_MOVE_DELAY_MS/,
   'The rescue visual and achievement must no longer be separated by a delayed callback');
 
 assert.match(secretEvents, /achievementId === SAVE_BELLA_ID && context\.rescueConfirmed !== true/,
-  'Legacy camera-only SAVE BELLA! signals must be rejected');
-assert.match(secretEvents, /return false/);
+  'Legacy camera-only SAVE BELLA! signals must be rejected at the signal boundary');
+assert.match(secretEvents, /takePendingSecretAchievements/,
+  'Pending secret achievements must preserve rescue context');
+assert.match(secretAchievements, /validSecretContext/);
+assert.match(secretAchievements, /context\.rescueConfirmed === true/,
+  'The achievement listener must independently reject legacy camera-only Bella events');
+assert.match(secretAchievements, /takePendingSecretAchievements\(\)/);
 assert.match(behavior, /turn:secret-achievement/);
 assert.match(behavior, /turn:achievements-updated/);
 assert.match(behavior, /store\?\.isUnlocked\?\.\(SAVE_BELLA_ID\)/,
@@ -72,5 +80,10 @@ assert.match(behavior, /if \(root\.userData\.turnBellaRescued\) return;/,
 assert.match(world, /countryside-bella-rescue-r173\.js\?revision=r174-siren-rescue-zone/);
 assert.match(world, /applyBellaFinalVisuals\(bellaRoot\);\s*installBellaRescueBehavior\(\{ root: bellaRoot, runtime \}\);/,
   'Rescue behavior must install after Bella’s final approved visual treatment');
+assert.match(app, /render\/world\.js\?revision=r174-bella-siren-zone/,
+  'The production app must request the corrected world module under a fresh cache identity');
+assert.match(app, /bella-rescue=r174-siren-zone/,
+  'The Home layout must also load the corrected secret-achievement validator');
+assert.match(homeLayout, /secret-achievements\.js\?build=\$\{buildKey\}-r174-bella-siren-zone/);
 
 console.log('TURN Bella siren rescue zone, ground transition and directional meow regression passed.');
