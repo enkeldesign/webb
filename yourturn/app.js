@@ -25,7 +25,6 @@ const webPlatform = createWebPlatform();
 installTurnPlatform(webPlatform);
 globalThis.__turnMotionLifecycle = installMotionLifecycleBridge({ platform: webPlatform });
 globalThis.__turnDisplayLifecycle = installDisplayLifecycleBridge({ platform: webPlatform });
-
 document.documentElement.dataset.turnPlatform = 'web-adapter';
 
 const { installPerformanceProfile } = await import(withBuild('/turn/performance-profile.js'));
@@ -82,6 +81,7 @@ const ui = createYourTurnUi();
 const request = readYourTurnRequest();
 const session = createYourTurnSession({ runtime, raceSession, ui, animation, request });
 globalThis.__yourTurnSession = session;
+document.querySelector('#yourTurnLoading')?.setAttribute('hidden', '');
 
 try {
   await session.launch();
