@@ -1,4 +1,4 @@
-import { normalizeChallengeName } from '/yourturn/protocol.js?revision=r1';
+import { normalizeChallengeName } from '/yourturn/protocol.js?revision=r2';
 
 const PLAYER_NAME_KEY = 'yourturn-player-name-v1';
 
@@ -13,14 +13,15 @@ export function createYourTurnUi() {
   const actions = dialog?.querySelector('.yourturn-actions');
   const status = dialog?.querySelector('.yourturn-dialog-status');
   const nameField = dialog?.querySelector('.yourturn-name-field');
+  const motionToggle = dialog?.querySelector('#yourTurnMotionToggle');
   const rotate = document.querySelector('#yourTurnRotate');
   const targetChip = document.querySelector('#yourTurnTargetChip');
   const targetOpponent = document.querySelector('#yourTurnTargetOpponent');
   const targetTime = document.querySelector('#yourTurnTargetTime');
-  const pauseButton = document.querySelector('#yourTurnPauseButton');
+  const challengeButton = document.querySelector('#yourTurnChallengeButton');
 
   if (!dialog || !card || !kicker || !title || !details || !copy || !extra || !actions || !status
-      || !nameField || !rotate || !targetChip || !targetOpponent || !targetTime || !pauseButton) {
+      || !nameField || !motionToggle || !rotate || !targetChip || !targetOpponent || !targetTime || !challengeButton) {
     throw new Error('YOUR TURN could not find its complete interface.');
   }
 
@@ -36,7 +37,8 @@ export function createYourTurnUi() {
     extraHtml = '',
     actionList = [],
     requestName = false,
-    className = ''
+    className = '',
+    motionControl = false
   }) {
     kicker.textContent = kickerText;
     title.textContent = titleText;
@@ -48,6 +50,7 @@ export function createYourTurnUi() {
     extra.hidden = !extraHtml;
     status.textContent = '';
     card.dataset.view = className;
+    motionToggle.hidden = !motionControl;
 
     nameField.hidden = !requestName;
     if (requestName) nameField.querySelector('input').value = loadPlayerName();
@@ -96,13 +99,13 @@ export function createYourTurnUi() {
 
   function showRaceChrome() {
     targetChip.hidden = false;
-    pauseButton.hidden = false;
+    challengeButton.hidden = false;
     document.body.classList.add('yourturn-racing');
   }
 
   function hideRaceChrome() {
     targetChip.hidden = true;
-    pauseButton.hidden = true;
+    challengeButton.hidden = true;
     document.body.classList.remove('yourturn-racing');
   }
 
@@ -117,8 +120,19 @@ export function createYourTurnUi() {
     document.body.classList.remove('yourturn-awaiting-landscape');
   }
 
-  function bindPause(handler) {
-    pauseButton.addEventListener('click', handler);
+  function bindChallengeMenu(handler) {
+    challengeButton.addEventListener('click', handler);
+  }
+
+  function bindMotionToggle(handler) {
+    motionToggle.addEventListener('click', handler);
+  }
+
+  function setMotionPaused(paused) {
+    motionToggle.textContent = paused ? '▶' : '⏸';
+    motionToggle.setAttribute('aria-label', paused ? 'Play background motion' : 'Pause background motion');
+    motionToggle.setAttribute('aria-pressed', String(Boolean(paused)));
+    motionToggle.title = paused ? 'Play background motion' : 'Pause background motion';
   }
 
   return Object.freeze({
@@ -131,7 +145,9 @@ export function createYourTurnUi() {
     hideRaceChrome,
     showRotate,
     hideRotate,
-    bindPause
+    bindChallengeMenu,
+    bindMotionToggle,
+    setMotionPaused
   });
 }
 

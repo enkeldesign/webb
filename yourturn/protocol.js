@@ -1,8 +1,9 @@
 const CHALLENGE_SCHEMA_VERSION = 1;
 const WIRE_VERSION = 1;
 const HASH_KEY = 'challenge';
+const QUERY_KEY = 'c';
 const MAX_NAME_LENGTH = 24;
-const MAX_FRAMES = 450;
+const MAX_FRAMES = 180;
 const MIN_FRAMES = 21;
 const TIME_SCALE = 1000;
 const POSITION_SCALE = 100;
@@ -122,6 +123,9 @@ export async function decodeChallenge(encoded) {
 }
 
 export function encodedChallengeFromLocation(locationRef = globalThis.location) {
+  const query = new URLSearchParams(locationRef?.search || '');
+  const queryValue = query.get(QUERY_KEY);
+  if (queryValue) return queryValue;
   const hash = String(locationRef?.hash || '').replace(/^#/, '');
   return new URLSearchParams(hash).get(HASH_KEY) || '';
 }
@@ -132,11 +136,9 @@ export function makeChallengeUrl(encoded, {
   responder = ''
 } = {}) {
   const url = new URL(baseUrl);
+  url.searchParams.set(QUERY_KEY, encoded);
   if (reply) url.searchParams.set('reply', reply);
   if (responder) url.searchParams.set('responder', normalizeChallengeName(responder));
-  const params = new URLSearchParams();
-  params.set(HASH_KEY, encoded);
-  url.hash = params.toString();
   return url.href;
 }
 

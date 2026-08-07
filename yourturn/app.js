@@ -1,19 +1,18 @@
 import * as THREE from 'three';
-import { createYourTurnUi, escapeHtml } from '/yourturn/ui.js?revision=r1';
-import { createYourTurnSession, readYourTurnRequest } from '/yourturn/session.js?revision=r1';
+import { createYourTurnUi, escapeHtml } from '/yourturn/ui.js?revision=r2';
+import { createYourTurnSession, readYourTurnRequest } from '/yourturn/session.js?revision=r2';
 
 if (globalThis.__YOUR_TURN_STORAGE_READY__ === false) {
   throw new Error('YOUR TURN storage isolation failed before startup.');
 }
 
-const animation = installAnimationPauseBridge(THREE);
 const release = await loadTurnRelease();
 globalThis.__TURN_BUILD__ = Object.freeze(release);
-document.documentElement.dataset.yourTurnRuntime = 'recipient-r1';
+document.documentElement.dataset.yourTurnRuntime = 'recipient-r2';
 
 function withBuild(path) {
   const url = new URL(path, globalThis.location?.href || 'https://enkel.design/yourturn/');
-  if (release.cacheKey) url.searchParams.set('build', `${release.cacheKey}-yourturn-r1`);
+  if (release.cacheKey) url.searchParams.set('build', `${release.cacheKey}-yourturn-r2`);
   return url.href;
 }
 
@@ -31,6 +30,7 @@ const { installPerformanceProfile } = await import(withBuild('/turn/performance-
 installPerformanceProfile();
 const { installCoveredRenderingGuard } = await import(withBuild('/turn/render/covered-rendering.js'));
 installCoveredRenderingGuard();
+const animation = installAnimationPauseBridge(THREE);
 
 const { installDriveByEarSetting } = await import(withBuild('/turn/ui/drive-by-ear-setting.js'));
 const driveByEarEnabled = installDriveByEarSetting();
@@ -120,7 +120,7 @@ async function loadTurnRelease() {
 
 function installAnimationPauseBridge(three) {
   const prototype = three.WebGLRenderer.prototype;
-  const nativeSetAnimationLoop = prototype.setAnimationLoop;
+  const downstreamSetAnimationLoop = prototype.setAnimationLoop;
   let renderer = null;
   let loop = null;
   let paused = false;
@@ -128,22 +128,20 @@ function installAnimationPauseBridge(three) {
   prototype.setAnimationLoop = function setAnimationLoop(callback) {
     renderer = this;
     if (typeof callback === 'function') loop = callback;
-    if (callback === null) loop = null;
-    return nativeSetAnimationLoop.call(this, paused ? null : callback);
+    if (callback === null && !paused) loop = null;
+    return downstreamSetAnimationLoop.call(this, paused ? null : callback);
   };
 
   return Object.freeze({
     pause() {
+      if (paused) return;
       paused = true;
-      if (renderer) nativeSetAnimationLoop.call(renderer, null);
+      if (renderer) downstreamSetAnimationLoop.call(renderer, null);
     },
     resume() {
-      if (!paused && renderer && loop) {
-        nativeSetAnimationLoop.call(renderer, loop);
-        return;
-      }
+      if (!paused) return;
       paused = false;
-      if (renderer && loop) nativeSetAnimationLoop.call(renderer, loop);
+      if (renderer && loop) downstreamSetAnimationLoop.call(renderer, loop);
     },
     isPaused: () => paused
   });
