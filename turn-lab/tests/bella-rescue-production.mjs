@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
 const [
+  releaseSource,
   behavior,
   bootstrap,
   secretEvents,
@@ -11,6 +12,7 @@ const [
   homeLayout,
   index
 ] = await Promise.all([
+  fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/countryside-bella-rescue-r173.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/countryside-bella-rescue-hotfix-r176.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/secret-events.js', import.meta.url), 'utf8'),
@@ -20,6 +22,8 @@ const [
   fs.readFile(new URL('../../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8')
 ]);
+
+const release = JSON.parse(releaseSource);
 
 assert.match(behavior, /SAVE_BELLA_ID = 'save-bella'/);
 assert.match(behavior, /REQUIRED_VEHICLE_ID = 'firetruck'/);
@@ -97,9 +101,13 @@ assert.match(bootstrap, /turnBellaRescueBehaviorInstalled = false/);
 assert.match(bootstrap, /installBellaRescueBehavior\(\{ root, runtime \}\)/);
 assert.match(bootstrap, /turnBellaRescueBootstrap = 'r176-road-derived-zone'/,
   'The production bootstrap must dispose and replace any rescue timer installed by a cached world module');
-assert.match(index, /app\.js\?build=20260805-r160-browser-consent-r176-bella-road-derived-zone/,
-  'The top-level app URL must change so Safari cannot retain the old dependency graph');
+assert.match(index, new RegExp(`app\\.js\\?build=${escapeRegex(release.cacheKey)}-browser-consent-r176-bella-road-derived-zone`),
+  'The top-level app URL must use the canonical release cache key so Safari cannot retain an old dependency graph');
 assert.match(index, /countryside-bella-rescue-hotfix-r176\.js\?revision=r176-video-proven-rescue/,
   'The current rescue replacement must be loaded independently from the cached world graph');
 
 console.log('TURN Bella video-proven road-derived rescue, siren input, ground transition and cache replacement regression passed.');
+
+function escapeRegex(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
