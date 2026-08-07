@@ -15,10 +15,10 @@ import {
   makeMockChallengeUrl,
   normalizeChallenge,
   normalizeChallengeName
-} from '/yourturn/protocol.js?revision=r1';
+} from '/yourturn/protocol.js?revision=r2';
 import { getMockChallenge, MOCK_CHALLENGES } from '/yourturn/mock-challenges.js?revision=r1';
 import { createChallengeScene } from '/yourturn/scene.js?revision=r1';
-import { aboutTurnHtml, escapeHtml, newcomerAssistiveText } from '/yourturn/ui.js?revision=r1';
+import { aboutTurnHtml, escapeHtml, newcomerAssistiveText } from '/yourturn/ui.js?revision=r2';
 
 export function readYourTurnRequest(locationRef = globalThis.location) {
   const query = new URLSearchParams(locationRef?.search || '');
@@ -45,10 +45,13 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     scene: null,
     pendingAccess: null,
     paused: false,
-    backgroundPaused: false
+    backgroundPaused: false,
+    ambientPaused: false
   };
 
-  ui.bindPause(() => pauseRace('Paused by player.'));
+  ui.bindChallengeMenu(() => openChallengeMenu('Race paused.'));
+  ui.bindMotionToggle(toggleAmbientMotion);
+  ui.setMotionPaused(false);
   window.addEventListener('turn:lap-result', handleLapResult);
   window.addEventListener('turn:ui-state-change', handleUiState);
   document.addEventListener('visibilitychange', handleVisibility);
@@ -147,6 +150,12 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     });
   }
 
+  function showSessionModal(config) {
+    const motionControl = Boolean(state.scene && document.body.classList.contains('yourturn-preview'));
+    ui.setMotionPaused(state.ambientPaused);
+    ui.showModal({ ...config, motionControl });
+  }
+
   function showInvitation() {
     const challenge = state.challenge;
     const track = getTrackDefinition(challenge.trackId);
@@ -154,7 +163,7 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     state.phase = 'preview';
     state.scene?.setPhase('preview');
     ui.hideRaceChrome();
-    ui.showModal({
+    showSessionModal({
       titleText: `${challenge.challengerName} CHALLENGES YOU`,
       detailsHtml: `
         <strong>${escapeHtml(track.name.toUpperCase())}</strong>
@@ -187,7 +196,7 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
 
   function showMotionProblem(error) {
     const message = error instanceof Error ? error.message : 'Motion steering could not be enabled.';
-    ui.showModal({
+    showSessionModal({
       titleText: 'MOTION STEERING NEEDED',
       copyHtml: `${escapeHtml(message)} TURN is designed around rotating the phone like a steering wheel.`,
       extraHtml: '<p class="yourturn-small-note">If this browser cannot provide motion access, on-screen steering is available as a fallback.</p>',
@@ -232,6 +241,7 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
   async function startAcceptedRace() {
     state.accepted = true;
     state.paused = false;
+    animation.pause();
     ui.hideRotate();
     document.body.classList.remove('yourturn-preview');
     document.body.classList.add('yourturn-racing');
@@ -242,6 +252,7 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     document.querySelector('#resetButton')?.click();
     useChallengeAsOnlyOpponent();
     const access = state.pendingAccess || raceSession.prepareManualAccess();
+    await centerMotionAfterLandscape();
     await raceSession.startGame(access.fullscreenPromise);
     runtime.setGameMode(GAME_MODE.STAGED);
     runtime.state.velocity.set(0, 0, 0);
@@ -249,8 +260,40 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     const message = document.querySelector('#message');
     message?.classList.remove('show');
     if (message) message.textContent = '';
+    runtime.state.lastFrame = performance.now();
     ui.showRaceChrome();
     animation.resume();
+  }
+
+  async function centerMotionAfterLandscape() {
+    if (!runtime.state.sensorMode) return;
+    await new Promise((resolve) => {
+      let samples = 0;
+      let finished = false;
+      let timer = 0;
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        window.removeEventListener('devicemotion', onMotion);
+        window.clearTimeout(timer);
+        resolve();
+      };
+      const onMotion = () => {
+        samples += 1;
+        if (samples >= 2) finish();
+      };
+      window.addEventListener('devicemotion', onMotion, { passive: true });
+      timer = window.setTimeout(finish, 320);
+    });
+
+    runtime.state.neutralRoll = runtime.state.targetRoll;
+    runtime.state.horizonRollReference = runtime.state.targetRoll;
+    runtime.state.roll = runtime.state.targetRoll;
+    runtime.state.neutralPitch = runtime.state.targetPitch;
+    runtime.state.pitch = runtime.state.targetPitch;
+    runtime.state.steering = 0;
+    runtime.state.steeringEngaged = false;
+    runtime.state.tiltDrive = 0;
   }
 
   function handleLapResult(event) {
@@ -284,7 +327,7 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
 
   function showWin(candidate) {
     const difference = state.challenge.time - candidate.time;
-    ui.showModal({
+    showSessionModal({
       titleText: `YOU BEAT ${state.challenge.challengerName}`,
       detailsHtml: `
         <strong>${formatChallengeTime(candidate.time)}</strong>
@@ -328,7 +371,7 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
   function showGiveUpConfirm() {
     const wasAccepted = state.accepted;
     if (wasAccepted) stopRaceForModal('reply');
-    ui.showModal({
+    showSessionModal({
       titleText: 'GIVE UP?',
       detailsHtml: `<strong>${escapeHtml(state.challenge.challengerName)} WINS</strong><span>Target ${formatChallengeTime(state.challenge.time)}</span>`,
       copyHtml: `You can keep racing ${escapeHtml(state.challenge.challengerName)}’s car for as many laps as you want.`,
@@ -343,7 +386,7 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
   function finishGiveUp() {
     state.phase = 'reply';
     state.scene?.setPhase('reply');
-    ui.showModal({
+    showSessionModal({
       titleText: `${state.challenge.challengerName} WINS`,
       detailsHtml: `<strong>${formatChallengeTime(state.challenge.time)}</strong><span>Challenge held</span>`,
       copyHtml: 'Send the result back, try again, or open the full TURN game.',
@@ -372,7 +415,7 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
   }
 
   function showReceivedGiveUp() {
-    ui.showModal({
+    showSessionModal({
       titleText: `${request.responder} GAVE UP`,
       detailsHtml: `<strong>YOU WIN</strong><span>${formatChallengeTime(state.challenge.time)} held the lead</span>`,
       copyHtml: `Your car beat ${escapeHtml(request.responder)}.`,
@@ -385,34 +428,24 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     });
   }
 
-  function pauseRace(reason = 'Race paused.') {
+  function openChallengeMenu(reason = 'Race paused.') {
     if (!state.accepted || state.paused || !['racing', 'staged'].includes(state.phase)) return;
     state.paused = true;
     stopDrivingInputs();
     animation.pause();
-    ui.showModal({
-      titleText: 'PAUSED',
-      copyHtml: escapeHtml(reason),
-      className: 'paused',
-      actionList: [
-        { label: 'RESUME', primary: true, action: resumeRace },
-        { label: 'RESTART LAP', action: restartFromPause },
-        { label: 'GIVE UP', destructive: true, action: showGiveUpConfirm },
-        { label: 'ABOUT TURN', kind: 'quiet', action: () => showAbout(() => pauseRaceView(reason)) }
-      ]
-    });
+    showChallengeMenuView(reason);
   }
 
-  function pauseRaceView(reason) {
-    ui.showModal({
-      titleText: 'PAUSED',
+  function showChallengeMenuView(reason) {
+    showSessionModal({
+      titleText: 'CHALLENGE',
       copyHtml: escapeHtml(reason),
       className: 'paused',
       actionList: [
         { label: 'RESUME', primary: true, action: resumeRace },
         { label: 'RESTART LAP', action: restartFromPause },
         { label: 'GIVE UP', destructive: true, action: showGiveUpConfirm },
-        { label: 'ABOUT TURN', kind: 'quiet', action: () => showAbout(() => pauseRaceView(reason)) }
+        { label: 'ABOUT TURN', kind: 'quiet', action: () => showAbout(() => showChallengeMenuView(reason)) }
       ]
     });
   }
@@ -464,11 +497,24 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     state.paused = false;
     runtime.state.running = true;
     runtime.state.lastFrame = performance.now();
-    animation.resume();
+    if (state.ambientPaused) animation.pause();
+    else animation.resume();
+  }
+
+  function toggleAmbientMotion() {
+    if (!state.scene || !document.body.classList.contains('yourturn-preview')) return;
+    state.ambientPaused = !state.ambientPaused;
+    if (state.ambientPaused) {
+      animation.pause();
+    } else {
+      runtime.state.lastFrame = performance.now();
+      animation.resume();
+    }
+    ui.setMotionPaused(state.ambientPaused);
   }
 
   function showAbout(returnAction) {
-    ui.showModal({
+    showSessionModal({
       titleText: 'ABOUT TURN',
       extraHtml: aboutTurnHtml(),
       className: 'about',
@@ -484,7 +530,7 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
       label: mock.label,
       action: () => { globalThis.location.href = makeMockChallengeUrl(mock.id); }
     }));
-    ui.showModal({
+    showSessionModal({
       titleText: 'TEST CHALLENGES',
       copyHtml: 'Choose a stable mock link while the recipient experience is under development.',
       className: 'picker',
@@ -515,7 +561,7 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     }
     if (!document.hidden && state.backgroundPaused) {
       state.backgroundPaused = false;
-      pauseRaceView('Race paused while YOUR TURN was in the background.');
+      showChallengeMenuView('Race paused while YOUR TURN was in the background.');
     }
   }
 
