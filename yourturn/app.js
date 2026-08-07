@@ -1,6 +1,13 @@
 import * as THREE from 'three';
+import { trackPitch, trackSurfaceY } from '/turn/tracks/elevation.js?build=20260725-r67';
 import { createYourTurnUi, escapeHtml } from '/yourturn/ui.js?revision=r3';
 import { createYourTurnSession, readYourTurnRequest } from '/yourturn/session.js?revision=r3';
+
+const FINAL_MOTION_CENTER_DELAY_MS = 320;
+const FINAL_MOTION_QUIET_MS = 120;
+const FINAL_MOTION_TIMEOUT_MS = 1100;
+const FINAL_MOTION_SAMPLE_COUNT = 3;
+const PLAYER_START_LANE_OFFSET = 4.1;
 
 if (globalThis.__YOUR_TURN_STORAGE_READY__ === false) {
   throw new Error('YOUR TURN storage isolation failed before startup.');
@@ -8,11 +15,11 @@ if (globalThis.__YOUR_TURN_STORAGE_READY__ === false) {
 
 const release = await loadTurnRelease();
 globalThis.__TURN_BUILD__ = Object.freeze(release);
-document.documentElement.dataset.yourTurnRuntime = 'recipient-r3';
+document.documentElement.dataset.yourTurnRuntime = 'recipient-r4';
 
 function withBuild(path) {
   const url = new URL(path, globalThis.location?.href || 'https://enkel.design/yourturn/');
-  if (release.cacheKey) url.searchParams.set('build', `${release.cacheKey}-yourturn-r3`);
+  if (release.cacheKey) url.searchParams.set('build', `${release.cacheKey}-yourturn-r4`);
   return url.href;
 }
 
@@ -70,9 +77,9 @@ const raceSession = globalThis.__turnNextRaceSession;
 if (!runtime || !raceSession) throw new Error('TURN racing runtime did not become available.');
 
 // TURN's production lifecycle bridge intentionally owns a single devicemotion
-// subscription. YOUR TURN also samples motion briefly after the portrait → landscape
-// transition before centering. Restore normal browser multi-listener semantics here so
-// that sampling cannot replace the racing listener (which caused steering to disappear).
+// subscription. YOUR TURN also samples motion after the portrait → landscape
+// transition. Restore normal browser multi-listener semantics here so sampling can
+// coexist with the canonical racing listener.
 globalThis.__turnMotionLifecycle?.uninstall?.();
 
 globalThis.__turnRaceSession = raceSession;
@@ -83,9 +90,12 @@ await import(withBuild('/turn/render/world.js?revision=r175-bella-broad-rear-zon
 const { installScreenBlanking } = await import(withBuild('/turn/ui/screen-blanking.js?revision=r143-temporary-dbe-position'));
 installScreenBlanking(runtime);
 
+installFinalMotionCentering(runtime, animation);
+
 const ui = createYourTurnUi();
 const request = readYourTurnRequest();
 const session = createYourTurnSession({ runtime, raceSession, ui, animation, request });
+installStartLineFormationAdapter(runtime, () => session.getState());
 globalThis.__yourTurnSession = session;
 document.querySelector('#yourTurnLoading')?.setAttribute('hidden', '');
 
@@ -124,40 +134,366 @@ async function loadTurnRelease() {
   }
 }
 
+function installFinalMotionCentering(runtime, animation) {
+  window.addEventListener('turn:ui-state-change', (event) => {
+    if (event.detail?.reason !== 'race-started' || !runtime.state.sensorMode) return;
+
+    // Canonical TURN performs its own startup center shortly after race-started.
+    // In YOUR TURN that can land while Safari is still settling the portrait →
+    // landscape coordinate system and overwrite a good neutral with a left/right
+    // biased one. Keep the runtime hard-paused and make the final, silent center only
+    // after the landscape viewport has settled and fresh motion samples have arrived.
+    animation.deferResumeUntil(silentlyCenterAfterLandscape(runtime));
+  });
+}
+
+async function silentlyCenterAfterLandscape(runtime) {
+  const startedAt = performance.now();
+  await waitForSettledLandscape(startedAt);
+  await waitForFreshMotionSamples(FINAL_MOTION_SAMPLE_COUNT, 600);
+
+  const state = runtime.state;
+  if (!state.sensorMode) return;
+  state.neutralRoll = state.targetRoll;
+  state.horizonRollReference = state.targetRoll;
+  state.roll = state.targetRoll;
+  state.neutralPitch = state.targetPitch;
+  state.pitch = state.targetPitch;
+  state.steering = 0;
+  state.steeringEngaged = false;
+  state.tiltDrive = 0;
+}
+
+function waitForSettledLandscape(startedAt) {
+  return new Promise((resolve) => {
+    let lastViewportChangeAt = performance.now();
+    let settled = false;
+    let frame = 0;
+
+    const noteViewportChange = () => {
+      lastViewportChangeAt = performance.now();
+    };
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      cancelAnimationFrame(frame);
+      window.removeEventListener('resize', noteViewportChange);
+      window.removeEventListener('orientationchange', noteViewportChange);
+      screen.orientation?.removeEventListener?.('change', noteViewportChange);
+      resolve();
+    };
+    const check = () => {
+      const now = performance.now();
+      const minimumDelayPassed = now - startedAt >= FINAL_MOTION_CENTER_DELAY_MS;
+      const viewportQuiet = now - lastViewportChangeAt >= FINAL_MOTION_QUIET_MS;
+      const landscape = globalThis.matchMedia?.('(orientation: landscape)').matches
+        || globalThis.innerWidth > globalThis.innerHeight;
+      const timedOut = now - startedAt >= FINAL_MOTION_TIMEOUT_MS;
+
+      if ((landscape && minimumDelayPassed && viewportQuiet) || timedOut) {
+        finish();
+        return;
+      }
+      frame = requestAnimationFrame(check);
+    };
+
+    window.addEventListener('resize', noteViewportChange, { passive: true });
+    window.addEventListener('orientationchange', noteViewportChange, { passive: true });
+    screen.orientation?.addEventListener?.('change', noteViewportChange, { passive: true });
+    frame = requestAnimationFrame(check);
+  });
+}
+
+function waitForFreshMotionSamples(count, timeoutMs) {
+  return new Promise((resolve) => {
+    let samples = 0;
+    let finished = false;
+    let timer = 0;
+
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      window.removeEventListener('devicemotion', onMotion);
+      window.clearTimeout(timer);
+      resolve();
+    };
+    const onMotion = (event) => {
+      const gravity = event?.accelerationIncludingGravity;
+      if (!gravity || gravity.x == null || gravity.y == null || gravity.z == null) return;
+      samples += 1;
+      if (samples >= count) finish();
+    };
+
+    window.addEventListener('devicemotion', onMotion, { passive: true });
+    timer = window.setTimeout(finish, timeoutMs);
+  });
+}
+
+function installStartLineFormationAdapter(runtime, getSessionState) {
+  const downstreamSetSceneOverride = runtime.setSceneOverride.bind(runtime);
+  let formation = null;
+
+  window.addEventListener('turn:ui-state-change', (event) => {
+    if (event.detail?.reason === 'race-reset') formation = null;
+  });
+
+  runtime.setSceneOverride = (override) => {
+    if (typeof override !== 'function') {
+      formation = null;
+      downstreamSetSceneOverride(override);
+      return;
+    }
+
+    downstreamSetSceneOverride((dt) => {
+      const sessionState = getSessionState?.();
+      const staged = sessionState?.phase === 'staged'
+        && !runtime.state.lapActive
+        && document.body.classList.contains('yourturn-racing');
+
+      if (staged) {
+        formation = ensureStartFormation(runtime, sessionState.challengeLap, formation);
+        preparePlayerStartLane(runtime, formation);
+      }
+
+      const handled = override(dt);
+      if (staged && handled && formation) placeOpponentBeforeStart(runtime, formation, dt);
+      return handled;
+    });
+  };
+}
+
+function ensureStartFormation(runtime, challengeLap, previous) {
+  if (!challengeLap?.frames?.length) return null;
+  if (previous?.challengeLap === challengeLap) return previous;
+
+  return {
+    challengeLap,
+    startFrame: challengeLap.frames[0],
+    distanceToStart: buildDistanceToStart(runtime.samples),
+    playerSide: preferredPlayerSide(runtime.samples),
+    playerPlaced: false,
+    rivalDistance: Infinity
+  };
+}
+
+function preparePlayerStartLane(runtime, formation) {
+  if (!formation || formation.playerPlaced) return;
+  const { state, samples } = runtime;
+  const nearest = runtime.findNearestTrack(state.position);
+  const normal = nearest.sample.normal || normalFromTangent(nearest.sample.tangent);
+
+  // The recorded lap begins exactly on the canonical start line. Give that line to
+  // the challenger and put the recipient beside it so the two cars do not overlap.
+  state.position.addScaledVector(normal, PLAYER_START_LANE_OFFSET * formation.playerSide);
+  const settled = runtime.findNearestTrack(state.position);
+  state.position.y = trackSurfaceY(settled.sample);
+  state.surfacePitch = trackPitch(settled.sample);
+  state.nearestTrackIndex = settled.index;
+  state.trackDistance = settled.distance;
+  state.progress = settled.index / Math.max(1, samples.length);
+  state.lastProgress = state.progress;
+  state.lapPreviousPosition = { x: state.position.x, z: state.position.z };
+
+  formation.rivalDistance = distanceToStartAtPosition(
+    runtime,
+    formation.distanceToStart,
+    state.position
+  );
+  formation.playerPlaced = true;
+}
+
+function placeOpponentBeforeStart(runtime, formation, dt) {
+  const opponentCar = runtime.competitorCars[0];
+  if (!opponentCar) return;
+
+  const playerDistance = distanceToStartAtPosition(
+    runtime,
+    formation.distanceToStart,
+    runtime.state.position
+  );
+
+  // Ratchet toward the line: backing away never drags the challenger backwards.
+  // Once the player gets closer than the challenger, both keep the same remaining
+  // distance so the challenger arrives exactly at its recorded t=0 pose.
+  formation.rivalDistance = Math.min(formation.rivalDistance, playerDistance);
+  const pose = poseBeforeStart(
+    runtime.samples,
+    formation.distanceToStart,
+    formation.rivalDistance,
+    formation.startFrame
+  );
+  const surfaceSample = runtime.findNearestTrack(pose).sample;
+
+  opponentCar.visible = true;
+  opponentCar.position.set(pose.x, trackSurfaceY(surfaceSample), pose.z);
+  opponentCar.rotation.x = trackPitch(surfaceSample);
+  opponentCar.rotation.y = pose.h + Math.PI;
+  opponentCar.rotation.z = 0;
+  runtime.animateWheels(opponentCar, 0, Math.max(0, runtime.state.speed), dt);
+}
+
+function buildDistanceToStart(samples) {
+  const distances = new Array(samples.length).fill(0);
+  let distance = 0;
+  for (let index = samples.length - 1; index >= 1; index -= 1) {
+    const current = samples[index].point;
+    const next = samples[(index + 1) % samples.length].point;
+    distance += current.distanceTo(next);
+    distances[index] = distance;
+  }
+  return distances;
+}
+
+function distanceToStartAtPosition(runtime, distances, position) {
+  const nearest = runtime.findNearestTrack(position);
+  const index = nearest.index;
+  if (index === 0) return 0;
+
+  const sample = nearest.sample;
+  const dx = position.x - sample.point.x;
+  const dz = position.z - sample.point.z;
+  const alongTrack = dx * sample.tangent.x + dz * sample.tangent.z;
+  return Math.max(0, (distances[index] || 0) - alongTrack);
+}
+
+function poseBeforeStart(samples, distances, requestedDistance, startFrame) {
+  const distance = Math.max(0, Number(requestedDistance) || 0);
+  const startHeading = Number.isFinite(startFrame?.h)
+    ? startFrame.h
+    : Math.atan2(samples[0].tangent.x, samples[0].tangent.z);
+
+  if (distance <= 0.01) {
+    return {
+      x: Number.isFinite(startFrame?.x) ? startFrame.x : samples[0].point.x,
+      z: Number.isFinite(startFrame?.z) ? startFrame.z : samples[0].point.z,
+      h: startHeading
+    };
+  }
+
+  let behindIndex = samples.length - 1;
+  while (behindIndex > 1 && distances[behindIndex] < distance) behindIndex -= 1;
+  const aheadIndex = (behindIndex + 1) % samples.length;
+  const behindDistance = distances[behindIndex] || distance;
+  const aheadDistance = aheadIndex === 0 ? 0 : (distances[aheadIndex] || 0);
+  const span = Math.max(0.001, behindDistance - aheadDistance);
+  const alpha = clamp((behindDistance - distance) / span, 0, 1);
+  const behind = samples[behindIndex];
+  const ahead = samples[aheadIndex];
+  const aheadX = aheadIndex === 0 && Number.isFinite(startFrame?.x)
+    ? startFrame.x
+    : ahead.point.x;
+  const aheadZ = aheadIndex === 0 && Number.isFinite(startFrame?.z)
+    ? startFrame.z
+    : ahead.point.z;
+  const behindHeading = Math.atan2(behind.tangent.x, behind.tangent.z);
+  const aheadHeading = aheadIndex === 0
+    ? startHeading
+    : Math.atan2(ahead.tangent.x, ahead.tangent.z);
+
+  return {
+    x: lerp(behind.point.x, aheadX, alpha),
+    z: lerp(behind.point.z, aheadZ, alpha),
+    h: lerpAngle(behindHeading, aheadHeading, alpha)
+  };
+}
+
+function preferredPlayerSide(samples) {
+  if (samples.length < 2) return 1;
+  const start = samples[0].tangent;
+  const ahead = samples[Math.min(samples.length - 1, 24)].tangent;
+  const signedTurn = start.x * ahead.z - start.z * ahead.x;
+  if (Math.abs(signedTurn) < 0.001) return 1;
+
+  // Use the outside of the first bend when there is a clear choice.
+  return signedTurn < 0 ? 1 : -1;
+}
+
+function normalFromTangent(tangent) {
+  return new THREE.Vector3(-tangent.z, 0, tangent.x).normalize();
+}
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+function lerpAngle(a, b, t) {
+  let delta = b - a;
+  while (delta > Math.PI) delta -= Math.PI * 2;
+  while (delta < -Math.PI) delta += Math.PI * 2;
+  return a + delta * t;
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
 function installHardPauseController() {
   let paused = false;
   let pausedAt = 0;
+  let resumeBarrier = null;
+  let resumeRequested = false;
+  let barrierVersion = 0;
+
+  function pause() {
+    if (paused) return;
+    paused = true;
+    pausedAt = performance.now();
+    resumeRequested = false;
+
+    // The canonical TURN loop already has a hard occlusion path for The Lot.
+    // YOUR TURN has no Lot UI, so reusing that class gives us a tested frame-level
+    // stop: no physics, replay movement or rendering advances behind our modal.
+    document.body.classList.add('turn-lot-open', 'yourturn-runtime-paused');
+    globalThis.__turnAudio?.silence?.();
+  }
+
+  function finishResume() {
+    if (!paused) return;
+    const now = performance.now();
+    const state = globalThis.__turnRuntime?.state;
+    const pausedFor = Math.max(0, now - pausedAt);
+
+    // A menu pause must not count against an active lap.
+    if (state?.lapActive && Number.isFinite(state.lapStartedAt)) {
+      state.lapStartedAt += pausedFor;
+    }
+    if (state) state.lastFrame = now;
+
+    document.body.classList.remove('turn-lot-open', 'yourturn-runtime-paused');
+    paused = false;
+    pausedAt = 0;
+    resumeRequested = false;
+  }
+
+  function resume() {
+    if (!paused) return;
+    if (resumeBarrier) {
+      resumeRequested = true;
+      return;
+    }
+    finishResume();
+  }
+
+  function deferResumeUntil(promise) {
+    pause();
+    const version = ++barrierVersion;
+    const barrier = Promise.resolve(promise)
+      .catch((error) => {
+        console.warn('YOUR TURN: final motion centering did not complete cleanly.', error);
+      })
+      .finally(() => {
+        if (version !== barrierVersion) return;
+        resumeBarrier = null;
+        if (resumeRequested) finishResume();
+      });
+    resumeBarrier = barrier;
+    return barrier;
+  }
 
   return Object.freeze({
-    pause() {
-      if (paused) return;
-      paused = true;
-      pausedAt = performance.now();
-
-      // The canonical TURN loop already has a hard occlusion path for The Lot.
-      // YOUR TURN has no Lot UI, so reusing that class gives us a tested frame-level
-      // stop: no physics, replay movement or rendering advances behind our modal.
-      document.body.classList.add('turn-lot-open', 'yourturn-runtime-paused');
-      globalThis.__turnAudio?.silence?.();
-    },
-
-    resume() {
-      if (!paused) return;
-      const now = performance.now();
-      const state = globalThis.__turnRuntime?.state;
-      const pausedFor = Math.max(0, now - pausedAt);
-
-      // A menu pause must not count against an active lap.
-      if (state?.lapActive && Number.isFinite(state.lapStartedAt)) {
-        state.lapStartedAt += pausedFor;
-      }
-      if (state) state.lastFrame = now;
-
-      document.body.classList.remove('turn-lot-open', 'yourturn-runtime-paused');
-      paused = false;
-      pausedAt = 0;
-    },
-
+    pause,
+    resume,
+    deferResumeUntil,
     isPaused: () => paused
   });
 }
