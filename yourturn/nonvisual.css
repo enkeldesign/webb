@@ -1,0 +1,115 @@
+.yourturn-nonvisual-card {
+  width: min(760px, 92vw);
+}
+
+.yourturn-nonvisual-copy {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.yourturn-nonvisual-copy p,
+.yourturn-dbe-balance p {
+  margin: 0;
+  font-size: clamp(0.95rem, 2vw, 1.12rem);
+  font-weight: 760;
+  line-height: 1.35;
+}
+
+.yourturn-dbe-balance {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  border: 4px solid #08090a;
+  border-radius: 16px;
+  background: #fff8e8;
+}
+
+.yourturn-dbe-balance h2 {
+  margin: 0;
+  font-size: clamp(1rem, 2.2vw, 1.35rem);
+  line-height: 1;
+  letter-spacing: 0.06em;
+}
+
+.yourturn-dbe-balance input[type="range"] {
+  width: 100%;
+  min-height: 36px;
+  accent-color: #6b3fa0;
+  touch-action: manipulation;
+}
+
+.yourturn-dbe-balance input[type="range"]:focus-visible {
+  outline: 4px solid #38d9ff;
+  outline-offset: 3px;
+}
+
+.yourturn-dbe-balance-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.yourturn-dbe-balance output {
+  justify-self: center;
+  min-width: 9ch;
+  padding: 5px 10px;
+  border: 2px solid #08090a;
+  border-radius: 999px;
+  background: #ffd43b;
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .yourturn-nonvisual-card {
+    width: min(900px, 94vw);
+  }
+
+  .yourturn-nonvisual-copy {
+    gap: 6px;
+    margin-bottom: 9px;
+  }
+
+  .yourturn-nonvisual-copy p,
+  .yourturn-dbe-balance p {
+    font-size: 0.84rem;
+    line-height: 1.25;
+  }
+
+  .yourturn-dbe-balance {
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 0.9fr);
+    align-items: center;
+    gap: 5px 14px;
+    margin-bottom: 9px;
+    padding: 8px 11px;
+    border-width: 3px;
+  }
+
+  .yourturn-dbe-balance h2,
+  .yourturn-dbe-balance p {
+    grid-column: 1;
+  }
+
+  .yourturn-dbe-balance input,
+  .yourturn-dbe-balance-labels,
+  .yourturn-dbe-balance output {
+    grid-column: 2;
+  }
+
+  .yourturn-dbe-balance input {
+    grid-row: 1;
+  }
+
+  .yourturn-dbe-balance-labels {
+    grid-row: 2;
+  }
+
+  .yourturn-dbe-balance output {
+    grid-row: 3;
+  }
+}
