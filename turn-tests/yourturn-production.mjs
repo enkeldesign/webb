@@ -16,6 +16,8 @@ const [
   sceneSource,
   uiSource,
   cssSource,
+  nonVisualSource,
+  nonVisualCssSource,
   storageSource,
   mockSource,
   productionApp
@@ -26,6 +28,8 @@ const [
   fs.readFile(new URL('../yourturn/scene.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/ui.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/yourturn.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../yourturn/nonvisual.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../yourturn/nonvisual.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/storage-bootstrap.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/mock-challenges.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8')
@@ -34,6 +38,8 @@ const [
 assert.match(indexSource, /<title>YOUR TURN<\/title>/);
 assert.match(indexSource, /\/yourturn\/storage-bootstrap\.js/);
 assert.match(indexSource, /\/yourturn\/app\.js\?revision=r4/);
+assert.match(indexSource, /\/yourturn\/nonvisual\.css\?revision=r1/);
+assert.match(indexSource, /\/yourturn\/nonvisual\.js\?revision=r1/);
 assert.match(indexSource, /id="yourTurnChallengeButton"[\s\S]*>THE CHALLENGE<\/button>/,
   'The in-race return point must read as the challenge hub, not as a verb or a Pause command');
 assert.match(indexSource, /id="yourTurnMotionToggle"[\s\S]*aria-label="Pause background motion"/,
@@ -87,6 +93,33 @@ assert.match(appSource, /installScreenBlanking/,
   'The non-visual screen blanking affordance must remain available');
 assert.match(appSource, /installRaceSpeech/,
   'Screen-reader race announcements must be included');
+
+assert.match(nonVisualSource, /document\.querySelector\('\.reset-rivals-button'\)\?\.remove\(\)/,
+  'YOUR TURN must remove Reset Rivals because its only rival is the challenger');
+assert.match(nonVisualSource, /BLANK SCREEN MODE[\s\S]*DRIVE BY EAR/,
+  'Blank screen must open a short Drive By Ear introduction before hiding visuals');
+assert.match(nonVisualSource, /turns the racing line, upcoming corners, grip, recovery and nearby cars into spatial sound/i);
+assert.match(nonVisualSource, /supports complete non-visual gameplay and works with screen readers/i);
+assert.match(nonVisualSource, /full TURN game also includes Drive By Ear 101 training/i,
+  'Recipient guidance should point to training in full TURN without adding a training action here');
+assert.doesNotMatch(nonVisualSource, /TRY TRAINING/i,
+  'YOUR TURN should explain training availability without adding a training button');
+assert.match(nonVisualSource, /id="yourTurnDbeBalance" type="range" min="0" max="100"/,
+  'The Drive By Ear introduction needs the sound-balance slider');
+assert.match(nonVisualSource, /audioPreferences\.setBalance\?\.\(value \/ 100\)/,
+  'The balance slider must use TURN’s actual audio preference API');
+assert.match(nonVisualSource, /event\.stopImmediatePropagation\(\)/,
+  'The recipient dialog must replace the canonical two-tap blank-screen confirmation');
+assert.match(nonVisualSource, /blankButton\.click\(\);[\s\S]*blankButton\.click\(\);/,
+  'After informed confirmation, reuse TURN’s canonical screen-blanking state machine');
+assert.match(nonVisualSource, /classList\.add\('turn-lot-open', 'yourturn-runtime-paused', 'yourturn-nonvisual-info-open'\)/,
+  'The non-visual information dialog must hard-pause background gameplay while it is being read');
+assert.match(nonVisualSource, /state\.lapStartedAt \+= pausedFor/,
+  'Opening the non-visual information dialog must not add time to an active lap');
+assert.match(nonVisualCssSource, /\.yourturn-dbe-balance/);
+assert.match(nonVisualCssSource, /input\[type="range"\]/);
+assert.match(nonVisualCssSource, /@media \(max-height: 560px\) and \(orientation: landscape\)/,
+  'The non-visual dialog must stay usable in compact in-app-browser landscape viewports');
 
 assert.match(sessionSource, /prepareMotionAccess\(\)/,
   'Accept must request motion steering first');
@@ -201,4 +234,4 @@ assert.equal(
   'https://enkel.design/yourturn/?challenge=sol-countryside-r1'
 );
 
-console.log('YOUR TURN final centering, seamless start formation, hard pause, vector controls and social-link regression passed.');
+console.log('YOUR TURN non-visual onboarding, balance control, rival reset removal and recipient regression passed.');
