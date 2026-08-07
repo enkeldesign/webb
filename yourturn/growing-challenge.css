@@ -10,6 +10,10 @@
   background: #ff9b66;
 }
 
+.yourturn-card h1 {
+  text-transform: uppercase;
+}
+
 .yourturn-racer-summary {
   display: flex;
   flex-wrap: wrap;
