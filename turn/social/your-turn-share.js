@@ -117,6 +117,7 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
   let activeTrackId = '';
   let returnFocus = null;
   let pausedRace = false;
+  let pausedAt = 0;
   let sharing = false;
   const knownBestTimes = new Map();
 
@@ -158,14 +159,23 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
   function pauseForComposer() {
     pausedRace = currentRaceIsVisible();
     if (!pausedRace) return;
+    pausedAt = performance.now();
     document.body.classList.add('turn-runtime-paused');
+    globalThis.__turnAudio?.silence?.();
   }
 
   function resumeAfterComposer() {
     if (!pausedRace) return;
+    const now = performance.now();
+    const pausedFor = Math.max(0, now - pausedAt);
+    const state = runtime?.state;
+    if (state?.lapActive && Number.isFinite(state.lapStartedAt)) {
+      state.lapStartedAt += pausedFor;
+    }
+    if (state) state.lastFrame = now;
     document.body.classList.remove('turn-runtime-paused');
-    if (runtime?.state) runtime.state.lastFrame = performance.now();
     pausedRace = false;
+    pausedAt = 0;
   }
 
   function openComposer(trackId, lap, trigger) {
