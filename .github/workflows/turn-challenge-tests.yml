@@ -8,10 +8,10 @@ on:
     paths:
       - 'turn-next/**'
       - 'yourturn/**'
+      - 'turn/index.html'
       - 'turn/social/**'
       - 'turn/race/rival-storage.js'
       - 'turn/render/covered-rendering.js'
-      - 'turn/m8-home-fixed-layout.js'
       - 'turn-tests/challenge-*.mjs'
       - 'turn-tests/yourturn-*.mjs'
       - '.github/workflows/turn-challenge-tests.yml'
@@ -21,10 +21,10 @@ on:
     paths:
       - 'turn-next/**'
       - 'yourturn/**'
+      - 'turn/index.html'
       - 'turn/social/**'
       - 'turn/race/rival-storage.js'
       - 'turn/render/covered-rendering.js'
-      - 'turn/m8-home-fixed-layout.js'
       - 'turn-tests/challenge-*.mjs'
       - 'turn-tests/yourturn-*.mjs'
       - '.github/workflows/turn-challenge-tests.yml'
