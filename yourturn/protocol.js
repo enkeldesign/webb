@@ -54,6 +54,7 @@ export function challengeFromLap({
   const racer = racerFromLap({
     racerId: racerId || createRacerId(),
     racerName: challengerName,
+    challengeOrder: 1,
     lap
   });
 
@@ -61,6 +62,7 @@ export function challengeFromLap({
     v: CHALLENGE_SCHEMA_VERSION,
     chainId: chainId || createChallengeChainId(),
     sharedBy: racer.id,
+    nextOrder: 2,
     trackId,
     trackRevision,
     trackName,
@@ -74,8 +76,15 @@ export function challengeFromLap({
 
 export function challengeWithLap({ challenge, racerId, racerName, lap }) {
   const current = normalizeChallenge(challenge);
-  const candidate = racerFromLap({ racerId, racerName, lap });
-  const existing = current.racers.find((racer) => racer.id === candidate.id);
+  const candidateId = normalizeRacerId(racerId || createRacerId());
+  const existing = current.racers.find((racer) => racer.id === candidateId);
+  const challengeOrder = existing?.order || current.nextOrder;
+  const candidate = racerFromLap({
+    racerId: candidateId,
+    racerName,
+    challengeOrder,
+    lap
+  });
   const merged = current.racers.filter((racer) => racer.id !== candidate.id);
 
   // Returning players keep a single car in the bundle. A slower repeat never
@@ -107,6 +116,7 @@ export function challengeWithLap({ challenge, racerId, racerName, lap }) {
     ...current,
     v: CHALLENGE_SCHEMA_VERSION,
     sharedBy: candidate.id,
+    nextOrder: existing ? current.nextOrder : current.nextOrder + 1,
     racers: selected,
     replyTo: null
   });
@@ -147,11 +157,14 @@ export function normalizeChallenge(value) {
   const sharedByCandidate = normalizeRacerId(source.sharedBy || source.senderId || leader.id, leader.id);
   const sharedBy = racers.some((racer) => racer.id === sharedByCandidate) ? sharedByCandidate : leader.id;
   const chainId = normalizeRacerId(source.chainId, legacyChainId(source, leader));
+  const highestOrder = racers.reduce((highest, racer) => Math.max(highest, racer.order), 0);
+  const nextOrder = Math.max(highestOrder + 1, normalizeRacerOrder(source.nextOrder, highestOrder + 1));
 
   return Object.freeze({
     v: CHALLENGE_SCHEMA_VERSION,
     chainId,
     sharedBy,
+    nextOrder,
     trackId,
     trackRevision: String(source.trackRevision || ''),
     trackName: String(source.trackName || '').trim(),
@@ -238,7 +251,7 @@ export function makeMockChallengeUrl(challengeId, {
   return url.href;
 }
 
-function racerFromLap({ racerId, racerName, lap }) {
+function racerFromLap({ racerId, racerName, challengeOrder = 1, lap }) {
   const time = Number(lap?.time);
   const frames = downsampleFrames(lap?.frames);
   if (!Number.isFinite(time) || time <= 5 || frames.length < MIN_FRAMES) {
@@ -248,6 +261,7 @@ function racerFromLap({ racerId, racerName, lap }) {
     id: racerId || createRacerId(),
     name: racerName,
     time,
+    order: challengeOrder,
     frames
   }, 0);
 }
@@ -259,7 +273,8 @@ function normalizeRacer(value, index) {
   if (!Number.isFinite(time) || time <= 5 || frames.length < MIN_FRAMES) return null;
   const name = normalizeChallengeName(source.name || source.challengerName);
   const id = normalizeRacerId(source.id || source.racerId, legacyRacerId(name, time, frames, index));
-  return Object.freeze({ id, name, time, frames });
+  const order = normalizeRacerOrder(source.order ?? source.challengeOrder, index + 1);
+  return Object.freeze({ id, name, time, order, frames });
 }
 
 function legacyRacerFromChallenge(source) {
@@ -267,6 +282,7 @@ function legacyRacerFromChallenge(source) {
     id: source.racerId,
     name: source.challengerName,
     time: source.time,
+    order: 1,
     frames: source.frames
   };
 }
@@ -277,6 +293,7 @@ function toWireChallenge(challenge) {
     v: challenge.v,
     id: challenge.chainId,
     s: challenge.sharedBy,
+    o: challenge.nextOrder,
     ti: challenge.trackId,
     tr: challenge.trackRevision,
     tn: challenge.trackName,
@@ -287,7 +304,8 @@ function toWireChallenge(challenge) {
       racer.id,
       racer.name,
       quantize(racer.time, TIME_SCALE),
-      encodeFrames(racer.frames)
+      encodeFrames(racer.frames),
+      racer.order
     ]),
     r: challenge.replyTo ? [
       challenge.replyTo.kind === 'win' ? 'w' : 'g',
@@ -304,12 +322,14 @@ function fromWireChallengeV2(wire) {
     id: row?.[0],
     name: row?.[1],
     time: integer(row?.[2]) / TIME_SCALE,
-    frames: decodeFrames(row?.[3])
+    frames: decodeFrames(row?.[3]),
+    order: row?.[4]
   })) : [];
   return {
     v: CHALLENGE_SCHEMA_VERSION,
     chainId: wire.id,
     sharedBy: wire.s,
+    nextOrder: wire.o,
     trackId: wire.ti,
     trackRevision: wire.tr,
     trackName: wire.tn,
@@ -456,6 +476,13 @@ function normalizeRacerId(value, fallback = '') {
     .replace(/[^a-z0-9_-]/g, '')
     .slice(0, 64);
   return fallbackClean || 'r-unknown';
+}
+
+function normalizeRacerOrder(value, fallback = 1) {
+  const order = Math.round(Number(value));
+  if (Number.isFinite(order) && order >= 1 && order <= 999) return order;
+  const fallbackOrder = Math.round(Number(fallback));
+  return Number.isFinite(fallbackOrder) && fallbackOrder >= 1 ? fallbackOrder : 1;
 }
 
 function legacyRacerId(name, time, frames, index = 0) {
