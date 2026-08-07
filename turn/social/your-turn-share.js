@@ -24,12 +24,25 @@ const SHARE_ICON = `
   </svg>`;
 
 function installStylesheet() {
-  if (document.querySelector('link[data-turn-yourturn-share]')) return;
+  const existing = document.querySelector('link[data-turn-yourturn-share]');
+  if (existing?.sheet) return Promise.resolve(existing);
+  if (existing) {
+    return new Promise((resolve, reject) => {
+      existing.addEventListener('load', () => resolve(existing), { once: true });
+      existing.addEventListener('error', () => reject(new Error('TURN YOUR TURN sharing styles could not load.')), { once: true });
+    });
+  }
+
   const link = document.createElement('link');
   link.rel = 'stylesheet';
   link.href = '/turn/social/your-turn-share.css?revision=r1';
   link.setAttribute('data-turn-yourturn-share', '');
+  const ready = new Promise((resolve, reject) => {
+    link.addEventListener('load', () => resolve(link), { once: true });
+    link.addEventListener('error', () => reject(new Error('TURN YOUR TURN sharing styles could not load.')), { once: true });
+  });
   document.head.appendChild(link);
+  return ready;
 }
 
 function formatTrackName(trackId) {
@@ -74,15 +87,13 @@ function wrapTrackCard(card) {
   card.replaceWith(slot);
   slot.appendChild(card);
 
-  if (!card.disabled && !card.classList.contains('is-locked')) {
-    const share = document.createElement('button');
-    share.type = 'button';
-    share.className = 'turn-yourturn-track-share';
-    share.dataset.trackId = card.dataset.trackId || '';
-    share.innerHTML = SHARE_ICON;
-    share.hidden = true;
-    slot.appendChild(share);
-  }
+  const share = document.createElement('button');
+  share.type = 'button';
+  share.className = 'turn-yourturn-track-share';
+  share.dataset.trackId = card.dataset.trackId || '';
+  share.innerHTML = SHARE_ICON;
+  share.hidden = true;
+  slot.appendChild(share);
   return slot;
 }
 
@@ -95,7 +106,7 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
   if (globalThis[INSTALL_FLAG]) return globalThis[INSTALL_FLAG];
   if (!home) throw new Error('TURN YOUR TURN sharing could not find Home.');
 
-  installStylesheet();
+  await installStylesheet();
   const runtime = globalThis.__turnRuntime;
   const rail = home.querySelector('.m8-track-rail');
   if (!rail) throw new Error('TURN YOUR TURN sharing could not find the track rail.');
@@ -140,7 +151,8 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
       const trackId = button.dataset.trackId || '';
       const card = button.parentElement?.querySelector('.track-card');
       const best = getStoredBestReplayLap(trackId);
-      button.hidden = !(card?.classList.contains('is-selected') && best);
+      const unavailable = card?.disabled || card?.classList.contains('is-trophy-locked');
+      button.hidden = !(card?.classList.contains('is-selected') && best && !unavailable);
       button.setAttribute(
         'aria-label',
         best
@@ -245,7 +257,7 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
       if (navigator.share) {
         try {
           await navigator.share(shareData);
-          closeComposer({ restoreFocus: false });
+          closeComposer();
           return;
         } catch (error) {
           if (error?.name === 'AbortError') return;
@@ -301,7 +313,7 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
     ? new MutationObserver(syncTrackShareButtons)
     : null;
   for (const card of rail.querySelectorAll('.track-card')) {
-    selectionObserver?.observe(card, { attributes: true, attributeFilter: ['class', 'aria-pressed'] });
+    selectionObserver?.observe(card, { attributes: true, attributeFilter: ['class', 'aria-pressed', 'disabled'] });
   }
 
   window.addEventListener('turn:rivals-reset', () => {
