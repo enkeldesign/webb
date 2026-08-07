@@ -31,11 +31,12 @@
 }
 
 .yourturn-racer-summary > span[data-leader="true"] {
-  background: #ffd43b;
+  box-shadow: 0 0 0 3px #ffd43b, 3px 3px 0 3px #08090a;
 }
 
 .yourturn-racer-summary b {
-  font-weight: 1000;
+  font-weight: 900;
+  text-transform: uppercase;
 }
 
 .yourturn-racer-summary small {
@@ -59,16 +60,48 @@
   padding: 4px 8px;
   border: 2px solid #08090a;
   border-radius: 999px;
-  background: rgb(255 248 232 / 0.92);
+  background: rgb(255 248 232 / 0.94);
   color: #08090a;
   box-shadow: 2px 2px 0 #08090a;
   font-size: clamp(0.64rem, 1.3vw, 0.82rem);
-  font-weight: 1000;
+  font-weight: 900;
   line-height: 1;
+  text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   will-change: transform;
+}
+
+.yourturn-racer-label.yourturn-order-1,
+.yourturn-racer-summary > span.yourturn-order-1 {
+  background: #ffd1e6;
+}
+
+.yourturn-racer-label.yourturn-order-2,
+.yourturn-racer-summary > span.yourturn-order-2 {
+  background: #bdeeff;
+}
+
+.yourturn-racer-label.yourturn-order-3,
+.yourturn-racer-summary > span.yourturn-order-3 {
+  background: #c8f5d0;
+}
+
+.yourturn-racer-label.yourturn-order-4,
+.yourturn-racer-summary > span.yourturn-order-4 {
+  background: #fff0a8;
+}
+
+.yourturn-racer-label.yourturn-order-5,
+.yourturn-racer-summary > span.yourturn-order-5 {
+  background: #ffd0ae;
+}
+
+.yourturn-player-label {
+  border-width: 3px;
+  font-weight: 1000;
+  letter-spacing: 0.025em;
 }
 
 .yourturn-racer-label[hidden] {
@@ -77,6 +110,20 @@
 
 .yourturn-dialog[open] ~ .yourturn-racer-labels .yourturn-racer-label {
   opacity: 0.72;
+}
+
+.yourturn-name-field input {
+  text-transform: uppercase;
+}
+
+.yourturn-name-field input::placeholder {
+  color: #666;
+  opacity: 1;
+  text-transform: uppercase;
+}
+
+#yourTurnTargetOpponent {
+  text-transform: uppercase;
 }
 
 @media (max-height: 560px) and (orientation: landscape) {
@@ -99,5 +146,9 @@
     padding: 3px 6px;
     border-width: 2px;
     font-size: 0.65rem;
+  }
+
+  .yourturn-player-label {
+    border-width: 3px;
   }
 }
