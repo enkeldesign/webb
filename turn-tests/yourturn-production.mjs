@@ -4,6 +4,7 @@ import {
   challengeFromLap,
   decodeChallenge,
   encodeChallenge,
+  encodedChallengeFromLocation,
   makeChallengeUrl,
   makeMockChallengeUrl
 } from '../yourturn/protocol.js';
@@ -32,8 +33,11 @@ const [
 
 assert.match(indexSource, /<title>YOUR TURN<\/title>/);
 assert.match(indexSource, /\/yourturn\/storage-bootstrap\.js/);
-assert.match(indexSource, /\/yourturn\/app\.js/);
-assert.match(indexSource, /id="yourTurnPauseButton"/);
+assert.match(indexSource, /\/yourturn\/app\.js\?revision=r2/);
+assert.match(indexSource, /id="yourTurnChallengeButton"[\s\S]*>CHALLENGE<\/button>/,
+  'The in-race return point must be a challenge menu, not merely a Pause label');
+assert.match(indexSource, /id="yourTurnMotionToggle"[\s\S]*aria-label="Pause background motion"/,
+  'Invitation and result motion need an explicit pause/play control');
 assert.match(indexSource, /id="yourTurnRotate"/);
 assert.match(indexSource, /ROTATE YOUR DEVICE TO LANDSCAPE/);
 assert.doesNotMatch(indexSource, /manifest|install-gate/i,
@@ -44,8 +48,12 @@ assert.match(appSource, /await import\(withBuild\('\/turn\/main\.js'\)\)/,
 assert.doesNotMatch(appSource, /\/turn\/app\.js|m8-home|installM8HomeNavigation/,
   'YOUR TURN must not bootstrap the full TURN Home application');
 assert.match(appSource, /installAnimationPauseBridge/);
-assert.match(appSource, /nativeSetAnimationLoop\.call\(renderer, null\)/,
-  'Pause must stop the rendering/physics loop rather than merely reducing motion');
+assert.ok(
+  appSource.indexOf('installCoveredRenderingGuard();') < appSource.indexOf('installAnimationPauseBridge(THREE)'),
+  'YOUR TURN pause must wrap the final renderer loop after TURN covered-rendering composition'
+);
+assert.match(appSource, /downstreamSetAnimationLoop\.call\(renderer, null\)/,
+  'Pause must stop the actual rendering and physics loop');
 assert.match(appSource, /installScreenBlanking/,
   'The non-visual screen blanking affordance must remain available');
 assert.match(appSource, /installRaceSpeech/,
@@ -58,19 +66,31 @@ assert.ok(
   'Motion permission must happen before the landscape transition'
 );
 assert.match(sessionSource, /ui\.showRotate\(\)/);
+assert.match(sessionSource, /centerMotionAfterLandscape\(\)/,
+  'Landscape entry must establish a fresh steering neutral before the race can move');
+assert.match(sessionSource, /runtime\.state\.neutralRoll = runtime\.state\.targetRoll/);
 assert.match(sessionSource, /prepareManualAccess\(\)/,
   'On-screen steering must remain an explicit fallback');
 assert.match(sessionSource, /label: 'TRY LATER'/);
 assert.match(sessionSource, /globalThis\.location\.href = '\/turn\/'/);
 assert.match(sessionSource, /label: 'ABOUT TURN'/);
 assert.match(sessionSource, /label: 'GET FULL TURN'/);
-assert.match(sessionSource, /label: 'PAUSE'|titleText: 'PAUSED'/);
+assert.match(sessionSource, /titleText: 'CHALLENGE'/);
+assert.match(sessionSource, /label: 'GIVE UP'/,
+  'Challenge menu must keep the route back to Give Up visible');
+assert.match(sessionSource, /ambientPaused/);
+assert.match(sessionSource, /toggleAmbientMotion/);
+assert.match(sessionSource, /if \(state\.ambientPaused\) animation\.pause\(\)/,
+  'A start-screen background pause preference must carry through to the result scene');
 assert.match(sessionSource, /navigator\.share/);
 assert.match(sessionSource, /navigator\.clipboard/);
 assert.doesNotMatch(sessionSource, /ghost/i,
   'YOUR TURN recipient copy and challenge layer must describe the challenger’s car, not a ghost');
 
 assert.match(uiSource, /YOUR TURN/);
+assert.match(uiSource, /bindMotionToggle/);
+assert.match(uiSource, /Play background motion/);
+assert.match(uiSource, /Pause background motion/);
 assert.match(uiSource, /rotate your phone like a steering wheel/i);
 assert.match(uiSource, /spatial audio/i);
 assert.match(uiSource, /screen-reader and non-visual play/i);
@@ -84,8 +104,10 @@ assert.match(sceneSource, /prefers-reduced-motion/);
 
 assert.match(cssSource, /background: rgb\(255 248 232 \/ 0\.9\)/,
   'Portrait invitation card must be slightly translucent so the challenger car remains perceptible');
-assert.match(cssSource, /\.yourturn-pause-button[\s\S]*#ff9b66/,
-  'The explicit Pause control must use the navigation/back orange');
+assert.match(cssSource, /\.yourturn-challenge-button[\s\S]*#ff9b66/,
+  'The challenge-menu control must use the navigation/back orange');
+assert.match(cssSource, /\.yourturn-motion-toggle[\s\S]*border-radius: 50%[\s\S]*background: #ff9b66/,
+  'The modal pause/play control must be round and use the navigation/back orange');
 assert.match(cssSource, /@media \(orientation: portrait\)/);
 assert.match(cssSource, /@media \(max-height: 560px\) and \(orientation: landscape\)/,
   'Small in-app browser viewports need a dedicated compact landscape layout');
@@ -120,16 +142,28 @@ const challenge = challengeFromLap({
     frames
   }
 });
-assert.ok(challenge.frames.length <= 450);
+assert.ok(challenge.frames.length <= 180);
 const encoded = await encodeChallenge(challenge);
 const decoded = await decodeChallenge(encoded);
 assert.equal(decoded.challengerName, 'Erik');
 assert.equal(decoded.trackId, 'countryside');
 assert.equal(decoded.time, 42);
-assert.match(makeChallengeUrl(encoded), /^https:\/\/enkel\.design\/yourturn\/#challenge=/);
+const challengeUrl = makeChallengeUrl(encoded);
+assert.match(challengeUrl, /^https:\/\/enkel\.design\/yourturn\/\?c=/,
+  'New challenge replies must use a query-carried URL so social preview crawlers receive the challenge URL');
+assert.equal(
+  encodedChallengeFromLocation(new URL(challengeUrl)),
+  encoded,
+  'Query-carried challenge URLs must decode normally'
+);
+assert.equal(
+  encodedChallengeFromLocation(new URL(`https://enkel.design/yourturn/#challenge=${encoded}`)),
+  encoded,
+  'Previously shared hash-carried challenge links must remain valid'
+);
 assert.equal(
   makeMockChallengeUrl('sol-countryside-r1'),
   'https://enkel.design/yourturn/?challenge=sol-countryside-r1'
 );
 
-console.log('YOUR TURN standalone recipient, motion-first flow, pause, accessibility and protocol regression passed.');
+console.log('YOUR TURN recipient motion controls, challenge menu, fresh calibration, social links and protocol regression passed.');
