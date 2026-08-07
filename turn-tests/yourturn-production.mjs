@@ -1,12 +1,16 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {
+  MAX_CHALLENGE_RACERS,
   challengeFromLap,
+  challengeLeader,
+  challengeWithLap,
   decodeChallenge,
   encodeChallenge,
   encodedChallengeFromLocation,
   makeChallengeUrl,
-  makeMockChallengeUrl
+  makeMockChallengeUrl,
+  normalizeChallenge
 } from '../yourturn/protocol.js';
 
 const [
@@ -16,8 +20,10 @@ const [
   sceneSource,
   uiSource,
   cssSource,
+  growingCssSource,
+  labelsSource,
+  labelBootstrapSource,
   nonVisualSource,
-  nonVisualCssSource,
   storageSource,
   mockSource,
   productionApp
@@ -28,8 +34,10 @@ const [
   fs.readFile(new URL('../yourturn/scene.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/ui.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/yourturn.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../yourturn/growing-challenge.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../yourturn/racer-labels.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../yourturn/racer-labels-bootstrap.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/nonvisual.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../yourturn/nonvisual.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/storage-bootstrap.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/mock-challenges.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8')
@@ -37,21 +45,16 @@ const [
 
 assert.match(indexSource, /<title>YOUR TURN<\/title>/);
 assert.match(indexSource, /\/yourturn\/storage-bootstrap\.js/);
-assert.match(indexSource, /\/yourturn\/app\.js\?revision=r4/);
-assert.match(indexSource, /\/yourturn\/nonvisual\.css\?revision=r1/);
-assert.match(indexSource, /\/yourturn\/nonvisual\.js\?revision=r1/);
-assert.match(indexSource, /id="yourTurnChallengeButton"[\s\S]*>THE CHALLENGE<\/button>/,
-  'The in-race return point must read as the challenge hub, not as a verb or a Pause command');
-assert.match(indexSource, /id="yourTurnMotionToggle"[\s\S]*aria-label="Pause background motion"/,
-  'Invitation and result motion need an explicit pause/play control');
-assert.match(indexSource, /<rect x="6"[\s\S]*<rect x="14"/,
-  'The initial modal Pause icon must be vector artwork rather than an emoji glyph');
-assert.match(indexSource, /id="yourTurnRotate"/);
-assert.match(indexSource, /ROTATE YOUR DEVICE TO LANDSCAPE/);
-assert.match(indexSource, /The race starts when you cross the starting line\./,
-  'The landscape transition must explain that timing starts at the physical start line');
+assert.match(indexSource, /\/yourturn\/app\.js\?revision=r6/);
+assert.match(indexSource, /growing-challenge\.css/);
+assert.match(indexSource, /racer-labels-bootstrap\.js/);
+assert.match(indexSource, /session\.js\?revision=r3[^\n]*session\.js\?revision=r6/,
+  'The page must cache-bust the new growing-challenge session even though app.js stays canonical');
+assert.match(indexSource, /Your name in the challenge/);
+assert.match(indexSource, /id="yourTurnChallengeButton"[\s\S]*>THE CHALLENGE<\/button>/);
+assert.match(indexSource, /The race starts when you cross the starting line\./);
 assert.doesNotMatch(indexSource, /manifest|install-gate/i,
-  'YOUR TURN must remain a browser-first challenge app rather than a PWA install gate');
+  'YOUR TURN remains browser-first rather than a PWA install gate');
 
 assert.match(appSource, /await import\(withBuild\('\/turn\/main\.js'\)\)/,
   'YOUR TURN must reuse the canonical TURN race runtime');
@@ -59,179 +62,150 @@ assert.doesNotMatch(appSource, /\/turn\/app\.js|m8-home|installM8HomeNavigation/
   'YOUR TURN must not bootstrap the full TURN Home application');
 assert.match(appSource, /installHardPauseController/);
 assert.match(appSource, /classList\.add\('turn-lot-open', 'yourturn-runtime-paused'\)/,
-  'YOUR TURN pause must use TURN’s canonical hard-occlusion path so physics and rendering both stop');
-assert.match(appSource, /state\.lapStartedAt \+= pausedFor/,
-  'Time spent in THE CHALLENGE menu must not count against an active lap');
-assert.doesNotMatch(appSource, /WebGLRenderer\.prototype|installAnimationPauseBridge/,
-  'Do not rely on prototype interception for Three.js animation pause; renderer methods may be instance-owned');
-assert.ok(
-  appSource.indexOf("await import(withBuild('/turn/main.js'))")
-    < appSource.indexOf('globalThis.__turnMotionLifecycle?.uninstall?.()'),
-  'YOUR TURN must restore native multi-listener motion semantics after canonical TURN startup'
-);
-assert.match(appSource, /single devicemotion[\s\S]*multi-listener semantics/,
-  'The steering subscription collision must remain documented next to the compatibility fix');
-assert.match(appSource, /FINAL_MOTION_CENTER_DELAY_MS = 320/,
-  'Final centering must happen after TURN’s early startup-center window, not during the orientation transition');
-assert.match(appSource, /animation\.deferResumeUntil\(silentlyCenterAfterLandscape\(runtime\)\)/,
-  'The race runtime must stay hard-paused until final landscape centering finishes');
-assert.match(appSource, /waitForSettledLandscape/);
-assert.match(appSource, /waitForFreshMotionSamples\(FINAL_MOTION_SAMPLE_COUNT, 600\)/,
-  'Final centering must use fresh post-rotation motion data');
-assert.match(appSource, /state\.neutralRoll = state\.targetRoll[\s\S]*state\.steeringEngaged = false/,
-  'The final landscape center must silently reset steering state');
-assert.match(appSource, /PLAYER_START_LANE_OFFSET = 4\.1/,
-  'Recipient and challenger need a stable side-by-side pre-start formation');
+  'THE CHALLENGE modal must hard-pause physics and replay movement');
+assert.match(appSource, /FINAL_MOTION_CENTER_DELAY_MS = 320/);
 assert.match(appSource, /installStartLineFormationAdapter/);
-assert.match(appSource, /formation\.rivalDistance = Math\.min\(formation\.rivalDistance, playerDistance\)/,
-  'The challenger may advance toward the line but must never follow a player who backs away');
-assert.match(appSource, /challengeLap\.frames\[0\]/,
-  'The staged challenger must converge on the exact recorded t=0 start pose');
-assert.match(appSource, /aheadIndex === 0 && Number\.isFinite\(startFrame\?\.x\)/,
-  'The pre-start path must interpolate into the exact recorded start position rather than snap there');
-assert.match(appSource, /installScreenBlanking/,
-  'The non-visual screen blanking affordance must remain available');
-assert.match(appSource, /installRaceSpeech/,
-  'Screen-reader race announcements must be included');
+assert.match(appSource, /formation\.rivalDistance = Math\.min\(formation\.rivalDistance, playerDistance\)/);
+assert.match(appSource, /installScreenBlanking/);
+assert.match(appSource, /installRaceSpeech/);
 
-assert.match(nonVisualSource, /document\.querySelector\('\.reset-rivals-button'\)\?\.remove\(\)/,
-  'YOUR TURN must remove Reset Rivals because its only rival is the challenger');
-assert.match(nonVisualSource, /BLANK SCREEN MODE[\s\S]*DRIVE BY EAR/,
-  'Blank screen must open a short Drive By Ear introduction before hiding visuals');
-assert.match(nonVisualSource, /turns the racing line, upcoming corners, grip, recovery and nearby cars into spatial sound/i);
-assert.match(nonVisualSource, /supports complete non-visual gameplay and works with screen readers/i);
-assert.match(nonVisualSource, /full TURN game also includes Drive By Ear 101 training/i,
-  'Recipient guidance should point to training in full TURN without adding a training action here');
-assert.doesNotMatch(nonVisualSource, /TRY TRAINING/i,
-  'YOUR TURN should explain training availability without adding a training button');
-assert.match(nonVisualSource, /id="yourTurnDbeBalance" type="range" min="0" max="100"/,
-  'The Drive By Ear introduction needs the sound-balance slider');
-assert.match(nonVisualSource, /audioPreferences\.setBalance\?\.\(value \/ 100\)/,
-  'The balance slider must use TURN’s actual audio preference API');
-assert.match(nonVisualSource, /event\.stopImmediatePropagation\(\)/,
-  'The recipient dialog must replace the canonical two-tap blank-screen confirmation');
-assert.match(nonVisualSource, /blankButton\.click\(\);[\s\S]*blankButton\.click\(\);/,
-  'After informed confirmation, reuse TURN’s canonical screen-blanking state machine');
-assert.match(nonVisualSource, /classList\.add\('turn-lot-open', 'yourturn-runtime-paused', 'yourturn-nonvisual-info-open'\)/,
-  'The non-visual information dialog must hard-pause background gameplay while it is being read');
-assert.match(nonVisualSource, /state\.lapStartedAt \+= pausedFor/,
-  'Opening the non-visual information dialog must not add time to an active lap');
-assert.match(nonVisualCssSource, /\.yourturn-dbe-balance/);
-assert.match(nonVisualCssSource, /input\[type="range"\]/);
-assert.match(nonVisualCssSource, /@media \(max-height: 560px\) and \(orientation: landscape\)/,
-  'The non-visual dialog must stay usable in compact in-app-browser landscape viewports');
-
-assert.match(sessionSource, /prepareMotionAccess\(\)/,
-  'Accept must request motion steering first');
-assert.ok(
-  sessionSource.indexOf('prepareMotionAccess()') < sessionSource.indexOf('awaitLandscapeAndStart()'),
-  'Motion permission must happen before the landscape transition'
-);
-assert.match(sessionSource, /ui\.showRotate\(\)/);
-assert.match(sessionSource, /centerMotionAfterLandscape\(\)/,
-  'Landscape entry keeps its immediate center while r4 adds a final post-settle center before movement');
-assert.match(sessionSource, /runtime\.state\.neutralRoll = runtime\.state\.targetRoll/);
-assert.match(sessionSource, /prepareManualAccess\(\)/,
-  'On-screen steering must remain an explicit fallback');
-assert.match(sessionSource, /label: 'TRY LATER'/);
-assert.match(sessionSource, /globalThis\.location\.href = '\/turn\/'/);
-assert.match(sessionSource, /label: 'ABOUT TURN'/);
-assert.match(sessionSource, /label: 'GET FULL TURN'/);
-assert.match(sessionSource, /titleText: 'CHALLENGE'/);
-assert.match(sessionSource, /label: 'GIVE UP'/,
-  'Challenge menu must keep the route back to Give Up visible');
-assert.match(sessionSource, /ambientPaused/);
-assert.match(sessionSource, /toggleAmbientMotion/);
-assert.match(sessionSource, /if \(state\.ambientPaused\) animation\.pause\(\)/,
-  'A start-screen background pause preference must carry through to the result scene');
+assert.match(sessionSource, /challengeLaps: \[\]/,
+  'A challenge session must support a field of replay cars');
+assert.match(sessionSource, /state\.challenge\.racers\.map\(racerToLap\)/,
+  'Every racer in the bundle must become a canonical TURN replay lap');
+assert.match(sessionSource, /runtime\.state\.competitorLaps = state\.challengeLaps/,
+  'The growing challenge field must feed TURN’s canonical rival runtime');
+assert.match(sessionSource, /challengeWithLap\(/,
+  'Sharing a run must merge it into the existing challenge instead of replacing the challenge');
+assert.match(sessionSource, /state\.racerId:|racerId: loadOrCreateRacerId\(\)/,
+  'A browser participant needs a stable racer identity so their later best can replace their earlier car');
+assert.match(sessionSource, /if \(!state\.bestRun \|\| candidate\.time < state\.bestRun\.time\) state\.bestRun = candidate/,
+  'A player can share their best attempt even without taking the overall lead');
+assert.match(sessionSource, /label: 'SHARE'/);
+assert.match(sessionSource, /label: 'SHARE YOUR TURN'/);
+assert.doesNotMatch(sessionSource, /label: 'GIVE UP'|label: 'YES, GIVE UP'/,
+  'The active framework must use neutral sharing instead of Give Up');
+assert.match(sessionSource, /label: 'GET THE GAME', game: true/);
+assert.match(sessionSource, /label: 'BACK', back: true/);
+assert.match(sessionSource, /racerSummaryHtml/);
+assert.match(sessionSource, /players challenge you|PLAYERS CHALLENGE YOU/i);
 assert.match(sessionSource, /navigator\.share/);
 assert.match(sessionSource, /navigator\.clipboard/);
 assert.doesNotMatch(sessionSource, /ghost/i,
-  'YOUR TURN recipient copy and challenge layer must describe the challenger’s car, not a ghost');
+  'Recipient-facing YOUR TURN challenge code describes people and cars, not ghosts');
 
-assert.match(uiSource, /YOUR TURN/);
-assert.match(uiSource, /bindMotionToggle/);
-assert.match(uiSource, /Play background motion/);
-assert.match(uiSource, /Pause background motion/);
-assert.match(uiSource, /const PAUSE_ICON[\s\S]*<rect[\s\S]*<rect/,
-  'Pause must use two SVG bars');
-assert.match(uiSource, /const PLAY_ICON[\s\S]*<path/,
-  'Play must use matching SVG artwork');
-assert.doesNotMatch(uiSource, /⏸|▶/,
-  'Motion control artwork must not depend on platform emoji glyphs');
-assert.match(uiSource, /rotate your phone like a steering wheel/i);
-assert.match(uiSource, /spatial audio/i);
-assert.match(uiSource, /screen-reader and non-visual play/i);
-assert.match(uiSource, /visually-hidden/);
-assert.doesNotMatch(uiSource, /ghost/i);
+assert.match(uiSource, /action\.share/);
+assert.match(uiSource, /action\.game/);
+assert.match(uiSource, /action\.back/);
+assert.match(uiSource, /is-share/);
+assert.match(uiSource, /is-game/);
+assert.match(uiSource, /is-back/);
+assert.match(uiSource, /const PAUSE_ICON[\s\S]*<rect[\s\S]*<rect/);
+assert.match(uiSource, /const PLAY_ICON[\s\S]*<path/);
+assert.doesNotMatch(uiSource, /⏸|▶/);
 
-assert.match(sceneSource, /PREVIEW_START_DELAY_MS = 650/,
-  'Opponent preview movement must not begin as an uncanny instant imitation');
+assert.match(growingCssSource, /\.is-share[\s\S]*#ff4fa3/,
+  'Share is the pink CTA');
+assert.match(growingCssSource, /\.is-game[\s\S]*#38d9ff/,
+  'Get the Game uses blue rather than navigation orange');
+assert.match(growingCssSource, /\.is-back[\s\S]*#ff9b66/,
+  'Back remains the design-system orange');
+assert.match(growingCssSource, /\.yourturn-racer-summary/);
+assert.match(growingCssSource, /\.yourturn-racer-label/);
+assert.match(labelsSource, /lap\.challengerName/,
+  'Visual replay labels must use the player name carried by each racer lap');
+assert.match(labelsSource, /runtime\.competitorCars/);
+assert.match(labelBootstrapSource, /installRacerLabels/);
+assert.match(labelBootstrapSource, /carId = state\.challenge\.carId/,
+  'All social racers must retain the challenge car identity');
+
+assert.match(sceneSource, /PREVIEW_START_DELAY_MS = 650/);
 assert.match(sceneSource, /STAGED_IMITATION_DELAY_MS = 650/);
 assert.match(sceneSource, /prefers-reduced-motion/);
-
-assert.match(cssSource, /background: rgb\(255 248 232 \/ 0\.9\)/,
-  'Portrait invitation card must be slightly translucent so the challenger car remains perceptible');
-assert.match(cssSource, /\.yourturn-challenge-button[\s\S]*#ff9b66/,
-  'The challenge-menu control must use the navigation/back orange');
-assert.match(cssSource, /\.yourturn-motion-toggle[\s\S]*border-radius: 50%[\s\S]*background: #ff9b66/,
-  'The modal pause/play control must be round and use the navigation/back orange');
-assert.match(cssSource, /@media \(orientation: portrait\)/);
-assert.match(cssSource, /@media \(max-height: 560px\) and \(orientation: landscape\)/,
-  'Small in-app browser viewports need a dedicated compact landscape layout');
-
+assert.match(cssSource, /background: rgb\(255 248 232 \/ 0\.9\)/);
+assert.match(nonVisualSource, /Drive By Ear 101 training/);
+assert.match(nonVisualSource, /yourTurnDbeBalance/);
+assert.match(nonVisualSource, /removeRivalResetUi/);
 assert.match(storageSource, /const LOCAL_PREFIX = 'yourturn:';/);
-assert.match(storageSource, /turn production TURN records|TURN records/i);
 assert.match(mockSource, /'sol-countryside-r1'/);
-assert.match(mockSource, /time: 13\.5/);
-
 assert.match(productionApp, /installM8HomeNavigation\(\)/,
   'Production TURN remains the full application and is not replaced by YOUR TURN');
 
-const frames = Array.from({ length: 900 }, (_, index) => ({
-  t: 42 * index / 899,
-  x: index * 0.08,
-  z: index * 0.04,
-  h: index * 0.001,
-  s: 0,
-  d: 0,
-  p: index / 899
-}));
-const challenge = challengeFromLap({
-  challengerName: 'Erik',
+assert.equal(MAX_CHALLENGE_RACERS, 4);
+
+const lap = (time, offset = 0) => ({
+  time,
+  carId: 'sedan-sports',
+  carColor: '#ff4fa3',
+  carSecondaryColor: '#252a35',
+  frames: Array.from({ length: 900 }, (_, index) => ({
+    t: time * index / 899,
+    x: index * 0.08 + offset,
+    z: index * 0.04,
+    h: index * 0.001,
+    s: Math.sin(index / 40) * 0.2,
+    d: 0,
+    p: index / 899
+  }))
+});
+
+let chain = challengeFromLap({
+  challengerName: 'ARVID',
+  racerId: 'r-arvid',
+  chainId: 'yt-family-chain',
   trackId: 'countryside',
   trackRevision: 'countryside',
   trackName: 'Countryside',
-  lap: {
-    time: 42,
-    carId: 'sedan-sports',
-    carColor: '#ff4fa3',
-    carSecondaryColor: '#252a35',
-    frames
-  }
+  lap: lap(15.8)
 });
-assert.ok(challenge.frames.length <= 180);
-const encoded = await encodeChallenge(challenge);
-const decoded = await decodeChallenge(encoded);
-assert.equal(decoded.challengerName, 'Erik');
-assert.equal(decoded.trackId, 'countryside');
-assert.equal(decoded.time, 42);
-const challengeUrl = makeChallengeUrl(encoded);
-assert.match(challengeUrl, /^https:\/\/enkel\.design\/yourturn\/\?c=/,
-  'New challenge replies must use a query-carried URL so social preview crawlers receive the challenge URL');
-assert.equal(
-  encodedChallengeFromLocation(new URL(challengeUrl)),
-  encoded,
-  'Query-carried challenge URLs must decode normally'
-);
-assert.equal(
-  encodedChallengeFromLocation(new URL(`https://enkel.design/yourturn/#challenge=${encoded}`)),
-  encoded,
-  'Previously shared hash-carried challenge links must remain valid'
-);
-assert.equal(
-  makeMockChallengeUrl('sol-countryside-r1'),
-  'https://enkel.design/yourturn/?challenge=sol-countryside-r1'
-);
+assert.equal(chain.racers.length, 1);
+assert.equal(challengeLeader(chain).name, 'ARVID');
+assert.ok(chain.racers[0].frames.length <= 120);
 
-console.log('YOUR TURN non-visual onboarding, balance control, rival reset removal and recipient regression passed.');
+chain = challengeWithLap({ challenge: chain, racerId: 'r-erik', racerName: 'ERIK', lap: lap(15.5, 0.3) });
+chain = challengeWithLap({ challenge: chain, racerId: 'r-kerstin', racerName: 'KERSTIN', lap: lap(16.1, -0.25) });
+assert.deepEqual(chain.racers.map((racer) => racer.name), ['ERIK', 'ARVID', 'KERSTIN']);
+
+chain = challengeWithLap({ challenge: chain, racerId: 'r-erik', racerName: 'ERIK', lap: lap(15.2, 0.15) });
+assert.equal(chain.racers.filter((racer) => racer.id === 'r-erik').length, 1,
+  'A returning player must keep exactly one car in the challenge');
+assert.equal(chain.racers.find((racer) => racer.id === 'r-erik').time, 15.2,
+  'A better repeat lap must replace that player’s older car');
+
+chain = challengeWithLap({ challenge: chain, racerId: 'r-d', racerName: 'D', lap: lap(17.2, 0.5) });
+chain = challengeWithLap({ challenge: chain, racerId: 'r-e', racerName: 'E', lap: lap(18.4, -0.5) });
+assert.equal(chain.racers.length, 4, 'Self-contained links are capped at four rival cars');
+assert.ok(chain.racers.some((racer) => racer.id === 'r-e'), 'The newest contributor must survive the four-car cap');
+assert.equal(chain.chainId, 'yt-family-chain', 'The social challenge identity must survive every share');
+
+const encoded = await encodeChallenge(chain);
+const decoded = await decodeChallenge(encoded);
+assert.equal(decoded.racers.length, 4);
+assert.deepEqual(decoded.racers.map((racer) => racer.id), chain.racers.map((racer) => racer.id));
+assert.equal(decoded.chainId, chain.chainId);
+assert.ok(encoded.length < 18000, `Four-car challenge link payload should stay practical; got ${encoded.length} characters`);
+
+const challengeUrl = makeChallengeUrl(encoded);
+assert.match(challengeUrl, /^https:\/\/enkel\.design\/yourturn\/\?c=/);
+assert.equal(encodedChallengeFromLocation(new URL(challengeUrl)), encoded);
+assert.equal(encodedChallengeFromLocation(new URL(`https://enkel.design/yourturn/#challenge=${encoded}`)), encoded,
+  'Previously shared hash-carried challenge links remain readable');
+assert.equal(makeMockChallengeUrl('sol-countryside-r1'), 'https://enkel.design/yourturn/?challenge=sol-countryside-r1');
+
+const legacy = normalizeChallenge({
+  v: 1,
+  challengerName: 'SOL',
+  trackId: 'countryside',
+  trackRevision: 'countryside',
+  trackName: 'Countryside',
+  time: 18.75,
+  carId: 'sedan-sports',
+  carColor: '#ff4fa3',
+  carSecondaryColor: '#252a35',
+  frames: lap(18.75).frames
+});
+assert.equal(legacy.v, 2);
+assert.equal(legacy.racers.length, 1, 'Old one-car links must transparently upgrade into a challenge field');
+assert.equal(legacy.racers[0].name, 'SOL');
+
+console.log('YOUR TURN growing four-car social challenge, named racers, share CTA and compatibility regression passed.');
