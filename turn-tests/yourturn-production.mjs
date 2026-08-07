@@ -33,7 +33,7 @@ const [
 
 assert.match(indexSource, /<title>YOUR TURN<\/title>/);
 assert.match(indexSource, /\/yourturn\/storage-bootstrap\.js/);
-assert.match(indexSource, /\/yourturn\/app\.js\?revision=r3/);
+assert.match(indexSource, /\/yourturn\/app\.js\?revision=r4/);
 assert.match(indexSource, /id="yourTurnChallengeButton"[\s\S]*>THE CHALLENGE<\/button>/,
   'The in-race return point must read as the challenge hub, not as a verb or a Pause command');
 assert.match(indexSource, /id="yourTurnMotionToggle"[\s\S]*aria-label="Pause background motion"/,
@@ -42,6 +42,8 @@ assert.match(indexSource, /<rect x="6"[\s\S]*<rect x="14"/,
   'The initial modal Pause icon must be vector artwork rather than an emoji glyph');
 assert.match(indexSource, /id="yourTurnRotate"/);
 assert.match(indexSource, /ROTATE YOUR DEVICE TO LANDSCAPE/);
+assert.match(indexSource, /The race starts when you cross the starting line\./,
+  'The landscape transition must explain that timing starts at the physical start line');
 assert.doesNotMatch(indexSource, /manifest|install-gate/i,
   'YOUR TURN must remain a browser-first challenge app rather than a PWA install gate');
 
@@ -63,6 +65,24 @@ assert.ok(
 );
 assert.match(appSource, /single devicemotion[\s\S]*multi-listener semantics/,
   'The steering subscription collision must remain documented next to the compatibility fix');
+assert.match(appSource, /FINAL_MOTION_CENTER_DELAY_MS = 320/,
+  'Final centering must happen after TURN’s early startup-center window, not during the orientation transition');
+assert.match(appSource, /animation\.deferResumeUntil\(silentlyCenterAfterLandscape\(runtime\)\)/,
+  'The race runtime must stay hard-paused until final landscape centering finishes');
+assert.match(appSource, /waitForSettledLandscape/);
+assert.match(appSource, /waitForFreshMotionSamples\(FINAL_MOTION_SAMPLE_COUNT, 600\)/,
+  'Final centering must use fresh post-rotation motion data');
+assert.match(appSource, /state\.neutralRoll = state\.targetRoll[\s\S]*state\.steeringEngaged = false/,
+  'The final landscape center must silently reset steering state');
+assert.match(appSource, /PLAYER_START_LANE_OFFSET = 4\.1/,
+  'Recipient and challenger need a stable side-by-side pre-start formation');
+assert.match(appSource, /installStartLineFormationAdapter/);
+assert.match(appSource, /formation\.rivalDistance = Math\.min\(formation\.rivalDistance, playerDistance\)/,
+  'The challenger may advance toward the line but must never follow a player who backs away');
+assert.match(appSource, /challengeLap\.frames\[0\]/,
+  'The staged challenger must converge on the exact recorded t=0 start pose');
+assert.match(appSource, /aheadIndex === 0 && Number\.isFinite\(startFrame\?\.x\)/,
+  'The pre-start path must interpolate into the exact recorded start position rather than snap there');
 assert.match(appSource, /installScreenBlanking/,
   'The non-visual screen blanking affordance must remain available');
 assert.match(appSource, /installRaceSpeech/,
@@ -76,7 +96,7 @@ assert.ok(
 );
 assert.match(sessionSource, /ui\.showRotate\(\)/);
 assert.match(sessionSource, /centerMotionAfterLandscape\(\)/,
-  'Landscape entry must establish a fresh steering neutral before the race can move');
+  'Landscape entry keeps its immediate center while r4 adds a final post-settle center before movement');
 assert.match(sessionSource, /runtime\.state\.neutralRoll = runtime\.state\.targetRoll/);
 assert.match(sessionSource, /prepareManualAccess\(\)/,
   'On-screen steering must remain an explicit fallback');
@@ -181,4 +201,4 @@ assert.equal(
   'https://enkel.design/yourturn/?challenge=sol-countryside-r1'
 );
 
-console.log('YOUR TURN hard pause, steering subscription, vector motion controls, challenge menu and social-link regression passed.');
+console.log('YOUR TURN final centering, seamless start formation, hard pause, vector controls and social-link regression passed.');
