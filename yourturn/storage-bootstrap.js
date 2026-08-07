@@ -2,6 +2,10 @@
   const LOCAL_PREFIX = 'yourturn:';
   const SESSION_PREFIX = 'yourturn-session:';
   const PATCH_MARKER = Symbol.for('yourturn.storage.patch');
+  const SHARED_RACER_ID_KEY = 'turn-social-racer-id-v1';
+  const SHARED_RACER_NAME_KEY = 'turn-social-racer-name-v1';
+  const LEGACY_RACER_ID_KEY = `${LOCAL_PREFIX}yourturn-racer-id-v1`;
+  const LEGACY_RACER_NAME_KEY = `${LOCAL_PREFIX}yourturn-player-name-v1`;
 
   function fail(error) {
     console.error('YOUR TURN: isolated storage could not be established.', error);
@@ -33,6 +37,23 @@
       clear: proto.clear,
       key: proto.key
     });
+
+    // Migrate the earlier YOUR TURN-only identity into the shared social profile,
+    // then mirror the shared racer ID back into the old namespaced key so the
+    // existing session code starts with the same identity before any UI is shown.
+    const sharedRacerId = native.getItem.call(localStorageRef, SHARED_RACER_ID_KEY);
+    const legacyRacerId = native.getItem.call(localStorageRef, LEGACY_RACER_ID_KEY);
+    if (!sharedRacerId && legacyRacerId) {
+      native.setItem.call(localStorageRef, SHARED_RACER_ID_KEY, legacyRacerId);
+    } else if (sharedRacerId && sharedRacerId !== legacyRacerId) {
+      native.setItem.call(localStorageRef, LEGACY_RACER_ID_KEY, sharedRacerId);
+    }
+
+    const sharedRacerName = native.getItem.call(localStorageRef, SHARED_RACER_NAME_KEY);
+    const legacyRacerName = native.getItem.call(localStorageRef, LEGACY_RACER_NAME_KEY);
+    if (!sharedRacerName && legacyRacerName) {
+      native.setItem.call(localStorageRef, SHARED_RACER_NAME_KEY, legacyRacerName);
+    }
 
     // YOUR TURN isolates gameplay records, but the lightweight social racer
     // profile intentionally belongs to TURN as a whole. Expose a tiny raw local
