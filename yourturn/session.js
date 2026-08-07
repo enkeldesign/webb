@@ -6,7 +6,10 @@ import { getTrackDefinition } from '/turn/tracks/catalog.js?source=20260729-r118
 import { getTrackStorageRevision } from '/turn/tracks/definitions.js';
 import { getCarDefinition } from '/turn/vehicle/catalog.js?build=20260720-r19';
 import {
-  challengeFromLap,
+  challengeLeader,
+  challengeSender,
+  challengeWithLap,
+  createRacerId,
   decodeChallenge,
   encodeChallenge,
   encodedChallengeFromLocation,
@@ -15,10 +18,12 @@ import {
   makeMockChallengeUrl,
   normalizeChallenge,
   normalizeChallengeName
-} from '/yourturn/protocol.js?revision=r2';
+} from '/yourturn/protocol.js?revision=r3';
 import { getMockChallenge, MOCK_CHALLENGES } from '/yourturn/mock-challenges.js?revision=r1';
 import { createChallengeScene } from '/yourturn/scene.js?revision=r1';
-import { aboutTurnHtml, escapeHtml, newcomerAssistiveText } from '/yourturn/ui.js?revision=r2';
+import { aboutTurnHtml, escapeHtml, newcomerAssistiveText } from '/yourturn/ui.js?revision=r3';
+
+const RACER_ID_KEY = 'yourturn-racer-id-v1';
 
 export function readYourTurnRequest(locationRef = globalThis.location) {
   const query = new URLSearchParams(locationRef?.search || '');
@@ -27,6 +32,7 @@ export function readYourTurnRequest(locationRef = globalThis.location) {
   return Object.freeze({
     mockId,
     encoded,
+    // Kept only so already-shared r5 give-up links remain understandable.
     reply: query.get('reply') === 'give-up' ? 'give-up' : '',
     responder: normalizeChallengeName(query.get('responder'), 'A TURN PLAYER'),
     hasChallenge: Boolean(mockId || encoded)
@@ -41,12 +47,15 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     phase: 'idle',
     challenge: null,
     challengeLap: null,
+    challengeLaps: [],
+    bestRun: null,
     winningLap: null,
     scene: null,
     pendingAccess: null,
     paused: false,
     backgroundPaused: false,
-    ambientPaused: false
+    ambientPaused: false,
+    racerId: loadOrCreateRacerId()
   };
 
   ui.bindChallengeMenu(() => openChallengeMenu('Race paused.'));
@@ -67,11 +76,10 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
 
     const challenge = await resolveChallenge();
     state.active = true;
-    state.challenge = challenge;
-    state.challengeLap = challengeToLap(challenge);
+    setChallenge(challenge);
 
     await raceSession.selectVehicle(challengeVehicle(challenge));
-    useChallengeAsOnlyOpponent();
+    useChallengeField();
     document.body.classList.add('yourturn-active', 'yourturn-preview');
 
     runtime.state.running = true;
@@ -91,13 +99,21 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     });
     state.phase = request.reply ? 'reply' : 'preview';
     state.scene.setPhase(state.phase);
-    ui.setTarget({
-      opponent: challenge.challengerName,
-      time: formatChallengeTime(challenge.time)
-    });
+    syncTarget();
 
-    if (request.reply === 'give-up') showReceivedGiveUp();
+    if (request.reply === 'give-up') showReceivedLegacyGiveUp();
     else showInvitation();
+  }
+
+  function setChallenge(challenge) {
+    state.challenge = normalizeChallenge(challenge);
+    state.challengeLaps = state.challenge.racers.map(racerToLap);
+    state.challengeLap = state.challengeLaps[0] || null;
+  }
+
+  function syncTarget() {
+    const leader = challengeLeader(state.challenge);
+    ui.setTarget({ opponent: leader.name, time: formatChallengeTime(leader.time) });
   }
 
   async function resolveChallenge() {
@@ -160,21 +176,26 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     const challenge = state.challenge;
     const track = getTrackDefinition(challenge.trackId);
     const car = getCarDefinition(challenge.carId);
+    const leader = challengeLeader(challenge);
+    const sender = challengeSender(challenge);
+    const count = challenge.racers.length;
     state.phase = 'preview';
     state.scene?.setPhase('preview');
     ui.hideRaceChrome();
     showSessionModal({
-      titleText: `${challenge.challengerName} CHALLENGES YOU`,
+      titleText: count === 1 ? `${sender.name} CHALLENGES YOU` : `${count} PLAYERS CHALLENGE YOU`,
       detailsHtml: `
         <strong>${escapeHtml(track.name.toUpperCase())}</strong>
-        <span>${escapeHtml(car.name)} · ${formatChallengeTime(challenge.time)}</span>`,
-      copyHtml: `Beat ${escapeHtml(challenge.challengerName)}’s car. Race as many laps as you need.`,
-      extraHtml: newcomerAssistiveText(challenge.challengerName),
+        <span>${escapeHtml(car.name)} · fastest ${escapeHtml(leader.name)} ${formatChallengeTime(leader.time)}</span>`,
+      copyHtml: count === 1
+        ? `Beat ${escapeHtml(leader.name)}’s car, or add your best lap and share the challenge on.`
+        : `Race ${escapeHtml(joinRacerNames(challenge.racers))}. Beat ${escapeHtml(leader.name)} to take the lead, or add your best lap and share the challenge on.`,
+      extraHtml: `${racerSummaryHtml(challenge)}${newcomerAssistiveText(sender.name)}`,
       className: 'invitation',
       actionList: [
         { label: 'ACCEPT CHALLENGE', primary: true, action: () => void acceptWithMotion() },
         { label: 'TRY LATER', navigation: true, action: openFullTurn },
-        { label: 'GIVE UP', destructive: true, action: showGiveUpConfirm },
+        { label: 'SHARE', share: true, action: () => void shareExistingChallenge() },
         { label: 'ABOUT TURN', kind: 'quiet', action: () => showAbout(showInvitation) }
       ]
     });
@@ -247,10 +268,10 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     document.body.classList.add('yourturn-racing');
     state.phase = 'staged';
     state.scene.setPhase('staged');
-    useChallengeAsOnlyOpponent();
+    useChallengeField();
 
     document.querySelector('#resetButton')?.click();
-    useChallengeAsOnlyOpponent();
+    useChallengeField();
     const access = state.pendingAccess || raceSession.prepareManualAccess();
     await centerMotionAfterLandscape();
     await raceSession.startGame(access.fullscreenPromise);
@@ -313,117 +334,103 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
   }
 
   function finishAttempt(candidate) {
-    useChallengeAsOnlyOpponent();
-    if (candidate.time < state.challenge.time) {
+    useChallengeField();
+    if (!state.bestRun || candidate.time < state.bestRun.time) state.bestRun = candidate;
+    const leader = challengeLeader(state.challenge);
+    if (candidate.time < leader.time) {
       state.winningLap = candidate;
       state.phase = 'result';
       stopRaceForModal('result');
-      showWin(candidate);
+      showShareResult(candidate);
       return;
     }
     state.phase = runtime.state.lapActive ? 'racing' : 'staged';
     state.scene.setPhase(state.phase);
   }
 
-  function showWin(candidate) {
-    const difference = state.challenge.time - candidate.time;
+  function showShareResult(candidate = state.bestRun) {
+    if (!candidate) {
+      showNoLapYet();
+      return;
+    }
+    const leader = challengeLeader(state.challenge);
+    const ahead = leader.time - candidate.time;
+    const won = ahead > 0;
     showSessionModal({
-      titleText: `YOU BEAT ${state.challenge.challengerName}`,
+      titleText: won ? `YOU BEAT ${leader.name}` : 'YOUR BEST LAP',
       detailsHtml: `
         <strong>${formatChallengeTime(candidate.time)}</strong>
-        <span>${difference.toFixed(3)} seconds ahead</span>`,
-      copyHtml: 'Send your winning lap back as a new YOUR TURN challenge.',
+        <span>${won ? `${ahead.toFixed(3)} seconds ahead` : `${Math.abs(ahead).toFixed(3)} seconds behind ${escapeHtml(leader.name)}`}</span>`,
+      copyHtml: 'Add your car to this challenge and send it on. If you are already in the challenge, only your faster run is kept.',
       requestName: true,
       className: 'result',
       actionList: [
-        { label: 'SHARE YOUR TURN', primary: true, action: () => void shareWinningReply() },
+        { label: 'SHARE YOUR TURN', share: true, action: () => void shareContribution(candidate) },
         { label: 'RACE AGAIN', action: raceAgain },
-        { label: 'GET FULL TURN', navigation: true, action: openFullTurn },
-        { label: 'ABOUT TURN', kind: 'quiet', action: () => showAbout(() => showWin(candidate)) }
+        { label: 'GET THE GAME', game: true, action: openFullTurn },
+        { label: 'ABOUT TURN', kind: 'quiet', action: () => showAbout(() => showShareResult(candidate)) }
       ]
     });
   }
 
-  async function shareWinningReply() {
-    const responder = ui.playerName();
-    const replyChallenge = challengeFromLap({
-      challengerName: responder,
-      trackId: state.challenge.trackId,
-      trackRevision: getTrackStorageRevision(state.challenge.trackId),
-      trackName: getTrackDefinition(state.challenge.trackId).name,
-      lap: state.winningLap,
-      replyTo: {
-        kind: 'win',
-        opponent: state.challenge.challengerName,
-        previousTime: state.challenge.time
-      }
+  function showNoLapYet() {
+    showSessionModal({
+      titleText: 'NO LAP YET',
+      copyHtml: 'Finish a valid lap to add your own car to this challenge. You can also pass the current challenge on unchanged.',
+      className: 'share-empty',
+      actionList: [
+        { label: 'KEEP RACING', primary: true, action: resumeRace },
+        { label: 'SHARE ORIGINAL', share: true, action: () => void shareExistingChallenge() },
+        { label: 'ABOUT TURN', kind: 'quiet', action: () => showAbout(showNoLapYet) }
+      ]
     });
-    const encoded = await encodeChallenge(replyChallenge);
+  }
+
+  async function shareContribution(candidate) {
+    const racerName = ui.playerName();
+    const nextChallenge = challengeWithLap({
+      challenge: state.challenge,
+      racerId: state.racerId,
+      racerName,
+      lap: candidate
+    });
+    const encoded = await encodeChallenge(nextChallenge);
     const url = makeChallengeUrl(encoded);
+    const leader = challengeLeader(nextChallenge);
+    const text = nextChallenge.racers.length === 1
+      ? `${racerName} challenges you with ${formatChallengeTime(candidate.time)}. Your turn.`
+      : `${racerName} joined a ${nextChallenge.racers.length}-car YOUR TURN challenge. Fastest: ${leader.name} ${formatChallengeTime(leader.time)}. Your turn.`;
     return shareUrl({
-      title: `${responder} sends you YOUR TURN`,
-      text: `${responder} beat ${state.challenge.challengerName} with ${formatChallengeTime(state.winningLap.time)}. Your turn.`,
+      title: `${racerName} sends you YOUR TURN`,
+      text,
       url,
-      success: 'Your challenge is ready to send.'
+      success: 'Your growing challenge is ready to send.'
     });
   }
 
-  function showGiveUpConfirm() {
-    const wasAccepted = state.accepted;
-    if (wasAccepted) stopRaceForModal('reply');
-    showSessionModal({
-      titleText: 'GIVE UP?',
-      detailsHtml: `<strong>${escapeHtml(state.challenge.challengerName)} WINS</strong><span>Target ${formatChallengeTime(state.challenge.time)}</span>`,
-      copyHtml: `You can keep racing ${escapeHtml(state.challenge.challengerName)}’s car for as many laps as you want.`,
-      className: 'give-up',
-      actionList: [
-        { label: 'KEEP RACING', primary: true, action: wasAccepted ? raceAgain : showInvitation },
-        { label: 'YES, GIVE UP', destructive: true, action: finishGiveUp }
-      ]
-    });
-  }
-
-  function finishGiveUp() {
-    state.phase = 'reply';
-    state.scene?.setPhase('reply');
-    showSessionModal({
-      titleText: `${state.challenge.challengerName} WINS`,
-      detailsHtml: `<strong>${formatChallengeTime(state.challenge.time)}</strong><span>Challenge held</span>`,
-      copyHtml: 'Send the result back, try again, or open the full TURN game.',
-      requestName: true,
-      className: 'result',
-      actionList: [
-        { label: 'SHARE RESULT', primary: true, action: () => void shareGiveUpReply() },
-        { label: 'TRY AGAIN', action: state.accepted ? raceAgain : showInvitation },
-        { label: 'GET FULL TURN', navigation: true, action: openFullTurn },
-        { label: 'ABOUT TURN', kind: 'quiet', action: () => showAbout(finishGiveUp) }
-      ]
-    });
-  }
-
-  async function shareGiveUpReply() {
-    const responder = ui.playerName();
-    const url = request.mockId
-      ? makeMockChallengeUrl(request.mockId, { reply: 'give-up', responder })
-      : makeChallengeUrl(request.encoded, { reply: 'give-up', responder });
+  async function shareExistingChallenge() {
+    const encoded = await encodeChallenge(state.challenge);
+    const url = makeChallengeUrl(encoded);
+    const leader = challengeLeader(state.challenge);
     return shareUrl({
-      title: `${responder} answered your YOUR TURN challenge`,
-      text: `${responder} gave up. ${state.challenge.challengerName} wins this round.`,
+      title: 'YOUR TURN — a TURN challenge',
+      text: `Race ${state.challenge.racers.length === 1 ? leader.name : `${state.challenge.racers.length} players`}. Fastest: ${leader.name} ${formatChallengeTime(leader.time)}. Your turn.`,
       url,
-      success: 'Result ready to send.'
+      success: 'Challenge ready to send.'
     });
   }
 
-  function showReceivedGiveUp() {
+  function showReceivedLegacyGiveUp() {
     showSessionModal({
-      titleText: `${request.responder} GAVE UP`,
-      detailsHtml: `<strong>YOU WIN</strong><span>${formatChallengeTime(state.challenge.time)} held the lead</span>`,
-      copyHtml: `Your car beat ${escapeHtml(request.responder)}.`,
+      titleText: `${request.responder} PASSED IT ON`,
+      detailsHtml: `<strong>YOUR TURN</strong><span>${formatChallengeTime(challengeLeader(state.challenge).time)} is still the time to beat</span>`,
+      copyHtml: 'This is an older challenge reply. You can race it or send the challenge on.',
       className: 'result',
       actionList: [
         { label: 'RACE THIS CHALLENGE', primary: true, action: () => void acceptWithMotion() },
-        { label: 'GET FULL TURN', navigation: true, action: openFullTurn },
-        { label: 'ABOUT TURN', kind: 'quiet', action: () => showAbout(showReceivedGiveUp) }
+        { label: 'SHARE', share: true, action: () => void shareExistingChallenge() },
+        { label: 'GET THE GAME', game: true, action: openFullTurn },
+        { label: 'ABOUT TURN', kind: 'quiet', action: () => showAbout(showReceivedLegacyGiveUp) }
       ]
     });
   }
@@ -438,16 +445,34 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
 
   function showChallengeMenuView(reason) {
     showSessionModal({
-      titleText: 'CHALLENGE',
-      copyHtml: escapeHtml(reason),
+      titleText: 'THE CHALLENGE',
+      copyHtml: state.bestRun
+        ? `Your best lap so far is ${formatChallengeTime(state.bestRun.time)}. Keep racing or add it to the challenge and share.`
+        : escapeHtml(reason),
+      extraHtml: racerSummaryHtml(state.challenge),
       className: 'paused',
       actionList: [
         { label: 'RESUME', primary: true, action: resumeRace },
         { label: 'RESTART LAP', action: restartFromPause },
-        { label: 'GIVE UP', destructive: true, action: showGiveUpConfirm },
+        { label: 'SHARE', share: true, action: shareFromChallengeMenu },
         { label: 'ABOUT TURN', kind: 'quiet', action: () => showAbout(() => showChallengeMenuView(reason)) }
       ]
     });
+  }
+
+  function shareFromChallengeMenu() {
+    if (!state.bestRun) {
+      showNoLapYet();
+      return;
+    }
+    state.phase = 'result';
+    state.scene?.setPhase('result');
+    hideRaceUi();
+    ui.hideRaceChrome();
+    document.body.classList.remove('yourturn-racing');
+    document.body.classList.add('yourturn-preview');
+    state.paused = false;
+    showShareResult(state.bestRun);
   }
 
   function resumeRace() {
@@ -456,12 +481,13 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     state.backgroundPaused = false;
     runtime.state.lastFrame = performance.now();
     animation.resume();
+    showRaceUi(runtime.state.sensorMode);
     ui.showRaceChrome();
   }
 
   function restartFromPause() {
     document.querySelector('#resetButton')?.click();
-    useChallengeAsOnlyOpponent();
+    useChallengeField();
     state.phase = 'staged';
     state.scene.setPhase('staged');
     resumeRace();
@@ -473,10 +499,10 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     state.paused = false;
     document.body.classList.remove('yourturn-preview');
     document.body.classList.add('yourturn-racing');
-    useChallengeAsOnlyOpponent();
+    useChallengeField();
     showRaceUi(runtime.state.sensorMode);
     document.querySelector('#resetButton')?.click();
-    useChallengeAsOnlyOpponent();
+    useChallengeField();
     state.phase = 'staged';
     state.scene.setPhase('staged');
     runtime.state.lastFrame = performance.now();
@@ -488,7 +514,7 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     runtime.setGameMode(GAME_MODE.STAGED);
     runtime.state.velocity.set(0, 0, 0);
     stopDrivingInputs();
-    useChallengeAsOnlyOpponent();
+    useChallengeField();
     state.scene?.setPhase(scenePhase);
     hideRaceUi();
     ui.hideRaceChrome();
@@ -519,8 +545,8 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
       extraHtml: aboutTurnHtml(),
       className: 'about',
       actionList: [
-        { label: 'BACK', primary: true, action: returnAction },
-        { label: 'GET FULL TURN', navigation: true, action: openFullTurn }
+        { label: 'BACK', back: true, action: returnAction },
+        { label: 'GET THE GAME', game: true, action: openFullTurn }
       ]
     });
   }
@@ -546,7 +572,7 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     if (event.detail?.reason === 'race-reset') {
       state.phase = 'staged';
       state.scene?.setPhase('staged');
-      useChallengeAsOnlyOpponent();
+      useChallengeField();
     }
   }
 
@@ -565,11 +591,11 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     }
   }
 
-  function useChallengeAsOnlyOpponent() {
-    runtime.state.competitorLaps = state.challengeLap ? [state.challengeLap] : [];
+  function useChallengeField() {
+    runtime.state.competitorLaps = state.challengeLaps.map((lap) => ({ ...lap, frames: lap.frames.map((frame) => ({ ...frame })) }));
     syncPrimaryRivalState(runtime.state);
     runtime.syncCompetitorVisuals?.();
-    runtime.setRacePosition?.(null, state.challengeLap ? 2 : 1);
+    runtime.setRacePosition?.(null, state.challengeLaps.length + 1);
   }
 
   function stopDrivingInputs() {
@@ -607,16 +633,15 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
   return Object.freeze({ launch, getState: () => state });
 }
 
-function challengeToLap(challenge) {
+function racerToLap(racer) {
   return {
-    time: challenge.time,
+    time: racer.time,
     hitAt: null,
-    challengeId: 'yourturn-opponent',
-    challengerName: challenge.challengerName,
-    carId: challenge.carId,
-    carColor: challenge.carColor,
-    carSecondaryColor: challenge.carSecondaryColor,
-    frames: challenge.frames.map((frame) => ({ ...frame }))
+    challengeId: `yourturn-${racer.id}`,
+    racerId: racer.id,
+    challengerName: racer.name,
+    carId: null,
+    frames: racer.frames.map((frame) => ({ ...frame }))
   };
 }
 
@@ -626,6 +651,34 @@ function challengeVehicle(challenge) {
     color: challenge.carColor,
     secondaryColor: challenge.carSecondaryColor
   };
+}
+
+function racerSummaryHtml(challenge) {
+  if (!challenge?.racers?.length) return '';
+  return `<div class="yourturn-racer-summary" aria-label="Cars in this challenge">${challenge.racers.map((racer, index) => `
+    <span${index === 0 ? ' data-leader="true"' : ''}>
+      <b>${escapeHtml(racer.name)}</b>
+      <small>${formatChallengeTime(racer.time)}</small>
+    </span>`).join('')}</div>`;
+}
+
+function joinRacerNames(racers) {
+  const names = racers.map((racer) => racer.name);
+  if (names.length <= 1) return names[0] || '';
+  if (names.length === 2) return `${names[0]} and ${names[1]}`;
+  return `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`;
+}
+
+function loadOrCreateRacerId() {
+  try {
+    const existing = localStorage.getItem(RACER_ID_KEY);
+    if (existing) return existing;
+    const created = createRacerId();
+    localStorage.setItem(RACER_ID_KEY, created);
+    return created;
+  } catch (_) {
+    return createRacerId();
+  }
 }
 
 function showRaceUi(sensorMode) {
