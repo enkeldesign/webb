@@ -29,6 +29,16 @@ export const MOCK_CHALLENGES = Object.freeze({
     carSecondaryColor: '#fff8e8',
     label: 'ALEX · Countryside · 0:16.250'
   }),
+  'erik-seed-r1': Object.freeze({
+    id: 'erik-seed-r1',
+    challengerName: 'ERIK',
+    trackId: 'countryside',
+    time: 18.75,
+    carId: 'sedan-sports',
+    carColor: '#ffd1e6',
+    carSecondaryColor: '#252a35',
+    label: 'ERIK · START A FAMILY CHAIN'
+  }),
   'friends-countryside-r1': Object.freeze({
     id: 'friends-countryside-r1',
     challengerName: 'ARVID',
