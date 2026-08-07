@@ -2,6 +2,7 @@ import { aboutTurnHtml as sharedAboutTurnHtml } from '/turn/content/about-turn.j
 import { normalizeChallengeName } from '/yourturn/protocol.js?revision=r3';
 
 const PLAYER_NAME_KEY = 'yourturn-player-name-v1';
+const NAME_REQUIRED_MESSAGE = 'Write your name before sharing.';
 const PAUSE_ICON = `
   <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
     <rect x="6" y="5" width="4" height="14" rx="1"></rect>
@@ -40,6 +41,12 @@ export function createYourTurnUi() {
     if (document.body.classList.contains('yourturn-active')) event.preventDefault();
   });
 
+  nameInput.addEventListener('input', () => {
+    if (!normalizeChallengeName(nameInput.value, '')) return;
+    nameInput.removeAttribute('aria-invalid');
+    if (status.textContent === NAME_REQUIRED_MESSAGE) status.textContent = '';
+  });
+
   function showModal({
     kickerText = 'YOUR TURN',
     titleText,
@@ -64,6 +71,8 @@ export function createYourTurnUi() {
     motionToggle.hidden = !motionControl;
 
     nameField.hidden = !requestName;
+    nameInput.required = requestName;
+    nameInput.removeAttribute('aria-invalid');
     if (requestName) {
       // Names are intentionally entered afresh at each share. A stable anonymous
       // racer ID handles identity; the visible name remains a deliberate message.
@@ -82,13 +91,32 @@ export function createYourTurnUi() {
       if (action.share) button.classList.add('is-share');
       if (action.game) button.classList.add('is-game');
       if (action.back) button.classList.add('is-back');
-      button.addEventListener('click', action.action);
+      button.addEventListener('click', (event) => {
+        if (requestName && action.share && !validateRequestedName()) return;
+        action.action(event);
+      });
       actions.appendChild(button);
     }
 
     if (typeof dialog.showModal === 'function' && !dialog.open) dialog.showModal();
     else dialog.setAttribute('open', '');
     actions.querySelector('.is-primary, .is-share, button')?.focus();
+  }
+
+  function validateRequestedName() {
+    const name = normalizeChallengeName(nameInput.value, '');
+    if (name) {
+      nameInput.removeAttribute('aria-invalid');
+      return true;
+    }
+    nameInput.setAttribute('aria-invalid', 'true');
+    status.textContent = NAME_REQUIRED_MESSAGE;
+    try {
+      nameInput.focus({ preventScroll: false });
+    } catch (_) {
+      nameInput.focus();
+    }
+    return false;
   }
 
   function closeModal() {
