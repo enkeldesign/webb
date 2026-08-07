@@ -1,0 +1,103 @@
+.yourturn-actions button.is-share {
+  background: #ff4fa3;
+}
+
+.yourturn-actions button.is-game {
+  background: #38d9ff;
+}
+
+.yourturn-actions button.is-back {
+  background: #ff9b66;
+}
+
+.yourturn-racer-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 4px;
+}
+
+.yourturn-racer-summary > span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 6px 9px;
+  border: 3px solid #08090a;
+  border-radius: 999px;
+  background: #fff8e8;
+  box-shadow: 3px 3px 0 #08090a;
+  font-size: 0.82rem;
+  line-height: 1;
+}
+
+.yourturn-racer-summary > span[data-leader="true"] {
+  background: #ffd43b;
+}
+
+.yourturn-racer-summary b {
+  font-weight: 1000;
+}
+
+.yourturn-racer-summary small {
+  font-size: 0.75rem;
+  font-weight: 850;
+}
+
+.yourturn-racer-labels {
+  position: fixed;
+  z-index: 850;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.yourturn-racer-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: 150px;
+  padding: 4px 8px;
+  border: 2px solid #08090a;
+  border-radius: 999px;
+  background: rgb(255 248 232 / 0.92);
+  color: #08090a;
+  box-shadow: 2px 2px 0 #08090a;
+  font-size: clamp(0.64rem, 1.3vw, 0.82rem);
+  font-weight: 1000;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  will-change: transform;
+}
+
+.yourturn-racer-label[hidden] {
+  display: none;
+}
+
+.yourturn-dialog[open] ~ .yourturn-racer-labels .yourturn-racer-label {
+  opacity: 0.72;
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .yourturn-racer-summary {
+    gap: 5px;
+  }
+
+  .yourturn-racer-summary > span {
+    padding: 4px 7px;
+    border-width: 2px;
+    box-shadow: 2px 2px 0 #08090a;
+    font-size: 0.72rem;
+  }
+
+  .yourturn-racer-summary small {
+    font-size: 0.66rem;
+  }
+
+  .yourturn-racer-label {
+    padding: 3px 6px;
+    border-width: 2px;
+    font-size: 0.65rem;
+  }
+}
