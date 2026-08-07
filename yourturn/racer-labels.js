@@ -20,15 +20,18 @@ export function installRacerLabels(runtime, getSessionState) {
 
   function syncLabels(state) {
     const laps = state?.challengeLaps || [];
-    const playerOrder = resolvePlayerOrder(state, laps);
-    const nextSignature = `${laps.map((lap) => `${lap.racerId}:${lap.challengerName}:${lap.challengeOrder}`).join('|')}|you:${playerOrder}`;
+    const playerOrder = resolvePlayerOrder(state);
+    const nextSignature = `${laps.map((lap, index) => {
+      const order = racerOrder(state, lap.racerId, index + 1);
+      return `${lap.racerId}:${lap.challengerName}:${order}`;
+    }).join('|')}|you:${playerOrder}`;
     if (nextSignature === signature) return;
     signature = nextSignature;
     root.replaceChildren();
 
     labels = laps.map((lap, index) => {
       const label = document.createElement('span');
-      const order = lap.challengeOrder || index + 1;
+      const order = racerOrder(state, lap.racerId, index + 1);
       label.className = `yourturn-racer-label yourturn-order-${colorOrder(order)}`;
       label.textContent = lap.challengerName || 'TURN PLAYER';
       root.appendChild(label);
@@ -92,10 +95,13 @@ export function installRacerLabels(runtime, getSessionState) {
   return root;
 }
 
-function resolvePlayerOrder(state, laps) {
-  const ownLap = laps.find((lap) => lap.racerId && lap.racerId === state?.racerId);
-  if (ownLap?.challengeOrder) return ownLap.challengeOrder;
-  return state?.challenge?.nextOrder || Math.min(MAX_ORDER_COLOR, laps.length + 1);
+function racerOrder(state, racerId, fallback) {
+  return state?.challenge?.racers?.find((racer) => racer.id === racerId)?.order || fallback;
+}
+
+function resolvePlayerOrder(state) {
+  const ownRacer = state?.challenge?.racers?.find((racer) => racer.id === state?.racerId);
+  return ownRacer?.order || state?.challenge?.nextOrder || 1;
 }
 
 function colorOrder(order) {
