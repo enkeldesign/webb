@@ -1,0 +1,296 @@
+.turn-yourturn-track-slot {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+.m8-track-rail .turn-yourturn-track-slot {
+  flex: 0 0 clamp(350px, 40vw, 590px);
+  width: clamp(350px, 40vw, 590px);
+  min-height: clamp(220px, 36vh, 400px);
+  scroll-snap-align: start;
+}
+
+.m8-track-rail .turn-yourturn-track-slot > .track-card {
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+  scroll-snap-align: none;
+}
+
+.m8-home-fixed-layout .m8-track-rail .turn-yourturn-track-slot {
+  width: 100%;
+  min-height: clamp(180px, 27vh, 260px);
+  scroll-snap-align: start;
+}
+
+.m8-home-fixed-layout .m8-track-rail .turn-yourturn-track-slot > .track-card {
+  min-height: inherit;
+}
+
+.turn-yourturn-track-share,
+.lap-result-yourturn-share {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 4px solid #08090a;
+  border-radius: 50%;
+  background: #fff8e8;
+  color: #08090a;
+  box-shadow: 5px 5px 0 #08090a;
+  touch-action: manipulation;
+}
+
+.turn-yourturn-track-share {
+  position: absolute;
+  z-index: 4;
+  right: 16px;
+  bottom: 16px;
+  width: clamp(46px, 4.6vw, 58px);
+  height: clamp(46px, 4.6vw, 58px);
+}
+
+.turn-yourturn-track-share[hidden],
+.lap-result-yourturn-share[hidden] {
+  display: none !important;
+}
+
+.turn-yourturn-track-share svg,
+.lap-result-yourturn-share svg {
+  width: 58%;
+  height: 58%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.turn-yourturn-track-share:hover,
+.lap-result-yourturn-share:hover {
+  transform: translateY(-2px);
+}
+
+.turn-yourturn-track-share:active,
+.lap-result-yourturn-share:active {
+  transform: translate(4px, 4px);
+  box-shadow: 1px 1px 0 #08090a;
+}
+
+.turn-yourturn-track-share:focus-visible,
+.lap-result-yourturn-share:focus-visible {
+  outline: 5px solid #38d9ff;
+  outline-offset: 4px;
+}
+
+.lap-result-toast.has-yourturn-share {
+  padding-right: 72px;
+}
+
+.lap-result-yourturn-share {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  right: 12px;
+  width: 48px;
+  height: 48px;
+  transform: translateY(-50%);
+  pointer-events: auto;
+  box-shadow: 4px 4px 0 #08090a;
+}
+
+.lap-result-yourturn-share:hover {
+  transform: translateY(calc(-50% - 2px));
+}
+
+.lap-result-yourturn-share:active {
+  transform: translate(4px, calc(-50% + 4px));
+}
+
+.turn-yourturn-share-dialog {
+  width: min(690px, calc(100vw - 28px));
+  max-height: calc(100dvh - 28px);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #08090a;
+}
+
+.turn-yourturn-share-dialog::backdrop {
+  background: rgb(8 9 10 / 0.58);
+  backdrop-filter: blur(4px);
+}
+
+.turn-yourturn-share-card {
+  box-sizing: border-box;
+  max-height: calc(100dvh - 28px);
+  overflow: auto;
+  padding: clamp(18px, 3vw, 28px);
+  border: 5px solid #08090a;
+  border-radius: 26px;
+  background: #fff8e8;
+  box-shadow: 10px 10px 0 #08090a;
+}
+
+.turn-yourturn-share-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.turn-yourturn-share-head span {
+  display: block;
+  margin-bottom: 4px;
+  color: #6b3fa0;
+  font-size: .78rem;
+  font-weight: 1000;
+  letter-spacing: .14em;
+}
+
+.turn-yourturn-share-head h2 {
+  margin: 0;
+  font-size: clamp(2rem, 6vw, 4rem);
+  line-height: .9;
+  letter-spacing: -.05em;
+}
+
+.turn-yourturn-share-close {
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 4px solid #08090a;
+  border-radius: 50%;
+  background: #ff9b66;
+  color: #08090a;
+  box-shadow: 4px 4px 0 #08090a;
+  font: 1000 1.7rem/1 system-ui, sans-serif;
+}
+
+.turn-yourturn-share-details {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+  margin-bottom: 14px;
+  padding: 10px 13px;
+  border: 4px solid #08090a;
+  border-radius: 16px;
+  background: #ffd43b;
+  font-weight: 900;
+}
+
+.turn-yourturn-share-details strong {
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+}
+
+.turn-yourturn-share-copy {
+  margin: 0 0 16px;
+  font-weight: 750;
+  line-height: 1.3;
+}
+
+.turn-yourturn-share-name {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 10px;
+  font-weight: 900;
+}
+
+.turn-yourturn-share-name input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 48px;
+  padding: 9px 12px;
+  border: 4px solid #08090a;
+  border-radius: 12px;
+  background: #fff;
+  color: #08090a;
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.turn-yourturn-share-name input::placeholder {
+  color: #666;
+  opacity: 1;
+}
+
+.turn-yourturn-share-status {
+  min-height: 1.25em;
+  margin: 0 0 10px;
+  font-size: .86rem;
+  font-weight: 800;
+}
+
+.turn-yourturn-share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.turn-yourturn-share-actions button {
+  min-height: 48px;
+  padding: 10px 18px;
+  border: 4px solid #08090a;
+  border-radius: 14px;
+  color: #08090a;
+  box-shadow: 5px 5px 0 #08090a;
+  font: inherit;
+  font-weight: 1000;
+}
+
+.turn-yourturn-share-submit {
+  background: #ff4fa3;
+}
+
+.turn-yourturn-share-back {
+  background: #ff9b66;
+}
+
+.turn-yourturn-share-actions button:focus-visible,
+.turn-yourturn-share-close:focus-visible,
+.turn-yourturn-share-name input:focus-visible {
+  outline: 5px solid #38d9ff;
+  outline-offset: 4px;
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .turn-yourturn-share-card {
+    padding: 14px 17px;
+    border-width: 4px;
+  }
+
+  .turn-yourturn-share-head {
+    margin-bottom: 9px;
+  }
+
+  .turn-yourturn-share-head h2 {
+    font-size: clamp(1.7rem, 5vw, 2.7rem);
+  }
+
+  .turn-yourturn-share-details,
+  .turn-yourturn-share-copy,
+  .turn-yourturn-share-name {
+    margin-bottom: 8px;
+  }
+
+  .turn-yourturn-share-name input,
+  .turn-yourturn-share-actions button {
+    min-height: 40px;
+  }
+
+  .turn-yourturn-track-share {
+    right: 11px;
+    bottom: 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .turn-yourturn-share-dialog::backdrop {
+    backdrop-filter: none;
+  }
+}
