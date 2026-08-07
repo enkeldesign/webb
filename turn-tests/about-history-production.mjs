@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
 const [
+  releaseSource,
   productionEntry,
   nextEntry,
   bootstrapEntry,
@@ -14,6 +15,7 @@ const [
   designReference,
   designNavigation
 ] = await Promise.all([
+  fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/about-history-bootstrap.js', import.meta.url), 'utf8'),
@@ -26,6 +28,8 @@ const [
   fs.readFile(new URL('../turn/design-dialogs.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/design-navigation.css', import.meta.url), 'utf8')
 ]);
+
+const release = JSON.parse(releaseSource);
 
 assert.match(productionEntry, /about-history-bootstrap-r165\.js\?build=20260806-r161-r167-changelog-order/,
   'The public website must load the newest-first browser-aware About implementation directly');
@@ -105,8 +109,12 @@ assert.match(content, /18–19 July 2026/);
 assert.match(content, /Current stabilization/);
 assert.match(content, /18 July 2026/);
 assert.match(content, /5 August/);
-assert.match(content, /TURN 1\.5\.1/);
-assert.match(content, /2026\.08\.05-r160/);
+assert.match(content, /TURN 1\.5\.1/,
+  'History must retain the previous 1.5.1 milestone');
+assert.match(content, new RegExp(`TURN ${escapeRegex(release.version)}`),
+  'History must name the canonical current release');
+assert.match(content, new RegExp(escapeRegex(release.id)),
+  'History must name the canonical current build');
 assert.match(content, /one oh one/);
 assert.match(content, /28 achievements and 1,700 available trophies/);
 assert.match(content, /SAVE BELLA!/);
@@ -168,3 +176,7 @@ assert.match(designNavigation, /\.section-nav\.design-section-nav/);
 assert.match(designNavigation, /prefers-reduced-motion: reduce/);
 
 console.log('TURN website About, history, dialog system and design-system navigation regression passed.');
+
+function escapeRegex(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
