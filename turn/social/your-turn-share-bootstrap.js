@@ -1,21 +1,22 @@
 import { installYourTurnShare } from './your-turn-share.js?revision=r1';
 
-function waitForHome() {
-  const existing = document.querySelector('.m8-home-fixed-layout');
-  if (existing) return Promise.resolve(existing);
+function waitForHomeLayout() {
+  if (globalThis.__turnHomeLayout?.home) return Promise.resolve(globalThis.__turnHomeLayout.home);
 
   return new Promise((resolve) => {
-    const observer = new MutationObserver(() => {
-      const home = document.querySelector('.m8-home-fixed-layout');
-      if (!home) return;
-      observer.disconnect();
-      resolve(home);
-    });
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+    const check = () => {
+      const home = globalThis.__turnHomeLayout?.home;
+      if (home) {
+        resolve(home);
+        return;
+      }
+      requestAnimationFrame(check);
+    };
+    requestAnimationFrame(check);
   });
 }
 
-waitForHome()
+waitForHomeLayout()
   .then((home) => installYourTurnShare({ home }))
   .catch((error) => {
     console.error('TURN: YOUR TURN sharing could not start.', error);
