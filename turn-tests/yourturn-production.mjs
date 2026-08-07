@@ -52,7 +52,7 @@ assert.match(indexSource, /session\.js\?revision=r3[^\n]*session\.js\?revision=r
   'The page must cache-bust the new growing-challenge session even though app.js stays canonical');
 assert.match(indexSource, /Your name in the challenge/);
 assert.match(indexSource, /id="yourTurnChallengeButton"[\s\S]*>THE CHALLENGE<\/button>/);
-assert.match(indexSource, /The race starts when you cross the starting line\./);
+assert.match(indexSource, /Press Gas, Drift or Boost to start the race\./);
 assert.doesNotMatch(indexSource, /manifest|install-gate/i,
   'YOUR TURN remains browser-first rather than a PWA install gate');
 
