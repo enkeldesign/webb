@@ -1,0 +1,4 @@
+html[data-turn-deployment="yourturn"] .yourturn-card[data-view="about"] a,
+html[data-turn-deployment="yourturn"] .yourturn-card[data-view="about"] a:visited {
+  color: #08090a;
+}
