@@ -9,7 +9,7 @@ on:
       - 'turn-next/**'
       - 'yourturn/**'
       - 'turn-tests/challenge-*.mjs'
-      - 'turn-tests/yourturn-production.mjs'
+      - 'turn-tests/yourturn-*.mjs'
       - '.github/workflows/turn-challenge-tests.yml'
   push:
     branches:
@@ -18,7 +18,7 @@ on:
       - 'turn-next/**'
       - 'yourturn/**'
       - 'turn-tests/challenge-*.mjs'
-      - 'turn-tests/yourturn-production.mjs'
+      - 'turn-tests/yourturn-*.mjs'
       - '.github/workflows/turn-challenge-tests.yml'
 
 permissions:
@@ -47,6 +47,9 @@ jobs:
 
       - name: Run YOUR TURN recipient contract
         run: node turn-tests/yourturn-production.mjs
+
+      - name: Run YOUR TURN start-grid and social-preview regression
+        run: node turn-tests/yourturn-start-grid-production.mjs
 
       - name: Verify TURN NEXT parity wrapper
         run: node turn-next/scripts/build-parity-app.mjs --check
