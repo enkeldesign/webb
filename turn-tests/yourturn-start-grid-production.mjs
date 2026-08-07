@@ -4,32 +4,53 @@ import {
   challengeFromLap,
   challengeWithLap,
   decodeChallenge,
-  encodeChallenge,
-  makeChallengeUrl
+  encodeChallenge
 } from '../yourturn/protocol.js';
 
-const [indexSource, sceneSource, labelsSource, bootstrapSource, colorsSource, cssSource, uiSource, mockSource] = await Promise.all([
+const [
+  indexSource,
+  labelsSource,
+  bootstrapSource,
+  colorsSource,
+  cssSource,
+  uiSource,
+  mockSource,
+  startGateSource,
+  socialProtocolSource
+] = await Promise.all([
   fs.readFile(new URL('../yourturn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../yourturn/scene.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/racer-labels.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/racer-labels-bootstrap.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/racer-colors.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/growing-challenge.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/ui.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../yourturn/mock-challenges.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../yourturn/mock-challenges.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../yourturn/start-gate.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../yourturn/protocol-social.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(sceneSource, /rivalCount > 1/);
-assert.match(sceneSource, /const totalCars = rivalCount \+ 1/);
-assert.match(sceneSource, /const playerSlot = Math\.floor\(\(totalCars - 1\) \/ 2\)/,
+assert.match(indexSource, /start-gate\.js\?revision=r1/);
+assert.match(indexSource, /Press Gas, Drift or Boost to start the race\./);
+assert.match(startGateSource, /sessionState\.phase === 'staged'/);
+assert.match(startGateSource, /renderStartGrid/);
+assert.match(startGateSource, /const playerSlot = Math\.floor\(\(totalCars - 1\) \/ 2\)/,
   'The player belongs in the middle or left-middle start slot');
-assert.match(sceneSource, /for \(let index = 0; index < competitorCars\.length; index \+= 1\)/,
-  'Every rival car must be explicitly staged in a multi-car start row');
-assert.match(bootstrapSource, /state\.challengeLaps\.length > 1[^\n]*state\.challengeLap = null/,
-  'The single-rival smart start-line adapter must stand down for multi-car rows');
+assert.match(startGateSource, /runtime\.state\.velocity\.set\(0, 0, 0\)/,
+  'Cars must stand still while waiting for the start input');
+assert.match(startGateSource, /#gasButton, \.drive-drift-zone, \.drive-boost-zone/,
+  'Gas, Drift and Boost are the explicit race-start intents');
+assert.match(startGateSource, /beginTimedLapState/,
+  'The first forward control must start canonical lap timing immediately');
+assert.match(startGateSource, /LAUNCH_BLEND_SECONDS = 0\.9/,
+  'Rivals should merge smoothly from their side-by-side start slots into recorded trajectories');
 
-assert.match(labelsSource, /\( YOU \)/);
+assert.match(labelsSource, /playerLabel\.textContent = 'YOU'/);
+assert.doesNotMatch(labelsSource, /\( YOU \)/);
 assert.match(labelsSource, /ownRacer\?\.order \|\| state\?\.challenge\?\.nextOrder/);
+assert.match(bootstrapSource, /requestAnimationFrame\(bootstrap\)/,
+  'Name-plate bootstrap must keep waiting on slow cold starts');
+assert.doesNotMatch(bootstrapSource, /FRAME_LIMIT/,
+  'Name plates must not silently give up before a slow runtime finishes loading');
 assert.match(colorsSource, /'#ffd1e6'[\s\S]*'#bdeeff'[\s\S]*'#c8f5d0'[\s\S]*'#fff0a8'[\s\S]*'#ffd0ae'/);
 assert.match(colorsSource, /lap\.carColor = colorForOrder/);
 assert.match(colorsSource, /raceSession\.selectVehicle/,
@@ -53,6 +74,12 @@ assert.match(indexSource, /property="og:image:width" content="1200"/);
 assert.match(indexSource, /property="og:image:height" content="630"/);
 assert.match(indexSource, /name="twitter:card" content="summary_large_image"/);
 assert.match(indexSource, /rel="image_src"/);
+assert.match(indexSource, /protocol-social\.js\?revision=r1/,
+  'Runtime sharing must use the OG-stable URL adapter');
+assert.match(socialProtocolSource, /url\.searchParams\.set\('share', '1'\)/);
+assert.match(socialProtocolSource, /fragment\.set\('challenge', String\(encoded \|\| ''\)\)/);
+assert.doesNotMatch(socialProtocolSource, /searchParams\.set\('c', encoded\)/,
+  'Large replay payloads must not be sent to social-preview servers in the query string');
 
 const lap = (time, offset = 0) => ({
   time,
@@ -97,7 +124,7 @@ assert.deepEqual(
   chain.racers.map(({ id, order }) => [id, order]),
   'Join order must survive a real challenge-link round trip'
 );
-const url = makeChallengeUrl(encoded);
-assert.ok(url.length < 8000, `A four-rival query URL must stay below common request-line limits for reliable OG previews; got ${url.length}`);
+assert.ok(encoded.length > 100,
+  'The OG adapter test must use a meaningful self-contained replay payload');
 
-console.log('YOUR TURN full start grid, ordered colors, name entry and social-preview regression passed.');
+console.log('YOUR TURN fixed start gate, reliable labels, ordered colors and OG-stable sharing regression passed.');
