@@ -107,7 +107,7 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
 
   function setChallenge(challenge) {
     state.challenge = normalizeChallenge(challenge);
-    state.challengeLaps = state.challenge.racers.map(racerToLap);
+    state.challengeLaps = state.challenge.racers.map((racer) => racerToLap(racer, state.challenge));
     state.challengeLap = state.challengeLaps[0] || null;
   }
 
@@ -134,35 +134,50 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
   }
 
   function materializeMockChallenge(definition) {
-    const frames = runtime.samples.map((sample, index, samples) => {
-      const denominator = Math.max(1, samples.length - 1);
-      const previous = samples[(index - 2 + samples.length) % samples.length];
-      const next = samples[(index + 2) % samples.length];
-      const previousHeading = Math.atan2(previous.tangent.x, previous.tangent.z);
-      const nextHeading = Math.atan2(next.tangent.x, next.tangent.z);
-      const steering = normalizeAngle(nextHeading - previousHeading) * 3.2;
-      return {
-        t: definition.time * index / denominator,
-        x: sample.point.x,
-        z: sample.point.z,
-        h: Math.atan2(sample.tangent.x, sample.tangent.z),
-        s: THREE.MathUtils.clamp(steering, -1, 1),
-        d: Math.min(1, Math.abs(steering) * 0.75),
-        p: index / denominator
-      };
-    });
+    const mockRacers = Array.isArray(definition.racers) && definition.racers.length
+      ? definition.racers
+      : [{
+        id: `mock-${definition.id}`,
+        name: definition.challengerName,
+        time: definition.time,
+        laneOffset: 0
+      }];
+    const racers = mockRacers.map((racer) => ({
+      id: racer.id,
+      name: racer.name,
+      time: racer.time,
+      frames: runtime.samples.map((sample, index, samples) => {
+        const denominator = Math.max(1, samples.length - 1);
+        const previous = samples[(index - 2 + samples.length) % samples.length];
+        const next = samples[(index + 2) % samples.length];
+        const previousHeading = Math.atan2(previous.tangent.x, previous.tangent.z);
+        const nextHeading = Math.atan2(next.tangent.x, next.tangent.z);
+        const steering = normalizeAngle(nextHeading - previousHeading) * 3.2;
+        const normal = sample.normal || new THREE.Vector3(-sample.tangent.z, 0, sample.tangent.x).normalize();
+        const laneOffset = Number(racer.laneOffset) || 0;
+        return {
+          t: racer.time * index / denominator,
+          x: sample.point.x + normal.x * laneOffset,
+          z: sample.point.z + normal.z * laneOffset,
+          h: Math.atan2(sample.tangent.x, sample.tangent.z),
+          s: THREE.MathUtils.clamp(steering, -1, 1),
+          d: Math.min(1, Math.abs(steering) * 0.75),
+          p: index / denominator
+        };
+      })
+    }));
     const track = getTrackDefinition(definition.trackId);
     return normalizeChallenge({
-      v: 1,
-      challengerName: definition.challengerName,
+      v: 2,
+      chainId: `yt-mock-${definition.id}`,
+      sharedBy: racers[0].id,
       trackId: definition.trackId,
       trackRevision: getTrackStorageRevision(definition.trackId),
       trackName: track.name,
-      time: definition.time,
       carId: definition.carId,
       carColor: definition.carColor,
       carSecondaryColor: definition.carSecondaryColor,
-      frames
+      racers
     });
   }
 
@@ -356,12 +371,16 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     const leader = challengeLeader(state.challenge);
     const ahead = leader.time - candidate.time;
     const won = ahead > 0;
+    const previousSelf = state.challenge.racers.find((racer) => racer.id === state.racerId);
+    const keepingPrevious = previousSelf && previousSelf.time <= candidate.time;
     showSessionModal({
       titleText: won ? `YOU BEAT ${leader.name}` : 'YOUR BEST LAP',
       detailsHtml: `
         <strong>${formatChallengeTime(candidate.time)}</strong>
         <span>${won ? `${ahead.toFixed(3)} seconds ahead` : `${Math.abs(ahead).toFixed(3)} seconds behind ${escapeHtml(leader.name)}`}</span>`,
-      copyHtml: 'Add your car to this challenge and send it on. If you are already in the challenge, only your faster run is kept.',
+      copyHtml: keepingPrevious
+        ? `Your earlier ${formatChallengeTime(previousSelf.time)} car is still faster, so that run will stay in the challenge when you share.`
+        : 'Add your car to this challenge and send it on. If you are already in the challenge, this faster run replaces your earlier car.',
       requestName: true,
       className: 'result',
       actionList: [
@@ -471,7 +490,11 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     ui.hideRaceChrome();
     document.body.classList.remove('yourturn-racing');
     document.body.classList.add('yourturn-preview');
+    // Opening THE CHALLENGE deliberately hard-paused the race. Carry that paused
+    // state into the result preview so the top-right control truthfully shows Play.
+    state.ambientPaused = true;
     state.paused = false;
+    ui.setMotionPaused(true);
     showShareResult(state.bestRun);
   }
 
@@ -592,7 +615,10 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
   }
 
   function useChallengeField() {
-    runtime.state.competitorLaps = state.challengeLaps.map((lap) => ({ ...lap, frames: lap.frames.map((frame) => ({ ...frame })) }));
+    runtime.state.competitorLaps = state.challengeLaps.map((lap) => ({
+      ...lap,
+      frames: lap.frames.map((frame) => ({ ...frame }))
+    }));
     syncPrimaryRivalState(runtime.state);
     runtime.syncCompetitorVisuals?.();
     runtime.setRacePosition?.(null, state.challengeLaps.length + 1);
@@ -633,14 +659,16 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
   return Object.freeze({ launch, getState: () => state });
 }
 
-function racerToLap(racer) {
+function racerToLap(racer, challenge) {
   return {
     time: racer.time,
     hitAt: null,
     challengeId: `yourturn-${racer.id}`,
     racerId: racer.id,
     challengerName: racer.name,
-    carId: null,
+    carId: challenge.carId,
+    carColor: challenge.carColor,
+    carSecondaryColor: challenge.carSecondaryColor,
     frames: racer.frames.map((frame) => ({ ...frame }))
   };
 }
