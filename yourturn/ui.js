@@ -1,4 +1,4 @@
-import { normalizeChallengeName } from '/yourturn/protocol.js?revision=r2';
+import { normalizeChallengeName } from '/yourturn/protocol.js?revision=r3';
 
 const PLAYER_NAME_KEY = 'yourturn-player-name-v1';
 const PAUSE_ICON = `
@@ -73,13 +73,16 @@ export function createYourTurnUi() {
       if (action.primary) button.classList.add('is-primary');
       if (action.destructive) button.classList.add('is-destructive');
       if (action.navigation) button.classList.add('is-navigation');
+      if (action.share) button.classList.add('is-share');
+      if (action.game) button.classList.add('is-game');
+      if (action.back) button.classList.add('is-back');
       button.addEventListener('click', action.action);
       actions.appendChild(button);
     }
 
     if (typeof dialog.showModal === 'function' && !dialog.open) dialog.showModal();
     else dialog.setAttribute('open', '');
-    actions.querySelector('.is-primary, button')?.focus();
+    actions.querySelector('.is-primary, .is-share, button')?.focus();
   }
 
   function closeModal() {
@@ -189,6 +192,6 @@ function loadPlayerName() {
   try {
     return normalizeChallengeName(localStorage.getItem(PLAYER_NAME_KEY));
   } catch (_) {
-    return 'A TURN PLAYER';
+    return 'YOUR NAME';
   }
 }
