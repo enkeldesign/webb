@@ -34,6 +34,24 @@
       key: proto.key
     });
 
+    // YOUR TURN isolates gameplay records, but the lightweight social racer
+    // profile intentionally belongs to TURN as a whole. Expose a tiny raw local
+    // storage bridge before patching Storage so /turn and /yourturn can share
+    // that convenience identity when they happen to run in the same browser
+    // storage context. Cross-browser/webview identity still relies on explicit
+    // player confirmation in the challenge UI.
+    globalThis.__TURN_SHARED_LOCAL_STORAGE__ = Object.freeze({
+      getItem(key) {
+        return native.getItem.call(localStorageRef, String(key));
+      },
+      setItem(key, value) {
+        return native.setItem.call(localStorageRef, String(key), String(value));
+      },
+      removeItem(key) {
+        return native.removeItem.call(localStorageRef, String(key));
+      }
+    });
+
     function prefixFor(storage) {
       if (storage === localStorageRef) return LOCAL_PREFIX;
       if (storage === sessionStorageRef) return SESSION_PREFIX;
