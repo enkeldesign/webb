@@ -154,7 +154,7 @@ assert.match(indexSource,
   /<script type="module" src="\.\/testing\/admin-unlock-sequence\.js\?revision=r176-admin-rewards"><\/script>/,
   'The production entry must publish the rewards-only recognizer with a fresh cache identity');
 assert.match(indexSource,
-  /src="\.\/live-steering-setting\.js\?build=20260805-r160-live-steering"/,
+  /src="\.\/live-steering-setting\.js\?build=20260806-r161-live-steering"/,
   'The hidden recognizer must not disturb the canonical steering entry');
 
 console.log('TURN rewards-only admin unlock regression passed.');
