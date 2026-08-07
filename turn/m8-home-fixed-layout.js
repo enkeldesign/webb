@@ -154,11 +154,6 @@ export async function installM8HomeFixedLayout() {
   const driveByEarTraining = await installDriveByEarTraining(globalThis.__turnRuntime);
   installDriveByEarSpokenLabels(driveByEarTraining);
 
-  const { installYourTurnShare } = await import(
-    `/turn/social/your-turn-share.js?build=${buildKey}-yourturn-share-r1`
-  );
-  const yourTurnShare = await installYourTurnShare({ home });
-
   globalThis.__turnHomeLayout = Object.freeze({
     id: LAYOUT_ID,
     home,
@@ -172,8 +167,7 @@ export async function installM8HomeFixedLayout() {
     secretAchievements,
     achievementChallengeExpansion,
     trophyRoadFeedback,
-    driveByEarTraining,
-    yourTurnShare
+    driveByEarTraining
   });
   return globalThis.__turnHomeLayout;
 }
