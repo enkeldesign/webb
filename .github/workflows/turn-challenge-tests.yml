@@ -1,0 +1,45 @@
+name: TURN challenge regression
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'turn-next/**'
+      - 'turn-tests/challenge-*.mjs'
+      - '.github/workflows/turn-challenge-tests.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'turn-next/**'
+      - 'turn-tests/challenge-*.mjs'
+      - '.github/workflows/turn-challenge-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  challenge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Syntax-check challenge modules
+        run: find turn-next -maxdepth 1 -type f -name 'challenge-*.js' -print0 | xargs -0 -n1 node --check
+
+      - name: Run Race My Ghost contract
+        run: node turn-tests/challenge-mode-production.mjs
+
+      - name: Run challenge dialog state-safety regression
+        run: node turn-tests/challenge-dialog-state-production.mjs
+
+      - name: Verify TURN NEXT parity wrapper
+        run: node turn-next/scripts/build-parity-app.mjs --check
