@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
 const [
+  turnIndex,
+  shareBootstrap,
   shareSource,
   shareCss,
   profileSource,
@@ -12,6 +14,8 @@ const [
   yourTurnIndex,
   yourTurnUi
 ] = await Promise.all([
+  fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/social/your-turn-share-bootstrap.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/social/your-turn-share.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/social/your-turn-share.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/social/racer-profile.js', import.meta.url), 'utf8'),
@@ -23,9 +27,13 @@ const [
   fs.readFile(new URL('../yourturn/ui.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(fixedHome, /\/turn\/social\/your-turn-share\.js\?build=\$\{buildKey\}-yourturn-share-r1/,
-  'Production Home must install YOUR TURN sharing after the fixed Home is ready');
-assert.match(fixedHome, /installYourTurnShare\(\{ home \}\)/);
+assert.match(turnIndex, /\.\/social\/your-turn-share-bootstrap\.js\?revision=r1/,
+  'Production TURN must load the social sharing bootstrap with an explicit cache identity');
+assert.match(shareBootstrap, /globalThis\.__turnHomeLayout\?\.home/,
+  'Sharing must wait until all existing fixed-Home enhancements have completed');
+assert.match(shareBootstrap, /installYourTurnShare\(\{ home \}\)/);
+assert.doesNotMatch(fixedHome, /your-turn-share|installYourTurnShare/,
+  'The established fixed Home module stays independent of the new sharing feature');
 
 assert.match(rivalStorage, /export function getStoredBestReplayLap\(/,
   'TURN must expose the actual stored replay, not only the best-time summary');
@@ -33,6 +41,8 @@ assert.match(rivalStorage, /frames: lap\.frames\.map\(\(frame\) => \(\{ \.\.\.fr
   'Shareable replay reads must clone persisted frames');
 assert.match(rivalStorage, /getStoredBestLap[\s\S]*getStoredBestReplayLap/,
   'Existing best-lap summaries must keep using the same canonical record source');
+assert.match(rivalStorage, /historical summary-only fallback[\s\S]*oldGhost\?\.bestTime/,
+  'Very old best-time-only Countryside records must remain visible even when they cannot be shared');
 
 assert.match(shareSource, /challengeFromLap/);
 assert.match(shareSource, /encodeChallenge/);
@@ -47,6 +57,8 @@ assert.match(shareSource, /normalizeChallengeName\(input\.value, ''\)/,
   'TURN share must reject an empty name instead of falling back to an anonymous racer');
 assert.doesNotMatch(shareSource, /A TURN PLAYER/,
   'TURN seed creation must never silently invent an anonymous display name');
+assert.match(shareSource, /input\.value = profile\.name \|\| ''/,
+  'The composer must prefill the last deliberately entered social name');
 assert.match(shareSource, /saveSocialRacerName\(racerName\)/,
   'A successfully entered social name must become the next composer default');
 assert.match(shareSource, /card\?\.classList\.contains\('is-selected'\) && best/,
@@ -56,6 +68,10 @@ assert.match(shareSource, /time < previousBest - PB_EPSILON/,
 assert.match(shareSource, /lap-result-yourturn-share/);
 assert.match(shareSource, /turn-runtime-paused/,
   'Opening the composer during a race must hard-pause the runtime');
+assert.match(shareSource, /state\.lapStartedAt \+= pausedFor/,
+  'Time spent composing or sharing must not count against the automatically started next lap');
+assert.match(shareSource, /__turnAudio\?\.silence\?\.\(\)/,
+  'A hard-paused share composer must not leave the engine/audio state running behind it');
 assert.match(coveredRendering, /turn-runtime-paused/,
   'The renderer guard must honour the sharing modal pause class');
 
@@ -77,6 +93,10 @@ assert.match(profileSource, /adoptSocialRacerIdentity/,
 
 assert.match(storageBootstrap, /__TURN_SHARED_LOCAL_STORAGE__/,
   'YOUR TURN must expose only a deliberate raw local-storage bridge for shared social identity');
+assert.match(storageBootstrap, /effectiveRacerId = sharedRacerId \|\| legacyRacerId \|\| createRacerId\(\)/,
+  'YOUR TURN must establish one shared racer ID before its existing session code initializes');
+assert.match(storageBootstrap, /LEGACY_RACER_NAME_KEY[\s\S]*SHARED_RACER_NAME_KEY/,
+  'Existing YOUR TURN names should migrate into the shared composer default');
 assert.match(storageBootstrap, /storageNamespace: LOCAL_PREFIX/,
   'YOUR TURN gameplay storage remains isolated');
 assert.match(yourTurnIndex, /storage-bootstrap\.js\?revision=r2/);
