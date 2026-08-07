@@ -1,0 +1,512 @@
+html[data-turn-deployment="yourturn"],
+html[data-turn-deployment="yourturn"] body {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+  background: #08090a;
+}
+
+html[data-turn-deployment="yourturn"] body {
+  position: fixed;
+  inset: 0;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+html[data-turn-deployment="yourturn"] #game {
+  position: fixed;
+  inset: 0;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+html[data-turn-deployment="yourturn"] #intro {
+  display: none !important;
+}
+
+.yourturn-loading {
+  position: fixed;
+  z-index: 7000;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  padding: 24px;
+  background: #38d9ff;
+  color: #08090a;
+  text-align: center;
+  font: 900 1rem/1.1 system-ui, sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.yourturn-loading[hidden] {
+  display: none;
+}
+
+.yourturn-loading img {
+  width: min(28vw, 132px);
+  border: 4px solid #08090a;
+  border-radius: 22px;
+  box-shadow: 8px 8px 0 #08090a;
+}
+
+.yourturn-loading strong {
+  margin-top: 8px;
+  font-size: clamp(1.8rem, 7vw, 4rem);
+  letter-spacing: -0.04em;
+}
+
+.yourturn-loading span {
+  font-size: 0.9rem;
+}
+
+.yourturn-dialog {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding:
+    max(16px, env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right))
+    max(18px, env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
+  border: 0;
+  background: transparent;
+  color: #08090a;
+  place-items: center;
+  overflow: auto;
+}
+
+.yourturn-dialog[open] {
+  display: grid;
+}
+
+.yourturn-dialog::backdrop {
+  background: rgb(8 9 10 / 0.18);
+  backdrop-filter: blur(1.5px);
+}
+
+.yourturn-card {
+  box-sizing: border-box;
+  width: min(720px, 92vw);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: clamp(18px, 3vw, 30px);
+  border: 5px solid #08090a;
+  border-radius: 26px;
+  background: rgb(255 248 232 / 0.93);
+  box-shadow: 12px 12px 0 rgb(8 9 10 / 0.96);
+  text-align: left;
+  -webkit-overflow-scrolling: touch;
+}
+
+.yourturn-card-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.yourturn-card-head img {
+  width: clamp(48px, 7vw, 72px);
+  aspect-ratio: 1;
+  border: 3px solid #08090a;
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 #08090a;
+}
+
+.yourturn-kicker {
+  display: block;
+  margin-bottom: 5px;
+  color: #6b3fa0;
+  font-size: clamp(0.72rem, 1.5vw, 0.95rem);
+  font-weight: 1000;
+  letter-spacing: 0.14em;
+}
+
+.yourturn-card h1 {
+  margin: 0;
+  font-size: clamp(2rem, 6vw, 4.6rem);
+  line-height: 0.86;
+  letter-spacing: -0.06em;
+  overflow-wrap: anywhere;
+}
+
+.yourturn-details {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 16px;
+  margin: 0 0 14px;
+  padding: 12px 15px;
+  border: 4px solid #08090a;
+  border-radius: 16px;
+  background: #ffd43b;
+}
+
+.yourturn-details[hidden],
+.yourturn-copy[hidden],
+.yourturn-extra[hidden],
+.yourturn-name-field[hidden] {
+  display: none;
+}
+
+.yourturn-details strong {
+  font-size: clamp(1.25rem, 3vw, 2rem);
+  line-height: 1;
+}
+
+.yourturn-details span {
+  font-size: clamp(0.95rem, 2vw, 1.25rem);
+  font-weight: 800;
+}
+
+.yourturn-copy {
+  margin: 0 0 16px;
+  font-size: clamp(1rem, 2.2vw, 1.25rem);
+  font-weight: 760;
+  line-height: 1.28;
+}
+
+.yourturn-extra {
+  margin: 0 0 14px;
+}
+
+.yourturn-small-note,
+.yourturn-about-copy p {
+  margin: 0 0 10px;
+  font-size: clamp(0.92rem, 1.8vw, 1.08rem);
+  line-height: 1.35;
+}
+
+.yourturn-about-copy p:last-child {
+  margin-bottom: 0;
+}
+
+.yourturn-name-field {
+  display: grid;
+  gap: 7px;
+  margin: 0 0 14px;
+  font-weight: 850;
+}
+
+.yourturn-name-field input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 48px;
+  padding: 9px 12px;
+  border: 3px solid #08090a;
+  border-radius: 12px;
+  background: #fff;
+  color: #08090a;
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 900;
+  user-select: text;
+  -webkit-user-select: text;
+  touch-action: manipulation;
+}
+
+.yourturn-dialog-status {
+  min-height: 1.2em;
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.yourturn-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.yourturn-actions button {
+  min-height: 48px;
+  padding: 10px 16px;
+  border: 4px solid #08090a;
+  border-radius: 14px;
+  background: #fff8e8;
+  color: #08090a;
+  box-shadow: 5px 5px 0 #08090a;
+  font: inherit;
+  font-weight: 1000;
+  letter-spacing: 0.015em;
+  touch-action: manipulation;
+}
+
+.yourturn-actions button.is-primary {
+  background: #8ce99a;
+}
+
+.yourturn-actions button.is-navigation {
+  background: #ff9b66;
+}
+
+.yourturn-actions button.is-destructive {
+  background: #ffb4ab;
+}
+
+.yourturn-actions button[data-kind="quiet"] {
+  border-width: 0 0 3px;
+  border-radius: 0;
+  padding-inline: 4px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.yourturn-actions button:focus-visible,
+.yourturn-name-field input:focus-visible,
+.yourturn-pause-button:focus-visible {
+  outline: 4px solid #38d9ff;
+  outline-offset: 4px;
+}
+
+.yourturn-card[data-view="paused"] {
+  width: min(520px, 90vw);
+}
+
+.yourturn-card[data-view="error"] {
+  border-color: #ff7f50;
+}
+
+.yourturn-rotate {
+  position: fixed;
+  z-index: 6000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding:
+    max(20px, env(safe-area-inset-top))
+    max(20px, env(safe-area-inset-right))
+    max(20px, env(safe-area-inset-bottom))
+    max(20px, env(safe-area-inset-left));
+  background: #38d9ff;
+  color: #08090a;
+}
+
+.yourturn-rotate[hidden] {
+  display: none;
+}
+
+.yourturn-rotate-card {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  width: min(560px, 92vw);
+  padding: clamp(22px, 5vw, 40px);
+  border: 5px solid #08090a;
+  border-radius: 28px;
+  background: #fff8e8;
+  box-shadow: 12px 12px 0 #08090a;
+  text-align: center;
+}
+
+.yourturn-rotate-card strong {
+  font-size: clamp(1.45rem, 5vw, 2.7rem);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+}
+
+.yourturn-rotate-card p {
+  margin: 0;
+  max-width: 34ch;
+  font-weight: 750;
+  line-height: 1.3;
+}
+
+.yourturn-phone {
+  width: 72px;
+  height: 118px;
+  border: 6px solid #08090a;
+  border-radius: 16px;
+  background: #ffd43b;
+  transform: rotate(90deg);
+}
+
+.yourturn-target-chip {
+  min-width: clamp(170px, 22vw, 280px);
+  background: #fff8e8 !important;
+}
+
+.yourturn-target-chip > span {
+  display: block;
+  color: #6b3fa0;
+  font-size: 0.62rem;
+  font-weight: 1000;
+  letter-spacing: 0.1em;
+}
+
+.yourturn-target-chip strong {
+  display: block;
+  white-space: nowrap;
+}
+
+body.yourturn-racing .lap-chip,
+body.yourturn-racing .best-chip {
+  display: none !important;
+}
+
+.yourturn-pause-button {
+  background: #ff9b66 !important;
+  color: #08090a !important;
+}
+
+body.yourturn-racing #resetButton {
+  background: #fff8e8;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+@media (orientation: portrait) {
+  .yourturn-dialog {
+    place-items: end center;
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+  }
+
+  .yourturn-card {
+    width: min(92vw, 620px);
+    max-height: min(68dvh, 720px);
+    background: rgb(255 248 232 / 0.9);
+  }
+
+  .yourturn-card h1 {
+    font-size: clamp(2rem, 9vw, 3.7rem);
+  }
+
+  .yourturn-card-head img {
+    width: 52px;
+  }
+
+  .yourturn-actions button {
+    flex: 1 1 42%;
+  }
+
+  .yourturn-actions button.is-primary {
+    flex-basis: 58%;
+  }
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .yourturn-dialog {
+    padding: 10px max(12px, env(safe-area-inset-right)) 12px max(12px, env(safe-area-inset-left));
+  }
+
+  .yourturn-card {
+    width: min(820px, 94vw);
+    max-height: calc(100dvh - 22px);
+    padding: 15px 18px;
+    border-width: 4px;
+    box-shadow: 8px 8px 0 rgb(8 9 10 / 0.96);
+  }
+
+  .yourturn-card-head {
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .yourturn-card-head img {
+    width: 42px;
+    border-width: 2px;
+  }
+
+  .yourturn-card h1 {
+    font-size: clamp(1.7rem, 5.2vw, 3.2rem);
+  }
+
+  .yourturn-details {
+    margin-bottom: 9px;
+    padding: 8px 11px;
+    border-width: 3px;
+  }
+
+  .yourturn-copy {
+    margin-bottom: 9px;
+    font-size: 0.95rem;
+  }
+
+  .yourturn-extra {
+    margin-bottom: 8px;
+  }
+
+  .yourturn-name-field {
+    margin-bottom: 8px;
+  }
+
+  .yourturn-name-field input {
+    min-height: 40px;
+    padding-block: 6px;
+  }
+
+  .yourturn-dialog-status {
+    margin-bottom: 5px;
+  }
+
+  .yourturn-actions {
+    gap: 8px;
+  }
+
+  .yourturn-actions button {
+    min-height: 40px;
+    padding: 7px 11px;
+    border-width: 3px;
+    box-shadow: 3px 3px 0 #08090a;
+    font-size: 0.86rem;
+  }
+
+  body.yourturn-racing .map-wrap {
+    display: none !important;
+  }
+
+  body.yourturn-racing .topbar {
+    justify-content: flex-start;
+  }
+
+  body.yourturn-racing .stats {
+    max-width: calc(100vw - max(14px, env(safe-area-inset-left)) - max(14px, env(safe-area-inset-right)));
+  }
+
+  .yourturn-target-chip {
+    min-width: 150px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .yourturn-dialog::backdrop {
+    backdrop-filter: none;
+  }
+
+  .yourturn-phone {
+    transform: rotate(90deg);
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

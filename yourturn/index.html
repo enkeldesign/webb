@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en" data-turn-deployment="yourturn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#38d9ff">
+  <meta name="application-name" content="YOUR TURN">
+  <meta name="description" content="A YOUR TURN racing challenge, powered by TURN.">
+  <link rel="canonical" href="https://enkel.design/yourturn/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="YOUR TURN">
+  <meta property="og:title" content="YOUR TURN — a TURN challenge">
+  <meta property="og:description" content="Someone challenged you. Your turn.">
+  <meta property="og:url" content="https://enkel.design/yourturn/">
+  <meta property="og:image" content="https://enkel.design/turn/turn-og-r58.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="YOUR TURN — a TURN challenge">
+  <meta name="twitter:description" content="Someone challenged you. Your turn.">
+  <meta name="twitter:image" content="https://enkel.design/turn/turn-og-r58.jpg">
+  <title>YOUR TURN</title>
+  <link rel="icon" href="/turn/TURNicon.PNG?icon=20260803-profile-512" type="image/png">
+
+  <link rel="stylesheet" href="/turn/styles.css?source=yourturn-r1">
+  <link rel="stylesheet" href="/turn/vertical-drive.css?source=yourturn-r1">
+  <link rel="stylesheet" href="/turn/hud-tuning.css?source=yourturn-r1">
+  <link rel="stylesheet" href="/turn/gameplay-features.css?source=yourturn-r1">
+  <link rel="stylesheet" href="/turn/gameplay-v2.css?source=yourturn-r1">
+  <link rel="stylesheet" href="/turn/position-hud-r83.css?source=yourturn-r1">
+  <link rel="stylesheet" href="/turn/drive-pad.css?source=yourturn-r1">
+  <link rel="stylesheet" href="/turn/manual-steering.css?source=yourturn-r1">
+  <link rel="stylesheet" href="/turn/steering-limit-warning.css?source=yourturn-r1">
+  <link rel="stylesheet" href="/turn/lap-result-toast.css?source=yourturn-r1">
+  <link rel="stylesheet" href="/turn/r104-polish.css?source=yourturn-r1">
+  <link rel="stylesheet" href="/yourturn/yourturn.css?revision=r1">
+
+  <script src="/yourturn/storage-bootstrap.js?revision=r1"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body class="yourturn">
+  <div id="game" aria-label="YOUR TURN racing challenge"></div>
+
+  <section class="panel" id="intro" hidden aria-hidden="true">
+    <button id="motionButton" type="button" hidden></button>
+    <button id="manualButton" type="button" hidden></button>
+    <p id="status" role="status" hidden></p>
+  </section>
+
+  <div class="hud" id="hud" hidden>
+    <div class="topbar">
+      <div class="stats">
+        <div class="chip speed-chip">speed<strong><span id="speed">0</span> km/h</strong></div>
+        <div class="chip lap-chip">lap<strong id="lap">1</strong></div>
+        <div class="chip time-chip">time<strong id="lapTime">0:00.000</strong></div>
+        <div class="chip best-chip">best<strong id="bestTime">--:--.---</strong></div>
+        <div class="chip yourturn-target-chip" id="yourTurnTargetChip" hidden>
+          <span>YOUR TURN</span>
+          <strong>BEAT <b id="yourTurnTargetOpponent"></b> · <span id="yourTurnTargetTime"></span></strong>
+        </div>
+      </div>
+      <div class="map-wrap"><canvas id="map" width="300" height="210" aria-label="Track map"></canvas></div>
+    </div>
+    <div class="message" id="message" role="status"></div>
+    <div class="tilt-drive" aria-hidden="true">
+      <span><b>brake</b><b>gas</b></span>
+      <div class="tilt-track"><i class="tilt-needle" id="tiltNeedle"></i></div>
+      <small class="tilt-value" id="tiltValue">neutral</small>
+    </div>
+  </div>
+
+  <div class="manual-steer" id="manualSteer" role="slider" aria-label="Steering. Drag left or right." aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0" hidden>
+    <span class="manual-steer-knob" aria-hidden="true"></span>
+  </div>
+
+  <div class="controls" id="controls" hidden>
+    <div class="utility-group">
+      <button class="utility yourturn-pause-button" id="yourTurnPauseButton" type="button" hidden>PAUSE</button>
+      <button class="utility" id="calibrateButton" type="button">Recalibrate</button>
+      <button class="utility" id="resetButton" type="button">Restart Lap</button>
+    </div>
+    <div class="pedals">
+      <button class="pedal brake" id="brakeButton" type="button">Brake</button>
+      <button class="pedal gas" id="gasButton" type="button">Gas</button>
+    </div>
+  </div>
+
+  <section class="yourturn-rotate" id="yourTurnRotate" aria-labelledby="yourTurnRotateTitle" hidden>
+    <div class="yourturn-rotate-card">
+      <div class="yourturn-phone" aria-hidden="true"></div>
+      <strong id="yourTurnRotateTitle" tabindex="-1">ROTATE YOUR DEVICE TO LANDSCAPE</strong>
+      <p>Keep the phone comfortably level. The race will start when you turn it.</p>
+    </div>
+  </section>
+
+  <dialog class="yourturn-dialog" id="yourTurnDialog" aria-labelledby="yourTurnTitle">
+    <article class="yourturn-card">
+      <header class="yourturn-card-head">
+        <img src="/turn/TURNicon.PNG?icon=20260803-profile-512" alt="" aria-hidden="true">
+        <div>
+          <span class="yourturn-kicker">YOUR TURN</span>
+          <h1 id="yourTurnTitle"></h1>
+        </div>
+      </header>
+      <div class="yourturn-details"></div>
+      <p class="yourturn-copy"></p>
+      <div class="yourturn-extra"></div>
+      <label class="yourturn-name-field" hidden>
+        <span>Your name in the reply</span>
+        <input type="text" maxlength="24" autocomplete="nickname">
+      </label>
+      <p class="yourturn-dialog-status" role="status" aria-live="polite"></p>
+      <div class="yourturn-actions"></div>
+    </article>
+  </dialog>
+
+  <div class="yourturn-loading" id="yourTurnLoading" role="status" aria-live="polite">
+    <img src="/turn/TURNicon.PNG?icon=20260803-profile-512" alt="">
+    <strong>YOUR TURN</strong>
+    <span>Loading challenge…</span>
+  </div>
+
+  <script type="module" src="/yourturn/app.js?revision=r1"></script>
+</body>
+</html>
