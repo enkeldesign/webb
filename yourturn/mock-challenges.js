@@ -28,6 +28,21 @@ export const MOCK_CHALLENGES = Object.freeze({
     carColor: '#38d9ff',
     carSecondaryColor: '#fff8e8',
     label: 'ALEX · Countryside · 0:16.250'
+  }),
+  'friends-countryside-r1': Object.freeze({
+    id: 'friends-countryside-r1',
+    challengerName: 'ARVID',
+    trackId: 'countryside',
+    time: 15.4,
+    carId: 'sedan-sports',
+    carColor: '#ff4fa3',
+    carSecondaryColor: '#252a35',
+    racers: Object.freeze([
+      Object.freeze({ id: 'mock-arvid', name: 'ARVID', time: 15.4, laneOffset: 0 }),
+      Object.freeze({ id: 'mock-erik', name: 'ERIK', time: 16.1, laneOffset: 1.15 }),
+      Object.freeze({ id: 'mock-kerstin', name: 'KERSTIN', time: 17.05, laneOffset: -1.15 })
+    ]),
+    label: 'ARVID + ERIK + KERSTIN · 3 cars'
   })
 });
 

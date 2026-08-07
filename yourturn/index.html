@@ -33,13 +33,16 @@
   <link rel="stylesheet" href="/turn/r104-polish.css?source=yourturn-r4">
   <link rel="stylesheet" href="/yourturn/yourturn.css?revision=r3">
   <link rel="stylesheet" href="/yourturn/nonvisual.css?revision=r1">
+  <link rel="stylesheet" href="/yourturn/growing-challenge.css?revision=r1">
 
   <script src="/yourturn/storage-bootstrap.js?revision=r1"></script>
   <script type="importmap">
     {
       "imports": {
         "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/"
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/",
+        "/yourturn/session.js?revision=r3": "/yourturn/session.js?revision=r6",
+        "/yourturn/ui.js?revision=r3": "/yourturn/ui.js?revision=r6"
       }
     }
   </script>
@@ -118,8 +121,8 @@
       <p class="yourturn-copy"></p>
       <div class="yourturn-extra"></div>
       <label class="yourturn-name-field" hidden>
-        <span>Your name in the reply</span>
-        <input type="text" maxlength="24" autocomplete="nickname">
+        <span>Your name in the challenge</span>
+        <input type="text" maxlength="24" autocomplete="nickname" placeholder="YOUR NAME">
       </label>
       <p class="yourturn-dialog-status" role="status" aria-live="polite"></p>
       <div class="yourturn-actions"></div>
@@ -132,7 +135,8 @@
     <span>Loading challenge…</span>
   </div>
 
-  <script type="module" src="/yourturn/app.js?revision=r4"></script>
+  <script type="module" src="/yourturn/app.js?revision=r6"></script>
   <script type="module" src="/yourturn/nonvisual.js?revision=r1"></script>
+  <script type="module" src="/yourturn/racer-labels-bootstrap.js?revision=r1"></script>
 </body>
 </html>
