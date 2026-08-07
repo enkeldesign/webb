@@ -143,14 +143,33 @@ export function clearAllRivalsState(state, trackIds = []) {
 
 export function getStoredBestLap(trackId = DEFAULT_TRACK_ID) {
   const bestReplay = getStoredBestReplayLap(trackId);
-  if (!bestReplay) return null;
-  const summary = {
-    time: bestReplay.time,
-    carId: bestReplay.carId
-  };
-  if (bestReplay.carColor) summary.carColor = bestReplay.carColor;
-  if (bestReplay.carSecondaryColor) summary.carSecondaryColor = bestReplay.carSecondaryColor;
-  return summary;
+  if (bestReplay) {
+    const summary = {
+      time: bestReplay.time,
+      carId: bestReplay.carId
+    };
+    if (bestReplay.carColor) summary.carColor = bestReplay.carColor;
+    if (bestReplay.carSecondaryColor) summary.carSecondaryColor = bestReplay.carSecondaryColor;
+    return summary;
+  }
+
+  // Preserve the historical summary-only fallback. Very old Countryside saves
+  // can contain a best time without enough replay frames to share as YOUR TURN;
+  // Home should still display that record even though no share button is offered.
+  const activeTrackId = normalizeTrackId(trackId);
+  if (activeTrackId === DEFAULT_TRACK_ID) {
+    try {
+      const oldGhost = JSON.parse(localStorage.getItem(ghostKey(activeTrackId)));
+      const legacyTime = Number(oldGhost?.bestTime);
+      if (Number.isFinite(legacyTime)) {
+        return {
+          time: legacyTime,
+          carId: LEGACY_VEHICLE_ID
+        };
+      }
+    } catch (_) {}
+  }
+  return null;
 }
 
 export function getStoredBestReplayLap(trackId = DEFAULT_TRACK_ID) {
