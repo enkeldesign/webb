@@ -1,9 +1,12 @@
-const CHALLENGE_SCHEMA_VERSION = 1;
-const WIRE_VERSION = 1;
+const CHALLENGE_SCHEMA_VERSION = 2;
+const LEGACY_SCHEMA_VERSION = 1;
+const WIRE_VERSION = 2;
+const LEGACY_WIRE_VERSION = 1;
 const HASH_KEY = 'challenge';
 const QUERY_KEY = 'c';
 const MAX_NAME_LENGTH = 24;
-const MAX_FRAMES = 180;
+export const MAX_CHALLENGE_RACERS = 4;
+const MAX_FRAMES = 120;
 const MIN_FRAMES = 21;
 const TIME_SCALE = 1000;
 const POSITION_SCALE = 100;
@@ -28,60 +31,139 @@ export function normalizeChallengeName(value, fallback = 'A TURN PLAYER') {
   return clean || fallback;
 }
 
+export function createRacerId(prefix = 'r') {
+  const random = globalThis.crypto?.randomUUID?.()
+    || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+  return normalizeRacerId(`${prefix}-${random}`);
+}
+
+export function createChallengeChainId() {
+  return createRacerId('yt');
+}
+
 export function challengeFromLap({
   challengerName,
+  racerId,
+  chainId,
   trackId,
   trackRevision,
   trackName,
   lap,
   replyTo = null
 }) {
-  const time = Number(lap?.time);
-  const frames = downsampleFrames(lap?.frames);
-  if (!Number.isFinite(time) || time <= 5 || frames.length < MIN_FRAMES) {
-    throw new Error('YOUR TURN can only share a complete valid lap.');
-  }
+  const racer = racerFromLap({
+    racerId: racerId || createRacerId(),
+    racerName: challengerName,
+    lap
+  });
 
   return normalizeChallenge({
     v: CHALLENGE_SCHEMA_VERSION,
-    challengerName,
+    chainId: chainId || createChallengeChainId(),
+    sharedBy: racer.id,
     trackId,
     trackRevision,
     trackName,
-    time,
-    carId: lap.carId,
-    carColor: lap.carColor,
-    carSecondaryColor: lap.carSecondaryColor,
-    frames,
+    carId: lap?.carId,
+    carColor: lap?.carColor,
+    carSecondaryColor: lap?.carSecondaryColor,
+    racers: [racer],
     replyTo
   });
 }
 
+export function challengeWithLap({ challenge, racerId, racerName, lap }) {
+  const current = normalizeChallenge(challenge);
+  const candidate = racerFromLap({ racerId, racerName, lap });
+  const existing = current.racers.find((racer) => racer.id === candidate.id);
+  const merged = current.racers.filter((racer) => racer.id !== candidate.id);
+
+  // Returning players keep a single car in the bundle. A slower repeat never
+  // overwrites their better earlier run; a new personal best replaces it.
+  merged.push(existing && existing.time <= candidate.time ? existing : candidate);
+
+  // The link is intentionally self-contained and capped at TURN's four-rival
+  // visual/runtime limit. A new contributor is always retained; the remaining
+  // slots are the quickest other cars in the chain.
+  const selected = merged
+    .sort((a, b) => a.time - b.time)
+    .filter((racer, index, racers) => {
+      if (racer.id === candidate.id) return true;
+      const contributorIndex = racers.findIndex((item) => item.id === candidate.id);
+      const beforeContributor = racers.slice(0, contributorIndex).filter((item) => item.id !== candidate.id);
+      const afterContributor = racers.slice(contributorIndex + 1).filter((item) => item.id !== candidate.id);
+      const others = [...beforeContributor, ...afterContributor].sort((a, b) => a.time - b.time);
+      return others.slice(0, MAX_CHALLENGE_RACERS - 1).some((item) => item.id === racer.id);
+    })
+    .sort((a, b) => a.time - b.time)
+    .slice(0, MAX_CHALLENGE_RACERS);
+
+  if (!selected.some((racer) => racer.id === candidate.id)) {
+    selected[MAX_CHALLENGE_RACERS - 1] = existing && existing.time <= candidate.time ? existing : candidate;
+    selected.sort((a, b) => a.time - b.time);
+  }
+
+  return normalizeChallenge({
+    ...current,
+    v: CHALLENGE_SCHEMA_VERSION,
+    sharedBy: candidate.id,
+    racers: selected,
+    replyTo: null
+  });
+}
+
+export function challengeLeader(challenge) {
+  return normalizeChallenge(challenge).racers[0];
+}
+
+export function challengeSender(challenge) {
+  const normalized = normalizeChallenge(challenge);
+  return normalized.racers.find((racer) => racer.id === normalized.sharedBy) || normalized.racers[0];
+}
+
 export function normalizeChallenge(value) {
   const source = value && typeof value === 'object' ? value : {};
-  const time = Number(source.time);
-  const frames = downsampleFrames(source.frames);
-  const trackId = String(source.trackId || '').trim();
-  const carId = String(source.carId || '').trim();
-
-  if (Number(source.v) !== CHALLENGE_SCHEMA_VERSION) {
+  const sourceVersion = Number(source.v);
+  if (sourceVersion !== CHALLENGE_SCHEMA_VERSION && sourceVersion !== LEGACY_SCHEMA_VERSION) {
     throw new Error('This challenge uses an unsupported replay version.');
   }
-  if (!trackId || !carId || !Number.isFinite(time) || time <= 5 || frames.length < MIN_FRAMES) {
+
+  const trackId = String(source.trackId || '').trim();
+  const carId = String(source.carId || '').trim();
+  const rawRacers = Array.isArray(source.racers) && source.racers.length
+    ? source.racers
+    : [legacyRacerFromChallenge(source)];
+  const racers = rawRacers
+    .map((racer, index) => normalizeRacer(racer, index))
+    .filter(Boolean)
+    .sort((a, b) => a.time - b.time)
+    .slice(0, MAX_CHALLENGE_RACERS);
+
+  if (!trackId || !carId || racers.length === 0) {
     throw new Error('This challenge is incomplete or damaged.');
   }
 
+  const leader = racers[0];
+  const sharedByCandidate = normalizeRacerId(source.sharedBy || source.senderId || leader.id, leader.id);
+  const sharedBy = racers.some((racer) => racer.id === sharedByCandidate) ? sharedByCandidate : leader.id;
+  const chainId = normalizeRacerId(source.chainId, legacyChainId(source, leader));
+
   return Object.freeze({
     v: CHALLENGE_SCHEMA_VERSION,
-    challengerName: normalizeChallengeName(source.challengerName),
+    chainId,
+    sharedBy,
     trackId,
     trackRevision: String(source.trackRevision || ''),
     trackName: String(source.trackName || '').trim(),
-    time,
     carId,
     carColor: normalizeHex(source.carColor, '#ffcc00'),
     carSecondaryColor: normalizeHex(source.carSecondaryColor, '#f8f9fa'),
-    frames,
+    racers: Object.freeze(racers),
+    // Leader aliases preserve the simple single-rival interface used by preview
+    // and backwards-compatible callers while the challenge itself is now a field.
+    challengerName: leader.name,
+    time: leader.time,
+    frames: leader.frames,
     replyTo: normalizeReply(source.replyTo)
   });
 }
@@ -119,7 +201,9 @@ export async function decodeChallenge(encoded) {
   }
 
   const parsed = JSON.parse(new TextDecoder().decode(bytes));
-  return normalizeChallenge(parsed?.w === WIRE_VERSION ? fromWireChallenge(parsed) : parsed);
+  if (parsed?.w === WIRE_VERSION) return normalizeChallenge(fromWireChallengeV2(parsed));
+  if (parsed?.w === LEGACY_WIRE_VERSION) return normalizeChallenge(fromWireChallengeV1(parsed));
+  return normalizeChallenge(parsed);
 }
 
 export function encodedChallengeFromLocation(locationRef = globalThis.location) {
@@ -154,9 +238,108 @@ export function makeMockChallengeUrl(challengeId, {
   return url.href;
 }
 
+function racerFromLap({ racerId, racerName, lap }) {
+  const time = Number(lap?.time);
+  const frames = downsampleFrames(lap?.frames);
+  if (!Number.isFinite(time) || time <= 5 || frames.length < MIN_FRAMES) {
+    throw new Error('YOUR TURN can only share a complete valid lap.');
+  }
+  return normalizeRacer({
+    id: racerId || createRacerId(),
+    name: racerName,
+    time,
+    frames
+  }, 0);
+}
+
+function normalizeRacer(value, index) {
+  const source = value && typeof value === 'object' ? value : {};
+  const time = Number(source.time);
+  const frames = downsampleFrames(source.frames);
+  if (!Number.isFinite(time) || time <= 5 || frames.length < MIN_FRAMES) return null;
+  const name = normalizeChallengeName(source.name || source.challengerName);
+  const id = normalizeRacerId(source.id || source.racerId, legacyRacerId(name, time, frames, index));
+  return Object.freeze({ id, name, time, frames });
+}
+
+function legacyRacerFromChallenge(source) {
+  return {
+    id: source.racerId,
+    name: source.challengerName,
+    time: source.time,
+    frames: source.frames
+  };
+}
+
 function toWireChallenge(challenge) {
+  return {
+    w: WIRE_VERSION,
+    v: challenge.v,
+    id: challenge.chainId,
+    s: challenge.sharedBy,
+    ti: challenge.trackId,
+    tr: challenge.trackRevision,
+    tn: challenge.trackName,
+    c: challenge.carId,
+    pc: challenge.carColor,
+    sc: challenge.carSecondaryColor,
+    rs: challenge.racers.map((racer) => [
+      racer.id,
+      racer.name,
+      quantize(racer.time, TIME_SCALE),
+      encodeFrames(racer.frames)
+    ]),
+    r: challenge.replyTo ? [
+      challenge.replyTo.kind === 'win' ? 'w' : 'g',
+      challenge.replyTo.opponent,
+      Number.isFinite(challenge.replyTo.previousTime)
+        ? quantize(challenge.replyTo.previousTime, TIME_SCALE)
+        : null
+    ] : null
+  };
+}
+
+function fromWireChallengeV2(wire) {
+  const racers = Array.isArray(wire.rs) ? wire.rs.map((row) => ({
+    id: row?.[0],
+    name: row?.[1],
+    time: integer(row?.[2]) / TIME_SCALE,
+    frames: decodeFrames(row?.[3])
+  })) : [];
+  return {
+    v: CHALLENGE_SCHEMA_VERSION,
+    chainId: wire.id,
+    sharedBy: wire.s,
+    trackId: wire.ti,
+    trackRevision: wire.tr,
+    trackName: wire.tn,
+    carId: wire.c,
+    carColor: wire.pc,
+    carSecondaryColor: wire.sc,
+    racers,
+    replyTo: decodeReply(wire.r)
+  };
+}
+
+function fromWireChallengeV1(wire) {
+  return {
+    v: LEGACY_SCHEMA_VERSION,
+    challengerName: wire.n,
+    trackId: wire.ti,
+    trackRevision: wire.tr,
+    trackName: wire.tn,
+    time: integer(wire.tm) / TIME_SCALE,
+    carId: wire.c,
+    carColor: wire.pc,
+    carSecondaryColor: wire.sc,
+    frames: decodeFrames(wire.f),
+    replyTo: decodeReply(wire.r)
+  };
+}
+
+function encodeFrames(frames) {
   let previous = null;
-  const frames = challenge.frames.map((frame) => {
+  return frames.map((frame) => {
     const current = [
       quantize(frame.t, TIME_SCALE),
       quantize(frame.x, POSITION_SCALE),
@@ -180,32 +363,11 @@ function toWireChallenge(challenge) {
     previous = current;
     return row;
   });
-
-  return {
-    w: WIRE_VERSION,
-    v: challenge.v,
-    n: challenge.challengerName,
-    ti: challenge.trackId,
-    tr: challenge.trackRevision,
-    tn: challenge.trackName,
-    tm: quantize(challenge.time, TIME_SCALE),
-    c: challenge.carId,
-    pc: challenge.carColor,
-    sc: challenge.carSecondaryColor,
-    f: frames,
-    r: challenge.replyTo ? [
-      challenge.replyTo.kind === 'win' ? 'w' : 'g',
-      challenge.replyTo.opponent,
-      Number.isFinite(challenge.replyTo.previousTime)
-        ? quantize(challenge.replyTo.previousTime, TIME_SCALE)
-        : null
-    ] : null
-  };
 }
 
-function fromWireChallenge(wire) {
+function decodeFrames(rows) {
   let previous = null;
-  const frames = Array.isArray(wire.f) ? wire.f.map((row, index) => {
+  return Array.isArray(rows) ? rows.map((row, index) => {
     if (!Array.isArray(row) || row.length < 7) return null;
     const current = index === 0
       ? row.map((value) => integer(value))
@@ -229,26 +391,14 @@ function fromWireChallenge(wire) {
       p: current[6] / PROGRESS_SCALE
     };
   }).filter(Boolean) : [];
+}
 
-  const reply = Array.isArray(wire.r) ? {
-    kind: wire.r[0] === 'w' ? 'win' : wire.r[0] === 'g' ? 'give-up' : '',
-    opponent: wire.r[1],
-    previousTime: wire.r[2] == null ? null : integer(wire.r[2]) / TIME_SCALE
+function decodeReply(row) {
+  return Array.isArray(row) ? {
+    kind: row[0] === 'w' ? 'win' : row[0] === 'g' ? 'give-up' : '',
+    opponent: row[1],
+    previousTime: row[2] == null ? null : integer(row[2]) / TIME_SCALE
   } : null;
-
-  return {
-    v: wire.v,
-    challengerName: wire.n,
-    trackId: wire.ti,
-    trackRevision: wire.tr,
-    trackName: wire.tn,
-    time: integer(wire.tm) / TIME_SCALE,
-    carId: wire.c,
-    carColor: wire.pc,
-    carSecondaryColor: wire.sc,
-    frames,
-    replyTo: reply
-  };
 }
 
 function normalizeFrames(frames, { limit = MAX_FRAMES } = {}) {
@@ -293,6 +443,37 @@ function normalizeReply(reply) {
     opponent: normalizeChallengeName(reply.opponent, 'THE CHALLENGER'),
     previousTime: Number.isFinite(Number(reply.previousTime)) ? Number(reply.previousTime) : null
   });
+}
+
+function normalizeRacerId(value, fallback = '') {
+  const clean = String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, '')
+    .slice(0, 64);
+  if (clean) return clean;
+  const fallbackClean = String(fallback || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, '')
+    .slice(0, 64);
+  return fallbackClean || 'r-unknown';
+}
+
+function legacyRacerId(name, time, frames, index = 0) {
+  const first = frames[0] || {};
+  return `legacy-${simpleHash(`${name}|${time.toFixed(3)}|${finite(first.x)}|${finite(first.z)}|${index}`)}`;
+}
+
+function legacyChainId(source, leader) {
+  return `yt-legacy-${simpleHash(`${source.trackId || ''}|${source.trackRevision || ''}|${leader.id}`)}`;
+}
+
+function simpleHash(value) {
+  let hash = 2166136261;
+  for (const character of String(value)) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(36);
 }
 
 function normalizeHex(value, fallback) {
