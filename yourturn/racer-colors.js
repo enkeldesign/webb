@@ -5,7 +5,6 @@ const ORDER_COLORS = Object.freeze([
   '#fff0a8',
   '#ffd0ae'
 ]);
-const FRAME_LIMIT = 240;
 
 function colorForOrder(order) {
   const index = Math.min(ORDER_COLORS.length, Math.max(1, Math.round(Number(order) || 1))) - 1;
@@ -42,20 +41,25 @@ async function applyChallengeColors(runtime, raceSession, session) {
   return true;
 }
 
-function bootstrap(attempt = 0) {
+let applied = false;
+function bootstrap() {
+  if (applied) return;
   const runtime = globalThis.__turnRuntime;
   const raceSession = globalThis.__turnRaceSession || globalThis.__turnNextRaceSession;
   const session = globalThis.__yourTurnSession;
   if (runtime && raceSession && session) {
     const state = session.getState();
     if (state.challenge?.racers?.length) {
+      applied = true;
       void applyChallengeColors(runtime, raceSession, session);
       return;
     }
   }
-  if (attempt < FRAME_LIMIT) requestAnimationFrame(() => bootstrap(attempt + 1));
+  requestAnimationFrame(bootstrap);
 }
 
+window.addEventListener('turn:runtime-ready', bootstrap);
+window.addEventListener('pageshow', bootstrap);
 bootstrap();
 
 export { ORDER_COLORS, colorForOrder };
