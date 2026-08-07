@@ -1,3 +1,4 @@
+import { aboutTurnHtml as sharedAboutTurnHtml } from '/turn/content/about-turn.js?revision=r1';
 import { normalizeChallengeName } from '/yourturn/protocol.js?revision=r3';
 
 const PLAYER_NAME_KEY = 'yourturn-player-name-v1';
@@ -168,12 +169,7 @@ export function createYourTurnUi() {
 }
 
 export function aboutTurnHtml() {
-  return `
-    <div class="yourturn-about-copy">
-      <p><strong>TURN</strong> is a racing game built around one unusual control: rotate your phone like a steering wheel.</p>
-      <p>Gas, Drift and Boost are on screen. Drive By Ear turns the racing line, upcoming corners, grip and nearby cars into spatial sound.</p>
-      <p>TURN is designed for screen-reader and non-visual play as well as visual play. Headphones give the clearest left/right audio information.</p>
-    </div>`;
+  return sharedAboutTurnHtml();
 }
 
 export function newcomerAssistiveText(challengerName) {
