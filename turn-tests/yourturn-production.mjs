@@ -71,16 +71,18 @@ assert.match(appSource, /installRaceSpeech/);
 
 assert.match(sessionSource, /challengeLaps: \[\]/,
   'A challenge session must support a field of replay cars');
-assert.match(sessionSource, /state\.challenge\.racers\.map\(racerToLap\)/,
-  'Every racer in the bundle must become a canonical TURN replay lap');
+assert.match(sessionSource, /state\.challenge\.racers\.map\(\(racer\) => racerToLap\(racer, state\.challenge\)\)/,
+  'Every racer in the bundle must become a canonical TURN replay lap with challenge car identity');
 assert.match(sessionSource, /runtime\.state\.competitorLaps = state\.challengeLaps/,
   'The growing challenge field must feed TURN’s canonical rival runtime');
 assert.match(sessionSource, /challengeWithLap\(/,
   'Sharing a run must merge it into the existing challenge instead of replacing the challenge');
-assert.match(sessionSource, /state\.racerId:|racerId: loadOrCreateRacerId\(\)/,
+assert.match(sessionSource, /racerId: loadOrCreateRacerId\(\)/,
   'A browser participant needs a stable racer identity so their later best can replace their earlier car');
 assert.match(sessionSource, /if \(!state\.bestRun \|\| candidate\.time < state\.bestRun\.time\) state\.bestRun = candidate/,
   'A player can share their best attempt even without taking the overall lead');
+assert.match(sessionSource, /previousSelf && previousSelf\.time <= candidate\.time/,
+  'A returning racer must keep their earlier faster car when the current attempt is slower');
 assert.match(sessionSource, /label: 'SHARE'/);
 assert.match(sessionSource, /label: 'SHARE YOUR TURN'/);
 assert.doesNotMatch(sessionSource, /label: 'GIVE UP'|label: 'YES, GIVE UP'/,
@@ -88,7 +90,9 @@ assert.doesNotMatch(sessionSource, /label: 'GIVE UP'|label: 'YES, GIVE UP'/,
 assert.match(sessionSource, /label: 'GET THE GAME', game: true/);
 assert.match(sessionSource, /label: 'BACK', back: true/);
 assert.match(sessionSource, /racerSummaryHtml/);
-assert.match(sessionSource, /players challenge you|PLAYERS CHALLENGE YOU/i);
+assert.match(sessionSource, /PLAYERS CHALLENGE YOU/);
+assert.match(sessionSource, /state\.ambientPaused = true/,
+  'Moving from the hard-paused challenge menu to share/result must keep background motion paused');
 assert.match(sessionSource, /navigator\.share/);
 assert.match(sessionSource, /navigator\.clipboard/);
 assert.doesNotMatch(sessionSource, /ghost/i,
@@ -116,8 +120,8 @@ assert.match(labelsSource, /lap\.challengerName/,
   'Visual replay labels must use the player name carried by each racer lap');
 assert.match(labelsSource, /runtime\.competitorCars/);
 assert.match(labelBootstrapSource, /installRacerLabels/);
-assert.match(labelBootstrapSource, /carId = state\.challenge\.carId/,
-  'All social racers must retain the challenge car identity');
+assert.match(sessionSource, /carId: challenge\.carId[\s\S]*carColor: challenge\.carColor[\s\S]*carSecondaryColor: challenge\.carSecondaryColor/,
+  'Every social racer lap must carry the shared challenge car identity');
 
 assert.match(sceneSource, /PREVIEW_START_DELAY_MS = 650/);
 assert.match(sceneSource, /STAGED_IMITATION_DELAY_MS = 650/);
@@ -128,6 +132,8 @@ assert.match(nonVisualSource, /yourTurnDbeBalance/);
 assert.match(nonVisualSource, /removeRivalResetUi/);
 assert.match(storageSource, /const LOCAL_PREFIX = 'yourturn:';/);
 assert.match(mockSource, /'sol-countryside-r1'/);
+assert.match(mockSource, /'friends-countryside-r1'/,
+  'A deterministic named three-car fixture must be available for phone testing');
 assert.match(productionApp, /installM8HomeNavigation\(\)/,
   'Production TURN remains the full application and is not replaced by YOUR TURN');
 
@@ -191,6 +197,7 @@ assert.equal(encodedChallengeFromLocation(new URL(challengeUrl)), encoded);
 assert.equal(encodedChallengeFromLocation(new URL(`https://enkel.design/yourturn/#challenge=${encoded}`)), encoded,
   'Previously shared hash-carried challenge links remain readable');
 assert.equal(makeMockChallengeUrl('sol-countryside-r1'), 'https://enkel.design/yourturn/?challenge=sol-countryside-r1');
+assert.equal(makeMockChallengeUrl('friends-countryside-r1'), 'https://enkel.design/yourturn/?challenge=friends-countryside-r1');
 
 const legacy = normalizeChallenge({
   v: 1,
