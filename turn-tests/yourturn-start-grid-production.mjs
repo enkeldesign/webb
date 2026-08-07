@@ -62,9 +62,11 @@ assert.match(cssSource, /yourturn-player-label[\s\S]*font-weight: 1000/);
 
 assert.match(indexSource, /placeholder="WRITE YOUR NAME HERE"/);
 assert.match(cssSource, /input::placeholder[\s\S]*#666/,
-  'The share-name placeholder must use the middle-grey design token value');
-assert.match(uiSource, /nameInput\.value = ''/,
-  'Opening a share result must show a real placeholder instead of editable fake placeholder text');
+  'The first-share name placeholder must use the middle-grey design token value');
+assert.match(uiSource, /const rememberedName = loadSocialRacerProfile\(\)\.name/,
+  'After a player has named a share, later share composers should use that name as the editable default');
+assert.match(uiSource, /nameInput\.value = nameValue == null \? rememberedName : String\(nameValue\)/,
+  'Explicit identity-recovery flows must still be able to clear or replace the remembered default');
 assert.match(mockSource, /'erik-full-field-r1'/);
 assert.match(mockSource, /challengerName: 'ERIK'/);
 
@@ -127,4 +129,4 @@ assert.deepEqual(
 assert.ok(encoded.length > 100,
   'The OG adapter test must use a meaningful self-contained replay payload');
 
-console.log('YOUR TURN fixed start gate, reliable labels, ordered colors and OG-stable sharing regression passed.');
+console.log('YOUR TURN fixed start gate, reliable labels, ordered colors, remembered names and OG-stable sharing regression passed.');
