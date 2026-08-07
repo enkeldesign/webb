@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { createYourTurnUi, escapeHtml } from '/yourturn/ui.js?revision=r2';
-import { createYourTurnSession, readYourTurnRequest } from '/yourturn/session.js?revision=r2';
+import { createYourTurnUi, escapeHtml } from '/yourturn/ui.js?revision=r3';
+import { createYourTurnSession, readYourTurnRequest } from '/yourturn/session.js?revision=r3';
 
 if (globalThis.__YOUR_TURN_STORAGE_READY__ === false) {
   throw new Error('YOUR TURN storage isolation failed before startup.');
@@ -8,11 +8,11 @@ if (globalThis.__YOUR_TURN_STORAGE_READY__ === false) {
 
 const release = await loadTurnRelease();
 globalThis.__TURN_BUILD__ = Object.freeze(release);
-document.documentElement.dataset.yourTurnRuntime = 'recipient-r2';
+document.documentElement.dataset.yourTurnRuntime = 'recipient-r3';
 
 function withBuild(path) {
   const url = new URL(path, globalThis.location?.href || 'https://enkel.design/yourturn/');
-  if (release.cacheKey) url.searchParams.set('build', `${release.cacheKey}-yourturn-r2`);
+  if (release.cacheKey) url.searchParams.set('build', `${release.cacheKey}-yourturn-r3`);
   return url.href;
 }
 
@@ -30,7 +30,7 @@ const { installPerformanceProfile } = await import(withBuild('/turn/performance-
 installPerformanceProfile();
 const { installCoveredRenderingGuard } = await import(withBuild('/turn/render/covered-rendering.js'));
 installCoveredRenderingGuard();
-const animation = installAnimationPauseBridge(THREE);
+const animation = installHardPauseController();
 
 const { installDriveByEarSetting } = await import(withBuild('/turn/ui/drive-by-ear-setting.js'));
 const driveByEarEnabled = installDriveByEarSetting();
@@ -68,6 +68,12 @@ await import(withBuild('/turn/main.js'));
 const runtime = globalThis.__turnRuntime;
 const raceSession = globalThis.__turnNextRaceSession;
 if (!runtime || !raceSession) throw new Error('TURN racing runtime did not become available.');
+
+// TURN's production lifecycle bridge intentionally owns a single devicemotion
+// subscription. YOUR TURN also samples motion briefly after the portrait → landscape
+// transition before centering. Restore normal browser multi-listener semantics here so
+// that sampling cannot replace the racing listener (which caused steering to disappear).
+globalThis.__turnMotionLifecycle?.uninstall?.();
 
 globalThis.__turnRaceSession = raceSession;
 const { installWideGamutRuntime } = await import(withBuild('/turn/vehicle/wide-gamut.js?revision=r157-display-p3'));
@@ -118,31 +124,40 @@ async function loadTurnRelease() {
   }
 }
 
-function installAnimationPauseBridge(three) {
-  const prototype = three.WebGLRenderer.prototype;
-  const downstreamSetAnimationLoop = prototype.setAnimationLoop;
-  let renderer = null;
-  let loop = null;
+function installHardPauseController() {
   let paused = false;
-
-  prototype.setAnimationLoop = function setAnimationLoop(callback) {
-    renderer = this;
-    if (typeof callback === 'function') loop = callback;
-    if (callback === null && !paused) loop = null;
-    return downstreamSetAnimationLoop.call(this, paused ? null : callback);
-  };
+  let pausedAt = 0;
 
   return Object.freeze({
     pause() {
       if (paused) return;
       paused = true;
-      if (renderer) downstreamSetAnimationLoop.call(renderer, null);
+      pausedAt = performance.now();
+
+      // The canonical TURN loop already has a hard occlusion path for The Lot.
+      // YOUR TURN has no Lot UI, so reusing that class gives us a tested frame-level
+      // stop: no physics, replay movement or rendering advances behind our modal.
+      document.body.classList.add('turn-lot-open', 'yourturn-runtime-paused');
+      globalThis.__turnAudio?.silence?.();
     },
+
     resume() {
       if (!paused) return;
+      const now = performance.now();
+      const state = globalThis.__turnRuntime?.state;
+      const pausedFor = Math.max(0, now - pausedAt);
+
+      // A menu pause must not count against an active lap.
+      if (state?.lapActive && Number.isFinite(state.lapStartedAt)) {
+        state.lapStartedAt += pausedFor;
+      }
+      if (state) state.lastFrame = now;
+
+      document.body.classList.remove('turn-lot-open', 'yourturn-runtime-paused');
       paused = false;
-      if (renderer && loop) downstreamSetAnimationLoop.call(renderer, loop);
+      pausedAt = 0;
     },
+
     isPaused: () => paused
   });
 }
