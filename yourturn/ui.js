@@ -1,7 +1,10 @@
 import { aboutTurnHtml as sharedAboutTurnHtml } from '/turn/content/about-turn.js?revision=r1';
+import {
+  loadSocialRacerProfile,
+  saveSocialRacerName
+} from '/turn/social/racer-profile.js?revision=r1';
 import { normalizeChallengeName } from '/yourturn/protocol.js?revision=r3';
 
-const PLAYER_NAME_KEY = 'yourturn-player-name-v1';
 const NAME_REQUIRED_MESSAGE = 'Write your name before sharing.';
 const PAUSE_ICON = `
   <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
@@ -55,6 +58,8 @@ export function createYourTurnUi() {
     extraHtml = '',
     actionList = [],
     requestName = false,
+    nameValue = null,
+    focusName = false,
     className = '',
     motionControl = false
   }) {
@@ -74,9 +79,8 @@ export function createYourTurnUi() {
     nameInput.required = requestName;
     nameInput.removeAttribute('aria-invalid');
     if (requestName) {
-      // Names are intentionally entered afresh at each share. A stable anonymous
-      // racer ID handles identity; the visible name remains a deliberate message.
-      nameInput.value = '';
+      const rememberedName = loadSocialRacerProfile().name;
+      nameInput.value = nameValue == null ? rememberedName : String(nameValue);
     }
 
     actions.replaceChildren();
@@ -100,7 +104,12 @@ export function createYourTurnUi() {
 
     if (typeof dialog.showModal === 'function' && !dialog.open) dialog.showModal();
     else dialog.setAttribute('open', '');
-    actions.querySelector('.is-primary, .is-share, button')?.focus();
+
+    if (requestName && (focusName || !nameInput.value)) {
+      nameInput.focus();
+    } else {
+      actions.querySelector('.is-primary, .is-share, button')?.focus();
+    }
   }
 
   function validateRequestedName() {
@@ -129,12 +138,17 @@ export function createYourTurnUi() {
   }
 
   function playerName() {
-    const name = normalizeChallengeName(nameInput.value);
-    try {
-      localStorage.setItem(PLAYER_NAME_KEY, name);
-    } catch (_) {}
+    const name = normalizeChallengeName(nameInput.value, '');
+    if (!name) return '';
+    saveSocialRacerName(name);
     nameInput.value = name;
     return name;
+  }
+
+  function setPlayerNameValue(value, { focus = false } = {}) {
+    nameInput.value = normalizeChallengeName(value, '');
+    nameInput.removeAttribute('aria-invalid');
+    if (focus) nameInput.focus();
   }
 
   function setTarget({ opponent, time }) {
@@ -185,6 +199,7 @@ export function createYourTurnUi() {
     closeModal,
     setStatus,
     playerName,
+    setPlayerNameValue,
     setTarget,
     showRaceChrome,
     hideRaceChrome,
