@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 
 const LABEL_HEIGHT = 2.8;
+const PLAYER_LABEL_HEIGHT = 3.05;
+const MAX_ORDER_COLOR = 5;
 
 export function installRacerLabels(runtime, getSessionState) {
   if (!runtime?.camera || runtime.__yourTurnRacerLabelsInstalled) return null;
@@ -12,60 +14,97 @@ export function installRacerLabels(runtime, getSessionState) {
   document.body.appendChild(root);
 
   let labels = [];
+  let playerLabel = null;
   let signature = '';
   const point = new THREE.Vector3();
 
-  function syncLabels(laps) {
-    const nextSignature = laps.map((lap) => `${lap.racerId}:${lap.challengerName}`).join('|');
+  function syncLabels(state) {
+    const laps = state?.challengeLaps || [];
+    const playerOrder = resolvePlayerOrder(state);
+    const nextSignature = `${laps.map((lap, index) => {
+      const order = racerOrder(state, lap.racerId, index + 1);
+      return `${lap.racerId}:${lap.challengerName}:${order}`;
+    }).join('|')}|you:${playerOrder}`;
     if (nextSignature === signature) return;
     signature = nextSignature;
     root.replaceChildren();
-    labels = laps.map((lap) => {
+
+    labels = laps.map((lap, index) => {
       const label = document.createElement('span');
-      label.className = 'yourturn-racer-label';
+      const order = racerOrder(state, lap.racerId, index + 1);
+      label.className = `yourturn-racer-label yourturn-order-${colorOrder(order)}`;
       label.textContent = lap.challengerName || 'TURN PLAYER';
       root.appendChild(label);
       return label;
     });
+
+    playerLabel = document.createElement('span');
+    playerLabel.className = `yourturn-racer-label yourturn-player-label yourturn-order-${colorOrder(playerOrder)}`;
+    playerLabel.textContent = '( YOU )';
+    root.appendChild(playerLabel);
   }
 
   function frame() {
     const state = getSessionState?.();
     const laps = state?.challengeLaps || [];
-    syncLabels(laps);
+    syncLabels(state);
     const visible = Boolean(state?.active)
       && !document.documentElement.classList.contains('turn-screen-blanked');
 
     for (let index = 0; index < labels.length; index += 1) {
-      const label = labels[index];
-      const car = runtime.competitorCars?.[index];
-      if (!visible || !car?.visible) {
-        label.hidden = true;
-        continue;
-      }
-
-      point.copy(car.position);
-      point.y += LABEL_HEIGHT;
-      point.project(runtime.camera);
-      if (!Number.isFinite(point.x) || !Number.isFinite(point.y) || point.z < -1 || point.z > 1) {
-        label.hidden = true;
-        continue;
-      }
-
-      const x = (point.x * 0.5 + 0.5) * globalThis.innerWidth;
-      const y = (-point.y * 0.5 + 0.5) * globalThis.innerHeight;
-      if (x < -80 || x > globalThis.innerWidth + 80 || y < -60 || y > globalThis.innerHeight + 60) {
-        label.hidden = true;
-        continue;
-      }
-
-      label.hidden = false;
-      label.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -100%)`;
+      positionLabel(labels[index], runtime.competitorCars?.[index], LABEL_HEIGHT, visible);
     }
+
+    positionLabel(
+      playerLabel,
+      runtime.playerCar,
+      PLAYER_LABEL_HEIGHT,
+      visible && Boolean(state?.accepted)
+    );
 
     requestAnimationFrame(frame);
   }
 
+  function positionLabel(label, car, height, visible) {
+    if (!label) return;
+    if (!visible || !car?.visible) {
+      label.hidden = true;
+      return;
+    }
+
+    point.copy(car.position);
+    point.y += height;
+    point.project(runtime.camera);
+    if (!Number.isFinite(point.x) || !Number.isFinite(point.y) || point.z < -1 || point.z > 1) {
+      label.hidden = true;
+      return;
+    }
+
+    const x = (point.x * 0.5 + 0.5) * globalThis.innerWidth;
+    const y = (-point.y * 0.5 + 0.5) * globalThis.innerHeight;
+    if (x < -80 || x > globalThis.innerWidth + 80 || y < -60 || y > globalThis.innerHeight + 60) {
+      label.hidden = true;
+      return;
+    }
+
+    label.hidden = false;
+    label.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -100%)`;
+  }
+
   requestAnimationFrame(frame);
   return root;
+}
+
+function racerOrder(state, racerId, fallback) {
+  return state?.challenge?.racers?.find((racer) => racer.id === racerId)?.order || fallback;
+}
+
+function resolvePlayerOrder(state) {
+  const ownRacer = state?.challenge?.racers?.find((racer) => racer.id === state?.racerId);
+  return ownRacer?.order || state?.challenge?.nextOrder || 1;
+}
+
+function colorOrder(order) {
+  const value = Math.max(1, Math.round(Number(order) || 1));
+  return Math.min(MAX_ORDER_COLOR, value);
 }

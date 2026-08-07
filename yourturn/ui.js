@@ -22,6 +22,7 @@ export function createYourTurnUi() {
   const actions = dialog?.querySelector('.yourturn-actions');
   const status = dialog?.querySelector('.yourturn-dialog-status');
   const nameField = dialog?.querySelector('.yourturn-name-field');
+  const nameInput = nameField?.querySelector('input');
   const motionToggle = dialog?.querySelector('#yourTurnMotionToggle');
   const rotate = document.querySelector('#yourTurnRotate');
   const targetChip = document.querySelector('#yourTurnTargetChip');
@@ -30,7 +31,7 @@ export function createYourTurnUi() {
   const challengeButton = document.querySelector('#yourTurnChallengeButton');
 
   if (!dialog || !card || !kicker || !title || !details || !copy || !extra || !actions || !status
-      || !nameField || !motionToggle || !rotate || !targetChip || !targetOpponent || !targetTime || !challengeButton) {
+      || !nameField || !nameInput || !motionToggle || !rotate || !targetChip || !targetOpponent || !targetTime || !challengeButton) {
     throw new Error('YOUR TURN could not find its complete interface.');
   }
 
@@ -62,7 +63,11 @@ export function createYourTurnUi() {
     motionToggle.hidden = !motionControl;
 
     nameField.hidden = !requestName;
-    if (requestName) nameField.querySelector('input').value = loadPlayerName();
+    if (requestName) {
+      // Names are intentionally entered afresh at each share. A stable anonymous
+      // racer ID handles identity; the visible name remains a deliberate message.
+      nameInput.value = '';
+    }
 
     actions.replaceChildren();
     for (const action of actionList) {
@@ -95,12 +100,11 @@ export function createYourTurnUi() {
   }
 
   function playerName() {
-    const input = nameField.querySelector('input');
-    const name = normalizeChallengeName(input?.value);
+    const name = normalizeChallengeName(nameInput.value);
     try {
       localStorage.setItem(PLAYER_NAME_KEY, name);
     } catch (_) {}
-    if (input) input.value = name;
+    nameInput.value = name;
     return name;
   }
 
@@ -186,12 +190,4 @@ export function escapeHtml(value) {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#39;');
-}
-
-function loadPlayerName() {
-  try {
-    return normalizeChallengeName(localStorage.getItem(PLAYER_NAME_KEY));
-  } catch (_) {
-    return 'YOUR NAME';
-  }
 }

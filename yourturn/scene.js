@@ -6,11 +6,13 @@ const PREVIEW_CAMERA_DISTANCE = 18;
 const PREVIEW_CAMERA_HEIGHT = 8.4;
 const PREVIEW_START_DELAY_MS = 650;
 const STAGED_IMITATION_DELAY_MS = 650;
+const START_GRID_SPACING = 3.4;
 
 export function createChallengeScene({ runtime, challengeLap, onRaceStarted }) {
   let phase = 'preview';
   let previewStartedAt = performance.now();
   const stagedHistory = [];
+  const stagedGrid = createEmptyGrid();
   const reduceMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 
   function setPhase(nextPhase) {
@@ -19,6 +21,7 @@ export function createChallengeScene({ runtime, challengeLap, onRaceStarted }) {
       previewStartedAt = performance.now();
     }
     if (nextPhase !== 'staged') stagedHistory.length = 0;
+    if (nextPhase === 'staged') resetGrid(stagedGrid);
   }
 
   function update(dt) {
@@ -33,7 +36,7 @@ export function createChallengeScene({ runtime, challengeLap, onRaceStarted }) {
         onRaceStarted?.();
         return false;
       }
-      renderStage(runtime, dt, stagedHistory, reduceMotion);
+      renderStage(runtime, dt, stagedHistory, stagedGrid, reduceMotion);
       return true;
     }
     return false;
@@ -72,17 +75,26 @@ function renderPreview(runtime, challengeLap, previewStartedAt, dt, reduceMotion
   runtime.camera.updateProjectionMatrix();
 }
 
-function renderStage(runtime, dt, stagedHistory, reduceMotion) {
+function renderStage(runtime, dt, stagedHistory, stagedGrid, reduceMotion) {
+  const rivalCount = Math.min(
+    runtime.state.competitorLaps?.length || 0,
+    runtime.competitorCars?.length || 0
+  );
+
+  if (rivalCount > 1) {
+    renderMultiRivalGrid(runtime, dt, stagedGrid, rivalCount);
+    renderStageCamera(runtime, dt);
+    return;
+  }
+
+  renderSingleRivalStage(runtime, dt, stagedHistory, reduceMotion);
+  renderStageCamera(runtime, dt);
+}
+
+function renderSingleRivalStage(runtime, dt, stagedHistory, reduceMotion) {
   const { state, playerCar, competitorCars } = runtime;
   const opponentCar = competitorCars[0];
-  playerCar.visible = true;
-  playerCar.position.copy(state.position);
-  const playerSample = runtime.findNearestTrack(state.position).sample;
-  playerCar.position.y = trackSurfaceY(playerSample);
-  playerCar.rotation.x = trackPitch(playerSample);
-  playerCar.rotation.y = state.heading + Math.PI;
-  playerCar.rotation.z = 0;
-  runtime.animateWheels(playerCar, state.steering, state.speed, dt);
+  placePlayerCar(runtime, dt);
 
   const now = performance.now();
   if (!reduceMotion) {
@@ -107,7 +119,79 @@ function renderStage(runtime, dt, stagedHistory, reduceMotion) {
     opponentCar.rotation.z = -delayed.steering * 0.03;
     runtime.animateWheels(opponentCar, delayed.steering, 0, dt);
   }
+}
 
+function renderMultiRivalGrid(runtime, dt, grid, rivalCount) {
+  const { state, samples, competitorCars } = runtime;
+  const totalCars = rivalCount + 1;
+  const playerSlot = Math.floor((totalCars - 1) / 2);
+  const slotOffsets = Array.from(
+    { length: totalCars },
+    (_, index) => (index - (totalCars - 1) / 2) * START_GRID_SPACING
+  );
+
+  if (!grid.playerPlaced) {
+    const nearest = runtime.findNearestTrack(state.position);
+    const normal = nearest.sample.normal || normalFromTangent(nearest.sample.tangent);
+    state.position.addScaledVector(normal, slotOffsets[playerSlot]);
+    const settled = runtime.findNearestTrack(state.position);
+    state.position.y = trackSurfaceY(settled.sample);
+    state.surfacePitch = trackPitch(settled.sample);
+    state.nearestTrackIndex = settled.index;
+    state.trackDistance = settled.distance;
+    state.progress = settled.index / Math.max(1, samples.length);
+    state.lastProgress = state.progress;
+    state.lapPreviousPosition = { x: state.position.x, z: state.position.z };
+    grid.rivalIndex = settled.index;
+    grid.playerPlaced = true;
+  }
+
+  placePlayerCar(runtime, dt);
+
+  const nearest = runtime.findNearestTrack(state.position);
+  if (!Number.isFinite(grid.rivalIndex)) grid.rivalIndex = nearest.index;
+  if (nearest.index >= grid.rivalIndex && nearest.index - grid.rivalIndex < samples.length / 2) {
+    grid.rivalIndex = nearest.index;
+  }
+
+  const rowSample = samples[Math.max(0, Math.min(samples.length - 1, grid.rivalIndex))] || nearest.sample;
+  const rowNormal = rowSample.normal || normalFromTangent(rowSample.tangent);
+  const rowHeading = Math.atan2(rowSample.tangent.x, rowSample.tangent.z);
+  const rivalSlots = slotOffsets.filter((_, index) => index !== playerSlot);
+
+  for (let index = 0; index < competitorCars.length; index += 1) {
+    const car = competitorCars[index];
+    if (!car || index >= rivalCount) {
+      if (car) car.visible = false;
+      continue;
+    }
+
+    const offset = rivalSlots[index] ?? 0;
+    car.visible = true;
+    car.position.copy(rowSample.point).addScaledVector(rowNormal, offset);
+    const surface = runtime.findNearestTrack(car.position).sample;
+    car.position.y = trackSurfaceY(surface);
+    car.rotation.x = trackPitch(surface);
+    car.rotation.y = rowHeading + Math.PI;
+    car.rotation.z = 0;
+    runtime.animateWheels(car, 0, Math.max(0, state.speed), dt);
+  }
+}
+
+function placePlayerCar(runtime, dt) {
+  const { state, playerCar } = runtime;
+  playerCar.visible = true;
+  playerCar.position.copy(state.position);
+  const playerSample = runtime.findNearestTrack(state.position).sample;
+  playerCar.position.y = trackSurfaceY(playerSample);
+  playerCar.rotation.x = trackPitch(playerSample);
+  playerCar.rotation.y = state.heading + Math.PI;
+  playerCar.rotation.z = 0;
+  runtime.animateWheels(playerCar, state.steering, state.speed, dt);
+}
+
+function renderStageCamera(runtime, dt) {
+  const { state, playerCar } = runtime;
   const forward = new THREE.Vector3(Math.sin(state.heading), 0, Math.cos(state.heading));
   const focus = state.position.clone();
   focus.y = playerCar.position.y;
@@ -149,4 +233,17 @@ function hideOtherCompetitors(runtime, keepIndex) {
   for (let index = 0; index < runtime.competitorCars.length; index += 1) {
     if (index !== keepIndex) runtime.competitorCars[index].visible = false;
   }
+}
+
+function normalFromTangent(tangent) {
+  return new THREE.Vector3(-tangent.z, 0, tangent.x).normalize();
+}
+
+function createEmptyGrid() {
+  return { playerPlaced: false, rivalIndex: null };
+}
+
+function resetGrid(grid) {
+  grid.playerPlaced = false;
+  grid.rivalIndex = null;
 }

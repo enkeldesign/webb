@@ -43,6 +43,22 @@ export const MOCK_CHALLENGES = Object.freeze({
       Object.freeze({ id: 'mock-kerstin', name: 'KERSTIN', time: 17.05, laneOffset: -1.15 })
     ]),
     label: 'ARVID + ERIK + KERSTIN · 3 cars'
+  }),
+  'erik-full-field-r1': Object.freeze({
+    id: 'erik-full-field-r1',
+    challengerName: 'ERIK',
+    trackId: 'countryside',
+    time: 15.4,
+    carId: 'sedan-sports',
+    carColor: '#ffd1e6',
+    carSecondaryColor: '#252a35',
+    racers: Object.freeze([
+      Object.freeze({ id: 'mock-erik-first', name: 'ERIK', time: 15.4, laneOffset: 0 }),
+      Object.freeze({ id: 'mock-arvid-second', name: 'ARVID', time: 16.0, laneOffset: 0.85 }),
+      Object.freeze({ id: 'mock-kerstin-third', name: 'KERSTIN', time: 16.7, laneOffset: -0.85 }),
+      Object.freeze({ id: 'mock-sol-fourth', name: 'SOL', time: 17.4, laneOffset: 1.55 })
+    ]),
+    label: 'ERIK FIRST · 4 rivals + YOU'
   })
 });
 
