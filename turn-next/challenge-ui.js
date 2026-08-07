@@ -28,6 +28,9 @@ export function createChallengeUi() {
         <div class="turn-challenge-actions"></div>
       </article>`;
     document.body.appendChild(modal);
+    modal.addEventListener('cancel', (event) => {
+      if (document.body.classList.contains('turn-challenge-active')) event.preventDefault();
+    });
     return modal;
   }
 
