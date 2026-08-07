@@ -31,8 +31,8 @@ const [
 
 const release = JSON.parse(releaseSource);
 
-assert.match(productionEntry, /about-history-bootstrap-r165\.js\?build=20260806-r161-r167-changelog-order/,
-  'The public website must load the newest-first browser-aware About implementation directly');
+assert.match(productionEntry, /about-history-bootstrap-r165\.js\?build=20260806-r161-r168-shared-about-credits/,
+  'The public website must load the shared-credit browser-aware About implementation directly');
 assert.ok(
   productionEntry.indexOf('about-history-bootstrap-r165.js') < productionEntry.indexOf('./app.js?build='),
   'Website About must load before the game module waits for explicit browser launch'
