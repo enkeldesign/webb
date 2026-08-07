@@ -40,7 +40,7 @@ export function installRacerLabels(runtime, getSessionState) {
 
     playerLabel = document.createElement('span');
     playerLabel.className = `yourturn-racer-label yourturn-player-label yourturn-order-${colorOrder(playerOrder)}`;
-    playerLabel.textContent = '( YOU )';
+    playerLabel.textContent = 'YOU';
     root.appendChild(playerLabel);
   }
 
