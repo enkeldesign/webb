@@ -96,6 +96,7 @@ html[data-turn-deployment="yourturn"] #intro {
 }
 
 .yourturn-card {
+  position: relative;
   box-sizing: border-box;
   width: min(720px, 92vw);
   max-height: calc(100dvh - 32px);
@@ -109,12 +110,38 @@ html[data-turn-deployment="yourturn"] #intro {
   -webkit-overflow-scrolling: touch;
 }
 
+.yourturn-motion-toggle {
+  position: absolute;
+  z-index: 3;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  min-height: 52px;
+  padding: 0;
+  place-items: center;
+  border: 4px solid #08090a;
+  border-radius: 50%;
+  background: #ff9b66;
+  color: #08090a;
+  box-shadow: 4px 4px 0 #08090a;
+  font: 1000 1.2rem/1 system-ui, sans-serif;
+  touch-action: manipulation;
+}
+
+.yourturn-motion-toggle[hidden] {
+  display: none;
+}
+
 .yourturn-card-head {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: start;
   gap: 12px;
   margin-bottom: 16px;
+  padding-right: 56px;
 }
 
 .yourturn-card-head img {
@@ -267,7 +294,8 @@ html[data-turn-deployment="yourturn"] #intro {
 
 .yourturn-actions button:focus-visible,
 .yourturn-name-field input:focus-visible,
-.yourturn-pause-button:focus-visible {
+.yourturn-challenge-button:focus-visible,
+.yourturn-motion-toggle:focus-visible {
   outline: 4px solid #38d9ff;
   outline-offset: 4px;
 }
@@ -357,7 +385,7 @@ body.yourturn-racing .best-chip {
   display: none !important;
 }
 
-.yourturn-pause-button {
+.yourturn-challenge-button {
   background: #ff9b66 !important;
   color: #08090a !important;
 }
@@ -420,10 +448,23 @@ body.yourturn-racing #resetButton {
     box-shadow: 8px 8px 0 rgb(8 9 10 / 0.96);
   }
 
+  .yourturn-motion-toggle {
+    top: 8px;
+    right: 8px;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    border-width: 3px;
+    box-shadow: 3px 3px 0 #08090a;
+    font-size: 1rem;
+  }
+
   .yourturn-card-head {
     grid-template-columns: 44px minmax(0, 1fr);
     gap: 10px;
     margin-bottom: 10px;
+    padding-right: 46px;
   }
 
   .yourturn-card-head img {
