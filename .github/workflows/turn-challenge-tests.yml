@@ -7,14 +7,18 @@ on:
       - main
     paths:
       - 'turn-next/**'
+      - 'yourturn/**'
       - 'turn-tests/challenge-*.mjs'
+      - 'turn-tests/yourturn-production.mjs'
       - '.github/workflows/turn-challenge-tests.yml'
   push:
     branches:
       - main
     paths:
       - 'turn-next/**'
+      - 'yourturn/**'
       - 'turn-tests/challenge-*.mjs'
+      - 'turn-tests/yourturn-production.mjs'
       - '.github/workflows/turn-challenge-tests.yml'
 
 permissions:
@@ -33,13 +37,16 @@ jobs:
           node-version: '24'
 
       - name: Syntax-check challenge modules
-        run: find turn-next -maxdepth 1 -type f -name 'challenge-*.js' -print0 | xargs -0 -n1 node --check
+        run: find turn-next yourturn -maxdepth 1 -type f -name '*.js' -print0 | xargs -0 -n1 node --check
 
       - name: Run Race My Ghost contract
         run: node turn-tests/challenge-mode-production.mjs
 
       - name: Run challenge dialog state-safety regression
         run: node turn-tests/challenge-dialog-state-production.mjs
+
+      - name: Run YOUR TURN recipient contract
+        run: node turn-tests/yourturn-production.mjs
 
       - name: Verify TURN NEXT parity wrapper
         run: node turn-next/scripts/build-parity-app.mjs --check
