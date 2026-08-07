@@ -20,18 +20,18 @@
   <title>YOUR TURN</title>
   <link rel="icon" href="/turn/TURNicon.PNG?icon=20260803-profile-512" type="image/png">
 
-  <link rel="stylesheet" href="/turn/styles.css?source=yourturn-r2">
-  <link rel="stylesheet" href="/turn/vertical-drive.css?source=yourturn-r2">
-  <link rel="stylesheet" href="/turn/hud-tuning.css?source=yourturn-r2">
-  <link rel="stylesheet" href="/turn/gameplay-features.css?source=yourturn-r2">
-  <link rel="stylesheet" href="/turn/gameplay-v2.css?source=yourturn-r2">
-  <link rel="stylesheet" href="/turn/position-hud-r83.css?source=yourturn-r2">
-  <link rel="stylesheet" href="/turn/drive-pad.css?source=yourturn-r2">
-  <link rel="stylesheet" href="/turn/manual-steering.css?source=yourturn-r2">
-  <link rel="stylesheet" href="/turn/steering-limit-warning.css?source=yourturn-r2">
-  <link rel="stylesheet" href="/turn/lap-result-toast.css?source=yourturn-r2">
-  <link rel="stylesheet" href="/turn/r104-polish.css?source=yourturn-r2">
-  <link rel="stylesheet" href="/yourturn/yourturn.css?revision=r2">
+  <link rel="stylesheet" href="/turn/styles.css?source=yourturn-r3">
+  <link rel="stylesheet" href="/turn/vertical-drive.css?source=yourturn-r3">
+  <link rel="stylesheet" href="/turn/hud-tuning.css?source=yourturn-r3">
+  <link rel="stylesheet" href="/turn/gameplay-features.css?source=yourturn-r3">
+  <link rel="stylesheet" href="/turn/gameplay-v2.css?source=yourturn-r3">
+  <link rel="stylesheet" href="/turn/position-hud-r83.css?source=yourturn-r3">
+  <link rel="stylesheet" href="/turn/drive-pad.css?source=yourturn-r3">
+  <link rel="stylesheet" href="/turn/manual-steering.css?source=yourturn-r3">
+  <link rel="stylesheet" href="/turn/steering-limit-warning.css?source=yourturn-r3">
+  <link rel="stylesheet" href="/turn/lap-result-toast.css?source=yourturn-r3">
+  <link rel="stylesheet" href="/turn/r104-polish.css?source=yourturn-r3">
+  <link rel="stylesheet" href="/yourturn/yourturn.css?revision=r3">
 
   <script src="/yourturn/storage-bootstrap.js?revision=r1"></script>
   <script type="importmap">
@@ -80,7 +80,7 @@
 
   <div class="controls" id="controls" hidden>
     <div class="utility-group">
-      <button class="utility yourturn-challenge-button" id="yourTurnChallengeButton" type="button" hidden aria-label="Open challenge menu">CHALLENGE</button>
+      <button class="utility yourturn-challenge-button" id="yourTurnChallengeButton" type="button" hidden aria-label="Open the challenge">THE CHALLENGE</button>
       <button class="utility" id="calibrateButton" type="button">Recalibrate</button>
       <button class="utility" id="resetButton" type="button">Restart Lap</button>
     </div>
@@ -100,7 +100,12 @@
 
   <dialog class="yourturn-dialog" id="yourTurnDialog" aria-labelledby="yourTurnTitle">
     <article class="yourturn-card">
-      <button class="yourturn-motion-toggle" id="yourTurnMotionToggle" type="button" hidden aria-label="Pause background motion" aria-pressed="false" title="Pause background motion">⏸</button>
+      <button class="yourturn-motion-toggle" id="yourTurnMotionToggle" type="button" hidden aria-label="Pause background motion" aria-pressed="false" title="Pause background motion">
+        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
+          <rect x="6" y="5" width="4" height="14" rx="1"></rect>
+          <rect x="14" y="5" width="4" height="14" rx="1"></rect>
+        </svg>
+      </button>
       <header class="yourturn-card-head">
         <img src="/turn/TURNicon.PNG?icon=20260803-profile-512" alt="" aria-hidden="true">
         <div>
@@ -126,6 +131,6 @@
     <span>Loading challenge…</span>
   </div>
 
-  <script type="module" src="/yourturn/app.js?revision=r2"></script>
+  <script type="module" src="/yourturn/app.js?revision=r3"></script>
 </body>
 </html>

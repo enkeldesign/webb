@@ -1,6 +1,15 @@
 import { normalizeChallengeName } from '/yourturn/protocol.js?revision=r2';
 
 const PLAYER_NAME_KEY = 'yourturn-player-name-v1';
+const PAUSE_ICON = `
+  <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
+    <rect x="6" y="5" width="4" height="14" rx="1"></rect>
+    <rect x="14" y="5" width="4" height="14" rx="1"></rect>
+  </svg>`;
+const PLAY_ICON = `
+  <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
+    <path d="M8 5.5v13l10-6.5z"></path>
+  </svg>`;
 
 export function createYourTurnUi() {
   const dialog = document.querySelector('#yourTurnDialog');
@@ -129,7 +138,7 @@ export function createYourTurnUi() {
   }
 
   function setMotionPaused(paused) {
-    motionToggle.textContent = paused ? '▶' : '⏸';
+    motionToggle.innerHTML = paused ? PLAY_ICON : PAUSE_ICON;
     motionToggle.setAttribute('aria-label', paused ? 'Play background motion' : 'Pause background motion');
     motionToggle.setAttribute('aria-pressed', String(Boolean(paused)));
     motionToggle.title = paused ? 'Play background motion' : 'Pause background motion';
