@@ -3,6 +3,7 @@ import {
   CURRENT_RELEASE,
   DEVELOPMENT_HISTORY
 } from '../content/about-history.js?build=20260806-r161';
+import { aboutTurnHtml } from '../content/about-turn.js?revision=r1';
 
 const REVISION = 'r165-browser-about';
 const INSTALL_NOTE =
@@ -199,9 +200,7 @@ function compactAboutDialog(aboutDialog, historyDialog, tabs) {
 
   content.classList.add('turn-dialog__body');
   content.innerHTML = `
-    <p class="m8-about-lead">TURN is a racing game about tilt steering, personal rivals and learning to drive by ear.</p>
-    <p class="m8-about-summary">Built through inclusive and universal design so players can use sight, sound, touch, motion, a keyboard or assistive technology.</p>
-    <p class="m8-about-credits">© 2026 <a href="https://enkel.design/" target="_blank" rel="noreferrer">enkel.design</a>. Created by Erik Jansson, aided by OpenAI Codex. Drive By Ear™ is inspired by <a href="https://ceal.cs.columbia.edu/rad/" target="_blank" rel="noreferrer">RAD – Racing Auditory Display</a>.</p>
+    ${aboutTurnHtml()}
     <div class="m8-about-actions turn-dialog__actions">
       <button class="m8-about-history" type="button" aria-haspopup="dialog">HISTORY &amp; CHANGELOG</button>
       <a class="m8-about-design-system" href="/turn/design.html" target="_blank" rel="noreferrer">DESIGN SYSTEM</a>
