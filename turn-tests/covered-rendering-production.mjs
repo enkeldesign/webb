@@ -22,8 +22,10 @@ assert.ok(
 );
 
 assert.match(guard, /THREE\.WebGLRenderer\.prototype/, 'The guard must cover the renderer loop at its shared registration boundary');
-assert.match(guard, /TRACK_SELECTOR_CLASS = 'turn-track-select-open'/, 'Only the fully covering track selector should add this new pause condition');
-assert.match(guard, /document\.body\?\.classList\.contains\(TRACK_SELECTOR_CLASS\)/, 'Covered frames must be detected from the selector lifecycle class');
+assert.match(guard, /PAUSE_CLASSES[\s\S]*turn-track-select-open[\s\S]*turn-runtime-paused/,
+  'The renderer guard must support both track selection and deliberate modal pauses');
+assert.match(guard, /PAUSE_CLASSES\.some\(\(className\) => document\.body\?\.classList\.contains\(className\)\)/,
+  'Covered frames must be detected from the declared pause lifecycle classes');
 assert.match(guard, /stats\.skippedFrames \+= 1/, 'Skipped covered frames must remain measurable through diagnostics');
 assert.match(guard, /callback\.call\(renderer, time, frame\)/, 'Visible frames must preserve the original renderer callback context and arguments');
 assert.match(guard, /typeof callback !== 'function'/, 'Removing an animation loop must still delegate directly to Three.js');
@@ -36,4 +38,4 @@ assert.match(selector, /document\.body\.classList\.remove\('turn-track-select-op
 assert.match(main, /if \(document\.body\.classList\.contains\('turn-lot-open'\)\) return 'lot'/, 'The existing Lot pause must remain intact');
 assert.match(main, /if \(installGate && !installGate\.hidden\) return 'install gate'/, 'The existing install-gate pause must remain intact');
 
-console.log(`TURN ${release.id} fully covered track-selector rendering guard passed.`);
+console.log(`TURN ${release.id} covered rendering and modal pause guard passed.`);

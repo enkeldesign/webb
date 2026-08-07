@@ -2,6 +2,10 @@
   const LOCAL_PREFIX = 'yourturn:';
   const SESSION_PREFIX = 'yourturn-session:';
   const PATCH_MARKER = Symbol.for('yourturn.storage.patch');
+  const SHARED_RACER_ID_KEY = 'turn-social-racer-id-v1';
+  const SHARED_RACER_NAME_KEY = 'turn-social-racer-name-v1';
+  const LEGACY_RACER_ID_KEY = `${LOCAL_PREFIX}yourturn-racer-id-v1`;
+  const LEGACY_RACER_NAME_KEY = `${LOCAL_PREFIX}yourturn-player-name-v1`;
 
   function fail(error) {
     console.error('YOUR TURN: isolated storage could not be established.', error);
@@ -20,6 +24,12 @@
     else render();
   }
 
+  function createRacerId() {
+    const random = globalThis.crypto?.randomUUID?.()
+      || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+    return `r-${String(random).toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 60)}`;
+  }
+
   try {
     const localStorageRef = window.localStorage;
     const sessionStorageRef = window.sessionStorage;
@@ -32,6 +42,40 @@
       removeItem: proto.removeItem,
       clear: proto.clear,
       key: proto.key
+    });
+
+    // Migrate the earlier YOUR TURN-only identity into the shared social profile.
+    // If this browser has never participated before, create the ID here so both
+    // the existing YOUR TURN session code and the new TURN social profile start
+    // with exactly the same racer identity before any UI or replay colours load.
+    const sharedRacerId = native.getItem.call(localStorageRef, SHARED_RACER_ID_KEY);
+    const legacyRacerId = native.getItem.call(localStorageRef, LEGACY_RACER_ID_KEY);
+    const effectiveRacerId = sharedRacerId || legacyRacerId || createRacerId();
+    native.setItem.call(localStorageRef, SHARED_RACER_ID_KEY, effectiveRacerId);
+    native.setItem.call(localStorageRef, LEGACY_RACER_ID_KEY, effectiveRacerId);
+
+    const sharedRacerName = native.getItem.call(localStorageRef, SHARED_RACER_NAME_KEY);
+    const legacyRacerName = native.getItem.call(localStorageRef, LEGACY_RACER_NAME_KEY);
+    if (!sharedRacerName && legacyRacerName) {
+      native.setItem.call(localStorageRef, SHARED_RACER_NAME_KEY, legacyRacerName);
+    }
+
+    // YOUR TURN isolates gameplay records, but the lightweight social racer
+    // profile intentionally belongs to TURN as a whole. Expose a tiny raw local
+    // storage bridge before patching Storage so /turn and /yourturn can share
+    // that convenience identity when they happen to run in the same browser
+    // storage context. Cross-browser/webview identity still relies on explicit
+    // player confirmation in the challenge UI.
+    globalThis.__TURN_SHARED_LOCAL_STORAGE__ = Object.freeze({
+      getItem(key) {
+        return native.getItem.call(localStorageRef, String(key));
+      },
+      setItem(key, value) {
+        return native.setItem.call(localStorageRef, String(key), String(value));
+      },
+      removeItem(key) {
+        return native.removeItem.call(localStorageRef, String(key));
+      }
     });
 
     function prefixFor(storage) {

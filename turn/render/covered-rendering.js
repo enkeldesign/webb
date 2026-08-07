@@ -1,7 +1,10 @@
 import * as THREE from 'three';
 
 const INSTALL_FLAG = Symbol.for('turn.covered-rendering-installed');
-const TRACK_SELECTOR_CLASS = 'turn-track-select-open';
+const PAUSE_CLASSES = Object.freeze([
+  'turn-track-select-open',
+  'turn-runtime-paused'
+]);
 
 export function installCoveredRenderingGuard() {
   const prototype = THREE.WebGLRenderer.prototype;
@@ -20,7 +23,7 @@ export function installCoveredRenderingGuard() {
 
     const renderer = this;
     const guardedCallback = (time, frame) => {
-      if (document.body?.classList.contains(TRACK_SELECTOR_CLASS)) {
+      if (PAUSE_CLASSES.some((className) => document.body?.classList.contains(className))) {
         stats.skippedFrames += 1;
         return;
       }

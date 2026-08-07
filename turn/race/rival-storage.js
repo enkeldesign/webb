@@ -142,36 +142,71 @@ export function clearAllRivalsState(state, trackIds = []) {
 }
 
 export function getStoredBestLap(trackId = DEFAULT_TRACK_ID) {
-  const activeTrackId = normalizeTrackId(trackId);
-  try {
-    const savedRivals = JSON.parse(localStorage.getItem(rivalKey(activeTrackId)));
-    const bestLap = Array.isArray(savedRivals?.laps)
-      ? savedRivals.laps.reduce((best, lap) => {
-        const time = Number(lap?.time);
-        if (!Number.isFinite(time)) return best;
-        if (!best || time < best.time) {
-          const summary = {
-            time,
-            carId: lap?.carId ? normalizeVehicleId(lap.carId) : LEGACY_VEHICLE_ID
-          };
-          if (lap?.carColor) summary.carColor = normalizeVehicleColor(lap.carColor);
-          if (lap?.carSecondaryColor) {
-            summary.carSecondaryColor = normalizeVehicleSecondaryColor(lap.carSecondaryColor);
-          }
-          return summary;
-        }
-        return best;
-      }, null)
-      : null;
-    if (bestLap) return bestLap;
+  const bestReplay = getStoredBestReplayLap(trackId);
+  if (bestReplay) {
+    const summary = {
+      time: bestReplay.time,
+      carId: bestReplay.carId
+    };
+    if (bestReplay.carColor) summary.carColor = bestReplay.carColor;
+    if (bestReplay.carSecondaryColor) summary.carSecondaryColor = bestReplay.carSecondaryColor;
+    return summary;
+  }
 
-    if (activeTrackId === DEFAULT_TRACK_ID) {
+  // Preserve the historical summary-only fallback. Very old Countryside saves
+  // can contain a best time without enough replay frames to share as YOUR TURN;
+  // Home should still display that record even though no share button is offered.
+  const activeTrackId = normalizeTrackId(trackId);
+  if (activeTrackId === DEFAULT_TRACK_ID) {
+    try {
       const oldGhost = JSON.parse(localStorage.getItem(ghostKey(activeTrackId)));
       const legacyTime = Number(oldGhost?.bestTime);
       if (Number.isFinite(legacyTime)) {
         return {
           time: legacyTime,
           carId: LEGACY_VEHICLE_ID
+        };
+      }
+    } catch (_) {}
+  }
+  return null;
+}
+
+export function getStoredBestReplayLap(trackId = DEFAULT_TRACK_ID) {
+  const activeTrackId = normalizeTrackId(trackId);
+  try {
+    const savedRivals = JSON.parse(localStorage.getItem(rivalKey(activeTrackId)));
+    const bestLap = Array.isArray(savedRivals?.laps)
+      ? savedRivals.laps
+        .filter(isValidLap)
+        .reduce((best, lap) => {
+          const time = Number(lap?.time);
+          if (!best || time < best.time) {
+            return {
+              time,
+              hitAt: lap.hitAt != null && Number.isFinite(Number(lap.hitAt)) ? Number(lap.hitAt) : null,
+              carId: lap?.carId ? normalizeVehicleId(lap.carId) : LEGACY_VEHICLE_ID,
+              carColor: lap?.carColor ? normalizeVehicleColor(lap.carColor) : DEFAULT_VEHICLE_COLOR,
+              carSecondaryColor: normalizeVehicleSecondaryColor(lap?.carSecondaryColor),
+              frames: lap.frames.map((frame) => ({ ...frame }))
+            };
+          }
+          return best;
+        }, null)
+      : null;
+    if (bestLap) return bestLap;
+
+    if (activeTrackId === DEFAULT_TRACK_ID) {
+      const oldGhost = JSON.parse(localStorage.getItem(ghostKey(activeTrackId)));
+      const legacyTime = Number(oldGhost?.bestTime);
+      if (Number.isFinite(legacyTime) && Array.isArray(oldGhost?.frames) && oldGhost.frames.length > 20) {
+        return {
+          time: legacyTime,
+          hitAt: null,
+          carId: LEGACY_VEHICLE_ID,
+          carColor: DEFAULT_VEHICLE_COLOR,
+          carSecondaryColor: DEFAULT_VEHICLE_SECONDARY_COLOR,
+          frames: oldGhost.frames.map((frame) => ({ ...frame }))
         };
       }
     }
