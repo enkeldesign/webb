@@ -1,9 +1,10 @@
 import { aboutTurnHtml as sharedAboutTurnHtml } from '/turn/content/about-turn.js?revision=r1';
 import {
+  adoptSocialRacerIdentity,
   loadSocialRacerProfile,
   saveSocialRacerName
 } from '/turn/social/racer-profile.js?revision=r1';
-import { normalizeChallengeName } from '/yourturn/protocol.js?revision=r3';
+import { formatChallengeTime, normalizeChallengeName } from '/yourturn/protocol.js?revision=r3';
 
 const NAME_REQUIRED_MESSAGE = 'Write your name before sharing.';
 const PAUSE_ICON = `
@@ -50,19 +51,21 @@ export function createYourTurnUi() {
     if (status.textContent === NAME_REQUIRED_MESSAGE) status.textContent = '';
   });
 
-  function showModal({
-    kickerText = 'YOUR TURN',
-    titleText,
-    detailsHtml = '',
-    copyHtml = '',
-    extraHtml = '',
-    actionList = [],
-    requestName = false,
-    nameValue = null,
-    focusName = false,
-    className = '',
-    motionControl = false
-  }) {
+  function showModal(config) {
+    const {
+      kickerText = 'YOUR TURN',
+      titleText,
+      detailsHtml = '',
+      copyHtml = '',
+      extraHtml = '',
+      actionList = [],
+      requestName = false,
+      nameValue = null,
+      focusName = false,
+      className = '',
+      motionControl = false
+    } = config;
+
     kicker.textContent = kickerText;
     title.textContent = titleText;
     details.innerHTML = detailsHtml;
@@ -96,7 +99,10 @@ export function createYourTurnUi() {
       if (action.game) button.classList.add('is-game');
       if (action.back) button.classList.add('is-back');
       button.addEventListener('click', (event) => {
-        if (requestName && action.share && !validateRequestedName()) return;
+        if (requestName && action.share) {
+          if (!validateRequestedName()) return;
+          if (offerExistingRacerClaim({ action, event, returnConfig: config })) return;
+        }
         action.action(event);
       });
       actions.appendChild(button);
@@ -110,6 +116,56 @@ export function createYourTurnUi() {
     } else {
       actions.querySelector('.is-primary, .is-share, button')?.focus();
     }
+  }
+
+  function offerExistingRacerClaim({ action, event, returnConfig }) {
+    const sessionState = globalThis.__yourTurnSession?.getState?.();
+    const challenge = sessionState?.challenge;
+    if (!sessionState || !challenge?.racers?.length) return false;
+
+    const profile = loadSocialRacerProfile();
+    if (profile.id) sessionState.racerId = profile.id;
+    if (challenge.racers.some((racer) => racer.id === sessionState.racerId)) return false;
+
+    const typedName = normalizeChallengeName(nameInput.value, '');
+    const normalizedTyped = typedName.toLocaleUpperCase('en');
+    const matches = challenge.racers.filter((racer) => (
+      normalizeChallengeName(racer.name, '').toLocaleUpperCase('en') === normalizedTyped
+    ));
+    if (!matches.length) return false;
+
+    if (matches.length > 1) {
+      nameInput.setAttribute('aria-invalid', 'true');
+      status.textContent = `${typedName} is already used by more than one car in this challenge. Use another name.`;
+      nameInput.focus();
+      return true;
+    }
+
+    const existing = matches[0];
+    showModal({
+      titleText: `${existing.name} IS ALREADY HERE`,
+      detailsHtml: `<strong>${formatChallengeTime(existing.time)}</strong><span>Earlier ${escapeHtml(existing.name)} car</span>`,
+      copyHtml: `Is that your earlier car? If it is, this share will update ${escapeHtml(existing.name)} instead of adding a duplicate player.`,
+      className: 'identity-claim',
+      actionList: [
+        {
+          label: 'YES, THAT’S ME',
+          share: true,
+          action: () => {
+            sessionState.racerId = existing.id;
+            adoptSocialRacerIdentity({ id: existing.id, name: typedName });
+            nameInput.value = typedName;
+            action.action(event);
+          }
+        },
+        {
+          label: 'NO, USE ANOTHER NAME',
+          navigation: true,
+          action: () => showModal({ ...returnConfig, nameValue: '', focusName: true })
+        }
+      ]
+    });
+    return true;
   }
 
   function validateRequestedName() {
