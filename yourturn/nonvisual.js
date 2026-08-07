@@ -1,12 +1,16 @@
 const BLANKING_ACTIVATION_TIMEOUT_MS = 1800;
+const BOOTSTRAP_FRAME_LIMIT = 180;
 
 export function installYourTurnNonVisualIntro({
-  screenBlanking,
-  animation,
-  audioPreferences
+  blankButton = document.querySelector('.turn-screen-blank-control'),
+  audioPreferences = globalThis.__turnAudioPreferences,
+  runtime = globalThis.__turnRuntime
 } = {}) {
-  const blankButton = screenBlanking?.button;
-  if (!blankButton || !animation || !audioPreferences) return null;
+  if (!blankButton || !audioPreferences || !runtime) return null;
+  if (blankButton.dataset.yourTurnNonVisualIntro === 'true') return null;
+  blankButton.dataset.yourTurnNonVisualIntro = 'true';
+
+  removeRivalResetUi();
 
   const dialog = createDialog();
   const balanceSlider = dialog.querySelector('#yourTurnDbeBalance');
@@ -14,7 +18,8 @@ export function installYourTurnNonVisualIntro({
   const blankAction = dialog.querySelector('[data-yourturn-blank-screen]');
   const backAction = dialog.querySelector('[data-yourturn-nonvisual-back]');
   let bypassBlankButtonIntro = false;
-  let resumeAfterDialog = false;
+  let pausedForDialog = false;
+  let pausedAt = 0;
 
   function balanceLabel(value) {
     if (value < 45) return `${100 - value}% other sounds`;
@@ -31,10 +36,31 @@ export function installYourTurnNonVisualIntro({
     balanceOutput.textContent = balanceOutput.value;
   }
 
+  function pauseRaceForDialog() {
+    pausedForDialog = !document.body.classList.contains('turn-lot-open');
+    if (!pausedForDialog) return;
+    pausedAt = performance.now();
+    document.body.classList.add('turn-lot-open', 'yourturn-runtime-paused', 'yourturn-nonvisual-info-open');
+    globalThis.__turnAudio?.silence?.();
+  }
+
+  function resumeRaceFromDialog() {
+    if (!pausedForDialog) return;
+    const now = performance.now();
+    const state = runtime.state;
+    const pausedFor = Math.max(0, now - pausedAt);
+    if (state?.lapActive && Number.isFinite(state.lapStartedAt)) {
+      state.lapStartedAt += pausedFor;
+    }
+    if (state) state.lastFrame = now;
+    document.body.classList.remove('turn-lot-open', 'yourturn-runtime-paused', 'yourturn-nonvisual-info-open');
+    pausedForDialog = false;
+    pausedAt = 0;
+  }
+
   function openDialog() {
     syncBalance();
-    resumeAfterDialog = !animation.isPaused();
-    animation.pause();
+    pauseRaceForDialog();
     if (typeof dialog.showModal === 'function' && !dialog.open) dialog.showModal();
     else dialog.setAttribute('open', '');
     blankAction.focus();
@@ -43,18 +69,15 @@ export function installYourTurnNonVisualIntro({
   function closeDialog({ resume = true } = {}) {
     if (typeof dialog.close === 'function' && dialog.open) dialog.close();
     else dialog.removeAttribute('open');
-    if (resume && resumeAfterDialog) animation.resume();
-    resumeAfterDialog = false;
+    if (resume) resumeRaceFromDialog();
     if (!blankButton.hidden) blankButton.focus({ preventScroll: true });
   }
 
   async function activateBlankScreen() {
-    const shouldResume = resumeAfterDialog;
     closeDialog({ resume: false });
 
-    // Reuse TURN's tested screen-blanking state machine. The recipient-facing
-    // information dialog replaces its two-tap confirmation, so advance IDLE → ARMED
-    // → ACTIVE internally without showing the intermediate toast to the player.
+    // Reuse TURN's tested screen-blanking state machine. This information dialog
+    // replaces its two-tap confirmation, so advance IDLE → ARMED → ACTIVE internally.
     bypassBlankButtonIntro = true;
     try {
       blankButton.click();
@@ -64,8 +87,7 @@ export function installYourTurnNonVisualIntro({
     }
 
     await waitForBlankingAttempt(blankButton);
-    if (shouldResume) animation.resume();
-    resumeAfterDialog = false;
+    resumeRaceFromDialog();
   }
 
   blankButton.addEventListener('click', (event) => {
@@ -131,6 +153,12 @@ function createDialog() {
   return dialog;
 }
 
+function removeRivalResetUi() {
+  document.querySelector('.reset-rivals-button')?.remove();
+  document.querySelector('.nuke-dialog')?.remove();
+  document.querySelector('.nuke-effect')?.remove();
+}
+
 function waitForBlankingAttempt(button) {
   if (button.dataset.state === 'active' || button.dataset.state === 'idle') {
     return Promise.resolve(button.dataset.state);
@@ -150,4 +178,26 @@ function waitForBlankingAttempt(button) {
       resolve(button.dataset.state || 'unknown');
     }, BLANKING_ACTIVATION_TIMEOUT_MS);
   });
+}
+
+function bootstrap(attempt = 0) {
+  removeRivalResetUi();
+  const blankButton = document.querySelector('.turn-screen-blank-control');
+  const audioPreferences = globalThis.__turnAudioPreferences;
+  const runtime = globalThis.__turnRuntime;
+
+  if (blankButton && audioPreferences && runtime) {
+    installYourTurnNonVisualIntro({ blankButton, audioPreferences, runtime });
+    return;
+  }
+
+  if (attempt < BOOTSTRAP_FRAME_LIMIT) {
+    requestAnimationFrame(() => bootstrap(attempt + 1));
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => bootstrap(), { once: true });
+} else {
+  bootstrap();
 }
