@@ -24,6 +24,12 @@
     else render();
   }
 
+  function createRacerId() {
+    const random = globalThis.crypto?.randomUUID?.()
+      || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+    return `r-${String(random).toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 60)}`;
+  }
+
   try {
     const localStorageRef = window.localStorage;
     const sessionStorageRef = window.sessionStorage;
@@ -38,16 +44,15 @@
       key: proto.key
     });
 
-    // Migrate the earlier YOUR TURN-only identity into the shared social profile,
-    // then mirror the shared racer ID back into the old namespaced key so the
-    // existing session code starts with the same identity before any UI is shown.
+    // Migrate the earlier YOUR TURN-only identity into the shared social profile.
+    // If this browser has never participated before, create the ID here so both
+    // the existing YOUR TURN session code and the new TURN social profile start
+    // with exactly the same racer identity before any UI or replay colours load.
     const sharedRacerId = native.getItem.call(localStorageRef, SHARED_RACER_ID_KEY);
     const legacyRacerId = native.getItem.call(localStorageRef, LEGACY_RACER_ID_KEY);
-    if (!sharedRacerId && legacyRacerId) {
-      native.setItem.call(localStorageRef, SHARED_RACER_ID_KEY, legacyRacerId);
-    } else if (sharedRacerId && sharedRacerId !== legacyRacerId) {
-      native.setItem.call(localStorageRef, LEGACY_RACER_ID_KEY, sharedRacerId);
-    }
+    const effectiveRacerId = sharedRacerId || legacyRacerId || createRacerId();
+    native.setItem.call(localStorageRef, SHARED_RACER_ID_KEY, effectiveRacerId);
+    native.setItem.call(localStorageRef, LEGACY_RACER_ID_KEY, effectiveRacerId);
 
     const sharedRacerName = native.getItem.call(localStorageRef, SHARED_RACER_NAME_KEY);
     const legacyRacerName = native.getItem.call(localStorageRef, LEGACY_RACER_NAME_KEY);
