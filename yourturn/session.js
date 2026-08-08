@@ -14,11 +14,15 @@ import {
   encodeChallenge,
   encodedChallengeFromLocation,
   formatChallengeTime,
-  makeChallengeUrl,
   makeMockChallengeUrl,
   normalizeChallenge,
   normalizeChallengeName
 } from '/yourturn/protocol.js?revision=r3';
+import {
+  loadChallengeSnapshot,
+  makeShareableChallengeUrl,
+  snapshotIdFromLocation
+} from '/yourturn/challenge-store.js?revision=r1';
 import { getMockChallenge, MOCK_CHALLENGES } from '/yourturn/mock-challenges.js?revision=r1';
 import { createChallengeScene } from '/yourturn/scene.js?revision=r1';
 import { aboutTurnHtml, escapeHtml, newcomerAssistiveText } from '/yourturn/ui.js?revision=r3';
@@ -28,14 +32,16 @@ const RACER_ID_KEY = 'yourturn-racer-id-v1';
 export function readYourTurnRequest(locationRef = globalThis.location) {
   const query = new URLSearchParams(locationRef?.search || '');
   const mockId = query.get('challenge') || '';
-  const encoded = encodedChallengeFromLocation(locationRef);
+  const snapshotId = snapshotIdFromLocation(locationRef);
+  const encoded = snapshotId ? '' : encodedChallengeFromLocation(locationRef);
   return Object.freeze({
     mockId,
+    snapshotId,
     encoded,
     // Kept only so already-shared r5 give-up links remain understandable.
     reply: query.get('reply') === 'give-up' ? 'give-up' : '',
     responder: normalizeChallengeName(query.get('responder'), 'A TURN PLAYER'),
-    hasChallenge: Boolean(mockId || encoded)
+    hasChallenge: Boolean(mockId || snapshotId || encoded)
   });
 }
 
@@ -124,7 +130,10 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
       return materializeMockChallenge(definition);
     }
 
-    const challenge = await decodeChallenge(request.encoded);
+    const encoded = request.snapshotId
+      ? await loadChallengeSnapshot(request.snapshotId)
+      : request.encoded;
+    const challenge = await decodeChallenge(encoded);
     await activateTrack(challenge.trackId, runtime);
     const currentRevision = getTrackStorageRevision(challenge.trackId);
     if (challenge.trackRevision && challenge.trackRevision !== currentRevision) {
@@ -414,7 +423,10 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
       lap: candidate
     });
     const encoded = await encodeChallenge(nextChallenge);
-    const url = makeChallengeUrl(encoded);
+    ui.setStatus('Preparing challenge link…');
+    const prepared = await makeShareableChallengeUrl(encoded);
+    const url = prepared.url;
+    ui.setStatus('');
     const leader = challengeLeader(nextChallenge);
     const text = nextChallenge.racers.length === 1
       ? `${racerName} challenges you with ${formatChallengeTime(candidate.time)}. Your turn.`
@@ -429,7 +441,10 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
 
   async function shareExistingChallenge() {
     const encoded = await encodeChallenge(state.challenge);
-    const url = makeChallengeUrl(encoded);
+    ui.setStatus('Preparing challenge link…');
+    const prepared = await makeShareableChallengeUrl(encoded);
+    const url = prepared.url;
+    ui.setStatus('');
     const leader = challengeLeader(state.challenge);
     return shareUrl({
       title: 'YOUR TURN — a TURN challenge',
