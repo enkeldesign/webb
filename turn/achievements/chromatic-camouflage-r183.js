@@ -89,7 +89,6 @@ export function installChromaticCamouflageAchievement() {
   if (globalThis.__turnChromaticCamouflage) return globalThis.__turnChromaticCamouflage;
 
   let achievements = globalThis.__turnAchievements || null;
-  let retryTimer = 0;
   let disposed = false;
 
   const evaluate = () => {
@@ -104,21 +103,16 @@ export function installChromaticCamouflageAchievement() {
   };
 
   const scheduleEvaluation = () => globalThis.setTimeout?.(evaluate, 0);
-  const retryUntilReady = () => {
-    if (disposed || evaluate()) return;
-    retryTimer = globalThis.setTimeout?.(retryUntilReady, 100) || 0;
-  };
 
   globalThis.addEventListener?.('turn:lap-result', scheduleEvaluation);
   globalThis.addEventListener?.('turn:home-ready', scheduleEvaluation);
-  retryUntilReady();
+  scheduleEvaluation();
 
   const api = Object.freeze({
     evaluate,
     matchesTrackColor,
     disconnect() {
       disposed = true;
-      globalThis.clearTimeout?.(retryTimer);
       globalThis.removeEventListener?.('turn:lap-result', scheduleEvaluation);
       globalThis.removeEventListener?.('turn:home-ready', scheduleEvaluation);
       globalThis.__turnChromaticCamouflage = null;
