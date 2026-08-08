@@ -1,0 +1,46 @@
+.turn-about-privacy {
+  margin-top: 10px;
+  color: inherit;
+  font: inherit;
+}
+
+.turn-about-privacy summary {
+  width: fit-content;
+  padding: 2px 0;
+  color: inherit;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 900;
+  line-height: 1.35;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+}
+
+.turn-about-privacy summary:focus-visible {
+  outline: 4px solid var(--turn-form-control-focus, #38d9ff);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+.turn-about-privacy-copy {
+  max-width: 60ch;
+  margin-top: 8px;
+}
+
+.turn-about-privacy-copy p,
+.yourturn-about-copy .turn-about-privacy-copy p {
+  margin: 0;
+  font-size: 0.78rem !important;
+  font-weight: 760;
+  line-height: 1.42 !important;
+}
+
+.turn-about-privacy-copy p + p,
+.yourturn-about-copy .turn-about-privacy-copy p + p {
+  margin-top: 7px;
+}
+
+/* Intentionally keep the native disclosure marker. Privacy is a quiet text/link
+   disclosure, not TURN's blue informational disclosure component. */
