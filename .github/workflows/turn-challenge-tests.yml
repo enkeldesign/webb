@@ -10,10 +10,16 @@ on:
       - 'yourturn/**'
       - 'turn/index.html'
       - 'turn/social/**'
+      - 'turn/telemetry/**'
+      - 'turn/content/about-turn.js'
+      - 'turn/about-privacy.css'
+      - 'turn/stats/**'
       - 'turn/race/rival-storage.js'
       - 'turn/render/covered-rendering.js'
+      - 'workers/turn-challenges/**'
       - 'turn-tests/challenge-*.mjs'
       - 'turn-tests/yourturn-*.mjs'
+      - 'turn-tests/telemetry-production.mjs'
       - '.github/workflows/turn-challenge-tests.yml'
   push:
     branches:
@@ -23,10 +29,16 @@ on:
       - 'yourturn/**'
       - 'turn/index.html'
       - 'turn/social/**'
+      - 'turn/telemetry/**'
+      - 'turn/content/about-turn.js'
+      - 'turn/about-privacy.css'
+      - 'turn/stats/**'
       - 'turn/race/rival-storage.js'
       - 'turn/render/covered-rendering.js'
+      - 'workers/turn-challenges/**'
       - 'turn-tests/challenge-*.mjs'
       - 'turn-tests/yourturn-*.mjs'
+      - 'turn-tests/telemetry-production.mjs'
       - '.github/workflows/turn-challenge-tests.yml'
 
 permissions:
@@ -47,7 +59,7 @@ jobs:
       - name: Syntax-check challenge modules
         run: |
           find turn-next yourturn -maxdepth 1 -type f -name '*.js' -print0 | xargs -0 -n1 node --check
-          find turn/social -maxdepth 1 -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+          find turn/social turn/telemetry turn/stats -type f -name '*.js' -print0 | xargs -0 -n1 node --check
 
       - name: Run Race My Ghost contract
         run: node turn-tests/challenge-mode-production.mjs
@@ -66,6 +78,9 @@ jobs:
 
       - name: Run YOUR TURN start-grid and social-preview regression
         run: node turn-tests/yourturn-start-grid-production.mjs
+
+      - name: Run private telemetry and privacy contract
+        run: node turn-tests/telemetry-production.mjs
 
       - name: Verify TURN NEXT parity wrapper
         run: node turn-next/scripts/build-parity-app.mjs --check

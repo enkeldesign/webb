@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="color-scheme" content="light">
+  <title>TURN private usage stats</title>
+  <link rel="icon" href="../TURNicon.PNG" type="image/png">
+  <link rel="stylesheet" href="../design-tokens.css?build=20260808-r162">
+  <link rel="stylesheet" href="./stats.css?revision=r1">
+</head>
+<body>
+  <main class="stats-shell">
+    <header class="stats-hero">
+      <div>
+        <span class="eyebrow">PRIVATE · ENKEL.DESIGN</span>
+        <h1>TURN<br>STATS</h1>
+        <p>Anonymous gameplay usage from TURN and YOUR TURN. Nothing on this page is linked from the game.</p>
+      </div>
+      <img src="../TURNicon.PNG" alt="TURN app icon">
+    </header>
+
+    <section class="stats-access" id="statsAccess" aria-labelledby="statsAccessTitle">
+      <h2 id="statsAccessTitle">PRIVATE DASHBOARD</h2>
+      <p>Open your bookmarked private link, or enter the dashboard key.</p>
+      <form id="statsKeyForm">
+        <label for="statsKey">Dashboard key</label>
+        <div class="key-row">
+          <input id="statsKey" name="statsKey" type="password" autocomplete="off" spellcheck="false" required>
+          <button type="submit">OPEN STATS</button>
+        </div>
+      </form>
+      <p class="status" id="statsAccessStatus" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="statsDashboard" hidden>
+      <div class="stats-toolbar" aria-label="Statistics period">
+        <div>
+          <span class="toolbar-label">PERIOD</span>
+          <div class="range-tabs" id="rangeTabs">
+            <button type="button" data-days="1">24H</button>
+            <button type="button" data-days="7">7 DAYS</button>
+            <button type="button" data-days="30" aria-pressed="true">30 DAYS</button>
+            <button type="button" data-days="90">90 DAYS</button>
+            <button type="button" data-days="3650">ALL</button>
+          </div>
+        </div>
+        <div class="updated" id="statsUpdated" aria-live="polite"></div>
+      </div>
+
+      <p class="privacy-note"><strong>PLAY SESSIONS</strong> means one page load that actually starts a race. TURN deliberately does not assign a persistent analytics identifier, so this dashboard does not pretend to count unique people.</p>
+
+      <section class="metric-grid" aria-label="Headline statistics">
+        <article class="metric"><span>PLAY SESSIONS</span><strong id="metricSessions">–</strong></article>
+        <article class="metric"><span>RACES STARTED</span><strong id="metricRaces">–</strong></article>
+        <article class="metric"><span>LAPS FINISHED</span><strong id="metricLaps">–</strong></article>
+        <article class="metric"><span>VOID LAPS</span><strong id="metricVoid">–</strong><small id="metricVoidRate"></small></article>
+      </section>
+
+      <section class="favourites-grid">
+        <article class="feature-card most"><span>MOST PLAYED TRACK</span><strong id="mostTrack">–</strong><small id="mostTrackCount"></small></article>
+        <article class="feature-card least"><span>LEAST PLAYED TRACK</span><strong id="leastTrack">–</strong><small id="leastTrackCount"></small></article>
+        <article class="feature-card most"><span>MOST USED CAR</span><strong id="mostCar">–</strong><small id="mostCarCount"></small></article>
+        <article class="feature-card least"><span>LEAST USED CAR</span><strong id="leastCar">–</strong><small id="leastCarCount"></small></article>
+      </section>
+
+      <section class="stats-columns">
+        <article class="panel">
+          <div class="panel-head"><span>RACE STARTS</span><h2>TRACKS</h2></div>
+          <div class="ranking" id="trackRanking"></div>
+        </article>
+        <article class="panel">
+          <div class="panel-head"><span>RACE STARTS</span><h2>CARS</h2></div>
+          <div class="ranking" id="carRanking"></div>
+        </article>
+      </section>
+
+      <section class="stats-columns compact-panels">
+        <article class="panel">
+          <div class="panel-head"><span>HOW TURN IS PLAYED</span><h2>MODES</h2></div>
+          <dl class="breakdown" id="modeBreakdown"></dl>
+        </article>
+        <article class="panel">
+          <div class="panel-head"><span>COMPLETED LAPS</span><h2>AVERAGE TIMES</h2></div>
+          <dl class="breakdown" id="lapTimes"></dl>
+        </article>
+      </section>
+
+      <footer class="stats-footer">
+        <p id="lastActivity">No activity yet.</p>
+        <button id="forgetKey" type="button">FORGET DASHBOARD KEY</button>
+      </footer>
+    </section>
+  </main>
+  <script type="module" src="./stats.js?revision=r1"></script>
+</body>
+</html>
