@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {
   AIRPORT_RUNWAY_ACCESS_ROADS,
   AIRPORT_RUNWAY_Z
-} from '/turn-next/airport-runway-spec.js';
+} from './airport-runway-spec.js';
 
 const [ENTRY, AIRCRAFT_EXIT, AIRCRAFT_REENTRY, HANGAR_EXIT] = AIRPORT_RUNWAY_ACCESS_ROADS;
 
