@@ -1,5 +1,3 @@
-import { makeChallengeUrl } from '/yourturn/protocol-social.js?revision=r1';
-
 export const CHALLENGE_STORE_BASE_URL = 'https://turn-challenges.erik-jansson-ux.workers.dev';
 export const CHALLENGE_SNAPSHOT_ID_PATTERN = /^[0123456789abcdefghjkmnpqrstvwxyz]{12}$/;
 
@@ -24,9 +22,29 @@ export function makeSnapshotChallengeUrl(snapshotId, {
   url.searchParams.delete('share');
   if (reply) url.searchParams.set('reply', String(reply));
   else url.searchParams.delete('reply');
-  if (responder) url.searchParams.set('responder', String(responder).trim());
+  if (responder) url.searchParams.set('responder', normalizeResponder(responder));
   else url.searchParams.delete('responder');
   url.hash = '';
+  return url.href;
+}
+
+export function makeSelfContainedChallengeUrl(encoded, {
+  baseUrl = DEFAULT_PUBLIC_BASE_URL,
+  reply = '',
+  responder = ''
+} = {}) {
+  const payload = normalizeEncodedPayload(encoded);
+  const url = new URL(baseUrl);
+  url.searchParams.delete('c');
+  url.searchParams.set('share', '1');
+  if (reply) url.searchParams.set('reply', String(reply));
+  else url.searchParams.delete('reply');
+  if (responder) url.searchParams.set('responder', normalizeResponder(responder));
+  else url.searchParams.delete('responder');
+
+  const fragment = new URLSearchParams();
+  fragment.set('challenge', payload);
+  url.hash = fragment.toString();
   return url.href;
 }
 
@@ -95,7 +113,7 @@ export async function makeShareableChallengeUrl(encoded, {
   timeoutMs = DEFAULT_TIMEOUT_MS
 } = {}) {
   const payload = normalizeEncodedPayload(encoded);
-  const fallbackUrl = makeChallengeUrl(payload, { baseUrl, reply, responder });
+  const fallbackUrl = makeSelfContainedChallengeUrl(payload, { baseUrl, reply, responder });
 
   try {
     const snapshotId = await saveChallengeSnapshot(payload, {
@@ -132,6 +150,14 @@ function normalizeEncodedPayload(value) {
     throw new Error('YOUR TURN challenge data is incomplete or damaged.');
   }
   return payload;
+}
+
+function normalizeResponder(value) {
+  return String(value || '')
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 24);
 }
 
 function stripTrailingSlash(value) {
