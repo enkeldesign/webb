@@ -40,7 +40,7 @@ assert.ok(fallbackUrl.length > makeSnapshotChallengeUrl(SNAPSHOT_ID).length,
 let savedRequest = null;
 const saveFetch = async (url, init) => {
   savedRequest = { url, init };
-  return new Response(JSON.stringify({ id: SNAPSHOT_ID, created: true }), {
+  return new globalThis.Response(JSON.stringify({ id: SNAPSHOT_ID, created: true }), {
     status: 201,
     headers: { 'Content-Type': 'application/json' }
   });
@@ -57,7 +57,7 @@ assert.deepEqual(JSON.parse(savedRequest.init.body), { payload: PAYLOAD });
 let loadedRequest = null;
 const loadFetch = async (url, init) => {
   loadedRequest = { url, init };
-  return new Response(JSON.stringify({ id: SNAPSHOT_ID, payload: PAYLOAD }), {
+  return new globalThis.Response(JSON.stringify({ id: SNAPSHOT_ID, payload: PAYLOAD }), {
     status: 200,
     headers: { 'Content-Type': 'application/json' }
   });
