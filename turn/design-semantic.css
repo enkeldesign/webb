@@ -1,4 +1,4 @@
-@import url('./design-tokens.css?revision=r140-difficulty-system');
+@import url('./design-tokens.css?revision=r162-social-sharing');
 
 /*
   Normative production roles.
@@ -13,6 +13,16 @@
 .lot-race {
   border-radius: var(--turn-radius-pill) !important;
   background: var(--turn-action-primary) !important;
+}
+
+/* Social challenge actions keep their meaning across TURN and YOUR TURN. */
+.turn-yourturn-share-submit,
+.yourturn-actions button.is-share {
+  background: var(--turn-action-share) !important;
+}
+
+.yourturn-actions button.is-game {
+  background: var(--turn-action-game) !important;
 }
 
 /* Home menu utilities deliberately step back from the selected-track action. */
@@ -58,6 +68,13 @@
 [data-turn-navigation-action] {
   background: var(--turn-action-navigation) !important;
 }
+
+/* Social racer colours encode stable join order, not speed or leaderboard rank. */
+.yourturn-order-1 { background: var(--turn-social-racer-1) !important; }
+.yourturn-order-2 { background: var(--turn-social-racer-2) !important; }
+.yourturn-order-3 { background: var(--turn-social-racer-3) !important; }
+.yourturn-order-4 { background: var(--turn-social-racer-4) !important; }
+.yourturn-order-5 { background: var(--turn-social-racer-5) !important; }
 
 /* Driving controls use stable, literal semantics. */
 .drive-drift-zone,
