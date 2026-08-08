@@ -1,0 +1,48 @@
+name: TURN Chromatic Camouflage regression
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'turn/index.html'
+      - 'turn/achievements/catalog-chromatic-r183.js'
+      - 'turn/achievements/chromatic-camouflage-r183.js'
+      - 'turn/progression/trophy-road-chromatic-r183.js'
+      - 'turn-lab/tests/chromatic-camouflage-production.mjs'
+      - '.github/workflows/turn-chromatic-camouflage.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'turn/index.html'
+      - 'turn/achievements/catalog-chromatic-r183.js'
+      - 'turn/achievements/chromatic-camouflage-r183.js'
+      - 'turn/progression/trophy-road-chromatic-r183.js'
+      - 'turn-lab/tests/chromatic-camouflage-production.mjs'
+      - '.github/workflows/turn-chromatic-camouflage.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Syntax-check Chromatic Camouflage modules
+        run: |
+          node --check turn/achievements/catalog-chromatic-r183.js
+          node --check turn/achievements/chromatic-camouflage-r183.js
+          node --check turn/progression/trophy-road-chromatic-r183.js
+          node --check turn-lab/tests/chromatic-camouflage-production.mjs
+
+      - name: Run Chromatic Camouflage production regression
+        run: node turn-lab/tests/chromatic-camouflage-production.mjs
