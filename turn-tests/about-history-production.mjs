@@ -31,8 +31,8 @@ const [
 
 const release = JSON.parse(releaseSource);
 
-assert.match(productionEntry, /about-history-bootstrap-r165\.js\?build=20260806-r161-r168-shared-about-credits/,
-  'The public website must load the shared-credit browser-aware About implementation directly');
+assert.match(productionEntry, new RegExp(`about-history-bootstrap-r165\\.js\\?build=${escapeRegex(release.cacheKey)}-r168-shared-about-credits`),
+  'The public website must load the shared-credit browser-aware About implementation directly with the current release cache identity');
 assert.ok(
   productionEntry.indexOf('about-history-bootstrap-r165.js') < productionEntry.indexOf('./app.js?build='),
   'Website About must load before the game module waits for explicit browser launch'
@@ -49,6 +49,8 @@ assert.match(productionEntry, /id="installTurnButton"[\s\S]*id="installNote"[\s\
 assert.match(productionEntry, /Install TURN as a home screen web app for the best fullscreen experience\. You can also play here, but it is not recommended\./);
 
 assert.match(bootstrap, /CHANGELOG[\s\S]*CURRENT_RELEASE[\s\S]*DEVELOPMENT_HISTORY/);
+assert.match(bootstrap, new RegExp(`about-history\\.js\\?build=${escapeRegex(release.cacheKey)}`),
+  'History data must use the current release cache identity');
 assert.match(bootstrap, /return \[\.\.\.CHANGELOG\]\.reverse\(\)\.map\(/,
   'The changelog must render newest entries first without mutating its source data');
 assert.match(bootstrap, /const INSTALL_NOTE[\s\S]*Install TURN as a home screen web app for the best fullscreen experience\. You can also play here, but it is not recommended\./);
@@ -103,18 +105,21 @@ assert.match(browserInstallCss, /@media \(max-height: 500px\) and \(orientation:
 
 const historyEntries = (content.match(/period:/g) || []).length;
 const changelogDays = (content.match(/date:/g) || []).length;
-assert.ok(historyEntries >= 10, `Expected at least ten development-history periods, found ${historyEntries}`);
-assert.ok(changelogDays >= 18, `Expected at least eighteen changelog dates, found ${changelogDays}`);
+assert.ok(historyEntries >= 11, `Expected at least eleven development-history periods, found ${historyEntries}`);
+assert.ok(changelogDays >= 20, `Expected at least twenty changelog dates, found ${changelogDays}`);
 assert.match(content, /18–19 July 2026/);
-assert.match(content, /Current stabilization/);
+assert.match(content, /Stabilization and progression/);
+assert.match(content, /YOUR TURN makes personal rivals social/);
 assert.match(content, /18 July 2026/);
-assert.match(content, /5 August/);
+assert.match(content, /8 August/);
 assert.match(content, /TURN 1\.5\.1/,
   'History must retain the previous 1.5.1 milestone');
 assert.match(content, new RegExp(`TURN ${escapeRegex(release.version)}`),
   'History must name the canonical current release');
 assert.match(content, new RegExp(escapeRegex(release.id)),
   'History must name the canonical current build');
+assert.match(content, /Cloudflare Worker and D1 snapshot store/,
+  'History must explain the short-link transport introduced with YOUR TURN');
 assert.match(content, /one oh one/);
 assert.match(content, /28 achievements and 1,700 available trophies/);
 assert.match(content, /SAVE BELLA!/);

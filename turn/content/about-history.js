@@ -121,16 +121,30 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   },
   {
     period: '4–6 August',
-    title: 'Current stabilization',
+    title: 'Stabilization and progression',
     paragraphs: [
       'TURN 1.5.0 added a branded loading cover, stable iOS Home sizing, compact Paintjob locking and new-achievement markers.',
-      'TURN 1.5.1 corrected Trophy Road’s initial reward card, transitions between 3D and line-art previews and the Paintjob lower rail. TURN 1.5.2 consolidates the later interface, progression, achievement and accessibility work together with the corrected usable iOS standalone viewport.',
-      'The game is now in a refinement and hardening phase: five tracks, fifteen garage slots, local rivals, a mature non-visual audio system, assistive-technology navigation and persistent progression.'
+      'TURN 1.5.1 corrected Trophy Road’s initial reward card, transitions between 3D and line-art previews and the Paintjob lower rail. TURN 1.5.2 consolidated the later interface, progression, achievement and accessibility work together with the corrected usable iOS standalone viewport.',
+      'The game entered a refinement and hardening phase with five tracks, fifteen garage slots, local rivals, a mature non-visual audio system, assistive-technology navigation and persistent progression.'
     ],
     milestones: [
-      'Canonical release: TURN 1.5.2 · 2026.08.06-r161',
+      'TURN 1.5.2 · 2026.08.06-r161 stabilization baseline',
       'Post-r160 interface, progression, achievement and viewport stabilization',
       'Sixty-plus production regression gates plus DBE training tests'
+    ]
+  },
+  {
+    period: '6–8 August',
+    title: 'YOUR TURN makes personal rivals social',
+    paragraphs: [
+      'YOUR TURN grew from a focused recipient prototype into a browser-first social challenge flow that reuses TURN’s canonical track, vehicle, replay, audio and accessibility systems. TURN can now share the selected track’s stored best lap from Home and offer sharing directly from a new-personal-best lap result.',
+      'Recipients can race the challenge repeatedly, add their own named car and pass the challenge on. Growing chains preserve stable racer identities, keep up to four rival replays, stage the field together at the start and use player name plates and deliberate social colours instead of anonymous ghost language.',
+      'The first self-contained links proved too large for dependable social previews as a chain grew. A lightweight Cloudflare Worker and D1 snapshot store now turns the same immutable challenge payload into a short enkel.design link, while the complete self-contained link remains an automatic fallback. TURN and YOUR TURN also share one About presentation and credit Kenney Game Assets.'
+    ],
+    milestones: [
+      'TURN → YOUR TURN sharing from Home and personal-best results',
+      'Growing named multi-racer challenge chains with stable identities',
+      'Canonical release: TURN 1.6.0 · 2026.08.08-r162'
     ]
   }
 ]);
@@ -282,11 +296,27 @@ export const CHANGELOG = Object.freeze([
     entries: [
       ['1.5.2 r161', 'Consolidates post-r160 interface, progression, achievement and accessibility work; corrects the usable iOS standalone viewport and refreshes release caches.']
     ]
+  },
+  {
+    date: '7 August',
+    entries: [
+      ['YOUR TURN recipient', 'Browser-first challenge flow reusing TURN’s canonical race runtime, with motion steering, Drive By Ear support, real pause, repeat attempts and named rival cars.'],
+      ['Growing challenges', 'Challenges can accumulate up to four rival replays, preserve stable racer identity, replace a returning racer’s slower car and stage the field together at the start.'],
+      ['TURN sharing', 'Selected-track records and new personal-best lap results can launch the SHARE YOUR TURN composer without changing core race behaviour.']
+    ]
+  },
+  {
+    date: '8 August',
+    entries: [
+      ['1.6.0 r162', 'Promotes YOUR TURN sharing into the release: social challenge creation from TURN, growing named challenge chains and refreshed release caches.'],
+      ['Short challenge links', 'Cloudflare Worker and D1 snapshots replace growing replay URLs with compact enkel.design links; self-contained links remain the automatic fallback.'],
+      ['Shared product language', 'TURN and YOUR TURN share the About presentation and Kenney Game Assets attribution, while the design system now documents social sharing and racer identity colours.']
+    ]
   }
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.5.2',
-  build: '2026.08.06-r161',
-  note: 'Patch release consolidating the 5–6 August stabilization work.'
+  version: '1.6.0',
+  build: '2026.08.08-r162',
+  note: 'Minor release adding YOUR TURN social challenges, short-link transport and refreshed design-system documentation.'
 });

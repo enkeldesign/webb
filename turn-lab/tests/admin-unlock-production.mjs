@@ -8,10 +8,12 @@ import {
 } from '../../turn/testing/admin-unlock-sequence.js';
 import { TROPHY_ROAD_REWARDS } from '../../turn/progression/trophy-road.js';
 
-const [source, indexSource] = await Promise.all([
+const [source, indexSource, releaseSource] = await Promise.all([
   fs.readFile(new URL('../../turn/testing/admin-unlock-sequence.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8')
 ]);
+const release = JSON.parse(releaseSource);
 
 assert.deepEqual(ADMIN_UNLOCK_SEQUENCE, [
   'track:countryside',
@@ -154,7 +156,11 @@ assert.match(indexSource,
   /<script type="module" src="\.\/testing\/admin-unlock-sequence\.js\?revision=r176-admin-rewards"><\/script>/,
   'The production entry must publish the rewards-only recognizer with a fresh cache identity');
 assert.match(indexSource,
-  /src="\.\/live-steering-setting\.js\?build=20260806-r161-live-steering"/,
+  new RegExp(`src="\\.\\/live-steering-setting\\.js\\?build=${escapeRegex(release.cacheKey)}-live-steering"`),
   'The hidden recognizer must not disturb the canonical steering entry');
 
 console.log('TURN rewards-only admin unlock regression passed.');
+
+function escapeRegex(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}

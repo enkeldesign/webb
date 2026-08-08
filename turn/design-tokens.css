@@ -11,30 +11,37 @@
   --turn-yellow-600: #ffbd12;
   --turn-yellow-400: #ffd43b;
   --turn-yellow-200: #ffe087;
+  --turn-yellow-100: #fff0a8;
 
   --turn-blue-600: #35b8e7;
   --turn-blue-500: #38d9ff;
   --turn-blue-300: #68c8f2;
   --turn-blue-200: #8ed8ff;
+  --turn-blue-100: #bdeeff;
 
   --turn-pink-500: #ff4fa3;
   --turn-pink-200: #ff8caf;
+  --turn-pink-100: #ffd1e6;
 
   --turn-red-500: #ff6b6b;
   --turn-red-200: #ff9b91;
 
   --turn-green-500: #8ce99a;
   --turn-green-200: #d9f5c2;
+  --turn-green-100: #c8f5d0;
 
   --turn-orange-500: #ff7b54;
   --turn-orange-200: #ffb89f;
+  --turn-orange-100: #ffd0ae;
 
   /* Semantic UI roles. */
   --turn-surface-page: var(--turn-paper);
   --turn-surface-raised: var(--turn-white);
   --turn-action-primary: var(--turn-pink-500);
+  --turn-action-share: var(--turn-pink-500);
   --turn-action-utility: var(--turn-paper);
   --turn-action-information: var(--turn-blue-500);
+  --turn-action-game: var(--turn-blue-500);
   --turn-action-success: var(--turn-green-500);
   --turn-action-warning: var(--turn-yellow-400);
   --turn-action-danger: var(--turn-red-500);
@@ -59,6 +66,13 @@
   --turn-control-boost: var(--turn-yellow-400);
   --turn-control-boost-empty: var(--turn-yellow-200);
   --turn-control-brake: var(--turn-orange-500);
+
+  /* Social challenge identity. Join order stays stable even when race order changes. */
+  --turn-social-racer-1: var(--turn-pink-100);
+  --turn-social-racer-2: var(--turn-blue-100);
+  --turn-social-racer-3: var(--turn-green-100);
+  --turn-social-racer-4: var(--turn-yellow-100);
+  --turn-social-racer-5: var(--turn-orange-100);
 
   /* Geometry. */
   --turn-border-micro: 2px;
