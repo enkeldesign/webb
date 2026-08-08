@@ -1,0 +1,28 @@
+.airport-runway-test-note {
+  position: fixed;
+  z-index: 90;
+  top: max(8px, env(safe-area-inset-top));
+  left: max(8px, env(safe-area-inset-left));
+  margin: 0;
+  padding: 5px 8px;
+  border: 2px solid #08090a;
+  border-radius: 8px;
+  background: #38d9ff;
+  color: #08090a;
+  box-shadow: 2px 2px 0 #08090a;
+  font: 900 10px/1 system-ui, sans-serif;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.turn-home-open .airport-runway-test-note {
+  top: max(6px, env(safe-area-inset-top));
+}
+
+@media (max-height: 430px) {
+  .airport-runway-test-note {
+    font-size: 9px;
+    padding: 4px 6px;
+  }
+}
