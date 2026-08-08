@@ -1,0 +1,38 @@
+name: TURN NEXT Airport Runway prototype
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'turn-next/airport-runway/**'
+      - 'turn-tests/airport-runway-next-production.mjs'
+      - '.github/workflows/turn-airport-runway-next-tests.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'turn-next/airport-runway/**'
+      - 'turn-tests/airport-runway-next-production.mjs'
+      - '.github/workflows/turn-airport-runway-next-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  runway-prototype:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Syntax-check AIRPORT RUNWAY modules
+        run: find turn-next/airport-runway -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+
+      - name: Run AIRPORT RUNWAY geometry, collision and isolation regression
+        run: node turn-tests/airport-runway-next-production.mjs
