@@ -12,7 +12,8 @@ const [
   fixedHome,
   coveredRendering,
   yourTurnIndex,
-  yourTurnUi
+  yourTurnUi,
+  challengeStore
 ] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/social/your-turn-share-bootstrap.js', import.meta.url), 'utf8'),
@@ -24,11 +25,14 @@ const [
   fs.readFile(new URL('../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/render/covered-rendering.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../yourturn/ui.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../yourturn/ui.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../yourturn/challenge-store.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(turnIndex, /\.\/social\/your-turn-share-bootstrap\.js\?revision=r1/,
-  'Production TURN must load the social sharing bootstrap with an explicit cache identity');
+assert.match(turnIndex, /\.\/social\/your-turn-share-bootstrap\.js\?revision=r2/,
+  'Production TURN must load the short-link sharing bootstrap with a fresh cache identity');
+assert.match(shareBootstrap, /your-turn-share\.js\?revision=r2/,
+  'The bootstrap must load the short-link sharing implementation');
 assert.match(shareBootstrap, /globalThis\.__turnHomeLayout\?\.home/,
   'Sharing must wait until all existing fixed-Home enhancements have completed');
 assert.match(shareBootstrap, /installYourTurnShare\(\{ home \}\)/);
@@ -46,11 +50,18 @@ assert.match(rivalStorage, /historical summary-only fallback[\s\S]*oldGhost\?\.b
 
 assert.match(shareSource, /challengeFromLap/);
 assert.match(shareSource, /encodeChallenge/);
-assert.match(shareSource, /makeChallengeUrl/);
+assert.match(shareSource, /makeShareableChallengeUrl/,
+  'TURN seed creation must prefer the short immutable snapshot transport');
+assert.doesNotMatch(shareSource, /makeChallengeUrl/,
+  'TURN should not directly construct the old long URL anymore');
+assert.match(challengeStore, /turn-challenges\.erik-jansson-ux\.workers\.dev/,
+  'The short-link transport must target the deployed Worker');
+assert.match(challengeStore, /makeSelfContainedChallengeUrl/,
+  'The current self-contained challenge URL must remain as the automatic fallback');
 assert.match(shareSource, /getTrackStorageRevision/,
   'Seed challenges must carry the current track revision');
 assert.match(shareSource, /racerId: profile\.id/,
-  'TURN-created seeds must carry the social racer ID in the link payload');
+  'TURN-created seeds must carry the social racer ID in the challenge payload');
 assert.match(shareSource, /SHARE YOUR TURN/);
 assert.match(shareSource, /WRITE YOUR NAME HERE/);
 assert.match(shareSource, /normalizeChallengeName\(input\.value, ''\)/,
@@ -112,4 +123,4 @@ assert.match(yourTurnUi, /adoptSocialRacerIdentity\(\{ id: existing\.id, name: t
 assert.match(yourTurnUi, /challenge\.racers\.some\(\(racer\) => racer\.id === sessionState\.racerId\)/,
   'A recognized racer ID must bypass unnecessary identity confirmation');
 
-console.log('TURN → YOUR TURN seed sharing, remembered names and returning-racer claim regression passed.');
+console.log('TURN → YOUR TURN seed sharing, short transport, remembered names and returning-racer claim regression passed.');
