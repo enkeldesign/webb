@@ -11,11 +11,5 @@
     {
       "binding": "DB"
     }
-  ],
-  "analytics_engine_datasets": [
-    {
-      "binding": "ANALYTICS",
-      "dataset": "turn_gameplay"
-    }
   ]
 }
