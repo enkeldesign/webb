@@ -8,9 +8,9 @@ import {
 // Use an unmapped URL for the prototype's base catalog. TURN NEXT maps the ordinary
 // source URL back to this wrapper for Home, so importing that exact URL here would recurse.
 import { TRACK_CATALOG as CANONICAL_TRACK_CATALOG } from '/turn/tracks/catalog.js?source=20260729-r118-m8&airport-runway-base=r2';
-import { createAirportRunwayControlPoints } from '/turn-next/airport-runway-layout.js';
-import { AIRPORT_RUNWAY_COLLIDERS } from '/turn-next/airport-runway-collision.js';
-import { AIRPORT_RUNWAY_ID } from '/turn-next/airport-runway-spec.js';
+import { createAirportRunwayControlPoints } from './airport-runway-layout.js';
+import { AIRPORT_RUNWAY_COLLIDERS } from './airport-runway-collision.js';
+import { AIRPORT_RUNWAY_ID } from './airport-runway-spec.js';
 
 export { DEFAULT_TRACK_ID, TRACK_SAMPLE_COUNT, TRACK_SELECTION_KEY, TRACK_PLACEHOLDERS };
 
