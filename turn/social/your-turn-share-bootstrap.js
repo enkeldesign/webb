@@ -1,4 +1,4 @@
-import { installYourTurnShare } from './your-turn-share.js?revision=r1';
+import { installYourTurnShare } from './your-turn-share.js?revision=r2';
 
 let started = false;
 

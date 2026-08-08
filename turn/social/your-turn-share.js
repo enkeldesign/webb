@@ -6,9 +6,9 @@ import {
   challengeFromLap,
   encodeChallenge,
   formatChallengeTime,
-  makeChallengeUrl,
   normalizeChallengeName
 } from '/yourturn/protocol-social.js?revision=r1';
+import { makeShareableChallengeUrl } from '/yourturn/challenge-store.js?revision=r1';
 import {
   loadSocialRacerProfile,
   saveSocialRacerName
@@ -247,7 +247,10 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
         lap: activeLap
       });
       const encoded = await encodeChallenge(challenge);
-      const url = makeChallengeUrl(encoded);
+      status.textContent = 'Preparing challenge link…';
+      const prepared = await makeShareableChallengeUrl(encoded);
+      const url = prepared.url;
+      status.textContent = '';
       const shareData = {
         title: `${racerName} sends you YOUR TURN`,
         text: `${racerName} challenges you on ${track?.name || activeTrackId} with ${formatChallengeTime(activeLap.time)}. Your turn.`,
@@ -266,7 +269,9 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
 
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(url);
-        status.textContent = 'Challenge link copied.';
+        status.textContent = prepared.usedSnapshot
+          ? 'Short challenge link copied.'
+          : 'Challenge link copied.';
         return;
       }
 
@@ -364,7 +369,7 @@ export async function installYourTurnShare({ home = document.querySelector('.m8-
   });
   globalThis[INSTALL_FLAG] = api;
   globalThis.__turnYourTurnShare = api;
-  document.documentElement.dataset.turnYourTurnShare = 'r1';
+  document.documentElement.dataset.turnYourTurnShare = 'r2';
   return api;
 }
 
