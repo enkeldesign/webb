@@ -127,9 +127,9 @@ async function loadTurnRelease() {
   } catch (error) {
     console.warn('YOUR TURN: using bundled TURN release fallback.', error);
     return {
-      version: '1.5.2',
-      id: '2026.08.06-r161',
-      cacheKey: '20260806-r161'
+      version: '1.6.0',
+      id: '2026.08.08-r162',
+      cacheKey: '20260808-r162'
     };
   }
 }
