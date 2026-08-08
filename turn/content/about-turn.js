@@ -1,6 +1,16 @@
 import { installTurnTelemetry } from '../telemetry/client.js?revision=r1';
 
 installTurnTelemetry();
+installSharedAboutStyles();
+
+function installSharedAboutStyles() {
+  if (document.querySelector('link[data-turn-about-privacy]')) return;
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = '/turn/about-privacy.css?revision=r1';
+  link.setAttribute('data-turn-about-privacy', '');
+  document.head.appendChild(link);
+}
 
 export function aboutTurnHtml() {
   return `
