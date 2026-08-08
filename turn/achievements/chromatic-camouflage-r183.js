@@ -128,4 +128,6 @@ export function installChromaticCamouflageAchievement() {
   return api;
 }
 
-installChromaticCamouflageAchievement();
+if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+  installChromaticCamouflageAchievement();
+}
