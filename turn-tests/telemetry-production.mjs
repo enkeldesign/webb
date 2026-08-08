@@ -36,6 +36,8 @@ assert.match(about, /<summary>PRIVACY &amp; USAGE STATISTICS<\/summary>/);
 assert.match(about, /no analytics cookie and creates no persistent analytics identifier/i);
 assert.match(about, /does not include your name, challenge name, challenge link or ID, replay, driving path, control inputs/i);
 assert.match(about, /private developer dashboard/i);
+assert.match(about, /anonymous daily aggregate statistics in Cloudflare D1/i);
+assert.match(about, /does not keep raw gameplay-event histories/i);
 assert.match(about, /about-privacy\.css\?revision=r1/);
 
 assert.match(privacyCss, /\.turn-about-privacy summary[\s\S]*color: inherit[\s\S]*font: inherit/);
@@ -62,13 +64,12 @@ assert.match(statsJs, /Motion-steered races/);
 assert.match(statsJs, /Drive By Ear races/);
 
 assert.match(workerConfig, /"main": "src\/router\.js"/);
-assert.match(workerConfig, /"analytics_engine_datasets"/);
-assert.match(workerConfig, /"binding": "ANALYTICS"/);
-assert.match(workerConfig, /"dataset": "turn_gameplay"/);
+assert.match(workerConfig, /"d1_databases"/);
+assert.match(workerConfig, /"binding": "DB"/);
+assert.doesNotMatch(workerConfig, /analytics_engine_datasets|"binding": "ANALYTICS"/,
+  'Private stats must deploy using the already-proven D1 binding only');
 assert.match(workerRouter, /handleTelemetryRoute/);
 assert.match(workerTelemetry, /'play_session'[\s\S]*'race_start'[\s\S]*'lap_complete'[\s\S]*'lap_invalid'/);
-assert.match(workerTelemetry, /writeDataPoint/);
-assert.match(workerTelemetry, /const sessionHash = await sha256Hex\(event\.session\)/);
 assert.match(workerTelemetry, /CREATE TABLE IF NOT EXISTS turn_telemetry_daily/);
 assert.doesNotMatch(workerTelemetry, /INSERT INTO turn_telemetry_(?:event|raw|session)|session_hash TEXT|player_id TEXT/i,
   'D1 must keep daily aggregate usage only, not persistent player/session histories');
