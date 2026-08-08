@@ -55,8 +55,8 @@ assert.match(statsJs, /location\.hash\.slice\(1\)/,
 assert.match(statsJs, /Authorization: `Bearer \$\{statsKey\}`/);
 assert.doesNotMatch(statsJs, /localStorage|sessionStorage|document\.cookie/i,
   'The private dashboard must not persist its bearer key into browser storage');
-assert.match(statsJs, /mostTrack/);
-assert.match(statsJs, /mostCar/);
+assert.match(statsJs, /renderFavourite\('Track', tracks, races\)/);
+assert.match(statsJs, /renderFavourite\('Car', cars, races\)/);
 assert.match(statsJs, /YOUR TURN play sessions/);
 assert.match(statsJs, /Motion-steered races/);
 assert.match(statsJs, /Drive By Ear races/);
