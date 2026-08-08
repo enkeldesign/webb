@@ -25,7 +25,7 @@ export function aboutTurnHtml() {
           <p>The events can include TURN or YOUR TURN, app build, track, car, motion or manual steering, browser or installed web app, Drive By Ear and blank-screen state, valid or void laps and lap time.</p>
           <p>TURN’s analytics payload does not include your name, challenge name, challenge link or ID, replay, driving path, control inputs, advertising identifiers, IP address or precise location. Cloudflare processes normal network request information while carrying the events, but TURN does not add that information to its gameplay statistics.</p>
           <p>TURN sets no analytics cookie and creates no persistent analytics identifier. A random identifier exists only in memory for the current page load so events from that one play session can be grouped; it disappears when the page is closed or reloaded.</p>
-          <p>Raw custom analytics are retained by Cloudflare Analytics Engine for three months. TURN also keeps anonymous daily totals in D1 for longer-term trends in a private developer dashboard. The statistics are not public and are not used for advertising.</p>
+          <p>TURN keeps anonymous daily aggregate statistics in Cloudflare D1 for the private developer dashboard. It does not keep raw gameplay-event histories in that database. The statistics are not public and are not used for advertising.</p>
         </div>
       </details>
     </div>`;
