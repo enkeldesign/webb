@@ -61,6 +61,9 @@ jobs:
       - name: Run TURN to YOUR TURN sharing contract
         run: node turn-tests/yourturn-turn-sharing-production.mjs
 
+      - name: Run YOUR TURN short-link transport regression
+        run: node turn-tests/yourturn-short-links-production.mjs
+
       - name: Run YOUR TURN start-grid and social-preview regression
         run: node turn-tests/yourturn-start-grid-production.mjs
 
