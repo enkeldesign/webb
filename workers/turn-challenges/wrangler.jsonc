@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "turn-challenges",
-  "main": "src/index.js",
+  "main": "src/router.js",
   "compatibility_date": "2026-08-08",
   "workers_dev": true,
   "observability": {
@@ -10,6 +10,12 @@
   "d1_databases": [
     {
       "binding": "DB"
+    }
+  ],
+  "analytics_engine_datasets": [
+    {
+      "binding": "ANALYTICS",
+      "dataset": "turn_gameplay"
     }
   ]
 }
