@@ -1,8 +1,17 @@
 import * as THREE from 'three';
+import {
+  AIRPORT_RUNWAY_ACCESS_ROADS,
+  AIRPORT_RUNWAY_Z
+} from '/turn-next/airport-runway-spec.js';
+
+const [ENTRY, AIRCRAFT_EXIT, AIRCRAFT_REENTRY, HANGAR_EXIT] = AIRPORT_RUNWAY_ACCESS_ROADS;
 
 // TURN NEXT-only prototype of AIRPORT: RUNWAY.
-// The route preserves the lower half of Airport and replaces the northern half with
-// four runway access roads, two runway runs, an aircraft diversion, and a hangar pass-through.
+// The lower/outer Airport circuit is preserved. The upper section is replaced by the
+// four-access-road sequence from the sketch:
+//   road -> runway -> off before the A380 -> around it -> runway -> off -> hangar -> road.
+// Keeping the plane between access roads 2 and 3 is deliberate: the obstacle now enforces
+// the detour instead of sitting on top of the authored racing line.
 export const AIRPORT_RUNWAY_CONTROL_POINTS = Object.freeze([
   [-205, -126],
   [-120, -138],
@@ -16,35 +25,46 @@ export const AIRPORT_RUNWAY_CONTROL_POINTS = Object.freeze([
   [192, 70],
   [154, 98],
 
-  // Access road 1: force onto the runway.
-  [130, 74],
-  [130, 22],
-  [130, -62],
-  [130, -132],
-  [130, -188],
+  // 1. Cones close the old continuation; turn down the first access road.
+  [ENTRY.x, 74],
+  [ENTRY.x, 20],
+  [ENTRY.x, -62],
+  [ENTRY.x, -132],
+  [ENTRY.x, -188],
+  [ENTRY.x, AIRPORT_RUNWAY_Z],
 
-  // First runway run, then aircraft forces the player off via access road 2.
-  [72, -221],
-  [20, -221],
-  [-28, -221],
-  [-28, -175],
-  [-28, -116],
+  // First runway burst. The A380 is ahead, so leave before reaching its wing.
+  [105, AIRPORT_RUNWAY_Z],
+  [78, AIRPORT_RUNWAY_Z],
+  [AIRCRAFT_EXIT.x, -190],
+  [AIRCRAFT_EXIT.x, -150],
+  [AIRCRAFT_EXIT.x, -118],
 
-  // Cones feed back to access road 3 and onto the runway again.
-  [-86, -118],
-  [-86, -174],
-  [-86, -221],
-  [-145, -221],
-  [-188, -221],
+  // Pass behind the aircraft on the service road.
+  [35, -118],
+  [0, -118],
+  [-30, -118],
+  [AIRCRAFT_REENTRY.x, -118],
 
-  // Leave the runway on access road 4 before the threshold.
-  [-188, -170],
-  [-188, -112],
+  // 3. Cones close the service-road continuation; return to the runway.
+  [AIRCRAFT_REENTRY.x, -155],
+  [AIRCRAFT_REENTRY.x, -190],
+  [AIRCRAFT_REENTRY.x, AIRPORT_RUNWAY_Z],
 
-  // Open hangar pass-through, then left back onto the original lower Airport route.
-  [-150, -82],
-  [-112, -50],
-  [-72, -12],
+  // Second runway burst, then leave before the runway-end barrier.
+  [-105, AIRPORT_RUNWAY_Z],
+  [-150, AIRPORT_RUNWAY_Z],
+  [HANGAR_EXIT.x, AIRPORT_RUNWAY_Z],
+  [HANGAR_EXIT.x, -180],
+  [HANGAR_EXIT.x, -140],
+  [HANGAR_EXIT.x, -110],
+
+  // 4. Thread the open hangar and turn left back onto the established Airport loop.
+  [-156, -86],
+  [-130, -66],
+  [-104, -55],
+  [-80, -34],
+  [-58, -8],
   [-38, 32],
   [-25, 43],
   [-32, 65],
