@@ -1,0 +1,43 @@
+name: TURN challenge Worker
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'workers/turn-challenges/**'
+      - '.github/workflows/turn-challenge-worker-tests.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'workers/turn-challenges/**'
+      - '.github/workflows/turn-challenge-worker-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  worker:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workers/turn-challenges
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install Worker tooling
+        run: npm install --ignore-scripts
+
+      - name: Run Worker contract tests
+        run: npm run check
+
+      - name: Validate Cloudflare bundle
+        run: npx wrangler deploy --dry-run --outdir .wrangler-dry-run
