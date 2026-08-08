@@ -1,0 +1,96 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {
+  ACHIEVEMENTS,
+  TRACK_IDS,
+  getAchievement
+} from '../../turn/achievements/catalog-chromatic-r183.js';
+import {
+  CHROMATIC_CAMOUFLAGE_ID,
+  matchesTrackColor,
+  qualifyingChromaticCamouflage
+} from '../../turn/achievements/chromatic-camouflage-r183.js';
+import { TROPHY_ROAD_MAX_THRESHOLD } from '../../turn/progression/trophy-road-chromatic-r183.js';
+
+const indexSource = await fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8');
+const moduleSource = await fs.readFile(
+  new URL('../../turn/achievements/chromatic-camouflage-r183.js', import.meta.url),
+  'utf8'
+);
+
+const achievement = getAchievement(CHROMATIC_CAMOUFLAGE_ID);
+assert.equal(ACHIEVEMENTS.length, 29,
+  'Production TURN should expose the existing 28 achievements plus Chromatic Camouflage');
+assert.equal(achievement?.title, 'CHROMATIC CAMOUFLAGE');
+assert.equal(achievement?.hidden, true);
+assert.equal(achievement?.category, 'exploration');
+assert.equal(achievement?.trophies, 50);
+assert.equal(
+  achievement?.description,
+  'Set your personal best on every track in a car painted to match that track.'
+);
+assert.equal(
+  ACHIEVEMENTS.reduce((total, item) => total + item.trophies, 0),
+  1750
+);
+assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 1750);
+
+const factoryRoute = Object.freeze({
+  countryside: Object.freeze({ time: 18, carId: 'convertible', carColor: '#a8327a' }),
+  airport: Object.freeze({ time: 21, carId: 'classic', carColor: '#ffcc00' }),
+  harbor: Object.freeze({ time: 35, carId: 'vintage-racer', carColor: '#8b5a2b' }),
+  cliffside: Object.freeze({ time: 24, carId: 'race-future', carColor: '#00aabb' }),
+  'midnight-city': Object.freeze({ time: 70, carId: 'sedan-sports', carColor: '#5e3c87' })
+});
+
+for (const trackId of TRACK_IDS) {
+  assert.equal(matchesTrackColor(trackId, factoryRoute[trackId].carColor), true,
+    `${trackId} should admit its corresponding factory-colour route`);
+}
+
+assert.equal(matchesTrackColor('countryside', '#ff70b4'), true);
+assert.equal(matchesTrackColor('airport', '#ffd84f'), true);
+assert.equal(matchesTrackColor('harbor', '#f28b39'), true);
+assert.equal(matchesTrackColor('cliffside', '#3ccad6'), true);
+assert.equal(matchesTrackColor('midnight-city', '#a785ea'), true);
+
+assert.equal(matchesTrackColor('countryside', '#ffcc00'), false,
+  'A saturated wrong hue must not count');
+assert.equal(matchesTrackColor('airport', '#fafafa'), false,
+  'Near-white paint must not count even when hue is ambiguous');
+assert.equal(matchesTrackColor('midnight-city', '#160b22'), false,
+  'Very dark paint must not count');
+assert.equal(matchesTrackColor('cliffside', '#777777'), false,
+  'Low-chroma grey must not count');
+
+const qualifying = qualifyingChromaticCamouflage((trackId) => factoryRoute[trackId]);
+assert.equal(qualifying?.length, TRACK_IDS.length);
+assert.deepEqual(qualifying?.map(({ trackId }) => trackId), TRACK_IDS);
+
+assert.equal(qualifyingChromaticCamouflage((trackId) => (
+  trackId === 'harbor'
+    ? { ...factoryRoute[trackId], carColor: '#ff4fa3' }
+    : factoryRoute[trackId]
+)), null, 'One wrong-colour personal best must keep the achievement locked');
+
+assert.equal(qualifyingChromaticCamouflage((trackId) => (
+  trackId === 'airport' ? null : factoryRoute[trackId]
+)), null, 'Every canonical production track must have a stored personal best');
+
+assert.match(moduleSource, /minSaturation: 0\.30/);
+assert.match(moduleSource, /minLightness: 0\.28/);
+assert.match(moduleSource, /maxLightness: 0\.85/);
+assert.match(moduleSource, /turn:lap-result/,
+  'The state should be re-evaluated after a record can change');
+
+assert.match(indexSource, /TURN v1\.6\.0 · Build 2026\.08\.08-r162/);
+assert.match(indexSource, /catalog-chromatic-r183\.js/,
+  'Production must route the achievement store and view through the Chromatic catalog');
+assert.match(indexSource, /trophy-road-chromatic-r183\.js/,
+  'Production must expose the expanded 1750-trophy road maximum');
+assert.match(indexSource, /chromatic-camouflage-r183\.js/,
+  'Production must install the hidden achievement evaluator');
+assert.doesNotMatch(indexSource, /airport-runway/,
+  'The TURN NEXT Airport prototype must not enter the production TURN entry point');
+
+console.log('TURN production Chromatic Camouflage achievement regression passed.');
