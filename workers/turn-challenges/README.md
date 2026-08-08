@@ -19,10 +19,9 @@ There is intentionally no update or delete API for challenge snapshots. Two peop
 
 - `POST /v1/telemetry` — accepts a small batch of allow-listed gameplay events from TURN/YOUR TURN.
 - `GET /v1/stats?days=30` — returns anonymous aggregate statistics to the private dashboard after bearer-key authentication.
-- Analytics Engine binding: `ANALYTICS`, dataset `turn_gameplay`.
-- D1 stores daily aggregate counts only. It does not store player IDs or page-session IDs.
+- D1 stores daily aggregate counts only. It does not store player IDs, page-session IDs or raw gameplay-event histories.
 
-TURN does not create an analytics cookie or persistent analytics identifier. A random page-session identifier exists only in browser memory, is hashed by the Worker before the Analytics Engine write, and is never written to D1. Telemetry starts only after a race actually starts and is event-driven rather than frame-driven.
+TURN does not create an analytics cookie or persistent analytics identifier. A random page-session identifier exists only in browser memory and is never written to D1. Telemetry starts only after a race actually starts and is event-driven rather than frame-driven.
 
 Current event types are deliberately small:
 
@@ -55,7 +54,7 @@ Cloudflare Workers Builds deploys this project directly from `enkeldesign/webb`.
 - Build command: empty
 - Deploy command: `npx wrangler deploy`
 
-The Wrangler config declares D1 as binding `DB` and Analytics Engine as binding `ANALYTICS`. The `turn_gameplay` Analytics Engine dataset is created by Cloudflare when data is first written.
+The Wrangler config declares only the existing D1 binding `DB`. Usage statistics are aggregated directly into D1, which keeps the deployment surface small and avoids making the dashboard depend on a second analytics binding.
 
 After deployment, the public Worker base URL is:
 
