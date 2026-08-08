@@ -2,3 +2,45 @@ html[data-turn-deployment="yourturn"] .yourturn-card[data-view="about"] a,
 html[data-turn-deployment="yourturn"] .yourturn-card[data-view="about"] a:visited {
   color: #08090a;
 }
+
+/*
+ * ABOUT TURN is deliberately a single-scroll-region modal. The outer <dialog>
+ * and card must not both scroll on iOS: nested scrolling caused the content to
+ * open part-way down, snap while swiping, and leave the visible footer buttons
+ * outside the active touch-scrolling region.
+ */
+html[data-turn-deployment="yourturn"] .yourturn-dialog {
+  overflow: hidden;
+}
+
+html[data-turn-deployment="yourturn"] .yourturn-card[data-view="about"] {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+html[data-turn-deployment="yourturn"] .yourturn-card[data-view="about"] .yourturn-card-head,
+html[data-turn-deployment="yourturn"] .yourturn-card[data-view="about"] .yourturn-name-field,
+html[data-turn-deployment="yourturn"] .yourturn-card[data-view="about"] .yourturn-dialog-status,
+html[data-turn-deployment="yourturn"] .yourturn-card[data-view="about"] .yourturn-actions {
+  flex: 0 0 auto;
+}
+
+html[data-turn-deployment="yourturn"] .yourturn-card[data-view="about"] .yourturn-extra {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  scroll-behavior: auto;
+  scroll-padding-block: 8px;
+}
+
+html[data-turn-deployment="yourturn"] .yourturn-card[data-view="about"] .yourturn-actions {
+  position: relative;
+  z-index: 2;
+  margin-top: 10px;
+  padding-bottom: 2px;
+}

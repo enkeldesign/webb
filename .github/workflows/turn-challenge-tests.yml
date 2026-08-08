@@ -70,6 +70,9 @@ jobs:
       - name: Run YOUR TURN recipient contract
         run: node turn-tests/yourturn-production.mjs
 
+      - name: Run YOUR TURN About modal regression
+        run: node turn-tests/yourturn-about-modal-production.mjs
+
       - name: Run TURN to YOUR TURN sharing contract
         run: node turn-tests/yourturn-turn-sharing-production.mjs
 
