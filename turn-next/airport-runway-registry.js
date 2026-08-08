@@ -4,8 +4,8 @@ import {
   TRACK_SAMPLE_COUNT,
   createTrackRuntime,
   normalizeTrackId
-} from '/turn-next/airport-runway-catalog.js';
-import { installAirportRunwayWorld } from '/turn-next/airport-runway-world.js';
+} from './airport-runway-catalog.js';
+import { installAirportRunwayWorld } from './airport-runway-world.js';
 import { installAirportWorld } from '/turn/tracks/airport-world-r52.js?build=20260722-r52';
 import { installCliffsideWorld } from '/turn/tracks/cliffside-world-r76.js?build=20260808-r162';
 import { installHarborWorld } from '/turn/tracks/harbor-world-r81.js?build=20260808-r162';
