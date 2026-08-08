@@ -2,7 +2,7 @@ import {
   AIRPORT_RUNWAY_AIRCRAFT,
   AIRPORT_RUNWAY_BLOCKERS,
   AIRPORT_RUNWAY_HANGAR
-} from '/turn-next/airport-runway-spec.js';
+} from './airport-runway-spec.js';
 
 function box(id, minX, maxX, minZ, maxZ, category) {
   return Object.freeze({ id, type: 'box', category, minX, maxX, minZ, maxZ });
