@@ -48,8 +48,8 @@ assert.match(indexSource, /\/yourturn\/storage-bootstrap\.js/);
 assert.match(indexSource, /\/yourturn\/app\.js\?revision=r6/);
 assert.match(indexSource, /growing-challenge\.css/);
 assert.match(indexSource, /racer-labels-bootstrap\.js/);
-assert.match(indexSource, /session\.js\?revision=r3[^\n]*session\.js\?revision=r6/,
-  'The page must cache-bust the new growing-challenge session even though app.js stays canonical');
+assert.match(indexSource, /session\.js\?revision=r3[^\n]*session\.js\?revision=r7/,
+  'The page must cache-bust the short-link growing-challenge session even though app.js stays canonical');
 assert.match(indexSource, /Your name in the challenge/);
 assert.match(indexSource, /id="yourTurnChallengeButton"[\s\S]*>THE CHALLENGE<\/button>/);
 assert.match(indexSource, /Press Gas, Drift or Boost to start the race\./);
