@@ -1,0 +1,163 @@
+<!doctype html>
+<!-- TURN NEXT-only AIRPORT: RUNWAY prototype. Production TURN and ordinary TURN NEXT are untouched. -->
+<html lang="en" data-turn-deployment="next"><head>
+  <base href="/turn/">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, shrink-to-fit=no">
+  <meta name="theme-color" content="#08090a">
+  <meta name="application-name" content="TURN NEXT · AIRPORT: RUNWAY">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="Isolated TURN NEXT test build for the AIRPORT: RUNWAY route prototype.">
+  <title>TURN NEXT · AIRPORT: RUNWAY · Test only</title>
+  <script>
+    globalThis.__TURN_BUILD__ = Object.freeze({
+      version: '1.6.0',
+      id: '2026.08.08-r162',
+      cacheKey: '20260808-r162'
+    });
+  </script>
+  <script src="/turn-next/airport-runway/storage-bootstrap.js?revision=r2"></script>
+  <script>
+    // This dedicated prototype is a browser test harness, not an installable second app.
+    // Resolve the canonical TURN launch gate immediately while retaining TURN NEXT identity.
+    globalThis.__turnLaunchReady = Promise.resolve({ mode: 'browser', prototype: 'airport-runway' });
+    document.documentElement.classList.add('turn-browser', 'turn-browser-launched');
+  </script>
+
+  <link rel="stylesheet" href="./styles.css?build=20260808-r162">
+  <link rel="stylesheet" href="./vertical-drive.css?build=20260808-r162">
+  <link rel="stylesheet" href="./hud-tuning.css?build=20260808-r162">
+  <link rel="stylesheet" href="./gameplay-features.css?build=20260808-r162">
+  <link rel="stylesheet" href="./gameplay-v2.css?build=20260808-r162">
+  <link rel="stylesheet" href="./position-hud-r83.css?build=20260808-r162">
+  <link rel="stylesheet" href="./drive-pad.css?build=20260808-r162">
+  <link rel="stylesheet" href="./in-game-menu.css?build=20260808-r162">
+  <link rel="stylesheet" href="./spectate-v3.css?build=20260808-r162">
+  <link rel="stylesheet" href="./manual-steering.css?build=20260808-r162">
+  <link rel="stylesheet" href="./orientation-guard.css?build=20260808-r162-home-portrait">
+  <link rel="stylesheet" href="./lap-result-toast.css?build=20260808-r162">
+  <link rel="stylesheet" href="./rival-onboarding.css?build=20260808-r162">
+  <link rel="stylesheet" href="./track-select.css?build=20260808-r162">
+  <link rel="stylesheet" href="./track-select-r54.css?build=20260808-r162">
+  <link rel="stylesheet" href="./track-select-r61.css?build=20260808-r162">
+  <link rel="stylesheet" href="./track-select-r77.css?build=20260808-r162">
+  <link rel="stylesheet" href="./track-select-r78.css?build=20260808-r162">
+  <link rel="stylesheet" href="./track-select-r79.css?build=20260808-r162">
+  <link rel="stylesheet" href="./track-intro.css?build=20260808-r162">
+  <link rel="stylesheet" href="./garage/lot-r10.css?build=20260808-r162">
+  <link rel="stylesheet" href="./garage/lot-stat-legend.css?build=20260808-r162">
+  <link rel="stylesheet" href="./garage/lot-layout-r60.css?build=20260808-r162">
+  <link rel="stylesheet" href="./m8-menu-font-fix.css?build=20260808-r162-menu-font-v3">
+  <link rel="stylesheet" href="/turn-next/identity.css?source=20260808-r162-m8.5-logo">
+  <link rel="stylesheet" href="/turn-next/airport-runway/prototype.css?revision=r2">
+
+  <script src="./pwa-usable-viewport-r181.js?revision=r181-usable-web-layer"></script>
+  <script src="./motion-safe-zone.js?build=20260808-r162"></script>
+  <script src="./orientation-compat.js?build=20260808-r162"></script>
+  <script src="./live-steering-setting.js?build=20260808-r162-live-steering"></script>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/",
+
+        "/turn/race/game-state.js?build=20260805-r160": "/turn/race/game-state.js?build=20260808-r162",
+        "/turn/race/rival-storage.js?build=20260805-r160": "/turn/race/rival-storage.js?build=20260808-r162",
+        "/turn/race/replay-system.js?build=20260805-r160": "/turn/race/replay-system.js?build=20260808-r162",
+
+        "/turn/tracks/track-manager.js?build=20260805-r160": "/turn/tracks/track-manager.js?source=20260729-r118-m8",
+        "/turn/tracks/track-manager.js?build=20260722-r52": "/turn/tracks/track-manager.js?source=20260729-r118-m8",
+
+        "/turn/tracks/catalog.js?build=20260805-r160": "/turn-next/airport-runway/catalog.js",
+        "/turn/tracks/catalog.js?source=20260729-r118-m8": "/turn-next/airport-runway/catalog.js",
+        "/turn/tracks/catalog.js?build=20260722-r50": "/turn-next/airport-runway/catalog.js",
+        "/turn/tracks/catalog.js?build=20260808-r162": "/turn-next/airport-runway/catalog.js",
+        "/turn/tracks/catalog.js": "/turn-next/airport-runway/catalog.js",
+
+        "/turn/tracks/definitions.js?build=20260805-r160": "/turn-next/airport-runway/definitions.js",
+        "/turn/tracks/definitions.js?build=20260808-r162": "/turn-next/airport-runway/definitions.js",
+        "/turn/tracks/definitions.js": "/turn-next/airport-runway/definitions.js",
+
+        "/turn/tracks/registry.js?build=20260808-r162": "/turn-next/airport-runway/registry.js",
+        "/turn/tracks/registry.js": "/turn-next/airport-runway/registry.js",
+        "/turn/tracks/pace-notes.js?build=20260808-r162": "/turn-next/airport-runway/pace-notes.js",
+        "/turn/tracks/pace-notes.js": "/turn-next/airport-runway/pace-notes.js",
+
+        "/turn/tracks/elevation.js?build=20260805-r160": "/turn/tracks/elevation.js?build=20260725-r67",
+        "/turn/vehicle/catalog.js?build=20260805-r160": "/turn/vehicle/catalog.js?source=20260729-r118-m8",
+
+        "./garage/lot-r10.js?build=20260720-r19": "./garage/lot-track-select.js?build=20260808-r162",
+        "./render/camera.js?build=20260720-r19": "./render/camera.js?build=20260808-r162",
+        "./race/lap-system.js?build=20260720-r19": "./race/lap-system-r86.js?build=20260808-r162",
+        "./race/game-state.js": "./race/game-state.js?build=20260808-r162",
+        "./race/replay-system.js": "./race/replay-system.js?build=20260808-r162",
+        "./race/rival-storage.js?build=20260720-r19": "./race/rival-storage.js?build=20260808-r162",
+        "./race/rival-storage.js?build=20260722-r50": "./race/rival-storage.js?build=20260808-r162",
+        "./race/track-spatial-index.js?build=20260720-r19": "./race/track-spatial-index.js?build=20260808-r162",
+        "./performance-monitor.js?build=20260720-r19": "./performance-monitor.js?build=20260808-r162",
+        "./world-assets.js": "./world-assets.js?build=20260808-r162",
+        "./vehicle/physics.js?build=20260720-r19": "./vehicle/physics.js?build=20260808-r162",
+        "./vehicle/catalog.js?build=20260720-r19": "./vehicle/catalog.js?build=20260808-r162",
+        "./vehicle/catalog.js?build=20260720-r20": "./vehicle/catalog.js?build=20260808-r162",
+        "./vehicle/catalog.js?build=20260722-r42": "./vehicle/catalog.js?build=20260808-r162",
+        "./vehicle/car-models.js?build=20260720-r19": "./vehicle/emergency-livery-models.js?build=20260808-r162",
+        "./vehicle/car-models.js?build=20260720-r22": "./vehicle/emergency-livery-models.js?build=20260808-r162",
+        "./ui/race-announcements.js": "./ui/race-announcements.js?build=20260808-r162",
+        "./ui/track-select.js?build=20260722-r51": "./ui/track-select.js?build=20260808-r162",
+        "./ui/track-intro.js?build=20260725-r75": "./ui/track-intro.js?build=20260808-r162",
+        "./tracks/cliffside-layout.js": "./tracks/cliffside-layout.js?build=20260808-r162",
+        "./tracks/cliffside-world.js": "./tracks/cliffside-world-r76.js?build=20260808-r162",
+        "./tracks/harbor-collision.js": "./tracks/harbor-collision.js?build=20260808-r162",
+        "./tracks/harbor-layout.js": "./tracks/harbor-layout.js?build=20260808-r162",
+        "./tracks/harbor-world.js": "./tracks/harbor-world-r81.js?build=20260808-r162",
+        "./tracks/elevation.js": "./tracks/elevation.js?build=20260808-r162"
+      }
+    }
+  </script>
+</head><body>
+  <p class="airport-runway-test-note" role="note">TURN NEXT · AIRPORT: RUNWAY · TEST ONLY</p>
+  <div id="game" aria-label="Third-person motion-controlled arcade racing game"></div>
+  <section class="panel" id="intro" hidden aria-hidden="true">
+    <button id="motionButton" type="button" hidden></button>
+    <button id="manualButton" type="button" hidden></button>
+    <p id="status" role="status" hidden></p>
+  </section>
+  <section class="rotate-panel" aria-label="Rotate your device to landscape">
+    <div class="rotate-card">
+      <div class="rotate-phone" aria-hidden="true"></div>
+      <strong>ROTATE YOUR DEVICE TO LANDSCAPE</strong>
+    </div>
+  </section>
+  <div class="hud" id="hud" hidden>
+    <div class="topbar">
+      <div class="stats">
+        <div class="chip">speed<strong><span id="speed">0</span> km/h</strong></div>
+        <div class="chip">lap<strong id="lap">1</strong></div>
+        <div class="chip">time<strong id="lapTime">0:00.000</strong></div>
+        <div class="chip">best<strong id="bestTime">--:--.---</strong></div>
+      </div>
+      <div class="map-wrap"><canvas id="map" width="300" height="210" aria-label="Track map"></canvas></div>
+    </div>
+    <div class="message" id="message" role="status"></div>
+    <div class="tilt-drive" aria-hidden="true">
+      <span><b>brake</b><b>gas</b></span>
+      <div class="tilt-track"><i class="tilt-needle" id="tiltNeedle"></i></div>
+      <small class="tilt-value" id="tiltValue">neutral</small>
+    </div>
+  </div>
+  <div class="manual-steer" id="manualSteer" role="slider" aria-label="Steering. Drag left or right." aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0" hidden>
+    <span class="manual-steer-knob" aria-hidden="true"></span>
+  </div>
+  <div class="controls" id="controls" hidden>
+    <div class="utility-group">
+      <button class="utility" id="calibrateButton" type="button">Recalibrate</button>
+      <button class="utility" id="resetButton" type="button">Restart Lap</button>
+    </div>
+    <div class="pedals">
+      <button class="pedal brake" id="brakeButton" type="button">Brake</button>
+      <button class="pedal gas" id="gasButton" type="button">Gas</button>
+    </div>
+  </div>
+  <script type="module" src="/turn/app.js?build=20260808-r162-browser-consent-r166-bella-records-airport-runway-r2"></script>
+</body></html>
