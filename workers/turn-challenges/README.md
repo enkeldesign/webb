@@ -1,46 +1,69 @@
-# TURN challenge snapshot Worker
+# TURN Cloudflare Worker
 
-This is the deliberately small server component for short YOUR TURN links.
+This is TURN's deliberately small server component. It currently has two jobs:
 
-It does one thing: store an immutable encoded YOUR TURN challenge snapshot behind a short opaque ID and return that same snapshot later.
+1. store immutable YOUR TURN challenge snapshots behind short opaque IDs; and
+2. receive privacy-minimal gameplay events for Erik's private usage dashboard.
 
-TURN and YOUR TURN are **not connected to this Worker yet**. Until the frontend integration lands, production sharing keeps using the existing self-contained challenge links.
+TURN's racing runtime remains local in the browser. The Worker does not simulate races, synchronize players or understand driving physics.
 
-## API
+## Challenge API
 
-- `GET /health` — deployment/binding health check.
+- `GET /health` — deployment/D1 binding health check.
 - `POST /v1/challenges` — accepts `{ "payload": "gz.…" }` from `https://enkel.design`, validates the YOUR TURN v2 wire payload, stores it, and returns a 12-character ID.
 - `GET /v1/challenges/:id` — returns the immutable encoded challenge snapshot.
 
-There is intentionally no update, delete, account, session, leaderboard, or synchronization API. Two people who grow the same seed still create two independent challenge branches.
+There is intentionally no update or delete API for challenge snapshots. Two people who grow the same seed create independent immutable branches.
+
+## Private usage statistics
+
+- `POST /v1/telemetry` — accepts a small batch of allow-listed gameplay events from TURN/YOUR TURN.
+- `GET /v1/stats?days=30` — returns anonymous aggregate statistics to the private dashboard after bearer-key authentication.
+- Analytics Engine binding: `ANALYTICS`, dataset `turn_gameplay`.
+- D1 stores daily aggregate counts only. It does not store player IDs or page-session IDs.
+
+TURN does not create an analytics cookie or persistent analytics identifier. A random page-session identifier exists only in browser memory, is hashed by the Worker before the Analytics Engine write, and is never written to D1. Telemetry starts only after a race actually starts and is event-driven rather than frame-driven.
+
+Current event types are deliberately small:
+
+- `play_session`
+- `race_start`
+- `lap_complete`
+- `lap_invalid`
+
+Dimensions are limited to product surface, build, track, car, steering mode, browser/installed web app, Drive By Ear state, blank-screen state, lap time and invalid-lap reason. Names, challenge IDs/links, replay data, driving paths, control streams and precise location are not part of the analytics payload.
+
+The private dashboard is a static page under `/turn/stats/`. It is `noindex`, unlinked from TURN and protected at the API layer by a bearer key whose plaintext is not committed to the repository.
 
 ## Storage and safety boundaries
 
 - D1 binding: `DB`.
-- The table is created lazily with `CREATE TABLE IF NOT EXISTS` so first deployment does not require a separate migration step.
-- Exact duplicate payloads reuse the same snapshot ID; different challenge generations get different immutable snapshots.
-- Browser writes are accepted only with an `Origin` of `https://enkel.design` (or `https://www.enkel.design`). This is a browser-origin guard, not an authentication system.
-- Request and decompressed-payload limits protect the tiny store from accidental oversized writes.
-- The Worker decompresses and structurally validates the current YOUR TURN v2 wire format before storing anything.
+- Tables are created lazily with `CREATE TABLE IF NOT EXISTS`; deployment does not require a separate migration step.
+- Exact duplicate challenge payloads reuse the same snapshot ID; different challenge generations get different immutable snapshots.
+- Browser writes are accepted only with an `Origin` of `https://enkel.design` (or `https://www.enkel.design`). This is an origin guard, not user authentication.
+- Request and decompressed-payload limits protect the challenge store from accidental oversized writes.
+- The Worker decompresses and structurally validates the current YOUR TURN v2 wire format before storing challenges.
+- The telemetry endpoint accepts only its fixed event schema rather than arbitrary event names or arbitrary user data.
 
-## Cloudflare dashboard setup
+## Cloudflare deployment
 
-Cloudflare Workers Builds can deploy this project directly from the existing `enkeldesign/webb` repository.
+Cloudflare Workers Builds deploys this project directly from `enkeldesign/webb`.
 
-1. Open **Workers & Pages** → **Create application** → **Import a repository**.
-2. Connect the GitHub account and choose `enkeldesign/webb`.
-3. Worker/project name: **`turn-challenges`**. This must match `wrangler.jsonc`.
-4. Production branch: **`main`**.
-5. Root directory: **`workers/turn-challenges`**.
-6. Leave the optional build command empty.
-7. Leave the deploy command at its default: **`npx wrangler deploy`**.
-8. Save and deploy.
+- Worker/project name: `turn-challenges`
+- Production branch: `main`
+- Root directory: `workers/turn-challenges`
+- Build command: empty
+- Deploy command: `npx wrangler deploy`
 
-The Wrangler config declares a draft D1 binding with only `"binding": "DB"`. Wrangler 4.45+ supports automatic resource provisioning for D1 and should create/link the database during deployment.
+The Wrangler config declares D1 as binding `DB` and Analytics Engine as binding `ANALYTICS`. The `turn_gameplay` Analytics Engine dataset is created by Cloudflare when data is first written.
 
-If Cloudflare's automatic D1 provisioning does not complete, do not improvise another architecture. Create one D1 database in the dashboard and bind it to the Worker as variable **`DB`**, then redeploy. No schema SQL needs to be entered manually because the Worker initializes its one table lazily.
+After deployment, the public Worker base URL is:
 
-After deployment, open the generated `*.workers.dev/health` endpoint. A ready deployment returns JSON containing:
+```text
+https://turn-challenges.erik-jansson-ux.workers.dev
+```
+
+A ready `/health` response contains:
 
 ```json
 {
@@ -51,25 +74,17 @@ After deployment, open the generated `*.workers.dev/health` endpoint. A ready de
 }
 ```
 
-Give the resulting public Worker base URL to the TURN frontend integration, for example:
-
-```text
-https://turn-challenges.<account-subdomain>.workers.dev
-```
-
-The Worker URL is public configuration, not a secret.
-
 ## Local checks
 
 Requires Node 24+ for the same web-platform primitives used by the Worker tests.
 
 ```sh
-npm test
+npm install
+npm run check
 ```
 
-Wrangler is only required for local Cloudflare development/deployment:
+For local Cloudflare development:
 
 ```sh
-npm install
 npm run dev
 ```
