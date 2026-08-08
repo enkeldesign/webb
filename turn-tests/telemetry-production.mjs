@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [client, about, privacyCss, statsHtml, statsJs, workerConfig, workerRouter, workerTelemetry] = await Promise.all([
+const [client, about, privacyCss, statsHtml, statsJs, productionIndex, workerConfig, workerRouter, workerTelemetry] = await Promise.all([
   fs.readFile(new URL('../turn/telemetry/client.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/content/about-turn.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/about-privacy.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/stats/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/stats/stats.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../workers/turn-challenges/wrangler.jsonc', import.meta.url), 'utf8'),
   fs.readFile(new URL('../workers/turn-challenges/src/router.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../workers/turn-challenges/src/telemetry.js', import.meta.url), 'utf8')
@@ -47,14 +48,15 @@ assert.match(statsHtml, /<meta name="robots" content="noindex,nofollow,noarchive
 assert.match(statsHtml, /PRIVATE · ENKEL\.DESIGN/);
 assert.match(statsHtml, /PLAY SESSIONS/);
 assert.match(statsHtml, /does not assign a persistent analytics identifier/);
-assert.doesNotMatch(statsHtml, /href=["'][^"']*stats/i,
-  'The private dashboard must not link itself into public game navigation');
+assert.doesNotMatch(productionIndex, /href=["'][^"']*\/turn\/stats|href=["'][^"']*stats\//i,
+  'The private dashboard must not be linked into public TURN navigation');
 assert.match(statsJs, /location\.hash\.slice\(1\)/,
   'The private key must stay in the URL fragment so GitHub Pages never receives it');
 assert.match(statsJs, /Authorization: `Bearer \$\{statsKey\}`/);
 assert.doesNotMatch(statsJs, /localStorage|sessionStorage|document\.cookie/i,
   'The private dashboard must not persist its bearer key into browser storage');
-assert.match(statsJs, /MOST PLAYED|mostTrack|mostCar/);
+assert.match(statsJs, /mostTrack/);
+assert.match(statsJs, /mostCar/);
 assert.match(statsJs, /YOUR TURN play sessions/);
 assert.match(statsJs, /Motion-steered races/);
 assert.match(statsJs, /Drive By Ear races/);
