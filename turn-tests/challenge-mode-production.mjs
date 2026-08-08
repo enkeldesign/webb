@@ -20,7 +20,8 @@ const [
   uiSource,
   codecSource,
   cssSource,
-  storageSource
+  storageSource,
+  releaseSource
 ] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
@@ -32,12 +33,14 @@ const [
   fs.readFile(new URL('../turn-next/challenge-ui.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/challenge-codec.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/challenge-mode.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-next/storage-bootstrap.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn-next/storage-bootstrap.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8')
 ]);
+const release = JSON.parse(releaseSource);
 
 assert.doesNotMatch(productionIndex, /challenge-mode|challenge-codec|RACE MY GHOST/,
   'The prototype must remain isolated from production TURN');
-assert.match(nextIndex, /TURN NEXT · Source TURN v1\.5\.2 · Build 2026\.08\.06-r161/);
+assert.match(nextIndex, new RegExp(`TURN NEXT · Source TURN v${escapeRegex(release.version)} · Build ${escapeRegex(release.id)}`));
 assert.match(nextIndex, /"\/turn\/tracks\/track-manager\.js\?build=20260805-r160": "\/turn\/tracks\/track-manager\.js\?source=20260729-r118-m8"/,
   'Challenge mode must reuse TURN NEXT’s canonical Track Manager singleton');
 assert.match(nextIndex, /"\/turn\/tracks\/catalog\.js\?build=20260805-r160": "\/turn\/tracks\/catalog\.js\?source=20260729-r118-m8"/);
@@ -190,3 +193,7 @@ assert.ok(builtInStyleChallenge.frames.at(-1).t > 64.99,
 assert.equal(builtInStyleChallenge.frames.at(-1).x, 719);
 
 console.log('TURN NEXT Race My Ghost challenge, repeat attempts, top-four isolation, compact links and replies passed.');
+
+function escapeRegex(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
