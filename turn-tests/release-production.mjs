@@ -36,11 +36,12 @@ const [
 await checkReleaseFiles();
 
 const visibleBuild = `TURN v${release.version} · Build ${release.id}`;
-assert.match(index, new RegExp(escapeRegExp(`<title>${visibleBuild}</title>`)));
+assert.match(index, /<title>TURN<\/title>/,
+  'The document title must identify the product without exposing release metadata to screen-reader page context');
 assert.equal(
   index.split(visibleBuild).length - 1,
-  2,
-  'Title and install onboarding must share the static release identity; Home receives it from the runtime source of truth'
+  1,
+  'Install onboarding keeps the static release identity; Home receives it from the runtime source of truth'
 );
 assert.match(index, new RegExp(`version: '${escapeRegExp(release.version)}'`));
 assert.match(index, new RegExp(`id: '${escapeRegExp(release.id)}'`));
