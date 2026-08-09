@@ -96,9 +96,8 @@ export function installTurnAudio() {
 
   document.addEventListener('pointerdown', unlockFromGesture, { capture: true, passive: true });
   document.addEventListener('pointerdown', handleLotPointerDown, { capture: true, passive: true });
+  document.addEventListener('pointerdown', handleUiPointerDown, { capture: true, passive: true });
   document.addEventListener('keydown', unlockFromGesture, { capture: true });
-  document.addEventListener('click', handleUiClick, { capture: true });
-  document.addEventListener('change', handleUiChange, { capture: true });
   document.addEventListener('visibilitychange', handleVisibilityChange, { passive: true });
   window.addEventListener('pagehide', handlePageHide, { passive: true });
   if (DRIVE_BY_EAR_ENABLED) {
@@ -221,8 +220,6 @@ export function update(frame = {}, now = performance.now()) {
   smooth(skidTone.frequency, 720 + speedRatio * 520 + strongSlip * 190, audioNow, 0.07);
   smooth(skidFilter.frequency, 980 + speedRatio * 520, audioNow, 0.09);
 
-  // DRIFT describes loss of grip without issuing a second left/right instruction.
-  // More slip widens the centred tyre image rather than moving it to one ear.
   const driftWidth = driftHeld
     ? 0.32 + strongSlip * 0.68
     : slipIntent * 0.18;
@@ -466,7 +463,6 @@ function installBoostGraph() {
   boostTone.start();
 }
 
-
 function installEmergencySirenGraph() {
   sirenGain = context.createGain();
   sirenGain.gain.value = 0;
@@ -540,8 +536,6 @@ function installDbeGraphs() {
   sliderHarmonicMix = context.createGain();
   sliderHarmonicMix.gain.value = 0.14;
 
-  // A soft tonal pair replaces the former continuous noise hiss.
-  // The fifth keeps the cue easy to localise without pushing energy into a sharp band.
   sliderTone = context.createOscillator();
   sliderTone.type = 'sine';
   sliderTone.frequency.value = 390;
@@ -560,8 +554,6 @@ function installDbeGraphs() {
   sliderTone.start();
   sliderHarmonic.start();
 
-  // Off-road surface is deliberately centred. It describes gravel and bumps,
-  // while the panned ribbon remains the only steering instruction.
   surfaceGain = context.createGain();
   surfaceGain.gain.value = 0;
   surfaceFilter = context.createBiquadFilter();
@@ -891,17 +883,13 @@ function handleLotPointerDown(event) {
   cue('car-select');
 }
 
-function handleUiChange(event) {
-  if (event.target.matches?.('.lot-color-input')) cue('paint-select');
-}
-
 function handleLotVisibilityChange() {
   const nextLotOpen = document.body?.classList.contains('turn-lot-open') || false;
   if (nextLotOpen && !lotOpen) cue('garage-open');
   lotOpen = nextLotOpen;
 }
 
-function handleUiClick(event) {
+function handleUiPointerDown(event) {
   const button = event.target.closest?.('button');
   if (!button) return;
   if (button.closest('.drive-pad') || button.classList.contains('pedal') || button.classList.contains('brake-reverse')) return;

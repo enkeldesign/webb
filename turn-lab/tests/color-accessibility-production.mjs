@@ -20,6 +20,8 @@ const [
   stylesSource,
   drivePadCssSource,
   manualSteeringCssSource,
+  orientationSource,
+  audioSource,
   historySource
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
@@ -32,6 +34,8 @@ const [
   fs.readFile(new URL('../../turn/styles.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/drive-pad.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/manual-steering.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/orientation-compat.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/audio/audio-system.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/content/about-history.js', import.meta.url), 'utf8')
 ]);
 const release = JSON.parse(releaseSource);
@@ -105,6 +109,20 @@ assert.match(drivePadCssSource, /\.drive-pad[\s\S]*touch-action:\s*none/,
 assert.match(manualSteeringCssSource, /\.manual-steer[\s\S]*touch-action:\s*none/,
   'Gesture suppression must remain local to manual steering');
 
+// Keep native form activation out of document-level click delegation. iOS VoiceOver
+// native pickers are sensitive to ancestor click listeners; TURN has no reason to put
+// unrelated orientation or UI-sound behavior in the color input's click ancestry.
+assert.doesNotMatch(orientationSource, /document\.addEventListener\(['"]click['"]/,
+  'Orientation compatibility must not delegate click handling from document');
+assert.match(orientationSource, /querySelector\('#motionButton'\)\?\.addEventListener\('click', resetSensorCalibration\)/,
+  'Motion calibration should bind directly to the control that owns it');
+assert.doesNotMatch(audioSource, /document\.addEventListener\(['"]click['"]/,
+  'Generic UI audio must not intercept every native-control click through document');
+assert.doesNotMatch(audioSource, /document\.addEventListener\(['"]change['"]/,
+  'Generic UI audio must not delegate native form changes through document');
+assert.match(audioSource, /document\.addEventListener\('pointerdown', handleUiPointerDown/,
+  'Nonessential pointer UI sounds may remain on the physical pointer path');
+
 assert.doesNotMatch(runtimeSource, /describeColorCue|lot-color-control|input\[type="color"\]|onPaintValueChange|replaceWith/,
   'The Color Cues runtime must not post-process paint controls');
 assert.match(runtimeSource, /Color cues/);
@@ -120,4 +138,4 @@ assert.match(historySource, /native HTML color input/i);
 assert.doesNotMatch(historySource, /native paint activation bridge|assistive-technology bridge/i,
   'Current release history must not claim an activation bridge that no longer exists');
 
-console.log('TURN 1.7.0 r163 HTML-first native color input and Color Cues regression passed.');
+console.log('TURN 1.7.0 r163 HTML-first native color input and VoiceOver event-boundary regression passed.');

@@ -79,9 +79,13 @@ assert.match(audio, /case 'car-select':/);
 assert.match(audio, /case 'paint-select':/);
 assert.match(audio, /handleLotVisibilityChange/);
 assert.match(audio, /handleLotPointerDown/);
-assert.match(audio, /handleUiChange/);
-assert.match(audio, /function handleUiClick\(/);
+assert.match(audio, /function handleUiPointerDown\(/);
 assert.match(audio, /document\.addEventListener\('pointerdown', unlockFromGesture/);
+assert.match(audio, /document\.addEventListener\('pointerdown', handleUiPointerDown/);
+assert.doesNotMatch(audio, /document\.addEventListener\('click'/,
+  'Nonessential UI audio must not put a delegated click listener above native form controls');
+assert.doesNotMatch(audio, /document\.addEventListener\('change'/,
+  'Nonessential UI audio must not put delegated form handling above native controls');
 assert.match(audio, /document\.addEventListener\('keydown', unlockFromGesture/);
 assert.match(audio, /document\.addEventListener\('visibilitychange', handleVisibilityChange/);
 assert.match(audio, /window\.addEventListener\('pagehide', handlePageHide/);
