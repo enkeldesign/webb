@@ -2,19 +2,20 @@
   "id": "/turn-lab/",
   "name": "TURN LAB",
   "short_name": "TURN LAB",
-  "description": "A test build of the motion-controlled arcade drift racer TURN.",
+  "description": "Temporary installed-app viewport diagnostics for the current production TURN runtime.",
   "start_url": "/turn-lab/",
   "scope": "/turn-lab/",
-  "display": "fullscreen",
+  "display": "standalone",
+  "display_override": ["standalone"],
   "orientation": "landscape",
-  "background_color": "#38d9ff",
-  "theme_color": "#38d9ff",
+  "background_color": "#08090a",
+  "theme_color": "#08090a",
   "icons": [
     {
-      "src": "/turn/icon-192-v4.png",
-      "sizes": "192x192",
+      "src": "/turn/TURNicon.PNG?icon=20260803-profile-512",
+      "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ]
 }
