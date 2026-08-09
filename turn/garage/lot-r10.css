@@ -278,18 +278,22 @@
   align-items: center;
   gap: 6px;
   min-height: 38px;
-  padding: 4px 5px 4px 7px;
+  padding: 2px 5px 2px 7px;
   border: 2px solid var(--ink);
   border-radius: 10px;
   background: var(--paper);
   box-shadow: 2px 2px 0 var(--ink);
-  cursor: pointer;
 }
 
-.lot-color-copy {
+.lot-color-copy,
+.lot-color-name {
   min-width: 0;
   display: grid;
   gap: 2px;
+}
+
+.lot-color-name {
+  cursor: pointer;
 }
 
 .lot-color-label {
@@ -299,6 +303,23 @@
   letter-spacing: 0.055em;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.lot-color-preset {
+  width: 100%;
+  min-width: 0;
+  height: 18px;
+  min-height: 0;
+  margin: 0;
+  padding: 0 3px;
+  border: 1.5px solid var(--ink);
+  border-radius: 5px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.38rem;
+  font-weight: 900;
+  letter-spacing: 0.035em;
 }
 
 .lot-color-input {
@@ -313,7 +334,8 @@
   cursor: pointer;
 }
 
-.lot-color-input:focus-visible {
+.lot-color-input:focus-visible,
+.lot-color-preset:focus-visible {
   outline: 3px solid var(--cyan);
   outline-offset: 2px;
 }
@@ -391,7 +413,9 @@
   .lot-colors { gap: 4px; margin: 6px 0 8px; }
   .lot-color-input { width: 32px; height: 25px; }
   .lot-color-label { font-size: 0.42rem; }
-  .lot-color-copy { gap: 1px; }
+  .lot-color-preset { height: 17px; font-size: 0.34rem; }
+  .lot-color-copy,
+  .lot-color-name { gap: 1px; }
   .lot-view-open,
   .lot-race { min-height: 34px; }
 }
