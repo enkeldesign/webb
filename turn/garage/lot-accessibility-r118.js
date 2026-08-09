@@ -11,6 +11,7 @@ const STAT_FIELDS = Object.freeze([
 
 export function installLotAccessibility(root = document.body) {
   const screen = root.querySelector('.lot-screen');
+  const lotTitle = screen?.querySelector('#lot-title');
   const carPicker = screen?.querySelector('.lot-car-picker');
   const colors = screen?.querySelector('.lot-colors');
   const card = screen?.querySelector('.lot-card');
@@ -116,6 +117,18 @@ export function installLotAccessibility(root = document.body) {
   };
 
   syncSelectedCarSemantics();
+
+  // The Lot is a full-screen route. If focus is still on the Home control that
+  // opened it, explicitly hand focus to the new view before VoiceOver can retain
+  // the old screen position and accidentally activate Race This Car underneath.
+  if (lotTitle && !screen.contains(document.activeElement)) {
+    lotTitle.tabIndex = -1;
+    try {
+      lotTitle.focus({ preventScroll: true });
+    } catch (_) {
+      lotTitle.focus();
+    }
+  }
 
   const selectionObserver = new MutationObserver(syncSelectedCarSemantics);
   selectionObserver.observe(carPicker, {
