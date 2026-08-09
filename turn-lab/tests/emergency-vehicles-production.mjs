@@ -40,7 +40,6 @@ const [
   emergencyLiveries,
   lot,
   lotCss,
-  fixedLiveryUi,
   lotTrackSelect,
   controls,
   audio,
@@ -53,7 +52,6 @@ const [
   fs.readFile(path.join(turnDir, 'vehicle/emergency-livery-models.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'garage/lot-r10.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'garage/lot-r10.css'), 'utf8'),
-  fs.readFile(path.join(turnDir, 'garage/lot-fixed-livery-ui.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'garage/lot-track-select.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'ui/gameplay-controls.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'audio/audio-system.js'), 'utf8'),
@@ -90,19 +88,16 @@ assert.match(emergencyLiveries, /installLotUnselectedTint/,
   'Unselected Lot vehicles should retain a subtle hint of their factory colour');
 assert.doesNotMatch(emergencyLiveries, /turnEmergencyLightRig|PointLight|AdditiveBlending/);
 
-assert.match(lot, /SERVICE LIVERY/);
-assert.match(lotCss, /\.lot-fixed-livery/);
-assert.match(fixedLiveryUi, /emergencyVehicleNames/);
-assert.match(fixedLiveryUi, /colors\.childNodes\.length > 0/);
-assert.match(fixedLiveryUi, /colors\.replaceChildren\(\)/);
-assert.doesNotMatch(fixedLiveryUi, /colors\.hidden = true/);
-assert.match(fixedLiveryUi, /colors\.hidden = false/);
-assert.match(fixedLiveryUi, /colors\.setAttribute\('aria-hidden', 'true'\)/);
-assert.match(lotTrackSelect, /installFixedLiveryUiGuard/);
-assert.match(lotTrackSelect, /emergency-paint-empty-v3/);
-assert.match(index, /syncFixedLiveryRail/);
-assert.match(index, /emergencyVehicleNames/);
-assert.doesNotMatch(fixedLiveryUi, /input|type=['"]color|SERVICE LIGHTS/);
+assert.match(lot, /if \(car\.fixedLivery\)[\s\S]*colors\.replaceChildren\(\)[\s\S]*colors\.setAttribute\('aria-hidden', 'true'\)/,
+  'The Lot renderer itself must leave fixed-livery paint empty and non-interactive');
+assert.doesNotMatch(lot, /SERVICE LIVERY|lot-fixed-livery/,
+  'Fixed-livery vehicles should not need a placeholder control that another script removes');
+assert.doesNotMatch(lotCss, /\.lot-fixed-livery/,
+  'There should be no dead fixed-livery placeholder styling');
+assert.doesNotMatch(lotTrackSelect, /installFixedLiveryUiGuard|lot-fixed-livery-ui/,
+  'The route wrapper must not install a fixed-livery DOM observer');
+assert.doesNotMatch(index, /syncFixedLiveryRail|emergencyVehicleNames/,
+  'Production index must not contain another fixed-livery DOM observer');
 
 const escapedBuild = release.cacheKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 for (const html of [index, nextIndex]) {
