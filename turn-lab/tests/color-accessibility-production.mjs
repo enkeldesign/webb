@@ -67,8 +67,11 @@ assert.doesNotMatch(lotSource, /input\.setAttribute\('aria-hidden'|input\.tabInd
 
 assert.match(lotCssSource, /\.lot-color-input \{[\s\S]*width: 38px[\s\S]*height: 28px[\s\S]*border: 2px solid var\(--ink\)/,
   'The native input must be styled directly as the visible swatch');
-assert.doesNotMatch(lotCssSource, /\.lot-color-trigger|opacity: 0\.001|pointer-events: none/,
-  'Core Lot CSS must not hide one control behind another');
+assert.doesNotMatch(lotCssSource, /\.lot-color-trigger|opacity: 0\.001/,
+  'Core Lot CSS must not contain the retired hidden-input or duplicate-trigger treatment');
+const paintInputCss = lotCssSource.match(/\.lot-color-input \{[\s\S]*?\}/)?.[0] || '';
+assert.doesNotMatch(paintInputCss, /pointer-events:\s*none|opacity:\s*0(?:\.0+)?/,
+  'The native paint input itself must remain visible and interactive');
 
 assert.doesNotMatch(runtimeSource, /describeColorCue|lot-color-control|input\[type="color"\]|onPaintValueChange|replaceWith|removeAttribute\('aria-hidden'/,
   'Color Cues runtime must not post-process paint controls');
