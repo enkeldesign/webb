@@ -20,13 +20,13 @@ const release = JSON.parse(releaseSource);
 
 assert.equal(COLOR_CUES_STORAGE_KEY, 'turn-color-cues-v1');
 assert.deepEqual(TRACK_COLOR_CUES, {
-  countryside: 'pink / magenta',
+  countryside: 'pink',
   airport: 'yellow',
   harbor: 'orange',
   cliffside: 'cyan',
   'midnight-city': 'violet'
 });
-assert.equal(trackColorCue('countryside'), 'pink / magenta');
+assert.equal(trackColorCue('countryside'), 'pink');
 assert.equal(trackColorCue('midnight-city'), 'violet');
 assert.equal(trackColorCue('invented'), '');
 
@@ -85,6 +85,7 @@ assert.match(cssSource, /repeating-linear-gradient/,
   'Color Cues must include a non-color pattern channel as well as text');
 
 assert.match(historySource, /1\.7\.0 r163/);
+assert.match(historySource, /accessibility patch/i);
 assert.match(historySource, /CHROMATIC CAMOUFLAGE/);
 assert.match(historySource, /Color Cues/);
 assert.match(historySource, /VoiceOver/);
