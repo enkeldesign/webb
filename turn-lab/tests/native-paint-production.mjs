@@ -37,10 +37,12 @@ const [index, releaseSource, lot, css, carModels, main, lapSystem, rivalStorage]
 
 const release = JSON.parse(releaseSource);
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
-assert.match(lot, /input\.type = 'color'/, 'The Lot must invoke the browser or OS colour picker');
+assert.match(lot, /input\.type = 'color'/, 'The Lot must use the browser or OS colour picker');
+assert.match(lot, /inputLabel\.htmlFor = input\.id/, 'The native input must have an explicit HTML label');
 assert.match(lot, /input\.addEventListener\('input'/, 'Native picker changes must preview immediately');
-assert.doesNotMatch(lot, /CAR_PALETTE|makeColorButton/, 'The production Lot must not render the custom palette');
-assert.match(css, /\.lot-color-input/);
+assert.doesNotMatch(lot, /CAR_PALETTE|makeColorButton|NAMED_COLOR_PRESETS|lot-color-preset/, 'Production must not add a custom or fallback palette');
+assert.doesNotMatch(lot, /input\.className|input\.classList|input\.setAttribute\('aria-/, 'The native color input must remain semantically and visually native');
+assert.doesNotMatch(css, /\.lot-color-input|input\[type=['"]?color/, 'TURN must not style the native color input itself');
 assert.doesNotMatch(css, /\.lot-color\[aria-pressed=/, 'The retired custom swatch state must be removed');
 assert.match(carModels, /turnSecondaryPaintMaterials/);
 assert.match(carModels, /isSecondaryPaint\(node, car\)/);
@@ -50,7 +52,7 @@ assert.match(lapSystem, /carSecondaryColor: state\.vehicleSecondaryColor \|\| '#
 assert.match(rivalStorage, /version: 6/, 'Track-scoped rivals must preserve geometry revision and secondary paint metadata');
 assert.match(rivalStorage, /normalizeVehicleSecondaryColor\(lap\.carSecondaryColor\)/);
 
-console.log(`TURN ${release.id} native and secondary paint passed.`);
+console.log(`TURN ${release.id} bare native and secondary paint passed.`);
 
 function readGlbJson(buffer) {
   assert.equal(buffer.toString('utf8', 0, 4), 'glTF');
