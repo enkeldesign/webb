@@ -9,11 +9,47 @@ import { gateLotPaintNow } from '../progression/lot-paint-reward.js?revision=r16
 // TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r154-trophy-road-feedback'
 const ENHANCEMENT_ID = 'enhanced-lot-r163-native-picker-parent-click';
 const TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r157-paint-monster';
+const LOT_ENTRY_CLICK_GUARD_MS = 600;
 const activeEnhancements = new WeakMap();
 
 function findLotScreen(root) {
   if (root?.matches?.('.lot-screen')) return root;
   return root?.querySelector?.('.lot-screen') || null;
+}
+
+function installLotEntryClickGuard(screen) {
+  const card = screen.querySelector('.lot-card');
+  if (!card) return () => {};
+
+  const startedAt = globalThis.performance?.now?.() ?? Date.now();
+  const now = () => globalThis.performance?.now?.() ?? Date.now();
+  let active = true;
+
+  const blockCarryOverRaceClick = (event) => {
+    if (!active || now() - startedAt >= LOT_ENTRY_CLICK_GUARD_MS) return;
+    const raceButton = event.target?.closest?.('.lot-race');
+    if (!raceButton || !card.contains(raceButton)) return;
+
+    // A VoiceOver double-tap that opens a full-screen route can leave a second
+    // hit-test activation behind in standalone iOS landscape. Race This Car is
+    // mounted in almost the same screen region as Home RACE, so keep only this
+    // newly mounted action out of that finishing gesture. The paint picker is a
+    // sibling of .lot-card and therefore has no click-listener ancestor added.
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  };
+
+  card.addEventListener('click', blockCarryOverRaceClick, true);
+  const timer = globalThis.setTimeout?.(() => {
+    active = false;
+    card.removeEventListener('click', blockCarryOverRaceClick, true);
+  }, LOT_ENTRY_CLICK_GUARD_MS);
+
+  return () => {
+    active = false;
+    if (timer != null) globalThis.clearTimeout?.(timer);
+    card.removeEventListener('click', blockCarryOverRaceClick, true);
+  };
 }
 
 export function enhanceLotNow(root = document.body) {
@@ -24,6 +60,7 @@ export function enhanceLotNow(root = document.body) {
   if (active) return active.release;
 
   const scope = screen.parentElement || document.body;
+  const removeEntryClickGuard = installLotEntryClickGuard(screen);
   const removeTrophyGate = gateLotNow(scope);
   const removePaintGate = gateLotPaintNow(scope);
   const removeStatLegend = installLotStatLegend(scope);
@@ -39,6 +76,7 @@ export function enhanceLotNow(root = document.body) {
     removeStatLegend();
     removePaintGate();
     removeTrophyGate();
+    removeEntryClickGuard();
     activeEnhancements.delete(screen);
     delete screen.dataset.lotEnhancements;
   };
