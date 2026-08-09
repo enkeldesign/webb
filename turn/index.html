@@ -60,53 +60,16 @@
   <link rel="stylesheet" href="./track-select-r78.css?build=20260809-r163">
   <link rel="stylesheet" href="./track-select-r79.css?build=20260809-r163">
   <link rel="stylesheet" href="./track-intro.css?build=20260809-r163">
-  <link rel="stylesheet" href="./garage/lot-r10.css?build=20260809-r163-accessible-paint">
+  <link rel="stylesheet" href="./garage/lot-r10.css?build=20260809-r163-paint-basics">
   <link rel="stylesheet" href="./garage/lot-stat-legend.css?build=20260809-r163">
   <link rel="stylesheet" href="./garage/lot-layout-r60.css?build=20260809-r163">
   <link rel="stylesheet" href="./accessibility/color-cues-r163.css?build=20260809-r163-accessible-paint">
-  <link rel="stylesheet" href="./accessibility/native-color-input-r163.css?revision=r163-native-input">
   <link rel="stylesheet" href="./m8-menu-font-fix.css?build=20260809-r163-menu-font-v3">
   <script src="./install-gate.js?build=20260809-r163-social-browser"></script>
   <script src="./pwa-usable-viewport-r181.js?revision=r181-usable-web-layer"></script>
   <script src="./motion-safe-zone.js?build=20260809-r163"></script>
   <script src="./orientation-compat.js?build=20260809-r163"></script>
   <script src="./live-steering-setting.js?build=20260809-r163-live-steering"></script>
-  <script>
-    (() => {
-      const emergencyVehicleNames = new Set(['Fire Truck', 'Police Car', 'Ambulance']);
-      const syncFixedLiveryRail = () => {
-        for (const screen of document.querySelectorAll('.lot-screen')) {
-          const colors = screen.querySelector('.lot-colors');
-          if (!colors) continue;
-          const selectedName = screen.querySelector('.lot-car-title strong')?.textContent?.trim() || '';
-          const fixedVehicle = emergencyVehicleNames.has(selectedName) || Boolean(colors.querySelector('.lot-fixed-livery'));
-          if (fixedVehicle) {
-            if (colors.childNodes.length > 0) colors.replaceChildren();
-            colors.hidden = false;
-            colors.setAttribute('aria-hidden', 'true');
-            colors.removeAttribute('aria-label');
-            screen.querySelector('.lot-viewbox')?.classList.add('lot-viewbox-with-paint');
-          } else if (colors.children.length > 0) {
-            colors.hidden = false;
-            colors.removeAttribute('aria-hidden');
-          }
-        }
-      };
-      const start = () => {
-        new MutationObserver(syncFixedLiveryRail).observe(document.body, {
-          childList: true,
-          subtree: true,
-          characterData: true
-        });
-        syncFixedLiveryRail();
-      };
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', start, { once: true });
-      } else {
-        start();
-      }
-    })();
-  </script>
   <script type="importmap">
     {
       "imports": {
@@ -114,7 +77,7 @@
         "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/",
         "/turn/achievements/catalog.js?revision=r166-bella-records": "/turn/achievements/catalog-chromatic-r183.js?revision=r183-production",
         "/turn/progression/trophy-road.js?revision=r166-bella-records": "/turn/progression/trophy-road-chromatic-r183.js?revision=r183-production",
-        "./garage/lot-r10.js?build=20260720-r19": "./garage/lot-track-select.js?build=20260809-r163&revision=r163-accessible-paint",
+        "./garage/lot-r10.js?build=20260720-r19": "./garage/lot-track-select.js?build=20260809-r163&revision=r163-paint-basics",
         "./render/camera.js?build=20260720-r19": "./render/camera.js?build=20260809-r163",
         "./race/lap-system.js?build=20260720-r19": "./race/lap-system-r86.js?build=20260809-r163",
         "./race/game-state.js": "./race/game-state.js?build=20260809-r163",
@@ -190,7 +153,7 @@
   <script type="module" src="./ui/about-history-bootstrap-r165.js?build=20260809-r163-r168-shared-about-credits"></script>
   <script type="module" src="./testing/admin-unlock-sequence.js?revision=r176-admin-rewards"></script>
   <script type="module" src="./app.js?build=20260809-r163-browser-consent-r176-bella-road-derived-zone"></script>
-  <script type="module" src="./accessibility/color-accessibility-r163.js?build=20260809-r163-native-input"></script>
+  <script type="module" src="./accessibility/color-accessibility-r163.js?build=20260809-r163-paint-basics"></script>
   <script type="module" src="./achievements/chromatic-camouflage-r183.js?revision=r183-production"></script>
   <script type="module" src="./social/your-turn-share-bootstrap.js?revision=r2"></script>
   <script type="module" src="./tracks/countryside-bella-rescue-hotfix-r176.js?revision=r176-video-proven-rescue"></script>
