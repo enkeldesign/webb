@@ -15,22 +15,6 @@ import { describeColorCue } from '../accessibility/color-cues.js?revision=r163';
 const UNSELECTED_COLOR = new THREE.Color(0x313131);
 const VIEWER_INITIAL_YAW = Math.PI - 0.55;
 let paintControlSerial = 0;
-const NAMED_COLOR_PRESETS = Object.freeze([
-  ['Pink', '#ff70b4'],
-  ['Magenta', '#ff00ff'],
-  ['Red', '#d92d20'],
-  ['Orange', '#f28b39'],
-  ['Yellow', '#ffcc00'],
-  ['Yellow green', '#9acd32'],
-  ['Green', '#26cb00'],
-  ['Cyan', '#00aabb'],
-  ['Blue', '#2ab7ff'],
-  ['Violet', '#5e3c87'],
-  ['Brown', '#8b5a2b'],
-  ['Grey', '#777777'],
-  ['Black', '#08090a'],
-  ['White', '#f8f9fa']
-]);
 const CAR_DESCRIPTIONS = Object.freeze({
   convertible: 'A low, open-top sports car with a long bonnet and compact cabin.',
   classic: 'A small, upright classic car with rounded bodywork and a friendly shape.',
@@ -66,13 +50,13 @@ export function showTheLot({ initialSelection } = {}) {
       <div class="lot-car-picker" role="radiogroup" aria-label="Choose a car"></div>
 
       <div class="lot-side">
-        <section class="lot-viewbox" aria-hidden="true">
-          <div class="lot-viewbox-head">
+        <section class="lot-viewbox lot-viewbox-with-paint">
+          <div class="lot-viewbox-head" aria-hidden="true">
             <span>3D VIEW</span>
-            <button class="lot-view-close" type="button" tabindex="-1">×</button>
           </div>
-          <div class="lot-view-host"></div>
-          <small>DRAG TO ROTATE</small>
+          <div class="lot-view-host" aria-hidden="true"></div>
+          <small aria-hidden="true">DRAG TO ROTATE</small>
+          <div class="lot-colors" aria-label="Choose car paint colours"></div>
         </section>
 
         <aside class="lot-card">
@@ -82,9 +66,7 @@ export function showTheLot({ initialSelection } = {}) {
           </div>
           <p class="lot-car-description"></p>
           <div class="lot-stats"></div>
-          <div class="lot-colors" aria-label="Choose car paint colours"></div>
           <div class="lot-card-actions">
-            <button class="lot-view-open" type="button" hidden aria-hidden="true" tabindex="-1">VIEW 3D</button>
             <button class="lot-race" type="button">RACE THIS CAR</button>
           </div>
         </aside>
@@ -297,12 +279,8 @@ export function showTheLot({ initialSelection } = {}) {
       control.className = 'lot-color-control';
       control.dataset.paintLabel = label;
 
-      const copy = document.createElement('span');
-      copy.className = 'lot-color-copy';
-
       const input = document.createElement('input');
       input.type = 'color';
-      input.className = 'lot-color-input';
       input.id = `turnPaintColor${++paintControlSerial}`;
       input.value = secondary
         ? normalizeVehicleSecondaryColor(value)
@@ -319,14 +297,6 @@ export function showTheLot({ initialSelection } = {}) {
       const cue = document.createElement('span');
       cue.className = 'turn-color-cue lot-color-cue';
 
-      const named = document.createElement('select');
-      named.className = 'lot-color-preset';
-      named.setAttribute('aria-label', `Choose ${label} colour by name`);
-      named.append(new Option('BY NAME…', ''));
-      for (const [colorName, colorValue] of NAMED_COLOR_PRESETS) {
-        named.append(new Option(colorName.toUpperCase(), colorValue));
-      }
-
       const syncCue = () => {
         cue.textContent = `COLOR · ${describeColorCue(input.value).toUpperCase()}`;
       };
@@ -336,19 +306,8 @@ export function showTheLot({ initialSelection } = {}) {
         onInput(input.value);
       });
 
-      // Shipping iOS/WebKit can expose the native color value to VoiceOver but
-      // fail its Press action. A plain select provides a second native path; it
-      // does not replace, proxy or script activation of the color input.
-      named.addEventListener('change', () => {
-        if (!named.value) return;
-        input.value = named.value;
-        named.value = '';
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-      });
-
       inputLabel.append(name, cue);
-      copy.append(inputLabel, named);
-      control.append(copy, input);
+      control.append(input, inputLabel);
       syncCue();
       return control;
     }
