@@ -14,28 +14,6 @@
 
   const LOCAL_PREFIX = 'turn-lab:';
   const SESSION_PREFIX = 'turn-lab-session:';
-  const SEED_MARKER = LOCAL_PREFIX + '__seeded_from_turn_v3__';
-  const COPY_ONCE_KEYS = [
-    'turn-personal-rivals-v1',
-    'turn-three-ghost-v4',
-    'turn-rival-timestamp-migration-v1'
-  ];
-
-  // Seed the independent LAB snapshot once from the current production save, then diverge.
-  // Versioning the marker replaces any data created while LAB still depended on /turn code.
-  try {
-    if (native.getItem.call(localStorageRef, SEED_MARKER) !== '1') {
-      for (const key of COPY_ONCE_KEYS) {
-        const labKey = LOCAL_PREFIX + key;
-        const productionValue = native.getItem.call(localStorageRef, key);
-        if (productionValue != null) native.setItem.call(localStorageRef, labKey, productionValue);
-        else native.removeItem.call(localStorageRef, labKey);
-      }
-      native.setItem.call(localStorageRef, SEED_MARKER, '1');
-    }
-  } catch (error) {
-    console.warn('TURN LAB: could not seed production save data.', error);
-  }
 
   function prefixFor(storage) {
     if (storage === localStorageRef) return LOCAL_PREFIX;
@@ -58,7 +36,6 @@
     return native.removeItem.call(this, prefix ? prefix + String(key) : key);
   };
 
-  // Keep any future clear() call inside the LAB sandbox instead of wiping production TURN data.
   proto.clear = function clear() {
     const prefix = prefixFor(this);
     if (!prefix) return native.clear.call(this);
@@ -71,7 +48,6 @@
     for (const key of keys) native.removeItem.call(this, key);
   };
 
-  // Expose only LAB keys if code ever enumerates Storage by key(index).
   proto.key = function key(index) {
     const prefix = prefixFor(this);
     if (!prefix) return native.key.call(this, index);
@@ -84,5 +60,5 @@
     return keys[index] ?? null;
   };
 
-  console.info('TURN LAB: isolated save-data namespace enabled.');
+  console.info('TURN LAB: isolated empty save-data namespace enabled.');
 })();
