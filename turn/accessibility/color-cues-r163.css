@@ -35,25 +35,6 @@ html[data-turn-color-cues='on'] .turn-color-cue {
   content: '';
 }
 
-.lot-color-control {
-  position: relative;
-}
-
-.lot-color-copy {
-  min-width: 0;
-  display: grid;
-  gap: 2px;
-}
-
-.lot-color-label {
-  overflow: hidden;
-  font-size: 0.45rem;
-  font-weight: 900;
-  letter-spacing: 0.055em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .lot-color-cue {
   align-items: center;
   gap: 4px;
@@ -77,69 +58,10 @@ html[data-turn-color-cues='on'] .turn-color-cue {
   content: '';
 }
 
-/* Keep the real input rendered because iOS opens its native picker from DOM
-   focus. It sits directly beneath the visible trigger rather than at 0,0, so
-   even a failed platform hand-off cannot create a stray focus target on the
-   left side of The Lot. The adjacent real button is the accessible control. */
-.lot-color-native {
-  position: absolute !important;
-  top: 50% !important;
-  right: 5px !important;
-  width: 38px !important;
-  height: 28px !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  opacity: 0.001 !important;
-  pointer-events: none !important;
-  transform: translateY(-50%);
-}
-
-.lot-color-trigger {
-  position: relative;
-  z-index: 1;
-  width: 38px;
-  height: 28px;
-  min-height: 0;
-  padding: 2px;
-  border: 2px solid var(--ink, #08090a);
-  border-radius: 7px;
-  background: var(--lot-color-value, #ffcc00);
-  box-shadow: none;
-  cursor: pointer;
-}
-
-.lot-color-trigger:hover {
-  transform: none;
-}
-
-.lot-color-trigger:active {
-  transform: translate(1px, 1px);
-}
-
-.lot-color-trigger:focus-visible {
-  outline: 3px solid var(--cyan, #38d9ff);
-  outline-offset: 2px;
-}
-
 @media (max-height: 520px) {
-  .lot-color-native,
-  .lot-color-trigger {
-    width: 34px !important;
-    height: 26px !important;
-  }
-
-  .lot-color-label { font-size: 0.42rem; }
   .lot-color-cue { font-size: 0.36rem; }
 }
 
 @media (max-height: 430px) {
-  .lot-color-native,
-  .lot-color-trigger {
-    width: 32px !important;
-    height: 25px !important;
-  }
-
-  .lot-color-copy { gap: 1px; }
   .lot-color-cue { font-size: 0.33rem; }
 }
