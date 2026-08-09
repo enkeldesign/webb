@@ -31,6 +31,10 @@ const [index, releaseSource, app, menu, controls, backToLot, main, menuCss, poli
 
 const release = JSON.parse(releaseSource);
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
+assert.match(index, /<title>TURN<\/title>/,
+  'The document title must stay product-only so VoiceOver never announces release metadata as page context');
+assert.doesNotMatch(index, /<title>[^<]*(?:\bv\d|\bbuild\b)[^<]*<\/title>/i,
+  'Version and build metadata must not live in the document title');
 assert.match(index, new RegExp(`in-game-menu\\.css\\?build=${release.cacheKey}`));
 assert.match(index, /id="calibrateButton"[^>]*>Recalibrate<\/button>/);
 assert.match(
