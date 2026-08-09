@@ -10,9 +10,11 @@ import {
 } from '../vehicle/catalog.js?build=20260720-r20';
 import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js?build=20260720-r22';
 import { recordPerformanceFrame } from '../performance-monitor.js?build=20260720-r20';
+import { describeColorCue } from '../accessibility/color-cues.js?revision=r163';
 
 const UNSELECTED_COLOR = new THREE.Color(0x313131);
 const VIEWER_INITIAL_YAW = Math.PI - 0.55;
+let paintControlSerial = 0;
 const CAR_DESCRIPTIONS = Object.freeze({
   convertible: 'A low, open-top sports car with a long bonnet and compact cabin.',
   classic: 'A small, upright classic car with rounded bodywork and a friendly shape.',
@@ -30,6 +32,36 @@ const CAR_DESCRIPTIONS = Object.freeze({
   truck: 'A sturdy pickup truck with a separate cab and cargo bed.',
   van: 'A tall enclosed van with a boxy body and short bonnet.'
 });
+
+function isIOSFamily() {
+  const navigatorObject = globalThis.navigator;
+  if (!navigatorObject) return false;
+  const platform = String(navigatorObject.platform || '');
+  const userAgent = String(navigatorObject.userAgent || '');
+  return /iPhone|iPad|iPod/i.test(platform)
+    || /iPhone|iPad|iPod/i.test(userAgent)
+    || (platform === 'MacIntel' && Number(navigatorObject.maxTouchPoints || 0) > 1);
+}
+
+function focusNativeColorInput(input) {
+  try {
+    input.focus({ preventScroll: true });
+  } catch (_) {
+    input.focus();
+  }
+}
+
+function openNativeColorPicker(input) {
+  // WebKit on iOS before the AXPress fix does not activate input[type="color"]
+  // reliably from VoiceOver. Native iOS form pickers are tied to DOM focus, so
+  // the accessible button focuses the real input there. Other platforms use
+  // the input's normal activation behavior. The system picker remains native.
+  if (isIOSFamily()) {
+    focusNativeColorInput(input);
+    return;
+  }
+  input.click();
+}
 
 export function showTheLot({ initialSelection } = {}) {
   return new Promise((resolve) => {
@@ -219,7 +251,6 @@ export function showTheLot({ initialSelection } = {}) {
           onInput(value) {
             selectedColor = normalizeVehicleColor(value);
             applySelectedPaint();
-            updatePaintAccessibleNames();
           }
         })];
         if (car.secondaryPaint) {
@@ -230,13 +261,11 @@ export function showTheLot({ initialSelection } = {}) {
             onInput(value) {
               selectedSecondaryColor = normalizeVehicleSecondaryColor(value);
               applySelectedPaint();
-              updatePaintAccessibleNames();
             }
           }));
         }
         colors.replaceChildren(...paintControls);
         colors.setAttribute('aria-label', 'Choose car paint colours');
-        updatePaintAccessibleNames();
       }
 
       for (const [carId, platform] of platforms) {
@@ -278,32 +307,54 @@ export function showTheLot({ initialSelection } = {}) {
     });
 
     function makeColorInput({ label, value, secondary = false, onInput }) {
-      const control = document.createElement('label');
+      const control = document.createElement('div');
       control.className = 'lot-color-control';
       control.dataset.paintLabel = label;
 
+      const copy = document.createElement('span');
+      copy.className = 'lot-color-copy';
+
       const name = document.createElement('span');
+      name.className = 'lot-color-label';
       name.textContent = label.toUpperCase();
+
+      const cue = document.createElement('span');
+      cue.className = 'turn-color-cue lot-color-cue';
+      cue.setAttribute('aria-hidden', 'true');
 
       const input = document.createElement('input');
       input.type = 'color';
-      input.className = 'lot-color-input';
+      input.className = 'lot-color-input lot-color-native';
+      input.id = `turnPaintColor${++paintControlSerial}`;
+      input.tabIndex = -1;
+      input.setAttribute('aria-hidden', 'true');
       input.value = secondary
         ? normalizeVehicleSecondaryColor(value)
         : normalizeVehicleColor(value);
-      input.addEventListener('input', () => onInput(input.value));
 
-      control.append(name, input);
-      return control;
-    }
+      const trigger = document.createElement('button');
+      trigger.type = 'button';
+      trigger.className = 'lot-color-trigger';
 
-    function updatePaintAccessibleNames() {
-      colors.querySelectorAll('.lot-color-control').forEach((control) => {
-        const input = control.querySelector('input');
-        const label = control.dataset.paintLabel || 'Paint';
-        const colourName = describeHexColor(input.value);
-        input.setAttribute('aria-label', `${label} colour. ${colourName}`);
+      const syncColorSemantics = () => {
+        const color = input.value || '#ffcc00';
+        const colourName = describeColorCue(color);
+        trigger.style.setProperty('--lot-color-value', color);
+        trigger.setAttribute('aria-label', `${label} colour. ${colourName}. Opens system color picker.`);
+        cue.textContent = `COLOR · ${colourName.toUpperCase()}`;
+      };
+
+      trigger.addEventListener('click', () => openNativeColorPicker(input));
+      input.addEventListener('input', () => {
+        syncColorSemantics();
+        onInput(input.value);
       });
+      input.addEventListener('change', syncColorSemantics);
+
+      copy.append(name, cue);
+      control.append(copy, input, trigger);
+      syncColorSemantics();
+      return control;
     }
 
     function applySelectedPaint() {
@@ -613,42 +664,4 @@ function makeStats(vehicleStats) {
     row.innerHTML = `<span aria-hidden="true">${label}</span><i aria-hidden="true">${Array.from({ length: 5 }, (_, index) => `<b class="${index < value ? 'is-full' : ''}"></b>`).join('')}</i>`;
     return row;
   });
-}
-
-function describeHexColor(hex) {
-  const clean = String(hex || '').replace('#', '').trim();
-  if (!/^[0-9a-f]{6}$/i.test(clean)) return 'custom colour';
-  const r = parseInt(clean.slice(0, 2), 16) / 255;
-  const g = parseInt(clean.slice(2, 4), 16) / 255;
-  const b = parseInt(clean.slice(4, 6), 16) / 255;
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const lightness = (max + min) / 2;
-  const delta = max - min;
-  const saturation = delta === 0 ? 0 : delta / (1 - Math.abs(2 * lightness - 1));
-  let hue = 0;
-  if (delta !== 0) {
-    if (max === r) hue = 60 * (((g - b) / delta) % 6);
-    else if (max === g) hue = 60 * (((b - r) / delta) + 2);
-    else hue = 60 * (((r - g) / delta) + 4);
-  }
-  if (hue < 0) hue += 360;
-
-  if (lightness < 0.09) return 'black';
-  if (lightness > 0.94 && saturation < 0.16) return 'white';
-  if (saturation < 0.12) {
-    if (lightness < 0.32) return 'dark grey';
-    if (lightness > 0.72) return 'light grey';
-    return 'grey';
-  }
-
-  const names = [
-    [15, 'red'], [42, 'orange'], [68, 'yellow'], [105, 'yellow green'],
-    [165, 'green'], [195, 'turquoise'], [225, 'blue'], [255, 'indigo'],
-    [285, 'violet'], [330, 'magenta'], [360, 'red']
-  ];
-  const base = names.find(([limit]) => hue < limit)?.[1] || 'red';
-  if (lightness < 0.28) return `dark ${base}`;
-  if (lightness > 0.74) return `light ${base}`;
-  return base;
 }

@@ -1,13 +1,11 @@
 import {
   applyColorCuesState,
-  describeColorCue,
   loadColorCuesEnabled,
   saveColorCuesEnabled,
   trackColorCue
 } from './color-cues.js?revision=r163';
 
-const RUNTIME_ID = 'color-accessibility-r163';
-let paintControlSerial = 0;
+const RUNTIME_ID = 'color-cues-r163';
 let scheduled = false;
 
 function settingsStatus(dialog) {
@@ -71,80 +69,10 @@ function installTrackColorCues() {
   }
 }
 
-function paintLabel(control) {
-  return control.dataset.paintLabel || control.querySelector('span')?.textContent?.trim() || 'Paint';
-}
-
-function enhancePaintControl(control) {
-  if (control.dataset.turnColorAccessibility === RUNTIME_ID) return;
-  const input = control.querySelector('input[type="color"]');
-  if (!input) return;
-
-  const labelText = paintLabel(control);
-  const replacement = document.createElement('div');
-  replacement.className = control.className;
-  replacement.dataset.paintLabel = labelText;
-  replacement.dataset.turnColorAccessibility = RUNTIME_ID;
-
-  const serial = ++paintControlSerial;
-  const inputId = input.id || `turnPaintColor${serial}`;
-  const labelId = `turnPaintColorLabel${serial}`;
-  input.id = inputId;
-  input.classList.add('lot-color-native');
-  input.tabIndex = -1;
-  input.setAttribute('aria-hidden', 'true');
-
-  const copy = document.createElement('span');
-  copy.className = 'lot-color-copy';
-
-  const label = document.createElement('label');
-  label.className = 'lot-color-label';
-  label.id = labelId;
-  label.htmlFor = inputId;
-  label.textContent = labelText.toUpperCase();
-
-  const cue = document.createElement('span');
-  cue.className = 'turn-color-cue lot-color-cue';
-  cue.setAttribute('aria-hidden', 'true');
-
-  const trigger = document.createElement('button');
-  trigger.type = 'button';
-  trigger.className = 'lot-color-trigger';
-  trigger.setAttribute('aria-labelledby', labelId);
-  trigger.setAttribute('aria-description', 'Opens the system color picker.');
-
-  const sync = () => {
-    const color = input.value || '#ffcc00';
-    trigger.style.setProperty('--lot-color-value', color);
-    cue.textContent = `COLOR · ${describeColorCue(color).toUpperCase()}`;
-  };
-
-  // WebKit before Safari 27 exposes the native color well to VoiceOver but its
-  // accessibility Press action can fail to open the picker. A real button can
-  // still receive the assistive-technology activation. Forward that activation
-  // through the associated label: iOS then opens the same native color picker,
-  // including the platform's own semantic color names, without TURN replacing it.
-  trigger.addEventListener('click', () => label.click());
-  input.addEventListener('input', () => requestAnimationFrame(sync));
-  input.addEventListener('change', sync);
-
-  copy.append(label, cue);
-  replacement.append(copy, input, trigger);
-  control.replaceWith(replacement);
-  sync();
-}
-
-function installAccessiblePaintControls() {
-  for (const control of document.querySelectorAll('.lot-color-control:not(.lot-fixed-livery)')) {
-    enhancePaintControl(control);
-  }
-}
-
 function sync() {
   scheduled = false;
   installColorCueSetting();
   installTrackColorCues();
-  installAccessiblePaintControls();
 }
 
 function scheduleSync() {
