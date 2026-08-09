@@ -1,0 +1,47 @@
+name: TURN color accessibility regression
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'turn/accessibility/**'
+      - 'turn/index.html'
+      - 'turn/release.json'
+      - 'turn/content/about-history.js'
+      - 'turn-lab/tests/color-accessibility-production.mjs'
+      - '.github/workflows/turn-color-accessibility.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'turn/accessibility/**'
+      - 'turn/index.html'
+      - 'turn/release.json'
+      - 'turn/content/about-history.js'
+      - 'turn-lab/tests/color-accessibility-production.mjs'
+      - '.github/workflows/turn-color-accessibility.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Syntax-check color accessibility modules
+        run: |
+          node --check turn/accessibility/color-cues.js
+          node --check turn/accessibility/color-accessibility-r163.js
+          node --check turn-lab/tests/color-accessibility-production.mjs
+
+      - name: Run color accessibility production regression
+        run: node turn-lab/tests/color-accessibility-production.mjs
