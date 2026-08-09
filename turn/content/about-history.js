@@ -146,6 +146,20 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
       'Growing named multi-racer challenge chains with stable identities',
       'Canonical release: TURN 1.6.0 · 2026.08.08-r162'
     ]
+  },
+  {
+    period: '8–9 August',
+    title: 'A color-based achievement triggers an accessibility patch',
+    paragraphs: [
+      'CHROMATIC CAMOUFLAGE added a hidden 50-trophy challenge built around the five production track colours. It checks the current personal best on every track and deliberately accepts broad hue families rather than exact paint values, bringing the collection to 29 achievements and 1,750 available trophies. Device testing widened Countryside’s accepted pink family so canonical #FF00FF Magenta is not rejected on a five-degree technicality.',
+      'The new color-based achievement exposed an accessibility gap: common colour-vision simulations collapse several track colours toward similar greys, olives and violets. TURN 1.7.0 is therefore an accessibility patch, adding optional Color Cues, off by default, with compact text and pattern labels for track colours and selected vehicle paint without recolouring the game or creating a separate visual mode.',
+      'Real-device VoiceOver testing also exposed a WebKit defect: the native color input could be read, and the system picker itself supplied useful semantic colour names, but VoiceOver could no longer activate the colour well. TURN keeps the native system picker and its semantics, while routing assistive-technology activation through an ordinary button and the input’s associated label.'
+    ],
+    milestones: [
+      'CHROMATIC CAMOUFLAGE · 50 trophies with generous pink-family matching',
+      'Optional Color Cues with text and pattern redundancy',
+      'TURN 1.7.0 · 2026.08.09-r163 accessibility patch with accessible native paint activation'
+    ]
   }
 ]);
 
@@ -312,11 +326,19 @@ export const CHANGELOG = Object.freeze([
       ['Short challenge links', 'Cloudflare Worker and D1 snapshots replace growing replay URLs with compact enkel.design links; self-contained links remain the automatic fallback.'],
       ['Shared product language', 'TURN and YOUR TURN share the About presentation and Kenney Game Assets attribution, while the design system now documents social sharing and racer identity colours.']
     ]
+  },
+  {
+    date: '9 August',
+    entries: [
+      ['1.7.0 r163', 'Accessibility patch prompted by the new color-based CHROMATIC CAMOUFLAGE achievement: adds Color Cues and repairs assistive-technology activation of the native paint picker.'],
+      ['CHROMATIC CAMOUFLAGE', 'Hidden 50-trophy achievement for setting a matching-colour personal best on all five production tracks; broad hue ranges now include canonical #FF00FF Magenta for Countryside’s pink family.'],
+      ['Color accessibility', 'Color Cues are off by default and add text plus pattern redundancy; VoiceOver can activate vehicle paint again while TURN keeps the system color picker and its native semantic colour names.']
+    ]
   }
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.6.0',
-  build: '2026.08.08-r162',
-  note: 'Minor release adding YOUR TURN social challenges, short-link transport and refreshed design-system documentation.'
+  version: '1.7.0',
+  build: '2026.08.09-r163',
+  note: 'Accessibility patch prompted by the new color-based Chromatic Camouflage achievement, adding optional Color Cues and repaired assistive-technology access to the native vehicle paint picker.'
 });
