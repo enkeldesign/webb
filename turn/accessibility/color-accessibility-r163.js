@@ -6,12 +6,30 @@ import {
   trackColorCue
 } from './color-cues.js?revision=r163';
 
-const RUNTIME_ID = 'color-accessibility-r163';
+const RUNTIME_ID = 'color-accessibility-r163-focus-bridge';
 let paintControlSerial = 0;
 let scheduled = false;
 
 function settingsStatus(dialog) {
   return dialog.querySelector('.m8-settings-status');
+}
+
+function isIOSFamily() {
+  const navigatorObject = globalThis.navigator;
+  if (!navigatorObject) return false;
+  const platform = String(navigatorObject.platform || '');
+  const userAgent = String(navigatorObject.userAgent || '');
+  return /iPhone|iPad|iPod/i.test(platform)
+    || /iPhone|iPad|iPod/i.test(userAgent)
+    || (platform === 'MacIntel' && Number(navigatorObject.maxTouchPoints || 0) > 1);
+}
+
+function focusNativeColorInput(input) {
+  try {
+    input.focus({ preventScroll: true });
+  } catch (_) {
+    input.focus();
+  }
 }
 
 function installColorCueSetting() {
@@ -97,10 +115,11 @@ function enhancePaintControl(control) {
   const copy = document.createElement('span');
   copy.className = 'lot-color-copy';
 
-  const label = document.createElement('label');
+  // Use ordinary text to name the accessible trigger. A <label> here would
+  // activate the broken native AXPress path again on affected iOS versions.
+  const label = document.createElement('span');
   label.className = 'lot-color-label';
   label.id = labelId;
-  label.htmlFor = inputId;
   label.textContent = labelText.toUpperCase();
 
   const cue = document.createElement('span');
@@ -119,12 +138,19 @@ function enhancePaintControl(control) {
     cue.textContent = `COLOR · ${describeColorCue(color).toUpperCase()}`;
   };
 
-  // WebKit before Safari 27 exposes the native color well to VoiceOver but its
-  // accessibility Press action can fail to open the picker. A real button can
-  // still receive the assistive-technology activation. Forward that activation
-  // through the associated label: iOS then opens the same native color picker,
-  // including the platform's own semantic color names, without TURN replacing it.
-  trigger.addEventListener('click', () => label.click());
+  // WebKit bug 312177 / rdar 172218114 prevents VoiceOver AXPress from
+  // activating input[type="color"] before Safari 27. iOS still opens native
+  // form pickers when their input receives DOM focus, so the real button uses
+  // focus() on iPhone/iPad. Other platforms keep the normal click() route.
+  // The native input remains the source of truth and the picker keeps the
+  // platform's own semantic color names, including custom colors.
+  trigger.addEventListener('click', () => {
+    if (isIOSFamily()) {
+      focusNativeColorInput(input);
+      return;
+    }
+    input.click();
+  });
   input.addEventListener('input', () => requestAnimationFrame(sync));
   input.addEventListener('change', sync);
 
