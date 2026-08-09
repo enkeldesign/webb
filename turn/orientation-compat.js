@@ -106,13 +106,8 @@
     const viewportLandscape = viewportIsLandscape();
     const screenMatchesViewport = angleIsLandscape(normalizedScreenAngle) === viewportLandscape;
 
-    // Preserve the working iPhone path whenever the Screen Orientation API agrees with
-    // the actual viewport.
     if (normalizedScreenAngle != null && screenMatchesViewport) return normalizedScreenAngle;
 
-    // Older standalone iPads can report a portrait-like Screen Orientation angle while
-    // already rendering a landscape viewport. Prefer the legacy value only when it fixes
-    // that mismatch.
     const legacyAngle = normalizeDegrees(Number(window.orientation));
     const legacyMatchesViewport = angleIsLandscape(legacyAngle) === viewportLandscape;
     if (legacyAngle != null && legacyMatchesViewport) return legacyAngle;
@@ -253,8 +248,6 @@
   }
 
   async function requestLandscapeLock() {
-    // Prefer the broad landscape lock so both physical turning directions remain valid.
-    // Some WebKit builds behave asymmetrically when pinned to an exact landscape side.
     if (await tryOrientationLock('landscape')) return true;
 
     const exactType = preferredLandscapeLock === 'landscape'
@@ -329,8 +322,15 @@
     if (gameplayActive) void requestLandscapeLock();
   }
 
-  // Register before the game adds its own devicemotion listener. Each sensor event can
-  // therefore update the mapping before TURN reads screen.orientation.angle for that frame.
+  function bindDirectUiControls() {
+    document.querySelector('#motionButton')?.addEventListener('click', resetSensorCalibration);
+    document.querySelector('#calibrateButton')?.addEventListener('click', () => {
+      if (!gameplayActive) return;
+      steeringNeutralRoll = lastResolvedRoll;
+      clearSteeringLimitFeedback();
+    });
+  }
+
   window.addEventListener('devicemotion', observeMotion, { passive: true });
   window.addEventListener('orientationchange', () => {
     if (gameplayActive) {
@@ -351,25 +351,19 @@
     setGameplayActive(Boolean(event.detail?.running));
   });
 
-  // Safari may only accept an orientation request while processing a user interaction.
-  // Ask on actual game-start gestures, but do not re-lock on every GAS/DRIFT/BOOST touch.
   document.addEventListener('pointerdown', (event) => {
     const startsGame = event.target.closest?.('#motionButton, #manualButton, .lot-race');
     if (startsGame) void requestLandscapeLock();
   }, { passive: true, capture: true });
 
-  document.addEventListener('click', (event) => {
-    if (event.target.closest?.('#motionButton')) resetSensorCalibration();
-    if (event.target.closest?.('#calibrateButton') && gameplayActive) {
-      steeringNeutralRoll = lastResolvedRoll;
-      clearSteeringLimitFeedback();
-    }
-  });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindDirectUiControls, { once: true });
+  } else {
+    bindDirectUiControls();
+  }
 
   let installed = false;
 
-  // Prefer shadowing only this ScreenOrientation instance so the compatibility correction
-  // stays local to TURN.
   try {
     Object.defineProperty(orientation, 'angle', {
       configurable: true,
@@ -381,7 +375,6 @@
     installed = true;
   } catch (_) {}
 
-  // Fallback for WebKit versions that disallow an own property on ScreenOrientation.
   if (!installed && prototypeAngleDescriptor?.get && prototypeAngleDescriptor.configurable !== false) {
     try {
       Object.defineProperty(prototype, 'angle', {
