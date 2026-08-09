@@ -1,65 +1,125 @@
 <!doctype html>
-<html lang="en">
-<head>
+<!-- TURN LAB viewport diagnostics. Runtime source: production TURN 2026.08.09-r163 at 3f35e821. -->
+<html lang="en" data-turn-deployment="lab"><head>
+  <base href="/turn/">
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-  <meta name="theme-color" content="#38d9ff">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, shrink-to-fit=no">
+  <meta name="theme-color" content="#08090a">
   <meta name="application-name" content="TURN LAB">
+  <meta name="description" content="TURN LAB runs the current production TURN runtime with temporary installed-app viewport diagnostics.">
+  <meta name="robots" content="noindex,nofollow">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="TURN LAB">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>TURN LAB v1.0.0 · Build 2026.07.19-r7</title>
+  <title>TURN LAB</title>
   <script>
     globalThis.__TURN_BUILD__ = Object.freeze({
-      version: '1.0.0',
-      id: '2026.07.19-r7',
-      cacheKey: '20260719-r7'
+      version: '1.7.0',
+      id: '2026.08.09-r163',
+      cacheKey: '20260809-r163'
+    });
+    globalThis.__TURN_LAB_SOURCE__ = Object.freeze({
+      commit: '3f35e821240773aa6dfd52bb0ad8d787db79d782',
+      purpose: 'viewport-flight-recorder-r1'
     });
   </script>
-  <link rel="icon" href="/turn/apple-touch-icon-v4.png" type="image/png" sizes="180x180">
-  <link rel="apple-touch-icon" href="/turn/apple-touch-icon-v4.png" sizes="180x180">
-  <link rel="manifest" href="./site.webmanifest?build=20260719-r7">
-  <link rel="stylesheet" href="./styles.css?build=20260719-r7">
-  <link rel="stylesheet" href="./vertical-drive.css?build=20260719-r7">
-  <link rel="stylesheet" href="./hud-tuning.css?build=20260719-r7">
-  <link rel="stylesheet" href="./install-gate.css?build=20260719-r7">
-  <link rel="stylesheet" href="./gameplay-features.css?build=20260719-r7">
-  <link rel="stylesheet" href="./gameplay-v2.css?build=20260719-r7">
-  <link rel="stylesheet" href="./spectate-v3.css?build=20260719-r7">
-  <script src="./lab-storage.js?build=20260719-r7"></script>
-  <script src="./install-gate.js?build=20260719-r7"></script>
-  <script src="./orientation-compat.js?build=20260719-r7"></script>
+  <link rel="icon" href="/turn/TURNicon.PNG?icon=20260803-profile-512" type="image/png" sizes="512x512">
+  <link rel="apple-touch-icon" href="/turn/TURNicon.PNG?icon=20260803-profile-512" sizes="512x512">
+  <link rel="manifest" href="/turn-lab/site.webmanifest?revision=viewport-flight-recorder-r1">
+  <link rel="stylesheet" href="./styles.css?build=20260809-r163-native-html">
+  <link rel="stylesheet" href="./vertical-drive.css?build=20260809-r163">
+  <link rel="stylesheet" href="./hud-tuning.css?build=20260809-r163">
+  <link rel="stylesheet" href="./install-gate.css?build=20260809-r163-social-browser">
+  <link rel="stylesheet" href="./browser-install-r165.css?revision=r165-browser-about">
+  <link rel="stylesheet" href="./gameplay-features.css?build=20260809-r163">
+  <link rel="stylesheet" href="./gameplay-v2.css?build=20260809-r163">
+  <link rel="stylesheet" href="./position-hud-r83.css?build=20260809-r163">
+  <link rel="stylesheet" href="./drive-pad.css?build=20260809-r163">
+  <link rel="stylesheet" href="./in-game-menu.css?build=20260809-r163">
+  <link rel="stylesheet" href="./spectate-v3.css?build=20260809-r163">
+  <link rel="stylesheet" href="./manual-steering.css?build=20260809-r163">
+  <link rel="stylesheet" href="./orientation-guard.css?build=20260809-r163-home-portrait">
+  <link rel="stylesheet" href="./lap-result-toast.css?build=20260809-r163">
+  <link rel="stylesheet" href="./rival-onboarding.css?build=20260809-r163">
+  <link rel="stylesheet" href="./track-select.css?build=20260809-r163">
+  <link rel="stylesheet" href="./track-select-r54.css?build=20260809-r163">
+  <link rel="stylesheet" href="./track-select-r61.css?build=20260809-r163">
+  <link rel="stylesheet" href="./track-select-r77.css?build=20260809-r163">
+  <link rel="stylesheet" href="./track-select-r78.css?build=20260809-r163">
+  <link rel="stylesheet" href="./track-select-r79.css?build=20260809-r163">
+  <link rel="stylesheet" href="./track-intro.css?build=20260809-r163">
+  <link rel="stylesheet" href="./garage/lot-r10.css?build=20260809-r163-native-html">
+  <link rel="stylesheet" href="./garage/lot-stat-legend.css?build=20260809-r163">
+  <link rel="stylesheet" href="./garage/lot-layout-r60.css?build=20260809-r163-native-html">
+  <link rel="stylesheet" href="./accessibility/color-cues-r163.css?build=20260809-r163-accessible-paint">
+  <link rel="stylesheet" href="./m8-menu-font-fix.css?build=20260809-r163-menu-font-v3">
+  <script src="/turn-lab/lab-bootstrap.js?revision=viewport-flight-recorder-r1"></script>
+  <script src="/turn-lab/viewport-diagnostics.js?revision=viewport-flight-recorder-r1"></script>
+  <script src="./pwa-usable-viewport-r181.js?revision=r181-usable-web-layer"></script>
+  <script src="./motion-safe-zone.js?build=20260809-r163"></script>
+  <script src="./orientation-compat.js?build=20260809-r163&revision=r163-voiceover-native-picker-events"></script>
+  <script src="./live-steering-setting.js?build=20260809-r163-live-steering"></script>
   <script type="importmap">
     {
       "imports": {
         "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/"
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/",
+        "/turn/audio/audio-system.js?build=20260809-r163": "/turn/audio/audio-system.js?build=20260809-r163&revision=r163-voiceover-native-picker-events",
+        "/turn/ui/in-game-menu.js?build=20260809-r163": "/turn/ui/in-game-menu.js?build=20260809-r163&revision=r163-restart-source-label",
+        "/turn/achievements/catalog.js?revision=r166-bella-records": "/turn/achievements/catalog-chromatic-r183.js?revision=r183-production",
+        "/turn/progression/trophy-road.js?revision=r166-bella-records": "/turn/progression/trophy-road-chromatic-r183.js?revision=r183-production",
+        "./garage/lot-accessibility-r118.js?build=20260729-r118": "./garage/lot-accessibility-r118.js?build=20260809-r163&revision=r163-voiceover-first-lot-focus",
+        "./garage/lot-enhancement-runtime.js?revision=r163-native-picker-parent-click&build=20260809-r163": "./garage/lot-enhancement-runtime.js?build=20260809-r163&revision=r163-voiceover-pwa-lot-carryover",
+        "./garage/lot-r10.js?build=20260720-r19": "./garage/lot-track-select.js?build=20260809-r163&revision=r163-native-html",
+        "./render/camera.js?build=20260720-r19": "./render/camera.js?build=20260809-r163",
+        "./race/lap-system.js?build=20260720-r19": "./race/lap-system-r86.js?build=20260809-r163",
+        "./race/game-state.js": "./race/game-state.js?build=20260809-r163",
+        "./race/replay-system.js": "./race/replay-system.js?build=20260809-r163",
+        "./race/rival-storage.js?build=20260720-r19": "./race/rival-storage.js?build=20260809-r163",
+        "./race/rival-storage.js?build=20260722-r50": "./race/rival-storage.js?build=20260809-r163",
+        "./race/track-spatial-index.js?build=20260720-r19": "./race/track-spatial-index.js?build=20260809-r163",
+        "./performance-monitor.js?build=20260720-r19": "./performance-monitor.js?build=20260809-r163",
+        "./world-assets.js": "./world-assets.js?build=20260809-r163",
+        "./vehicle/physics.js?build=20260720-r19": "./vehicle/physics.js?build=20260809-r163",
+        "./vehicle/catalog.js?build=20260720-r19": "./vehicle/catalog.js?build=20260809-r163",
+        "./vehicle/catalog.js?build=20260720-r20": "./vehicle/catalog.js?build=20260809-r163",
+        "./vehicle/catalog.js?build=20260722-r42": "./vehicle/catalog.js?build=20260809-r163",
+        "./vehicle/car-models.js?build=20260720-r19": "./vehicle/emergency-livery-models.js?build=20260809-r163",
+        "./vehicle/car-models.js?build=20260720-r22": "./vehicle/emergency-livery-models.js?build=20260809-r163",
+        "./ui/race-announcements.js": "./ui/race-announcements.js?build=20260809-r163",
+        "./ui/track-select.js?build=20260722-r51": "./ui/track-select.js?build=20260809-r163",
+        "./ui/track-intro.js?build=20260725-r75": "./ui/track-intro.js?build=20260809-r163",
+        "./tracks/catalog.js?build=20260722-r50": "./tracks/catalog.js?build=20260809-r163",
+        "./tracks/catalog.js": "./tracks/catalog.js?build=20260809-r163",
+        "./tracks/cliffside-layout.js": "./tracks/cliffside-layout.js?build=20260809-r163",
+        "./tracks/cliffside-world.js": "./tracks/cliffside-world-r76.js?build=20260809-r163",
+        "./tracks/harbor-collision.js": "./tracks/harbor-collision.js?build=20260809-r163",
+        "./tracks/harbor-layout.js": "./tracks/harbor-layout.js?build=20260809-r163",
+        "./tracks/harbor-world.js": "./tracks/harbor-world-r81.js?build=20260809-r163",
+        "./tracks/definitions.js": "./tracks/definitions.js?build=20260809-r163",
+        "./tracks/elevation.js": "./tracks/elevation.js?build=20260809-r163",
+        "./tracks/pace-notes.js": "./tracks/pace-notes.js?build=20260809-r163",
+        "./tracks/registry.js": "./tracks/registry.js?build=20260809-r163",
+        "./tracks/track-manager.js?build=20260722-r52": "./tracks/track-manager.js?build=20260809-r163"
       }
     }
   </script>
-</head>
-<body>
+</head><body>
   <section class="install-gate" id="installGate" aria-labelledby="installTitle">
     <div class="install-shell">
-      <div class="install-art" aria-hidden="true">
-        <img class="install-icon" src="/turn/apple-touch-icon-v4.png" alt="">
-      </div>
-
+      <div class="install-art" aria-hidden="true"><img class="install-icon" src="./TURNicon.PNG?icon=20260803-profile-512" alt=""></div>
       <div class="install-card">
-        <span class="install-kicker">TURN v1.0.0 · Build 2026.07.19-r7</span>
+        <span class="install-kicker">TURN LAB · production TURN 1.7.0 r163</span>
         <h1 id="installTitle">TURN LAB</h1>
-        <p class="install-copy">
-          TURN LAB is an independent snapshot of the working game, ready to be refactored without touching live TURN.
-        </p>
+        <p class="install-copy">The current production game with a viewport flight recorder. Production TURN is not modified.</p>
         <div class="install-actions">
-          <button class="install-primary" id="installTurnButton" type="button">Install TURN LAB</button>
+          <button id="installTurnButton" class="install-primary" type="button">Install TURN LAB</button>
+          <p class="install-note" id="installNote">Install this separate Home Screen app to reproduce the intermittent iOS viewport strip.</p>
           <button class="install-secondary" id="playBrowserButton" type="button">Play in browser anyway</button>
         </div>
-        <p class="install-note" id="installNote">LAB has its own save data. Your TURN records stay untouched.</p>
       </div>
     </div>
-
     <div class="install-guide" id="installGuide" role="dialog" aria-modal="true" aria-labelledby="installGuideTitle" hidden>
       <div class="install-guide-card">
         <div class="install-guide-head">
@@ -70,66 +130,25 @@
       </div>
     </div>
   </section>
-
   <div id="game" aria-label="Third-person motion-controlled arcade racing game"></div>
-
-  <section class="panel" id="intro" aria-labelledby="title">
-    <div class="start-card">
-      <span class="kicker">TURN v1.0.0 · Build 2026.07.19-r7</span>
-      <h1 id="title">TURN LAB</h1>
-      <p class="tagline">
-        Turn the phone to steer. Press and drag the gas pedal up for more throttle or down for less. Brake stays on its own button.
-      </p>
-      <div class="actions">
-        <button id="motionButton" type="button">Enable motion &amp; race</button>
-        <button class="secondary" id="manualButton" type="button">Desktop / manual mode</button>
-      </div>
-      <p class="status" id="status" role="status">
-        Steering uses phone rotation. Acceleration and braking are controlled with the on-screen pedals.
-      </p>
-    </div>
+  <section class="panel" id="intro" hidden aria-hidden="true">
+    <button id="motionButton" type="button" hidden>Turn the device to steer</button>
+    <button id="manualButton" type="button" hidden></button>
+    <p id="status" role="status" hidden>Steering uses device rotation</p>
   </section>
-
-  <section class="rotate-panel" aria-label="Rotate device">
-    <div class="rotate-card">
-      <div class="rotate-phone" aria-hidden="true"></div>
-      <strong>Rotate to landscape</strong>
-    </div>
-  </section>
-
+  <section class="rotate-panel" aria-label="Rotate your device to landscape"><div class="rotate-card"><div class="rotate-phone" aria-hidden="true"></div><strong>ROTATE YOUR DEVICE TO LANDSCAPE</strong></div></section>
   <div class="hud" id="hud" hidden>
-    <div class="topbar">
-      <div class="stats">
-        <div class="chip">speed<strong><span id="speed">0</span> km/h</strong></div>
-        <div class="chip">lap<strong id="lap">1</strong></div>
-        <div class="chip">time<strong id="lapTime">0:00.000</strong></div>
-        <div class="chip">best<strong id="bestTime">--:--.---</strong></div>
-      </div>
-      <div class="map-wrap"><canvas id="map" width="300" height="210" aria-label="Track map"></canvas></div>
-    </div>
-
+    <div class="topbar"><div class="stats"><div class="chip">speed<strong><span id="speed">0</span> km/h</strong></div><div class="chip">lap<strong id="lap">1</strong></div><div class="chip">time<strong id="lapTime">0:00.000</strong></div><div class="chip">best<strong id="bestTime">--:--.---</strong></div></div><div class="map-wrap"><canvas id="map" width="300" height="210" aria-label="Track map"></canvas></div></div>
     <div class="message" id="message" role="status"></div>
-
-    <div class="tilt-drive" aria-hidden="true">
-      <span><b>brake</b><b>gas</b></span>
-      <div class="tilt-track"><i class="tilt-needle" id="tiltNeedle"></i></div>
-      <small class="tilt-value" id="tiltValue">neutral</small>
-    </div>
+    <div class="tilt-drive" aria-hidden="true"><span><b>brake</b><b>gas</b></span><div class="tilt-track"><i class="tilt-needle" id="tiltNeedle"></i></div><small class="tilt-value" id="tiltValue">neutral</small></div>
   </div>
-
-  <div class="manual-steer" id="manualSteer" hidden></div>
-
-  <div class="controls" id="controls" hidden>
-    <div class="utility-group">
-      <button class="utility" id="calibrateButton" type="button">Center controls</button>
-      <button class="utility" id="resetButton" type="button">Reset car</button>
-    </div>
-    <div class="pedals">
-      <button class="pedal brake" id="brakeButton" type="button">Brake</button>
-      <button class="pedal gas" id="gasButton" type="button">Gas</button>
-    </div>
-  </div>
-
-  <script type="module" src="./app.js?build=20260719-r7"></script>
-</body>
-</html>
+  <div class="manual-steer" id="manualSteer" role="slider" aria-label="Steering. Drag left or right." aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0" hidden><span class="manual-steer-knob" aria-hidden="true"></span></div>
+  <div class="controls" id="controls" hidden><div class="utility-group"><button class="utility" id="calibrateButton" type="button">Recalibrate</button><button class="utility" id="resetButton" type="button" aria-label="Restart the current lap from the start line">Restart Lap</button></div><div class="pedals"><button class="pedal brake" id="brakeButton" type="button">Brake</button><button class="pedal gas" id="gasButton" type="button">Gas</button></div></div>
+  <script type="module" src="./ui/about-history-bootstrap-r165.js?build=20260809-r163-r168-shared-about-credits"></script>
+  <script type="module" src="./testing/admin-unlock-sequence.js?revision=r176-admin-rewards"></script>
+  <script type="module" src="./app.js?build=20260809-r163-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click"></script>
+  <script type="module" src="./accessibility/color-accessibility-r163.js?build=20260809-r163-paint-basics"></script>
+  <script type="module" src="./achievements/chromatic-camouflage-r183.js?revision=r183-production"></script>
+  <script type="module" src="./social/your-turn-share-bootstrap.js?revision=r2"></script>
+  <script type="module" src="./tracks/countryside-bella-rescue-hotfix-r176.js?revision=r176-video-proven-rescue"></script>
+</body></html>
