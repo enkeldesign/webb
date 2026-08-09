@@ -13,7 +13,8 @@ const [
   nextManifestSource,
   labManifestSource,
   labBootstrap,
-  labDiagnostics
+  labDiagnostics,
+  labRepair
 ] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
@@ -26,7 +27,8 @@ const [
   fs.readFile(new URL('../turn-next/site.webmanifest', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-lab/site.webmanifest', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-lab/lab-bootstrap.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-lab/viewport-diagnostics.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn-lab/viewport-diagnostics.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn-lab/viewport-repair-r3.js', import.meta.url), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -141,6 +143,8 @@ assert.doesNotMatch(labBootstrap, /seed|COPY_ONCE|turn-personal-rivals/,
   'The fresh viewport lab must not seed or modify production TURN save data');
 assert.match(labBootstrap, /__turnLaunchReady/,
   'LAB must preserve the production startup gate contract');
+assert.match(labBootstrap, /viewport-repair-r3\.js\?revision=r3-meta-reflow/,
+  'LAB must load the isolated repair bench without modifying production TURN');
 
 for (const requiredDiagnostic of [
   'screen.width',
@@ -165,4 +169,27 @@ assert.match(labDiagnostics, /MAX_SESSIONS = 8/,
 assert.match(labDiagnostics, /localStorage\.setItem\(STORAGE_KEY/,
   'Viewport evidence must survive reloads and orientation cycles');
 
-console.log(`TURN ${release.id} usable iOS standalone viewport boundary and TURN LAB recorder passed.`);
+// The r3 repair bench is LAB-only and only experiments on the measured BAD signature.
+assert.doesNotThrow(() => new Function(labRepair), 'The LAB repair probe must remain valid JavaScript');
+for (const requiredRepair of [
+  "measureHeight('100dvh')",
+  "measureHeight('100lvh')",
+  'BAD_GAP_MIN = 40',
+  'Math.abs(sample.clientH - sample.dvh) <= 2',
+  'TRY VIEWPORT REFLOW',
+  'META_PULSE_MS = 120',
+  'CHECKPOINTS_MS = Object.freeze([0, 80, 250, 650])',
+  "meta.setAttribute('content', pulse)",
+  "meta.setAttribute('content', original)",
+  '__turnLabViewportRepairResult',
+  "outcome: recovered ? 'RECOVERED' : 'STILL_BAD'",
+  'COPY REPAIR RESULT'
+]) {
+  assert.ok(labRepair.includes(requiredRepair), `TURN LAB repair bench must include ${requiredRepair}`);
+}
+assert.doesNotMatch(labRepair, /screen\.(?:width|height)/,
+  'The repair experiment must never size content from physical screen dimensions');
+assert.match(labRepair, /if \(!hasBadSignature\(before\)\)/,
+  'The viewport meta pulse must not run on healthy launches');
+
+console.log(`TURN ${release.id} usable iOS standalone viewport boundary and TURN LAB recorder/repair bench passed.`);
