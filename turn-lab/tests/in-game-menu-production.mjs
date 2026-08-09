@@ -33,12 +33,24 @@ const release = JSON.parse(releaseSource);
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(index, new RegExp(`in-game-menu\\.css\\?build=${release.cacheKey}`));
 assert.match(index, /id="calibrateButton"[^>]*>Recalibrate<\/button>/);
-assert.match(index, /id="resetButton"[^>]*>Restart Lap<\/button>/);
+assert.match(
+  index,
+  /id="resetButton"[^>]*aria-label="Restart the current lap from the start line"[^>]*>Restart Lap<\/button>/,
+  'Restart Lap must expose its final accessible name in source HTML before VoiceOver can focus it'
+);
+assert.match(
+  index,
+  /"\/turn\/ui\/in-game-menu\.js\?build=20260809-r163": "\/turn\/ui\/in-game-menu\.js\?build=20260809-r163&revision=r163-restart-source-label"/,
+  'The source-owned restart label patch must bypass any cached r163 menu module'
+);
 assert.match(app, /installStylesheet\('\.\/r104-polish\.css', 'data-turn-r104-polish'\)/);
 assert.match(app, /await import\(withBuild\('\.\/ui\/in-game-menu\.js'\)\)/);
 
-assert.match(menu, /backToStartButton\.textContent = 'Restart Lap'/);
-assert.match(menu, /Restart the current lap from the start line/);
+assert.doesNotMatch(menu, /backToStartButton\.textContent\s*=/,
+  'The runtime must not rewrite Restart Lap after the accessibility tree has been created');
+assert.doesNotMatch(menu, /backToStartButton\.setAttribute\('aria-label'/,
+  'The runtime must not late-mutate the Restart Lap accessible name');
+assert.match(menu, /backToStartButton\.classList\.add\('back-to-start-button'\)/);
 assert.match(menu, /backToLotButton\.textContent = 'Leave Race'/);
 assert.match(menu, /Leave the race and choose another track/);
 assert.match(menu, /inGameMenuVisibilityFor\(runtime\.state\.mode\)/);
