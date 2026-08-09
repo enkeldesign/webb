@@ -2,12 +2,12 @@ import { installLotStatLegend } from './lot-stat-legend.js?build=20260724-r59';
 import { installLotLayout } from './lot-layout-r60.js?build=20260729-r116';
 import { installLotAccessibility } from './lot-accessibility-r118.js?build=20260729-r118';
 import { gateLotNow } from '../progression/lot-trophy-gate.js?revision=r162-dismiss-unlocked-car-toast';
-import { gateLotPaintNow } from '../progression/lot-paint-reward.js?revision=r161-car-colour-lock';
+import { gateLotPaintNow } from '../progression/lot-paint-reward.js?revision=r163-native-picker-parent-click';
 
 // Historical regression markers for the established enhancement layers:
 // ENHANCEMENT_ID = 'enhanced-lot-r121'
 // TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r154-trophy-road-feedback'
-const ENHANCEMENT_ID = 'enhanced-lot-r162-dismiss-unlocked-car-toast';
+const ENHANCEMENT_ID = 'enhanced-lot-r163-native-picker-parent-click';
 const TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r157-paint-monster';
 const activeEnhancements = new WeakMap();
 
