@@ -117,7 +117,7 @@ assert.match(cueCssSource, /lot-color-cue/);
 assert.match(cueCssSource, /repeating-linear-gradient/);
 
 assert.match(historySource, /native HTML color input/i);
-assert.doesNotMatch(historySource, /native paint activation bridge|named-color fallback/i,
-  'Current release history must not claim a workaround that no longer exists');
+assert.doesNotMatch(historySource, /native paint activation bridge|assistive-technology bridge/i,
+  'Current release history must not claim an activation bridge that no longer exists');
 
 console.log('TURN 1.7.0 r163 HTML-first native color input and Color Cues regression passed.');
