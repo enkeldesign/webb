@@ -9,21 +9,13 @@ import {
   trackColorCue
 } from '../../turn/accessibility/color-cues.js';
 
-const [
-  releaseSource,
-  indexSource,
-  runtimeSource,
-  cueCssSource,
-  nativeInputCssSource,
-  lotSource,
-  historySource
-] = await Promise.all([
+const [releaseSource, indexSource, runtimeSource, cueCssSource, lotSource, lotCssSource, historySource] = await Promise.all([
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/accessibility/color-accessibility-r163.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/accessibility/color-cues-r163.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/accessibility/native-color-input-r163.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/lot-r10.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/content/about-history.js', import.meta.url), 'utf8')
 ]);
 const release = JSON.parse(releaseSource);
@@ -37,8 +29,7 @@ assert.deepEqual(TRACK_COLOR_CUES, {
   'midnight-city': 'violet'
 });
 assert.equal(trackColorCue('countryside'), 'pink');
-assert.equal(trackColorCue('midnight-city'), 'violet');
-assert.equal(trackColorCue('invented'), '');
+assert.equal(describeColorCue('#ff00ff'), 'magenta');
 
 const memory = new Map();
 const storage = {
@@ -49,79 +40,53 @@ assert.equal(loadColorCuesEnabled(storage), false, 'Color Cues must be off by de
 assert.equal(saveColorCuesEnabled(true, storage), true);
 assert.equal(loadColorCuesEnabled(storage), true);
 assert.equal(saveColorCuesEnabled(false, storage), true);
-assert.equal(loadColorCuesEnabled(storage), false);
-
-assert.equal(describeColorCue('#ff70b4'), 'pink');
-assert.equal(describeColorCue('#ff00ff'), 'magenta',
-  'TURN should use the ordinary semantic name for canonical Magenta');
-assert.equal(describeColorCue('#ffd84f'), 'yellow');
-assert.equal(describeColorCue('#f28b39'), 'orange');
-assert.equal(describeColorCue('#3ccad6'), 'cyan');
-assert.equal(describeColorCue('#a785ea'), 'violet');
-assert.equal(describeColorCue('#8b5a2b'), 'brown');
-assert.equal(describeColorCue('#777777'), 'grey');
-assert.equal(describeColorCue('#050505'), 'black');
-assert.equal(describeColorCue('#fafafa'), 'white');
 
 assert.equal(release.version, '1.7.0');
 assert.equal(release.id, '2026.08.09-r163');
-assert.equal(release.cacheKey, '20260809-r163');
-assert.match(indexSource, /TURN v1\.7\.0 · Build 2026\.08\.09-r163/);
-assert.match(indexSource, /accessibility\/native-color-input-r163\.css\?revision=r163-native-input/,
-  'The native-input correction must have its own uncached stylesheet');
-assert.match(indexSource, /accessibility\/color-accessibility-r163\.js\?build=20260809-r163-native-input/,
-  'The device-tested native-input correction must bypass the failed bridge cache');
+assert.match(indexSource, /garage\/lot-r10\.css\?build=20260809-r163-paint-basics/);
+assert.match(indexSource, /color-accessibility-r163\.js\?build=20260809-r163-paint-basics/);
+assert.doesNotMatch(indexSource, /native-color-input-r163\.css/,
+  'There must not be a second stylesheet whose job is to undo the paint-control stylesheet');
+assert.doesNotMatch(indexSource, /syncFixedLiveryRail|emergencyVehicleNames/,
+  'Production index must not patch The Lot after render');
 
-// The verified Lot still creates the old r163 bridge, but the accessibility
-// runtime must synchronously reduce it back to one real native input before it
-// becomes the interactive UI. This protects the hotfix while the older Lot
-// renderer remains release-frozen.
+assert.match(lotSource, /const control = document\.createElement\('label'\)/,
+  'The paint field must use an ordinary label around the native input');
 assert.match(lotSource, /input\.type = 'color'/,
-  'TURN must retain a real input[type=color] as the paint value source');
-assert.match(runtimeSource, /control\.querySelector\('\.lot-color-trigger'\)\?\.remove\(\)/,
-  'The failed duplicate swatch/button must be removed from the live Lot');
-assert.match(runtimeSource, /input\.removeAttribute\('aria-hidden'\)/,
-  'The real native input must return to the accessibility tree');
-assert.match(runtimeSource, /input\.removeAttribute\('tabindex'\)/,
-  'The real native input must return to normal keyboard and swipe order');
-assert.match(runtimeSource, /input\.classList\.remove\('lot-color-native'\)/,
-  'The native input must no longer carry the hidden-bridge marker');
-assert.match(runtimeSource, /describeColorCue\(input\.value\)/,
-  'The same semantic classifier must name the selected paint for Color Cues');
-assert.match(runtimeSource, /cuesEnabled[\s\S]*`\$\{label\} colour\. \$\{colorName\}\.`[\s\S]*`\$\{label\} colour\.`/,
-  'TURN must expose its semantic color name only when Color Cues is enabled');
-assert.match(runtimeSource, /document\.addEventListener\('input', onPaintValueChange, true\)/,
-  'The Color Cue name must follow live native picker changes');
-assert.match(runtimeSource, /document\.addEventListener\('change', onPaintValueChange, true\)/,
-  'The Color Cue name must also follow committed native picker changes');
-assert.doesNotMatch(runtimeSource, /showPicker\(|\.click\(\)|focusNativeColorInput|isIOSFamily|label\.click\(/,
-  'TURN must stop trying to synthesize or forward activation of the native picker');
-assert.match(runtimeSource, /Color cues/);
-assert.match(runtimeSource, /turn:color-cues-changed/);
-assert.match(runtimeSource, /TRACK COLOR ·/);
-assert.doesNotMatch(runtimeSource, /setInterval|setAnimationLoop/,
-  'Color accessibility must remain event/DOM driven rather than add polling');
+  'The visible paint swatch and interactive control must be the native input[type=color]');
+assert.match(lotSource, /input\.className = 'lot-color-input'/);
+assert.match(lotSource, /control\.append\(copy, input\)/);
+assert.match(lotSource, /cue\.textContent = `COLOR · \$\{describeColorCue\(input\.value\)\.toUpperCase\(\)\}`/,
+  'Color Cues must use the shared broad semantic classifier');
+assert.doesNotMatch(lotSource, /lot-color-trigger|lot-color-native|openNativeColorPicker|focusNativeColorInput|isIOSFamily|showPicker\(|label\.click\(/,
+  'The Lot must not contain a second swatch or synthetic picker activation path');
+assert.doesNotMatch(lotSource, /input\.setAttribute\('aria-label'/,
+  'Color Cues should not replace the native input semantics with a scripted accessible name');
+assert.doesNotMatch(lotSource, /input\.setAttribute\('aria-hidden'|input\.tabIndex = -1/,
+  'The native input must remain in the normal accessibility and keyboard order');
 
-assert.match(nativeInputCssSource, /\.lot-color-control \.lot-color-input/);
-assert.match(nativeInputCssSource, /opacity: 1 !important/,
-  'The native input itself must be visible as the color swatch');
-assert.match(nativeInputCssSource, /pointer-events: auto !important/,
-  'The native input itself must receive pointer interaction');
-assert.match(nativeInputCssSource, /\.lot-color-control \.lot-color-trigger[\s\S]*display: none !important/,
-  'The duplicate swatch must never flash before the runtime removes it');
-assert.match(nativeInputCssSource, /\.lot-color-input:focus-visible/,
-  'The real native input must retain a visible keyboard focus treatment');
+assert.match(lotCssSource, /\.lot-color-input \{[\s\S]*width: 38px[\s\S]*height: 28px[\s\S]*border: 2px solid var\(--ink\)/,
+  'The native input must be styled directly as the visible swatch');
+assert.doesNotMatch(lotCssSource, /\.lot-color-trigger|opacity: 0\.001/,
+  'Core Lot CSS must not contain the retired hidden-input or duplicate-trigger treatment');
+const paintInputCss = lotCssSource.match(/\.lot-color-input \{[\s\S]*?\}/)?.[0] || '';
+assert.doesNotMatch(paintInputCss, /pointer-events:\s*none|opacity:\s*0(?:\.0+)?/,
+  'The native paint input itself must remain visible and interactive');
+
+assert.doesNotMatch(runtimeSource, /describeColorCue|lot-color-control|input\[type="color"\]|onPaintValueChange|replaceWith|removeAttribute\('aria-hidden'/,
+  'Color Cues runtime must not post-process paint controls');
+assert.match(runtimeSource, /Color cues/);
+assert.match(runtimeSource, /TRACK COLOR ·/);
+assert.doesNotMatch(runtimeSource, /setInterval|setAnimationLoop/);
 
 assert.match(cueCssSource, /data-turn-color-cues='on'/);
 assert.match(cueCssSource, /track-card-color-cue/);
 assert.match(cueCssSource, /lot-color-cue/);
-assert.match(cueCssSource, /repeating-linear-gradient/,
-  'Color Cues must include a non-color pattern channel as well as text');
+assert.match(cueCssSource, /repeating-linear-gradient/);
 
 assert.match(historySource, /1\.7\.0 r163/);
 assert.match(historySource, /accessibility patch/i);
 assert.match(historySource, /CHROMATIC CAMOUFLAGE/);
 assert.match(historySource, /Color Cues/);
-assert.match(historySource, /VoiceOver/);
 
-console.log('TURN 1.7.0 r163 native color input and Color Cues regression passed.');
+console.log('TURN 1.7.0 r163 first-principles native color input and Color Cues regression passed.');

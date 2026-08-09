@@ -34,8 +34,8 @@ assert.match(index, new RegExp(`lot-layout-r60\\.css\\?build=${release.cacheKey}
 assert.match(index, new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent`), 'Production must cache-bust the browser-gated canonical runtime');
 assert.equal(
   imports['./garage/lot-r10.js?build=20260720-r19'],
-  `./garage/lot-track-select.js?build=${release.cacheKey}&revision=r163-accessible-paint`,
-  'Production must retain the track-first compatibility wrapper with the accessible-paint revision'
+  `./garage/lot-track-select.js?build=${release.cacheKey}&revision=r163-paint-basics`,
+  'Production must retain the track-first compatibility wrapper with the paint-basics revision'
 );
 
 assert.match(app, /lot-layout-r60\.css\?revision=r121-viewer-r122-fit-r128-super-sedan-notice-r129-race-button-fit/, 'The Super Sedan fit stylesheet must bypass the previous notice cache');

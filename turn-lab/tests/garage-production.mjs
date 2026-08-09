@@ -149,7 +149,7 @@ assert.match(index, new RegExp(`\\.\\/track-intro\\.css\\?build=${release.cacheK
 assert.match(index, new RegExp(`src="\\.\\/app\\.js\\?build=${release.cacheKey}-browser-consent(?:-[^"]+)?"`));
 assert.equal(
   imports['./garage/lot-r10.js?build=20260720-r19'],
-  `${releaseTarget('./garage/lot-track-select.js')}&revision=r163-accessible-paint`
+  `${releaseTarget('./garage/lot-track-select.js')}&revision=r163-paint-basics`
 );
 assert.equal(imports['./ui/track-intro.js?build=20260725-r75'], releaseTarget('./ui/track-intro.js'));
 assert.equal(imports['./race/lap-system.js?build=20260720-r19'], releaseTarget('./race/lap-system-r86.js'));

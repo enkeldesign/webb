@@ -14,7 +14,6 @@ import { describeColorCue } from '../accessibility/color-cues.js?revision=r163';
 
 const UNSELECTED_COLOR = new THREE.Color(0x313131);
 const VIEWER_INITIAL_YAW = Math.PI - 0.55;
-let paintControlSerial = 0;
 const CAR_DESCRIPTIONS = Object.freeze({
   convertible: 'A low, open-top sports car with a long bonnet and compact cabin.',
   classic: 'A small, upright classic car with rounded bodywork and a friendly shape.',
@@ -32,36 +31,6 @@ const CAR_DESCRIPTIONS = Object.freeze({
   truck: 'A sturdy pickup truck with a separate cab and cargo bed.',
   van: 'A tall enclosed van with a boxy body and short bonnet.'
 });
-
-function isIOSFamily() {
-  const navigatorObject = globalThis.navigator;
-  if (!navigatorObject) return false;
-  const platform = String(navigatorObject.platform || '');
-  const userAgent = String(navigatorObject.userAgent || '');
-  return /iPhone|iPad|iPod/i.test(platform)
-    || /iPhone|iPad|iPod/i.test(userAgent)
-    || (platform === 'MacIntel' && Number(navigatorObject.maxTouchPoints || 0) > 1);
-}
-
-function focusNativeColorInput(input) {
-  try {
-    input.focus({ preventScroll: true });
-  } catch (_) {
-    input.focus();
-  }
-}
-
-function openNativeColorPicker(input) {
-  // WebKit on iOS before the AXPress fix does not activate input[type="color"]
-  // reliably from VoiceOver. Native iOS form pickers are tied to DOM focus, so
-  // the accessible button focuses the real input there. Other platforms use
-  // the input's normal activation behavior. The system picker remains native.
-  if (isIOSFamily()) {
-    focusNativeColorInput(input);
-    return;
-  }
-  input.click();
-}
 
 export function showTheLot({ initialSelection } = {}) {
   return new Promise((resolve) => {
@@ -238,12 +207,10 @@ export function showTheLot({ initialSelection } = {}) {
       }
 
       if (car.fixedLivery) {
-        const livery = document.createElement('div');
-        livery.className = 'lot-color-control lot-fixed-livery';
-        livery.innerHTML = '<span>PAINT</span><strong>SERVICE LIVERY</strong>';
-        livery.setAttribute('aria-label', `${car.name} uses its fixed service livery`);
-        colors.replaceChildren(livery);
-        colors.setAttribute('aria-label', 'Fixed service livery');
+        colors.replaceChildren();
+        colors.hidden = false;
+        colors.setAttribute('aria-hidden', 'true');
+        colors.removeAttribute('aria-label');
       } else {
         const paintControls = [makeColorInput({
           label: 'Body',
@@ -265,6 +232,8 @@ export function showTheLot({ initialSelection } = {}) {
           }));
         }
         colors.replaceChildren(...paintControls);
+        colors.hidden = false;
+        colors.removeAttribute('aria-hidden');
         colors.setAttribute('aria-label', 'Choose car paint colours');
       }
 
@@ -307,7 +276,7 @@ export function showTheLot({ initialSelection } = {}) {
     });
 
     function makeColorInput({ label, value, secondary = false, onInput }) {
-      const control = document.createElement('div');
+      const control = document.createElement('label');
       control.className = 'lot-color-control';
       control.dataset.paintLabel = label;
 
@@ -320,40 +289,26 @@ export function showTheLot({ initialSelection } = {}) {
 
       const cue = document.createElement('span');
       cue.className = 'turn-color-cue lot-color-cue';
-      cue.setAttribute('aria-hidden', 'true');
 
       const input = document.createElement('input');
       input.type = 'color';
-      input.className = 'lot-color-input lot-color-native';
-      input.id = `turnPaintColor${++paintControlSerial}`;
-      input.tabIndex = -1;
-      input.setAttribute('aria-hidden', 'true');
+      input.className = 'lot-color-input';
       input.value = secondary
         ? normalizeVehicleSecondaryColor(value)
         : normalizeVehicleColor(value);
 
-      const trigger = document.createElement('button');
-      trigger.type = 'button';
-      trigger.className = 'lot-color-trigger';
-
-      const syncColorSemantics = () => {
-        const color = input.value || '#ffcc00';
-        const colourName = describeColorCue(color);
-        trigger.style.setProperty('--lot-color-value', color);
-        trigger.setAttribute('aria-label', `${label} colour. ${colourName}. Opens system color picker.`);
-        cue.textContent = `COLOR · ${colourName.toUpperCase()}`;
+      const syncCue = () => {
+        cue.textContent = `COLOR · ${describeColorCue(input.value).toUpperCase()}`;
       };
 
-      trigger.addEventListener('click', () => openNativeColorPicker(input));
       input.addEventListener('input', () => {
-        syncColorSemantics();
+        syncCue();
         onInput(input.value);
       });
-      input.addEventListener('change', syncColorSemantics);
 
       copy.append(name, cue);
-      control.append(copy, input, trigger);
-      syncColorSemantics();
+      control.append(copy, input);
+      syncCue();
       return control;
     }
 

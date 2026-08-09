@@ -1,12 +1,11 @@
 import {
   applyColorCuesState,
-  describeColorCue,
   loadColorCuesEnabled,
   saveColorCuesEnabled,
   trackColorCue
 } from './color-cues.js?revision=r163';
 
-const RUNTIME_ID = 'color-cues-r163-native-input';
+const RUNTIME_ID = 'color-cues-r163';
 let scheduled = false;
 
 function settingsStatus(dialog) {
@@ -69,52 +68,16 @@ function installTrackColorCues() {
   }
 }
 
-function syncNativePaintControl(control) {
-  const input = control?.querySelector('input[type="color"]');
-  if (!input) return;
-
-  // The visible swatch and the interactive control are the same native input.
-  // Earlier r163 device-tested bridges added a second button to work around an
-  // iOS VoiceOver/WebKit activation defect, but neither synthetic label clicks
-  // nor focus forwarding opened the picker reliably. Do not replace the native
-  // control with another swatch: expose it directly and let the platform own it.
-  control.querySelector('.lot-color-trigger')?.remove();
-  input.removeAttribute('aria-hidden');
-  input.removeAttribute('tabindex');
-  input.classList.remove('lot-color-native');
-
-  const label = control.dataset.paintLabel || control.querySelector('.lot-color-label')?.textContent?.trim() || 'Paint';
-  const colorName = describeColorCue(input.value);
-  const cuesEnabled = document.documentElement.dataset.turnColorCues === 'on';
-  input.setAttribute('aria-label', cuesEnabled
-    ? `${label} colour. ${colorName}.`
-    : `${label} colour.`);
-}
-
-function installNativePaintInputs() {
-  for (const control of document.querySelectorAll('.lot-color-control:not(.lot-fixed-livery)')) {
-    syncNativePaintControl(control);
-  }
-}
-
 function sync() {
   scheduled = false;
   installColorCueSetting();
   installTrackColorCues();
-  installNativePaintInputs();
 }
 
 function scheduleSync() {
   if (scheduled) return;
   scheduled = true;
   queueMicrotask(sync);
-}
-
-function onPaintValueChange(event) {
-  const input = event.target;
-  if (!(input instanceof HTMLInputElement) || input.type !== 'color') return;
-  const control = input.closest('.lot-color-control');
-  if (control) syncNativePaintControl(control);
 }
 
 export function installColorAccessibility() {
@@ -124,9 +87,6 @@ export function installColorAccessibility() {
   const observer = new MutationObserver(scheduleSync);
   observer.observe(document.body, { childList: true, subtree: true });
   globalThis.addEventListener('turn:home-ready', scheduleSync);
-  globalThis.addEventListener('turn:color-cues-changed', scheduleSync);
-  document.addEventListener('input', onPaintValueChange, true);
-  document.addEventListener('change', onPaintValueChange, true);
   sync();
 
   const api = Object.freeze({
@@ -135,9 +95,6 @@ export function installColorAccessibility() {
     disconnect() {
       observer.disconnect();
       globalThis.removeEventListener('turn:home-ready', scheduleSync);
-      globalThis.removeEventListener('turn:color-cues-changed', scheduleSync);
-      document.removeEventListener('input', onPaintValueChange, true);
-      document.removeEventListener('change', onPaintValueChange, true);
       globalThis.__turnColorAccessibility = null;
     }
   });

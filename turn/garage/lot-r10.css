@@ -273,7 +273,6 @@
 }
 
 .lot-color-control {
-  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 38px;
   align-items: center;
@@ -284,6 +283,7 @@
   border-radius: 10px;
   background: var(--paper);
   box-shadow: 2px 2px 0 var(--ink);
+  cursor: pointer;
 }
 
 .lot-color-copy {
@@ -301,63 +301,19 @@
   white-space: nowrap;
 }
 
-.lot-fixed-livery {
-  grid-template-columns: minmax(0, 1fr) auto;
-  cursor: default;
-}
-
-.lot-fixed-livery strong {
-  padding: 5px 7px;
-  border: 2px solid var(--ink);
-  border-radius: 7px;
-  background: var(--cyan);
-  font-size: 0.48rem;
-  letter-spacing: 0.045em;
-  white-space: nowrap;
-}
-
-/* The real native input stays rendered so iOS can present its system picker
-   when TURN moves DOM focus to it. It shares the visible swatch geometry but
-   is removed from the accessibility order; the adjacent button is the single
-   assistive-technology target. */
 .lot-color-input {
-  position: absolute;
-  top: 50%;
-  right: 5px;
   width: 38px;
   height: 28px;
   min-height: 0;
   margin: 0;
   padding: 0;
-  border: 0;
-  opacity: 0.001;
-  pointer-events: none;
-  transform: translateY(-50%);
-}
-
-.lot-color-trigger {
-  position: relative;
-  z-index: 1;
-  width: 38px;
-  height: 28px;
-  min-height: 0;
-  padding: 2px;
   border: 2px solid var(--ink);
   border-radius: 7px;
-  background: var(--lot-color-value, #ffcc00);
-  box-shadow: none;
+  background: transparent;
   cursor: pointer;
 }
 
-.lot-color-trigger:hover {
-  transform: none;
-}
-
-.lot-color-trigger:active {
-  transform: translate(1px, 1px);
-}
-
-.lot-color-trigger:focus-visible {
+.lot-color-input:focus-visible {
   outline: 3px solid var(--cyan);
   outline-offset: 2px;
 }
@@ -433,8 +389,7 @@
   .lot-stat > span { font-size: 0.43rem; }
   .lot-stat i { height: 6px; }
   .lot-colors { gap: 4px; margin: 6px 0 8px; }
-  .lot-color-input,
-  .lot-color-trigger { width: 32px; height: 25px; }
+  .lot-color-input { width: 32px; height: 25px; }
   .lot-color-label { font-size: 0.42rem; }
   .lot-color-copy { gap: 1px; }
   .lot-view-open,
