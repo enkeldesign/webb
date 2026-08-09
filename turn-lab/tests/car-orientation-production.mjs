@@ -41,8 +41,11 @@ const expectedVisualScales = new Map([
 ]);
 
 const expectedGlobalSizeMultipliers = new Map([
-  ['convertible', 0.6],
-  ['classic', 0.6]
+  ['convertible', 0.72],
+  ['classic', 0.72],
+  ['vintage-racer', 0.75],
+  ['toy-racer', 0.7],
+  ['police', 1.15]
 ]);
 
 const expectedFeaturedSizeMultipliers = new Map([
@@ -107,9 +110,15 @@ for (const car of catalog.CAR_CATALOG) {
 
 const convertible = catalog.getCarDefinition('convertible');
 const trainingCar = catalog.getCarDefinition('classic');
+const vintageRacer = catalog.getCarDefinition('vintage-racer');
+const toyRacer = catalog.getCarDefinition('toy-racer');
+const policeCar = catalog.getCarDefinition('police');
 const monsterTruck = catalog.getCarDefinition('monster-truck');
-assertClose(convertible.visualScale * convertible.visualSizeMultiplier, 0.588, 'Convertible effective visual scale');
-assertClose(trainingCar.visualScale * trainingCar.visualSizeMultiplier, 0.6, 'Training Car effective visual scale');
+assertClose(convertible.visualScale * convertible.visualSizeMultiplier, 0.7056, 'Convertible effective visual scale');
+assertClose(trainingCar.visualScale * trainingCar.visualSizeMultiplier, 0.72, 'Training Car effective visual scale');
+assertClose(vintageRacer.visualScale * vintageRacer.visualSizeMultiplier, 0.72, 'Vintage Racer effective visual scale');
+assertClose(toyRacer.visualScale * toyRacer.visualSizeMultiplier, 0.658, 'Toy Racer effective visual scale');
+assertClose(policeCar.visualScale * policeCar.visualSizeMultiplier, 1.127, 'Police Car effective visual scale');
 assertClose(monsterTruck.visualScale * monsterTruck.visualSizeMultiplier, 0.83, 'Monster Truck compact visual scale');
 assertClose(
   monsterTruck.visualScale * monsterTruck.visualSizeMultiplier * monsterTruck.featuredVisualSizeMultiplier,
