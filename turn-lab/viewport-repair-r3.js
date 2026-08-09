@@ -2,8 +2,12 @@
   const BAD_GAP_MIN = 40;
   const META_PULSE_MS = 120;
   const CHECKPOINTS_MS = Object.freeze([0, 80, 250, 650]);
+  const AUTO_CHECKS_MS = Object.freeze([180, 320, 600, 1000, 1600]);
   const startedAt = performance.now();
   let lastResult = null;
+  let repairInFlight = false;
+  let autoAttempted = false;
+  let consecutiveBadChecks = 0;
 
   function round(value, digits = 1) {
     const factor = 10 ** digits;
@@ -52,7 +56,8 @@
       isStandalone() &&
       sample?.landscape &&
       sample.gap >= BAD_GAP_MIN &&
-      Math.abs(sample.clientH - sample.dvh) <= 2
+      Math.abs(sample.clientH - sample.dvh) <= 2 &&
+      Math.abs(sample.visualH - sample.dvh) <= 2
     );
   }
 
@@ -85,23 +90,50 @@
     return copied;
   }
 
-  async function runMetaReflow(status, signatureText, button) {
-    if (button.disabled) return;
-    button.disabled = true;
+  function benchUi() {
+    const panel = document.querySelector('#turnLabDiagnosticsPanel');
+    const bench = panel?.querySelector('[data-lab-repair-bench]');
+    return {
+      status: panel?.querySelector('.turn-lab-status') || null,
+      signatureText: bench?.querySelector('[data-lab-repair-signature]') || null,
+      reflowButton: bench?.querySelector('[data-lab-meta-reflow]') || null,
+      copyButton: bench?.querySelector('[data-lab-copy-repair]') || null
+    };
+  }
+
+  function syncBenchUi(sample = null) {
+    const ui = benchUi();
+    if (ui.signatureText) ui.signatureText.textContent = classification(sample || undefined);
+    if (ui.reflowButton) ui.reflowButton.disabled = repairInFlight;
+    if (ui.copyButton) ui.copyButton.disabled = repairInFlight || !lastResult;
+    return ui;
+  }
+
+  async function runMetaReflow({ trigger = 'manual' } = {}) {
+    if (repairInFlight) return null;
 
     const meta = document.querySelector('meta[name="viewport"]');
+    const ui = syncBenchUi();
     if (!meta) {
-      status.textContent = 'Viewport meta tag not found.';
-      button.disabled = false;
-      return;
+      if (ui.status) ui.status.textContent = 'Viewport meta tag not found.';
+      return null;
     }
 
     const before = snapshot('before');
-    signatureText.textContent = classification(before);
+    if (ui.signatureText) ui.signatureText.textContent = classification(before);
     if (!hasBadSignature(before)) {
-      status.textContent = 'Not in the known BAD 393/462 signature. No repair was run.';
-      button.disabled = false;
-      return;
+      if (ui.status && trigger === 'manual') {
+        ui.status.textContent = 'Not in the known BAD 393/462 signature. No repair was run.';
+      }
+      return null;
+    }
+
+    repairInFlight = true;
+    syncBenchUi(before);
+    if (ui.status) {
+      ui.status.textContent = trigger === 'auto'
+        ? 'Known BAD viewport detected. Verifying automatic repair…'
+        : 'Repairing viewport and verifying the result…';
     }
 
     const original = meta.getAttribute('content') || '';
@@ -115,48 +147,61 @@
     window.visualViewport?.addEventListener('resize', onVisualResize, { passive: true });
 
     const pulse = 'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no';
-    meta.setAttribute('content', pulse);
-    void document.documentElement.clientHeight;
-    await delay(META_PULSE_MS);
-    meta.setAttribute('content', original);
-    void document.documentElement.clientHeight;
+    try {
+      meta.setAttribute('content', pulse);
+      void document.documentElement.clientHeight;
+      await delay(META_PULSE_MS);
+      meta.setAttribute('content', original);
+      void document.documentElement.clientHeight;
 
-    const checkpoints = [];
-    let elapsed = 0;
-    for (const target of CHECKPOINTS_MS) {
-      const wait = Math.max(0, target - elapsed);
-      if (wait) await delay(wait);
-      elapsed = target;
-      checkpoints.push(snapshot(`after+${target}`));
+      const checkpoints = [];
+      let elapsed = 0;
+      for (const target of CHECKPOINTS_MS) {
+        const wait = Math.max(0, target - elapsed);
+        if (wait) await delay(wait);
+        elapsed = target;
+        checkpoints.push(snapshot(`after+${target}`));
+      }
+
+      const after = checkpoints.at(-1) || snapshot('after');
+      const recovered = !hasBadSignature(after) &&
+        after.clientH >= before.clientH + BAD_GAP_MIN &&
+        after.gap < 20;
+
+      lastResult = {
+        lab: 'TURN viewport repair bench r4 auto',
+        productionBuild: globalThis.__TURN_BUILD__ || null,
+        standalone: isStandalone(),
+        trigger,
+        originalMeta: original,
+        pulseMeta: pulse,
+        pulseMs: META_PULSE_MS,
+        before,
+        checkpoints,
+        events,
+        outcome: recovered ? 'RECOVERED' : 'STILL_BAD'
+      };
+      globalThis.__turnLabViewportRepairResult = lastResult;
+      globalThis.__turnLabViewportAutoRepairResult = trigger === 'auto' ? lastResult : null;
+
+      const currentUi = benchUi();
+      if (currentUi.signatureText) currentUi.signatureText.textContent = classification(after);
+      if (currentUi.status) {
+        currentUi.status.textContent = recovered
+          ? `${trigger === 'auto' ? 'AUTO-RECOVERED' : 'RECOVERED'}: WebKit restored the full reachable viewport.`
+          : `${trigger === 'auto' ? 'AUTO REPAIR FAILED' : 'STILL BAD'}: viewport-meta reflow did not recover the missing height.`;
+      }
+      window.dispatchEvent(new CustomEvent('turn-lab:viewport-repair-result', {
+        detail: { trigger, outcome: lastResult.outcome }
+      }));
+      return lastResult;
+    } finally {
+      meta.setAttribute('content', original);
+      window.removeEventListener('resize', onResize);
+      window.visualViewport?.removeEventListener('resize', onVisualResize);
+      repairInFlight = false;
+      syncBenchUi();
     }
-
-    window.removeEventListener('resize', onResize);
-    window.visualViewport?.removeEventListener('resize', onVisualResize);
-
-    const after = checkpoints.at(-1) || snapshot('after');
-    const recovered = !hasBadSignature(after) &&
-      after.clientH >= before.clientH + BAD_GAP_MIN &&
-      after.gap < 20;
-
-    lastResult = {
-      lab: 'TURN viewport repair bench r3',
-      productionBuild: globalThis.__TURN_BUILD__ || null,
-      standalone: isStandalone(),
-      originalMeta: original,
-      pulseMeta: pulse,
-      pulseMs: META_PULSE_MS,
-      before,
-      checkpoints,
-      events,
-      outcome: recovered ? 'RECOVERED' : 'STILL_BAD'
-    };
-    globalThis.__turnLabViewportRepairResult = lastResult;
-
-    signatureText.textContent = classification(after);
-    status.textContent = recovered
-      ? 'RECOVERED: WebKit expanded the reachable viewport without rotating. Copy the repair result.'
-      : 'STILL BAD: viewport-meta reflow did not recover the missing height. Copy the repair result.';
-    button.disabled = false;
   }
 
   function installRepairBench() {
@@ -171,10 +216,10 @@
     bench.dataset.labRepairBench = '';
     bench.style.cssText = 'width:100%;margin:10px 0 0;padding-top:10px;border-top:3px solid #08090a;';
     bench.innerHTML = `
-      <strong>REPAIR BENCH r3</strong>
+      <strong>REPAIR BENCH r4 · AUTO ARMED</strong>
       <div data-lab-repair-signature style="margin:6px 0"></div>
       <button type="button" data-lab-meta-reflow>TRY VIEWPORT REFLOW</button>
-      <button type="button" data-lab-copy-repair>COPY REPAIR RESULT</button>`;
+      <button type="button" data-lab-copy-repair disabled>COPY REPAIR RESULT</button>`;
     actions.after(bench);
 
     const signatureText = bench.querySelector('[data-lab-repair-signature]');
@@ -182,20 +227,24 @@
     const copyButton = bench.querySelector('[data-lab-copy-repair]');
     signatureText.textContent = classification();
 
-    reflowButton.addEventListener('click', () => runMetaReflow(status, signatureText, reflowButton));
+    reflowButton.addEventListener('click', () => runMetaReflow({ trigger: 'manual' }));
     copyButton.addEventListener('click', async () => {
-      if (!lastResult) {
-        status.textContent = 'Run TRY VIEWPORT REFLOW first.';
+      if (repairInFlight) {
+        status.textContent = 'Repair is still verifying. COPY REPAIR RESULT will enable when it is finished.';
         return;
       }
-      const copied = await copyText(JSON.stringify(lastResult, null, 2));
+      const result = lastResult || globalThis.__turnLabViewportRepairResult || null;
+      if (!result) {
+        status.textContent = 'No repair result yet.';
+        return;
+      }
+      const copied = await copyText(JSON.stringify(result, null, 2));
       status.textContent = copied ? 'Copied compact repair result.' : 'Copy failed.';
     });
 
     const labButton = document.querySelector('#turnLabDiagnosticsButton');
-    labButton?.addEventListener('click', () => {
-      signatureText.textContent = classification();
-    });
+    labButton?.addEventListener('click', () => syncBenchUi());
+    syncBenchUi();
     return true;
   }
 
@@ -206,6 +255,24 @@
       observer.disconnect();
     });
     observer.observe(document.documentElement, { childList: true, subtree: true });
+  }
+
+  function autoCheck(label) {
+    if (autoAttempted || repairInFlight || !document.body) return;
+    const sample = snapshot(`auto-check:${label}`);
+    if (!hasBadSignature(sample)) {
+      consecutiveBadChecks = 0;
+      return;
+    }
+
+    consecutiveBadChecks += 1;
+    if (consecutiveBadChecks < 2) return;
+    autoAttempted = true;
+    runMetaReflow({ trigger: 'auto' });
+  }
+
+  for (const delayMs of AUTO_CHECKS_MS) {
+    setTimeout(() => autoCheck(`startup+${delayMs}`), delayMs);
   }
 
   if (document.readyState === 'loading') {
