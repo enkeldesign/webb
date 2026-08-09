@@ -255,8 +255,6 @@ function install(runtime) {
   simplifyResetRivalsFeedback();
   const audioButton = createAudioPanel().button;
 
-  backToStartButton.textContent = 'Restart Lap';
-  backToStartButton.setAttribute('aria-label', 'Restart the current lap from the start line');
   backToStartButton.classList.add('back-to-start-button');
 
   backToLotButton.textContent = 'Leave Race';
