@@ -153,12 +153,12 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     paragraphs: [
       'CHROMATIC CAMOUFLAGE added a hidden 50-trophy challenge built around the five production track colours. It checks the current personal best on every track and deliberately accepts broad hue families rather than exact paint values, bringing the collection to 29 achievements and 1,750 available trophies. Device testing widened Countryside’s accepted pink family so canonical #FF00FF Magenta is not rejected on a five-degree technicality.',
       'The new color-based achievement exposed an accessibility gap: common colour-vision simulations collapse several track colours toward similar greys, olives and violets. TURN 1.7.0 is therefore an accessibility patch, adding optional Color Cues, off by default, with compact text and pattern labels for track colours and selected vehicle paint without recolouring the game or creating a separate visual mode.',
-      'Real-device VoiceOver testing also exposed a WebKit defect: the native color input could be read, and the system picker itself supplied useful semantic colour names, but VoiceOver could no longer activate the colour well. An initial label-forwarding workaround failed on device and only exposed a hidden focus target. The corrected design makes The Lot own one accessible paint control from creation time: an ordinary button bridges affected iOS VoiceOver activation directly to the real native input while the system picker, its native semantics and the input value remain canonical.'
+      'VoiceOver testing then showed TURN’s paint control behaving differently from a plain HTML color input in the same browser session. The response was to remove the workaround stack rather than add another bridge: the Lot now creates the real input in its final semantic location, leaves the native control appearance and accessible value untouched, stops globally disabling selection and touch behaviour, and progressively adds only TURN’s label and optional Color Cue.'
     ],
     milestones: [
       'CHROMATIC CAMOUFLAGE · 50 trophies with generous pink-family matching',
       'Optional Color Cues with text and pattern redundancy',
-      'TURN 1.7.0 · 2026.08.09-r163 accessibility patch with native paint activation bridge'
+      'TURN 1.7.0 · 2026.08.09-r163 accessibility patch returning paint to native HTML first'
     ]
   }
 ]);
@@ -330,9 +330,9 @@ export const CHANGELOG = Object.freeze([
   {
     date: '9 August',
     entries: [
-      ['1.7.0 r163', 'Accessibility patch prompted by the new color-based CHROMATIC CAMOUFLAGE achievement: adds Color Cues and an assistive-technology bridge to the native paint picker.'],
+      ['1.7.0 r163', 'Accessibility patch prompted by the new color-based CHROMATIC CAMOUFLAGE achievement: adds optional Color Cues while keeping vehicle paint on the native HTML color input.'],
       ['CHROMATIC CAMOUFLAGE', 'Hidden 50-trophy achievement for setting a matching-colour personal best on all five production tracks; broad hue ranges now include canonical #FF00FF Magenta for Countryside’s pink family.'],
-      ['Color accessibility', 'Color Cues are off by default and add text plus pattern redundancy. After the first VoiceOver activation workaround failed device testing, The Lot was refactored to own the accessible paint control directly while preserving the native system picker and its semantic colour names.']
+      ['Color accessibility', 'Device comparison against a plain HTML color input led to removing activation bridges, named-color fallbacks, post-render paint relocation and broad interaction-suppressing CSS. TURN now starts with the native input and progressively adds only layout and optional Color Cues.']
     ]
   }
 ]);
@@ -340,5 +340,5 @@ export const CHANGELOG = Object.freeze([
 export const CURRENT_RELEASE = Object.freeze({
   version: '1.7.0',
   build: '2026.08.09-r163',
-  note: 'Accessibility patch prompted by the new color-based Chromatic Camouflage achievement, adding optional Color Cues and an assistive-technology bridge to the native vehicle paint picker.'
+  note: 'Accessibility patch prompted by the new color-based Chromatic Camouflage achievement, adding optional Color Cues while keeping vehicle paint on the native HTML color input.'
 });
