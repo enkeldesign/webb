@@ -1,0 +1,139 @@
+/* TURN 1.7.0 r163: redundant colour information without recolouring the game. */
+
+.turn-color-cue {
+  display: none;
+}
+
+html[data-turn-color-cues='on'] .turn-color-cue {
+  display: inline-flex;
+}
+
+.track-card-color-cue {
+  grid-column: 1;
+  align-items: center;
+  justify-self: start;
+  gap: 5px;
+  margin-top: 4px;
+  padding: 3px 7px;
+  border: 2px solid var(--m8-ink, #08090a);
+  border-radius: 999px;
+  background: rgb(255 248 232 / 0.9);
+  color: var(--m8-ink, #08090a);
+  font-size: clamp(0.5rem, 0.9vw, 0.68rem);
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.track-card-color-cue::before {
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  background: repeating-linear-gradient(135deg, currentColor 0 1px, transparent 1px 3px);
+  content: '';
+}
+
+.lot-color-control {
+  position: relative;
+}
+
+.lot-color-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.lot-color-label {
+  overflow: hidden;
+  font-size: 0.45rem;
+  font-weight: 900;
+  letter-spacing: 0.055em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.lot-color-cue {
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  font-size: 0.4rem;
+  font-weight: 900;
+  letter-spacing: 0.045em;
+  line-height: 1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.lot-color-cue::before {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  background: repeating-linear-gradient(135deg, currentColor 0 1px, transparent 1px 3px);
+  content: '';
+}
+
+/* Keep the real input rendered so iOS can present its native colour picker,
+   but do not expose its currently broken VoiceOver press action. The adjacent
+   real button activates the associated label, which lets WebKit open the same
+   native picker and retain the platform's own colour semantics. */
+.lot-color-native {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  opacity: 0.001 !important;
+  pointer-events: none !important;
+}
+
+.lot-color-trigger {
+  width: 38px;
+  height: 28px;
+  min-height: 0;
+  padding: 2px;
+  border: 2px solid var(--ink, #08090a);
+  border-radius: 7px;
+  background: var(--lot-color-value, #ffcc00);
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.lot-color-trigger:hover {
+  transform: none;
+}
+
+.lot-color-trigger:active {
+  transform: translate(1px, 1px);
+}
+
+.lot-color-trigger:focus-visible {
+  outline: 3px solid var(--cyan, #38d9ff);
+  outline-offset: 2px;
+}
+
+@media (max-height: 520px) {
+  .lot-color-trigger {
+    width: 34px;
+    height: 26px;
+  }
+
+  .lot-color-label { font-size: 0.42rem; }
+  .lot-color-cue { font-size: 0.36rem; }
+}
+
+@media (max-height: 430px) {
+  .lot-color-trigger {
+    width: 32px;
+    height: 25px;
+  }
+
+  .lot-color-copy { gap: 1px; }
+  .lot-color-cue { font-size: 0.33rem; }
+}
