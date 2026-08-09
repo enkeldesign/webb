@@ -1,7 +1,7 @@
 export const COLOR_CUES_STORAGE_KEY = 'turn-color-cues-v1';
 
 export const TRACK_COLOR_CUES = Object.freeze({
-  countryside: 'pink',
+  countryside: 'pink / magenta',
   airport: 'yellow',
   harbor: 'orange',
   cliffside: 'cyan',
