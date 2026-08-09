@@ -20,13 +20,13 @@ const release = JSON.parse(releaseSource);
 
 assert.equal(COLOR_CUES_STORAGE_KEY, 'turn-color-cues-v1');
 assert.deepEqual(TRACK_COLOR_CUES, {
-  countryside: 'pink',
+  countryside: 'pink / magenta',
   airport: 'yellow',
   harbor: 'orange',
   cliffside: 'cyan',
   'midnight-city': 'violet'
 });
-assert.equal(trackColorCue('countryside'), 'pink');
+assert.equal(trackColorCue('countryside'), 'pink / magenta');
 assert.equal(trackColorCue('midnight-city'), 'violet');
 assert.equal(trackColorCue('invented'), '');
 
@@ -42,6 +42,8 @@ assert.equal(saveColorCuesEnabled(false, storage), true);
 assert.equal(loadColorCuesEnabled(storage), false);
 
 assert.equal(describeColorCue('#ff70b4'), 'pink');
+assert.equal(describeColorCue('#ff00ff'), 'magenta',
+  'TURN should use the ordinary semantic name for canonical Magenta');
 assert.equal(describeColorCue('#ffd84f'), 'yellow');
 assert.equal(describeColorCue('#f28b39'), 'orange');
 assert.equal(describeColorCue('#3ccad6'), 'cyan');
