@@ -10,7 +10,11 @@ const COLOR_LIMITS = Object.freeze({
 });
 
 export const TRACK_COLOR_RULES = Object.freeze({
-  countryside: Object.freeze({ hueMin: 305, hueMax: 350, name: 'pink' }),
+  // Countryside's accent is pink, but the achievement is intentionally
+  // charitable: vivid magenta is perceptually adjacent and should count too.
+  // In particular, the native picker's canonical #ff00ff Magenta must not
+  // lose on a five-degree technicality.
+  countryside: Object.freeze({ hueMin: 295, hueMax: 350, name: 'pink / magenta' }),
   airport: Object.freeze({ hueMin: 40, hueMax: 65, name: 'yellow' }),
   harbor: Object.freeze({ hueMin: 15, hueMax: 39.999, name: 'orange' }),
   cliffside: Object.freeze({ hueMin: 165, hueMax: 205, name: 'cyan' }),
