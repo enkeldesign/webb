@@ -72,7 +72,7 @@ assert.match(indexSource, /TURN v1\.7\.0 · Build 2026\.08\.09-r163/);
 assert.match(indexSource, /garage\/lot-r10\.css\?build=20260809-r163-accessible-paint/);
 assert.match(indexSource, /accessibility\/color-cues-r163\.css\?build=20260809-r163-accessible-paint/);
 assert.match(indexSource, /accessibility\/color-accessibility-r163\.js\?build=20260809-r163-accessible-paint/);
-assert.match(indexSource, /lot-track-select\.js\?build=20260809-r163-accessible-paint/);
+assert.match(indexSource, /lot-track-select\.js\?build=20260809-r163&revision=r163-accessible-paint/);
 assert.match(lotTrackSelectSource, /lot-r10\.js\?build=20260809-r163-accessible-paint/);
 
 // The Lot owns the paint control. The accessibility runtime must not replace
