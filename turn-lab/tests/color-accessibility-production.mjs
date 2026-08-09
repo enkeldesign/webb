@@ -64,8 +64,16 @@ assert.match(runtimeSource, /input\[type="color"\]/,
   'TURN must keep the real native color input rather than substitute a custom picker');
 assert.match(runtimeSource, /lot-color-trigger/,
   'An ordinary button must provide an assistive-technology activation path');
-assert.match(runtimeSource, /trigger\.addEventListener\('click', \(\) => label\.click\(\)\)/,
-  'The accessible trigger must activate the associated label so iOS opens the native picker');
+assert.match(runtimeSource, /WebKit bug 312177 \/ rdar 172218114/,
+  'The workaround must document the upstream WebKit AXPress defect it is targeting');
+assert.match(runtimeSource, /function isIOSFamily\(\)/,
+  'The iOS workaround must be scoped to iPhone and iPad rather than change desktop picker behavior');
+assert.match(runtimeSource, /input\.focus\(\{ preventScroll: true \}\)/,
+  'On iOS, the accessible button must open the native form picker through DOM focus');
+assert.match(runtimeSource, /if \(isIOSFamily\(\)\)[\s\S]*focusNativeColorInput\(input\)[\s\S]*input\.click\(\)/,
+  'iOS must use focus while other platforms retain normal click activation');
+assert.doesNotMatch(runtimeSource, /label\.click\(/,
+  'Do not route through a synthetic label click; device testing showed that only moved VoiceOver to a hidden target');
 assert.doesNotMatch(runtimeSource, /showPicker\(/,
   'The iOS accessibility fix must not rely on showPicker(), which is not dependable on affected iOS versions');
 assert.match(runtimeSource, /platform's own semantic color names/,
@@ -79,6 +87,10 @@ assert.doesNotMatch(runtimeSource, /setInterval|setAnimationLoop/,
 
 assert.match(cssSource, /data-turn-color-cues='on'/);
 assert.match(cssSource, /lot-color-native/);
+assert.match(cssSource, /top: 50% !important/,
+  'The native input must remain aligned with the visible paint swatch rather than at the viewport origin');
+assert.match(cssSource, /right: 5px !important/,
+  'The native input focus geometry must match the visible trigger');
 assert.match(cssSource, /lot-color-trigger/);
 assert.match(cssSource, /track-card-color-cue/);
 assert.match(cssSource, /repeating-linear-gradient/,
