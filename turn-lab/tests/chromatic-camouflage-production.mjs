@@ -49,6 +49,8 @@ for (const trackId of TRACK_IDS) {
 }
 
 assert.equal(matchesTrackColor('countryside', '#ff70b4'), true);
+assert.equal(matchesTrackColor('countryside', '#ff00ff'), true,
+  'Canonical Magenta should count for Countryside; the charitable range must not fail on a tiny hue boundary');
 assert.equal(matchesTrackColor('airport', '#ffd84f'), true);
 assert.equal(matchesTrackColor('harbor', '#f28b39'), true);
 assert.equal(matchesTrackColor('cliffside', '#3ccad6'), true);
@@ -80,6 +82,8 @@ assert.equal(qualifyingChromaticCamouflage((trackId) => (
 assert.match(moduleSource, /minSaturation: 0\.30/);
 assert.match(moduleSource, /minLightness: 0\.28/);
 assert.match(moduleSource, /maxLightness: 0\.85/);
+assert.match(moduleSource, /hueMin: 295/,
+  'Countryside must include native canonical magenta at hue 300');
 assert.match(moduleSource, /turn:lap-result/,
   'The state should be re-evaluated after a record can change');
 
