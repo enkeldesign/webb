@@ -143,8 +143,8 @@ assert.doesNotMatch(labBootstrap, /seed|COPY_ONCE|turn-personal-rivals/,
   'The fresh viewport lab must not seed or modify production TURN save data');
 assert.match(labBootstrap, /__turnLaunchReady/,
   'LAB must preserve the production startup gate contract');
-assert.match(labBootstrap, /viewport-repair-r3\.js\?revision=r3-meta-reflow/,
-  'LAB must load the isolated repair bench without modifying production TURN');
+assert.match(labBootstrap, /viewport-repair-r3\.js\?revision=r4-auto-repair/,
+  'LAB must load the cache-busted automatic repair experiment without modifying production TURN');
 
 for (const requiredDiagnostic of [
   'screen.width',
@@ -169,20 +169,26 @@ assert.match(labDiagnostics, /MAX_SESSIONS = 8/,
 assert.match(labDiagnostics, /localStorage\.setItem\(STORAGE_KEY/,
   'Viewport evidence must survive reloads and orientation cycles');
 
-// The r3 repair bench is LAB-only and only experiments on the measured BAD signature.
+// The repair bench remains LAB-only. Automatic mode requires two consecutive known-BAD measurements.
 assert.doesNotThrow(() => new Function(labRepair), 'The LAB repair probe must remain valid JavaScript');
 for (const requiredRepair of [
   "measureHeight('100dvh')",
   "measureHeight('100lvh')",
   'BAD_GAP_MIN = 40',
   'Math.abs(sample.clientH - sample.dvh) <= 2',
+  'Math.abs(sample.visualH - sample.dvh) <= 2',
   'TRY VIEWPORT REFLOW',
   'META_PULSE_MS = 120',
   'CHECKPOINTS_MS = Object.freeze([0, 80, 250, 650])',
+  'AUTO_CHECKS_MS = Object.freeze([180, 320, 600, 1000, 1600])',
+  'consecutiveBadChecks < 2',
+  "runMetaReflow({ trigger: 'auto' })",
   "meta.setAttribute('content', pulse)",
   "meta.setAttribute('content', original)",
   '__turnLabViewportRepairResult',
+  '__turnLabViewportAutoRepairResult',
   "outcome: recovered ? 'RECOVERED' : 'STILL_BAD'",
+  'repairInFlight',
   'COPY REPAIR RESULT'
 ]) {
   assert.ok(labRepair.includes(requiredRepair), `TURN LAB repair bench must include ${requiredRepair}`);
