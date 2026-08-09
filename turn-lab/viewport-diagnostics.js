@@ -1,33 +1,45 @@
 (() => {
-  const STORAGE_KEY = 'turn-lab-viewport-flight-recorder-v1';
+  const STORAGE_KEY = 'turn-lab-viewport-surgical-recorder-v2';
   const MAX_SESSIONS = 8;
-  const MAX_SNAPSHOTS = 90;
+  const MAX_SAMPLES = 18;
+  const STARTUP_DELAYS_MS = Object.freeze([0, 50, 100, 200, 350, 600, 1000, 1600, 2500, 4000, 6000]);
+  const EVENT_WINDOW_MS = 7000;
   const sessionId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
   const startedAt = performance.now();
+
+  function round(value, digits = 1) {
+    const factor = 10 ** digits;
+    return Math.round((Number(value) || 0) * factor) / factor;
+  }
 
   function readStore() {
     try {
       const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-      if (parsed && Array.isArray(parsed.sessions)) return parsed;
+      if (parsed?.version === 2 && Array.isArray(parsed.sessions)) return parsed;
     } catch (_) {}
-    return { version: 1, sessions: [] };
+    return { version: 2, sessions: [] };
   }
 
   function writeStore(store) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
-    } catch (_) {}
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); } catch (_) {}
   }
 
   const store = readStore();
-  const session = {
+  store.sessions.push({
     id: sessionId,
     startedAt: new Date().toISOString(),
     label: '',
+    markedAt: '',
+    markedAtMs: 0,
+    standalone:
+      document.documentElement.classList.contains('turn-standalone') ||
+      Boolean(window.matchMedia?.('(display-mode: standalone)').matches) ||
+      navigator.standalone === true,
     userAgent: navigator.userAgent || '',
-    snapshots: []
-  };
-  store.sessions.push(session);
+    dpr: Number(window.devicePixelRatio) || 1,
+    samples: [],
+    mark: null
+  });
   if (store.sessions.length > MAX_SESSIONS) {
     store.sessions.splice(0, store.sessions.length - MAX_SESSIONS);
   }
@@ -37,15 +49,46 @@
     const element = document.querySelector(selector);
     if (!element) return null;
     const rect = element.getBoundingClientRect();
+    return [round(rect.width), round(rect.height), round(rect.x), round(rect.y), round(rect.bottom)];
+  }
+
+  let unitProbe = null;
+
+  function ensureUnitProbe() {
+    if (unitProbe?.isConnected) return unitProbe;
+    if (!document.body) return null;
+
+    unitProbe = document.createElement('div');
+    unitProbe.id = 'turnLabViewportUnitProbe';
+    unitProbe.setAttribute('aria-hidden', 'true');
+    unitProbe.style.cssText = 'position:fixed;left:-10000px;top:-10000px;width:0;height:0;overflow:visible;visibility:hidden;pointer-events:none;';
+    unitProbe.innerHTML = `
+      <i data-vh style="display:block;height:100vh;width:1px"></i>
+      <i data-dvh style="display:block;height:100dvh;width:1px"></i>
+      <i data-svh style="display:block;height:100svh;width:1px"></i>
+      <i data-lvh style="display:block;height:100lvh;width:1px"></i>
+      <i data-vw style="display:block;width:100vw;height:1px"></i>
+      <i data-dvw style="display:block;width:100dvw;height:1px"></i>
+      <i data-safe style="display:block;padding-top:env(safe-area-inset-top);padding-right:env(safe-area-inset-right);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left)"></i>`;
+    document.body.appendChild(unitProbe);
+    return unitProbe;
+  }
+
+  function viewportUnitSnapshot() {
+    const probe = ensureUnitProbe();
+    if (!probe) return null;
+
+    const box = (name) => probe.querySelector(`[data-${name}]`)?.getBoundingClientRect();
+    const safeStyle = getComputedStyle(probe.querySelector('[data-safe]'));
     return {
-      x: Math.round(rect.x * 10) / 10,
-      y: Math.round(rect.y * 10) / 10,
-      width: Math.round(rect.width * 10) / 10,
-      height: Math.round(rect.height * 10) / 10,
-      right: Math.round(rect.right * 10) / 10,
-      bottom: Math.round(rect.bottom * 10) / 10,
-      hidden: element.hidden === true,
-      display: getComputedStyle(element).display
+      h: ['vh', 'dvh', 'svh', 'lvh'].map((name) => round(box(name)?.height || 0)),
+      w: ['vw', 'dvw'].map((name) => round(box(name)?.width || 0)),
+      safe: [
+        round(parseFloat(safeStyle.paddingTop)),
+        round(parseFloat(safeStyle.paddingRight)),
+        round(parseFloat(safeStyle.paddingBottom)),
+        round(parseFloat(safeStyle.paddingLeft))
+      ]
     };
   }
 
@@ -53,141 +96,110 @@
     return {
       type: screen.orientation?.type || '',
       angle: Number(screen.orientation?.angle ?? window.orientation ?? 0) || 0,
-      portraitMedia: Boolean(window.matchMedia?.('(orientation: portrait)').matches),
-      landscapeMedia: Boolean(window.matchMedia?.('(orientation: landscape)').matches)
+      media: window.matchMedia?.('(orientation: landscape)').matches ? 'landscape' : 'portrait'
     };
   }
 
   function currentSnapshot(reason) {
     const root = document.documentElement;
-    const body = document.body;
     const viewport = window.visualViewport;
-    const rootStyle = getComputedStyle(root);
-    const bodyStyle = body ? getComputedStyle(body) : null;
-    const snapshot = {
+    const production = globalThis.__turnPwaViewportDiagnostics;
+
+    return {
+      t: round(performance.now() - startedAt),
       reason,
-      atMs: Math.round((performance.now() - startedAt) * 10) / 10,
-      wallTime: new Date().toISOString(),
-      standalone:
-        root.classList.contains('turn-standalone') ||
-        Boolean(window.matchMedia?.('(display-mode: standalone)').matches) ||
-        navigator.standalone === true,
-      visibility: document.visibilityState,
-      dpr: Number(window.devicePixelRatio) || 1,
       orientation: orientationSnapshot(),
-      screen: {
-        width: Number(screen.width) || 0,
-        height: Number(screen.height) || 0,
-        availWidth: Number(screen.availWidth) || 0,
-        availHeight: Number(screen.availHeight) || 0
-      },
-      window: {
-        innerWidth: Number(window.innerWidth) || 0,
-        innerHeight: Number(window.innerHeight) || 0,
-        outerWidth: Number(window.outerWidth) || 0,
-        outerHeight: Number(window.outerHeight) || 0,
-        scrollX: Number(window.scrollX) || 0,
-        scrollY: Number(window.scrollY) || 0
-      },
-      document: {
-        clientWidth: Number(root.clientWidth) || 0,
-        clientHeight: Number(root.clientHeight) || 0,
-        scrollWidth: Number(root.scrollWidth) || 0,
-        scrollHeight: Number(root.scrollHeight) || 0,
-        appWidth: rootStyle.getPropertyValue('--app-width').trim(),
-        appHeight: rootStyle.getPropertyValue('--app-height').trim(),
-        htmlBackground: rootStyle.backgroundColor,
-        bodyBackground: bodyStyle?.backgroundColor || ''
-      },
-      visualViewport: viewport ? {
-        width: Math.round(viewport.width * 10) / 10,
-        height: Math.round(viewport.height * 10) / 10,
-        offsetLeft: Math.round(viewport.offsetLeft * 10) / 10,
-        offsetTop: Math.round(viewport.offsetTop * 10) / 10,
-        pageLeft: Math.round(viewport.pageLeft * 10) / 10,
-        pageTop: Math.round(viewport.pageTop * 10) / 10,
-        scale: Math.round(viewport.scale * 1000) / 1000
-      } : null,
-      rects: {
-        body: body ? (() => {
-          const rect = body.getBoundingClientRect();
-          return {
-            width: Math.round(rect.width * 10) / 10,
-            height: Math.round(rect.height * 10) / 10,
-            bottom: Math.round(rect.bottom * 10) / 10
-          };
-        })() : null,
-        game: rectFor('#game'),
-        home: rectFor('.m8-home'),
-        rotate: rectFor('.rotate-panel'),
-        loading: rectFor('#installGate')
-      },
-      productionDiagnostics: globalThis.__turnPwaViewportDiagnostics || null
+      screen: [Number(screen.width) || 0, Number(screen.height) || 0],
+      outer: [Number(window.outerWidth) || 0, Number(window.outerHeight) || 0],
+      inner: [Number(window.innerWidth) || 0, Number(window.innerHeight) || 0],
+      client: [Number(root.clientWidth) || 0, Number(root.clientHeight) || 0],
+      visual: viewport ? [
+        round(viewport.width),
+        round(viewport.height),
+        round(viewport.offsetLeft),
+        round(viewport.offsetTop),
+        round(viewport.scale, 3)
+      ] : null,
+      units: viewportUnitSnapshot(),
+      html: rectFor('html'),
+      body: rectFor('body'),
+      game: rectFor('#game'),
+      home: rectFor('.m8-home'),
+      rotate: rectFor('.rotate-panel'),
+      loading: rectFor('#installGate'),
+      production: production ? [
+        Number(production.width) || 0,
+        Number(production.height) || 0,
+        Number(production.innerWidth) || 0,
+        Number(production.innerHeight) || 0,
+        Number(production.visualWidth) || 0,
+        Number(production.visualHeight) || 0
+      ] : null,
+      visibility: document.visibilityState
     };
-    return snapshot;
   }
 
-  function saveSnapshot(reason) {
+  function signature(snapshot) {
+    const { t, reason, ...measurements } = snapshot;
+    return JSON.stringify(measurements);
+  }
+
+  function saveSample(reason, { force = false } = {}) {
     const liveStore = readStore();
     const liveSession = liveStore.sessions.find((item) => item.id === sessionId);
     if (!liveSession) return;
-    liveSession.snapshots.push(currentSnapshot(reason));
-    if (liveSession.snapshots.length > MAX_SNAPSHOTS) {
-      liveSession.snapshots.splice(0, liveSession.snapshots.length - MAX_SNAPSHOTS);
+
+    const snapshot = currentSnapshot(reason);
+    const latest = liveSession.samples.at(-1);
+    if (!force && latest && signature(latest) === signature(snapshot)) {
+      latest.reason = `${latest.reason}|${reason}`;
+      latest.t = snapshot.t;
+    } else {
+      liveSession.samples.push(snapshot);
+      if (liveSession.samples.length > MAX_SAMPLES) {
+        liveSession.samples.splice(0, liveSession.samples.length - MAX_SAMPLES);
+      }
     }
     writeStore(liveStore);
     updatePanel();
   }
 
-  function scheduleBurst(reason) {
-    saveSnapshot(reason);
-    for (const delay of [50, 150, 350, 800]) {
-      setTimeout(() => saveSnapshot(`${reason}+${delay}`), delay);
-    }
+  function captureStartupEvent(reason) {
+    if (performance.now() - startedAt <= EVENT_WINDOW_MS) saveSample(reason);
   }
 
-  const passiveEvents = ['resize', 'orientationchange', 'pageshow', 'focus'];
-  for (const eventName of passiveEvents) {
-    window.addEventListener(eventName, () => scheduleBurst(eventName), { passive: true });
+  for (const eventName of ['resize', 'orientationchange', 'pageshow', 'focus']) {
+    window.addEventListener(eventName, () => captureStartupEvent(eventName), { passive: true });
   }
-  screen.orientation?.addEventListener?.('change', () => scheduleBurst('screen.orientation.change'), { passive: true });
-  window.visualViewport?.addEventListener('resize', () => scheduleBurst('visualViewport.resize'), { passive: true });
-  window.visualViewport?.addEventListener('scroll', () => saveSnapshot('visualViewport.scroll'), { passive: true });
-  document.addEventListener('visibilitychange', () => scheduleBurst(`visibility:${document.visibilityState}`), { passive: true });
-  document.addEventListener('DOMContentLoaded', () => scheduleBurst('DOMContentLoaded'), { once: true });
-  window.addEventListener('load', () => scheduleBurst('load'), { once: true });
-  window.addEventListener('turn:runtime-ready', () => scheduleBurst('turn:runtime-ready'));
-  document.addEventListener('turn:home-ready', () => scheduleBurst('turn:home-ready'));
+  screen.orientation?.addEventListener?.('change', () => captureStartupEvent('screen.orientation.change'), { passive: true });
+  window.visualViewport?.addEventListener('resize', () => captureStartupEvent('visualViewport.resize'), { passive: true });
+  document.addEventListener('visibilitychange', () => captureStartupEvent(`visibility:${document.visibilityState}`), { passive: true });
+  document.addEventListener('DOMContentLoaded', () => captureStartupEvent('DOMContentLoaded'), { once: true });
+  window.addEventListener('load', () => captureStartupEvent('load'), { once: true });
+  window.addEventListener('turn:runtime-ready', () => captureStartupEvent('turn:runtime-ready'));
+  document.addEventListener('turn:home-ready', () => captureStartupEvent('turn:home-ready'));
 
-  for (const delay of [0, 100, 300, 650, 1200, 2500]) {
-    setTimeout(() => saveSnapshot(`startup+${delay}`), delay);
+  for (const delay of STARTUP_DELAYS_MS) {
+    setTimeout(() => saveSample(`startup+${delay}`), delay);
   }
 
-  function latestSnapshot() {
-    const liveStore = readStore();
-    const liveSession = liveStore.sessions.find((item) => item.id === sessionId);
-    return liveSession?.snapshots.at(-1) || null;
+  function liveSession() {
+    return readStore().sessions.find((item) => item.id === sessionId) || null;
   }
 
   function compactSummary(snapshot) {
     if (!snapshot) return 'No samples yet.';
-    const vv = snapshot.visualViewport;
-    const game = snapshot.rects.game;
-    const home = snapshot.rects.home;
     return [
+      'SURGICAL RECORDER r2',
       `SESSION ${sessionId}`,
-      `standalone: ${snapshot.standalone}`,
-      `orientation: ${snapshot.orientation.type || (snapshot.orientation.landscapeMedia ? 'landscape' : 'portrait')} · ${snapshot.orientation.angle}°`,
-      `screen: ${snapshot.screen.width}×${snapshot.screen.height}`,
-      `inner: ${snapshot.window.innerWidth}×${snapshot.window.innerHeight}`,
-      `client: ${snapshot.document.clientWidth}×${snapshot.document.clientHeight}`,
-      `visual: ${vv ? `${vv.width}×${vv.height} @ ${vv.offsetLeft},${vv.offsetTop}` : 'n/a'}`,
-      `#game: ${game ? `${game.width}×${game.height} bottom ${game.bottom}` : 'n/a'}`,
-      `.m8-home: ${home ? `${home.width}×${home.height} bottom ${home.bottom}` : 'n/a'}`,
-      `--app: ${snapshot.document.appWidth || '?'} × ${snapshot.document.appHeight || '?'}`,
-      `html bg: ${snapshot.document.htmlBackground}`,
-      `body bg: ${snapshot.document.bodyBackground}`,
-      `last event: ${snapshot.reason} @ ${snapshot.atMs}ms`
+      `orientation: ${snapshot.orientation.type || snapshot.orientation.media} · ${snapshot.orientation.angle}° · ${snapshot.orientation.media}`,
+      `screen: ${snapshot.screen.join('×')} · outer: ${snapshot.outer.join('×')}`,
+      `inner: ${snapshot.inner.join('×')} · client: ${snapshot.client.join('×')}`,
+      `visual: ${snapshot.visual ? `${snapshot.visual[0]}×${snapshot.visual[1]} scale ${snapshot.visual[4]}` : 'n/a'}`,
+      `vh/dvh/svh/lvh: ${snapshot.units ? snapshot.units.h.join('/') : 'n/a'}`,
+      `safe T/R/B/L: ${snapshot.units ? snapshot.units.safe.join('/') : 'n/a'}`,
+      `#game: ${snapshot.game ? `${snapshot.game[0]}×${snapshot.game[1]}` : 'n/a'} · home: ${snapshot.home ? `${snapshot.home[0]}×${snapshot.home[1]}` : 'n/a'}`,
+      `last: ${snapshot.reason} @ ${snapshot.t}ms`
     ].join('\n');
   }
 
@@ -197,17 +209,21 @@
 
   function updatePanel() {
     if (!summary) return;
-    summary.textContent = compactSummary(latestSnapshot());
+    const current = liveSession();
+    summary.textContent = compactSummary(current?.mark || current?.samples.at(-1) || currentSnapshot('panel'));
   }
 
   function markSession(label) {
     const liveStore = readStore();
-    const liveSession = liveStore.sessions.find((item) => item.id === sessionId);
-    if (!liveSession) return;
-    liveSession.label = label;
-    liveSession.markedAt = new Date().toISOString();
-    liveSession.snapshots.push(currentSnapshot(`marked:${label}`));
+    const current = liveStore.sessions.find((item) => item.id === sessionId);
+    if (!current) return;
+
+    current.label = label;
+    current.markedAt = new Date().toISOString();
+    current.markedAtMs = round(performance.now() - startedAt);
+    current.mark = currentSnapshot(`marked:${label}`);
     writeStore(liveStore);
+
     if (labButton) labButton.textContent = label === 'BAD' ? 'LAB BAD' : 'LAB GOOD';
     updatePanel();
   }
@@ -233,23 +249,19 @@
     ensureLayerStyle();
     const enabled = document.documentElement.classList.toggle('turn-lab-show-layers');
     button.textContent = enabled ? 'NORMAL COLORS' : 'COLOR LAYERS';
-    scheduleBurst(enabled ? 'layer-colors:on' : 'layer-colors:off');
   }
 
-  async function copyLog(status) {
-    saveSnapshot('copy-log');
-    const liveStore = readStore();
-    const payload = {
-      lab: 'TURN viewport flight recorder r1',
-      productionBuild: globalThis.__TURN_BUILD__ || null,
-      copiedAt: new Date().toISOString(),
-      sessions: liveStore.sessions
-    };
-    const text = JSON.stringify(payload, null, 2);
+  function mostRecentMarkedSessions(sessions) {
+    const selected = ['GOOD', 'BAD']
+      .map((label) => [...sessions].reverse().find((item) => item.label === label))
+      .filter(Boolean);
+    return selected.sort((a, b) => String(a.startedAt).localeCompare(String(b.startedAt)));
+  }
+
+  async function copyText(text) {
     try {
       await navigator.clipboard.writeText(text);
-      status.textContent = 'Copied. Paste the log into ChatGPT.';
-      return;
+      return true;
     } catch (_) {}
 
     const textarea = document.createElement('textarea');
@@ -262,12 +274,38 @@
     let copied = false;
     try { copied = document.execCommand('copy'); } catch (_) {}
     textarea.remove();
-    status.textContent = copied ? 'Copied. Paste the log into ChatGPT.' : 'Copy failed.';
+    return copied;
+  }
+
+  async function copyLog(status) {
+    const results = mostRecentMarkedSessions(readStore().sessions);
+    if (!results.length) {
+      status.textContent = 'Mark this launch GOOD or BAD first.';
+      return;
+    }
+
+    const payload = {
+      lab: 'TURN viewport surgical recorder r2',
+      productionBuild: globalThis.__TURN_BUILD__ || null,
+      legend: {
+        rect: '[width,height,x,y,bottom]',
+        visual: '[width,height,offsetLeft,offsetTop,scale]',
+        unitsH: '[100vh,100dvh,100svh,100lvh]',
+        unitsW: '[100vw,100dvw]',
+        safe: '[top,right,bottom,left]',
+        production: '[width,height,innerWidth,innerHeight,visualWidth,visualHeight]'
+      },
+      results
+    };
+    const copied = await copyText(JSON.stringify(payload, null, 2));
+    status.textContent = copied
+      ? `Copied ${results.map((item) => item.label).join(' + ')} result${results.length === 1 ? '' : 's'}.`
+      : 'Copy failed.';
   }
 
   function clearLog(status) {
     try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
-    status.textContent = 'Saved lab history cleared. Reload to start a fresh session.';
+    status.textContent = 'Saved surgical history cleared. Reload to start fresh.';
   }
 
   function installUi() {
@@ -275,50 +313,16 @@
 
     const style = document.createElement('style');
     style.textContent = `
-      #turnLabDiagnosticsButton {
-        position: fixed;
-        z-index: 2147483646;
-        top: max(8px, env(safe-area-inset-top));
-        right: max(8px, env(safe-area-inset-right));
-        min-width: 72px;
-        min-height: 44px;
-        padding: 8px 10px;
-        border: 3px solid #08090a;
-        border-radius: 14px;
-        background: #ffd43b;
-        color: #08090a;
-        font: 900 13px/1 system-ui, sans-serif;
-        box-shadow: 4px 4px 0 #08090a;
-      }
-      #turnLabDiagnosticsPanel {
-        position: fixed;
-        z-index: 2147483647;
-        inset: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
-        overflow: auto;
-        padding: 16px;
-        border: 4px solid #08090a;
-        border-radius: 18px;
-        background: #fff8e8;
-        color: #08090a;
-        box-shadow: 8px 8px 0 #08090a;
-        font: 700 14px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace;
-      }
-      #turnLabDiagnosticsPanel[hidden] { display: none !important; }
-      #turnLabDiagnosticsPanel h2 { margin: 0 0 10px; font: 1000 24px/1 system-ui, sans-serif; }
-      #turnLabDiagnosticsPanel pre { white-space: pre-wrap; overflow-wrap: anywhere; }
-      #turnLabDiagnosticsPanel .turn-lab-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
-      #turnLabDiagnosticsPanel button { min-height: 44px; padding: 8px 12px; background: #ffd43b; color: #08090a; }
-      #turnLabDiagnosticsPanel [data-lab-bad] { background: #ff8fab; }
-      #turnLabDiagnosticsPanel [data-lab-good] { background: #8ce99a; }
-      #turnLabDiagnosticsPanel .turn-lab-status { min-height: 1.4em; margin: 8px 0 0; }
-    `;
+      #turnLabDiagnosticsButton{position:fixed;z-index:2147483646;top:max(8px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));min-width:72px;min-height:44px;padding:8px 10px;border:3px solid #08090a;border-radius:14px;background:#ffd43b;color:#08090a;font:900 13px/1 system-ui,sans-serif;box-shadow:4px 4px 0 #08090a}
+      #turnLabDiagnosticsPanel{position:fixed;z-index:2147483647;inset:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));overflow:auto;padding:16px;border:4px solid #08090a;border-radius:18px;background:#fff8e8;color:#08090a;box-shadow:8px 8px 0 #08090a;font:700 14px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace}
+      #turnLabDiagnosticsPanel[hidden]{display:none!important}#turnLabDiagnosticsPanel h2{margin:0 0 10px;font:1000 24px/1 system-ui,sans-serif}#turnLabDiagnosticsPanel pre{white-space:pre-wrap;overflow-wrap:anywhere}.turn-lab-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}#turnLabDiagnosticsPanel button{min-height:44px;padding:8px 12px;background:#ffd43b;color:#08090a}#turnLabDiagnosticsPanel [data-lab-bad]{background:#ff8fab}#turnLabDiagnosticsPanel [data-lab-good]{background:#8ce99a}.turn-lab-status{min-height:1.4em;margin:8px 0 0}`;
     document.head.appendChild(style);
 
     labButton = document.createElement('button');
     labButton.id = 'turnLabDiagnosticsButton';
     labButton.type = 'button';
-    labButton.textContent = 'LAB';
-    labButton.setAttribute('aria-label', 'Open TURN viewport diagnostics');
+    labButton.textContent = 'LAB r2';
+    labButton.setAttribute('aria-label', 'Open TURN surgical viewport diagnostics');
 
     panel = document.createElement('section');
     panel.id = 'turnLabDiagnosticsPanel';
@@ -327,8 +331,8 @@
     panel.setAttribute('aria-modal', 'true');
     panel.setAttribute('aria-labelledby', 'turnLabDiagnosticsTitle');
     panel.innerHTML = `
-      <h2 id="turnLabDiagnosticsTitle">TURN VIEWPORT LAB</h2>
-      <p>Mark the launch while the problem is visible, then copy the log. COLOR LAYERS changes only diagnostic backgrounds after launch.</p>
+      <h2 id="turnLabDiagnosticsTitle">TURN VIEWPORT LAB r2</h2>
+      <p>Cold-launch in landscape. Mark the launch while you can still see whether the strip is present. COPY LOG exports only the newest GOOD and BAD results.</p>
       <pre data-lab-summary></pre>
       <div class="turn-lab-actions">
         <button type="button" data-lab-bad>MARK BAD</button>
@@ -338,13 +342,12 @@
         <button type="button" data-lab-clear>CLEAR HISTORY</button>
         <button type="button" data-lab-close>CLOSE</button>
       </div>
-      <p class="turn-lab-status" role="status" aria-live="polite"></p>
-    `;
+      <p class="turn-lab-status" role="status" aria-live="polite"></p>`;
+
     summary = panel.querySelector('[data-lab-summary]');
     const status = panel.querySelector('.turn-lab-status');
 
     labButton.addEventListener('click', () => {
-      saveSnapshot('open-lab-panel');
       panel.hidden = false;
       updatePanel();
       panel.querySelector('[data-lab-bad]')?.focus();
@@ -369,5 +372,5 @@
     installUi();
   }
 
-  saveSnapshot('script-start');
+  saveSample('script-start', { force: true });
 })();
