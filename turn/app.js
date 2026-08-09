@@ -174,7 +174,7 @@ installStylesheet(
 // Historical stylesheet bundle marker retained for the Trophy Road regression contract:
 // trophy-road-r157.css?revision=r157-paint-monster
 installStylesheet(
-  './progression/trophy-road-r157.css?revision=r161-car-colour-lock',
+  './progression/trophy-road-r157.css?revision=r163-native-picker-parent-click',
   'data-turn-trophy-road'
 );
 const { prepareTrophyRoadProfile } = await import(
@@ -268,7 +268,7 @@ installHarborHiddenFaceOrientation();
 // lot-enhancement-runtime.js?revision=r121&trophy-road=r154
 // lot-enhancement-runtime.js?revision=r121&trophy-road=r157
 const { installLotEnhancementRuntime } = await import(
-  withBuild('./garage/lot-enhancement-runtime.js?revision=r121&trophy-road=r159&paint=r161-car-colour-lock&toast=r162-dismiss-unlocked-car')
+  withBuild('./garage/lot-enhancement-runtime.js?revision=r163-native-picker-parent-click')
 );
 installLotEnhancementRuntime();
 
