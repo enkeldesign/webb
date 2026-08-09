@@ -42,6 +42,11 @@ assert.equal(
   `./garage/lot-accessibility-r118.js?build=${release.cacheKey}&revision=r163-voiceover-first-lot-focus`,
   'Production must bypass the cached Lot accessibility module for the first-entry VoiceOver focus fix'
 );
+assert.equal(
+  imports[`./garage/lot-enhancement-runtime.js?revision=r163-native-picker-parent-click&build=${release.cacheKey}`],
+  `./garage/lot-enhancement-runtime.js?build=${release.cacheKey}&revision=r163-voiceover-pwa-lot-carryover`,
+  'Production must bypass the cached Lot enhancer for the standalone VoiceOver carry-over guard'
+);
 
 assert.match(app, /lot-layout-r60\.css\?revision=r121-viewer-r122-fit-r128-super-sedan-notice-r129-race-button-fit/, 'The Super Sedan fit stylesheet must bypass the previous notice cache');
 assert.match(app, /lot-enhancement-runtime\.js\?revision=r121/, 'Production must load the route-independent Lot enhancer');
@@ -59,6 +64,17 @@ assert.doesNotMatch(wrapper, /installLotLayout|installLotStatLegend|installLotAc
 
 assert.match(enhancementRuntime, /ENHANCEMENT_ID = 'enhanced-lot-r121'/, 'The restored Lot contract must have an explicit identity');
 assert.match(enhancementRuntime, /activeEnhancements = new WeakMap\(\)/, 'Enhancements must be idempotent per Lot screen');
+assert.match(enhancementRuntime, /LOT_ENTRY_CLICK_GUARD_MS = 600/, 'The Lot must keep a short bounded entry quarantine for carry-over activations');
+assert.match(enhancementRuntime, /const card = screen\.querySelector\('\.lot-card'\)/, 'The entry guard must live on the information card, not on the whole Lot');
+assert.match(enhancementRuntime, /event\.target\?\.closest\?\.\('\.lot-race'\)/, 'The entry guard must target only Race This Car');
+assert.match(enhancementRuntime, /event\.preventDefault\(\);[\s\S]*event\.stopImmediatePropagation\(\);/, 'A carry-over activation must stop before the motion gate can run');
+assert.match(enhancementRuntime, /card\.addEventListener\('click', blockCarryOverRaceClick, true\)/, 'The card capture guard must run before the Race This Car target listener');
+assert.match(enhancementRuntime, /card\.removeEventListener\('click', blockCarryOverRaceClick, true\)/, 'The temporary entry guard must clean itself up');
+assert.doesNotMatch(enhancementRuntime, /document\.addEventListener\('click'/, 'The carry-over fix must not restore a document-level click listener around native controls');
+assert.ok(
+  enhancementRuntime.indexOf('installLotEntryClickGuard(screen)') < enhancementRuntime.indexOf('gateLotNow(scope)'),
+  'The carry-over guard must attach before the ordinary Lot gates'
+);
 assert.match(enhancementRuntime, /installLotStatLegend\(scope\)/, 'Every Lot route must receive the stat legend');
 assert.match(enhancementRuntime, /installLotLayout\(scope\)/, 'Every Lot route must receive the shared visual layout enhancement');
 assert.match(enhancementRuntime, /installLotAccessibility\(scope\)/, 'Every Lot route must receive the r118 accessibility model');
