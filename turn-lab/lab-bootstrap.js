@@ -62,6 +62,11 @@
   document.documentElement.classList.toggle('turn-browser', !isStandalone);
   document.documentElement.dataset.turnLab = 'viewport-flight-recorder-r1';
 
+  const repairScript = document.createElement('script');
+  repairScript.src = '/turn-lab/viewport-repair-r3.js?revision=r3-meta-reflow';
+  repairScript.async = true;
+  document.head.appendChild(repairScript);
+
   let releaseBrowserLaunch = null;
   let browserReleased = false;
   globalThis.__turnLaunchReady = isStandalone
