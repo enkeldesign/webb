@@ -14,18 +14,16 @@ const [
   indexSource,
   runtimeSource,
   cueCssSource,
+  nativeInputCssSource,
   lotSource,
-  lotCssSource,
-  lotTrackSelectSource,
   historySource
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/accessibility/color-accessibility-r163.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/accessibility/color-cues-r163.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/accessibility/native-color-input-r163.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-r10.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-track-select.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/content/about-history.js', import.meta.url), 'utf8')
 ]);
 const release = JSON.parse(releaseSource);
@@ -69,57 +67,56 @@ assert.equal(release.version, '1.7.0');
 assert.equal(release.id, '2026.08.09-r163');
 assert.equal(release.cacheKey, '20260809-r163');
 assert.match(indexSource, /TURN v1\.7\.0 · Build 2026\.08\.09-r163/);
-assert.match(indexSource, /garage\/lot-r10\.css\?build=20260809-r163-accessible-paint/);
-assert.match(indexSource, /accessibility\/color-cues-r163\.css\?build=20260809-r163-accessible-paint/);
-assert.match(indexSource, /accessibility\/color-accessibility-r163\.js\?build=20260809-r163-accessible-paint/);
-assert.match(indexSource, /lot-track-select\.js\?build=20260809-r163&revision=r163-accessible-paint/);
-assert.match(lotTrackSelectSource, /lot-r10\.js\?build=20260809-r163-accessible-paint/);
+assert.match(indexSource, /accessibility\/native-color-input-r163\.css\?revision=r163-native-input/,
+  'The native-input correction must have its own uncached stylesheet');
+assert.match(indexSource, /accessibility\/color-accessibility-r163\.js\?build=20260809-r163-native-input/,
+  'The device-tested native-input correction must bypass the failed bridge cache');
 
-// The Lot owns the paint control. The accessibility runtime must not replace
-// or rebuild it after render.
+// The verified Lot still creates the old r163 bridge, but the accessibility
+// runtime must synchronously reduce it back to one real native input before it
+// becomes the interactive UI. This protects the hotfix while the older Lot
+// renderer remains release-frozen.
 assert.match(lotSource, /input\.type = 'color'/,
-  'The Lot must keep the real native color input rather than substitute a custom picker');
-assert.match(lotSource, /trigger\.className = 'lot-color-trigger'/,
-  'The Lot itself must create the accessible paint trigger');
-assert.match(lotSource, /input\.setAttribute\('aria-hidden', 'true'\)/,
-  'The broken native AXPress target must stay out of the VoiceOver swipe order');
-assert.match(lotSource, /trigger\.setAttribute\('aria-label', `\$\{label\} colour\. \$\{colourName\}\. Opens system color picker\.`\)/,
-  'The accessible trigger must expose the selected semantic color name');
-assert.match(lotSource, /function isIOSFamily\(\)/,
-  'The iOS workaround must be scoped to iPhone and iPad rather than change desktop picker behavior');
-assert.match(lotSource, /input\.focus\(\{ preventScroll: true \}\)/,
-  'On iOS, the accessible button must open the native form picker through DOM focus');
-assert.match(lotSource, /if \(isIOSFamily\(\)\)[\s\S]*focusNativeColorInput\(input\)[\s\S]*input\.click\(\)/,
-  'iOS must use focus while other platforms retain normal click activation');
-assert.doesNotMatch(lotSource, /label\.click\(/,
-  'Do not route through a synthetic label click; device testing showed that only moved VoiceOver to a hidden target');
-assert.doesNotMatch(lotSource, /showPicker\(/,
-  'The iOS accessibility fix must not rely on showPicker(), which is not implemented for these iOS controls');
-assert.match(lotSource, /describeColorCue\(color\)/,
-  'Paint cues and accessible names must share the same semantic color classifier');
-assert.match(lotSource, /cue\.textContent = `COLOR · \$\{colourName\.toUpperCase\(\)\}`/);
-
-assert.doesNotMatch(runtimeSource, /lot-color-control|lot-color-trigger|input\[type="color"\]|replaceWith|enhancePaintControl/,
-  'Color Cues runtime must not post-process or replace The Lot paint controls');
+  'TURN must retain a real input[type=color] as the paint value source');
+assert.match(runtimeSource, /control\.querySelector\('\.lot-color-trigger'\)\?\.remove\(\)/,
+  'The failed duplicate swatch/button must be removed from the live Lot');
+assert.match(runtimeSource, /input\.removeAttribute\('aria-hidden'\)/,
+  'The real native input must return to the accessibility tree');
+assert.match(runtimeSource, /input\.removeAttribute\('tabindex'\)/,
+  'The real native input must return to normal keyboard and swipe order');
+assert.match(runtimeSource, /input\.classList\.remove\('lot-color-native'\)/,
+  'The native input must no longer carry the hidden-bridge marker');
+assert.match(runtimeSource, /describeColorCue\(input\.value\)/,
+  'The same semantic classifier must name the selected paint for Color Cues');
+assert.match(runtimeSource, /cuesEnabled[\s\S]*`\$\{label\} colour\. \$\{colorName\}\.`[\s\S]*`\$\{label\} colour\.`/,
+  'TURN must expose its semantic color name only when Color Cues is enabled');
+assert.match(runtimeSource, /document\.addEventListener\('input', onPaintValueChange, true\)/,
+  'The Color Cue name must follow live native picker changes');
+assert.match(runtimeSource, /document\.addEventListener\('change', onPaintValueChange, true\)/,
+  'The Color Cue name must also follow committed native picker changes');
+assert.doesNotMatch(runtimeSource, /showPicker\(|\.click\(\)|focusNativeColorInput|isIOSFamily|label\.click\(/,
+  'TURN must stop trying to synthesize or forward activation of the native picker');
 assert.match(runtimeSource, /Color cues/);
 assert.match(runtimeSource, /turn:color-cues-changed/);
 assert.match(runtimeSource, /TRACK COLOR ·/);
 assert.doesNotMatch(runtimeSource, /setInterval|setAnimationLoop/,
-  'Color accessibility must remain event/DOM driven rather than add a polling loop');
+  'Color accessibility must remain event/DOM driven rather than add polling');
 
-assert.match(lotCssSource, /\.lot-color-input/);
-assert.match(lotCssSource, /\.lot-color-trigger/);
-assert.match(lotCssSource, /top: 50%/,
-  'The native input must remain aligned with the visible paint swatch rather than at the viewport origin');
-assert.match(lotCssSource, /right: 5px/,
-  'The native input focus geometry must match the visible trigger');
+assert.match(nativeInputCssSource, /\.lot-color-control \.lot-color-input/);
+assert.match(nativeInputCssSource, /opacity: 1 !important/,
+  'The native input itself must be visible as the color swatch');
+assert.match(nativeInputCssSource, /pointer-events: auto !important/,
+  'The native input itself must receive pointer interaction');
+assert.match(nativeInputCssSource, /\.lot-color-control \.lot-color-trigger[\s\S]*display: none !important/,
+  'The duplicate swatch must never flash before the runtime removes it');
+assert.match(nativeInputCssSource, /\.lot-color-input:focus-visible/,
+  'The real native input must retain a visible keyboard focus treatment');
+
 assert.match(cueCssSource, /data-turn-color-cues='on'/);
 assert.match(cueCssSource, /track-card-color-cue/);
 assert.match(cueCssSource, /lot-color-cue/);
 assert.match(cueCssSource, /repeating-linear-gradient/,
   'Color Cues must include a non-color pattern channel as well as text');
-assert.doesNotMatch(cueCssSource, /lot-color-native|lot-color-trigger/,
-  'Core paint-control styling must live with The Lot rather than in the optional Color Cues layer');
 
 assert.match(historySource, /1\.7\.0 r163/);
 assert.match(historySource, /accessibility patch/i);
@@ -127,4 +124,4 @@ assert.match(historySource, /CHROMATIC CAMOUFLAGE/);
 assert.match(historySource, /Color Cues/);
 assert.match(historySource, /VoiceOver/);
 
-console.log('TURN 1.7.0 r163 color accessibility regression passed.');
+console.log('TURN 1.7.0 r163 native color input and Color Cues regression passed.');
