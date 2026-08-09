@@ -37,6 +37,11 @@ assert.equal(
   `./garage/lot-track-select.js?build=${release.cacheKey}&revision=r163-native-html`,
   'Production must retain the track-first compatibility wrapper with the native HTML revision'
 );
+assert.equal(
+  imports['./garage/lot-accessibility-r118.js?build=20260729-r118'],
+  `./garage/lot-accessibility-r118.js?build=${release.cacheKey}&revision=r163-voiceover-first-lot-focus`,
+  'Production must bypass the cached Lot accessibility module for the first-entry VoiceOver focus fix'
+);
 
 assert.match(app, /lot-layout-r60\.css\?revision=r121-viewer-r122-fit-r128-super-sedan-notice-r129-race-button-fit/, 'The Super Sedan fit stylesheet must bypass the previous notice cache');
 assert.match(app, /lot-enhancement-runtime\.js\?revision=r121/, 'Production must load the route-independent Lot enhancer');
@@ -97,6 +102,10 @@ assert.match(accessibility, /aria-posinset/, 'Reordered radios must retain their
 assert.match(accessibility, /aria-setsize/, 'Reordered radios must retain the catalogue size');
 assert.match(accessibility, /attributeFilter: \['aria-checked'\]/, 'Selected-car semantics must follow live radio changes without polling');
 assert.doesNotMatch(accessibility, /setAttribute\('aria-activedescendant'/, 'A non-focusable radiogroup must not pretend to own active-descendant focus');
+assert.match(accessibility, /const lotTitle = screen\?\.querySelector\('#lot-title'\)/, 'The full-screen Lot route must expose its own focus handoff target');
+assert.match(accessibility, /if \(lotTitle && !screen\.contains\(document\.activeElement\)\)/, 'Lot entry focus must move only when focus is still outside the new route');
+assert.match(accessibility, /lotTitle\.tabIndex = -1/, 'The Lot heading must be programmatically focusable without joining normal tab order');
+assert.match(accessibility, /lotTitle\.focus\(\{ preventScroll: true \}\)/, 'The Lot focus handoff must not scroll or activate Race This Car');
 assert.match(accessibility, /Top speed/, 'Car descriptions must include top speed');
 assert.match(accessibility, /Acceleration/, 'Car descriptions must include acceleration');
 assert.match(accessibility, /Control/, 'Car descriptions must include control');
@@ -106,7 +115,7 @@ assert.match(accessibility, /Boost tank/, 'Car descriptions must include boost t
 assert.match(accessibility, /out of 5\./, 'Every described attribute must use the agreed out-of-five scale');
 assert.match(accessibility, /colors\.setAttribute\('aria-labelledby', paintHeading\.id\)/, 'The colour controls must have a useful accessible group name');
 assert.match(accessibility, /card\.setAttribute\('role', 'region'\)/, 'Selected-car information must remain a named navigable region');
-assert.doesNotMatch(accessibility, /setInterval|requestAnimationFrame|setAnimationLoop/, 'The accessibility enhancer must not add polling or animation work');
+assert.doesNotMatch(accessibility, /setInterval|setTimeout|requestAnimationFrame|setAnimationLoop/, 'The accessibility enhancer must not add timing workarounds, polling or animation work');
 
 assert.match(layoutCss, /\.lot-a11y-only \{[\s\S]*clip-path: inset\(50%\)/, 'Navigation headings and summaries must be visually hidden without leaving the accessibility tree');
 assert.match(layoutCss, /--lot-paint-rail-height: 54px/, 'Paint controls must use a compact dock to protect the 3D preview');
