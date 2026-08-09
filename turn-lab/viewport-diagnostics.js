@@ -15,30 +15,31 @@
   function readStore() {
     try {
       const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-      if (parsed && parsed.version === 2 && Array.isArray(parsed.sessions)) return parsed;
+      if (parsed?.version === 2 && Array.isArray(parsed.sessions)) return parsed;
     } catch (_) {}
     return { version: 2, sessions: [] };
   }
 
   function writeStore(store) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
-    } catch (_) {}
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); } catch (_) {}
   }
 
   const store = readStore();
-  const session = {
+  store.sessions.push({
     id: sessionId,
     startedAt: new Date().toISOString(),
     label: '',
     markedAt: '',
     markedAtMs: 0,
+    standalone:
+      document.documentElement.classList.contains('turn-standalone') ||
+      Boolean(window.matchMedia?.('(display-mode: standalone)').matches) ||
+      navigator.standalone === true,
     userAgent: navigator.userAgent || '',
     dpr: Number(window.devicePixelRatio) || 1,
     samples: [],
     mark: null
-  };
-  store.sessions.push(session);
+  });
   if (store.sessions.length > MAX_SESSIONS) {
     store.sessions.splice(0, store.sessions.length - MAX_SESSIONS);
   }
@@ -59,16 +60,16 @@
 
     unitProbe = document.createElement('div');
     unitProbe.id = 'turnLabViewportUnitProbe';
-    unitProbe.hidden = true;
     unitProbe.setAttribute('aria-hidden', 'true');
+    unitProbe.style.cssText = 'position:fixed;left:-10000px;top:-10000px;width:0;height:0;overflow:visible;visibility:hidden;pointer-events:none;';
     unitProbe.innerHTML = `
-      <i data-vh style="position:fixed;height:100vh;width:1px"></i>
-      <i data-dvh style="position:fixed;height:100dvh;width:1px"></i>
-      <i data-svh style="position:fixed;height:100svh;width:1px"></i>
-      <i data-lvh style="position:fixed;height:100lvh;width:1px"></i>
-      <i data-vw style="position:fixed;width:100vw;height:1px"></i>
-      <i data-dvw style="position:fixed;width:100dvw;height:1px"></i>
-      <i data-safe style="position:fixed;padding-top:env(safe-area-inset-top);padding-right:env(safe-area-inset-right);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left)"></i>`;
+      <i data-vh style="display:block;height:100vh;width:1px"></i>
+      <i data-dvh style="display:block;height:100dvh;width:1px"></i>
+      <i data-svh style="display:block;height:100svh;width:1px"></i>
+      <i data-lvh style="display:block;height:100lvh;width:1px"></i>
+      <i data-vw style="display:block;width:100vw;height:1px"></i>
+      <i data-dvw style="display:block;width:100dvw;height:1px"></i>
+      <i data-safe style="display:block;padding-top:env(safe-area-inset-top);padding-right:env(safe-area-inset-right);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left)"></i>`;
     document.body.appendChild(unitProbe);
     return unitProbe;
   }
@@ -77,18 +78,11 @@
     const probe = ensureUnitProbe();
     if (!probe) return null;
 
-    function height(name) {
-      return round(probe.querySelector(`[data-${name}]`)?.getBoundingClientRect().height || 0);
-    }
-
-    function width(name) {
-      return round(probe.querySelector(`[data-${name}]`)?.getBoundingClientRect().width || 0);
-    }
-
+    const box = (name) => probe.querySelector(`[data-${name}]`)?.getBoundingClientRect();
     const safeStyle = getComputedStyle(probe.querySelector('[data-safe]'));
     return {
-      h: [height('vh'), height('dvh'), height('svh'), height('lvh')],
-      w: [width('vw'), width('dvw')],
+      h: ['vh', 'dvh', 'svh', 'lvh'].map((name) => round(box(name)?.height || 0)),
+      w: ['vw', 'dvw'].map((name) => round(box(name)?.width || 0)),
       safe: [
         round(parseFloat(safeStyle.paddingTop)),
         round(parseFloat(safeStyle.paddingRight)),
@@ -99,11 +93,10 @@
   }
 
   function orientationSnapshot() {
-    const landscapeMedia = Boolean(window.matchMedia?.('(orientation: landscape)').matches);
     return {
       type: screen.orientation?.type || '',
       angle: Number(screen.orientation?.angle ?? window.orientation ?? 0) || 0,
-      media: landscapeMedia ? 'landscape' : 'portrait'
+      media: window.matchMedia?.('(orientation: landscape)').matches ? 'landscape' : 'portrait'
     };
   }
 
@@ -111,7 +104,6 @@
     const root = document.documentElement;
     const viewport = window.visualViewport;
     const production = globalThis.__turnPwaViewportDiagnostics;
-    const units = viewportUnitSnapshot();
 
     return {
       t: round(performance.now() - startedAt),
@@ -128,8 +120,9 @@
         round(viewport.offsetTop),
         round(viewport.scale, 3)
       ] : null,
-      units,
-      body: document.body ? rectFor('body') : null,
+      units: viewportUnitSnapshot(),
+      html: rectFor('html'),
+      body: rectFor('body'),
       game: rectFor('#game'),
       home: rectFor('.m8-home'),
       rotate: rectFor('.rotate-panel'),
@@ -146,23 +139,9 @@
     };
   }
 
-  function measurementSignature(snapshot) {
-    return JSON.stringify({
-      orientation: snapshot.orientation,
-      screen: snapshot.screen,
-      outer: snapshot.outer,
-      inner: snapshot.inner,
-      client: snapshot.client,
-      visual: snapshot.visual,
-      units: snapshot.units,
-      body: snapshot.body,
-      game: snapshot.game,
-      home: snapshot.home,
-      rotate: snapshot.rotate,
-      loading: snapshot.loading,
-      production: snapshot.production,
-      visibility: snapshot.visibility
-    });
+  function signature(snapshot) {
+    const { t, reason, ...measurements } = snapshot;
+    return JSON.stringify(measurements);
   }
 
   function saveSample(reason, { force = false } = {}) {
@@ -172,7 +151,7 @@
 
     const snapshot = currentSnapshot(reason);
     const latest = liveSession.samples.at(-1);
-    if (!force && latest && measurementSignature(latest) === measurementSignature(snapshot)) {
+    if (!force && latest && signature(latest) === signature(snapshot)) {
       latest.reason = `${latest.reason}|${reason}`;
       latest.t = snapshot.t;
     } else {
@@ -185,13 +164,8 @@
     updatePanel();
   }
 
-  function withinStartupWindow() {
-    return performance.now() - startedAt <= EVENT_WINDOW_MS;
-  }
-
   function captureStartupEvent(reason) {
-    if (!withinStartupWindow()) return;
-    saveSample(reason);
+    if (performance.now() - startedAt <= EVENT_WINDOW_MS) saveSample(reason);
   }
 
   for (const eventName of ['resize', 'orientationchange', 'pageshow', 'focus']) {
@@ -209,29 +183,23 @@
     setTimeout(() => saveSample(`startup+${delay}`), delay);
   }
 
-  function latestSnapshot() {
-    const liveStore = readStore();
-    const liveSession = liveStore.sessions.find((item) => item.id === sessionId);
-    return liveSession?.mark || liveSession?.samples.at(-1) || null;
+  function liveSession() {
+    return readStore().sessions.find((item) => item.id === sessionId) || null;
   }
 
   function compactSummary(snapshot) {
     if (!snapshot) return 'No samples yet.';
-    const units = snapshot.units;
     return [
       'SURGICAL RECORDER r2',
       `SESSION ${sessionId}`,
       `orientation: ${snapshot.orientation.type || snapshot.orientation.media} · ${snapshot.orientation.angle}° · ${snapshot.orientation.media}`,
-      `screen: ${snapshot.screen.join('×')}`,
-      `outer: ${snapshot.outer.join('×')}`,
-      `inner: ${snapshot.inner.join('×')}`,
-      `client: ${snapshot.client.join('×')}`,
+      `screen: ${snapshot.screen.join('×')} · outer: ${snapshot.outer.join('×')}`,
+      `inner: ${snapshot.inner.join('×')} · client: ${snapshot.client.join('×')}`,
       `visual: ${snapshot.visual ? `${snapshot.visual[0]}×${snapshot.visual[1]} scale ${snapshot.visual[4]}` : 'n/a'}`,
-      `viewport heights vh/dvh/svh/lvh: ${units ? units.h.join('/') : 'n/a'}`,
-      `safe insets T/R/B/L: ${units ? units.safe.join('/') : 'n/a'}`,
-      `#game: ${snapshot.game ? `${snapshot.game[0]}×${snapshot.game[1]}` : 'n/a'}`,
-      `.m8-home: ${snapshot.home ? `${snapshot.home[0]}×${snapshot.home[1]}` : 'n/a'}`,
-      `last sample: ${snapshot.reason} @ ${snapshot.t}ms`
+      `vh/dvh/svh/lvh: ${snapshot.units ? snapshot.units.h.join('/') : 'n/a'}`,
+      `safe T/R/B/L: ${snapshot.units ? snapshot.units.safe.join('/') : 'n/a'}`,
+      `#game: ${snapshot.game ? `${snapshot.game[0]}×${snapshot.game[1]}` : 'n/a'} · home: ${snapshot.home ? `${snapshot.home[0]}×${snapshot.home[1]}` : 'n/a'}`,
+      `last: ${snapshot.reason} @ ${snapshot.t}ms`
     ].join('\n');
   }
 
@@ -241,18 +209,19 @@
 
   function updatePanel() {
     if (!summary) return;
-    summary.textContent = compactSummary(latestSnapshot() || currentSnapshot('panel'));
+    const current = liveSession();
+    summary.textContent = compactSummary(current?.mark || current?.samples.at(-1) || currentSnapshot('panel'));
   }
 
   function markSession(label) {
     const liveStore = readStore();
-    const liveSession = liveStore.sessions.find((item) => item.id === sessionId);
-    if (!liveSession) return;
+    const current = liveStore.sessions.find((item) => item.id === sessionId);
+    if (!current) return;
 
-    liveSession.label = label;
-    liveSession.markedAt = new Date().toISOString();
-    liveSession.markedAtMs = round(performance.now() - startedAt);
-    liveSession.mark = currentSnapshot(`marked:${label}`);
+    current.label = label;
+    current.markedAt = new Date().toISOString();
+    current.markedAtMs = round(performance.now() - startedAt);
+    current.mark = currentSnapshot(`marked:${label}`);
     writeStore(liveStore);
 
     if (labButton) labButton.textContent = label === 'BAD' ? 'LAB BAD' : 'LAB GOOD';
@@ -283,42 +252,16 @@
   }
 
   function mostRecentMarkedSessions(sessions) {
-    const selected = [];
-    for (const label of ['GOOD', 'BAD']) {
-      const match = [...sessions].reverse().find((item) => item.label === label);
-      if (match) selected.push(match);
-    }
+    const selected = ['GOOD', 'BAD']
+      .map((label) => [...sessions].reverse().find((item) => item.label === label))
+      .filter(Boolean);
     return selected.sort((a, b) => String(a.startedAt).localeCompare(String(b.startedAt)));
   }
 
-  async function copyLog(status) {
-    const liveStore = readStore();
-    const results = mostRecentMarkedSessions(liveStore.sessions);
-    if (!results.length) {
-      status.textContent = 'Mark this launch GOOD or BAD first.';
-      return;
-    }
-
-    const payload = {
-      lab: 'TURN viewport surgical recorder r2',
-      productionBuild: globalThis.__TURN_BUILD__ || null,
-      copiedAt: new Date().toISOString(),
-      legend: {
-        rect: '[width,height,x,y,bottom]',
-        visual: '[width,height,offsetLeft,offsetTop,scale]',
-        unitsH: '[100vh,100dvh,100svh,100lvh]',
-        unitsW: '[100vw,100dvw]',
-        safe: '[top,right,bottom,left]',
-        production: '[width,height,innerWidth,innerHeight,visualWidth,visualHeight]'
-      },
-      results
-    };
-    const text = JSON.stringify(payload, null, 2);
-
+  async function copyText(text) {
     try {
       await navigator.clipboard.writeText(text);
-      status.textContent = `Copied ${results.map((item) => item.label).join(' + ')} result${results.length === 1 ? '' : 's'}.`;
-      return;
+      return true;
     } catch (_) {}
 
     const textarea = document.createElement('textarea');
@@ -331,7 +274,33 @@
     let copied = false;
     try { copied = document.execCommand('copy'); } catch (_) {}
     textarea.remove();
-    status.textContent = copied ? 'Copied surgical log.' : 'Copy failed.';
+    return copied;
+  }
+
+  async function copyLog(status) {
+    const results = mostRecentMarkedSessions(readStore().sessions);
+    if (!results.length) {
+      status.textContent = 'Mark this launch GOOD or BAD first.';
+      return;
+    }
+
+    const payload = {
+      lab: 'TURN viewport surgical recorder r2',
+      productionBuild: globalThis.__TURN_BUILD__ || null,
+      legend: {
+        rect: '[width,height,x,y,bottom]',
+        visual: '[width,height,offsetLeft,offsetTop,scale]',
+        unitsH: '[100vh,100dvh,100svh,100lvh]',
+        unitsW: '[100vw,100dvw]',
+        safe: '[top,right,bottom,left]',
+        production: '[width,height,innerWidth,innerHeight,visualWidth,visualHeight]'
+      },
+      results
+    };
+    const copied = await copyText(JSON.stringify(payload, null, 2));
+    status.textContent = copied
+      ? `Copied ${results.map((item) => item.label).join(' + ')} result${results.length === 1 ? '' : 's'}.`
+      : 'Copy failed.';
   }
 
   function clearLog(status) {
@@ -344,43 +313,9 @@
 
     const style = document.createElement('style');
     style.textContent = `
-      #turnLabDiagnosticsButton {
-        position: fixed;
-        z-index: 2147483646;
-        top: max(8px, env(safe-area-inset-top));
-        right: max(8px, env(safe-area-inset-right));
-        min-width: 72px;
-        min-height: 44px;
-        padding: 8px 10px;
-        border: 3px solid #08090a;
-        border-radius: 14px;
-        background: #ffd43b;
-        color: #08090a;
-        font: 900 13px/1 system-ui, sans-serif;
-        box-shadow: 4px 4px 0 #08090a;
-      }
-      #turnLabDiagnosticsPanel {
-        position: fixed;
-        z-index: 2147483647;
-        inset: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
-        overflow: auto;
-        padding: 16px;
-        border: 4px solid #08090a;
-        border-radius: 18px;
-        background: #fff8e8;
-        color: #08090a;
-        box-shadow: 8px 8px 0 #08090a;
-        font: 700 14px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace;
-      }
-      #turnLabDiagnosticsPanel[hidden] { display: none !important; }
-      #turnLabDiagnosticsPanel h2 { margin: 0 0 10px; font: 1000 24px/1 system-ui, sans-serif; }
-      #turnLabDiagnosticsPanel pre { white-space: pre-wrap; overflow-wrap: anywhere; }
-      #turnLabDiagnosticsPanel .turn-lab-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
-      #turnLabDiagnosticsPanel button { min-height: 44px; padding: 8px 12px; background: #ffd43b; color: #08090a; }
-      #turnLabDiagnosticsPanel [data-lab-bad] { background: #ff8fab; }
-      #turnLabDiagnosticsPanel [data-lab-good] { background: #8ce99a; }
-      #turnLabDiagnosticsPanel .turn-lab-status { min-height: 1.4em; margin: 8px 0 0; }
-    `;
+      #turnLabDiagnosticsButton{position:fixed;z-index:2147483646;top:max(8px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));min-width:72px;min-height:44px;padding:8px 10px;border:3px solid #08090a;border-radius:14px;background:#ffd43b;color:#08090a;font:900 13px/1 system-ui,sans-serif;box-shadow:4px 4px 0 #08090a}
+      #turnLabDiagnosticsPanel{position:fixed;z-index:2147483647;inset:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));overflow:auto;padding:16px;border:4px solid #08090a;border-radius:18px;background:#fff8e8;color:#08090a;box-shadow:8px 8px 0 #08090a;font:700 14px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace}
+      #turnLabDiagnosticsPanel[hidden]{display:none!important}#turnLabDiagnosticsPanel h2{margin:0 0 10px;font:1000 24px/1 system-ui,sans-serif}#turnLabDiagnosticsPanel pre{white-space:pre-wrap;overflow-wrap:anywhere}.turn-lab-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}#turnLabDiagnosticsPanel button{min-height:44px;padding:8px 12px;background:#ffd43b;color:#08090a}#turnLabDiagnosticsPanel [data-lab-bad]{background:#ff8fab}#turnLabDiagnosticsPanel [data-lab-good]{background:#8ce99a}.turn-lab-status{min-height:1.4em;margin:8px 0 0}`;
     document.head.appendChild(style);
 
     labButton = document.createElement('button');
@@ -407,8 +342,8 @@
         <button type="button" data-lab-clear>CLEAR HISTORY</button>
         <button type="button" data-lab-close>CLOSE</button>
       </div>
-      <p class="turn-lab-status" role="status" aria-live="polite"></p>
-    `;
+      <p class="turn-lab-status" role="status" aria-live="polite"></p>`;
+
     summary = panel.querySelector('[data-lab-summary]');
     const status = panel.querySelector('.turn-lab-status');
 
