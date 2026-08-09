@@ -83,7 +83,7 @@ assert.match(moduleSource, /maxLightness: 0\.85/);
 assert.match(moduleSource, /turn:lap-result/,
   'The state should be re-evaluated after a record can change');
 
-assert.match(indexSource, /TURN v1\.6\.0 · Build 2026\.08\.08-r162/);
+assert.match(indexSource, /TURN v1\.7\.0 · Build 2026\.08\.09-r163/);
 assert.match(indexSource, /catalog-chromatic-r183\.js/,
   'Production must route the achievement store and view through the Chromatic catalog');
 assert.match(indexSource, /trophy-road-chromatic-r183\.js/,
@@ -93,4 +93,4 @@ assert.match(indexSource, /chromatic-camouflage-r183\.js/,
 assert.doesNotMatch(indexSource, /airport-runway/,
   'The TURN NEXT Airport prototype must not enter the production TURN entry point');
 
-console.log('TURN production Chromatic Camouflage achievement regression passed.');
+console.log('TURN 1.7.0 production Chromatic Camouflage achievement regression passed.');
