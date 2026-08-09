@@ -14,6 +14,23 @@ import { describeColorCue } from '../accessibility/color-cues.js?revision=r163';
 
 const UNSELECTED_COLOR = new THREE.Color(0x313131);
 const VIEWER_INITIAL_YAW = Math.PI - 0.55;
+let paintControlSerial = 0;
+const NAMED_COLOR_PRESETS = Object.freeze([
+  ['Pink', '#ff70b4'],
+  ['Magenta', '#ff00ff'],
+  ['Red', '#d92d20'],
+  ['Orange', '#f28b39'],
+  ['Yellow', '#ffcc00'],
+  ['Yellow green', '#9acd32'],
+  ['Green', '#26cb00'],
+  ['Cyan', '#00aabb'],
+  ['Blue', '#2ab7ff'],
+  ['Violet', '#5e3c87'],
+  ['Brown', '#8b5a2b'],
+  ['Grey', '#777777'],
+  ['Black', '#08090a'],
+  ['White', '#f8f9fa']
+]);
 const CAR_DESCRIPTIONS = Object.freeze({
   convertible: 'A low, open-top sports car with a long bonnet and compact cabin.',
   classic: 'A small, upright classic car with rounded bodywork and a friendly shape.',
@@ -276,12 +293,24 @@ export function showTheLot({ initialSelection } = {}) {
     });
 
     function makeColorInput({ label, value, secondary = false, onInput }) {
-      const control = document.createElement('label');
+      const control = document.createElement('div');
       control.className = 'lot-color-control';
       control.dataset.paintLabel = label;
 
       const copy = document.createElement('span');
       copy.className = 'lot-color-copy';
+
+      const input = document.createElement('input');
+      input.type = 'color';
+      input.className = 'lot-color-input';
+      input.id = `turnPaintColor${++paintControlSerial}`;
+      input.value = secondary
+        ? normalizeVehicleSecondaryColor(value)
+        : normalizeVehicleColor(value);
+
+      const inputLabel = document.createElement('label');
+      inputLabel.className = 'lot-color-name';
+      inputLabel.htmlFor = input.id;
 
       const name = document.createElement('span');
       name.className = 'lot-color-label';
@@ -290,12 +319,13 @@ export function showTheLot({ initialSelection } = {}) {
       const cue = document.createElement('span');
       cue.className = 'turn-color-cue lot-color-cue';
 
-      const input = document.createElement('input');
-      input.type = 'color';
-      input.className = 'lot-color-input';
-      input.value = secondary
-        ? normalizeVehicleSecondaryColor(value)
-        : normalizeVehicleColor(value);
+      const named = document.createElement('select');
+      named.className = 'lot-color-preset';
+      named.setAttribute('aria-label', `Choose ${label} colour by name`);
+      named.append(new Option('BY NAME…', ''));
+      for (const [colorName, colorValue] of NAMED_COLOR_PRESETS) {
+        named.append(new Option(colorName.toUpperCase(), colorValue));
+      }
 
       const syncCue = () => {
         cue.textContent = `COLOR · ${describeColorCue(input.value).toUpperCase()}`;
@@ -306,7 +336,18 @@ export function showTheLot({ initialSelection } = {}) {
         onInput(input.value);
       });
 
-      copy.append(name, cue);
+      // Shipping iOS/WebKit can expose the native color value to VoiceOver but
+      // fail its Press action. A plain select provides a second native path; it
+      // does not replace, proxy or script activation of the color input.
+      named.addEventListener('change', () => {
+        if (!named.value) return;
+        input.value = named.value;
+        named.value = '';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+
+      inputLabel.append(name, cue);
+      copy.append(inputLabel, named);
       control.append(copy, input);
       syncCue();
       return control;

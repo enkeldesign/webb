@@ -43,23 +43,35 @@ assert.equal(saveColorCuesEnabled(false, storage), true);
 
 assert.equal(release.version, '1.7.0');
 assert.equal(release.id, '2026.08.09-r163');
-assert.match(indexSource, /garage\/lot-r10\.css\?build=20260809-r163-paint-basics/);
+assert.match(indexSource, /garage\/lot-r10\.css\?build=20260809-r163-named-color-fallback/);
+assert.match(indexSource, /lot-track-select\.js\?build=20260809-r163&revision=r163-named-color-fallback/);
 assert.match(indexSource, /color-accessibility-r163\.js\?build=20260809-r163-paint-basics/);
 assert.doesNotMatch(indexSource, /native-color-input-r163\.css/,
   'There must not be a second stylesheet whose job is to undo the paint-control stylesheet');
 assert.doesNotMatch(indexSource, /syncFixedLiveryRail|emergencyVehicleNames/,
   'Production index must not patch The Lot after render');
 
-assert.match(lotSource, /const control = document\.createElement\('label'\)/,
-  'The paint field must use an ordinary label around the native input');
 assert.match(lotSource, /input\.type = 'color'/,
-  'The visible paint swatch and interactive control must be the native input[type=color]');
+  'The visible paint swatch and interactive control must remain the native input[type=color]');
 assert.match(lotSource, /input\.className = 'lot-color-input'/);
-assert.match(lotSource, /control\.append\(copy, input\)/);
+assert.match(lotSource, /inputLabel\.htmlFor = input\.id/,
+  'The native color input must use a direct explicit label');
+assert.match(lotSource, /NAMED_COLOR_PRESETS/,
+  'The Lot must provide a small native named-color fallback while shipping WebKit cannot press the color input');
+assert.match(lotSource, /named\.className = 'lot-color-preset'/);
+assert.match(lotSource, /named\.setAttribute\('aria-label', `Choose \$\{label\} colour by name`\)/);
+for (const value of ['#ff70b4', '#ff00ff', '#f28b39', '#ffcc00', '#00aabb', '#5e3c87']) {
+  assert.match(lotSource, new RegExp(value.replace('#', '\\#')),
+    `Named-color fallback must include ${value}`);
+}
+assert.match(lotSource, /input\.value = named\.value[\s\S]*input\.dispatchEvent\(new Event\('input', \{ bubbles: true \}\)\)/,
+  'Named-color selection must feed the same native input event path as the system picker');
+assert.match(lotSource, /named\.value = ''/,
+  'The named-color select is an action fallback, not a second stored paint state');
 assert.match(lotSource, /cue\.textContent = `COLOR · \$\{describeColorCue\(input\.value\)\.toUpperCase\(\)\}`/,
   'Color Cues must use the shared broad semantic classifier');
 assert.doesNotMatch(lotSource, /lot-color-trigger|lot-color-native|openNativeColorPicker|focusNativeColorInput|isIOSFamily|showPicker\(|label\.click\(/,
-  'The Lot must not contain a second swatch or synthetic picker activation path');
+  'The Lot must not contain a duplicate swatch or synthetic picker activation path');
 assert.doesNotMatch(lotSource, /input\.setAttribute\('aria-label'/,
   'Color Cues should not replace the native input semantics with a scripted accessible name');
 assert.doesNotMatch(lotSource, /input\.setAttribute\('aria-hidden'|input\.tabIndex = -1/,
@@ -67,6 +79,8 @@ assert.doesNotMatch(lotSource, /input\.setAttribute\('aria-hidden'|input\.tabInd
 
 assert.match(lotCssSource, /\.lot-color-input \{[\s\S]*width: 38px[\s\S]*height: 28px[\s\S]*border: 2px solid var\(--ink\)/,
   'The native input must be styled directly as the visible swatch');
+assert.match(lotCssSource, /\.lot-color-preset \{/,
+  'The fallback must remain a plain native select rather than a custom menu');
 assert.doesNotMatch(lotCssSource, /\.lot-color-trigger|opacity: 0\.001/,
   'Core Lot CSS must not contain the retired hidden-input or duplicate-trigger treatment');
 const paintInputCss = lotCssSource.match(/\.lot-color-input \{[\s\S]*?\}/)?.[0] || '';
@@ -89,4 +103,4 @@ assert.match(historySource, /accessibility patch/i);
 assert.match(historySource, /CHROMATIC CAMOUFLAGE/);
 assert.match(historySource, /Color Cues/);
 
-console.log('TURN 1.7.0 r163 first-principles native color input and Color Cues regression passed.');
+console.log('TURN 1.7.0 r163 native color input, named fallback and Color Cues regression passed.');

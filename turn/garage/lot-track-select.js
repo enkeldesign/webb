@@ -1,4 +1,4 @@
-import { showTheLot as showOriginalLot } from './lot-r10.js?build=20260809-r163-paint-basics';
+import { showTheLot as showOriginalLot } from './lot-r10.js?build=20260809-r163-named-color-fallback';
 // Historical regression marker for the established compatibility wrapper:
 // lot-enhancement-runtime.js?revision=r121&build=20260731-r120
 import { enhanceLotNow } from './lot-enhancement-runtime.js?revision=r157&build=20260804-r157';
