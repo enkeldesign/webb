@@ -144,12 +144,12 @@ const imports = JSON.parse(importMapText).imports;
 const releaseTarget = (filePath) => `${filePath}?build=${release.cacheKey}`;
 
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
-assert.match(index, new RegExp(`\\.\\/garage\\/lot-r10\\.css\\?build=${release.cacheKey}`));
+assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260809-r163-native-html/);
 assert.match(index, new RegExp(`\\.\\/track-intro\\.css\\?build=${release.cacheKey}`));
 assert.match(index, new RegExp(`src="\\.\\/app\\.js\\?build=${release.cacheKey}-browser-consent(?:-[^"]+)?"`));
 assert.equal(
   imports['./garage/lot-r10.js?build=20260720-r19'],
-  `${releaseTarget('./garage/lot-track-select.js')}&revision=r163-named-color-fallback`
+  `${releaseTarget('./garage/lot-track-select.js')}&revision=r163-native-html`
 );
 assert.equal(imports['./ui/track-intro.js?build=20260725-r75'], releaseTarget('./ui/track-intro.js'));
 assert.equal(imports['./race/lap-system.js?build=20260720-r19'], releaseTarget('./race/lap-system-r86.js'));
@@ -161,12 +161,15 @@ assert.match(app, /lot-enhancement-runtime\.js\?revision=r121&trophy-road=r154/)
 assert.ok(app.indexOf('installLotEnhancementRuntime()') < app.indexOf("withBuild('./main.js')"));
 
 assert.match(lotWrapper, /showOriginalLot/);
+assert.match(lotWrapper, /lot-r10\.js\?build=20260809-r163-native-html/);
 assert.match(lotWrapper, /export async function showEnhancedLot/);
 assert.match(lotWrapper, /enhanceLotNow\(\)/);
 assert.match(lotWrapper, /await chooseTrackBeforeLot\(\)/);
 assert.match(lotWrapper, /track-manager\.js\?build=20260722-r52/);
 assert.doesNotMatch(lotWrapper, /installLotLayout|installLotStatLegend|installLotAccessibility/);
 assert.match(originalLot, /export function showTheLot/);
+assert.match(originalLot, /input\.type = 'color'/);
+assert.doesNotMatch(originalLot, /NAMED_COLOR_PRESETS|lot-color-preset|showPicker\(|label\.click\(/);
 
 assert.match(lotEnhancementRuntime, /ENHANCEMENT_ID = 'enhanced-lot-r121'/);
 assert.match(lotEnhancementRuntime, /TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r154-trophy-road-feedback'/);
@@ -187,14 +190,14 @@ assert.match(lotTrophyGate, /lot-selected-car-lock/);
 assert.match(lotTrophyGate, /showTrophyUnlockNotice/);
 assert.doesNotMatch(lotTrophyGate, /colors\.hidden|carPicker\.hidden/);
 
-assert.match(lotLayout, /viewbox\.appendChild\(colors\)/);
+assert.match(originalLot, /<section class="lot-viewbox lot-viewbox-with-paint">[\s\S]*<div class="lot-colors" aria-label="Choose car paint colours"><\/div>[\s\S]*<\/section>/);
+assert.doesNotMatch(lotLayout, /appendChild\(colors\)|removeAttribute\('aria-hidden'\)|lot-view-close|lot-view-open/);
 assert.match(lotLayout, /attributesHeading\.replaceChildren\(document\.createTextNode\('ATTRIBUTES'\)\)/);
-assert.match(lotLayout, /lot-viewbox-with-paint/);
 assert.match(lotLayoutCss, /\.lot-viewbox-with-paint[\s\S]*flex: 1 1 auto/);
 assert.match(lotLayoutCss, /min-height: clamp\(150px, 28vh, 230px\)/);
 assert.match(lotLayoutCss, /--lot-paint-rail-height: 54px/);
 assert.match(lotLayoutCss, /\.lot-viewbox-with-paint \.lot-view-host[\s\S]*inset: 0 0 var\(--lot-paint-rail-height\)/);
-assert.match(lotLayoutCss, /\.lot-view-close,[\s\S]*\.lot-view-open[\s\S]*display: none !important/);
+assert.doesNotMatch(lotLayoutCss, /\.lot-color-input|\.lot-color-preset/);
 assert.match(lotLayoutCss, /\.lot-secret-notice \{[\s\S]*background: #d9f5c2[\s\S]*border: 3px solid var\(--ink\)/);
 assert.match(lotLayoutCss, /\.lot-secret-notice\[hidden\][\s\S]*display: none/);
 assert.match(lotLayoutCss, /\.lot-secret-notice-chip[\s\S]*background: var\(--yellow\)/);
@@ -260,4 +263,4 @@ assert.match(easterEggUi, /notice\.setAttribute\('role', 'status'\)/);
 assert.match(easterEggUi, /notice\.setAttribute\('aria-live', 'polite'\)/);
 assert.match(easterEggUi, /card\.insertBefore\(notice, actions \|\| null\)/, 'The explanation must sit immediately before RACE THIS CAR');
 
-console.log(`TURN ${release.id} enhanced Lot route, Trophy Road gating, accessibility and garage setup passed.`);
+console.log(`TURN ${release.id} enhanced Lot route, Trophy Road gating, native paint and garage setup passed.`);
