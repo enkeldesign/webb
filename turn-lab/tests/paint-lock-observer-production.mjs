@@ -18,18 +18,25 @@ assert.match(paintGate, /observer\.observe\(picker,/,
   'Paint synchronization must observe the car picker rather than the whole Lot screen');
 assert.doesNotMatch(paintGate, /observer\.observe\(screen,/,
   'The lock presentation must not be inside the paint observer target');
-assert.match(syncBody, /setLockedInteraction\(locked, carId\)/,
-  'Paint synchronization must retain the compact rail and recolour its lock for the current car');
+assert.match(syncBody, /if \(locked\) ensureLockButton\(carId\);[\s\S]*else removeLockPresentation\(\)/,
+  'Paint synchronization must keep the compact lock control only while paint is actually locked');
 assert.doesNotMatch(syncBody, /lot-paint-lock[\s\S]*remove\(\);[\s\S]*if \(locked\)/,
-  'A synchronization pass must never remove and immediately recreate its own lock icon');
+  'A synchronization pass must never remove and immediately recreate its own lock control');
 assert.match(paintGate, /try \{[\s\S]*\} finally \{[\s\S]*syncing = false/,
   'The synchronization guard must always be released');
-assert.match(paintGate, /colors\.addEventListener\('click', handleLockedAreaClick\)/,
-  'Any tap in the locked paint rail must explain the Trophy Road requirement');
-assert.match(paintGate, /colors\.addEventListener\('keydown', handleLockedAreaKeydown\)/,
-  'The locked paint rail must expose the same explanation from the keyboard');
-assert.match(paintGate, /colors\.setAttribute\('role', 'button'\)/);
-assert.match(paintGate, /colors\.tabIndex = 0/);
+
+assert.doesNotMatch(paintGate, /colors\.addEventListener\(['"]click['"]/,
+  'The paint container must never be a click-listener ancestor of the native color input');
+assert.doesNotMatch(paintGate, /colors\.addEventListener\(['"]keydown['"]/,
+  'The paint container must not emulate button keyboard behavior');
+assert.doesNotMatch(paintGate, /colors\.setAttribute\('role', 'button'\)|colors\.tabIndex\s*=/,
+  'The paint group must keep its real group semantics instead of becoming a faux button');
+assert.match(paintGate, /button = document\.createElement\('button'\)/,
+  'Locked Paintjob feedback should use a real button');
+assert.match(paintGate, /button\.type = 'button'/);
+assert.match(paintGate, /button\.className = 'lot-paint-lock-button'/);
+assert.match(paintGate, /button\.addEventListener\('click', showLockedPaintInfo\)/,
+  'The lock explanation belongs directly to the lock button, not an ancestor of paint inputs');
 assert.match(paintGate, /lot-paint-lock-copy/);
 assert.match(paintGate, /<strong>PAINTJOB<\/strong>/);
 assert.doesNotMatch(paintGate, /<i>•<\/i>|<b>LOCKED<\/b>/,
@@ -41,12 +48,11 @@ assert.match(paintGate, /--lot-paint-lock-background/);
 assert.match(paintGate, /--lot-paint-lock-foreground/);
 assert.match(paintGate, /getVehicleDefaultColor\(carId\)/,
   'The locked swatch must represent the selected car factory colour');
-assert.doesNotMatch(paintGate, /document\.createElement\('button'\)[\s\S]*lot-paint-lock/,
-  'The compact lock must not create a nested oversized button');
+
 assert.match(paintCss, /\.lot-colors\.is-paint-locked[\s\S]*min-height: 54px/);
 assert.match(
   paintCss,
-  /\.lot-viewbox-with-paint \.lot-colors\.is-paint-locked \{[\s\S]*position: absolute;[\s\S]*bottom: 0;[\s\S]*grid-template-columns: minmax\(0, 1fr\) auto;/,
+  /\.lot-viewbox-with-paint \.lot-colors\.is-paint-locked \{[\s\S]*position: absolute;[\s\S]*bottom: 0;/,
   'The locked Paintjob treatment must occupy the reserved bottom rail rather than cover the 3D viewer'
 );
 assert.doesNotMatch(
@@ -54,6 +60,10 @@ assert.doesNotMatch(
   /position: relative/,
   'The generic locked state must not override the absolute bottom-rail placement'
 );
+const paintLockButtonRule = paintCss.match(/\.lot-paint-lock-button\s*\{([\s\S]*?)\}/)?.[1] || '';
+assert.ok(paintLockButtonRule, 'The real locked Paintjob button must have its own layout rule');
+assert.match(paintLockButtonRule, /grid-template-columns: minmax\(0, 1fr\) auto/);
+assert.match(paintLockButtonRule, /width: 100%/);
 const paintLockRule = paintCss.match(/\.lot-paint-lock\s*\{([\s\S]*?)\}/)?.[1] || '';
 assert.ok(paintLockRule, 'The compact paint lock must have its own CSS rule');
 assert.match(paintLockRule, /width: 36px/);
@@ -73,12 +83,12 @@ assert.match(lotGate, /if \(lastAnnouncedCarId\) dismissVisibleUnlockNotice\(\);
   'Leaving The Lot must not leave a vehicle lock notice behind');
 
 assert.match(lotRuntime, /lot-trophy-gate\.js\?revision=r162-dismiss-unlocked-car-toast/);
-assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r161-car-colour-lock/);
-assert.match(app, /trophy-road-r157\.css\?revision=r161-car-colour-lock/);
-assert.match(app, /lot-enhancement-runtime\.js\?revision=r121&trophy-road=r159&paint=r161-car-colour-lock&toast=r162-dismiss-unlocked-car/);
+assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r163-native-picker-parent-click/);
+assert.match(app, /trophy-road-r157\.css\?revision=r163-native-picker-parent-click/);
+assert.match(app, /lot-enhancement-runtime\.js\?revision=r163-native-picker-parent-click/);
 assert.match(
   index,
-  new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r176-bella-road-derived-zone`)
+  new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click`)
 );
 
-console.log('TURN Lot lock feedback and Paintjob rail regressions passed.');
+console.log('TURN Lot lock feedback and native paint ancestry regressions passed.');
