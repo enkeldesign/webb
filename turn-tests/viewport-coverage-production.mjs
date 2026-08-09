@@ -4,26 +4,41 @@ import fs from 'node:fs/promises';
 const [
   index,
   nextIndex,
+  labIndex,
   releaseSource,
   main,
   styles,
   usableViewport,
   productionManifestSource,
-  nextManifestSource
+  nextManifestSource,
+  labManifestSource,
+  labBootstrap,
+  labDiagnostics
 ] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn-lab/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/styles.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/pwa-usable-viewport-r181.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/site.webmanifest', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-next/site.webmanifest', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn-next/site.webmanifest', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn-lab/site.webmanifest', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn-lab/lab-bootstrap.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn-lab/viewport-diagnostics.js', import.meta.url), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
 const productionManifest = JSON.parse(productionManifestSource);
 const nextManifest = JSON.parse(nextManifestSource);
+const labManifest = JSON.parse(labManifestSource);
+
+function importMap(source) {
+  const text = source.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
+  assert.ok(text, 'Expected an import map');
+  return JSON.parse(text).imports;
+}
 
 assert.match(
   index,
@@ -89,4 +104,64 @@ assert.match(
   new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`)
 );
 
-console.log(`TURN ${release.id} usable iOS standalone viewport boundary passed.`);
+// TURN LAB is a deployed diagnostic shell around the exact current production runtime.
+assert.match(labIndex, /<base href="\/turn\/">/,
+  'TURN LAB must resolve all ordinary game assets from the current production TURN tree');
+assert.deepEqual(importMap(labIndex), importMap(index),
+  'TURN LAB must use the exact production import-map graph so viewport tests exercise current TURN code');
+assert.match(labIndex, new RegExp(`version: '${release.version.replaceAll('.', '\\.')}'`));
+assert.match(labIndex, new RegExp(`id: '${release.id.replaceAll('.', '\\.')}'`));
+assert.match(labIndex, new RegExp(`cacheKey: '${release.cacheKey}'`));
+assert.ok(
+  labIndex.indexOf('/turn-lab/lab-bootstrap.js') < labIndex.indexOf('/turn-lab/viewport-diagnostics.js'),
+  'LAB storage and standalone detection must exist before the flight recorder starts'
+);
+assert.ok(
+  labIndex.indexOf('/turn-lab/viewport-diagnostics.js') < labIndex.indexOf('pwa-usable-viewport-r181.js'),
+  'The flight recorder must observe the page before the production PWA viewport boundary mutates it'
+);
+assert.ok(
+  labIndex.indexOf('pwa-usable-viewport-r181.js') < labIndex.indexOf('app.js?build='),
+  'LAB must preserve the production PWA-boundary-before-runtime ordering'
+);
+
+assert.equal(labManifest.id, '/turn-lab/');
+assert.equal(labManifest.start_url, '/turn-lab/');
+assert.equal(labManifest.scope, '/turn-lab/');
+assert.equal(labManifest.display, 'standalone');
+assert.deepEqual(labManifest.display_override, ['standalone']);
+assert.equal(labManifest.orientation, 'landscape');
+
+assert.match(labBootstrap, /LOCAL_PREFIX = 'turn-lab:'/,
+  'LAB local storage must stay in its own namespace');
+assert.match(labBootstrap, /SESSION_PREFIX = 'turn-lab-session:'/,
+  'LAB session storage must stay in its own namespace');
+assert.doesNotMatch(labBootstrap, /seed|COPY_ONCE|turn-personal-rivals/,
+  'The fresh viewport lab must not seed or modify production TURN save data');
+assert.match(labBootstrap, /__turnLaunchReady/,
+  'LAB must preserve the production startup gate contract');
+
+for (const requiredDiagnostic of [
+  'screen.width',
+  'screen.height',
+  'window.innerHeight',
+  'root.clientHeight',
+  'window.visualViewport',
+  "rectFor('#game')",
+  "rectFor('.m8-home')",
+  "rectFor('.rotate-panel')",
+  "rectFor('#installGate')",
+  '__turnPwaViewportDiagnostics',
+  "markSession('BAD')",
+  "markSession('GOOD')",
+  'COLOR LAYERS',
+  'COPY LOG'
+]) {
+  assert.ok(labDiagnostics.includes(requiredDiagnostic), `TURN LAB recorder must include ${requiredDiagnostic}`);
+}
+assert.match(labDiagnostics, /MAX_SESSIONS = 8/,
+  'The recorder must retain several random good/bad cold launches for comparison');
+assert.match(labDiagnostics, /localStorage\.setItem\(STORAGE_KEY/,
+  'Viewport evidence must survive reloads and orientation cycles');
+
+console.log(`TURN ${release.id} usable iOS standalone viewport boundary and TURN LAB recorder passed.`);
