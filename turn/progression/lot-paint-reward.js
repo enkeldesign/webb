@@ -54,8 +54,6 @@ export function gateLotPaintNow(root = document.body) {
   const picker = screen.querySelector('.lot-car-picker');
   if (!colors || !raceButton || !picker) return () => {};
 
-  const originalRole = colors.getAttribute('role');
-  const originalTabIndex = colors.getAttribute('tabindex');
   let syncing = false;
   let lastCarId = selectedCarId(screen);
   let paintWasUnlocked = isPaintUnlocked();
@@ -83,60 +81,44 @@ export function gateLotPaintNow(root = document.body) {
     });
   }
 
-  function ensureLockLabel() {
-    let label = colors.querySelector('.lot-paint-lock-copy');
-    if (label) return label;
-    label = document.createElement('span');
-    label.className = 'lot-paint-lock-copy';
-    label.setAttribute('aria-hidden', 'true');
-    label.innerHTML = '<strong>PAINTJOB</strong>';
-    colors.prepend(label);
-    return label;
-  }
-
   function applyLockColour(icon, carId) {
     const bodyColour = getVehicleDefaultColor(carId);
     icon.style.setProperty('--lot-paint-lock-background', bodyColour);
     icon.style.setProperty('--lot-paint-lock-foreground', contrastingInk(bodyColour));
   }
 
-  function ensureLockIcon(carId) {
-    let icon = colors.querySelector('.lot-paint-lock');
-    if (!icon) {
-      icon = document.createElement('span');
+  function ensureLockButton(carId) {
+    let button = colors.querySelector('.lot-paint-lock-button');
+    if (!button) {
+      button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'lot-paint-lock-button';
+
+      const copy = document.createElement('span');
+      copy.className = 'lot-paint-lock-copy';
+      copy.innerHTML = '<strong>PAINTJOB</strong>';
+
+      const icon = document.createElement('span');
       icon.className = 'lot-paint-lock';
       icon.setAttribute('aria-hidden', 'true');
       icon.innerHTML = LOCK_ICON;
-      colors.append(icon);
+
+      button.append(copy, icon);
+      button.addEventListener('click', showLockedPaintInfo);
+      colors.prepend(button);
     }
-    applyLockColour(icon, carId);
-    return icon;
+
+    const threshold = reward()?.threshold || 500;
+    button.setAttribute(
+      'aria-label',
+      `Paintjob locked. Vehicle paint controls unlock at ${threshold} trophies on Trophy Road.`
+    );
+    applyLockColour(button.querySelector('.lot-paint-lock'), carId);
+    return button;
   }
 
   function removeLockPresentation() {
-    colors.querySelector('.lot-paint-lock-copy')?.remove();
-    colors.querySelector('.lot-paint-lock')?.remove();
-  }
-
-  function setLockedInteraction(locked, carId) {
-    if (locked) {
-      const threshold = reward()?.threshold || 500;
-      colors.setAttribute('role', 'button');
-      colors.tabIndex = 0;
-      colors.setAttribute(
-        'aria-label',
-        `Paintjob locked. Vehicle paint controls unlock at ${threshold} trophies on Trophy Road.`
-      );
-      ensureLockLabel();
-      ensureLockIcon(carId);
-      return;
-    }
-
-    removeLockPresentation();
-    if (originalRole == null) colors.removeAttribute('role');
-    else colors.setAttribute('role', originalRole);
-    if (originalTabIndex == null) colors.removeAttribute('tabindex');
-    else colors.setAttribute('tabindex', originalTabIndex);
+    colors.querySelector('.lot-paint-lock-button')?.remove();
   }
 
   function sync() {
@@ -161,10 +143,8 @@ export function gateLotPaintNow(root = document.body) {
         if (input) input.disabled = locked;
       }
 
-      setLockedInteraction(locked, carId);
-      if (!locked && car && !car.fixedLivery) {
-        colors.setAttribute('aria-label', 'Choose car paint colours');
-      }
+      if (locked) ensureLockButton(carId);
+      else removeLockPresentation();
 
       if (!paintWasUnlocked && paintUnlocked) {
         window.dispatchEvent(new CustomEvent('turn:paint-controls-unlocked'));
@@ -187,17 +167,6 @@ export function gateLotPaintNow(root = document.body) {
     attributeFilter: ['aria-checked']
   });
 
-  const handleLockedAreaClick = (event) => {
-    if (!colors.classList.contains('is-paint-locked')) return;
-    event.preventDefault();
-    showLockedPaintInfo();
-  };
-  const handleLockedAreaKeydown = (event) => {
-    if (!colors.classList.contains('is-paint-locked')) return;
-    if (event.key !== 'Enter' && event.key !== ' ') return;
-    event.preventDefault();
-    showLockedPaintInfo();
-  };
   const handleReward = sync;
   const handleStorage = (event) => {
     if (event.key === 'turn-achievements-v1') sync();
@@ -205,8 +174,6 @@ export function gateLotPaintNow(root = document.body) {
   window.addEventListener('turn:trophy-road-updated', handleReward);
   window.addEventListener('storage', handleStorage);
   raceButton.addEventListener('click', sync, { capture: true });
-  colors.addEventListener('click', handleLockedAreaClick);
-  colors.addEventListener('keydown', handleLockedAreaKeydown);
   sync();
 
   const release = () => {
@@ -214,8 +181,6 @@ export function gateLotPaintNow(root = document.body) {
     window.removeEventListener('turn:trophy-road-updated', handleReward);
     window.removeEventListener('storage', handleStorage);
     raceButton.removeEventListener('click', sync, { capture: true });
-    colors.removeEventListener('click', handleLockedAreaClick);
-    colors.removeEventListener('keydown', handleLockedAreaKeydown);
     removeLockPresentation();
     for (const control of colors.querySelectorAll('.lot-color-control')) {
       control.hidden = false;
@@ -223,10 +188,6 @@ export function gateLotPaintNow(root = document.body) {
       if (input) input.disabled = false;
     }
     colors.classList.remove('is-paint-locked');
-    if (originalRole == null) colors.removeAttribute('role');
-    else colors.setAttribute('role', originalRole);
-    if (originalTabIndex == null) colors.removeAttribute('tabindex');
-    else colors.setAttribute('tabindex', originalTabIndex);
     delete screen.dataset.turnPaintUnlocked;
     activeGates.delete(screen);
   };
