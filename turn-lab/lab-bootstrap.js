@@ -1,4 +1,58 @@
 (() => {
+  globalThis.__TURN_LAB__ = true;
+
+  const localStorageRef = window.localStorage;
+  const sessionStorageRef = window.sessionStorage;
+  const storageProto = Storage.prototype;
+  const nativeStorage = {
+    getItem: storageProto.getItem,
+    setItem: storageProto.setItem,
+    removeItem: storageProto.removeItem,
+    clear: storageProto.clear,
+    key: storageProto.key
+  };
+  const LOCAL_PREFIX = 'turn-lab:';
+  const SESSION_PREFIX = 'turn-lab-session:';
+
+  function prefixFor(storage) {
+    if (storage === localStorageRef) return LOCAL_PREFIX;
+    if (storage === sessionStorageRef) return SESSION_PREFIX;
+    return '';
+  }
+
+  storageProto.getItem = function getItem(key) {
+    const prefix = prefixFor(this);
+    return nativeStorage.getItem.call(this, prefix ? prefix + String(key) : key);
+  };
+  storageProto.setItem = function setItem(key, value) {
+    const prefix = prefixFor(this);
+    return nativeStorage.setItem.call(this, prefix ? prefix + String(key) : key, value);
+  };
+  storageProto.removeItem = function removeItem(key) {
+    const prefix = prefixFor(this);
+    return nativeStorage.removeItem.call(this, prefix ? prefix + String(key) : key);
+  };
+  storageProto.clear = function clear() {
+    const prefix = prefixFor(this);
+    if (!prefix) return nativeStorage.clear.call(this);
+    const keys = [];
+    for (let index = 0; index < this.length; index += 1) {
+      const key = nativeStorage.key.call(this, index);
+      if (key?.startsWith(prefix)) keys.push(key);
+    }
+    for (const key of keys) nativeStorage.removeItem.call(this, key);
+  };
+  storageProto.key = function key(index) {
+    const prefix = prefixFor(this);
+    if (!prefix) return nativeStorage.key.call(this, index);
+    const keys = [];
+    for (let cursor = 0; cursor < this.length; cursor += 1) {
+      const candidate = nativeStorage.key.call(this, cursor);
+      if (candidate?.startsWith(prefix)) keys.push(candidate.slice(prefix.length));
+    }
+    return keys[index] ?? null;
+  };
+
   const isStandalone =
     window.matchMedia?.('(display-mode: standalone)').matches ||
     window.matchMedia?.('(display-mode: fullscreen)').matches ||
