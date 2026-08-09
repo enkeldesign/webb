@@ -7,7 +7,7 @@
   "scope": "/turn-lab/",
   "display": "standalone",
   "display_override": ["standalone"],
-  "orientation": "landscape",
+  "orientation": "any",
   "background_color": "#08090a",
   "theme_color": "#08090a",
   "icons": [

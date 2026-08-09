@@ -130,7 +130,8 @@ assert.equal(labManifest.start_url, '/turn-lab/');
 assert.equal(labManifest.scope, '/turn-lab/');
 assert.equal(labManifest.display, 'standalone');
 assert.deepEqual(labManifest.display_override, ['standalone']);
-assert.equal(labManifest.orientation, 'landscape');
+assert.equal(labManifest.orientation, 'any',
+  'TURN LAB deliberately removes the landscape manifest lock for the real-device startup-orientation experiment');
 
 assert.match(labBootstrap, /LOCAL_PREFIX = 'turn-lab:'/,
   'LAB local storage must stay in its own namespace');
