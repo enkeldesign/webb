@@ -9,13 +9,29 @@ import {
   trackColorCue
 } from '../../turn/accessibility/color-cues.js';
 
-const [releaseSource, indexSource, runtimeSource, cueCssSource, lotSource, lotCssSource, historySource] = await Promise.all([
+const [
+  releaseSource,
+  indexSource,
+  runtimeSource,
+  cueCssSource,
+  lotSource,
+  lotCssSource,
+  layoutSource,
+  stylesSource,
+  drivePadCssSource,
+  manualSteeringCssSource,
+  historySource
+] = await Promise.all([
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/accessibility/color-accessibility-r163.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/accessibility/color-cues-r163.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/lot-layout-r60.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/styles.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/drive-pad.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/manual-steering.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/content/about-history.js', import.meta.url), 'utf8')
 ]);
 const release = JSON.parse(releaseSource);
@@ -43,52 +59,54 @@ assert.equal(saveColorCuesEnabled(false, storage), true);
 
 assert.equal(release.version, '1.7.0');
 assert.equal(release.id, '2026.08.09-r163');
-assert.match(indexSource, /garage\/lot-r10\.css\?build=20260809-r163-named-color-fallback/);
-assert.match(indexSource, /lot-track-select\.js\?build=20260809-r163&revision=r163-named-color-fallback/);
-assert.match(indexSource, /color-accessibility-r163\.js\?build=20260809-r163-paint-basics/);
-assert.doesNotMatch(indexSource, /native-color-input-r163\.css/,
-  'There must not be a second stylesheet whose job is to undo the paint-control stylesheet');
-assert.doesNotMatch(indexSource, /syncFixedLiveryRail|emergencyVehicleNames/,
-  'Production index must not patch The Lot after render');
+assert.match(indexSource, /styles\.css\?build=20260809-r163-native-html/);
+assert.match(indexSource, /garage\/lot-r10\.css\?build=20260809-r163-native-html/);
+assert.match(indexSource, /garage\/lot-layout-r60\.css\?build=20260809-r163-native-html/);
+assert.match(indexSource, /lot-track-select\.js\?build=20260809-r163&revision=r163-native-html/);
+assert.doesNotMatch(indexSource, /named-color-fallback|native-color-input-r163\.css/,
+  'Production must not load fallback or corrective paint layers');
 
 assert.match(lotSource, /input\.type = 'color'/,
-  'The visible paint swatch and interactive control must remain the native input[type=color]');
-assert.match(lotSource, /input\.className = 'lot-color-input'/);
+  'Vehicle paint must start with a real HTML color input');
 assert.match(lotSource, /inputLabel\.htmlFor = input\.id/,
-  'The native color input must use a direct explicit label');
-assert.match(lotSource, /NAMED_COLOR_PRESETS/,
-  'The Lot must provide a small native named-color fallback while shipping WebKit cannot press the color input');
-assert.match(lotSource, /named\.className = 'lot-color-preset'/);
-assert.match(lotSource, /named\.setAttribute\('aria-label', `Choose \$\{label\} colour by name`\)/);
-for (const value of ['#ff70b4', '#ff00ff', '#f28b39', '#ffcc00', '#00aabb', '#5e3c87']) {
-  assert.match(lotSource, new RegExp(value.replace('#', '\\#')),
-    `Named-color fallback must include ${value}`);
-}
-assert.match(lotSource, /input\.value = named\.value[\s\S]*input\.dispatchEvent\(new Event\('input', \{ bubbles: true \}\)\)/,
-  'Named-color selection must feed the same native input event path as the system picker');
-assert.match(lotSource, /named\.value = ''/,
-  'The named-color select is an action fallback, not a second stored paint state');
+  'The native color input must have a real explicit label');
+assert.match(lotSource, /input\.addEventListener\('input'/,
+  'Progressive enhancement must listen to the native input rather than replace activation');
 assert.match(lotSource, /cue\.textContent = `COLOR · \$\{describeColorCue\(input\.value\)\.toUpperCase\(\)\}`/,
-  'Color Cues must use the shared broad semantic classifier');
-assert.doesNotMatch(lotSource, /lot-color-trigger|lot-color-native|openNativeColorPicker|focusNativeColorInput|isIOSFamily|showPicker\(|label\.click\(/,
-  'The Lot must not contain a duplicate swatch or synthetic picker activation path');
-assert.doesNotMatch(lotSource, /input\.setAttribute\('aria-label'/,
-  'Color Cues should not replace the native input semantics with a scripted accessible name');
-assert.doesNotMatch(lotSource, /input\.setAttribute\('aria-hidden'|input\.tabIndex = -1/,
-  'The native input must remain in the normal accessibility and keyboard order');
+  'Color Cues may progressively add TURN’s broad semantic name');
+assert.doesNotMatch(lotSource, /NAMED_COLOR_PRESETS|lot-color-preset|BY NAME|document\.createElement\('select'\)/,
+  'The rejected named-color fallback must be gone');
+assert.doesNotMatch(lotSource, /lot-color-trigger|lot-color-native|showPicker\(|\.click\(\)|focusNativeColorInput|isIOSFamily|label\.click\(/,
+  'TURN must not proxy or synthesize native picker activation');
+assert.doesNotMatch(lotSource, /input\.className|input\.classList|input\.setAttribute\('aria-|input\.tabIndex/,
+  'The color input itself must not be restyled or have its accessibility semantics rewritten');
 
-assert.match(lotCssSource, /\.lot-color-input \{[\s\S]*width: 38px[\s\S]*height: 28px[\s\S]*border: 2px solid var\(--ink\)/,
-  'The native input must be styled directly as the visible swatch');
-assert.match(lotCssSource, /\.lot-color-preset \{/,
-  'The fallback must remain a plain native select rather than a custom menu');
-assert.doesNotMatch(lotCssSource, /\.lot-color-trigger|opacity: 0\.001/,
-  'Core Lot CSS must not contain the retired hidden-input or duplicate-trigger treatment');
-const paintInputCss = lotCssSource.match(/\.lot-color-input \{[\s\S]*?\}/)?.[0] || '';
-assert.doesNotMatch(paintInputCss, /pointer-events:\s*none|opacity:\s*0(?:\.0+)?/,
-  'The native paint input itself must remain visible and interactive');
+assert.match(lotSource, /<section class="lot-viewbox lot-viewbox-with-paint">[\s\S]*<div class="lot-colors" aria-label="Choose car paint colours"><\/div>[\s\S]*<\/section>/,
+  'Paint controls must be created in their final semantic DOM location');
+assert.match(lotSource, /lot-viewbox-head" aria-hidden="true"/);
+assert.match(lotSource, /lot-view-host" aria-hidden="true"/);
+assert.doesNotMatch(layoutSource, /appendChild\(colors\)|removeAttribute\('aria-hidden'\)|lot-view-close|lot-view-open/,
+  'The layout enhancer must not relocate paint or repair parent accessibility after render');
 
-assert.doesNotMatch(runtimeSource, /describeColorCue|lot-color-control|input\[type="color"\]|onPaintValueChange|replaceWith|removeAttribute\('aria-hidden'/,
-  'Color Cues runtime must not post-process paint controls');
+assert.doesNotMatch(lotCssSource, /\.lot-color-input|\.lot-color-preset|input\[type=['"]?color/,
+  'TURN CSS must leave the native color input appearance untouched');
+
+const universalBlock = stylesSource.match(/\*\s*\{[\s\S]*?\}/)?.[0] || '';
+const htmlBodyBlock = stylesSource.match(/html,\s*\nbody\s*\{[\s\S]*?\}/)?.[0] || '';
+const buttonBlock = stylesSource.match(/button\s*\{[\s\S]*?\}/)?.[0] || '';
+assert.doesNotMatch(universalBlock, /user-select|touch-action|-webkit-touch-callout|-webkit-tap-highlight-color/,
+  'Universal CSS must not suppress native interaction');
+assert.doesNotMatch(htmlBodyBlock, /touch-action:\s*none|user-select:\s*none/,
+  'The document root must not disable native touch or selection semantics');
+assert.doesNotMatch(buttonBlock, /touch-action:\s*none|user-select:\s*none|-webkit-touch-callout/,
+  'Generic controls must not inherit game-gesture suppression');
+assert.match(drivePadCssSource, /\.drive-pad[\s\S]*touch-action:\s*none/,
+  'Gesture suppression must remain local to the driving surface');
+assert.match(manualSteeringCssSource, /\.manual-steer[\s\S]*touch-action:\s*none/,
+  'Gesture suppression must remain local to manual steering');
+
+assert.doesNotMatch(runtimeSource, /describeColorCue|lot-color-control|input\[type="color"\]|onPaintValueChange|replaceWith/,
+  'The Color Cues runtime must not post-process paint controls');
 assert.match(runtimeSource, /Color cues/);
 assert.match(runtimeSource, /TRACK COLOR ·/);
 assert.doesNotMatch(runtimeSource, /setInterval|setAnimationLoop/);
@@ -98,9 +116,8 @@ assert.match(cueCssSource, /track-card-color-cue/);
 assert.match(cueCssSource, /lot-color-cue/);
 assert.match(cueCssSource, /repeating-linear-gradient/);
 
-assert.match(historySource, /1\.7\.0 r163/);
-assert.match(historySource, /accessibility patch/i);
-assert.match(historySource, /CHROMATIC CAMOUFLAGE/);
-assert.match(historySource, /Color Cues/);
+assert.match(historySource, /native HTML color input/i);
+assert.doesNotMatch(historySource, /native paint activation bridge|assistive-technology bridge/i,
+  'Current release history must not claim an activation bridge that no longer exists');
 
-console.log('TURN 1.7.0 r163 native color input, named fallback and Color Cues regression passed.');
+console.log('TURN 1.7.0 r163 HTML-first native color input and Color Cues regression passed.');

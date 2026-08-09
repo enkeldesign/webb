@@ -138,11 +138,6 @@
   background: var(--pink);
 }
 
-.lot-view-close,
-.lot-view-open {
-  display: none !important;
-}
-
 @media (max-height: 520px) {
   .lot-side {
     top: max(62px, calc(env(safe-area-inset-top) + 54px));
@@ -170,13 +165,7 @@
 
   .lot-viewbox-with-paint .lot-color-control {
     min-height: 35px;
-    grid-template-columns: minmax(0, 1fr) 34px;
-    padding: 3px 4px 3px 6px;
-  }
-
-  .lot-viewbox-with-paint .lot-color-input {
-    width: 34px;
-    height: 26px;
+    padding: 3px 6px;
   }
 
   .lot-viewbox-with-paint > small {
@@ -257,13 +246,7 @@
 
   .lot-viewbox-with-paint .lot-color-control {
     min-height: 33px;
-    grid-template-columns: minmax(0, 1fr) 32px;
-    padding: 3px 4px 3px 6px;
-  }
-
-  .lot-viewbox-with-paint .lot-color-input {
-    width: 32px;
-    height: 25px;
+    padding: 3px 6px;
   }
 
   .lot-viewbox-with-paint > small {

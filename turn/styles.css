@@ -20,10 +20,6 @@
 
 * {
   box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
 }
 
 html,
@@ -33,7 +29,6 @@ body {
   margin: 0;
   overflow: hidden;
   overscroll-behavior: none;
-  touch-action: none;
   background: var(--cyan);
 }
 
@@ -76,10 +71,6 @@ button {
   font: inherit;
   color: var(--ink);
   box-shadow: 5px 5px 0 var(--ink);
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-  touch-action: none;
 }
 
 button:active,
@@ -403,6 +394,9 @@ h1 {
   border-radius: 50%;
   font-size: clamp(0.68rem, 1.8vw, 0.95rem);
   text-transform: uppercase;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .brake { background: var(--pink); }

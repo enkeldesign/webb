@@ -146,19 +146,6 @@
   letter-spacing: 0.08em;
 }
 
-.lot-view-close {
-  width: 30px;
-  height: 30px;
-  min-height: 0;
-  padding: 0;
-  border-width: 2px;
-  border-radius: 50%;
-  background: var(--pink);
-  font-size: 1rem;
-  line-height: 1;
-  pointer-events: auto;
-}
-
 .lot-view-host,
 .lot-view-host canvas {
   position: absolute;
@@ -273,26 +260,21 @@
 }
 
 .lot-color-control {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 38px;
+  display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   min-height: 38px;
-  padding: 2px 5px 2px 7px;
+  padding: 4px 7px;
   border: 2px solid var(--ink);
   border-radius: 10px;
   background: var(--paper);
   box-shadow: 2px 2px 0 var(--ink);
 }
 
-.lot-color-copy,
 .lot-color-name {
   min-width: 0;
   display: grid;
   gap: 2px;
-}
-
-.lot-color-name {
   cursor: pointer;
 }
 
@@ -305,71 +287,20 @@
   white-space: nowrap;
 }
 
-.lot-color-preset {
-  width: 100%;
-  min-width: 0;
-  height: 18px;
-  min-height: 0;
-  margin: 0;
-  padding: 0 3px;
-  border: 1.5px solid var(--ink);
-  border-radius: 5px;
-  background: var(--paper);
-  color: var(--ink);
-  font: inherit;
-  font-size: 0.38rem;
-  font-weight: 900;
-  letter-spacing: 0.035em;
-}
-
-.lot-color-input {
-  width: 38px;
-  height: 28px;
-  min-height: 0;
-  margin: 0;
-  padding: 0;
-  border: 2px solid var(--ink);
-  border-radius: 7px;
-  background: transparent;
-  cursor: pointer;
-}
-
-.lot-color-input:focus-visible,
-.lot-color-preset:focus-visible {
-  outline: 3px solid var(--cyan);
-  outline-offset: 2px;
-}
-
 .lot-card-actions {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: 1fr;
   gap: 7px;
 }
 
-.lot-view-open,
 .lot-race {
   min-height: 42px;
+  width: 100%;
   padding: 7px 10px;
   border-radius: 12px;
+  background: var(--lime);
   font-size: clamp(0.58rem, 1.4vw, 0.8rem);
   letter-spacing: 0.04em;
-}
-
-.lot-view-open {
-  background: var(--cyan);
-}
-
-.lot-view-open[hidden] {
-  display: none;
-}
-
-.lot-race {
-  width: 100%;
-  background: var(--lime);
-}
-
-.lot-card-actions:has(.lot-view-open[hidden]) {
-  grid-template-columns: 1fr;
 }
 
 .lot-loading {
@@ -411,12 +342,8 @@
   .lot-stat > span { font-size: 0.43rem; }
   .lot-stat i { height: 6px; }
   .lot-colors { gap: 4px; margin: 6px 0 8px; }
-  .lot-color-input { width: 32px; height: 25px; }
   .lot-color-label { font-size: 0.42rem; }
-  .lot-color-preset { height: 17px; font-size: 0.34rem; }
-  .lot-color-copy,
   .lot-color-name { gap: 1px; }
-  .lot-view-open,
   .lot-race { min-height: 34px; }
 }
 
