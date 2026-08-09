@@ -59,7 +59,13 @@ const DEFAULT_SECONDARY_COLOR_BY_ID = Object.freeze({
   ambulance: Object.freeze({ fallback: '#d92d20', p3: Object.freeze([0.82, 0.08, 0.04]) })
 });
 
-const VISUAL_SIZE_MULTIPLIER_BY_ID = Object.freeze({ convertible: 0.6, classic: 0.6 });
+const VISUAL_SIZE_MULTIPLIER_BY_ID = Object.freeze({
+  convertible: 0.72,
+  classic: 0.72,
+  'vintage-racer': 0.75,
+  'toy-racer': 0.7,
+  police: 1.15
+});
 const FEATURED_VISUAL_SIZE_MULTIPLIER_BY_ID = Object.freeze({ 'monster-truck': 1.2 });
 const EMERGENCY_SERVICE_BY_ID = Object.freeze({ firetruck: 'firetruck', police: 'police', ambulance: 'ambulance' });
 const FIXED_LIVERY_IDS = new Set(Object.keys(EMERGENCY_SERVICE_BY_ID));
