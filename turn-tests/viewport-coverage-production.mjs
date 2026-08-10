@@ -28,7 +28,7 @@ const [
   fs.readFile(new URL('../turn-lab/site.webmanifest', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-lab/lab-bootstrap.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-lab/viewport-diagnostics.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-lab/viewport-repair-r3.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn-lab/viewport-repair-r6.js', import.meta.url), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -143,8 +143,8 @@ assert.doesNotMatch(labBootstrap, /seed|COPY_ONCE|turn-personal-rivals/,
   'The fresh viewport lab must not seed or modify production TURN save data');
 assert.match(labBootstrap, /__turnLaunchReady/,
   'LAB must preserve the production startup gate contract');
-assert.match(labBootstrap, /viewport-repair-r3\.js\?revision=r5-auto-watchdog/,
-  'LAB must load the cache-busted event-driven repair watchdog without modifying production TURN');
+assert.match(labBootstrap, /viewport-repair-r6\.js\?revision=r6-resume-watchdog/,
+  'LAB must load the cache-busted lifecycle repair watchdog without modifying production TURN');
 
 for (const requiredDiagnostic of [
   'screen.width',
@@ -169,7 +169,7 @@ assert.match(labDiagnostics, /MAX_SESSIONS = 8/,
 assert.match(labDiagnostics, /localStorage\.setItem\(STORAGE_KEY/,
   'Viewport evidence must survive reloads and orientation cycles');
 
-// The repair bench remains LAB-only. Automatic mode watches startup events and confirms a persistent BAD signature before pulsing viewport meta.
+// The repair bench remains LAB-only. Automatic mode watches both startup and later app lifecycle events.
 assert.doesNotThrow(() => new Function(labRepair), 'The LAB repair probe must remain valid JavaScript');
 for (const requiredRepair of [
   "measureHeight('100dvh')",
@@ -181,23 +181,30 @@ for (const requiredRepair of [
   'META_PULSE_MS = 120',
   'CHECKPOINTS_MS = Object.freeze([0, 80, 250, 650])',
   'AUTO_CONFIRM_MS = 90',
-  'AUTO_WATCHDOG_MS = 10000',
-  'AUTO_CHECKS_MS = Object.freeze([120, 240, 400, 650, 1000, 1600, 2500, 4000, 6000, 8000, 10000])',
+  'AUTO_COOLDOWN_MS = 1200',
+  'STARTUP_CHECKS_MS = Object.freeze([120, 240, 400, 650, 1000, 1600, 2500, 4000, 6000, 8000, 10000])',
+  'LIFECYCLE_SETTLE_MS = Object.freeze([0, 120, 350])',
   "snapshot(`auto-confirm:${reason}`)",
   "window.addEventListener('turn:runtime-ready', onWatchdogEvent)",
   "window.addEventListener('turn:home-ready', onWatchdogEvent)",
   "window.visualViewport?.addEventListener('resize', onWatchdogEvent",
+  "document.addEventListener('visibilitychange'",
+  "scheduleLifecycleChecks('visibility:visible')",
   "runMetaReflow({ trigger: 'auto' })",
   "meta.setAttribute('content', pulse)",
   "meta.setAttribute('content', original)",
   '__turnLabViewportRepairResult',
   '__turnLabViewportAutoRepairResult',
   "outcome: recovered ? 'RECOVERED' : 'STILL_BAD'",
+  'incidentArmed = true',
+  'performance.now() - lastAutoAttemptAt < AUTO_COOLDOWN_MS',
   'repairInFlight',
   'COPY REPAIR RESULT'
 ]) {
   assert.ok(labRepair.includes(requiredRepair), `TURN LAB repair bench must include ${requiredRepair}`);
 }
+assert.doesNotMatch(labRepair, /AUTO_WATCHDOG_MS|performance\.now\(\) - startedAt >/,
+  'Resume-time recovery must not expire just because the app has been alive longer than the cold-start window');
 assert.doesNotMatch(labRepair, /screen\.(?:width|height)/,
   'The repair experiment must never size content from physical screen dimensions');
 assert.match(labRepair, /if \(!hasBadSignature\(before\)\)/,
