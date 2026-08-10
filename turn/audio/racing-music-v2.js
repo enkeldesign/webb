@@ -2,13 +2,13 @@ const AudioContextClass = globalThis.AudioContext || globalThis.webkitAudioConte
 
 const MUSIC_VOLUME_STORAGE_KEY = 'turn-racing-music-volume-v1';
 const MUSIC_LAST_VOLUME_STORAGE_KEY = 'turn-racing-music-last-volume-v1';
-const DEFAULT_VOLUME = 70;
-const BPM = 140;
+const DEFAULT_VOLUME = 10;
+const BPM = 124;
 const STEPS_PER_BEAT = 4;
 const STEP_SECONDS = (60 / BPM) / STEPS_PER_BEAT;
 const LOOKAHEAD_MS = 25;
 const SCHEDULE_AHEAD_SECONDS = 0.12;
-const DESIGNED_MASTER_GAIN = 0.68;
+const DESIGNED_MASTER_GAIN = 0.56;
 const HOME_STYLE_ID = 'turn-racing-music-styles';
 
 const NOTE_INDEX = Object.freeze({
@@ -123,7 +123,6 @@ let installed = false;
 let context = null;
 let masterGain = null;
 let noiseBuffer = null;
-let bassDistortionCurve = null;
 let schedulerTimer = 0;
 let currentSection = 0;
 let currentStep = 0;
@@ -177,23 +176,11 @@ function makeGain(value = 1) {
   return new globalThis.GainNode(context, { gain: value });
 }
 
-function makeDistortionCurve(amount = 45) {
-  const samples = 2048;
-  const curve = new Float32Array(samples);
-  const deg = Math.PI / 180;
-  for (let index = 0; index < samples; index += 1) {
-    const x = index * 2 / samples - 1;
-    curve[index] = ((3 + amount) * x * 20 * deg) / (Math.PI + amount * Math.abs(x));
-  }
-  return curve;
-}
-
 function makeNoiseBuffer() {
   const buffer = context.createBuffer(1, context.sampleRate, context.sampleRate);
   const data = buffer.getChannelData(0);
   for (let index = 0; index < data.length; index += 1) {
-    const random = Math.random() * 2 - 1;
-    data[index] = Math.round(random * 10) / 10;
+    data[index] = Math.random() * 2 - 1;
   }
   return buffer;
 }
@@ -215,17 +202,16 @@ function ensureGraph() {
   }
 
   const compressor = context.createDynamicsCompressor();
-  compressor.threshold.value = -15;
-  compressor.knee.value = 8;
-  compressor.ratio.value = 5;
-  compressor.attack.value = 0.003;
-  compressor.release.value = 0.16;
+  compressor.threshold.value = -12;
+  compressor.knee.value = 18;
+  compressor.ratio.value = 2.5;
+  compressor.attack.value = 0.015;
+  compressor.release.value = 0.28;
 
   masterGain.connect(compressor);
   compressor.connect(context.destination);
 
   noiseBuffer = makeNoiseBuffer();
-  bassDistortionCurve = makeDistortionCurve(45);
   return true;
 }
 
@@ -244,84 +230,79 @@ function stopActiveSources() {
   activeSources.clear();
 }
 
-function scheduleGainEnvelope(gain, time, peak, releaseTime) {
+function scheduleGainEnvelope(gain, time, peak, releaseTime, attack = 0.018) {
   gain.setValueAtTime(0.0001, time);
-  gain.exponentialRampToValueAtTime(peak, time + 0.005);
+  gain.exponentialRampToValueAtTime(peak, time + attack);
   gain.exponentialRampToValueAtTime(0.0001, releaseTime);
 }
 
 function playLead(note, time) {
   if (!note) return;
   const hz = noteToFrequency(note);
-  const carrier = trackSource(context.createOscillator());
-  const modulator = trackSource(context.createOscillator());
-  const modulation = makeGain(hz * 0.9);
+  const body = trackSource(context.createOscillator());
+  const overtone = trackSource(context.createOscillator());
+  const bodyGain = makeGain(0.82);
+  const overtoneGain = makeGain(0.12);
   const amp = makeGain(0.0001);
-  if (!modulation || !amp) return;
+  if (!bodyGain || !overtoneGain || !amp) return;
   const filter = context.createBiquadFilter();
 
-  carrier.type = 'sine';
-  modulator.type = 'sine';
-  carrier.frequency.setValueAtTime(hz, time);
-  modulator.frequency.setValueAtTime(hz * 2.01, time);
-  modulation.gain.setValueAtTime(hz * 0.9, time);
-  modulation.gain.exponentialRampToValueAtTime(Math.max(1, hz * 0.15), time + 0.1);
+  body.type = 'triangle';
+  overtone.type = 'sine';
+  body.frequency.setValueAtTime(hz, time);
+  overtone.frequency.setValueAtTime(hz * 2, time);
 
   filter.type = 'lowpass';
-  filter.frequency.value = 7000;
-  filter.Q.value = 2;
-  scheduleGainEnvelope(amp.gain, time, 0.22, time + STEP_SECONDS * 0.9);
+  filter.frequency.value = 3200;
+  filter.Q.value = 0.45;
+  scheduleGainEnvelope(amp.gain, time, 0.18, time + STEP_SECONDS * 1.05, 0.022);
 
-  modulator.connect(modulation);
-  modulation.connect(carrier.frequency);
-  carrier.connect(filter);
+  body.connect(bodyGain);
+  overtone.connect(overtoneGain);
+  bodyGain.connect(filter);
+  overtoneGain.connect(filter);
   filter.connect(amp);
   amp.connect(masterGain);
 
-  carrier.start(time);
-  modulator.start(time);
-  carrier.stop(time + STEP_SECONDS);
-  modulator.stop(time + STEP_SECONDS);
+  body.start(time);
+  overtone.start(time);
+  body.stop(time + STEP_SECONDS * 1.08);
+  overtone.stop(time + STEP_SECONDS * 1.08);
 }
 
 function playBass(note, time) {
   if (!note) return;
   const hz = noteToFrequency(note);
-  const saw = trackSource(context.createOscillator());
-  const square = trackSource(context.createOscillator());
-  const sawGain = makeGain(0.55);
-  const squareGain = makeGain(0.25);
+  const body = trackSource(context.createOscillator());
+  const sub = trackSource(context.createOscillator());
+  const bodyGain = makeGain(0.64);
+  const subGain = makeGain(0.34);
   const amp = makeGain(0.0001);
-  if (!sawGain || !squareGain || !amp) return;
+  if (!bodyGain || !subGain || !amp) return;
   const filter = context.createBiquadFilter();
-  const distortion = context.createWaveShaper();
 
-  saw.type = 'sawtooth';
-  square.type = 'square';
-  saw.frequency.setValueAtTime(hz, time);
-  square.frequency.setValueAtTime(hz / 2, time);
+  body.type = 'triangle';
+  sub.type = 'sine';
+  body.frequency.setValueAtTime(hz, time);
+  sub.frequency.setValueAtTime(hz / 2, time);
 
   filter.type = 'lowpass';
-  filter.Q.value = 5;
-  filter.frequency.setValueAtTime(1700, time);
-  filter.frequency.exponentialRampToValueAtTime(300, time + STEP_SECONDS * 0.8);
+  filter.Q.value = 0.7;
+  filter.frequency.setValueAtTime(1050, time);
+  filter.frequency.exponentialRampToValueAtTime(280, time + STEP_SECONDS * 0.95);
+  scheduleGainEnvelope(amp.gain, time, 0.21, time + STEP_SECONDS * 1.02, 0.016);
 
-  distortion.curve = bassDistortionCurve;
-  distortion.oversample = '2x';
-  scheduleGainEnvelope(amp.gain, time, 0.25, time + STEP_SECONDS * 0.9);
-
-  saw.connect(sawGain);
-  square.connect(squareGain);
-  sawGain.connect(filter);
-  squareGain.connect(filter);
-  filter.connect(distortion);
-  distortion.connect(amp);
+  body.connect(bodyGain);
+  sub.connect(subGain);
+  bodyGain.connect(filter);
+  subGain.connect(filter);
+  filter.connect(amp);
   amp.connect(masterGain);
 
-  saw.start(time);
-  square.start(time);
-  saw.stop(time + STEP_SECONDS);
-  square.stop(time + STEP_SECONDS);
+  body.start(time);
+  sub.start(time);
+  body.stop(time + STEP_SECONDS * 1.05);
+  sub.stop(time + STEP_SECONDS * 1.05);
 }
 
 function playArp(note, time) {
@@ -331,71 +312,69 @@ function playArp(note, time) {
   if (!amp) return;
   const filter = context.createBiquadFilter();
 
-  oscillator.type = 'square';
+  oscillator.type = 'triangle';
   oscillator.frequency.setValueAtTime(noteToFrequency(note), time);
-  oscillator.detune.setValueAtTime(8, time);
-  oscillator.detune.linearRampToValueAtTime(0, time + 0.025);
 
-  filter.type = 'bandpass';
-  filter.frequency.value = 3500;
-  filter.Q.value = 0.7;
-  scheduleGainEnvelope(amp.gain, time, 0.065, time + STEP_SECONDS * 0.7);
+  filter.type = 'lowpass';
+  filter.frequency.value = 2300;
+  filter.Q.value = 0.35;
+  scheduleGainEnvelope(amp.gain, time, 0.036, time + STEP_SECONDS * 0.92, 0.012);
 
   oscillator.connect(filter);
   filter.connect(amp);
   amp.connect(masterGain);
   oscillator.start(time);
-  oscillator.stop(time + STEP_SECONDS * 0.75);
+  oscillator.stop(time + STEP_SECONDS * 0.95);
 }
 
 function playKick(time) {
   const oscillator = trackSource(context.createOscillator());
-  const amp = makeGain(0.7);
+  const amp = makeGain(0.48);
   if (!amp) return;
 
   oscillator.type = 'sine';
-  oscillator.frequency.setValueAtTime(150, time);
-  oscillator.frequency.exponentialRampToValueAtTime(42, time + 0.12);
-  amp.gain.setValueAtTime(0.7, time);
-  amp.gain.exponentialRampToValueAtTime(0.0001, time + 0.14);
+  oscillator.frequency.setValueAtTime(112, time);
+  oscillator.frequency.exponentialRampToValueAtTime(45, time + 0.16);
+  amp.gain.setValueAtTime(0.48, time);
+  amp.gain.exponentialRampToValueAtTime(0.0001, time + 0.18);
 
   oscillator.connect(amp);
   amp.connect(masterGain);
   oscillator.start(time);
-  oscillator.stop(time + 0.15);
+  oscillator.stop(time + 0.19);
 }
 
 function playSnare(time) {
   const source = trackSource(context.createBufferSource());
   const filter = context.createBiquadFilter();
-  const amp = makeGain(0.35);
+  const amp = makeGain(0.18);
   if (!amp) return;
 
   source.buffer = noiseBuffer;
   filter.type = 'bandpass';
-  filter.frequency.value = 1900;
-  filter.Q.value = 0.8;
-  amp.gain.setValueAtTime(0.35, time);
-  amp.gain.exponentialRampToValueAtTime(0.0001, time + 0.1);
+  filter.frequency.value = 1350;
+  filter.Q.value = 0.55;
+  amp.gain.setValueAtTime(0.18, time);
+  amp.gain.exponentialRampToValueAtTime(0.0001, time + 0.13);
 
   source.connect(filter);
   filter.connect(amp);
   amp.connect(masterGain);
   source.start(time);
-  source.stop(time + 0.11);
+  source.stop(time + 0.14);
 }
 
 function playHat(time, open = false) {
   const source = trackSource(context.createBufferSource());
   const filter = context.createBiquadFilter();
-  const amp = makeGain(open ? 0.13 : 0.08);
+  const amp = makeGain(open ? 0.045 : 0.026);
   if (!amp) return;
-  const duration = open ? 0.16 : 0.035;
+  const duration = open ? 0.18 : 0.055;
 
   source.buffer = noiseBuffer;
   filter.type = 'highpass';
-  filter.frequency.value = open ? 6000 : 7800;
-  amp.gain.setValueAtTime(open ? 0.13 : 0.08, time);
+  filter.frequency.value = open ? 4300 : 5200;
+  amp.gain.setValueAtTime(open ? 0.045 : 0.026, time);
   amp.gain.exponentialRampToValueAtTime(0.0001, time + duration);
 
   source.connect(filter);
@@ -453,7 +432,7 @@ function applyMasterVolume() {
     : 0;
   try {
     masterGain.gain.cancelScheduledValues(now);
-    masterGain.gain.setTargetAtTime(gain, now, 0.025);
+    masterGain.gain.setTargetAtTime(gain, now, 0.04);
   } catch (_) {
     masterGain.gain.value = gain;
   }
@@ -869,6 +848,7 @@ export function installRacingMusic({ home = document.querySelector('.m8-home') }
   const api = Object.freeze({
     bpm: BPM,
     arrangement: Object.freeze(['tune', 'tune', 'bridge']),
+    timbre: 'warm-v2',
     get volume() {
       return musicVolume;
     },

@@ -193,7 +193,7 @@ export async function installM8HomeFixedLayout() {
   installDriveByEarSpokenLabels(driveByEarTraining);
 
   const { installRacingMusic } = await import(
-    `/turn/audio/racing-music.js?build=${buildKey}-racing-music-v1`
+    `/turn/audio/racing-music-v2.js?build=${buildKey}-racing-music-warm-v2`
   );
   const racingMusic = installRacingMusic({ home });
 
