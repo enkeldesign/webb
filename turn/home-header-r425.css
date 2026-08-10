@@ -12,7 +12,7 @@ html .m8-home.m8-home-fixed-layout .m8-home-head {
 /* Keep the music control's full touch target, but align its visible label
    with the first (version/build) row of the metadata block. */
 html .m8-home.m8-home-fixed-layout .turn-music-home-toggle {
-  transform: translateY(calc(-1 * clamp(8px, 1.8vh, 14px)));
+  transform: translateY(clamp(-14px, -1.8vh, -8px));
 }
 
 @media (max-height: 560px) and (orientation: landscape) {
