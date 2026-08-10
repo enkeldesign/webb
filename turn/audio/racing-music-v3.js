@@ -121,21 +121,17 @@ const BRIDGE = Object.freeze({
   ])
 });
 
-// C — an eight-half-note hook over Em → C → G → B7.
-// `sustainLead` turns the nulls after each note into held time rather than silence.
-// The final D# resolves naturally into the opening E when the chorus repeats or T returns.
+// C — a four-bar flute-like hook over Em → C → G → B7.
+// Each written note owns a whole 4/4 bar: it stays level through beats 1–3,
+// then glides toward the next chorus pitch across beat 4.
 const CHORUS = Object.freeze({
   name: 'chorus',
   sustainLead: true,
   lead: Object.freeze([
-    'E6', null, null, null, null, null, null, null,
-    'G6', null, null, null, null, null, null, null,
-    'B6', null, null, null, null, null, null, null,
-    'G6', null, null, null, null, null, null, null,
-    'E6', null, null, null, null, null, null, null,
-    'D6', null, null, null, null, null, null, null,
-    'B5', null, null, null, null, null, null, null,
-    'D#6', null, null, null, null, null, null, null
+    'E6', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+    'G6', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+    'B6', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+    'D#6', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
   ]),
   bass: Object.freeze([
     'E2', null, null, null, 'B2', null, null, null,
@@ -282,6 +278,15 @@ function scheduleGainEnvelope(gain, time, peak, releaseTime, attack = 0.018) {
   gain.exponentialRampToValueAtTime(0.0001, releaseTime);
 }
 
+function scheduleFluteEnvelope(gain, time, peak, releaseTime) {
+  const attackEnd = Math.min(releaseTime - 0.08, time + 0.12);
+  const releaseStart = Math.max(attackEnd, releaseTime - 0.07);
+  gain.setValueAtTime(0.0001, time);
+  gain.linearRampToValueAtTime(peak, attackEnd);
+  gain.setValueAtTime(peak, releaseStart);
+  gain.exponentialRampToValueAtTime(0.0001, releaseTime);
+}
+
 function leadHoldSteps(section, step) {
   if (!section?.sustainLead || !section.lead[step]) return 1;
   let hold = 1;
@@ -289,33 +294,102 @@ function leadHoldSteps(section, step) {
   return hold;
 }
 
-function playLead(note, time, { holdSteps = 1, sustained = false } = {}) {
+function nextSustainedLeadNote(sectionIndex, step) {
+  const section = ARRANGEMENT[sectionIndex];
+  if (!section?.sustainLead) return null;
+  for (let index = step + 1; index < section.lead.length; index += 1) {
+    if (section.lead[index]) return section.lead[index];
+  }
+  const nextSection = ARRANGEMENT[(sectionIndex + 1) % ARRANGEMENT.length];
+  if (!nextSection?.sustainLead) return null;
+  return nextSection.lead.find(Boolean) || null;
+}
+
+function playFluteLead(note, nextNote, time, holdSteps) {
   if (!note) return;
-  // User-tuned lead transposition: two octaves below the written melody.
+  // User-tuned lead transposition remains two octaves below the written melody.
+  const hz = noteToFrequency(note) / 4;
+  const nextHz = nextNote ? noteToFrequency(nextNote) / 4 : null;
+  const duration = STEP_SECONDS * Math.max(1, holdSteps);
+  const endTime = time + duration;
+  const beatSeconds = STEP_SECONDS * STEPS_PER_BEAT;
+  const glideStart = Math.max(time + 0.2, endTime - beatSeconds);
+
+  const body = trackSource(context.createOscillator());
+  const overtone = trackSource(context.createOscillator());
+  const vibrato = trackSource(context.createOscillator());
+  const bodyGain = makeGain(0.92);
+  const overtoneGain = makeGain(0.07);
+  const vibratoGain = makeGain(0);
+  const amp = makeGain(0.0001);
+  if (!bodyGain || !overtoneGain || !vibratoGain || !amp) return;
+  const filter = context.createBiquadFilter();
+
+  body.type = 'sine';
+  overtone.type = 'sine';
+  vibrato.type = 'sine';
+  body.frequency.setValueAtTime(hz, time);
+  overtone.frequency.setValueAtTime(hz * 2, time);
+  vibrato.frequency.setValueAtTime(5.2, time);
+  vibratoGain.gain.setValueAtTime(0, time);
+  vibratoGain.gain.linearRampToValueAtTime(5.5, Math.min(endTime - 0.1, time + beatSeconds * 1.25));
+
+  if (nextHz && glideStart < endTime - 0.04) {
+    body.frequency.setValueAtTime(hz, glideStart);
+    body.frequency.linearRampToValueAtTime(nextHz, endTime - 0.025);
+    overtone.frequency.setValueAtTime(hz * 2, glideStart);
+    overtone.frequency.linearRampToValueAtTime(nextHz * 2, endTime - 0.025);
+  }
+
+  filter.type = 'lowpass';
+  filter.frequency.value = 2400;
+  filter.Q.value = 0.2;
+  scheduleFluteEnvelope(amp.gain, time, 0.18, endTime);
+
+  vibrato.connect(vibratoGain);
+  vibratoGain.connect(body.detune);
+  vibratoGain.connect(overtone.detune);
+  body.connect(bodyGain);
+  overtone.connect(overtoneGain);
+  bodyGain.connect(filter);
+  overtoneGain.connect(filter);
+  filter.connect(amp);
+  amp.connect(masterGain);
+
+  body.start(time);
+  overtone.start(time);
+  vibrato.start(time);
+  body.stop(endTime + 0.01);
+  overtone.stop(endTime + 0.01);
+  vibrato.stop(endTime + 0.01);
+}
+
+function playLead(note, time, { holdSteps = 1, sustained = false, nextNote = null } = {}) {
+  if (!note) return;
+  if (sustained) {
+    playFluteLead(note, nextNote, time, holdSteps);
+    return;
+  }
+
+  // User-tuned T/B lead transposition: two octaves below the written melody.
   const hz = noteToFrequency(note) / 4;
   const body = trackSource(context.createOscillator());
   const overtone = trackSource(context.createOscillator());
-  const bodyGain = makeGain(sustained ? 0.88 : 0.82);
-  const overtoneGain = makeGain(sustained ? 0.08 : 0.12);
+  const bodyGain = makeGain(0.82);
+  const overtoneGain = makeGain(0.12);
   const amp = makeGain(0.0001);
   if (!bodyGain || !overtoneGain || !amp) return;
   const filter = context.createBiquadFilter();
-  const duration = STEP_SECONDS * Math.max(1, holdSteps - (sustained ? 0.12 : 0));
+  const duration = STEP_SECONDS;
 
   body.type = 'triangle';
   overtone.type = 'sine';
   body.frequency.setValueAtTime(hz, time);
   overtone.frequency.setValueAtTime(hz * 2, time);
   filter.type = 'lowpass';
-  filter.frequency.value = sustained ? 2700 : 3200;
-  filter.Q.value = sustained ? 0.3 : 0.45;
-  scheduleGainEnvelope(
-    amp.gain,
-    time,
-    sustained ? 0.19 : 0.18,
-    time + duration,
-    sustained ? 0.075 : 0.022
-  );
+  filter.frequency.value = 3200;
+  filter.Q.value = 0.45;
+  scheduleGainEnvelope(amp.gain, time, 0.18, time + duration * 1.05, 0.022);
 
   body.connect(bodyGain);
   overtone.connect(overtoneGain);
@@ -325,8 +399,8 @@ function playLead(note, time, { holdSteps = 1, sustained = false } = {}) {
   amp.connect(masterGain);
   body.start(time);
   overtone.start(time);
-  body.stop(time + duration + 0.01);
-  overtone.stop(time + duration + 0.01);
+  body.stop(time + duration * 1.08);
+  overtone.stop(time + duration * 1.08);
 }
 
 function playBass(note, time) {
@@ -445,7 +519,8 @@ function scheduleStep(step, time) {
   const section = ARRANGEMENT[currentSection];
   playLead(section.lead[step], time, {
     holdSteps: leadHoldSteps(section, step),
-    sustained: section.sustainLead === true
+    sustained: section.sustainLead === true,
+    nextNote: section.sustainLead ? nextSustainedLeadNote(currentSection, step) : null
   });
   playBass(section.bass[step], time);
   playArp(section.arp[step], time);
@@ -776,7 +851,7 @@ export function installRacingMusic({ home = document.querySelector('.m8-home') }
   const api = Object.freeze({
     bpm: BPM,
     arrangement: Object.freeze(ARRANGEMENT.map((section) => section.name)),
-    timbre: 'warm-v3-sustained-chorus',
+    timbre: 'warm-v3-flute-legato-chorus',
     get volume() { return musicVolume; },
     get enabled() { return musicVolume > 0; },
     get playing() { return playing; },
