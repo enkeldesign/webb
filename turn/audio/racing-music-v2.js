@@ -238,7 +238,7 @@ function scheduleGainEnvelope(gain, time, peak, releaseTime, attack = 0.018) {
 
 function playLead(note, time) {
   if (!note) return;
-  const hz = noteToFrequency(note);
+  const hz = noteToFrequency(note) / 4;
   const body = trackSource(context.createOscillator());
   const overtone = trackSource(context.createOscillator());
   const bodyGain = makeGain(0.82);
