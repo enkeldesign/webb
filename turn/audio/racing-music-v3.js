@@ -121,28 +121,24 @@ const BRIDGE = Object.freeze({
   ])
 });
 
-// C — a melodic flute hook over Em → C → G → B7.
-// Most notes move every beat; selected hook tones breathe for two or three beats.
+// C — a short, articulated flute hook over Em → C → G → B7.
+// The sequencer grid is sixteenth notes, so alternating note/null slots make true eighth notes.
 const CHORUS = Object.freeze({
   name: 'chorus',
-  sustainLead: false,
+  leadVoice: 'flute',
   lead: Object.freeze([
-    // Em: E (2 beats) → G → B
-    'E6', null, null, null, null, null, null, null,
-    'G6', null, null, null,
-    'B6', null, null, null,
-    // C: G → E (3 beats)
-    'G6', null, null, null,
-    'E6', null, null, null, null, null, null, null, null, null, null, null,
-    // G: D → B → A → G
-    'D7', null, null, null,
-    'B6', null, null, null,
-    'A6', null, null, null,
-    'G6', null, null, null,
-    // B7: F# → A → D# (2 beats), resolving to E when C repeats
-    'F#6', null, null, null,
-    'A6', null, null, null,
-    'D#6', null, null, null, null, null, null, null
+    // Em — eight eighth notes
+    'E6', null, 'G6', null, 'B6', null, 'G6', null,
+    'E7', null, 'B6', null, 'G6', null, 'B6', null,
+    // C — eight eighth notes
+    'G6', null, 'E6', null, 'C7', null, 'E7', null,
+    'G7', null, 'E7', null, 'D7', null, 'C7', null,
+    // G — eight eighth notes
+    'D7', null, 'B6', null, 'G6', null, 'B6', null,
+    'D7', null, 'B6', null, 'A6', null, 'G6', null,
+    // B7 — eight eighth notes, ending on D# to pull back into E
+    'F#6', null, 'A6', null, 'B6', null, 'D#7', null,
+    'B6', null, 'A6', null, 'F#6', null, 'D#6', null
   ]),
   bass: Object.freeze([
     'E2', null, null, null, 'B2', null, null, null,
@@ -289,81 +285,31 @@ function scheduleGainEnvelope(gain, time, peak, releaseTime, attack = 0.018) {
   gain.exponentialRampToValueAtTime(0.0001, releaseTime);
 }
 
-function scheduleFluteEnvelope(gain, time, peak, releaseTime) {
-  const attackEnd = Math.min(releaseTime - 0.08, time + 0.1);
-  const releaseStart = Math.max(attackEnd, releaseTime - 0.06);
-  gain.setValueAtTime(0.0001, time);
-  gain.linearRampToValueAtTime(peak, attackEnd);
-  gain.setValueAtTime(peak, releaseStart);
-  gain.exponentialRampToValueAtTime(0.0001, releaseTime);
-}
-
-function leadHoldSteps(section, step) {
-  if (!section?.sustainLead || !section.lead[step]) return 1;
-  let hold = 1;
-  while (step + hold < section.lead.length && section.lead[step + hold] == null) hold += 1;
-  return hold;
-}
-
-function nextSustainedLeadNote(sectionIndex, step) {
-  const section = ARRANGEMENT[sectionIndex];
-  if (!section?.sustainLead) return null;
-  for (let index = step + 1; index < section.lead.length; index += 1) {
-    if (section.lead[index]) return section.lead[index];
-  }
-  const nextSection = ARRANGEMENT[(sectionIndex + 1) % ARRANGEMENT.length];
-  if (!nextSection?.sustainLead) return null;
-  return nextSection.lead.find(Boolean) || null;
-}
-
-function playFluteLead(note, nextNote, time, holdSteps) {
+function playFluteLead(note, time) {
   if (!note) return;
-  // Chorus flute sits one octave above the T/B lead transposition.
+  // Chorus flute stays one octave above the T/B lead transposition.
   const hz = noteToFrequency(note) / 2;
-  const nextHz = nextNote ? noteToFrequency(nextNote) / 2 : null;
-  const duration = STEP_SECONDS * Math.max(1, holdSteps);
+  // One eighth note = two sixteenth-note sequencer steps. Leave a tiny articulation gap.
+  const duration = STEP_SECONDS * 2 * 0.88;
   const endTime = time + duration;
-  const beatSeconds = STEP_SECONDS * STEPS_PER_BEAT;
-  // Long notes lean toward the next pitch across their final beat; short notes only connect briefly.
-  const glideWindow = holdSteps >= STEPS_PER_BEAT * 2
-    ? beatSeconds
-    : Math.min(STEP_SECONDS, duration * 0.3);
-  const glideStart = Math.max(time + 0.08, endTime - glideWindow);
 
   const body = trackSource(context.createOscillator());
   const overtone = trackSource(context.createOscillator());
-  const vibrato = trackSource(context.createOscillator());
   const bodyGain = makeGain(0.9);
   const overtoneGain = makeGain(0.04);
-  const vibratoGain = makeGain(0);
   const amp = makeGain(0.0001);
-  if (!bodyGain || !overtoneGain || !vibratoGain || !amp) return;
+  if (!bodyGain || !overtoneGain || !amp) return;
   const filter = context.createBiquadFilter();
 
   body.type = 'sine';
   overtone.type = 'sine';
-  vibrato.type = 'sine';
   body.frequency.setValueAtTime(hz, time);
   overtone.frequency.setValueAtTime(hz * 2, time);
-  vibrato.frequency.setValueAtTime(5.2, time);
-  vibratoGain.gain.setValueAtTime(0, time);
-  vibratoGain.gain.linearRampToValueAtTime(4.2, Math.min(endTime - 0.08, time + beatSeconds));
-
-  if (nextHz && glideStart < endTime - 0.04) {
-    body.frequency.setValueAtTime(hz, glideStart);
-    body.frequency.linearRampToValueAtTime(nextHz, endTime - 0.025);
-    overtone.frequency.setValueAtTime(hz * 2, glideStart);
-    overtone.frequency.linearRampToValueAtTime(nextHz * 2, endTime - 0.025);
-  }
-
   filter.type = 'lowpass';
   filter.frequency.value = 2400;
   filter.Q.value = 0.18;
-  scheduleFluteEnvelope(amp.gain, time, 0.07, endTime);
+  scheduleGainEnvelope(amp.gain, time, 0.07, endTime, 0.035);
 
-  vibrato.connect(vibratoGain);
-  vibratoGain.connect(body.detune);
-  vibratoGain.connect(overtone.detune);
   body.connect(bodyGain);
   overtone.connect(overtoneGain);
   bodyGain.connect(filter);
@@ -373,16 +319,14 @@ function playFluteLead(note, nextNote, time, holdSteps) {
 
   body.start(time);
   overtone.start(time);
-  vibrato.start(time);
   body.stop(endTime + 0.01);
   overtone.stop(endTime + 0.01);
-  vibrato.stop(endTime + 0.01);
 }
 
-function playLead(note, time, { holdSteps = 1, sustained = false, nextNote = null } = {}) {
+function playLead(note, time, { voice = 'lead' } = {}) {
   if (!note) return;
-  if (sustained) {
-    playFluteLead(note, nextNote, time, holdSteps);
+  if (voice === 'flute') {
+    playFluteLead(note, time);
     return;
   }
 
@@ -533,9 +477,7 @@ function playDrums(pattern, time) {
 function scheduleStep(step, time) {
   const section = ARRANGEMENT[currentSection];
   playLead(section.lead[step], time, {
-    holdSteps: leadHoldSteps(section, step),
-    sustained: section.sustainLead === true,
-    nextNote: section.sustainLead ? nextSustainedLeadNote(currentSection, step) : null
+    voice: section.leadVoice || 'lead'
   });
   playBass(section.bass[step], time);
   playArp(section.arp[step], time);
@@ -866,7 +808,7 @@ export function installRacingMusic({ home = document.querySelector('.m8-home') }
   const api = Object.freeze({
     bpm: BPM,
     arrangement: Object.freeze(ARRANGEMENT.map((section) => section.name)),
-    timbre: 'warm-v3-melodic-flute-chorus',
+    timbre: 'warm-v3-eighth-note-flute-chorus',
     get volume() { return musicVolume; },
     get enabled() { return musicVolume > 0; },
     get playing() { return playing; },
