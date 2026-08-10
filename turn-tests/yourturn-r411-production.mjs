@@ -12,14 +12,14 @@ const [
 ] = await Promise.all([
   fs.readFile(new URL('../yourturn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/race-controls-r411.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../yourturn/track-map-r411.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../yourturn/track-map-r417.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/r411.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/r411-race-controls.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(yourTurnIndex, /race-controls-r411\.js\?revision=r411/);
-assert.match(yourTurnIndex, /track-map-r411\.js\?revision=r411/);
+assert.match(yourTurnIndex, /race-controls-r417\.js\?revision=r417/);
+assert.match(yourTurnIndex, /track-map-r417\.js\?revision=r417/);
 assert.match(yourTurnIndex, /r411\.css\?revision=r411/);
 assert.match(turnIndex, /ui\/r411-race-controls\.js\?revision=r411/);
 
