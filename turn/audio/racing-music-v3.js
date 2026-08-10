@@ -121,17 +121,28 @@ const BRIDGE = Object.freeze({
   ])
 });
 
-// C — a four-bar flute-like hook over Em → C → G → B7.
-// Each written note owns a whole 4/4 bar: it stays level through beats 1–3,
-// then glides toward the next chorus pitch across beat 4.
+// C — a melodic flute hook over Em → C → G → B7.
+// Most notes move every beat; selected hook tones breathe for two or three beats.
 const CHORUS = Object.freeze({
   name: 'chorus',
   sustainLead: true,
   lead: Object.freeze([
-    'E6', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-    'G6', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-    'B6', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-    'D#6', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
+    // Em: E (2 beats) → G → B
+    'E6', null, null, null, null, null, null, null,
+    'G6', null, null, null,
+    'B6', null, null, null,
+    // C: G → E (3 beats)
+    'G6', null, null, null,
+    'E6', null, null, null, null, null, null, null, null, null, null, null,
+    // G: D → B → A → G
+    'D7', null, null, null,
+    'B6', null, null, null,
+    'A6', null, null, null,
+    'G6', null, null, null,
+    // B7: F# → A → D# (2 beats), resolving to E when C repeats
+    'F#6', null, null, null,
+    'A6', null, null, null,
+    'D#6', null, null, null, null, null, null, null
   ]),
   bass: Object.freeze([
     'E2', null, null, null, 'B2', null, null, null,
@@ -279,8 +290,8 @@ function scheduleGainEnvelope(gain, time, peak, releaseTime, attack = 0.018) {
 }
 
 function scheduleFluteEnvelope(gain, time, peak, releaseTime) {
-  const attackEnd = Math.min(releaseTime - 0.08, time + 0.12);
-  const releaseStart = Math.max(attackEnd, releaseTime - 0.07);
+  const attackEnd = Math.min(releaseTime - 0.08, time + 0.1);
+  const releaseStart = Math.max(attackEnd, releaseTime - 0.06);
   gain.setValueAtTime(0.0001, time);
   gain.linearRampToValueAtTime(peak, attackEnd);
   gain.setValueAtTime(peak, releaseStart);
@@ -307,19 +318,23 @@ function nextSustainedLeadNote(sectionIndex, step) {
 
 function playFluteLead(note, nextNote, time, holdSteps) {
   if (!note) return;
-  // User-tuned lead transposition remains two octaves below the written melody.
-  const hz = noteToFrequency(note) / 4;
-  const nextHz = nextNote ? noteToFrequency(nextNote) / 4 : null;
+  // Chorus flute sits one octave above the T/B lead transposition.
+  const hz = noteToFrequency(note) / 2;
+  const nextHz = nextNote ? noteToFrequency(nextNote) / 2 : null;
   const duration = STEP_SECONDS * Math.max(1, holdSteps);
   const endTime = time + duration;
   const beatSeconds = STEP_SECONDS * STEPS_PER_BEAT;
-  const glideStart = Math.max(time + 0.2, endTime - beatSeconds);
+  // Long notes lean toward the next pitch across their final beat; short notes only connect briefly.
+  const glideWindow = holdSteps >= STEPS_PER_BEAT * 2
+    ? beatSeconds
+    : Math.min(STEP_SECONDS, duration * 0.3);
+  const glideStart = Math.max(time + 0.08, endTime - glideWindow);
 
   const body = trackSource(context.createOscillator());
   const overtone = trackSource(context.createOscillator());
   const vibrato = trackSource(context.createOscillator());
-  const bodyGain = makeGain(0.92);
-  const overtoneGain = makeGain(0.07);
+  const bodyGain = makeGain(0.9);
+  const overtoneGain = makeGain(0.04);
   const vibratoGain = makeGain(0);
   const amp = makeGain(0.0001);
   if (!bodyGain || !overtoneGain || !vibratoGain || !amp) return;
@@ -332,7 +347,7 @@ function playFluteLead(note, nextNote, time, holdSteps) {
   overtone.frequency.setValueAtTime(hz * 2, time);
   vibrato.frequency.setValueAtTime(5.2, time);
   vibratoGain.gain.setValueAtTime(0, time);
-  vibratoGain.gain.linearRampToValueAtTime(5.5, Math.min(endTime - 0.1, time + beatSeconds * 1.25));
+  vibratoGain.gain.linearRampToValueAtTime(4.2, Math.min(endTime - 0.08, time + beatSeconds));
 
   if (nextHz && glideStart < endTime - 0.04) {
     body.frequency.setValueAtTime(hz, glideStart);
@@ -343,8 +358,8 @@ function playFluteLead(note, nextNote, time, holdSteps) {
 
   filter.type = 'lowpass';
   filter.frequency.value = 2400;
-  filter.Q.value = 0.2;
-  scheduleFluteEnvelope(amp.gain, time, 0.18, endTime);
+  filter.Q.value = 0.18;
+  scheduleFluteEnvelope(amp.gain, time, 0.105, endTime);
 
   vibrato.connect(vibratoGain);
   vibratoGain.connect(body.detune);
@@ -851,7 +866,7 @@ export function installRacingMusic({ home = document.querySelector('.m8-home') }
   const api = Object.freeze({
     bpm: BPM,
     arrangement: Object.freeze(ARRANGEMENT.map((section) => section.name)),
-    timbre: 'warm-v3-flute-legato-chorus',
+    timbre: 'warm-v3-melodic-flute-chorus',
     get volume() { return musicVolume; },
     get enabled() { return musicVolume > 0; },
     get playing() { return playing; },
