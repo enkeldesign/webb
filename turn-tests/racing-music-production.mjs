@@ -1,11 +1,17 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [homeLayout, music] = await Promise.all([
+const [index, app, homeLayout, music] = await Promise.all([
+  fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/audio/racing-music-v2.js', import.meta.url), 'utf8')
 ]);
 
+assert.match(index, /app\.js\?build=20260809-r163-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click-r420-music-warm/,
+  'The document must force a fresh app module for the music-v2 rollout');
+assert.match(app, /m8-home-fixed-layout\.js\?revision=m8\.9-track-title-alignment&trophy-road=r159&achievements=r166-bella-records&bella-rescue=r174-siren-zone&music=warm-v2/,
+  'The app must force a fresh Home layout module for the music-v2 rollout');
 assert.match(homeLayout, /audio\/racing-music-v2\.js\?build=\$\{buildKey\}-racing-music-warm-v2/,
   'Production Home must cache-bust and load the warmer TURN-only racing music module');
 assert.match(homeLayout, /installRacingMusic\(\{ home \}\)/,
