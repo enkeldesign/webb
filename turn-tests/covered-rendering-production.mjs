@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
+// This test is already part of the production regression workflow; keep the small
+// keyboard input contract in that same run without adding another CI workflow edge.
+await import('./qe-drive-controls-production.mjs');
+
 const [releaseSource, index, app, guard, selector, main] = await Promise.all([
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
