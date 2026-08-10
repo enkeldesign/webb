@@ -9,8 +9,8 @@ const [index, homeLayout, music] = await Promise.all([
 
 assert.match(
   index,
-  /"\/turn\/audio\/racing-music-v2\.js\?build=20260809-r163-racing-music-warm-v2": "\/turn\/audio\/racing-music-v3\.js\?revision=r422-flute-legato-chorus"/,
-  'The existing Home music import must resolve to a fresh flute-chorus URL without disturbing the Home layout'
+  /"\/turn\/audio\/racing-music-v2\.js\?build=20260809-r163-racing-music-warm-v2": "\/turn\/audio\/racing-music-v3\.js\?revision=r423-melodic-flute-chorus"/,
+  'The existing Home music import must resolve to a fresh melodic-flute URL without disturbing the Home layout'
 );
 assert.match(homeLayout, /audio\/racing-music-v2\.js\?build=\$\{buildKey\}-racing-music-warm-v2/,
   'The established Home lifecycle remains the single music installation point');
@@ -18,12 +18,12 @@ assert.match(homeLayout, /installRacingMusic\(\{ home \}\)/,
   'Racing music must remain attached to production Home rather than TURN NEXT');
 
 assert.match(music, /const BPM = 120/,
-  'The flute chorus must preserve the user-tuned 120 BPM tempo');
+  'The melodic flute chorus must preserve the user-tuned 120 BPM tempo');
 assert.match(music, /const DEFAULT_VOLUME = 50/,
-  'The flute chorus must preserve the user-tuned default volume');
-assert.match(music, /const hz = noteToFrequency\(note\) \/ 4/,
-  'The lead must preserve the user-tuned two-octave-down transposition');
-assert.match(music, /const hz = noteToFrequency\(note\) \/ 2/,
+  'The melodic flute chorus must preserve the user-tuned default volume');
+assert.match(music, /User-tuned T\/B lead transposition:[\s\S]*const hz = noteToFrequency\(note\) \/ 4/,
+  'The ordinary T/B lead must preserve the user-tuned two-octave-down transposition');
+assert.match(music, /User-tuned bass transposition:[\s\S]*const hz = noteToFrequency\(note\) \/ 2/,
   'The bass must preserve the user-tuned one-octave-down transposition');
 
 assert.match(music, /const CHORUS = Object\.freeze\(/,
@@ -32,8 +32,8 @@ assert.match(music, /name: 'chorus',[\s\S]*sustainLead: true/,
   'The chorus must explicitly opt into sustained lead notes');
 assert.match(
   music,
-  /'E6', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,[\s\S]*'G6', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,[\s\S]*'B6', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,[\s\S]*'D#6', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null/,
-  'Each chorus pitch must occupy a full sixteen-step 4/4 bar before the next written note'
+  /'E6', null, null, null, null, null, null, null,[\s\S]*'G6', null, null, null,[\s\S]*'B6', null, null, null,[\s\S]*'G6', null, null, null,[\s\S]*'E6', null, null, null, null, null, null, null, null, null, null, null,[\s\S]*'D7', null, null, null,[\s\S]*'B6', null, null, null,[\s\S]*'A6', null, null, null,[\s\S]*'G6', null, null, null,[\s\S]*'F#6', null, null, null,[\s\S]*'A6', null, null, null,[\s\S]*'D#6', null, null, null, null, null, null, null/,
+  'The chorus melody must mix one-beat movement with selected two- and three-beat sustained hook tones'
 );
 assert.match(music, /const ARRANGEMENT = Object\.freeze\(\[TUNE, TUNE, BRIDGE, TUNE, CHORUS, CHORUS\]\)/,
   'The form must remain T T B T C C so the chorus stays a scarce two-pass payoff');
@@ -41,23 +41,27 @@ assert.match(music, /const ARRANGEMENT = Object\.freeze\(\[TUNE, TUNE, BRIDGE, T
 assert.match(music, /function scheduleFluteEnvelope\(gain, time, peak, releaseTime\)/,
   'The chorus needs a dedicated flute envelope rather than stretching the punchy lead decay');
 assert.match(music, /gain\.setValueAtTime\(peak, releaseStart\)/,
-  'The flute envelope must hold its level until the very end instead of fading through beats two and three');
+  'The flute envelope must hold its level instead of decaying immediately');
 assert.match(music, /function nextSustainedLeadNote\(sectionIndex, step\)/,
   'The scheduler must know the destination pitch for chorus legato');
 assert.match(music, /if \(!nextSection\?\.sustainLead\) return null/,
   'The second chorus must not force a portamento into the returning punchy T section');
 assert.match(music, /function playFluteLead\(note, nextNote, time, holdSteps\)/,
   'Sustained chorus notes must use a dedicated flute-like voice');
-assert.match(music, /const beatSeconds = STEP_SECONDS \* STEPS_PER_BEAT/,
-  'The legato transition must be phrased in musical beats');
-assert.match(music, /const glideStart = Math\.max\(time \+ 0\.2, endTime - beatSeconds\)/,
-  'Pitch movement must begin on beat four after holding through beats one to three');
+assert.match(music, /Chorus flute sits one octave above the T\/B lead transposition\.[\s\S]*const hz = noteToFrequency\(note\) \/ 2/,
+  'The flute must sit one octave above the ordinary lead');
+assert.match(music, /const glideWindow = holdSteps >= STEPS_PER_BEAT \* 2[\s\S]*\? beatSeconds[\s\S]*: Math\.min\(STEP_SECONDS, duration \* 0\.3\)/,
+  'Long flute notes should spend their final beat leaning into the next pitch while short notes only connect briefly');
 assert.match(music, /body\.frequency\.linearRampToValueAtTime\(nextHz, endTime - 0\.025\)/,
-  'The flute must glide toward the next pitch during beat four');
+  'The flute must retain gentle legato movement toward the next pitch');
 assert.match(music, /body\.type = 'sine';[\s\S]*overtone\.type = 'sine';[\s\S]*vibrato\.type = 'sine'/,
-  'The sustained chorus should use a sine-rich flute timbre with gentle vibrato');
+  'The chorus should retain its sine-rich flute timbre with gentle vibrato');
 assert.match(music, /vibrato\.frequency\.setValueAtTime\(5\.2, time\)/,
-  'The held flute note should carry subtle natural vibrato');
+  'The flute should retain subtle natural vibrato');
+assert.match(music, /scheduleFluteEnvelope\(amp\.gain, time, 0\.105, endTime\)/,
+  'The higher flute must sit substantially lower in the mix than the previous 0.18 chorus peak');
+assert.match(music, /const overtoneGain = makeGain\(0\.04\)/,
+  'The octave-up flute should keep its bright overtone restrained');
 assert.match(music, /filter\.frequency\.value = 2400/,
   'The flute chorus should remain soft rather than bright and chiptune-like');
 
@@ -90,6 +94,6 @@ assert.match(music, /label\.innerHTML = '<strong>Music volume<\/strong><small>OF
 assert.match(music, /labels\.innerHTML = '<span>OFF<\/span><span>100%<\/span>'/);
 assert.match(music, /arrangement: Object\.freeze\(ARRANGEMENT\.map\(\(section\) => section\.name\)\)/,
   'Runtime diagnostics must expose the actual T/T/B/T/C/C form');
-assert.match(music, /timbre: 'warm-v3-flute-legato-chorus'/);
+assert.match(music, /timbre: 'warm-v3-melodic-flute-chorus'/);
 
-console.log('TURN T/T/B/T/C/C flute-legato chorus, user-tuned tempo/transposition, and music controls regression passed.');
+console.log('TURN T/T/B/T/C/C melodic flute chorus, preserved tuning, and music controls regression passed.');
