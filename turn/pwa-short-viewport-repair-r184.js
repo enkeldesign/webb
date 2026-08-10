@@ -55,6 +55,8 @@ function hasBadSignature(sample) {
 }
 
 function homeIsUsable(home) {
+  const root = document.documentElement;
+  if (!root.classList.contains('turn-home-ready')) return false;
   if (!home?.isConnected || document.visibilityState !== 'visible') return false;
   const style = getComputedStyle(home);
   const rect = home.getBoundingClientRect();
