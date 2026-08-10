@@ -143,8 +143,8 @@ assert.doesNotMatch(labBootstrap, /seed|COPY_ONCE|turn-personal-rivals/,
   'The fresh viewport lab must not seed or modify production TURN save data');
 assert.match(labBootstrap, /__turnLaunchReady/,
   'LAB must preserve the production startup gate contract');
-assert.match(labBootstrap, /viewport-repair-r3\.js\?revision=r4-auto-repair/,
-  'LAB must load the cache-busted automatic repair experiment without modifying production TURN');
+assert.match(labBootstrap, /viewport-repair-r3\.js\?revision=r5-auto-watchdog/,
+  'LAB must load the cache-busted event-driven repair watchdog without modifying production TURN');
 
 for (const requiredDiagnostic of [
   'screen.width',
@@ -169,7 +169,7 @@ assert.match(labDiagnostics, /MAX_SESSIONS = 8/,
 assert.match(labDiagnostics, /localStorage\.setItem\(STORAGE_KEY/,
   'Viewport evidence must survive reloads and orientation cycles');
 
-// The repair bench remains LAB-only. Automatic mode requires two consecutive known-BAD measurements.
+// The repair bench remains LAB-only. Automatic mode watches startup events and confirms a persistent BAD signature before pulsing viewport meta.
 assert.doesNotThrow(() => new Function(labRepair), 'The LAB repair probe must remain valid JavaScript');
 for (const requiredRepair of [
   "measureHeight('100dvh')",
@@ -180,8 +180,13 @@ for (const requiredRepair of [
   'TRY VIEWPORT REFLOW',
   'META_PULSE_MS = 120',
   'CHECKPOINTS_MS = Object.freeze([0, 80, 250, 650])',
-  'AUTO_CHECKS_MS = Object.freeze([180, 320, 600, 1000, 1600])',
-  'consecutiveBadChecks < 2',
+  'AUTO_CONFIRM_MS = 90',
+  'AUTO_WATCHDOG_MS = 10000',
+  'AUTO_CHECKS_MS = Object.freeze([120, 240, 400, 650, 1000, 1600, 2500, 4000, 6000, 8000, 10000])',
+  "snapshot(`auto-confirm:${reason}`)",
+  "window.addEventListener('turn:runtime-ready', onWatchdogEvent)",
+  "window.addEventListener('turn:home-ready', onWatchdogEvent)",
+  "window.visualViewport?.addEventListener('resize', onWatchdogEvent",
   "runMetaReflow({ trigger: 'auto' })",
   "meta.setAttribute('content', pulse)",
   "meta.setAttribute('content', original)",
