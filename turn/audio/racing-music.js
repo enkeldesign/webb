@@ -145,7 +145,9 @@ function clamp(value, min, max, fallback = min) {
 
 function readStoredNumber(key, fallback) {
   try {
-    const value = Number(globalThis.localStorage?.getItem(key));
+    const stored = globalThis.localStorage?.getItem(key);
+    if (stored == null || stored === '') return fallback;
+    const value = Number(stored);
     return Number.isFinite(value) ? clamp(value, 0, 100, fallback) : fallback;
   } catch (_) {
     return fallback;
