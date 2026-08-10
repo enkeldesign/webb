@@ -119,6 +119,7 @@ assert.match(css, /place-items: center/, 'Drive-zone labels must be vertically a
 assert.match(css, /content: "LEAVE"/, 'Boost lock hint must explain that leaving the Boost zone re-arms it');
 assert.match(css, /\.drive-pad \.drive-brake-zone \{/, 'Brake and Reverse must be styled as an internal drive-pad zone');
 assert.match(css, /\.drive-brake-zone\.is-active/, 'Brake must have visible active feedback');
+assert.match(gameplayCss, /\.boost-hud i \{[\s\S]*box-shadow: 3px 0 0 var\(--ink\);/, 'Boost charge must have a high-contrast ink edge at the live fill level');
 assert.match(gameplayCss, /\.boost-hud\.is-boost-full-flash/, 'Boost HUD must visibly react when recharge reaches full capacity');
 assert.match(gameplayCss, /\.boost-hud\.is-boost-empty-flash/, 'Boost HUD must react distinctly when the tank becomes empty');
 assert.match(gameplayCss, /@keyframes turn-boost-full-flash/, 'Full boost feedback must have its own animation');
