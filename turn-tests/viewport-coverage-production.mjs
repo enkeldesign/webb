@@ -214,4 +214,6 @@ assert.match(labRepair, /if \(!hasBadSignature\(before\)\)/,
 assert.match(labRepair, /if \(repairInFlight \|\| autoConfirmationTimer \|\| !document\.body \|\| !autoAllowed\(\)\) return;/,
   'Automatic repair must stay out of cold-start loading until Home has actually initialized');
 
+await import('./short-viewport-repair-production.mjs');
+
 console.log(`TURN ${release.id} usable iOS standalone viewport boundary and TURN LAB recorder/repair bench passed.`);
