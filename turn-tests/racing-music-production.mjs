@@ -29,7 +29,7 @@ assert.match(music, /if \(shouldPlay\(\)\) void startPlayback/,
   'The desired music state must be ON as soon as the Home interface is available');
 
 assert.match(music, /className = 'turn-music-home-toggle'/);
-assert.match(music, /`<span>MUSIC \$\{action\.toUpperCase\(\)\}<\/span>`/,
+assert.match(music, /MUSIC \$\{action\.toUpperCase\(\)\}/,
   'The Home header control must expose MUSIC OFF while playing and MUSIC ON while disabled');
 assert.match(music, /setAttribute\('aria-label', `Turn music \$\{action\}`\)/,
   'The visible toggle action must have an explicit accessible name');
