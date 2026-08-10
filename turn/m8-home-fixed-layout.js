@@ -192,6 +192,11 @@ export async function installM8HomeFixedLayout() {
   const driveByEarTraining = await installDriveByEarTraining(globalThis.__turnRuntime);
   installDriveByEarSpokenLabels(driveByEarTraining);
 
+  const { installRacingMusic } = await import(
+    `/turn/audio/racing-music.js?build=${buildKey}-racing-music-v1`
+  );
+  const racingMusic = installRacingMusic({ home });
+
   globalThis.__turnHomeLayout = Object.freeze({
     id: LAYOUT_ID,
     home,
@@ -206,7 +211,8 @@ export async function installM8HomeFixedLayout() {
     secretAchievements,
     achievementChallengeExpansion,
     trophyRoadFeedback,
-    driveByEarTraining
+    driveByEarTraining,
+    racingMusic
   });
   return globalThis.__turnHomeLayout;
 }
