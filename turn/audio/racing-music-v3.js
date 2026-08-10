@@ -2,7 +2,7 @@ const AudioContextClass = globalThis.AudioContext || globalThis.webkitAudioConte
 
 const MUSIC_VOLUME_STORAGE_KEY = 'turn-racing-music-volume-v1';
 const MUSIC_LAST_VOLUME_STORAGE_KEY = 'turn-racing-music-last-volume-v1';
-const DEFAULT_VOLUME = 50;
+const DEFAULT_VOLUME = 25;
 const BPM = 120;
 const STEPS_PER_BEAT = 4;
 const STEP_SECONDS = (60 / BPM) / STEPS_PER_BEAT;
@@ -125,7 +125,7 @@ const BRIDGE = Object.freeze({
 // Most notes move every beat; selected hook tones breathe for two or three beats.
 const CHORUS = Object.freeze({
   name: 'chorus',
-  sustainLead: true,
+  sustainLead: false,
   lead: Object.freeze([
     // Em: E (2 beats) → G → B
     'E6', null, null, null, null, null, null, null,
