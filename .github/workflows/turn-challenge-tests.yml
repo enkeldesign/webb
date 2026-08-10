@@ -76,6 +76,9 @@ jobs:
       - name: Run YOUR TURN r411 controls and maps regression
         run: node turn-tests/yourturn-r411-production.mjs
 
+      - name: Run YOUR TURN portrait-to-landscape viewport regression
+        run: node turn-tests/yourturn-viewport-transition-production.mjs
+
       - name: Run YOUR TURN About modal regression
         run: node turn-tests/yourturn-about-modal-production.mjs
 
