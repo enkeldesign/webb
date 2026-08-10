@@ -2,8 +2,8 @@ const AudioContextClass = globalThis.AudioContext || globalThis.webkitAudioConte
 
 const MUSIC_VOLUME_STORAGE_KEY = 'turn-racing-music-volume-v1';
 const MUSIC_LAST_VOLUME_STORAGE_KEY = 'turn-racing-music-last-volume-v1';
-const DEFAULT_VOLUME = 10;
-const BPM = 124;
+const DEFAULT_VOLUME = 15;
+const BPM = 116;
 const STEPS_PER_BEAT = 4;
 const STEP_SECONDS = (60 / BPM) / STEPS_PER_BEAT;
 const LOOKAHEAD_MS = 25;
