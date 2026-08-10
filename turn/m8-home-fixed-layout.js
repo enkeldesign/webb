@@ -20,7 +20,12 @@ function installShortViewportRaceDock() {
     @media (max-height: 430px) and (orientation: landscape) {
       html.turn-standalone .m8-home-fixed-layout .m8-home-menu {
         overflow-y: auto;
+        overflow-x: hidden;
         overscroll-behavior-y: contain;
+        overscroll-behavior-x: none;
+        touch-action: pan-y;
+        box-sizing: border-box;
+        padding-right: 8px;
         padding-bottom: 76px;
         scroll-padding-bottom: 76px;
       }
@@ -142,6 +147,11 @@ export async function installM8HomeFixedLayout() {
   document.documentElement.dataset.turnHomeLayout = LAYOUT_ID;
 
   const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
+  const { installShortViewportAutoRepair } = await import(
+    `/turn/pwa-short-viewport-repair-r184.js?build=${buildKey}&revision=r184-start-settle-first-activation`
+  );
+  const shortViewportAutoRepair = installShortViewportAutoRepair({ home });
+
   const { installM8HomeCardScrollFixes } = await import(
     `/turn/m8-home-card-scroll-fixes.js?build=${buildKey}-m8.9-track-title-alignment`
   );
@@ -188,6 +198,7 @@ export async function installM8HomeFixedLayout() {
     trackBrowser,
     menu,
     raceButton,
+    shortViewportAutoRepair,
     cardScrollFixes,
     trophyGate,
     achievements,
