@@ -1,0 +1,212 @@
+.yourturn-track-map {
+  width: min(320px, 58vw);
+  margin: 0 0 12px;
+}
+
+.yourturn-track-map svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.yourturn-track-map-shadow,
+.yourturn-track-map-road,
+.yourturn-track-map-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.yourturn-track-map-shadow {
+  stroke: #08090a;
+  stroke-width: 18;
+}
+
+.yourturn-track-map-road {
+  stroke: #fff8e8;
+  stroke-width: 11;
+}
+
+.yourturn-track-map-line {
+  stroke-width: 6;
+}
+
+.yourturn-track-map-start {
+  fill: #ffff09;
+  stroke: #08090a;
+  stroke-width: 4;
+}
+
+.yourturn-challenge-button.is-lap-invalid {
+  background: #ff6b6b !important;
+}
+
+.yourturn-settings-dialog {
+  width: min(920px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #08090a;
+  overflow: visible;
+}
+
+.yourturn-settings-dialog::backdrop {
+  background: rgb(8 9 10 / 0.62);
+  backdrop-filter: blur(5px);
+}
+
+.yourturn-settings-card {
+  box-sizing: border-box;
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+  padding: clamp(18px, 3vw, 30px);
+  border: 5px solid #08090a;
+  border-radius: 26px;
+  background: #fff8e8;
+  box-shadow: 10px 10px 0 #08090a;
+}
+
+.yourturn-settings-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.yourturn-settings-head span {
+  display: block;
+  margin-bottom: 3px;
+  color: #6b3fa0;
+  font-size: 0.78rem;
+  font-weight: 1000;
+  letter-spacing: 0.14em;
+}
+
+.yourturn-settings-head h2 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+}
+
+.yourturn-settings-close {
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 4px solid #08090a;
+  border-radius: 50%;
+  background: #ff9b66;
+  color: #08090a;
+  box-shadow: 4px 4px 0 #08090a;
+  font: inherit;
+  font-size: 1.8rem;
+  font-weight: 1000;
+  line-height: 1;
+}
+
+.yourturn-settings-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.yourturn-setting-card {
+  min-width: 0;
+  padding: 16px;
+  border: 4px solid #08090a;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 4px 4px 0 #08090a;
+}
+
+.yourturn-setting-card legend,
+.yourturn-setting-card > h3 {
+  margin: 0 0 8px;
+  padding: 0;
+  font-size: 1.15rem;
+  font-weight: 1000;
+}
+
+.yourturn-steering-setting label,
+.yourturn-toggle-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+.yourturn-steering-setting input,
+.yourturn-toggle-row input {
+  width: 28px;
+  height: 28px;
+  margin: 0;
+}
+
+.yourturn-steering-setting strong,
+.yourturn-toggle-row strong,
+.yourturn-balance-row strong {
+  display: block;
+}
+
+.yourturn-steering-setting small,
+.yourturn-toggle-row small,
+.yourturn-balance-row small {
+  display: block;
+  margin-top: 2px;
+  line-height: 1.25;
+}
+
+.yourturn-motion-note,
+.yourturn-settings-status {
+  margin: 10px 0 0;
+  font-weight: 800;
+}
+
+.yourturn-balance-row {
+  display: block;
+  margin-top: 12px;
+}
+
+#yourTurnAudioBalance {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.yourturn-balance-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+#yourTurnAudioBalanceValue {
+  display: block;
+  margin-top: 4px;
+  font-weight: 900;
+}
+
+.yourturn-settings-status {
+  min-height: 1.2em;
+}
+
+.yourturn-settings-close:focus-visible,
+.yourturn-setting-card :focus-visible {
+  outline: 4px solid #38d9ff;
+  outline-offset: 4px;
+}
+
+@media (max-width: 680px), (max-height: 430px) {
+  .yourturn-settings-list {
+    grid-template-columns: 1fr;
+  }
+
+  .yourturn-settings-card {
+    padding: 15px;
+  }
+}
