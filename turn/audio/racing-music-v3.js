@@ -359,7 +359,7 @@ function playFluteLead(note, nextNote, time, holdSteps) {
   filter.type = 'lowpass';
   filter.frequency.value = 2400;
   filter.Q.value = 0.18;
-  scheduleFluteEnvelope(amp.gain, time, 0.105, endTime);
+  scheduleFluteEnvelope(amp.gain, time, 0.07, endTime);
 
   vibrato.connect(vibratoGain);
   vibratoGain.connect(body.detune);
