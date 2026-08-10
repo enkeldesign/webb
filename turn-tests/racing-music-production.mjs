@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [index, homeLayout, music] = await Promise.all([
+const [index, labIndex, homeLayout, music, headerFix] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn-lab/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/audio/racing-music-v3.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/audio/racing-music-v3.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/home-header-r425.css', import.meta.url), 'utf8')
 ]);
 
 assert.match(
@@ -16,6 +18,19 @@ assert.match(homeLayout, /audio\/racing-music-v2\.js\?build=\$\{buildKey\}-racin
   'The established Home lifecycle remains the single music installation point');
 assert.match(homeLayout, /installRacingMusic\(\{ home \}\)/,
   'Racing music must remain attached to production Home rather than TURN NEXT');
+
+assert.match(index, /home-header-r425\.css\?revision=r425-header-boundary/,
+  'Production TURN must load the cache-busted Home header correction');
+assert.match(labIndex, /home-header-r425\.css\?revision=r425-header-boundary/,
+  'TURN LAB must load the same Home header correction as production');
+assert.match(headerFix, /html \.m8-home\.m8-home-fixed-layout \{\s*background: var\(--m8-blue\);/,
+  'The fixed Home canvas must own the blue background instead of a percentage-based yellow split');
+assert.match(headerFix, /html \.m8-home\.m8-home-fixed-layout \.m8-home-head \{\s*background: var\(--m8-yellow\);/,
+  'The actual Home header must own the yellow background so it stops at its real border');
+assert.match(headerFix, /turn-music-home-toggle \{\s*transform: translateY\(clamp\(-14px, -1\.8vh, -8px\)\);/,
+  'The Home music control must align upward with the version/build row while retaining its hit target');
+assert.match(headerFix, /@media \(max-width: 760px\) and \(orientation: portrait\)[\s\S]*turn-music-home-toggle \{\s*transform: none;/,
+  'Portrait Home must not inherit the landscape metadata alignment offset');
 
 assert.match(music, /const BPM = 120/,
   'The eighth-note chorus must preserve the current 120 BPM tempo');
@@ -37,8 +52,8 @@ assert.match(
   /'E6', null, 'G6', null, 'B6', null, 'G6', null,[\s\S]*'G6', null, 'E6', null, 'C7', null, 'E7', null,[\s\S]*'D7', null, 'B6', null, 'G6', null, 'B6', null,[\s\S]*'F#6', null, 'A6', null, 'B6', null, 'D#7', null/,
   'The chorus lead must articulate on alternating sixteenth-note slots, i.e. true eighth notes'
 );
-assert.match(music, /const ARRANGEMENT = Object\.freeze\(\[TUNE, TUNE, BRIDGE, TUNE, CHORUS, CHORUS\]\)/,
-  'The form must remain T T B T C C');
+assert.match(music, /const ARRANGEMENT = Object\.freeze\(\[TUNE, TUNE, BRIDGE, TUNE, CHORUS, CHORUS, BRIDGE, BRIDGE\]\)/,
+  'The approved form must remain T T B T C C B B');
 
 assert.match(music, /function playFluteLead\(note, time\)/,
   'The chorus must use a dedicated articulated flute voice');
@@ -87,7 +102,7 @@ assert.match(music, /className = 'turn-music-blank-toggle'/);
 assert.match(music, /label\.innerHTML = '<strong>Music volume<\/strong><small>OFF stops the music engine completely\.<\/small>'/);
 assert.match(music, /labels\.innerHTML = '<span>OFF<\/span><span>100%<\/span>'/);
 assert.match(music, /arrangement: Object\.freeze\(ARRANGEMENT\.map\(\(section\) => section\.name\)\)/,
-  'Runtime diagnostics must expose the actual T/T/B/T/C/C form');
+  'Runtime diagnostics must expose the actual T/T/B/T/C/C/B/B form');
 assert.match(music, /timbre: 'warm-v3-eighth-note-flute-chorus'/);
 
-console.log('TURN T/T/B/T/C/C eighth-note flute chorus, preserved hand tuning, and music controls regression passed.');
+console.log('TURN T/T/B/T/C/C/B/B eighth-note flute chorus, Home header boundary, music alignment, and controls regression passed.');
