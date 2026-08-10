@@ -1,4 +1,3 @@
-import '/yourturn/start-handoff-r416.js?revision=r416';
 import { getTrackDefinition, getTrackPreviewPoints } from '/turn/tracks/catalog.js?source=20260729-r118-m8';
 
 const MAP_VIEWS = new Set(['invitation', 'paused']);
@@ -49,8 +48,8 @@ function install() {
   const card = dialog?.querySelector('.yourturn-card');
   const extra = dialog?.querySelector('.yourturn-extra');
   if (!session || !dialog || !card || !extra) return false;
-  if (dialog.dataset.r411TrackMap === 'true') return true;
-  dialog.dataset.r411TrackMap = 'true';
+  if (dialog.dataset.r417TrackMap === 'true') return true;
+  dialog.dataset.r417TrackMap = 'true';
 
   function sync() {
     const challenge = session.getState?.().challenge;
