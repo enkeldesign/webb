@@ -63,7 +63,7 @@
   document.documentElement.dataset.turnLab = 'viewport-flight-recorder-r1';
 
   const repairScript = document.createElement('script');
-  repairScript.src = '/turn-lab/viewport-repair-r6.js?revision=r6-resume-watchdog';
+  repairScript.src = '/turn-lab/viewport-repair-r7.js?revision=r7-staged-autorepair';
   repairScript.async = true;
   document.head.appendChild(repairScript);
 
