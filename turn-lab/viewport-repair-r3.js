@@ -2,12 +2,14 @@
   const BAD_GAP_MIN = 40;
   const META_PULSE_MS = 120;
   const CHECKPOINTS_MS = Object.freeze([0, 80, 250, 650]);
-  const AUTO_CHECKS_MS = Object.freeze([180, 320, 600, 1000, 1600]);
+  const AUTO_CONFIRM_MS = 90;
+  const AUTO_WATCHDOG_MS = 10000;
+  const AUTO_CHECKS_MS = Object.freeze([120, 240, 400, 650, 1000, 1600, 2500, 4000, 6000, 8000, 10000]);
   const startedAt = performance.now();
   let lastResult = null;
   let repairInFlight = false;
   let autoAttempted = false;
-  let consecutiveBadChecks = 0;
+  let autoConfirmationTimer = 0;
 
   function round(value, digits = 1) {
     const factor = 10 ** digits;
@@ -169,7 +171,7 @@
         after.gap < 20;
 
       lastResult = {
-        lab: 'TURN viewport repair bench r4 auto',
+        lab: 'TURN viewport repair bench r5 watchdog',
         productionBuild: globalThis.__TURN_BUILD__ || null,
         standalone: isStandalone(),
         trigger,
@@ -216,7 +218,7 @@
     bench.dataset.labRepairBench = '';
     bench.style.cssText = 'width:100%;margin:10px 0 0;padding-top:10px;border-top:3px solid #08090a;';
     bench.innerHTML = `
-      <strong>REPAIR BENCH r4 · AUTO ARMED</strong>
+      <strong>REPAIR BENCH r5 · WATCHDOG ARMED</strong>
       <div data-lab-repair-signature style="margin:6px 0"></div>
       <button type="button" data-lab-meta-reflow>TRY VIEWPORT REFLOW</button>
       <button type="button" data-lab-copy-repair disabled>COPY REPAIR RESULT</button>`;
@@ -257,23 +259,39 @@
     observer.observe(document.documentElement, { childList: true, subtree: true });
   }
 
-  function autoCheck(label) {
-    if (autoAttempted || repairInFlight || !document.body) return;
-    const sample = snapshot(`auto-check:${label}`);
-    if (!hasBadSignature(sample)) {
-      consecutiveBadChecks = 0;
-      return;
-    }
+  function confirmAutoRepair(reason) {
+    if (autoAttempted || repairInFlight || autoConfirmationTimer || !document.body) return;
+    if (performance.now() - startedAt > AUTO_WATCHDOG_MS + 250) return;
 
-    consecutiveBadChecks += 1;
-    if (consecutiveBadChecks < 2) return;
-    autoAttempted = true;
-    runMetaReflow({ trigger: 'auto' });
+    const first = snapshot(`auto-watch:${reason}`);
+    if (!hasBadSignature(first)) return;
+
+    autoConfirmationTimer = window.setTimeout(() => {
+      autoConfirmationTimer = 0;
+      if (autoAttempted || repairInFlight || !document.body) return;
+      const confirmed = snapshot(`auto-confirm:${reason}`);
+      if (!hasBadSignature(confirmed)) return;
+      autoAttempted = true;
+      runMetaReflow({ trigger: 'auto' });
+    }, AUTO_CONFIRM_MS);
+  }
+
+  function onWatchdogEvent(event) {
+    if (autoAttempted || repairInFlight) return;
+    window.setTimeout(() => confirmAutoRepair(event?.type || 'event'), 0);
   }
 
   for (const delayMs of AUTO_CHECKS_MS) {
-    setTimeout(() => autoCheck(`startup+${delayMs}`), delayMs);
+    setTimeout(() => confirmAutoRepair(`startup+${delayMs}`), delayMs);
   }
+
+  window.addEventListener('resize', onWatchdogEvent, { passive: true });
+  window.addEventListener('orientationchange', onWatchdogEvent, { passive: true });
+  window.addEventListener('pageshow', onWatchdogEvent, { passive: true });
+  window.addEventListener('focus', onWatchdogEvent, { passive: true });
+  window.visualViewport?.addEventListener('resize', onWatchdogEvent, { passive: true });
+  window.addEventListener('turn:runtime-ready', onWatchdogEvent);
+  window.addEventListener('turn:home-ready', onWatchdogEvent);
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', waitForBench, { once: true });
