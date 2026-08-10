@@ -9,6 +9,7 @@ on:
       - 'turn-next/**'
       - 'yourturn/**'
       - 'turn/index.html'
+      - 'turn/ui/r411-race-controls.js'
       - 'turn/social/**'
       - 'turn/telemetry/**'
       - 'turn/content/about-turn.js'
@@ -28,6 +29,7 @@ on:
       - 'turn-next/**'
       - 'yourturn/**'
       - 'turn/index.html'
+      - 'turn/ui/r411-race-controls.js'
       - 'turn/social/**'
       - 'turn/telemetry/**'
       - 'turn/content/about-turn.js'
@@ -60,6 +62,7 @@ jobs:
         run: |
           find turn-next yourturn -maxdepth 1 -type f -name '*.js' -print0 | xargs -0 -n1 node --check
           find turn/social turn/telemetry turn/stats -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+          node --check turn/ui/r411-race-controls.js
 
       - name: Run Race My Ghost contract
         run: node turn-tests/challenge-mode-production.mjs
@@ -69,6 +72,9 @@ jobs:
 
       - name: Run YOUR TURN recipient contract
         run: node turn-tests/yourturn-production.mjs
+
+      - name: Run YOUR TURN r411 controls and maps regression
+        run: node turn-tests/yourturn-r411-production.mjs
 
       - name: Run YOUR TURN About modal regression
         run: node turn-tests/yourturn-about-modal-production.mjs
