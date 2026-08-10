@@ -2,8 +2,8 @@ const AudioContextClass = globalThis.AudioContext || globalThis.webkitAudioConte
 
 const MUSIC_VOLUME_STORAGE_KEY = 'turn-racing-music-volume-v1';
 const MUSIC_LAST_VOLUME_STORAGE_KEY = 'turn-racing-music-last-volume-v1';
-const DEFAULT_VOLUME = 15;
-const BPM = 116;
+const DEFAULT_VOLUME = 50;
+const BPM = 120;
 const STEPS_PER_BEAT = 4;
 const STEP_SECONDS = (60 / BPM) / STEPS_PER_BEAT;
 const LOOKAHEAD_MS = 25;
@@ -272,7 +272,7 @@ function playLead(note, time) {
 
 function playBass(note, time) {
   if (!note) return;
-  const hz = noteToFrequency(note);
+  const hz = noteToFrequency(note) / 2;
   const body = trackSource(context.createOscillator());
   const sub = trackSource(context.createOscillator());
   const bodyGain = makeGain(0.64);
