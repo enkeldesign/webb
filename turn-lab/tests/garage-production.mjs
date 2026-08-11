@@ -106,6 +106,7 @@ const [
   carModels,
   lotWrapper,
   lotEnhancementRuntime,
+  lotPerkDisclosure,
   lotLayout,
   lotLayoutCss,
   lotAccessibility,
@@ -127,6 +128,7 @@ const [
   fs.readFile(path.join(turnDir, 'vehicle/car-models.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'garage/lot-track-select.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'garage/lot-enhancement-runtime.js'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'garage/lot-perk-disclosure.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'garage/lot-layout-r60.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'garage/lot-layout-r60.css'), 'utf8'),
   fs.readFile(path.join(turnDir, 'garage/lot-accessibility-r118.js'), 'utf8'),
@@ -144,7 +146,7 @@ const imports = JSON.parse(importMapText).imports;
 const releaseTarget = (filePath) => `${filePath}?build=${release.cacheKey}`;
 
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
-assert.match(index, /\.\/garage\/lot-r10\.css\?build=20260809-r163-native-html/);
+assert.match(index, new RegExp(`\\.\\/garage\\/lot-r10\\.css\\?build=${release.cacheKey}-native-html`));
 assert.match(index, new RegExp(`\\.\\/track-intro\\.css\\?build=${release.cacheKey}`));
 assert.match(index, new RegExp(`src="\\.\\/app\\.js\\?build=${release.cacheKey}-browser-consent(?:-[^"]+)?"`));
 assert.equal(
@@ -171,10 +173,11 @@ assert.match(originalLot, /export function showTheLot/);
 assert.match(originalLot, /input\.type = 'color'/);
 assert.doesNotMatch(originalLot, /NAMED_COLOR_PRESETS|lot-color-preset|showPicker\(|label\.click\(/);
 
-assert.match(lotEnhancementRuntime, /ENHANCEMENT_ID = 'enhanced-lot-r121'/);
-assert.match(lotEnhancementRuntime, /TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r154-trophy-road-feedback'/);
+assert.match(lotEnhancementRuntime, /ENHANCEMENT_ID = 'enhanced-lot-r164-perks'/);
+assert.match(lotEnhancementRuntime, /TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r164-perks'/);
 assert.match(lotEnhancementRuntime, /activeEnhancements = new WeakMap\(\)/);
 assert.match(lotEnhancementRuntime, /gateLotNow\(scope\)/);
+assert.match(lotEnhancementRuntime, /installLotPerkDisclosure\(scope\)/);
 assert.match(lotEnhancementRuntime, /installLotStatLegend\(scope\)/);
 assert.match(lotEnhancementRuntime, /installLotLayout\(scope\)/);
 assert.match(lotEnhancementRuntime, /installLotAccessibility\(scope\)/);
@@ -184,6 +187,9 @@ assert.ok(
 );
 assert.match(lotEnhancementRuntime, /new MutationObserver\(sync\)/);
 assert.match(lotEnhancementRuntime, /screen\.dataset\.lotEnhancements = ENHANCEMENT_ID/);
+assert.match(lotPerkDisclosure, /aria-expanded/);
+assert.match(lotPerkDisclosure, /<strong>PERK:<\/strong>/);
+assert.match(lotPerkDisclosure, /-webkit-line-clamp: 2/);
 assert.match(lotTrophyGate, /FALLBACK_VEHICLE_ID = 'classic'/);
 assert.match(lotTrophyGate, /raceButton\.disabled = locked/);
 assert.match(lotTrophyGate, /lot-selected-car-lock/);
@@ -263,4 +269,4 @@ assert.match(easterEggUi, /notice\.setAttribute\('role', 'status'\)/);
 assert.match(easterEggUi, /notice\.setAttribute\('aria-live', 'polite'\)/);
 assert.match(easterEggUi, /card\.insertBefore\(notice, actions \|\| null\)/, 'The explanation must sit immediately before RACE THIS CAR');
 
-console.log(`TURN ${release.id} enhanced Lot route, Trophy Road gating, native paint and garage setup passed.`);
+console.log(`TURN ${release.id} enhanced Lot route, Trophy Road gating, perks, native paint and garage setup passed.`);
