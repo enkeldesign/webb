@@ -337,7 +337,7 @@ function playFluteLead(note, time) {
   const harmonic = trackSource(context.createOscillator());
 
   const bodyGain = makeGain(0.75);
-  const harmonicGain = makeGain(0.10);
+  const harmonicGain = makeGain(0.20);
   const amp = makeGain(0.0001);
 
   if (!bodyGain || !harmonicGain || !amp) return;
@@ -383,7 +383,7 @@ function playFluteLead(note, time) {
   amp.gain.setValueAtTime(0.0001, time);
 
   amp.gain.exponentialRampToValueAtTime(
-    0.050,
+    0.075,
     time + 0.008
   );
 
