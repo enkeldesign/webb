@@ -64,9 +64,9 @@ function installStartupCover() {
   const card = gate.querySelector('.install-card');
   const guide = gate.querySelector('.install-guide');
   guide?.setAttribute('hidden', '');
-  if (title) title.textContent = 'TURN';
+  if (title) title.textContent = 'LOADING';
   if (copy) {
-    copy.textContent = 'Loading TURN';
+    copy.textContent = 'YOU’LL BE RACING IN NO TIME';
     copy.setAttribute('role', 'status');
     copy.setAttribute('aria-live', 'polite');
   }
