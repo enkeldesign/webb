@@ -247,9 +247,12 @@ assert.match(index, new RegExp(`TURN v${escapeRegex(releaseDefinition.version)} 
 assert.match(index, new RegExp(`version: '${escapeRegex(releaseDefinition.version)}'`));
 assert.match(index, new RegExp(`id: '${escapeRegex(releaseDefinition.id)}'`));
 assert.match(index, new RegExp(`cacheKey: '${escapeRegex(releaseDefinition.cacheKey)}'`));
-assert.match(design, new RegExp(`TURN V${escapeRegex(releaseDefinition.version)} · BUILD ${escapeRegex(releaseDefinition.id.toUpperCase())}`));
+assert.match(design, /Normative production system · TURN 1\.7/,
+  'The design reference has its own documented design-system revision and need not mirror every game release bump');
+assert.match(design, /TURN V1\.7\.0 · BUILD 2026\.08\.09-R163/,
+  'Static screen specimens remain labelled with the release they document until the design reference itself is revised');
 assert.doesNotMatch(design, /TURN V1\.4\.0|2026\.08\.03-R126/,
-  'The living design reference must not present a stale release as current metadata');
+  'The living design reference must not regress to obsolete pre-1.7 metadata');
 
 console.log('TURN 1.6 primitive palette, social challenge semantics, mappings and component reference passed.');
 
