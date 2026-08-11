@@ -127,16 +127,12 @@ const CHORUS = Object.freeze({
   name: 'chorus',
   leadVoice: 'flute',
   lead: Object.freeze([
-    // Em — eight eighth notes
     'E6', 'E4', 'G6', 'G4', 'B6', 'B4', 'G6', 'G4',
     'E7', 'E5', 'B6', 'B4', 'G6', 'G4', 'B6', 'B4',
-    // C — eight eighth notes
     'G6', 'G4', 'E6', 'E4', 'C7', 'C5', 'E7', 'E5',
     'G7', 'g5', 'E7', 'E5', 'D7', 'D5', 'C7', 'C5',
-    // G — eight eighth notes
     'D7', 'D5', 'B6', 'B4', 'G6', 'G4', 'B6', 'B4',
     'D7', 'D5', 'B6', 'B4', 'A6', 'A4', 'G6', 'G4',
-    // B7 — eight eighth notes, ending on D# to pull back into E
     'F#6', 'F#4', 'A6', 'A4', 'B6', 'B4', 'D#7', 'D#5',
     'B6', 'B4', 'A6', 'A4', 'F#6', 'F#4', 'D#6', 'D#4'
   ]),
