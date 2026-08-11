@@ -1,4 +1,4 @@
-const AudioContextClass = globalThis.AudioContext || globalThis.webkitAudioContext;
+import { getSharedAudioContext, resumeSharedAudioContext } from './shared-audio-context-r430.js?revision=r430-single-context';
 
 const MUSIC_VOLUME_STORAGE_KEY = 'turn-racing-music-volume-v1';
 const MUSIC_LAST_VOLUME_STORAGE_KEY = 'turn-racing-music-last-volume-v1';
@@ -240,16 +240,12 @@ function makeNoiseBuffer() {
 }
 
 function ensureGraph() {
-  if (context || !AudioContextClass || typeof globalThis.GainNode !== 'function') return Boolean(context);
-  try {
-    context = new AudioContextClass({ latencyHint: 'playback' });
-  } catch (_) {
-    context = new AudioContextClass();
-  }
+  if (context) return true;
+  context = getSharedAudioContext();
+  if (!context || typeof globalThis.GainNode !== 'function') return false;
 
   masterGain = makeGain(0);
   if (!masterGain) {
-    void context.close?.();
     context = null;
     return false;
   }
@@ -523,16 +519,12 @@ function applyMasterVolume() {
 async function startPlayback({ restart = false } = {}) {
   if (!soundEnabled || musicVolume <= 0 || document.visibilityState === 'hidden') return false;
   if (!ensureGraph()) return false;
+  const ready = await resumeSharedAudioContext();
+  if (!ready || context.state !== 'running') return false;
   if (restart) {
     currentSection = 0;
     currentStep = 0;
   }
-  try {
-    if (context.state !== 'running') await context.resume();
-  } catch (_) {
-    return false;
-  }
-  if (context.state !== 'running') return false;
   applyMasterVolume();
   if (!playing) {
     playing = true;
@@ -552,9 +544,6 @@ async function stopPlayback({ reset = false } = {}) {
   }
   if (!context) return;
   applyMasterVolume();
-  try {
-    if (context.state === 'running') await context.suspend();
-  } catch (_) {}
 }
 
 function shouldPlay() {
@@ -813,6 +802,7 @@ export function installRacingMusic({ home = document.querySelector('.m8-home') }
     get enabled() { return musicVolume > 0; },
     get playing() { return playing; },
     get state() { return context?.state || 'not-created'; },
+    get sampleRate() { return context?.sampleRate || 0; },
     setVolume,
     toggle: toggleMusic,
     start: () => startPlayback({ restart: false }),
