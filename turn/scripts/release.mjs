@@ -7,6 +7,7 @@ const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const turnDir = path.resolve(scriptDir, '..');
 const releasePath = path.join(turnDir, 'release.json');
 const indexPath = path.join(turnDir, 'index.html');
+const labIndexPath = path.resolve(turnDir, '../turn-lab/index.html');
 
 export async function loadReleaseDefinition() {
   const release = JSON.parse(await fs.readFile(releasePath, 'utf8'));
@@ -53,22 +54,55 @@ export function renderReleaseIndex(source, release) {
   return output;
 }
 
+export function renderLabReleaseIndex(source, productionIndex, release) {
+  validateReleaseDefinition(release);
+  const productionImportMap = productionIndex.match(/<script type="importmap">[\s\S]*?<\/script>/)?.[0];
+  assert.ok(productionImportMap, 'Production TURN must expose an import map before TURN LAB can be synchronized');
+  const revision = release.id.match(/-r(\d+)$/)?.[1] || '';
+
+  return source
+    .replace(
+      /<!-- TURN LAB viewport diagnostics\. Runtime source: production TURN [^>]* -->/,
+      `<!-- TURN LAB viewport diagnostics. Runtime source: production TURN ${release.id}. -->`
+    )
+    .replace(
+      /globalThis\.__TURN_BUILD__ = Object\.freeze\(\{[\s\S]*?\}\);/,
+      `globalThis.__TURN_BUILD__ = Object.freeze({\n      version: '${release.version}',\n      id: '${release.id}',\n      cacheKey: '${release.cacheKey}'\n    });`
+    )
+    .replace(
+      /TURN LAB · production TURN \d+\.\d+\.\d+ r\d+/g,
+      `TURN LAB · production TURN ${release.version} r${revision}`
+    )
+    .replace(/((?:href|src)="\.\/[^"?]+\?build=)\d{8}-r\d+/g, `$1${release.cacheKey}`)
+    .replace(/<script type="importmap">[\s\S]*?<\/script>/, productionImportMap);
+}
+
 export async function checkReleaseFiles({ write = false } = {}) {
-  const [release, source] = await Promise.all([
+  const [release, source, labSource] = await Promise.all([
     loadReleaseDefinition(),
-    fs.readFile(indexPath, 'utf8')
+    fs.readFile(indexPath, 'utf8'),
+    fs.readFile(labIndexPath, 'utf8')
   ]);
   const expected = renderReleaseIndex(source, release);
+  const expectedLab = renderLabReleaseIndex(labSource, expected, release);
 
   if (write) {
-    if (expected !== source) await fs.writeFile(indexPath, expected);
-    return { release, changed: expected !== source };
+    const productionChanged = expected !== source;
+    const labChanged = expectedLab !== labSource;
+    if (productionChanged) await fs.writeFile(indexPath, expected);
+    if (labChanged) await fs.writeFile(labIndexPath, expectedLab);
+    return { release, changed: productionChanged || labChanged };
   }
 
   assert.equal(
     source,
     expected,
     'turn/index.html is not synchronized with turn/release.json. Run: node turn/scripts/release.mjs --write'
+  );
+  assert.equal(
+    labSource,
+    expectedLab,
+    'turn-lab/index.html is not synchronized with production TURN. Run: node turn/scripts/release.mjs --write'
   );
   return { release, changed: false };
 }
