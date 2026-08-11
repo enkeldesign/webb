@@ -244,13 +244,23 @@
 .lot-stat b {
   border: 1.5px solid var(--ink);
   border-radius: 2px;
-  background: #d6d0c2;
+  background: #fff;
 }
 
-.lot-stat b.is-full { background: var(--cyan); }
-.lot-stat:nth-child(4) b.is-full { background: var(--pink); }
+.lot-stat:nth-child(1) b.is-full,
+.lot-stat:nth-child(2) b.is-full {
+  background: var(--turn-control-gas, #8ce99a);
+}
+
+.lot-stat:nth-child(3) b.is-full,
+.lot-stat:nth-child(4) b.is-full {
+  background: var(--turn-control-drift, #38d9ff);
+}
+
 .lot-stat:nth-child(5) b.is-full,
-.lot-stat:nth-child(6) b.is-full { background: var(--yellow); }
+.lot-stat:nth-child(6) b.is-full {
+  background: var(--turn-control-boost, #ffd43b);
+}
 
 .lot-colors {
   display: grid;

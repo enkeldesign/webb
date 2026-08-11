@@ -14,13 +14,14 @@ assert.match(
   'The DRIFT legend must state the permanent speed tradeoff'
 );
 
-const [index, releaseSource, wrapper, enhancementRuntime, legendModule, legendCss, lotSource, physicsSource] = await Promise.all([
+const [index, releaseSource, wrapper, enhancementRuntime, legendModule, legendCss, lotCss, lotSource, physicsSource] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-track-select.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-enhancement-runtime.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-stat-legend.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-stat-legend.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/lot-r10.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/physics.js', import.meta.url), 'utf8')
 ]);
@@ -57,6 +58,10 @@ assert.match(legendModule, /label\.textContent !== definition\.label/, 'Relabell
 assert.match(legendModule, /trigger\.remove\(\)/, 'Legend cleanup must remove its injected trigger');
 assert.match(legendModule, /dialog\.remove\(\)/, 'Legend cleanup must remove its injected dialog');
 assert.match(legendCss, /\.lot-stats-dialog\[hidden\]/, 'The closed legend must stay out of layout and interaction');
+assert.match(lotCss, /\.lot-stat b \{[\s\S]*background: #fff;/, 'Empty stat cells must be white');
+assert.match(lotCss, /\.lot-stat:nth-child\(1\) b\.is-full,[\s\S]*nth-child\(2\)[\s\S]*--turn-control-gas/, 'Top speed and acceleration must use the GAS green');
+assert.match(lotCss, /\.lot-stat:nth-child\(3\) b\.is-full,[\s\S]*nth-child\(4\)[\s\S]*--turn-control-drift/, 'Control and drift must use the DRIFT blue');
+assert.match(lotCss, /\.lot-stat:nth-child\(5\) b\.is-full,[\s\S]*nth-child\(6\)[\s\S]*--turn-control-boost/, 'Boost power and boost tank must use the BOOST yellow');
 assert.match(lotSource, /\['ACCELERATION', vehicleStats\.acceleration\]/, 'The Lot renderer must expose the full agreed attribute name');
 assert.match(physicsSource, /baseSpeedLimit \* effectiveDriftSpeedMultiplier/, 'Production physics must apply the DRIFT penalty to the active speed limit');
 assert.match(physicsSource, /3\.2 \* driftStabilityMultiplier/, 'The DRIFT stat must improve recovery from a slide');
