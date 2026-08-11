@@ -2,7 +2,7 @@ const AudioContextClass = globalThis.AudioContext || globalThis.webkitAudioConte
 
 const MUSIC_VOLUME_STORAGE_KEY = 'turn-racing-music-volume-v1';
 const MUSIC_LAST_VOLUME_STORAGE_KEY = 'turn-racing-music-last-volume-v1';
-const DEFAULT_VOLUME = 50;
+const DEFAULT_VOLUME = 25;
 const BPM = 120;
 const STEPS_PER_BEAT = 4;
 const STEP_SECONDS = (60 / BPM) / STEPS_PER_BEAT;
@@ -126,27 +126,30 @@ const BRIDGE = Object.freeze({
 const CHORUS = Object.freeze({
   name: 'chorus',
   leadVoice: 'flute',
-lead: Object.freeze([
-  'E4', 'E4', 'G4', 'G4', 'B4', 'B4', 'G4', 'G4',
-  'E5', 'E5', 'B4', 'B4', 'G4', 'G4', 'B4', 'B4',
-  'G4', 'G4', 'E4', 'E4', 'C5', 'C5', 'E5', 'E5',
-  'G5', 'G5', 'E5', 'E5', 'D5', 'D5', 'C5', 'C5',
-  'D5', 'D5', 'B4', 'B4', 'G4', 'G4', 'B4', 'B4',
-  'D5', 'D5', 'B4', 'B4', 'A4', 'A4', 'G4', 'G4',
-  'F#4', 'F#4', 'A4', 'A4', 'B4', 'B4', 'D#5', 'D#5',
-  'B4', 'B4', 'A4', 'A4', 'F#4', 'F#4', 'D#4', 'D#4'
-]),
+  lead: Object.freeze([
+    // Em — eight eighth notes
+    'E6', null, 'G6', null, 'B6', null, 'G6', null,
+    'E7', null, 'B6', null, 'G6', null, 'B6', null,
+    // C — eight eighth notes
+    'G6', null, 'E6', null, 'C7', null, 'E7', null,
+    'G7', null, 'E7', null, 'D7', null, 'C7', null,
+    // G — eight eighth notes
+    'D7', null, 'B6', null, 'G6', null, 'B6', null,
+    'D7', null, 'B6', null, 'A6', null, 'G6', null,
+    // B7 — eight eighth notes, ending on D# to pull back into E
+    'F#6', null, 'A6', null, 'B6', null, 'D#7', null,
+    'B6', null, 'A6', null, 'F#6', null, 'D#6', null
+  ]),
   bass: Object.freeze([
-  'E2', 'E2', 'E2', 'E2', 'B2', 'B2', 'B2', 'B2',
-  'E3', 'E3', 'E3', 'E3', 'B2', 'B2', 'B2', 'B2',
-  'C2', 'C2', 'C2', 'C2', 'G2', 'G2', 'G2', 'G2',
-  'C3', 'C3', 'C3', 'C3', 'G2', 'G2', 'G2', 'G2',
-  'G2', 'G2', 'G2', 'G2', 'D3', 'D3', 'D3', 'D3',
-  'G3', 'G3', 'G3', 'G3', 'D3', 'D3', 'D3', 'D3',
-  'B1', 'B1', 'B1', 'B1', 'F#2', 'F#2', 'F#2', 'F#2',
-  'A2', 'A2', 'A2', 'A2', 'D#3', 'D#3', 'F#3', 'F#3'
-]),
-
+    'E2', null, null, null, 'B2', null, null, null,
+    'E3', null, null, null, 'B2', null, null, null,
+    'C2', null, null, null, 'G2', null, null, null,
+    'C3', null, null, null, 'G2', null, null, null,
+    'G2', null, null, null, 'D3', null, null, null,
+    'G3', null, null, null, 'D3', null, null, null,
+    'B1', null, null, null, 'F#2', null, null, null,
+    'A2', null, null, null, 'D#3', null, 'F#3', null
+  ]),
   arp: Object.freeze([
     'E4', null, 'G4', null, 'B4', null, 'G4', null,
     'E5', null, 'B4', null, 'G4', null, 'B4', null,
@@ -158,19 +161,19 @@ lead: Object.freeze([
     'B4', null, 'F#4', null, 'D#4', null, 'F#4', null
   ]),
   drums: Object.freeze([
-    'KH', 'H', 'H', 'H', 'SH', 'H', null, 'H',
-    'KH', 'H', 'H', 'H', 'SH', 'H', 'K', 'OH',
-    'KH', 'H', 'H', 'H', 'SH', 'H', null, 'H',
-    'KH', 'H', 'H', 'OH', 'SH', 'H', 'K', 'OH',
-    'KH', 'H', 'H', 'H', 'SH', 'H', null, 'H',
-    'KH', 'H', 'H', 'H', 'SH', 'H', 'K', 'OH',
-    'KH', 'H', 'H', 'H', 'SH', 'H', 'KH', 'H',
-    'KS', 'H', 'K', 'OH', 'SH', 'H', 'KS', 'OH'
+    'KH', 'H', null, 'H', 'SH', 'H', null, 'H',
+    'KH', 'H', null, 'H', 'SH', 'H', 'K', 'OH',
+    'KH', 'H', null, 'H', 'SH', 'H', null, 'H',
+    'KH', 'H', null, 'H', 'SH', 'H', 'K', 'OH',
+    'KH', 'H', null, 'H', 'SH', 'H', null, 'H',
+    'KH', 'H', null, 'H', 'SH', 'H', 'K', 'OH',
+    'KH', 'H', null, 'H', 'SH', 'H', 'KH', 'H',
+    'KS', 'H', 'K', 'H', 'SH', 'H', 'KS', 'OH'
   ])
 });
 
 // Song form: establish T, contrast with B, return to T, then make C the scarce payoff.
-const ARRANGEMENT = Object.freeze([CHORUS, CHORUS, TUNE, TUNE, BRIDGE, TUNE]);
+const ARRANGEMENT = Object.freeze([TUNE, TUNE, BRIDGE, TUNE, CHORUS, CHORUS]);
 
 let installed = false;
 let context = null;
@@ -282,13 +285,12 @@ function scheduleGainEnvelope(gain, time, peak, releaseTime, attack = 0.018) {
   gain.exponentialRampToValueAtTime(0.0001, releaseTime);
 }
 
-/*
 function playFluteLead(note, time) {
   if (!note) return;
   // Chorus flute stays one octave above the T/B lead transposition.
   const hz = noteToFrequency(note) / 2;
   // One eighth note = two sixteenth-note sequencer steps. Leave a tiny articulation gap.
-const duration = STEP_SECONDS * 0.88;
+  const duration = STEP_SECONDS * 2 * 0.88;
   const endTime = time + duration;
 
   const body = trackSource(context.createOscillator());
@@ -306,7 +308,7 @@ const duration = STEP_SECONDS * 0.88;
   filter.type = 'lowpass';
   filter.frequency.value = 2400;
   filter.Q.value = 0.18;
-  scheduleGainEnvelope(amp.gain, time, 0.05, endTime, 0.035);
+  scheduleGainEnvelope(amp.gain, time, 0.07, endTime, 0.035);
 
   body.connect(bodyGain);
   overtone.connect(overtoneGain);
@@ -319,98 +321,6 @@ const duration = STEP_SECONDS * 0.88;
   overtone.start(time);
   body.stop(endTime + 0.01);
   overtone.stop(endTime + 0.01);
-}
-*/
-
-function playFluteLead(note, time) {
-  if (!note) return;
-
-  // Keep the chorus in its current octave.
-  const hz = noteToFrequency(note) / 2;
-
-  // One sixteenth-note event with a small gap.
-  const duration = STEP_SECONDS * 0.88;
-  const endTime = time + duration;
-
-  // Main guitar body + brighter harmonic.
-  const body = trackSource(context.createOscillator());
-  const harmonic = trackSource(context.createOscillator());
-
-  const bodyGain = makeGain(0.75);
-  const harmonicGain = makeGain(0.16);
-  const amp = makeGain(0.0001);
-
-  if (!bodyGain || !harmonicGain || !amp) return;
-
-  const filter = context.createBiquadFilter();
-
-  // Triangle keeps it warm, while the second oscillator
-  // gives that slightly synthetic 90s-game guitar edge.
-  body.type = 'triangle';
-  harmonic.type = 'triangle';
-
-  body.frequency.setValueAtTime(hz, time);
-  harmonic.frequency.setValueAtTime(hz * 2, time);
-
-  // Tiny downward pitch "pluck" at the start.
-  // Gives the note a picked-string character.
-  body.frequency.setValueAtTime(hz * 1.018, time);
-  body.frequency.exponentialRampToValueAtTime(
-    hz,
-    time + 0.025
-  );
-
-  harmonic.frequency.setValueAtTime(hz * 2.025, time);
-  harmonic.frequency.exponentialRampToValueAtTime(
-    hz * 2,
-    time + 0.022
-  );
-
-  // Start bright, then quickly darken like a plucked string.
-  filter.type = 'lowpass';
-  filter.Q.value = 1.2;
-
-  filter.frequency.setValueAtTime(2000, time);
-  filter.frequency.exponentialRampToValueAtTime(
-    1000,
-    endTime
-  );
-
-  // Guitar-style envelope:
-  // very quick pick attack,
-  // strong initial hit,
-  // then decay rather than a flute sustain.
-  amp.gain.setValueAtTime(0.0001, time);
-
-  amp.gain.exponentialRampToValueAtTime(
-    0.075,
-    time + 0.008
-  );
-
-  amp.gain.exponentialRampToValueAtTime(
-    0.025,
-    time + duration * 0.38
-  );
-
-  amp.gain.exponentialRampToValueAtTime(
-    0.0001,
-    endTime
-  );
-
-  body.connect(bodyGain);
-  harmonic.connect(harmonicGain);
-
-  bodyGain.connect(filter);
-  harmonicGain.connect(filter);
-
-  filter.connect(amp);
-  amp.connect(masterGain);
-
-  body.start(time);
-  harmonic.start(time);
-
-  body.stop(endTime + 0.01);
-  harmonic.stop(endTime + 0.01);
 }
 
 function playLead(note, time, { voice = 'lead' } = {}) {
