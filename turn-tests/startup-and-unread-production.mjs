@@ -17,13 +17,18 @@ const escapedCacheKey = escapeRegex(release.cacheKey);
 
 assert.match(index, new RegExp(`TURN v${escapedVersion} · Build ${escapedId}`));
 assert.match(index, new RegExp(`app\\.js\\?build=${escapedCacheKey}-browser-consent-r176-bella-road-derived-zone`));
+assert.match(index, /app\.js\?build=20260809-r163-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click-r420-music-warm-r426-loading-copy/,
+  'The production document must cache-bust the revised loading-screen copy');
 assert.match(index, /countryside-bella-rescue-hotfix-r176\.js\?revision=r176-video-proven-rescue/,
   'The canonical startup document must replace cached Bella rescue behavior independently');
 assert.match(nextIndex, new RegExp(`TURN NEXT · Source TURN v${escapedVersion} · Build ${escapedId}`));
 assert.match(nextIndex, new RegExp(`turn-next\\/app\\.js\\?source=${escapedCacheKey}-browser-consent-r166-bella-records`));
 
 assert.match(app, /function installStartupCover\(\)/);
-assert.match(app, /copy\.textContent = 'Loading TURN'/);
+assert.match(app, /title\.textContent = 'LOADING'/,
+  'The startup cover heading must read LOADING');
+assert.match(app, /copy\.textContent = 'YOU’LL BE RACING IN NO TIME'/,
+  'The startup cover status copy must reassure the player that racing is imminent');
 assert.match(app, /turn-startup-spinner/);
 assert.match(app, /prefers-reduced-motion: reduce/);
 assert.match(app, /\.m8-home\.m8-home-fixed-layout[\s\S]*height: auto !important/);
