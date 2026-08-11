@@ -254,10 +254,8 @@ export function updateVehiclePhysicsState({
     collisionProfile: currentCollisionProfile(),
     dt
   });
-  if (collision.collided) {
-    updateVehicleOverdriveState({ state, collided: true });
-    nearestAfter = findNearestTrack(state.position);
-  }
+  if (collision.collided) updateVehicleOverdriveState({ state, collided: true });
+  if (collision.collided) nearestAfter = findNearestTrack(state.position);
 
   state.position.y = trackSurfaceY(nearestAfter.sample);
   state.surfacePitch = trackPitch(nearestAfter.sample);
