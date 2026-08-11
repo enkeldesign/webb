@@ -3,7 +3,7 @@ import {
   isTrackUnlocked,
   rewardForTrack,
   showTrophyUnlockNotice
-} from './trophy-road.js?revision=r155-trophy-road-polish';
+} from './trophy-road.js?revision=r164-perks';
 
 const LOCKED_TRACK_ID = 'midnight-city';
 
