@@ -371,9 +371,9 @@ function playFluteLead(note, time) {
   filter.type = 'lowpass';
   filter.Q.value = 1.2;
 
-  filter.frequency.setValueAtTime(3000, time);
+  filter.frequency.setValueAtTime(1000, time);
   filter.frequency.exponentialRampToValueAtTime(
-    900,
+    400,
     endTime
   );
 
