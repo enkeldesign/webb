@@ -160,6 +160,20 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
       'Optional Color Cues with text and pattern redundancy',
       'TURN 1.7.0 · 2026.08.09-r163 accessibility patch returning paint to native HTML first'
     ]
+  },
+  {
+    period: '9–11 August',
+    title: 'Music, resilience and vehicle character',
+    paragraphs: [
+      'Real-device investigation of an intermittent short iOS standalone viewport moved from observation to measurement in TURN LAB, where the failing 393/462-pixel state could be captured and repaired reproducibly. Production TURN now protects the primary RACE action in the short viewport and can perform the narrow, proven viewport-meta repair after Home has settled. YOUR TURN also gained canonical track maps and a clearer challenge-specific control set; a later cyan-screen failure was traced to another self-triggering MutationObserver loop and fixed at its source.',
+      'TURN gained its first continuous generated Web Audio soundtrack across Home, The Lot and racing. Reusable tune, bridge and chorus sections were repeatedly tuned by listening on real devices, while persistent Music controls provide an explicit OFF state that shuts down the music scheduler and AudioContext rather than merely muting it. The default volume is now 50%, and desktop players can hold Q for Drift and E for Boost through the same canonical drive-pad path as touch controls.',
+      'The Monster Truck became the first Trophy Road vehicle whose reward changes the rules rather than only unlocking a model: it treats off-road ground like track for acceleration, grip, drag, Boost and speed limits while still colliding normally with railings, walls and other world geometry. The perk establishes a new direction for achievement rewards built around distinctive ways to drive rather than simple stat inflation.'
+    ],
+    milestones: [
+      'Real-device iOS viewport repair and YOUR TURN control-loop hardening',
+      'Generated racing soundtrack with persistent 0–100% Music control and true OFF shutdown',
+      'TURN 1.8.0 · 2026.08.11-r164 with the Monster Truck all-terrain perk'
+    ]
   }
 ]);
 
@@ -334,11 +348,22 @@ export const CHANGELOG = Object.freeze([
       ['CHROMATIC CAMOUFLAGE', 'Hidden 50-trophy achievement for setting a matching-colour personal best on all five production tracks; broad hue ranges now include canonical #FF00FF Magenta for Countryside’s pink family.'],
       ['Color accessibility', 'Device comparison against a plain HTML color input led to removing activation bridges, named-color fallbacks, post-render paint relocation and broad interaction-suppressing CSS. TURN now starts with the native input and progressively adds only layout and optional Color Cues.']
     ]
+  },
+  {
+    date: '10–11 August',
+    entries: [
+      ['1.8.0 r164', 'Minor release combining post-r163 reliability, social-racing, control, music and vehicle-identity work with refreshed release caches.'],
+      ['iOS/PWA resilience', 'A real-device-proven repair handles the known short standalone viewport after Home settles, while the primary RACE action remains reachable in the reduced web layer.'],
+      ['YOUR TURN', 'Adds canonical track maps, challenge-specific Settings and Spectate controls, aligns race controls with TURN and removes a self-triggering control-row observer loop that could leave iOS on a cyan screen.'],
+      ['Generated racing music', 'Continuous Web Audio music spans Home, The Lot and racing with reusable tune, bridge and chorus material, persisted OFF–100% volume, a 50% default and true engine shutdown at OFF.'],
+      ['Desktop controls and vehicle identity', 'Q = Drift and E = Boost join the existing keyboard route; the Monster Truck becomes the first perk vehicle by taking no off-road terrain speed or handling penalty while preserving world collisions.'],
+      ['Interface/accessibility polish', 'Adds a non-colour edge to the Boost meter, fixes the Home header boundary and music-control alignment, and refreshes the startup loading copy.']
+    ]
   }
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.7.0',
-  build: '2026.08.09-r163',
-  note: 'Accessibility patch prompted by the new color-based Chromatic Camouflage achievement, adding optional Color Cues while keeping vehicle paint on the native HTML color input.'
+  version: '1.8.0',
+  build: '2026.08.11-r164',
+  note: 'Adds generated racing music, real-device iOS/PWA resilience, refined YOUR TURN controls, Q/E desktop actions and the Monster Truck’s all-terrain perk.'
 });
