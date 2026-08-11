@@ -12,11 +12,15 @@ import {
 } from '../../turn/achievements/chromatic-camouflage-r183.js';
 import { TROPHY_ROAD_MAX_THRESHOLD } from '../../turn/progression/trophy-road-chromatic-r183.js';
 
-const indexSource = await fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8');
+const [releaseSource, indexSource] = await Promise.all([
+  fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8')
+]);
 const moduleSource = await fs.readFile(
   new URL('../../turn/achievements/chromatic-camouflage-r183.js', import.meta.url),
   'utf8'
 );
+const release = JSON.parse(releaseSource);
 
 const achievement = getAchievement(CHROMATIC_CAMOUFLAGE_ID);
 assert.equal(ACHIEVEMENTS.length, 29,
@@ -87,7 +91,10 @@ assert.match(moduleSource, /hueMin: 295/,
 assert.match(moduleSource, /turn:lap-result/,
   'The state should be re-evaluated after a record can change');
 
-assert.match(indexSource, /TURN v1\.7\.0 · Build 2026\.08\.09-r163/);
+assert.ok(
+  indexSource.includes(`TURN v${release.version} · Build ${release.id}`),
+  'Production entry point must display the current release source of truth'
+);
 assert.match(indexSource, /catalog-chromatic-r183\.js/,
   'Production must route the achievement store and view through the Chromatic catalog');
 assert.match(indexSource, /trophy-road-chromatic-r183\.js/,
@@ -97,4 +104,4 @@ assert.match(indexSource, /chromatic-camouflage-r183\.js/,
 assert.doesNotMatch(indexSource, /airport-runway/,
   'The TURN NEXT Airport prototype must not enter the production TURN entry point');
 
-console.log('TURN 1.7.0 production Chromatic Camouflage achievement regression passed.');
+console.log(`TURN ${release.version} production Chromatic Camouflage achievement regression passed.`);
