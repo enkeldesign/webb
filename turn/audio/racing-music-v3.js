@@ -338,7 +338,7 @@ function playFluteLead(note, time) {
   const harmonic = trackSource(context.createOscillator());
 
   const bodyGain = makeGain(0.75);
-  const harmonicGain = makeGain(0.16);
+  const harmonicGain = makeGain(0.10);
   const amp = makeGain(0.0001);
 
   if (!bodyGain || !harmonicGain || !amp) return;
@@ -371,9 +371,9 @@ function playFluteLead(note, time) {
   filter.type = 'lowpass';
   filter.Q.value = 1.2;
 
-  filter.frequency.setValueAtTime(4200, time);
+  filter.frequency.setValueAtTime(3000, time);
   filter.frequency.exponentialRampToValueAtTime(
-    1500,
+    900,
     endTime
   );
 
@@ -384,7 +384,7 @@ function playFluteLead(note, time) {
   amp.gain.setValueAtTime(0.0001, time);
 
   amp.gain.exponentialRampToValueAtTime(
-    0.055,
+    0.050,
     time + 0.008
   );
 
