@@ -59,7 +59,8 @@ export function installLotPerkDisclosure(root = document.body) {
   const screen = root?.matches?.('.lot-screen') ? root : root?.querySelector?.('.lot-screen');
   const card = screen?.querySelector?.('.lot-card');
   const description = card?.querySelector?.('.lot-car-description');
-  if (!screen || !card || !description) return () => {};
+  const picker = screen?.querySelector?.('.lot-car-picker');
+  if (!screen || !card || !description || !picker) return () => {};
 
   installStyles();
 
@@ -83,6 +84,7 @@ export function installLotPerkDisclosure(root = document.body) {
   description.after(disclosure);
 
   let currentVehicleId = '';
+  let currentPerkDescription = '';
 
   function collapse() {
     button.setAttribute('aria-expanded', 'false');
@@ -101,12 +103,16 @@ export function installLotPerkDisclosure(root = document.body) {
 
     disclosure.hidden = !perkDescription;
     if (!perkDescription) {
-      copy.replaceChildren();
+      if (currentPerkDescription) copy.replaceChildren();
+      currentPerkDescription = '';
       button.setAttribute('aria-label', 'Perk information');
       return;
     }
 
-    copy.innerHTML = `<strong>PERK:</strong> ${perkDescription}`;
+    if (perkDescription !== currentPerkDescription) {
+      copy.innerHTML = `<strong>PERK:</strong> ${perkDescription}`;
+      currentPerkDescription = perkDescription;
+    }
     const vehicleName = screen.querySelector('.lot-car-title strong')?.textContent?.trim() || 'Selected car';
     button.setAttribute('aria-label', `Show ${vehicleName} perk`);
   }
@@ -119,13 +125,15 @@ export function installLotPerkDisclosure(root = document.body) {
     button.setAttribute('aria-label', `${expanded ? 'Show' : 'Hide'} ${vehicleName} perk`);
   });
 
+  // Observe only the radio-selection state. The original r164 implementation
+  // observed the whole Lot subtree for child/text changes, then rewrote its own
+  // perk copy inside that subtree. That created a self-triggering microtask loop
+  // after ordinary Lot interactions and could freeze the main thread.
   const observer = new MutationObserver(sync);
-  observer.observe(screen, {
+  observer.observe(picker, {
     subtree: true,
     attributes: true,
-    attributeFilter: ['aria-checked'],
-    childList: true,
-    characterData: true
+    attributeFilter: ['aria-checked']
   });
   sync();
 
