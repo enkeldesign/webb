@@ -158,13 +158,13 @@ lead: Object.freeze([
     'B4', null, 'F#4', null, 'D#4', null, 'F#4', null
   ]),
   drums: Object.freeze([
-    'KH', 'H', 'H', 'K', 'SH', 'H', null, 'H',
-    'KH', 'H', 'H', 'K', 'SH', 'H', 'K', 'OH',
-    'KH', 'H', 'H', 'K', 'SH', 'H', null, 'H',
-    'KH', 'H', 'H', 'K', 'SH', 'H', 'K', 'OH',
-    'KH', 'H', 'H', 'K', 'SH', 'H', null, 'H',
-    'KH', 'H', 'H', 'K', 'SH', 'H', 'K', 'OH',
-    'KH', 'H', 'H', 'K', 'SH', 'H', 'KH', 'H',
+    'KH', 'KH', 'H', 'OH', 'SH', 'H', null, 'H',
+    'KH', 'H', 'H', 'OH', 'SH', 'H', 'K', 'OH',
+    'KH', 'H', 'H', 'OH', 'SH', 'H', null, 'H',
+    'KH', 'H', 'H', 'OH', 'SH', 'H', 'K', 'OH',
+    'KH', 'KH', 'H', 'OH', 'SH', 'H', null, 'H',
+    'KH', 'H', 'H', 'OH', 'SH', 'H', 'K', 'OH',
+    'KH', 'H', 'H', 'OH', 'SH', 'H', 'KH', 'H',
     'KS', 'H', 'K', 'H', 'SH', 'H', 'KS', 'OH'
   ])
 });
