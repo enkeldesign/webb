@@ -141,14 +141,14 @@ const CHORUS = Object.freeze({
     'B6', null, 'A6', null, 'F#6', null, 'D#6', null
   ]),
   bass: Object.freeze([
-    'E2', 'E2', null, null, 'B2', 'B2', null, null,
-    'E3', 'E3', null, null, 'B2', 'B2', null, null,
-    'C2', 'C2', null, null, 'G2', 'G2', null, null,
-    'C3', 'C3', null, null, 'G2', 'G2', null, null,
-    'G2', 'G2', null, null, 'D3', 'D3', null, null,
-    'G3', 'G3', null, null, 'D3', 'D3', null, null,
-    'B1', 'B1', null, null, 'F#2', 'F#2', null, null,
-    'A2', 'A2', null, null, 'D#3', 'D#3', 'F#3', null
+    'E2', 'E2', 'E2', null, 'B2', 'B2', null, null,
+    'E3', 'E3', 'E3', null, 'B2', 'B2', null, null,
+    'C2', 'C2', 'C2', null, 'G2', 'G2', null, null,
+    'C3', 'C3', 'C3', null, 'G2', 'G2', null, null,
+    'G2', 'G2', 'G2', null, 'D3', 'D3', null, null,
+    'G3', 'G3', 'G3', null, 'D3', 'D3', null, null,
+    'B1', 'B1', 'B1', null, 'F#2', 'F#2', null, null,
+    'A2', 'A2', 'A2', null, 'D#3', 'D#3', 'F#3', null
   ]),
   arp: Object.freeze([
     'E4', null, 'G4', null, 'B4', null, 'G4', null,
