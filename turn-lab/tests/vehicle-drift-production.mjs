@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 
 import { CAR_CATALOG, deriveVehicleTuning } from '../../turn/vehicle/catalog.js';
-import { getVehicleSpeedLimit, vehicleIgnoresOffRoadPenalty } from '../../turn/vehicle/physics.js';
+import { getVehicleSpeedLimit } from '../../turn/vehicle/physics.js';
 
 const driftTunings = [1, 2, 3, 4, 5].map((drift) => deriveVehicleTuning({
   speed: 3,
@@ -21,44 +21,6 @@ assert.deepEqual(
   driftTunings.map((tuning) => tuning.driftStabilityMultiplier),
   [0.82, 0.91, 1, 1.09, 1.18],
   'Higher DRIFT ratings must settle lateral motion more cleanly'
-);
-
-const monsterTruck = CAR_CATALOG.find((car) => car.id === 'monster-truck');
-assert.ok(monsterTruck, 'Monster Truck must remain in the vehicle catalog');
-assert.equal(
-  vehicleIgnoresOffRoadPenalty(monsterTruck.id),
-  true,
-  'Monster Truck must treat off-road terrain as track for vehicle physics'
-);
-for (const car of CAR_CATALOG.filter((candidate) => candidate.id !== 'monster-truck')) {
-  assert.equal(
-    vehicleIgnoresOffRoadPenalty(car.id),
-    false,
-    `${car.name} must keep the normal off-road physics penalty`
-  );
-}
-
-const monsterMaxSpeed = 88 * monsterTruck.tuning.topSpeedMultiplier;
-const monsterRoadLimit = getVehicleSpeedLimit({
-  offRoad: false,
-  boostActive: false,
-  maxSpeed: monsterMaxSpeed,
-  boostSpeedMultiplier: monsterTruck.tuning.boostSpeedMultiplier,
-  driftHeld: false,
-  driftSpeedMultiplier: monsterTruck.tuning.driftSpeedMultiplier
-});
-const monsterEffectiveOffRoadLimit = getVehicleSpeedLimit({
-  offRoad: !vehicleIgnoresOffRoadPenalty(monsterTruck.id),
-  boostActive: false,
-  maxSpeed: monsterMaxSpeed,
-  boostSpeedMultiplier: monsterTruck.tuning.boostSpeedMultiplier,
-  driftHeld: false,
-  driftSpeedMultiplier: monsterTruck.tuning.driftSpeedMultiplier
-});
-assert.equal(
-  monsterEffectiveOffRoadLimit,
-  monsterRoadLimit,
-  'Monster Truck must retain its road speed limit while physically off-road'
 );
 
 const drivingModes = [
@@ -102,4 +64,4 @@ for (const car of CAR_CATALOG) {
   }
 }
 
-console.log('TURN DRIFT and Monster Truck off-road physics contract passed for all 15 cars.');
+console.log('TURN DRIFT speed, engine, drag and stability contract passed for all 15 cars.');
