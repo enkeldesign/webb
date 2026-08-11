@@ -171,7 +171,7 @@ lead: Object.freeze([
 });
 
 // Song form: establish T, contrast with B, return to T, then make C the scarce payoff.
-const ARRANGEMENT = Object.freeze([TUNE, TUNE, BRIDGE, TUNE, CHORUS, CHORUS, CHORUS, BRIDGE]);
+const ARRANGEMENT = Object.freeze([TUNE, TUNE, BRIDGE, TUNE, CHORUS, CHORUS]);
 
 let installed = false;
 let context = null;
