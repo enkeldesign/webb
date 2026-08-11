@@ -128,17 +128,17 @@ const CHORUS = Object.freeze({
   leadVoice: 'flute',
   lead: Object.freeze([
     // Em — eight eighth notes
-    'E6', null, 'G6', null, 'B6', null, 'G6', null,
-    'E7', null, 'B6', null, 'G6', null, 'B6', null,
+    'E6', 'E4', 'G6', 'G4', 'B6', 'B4', 'G6', 'G4',
+    'E7', 'E5', 'B6', 'B4', 'G6', 'G4', 'B6', 'B4',
     // C — eight eighth notes
-    'G6', null, 'E6', null, 'C7', null, 'E7', null,
-    'G7', null, 'E7', null, 'D7', null, 'C7', null,
+    'G6', 'G4', 'E6', 'E4', 'C7', 'C5', 'E7', 'E5',
+    'G7', 'g5', 'E7', 'E5', 'D7', 'D5', 'C7', 'C5',
     // G — eight eighth notes
-    'D7', null, 'B6', null, 'G6', null, 'B6', null,
-    'D7', null, 'B6', null, 'A6', null, 'G6', null,
+    'D7', 'D5', 'B6', 'B4', 'G6', 'G4', 'B6', 'B4',
+    'D7', 'D5', 'B6', 'B4', 'A6', 'A4', 'G6', 'G4',
     // B7 — eight eighth notes, ending on D# to pull back into E
-    'F#6', null, 'A6', null, 'B6', null, 'D#7', null,
-    'B6', null, 'A6', null, 'F#6', null, 'D#6', null
+    'F#6', 'F#4', 'A6', 'A4', 'B6', 'B4', 'D#7', 'D#5',
+    'B6', 'B4', 'A6', 'A4', 'F#6', 'F#4', 'D#6', 'D#4'
   ]),
   bass: Object.freeze([
     'E2', 'E2', 'E2', null, 'B2', 'B2', null, null,
