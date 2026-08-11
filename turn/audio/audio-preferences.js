@@ -1,7 +1,3 @@
-import { installSharedAudioContextConstructor } from './shared-audio-context-r430.js?revision=r430-single-context';
-
-installSharedAudioContextConstructor();
-
 const AUDIO_ENABLED_STORAGE_KEY = 'turn-audio-enabled-v1';
 const AUDIO_BALANCE_STORAGE_KEY = 'turn-audio-balance-v1';
 const DEFAULT_BALANCE = 0.5;

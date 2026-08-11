@@ -63,7 +63,7 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     type: 'vehicle',
     vehicleIds: Object.freeze(['monster-truck']),
     icon: 'monster',
-    description: 'Unlock the Monster Truck: a dark military-green heavyweight with enormous tyres, strong drift-stability and a long-lasting Boost tank. Going off-road doesn’t slow it down.'
+    description: 'Unlock the Monster Truck: a dark military-green heavyweight with enormous tyres, strong drift stability and a long Boost tank.'
   })
 ]);
 
