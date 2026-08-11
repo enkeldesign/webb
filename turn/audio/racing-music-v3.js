@@ -288,7 +288,7 @@ function playFluteLead(note, time) {
   // Chorus flute stays one octave above the T/B lead transposition.
   const hz = noteToFrequency(note) / 2;
   // One eighth note = two sixteenth-note sequencer steps. Leave a tiny articulation gap.
-  const duration = STEP_SECONDS * 2 * 0.88;
+const duration = STEP_SECONDS * 0.88;
   const endTime = time + duration;
 
   const body = trackSource(context.createOscillator());
