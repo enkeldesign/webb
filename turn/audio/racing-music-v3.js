@@ -283,6 +283,7 @@ function scheduleGainEnvelope(gain, time, peak, releaseTime, attack = 0.018) {
   gain.exponentialRampToValueAtTime(0.0001, releaseTime);
 }
 
+/*
 function playFluteLead(note, time) {
   if (!note) return;
   // Chorus flute stays one octave above the T/B lead transposition.
@@ -319,6 +320,98 @@ const duration = STEP_SECONDS * 0.88;
   overtone.start(time);
   body.stop(endTime + 0.01);
   overtone.stop(endTime + 0.01);
+}
+*/
+
+function playFluteLead(note, time) {
+  if (!note) return;
+
+  // Keep the chorus in its current octave.
+  const hz = noteToFrequency(note) / 2;
+
+  // One sixteenth-note event with a small gap.
+  const duration = STEP_SECONDS * 0.88;
+  const endTime = time + duration;
+
+  // Main guitar body + brighter harmonic.
+  const body = trackSource(context.createOscillator());
+  const harmonic = trackSource(context.createOscillator());
+
+  const bodyGain = makeGain(0.75);
+  const harmonicGain = makeGain(0.16);
+  const amp = makeGain(0.0001);
+
+  if (!bodyGain || !harmonicGain || !amp) return;
+
+  const filter = context.createBiquadFilter();
+
+  // Triangle keeps it warm, while the second oscillator
+  // gives that slightly synthetic 90s-game guitar edge.
+  body.type = 'triangle';
+  harmonic.type = 'triangle';
+
+  body.frequency.setValueAtTime(hz, time);
+  harmonic.frequency.setValueAtTime(hz * 2, time);
+
+  // Tiny downward pitch "pluck" at the start.
+  // Gives the note a picked-string character.
+  body.frequency.setValueAtTime(hz * 1.018, time);
+  body.frequency.exponentialRampToValueAtTime(
+    hz,
+    time + 0.025
+  );
+
+  harmonic.frequency.setValueAtTime(hz * 2.025, time);
+  harmonic.frequency.exponentialRampToValueAtTime(
+    hz * 2,
+    time + 0.022
+  );
+
+  // Start bright, then quickly darken like a plucked string.
+  filter.type = 'lowpass';
+  filter.Q.value = 1.2;
+
+  filter.frequency.setValueAtTime(4200, time);
+  filter.frequency.exponentialRampToValueAtTime(
+    1500,
+    endTime
+  );
+
+  // Guitar-style envelope:
+  // very quick pick attack,
+  // strong initial hit,
+  // then decay rather than a flute sustain.
+  amp.gain.setValueAtTime(0.0001, time);
+
+  amp.gain.exponentialRampToValueAtTime(
+    0.055,
+    time + 0.008
+  );
+
+  amp.gain.exponentialRampToValueAtTime(
+    0.025,
+    time + duration * 0.38
+  );
+
+  amp.gain.exponentialRampToValueAtTime(
+    0.0001,
+    endTime
+  );
+
+  body.connect(bodyGain);
+  harmonic.connect(harmonicGain);
+
+  bodyGain.connect(filter);
+  harmonicGain.connect(filter);
+
+  filter.connect(amp);
+  amp.connect(masterGain);
+
+  body.start(time);
+  harmonic.start(time);
+
+  body.stop(endTime + 0.01);
+  harmonic.stop(endTime + 0.01);
 }
 
 function playLead(note, time, { voice = 'lead' } = {}) {
