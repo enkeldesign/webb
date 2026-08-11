@@ -17,8 +17,10 @@ const escapedCacheKey = escapeRegex(release.cacheKey);
 
 assert.match(index, new RegExp(`TURN v${escapedVersion} · Build ${escapedId}`));
 assert.match(index, new RegExp(`app\\.js\\?build=${escapedCacheKey}-browser-consent-r176-bella-road-derived-zone`));
-assert.match(index, /app\.js\?build=20260809-r163-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click-r420-music-warm-r426-loading-copy/,
-  'The production document must cache-bust the revised loading-screen copy');
+assert.ok(
+  index.includes(`app.js?build=${release.cacheKey}-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click-r420-music-warm-r426-loading-copy`),
+  'The production document must cache-bust the revised loading-screen copy under the current release key'
+);
 assert.match(index, /countryside-bella-rescue-hotfix-r176\.js\?revision=r176-video-proven-rescue/,
   'The canonical startup document must replace cached Bella rescue behavior independently');
 assert.match(nextIndex, new RegExp(`TURN NEXT · Source TURN v${escapedVersion} · Build ${escapedId}`));

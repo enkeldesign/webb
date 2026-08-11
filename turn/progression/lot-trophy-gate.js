@@ -3,7 +3,7 @@ import {
   isVehicleUnlocked,
   rewardForVehicle,
   showTrophyUnlockNotice
-} from './trophy-road.js?revision=r157-paint-monster';
+} from './trophy-road.js?revision=r164-perks';
 
 const FALLBACK_VEHICLE_ID = 'classic';
 const activeGates = new WeakMap();

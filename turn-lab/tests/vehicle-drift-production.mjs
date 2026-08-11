@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict';
 
 import { CAR_CATALOG, deriveVehicleTuning } from '../../turn/vehicle/catalog.js';
-import { getVehicleSpeedLimit, vehicleIgnoresOffRoadPenalty } from '../../turn/vehicle/physics.js';
+import {
+  OVERDRIVE_BUILD_SECONDS,
+  OVERDRIVE_MAX_SPEED_MULTIPLIER,
+  getOverdriveSpeedMultiplier,
+  getVehicleSpeedLimit,
+  updateVehicleOverdriveState,
+  vehicleHasOverdrive,
+  vehicleIgnoresOffRoadPenalty
+} from '../../turn/vehicle/physics.js';
 
 const driftTunings = [1, 2, 3, 4, 5].map((drift) => deriveVehicleTuning({
   speed: 3,
@@ -61,6 +69,38 @@ assert.equal(
   'Monster Truck must retain its road speed limit while physically off-road'
 );
 
+const futureRacer = CAR_CATALOG.find((car) => car.id === 'race-future');
+assert.ok(futureRacer, 'Future Racer must remain in the vehicle catalog');
+assert.equal(OVERDRIVE_BUILD_SECONDS, 5, 'OVERDRIVE must take five clean seconds to fully build');
+assert.equal(OVERDRIVE_MAX_SPEED_MULTIPLIER, 1.06, 'OVERDRIVE must top out at a small 6% speed-ceiling bonus');
+assert.equal(vehicleHasOverdrive(futureRacer.id), true, 'Future Racer must own OVERDRIVE');
+for (const car of CAR_CATALOG.filter((candidate) => candidate.id !== 'race-future')) {
+  assert.equal(vehicleHasOverdrive(car.id), false, `${car.name} must not receive OVERDRIVE`);
+}
+assert.equal(getOverdriveSpeedMultiplier(0), 1);
+assert.ok(Math.abs(getOverdriveSpeedMultiplier(2.5) - 1.03) < 1e-12);
+assert.equal(getOverdriveSpeedMultiplier(5), 1.06);
+assert.equal(getOverdriveSpeedMultiplier(20), 1.06, 'OVERDRIVE must clamp at its designed ceiling');
+
+const overdriveState = { vehicleId: 'race-future', speed: 40, overdriveCleanSeconds: 0 };
+updateVehicleOverdriveState({ state: overdriveState, dt: 2.5, speed: 40 });
+assert.equal(overdriveState.overdriveCleanSeconds, 2.5);
+assert.ok(Math.abs(getOverdriveSpeedMultiplier(overdriveState.overdriveCleanSeconds) - 1.03) < 1e-12);
+updateVehicleOverdriveState({ state: overdriveState, dt: 2.5, speed: 40 });
+assert.equal(overdriveState.overdriveCleanSeconds, 5);
+assert.equal(getOverdriveSpeedMultiplier(overdriveState.overdriveCleanSeconds), 1.06);
+updateVehicleOverdriveState({ state: overdriveState, offRoad: true });
+assert.equal(overdriveState.overdriveCleanSeconds, 0, 'Leaving the road must reset OVERDRIVE immediately');
+overdriveState.overdriveCleanSeconds = 5;
+updateVehicleOverdriveState({ state: overdriveState, collided: true });
+assert.equal(overdriveState.overdriveCleanSeconds, 0, 'A collision must reset OVERDRIVE immediately');
+updateVehicleOverdriveState({ state: overdriveState, dt: 5, speed: 0 });
+assert.equal(overdriveState.overdriveCleanSeconds, 0, 'Standing still must not preload OVERDRIVE');
+
+const ordinaryState = { vehicleId: 'sedan', speed: 40, overdriveCleanSeconds: 4 };
+assert.equal(updateVehicleOverdriveState({ state: ordinaryState, dt: 1, speed: 40 }), 1);
+assert.equal(ordinaryState.overdriveCleanSeconds, 0, 'Non-perk cars must not retain OVERDRIVE state');
+
 const drivingModes = [
   { name: 'road', offRoad: false, boostActive: false },
   { name: 'road with boost', offRoad: false, boostActive: true },
@@ -102,4 +142,4 @@ for (const car of CAR_CATALOG) {
   }
 }
 
-console.log('TURN DRIFT and Monster Truck off-road physics contract passed for all 15 cars.');
+console.log('TURN DRIFT, Monster Truck all-terrain and Future Racer OVERDRIVE contracts passed for all 15 cars.');

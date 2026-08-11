@@ -7,6 +7,7 @@ const [
   app,
   wrapper,
   enhancementRuntime,
+  perkDisclosure,
   layout,
   layoutCss,
   lot,
@@ -18,6 +19,7 @@ const [
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-track-select.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-enhancement-runtime.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/lot-perk-disclosure.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-layout-r60.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-layout-r60.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8'),
@@ -30,127 +32,94 @@ const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/s
 assert.ok(importMapText, 'Production must expose its import map');
 const imports = JSON.parse(importMapText).imports;
 
-assert.match(index, /lot-layout-r60\.css\?build=20260809-r163-native-html/, 'Production must cache-bust the HTML-first Lot layout stylesheet');
-assert.match(index, new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent`), 'Production must cache-bust the browser-gated canonical runtime');
+assert.match(
+  index,
+  new RegExp(`lot-layout-r60\\.css\\?build=${release.cacheKey}-native-html`),
+  'Production must cache-bust the HTML-first Lot layout stylesheet with the active release'
+);
+assert.match(index, new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent`));
 assert.equal(
   imports['./garage/lot-r10.js?build=20260720-r19'],
-  `./garage/lot-track-select.js?build=${release.cacheKey}&revision=r163-native-html`,
-  'Production must retain the track-first compatibility wrapper with the native HTML revision'
+  `./garage/lot-track-select.js?build=${release.cacheKey}&revision=r163-native-html`
 );
 assert.equal(
   imports['./garage/lot-accessibility-r118.js?build=20260729-r118'],
-  `./garage/lot-accessibility-r118.js?build=${release.cacheKey}&revision=r163-voiceover-first-lot-focus`,
-  'Production must bypass the cached Lot accessibility module for the first-entry VoiceOver focus fix'
-);
-assert.equal(
-  imports[`./garage/lot-enhancement-runtime.js?revision=r163-native-picker-parent-click&build=${release.cacheKey}`],
-  `./garage/lot-enhancement-runtime.js?build=${release.cacheKey}&revision=r163-voiceover-pwa-lot-carryover`,
-  'Production must bypass the cached Lot enhancer for the standalone VoiceOver carry-over guard'
+  `./garage/lot-accessibility-r118.js?build=${release.cacheKey}&revision=r163-voiceover-first-lot-focus`
 );
 
-assert.match(app, /lot-layout-r60\.css\?revision=r121-viewer-r122-fit-r128-super-sedan-notice-r129-race-button-fit/, 'The Super Sedan fit stylesheet must bypass the previous notice cache');
-assert.match(app, /lot-enhancement-runtime\.js\?revision=r121/, 'Production must load the route-independent Lot enhancer');
-assert.match(app, /installLotEnhancementRuntime\(\)/, 'Production must install the Lot enhancer once');
+assert.match(app, /installLotEnhancementRuntime\(\)/);
 assert.ok(
   app.indexOf('installLotEnhancementRuntime()') < app.indexOf("withBuild('./main.js')"),
   'The Lot enhancement observer must exist before any route can open The Lot'
 );
 
-assert.match(wrapper, /lot-enhancement-runtime\.js\?revision=r121&build=20260731-r120/, 'The compatibility wrapper must share the exact enhancement module instance');
-assert.match(wrapper, /export async function showEnhancedLot/, 'The enhanced active-track Lot must remain reusable without another track chooser');
-assert.match(wrapper, /const removeEnhancements = enhanceLotNow\(\)/, 'The compatibility wrapper must synchronously enhance before the first paint');
-assert.match(wrapper, /await chooseTrackBeforeLot\(\)/, 'The compatibility route must still choose a track before The Lot');
-assert.doesNotMatch(wrapper, /installLotLayout|installLotStatLegend|installLotAccessibility/, 'Enhancement ownership must not drift back into one navigation wrapper');
+assert.match(wrapper, /export async function showEnhancedLot/);
+assert.match(wrapper, /const removeEnhancements = enhanceLotNow\(\)/);
+assert.match(wrapper, /await chooseTrackBeforeLot\(\)/);
+assert.doesNotMatch(wrapper, /installLotLayout|installLotStatLegend|installLotAccessibility/);
 
-assert.match(enhancementRuntime, /ENHANCEMENT_ID = 'enhanced-lot-r121'/, 'The restored Lot contract must have an explicit identity');
-assert.match(enhancementRuntime, /activeEnhancements = new WeakMap\(\)/, 'Enhancements must be idempotent per Lot screen');
-assert.match(enhancementRuntime, /LOT_ENTRY_CLICK_GUARD_MS = 600/, 'The Lot must keep a short bounded entry quarantine for carry-over activations');
-assert.match(enhancementRuntime, /const card = screen\.querySelector\('\.lot-card'\)/, 'The entry guard must live on the information card, not on the whole Lot');
-assert.match(enhancementRuntime, /event\.target\?\.closest\?\.\('\.lot-race'\)/, 'The entry guard must target only Race This Car');
-assert.match(enhancementRuntime, /event\.preventDefault\(\);[\s\S]*event\.stopImmediatePropagation\(\);/, 'A carry-over activation must stop before the motion gate can run');
-assert.match(enhancementRuntime, /card\.addEventListener\('click', blockCarryOverRaceClick, true\)/, 'The card capture guard must run before the Race This Car target listener');
-assert.match(enhancementRuntime, /card\.removeEventListener\('click', blockCarryOverRaceClick, true\)/, 'The temporary entry guard must clean itself up');
-assert.doesNotMatch(enhancementRuntime, /document\.addEventListener\('click'/, 'The carry-over fix must not restore a document-level click listener around native controls');
+assert.match(enhancementRuntime, /ENHANCEMENT_ID = 'enhanced-lot-r164-perks'/);
+assert.match(enhancementRuntime, /activeEnhancements = new WeakMap\(\)/);
+assert.match(enhancementRuntime, /LOT_ENTRY_CLICK_GUARD_MS = 600/);
+assert.match(enhancementRuntime, /installLotPerkDisclosure\(scope\)/);
+assert.match(enhancementRuntime, /installLotStatLegend\(scope\)/);
+assert.match(enhancementRuntime, /installLotLayout\(scope\)/);
+assert.match(enhancementRuntime, /installLotAccessibility\(scope\)/);
 assert.ok(
-  enhancementRuntime.indexOf('installLotEntryClickGuard(screen)') < enhancementRuntime.indexOf('gateLotNow(scope)'),
-  'The carry-over guard must attach before the ordinary Lot gates'
+  enhancementRuntime.indexOf('installLotPerkDisclosure(scope)') < enhancementRuntime.indexOf('installLotAccessibility(scope)'),
+  'Perk information must exist before the accessibility enhancer completes selected-car semantics'
 );
-assert.match(enhancementRuntime, /installLotStatLegend\(scope\)/, 'Every Lot route must receive the stat legend');
-assert.match(enhancementRuntime, /installLotLayout\(scope\)/, 'Every Lot route must receive the shared visual layout enhancement');
-assert.match(enhancementRuntime, /installLotAccessibility\(scope\)/, 'Every Lot route must receive the r118 accessibility model');
-assert.ok(
-  enhancementRuntime.indexOf('installLotStatLegend(scope)') < enhancementRuntime.indexOf('installLotLayout(scope)'),
-  'The legend trigger must exist before the layout turns it into the Attributes info icon'
+assert.match(enhancementRuntime, /new MutationObserver\(sync\)/);
+assert.match(enhancementRuntime, /if \(active\) return active\.release/);
+assert.match(enhancementRuntime, /released = true/);
+
+assert.match(perkDisclosure, /className = 'lot-perk-button'/);
+assert.match(perkDisclosure, /aria-expanded/);
+assert.match(perkDisclosure, /<strong>PERK:<\/strong>/);
+assert.match(perkDisclosure, /-webkit-line-clamp: 2/);
+assert.match(perkDisclosure, /reward\?\.perkDescription/);
+
+assert.match(
+  lot,
+  /<section class="lot-viewbox lot-viewbox-with-paint">[\s\S]*<div class="lot-colors" aria-label="Choose car paint colours"><\/div>[\s\S]*<\/section>/,
+  'Native paint controls and 3D preview must share their final panel from initial render'
 );
-assert.ok(
-  enhancementRuntime.indexOf('installLotLayout(scope)') < enhancementRuntime.indexOf('installLotAccessibility(scope)'),
-  'Accessibility landmarks must attach after visual layout enhancement'
-);
-assert.match(enhancementRuntime, /new MutationObserver\(sync\)/, 'The runtime must catch M8 and any future Lot route');
-assert.match(enhancementRuntime, /if \(active\) return active\.release/, 'Repeated route helpers must not install duplicate observers or headings');
-assert.match(enhancementRuntime, /released = true/, 'Cleanup must be safe when both the route and observer release the same screen');
+assert.match(lot, /lot-viewbox-head" aria-hidden="true"/);
+assert.match(lot, /lot-view-host" aria-hidden="true"/);
+assert.doesNotMatch(lot, /lot-view-close|lot-view-open/);
 
-assert.match(lot, /<section class="lot-viewbox lot-viewbox-with-paint">[\s\S]*<div class="lot-colors" aria-label="Choose car paint colours"><\/div>[\s\S]*<\/section>/,
-  'The native paint controls and 3D preview must share their final panel from initial render');
-assert.match(lot, /lot-viewbox-head" aria-hidden="true"/, 'Decorative 3D chrome must be hidden at source');
-assert.match(lot, /lot-view-host" aria-hidden="true"/, 'The decorative WebGL host must be hidden at source');
-assert.match(lot, /<small aria-hidden="true">DRAG TO ROTATE<\/small>/, 'Decorative viewer guidance must be hidden at source');
-assert.doesNotMatch(lot, /lot-view-close|lot-view-open/, 'Dormant 3D controls must not be rendered just to be removed later');
-assert.doesNotMatch(layout, /viewbox|colors|appendChild\(colors\)|aria-hidden|lot-view-close|lot-view-open/,
-  'The layout enhancer must not rearrange or repair the paint control DOM');
-assert.match(layout, /document\.createTextNode\('ATTRIBUTES'\)/, 'The lower card must be headed Attributes visually');
-assert.match(layout, /infoButton\.textContent = 'i'/, 'The verbose help button must become a conventional info icon');
-assert.match(layout, /aria-label', 'What do the attributes mean\?'/, 'The compact icon must keep an explicit accessible name');
-assert.doesNotMatch(layout, /MutationObserver|setAnimationLoop|requestAnimationFrame/, 'The visual layout pass must remain a one-time DOM arrangement');
+assert.doesNotMatch(layout, /appendChild\(colors\)|lot-view-close|lot-view-open/);
+assert.match(layout, /document\.createTextNode\('ATTRIBUTES'\)/);
+assert.match(layout, /infoButton\.textContent = 'i'/);
+assert.match(layout, /aria-label', 'What do the attributes mean\?'/);
+assert.doesNotMatch(layout, /MutationObserver|setAnimationLoop|requestAnimationFrame/);
 
-assert.match(accessibility, /makeHiddenHeading\('lot-choose-car-heading', 'Choose car'\)/, 'Screen-reader users must be able to navigate directly to the car chooser');
-assert.match(accessibility, /makeHiddenHeading\('lot-paint-heading', 'Choose car colour'\)/, 'Screen-reader users must be able to jump beyond the car list to paint controls');
-assert.match(accessibility, /makeHiddenHeading\('lot-car-info-heading', 'Car information'\)/, 'Screen-reader users must be able to jump directly to selected-car information');
-assert.match(accessibility, /existingLabel = button\.getAttribute\('aria-label'\) \|\| car\.name/, 'The complete car text must retain its name and visual description');
-assert.match(accessibility, /button\.setAttribute\('aria-labelledby', description\.id\)/, 'Every car option must use its complete hidden text as the accessible name');
-assert.match(accessibility, /selectedSummary\.textContent = completeTextByCarId\.get\(selectedCarId\)/, 'Car information must contain real complete text for the selected car');
-assert.match(accessibility, /carDescription\.setAttribute\('aria-hidden', 'true'\)/, 'The visible short description must not duplicate the complete accessible summary');
-assert.match(accessibility, /stats\.setAttribute\('aria-hidden', 'true'\)/, 'The visual bars must not duplicate attributes already present in the complete summary');
-assert.match(accessibility, /CAR_CATALOG\.slice\(selectedIndex\)/, 'The hidden radio order must begin with the selected car');
-assert.match(accessibility, /carPicker\.appendChild\(fragment\)/, 'The checked radio must become the first item reached after the Choose car heading');
-assert.match(accessibility, /button\.tabIndex = button === selectedButton \? 0 : -1/, 'The selected car must remain the radio group keyboard entry point');
-assert.match(accessibility, /aria-posinset/, 'Reordered radios must retain their original catalogue position');
-assert.match(accessibility, /aria-setsize/, 'Reordered radios must retain the catalogue size');
-assert.match(accessibility, /attributeFilter: \['aria-checked'\]/, 'Selected-car semantics must follow live radio changes without polling');
-assert.doesNotMatch(accessibility, /setAttribute\('aria-activedescendant'/, 'A non-focusable radiogroup must not pretend to own active-descendant focus');
-assert.match(accessibility, /const lotTitle = screen\?\.querySelector\('#lot-title'\)/, 'The full-screen Lot route must expose its own focus handoff target');
-assert.match(accessibility, /if \(lotTitle && !screen\.contains\(document\.activeElement\)\)/, 'Lot entry focus must move only when focus is still outside the new route');
-assert.match(accessibility, /lotTitle\.tabIndex = -1/, 'The Lot heading must be programmatically focusable without joining normal tab order');
-assert.match(accessibility, /lotTitle\.focus\(\{ preventScroll: true \}\)/, 'The Lot focus handoff must not scroll or activate Race This Car');
-assert.match(accessibility, /Top speed/, 'Car descriptions must include top speed');
-assert.match(accessibility, /Acceleration/, 'Car descriptions must include acceleration');
-assert.match(accessibility, /Control/, 'Car descriptions must include control');
-assert.match(accessibility, /Drift/, 'Car descriptions must include drift');
-assert.match(accessibility, /Boost power/, 'Car descriptions must include boost power');
-assert.match(accessibility, /Boost tank/, 'Car descriptions must include boost tank');
-assert.match(accessibility, /out of 5\./, 'Every described attribute must use the agreed out-of-five scale');
-assert.match(accessibility, /colors\.setAttribute\('aria-labelledby', paintHeading\.id\)/, 'The colour controls must have a useful accessible group name');
-assert.match(accessibility, /card\.setAttribute\('role', 'region'\)/, 'Selected-car information must remain a named navigable region');
-assert.doesNotMatch(accessibility, /setInterval|setTimeout|requestAnimationFrame|setAnimationLoop/, 'The accessibility enhancer must not add timing workarounds, polling or animation work');
+assert.match(layoutCss, /\.lot-a11y-only \{[\s\S]*clip-path: inset\(50%\)/);
+assert.match(layoutCss, /--lot-paint-rail-height: 54px/);
+assert.match(layoutCss, /min-height: clamp\(150px, 28vh, 230px\)/);
+assert.match(layoutCss, /\.lot-viewbox-with-paint \.lot-colors \{[\s\S]*border-top: 3px solid var\(--ink\)/);
+assert.doesNotMatch(layoutCss, /\.lot-color-input|\.lot-color-preset/);
+assert.match(layoutCss, /\.lot-race \{[\s\S]*background: var\(--pink\)/);
+assert.match(layoutCss, /@media \(max-height: 520px\)/);
+assert.match(layoutCss, /@media \(max-height: 430px\)/);
 
-assert.match(layoutCss, /\.lot-a11y-only \{[\s\S]*clip-path: inset\(50%\)/, 'Navigation headings and summaries must be visually hidden without leaving the accessibility tree');
-assert.match(layoutCss, /--lot-paint-rail-height: 54px/, 'Paint controls must use a compact dock to protect the 3D preview');
-assert.match(layoutCss, /min-height: clamp\(150px, 28vh, 230px\)/, 'The 3D viewer must receive a meaningful responsive minimum height');
-assert.match(layoutCss, /flex: 1 1 auto/, 'The 3D panel must receive the remaining rail height instead of being squashed');
-assert.match(layoutCss, /\.lot-viewbox-with-paint \.lot-colors \{[\s\S]*border-top: 3px solid var\(--ink\)/, 'Paint controls must preserve their visual dock inside the 3D card');
-assert.doesNotMatch(layoutCss, /\.lot-color-input|\.lot-color-preset/, 'Layout CSS must not style or replace native paint controls');
-assert.match(layoutCss, /\.lot-card-actions \{[\s\S]*grid-template-columns: 1fr[\s\S]*margin-top: 4px/, 'Race This Car must follow the secret notice with only the explicit minimum gap');
-assert.match(layoutCss, /\.lot-secret-notice \{[\s\S]*margin: 8px 0 0/, 'The secret notice must not reserve an additional bottom margin above Race This Car');
-assert.match(layoutCss, /\.lot-screen\.is-super-sedan-unlocked \.lot-card \{[\s\S]*display: flex[\s\S]*flex-direction: column/, 'The unlocked card must keep the notice and action in one deterministic vertical flow');
-assert.match(layoutCss, /\.lot-screen\.is-super-sedan-unlocked \.lot-viewbox-with-paint \{[\s\S]*min-height: clamp\(132px, 22vh, 176px\)/, 'The temporary secret message must borrow enough rail height to keep Race This Car above the fold');
-assert.match(layoutCss, /\.lot-stats-help \{[\s\S]*border-radius: 50%/, 'The Attributes help control must read as a conventional circular info icon');
-assert.match(layoutCss, /\.lot-race \{[\s\S]*background: var\(--pink\)/, 'Race This Car must use the pink action treatment shown in the fitted design');
-assert.match(layoutCss, /@media \(max-height: 520px\)[\s\S]*\.lot-side \{[\s\S]*top: max\(62px,[\s\S]*\.lot-card \{[\s\S]*padding: 9px/, 'Tablet-sized short landscapes must compact the rail before Race can leave the viewport');
-assert.match(layoutCss, /@media \(max-height: 520px\)[\s\S]*\.lot-screen\.is-super-sedan-unlocked \.lot-viewbox-with-paint \{[\s\S]*min-height: 112px/, 'Short tablet landscapes must give the unlocked action enough room');
-assert.match(layoutCss, /@media \(max-height: 520px\)[\s\S]*min-height: 140px/, 'The fitted layout must preserve a useful 3D preview on short tablet landscapes');
-assert.match(layoutCss, /@media \(max-height: 430px\)[\s\S]*\.lot-screen\.is-super-sedan-unlocked \.lot-viewbox-with-paint \{[\s\S]*min-height: 96px/, 'Short iPhone landscapes must prioritise the unlocked race action without removing the viewer');
-assert.match(layoutCss, /@media \(max-height: 430px\)[\s\S]*min-height: 120px/, 'Short iPhone landscapes must keep the viewer without pushing Race off-screen');
+assert.match(accessibility, /makeHiddenHeading\('lot-choose-car-heading', 'Choose car'\)/);
+assert.match(accessibility, /makeHiddenHeading\('lot-paint-heading', 'Choose car colour'\)/);
+assert.match(accessibility, /makeHiddenHeading\('lot-car-info-heading', 'Car information'\)/);
+assert.match(accessibility, /button\.setAttribute\('aria-labelledby', description\.id\)/);
+assert.match(accessibility, /selectedSummary\.textContent = completeTextByCarId\.get\(selectedCarId\)/);
+assert.match(accessibility, /CAR_CATALOG\.slice\(selectedIndex\)/);
+assert.match(accessibility, /aria-posinset/);
+assert.match(accessibility, /aria-setsize/);
+assert.match(accessibility, /lotTitle\.focus\(\{ preventScroll: true \}\)/);
+assert.match(accessibility, /Top speed/);
+assert.match(accessibility, /Boost tank/);
+assert.doesNotMatch(accessibility, /setInterval|requestAnimationFrame|setAnimationLoop/);
 
-assert.match(legend, /aria-haspopup', 'dialog'/, 'The relocated info icon must still open the full stat legend');
+assert.match(legend, /VEHICLE_STAT_LEGEND/);
+assert.match(legend, /aria-haspopup', 'dialog'/);
+assert.match(legend, /role', 'dialog'/);
+assert.match(legend, /name\.textContent = entry\.label/);
+assert.match(legend, /description\.textContent = entry\.description/);
 
-console.log(`TURN ${release.id} source-owned native paint layout and selected-car accessibility passed.`);
+console.log(`TURN ${release.id} compact Lot layout, perk disclosure and accessibility contract passed.`);

@@ -7,7 +7,7 @@ export {
   loadAchievementState,
   normalizeAchievementState,
   totalAvailableTrophies
-} from './achievements/store.js?revision=r166-bella-records';
+} from './achievements/store.js?revision=r164-perks';
 export {
   TIME_TRIALS,
   TIME_TRIAL_ACHIEVEMENT_IDS,
@@ -30,5 +30,5 @@ export {
   isVehicleUnlocked,
   isPaintUnlocked,
   prepareTrophyRoadProfile
-} from './progression/trophy-road.js?revision=r166-bella-records';
-export { installAchievements } from './achievements/runtime.js?revision=r166-bella-records';
+} from './progression/trophy-road-perks-r164.js?revision=r164-perks';
+export { installAchievements } from './achievements/runtime.js?revision=r164-perks';

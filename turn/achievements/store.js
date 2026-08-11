@@ -10,7 +10,7 @@ import {
   getTrophyRoadReward,
   grandfatheredRewardIdsForVersion,
   rewardIdsForTrophies
-} from '../progression/trophy-road.js?revision=r166-bella-records';
+} from '../progression/trophy-road-perks-r164.js?revision=r164-perks';
 
 export const ACHIEVEMENT_STORAGE_KEY = TROPHY_ROAD_STORAGE_KEY;
 const STORAGE_VERSION = TROPHY_ROAD_STORAGE_VERSION;

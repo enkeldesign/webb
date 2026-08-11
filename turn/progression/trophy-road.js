@@ -26,24 +26,25 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     description: 'Unlock TURN’s night-time city track, with neon streets, technical corners and the longest lap in the current track collection.'
   }),
   Object.freeze({
-    id: 'future-racer',
-    threshold: 400,
-    title: 'FUTURE RACER',
-    shortTitle: 'Future Racer',
-    type: 'vehicle',
-    vehicleIds: Object.freeze(['race-future']),
-    icon: 'future',
-    description: 'Unlock a high-speed racing vehicle built for advanced laps and hard time-trial targets.'
-  }),
-  Object.freeze({
     id: 'paintjob',
-    threshold: 500,
+    threshold: 400,
     title: 'PAINTJOB',
     shortTitle: 'Paintjob',
     type: 'feature',
     featureId: 'vehicle-paint',
     icon: 'paint',
     description: 'Unlock body and secondary paint controls in The Lot. Every vehicle keeps its own distinctive factory colour until then.'
+  }),
+  Object.freeze({
+    id: 'future-racer',
+    threshold: 500,
+    title: 'FUTURE RACER',
+    shortTitle: 'Future Racer',
+    type: 'vehicle',
+    vehicleIds: Object.freeze(['race-future']),
+    icon: 'future',
+    perkDescription: 'OVERDRIVE — 5 clean seconds builds +6% top speed. Off-road or collisions reset it.',
+    description: 'Unlock the Future Racer: built for advanced time trials.<br><strong>PERK:</strong> OVERDRIVE — 5 clean seconds builds +6%; off-road or hits reset.'
   }),
   Object.freeze({
     id: 'emergency-pack',
@@ -63,7 +64,8 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     type: 'vehicle',
     vehicleIds: Object.freeze(['monster-truck']),
     icon: 'monster',
-    description: 'Unlock the Monster Truck: a dark military-green heavyweight with enormous tyres, strong drift-stability and a long-lasting Boost tank. Going off-road doesn’t slow it down.'
+    perkDescription: 'Going off-road doesn’t slow it down.',
+    description: 'Unlock the Monster Truck: a military-green heavyweight.<br><strong>PERK:</strong> Going off-road doesn’t slow it down.'
   })
 ]);
 

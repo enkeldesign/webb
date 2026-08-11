@@ -82,8 +82,9 @@ assert.match(lotGate, /if \(lastAnnouncedCarId\) dismissVisibleUnlockNotice\(\)/
 assert.match(lotGate, /if \(lastAnnouncedCarId\) dismissVisibleUnlockNotice\(\);[\s\S]*raceButton\.classList\.remove/,
   'Leaving The Lot must not leave a vehicle lock notice behind');
 
-assert.match(lotRuntime, /lot-trophy-gate\.js\?revision=r162-dismiss-unlocked-car-toast/);
-assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r163-native-picker-parent-click/);
+assert.match(lotRuntime, /lot-trophy-gate\.js\?revision=r164-perks/);
+assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r164-perks/);
+assert.match(lotRuntime, /lot-perk-disclosure\.js\?revision=r164-perks/);
 assert.match(app, /trophy-road-r157\.css\?revision=r163-native-picker-parent-click/);
 assert.match(app, /lot-enhancement-runtime\.js\?revision=r163-native-picker-parent-click/);
 assert.match(
@@ -91,4 +92,4 @@ assert.match(
   new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click`)
 );
 
-console.log('TURN Lot lock feedback and native paint ancestry regressions passed.');
+console.log('TURN Lot lock feedback, perk revisions and native paint ancestry regressions passed.');
