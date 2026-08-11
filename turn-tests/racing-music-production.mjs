@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { Buffer } from 'node:buffer';
+import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 
 const [index, labIndex, homeLayout, music, headerFix] = await Promise.all([
@@ -9,10 +11,30 @@ const [index, labIndex, homeLayout, music, headerFix] = await Promise.all([
   fs.readFile(new URL('../turn/home-header-r425.css', import.meta.url), 'utf8')
 ]);
 
-assert.match(
-  index,
-  /"\/turn\/audio\/racing-music-v2\.js\?build=20260809-r163-racing-music-warm-v2": "\/turn\/audio\/racing-music-v3\.js\?revision=r424-eighth-note-flute-chorus"/,
-  'The established compatibility import must still resolve Home music to the approved v3 source'
+function gitBlobSha(source) {
+  const header = `blob ${Buffer.byteLength(source, 'utf8')}\0`;
+  return crypto.createHash('sha1').update(header).update(source).digest('hex');
+}
+
+function importMapImports(source) {
+  const jsonText = source.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
+  assert.ok(jsonText, 'TURN must expose an import map');
+  return JSON.parse(jsonText).imports;
+}
+
+const musicSpecifier = '/turn/audio/racing-music-v2.js?build=20260809-r163-racing-music-warm-v2';
+const musicRevision = `blob-${gitBlobSha(music).slice(0, 12)}`;
+const expectedMusicTarget = `/turn/audio/racing-music-v3.js?revision=${musicRevision}`;
+
+assert.equal(
+  importMapImports(index)[musicSpecifier],
+  expectedMusicTarget,
+  'Production must fingerprint the approved v3 music URL from the actual racing-music-v3.js blob so direct song edits cannot reuse stale cached bytes'
+);
+assert.equal(
+  importMapImports(labIndex)[musicSpecifier],
+  expectedMusicTarget,
+  'TURN LAB must use the same content-fingerprinted racing music URL as production'
 );
 assert.match(homeLayout, /audio\/racing-music-v2\.js\?build=\$\{buildKey\}-racing-music-warm-v2/,
   'The established Home lifecycle remains the single music installation point');
@@ -110,4 +132,4 @@ assert.match(music, /arrangement: Object\.freeze\(ARRANGEMENT\.map\(\(section\) 
 assert.match(music, /timbre: 'warm-v3-eighth-note-flute-chorus'/,
   'The existing runtime timbre identifier must remain stable for compatibility');
 
-console.log('TURN approved 120 BPM / 50% generated racing music, Home header and controls regression passed.');
+console.log(`TURN approved 120 BPM / 50% generated racing music and content-fingerprinted cache revision ${musicRevision} passed.`);
