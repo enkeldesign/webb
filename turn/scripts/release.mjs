@@ -8,6 +8,7 @@ const turnDir = path.resolve(scriptDir, '..');
 const releasePath = path.join(turnDir, 'release.json');
 const indexPath = path.join(turnDir, 'index.html');
 const labIndexPath = path.resolve(turnDir, '../turn-lab/index.html');
+const RACING_MUSIC_SPECIFIER_PATTERN = /^\/turn\/audio\/racing-music-v2\.js\?build=\d{8}-r\d+-racing-music-warm-v2$/;
 
 export async function loadReleaseDefinition() {
   const release = JSON.parse(await fs.readFile(releasePath, 'utf8'));
@@ -20,6 +21,22 @@ export function validateReleaseDefinition(release) {
   assert.match(release?.id || '', /^\d{4}\.\d{2}\.\d{2}-r\d+$/, 'TURN release id must use YYYY.MM.DD-rN');
   assert.match(release?.cacheKey || '', /^\d{8}-r\d+$/, 'TURN cache key must use YYYYMMDD-rN');
   assert.equal(release.id.replaceAll('.', '').replace('-', '-'), release.cacheKey, 'Release id and cache key must describe the same build');
+}
+
+function synchronizeRuntimeMusicSpecifier(importMap, release) {
+  const imports = importMap.imports || {};
+  const currentSpecifier = `/turn/audio/racing-music-v2.js?build=${release.cacheKey}-racing-music-warm-v2`;
+  const staleSpecifier = Object.keys(imports).find((specifier) =>
+    RACING_MUSIC_SPECIFIER_PATTERN.test(specifier) && specifier !== currentSpecifier
+  );
+
+  if (!staleSpecifier) return;
+
+  const synchronizedImports = {};
+  for (const [specifier, target] of Object.entries(imports)) {
+    synchronizedImports[specifier === staleSpecifier ? currentSpecifier : specifier] = target;
+  }
+  importMap.imports = synchronizedImports;
 }
 
 export function renderReleaseIndex(source, release) {
@@ -41,6 +58,7 @@ export function renderReleaseIndex(source, release) {
     /<script type="importmap">\s*([\s\S]*?)\s*<\/script>/,
     (match, jsonText) => {
       const importMap = JSON.parse(jsonText);
+      synchronizeRuntimeMusicSpecifier(importMap, release);
       for (const [specifier, target] of Object.entries(importMap.imports || {})) {
         if (typeof target !== 'string' || !target.startsWith('./')) continue;
         const url = new URL(target, 'https://enkel.design/turn/');
