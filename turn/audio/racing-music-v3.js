@@ -138,15 +138,16 @@ lead: Object.freeze([
 ]),
 
   bass: Object.freeze([
-    'E2', 'E2', 'E2', null, 'B2', 'B2', null, null,
-    'E3', 'E3', 'E3', null, 'B2', 'B2', null, null,
-    'C2', 'C2', 'C2', null, 'G2', 'G2', null, null,
-    'C3', 'C3', 'C3', null, 'G2', 'G2', null, null,
-    'G2', 'G2', 'G2', null, 'D3', 'D3', null, null,
-    'G3', 'G3', 'G3', null, 'D3', 'D3', null, null,
-    'B1', 'B1', 'B1', null, 'F#2', 'F#2', null, null,
-    'A2', 'A2', 'A2', null, 'D#3', 'D#3', 'F#3', null
-  ]),
+  'E2', 'E2', 'E2', 'E2', 'B2', 'B2', 'B2', 'B2',
+  'E3', 'E3', 'E3', 'E3', 'B2', 'B2', 'B2', 'B2',
+  'C2', 'C2', 'C2', 'C2', 'G2', 'G2', 'G2', 'G2',
+  'C3', 'C3', 'C3', 'C3', 'G2', 'G2', 'G2', 'G2',
+  'G2', 'G2', 'G2', 'G2', 'D3', 'D3', 'D3', 'D3',
+  'G3', 'G3', 'G3', 'G3', 'D3', 'D3', 'D3', 'D3',
+  'B1', 'B1', 'B1', 'B1', 'F#2', 'F#2', 'F#2', 'F#2',
+  'A2', 'A2', 'A2', 'A2', 'D#3', 'D#3', 'F#3', 'F#3'
+]),
+
   arp: Object.freeze([
     'E4', null, 'G4', null, 'B4', null, 'G4', null,
     'E5', null, 'B4', null, 'G4', null, 'B4', null,
