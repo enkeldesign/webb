@@ -2,9 +2,51 @@ import { resolveWorldCollisionState } from '../race/world-collision.js?build=202
 import { trackPitch, trackSurfaceY } from '../tracks/elevation.js?build=20260725-r67';
 
 const OFFROAD_CAPABLE_VEHICLE_IDS = new Set(['monster-truck']);
+const OVERDRIVE_VEHICLE_ID = 'race-future';
+const OVERDRIVE_MIN_SPEED = 8;
+export const OVERDRIVE_BUILD_SECONDS = 5;
+export const OVERDRIVE_MAX_SPEED_MULTIPLIER = 1.06;
 
 export function vehicleIgnoresOffRoadPenalty(vehicleId) {
   return OFFROAD_CAPABLE_VEHICLE_IDS.has(String(vehicleId || ''));
+}
+
+export function vehicleHasOverdrive(vehicleId) {
+  return String(vehicleId || '') === OVERDRIVE_VEHICLE_ID;
+}
+
+export function getOverdriveSpeedMultiplier(cleanSeconds = 0) {
+  const progress = clamp(nonNegativeNumber(cleanSeconds, 0) / OVERDRIVE_BUILD_SECONDS, 0, 1);
+  return 1 + (OVERDRIVE_MAX_SPEED_MULTIPLIER - 1) * progress;
+}
+
+export function updateVehicleOverdriveState({
+  state,
+  dt = 0,
+  offRoad = state?.offRoad === true,
+  collided = false,
+  speed = state?.speed || 0
+} = {}) {
+  if (!state) return 1;
+  if (!vehicleHasOverdrive(state.vehicleId)) {
+    state.overdriveCleanSeconds = 0;
+    return 1;
+  }
+
+  if (offRoad || collided) {
+    state.overdriveCleanSeconds = 0;
+    return 1;
+  }
+
+  if (nonNegativeNumber(speed, 0) >= OVERDRIVE_MIN_SPEED) {
+    state.overdriveCleanSeconds = clamp(
+      nonNegativeNumber(state.overdriveCleanSeconds, 0) + nonNegativeNumber(dt, 0),
+      0,
+      OVERDRIVE_BUILD_SECONDS
+    );
+  }
+
+  return getOverdriveSpeedMultiplier(state.overdriveCleanSeconds);
 }
 
 export function getVehicleSpeedLimit({
@@ -183,6 +225,13 @@ export function updateVehiclePhysicsState({
     : 0.11 + speed * 0.0009 + (driftHeld ? driftDragAdd : 0);
   state.velocity.multiplyScalar(Math.exp(-drag * dt));
 
+  speed = state.velocity.length();
+  const overdriveSpeedMultiplier = updateVehicleOverdriveState({
+    state,
+    dt,
+    offRoad: state.offRoad,
+    speed
+  });
   const speedLimit = getVehicleSpeedLimit({
     offRoad: physicsOffRoad,
     boostActive: effectiveBoostActive,
@@ -190,9 +239,8 @@ export function updateVehiclePhysicsState({
     boostSpeedMultiplier: tuningBoostSpeedMultiplier,
     driftHeld,
     driftSpeedMultiplier
-  });
+  }) * overdriveSpeedMultiplier;
 
-  speed = state.velocity.length();
   if (speed > speedLimit) state.velocity.multiplyScalar(speedLimit / speed);
 
   state.position.addScaledVector(state.velocity, dt);
@@ -206,12 +254,16 @@ export function updateVehiclePhysicsState({
     collisionProfile: currentCollisionProfile(),
     dt
   });
-  if (collision.collided) nearestAfter = findNearestTrack(state.position);
+  if (collision.collided) {
+    updateVehicleOverdriveState({ state, collided: true });
+    nearestAfter = findNearestTrack(state.position);
+  }
 
   state.position.y = trackSurfaceY(nearestAfter.sample);
   state.surfacePitch = trackPitch(nearestAfter.sample);
   state.trackDistance = nearestAfter.distance;
   state.offRoad = nearestAfter.distance > trackWidth * 0.58 && !isForgivingSurface(state.position);
+  if (state.offRoad) updateVehicleOverdriveState({ state, offRoad: true });
   state.lastProgress = state.progress;
   state.progress = nearestAfter.index / activeTrackSampleCount;
   state.nearestTrackIndex = nearestAfter.index;
