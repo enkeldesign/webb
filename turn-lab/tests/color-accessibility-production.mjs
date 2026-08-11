@@ -63,14 +63,18 @@ assert.equal(saveColorCuesEnabled(true, storage), true);
 assert.equal(loadColorCuesEnabled(storage), true);
 assert.equal(saveColorCuesEnabled(false, storage), true);
 
-assert.equal(release.version, '1.7.0');
-assert.equal(release.id, '2026.08.09-r163');
-assert.match(indexSource, /styles\.css\?build=20260809-r163-native-html/);
-assert.match(indexSource, /garage\/lot-r10\.css\?build=20260809-r163-native-html/);
-assert.match(indexSource, /garage\/lot-layout-r60\.css\?build=20260809-r163-native-html/);
-assert.match(indexSource, /lot-track-select\.js\?build=20260809-r163&revision=r163-native-html/);
-assert.match(indexSource, /app\.js\?build=20260809-r163-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click/,
-  'The device must receive the native-picker ancestry experiment under a fresh module URL');
+assert.ok(
+  indexSource.includes(`TURN v${release.version} · Build ${release.id}`),
+  'Production entry point must display the current release source of truth'
+);
+assert.ok(indexSource.includes(`styles.css?build=${release.cacheKey}-native-html`));
+assert.ok(indexSource.includes(`garage/lot-r10.css?build=${release.cacheKey}-native-html`));
+assert.ok(indexSource.includes(`garage/lot-layout-r60.css?build=${release.cacheKey}-native-html`));
+assert.ok(indexSource.includes(`lot-track-select.js?build=${release.cacheKey}&revision=r163-native-html`));
+assert.ok(
+  indexSource.includes(`app.js?build=${release.cacheKey}-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click`),
+  'The device must receive the native-picker ancestry experiment under a fresh release module URL'
+);
 assert.doesNotMatch(indexSource, /named-color-fallback|native-color-input-r163\.css/,
   'Production must not load fallback or corrective paint layers');
 
@@ -150,4 +154,4 @@ assert.match(historySource, /native HTML color input/i);
 assert.doesNotMatch(historySource, /native paint activation bridge|assistive-technology bridge/i,
   'Current release history must not claim an activation bridge that no longer exists');
 
-console.log('TURN 1.7.0 r163 HTML-first native color input and click-ancestry regression passed.');
+console.log(`TURN ${release.version} ${release.id} HTML-first native color input and click-ancestry regression passed.`);
