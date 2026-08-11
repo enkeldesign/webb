@@ -127,14 +127,14 @@ const CHORUS = Object.freeze({
   name: 'chorus',
   leadVoice: 'flute',
 lead: Object.freeze([
-  'E4', 'E4', 'G4', 'G4', 'B4', 'B4', 'G4', 'G4',
-  'E5', 'E5', 'B4', 'B4', 'G4', 'G4', 'B4', 'B4',
-  'G4', 'G4', 'E4', 'E4', 'C5', 'C5', 'E5', 'E5',
-  'G5', 'G5', 'E5', 'E5', 'D5', 'D5', 'C5', 'C5',
-  'D5', 'D5', 'B4', 'B4', 'G4', 'G4', 'B4', 'B4',
-  'D5', 'D5', 'B4', 'B4', 'A4', 'A4', 'G4', 'G4',
-  'F#4', 'F#4', 'A4', 'A4', 'B4', 'B4', 'D#5', 'D#5',
-  'B4', 'B4', 'A4', 'A4', 'F#4', 'F#4', 'D#4', 'D#4'
+  'E5', 'E5', 'G5', 'G5', 'B5', 'B5', 'G5', 'G5',
+  'E6', 'E6', 'B5', 'B5', 'G5', 'G5', 'B5', 'B5',
+  'G5', 'G5', 'E5', 'E5', 'C6', 'C6', 'E6', 'E6',
+  'G6', 'G6', 'E6', 'E6', 'D6', 'D6', 'C6', 'C6',
+  'D6', 'D6', 'B5', 'B5', 'G5', 'G5', 'B5', 'B5',
+  'D6', 'D6', 'B5', 'B5', 'A5', 'A5', 'G5', 'G5',
+  'F#5', 'F#5', 'A5', 'A5', 'B5', 'B5', 'D#6', 'D#6',
+  'B5', 'B5', 'A5', 'A5', 'F#5', 'F#5', 'D#5', 'D#5'
 ]),
   bass: Object.freeze([
   'E2', 'E2', 'E2', 'E2', 'B2', 'B2', 'B2', 'B2',
@@ -370,9 +370,9 @@ function playFluteLead(note, time) {
   filter.type = 'lowpass';
   filter.Q.value = 1.2;
 
-  filter.frequency.setValueAtTime(3000, time);
+  filter.frequency.setValueAtTime(5000, time);
   filter.frequency.exponentialRampToValueAtTime(
-    1500,
+    2000,
     endTime
   );
 
