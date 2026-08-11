@@ -126,16 +126,17 @@ const BRIDGE = Object.freeze({
 const CHORUS = Object.freeze({
   name: 'chorus',
   leadVoice: 'flute',
-  lead: Object.freeze([
-    'E6', 'E4', 'G6', 'G4', 'B6', 'B4', 'G6', 'G4',
-    'E7', 'E5', 'B6', 'B4', 'G6', 'G4', 'B6', 'B4',
-    'G6', 'G4', 'E6', 'E4', 'C7', 'C5', 'E7', 'E5',
-    'G7', 'g5', 'E7', 'E5', 'D7', 'D5', 'C7', 'C5',
-    'D7', 'D5', 'B6', 'B4', 'G6', 'G4', 'B6', 'B4',
-    'D7', 'D5', 'B6', 'B4', 'A6', 'A4', 'G6', 'G4',
-    'F#6', 'F#4', 'A6', 'A4', 'B6', 'B4', 'D#7', 'D#5',
-    'B6', 'B4', 'A6', 'A4', 'F#6', 'F#4', 'D#6', 'D#4'
-  ]),
+lead: Object.freeze([
+  'E6', 'E5', 'G6', 'G5', 'B6', 'B5', 'G6', 'G5',
+  'E7', 'E6', 'B6', 'B5', 'G6', 'G5', 'B6', 'B5',
+  'G6', 'G5', 'E6', 'E5', 'C7', 'C6', 'E7', 'E6',
+  'G7', 'G6', 'E7', 'E6', 'D7', 'D6', 'C7', 'C6',
+  'D7', 'D6', 'B6', 'B5', 'G6', 'G5', 'B6', 'B5',
+  'D7', 'D6', 'B6', 'B5', 'A6', 'A5', 'G6', 'G5',
+  'F#6', 'F#5', 'A6', 'A5', 'B6', 'B5', 'D#7', 'D#6',
+  'B6', 'B5', 'A6', 'A5', 'F#6', 'F#5', 'D#6', 'D#5'
+]),
+
   bass: Object.freeze([
     'E2', 'E2', 'E2', null, 'B2', 'B2', null, null,
     'E3', 'E3', 'E3', null, 'B2', 'B2', null, null,
