@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { Buffer } from 'node:buffer';
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 
