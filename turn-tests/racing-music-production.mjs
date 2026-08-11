@@ -12,7 +12,7 @@ const [index, labIndex, homeLayout, music, headerFix] = await Promise.all([
 assert.match(
   index,
   /"\/turn\/audio\/racing-music-v2\.js\?build=20260809-r163-racing-music-warm-v2": "\/turn\/audio\/racing-music-v3\.js\?revision=r424-eighth-note-flute-chorus"/,
-  'The established Home music import must resolve to the current chorus engine URL'
+  'The established compatibility import must still resolve Home music to the approved v3 source'
 );
 assert.match(homeLayout, /audio\/racing-music-v2\.js\?build=\$\{buildKey\}-racing-music-warm-v2/,
   'The established Home lifecycle remains the single music installation point');
@@ -33,9 +33,9 @@ assert.match(headerFix, /@media \(max-width: 760px\) and \(orientation: portrait
   'Portrait Home must not inherit the landscape metadata alignment offset');
 
 assert.match(music, /const BPM = 120/,
-  'The current chorus must preserve the hand-tuned 120 BPM tempo');
-assert.match(music, /const DEFAULT_VOLUME = 25/,
-  'The current chorus must preserve the hand-tuned 25% default volume');
+  'The approved song must preserve the hand-tuned 120 BPM tempo');
+assert.match(music, /const DEFAULT_VOLUME = 50/,
+  'The approved song must preserve the hand-tuned 50% default volume');
 assert.match(music, /User-tuned T\/B lead transposition:[\s\S]*const hz = noteToFrequency\(note\) \/ 4/,
   'The ordinary T/B lead must preserve the two-octave-down transposition');
 assert.match(music, /User-tuned bass transposition:[\s\S]*const hz = noteToFrequency\(note\) \/ 2/,
@@ -44,49 +44,53 @@ assert.match(music, /User-tuned bass transposition:[\s\S]*const hz = noteToFrequ
 assert.match(music, /const CHORUS = Object\.freeze\(/,
   'The song must retain a distinct reusable chorus section');
 assert.match(music, /name: 'chorus',[\s\S]*leadVoice: 'flute'/,
-  'The chorus must keep its dedicated flute voice without using sustain as the routing flag');
+  'The chorus must retain its dedicated lead routing identifier');
 assert.doesNotMatch(music, /sustainLead|leadHoldSteps|nextSustainedLeadNote|nextNote/,
-  'The chorus must not retain the old sustain or portamento machinery');
+  'The chorus must not retain obsolete sustain or portamento machinery');
 assert.match(
   music,
-  /'E6', 'E6', 'G6', 'G6', 'B6', 'B6', 'G6', 'G6',[\s\S]*'G6', 'G6', 'E6', 'E6', 'C7', 'C7', 'E7', 'E7',[\s\S]*'D7', 'D7', 'B6', 'B6', 'G6', 'G6', 'B6', 'B6',[\s\S]*'F#6', 'F#6', 'A6', 'A6', 'B6', 'B6', 'D#7', 'D#7'/,
-  'The chorus lead must preserve the current paired sixteenth-note melody'
+  /'E4', 'E4', 'G4', 'G4', 'B4', 'B4', 'G4', 'G4',[\s\S]*'G4', 'G4', 'E4', 'E4', 'C5', 'C5', 'E5', 'E5',[\s\S]*'D5', 'D5', 'B4', 'B4', 'G4', 'G4', 'B4', 'B4',[\s\S]*'F#4', 'F#4', 'A4', 'A4', 'B4', 'B4', 'D#5', 'D#5'/,
+  'The chorus lead must preserve the approved paired sixteenth-note melody'
 );
-assert.match(music, /const ARRANGEMENT = Object\.freeze\(\[TUNE, TUNE, BRIDGE, TUNE, CHORUS, CHORUS\]\)/,
-  'The current form must remain T T B T C C');
+assert.match(music, /const ARRANGEMENT = Object\.freeze\(\[CHORUS, CHORUS, TUNE, TUNE, BRIDGE, TUNE\]\)/,
+  'The approved form must remain C C T T B T');
 
 assert.match(music, /function playFluteLead\(note, time\)/,
-  'The chorus must use a dedicated articulated flute voice');
-assert.match(music, /Chorus flute stays one octave above the T\/B lead transposition\.[\s\S]*const hz = noteToFrequency\(note\) \/ 2/,
-  'The chorus flute must stay one octave above the ordinary lead');
+  'The dedicated chorus lead synth must remain available under its compatibility function name');
+assert.match(music, /Keep the chorus in its current octave\.[\s\S]*const hz = noteToFrequency\(note\) \/ 2/,
+  'The chorus lead must preserve its current octave');
 assert.match(music, /const duration = STEP_SECONDS \* 0\.88/,
-  'Each flute event must occupy one articulated sixteenth note with a small gap');
-assert.match(music, /scheduleGainEnvelope\(amp\.gain, time, 0\.05, endTime, 0\.035\)/,
-  'The articulated flute must preserve the current quieter 0.05 peak');
-assert.match(music, /const bodyGain = makeGain\(0\.9\)/,
-  'The flute body balance must preserve the current hand-tuned value');
-assert.match(music, /const overtoneGain = makeGain\(0\.04\)/,
-  'The flute overtone must remain restrained');
-assert.match(music, /filter\.frequency\.value = 2400/,
-  'The flute chorus should remain soft rather than bright and chiptune-like');
+  'Each chorus lead event must remain a short articulated sixteenth note');
+assert.match(music, /const bodyGain = makeGain\(0\.75\)/,
+  'The chorus lead body balance must preserve the approved value');
+assert.match(music, /const harmonicGain = makeGain\(0\.16\)/,
+  'The brighter chorus harmonic must preserve the approved value');
+assert.match(music, /body\.type = 'triangle'/);
+assert.match(music, /harmonic\.type = 'triangle'/);
+assert.match(music, /body\.frequency\.setValueAtTime\(hz \* 1\.018, time\)[\s\S]*exponentialRampToValueAtTime\([\s\S]*hz,[\s\S]*time \+ 0\.025/,
+  'The chorus lead must preserve its short picked-string pitch transient');
+assert.match(music, /filter\.frequency\.setValueAtTime\(2000, time\)[\s\S]*1000,[\s\S]*endTime/,
+  'The chorus lead must retain its bright-to-warm pluck filter sweep');
+assert.match(music, /amp\.gain\.exponentialRampToValueAtTime\([\s\S]*0\.075,[\s\S]*time \+ 0\.008/,
+  'The chorus lead must retain its quick picked attack');
 assert.doesNotMatch(music, /const vibrato =|linearRampToValueAtTime\(nextHz|scheduleFluteEnvelope/,
-  'Sixteenth-note chorus events must not use sustained vibrato, glide, or hold envelopes');
+  'Sixteenth-note chorus events must not use the abandoned sustained vibrato or glide machinery');
 
 assert.match(music, /function playLead\(note, time, \{ voice = 'lead' \} = \{\}\)/,
-  'Lead voice selection must be independent of note sustain');
+  'Lead voice selection must remain independent of note sustain');
 assert.match(music, /if \(voice === 'flute'\) \{[\s\S]*playFluteLead\(note, time\);[\s\S]*return;/,
-  'The dedicated chorus voice must route to the flute synth');
+  'The dedicated chorus voice must route to its chorus synth');
 assert.match(music, /voice: section\.leadVoice \|\| 'lead'/,
-  'The scheduler must select the chorus flute by voice rather than by sustain');
+  'The scheduler must select the chorus voice explicitly');
 assert.match(music, /body\.type = 'triangle'/,
-  'The ordinary T/B lead and bass must keep the established warm triangle character');
+  'The generated song must keep its established warm triangle character');
 
 assert.match(music, /MUSIC_VOLUME_STORAGE_KEY = 'turn-racing-music-volume-v1'/,
-  'The chorus rollout must preserve existing saved volume preferences');
+  'The release must preserve existing saved volume preferences');
 assert.doesNotMatch(music, /fetch\(|new Audio\(/,
   'Racing music must remain generated Web Audio rather than a downloaded asset');
 assert.doesNotMatch(music, /type = 'square'|type = 'sawtooth'|createWaveShaper/,
-  'The chorus must not reintroduce the old chiptune-like voices');
+  'The approved song must not introduce harsh square, sawtooth or waveshaper voices');
 
 assert.match(music, /document\.addEventListener\('pointerdown', handleUserActivation/,
   'Music must unlock from a permitted pointer gesture');
@@ -102,8 +106,8 @@ assert.match(music, /className = 'turn-music-blank-toggle'/);
 assert.match(music, /label\.innerHTML = '<strong>Music volume<\/strong><small>OFF stops the music engine completely\.<\/small>'/);
 assert.match(music, /labels\.innerHTML = '<span>OFF<\/span><span>100%<\/span>'/);
 assert.match(music, /arrangement: Object\.freeze\(ARRANGEMENT\.map\(\(section\) => section\.name\)\)/,
-  'Runtime diagnostics must expose the actual T/T/B/T/C/C form');
+  'Runtime diagnostics must expose the actual arrangement');
 assert.match(music, /timbre: 'warm-v3-eighth-note-flute-chorus'/,
-  'The existing runtime timbre identifier remains stable for compatibility');
+  'The existing runtime timbre identifier must remain stable for compatibility');
 
-console.log('TURN T/T/B/T/C/C sixteenth-note flute chorus, Home header boundary, music alignment, and controls regression passed.');
+console.log('TURN approved 120 BPM / 50% generated racing music, Home header and controls regression passed.');
