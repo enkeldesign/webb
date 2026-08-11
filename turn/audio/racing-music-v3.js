@@ -326,7 +326,7 @@ function playFluteLead(note, time) {
   if (!note) return;
 
   // Keep the chorus in its current octave.
-  const hz = noteToFrequency(note) / 2;
+  const hz = noteToFrequency(note) / 1;
 
   // One sixteenth-note event with a small gap.
   const duration = STEP_SECONDS * 0.88;
