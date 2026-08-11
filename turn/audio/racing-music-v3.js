@@ -171,7 +171,7 @@ lead: Object.freeze([
 });
 
 // Song form: establish T, contrast with B, return to T, then make C the scarce payoff.
-const ARRANGEMENT = Object.freeze([TUNE, TUNE, BRIDGE, TUNE, CHORUS, CHORUS, BRIDGE]);
+const ARRANGEMENT = Object.freeze([TUNE, TUNE, BRIDGE, TUNE, CHORUS, CHORUS, CHORUS, BRIDGE]);
 
 let installed = false;
 let context = null;
@@ -306,7 +306,7 @@ const duration = STEP_SECONDS * 0.88;
   filter.type = 'lowpass';
   filter.frequency.value = 2400;
   filter.Q.value = 0.18;
-  scheduleGainEnvelope(amp.gain, time, 0.07, endTime, 0.035);
+  scheduleGainEnvelope(amp.gain, time, 0.05, endTime, 0.035);
 
   body.connect(bodyGain);
   overtone.connect(overtoneGain);
