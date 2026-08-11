@@ -1,14 +1,15 @@
 import { installLotStatLegend } from './lot-stat-legend.js?build=20260724-r59';
 import { installLotLayout } from './lot-layout-r60.js?build=20260729-r116';
 import { installLotAccessibility } from './lot-accessibility-r118.js?build=20260729-r118';
-import { gateLotNow } from '../progression/lot-trophy-gate.js?revision=r162-dismiss-unlocked-car-toast';
-import { gateLotPaintNow } from '../progression/lot-paint-reward.js?revision=r163-native-picker-parent-click';
+import { installLotPerkDisclosure } from './lot-perk-disclosure.js?revision=r164-perks';
+import { gateLotNow } from '../progression/lot-trophy-gate.js?revision=r164-perks';
+import { gateLotPaintNow } from '../progression/lot-paint-reward.js?revision=r164-perks';
 
 // Historical regression markers for the established enhancement layers:
 // ENHANCEMENT_ID = 'enhanced-lot-r121'
 // TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r154-trophy-road-feedback'
-const ENHANCEMENT_ID = 'enhanced-lot-r163-native-picker-parent-click';
-const TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r157-paint-monster';
+const ENHANCEMENT_ID = 'enhanced-lot-r164-perks';
+const TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r164-perks';
 const LOT_ENTRY_CLICK_GUARD_MS = 600;
 const activeEnhancements = new WeakMap();
 
@@ -63,6 +64,7 @@ export function enhanceLotNow(root = document.body) {
   const removeEntryClickGuard = installLotEntryClickGuard(screen);
   const removeTrophyGate = gateLotNow(scope);
   const removePaintGate = gateLotPaintNow(scope);
+  const removePerkDisclosure = installLotPerkDisclosure(scope);
   const removeStatLegend = installLotStatLegend(scope);
   const removeLayout = installLotLayout(scope);
   const removeAccessibility = installLotAccessibility(scope);
@@ -74,6 +76,7 @@ export function enhanceLotNow(root = document.body) {
     removeAccessibility();
     removeLayout();
     removeStatLegend();
+    removePerkDisclosure();
     removePaintGate();
     removeTrophyGate();
     removeEntryClickGuard();
