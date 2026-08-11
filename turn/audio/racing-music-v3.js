@@ -170,7 +170,7 @@ lead: Object.freeze([
 });
 
 // Song form: establish T, contrast with B, return to T, then make C the scarce payoff.
-const ARRANGEMENT = Object.freeze([TUNE, TUNE, BRIDGE, TUNE, CHORUS, CHORUS]);
+const ARRANGEMENT = Object.freeze([CHORUS, CHORUS, TUNE, TUNE, BRIDGE, TUNE]);
 
 let installed = false;
 let context = null;
@@ -370,9 +370,9 @@ function playFluteLead(note, time) {
   filter.type = 'lowpass';
   filter.Q.value = 1.2;
 
-  filter.frequency.setValueAtTime(2500, time);
+  filter.frequency.setValueAtTime(1600, time);
   filter.frequency.exponentialRampToValueAtTime(
-    1000,
+    800,
     endTime
   );
 
