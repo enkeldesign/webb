@@ -116,9 +116,10 @@ assert.match(accessibility, /Top speed/);
 assert.match(accessibility, /Boost tank/);
 assert.doesNotMatch(accessibility, /setInterval|requestAnimationFrame|setAnimationLoop/);
 
+assert.match(legend, /VEHICLE_STAT_LEGEND/);
 assert.match(legend, /aria-haspopup', 'dialog'/);
 assert.match(legend, /role', 'dialog'/);
-assert.match(legend, /Top speed/);
-assert.match(legend, /Boost tank/);
+assert.match(legend, /name\.textContent = entry\.label/);
+assert.match(legend, /description\.textContent = entry\.description/);
 
 console.log(`TURN ${release.id} compact Lot layout, perk disclosure and accessibility contract passed.`);
