@@ -1,6 +1,12 @@
 import { resolveWorldCollisionState } from '../race/world-collision.js?build=20260723-r53';
 import { trackPitch, trackSurfaceY } from '../tracks/elevation.js?build=20260725-r67';
 
+const OFFROAD_CAPABLE_VEHICLE_IDS = new Set(['monster-truck']);
+
+export function vehicleIgnoresOffRoadPenalty(vehicleId) {
+  return OFFROAD_CAPABLE_VEHICLE_IDS.has(String(vehicleId || ''));
+}
+
 export function getVehicleSpeedLimit({
   offRoad = false,
   boostActive = false,
@@ -62,6 +68,7 @@ export function updateVehiclePhysicsState({
   state.nearestTrackIndex = nearestBefore.index;
   state.trackDistance = nearestBefore.distance;
   state.offRoad = nearestBefore.distance > trackWidth * 0.58 && !isForgivingSurface(state.position);
+  const physicsOffRoad = state.offRoad && !vehicleIgnoresOffRoadPenalty(state.vehicleId);
 
   const forward = getForward();
   const right = getRight();
@@ -74,11 +81,11 @@ export function updateVehiclePhysicsState({
   const effectiveBoostActive = boostActive && !brakingOrReversing;
 
   const enginePower =
-    (state.offRoad ? 36 : 43) *
+    (physicsOffRoad ? 36 : 43) *
     accelerationMultiplier *
     (driftHeld ? driftEngineMultiplier : 1);
   const boostPower = effectiveBoostActive
-    ? (state.offRoad ? 16 : 36) * tuningBoostPowerMultiplier
+    ? (physicsOffRoad ? 16 : 36) * tuningBoostPowerMultiplier
     : 0;
   state.velocity.addScaledVector(
     forward,
@@ -97,7 +104,7 @@ export function updateVehiclePhysicsState({
       );
     } else {
       // Once forward motion is essentially gone, the same held control becomes reverse.
-      const reversePower = (state.offRoad ? 20 : 27) * accelerationMultiplier;
+      const reversePower = (physicsOffRoad ? 20 : 27) * accelerationMultiplier;
       state.velocity.addScaledVector(forward, -reversePower * state.brake * dt);
 
       const reverseSpeed = state.velocity.dot(forward);
@@ -155,7 +162,7 @@ export function updateVehiclePhysicsState({
     ? 0.42 * driftStabilityMultiplier
     : 1;
   const grip = (
-    state.offRoad
+    physicsOffRoad
       ? lerp(3.4, 1.35, state.driftAmount)
       : lerp(11.5, 1.45, state.driftAmount)
   ) * controlGripMultiplier * driftGripMultiplier;
@@ -171,13 +178,13 @@ export function updateVehiclePhysicsState({
     );
   }
 
-  const drag = state.offRoad
+  const drag = physicsOffRoad
     ? 0.34
     : 0.11 + speed * 0.0009 + (driftHeld ? driftDragAdd : 0);
   state.velocity.multiplyScalar(Math.exp(-drag * dt));
 
   const speedLimit = getVehicleSpeedLimit({
-    offRoad: state.offRoad,
+    offRoad: physicsOffRoad,
     boostActive: effectiveBoostActive,
     maxSpeed: effectiveMaxSpeed,
     boostSpeedMultiplier: tuningBoostSpeedMultiplier,
