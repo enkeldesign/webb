@@ -44,7 +44,7 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     vehicleIds: Object.freeze(['race-future']),
     icon: 'future',
     perkDescription: 'OVERDRIVE — 5 clean seconds builds +6% top speed. Off-road or collisions reset it.',
-    description: 'Unlock the Future Racer: a high-speed machine for advanced time trials.<br><strong>PERK:</strong> OVERDRIVE — 5 clean seconds builds +6% top speed. Off-road or collisions reset it.'
+    description: 'Unlock the Future Racer: built for advanced time trials.<br><strong>PERK:</strong> OVERDRIVE — 5 clean seconds builds +6%; off-road or hits reset.'
   }),
   Object.freeze({
     id: 'emergency-pack',
@@ -65,7 +65,7 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     vehicleIds: Object.freeze(['monster-truck']),
     icon: 'monster',
     perkDescription: 'Going off-road doesn’t slow it down.',
-    description: 'Unlock the Monster Truck: a dark military-green heavyweight with huge tyres, stable drift and a long Boost tank.<br><strong>PERK:</strong> Going off-road doesn’t slow it down.'
+    description: 'Unlock the Monster Truck: a military-green heavyweight.<br><strong>PERK:</strong> Going off-road doesn’t slow it down.'
   })
 ]);
 
