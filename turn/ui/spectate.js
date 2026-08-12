@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GAME_MODE } from '../race/game-state.js';
 import { replayFrameAt } from '../race/replay-system.js';
+import { trackPitch, trackSampleAtProgress, trackSurfaceY } from '../tracks/elevation.js?build=20260811-r164';
 
 const spectate = {
   active: false,
@@ -38,6 +39,12 @@ function install(runtime) {
   installUi(runtime);
 }
 
+function replaySurfaceSample(runtime, frame) {
+  return trackSampleAtProgress(runtime.samples, frame?.p)
+    || runtime.findNearestTrack?.(frame)?.sample
+    || null;
+}
+
 function updateSpectatorScene(runtime, dt) {
   if (!spectate.active) return false;
 
@@ -73,8 +80,10 @@ function updateSpectatorScene(runtime, dt) {
       continue;
     }
 
+    const surfaceSample = replaySurfaceSample(runtime, frame);
     car.visible = true;
-    car.position.set(frame.x, 0.18, frame.z);
+    car.position.set(frame.x, trackSurfaceY(surfaceSample), frame.z);
+    car.rotation.x = trackPitch(surfaceSample);
     car.rotation.y = frame.h + Math.PI;
     car.rotation.z = -frame.s * 0.03;
     if (car === ghostCar) animateWheels(car, frame.s, 45, dt);
@@ -84,15 +93,17 @@ function updateSpectatorScene(runtime, dt) {
   const frame = lap ? replayFrameAt(lap, spectate.elapsed) : null;
   if (!frame) return true;
 
-  const focus = new THREE.Vector3(frame.x, 0.18, frame.z);
+  const surfaceSample = replaySurfaceSample(runtime, frame);
+  const surfaceY = trackSurfaceY(surfaceSample);
+  const focus = new THREE.Vector3(frame.x, surfaceY, frame.z);
   const forward = new THREE.Vector3(Math.sin(frame.h), 0, Math.cos(frame.h));
   const desiredCamera = focus.clone().addScaledVector(forward, -18.5);
-  desiredCamera.y = 8.6;
+  desiredCamera.y = surfaceY + 8.6;
   cameraPosition.lerp(desiredCamera, 1 - Math.exp(-dt * 7.2));
   camera.position.copy(cameraPosition);
 
   const desiredTarget = focus.clone().addScaledVector(forward, 13.5);
-  desiredTarget.y = 2.15;
+  desiredTarget.y = surfaceY + 2.15;
   cameraTarget.lerp(desiredTarget, 1 - Math.exp(-dt * 9));
   camera.up.set(0, 1, 0);
   camera.lookAt(cameraTarget);
@@ -261,7 +272,7 @@ function spectateDateLabel(lap, allLaps) {
   }
 
   const duplicateDate = allLaps.filter((other) => {
-    const otherHitAt = other?.hitAt == null ? NaN : Number(other.hitAt);
+    const otherHitAt = other?.hitAt == null ? NaN : Number(otherHitAt);
     return Number.isFinite(otherHitAt) && sameDate(new Date(otherHitAt), date);
   }).length > 1;
 
