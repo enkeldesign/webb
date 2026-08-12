@@ -1,8 +1,45 @@
 import { getTurnPlatform } from '../platform/platform-context.js';
 
-const STEERING_ENTER_THRESHOLD = degToRad(2.2);
-const STEERING_EXIT_THRESHOLD = degToRad(0.9);
 const MAX_CONFIGURED_SAFE_ZONE_DEGREES = 45;
+
+const DEFAULT_STEERING_PROFILE = Object.freeze({
+  id: 'default',
+  steeringEnterThreshold: degToRad(2.2),
+  steeringExitThreshold: degToRad(0.9),
+  rollFollowRate: 16,
+  pitchFollowRate: 12,
+  steeringResponseRate: 8.5,
+  steeringReleaseRate: 12,
+  curvePower: 1
+});
+
+const IPAD_STEERING_PROFILE = Object.freeze({
+  id: 'ipad-damped',
+  steeringEnterThreshold: degToRad(3.2),
+  steeringExitThreshold: degToRad(1.4),
+  rollFollowRate: 10.5,
+  pitchFollowRate: 12,
+  steeringResponseRate: 6.5,
+  steeringReleaseRate: 10,
+  curvePower: 1.22
+});
+
+export function resolveMotionSteeringProfile(environment = globalThis) {
+  const navigatorRef = environment?.navigator || environment;
+  const userAgent = String(navigatorRef?.userAgent || '');
+  const platform = String(navigatorRef?.platform || '');
+  const maxTouchPoints = Math.max(0, Number(navigatorRef?.maxTouchPoints) || 0);
+  const reportsIPad = /\biPad\b/i.test(userAgent);
+  const reportsDesktopIPad = platform === 'MacIntel'
+    && maxTouchPoints > 1
+    && /\bMacintosh\b/i.test(userAgent);
+
+  return reportsIPad || reportsDesktopIPad
+    ? IPAD_STEERING_PROFILE
+    : DEFAULT_STEERING_PROFILE;
+}
+
+const ACTIVE_STEERING_PROFILE = resolveMotionSteeringProfile();
 
 export function motionPoseFromGravity(event) {
   const gravity = event?.accelerationIncludingGravity;
@@ -34,7 +71,12 @@ export function resolveSteeringRollLimit(
   return Number.isFinite(fallback) && fallback > 0 ? fallback : degToRad(14);
 }
 
-export function updateMotionInputState({ state, dt, maxSteerRoll }) {
+export function updateMotionInputState({
+  state,
+  dt,
+  maxSteerRoll,
+  steeringProfile = ACTIVE_STEERING_PROFILE
+}) {
   if (!state.sensorMode) {
     // Manual input is expressed in screen space (left = -1, right = +1), while
     // TURN's vehicle yaw convention uses the opposite sign.
@@ -43,8 +85,13 @@ export function updateMotionInputState({ state, dt, maxSteerRoll }) {
     return;
   }
 
-  state.roll += shortestAngle(state.roll, state.targetRoll) * Math.min(1, dt * 16);
-  state.pitch = lerp(state.pitch, state.targetPitch, Math.min(1, dt * 12));
+  state.roll += shortestAngle(state.roll, state.targetRoll)
+    * Math.min(1, dt * steeringProfile.rollFollowRate);
+  state.pitch = lerp(
+    state.pitch,
+    state.targetPitch,
+    Math.min(1, dt * steeringProfile.pitchFollowRate)
+  );
 
   const steeringRoll = normalizeAngle(state.roll - state.neutralRoll);
   const steeringMagnitude = Math.abs(steeringRoll);
@@ -53,24 +100,30 @@ export function updateMotionInputState({ state, dt, maxSteerRoll }) {
   state.steeringEngaged ??= false;
 
   if (state.steeringEngaged) {
-    if (steeringMagnitude < STEERING_EXIT_THRESHOLD) state.steeringEngaged = false;
-  } else if (steeringMagnitude > STEERING_ENTER_THRESHOLD) {
+    if (steeringMagnitude < steeringProfile.steeringExitThreshold) state.steeringEngaged = false;
+  } else if (steeringMagnitude > steeringProfile.steeringEnterThreshold) {
     state.steeringEngaged = true;
   }
 
   let desiredSteering = 0;
   if (state.steeringEngaged) {
-    const availableRoll = Math.max(0.001, steeringRollLimit - STEERING_EXIT_THRESHOLD);
+    const availableRoll = Math.max(
+      0.001,
+      steeringRollLimit - steeringProfile.steeringExitThreshold
+    );
     const linearSteer = clamp(
-      (steeringMagnitude - STEERING_EXIT_THRESHOLD) / availableRoll,
+      (steeringMagnitude - steeringProfile.steeringExitThreshold) / availableRoll,
       0,
       1
     );
-    const easedSteer = linearSteer * linearSteer * (3 - 2 * linearSteer);
+    const curvedSteer = Math.pow(linearSteer, steeringProfile.curvePower);
+    const easedSteer = curvedSteer * curvedSteer * (3 - 2 * curvedSteer);
     desiredSteering = -Math.sign(steeringRoll) * easedSteer;
   }
 
-  const steeringResponseRate = state.steeringEngaged ? 8.5 : 12;
+  const steeringResponseRate = state.steeringEngaged
+    ? steeringProfile.steeringResponseRate
+    : steeringProfile.steeringReleaseRate;
   const steeringResponse = 1 - Math.exp(-dt * steeringResponseRate);
   state.steering = lerp(state.steering, desiredSteering, steeringResponse);
 
