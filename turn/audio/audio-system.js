@@ -1,6 +1,7 @@
 const AudioContextClass = globalThis.AudioContext || globalThis.webkitAudioContext;
 
 const AUDIO_UPDATE_INTERVAL_MS = 1000 / 30;
+const AUDIO_RECOVERY_RETRY_MS = 1000;
 const MASTER_GAIN = 0.72;
 const RIVAL_NEAR_ENTER_METERS = 10;
 const RIVAL_NEAR_EXIT_METERS = 15;
@@ -8,6 +9,7 @@ const PACE_NOTE_LEVEL = 0.052;
 const PACE_NOTE_DURATION_SECONDS = 0.055;
 const PACE_NOTE_STEP_SECONDS = 0.105;
 const PACE_NOTE_GROUP_GAP_SECONDS = 0.22;
+const TRANSIENT_NOISE_SECONDS = 0.5;
 const DRIVE_BY_EAR_ENABLED = globalThis.__turnDriveByEarEnabled !== false;
 const EMERGENCY_SERVICE_BY_VEHICLE_ID = Object.freeze({
   firetruck: 'firetruck',
@@ -72,8 +74,15 @@ let safetyMode = 'none';
 let offRoadLatched = false;
 let lotOpen = false;
 let installed = false;
+let recoveryInFlight = false;
+let lastRecoveryAttemptAt = -Infinity;
+let recoveryAttempts = 0;
+let recoverySuccesses = 0;
+let maxTransientSources = 0;
 const cueTimes = new Map();
 const activePaceNoteSources = new Set();
+const activeTransientSources = new Set();
+const transientNoiseBuffers = new Map();
 
 export function installTurnAudio() {
   if (installed) return globalThis.__turnAudio;
@@ -89,6 +98,16 @@ export function installTurnAudio() {
     },
     get state() {
       return context?.state || 'unavailable';
+    },
+    get diagnostics() {
+      return Object.freeze({
+        state: context?.state || 'unavailable',
+        activeTransientSources: activeTransientSources.size,
+        activePaceNoteSources: activePaceNoteSources.size,
+        maxTransientSources,
+        recoveryAttempts,
+        recoverySuccesses
+      });
     }
   });
 
@@ -99,6 +118,7 @@ export function installTurnAudio() {
   document.addEventListener('pointerdown', handleUiPointerDown, { capture: true, passive: true });
   document.addEventListener('keydown', unlockFromGesture, { capture: true });
   document.addEventListener('visibilitychange', handleVisibilityChange, { passive: true });
+  window.addEventListener('pageshow', handlePageShow, { passive: true });
   window.addEventListener('pagehide', handlePageHide, { passive: true });
   if (DRIVE_BY_EAR_ENABLED) {
     window.addEventListener('turn:pace-note', handlePaceNoteAudio);
@@ -120,16 +140,23 @@ export async function unlock() {
   if (!context) return false;
   if (context.state === 'running') return true;
 
+  recoveryAttempts += 1;
   try {
     await context.resume();
   } catch (_) {
     return false;
   }
-  return context.state === 'running';
+  const ready = context.state === 'running';
+  if (ready) recoverySuccesses += 1;
+  return ready;
 }
 
 export function update(frame = {}, now = performance.now()) {
-  if (!context || context.state !== 'running') return;
+  if (!context) return;
+  if (context.state !== 'running') {
+    requestContextRecovery(now);
+    return;
+  }
   if (now - lastUpdateAt < AUDIO_UPDATE_INTERVAL_MS) return;
   lastUpdateAt = now;
 
@@ -298,6 +325,7 @@ function ensureGraph() {
   } catch (_) {
     context = new AudioContextClass();
   }
+  context.addEventListener?.('statechange', handleContextStateChange);
 
   const compressor = context.createDynamicsCompressor();
   compressor.threshold.value = -18;
@@ -687,24 +715,24 @@ function schedulePaceNoteBeep(startAt, pan, severity) {
 
   const record = { oscillator, gain, panner };
   activePaceNoteSources.add(record);
-  oscillator.addEventListener('ended', () => {
-    activePaceNoteSources.delete(record);
-    oscillator.disconnect();
-    gain.disconnect();
-    panner.disconnect();
-  }, { once: true });
+  oscillator.addEventListener('ended', () => cleanupPaceNoteSource(record), { once: true });
 
   oscillator.start(startAt);
   oscillator.stop(endAt + 0.01);
 }
 
+function cleanupPaceNoteSource(record) {
+  activePaceNoteSources.delete(record);
+  disconnectNodes(record.oscillator, record.gain, record.panner);
+}
+
 function stopPaceNoteSources() {
-  for (const record of activePaceNoteSources) {
+  for (const record of [...activePaceNoteSources]) {
     try {
       record.oscillator.stop();
     } catch (_) {}
+    cleanupPaceNoteSource(record);
   }
-  activePaceNoteSources.clear();
   routeDuckUntil = -Infinity;
 }
 
@@ -799,7 +827,8 @@ function playTone(startHz, endHz, duration, level, type, startAt, pan = 0, outpu
   gain.gain.exponentialRampToValueAtTime(0.0001, endAt);
 
   oscillator.connect(gain);
-  connectPanned(gain, pan, output);
+  const panner = connectPanned(gain, pan, output);
+  trackTransientSource(oscillator, [oscillator, gain, panner]);
   oscillator.start(startAt);
   oscillator.stop(endAt + 0.02);
 }
@@ -819,7 +848,7 @@ function playNoiseBurst(
   const gain = context.createGain();
   const endAt = startAt + duration;
 
-  source.buffer = makeNoiseBuffer(context, Math.max(0.2, duration), smoothing);
+  source.buffer = transientNoiseBuffer(smoothing);
   filter.type = 'bandpass';
   filter.Q.value = 0.7;
   filter.frequency.setValueAtTime(Math.max(1, lowHz), startAt);
@@ -831,9 +860,39 @@ function playNoiseBurst(
 
   source.connect(filter);
   filter.connect(gain);
-  connectPanned(gain, pan, output);
-  source.start(startAt);
+  const panner = connectPanned(gain, pan, output);
+  trackTransientSource(source, [source, filter, gain, panner]);
+  const maxOffset = Math.max(0, TRANSIENT_NOISE_SECONDS - duration - 0.02);
+  source.start(startAt, Math.random() * maxOffset);
   source.stop(endAt + 0.02);
+}
+
+function trackTransientSource(source, nodes) {
+  const record = { source, nodes };
+  activeTransientSources.add(record);
+  maxTransientSources = Math.max(maxTransientSources, activeTransientSources.size);
+  source.addEventListener?.('ended', () => {
+    activeTransientSources.delete(record);
+    disconnectNodes(...nodes);
+  }, { once: true });
+}
+
+function transientNoiseBuffer(smoothing) {
+  const key = clamp(Number(smoothing) || 0.78, 0, 0.98).toFixed(3);
+  let buffer = transientNoiseBuffers.get(key);
+  if (!buffer) {
+    buffer = makeNoiseBuffer(context, TRANSIENT_NOISE_SECONDS, Number(key));
+    transientNoiseBuffers.set(key, buffer);
+  }
+  return buffer;
+}
+
+function disconnectNodes(...nodes) {
+  for (const node of nodes) {
+    try {
+      node?.disconnect?.();
+    } catch (_) {}
+  }
 }
 
 function connectPanned(node, pan, output = masterGain) {
@@ -841,6 +900,7 @@ function connectPanned(node, pan, output = masterGain) {
   if (panner.pan) panner.pan.value = clamp(Number(pan) || 0, -1, 1);
   node.connect(panner);
   panner.connect(output || masterGain);
+  return panner;
 }
 
 function createPannerNode() {
@@ -870,12 +930,33 @@ function makeNoiseBuffer(audioContext, seconds, smoothing = 0.72) {
 }
 
 function smooth(param, value, time, timeConstant) {
-  param.setTargetAtTime(value, time, timeConstant);
+  if (!param) return;
+  try {
+    if (typeof param.cancelAndHoldAtTime === 'function') {
+      param.cancelAndHoldAtTime(time);
+    } else {
+      const currentValue = Number(param.value);
+      param.cancelScheduledValues(time);
+      if (Number.isFinite(currentValue)) param.setValueAtTime(currentValue, time);
+    }
+    param.setTargetAtTime(value, time, timeConstant);
+  } catch (_) {
+    try {
+      param.value = value;
+    } catch (_) {}
+  }
 }
 
 function hardMute(param, time) {
-  param.cancelScheduledValues(time);
-  param.setValueAtTime(0, time);
+  if (!param) return;
+  try {
+    param.cancelScheduledValues(time);
+    param.setValueAtTime(0, time);
+  } catch (_) {
+    try {
+      param.value = 0;
+    } catch (_) {}
+  }
 }
 
 function handleLotPointerDown(event) {
@@ -909,11 +990,47 @@ function unlockFromGesture() {
   void unlock();
 }
 
+function audioShouldRun() {
+  return !document.hidden
+    && globalThis.__turnAudioPreferences?.getSettings?.().audioEnabled !== false;
+}
+
+function requestContextRecovery(now = performance.now(), force = false) {
+  if (!context || context.state === 'running' || context.state === 'closed') return;
+  if (!audioShouldRun() || recoveryInFlight) return;
+  if (!force && now - lastRecoveryAttemptAt < AUDIO_RECOVERY_RETRY_MS) return;
+
+  lastRecoveryAttemptAt = now;
+  recoveryInFlight = true;
+  recoveryAttempts += 1;
+  void Promise.resolve(context.resume())
+    .then(() => {
+      recoveryInFlight = false;
+      if (context?.state === 'running') {
+        recoverySuccesses += 1;
+        lastUpdateAt = -Infinity;
+      }
+    })
+    .catch(() => {
+      recoveryInFlight = false;
+    });
+}
+
+function handleContextStateChange() {
+  if (context?.state !== 'running') requestContextRecovery(performance.now(), false);
+}
+
 function handleVisibilityChange() {
   if (document.hidden) {
     silence();
     suspendContext();
+    return;
   }
+  requestContextRecovery(performance.now(), true);
+}
+
+function handlePageShow() {
+  requestContextRecovery(performance.now(), true);
 }
 
 function handlePageHide() {
