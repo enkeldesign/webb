@@ -55,7 +55,6 @@ export function installLotPerkDisclosure(root = document.body) {
   perk.appendChild(copy);
   description.after(perk);
 
-  let currentVehicleId = '';
   let currentPerkText = '';
 
   function sync() {
@@ -67,7 +66,6 @@ export function installLotPerkDisclosure(root = document.body) {
       ? `${perkTitle}: ${perkDescription}`
       : '';
 
-    currentVehicleId = vehicleId;
     perk.hidden = !perkText;
     if (!perkText) {
       if (currentPerkText) copy.replaceChildren();
