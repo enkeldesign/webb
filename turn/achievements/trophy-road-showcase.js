@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {
   getVehicleDefaultColor,
   getVehicleDefaultSecondaryColor
-} from '../vehicle/catalog.js?build=20260804-r157-factory-colors';
+} from '../vehicle/catalog.js?revision=r164-vintage-rally-polish';
 import { createCarVisual } from '../vehicle/emergency-livery-models.js?build=20260804-r157-display-p3';
 import { configureRendererWideGamut } from '../vehicle/wide-gamut.js?revision=r157-display-p3';
 
@@ -17,6 +17,12 @@ const REWARD_CARS = Object.freeze({
   ]),
   monster: Object.freeze([
     Object.freeze({ carId: 'monster-truck', x: 0, targetLength: 6.0, yaw: Math.PI - 0.55 })
+  ]),
+  'vintage-racer': Object.freeze([
+    Object.freeze({ carId: 'vintage-racer', x: 0, targetLength: 6.0, yaw: Math.PI - 0.55 })
+  ]),
+  'rally-racer': Object.freeze([
+    Object.freeze({ carId: 'toy-racer', x: 0, targetLength: 5.8, yaw: Math.PI - 0.55 })
   ])
 });
 

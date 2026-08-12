@@ -94,8 +94,8 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     vehicleIds: Object.freeze(['toy-racer']),
     icon: 'rally',
     perkTitle: 'TWITCHY TURNY',
-    perkDescription: 'DRIFT fills BOOST even faster than normal, but the tank is tiny.',
-    description: 'Unlock the Rally Racer: tiny, twitchy and perfect for curvy tracks.<br><strong>TWITCHY TURNY:</strong> DRIFT fills BOOST even faster than normal, but the tank is tiny.'
+    perkDescription: 'DRIFT fills BOOST even faster than normal.',
+    description: 'Unlock the Rally Racer: twitchy and perfect for curvy tracks.<br><strong>TWITCHY TURNY:</strong> DRIFT fills BOOST even faster than normal.'
   })
 ]);
 

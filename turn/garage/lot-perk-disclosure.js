@@ -1,4 +1,4 @@
-import { getCarDefinition } from '../vehicle/catalog.js?revision=r164-vintage-rally-perks';
+import { getCarDefinition } from '../vehicle/catalog.js?revision=r164-vintage-rally-polish';
 
 const STYLE_ID = 'turn-lot-perk-inline-styles';
 
