@@ -9,9 +9,11 @@ const [
   fixedLayout,
   achievementsFacade,
   achievementRuntime,
+  performanceProfile,
   worldAssets,
   worldRender,
   bellaRescue,
+  bellaBootstrap,
   harborOptimized
 ] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
@@ -21,9 +23,11 @@ const [
   fs.readFile(new URL('../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/achievements.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/achievements/runtime.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/performance-profile.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/world-assets.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/render/world.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/countryside-bella-rescue-r173.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/countryside-bella-rescue-hotfix-r176.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/harbor-world-r82.js', import.meta.url), 'utf8')
 ]);
 
@@ -70,6 +74,27 @@ assert.match(
   /countryside-bella-rescue-r173\.js\?revision=r164-long-session-robustness/,
   'The world bootstrap must request Bella’s on-demand audio lifecycle through a fresh URL'
 );
+assert.match(
+  index,
+  /countryside-bella-rescue-hotfix-r176\.js\?revision=r164-long-session-robustness/,
+  'Production must cache-bust the independent Bella bootstrap itself, not just the behavior it imports'
+);
+
+// Touch hardware keeps 60 Hz gameplay but should not redraw the complete dynamic
+// shadow map at 60 Hz too. The profile piggybacks the existing renderer call rather
+// than adding another timer or animation loop.
+assert.match(performanceProfile, /TOUCH_SHADOW_REFRESH_INTERVAL_MS = 1000 \/ 30/);
+assert.match(performanceProfile, /function installTouchShadowRefreshCap\(renderer, profile\)/);
+assert.match(performanceProfile, /renderer\.shadowMap\.autoUpdate = false/,
+  'Touch rendering should explicitly own shadow refresh cadence');
+assert.match(performanceProfile, /renderer\.userData\.turnOriginalRender = originalRender/,
+  'The runtime renderer must only be wrapped once');
+assert.match(performanceProfile, /now - lastShadowRefreshAt >= TOUCH_SHADOW_REFRESH_INTERVAL_MS/);
+assert.match(performanceProfile, /renderer\.shadowMap\.needsUpdate = true/);
+assert.match(performanceProfile, /renderer\.shadowMap\.autoUpdate = true/,
+  'Desktop and non-touch rendering must retain full-refresh shadow behavior');
+assert.doesNotMatch(performanceProfile, /setInterval|requestAnimationFrame|setAnimationLoop/,
+  'Shadow throttling must add no independent scheduling loop');
 
 // Achievements need 100 ms samples while driving, but should contribute zero timer
 // wake-ups while the player is on Home, in The Lot, backgrounded, or otherwise idle.
@@ -193,5 +218,9 @@ assert.match(
   /meowContext\.close\?\.\(\)[\s\S]*meowContext = null/,
   'Disposing the rescue behavior must close and release Bella’s context'
 );
+assert.match(bellaBootstrap, /countryside-bella-rescue-r173\.js\?revision=r164-long-session-robustness/);
+assert.match(bellaBootstrap, /RETRY_DELAYS_MS = Object\.freeze/);
+assert.doesNotMatch(bellaBootstrap, /setInterval/,
+  'The independent Bella bootstrap must use bounded startup retries rather than a fixed polling interval');
 
-console.log(`TURN ${release.id} long-session timers, scenery batching/contours, cache and Bella audio lifecycle passed.`);
+console.log(`TURN ${release.id} long-session timers, touch shadows, scenery batching/contours, cache and Bella audio lifecycle passed.`);
