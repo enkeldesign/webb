@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-import { CAR_CATALOG, deriveVehicleTuning } from '../../turn/vehicle/catalog.js';
+import { CAR_CATALOG, deriveVehicleTuning, getVehicleStatTotal } from '../../turn/vehicle/catalog.js';
 import {
   OVERDRIVE_BUILD_SECONDS,
   OVERDRIVE_MAX_SPEED_MULTIPLIER,
@@ -12,9 +12,11 @@ import {
   vehicleIgnoresOffRoadPenalty
 } from '../../turn/vehicle/physics.js';
 
-const [physicsSource, controlsSource] = await Promise.all([
+const [physicsSource, controlsSource, showcaseSource, trophyRoadSource] = await Promise.all([
   fs.readFile(new URL('../../turn/vehicle/physics.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/ui/gameplay-controls.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/ui/gameplay-controls.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/achievements/trophy-road-showcase.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/progression/trophy-road.js', import.meta.url), 'utf8')
 ]);
 
 const driftTunings = [1, 2, 3, 4, 5].map((drift) => deriveVehicleTuning({
@@ -39,28 +41,33 @@ assert.deepEqual(
 
 const vintageRacer = CAR_CATALOG.find((car) => car.id === 'vintage-racer');
 assert.ok(vintageRacer, 'Vintage Racer must remain in the vehicle catalog');
+assert.deepEqual(vintageRacer.stats, {
+  speed: 4,
+  acceleration: 3,
+  control: 2,
+  drift: 5,
+  boostPower: 2,
+  boostDuration: 2
+}, 'Vintage Racer must spend three ordinary stat points to reach maximum DRIFT');
+assert.equal(getVehicleStatTotal(vintageRacer.stats), 18,
+  'Vintage Racer must retain the shared 18-point vehicle budget');
+assert.equal(vintageRacer.defaultColor, '#3f5368',
+  'Vintage Racer must receive the Truck factory colour');
 assert.equal(vintageRacer.perk?.title, 'DRIFTAGE');
 assert.match(vintageRacer.perk?.description || '', /larger slip angles/i);
-assert.equal(vintageRacer.tuning.driftSpeedMultiplier, 0.9,
-  'DRIFTAGE must retain substantially more speed than the Vintage Racer ordinary DRIFT-2 baseline');
-assert.equal(vintageRacer.tuning.driftDragAdd, 0.07,
-  'DRIFTAGE must add less drag while DRIFT is held');
+assert.equal(vintageRacer.tuning.driftSpeedMultiplier, 0.95,
+  'DRIFTAGE must retain more speed than an ordinary maximum-DRIFT car');
+assert.equal(vintageRacer.tuning.driftDragAdd, 0.045,
+  'DRIFTAGE must add less drag than an ordinary maximum-DRIFT car');
 assert.equal(vintageRacer.tuning.driftYawMultiplier, 1.28,
   'DRIFTAGE steering must become more aggressive while drifting');
 assert.equal(vintageRacer.tuning.driftGripMultiplier, 0.72,
   'DRIFTAGE must reduce lateral correction so larger slip angles can be held');
 assert.equal(vintageRacer.tuning.driftSlideMultiplier, 1.18,
   'DRIFTAGE must support a larger sustained slide');
-const ordinaryDriftTwo = deriveVehicleTuning({
-  speed: 4,
-  acceleration: 4,
-  control: 3,
-  drift: 2,
-  boostPower: 3,
-  boostDuration: 2
-});
-assert.ok(vintageRacer.tuning.driftSpeedMultiplier > ordinaryDriftTwo.driftSpeedMultiplier);
-assert.ok(vintageRacer.tuning.driftDragAdd < ordinaryDriftTwo.driftDragAdd);
+const ordinaryDriftFive = deriveVehicleTuning(vintageRacer.stats);
+assert.ok(vintageRacer.tuning.driftSpeedMultiplier > ordinaryDriftFive.driftSpeedMultiplier);
+assert.ok(vintageRacer.tuning.driftDragAdd < ordinaryDriftFive.driftDragAdd);
 assert.match(physicsSource, /steeringStatMultiplier \*[\s\S]*driftYawMultiplier/,
   'Vehicle physics must apply the car-owned DRIFT yaw multiplier');
 assert.match(physicsSource, /0\.42 \* driftStabilityMultiplier \* driftGripTuningMultiplier/,
@@ -71,10 +78,15 @@ assert.match(physicsSource, /slideStrength = \(driftHeld \? 0\.235 : 0\.12\) \* 
 const rallyRacer = CAR_CATALOG.find((car) => car.id === 'toy-racer');
 assert.ok(rallyRacer, 'The former Toy Racer asset/id must remain available for saved selections and ghosts');
 assert.equal(rallyRacer.name, 'Rally Racer', 'Toy Racer must be presented as Rally Racer without changing its stable id');
+assert.equal(rallyRacer.defaultColor, '#111111', 'Rally Racer factory paint must be #111');
 assert.equal(rallyRacer.perk?.title, 'TWITCHY TURNY');
 assert.match(rallyRacer.perk?.description || '', /fills BOOST even faster/i);
+assert.doesNotMatch(rallyRacer.perk?.description || '', /tiny|small(?:er)? tank/i,
+  'TWITCHY TURNY copy must not imply a special Boost-tank penalty');
+assert.equal(rallyRacer.stats.boostDuration, 1,
+  'Rally Racer must use the ordinary minimum 1/5 Boost Tank attribute');
 assert.equal(rallyRacer.tuning.boostDurationSeconds, 1.2,
-  'Rally Racer must retain the smallest Boost tank');
+  'Rating 1 must remain the ordinary 1.2-second Boost tank with no Rally-specific downsizing');
 assert.equal(rallyRacer.tuning.driftBoostRechargeMultiplier, 3.6,
   'TWITCHY TURNY must recharge Boost 50% faster than the ordinary 2.4x DRIFT recharge');
 assert.match(controlsSource, /function getDriftRechargeMultiplier\(\)/);
@@ -84,6 +96,26 @@ assert.match(
   /globalThis\.__turnDriftHeld \? getDriftRechargeMultiplier\(\) : 1/,
   'Boost recharge must read the selected car tuning only while DRIFT is held'
 );
+
+const truck = CAR_CATALOG.find((car) => car.id === 'truck');
+assert.ok(truck, 'Truck must remain in the vehicle catalog');
+assert.equal(truck.defaultColor, '#8b5a2b',
+  'Truck must receive the former Vintage Racer factory colour');
+
+assert.match(
+  showcaseSource,
+  /'vintage-racer': Object\.freeze\(\[[\s\S]*carId: 'vintage-racer'/,
+  'Vintage Racer Trophy Road detail must use its 3D vehicle model'
+);
+assert.match(
+  showcaseSource,
+  /'rally-racer': Object\.freeze\(\[[\s\S]*carId: 'toy-racer'/,
+  'Rally Racer Trophy Road detail must use the stable Toy Racer 3D asset'
+);
+assert.match(showcaseSource, /catalog\.js\?revision=r164-vintage-rally-polish/,
+  'Trophy Road models must use the refreshed factory colours');
+assert.doesNotMatch(trophyRoadSource, /tank is tiny|tiny tank/i,
+  'Trophy Road must not describe the ordinary 1\/5 Rally tank as an extra penalty');
 
 const monsterTruck = CAR_CATALOG.find((car) => car.id === 'monster-truck');
 assert.ok(monsterTruck, 'Monster Truck must remain in the vehicle catalog');
@@ -198,4 +230,4 @@ for (const car of CAR_CATALOG) {
   }
 }
 
-console.log('TURN DRIFT, DRIFTAGE, TWITCHY TURNY, OVERSIZED and OVERDRIVE contracts passed for all 15 cars.');
+console.log('TURN DRIFT, Vintage/Rally polish, DRIFTAGE, TWITCHY TURNY, OVERSIZED and OVERDRIVE contracts passed for all 15 cars.');
