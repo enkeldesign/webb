@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [lotGate, paintGate, paintCss, lotRuntime, app, index, releaseSource] = await Promise.all([
+const [lotGate, paintGate, paintCss, lotRuntime, perkPresentation, app, index, releaseSource] = await Promise.all([
   fs.readFile(new URL('../../turn/progression/lot-trophy-gate.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/progression/lot-paint-reward.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/progression/trophy-road-r157.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-enhancement-runtime.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/lot-perk-disclosure.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8')
@@ -84,7 +85,18 @@ assert.match(lotGate, /if \(lastAnnouncedCarId\) dismissVisibleUnlockNotice\(\);
 
 assert.match(lotRuntime, /lot-trophy-gate\.js\?revision=r164-perks/);
 assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r164-perks/);
-assert.match(lotRuntime, /lot-perk-disclosure\.js\?revision=r164-perks/);
+assert.match(lotRuntime, /lot-perk-disclosure\.js\?revision=r164-perk-titles-inline/);
+
+assert.match(
+  perkPresentation,
+  /observer\.observe\(picker, \{[\s\S]*subtree: true,[\s\S]*attributes: true,[\s\S]*attributeFilter: \['aria-checked'\][\s\S]*\}\);/,
+  'Inline perk synchronization must remain scoped to selected-car radio state'
+);
+assert.doesNotMatch(perkPresentation, /observer\.observe\(screen,/,
+  'Inline perk presentation must never observe the DOM subtree that contains its own copy');
+assert.doesNotMatch(perkPresentation, /childList:\s*true|characterData:\s*true/,
+  'Inline perk presentation must not reintroduce the self-triggering DOM/text observer that froze The Lot');
+
 assert.match(app, /trophy-road-r157\.css\?revision=r163-native-picker-parent-click/);
 assert.match(app, /lot-enhancement-runtime\.js\?revision=r163-native-picker-parent-click/);
 assert.match(
@@ -92,4 +104,4 @@ assert.match(
   new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click`)
 );
 
-console.log('TURN Lot lock feedback, perk revisions and native paint ancestry regressions passed.');
+console.log('TURN Lot lock feedback, named perk observer safety and native paint ancestry regressions passed.');
