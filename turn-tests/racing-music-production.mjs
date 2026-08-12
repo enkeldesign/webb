@@ -118,6 +118,36 @@ assert.match(music, /voice: section\.leadVoice \|\| 'lead'/,
 assert.match(music, /body\.type = 'triangle'/,
   'The generated song must keep its established warm triangle character');
 
+// Long sessions create thousands of short note/drum graphs. WebKit must not be
+// asked to discover connected-but-silent Gain/Filter branches by GC alone.
+assert.match(music, /const activeGraphs = new Map\(\)/,
+  'Racing music must track the downstream graph belonging to each short-lived source');
+assert.match(music, /function cleanupGraph\(source\)/);
+assert.match(music, /activeGraphs\.delete\(source\)/);
+assert.match(music, /node\?\.disconnect\?\.\(\)/,
+  'Completed music voices must explicitly disconnect their local Web Audio nodes');
+assert.match(music, /function trackGraph\(source, nodes\)/);
+assert.match(
+  music,
+  /source\.addEventListener\?\.\('ended',[\s\S]*activeSources\.delete\(source\);[\s\S]*cleanupGraph\(source\)/,
+  'Natural source completion must tear down the associated graph immediately'
+);
+assert.match(
+  music,
+  /function stopActiveSources\(\)[\s\S]*for \(const source of \[\.\.\.activeGraphs\.keys\(\)\]\) cleanupGraph\(source\)/,
+  'Music OFF/background stop must explicitly release graph branches even before ended events arrive'
+);
+for (const graphContract of [
+  /trackGraph\(body, \[body, harmonic, bodyGain, harmonicGain, filter, amp\]\)/,
+  /trackGraph\(body, \[body, overtone, bodyGain, overtoneGain, filter, amp\]\)/,
+  /trackGraph\(body, \[body, sub, bodyGain, subGain, filter, amp\]\)/,
+  /trackGraph\(oscillator, \[oscillator, filter, amp\]\)/,
+  /trackGraph\(oscillator, \[oscillator, amp\]\)/,
+  /trackGraph\(source, \[source, filter, amp\]\)/
+]) {
+  assert.match(music, graphContract, 'Every generated music voice family must participate in explicit graph teardown');
+}
+
 assert.match(music, /MUSIC_VOLUME_STORAGE_KEY = 'turn-racing-music-volume-v1'/,
   'The release must preserve existing saved volume preferences');
 assert.doesNotMatch(music, /fetch\(|new Audio\(/,
@@ -143,4 +173,4 @@ assert.match(music, /arrangement: Object\.freeze\(ARRANGEMENT\.map\(\(section\) 
 assert.match(music, /timbre: 'warm-v3-eighth-note-flute-chorus'/,
   'The existing runtime timbre identifier must remain stable for compatibility');
 
-console.log(`TURN approved music runtime routing resolves ${musicSpecifier} to ${musicRevision}.`);
+console.log(`TURN approved music runtime routing resolves ${musicSpecifier} to ${musicRevision} with explicit voice-graph teardown.`);
