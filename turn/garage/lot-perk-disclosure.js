@@ -1,4 +1,5 @@
 import { getCarDefinition } from '../vehicle/catalog.js?revision=r164-vintage-rally-polish';
+import { vehiclePerkPresentation } from '../vehicle/perk-presentation.js?revision=r164-post-soak';
 
 const STYLE_ID = 'turn-lot-perk-inline-styles';
 
@@ -59,7 +60,7 @@ export function installLotPerkDisclosure(root = document.body) {
 
   function sync() {
     const vehicleId = selectedVehicleId(screen);
-    const vehiclePerk = getCarDefinition(vehicleId)?.perk;
+    const vehiclePerk = vehiclePerkPresentation(vehicleId, getCarDefinition(vehicleId)?.perk);
     const perkTitle = vehiclePerk?.title || '';
     const perkDescription = vehiclePerk?.description || '';
     const perkText = perkTitle && perkDescription
