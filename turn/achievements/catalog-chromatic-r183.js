@@ -21,6 +21,11 @@ export const ACHIEVEMENTS = Object.freeze([
   ...base.ACHIEVEMENTS.slice(insertionIndex)
 ]);
 
+export const VEHICLE_NAMES = Object.freeze({
+  ...base.VEHICLE_NAMES,
+  'toy-racer': 'Rally Racer'
+});
+
 const ACHIEVEMENT_BY_ID = new Map(
   ACHIEVEMENTS.map((achievement) => [achievement.id, achievement])
 );
