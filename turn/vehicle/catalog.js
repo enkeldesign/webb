@@ -37,8 +37,8 @@ export const CAR_PALETTE = Object.freeze([
 const DEFAULT_COLOR_BY_ID = Object.freeze({
   convertible: Object.freeze({ fallback: '#a8327a', p3: Object.freeze([0.66, 0.14, 0.43]) }),
   classic: Object.freeze({ fallback: '#ffcc00', p3: Object.freeze([1, 0.76, 0]) }),
-  'vintage-racer': Object.freeze({ fallback: '#8b5a2b', p3: Object.freeze([0.52, 0.29, 0.12]) }),
-  'toy-racer': Object.freeze({ fallback: '#2d5ea8', p3: Object.freeze([0.12, 0.31, 0.68]) }),
+  'vintage-racer': Object.freeze({ fallback: '#3f5368', p3: Object.freeze([0.22, 0.32, 0.43]) }),
+  'toy-racer': Object.freeze({ fallback: '#111111', p3: Object.freeze([0.067, 0.067, 0.067]) }),
   'monster-truck': Object.freeze({ fallback: '#3f5a3c', p3: Object.freeze([0.21, 0.35, 0.19]) }),
   'race-future': Object.freeze({ fallback: '#00aabb', p3: Object.freeze([0, 0.68, 0.74]) }),
   race: Object.freeze({ fallback: '#b93632', p3: Object.freeze([0.72, 0.12, 0.12]) }),
@@ -48,7 +48,7 @@ const DEFAULT_COLOR_BY_ID = Object.freeze({
   firetruck: Object.freeze({ fallback: '#d92d20', p3: Object.freeze([0.82, 0.08, 0.04]) }),
   police: Object.freeze({ fallback: '#0b0d10', p3: Object.freeze([0.035, 0.045, 0.06]) }),
   ambulance: Object.freeze({ fallback: '#f8f9fa', p3: Object.freeze([0.95, 0.97, 0.98]) }),
-  truck: Object.freeze({ fallback: '#3f5368', p3: Object.freeze([0.22, 0.32, 0.43]) }),
+  truck: Object.freeze({ fallback: '#8b5a2b', p3: Object.freeze([0.52, 0.29, 0.12]) }),
   van: Object.freeze({ fallback: '#5d503f', p3: Object.freeze([0.34, 0.29, 0.21]) })
 });
 
@@ -87,7 +87,7 @@ const VEHICLE_PERK_BY_ID = Object.freeze({
   }),
   'toy-racer': Object.freeze({
     title: 'TWITCHY TURNY',
-    description: 'DRIFT fills BOOST even faster than normal, but the tank is tiny.'
+    description: 'DRIFT fills BOOST even faster than normal.'
   }),
   'monster-truck': Object.freeze({
     title: 'OVERSIZED',
@@ -104,8 +104,8 @@ const VEHICLE_PERK_BY_ID = Object.freeze({
 
 const TUNING_OVERRIDE_BY_ID = Object.freeze({
   'vintage-racer': Object.freeze({
-    driftDragAdd: 0.07,
-    driftSpeedMultiplier: 0.9,
+    driftDragAdd: 0.045,
+    driftSpeedMultiplier: 0.95,
     driftYawMultiplier: 1.28,
     driftGripMultiplier: 0.72,
     driftSlideMultiplier: 1.18
@@ -118,7 +118,7 @@ const TUNING_OVERRIDE_BY_ID = Object.freeze({
 const RAW_CARS = [
   ['convertible', 'Convertible', 'prototype', { speed: 4, acceleration: 4, control: 4, drift: 2, boostPower: 3, boostDuration: 1 }, 0.98, 1, 1.08],
   ['classic', 'Training Car', 'prototype', { speed: 1, acceleration: 1, control: 5, drift: 5, boostPower: 1, boostDuration: 5 }, 1.00, 1, 0.88],
-  ['vintage-racer', 'Vintage Racer', 'toy', { speed: 4, acceleration: 4, control: 3, drift: 2, boostPower: 3, boostDuration: 2 }, 0.96, 0, 1.28],
+  ['vintage-racer', 'Vintage Racer', 'toy', { speed: 4, acceleration: 3, control: 2, drift: 5, boostPower: 2, boostDuration: 2 }, 0.96, 0, 1.28],
   ['toy-racer', 'Rally Racer', 'toy', { speed: 4, acceleration: 5, control: 5, drift: 1, boostPower: 2, boostDuration: 1 }, 0.94, 2, 1.18],
   ['monster-truck', 'Monster Truck', 'toy', { speed: 2, acceleration: 3, control: 2, drift: 5, boostPower: 2, boostDuration: 4 }, 0.83, 2, 0.62],
   ['race-future', 'Future Racer', 'car', { speed: 5, acceleration: 5, control: 3, drift: 1, boostPower: 3, boostDuration: 1 }, 0.96, 0, 1.42],
