@@ -176,7 +176,11 @@ assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} 
 assert.equal(imports['./race/replay-system.js'], releaseTarget('./race/replay-system.js'), 'The current release must publish the shared replay sampler cache');
 assert.equal(imports['./race/track-spatial-index.js?build=20260720-r19'], releaseTarget('./race/track-spatial-index.js'), 'The current release must publish the rebuildable bounded track search');
 assert.equal(imports['./performance-monitor.js?build=20260720-r19'], releaseTarget('./performance-monitor.js'), 'The current release must publish the diagnostics module');
-assert.equal(imports['./world-assets.js'], releaseTarget('./world-assets.js'), 'The current release must publish both countryside tree-grounding passes');
+assert.equal(
+  imports['./world-assets.js'],
+  `${releaseTarget('./world-assets.js')}&revision=r164-long-session-robustness`,
+  'The current release must publish the fresh tree-grounding and contour-suppression pass'
+);
 assert.equal(
   imports['/turn/achievements/trophy-road-showcase.js?revision=r160-reward-detail-sync'],
   '/turn/achievements/trophy-road-showcase.js?revision=r164-long-session-robustness',
@@ -184,11 +188,11 @@ assert.equal(
 );
 assert.match(app, /performance-profile\.js\?revision=r164-long-session-robustness/,
   'The installed runtime must request the mobile thermal profile under a fresh URL');
-assert.match(app, /installPerformanceProfile\(\)/, 'Renderer profile installation must run before the game runtime');
+assert.match(app, /installPerformanceProfile\(\)/, 'Renderer profile installation must run before gameplay starts');
 assert.ok(app.indexOf('./performance-profile.js') < app.indexOf('./main.js'), 'The DPR cap must be ready before main.js creates the runtime');
 assert.match(profile, /DEFAULT_DPR_CAP = 1\.5/, 'Desktop production DPR ceiling must stay at 1.5');
 assert.match(profile, /TOUCH_DPR_CAP = 1\.25/, 'Touch production must reserve thermal headroom with DPR 1.25');
-assert.match(profile, /TOUCH_SHADOW_MAP_SIZE = 512/, 'Touch production must use the cheaper 512px shadow map');
+assert.match(profile, /TOUCH_SHADOW_MAP_SIZE = 512/, 'Touch devices must use the cheaper 512px shadow map');
 assert.match(profile, /maxTouchPoints/);
 assert.match(profile, /pointer: coarse/);
 assert.match(profile, /MAX_DPR_CAP = 1\.5/, 'Diagnostics must never restore the retired DPR 2 tier');
