@@ -1,5 +1,7 @@
 const HEALTH_CHECK_INTERVAL_MS = 1000;
 const RECOVERY_GRACE_MS = 900;
+const STOP_SETTLE_TIMEOUT_MS = 600;
+const STOP_SETTLE_POLL_MS = 20;
 const INSTALL_RETRY_MS = 250;
 const INSTALL_RETRY_LIMIT = 40;
 
@@ -61,10 +63,11 @@ export function installRacingMusicHealth(music = globalThis.__turnRacingMusic) {
     const restoreVolume = music.volume;
     try {
       // v3 deliberately stops every scheduled source synchronously when volume
-      // reaches zero. This also clears its `playing` flag, so a restore creates
-      // a fresh scheduler even if WebKit interrupted the context mid-song.
+      // reaches zero. Its public stop also begins an async AudioContext suspend,
+      // so wait for that lifecycle to settle before restoring volume; otherwise
+      // an old suspend can land after the new scheduler has already started.
       music.stop();
-      await Promise.resolve();
+      await waitForStoppedPlayback(music);
       if (restoreVolume > 0 && document.visibilityState !== 'hidden'
         && globalThis.__turnAudioPreferences?.getSettings?.().audioEnabled !== false) {
         music.setVolume(restoreVolume, { restart: true });
@@ -103,6 +106,19 @@ export function installRacingMusicHealth(music = globalThis.__turnRacingMusic) {
   });
   globalThis.__turnRacingMusicHealth = installed;
   return installed;
+}
+
+async function waitForStoppedPlayback(music) {
+  const deadline = performance.now() + STOP_SETTLE_TIMEOUT_MS;
+  while (performance.now() < deadline) {
+    if (!music.playing && music.state !== 'running') return true;
+    await delay(STOP_SETTLE_POLL_MS);
+  }
+  return !music.playing;
+}
+
+function delay(milliseconds) {
+  return new Promise((resolve) => globalThis.setTimeout(resolve, milliseconds));
 }
 
 function installWhenHomeReady() {
