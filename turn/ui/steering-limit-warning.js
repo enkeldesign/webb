@@ -1,4 +1,5 @@
 const LIMIT_EVENT = 'turn:steering-limit-feedback';
+const HARD_LIMIT_CUE_HOLD_MS = 320;
 const SECOND_TONE_DELAY_MS = 90;
 const MIN_VISIBLE_OPACITY = 0.08;
 const MIN_VISIBLE_GROWTH = 0.3;
@@ -50,6 +51,9 @@ export function installSteeringLimitWarning() {
 
   const announcedSides = { left: false, right: false };
   let audioTimer = 0;
+  let hardCueTimer = 0;
+  let pendingHardSide = null;
+  let currentHardSide = null;
   let animationFrame = 0;
   let previousFrameTime = 0;
 
@@ -146,10 +150,18 @@ export function installSteeringLimitWarning() {
     if (!animationFrame) animationFrame = window.requestAnimationFrame(animateVisuals);
   }
 
+  function cancelPendingHardCue() {
+    window.clearTimeout(hardCueTimer);
+    hardCueTimer = 0;
+    pendingHardSide = null;
+  }
+
   function resetRaceAnnouncements() {
     announcedSides.left = false;
     announcedSides.right = false;
     announcer.textContent = '';
+    currentHardSide = null;
+    cancelPendingHardCue();
   }
 
   function playLimitCue() {
@@ -170,12 +182,27 @@ export function installSteeringLimitWarning() {
     });
   }
 
+  function scheduleHardCue(side) {
+    if (pendingHardSide === side && hardCueTimer) return;
+    cancelPendingHardCue();
+    pendingHardSide = side;
+    hardCueTimer = window.setTimeout(() => {
+      hardCueTimer = 0;
+      pendingHardSide = null;
+      if (currentHardSide !== side) return;
+      playLimitCue();
+      announceLimit(side);
+    }, HARD_LIMIT_CUE_HOLD_MS);
+  }
+
   function handleLimitFeedback(event) {
     const detail = event.detail || {};
     const side = detail.side === 'left' || detail.side === 'right' ? detail.side : null;
     const now = currentTime();
 
     if (!detail.active || !side) {
+      currentHardSide = null;
+      cancelPendingHardCue();
       scheduleSoftRelease(states.left, now);
       scheduleSoftRelease(states.right, now);
       requestVisualAnimation();
@@ -188,9 +215,14 @@ export function installSteeringLimitWarning() {
     setHiddenTarget(inactiveState);
     requestVisualAnimation();
 
-    if (detail.enteredHard) {
-      playLimitCue();
-      announceLimit(side);
+    if (detail.hard) {
+      if (currentHardSide !== side || detail.enteredHard) {
+        currentHardSide = side;
+        scheduleHardCue(side);
+      }
+    } else {
+      currentHardSide = null;
+      cancelPendingHardCue();
     }
   }
 
@@ -201,6 +233,8 @@ export function installSteeringLimitWarning() {
     if (!event.detail?.running) {
       window.clearTimeout(audioTimer);
       audioTimer = 0;
+      currentHardSide = null;
+      cancelPendingHardCue();
       resetVisualsImmediately();
       announcer.textContent = '';
     }
