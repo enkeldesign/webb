@@ -238,7 +238,7 @@ audioPreferences.setDriveByEarEnabled(driveByEarEnabled);
 // }
 
 const { installSteeringLimitWarning } = await import(
-  withBuild('./ui/steering-limit-warning.js')
+  withBuild('./ui/steering-limit-warning.js?revision=r164-post-soak')
 );
 installSteeringLimitWarning();
 
@@ -272,7 +272,7 @@ installHarborHiddenFaceOrientation();
 // lot-enhancement-runtime.js?revision=r121&trophy-road=r154
 // lot-enhancement-runtime.js?revision=r121&trophy-road=r157
 const { installLotEnhancementRuntime } = await import(
-  withBuild('./garage/lot-enhancement-runtime.js?revision=r163-native-picker-parent-click')
+  withBuild('./garage/lot-enhancement-runtime.js?revision=r164-post-soak')
 );
 installLotEnhancementRuntime();
 
@@ -301,7 +301,7 @@ installTrackIntroCamera();
 // render/world.js?revision=r174-bella-siren-zone
 await Promise.all([
   import(withBuild('./render/world.js?revision=r164-long-session-robustness')),
-  import(withBuild('./ui/spectate.js')),
+  import(withBuild('./ui/spectate.js?revision=r164-elevation-aware')),
   import(withBuild('./ui/back-to-lot.js'))
 ]);
 
