@@ -1,7 +1,6 @@
-import { rewardForVehicle } from '../progression/trophy-road.js?revision=r164-perks';
+import { rewardForVehicle } from '../progression/trophy-road.js?revision=r164-perk-titles';
 
-const STYLE_ID = 'turn-lot-perk-disclosure-styles';
-const COPY_ID = 'turnLotPerkDescription';
+const STYLE_ID = 'turn-lot-perk-inline-styles';
 
 function installStyles() {
   if (document.getElementById(STYLE_ID)) return;
@@ -9,42 +8,25 @@ function installStyles() {
   style.id = STYLE_ID;
   style.textContent = `
     .lot-perk-disclosure {
-      display: grid;
-      justify-items: start;
-      gap: 4px;
       margin: 6px 0 0;
     }
-    .lot-perk-disclosure[hidden],
-    .lot-perk-copy[hidden] {
+    .lot-perk-disclosure[hidden] {
       display: none !important;
     }
-    .lot-perk-button {
-      min-height: 25px;
-      padding: 3px 7px;
-      border: 2px solid var(--ink);
-      border-radius: 999px;
-      background: var(--yellow);
-      box-shadow: 2px 2px 0 var(--ink);
-      font-size: 0.46rem;
-      letter-spacing: 0.055em;
-      line-height: 1;
-    }
-    .lot-perk-button .lot-perk-symbol {
-      margin-right: 3px;
-    }
     .lot-perk-copy {
-      display: -webkit-box;
       max-width: 100%;
       margin: 0;
-      overflow: hidden;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 2;
+      color: #2f6f38;
       font-size: 0.52rem;
+      font-weight: 800;
       line-height: 1.25;
+    }
+    .lot-perk-copy strong {
+      color: inherit;
+      font-weight: 950;
     }
     @media (max-height: 430px) {
       .lot-perk-disclosure { margin-top: 4px; }
-      .lot-perk-button { min-height: 22px; padding: 2px 6px; }
       .lot-perk-copy { font-size: 0.48rem; }
     }
   `;
@@ -64,71 +46,43 @@ export function installLotPerkDisclosure(root = document.body) {
 
   installStyles();
 
-  const disclosure = document.createElement('div');
-  disclosure.className = 'lot-perk-disclosure';
-  disclosure.hidden = true;
-
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'lot-perk-button';
-  button.setAttribute('aria-expanded', 'false');
-  button.setAttribute('aria-controls', COPY_ID);
-  button.innerHTML = '<span class="lot-perk-symbol" aria-hidden="true">✦</span>PERK';
+  const perk = document.createElement('div');
+  perk.className = 'lot-perk-disclosure';
+  perk.hidden = true;
 
   const copy = document.createElement('p');
-  copy.id = COPY_ID;
   copy.className = 'lot-perk-copy';
-  copy.hidden = true;
-
-  disclosure.append(button, copy);
-  description.after(disclosure);
+  perk.appendChild(copy);
+  description.after(perk);
 
   let currentVehicleId = '';
-  let currentPerkDescription = '';
-
-  function collapse() {
-    button.setAttribute('aria-expanded', 'false');
-    copy.hidden = true;
-  }
+  let currentPerkText = '';
 
   function sync() {
     const vehicleId = selectedVehicleId(screen);
     const reward = rewardForVehicle(vehicleId);
+    const perkTitle = reward?.perkTitle || '';
     const perkDescription = reward?.perkDescription || '';
+    const perkText = perkTitle && perkDescription
+      ? `${perkTitle}: ${perkDescription}`
+      : '';
 
-    if (vehicleId !== currentVehicleId) {
-      currentVehicleId = vehicleId;
-      collapse();
-    }
-
-    disclosure.hidden = !perkDescription;
-    if (!perkDescription) {
-      if (currentPerkDescription) copy.replaceChildren();
-      currentPerkDescription = '';
-      button.setAttribute('aria-label', 'Perk information');
+    currentVehicleId = vehicleId;
+    perk.hidden = !perkText;
+    if (!perkText) {
+      if (currentPerkText) copy.replaceChildren();
+      currentPerkText = '';
       return;
     }
 
-    if (perkDescription !== currentPerkDescription) {
-      copy.innerHTML = `<strong>PERK:</strong> ${perkDescription}`;
-      currentPerkDescription = perkDescription;
+    if (perkText !== currentPerkText) {
+      copy.innerHTML = `<strong>${perkTitle}:</strong> ${perkDescription}`;
+      currentPerkText = perkText;
     }
-    const vehicleName = screen.querySelector('.lot-car-title strong')?.textContent?.trim() || 'Selected car';
-    button.setAttribute('aria-label', `Show ${vehicleName} perk`);
   }
 
-  button.addEventListener('click', () => {
-    const expanded = button.getAttribute('aria-expanded') === 'true';
-    button.setAttribute('aria-expanded', String(!expanded));
-    copy.hidden = expanded;
-    const vehicleName = screen.querySelector('.lot-car-title strong')?.textContent?.trim() || 'selected car';
-    button.setAttribute('aria-label', `${expanded ? 'Show' : 'Hide'} ${vehicleName} perk`);
-  });
-
-  // Observe only the radio-selection state. The original r164 implementation
-  // observed the whole Lot subtree for child/text changes, then rewrote its own
-  // perk copy inside that subtree. That created a self-triggering microtask loop
-  // after ordinary Lot interactions and could freeze the main thread.
+  // Observe only the radio-selection state. Perk copy lives outside the picker,
+  // so updating it cannot trigger this observer or recreate the r164 freeze loop.
   const observer = new MutationObserver(sync);
   observer.observe(picker, {
     subtree: true,
@@ -139,6 +93,6 @@ export function installLotPerkDisclosure(root = document.body) {
 
   return () => {
     observer.disconnect();
-    disclosure.remove();
+    perk.remove();
   };
 }
