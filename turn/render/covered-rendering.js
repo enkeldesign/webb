@@ -8,6 +8,9 @@ const PAUSE_CLASSES = Object.freeze([
   'turn-track-select-open',
   'turn-runtime-paused'
 ]);
+const MAIN_RENDERER_PAUSE_CLASSES = Object.freeze([
+  'turn-home-open'
+]);
 
 export function installCoveredRenderingGuard() {
   const prototype = THREE.WebGLRenderer.prototype;
@@ -17,6 +20,7 @@ export function installCoveredRenderingGuard() {
   const stats = {
     guardedLoops: 0,
     skippedFrames: 0,
+    skippedCoveredMainFrames: 0,
     skippedHighRefreshFrames: 0
   };
 
@@ -30,6 +34,16 @@ export function installCoveredRenderingGuard() {
     const guardedCallback = (time, frame) => {
       if (PAUSE_CLASSES.some((className) => document.body?.classList.contains(className))) {
         stats.skippedFrames += 1;
+        return;
+      }
+
+      const mainRendererCovered = renderer === globalThis.__turnRuntime?.renderer
+        && MAIN_RENDERER_PAUSE_CLASSES.some((className) => document.body?.classList.contains(className));
+      if (mainRendererCovered) {
+        stats.skippedCoveredMainFrames += 1;
+        // Reset the delivery clock so returning from Home does not inherit a
+        // stale accumulated cadence from minutes of intentionally skipped work.
+        lastDeliveredAt = -Infinity;
         return;
       }
 
