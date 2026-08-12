@@ -94,6 +94,9 @@ jobs:
       - name: Run TURN NEXT motion safe-zone regression
         run: node turn-tests/motion-safe-zone-production.mjs
 
+      - name: Run post-optimisation soak regression
+        run: node turn-tests/post-soak-production.mjs
+
       - name: Run production race and replay regression tests
         run: node turn-tests/race-production.mjs
 

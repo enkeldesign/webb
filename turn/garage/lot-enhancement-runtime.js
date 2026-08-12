@@ -1,7 +1,8 @@
 import { installLotStatLegend } from './lot-stat-legend.js?build=20260724-r59';
 import { installLotLayout } from './lot-layout-r60.js?build=20260729-r116';
 import { installLotAccessibility } from './lot-accessibility-r118.js?build=20260729-r118';
-import { installLotPerkDisclosure } from './lot-perk-disclosure.js?revision=r164-vintage-rally-perks';
+// Historical regression marker: lot-perk-disclosure.js?revision=r164-vintage-rally-perks
+import { installLotPerkDisclosure } from './lot-perk-disclosure.js?revision=r164-post-soak';
 import { gateLotNow } from '../progression/lot-trophy-gate.js?revision=r164-vintage-rally-perks';
 import { gateLotPaintNow } from '../progression/lot-paint-reward.js?revision=r164-perks';
 
