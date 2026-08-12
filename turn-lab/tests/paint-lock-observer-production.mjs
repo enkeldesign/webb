@@ -78,15 +78,20 @@ assert.doesNotMatch(paintLockRule, /width: 100%/);
 assert.match(lotGate, /function dismissVisibleUnlockNotice\(\)/);
 assert.match(lotGate, /\.turn-unlock-notice\.is-visible/);
 assert.match(lotGate, /notice\.classList\.remove\('is-visible'\)/);
+assert.match(lotGate, /trophy-road\.js\?revision=r164-vintage-rally-perks/);
 assert.match(lotGate, /if \(lastAnnouncedCarId\) dismissVisibleUnlockNotice\(\)/,
   'Selecting an available vehicle after a locked one must remove the stale lock notice');
 assert.match(lotGate, /if \(lastAnnouncedCarId\) dismissVisibleUnlockNotice\(\);[\s\S]*raceButton\.classList\.remove/,
   'Leaving The Lot must not leave a vehicle lock notice behind');
 
-assert.match(lotRuntime, /lot-trophy-gate\.js\?revision=r164-perks/);
+assert.match(lotRuntime, /lot-trophy-gate\.js\?revision=r164-vintage-rally-perks/);
 assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r164-perks/);
-assert.match(lotRuntime, /lot-perk-disclosure\.js\?revision=r164-perk-titles-inline/);
+assert.match(lotRuntime, /lot-perk-disclosure\.js\?revision=r164-vintage-rally-perks/);
 
+assert.match(perkPresentation, /getCarDefinition\(vehicleId\)\?\.perk/,
+  'Inline perk identity must be read from the selected car itself');
+assert.doesNotMatch(perkPresentation, /rewardForVehicle|trophy-road/,
+  'Inline perk presentation must not become a progression entitlement');
 assert.match(
   perkPresentation,
   /observer\.observe\(picker, \{[\s\S]*subtree: true,[\s\S]*attributes: true,[\s\S]*attributeFilter: \['aria-checked'\][\s\S]*\}\);/,
@@ -104,4 +109,4 @@ assert.match(
   new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click`)
 );
 
-console.log('TURN Lot lock feedback, named perk observer safety and native paint ancestry regressions passed.');
+console.log('TURN Lot lock feedback, car-owned perk observer safety and native paint ancestry regressions passed.');
