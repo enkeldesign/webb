@@ -1,4 +1,4 @@
-import { rewardForVehicle } from '../progression/trophy-road.js?revision=r164-perk-titles';
+import { getCarDefinition } from '../vehicle/catalog.js?revision=r164-vintage-rally-perks';
 
 const STYLE_ID = 'turn-lot-perk-inline-styles';
 
@@ -59,9 +59,9 @@ export function installLotPerkDisclosure(root = document.body) {
 
   function sync() {
     const vehicleId = selectedVehicleId(screen);
-    const reward = rewardForVehicle(vehicleId);
-    const perkTitle = reward?.perkTitle || '';
-    const perkDescription = reward?.perkDescription || '';
+    const vehiclePerk = getCarDefinition(vehicleId)?.perk;
+    const perkTitle = vehiclePerk?.title || '';
+    const perkDescription = vehiclePerk?.description || '';
     const perkText = perkTitle && perkDescription
       ? `${perkTitle}: ${perkDescription}`
       : '';
