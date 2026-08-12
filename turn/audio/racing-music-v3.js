@@ -189,6 +189,7 @@ let blankToggle = null;
 let settingsSlider = null;
 let settingsOutput = null;
 const activeSources = new Set();
+const activeGraphs = new Map();
 
 function clamp(value, min, max, fallback = min) {
   if (!Number.isFinite(value)) return fallback;
@@ -263,9 +264,25 @@ function ensureGraph() {
   return true;
 }
 
+function cleanupGraph(source) {
+  const nodes = activeGraphs.get(source);
+  if (!nodes) return;
+  activeGraphs.delete(source);
+  for (const node of nodes) {
+    try { node?.disconnect?.(); } catch (_) {}
+  }
+}
+
+function trackGraph(source, nodes) {
+  activeGraphs.set(source, nodes.filter(Boolean));
+}
+
 function trackSource(source) {
   activeSources.add(source);
-  source.addEventListener?.('ended', () => activeSources.delete(source), { once: true });
+  source.addEventListener?.('ended', () => {
+    activeSources.delete(source);
+    cleanupGraph(source);
+  }, { once: true });
   return source;
 }
 
@@ -273,6 +290,7 @@ function stopActiveSources() {
   for (const source of activeSources) {
     try { source.stop(); } catch (_) {}
   }
+  for (const source of [...activeGraphs.keys()]) cleanupGraph(source);
   activeSources.clear();
 }
 
@@ -405,6 +423,7 @@ function playFluteLead(note, time) {
 
   filter.connect(amp);
   amp.connect(masterGain);
+  trackGraph(body, [body, harmonic, bodyGain, harmonicGain, filter, amp]);
 
   body.start(time);
   harmonic.start(time);
@@ -446,6 +465,7 @@ function playLead(note, time, { voice = 'lead' } = {}) {
   overtoneGain.connect(filter);
   filter.connect(amp);
   amp.connect(masterGain);
+  trackGraph(body, [body, overtone, bodyGain, overtoneGain, filter, amp]);
   body.start(time);
   overtone.start(time);
   body.stop(time + duration * 1.08);
@@ -480,6 +500,7 @@ function playBass(note, time) {
   subGain.connect(filter);
   filter.connect(amp);
   amp.connect(masterGain);
+  trackGraph(body, [body, sub, bodyGain, subGain, filter, amp]);
   body.start(time);
   sub.start(time);
   body.stop(time + STEP_SECONDS * 1.05);
@@ -501,6 +522,7 @@ function playArp(note, time) {
   oscillator.connect(filter);
   filter.connect(amp);
   amp.connect(masterGain);
+  trackGraph(oscillator, [oscillator, filter, amp]);
   oscillator.start(time);
   oscillator.stop(time + STEP_SECONDS * 0.95);
 }
@@ -516,6 +538,7 @@ function playKick(time) {
   amp.gain.exponentialRampToValueAtTime(0.0001, time + 0.18);
   oscillator.connect(amp);
   amp.connect(masterGain);
+  trackGraph(oscillator, [oscillator, amp]);
   oscillator.start(time);
   oscillator.stop(time + 0.19);
 }
@@ -534,6 +557,7 @@ function playSnare(time) {
   source.connect(filter);
   filter.connect(amp);
   amp.connect(masterGain);
+  trackGraph(source, [source, filter, amp]);
   source.start(time);
   source.stop(time + 0.14);
 }
@@ -552,6 +576,7 @@ function playHat(time, open = false) {
   source.connect(filter);
   filter.connect(amp);
   amp.connect(masterGain);
+  trackGraph(source, [source, filter, amp]);
   source.start(time);
   source.stop(time + duration);
 }
