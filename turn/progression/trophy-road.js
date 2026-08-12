@@ -43,8 +43,9 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     type: 'vehicle',
     vehicleIds: Object.freeze(['race-future']),
     icon: 'future',
-    perkDescription: 'OVERDRIVE — 5 clean seconds builds +6% top speed. Off-road or collisions reset it.',
-    description: 'Unlock the Future Racer: built for advanced time trials.<br><strong>PERK:</strong> OVERDRIVE — 5 clean seconds builds +6%; off-road or hits reset.'
+    perkTitle: 'OVERDRIVE',
+    perkDescription: '5 clean seconds builds +6% top speed. Off-road or collisions reset it.',
+    description: 'Unlock the Future Racer: built for advanced time trials.<br><strong>OVERDRIVE:</strong> 5 clean seconds builds +6% top speed; off-road or hits reset.'
   }),
   Object.freeze({
     id: 'emergency-pack',
@@ -54,7 +55,9 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     type: 'vehicle-pack',
     vehicleIds: Object.freeze(['firetruck', 'ambulance', 'police']),
     icon: 'emergency',
-    description: 'Unlock the Fire Truck, Ambulance and Police Car. During Boost, their emergency lights flash and their sirens sound. All three have maximum Boost tanks.'
+    perkTitle: 'SIRENS',
+    perkDescription: 'Boost activates flashing emergency lights and sirens.',
+    description: 'Unlock the Fire Truck, Ambulance and Police Car. All three have maximum Boost tanks.<br><strong>SIRENS:</strong> Boost activates flashing emergency lights and sirens.'
   }),
   Object.freeze({
     id: 'monster',
@@ -64,8 +67,9 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     type: 'vehicle',
     vehicleIds: Object.freeze(['monster-truck']),
     icon: 'monster',
+    perkTitle: 'OVERSIZED',
     perkDescription: 'Going off-road doesn’t slow it down.',
-    description: 'Unlock the Monster Truck: a military-green heavyweight.<br><strong>PERK:</strong> Going off-road doesn’t slow it down.'
+    description: 'Unlock the Monster Truck: a military-green heavyweight.<br><strong>OVERSIZED:</strong> Going off-road doesn’t slow it down.'
   })
 ]);
 

@@ -73,10 +73,30 @@ assert.equal(rewardForVehicle('race-future')?.id, 'future-racer');
 assert.equal(rewardForVehicle('monster-truck')?.id, 'monster');
 assert.equal(rewardForFeature('vehicle-paint')?.id, 'paintjob');
 assert.equal(getTrophyRoadReward('invented'), null);
-assert.match(getTrophyRoadReward('future-racer')?.perkDescription || '', /OVERDRIVE/);
-assert.match(getTrophyRoadReward('future-racer')?.description || '', /<strong>PERK:<\/strong>/);
-assert.match(getTrophyRoadReward('monster')?.perkDescription || '', /off-road/i);
-assert.match(getTrophyRoadReward('monster')?.description || '', /<strong>PERK:<\/strong>/);
+
+const futurePerk = getTrophyRoadReward('future-racer');
+assert.equal(futurePerk?.perkTitle, 'OVERDRIVE');
+assert.match(futurePerk?.perkDescription || '', /5 clean seconds/);
+assert.match(futurePerk?.description || '', /<strong>OVERDRIVE:<\/strong>/);
+
+const emergencyPerk = getTrophyRoadReward('emergency-pack');
+assert.equal(emergencyPerk?.perkTitle, 'SIRENS');
+assert.match(emergencyPerk?.perkDescription || '', /emergency lights and sirens/i);
+assert.match(emergencyPerk?.description || '', /<strong>SIRENS:<\/strong>/);
+for (const vehicleId of ['firetruck', 'ambulance', 'police']) {
+  assert.equal(rewardForVehicle(vehicleId)?.perkTitle, 'SIRENS');
+}
+
+const monsterPerk = getTrophyRoadReward('monster');
+assert.equal(monsterPerk?.perkTitle, 'OVERSIZED');
+assert.match(monsterPerk?.perkDescription || '', /off-road/i);
+assert.match(monsterPerk?.description || '', /<strong>OVERSIZED:<\/strong>/);
+
+for (const reward of [futurePerk, emergencyPerk, monsterPerk]) {
+  assert.doesNotMatch(reward?.description || '', /<strong>PERK:<\/strong>/,
+    'Unlock details must lead with the actual perk title rather than the generic word PERK');
+}
+
 assert.deepEqual(grandfatheredRewardIdsForVersion(3), ['paintjob', 'monster']);
 assert.deepEqual(
   grandfatheredRewardIdsForVersion(2),
@@ -147,10 +167,12 @@ for (const threshold of [300, 400, 500, 600, 700]) {
 }
 assert.match(roadSource, /id: 'paintjob'/);
 assert.match(roadSource, /id: 'future-racer'/);
-assert.match(roadSource, /OVERDRIVE/);
-assert.match(roadSource, /<strong>PERK:<\/strong>/);
+assert.match(roadSource, /perkTitle: 'OVERDRIVE'/);
 assert.match(roadSource, /id: 'emergency-pack'/);
+assert.match(roadSource, /perkTitle: 'SIRENS'/);
 assert.match(roadSource, /id: 'monster'/);
+assert.match(roadSource, /perkTitle: 'OVERSIZED'/);
+assert.doesNotMatch(roadSource, /<strong>PERK:<\/strong>/);
 assert.match(roadSource, /grandfatheredRewardIdsForVersion/);
 assert.doesNotMatch(roadSource, /clearRivals|resetRivals|rival-storage/);
 
@@ -163,12 +185,17 @@ assert.match(workflow, /Run Trophy Road progression regression/);
 assert.match(workflow, /node turn-lab\/tests\/trophy-road-production\.mjs/);
 assert.match(perkWrapper, /TROPHY_ROAD_MAX_THRESHOLD = 1750/,
   'The production Chromatic-era Trophy Road must keep the full 1,750 trophy scale');
-assert.match(perkWrapper, /trophy-road\.js\?revision=r164-perks/);
-assert.match(perkDisclosure, /aria-expanded/);
-assert.match(perkDisclosure, /<strong>PERK:<\/strong>/);
-assert.match(perkDisclosure, /-webkit-line-clamp: 2/,
-  'Expanded Lot perk copy must remain visually capped at two rows');
-assert.match(enhancementRuntime, /installLotPerkDisclosure/);
-assert.match(enhancementRuntime, /revision=r164-perks/);
+assert.match(perkWrapper, /trophy-road\.js\?revision=r164-perk-titles/);
 
-console.log('TURN expanded Trophy Road, reward swap and perk presentation regression passed.');
+assert.match(perkDisclosure, /reward\?\.perkTitle/);
+assert.match(perkDisclosure, /reward\?\.perkDescription/);
+assert.match(perkDisclosure, /className = 'lot-perk-copy'/);
+assert.match(perkDisclosure, /color: #2f6f38/,
+  'Named vehicle perk copy must use the dark achievement-green treatment');
+assert.doesNotMatch(perkDisclosure, /lot-perk-button|aria-expanded/,
+  'Named perk information must be inline and must not spend vertical space on a disclosure button');
+assert.match(perkDisclosure, /<strong>\$\{perkTitle\}:<\/strong>/);
+assert.match(enhancementRuntime, /installLotPerkDisclosure/);
+assert.match(enhancementRuntime, /lot-perk-disclosure\.js\?revision=r164-perk-titles-inline/);
+
+console.log('TURN expanded Trophy Road, named vehicle perks and inline Lot perk presentation regression passed.');

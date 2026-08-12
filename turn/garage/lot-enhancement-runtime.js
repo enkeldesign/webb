@@ -1,14 +1,14 @@
 import { installLotStatLegend } from './lot-stat-legend.js?build=20260724-r59';
 import { installLotLayout } from './lot-layout-r60.js?build=20260729-r116';
 import { installLotAccessibility } from './lot-accessibility-r118.js?build=20260729-r118';
-import { installLotPerkDisclosure } from './lot-perk-disclosure.js?revision=r164-perks-observer-hotfix';
+import { installLotPerkDisclosure } from './lot-perk-disclosure.js?revision=r164-perk-titles-inline';
 import { gateLotNow } from '../progression/lot-trophy-gate.js?revision=r164-perks';
 import { gateLotPaintNow } from '../progression/lot-paint-reward.js?revision=r164-perks';
 
 // Historical regression markers for the established enhancement layers:
 // ENHANCEMENT_ID = 'enhanced-lot-r121'
 // TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r154-trophy-road-feedback'
-const ENHANCEMENT_ID = 'enhanced-lot-r164-perks-observer-hotfix';
+const ENHANCEMENT_ID = 'enhanced-lot-r164-perk-titles-inline';
 const TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r164-perks';
 const LOT_ENTRY_CLICK_GUARD_MS = 600;
 const activeEnhancements = new WeakMap();

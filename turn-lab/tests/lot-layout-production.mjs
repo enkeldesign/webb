@@ -49,7 +49,7 @@ assert.equal(
 assert.equal(
   imports['./garage/lot-enhancement-runtime.js?revision=r163-native-picker-parent-click&build=20260809-r163'],
   `./garage/lot-enhancement-runtime.js?build=${release.cacheKey}&revision=r164-perk-observer-hotfix`,
-  'The interaction-freeze hotfix must use a fresh enhancement-runtime URL so installed PWAs cannot reuse the broken r164 observer graph'
+  'The interaction-freeze hotfix must retain its cache-safe enhancement-runtime route'
 );
 
 assert.match(app, /installLotEnhancementRuntime\(\)/);
@@ -63,8 +63,8 @@ assert.match(wrapper, /const removeEnhancements = enhanceLotNow\(\)/);
 assert.match(wrapper, /await chooseTrackBeforeLot\(\)/);
 assert.doesNotMatch(wrapper, /installLotLayout|installLotStatLegend|installLotAccessibility/);
 
-assert.match(enhancementRuntime, /ENHANCEMENT_ID = 'enhanced-lot-r164-perks-observer-hotfix'/);
-assert.match(enhancementRuntime, /lot-perk-disclosure\.js\?revision=r164-perks-observer-hotfix/);
+assert.match(enhancementRuntime, /ENHANCEMENT_ID = 'enhanced-lot-r164-perk-titles-inline'/);
+assert.match(enhancementRuntime, /lot-perk-disclosure\.js\?revision=r164-perk-titles-inline/);
 assert.match(enhancementRuntime, /activeEnhancements = new WeakMap\(\)/);
 assert.match(enhancementRuntime, /LOT_ENTRY_CLICK_GUARD_MS = 600/);
 assert.match(enhancementRuntime, /installLotPerkDisclosure\(scope\)/);
@@ -79,11 +79,13 @@ assert.match(enhancementRuntime, /new MutationObserver\(sync\)/);
 assert.match(enhancementRuntime, /if \(active\) return active\.release/);
 assert.match(enhancementRuntime, /released = true/);
 
-assert.match(perkDisclosure, /className = 'lot-perk-button'/);
-assert.match(perkDisclosure, /aria-expanded/);
-assert.match(perkDisclosure, /<strong>PERK:<\/strong>/);
-assert.match(perkDisclosure, /-webkit-line-clamp: 2/);
+assert.match(perkDisclosure, /className = 'lot-perk-copy'/);
+assert.match(perkDisclosure, /reward\?\.perkTitle/);
 assert.match(perkDisclosure, /reward\?\.perkDescription/);
+assert.match(perkDisclosure, /<strong>\$\{perkTitle\}:<\/strong>/);
+assert.match(perkDisclosure, /color: #2f6f38/);
+assert.doesNotMatch(perkDisclosure, /lot-perk-button|aria-expanded/,
+  'Perk content must be inline instead of hidden behind a disclosure button');
 assert.match(perkDisclosure, /const picker = screen\?\.querySelector\?\.\('\.lot-car-picker'\)/);
 assert.match(
   perkDisclosure,
@@ -91,9 +93,9 @@ assert.match(
   'Perk synchronization must observe only car radio selection state'
 );
 assert.doesNotMatch(perkDisclosure, /observer\.observe\(screen,/,
-  'The perk disclosure must never observe the subtree that contains its own generated copy');
+  'The perk presentation must never observe the subtree that contains its own generated copy');
 assert.doesNotMatch(perkDisclosure, /childList:\s*true|characterData:\s*true/,
-  'The perk disclosure must not react to DOM/text mutations that its own sync function can create');
+  'The perk presentation must not react to DOM/text mutations that its own sync function can create');
 
 assert.match(
   lot,
@@ -138,4 +140,4 @@ assert.match(legend, /role', 'dialog'/);
 assert.match(legend, /name\.textContent = entry\.label/);
 assert.match(legend, /description\.textContent = entry\.description/);
 
-console.log(`TURN ${release.id} compact Lot layout, non-self-triggering perk disclosure and accessibility contract passed.`);
+console.log(`TURN ${release.id} compact Lot layout, inline named perks and accessibility contract passed.`);
