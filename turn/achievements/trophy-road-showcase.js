@@ -6,6 +6,7 @@ import {
 import { createCarVisual } from '../vehicle/emergency-livery-models.js?build=20260804-r157-display-p3';
 import { configureRendererWideGamut } from '../vehicle/wide-gamut.js?revision=r157-display-p3';
 
+const SHOWCASE_FRAME_INTERVAL_MS = 1000 / 30;
 const REWARD_CARS = Object.freeze({
   'future-racer': Object.freeze([
     Object.freeze({ carId: 'race-future', x: 0, targetLength: 6.4, yaw: Math.PI - 0.55 })
@@ -42,6 +43,7 @@ export function createTrophyRoadShowcase() {
   let running = false;
   let disposed = false;
   let resizeObserver = null;
+  let lastRenderAt = -Infinity;
   const groups = new Map();
   const groupPromises = new Map();
   const clock = new THREE.Clock();
@@ -67,7 +69,9 @@ export function createTrophyRoadShowcase() {
       powerPreference: 'high-performance'
     });
     configureRendererWideGamut(renderer);
-    renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio || 1, 1.35));
+    const profileCap = Number(globalThis.__turnPerformanceProfile?.dprCap);
+    const dprCap = Number.isFinite(profileCap) ? Math.min(1.35, profileCap) : 1.35;
+    renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio || 1, dprCap));
     renderer.setClearColor(0x000000, 0);
     resizeObserver = new ResizeObserver(resize);
   }
@@ -175,8 +179,10 @@ export function createTrophyRoadShowcase() {
     renderer.setSize(Math.round(rect.width), Math.round(rect.height), false);
   }
 
-  function render() {
+  function render(now) {
     if (!running || disposed || !renderer || !scene || !camera) return;
+    if (now - lastRenderAt < SHOWCASE_FRAME_INTERVAL_MS) return;
+    lastRenderAt = now;
     const elapsed = clock.getElapsedTime();
     const visuals = activeGroup?.userData?.turnRewardVisuals || [];
     for (const visual of visuals) {
@@ -190,6 +196,7 @@ export function createTrophyRoadShowcase() {
 
   function resume() {
     if (running || disposed || !renderer || !activeGroup) return;
+    lastRenderAt = -Infinity;
     running = true;
     renderer.setAnimationLoop(render);
   }
@@ -220,6 +227,8 @@ export function createTrophyRoadShowcase() {
     clear();
     resizeObserver?.disconnect();
     renderer?.dispose();
+    renderer?.forceContextLoss?.();
+    renderer?.domElement?.remove();
     renderer = null;
     activeHost = null;
     groups.clear();
