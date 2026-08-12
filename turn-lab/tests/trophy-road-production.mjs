@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { createAchievementStore, normalizeAchievementState } from '../../turn/achievements/store.js';
+import { getCarDefinition } from '../../turn/vehicle/catalog.js';
 import {
   TROPHY_ROAD_MAX_THRESHOLD,
   TROPHY_ROAD_REWARDS,
@@ -43,9 +44,14 @@ function createMemoryStorage(initial = {}) {
   };
 }
 
+const rewardIds = TROPHY_ROAD_REWARDS.map((reward) => reward.id);
+const through700 = ['midnight-city', 'paintjob', 'future-racer', 'emergency-pack', 'monster'];
+const through800 = [...through700, 'vintage-racer'];
+const through900 = [...through800, 'rally-racer'];
+
 assert.equal(TROPHY_ROAD_STORAGE_KEY, 'turn-achievements-v1');
-assert.equal(TROPHY_ROAD_STORAGE_VERSION, 4,
-  'The extra all-track progress uses its own storage and must not force a Trophy Road migration');
+assert.equal(TROPHY_ROAD_STORAGE_VERSION, 5,
+  'Adding locks to previously unrestricted cars requires a one-time ownership grandfather migration');
 assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 1700,
   'The base road must retain room for the complete expanded trophy collection');
 assert.equal(TROPHY_ROAD_VIEWPORT_THRESHOLD, 600);
@@ -56,7 +62,9 @@ assert.deepEqual(
     ['paintjob', 400],
     ['future-racer', 500],
     ['emergency-pack', 600],
-    ['monster', 700]
+    ['monster', 700],
+    ['vintage-racer', 800],
+    ['rally-racer', 900]
   ]
 );
 
@@ -65,12 +73,16 @@ assert.deepEqual(rewardIdsForTrophies(300), ['midnight-city']);
 assert.deepEqual(rewardIdsForTrophies(400), ['midnight-city', 'paintjob']);
 assert.deepEqual(rewardIdsForTrophies(500), ['midnight-city', 'paintjob', 'future-racer']);
 assert.deepEqual(rewardIdsForTrophies(600), ['midnight-city', 'paintjob', 'future-racer', 'emergency-pack']);
-assert.deepEqual(rewardIdsForTrophies(700), ['midnight-city', 'paintjob', 'future-racer', 'emergency-pack', 'monster']);
-assert.deepEqual(rewardIdsForTrophies(1700), TROPHY_ROAD_REWARDS.map((reward) => reward.id));
+assert.deepEqual(rewardIdsForTrophies(700), through700);
+assert.deepEqual(rewardIdsForTrophies(800), through800);
+assert.deepEqual(rewardIdsForTrophies(900), through900);
+assert.deepEqual(rewardIdsForTrophies(1700), rewardIds);
 assert.equal(rewardForTrack('midnight-city')?.id, 'midnight-city');
 assert.equal(rewardForVehicle('firetruck')?.id, 'emergency-pack');
 assert.equal(rewardForVehicle('race-future')?.id, 'future-racer');
 assert.equal(rewardForVehicle('monster-truck')?.id, 'monster');
+assert.equal(rewardForVehicle('vintage-racer')?.id, 'vintage-racer');
+assert.equal(rewardForVehicle('toy-racer')?.id, 'rally-racer');
 assert.equal(rewardForFeature('vehicle-paint')?.id, 'paintjob');
 assert.equal(getTrophyRoadReward('invented'), null);
 
@@ -85,24 +97,41 @@ assert.match(emergencyPerk?.perkDescription || '', /emergency lights and sirens/
 assert.match(emergencyPerk?.description || '', /<strong>SIRENS:<\/strong>/);
 for (const vehicleId of ['firetruck', 'ambulance', 'police']) {
   assert.equal(rewardForVehicle(vehicleId)?.perkTitle, 'SIRENS');
+  assert.equal(getCarDefinition(vehicleId).perk?.title, 'SIRENS');
 }
 
 const monsterPerk = getTrophyRoadReward('monster');
 assert.equal(monsterPerk?.perkTitle, 'OVERSIZED');
 assert.match(monsterPerk?.perkDescription || '', /off-road/i);
 assert.match(monsterPerk?.description || '', /<strong>OVERSIZED:<\/strong>/);
+assert.equal(getCarDefinition('monster-truck').perk?.title, 'OVERSIZED');
 
-for (const reward of [futurePerk, emergencyPerk, monsterPerk]) {
+const vintagePerk = getTrophyRoadReward('vintage-racer');
+assert.equal(vintagePerk?.perkTitle, 'DRIFTAGE');
+assert.match(vintagePerk?.perkDescription || '', /larger slip angles/i);
+assert.match(vintagePerk?.description || '', /<strong>DRIFTAGE:<\/strong>/);
+assert.equal(getCarDefinition('vintage-racer').perk?.title, 'DRIFTAGE');
+
+const rallyPerk = getTrophyRoadReward('rally-racer');
+assert.equal(rallyPerk?.perkTitle, 'TWITCHY TURNY');
+assert.match(rallyPerk?.perkDescription || '', /fills BOOST even faster/i);
+assert.match(rallyPerk?.description || '', /<strong>TWITCHY TURNY:<\/strong>/);
+assert.equal(getCarDefinition('toy-racer').name, 'Rally Racer');
+assert.equal(getCarDefinition('toy-racer').perk?.title, 'TWITCHY TURNY');
+
+assert.equal(getCarDefinition('race-future').perk?.title, 'OVERDRIVE');
+for (const reward of [futurePerk, emergencyPerk, monsterPerk, vintagePerk, rallyPerk]) {
   assert.doesNotMatch(reward?.description || '', /<strong>PERK:<\/strong>/,
     'Unlock details must lead with the actual perk title rather than the generic word PERK');
 }
 
-assert.deepEqual(grandfatheredRewardIdsForVersion(3), ['paintjob', 'monster']);
 assert.deepEqual(
-  grandfatheredRewardIdsForVersion(2),
-  ['midnight-city', 'paintjob', 'future-racer', 'emergency-pack', 'monster']
+  grandfatheredRewardIdsForVersion(3),
+  ['paintjob', 'monster', 'vintage-racer', 'rally-racer']
 );
-assert.deepEqual(grandfatheredRewardIdsForVersion(4), []);
+assert.deepEqual(grandfatheredRewardIdsForVersion(4), ['vintage-racer', 'rally-racer']);
+assert.deepEqual(grandfatheredRewardIdsForVersion(2), rewardIds);
+assert.deepEqual(grandfatheredRewardIdsForVersion(5), []);
 
 const freshStorage = createMemoryStorage();
 assert.equal(prepareTrophyRoadProfile(freshStorage), null);
@@ -112,19 +141,58 @@ assert.equal(isTrackUnlocked('midnight-city', freshStorage), false);
 assert.equal(isVehicleUnlocked('classic', freshStorage), true);
 assert.equal(isVehicleUnlocked('firetruck', freshStorage), false);
 assert.equal(isVehicleUnlocked('monster-truck', freshStorage), false);
+assert.equal(isVehicleUnlocked('vintage-racer', freshStorage), false);
+assert.equal(isVehicleUnlocked('toy-racer', freshStorage), false);
 assert.equal(isPaintUnlocked(freshStorage), false);
+
+const priorProductionProfile = createMemoryStorage({
+  'turn-achievements-v1': JSON.stringify({
+    version: 4,
+    unlocked: {},
+    seen: [],
+    progress: { tracks: [], blankTracks: [] },
+    rewards: { unlocked: [], seen: [] }
+  })
+});
+assert.deepEqual(
+  readTrophyRoadSnapshot(priorProductionProfile).unlockedRewardIds,
+  ['vintage-racer', 'rally-racer'],
+  'Every pre-lock v4 profile already owned both formerly unrestricted cars'
+);
+assert.equal(isVehicleUnlocked('vintage-racer', priorProductionProfile), true);
+assert.equal(isVehicleUnlocked('toy-racer', priorProductionProfile), true);
+
+const normalizedPriorProduction = normalizeAchievementState({
+  version: 4,
+  unlocked: {},
+  seen: [],
+  progress: { tracks: [], blankTracks: [] },
+  rewards: { unlocked: [], seen: [] }
+});
+assert.equal(normalizedPriorProduction.version, 5);
+assert.deepEqual(normalizedPriorProduction.rewards.unlocked, ['vintage-racer', 'rally-racer']);
+assert.deepEqual(normalizedPriorProduction.rewards.seen, ['vintage-racer', 'rally-racer']);
+
+const newVersionFiveProfile = normalizeAchievementState({
+  version: 5,
+  unlocked: {},
+  seen: [],
+  progress: { tracks: [], blankTracks: [] },
+  rewards: { unlocked: [], seen: [] }
+});
+assert.deepEqual(newVersionFiveProfile.rewards.unlocked, [],
+  'New v5 players must earn Vintage and Rally rather than inherit them');
 
 const legacyWithoutAchievements = createMemoryStorage({
   'turn-vehicle-selection-v1': JSON.stringify({ carId: 'police' })
 });
 const preparedLegacy = prepareTrophyRoadProfile(legacyWithoutAchievements);
 assert.equal(preparedLegacy?.version, 2);
-assert.deepEqual(
-  readTrophyRoadSnapshot(legacyWithoutAchievements).unlockedRewardIds,
-  ['midnight-city', 'paintjob', 'future-racer', 'emergency-pack', 'monster']
-);
+assert.deepEqual(readTrophyRoadSnapshot(legacyWithoutAchievements).unlockedRewardIds, rewardIds);
 assert.equal(isPaintUnlocked(legacyWithoutAchievements), true);
 assert.equal(isVehicleUnlocked('monster-truck', legacyWithoutAchievements), true);
+assert.equal(isVehicleUnlocked('vintage-racer', legacyWithoutAchievements), true);
+assert.equal(isVehicleUnlocked('toy-racer', legacyWithoutAchievements), true);
 
 const migratedLegacy = normalizeAchievementState({
   version: 2,
@@ -134,11 +202,8 @@ const migratedLegacy = normalizeAchievementState({
   seen: ['first-turn'],
   progress: { tracks: ['countryside'], blankTracks: [] }
 });
-assert.equal(migratedLegacy.version, 4);
-assert.deepEqual(
-  migratedLegacy.rewards.unlocked,
-  ['midnight-city', 'paintjob', 'future-racer', 'emergency-pack', 'monster']
-);
+assert.equal(migratedLegacy.version, 5);
+assert.deepEqual(migratedLegacy.rewards.unlocked, rewardIds);
 assert.deepEqual(migratedLegacy.rewards.seen, migratedLegacy.rewards.unlocked);
 
 const progressionStorage = createMemoryStorage();
@@ -154,15 +219,21 @@ assert.equal(store.unlock('around-the-turn', { trackId: 'harbor' })?.trophies, 1
 assert.deepEqual(store.syncRewards().map((reward) => reward.id), ['emergency-pack']);
 assert.equal(store.unlock('faster-than-the-dev', { trackId: 'midnight-city' })?.trophies, 100);
 assert.deepEqual(store.syncRewards().map((reward) => reward.id), ['monster']);
+assert.equal(store.unlock('night-shift-sheriff', { trackId: 'midnight-city', vehicleId: 'police' })?.trophies, 100);
+assert.deepEqual(store.syncRewards().map((reward) => reward.id), ['vintage-racer']);
+assert.equal(store.unlock('on-course-of-course', { trackId: 'harbor' })?.trophies, 100);
+assert.deepEqual(store.syncRewards().map((reward) => reward.id), ['rally-racer']);
 assert.equal(isTrackUnlocked('midnight-city', progressionStorage), true);
 assert.equal(isVehicleUnlocked('firetruck', progressionStorage), true);
 assert.equal(isVehicleUnlocked('monster-truck', progressionStorage), true);
+assert.equal(isVehicleUnlocked('vintage-racer', progressionStorage), true);
+assert.equal(isVehicleUnlocked('toy-racer', progressionStorage), true);
 assert.equal(isPaintUnlocked(progressionStorage), true);
 
-assert.match(roadSource, /TROPHY_ROAD_STORAGE_VERSION = 4/);
+assert.match(roadSource, /TROPHY_ROAD_STORAGE_VERSION = 5/);
 assert.match(roadSource, /TROPHY_ROAD_MAX_THRESHOLD = 1700/);
 assert.match(roadSource, /TROPHY_ROAD_VIEWPORT_THRESHOLD = 600/);
-for (const threshold of [300, 400, 500, 600, 700]) {
+for (const threshold of [300, 400, 500, 600, 700, 800, 900]) {
   assert.match(roadSource, new RegExp(`threshold: ${threshold}`));
 }
 assert.match(roadSource, /id: 'paintjob'/);
@@ -172,7 +243,12 @@ assert.match(roadSource, /id: 'emergency-pack'/);
 assert.match(roadSource, /perkTitle: 'SIRENS'/);
 assert.match(roadSource, /id: 'monster'/);
 assert.match(roadSource, /perkTitle: 'OVERSIZED'/);
+assert.match(roadSource, /id: 'vintage-racer'/);
+assert.match(roadSource, /perkTitle: 'DRIFTAGE'/);
+assert.match(roadSource, /id: 'rally-racer'/);
+assert.match(roadSource, /perkTitle: 'TWITCHY TURNY'/);
 assert.doesNotMatch(roadSource, /<strong>PERK:<\/strong>/);
+assert.match(roadSource, /VERSION_FOUR_GRANDFATHERED_REWARDS/);
 assert.match(roadSource, /grandfatheredRewardIdsForVersion/);
 assert.doesNotMatch(roadSource, /clearRivals|resetRivals|rival-storage/);
 
@@ -185,10 +261,12 @@ assert.match(workflow, /Run Trophy Road progression regression/);
 assert.match(workflow, /node turn-lab\/tests\/trophy-road-production\.mjs/);
 assert.match(perkWrapper, /TROPHY_ROAD_MAX_THRESHOLD = 1750/,
   'The production Chromatic-era Trophy Road must keep the full 1,750 trophy scale');
-assert.match(perkWrapper, /trophy-road\.js\?revision=r164-perk-titles/);
+assert.match(perkWrapper, /trophy-road\.js\?revision=r164-vintage-rally-perks/);
 
-assert.match(perkDisclosure, /reward\?\.perkTitle/);
-assert.match(perkDisclosure, /reward\?\.perkDescription/);
+assert.match(perkDisclosure, /getCarDefinition\(vehicleId\)\?\.perk/,
+  'The Lot must read perk identity directly from the selected car, not from progression ownership');
+assert.doesNotMatch(perkDisclosure, /rewardForVehicle|trophy-road/,
+  'Vehicle perks must not be free-floating Trophy Road entitlements');
 assert.match(perkDisclosure, /className = 'lot-perk-copy'/);
 assert.match(perkDisclosure, /color: #2f6f38/,
   'Named vehicle perk copy must use the dark achievement-green treatment');
@@ -196,6 +274,7 @@ assert.doesNotMatch(perkDisclosure, /lot-perk-button|aria-expanded/,
   'Named perk information must be inline and must not spend vertical space on a disclosure button');
 assert.match(perkDisclosure, /<strong>\$\{perkTitle\}:<\/strong>/);
 assert.match(enhancementRuntime, /installLotPerkDisclosure/);
-assert.match(enhancementRuntime, /lot-perk-disclosure\.js\?revision=r164-perk-titles-inline/);
+assert.match(enhancementRuntime, /lot-perk-disclosure\.js\?revision=r164-vintage-rally-perks/);
+assert.match(enhancementRuntime, /lot-trophy-gate\.js\?revision=r164-vintage-rally-perks/);
 
-console.log('TURN expanded Trophy Road, named vehicle perks and inline Lot perk presentation regression passed.');
+console.log('TURN Trophy Road Vintage/Rally locks, grandfathering and car-owned perk presentation regression passed.');
