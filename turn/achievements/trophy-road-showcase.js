@@ -114,7 +114,10 @@ export function createTrophyRoadShowcase() {
           color: getVehicleDefaultColor(definition.carId),
           secondaryColor: getVehicleDefaultSecondaryColor(definition.carId),
           targetLength: definition.targetLength,
-          outline: true
+          // Trophy Road cards are small, continuously rotating previews. The
+          // contour shell would render every car mesh twice for little visual
+          // benefit here, so keep the actual model only.
+          outline: false
         });
         visual.position.set(definition.x, 0, 0);
         visual.rotation.y = definition.yaw;
