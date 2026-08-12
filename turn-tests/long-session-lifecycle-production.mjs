@@ -11,7 +11,8 @@ const [
   achievementRuntime,
   worldAssets,
   worldRender,
-  bellaRescue
+  bellaRescue,
+  harborOptimized
 ] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-lab/index.html', import.meta.url), 'utf8'),
@@ -22,7 +23,8 @@ const [
   fs.readFile(new URL('../turn/achievements/runtime.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/world-assets.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/render/world.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/countryside-bella-rescue-r173.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/tracks/countryside-bella-rescue-r173.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/harbor-world-r82.js', import.meta.url), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -36,6 +38,7 @@ function importMap(source) {
 const productionImports = importMap(index);
 const labImports = importMap(labIndex);
 const optimizedWorldAssetTarget = `./world-assets.js?build=${release.cacheKey}&revision=r164-long-session-robustness`;
+const optimizedHarborTarget = `./tracks/harbor-world-r82.js?build=${release.cacheKey}&revision=r164-long-session-robustness`;
 
 assert.equal(
   productionImports['./world-assets.js'],
@@ -46,6 +49,16 @@ assert.equal(
   labImports['./world-assets.js'],
   optimizedWorldAssetTarget,
   'TURN LAB must exercise the same tree-optimized world asset module as production'
+);
+assert.equal(
+  productionImports['./tracks/harbor-world.js'],
+  optimizedHarborTarget,
+  'Production Harbor must use the draw-call-batched container-yard layer'
+);
+assert.equal(
+  labImports['./tracks/harbor-world.js'],
+  optimizedHarborTarget,
+  'TURN LAB must use the same optimized Harbor world as production'
 );
 assert.match(
   app,
@@ -134,6 +147,23 @@ assert.match(
   'Late forest clusters must be de-contoured as part of their one-time grounding pass'
 );
 
+// Harbor used to keep one MeshStandardMaterial shell plus a separate wireframe mesh for
+// every container. Grouping identical geometry by paint colour retains the yard while
+// collapsing those permanent draw calls to a handful of InstancedMesh batches.
+assert.match(harborOptimized, /installHarborWorldR81/);
+assert.match(harborOptimized, /function batchContainerYards\(world\)/);
+assert.match(harborOptimized, /const shellsByColor = new Map\(\)/);
+assert.match(harborOptimized, /new THREE\.InstancedMesh\(containerGeometry, material, entries\.length\)/);
+assert.match(harborOptimized, /new THREE\.InstancedMesh\(ribGeometry, ribMaterial, ribs\.length\)/);
+assert.match(harborOptimized, /batch\.castShadow = true/,
+  'Batching must preserve the established container shadows');
+assert.match(harborOptimized, /batch\.receiveShadow = true/,
+  'Batching must preserve the established container shadow reception');
+assert.match(harborOptimized, /gameplayGeometryUnchanged: true/,
+  'Harbor batching must remain a rendering-only optimization');
+assert.doesNotMatch(harborOptimized, /setAnimationLoop|requestAnimationFrame|setInterval/,
+  'The Harbor optimization must add no independent runtime loop');
+
 // Bella may use a tiny separate Web Audio context, but ordinary TURN sessions should
 // never keep a third live context merely because the rescue behavior is installed.
 assert.match(bellaRescue, /function meowContextWanted\(/);
@@ -164,4 +194,4 @@ assert.match(
   'Disposing the rescue behavior must close and release Bella’s context'
 );
 
-console.log(`TURN ${release.id} long-session timer, scenery contour, cache and Bella audio lifecycle passed.`);
+console.log(`TURN ${release.id} long-session timers, scenery batching/contours, cache and Bella audio lifecycle passed.`);
