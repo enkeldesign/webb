@@ -174,6 +174,12 @@ function installGameplayUi() {
     return Math.max(0.8, Math.min(5, duration));
   }
 
+  function getDriftRechargeMultiplier() {
+    const multiplier = Number(globalThis.__turnVehicleTuning?.driftBoostRechargeMultiplier);
+    if (!Number.isFinite(multiplier)) return DRIFT_RECHARGE_MULTIPLIER;
+    return Math.max(1, Math.min(6, multiplier));
+  }
+
   function refillBoost() {
     window.clearTimeout(boostFlashTimer);
     boostFlashTimer = 0;
@@ -402,7 +408,7 @@ function installGameplayUi() {
         safeVibrate([28, 36, 62]);
       }
     } else {
-      const rechargeMultiplier = globalThis.__turnDriftHeld ? DRIFT_RECHARGE_MULTIPLIER : 1;
+      const rechargeMultiplier = globalThis.__turnDriftHeld ? getDriftRechargeMultiplier() : 1;
       boostCharge = Math.min(1, boostCharge + dt * rechargeMultiplier / BOOST_RECHARGE_SECONDS);
     }
 
