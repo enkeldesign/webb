@@ -14,6 +14,7 @@ import { describeColorCue } from '../accessibility/color-cues.js?revision=r163';
 
 const UNSELECTED_COLOR = new THREE.Color(0x313131);
 const VIEWER_INITIAL_YAW = Math.PI - 0.55;
+const LOT_FRAME_INTERVAL_MS = 1000 / 30;
 let paintControlSerial = 0;
 const CAR_DESCRIPTIONS = Object.freeze({
   convertible: 'A low, open-top sports car with a long bonnet and compact cabin.',
@@ -95,7 +96,7 @@ export function showTheLot({ initialSelection } = {}) {
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.55));
+    renderer.setPixelRatio(rendererPixelRatio(1.5));
     renderer.shadowMap.enabled = false;
     host.appendChild(renderer.domElement);
 
@@ -166,7 +167,10 @@ export function showTheLot({ initialSelection } = {}) {
         targetLength: 5.15,
         outline: true
       }).then((visual) => {
-        if (disposed) return;
+        if (disposed) {
+          disposeVisualMaterials(visual);
+          return;
+        }
         visual.position.set(x, 0.08, z);
         visual.rotation.y = Math.PI;
         visual.userData.turnLotCarId = car.id;
@@ -346,8 +350,11 @@ export function showTheLot({ initialSelection } = {}) {
       disposed = true;
       resizeObserver.disconnect();
       renderer.setAnimationLoop(null);
-      renderer.dispose();
+      for (const root of carRoots.values()) disposeVisualMaterials(root);
       viewer.dispose();
+      renderer.dispose();
+      renderer.forceContextLoss?.();
+      renderer.domElement.remove();
       overlay.remove();
       document.body.classList.remove('turn-lot-open');
       resolve(result ? normalizeVehicleSelection(result) : null);
@@ -372,8 +379,10 @@ export function showTheLot({ initialSelection } = {}) {
     resize();
 
     const clock = new THREE.Clock();
-    renderer.setAnimationLoop(() => {
-      if (disposed) return;
+    let lastRenderAt = -Infinity;
+    renderer.setAnimationLoop((now) => {
+      if (disposed || now - lastRenderAt < LOT_FRAME_INTERVAL_MS) return;
+      lastRenderAt = now;
       const elapsed = clock.getElapsedTime();
       for (const root of carRoots.values()) {
         const selected = Boolean(root.userData.turnLotSelected);
@@ -388,7 +397,7 @@ export function showTheLot({ initialSelection } = {}) {
       recordPerformanceFrame(
         'lot',
         viewerRendered ? [renderer, viewer.renderer] : renderer,
-        performance.now()
+        now
       );
     });
   });
@@ -398,7 +407,7 @@ function createViewer(host) {
   const scene = new THREE.Scene();
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+  renderer.setPixelRatio(rendererPixelRatio(1.5));
   host.appendChild(renderer.domElement);
 
   const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 60);
@@ -466,8 +475,14 @@ function createViewer(host) {
           targetLength: 6.4,
           outline: true
         });
-        if (request !== generation) return;
-        if (visual) stage.remove(visual);
+        if (request !== generation) {
+          disposeVisualMaterials(next);
+          return;
+        }
+        if (visual) {
+          stage.remove(visual);
+          disposeVisualMaterials(visual);
+        }
         visual = next;
         stage.add(visual);
         recolorCarVisual(visual, currentColor, currentSecondaryColor);
@@ -499,9 +514,33 @@ function createViewer(host) {
     },
     dispose() {
       generation += 1;
+      if (visual) {
+        stage.remove(visual);
+        disposeVisualMaterials(visual);
+        visual = null;
+      }
       renderer.dispose();
+      renderer.forceContextLoss?.();
+      renderer.domElement.remove();
     }
   };
+}
+
+function rendererPixelRatio(fallbackCap) {
+  const deviceRatio = Math.max(1, Number(globalThis.devicePixelRatio) || 1);
+  const profileCap = Number(globalThis.__turnPerformanceProfile?.dprCap);
+  const cap = Number.isFinite(profileCap) ? profileCap : fallbackCap;
+  return Math.min(deviceRatio, cap);
+}
+
+function disposeVisualMaterials(root) {
+  const materials = new Set();
+  root?.traverse?.((node) => {
+    if (!node?.isMesh || !node.material) return;
+    const nodeMaterials = Array.isArray(node.material) ? node.material : [node.material];
+    for (const material of nodeMaterials) materials.add(material);
+  });
+  for (const material of materials) material.dispose?.();
 }
 
 function rememberMaterialState(root) {
