@@ -63,9 +63,9 @@ export function installRacingMusicHealth(music = globalThis.__turnRacingMusic) {
     const restoreVolume = music.volume;
     try {
       // v3 deliberately stops every scheduled source synchronously when volume
-      // reaches zero. Its public stop also begins an async AudioContext suspend,
-      // so wait for that lifecycle to settle before restoring volume; otherwise
-      // an old suspend can land after the new scheduler has already started.
+      // reaches zero. Its public stop also begins an async context suspend, so
+      // wait for that lifecycle to settle before restoring volume; otherwise an
+      // old suspend can land after the new scheduler has already started.
       music.stop();
       await waitForStoppedPlayback(music);
       if (restoreVolume > 0 && document.visibilityState !== 'hidden'
