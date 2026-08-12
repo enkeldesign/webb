@@ -161,7 +161,8 @@ assert.deepEqual(normalizeChallengeProgress({
 });
 
 const empty = normalizeAchievementState(null);
-assert.equal(empty.version, 4);
+assert.equal(empty.version, 5,
+  'Trophy Road v5 distinguishes existing owners of Vintage/Rally from new profiles after those cars become locked rewards');
 assert.deepEqual(empty.progress.tracks, []);
 assert.deepEqual(empty.progress.blankTracks, []);
 assert.deepEqual(empty.rewards.unlocked, []);
