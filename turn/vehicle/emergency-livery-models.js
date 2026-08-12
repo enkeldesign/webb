@@ -39,15 +39,12 @@ const EMERGENCY_LIVERY_BY_ID = Object.freeze({
 export { preloadCarModels, recolorCarVisual };
 
 export async function createCarVisual(options = {}) {
-  const lotGridVisual = Math.abs(Number(options.targetLength) - LOT_TARGET_LENGTH) < 0.001;
-  // TURN's contour treatment is a second, enlarged back-face mesh for every
-  // source mesh. Keep it for gameplay cars/ghosts and the large selected-car
-  // viewer, but do not double draw calls for all 15 tiny Lot-grid cars.
-  const outline = options.outline !== false && !lotGridVisual;
-  const root = await createBaseCarVisual({ ...options, outline });
+  const root = await createBaseCarVisual(options);
   const livery = EMERGENCY_LIVERY_BY_ID[root?.userData?.turnCarId];
   if (livery) applyFixedEmergencyLivery(root, livery, Boolean(options.ghost));
-  if (lotGridVisual) installLotUnselectedTint(root);
+  if (Math.abs(Number(options.targetLength) - LOT_TARGET_LENGTH) < 0.001) {
+    installLotUnselectedTint(root);
+  }
   return root;
 }
 
