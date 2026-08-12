@@ -173,7 +173,7 @@ assert.match(originalLot, /export function showTheLot/);
 assert.match(originalLot, /input\.type = 'color'/);
 assert.doesNotMatch(originalLot, /NAMED_COLOR_PRESETS|lot-color-preset|showPicker\(|label\.click\(/);
 
-assert.match(lotEnhancementRuntime, /ENHANCEMENT_ID = 'enhanced-lot-r164-perks'/);
+assert.match(lotEnhancementRuntime, /ENHANCEMENT_ID = 'enhanced-lot-r164-perk-titles-inline'/);
 assert.match(lotEnhancementRuntime, /TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r164-perks'/);
 assert.match(lotEnhancementRuntime, /activeEnhancements = new WeakMap\(\)/);
 assert.match(lotEnhancementRuntime, /gateLotNow\(scope\)/);
@@ -187,9 +187,11 @@ assert.ok(
 );
 assert.match(lotEnhancementRuntime, /new MutationObserver\(sync\)/);
 assert.match(lotEnhancementRuntime, /screen\.dataset\.lotEnhancements = ENHANCEMENT_ID/);
-assert.match(lotPerkDisclosure, /aria-expanded/);
-assert.match(lotPerkDisclosure, /<strong>PERK:<\/strong>/);
-assert.match(lotPerkDisclosure, /-webkit-line-clamp: 2/);
+assert.match(lotPerkDisclosure, /reward\?\.perkTitle/);
+assert.match(lotPerkDisclosure, /reward\?\.perkDescription/);
+assert.match(lotPerkDisclosure, /<strong>\$\{perkTitle\}:<\/strong>/);
+assert.match(lotPerkDisclosure, /color: #2f6f38/);
+assert.doesNotMatch(lotPerkDisclosure, /lot-perk-button|aria-expanded|<strong>PERK:<\/strong>/);
 assert.match(lotTrophyGate, /FALLBACK_VEHICLE_ID = 'classic'/);
 assert.match(lotTrophyGate, /raceButton\.disabled = locked/);
 assert.match(lotTrophyGate, /lot-selected-car-lock/);
@@ -269,4 +271,4 @@ assert.match(easterEggUi, /notice\.setAttribute\('role', 'status'\)/);
 assert.match(easterEggUi, /notice\.setAttribute\('aria-live', 'polite'\)/);
 assert.match(easterEggUi, /card\.insertBefore\(notice, actions \|\| null\)/, 'The explanation must sit immediately before RACE THIS CAR');
 
-console.log(`TURN ${release.id} enhanced Lot route, Trophy Road gating, perks, native paint and garage setup passed.`);
+console.log(`TURN ${release.id} enhanced Lot route, Trophy Road gating, named inline perks, native paint and garage setup passed.`);
