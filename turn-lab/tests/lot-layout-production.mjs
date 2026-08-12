@@ -40,7 +40,8 @@ assert.match(
 assert.match(index, new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent`));
 assert.equal(
   imports['./garage/lot-r10.js?build=20260720-r19'],
-  `./garage/lot-track-select.js?build=${release.cacheKey}&revision=r163-native-html`
+  `./garage/lot-track-select.js?build=${release.cacheKey}&revision=r164-long-session-robustness`,
+  'Production must request the optimized Lot wrapper under a fresh cache identity'
 );
 assert.equal(
   imports['./garage/lot-accessibility-r118.js?build=20260729-r118'],
@@ -59,6 +60,8 @@ assert.ok(
 );
 
 assert.match(wrapper, /export async function showEnhancedLot/);
+assert.match(wrapper, /lot-r10\.js\?build=20260809-r163-native-html&revision=r164-long-session-robustness/,
+  'The wrapper must load the optimized Lot implementation under a fresh URL');
 assert.match(wrapper, /const removeEnhancements = enhanceLotNow\(\)/);
 assert.match(wrapper, /await chooseTrackBeforeLot\(\)/);
 assert.doesNotMatch(wrapper, /installLotLayout|installLotStatLegend|installLotAccessibility/);
@@ -108,6 +111,10 @@ assert.match(
 assert.match(lot, /lot-viewbox-head" aria-hidden="true"/);
 assert.match(lot, /lot-view-host" aria-hidden="true"/);
 assert.doesNotMatch(lot, /lot-view-close|lot-view-open/);
+assert.match(lot, /LOT_FRAME_INTERVAL_MS = 1000 \/ 30/,
+  'The Lot must stay at a cooler 30fps without changing race rendering');
+assert.match(lot, /renderer\.forceContextLoss\?\.\(\)/,
+  'Closing The Lot must release its WebGL context');
 
 assert.doesNotMatch(layout, /appendChild\(colors\)|lot-view-close|lot-view-open/);
 assert.match(layout, /document\.createTextNode\('ATTRIBUTES'\)/);
@@ -143,4 +150,4 @@ assert.match(legend, /role', 'dialog'/);
 assert.match(legend, /name\.textContent = entry\.label/);
 assert.match(legend, /description\.textContent = entry\.description/);
 
-console.log(`TURN ${release.id} compact Lot layout, car-owned named perks and accessibility contract passed.`);
+console.log(`TURN ${release.id} compact optimized Lot layout, car-owned named perks and accessibility contract passed.`);
