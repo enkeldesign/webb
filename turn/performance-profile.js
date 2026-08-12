@@ -2,6 +2,7 @@ const DEFAULT_DPR_CAP = 1.5;
 const DEFAULT_SHADOW_MAP_SIZE = 1024;
 const TOUCH_DPR_CAP = 1.25;
 const TOUCH_SHADOW_MAP_SIZE = 512;
+const TOUCH_SHADOW_REFRESH_INTERVAL_MS = 1000 / 30;
 const MIN_DPR_CAP = 0.75;
 const MAX_DPR_CAP = 1.5;
 const SHADOW_MAP_SIZES = new Set([256, 512, 1024]);
@@ -72,6 +73,7 @@ export function installPerformanceProfile() {
     }
     renderer.setPixelRatio(profile.pixelRatio);
     renderer.shadowMap.enabled = profile.shadowsEnabled;
+    installTouchShadowRefreshCap(renderer, profile);
     const shadowMapSize = profile.shadowMapSize;
     runtime.scene?.traverse?.((node) => {
       if (!node?.isLight || !node.shadow?.mapSize) return;
@@ -103,6 +105,30 @@ export function installPerformanceProfile() {
   globalThis.__turnPerformanceProfile = profile;
   globalThis.__turnPerformanceProfileRuntime = installed;
   return installed;
+}
+
+function installTouchShadowRefreshCap(renderer, profile) {
+  if (!renderer?.shadowMap) return;
+  if (!profile.touchOptimized || !profile.shadowsEnabled) {
+    renderer.shadowMap.autoUpdate = true;
+    return;
+  }
+
+  renderer.shadowMap.autoUpdate = false;
+  if (renderer.userData.turnOriginalRender) return;
+
+  const originalRender = renderer.render.bind(renderer);
+  renderer.userData.turnOriginalRender = originalRender;
+  let lastShadowRefreshAt = -Infinity;
+
+  renderer.render = (scene, camera) => {
+    const now = performance.now();
+    if (now - lastShadowRefreshAt >= TOUCH_SHADOW_REFRESH_INTERVAL_MS) {
+      renderer.shadowMap.needsUpdate = true;
+      lastShadowRefreshAt = now;
+    }
+    return originalRender(scene, camera);
+  };
 }
 
 function currentPerformanceEnvironment() {
