@@ -135,8 +135,8 @@ assert.doesNotMatch(bootstrap, /setInterval/,
   'The independent Bella bootstrap must not maintain its old fixed 120 ms polling interval');
 assert.match(index, new RegExp(`app\\.js\\?build=${escapeRegex(release.cacheKey)}-browser-consent-r176-bella-road-derived-zone`),
   'The top-level app URL must use the canonical release cache key so Safari cannot retain an old dependency graph');
-assert.match(index, /countryside-bella-rescue-hotfix-r176\.js\?revision=r176-video-proven-rescue/,
-  'The current rescue replacement remains independently loaded until its outer script URL receives the final robustness cache revision');
+assert.match(index, /countryside-bella-rescue-hotfix-r176\.js\?revision=r164-long-session-robustness/,
+  'The independent rescue replacement must have a fresh outer module URL so Safari cannot reuse the old r176 bootstrap bytes');
 
 console.log('TURN Bella video-proven rescue, on-demand directional audio and bounded bootstrap regression passed.');
 
