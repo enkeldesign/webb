@@ -271,6 +271,7 @@ installHarborHiddenFaceOrientation();
 // Historical regression markers for established Trophy Road Lot enhancement bundles:
 // lot-enhancement-runtime.js?revision=r121&trophy-road=r154
 // lot-enhancement-runtime.js?revision=r121&trophy-road=r157
+// lot-enhancement-runtime.js?revision=r163-native-picker-parent-click
 const { installLotEnhancementRuntime } = await import(
   withBuild('./garage/lot-enhancement-runtime.js?revision=r164-post-soak')
 );
