@@ -97,6 +97,15 @@ export function updateVehiclePhysicsState({
   const driftDragAdd = nonNegativeNumber(tuning?.driftDragAdd, 0.1);
   const driftSpeedMultiplier = clamp(positiveNumber(tuning?.driftSpeedMultiplier, 0.84), 0.5, 0.99);
   const driftStabilityMultiplier = clamp(positiveNumber(tuning?.driftStabilityMultiplier, 1), 0.75, 1.25);
+  const driftYawMultiplier = driftHeld
+    ? clamp(positiveNumber(tuning?.driftYawMultiplier, 1), 0.75, 1.5)
+    : 1;
+  const driftGripTuningMultiplier = driftHeld
+    ? clamp(positiveNumber(tuning?.driftGripMultiplier, 1), 0.55, 1.25)
+    : 1;
+  const driftSlideMultiplier = driftHeld
+    ? clamp(positiveNumber(tuning?.driftSlideMultiplier, 1), 0.75, 1.5)
+    : 1;
   const tuningBoostPowerMultiplier = positiveNumber(tuning?.boostPowerMultiplier, 1);
   const tuningBoostSpeedMultiplier = positiveNumber(tuning?.boostSpeedMultiplier, 1.32);
   const effectiveMaxSpeed = maxSpeed;
@@ -190,6 +199,7 @@ export function updateVehiclePhysicsState({
     (0.18 + Math.abs(forwardSpeed) * 0.012) *
     steeringAuthority *
     steeringStatMultiplier *
+    driftYawMultiplier *
     (1 + state.driftAmount * 0.65 + (driftHeld ? 0.58 : 0));
 
   state.heading = normalizeAngle(state.heading + yawRate * dt);
@@ -201,7 +211,7 @@ export function updateVehiclePhysicsState({
     ? 1
     : 0.92 + controlMultiplier * 0.08;
   const driftGripMultiplier = driftHeld
-    ? 0.42 * driftStabilityMultiplier
+    ? 0.42 * driftStabilityMultiplier * driftGripTuningMultiplier
     : 1;
   const grip = (
     physicsOffRoad
@@ -213,7 +223,7 @@ export function updateVehiclePhysicsState({
   state.velocity.addScaledVector(newRight, -lateralSpeed * lateralCorrection);
 
   if ((state.driftAmount > 0.18 || driftHeld) && speed > 14) {
-    const slideStrength = driftHeld ? 0.235 : 0.12;
+    const slideStrength = (driftHeld ? 0.235 : 0.12) * driftSlideMultiplier;
     state.velocity.addScaledVector(
       newRight,
       state.steering * speed * Math.max(state.driftAmount, 0.48) * slideStrength * dt
