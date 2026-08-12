@@ -18,7 +18,7 @@ async function loadWorldModules() {
     import(moduleUrl('../section-intensity.js')),
     import(moduleUrl('../tracks/countryside-bella-r166.js?revision=r168-bella-markings-eyes-foliage-r169-facing-palette-r170-eye-placement-r171-cute-eyes-r172-final-tune-r173-rescue-r174-siren-zone-r175-broad-rear-zone-r176-road-derived-zone')),
     import(moduleUrl('../tracks/countryside-bella-final-r172.js?revision=r172-final-tune-r173-rescue-r174-siren-zone-r175-broad-rear-zone-r176-road-derived-zone')),
-    import(moduleUrl('../tracks/countryside-bella-rescue-r173.js?revision=r176-road-derived-rescue-zone'))
+    import(moduleUrl('../tracks/countryside-bella-rescue-r173.js?revision=r164-long-session-robustness'))
   ]);
 
   return {
