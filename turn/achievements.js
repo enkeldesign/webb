@@ -31,4 +31,4 @@ export {
   isPaintUnlocked,
   prepareTrophyRoadProfile
 } from './progression/trophy-road-perks-r164.js?revision=r164-perks';
-export { installAchievements } from './achievements/runtime.js?revision=r164-perks';
+export { installAchievements } from './achievements/runtime.js?revision=r164-long-session-robustness';
