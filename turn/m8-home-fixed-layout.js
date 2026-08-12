@@ -163,7 +163,7 @@ export async function installM8HomeFixedLayout() {
   const trophyGate = installM8TrophyGate(globalThis.__turnNextHome);
 
   const { installAchievements } = await import(
-    `/turn/achievements.js?build=${buildKey}-r166-bella-records`
+    `/turn/achievements.js?build=${buildKey}-r166-bella-records&robustness=r164-long-session`
   );
   const achievements = installAchievements(globalThis.__turnRuntime);
   const { installAchievementUnreadMarkers } = await import(
