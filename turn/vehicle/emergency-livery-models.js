@@ -41,10 +41,9 @@ export { preloadCarModels, recolorCarVisual };
 export async function createCarVisual(options = {}) {
   const lotGridVisual = Math.abs(Number(options.targetLength) - LOT_TARGET_LENGTH) < 0.001;
   // TURN's contour treatment is a second, enlarged back-face mesh for every
-  // source mesh. Keep that strong silhouette for the player and the large
-  // selected-car viewer, but do not double draw calls for all 15 Lot cars or
-  // for translucent rivals/ghosts where the outline adds little readability.
-  const outline = options.outline !== false && !options.ghost && !lotGridVisual;
+  // source mesh. Keep it for gameplay cars/ghosts and the large selected-car
+  // viewer, but do not double draw calls for all 15 tiny Lot-grid cars.
+  const outline = options.outline !== false && !lotGridVisual;
   const root = await createBaseCarVisual({ ...options, outline });
   const livery = EMERGENCY_LIVERY_BY_ID[root?.userData?.turnCarId];
   if (livery) applyFixedEmergencyLivery(root, livery, Boolean(options.ghost));
