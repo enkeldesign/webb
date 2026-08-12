@@ -75,11 +75,51 @@ const RETIRED_VEHICLE_REPLACEMENTS = Object.freeze({
   'truck-flat': 'ambulance'
 });
 
+const SIRENS_PERK = Object.freeze({
+  title: 'SIRENS',
+  description: 'Boost activates flashing emergency lights and sirens.'
+});
+
+const VEHICLE_PERK_BY_ID = Object.freeze({
+  'vintage-racer': Object.freeze({
+    title: 'DRIFTAGE',
+    description: 'DRIFT drains less speed, steering becomes more aggressive and the car can hold larger slip angles.'
+  }),
+  'toy-racer': Object.freeze({
+    title: 'TWITCHY TURNY',
+    description: 'DRIFT fills BOOST even faster than normal, but the tank is tiny.'
+  }),
+  'monster-truck': Object.freeze({
+    title: 'OVERSIZED',
+    description: 'Going off-road doesn’t slow it down.'
+  }),
+  'race-future': Object.freeze({
+    title: 'OVERDRIVE',
+    description: '5 clean seconds builds +6% top speed. Off-road or collisions reset it.'
+  }),
+  firetruck: SIRENS_PERK,
+  police: SIRENS_PERK,
+  ambulance: SIRENS_PERK
+});
+
+const TUNING_OVERRIDE_BY_ID = Object.freeze({
+  'vintage-racer': Object.freeze({
+    driftDragAdd: 0.07,
+    driftSpeedMultiplier: 0.9,
+    driftYawMultiplier: 1.28,
+    driftGripMultiplier: 0.72,
+    driftSlideMultiplier: 1.18
+  }),
+  'toy-racer': Object.freeze({
+    driftBoostRechargeMultiplier: 3.6
+  })
+});
+
 const RAW_CARS = [
   ['convertible', 'Convertible', 'prototype', { speed: 4, acceleration: 4, control: 4, drift: 2, boostPower: 3, boostDuration: 1 }, 0.98, 1, 1.08],
   ['classic', 'Training Car', 'prototype', { speed: 1, acceleration: 1, control: 5, drift: 5, boostPower: 1, boostDuration: 5 }, 1.00, 1, 0.88],
   ['vintage-racer', 'Vintage Racer', 'toy', { speed: 4, acceleration: 4, control: 3, drift: 2, boostPower: 3, boostDuration: 2 }, 0.96, 0, 1.28],
-  ['toy-racer', 'Toy Racer', 'toy', { speed: 4, acceleration: 5, control: 5, drift: 1, boostPower: 2, boostDuration: 1 }, 0.94, 2, 1.18],
+  ['toy-racer', 'Rally Racer', 'toy', { speed: 4, acceleration: 5, control: 5, drift: 1, boostPower: 2, boostDuration: 1 }, 0.94, 2, 1.18],
   ['monster-truck', 'Monster Truck', 'toy', { speed: 2, acceleration: 3, control: 2, drift: 5, boostPower: 2, boostDuration: 4 }, 0.83, 2, 0.62],
   ['race-future', 'Future Racer', 'car', { speed: 5, acceleration: 5, control: 3, drift: 1, boostPower: 3, boostDuration: 1 }, 0.96, 0, 1.42],
   ['race', 'Race Car', 'car', { speed: 5, acceleration: 4, control: 4, drift: 2, boostPower: 2, boostDuration: 1 }, 0.94, 0, 1.55],
@@ -116,7 +156,12 @@ export const CAR_CATALOG = Object.freeze(RAW_CARS.map(([
   secondaryPaint: SECONDARY_PAINT_BY_ID[id] || null,
   emergencyService: EMERGENCY_SERVICE_BY_ID[id] || null,
   fixedLivery: FIXED_LIVERY_IDS.has(id),
-  tuning: Object.freeze({ ...deriveVehicleTuning(stats), enginePitch })
+  perk: VEHICLE_PERK_BY_ID[id] || null,
+  tuning: Object.freeze({
+    ...deriveVehicleTuning(stats),
+    ...(TUNING_OVERRIDE_BY_ID[id] || {}),
+    enginePitch
+  })
 })));
 
 const CAR_BY_ID = new Map(CAR_CATALOG.map((car) => [car.id, car]));
