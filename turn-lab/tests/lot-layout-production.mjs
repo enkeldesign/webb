@@ -63,8 +63,10 @@ assert.match(wrapper, /const removeEnhancements = enhanceLotNow\(\)/);
 assert.match(wrapper, /await chooseTrackBeforeLot\(\)/);
 assert.doesNotMatch(wrapper, /installLotLayout|installLotStatLegend|installLotAccessibility/);
 
-assert.match(enhancementRuntime, /ENHANCEMENT_ID = 'enhanced-lot-r164-perk-titles-inline'/);
-assert.match(enhancementRuntime, /lot-perk-disclosure\.js\?revision=r164-perk-titles-inline/);
+assert.match(enhancementRuntime, /ENHANCEMENT_ID = 'enhanced-lot-r164-vintage-rally-perks'/);
+assert.match(enhancementRuntime, /TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r164-vintage-rally-perks'/);
+assert.match(enhancementRuntime, /lot-perk-disclosure\.js\?revision=r164-vintage-rally-perks/);
+assert.match(enhancementRuntime, /lot-trophy-gate\.js\?revision=r164-vintage-rally-perks/);
 assert.match(enhancementRuntime, /activeEnhancements = new WeakMap\(\)/);
 assert.match(enhancementRuntime, /LOT_ENTRY_CLICK_GUARD_MS = 600/);
 assert.match(enhancementRuntime, /installLotPerkDisclosure\(scope\)/);
@@ -80,8 +82,9 @@ assert.match(enhancementRuntime, /if \(active\) return active\.release/);
 assert.match(enhancementRuntime, /released = true/);
 
 assert.match(perkDisclosure, /className = 'lot-perk-copy'/);
-assert.match(perkDisclosure, /reward\?\.perkTitle/);
-assert.match(perkDisclosure, /reward\?\.perkDescription/);
+assert.match(perkDisclosure, /getCarDefinition\(vehicleId\)\?\.perk/);
+assert.doesNotMatch(perkDisclosure, /rewardForVehicle|trophy-road/,
+  'Perk display must be driven by the selected car definition rather than Trophy Road ownership');
 assert.match(perkDisclosure, /<strong>\$\{perkTitle\}:<\/strong>/);
 assert.match(perkDisclosure, /color: #2f6f38/);
 assert.doesNotMatch(perkDisclosure, /lot-perk-button|aria-expanded/,
@@ -140,4 +143,4 @@ assert.match(legend, /role', 'dialog'/);
 assert.match(legend, /name\.textContent = entry\.label/);
 assert.match(legend, /description\.textContent = entry\.description/);
 
-console.log(`TURN ${release.id} compact Lot layout, inline named perks and accessibility contract passed.`);
+console.log(`TURN ${release.id} compact Lot layout, car-owned named perks and accessibility contract passed.`);
