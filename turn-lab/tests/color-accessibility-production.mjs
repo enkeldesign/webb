@@ -70,7 +70,7 @@ assert.ok(
 assert.ok(indexSource.includes(`styles.css?build=${release.cacheKey}-native-html`));
 assert.ok(indexSource.includes(`garage/lot-r10.css?build=${release.cacheKey}-native-html`));
 assert.ok(indexSource.includes(`garage/lot-layout-r60.css?build=${release.cacheKey}-native-html`));
-assert.ok(indexSource.includes(`lot-track-select.js?build=${release.cacheKey}&revision=r163-native-html`));
+assert.ok(indexSource.includes(`lot-track-select.js?build=${release.cacheKey}&revision=r164-long-session-robustness`));
 assert.ok(
   indexSource.includes(`app.js?build=${release.cacheKey}-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click`),
   'The device must receive the native-picker ancestry experiment under a fresh release module URL'

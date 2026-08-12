@@ -182,7 +182,9 @@ const { prepareTrophyRoadProfile } = await import(
 );
 prepareTrophyRoadProfile();
 
-const { installPerformanceProfile } = await import(withBuild('./performance-profile.js'));
+const { installPerformanceProfile } = await import(
+  withBuild('./performance-profile.js?revision=r164-long-session-robustness')
+);
 installPerformanceProfile();
 
 const { installCoveredRenderingGuard } = await import(withBuild('./render/covered-rendering.js'));
@@ -197,7 +199,7 @@ const {
   prepareDriveByEarRuntime,
   ensureDriveByEarRuntime
 } = await import(
-  withBuild('./audio/drive-by-ear-runtime.js?revision=r143-temporary-audio-only')
+  withBuild('./audio/drive-by-ear-runtime.js?revision=r164-long-session-robustness')
 );
 await prepareDriveByEarRuntime();
 
@@ -214,7 +216,9 @@ globalThis.__turnDriveByEarEnabled = true;
 const { installAudioPreferences } = await import(withBuild('./audio/audio-preferences.js'));
 const audioPreferences = installAudioPreferences({ driveByEarGraphAvailable: driveByEarEnabled });
 
-const { installTurnAudio } = await import(withBuild('./audio/audio-system.js'));
+const { installTurnAudio } = await import(
+  withBuild('./audio/audio-system.js?revision=r164-long-session-robustness')
+);
 installTurnAudio();
 audioPreferences.setDriveByEarEnabled(driveByEarEnabled);
 
@@ -296,7 +300,7 @@ installTrackIntroCamera();
 // render/world.js?revision=r166-bella-records
 // render/world.js?revision=r174-bella-siren-zone
 await Promise.all([
-  import(withBuild('./render/world.js?revision=r175-bella-broad-rear-zone')),
+  import(withBuild('./render/world.js?revision=r164-long-session-robustness')),
   import(withBuild('./ui/spectate.js')),
   import(withBuild('./ui/back-to-lot.js'))
 ]);
@@ -342,7 +346,7 @@ if (buildLabel) {
 // Historical regression marker for the paint and Monster Home bundle:
 // m8-home-fixed-layout.js?revision=m8.9-track-title-alignment&trophy-road=r157
 const { installM8HomeFixedLayout } = await import(
-  withBuild('./m8-home-fixed-layout.js?revision=m8.9-track-title-alignment&trophy-road=r159&achievements=r166-bella-records&bella-rescue=r174-siren-zone&music=warm-v2')
+  withBuild('./m8-home-fixed-layout.js?revision=m8.9-track-title-alignment&trophy-road=r159&achievements=r166-bella-records&bella-rescue=r174-siren-zone&music=warm-v2&robustness=r164-long-session')
 );
 await installM8HomeFixedLayout();
 installStylesheet(

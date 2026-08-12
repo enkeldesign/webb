@@ -76,6 +76,15 @@ function otherSoundPreference() {
   return balance > 0.5 ? clamp((1 - balance) / 0.5, 0, 1) : 1;
 }
 
+function meowContextWanted(runtime = globalThis.__turnRuntime) {
+  const state = runtime?.state;
+  return (state?.running === true || state?.lapActive === true)
+    && activeTrackId(runtime) === 'countryside'
+    && String(state?.vehicleId || '').toLowerCase() === REQUIRED_VEHICLE_ID
+    && otherSoundPreference() > 0.001
+    && document.visibilityState !== 'hidden';
+}
+
 function ensureMeowContext() {
   if (!AudioContextClass) return null;
   if (!meowContext) {
@@ -89,8 +98,16 @@ function ensureMeowContext() {
   return meowContext;
 }
 
+function suspendMeowContext() {
+  if (meowContext?.state !== 'running') return;
+  void meowContext.suspend().catch(() => {});
+}
+
 function unlockMeowContext() {
-  ensureMeowContext();
+  // Bella is the only intentionally separate world-sound context. Do not keep a
+  // third live AudioContext in ordinary TURN sessions: arm it only while the
+  // Fire Truck is actually racing on Countryside and other sounds are enabled.
+  if (meowContextWanted()) ensureMeowContext();
 }
 
 function scheduleMeow({ pan = 0, intensity = 0.5, rescued = false } = {}) {
@@ -143,6 +160,7 @@ function scheduleMeow({ pan = 0, intensity = 0.5, rescued = false } = {}) {
     formantGain.disconnect();
     gain.disconnect();
     panner.disconnect();
+    if (rescued) suspendMeowContext();
   }, { once: true });
   return true;
 }
@@ -290,6 +308,7 @@ export function installBellaRescueBehavior({ root, runtime = globalThis.__turnRu
       && player;
     if (!eligible || document.hidden) {
       wasInRange = false;
+      suspendMeowContext();
       return;
     }
 
@@ -349,7 +368,8 @@ export function installBellaRescueBehavior({ root, runtime = globalThis.__turnRu
     rangeMeters: MEOW_RANGE_METERS,
     directional: true,
     cadence: 'Meows repeat more often as the Fire Truck approaches.',
-    availability: 'Other-sounds preference and global audio setting are respected.'
+    availability: 'Other-sounds preference and global audio setting are respected.',
+    contextPolicy: 'The meow AudioContext is created only during an eligible Countryside Fire Truck race and suspends when that condition stops.'
   });
   root.userData.turnBellaDisposeRescueBehavior = () => {
     if (disposed) return;
@@ -359,6 +379,10 @@ export function installBellaRescueBehavior({ root, runtime = globalThis.__turnRu
     globalThis.removeEventListener('turn:achievements-updated', handleAchievementUpdate);
     document.removeEventListener('pointerdown', unlockMeowContext, { capture: true });
     document.removeEventListener('keydown', unlockMeowContext, { capture: true });
+    if (meowContext) {
+      void meowContext.close?.().catch?.(() => {});
+      meowContext = null;
+    }
   };
 
   sample();

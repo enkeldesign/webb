@@ -21,8 +21,8 @@ assert.ok(
   index.includes(`app.js?build=${release.cacheKey}-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click-r420-music-warm-r426-loading-copy`),
   'The production document must cache-bust the revised loading-screen copy under the current release key'
 );
-assert.match(index, /countryside-bella-rescue-hotfix-r176\.js\?revision=r176-video-proven-rescue/,
-  'The canonical startup document must replace cached Bella rescue behavior independently');
+assert.match(index, /countryside-bella-rescue-hotfix-r176\.js\?revision=r164-long-session-robustness/,
+  'The canonical startup document must cache-bust the independent Bella rescue bootstrap with the long-session behavior');
 assert.match(nextIndex, new RegExp(`TURN NEXT · Source TURN v${escapedVersion} · Build ${escapedId}`));
 assert.match(nextIndex, new RegExp(`turn-next\\/app\\.js\\?source=${escapedCacheKey}-browser-consent-r166-bella-records`));
 

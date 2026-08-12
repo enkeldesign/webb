@@ -1,3 +1,5 @@
+const ORGANIC_UPDATE_INTERVAL_MS = 1000 / 30;
+
 const CAPTURED = Object.seal({
   contexts: [],
   oscillators: [],
@@ -18,6 +20,7 @@ let restoreFactories = null;
 let organicRoot = null;
 let organicSub = null;
 let organicContext = null;
+let lastOrganicUpdateAt = -Infinity;
 
 export function prepareOrganicRibbonCapture() {
   if (prepared) return;
@@ -41,7 +44,10 @@ export function installOrganicRibbon() {
     },
     update(frame = {}, now = performance.now()) {
       decorateCapturedRibbon();
-      updateOrganicVoices(frame);
+      if (now - lastOrganicUpdateAt >= ORGANIC_UPDATE_INTERVAL_MS) {
+        updateOrganicVoices(frame);
+        lastOrganicUpdateAt = now;
+      }
       baseAudio.update(frame, now);
     },
     cue: (...args) => baseAudio.cue(...args),
@@ -229,8 +235,26 @@ function updateOrganicVoices(frame) {
     : 388 + risk * 72;
   const now = organicContext.currentTime;
 
-  organicRoot.frequency.setTargetAtTime(fundamental, now, 0.18);
-  organicSub.frequency.setTargetAtTime(fundamental * 0.5, now, 0.22);
+  retarget(organicRoot.frequency, fundamental, now, 0.18);
+  retarget(organicSub.frequency, fundamental * 0.5, now, 0.22);
+}
+
+function retarget(parameter, value, now, timeConstant) {
+  if (!parameter) return;
+  try {
+    if (typeof parameter.cancelAndHoldAtTime === 'function') {
+      parameter.cancelAndHoldAtTime(now);
+    } else {
+      const currentValue = Number(parameter.value);
+      parameter.cancelScheduledValues(now);
+      if (Number.isFinite(currentValue)) parameter.setValueAtTime(currentValue, now);
+    }
+    parameter.setTargetAtTime(value, now, timeConstant);
+  } catch (_) {
+    try {
+      parameter.value = value;
+    } catch (_) {}
+  }
 }
 
 function findOscillatorNear(frequency, tolerance) {

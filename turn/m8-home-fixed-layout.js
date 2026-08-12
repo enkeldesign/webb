@@ -163,7 +163,7 @@ export async function installM8HomeFixedLayout() {
   const trophyGate = installM8TrophyGate(globalThis.__turnNextHome);
 
   const { installAchievements } = await import(
-    `/turn/achievements.js?build=${buildKey}-r166-bella-records`
+    `/turn/achievements.js?build=${buildKey}-r166-bella-records&robustness=r164-long-session`
   );
   const achievements = installAchievements(globalThis.__turnRuntime);
   const { installAchievementUnreadMarkers } = await import(
@@ -182,7 +182,7 @@ export async function installM8HomeFixedLayout() {
     achievements
   });
   const { installTrophyRoadFeedback } = await import(
-    `/turn/achievements/trophy-road-feedback.js?build=${buildKey}-r166-bella-records`
+    `/turn/achievements/trophy-road-feedback.js?build=${buildKey}-r166-bella-records&robustness=r164-long-session`
   );
   const trophyRoadFeedback = installTrophyRoadFeedback(achievements);
 
@@ -196,6 +196,10 @@ export async function installM8HomeFixedLayout() {
     `/turn/audio/racing-music-v2.js?build=${buildKey}-racing-music-warm-v2`
   );
   const racingMusic = installRacingMusic({ home });
+  const { installRacingMusicHealth } = await import(
+    `/turn/audio/racing-music-health.js?build=${buildKey}&revision=r164-long-session-robustness`
+  );
+  const racingMusicHealth = installRacingMusicHealth(racingMusic);
 
   globalThis.__turnHomeLayout = Object.freeze({
     id: LAYOUT_ID,
@@ -212,7 +216,8 @@ export async function installM8HomeFixedLayout() {
     achievementChallengeExpansion,
     trophyRoadFeedback,
     driveByEarTraining,
-    racingMusic
+    racingMusic,
+    racingMusicHealth
   });
   return globalThis.__turnHomeLayout;
 }

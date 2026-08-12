@@ -62,7 +62,8 @@ function prepareModel(source, {
   outline = false,
   castShadow = true,
   tint = null,
-  tintAmount = 0.75
+  tintAmount = 0.75,
+  suppressAutoOutline = false
 } = {}) {
   const model = source.clone(true);
   const tintColor = tint == null ? null : new THREE.Color(tint);
@@ -83,6 +84,10 @@ function prepareModel(source, {
 
     node.castShadow = castShadow;
     node.receiveShadow = true;
+    // world-art-pass.js uses this marker to avoid adding a second enlarged
+    // back-face mesh. Repeated vegetation keeps its native silhouette instead
+    // of doubling its draw calls for the entire race.
+    if (suppressAutoOutline) node.userData.turnOutlined = true;
   });
 
   model.updateMatrixWorld(true);
@@ -132,7 +137,8 @@ function placeAlongTrack({
   stretch = null,
   tint = null,
   tintAmount = 0.75,
-  groundSink = 0
+  groundSink = 0,
+  suppressAutoOutline = false
 }) {
   const { sample, position } = trackPosition(samples, index, side, trackWidth, distance);
   const model = prepareModel(source, {
@@ -141,7 +147,8 @@ function placeAlongTrack({
     outline,
     castShadow,
     tint,
-    tintAmount
+    tintAmount,
+    suppressAutoOutline
   });
   model.position.add(position);
   model.position.y -= groundSink;
@@ -181,7 +188,8 @@ function placeTreeBelt({ world, samples, trackWidth, trees, tallTrees }) {
       targetHeight,
       groundSink: targetHeight * 0.07,
       castShadow: i % 3 === 0,
-      rotationOffset: random * Math.PI * 2
+      rotationOffset: random * Math.PI * 2,
+      suppressAutoOutline: true
     });
   }
 }

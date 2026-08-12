@@ -13,8 +13,8 @@ export function prepareDriveByEarRuntime() {
   if (preparationPromise) return preparationPromise;
 
   preparationPromise = Promise.all([
-    import(withBuild('./organic-ribbon.js')),
-    import(withBuild('./recovery-guidance.js')),
+    import(withBuild('./organic-ribbon.js?revision=r164-long-session-robustness')),
+    import(withBuild('./recovery-guidance.js?revision=r164-long-session-robustness')),
     import(withBuild('./pace-note-priority.js?revision=r123-final-hold'))
   ]).then(([organicRibbon, recoveryGuidance, paceNotePriority]) => {
     organicRibbon.prepareOrganicRibbonCapture();

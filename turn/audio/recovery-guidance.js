@@ -10,6 +10,7 @@ let prepared = false;
 let installed = false;
 let wrappedAudio = null;
 let lastComputedAt = -Infinity;
+let lastWrongWayUpdateAt = -Infinity;
 let cachedOverrides = Object.freeze({});
 let wrongWayGain = null;
 let wrongWayPanner = null;
@@ -62,7 +63,7 @@ export function installRecoveryGuidance() {
 
       if (!dbeEnabled) {
         cachedOverrides = Object.freeze({});
-        updateWrongWayTone({ active: false }, settings);
+        updateWrongWayTone({ active: false }, settings, now);
         baseAudio.update(frame, now);
         return;
       }
@@ -75,12 +76,17 @@ export function installRecoveryGuidance() {
       }
 
       const nextFrame = { ...frame, ...cachedOverrides };
-      updateWrongWayTone(nextFrame, settings);
+      updateWrongWayTone(nextFrame, settings, now);
       baseAudio.update(nextFrame, now);
     },
     cue: (...args) => baseAudio.cue(...args),
     silence(...args) {
-      updateWrongWayTone({ active: false }, globalThis.__turnAudioPreferences?.getSettings?.());
+      updateWrongWayTone(
+        { active: false },
+        globalThis.__turnAudioPreferences?.getSettings?.(),
+        performance.now(),
+        true
+      );
       return baseAudio.silence(...args);
     },
     get available() {
@@ -238,7 +244,10 @@ function createWrongWayRecoveryFrame({ forward, right, currentSample, frame }) {
   };
 }
 
-function updateWrongWayTone(frame, settings = {}) {
+function updateWrongWayTone(frame, settings = {}, nowMilliseconds = performance.now(), force = false) {
+  if (!force && nowMilliseconds - lastWrongWayUpdateAt < RECOVERY_UPDATE_INTERVAL_MS) return;
+  lastWrongWayUpdateAt = nowMilliseconds;
+
   const ready = ensureWrongWayGraph();
   if (!ready) return;
 
@@ -346,6 +355,13 @@ function setPannerTarget(panner, value, now, timeConstant) {
 function setTarget(parameter, value, now, timeConstant) {
   if (!parameter) return;
   try {
+    if (typeof parameter.cancelAndHoldAtTime === 'function') {
+      parameter.cancelAndHoldAtTime(now);
+    } else {
+      const currentValue = Number(parameter.value);
+      parameter.cancelScheduledValues(now);
+      if (Number.isFinite(currentValue)) parameter.setValueAtTime(currentValue, now);
+    }
     parameter.setTargetAtTime(value, now, timeConstant);
   } catch (_) {
     try {

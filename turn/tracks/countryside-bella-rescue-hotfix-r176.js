@@ -1,7 +1,6 @@
-import { installBellaRescueBehavior } from './countryside-bella-rescue-r173.js?revision=r176-road-derived-rescue-zone';
+import { installBellaRescueBehavior } from './countryside-bella-rescue-r173.js?revision=r164-long-session-robustness';
 
-const RETRY_INTERVAL_MS = 120;
-const RETRY_LIMIT = 100;
+const RETRY_DELAYS_MS = Object.freeze([250, 350, 500, 700, 900, 1200, 1600, 2200, 3000, 4000]);
 
 function bellaRoot(runtime) {
   return runtime?.world?.children?.find?.(
@@ -16,19 +15,23 @@ function reinstall(runtime) {
   root.userData.turnBellaDisposeRescueBehavior?.();
   root.userData.turnBellaRescueBehaviorInstalled = false;
   installBellaRescueBehavior({ root, runtime });
-  root.userData.turnBellaRescueBootstrap = 'r176-road-derived-zone';
+  root.userData.turnBellaRescueBootstrap = 'r164-long-session-robustness';
   return true;
 }
 
 function start(runtime = globalThis.__turnRuntime) {
   if (reinstall(runtime)) return;
-  let attempts = 0;
-  const timer = window.setInterval(() => {
-    attempts += 1;
-    if (reinstall(globalThis.__turnRuntime) || attempts >= RETRY_LIMIT) {
-      window.clearInterval(timer);
-    }
-  }, RETRY_INTERVAL_MS);
+
+  let attempt = 0;
+  const retry = () => {
+    if (reinstall(globalThis.__turnRuntime)) return;
+    if (attempt >= RETRY_DELAYS_MS.length) return;
+    const delay = RETRY_DELAYS_MS[attempt];
+    attempt += 1;
+    window.setTimeout(retry, delay);
+  };
+
+  retry();
 }
 
 if (globalThis.__turnRuntime) start(globalThis.__turnRuntime);

@@ -45,36 +45,52 @@ assert.equal(performanceModeRequested('?perf=1'), true);
 assert.equal(performanceModeRequested('?perf=0'), false);
 assert.equal(performanceModeRequested(''), false);
 
-const baselineProfile = performanceProfileFromSearch('?perf=1', 2);
-assert.equal(baselineProfile.active, false, 'Perf diagnostics alone must not add a separate quality tier');
-assert.equal(baselineProfile.dprCap, 1.5, 'TURN must use one universal DPR 1.5 ceiling');
+// Desktop/precise-pointer rendering keeps the established quality baseline.
+const baselineProfile = performanceProfileFromSearch('?perf=1', 2, { touchOptimized: false });
+assert.equal(baselineProfile.active, false, 'Perf diagnostics alone must not add a separate desktop quality tier');
+assert.equal(baselineProfile.dprCap, 1.5, 'Desktop TURN must retain its DPR 1.5 ceiling');
 assert.equal(baselineProfile.pixelRatio, 1.5);
 assert.equal(baselineProfile.shadowsEnabled, true);
 assert.equal(baselineProfile.shadowMapSize, 1024);
+assert.equal(baselineProfile.touchOptimized, false);
 
-const dprProfile = performanceProfileFromSearch('?perf=1&dpr=1.25', 2);
+// Touch hardware does the same gameplay work at a saner fill-rate/shadow cost.
+const touchProfile = performanceProfileFromSearch('', 3, { touchOptimized: true });
+assert.equal(touchProfile.active, false, 'Mobile thermal defaults are production behavior, not a diagnostic quality mode');
+assert.equal(touchProfile.touchOptimized, true);
+assert.equal(touchProfile.dprCap, 1.25, 'Touch devices must cap pixel density at 1.25 for long-session thermal headroom');
+assert.equal(touchProfile.pixelRatio, 1.25);
+assert.equal(touchProfile.shadowsEnabled, true);
+assert.equal(touchProfile.shadowMapSize, 512, 'Touch devices must use the cheaper production shadow map');
+
+const dprProfile = performanceProfileFromSearch('?perf=1&dpr=1.25', 2, { touchOptimized: false });
 assert.equal(dprProfile.active, true);
 assert.equal(dprProfile.dprCap, 1.25);
 assert.equal(dprProfile.pixelRatio, 1.25);
 assert.match(dprProfile.label, /DPR≤1\.25/);
 
-const lowDprProfile = performanceProfileFromSearch('?perf=1&dpr=0.2', 2);
+const lowDprProfile = performanceProfileFromSearch('?perf=1&dpr=0.2', 2, { touchOptimized: false });
 assert.equal(lowDprProfile.dprCap, 0.75, 'Diagnostic DPR overrides must stay within the safe lower bound');
-const highDprProfile = performanceProfileFromSearch('?perf=1&dpr=9', 3);
-assert.equal(highDprProfile.dprCap, 1.5, 'No diagnostic profile may exceed the universal production cap');
+const highDprProfile = performanceProfileFromSearch('?perf=1&dpr=9', 3, { touchOptimized: false });
+assert.equal(highDprProfile.dprCap, 1.5, 'No diagnostic profile may exceed the desktop production cap');
 
-const shadowProfile = performanceProfileFromSearch('?perf=1&shadow=512', 2);
+const shadowProfile = performanceProfileFromSearch('?perf=1&shadow=512', 2, { touchOptimized: false });
 assert.equal(shadowProfile.active, true);
 assert.equal(shadowProfile.shadowsEnabled, true);
 assert.equal(shadowProfile.shadowMapSize, 512);
-const noShadowProfile = performanceProfileFromSearch('?perf=1&shadow=off', 2);
+const noShadowProfile = performanceProfileFromSearch('?perf=1&shadow=off', 2, { touchOptimized: false });
 assert.equal(noShadowProfile.shadowsEnabled, false);
 assert.match(noShadowProfile.label, /shadows off/);
-const ignoredProfile = performanceProfileFromSearch('?dpr=1&shadow=off', 2);
+const ignoredProfile = performanceProfileFromSearch('?dpr=1&shadow=off', 2, { touchOptimized: false });
 assert.equal(ignoredProfile.active, false, 'Renderer overrides must be ignored outside explicit perf mode');
 assert.equal(ignoredProfile.dprCap, 1.5);
-assert.equal(ignoredProfile.pixelRatio, 1.5, 'Normal play must still receive the universal DPR cap');
+assert.equal(ignoredProfile.pixelRatio, 1.5, 'Normal desktop play must retain the desktop DPR cap');
 assert.equal(ignoredProfile.shadowsEnabled, true);
+
+const touchDiagnosticOverride = performanceProfileFromSearch('?perf=1&dpr=1.5&shadow=1024', 3, { touchOptimized: true });
+assert.equal(touchDiagnosticOverride.active, true, 'Perf mode may deliberately restore heavier settings for A/B diagnosis');
+assert.equal(touchDiagnosticOverride.dprCap, 1.5);
+assert.equal(touchDiagnosticOverride.shadowMapSize, 1024);
 
 const replayLap = {
   time: 2,
@@ -100,7 +116,31 @@ assert.equal(summary.p95Ms, 50);
 assert.equal(summary.slowPercent, 40);
 assert.ok(Math.abs(summary.fps - 1000 / 30) < 1e-9);
 
-const [index, releaseSource, app, main, worldAssets, worldRender, controls, menu, spectate, hud, physics, camera, cars, lot, monitor, profile, replay, audio, orientationCompat, airportWorld, airportPolish, worldCollision] = await Promise.all([
+const [
+  index,
+  releaseSource,
+  app,
+  main,
+  worldAssets,
+  worldRender,
+  controls,
+  menu,
+  spectate,
+  hud,
+  physics,
+  camera,
+  cars,
+  lot,
+  trophyShowcase,
+  monitor,
+  profile,
+  replay,
+  audio,
+  orientationCompat,
+  airportWorld,
+  airportPolish,
+  worldCollision
+] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
@@ -115,6 +155,7 @@ const [index, releaseSource, app, main, worldAssets, worldRender, controls, menu
   fs.readFile(new URL('../../turn/render/camera.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/achievements/trophy-road-showcase.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/performance-monitor.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/performance-profile.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/race/replay-system.js', import.meta.url), 'utf8'),
@@ -135,13 +176,28 @@ assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} 
 assert.equal(imports['./race/replay-system.js'], releaseTarget('./race/replay-system.js'), 'The current release must publish the shared replay sampler cache');
 assert.equal(imports['./race/track-spatial-index.js?build=20260720-r19'], releaseTarget('./race/track-spatial-index.js'), 'The current release must publish the rebuildable bounded track search');
 assert.equal(imports['./performance-monitor.js?build=20260720-r19'], releaseTarget('./performance-monitor.js'), 'The current release must publish the diagnostics module');
-assert.equal(imports['./world-assets.js'], releaseTarget('./world-assets.js'), 'The current release must publish both countryside tree-grounding passes');
-assert.match(app, /installPerformanceProfile\(\)/, 'Renderer profile installation must run before the game runtime');
-assert.ok(app.indexOf('./performance-profile.js') < app.indexOf('./main.js'), 'The universal DPR cap must be ready before main.js creates the runtime');
-assert.match(profile, /DEFAULT_DPR_CAP = 1\.5/, 'The universal production DPR ceiling must stay at 1.5');
+assert.equal(
+  imports['./world-assets.js'],
+  `${releaseTarget('./world-assets.js')}&revision=r164-long-session-robustness`,
+  'The current release must publish the fresh tree-grounding and contour-suppression pass'
+);
+assert.equal(
+  imports['/turn/achievements/trophy-road-showcase.js?revision=r160-reward-detail-sync'],
+  '/turn/achievements/trophy-road-showcase.js?revision=r164-long-session-robustness',
+  'Trophy Road must receive the fresh throttled preview renderer instead of a cached full-refresh module'
+);
+assert.match(app, /performance-profile\.js\?revision=r164-long-session-robustness/,
+  'The installed runtime must request the mobile thermal profile under a fresh URL');
+assert.match(app, /installPerformanceProfile\(\)/, 'Renderer profile installation must run before gameplay starts');
+assert.ok(app.indexOf('./performance-profile.js') < app.indexOf('./main.js'), 'The DPR cap must be ready before main.js creates the runtime');
+assert.match(profile, /DEFAULT_DPR_CAP = 1\.5/, 'Desktop production DPR ceiling must stay at 1.5');
+assert.match(profile, /TOUCH_DPR_CAP = 1\.25/, 'Touch production must reserve thermal headroom with DPR 1.25');
+assert.match(profile, /TOUCH_SHADOW_MAP_SIZE = 512/, 'Touch devices must use the cheaper 512px shadow map');
+assert.match(profile, /maxTouchPoints/);
+assert.match(profile, /pointer: coarse/);
 assert.match(profile, /MAX_DPR_CAP = 1\.5/, 'Diagnostics must never restore the retired DPR 2 tier');
-assert.match(profile, /if \(!runtime\?\.renderer\) return;/, 'The universal renderer profile must apply even without a diagnostic override');
-assert.doesNotMatch(profile, /if \(!profile\.active \|\| !runtime\?\.renderer\) return;/, 'Normal play must not bypass the universal DPR cap');
+assert.match(profile, /if \(!runtime\?\.renderer\) return;/, 'The renderer profile must apply even without a diagnostic override');
+assert.doesNotMatch(profile, /if \(!profile\.active \|\| !runtime\?\.renderer\) return;/, 'Normal play must not bypass its device-appropriate DPR cap');
 assert.match(profile, /renderer\.setPixelRatio = \(value\) =>/, 'The DPR cap must survive TURN resize calls');
 assert.match(profile, /renderer\.shadowMap\.enabled = profile\.shadowsEnabled/, 'Shadow A/B testing must remain available without a second loop');
 assert.doesNotMatch(profile, /requestAnimationFrame|setAnimationLoop|setInterval/, 'Performance profiles must add no animation loop');
@@ -176,7 +232,24 @@ assert.doesNotMatch(camera, /state\.position\.clone\(\)/);
 assert.match(cars, /record\.node\.castShadow = !ghost/);
 assert.doesNotMatch(lot, /root\.scale\.lerp\(new THREE\.Vector3/);
 assert.match(lot, /recordPerformanceFrame/);
+assert.match(lot, /LOT_FRAME_INTERVAL_MS = 1000 \/ 30/,
+  'The two-renderer Lot surface must not render at 60/120 Hz');
+assert.match(lot, /now - lastRenderAt < LOT_FRAME_INTERVAL_MS/);
+assert.match(lot, /rendererPixelRatio\(1\.5\)/,
+  'Both Lot renderers must inherit the production touch DPR cap');
+assert.match(lot, /renderer\.forceContextLoss\?\.\(\)/,
+  'Closing The Lot must release its WebGL context instead of accumulating contexts across visits');
+assert.match(lot, /function disposeVisualMaterials\(/,
+  'Repeated 3D viewer swaps must release cloned materials');
+assert.doesNotMatch(lot, /geometry\.dispose/,
+  'The Lot must not dispose shared cached vehicle geometries while releasing per-view materials');
 assert.doesNotMatch(lot, /GLTFLoader|InstancedMesh|installBrickScenery/, 'The clean Lot must not spend asset or draw-call budget on decorative wall scenery');
+assert.match(trophyShowcase, /SHOWCASE_FRAME_INTERVAL_MS = 1000 \/ 30/,
+  'Trophy Road decorative 3D models must stay at 30 fps');
+assert.match(trophyShowcase, /now - lastRenderAt < SHOWCASE_FRAME_INTERVAL_MS/);
+assert.match(trophyShowcase, /__turnPerformanceProfile\?\.dprCap/);
+assert.match(trophyShowcase, /renderer\?\.forceContextLoss\?\.\(\)/,
+  'Closing the Achievements renderer must release its WebGL context');
 assert.match(audio, /AUDIO_UPDATE_INTERVAL_MS = 1000 \/ 30/, 'Audio state must stay capped at 30 Hz');
 assert.doesNotMatch(audio, /requestAnimationFrame|setAnimationLoop|setInterval/, 'New sound cues must not add a second loop');
 assert.doesNotMatch(orientationCompat, /requestAnimationFrame|setAnimationLoop|setInterval/, 'The orientation guard must remain event-driven and add no render loop');
@@ -187,4 +260,4 @@ assert.doesNotMatch(worldCollision, /requestAnimationFrame|setAnimationLoop|setI
 assert.match(monitor, /turn:perf-snapshot/);
 assert.match(monitor, /trackChecksPerQuery/);
 
-console.log(`TURN ${release.id} universal DPR, world containment, complete tree grounding, rebuildable bounded spatial search and diagnostics passed (${(trackChecks / trackQueries).toFixed(1)} average on-track checks vs 720).`);
+console.log(`TURN ${release.id} mobile thermal profile, 30fps menu 3D, world containment, bounded spatial search and diagnostics passed (${(trackChecks / trackQueries).toFixed(1)} average on-track checks vs 720).`);

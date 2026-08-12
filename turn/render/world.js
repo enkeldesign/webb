@@ -2,6 +2,7 @@ import * as THREE from 'three';
 
 const buildId = new URL(import.meta.url).searchParams.get('build');
 const TREE_CLUSTER_SINK_RATIO = 0.07;
+const TURN_INK = 0x08090a;
 
 function moduleUrl(relativePath) {
   const url = new URL(relativePath, import.meta.url);
@@ -17,7 +18,7 @@ async function loadWorldModules() {
     import(moduleUrl('../section-intensity.js')),
     import(moduleUrl('../tracks/countryside-bella-r166.js?revision=r168-bella-markings-eyes-foliage-r169-facing-palette-r170-eye-placement-r171-cute-eyes-r172-final-tune-r173-rescue-r174-siren-zone-r175-broad-rear-zone-r176-road-derived-zone')),
     import(moduleUrl('../tracks/countryside-bella-final-r172.js?revision=r172-final-tune-r173-rescue-r174-siren-zone-r175-broad-rear-zone-r176-road-derived-zone')),
-    import(moduleUrl('../tracks/countryside-bella-rescue-r173.js?revision=r176-road-derived-rescue-zone'))
+    import(moduleUrl('../tracks/countryside-bella-rescue-r173.js?revision=r164-long-session-robustness'))
   ]);
 
   return {
@@ -42,6 +43,33 @@ function waitForRuntime() {
   }, { once: true });
 }
 
+function isContourShell(node) {
+  if (!node?.isMesh || !node.material) return false;
+  if (node.userData?.turnOutline) return true;
+  const materials = Array.isArray(node.material) ? node.material : [node.material];
+  return materials.some((material) => (
+    material?.side === THREE.BackSide
+    && material?.color?.getHex?.() === TURN_INK
+  ));
+}
+
+function suppressTreeClusterContours(root) {
+  const contourShells = [];
+  root.traverse((node) => {
+    if (!node?.isMesh) return;
+    if (isContourShell(node)) {
+      contourShells.push(node);
+      return;
+    }
+    // world-art-pass.js checks this marker before creating an enlarged
+    // back-face contour shell. Leave it set even after stripping an already
+    // created shell so the later compatibility sweeps cannot recreate it.
+    node.userData.turnOutlined = true;
+  });
+
+  for (const shell of contourShells) shell.parent?.remove(shell);
+}
+
 function groundLateTreeClusters(world, baselineChildren) {
   const bounds = new THREE.Box3();
   const size = new THREE.Vector3();
@@ -64,11 +92,12 @@ function groundLateTreeClusters(world, baselineChildren) {
       && size.z >= 5;
 
     if (!treeCluster) continue;
+    suppressTreeClusterContours(child);
     child.position.y -= size.y * TREE_CLUSTER_SINK_RATIO;
     groundedCount += 1;
   }
 
-  if (groundedCount) console.info(`TURN: grounded ${groundedCount} late tree clusters.`);
+  if (groundedCount) console.info(`TURN: grounded ${groundedCount} late tree clusters without contour shells.`);
 }
 
 async function install(runtime) {

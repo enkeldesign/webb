@@ -34,8 +34,8 @@ const imports = JSON.parse(importMapText).imports;
 assert.match(index, new RegExp(`lot-stat-legend\\.css\\?build=${release.cacheKey}`), 'Production must load the stat-legend styling through the current release');
 assert.equal(
   imports['./garage/lot-r10.js?build=20260720-r19'],
-  `./garage/lot-track-select.js?build=${release.cacheKey}&revision=r163-native-html`,
-  'Production must publish the native HTML Lot wrapper through the current release'
+  `./garage/lot-track-select.js?build=${release.cacheKey}&revision=r164-long-session-robustness`,
+  'Production must publish the optimized native HTML Lot wrapper through the current release'
 );
 assert.equal(imports['./vehicle/physics.js?build=20260720-r19'], `./vehicle/physics.js?build=${release.cacheKey}`, 'Production must publish the mandatory DRIFT penalty through the current release');
 assert.equal(imports['./vehicle/catalog.js?build=20260720-r19'], `./vehicle/catalog.js?build=${release.cacheKey}`, 'Production must publish the shared stat definitions through the current release');

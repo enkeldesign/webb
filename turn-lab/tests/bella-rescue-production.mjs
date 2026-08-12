@@ -90,23 +90,55 @@ assert.match(behavior, /__turnAudioPreferences\?\.getSettings/);
 assert.match(behavior, /createStereoPanner/);
 assert.match(behavior, /voice\.frequency\.exponentialRampToValueAtTime/);
 
-assert.match(world, /countryside-bella-rescue-r173\.js\?revision=r176-road-derived-rescue-zone/);
+// Bella keeps its tiny directional world-sound context separate from the central
+// game/DBE graph, but ordinary sessions must not keep that third context running.
+assert.match(behavior, /function meowContextWanted\(/);
+assert.match(
+  behavior,
+  /activeTrackId\(runtime\) === 'countryside'[\s\S]*vehicleId \|\| ''\)\.toLowerCase\(\) === REQUIRED_VEHICLE_ID[\s\S]*otherSoundPreference\(\) > 0\.001[\s\S]*document\.visibilityState !== 'hidden'/,
+  'Bella audio must only arm for a visible Countryside Fire Truck run with other sounds enabled'
+);
+assert.match(
+  behavior,
+  /function unlockMeowContext\(\)[\s\S]*if \(meowContextWanted\(\)\) ensureMeowContext\(\)/,
+  'Ordinary gestures must not eagerly create the Bella AudioContext'
+);
+assert.match(behavior, /function suspendMeowContext\(\)/);
+assert.match(
+  behavior,
+  /if \(!eligible \|\| document\.hidden\) \{[\s\S]*suspendMeowContext\(\)/,
+  'Leaving an eligible rescue run must suspend Bella audio'
+);
+assert.match(
+  behavior,
+  /meowContext\.close\?\.\(\)[\s\S]*meowContext = null/,
+  'Disposal must close and release Bella audio completely'
+);
+
+assert.match(world, /countryside-bella-rescue-r173\.js\?revision=r164-long-session-robustness/,
+  'The Countryside world bootstrap must request the on-demand Bella audio lifecycle under a fresh URL');
 assert.match(world, /applyBellaFinalVisuals\(bellaRoot\);\s*installBellaRescueBehavior\(\{ root: bellaRoot, runtime \}\);/);
-assert.match(app, /render\/world\.js\?revision=r175-bella-broad-rear-zone/,
-  'The established app world entry remains valid while the independent rescue bootstrap replaces cached behavior');
+assert.match(app, /render\/world\.js\?revision=r164-long-session-robustness/,
+  'The app must request the optimized world graph rather than an older Bella world cache identity');
 assert.match(homeLayout, /secret-achievements\.js\?build=\$\{buildKey\}-r174-bella-siren-zone/);
 
+assert.match(bootstrap, /countryside-bella-rescue-r173\.js\?revision=r164-long-session-robustness/,
+  'The independent Bella bootstrap must reinstall the same robustness behavior as the world graph');
 assert.match(bootstrap, /turnBellaDisposeRescueBehavior\?\.\(\)/);
 assert.match(bootstrap, /turnBellaRescueBehaviorInstalled = false/);
 assert.match(bootstrap, /installBellaRescueBehavior\(\{ root, runtime \}\)/);
-assert.match(bootstrap, /turnBellaRescueBootstrap = 'r176-road-derived-zone'/,
-  'The production bootstrap must dispose and replace any rescue timer installed by a cached world module');
+assert.match(bootstrap, /turnBellaRescueBootstrap = 'r164-long-session-robustness'/,
+  'The production bootstrap must identify the long-session behavior it reinstalls');
+assert.match(bootstrap, /RETRY_DELAYS_MS = Object\.freeze\(\[250, 350, 500, 700, 900, 1200, 1600, 2200, 3000, 4000\]\)/,
+  'Async Bella discovery should use a bounded back-off rather than an 8 Hz startup poll');
+assert.doesNotMatch(bootstrap, /setInterval/,
+  'The independent Bella bootstrap must not maintain its old fixed 120 ms polling interval');
 assert.match(index, new RegExp(`app\\.js\\?build=${escapeRegex(release.cacheKey)}-browser-consent-r176-bella-road-derived-zone`),
   'The top-level app URL must use the canonical release cache key so Safari cannot retain an old dependency graph');
-assert.match(index, /countryside-bella-rescue-hotfix-r176\.js\?revision=r176-video-proven-rescue/,
-  'The current rescue replacement must be loaded independently from the cached world graph');
+assert.match(index, /countryside-bella-rescue-hotfix-r176\.js\?revision=r164-long-session-robustness/,
+  'The independent rescue replacement must have a fresh outer module URL so Safari cannot reuse the old r176 bootstrap bytes');
 
-console.log('TURN Bella video-proven road-derived rescue, siren input, ground transition and cache replacement regression passed.');
+console.log('TURN Bella video-proven rescue, on-demand directional audio and bounded bootstrap regression passed.');
 
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

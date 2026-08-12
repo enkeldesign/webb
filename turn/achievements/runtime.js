@@ -96,6 +96,7 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     pendingToastRewards: [],
     toastTimer: 0,
     rewardToastTimer: 0,
+    samplingTimer: 0,
     listenCloselyMs: 0,
     lastSampleAt: performance.now(),
     secondWind: {
@@ -309,9 +310,29 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     secondWind.previousBoostActive = boostActive;
   }
 
+  function startDrivingSampler() {
+    if (session.samplingTimer || document.visibilityState === 'hidden') return;
+    session.lastSampleAt = performance.now();
+    session.samplingTimer = window.setInterval(sampleDrivingState, SAMPLE_INTERVAL_MS);
+  }
+
+  function stopDrivingSampler() {
+    if (session.samplingTimer) window.clearInterval(session.samplingTimer);
+    session.samplingTimer = 0;
+    session.lastSampleAt = performance.now();
+  }
+
+  function syncDrivingSampler() {
+    const state = runtime?.state;
+    const active = state?.running === true || state?.lapActive === true;
+    if (active && document.visibilityState !== 'hidden') startDrivingSampler();
+    else stopDrivingSampler();
+  }
+
   function beginLap() {
     session.currentLapVoid = false;
     session.currentLap = makeLapAttempt(runtime, drivePad, session.recalibratedPending);
+    startDrivingSampler();
     sampleDrivingState();
     view.render();
   }
@@ -432,9 +453,12 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
       session.spectateStartedAt = 0;
       session.listenCloselyMs = 0;
     }
+    syncDrivingSampler();
     syncRaceTriggerVisibility();
     view.render();
   });
+
+  document.addEventListener('visibilitychange', syncDrivingSampler, { passive: true });
 
   const menuObserver = typeof MutationObserver === 'function'
     ? new MutationObserver(syncRaceTriggerVisibility)
@@ -442,7 +466,7 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
   menuObserver?.observe(utilityGroup, { attributes: true, attributeFilter: ['data-menu-state'] });
 
   importStoredTimeTrials();
-  window.setInterval(sampleDrivingState, SAMPLE_INTERVAL_MS);
+  syncDrivingSampler();
   syncRaceTriggerVisibility();
 
   const api = Object.freeze({
