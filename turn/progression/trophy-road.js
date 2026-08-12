@@ -1,5 +1,5 @@
 export const TROPHY_ROAD_STORAGE_KEY = 'turn-achievements-v1';
-export const TROPHY_ROAD_STORAGE_VERSION = 4;
+export const TROPHY_ROAD_STORAGE_VERSION = 5;
 export const TROPHY_ROAD_MAX_THRESHOLD = 1700;
 export const TROPHY_ROAD_VIEWPORT_THRESHOLD = 600;
 
@@ -11,7 +11,9 @@ export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
   future: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M5 32h8l7-7h9l5-8h8l5 8h9l4 7v7H5Z"></path><path d="M21 25h26M36 17l5 8M47 13h12v6H45"></path><circle cx="17" cy="39" r="5"></circle><circle cx="50" cy="39" r="5"></circle><path d="M2 22h12M1 16h17M7 28h9"></path></svg>',
   paint: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M10 7h29v13H10Z"></path><path d="M39 11h8c5 0 7 3 7 7v4H31v8"></path><path d="M27 28h8v16h-8Z"></path><path d="M15 12h18M15 16h12"></path></svg>',
   emergency: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M18 35V21a14 14 0 0 1 28 0v14"></path><path d="M12 35h40v9H12Z"></path><path d="M32 2v7M9 9l6 6M55 9l-6 6M3 25h8M53 25h8"></path><path d="M24 34V22a8 8 0 0 1 16 0v12"></path></svg>',
-  monster: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M10 28h8l5-10h20l7 10h5v9H9Z"></path><path d="M28 18v10M23 28h27M45 22h8l4 6"></path><circle cx="18" cy="38" r="8"></circle><circle cx="48" cy="38" r="8"></circle><circle cx="18" cy="38" r="3"></circle><circle cx="48" cy="38" r="3"></circle></svg>'
+  monster: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M10 28h8l5-10h20l7 10h5v9H9Z"></path><path d="M28 18v10M23 28h27M45 22h8l4 6"></path><circle cx="18" cy="38" r="8"></circle><circle cx="48" cy="38" r="8"></circle><circle cx="18" cy="38" r="3"></circle><circle cx="48" cy="38" r="3"></circle></svg>',
+  vintage: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M5 31h9l7-8h20l8 4h9v10H5Z"></path><path d="M21 23l5-8h12l6 8M27 15v8M12 31h39"></path><circle cx="17" cy="38" r="6"></circle><circle cx="49" cy="38" r="6"></circle></svg>',
+  rally: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M7 31h7l6-12h24l8 12h6v7H7Z"></path><path d="M24 19v12M20 24h27M11 27h7M47 15h8l3 7"></path><circle cx="18" cy="39" r="5"></circle><circle cx="49" cy="39" r="5"></circle></svg>'
 });
 
 export const TROPHY_ROAD_REWARDS = Object.freeze([
@@ -70,6 +72,30 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     perkTitle: 'OVERSIZED',
     perkDescription: 'Going off-road doesn’t slow it down.',
     description: 'Unlock the Monster Truck: a military-green heavyweight.<br><strong>OVERSIZED:</strong> Going off-road doesn’t slow it down.'
+  }),
+  Object.freeze({
+    id: 'vintage-racer',
+    threshold: 800,
+    title: 'VINTAGE RACER',
+    shortTitle: 'Vintage Racer',
+    type: 'vehicle',
+    vehicleIds: Object.freeze(['vintage-racer']),
+    icon: 'vintage',
+    perkTitle: 'DRIFTAGE',
+    perkDescription: 'DRIFT drains less speed, steering becomes more aggressive and the car can hold larger slip angles.',
+    description: 'Unlock the Vintage Racer: the car for linking corners beautifully.<br><strong>DRIFTAGE:</strong> DRIFT drains less speed, steering becomes more aggressive and it can hold larger slip angles.'
+  }),
+  Object.freeze({
+    id: 'rally-racer',
+    threshold: 900,
+    title: 'RALLY RACER',
+    shortTitle: 'Rally Racer',
+    type: 'vehicle',
+    vehicleIds: Object.freeze(['toy-racer']),
+    icon: 'rally',
+    perkTitle: 'TWITCHY TURNY',
+    perkDescription: 'DRIFT fills BOOST even faster than normal, but the tank is tiny.',
+    description: 'Unlock the Rally Racer: tiny, twitchy and perfect for curvy tracks.<br><strong>TWITCHY TURNY:</strong> DRIFT fills BOOST even faster than normal, but the tank is tiny.'
   })
 ]);
 
@@ -84,7 +110,13 @@ const REWARD_BY_FEATURE = new Map(
   TROPHY_ROAD_REWARDS.filter((reward) => reward.featureId).map((reward) => [reward.featureId, reward])
 );
 const PREPARED_STORAGE = new WeakSet();
-const VERSION_THREE_GRANDFATHERED_REWARDS = Object.freeze(['paintjob', 'monster']);
+const VERSION_THREE_GRANDFATHERED_REWARDS = Object.freeze([
+  'paintjob',
+  'monster',
+  'vintage-racer',
+  'rally-racer'
+]);
+const VERSION_FOUR_GRANDFATHERED_REWARDS = Object.freeze(['vintage-racer', 'rally-racer']);
 
 let unlockNotice = null;
 let unlockNoticeTimer = 0;
@@ -109,6 +141,7 @@ export function grandfatheredRewardIdsForVersion(version) {
   const numericVersion = Number(version) || 0;
   if (numericVersion < 3) return TROPHY_ROAD_REWARDS.map((reward) => reward.id);
   if (numericVersion === 3) return [...VERSION_THREE_GRANDFATHERED_REWARDS];
+  if (numericVersion === 4) return [...VERSION_FOUR_GRANDFATHERED_REWARDS];
   return [];
 }
 
