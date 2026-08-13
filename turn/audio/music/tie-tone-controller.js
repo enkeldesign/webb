@@ -4,22 +4,27 @@ export function createTieToneController({ context, getStepSeconds }) {
   function remember(lane, state) { active.set(lane, state); }
   function clear() { active.clear(); }
 
-  function extend(lane, time) {
+  function sustain(lane, time, heldSteps) {
     const state = active.get(lane);
-    if (!state) return;
-    const end = time + getStepSeconds();
-    if (end <= state.end) return;
-    const at = Math.min(time, Math.max(context.currentTime + .002, state.attackEnd));
+    if (!state || heldSteps <= 1) return;
+    const stepSeconds = getStepSeconds();
+    const end = time + stepSeconds * heldSteps;
+    const at = Math.max(time + .001, state.attackEnd + .0005);
+    const release = Math.min(.05, stepSeconds * .35);
+    const releaseStart = Math.max(at, end - release);
+    const sustainGain = Math.max(.0002, state.voice.gain);
     const gain = state.amp.gain;
-    if (typeof gain.cancelAndHoldAtTime === 'function') gain.cancelAndHoldAtTime(at);
-    else {
-      gain.cancelScheduledValues(at);
-      gain.setValueAtTime(Math.max(.0002, state.voice.gain * .65), at);
-    }
+
+    // Replace the voice's normal short decay with an explicit gate: attack, hold, release.
+    gain.cancelScheduledValues(at);
+    gain.setValueAtTime(sustainGain, at);
+    gain.setValueAtTime(sustainGain, releaseStart);
     gain.exponentialRampToValueAtTime(.0001, end);
+
+    // AudioScheduledSourceNode applies the latest scheduled stop call while still active.
     try { state.body.stop(end + .01); state.harmonic?.stop(end + .01); } catch (_) {}
     state.end = end;
   }
 
-  return Object.freeze({ remember, extend, clear });
+  return Object.freeze({ remember, sustain, clear });
 }
