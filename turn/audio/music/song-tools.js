@@ -37,6 +37,21 @@ function validateTieSequence(sequence, label, { allowTies = true } = {}) {
   }
 }
 
+function compileTieSequence(sequence) {
+  if (!sequence.includes('=')) return sequence;
+  const compiled = sequence.slice();
+  for (let step = 0; step < compiled.length; step += 1) {
+    const note = compiled[step];
+    if (!note || note === '=') continue;
+    let heldSteps = 1;
+    while (step + heldSteps < compiled.length && compiled[step + heldSteps] === '=') heldSteps += 1;
+    if (heldSteps === 1) continue;
+    compiled[step] = Object.freeze({ note, heldSteps });
+    for (let offset = 1; offset < heldSteps; offset += 1) compiled[step + offset] = null;
+  }
+  return Object.freeze(compiled);
+}
+
 export function makeSection({
   name,
   harmony,
@@ -69,7 +84,10 @@ export function makeSection({
   }
   if (!section.name) throw new TypeError('TURN music sections need a name.');
   if (length % 16 !== 0) throw new RangeError(`TURN music ${section.name} must contain whole 16-step bars.`);
-  for (const lane of ['lead', 'bass', 'arp']) validateTieSequence(section[lane], `${section.name} ${lane}`);
+  for (const lane of ['lead', 'bass', 'arp']) {
+    validateTieSequence(section[lane], `${section.name} ${lane}`);
+    section[lane] = compileTieSequence(section[lane]);
+  }
   validateTieSequence(section.drums, `${section.name} drums`, { allowTies: false });
   if (section.harmony == null) {
     // Legacy/menu sections predate explicit harmony metadata. Keep them compatible.
