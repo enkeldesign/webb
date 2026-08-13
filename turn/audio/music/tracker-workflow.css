@@ -86,6 +86,10 @@ select {
   margin-top: var(--turn-space-2);
 }
 
+.note-buttons[hidden] {
+  display: none;
+}
+
 .note-button {
   min-width: 2.9rem;
 }
