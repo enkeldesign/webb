@@ -1,3 +1,4 @@
+import './tracker-column-octave.js?revision=r190-column-octave';
 import { createToneRuntime } from './tone-runtime-ties.js?revision=r186-note-ties';
 import { createDrumRuntime } from './drum-runtime.js?revision=r184-score-v2';
 import { model, buildSong, C, HITS, VOICES } from './tracker-core.js?revision=r187-music-tracker';
