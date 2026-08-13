@@ -22,6 +22,21 @@ function voiceName(value, fallback) {
   return normalized || fallback;
 }
 
+function validateTieSequence(sequence, label, { allowTies = true } = {}) {
+  let activeNote = false;
+  for (let step = 0; step < sequence.length; step += 1) {
+    const token = sequence[step];
+    if (token === '=') {
+      if (!allowTies) throw new RangeError(`TURN music ${label} cannot use note ties.`);
+      if (!activeNote) {
+        throw new RangeError(`TURN music ${label} tie at step ${step + 1} must immediately follow a note or another tie.`);
+      }
+      continue;
+    }
+    activeNote = Boolean(token);
+  }
+}
+
 export function makeSection({
   name,
   harmony,
@@ -54,6 +69,8 @@ export function makeSection({
   }
   if (!section.name) throw new TypeError('TURN music sections need a name.');
   if (length % 16 !== 0) throw new RangeError(`TURN music ${section.name} must contain whole 16-step bars.`);
+  for (const lane of ['lead', 'bass', 'arp']) validateTieSequence(section[lane], `${section.name} ${lane}`);
+  validateTieSequence(section.drums, `${section.name} drums`, { allowTies: false });
   if (section.harmony == null) {
     // Legacy/menu sections predate explicit harmony metadata. Keep them compatible.
     section.harmony = Object.freeze(Array.from({ length: length / 16 }, () => ''));
