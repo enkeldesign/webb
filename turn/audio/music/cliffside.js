@@ -3,10 +3,10 @@ import { bars, makeSection, makeSong } from './song-tools.js?revision=r165-track
 const TUNE = makeSection({
   name: 'tune',
   lead: bars(
-    'D5 - F5 - A5 C6 A5 - F5 - E5 - D5 A5 - D6 -',
-    'Bb5 - D6 - F6 D6 Bb5 - A5 - F5 - D5 F5 - A5 -',
-    'F5 - A5 - C6 - A5 G5 F5 - C6 - A5 - G5 - F5 -',
-    'C6 - G5 - E5 G5 C6 - Bb5 - G5 - E5 G5 - A5 -'
+    'D5 - F5 - A5 C6 A5 - F5 - E5 - D5 A5 - D6',
+    'Bb5 - D6 - F6 D6 Bb5 - A5 - F5 - D5 F5 - A5',
+    'F5 - A5 - C6 - A5 G5 - C6 - A5 - G5 - F5',
+    'C6 - G5 - E5 G5 C6 - Bb5 - G5 - E5 G5 - A5'
   ),
   bass: bars(
     'D2 - - - A2 - - - D3 - - - A2 - - -',
@@ -60,10 +60,10 @@ const CHORUS = makeSection({
 const BRIDGE = makeSection({
   name: 'bridge',
   lead: bars(
-    'G5 - Bb5 D6 - Bb5 - G5 - D6 - F6 - D6 - Bb5 -',
+    'G5 - Bb5 D6 - Bb5 - G5 - D6 - F6 - D6 - Bb5',
     'Bb5 D6 F6 - E6 - D6 - Bb5 G5 Bb5 - D6 - C6 -',
     'A5 - C#6 E6 - A6 - E6 - C#6 - A5 E6 - D6 -',
-    'A5 C#6 E6 - G6 - E6 - D6 C#6 A5 - C#6 - D6 - D6 -'
+    'A5 C#6 E6 - G6 - E6 - D6 C#6 A5 - C#6 - D6 -'
   ),
   bass: bars(
     'G1 - - - D2 - - - G2 - - - D2 - - -',
