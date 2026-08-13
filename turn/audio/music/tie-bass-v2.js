@@ -12,6 +12,6 @@ export function tiedBass(base, ties, getStepSeconds) {
     const state = captureTieTone(base, before, time, preset, getStepSeconds());
     if (!state) return;
     ties.remember('bass', state);
-    if (tied && tied.heldSteps > 1) ties.sustain('bass', time, tied.heldSteps);
+    if (tied && tied.heldSteps > 1) ties.sustain('bass', time, tied.gateFactor || tied.heldSteps);
   };
 }
