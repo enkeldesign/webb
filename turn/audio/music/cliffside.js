@@ -1,4 +1,3 @@
-/*
 import { bars, makeSection, makeSong } from './song-tools.js?revision=r165-track-songbook-v1';
 
 const TUNE = makeSection({
@@ -93,9 +92,9 @@ export const CLIFFSIDE_SONG = makeSong({
   sections: [TUNE, CHORUS, BRIDGE],
   arrangement: ['tune', 'bridge', 'chorus', 'tune', 'bridge', 'chorus']
 });
-*/
 
-// GROK version
+
+/* GROK version
 
 import { bars, makeSection, makeSong } from './song-tools.js?revision=r165-track-songbook-v1';
 
@@ -191,3 +190,4 @@ export const CLIFFSIDE_SONG = makeSong({
   sections: [TUNE, CHORUS, BRIDGE],
   arrangement: ['tune', 'bridge', 'chorus', 'tune', 'bridge', 'chorus']
 });
+*/
