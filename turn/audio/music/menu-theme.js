@@ -1,8 +1,12 @@
-import { makeSection, makeSong } from './song-tools.js?revision=r165-track-songbook-v1';
+import { makeSection, makeSong } from './song-tools.js?revision=r185-menu-orchestration';
 
-// The established TURN theme, moved intact out of the audio engine.
+// The established TURN theme: note-for-note intact, newly orchestrated through score v2.
 const TUNE = makeSection({
   name: 'tune',
+  leadVoice: 'brass',
+  bassVoice: 'warm',
+  arpVoice: 'mandolin',
+  drumKit: 'classic',
   lead: [
     'E5', null, 'G5', 'B5', 'D6', null, 'B5', 'G5',
     'E5', null, 'G5', 'A5', 'B5', 'D6', 'E6', null,
@@ -47,6 +51,10 @@ const TUNE = makeSection({
 
 const BRIDGE = makeSection({
   name: 'bridge',
+  leadVoice: 'reed',
+  bassVoice: 'warm',
+  arpVoice: 'organ',
+  drumKit: 'cinematic',
   lead: [
     'G5', null, 'B5', 'D6', 'G6', 'F#6', 'D6', 'B5',
     'A5', 'B5', 'D6', 'E6', 'D6', 'B5', 'G5', null,
@@ -91,7 +99,10 @@ const BRIDGE = makeSection({
 
 const CHORUS = makeSection({
   name: 'chorus',
-  leadVoice: 'flute',
+  leadVoice: 'whistle',
+  bassVoice: 'warm',
+  arpVoice: 'glass',
+  drumKit: 'night',
   lead: [
     'E4', 'E4', 'G4', 'G4', 'B4', 'B4', 'G4', 'G4',
     'E5', 'E5', 'B4', 'B4', 'G4', 'G4', 'B4', 'B4',
@@ -138,6 +149,8 @@ export const MENU_SONG = makeSong({
   id: 'menu',
   name: 'TURN Theme',
   bpm: 120,
+  key: 'E minor',
+  style: 'warm arcade title anthem',
   sections: [TUNE, BRIDGE, CHORUS],
   arrangement: ['chorus', 'chorus', 'tune', 'tune', 'bridge', 'tune']
 });

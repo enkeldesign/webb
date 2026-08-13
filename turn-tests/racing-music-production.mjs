@@ -54,39 +54,56 @@ function importMapImports(source) {
 
 const release = JSON.parse(releaseSource);
 const musicSpecifier = `/turn/audio/racing-music-v2.js?build=${release.cacheKey}-racing-music-warm-v2`;
-const expectedMusicTarget = '/turn/audio/racing-music-v5.js?revision=r184-score-v2';
+const expectedMusicTarget = '/turn/audio/racing-music-v5.js?revision=r185-menu-orchestration';
 const productionImports = importMapImports(index);
 const labImports = importMapImports(labIndex);
 
 assert.match(homeLayout, /audio\/racing-music-v2\.js\?build=\$\{buildKey\}-racing-music-warm-v2/,
   'Home keeps the established release-derived compatibility specifier');
 assert.equal(productionImports[musicSpecifier], expectedMusicTarget,
-  'Production must route the compatibility specifier to the fresh score-v5 URL');
+  'Production must route the compatibility specifier to the fresh menu-orchestration URL');
 assert.equal(labImports[musicSpecifier], expectedMusicTarget,
-  'TURN LAB must exercise the same score-v5 engine');
+  'TURN LAB must exercise the same menu-orchestrated score-v5 engine');
 assert.doesNotMatch(index, /racing-music-v4\.js\?revision=track-songbook-20260813-v1/,
   'Production must not retain the stale score-v4 cache target');
 assert.doesNotMatch(labIndex, /racing-music-v4\.js\?revision=track-songbook-20260813-v1/,
   'TURN LAB must not retain the stale score-v4 cache target');
 
-for (const moduleName of ['songbook', 'tone-runtime', 'drum-runtime', 'instrument-bank', 'music-controls']) {
+assert.match(engine, /music\/songbook\.js\?revision=r185-menu-orchestration/,
+  'score-v5 must reload the songbook for the orchestrated menu theme');
+for (const moduleName of ['tone-runtime', 'drum-runtime', 'instrument-bank', 'music-controls']) {
   assert.match(engine, new RegExp(`music/${moduleName}\\.js\\?revision=r184-score-v2`),
-    `score-v5 must load ${moduleName} through the fresh music revision`);
+    `score-v5 must keep ${moduleName} on the current instrument-library revision`);
 }
 assert.match(engine, /music-controls\.css\?revision=r184-score-v2/,
-  'Music control CSS must also be cache-busted with the score');
+  'Music control CSS stays on the current score revision');
+assert.match(songbookSource, /menu-theme\.js\?revision=r185-menu-orchestration/,
+  'The songbook must not serve a cached pre-v2 menu theme');
 for (const trackFile of ['countryside', 'airport', 'cliffside', 'harbor', 'midnight-city']) {
   assert.match(songbookSource, new RegExp(`${trackFile}\\.js\\?revision=r184-score-v2`),
-    `${trackFile} must load through the fresh score revision`);
+    `${trackFile} must keep the approved score-v2 revision`);
 }
 
 assert.equal(MENU_SONG.id, 'menu');
 assert.equal(MENU_SONG.name, 'TURN Theme');
 assert.equal(MENU_SONG.bpm, 120, 'The approved UI theme stays at 120 BPM');
+assert.equal(MENU_SONG.key, 'E minor', 'The established menu theme keeps its tonal identity');
+assert.equal(MENU_SONG.style, 'warm arcade title anthem');
 assert.deepEqual(MENU_SONG.form, ['chorus', 'chorus', 'tune', 'tune', 'bridge', 'tune'],
   'The established UI theme keeps its C C T T B T form');
+assert.match(menuSource, /song-tools\.js\?revision=r185-menu-orchestration/,
+  'The menu theme must use the score-v2 section schema rather than its stale legacy import');
 assert.match(menuSource, /'E5', null, 'G5', 'B5', 'D6'/,
   'The established menu melody remains intact');
+const menuPalettes = Object.fromEntries(MENU_SONG.sections.map((section) => [
+  section.name,
+  `${section.leadVoice}/${section.bassVoice}/${section.arpVoice}/${section.drumKit}`
+]));
+assert.deepEqual(menuPalettes, {
+  tune: 'brass/warm/mandolin/classic',
+  bridge: 'reed/warm/organ/cinematic',
+  chorus: 'whistle/warm/glass/night'
+}, 'The same TURN theme notes must be re-orchestrated through three distinct score-v2 palettes');
 
 const expectedTrackIds = ['countryside', 'airport', 'cliffside', 'harbor', 'midnight-city'];
 assert.deepEqual(Object.keys(TRACK_SONGS), expectedTrackIds);
