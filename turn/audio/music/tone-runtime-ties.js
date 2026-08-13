@@ -6,6 +6,11 @@ import { captureTieTone } from './tie-tone-capture.js?revision=r186-note-ties';
 export function createToneRuntime(options) {
   const base = createBaseToneRuntime(options);
   const ties = createTieToneController(options);
-  void LEAD_VOICES; void BASS_VOICES; void ARP_VOICES; void captureTieTone; void ties;
+
+  function wrap(lane, library, fallback, play, aliasFlute = false) {
+    return { lane, library, fallback, play, aliasFlute };
+  }
+
+  void wrap; void LEAD_VOICES; void BASS_VOICES; void ARP_VOICES; void captureTieTone; void ties;
   return base;
 }
