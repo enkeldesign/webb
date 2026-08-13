@@ -152,13 +152,19 @@
   -webkit-overflow-scrolling: touch;
 }
 
+/*
+  Keep the sticky action footprint close to the button itself. The negative
+  edge margins reclaim most of the card padding while the transparent shell
+  avoids masking stats as they pass behind the sticky action during scrolling.
+*/
 .lot-card-actions {
   position: sticky;
   z-index: 2;
   bottom: 0;
   grid-template-columns: 1fr;
-  margin-top: 4px;
-  background: rgb(255 248 232 / 0.98);
+  margin: 1px -6px -3px;
+  padding: 0 6px 3px;
+  background: transparent;
 }
 
 .lot-race {
@@ -257,7 +263,8 @@
   }
 
   .lot-card-actions {
-    margin-top: 3px;
+    margin: 1px -5px -3px;
+    padding: 0 5px 3px;
   }
 }
 
@@ -310,6 +317,7 @@
   }
 
   .lot-card-actions {
-    margin-top: 2px;
+    margin: 1px -5px -2px;
+    padding: 0 5px 2px;
   }
 }

@@ -142,6 +142,11 @@ assert.match(
 );
 assert.match(
   layoutCss,
+  /\.lot-card-actions \{[\s\S]*margin: 1px -6px -3px;[\s\S]*padding: 0 6px 3px;[\s\S]*background: transparent;/,
+  'The sticky Race This Car shell must stay close to the button instead of masking stats with a broad opaque band'
+);
+assert.match(
+  layoutCss,
   /@media \(max-height: 520px\)[\s\S]*--lot-viewbox-min-height: 140px;[\s\S]*--lot-side-gap: 7px/,
   'Short tablet landscapes must keep the card budget aligned with the compact viewer and gap'
 );
@@ -175,4 +180,4 @@ assert.match(legend, /role', 'dialog'/);
 assert.match(legend, /name\.textContent = entry\.label/);
 assert.match(legend, /description\.textContent = entry\.description/);
 
-console.log(`TURN ${release.id} compact optimized Lot layout, bounded details card, car-owned named perks and accessibility contract passed.`);
+console.log(`TURN ${release.id} compact optimized Lot layout, bounded details card, compact sticky race action, car-owned named perks and accessibility contract passed.`);
