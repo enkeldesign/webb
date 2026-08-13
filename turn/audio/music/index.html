@@ -1,7 +1,194 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#08090a"><title>TURN Music Tracker</title><link rel="stylesheet" href="./tracker.css?revision=r187-music-tracker"></head><body><header class="app-header"><div><p class="eyebrow">TURN · MUSIC V2</p><h1>Music Tracker</h1><p class="lede">Compose against the real TURN instrument bank and hear changes immediately — no commits required.</p></div><a class="back-link" href="/turn/">Back to TURN</a></header><main>
-<section class="panel"><div class="section-heading"><div><p class="eyebrow">SOURCE</p><h2>Import / export</h2></div><p id="draftStatus" class="status-pill" role="status">Ready</p></div><div class="source-grid"><div class="source-card"><h3>Existing TURN song</h3><div class="inline-fields"><label class="grow"><span>Song</span><select id="songSelect"></select></label><button id="loadSongButton" class="button secondary" type="button">Load</button></div></div><div class="source-card"><h3>URL</h3><label><span>TURN song .js URL</span><input id="songUrl" type="url" placeholder="https://…/song.js"></label><button id="loadUrlButton" class="button secondary" type="button">Fetch &amp; parse</button><p class="hint">Remote source is parsed as text, never executed. GitHub blob URLs are converted to raw URLs automatically.</p></div><div class="source-card source-card-wide"><h3>Clipboard / pasted source</h3><textarea id="pasteSource" rows="5" spellcheck="false" placeholder="Paste a TURN song module here…"></textarea><div class="button-row"><button id="readClipboardButton" class="button secondary" type="button">Read clipboard</button><button id="loadPasteButton" class="button secondary" type="button">Load pasted source</button><button id="newSongButton" class="button ghost" type="button">New blank song</button></div></div><div class="source-card source-card-wide"><h3>Export</h3><div class="inline-fields"><label class="grow"><span>Filename</span><input id="filenameInput" type="text" value="new-song.js"></label><button id="copySourceButton" class="button secondary" type="button">Copy .js</button><button id="downloadSourceButton" class="button primary" type="button">Download .js</button></div><textarea id="exportPreview" rows="7" spellcheck="false" readonly aria-label="Generated TURN song JavaScript"></textarea></div></div></section>
-<section class="panel"><div class="section-heading"><div><p class="eyebrow">SONG</p><h2>Metadata &amp; arrangement</h2></div></div><div class="meta-grid"><label><span>ID</span><input id="metaId" type="text" value="new-song"></label><label><span>Name</span><input id="metaName" type="text" value="New TURN Song"></label><label><span>BPM</span><input id="metaBpm" type="number" min="70" max="180" value="120"></label><label><span>Key</span><input id="metaKey" type="text" value="C major"></label><label class="wide"><span>Style</span><input id="metaStyle" type="text"></label><label><span>Swing</span><input id="metaSwing" type="number" min="0" max="0.24" step="0.01" value="0"></label></div><div class="arrangement-wrap"><div><h3>Six-part arrangement</h3><p class="hint">T = tune · B = bridge · C = chorus</p></div><div id="arrangementControls" class="arrangement"></div><output id="arrangementText" class="arrangement-code">TTTBCC</output></div></section>
-<section class="panel"><div class="section-heading"><div><p class="eyebrow">SOUND BANK</p><h2>Instrument demos</h2></div><p id="demoStatus" class="hint" aria-live="polite">Push an instrument repeatedly: DO · RE · MI · FA · SOL · LA · TI · DO.</p></div><div id="instrumentDemos" class="instrument-demos"></div></section>
-<section class="panel tracker-panel"><div class="section-heading tracker-heading"><div><p class="eyebrow">TRACKER</p><h2>Part builder</h2></div><div class="transport"><button id="playSongButton" class="button play" type="button">▶ Song</button><button class="button play part-play" data-part="tune" type="button">▶ T</button><button class="button play part-play" data-part="bridge" type="button">▶ B</button><button class="button play part-play" data-part="chorus" type="button">▶ C</button><button id="stopButton" class="button stop" type="button">■ Stop</button></div></div><div class="tracker-toolbar"><fieldset class="channels"><legend>Channels</legend><label><input type="checkbox" data-channel="lead" checked> Lead</label><label><input type="checkbox" data-channel="bass" checked> Bass</label><label><input type="checkbox" data-channel="arp" checked> Arp</label><label><input type="checkbox" data-channel="drums" checked> Drums</label></fieldset><label class="loop-toggle"><input id="loopPlayback" type="checkbox" checked> Loop playback</label><p id="playStatus" class="play-status" aria-live="polite">Stopped</p></div><div class="part-tabs" role="tablist"><button class="part-tab active" data-part="tune" type="button">T · Tune</button><button class="part-tab" data-part="bridge" type="button">B · Bridge</button><button class="part-tab" data-part="chorus" type="button">C · Chorus</button></div><div class="part-settings"><label><span>Lead</span><select id="leadVoice"></select></label><label><span>Bass</span><select id="bassVoice"></select></label><label><span>Arp / texture</span><select id="arpVoice"></select></label><label><span>Drums</span><select id="drumKit"></select></label></div><div class="bar-toolbar"><button id="prevBarButton" class="button ghost" type="button">← Previous bar</button><strong id="barPosition">Bar 1 / 4</strong><button id="nextBarButton" class="button ghost" type="button">Next bar →</button><button id="addBarButton" class="button ghost" type="button">+ Bar</button><button id="removeBarButton" class="button ghost" type="button">− Bar</button><button id="copyBarButton" class="button ghost" type="button">Copy bar</button><button id="pasteBarButton" class="button ghost" type="button">Paste bar</button><button id="clearBarButton" class="button ghost danger-text" type="button">Clear bar</button></div><label class="harmony-field"><span>Harmony / chord for this bar</span><input id="barHarmony" type="text" placeholder="e.g. Em7"></label><div class="tracker-help"><span><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> move</span><span><kbd>Enter</kbd> advance</span><span><kbd>-</kbd> rest</span><span><kbd>=</kbd> tie</span><span>Piano keys: <kbd>Z</kbd>…<kbd>M</kbd> and <kbd>Q</kbd>…<kbd>U</kbd></span><span>Rows use tracker-style hex numbering.</span></div><div class="tracker-scroll" tabindex="0"><div class="tracker-grid tracker-grid-head"><div>ROW</div><div>LEAD</div><div>BASS</div><div>ARP</div><div>DRUMS</div></div><div id="trackerGrid"></div></div><div class="entry-pad"><div class="entry-pad-head"><div><h3>Quick entry</h3><p id="selectedCellLabel" class="hint">Lead · row 00</p></div><label id="octaveControl"><span>Octave</span><input id="entryOctave" type="number" min="0" max="8" value="5"></label></div><div id="noteButtons" class="note-buttons"></div><div id="drumButtons" class="note-buttons" hidden></div></div><details class="validation-panel"><summary>Validation</summary><pre id="validationOutput">Ready.</pre></details></section>
-</main><footer>TURN Music Tracker is a development utility. It uses the same generated Web Audio instruments as the game and stores an autosaved draft in this browser only.</footer><script type="module" src="./tracker.js?revision=r187-music-tracker"></script></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#08090a">
+  <meta name="robots" content="noindex">
+  <title>TURN Music Tracker</title>
+  <link rel="stylesheet" href="../../design-tokens.css?revision=r162-social-sharing">
+  <link rel="stylesheet" href="../../design-semantic.css?revision=r162-social-sharing">
+  <link rel="stylesheet" href="./tracker.css?revision=r188-design-system">
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-header-inner">
+      <div>
+        <p class="eyebrow">TURN · MUSIC V2</p>
+        <h1>Music Tracker</h1>
+        <p class="lede">Compose against the real TURN instrument bank and hear changes immediately — no commits required.</p>
+      </div>
+      <a class="back-link" href="/turn/" data-turn-navigation-action>Back to TURN</a>
+    </div>
+  </header>
+
+  <main>
+    <details class="tracker-disclosure">
+      <summary>
+        <span class="disclosure-symbol" aria-hidden="true"></span>
+        <span class="disclosure-title"><small>SOURCE</small><strong>Import / export</strong></span>
+        <span id="draftStatus" class="status-pill" role="status">Ready</span>
+      </summary>
+      <div class="disclosure-panel">
+        <div class="source-grid">
+          <div class="source-card">
+            <h3>Existing TURN song</h3>
+            <div class="inline-fields">
+              <label class="grow"><span>Song</span><select id="songSelect"></select></label>
+              <button id="loadSongButton" class="button secondary" type="button">Load</button>
+            </div>
+          </div>
+          <div class="source-card">
+            <h3>URL</h3>
+            <label><span>TURN song .js URL</span><input id="songUrl" type="url" placeholder="https://…/song.js"></label>
+            <button id="loadUrlButton" class="button secondary" type="button">Fetch &amp; parse</button>
+            <p class="hint">Remote source is parsed as text, never executed. GitHub blob URLs are converted to raw URLs automatically.</p>
+          </div>
+          <div class="source-card source-card-wide">
+            <h3>Clipboard / pasted source</h3>
+            <textarea id="pasteSource" rows="5" spellcheck="false" placeholder="Paste a TURN song module here…"></textarea>
+            <div class="button-row">
+              <button id="readClipboardButton" class="button secondary" type="button">Read clipboard</button>
+              <button id="loadPasteButton" class="button secondary" type="button">Load pasted source</button>
+              <button id="newSongButton" class="button ghost" type="button">New blank song</button>
+            </div>
+          </div>
+          <div class="source-card source-card-wide">
+            <h3>Export</h3>
+            <div class="inline-fields">
+              <label class="grow"><span>Filename</span><input id="filenameInput" type="text" value="new-song.js"></label>
+              <button id="copySourceButton" class="button secondary" type="button">Copy .js</button>
+              <button id="downloadSourceButton" class="button primary" type="button">Download .js</button>
+            </div>
+            <textarea id="exportPreview" rows="7" spellcheck="false" readonly aria-label="Generated TURN song JavaScript"></textarea>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details class="tracker-disclosure">
+      <summary>
+        <span class="disclosure-symbol" aria-hidden="true"></span>
+        <span class="disclosure-title"><small>SONG</small><strong>Metadata &amp; arrangement</strong></span>
+      </summary>
+      <div class="disclosure-panel">
+        <div class="meta-grid">
+          <label><span>ID</span><input id="metaId" type="text" value="new-song"></label>
+          <label><span>Name</span><input id="metaName" type="text" value="New TURN Song"></label>
+          <label><span>BPM</span><input id="metaBpm" type="number" min="70" max="180" value="120"></label>
+          <label><span>Key</span><input id="metaKey" type="text" value="C major"></label>
+          <label class="wide"><span>Style</span><input id="metaStyle" type="text"></label>
+          <label><span>Swing</span><input id="metaSwing" type="number" min="0" max="0.24" step="0.01" value="0"></label>
+        </div>
+        <div class="arrangement-wrap">
+          <div>
+            <h3>Six-part arrangement</h3>
+            <p class="hint">T = tune · B = bridge · C = chorus</p>
+          </div>
+          <div id="arrangementControls" class="arrangement"></div>
+          <output id="arrangementText" class="arrangement-code">TTTBCC</output>
+        </div>
+      </div>
+    </details>
+
+    <details class="tracker-disclosure">
+      <summary>
+        <span class="disclosure-symbol" aria-hidden="true"></span>
+        <span class="disclosure-title"><small>SOUND BANK</small><strong>Instrument demos</strong></span>
+      </summary>
+      <div class="disclosure-panel">
+        <p id="demoStatus" class="hint demo-status" aria-live="polite">Push an instrument repeatedly: DO · RE · MI · FA · SOL · LA · TI · DO.</p>
+        <div id="instrumentDemos" class="instrument-demos"></div>
+      </div>
+    </details>
+
+    <section class="panel tracker-panel" aria-labelledby="partBuilderHeading">
+      <div class="section-heading tracker-heading">
+        <div>
+          <p class="eyebrow">TRACKER</p>
+          <h2 id="partBuilderHeading">Part builder</h2>
+        </div>
+        <div class="transport">
+          <button id="playSongButton" class="button play" type="button">▶ Song</button>
+          <button class="button play part-play" data-part="tune" type="button">▶ T</button>
+          <button class="button play part-play" data-part="bridge" type="button">▶ B</button>
+          <button class="button play part-play" data-part="chorus" type="button">▶ C</button>
+          <button id="stopButton" class="button stop" type="button">■ Stop</button>
+        </div>
+      </div>
+
+      <div class="tracker-toolbar">
+        <fieldset class="channels">
+          <legend>Channels</legend>
+          <label><input type="checkbox" data-channel="lead" checked> Lead</label>
+          <label><input type="checkbox" data-channel="bass" checked> Bass</label>
+          <label><input type="checkbox" data-channel="arp" checked> Arp</label>
+          <label><input type="checkbox" data-channel="drums" checked> Drums</label>
+        </fieldset>
+        <label class="loop-toggle"><input id="loopPlayback" type="checkbox" checked> Loop playback</label>
+        <p id="playStatus" class="play-status" aria-live="polite">Stopped</p>
+      </div>
+
+      <div class="part-tabs" role="tablist" aria-label="Song parts">
+        <button class="part-tab active" data-part="tune" type="button" role="tab">T · Tune</button>
+        <button class="part-tab" data-part="bridge" type="button" role="tab">B · Bridge</button>
+        <button class="part-tab" data-part="chorus" type="button" role="tab">C · Chorus</button>
+      </div>
+
+      <div class="part-settings">
+        <label><span>Lead</span><select id="leadVoice"></select></label>
+        <label><span>Bass</span><select id="bassVoice"></select></label>
+        <label><span>Arp / texture</span><select id="arpVoice"></select></label>
+        <label><span>Drums</span><select id="drumKit"></select></label>
+      </div>
+
+      <div class="bar-toolbar">
+        <button id="prevBarButton" class="button ghost" type="button">← Previous bar</button>
+        <strong id="barPosition">Bar 1 / 4</strong>
+        <button id="nextBarButton" class="button ghost" type="button">Next bar →</button>
+        <button id="addBarButton" class="button ghost" type="button">+ Bar</button>
+        <button id="removeBarButton" class="button ghost" type="button">− Bar</button>
+        <button id="copyBarButton" class="button ghost" type="button">Copy bar</button>
+        <button id="pasteBarButton" class="button ghost" type="button">Paste bar</button>
+        <button id="clearBarButton" class="button danger" type="button">Clear bar</button>
+      </div>
+
+      <label class="harmony-field"><span>Harmony / chord for this bar</span><input id="barHarmony" type="text" placeholder="e.g. Em7"></label>
+
+      <div class="tracker-instruction" id="trackerInstruction">
+        Select a tracker cell, then enter its value with NOTE ENTRY below. Every note, rest or tie advances to the next row automatically.
+      </div>
+
+      <div class="tracker-scroll" aria-describedby="trackerInstruction">
+        <div class="tracker-grid tracker-grid-head" aria-hidden="true"><div>ROW</div><div>LEAD</div><div>BASS</div><div>ARP</div><div>DRUMS</div></div>
+        <div id="trackerGrid"></div>
+      </div>
+
+      <div class="entry-pad" aria-labelledby="noteEntryHeading">
+        <div class="entry-pad-head">
+          <div>
+            <p class="eyebrow">INPUT</p>
+            <h3 id="noteEntryHeading">Note entry</h3>
+            <p id="selectedCellLabel" class="hint">Lead · row 00</p>
+          </div>
+          <label id="octaveControl"><span>Octave</span><input id="entryOctave" type="number" min="0" max="8" value="5"></label>
+        </div>
+        <div id="noteButtons" class="note-buttons"></div>
+        <div id="drumButtons" class="note-buttons" hidden></div>
+        <div class="entry-navigation">
+          <button id="entryPrevButton" class="button ghost" type="button">↑ Previous row</button>
+          <button id="entryNextButton" class="button ghost" type="button">Next row ↓</button>
+        </div>
+      </div>
+
+      <details class="validation-panel">
+        <summary>Validation</summary>
+        <pre id="validationOutput">Ready.</pre>
+      </details>
+    </section>
+  </main>
+
+  <footer>TURN Music Tracker is a development utility. It uses the same generated Web Audio instruments as the game and stores an autosaved draft in this browser only.</footer>
+  <script type="module" src="./tracker.js?revision=r188-design-system"></script>
+</body>
+</html>
