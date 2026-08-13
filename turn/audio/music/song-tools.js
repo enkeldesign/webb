@@ -46,10 +46,26 @@ function compileTieSequence(sequence) {
     let heldSteps = 1;
     while (step + heldSteps < compiled.length && compiled[step + heldSteps] === '=') heldSteps += 1;
     if (heldSteps === 1) continue;
-    compiled[step] = Object.freeze({ note, heldSteps });
+    compiled[step] = { note, heldSteps, startStep: step, gateFactor: heldSteps };
     for (let offset = 1; offset < heldSteps; offset += 1) compiled[step + offset] = null;
   }
   return Object.freeze(compiled);
+}
+
+function finalizeTieGates(sections, swing) {
+  for (const section of sections) {
+    for (const lane of ['lead', 'bass', 'arp']) {
+      for (const event of section[lane]) {
+        if (!event || typeof event !== 'object' || !Number.isInteger(event.heldSteps)) continue;
+        let gateFactor = 0;
+        for (let offset = 0; offset < event.heldSteps; offset += 1) {
+          gateFactor += (event.startStep + offset) % 2 === 0 ? 1 + swing : 1 - swing;
+        }
+        event.gateFactor = gateFactor;
+        Object.freeze(event);
+      }
+    }
+  }
 }
 
 export function makeSection({
@@ -121,6 +137,7 @@ export function makeSong({ id, name, bpm, key = '', style = '', swing = 0, secti
   if (!Array.isArray(arrangement) || arrangement.length !== 6) {
     throw new RangeError(`TURN music ${songId} must have exactly six arrangement parts.`);
   }
+  finalizeTieGates(sections, groove);
   const arranged = arrangement.map((sectionName) => {
     const section = byName.get(sectionName);
     if (!section) throw new RangeError(`TURN music ${songId} references unknown section ${sectionName}.`);
