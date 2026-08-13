@@ -1,4 +1,4 @@
-import { model, save, errors, source, P, C } from './tracker-core.js?revision=r187-music-tracker';
+import { model, save, errors, source, validToken, P, C } from './tracker-core.js?revision=r187-music-tracker';
 
 const NOTE = /^([A-G](?:#|b)?)(-?\d+)$/;
 const MIN_OCTAVE = 0;
@@ -112,27 +112,47 @@ function updateVisibleColumn() {
   });
 }
 
+function renderCellMode() {
+  const pitched = P.includes(state().sel.lane);
+  const index = model.step();
+  const part = state().parts[state().part];
+  $('noteEntryHeading').textContent = 'Note entry';
+  $('selectedCellLabel').textContent = `${C[state().part]} · ${state().sel.lane} · row ${index.toString(16).toUpperCase().padStart(2, '0')}`;
+  $('octaveControl').hidden = !pitched;
+  $('noteButtons').hidden = !pitched;
+  $('drumButtons').hidden = pitched;
+  $('entryNavigation').hidden = false;
+  if (pitched) $('entryOctave').value = state().oct[state().sel.lane];
+  const tieButton = document.querySelector('[data-entry="tie"]');
+  if (tieButton) tieButton.disabled = !pitched || !validToken(state().sel.lane, '=', index, part);
+}
+
 function renderColumnSelection() {
+  const columnMode = P.includes(selectedColumn);
   document.querySelectorAll('[data-column-select]').forEach((button) => {
     const active = button.dataset.columnSelect === selectedColumn;
     button.classList.toggle('selected', active);
     button.setAttribute('aria-pressed', String(active));
   });
   document.querySelectorAll('.step-cell').forEach((cell) => {
-    cell.classList.toggle('column-selected', cell.dataset.lane === selectedColumn);
+    const lane = cell.dataset.lane;
+    const row = Number(cell.dataset.row);
+    const cellSelected = !columnMode && lane === state().sel.lane && row === state().sel.row;
+    cell.classList.toggle('column-selected', columnMode && lane === selectedColumn);
+    cell.classList.toggle('selected', cellSelected);
+    cell.setAttribute('aria-pressed', String(cellSelected));
   });
 
-  const columnMode = P.includes(selectedColumn);
   $('columnOctaveControls').hidden = !columnMode;
-  $('octaveControl').hidden = columnMode || !P.includes(state().sel.lane);
-  $('noteButtons').hidden = columnMode || !P.includes(state().sel.lane);
-  $('drumButtons').hidden = columnMode || P.includes(state().sel.lane);
-  $('entryNavigation').hidden = columnMode;
-
   if (!columnMode) {
-    $('noteEntryHeading').textContent = 'Note entry';
+    renderCellMode();
     return;
   }
+
+  $('octaveControl').hidden = true;
+  $('noteButtons').hidden = true;
+  $('drumButtons').hidden = true;
+  $('entryNavigation').hidden = true;
 
   const sequence = currentLaneSequence();
   const bars = model.barsIn(state().parts[state().part]);
