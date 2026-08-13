@@ -104,7 +104,7 @@ const BRIDGE = makeSection({
 export const COUNTRYSIDE_SONG = makeSong({
   id: 'countryside',
   name: 'Countryside Lap',
-  bpm: 100,
+  bpm: 128,
 
   sections: [
     TUNE,
