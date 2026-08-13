@@ -6,7 +6,7 @@ const TUNE = makeSection({
     'A5 - C6 E6 - C6 - A5 - G5 - E5 G5 - A5 -',
     'F5 - A5 C6 - A5 - F5 - E5 - C5 E5 - F5 -',
     'C6 - E6 G6 - E6 - C6 - B5 - G5 B5 - C6 -',
-    'G5 - B5 D6 - B5 - G5 - E5 F5 G5 - B5 - E6 -'
+    'G5 - B5 D6 - B5 - G5 - E5 F5 G5 - B5 - E6'
   ),
   bass: bars(
     'A1 - - A2 - - E2 - A1 - - A2 - G2 - E2 -',
