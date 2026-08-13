@@ -125,6 +125,31 @@ assert.doesNotMatch(layout, /MutationObserver|setAnimationLoop|requestAnimationF
 assert.match(layoutCss, /\.lot-a11y-only \{[\s\S]*clip-path: inset\(50%\)/);
 assert.match(layoutCss, /--lot-paint-rail-height: 54px/);
 assert.match(layoutCss, /min-height: clamp\(150px, 28vh, 230px\)/);
+assert.match(
+  layoutCss,
+  /\.lot-side \{[\s\S]*--lot-viewbox-min-height: clamp\(150px, 28vh, 230px\);[\s\S]*--lot-side-gap: 10px/,
+  'The details card must derive its viewport budget from the protected 3D preview and rail gap'
+);
+assert.match(
+  layoutCss,
+  /\.lot-card \{[\s\S]*max-height: calc\(100% - var\(--lot-viewbox-min-height\) - var\(--lot-side-gap\)\);[\s\S]*overflow-y: auto;[\s\S]*overscroll-behavior: contain/,
+  'Growing descriptions, perks and future detail rows must overflow inside the card rather than below the viewport'
+);
+assert.match(
+  layoutCss,
+  /\.lot-card-actions \{[\s\S]*position: sticky;[\s\S]*bottom: 0;/,
+  'Race This Car must remain visible at the bottom of a constrained details card'
+);
+assert.match(
+  layoutCss,
+  /@media \(max-height: 520px\)[\s\S]*--lot-viewbox-min-height: 140px;[\s\S]*--lot-side-gap: 7px/,
+  'Short tablet landscapes must keep the card budget aligned with the compact viewer and gap'
+);
+assert.match(
+  layoutCss,
+  /@media \(max-height: 430px\)[\s\S]*--lot-viewbox-min-height: 120px;[\s\S]*--lot-side-gap: 7px/,
+  'Short iPhone landscapes must keep the card budget aligned with the compact viewer and gap'
+);
 assert.match(layoutCss, /\.lot-viewbox-with-paint \.lot-colors \{[\s\S]*border-top: 3px solid var\(--ink\)/);
 assert.doesNotMatch(layoutCss, /\.lot-color-input|\.lot-color-preset/);
 assert.match(layoutCss, /\.lot-race \{[\s\S]*background: var\(--pink\)/);
@@ -150,4 +175,4 @@ assert.match(legend, /role', 'dialog'/);
 assert.match(legend, /name\.textContent = entry\.label/);
 assert.match(legend, /description\.textContent = entry\.description/);
 
-console.log(`TURN ${release.id} compact optimized Lot layout, car-owned named perks and accessibility contract passed.`);
+console.log(`TURN ${release.id} compact optimized Lot layout, bounded details card, car-owned named perks and accessibility contract passed.`);
