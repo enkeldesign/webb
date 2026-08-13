@@ -8,6 +8,52 @@ let selectedColumn = null;
 const $ = (id) => document.getElementById(id);
 const state = () => model.state;
 
+function installUI() {
+  if (!document.querySelector('link[data-tracker-column-octave]')) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = './tracker-column-octave.css?revision=r190-column-octave';
+    link.dataset.trackerColumnOctave = '';
+    document.head.append(link);
+  }
+
+  const instruction = $('trackerInstruction');
+  instruction.textContent = 'Select a tracker cell, then enter its value with NOTE ENTRY below. Tap LEAD, BASS or ARP to select that whole part column and move it by octaves.';
+
+  const header = document.querySelector('.tracker-grid-head');
+  header.removeAttribute('aria-hidden');
+  header.replaceChildren();
+  const row = document.createElement('div');
+  row.textContent = 'ROW';
+  header.append(row);
+  for (const lane of ['lead', 'bass', 'arp']) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'column-select-button';
+    button.dataset.columnSelect = lane;
+    button.setAttribute('aria-pressed', 'false');
+    button.setAttribute('aria-label', `Select the whole ${lane} column in the current part for octave shift`);
+    const label = document.createElement('span');
+    label.textContent = lane.toUpperCase();
+    const badge = document.createElement('small');
+    badge.textContent = 'O±';
+    button.append(label, badge);
+    header.append(button);
+  }
+  const drums = document.createElement('div');
+  drums.textContent = 'DRUMS';
+  header.append(drums);
+
+  const navigation = document.querySelector('.entry-navigation');
+  navigation.id = 'entryNavigation';
+  const controls = document.createElement('div');
+  controls.id = 'columnOctaveControls';
+  controls.className = 'column-octave-controls';
+  controls.hidden = true;
+  controls.innerHTML = '<button id="octaveDownButton" class="button octave-shift" type="button">O−</button><button id="octaveUpButton" class="button octave-shift" type="button">O+</button><p id="columnOctaveHint" class="column-octave-hint">Moves every note in the selected column by one octave.</p>';
+  navigation.before(controls);
+}
+
 function noteParts(value) {
   if (typeof value !== 'string') return null;
   const match = NOTE.exec(value);
@@ -149,5 +195,6 @@ function wireColumnSelection() {
   }
 }
 
+installUI();
 wireColumnSelection();
 renderColumnSelection();
