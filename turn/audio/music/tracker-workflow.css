@@ -1,0 +1,163 @@
+.button,
+.demo-button,
+.note-button,
+.part-tab {
+  min-height: 44px;
+  padding: 7px 12px;
+}
+
+input,
+select {
+  min-height: 44px;
+  padding-block: 7px;
+}
+
+.arrangement select { min-height: 44px; }
+
+.tracker-heading {
+  margin-bottom: var(--turn-space-3);
+}
+
+.tracker-toolbar {
+  margin-bottom: var(--turn-space-2);
+}
+
+.sheet-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--turn-space-3);
+  flex-wrap: wrap;
+  margin: var(--turn-space-2) 0;
+}
+
+.sheet-controls .transport {
+  justify-content: flex-start;
+}
+
+.sheet-controls .play-status {
+  margin: 0 0 0 auto;
+}
+
+.tracker-instruction {
+  margin: var(--turn-space-3) 0 var(--turn-space-2);
+  padding: 7px 10px;
+  font-size: .78rem;
+  line-height: 1.35;
+}
+
+.tracker-grid-head > div {
+  display: flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 5px 8px;
+}
+
+.row-number,
+.step-cell {
+  min-height: 30px;
+}
+
+.row-number {
+  font-size: .7rem;
+  line-height: 1;
+}
+
+.step-cell {
+  padding: 3px 8px;
+  font-size: .82rem;
+  line-height: 1.05;
+}
+
+.entry-pad {
+  margin-top: var(--turn-space-3);
+  padding: var(--turn-space-3);
+}
+
+.entry-pad-head {
+  gap: var(--turn-space-3);
+}
+
+.entry-pad-head h3 {
+  font-size: 1.25rem;
+}
+
+.note-buttons {
+  gap: var(--turn-space-1);
+  margin-top: var(--turn-space-2);
+}
+
+.note-buttons[hidden] {
+  display: none;
+}
+
+.note-button {
+  min-width: 2.9rem;
+}
+
+.entry-navigation {
+  margin-top: var(--turn-space-2);
+  padding-top: var(--turn-space-2);
+}
+
+.bar-tools {
+  margin-top: var(--turn-space-4);
+  padding-top: var(--turn-space-3);
+  border-top: var(--turn-border-micro) solid var(--turn-ink);
+}
+
+.bar-toolbar {
+  margin-top: 0;
+}
+
+.harmony-field {
+  margin: var(--turn-space-3) 0 0;
+}
+
+body .column-select-button {
+  min-height: 34px;
+  padding: 5px 8px;
+}
+
+body .column-octave-controls .octave-shift {
+  min-height: 44px;
+}
+
+@media (max-width: 760px) {
+  .sheet-controls {
+    align-items: flex-start;
+  }
+
+  .sheet-controls .play-status {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .sheet-controls .transport {
+    gap: var(--turn-space-1);
+  }
+
+  .sheet-controls .transport .button {
+    padding-inline: 10px;
+  }
+
+  .tracker-grid-head > div,
+  body .column-select-button {
+    min-height: 32px;
+    padding-block: 4px;
+  }
+
+  .row-number,
+  .step-cell {
+    min-height: 28px;
+  }
+
+  .step-cell {
+    padding-block: 2px;
+  }
+
+  .entry-pad {
+    padding: var(--turn-space-2);
+  }
+}
