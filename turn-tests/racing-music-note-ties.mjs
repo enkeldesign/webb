@@ -5,13 +5,13 @@ const [index, labIndex, wrapperSource, controllerSource, leadSource, bassSource,
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-lab/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/audio/music/tone-runtime-ties.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/audio/music/tie-tone-controller.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/audio/music/tie-tone-controller-v2.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/audio/music/tie-lead-v2.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/audio/music/tie-bass-v2.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/audio/music/tie-arp-v2.js', import.meta.url), 'utf8')
 ]);
 const { bars, makeSection } = await import(new URL('../turn/audio/music/song-tools.js?test=note-ties', import.meta.url));
-const { createTieToneController } = await import(new URL('../turn/audio/music/tie-tone-controller.js?test=note-ties', import.meta.url));
+const { createTieToneController } = await import(new URL('../turn/audio/music/tie-tone-controller-v2.js?test=note-ties', import.meta.url));
 
 function importsOf(source) {
   const json = source.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
@@ -54,7 +54,8 @@ for (const source of [leadSource, bassSource, arpSource]) {
   assert.match(source, /heldSteps/);
   assert.match(source, /ties\.sustain/);
 }
-assert.match(controllerSource, /attack, hold, release/);
+assert.match(controllerSource, /setValueAtTime\(sustainGain, releaseStart\)/,
+  'A tie must hold a stable sustain level until its short release');
 
 const events = [];
 const gain = {
@@ -63,7 +64,7 @@ const gain = {
   exponentialRampToValueAtTime(value, time) { events.push(['ramp', value, time]); }
 };
 const stopped = [];
-const controller = createTieToneController({ context: { currentTime: 0 }, getStepSeconds: () => .125 });
+const controller = createTieToneController({ getStepSeconds: () => .125 });
 const state = {
   body: { stop(time) { stopped.push(['body', time]); } },
   harmonic: { stop(time) { stopped.push(['harmonic', time]); } },
