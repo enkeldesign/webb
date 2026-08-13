@@ -3,10 +3,10 @@ import { bars, makeSection, makeSong } from './song-tools.js?revision=r165-track
 const TUNE = makeSection({
   name: 'tune',
   lead: bars(
-    'C#6 - E6 - G#6 E6 C#6 - B5 - G#5 B5 - C#6 - E6 -',
-    'A5 - C#6 - E6 C#6 A5 - G#5 - E5 G#5 - A5 - C#6 -',
-    'E6 - G#6 - B6 G#6 E6 - D#6 - B5 D#6 - E6 - G#6 -',
-    'B5 - D#6 - F#6 D#6 B5 - A5 B5 C#6 - D#6 - F#6 - G#6 -'
+    'C#6 - E6 - G#6 E6 C#6 - B5 - G#5 B5 - C#6 - E6',
+    'A5 - C#6 - E6 C#6 A5 - G#5 - E5 G#5 - A5 - C#6',
+    'E6 - G#6 - B6 G#6 E6 - D#6 - B5 D#6 - E6 - G#6',
+    'B5 - D#6 - F#6 D#6 - A5 B5 C#6 - D#6 - F#6 - G#6'
   ),
   bass: bars(
     'C#2 - C#2 - G#2 - C#3 - C#2 - B1 - G#2 - C#3 -',
