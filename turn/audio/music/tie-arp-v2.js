@@ -12,6 +12,6 @@ export function tiedArp(base, ties, getStepSeconds) {
     const state = captureTieTone(base, before, time, preset, getStepSeconds());
     if (!state) return;
     ties.remember('arp', state);
-    if (tied && tied.heldSteps > 1) ties.sustain('arp', time, tied.heldSteps);
+    if (tied && tied.heldSteps > 1) ties.sustain('arp', time, tied.gateFactor || tied.heldSteps);
   };
 }
