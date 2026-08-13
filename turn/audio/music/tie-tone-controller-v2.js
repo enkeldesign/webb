@@ -2,11 +2,11 @@ export function createTieToneController({ getStepSeconds }) {
   const active = new Map();
   function remember(lane, state) { active.set(lane, state); }
   function clear() { active.clear(); }
-  function sustain(lane, time, heldSteps) {
+  function sustain(lane, time, gateFactor) {
     const state = active.get(lane);
-    if (!state || heldSteps <= 1) return;
+    if (!state || gateFactor <= 1) return;
     const stepSeconds = getStepSeconds();
-    const end = time + stepSeconds * heldSteps;
+    const end = time + stepSeconds * gateFactor;
     const at = Math.max(time + .001, state.attackEnd + .0005);
     const releaseStart = Math.max(at, end - Math.min(.05, stepSeconds * .35));
     const sustainGain = Math.max(.0002, state.voice.gain);
