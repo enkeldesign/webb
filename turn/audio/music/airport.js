@@ -9,10 +9,10 @@ const TUNE = makeSection({
     'G5 - B5 D6 - B5 - G5 - E5 F5 G5 - B5 - E6'
   ),
   bass: bars(
-    'A1 - - A2 - - E2 - A1 - - A2 - G2 - E2 -',
-    'F1 - - F2 - - C2 - F1 - - F2 - E2 - C2 -',
-    'C2 - - C3 - - G2 - C2 - - C3 - B2 - G2 -',
-    'G1 - - G2 - - D2 - G1 - - G2 - B1 - E2 -'
+    'A1 - - A2 - - E2 - A1 - - A2 - G2 - E2',
+    'F1 - - F2 - - C2 - F1 - - F2 - E2 - C2',
+    'C2 - - C3 - - G2 - C2 - - C3 - B2 - G2',
+    'G1 - - G2 - - D2 - G1 - - G2 - B1 - E2'
   ),
   arp: bars(
     'A4 C5 E5 C5 A4 E5 C5 E5 A4 C5 E5 A5 E5 C5 A5 E5',
@@ -60,10 +60,10 @@ const CHORUS = makeSection({
 const BRIDGE = makeSection({
   name: 'bridge',
   lead: bars(
-    'D6 - A5 F5 - A5 - D6 - C6 - A5 - F5 - E5 -',
+    'D6 - A5 F5 - A5 - D6 - C6 - A5 - F5 - E5',
     'F5 A5 C6 - E6 - C6 - A5 F5 A5 - C6 - A5 -',
     'E5 - G#5 B5 - E6 - D6 - B5 - G#5 B5 - D6 -',
-    'E6 D6 B5 - G#5 - E5 - B5 - D6 E6 - B5 - E6 -'
+    'E6 D6 B5 - G#5 - E5 - B5 - D6 E6 - B5 - E6'
   ),
   bass: bars(
     'D2 - - - A2 - - - D3 - - - A2 - - -',
