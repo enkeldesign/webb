@@ -1,4 +1,4 @@
-import { createToneRuntime as createBaseToneRuntime } from './tone-runtime.js?revision=r184-score-v2';
+import { createToneRuntime as createBaseToneRuntime } from './tone-runtime.js?revision=r184-score-v2-base';
 import { createTieToneController } from './tie-tone-controller.js?revision=r186-note-ties';
 import { tiedLead } from './tie-lead.js?revision=r186-note-ties';
 import { tiedBass } from './tie-bass.js?revision=r186-note-ties';
