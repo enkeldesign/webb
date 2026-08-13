@@ -109,12 +109,12 @@ select {
   margin: var(--turn-space-3) 0 0;
 }
 
-.column-select-button {
+body .column-select-button {
   min-height: 34px;
   padding: 5px 8px;
 }
 
-.column-octave-controls .octave-shift {
+body .column-octave-controls .octave-shift {
   min-height: 44px;
 }
 
@@ -139,7 +139,7 @@ select {
   }
 
   .tracker-grid-head > div,
-  .column-select-button {
+  body .column-select-button {
     min-height: 32px;
     padding-block: 4px;
   }
