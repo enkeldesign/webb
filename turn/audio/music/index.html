@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="../../design-tokens.css?revision=r162-social-sharing">
   <link rel="stylesheet" href="../../design-semantic.css?revision=r162-social-sharing">
   <link rel="stylesheet" href="./tracker.css?revision=r189-layout-containment">
+  <link rel="stylesheet" href="./tracker-workflow.css?revision=r191-primary-workflow">
 </head>
 <body>
   <header class="app-header">
@@ -108,13 +109,6 @@
           <p class="eyebrow">TRACKER</p>
           <h2 id="partBuilderHeading">Part builder</h2>
         </div>
-        <div class="transport">
-          <button id="playSongButton" class="button play" type="button">▶ Song</button>
-          <button class="button play part-play" data-part="tune" type="button">▶ T</button>
-          <button class="button play part-play" data-part="bridge" type="button">▶ B</button>
-          <button class="button play part-play" data-part="chorus" type="button">▶ C</button>
-          <button id="stopButton" class="button stop" type="button">■ Stop</button>
-        </div>
       </div>
 
       <div class="tracker-toolbar">
@@ -126,7 +120,6 @@
           <label><input type="checkbox" data-channel="drums" checked> Drums</label>
         </fieldset>
         <label class="loop-toggle"><input id="loopPlayback" type="checkbox" checked> Loop playback</label>
-        <p id="playStatus" class="play-status" aria-live="polite">Stopped</p>
       </div>
 
       <div class="part-tabs" role="tablist" aria-label="Song parts">
@@ -142,21 +135,19 @@
         <label><span>Drums</span><select id="drumKit"></select></label>
       </div>
 
-      <div class="bar-toolbar">
-        <button id="prevBarButton" class="button ghost" type="button">← Previous bar</button>
-        <strong id="barPosition">Bar 1 / 4</strong>
-        <button id="nextBarButton" class="button ghost" type="button">Next bar →</button>
-        <button id="addBarButton" class="button ghost" type="button">+ Bar</button>
-        <button id="removeBarButton" class="button ghost" type="button">− Bar</button>
-        <button id="copyBarButton" class="button ghost" type="button">Copy bar</button>
-        <button id="pasteBarButton" class="button ghost" type="button">Paste bar</button>
-        <button id="clearBarButton" class="button danger" type="button">Clear bar</button>
-      </div>
-
-      <label class="harmony-field"><span>Harmony / chord for this bar</span><input id="barHarmony" type="text" placeholder="e.g. Em7"></label>
-
       <div class="tracker-instruction" id="trackerInstruction">
         Select a tracker cell, then enter its value with NOTE ENTRY below. Every note, rest or tie advances to the next row automatically.
+      </div>
+
+      <div class="sheet-controls" aria-label="Playback controls">
+        <div class="transport">
+          <button id="playSongButton" class="button play" type="button">▶ Song</button>
+          <button class="button play part-play" data-part="tune" type="button">▶ T</button>
+          <button class="button play part-play" data-part="bridge" type="button">▶ B</button>
+          <button class="button play part-play" data-part="chorus" type="button">▶ C</button>
+          <button id="stopButton" class="button stop" type="button">■ Stop</button>
+        </div>
+        <p id="playStatus" class="play-status" aria-live="polite">Stopped</p>
       </div>
 
       <div class="tracker-scroll" aria-describedby="trackerInstruction">
@@ -179,6 +170,20 @@
           <button id="entryPrevButton" class="button ghost" type="button">↑ Previous row</button>
           <button id="entryNextButton" class="button ghost" type="button">Next row ↓</button>
         </div>
+      </div>
+
+      <div class="bar-tools" aria-label="Bar tools">
+        <div class="bar-toolbar">
+          <button id="prevBarButton" class="button ghost" type="button">← Previous bar</button>
+          <strong id="barPosition">Bar 1 / 4</strong>
+          <button id="nextBarButton" class="button ghost" type="button">Next bar →</button>
+          <button id="addBarButton" class="button ghost" type="button">+ Bar</button>
+          <button id="removeBarButton" class="button ghost" type="button">− Bar</button>
+          <button id="copyBarButton" class="button ghost" type="button">Copy bar</button>
+          <button id="pasteBarButton" class="button ghost" type="button">Paste bar</button>
+          <button id="clearBarButton" class="button danger" type="button">Clear bar</button>
+        </div>
+        <label class="harmony-field"><span>Harmony / chord for this bar</span><input id="barHarmony" type="text" placeholder="e.g. Em7"></label>
       </div>
 
       <details class="validation-panel">
