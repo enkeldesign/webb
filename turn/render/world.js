@@ -11,11 +11,12 @@ function moduleUrl(relativePath) {
 }
 
 async function loadWorldModules() {
-  const [beauty, art, identity, intensity, bella, bellaFinal, bellaRescue] = await Promise.all([
+  const [beauty, art, identity, intensity, scenery, bella, bellaFinal, bellaRescue] = await Promise.all([
     import(moduleUrl('../world-beauty.js')),
     import(moduleUrl('../world-art-pass.js')),
     import(moduleUrl('../track-identity.js')),
     import(moduleUrl('../section-intensity.js')),
+    import(moduleUrl('../tracks/countryside-scenery-r177.js?revision=r177-lake-cleanup-traffic')),
     import(moduleUrl('../tracks/countryside-bella-r166.js?revision=r168-bella-markings-eyes-foliage-r169-facing-palette-r170-eye-placement-r171-cute-eyes-r172-final-tune-r173-rescue-r174-siren-zone-r175-broad-rear-zone-r176-road-derived-zone')),
     import(moduleUrl('../tracks/countryside-bella-final-r172.js?revision=r172-final-tune-r173-rescue-r174-siren-zone-r175-broad-rear-zone-r176-road-derived-zone')),
     import(moduleUrl('../tracks/countryside-bella-rescue-r173.js?revision=r164-long-session-robustness'))
@@ -26,6 +27,7 @@ async function loadWorldModules() {
     installArtPass: art.installArtPass,
     installTrackIdentity: identity.installTrackIdentity,
     installSectionIntensity: intensity.installSectionIntensity,
+    installCountrysideSceneryCleanup: scenery.installCountrysideSceneryCleanup,
     installCountrysideBella: bella.installCountrysideBella,
     applyBellaFinalVisuals: bellaFinal.applyBellaFinalVisuals,
     installBellaRescueBehavior: bellaRescue.installBellaRescueBehavior
@@ -129,6 +131,7 @@ async function install(runtime) {
       installArtPass,
       installTrackIdentity,
       installSectionIntensity,
+      installCountrysideSceneryCleanup,
       installCountrysideBella,
       applyBellaFinalVisuals,
       installBellaRescueBehavior
@@ -143,9 +146,10 @@ async function install(runtime) {
     }
 
     // Preserve the verified installation order from the generated legacy source.
-    installArtPass({ world, scene, samples: worldSamples, trackWidth }).catch((error) => {
-      console.warn('TURN: bold surroundings art pass failed, keeping base world.', error);
-    });
+    const artPassPromise = installArtPass({ world, scene, samples: worldSamples, trackWidth })
+      .catch((error) => {
+        console.warn('TURN: bold surroundings art pass failed, keeping base world.', error);
+      });
 
     installTrackIdentity({ world, samples: worldSamples, trackWidth });
     installSectionIntensity({ world, samples: worldSamples, trackWidth });
@@ -163,6 +167,16 @@ async function install(runtime) {
       .then(() => groundLateTreeClusters(world, beautyBaselineChildren))
       .catch((error) => {
         console.warn('TURN: world beauty pass failed, keeping base world.', error);
+      });
+
+    artPassPromise
+      .then(() => installCountrysideSceneryCleanup({
+        world,
+        samples: worldSamples,
+        trackWidth
+      }))
+      .catch((error) => {
+        console.warn('TURN: Countryside lake/traffic cleanup failed, keeping base scenery.', error);
       });
   } catch (error) {
     console.warn('TURN: standalone world bootstrap failed, keeping base world.', error);
