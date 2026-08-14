@@ -94,7 +94,7 @@ try {
     total: 5,
     time: 13.5,
     valid: true,
-    saved: false,
+    saved: true,
     ranked: true
   });
 
