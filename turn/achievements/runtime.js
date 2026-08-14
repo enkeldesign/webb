@@ -365,7 +365,9 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
       candidates.push('around-the-turn');
     }
 
-    const timeTrial = qualifyingTimeTrial(context.trackId, context.time);
+    const timeTrial = detail?.ranked === false
+      ? null
+      : qualifyingTimeTrial(context.trackId, context.time);
     if (timeTrial) {
       candidates.push(timeTrial.id);
       if (completedAllTimeTrials((id) => store.isUnlocked(id), timeTrial.id)) {
