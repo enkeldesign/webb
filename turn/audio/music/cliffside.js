@@ -87,7 +87,7 @@ const CHORUS = makeSection({
   )
 });
 
-export const MENU_SONG = makeSong({
+export const CLIFFSIDE_SONG = makeSong({
   id: 'cliffside', name: 'TURN Theme', bpm: 120, key: 'E minor',
   style: 'warm arcade title anthem', swing: 0.2,
   sections: [TUNE, BRIDGE, CHORUS], arrangement: ['bridge', 'tune', chorus', 'chorus', 'tune', 'tune']
