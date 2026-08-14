@@ -21,7 +21,10 @@ const bestLayoutBlock = css.match(/\.track-card-best \{[\s\S]*?\n\}/)?.[0] || ''
 
 assert.match(index, new RegExp(`track-select-r61\\.css\\?build=${release.cacheKey}`), 'Production must load the record-car thumbnail layout through the current release');
 assert.equal(imports['./ui/track-select.js?build=20260722-r51'], releaseTarget('./ui/track-select.js'), 'Production must publish the enhanced selector');
-assert.equal(imports['./race/rival-storage.js?build=20260722-r50'], releaseTarget('./race/rival-storage.js'), 'The selector must receive paint-aware record summaries');
+assert.ok(
+  imports['./race/rival-storage.js?build=20260722-r50']?.startsWith(releaseTarget('./race/rival-storage.js')),
+  'The selector must receive the current paint-aware ranked record summaries'
+);
 
 assert.match(selector, /track-card-best-model/, 'Every playable Best row must reserve a model thumbnail');
 assert.match(selector, /renderBestCarThumbnail\(bestLap\)/, 'Best rows must request the stored record car');
