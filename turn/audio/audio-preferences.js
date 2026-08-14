@@ -1,6 +1,7 @@
 const AUDIO_ENABLED_STORAGE_KEY = 'turn-audio-enabled-v1';
 const AUDIO_BALANCE_STORAGE_KEY = 'turn-audio-balance-v1';
-const DEFAULT_BALANCE = 0.5;
+const BALANCE_CENTER = 0.5;
+const DEFAULT_BALANCE = 0.55;
 const GRAPH_GAIN_ROLES = Object.freeze([
   'master',
   'dynamics',
@@ -240,9 +241,9 @@ function applyAllPreferences() {
 
 function applyPreferences(state) {
   const now = state.context?.currentTime || 0;
-  const dbeFactor = balance < DEFAULT_BALANCE ? balance / DEFAULT_BALANCE : 1;
-  const otherFactor = balance > DEFAULT_BALANCE
-    ? (1 - balance) / (1 - DEFAULT_BALANCE)
+  const dbeFactor = balance < BALANCE_CENTER ? balance / BALANCE_CENTER : 1;
+  const otherFactor = balance > BALANCE_CENTER
+    ? (1 - balance) / (1 - BALANCE_CENTER)
     : 1;
 
   setGain(state.masterPreference, audioEnabled ? 1 : 0, now);

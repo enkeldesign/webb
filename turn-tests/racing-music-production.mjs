@@ -35,25 +35,36 @@ function importMapImports(source) {
 
 const release = JSON.parse(releaseSource);
 const musicSpecifier = `/turn/audio/racing-music-v2.js?build=${release.cacheKey}-racing-music-warm-v2`;
+const audioPreferencesSpecifier = `/turn/audio/audio-preferences.js?build=${release.cacheKey}`;
+const instrumentBankSpecifier = '/turn/audio/music/instrument-bank.js?revision=r184-score-v2';
 const productionImports = importMapImports(index);
 const labImports = importMapImports(labIndex);
 const trackerImports = importMapImports(trackerIndex);
-assert.equal(productionImports[musicSpecifier], '/turn/audio/racing-music-v5.js?revision=r185-menu-orchestration');
-assert.equal(labImports[musicSpecifier], '/turn/audio/racing-music-v5.js?revision=r185-menu-orchestration');
+assert.equal(productionImports[musicSpecifier], '/turn/audio/racing-music-v5.js?revision=r197-audio-mix');
+assert.equal(labImports[musicSpecifier], '/turn/audio/racing-music-v5.js?revision=r197-audio-mix');
+assert.equal(productionImports[audioPreferencesSpecifier], `/turn/audio/audio-preferences.js?build=${release.cacheKey}&revision=r197-audio-mix`);
+assert.equal(labImports[audioPreferencesSpecifier], `/turn/audio/audio-preferences.js?build=${release.cacheKey}&revision=r197-audio-mix`);
+assert.equal(productionImports[instrumentBankSpecifier], '/turn/audio/music/instrument-bank.js?revision=r197-audio-mix');
+assert.equal(labImports[instrumentBankSpecifier], '/turn/audio/music/instrument-bank.js?revision=r197-audio-mix');
 assert.match(homeLayout, /audio\/racing-music-v2\.js\?build=\$\{buildKey\}-racing-music-warm-v2/);
-assert.match(engine, /music\/songbook\.js\?revision=r185-menu-orchestration/);
+assert.match(engine, /music\/songbook\.js\?revision=r197-audio-mix/);
 assert.equal(
   trackerImports['./songbook.js?revision=r185-menu-orchestration'],
-  './songbook.js?revision=r196-user-scores-repair',
+  './songbook.js?revision=r197-audio-mix',
   'Music Tracker must bypass stale songbook modules after direct score edits'
 );
+assert.equal(
+  trackerImports['./instrument-bank.js?revision=r184-score-v2'],
+  './instrument-bank.js?revision=r197-audio-mix',
+  'Music Tracker must audition the refreshed instrument bank'
+);
 assert.match(trackerIndex, /tracker\.js\?revision=r196-song-recovery/,
-  'Music Tracker entry must get a fresh module identity after a broken song import');
+  'Music Tracker keeps its recovered entry module while routing refreshed nested music modules');
 
 // Creative score files are intentionally user-editable. Cache-bust their direct imports whenever
 // the checked-in scores change so installed Safari PWAs do not keep stale song modules.
 for (const songFile of ['menu-theme', 'countryside', 'airport', 'cliffside', 'harbor', 'midnight-city']) {
-  assert.match(songbookSource, new RegExp(`${songFile}\\.js\\?revision=r196-user-scores-repair`),
+  assert.match(songbookSource, new RegExp(`${songFile}\\.js\\?revision=r197-audio-mix`),
     `${songFile} must use the current user-score cache revision`);
 }
 
@@ -106,9 +117,14 @@ assert.deepEqual(Object.keys(BASS_VOICES), ['warm','upright','sub','drone','driv
 assert.deepEqual(Object.keys(ARP_VOICES), ['soft','mandolin','glass','organ','metal','neon']);
 assert.deepEqual(Object.keys(DRUM_KITS), ['classic','brush','electro','cinematic','industrial','night']);
 assert.match(leadVoicesSource, /body: 'sawtooth'/);
-assert.match(bassVoicesSource, /upright:/);
+assert.match(bassVoicesSource, /drone:\s+\{[^\n]*attack: \.006/,
+  'Drone bass must speak quickly enough to land on dense sixteenth-note patterns');
 assert.match(arpVoicesSource, /organ:/);
 assert.match(drumKitsSource, /brush:/);
+assert.match(engine, /const DEFAULT_VOLUME = 100;/,
+  'Fresh TURN installs should start music at full intended level');
+assert.match(engine, /const DESIGNED_MASTER_GAIN = 0\.54;/,
+  '100% music volume remains bounded by the designed master gain before compression');
 
 for (const generatedSource of [engine, toneRuntime, drumRuntime]) {
   assert.doesNotMatch(generatedSource, /fetch\(|new Audio\(/,

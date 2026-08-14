@@ -105,12 +105,15 @@ assert.match(menu, /saveDriveByEarEnabled\(enabled\)/);
 assert.match(menu, /setDriveByEarEnabled/);
 assert.match(menu, /driveByEarGraphAvailable === false/,
   'The normal settings path may still reload after a stored off startup, while audio-only mode uses the prepared runtime directly');
+assert.match(menu, /if \(value > 55\)/,
+  '55% toward Drive By Ear remains inside the user-facing Balanced range');
 
 assert.match(preferences, /turn-audio-enabled-v1/);
 assert.match(preferences, /turn-audio-balance-v1/);
-assert.match(preferences, /const DEFAULT_BALANCE = 0\.5/);
+assert.match(preferences, /const BALANCE_CENTER = 0\.5/);
+assert.match(preferences, /const DEFAULT_BALANCE = 0\.55/);
 assert.match(preferences, /if \(stored == null \|\| stored === ''\) return DEFAULT_BALANCE/,
-  'An unset balance must retain the intended centre mix');
+  'An unset balance should start at the high edge of Balanced, slightly favouring Drive By Ear');
 assert.match(preferences, /const GRAPH_GAIN_ROLES/);
 assert.match(preferences, /'dynamics',[\s\S]*'guidance',[\s\S]*'route',[\s\S]*'world',[\s\S]*'safety'/);
 assert.match(preferences, /role === 'dynamics' \|\| role === 'world'/,
@@ -119,8 +122,8 @@ assert.match(preferences, /role === 'guidance' \|\| role === 'route' \|\| role =
   'Slider, pace notes and safety cues must share the Drive By Ear side of the balance');
 assert.match(preferences, /setGain\(state\.masterPreference, audioEnabled \? 1 : 0/);
 assert.match(preferences, /setGain\(state\.dbePreference, dbeEnabled \? dbeFactor : 0/);
-assert.match(preferences, /const dbeFactor = balance < DEFAULT_BALANCE/);
-assert.match(preferences, /const otherFactor = balance > DEFAULT_BALANCE/);
+assert.match(preferences, /const dbeFactor = balance < BALANCE_CENTER/);
+assert.match(preferences, /const otherFactor = balance > BALANCE_CENTER/);
 assert.match(preferences, /replacePrototypeMethod/,
   'Audio graph interception must fail safely on restrictive browser prototypes');
 assert.match(preferences, /routingAvailable = connectPatched && gainFactoryPatched/);
