@@ -90,5 +90,5 @@ const CHORUS = makeSection({
 export const COUNTRYSIDE_SONG = makeSong({
   id: 'countryside', name: 'TURN Theme', bpm: 112, key: 'E minor',
   style: 'warm arcade title anthem', swing: 0.24,
-  sections: [TUNE, BRIDGE, CHORUS], arrangement: ['tune', 'bridge', chorus', 'chorus', 'bridge', 'tune']
+  sections: [TUNE, BRIDGE, CHORUS], arrangement: ['tune', 'bridge', 'chorus', 'chorus', 'bridge', 'tune']
 });

@@ -90,5 +90,5 @@ const CHORUS = makeSection({
 export const MIDNIGHT_CITY_SONG = makeSong({
   id: 'midnight-city', name: 'TURN Theme', bpm: 144, key: 'E minor',
   style: 'warm arcade title anthem', swing: 0,
-  sections: [TUNE, BRIDGE, CHORUS], arrangement: ['bridge', 'bridge', chorus', 'chorus', 'tune', 'tune']
+  sections: [TUNE, BRIDGE, CHORUS], arrangement: ['bridge', 'bridge', 'chorus', 'chorus', 'tune', 'tune']
 });
