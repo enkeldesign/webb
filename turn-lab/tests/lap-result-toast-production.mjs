@@ -89,7 +89,14 @@ try {
   assert.equal(state.lapInvalid, false, 'A newly started lap after a valid finish must begin clean');
   assert.deepEqual(state.competitorLaps.map((lap) => lap.time), [10, 11, 12, 13], 'A fifth-place lap need not replace a saved rival');
   assert.equal(publishedResults.at(-1)?.type, 'turn:lap-result');
-  assert.deepEqual(publishedResults.at(-1)?.detail, { position: 5, total: 5, time: 13.5 });
+  assert.deepEqual(publishedResults.at(-1)?.detail, {
+    position: 5,
+    total: 5,
+    time: 13.5,
+    valid: true,
+    saved: false,
+    ranked: true
+  });
 
   const shortRecordingState = makeState({ recording: makeFrames(5), lapElapsed: 14 });
   const shortRecordingResult = completeLapState({
@@ -107,7 +114,14 @@ try {
   assert.equal(shortRecordingResult.position, 5);
   assert.equal(shortRecordingResult.total, 5);
   assert.deepEqual(shortRecordingState.competitorLaps.map((lap) => lap.time), [10, 11, 12, 13]);
-  assert.deepEqual(publishedResults.at(-1)?.detail, { position: 5, total: 5, time: 14 }, 'Every completed lap must publish the frozen lap result');
+  assert.deepEqual(publishedResults.at(-1)?.detail, {
+    position: 5,
+    total: 5,
+    time: 14,
+    valid: false,
+    saved: false,
+    ranked: true
+  }, 'Every completed lap must publish the frozen lap result and its ranking eligibility');
 
   for (const rivalTimes of [[], [11, 14], [10, 11, 12, 13]]) {
     const rivalCountState = makeState({
@@ -151,13 +165,21 @@ try {
 
   assert.equal(unrankedResult.completedLap, true, 'The easter egg lap must still complete normally on screen');
   assert.equal(unrankedResult.validLap, true, 'The easter egg must not masquerade as a missed-checkpoint lap');
-  assert.equal(unrankedResult.savedLap, false, 'The max-stat easter egg lap must be explicitly unranked');
-  assert.strictEqual(unrankedState.competitorLaps, originalRivals, 'The rival array must be restored atomically after an easter egg finish');
+  assert.equal(unrankedResult.ranked, false, 'The max-stat easter egg lap must be explicitly unranked');
+  assert.equal(unrankedResult.savedLap, false, 'The max-stat easter egg lap must never become a rival');
+  assert.strictEqual(unrankedState.competitorLaps, originalRivals, 'The rival array must remain untouched by an easter egg finish');
   assert.strictEqual(unrankedState.ghostFrames, originalGhostFrames, 'The current best ghost must remain untouched');
   assert.equal(unrankedState.bestTime, 10, 'An easter egg time must never replace BEST');
   assert.equal(unrankedState.ghostVisible, true, 'Existing rivals must remain visible after the unranked finish');
   assert.equal(unrankedSaveCalls, 0, 'Unranked laps must never call persistent rival storage');
-  assert.deepEqual(publishedResults.at(-1)?.detail, { position: 1, total: 4, time: 9 }, 'The player may still see the completed lap result');
+  assert.deepEqual(publishedResults.at(-1)?.detail, {
+    position: 1,
+    total: 4,
+    time: 9,
+    valid: true,
+    saved: false,
+    ranked: false
+  }, 'The player may still see the completed lap result while consumers know it is unranked');
 } finally {
   if (originalCustomEvent === undefined) delete globalThis.CustomEvent;
   else globalThis.CustomEvent = originalCustomEvent;
@@ -189,7 +211,10 @@ const imports = JSON.parse(importMapText).imports;
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(index, new RegExp(`lap-result-toast\\.css\\?build=${release.cacheKey}`));
 assert.match(index, new RegExp(`rival-onboarding\\.css\\?build=${release.cacheKey}`));
-assert.equal(imports['./race/lap-system.js?build=20260720-r19'], `./race/lap-system-r86.js?build=${release.cacheKey}`, 'The current release must publish the unranked easter egg policy around the verified lap engine');
+assert.ok(
+  imports['./race/lap-system.js?build=20260720-r19']?.startsWith(`./race/lap-system-r86.js?build=${release.cacheKey}`),
+  'The current release must publish the current unranked easter egg policy around the verified lap engine'
+);
 assert.equal(imports['./race/game-state.js'], `./race/game-state.js?build=${release.cacheKey}`, 'The current release must publish reset-safe invalid-lap state');
 assert.equal(imports['./ui/race-announcements.js'], `./ui/race-announcements.js?build=${release.cacheKey}`, 'Shared spoken race formatting must follow the release cache key');
 assert.match(app, /installLapResultToast\(\)/, 'The lap result toast must install before the game runtime starts');
@@ -202,13 +227,15 @@ assert.match(lapSystem, /suppressNextLapStartMessage = true/, 'Invalid-lap feedb
 assert.doesNotMatch(lapSystem, /crossedStartByProgress/, 'Start and finish must use only the swept physical line crossing');
 assert.match(lapSystem, /const completedLap = finishedTime > 5/, 'Result visibility must be separated from replay-save eligibility');
 assert.match(lapSystem, /const validLap = completedLap && state\.recording\.length > 20/, 'Ghost saving may still require a usable recording');
+assert.match(lapSystem, /const rankedLap = ranked !== false/, 'Ranking eligibility must be decided before storage and result publication');
+assert.match(lapSystem, /ranked: rankedLap/, 'The frozen lap-result contract must expose ranking eligibility to achievement consumers');
 assert.match(lapSystem, /if \(completedLap\) \{\s*publishLapResult/s, 'Every completed lap must publish a result, including last place and unsaved replays');
 assert.doesNotMatch(lapSystem, /TOP ['"] \+|NEW BEST|showMessage\?\.\(message\)/, 'The retired duplicate lap-ranking message must stay removed');
 assert.match(lapSystem, /raceRivals\.filter\(\(lap\) => lap\.time < finishedTime\)\.length/, 'Finish placement must be calculated against the rivals from the completed race');
 assert.match(lapPolicy, /isSportsSedanEasterEgg/, 'The production lap policy must recognize the hidden Sports Sedan setup');
-assert.match(lapPolicy, /saveGhost: undefined/, 'The hidden setup must never reach persistent rival storage');
-assert.match(lapPolicy, /state\.competitorLaps = savedState\.competitorLaps/, 'The hidden setup must restore rival state before the next render');
-assert.match(lapPolicy, /savedLap: false/, 'The hidden setup must report its lap as unranked');
+assert.match(lapPolicy, /const ranked = !isSportsSedanEasterEgg/, 'The hidden setup must become unranked before lap completion');
+assert.match(lapPolicy, /saveGhost: ranked \? options\?\.saveGhost : undefined/, 'The hidden setup must never reach persistent rival storage');
+assert.doesNotMatch(lapPolicy, /savedState|state\.competitorLaps =/, 'The hidden setup must not save and then roll back ranked state');
 assert.match(gameState, /state\.lapInvalid = false/, 'Restart Lap and race staging must clear invalid-lap status');
 assert.match(hud, /lapInvalid \? 'LAP VOID' : formatTime\(state\.lapElapsed\)/, 'The TIME card must stop displaying a running time once the lap is void');
 assert.doesNotMatch(hud, /INVALID LAP/, 'Retired technical copy must not return to the TIME card');
