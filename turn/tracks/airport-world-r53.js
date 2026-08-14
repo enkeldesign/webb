@@ -48,10 +48,10 @@ const EXTRA_AIRCRAFT = Object.freeze([
   Object.freeze({
     name: 'Airport B787 Overflight',
     model: 'b787',
-    targetLength: 54,
-    // Keep the static overflight far out near the horizon: distant enough to read as
-    // background air traffic, but low enough to enter normal race-camera fields of view.
-    position: [360, 100, -420],
+    targetLength: 40,
+    // Push the static aircraft deep into the hangar-side corner of the world. The smaller
+    // apparent size and greater camera distance reduce parallax so it reads as far-away traffic.
+    position: [520, 110, -560],
     rotation: -0.72,
     bank: -0.08,
     airborne: true
@@ -156,6 +156,9 @@ function prepareAircraftAsset(source, {
     const clones = materials.map((entry) => {
       const clone = entry.clone();
       if ('roughness' in clone) clone.roughness = Math.max(clone.roughness ?? 0.72, 0.62);
+      // The distant airborne aircraft intentionally sits beyond the scene's normal fog range.
+      // Keep it visible as a tiny silhouette rather than letting linear fog erase it completely.
+      if (airborne) clone.fog = false;
       return clone;
     });
     node.material = Array.isArray(node.material) ? clones : clones[0];
@@ -176,7 +179,8 @@ function prepareAircraftAsset(source, {
           depthWrite: false,
           polygonOffset: true,
           polygonOffsetFactor: 1,
-          polygonOffsetUnits: 1
+          polygonOffsetUnits: 1,
+          fog: !airborne
         })
       );
       outlineNode.scale.setScalar(airborne ? 1.012 : 1.018);
