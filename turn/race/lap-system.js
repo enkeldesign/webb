@@ -136,13 +136,16 @@ export function completeLapState({
   now,
   competitorLimit,
   saveGhost,
-  onError
+  onError,
+  ranked = true
 }) {
   const finishedTime = (now - state.lapStartedAt) / 1000;
   const completedLap = finishedTime > 5;
   const validLap = completedLap && state.recording.length > 20;
+  const rankedLap = ranked !== false;
   let finishingPosition = null;
   let finishingTotal = null;
+  let savedLap = false;
 
   if (completedLap) {
     const raceRivals = state.competitorLaps
@@ -152,7 +155,7 @@ export function completeLapState({
     finishingTotal = raceRivals.length + 1;
   }
 
-  if (validLap) {
+  if (validLap && rankedLap) {
     try {
       const candidateFrames = state.recording.map((frame) => ({ ...frame }));
       if (candidateFrames.length) {
@@ -183,6 +186,7 @@ export function completeLapState({
       state.bestTime = state.competitorLaps[0]?.time ?? Infinity;
       state.ghostFrames = state.competitorLaps[0]?.frames ?? [];
       state.ghostVisible = state.competitorLaps.length > 0;
+      savedLap = true;
       saveGhost?.();
     } catch (error) {
       onError?.(error);
@@ -193,7 +197,10 @@ export function completeLapState({
     publishLapResult({
       position: finishingPosition,
       total: finishingTotal,
-      time: finishedTime
+      time: finishedTime,
+      valid: validLap,
+      saved: savedLap,
+      ranked: rankedLap
     });
   }
 
@@ -209,6 +216,8 @@ export function completeLapState({
     finishedTime,
     completedLap,
     validLap,
+    savedLap,
+    ranked: rankedLap,
     position: finishingPosition,
     total: finishingTotal
   };
