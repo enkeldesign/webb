@@ -5,7 +5,7 @@ import {
   createTrackRuntime,
   normalizeTrackId
 } from './catalog.js';
-import { installAirportWorld } from './airport-world-r52.js?build=20260722-r52';
+import { installAirportWorld } from './airport-world-r53.js?build=20260814-r53';
 import { installCliffsideWorld } from './cliffside-world.js';
 import { installHarborWorld } from './harbor-world.js';
 // Historical regression markers: midnight-city-world-r9.js?build=20260802-r9, midnight-city-world-r10.js?build=20260802-r10
