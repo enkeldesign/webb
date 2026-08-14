@@ -48,10 +48,10 @@ const EXTRA_AIRCRAFT = Object.freeze([
   Object.freeze({
     name: 'Airport B787 Overflight',
     model: 'b787',
-    targetLength: 40,
-    // Push the static aircraft deep into the hangar-side corner of the world. The smaller
-    // apparent size and greater camera distance reduce parallax so it reads as far-away traffic.
-    position: [520, 110, -560],
+    targetLength: 22,
+    // The minimap maps +X to the right and +Z downward. Put the static overflight deep in
+    // the lower-right world quadrant, high and small enough to read like distant traffic.
+    position: [620, 190, 560],
     rotation: -0.72,
     bank: -0.08,
     airborne: true
