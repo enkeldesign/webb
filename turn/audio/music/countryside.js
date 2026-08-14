@@ -1,94 +1,94 @@
-import { bars, makeSection, makeSong } from './song-tools.js?revision=r184-score-v2';
+import { bars, makeSection, makeSong } from './song-tools.js?revision=r186-note-ties';
 
 const TUNE = makeSection({
-  name: 'tune', harmony: ['Am7', 'Dm7', 'G7', 'C'],
-  leadVoice: 'pluck', bassVoice: 'upright', arpVoice: 'mandolin', drumKit: 'brush',
+  name: 'tune',
+  leadVoice: 'lead', bassVoice: 'upright', arpVoice: 'organ', drumKit: 'brush',
   lead: bars(
-    'A5 - C6 E6 - C6 A5 - E5 - G5 A5 - C6 - -',
-    'D6 - F6 A6 - F6 D6 - A5 - C6 D6 - F6 - -',
-    'G5 - B5 D6 - F6 D6 - B5 - A5 G5 - D6 - -',
-    'E6 - G6 C7 - G6 E6 - C6 - E6 G6 - C7 - -'
+    'E5 - G5 B5 D6 - B5 G5 E5 - G5 A5 B5 D6 E6 -',
+    'D6 - B5 A5 G5 - E5 G5 A5 B5 D6 B5 A5 G5 F#5 -',
+    'E5 - B5 D6 E6 G6 F#6 E6 D6 - B5 G5 A5 B5 D6 -',
+    'B5 D6 E6 G6 F#6 E6 D6 B5 A5 B5 G5 F#5 E5 B5 E6 -'
   ),
   bass: bars(
-    'A1 - - E2 - - G2 - A2 - - E2 - G2 - -',
-    'D2 - - A2 - - C3 - D3 - - A2 - C3 - -',
-    'G1 - - D2 - - F2 - G2 - - D2 - F2 - -',
-    'C2 - - G2 - - E2 - C3 - - G2 - E2 - -'
+    'E2 - E2 E3 - B2 D3 - E2 - G2 B2 D3 B2 E3 -',
+    'C2 - C3 G2 - C3 B2 - D2 - D3 A2 D3 F#3 A2 -',
+    'E2 - E3 B2 D3 B2 G2 - E2 B2 E3 - D3 B2 G2 -',
+    'C2 - G2 C3 B2 - D3 C3 D2 A2 D3 F#3 E2 B2 E3 -'
   ),
   arp: bars(
-    'A3 C4 E4 G4 A4 G4 E4 C4 A3 C4 E4 G4 A4 G4 E4 C4',
-    'D4 F4 A4 C5 D5 C5 A4 F4 D4 F4 A4 C5 D5 C5 A4 F4',
-    'G3 B3 D4 F4 G4 F4 D4 B3 G3 B3 D4 F4 G4 F4 D4 B3',
-    'C4 E4 G4 E4 C5 G4 E4 G4 C4 E4 G4 C5 G4 E4 G4 E4'
+    'E4 B4 G4 B4 E5 B4 G4 B4 E4 B4 G4 B4 E5 B4 G4 D5',
+    'C4 G4 E4 G4 C5 G4 E4 G4 D4 A4 F#4 A4 D5 A4 F#4 A4',
+    'E4 B4 G4 B4 E5 B4 G4 B4 E4 G4 B4 D5 E5 D5 B4 G4',
+    'C4 G4 E4 G4 C5 B4 G4 E4 D4 A4 F#4 A4 E4 B4 G4 E5'
   ),
   drums: bars(
-    'K R - R S R - R K R - R S R - R',
-    'K R - R S R R R K R - R S R - R',
-    'K R R R S R - R K R R R S R - R',
-    'K R - R S R R R K R R R S R K R'
-  )
-});
-
-const CHORUS = makeSection({
-  name: 'chorus', harmony: ['C', 'Am7', 'Dm7', 'G7'],
-  leadVoice: 'whistle', bassVoice: 'upright', arpVoice: 'mandolin', drumKit: 'brush',
-  lead: bars(
-    'G5 - C6 E6 - G6 - E6 C6 - G5 - E6 - C6 -',
-    'A5 - C6 E6 - A6 - E6 C6 - A5 - E6 - C6 -',
-    'A5 - D6 F6 - A6 - F6 D6 - A5 - F6 - D6 -',
-    'B5 - D6 F6 - G6 - F6 D6 - B5 - D6 - G6 -'
-  ),
-  bass: bars(
-    'C2 - - G2 - - E2 - C3 - - G2 - E2 - -',
-    'A1 - - E2 - - G2 - A2 - - E2 - G2 - -',
-    'D2 - - A2 - - C3 - D3 - - A2 - C3 - -',
-    'G1 - - D2 - - F2 - G2 - - D2 - F2 - -'
-  ),
-  arp: bars(
-    'C4 E4 G4 E4 C5 G4 E4 G4 C4 E4 G4 C5 G4 E4 G4 E4',
-    'A3 C4 E4 G4 A4 G4 E4 C4 A3 C4 E4 G4 A4 G4 E4 C4',
-    'D4 F4 A4 C5 D5 C5 A4 F4 D4 F4 A4 C5 D5 C5 A4 F4',
-    'G3 B3 D4 F4 G4 F4 D4 B3 G3 B3 D4 F4 G4 F4 D4 B3'
-  ),
-  drums: bars(
-    'K R R R S R - R K R R R S R - R',
-    'K R - R S R R R K R - R S R - R',
-    'K R R R S R - R K R R R S R R R',
-    'K R R R S R K R K R R R S R K R'
+    'KH H H H SH H KH H KH H H H SH H K OH',
+    'KH H H H SH H K H KH H KH H SH H S OH',
+    'KH H H H SH H KH H KH H H H SH H K OH',
+    'KH H H H SH H KH H KH H SH H S S KS OH'
   )
 });
 
 const BRIDGE = makeSection({
-  name: 'bridge', harmony: ['Fm7', 'Eb', 'Fm7', 'G7'],
-  leadVoice: 'pluck', bassVoice: 'upright', arpVoice: 'soft', drumKit: 'brush',
+  name: 'bridge',
+  leadVoice: 'lead', bassVoice: 'upright', arpVoice: 'organ', drumKit: 'brush',
   lead: bars(
-    'Ab5 - C6 Eb6 - C6 Ab5 - F5 - Ab5 C6 - Eb6 - -',
-    'G5 - Bb5 Eb6 - Bb5 G5 - Eb5 - G5 Bb5 - Eb6 - -',
-    'Ab5 - C6 F6 - Eb6 C6 - Ab5 - G5 F5 - C6 - -',
-    'B5 - D6 F6 - G6 - F6 D6 - B5 - G5 G5 - D6'
+    'G5 - B5 D6 G6 F#6 D6 B5 A5 B5 D6 E6 D6 B5 G5 -',
+    'F#5 - A5 D6 F#6 E6 D6 A5 B5 D6 E6 F#6 E6 D6 A5 -',
+    'E5 G5 C6 E6 G6 E6 D6 C6 G5 C6 D6 E6 G6 E6 C6 -',
+    'F#5 A5 B5 D#6 F#6 D#6 B5 A5 F#5 A5 B5 D#6 F#6 D#6 B5 D#6'
   ),
   bass: bars(
-    'F1 - - C2 - - Eb2 - F2 - - C2 - Eb2 - -',
-    'Eb2 - - Bb2 - - G2 - Eb3 - - Bb2 - G2 - -',
-    'F1 - - C2 - - Eb2 - F2 - - C2 - Eb2 - -',
-    'G1 - - D2 - - F2 - G2 - - D2 - F2 - -'
+    'G2 - G2 D3 - G3 F#3 D3 G2 B2 D3 - G3 D3 B2 -',
+    'D2 - D3 A2 - D3 F#3 A2 D2 A2 D3 - F#3 D3 A2 -',
+    'C2 - C3 G2 - C3 E3 G2 C2 G2 C3 - E3 C3 G2 -',
+    'B1 - B2 F#2 A2 B2 D#3 F#3 B1 F#2 A2 B2 D#3 F#3 B2 D#3'
   ),
   arp: bars(
-    'F3 Ab3 C4 Eb4 F4 Eb4 C4 Ab3 F3 Ab3 C4 Eb4 F4 Eb4 C4 Ab3',
-    'Eb4 G4 Bb4 G4 Eb5 Bb4 G4 Bb4 Eb4 G4 Bb4 Eb5 Bb4 G4 Bb4 G4',
-    'F3 Ab3 C4 Eb4 F4 Eb4 C4 Ab3 F3 Ab3 C4 Eb4 F4 Eb4 C4 Ab3',
-    'G3 B3 D4 F4 G4 F4 D4 B3 G3 B3 D4 F4 G4 F4 D4 B3'
+    'G4 D5 B4 D5 G5 D5 B4 D5 G4 B4 D5 G5 D5 B4 D5 G5',
+    'D4 A4 F#4 A4 D5 A4 F#4 A4 D4 F#4 A4 D5 F#5 D5 A4 F#4',
+    'C4 G4 E4 G4 C5 G4 E4 G4 C4 E4 G4 C5 E5 C5 G4 E4',
+    'B3 F#4 A4 D#5 B4 F#4 A4 D#5 B3 A4 D#5 F#5 A5 F#5 D#5 B4'
   ),
   drums: bars(
-    'K R - R S R - R K R - R S R - R',
-    'K R - R S R R R K R - R S R - R',
-    'K R R R S R - R K R - R S R R R',
-    'K R R R S R K R K R R R S R K R'
+    'KH H H H SH H KH H KH H KH H SH H K OH',
+    'KH H KH H SH H K H KH H KH H SH H KS OH',
+    'KH H H H SH H KH H KH H KH H SH H K OH',
+    'KH H KH H SH H KH H KS H KS H S KS KS KSO'
+  )
+});
+
+const CHORUS = makeSection({
+  name: 'chorus',
+  leadVoice: 'whistle', bassVoice: 'upright', arpVoice: 'organ', drumKit: 'brush',
+  lead: bars(
+    'E5 E5 G5 G5 B5 B5 G5 G5 E6 E6 B5 B5 G5 G5 B5 B5',
+    'G5 G5 E5 E5 C6 C6 E6 E6 G6 G6 E6 E6 D6 D6 C6 C6',
+    'D6 D6 B5 B5 G5 G5 B5 B5 D6 D6 B5 B5 A5 A5 G5 G5',
+    'F#5 F#5 A5 A5 B5 B5 D#6 D#6 B5 B5 A5 A5 F#5 F#5 D#5 D#5'
+  ),
+  bass: bars(
+    'E2 E2 E2 E2 B2 B2 B2 B2 E3 E3 E3 E3 B2 B2 B2 B2',
+    'C2 C2 C2 C2 G2 G2 G2 G2 C3 C3 C3 C3 G2 G2 G2 G2',
+    'G2 G2 G2 G2 D3 D3 D3 D3 G3 G3 G3 G3 D3 D3 D3 D3',
+    'B1 B1 B1 B1 F#2 F#2 F#2 F#2 A2 A2 A2 A2 D#3 D#3 F#3 F#3'
+  ),
+  arp: bars(
+    'E4 - G4 - B4 - G4 - E5 - B4 - G4 - B4 -',
+    'C4 - E4 - G4 - E4 - C5 - G4 - E4 - G4 -',
+    'G4 - B4 - D5 - B4 - G5 - D5 - B4 - D5 -',
+    'B3 - D#4 - F#4 - A4 - B4 - F#4 - D#4 - F#4 -'
+  ),
+  drums: bars(
+    'KH H H H SH H - H KH H H H SH H K OH',
+    'KH H H H SH H - H KH H H OH SH H K OH',
+    'KH H H H SH H - H KH H H H SH H K OH',
+    'KH H H H SH H KH H KS H K OH SH H KS OH'
   )
 });
 
 export const COUNTRYSIDE_SONG = makeSong({
-  id: 'countryside', name: 'Countryside Lap', bpm: 100, key: 'C major / A minor',
-  style: 'sunny swinging road-trip folk pop', swing: 0.10,
-  sections: [TUNE, CHORUS, BRIDGE], arrangement: ['tune', 'chorus', 'tune', 'bridge', 'tune', 'chorus']
+  id: 'countryside', name: 'TURN Theme', bpm: 112, key: 'E minor',
+  style: 'warm arcade title anthem', swing: 0.24,
+  sections: [TUNE, BRIDGE, CHORUS], arrangement: ['tune', 'bridge', chorus', 'chorus', 'bridge', 'tune']
 });
