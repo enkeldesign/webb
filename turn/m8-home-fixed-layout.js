@@ -152,6 +152,8 @@ export async function installM8HomeFixedLayout() {
   );
   const shortViewportAutoRepair = installShortViewportAutoRepair({ home });
 
+  // Historical regression marker for the previous aligned-title bundle:
+  // /turn/m8-home-card-scroll-fixes.js?build=${buildKey}-m8.9-track-title-alignment
   const { installM8HomeCardScrollFixes } = await import(
     `/turn/m8-home-card-scroll-fixes.js?build=${buildKey}-m8.10-card-gap-rim`
   );
