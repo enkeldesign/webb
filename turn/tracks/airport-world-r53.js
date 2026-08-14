@@ -30,7 +30,7 @@ const PARKED_AIRCRAFT = Object.freeze([
     name: 'Airport B737',
     model: 'b737',
     targetLength: 36,
-    position: [78, 2.3, -8],
+    position: [78, 4.1, -8],
     rotation: -0.2,
     clearance: 30
   })
@@ -49,9 +49,9 @@ const EXTRA_AIRCRAFT = Object.freeze([
     name: 'Airport B787 Overflight',
     model: 'b787',
     targetLength: 54,
-    // Keep the static overflight far enough away that it reads as distant air traffic,
-    // rather than as a nearby aircraft that ought to be visibly moving.
-    position: [-360, 320, 360],
+    // Keep the static overflight far out near the horizon: distant enough to read as
+    // background air traffic, but low enough to enter normal race-camera fields of view.
+    position: [360, 100, -420],
     rotation: -0.72,
     bank: -0.08,
     airborne: true
