@@ -1,4 +1,7 @@
 const STYLE_ATTRIBUTE = 'data-turn-m8-card-scroll-fixes';
+// Historical regression markers for the native-scroll/title-alignment bundle:
+// const FIX_ID = 'native-scroll-full-track-names-v4';
+// m8-home-card-scroll-fixes.css?build=${buildKey}-m8.9-track-title-alignment
 const FIX_ID = 'native-scroll-full-track-names-v5';
 
 function installStylesheet() {
