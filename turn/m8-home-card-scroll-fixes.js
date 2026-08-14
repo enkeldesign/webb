@@ -1,12 +1,15 @@
 const STYLE_ATTRIBUTE = 'data-turn-m8-card-scroll-fixes';
-const FIX_ID = 'native-scroll-full-track-names-v4';
+// Historical regression markers for the native-scroll/title-alignment bundle:
+// const FIX_ID = 'native-scroll-full-track-names-v4';
+// m8-home-card-scroll-fixes.css?build=${buildKey}-m8.9-track-title-alignment
+const FIX_ID = 'native-scroll-full-track-names-v5';
 
 function installStylesheet() {
   if (document.querySelector(`link[${STYLE_ATTRIBUTE}]`)) return;
   const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
   const stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet';
-  stylesheet.href = `/turn/m8-home-card-scroll-fixes.css?build=${buildKey}-m8.9-track-title-alignment`;
+  stylesheet.href = `/turn/m8-home-card-scroll-fixes.css?build=${buildKey}-m8.10-card-gap-rim`;
   stylesheet.setAttribute(STYLE_ATTRIBUTE, '');
   document.head.appendChild(stylesheet);
 }
@@ -54,7 +57,7 @@ function installScrollIndicator(rail) {
   };
 }
 
-function installIndicatorSync(rail, indicator, thumb) {
+function installIndicatorSync(rail, viewport, indicator, thumb) {
   let animationFrame = 0;
 
   const sync = () => {
@@ -62,7 +65,10 @@ function installIndicatorSync(rail, indicator, thumb) {
     const maximum = Math.max(0, rail.scrollHeight - rail.clientHeight);
     const hasOverflow = maximum > 2;
     indicator.hidden = !hasOverflow;
-    if (!hasOverflow) return;
+    if (!hasOverflow) {
+      viewport.classList.remove('has-scroll-above', 'has-scroll-below');
+      return;
+    }
 
     const visibleRatio = Math.min(1, rail.clientHeight / Math.max(rail.clientHeight, rail.scrollHeight));
     const thumbPercent = Math.max(18, visibleRatio * 100);
@@ -71,6 +77,8 @@ function installIndicatorSync(rail, indicator, thumb) {
     thumb.style.top = `${progress * (100 - thumbPercent)}%`;
     indicator.classList.toggle('is-at-start', progress <= 0.01);
     indicator.classList.toggle('is-at-end', progress >= 0.99);
+    viewport.classList.toggle('has-scroll-above', rail.scrollTop > 2);
+    viewport.classList.toggle('has-scroll-below', rail.scrollTop < maximum - 2);
   };
 
   const requestSync = () => {
@@ -101,7 +109,7 @@ export async function installM8HomeCardScrollFixes() {
 
   const { viewport, indicator, thumb } = installScrollIndicator(rail);
   if (!indicator || !thumb) throw new Error('TURN M8 could not create the track scroll indicator.');
-  const indicatorSync = installIndicatorSync(rail, indicator, thumb);
+  const indicatorSync = installIndicatorSync(rail, viewport, indicator, thumb);
 
   home.classList.add('m8-home-card-scroll-fixes');
   home.dataset.m8CardScrollFixes = FIX_ID;

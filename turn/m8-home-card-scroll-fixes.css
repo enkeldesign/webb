@@ -5,9 +5,38 @@
   overflow: hidden;
 }
 
+.m8-home-card-scroll-fixes .m8-track-scroll-viewport::before,
+.m8-home-card-scroll-fixes .m8-track-scroll-viewport::after {
+  position: absolute;
+  left: 3px;
+  right: 25px;
+  z-index: 3;
+  height: 10px;
+  content: '';
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 100ms ease;
+}
+
+.m8-home-card-scroll-fixes .m8-track-scroll-viewport::before {
+  top: 0;
+  background: linear-gradient(to bottom, rgb(8 9 10 / 0.20), rgb(8 9 10 / 0));
+}
+
+.m8-home-card-scroll-fixes .m8-track-scroll-viewport::after {
+  bottom: 0;
+  background: linear-gradient(to top, rgb(8 9 10 / 0.16), rgb(8 9 10 / 0));
+}
+
+.m8-home-card-scroll-fixes .m8-track-scroll-viewport.has-scroll-above::before,
+.m8-home-card-scroll-fixes .m8-track-scroll-viewport.has-scroll-below::after {
+  opacity: 1;
+}
+
 .m8-home-card-scroll-fixes .m8-track-rail {
   height: 100%;
   padding-right: 25px;
+  gap: clamp(14px, 1.4vw, 16px);
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior-y: contain;
@@ -33,6 +62,7 @@
   top: 3px;
   right: 2px;
   bottom: 14px;
+  z-index: 4;
   width: 15px;
   border: 3px solid var(--m8-ink);
   border-radius: 999px;
@@ -214,6 +244,11 @@
     padding-right: 22px;
   }
 
+  .m8-home-card-scroll-fixes .m8-track-scroll-viewport::before,
+  .m8-home-card-scroll-fixes .m8-track-scroll-viewport::after {
+    right: 22px;
+  }
+
   .m8-home-card-scroll-fixes .m8-track-scroll-indicator {
     bottom: 10px;
     width: 13px;
@@ -250,6 +285,11 @@
     padding-right: 22px;
   }
 
+  .m8-home-card-scroll-fixes .m8-track-scroll-viewport::before,
+  .m8-home-card-scroll-fixes .m8-track-scroll-viewport::after {
+    right: 22px;
+  }
+
   .m8-home-card-scroll-fixes .m8-track-rail .track-card {
     grid-template-columns: minmax(0, 1fr) minmax(104px, 38%);
   }
@@ -258,5 +298,10 @@
 @media (prefers-reduced-motion: reduce) {
   .m8-home-card-scroll-fixes .m8-track-rail {
     scroll-behavior: auto !important;
+  }
+
+  .m8-home-card-scroll-fixes .m8-track-scroll-viewport::before,
+  .m8-home-card-scroll-fixes .m8-track-scroll-viewport::after {
+    transition: none;
   }
 }
