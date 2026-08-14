@@ -1,14 +1,20 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [releaseSource, index, main] = await Promise.all([
+const [releaseSource, index, labIndex, main, continuity] = await Promise.all([
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/main.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn-lab/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/main.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/render/skid-continuity-r198.js', import.meta.url), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
+assert.match(index, /render\/skid-continuity-r198\.js\?revision=r198-skid-continuity/,
+  'Production TURN must load the fresh skid continuity renderer');
+assert.match(labIndex, /render\/skid-continuity-r198\.js\?revision=r198-skid-continuity/,
+  'TURN LAB must exercise the same skid continuity renderer as production');
 
 const declarations = section(main, 'const SKID_HISTORY_CAPACITY', '\nconst smokePool');
 assert.match(declarations, /SKID_HISTORY_CAPACITY = 90/, 'Skid history must preserve the previous 90 sample pairs');
@@ -42,6 +48,31 @@ assert.match(ringSection, /skidGeometry\.setDrawRange\(0, cursor\)/);
 assert.doesNotMatch(ringSection, /\.clone\(\)|\.unshift\(|\.map\(/, 'The skid update path must allocate no vectors or small history arrays');
 assert.doesNotMatch(ringSection, /requestAnimationFrame|setAnimationLoop|setInterval|setTimeout/, 'The ring buffer must remain inside the existing scene update');
 
+assert.match(continuity, /legacySkidLine\.visible = false/,
+  'The old renderer must be hidden so the corrected geometry is the only visible skid layer');
+assert.match(continuity, /new Uint8Array\(SKID_HISTORY_CAPACITY\)/,
+  'Continuity must be stored in a fixed allocation alongside the existing ring-buffer model');
+assert.match(continuity, /skidHistoryConnections\[skidHistoryStart\] = connectToPrevious \? 1 : 0/,
+  'Every new skid sample must explicitly declare whether it connects to the previous sample');
+assert.match(continuity, /skidHistoryConnections\[skidHistoryStart\] = 0/,
+  'Non-skidding frames must age the history without creating a drawable connection');
+assert.match(continuity, /const connectToPrevious = skidStrokeActive/,
+  'A new skid stroke must not connect back to an older stroke after grip returns');
+assert.match(continuity, /latestSkidDistanceSquared\(0, skidLeftWheel\) <= SKID_MAX_CONTINUOUS_GAP_SQUARED/,
+  'Even an active skid must reject an implausibly large position jump');
+assert.match(continuity, /if \(!skidHistoryConnections\[sampleIndex\]\) continue/,
+  'Rendering must skip breaks instead of drawing across them');
+assert.match(continuity, /clearIfCarJumped\(\)/,
+  'Track, training-part and restart teleports must clear stale skid history before repainting');
+assert.match(continuity, /addEventListener\('turn:track-changed', clearSkids\)/,
+  'Changing tracks must clear skid history immediately');
+assert.match(continuity, /event\.detail\?\.reason === 'race-reset'/,
+  'Restarting a race must clear skid history immediately');
+assert.match(continuity, /skidLine\.onBeforeRender = updateSkids/,
+  'The corrected renderer must stay inside the existing render loop rather than adding another animation loop');
+assert.doesNotMatch(continuity, /requestAnimationFrame|setAnimationLoop|setInterval|setTimeout/,
+  'The continuity fix must not add another timer or animation loop');
+
 const simulation = createRingSimulation(3);
 simulation.push([1, 2, 3, 4, 5, 6]);
 simulation.push([7, 8, 9, 10, 11, 12]);
@@ -58,7 +89,22 @@ assert.deepEqual(simulation.samples(), [
   [7, 8, 9, 10, 11, 12]
 ], 'A full ring must overwrite only the oldest sample');
 
-console.log(`TURN ${release.id} fixed skid history ring buffer passed.`);
+const continuitySimulation = createContinuitySimulation(6);
+const a = [1, 1, 1, 2, 2, 2];
+const b = [3, 3, 3, 4, 4, 4];
+const c = [20, 20, 20, 21, 21, 21];
+const d = [22, 22, 22, 23, 23, 23];
+continuitySimulation.push(a, false);
+continuitySimulation.push(b, true);
+continuitySimulation.repeatGap();
+continuitySimulation.push(c, false);
+continuitySimulation.push(d, true);
+assert.deepEqual(continuitySimulation.segments(), [
+  [d, c],
+  [b, a]
+], 'Separate skid bursts must remain visible as separate strokes without a bridge across the gap');
+
+console.log(`TURN ${release.id} fixed skid history and continuity regression passed.`);
 
 function section(source, startMarker, endMarker) {
   const start = source.indexOf(startMarker);
@@ -94,6 +140,40 @@ function createRingSimulation(capacity) {
         const slot = (start + offset) % capacity;
         return Array.from(values.slice(slot * stride, slot * stride + stride));
       });
+    }
+  };
+}
+
+function createContinuitySimulation(capacity) {
+  const values = Array.from({ length: capacity }, () => null);
+  const connections = new Uint8Array(capacity);
+  let start = 0;
+  let count = 0;
+
+  function insert(sample, connected) {
+    start = (start - 1 + capacity) % capacity;
+    values[start] = sample;
+    connections[start] = connected ? 1 : 0;
+    count = Math.min(capacity, count + 1);
+  }
+
+  return {
+    push(sample, connected) {
+      insert(sample, connected);
+    },
+    repeatGap() {
+      if (!count) return;
+      insert(values[start], false);
+    },
+    segments() {
+      const segments = [];
+      for (let offset = 0; offset < count - 1; offset += 1) {
+        const current = (start + offset) % capacity;
+        const previous = (start + offset + 1) % capacity;
+        if (!connections[current]) continue;
+        segments.push([values[current], values[previous]]);
+      }
+      return segments;
     }
   };
 }
