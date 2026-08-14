@@ -3,6 +3,7 @@ import {
   DEFAULT_VEHICLE_COLOR,
   LEGACY_VEHICLE_ID,
   DEFAULT_VEHICLE_SECONDARY_COLOR,
+  isSportsSedanEasterEgg,
   normalizeVehicleColor,
   normalizeVehicleId,
   normalizeVehicleSecondaryColor
@@ -45,7 +46,7 @@ export function saveRivalsState(state, { trackId } = {}) {
       version: 6,
       trackId: activeTrackId,
       trackRevision: storageTrackId(activeTrackId),
-      laps: state.competitorLaps
+      laps: state.competitorLaps.filter(isValidLap)
     }));
     return true;
   } catch (_) {
@@ -225,5 +226,11 @@ export function syncPrimaryRivalState(state) {
 }
 
 function isValidLap(lap) {
-  return Number.isFinite(lap?.time) && Array.isArray(lap?.frames) && lap.frames.length > 20;
+  return Number.isFinite(lap?.time)
+    && Array.isArray(lap?.frames)
+    && lap.frames.length > 20
+    && !isSportsSedanEasterEgg({
+      carId: lap?.carId,
+      secondaryColor: lap?.carSecondaryColor
+    });
 }
