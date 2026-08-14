@@ -2,7 +2,7 @@ import { bars, makeSection, makeSong } from './song-tools.js?revision=r186-note-
 
 const TUNE = makeSection({
   name: 'tune',
-  leadVoice: 'bell', bassVoice: 'drone', arpVoice: 'neon', drumKit: 'electro',
+  leadVoice: 'bell', bassVoice: 'drone', arpVoice: 'glass', drumKit: 'electro',
   lead: bars(
     'E5 - G5 B5 D6 - B5 G5 E5 - G5 A5 B5 D6 E6 -',
     'D6 - B5 A5 G5 - E5 G5 A5 B5 D6 B5 A5 G5 F#5 -',
@@ -88,7 +88,7 @@ const CHORUS = makeSection({
 });
 
 export const MIDNIGHT_CITY_SONG = makeSong({
-  id: 'midnight-city', name: 'TURN Theme', bpm: 128, key: 'E minor',
+  id: 'midnight-city', name: 'TURN Theme', bpm: 136, key: 'E minor',
   style: 'warm arcade title anthem', swing: 0,
   sections: [TUNE, BRIDGE, CHORUS], arrangement: ['tune', 'tune', 'bridge', 'tune', 'chorus', 'chorus']
 });
