@@ -2,7 +2,7 @@ import { bars, makeSection, makeSong } from './song-tools.js?revision=r186-note-
 
 const TUNE = makeSection({
   name: 'tune',
-  leadVoice: 'lead', bassVoice: 'upright', arpVoice: 'organ', drumKit: 'brush',
+  leadVoice: 'brass', bassVoice: 'sub', arpVoice: 'metal', drumKit: 'industrial',
   lead: bars(
     'E5 - G5 B5 D6 - B5 G5 E5 - G5 A5 B5 D6 E6 -',
     'D6 - B5 A5 G5 - E5 G5 A5 B5 D6 B5 A5 G5 F#5 -',
@@ -31,7 +31,7 @@ const TUNE = makeSection({
 
 const BRIDGE = makeSection({
   name: 'bridge',
-  leadVoice: 'lead', bassVoice: 'upright', arpVoice: 'organ', drumKit: 'brush',
+  leadVoice: 'brass', bassVoice: 'sub', arpVoice: 'metal', drumKit: 'industrial',
   lead: bars(
     'G5 - B5 D6 G6 F#6 D6 B5 A5 B5 D6 E6 D6 B5 G5 -',
     'F#5 - A5 D6 F#6 E6 D6 A5 B5 D6 E6 F#6 E6 D6 A5 -',
@@ -60,18 +60,18 @@ const BRIDGE = makeSection({
 
 const CHORUS = makeSection({
   name: 'chorus',
-  leadVoice: 'whistle', bassVoice: 'upright', arpVoice: 'organ', drumKit: 'brush',
+  leadVoice: 'pulse', bassVoice: 'sub', arpVoice: 'metal', drumKit: 'industrial',
   lead: bars(
-    'E5 E5 G5 G5 B5 B5 G5 G5 E6 E6 B5 B5 G5 G5 B5 B5',
-    'G5 G5 E5 E5 C6 C6 E6 E6 G6 G6 E6 E6 D6 D6 C6 C6',
-    'D6 D6 B5 B5 G5 G5 B5 B5 D6 D6 B5 B5 A5 A5 G5 G5',
-    'F#5 F#5 A5 A5 B5 B5 D#6 D#6 B5 B5 A5 A5 F#5 F#5 D#5 D#5'
+    'E6 E6 G6 G6 B6 B6 G6 G6 E7 E7 B6 B6 G6 G6 B6 B6',
+    'G6 G6 E6 E6 C7 C7 E7 E7 G7 G7 E7 E7 D7 D7 C7 C7',
+    'D7 D7 B6 B6 G6 G6 B6 B6 D7 D7 B6 B6 A6 A6 G6 G6',
+    'F#6 F#6 A6 A6 B6 B6 D#7 D#7 B6 B6 A6 A6 F#6 F#6 D#6 D#6'
   ),
   bass: bars(
-    'E2 E2 E2 E2 B2 B2 B2 B2 E3 E3 E3 E3 B2 B2 B2 B2',
-    'C2 C2 C2 C2 G2 G2 G2 G2 C3 C3 C3 C3 G2 G2 G2 G2',
-    'G2 G2 G2 G2 D3 D3 D3 D3 G3 G3 G3 G3 D3 D3 D3 D3',
-    'B1 B1 B1 B1 F#2 F#2 F#2 F#2 A2 A2 A2 A2 D#3 D#3 F#3 F#3'
+    'E3 E3 E3 E3 B3 B3 B3 B3 E4 E4 E4 E4 B3 B3 B3 B3',
+    'C3 C3 C3 C3 G3 G3 G3 G3 C4 C4 C4 C4 G3 G3 G3 G3',
+    'G3 G3 G3 G3 D4 D4 D4 D4 G4 G4 G4 G4 D4 D4 D4 D4',
+    'B2 B2 B2 B2 F#3 F#3 F#3 F#3 A3 A3 A3 A3 D#4 D#4 F#4 F#4'
   ),
   arp: bars(
     'E4 - G4 - B4 - G4 - E5 - B4 - G4 - B4 -',
