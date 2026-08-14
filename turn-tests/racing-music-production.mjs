@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [index, labIndex, releaseSource, homeLayout, engine, songbookSource, songToolsSource,
+const [index, labIndex, trackerIndex, releaseSource, homeLayout, engine, songbookSource, songToolsSource,
   toneRuntime, drumRuntime, leadVoicesSource, bassVoicesSource, arpVoicesSource,
   drumKitsSource] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-lab/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/audio/music/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/audio/racing-music-v5.js', import.meta.url), 'utf8'),
@@ -36,15 +37,23 @@ const release = JSON.parse(releaseSource);
 const musicSpecifier = `/turn/audio/racing-music-v2.js?build=${release.cacheKey}-racing-music-warm-v2`;
 const productionImports = importMapImports(index);
 const labImports = importMapImports(labIndex);
+const trackerImports = importMapImports(trackerIndex);
 assert.equal(productionImports[musicSpecifier], '/turn/audio/racing-music-v5.js?revision=r185-menu-orchestration');
 assert.equal(labImports[musicSpecifier], '/turn/audio/racing-music-v5.js?revision=r185-menu-orchestration');
 assert.match(homeLayout, /audio\/racing-music-v2\.js\?build=\$\{buildKey\}-racing-music-warm-v2/);
 assert.match(engine, /music\/songbook\.js\?revision=r185-menu-orchestration/);
+assert.equal(
+  trackerImports['./songbook.js?revision=r185-menu-orchestration'],
+  './songbook.js?revision=r196-user-scores-repair',
+  'Music Tracker must bypass stale songbook modules after direct score edits'
+);
+assert.match(trackerIndex, /tracker\.js\?revision=r196-song-recovery/,
+  'Music Tracker entry must get a fresh module identity after a broken song import');
 
 // Creative score files are intentionally user-editable. Cache-bust their direct imports whenever
 // the checked-in scores change so installed Safari PWAs do not keep stale song modules.
 for (const songFile of ['menu-theme', 'countryside', 'airport', 'cliffside', 'harbor', 'midnight-city']) {
-  assert.match(songbookSource, new RegExp(`${songFile}\\.js\\?revision=r194-user-scores`),
+  assert.match(songbookSource, new RegExp(`${songFile}\\.js\\?revision=r196-user-scores-repair`),
     `${songFile} must use the current user-score cache revision`);
 }
 

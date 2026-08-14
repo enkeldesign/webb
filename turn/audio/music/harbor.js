@@ -90,5 +90,5 @@ const CHORUS = makeSection({
 export const HARBOR_SONG = makeSong({
   id: 'harbor', name: 'TURN Theme', bpm: 132, key: 'E minor',
   style: 'warm arcade title anthem', swing: 0.05,
-  sections: [TUNE, BRIDGE, CHORUS], arrangement: ['tune', 'tune', 'bridge', 'tune', 'chorus ', 'chorus']
+  sections: [TUNE, BRIDGE, CHORUS], arrangement: ['tune', 'tune', 'bridge', 'tune', 'chorus', 'chorus']
 });

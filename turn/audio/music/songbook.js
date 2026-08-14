@@ -1,9 +1,9 @@
-import { MENU_SONG } from './menu-theme.js?revision=r194-user-scores';
-import { COUNTRYSIDE_SONG } from './countryside.js?revision=r194-user-scores';
-import { AIRPORT_SONG } from './airport.js?revision=r194-user-scores';
-import { CLIFFSIDE_SONG } from './cliffside.js?revision=r194-user-scores';
-import { HARBOR_SONG } from './harbor.js?revision=r194-user-scores';
-import { MIDNIGHT_CITY_SONG } from './midnight-city.js?revision=r194-user-scores';
+import { MENU_SONG } from './menu-theme.js?revision=r196-user-scores-repair';
+import { COUNTRYSIDE_SONG } from './countryside.js?revision=r196-user-scores-repair';
+import { AIRPORT_SONG } from './airport.js?revision=r196-user-scores-repair';
+import { CLIFFSIDE_SONG } from './cliffside.js?revision=r196-user-scores-repair';
+import { HARBOR_SONG } from './harbor.js?revision=r196-user-scores-repair';
+import { MIDNIGHT_CITY_SONG } from './midnight-city.js?revision=r196-user-scores-repair';
 
 export { MENU_SONG };
 
