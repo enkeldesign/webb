@@ -170,7 +170,10 @@ assert.equal(
   `${releaseTarget('./garage/lot-track-select.js')}&revision=r164-long-session-robustness`
 );
 assert.equal(imports['./ui/track-intro.js?build=20260725-r75'], releaseTarget('./ui/track-intro.js'));
-assert.equal(imports['./race/lap-system.js?build=20260720-r19'], releaseTarget('./race/lap-system-r86.js'));
+assert.ok(
+  imports['./race/lap-system.js?build=20260720-r19']?.startsWith(releaseTarget('./race/lap-system-r86.js')),
+  'Production must route lap completion through the current Super Sedan policy'
+);
 
 assert.match(app, /lot-layout-r60\.css\?revision=r121-viewer-r122-fit-r128-super-sedan-notice/);
 assert.match(app, /sports-sedan-easter-egg\.js\?revision=r128-unlock-notice/);
@@ -266,7 +269,8 @@ assert.match(lapSystem, /carId: state\.vehicleId \|\| 'sedan'/);
 assert.match(lapSystem, /carColor: state\.vehicleColor \|\| '#ffd43b'/);
 assert.match(lapSystem, /carSecondaryColor: state\.vehicleSecondaryColor \|\| '#f8f9fa'/);
 assert.match(lapPolicy, /isSportsSedanEasterEgg/);
-assert.match(lapPolicy, /saveGhost: undefined/);
+assert.match(lapPolicy, /const ranked = !isSportsSedanEasterEgg/);
+assert.match(lapPolicy, /saveGhost: ranked \? options\?\.saveGhost : undefined/);
 assert.match(rivalStorage, /version: 6/);
 assert.match(rivalStorage, /trackRevision: storageTrackId\(activeTrackId\)/);
 assert.match(rivalStorage, /normalizeVehicleId\(lap\.carId\)/);
