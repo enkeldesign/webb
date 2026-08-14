@@ -2,9 +2,9 @@ import * as THREE from 'three';
 import { createCarVisual } from '../vehicle/car-models.js?build=20260720-r19';
 
 const INK = 0x08090a;
-const TAU = Math.PI * 2;
 const BUILDING_RETRY_COUNT = 8;
 const BUILDING_RETRY_DELAY_MS = 250;
+const relocatedTownPlacements = new Set();
 
 const VEHICLE_SLOTS = Object.freeze([
   Object.freeze({ carId: 'suv', color: '#ff922b', index: 74, distance: 25, targetLength: 6.8, rotationOffset: 0.12 }),
@@ -72,20 +72,30 @@ function hasInkOutline(root) {
   return outlined;
 }
 
-function removeBeachContours(world) {
-  const removals = [];
+function neutralizeBeachContours(world) {
   const bounds = new THREE.Box3();
+  let changed = 0;
 
   for (const child of world.children) {
     if (!child?.isMesh || !child.userData?.turnNoAutoOutline || !isInkMaterial(child.material)) continue;
     bounds.setFromObject(child);
-    // Lake shore ribbons and the island outline sit almost flush with the ground.
+    // Lake shore ribbons and the island base sit almost flush with the ground.
     // The intentional road-edge contour is higher (around y=.158), so leave it alone.
-    if (bounds.max.y < 0.11) removals.push(child);
+    if (bounds.max.y >= 0.11) continue;
+
+    const isIslandBase = child.geometry?.type === 'ShapeGeometry';
+    const useWater = !isIslandBase && bounds.max.y > 0.044;
+    child.material = new THREE.MeshStandardMaterial({
+      color: useWater ? 0x39ccef : 0xf2cf83,
+      roughness: useWater ? 0.4 : 1,
+      metalness: 0,
+      side: THREE.DoubleSide
+    });
+    child.userData.turnBeachContourNeutralized = true;
+    changed += 1;
   }
 
-  for (const child of removals) world.remove(child);
-  if (removals.length) console.info(`TURN: removed ${removals.length} Countryside beach contour meshes.`);
+  if (changed) console.info(`TURN: neutralized ${changed} Countryside beach contour meshes.`);
 }
 
 function expectedTownPlacements(samples, trackWidth) {
@@ -99,7 +109,7 @@ function expectedTownPlacements(samples, trackWidth) {
       sample.normal,
       side * (trackWidth / 2 + distance)
     );
-    placements.push({ sample, side, distance, position });
+    placements.push({ key: index, sample, side, distance, position });
   }
   return placements;
 }
@@ -131,7 +141,10 @@ function relocateLakeBuildings(world, samples, trackWidth) {
   const center = getTrackCenter(samples);
   const shoreOuter = trackInsetContour(samples, center, 72, 7);
   const placements = expectedTownPlacements(samples, trackWidth)
-    .filter((placement) => pointInPolygon(placement.position, shoreOuter));
+    .filter((placement) => (
+      !relocatedTownPlacements.has(placement.key)
+      && pointInPolygon(placement.position, shoreOuter)
+    ));
 
   const bounds = new THREE.Box3();
   const currentCenter = new THREE.Vector3();
@@ -154,6 +167,7 @@ function relocateLakeBuildings(world, samples, trackWidth) {
     building.position.x += safePosition.x - currentCenter.x;
     building.position.z += safePosition.z - currentCenter.z;
     building.userData.turnLakeRelocated = true;
+    relocatedTownPlacements.add(placement.key);
     moved += 1;
   }
 
@@ -206,13 +220,12 @@ async function settleLakeBuildings(world, samples, trackWidth) {
 export async function installCountrysideSceneryCleanup({ world, samples, trackWidth }) {
   if (!world || !samples?.length || !Number.isFinite(trackWidth)) return;
 
-  removeBeachContours(world);
+  neutralizeBeachContours(world);
   await Promise.allSettled([
     settleLakeBuildings(world, samples, trackWidth),
     addRoadsideVehicles(world, samples, trackWidth)
   ]);
 
-  // A late art-pass completion cannot recreate the beach contours after this point in the
-  // normal bootstrap, but one final sweep makes the cleanup resilient to slower devices.
-  removeBeachContours(world);
+  // One final sweep makes the shoreline cleanup resilient to slower art-pass completion.
+  neutralizeBeachContours(world);
 }
