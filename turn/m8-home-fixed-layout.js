@@ -153,7 +153,7 @@ export async function installM8HomeFixedLayout() {
   const shortViewportAutoRepair = installShortViewportAutoRepair({ home });
 
   const { installM8HomeCardScrollFixes } = await import(
-    `/turn/m8-home-card-scroll-fixes.js?build=${buildKey}-m8.9-track-title-alignment`
+    `/turn/m8-home-card-scroll-fixes.js?build=${buildKey}-m8.10-card-gap-rim`
   );
   const cardScrollFixes = await installM8HomeCardScrollFixes();
 
