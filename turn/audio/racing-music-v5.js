@@ -1,4 +1,4 @@
-import { MENU_SONG, SONGBOOK, songForTrack } from './music/songbook.js?revision=r185-menu-orchestration';
+import { MENU_SONG, SONGBOOK, songForTrack } from './music/songbook.js?revision=r197-audio-mix';
 import { createToneRuntime } from './music/tone-runtime.js?revision=r184-score-v2';
 import { createDrumRuntime } from './music/drum-runtime.js?revision=r184-score-v2';
 import { LEAD_VOICES, BASS_VOICES, ARP_VOICES, DRUM_KITS } from './music/instrument-bank.js?revision=r184-score-v2';
@@ -7,7 +7,7 @@ import { installMusicControls } from './music/music-controls.js?revision=r184-sc
 const AudioContextClass = globalThis.AudioContext || globalThis.webkitAudioContext;
 const MUSIC_VOLUME_STORAGE_KEY = 'turn-racing-music-volume-v1';
 const MUSIC_LAST_VOLUME_STORAGE_KEY = 'turn-racing-music-last-volume-v1';
-const DEFAULT_VOLUME = 50;
+const DEFAULT_VOLUME = 100;
 const STEPS_PER_BEAT = 4;
 const LOOKAHEAD_MS = 25;
 const SCHEDULE_AHEAD_SECONDS = 0.12;
