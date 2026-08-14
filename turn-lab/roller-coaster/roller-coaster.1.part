@@ -1,0 +1,88 @@
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const TRACK_WIDTH = 18;
+const HALF_TRACK = TRACK_WIDTH / 2;
+const SAMPLE_COUNT = 1500;
+const MAX_SPEED = 58;
+const GRAVITY_EFFECT = 24;
+const ROAD_Y = 0.32;
+const FLOOR_Y = 0;
+const TAU = Math.PI * 2;
+
+const CONTROL_POINTS = [
+  [0, 4, -158], [52, 8, -165], [108, 30, -158], [154, 54, -138], [176, 62, -108], [168, 35, -70], [150, 7, -18], [116, 5, 18], [78, 31, 38], [35, 8, 50], [-5, 24, 28], [-42, 5, -2], [-83, 18, 14], [-124, 7, 52], [-164, 21, 94], [-127, 8, 126], [-72, 29, 119], [-15, 7, 94], [43, 21, 113], [95, 6, 92], [129, 17, 58], [92, 8, 22], [42, 19, -4], [-8, 6, 7], [-57, 17, -31], [-104, 5, -70], [-83, 21, -108], [-39, 8, -136]
+].map(([x,y,z]) => new THREE.Vector3(x,y,z));
+
+const curve = new THREE.CatmullRomCurve3(CONTROL_POINTS, true, 'centripetal');
+const samples = Array.from({ length:SAMPLE_COUNT }, (_, index) => {
+  const t = index / SAMPLE_COUNT;
+  const point = curve.getPointAt(t);
+  const tangent = curve.getTangentAt(t).normalize();
+  const normal = new THREE.Vector3(-tangent.z, 0, tangent.x).normalize();
+  return { point, tangent, normal };
+});
+
+const cumulative = [0];
+for (let index = 1; index <= samples.length; index += 1) {
+  const previous = samples[index - 1].point;
+  const next = samples[index % samples.length].point;
+  cumulative.push(cumulative[index - 1] + previous.distanceTo(next));
+}
+const trackLength = cumulative.at(-1);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x55c9ed);
+scene.fog = new THREE.Fog(0xa7d9e6, 300, 820);
+const camera = new THREE.PerspectiveCamera(67, innerWidth / innerHeight, 0.1, 1200);
+const renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.prepend(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xeaf8ff, 0x5d7554, 2.7));
+const sun = new THREE.DirectionalLight(0xfff4d2, 3.8);
+sun.position.set(-130, 210, 90); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); sun.shadow.camera.left = -220; sun.shadow.camera.right = 220; sun.shadow.camera.top = 220; sun.shadow.camera.bottom = -220; sun.shadow.camera.far = 550; scene.add(sun);
+
+const world = new THREE.Group(); world.name = 'ROLLER COASTER LAB'; scene.add(world);
+const wood = new THREE.MeshStandardMaterial({ color:0x895f3d, roughness:0.9, metalness:0 });
+const woodDark = new THREE.MeshStandardMaterial({ color:0x5f402c, roughness:0.94, metalness:0 });
+const woodLight = new THREE.MeshStandardMaterial({ color:0xb58254, roughness:0.88, metalness:0 });
+const steel = new THREE.MeshStandardMaterial({ color:0xdde2e4, roughness:0.54, metalness:0.54 });
+const grass = new THREE.MeshStandardMaterial({ color:0x6fae62, roughness:1, metalness:0 });
+const pathMaterial = new THREE.MeshStandardMaterial({ color:0xd9c69c, roughness:1, metalness:0 });
+
+function makeGround() {
+  const floor = new THREE.Mesh(new THREE.CircleGeometry(430, 96), grass); floor.rotation.x = -Math.PI / 2; floor.position.y = -0.15; floor.receiveShadow = true; world.add(floor);
+  for (let index = 0; index < 12; index += 1) {
+    const angle = index / 12 * TAU + 0.17; const radius = 260 + (index % 3) * 42;
+    const hill = new THREE.Mesh(new THREE.ConeGeometry(38 + (index % 4) * 9, 48 + (index % 3) * 18, 7), new THREE.MeshStandardMaterial({ color:index % 2 ? 0x618e58 : 0x739c60, roughness:1, flatShading:true }));
+    hill.position.set(Math.cos(angle) * radius, 18, Math.sin(angle) * radius); hill.rotation.y = angle; hill.receiveShadow = true; world.add(hill);
+  }
+  const pathCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(-235, 0.05, -120),new THREE.Vector3(-165, 0.05, -80),new THREE.Vector3(-115, 0.05, -20),new THREE.Vector3(-140, 0.05, 70),new THREE.Vector3(-205, 0.05, 115)]);
+  const path = new THREE.Mesh(new THREE.TubeGeometry(pathCurve, 40, 4.2, 6, false), pathMaterial); path.scale.y = 0.03; path.receiveShadow = true; world.add(path);
+}
+
+function ribbonGeometry(width, lift = ROAD_Y) {
+  const positions = [], indices = [];
+  for (let index = 0; index <= samples.length; index += 1) { const sample = samples[index % samples.length]; const left = sample.point.clone().addScaledVector(sample.normal, width / 2); const right = sample.point.clone().addScaledVector(sample.normal, -width / 2); left.y += lift; right.y += lift; positions.push(left.x,left.y,left.z,right.x,right.y,right.z); }
+  for (let index = 0; index < samples.length; index += 1) { const a=index*2,b=a+1,c=a+2,d=a+3; indices.push(a,c,b,b,c,d); }
+  const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions,3)); geometry.setIndex(indices); geometry.computeVertexNormals(); return geometry;
+}
+
+function makeWoodRoad() {
+  const deck = new THREE.Mesh(ribbonGeometry(TRACK_WIDTH, ROAD_Y), woodDark); deck.receiveShadow = true; world.add(deck);
+  const plankGeometry = new THREE.BoxGeometry(TRACK_WIDTH + 0.45, 0.23, 1.65); const plankCount = Math.ceil(samples.length / 5); const planks = new THREE.InstancedMesh(plankGeometry, wood, plankCount); planks.instanceMatrix.setUsage(THREE.StaticDrawUsage); planks.castShadow = false; planks.receiveShadow = true; const marker = new THREE.Object3D(); let cursor = 0;
+  for (let index = 0; index < samples.length; index += 5) { const sample=samples[index]; marker.position.copy(sample.point); marker.position.y += ROAD_Y + 0.17; marker.rotation.set(Math.atan2(sample.tangent.y, Math.hypot(sample.tangent.x, sample.tangent.z)),Math.atan2(sample.tangent.x, sample.tangent.z),0); marker.scale.set(1,1,1); marker.updateMatrix(); planks.setMatrixAt(cursor, marker.matrix); planks.setColorAt(cursor, new THREE.Color(cursor % 3 === 0 ? 0xa8754b : cursor % 3 === 1 ? 0x946543 : 0xb17c50)); cursor += 1; }
+  planks.count = cursor; planks.instanceMatrix.needsUpdate = true; if (planks.instanceColor) planks.instanceColor.needsUpdate = true; world.add(planks);
+  for (const offset of [-5.2, 5.2]) makeRail(offset, 0.28, steel, 0.24); for (const offset of [-(HALF_TRACK + 0.2), HALF_TRACK + 0.2]) makeRail(offset, 1.05, woodLight, 0.30); makeLiftChain(); makeStartLine();
+}
+
+function offsetCurve(offset, yLift) { const points=[]; for (let index=0;index<samples.length;index+=3){const sample=samples[index];points.push(sample.point.clone().addScaledVector(sample.normal,offset).setY(sample.point.y+ROAD_Y+yLift));} return new THREE.CatmullRomCurve3(points,true,'centripetal'); }
+function makeRail(offset,yLift,material,radius){const rail=new THREE.Mesh(new THREE.TubeGeometry(offsetCurve(offset,yLift),Math.floor(samples.length/2),radius,6,true),material);rail.castShadow=false;rail.receiveShadow=true;world.add(rail);}
+function makeLiftChain(){const chainGeometry=new THREE.BoxGeometry(0.5,0.14,2.0);const links=new THREE.InstancedMesh(chainGeometry,steel,64);const marker=new THREE.Object3D();let cursor=0;for(let index=12;index<310&&cursor<64;index+=5){const sample=samples[index];if(sample.point.y<8||sample.tangent.y<0.02)continue;marker.position.copy(sample.point);marker.position.y+=ROAD_Y+0.49;marker.rotation.set(Math.atan2(sample.tangent.y,Math.hypot(sample.tangent.x,sample.tangent.z)),Math.atan2(sample.tangent.x,sample.tangent.z),0);marker.updateMatrix();links.setMatrixAt(cursor++,marker.matrix);}links.count=cursor;links.instanceMatrix.needsUpdate=true;world.add(links);}
+function makeStartLine(){const sample=samples[0];const yaw=Math.atan2(sample.tangent.x,sample.tangent.z);const pitch=Math.atan2(sample.tangent.y,Math.hypot(sample.tangent.x,sample.tangent.z));for(let i=0;i<12;i+=1){const tile=new THREE.Mesh(new THREE.BoxGeometry(TRACK_WIDTH/12+0.05,0.08,2.0),i%2?woodDark:new THREE.MeshStandardMaterial({color:0xfff8e8,roughness:.9}));tile.position.copy(sample.point).addScaledVector(sample.normal,(i-5.5)*TRACK_WIDTH/12);tile.position.y+=ROAD_Y+0.38;tile.rotation.set(pitch,yaw,0);tile.receiveShadow=true;world.add(tile);}}
+function matrixForBeam(start,end,thickness,marker){const delta=end.clone().sub(start);const length=delta.length();marker.position.copy(start).add(end).multiplyScalar(0.5);marker.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.clone().normalize());marker.scale.set(1,length,1);marker.updateMatrix();return marker.matrix.clone();}
+function makeTimberForest() {
