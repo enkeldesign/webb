@@ -90,5 +90,5 @@ const CHORUS = makeSection({
 export const AIRPORT_SONG = makeSong({
   id: 'airport', name: 'TURN Theme', bpm: 128, key: 'E minor',
   style: 'warm arcade title anthem', swing: 0.1,
-  sections: [TUNE, BRIDGE, CHORUS], arrangement: ['tune', 'tune', 'bridge', 'chorus', 'bridge', 'chorus']
+  sections: [TUNE, BRIDGE, CHORUS], arrangement: ['tune', 'tune', 'bridge', 'tune', 'chorus ', 'chorus']
 });
