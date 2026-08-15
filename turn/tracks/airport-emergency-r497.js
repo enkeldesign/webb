@@ -9,10 +9,9 @@ const AMBULANCE_ID = 'ambulance';
 const PREPARED_WRECK_NAME = 'Airport B787 Prepared Wreck';
 const FIRE_NAME = 'Airport MAYDAY fire';
 const R496_TARGET_PENETRATION_Y = 10.5;
-// The latest r496 playtest is close, but the fuselage still reads slightly suspended
-// from several approach angles. Add a modest final 1.5 world units rather than making
-// another large correction.
-const TARGET_WRECK_PENETRATION_Y = 12.0;
+// The r497 playtest is close, but the fuselage still reads too high above the ground.
+// Lower it another 4 world units from the tested 12-unit result.
+const TARGET_WRECK_PENETRATION_Y = 16.0;
 const EXTRA_WRECK_PENETRATION_Y = TARGET_WRECK_PENETRATION_Y - R496_TARGET_PENETRATION_Y;
 // The original layered flame works well up close but is too small relative to the
 // full-scale 62-unit B787. Scaling the existing fire group keeps the same animation,
@@ -88,6 +87,6 @@ function installFinalWreckDepth(world, runtime) {
     basePenetration: R496_TARGET_PENETRATION_Y,
     targetPenetration: TARGET_WRECK_PENETRATION_Y,
     additionalPenetration: EXTRA_WRECK_PENETRATION_Y,
-    basis: 'small final playtest correction after r496; lowers the wreck another 1.5 world units'
+    basis: 'r498 playtest correction; lowers the tested r497 wreck another 4 world units'
   });
 }
