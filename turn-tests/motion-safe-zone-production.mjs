@@ -5,6 +5,8 @@ import {
   updateMotionInputState
 } from '../turn/input/motion.js';
 import {
+  applyLowSpeedHorizonDeadZone,
+  resolveLowSpeedHorizonDeadZone,
   resolveSensorCameraRollLimit,
   updateRaceCameraState
 } from '../turn/render/camera.js';
@@ -45,6 +47,31 @@ approximately(resolveSensorCameraRollLimit(), toRadians(24));
 approximately(resolveSteeringRollLimit(toRadians(14), { steeringDegrees: 0 }), toRadians(14));
 approximately(resolveSensorCameraRollLimit({ horizonDegrees: 90 }), toRadians(18));
 
+// Horizon stabilization is deliberately limited to first-impression / crawling
+// speeds. It is fully active through 5 km/h, fades linearly, and is completely
+// absent from 25 km/h upward so real corners retain today's direct camera feel.
+approximately(resolveLowSpeedHorizonDeadZone(0), toRadians(1.25));
+approximately(resolveLowSpeedHorizonDeadZone(5 / 3.6), toRadians(1.25));
+approximately(resolveLowSpeedHorizonDeadZone(15 / 3.6), toRadians(0.625));
+approximately(resolveLowSpeedHorizonDeadZone(25 / 3.6), 0);
+approximately(resolveLowSpeedHorizonDeadZone(58 / 3.6), 0);
+approximately(resolveLowSpeedHorizonDeadZone(-5 / 3.6), toRadians(1.25));
+approximately(
+  applyLowSpeedHorizonDeadZone(toRadians(1), toRadians(24), 0),
+  0,
+  1e-9
+);
+approximately(
+  applyLowSpeedHorizonDeadZone(toRadians(24), toRadians(24), 0),
+  toRadians(24),
+  1e-9
+);
+approximately(
+  applyLowSpeedHorizonDeadZone(toRadians(1), toRadians(24), 25 / 3.6),
+  toRadians(1),
+  1e-9
+);
+
 const steeringState = {
   sensorMode: true,
   roll: 0,
@@ -66,7 +93,7 @@ steeringState.steering = 0;
 updateMotionInputState({ state: steeringState, dt: 1, maxSteerRoll: toRadians(14) });
 assert.ok(steeringState.steering > 0.999, 'Steering must saturate at the canonical -24-degree boundary');
 
-function measuredCameraRoll(rollDegrees, configuration) {
+function measuredCameraRoll(rollDegrees, configuration, speedKmh = 0) {
   globalThis.__TURN_MOTION_SAFE_ZONE__ = configuration;
   let rotation = null;
   const camera = {
@@ -78,7 +105,7 @@ function measuredCameraRoll(rollDegrees, configuration) {
     updateProjectionMatrix() {}
   };
   const state = {
-    speed: 0,
+    speed: speedKmh / 3.6,
     velocity: { dot() { return 0; } },
     position: { x: 0, y: 0, z: 0 },
     nearestTrackIndex: 0,
@@ -104,6 +131,17 @@ function measuredCameraRoll(rollDegrees, configuration) {
 approximately(measuredCameraRoll(32, globalThis.__TURN_MOTION_SAFE_ZONE__), toRadians(-24), 1e-9);
 approximately(measuredCameraRoll(-32, globalThis.__TURN_MOTION_SAFE_ZONE__), toRadians(24), 1e-9);
 approximately(measuredCameraRoll(32, undefined), toRadians(-18), 1e-9);
+approximately(measuredCameraRoll(1, globalThis.__TURN_MOTION_SAFE_ZONE__, 0), 0, 1e-9);
+approximately(
+  measuredCameraRoll(1, globalThis.__TURN_MOTION_SAFE_ZONE__, 25),
+  toRadians(-1),
+  1e-9
+);
+approximately(
+  measuredCameraRoll(1, globalThis.__TURN_MOTION_SAFE_ZONE__, 58),
+  toRadians(-1),
+  1e-9
+);
 
 assert.equal(steeringLimitVisualOpacity({ active: false }), 0);
 approximately(steeringLimitVisualOpacity({ active: true, intensity: 0 }), 0.08);
@@ -205,4 +243,4 @@ for (const removedPath of [
 if (previousConfiguration === undefined) delete globalThis.__TURN_MOTION_SAFE_ZONE__;
 else globalThis.__TURN_MOTION_SAFE_ZONE__ = previousConfiguration;
 
-console.log('Canonical TURN 24-degree safe zone, inertial warning and NEXT wrapper passed.');
+console.log('Canonical TURN 24-degree safe zone, low-speed horizon stabilization, inertial warning and NEXT wrapper passed.');
