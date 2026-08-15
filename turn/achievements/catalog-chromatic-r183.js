@@ -16,8 +16,8 @@ const GOLDEN_HOUR = Object.freeze({
   trophies: 100,
   hidden: true,
   lockedDescription: '',
-  title: 'GOLDEN HOUR',
-  description: 'In the Ambulance, answer the Airport crash with sirens and deliver the patient to the terminal medical bay within 30 seconds.',
+  title: 'MAYDAY!',
+  description: 'In the Ambulance, answer the Airport MAYDAY with sirens and deliver the patient to the terminal medical bay within 30 seconds.',
   icon: 'siren'
 });
 
