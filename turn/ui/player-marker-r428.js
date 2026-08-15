@@ -7,12 +7,14 @@ const AUTO_ACTIVATION_RADIUS = REFERENCE_CAR_LENGTH * AUTO_ACTIVATION_DIAMETER_C
 const AUTO_ACTIVATION_RADIUS_SQUARED = AUTO_ACTIVATION_RADIUS * AUTO_ACTIVATION_RADIUS;
 const AUTO_EXIT_GRACE_MS = 220;
 const AUTO_CHECK_INTERVAL_MS = 50;
-const MARKER_GAP_PX = 14;
+const MARKER_GAP_PX = 20;
 const MARKER_SIZE_VIEWPORT_RATIO = 0.045;
 const MARKER_SIZE_MIN_PX = 17;
 const MARKER_SIZE_MAX_PX = 23;
 const FALLBACK_ROOF_HEIGHT = 1.8;
 const FALLBACK_MARKER_COLOR = '#38d9ff';
+const FIXED_LIVERY_MARKER_COLOR = '#ffcc00';
+const FIXED_LIVERY_VEHICLE_IDS = new Set(['firetruck', 'police', 'ambulance']);
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -144,6 +146,9 @@ export function playerMarkerAutoActive(distance) {
 }
 
 export function playerMarkerColor(runtime) {
+  const carId = runtime?.playerCar?.userData?.turnCarId || runtime?.state?.vehicleId;
+  if (FIXED_LIVERY_VEHICLE_IDS.has(carId)) return FIXED_LIVERY_MARKER_COLOR;
+
   const color = runtime?.playerCar?.userData?.turnCarColor || runtime?.state?.vehicleColor;
   return typeof color === 'string' && color.trim() ? color.trim() : FALLBACK_MARKER_COLOR;
 }
