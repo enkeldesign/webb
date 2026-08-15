@@ -1,5 +1,5 @@
 import { model, C } from './tracker-core.js?revision=r187-music-tracker';
-import { auditionRow, startPlayback } from './tracker-audio.js?revision=r208-row-playhead';
+import { auditionRow, startPlayback, stopPlayback } from './tracker-audio.js?revision=r208-row-playhead';
 
 const grid = document.getElementById('trackerGrid');
 const partTabs = [...document.querySelectorAll('.part-tab[data-part]')];
@@ -130,7 +130,10 @@ gridObserver?.observe(grid, { childList: true, subtree: true });
 installRowButtons();
 
 document.addEventListener('turn-tracker-play-row', (event) => renderPlayingRow(event.detail));
-document.addEventListener('turn-tracker-playback-stop', clearPlayingRow);
+document.addEventListener('turn-tracker-playback-stop', () => {
+  clearPlayingRow();
+  if (document.getElementById('playStatus')?.textContent.startsWith('Preview row')) stopPlayback();
+});
 
 document.querySelector('.transport')?.addEventListener('click', (event) => {
   const button = event.target.closest('.part-play[data-part]');
