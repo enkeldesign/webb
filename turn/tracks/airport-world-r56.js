@@ -1,5 +1,5 @@
 import { installAirportWorld as installAirportWorldR53 } from './airport-world-r53.js?build=20260814-r57';
-import { installAirportEmergency } from './airport-emergency-r493.js?revision=r493-playtest';
+import { installAirportEmergency } from './airport-emergency-r494.js?revision=r494-playtest';
 
 export function installAirportWorld(options = {}) {
   const world = installAirportWorldR53(options);
@@ -23,7 +23,10 @@ export function installAirportWorld(options = {}) {
     sceneLevelEmergencyLoop: true,
     clearMedicalSignSightline: true,
     prebuiltCrashWreck: true,
-    continuousEmergencyAudio: true
+    continuousEmergencyAudio: true,
+    screenRelativeEmergencyAudio: true,
+    partiallyEmbeddedCrashWreck: true,
+    medicalEntranceDoor: true
   });
   return world;
 }
