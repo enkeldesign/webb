@@ -14,6 +14,11 @@ if (!document.querySelector('link[data-tracker-playhead]')) {
   document.head.append(link);
 }
 
+const instruction = document.getElementById('trackerInstruction');
+if (instruction && !instruction.textContent.includes('Tap a row number')) {
+  instruction.textContent += ' Tap a row number to preview that row and use it once as the next part-play start.';
+}
+
 function clearPlayingRow() {
   grid?.querySelectorAll('.tracker-row.playing').forEach((row) => row.classList.remove('playing'));
   grid?.querySelectorAll('.row-number.playing').forEach((button) => button.classList.remove('playing'));
