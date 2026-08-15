@@ -55,6 +55,7 @@ const [
   maydayAudio,
   airportEmergency,
   maydayPolish,
+  maydayHud,
   airportWorldR56,
   trackRegistry,
   license,
@@ -72,6 +73,7 @@ const [
   fs.readFile(path.join(turnDir, 'audio/mayday-audio-r493.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'tracks/airport-emergency-r493.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'tracks/airport-emergency-r494.js'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'tracks/airport-emergency-r496.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'tracks/airport-world-r56.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'tracks/registry.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'assets/cars/KENNEY-CAR-KIT.md'), 'utf8'),
@@ -120,14 +122,14 @@ assert.doesNotMatch(index, /syncFixedLiveryRail|emergencyVehicleNames/,
 
 assert.match(airportWorldR56, /airport-world-r53\.js/,
   'The MAYDAY layer must preserve the current real-aircraft Airport world');
-assert.match(airportWorldR56, /airport-emergency-r494\.js\?revision=r495-playtest/,
-  'The r495 playtest must cache-bust the corrected MAYDAY layer');
+assert.match(airportWorldR56, /airport-emergency-r496\.js\?revision=r496-hud-cache/,
+  'The r496 playtest must cache-bust the calibrated MAYDAY HUD layer');
 assert.match(airportWorldR56, /removeMedicalBayJetBridge\(world\)/,
   'The jet bridge in front of the medical H sign must remain removed');
 assert.match(airportWorldR56, /nearly\(node\.position\?\.x, -52\)/);
 assert.match(airportWorldR56, /nearly\(node\.position\?\.z, -32\)/);
-assert.match(trackRegistry, /airport-world-r56\.js\?build=20260815-r495/,
-  'Production Airport must cache-bust the r495 MAYDAY layer');
+assert.match(trackRegistry, /airport-world-r56\.js\?build=20260815-r496/,
+  'Production Airport must cache-bust the r496 MAYDAY layer');
 assert.match(trackRegistry, /airport\(\{ scene, samples, trackWidth, runtime \}\)/,
   'Airport world installation must receive the live TURN runtime');
 
@@ -192,7 +194,7 @@ assert.match(airportEmergency, /renderScene\.onBeforeRender = function airportEm
 assert.match(airportEmergency, /PATIENT ON BOARD · MEDICAL BAY · 30 SECONDS/);
 assert.doesNotMatch(airportEmergency, /FOLLOW THE SIRENS/);
 assert.match(airportEmergency, /\.turn-mayday-info-plate[\s\S]*top: max\(16px, calc\(env\(safe-area-inset-top\) \+ 10px\)\)[\s\S]*border: 3px solid #08090a[\s\S]*box-shadow: 5px 5px 0 #08090a/,
-  'MAYDAY instructions should retain the blank-screen info-plate treatment');
+  'The base MAYDAY info plate should retain the established card treatment');
 assert.match(airportEmergency, /new THREE\.BoxGeometry\(10\.4, 6\.4, 0\.65\)/,
   'The terminal H plate should cover the window it occupies');
 assert.match(airportEmergency, /sign\.position\.set\(0, 8\.7, 12\.72\)/);
@@ -210,15 +212,13 @@ assert.match(airportEmergency, /clearsOnPageReload: true/);
 assert.doesNotMatch(airportEmergency, /localStorage|sessionStorage/);
 
 assert.match(maydayPolish, /airport-emergency-r493\.js\?revision=r493/,
-  'The corrective layer should stay small over the already-tested MAYDAY event');
+  'The corrected stereo and medical-door layer must remain underneath r496');
 assert.match(maydayPolish, /cameraRight\.set\(1, 0, 0\)\.applyQuaternion\(camera\.quaternion\)/,
   'Stereo direction must keep using actual camera screen-right');
 assert.match(maydayPolish, /-Number\(physicsRight\.x \|\| 0\)/,
   'The no-camera fallback must retain corrected screen-relative handedness');
 assert.match(maydayPolish, /const WRECK_PENETRATION_Y = 4\.40/,
-  'The wreck should move substantially back toward the r492 depth after playtesting');
-assert.match(maydayPolish, /2\.47 \+ \(4\.94 - 2\.47\) \* 0\.78 = 4\.3966/,
-  'The wreck depth must document the requested 78-percent interpolation from r494 toward r492');
+  'r496 should build from the r495 measured baseline rather than rewriting it');
 assert.match(maydayPolish, /mount\.position\.y -= WRECK_PENETRATION_Y/);
 assert.match(maydayPolish, /Airport MAYDAY medical entrance/,
   'The medical bay needs a permanent facade entrance beside the H sign');
@@ -232,6 +232,22 @@ assert.match(maydayPolish, /new THREE\.BoxGeometry\(6\.8, 7\.4, 0\.72\)/,
   'The medical entrance should keep the approved playtest proportions');
 assert.match(maydayPolish, /entrance\.position\.set\(MEDICAL_WINDOW_X, 0, 12\.68\)/,
   'The door should align exactly with the window bay it replaces');
+
+assert.match(maydayHud, /airport-emergency-r494\.js\?revision=r496-hud-depth/,
+  'r496 must explicitly cache-bust its calibrated parent layer');
+assert.match(maydayHud, /const TARGET_WRECK_PENETRATION_Y = 10\.5/,
+  'The B787 should use the calibrated halfway-buried depth from the latest screenshots');
+assert.match(maydayHud, /62 \* sin\(20deg\) \/ 2 = 10\.6/,
+  'The calibration should stay tied to the 62-unit aircraft and 20-degree pitch');
+assert.match(maydayHud, /mount\.position\.y -= EXTRA_WRECK_PENETRATION_Y/,
+  'r496 must apply only the additional depth beyond the r494 baseline');
+assert.match(maydayHud, /var\(--turn-action-danger, #ff6b6b\)/,
+  'MAYDAY instructions and unlock toast must use the danger design token');
+assert.match(maydayHud, /bottom: calc\(clamp\(92px, 20vh, 150px\) \+ 38px\)/,
+  'MAYDAY messages should sit immediately above the boost HUD');
+assert.match(maydayHud, /turn:achievements-updated/);
+assert.match(maydayHud, /unlocked\.includes\('golden-hour'\)/,
+  'Only the MAYDAY unlock should receive the danger achievement-toast treatment');
 
 assert.match(maydayAudio, /export function playMaydayCrashSound/);
 assert.match(maydayAudio, /playDistortedNoise\(now \+ 0\.015, 3\.05/,
@@ -269,4 +285,4 @@ assert.match(audio, /emergencySirenFrequency/);
 assert.match(audio, /sirenActive = boostActive/);
 assert.match(license, /Creative Commons CC0 1\.0 Universal/);
 
-console.log('TURN emergency vehicles and MAYDAY r495 depth/door fixes passed.');
+console.log('TURN emergency vehicles and MAYDAY r496 calibration/HUD fixes passed.');
