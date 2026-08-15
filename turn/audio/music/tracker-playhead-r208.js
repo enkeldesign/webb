@@ -5,6 +5,7 @@ const grid = document.getElementById('trackerGrid');
 const partTabs = [...document.querySelectorAll('.part-tab[data-part]')];
 const partPlayButtons = [...document.querySelectorAll('.part-play[data-part]')];
 let armedStart = null;
+let endingRowPreview = false;
 
 if (!document.querySelector('link[data-tracker-playhead]')) {
   const link = document.createElement('link');
@@ -132,7 +133,11 @@ installRowButtons();
 document.addEventListener('turn-tracker-play-row', (event) => renderPlayingRow(event.detail));
 document.addEventListener('turn-tracker-playback-stop', () => {
   clearPlayingRow();
-  if (document.getElementById('playStatus')?.textContent.startsWith('Preview row')) stopPlayback();
+  const previewing = document.getElementById('playStatus')?.textContent.startsWith('Preview row');
+  if (!previewing || endingRowPreview) return;
+  endingRowPreview = true;
+  stopPlayback();
+  endingRowPreview = false;
 });
 
 document.querySelector('.transport')?.addEventListener('click', (event) => {
