@@ -142,6 +142,29 @@ body .column-octave-controls .octave-shift {
     width: 100%;
     margin-left: 0;
   }
+
+  /* On phones the sheet is the primary control surface. Keep all four lanes visible
+     instead of inheriting the desktop tracker's 650px minimum width. */
+  .tracker-grid,
+  .tracker-row {
+    grid-template-columns: 2.8rem repeat(3, minmax(0, 1fr)) 4.4rem;
+    min-width: 0;
+  }
+
+  .tracker-grid-head > div,
+  body .column-select-button {
+    min-width: 0;
+    padding-inline: 6px;
+  }
+
+  body .column-select-button {
+    gap: 4px;
+  }
+
+  .step-cell {
+    min-width: 0;
+    padding-inline: 6px;
+  }
 }
 
 @media (max-width: 520px) {
@@ -153,10 +176,24 @@ body .column-octave-controls .octave-shift {
     padding-inline: 10px;
   }
 
+  .tracker-grid,
+  .tracker-row {
+    grid-template-columns: 2.45rem repeat(3, minmax(0, 1fr)) 3.8rem;
+  }
+
   .tracker-grid-head > div,
   body .column-select-button {
     min-height: 32px;
-    padding-block: 4px;
+    padding: 4px;
+  }
+
+  body .column-select-button {
+    gap: 2px;
+  }
+
+  body .column-select-button small {
+    padding-inline: 3px;
+    font-size: .52rem;
   }
 
   .row-number,
@@ -165,7 +202,8 @@ body .column-octave-controls .octave-shift {
   }
 
   .step-cell {
-    padding-block: 2px;
+    padding: 2px 4px;
+    font-size: .78rem;
   }
 
   .entry-pad {
