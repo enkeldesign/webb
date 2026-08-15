@@ -29,6 +29,23 @@ const { PostalSimulation, packageScore, nextLegForPackage } = context.POSTAL_MOD
 }
 
 {
+  const sim = new PostalSimulation({ seed: 10 });
+  const locationlessHold = sim.addPackage({
+    id: 'IN-HOLD',
+    origin: { place: 'Hamburg', country: 'Germany' },
+    destination: { place: 'Timrå', country: 'Sweden' },
+    cityId: null,
+    location: 'Hamburg partner hub',
+    status: 'held',
+    issue: 'missed-scan'
+  });
+  assert.equal(locationlessHold.cityId, null);
+  const incoming = sim.getIncomingPackages();
+  assert.ok(!incoming.some(pkg => pkg.id === locationlessHold.id), 'Locationless inbound holds must not appear in depot intake totals');
+  assert.equal(sim.getMetrics().incoming, incoming.length, 'The HUD total must match the packages rendered in depot intake queues');
+}
+
+{
   const sim = new PostalSimulation({ seed: 1 });
   sim.paused = false;
   const pkg = sim.packages.get('SOR-48219');

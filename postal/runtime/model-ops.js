@@ -114,7 +114,7 @@ PostalSimulation.prototype.getIssues = function() {
 
 PostalSimulation.prototype.getIncomingPackages = function(cityId = null) {
     return [...this.packages.values()]
-      .filter(pkg => (!cityId || pkg.cityId === cityId) && ['arrived', 'sorting', 'held'].includes(pkg.status))
+      .filter(pkg => CITY_IDS.includes(pkg.cityId) && (!cityId || pkg.cityId === cityId) && ['arrived', 'sorting', 'held'].includes(pkg.status))
       .sort((a, b) => packageScore(b, this.focus, this.clock) - packageScore(a, this.focus, this.clock));
 };
 
@@ -124,7 +124,7 @@ PostalSimulation.prototype.getMetrics = function() {
     const late = active.filter(p => p.deadline < this.clock).length;
     const dueSoon = active.filter(p => p.deadline >= this.clock && p.deadline - this.clock < 25).length;
     const issues = active.filter(p => p.issue || p.complaint).length;
-    const incoming = active.filter(p => ['arrived', 'sorting', 'held'].includes(p.status)).length;
+    const incoming = this.getIncomingPackages().length;
     const onTime = this.stats.delivered ? Math.round(100 * (this.stats.delivered - this.stats.lateDelivered) / this.stats.delivered) : 100;
     return { active: active.length, incoming, late, dueSoon, issues, onTime, delivered: this.stats.delivered };
 };
