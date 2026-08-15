@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [releaseSource, index, main, trackManager] = await Promise.all([
+const [releaseSource, index, main, trackManager, leaderMarker] = await Promise.all([
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/main.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/track-manager.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/tracks/track-manager.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/ui/leader-marker-r500.js', import.meta.url), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -48,6 +49,11 @@ assert.ok(
 
 assert.match(main, /competitorCars,\s*ensureCompetitorCars,\s*syncCompetitorVisuals,/, 'The runtime must expose separate pool and identity operations');
 assert.match(main, /if \(root\.userData\.turnVisualKey === key \|\| root\.userData\.turnVisualPendingKey === key\) return;/, 'Model installation must retain its duplicate-key fast path');
+
+const leaderRoofSection = section(leaderMarker, 'function carRoofHeight', '\nfunction installRuntime');
+assert.match(leaderRoofSection, /child\.userData\?\.turnAssetVisual/, 'The leader marker must measure the installed rival model');
+assert.match(leaderRoofSection, /child\.visible !== false/, 'The procedural car must remain a fallback while its asset loads');
+assert.doesNotMatch(leaderRoofSection, /children\?\.\[0\]/, 'The hidden procedural body must not determine an installed rival model height');
 
 const activationSection = section(trackManager, 'export async function activateTrack', '\nfunction installRuntime');
 assert.match(activationSection, /loadRivalsState\(/, 'Track activation must load the selected track rival namespace');
