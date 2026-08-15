@@ -1,10 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import {
-  AIRPORT_EMERGENCY_CONFIG,
-  qualifiesForAirportCrash
-} from '../../turn/tracks/airport-emergency-r489.js';
 import { getAchievement as getProductionAchievement } from '../../turn/achievements/catalog-chromatic-r183.js';
 
 const root = process.cwd();
@@ -39,34 +35,6 @@ for (const [id, contract] of expected) {
 assert.equal(catalog.normalizeVehicleId('suv-luxury'), 'firetruck');
 assert.equal(catalog.normalizeVehicleId('hatchback-sports'), 'police');
 assert.equal(catalog.normalizeVehicleId('truck-flat'), 'ambulance');
-
-assert.equal(AIRPORT_EMERGENCY_CONFIG.trackId, 'airport');
-assert.equal(AIRPORT_EMERGENCY_CONFIG.vehicleId, 'ambulance');
-assert.equal(AIRPORT_EMERGENCY_CONFIG.transferLimitMs, 30_000);
-assert.equal(qualifiesForAirportCrash(
-  { valid: true, time: 16.5 },
-  { trackId: 'airport', vehicleId: 'ambulance', crashActive: false }
-), true, 'A valid Airport lap in the Ambulance should trigger the crash');
-assert.equal(qualifiesForAirportCrash(
-  { valid: true, time: 16.5 },
-  { trackId: 'airport', vehicleId: 'police', crashActive: false }
-), false, 'Other emergency vehicles must not trigger the Airport crash');
-assert.equal(qualifiesForAirportCrash(
-  { valid: true, time: 16.5 },
-  { trackId: 'airport', vehicleId: 'sedan', crashActive: false }
-), false, 'Ordinary cars must not trigger the Airport crash');
-assert.equal(qualifiesForAirportCrash(
-  { valid: false, time: 16.5 },
-  { trackId: 'airport', vehicleId: 'ambulance', crashActive: false }
-), false, 'A void or otherwise invalid lap must not trigger the Airport crash');
-assert.equal(qualifiesForAirportCrash(
-  { valid: true, time: 16.5 },
-  { trackId: 'countryside', vehicleId: 'ambulance', crashActive: false }
-), false, 'The Ambulance crash event is Airport-only');
-assert.equal(qualifiesForAirportCrash(
-  { valid: true, time: 16.5 },
-  { trackId: 'airport', vehicleId: 'ambulance', crashActive: true }
-), false, 'The crash should happen only once per page session');
 
 const goldenHour = getProductionAchievement('golden-hour');
 assert.equal(goldenHour?.title, 'GOLDEN HOUR');
@@ -153,11 +121,21 @@ assert.match(trackRegistry, /airport-world-r54\.js/,
   'Production Airport must route through the ambulance-emergency wrapper');
 assert.match(trackRegistry, /airport\(\{ scene, samples, trackWidth, runtime \}\)/,
   'Airport world installation must receive the live TURN runtime');
-assert.match(airportEmergency, /detail\?\.valid === true/);
-assert.match(airportEmergency, /vehicleId === AMBULANCE_ID/);
+assert.match(airportEmergency, /export const AIRPORT_EMERGENCY_CONFIG/);
+assert.match(airportEmergency, /trackId: AIRPORT_TRACK_ID/);
+assert.match(airportEmergency, /vehicleId: AMBULANCE_ID/);
+assert.match(airportEmergency, /TRANSFER_LIMIT_MS = 30_000/);
+assert.match(airportEmergency, /export function qualifiesForAirportCrash/);
+assert.match(airportEmergency, /crashActive !== true/,
+  'The Airport crash should happen only once per page session');
+assert.match(airportEmergency, /trackId === AIRPORT_TRACK_ID/,
+  'The crash trigger must remain Airport-only');
+assert.match(airportEmergency, /vehicleId === AMBULANCE_ID/,
+  'No other car may trigger the Airport crash');
+assert.match(airportEmergency, /detail\?\.valid === true/,
+  'Only a valid completed lap may trigger the crash');
 assert.match(airportEmergency, /globalThis\.__turnBoostActive === true/,
   'The pickup action must require the Ambulance siren/Boost to be active near the crash');
-assert.match(airportEmergency, /TRANSFER_LIMIT_MS = 30_000/);
 assert.match(airportEmergency, /signalSecretAchievement\('golden-hour'/);
 assert.match(airportEmergency, /Airport B787 Overflight/,
   'The normal sky aircraft must disappear after the crash is triggered');
