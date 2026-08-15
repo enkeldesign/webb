@@ -52,8 +52,9 @@ const [
   lotTrackSelect,
   controls,
   audio,
+  maydayAudio,
   airportEmergency,
-  airportWorldR55,
+  airportWorldR56,
   trackRegistry,
   license,
   index,
@@ -67,8 +68,9 @@ const [
   fs.readFile(path.join(turnDir, 'garage/lot-track-select.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'ui/gameplay-controls.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'audio/audio-system.js'), 'utf8'),
-  fs.readFile(path.join(turnDir, 'tracks/airport-emergency-r490.js'), 'utf8'),
-  fs.readFile(path.join(turnDir, 'tracks/airport-world-r55.js'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'audio/mayday-audio-r491.js'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'tracks/airport-emergency-r491.js'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'tracks/airport-world-r56.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'tracks/registry.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'assets/cars/KENNEY-CAR-KIT.md'), 'utf8'),
   fs.readFile(path.join(turnDir, 'index.html'), 'utf8'),
@@ -114,18 +116,18 @@ assert.doesNotMatch(lotTrackSelect, /installFixedLiveryUiGuard|lot-fixed-livery-
 assert.doesNotMatch(index, /syncFixedLiveryRail|emergencyVehicleNames/,
   'Production index must not contain another fixed-livery DOM observer');
 
-assert.match(airportWorldR55, /airport-world-r53\.js/,
+assert.match(airportWorldR56, /airport-world-r53\.js/,
   'The MAYDAY layer must preserve the current real-aircraft Airport world');
-assert.match(airportWorldR55, /airport-emergency-r490\.js/);
-assert.match(trackRegistry, /airport-world-r55\.js/,
-  'Production Airport must route through the polished MAYDAY wrapper');
+assert.match(airportWorldR56, /airport-emergency-r491\.js/);
+assert.match(trackRegistry, /airport-world-r56\.js/,
+  'Production Airport must route through the MAYDAY playtest-fix wrapper');
 assert.match(trackRegistry, /airport\(\{ scene, samples, trackWidth, runtime \}\)/,
   'Airport world installation must receive the live TURN runtime');
 assert.match(airportEmergency, /export const AIRPORT_EMERGENCY_CONFIG/);
 assert.match(airportEmergency, /vehicleId: AMBULANCE_ID/);
 assert.match(airportEmergency, /TRANSFER_LIMIT_MS = 30_000/);
-assert.match(airportEmergency, /MEDICAL_RADIUS = 28/,
-  'The terminal medical bay should use a forgiving arrival radius');
+assert.match(airportEmergency, /MEDICAL_RADIUS = 42/,
+  'The terminal medical bay should be broad enough to trigger around either responder');
 assert.match(airportEmergency, /crashActive !== true/,
   'The Airport crash should happen only once per page session');
 assert.match(airportEmergency, /trackId === AIRPORT_TRACK_ID/,
@@ -138,32 +140,50 @@ assert.match(airportEmergency, /globalThis\.__turnBoostActive === true/,
   'The pickup action must require the Ambulance siren\/Boost to be active near the crash');
 assert.match(airportEmergency, /signalSecretAchievement\('golden-hour'/);
 assert.match(airportEmergency, /WRECK_TARGET_LENGTH = 62/,
-  'The wreck should reuse the real B787 at close to full aircraft scale');
+  'The wreck should reuse the real B787 at full aircraft scale');
 assert.match(airportEmergency, /world\.getObjectByName\(OVERFLIGHT_NAME\)/,
-  'The plane seen in the sky should become the physical wreck rather than a procedural substitute');
+  'The plane seen in the sky should become the physical wreck rather than a substitute');
 assert.match(airportEmergency, /aircraftMount\.rotation\.x = THREE\.MathUtils\.degToRad\(-20\)/);
+assert.match(airportEmergency, /aircraftMount\.rotation\.y = Math\.PI/,
+  'The wreck nose-tail direction must be reversed from the r490 playtest');
 assert.match(airportEmergency, /aircraftMount\.rotation\.z = THREE\.MathUtils\.degToRad\(20\)/);
+assert.match(airportEmergency, /makeFlameTongue/,
+  'The crash fire should use layered bent flame geometry instead of two large cones');
+assert.match(airportEmergency, /THREE\.AdditiveBlending/);
 assert.match(airportEmergency, /\[7\.0, 65, 2\.0, 4\.9\]/,
-  'The smoke column should rise well above the full-scale wreck');
-assert.match(airportEmergency, /TERMINAL_NAME = 'TURN International Terminal'/);
-assert.match(airportEmergency, /terminal\.localToWorld\(new THREE\.Vector3\(0, 0\.3, 31\)\)/,
-  'The medical trigger belongs on the open apron directly in front of the terminal');
-assert.match(airportEmergency, /placement\.terminal\.add\(sign\)/,
-  'The H sign must be mounted to the terminal instead of floating in the scenery');
+  'The smoke column should stay tall above the full-scale wreck');
+assert.match(airportEmergency, /preloadCarModels\(\['firetruck', 'ambulance'\]\)/,
+  'Airport + Ambulance should prewarm both medical responder models before lap one finishes');
+assert.match(airportEmergency, /requestIdleCallback/,
+  'Responder preparation should move away from the finish-line critical path');
+assert.match(airportEmergency, /playMaydayCrashSound\(\);[\s\S]*session\.crashActive = true/,
+  'The impact must be requested before any crash-scene or responder work');
 assert.match(airportEmergency, /carId: 'firetruck'/,
-  'The medical bay should gain a real Fire Truck responder after the crash');
-assert.match(airportEmergency, /installResponderLightOverride/,
-  'The medical Fire Truck should visibly flash as an emergency destination');
-assert.match(airportEmergency, /positionalPan/,
-  'The rescue must expose left\/right audible guidance');
-assert.match(airportEmergency, /cue\?\.\('car-near', \{ pan, intensity \}\)/,
-  'Positioned guidance should stay inside the established TURN audio graph');
+  'The medical bay needs a Fire Truck responder');
+assert.match(airportEmergency, /carId: 'ambulance'/,
+  'The medical bay needs an Ambulance responder too');
+assert.match(airportEmergency, /horizontalDistanceSquared\(position, placement\.firetruckPoint\)/);
+assert.match(airportEmergency, /horizontalDistanceSquared\(position, placement\.ambulancePoint\)/,
+  'Approaching either responder must count as reaching the medical bay');
+assert.match(airportEmergency, /pulseMaydayResponderSiren/,
+  'The medical responders must provide positioned audible sirens');
+assert.match(airportEmergency, /pulseMaydayFire/,
+  'The crash site must retain positioned audible fire guidance');
+assert.match(airportEmergency, /#message\.turn-mayday-message[\s\S]*31vh/,
+  'MAYDAY instructions must sit below the top lap HUD');
 assert.match(airportEmergency, /marker\.textContent = kind === 'medical' \? 'H' : '🔥'/,
   'The minimap must switch from the crash marker to the terminal medical marker during transport');
 assert.match(airportEmergency, /sessionPersistent: true/);
 assert.match(airportEmergency, /clearsOnPageReload: true/);
 assert.doesNotMatch(airportEmergency, /localStorage|sessionStorage/,
   'The crash must persist only for the current page session and reset when TURN starts again');
+
+assert.match(maydayAudio, /export function playMaydayCrashSound/);
+assert.match(maydayAudio, /export function pulseMaydayResponderSiren/);
+assert.match(maydayAudio, /createStereoPanner/,
+  'MAYDAY responder audio should preserve left\/right direction when supported');
+assert.match(maydayAudio, /__turnAudioPreferences\?\.getSettings/,
+  'The supplemental rescue audio must respect TURN audio-off preferences');
 
 const escapedBuild = release.cacheKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 for (const html of [index, nextIndex]) {
@@ -184,4 +204,4 @@ assert.match(audio, /emergencySirenFrequency/);
 assert.match(audio, /sirenActive = boostActive/);
 assert.match(license, /Creative Commons CC0 1\.0 Universal/);
 
-console.log('TURN emergency vehicles and polished Airport MAYDAY rescue passed.');
+console.log('TURN emergency vehicles and MAYDAY playtest fixes passed.');
