@@ -7,7 +7,9 @@ import {
 import {
   applyLowSpeedHorizonDeadZone,
   resolveLowSpeedHorizonDeadZone,
+  resolveLowSpeedHorizonStabilizationAmount,
   resolveSensorCameraRollLimit,
+  smoothLowSpeedHorizonRoll,
   updateRaceCameraState
 } from '../turn/render/camera.js';
 import {
@@ -48,8 +50,14 @@ approximately(resolveSteeringRollLimit(toRadians(14), { steeringDegrees: 0 }), t
 approximately(resolveSensorCameraRollLimit({ horizonDegrees: 90 }), toRadians(18));
 
 // Horizon stabilization is deliberately limited to first-impression / crawling
-// speeds. It is fully active through 5 km/h, fades linearly, and is completely
-// absent from 25 km/h upward so real corners retain today's direct camera feel.
+// speeds. Dead-zone suppression and temporal smoothing share the same fade: full
+// through 5 km/h and completely absent from 25 km/h upward.
+approximately(resolveLowSpeedHorizonStabilizationAmount(0), 1);
+approximately(resolveLowSpeedHorizonStabilizationAmount(5 / 3.6), 1);
+approximately(resolveLowSpeedHorizonStabilizationAmount(15 / 3.6), 0.5);
+approximately(resolveLowSpeedHorizonStabilizationAmount(25 / 3.6), 0);
+approximately(resolveLowSpeedHorizonStabilizationAmount(58 / 3.6), 0);
+approximately(resolveLowSpeedHorizonStabilizationAmount(-5 / 3.6), 1);
 approximately(resolveLowSpeedHorizonDeadZone(0), toRadians(1.25));
 approximately(resolveLowSpeedHorizonDeadZone(5 / 3.6), toRadians(1.25));
 approximately(resolveLowSpeedHorizonDeadZone(15 / 3.6), toRadians(0.625));
@@ -70,6 +78,36 @@ approximately(
   applyLowSpeedHorizonDeadZone(toRadians(1), toRadians(24), 25 / 3.6),
   toRadians(1),
   1e-9
+);
+
+const smoothingTarget = toRadians(10);
+const stoppedSmoothingStep = smoothLowSpeedHorizonRoll(0, smoothingTarget, 0, 1 / 60);
+const midSpeedSmoothingStep = smoothLowSpeedHorizonRoll(0, smoothingTarget, 15 / 3.6, 1 / 60);
+assert.ok(
+  stoppedSmoothingStep > 0 && stoppedSmoothingStep < smoothingTarget,
+  'Stopped horizon motion should ease toward deliberate tilt instead of stepping immediately'
+);
+assert.ok(
+  midSpeedSmoothingStep > stoppedSmoothingStep && midSpeedSmoothingStep < smoothingTarget,
+  'Temporal smoothing should fade progressively between 5 and 25 km/h'
+);
+approximately(
+  smoothLowSpeedHorizonRoll(0, smoothingTarget, 25 / 3.6, 1 / 60),
+  smoothingTarget,
+  1e-9
+);
+approximately(
+  smoothLowSpeedHorizonRoll(0, smoothingTarget, 58 / 3.6, 1 / 60),
+  smoothingTarget,
+  1e-9
+);
+let convergedRoll = 0;
+for (let frame = 0; frame < 60; frame += 1) {
+  convergedRoll = smoothLowSpeedHorizonRoll(convergedRoll, smoothingTarget, 0, 1 / 60);
+}
+assert.ok(
+  convergedRoll > smoothingTarget * 0.999,
+  'Low-speed smoothing must settle on the intentional target instead of reducing steering range'
 );
 
 const steeringState = {
@@ -243,4 +281,4 @@ for (const removedPath of [
 if (previousConfiguration === undefined) delete globalThis.__TURN_MOTION_SAFE_ZONE__;
 else globalThis.__TURN_MOTION_SAFE_ZONE__ = previousConfiguration;
 
-console.log('Canonical TURN 24-degree safe zone, low-speed horizon stabilization, inertial warning and NEXT wrapper passed.');
+console.log('Canonical TURN 24-degree safe zone, low-speed horizon dead zone and smoothing, inertial warning and NEXT wrapper passed.');
