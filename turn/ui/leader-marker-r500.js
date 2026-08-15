@@ -57,22 +57,31 @@ export function leadingRival(runtime) {
   for (let index = 0; index < laps.length; index += 1) {
     const lap = laps[index];
     const lapTime = Number(lap?.time);
-    if (!Number.isFinite(lapTime) || lapTime <= 0 || elapsed >= lapTime) continue;
+    if (!Number.isFinite(lapTime) || lapTime <= 0) continue;
 
     const frame = runtime?.lapFrameAt?.(lap, elapsed);
     const progress = Number(frame?.p);
-    if (!Number.isFinite(progress) || progress <= playerProgress + LEADER_PROGRESS_EPSILON) continue;
+    if (!Number.isFinite(progress)) continue;
 
-    if (!leader || progress > leader.progress) {
+    const completedLaps = Math.floor(elapsed / lapTime);
+    const raceProgress = completedLaps + progress;
+    if (!leader || raceProgress > leader.raceProgress) {
       leader = {
         index,
         lap,
         car: runtime?.competitorCars?.[index] || null,
         frame,
-        progress
+        progress,
+        completedLaps,
+        raceProgress
       };
     }
   }
+
+  // Once the actual leader has finished this timed lap there is no longer a
+  // physical car ahead to mark; do not silently switch the marker to P2.
+  if (!leader || leader.completedLaps > 0) return null;
+  if (leader.raceProgress <= playerProgress + LEADER_PROGRESS_EPSILON) return null;
   return leader;
 }
 
