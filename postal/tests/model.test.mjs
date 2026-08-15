@@ -14,6 +14,21 @@ for (const name of ['model-data.js','model-core.js','model-flow.js','model-ops.j
 const { PostalSimulation, packageScore, nextLegForPackage } = context.POSTAL_MODEL;
 
 {
+  const crew = Object.values(context.CITIES).flatMap(city => city.crew);
+  assert.equal(crew.length, 9);
+  assert.equal(new Set(crew.map(worker => worker.name)).size, 9, 'Depot crew names must be unique');
+  assert.equal(new Set(crew.map(worker => worker.assetKey)).size, 9, 'Depot crew models must be unique');
+  const sim = new PostalSimulation({ seed: 9 });
+  for (const cityId of context.CITY_IDS) {
+    assert.ok(sim.getIncomingPackages(cityId).length >= 4, `${cityId} should open with a visible intake queue`);
+  }
+  const openingTotal = sim.packages.size;
+  sim.paused = false;
+  for (let i = 0; i < 4; i++) sim.tick(1);
+  assert.ok(sim.packages.size >= openingTotal + 2, 'Incoming packages should arrive in visible waves');
+}
+
+{
   const sim = new PostalSimulation({ seed: 1 });
   sim.paused = false;
   const pkg = sim.packages.get('SOR-48219');

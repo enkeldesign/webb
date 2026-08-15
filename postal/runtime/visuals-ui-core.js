@@ -112,9 +112,12 @@ function updateUI(force = false) {
   if (!force && now - lastUiUpdate < 300) return;
   lastUiUpdate = now;
   const m = simulation.getMetrics();
+  if (simulation.stats.received > lastReceivedCount) app.incoming.classList.add('new-arrival');
+  lastReceivedCount = simulation.stats.received;
   app.metricOnTime.textContent = `${m.onTime}%`;
   $('#metric-ontime-bar').style.width = `${Math.max(2, m.onTime)}%`;
-  app.metricFlow.textContent = `${m.active}`;
+  app.metricFlow.textContent = `${m.incoming}`;
+  app.incoming.setAttribute('aria-label', `Open ${m.incoming} incoming package${m.incoming === 1 ? '' : 's'} across all depots`);
   app.metricIssues.textContent = `${m.issues}`;
   app.issueBadge.textContent = String(m.issues);
   app.issueBadge.hidden = m.issues === 0;

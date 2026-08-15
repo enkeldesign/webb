@@ -3,17 +3,32 @@ const CITIES = {
   sundsvall: {
     id: 'sundsvall', name: 'Sundsvall', short: 'SUN', hub: 'Sundsvall terminal',
     towns: ['Sundsvall', 'Timrå', 'Söråker', 'Härnösand', 'Ånge'],
-    coord: [17.3069, 62.3908], gateway: 'stockholm'
+    coord: [17.3069, 62.3908], gateway: 'stockholm',
+    crew: [
+      { name: 'Mira', role: 'Inbound lead', assetKey: 'workerSunMira' },
+      { name: 'Leo', role: 'Express sort', assetKey: 'workerSunLeo' },
+      { name: 'Sam', role: 'Local routes', assetKey: 'workerSunSam' }
+    ]
   },
   stockholm: {
     id: 'stockholm', name: 'Stockholm', short: 'STO', hub: 'Stockholm terminal',
     towns: ['Stockholm', 'Solna', 'Nacka', 'Södertälje', 'Uppsala'],
-    coord: [18.0686, 59.3293], gateway: 'stockholm'
+    coord: [18.0686, 59.3293], gateway: 'stockholm',
+    crew: [
+      { name: 'Amina', role: 'International desk', assetKey: 'workerStoAmina' },
+      { name: 'Freja', role: 'Priority sort', assetKey: 'workerStoFreja' },
+      { name: 'Viktor', role: 'National handoff', assetKey: 'workerStoViktor' }
+    ]
   },
   goteborg: {
     id: 'goteborg', name: 'Göteborg', short: 'GBG', hub: 'Göteborg terminal',
     towns: ['Göteborg', 'Mölndal', 'Kungälv', 'Kungsbacka', 'Borås'],
-    coord: [11.9746, 57.7089], gateway: 'goteborg'
+    coord: [11.9746, 57.7089], gateway: 'goteborg',
+    crew: [
+      { name: 'Elin', role: 'Dock lead', assetKey: 'workerGbgElin' },
+      { name: 'Nils', role: 'Regional sort', assetKey: 'workerGbgNils' },
+      { name: 'Omar', role: 'Export desk', assetKey: 'workerGbgOmar' }
+    ]
   }
 };
 
@@ -94,11 +109,13 @@ function trace(pkg, clock, label, place) {
 }
 
 function createWorker(cityId, index) {
-  const names = ['Mira', 'Leo', 'Sam', 'Nora'];
+  const profile = CITIES[cityId].crew[index];
   return {
     id: `${cityId}-w${index + 1}`,
     cityId,
-    name: names[index % names.length],
+    name: profile.name,
+    role: profile.role,
+    assetKey: profile.assetKey,
     task: 'Waiting for work',
     packageId: null,
     progress: 0,
