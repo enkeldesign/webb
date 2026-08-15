@@ -11,15 +11,18 @@ const TERMINAL_NAME = 'TURN International Terminal';
 const PREPARED_WRECK_NAME = 'Airport B787 Prepared Wreck';
 const MEDICAL_DOOR_NAME = 'Airport MAYDAY medical entrance';
 
-// r492 intentionally pushed the live B787 down by 4.8 local units while its mount sat
-// another 0.7 units low. With the wreck pitched and rolled 20 degrees, that 4.8-unit
-// local-Y move contributed about 4.24 world-Y units (4.8 * cos20 * cos20), for an
-// effective deliberate sink of about 4.94 units. r493 removed all penetration and
-// ground-fit the lowest geometry. Split those two playtest extremes: lower the fitted
-// wreck by half the old effective sink, 2.47 world units.
-const WRECK_PENETRATION_Y = 2.47;
+// r492 effectively lowered the wreck by about 4.94 world-Y units: the aircraft-local
+// -4.8 Y offset contributes about 4.24 after the 20-degree pitch/roll, plus the mount's
+// -0.7 Y. r494 used 2.47, exactly halfway between r493's ground fit and r492. Playtesting
+// still showed the fuselage clearly above ground, while r492 was closer but slightly too low.
+// Move 78% of the remaining 2.47-unit gap back toward r492:
+// 2.47 + (4.94 - 2.47) * 0.78 = 4.3966 -> 4.40 world units.
+const WRECK_PENETRATION_Y = 4.40;
 const WRECK_FIND_INTERVAL_MS = 120;
 const WRECK_FIND_ATTEMPTS = 160;
+const MEDICAL_WINDOW_X = 12.5;
+const MEDICAL_WINDOW_Y = 8.7;
+const MEDICAL_WINDOW_Z = 12.25;
 
 export function installAirportEmergency(options = {}) {
   const runtime = options.runtime || globalThis.__turnRuntime;
@@ -120,7 +123,7 @@ function installWreckPenetration(world, runtime) {
 
   world.userData.turnMaydayR494WreckPenetration = Object.freeze({
     amount: WRECK_PENETRATION_Y,
-    basis: 'half of the r492 effective hard-coded vertical sink after 20-degree pitch/roll'
+    basis: '78 percent of the remaining distance from r494 back toward the r492 wreck depth'
   });
 }
 
@@ -129,9 +132,22 @@ function installMedicalEntrance(world) {
   const terminal = world.getObjectByName(TERMINAL_NAME);
   if (!terminal) return;
 
+  // The terminal windows are facade overlays rather than holes in the wall. Remove the
+  // north-facing window in this exact bay, then put the medical entrance on its centreline
+  // so the door genuinely replaces the window instead of floating between two bays.
+  const replacedWindow = terminal.children.find((node) => (
+    node?.isGroup
+    && nearly(node.position?.x, MEDICAL_WINDOW_X)
+    && nearly(node.position?.y, MEDICAL_WINDOW_Y)
+    && nearly(node.position?.z, MEDICAL_WINDOW_Z)
+    && node.children?.length === 2
+  ));
+  if (replacedWindow) terminal.remove(replacedWindow);
+
   const entrance = new THREE.Group();
   entrance.name = MEDICAL_DOOR_NAME;
   entrance.userData.turnAirportMedicalEntrance = true;
+  entrance.userData.turnReplacesTerminalWindow = true;
 
   const ink = new THREE.MeshBasicMaterial({ color: 0x08090a, toneMapped: false });
   const cream = new THREE.MeshStandardMaterial({ color: 0xfff8e8, roughness: 0.88 });
@@ -171,8 +187,10 @@ function installMedicalEntrance(world) {
     node.receiveShadow = true;
   });
 
-  // The H occupies the central north-facing window. Put the entrance immediately to
-  // its right, toward the responder Ambulance, replacing the adjacent window visually.
-  entrance.position.set(9.2, 0, 12.68);
+  entrance.position.set(MEDICAL_WINDOW_X, 0, 12.68);
   terminal.add(entrance);
+}
+
+function nearly(value, expected) {
+  return Math.abs(Number(value) - expected) < 0.01;
 }
