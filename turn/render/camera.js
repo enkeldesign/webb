@@ -1,5 +1,8 @@
 const DEFAULT_MAX_SENSOR_CAMERA_ROLL = 18 * Math.PI / 180;
 const MAX_CONFIGURED_SAFE_ZONE_DEGREES = 45;
+const LOW_SPEED_HORIZON_DEAD_ZONE = 1.25 * Math.PI / 180;
+const LOW_SPEED_HORIZON_FULL_STABILIZATION_SPEED = 5 / 3.6;
+const LOW_SPEED_HORIZON_RELEASE_SPEED = 25 / 3.6;
 
 export function resolveSensorCameraRollLimit(
   configuration = globalThis.__TURN_MOTION_SAFE_ZONE__
@@ -13,6 +16,39 @@ export function resolveSensorCameraRollLimit(
     return configuredDegrees * Math.PI / 180;
   }
   return DEFAULT_MAX_SENSOR_CAMERA_ROLL;
+}
+
+export function resolveLowSpeedHorizonDeadZone(speed) {
+  const speedMagnitude = Math.abs(Number(speed) || 0);
+  if (speedMagnitude <= LOW_SPEED_HORIZON_FULL_STABILIZATION_SPEED) {
+    return LOW_SPEED_HORIZON_DEAD_ZONE;
+  }
+  if (speedMagnitude >= LOW_SPEED_HORIZON_RELEASE_SPEED) return 0;
+
+  const releaseProgress = (
+    speedMagnitude - LOW_SPEED_HORIZON_FULL_STABILIZATION_SPEED
+  ) / (
+    LOW_SPEED_HORIZON_RELEASE_SPEED - LOW_SPEED_HORIZON_FULL_STABILIZATION_SPEED
+  );
+  return LOW_SPEED_HORIZON_DEAD_ZONE * (1 - releaseProgress);
+}
+
+export function applyLowSpeedHorizonDeadZone(relativeRoll, maxRoll, speed) {
+  const limit = Math.max(0, Number(maxRoll) || 0);
+  if (!limit) return 0;
+
+  const guardedRoll = clamp(Number(relativeRoll) || 0, -limit, limit);
+  const deadZone = Math.min(limit, resolveLowSpeedHorizonDeadZone(speed));
+  if (!deadZone) return guardedRoll;
+
+  const magnitude = Math.abs(guardedRoll);
+  if (magnitude <= deadZone) return 0;
+
+  // Remove only the low-speed neutral jitter range, then stretch the remaining
+  // response so intentional full tilt still reaches the existing camera limit.
+  const activeRange = Math.max(0.000001, limit - deadZone);
+  const remappedMagnitude = (magnitude - deadZone) / activeRange * limit;
+  return Math.sign(guardedRoll) * remappedMagnitude;
 }
 
 export function updateRaceCameraState({
@@ -77,7 +113,12 @@ export function updateRaceCameraState({
     const relativeRoll = normalizeAngle(state.roll - neutralRoll);
     const maxSensorCameraRoll = resolveSensorCameraRollLimit();
     const guardedRoll = clamp(relativeRoll, -maxSensorCameraRoll, maxSensorCameraRoll);
-    camera.rotateZ(-guardedRoll);
+    const stabilizedRoll = applyLowSpeedHorizonDeadZone(
+      guardedRoll,
+      maxSensorCameraRoll,
+      state.speed
+    );
+    camera.rotateZ(-stabilizedRoll);
   }
 
   camera.fov = lerp(camera.fov, 68 + speedRatio * 14, Math.min(1, dt * 4.5));
