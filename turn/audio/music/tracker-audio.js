@@ -69,6 +69,16 @@ export function stopPlayback() {
   document.getElementById('playStatus').textContent = 'Stopped';
 }
 
+function stopForDemo() {
+  const canonicalStop = document.getElementById('stopButton');
+  if (typeof canonicalStop?.onclick === 'function') canonicalStop.click();
+  else stopPlayback();
+  if (audio) {
+    audio.tones.stop();
+    audio.drums.stop();
+  }
+}
+
 export async function startPlayback(mode, part = model.state.part, bar = 0) {
   stopPlayback();
   const so = buildSong();
@@ -154,7 +164,7 @@ function pitchedDemoLabel(group, name, index) {
 }
 
 export async function demoInstrument(group, name, button) {
-  stopPlayback();
+  stopForDemo();
   const g = await resume();
   g.step(.16);
   const now = performance.now();
