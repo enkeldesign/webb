@@ -1,14 +1,23 @@
 # POSTAL assets
 
-POSTAL includes selected assets from the following Kenney packs:
+POSTAL uses selected assets from Kenney packs. All Kenney assets listed here are released under Creative Commons CC0 1.0 Universal; attribution is not required, but POSTAL credits Kenney because the assets give the game much of its visual character.
 
-- [**Factory Kit 3.0**](https://kenney.nl/assets/factory-kit) — conveyors, parcels, scanners, machinery, structures and Oopi operators.
-- [**City Builder Starter Kit**](https://github.com/KenneyNL/City-Builder-Kit) — roads, buildings and trees.
-- [**Car Kit 3.1**](https://kenney.nl/assets/car-kit) — the northbound truck, shared from TURN's existing vendored assets.
-- [**UI Audio 1.0**](https://kenney.nl/assets/ui-audio) — CC0 samples retained from the first visual prototype. The current build does not play these files; its short, warm feedback tones are synthesized locally with the Web Audio API.
+## Supplied for this rebuild
 
-All selected assets are released under [Creative Commons CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/). Attribution is not required. POSTAL credits Kenney because the work gives the game much of its character.
+- **City Kit (Suburban)** — the supplied large and small tree models are vendored directly with their color-map texture.
+- **Factory Kit 3.0** — the supplied pack matches the Factory Kit already present in POSTAL, so the existing vendored copy is reused for operators, conveyors, parcels, structures and signage instead of duplicating it.
 
-Original source: [kenney.nl/assets](https://kenney.nl/assets)
+The CC0 license files shipped inside the user-supplied archives are the source of truth for these supplied assets.
+
+## Existing CC0 Kenney assets retained
+
+- **City Builder Starter Kit** — regional buildings.
+- **Car Kit 3.1** — postal truck, shared from TURN's existing vendored assets.
+
+## Sweden geometry
+
+The 3D Sweden outline is derived from **Natural Earth, Admin 0 Countries, 1:110m**. Natural Earth data is in the public domain and may be used for any purpose. Source: Natural Earth / `nvkelso/natural-earth-vector`.
+
+## Runtime
 
 POSTAL vendors selected modules from **three.js 0.184.0** under the MIT License. The license text is included at `../vendor/THREE-LICENSE.txt`.

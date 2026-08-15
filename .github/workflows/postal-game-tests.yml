@@ -23,6 +23,9 @@ jobs:
         with:
           node-version: 22
       - name: Check JavaScript syntax
-        run: node --check postal/main.mjs && node --check postal/world.mjs && node --check postal/sim.mjs && node --check postal/management-sim.mjs && node --check postal/management-ui.mjs && node --check postal/sw.js
-      - name: Test the shift simulation
+        run: |
+          node --check postal/main.mjs
+          node --check postal/sw.js
+          for file in postal/runtime/*.js; do node --check "$file"; done
+      - name: Test the logistics simulation
         run: node --test postal/tests/*.test.mjs
