@@ -28,9 +28,9 @@ function resizeRenderer() {
   const rect = app.viewport.getBoundingClientRect();
   const width = Math.max(1, rect.width);
   const height = Math.max(1, rect.height);
-  renderer.setSize(width, height, false);
+  renderer?.setSize(width, height, false);
   const aspect = width / height;
-  const base = currentLevel === 'sweden' ? 7.2 : 6.9;
+  const base = currentLevel === 'region' ? 7.15 : currentLevel === 'sweden' ? 6.15 : 6.15;
   if (aspect >= 1) {
     camera.left = -base * aspect; camera.right = base * aspect; camera.top = base; camera.bottom = -base;
   } else {
@@ -46,7 +46,7 @@ function animate(now) {
   if (!simulation.paused) visualTime += realDt;
   updateSceneVisuals();
   updateUI();
-  renderer.render(scene, camera);
+  renderer?.render(scene, camera);
   requestAnimationFrame(animate);
 }
 
@@ -57,8 +57,13 @@ function bindUI() {
   $('#focus-btn').addEventListener('click', showFocusSheet);
   $('#issues-btn').addEventListener('click', showIssuesSheet);
   $('#find-btn').addEventListener('click', showFindSheet);
-  app.eventRibbon.addEventListener('click', showIssuesSheet);
+  app.eventRibbon.addEventListener('click', () => {
+    const packageId = app.eventRibbon.dataset.packageId;
+    if (packageId && simulation.packages.has(packageId)) showPackage(packageId);
+    else showIssuesSheet();
+  });
   app.sheetClose.addEventListener('click', closeSheet);
+  app.sheet.addEventListener('click', event => { if (event.target === app.sheet) closeSheet(); });
   app.canvas.addEventListener('pointerup', onScenePointer);
 
   app.sheetBody.addEventListener('click', event => {
@@ -103,7 +108,7 @@ function bindUI() {
 async function boot() {
   bindUI();
   resizeRenderer();
-  await preloadAssets();
+  if (renderer) await preloadAssets();
   buildScene();
   updateUI(true);
   app.loader.classList.add('is-done');
@@ -112,4 +117,12 @@ async function boot() {
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
 
-boot();
+boot().catch(error => {
+  console.error('POSTAL failed to start.', error);
+  app.canvas.hidden = true;
+  app.fallback.hidden = false;
+  app.loader?.classList.add('is-done');
+  setTimeout(() => app.loader?.remove(), 420);
+  updateUI(true);
+  announce('The 3D view could not start. Package controls are still available.');
+});

@@ -7,67 +7,88 @@ function closeSheet() {
 function showFocusSheet() {
   const buttons = FOCUS_MODES.map(mode => `
     <button class="focus-option ${simulation.focus === mode ? 'is-active' : ''}" data-focus="${mode}" aria-pressed="${simulation.focus === mode}">
-      <span>${focusLabel(mode)}</span>
+      <span class="focus-option-icon" aria-hidden="true">${focusIcon(mode)}</span>
+      <strong>${focusLabel(mode)}</strong>
       <small>${focusDescription(mode)}</small>
     </button>`).join('');
-  showSheet('What matters right now?', `<p class="sheet-lede">One choice. The team automatically pulls the parcels that best match it.</p><div class="focus-grid">${buttons}</div>`);
+  showSheet('Choose the team focus', `<p class="sheet-lede">The depot keeps moving. Your focus changes which packages every worker pulls first.</p><div class="focus-grid">${buttons}</div>`);
+}
+
+function focusIcon(mode) {
+  return ({ late: '⏱', complaints: '☎', express: 'ϟ', international: '↗' })[mode] || '●';
 }
 
 function focusDescription(mode) {
   return ({
-    late: 'Protect deadlines and recover parcels closest to failure.',
-    complaints: 'Pull customer pain to the front of every queue.',
-    express: 'Keep paid express traffic moving first.',
-    international: 'Protect handoffs with fewer recovery options.'
+    late: 'Recover the packages closest to missing their deadline.',
+    complaints: 'Pull visible customer pain to the front of each queue.',
+    express: 'Protect the fastest paid service across every handoff.',
+    international: 'Prioritise routes with fewer chances to recover.'
   })[mode];
 }
 
 function showIssuesSheet() {
   const issues = simulation.getIssues();
-  const html = issues.length ? issues.map(pkg => packageRow(pkg, true)).join('') : `<div class="empty-state"><strong>No active exceptions.</strong><p>The network is moving cleanly.</p></div>`;
-  showSheet(`Issues · ${issues.length}`, `<div class="issue-list">${html}</div>`);
+  const html = issues.length
+    ? `<p class="sheet-lede">These packages have left the normal flow. Open one, read its scan trail and choose an operational fix.</p><div class="issue-list">${issues.map(pkg => packageRow(pkg, true)).join('')}</div>`
+    : `<div class="empty-state"><span class="empty-state-icon" aria-hidden="true">✓</span><strong>No active exceptions</strong><p>The network is moving cleanly.</p></div>`;
+  showSheet(`Issues · ${issues.length}`, html);
 }
 
 function packageRow(pkg, showIssue = false) {
   const route = `${pkg.origin.place} → ${pkg.destination.place}`;
   const className = pkg.issue ? 'critical' : pkg.complaint ? 'warning' : 'normal';
+  const cubeLabel = pkg.service === 'express' ? 'EXP' : pkg.id.split('-')[0].slice(0, 3);
   return `<button class="package-row ${className}" data-open-package="${pkg.id}">
-    <span class="package-row-main"><strong>${pkg.id}</strong><span>${route}</span></span>
-    <span class="package-row-meta">${showIssue ? escapeHtml(pkg.issueDetail || 'Customer complaint') : escapeHtml(pkg.location)}</span>
+    <span class="parcel-cube" aria-hidden="true">${escapeHtml(cubeLabel)}</span>
+    <span class="package-row-copy">
+      <span class="package-row-main"><strong>${escapeHtml(pkg.id)}</strong><span>${escapeHtml(route)}</span></span>
+      <span class="package-row-meta">${showIssue ? escapeHtml(pkg.issueDetail || 'Customer complaint') : escapeHtml(pkg.location)}</span>
+    </span>
+    <span class="row-arrow" aria-hidden="true">›</span>
   </button>`;
 }
 
 function showFindSheet() {
   showSheet('Find a package', `
-    <label class="search-label" for="package-search">ID, town, country or carrier</label>
-    <input id="package-search" class="package-search" type="search" inputmode="search" autocomplete="off" placeholder="Try US-77104 or Timrå">
-    <div id="search-results" class="search-results"><p class="hint">Search the live network from parcel to country.</p></div>
+    <label class="search-label" for="package-search">Package ID, town, country or carrier</label>
+    <div class="search-box"><input id="package-search" class="package-search" type="search" inputmode="search" autocomplete="off" placeholder="Try US-77104 or Timrå"></div>
+    <div id="search-results" class="search-results"><p class="hint">Search every live package in Sweden and beyond.</p></div>
   `, { onOpen() { setTimeout(() => $('#package-search')?.focus(), 30); } });
 }
 
 function showPackage(packageId) {
-  const pkg = simulation.packages.get(packageId); if (!pkg) return;
+  const pkg = simulation.packages.get(packageId);
+  if (!pkg) return;
   selectedPackageId = packageId;
   const slack = Math.round(pkg.deadline - simulation.clock);
   const status = humanStatus(pkg.status);
   const issue = pkg.issue ? `<div class="exception-card"><span class="eyebrow">NEEDS YOU</span><strong>${issueTitle(pkg.issue)}</strong><p>${escapeHtml(pkg.issueDetail)}</p></div>` : '';
-  const complaint = pkg.complaint ? `<div class="complaint-note"><strong>Customer complaint</strong><span>The recipient has asked where this parcel is.</span></div>` : '';
+  const complaint = pkg.complaint ? `<div class="complaint-note"><strong>Customer complaint</strong><span>The recipient has asked where this package is.</span></div>` : '';
   const actions = packageActions(pkg);
   const traceHtml = [...pkg.trace].reverse().map(item => `<li><span>${formatGameClock(item.t)}</span><div><strong>${escapeHtml(item.label)}</strong><small>${escapeHtml(item.place)}</small></div></li>`).join('');
   showSheet(pkg.id, `
-    <div class="package-hero">
-      <div><span class="eyebrow">${escapeHtml(pkg.carrier)} · ${pkg.service.toUpperCase()}</span><h3>${escapeHtml(pkg.origin.place)} <span aria-hidden="true">→</span> ${escapeHtml(pkg.destination.place)}</h3><p>${escapeHtml(pkg.origin.country)} → ${escapeHtml(pkg.destination.country)}</p></div>
-      <span class="deadline-pill ${slack < 0 ? 'late' : slack < 25 ? 'soon' : ''}">${slack < 0 ? `${Math.abs(slack)}m late` : `${slack}m left`}</span>
+    <div class="package-label-card ${carrierClass(pkg.carrier)}">
+      <span class="carrier-band" aria-hidden="true"></span>
+      <div class="package-hero">
+        <div><span class="eyebrow">${escapeHtml(pkg.carrier)} · ${pkg.service.toUpperCase()}</span><h3>${escapeHtml(pkg.origin.place)} <span aria-hidden="true">→</span> ${escapeHtml(pkg.destination.place)}</h3><p>${escapeHtml(pkg.origin.country)} → ${escapeHtml(pkg.destination.country)}</p></div>
+        <span class="deadline-pill ${slack < 0 ? 'late' : slack < 25 ? 'soon' : ''}">${slack < 0 ? `${Math.abs(slack)}m late` : `${slack}m left`}</span>
+      </div>
+      <div class="route-visual" aria-hidden="true"><span></span><i></i><span></span></div>
     </div>
-    <dl class="package-facts"><div><dt>Status</dt><dd>${status}</dd></div><div><dt>Now</dt><dd>${escapeHtml(pkg.location)}</dd></div></dl>
+    <dl class="package-facts"><div><dt>Status</dt><dd>${status}</dd></div><div><dt>Current location</dt><dd>${escapeHtml(pkg.location)}</dd></div></dl>
     ${issue}${complaint}
     <div class="sheet-actions">${actions}</div>
-    <details class="trace" open><summary>Trace · ${pkg.trace.length} scans</summary><ol>${traceHtml}</ol></details>
+    <details class="trace" open><summary>Full trace · ${pkg.trace.length} scans</summary><ol>${traceHtml}</ol></details>
   `);
 }
 
+function carrierClass(carrier) {
+  return `carrier-${String(carrier || 'other').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
+}
+
 function packageActions(pkg) {
-  const btn = (label, action, cls='secondary') => `<button class="action-btn ${cls}" data-package-action="${action}" data-package-id="${pkg.id}">${label}</button>`;
+  const btn = (label, action, cls = 'secondary') => `<button class="action-btn ${cls}" data-package-action="${action}" data-package-id="${pkg.id}">${label}</button>`;
   const list = [];
   if (pkg.issue === 'scan-gap') list.push(btn('SCAN CAGE', 'scan-cage', 'primary'), btn('REROUTE', 'reroute'));
   else if (pkg.issue === 'wrong-dock' || pkg.issue === 'routing') list.push(btn('REROUTE', 'reroute', 'primary'));
@@ -79,69 +100,86 @@ function packageActions(pkg) {
 }
 
 function showWorker(workerId) {
-  const worker = Object.values(simulation.cities).flatMap(c => c.workers).find(w => w.id === workerId);
+  const worker = Object.values(simulation.cities).flatMap(city => city.workers).find(item => item.id === workerId);
   if (!worker) return;
   const pkg = worker.packageId ? simulation.packages.get(worker.packageId) : null;
+  const progress = Math.min(100, Math.round((worker.progress / worker.total) * 100) || 0);
   showSheet(worker.name, `
-    <div class="entity-card"><span class="eyebrow">SORT TEAM · ${CITIES[worker.cityId].name}</span><h3>${escapeHtml(worker.task)}</h3>
-      <p>${pkg ? `Working on <button class="inline-link" data-open-package="${pkg.id}">${pkg.id}</button> because it currently scores highest under <strong>${focusLabel(simulation.focus)}</strong>.` : `Waiting for the next parcel. Current focus: <strong>${focusLabel(simulation.focus)}</strong>.`}</p>
-      <div class="mini-stats"><span><strong>${worker.handled}</strong> handled</span><span><strong>${Math.round((worker.progress / worker.total) * 100) || 0}%</strong> task</span></div>
+    <div class="entity-card">
+      <div class="entity-card-layout">
+        <span class="entity-avatar" aria-hidden="true">${escapeHtml(worker.name.slice(0, 1))}</span>
+        <div><span class="eyebrow">SORT TEAM · ${CITIES[worker.cityId].name.toUpperCase()}</span><h3>${escapeHtml(worker.task)}</h3></div>
+      </div>
+      <p>${pkg ? `Working on <button class="inline-link" data-open-package="${pkg.id}">${pkg.id}</button> because it scores highest under <strong>${focusLabel(simulation.focus)}</strong>.` : `Ready for the next package. Current team focus: <strong>${focusLabel(simulation.focus)}</strong>.`}</p>
+      <div class="progress-rail" aria-label="Task ${progress}% complete"><i style="width:${progress}%"></i></div>
+      <div class="mini-stats"><span><strong>${worker.handled}</strong> handled</span><span><strong>${progress}%</strong> current task</span></div>
     </div>`);
 }
 
 function findTruck(truckId) {
-  return [...Object.values(simulation.cities).flatMap(c => c.regionalTrucks), ...simulation.nationalTrucks].find(t => t.id === truckId);
+  return [...Object.values(simulation.cities).flatMap(city => city.regionalTrucks), ...simulation.nationalTrucks].find(truck => truck.id === truckId);
+}
+
+function capacityDots(load, capacity) {
+  return `<div class="capacity-dots" aria-label="${load} of ${capacity} load spaces filled">${Array.from({ length: capacity }, (_, i) => `<i class="${i < load ? 'is-full' : ''}"></i>`).join('')}</div>`;
 }
 
 function showTruck(truckId) {
-  const truck = findTruck(truckId); if (!truck) return;
+  const truck = findTruck(truckId);
+  if (!truck) return;
   const from = CITIES[truck.from]?.name || truck.from;
   const to = CITIES[truck.to]?.name || truck.to;
   const load = truck.load.map(id => simulation.packages.get(id)).filter(Boolean);
+  const progress = truck.state === 'driving' ? Math.round(truck.progress * 100) : 0;
   showSheet(truck.kind === 'national' ? 'National linehaul' : 'Regional truck', `
-    <div class="entity-card"><span class="eyebrow">${truck.state.toUpperCase()}</span><h3>${escapeHtml(from)} → ${escapeHtml(to)}</h3>
-      <p>${truck.state === 'driving' ? `${Math.round(truck.progress * 100)}% through the trip.` : `Waiting for the right load or an urgent parcel.`}</p>
+    <div class="entity-card">
+      <div class="entity-card-layout"><span class="entity-avatar" aria-hidden="true">↗</span><div><span class="eyebrow">${truck.state.toUpperCase()}</span><h3>${escapeHtml(from)} → ${escapeHtml(to)}</h3></div></div>
+      <p>${truck.state === 'driving' ? `${progress}% through the route. Tap any package below to follow its whole journey.` : 'Waiting for a useful load or a deadline that forces departure.'}</p>
+      ${capacityDots(load.length, truck.capacity)}
       <div class="mini-stats"><span><strong>${load.length}/${truck.capacity}</strong> load</span><span><strong>${truck.departures}</strong> runs</span></div>
     </div>
-    <div class="package-list">${load.length ? load.map(p => packageRow(p)).join('') : '<p class="hint">No parcels aboard right now.</p>'}</div>`);
+    <div class="package-list">${load.length ? load.map(pkg => packageRow(pkg)).join('') : '<p class="hint">No packages aboard right now.</p>'}</div>`);
 }
 
 function showTransport(transportId) {
-  const transport = simulation.internationalTransports.find(t => t.id === transportId); if (!transport) return;
+  const transport = simulation.internationalTransports.find(item => item.id === transportId);
+  if (!transport) return;
   const load = transport.load.map(id => simulation.packages.get(id)).filter(Boolean);
   const from = CITIES[transport.from]?.name || transport.from;
   const to = CITIES[transport.to]?.name || transport.to;
-  const waiting = transport.direction === 'inbound' ? 'Waiting for inbound parcels at the partner gateway.' : 'Waiting for outbound international parcels.';
-  showSheet('International transport', `<div class="entity-card"><span class="eyebrow">${transport.state.toUpperCase()}</span><h3>${escapeHtml(from)} → ${escapeHtml(to)}</h3><p>${transport.state === 'driving' ? `${Math.round(transport.progress * 100)}% complete.` : waiting}</p></div><div class="package-list">${load.length ? load.map(p => packageRow(p)).join('') : '<p class="hint">No parcels aboard right now.</p>'}</div>`);
+  const waiting = transport.direction === 'inbound' ? 'Waiting for inbound packages at the partner gateway.' : 'Waiting for outbound international packages.';
+  showSheet('International transport', `<div class="entity-card"><div class="entity-card-layout"><span class="entity-avatar" aria-hidden="true">◎</span><div><span class="eyebrow">${transport.state.toUpperCase()}</span><h3>${escapeHtml(from)} → ${escapeHtml(to)}</h3></div></div><p>${transport.state === 'driving' ? `${Math.round(transport.progress * 100)}% complete.` : waiting}</p>${capacityDots(load.length, transport.capacity)}</div><div class="package-list">${load.length ? load.map(pkg => packageRow(pkg)).join('') : '<p class="hint">No packages aboard right now.</p>'}</div>`);
 }
 
 function showTown(cityId, town) {
-  const packages = [...simulation.packages.values()].filter(p => p.destination.place === town && p.status !== 'delivered');
-  showSheet(town, `<div class="entity-card"><span class="eyebrow">${CITIES[cityId].name.toUpperCase()} REGION</span><h3>${packages.length} parcel${packages.length === 1 ? '' : 's'} heading here</h3><p>Regional trucks leave automatically when the load is worthwhile or a deadline forces the run.</p></div><div class="package-list">${packages.length ? packages.map(p => packageRow(p)).join('') : '<p class="hint">Nothing waiting for this route.</p>'}</div>`);
+  const packages = [...simulation.packages.values()].filter(pkg => pkg.destination.place === town && pkg.status !== 'delivered');
+  showSheet(town, `<div class="entity-card"><span class="eyebrow">${CITIES[cityId].name.toUpperCase()} REGION</span><h3>${packages.length} package${packages.length === 1 ? '' : 's'} heading here</h3><p>Regional trucks leave automatically when their load is worthwhile or a deadline forces the run.</p></div><div class="package-list">${packages.length ? packages.map(pkg => packageRow(pkg)).join('') : '<div class="empty-state"><span class="empty-state-icon" aria-hidden="true">✓</span><strong>Route clear</strong><p>Nothing is waiting for this town.</p></div>'}</div>`);
 }
 
 function showCity(cityId) {
   const city = simulation.cities[cityId];
   const waiting = Object.values(city.queues).flat().length;
-  showSheet(CITIES[cityId].name, `<div class="entity-card"><span class="eyebrow">SWEDEN HUB</span><h3>${waiting} parcels on the floor</h3><p>${city.workers.filter(w => w.packageId).length} workers sorting · ${city.regionalTrucks.filter(t => t.state === 'driving').length} regional trucks moving.</p></div><button class="action-btn primary full" data-open-region="${cityId}">OPEN ${CITIES[cityId].name.toUpperCase()} REGION</button>`);
+  const activeWorkers = city.workers.filter(worker => worker.packageId).length;
+  const movingTrucks = city.regionalTrucks.filter(truck => truck.state === 'driving').length;
+  showSheet(CITIES[cityId].name, `<div class="entity-card"><span class="eyebrow">SWEDEN HUB</span><h3>${waiting} packages on the depot floor</h3><div class="mini-stats"><span><strong>${activeWorkers}/3</strong> workers sorting</span><span><strong>${movingTrucks}</strong> trucks moving</span></div></div><button class="action-btn primary full" data-open-region="${cityId}">OPEN ${CITIES[cityId].name.toUpperCase()} REGION</button>`);
 }
 
 function showHandoff(cityId) {
   const city = simulation.cities[cityId];
-  const pkgs = city.queues.readyNational.map(id => simulation.packages.get(id)).filter(Boolean);
-  showSheet('National handoff', `<p class="sheet-lede">Parcels leave the region here. Sweden-level linehaul chooses the correct hub automatically.</p><div class="package-list">${pkgs.length ? pkgs.map(p => packageRow(p)).join('') : '<p class="hint">Handoff is clear.</p>'}</div>`);
+  const packages = city.queues.readyNational.map(id => simulation.packages.get(id)).filter(Boolean);
+  showSheet('National handoff', `<p class="sheet-lede">Packages leave the region here. Sweden-level linehaul chooses the correct hub automatically.</p><div class="package-list">${packages.length ? packages.map(pkg => packageRow(pkg)).join('') : '<div class="empty-state"><span class="empty-state-icon" aria-hidden="true">✓</span><strong>Handoff clear</strong><p>No national packages are waiting.</p></div>'}</div>`);
 }
 
 function issueTitle(issue) {
-  return ({ 'scan-gap':'Missing scan trail', 'wrong-dock':'Wrong dock', 'label-damage':'Unreadable label', 'missed-scan':'Missing handoff scan', routing:'No route' })[issue] || 'Exception';
+  return ({ 'scan-gap': 'Missing scan trail', 'wrong-dock': 'Wrong dock', 'label-damage': 'Unreadable label', 'missed-scan': 'Missing handoff scan', routing: 'No route' })[issue] || 'Exception';
 }
 
 function humanStatus(status) {
-  return ({ arrived:'At depot', sorting:'Being sorted', 'ready-local':'Ready for regional truck', 'ready-national':'Ready for national handoff', 'ready-international':'Ready for international departure', 'ready-inbound':'Waiting at overseas gateway', 'transit-local':'On regional truck', 'transit-national':'On national linehaul', 'transit-international':'International transport', held:'Held for investigation', delivered:'Delivered' })[status] || status;
+  return ({ arrived: 'At depot', sorting: 'Being sorted', 'ready-local': 'Ready for regional truck', 'ready-national': 'Ready for national handoff', 'ready-international': 'Ready for international departure', 'ready-inbound': 'Waiting at overseas gateway', 'transit-local': 'On regional truck', 'transit-national': 'On national linehaul', 'transit-international': 'International transport', held: 'Held for investigation', delivered: 'Delivered' })[status] || status;
 }
 
 function escapeHtml(value) {
-  return String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+  return String(value ?? '').replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
 }
 
 function announce(text) {

@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#102423">
+  <meta name="theme-color" content="#102a29">
   <meta name="color-scheme" content="light">
+  <meta name="description" content="Run a living Swedish parcel network from depot floor to national linehaul.">
   <title>POSTAL — Every promise has a path</title>
   <link rel="stylesheet" href="./styles.css">
   <script type="importmap">
@@ -18,86 +19,136 @@
 </head>
 <body>
   <div id="loader" class="loader" role="status" aria-live="polite">
-    <div class="loader-mark" aria-hidden="true">P</div>
-    <strong>POSTAL</strong>
-    <span>Starting the network…</span>
+    <div class="loader-brand">
+      <div class="loader-mark" aria-hidden="true">
+        <span>P</span>
+        <i></i>
+      </div>
+      <div>
+        <strong>POSTAL</strong>
+        <span>Every promise has a path.</span>
+      </div>
+    </div>
+    <div class="loader-route" aria-hidden="true">
+      <i></i><span></span><i></i><span></span><i></i>
+      <b class="loader-parcel"></b>
+    </div>
+    <span id="loader-copy">Opening Sundsvall depot…</span>
     <div id="load-progress" class="load-progress" aria-hidden="true"></div>
   </div>
 
   <main class="game-shell">
-    <header class="topbar">
-      <div class="brand">
-        <span class="brand-mark" aria-hidden="true">P</span>
-        <div>
-          <strong>POSTAL</strong>
-          <span>Every promise has a path.</span>
-        </div>
-      </div>
-      <div class="topbar-actions">
-        <span id="clock" class="clock" aria-label="Game time">07:00</span>
-        <button id="pause-btn" class="compact-btn pause-btn" type="button" aria-pressed="false">Ⅱ PAUSE</button>
-      </div>
-    </header>
-
-    <nav class="city-switcher" aria-label="City">
-      <button class="city-chip" type="button" data-city="sundsvall" aria-pressed="true">SUNDSVALL</button>
-      <button class="city-chip" type="button" data-city="stockholm" aria-pressed="false">STOCKHOLM</button>
-      <button class="city-chip" type="button" data-city="goteborg" aria-pressed="false">GÖTEBORG</button>
-    </nav>
-
-    <section class="status-strip" aria-label="Network status">
-      <div class="metric"><span>ON TIME</span><strong id="metric-ontime">100%</strong></div>
-      <div class="metric"><span>IN FLOW</span><strong id="metric-flow">0</strong></div>
-      <div class="metric metric-issues"><span>ISSUES</span><strong id="metric-issues">0</strong></div>
-      <div class="focus-status"><span>FOCUS</span><strong id="focus-value">LATE</strong></div>
-    </section>
-
     <section class="world-card" aria-labelledby="level-title">
-      <div class="world-heading">
-        <div>
-          <h1 id="level-title">Sundsvall depot</h1>
-          <p id="level-subtitle">People sort. Parcels move. You decide what matters.</p>
-        </div>
-        <span class="tap-hint">Tap what moves</span>
-      </div>
-
       <div class="viewport">
-        <canvas id="scene" aria-label="Interactive 3D logistics network"></canvas>
-        <button id="event-ribbon" class="event-ribbon" type="button" data-kind="warning">
-          <span class="event-dot" aria-hidden="true"></span>
-          <span id="event-text">Customer complaint: USA → Timrå</span>
-          <span aria-hidden="true">›</span>
-        </button>
+        <canvas id="scene" aria-label="Interactive 3D logistics network. Tap packages, workers, trucks, towns and hubs for details."></canvas>
+        <div id="scene-fallback" class="scene-fallback" hidden role="img" aria-label="Stylised package depot overview">
+          <div class="fallback-building"><span></span><span></span><span></span></div>
+          <div class="fallback-road"></div>
+          <div class="fallback-truck"><i></i></div>
+          <p>The live controls and package investigation still work on this device.</p>
+        </div>
+        <div class="world-shade" aria-hidden="true"></div>
+
+        <header class="topbar">
+          <div class="brand">
+            <span class="brand-mark" aria-hidden="true"><b>P</b><i></i></span>
+            <div>
+              <strong>POSTAL</strong>
+              <span>Every promise has a path.</span>
+            </div>
+          </div>
+          <div class="topbar-actions">
+            <span class="clock" aria-label="Game time">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"></circle><path d="M12 7v5l3 2"></path></svg>
+              <span id="clock">07:00</span>
+            </span>
+            <button id="pause-btn" class="compact-btn pause-btn" type="button" aria-pressed="false" aria-label="Pause network">
+              <span id="pause-symbol" class="pause-symbol" aria-hidden="true">Ⅱ</span>
+              <span id="pause-label">PAUSE</span>
+            </button>
+          </div>
+        </header>
+
+        <section class="status-strip" aria-label="Network status">
+          <div class="metric metric-ontime">
+            <span class="metric-label">ON TIME</span>
+            <strong id="metric-ontime">100%</strong>
+            <i class="metric-track" aria-hidden="true"><b id="metric-ontime-bar"></b></i>
+          </div>
+          <div class="metric metric-flow">
+            <span class="metric-label">IN FLOW</span>
+            <strong id="metric-flow">0</strong>
+            <span class="metric-note">packages</span>
+          </div>
+          <button id="issues-btn" class="metric metric-issues" type="button" aria-label="Open network issues">
+            <span class="metric-label">ISSUES</span>
+            <strong id="metric-issues">0</strong>
+            <span class="metric-note">need you</span>
+            <span id="issue-badge" class="badge" hidden>0</span>
+          </button>
+        </section>
+
+        <section class="world-context">
+          <div class="world-heading">
+            <div>
+              <span id="level-kicker" class="level-kicker"><i aria-hidden="true"></i><span id="level-kicker-text">LIVE DEPOT</span></span>
+              <h1 id="level-title">Sundsvall depot</h1>
+              <p id="level-subtitle">People sort. Packages move. You decide what matters.</p>
+            </div>
+            <span class="tap-hint"><span aria-hidden="true">◎</span> Tap the scene</span>
+          </div>
+          <nav class="city-switcher" aria-label="City">
+            <button class="city-chip" type="button" data-city="sundsvall" aria-pressed="true"><span>SUN</span>Sundsvall</button>
+            <button class="city-chip" type="button" data-city="stockholm" aria-pressed="false"><span>STO</span>Stockholm</button>
+            <button class="city-chip" type="button" data-city="goteborg" aria-pressed="false"><span>GBG</span>Göteborg</button>
+          </nav>
+        </section>
+
+        <div class="lower-controls">
+          <button id="event-ribbon" class="event-ribbon" type="button" data-kind="warning">
+            <span class="event-signal" aria-hidden="true"><i></i></span>
+            <span class="event-copy"><small>NEEDS YOU</small><strong id="event-text">Customer complaint: USA → Timrå</strong></span>
+            <span class="event-arrow" aria-hidden="true">›</span>
+          </button>
+
+          <div class="quick-actions" aria-label="Operations">
+            <button id="focus-btn" class="quick-action quick-action-focus" type="button">
+              <span class="action-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M22 12h-3M12 22v-3M2 12h3"></path></svg>
+              </span>
+              <span><small>TEAM FOCUS</small><strong id="focus-value">LATE</strong></span>
+            </button>
+            <button id="find-btn" class="quick-action" type="button">
+              <span class="action-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"></path><path d="m4 7.5 8 4.5 8-4.5M12 12v9"></path><circle cx="17.5" cy="16.5" r="2.5"></circle><path d="m19.4 18.4 2 2"></path></svg>
+              </span>
+              <span><small>DETECTIVE</small><strong>FIND PACKAGE</strong></span>
+            </button>
+          </div>
+
+          <nav class="level-switcher" aria-label="Network level">
+            <button class="level-tab" type="button" data-level="depot" aria-pressed="true">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 10h18v10H3zM6 10V6h12v4M7 14h3v6M14 14h3v2h-3z"></path></svg>
+              <span><small>ZOOMED IN</small>DEPOT</span>
+            </button>
+            <button class="level-tab" type="button" data-level="region" aria-pressed="false">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 18 8 6l4 12 4-9 4 9M3 20h18"></path><circle cx="8" cy="6" r="2"></circle><circle cx="16" cy="9" r="2"></circle></svg>
+              <span><small>LOCAL FLOW</small>REGION</span>
+            </button>
+            <button class="level-tab" type="button" data-level="sweden" aria-pressed="false">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3c4 0 7 4 7 9s-3 9-7 9-7-4-7-9 3-9 7-9Z"></path><path d="M5 12h14M12 3c2 2 3 5 3 9s-1 7-3 9M12 3c-2 2-3 5-3 9s1 7 3 9"></path></svg>
+              <span><small>BIG PICTURE</small>SWEDEN</span>
+            </button>
+          </nav>
+        </div>
       </div>
     </section>
-
-    <div class="quick-actions" aria-label="Actions">
-      <button id="focus-btn" class="quick-action" type="button">
-        <span class="action-kicker">TEAM</span>
-        <strong>FOCUS</strong>
-      </button>
-      <button id="issues-btn" class="quick-action" type="button">
-        <span class="action-kicker">NEEDS YOU</span>
-        <strong>ISSUES</strong>
-        <span id="issue-badge" class="badge" hidden>0</span>
-      </button>
-      <button id="find-btn" class="quick-action" type="button">
-        <span class="action-kicker">TRACE</span>
-        <strong>FIND PACKAGE</strong>
-      </button>
-    </div>
-
-    <nav class="level-switcher" aria-label="Network level">
-      <button class="level-tab" type="button" data-level="depot" aria-pressed="true"><span>1</span>DEPOT</button>
-      <button class="level-tab" type="button" data-level="region" aria-pressed="false"><span>2</span>REGION</button>
-      <button class="level-tab" type="button" data-level="sweden" aria-pressed="false"><span>3</span>SWEDEN</button>
-    </nav>
   </main>
 
   <dialog id="sheet" class="sheet" aria-labelledby="sheet-title">
     <div class="sheet-handle" aria-hidden="true"></div>
     <header class="sheet-header">
-      <h2 id="sheet-title">Details</h2>
+      <div><span class="sheet-eyebrow">LIVE OPERATIONS</span><h2 id="sheet-title">Details</h2></div>
       <button id="sheet-close" class="sheet-close" type="button" aria-label="Close">×</button>
     </header>
     <div id="sheet-body" class="sheet-body"></div>
