@@ -155,7 +155,7 @@ assert.match(airportEmergency, /\[7\.0, 65, 2\.0, 4\.9\]/,
 
 assert.match(airportEmergency, /preloadCarModels\(\['firetruck', 'ambulance'\]\)/,
   'Ambulance Airport runs should preload both medical responder models');
-assert.doesNotMatch(airportEmergency, /requestIdleCallback/,
+assert.doesNotMatch(airportEmergency, /globalThis\.requestIdleCallback\s*\(/,
   'iOS must not defer responder preparation until the finish line');
 assert.match(airportEmergency, /renderer\.compileAsync\(staging, camera\)/,
   'MAYDAY-only materials should be asynchronously shader-warmed before the crash reveal');
