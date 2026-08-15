@@ -187,6 +187,9 @@ jobs:
       - name: Run Music Tracker demo feedback regression
         run: node turn-tests/music-tracker-demo-feedback.mjs
 
+      - name: Run Music Tracker mobile sheet regression
+        run: node turn-tests/music-tracker-mobile-sheet.mjs
+
       - name: Run sustained music note tie regression
         run: node turn-tests/racing-music-note-ties.mjs
 
