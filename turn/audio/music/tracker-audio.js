@@ -4,6 +4,8 @@ import { model, buildSong, C, HITS, VOICES } from './tracker-core.js?revision=r1
 
 let audio = null;
 let play = null;
+let playGeneration = 0;
+const playbackTimers = new Set();
 let demo = { key: '', i: 0, t: 0, timer: 0 };
 
 const DEMO_OCT = {
@@ -59,9 +61,48 @@ async function resume() {
   return g;
 }
 
+function dispatchPlaybackEvent(type, detail = {}) {
+  document.dispatchEvent(new CustomEvent(type, { detail }));
+}
+
+function clearPlaybackTimers({ announce = true } = {}) {
+  playbackTimers.forEach((timer) => clearTimeout(timer));
+  playbackTimers.clear();
+  if (announce) dispatchPlaybackEvent('turn-tracker-playback-stop');
+}
+
+function schedulePlaybackEvent(type, detail, when, generation) {
+  const delay = Math.max(0, (when - audio.ctx.currentTime) * 1000);
+  const timer = setTimeout(() => {
+    playbackTimers.delete(timer);
+    if (generation !== playGeneration) return;
+    dispatchPlaybackEvent(type, detail);
+  }, delay);
+  playbackTimers.add(timer);
+}
+
+function playStep(g, sec, i, t, state = model.state) {
+  if (state.channels.lead) g.tones.playLead(sec.lead[i], t, sec.leadVoice);
+  if (state.channels.bass) g.tones.playBass(sec.bass[i], t, sec.bassVoice);
+  if (state.channels.arp) g.tones.playArp(sec.arp[i], t, sec.arpVoice);
+  if (state.channels.drums) g.drums.play(sec.drums[i], t, sec.drumKit);
+}
+
+function scheduleRowFeedback(generation, mode, sec, i, t) {
+  schedulePlaybackEvent('turn-tracker-play-row', {
+    mode,
+    part: sec.name,
+    step: i,
+    bar: Math.floor(i / 16),
+    row: i % 16
+  }, t, generation);
+}
+
 export function stopPlayback() {
   if (play) clearTimeout(play.timer);
   play = null;
+  playGeneration += 1;
+  clearPlaybackTimers();
   if (audio) {
     audio.tones.stop();
     audio.drums.stop();
@@ -79,14 +120,40 @@ function stopForDemo() {
   }
 }
 
-export async function startPlayback(mode, part = model.state.part, bar = 0) {
+export async function auditionRow(part = model.state.part, step = model.state.bar * 16) {
+  stopPlayback();
+  const so = buildSong();
+  const sec = so.sections.find((section) => section.name === part);
+  if (!sec) throw Error(`Unknown part: ${part}`);
+  const i = Math.max(0, Math.min(sec.lead.length - 1, Number(step) || 0));
+  const g = await resume();
+  const ss = (60 / so.bpm) / 4;
+  g.step(ss);
+  const t = g.ctx.currentTime + .03;
+  const generation = ++playGeneration;
+  playStep(g, sec, i, t);
+  scheduleRowFeedback(generation, 'row', sec, i, t);
+  const swing = +so.swing || 0;
+  const duration = ss * (i % 2 === 0 ? 1 + swing : 1 - swing);
+  schedulePlaybackEvent('turn-tracker-playback-stop', {}, t + duration, generation);
+  document.getElementById('playStatus').textContent = `Preview row ${i.toString(16).toUpperCase().padStart(2, '0')}`;
+  const timer = setTimeout(() => {
+    playbackTimers.delete(timer);
+    if (generation === playGeneration) document.getElementById('playStatus').textContent = 'Stopped';
+  }, Math.max(0, (t + duration - g.ctx.currentTime) * 1000));
+  playbackTimers.add(timer);
+}
+
+export async function startPlayback(mode, part = model.state.part, bar = 0, row = 0) {
   stopPlayback();
   const so = buildSong();
   const g = await resume();
   const ss = (60 / so.bpm) / 4;
   g.step(ss);
   const seq = mode === 'song' ? [...so.arrangement] : [so.sections.find((section) => section.name === part)];
-  play = { mode, part, so, seq, si: 0, st: mode === 'part' ? bar * 16 : 0, t: g.ctx.currentTime + .05, ss, timer: 0 };
+  const startStep = mode === 'part' ? Math.max(0, bar * 16 + row) : 0;
+  const generation = ++playGeneration;
+  play = { mode, part, so, seq, si: 0, st: startStep, t: g.ctx.currentTime + .05, ss, timer: 0, generation };
   document.getElementById('playStatus').textContent = mode === 'song' ? `Playing ${so.name}` : `Playing ${C[part]}`;
   tick();
 }
@@ -99,10 +166,8 @@ function tick() {
     const sec = play.seq[play.si];
     const i = play.st;
     const t = play.t;
-    if (state.channels.lead) g.tones.playLead(sec.lead[i], t, sec.leadVoice);
-    if (state.channels.bass) g.tones.playBass(sec.bass[i], t, sec.bassVoice);
-    if (state.channels.arp) g.tones.playArp(sec.arp[i], t, sec.arpVoice);
-    if (state.channels.drums) g.drums.play(sec.drums[i], t, sec.drumKit);
+    playStep(g, sec, i, t, state);
+    scheduleRowFeedback(play.generation, play.mode, sec, i, t);
     const swing = +play.so.swing || 0;
     play.t += play.ss * (i % 2 === 0 ? 1 + swing : 1 - swing);
     play.st += 1;
@@ -112,8 +177,15 @@ function tick() {
       if (play.si >= play.seq.length) {
         if (state.loop) play.si = 0;
         else {
+          const generation = play.generation;
+          const endTime = play.t;
           play = null;
-          document.getElementById('playStatus').textContent = 'Stopped';
+          schedulePlaybackEvent('turn-tracker-playback-stop', {}, endTime, generation);
+          const timer = setTimeout(() => {
+            playbackTimers.delete(timer);
+            if (generation === playGeneration) document.getElementById('playStatus').textContent = 'Stopped';
+          }, Math.max(0, (endTime - g.ctx.currentTime) * 1000));
+          playbackTimers.add(timer);
           return;
         }
       }
