@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="../../design-semantic.css?revision=r162-social-sharing">
   <link rel="stylesheet" href="./tracker.css?revision=r189-layout-containment">
   <link rel="stylesheet" href="./tracker-workflow.css?revision=r192-safari-interaction">
+  <link rel="stylesheet" href="./tracker-demo-feedback-r204.css?revision=r204-local-demo-feedback">
   <script src="../../ui/page-zoom-baseline-r193.js?revision=r193-canonical-75"></script>
 </head>
 <body>
@@ -99,7 +100,7 @@
         <span class="disclosure-title"><small>SOUND BANK</small><strong>Instrument demos</strong></span>
       </summary>
       <div class="disclosure-panel">
-        <p id="demoStatus" class="hint demo-status" aria-live="polite">Push an instrument repeatedly: DO · RE · MI · FA · SOL · LA · TI · DO.</p>
+        <p id="demoStatus" class="hint demo-status">Tap an instrument repeatedly to step through its sounds. Pitched instruments play DO · RE · MI · FA · SOL · LA · TI · DO. Switching instrument or waiting 3 seconds resets the sequence.</p>
         <div id="instrumentDemos" class="instrument-demos"></div>
       </div>
     </details>
@@ -204,6 +205,7 @@
     }
   </script>
   <script type="module" src="./tracker.js?revision=r196-song-recovery"></script>
+  <script type="module" src="./tracker-demo-feedback-r204.js?revision=r204-local-demo-feedback"></script>
   <script type="module" src="./tracker-column-octave.js?revision=r190-column-octave"></script>
   <script type="module" src="./tracker-bar-shortcuts.js?revision=r191-primary-workflow"></script>
 </body>
