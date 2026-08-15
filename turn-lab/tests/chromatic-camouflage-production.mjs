@@ -23,8 +23,9 @@ const moduleSource = await fs.readFile(
 const release = JSON.parse(releaseSource);
 
 const achievement = getAchievement(CHROMATIC_CAMOUFLAGE_ID);
-assert.equal(ACHIEVEMENTS.length, 29,
-  'Production TURN should expose the existing 28 achievements plus Chromatic Camouflage');
+const goldenHour = getAchievement('golden-hour');
+assert.equal(ACHIEVEMENTS.length, 30,
+  'Production TURN should expose the existing 28 achievements plus Golden Hour and Chromatic Camouflage');
 assert.equal(achievement?.title, 'CHROMATIC CAMOUFLAGE');
 assert.equal(achievement?.hidden, true);
 assert.equal(achievement?.category, 'exploration');
@@ -33,11 +34,19 @@ assert.equal(
   achievement?.description,
   'Set your personal best on every track in a car painted to match that track.'
 );
+assert.equal(goldenHour?.title, 'GOLDEN HOUR');
+assert.equal(goldenHour?.hidden, true);
+assert.equal(goldenHour?.category, 'racing');
+assert.equal(goldenHour?.trophies, 100);
+assert.equal(goldenHour?.lockedDescription, '');
+assert.match(goldenHour?.description || '', /Ambulance/);
+assert.match(goldenHour?.description || '', /Airport crash/);
+assert.match(goldenHour?.description || '', /30 seconds/);
 assert.equal(
   ACHIEVEMENTS.reduce((total, item) => total + item.trophies, 0),
-  1750
+  1850
 );
-assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 1750);
+assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 1850);
 
 const factoryRoute = Object.freeze({
   countryside: Object.freeze({ time: 18, carId: 'convertible', carColor: '#a8327a' }),
@@ -96,12 +105,12 @@ assert.ok(
   'Production entry point must display the current release source of truth'
 );
 assert.match(indexSource, /catalog-chromatic-r183\.js/,
-  'Production must route the achievement store and view through the Chromatic catalog');
+  'Production must route the achievement store and view through the production achievement catalog');
 assert.match(indexSource, /trophy-road-chromatic-r183\.js/,
-  'Production must expose the expanded 1750-trophy road maximum');
+  'Production must expose the expanded 1850-trophy road maximum');
 assert.match(indexSource, /chromatic-camouflage-r183\.js/,
   'Production must install the hidden achievement evaluator');
 assert.doesNotMatch(indexSource, /airport-runway/,
   'The TURN NEXT Airport prototype must not enter the production TURN entry point');
 
-console.log(`TURN ${release.version} production Chromatic Camouflage achievement regression passed.`);
+console.log(`TURN ${release.version} production Golden Hour and Chromatic Camouflage achievement regression passed.`);
