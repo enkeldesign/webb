@@ -3,6 +3,7 @@ const MAX_CONFIGURED_SAFE_ZONE_DEGREES = 45;
 const LOW_SPEED_HORIZON_DEAD_ZONE = 1.25 * Math.PI / 180;
 const LOW_SPEED_HORIZON_FULL_STABILIZATION_SPEED = 5 / 3.6;
 const LOW_SPEED_HORIZON_RELEASE_SPEED = 25 / 3.6;
+const LOW_SPEED_HORIZON_SMOOTHING_RATE = 10;
 
 export function resolveSensorCameraRollLimit(
   configuration = globalThis.__TURN_MOTION_SAFE_ZONE__
@@ -18,19 +19,20 @@ export function resolveSensorCameraRollLimit(
   return DEFAULT_MAX_SENSOR_CAMERA_ROLL;
 }
 
-export function resolveLowSpeedHorizonDeadZone(speed) {
+export function resolveLowSpeedHorizonStabilizationAmount(speed) {
   const speedMagnitude = Math.abs(Number(speed) || 0);
-  if (speedMagnitude <= LOW_SPEED_HORIZON_FULL_STABILIZATION_SPEED) {
-    return LOW_SPEED_HORIZON_DEAD_ZONE;
-  }
+  if (speedMagnitude <= LOW_SPEED_HORIZON_FULL_STABILIZATION_SPEED) return 1;
   if (speedMagnitude >= LOW_SPEED_HORIZON_RELEASE_SPEED) return 0;
 
-  const releaseProgress = (
+  return 1 - (
     speedMagnitude - LOW_SPEED_HORIZON_FULL_STABILIZATION_SPEED
   ) / (
     LOW_SPEED_HORIZON_RELEASE_SPEED - LOW_SPEED_HORIZON_FULL_STABILIZATION_SPEED
   );
-  return LOW_SPEED_HORIZON_DEAD_ZONE * (1 - releaseProgress);
+}
+
+export function resolveLowSpeedHorizonDeadZone(speed) {
+  return LOW_SPEED_HORIZON_DEAD_ZONE * resolveLowSpeedHorizonStabilizationAmount(speed);
 }
 
 export function applyLowSpeedHorizonDeadZone(relativeRoll, maxRoll, speed) {
@@ -49,6 +51,24 @@ export function applyLowSpeedHorizonDeadZone(relativeRoll, maxRoll, speed) {
   const activeRange = Math.max(0.000001, limit - deadZone);
   const remappedMagnitude = (magnitude - deadZone) / activeRange * limit;
   return Math.sign(guardedRoll) * remappedMagnitude;
+}
+
+export function smoothLowSpeedHorizonRoll(previousRoll, targetRoll, speed, dt) {
+  const target = Number(targetRoll) || 0;
+  const previous = Number(previousRoll);
+  const current = Number.isFinite(previous) ? previous : target;
+  const stabilizationAmount = resolveLowSpeedHorizonStabilizationAmount(speed);
+
+  // Normal racing takes the direct path: no extra Math.exp() and no visual lag.
+  if (stabilizationAmount <= 0) return target;
+
+  const elapsed = Math.max(0, Number(dt) || 0);
+  const smoothingResponse = 1 - Math.exp(-elapsed * LOW_SPEED_HORIZON_SMOOTHING_RATE);
+  const smoothedRoll = lerp(current, target, smoothingResponse);
+
+  // Fade the temporal smoothing out over the same 5–25 km/h interval as the
+  // dead zone, reaching the untouched direct response at 25 km/h.
+  return lerp(target, smoothedRoll, stabilizationAmount);
 }
 
 export function updateRaceCameraState({
@@ -118,7 +138,15 @@ export function updateRaceCameraState({
       maxSensorCameraRoll,
       state.speed
     );
-    camera.rotateZ(-stabilizedRoll);
+    state.horizonCameraRoll = smoothLowSpeedHorizonRoll(
+      state.horizonCameraRoll,
+      stabilizedRoll,
+      state.speed,
+      dt
+    );
+    camera.rotateZ(-state.horizonCameraRoll);
+  } else {
+    state.horizonCameraRoll = 0;
   }
 
   camera.fov = lerp(camera.fov, 68 + speedRatio * 14, Math.min(1, dt * 4.5));
