@@ -1,4 +1,4 @@
-const CACHE = 'postal-rebuild-2026-08-15-v1';
+const CACHE = 'postal-visual-overhaul-2026-08-16-v1';
 self.addEventListener('install', event => { self.skipWaiting(); });
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {

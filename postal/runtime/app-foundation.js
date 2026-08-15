@@ -28,14 +28,26 @@ const app = {
   sheetTitle: $('#sheet-title'),
   sheetBody: $('#sheet-body'),
   sheetClose: $('#sheet-close'),
-  loader: $('#loader')
+  loader: $('#loader'),
+  loaderCopy: $('#loader-copy'),
+  fallback: $('#scene-fallback')
 };
 
-const renderer = new THREE.WebGLRenderer({ canvas: app.canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.outputColorSpace = THREE.SRGBColorSpace;
+let renderer = null;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas: app.canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.08;
+} catch (error) {
+  console.warn('POSTAL is running without WebGL.', error);
+  app.canvas.hidden = true;
+  app.fallback.hidden = false;
+  document.body.classList.add('no-webgl');
+}
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xdde9ea);
@@ -45,10 +57,10 @@ const pointer = new THREE.Vector2();
 let world = new THREE.Group();
 scene.add(world);
 
-const hemi = new THREE.HemisphereLight(0xffffff, 0x55715e, 2.2);
+const hemi = new THREE.HemisphereLight(0xf8fcff, 0x527463, 2.35);
 scene.add(hemi);
-const sun = new THREE.DirectionalLight(0xffffff, 3.2);
-sun.position.set(8, 14, 6);
+const sun = new THREE.DirectionalLight(0xfff5dc, 3.45);
+sun.position.set(9, 15, 7);
 sun.castShadow = true;
 sun.shadow.mapSize.set(1024, 1024);
 sun.shadow.camera.left = -14;
@@ -56,28 +68,45 @@ sun.shadow.camera.right = 14;
 sun.shadow.camera.top = 14;
 sun.shadow.camera.bottom = -14;
 scene.add(sun);
+const fill = new THREE.DirectionalLight(0xb9e5df, 1.15);
+fill.position.set(-8, 7, -6);
+scene.add(fill);
 
 const loader = new GLTFLoader();
 const assets = new Map();
 const manifest = {
-  // Factory Kit assets were already vendored by the previous prototype, so keep that
-  // copy rather than duplicate the same CC0 source from the newly supplied archive.
-  workerA: './assets/factory/oopi.glb',
-  workerB: './assets/factory/oopi.glb',
-  workerC: './assets/factory/oopi.glb',
-  suburbanA: './assets/city/building-small-a.glb',
-  suburbanF: './assets/city/building-small-b.glb',
+  workerA: './assets/kenney/characters/character-female-c.glb',
+  workerB: './assets/kenney/characters/character-male-e.glb',
+  workerC: './assets/kenney/characters/character-male-c.glb',
+  suburbanA: './assets/kenney/city-suburban/building-type-a.glb',
+  suburbanH: './assets/kenney/city-suburban/building-type-h.glb',
+  suburbanL: './assets/kenney/city-suburban/building-type-l.glb',
   treeLarge: './assets/kenney/suburban/tree-large.glb',
   treeSmall: './assets/kenney/suburban/tree-small.glb',
-  commercialA: './assets/city/building-small-c.glb',
-  skyscraper: './assets/city/building-small-d.glb',
-  industrialC: './assets/city/building-garage.glb',
-  industrialH: './assets/factory/structure-medium.glb',
+  commercialA: './assets/kenney/city-commercial/building-a.glb',
+  commercialH: './assets/kenney/city-commercial/building-h.glb',
+  skyscraper: './assets/kenney/city-commercial/building-skyscraper-a.glb',
+  industrialB: './assets/kenney/city-industrial/building-b.glb',
+  industrialS: './assets/kenney/city-industrial/building-s.glb',
+  industrialT: './assets/kenney/city-industrial/building-t.glb',
+  depotDoor: './assets/factory/structure-doorway-wide.glb',
+  depotWindow: './assets/factory/structure-window-wide.glb',
   handoffArrow: './assets/factory/indicator-special-arrow.glb',
   truck: './assets/vehicles/post-truck.glb',
   conveyor: './assets/factory/conveyor-long-stripe-sides.glb',
+  conveyorJunction: './assets/factory/conveyor-stripe-sides-junction-t.glb',
+  scanner: './assets/factory/scanner-high.glb',
+  screen: './assets/factory/screen-panel-wide.glb',
+  lever: './assets/factory/lever-double.glb',
   boxSmall: './assets/factory/box-small.glb',
-  boxLarge: './assets/factory/box-large.glb'
+  boxLarge: './assets/factory/box-large.glb',
+  roadCross: './assets/kenney/roads/road-crossroad.glb',
+  roadStraight: './assets/kenney/roads/road-straight.glb',
+  roadEnd: './assets/kenney/roads/road-end-round.glb',
+  roadCrossing: './assets/kenney/roads/road-crossing.glb',
+  roadLight: './assets/kenney/roads/light-square-double.glb',
+  roadCone: './assets/kenney/roads/construction-cone.glb',
+  roadBarrier: './assets/kenney/roads/construction-barrier.glb'
 };
 
 async function preloadAssets() {
@@ -94,6 +123,10 @@ async function preloadAssets() {
       const p = Math.round((loaded / entries.length) * 100);
       const progress = $('#load-progress');
       if (progress) progress.style.setProperty('--progress', `${p}%`);
+      if (app.loaderCopy) {
+        if (p > 78) app.loaderCopy.textContent = 'Connecting the national routes…';
+        else if (p > 38) app.loaderCopy.textContent = 'Rolling out roads and equipment…';
+      }
     }
   }));
 }
@@ -121,9 +154,12 @@ function cloneAsset(key, { target = 1, position = [0, 0, 0], rotation = [0, 0, 0
   const box2 = new THREE.Box3().setFromObject(clone);
   const center = new THREE.Vector3();
   box2.getCenter(center);
-  clone.position.set(position[0] - center.x, position[1] - box2.min.y, position[2] - center.z);
-  clone.rotation.set(...rotation);
-  return clone;
+  clone.position.set(-center.x, -box2.min.y, -center.z);
+  const root = new THREE.Group();
+  root.position.set(...position);
+  root.rotation.set(...rotation);
+  root.add(clone);
+  return root;
 }
 
 function material(color, roughness = 0.78, metalness = 0.02) {
@@ -215,7 +251,7 @@ function routeTube(curve, color = 0x4d6f70, width = 0.055) {
 
 const viewState = {
   workers: new Map(), packages: new Map(), regionalTrucks: new Map(), nationalTrucks: new Map(), international: new Map(), routeCurves: new Map(),
-  cityMarkers: new Map(), decorative: []
+  cityMarkers: new Map(), workerBadges: new Map(), conveyorParcels: [], roadLights: [], decorative: []
 };
 
 function clearWorld() {
@@ -223,8 +259,13 @@ function clearWorld() {
   world.traverse(obj => {
     if (obj.geometry && !obj.userData.keepGeometry) obj.geometry.dispose?.();
     if (obj.material && !obj.userData.keepMaterial) {
-      if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose?.());
-      else obj.material.dispose?.();
+      const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
+      materials.forEach(item => {
+        for (const value of Object.values(item)) {
+          if (value?.isTexture) value.dispose?.();
+        }
+        item.dispose?.();
+      });
     }
   });
   world = new THREE.Group();
@@ -251,6 +292,10 @@ function setCamera(level) {
 
 function buildScene() {
   clearWorld();
+  if (!renderer) {
+    updateContextHeader();
+    return;
+  }
   setCamera(currentLevel);
   if (currentLevel === 'depot') buildDepotScene(currentCityId);
   if (currentLevel === 'region') buildRegionScene(currentCityId);
