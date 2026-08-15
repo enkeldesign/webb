@@ -3,14 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#242342">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="format-detection" content="telephone=no">
-  <meta name="description" content="POSTAL is a portrait-friendly real-time parcel network game set in Sweden.">
-  <title>POSTAL — Every package has a promise</title>
-  <link rel="stylesheet" href="./styles.css?build=20260805-live-r4">
-  <link rel="stylesheet" href="./management.css?build=20260806-management-r2">
+  <meta name="theme-color" content="#102423">
+  <meta name="color-scheme" content="light">
+  <title>POSTAL — Every promise has a path</title>
+  <link rel="stylesheet" href="./styles.css">
   <script type="importmap">
     {
       "imports": {
@@ -21,91 +17,94 @@
   </script>
 </head>
 <body>
-  <a class="skip-link" href="#operationLayer">Skip to live packages</a>
-
-  <div class="game-shell" id="gameShell" data-play-mode="guided">
-    <header class="hud" aria-label="Shift status and controls">
-      <div class="hud-topline">
-        <div class="brand" aria-label="POSTAL">
-          <span class="brand-mark" aria-hidden="true"><i></i></span>
-          <span class="brand-word">POSTAL</span>
-        </div>
-
-        <div class="hud-controls">
-          <button class="icon-button" id="pauseButton" type="button" aria-pressed="false" aria-label="Pause shift" disabled><span aria-hidden="true">Ⅱ</span></button>
-          <button class="speed-button" id="speedButton" type="button" aria-label="Simulation speed, normal" disabled>1×</button>
-          <button class="icon-button" id="soundButton" type="button" aria-pressed="true" aria-label="Mute sound"><span aria-hidden="true">♪</span></button>
-          <button class="icon-button" id="detailsButton" type="button" aria-haspopup="dialog" aria-label="Open detailed shift information"><span aria-hidden="true">i</span></button>
-        </div>
-      </div>
-
-      <div class="shift-line">
-        <span class="shift-place" id="shiftPlace">SUNDSVALL · FIRST SHIFT</span>
-        <span class="shift-clock" id="clock">08:05</span>
-        <span class="shift-state" id="shiftState">READY</span>
-      </div>
-
-      <section class="metrics" aria-label="Network performance">
-        <div class="metric metric--service" id="serviceMetric"><span class="metric-icon" id="serviceIcon" aria-hidden="true">✓</span><span class="metric-label" id="serviceLabel">On time</span><strong id="serviceValue">100%</strong></div>
-        <div class="metric metric--backlog" id="backlogMetric"><span class="metric-icon" id="backlogIcon" aria-hidden="true">▦</span><span class="metric-label" id="backlogLabel">Waiting</span><strong id="backlogValue">0</strong></div>
-        <div class="metric metric--risk" id="riskMetric" data-level="good"><span class="metric-icon" id="riskIcon" aria-hidden="true">×</span><span class="metric-label" id="riskLabel">Combo</span><strong id="riskValue">0×</strong></div>
-      </section>
-    </header>
-
-    <main class="world-stage" id="main">
-      <canvas id="worldCanvas" aria-hidden="true"></canvas>
-      <div class="world-vignette" aria-hidden="true"></div>
-      <div class="world-grid" aria-hidden="true"></div>
-      <div class="loading-card" id="loadingCard" role="status"><span class="loading-parcel" aria-hidden="true"></span><span>Opening the network…</span></div>
-      <div class="scene-heading" aria-hidden="true"><span id="sceneEyebrow">LIVE DEPOT</span><strong id="sceneTitle">Sundsvall</strong></div>
-      <div class="mission-pill" id="missionPill" data-state="warning"><span class="mission-symbol" aria-hidden="true">↗</span><span><small id="missionLabel">FIRST ROUNDS</small><strong id="missionTime">NO PRESSURE</strong></span></div>
-      <div class="hotspot-layer" id="hotspotLayer" aria-label="Interactive destinations in the current scene"></div>
-
-      <section class="operation-layer" id="operationLayer" aria-labelledby="workQueueTitle" hidden>
-        <div class="operation-head">
-          <div><span class="operation-level" id="operationLevel">DEPOT FLOOR</span><strong id="workQueueTitle">Waiting batches</strong></div>
-          <span class="resource-chip" id="resourceChip">0 / 1 busy</span>
-        </div>
-        <div class="parcel-rack" id="parcelRack" role="group" aria-label="Waiting and moving package batches"></div>
-        <div class="fallback-targets" id="fallbackTargets" aria-label="Destinations in this level" hidden></div>
-        <p class="operation-empty" id="operationEmpty">All clear here.</p>
-      </section>
-      <p class="sr-only" id="sceneSummary">Sundsvall depot. No live work has started.</p>
-    </main>
-
-    <section class="command-deck" id="commandDeck" aria-labelledby="commandTitle" tabindex="-1">
-      <div class="deck-grabber" aria-hidden="true"></div>
-      <div class="command-content" id="commandContent"><div class="command-copy"><span class="command-kicker">FIRST SHIFT · GUIDED</span><h1 id="commandTitle">Learn the live route.</h1><p>Select a package batch, then tap its marked destination in the miniature world.</p></div><div class="command-actions"><button class="game-button game-button--primary" id="deckStartButton" type="button">Start first shift</button></div></div>
-    </section>
-
-    <nav class="scene-nav" aria-label="Network levels">
-      <button class="scene-tab" type="button" data-scene="terminal" aria-current="page" disabled><span class="scene-tab-icon" aria-hidden="true">▦</span><span>Depot</span><span class="tab-count" id="terminalAlert" aria-label="No waiting depot batches" hidden>0</span></button>
-      <button class="scene-tab" type="button" data-scene="network" disabled><span class="scene-tab-icon" aria-hidden="true">⌁</span><span>Region</span><span class="tab-count" id="networkAlert" aria-label="No waiting regional batches" hidden>0</span></button>
-      <button class="scene-tab" type="button" data-scene="sweden" disabled><span class="scene-tab-icon" aria-hidden="true">◆</span><span>Sweden</span><span class="tab-count" id="swedenAlert" aria-label="No waiting national batches" hidden>0</span></button>
-    </nav>
+  <div id="loader" class="loader" role="status" aria-live="polite">
+    <div class="loader-mark" aria-hidden="true">P</div>
+    <strong>POSTAL</strong>
+    <span>Starting the network…</span>
+    <div id="load-progress" class="load-progress" aria-hidden="true"></div>
   </div>
 
-  <section class="welcome" id="welcomeScreen" aria-labelledby="welcomeTitle">
-    <div class="welcome-scrim" aria-hidden="true"></div>
-    <div class="welcome-card">
-      <div class="welcome-logo" aria-hidden="true"><span class="welcome-box"><i></i></span><span class="welcome-word" id="welcomeTitle">POSTAL</span></div>
-      <p class="welcome-tagline">Every package has a promise.</p>
-      <div class="brief-card"><div class="brief-route" aria-hidden="true"><span class="brief-node brief-node--start"></span><span class="brief-line"></span><span class="brief-truck">▰</span><span class="brief-line"></span><span class="brief-node"></span></div><span class="brief-label">FIRST SHIFT · CALM PRACTICE</span><strong>Learn one route. Then you are in charge.</strong><span>Depot → region · no deadline</span></div>
-      <button class="game-button game-button--primary welcome-start" id="startButton" type="button">Start first shift</button>
-      <p class="welcome-note">After training, shifts run continuously. Plan teams and trucks, inspect suspicious packages and act before packages become late.</p>
+  <main class="game-shell">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">P</span>
+        <div>
+          <strong>POSTAL</strong>
+          <span>Every promise has a path.</span>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <span id="clock" class="clock" aria-label="Game time">07:00</span>
+        <button id="pause-btn" class="compact-btn pause-btn" type="button" aria-pressed="false">Ⅱ PAUSE</button>
+      </div>
+    </header>
+
+    <nav class="city-switcher" aria-label="City">
+      <button class="city-chip" type="button" data-city="sundsvall" aria-pressed="true">SUNDSVALL</button>
+      <button class="city-chip" type="button" data-city="stockholm" aria-pressed="false">STOCKHOLM</button>
+      <button class="city-chip" type="button" data-city="goteborg" aria-pressed="false">GÖTEBORG</button>
+    </nav>
+
+    <section class="status-strip" aria-label="Network status">
+      <div class="metric"><span>ON TIME</span><strong id="metric-ontime">100%</strong></div>
+      <div class="metric"><span>IN FLOW</span><strong id="metric-flow">0</strong></div>
+      <div class="metric metric-issues"><span>ISSUES</span><strong id="metric-issues">0</strong></div>
+      <div class="focus-status"><span>FOCUS</span><strong id="focus-value">LATE</strong></div>
+    </section>
+
+    <section class="world-card" aria-labelledby="level-title">
+      <div class="world-heading">
+        <div>
+          <h1 id="level-title">Sundsvall depot</h1>
+          <p id="level-subtitle">People sort. Parcels move. You decide what matters.</p>
+        </div>
+        <span class="tap-hint">Tap what moves</span>
+      </div>
+
+      <div class="viewport">
+        <canvas id="scene" aria-label="Interactive 3D logistics network"></canvas>
+        <button id="event-ribbon" class="event-ribbon" type="button" data-kind="warning">
+          <span class="event-dot" aria-hidden="true"></span>
+          <span id="event-text">Customer complaint: USA → Timrå</span>
+          <span aria-hidden="true">›</span>
+        </button>
+      </div>
+    </section>
+
+    <div class="quick-actions" aria-label="Actions">
+      <button id="focus-btn" class="quick-action" type="button">
+        <span class="action-kicker">TEAM</span>
+        <strong>FOCUS</strong>
+      </button>
+      <button id="issues-btn" class="quick-action" type="button">
+        <span class="action-kicker">NEEDS YOU</span>
+        <strong>ISSUES</strong>
+        <span id="issue-badge" class="badge" hidden>0</span>
+      </button>
+      <button id="find-btn" class="quick-action" type="button">
+        <span class="action-kicker">TRACE</span>
+        <strong>FIND PACKAGE</strong>
+      </button>
     </div>
-  </section>
 
-  <section class="campaign-screen" id="campaignScreen" aria-labelledby="campaignTitle" hidden><div class="campaign-scrim" aria-hidden="true"></div><div class="campaign-panel"><header class="campaign-head"><div><span class="command-kicker">POSTAL OPERATIONS</span><h2 id="campaignTitle">Choose a shift</h2><p id="campaignProgress">The next operation is open.</p></div><div class="campaign-stamp" id="campaignStamp" aria-hidden="true">1/5</div></header><div class="shift-list" id="shiftList"></div><p class="campaign-note">Each shift adds pressure and another live level. Replays vary carrier and arrival order. After a report, keep operating for endless waves.</p></div></section>
+    <nav class="level-switcher" aria-label="Network level">
+      <button class="level-tab" type="button" data-level="depot" aria-pressed="true"><span>1</span>DEPOT</button>
+      <button class="level-tab" type="button" data-level="region" aria-pressed="false"><span>2</span>REGION</button>
+      <button class="level-tab" type="button" data-level="sweden" aria-pressed="false"><span>3</span>SWEDEN</button>
+    </nav>
+  </main>
 
-  <section class="result-screen" id="resultScreen" aria-labelledby="resultTitle" hidden><div class="result-rays" aria-hidden="true"></div><div class="result-card"><span class="result-kicker" id="resultKicker">SHIFT COMPLETE</span><div class="result-grade" id="resultGrade" aria-label="Grade A">A</div><h2 id="resultTitle">Packages delivered.</h2><p id="resultSummary">The live network cleared.</p><div class="result-stats" id="resultStats" aria-label="Shift results"></div><div class="result-medals" id="resultMedals" aria-label="Shift achievements"></div><button class="game-button game-button--primary" id="nextShiftButton" type="button">Choose next shift</button><button class="game-button game-button--quiet" id="replayButton" type="button">Replay this shift</button><button class="text-button" id="resultDetailsButton" type="button" aria-haspopup="dialog">See the shift report</button></div></section>
+  <dialog id="sheet" class="sheet" aria-labelledby="sheet-title">
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <header class="sheet-header">
+      <h2 id="sheet-title">Details</h2>
+      <button id="sheet-close" class="sheet-close" type="button" aria-label="Close">×</button>
+    </header>
+    <div id="sheet-body" class="sheet-body"></div>
+  </dialog>
 
-  <dialog class="details-dialog" id="detailsDialog" aria-labelledby="detailsTitle"><div class="dialog-head"><div><span class="command-kicker">STRUCTURED VIEW</span><h2 id="detailsTitle">Live network details</h2></div><button class="dialog-close" id="detailsCloseButton" type="button" aria-label="Close shift details">×</button></div><div class="dialog-scroll"><p class="dialog-intro" id="detailsIntro">The same live network information in a sortable text view.</p><dl class="detail-metrics" id="detailMetrics"></dl><div id="detailScenario"></div><details class="help-disclosure"><summary>How to play</summary><p>Select a waiting package batch, then tap the lane, depot or hub printed on its marker. Use the resource planner to assign teams and vehicles. Suspicious packages can be opened for individual investigation.</p></details><details class="help-disclosure"><summary>Carriers</summary><p>NordPost brings steady mixed volume. DLH carries short express deadlines. Brang arrives in quick local bursts. DB Stänker brings larger national batches. They are fictional operators created for POSTAL.</p></details><details class="help-disclosure"><summary>Accessibility and motion</summary><p>All consequential canvas information is repeated in semantic controls and this structured view. Colour is paired with codes, shapes and labels. Opening this dialog pauses the shift. Reduced-motion preferences remove camera sweeps and non-essential animation.</p></details><details class="help-disclosure"><summary>Credits</summary><p>3D models are from Kenney asset packs under CC0. Interface tones are synthesized in the browser. POSTAL is an original fictional game and does not reproduce any real operator network.</p></details></div></dialog>
-
-  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-  <div class="sr-only" id="politeLive" aria-live="polite" aria-atomic="true"></div>
-  <div class="sr-only" id="assertiveLive" aria-live="assertive" aria-atomic="true"></div>
-
-  <script type="module" src="./bootstrap.mjs?build=20260806-carriers-r1"></script>
+  <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  <noscript>POSTAL needs JavaScript to run the live logistics simulation.</noscript>
+  <script type="module" src="./main.mjs"></script>
 </body>
 </html>
