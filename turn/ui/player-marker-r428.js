@@ -13,8 +13,11 @@ const MARKER_SIZE_MIN_PX = 17;
 const MARKER_SIZE_MAX_PX = 23;
 const FALLBACK_ROOF_HEIGHT = 1.8;
 const FALLBACK_MARKER_COLOR = '#38d9ff';
-const FIXED_LIVERY_MARKER_COLOR = '#ffcc00';
-const FIXED_LIVERY_VEHICLE_IDS = new Set(['firetruck', 'police', 'ambulance']);
+const FIXED_LIVERY_MARKER_COLORS = Object.freeze({
+  firetruck: '#d92d20',
+  police: '#0b0d10',
+  ambulance: '#f8f9fa'
+});
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -147,7 +150,8 @@ export function playerMarkerAutoActive(distance) {
 
 export function playerMarkerColor(runtime) {
   const carId = runtime?.playerCar?.userData?.turnCarId || runtime?.state?.vehicleId;
-  if (FIXED_LIVERY_VEHICLE_IDS.has(carId)) return FIXED_LIVERY_MARKER_COLOR;
+  const fixedLiveryColor = FIXED_LIVERY_MARKER_COLORS[carId];
+  if (fixedLiveryColor) return fixedLiveryColor;
 
   const color = runtime?.playerCar?.userData?.turnCarColor || runtime?.state?.vehicleColor;
   return typeof color === 'string' && color.trim() ? color.trim() : FALLBACK_MARKER_COLOR;
