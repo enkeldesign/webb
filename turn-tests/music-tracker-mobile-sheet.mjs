@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [index, workflow, tools, toolsCss] = await Promise.all([
+const [index, workflow, tools, toolsCss, activePartPlay] = await Promise.all([
   fs.readFile(new URL('../turn/audio/music/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/audio/music/tracker-workflow.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/audio/music/tracker-column-octave.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/audio/music/tracker-column-octave.css', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/audio/music/tracker-column-octave.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/audio/music/tracker-active-part-play-r207.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(index, /tracker-workflow\.css\?revision=r205-mobile-sheet-fit/,
@@ -52,4 +53,19 @@ assert.match(toolsCss, /\.column-tools-actions-three/,
 assert.match(toolsCss, /@media \(max-width: 760px\)[\s\S]*grid-template-columns: 1fr/,
   'Column tools should stack cleanly on phones');
 
-console.log('TURN Music Tracker mobile sheet and column tools regression passed.');
+assert.match(index, /tracker-active-part-play-r207\.js\?revision=r207-active-part-play/,
+  'Music Tracker must load the active-part playback affordance with a fresh module identity');
+assert.match(activePartPlay, /\.part-tab\[data-part\]/,
+  'Active playback styling should follow the selected tracker part');
+assert.match(activePartPlay, /\.part-play\[data-part\]/,
+  'Only part playback buttons should be restyled');
+assert.match(activePartPlay, /button\.classList\.toggle\('primary', active\)/,
+  'The selected part playback button should use TURN primary styling');
+assert.match(activePartPlay, /button\.classList\.toggle\('play', !active\)/,
+  'Inactive part playback buttons should retain normal game-action styling');
+assert.match(activePartPlay, /button\.setAttribute\('aria-current', 'true'\)/,
+  'The selected part playback button should expose its current relationship semantically');
+assert.match(activePartPlay, /attributeFilter: \['class', 'aria-selected'\]/,
+  'The affordance should stay synchronized when tracker rendering changes the selected part');
+
+console.log('TURN Music Tracker mobile sheet, column tools and active part playback regression passed.');
