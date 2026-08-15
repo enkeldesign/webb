@@ -15,8 +15,8 @@ assert.doesNotMatch(index, /id="demoStatus"[^>]*aria-live/,
   'The persistent demo instruction is not a live status region');
 assert.match(
   index,
-  /"\.\/tracker-audio\.js\?revision=r187-music-tracker": "\.\/tracker-audio\.js\?revision=r204-demo-feedback"/,
-  'Cached tracker entry modules must resolve to the fresh localized demo audio module'
+  /"\.\/tracker-audio\.js\?revision=r187-music-tracker": "\.\/tracker-audio\.js\?revision=r208-row-playhead"/,
+  'Cached tracker entry modules must resolve to the current audio module while preserving localized demo feedback'
 );
 
 for (const [token, label] of [
