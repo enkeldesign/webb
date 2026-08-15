@@ -1,17 +1,29 @@
+import * as THREE from 'three';
 import './player-marker-r427.js?revision=r427';
 
 const REFERENCE_CAR_LENGTH = 5.4;
 const AUTO_ACTIVATION_DIAMETER_CAR_LENGTHS = 3;
 const AUTO_ACTIVATION_RADIUS = REFERENCE_CAR_LENGTH * AUTO_ACTIVATION_DIAMETER_CAR_LENGTHS / 2;
+const AUTO_ACTIVATION_RADIUS_SQUARED = AUTO_ACTIVATION_RADIUS * AUTO_ACTIVATION_RADIUS;
 const AUTO_EXIT_GRACE_MS = 220;
-const MARKER_WORLD_UP_SAMPLE = 3;
-const MARKER_OFFSET_VIEWPORT_RATIO = 0.13;
-const MARKER_OFFSET_MIN_PX = 44;
-const MARKER_OFFSET_MAX_PX = 78;
+const AUTO_CHECK_INTERVAL_MS = 50;
+const MARKER_GAP_PX = 8;
+const MARKER_SIZE_VIEWPORT_RATIO = 0.045;
+const MARKER_SIZE_MIN_PX = 17;
+const MARKER_SIZE_MAX_PX = 23;
+const FALLBACK_ROOF_HEIGHT = 1.8;
 const FALLBACK_MARKER_COLOR = '#38d9ff';
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
+}
+
+function markerSizePixels(viewportHeight) {
+  return clamp(
+    (Number(viewportHeight) || 0) * MARKER_SIZE_VIEWPORT_RATIO,
+    MARKER_SIZE_MIN_PX,
+    MARKER_SIZE_MAX_PX
+  );
 }
 
 function installStyles() {
@@ -20,8 +32,8 @@ function installStyles() {
   style.id = 'turn-player-marker-r428-styles';
   style.textContent = `
     .turn-player-marker {
-      width: clamp(17px, 4.5vh, 23px);
-      height: clamp(17px, 4.5vh, 23px);
+      width: clamp(${MARKER_SIZE_MIN_PX}px, 4.5vh, ${MARKER_SIZE_MAX_PX}px);
+      height: clamp(${MARKER_SIZE_MIN_PX}px, 4.5vh, ${MARKER_SIZE_MAX_PX}px);
     }
 
     .turn-player-marker path {
@@ -61,7 +73,7 @@ function screenPoint(position, camera, rect, { allowOutside = false } = {}) {
   };
 }
 
-function markerPose(runtime, rect) {
+function markerPose(runtime, rect, roofHeight) {
   const position = runtime?.playerCar?.position;
   const camera = runtime?.camera;
   if (!position || !camera) return null;
@@ -69,12 +81,13 @@ function markerPose(runtime, rect) {
   const playerPoint = screenPoint(position, camera, rect);
   if (!playerPoint) return null;
 
-  const elevated = position.clone();
-  elevated.y += MARKER_WORLD_UP_SAMPLE;
-  const elevatedPoint = screenPoint(elevated, camera, rect, { allowOutside: true });
+  const roofPosition = position.clone();
+  roofPosition.y += roofHeight;
+  const roofPoint = screenPoint(roofPosition, camera, rect, { allowOutside: true });
+  if (!roofPoint) return null;
 
-  let upX = (elevatedPoint?.x ?? playerPoint.x) - playerPoint.x;
-  let upY = (elevatedPoint?.y ?? playerPoint.y - 1) - playerPoint.y;
+  let upX = roofPoint.x - playerPoint.x;
+  let upY = roofPoint.y - playerPoint.y;
   const upLength = Math.hypot(upX, upY);
   if (upLength < 0.001) {
     upX = 0;
@@ -84,18 +97,30 @@ function markerPose(runtime, rect) {
     upY /= upLength;
   }
 
-  const offset = clamp(
-    rect.height * MARKER_OFFSET_VIEWPORT_RATIO,
-    MARKER_OFFSET_MIN_PX,
-    MARKER_OFFSET_MAX_PX
-  );
-  const x = playerPoint.x + upX * offset;
-  const y = playerPoint.y + upY * offset;
+  // Standard overhead-marker treatment: anchor at the top of the vehicle silhouette,
+  // then leave one small, constant visual gap. This keeps the marker associated with
+  // the car without covering it, independent of FOV, speed or viewport height.
+  const centerGap = MARKER_GAP_PX + markerSizePixels(rect.height) * 0.5;
+  const x = roofPoint.x + upX * centerGap;
+  const y = roofPoint.y + upY * centerGap;
   const rotation = Math.atan2(upX, -upY) * 180 / Math.PI;
   return { x, y, rotation };
 }
 
-export function nearestRivalWorldDistance(runtime) {
+function playerModelRoofHeight(runtime) {
+  const car = runtime?.playerCar;
+  const model = car?.children?.[0];
+  if (!car?.position || !model) return FALLBACK_ROOF_HEIGHT;
+
+  try {
+    const bounds = new THREE.Box3().setFromObject(model);
+    const height = bounds.max.y - car.position.y;
+    if (Number.isFinite(height) && height > 0.4 && height < 6) return height;
+  } catch (_) {}
+  return FALLBACK_ROOF_HEIGHT;
+}
+
+function nearestRivalWorldDistanceSquared(runtime) {
   if (!runtime?.state?.lapActive || !runtime?.playerCar?.position) return Infinity;
   const player = runtime.playerCar.position;
   let nearestSquared = Infinity;
@@ -107,7 +132,12 @@ export function nearestRivalWorldDistance(runtime) {
     nearestSquared = Math.min(nearestSquared, dx * dx + dz * dz);
   }
 
-  return Number.isFinite(nearestSquared) ? Math.sqrt(nearestSquared) : Infinity;
+  return nearestSquared;
+}
+
+export function nearestRivalWorldDistance(runtime) {
+  const squared = nearestRivalWorldDistanceSquared(runtime);
+  return Number.isFinite(squared) ? Math.sqrt(squared) : Infinity;
 }
 
 export function playerMarkerAutoActive(distance) {
@@ -120,9 +150,10 @@ export function playerMarkerColor(runtime) {
 }
 
 function installRuntime(runtime) {
-  if (!runtime || runtime.__playerMarkerR428Installed) return runtime?.__playerMarkerR428Installed || null;
+  if (!runtime || runtime.__playerMarkerR429Installed) return runtime?.__playerMarkerR429Installed || null;
 
   runtime.__playerMarkerR427Installed?.stop?.();
+  runtime.__playerMarkerR428Installed?.stop?.();
   installStyles();
 
   const marker = createMarkerElement();
@@ -130,10 +161,21 @@ function installRuntime(runtime) {
   let frame = 0;
   let blankOverlay = null;
   let autoVisibleUntil = 0;
+  let nextAutoCheckAt = 0;
+  let autoNearby = false;
   let lastColor = '';
+  let lastCarId = null;
+  let roofHeight = FALLBACK_ROOF_HEIGHT;
 
   function measure() {
     rect = runtime.renderer?.domElement?.getBoundingClientRect?.() || null;
+  }
+
+  function refreshCarMetrics() {
+    const carId = runtime.playerCar?.userData?.turnCarId || runtime.state?.vehicleId || null;
+    if (carId === lastCarId) return;
+    lastCarId = carId;
+    roofHeight = playerModelRoofHeight(runtime);
   }
 
   function raceActive() {
@@ -145,17 +187,20 @@ function installRuntime(runtime) {
     return true;
   }
 
+  function updateAuto(now) {
+    if (now < nextAutoCheckAt) return;
+    nextAutoCheckAt = now + AUTO_CHECK_INTERVAL_MS;
+    autoNearby = nearestRivalWorldDistanceSquared(runtime) <= AUTO_ACTIVATION_RADIUS_SQUARED;
+    if (autoNearby) autoVisibleUntil = now + AUTO_EXIT_GRACE_MS;
+  }
+
   function render(now) {
     frame = requestAnimationFrame(render);
     const active = raceActive();
     if (!active) {
       autoVisibleUntil = 0;
-      marker.hidden = true;
-      return;
-    }
-
-    if (!rect?.width || !rect?.height) measure();
-    if (!rect?.width || !rect?.height) {
+      autoNearby = false;
+      nextAutoCheckAt = 0;
       marker.hidden = true;
       return;
     }
@@ -164,18 +209,26 @@ function installRuntime(runtime) {
     let visible = mode === 'on';
 
     if (mode === 'auto') {
-      const nearby = playerMarkerAutoActive(nearestRivalWorldDistance(runtime));
-      if (nearby) autoVisibleUntil = now + AUTO_EXIT_GRACE_MS;
-      visible = nearby || now < autoVisibleUntil;
+      updateAuto(now);
+      visible = autoNearby || now < autoVisibleUntil;
     } else {
       autoVisibleUntil = 0;
+      autoNearby = false;
+      nextAutoCheckAt = 0;
     }
 
     if (mode === 'off') visible = false;
     marker.hidden = !visible;
     if (!visible) return;
 
-    const pose = markerPose(runtime, rect);
+    if (!rect?.width || !rect?.height) measure();
+    if (!rect?.width || !rect?.height) {
+      marker.hidden = true;
+      return;
+    }
+
+    refreshCarMetrics();
+    const pose = markerPose(runtime, rect, roofHeight);
     if (!pose) {
       marker.hidden = true;
       return;
@@ -203,17 +256,19 @@ function installRuntime(runtime) {
   document.addEventListener('webkitfullscreenchange', refreshMeasurement, { passive: true });
 
   measure();
+  refreshCarMetrics();
   frame = requestAnimationFrame(render);
 
   const controller = Object.freeze({
     marker,
     activationRadius: AUTO_ACTIVATION_RADIUS,
+    markerGapPixels: MARKER_GAP_PX,
     stop() {
       cancelAnimationFrame(frame);
       marker.remove();
     }
   });
-  runtime.__playerMarkerR428Installed = controller;
+  runtime.__playerMarkerR429Installed = controller;
   return controller;
 }
 
