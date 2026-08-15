@@ -1,7 +1,51 @@
 'use strict';
+let onboardingActive = false;
+const FIRST_SHIFT_KEY = 'postal-first-shift-v2';
+
 function closeSheet() {
+  if (onboardingActive) return;
   if (app.sheet.open && typeof app.sheet.close === 'function') app.sheet.close();
   else app.sheet.removeAttribute('open');
+  app.sheetClose.hidden = false;
+}
+
+function needsFirstShiftBriefing() {
+  try { return localStorage.getItem(FIRST_SHIFT_KEY) !== 'complete'; }
+  catch { return true; }
+}
+
+function finishFirstShiftBriefing() {
+  try { localStorage.setItem(FIRST_SHIFT_KEY, 'complete'); } catch {}
+  onboardingActive = false;
+  app.sheetClose.hidden = false;
+  if (app.sheet.open && typeof app.sheet.close === 'function') app.sheet.close();
+  else app.sheet.removeAttribute('open');
+  simulation.paused = false;
+  updateUI(true);
+  announce('Morning shift started. Incoming packages are ready.');
+}
+
+function showBriefingSheet({ firstRun = false } = {}) {
+  onboardingActive = firstRun;
+  app.sheetClose.hidden = firstRun;
+  const metrics = simulation.getMetrics();
+  const action = firstRun
+    ? '<button class="action-btn primary full briefing-start" data-start-shift>START THE MORNING SHIFT</button>'
+    : '<button class="action-btn primary full" data-close-sheet>BACK TO THE NETWORK</button>';
+  showSheet(firstRun ? 'Morning briefing' : 'How to run the network', `
+    <div class="briefing-hero">
+      <span class="eyebrow">SHIFT 1 · 07:00</span>
+      <h3>Keep the morning moving</h3>
+      <p>${metrics.incoming} packages are already on depot floors. Your team sorts automatically; you decide what deserves attention.</p>
+    </div>
+    <div class="briefing-steps">
+      <article><span aria-hidden="true">1</span><div><strong>Watch INCOMING</strong><p>Open the depot queues, inspect any package and prioritise the ones that cannot wait.</p></div></article>
+      <article><span aria-hidden="true">2</span><div><strong>Resolve red ISSUES</strong><p>Read the scan trail, find what stopped the package and choose an operational fix.</p></div></article>
+      <article><span aria-hidden="true">3</span><div><strong>Zoom out before trouble spreads</strong><p>DEPOT shows people and parcels, REGION shows local trucks, and SWEDEN shows national and international flow.</p></div></article>
+    </div>
+    <div class="interaction-key"><strong>Also interactive:</strong><span>workers</span><span>packages</span><span>trucks</span><span>towns</span><span>hubs</span></div>
+    ${action}
+  `);
 }
 
 function showFocusSheet() {
@@ -33,6 +77,25 @@ function showIssuesSheet() {
     ? `<p class="sheet-lede">These packages have left the normal flow. Open one, read its scan trail and choose an operational fix.</p><div class="issue-list">${issues.map(pkg => packageRow(pkg, true)).join('')}</div>`
     : `<div class="empty-state"><span class="empty-state-icon" aria-hidden="true">✓</span><strong>No active exceptions</strong><p>The network is moving cleanly.</p></div>`;
   showSheet(`Issues · ${issues.length}`, html);
+}
+
+function showIncomingSheet() {
+  const incoming = simulation.getIncomingPackages();
+  const sorting = incoming.filter(pkg => pkg.status === 'sorting').length;
+  const held = incoming.filter(pkg => pkg.status === 'held').length;
+  const waiting = incoming.length - sorting - held;
+  const sections = CITY_IDS.map(cityId => {
+    const packages = incoming.filter(pkg => pkg.cityId === cityId);
+    return `<section class="depot-queue">
+      <header><div><span class="eyebrow">${CITIES[cityId].short} DEPOT</span><strong>${CITIES[cityId].name}</strong></div><span>${packages.length}</span></header>
+      <div class="package-list">${packages.length ? packages.slice(0, 8).map(pkg => packageRow(pkg)).join('') : '<p class="hint">The depot floor is clear.</p>'}</div>
+    </section>`;
+  }).join('');
+  showSheet(`Incoming · ${incoming.length}`, `
+    <p class="sheet-lede">The live intake across all three depots. Open a package to inspect its route or move it to the front of the sort.</p>
+    <div class="intake-summary"><span><strong>${waiting}</strong> waiting</span><span><strong>${sorting}</strong> sorting</span><span><strong>${held}</strong> held</span></div>
+    ${sections}
+  `);
 }
 
 function packageRow(pkg, showIssue = false) {
@@ -108,7 +171,7 @@ function showWorker(workerId) {
     <div class="entity-card">
       <div class="entity-card-layout">
         <span class="entity-avatar" aria-hidden="true">${escapeHtml(worker.name.slice(0, 1))}</span>
-        <div><span class="eyebrow">SORT TEAM · ${CITIES[worker.cityId].name.toUpperCase()}</span><h3>${escapeHtml(worker.task)}</h3></div>
+        <div><span class="eyebrow">${escapeHtml(worker.role.toUpperCase())} · ${CITIES[worker.cityId].name.toUpperCase()}</span><h3>${escapeHtml(worker.task)}</h3></div>
       </div>
       <p>${pkg ? `Working on <button class="inline-link" data-open-package="${pkg.id}">${pkg.id}</button> because it scores highest under <strong>${focusLabel(simulation.focus)}</strong>.` : `Ready for the next package. Current team focus: <strong>${focusLabel(simulation.focus)}</strong>.`}</p>
       <div class="progress-rail" aria-label="Task ${progress}% complete"><i style="width:${progress}%"></i></div>

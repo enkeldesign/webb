@@ -10,6 +10,7 @@ let selectedPackageId = null;
 let visualTime = 0;
 let lastFrame = performance.now();
 let lastUiUpdate = 0;
+let lastReceivedCount = simulation.stats.received;
 
 const app = {
   canvas: $('#scene'),
@@ -19,6 +20,7 @@ const app = {
   metricOnTime: $('#metric-ontime'),
   metricFlow: $('#metric-flow'),
   metricIssues: $('#metric-issues'),
+  incoming: $('#incoming-btn'),
   issueBadge: $('#issue-badge'),
   live: $('#live-region'),
   pause: $('#pause-btn'),
@@ -75,9 +77,15 @@ scene.add(fill);
 const loader = new GLTFLoader();
 const assets = new Map();
 const manifest = {
-  workerA: './assets/kenney/characters/character-female-c.glb',
-  workerB: './assets/kenney/characters/character-male-e.glb',
-  workerC: './assets/kenney/characters/character-male-c.glb',
+  workerSunMira: './assets/kenney/characters/character-female-c.glb',
+  workerSunLeo: './assets/kenney/characters/character-male-e.glb',
+  workerSunSam: './assets/kenney/characters/character-male-c.glb',
+  workerStoAmina: './assets/kenney/characters/character-female-e.glb',
+  workerStoFreja: './assets/kenney/characters/character-female-a.glb',
+  workerStoViktor: './assets/kenney/characters/character-male-d.glb',
+  workerGbgElin: './assets/kenney/characters/character-female-d.glb',
+  workerGbgNils: './assets/kenney/characters/character-male-a.glb',
+  workerGbgOmar: './assets/kenney/characters/character-male-f.glb',
   suburbanA: './assets/kenney/city-suburban/building-type-a.glb',
   suburbanH: './assets/kenney/city-suburban/building-type-h.glb',
   suburbanL: './assets/kenney/city-suburban/building-type-l.glb',

@@ -84,10 +84,9 @@ function buildDepotScene(cityId) {
   world.add(truck);
   viewState.decorative.push({ kind: 'dockTruck', mesh: truck, baseY: truck.position.y });
 
-  const workerKeys = ['workerA', 'workerB', 'workerC'];
   const workerBases = [[-3.55, .18, .45], [-.8, .18, .45], [1.8, .18, .45]];
   simulation.cities[cityId].workers.forEach((worker, i) => {
-    let mesh = cloneAsset(workerKeys[i], { target: 1.15, position: workerBases[i], rotation: [0, Math.PI, 0] });
+    let mesh = cloneAsset(worker.assetKey, { target: 1.15, position: workerBases[i], rotation: [0, Math.PI, 0] });
     if (!mesh) mesh = createWorkerFallback(workerBases[i], i);
     addUserData(mesh, { entityType: 'worker', workerId: worker.id });
     world.add(mesh);

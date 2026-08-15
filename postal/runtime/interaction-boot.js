@@ -54,6 +54,10 @@ function bindUI() {
   $$('.level-tab').forEach(btn => btn.addEventListener('click', () => setLevel(btn.dataset.level)));
   $$('.city-chip').forEach(btn => btn.addEventListener('click', () => setCity(btn.dataset.city)));
   app.pause.addEventListener('click', () => { simulation.togglePause(); updateUI(true); announce(simulation.paused ? 'Network paused.' : 'Network running.'); });
+  app.incoming.addEventListener('click', showIncomingSheet);
+  app.incoming.addEventListener('animationend', () => app.incoming.classList.remove('new-arrival'));
+  $('#help-btn').addEventListener('click', () => showBriefingSheet());
+  $('#scene-help-btn').addEventListener('click', () => showBriefingSheet());
   $('#focus-btn').addEventListener('click', showFocusSheet);
   $('#issues-btn').addEventListener('click', showIssuesSheet);
   $('#find-btn').addEventListener('click', showFindSheet);
@@ -63,10 +67,15 @@ function bindUI() {
     else showIssuesSheet();
   });
   app.sheetClose.addEventListener('click', closeSheet);
-  app.sheet.addEventListener('click', event => { if (event.target === app.sheet) closeSheet(); });
+  app.sheet.addEventListener('click', event => { if (event.target === app.sheet && !onboardingActive) closeSheet(); });
+  app.sheet.addEventListener('cancel', event => { if (onboardingActive) event.preventDefault(); });
   app.canvas.addEventListener('pointerup', onScenePointer);
 
   app.sheetBody.addEventListener('click', event => {
+    const startShift = event.target.closest('[data-start-shift]');
+    if (startShift) { finishFirstShiftBriefing(); return; }
+    const close = event.target.closest('[data-close-sheet]');
+    if (close) { closeSheet(); return; }
     const focus = event.target.closest('[data-focus]');
     if (focus) {
       simulation.setFocus(focus.dataset.focus); updateUI(true); showFocusSheet(); announce(`Priority set to ${focusLabel(simulation.focus)}.`); return;
@@ -98,7 +107,7 @@ function bindUI() {
   addEventListener('resize', resizeRenderer, { passive: true });
   document.addEventListener('visibilitychange', () => { lastFrame = performance.now(); });
   document.addEventListener('keydown', event => {
-    if (event.key === 'Escape' && app.sheet.open) closeSheet();
+    if (event.key === 'Escape' && app.sheet.open && !onboardingActive) closeSheet();
     if (event.code === 'Space' && !app.sheet.open && !['INPUT','BUTTON'].includes(document.activeElement?.tagName)) {
       event.preventDefault(); simulation.togglePause(); updateUI(true);
     }
@@ -106,6 +115,8 @@ function bindUI() {
 }
 
 async function boot() {
+  const firstRun = needsFirstShiftBriefing();
+  if (firstRun) simulation.paused = true;
   bindUI();
   resizeRenderer();
   if (renderer) await preloadAssets();
@@ -113,6 +124,7 @@ async function boot() {
   updateUI(true);
   app.loader.classList.add('is-done');
   setTimeout(() => app.loader.remove(), 420);
+  if (firstRun) showBriefingSheet({ firstRun: true });
   requestAnimationFrame(animate);
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
 }

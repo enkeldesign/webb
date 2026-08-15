@@ -28,7 +28,7 @@ class PostalSimulation {
     ];
     for (const t of this.internationalTransports) t.duration = 26;
     this.events = [];
-    this.stats = { delivered: 0, lateDelivered: 0, complaintsResolved: 0, investigationsResolved: 0 };
+    this.stats = { received: 0, delivered: 0, lateDelivered: 0, complaintsResolved: 0, investigationsResolved: 0 };
     this.spawnAccumulator = 0;
     this.incidentAccumulator = 0;
     this._bootstrapDemo();
@@ -67,6 +67,7 @@ class PostalSimulation {
     };
     if (!pkg.trace.length) trace(pkg, this.clock, 'Shipment created', pkg.origin.place);
     this.packages.set(pkg.id, pkg);
+    this.stats.received += 1;
     this._enqueue(pkg);
     return pkg;
   }
@@ -132,6 +133,27 @@ class PostalSimulation {
       origin: { place: 'Ånge', country: 'Sweden' }, destination: { place: 'Sundsvall', country: 'Sweden' },
       cityId: 'sundsvall', location: 'Sundsvall terminal', service: 'standard', deadline: 61
     });
+    const morningIntake = [
+      ['SUN-10421', 'sundsvall', 'Söråker', 'Timrå', 'Sweden', 'standard', 74, 'NordPost'],
+      ['SUN-10422', 'sundsvall', 'Härnösand', 'Solna', 'Sweden', 'express', 46, 'DLH'],
+      ['SUN-10423', 'sundsvall', 'Ånge', 'Hamburg', 'Germany', 'standard', 108, 'DB Stänker'],
+      ['STO-20411', 'stockholm', 'Solna', 'Nacka', 'Sweden', 'standard', 68, 'NordPost'],
+      ['STO-20412', 'stockholm', 'Uppsala', 'Borås', 'Sweden', 'express', 51, 'DLH'],
+      ['STO-20413', 'stockholm', 'Stockholm', 'Helsinki', 'Finland', 'standard', 112, 'DB Stänker'],
+      ['GBG-30411', 'goteborg', 'Kungsbacka', 'Mölndal', 'Sweden', 'standard', 64, 'NordPost'],
+      ['GBG-30412', 'goteborg', 'Borås', 'Sundsvall', 'Sweden', 'express', 49, 'DLH'],
+      ['GBG-30413', 'goteborg', 'Göteborg', 'København', 'Denmark', 'standard', 105, 'DB Stänker']
+    ];
+    for (const [id, cityId, origin, destination, country, service, deadline, carrier] of morningIntake) {
+      this.addPackage({
+        id, cityId, location: CITIES[cityId].hub, service, deadline, carrier,
+        origin: { place: origin, country: 'Sweden' }, destination: { place: destination, country },
+        trace: [
+          { t: -13, label: 'Collected', place: origin },
+          { t: -4, label: 'Arrived at depot', place: CITIES[cityId].hub }
+        ]
+      });
+    }
     this.addEvent('critical', 'Customer complaint: USA → Timrå', 'The parcel reached Stockholm, then vanished from the scan trail.', 'US-77104');
     this.addEvent('warning', 'Wrong dock in Göteborg', 'A parcel for Uppsala is sitting with local deliveries.', 'GBG-23018');
   }
@@ -160,9 +182,11 @@ class PostalSimulation {
     this._tickNationalTrucks(dt);
     this._tickInternational(dt);
 
-    if (this.spawnAccumulator > 7.5) {
-      this.spawnAccumulator = 0;
+    if (this.spawnAccumulator > 3.4) {
+      this.spawnAccumulator -= 3.4;
       this._spawnRoutinePackage();
+      this._spawnRoutinePackage();
+      if (this.random() < 0.55) this._spawnRoutinePackage();
     }
     if (this.incidentAccumulator > 42) {
       this.incidentAccumulator = 0;
