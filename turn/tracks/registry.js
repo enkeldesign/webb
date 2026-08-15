@@ -5,7 +5,7 @@ import {
   createTrackRuntime,
   normalizeTrackId
 } from './catalog.js';
-import { installAirportWorld } from './airport-world-r53.js?build=20260814-r57';
+import { installAirportWorld } from './airport-world-r54.js?build=20260815-r489';
 import { installCliffsideWorld } from './cliffside-world.js';
 import { installHarborWorld } from './harbor-world.js';
 // Historical regression markers: midnight-city-world-r9.js?build=20260802-r9, midnight-city-world-r10.js?build=20260802-r10
@@ -17,8 +17,8 @@ const WORLD_INSTALLERS = Object.freeze({
     if (!initialWorld) throw new Error('TURN: Countryside requires the initial production world.');
     return initialWorld;
   },
-  airport({ scene, samples, trackWidth }) {
-    return installAirportWorld({ scene, samples, trackWidth });
+  airport({ scene, samples, trackWidth, runtime }) {
+    return installAirportWorld({ scene, samples, trackWidth, runtime });
   },
   cliffside({ scene, samples, trackWidth }) {
     return installCliffsideWorld({ scene, samples, trackWidth });
