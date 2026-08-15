@@ -184,7 +184,8 @@ function markerPose(car, camera, rect, roofHeight) {
 
 function carRoofHeight(car, roofCache) {
   if (!car?.position) return FALLBACK_ROOF_HEIGHT;
-  const model = car.children?.[0];
+  const model = car.children?.find((child) => child.userData?.turnAssetVisual)
+    || car.children?.find((child) => child.visible !== false);
   if (!model) return FALLBACK_ROOF_HEIGHT;
 
   const cached = roofCache.get(car);
