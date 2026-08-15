@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { getAchievement as getProductionAchievement } from '../../turn/achievements/catalog-chromatic-r183.js';
 
 const root = process.cwd();
 const turnDir = path.join(root, 'turn');
@@ -35,6 +36,14 @@ assert.equal(catalog.normalizeVehicleId('suv-luxury'), 'firetruck');
 assert.equal(catalog.normalizeVehicleId('hatchback-sports'), 'police');
 assert.equal(catalog.normalizeVehicleId('truck-flat'), 'ambulance');
 
+const goldenHour = getProductionAchievement('golden-hour');
+assert.equal(goldenHour?.title, 'GOLDEN HOUR');
+assert.equal(goldenHour?.hidden, true);
+assert.equal(goldenHour?.category, 'racing');
+assert.equal(goldenHour?.trophies, 100);
+assert.match(goldenHour?.description || '', /Ambulance/);
+assert.match(goldenHour?.description || '', /30 seconds/);
+
 const [
   carModels,
   emergencyLiveries,
@@ -43,6 +52,9 @@ const [
   lotTrackSelect,
   controls,
   audio,
+  airportEmergency,
+  airportWorldR54,
+  trackRegistry,
   license,
   index,
   nextIndex,
@@ -55,6 +67,9 @@ const [
   fs.readFile(path.join(turnDir, 'garage/lot-track-select.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'ui/gameplay-controls.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'audio/audio-system.js'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'tracks/airport-emergency-r489.js'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'tracks/airport-world-r54.js'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'tracks/registry.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'assets/cars/KENNEY-CAR-KIT.md'), 'utf8'),
   fs.readFile(path.join(turnDir, 'index.html'), 'utf8'),
   fs.readFile(path.join(root, 'turn-next/index.html'), 'utf8'),
@@ -99,6 +114,40 @@ assert.doesNotMatch(lotTrackSelect, /installFixedLiveryUiGuard|lot-fixed-livery-
 assert.doesNotMatch(index, /syncFixedLiveryRail|emergencyVehicleNames/,
   'Production index must not contain another fixed-livery DOM observer');
 
+assert.match(airportWorldR54, /airport-world-r53\.js/,
+  'The emergency layer must preserve the current real-aircraft Airport world');
+assert.match(airportWorldR54, /installAirportEmergency/);
+assert.match(trackRegistry, /airport-world-r54\.js/,
+  'Production Airport must route through the ambulance-emergency wrapper');
+assert.match(trackRegistry, /airport\(\{ scene, samples, trackWidth, runtime \}\)/,
+  'Airport world installation must receive the live TURN runtime');
+assert.match(airportEmergency, /export const AIRPORT_EMERGENCY_CONFIG/);
+assert.match(airportEmergency, /trackId: AIRPORT_TRACK_ID/);
+assert.match(airportEmergency, /vehicleId: AMBULANCE_ID/);
+assert.match(airportEmergency, /TRANSFER_LIMIT_MS = 30_000/);
+assert.match(airportEmergency, /export function qualifiesForAirportCrash/);
+assert.match(airportEmergency, /crashActive !== true/,
+  'The Airport crash should happen only once per page session');
+assert.match(airportEmergency, /trackId === AIRPORT_TRACK_ID/,
+  'The crash trigger must remain Airport-only');
+assert.match(airportEmergency, /vehicleId === AMBULANCE_ID/,
+  'No other car may trigger the Airport crash');
+assert.match(airportEmergency, /detail\?\.valid === true/,
+  'Only a valid completed lap may trigger the crash');
+assert.match(airportEmergency, /globalThis\.__turnBoostActive === true/,
+  'The pickup action must require the Ambulance siren/Boost to be active near the crash');
+assert.match(airportEmergency, /signalSecretAchievement\('golden-hour'/);
+assert.match(airportEmergency, /Airport B787 Overflight/,
+  'The normal sky aircraft must disappear after the crash is triggered');
+assert.match(airportEmergency, /turnAirportCrashSite/);
+assert.match(airportEmergency, /turnAirportMedical/);
+assert.match(airportEmergency, /marker\.textContent = kind === 'medical' \? 'H' : '🔥'/,
+  'The minimap must switch from the crash marker to the terminal medical marker during transport');
+assert.match(airportEmergency, /sessionPersistent: true/);
+assert.match(airportEmergency, /clearsOnPageReload: true/);
+assert.doesNotMatch(airportEmergency, /localStorage|sessionStorage/,
+  'The crash must persist only for the current page session and reset when TURN starts again');
+
 const escapedBuild = release.cacheKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 for (const html of [index, nextIndex]) {
   assert.match(
@@ -118,4 +167,4 @@ assert.match(audio, /emergencySirenFrequency/);
 assert.match(audio, /sirenActive = boostActive/);
 assert.match(license, /Creative Commons CC0 1\.0 Universal/);
 
-console.log('TURN emergency vehicles, fixed liveries, wide-gamut lights, Lot tint and sirens passed.');
+console.log('TURN emergency vehicles, Airport ambulance rescue, fixed liveries, wide-gamut lights, Lot tint and sirens passed.');

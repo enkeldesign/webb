@@ -10,6 +10,17 @@ const CHROMATIC_CAMOUFLAGE = Object.freeze({
   icon: 'secret'
 });
 
+const GOLDEN_HOUR = Object.freeze({
+  id: 'golden-hour',
+  category: base.CATEGORY.RACING,
+  trophies: 100,
+  hidden: true,
+  lockedDescription: '',
+  title: 'GOLDEN HOUR',
+  description: 'In the Ambulance, answer the Airport crash with sirens and deliver the patient to the terminal medical bay within 30 seconds.',
+  icon: 'siren'
+});
+
 const firstTimeTrialIndex = base.ACHIEVEMENTS.findIndex(
   (achievement) => achievement.category === base.CATEGORY.TIME_TRIALS
 );
@@ -17,6 +28,7 @@ const insertionIndex = firstTimeTrialIndex >= 0 ? firstTimeTrialIndex : base.ACH
 
 export const ACHIEVEMENTS = Object.freeze([
   ...base.ACHIEVEMENTS.slice(0, insertionIndex),
+  GOLDEN_HOUR,
   CHROMATIC_CAMOUFLAGE,
   ...base.ACHIEVEMENTS.slice(insertionIndex)
 ]);

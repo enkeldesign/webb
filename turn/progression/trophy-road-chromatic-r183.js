@@ -7,7 +7,7 @@ import {
 
 export * from './trophy-road.js?revision=r164-vintage-rally-perks';
 
-export const TROPHY_ROAD_MAX_THRESHOLD = 1750;
+export const TROPHY_ROAD_MAX_THRESHOLD = 1850;
 
 export const TROPHY_ROAD_REWARDS = Object.freeze(BASE_TROPHY_ROAD_REWARDS.map((reward) => {
   if (reward.id !== 'future-racer') return reward;
