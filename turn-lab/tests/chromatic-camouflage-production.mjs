@@ -23,9 +23,9 @@ const moduleSource = await fs.readFile(
 const release = JSON.parse(releaseSource);
 
 const achievement = getAchievement(CHROMATIC_CAMOUFLAGE_ID);
-const goldenHour = getAchievement('golden-hour');
+const mayday = getAchievement('golden-hour');
 assert.equal(ACHIEVEMENTS.length, 30,
-  'Production TURN should expose the existing 28 achievements plus Golden Hour and Chromatic Camouflage');
+  'Production TURN should expose the existing 28 achievements plus MAYDAY and Chromatic Camouflage');
 assert.equal(achievement?.title, 'CHROMATIC CAMOUFLAGE');
 assert.equal(achievement?.hidden, true);
 assert.equal(achievement?.category, 'exploration');
@@ -34,14 +34,14 @@ assert.equal(
   achievement?.description,
   'Set your personal best on every track in a car painted to match that track.'
 );
-assert.equal(goldenHour?.title, 'GOLDEN HOUR');
-assert.equal(goldenHour?.hidden, true);
-assert.equal(goldenHour?.category, 'racing');
-assert.equal(goldenHour?.trophies, 100);
-assert.equal(goldenHour?.lockedDescription, '');
-assert.match(goldenHour?.description || '', /Ambulance/);
-assert.match(goldenHour?.description || '', /Airport crash/);
-assert.match(goldenHour?.description || '', /30 seconds/);
+assert.equal(mayday?.title, 'MAYDAY!');
+assert.equal(mayday?.hidden, true);
+assert.equal(mayday?.category, 'racing');
+assert.equal(mayday?.trophies, 100);
+assert.equal(mayday?.lockedDescription, '');
+assert.match(mayday?.description || '', /Ambulance/);
+assert.match(mayday?.description || '', /Airport MAYDAY/);
+assert.match(mayday?.description || '', /30 seconds/);
 assert.equal(
   ACHIEVEMENTS.reduce((total, item) => total + item.trophies, 0),
   1850
@@ -113,4 +113,4 @@ assert.match(indexSource, /chromatic-camouflage-r183\.js/,
 assert.doesNotMatch(indexSource, /airport-runway/,
   'The TURN NEXT Airport prototype must not enter the production TURN entry point');
 
-console.log(`TURN ${release.version} production Golden Hour and Chromatic Camouflage achievement regression passed.`);
+console.log(`TURN ${release.version} production MAYDAY and Chromatic Camouflage achievement regression passed.`);
