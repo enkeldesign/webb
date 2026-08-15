@@ -68,8 +68,8 @@ const [
   fs.readFile(path.join(turnDir, 'garage/lot-track-select.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'ui/gameplay-controls.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'audio/audio-system.js'), 'utf8'),
-  fs.readFile(path.join(turnDir, 'audio/mayday-audio-r491.js'), 'utf8'),
-  fs.readFile(path.join(turnDir, 'tracks/airport-emergency-r491.js'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'audio/mayday-audio-r492.js'), 'utf8'),
+  fs.readFile(path.join(turnDir, 'tracks/airport-emergency-r492.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'tracks/airport-world-r56.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'tracks/registry.js'), 'utf8'),
   fs.readFile(path.join(turnDir, 'assets/cars/KENNEY-CAR-KIT.md'), 'utf8'),
@@ -118,16 +118,16 @@ assert.doesNotMatch(index, /syncFixedLiveryRail|emergencyVehicleNames/,
 
 assert.match(airportWorldR56, /airport-world-r53\.js/,
   'The MAYDAY layer must preserve the current real-aircraft Airport world');
-assert.match(airportWorldR56, /airport-emergency-r491\.js/);
-assert.match(trackRegistry, /airport-world-r56\.js/,
-  'Production Airport must route through the MAYDAY playtest-fix wrapper');
+assert.match(airportWorldR56, /airport-emergency-r492\.js/);
+assert.match(trackRegistry, /airport-world-r56\.js\?build=20260815-r492/,
+  'Production Airport must cache-bust the r492 MAYDAY layer');
 assert.match(trackRegistry, /airport\(\{ scene, samples, trackWidth, runtime \}\)/,
   'Airport world installation must receive the live TURN runtime');
 assert.match(airportEmergency, /export const AIRPORT_EMERGENCY_CONFIG/);
 assert.match(airportEmergency, /vehicleId: AMBULANCE_ID/);
 assert.match(airportEmergency, /TRANSFER_LIMIT_MS = 30_000/);
 assert.match(airportEmergency, /MEDICAL_RADIUS = 42/,
-  'The terminal medical bay should be broad enough to trigger around either responder');
+  'The terminal medical bay should remain forgiving');
 assert.match(airportEmergency, /crashActive !== true/,
   'The Airport crash should happen only once per page session');
 assert.match(airportEmergency, /trackId === AIRPORT_TRACK_ID/,
@@ -145,32 +145,53 @@ assert.match(airportEmergency, /world\.getObjectByName\(OVERFLIGHT_NAME\)/,
   'The plane seen in the sky should become the physical wreck rather than a substitute');
 assert.match(airportEmergency, /aircraftMount\.rotation\.x = THREE\.MathUtils\.degToRad\(-20\)/);
 assert.match(airportEmergency, /aircraftMount\.rotation\.y = Math\.PI/,
-  'The wreck nose-tail direction must be reversed from the r490 playtest');
+  'The wreck nose-tail direction must remain reversed after playtesting');
 assert.match(airportEmergency, /aircraftMount\.rotation\.z = THREE\.MathUtils\.degToRad\(20\)/);
 assert.match(airportEmergency, /makeFlameTongue/,
-  'The crash fire should use layered bent flame geometry instead of two large cones');
+  'The improved layered crash fire must remain in place');
 assert.match(airportEmergency, /THREE\.AdditiveBlending/);
 assert.match(airportEmergency, /\[7\.0, 65, 2\.0, 4\.9\]/,
   'The smoke column should stay tall above the full-scale wreck');
+
 assert.match(airportEmergency, /preloadCarModels\(\['firetruck', 'ambulance'\]\)/,
-  'Airport + Ambulance should prewarm both medical responder models before lap one finishes');
-assert.match(airportEmergency, /requestIdleCallback/,
-  'Responder preparation should move away from the finish-line critical path');
+  'Ambulance Airport runs should preload both medical responder models');
+assert.doesNotMatch(airportEmergency, /globalThis\.requestIdleCallback\s*\(/,
+  'iOS must not defer responder preparation until the finish line');
+assert.match(airportEmergency, /renderer\.compileAsync\(staging, camera\)/,
+  'MAYDAY-only materials should be asynchronously shader-warmed before the crash reveal');
+assert.match(airportEmergency, /setTimeout\(revealCrashVisuals, 120\)/,
+  'Crash scene reparenting and reveal should happen after the lap transition frame');
 assert.match(airportEmergency, /playMaydayCrashSound\(\);[\s\S]*session\.crashActive = true/,
-  'The impact must be requested before any crash-scene or responder work');
+  'The impact must be requested before crash-state work');
+
 assert.match(airportEmergency, /carId: 'firetruck'/,
   'The medical bay needs a Fire Truck responder');
 assert.match(airportEmergency, /carId: 'ambulance'/,
   'The medical bay needs an Ambulance responder too');
-assert.match(airportEmergency, /horizontalDistanceSquared\(position, placement\.firetruckPoint\)/);
-assert.match(airportEmergency, /horizontalDistanceSquared\(position, placement\.ambulancePoint\)/,
-  'Approaching either responder must count as reaching the medical bay');
+assert.match(airportEmergency, /const medicalPoint = ambulancePoint\.clone\(\)/,
+  'The medical trigger must be centred on the responder Ambulance, not inside the terminal');
+assert.match(airportEmergency, /function isInsideMedicalBay\(position\)[\s\S]*placement\.medicalPoint/);
+assert.doesNotMatch(airportEmergency, /isInsideMedicalBay\(position\)[\s\S]{0,220}placement\.firetruckPoint/,
+  'The transfer zone should be one understandable Ambulance-centred target, not a hidden union of zones');
+assert.match(airportEmergency, /renderScene\.onBeforeRender = function airportEmergencyFrame/,
+  'MAYDAY logic must run at scene level even after the wreck leaves the camera frustum');
+assert.doesNotMatch(airportEmergency, /renderAnchor\.onBeforeRender/,
+  'Medical transfer and siren updates must not depend on the crash fire still being rendered');
+
+assert.match(airportEmergency, /PATIENT ON BOARD · MEDICAL BAY · 30 SECONDS/,
+  'The instruction should describe the objective without explicitly telling players to follow sirens');
+assert.doesNotMatch(airportEmergency, /FOLLOW THE SIRENS/);
+assert.match(airportEmergency, /\.turn-mayday-info-plate[\s\S]*top: max\(16px, calc\(env\(safe-area-inset-top\) \+ 10px\)\)[\s\S]*border: 3px solid #08090a[\s\S]*box-shadow: 5px 5px 0 #08090a/,
+  'MAYDAY instructions should use the same fixed info-plate treatment as blank-screen info');
+assert.match(airportEmergency, /new THREE\.BoxGeometry\(10\.4, 6\.4, 0\.65\)/,
+  'The terminal H plate should cover the window it occupies');
+assert.match(airportEmergency, /sign\.position\.set\(0, 8\.7, 12\.72\)/,
+  'The H plate should be centred on the terminal window');
+
 assert.match(airportEmergency, /pulseMaydayResponderSiren/,
   'The medical responders must provide positioned audible sirens');
 assert.match(airportEmergency, /pulseMaydayFire/,
   'The crash site must retain positioned audible fire guidance');
-assert.match(airportEmergency, /#message\.turn-mayday-message[\s\S]*31vh/,
-  'MAYDAY instructions must sit below the top lap HUD');
 assert.match(airportEmergency, /marker\.textContent = kind === 'medical' \? 'H' : '🔥'/,
   'The minimap must switch from the crash marker to the terminal medical marker during transport');
 assert.match(airportEmergency, /sessionPersistent: true/);
@@ -179,7 +200,13 @@ assert.doesNotMatch(airportEmergency, /localStorage|sessionStorage/,
   'The crash must persist only for the current page session and reset when TURN starts again');
 
 assert.match(maydayAudio, /export function playMaydayCrashSound/);
+assert.match(maydayAudio, /playDistortedNoise/,
+  'The crash impact should use a distorted low rumble rather than a short fail-like transient');
+assert.match(maydayAudio, /2\.45/,
+  'The crash rumble should be substantially slowed\/lengthened');
 assert.match(maydayAudio, /export function pulseMaydayResponderSiren/);
+assert.match(maydayAudio, /0\.58/,
+  'Responder siren pulses should overlap enough to sound continuous');
 assert.match(maydayAudio, /createStereoPanner/,
   'MAYDAY responder audio should preserve left\/right direction when supported');
 assert.match(maydayAudio, /__turnAudioPreferences\?\.getSettings/,
@@ -204,4 +231,4 @@ assert.match(audio, /emergencySirenFrequency/);
 assert.match(audio, /sirenActive = boostActive/);
 assert.match(license, /Creative Commons CC0 1\.0 Universal/);
 
-console.log('TURN emergency vehicles and MAYDAY playtest fixes passed.');
+console.log('TURN emergency vehicles and MAYDAY r492 playtest fixes passed.');

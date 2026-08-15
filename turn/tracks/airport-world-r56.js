@@ -1,5 +1,5 @@
 import { installAirportWorld as installAirportWorldR53 } from './airport-world-r53.js?build=20260814-r57';
-import { installAirportEmergency } from './airport-emergency-r491.js?revision=r491-playtest';
+import { installAirportEmergency } from './airport-emergency-r492.js?revision=r492-playtest';
 
 export function installAirportWorld(options = {}) {
   const world = installAirportWorldR53(options);
@@ -17,7 +17,9 @@ export function installAirportWorld(options = {}) {
     maydayPlaytestFixes: true,
     prewarmedMedicalResponders: true,
     positionedResponderSirens: true,
-    broadMedicalBay: true
+    broadMedicalBay: true,
+    responderCentredMedicalBay: true,
+    sceneLevelEmergencyLoop: true
   });
   return world;
 }
