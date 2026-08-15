@@ -117,7 +117,7 @@ assert.deepEqual(
     ['airport', 17],
     ['cliffside', 16],
     ['harbor', 24],
-    ['midnight-city', 55]
+    ['midnight-city', 53]
   ]
 );
 for (const trial of TIME_TRIALS) {
@@ -227,7 +227,7 @@ assert.match(timeTrialSource, /targetSeconds: 12/);
 assert.match(timeTrialSource, /targetSeconds: 17/);
 assert.match(timeTrialSource, /targetSeconds: 16/);
 assert.match(timeTrialSource, /targetSeconds: 24/);
-assert.match(timeTrialSource, /targetSeconds: 55/);
+assert.match(timeTrialSource, /targetSeconds: 53/);
 assert.match(timeTrialSource, /seconds >= trial\.targetSeconds/);
 
 assert.match(challengeSource, /SAMPLE_INTERVAL_MS = 50/);
