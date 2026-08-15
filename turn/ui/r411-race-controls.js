@@ -1,4 +1,4 @@
-import './player-marker-r428.js?revision=r429';
+import './player-marker-r428.js?revision=r430';
 
 function installStyles() {
   if (document.querySelector('#turn-r411-race-control-styles')) return;

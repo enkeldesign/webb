@@ -7,7 +7,7 @@ const AUTO_ACTIVATION_RADIUS = REFERENCE_CAR_LENGTH * AUTO_ACTIVATION_DIAMETER_C
 const AUTO_ACTIVATION_RADIUS_SQUARED = AUTO_ACTIVATION_RADIUS * AUTO_ACTIVATION_RADIUS;
 const AUTO_EXIT_GRACE_MS = 220;
 const AUTO_CHECK_INTERVAL_MS = 50;
-const MARKER_GAP_PX = 8;
+const MARKER_GAP_PX = 14;
 const MARKER_SIZE_VIEWPORT_RATIO = 0.045;
 const MARKER_SIZE_MIN_PX = 17;
 const MARKER_SIZE_MAX_PX = 23;
@@ -97,9 +97,8 @@ function markerPose(runtime, rect, roofHeight) {
     upY /= upLength;
   }
 
-  // Standard overhead-marker treatment: anchor at the top of the vehicle silhouette,
-  // then leave one small, constant visual gap. This keeps the marker associated with
-  // the car without covering it, independent of FOV, speed or viewport height.
+  // Anchor from the model's bounds-derived roof and leave enough screen-space
+  // clearance for the triangle to remain distinct even inside a same-car pack.
   const centerGap = MARKER_GAP_PX + markerSizePixels(rect.height) * 0.5;
   const x = roofPoint.x + upX * centerGap;
   const y = roofPoint.y + upY * centerGap;
