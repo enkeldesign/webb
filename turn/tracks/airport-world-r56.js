@@ -1,5 +1,5 @@
 import { installAirportWorld as installAirportWorldR53 } from './airport-world-r53.js?build=20260814-r57';
-import { installAirportEmergency } from './airport-emergency-r497.js?revision=r497-depth-fire-cache';
+import { installAirportEmergency } from './airport-emergency-r497.js?revision=r498-wreck-depth-cache';
 
 export function installAirportWorld(options = {}) {
   const world = installAirportWorldR53(options);

@@ -124,14 +124,14 @@ assert.doesNotMatch(index, /syncFixedLiveryRail|emergencyVehicleNames/,
 
 assert.match(airportWorldR56, /airport-world-r53\.js/,
   'The MAYDAY layer must preserve the current real-aircraft Airport world');
-assert.match(airportWorldR56, /airport-emergency-r497\.js\?revision=r497-depth-fire-cache/,
-  'The r497 playtest must cache-bust the final wreck/fire calibration layer');
+assert.match(airportWorldR56, /airport-emergency-r497\.js\?revision=r498-wreck-depth-cache/,
+  'The r498 playtest must cache-bust the revised wreck depth');
 assert.match(airportWorldR56, /removeMedicalBayJetBridge\(world\)/,
   'The jet bridge in front of the medical H sign must remain removed');
 assert.match(airportWorldR56, /nearly\(node\.position\?\.x, -52\)/);
 assert.match(airportWorldR56, /nearly\(node\.position\?\.z, -32\)/);
-assert.match(trackRegistry, /airport-world-r56\.js\?build=20260815-r497/,
-  'Production Airport must cache-bust the r497 MAYDAY layer');
+assert.match(trackRegistry, /airport-world-r56\.js\?build=20260815-r498/,
+  'Production Airport must cache-bust the r498 MAYDAY layer');
 assert.match(trackRegistry, /airport\(\{ scene, samples, trackWidth, runtime \}\)/,
   'Airport world installation must receive the live TURN runtime');
 
@@ -251,14 +251,14 @@ assert.match(maydayHud, /unlocked\.includes\('golden-hour'\)/,
 
 assert.match(maydayFinal, /airport-emergency-r496\.js\?revision=r497-depth-fire/,
   'r497 must preserve and cache-bust the approved r496 HUD behavior');
-assert.match(maydayFinal, /const TARGET_WRECK_PENETRATION_Y = 12\.0/,
-  'The latest playtest should lower the B787 a modest final 1.5 world units');
+assert.match(maydayFinal, /const TARGET_WRECK_PENETRATION_Y = 16\.0/,
+  'The r498 playtest should lower the B787 another four world units from the tested r497 result');
 assert.match(maydayFinal, /const FIRE_SCALE = 1\.7/,
-  'The crash fire should be materially larger against the full-scale B787');
+  'The crash fire should remain materially larger against the full-scale B787');
 assert.match(maydayFinal, /fire\.scale\.setScalar\(FIRE_SCALE\)/,
   'The larger fire should reuse the existing layered animated fire group');
 assert.match(maydayFinal, /mount\.position\.y -= EXTRA_WRECK_PENETRATION_Y/,
-  'The final wreck calibration should layer only the additional 1.5-unit correction');
+  'The final wreck calibration should apply the revised 16-unit target');
 
 assert.match(maydayAudio, /export function playMaydayCrashSound/);
 assert.match(maydayAudio, /playDistortedNoise\(now \+ 0\.015, 3\.05/,
@@ -296,4 +296,4 @@ assert.match(audio, /emergencySirenFrequency/);
 assert.match(audio, /sirenActive = boostActive/);
 assert.match(license, /Creative Commons CC0 1\.0 Universal/);
 
-console.log('TURN emergency vehicles and MAYDAY r497 depth/fire calibration passed.');
+console.log('TURN emergency vehicles and MAYDAY r498 wreck-depth calibration passed.');
