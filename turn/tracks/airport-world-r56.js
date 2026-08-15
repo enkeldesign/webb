@@ -1,5 +1,5 @@
 import { installAirportWorld as installAirportWorldR53 } from './airport-world-r53.js?build=20260814-r57';
-import { installAirportEmergency } from './airport-emergency-r496.js?revision=r496-hud-cache';
+import { installAirportEmergency } from './airport-emergency-r497.js?revision=r497-depth-fire-cache';
 
 export function installAirportWorld(options = {}) {
   const world = installAirportWorldR53(options);
@@ -29,7 +29,9 @@ export function installAirportWorld(options = {}) {
     medicalEntranceDoor: true,
     medicalEntranceReplacesWindow: true,
     maydayDangerHud: true,
-    maydayHudAboveBoost: true
+    maydayHudAboveBoost: true,
+    maydayFinalWreckDepth: true,
+    maydayLargerCrashFire: true
   });
   return world;
 }
