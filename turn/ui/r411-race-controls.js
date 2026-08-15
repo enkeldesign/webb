@@ -1,3 +1,5 @@
+import './player-marker-r427.js?revision=r427';
+
 function installStyles() {
   if (document.querySelector('#turn-r411-race-control-styles')) return;
   const style = document.createElement('style');
