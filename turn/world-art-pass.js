@@ -2,6 +2,7 @@ import * as THREE from 'three';
 
 const TAU = Math.PI * 2;
 const INK = 0x08090a;
+const TURN_ROAD = 0x44494f;
 const OUTLINE_MATERIAL = new THREE.MeshBasicMaterial({
   color: INK,
   side: THREE.BackSide
@@ -352,7 +353,7 @@ function addLakeIsland(world, center) {
 }
 
 function addRoadOuterContour(world, samples, trackWidth) {
-  const material = new THREE.MeshBasicMaterial({ color: INK, side: THREE.DoubleSide });
+  const material = new THREE.MeshBasicMaterial({ color: TURN_ROAD, side: THREE.DoubleSide });
   for (const side of [-1, 1]) {
     const inner = [];
     const outer = [];
