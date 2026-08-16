@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-const REVISION = 'r517-kenney-windmill-ocean-liner';
+const REVISION = 'r517-kenney-landmark-palettes';
 const INK = 0x08090a;
 const SEA_LEVEL = -16.5;
 const WINDMILL_TRACK_FRACTION = 0.57;
@@ -12,11 +12,11 @@ const OCEAN_LINER_TARGET_LENGTH = 92;
 
 const ASSET_URLS = Object.freeze({
   windmill: new URL(
-    '../assets/scenery/windmill.glb?asset=kenney-fantasy-town-kit-2.0',
+    '../assets/scenery/fantasy-town/windmill.glb?asset=kenney-fantasy-town-kit-2.0-palette-4aac939d',
     import.meta.url
   ).href,
   oceanLiner: new URL(
-    '../assets/scenery/ship-ocean-liner.glb?asset=kenney-watercraft-kit-2.1',
+    '../assets/scenery/watercraft/ship-ocean-liner.glb?asset=kenney-watercraft-kit-2.1-luxury-palette-31113835',
     import.meta.url
   ).href
 });
