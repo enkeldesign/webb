@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [surfaceSource, registry] = await Promise.all([
+const [surfaceSource, airportContrastSource, registry] = await Promise.all([
   fs.readFile(new URL('../../turn/tracks/procedural-surface-polish-r522.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/airport-surface-contrast-r525.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/registry.js', import.meta.url), 'utf8')
 ]);
 
@@ -38,7 +39,15 @@ assert.doesNotMatch(surfaceSource, /new THREE\.InstancedMesh/, 'The replacement 
 assert.match(surfaceSource, /const wheelBands = \[0\.27, 0\.36, 0\.64, 0\.73\]/, 'Road polish must retain subtle wheel-path wear');
 assert.match(surfaceSource, /maxAlpha: 0\.16/, 'Surface contrast must retain the stronger but still restrained lightness range');
 assert.match(surfaceSource, /return finishTexture\(canvas, 1, 6\);/, 'Closed road texture repeat must use an integer repeat count so the loop seam is continuous');
+
+assert.match(airportContrastSource, /new Set\(\['airport-grass', 'airport-concrete'\]\)/, 'Airport contrast pass must target only Airport ground textures');
+assert.match(airportContrastSource, /contrast: 1\.6/, 'Airport ground texture range must be visibly wider than the base procedural pass');
+assert.match(airportContrastSource, /darken: 0\.055/, 'Airport ground treatment must shift slightly darker overall');
+assert.match(airportContrastSource, /trackId !== 'airport'/, 'Airport contrast pass must not alter Harbor, Cliffside, Countryside or Midnight City');
+assert.doesNotMatch(airportContrastSource, /new THREE\.|InstancedMesh|requestAnimationFrame|setInterval/, 'Airport contrast must not add geometry, draw calls or a frame loop');
+
 assert.match(registry, /procedural-surface-polish-r522\.js\?revision=r524-procedural-surfaces-contrast-r171/);
+assert.match(registry, /airport-surface-contrast-r525\.js\?revision=r525-airport-ground-contrast/);
 assert.doesNotMatch(registry, /ground-detail-polish-r521/, 'The old scattered Airport/Harbor ground-detail pass must no longer load');
 
 console.log('TURN procedural surface polish contract passed.');
