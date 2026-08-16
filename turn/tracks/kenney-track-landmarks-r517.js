@@ -1,12 +1,13 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-const REVISION = 'r517-kenney-landmark-palettes';
+const REVISION = 'r517-kenney-landmark-framing';
 const INK = 0x08090a;
 const SEA_LEVEL = -16.5;
-const WINDMILL_TRACK_FRACTION = 0.57;
+const WINDMILL_TRACK_FRACTION = 0.52;
 const WINDMILL_TRACKSIDE_DISTANCE = 55;
-const OCEAN_LINER_TRACK_FRACTION = 0.82;
+const WINDMILL_LANDMARK_SCALE = 1.35;
+const OCEAN_LINER_TRACK_FRACTION = 0.55;
 const OCEAN_LINER_OFFSHORE_DISTANCE = 94;
 const OCEAN_LINER_TARGET_LENGTH = 92;
 
@@ -176,6 +177,7 @@ function createCountrysideWindmill(source, samples, trackWidth) {
   rotor.position.add(new THREE.Vector3(0, 8.2, 6.55));
 
   landmark.add(tower, roof, door, rotor);
+  landmark.scale.setScalar(WINDMILL_LANDMARK_SCALE);
   landmark.position.copy(position);
   landmark.position.y = sample.point.y + 0.08;
   landmark.rotation.y = Math.atan2(towardsTrack.x, towardsTrack.z);

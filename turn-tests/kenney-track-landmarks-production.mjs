@@ -54,6 +54,10 @@ assert.ok(horizontalSpan(linerPosition) > 20, 'The full-size ocean-liner source 
 
 assert.match(moduleSource, /assets\/scenery\/fantasy-town\/windmill\.glb\?asset=kenney-fantasy-town-kit-2\.0-palette-4aac939d/);
 assert.match(moduleSource, /assets\/scenery\/watercraft\/ship-ocean-liner\.glb\?asset=kenney-watercraft-kit-2\.1-luxury-palette-31113835/);
+assert.match(moduleSource, /WINDMILL_TRACK_FRACTION = 0\.52/);
+assert.match(moduleSource, /WINDMILL_LANDMARK_SCALE = 1\.35/);
+assert.match(moduleSource, /OCEAN_LINER_TRACK_FRACTION = 0\.55/);
+assert.match(moduleSource, /landmark\.scale\.setScalar\(WINDMILL_LANDMARK_SCALE\)/);
 assert.match(moduleSource, /currentTrackId\(runtime\) !== 'countryside'/);
 assert.match(moduleSource, /currentTrackId\(runtime\) !== 'cliffside'/);
 assert.match(moduleSource, /side \* \(trackWidth \/ 2 \+ WINDMILL_TRACKSIDE_DISTANCE\)/);
@@ -66,7 +70,7 @@ assert.doesNotMatch(
   'Landmarks must stay static, scenery-only additions with no physics, record, or animation loop changes'
 );
 
-const landmarkScript = './tracks/kenney-track-landmarks-r517.js?revision=r517-kenney-landmark-palettes';
+const landmarkScript = './tracks/kenney-track-landmarks-r517.js?revision=r517-kenney-landmark-framing';
 assert.ok(indexSource.includes(landmarkScript), 'Production TURN must load the cache-revisioned landmark module');
 assert.ok(
   indexSource.indexOf('cliffside-house-inset-r203.js') < indexSource.indexOf(landmarkScript),
