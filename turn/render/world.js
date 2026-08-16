@@ -13,7 +13,7 @@ function moduleUrl(relativePath) {
 async function loadWorldModules() {
   const [beauty, art, identity, intensity, scenery, bella, bellaFinal, bellaRescue] = await Promise.all([
     import(moduleUrl('../world-beauty.js')),
-    import(moduleUrl('../world-art-pass.js')),
+    import(moduleUrl('../world-art-pass.js?revision=r514-road-contour')),
     import(moduleUrl('../track-identity.js')),
     import(moduleUrl('../section-intensity.js')),
     import(moduleUrl('../tracks/countryside-scenery-r177.js?revision=r177-lake-cleanup-traffic')),
