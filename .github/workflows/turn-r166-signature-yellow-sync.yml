@@ -27,9 +27,16 @@ jobs:
       - name: Regenerate release identities
         run: |
           node turn/scripts/release.mjs --write
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('turn-next/index.html')
+          text = path.read_text()
+          text = text.replace('2026.08.16-r165', '2026.08.16-r166')
+          text = text.replace('20260816-r165', '20260816-r166')
+          path.write_text(text)
+          PY
           node turn-next/scripts/build-parity-app.mjs --write
           node turn-next/scripts/build-parity-main.mjs --write
-          node turn-next/scripts/build-parity-entry.mjs --write
 
       - name: Verify generated release contracts
         run: |
