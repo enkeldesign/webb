@@ -1,0 +1,67 @@
+name: Regenerate TURN r171 procedural-surface release entries
+
+on:
+  push:
+    branches:
+      - polish/procedural-surface-textures
+    paths:
+      - '.github/workflows/turn-r171-procedural-surface-sync.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: polish/procedural-surface-textures
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Regenerate release identities
+        run: |
+          node turn/scripts/release.mjs --write
+          python3 - <<'PY'
+          from pathlib import Path
+
+          replacements = [
+              ('turn-next/index.html', '2026.08.16-r170', '2026.08.17-r171'),
+              ('turn-next/index.html', '20260816-r170', '20260817-r171'),
+              ('turn/content/about-history.js', '2026.08.16-r170', '2026.08.17-r171'),
+              ('turn/ui/about-history-bootstrap-r165.js', '20260816-r170', '20260817-r171'),
+          ]
+          for filename, old, new in replacements:
+              path = Path(filename)
+              text = path.read_text()
+              if old in text:
+                  path.write_text(text.replace(old, new))
+          PY
+          node turn-next/scripts/build-parity-app.mjs --write
+          node turn-next/scripts/build-parity-main.mjs --write
+
+      - name: Verify generated release contracts
+        run: |
+          node turn/scripts/release.mjs --check
+          node turn-next/scripts/build-parity-app.mjs --check
+          node turn-next/scripts/build-parity-main.mjs --check
+          node turn-next/scripts/build-parity-entry.mjs --check
+          node turn-tests/release-production.mjs
+          node turn-tests/about-history-production.mjs
+          node turn-lab/tests/multi-track-production.mjs
+          node turn-lab/tests/procedural-surface-polish-production.mjs
+          node --check turn/tracks/procedural-surface-polish-r522.js
+
+      - name: Commit generated files and remove temporary workflow
+        run: |
+          git rm .github/workflows/turn-r171-procedural-surface-sync.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --quiet || git commit -m 'Regenerate TURN r171 release entries'
+          git push origin HEAD:polish/procedural-surface-textures
