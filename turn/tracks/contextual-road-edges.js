@@ -1,5 +1,3 @@
-import * as THREE from 'three';
-
 const COLOR_EPSILON = 1e-4;
 const INK = 0x08090a;
 const TURN_PROFILE_YELLOW = 0xffbd12;
@@ -12,9 +10,9 @@ export const ROAD_EDGE_COLORS = Object.freeze({
 });
 
 export const ROAD_EDGE_CONTOURS = Object.freeze({
-  airport: Object.freeze({ edgeWidth: 1.75, contourWidth: 0.62, heightOffset: 0.197 }),
-  cliffside: Object.freeze({ edgeWidth: 1.65, contourWidth: 0.62, heightOffset: 0.162 }),
-  harbor: Object.freeze({ edgeWidth: 1.8, contourWidth: 0.62, heightOffset: 0.207 })
+  airport: Object.freeze({ edgeWidth: 1.75, contourWidth: 0.62 }),
+  cliffside: Object.freeze({ edgeWidth: 1.65, contourWidth: 0.62 }),
+  harbor: Object.freeze({ edgeWidth: 1.8, contourWidth: 0.62 })
 });
 
 const EDGE_STYLES = Object.freeze({
@@ -47,6 +45,7 @@ export function applyContextualRoadEdges(world, trackId, {
   if (!world?.traverse || !style) return 0;
 
   let changed = 0;
+  const matchingEdges = [];
   if (styledWorlds.get(world) !== trackId) {
     const source = style.source.map(hexToLinearRgb);
     const target = hexToLinearRgb(style.target);
@@ -56,6 +55,7 @@ export function applyContextualRoadEdges(world, trackId, {
       if (!colors || colors.itemSize < 3 || colors.count < 2) return;
       if (!matchesAlternatingPalette(colors, source)) return;
 
+      matchingEdges.push(node);
       for (let index = 0; index < colors.count; index += 1) {
         colors.setXYZ(index, target.r, target.g, target.b);
       }
@@ -72,73 +72,82 @@ export function applyContextualRoadEdges(world, trackId, {
   if (
     contour
     && !outlinedWorlds.has(world)
+    && matchingEdges.length
     && Array.isArray(samples)
     && samples.length > 2
-    && typeof world.add === 'function'
   ) {
-    installOuterContour(world, samples, Number(trackWidth) || 27, trackId, contour);
+    for (const edge of matchingEdges) {
+      installOuterContourFromEdge(edge, samples, Number(trackWidth) || 27, trackId, contour);
+    }
     outlinedWorlds.add(world);
   }
 
   return changed;
 }
 
-function installOuterContour(world, samples, trackWidth, trackId, contour) {
-  const group = new THREE.Group();
-  group.name = `TURN ${trackId} outer road contours`;
-  group.userData.turnContextualRoadContour = trackId;
+function installOuterContourFromEdge(edge, samples, trackWidth, trackId, contour) {
+  if (!edge?.clone || !edge.geometry?.clone) return false;
+  const sourcePositions = edge.geometry.getAttribute?.('position');
+  const sourceColors = edge.geometry.getAttribute?.('color');
+  if (!sourcePositions || !sourceColors || sourcePositions.count < 6) return false;
 
-  for (const side of [-1, 1]) {
-    const positions = [];
-    const indices = [];
-    const halfTrack = trackWidth / 2;
-    const innerDistance = halfTrack + contour.edgeWidth - 0.04;
-    const outerDistance = halfTrack + contour.edgeWidth + contour.contourWidth;
+  const mesh = edge.clone(false);
+  mesh.geometry = edge.geometry.clone();
+  mesh.material = cloneMaterial(edge.material);
+  mesh.name = `TURN ${trackId} outer road contour`;
+  mesh.receiveShadow = true;
+  mesh.castShadow = false;
+  mesh.userData = { ...(edge.userData || {}), turnContextualRoadContour: trackId };
 
-    for (let index = 0; index <= samples.length; index += 1) {
-      const sample = samples[index % samples.length];
-      if (!sample?.point || !sample?.normal) continue;
+  const positions = mesh.geometry.getAttribute('position');
+  const colors = mesh.geometry.getAttribute('color');
+  const firstSample = samples[0];
+  const firstX = sourcePositions.getX(0) - Number(firstSample?.point?.x || 0);
+  const firstZ = sourcePositions.getZ(0) - Number(firstSample?.point?.z || 0);
+  const sideDot = firstX * Number(firstSample?.normal?.x || 0)
+    + firstZ * Number(firstSample?.normal?.z || 0);
+  const side = sideDot >= 0 ? 1 : -1;
+  const halfTrack = trackWidth / 2;
+  const innerDistance = halfTrack + contour.edgeWidth - 0.04;
+  const outerDistance = halfTrack + contour.edgeWidth + contour.contourWidth;
+  const segmentCount = Math.min(samples.length, Math.floor(positions.count / 6));
 
-      const inner = sample.point.clone()
-        .addScaledVector(sample.normal, side * innerDistance);
-      const outer = sample.point.clone()
-        .addScaledVector(sample.normal, side * outerDistance);
-      inner.y = sample.point.y + contour.heightOffset;
-      outer.y = sample.point.y + contour.heightOffset;
-      positions.push(inner.x, inner.y, inner.z, outer.x, outer.y, outer.z);
-    }
-
-    const rowCount = positions.length / 6;
-    for (let index = 0; index < rowCount - 1; index += 1) {
-      const a = index * 2;
-      const b = a + 1;
-      const c = a + 2;
-      const d = a + 3;
-      indices.push(a, c, b, b, c, d);
-    }
-
-    if (!indices.length) continue;
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    geometry.setIndex(indices);
-    geometry.computeVertexNormals();
-
-    const mesh = new THREE.Mesh(
-      geometry,
-      new THREE.MeshStandardMaterial({
-        color: INK,
-        roughness: 0.94,
-        metalness: 0,
-        side: THREE.DoubleSide
-      })
-    );
-    mesh.name = `TURN ${trackId} outer road contour ${side}`;
-    mesh.receiveShadow = true;
-    mesh.userData.turnContextualRoadContour = trackId;
-    group.add(mesh);
+  for (let segment = 0; segment < segmentCount; segment += 1) {
+    const current = samples[segment];
+    const next = samples[(segment + 1) % samples.length];
+    const base = segment * 6;
+    setContourVertex(positions, sourcePositions, base, current, side, innerDistance);
+    setContourVertex(positions, sourcePositions, base + 1, current, side, outerDistance);
+    setContourVertex(positions, sourcePositions, base + 2, next, side, innerDistance);
+    setContourVertex(positions, sourcePositions, base + 3, current, side, outerDistance);
+    setContourVertex(positions, sourcePositions, base + 4, next, side, outerDistance);
+    setContourVertex(positions, sourcePositions, base + 5, next, side, innerDistance);
   }
+  positions.needsUpdate = true;
 
-  if (group.children.length) world.add(group);
+  const ink = hexToLinearRgb(INK);
+  for (let index = 0; index < colors.count; index += 1) {
+    colors.setXYZ(index, ink.r, ink.g, ink.b);
+  }
+  colors.needsUpdate = true;
+  mesh.geometry.computeVertexNormals?.();
+
+  const parent = edge.parent;
+  parent?.add?.(mesh);
+  return Boolean(parent);
+}
+
+function setContourVertex(attribute, sourceAttribute, index, sample, side, distance) {
+  if (!sample?.point || !sample?.normal || index >= attribute.count) return;
+  const x = Number(sample.point.x) + Number(sample.normal.x) * side * distance;
+  const z = Number(sample.point.z) + Number(sample.normal.z) * side * distance;
+  const y = sourceAttribute.getY(index) - 0.008;
+  attribute.setXYZ(index, x, y, z);
+}
+
+function cloneMaterial(material) {
+  if (Array.isArray(material)) return material.map((entry) => entry?.clone?.() || entry);
+  return material?.clone?.() || material;
 }
 
 function matchesAlternatingPalette(attribute, palette) {
