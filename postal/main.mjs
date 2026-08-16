@@ -1,8 +1,10 @@
 import * as THREE_NS from 'three';
 import { GLTFLoader as GLTFLoader_NS } from 'three/addons/loaders/GLTFLoader.js';
+import { clone as cloneSkeleton_NS } from 'three/addons/utils/SkeletonUtils.js';
 
 globalThis.THREE = THREE_NS;
 globalThis.GLTFLoader = GLTFLoader_NS;
+globalThis.cloneSkeleton = cloneSkeleton_NS;
 
 const scripts = [
   './runtime/model-data.js', './runtime/model-core.js', './runtime/model-flow.js', './runtime/model-ops.js',
