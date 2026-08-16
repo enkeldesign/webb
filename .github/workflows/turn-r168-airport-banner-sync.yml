@@ -1,0 +1,70 @@
+name: Regenerate TURN r168 Airport banner release entries
+
+on:
+  push:
+    branches:
+      - polish/airport-start-banner-yellow
+    paths:
+      - '.github/workflows/turn-r168-airport-banner-sync.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: polish/airport-start-banner-yellow
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Regenerate release identities
+        run: |
+          node turn/scripts/release.mjs --write
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('turn-next/index.html')
+          text = path.read_text()
+          text = text.replace('2026.08.16-r167', '2026.08.16-r168')
+          text = text.replace('20260816-r167', '20260816-r168')
+          path.write_text(text)
+
+          path = Path('turn/content/about-history.js')
+          text = path.read_text()
+          text = text.replace("build: '2026.08.16-r167'", "build: '2026.08.16-r168'")
+          path.write_text(text)
+
+          path = Path('turn/ui/about-history-bootstrap-r165.js')
+          text = path.read_text()
+          text = text.replace('about-history.js?build=20260816-r167', 'about-history.js?build=20260816-r168')
+          path.write_text(text)
+          PY
+          node turn-next/scripts/build-parity-app.mjs --write
+          node turn-next/scripts/build-parity-main.mjs --write
+
+      - name: Verify generated release contracts
+        run: |
+          node turn/scripts/release.mjs --check
+          node turn-next/scripts/build-parity-app.mjs --check
+          node turn-next/scripts/build-parity-main.mjs --check
+          node turn-next/scripts/build-parity-entry.mjs --check
+          node turn-tests/release-production.mjs
+          node turn-tests/about-history-production.mjs
+          node turn-lab/tests/multi-track-production.mjs
+          node --check turn/tracks/airport-start-banner-r520.js
+
+      - name: Commit generated files and remove temporary workflow
+        run: |
+          git rm .github/workflows/turn-r168-airport-banner-sync.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --quiet || git commit -m 'Regenerate TURN r168 release entries'
+          git push origin HEAD:polish/airport-start-banner-yellow
