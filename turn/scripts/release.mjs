@@ -40,6 +40,7 @@ function synchronizeRuntimeMusicSpecifier(importMap, release) {
   importMap.imports = synchronizedImports;
 }
 
+// audio-preferences.js is imported through withBuild(), so its import-map key must advance with every release cache key.
 function synchronizeRuntimeAudioPreferencesSpecifier(importMap, release) {
   const imports = importMap.imports || {};
   const sourceSpecifier = Object.keys(imports).find((specifier) =>
