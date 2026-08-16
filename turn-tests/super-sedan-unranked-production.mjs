@@ -4,6 +4,7 @@ import { completeLapState } from '../turn/race/lap-system-r86.js?test=r195-unran
 import { getStoredBestLap, saveRivalsState } from '../turn/race/rival-storage.js?test=r195-unranked-super-sedan';
 import { isSportsSedanEasterEgg } from '../turn/vehicle/catalog.js?test=r195-unranked-super-sedan';
 
+// Release-cache assertions must follow the canonical build instead of pinning one release forever.
 const release = JSON.parse(await fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'));
 
 const [runtimeSource, chromaticSource, productionIndex, labIndex] = await Promise.all([
