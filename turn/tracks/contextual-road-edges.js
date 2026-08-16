@@ -1,10 +1,20 @@
+import * as THREE from 'three';
+
 const COLOR_EPSILON = 1e-4;
+const INK = 0x08090a;
+const TURN_PROFILE_YELLOW = 0xffbd12;
 
 export const ROAD_EDGE_COLORS = Object.freeze({
   countryside: '#ffffff',
-  airport: '#ffd43b',
+  airport: '#ffbd12',
   cliffside: '#ffffff',
-  harbor: '#f5c542'
+  harbor: '#ffbd12'
+});
+
+export const ROAD_EDGE_CONTOURS = Object.freeze({
+  airport: Object.freeze({ edgeWidth: 1.75, contourWidth: 0.62, heightOffset: 0.197 }),
+  cliffside: Object.freeze({ edgeWidth: 1.65, contourWidth: 0.62, heightOffset: 0.162 }),
+  harbor: Object.freeze({ edgeWidth: 1.8, contourWidth: 0.62, heightOffset: 0.207 })
 });
 
 const EDGE_STYLES = Object.freeze({
@@ -14,7 +24,7 @@ const EDGE_STYLES = Object.freeze({
   }),
   airport: Object.freeze({
     source: Object.freeze([0xff5f67, 0xfff8e8]),
-    target: 0xffd43b
+    target: TURN_PROFILE_YELLOW
   }),
   cliffside: Object.freeze({
     source: Object.freeze([0xff5f67, 0xfff8e8]),
@@ -22,37 +32,113 @@ const EDGE_STYLES = Object.freeze({
   }),
   harbor: Object.freeze({
     source: Object.freeze([0xf5c542, 0x08090a]),
-    target: 0xf5c542
+    target: TURN_PROFILE_YELLOW
   })
 });
 
 const styledWorlds = new WeakMap();
+const outlinedWorlds = new WeakSet();
 
-export function applyContextualRoadEdges(world, trackId) {
+export function applyContextualRoadEdges(world, trackId, {
+  samples,
+  trackWidth = 27
+} = {}) {
   const style = EDGE_STYLES[trackId];
   if (!world?.traverse || !style) return 0;
-  if (styledWorlds.get(world) === trackId) return 0;
 
-  const source = style.source.map(hexToLinearRgb);
-  const target = hexToLinearRgb(style.target);
   let changed = 0;
+  if (styledWorlds.get(world) !== trackId) {
+    const source = style.source.map(hexToLinearRgb);
+    const target = hexToLinearRgb(style.target);
 
-  world.traverse((node) => {
-    const colors = node?.geometry?.getAttribute?.('color');
-    if (!colors || colors.itemSize < 3 || colors.count < 2) return;
-    if (!matchesAlternatingPalette(colors, source)) return;
+    world.traverse((node) => {
+      const colors = node?.geometry?.getAttribute?.('color');
+      if (!colors || colors.itemSize < 3 || colors.count < 2) return;
+      if (!matchesAlternatingPalette(colors, source)) return;
 
-    for (let index = 0; index < colors.count; index += 1) {
-      colors.setXYZ(index, target.r, target.g, target.b);
-    }
-    colors.needsUpdate = true;
-    node.userData ||= {};
-    node.userData.turnContextualRoadEdge = trackId;
-    changed += 1;
-  });
+      for (let index = 0; index < colors.count; index += 1) {
+        colors.setXYZ(index, target.r, target.g, target.b);
+      }
+      colors.needsUpdate = true;
+      node.userData ||= {};
+      node.userData.turnContextualRoadEdge = trackId;
+      changed += 1;
+    });
 
-  styledWorlds.set(world, trackId);
+    styledWorlds.set(world, trackId);
+  }
+
+  const contour = ROAD_EDGE_CONTOURS[trackId];
+  if (
+    contour
+    && !outlinedWorlds.has(world)
+    && Array.isArray(samples)
+    && samples.length > 2
+    && typeof world.add === 'function'
+  ) {
+    installOuterContour(world, samples, Number(trackWidth) || 27, trackId, contour);
+    outlinedWorlds.add(world);
+  }
+
   return changed;
+}
+
+function installOuterContour(world, samples, trackWidth, trackId, contour) {
+  const group = new THREE.Group();
+  group.name = `TURN ${trackId} outer road contours`;
+  group.userData.turnContextualRoadContour = trackId;
+
+  for (const side of [-1, 1]) {
+    const positions = [];
+    const indices = [];
+    const halfTrack = trackWidth / 2;
+    const innerDistance = halfTrack + contour.edgeWidth - 0.04;
+    const outerDistance = halfTrack + contour.edgeWidth + contour.contourWidth;
+
+    for (let index = 0; index <= samples.length; index += 1) {
+      const sample = samples[index % samples.length];
+      if (!sample?.point || !sample?.normal) continue;
+
+      const inner = sample.point.clone()
+        .addScaledVector(sample.normal, side * innerDistance);
+      const outer = sample.point.clone()
+        .addScaledVector(sample.normal, side * outerDistance);
+      inner.y = sample.point.y + contour.heightOffset;
+      outer.y = sample.point.y + contour.heightOffset;
+      positions.push(inner.x, inner.y, inner.z, outer.x, outer.y, outer.z);
+    }
+
+    const rowCount = positions.length / 6;
+    for (let index = 0; index < rowCount - 1; index += 1) {
+      const a = index * 2;
+      const b = a + 1;
+      const c = a + 2;
+      const d = a + 3;
+      indices.push(a, c, b, b, c, d);
+    }
+
+    if (!indices.length) continue;
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setIndex(indices);
+    geometry.computeVertexNormals();
+
+    const mesh = new THREE.Mesh(
+      geometry,
+      new THREE.MeshStandardMaterial({
+        color: INK,
+        roughness: 0.94,
+        metalness: 0,
+        side: THREE.DoubleSide
+      })
+    );
+    mesh.name = `TURN ${trackId} outer road contour ${side}`;
+    mesh.receiveShadow = true;
+    mesh.userData.turnContextualRoadContour = trackId;
+    group.add(mesh);
+  }
+
+  if (group.children.length) world.add(group);
 }
 
 function matchesAlternatingPalette(attribute, palette) {
@@ -105,7 +191,10 @@ function styleActiveTrack(event) {
   const trackId = event?.detail?.trackId;
   const runtime = globalThis.__turnRuntime;
   const world = runtime?.activeWorld || (trackId === 'countryside' ? runtime?.world : null);
-  applyContextualRoadEdges(world, trackId);
+  applyContextualRoadEdges(world, trackId, {
+    samples: runtime?.samples,
+    trackWidth: runtime?.trackWidth
+  });
 }
 
 function bootstrap() {
