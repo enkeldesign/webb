@@ -29,11 +29,21 @@ jobs:
           node turn/scripts/release.mjs --write
           python3 - <<'PY'
           from pathlib import Path
-          path = Path('turn-next/index.html')
-          text = path.read_text()
-          text = text.replace('2026.08.16-r166', '2026.08.16-r167')
-          text = text.replace('20260816-r166', '20260816-r167')
-          path.write_text(text)
+
+          next_path = Path('turn-next/index.html')
+          next_text = next_path.read_text()
+          next_text = next_text.replace('2026.08.16-r166', '2026.08.16-r167')
+          next_text = next_text.replace('20260816-r166', '20260816-r167')
+          next_path.write_text(next_text)
+
+          history_path = Path('turn/content/about-history.js')
+          history_text = history_path.read_text()
+          history_text = history_text.replace("build: '2026.08.16-r165'", "build: '2026.08.16-r167'")
+          history_text = history_text.replace(
+              "note: 'Adds generated racing music, real-device iOS/PWA resilience, refined YOUR TURN controls, Q/E desktop actions and the Monster Truck’s all-terrain perk.'",
+              "note: 'Refines TURN’s road-edge colour, start-area identity and visual consistency while preserving racing behaviour.'"
+          )
+          history_path.write_text(history_text)
           PY
           node turn-next/scripts/build-parity-app.mjs --write
           node turn-next/scripts/build-parity-main.mjs --write
