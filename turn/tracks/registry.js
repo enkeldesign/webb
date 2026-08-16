@@ -15,7 +15,7 @@ import './contextual-road-edges.js?revision=r518-signature-yellow';
 import './road-contour-color-r512.js?revision=r513-countryside';
 import './start-area-polish-r519.js?revision=r519-start-area-consistency-v2';
 import './airport-start-banner-r520.js?revision=r520-signature-yellow';
-import './procedural-surface-polish-r522.js?revision=r523-procedural-surfaces-contrast';
+import './procedural-surface-polish-r522.js?revision=r524-procedural-surfaces-contrast';
 
 const WORLD_INSTALLERS = Object.freeze({
   countryside({ initialWorld }) {
