@@ -215,7 +215,15 @@
       : browserContext.name;
 
     if (browserContext.ios) {
-      const usesEllipsisMenu = ['safari', 'chrome', 'edge'].includes(targetId);
+      if (targetId === 'safari') {
+        return [
+          installStep(startNumber, 'In Safari, tap Share', 'If Share is not visible, tap … to open the menu, then choose Share.'),
+          installStep(startNumber + 1, 'Choose Add to Home Screen', 'Scroll down in the Share sheet if it is not visible.'),
+          installStep(startNumber + 2, `Open ${appName} from your Home Screen`, `From now on, ${appName} opens fullscreen like an app.`)
+        ].join('');
+      }
+
+      const usesEllipsisMenu = ['chrome', 'edge'].includes(targetId);
       const menuTitle = usesEllipsisMenu
         ? `In ${targetName}, tap …, then Share`
         : `In ${targetName}, open the menu, then Share`;
