@@ -13,7 +13,7 @@ import { installMidnightCityWorld } from './midnight-city-world-r11.js?build=202
 import { isForgivingTrackSurface } from './airport-runoff.js?build=20260722-r52';
 import './contextual-road-edges.js?revision=r518-signature-yellow';
 import './road-contour-color-r512.js?revision=r513-countryside';
-import './start-area-polish-r519.js?revision=r519-start-area-consistency';
+import './start-area-polish-r519.js?revision=r519-start-area-consistency-v2';
 
 const WORLD_INSTALLERS = Object.freeze({
   countryside({ initialWorld }) {
