@@ -4,6 +4,7 @@ const regionBuildingSets = {
   stockholm: ['commercialA', 'commercialH', 'skyscraper', 'commercialA'],
   goteborg: ['industrialB', 'industrialS', 'industrialT', 'industrialS']
 };
+const REGION_ROAD_CCW_OFFSET = Math.PI / 2;
 
 function buildRegionScene(cityId) {
   scene.background.set(cityId === 'stockholm' ? 0xd9e8ec : 0xddebe3);
@@ -98,7 +99,12 @@ function roadRotationFor(dx, dz) {
 }
 
 function addRoadTile(key, position, target, rotation) {
-  const road = cloneAsset(key, { target, position, rotation: [0, rotation, 0], shadow: false });
+  const road = cloneAsset(key, {
+    target,
+    position,
+    rotation: [0, rotation + REGION_ROAD_CCW_OFFSET, 0],
+    shadow: false
+  });
   if (road) world.add(road);
   else {
     const fallback = boxMesh([target, .06, target], 0x687674, [position[0], position[1], position[2]]);
