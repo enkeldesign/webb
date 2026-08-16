@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="first-day-pending">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -63,6 +63,9 @@
               <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"></circle><path d="M12 7v5l3 2"></path></svg>
               <span id="clock">07:00</span>
             </span>
+            <button id="music-btn" class="compact-btn music-btn" type="button" aria-pressed="true" aria-label="Turn music off" title="Turn music off">
+              <span aria-hidden="true">♫</span>
+            </button>
             <button id="help-btn" class="compact-btn help-btn" type="button" aria-label="How to play">
               <span aria-hidden="true">?</span>
             </button>
@@ -73,7 +76,7 @@
           </div>
         </header>
 
-        <section class="status-strip" aria-label="Network status">
+        <section class="status-strip" data-tutorial-reveal="status" aria-label="Network status">
           <div class="metric metric-ontime">
             <span class="metric-label">ON TIME</span>
             <strong id="metric-ontime">100%</strong>
@@ -100,7 +103,7 @@
               <p id="level-subtitle">People sort. Packages move. You decide what matters.</p>
             </div>
           </div>
-          <nav class="city-switcher" aria-label="City">
+          <nav class="city-switcher" data-tutorial-reveal="cities" aria-label="City">
             <button class="city-chip" type="button" data-city="sundsvall" aria-pressed="true"><span>SUN</span>Sundsvall</button>
             <button class="city-chip" type="button" data-city="stockholm" aria-pressed="false"><span>STO</span>Stockholm</button>
             <button class="city-chip" type="button" data-city="goteborg" aria-pressed="false"><span>GBG</span>Göteborg</button>
@@ -130,10 +133,10 @@
                 <span id="package-console-summary">Loading the network…</span>
               </div>
               <div class="package-tools" aria-label="Package tools">
-                <button id="focus-btn" class="package-tool focus-tool" type="button">
+                <button id="focus-btn" class="package-tool focus-tool" data-tutorial-reveal="focus" type="button">
                   <small>FOCUS</small><strong id="focus-value">SUN · LATE</strong>
                 </button>
-                <button id="find-btn" class="package-tool find-tool" type="button" aria-label="Find a package">
+                <button id="find-btn" class="package-tool find-tool" data-tutorial-reveal="find" type="button" aria-label="Find a package">
                   <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"></circle><path d="m15 15 5 5"></path></svg>
                   <span>FIND</span>
                 </button>
@@ -142,7 +145,7 @@
             <div id="package-rail" class="package-rail" role="list" aria-label="Packages across the whole network"></div>
           </section>
 
-          <nav class="level-switcher" aria-label="Network level">
+          <nav class="level-switcher" data-tutorial-reveal="levels" aria-label="Network level">
             <button class="level-tab" type="button" data-level="depot" aria-pressed="true">
               <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 10h18v10H3zM6 10V6h12v4M7 14h3v6M14 14h3v2h-3z"></path></svg>
               <span><small>ZOOMED IN</small>DEPOT</span>

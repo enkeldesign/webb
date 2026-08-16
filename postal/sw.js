@@ -1,4 +1,4 @@
-const CACHE = 'postal-packages-are-controls-2026-08-16-v3';
+const CACHE = 'postal-progressive-music-2026-08-16-v4';
 self.addEventListener('install', event => { self.skipWaiting(); });
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {

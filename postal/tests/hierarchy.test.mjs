@@ -13,6 +13,10 @@ const interaction = fs.readFileSync(path.join(root, 'runtime', 'interaction-boot
 assert.match(html, /href="\.\/styles\.css"[\s\S]*href="\.\/hierarchy\.css"/, 'Hierarchy overrides must load after the base styles');
 assert.match(html, /id="action-dock"[\s\S]*id="action-primary"/, 'The contextual next action must remain visible above the package rail');
 assert.match(html, /id="package-console"|class="package-console"[\s\S]*id="package-rail"/, 'The live package rail must be persistent HUD, not sheet content');
+assert.doesNotMatch(html.match(/<section id="action-dock"[^>]*>/)?.[0] || '', /data-tutorial-reveal/, 'The tutorial must never hide the current action');
+assert.doesNotMatch(html.match(/<section class="package-console"[^>]*>/)?.[0] || '', /data-tutorial-reveal/, 'The tutorial must never hide live packages');
+assert.match(hierarchy, /\.first-day-pending \[data-tutorial-reveal\][\s\S]*display:\s*none !important/, 'Unintroduced controls must not flash before tutorial state loads');
+assert.match(hierarchy, /\.tutorial-just-revealed[\s\S]*tutorialReveal/, 'New controls need a legible visual entrance');
 assert.match(hierarchy, /\.dock-button-primary[\s\S]*background:\s*var\(--yellow\)/, 'Yellow belongs to the direct executable action');
 assert.match(hierarchy, /\.level-tab\[aria-pressed="true"\][\s\S]*background:\s*rgba\(255,255,255/, 'Navigation must be quieter than the CTA');
 assert.match(hierarchy, /\.metric-issues[\s\S]*background:\s*rgba\(7, 29, 28/, 'Issue count should be status, not a competing red action card');

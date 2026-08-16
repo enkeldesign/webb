@@ -12,6 +12,7 @@ function showBriefingSheet() {
       <span class="eyebrow">PACKAGES ARE THE CONTROLS</span>
       <h3>See it. Select it. Send it.</h3>
       <p>The live rail stays on screen at Depot, Region and Sweden. Select a package to reveal its next physical handoff.</p>
+      <p class="hint">On your first morning, the rest of the interface appears as each tool becomes useful. Help, pause and music always remain available.</p>
     </div>
     <div class="briefing-steps">
       <article><span aria-hidden="true">1</span><div><strong>Select a package</strong><p>Its route breadcrumb and next action remain visible while you move through the network.</p></div></article>

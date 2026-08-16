@@ -288,6 +288,7 @@ function bindUI() {
 
 async function boot() {
   bindUI();
+  syncTutorialInterface();
   resizeRenderer();
   if (renderer) await preloadAssets();
   buildScene();

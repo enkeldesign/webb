@@ -8,6 +8,8 @@ const root = path.resolve(here, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'styles.css'), 'utf8');
 const hierarchy = fs.readFileSync(path.join(root, 'hierarchy.css'), 'utf8');
+const main = fs.readFileSync(path.join(root, 'main.mjs'), 'utf8');
+const music = fs.readFileSync(path.join(root, 'music.mjs'), 'utf8');
 const foundation = fs.readFileSync(path.join(root, 'runtime', 'app-foundation.js'), 'utf8');
 const interaction = fs.readFileSync(path.join(root, 'runtime', 'interaction-boot.js'), 'utf8');
 const tutorial = fs.readFileSync(path.join(root, 'runtime', 'tutorial.js'), 'utf8');
@@ -17,7 +19,7 @@ const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map(match => match[1]);
 assert.equal(new Set(ids).size, ids.length, 'HTML IDs must be unique');
 
 for (const id of [
-  'scene', 'scene-fallback', 'pause-btn', 'help-btn', 'incoming-btn', 'clock',
+  'scene', 'scene-fallback', 'pause-btn', 'help-btn', 'music-btn', 'incoming-btn', 'clock',
   'metric-ontime', 'metric-flow', 'metric-issues', 'focus-btn', 'find-btn',
   'action-dock', 'action-primary', 'action-details', 'package-rail', 'flow-feedback', 'sheet'
 ]) assert.ok(ids.includes(id), `Missing required UI hook #${id}`);
@@ -26,6 +28,7 @@ assert.match(html, /<canvas[^>]+aria-label=/, 'The interactive scene needs an ac
 assert.match(html, /<dialog[^>]+aria-labelledby="sheet-title"/, 'The bottom sheet needs an accessible name');
 assert.match(html, /id="package-rail"[^>]+role="list"/, 'The persistent package rail needs list semantics');
 assert.match(html, /id="action-primary"[^>]*>SELECT</, 'The direct action must be visible in the main HUD');
+assert.match(html, /id="music-btn"[^>]+aria-pressed="true"/, 'Music needs an always-available accessible toggle');
 assert.doesNotMatch(html, /scene-help-btn|event-ribbon/, 'Retired duplicate and event-only controls must stay removed');
 
 assert.doesNotMatch(foundation, /oopi\.glb/i, 'Alien workers must not return');
@@ -36,6 +39,10 @@ assert.match(interaction, /app\.packageRail\.addEventListener\('click'/);
 assert.match(interaction, /simulation\.dispatchTruck/);
 assert.doesNotMatch(interaction, /showBriefingSheet\(\{\s*firstRun|needsFirstShiftBriefing/, 'The first day must be played, not opened as a modal briefing');
 assert.match(tutorial, /select-package[\s\S]*choose-focus[\s\S]*select-chicago[\s\S]*send-national[\s\S]*send-timra/);
+assert.match(tutorial, /function syncTutorialInterface\(\)[\s\S]*phase === 'package'[\s\S]*phase === 'route'[\s\S]*phase === 'operations'/, 'First-day controls must reveal in meaningful stages');
+for (const feature of ['status', 'levels', 'focus', 'cities', 'find']) assert.match(html, new RegExp(`data-tutorial-reveal="${feature}"`), `Missing progressive ${feature} control`);
+assert.match(main, /installPostalMusic/, 'POSTAL must install its score without blocking game boot');
+assert.match(music, /\.\.\/turn\/audio\/music\/tone-runtime\.js[\s\S]*\.\.\/turn\/audio\/music\/drum-runtime\.js/, 'POSTAL music must reuse TURN audio engine modules');
 assert.match(region, /function roadRotationFor\(dx, dz\)[\s\S]*Math\.atan2\(dx, dz\)/, 'Road tiles must derive orientation from their route vector');
 assert.match(region, /const REGION_ROAD_CCW_OFFSET = Math\.PI \/ 2/, 'Every region road tile needs the requested quarter-turn counterclockwise');
 assert.match(region, /function addRoadTile\([\s\S]*rotation \+ REGION_ROAD_CCW_OFFSET/, 'The counterclockwise offset must apply to every region road asset');
