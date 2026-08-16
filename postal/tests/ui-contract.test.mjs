@@ -37,6 +37,8 @@ assert.match(interaction, /simulation\.dispatchTruck/);
 assert.doesNotMatch(interaction, /showBriefingSheet\(\{\s*firstRun|needsFirstShiftBriefing/, 'The first day must be played, not opened as a modal briefing');
 assert.match(tutorial, /select-package[\s\S]*choose-focus[\s\S]*select-chicago[\s\S]*send-national[\s\S]*send-timra/);
 assert.match(region, /function roadRotationFor\(dx, dz\)[\s\S]*Math\.atan2\(dx, dz\)/, 'Road tiles must derive orientation from their route vector');
+assert.match(region, /const REGION_ROAD_CCW_OFFSET = Math\.PI \/ 2/, 'Every region road tile needs the requested quarter-turn counterclockwise');
+assert.match(region, /function addRoadTile\([\s\S]*rotation \+ REGION_ROAD_CCW_OFFSET/, 'The counterclockwise offset must apply to every region road asset');
 assert.match(region, /addRegionEdgeNature\(cityId\)/, 'Region edges need deliberate nature framing');
 assert.match(foundation, /city-kit-roads|kenney\/roads/);
 assert.match(css, /env\(safe-area-inset-top/);
