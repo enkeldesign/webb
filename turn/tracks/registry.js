@@ -51,21 +51,27 @@ const FORGIVING_SURFACES = Object.freeze({
   }
 });
 
-export {
-  DEFAULT_TRACK_ID,
-  TRACK_CATALOG,
-  TRACK_SAMPLE_COUNT,
-  createTrackRuntime,
-  normalizeTrackId
-};
+export const TRACK_RUNTIME_REGISTRY = Object.freeze(TRACK_CATALOG.map((definition) => {
+  const installWorld = WORLD_INSTALLERS[definition.id];
+  const isForgivingSurface = FORGIVING_SURFACES[definition.id];
+  if (typeof installWorld !== 'function' || typeof isForgivingSurface !== 'function') {
+    throw new Error(`TURN: track ${definition.id} has an incomplete runtime contract.`);
+  }
 
-export function installTrackWorld(trackId, context = {}) {
-  const id = normalizeTrackId(trackId);
-  const installer = WORLD_INSTALLERS[id] || WORLD_INSTALLERS[DEFAULT_TRACK_ID];
-  return installer(context);
-}
+  return Object.freeze({
+    ...definition,
+    storageRevision: definition.storageRevision,
+    freeRoamDistance: definition.freeRoamDistance,
+    collisionProfile: definition.collisionProfile,
+    createRuntime(sampleCount = TRACK_SAMPLE_COUNT) {
+      return createTrackRuntime(definition.id, definition.sampleCount || sampleCount);
+    },
+    installWorld,
+    isForgivingSurface
+  });
+}));
 
-export function isTrackForgivingSurface(trackId, position) {
-  const id = normalizeTrackId(trackId);
-  return FORGIVING_SURFACES[id]?.(position) || false;
+export function getTrackRuntimeEntry(trackId = DEFAULT_TRACK_ID) {
+  const normalized = normalizeTrackId(trackId);
+  return TRACK_RUNTIME_REGISTRY.find((track) => track.id === normalized) || TRACK_RUNTIME_REGISTRY[0];
 }
