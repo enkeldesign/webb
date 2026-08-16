@@ -2,6 +2,7 @@ import {
   getTrackPaceNotes,
   speedAdjustedPaceNoteTrigger
 } from '../tracks/pace-notes.js';
+import { paceNotePlaybackDirection } from './pace-note-spatial.js';
 
 const PACE_NOTE_UPDATE_INTERVAL_MS = 1000 / 30;
 const MIN_FORWARD_SPEED = 0.25;
@@ -54,9 +55,14 @@ export function updatePaceNoteState(runtime, frame = {}) {
   const state = runtime?.state;
   const samples = runtime?.samples;
   const trackId = String(runtime?.trackId || state?.trackId || globalThis.__turnGetTrackId?.() || '');
-  const notes = getTrackPaceNotes(trackId);
 
-  if (!state || !Array.isArray(samples) || !notes.length) {
+  if (!state || !Array.isArray(samples)) {
+    resetPaceNotePassage(trackId || null, null);
+    return null;
+  }
+
+  const notes = getTrackPaceNotes(trackId, samples);
+  if (!notes.length) {
     resetPaceNotePassage(trackId || null, null);
     return null;
   }
@@ -195,10 +201,18 @@ function installResetListeners() {
 
 function publishPaceNote(detail) {
   if (typeof globalThis.dispatchEvent !== 'function' || typeof globalThis.CustomEvent !== 'function') return;
-  const eventName = globalThis.__turnPaceNotePriorityReady === true
-    ? 'turn:pace-note-priority'
-    : 'turn:pace-note';
-  globalThis.dispatchEvent(new globalThis.CustomEvent(eventName, { detail }));
+  const priorityReady = globalThis.__turnPaceNotePriorityReady === true;
+  const eventName = priorityReady ? 'turn:pace-note-priority' : 'turn:pace-note';
+  const eventDetail = priorityReady
+    ? detail
+    : {
+      ...detail,
+      groups: detail.groups.map((group) => Object.freeze({
+        ...group,
+        direction: paceNotePlaybackDirection(group.direction)
+      }))
+    };
+  globalThis.dispatchEvent(new globalThis.CustomEvent(eventName, { detail: eventDetail }));
 }
 
 function publishPaceNoteSilence() {

@@ -1,3 +1,5 @@
+import { paceNotePan } from './pace-note-spatial.js';
+
 const PACE_NOTE_EVENT = 'turn:pace-note-priority';
 const PACE_NOTE_SILENCE_EVENT = 'turn:pace-note-silence';
 const PACE_NOTE_LEVEL = 0.084;
@@ -196,7 +198,7 @@ function schedulePaceNoteGroups(groups, startAt) {
   groups.forEach((group, groupIndex) => {
     const direction = Math.sign(Number(group?.direction) || 0);
     const severity = clamp(Math.round(Number(group?.severity) || 1), 1, 3);
-    const pan = direction < 0 ? -0.96 : 0.96;
+    const pan = paceNotePan(direction);
 
     for (let index = 0; index < severity; index += 1) {
       const duration = index === severity - 1

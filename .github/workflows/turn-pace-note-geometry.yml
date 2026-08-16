@@ -1,0 +1,61 @@
+name: TURN pace-note geometry audit
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'turn/audio/pace-note*.js'
+      - 'turn/audio/pace-notes.js'
+      - 'turn/tracks/catalog.js'
+      - 'turn/tracks/*layout.js'
+      - 'turn/tracks/pace-note*.js'
+      - 'turn/training/**'
+      - 'turn-tests/pace-note-geometry-audit.mjs'
+      - 'turn-tests/pace-note-migration-report.mjs'
+      - 'turn-tests/pace-note-compiled-report.mjs'
+      - '.github/workflows/turn-pace-note-geometry.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'turn/audio/pace-note*.js'
+      - 'turn/audio/pace-notes.js'
+      - 'turn/tracks/catalog.js'
+      - 'turn/tracks/*layout.js'
+      - 'turn/tracks/pace-note*.js'
+      - 'turn/training/**'
+      - 'turn-tests/pace-note-geometry-audit.mjs'
+      - 'turn-tests/pace-note-migration-report.mjs'
+      - 'turn-tests/pace-note-compiled-report.mjs'
+      - '.github/workflows/turn-pace-note-geometry.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  geometry:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install the production Three.js version
+        run: npm install --no-save --no-package-lock three@0.184.0
+
+      - name: Syntax-check pace-note geometry tools
+        run: node --check turn/tracks/pace-note-geometry.js && node --check turn/tracks/pace-note-compiler.js && node --check turn/tracks/pace-note-recipes.js && node --check turn-tests/pace-note-geometry-audit.mjs && node --check turn-tests/pace-note-migration-report.mjs && node --check turn-tests/pace-note-compiled-report.mjs
+
+      - name: Audit every track and Drive By Ear 101
+        run: node turn-tests/pace-note-geometry-audit.mjs
+
+      - name: Report semantic migration anchors
+        run: node turn-tests/pace-note-migration-report.mjs
+
+      - name: Report compiled classifications
+        run: node turn-tests/pace-note-compiled-report.mjs

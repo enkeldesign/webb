@@ -10,11 +10,10 @@ export const RAIL_ASSIST_START = ROAD_HALF_WIDTH + 0.35;
 export const RECOVERY_LIMIT = ROAD_HALF_WIDTH + 10;
 export const SAFETY_ASSIST_START = RECOVERY_LIMIT - 4;
 
-// Physical landscape-device testing shows the shared priority panner reaches the
-// opposite ear for these authored training-course turns. Keep the stage definitions
-// semantic and map course left/right to the ear values that players actually hear.
-const LEFT = 1;
-const RIGHT = -1;
+// Every stage now stores semantic road direction. The shared priority-audio
+// calibration owns the physical ear mapping, so tutorials and tracks cannot drift.
+const LEFT = -1;
+const RIGHT = 1;
 const note = (progress, direction, severity, long = false) => Object.freeze({
   progress,
   direction,
