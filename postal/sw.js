@@ -1,4 +1,4 @@
-const CACHE = 'postal-onboarding-assets-2026-08-16-v2';
+const CACHE = 'postal-packages-are-controls-2026-08-16-v3';
 self.addEventListener('install', event => { self.skipWaiting(); });
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {

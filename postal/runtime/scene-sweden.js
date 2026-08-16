@@ -96,6 +96,8 @@ function buildSwedenScene() {
     viewState.decorative.push({ kind: 'routePulse', mesh: pulse, curve, offset: .15 + index * .18, speed: .025 });
   });
 
+  addSelectedSwedenRoute();
+
   simulation.nationalTrucks.forEach(truck => {
     const curve = viewState.routeCurves.get(`${truck.from}:${truck.to}`);
     if (!curve) return;
@@ -119,6 +121,49 @@ function buildSwedenScene() {
   const title = makeLabel(`SWEDEN · ${inFlow} PACKAGES IN FLOW`, { fg: '#fff', bg: 'rgba(16,42,41,.94)', scale: .57 });
   title.position.set(-2.4, 1.22, -5.5);
   world.add(title);
+}
+
+function selectedNetworkLeg(pkg) {
+  if (!pkg) return null;
+  if (pkg.status === 'ready-national') {
+    const leg = nextLegForPackage(pkg);
+    return leg?.to ? [pkg.cityId, leg.to] : null;
+  }
+  if (pkg.status === 'transit-national') {
+    const truck = simulation.nationalTrucks.find(item => item.load.includes(pkg.id));
+    return truck ? [truck.from, truck.to] : null;
+  }
+  if (pkg.status === 'ready-international') return [pkg.cityId, pkg.destination.country];
+  if (pkg.status === 'ready-inbound') return [pkg.origin.country, gatewayForCountry(pkg.origin.country)];
+  if (pkg.status === 'transit-international') {
+    const transport = simulation.internationalTransports.find(item => item.load.includes(pkg.id));
+    return transport ? [transport.from, transport.to] : null;
+  }
+  return null;
+}
+
+function addSelectedSwedenRoute() {
+  const pkg = selectedPackageId ? simulation.packages.get(selectedPackageId) : null;
+  const leg = selectedNetworkLeg(pkg);
+  if (!pkg || !leg) return;
+  const curve = viewState.routeCurves.get(`${leg[0]}:${leg[1]}`);
+  if (!curve) return;
+  const highlightMaterial = new THREE.MeshStandardMaterial({ color: 0xf2c94c, emissive: 0x5c4300, emissiveIntensity: .72, roughness: .48 });
+  const highlight = new THREE.Mesh(new THREE.TubeGeometry(curve, 48, .14, 10, false), highlightMaterial);
+  world.add(highlight);
+  const pulse = new THREE.Mesh(
+    new THREE.SphereGeometry(.15, 18, 12),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .96, depthWrite: false })
+  );
+  pulse.position.copy(curve.getPoint(.08));
+  world.add(pulse);
+  viewState.decorative.push({ kind: 'routePulse', mesh: pulse, curve, offset: .08, speed: .12 });
+  const label = makeLabel(`SELECTED · ${shortPlace(pkg.origin.place)} → ${shortPlace(pkg.destination.place)}`, {
+    fg: '#102a29', bg: 'rgba(242,201,76,.98)', scale: .43
+  });
+  label.position.copy(curve.getPoint(.52));
+  label.position.y += .48;
+  world.add(label);
 }
 
 function createTransportMarker(kind) {

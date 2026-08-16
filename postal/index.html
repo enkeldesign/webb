@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#102a29">
   <meta name="color-scheme" content="light">
-  <meta name="description" content="Run a living Swedish parcel network from depot floor to national linehaul.">
+  <meta name="description" content="A portrait-first package delivery management game: sort the rush, send the trucks and keep every promise moving.">
   <title>POSTAL — Every promise has a path</title>
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./hierarchy.css">
@@ -80,9 +80,9 @@
             <i class="metric-track" aria-hidden="true"><b id="metric-ontime-bar"></b></i>
           </div>
           <button id="incoming-btn" class="metric metric-flow" type="button" aria-label="Open incoming packages">
-            <span class="metric-label">INCOMING</span>
+            <span class="metric-label">LIVE</span>
             <strong id="metric-flow">0</strong>
-            <span class="metric-note">depot floor</span>
+            <span class="metric-note">packages</span>
           </button>
           <button id="issues-btn" class="metric metric-issues" type="button" aria-label="Open network issues">
             <span class="metric-label">ISSUES</span>
@@ -99,7 +99,6 @@
               <h1 id="level-title">Sundsvall depot</h1>
               <p id="level-subtitle">People sort. Packages move. You decide what matters.</p>
             </div>
-            <button id="scene-help-btn" class="tap-hint" type="button" aria-label="What can I interact with in the scene?"><span aria-hidden="true">◎</span> What to tap</button>
           </div>
           <nav class="city-switcher" aria-label="City">
             <button class="city-chip" type="button" data-city="sundsvall" aria-pressed="true"><span>SUN</span>Sundsvall</button>
@@ -108,27 +107,40 @@
           </nav>
         </section>
 
-        <div class="lower-controls">
-          <button id="event-ribbon" class="event-ribbon primary-cta" type="button" data-kind="warning">
-            <span class="event-signal" aria-hidden="true"><i></i></span>
-            <span class="event-copy"><small id="event-kicker">NEEDS YOU</small><strong id="event-text">Customer complaint: USA → Timrå</strong></span>
-            <span class="event-command" aria-hidden="true"><strong id="event-cta-label">INVESTIGATE</strong><span>›</span></span>
-          </button>
+        <div id="flow-feedback" class="flow-feedback" role="status" aria-live="polite" aria-atomic="true" hidden>
+          <strong id="flow-feedback-grade">EXPRESS RUN</strong>
+          <span id="flow-feedback-points">+105</span>
+        </div>
 
-          <div class="quick-actions" aria-label="Operations">
-            <button id="focus-btn" class="quick-action quick-action-focus" type="button">
-              <span class="action-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M22 12h-3M12 22v-3M2 12h3"></path></svg>
-              </span>
-              <span><small>TEAM FOCUS</small><strong id="focus-value">LATE</strong></span>
-            </button>
-            <button id="find-btn" class="quick-action" type="button">
-              <span class="action-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"></path><path d="m4 7.5 8 4.5 8-4.5M12 12v9"></path><circle cx="17.5" cy="16.5" r="2.5"></circle><path d="m19.4 18.4 2 2"></path></svg>
-              </span>
-              <span><small>DETECTIVE</small><strong>FIND PACKAGE</strong></span>
-            </button>
-          </div>
+        <div class="lower-controls">
+          <section id="action-dock" class="action-dock" aria-label="Selected operation">
+            <div class="action-dock-copy">
+              <small id="action-kicker">NEXT ACTION</small>
+              <strong id="action-title">Select a live package</strong>
+              <span id="action-meta">Its route will light up across every view.</span>
+            </div>
+            <button id="action-details" class="dock-button dock-button-secondary" type="button" hidden>DETAILS</button>
+            <button id="action-primary" class="dock-button dock-button-primary" type="button">SELECT</button>
+          </section>
+
+          <section class="package-console" aria-labelledby="package-console-title">
+            <header class="package-console-header">
+              <div class="package-console-title">
+                <strong id="package-console-title">LIVE PACKAGES</strong>
+                <span id="package-console-summary">Loading the network…</span>
+              </div>
+              <div class="package-tools" aria-label="Package tools">
+                <button id="focus-btn" class="package-tool focus-tool" type="button">
+                  <small>FOCUS</small><strong id="focus-value">SUN · LATE</strong>
+                </button>
+                <button id="find-btn" class="package-tool find-tool" type="button" aria-label="Find a package">
+                  <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"></circle><path d="m15 15 5 5"></path></svg>
+                  <span>FIND</span>
+                </button>
+              </div>
+            </header>
+            <div id="package-rail" class="package-rail" role="list" aria-label="Packages across the whole network"></div>
+          </section>
 
           <nav class="level-switcher" aria-label="Network level">
             <button class="level-tab" type="button" data-level="depot" aria-pressed="true">

@@ -1,10 +1,12 @@
 'use strict';
 class PostalSimulation {
-  constructor({ seed = 7 } = {}) {
+  constructor({ seed = 7, firstDay = false } = {}) {
     this.clock = 0;
     this.paused = false;
     this.speed = 1;
-    this.focus = 'late';
+    this.firstDay = Boolean(firstDay);
+    this.tutorialStage = this.firstDay ? 'select-package' : 'complete';
+    this.spawnEnabled = !this.firstDay;
     this.rngState = seed >>> 0;
     this.packages = new Map();
     this.cities = Object.fromEntries(CITY_IDS.map(id => [id, blankCityState(id)]));
@@ -28,10 +30,14 @@ class PostalSimulation {
     ];
     for (const t of this.internationalTransports) t.duration = 26;
     this.events = [];
-    this.stats = { received: 0, delivered: 0, lateDelivered: 0, complaintsResolved: 0, investigationsResolved: 0 };
+    this.stats = {
+      received: 0, delivered: 0, lateDelivered: 0, complaintsResolved: 0, investigationsResolved: 0,
+      dispatches: 0, dispatchedSpaces: 0, dispatchedCapacity: 0, score: 0, dispatchChain: 0
+    };
     this.spawnAccumulator = 0;
     this.incidentAccumulator = 0;
-    this._bootstrapDemo();
+    if (this.firstDay) this._bootstrapFirstDay();
+    else this._bootstrapDemo();
   }
 
   random() {
@@ -45,6 +51,7 @@ class PostalSimulation {
   }
 
   addPackage(spec) {
+    const carrier = carrierFor(spec.carrierId || spec.carrier || CARRIER_IDS[Math.floor(this.random() * CARRIER_IDS.length)]);
     const pkg = {
       id: spec.id || makePackageId(spec.prefix || 'PKG'),
       origin: spec.origin,
@@ -61,7 +68,12 @@ class PostalSimulation {
       priorityFlag: Boolean(spec.priorityFlag),
       international: spec.origin.country !== 'Sweden' || spec.destination.country !== 'Sweden',
       trace: spec.trace ? [...spec.trace] : [],
-      carrier: spec.carrier || ['NordPost', 'DLH', 'DB Stänker'][Math.floor(this.random() * 3)],
+      carrier: carrier.name,
+      carrierId: carrier.id,
+      carrierCode: carrier.code,
+      carrierTone: carrier.tone,
+      carrierPattern: carrier.pattern,
+      tutorialLock: Boolean(spec.tutorialLock),
       wait: 0,
       deliveredAt: null
     };
@@ -72,7 +84,26 @@ class PostalSimulation {
     return pkg;
   }
 
+  _bootstrapFirstDay() {
+    this.addPackage({
+      id: 'DAY1-1001',
+      origin: { place: 'Söråker', country: 'Sweden' },
+      destination: { place: 'Timrå', country: 'Sweden' },
+      cityId: 'sundsvall', location: 'Sundsvall terminal · inbound',
+      service: 'express', deadline: 120, carrierId: 'dlh', tutorialLock: true,
+      trace: [
+        { t: -9, label: 'Collected', place: 'Söråker' },
+        { t: -2, label: 'Arrived at depot', place: 'Sundsvall terminal' }
+      ]
+    });
+    this.addEvent('info', 'Your first DLH package is waiting', 'Select it in the live package rail.', 'DAY1-1001');
+  }
+
   _enqueue(pkg) {
+    if (!['ready-local', 'ready-national'].includes(pkg.status)) {
+      const managedTrucks = [...Object.values(this.cities).flatMap(city => city.regionalTrucks), ...this.nationalTrucks];
+      for (const truck of managedTrucks) truck.plannedLoad = truck.plannedLoad.filter(id => id !== pkg.id);
+    }
     for (const city of Object.values(this.cities)) {
       for (const queue of Object.values(city.queues)) {
         const i = queue.indexOf(pkg.id);
@@ -92,7 +123,7 @@ class PostalSimulation {
     this.addPackage({
       id: 'SOR-48219',
       origin: { place: 'Söråker', country: 'Sweden' }, destination: { place: 'Aarhus', country: 'Denmark' },
-      cityId: 'sundsvall', location: 'Sundsvall terminal', service: 'express', deadline: 72,
+      cityId: 'sundsvall', location: 'Sundsvall terminal', service: 'express', deadline: 72, carrierId: 'stanker',
       trace: [
         { t: -18, label: 'Collected', place: 'Söråker' },
         { t: -9, label: 'Arrived at regional depot', place: 'Sundsvall terminal' }
@@ -102,7 +133,7 @@ class PostalSimulation {
       id: 'US-77104',
       origin: { place: 'Chicago', country: 'USA' }, destination: { place: 'Timrå', country: 'Sweden' },
       cityId: 'stockholm', location: 'Stockholm terminal · inbound cage 14', service: 'express', deadline: 28,
-      status: 'held', issue: 'scan-gap', complaint: true,
+      status: 'held', issue: 'scan-gap', complaint: true, carrierId: 'dlh',
       issueDetail: 'No scan after customs release. Customer in Timrå says the parcel has not moved since yesterday.',
       trace: [
         { t: -96, label: 'Accepted', place: 'Chicago' },
@@ -116,7 +147,7 @@ class PostalSimulation {
       id: 'GBG-23018',
       origin: { place: 'Mölndal', country: 'Sweden' }, destination: { place: 'Uppsala', country: 'Sweden' },
       cityId: 'goteborg', location: 'Göteborg terminal · local dock', service: 'standard', deadline: 52,
-      status: 'held', issue: 'wrong-dock', issueDetail: 'Sorted to a local delivery dock even though Uppsala requires national handoff.',
+      status: 'held', issue: 'wrong-dock', carrierId: 'brung', issueDetail: 'Sorted to a local delivery dock even though Uppsala requires national handoff.',
       trace: [
         { t: -24, label: 'Collected', place: 'Mölndal' },
         { t: -15, label: 'Sorted', place: 'Göteborg terminal' },
@@ -126,23 +157,23 @@ class PostalSimulation {
     this.addPackage({
       id: 'STO-88402',
       origin: { place: 'Nacka', country: 'Sweden' }, destination: { place: 'Härnösand', country: 'Sweden' },
-      cityId: 'stockholm', location: 'Stockholm terminal', service: 'standard', deadline: 86
+      cityId: 'stockholm', location: 'Stockholm terminal', service: 'standard', deadline: 86, carrierId: 'nordpost'
     });
     this.addPackage({
       id: 'SUN-31391',
       origin: { place: 'Ånge', country: 'Sweden' }, destination: { place: 'Sundsvall', country: 'Sweden' },
-      cityId: 'sundsvall', location: 'Sundsvall terminal', service: 'standard', deadline: 61
+      cityId: 'sundsvall', location: 'Sundsvall terminal', service: 'standard', deadline: 61, carrierId: 'brung'
     });
     const morningIntake = [
-      ['SUN-10421', 'sundsvall', 'Söråker', 'Timrå', 'Sweden', 'standard', 74, 'NordPost'],
+      ['SUN-10421', 'sundsvall', 'Söråker', 'Timrå', 'Sweden', 'standard', 74, 'NORDPOST'],
       ['SUN-10422', 'sundsvall', 'Härnösand', 'Solna', 'Sweden', 'express', 46, 'DLH'],
-      ['SUN-10423', 'sundsvall', 'Ånge', 'Hamburg', 'Germany', 'standard', 108, 'DB Stänker'],
-      ['STO-20411', 'stockholm', 'Solna', 'Nacka', 'Sweden', 'standard', 68, 'NordPost'],
+      ['SUN-10423', 'sundsvall', 'Ånge', 'Hamburg', 'Germany', 'standard', 108, 'STÄNKER'],
+      ['STO-20411', 'stockholm', 'Solna', 'Nacka', 'Sweden', 'standard', 68, 'BRUNG'],
       ['STO-20412', 'stockholm', 'Uppsala', 'Borås', 'Sweden', 'express', 51, 'DLH'],
-      ['STO-20413', 'stockholm', 'Stockholm', 'Helsinki', 'Finland', 'standard', 112, 'DB Stänker'],
-      ['GBG-30411', 'goteborg', 'Kungsbacka', 'Mölndal', 'Sweden', 'standard', 64, 'NordPost'],
+      ['STO-20413', 'stockholm', 'Stockholm', 'Helsinki', 'Finland', 'standard', 112, 'STÄNKER'],
+      ['GBG-30411', 'goteborg', 'Kungsbacka', 'Mölndal', 'Sweden', 'standard', 64, 'BRUNG'],
       ['GBG-30412', 'goteborg', 'Borås', 'Sundsvall', 'Sweden', 'express', 49, 'DLH'],
-      ['GBG-30413', 'goteborg', 'Göteborg', 'København', 'Denmark', 'standard', 105, 'DB Stänker']
+      ['GBG-30413', 'goteborg', 'Göteborg', 'København', 'Denmark', 'standard', 105, 'STÄNKER']
     ];
     for (const [id, cityId, origin, destination, country, service, deadline, carrier] of morningIntake) {
       this.addPackage({
@@ -158,11 +189,14 @@ class PostalSimulation {
     this.addEvent('warning', 'Wrong dock in Göteborg', 'A parcel for Uppsala is sitting with local deliveries.', 'GBG-23018');
   }
 
-  setFocus(mode) {
-    if (!FOCUS_MODES.includes(mode)) return;
-    this.focus = mode;
-    this.addEvent('info', `Priority changed: ${mode}`, 'Workers now pull the highest-value matching parcels first.');
+  setFocus(cityId, mode) {
+    if (!this.cities[cityId] || !FOCUS_MODES.includes(mode)) return false;
+    this.cities[cityId].focus = mode;
+    this.addEvent('info', `${CITIES[cityId].name} focus: ${mode}`, 'That depot now pulls matching packages first.');
+    return true;
   }
+
+  getFocus(cityId) { return this.cities[cityId]?.focus || 'late'; }
 
   togglePause() { this.paused = !this.paused; }
 
@@ -182,13 +216,13 @@ class PostalSimulation {
     this._tickNationalTrucks(dt);
     this._tickInternational(dt);
 
-    if (this.spawnAccumulator > 3.4) {
-      this.spawnAccumulator -= 3.4;
+    if (this.spawnEnabled && this.spawnAccumulator > 5.8) {
+      this.spawnAccumulator -= 5.8;
       this._spawnRoutinePackage();
       this._spawnRoutinePackage();
       if (this.random() < 0.55) this._spawnRoutinePackage();
     }
-    if (this.incidentAccumulator > 42) {
+    if (this.spawnEnabled && this.incidentAccumulator > 42) {
       this.incidentAccumulator = 0;
       this._maybeCreateIncident();
     }

@@ -11,7 +11,23 @@ context.globalThis = context;
 for (const name of ['model-data.js','model-core.js','model-flow.js','model-ops.js']) {
   vm.runInContext(fs.readFileSync(path.join(root, 'runtime', name), 'utf8'), context, { filename: name });
 }
-const { PostalSimulation, packageScore, nextLegForPackage } = context.POSTAL_MODEL;
+const { PostalSimulation, CARRIERS, packageScore, nextLegForPackage } = context.POSTAL_MODEL;
+
+function tickUntil(sim, predicate, maxTicks = 300, dt = .5) {
+  for (let i = 0; i < maxTicks && !predicate(); i += 1) sim.tick(dt);
+  assert.ok(predicate(), `Condition was not reached after ${maxTicks * dt} simulated seconds`);
+}
+
+function runManaged(sim, pkg, maxTicks = 1200) {
+  for (let i = 0; i < maxTicks && pkg.status !== 'delivered'; i += 1) {
+    if (pkg.status === 'ready-local' || pkg.status === 'ready-national') {
+      const planned = sim.planPackageOnTruck(pkg.id);
+      if (planned.ok) sim.dispatchTruck(planned.truck.id);
+    }
+    sim.tick(.5);
+  }
+  assert.equal(pkg.status, 'delivered', `${pkg.id} should complete with managed dispatches`);
+}
 
 {
   const crew = Object.values(context.CITIES).flatMap(city => city.crew);
@@ -23,21 +39,22 @@ const { PostalSimulation, packageScore, nextLegForPackage } = context.POSTAL_MOD
     assert.ok(sim.getIncomingPackages(cityId).length >= 4, `${cityId} should open with a visible intake queue`);
   }
   const openingTotal = sim.packages.size;
-  sim.paused = false;
-  for (let i = 0; i < 4; i++) sim.tick(1);
-  assert.ok(sim.packages.size >= openingTotal + 2, 'Incoming packages should arrive in visible waves');
+  tickUntil(sim, () => sim.packages.size >= openingTotal + 2, 20);
+}
+
+{
+  assert.deepEqual(Object.values(CARRIERS).map(carrier => carrier.name), ['NORDPOST', 'DLH', 'BRUNG', 'STÄNKER']);
+  assert.equal(new Set(Object.values(CARRIERS).map(carrier => carrier.rhythm)).size, 4);
+  assert.equal(CARRIERS.dlh.service, 'express');
+  assert.ok(CARRIERS.stanker.deadline > CARRIERS.brung.deadline);
 }
 
 {
   const sim = new PostalSimulation({ seed: 10 });
   const locationlessHold = sim.addPackage({
-    id: 'IN-HOLD',
-    origin: { place: 'Hamburg', country: 'Germany' },
-    destination: { place: 'Timrå', country: 'Sweden' },
-    cityId: null,
-    location: 'Hamburg partner hub',
-    status: 'held',
-    issue: 'missed-scan'
+    id: 'IN-HOLD', origin: { place: 'Hamburg', country: 'Germany' },
+    destination: { place: 'Timrå', country: 'Sweden' }, cityId: null,
+    location: 'Hamburg partner hub', status: 'held', issue: 'missed-scan'
   });
   assert.equal(locationlessHold.cityId, null);
   const incoming = sim.getIncomingPackages();
@@ -47,11 +64,10 @@ const { PostalSimulation, packageScore, nextLegForPackage } = context.POSTAL_MOD
 
 {
   const sim = new PostalSimulation({ seed: 1 });
-  sim.paused = false;
+  sim.spawnEnabled = false;
   const pkg = sim.packages.get('SOR-48219');
   assert.equal(nextLegForPackage(pkg).kind, 'national');
-  for (let i = 0; i < 900 && pkg.status !== 'delivered'; i++) sim.tick(.5);
-  assert.equal(pkg.status, 'delivered');
+  runManaged(sim, pkg);
   assert.match(pkg.location, /Aarhus/);
   assert.ok(pkg.trace.some(step => step.label === 'National linehaul departed'));
   assert.ok(pkg.trace.some(step => step.label === 'International departure'));
@@ -59,12 +75,10 @@ const { PostalSimulation, packageScore, nextLegForPackage } = context.POSTAL_MOD
 
 {
   const sim = new PostalSimulation({ seed: 2 });
-  sim.paused = false;
+  sim.spawnEnabled = false;
   const pkg = sim.packages.get('US-77104');
-  const result = sim.resolveIssue(pkg.id, 'scan-cage');
-  assert.equal(result.ok, true);
-  for (let i = 0; i < 900 && pkg.status !== 'delivered'; i++) sim.tick(.5);
-  assert.equal(pkg.status, 'delivered');
+  assert.equal(sim.resolveIssue(pkg.id, 'scan-cage').ok, true);
+  runManaged(sim, pkg);
   assert.equal(pkg.location, 'Timrå');
   assert.ok(pkg.trace.some(step => step.label === 'Manual cage scan found parcel'));
 }
@@ -76,17 +90,49 @@ const { PostalSimulation, packageScore, nextLegForPackage } = context.POSTAL_MOD
   const complaint = sim.packages.get('US-77104');
   complaint.issue = null; complaint.status = 'arrived'; sim._enqueue(complaint);
   const ordinary = sim.addPackage({ id:'TEST-ORD', origin:{place:'Solna',country:'Sweden'}, destination:{place:'Nacka',country:'Sweden'}, cityId:'stockholm', location:'Stockholm terminal', deadline: 500 });
-  sim.focus='complaints';
-  assert.ok(packageScore(complaint, sim.focus, sim.clock) > packageScore(ordinary, sim.focus, sim.clock));
-  sim.paused=false; sim.tick(.1);
-  assert.ok(city.workers.some(w => w.packageId === complaint.id));
+  assert.equal(sim.setFocus('stockholm', 'complaints'), true);
+  assert.equal(sim.getFocus('stockholm'), 'complaints');
+  assert.equal(sim.getFocus('sundsvall'), 'late', 'Depot focus must be isolated by city');
+  assert.ok(packageScore(complaint, sim.getFocus('stockholm'), sim.clock) > packageScore(ordinary, sim.getFocus('stockholm'), sim.clock));
+  sim.tick(.1);
+  assert.ok(city.workers.some(worker => worker.packageId === complaint.id));
+}
+
+{
+  const sim = new PostalSimulation({ seed: 12, firstDay: true });
+  const pkg = sim.packages.get('DAY1-1001');
+  assert.equal(sim.packages.size, 1, 'The first morning should begin with one readable decision');
+  assert.equal(pkg.tutorialLock, true);
+  assert.equal(sim.startFirstDaySort(), true);
+  assert.equal(sim.cities.sundsvall.workers.find(worker => worker.name === 'Leo').packageId, pkg.id, 'Leo should visibly perform the Express tutorial sort');
+  tickUntil(sim, () => pkg.status === 'ready-local', 30);
+  for (let i = 0; i < 40; i += 1) sim.tick(.5);
+  assert.equal(pkg.status, 'ready-local', 'Regional trucks must never auto-depart');
+  assert.equal(sim.cities.sundsvall.regionalTrucks.find(truck => truck.to === 'Timrå').departures, 0);
+  const planned = sim.planPackageOnTruck(pkg.id);
+  assert.equal(planned.ok, true);
+  const sent = sim.dispatchTruck(planned.truck.id);
+  assert.equal(sent.grade, 'EXPRESS RUN');
+  assert.ok(sent.points > 0);
+  tickUntil(sim, () => pkg.status === 'delivered', 40);
+  assert.equal(sim.releaseFirstDayWave(), true);
+  assert.equal(new Set([...sim.packages.values()].filter(item => item.status !== 'delivered').map(item => item.carrier)).size, 4);
+  sim.setFocus('sundsvall', 'express');
+  assert.equal(sim.releaseChicagoCase(), true);
+  const chicago = sim.packages.get('US-77104');
+  assert.equal(sim.resolveIssue(chicago.id, 'scan-cage').ok, true);
+  runManaged(sim, chicago);
+  const checkpoints = Array.from(chicago.trace).filter(step => /linehaul arrived|Delivered/.test(step.label)).map(step => step.place);
+  assert.deepEqual(checkpoints, ['Sundsvall terminal', 'Timrå']);
+  assert.equal(sim.completeFirstDay(), true);
+  assert.equal(sim.spawnEnabled, true);
+  assert.ok(sim.getMetrics().score > 0);
 }
 
 {
   const sim = new PostalSimulation({ seed: 4 });
-  sim.paused = false;
-  for (let i=0;i<600;i++) sim.tick(.5);
-  const queued=[];
+  for (let i = 0; i < 600; i += 1) sim.tick(.5);
+  const queued = [];
   for (const city of Object.values(sim.cities)) for (const queue of Object.values(city.queues)) queued.push(...queue);
   assert.equal(new Set(queued).size, queued.length);
   for (const id of queued) assert.ok(sim.packages.has(id));

@@ -17,14 +17,16 @@ function buildRegionScene(cityId) {
   world.add(district);
 
   addRoadTile('roadCross', [0, .13, 0], 3.05, 0);
-  addRoadTile('roadCrossing', [3.02, .13, 0], 3.05, 0);
-  addRoadTile('roadStraight', [-3.02, .13, 0], 3.05, 0);
-  addRoadTile('roadStraight', [0, .13, 3.02], 3.05, Math.PI / 2);
-  addRoadTile('roadStraight', [0, .13, -3.02], 3.05, Math.PI / 2);
-  addRoadTile('roadEnd', [5.68, .13, 0], 3.05, Math.PI);
-  addRoadTile('roadEnd', [-5.68, .13, 0], 3.05, 0);
-  addRoadTile('roadEnd', [0, .13, 5.68], 3.05, -Math.PI / 2);
-  addRoadTile('roadEnd', [0, .13, -5.68], 3.05, Math.PI / 2);
+  // Kenney's straight tile points along local Z. Derive every rotation from
+  // the route vector so the painted lanes and moving trucks agree.
+  addRoadTile('roadCrossing', [3.02, .13, 0], 3.05, roadRotationFor(1, 0));
+  addRoadTile('roadStraight', [-3.02, .13, 0], 3.05, roadRotationFor(1, 0));
+  addRoadTile('roadStraight', [0, .13, 3.02], 3.05, roadRotationFor(0, 1));
+  addRoadTile('roadStraight', [0, .13, -3.02], 3.05, roadRotationFor(0, 1));
+  addRoadTile('roadEnd', [5.68, .13, 0], 3.05, roadRotationFor(1, 0));
+  addRoadTile('roadEnd', [-5.68, .13, 0], 3.05, roadRotationFor(-1, 0));
+  addRoadTile('roadEnd', [0, .13, 5.68], 3.05, roadRotationFor(0, 1));
+  addRoadTile('roadEnd', [0, .13, -5.68], 3.05, roadRotationFor(0, -1));
 
   const localCurve = new THREE.CatmullRomCurve3([
     new THREE.Vector3(-.2, .16, .2), new THREE.Vector3(1.8, .16, 1.7),
@@ -76,7 +78,9 @@ function buildRegionScene(cityId) {
   handoffLane.receiveShadow = true;
   world.add(handoffLane);
 
+  addSelectedRegionRoute(cityId);
   addRegionDetails(cityId);
+  addRegionEdgeNature(cityId);
 
   simulation.cities[cityId].regionalTrucks.forEach((truck, i) => {
     const curve = viewState.routeCurves.get(`${cityId}:${truck.to}`);
@@ -87,6 +91,10 @@ function buildRegionScene(cityId) {
     world.add(mesh);
     viewState.regionalTrucks.set(truck.id, { mesh, curve, offset: i * .035 });
   });
+}
+
+function roadRotationFor(dx, dz) {
+  return Math.atan2(dx, dz);
 }
 
 function addRoadTile(key, position, target, rotation) {
@@ -147,6 +155,56 @@ function addRegionDetails(cityId) {
       if (cone) world.add(cone);
     } else {
       const tree = cloneAsset(i % 2 ? 'treeSmall' : 'treeLarge', { target: .72, position: [x, .14, z] });
+      if (tree) world.add(tree);
+    }
+  });
+}
+
+function addSelectedRegionRoute(cityId) {
+  const pkg = selectedPackageId ? simulation.packages.get(selectedPackageId) : null;
+  if (!pkg || pkg.cityId !== cityId) return;
+  const destination = ['ready-national', 'transit-national'].includes(pkg.status) ? 'national'
+    : ['ready-local', 'transit-local'].includes(pkg.status) ? pkg.destination.place : null;
+  const curve = destination ? viewState.routeCurves.get(`${cityId}:${destination}`) : null;
+  if (!curve) return;
+  const material = new THREE.MeshStandardMaterial({ color: 0xf2c94c, emissive: 0x5c4300, emissiveIntensity: .55, roughness: .55 });
+  const highlight = new THREE.Mesh(new THREE.TubeGeometry(curve, 36, .21, 10, false), material);
+  highlight.position.y = .075;
+  highlight.receiveShadow = false;
+  world.add(highlight);
+  const pulse = new THREE.Mesh(
+    new THREE.SphereGeometry(.19, 18, 12),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .95, depthWrite: false })
+  );
+  world.add(pulse);
+  viewState.decorative.push({ kind: 'selectedRegionRoute', mesh: pulse, curve, offset: .08, speed: .12 });
+  const end = curve.getPoint(.995);
+  const marker = new THREE.Mesh(
+    new THREE.RingGeometry(.44, .57, 32),
+    new THREE.MeshBasicMaterial({ color: 0xf2c94c, transparent: true, opacity: .95, depthWrite: false })
+  );
+  marker.rotation.x = -Math.PI / 2;
+  marker.position.set(end.x, .27, end.z);
+  world.add(marker);
+  viewState.decorative.push({ kind: 'selectedRouteMarker', mesh: marker, offset: .3 });
+}
+
+function addRegionEdgeNature(cityId) {
+  const edgePoints = [
+    [-7.55, -1.5], [-7.35, 1.9], [-6.25, 5.2], [-3.3, 7.25], [.2, 7.55], [3.7, 7.05],
+    [6.65, 4.6], [7.55, 1.25], [7.25, -2.55], [5.25, -6.15], [1.8, -7.45], [-2.05, -7.35]
+  ];
+  const cityOffset = CITY_IDS.indexOf(cityId);
+  edgePoints.forEach(([x, z], index) => {
+    const tall = (index + cityOffset) % 3 === 0;
+    const cluster = cloneAsset(tall ? 'treeClusterTall' : 'treeCluster', {
+      target: tall ? 1.7 : 1.4,
+      position: [x, .04, z],
+      rotation: [0, ((index * 1.13) + cityOffset * .6) % (Math.PI * 2), 0]
+    });
+    if (cluster) world.add(cluster);
+    else {
+      const tree = cloneAsset(tall ? 'treeLarge' : 'treeSmall', { target: tall ? 1.15 : .9, position: [x, .12, z] });
       if (tree) world.add(tree);
     }
   });

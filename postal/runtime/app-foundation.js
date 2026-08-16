@@ -2,15 +2,25 @@
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const prefersReducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const FIRST_DAY_KEY = 'postal-first-day-v3';
 
-const simulation = new PostalSimulation({ seed: 12 });
+function needsFirstDay() {
+  try { return localStorage.getItem(FIRST_DAY_KEY) !== 'complete'; }
+  catch { return true; }
+}
+
+const firstDayRequired = needsFirstDay();
+const simulation = new PostalSimulation({ seed: 12, firstDay: firstDayRequired });
 let currentLevel = 'depot';
 let currentCityId = 'sundsvall';
-let selectedPackageId = null;
+let selectedPackageId = firstDayRequired ? null : 'US-77104';
+let selectedTruckId = null;
 let visualTime = 0;
 let lastFrame = performance.now();
 let lastUiUpdate = 0;
 let lastReceivedCount = simulation.stats.received;
+let packageRailKey = '';
+let flowFeedbackTimer = 0;
 
 const app = {
   canvas: $('#scene'),
@@ -24,8 +34,17 @@ const app = {
   issueBadge: $('#issue-badge'),
   live: $('#live-region'),
   pause: $('#pause-btn'),
-  eventRibbon: $('#event-ribbon'),
-  eventText: $('#event-text'),
+  actionDock: $('#action-dock'),
+  actionKicker: $('#action-kicker'),
+  actionTitle: $('#action-title'),
+  actionMeta: $('#action-meta'),
+  actionPrimary: $('#action-primary'),
+  actionDetails: $('#action-details'),
+  packageRail: $('#package-rail'),
+  packageSummary: $('#package-console-summary'),
+  flowFeedback: $('#flow-feedback'),
+  flowFeedbackGrade: $('#flow-feedback-grade'),
+  flowFeedbackPoints: $('#flow-feedback-points'),
   sheet: $('#sheet'),
   sheetTitle: $('#sheet-title'),
   sheetBody: $('#sheet-body'),
@@ -91,6 +110,8 @@ const manifest = {
   suburbanL: './assets/kenney/city-suburban/building-type-l.glb',
   treeLarge: './assets/kenney/suburban/tree-large.glb',
   treeSmall: './assets/kenney/suburban/tree-small.glb',
+  treeCluster: './assets/city/grass-trees.glb',
+  treeClusterTall: './assets/city/grass-trees-tall.glb',
   commercialA: './assets/kenney/city-commercial/building-a.glb',
   commercialH: './assets/kenney/city-commercial/building-h.glb',
   skyscraper: './assets/kenney/city-commercial/building-skyscraper-a.glb',
