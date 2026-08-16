@@ -16,7 +16,9 @@ const [
   installGateCss,
   orientationGuardCss,
   liveSteering,
-  menuFontCss
+  menuFontCss,
+  worldArtPass,
+  renderWorld
 ] = await Promise.all([
   loadReleaseDefinition(),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
@@ -30,7 +32,9 @@ const [
   fs.readFile(new URL('../turn/install-gate.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/orientation-guard.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/live-steering-setting.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/m8-menu-font-fix.css', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/m8-menu-font-fix.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/world-art-pass.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/render/world.js', import.meta.url), 'utf8')
 ]);
 
 await checkReleaseFiles();
@@ -127,6 +131,15 @@ assert.match(app, /installM8HomeNavigation\(\)/);
 assert.match(app, /installM8HomeFixedLayout\(\)/);
 assert.ok(app.indexOf('installTurnPlatform(webPlatform)') < app.indexOf("withBuild('./main.js')"));
 assert.ok(app.indexOf("withBuild('./main.js')") < app.indexOf('installM8HomeNavigation()'));
+
+assert.match(worldArtPass, /const TURN_ROAD = 0x44494f/,
+  'Countryside world art must share the TURN road color token for its curb contour');
+assert.match(worldArtPass, /function addRoadOuterContour[\s\S]*color: TURN_ROAD/,
+  'Countryside curb contour must be created in road color instead of black');
+assert.doesNotMatch(worldArtPass, /function addRoadOuterContour[\s\S]{0,180}color: INK/,
+  'Countryside curb contour must never regress to the generic ink outline color');
+assert.match(renderWorld, /world-art-pass\.js\?revision=r514-road-contour/,
+  'The fixed Countryside art pass needs its own URL revision so installed PWAs do not reuse the old black contour module');
 
 for (const anchor of [
   "from '/turn/race/game-state.js'",
