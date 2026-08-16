@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { createTrackSpatialIndex, findNearestTrackBruteForce } from '../../turn/race/track-spatial-index.js';
 import { AIRPORT_HAIRPIN_RUNOFF_ZONES, isForgivingTrackSurface } from '../../turn/tracks/airport-runoff.js';
+import { applyContextualRoadEdges, ROAD_EDGE_COLORS } from '../../turn/tracks/contextual-road-edges.js';
 import {
   TRACK_DEFINITIONS,
   TRACK_PLACEHOLDERS,
@@ -44,6 +45,54 @@ assert.equal(getTrackStorageRevision('midnight-city'), 'midnight-city-r2');
 assert.equal(getTrackFreeRoamDistance('midnight-city'), 34);
 assert.equal(getTrackStorageRevision('future-track'), 'future-track');
 assert.equal(getTrackFreeRoamDistance('future-track'), 170);
+
+assert.deepEqual(
+  ROAD_EDGE_COLORS,
+  {
+    countryside: '#ffffff',
+    airport: '#ffd43b',
+    cliffside: '#ffffff',
+    harbor: '#f5c542'
+  },
+  'Road-like tracks must use one contextual edge color instead of alternating race curbs'
+);
+
+const contextualEdgeCases = [
+  ['countryside', [0xe63946, 0xfff8e8]],
+  ['airport', [0xff5f67, 0xfff8e8]],
+  ['cliffside', [0xff5f67, 0xfff8e8]],
+  ['harbor', [0xf5c542, 0x08090a]]
+];
+for (const [trackId, sourcePalette] of contextualEdgeCases) {
+  const edgeColors = mockVertexColors(sourcePalette);
+  const roadColors = mockVertexColors([0x34383d, 0x4a4f55]);
+  const edge = {
+    geometry: { getAttribute(name) { return name === 'color' ? edgeColors : null; } },
+    userData: {}
+  };
+  const road = {
+    geometry: { getAttribute(name) { return name === 'color' ? roadColors : null; } },
+    userData: {}
+  };
+  const world = {
+    traverse(callback) {
+      callback(edge);
+      callback(road);
+    }
+  };
+
+  assert.equal(applyContextualRoadEdges(world, trackId), 1, `${trackId} must recolor exactly its alternating edge mesh`);
+  assert.equal(edge.userData.turnContextualRoadEdge, trackId);
+  assert.equal(road.userData.turnContextualRoadEdge, undefined, `${trackId} must not recolor the asphalt vertex gradient`);
+
+  const target = linearRgb(Number.parseInt(ROAD_EDGE_COLORS[trackId].slice(1), 16));
+  for (let index = 0; index < edgeColors.count; index += 1) {
+    assert.ok(Math.abs(edgeColors.getX(index) - target.r) < 1e-4);
+    assert.ok(Math.abs(edgeColors.getY(index) - target.g) < 1e-4);
+    assert.ok(Math.abs(edgeColors.getZ(index) - target.b) < 1e-4);
+  }
+}
+assert.equal(ROAD_EDGE_COLORS['midnight-city'], undefined, 'Midnight City already owns a solid street-edge treatment and must remain unchanged');
 
 const midnightLength = closedPolylineLength(MIDNIGHT_CITY_CONTROL_POINTS);
 const harborLength = closedPolylineLength(HARBOR_CONTROL_POINTS);
@@ -133,6 +182,7 @@ assert.match(definitions, /fogNear: 250[\s\S]*fogFar: 880/);
 assert.match(definitions, /id: 'track-6-tba'[\s\S]*locked: true/);
 assert.match(catalog, /MIDNIGHT_CITY_CONTROL_POINTS\.map/);
 assert.match(registry, /midnight-city-world-r9\.js\?build=20260802-r9/);
+assert.match(registry, /contextual-road-edges\.js\?revision=r507/);
 assert.match(registry, /definition\.sampleCount \|\| sampleCount/);
 assert.doesNotMatch(manager, /nextTrackId === 'midnight-city'/, 'The generic track manager must not gain a Midnight City special case');
 assert.match(manager, /lighting\.hemisphereIntensity \?\? 2\.7/);
@@ -211,4 +261,38 @@ function segmentsProperlyIntersect(a, b, c, d) {
 
 function orientation(a, b, c) {
   return (b[0] - a[0]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[0] - a[0]);
+}
+
+function mockVertexColors(hexes) {
+  const values = [];
+  for (const hex of hexes) {
+    const color = linearRgb(hex);
+    values.push(color.r, color.g, color.b);
+  }
+
+  return {
+    itemSize: 3,
+    count: hexes.length,
+    needsUpdate: false,
+    getX(index) { return values[index * 3]; },
+    getY(index) { return values[index * 3 + 1]; },
+    getZ(index) { return values[index * 3 + 2]; },
+    setXYZ(index, r, g, b) {
+      values[index * 3] = r;
+      values[index * 3 + 1] = g;
+      values[index * 3 + 2] = b;
+    }
+  };
+}
+
+function linearRgb(hex) {
+  const linear = (channel) => {
+    const value = channel / 255;
+    return value < 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  };
+  return {
+    r: linear((hex >> 16) & 0xff),
+    g: linear((hex >> 8) & 0xff),
+    b: linear(hex & 0xff)
+  };
 }
