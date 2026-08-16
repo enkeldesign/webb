@@ -73,6 +73,7 @@ function hideOldRoadContour(world) {
 }
 
 function addSectionEdges(world, samples, trackWidth) {
+  if (globalThis.__turnLegacySectionEdgesEnabled !== true) return;
   hideOldRoadContour(world);
   const sections = ZONES.length;
   const sectionLength = Math.floor(samples.length / sections);
