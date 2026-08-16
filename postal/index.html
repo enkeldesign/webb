@@ -8,6 +8,7 @@
   <meta name="description" content="Run a living Swedish parcel network from depot floor to national linehaul.">
   <title>POSTAL — Every promise has a path</title>
   <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./hierarchy.css">
   <script type="importmap">
     {
       "imports": {
@@ -108,10 +109,10 @@
         </section>
 
         <div class="lower-controls">
-          <button id="event-ribbon" class="event-ribbon" type="button" data-kind="warning">
+          <button id="event-ribbon" class="event-ribbon primary-cta" type="button" data-kind="warning">
             <span class="event-signal" aria-hidden="true"><i></i></span>
-            <span class="event-copy"><small>NEEDS YOU</small><strong id="event-text">Customer complaint: USA → Timrå</strong></span>
-            <span class="event-arrow" aria-hidden="true">›</span>
+            <span class="event-copy"><small id="event-kicker">NEEDS YOU</small><strong id="event-text">Customer complaint: USA → Timrå</strong></span>
+            <span class="event-command" aria-hidden="true"><strong id="event-cta-label">INVESTIGATE</strong><span>›</span></span>
           </button>
 
           <div class="quick-actions" aria-label="Operations">
