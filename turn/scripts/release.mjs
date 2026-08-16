@@ -60,7 +60,7 @@ function synchronizeReleaseBoundSpecifier(importMap, release, pattern, currentSp
 }
 
 function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
-  // These modules are imported through withBuild(), so their import-map keys must advance with every release cache key.
+  // Keep this list to modules imported through withBuild(); historical alias keys intentionally retain their source revisions.
   synchronizeReleaseBoundSpecifier(
     importMap,
     release,
