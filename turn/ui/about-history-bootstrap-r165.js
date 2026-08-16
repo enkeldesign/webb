@@ -2,7 +2,7 @@ import {
   CHANGELOG,
   CURRENT_RELEASE,
   DEVELOPMENT_HISTORY
-} from '../content/about-history.js?build=20260816-r170';
+} from '../content/about-history.js?build=20260817-r171';
 import { aboutTurnHtml } from '../content/about-turn.js?revision=r1';
 
 const REVISION = 'r165-browser-about';
