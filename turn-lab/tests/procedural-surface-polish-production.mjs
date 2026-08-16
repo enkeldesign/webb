@@ -38,7 +38,7 @@ assert.doesNotMatch(surfaceSource, /new THREE\.InstancedMesh/, 'The replacement 
 assert.match(surfaceSource, /const wheelBands = \[0\.27, 0\.36, 0\.64, 0\.73\]/, 'Road polish must retain subtle wheel-path wear');
 assert.match(surfaceSource, /maxAlpha: 0\.16/, 'Surface contrast must retain the stronger but still restrained lightness range');
 assert.match(surfaceSource, /return finishTexture\(canvas, 1, 6\);/, 'Closed road texture repeat must use an integer repeat count so the loop seam is continuous');
-assert.match(registry, /procedural-surface-polish-r522\.js\?revision=r524-procedural-surfaces-contrast/);
+assert.match(registry, /procedural-surface-polish-r522\.js\?revision=r524-procedural-surfaces-contrast-r171/);
 assert.doesNotMatch(registry, /ground-detail-polish-r521/, 'The old scattered Airport/Harbor ground-detail pass must no longer load');
 
 console.log('TURN procedural surface polish contract passed.');
