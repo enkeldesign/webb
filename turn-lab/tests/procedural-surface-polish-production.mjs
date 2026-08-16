@@ -1,22 +1,23 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {
-  PROCEDURAL_SURFACE_PLAN,
-  createRoadUvArray
-} from '../../turn/tracks/procedural-surface-polish-r522.js';
 
-assert.deepEqual(
-  PROCEDURAL_SURFACE_PLAN,
-  {
-    airport: { ground: true, road: true },
-    cliffside: { ground: false, road: true },
-    harbor: { ground: true, road: true }
-  },
-  'Airport and Harbor get ground + road polish, while Cliffside gets road polish only'
-);
-assert.equal(PROCEDURAL_SURFACE_PLAN.countryside, undefined, 'Countryside keeps its existing surface art pass');
-assert.equal(PROCEDURAL_SURFACE_PLAN['midnight-city'], undefined, 'Midnight City stays untouched');
+const [surfaceSource, registry] = await Promise.all([
+  fs.readFile(new URL('../../turn/tracks/procedural-surface-polish-r522.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/registry.js', import.meta.url), 'utf8')
+]);
 
+const planMatch = surfaceSource.match(/export const PROCEDURAL_SURFACE_PLAN = Object\.freeze\(\{([\s\S]*?)\n\}\);/);
+assert.ok(planMatch, 'Procedural surface plan must remain exported from production source');
+assert.match(planMatch[0], /airport: Object\.freeze\(\{ ground: true, road: true \}\)/);
+assert.match(planMatch[0], /cliffside: Object\.freeze\(\{ ground: false, road: true \}\)/);
+assert.match(planMatch[0], /harbor: Object\.freeze\(\{ ground: true, road: true \}\)/);
+assert.doesNotMatch(planMatch[0], /countryside|midnight-city/, 'Countryside and Midnight City must stay out of this polish pass');
+
+const uvFunctionMatch = surfaceSource.match(/export function createRoadUvArray\(sampleCount\) \{[\s\S]*?\n\}/);
+assert.ok(uvFunctionMatch, 'Production source must expose the pure road UV helper');
+const createRoadUvArray = Function(
+  `${uvFunctionMatch[0].replace('export function', 'function')}; return createRoadUvArray;`
+)();
 const uv = Array.from(createRoadUvArray(4));
 assert.deepEqual(
   uv,
@@ -30,18 +31,14 @@ assert.deepEqual(
   'Road UVs must span the full road width and loop length without disturbing geometry'
 );
 
-const [surfaceSource, registry] = await Promise.all([
-  fs.readFile(new URL('../../turn/tracks/procedural-surface-polish-r522.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/tracks/registry.js', import.meta.url), 'utf8')
-]);
-
 assert.match(surfaceSource, /new THREE\.CanvasTexture\(canvas\)/, 'Surface variation must be generated in memory without image texture assets');
 assert.match(surfaceSource, /broadFields\(/, 'Surface treatment must use broad low-frequency fields rather than scattered decals');
 assert.match(surfaceSource, /broadSlabs\(/, 'Hard-surface treatment must include restrained large-scale slab variation');
 assert.doesNotMatch(surfaceSource, /new THREE\.InstancedMesh/, 'The replacement surface treatment must not add decal draw-call batches');
 assert.match(surfaceSource, /const wheelBands = \[0\.27, 0\.36, 0\.64, 0\.73\]/, 'Road polish must retain subtle wheel-path wear');
 assert.match(surfaceSource, /maxAlpha: 0\.16/, 'Surface contrast must retain the stronger but still restrained lightness range');
-assert.match(registry, /procedural-surface-polish-r522\.js\?revision=r523-procedural-surfaces-contrast/);
+assert.match(surfaceSource, /return finishTexture\(canvas, 1, 6\);/, 'Closed road texture repeat must use an integer repeat count so the loop seam is continuous');
+assert.match(registry, /procedural-surface-polish-r522\.js\?revision=r524-procedural-surfaces-contrast/);
 assert.doesNotMatch(registry, /ground-detail-polish-r521/, 'The old scattered Airport/Harbor ground-detail pass must no longer load');
 
 console.log('TURN procedural surface polish contract passed.');
