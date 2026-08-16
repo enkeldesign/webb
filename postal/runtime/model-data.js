@@ -35,6 +35,35 @@ const CITIES = {
 const CITY_IDS = Object.keys(CITIES);
 const FOCUS_MODES = ['late', 'complaints', 'express', 'international'];
 
+const CARRIERS = Object.freeze({
+  nordpost: Object.freeze({
+    id: 'nordpost', name: 'NORDPOST', code: 'NP', tone: 'blue', pattern: 'bars',
+    service: 'standard', deadline: 116, rhythm: 'Steady domestic flow'
+  }),
+  dlh: Object.freeze({
+    id: 'dlh', name: 'DLH', code: 'DLH', tone: 'yellow', pattern: 'arrow',
+    service: 'express', deadline: 57, rhythm: 'Small, urgent express loads'
+  }),
+  brung: Object.freeze({
+    id: 'brung', name: 'BRUNG', code: 'BRG', tone: 'green', pattern: 'dots',
+    service: 'standard', deadline: 82, rhythm: 'Frequent local bursts'
+  }),
+  stanker: Object.freeze({
+    id: 'stanker', name: 'STÄNKER', code: 'DBS', tone: 'red', pattern: 'stripe',
+    service: 'standard', deadline: 138, rhythm: 'Bulky national cages'
+  })
+});
+
+const CARRIER_IDS = Object.keys(CARRIERS);
+
+function carrierFor(value) {
+  const normalized = String(value || '').toLowerCase().replace(/[^a-zåäö]+/g, '');
+  return Object.values(CARRIERS).find(carrier => {
+    const names = [carrier.id, carrier.name, carrier.code].map(item => item.toLowerCase().replace(/[^a-zåäö]+/g, ''));
+    return names.includes(normalized);
+  }) || CARRIERS.nordpost;
+}
+
 const COUNTRY_CITY_HINTS = {
   Denmark: 'goteborg', Germany: 'goteborg', Netherlands: 'goteborg', Norway: 'goteborg',
   Finland: 'stockholm', USA: 'stockholm', 'United States': 'stockholm', UK: 'stockholm', France: 'goteborg'
@@ -127,7 +156,7 @@ function createWorker(cityId, index) {
 function createTruck(id, kind, from, to, capacity = 7) {
   return {
     id, kind, from, to, state: 'waiting', progress: 0, duration: kind === 'regional' ? 12 : 20,
-    load: [], capacity, departures: 0, wait: 0
+    load: [], plannedLoad: [], capacity, departures: 0, wait: 0
   };
 }
 
@@ -137,6 +166,7 @@ function blankCityState(cityId) {
   regional.unshift(createTruck(`${cityId}-r0`, 'regional', cityId, city.name, 5));
   return {
     cityId,
+    focus: 'late',
     queues: { arrived: [], readyLocal: [], readyNational: [], readyInternational: [], held: [] },
     workers: [0, 1, 2].map(i => createWorker(cityId, i)),
     regionalTrucks: regional,

@@ -1,39 +1,46 @@
 # POSTAL
 
-A portrait-first, pausable real-time logistics game spanning parcel, depot, regional, national and international flows.
+A portrait-first, real-time “diner dash” management game about keeping package promises moving through a living Swedish delivery network.
 
-## Core loop
+## Player loop
 
-- Choose one operational focus: late parcels, complaints, express or international.
-- Workers automatically pull the highest-value parcel that matches that focus.
-- Regional trucks deliver locally or feed the national handoff.
-- National linehaul connects Sundsvall, Stockholm and Göteborg.
-- International transports handle both outbound and inbound parcels at Sweden's gateways.
-- Exceptions and complaints require parcel-level investigation; resolved parcels re-enter the live system and can be watched all the way to delivery.
+1. **Read the live package rail.** Every active package remains visible at Depot, Region and Sweden scales, with carrier, route, deadline, location and a multi-stop breadcrumb.
+2. **Select the pressure point.** The package itself reveals the next useful verb: sort, scan, reroute, load, send or follow.
+3. **Shape each depot.** Sundsvall, Stockholm and Göteborg keep independent team focuses for late, complaint, express or international work.
+4. **Choose departures.** Regional and national trucks never leave automatically. The player trades deadline protection against load efficiency.
+5. **Build flow.** EXPRESS RUN, DEADLINE SAVE, SMART LOAD and FULL LOAD departures award points and can extend a dispatch chain.
 
-## Demo detective cases
+## First morning
 
-- `US-77104`: USA → Timrå, stuck in Stockholm after a missing scan.
-- `GBG-23018`: Mölndal → Uppsala, sorted to the wrong dock in Göteborg.
-- `SOR-48219`: Söråker → Denmark, demonstrating local → national → international flow.
+The first day is an interactive shift, not an onboarding dialog:
 
-## Assets
+- Select and sort one DLH package from Söråker to Timrå.
+- Load its regional truck and choose when it leaves.
+- Meet a four-carrier intake wave and set Sundsvall’s focus.
+- Find the Chicago → Timrå package in Stockholm, repair its missing scan and keep it visible through national and regional handoffs.
+- Finish with a scored first-morning summary, then open the full incoming flow.
 
-- Nine distinct **Kenney Mini Characters** give Sundsvall, Stockholm and Göteborg their own named depot teams; the old Factory Kit alien operators are no longer loaded.
-- Supplied **City Kit (Suburban)**, **City Kit (Commercial)** and **City Kit (Industrial)** buildings give each region its own readable miniature identity.
-- **City Kit (Roads) 2.0** supplies the modular crossroads, crossings, straights, road ends, lights and work-zone props used by the depot and region dioramas.
-- Factory Kit equipment provides the cutaway depot shell, conveyors, scanner, control panels, parcels and floor signage.
-- The postal truck remains the existing Kenney Car Kit model shared with TURN.
-- Sweden uses Natural Earth Admin 0 Countries 1:110m public-domain geometry.
-- Three.js is retained in `vendor/` with its existing license file.
+## Carrier rhythms
 
-The UI is a single full-height portrait stage: game information and controls are layered around the 3D world instead of shrinking it into a dashboard card. A one-time morning briefing introduces the open-ended shift, while persistent INCOMING, ISSUES, focus, detective, help and zoom controls keep every core action discoverable. A non-WebGL fallback preserves package investigation and operational controls on constrained devices.
+- **NORDPOST** — steady mixed domestic baseline.
+- **DLH** — small, urgent express decisions.
+- **BRUNG** — frequent local bursts.
+- **STÄNKER** — bulky national and international cages.
+
+## Visual system
+
+- Nine distinct **Kenney Mini Characters** give every depot its own named team; skinned rigs are cloned through Three.js `SkeletonUtils` so they render correctly.
+- **City Kit Suburban, Commercial and Industrial** buildings give every region a readable miniature identity.
+- Correctly aligned **City Kit Roads** match the truck routes, while tree clusters frame the playable center instead of adding central clutter.
+- **Factory Kit** conveyors, scanners, parcels, loading equipment and depot modules make the sorting floor legible.
+- The selected package is marked in the 3D depot and its active route is highlighted in Region and Sweden views.
+- Compact non-modal sheets preserve the world above them; the direct action remains in the main HUD.
 
 ## Validation
-
-Run the pure simulation tests with:
 
 ```sh
 node postal/tests/model.test.mjs
 node postal/tests/ui-contract.test.mjs
+node postal/tests/character-rendering.test.mjs
+node postal/tests/hierarchy.test.mjs
 ```

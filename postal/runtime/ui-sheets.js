@@ -1,61 +1,40 @@
 'use strict';
-let onboardingActive = false;
-const FIRST_SHIFT_KEY = 'postal-first-shift-v2';
 
 function closeSheet() {
-  if (onboardingActive) return;
   if (app.sheet.open && typeof app.sheet.close === 'function') app.sheet.close();
   else app.sheet.removeAttribute('open');
   app.sheetClose.hidden = false;
 }
 
-function needsFirstShiftBriefing() {
-  try { return localStorage.getItem(FIRST_SHIFT_KEY) !== 'complete'; }
-  catch { return true; }
-}
-
-function finishFirstShiftBriefing() {
-  try { localStorage.setItem(FIRST_SHIFT_KEY, 'complete'); } catch {}
-  onboardingActive = false;
-  app.sheetClose.hidden = false;
-  if (app.sheet.open && typeof app.sheet.close === 'function') app.sheet.close();
-  else app.sheet.removeAttribute('open');
-  simulation.paused = false;
-  updateUI(true);
-  announce('Morning shift started. Incoming packages are ready.');
-}
-
-function showBriefingSheet({ firstRun = false } = {}) {
-  onboardingActive = firstRun;
-  app.sheetClose.hidden = firstRun;
-  const metrics = simulation.getMetrics();
-  const action = firstRun
-    ? '<button class="action-btn primary full briefing-start" data-start-shift>START THE MORNING SHIFT</button>'
-    : '<button class="action-btn primary full" data-close-sheet>BACK TO THE NETWORK</button>';
-  showSheet(firstRun ? 'Morning briefing' : 'How to run the network', `
+function showBriefingSheet() {
+  showSheet('How to run the network', `
     <div class="briefing-hero">
-      <span class="eyebrow">SHIFT 1 · 07:00</span>
-      <h3>Keep the morning moving</h3>
-      <p>${metrics.incoming} packages are already on depot floors. Your team sorts automatically; you decide what deserves attention.</p>
+      <span class="eyebrow">PACKAGES ARE THE CONTROLS</span>
+      <h3>See it. Select it. Send it.</h3>
+      <p>The live rail stays on screen at Depot, Region and Sweden. Select a package to reveal its next physical handoff.</p>
     </div>
     <div class="briefing-steps">
-      <article><span aria-hidden="true">1</span><div><strong>Watch INCOMING</strong><p>Open the depot queues, inspect any package and prioritise the ones that cannot wait.</p></div></article>
-      <article><span aria-hidden="true">2</span><div><strong>Resolve red ISSUES</strong><p>Read the scan trail, find what stopped the package and choose an operational fix.</p></div></article>
-      <article><span aria-hidden="true">3</span><div><strong>Zoom out before trouble spreads</strong><p>DEPOT shows people and parcels, REGION shows local trucks, and SWEDEN shows national and international flow.</p></div></article>
+      <article><span aria-hidden="true">1</span><div><strong>Select a package</strong><p>Its route breadcrumb and next action remain visible while you move through the network.</p></div></article>
+      <article><span aria-hidden="true">2</span><div><strong>Load and send trucks</strong><p>Leave early to protect a deadline or wait for a fuller, more efficient load.</p></div></article>
+      <article><span aria-hidden="true">3</span><div><strong>Give each depot a focus</strong><p>Sundsvall, Stockholm and Göteborg can prioritise different work.</p></div></article>
     </div>
-    <div class="interaction-key"><strong>Also interactive:</strong><span>workers</span><span>packages</span><span>trucks</span><span>towns</span><span>hubs</span></div>
-    ${action}
+    <div class="carrier-guide" aria-label="Carrier rhythms">
+      ${Object.values(CARRIERS).map(carrier => `<span class="carrier-guide-item carrier-${carrier.id}"><b>${carrier.code}</b><span><strong>${carrier.name}</strong><small>${carrier.rhythm}</small></span></span>`).join('')}
+    </div>
+    <button class="action-btn primary full" data-close-sheet>BACK TO THE NETWORK</button>
   `);
 }
 
 function showFocusSheet() {
+  const city = CITIES[currentCityId];
+  const currentFocus = simulation.getFocus(currentCityId);
   const buttons = FOCUS_MODES.map(mode => `
-    <button class="focus-option ${simulation.focus === mode ? 'is-active' : ''}" data-focus="${mode}" aria-pressed="${simulation.focus === mode}">
+    <button class="focus-option ${currentFocus === mode ? 'is-active' : ''}" data-focus="${mode}" data-focus-city="${currentCityId}" aria-pressed="${currentFocus === mode}">
       <span class="focus-option-icon" aria-hidden="true">${focusIcon(mode)}</span>
       <strong>${focusLabel(mode)}</strong>
       <small>${focusDescription(mode)}</small>
     </button>`).join('');
-  showSheet('Choose the team focus', `<p class="sheet-lede">The depot keeps moving. Your focus changes which packages every worker pulls first.</p><div class="focus-grid">${buttons}</div>`);
+  showSheet(`${city.name} team focus`, `<p class="sheet-lede">Only ${city.name} changes. The other depots keep their own priorities.</p><div class="focus-grid">${buttons}</div>`);
 }
 
 function focusIcon(mode) {
@@ -124,6 +103,8 @@ function showPackage(packageId) {
   const pkg = simulation.packages.get(packageId);
   if (!pkg) return;
   selectedPackageId = packageId;
+  selectedTruckId = null;
+  packageRailKey = '';
   const slack = Math.round(pkg.deadline - simulation.clock);
   const status = humanStatus(pkg.status);
   const issue = pkg.issue ? `<div class="exception-card"><span class="eyebrow">NEEDS YOU</span><strong>${issueTitle(pkg.issue)}</strong><p>${escapeHtml(pkg.issueDetail)}</p></div>` : '';
@@ -157,7 +138,6 @@ function packageActions(pkg) {
   else if (pkg.issue === 'wrong-dock' || pkg.issue === 'routing') list.push(btn('REROUTE', 'reroute', 'primary'));
   else if (pkg.issue === 'label-damage') list.push(btn('REPRINT LABEL', 'reprint', 'primary'));
   else if (pkg.issue === 'missed-scan') list.push(btn('RESCAN', 'rescan', 'primary'));
-  if (pkg.complaint) list.push(btn('CONTACT CUSTOMER', 'contact'));
   list.push(btn(pkg.priorityFlag ? 'CLEAR PRIORITY' : 'PRIORITISE', 'priority', pkg.priorityFlag ? 'secondary' : 'accent'));
   return list.join('');
 }
@@ -173,14 +153,14 @@ function showWorker(workerId) {
         <span class="entity-avatar" aria-hidden="true">${escapeHtml(worker.name.slice(0, 1))}</span>
         <div><span class="eyebrow">${escapeHtml(worker.role.toUpperCase())} · ${CITIES[worker.cityId].name.toUpperCase()}</span><h3>${escapeHtml(worker.task)}</h3></div>
       </div>
-      <p>${pkg ? `Working on <button class="inline-link" data-open-package="${pkg.id}">${pkg.id}</button> because it scores highest under <strong>${focusLabel(simulation.focus)}</strong>.` : `Ready for the next package. Current team focus: <strong>${focusLabel(simulation.focus)}</strong>.`}</p>
+      <p>${pkg ? `Working on <button class="inline-link" data-open-package="${pkg.id}">${pkg.id}</button> because it scores highest under <strong>${focusLabel(simulation.getFocus(worker.cityId))}</strong>.` : `Ready for the next package. Current depot focus: <strong>${focusLabel(simulation.getFocus(worker.cityId))}</strong>.`}</p>
       <div class="progress-rail" aria-label="Task ${progress}% complete"><i style="width:${progress}%"></i></div>
       <div class="mini-stats"><span><strong>${worker.handled}</strong> handled</span><span><strong>${progress}%</strong> current task</span></div>
     </div>`);
 }
 
 function findTruck(truckId) {
-  return [...Object.values(simulation.cities).flatMap(city => city.regionalTrucks), ...simulation.nationalTrucks].find(truck => truck.id === truckId);
+  return simulation.findTruck(truckId);
 }
 
 function capacityDots(load, capacity) {
@@ -190,18 +170,40 @@ function capacityDots(load, capacity) {
 function showTruck(truckId) {
   const truck = findTruck(truckId);
   if (!truck) return;
+  selectedTruckId = truck.id;
   const from = CITIES[truck.from]?.name || truck.from;
   const to = CITIES[truck.to]?.name || truck.to;
   const load = truck.load.map(id => simulation.packages.get(id)).filter(Boolean);
+  const eligible = simulation.eligiblePackagesForTruck(truck);
   const progress = truck.state === 'driving' ? Math.round(truck.progress * 100) : 0;
+  const waitingCopy = eligible.length
+    ? `${eligible.length} compatible package${eligible.length === 1 ? '' : 's'} waiting. Fill the truck, then decide whether the deadline or utilisation matters more.`
+    : 'No compatible packages are waiting for this route yet.';
+  const loadList = truck.state === 'driving'
+    ? (load.length ? load.map(pkg => packageRow(pkg)).join('') : '<p class="hint">No packages aboard right now.</p>')
+    : (eligible.length ? eligible.map(pkg => truckLoadRow(truck, pkg)).join('') : '<p class="hint">The dock is clear for this route.</p>');
+  const controls = truck.state === 'waiting' ? `<div class="sheet-actions">
+      <button class="action-btn secondary" data-auto-fill-truck="${truck.id}">AUTO-FILL</button>
+      <button class="action-btn primary" data-dispatch-truck="${truck.id}" ${truck.plannedLoad.length ? '' : 'disabled'}>SEND TO ${escapeHtml(String(to).toUpperCase())}</button>
+    </div>` : '';
   showSheet(truck.kind === 'national' ? 'National linehaul' : 'Regional truck', `
     <div class="entity-card">
       <div class="entity-card-layout"><span class="entity-avatar" aria-hidden="true">↗</span><div><span class="eyebrow">${truck.state.toUpperCase()}</span><h3>${escapeHtml(from)} → ${escapeHtml(to)}</h3></div></div>
-      <p>${truck.state === 'driving' ? `${progress}% through the route. Tap any package below to follow its whole journey.` : 'Waiting for a useful load or a deadline that forces departure.'}</p>
-      ${capacityDots(load.length, truck.capacity)}
-      <div class="mini-stats"><span><strong>${load.length}/${truck.capacity}</strong> load</span><span><strong>${truck.departures}</strong> runs</span></div>
+      <p>${truck.state === 'driving' ? `${progress}% through the route. The package rail remains live while it moves.` : waitingCopy}</p>
+      ${capacityDots(truck.state === 'driving' ? load.length : truck.plannedLoad.length, truck.capacity)}
+      <div class="mini-stats"><span><strong>${truck.state === 'driving' ? load.length : truck.plannedLoad.length}/${truck.capacity}</strong> load</span><span><strong>${truck.departures}</strong> runs</span></div>
     </div>
-    <div class="package-list">${load.length ? load.map(pkg => packageRow(pkg)).join('') : '<p class="hint">No packages aboard right now.</p>'}</div>`);
+    <div class="package-list truck-load-list">${loadList}</div>${controls}`);
+}
+
+function truckLoadRow(truck, pkg) {
+  const planned = truck.plannedLoad.includes(pkg.id);
+  const slack = Math.round(pkg.deadline - simulation.clock);
+  return `<button class="truck-load-row ${carrierClass(pkg.carrier)}" type="button" data-toggle-truck-load="${pkg.id}" data-truck-id="${truck.id}" aria-pressed="${planned}">
+    <span class="carrier-flag" data-pattern="${pkg.carrierPattern}">${escapeHtml(pkg.carrier)}</span>
+    <span><strong>${escapeHtml(pkg.origin.place)} → ${escapeHtml(pkg.destination.place)}</strong><small>${escapeHtml(pkg.id)} · ${slack < 0 ? `${Math.abs(slack)}m late` : `${slack}m left`}</small></span>
+    <span class="load-check" aria-hidden="true">${planned ? '✓' : '+'}</span>
+  </button>`;
 }
 
 function showTransport(transportId) {
@@ -216,7 +218,8 @@ function showTransport(transportId) {
 
 function showTown(cityId, town) {
   const packages = [...simulation.packages.values()].filter(pkg => pkg.destination.place === town && pkg.status !== 'delivered');
-  showSheet(town, `<div class="entity-card"><span class="eyebrow">${CITIES[cityId].name.toUpperCase()} REGION</span><h3>${packages.length} package${packages.length === 1 ? '' : 's'} heading here</h3><p>Regional trucks leave automatically when their load is worthwhile or a deadline forces the run.</p></div><div class="package-list">${packages.length ? packages.map(pkg => packageRow(pkg)).join('') : '<div class="empty-state"><span class="empty-state-icon" aria-hidden="true">✓</span><strong>Route clear</strong><p>Nothing is waiting for this town.</p></div>'}</div>`);
+  const ready = packages.filter(pkg => pkg.status === 'ready-local').length;
+  showSheet(town, `<div class="entity-card"><span class="eyebrow">${CITIES[cityId].name.toUpperCase()} REGION</span><h3>${packages.length} package${packages.length === 1 ? '' : 's'} heading here</h3><p>${ready ? `${ready} ready at the dock. Tap the route truck, load it and choose when it leaves.` : 'Packages will collect at the dock after sorting.'}</p></div><div class="package-list">${packages.length ? packages.map(pkg => packageRow(pkg)).join('') : '<div class="empty-state"><span class="empty-state-icon" aria-hidden="true">✓</span><strong>Route clear</strong><p>Nothing is waiting for this town.</p></div>'}</div>`);
 }
 
 function showCity(cityId) {
@@ -230,7 +233,15 @@ function showCity(cityId) {
 function showHandoff(cityId) {
   const city = simulation.cities[cityId];
   const packages = city.queues.readyNational.map(id => simulation.packages.get(id)).filter(Boolean);
-  showSheet('National handoff', `<p class="sheet-lede">Packages leave the region here. Sweden-level linehaul chooses the correct hub automatically.</p><div class="package-list">${packages.length ? packages.map(pkg => packageRow(pkg)).join('') : '<div class="empty-state"><span class="empty-state-icon" aria-hidden="true">✓</span><strong>Handoff clear</strong><p>No national packages are waiting.</p></div>'}</div>`);
+  showSheet('National handoff', `<p class="sheet-lede">Packages wait here until you load a compatible national linehaul and send it.</p><div class="package-list">${packages.length ? packages.map(pkg => packageRow(pkg)).join('') : '<div class="empty-state"><span class="empty-state-icon" aria-hidden="true">✓</span><strong>Handoff clear</strong><p>No national packages are waiting.</p></div>'}</div>`);
+}
+
+function showFirstDaySummary() {
+  const metrics = simulation.getMetrics();
+  showSheet('First morning complete', `
+    <div class="briefing-hero first-day-result"><span class="eyebrow">DAY 1 · NETWORK OPEN</span><h3>You kept the packages moving</h3><p>You sorted a live package, chose three truck departures, set one depot’s focus and followed Chicago → Timrå across Sweden.</p></div>
+    <div class="intake-summary"><span><strong>${metrics.score}</strong> points</span><span><strong>${metrics.onTime}%</strong> on time</span><span><strong>${metrics.utilisation}%</strong> truck use</span></div>
+    <button class="action-btn primary full" data-close-sheet>KEEP OPERATING</button>`);
 }
 
 function issueTitle(issue) {

@@ -4,6 +4,7 @@ const depotPalettes = {
   stockholm: { ground: 0xbacbd0, floor: 0xe9e7df, accent: 0x69a5c4, lane: 0x435f70 },
   goteborg: { ground: 0xb8c9b5, floor: 0xebe4d6, accent: 0xe37a47, lane: 0x4b6660 }
 };
+const carrierSceneColors = { nordpost: 0x2865ad, dlh: 0xf2c94c, brung: 0x28956c, stanker: 0xd84d43 };
 
 function buildDepotScene(cityId) {
   const palette = depotPalettes[cityId] || depotPalettes.sundsvall;
@@ -138,14 +139,16 @@ function createWorkerFallback(pos, i) {
 }
 
 function syncDepotPackages(cityId) {
-  for (const { mesh, issueRing } of viewState.packages.values()) {
+  for (const { mesh, issueRing, carrierPad, selectionRing } of viewState.packages.values()) {
     world.remove(mesh);
     if (issueRing) world.remove(issueRing);
+    if (carrierPad) world.remove(carrierPad);
+    if (selectionRing) world.remove(selectionRing);
   }
   viewState.packages.clear();
   const pkgs = [...simulation.packages.values()]
     .filter(pkg => pkg.cityId === cityId && !pkg.status.startsWith('transit') && pkg.status !== 'delivered')
-    .sort((a, b) => packageScore(b, simulation.focus, simulation.clock) - packageScore(a, simulation.focus, simulation.clock))
+    .sort((a, b) => packageScore(b, simulation.getFocus(cityId), simulation.clock) - packageScore(a, simulation.getFocus(cityId), simulation.clock))
     .slice(0, 16);
 
   pkgs.forEach((pkg, i) => {
@@ -174,6 +177,15 @@ function syncDepotPackages(cityId) {
     addUserData(mesh, { entityType: 'package', packageId: pkg.id });
     world.add(mesh);
 
+    const carrierPad = new THREE.Mesh(
+      new THREE.RingGeometry(.23, .31, 28),
+      new THREE.MeshBasicMaterial({ color: carrierSceneColors[pkg.carrierId] || 0x5d706e, transparent: true, opacity: .9, depthWrite: false })
+    );
+    carrierPad.rotation.x = -Math.PI / 2;
+    carrierPad.position.set(x, .202, z);
+    addUserData(carrierPad, { entityType: 'package', packageId: pkg.id });
+    world.add(carrierPad);
+
     let issueRing = null;
     if (held) {
       issueRing = new THREE.Mesh(new THREE.RingGeometry(.37, .46, 28), new THREE.MeshBasicMaterial({ color: 0xc53e36, transparent: true, opacity: .92, depthWrite: false }));
@@ -182,7 +194,18 @@ function syncDepotPackages(cityId) {
       addUserData(issueRing, { entityType: 'package', packageId: pkg.id });
       world.add(issueRing);
     }
-    viewState.packages.set(pkg.id, { mesh, issueRing, lane, base: new THREE.Vector3(x, mesh.position.y, z), baseY: mesh.position.y, offset: i * .47 });
+    let selectionRing = null;
+    if (pkg.id === selectedPackageId) {
+      selectionRing = new THREE.Mesh(
+        new THREE.RingGeometry(.49, .59, 32),
+        new THREE.MeshBasicMaterial({ color: 0xf2c94c, transparent: true, opacity: 1, depthWrite: false })
+      );
+      selectionRing.rotation.x = -Math.PI / 2;
+      selectionRing.position.set(x, .198, z);
+      addUserData(selectionRing, { entityType: 'package', packageId: pkg.id });
+      world.add(selectionRing);
+    }
+    viewState.packages.set(pkg.id, { mesh, issueRing, carrierPad, selectionRing, lane, base: new THREE.Vector3(x, mesh.position.y, z), baseY: mesh.position.y, offset: i * .47 });
   });
 }
 

@@ -5,8 +5,8 @@ PostalSimulation.prototype._tickWorkers = function(dt) {
         if (!worker.packageId) {
           const candidates = city.queues.arrived
             .map(id => this.packages.get(id))
-            .filter(pkg => pkg && !pkg.issue)
-            .sort((a, b) => packageScore(b, this.focus, this.clock) - packageScore(a, this.focus, this.clock));
+            .filter(pkg => pkg && !pkg.issue && !pkg.tutorialLock)
+            .sort((a, b) => packageScore(b, city.focus, this.clock) - packageScore(a, city.focus, this.clock));
           const pkg = candidates[0];
           if (!pkg) {
             worker.task = 'Watching the inbound flow';
@@ -65,22 +65,6 @@ PostalSimulation.prototype._tickRegionalTrucks = function(dt) {
       for (const truck of city.regionalTrucks) {
         if (truck.state === 'waiting') {
           truck.wait += dt;
-          const queue = city.queues.readyLocal
-            .map(id => this.packages.get(id))
-            .filter(pkg => pkg && pkg.destination.place === truck.to)
-            .sort((a, b) => packageScore(b, this.focus, this.clock) - packageScore(a, this.focus, this.clock));
-          const urgent = queue.some(pkg => packageScore(pkg, this.focus, this.clock) > 90);
-          if (queue.length && (queue.length >= 2 || truck.wait > 8 || urgent)) {
-            truck.load = queue.slice(0, truck.capacity).map(p => p.id);
-            for (const id of truck.load) {
-              const pkg = this.packages.get(id);
-              pkg.status = 'transit-local';
-              pkg.location = `Truck to ${truck.to}`;
-              this._enqueue(pkg);
-              trace(pkg, this.clock, 'Loaded on regional truck', CITIES[city.cityId].hub);
-            }
-            truck.state = 'driving'; truck.progress = 0; truck.wait = 0; truck.departures += 1;
-          }
         } else {
           truck.progress += dt / truck.duration;
           if (truck.progress >= 1) {
@@ -90,6 +74,7 @@ PostalSimulation.prototype._tickRegionalTrucks = function(dt) {
               pkg.status = 'delivered'; pkg.location = pkg.destination.place; pkg.deliveredAt = this.clock;
               trace(pkg, this.clock, 'Delivered', pkg.destination.place);
               this.stats.delivered += 1;
+              if (pkg.complaint) this.stats.complaintsResolved += 1;
               if (pkg.deliveredAt > pkg.deadline) this.stats.lateDelivered += 1;
               city.delivered += 1;
             }
@@ -103,23 +88,8 @@ PostalSimulation.prototype._tickRegionalTrucks = function(dt) {
 
 PostalSimulation.prototype._tickNationalTrucks = function(dt) {
     for (const truck of this.nationalTrucks) {
-      const city = this.cities[truck.from];
       if (truck.state === 'waiting') {
         truck.wait += dt;
-        const candidates = city.queues.readyNational
-          .map(id => this.packages.get(id))
-          .filter(pkg => pkg && nextLegForPackage(pkg).to === truck.to)
-          .sort((a, b) => packageScore(b, this.focus, this.clock) - packageScore(a, this.focus, this.clock));
-        const urgent = candidates.some(pkg => packageScore(pkg, this.focus, this.clock) > 95);
-        if (candidates.length && (candidates.length >= 3 || truck.wait > 10 || urgent)) {
-          truck.load = candidates.slice(0, truck.capacity).map(p => p.id);
-          for (const id of truck.load) {
-            const pkg = this.packages.get(id);
-            pkg.status = 'transit-national'; pkg.location = `${CITIES[truck.from].name} → ${CITIES[truck.to].name}`;
-            this._enqueue(pkg); trace(pkg, this.clock, 'National linehaul departed', CITIES[truck.from].hub);
-          }
-          truck.state = 'driving'; truck.progress = 0; truck.wait = 0; truck.departures += 1;
-        }
       } else {
         truck.progress += dt / truck.duration;
         if (truck.progress >= 1) {
@@ -149,12 +119,12 @@ PostalSimulation.prototype._tickInternational = function(dt) {
         const candidates = inbound
           ? [...this.packages.values()]
               .filter(pkg => pkg.status === 'ready-inbound' && pkg.origin.country === truck.from && gatewayForCountry(pkg.origin.country) === truck.to)
-              .sort((a, b) => packageScore(b, this.focus, this.clock) - packageScore(a, this.focus, this.clock))
+              .sort((a, b) => packageScore(b, city.focus, this.clock) - packageScore(a, city.focus, this.clock))
           : city.queues.readyInternational
               .map(id => this.packages.get(id))
               .filter(pkg => pkg && pkg.destination.country === truck.to)
-              .sort((a, b) => packageScore(b, this.focus, this.clock) - packageScore(a, this.focus, this.clock));
-        const urgent = candidates.some(pkg => packageScore(pkg, this.focus, this.clock) > 95);
+              .sort((a, b) => packageScore(b, city.focus, this.clock) - packageScore(a, city.focus, this.clock));
+        const urgent = candidates.some(pkg => packageScore(pkg, city.focus, this.clock) > 95);
         if (candidates.length && (truck.wait > 9 || urgent)) {
           truck.load = candidates.slice(0, truck.capacity).map(p => p.id);
           for (const id of truck.load) {
@@ -182,6 +152,7 @@ PostalSimulation.prototype._tickInternational = function(dt) {
               pkg.status = 'delivered'; pkg.location = `${pkg.destination.place}, ${pkg.destination.country}`; pkg.deliveredAt = this.clock;
               trace(pkg, this.clock, 'Handed to destination network', pkg.location);
               this.stats.delivered += 1;
+              if (pkg.complaint) this.stats.complaintsResolved += 1;
               if (pkg.deliveredAt > pkg.deadline) this.stats.lateDelivered += 1;
             }
           }

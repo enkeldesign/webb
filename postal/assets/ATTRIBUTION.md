@@ -19,6 +19,7 @@ The CC0 license files shipped inside the user-supplied archives are the source o
 ## Existing CC0 Kenney assets retained
 
 - **Car Kit 3.1** — postal truck, shared from TURN's existing vendored assets.
+- **City nature clusters** — retained Kenney grass-and-tree miniatures frame the outer edges of regional dioramas.
 
 ## Sweden geometry
 
