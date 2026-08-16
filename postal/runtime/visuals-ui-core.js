@@ -307,6 +307,7 @@ function updateUI(force = false) {
   if (!force && now - lastUiUpdate < 300) return;
   lastUiUpdate = now;
   updateFirstDayTutorial();
+  syncTutorialInterface();
   const m = simulation.getMetrics();
   if (simulation.stats.received > lastReceivedCount) app.incoming.classList.add('new-arrival');
   lastReceivedCount = simulation.stats.received;

@@ -19,6 +19,7 @@ The first day is an interactive shift, not an onboarding dialog:
 - Meet a four-carrier intake wave and set Sundsvall’s focus.
 - Find the Chicago → Timrå package in Stockholm, repair its missing scan and keep it visible through national and regional handoffs.
 - Finish with a scored first-morning summary, then open the full incoming flow.
+- The interface reveals route, pressure, focus, city and search controls only when the shift introduces them; the live package rail, current action, help, pause and music remain available throughout.
 
 ## Carrier rhythms
 
@@ -35,6 +36,7 @@ The first day is an interactive shift, not an onboarding dialog:
 - **Factory Kit** conveyors, scanners, parcels, loading equipment and depot modules make the sorting floor legible.
 - The selected package is marked in the 3D depot and its active route is highlighted in Region and Sweden views.
 - Compact non-modal sheets preserve the world above them; the direct action remains in the main HUD.
+- “Morning Routes” is a calm procedural score built from TURN’s Web Audio music engine modules. It starts after the first interaction and its persistent music control fully suspends the engine when switched off.
 
 ## Validation
 

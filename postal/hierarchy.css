@@ -10,12 +10,42 @@
   top: calc(5px + var(--safe-top));
   min-height: 42px;
 }
+.topbar-actions { gap: 4px; }
 .brand-mark { width: 36px; height: 36px; border-radius: 11px; }
 .brand strong { font-size: .82rem; }
 .brand div > span { margin-top: 2px; font-size: .57rem; opacity: .6; }
 .clock,
 .compact-btn { min-height: 38px; border-radius: 12px; }
-.help-btn { width: 38px; }
+.help-btn,
+.music-btn { width: 38px; padding: 0; }
+.music-btn {
+  position: relative;
+  overflow: hidden;
+  background: rgba(7, 29, 28, .68);
+  color: var(--yellow);
+  font-size: .92rem;
+}
+.music-btn[aria-pressed="true"] { background: rgba(7, 29, 28, .72); }
+.music-btn[aria-pressed="false"] { color: rgba(255,255,255,.62); }
+.music-btn[aria-pressed="false"]::after {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transform: rotate(-45deg);
+}
+.music-btn:disabled { opacity: .5; }
+
+.first-day-pending [data-tutorial-reveal],
+[data-tutorial-reveal][hidden] { display: none !important; }
+.tutorial-just-revealed { animation: tutorialReveal .58s cubic-bezier(.2,.82,.2,1); }
+@keyframes tutorialReveal {
+  0% { opacity: 0; transform: translateY(10px) scale(.97); }
+  62% { opacity: 1; transform: translateY(-2px) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
 
 .status-strip {
   top: calc(51px + var(--safe-top));
@@ -329,6 +359,14 @@
   .live-package-card { flex-basis: 163px; }
 }
 
+@media (max-width: 390px) {
+  .pause-btn { width: 38px; padding: 0; }
+  #pause-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+}
+
+html[data-tutorial-phase="package"] .world-context,
+html[data-tutorial-phase="route"] .world-context { top: calc(51px + var(--safe-top)); }
+
 @media (orientation: landscape) and (max-height: 620px) {
   .package-console { height: 92px; }
   .package-rail { height: 61px; }
@@ -337,5 +375,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .action-dock[data-tone="tutorial"] .dock-button-primary,
-  .live-package-card.tutorial-target { animation: none; }
+  .live-package-card.tutorial-target,
+  .tutorial-just-revealed { animation: none; }
 }

@@ -24,3 +24,10 @@ function loadClassic(src) {
 }
 
 for (const src of scripts) await loadClassic(src);
+
+try {
+  const { installPostalMusic } = await import('./music.mjs');
+  globalThis.__postalMusic = installPostalMusic({ button: document.querySelector('#music-btn') });
+} catch (error) {
+  console.warn('POSTAL music could not start.', error);
+}

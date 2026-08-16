@@ -1,6 +1,14 @@
 'use strict';
 let firstDayCelebration = false;
 let tutorialLastStage = simulation.tutorialStage;
+let tutorialInterfaceReady = false;
+const tutorialInterfaceElements = Object.freeze({
+  status: $('.status-strip'),
+  levels: $('.level-switcher'),
+  focus: $('#focus-btn'),
+  cities: $('.city-switcher'),
+  find: $('#find-btn')
+});
 
 function tutorialIsActive() {
   return simulation.firstDay && simulation.tutorialStage !== 'complete';
@@ -8,6 +16,41 @@ function tutorialIsActive() {
 
 function persistFirstDayComplete() {
   try { localStorage.setItem(FIRST_DAY_KEY, 'complete'); } catch {}
+}
+
+function tutorialInterfacePhase() {
+  if (!tutorialIsActive()) return 'complete';
+  if (['select-package', 'watch-sort'].includes(simulation.tutorialStage)) return 'package';
+  if (['load-local', 'send-local', 'local-driving'].includes(simulation.tutorialStage)) return 'route';
+  if (simulation.tutorialStage === 'choose-focus') return 'operations';
+  return 'network';
+}
+
+function syncTutorialInterface() {
+  const phase = tutorialInterfacePhase();
+  const visible = new Set(
+    phase === 'package' ? []
+      : phase === 'route' ? ['levels']
+      : phase === 'operations' ? ['levels', 'status', 'focus']
+      : Object.keys(tutorialInterfaceElements)
+  );
+
+  for (const [feature, element] of Object.entries(tutorialInterfaceElements)) {
+    if (!element) continue;
+    const shouldShow = visible.has(feature);
+    const wasHidden = element.hidden;
+    element.hidden = !shouldShow;
+    element.inert = !shouldShow;
+    if (shouldShow && wasHidden && tutorialInterfaceReady && !prefersReducedMotion) {
+      element.classList.remove('tutorial-just-revealed');
+      requestAnimationFrame(() => element.classList.add('tutorial-just-revealed'));
+      setTimeout(() => element.classList.remove('tutorial-just-revealed'), 700);
+    }
+  }
+
+  document.documentElement.dataset.tutorialPhase = phase;
+  document.documentElement.classList.remove('first-day-pending');
+  tutorialInterfaceReady = true;
 }
 
 function handleTutorialFocusChosen(cityId) {
@@ -105,13 +148,13 @@ function tutorialInstruction() {
       ? ['FIRST PACKAGE', 'DLH · Söråker → Timrå', 'Send it into the highlighted Express sort.', 'SORT EXPRESS', 'start-tutorial-sort']
       : ['FIRST PACKAGE', 'Tap the yellow DLH package', 'Packages stay here while you change depot or scale.', 'SELECT DLH', 'select-suggested'],
     'watch-sort': ['SORTING', 'Leo is moving your package', 'Watch its card change when it reaches the regional dock.', 'WATCH', 'watch'],
-    'load-local': ['TRUCK READY', 'Timrå route is waiting', 'Load the package, then choose when the truck leaves.', 'LOAD TRUCK', 'load-package'],
+    'load-local': ['REGION VIEW', 'Timrå route is waiting', 'The level bar now follows packages from depot floor to the roads.', 'LOAD TRUCK', 'load-package'],
     'send-local': ['YOUR DECISION', 'Timrå truck loaded', 'Leaving early protects DLH; waiting improves utilisation.', 'SEND TO TIMRÅ', 'dispatch-truck'],
     'local-driving': ['ON THE ROAD', 'Follow the DLH package', 'The first delivery will unlock a four-carrier wave.', 'FOLLOW', 'follow'],
-    'choose-focus': ['FOUR CARRIERS', 'Set Sundsvall’s team focus', 'Every depot keeps its own priority.', 'SET SUN FOCUS', 'open-focus'],
+    'choose-focus': ['NETWORK PRESSURE', 'Set Sundsvall’s team focus', 'LIVE and ISSUES now show pressure. Every depot keeps its own priority.', 'SET SUN FOCUS', 'open-focus'],
     'select-chicago': selectedPackageId === 'US-77104'
       ? ['MISSING SCAN', 'Chicago → Timrå', 'The breadcrumb shows where it stopped and what comes next.', 'SCAN CAGE', 'scan-cage']
-      : ['NETWORK CASE', 'Find Chicago → Timrå', 'It remains visible even though it is in Stockholm.', 'SELECT PACKAGE', 'select-suggested'],
+      : ['CITY TOOLS', 'Find Chicago → Timrå', 'FIND and the city switcher trace work anywhere without losing the package rail.', 'SELECT PACKAGE', 'select-suggested'],
     'watch-chicago-sort': ['FOUND IN STOCKHOLM', 'DLH package is sorting', 'Next: send it north on national linehaul.', 'WATCH', 'watch'],
     'load-national': ['NATIONAL HANDOFF', 'Stockholm → Sundsvall', 'Put the package on the northbound linehaul.', 'LOAD LINEHAUL', 'load-package'],
     'send-national': ['YOUR DECISION', 'Northbound linehaul loaded', 'Send it when the load is worth the deadline risk.', 'SEND TO SUNDSVALL', 'dispatch-truck'],
