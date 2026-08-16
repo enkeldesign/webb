@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-const REVISION = 'r522-procedural-surfaces';
+const REVISION = 'r523-procedural-surfaces-contrast';
 const ROAD_TRACKS = new Set(['airport', 'cliffside', 'harbor']);
 const GROUND_TRACKS = new Set(['airport', 'harbor']);
 
@@ -107,10 +107,10 @@ function makeAirportGrassTexture() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   broadFields(ctx, {
     seed: 11000,
-    palette: ['#dce8d5', '#ffffff', '#e7efdc', '#d6e1d1'],
+    palette: ['#d6e5cf', '#ffffff', '#e3edd7', '#ceddcc'],
     count: 64,
-    minAlpha: 0.04,
-    maxAlpha: 0.12,
+    minAlpha: 0.05,
+    maxAlpha: 0.165,
     minRadius: 38,
     maxRadius: 145
   });
@@ -121,8 +121,8 @@ function makeAirportGrassTexture() {
     const y = pseudo(13000 + index) * canvas.height;
     const length = 8 + pseudo(14000 + index) * 24;
     const angle = (pseudo(15000 + index) - 0.5) * 0.9;
-    ctx.globalAlpha = 0.025 + pseudo(16000 + index) * 0.045;
-    ctx.strokeStyle = index % 2 ? '#d8e3d3' : '#ffffff';
+    ctx.globalAlpha = 0.035 + pseudo(16000 + index) * 0.055;
+    ctx.strokeStyle = index % 2 ? '#d2dfce' : '#ffffff';
     ctx.lineWidth = 2 + pseudo(17000 + index) * 3;
     ctx.beginPath();
     ctx.moveTo(x, y);
@@ -140,19 +140,19 @@ function makeAirportConcreteTexture() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   broadFields(ctx, {
     seed: 21000,
-    palette: ['#e5e4df', '#ffffff', '#ece9df', '#dfe4e2'],
+    palette: ['#deded9', '#ffffff', '#e9e5da', '#d9e0de'],
     count: 44,
-    minAlpha: 0.035,
-    maxAlpha: 0.095,
+    minAlpha: 0.05,
+    maxAlpha: 0.14,
     minRadius: 42,
     maxRadius: 155
   });
   broadSlabs(ctx, {
     seed: 22000,
-    palette: ['#d7d9d6', '#ffffff', '#e5e0d6'],
+    palette: ['#ced2cf', '#ffffff', '#dfd9cf'],
     count: 11,
-    minAlpha: 0.025,
-    maxAlpha: 0.065
+    minAlpha: 0.035,
+    maxAlpha: 0.09
   });
   return finishTexture(canvas, 2.45, 1.85);
 }
@@ -164,10 +164,10 @@ function makeHarborLandTexture() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   broadFields(ctx, {
     seed: 31000,
-    palette: ['#dfe5d9', '#ffffff', '#e5e2d5', '#d8dfd5'],
+    palette: ['#d8e0d3', '#ffffff', '#dfdccd', '#d0dad0'],
     count: 58,
-    minAlpha: 0.04,
-    maxAlpha: 0.105,
+    minAlpha: 0.05,
+    maxAlpha: 0.15,
     minRadius: 38,
     maxRadius: 148
   });
@@ -181,26 +181,26 @@ function makeHarborConcreteTexture() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   broadFields(ctx, {
     seed: 41000,
-    palette: ['#dfe2e0', '#ffffff', '#e9e5dc', '#d8dddd'],
+    palette: ['#d8dcda', '#ffffff', '#e4dfd4', '#ced5d5'],
     count: 50,
-    minAlpha: 0.045,
-    maxAlpha: 0.11,
+    minAlpha: 0.055,
+    maxAlpha: 0.16,
     minRadius: 44,
     maxRadius: 158
   });
   broadSlabs(ctx, {
     seed: 42000,
-    palette: ['#d4d8d7', '#ffffff', '#e4e0d7'],
+    palette: ['#cbd0cf', '#ffffff', '#ded8ce'],
     count: 13,
-    minAlpha: 0.03,
-    maxAlpha: 0.075
+    minAlpha: 0.04,
+    maxAlpha: 0.10
   });
 
-  ctx.fillStyle = '#d4d8d6';
+  ctx.fillStyle = '#cbd1cf';
   for (let index = 0; index < 6; index += 1) {
     const x = 30 + pseudo(43000 + index) * 380;
     const width = 22 + pseudo(44000 + index) * 46;
-    ctx.globalAlpha = 0.02 + pseudo(45000 + index) * 0.025;
+    ctx.globalAlpha = 0.03 + pseudo(45000 + index) * 0.03;
     ctx.fillRect(x, 0, width, canvas.height);
   }
   ctx.globalAlpha = 1;
@@ -215,37 +215,37 @@ function makeRoadTexture() {
 
   broadFields(ctx, {
     seed: 51000,
-    palette: ['#dedfdd', '#ffffff', '#e8e7e2', '#d8dcdb'],
+    palette: ['#d7d9d7', '#ffffff', '#e3e1db', '#cfd4d3'],
     count: 46,
-    minAlpha: 0.035,
-    maxAlpha: 0.095,
+    minAlpha: 0.045,
+    maxAlpha: 0.13,
     minRadius: 34,
     maxRadius: 120
   });
   broadSlabs(ctx, {
     seed: 52000,
-    palette: ['#d3d5d4', '#ffffff', '#e4e1db'],
+    palette: ['#c9cccb', '#ffffff', '#ddd9d2'],
     count: 10,
-    minAlpha: 0.025,
-    maxAlpha: 0.065
+    minAlpha: 0.035,
+    maxAlpha: 0.085
   });
 
   const wheelBands = [0.27, 0.36, 0.64, 0.73];
   for (let index = 0; index < wheelBands.length; index += 1) {
     const x = wheelBands[index] * canvas.width;
     const width = 8 + (index % 2) * 6;
-    ctx.globalAlpha = index % 2 ? 0.025 : 0.018;
-    ctx.fillStyle = '#cbd0cf';
+    ctx.globalAlpha = index % 2 ? 0.035 : 0.026;
+    ctx.fillStyle = '#c4cac8';
     ctx.fillRect(x - width / 2, 0, width, canvas.height);
   }
 
   ctx.lineCap = 'round';
-  ctx.strokeStyle = '#d1d4d2';
+  ctx.strokeStyle = '#c9cdcb';
   for (let index = 0; index < 28; index += 1) {
     const x = pseudo(53000 + index) * canvas.width;
     const y = pseudo(54000 + index) * canvas.height;
     const length = 18 + pseudo(55000 + index) * 58;
-    ctx.globalAlpha = 0.018 + pseudo(56000 + index) * 0.028;
+    ctx.globalAlpha = 0.025 + pseudo(56000 + index) * 0.035;
     ctx.lineWidth = 1 + pseudo(57000 + index) * 1.4;
     ctx.beginPath();
     ctx.moveTo(x, y);
