@@ -4,6 +4,9 @@ import { completeLapState } from '../turn/race/lap-system-r86.js?test=r195-unran
 import { getStoredBestLap, saveRivalsState } from '../turn/race/rival-storage.js?test=r195-unranked-super-sedan';
 import { isSportsSedanEasterEgg } from '../turn/vehicle/catalog.js?test=r195-unranked-super-sedan';
 
+// Release-cache assertions must follow the canonical build instead of pinning one release forever.
+const release = JSON.parse(await fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'));
+
 const [runtimeSource, chromaticSource, productionIndex, labIndex] = await Promise.all([
   fs.readFile(new URL('../turn/achievements/runtime.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/achievements/chromatic-camouflage-r183.js', import.meta.url), 'utf8'),
@@ -155,10 +158,10 @@ assert.match(runtimeSource, /detail\?\.ranked === false[\s\S]*?qualifyingTimeTri
 assert.match(chromaticSource, /getStoredBestLap/,
   'Chromatic Camouflage must continue to use the centrally filtered ranked best lap');
 for (const index of [productionIndex, labIndex]) {
-  assert.match(index, /lap-system-r86\.js\?build=20260811-r164&revision=r195-unranked-super-sedan/,
-    'Prod and TURN LAB must cache-bust the unranked lap runtime');
-  assert.match(index, /rival-storage\.js\?build=20260811-r164&revision=r195-unranked-super-sedan/,
-    'Prod and TURN LAB must cache-bust ranked rival storage');
+  assert.match(index, new RegExp(`lap-system-r86\\.js\\?build=${release.cacheKey}&revision=r195-unranked-super-sedan`),
+    'Prod and TURN LAB must cache-bust the unranked lap runtime with the current release identity');
+  assert.match(index, new RegExp(`rival-storage\\.js\\?build=${release.cacheKey}&revision=r195-unranked-super-sedan`),
+    'Prod and TURN LAB must cache-bust ranked rival storage with the current release identity');
   assert.match(index, /achievements\/runtime\.js\?revision=r195-unranked-super-sedan/,
     'Prod and TURN LAB must cache-bust the time-trial achievement guard');
 }

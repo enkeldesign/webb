@@ -9,6 +9,8 @@ const releasePath = path.join(turnDir, 'release.json');
 const indexPath = path.join(turnDir, 'index.html');
 const labIndexPath = path.resolve(turnDir, '../turn-lab/index.html');
 const RACING_MUSIC_SPECIFIER_PATTERN = /^\/turn\/audio\/racing-music-v2\.js\?build=\d{8}-r\d+-racing-music-warm-v2$/;
+const AUDIO_PREFERENCES_SPECIFIER_PATTERN = /^\/turn\/audio\/audio-preferences\.js\?build=\d{8}-r\d+$/;
+const COVERED_RENDERING_SPECIFIER_PATTERN = /^\/turn\/render\/covered-rendering\.js\?build=\d{8}-r\d+$/;
 
 export async function loadReleaseDefinition() {
   const release = JSON.parse(await fs.readFile(releasePath, 'utf8'));
@@ -39,6 +41,40 @@ function synchronizeRuntimeMusicSpecifier(importMap, release) {
   importMap.imports = synchronizedImports;
 }
 
+function synchronizeReleaseBoundSpecifier(importMap, release, pattern, currentSpecifier) {
+  const imports = importMap.imports || {};
+  const sourceSpecifier = Object.keys(imports).find((specifier) => pattern.test(specifier));
+  if (!sourceSpecifier) return;
+
+  const sourceTarget = imports[sourceSpecifier];
+  const targetUrl = new URL(sourceTarget, 'https://enkel.design');
+  targetUrl.searchParams.set('build', release.cacheKey);
+  const currentTarget = `${targetUrl.pathname}${targetUrl.search}`;
+
+  const synchronizedImports = {};
+  for (const [specifier, target] of Object.entries(imports)) {
+    synchronizedImports[specifier === sourceSpecifier ? currentSpecifier : specifier] =
+      specifier === sourceSpecifier ? currentTarget : target;
+  }
+  importMap.imports = synchronizedImports;
+}
+
+function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
+  // Keep this list to modules imported through withBuild(); historical alias keys intentionally retain their source revisions.
+  synchronizeReleaseBoundSpecifier(
+    importMap,
+    release,
+    AUDIO_PREFERENCES_SPECIFIER_PATTERN,
+    `/turn/audio/audio-preferences.js?build=${release.cacheKey}`
+  );
+  synchronizeReleaseBoundSpecifier(
+    importMap,
+    release,
+    COVERED_RENDERING_SPECIFIER_PATTERN,
+    `/turn/render/covered-rendering.js?build=${release.cacheKey}`
+  );
+}
+
 export function renderReleaseIndex(source, release) {
   validateReleaseDefinition(release);
 
@@ -59,6 +95,7 @@ export function renderReleaseIndex(source, release) {
     (match, jsonText) => {
       const importMap = JSON.parse(jsonText);
       synchronizeRuntimeMusicSpecifier(importMap, release);
+      synchronizeRuntimeReleaseBoundSpecifiers(importMap, release);
       for (const [specifier, target] of Object.entries(importMap.imports || {})) {
         if (typeof target !== 'string' || !target.startsWith('./')) continue;
         const url = new URL(target, 'https://enkel.design/turn/');
