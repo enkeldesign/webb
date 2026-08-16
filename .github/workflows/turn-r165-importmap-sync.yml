@@ -1,0 +1,102 @@
+name: Make release import-map sync complete
+
+on:
+  push:
+    branches:
+      - fix/turn-cache-refresh-r165
+    paths:
+      - '.github/workflows/turn-r165-importmap-sync.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/turn-cache-refresh-r165
+
+      - name: Teach release sync about dynamic audio preferences specifier
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('turn/scripts/release.mjs')
+          text = path.read_text()
+          marker = "const RACING_MUSIC_SPECIFIER_PATTERN = /^\\/turn\\/audio\\/racing-music-v2\\.js\\?build=\\d{8}-r\\d+-racing-music-warm-v2$/;\n"
+          addition = marker + "const AUDIO_PREFERENCES_SPECIFIER_PATTERN = /^\\/turn\\/audio\\/audio-preferences\\.js\\?build=\\d{8}-r\\d+$/;\n"
+          if marker not in text:
+              raise SystemExit('Could not find music specifier pattern')
+          text = text.replace(marker, addition, 1)
+
+          function_anchor = """function synchronizeRuntimeMusicSpecifier(importMap, release) {
+  const imports = importMap.imports || {};
+  const currentSpecifier = `/turn/audio/racing-music-v2.js?build=${release.cacheKey}-racing-music-warm-v2`;
+  const staleSpecifier = Object.keys(imports).find((specifier) =>
+    RACING_MUSIC_SPECIFIER_PATTERN.test(specifier) && specifier !== currentSpecifier
+  );
+
+  if (!staleSpecifier) return;
+
+  const synchronizedImports = {};
+  for (const [specifier, target] of Object.entries(imports)) {
+    synchronizedImports[specifier === staleSpecifier ? currentSpecifier : specifier] = target;
+  }
+  importMap.imports = synchronizedImports;
+}
+"""
+          helper = function_anchor + """
+
+function synchronizeRuntimeAudioPreferencesSpecifier(importMap, release) {
+  const imports = importMap.imports || {};
+  const sourceSpecifier = Object.keys(imports).find((specifier) =>
+    AUDIO_PREFERENCES_SPECIFIER_PATTERN.test(specifier)
+  );
+  if (!sourceSpecifier) return;
+
+  const currentSpecifier = `/turn/audio/audio-preferences.js?build=${release.cacheKey}`;
+  const sourceTarget = imports[sourceSpecifier];
+  const targetUrl = new URL(sourceTarget, 'https://enkel.design');
+  targetUrl.searchParams.set('build', release.cacheKey);
+  const currentTarget = `${targetUrl.pathname}${targetUrl.search}`;
+
+  const synchronizedImports = {};
+  for (const [specifier, target] of Object.entries(imports)) {
+    synchronizedImports[specifier === sourceSpecifier ? currentSpecifier : specifier] =
+      specifier === sourceSpecifier ? currentTarget : target;
+  }
+  importMap.imports = synchronizedImports;
+}
+"""
+          if function_anchor not in text:
+              raise SystemExit('Could not find music synchronization helper')
+          text = text.replace(function_anchor, helper, 1)
+
+          call_anchor = "      synchronizeRuntimeMusicSpecifier(importMap, release);\n"
+          call_replacement = call_anchor + "      synchronizeRuntimeAudioPreferencesSpecifier(importMap, release);\n"
+          if call_anchor not in text:
+              raise SystemExit('Could not find import-map synchronization call')
+          text = text.replace(call_anchor, call_replacement, 1)
+          path.write_text(text)
+          PY
+
+      - name: Regenerate release entry files
+        run: node turn/scripts/release.mjs --write
+
+      - name: Verify release and music contracts
+        run: |
+          node turn/scripts/release.mjs --check
+          node turn-tests/release-production.mjs
+          node turn-tests/racing-music-production.mjs
+
+      - name: Commit fix and remove this temporary workflow
+        run: |
+          git rm .github/workflows/turn-r165-importmap-sync.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add turn/scripts/release.mjs turn/index.html turn-lab/index.html
+          git commit -m 'Keep dynamic audio imports on current TURN cache identity'
+          git push origin HEAD:fix/turn-cache-refresh-r165
