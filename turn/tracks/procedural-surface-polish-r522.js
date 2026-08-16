@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-const REVISION = 'r523-procedural-surfaces-contrast';
+const REVISION = 'r524-procedural-surfaces-contrast';
 const ROAD_TRACKS = new Set(['airport', 'cliffside', 'harbor']);
 const GROUND_TRACKS = new Set(['airport', 'harbor']);
 
@@ -253,7 +253,7 @@ function makeRoadTexture() {
     ctx.stroke();
   }
   ctx.globalAlpha = 1;
-  return finishTexture(canvas, 1, 5.4);
+  return finishTexture(canvas, 1, 6);
 }
 
 function textureFor(key) {
