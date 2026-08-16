@@ -1,5 +1,5 @@
 const COLOR_EPSILON = 1e-4;
-const INK = 0x08090a;
+const TURN_ROAD = 0x44494f;
 const TURN_PROFILE_YELLOW = 0xffbd12;
 
 export const ROAD_EDGE_COLORS = Object.freeze({
@@ -125,9 +125,9 @@ function installOuterContourFromEdge(edge, samples, trackWidth, trackId, contour
   }
   positions.needsUpdate = true;
 
-  const ink = hexToLinearRgb(INK);
+  const road = hexToLinearRgb(TURN_ROAD);
   for (let index = 0; index < colors.count; index += 1) {
-    colors.setXYZ(index, ink.r, ink.g, ink.b);
+    colors.setXYZ(index, road.r, road.g, road.b);
   }
   colors.needsUpdate = true;
   mesh.geometry.computeVertexNormals?.();
