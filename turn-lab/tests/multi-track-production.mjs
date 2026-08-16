@@ -2,7 +2,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { createTrackSpatialIndex, findNearestTrackBruteForce } from '../../turn/race/track-spatial-index.js';
 import { AIRPORT_HAIRPIN_RUNOFF_ZONES, isForgivingTrackSurface } from '../../turn/tracks/airport-runoff.js';
-import { applyContextualRoadEdges, ROAD_EDGE_COLORS } from '../../turn/tracks/contextual-road-edges.js';
+import {
+  applyContextualRoadEdges,
+  ROAD_EDGE_COLORS,
+  ROAD_EDGE_CONTOURS
+} from '../../turn/tracks/contextual-road-edges.js';
 import {
   TRACK_DEFINITIONS,
   TRACK_PLACEHOLDERS,
@@ -50,12 +54,21 @@ assert.deepEqual(
   ROAD_EDGE_COLORS,
   {
     countryside: '#ffffff',
-    airport: '#ffd43b',
+    airport: '#ffbd12',
     cliffside: '#ffffff',
-    harbor: '#f5c542'
+    harbor: '#ffbd12'
   },
-  'Road-like tracks must use one contextual edge color instead of alternating race curbs'
+  'Airport and Harbor must use TURN profile yellow while road-like tracks keep one solid contextual edge color'
 );
+assert.deepEqual(
+  Object.keys(ROAD_EDGE_CONTOURS),
+  ['airport', 'cliffside', 'harbor'],
+  'Airport, Cliffside and Harbor must gain the Countryside-style black outer contour only'
+);
+for (const [trackId, contour] of Object.entries(ROAD_EDGE_CONTOURS)) {
+  assert.ok(contour.edgeWidth > 1.5, `${trackId} contour must begin outside its colored road edge`);
+  assert.ok(contour.contourWidth >= 0.5 && contour.contourWidth <= 0.8, `${trackId} black contour must stay visually subordinate to the colored edge`);
+}
 
 const contextualEdgeCases = [
   ['countryside', [0xe63946, 0xfff8e8]],
@@ -93,6 +106,8 @@ for (const [trackId, sourcePalette] of contextualEdgeCases) {
   }
 }
 assert.equal(ROAD_EDGE_COLORS['midnight-city'], undefined, 'Midnight City already owns a solid street-edge treatment and must remain unchanged');
+assert.equal(ROAD_EDGE_CONTOURS.countryside, undefined, 'Countryside already owns its black outer contour and must not get a duplicate');
+assert.equal(ROAD_EDGE_CONTOURS['midnight-city'], undefined, 'Midnight City must keep its own street-edge construction');
 
 const midnightLength = closedPolylineLength(MIDNIGHT_CITY_CONTROL_POINTS);
 const harborLength = closedPolylineLength(HARBOR_CONTROL_POINTS);
@@ -182,7 +197,7 @@ assert.match(definitions, /fogNear: 250[\s\S]*fogFar: 880/);
 assert.match(definitions, /id: 'track-6-tba'[\s\S]*locked: true/);
 assert.match(catalog, /MIDNIGHT_CITY_CONTROL_POINTS\.map/);
 assert.match(registry, /midnight-city-world-r9\.js\?build=20260802-r9/);
-assert.match(registry, /contextual-road-edges\.js\?revision=r507/);
+assert.match(registry, /contextual-road-edges\.js\?revision=r509/);
 assert.match(registry, /definition\.sampleCount \|\| sampleCount/);
 assert.doesNotMatch(manager, /nextTrackId === 'midnight-city'/, 'The generic track manager must not gain a Midnight City special case');
 assert.match(manager, /lighting\.hemisphereIntensity \?\? 2\.7/);
