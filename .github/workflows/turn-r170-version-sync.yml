@@ -37,6 +37,7 @@ jobs:
               ('turn-next/index.html', '20260816-r169', '20260816-r170'),
               ('turn/content/about-history.js', "version: '1.8.0'", "version: '1.8.5'"),
               ('turn/content/about-history.js', "build: '2026.08.16-r169'", "build: '2026.08.16-r170'"),
+              ('turn/content/about-history.js', "note: 'Refines TURN’s road-edge colour, start-area identity and visual consistency while preserving racing behaviour.'", "note: 'TURN 1.8.5 adds the latest visual-consistency pass, including lightweight Airport and Harbor ground detail, while preserving racing behaviour.'"),
               ('turn/ui/about-history-bootstrap-r165.js', '20260816-r169', '20260816-r170'),
           ]
           for filename, old, new in replacements:
