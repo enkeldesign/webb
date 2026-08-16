@@ -33,8 +33,8 @@ export function applyContextualRoadEdges(world, trackId) {
   if (!world?.traverse || !style) return 0;
   if (styledWorlds.get(world) === trackId) return 0;
 
-  const source = style.source.map(hexToRgb);
-  const target = hexToRgb(style.target);
+  const source = style.source.map(hexToLinearRgb);
+  const target = hexToLinearRgb(style.target);
   let changed = 0;
 
   world.traverse((node) => {
@@ -83,12 +83,18 @@ function matchesAlternatingPalette(attribute, palette) {
   return seen.every(Boolean);
 }
 
-function hexToRgb(hex) {
+function hexToLinearRgb(hex) {
   return {
-    r: ((hex >> 16) & 0xff) / 255,
-    g: ((hex >> 8) & 0xff) / 255,
-    b: (hex & 0xff) / 255
+    r: srgbToLinear(((hex >> 16) & 0xff) / 255),
+    g: srgbToLinear(((hex >> 8) & 0xff) / 255),
+    b: srgbToLinear((hex & 0xff) / 255)
   };
+}
+
+function srgbToLinear(channel) {
+  return channel < 0.04045
+    ? channel / 12.92
+    : ((channel + 0.055) / 1.055) ** 2.4;
 }
 
 function styleInitialCountryside(runtime) {
