@@ -16,6 +16,8 @@ const ASSETS = {
 const loader = new GLTFLoader();
 const cache = new Map();
 const TAU = Math.PI * 2;
+const TREE_BASE_HEIGHT_RATIO = 0.09;
+const TREE_BASE_WIDTH_RATIO = 0.78;
 
 function seeded01(seed) {
   const value = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
@@ -30,9 +32,70 @@ function yawFor(sample) {
   return Math.atan2(sample.tangent.x, sample.tangent.z);
 }
 
+function stripTreeClusterGroundBase(root) {
+  let removedTriangles = 0;
+
+  root.traverse((node) => {
+    const geometry = node?.geometry;
+    const position = geometry?.getAttribute?.('position');
+    const index = geometry?.getIndex?.();
+    if (!node?.isMesh || !position || !index || index.count < 3) return;
+
+    if (!geometry.boundingBox) geometry.computeBoundingBox();
+    const bounds = geometry.boundingBox;
+    const width = bounds.max.x - bounds.min.x;
+    const height = bounds.max.y - bounds.min.y;
+    const depth = bounds.max.z - bounds.min.z;
+    const baseMaxY = bounds.min.y + height * TREE_BASE_HEIGHT_RATIO;
+    const wideTriangleThreshold = Math.max(width, depth) * TREE_BASE_WIDTH_RATIO;
+    const keptIndices = [];
+    let removedFromMesh = 0;
+
+    for (let offset = 0; offset < index.count; offset += 3) {
+      const a = index.getX(offset);
+      const b = index.getX(offset + 1);
+      const c = index.getX(offset + 2);
+      const maxY = Math.max(position.getY(a), position.getY(b), position.getY(c));
+      const spanX = Math.max(position.getX(a), position.getX(b), position.getX(c))
+        - Math.min(position.getX(a), position.getX(b), position.getX(c));
+      const spanZ = Math.max(position.getZ(a), position.getZ(b), position.getZ(c))
+        - Math.min(position.getZ(a), position.getZ(b), position.getZ(c));
+
+      // Kenney's grass-tree assets contain a broad, shallow tile in the same mesh as
+      // the trees. Repeated copies of that tile sit almost flush with TURN's terrain
+      // and z-fight in the overview camera. Keep every narrow trunk/branch triangle,
+      // but omit the wide triangles that make up only the low ground tile.
+      if (maxY <= baseMaxY && Math.max(spanX, spanZ) >= wideTriangleThreshold) {
+        removedFromMesh += 1;
+        continue;
+      }
+
+      keptIndices.push(a, b, c);
+    }
+
+    if (!removedFromMesh) return;
+    const strippedGeometry = geometry.clone();
+    strippedGeometry.setIndex(keptIndices);
+    if (strippedGeometry.groups.length) {
+      strippedGeometry.clearGroups();
+      strippedGeometry.addGroup(0, keptIndices.length, 0);
+    }
+    strippedGeometry.computeBoundingSphere();
+    node.geometry = strippedGeometry;
+    node.userData.turnGroundBaseRemoved = true;
+    removedTriangles += removedFromMesh;
+  });
+
+  root.userData.turnGroundBaseTrianglesRemoved = removedTriangles;
+  return removedTriangles;
+}
+
 function loadAsset(key) {
   if (!cache.has(key)) {
-    cache.set(key, loader.loadAsync(ASSETS[key]).then((gltf) => gltf.scene));
+    cache.set(key, loader.loadAsync(ASSETS[key]).then((gltf) => {
+      if (key === 'trees' || key === 'tallTrees') stripTreeClusterGroundBase(gltf.scene);
+      return gltf.scene;
+    }));
   }
   return cache.get(key);
 }
