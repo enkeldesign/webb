@@ -1,6 +1,7 @@
 const COLOR_EPSILON = 1e-4;
 const TURN_ROAD = 0x44494f;
-const TURN_PROFILE_YELLOW = 0xffbd12;
+const TURN_SIGNATURE_YELLOW = 0xffbd12;
+const DISPLAY_MATCHED_EDGE_TRACKS = new Set(['airport', 'harbor']);
 
 export const ROAD_EDGE_COLORS = Object.freeze({
   countryside: '#ffffff',
@@ -22,7 +23,7 @@ const EDGE_STYLES = Object.freeze({
   }),
   airport: Object.freeze({
     source: Object.freeze([0xff5f67, 0xfff8e8]),
-    target: TURN_PROFILE_YELLOW
+    target: TURN_SIGNATURE_YELLOW
   }),
   cliffside: Object.freeze({
     source: Object.freeze([0xff5f67, 0xfff8e8]),
@@ -30,7 +31,7 @@ const EDGE_STYLES = Object.freeze({
   }),
   harbor: Object.freeze({
     source: Object.freeze([0xf5c542, 0x08090a]),
-    target: TURN_PROFILE_YELLOW
+    target: TURN_SIGNATURE_YELLOW
   })
 });
 
@@ -80,6 +81,16 @@ export function applyContextualRoadEdges(world, trackId, {
       installOuterContourFromEdge(edge, samples, Number(trackWidth) || 27, trackId, contour);
     }
     outlinedWorlds.add(world);
+  }
+
+  // The Home header is a flat CSS #ffbd12. Airport and Harbor used the same
+  // numeric color already, but MeshStandardMaterial lighting could push that
+  // yellow toward a much brighter/neon result. These painted road edges are UI-like
+  // wayfinding marks, so render them as an unlit display color after contour cloning.
+  if (DISPLAY_MATCHED_EDGE_TRACKS.has(trackId)) {
+    for (const edge of matchingEdges) {
+      lockMaterialToDisplayColor(edge.material, style.target);
+    }
   }
 
   return changed;
@@ -148,6 +159,19 @@ function setContourVertex(attribute, sourceAttribute, index, sample, side, dista
 function cloneMaterial(material) {
   if (Array.isArray(material)) return material.map((entry) => entry?.clone?.() || entry);
   return material?.clone?.() || material;
+}
+
+function lockMaterialToDisplayColor(material, hex) {
+  const materials = Array.isArray(material) ? material : [material];
+  for (const entry of materials) {
+    if (!entry?.color?.setHex || !entry?.emissive?.setHex) continue;
+    entry.color.setHex(0x000000);
+    entry.emissive.setHex(hex);
+    entry.emissiveIntensity = 1;
+    entry.vertexColors = false;
+    entry.toneMapped = false;
+    entry.needsUpdate = true;
+  }
 }
 
 function matchesAlternatingPalette(attribute, palette) {

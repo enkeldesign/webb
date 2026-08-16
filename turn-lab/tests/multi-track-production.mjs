@@ -197,7 +197,7 @@ assert.match(definitions, /fogNear: 250[\s\S]*fogFar: 880/);
 assert.match(definitions, /id: 'track-6-tba'[\s\S]*locked: true/);
 assert.match(catalog, /MIDNIGHT_CITY_CONTROL_POINTS\.map/);
 assert.match(registry, /midnight-city-world-r9\.js\?build=20260802-r9/);
-assert.match(registry, /contextual-road-edges\.js\?revision=r509/);
+assert.match(registry, /contextual-road-edges\.js\?revision=r518-signature-yellow/);
 assert.match(registry, /definition\.sampleCount \|\| sampleCount/);
 assert.doesNotMatch(manager, /nextTrackId === 'midnight-city'/, 'The generic track manager must not gain a Midnight City special case');
 assert.match(manager, /lighting\.hemisphereIntensity \?\? 2\.7/);

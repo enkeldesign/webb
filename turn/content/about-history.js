@@ -364,6 +364,6 @@ export const CHANGELOG = Object.freeze([
 
 export const CURRENT_RELEASE = Object.freeze({
   version: '1.8.0',
-  build: '2026.08.16-r165',
-  note: 'Adds generated racing music, real-device iOS/PWA resilience, refined YOUR TURN controls, Q/E desktop actions and the Monster Truck’s all-terrain perk.'
+  build: '2026.08.16-r167',
+  note: 'Refines TURN’s road-edge colour, start-area identity and visual consistency while preserving racing behaviour.'
 });
