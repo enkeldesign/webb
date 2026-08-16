@@ -11,7 +11,7 @@ import { installHarborWorld } from './harbor-world.js';
 // Historical regression markers: midnight-city-world-r9.js?build=20260802-r9, midnight-city-world-r10.js?build=20260802-r10
 import { installMidnightCityWorld } from './midnight-city-world-r11.js?build=20260802-r11';
 import { isForgivingTrackSurface } from './airport-runoff.js?build=20260722-r52';
-import './contextual-road-edges.js?revision=r507';
+import './contextual-road-edges.js?revision=r509';
 
 const WORLD_INSTALLERS = Object.freeze({
   countryside({ initialWorld }) {
