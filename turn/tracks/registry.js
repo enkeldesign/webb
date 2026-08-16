@@ -11,7 +11,7 @@ import { installHarborWorld } from './harbor-world.js';
 // Historical regression markers: midnight-city-world-r9.js?build=20260802-r9, midnight-city-world-r10.js?build=20260802-r10
 import { installMidnightCityWorld } from './midnight-city-world-r11.js?build=20260802-r11';
 import { isForgivingTrackSurface } from './airport-runoff.js?build=20260722-r52';
-import './contextual-road-edges.js?revision=r509';
+import './contextual-road-edges.js?revision=r518-signature-yellow';
 import './road-contour-color-r512.js?revision=r513-countryside';
 
 const WORLD_INSTALLERS = Object.freeze({
@@ -51,27 +51,21 @@ const FORGIVING_SURFACES = Object.freeze({
   }
 });
 
-export const TRACK_RUNTIME_REGISTRY = Object.freeze(TRACK_CATALOG.map((definition) => {
-  const installWorld = WORLD_INSTALLERS[definition.id];
-  const isForgivingSurface = FORGIVING_SURFACES[definition.id];
-  if (typeof installWorld !== 'function' || typeof isForgivingSurface !== 'function') {
-    throw new Error(`TURN: track ${definition.id} has an incomplete runtime contract.`);
-  }
+export {
+  DEFAULT_TRACK_ID,
+  TRACK_CATALOG,
+  TRACK_SAMPLE_COUNT,
+  createTrackRuntime,
+  normalizeTrackId
+};
 
-  return Object.freeze({
-    ...definition,
-    storageRevision: definition.storageRevision,
-    freeRoamDistance: definition.freeRoamDistance,
-    collisionProfile: definition.collisionProfile,
-    createRuntime(sampleCount = TRACK_SAMPLE_COUNT) {
-      return createTrackRuntime(definition.id, definition.sampleCount || sampleCount);
-    },
-    installWorld,
-    isForgivingSurface
-  });
-}));
+export function installTrackWorld(trackId, context = {}) {
+  const id = normalizeTrackId(trackId);
+  const installer = WORLD_INSTALLERS[id] || WORLD_INSTALLERS[DEFAULT_TRACK_ID];
+  return installer(context);
+}
 
-export function getTrackRuntimeEntry(trackId = DEFAULT_TRACK_ID) {
-  const normalized = normalizeTrackId(trackId);
-  return TRACK_RUNTIME_REGISTRY.find((track) => track.id === normalized) || TRACK_RUNTIME_REGISTRY[0];
+export function isTrackForgivingSurface(trackId, position) {
+  const id = normalizeTrackId(trackId);
+  return FORGIVING_SURFACES[id]?.(position) || false;
 }
