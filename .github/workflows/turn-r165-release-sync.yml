@@ -1,0 +1,60 @@
+name: Sync TURN r165 release assets
+
+on:
+  push:
+    branches:
+      - fix/turn-cache-refresh-r165
+    paths:
+      - 'turn/release.json'
+      - '.github/workflows/turn-r165-release-sync.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/turn-cache-refresh-r165
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Synchronize TURN and TURN LAB release assets
+        run: node turn/scripts/release.mjs --write
+
+      - name: Synchronize TURN NEXT release identity
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = 'turn-next/index.html';
+          const release = JSON.parse(fs.readFileSync('turn/release.json', 'utf8'));
+          let source = fs.readFileSync(path, 'utf8');
+          source = source
+            .replaceAll('2026.08.11-r164', release.id)
+            .replaceAll('20260811-r164', release.cacheKey);
+          fs.writeFileSync(path, source);
+          NODE
+
+      - name: Verify generated release assets
+        run: |
+          node turn/scripts/release.mjs --check
+          node turn-next/scripts/build-parity-entry.mjs --check
+          node turn-tests/release-production.mjs
+
+      - name: Commit synchronized assets
+        run: |
+          if git diff --quiet -- turn/index.html turn-lab/index.html turn-next/index.html; then
+            echo 'Release assets already synchronized.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add turn/index.html turn-lab/index.html turn-next/index.html
+          git commit -m 'Synchronize TURN r165 release cache assets'
+          git push origin HEAD:fix/turn-cache-refresh-r165
