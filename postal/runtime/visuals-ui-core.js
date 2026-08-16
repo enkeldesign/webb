@@ -135,13 +135,24 @@ function updateUI(force = false) {
     return Boolean(pkg?.issue || pkg?.complaint);
   }) || simulation.events[0];
   if (top) {
+    const pkg = top.packageId ? simulation.packages.get(top.packageId) : null;
+    const packageNeedsAction = Boolean(pkg?.issue || pkg?.complaint);
+    const urgent = top.kind === 'critical';
+    const warning = top.kind === 'warning';
+    const ctaLabel = packageNeedsAction ? 'INVESTIGATE' : urgent || warning ? 'REVIEW' : 'OPEN';
+    const kickerText = urgent ? 'URGENT · NEEDS YOU' : warning ? 'NEEDS YOU' : 'NETWORK UPDATE';
+
     app.eventText.textContent = top.title;
-    app.eventRibbon.dataset.kind = top.kind;
+    app.eventRibbon.dataset.kind = urgent ? 'critical' : warning ? 'warning' : 'info';
     app.eventRibbon.dataset.packageId = top.packageId || '';
-    const kicker = $('.event-copy small');
-    if (kicker) kicker.textContent = top.kind === 'critical' ? 'URGENT · NEEDS YOU' : top.kind === 'warning' ? 'NEEDS YOU' : 'NETWORK UPDATE';
+    app.eventRibbon.setAttribute('aria-label', `${ctaLabel}: ${top.title}`);
+    $('#event-kicker').textContent = kickerText;
+    $('#event-cta-label').textContent = ctaLabel;
     app.eventRibbon.hidden = false;
-  } else app.eventRibbon.hidden = true;
+  } else {
+    app.eventRibbon.hidden = true;
+    app.eventRibbon.removeAttribute('aria-label');
+  }
 }
 
 function formatGameClock(sec) {
