@@ -2,7 +2,7 @@ import {
   CHANGELOG,
   CURRENT_RELEASE,
   DEVELOPMENT_HISTORY
-} from '../content/about-history.js?build=20260817-r172';
+} from '../content/about-history.js?build=20260817-r173';
 import { aboutTurnHtml } from '../content/about-turn.js?revision=r1';
 
 const REVISION = 'r165-browser-about';
@@ -135,7 +135,7 @@ function createHistoryDialog(scope = 'game') {
             tabindex="0"
             data-history-panel="development"
           >
-            <p class="turn-history-intro">TURN grew from a one-day sensor experiment into a five-track racing PWA with personal rivals, a fifteen-car garage, Drive By Ear, assistive-technology support and Trophy Road progression. This is the development story rather than a raw list of commits.</p>
+            <p class="turn-history-intro">TURN grew from a one-day sensor experiment into a six-track racing PWA with personal rivals, a fifteen-car garage, Drive By Ear, assistive-technology support and Trophy Road progression. This is the development story rather than a raw list of commits.</p>
             ${historyMarkup()}
           </section>
 
