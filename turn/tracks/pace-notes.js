@@ -35,37 +35,17 @@ const COUNTRYSIDE_PACE_NOTES = Object.freeze([
 
 const AIRPORT_PACE_NOTES = Object.freeze([
   createPaceNote('airport-1', 0.948, 0.988, [
-    {
-      direction: PACE_NOTE_DIRECTION.RIGHT,
-      severity: 2,
-      length: PACE_NOTE_LENGTH.MEDIUM
-    }
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.MEDIUM }
   ]),
   createPaceNote('airport-2', 0.155, 0.225, [
-    {
-      direction: PACE_NOTE_DIRECTION.RIGHT,
-      severity: 1,
-      length: PACE_NOTE_LENGTH.LONG
-    }
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 1, length: PACE_NOTE_LENGTH.LONG }
   ]),
   createPaceNote('airport-3', 0.385, 0.455, [
-    {
-      direction: PACE_NOTE_DIRECTION.RIGHT,
-      severity: 2,
-      length: PACE_NOTE_LENGTH.LONG
-    },
-    {
-      direction: PACE_NOTE_DIRECTION.LEFT,
-      severity: 3,
-      length: PACE_NOTE_LENGTH.MEDIUM
-    }
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG },
+    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
   ]),
   createPaceNote('airport-4', 0.565, 0.625, [
-    {
-      direction: PACE_NOTE_DIRECTION.RIGHT,
-      severity: 2,
-      length: PACE_NOTE_LENGTH.LONG
-    }
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG }
   ])
 ]);
 
@@ -153,12 +133,43 @@ const MIDNIGHT_CITY_PACE_NOTES = Object.freeze([
   ])
 ]);
 
+// MOUNTAIN deliberately changes character halfway around the lap. The backside climb
+// is a long, readable clockwise sweep. After the river the notes tighten into alternating
+// slalom groups so non-visual drivers hear the same escalation that sighted drivers see.
+const MOUNTAIN_PACE_NOTES = Object.freeze([
+  createPaceNote('mountain-1', 0.052, 0.145, [
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 1, length: PACE_NOTE_LENGTH.LONG }
+  ]),
+  createPaceNote('mountain-2', 0.180, 0.285, [
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG }
+  ]),
+  createPaceNote('mountain-3', 0.438, 0.535, [
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG }
+  ]),
+  createPaceNote('mountain-4', 0.590, 0.652, [
+    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
+  ]),
+  createPaceNote('mountain-5', 0.686, 0.744, [
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
+  ]),
+  createPaceNote('mountain-6', 0.790, 0.846, [
+    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
+  ]),
+  createPaceNote('mountain-7', 0.884, 0.938, [
+    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
+  ]),
+  createPaceNote('mountain-8', 0.962, 0.995, [
+    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 2, length: PACE_NOTE_LENGTH.SHORT }
+  ])
+]);
+
 const PACE_NOTE_MAPS = Object.freeze({
   countryside: COUNTRYSIDE_PACE_NOTES,
   airport: AIRPORT_PACE_NOTES,
   cliffside: CLIFFSIDE_PACE_NOTES,
   harbor: HARBOR_PACE_NOTES,
-  'midnight-city': MIDNIGHT_CITY_PACE_NOTES
+  'midnight-city': MIDNIGHT_CITY_PACE_NOTES,
+  mountain: MOUNTAIN_PACE_NOTES
 });
 
 const EMPTY_PACE_NOTES = Object.freeze([]);
