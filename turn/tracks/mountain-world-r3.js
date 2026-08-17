@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { installMountainTerrain } from './mountain-world-r3-terrain.js';
 import { installMountainScenery } from './mountain-world-r3-scenery.js';
 import { installMountainR3Polish } from './mountain-world-r3-polish.js';
+import { installMountainR4VisualPolish } from './mountain-world-r4-visual-polish.js';
 
 export function installMountainWorld({ scene, samples, trackWidth = 27, runtime } = {}) {
   if (!scene || !Array.isArray(samples) || samples.length < 3) {
@@ -15,18 +16,23 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
   const terrainContext = installMountainTerrain(world, samples, trackWidth);
   installMountainR3Polish(world, samples, trackWidth);
   const sceneryReady = installMountainScenery(world, samples, trackWidth, terrainContext);
-  world.ready = Promise.resolve(sceneryReady).then(() => world);
+  world.ready = Promise.resolve(sceneryReady)
+    .then(() => installMountainR4VisualPolish(world, samples, trackWidth, terrainContext))
+    .then(() => world);
   world.userData.turnMountainTerrainHeightAt = terrainContext.terrainHeightAt;
   world.userData.turnMountainArtDirection = Object.freeze({
-    version: 'r3',
+    version: 'r3+r4-visual-polish',
     ground: 'continuous-snow-and-granite-terrain-body',
     roadEdge: 'white-with-black-outer-contour',
     roadbed: 'opaque-and-terrain-supported',
     retainingFoundation: '4.6m-granite-skirt',
     routeClearanceProtected: true,
-    assetVillage: 'Kenney-Holiday-and-Fantasy-Town',
-    waterfallCliff: 'terrain-plus-Kenney-Nature-modules',
+    assetVillage: 'Kenney-Holiday-and-Fantasy-Town-assembled-r4',
+    villageSquare: 'winter-market-no-fountain',
+    streetlights: 'warm-static-halos',
+    waterfallCliff: 'terrain-plus-Kenney-Nature-modules-open-to-track',
     visibleWaterfallCurtain: true,
+    layeredMountainBackdrop: true,
     integratedSnowCaps: true,
     authoredSnowDrifts: true,
     riverHasChannelBanksAndBed: true,
