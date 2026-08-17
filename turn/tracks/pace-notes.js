@@ -19,100 +19,58 @@ function createPaceNote(id, triggerStart, triggerEnd, groups) {
 }
 
 const COUNTRYSIDE_PACE_NOTES = Object.freeze([
-  createPaceNote('countryside-1', 0.918, 0.968, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2 }
-  ]),
-  createPaceNote('countryside-2', 0.300, 0.368, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 1 }
-  ]),
-  createPaceNote('countryside-3', 0.414, 0.482, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2 }
-  ]),
-  createPaceNote('countryside-4', 0.590, 0.658, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 1 }
-  ])
+  createPaceNote('countryside-1', 0.918, 0.968, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2 }]),
+  createPaceNote('countryside-2', 0.300, 0.368, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 1 }]),
+  createPaceNote('countryside-3', 0.414, 0.482, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2 }]),
+  createPaceNote('countryside-4', 0.590, 0.658, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 1 }])
 ]);
 
 const AIRPORT_PACE_NOTES = Object.freeze([
-  createPaceNote('airport-1', 0.948, 0.988, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.MEDIUM }
-  ]),
-  createPaceNote('airport-2', 0.155, 0.225, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 1, length: PACE_NOTE_LENGTH.LONG }
-  ]),
+  createPaceNote('airport-1', 0.948, 0.988, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.MEDIUM }]),
+  createPaceNote('airport-2', 0.155, 0.225, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 1, length: PACE_NOTE_LENGTH.LONG }]),
   createPaceNote('airport-3', 0.385, 0.455, [
     { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG },
     { direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
   ]),
-  createPaceNote('airport-4', 0.565, 0.625, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG }
-  ])
+  createPaceNote('airport-4', 0.565, 0.625, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG }])
 ]);
 
 const CLIFFSIDE_PACE_NOTES = Object.freeze([
-  createPaceNote('cliffside-1', 0.925, 0.975, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2 }
-  ]),
-  createPaceNote('cliffside-2', 0.165, 0.230, [
-    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 1 }
-  ]),
-  createPaceNote('cliffside-3', 0.366, 0.434, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2 }
-  ]),
+  createPaceNote('cliffside-1', 0.925, 0.975, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2 }]),
+  createPaceNote('cliffside-2', 0.165, 0.230, [{ direction: PACE_NOTE_DIRECTION.LEFT, severity: 1 }]),
+  createPaceNote('cliffside-3', 0.366, 0.434, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2 }]),
   createPaceNote('cliffside-4', 0.505, 0.570, [
     { direction: PACE_NOTE_DIRECTION.LEFT, severity: 1 },
     { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2 }
   ]),
-  createPaceNote('cliffside-5', 0.720, 0.785, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 1 }
-  ])
+  createPaceNote('cliffside-5', 0.720, 0.785, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 1 }])
 ]);
 
 const HARBOR_PACE_NOTES = Object.freeze([
-  createPaceNote('harbor-1', 0.928, 0.982, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2 }
-  ]),
-  createPaceNote('harbor-2', 0.108, 0.176, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3 }
-  ]),
-  createPaceNote('harbor-3', 0.344, 0.412, [
-    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 3 }
-  ]),
-  createPaceNote('harbor-4', 0.548, 0.616, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3 }
-  ]),
-  createPaceNote('harbor-5', 0.766, 0.834, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2 }
-  ])
+  createPaceNote('harbor-1', 0.928, 0.982, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2 }]),
+  createPaceNote('harbor-2', 0.108, 0.176, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3 }]),
+  createPaceNote('harbor-3', 0.344, 0.412, [{ direction: PACE_NOTE_DIRECTION.LEFT, severity: 3 }]),
+  createPaceNote('harbor-4', 0.548, 0.616, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3 }]),
+  createPaceNote('harbor-5', 0.766, 0.834, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2 }])
 ]);
 
 // MIDNIGHT CITY was rebuilt after its first pace-note map. The trigger windows still
 // line up with the new bends, but the old left/right sequence was mirrored. These
 // directions follow the current route geometry in increasing track-progress order.
 const MIDNIGHT_CITY_PACE_NOTES = Object.freeze([
-  createPaceNote('midnight-city-1', 0.102, 0.128, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG }
-  ]),
-  createPaceNote('midnight-city-2', 0.145, 0.176, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.LONG }
-  ]),
+  createPaceNote('midnight-city-1', 0.102, 0.128, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG }]),
+  createPaceNote('midnight-city-2', 0.145, 0.176, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.LONG }]),
   createPaceNote('midnight-city-3', 0.232, 0.262, [
     { direction: PACE_NOTE_DIRECTION.LEFT, severity: 2, length: PACE_NOTE_LENGTH.MEDIUM },
     { direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.SHORT }
   ]),
-  createPaceNote('midnight-city-4', 0.266, 0.292, [
-    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
-  ]),
+  createPaceNote('midnight-city-4', 0.266, 0.292, [{ direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }]),
   createPaceNote('midnight-city-5', 0.338, 0.372, [
     { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.MEDIUM },
     { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
   ]),
-  createPaceNote('midnight-city-6', 0.450, 0.480, [
-    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
-  ]),
-  createPaceNote('midnight-city-7', 0.490, 0.520, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
-  ]),
+  createPaceNote('midnight-city-6', 0.450, 0.480, [{ direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }]),
+  createPaceNote('midnight-city-7', 0.490, 0.520, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }]),
   createPaceNote('midnight-city-8', 0.622, 0.656, [
     { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG },
     { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
@@ -125,42 +83,21 @@ const MIDNIGHT_CITY_PACE_NOTES = Object.freeze([
     { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.MEDIUM },
     { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
   ]),
-  createPaceNote('midnight-city-11', 0.906, 0.938, [
-    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
-  ]),
-  createPaceNote('midnight-city-12', 0.958, 0.982, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.MEDIUM }
-  ])
+  createPaceNote('midnight-city-11', 0.906, 0.938, [{ direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }]),
+  createPaceNote('midnight-city-12', 0.958, 0.982, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.MEDIUM }])
 ]);
 
-// MOUNTAIN deliberately changes character halfway around the lap. The backside climb
-// is a long, readable clockwise sweep. After the river the notes tighten into alternating
-// slalom groups so non-visual drivers hear the same escalation that sighted drivers see.
+// MOUNTAIN's first Codespace drive exposed the usual coordinate-handness trap: the
+// original map was exactly mirrored. These are the verified driver-perspective calls.
 const MOUNTAIN_PACE_NOTES = Object.freeze([
-  createPaceNote('mountain-1', 0.052, 0.145, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 1, length: PACE_NOTE_LENGTH.LONG }
-  ]),
-  createPaceNote('mountain-2', 0.180, 0.285, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG }
-  ]),
-  createPaceNote('mountain-3', 0.438, 0.535, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.LONG }
-  ]),
-  createPaceNote('mountain-4', 0.590, 0.652, [
-    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
-  ]),
-  createPaceNote('mountain-5', 0.686, 0.744, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
-  ]),
-  createPaceNote('mountain-6', 0.790, 0.846, [
-    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
-  ]),
-  createPaceNote('mountain-7', 0.884, 0.938, [
-    { direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }
-  ]),
-  createPaceNote('mountain-8', 0.962, 0.995, [
-    { direction: PACE_NOTE_DIRECTION.LEFT, severity: 2, length: PACE_NOTE_LENGTH.SHORT }
-  ])
+  createPaceNote('mountain-1', 0.052, 0.145, [{ direction: PACE_NOTE_DIRECTION.LEFT, severity: 1, length: PACE_NOTE_LENGTH.LONG }]),
+  createPaceNote('mountain-2', 0.180, 0.285, [{ direction: PACE_NOTE_DIRECTION.LEFT, severity: 2, length: PACE_NOTE_LENGTH.LONG }]),
+  createPaceNote('mountain-3', 0.438, 0.535, [{ direction: PACE_NOTE_DIRECTION.LEFT, severity: 2, length: PACE_NOTE_LENGTH.LONG }]),
+  createPaceNote('mountain-4', 0.590, 0.652, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }]),
+  createPaceNote('mountain-5', 0.686, 0.744, [{ direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }]),
+  createPaceNote('mountain-6', 0.790, 0.846, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }]),
+  createPaceNote('mountain-7', 0.884, 0.938, [{ direction: PACE_NOTE_DIRECTION.LEFT, severity: 3, length: PACE_NOTE_LENGTH.MEDIUM }]),
+  createPaceNote('mountain-8', 0.962, 0.995, [{ direction: PACE_NOTE_DIRECTION.RIGHT, severity: 2, length: PACE_NOTE_LENGTH.SHORT }])
 ]);
 
 const PACE_NOTE_MAPS = Object.freeze({
