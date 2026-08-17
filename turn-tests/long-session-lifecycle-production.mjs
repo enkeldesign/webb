@@ -167,8 +167,10 @@ assert.match(
 );
 assert.match(screenReaderCoordinator, /navigation\.innerHTML = `[\s\S]*Non-visual onboarding[\s\S]*Drive By Ear 101/,
   'Home accessibility shortcuts must put Non-visual onboarding before Drive By Ear 101');
-assert.match(screenReaderCoordinator, /speak\(`\$\{readyMessage\} \$\{NON_VISUAL_ONBOARDING_MESSAGE\}`, \{ priority: 'assertive' \}\)/,
-  'The one-time non-visual onboarding must be assertive enough to be noticed');
+assert.match(screenReaderCoordinator, /function scheduleNonVisualOnboarding\(\)[\s\S]*if \(viewportIsPortrait\(\)\) return;[\s\S]*speak\(`TURN is ready\. \$\{NON_VISUAL_ONBOARDING_MESSAGE\}`, \{ priority: 'assertive' \}\)/,
+  'The one-time non-visual onboarding must remain assertive but wait until landscape is confirmed');
+assert.match(screenReaderCoordinator, /if \(viewportIsPortrait\(\)\) \{\s*speak\('TURN is ready\. Rotate your device to landscape\.', \{ priority: 'assertive' \}\);\s*\} else \{\s*scheduleNonVisualOnboarding\(\);/,
+  'Portrait startup must not append the non-visual onboarding before the OS landscape announcement has cleared');
 assert.match(screenReaderCoordinator, /summary\.setAttribute\('aria-hidden', 'true'\)/,
   'Track cards must expose their composed button name once rather than repeating the visible summary');
 assert.match(screenReaderCoordinator, /window\.addEventListener\('turn:dbe-training-stage-started'/,
