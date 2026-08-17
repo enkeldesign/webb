@@ -3,6 +3,7 @@ import { installMountainTerrain } from './mountain-world-r3-terrain.js';
 import { installMountainScenery } from './mountain-world-r3-scenery.js';
 import { installMountainR3Polish } from './mountain-world-r3-polish.js';
 import { installMountainR4VisualPolish } from './mountain-world-r4-visual-polish.js';
+import { installMountainR4WaterfallNotch } from './mountain-world-r4-waterfall-notch.js';
 import { installMountainR4CabinFix } from './mountain-world-r4-cabin-fix.js';
 
 export function installMountainWorld({ scene, samples, trackWidth = 27, runtime } = {}) {
@@ -19,6 +20,7 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
   const sceneryReady = installMountainScenery(world, samples, trackWidth, terrainContext);
   world.ready = Promise.resolve(sceneryReady)
     .then(() => installMountainR4VisualPolish(world, samples, trackWidth, terrainContext))
+    .then(() => installMountainR4WaterfallNotch(world))
     .then(() => installMountainR4CabinFix(world, samples, trackWidth, terrainContext))
     .then(() => world);
   world.userData.turnMountainTerrainHeightAt = terrainContext.terrainHeightAt;
@@ -33,8 +35,9 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
     assetVillage: 'Kenney-Holiday-native-pivot-cabins-and-Fantasy-Town-market',
     villageSquare: 'winter-market-no-fountain',
     streetlights: 'warm-static-halos',
-    waterfallCliff: 'terrain-plus-Kenney-Nature-modules-open-to-track',
+    waterfallCliff: 'terrain-plus-Kenney-Nature-rock-shoulders-open-at-centre',
     visibleWaterfallCurtain: true,
+    waterfallDriverSightline: 'open-notch-between-rock-shoulders',
     layeredMountainBackdrop: true,
     integratedSnowCaps: true,
     authoredSnowDrifts: true,
