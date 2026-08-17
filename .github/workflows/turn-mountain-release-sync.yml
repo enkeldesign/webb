@@ -1,0 +1,43 @@
+name: TURN Mountain release sync
+
+on:
+  push:
+    branches:
+      - feature/mountain-track
+    paths:
+      - 'turn/release.json'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/mountain-track
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Synchronize TURN production and LAB release files
+        run: node turn/scripts/release.mjs --write
+      - name: Synchronize TURN NEXT release identity
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('turn-next/index.html')
+          s = p.read_text()
+          s = s.replace('1.8.5', '1.9.0')
+          s = s.replace('2026.08.17-r172', '2026.08.17-r173')
+          s = s.replace('20260817-r172', '20260817-r173')
+          s = s.replace('r172', 'r173')
+          p.write_text(s)
+          PY
+      - name: Commit generated release files
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add turn/index.html turn-lab/index.html turn-next/index.html
+          git diff --cached --quiet || git commit -m 'Synchronize TURN 1.9.0 r173 release files'
+          git push origin HEAD:feature/mountain-track
