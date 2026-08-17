@@ -18,15 +18,16 @@
   <script type="module">
     import * as THREE from 'three';
     import { createTrackRuntime } from '/turn/tracks/catalog.js';
-    import { installMountainWorld } from '/turn/tracks/mountain-world-r3.js?visual=3';
-    import { createMountainTerrainSampler, createMountainRiverSamples, offsetPoint, MOUNTAIN_R3 } from '/turn/tracks/mountain-world-r3-terrain.js?visual=3';
+    import { installMountainWorld } from '/turn/tracks/mountain-world-r3.js?visual=4';
+    import { createMountainTerrainSampler, createMountainRiverSamples, offsetPoint, MOUNTAIN_R3 } from '/turn/tracks/mountain-world-r3-terrain.js?visual=4';
 
     const VIEWS = Object.freeze({
       aerial: { position:[330,235,-345], target:[5,22,-10], fov:49 },
       village:{ position:[118,48,-286], target:[8,8,-215], fov:52 },
       summit:{ position:[325,95,160], target:[180,43,105], fov:50 },
       descent:{ position:[235,92,-5], target:[62,22,-32], fov:52 },
-      waterfall:{ position:[354,51,-236], target:[244,11,-143], fov:43 }
+      waterfall:{ position:[354,51,-236], target:[244,11,-143], fov:43 },
+      'waterfall-road': { dynamic:'waterfall-road', fov:48 }
     });
 
     const params = new URLSearchParams(location.search);
@@ -55,9 +56,31 @@
     await world.ready;
 
     const preset = VIEWS[viewName];
-    camera.position.set(...preset.position);
     camera.up.set(0,1,0);
-    camera.lookAt(...preset.target);
+    if (preset.dynamic === 'waterfall-road') {
+      let nearestIndex = 0;
+      let nearestDistanceSq = Infinity;
+      runtime.samples.forEach((sample, index) => {
+        const dx = sample.point.x - MOUNTAIN_R3.WATERFALL.x;
+        const dz = sample.point.z - MOUNTAIN_R3.WATERFALL.z;
+        const distanceSq = dx * dx + dz * dz;
+        if (distanceSq < nearestDistanceSq) {
+          nearestDistanceSq = distanceSq;
+          nearestIndex = index;
+        }
+      });
+      const cameraIndex = (nearestIndex - 54 + runtime.samples.length) % runtime.samples.length;
+      const roadCamera = runtime.samples[cameraIndex];
+      camera.position.set(roadCamera.point.x, roadCamera.point.y + 6.2, roadCamera.point.z);
+      camera.lookAt(
+        MOUNTAIN_R3.WATERFALL.x,
+        (MOUNTAIN_R3.WATERFALL.top + MOUNTAIN_R3.LAKE.level) * 0.5,
+        MOUNTAIN_R3.WATERFALL.z - 4
+      );
+    } else {
+      camera.position.set(...preset.position);
+      camera.lookAt(...preset.target);
+    }
     camera.fov = preset.fov;
     camera.updateProjectionMatrix();
 
