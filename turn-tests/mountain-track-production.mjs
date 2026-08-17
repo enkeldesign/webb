@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { Buffer } from 'node:buffer';
 import fs from 'node:fs/promises';
 import { TRACK_DEFINITIONS, TRACK_PLACEHOLDERS } from '../turn/tracks/definitions.js';
 import { MOUNTAIN_CONTROL_POINTS, MOUNTAIN_LAYOUT_RULES } from '../turn/tracks/mountain-layout.js';
