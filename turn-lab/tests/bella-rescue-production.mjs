@@ -126,19 +126,29 @@ assert.match(bootstrap, /countryside-bella-rescue-r173\.js\?revision=r164-long-s
   'The independent Bella bootstrap must reinstall the same robustness behavior as the world graph');
 assert.match(bootstrap, /turnBellaDisposeRescueBehavior\?\.\(\)/);
 assert.match(bootstrap, /turnBellaRescueBehaviorInstalled = false/);
-assert.match(bootstrap, /installBellaRescueBehavior\(\{ root, runtime \}\)/);
-assert.match(bootstrap, /turnBellaRescueBootstrap = 'r164-long-session-robustness'/,
-  'The production bootstrap must identify the long-session behavior it reinstalls');
+assert.match(bootstrap, /function correctedSpatialRuntime\(runtime\)/,
+  'The r172 bootstrap must isolate Bella stereo correction from shared TURN coordinates');
+assert.match(bootstrap, /property === 'getRight'/);
+assert.match(bootstrap, /x: -Number\(right\.x \|\| 0\)/);
+assert.match(bootstrap, /y: -Number\(right\.y \|\| 0\)/);
+assert.match(bootstrap, /z: -Number\(right\.z \|\| 0\)/,
+  'Bella must negate the runtime right vector so Web Audio negative/positive pan maps to the player’s actual left/right');
+assert.match(bootstrap, /installBellaRescueBehavior\(\{ root, runtime: correctedSpatialRuntime\(runtime\) \}\)/,
+  'The independent bootstrap must install the rescue behavior with the corrected spatial runtime');
+assert.doesNotMatch(bootstrap, /installBellaRescueBehavior\(\{ root, runtime \}\)/,
+  'The old mirrored Bella bootstrap must not be reintroduced');
+assert.match(bootstrap, /turnBellaRescueBootstrap = 'r172-screen-reader-quality'/,
+  'The production bootstrap must identify the directional-audio screen-reader quality behavior it reinstalls');
 assert.match(bootstrap, /RETRY_DELAYS_MS = Object\.freeze\(\[250, 350, 500, 700, 900, 1200, 1600, 2200, 3000, 4000\]\)/,
   'Async Bella discovery should use a bounded back-off rather than an 8 Hz startup poll');
 assert.doesNotMatch(bootstrap, /setInterval/,
   'The independent Bella bootstrap must not maintain its old fixed 120 ms polling interval');
 assert.match(index, new RegExp(`app\\.js\\?build=${escapeRegex(release.cacheKey)}-browser-consent-r176-bella-road-derived-zone`),
   'The top-level app URL must use the canonical release cache key so Safari cannot retain an old dependency graph');
-assert.match(index, /countryside-bella-rescue-hotfix-r176\.js\?revision=r164-long-session-robustness/,
-  'The independent rescue replacement must have a fresh outer module URL so Safari cannot reuse the old r176 bootstrap bytes');
+assert.match(index, new RegExp(`countryside-bella-rescue-hotfix-r176\\.js\\?build=${escapeRegex(release.cacheKey)}&revision=r530-screen-reader-quality`),
+  'The directional Bella replacement must be bound to the canonical release cache identity');
 
-console.log('TURN Bella video-proven rescue, on-demand directional audio and bounded bootstrap regression passed.');
+console.log('TURN Bella video-proven rescue, corrected left/right directional audio and bounded bootstrap regression passed.');
 
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
