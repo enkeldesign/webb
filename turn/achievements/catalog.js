@@ -9,7 +9,8 @@ export const TRACK_IDS = Object.freeze([
   'airport',
   'cliffside',
   'harbor',
-  'midnight-city'
+  'midnight-city',
+  'mountain'
 ]);
 
 export const TRAINING_CAR_ID = 'classic';
@@ -37,7 +38,8 @@ export const TRACK_NAMES = Object.freeze({
   airport: 'Airport',
   cliffside: 'Cliffside',
   harbor: 'Harbor',
-  'midnight-city': 'Midnight City'
+  'midnight-city': 'Midnight City',
+  mountain: 'Mountain'
 });
 
 export const VEHICLE_NAMES = Object.freeze({
@@ -98,7 +100,7 @@ export const ACHIEVEMENTS = Object.freeze([
   Object.freeze({ id: 'ahead-of-yourself', category: CATEGORY.RACING, trophies: 50, title: 'AHEAD OF YOURSELF', description: 'Finish first in a lap with at least one saved rival.', icon: 'trophy' }),
   Object.freeze({ id: 'night-shift-sheriff', category: CATEGORY.RACING, trophies: 100, title: 'NIGHT SHIFT SHERIFF', description: 'In Midnight City, use the Police Car to beat four non-police rivals. Overtake each one while Boost is active.', icon: 'siren', progressMax: 4 }),
   Object.freeze({ id: 'an-army-of-me', category: CATEGORY.RACING, trophies: 200, title: 'AN ARMY OF ME', description: 'Finish first against four saved rivals on every track.', icon: 'rival' }),
-  Object.freeze({ id: 'on-course-of-course', category: CATEGORY.RACING, trophies: 100, title: 'ON COURSE, OF COURSE', description: 'Finish every track without going off-road and within its clean-lap target.', recommendation: 'Targets: Countryside, Airport and Cliffside < 0:30 · Harbor < 1:00 · Midnight City < 2:00', icon: 'route' }),
+  Object.freeze({ id: 'on-course-of-course', category: CATEGORY.RACING, trophies: 100, title: 'ON COURSE, OF COURSE', description: 'Finish every track without going off-road and within its clean-lap target.', recommendation: 'Targets: Countryside, Airport and Cliffside < 0:30 · Harbor < 1:00 · Mountain < 1:50 · Midnight City < 2:00', icon: 'route' }),
   ...SECRET_ACHIEVEMENTS,
   ...TIME_TRIALS.map((trial) => Object.freeze({
     id: trial.id,
