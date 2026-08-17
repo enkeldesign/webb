@@ -4,6 +4,7 @@ import { installMountainScenery } from './mountain-world-r3-scenery.js';
 import { installMountainR3Polish } from './mountain-world-r3-polish.js';
 import { installMountainR4VisualPolish } from './mountain-world-r4-visual-polish.js';
 import { installMountainR4WaterfallNotch } from './mountain-world-r4-waterfall-notch.js';
+import { installMountainR4DriverFacingWaterfall } from './mountain-world-r4-waterfall-face.js';
 import { installMountainR4CabinFix } from './mountain-world-r4-cabin-fix.js';
 
 export function installMountainWorld({ scene, samples, trackWidth = 27, runtime } = {}) {
@@ -21,6 +22,7 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
   world.ready = Promise.resolve(sceneryReady)
     .then(() => installMountainR4VisualPolish(world, samples, trackWidth, terrainContext))
     .then(() => installMountainR4WaterfallNotch(world))
+    .then(() => installMountainR4DriverFacingWaterfall(world, samples))
     .then(() => installMountainR4CabinFix(world, samples, trackWidth, terrainContext))
     .then(() => world);
   world.userData.turnMountainTerrainHeightAt = terrainContext.terrainHeightAt;
@@ -37,7 +39,7 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
     streetlights: 'warm-static-halos',
     waterfallCliff: 'terrain-plus-Kenney-Nature-rock-shoulders-open-at-centre',
     visibleWaterfallCurtain: true,
-    waterfallDriverSightline: 'open-notch-between-rock-shoulders',
+    waterfallDriverSightline: 'open-rock-cleft-plus-driver-facing-water-plane',
     layeredMountainBackdrop: true,
     integratedSnowCaps: true,
     authoredSnowDrifts: true,
