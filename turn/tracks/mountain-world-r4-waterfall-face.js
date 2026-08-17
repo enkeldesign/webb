@@ -59,25 +59,24 @@ export function installMountainR4DriverFacingWaterfall(world, samples) {
   ).normalize();
   const across = new THREE.Vector3(-towardRoad.z, 0, towardRoad.x).normalize();
 
-  // The r3 sheets follow the physical spill toward the lake and look strong
-  // from the lakeside, but that geometry is nearly edge-on from the racing
-  // line. This additional face lives in the same cleft, drops nearly straight
-  // down the cliff, and leans only slightly toward the road. It therefore
-  // reads as the same waterfall from the cockpit rather than as a bigger fall.
+  // The physical r3 waterfall already connects the river to the lake. This
+  // road-facing surface is the visible front skin of that same fall. Pull it
+  // onto the exposed cliff face so terrain cannot occlude it from the racing
+  // line, while leaving the lakeside sheets and foam system intact.
   const topCenter = new THREE.Vector3(
     WATERFALL.x,
     WATERFALL.top - 0.65,
     WATERFALL.z + 2.2
-  ).addScaledVector(towardRoad, 1.2);
+  ).addScaledVector(towardRoad, 8.5);
   const bottomCenter = topCenter.clone()
-    .addScaledVector(towardRoad, 3.0)
-    .setY(LAKE.level + 0.75);
+    .addScaledVector(towardRoad, 4.0)
+    .setY(LAKE.level + 0.85);
 
   const water = new THREE.MeshStandardMaterial({
     color: WATER_LIGHT,
     roughness: 0.16,
     transparent: true,
-    opacity: 0.95,
+    opacity: 0.96,
     side: THREE.DoubleSide,
     emissive: 0x0b5872,
     emissiveIntensity: 0.25,
@@ -86,7 +85,7 @@ export function installMountainR4DriverFacingWaterfall(world, samples) {
   const foam = new THREE.MeshBasicMaterial({
     color: 0xf1fdff,
     transparent: true,
-    opacity: 0.72,
+    opacity: 0.74,
     side: THREE.DoubleSide,
     depthWrite: false
   });
@@ -96,15 +95,15 @@ export function installMountainR4DriverFacingWaterfall(world, samples) {
       topCenter,
       bottomCenter,
       across,
-      8.8,
+      9.2,
       water,
       'Mountain track-visible waterfall curtain r4'
     ),
     makeCurtain(
-      topCenter.clone().addScaledVector(across, 1.4),
-      bottomCenter.clone().addScaledVector(across, 0.6),
+      topCenter.clone().addScaledVector(across, 1.5),
+      bottomCenter.clone().addScaledVector(across, 0.7),
       across,
-      2.15,
+      2.3,
       foam,
       'Mountain track-visible waterfall whitewater r4'
     )
@@ -113,7 +112,8 @@ export function installMountainR4DriverFacingWaterfall(world, samples) {
   world.userData.turnMountainR4DriverFacingWaterfall = Object.freeze({
     removedPreviousFace,
     roadFacing: true,
-    width: 17.6,
+    cliffFaceOffsetTowardRoad: 8.5,
+    width: 18.4,
     drop: topCenter.y - bottomCenter.y,
     physicalR3LakeSheetsPreserved: true
   });
