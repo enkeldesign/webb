@@ -10,6 +10,7 @@ import { installCliffsideWorld } from './cliffside-world.js';
 import { installHarborWorld } from './harbor-world.js';
 // Historical regression markers: midnight-city-world-r9.js?build=20260802-r9, midnight-city-world-r10.js?build=20260802-r10
 import { installMidnightCityWorld } from './midnight-city-world-r11.js?build=20260802-r11';
+import { installMountainWorld } from './mountain-world.js?revision=r1';
 import { isForgivingTrackSurface } from './airport-runoff.js?build=20260722-r52';
 import './contextual-road-edges.js?revision=r518-signature-yellow';
 import './road-contour-color-r512.js?revision=r513-countryside';
@@ -34,6 +35,9 @@ const WORLD_INSTALLERS = Object.freeze({
   },
   'midnight-city'({ scene, samples, trackWidth, runtime }) {
     return installMidnightCityWorld({ scene, samples, trackWidth, runtime });
+  },
+  mountain({ scene, samples, trackWidth, runtime }) {
+    return installMountainWorld({ scene, samples, trackWidth, runtime });
   }
 });
 
@@ -51,6 +55,9 @@ const FORGIVING_SURFACES = Object.freeze({
     return false;
   },
   'midnight-city'() {
+    return false;
+  },
+  mountain() {
     return false;
   }
 });
