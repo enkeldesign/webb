@@ -111,7 +111,7 @@ function addWall(cabin, template, x, z, yaw, name) {
   return wall;
 }
 
-function makeGable(z, facing, color = 0x8a5c3f) {
+function makeGable(z, color = 0x8a5c3f) {
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute([
     -1.02, 0.96, z,
@@ -120,7 +120,6 @@ function makeGable(z, facing, color = 0x8a5c3f) {
   ], 3));
   geometry.computeVertexNormals();
   const gable = new THREE.Mesh(geometry, material(color, 1, 0, { side: THREE.DoubleSide }));
-  gable.rotation.y = facing < 0 ? Math.PI : 0;
   gable.castShadow = true;
   gable.receiveShadow = true;
   gable.userData.turnOutlined = true;
@@ -154,7 +153,7 @@ function makeAssembledHolidayCabin(templates, variant = 0) {
   roofB.name = 'Mountain Holiday mirrored snow roof half r4';
   cabin.add(roofB);
 
-  cabin.add(makeGable(1.01, 1), makeGable(-1.01, -1));
+  cabin.add(makeGable(1.01), makeGable(-1.01));
 
   // A dark plinth makes the log walls read as one building when snow banks
   // partially cover the bottom of the imported modules.
