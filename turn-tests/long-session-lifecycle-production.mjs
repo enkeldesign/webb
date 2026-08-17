@@ -87,8 +87,8 @@ assert.match(
 );
 assert.match(
   index,
-  new RegExp(`startup-screen-reader-handoff-r529\\.js\\?build=${escapeRegex(release.cacheKey)}&revision=r530-screen-reader-quality`),
-  'Production must bind the screen-reader coordinator to the current release cache identity'
+  new RegExp(`startup-screen-reader-handoff-r529\\.js\\?build=${escapeRegex(release.cacheKey)}&revision=r531-screen-reader-followup`),
+  'Production must bind the screen-reader coordinator follow-up to the current release cache identity'
 );
 
 // Touch hardware keeps 60 Hz gameplay but should not redraw the complete dynamic
@@ -150,15 +150,33 @@ assert.match(
   'The achievement facade must cache-bust the race-scoped sampler implementation'
 );
 
-// The screen-reader quality coordinator may discover dynamic live regions while Home
-// is being assembled, but it must not keep a document-wide observer or polling loop
-// alive for the rest of a long race session.
+// The screen-reader coordinator may discover dynamic live regions while Home is being
+// assembled, but it must not keep a document-wide observer or polling loop alive for
+// the rest of a long race session. The follow-up also protects the user-facing speech
+// contracts that depend on this coordinator.
 assert.match(screenReaderCoordinator, /discoveryObserver = new MutationObserver/);
 assert.match(screenReaderCoordinator, /discoveryObserver\.observe\(document\.body, \{ childList: true, subtree: true \}\)/);
 assert.match(screenReaderCoordinator, /discoveryObserver\?\.disconnect\(\);\s*discoveryObserver = null;/,
   'The broad accessibility discovery observer must disconnect once Home is ready');
 assert.doesNotMatch(screenReaderCoordinator, /setInterval/,
   'Screen-reader coordination must not add an independent polling interval');
+assert.match(
+  screenReaderCoordinator,
+  /return `\$\{dbe\}% Drive By Ear, \$\{other\}% other sounds\$\{balance\}`/,
+  'Sound balance must expose percentages at every slider position rather than repeating Balanced across a range'
+);
+assert.match(screenReaderCoordinator, /navigation\.innerHTML = `[\s\S]*Non-visual onboarding[\s\S]*Drive By Ear 101/,
+  'Home accessibility shortcuts must put Non-visual onboarding before Drive By Ear 101');
+assert.match(screenReaderCoordinator, /speak\(`\$\{readyMessage\} \$\{NON_VISUAL_ONBOARDING_MESSAGE\}`, \{ priority: 'assertive' \}\)/,
+  'The one-time non-visual onboarding must be assertive enough to be noticed');
+assert.match(screenReaderCoordinator, /summary\.setAttribute\('aria-hidden', 'true'\)/,
+  'Track cards must expose their composed button name once rather than repeating the visible summary');
+assert.match(screenReaderCoordinator, /window\.addEventListener\('turn:dbe-training-stage-started'/,
+  'Training speech must follow the exact stage-start event rather than the earlier track-swap event');
+assert.match(screenReaderCoordinator, /clearSpeechChannel\(TRAINING_SPEECH_CHANNEL\)/,
+  'Moving to another DBE part must cancel stale queued instructions');
+assert.match(screenReaderCoordinator, /speak\(`\$\{instructions\} Go!`, \{[\s\S]*priority: 'assertive'[\s\S]*channel: TRAINING_SPEECH_CHANNEL/,
+  'DBE instructions and the single GO cue must be one ordered assertive utterance');
 
 // Repeated vegetation is a poor place to spend a second draw call per source mesh.
 // Buildings/start landmarks may keep intentional contours; tree belts opt out before
@@ -244,4 +262,4 @@ assert.match(bellaBootstrap, /RETRY_DELAYS_MS = Object\.freeze/);
 assert.doesNotMatch(bellaBootstrap, /setInterval/,
   'The independent Bella bootstrap must use bounded startup retries rather than a fixed polling interval');
 
-console.log(`TURN ${release.id} long-session timers, touch shadows, accessibility observers, scenery batching/contours, cache and Bella audio lifecycle passed.`);
+console.log(`TURN ${release.id} long-session timers, touch shadows, accessibility observers, screen-reader speech contracts, scenery batching/contours, cache and Bella audio lifecycle passed.`);
