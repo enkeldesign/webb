@@ -21,7 +21,8 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
     .then(() => world);
   world.userData.turnMountainTerrainHeightAt = terrainContext.terrainHeightAt;
   world.userData.turnMountainArtDirection = Object.freeze({
-    version: 'r3+r4-visual-polish',
+    version: 'r3',
+    visualPolish: 'r4-village-waterfall-landmarks',
     ground: 'continuous-snow-and-granite-terrain-body',
     roadEdge: 'white-with-black-outer-contour',
     roadbed: 'opaque-and-terrain-supported',
