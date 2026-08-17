@@ -21,8 +21,20 @@ assert.ok(
   index.includes(`app.js?build=${release.cacheKey}-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click-r420-music-warm-r426-loading-copy`),
   'The production document must cache-bust the revised loading-screen copy under the current release key'
 );
-assert.match(index, /countryside-bella-rescue-hotfix-r176\.js\?revision=r164-long-session-robustness/,
-  'The canonical startup document must cache-bust the independent Bella rescue bootstrap with the long-session behavior');
+assert.match(
+  index,
+  new RegExp(`startup-screen-reader-handoff-r529\\.js\\?build=${escapedCacheKey}&revision=r530-screen-reader-quality`),
+  'The screen-reader quality coordinator must be bound to the current release cache identity'
+);
+assert.match(
+  index,
+  new RegExp(`countryside-bella-rescue-hotfix-r176\\.js\\?build=${escapedCacheKey}&revision=r530-screen-reader-quality`),
+  'The Bella directional-audio hotfix must be bound to the current release cache identity'
+);
+assert.ok(
+  index.indexOf('<h1 id="installTitle">TURN</h1>') < index.indexOf('<span class="install-kicker">TURN v'),
+  'Install-page reading order must expose the H1 and primary content before release/About information'
+);
 assert.match(nextIndex, new RegExp(`TURN NEXT · Source TURN v${escapedVersion} · Build ${escapedId}`));
 assert.match(nextIndex, new RegExp(`turn-next\\/app\\.js\\?source=${escapedCacheKey}-browser-consent-r166-bella-records`));
 
@@ -55,7 +67,7 @@ assert.match(unreadMarkers, /Newly unlocked achievement\./);
 assert.match(unreadMarkers, /new MutationObserver\(queueDecoration\)/);
 assert.match(unreadMarkers, /listObserver\.observe\(list, \{ childList: true \}\)/);
 
-console.log(`TURN ${release.version} startup cover, refreshed Bella graph, fixed Home viewport, spoken training labels and unread achievement markers passed.`);
+console.log(`TURN ${release.version} startup cover, screen-reader cache contracts, refreshed Bella graph, fixed Home viewport, spoken training labels and unread achievement markers passed.`);
 
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
