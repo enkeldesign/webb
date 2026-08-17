@@ -18,15 +18,16 @@
   <script type="module">
     import * as THREE from 'three';
     import { createTrackRuntime } from '/turn/tracks/catalog.js';
-    import { installMountainWorld } from '/turn/tracks/mountain-world-r3.js?visual=2';
-    import { createMountainTerrainSampler, createMountainRiverSamples, offsetPoint, MOUNTAIN_R3 } from '/turn/tracks/mountain-world-r3-terrain.js?visual=2';
+    import { installMountainWorld } from '/turn/tracks/mountain-world-r3.js?visual=4';
+    import { createMountainTerrainSampler, createMountainRiverSamples, offsetPoint, MOUNTAIN_R3 } from '/turn/tracks/mountain-world-r3-terrain.js?visual=4';
 
     const VIEWS = Object.freeze({
       aerial: { position:[330,235,-345], target:[5,22,-10], fov:49 },
       village:{ position:[118,48,-286], target:[8,8,-215], fov:52 },
       summit:{ position:[325,95,160], target:[180,43,105], fov:50 },
       descent:{ position:[235,92,-5], target:[62,22,-32], fov:52 },
-      waterfall:{ position:[354,51,-236], target:[244,11,-143], fov:43 }
+      waterfall:{ position:[354,51,-236], target:[244,11,-143], fov:43 },
+      'waterfall-road': { dynamic:'waterfall-road', fov:48 }
     });
 
     const params = new URLSearchParams(location.search);
@@ -55,9 +56,31 @@
     await world.ready;
 
     const preset = VIEWS[viewName];
-    camera.position.set(...preset.position);
     camera.up.set(0,1,0);
-    camera.lookAt(...preset.target);
+    if (preset.dynamic === 'waterfall-road') {
+      let nearestIndex = 0;
+      let nearestDistanceSq = Infinity;
+      runtime.samples.forEach((sample, index) => {
+        const dx = sample.point.x - MOUNTAIN_R3.WATERFALL.x;
+        const dz = sample.point.z - MOUNTAIN_R3.WATERFALL.z;
+        const distanceSq = dx * dx + dz * dz;
+        if (distanceSq < nearestDistanceSq) {
+          nearestDistanceSq = distanceSq;
+          nearestIndex = index;
+        }
+      });
+      const cameraIndex = (nearestIndex - 54 + runtime.samples.length) % runtime.samples.length;
+      const roadCamera = runtime.samples[cameraIndex];
+      camera.position.set(roadCamera.point.x, roadCamera.point.y + 6.2, roadCamera.point.z);
+      camera.lookAt(
+        MOUNTAIN_R3.WATERFALL.x,
+        (MOUNTAIN_R3.WATERFALL.top + MOUNTAIN_R3.LAKE.level) * 0.5,
+        MOUNTAIN_R3.WATERFALL.z - 4
+      );
+    } else {
+      camera.position.set(...preset.position);
+      camera.lookAt(...preset.target);
+    }
     camera.fov = preset.fov;
     camera.updateProjectionMatrix();
 
@@ -101,11 +124,13 @@
     const count = (fragment) => names.filter((name) => name.includes(fragment)).length;
     const diagnostics = world.userData.turnMountainGroundingDiagnostics || [];
     const maxGroundingDelta = diagnostics.reduce((max, entry) => Math.max(max, Math.abs(entry.delta)), 0);
+    const r4 = world.userData.turnMountainR4VisualPolish || {};
 
     globalThis.__mountainVisualMetrics = Object.freeze({
       viewName,
       assetsReady: world.userData.turnMountainAssetsReady === true,
       assetErrors: [...(world.userData.turnMountainAssetErrors || [])],
+      r4AssetErrors: [...(world.userData.turnMountainR4AssetErrors || [])],
       maximumRoadSupportGap,
       maximumEdgeSupportGap,
       maximumRenderedRoadSupportGap,
@@ -120,14 +145,24 @@
       deepFoundations: count('deep retaining road foundation r3'),
       roadbedUndersides: count('closed roadbed underside r3'),
       cabins: count('Holiday cabin prefab r3'),
+      assembledCabins: count('assembled r4'),
       marketStalls: count('Fantasy market stall'),
+      winterMarketAssets: count('winter market'),
       fountains: count('Fantasy fountain r3'),
+      litStreetlights: count('Holiday lit streetlight r4'),
+      warmLanternHalos: count('warm lantern halo r4'),
+      decorativeVillageAssets: count('village ') + count('decorative Holiday spruce r4'),
+      distantLayeredRidges: count('distant layered ridge r4'),
       waterfallCliffModules: count('Nature cliff module r3'),
       waterfallSheets: count('river-to-lake waterfall sheet r3'),
       visibleWaterfallCurtains: count('visible waterfall curtain r3'),
+      trackVisibleWaterfallCurtains: count('track-visible waterfall curtain r4'),
       waterfallSpillways: count('waterfall spillway r3'),
       lakes: count('terrain-bounded waterfall lake r3'),
-      windmills: names.filter((name) => /windmill/i.test(name)).length
+      windmills: names.filter((name) => /windmill/i.test(name)).length,
+      r4CabinsReported: Number(r4.cabins || 0),
+      r4StreetlightsReported: Number(r4.streetlights || 0),
+      r4MarketAssetsReported: Number(r4.marketAssets || 0)
     });
 
     renderer.render(scene,camera);
