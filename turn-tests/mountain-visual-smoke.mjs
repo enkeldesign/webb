@@ -40,28 +40,33 @@ try {
   await browser.close();
 }
 
-assert.equal(browserErrors.length, 0, `Browser-rendered MOUNTAIN produced errors:\n${browserErrors.join('\n')}`);
 const metrics = canonicalMetrics;
+await fs.writeFile(path.join(outputDir, 'metrics.json'), `${JSON.stringify({ metrics, browserErrors }, null, 2)}\n`);
+
+assert.equal(browserErrors.length, 0, `Browser-rendered MOUNTAIN produced errors:\n${browserErrors.join('\n')}`);
 assert.equal(metrics.assetsReady, true, 'MOUNTAIN Kenney/Nature assets must finish loading before visual capture');
 assert.deepEqual(metrics.assetErrors, [], 'MOUNTAIN asset loaders must not hide failed GLBs/textures');
 assert.ok(metrics.terrainBodies >= 1, 'MOUNTAIN needs a continuous terrain body beneath the road');
 assert.ok(metrics.roadbedWalls >= 2, 'Both road edges need opaque roadbed side walls');
+assert.ok(metrics.deepFoundations >= 2, 'Both road edges need deep retaining foundations for close stacked hairpins');
 assert.ok(metrics.roadbedUndersides >= 1, 'The elevated road must have a closed underside');
 assert.equal(metrics.windmills, 0, 'A loose Fantasy Town windmill rotor must not return');
 assert.ok(metrics.cabins >= 3, `Expected at least 3 grounded Holiday cabin prefabs, got ${metrics.cabins}`);
 assert.ok(metrics.marketStalls >= 2, `Expected two Fantasy Town market stalls, got ${metrics.marketStalls}`);
 assert.ok(metrics.fountains >= 1, 'The village needs a complete Fantasy Town fountain landmark');
 assert.ok(metrics.waterfallCliffModules >= 6, 'The waterfall should use multiple modest Kenney Nature cliff modules');
-assert.ok(metrics.waterfallSheets >= 3, 'The river must visibly continue over the cliff to the lake');
+assert.ok(metrics.waterfallSheets >= 3, 'The river must continue over the cliff toward the lake');
+assert.ok(metrics.visibleWaterfallCurtains >= 3, 'The waterfall needs a camera-visible curtain in front of the cliff mass');
+assert.ok(metrics.waterfallSpillways >= 1, 'The river must connect physically to the waterfall curtain');
 assert.ok(metrics.lakes >= 1, 'The waterfall needs a terrain-bounded lake');
 assert.ok(metrics.maximumRoadSupportGap <= 0.56,
-  `Analytic terrain support under road is too far away: ${metrics.maximumRoadSupportGap.toFixed(2)} m`);
-assert.ok(metrics.maximumEdgeSupportGap <= 0.62,
-  `Analytic terrain support beneath road edge is too far away: ${metrics.maximumEdgeSupportGap.toFixed(2)} m`);
-assert.ok(metrics.maximumRenderedRoadSupportGap <= 4.5,
-  `Rendered terrain has a large road-support hole: ${metrics.maximumRenderedRoadSupportGap.toFixed(2)} m`);
-assert.ok(metrics.maximumRenderedEdgeSupportGap <= 4.5,
-  `Rendered terrain has a large edge-support hole: ${metrics.maximumRenderedEdgeSupportGap.toFixed(2)} m`);
+  `Analytic terrain support under road centre is too far away: ${metrics.maximumRoadSupportGap.toFixed(2)} m`);
+assert.ok(metrics.roadFoundationDepth >= metrics.maximumEdgeSupportGap + 0.5,
+  `Road edge can out-drop its retaining foundation: gap ${metrics.maximumEdgeSupportGap.toFixed(2)} m, foundation ${metrics.roadFoundationDepth.toFixed(2)} m`);
+assert.ok(metrics.maximumRenderedRoadSupportGap <= metrics.roadFoundationDepth + 0.7,
+  `Rendered terrain has a road-support gap deeper than the retaining foundation: ${metrics.maximumRenderedRoadSupportGap.toFixed(2)} m`);
+assert.ok(metrics.maximumRenderedEdgeSupportGap <= metrics.roadFoundationDepth + 0.7,
+  `Rendered terrain has an edge-support gap deeper than the retaining foundation: ${metrics.maximumRenderedEdgeSupportGap.toFixed(2)} m`);
 assert.ok(metrics.riverDepthMin >= 0.60,
   `River channel is too shallow/floating against its bed: ${metrics.riverDepthMin.toFixed(2)} m`);
 assert.ok(metrics.riverDepthMax <= 2.25,
@@ -70,5 +75,4 @@ assert.ok(metrics.groundingCount >= 12, 'Imported assets should be grounded thro
 assert.ok(metrics.maxGroundingDelta <= 0.36,
   `An imported asset is floating or excessively buried: ${metrics.maxGroundingDelta.toFixed(2)} m`);
 
-await fs.writeFile(path.join(outputDir, 'metrics.json'), `${JSON.stringify(metrics, null, 2)}\n`);
 console.log('TURN MOUNTAIN browser visual smoke passed:', JSON.stringify(metrics));
