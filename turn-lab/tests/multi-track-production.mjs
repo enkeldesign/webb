@@ -19,6 +19,10 @@ import {
   MIDNIGHT_CITY_LAYOUT_RULES
 } from '../../turn/tracks/midnight-city-layout.js';
 import {
+  MOUNTAIN_CONTROL_POINTS,
+  MOUNTAIN_LAYOUT_RULES
+} from '../../turn/tracks/mountain-layout.js';
+import {
   clearRivalsState,
   getStoredBestTime,
   saveRivalsState
@@ -36,17 +40,20 @@ assert.deepEqual(
     { id: 'airport', difficulty: 'MEDIUM', storageRevision: 'airport-r50', freeRoamDistance: 95 },
     { id: 'cliffside', difficulty: 'MEDIUM', storageRevision: 'cliffside-r68', freeRoamDistance: 22.2 },
     { id: 'harbor', difficulty: 'HARD', storageRevision: 'harbor-r80', freeRoamDistance: 170 },
-    { id: 'midnight-city', difficulty: 'HARD', storageRevision: 'midnight-city-r2', freeRoamDistance: 34 }
+    { id: 'midnight-city', difficulty: 'HARD', storageRevision: 'midnight-city-r2', freeRoamDistance: 34 },
+    { id: 'mountain', difficulty: 'HARD', storageRevision: 'mountain-r1', freeRoamDistance: 31 }
   ],
   'Every playable track must own identity, difficulty, record namespace and containment in one source of truth'
 );
 assert.deepEqual(
-  TRACK_PLACEHOLDERS.map(({ id, name, locked }) => ({ id, name, locked })),
-  [{ id: 'track-6-tba', name: 'TBA', locked: true }],
-  'Track 6 must remain a visible but non-playable teaser'
+  TRACK_PLACEHOLDERS,
+  [],
+  'Track 6 must be a real playable MOUNTAIN track rather than the old TBA teaser'
 );
 assert.equal(getTrackStorageRevision('midnight-city'), 'midnight-city-r2');
 assert.equal(getTrackFreeRoamDistance('midnight-city'), 34);
+assert.equal(getTrackStorageRevision('mountain'), 'mountain-r1');
+assert.equal(getTrackFreeRoamDistance('mountain'), 31);
 assert.equal(getTrackStorageRevision('future-track'), 'future-track');
 assert.equal(getTrackFreeRoamDistance('future-track'), 170);
 
@@ -106,15 +113,19 @@ for (const [trackId, sourcePalette] of contextualEdgeCases) {
   }
 }
 assert.equal(ROAD_EDGE_COLORS['midnight-city'], undefined, 'Midnight City already owns a solid street-edge treatment and must remain unchanged');
+assert.equal(ROAD_EDGE_COLORS.mountain, undefined, 'Mountain owns its alpine blue-and-cream road-edge construction inside its world');
 assert.equal(ROAD_EDGE_CONTOURS.countryside, undefined, 'Countryside already owns its black outer contour and must not get a duplicate');
 assert.equal(ROAD_EDGE_CONTOURS['midnight-city'], undefined, 'Midnight City must keep its own street-edge construction');
+assert.equal(ROAD_EDGE_CONTOURS.mountain, undefined, 'Mountain must not receive a duplicate contextual contour');
 
 const midnightLength = closedPolylineLength(MIDNIGHT_CITY_CONTROL_POINTS);
 const harborLength = closedPolylineLength(HARBOR_CONTROL_POINTS);
+const mountainLength = closedPolylineLength(MOUNTAIN_CONTROL_POINTS);
 assert.ok(
   midnightLength >= harborLength * 2,
   `Midnight City must remain more than twice as long as Harbor (${midnightLength.toFixed(0)} vs ${harborLength.toFixed(0)})`
 );
+assert.ok(mountainLength > harborLength, 'Mountain must be a substantial alpine journey rather than a short technical loop');
 assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.cityGridRows, 5);
 assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.outerRingReturn, true);
 assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.districtCount, 4);
@@ -129,6 +140,11 @@ assert.ok(
   maximumControlTurn(MIDNIGHT_CITY_CONTROL_POINTS) < 110,
   'Midnight City must not contain a near-reversal that makes offset track borders fold into themselves'
 );
+assert.equal(findProperIntersections(MOUNTAIN_CONTROL_POINTS).length, 0, 'Mountain control road must not cross itself');
+assert.equal(MOUNTAIN_LAYOUT_RULES.minimumElevation, 0);
+assert.equal(MOUNTAIN_LAYOUT_RULES.maximumElevation, 49);
+assert.equal(MOUNTAIN_LAYOUT_RULES.snowLineElevation, 37);
+assert.ok(maximumControlTurn(MOUNTAIN_CONTROL_POINTS) < 100, 'Mountain hairpins must remain driveable rather than becoming near-reversals');
 
 const storage = new Map();
 const originalLocalStorage = globalThis.localStorage;
@@ -143,7 +159,8 @@ try {
     { trackId: 'countryside', time: 12.73, key: 'turn-personal-rivals-v1' },
     { trackId: 'airport', time: 22.42, key: 'turn-personal-rivals-v1:airport-r50' },
     { trackId: 'harbor', time: 38.61, key: 'turn-personal-rivals-v1:harbor-r80' },
-    { trackId: 'midnight-city', time: 104.82, key: 'turn-personal-rivals-v1:midnight-city-r2' }
+    { trackId: 'midnight-city', time: 104.82, key: 'turn-personal-rivals-v1:midnight-city-r2' },
+    { trackId: 'mountain', time: 98.14, key: 'turn-personal-rivals-v1:mountain-r1' }
   ];
 
   for (const entry of states) {
@@ -163,6 +180,7 @@ try {
   clearRivalsState({ trackId: 'midnight-city', competitorLaps: [] });
   assert.equal(storage.has('turn-personal-rivals-v1:midnight-city-r2'), false);
   assert.equal(storage.has('turn-personal-rivals-v1:harbor-r80'), true, 'Resetting Midnight City must preserve Harbor records');
+  assert.equal(storage.has('turn-personal-rivals-v1:mountain-r1'), true, 'Resetting Midnight City must preserve Mountain records');
   assert.equal(storage.has('turn-personal-rivals-v1'), true, 'Resetting Midnight City must preserve Countryside records');
 } finally {
   if (originalLocalStorage === undefined) delete globalThis.localStorage;
@@ -172,6 +190,7 @@ try {
 assert.equal(AIRPORT_HAIRPIN_RUNOFF_ZONES.length, 2);
 assert.equal(isForgivingTrackSurface('airport', { x: 20, z: 54 }), true);
 assert.equal(isForgivingTrackSurface('midnight-city', { x: 20, z: 54 }), false, 'Airport runoff must never leak into Midnight City');
+assert.equal(isForgivingTrackSurface('mountain', { x: 20, z: 54 }), false, 'Airport runoff must never leak into Mountain');
 
 const trackA = makeSamples([[-20, 0], [0, 0], [20, 0], [40, 0]]);
 const trackB = makeSamples([[0, 100], [20, 100], [40, 100], [60, 100]]);
@@ -181,41 +200,52 @@ const rebuilt = spatialIndex.find({ x: 19, z: 98 });
 const brute = findNearestTrackBruteForce(trackB, { x: 19, z: 98 });
 assert.equal(rebuilt.index, brute.index, 'The spatial index must rebuild exactly for a different course length');
 
-const [definitions, catalog, registry, manager, world, home] = await Promise.all([
+const [definitions, catalog, registry, manager, cityWorld, mountainWorld, home] = await Promise.all([
   fs.readFile(new URL('../../turn/tracks/definitions.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/registry.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/track-manager.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/midnight-city-world-r7.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/mountain-world.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/m8-home.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(definitions, /id: 'midnight-city'[\s\S]*difficulty: 'HARD'/);
 assert.match(definitions, /storageRevision: 'midnight-city-r2'/);
+assert.match(definitions, /id: 'mountain'[\s\S]*difficulty: 'HARD'/);
+assert.match(definitions, /storageRevision: 'mountain-r1'/);
 assert.match(definitions, /sampleCount: 1080/);
 assert.match(definitions, /fogNear: 250[\s\S]*fogFar: 880/);
-assert.match(definitions, /id: 'track-6-tba'[\s\S]*locked: true/);
+assert.doesNotMatch(definitions, /id: 'track-6-tba'/);
 assert.match(catalog, /MIDNIGHT_CITY_CONTROL_POINTS\.map/);
+assert.match(catalog, /MOUNTAIN_CONTROL_POINTS\.map/);
 assert.match(registry, /midnight-city-world-r9\.js\?build=20260802-r9/);
+assert.match(registry, /mountain-world\.js\?revision=r1/);
 assert.match(registry, /contextual-road-edges\.js\?revision=r518-signature-yellow/);
 assert.match(registry, /definition\.sampleCount \|\| sampleCount/);
 assert.doesNotMatch(manager, /nextTrackId === 'midnight-city'/, 'The generic track manager must not gain a Midnight City special case');
+assert.doesNotMatch(manager, /nextTrackId === 'mountain'/, 'The generic track manager must not gain a Mountain special case');
 assert.match(manager, /lighting\.hemisphereIntensity \?\? 2\.7/);
 assert.match(manager, /track\.fogNear/);
-assert.match(world, /installMidnightCityWorld as installMidnightCityWorldR6/);
-assert.match(world, /installReadableSignBacks/);
-assert.match(world, /reverse\.rotation\.y = Math\.PI/);
-assert.match(world, /label: 'VIOLET GARDENS'[\s\S]*x: -590[\s\S]*z: -125/);
-assert.match(world, /label: 'SUNRISE PARK'[\s\S]*x: 570[\s\S]*z: 145/);
-assert.match(world, /relocateSecondaryParks/);
-assert.match(world, /track-facing entrance/);
-assert.match(world, /rebuildParkTrees/);
-assert.match(world, /new THREE\.InstancedMesh/);
-assert.match(world, /noDynamicLightsAdded: true/);
-assert.doesNotMatch(world, /setAnimationLoop|requestAnimationFrame|setInterval/, 'Static city scenery must not add an independent loop');
-assert.match(home, /TRACK_SELECTION_CATALOG\.map\(renderTrackCard\)/, 'Home must render the playable city and TBA teaser from the shared catalog');
+assert.match(cityWorld, /installMidnightCityWorld as installMidnightCityWorldR6/);
+assert.match(cityWorld, /installReadableSignBacks/);
+assert.match(cityWorld, /reverse\.rotation\.y = Math\.PI/);
+assert.match(cityWorld, /label: 'VIOLET GARDENS'[\s\S]*x: -590[\s\S]*z: -125/);
+assert.match(cityWorld, /label: 'SUNRISE PARK'[\s\S]*x: 570[\s\S]*z: 145/);
+assert.match(cityWorld, /relocateSecondaryParks/);
+assert.match(cityWorld, /track-facing entrance/);
+assert.match(cityWorld, /rebuildParkTrees/);
+assert.match(cityWorld, /new THREE\.InstancedMesh/);
+assert.match(cityWorld, /noDynamicLightsAdded: true/);
+assert.doesNotMatch(cityWorld, /setAnimationLoop|requestAnimationFrame|setInterval/, 'Static city scenery must not add an independent loop');
+assert.match(mountainWorld, /Mountain cozy chalet/);
+assert.match(mountainWorld, /Mountain waterfall sheet/);
+assert.match(mountainWorld, /fantasy-town\/windmill\.glb/);
+assert.match(mountainWorld, /fantasy-town\/fountainCenter\.glb/);
+assert.doesNotMatch(mountainWorld, /setAnimationLoop|requestAnimationFrame|setInterval/, 'Static alpine scenery must not add an independent loop');
+assert.match(home, /TRACK_SELECTION_CATALOG\.map\(renderTrackCard\)/, 'Home must render all six playable tracks from the shared catalog');
 
-console.log(`TURN Midnight City passed at ${midnightLength.toFixed(0)} units, ${(midnightLength / harborLength).toFixed(1)}× Harbor.`);
+console.log(`TURN six-track runtime passed: Midnight City ${midnightLength.toFixed(0)} units, Mountain ${mountainLength.toFixed(0)} units.`);
 
 function closedPolylineLength(points) {
   let length = 0;
@@ -237,9 +267,7 @@ function maximumControlTurn(points) {
     const outgoing = [next[0] - current[0], next[2] - current[2]];
     const incomingLength = Math.hypot(...incoming);
     const outgoingLength = Math.hypot(...outgoing);
-    const cosine = (
-      incoming[0] * outgoing[0] + incoming[1] * outgoing[1]
-    ) / Math.max(1e-9, incomingLength * outgoingLength);
+    const cosine = (incoming[0] * outgoing[0] + incoming[1] * outgoing[1]) / Math.max(1e-9, incomingLength * outgoingLength);
     maximum = Math.max(maximum, Math.acos(Math.max(-1, Math.min(1, cosine))) * 180 / Math.PI);
   }
   return maximum;
