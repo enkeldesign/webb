@@ -2,7 +2,7 @@ import {
   CHANGELOG,
   CURRENT_RELEASE,
   DEVELOPMENT_HISTORY
-} from '../content/about-history.js?build=20260817-r171';
+} from '../content/about-history.js?build=20260817-r172';
 import { aboutTurnHtml } from '../content/about-turn.js?revision=r1';
 
 const REVISION = 'r165-browser-about';
@@ -28,17 +28,26 @@ function installStylesheet(path, dataAttribute) {
   document.head.appendChild(link);
 }
 
+function focusDialogHeading(dialog) {
+  const labelledBy = String(dialog.getAttribute('aria-labelledby') || '').trim().split(/\s+/)[0];
+  const heading = (labelledBy && document.getElementById(labelledBy))
+    || dialog.querySelector('h1, h2, h3, [role="heading"]');
+  if (!heading || !dialog.contains(heading)) return;
+  if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
+  try {
+    heading.focus({ preventScroll: true });
+  } catch (_) {
+    heading.focus?.();
+  }
+}
+
 function openDialog(dialog, trigger) {
   dialog.__turnReturnFocus = trigger;
   const card = dialog.querySelector('.m8-dialog-card');
   if (card) card.scrollTop = 0;
   if (typeof dialog.showModal === 'function') dialog.showModal();
   else dialog.setAttribute('open', '');
-  try {
-    dialog.querySelector('[data-dialog-close]')?.focus({ preventScroll: true });
-  } catch (_) {
-    dialog.querySelector('[data-dialog-close]')?.focus?.();
-  }
+  focusDialogHeading(dialog);
 }
 
 function closeDialog(dialog) {
