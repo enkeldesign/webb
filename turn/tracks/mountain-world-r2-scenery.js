@@ -1,8 +1,32 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { MOUNTAIN_R2, material, seededRandom, mountainFacingSign, offsetPoint, nearestTrackDistanceXZ, nearestNonLocalTrackDistanceXZ, safeTracksidePosition } from './mountain-world-r2-terrain.js';
+import {
+  MOUNTAIN_R2,
+  material,
+  seededRandom,
+  mountainFacingSign,
+  offsetPoint,
+  nearestTrackDistanceXZ,
+  nearestNonLocalTrackDistanceXZ,
+  safeTracksidePosition
+} from './mountain-world-r2-terrain.js';
 
-const { GRANITE_DARK, SPRUCE_DARK, SPRUCE_LIGHT, SNOW, WATER, WATER_LIGHT, GUARDRAIL, EDGE_WHITE_WIDTH, EDGE_BLACK_WIDTH, SHOULDER_WIDTH, LAKE_LEVEL, WATERFALL, HOLIDAY_ROOT, NATURE_ROOT } = MOUNTAIN_R2;
+const {
+  GRANITE_DARK,
+  SPRUCE_DARK,
+  SPRUCE_LIGHT,
+  SNOW,
+  WATER,
+  WATER_LIGHT,
+  GUARDRAIL,
+  EDGE_WHITE_WIDTH,
+  EDGE_BLACK_WIDTH,
+  SHOULDER_WIDTH,
+  LAKE_LEVEL,
+  WATERFALL,
+  HOLIDAY_ROOT,
+  NATURE_ROOT
+} = MOUNTAIN_R2;
 
 function makeSafeGuardrails(world, samples, trackWidth) {
   const entries = [];
@@ -18,7 +42,11 @@ function makeSafeGuardrails(world, samples, trackWidth) {
     entries.push({ index, point, offset });
   }
 
-  const posts = new THREE.InstancedMesh(new THREE.BoxGeometry(0.34, 1.5, 0.34), material(GUARDRAIL, 0.62, 0.25), entries.length);
+  const posts = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(0.34, 1.5, 0.34),
+    material(GUARDRAIL, 0.62, 0.25),
+    entries.length
+  );
   const marker = new THREE.Object3D();
   entries.forEach((entry, cursor) => {
     marker.position.copy(entry.point);
@@ -59,25 +87,68 @@ function makeSafeSnowForest(world, samples, trackWidth) {
     if (progress < 0.06 || progress > 0.94) continue;
     const inward = mountainFacingSign(sample);
     const side = random() > 0.18 ? inward : -inward;
-    const point = safeTracksidePosition(samples, index, side, trackWidth, 3.8, 19.8 + random() * 2.2, 34, 1.6);
+    const point = safeTracksidePosition(
+      samples,
+      index,
+      side,
+      trackWidth,
+      3.8,
+      19.8 + random() * 2.2,
+      34,
+      1.6
+    );
     if (!point) continue;
     point.y = sample.point.y - 0.8;
     placements.push({ point, scale: 0.62 + random() * 0.75, yaw: random() * Math.PI * 2 });
   }
 
-  const trunks = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.3, 0.42, 4.6, 6), material(0x60472f, 1), placements.length);
-  const crowns = new THREE.InstancedMesh(new THREE.ConeGeometry(3.0, 9.4, 7), material(SPRUCE_DARK, 1), placements.length);
-  const lowers = new THREE.InstancedMesh(new THREE.ConeGeometry(3.7, 7.2, 7), material(SPRUCE_LIGHT, 1), placements.length);
-  const snowCaps = new THREE.InstancedMesh(new THREE.ConeGeometry(2.45, 5.4, 7), material(SNOW, 1), placements.length);
+  const trunks = new THREE.InstancedMesh(
+    new THREE.CylinderGeometry(0.3, 0.42, 4.6, 6),
+    material(0x60472f, 1),
+    placements.length
+  );
+  const crowns = new THREE.InstancedMesh(
+    new THREE.ConeGeometry(3.0, 9.4, 7),
+    material(SPRUCE_DARK, 1),
+    placements.length
+  );
+  const lowers = new THREE.InstancedMesh(
+    new THREE.ConeGeometry(3.7, 7.2, 7),
+    material(SPRUCE_LIGHT, 1),
+    placements.length
+  );
+  const snowCaps = new THREE.InstancedMesh(
+    new THREE.ConeGeometry(2.45, 5.4, 7),
+    material(SNOW, 1),
+    placements.length
+  );
   const marker = new THREE.Object3D();
   placements.forEach((entry, cursor) => {
     marker.rotation.set(0, entry.yaw, 0);
     marker.scale.setScalar(entry.scale);
-    marker.position.copy(entry.point); marker.position.y += 2.3 * entry.scale; marker.updateMatrix(); trunks.setMatrixAt(cursor, marker.matrix);
-    marker.position.copy(entry.point); marker.position.y += 7.4 * entry.scale; marker.updateMatrix(); crowns.setMatrixAt(cursor, marker.matrix);
-    marker.position.copy(entry.point); marker.position.y += 5.1 * entry.scale; marker.rotation.y = entry.yaw + 0.18; marker.updateMatrix(); lowers.setMatrixAt(cursor, marker.matrix);
-    marker.position.copy(entry.point); marker.position.y += 8.6 * entry.scale; marker.rotation.y = entry.yaw - 0.1; marker.updateMatrix(); snowCaps.setMatrixAt(cursor, marker.matrix);
+    marker.position.copy(entry.point);
+    marker.position.y += 2.3 * entry.scale;
+    marker.updateMatrix();
+    trunks.setMatrixAt(cursor, marker.matrix);
+
+    marker.position.copy(entry.point);
+    marker.position.y += 7.4 * entry.scale;
+    marker.updateMatrix();
+    crowns.setMatrixAt(cursor, marker.matrix);
+
+    marker.position.copy(entry.point);
+    marker.position.y += 5.1 * entry.scale;
+    marker.rotation.y = entry.yaw + 0.18;
+    marker.updateMatrix();
+    lowers.setMatrixAt(cursor, marker.matrix);
+
+    marker.position.copy(entry.point);
+    marker.position.y += 8.6 * entry.scale;
+    marker.rotation.y = entry.yaw - 0.1;
+    marker.updateMatrix();
+    snowCaps.setMatrixAt(cursor, marker.matrix);
   });
+
   [trunks, crowns, lowers, snowCaps].forEach((mesh) => {
     mesh.instanceMatrix.needsUpdate = true;
     mesh.castShadow = true;
@@ -96,15 +167,29 @@ function makeGroundedRockFields(world, samples, trackWidth) {
     const sample = samples[index];
     if (sample.point.y < 5) continue;
     const side = mountainFacingSign(sample);
-    const point = safeTracksidePosition(samples, index, side, trackWidth, 3.8, 20.2 + random() * 2.8, 34, 1.8);
+    const point = safeTracksidePosition(
+      samples,
+      index,
+      side,
+      trackWidth,
+      3.8,
+      20.2 + random() * 2.8,
+      34,
+      1.8
+    );
     if (!point) continue;
     const scale = 1.5 + random() * 3.1;
     point.y = sample.point.y - 1.1 + scale * 0.42;
     placements.push({ point, scale, yaw: random() * Math.PI * 2, snow: random() > 0.45 });
   }
+
   const geometry = new THREE.DodecahedronGeometry(1, 0);
   const rocks = new THREE.InstancedMesh(geometry, material(GRANITE_DARK, 1), placements.length);
-  const caps = new THREE.InstancedMesh(geometry, material(SNOW, 1), placements.filter((entry) => entry.snow).length);
+  const caps = new THREE.InstancedMesh(
+    geometry,
+    material(SNOW, 1),
+    placements.filter((entry) => entry.snow).length
+  );
   const marker = new THREE.Object3D();
   let capCursor = 0;
   placements.forEach((entry, cursor) => {
@@ -114,14 +199,19 @@ function makeGroundedRockFields(world, samples, trackWidth) {
     marker.updateMatrix();
     rocks.setMatrixAt(cursor, marker.matrix);
     if (entry.snow) {
-      marker.position.copy(entry.point); marker.position.y += entry.scale * 0.52;
+      marker.position.copy(entry.point);
+      marker.position.y += entry.scale * 0.52;
       marker.scale.set(entry.scale, entry.scale * 0.24, entry.scale * 0.78);
-      marker.updateMatrix(); caps.setMatrixAt(capCursor, marker.matrix); capCursor += 1;
+      marker.updateMatrix();
+      caps.setMatrixAt(capCursor, marker.matrix);
+      capCursor += 1;
     }
   });
   rocks.instanceMatrix.needsUpdate = true;
   caps.instanceMatrix.needsUpdate = true;
-  rocks.castShadow = true; rocks.receiveShadow = true; caps.castShadow = true;
+  rocks.castShadow = true;
+  rocks.receiveShadow = true;
+  caps.castShadow = true;
   rocks.name = 'Mountain grounded clearance-safe granite';
   caps.name = 'Mountain grounded granite snow caps';
   world.add(rocks, caps);
@@ -135,22 +225,39 @@ function makeRandomSnowDrifts(world, samples, trackWidth) {
     new THREE.SphereGeometry(1, 6, 3)
   ];
   const snowMaterial = material(SNOW, 1);
-  for (let index = 16; index < samples.length; index += 19) {
+  for (let index = 16; index < samples.length; index += 23) {
     const sample = samples[index];
-    const sides = random() > 0.55 ? [-1, 1] : [random() > 0.5 ? -1 : 1];
+    const sides = random() > 0.64 ? [-1, 1] : [random() > 0.5 ? -1 : 1];
     for (const side of sides) {
-      const base = safeTracksidePosition(samples, index, side, trackWidth, 2.6, 19.2 + random() * 2.8, 34, 1.6);
+      const base = safeTracksidePosition(
+        samples,
+        index,
+        side,
+        trackWidth,
+        2.2,
+        19.4 + random() * 2.6,
+        34,
+        1.5
+      );
       if (!base) continue;
-      const blobCount = 2 + Math.floor(random() * 3);
+      const blobCount = 1 + Math.floor(random() * 3);
       for (let blob = 0; blob < blobCount; blob += 1) {
-        const scale = 1.5 + random() * 2.8;
+        const scale = 0.9 + random() * 1.5;
         const mound = new THREE.Mesh(geometries[(index + blob) % geometries.length], snowMaterial);
         mound.position.copy(base);
-        mound.position.x += (random() - 0.5) * 5.8;
-        mound.position.z += (random() - 0.5) * 5.8;
-        mound.position.y = sample.point.y - 0.35 + scale * (0.28 + random() * 0.08);
-        mound.rotation.set((random() - 0.5) * 0.24, random() * Math.PI, (random() - 0.5) * 0.18);
-        mound.scale.set(scale * (1.4 + random() * 1.25), scale * (0.28 + random() * 0.28), scale * (0.9 + random() * 1.05));
+        mound.position.x += (random() - 0.5) * 4.4;
+        mound.position.z += (random() - 0.5) * 4.4;
+        mound.position.y = sample.point.y - 0.28 + scale * (0.2 + random() * 0.08);
+        mound.rotation.set(
+          (random() - 0.5) * 0.2,
+          random() * Math.PI,
+          (random() - 0.5) * 0.16
+        );
+        mound.scale.set(
+          scale * (1.1 + random() * 1.0),
+          scale * (0.25 + random() * 0.22),
+          scale * (0.8 + random() * 0.85)
+        );
         if (nearestTrackDistanceXZ(mound.position, samples, 2) < trackWidth / 2 + 4.5) continue;
         mound.castShadow = true;
         mound.receiveShadow = true;
@@ -162,7 +269,14 @@ function makeRandomSnowDrifts(world, samples, trackWidth) {
 }
 
 function makeRiverCliffWaterfallAndLake(world, samples, trackWidth) {
-  const waterMaterial = new THREE.MeshStandardMaterial({ color: WATER, roughness: 0.32, transparent: true, opacity: 0.92, side: THREE.DoubleSide });
+  const waterMaterial = new THREE.MeshStandardMaterial({
+    color: WATER,
+    roughness: 0.32,
+    transparent: true,
+    opacity: 0.92,
+    side: THREE.DoubleSide
+  });
+
   const lake = new THREE.Mesh(new THREE.CircleGeometry(86, 56), waterMaterial);
   lake.rotation.x = -Math.PI / 2;
   lake.scale.set(1.2, 0.72, 1);
@@ -171,9 +285,15 @@ function makeRiverCliffWaterfallAndLake(world, samples, trackWidth) {
   world.add(lake);
 
   const riverPoints = [
-    [225, 45, 215], [246, 43.5, 180], [263, 41, 132], [271, 37.5, 78],
-    [270, 34, 20], [263, 30.5, -38], [254, 27.5, -84], [246, WATERFALL.top, -112]
-  ].map(([x,y,z]) => new THREE.Vector3(x,y,z));
+    [225, 45, 215],
+    [246, 43.5, 180],
+    [263, 41, 132],
+    [271, 37.5, 78],
+    [270, 34, 20],
+    [263, 30.5, -38],
+    [254, 27.5, -90],
+    [246, WATERFALL.top, -126]
+  ].map(([x, y, z]) => new THREE.Vector3(x, y, z));
   const curve = new THREE.CatmullRomCurve3(riverPoints, false, 'centripetal');
   const riverSamples = Array.from({ length: 88 }, (_, index) => {
     const t = index / 87;
@@ -185,12 +305,16 @@ function makeRiverCliffWaterfallAndLake(world, samples, trackWidth) {
 
   makeOpenRibbon(world, riverSamples, 15, material(GRANITE_DARK, 1), -0.42, 'Mountain grounded river rock bed');
   makeOpenRibbon(world, riverSamples, 8.2, waterMaterial, 0, 'Mountain summit river clear of road');
-
   loadNatureWaterfallCliff(world);
 
   const waterfallMaterial = new THREE.MeshStandardMaterial({
-    color: WATER_LIGHT, roughness: 0.22, transparent: true, opacity: 0.88, side: THREE.DoubleSide,
-    emissive: 0x0b4b66, emissiveIntensity: 0.12
+    color: WATER_LIGHT,
+    roughness: 0.22,
+    transparent: true,
+    opacity: 0.88,
+    side: THREE.DoubleSide,
+    emissive: 0x0b4b66,
+    emissiveIntensity: 0.12
   });
   const fallHeight = WATERFALL.top - WATERFALL.bottom;
   for (const offset of [-5.4, 0, 5.4]) {
@@ -200,17 +324,38 @@ function makeRiverCliffWaterfallAndLake(world, samples, trackWidth) {
     sheet.name = 'Mountain cliff waterfall sheet r2';
     world.add(sheet);
   }
-  const foam = new THREE.Mesh(new THREE.CircleGeometry(23, 28), new THREE.MeshBasicMaterial({ color: 0xeafcff, transparent: true, opacity: 0.76, side: THREE.DoubleSide }));
+
+  const foam = new THREE.Mesh(
+    new THREE.CircleGeometry(23, 28),
+    new THREE.MeshBasicMaterial({
+      color: 0xeafcff,
+      transparent: true,
+      opacity: 0.76,
+      side: THREE.DoubleSide
+    })
+  );
   foam.rotation.x = -Math.PI / 2;
   foam.scale.set(1.4, 0.64, 1);
   foam.position.set(249, LAKE_LEVEL + 0.08, -149);
   foam.name = 'Mountain waterfall lake foam';
   world.add(foam);
 
-  const mistMaterial = new THREE.MeshBasicMaterial({ color: 0xe9fbff, transparent: true, opacity: 0.18, depthWrite: false });
+  const mistMaterial = new THREE.MeshBasicMaterial({
+    color: 0xe9fbff,
+    transparent: true,
+    opacity: 0.18,
+    depthWrite: false
+  });
   for (let index = 0; index < 8; index += 1) {
-    const mist = new THREE.Mesh(new THREE.IcosahedronGeometry(4.5 + (index % 3) * 1.8, 1), mistMaterial);
-    mist.position.set(232 + (index % 5) * 7.2, LAKE_LEVEL + 3.5 + Math.floor(index / 5) * 4, -145 + (index % 2) * 4.5);
+    const mist = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(4.5 + (index % 3) * 1.8, 1),
+      mistMaterial
+    );
+    mist.position.set(
+      232 + (index % 5) * 7.2,
+      LAKE_LEVEL + 3.5 + Math.floor(index / 5) * 4,
+      -145 + (index % 2) * 4.5
+    );
     mist.scale.y = 0.6;
     mist.name = 'Mountain waterfall mist r2';
     world.add(mist);
@@ -228,11 +373,22 @@ function makeOpenRibbon(world, samples, halfWidth, meshMaterial, yOffset, name) 
   for (let index = 0; index < samples.length - 1; index += 1) {
     const current = samples[index];
     const next = samples[index + 1];
-    const a = current.point.clone().addScaledVector(current.normal, halfWidth); a.y += yOffset;
-    const b = current.point.clone().addScaledVector(current.normal, -halfWidth); b.y += yOffset;
-    const c = next.point.clone().addScaledVector(next.normal, halfWidth); c.y += yOffset;
-    const d = next.point.clone().addScaledVector(next.normal, -halfWidth); d.y += yOffset;
-    positions.push(a.x,a.y,a.z, b.x,b.y,b.z, c.x,c.y,c.z, b.x,b.y,b.z, d.x,d.y,d.z, c.x,c.y,c.z);
+    const a = current.point.clone().addScaledVector(current.normal, halfWidth);
+    const b = current.point.clone().addScaledVector(current.normal, -halfWidth);
+    const c = next.point.clone().addScaledVector(next.normal, halfWidth);
+    const d = next.point.clone().addScaledVector(next.normal, -halfWidth);
+    a.y += yOffset;
+    b.y += yOffset;
+    c.y += yOffset;
+    d.y += yOffset;
+    positions.push(
+      a.x, a.y, a.z,
+      b.x, b.y, b.z,
+      c.x, c.y, c.z,
+      b.x, b.y, b.z,
+      d.x, d.y, d.z,
+      c.x, c.y, c.z
+    );
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
@@ -253,40 +409,79 @@ function prepareAsset(root) {
   return root;
 }
 
+function tintAssetClone(root, color) {
+  const clone = root.clone(true);
+  clone.traverse((node) => {
+    if (!node?.isMesh) return;
+    if (Array.isArray(node.material)) {
+      node.material = node.material.map((source) => {
+        const next = source.clone();
+        next.color?.setHex(color);
+        next.metalness = 0;
+        next.roughness = 1;
+        return next;
+      });
+    } else if (node.material) {
+      node.material = node.material.clone();
+      node.material.color?.setHex(color);
+      node.material.metalness = 0;
+      node.material.roughness = 1;
+    }
+  });
+  return clone;
+}
+
 function loadNatureWaterfallCliff(world) {
   const loader = new GLTFLoader();
   Promise.all([
     loader.loadAsync(`${NATURE_ROOT}/cliff-waterfall-top-rock.glb`),
     loader.loadAsync(`${NATURE_ROOT}/cliff-waterfall-rock.glb`)
   ]).then(([top, fall]) => {
-    const topRoot = prepareAsset(top.scene);
-    const fallRoot = prepareAsset(fall.scene);
-    recolorNatureCliff(topRoot);
-    recolorNatureCliff(fallRoot);
-    topRoot.position.set(WATERFALL.x, 0, WATERFALL.z + 8);
-    topRoot.rotation.y = Math.PI;
-    topRoot.scale.set(62, 26, 42);
-    topRoot.name = 'Mountain Kenney Nature waterfall top cliff';
-    world.add(topRoot);
-    fallRoot.position.set(WATERFALL.x, -0.25, WATERFALL.z + 7);
-    fallRoot.rotation.y = Math.PI;
-    fallRoot.scale.set(62, 25.7, 42);
-    fallRoot.name = 'Mountain Kenney Nature waterfall cliff';
-    world.add(fallRoot);
+    const topTemplate = prepareAsset(top.scene);
+    const fallTemplate = prepareAsset(fall.scene);
+    recolorNatureCliff(topTemplate);
+    recolorNatureCliff(fallTemplate);
+
+    const cliffSites = [
+      { x: -27, y: -0.7, z: 8.5, scale: 0.9, yaw: 0.12 },
+      { x: 0, y: -0.4, z: 7.5, scale: 1.08, yaw: -0.04 },
+      { x: 28, y: -0.9, z: 9.0, scale: 0.94, yaw: -0.14 }
+    ];
+
+    cliffSites.forEach((site, index) => {
+      const cliff = fallTemplate.clone(true);
+      cliff.position.set(WATERFALL.x + site.x, site.y, WATERFALL.z + site.z);
+      cliff.rotation.y = Math.PI + site.yaw;
+      cliff.scale.set(27 * site.scale, 26 * site.scale, 18 * site.scale);
+      cliff.name = `Mountain Kenney Nature waterfall cliff ${index + 1}`;
+      world.add(cliff);
+
+      const cap = topTemplate.clone(true);
+      cap.position.set(WATERFALL.x + site.x, 22.5 * site.scale, WATERFALL.z + site.z - 0.4);
+      cap.rotation.y = Math.PI + site.yaw;
+      cap.scale.set(27 * site.scale, 5.5 * site.scale, 18 * site.scale);
+      cap.name = `Mountain Kenney Nature snowy cliff cap ${index + 1}`;
+      world.add(cap);
+    });
   }).catch((error) => console.warn('TURN: Mountain Nature waterfall cliff failed to load', error));
 }
 
 function recolorNatureCliff(root) {
   root.traverse((node) => {
     if (!node?.isMesh) return;
-    const materials = Array.isArray(node.material) ? node.material : [node.material];
-    materials.forEach((source) => {
-      if (!source) return;
-      const name = String(source.name || '').toLowerCase();
-      if (name.includes('grass')) source.color?.setHex(SNOW);
-      if (name.includes('dirt')) source.color?.setHex(GRANITE_DARK);
-      source.roughness = 1;
-    });
+    const recolor = (source) => {
+      if (!source) return source;
+      const next = source.clone();
+      const name = String(next.name || '').toLowerCase();
+      if (name.includes('grass')) next.color?.setHex(SNOW);
+      else next.color?.setHex(GRANITE_DARK);
+      next.metalness = 0;
+      next.roughness = 1;
+      return next;
+    };
+    node.material = Array.isArray(node.material)
+      ? node.material.map(recolor)
+      : recolor(node.material);
   });
 }
 
@@ -301,17 +496,33 @@ function loadAssetVillage(world, samples, trackWidth) {
     const wallTemplate = prepareAsset(wall.scene);
     const roofTemplate = prepareAsset(roof.scene);
     const cabinSites = [
-      [7, 1, 1.02], [24, 1, 0.88], [44, 1, 1.08], [1060, -1, 0.95], [1040, -1, 1.06], [1018, -1, 0.9]
+      [7, 1, 1.00],
+      [24, 1, 0.88],
+      [44, 1, 1.05],
+      [1060, -1, 0.94],
+      [1040, -1, 1.03],
+      [1018, -1, 0.90]
     ];
+
     cabinSites.forEach(([index, side, scale], cabinIndex) => {
-      const point = safeTracksidePosition(samples, index, side, trackWidth, 11 * scale, 34, 82);
+      const point = safeTracksidePosition(
+        samples,
+        index,
+        side,
+        trackWidth,
+        10.5 * scale,
+        31,
+        70
+      );
       if (!point) return;
       const sample = samples[index % samples.length];
       const cabin = makeHolidayCabin(wallTemplate, roofTemplate, scale);
       cabin.position.copy(point);
       cabin.position.y = sample.point.y - 0.92;
-      cabin.rotation.y = Math.atan2(sample.tangent.x, sample.tangent.z) + (side > 0 ? Math.PI : 0) + (cabinIndex % 2 ? 0.12 : -0.08);
-      cabin.name = `Mountain Kenney Holiday cabin ${cabinIndex + 1}`;
+      cabin.rotation.y = Math.atan2(sample.tangent.x, sample.tangent.z)
+        + (side > 0 ? Math.PI : 0)
+        + (cabinIndex % 2 ? 0.12 : -0.08);
+      cabin.name = `Mountain Kenney Holiday assembled cabin ${cabinIndex + 1}`;
       world.add(cabin);
     });
 
@@ -341,32 +552,65 @@ function loadAssetVillage(world, samples, trackWidth) {
 
 function makeHolidayCabin(wallTemplate, roofTemplate, scale) {
   const cabin = new THREE.Group();
-  const wallScale = 10.2 * scale;
-  const half = 5.0 * scale;
-  const wallY = 0;
-  const walls = [
-    { x: 0, z: half, yaw: Math.PI }, { x: 0, z: -half, yaw: 0 },
-    { x: half, z: 0, yaw: Math.PI / 2 }, { x: -half, z: 0, yaw: -Math.PI / 2 }
-  ];
-  walls.forEach(({ x, z, yaw }) => {
-    const wall = wallTemplate.clone(true);
-    wall.position.set(x, wallY, z);
-    wall.rotation.y = yaw;
-    wall.scale.setScalar(wallScale);
-    cabin.add(wall);
-  });
-  const roof = roofTemplate.clone(true);
-  roof.position.set(0, 8.55 * scale, 0);
-  roof.rotation.y = 0;
-  roof.scale.setScalar(8.6 * scale);
-  cabin.add(roof);
+  const wallScale = 7.2 * scale;
+  const wallRowHeight = wallScale * 0.4;
+  const roofScale = 6.2 * scale;
+  const roofY = wallRowHeight * 2 - 0.15 * scale;
 
-  const windowMaterial = new THREE.MeshStandardMaterial({ color: 0x21190f, emissive: 0xffc857, emissiveIntensity: 1.15, roughness: 0.7 });
-  for (const x of [-2.4, 2.4]) {
-    const window = new THREE.Mesh(new THREE.BoxGeometry(1.45 * scale, 1.75 * scale, 0.22 * scale), windowMaterial);
-    window.position.set(x * scale, 4.4 * scale, -5.2 * scale);
+  for (const rowY of [0, wallRowHeight]) {
+    for (const yaw of [0, Math.PI / 2, Math.PI, -Math.PI / 2]) {
+      const wall = wallTemplate.clone(true);
+      wall.position.set(0, rowY, 0);
+      wall.rotation.y = yaw;
+      wall.scale.setScalar(wallScale);
+      wall.name = 'Mountain Kenney Holiday cabin wall module';
+      cabin.add(wall);
+    }
+  }
+
+  for (const yaw of [0, Math.PI]) {
+    const roof = roofTemplate.clone(true);
+    roof.position.set(0, roofY, 0);
+    roof.rotation.y = yaw;
+    roof.scale.setScalar(roofScale);
+    roof.name = 'Mountain Kenney Holiday cabin roof half';
+    cabin.add(roof);
+
+    const snow = tintAssetClone(roofTemplate, SNOW);
+    snow.position.set(0, roofY + 0.26 * scale, 0);
+    snow.rotation.y = yaw;
+    snow.scale.setScalar(roofScale * 0.965);
+    snow.name = 'Mountain Kenney Holiday cabin roof snow layer';
+    cabin.add(snow);
+  }
+
+  const windowMaterial = new THREE.MeshStandardMaterial({
+    color: 0x21190f,
+    emissive: 0xffc857,
+    emissiveIntensity: 1.15,
+    roughness: 0.7
+  });
+  const doorMaterial = material(0x5d3926, 0.92);
+  const frontZ = -4.72 * scale;
+
+  for (const x of [-1.75, 1.75]) {
+    const window = new THREE.Mesh(
+      new THREE.BoxGeometry(1.25 * scale, 1.45 * scale, 0.2 * scale),
+      windowMaterial
+    );
+    window.position.set(x * scale, 3.3 * scale, frontZ);
+    window.name = 'Mountain warm cabin window';
     cabin.add(window);
   }
+
+  const door = new THREE.Mesh(
+    new THREE.BoxGeometry(1.5 * scale, 2.7 * scale, 0.24 * scale),
+    doorMaterial
+  );
+  door.position.set(0, 1.35 * scale, frontZ - 0.03);
+  door.name = 'Mountain cabin front door';
+  cabin.add(door);
+
   return cabin;
 }
 
