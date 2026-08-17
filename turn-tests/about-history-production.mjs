@@ -31,8 +31,8 @@ const [
 
 const release = JSON.parse(releaseSource);
 
-assert.match(productionEntry, new RegExp(`about-history-bootstrap-r165\\.js\\?build=${escapeRegex(release.cacheKey)}-r168-shared-about-credits`),
-  'The public website must load the shared-credit browser-aware About implementation directly with the current release cache identity');
+assert.match(productionEntry, new RegExp(`about-history-bootstrap-r165\\.js\\?build=${escapeRegex(release.cacheKey)}-r534-heading-first-about`),
+  'The public website must load the heading-first browser-aware About implementation directly with the current release cache identity');
 assert.ok(
   productionEntry.indexOf('about-history-bootstrap-r165.js') < productionEntry.indexOf('./app.js?build='),
   'Website About must load before the game module waits for explicit browser launch'
@@ -51,6 +51,14 @@ assert.match(productionEntry, /Install TURN as a home screen web app for the bes
 assert.match(bootstrap, /CHANGELOG[\s\S]*CURRENT_RELEASE[\s\S]*DEVELOPMENT_HISTORY/);
 assert.match(bootstrap, new RegExp(`about-history\\.js\\?build=${escapeRegex(release.cacheKey)}`),
   'History data must use the current release cache identity');
+assert.match(bootstrap, /function focusDialogHeading\(dialog\)/,
+  'Dialog opening must have a heading-first focus path');
+assert.match(bootstrap, /heading\.setAttribute\('tabindex', '-1'\)/,
+  'Dialog headings must be programmatically focusable without entering the normal tab order');
+assert.match(bootstrap, /focusDialogHeading\(dialog\);/,
+  'Opening About and History dialogs must focus the labelled heading rather than the close button');
+assert.doesNotMatch(bootstrap, /querySelector\('\[data-dialog-close\]'\)\?\.focus/,
+  'Initial dialog focus must not be forced to Close');
 assert.match(bootstrap, /return \[\.\.\.CHANGELOG\]\.reverse\(\)\.map\(/,
   'The changelog must render newest entries first without mutating its source data');
 assert.match(bootstrap, /const INSTALL_NOTE[\s\S]*Install TURN as a home screen web app for the best fullscreen experience\. You can also play here, but it is not recommended\./);
