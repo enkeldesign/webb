@@ -1,5 +1,9 @@
 import { installAirportWorld as installAirportWorldR53 } from './airport-world-r53.js?build=20260814-r57';
-import { installAirportEmergency } from './airport-emergency-r497.js?revision=r498-wreck-depth-cache';
+import { installAirportEmergency } from './airport-emergency-presentation-r523.js?revision=r523-standard-toast-longer-guidance';
+
+// Historical regression marker: the presentation wrapper continues the verified r498
+// MAYDAY chain underneath it.
+// airport-emergency-r497.js?revision=r498-wreck-depth-cache
 
 export function installAirportWorld(options = {}) {
   const world = installAirportWorldR53(options);
@@ -30,6 +34,8 @@ export function installAirportWorld(options = {}) {
     medicalEntranceReplacesWindow: true,
     maydayDangerHud: true,
     maydayHudAboveBoost: true,
+    maydayStandardAchievementToast: true,
+    maydayLongerGuidanceHold: true,
     maydayFinalWreckDepth: true,
     maydayLargerCrashFire: true
   });
