@@ -157,10 +157,9 @@ function retireLegacyStartPanel() {
   intro.hidden = true;
   intro.replaceChildren(
     makeHiddenHook('button', 'motionButton'),
+    makeHiddenHook('button', 'manualButton'),
     makeHiddenHook('p', 'status')
   );
-  intro.prepend(makeHiddenHook('button', 'manualButton'));
-  intro.prepend(makeHiddenHook('button', 'motionButton'));
   document.documentElement.dataset.turnLegacyStart = 'retired';
   return intro;
 }
