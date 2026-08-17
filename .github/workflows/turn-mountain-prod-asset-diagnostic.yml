@@ -1,0 +1,62 @@
+name: TURN MOUNTAIN production asset diagnostic
+
+on:
+  push:
+    branches:
+      - agent/mountain-prod-asset-diagnostic
+    paths:
+      - '.github/workflows/turn-mountain-prod-asset-diagnostic.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Probe production asset URLs
+        run: |
+          set -euxo pipefail
+          for path in \
+            turn/assets/scenery/mountain/holiday/cabin-wall.glb \
+            turn/assets/scenery/mountain/holiday/cabin-roof-snow.glb \
+            turn/assets/scenery/mountain/holiday/Textures/colormap.png \
+            turn/assets/scenery/mountain/fantasy/fountain-round-detail.glb \
+            turn/assets/scenery/mountain/fantasy/Textures/colormap.png \
+            turn/assets/scenery/mountain/nature/rock-large.glb \
+            turn/assets/scenery/mountain/nature/Textures/colormap.png
+          do
+            url="https://enkel.design/$path"
+            printf '\n=== %s ===\n' "$url"
+            curl --fail --silent --show-error --location --dump-header /tmp/headers --output /tmp/body "$url"
+            sed -n '1,20p' /tmp/headers
+            wc -c /tmp/body
+            file /tmp/body || true
+          done
+
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Run visual smoke against production deployment
+        env:
+          TURN_VISUAL_BASE_URL: https://enkel.design
+          TURN_VISUAL_OUTPUT: mountain-prod-visual-artifact
+        run: node turn-tests/mountain-visual-smoke.mjs
+
+      - name: Upload production diagnostic frames
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mountain-prod-asset-diagnostic
+          path: mountain-prod-visual-artifact
+          if-no-files-found: warn
+          retention-days: 3
