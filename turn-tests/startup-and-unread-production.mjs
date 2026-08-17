@@ -1,13 +1,14 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [releaseSource, index, nextIndex, app, fixedLayout, unreadMarkers] = await Promise.all([
+const [releaseSource, index, nextIndex, app, fixedLayout, unreadMarkers, screenReaderCoordinator] = await Promise.all([
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/achievements/unread-markers.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/achievements/unread-markers.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/ui/startup-screen-reader-handoff-r529.js', import.meta.url), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -53,6 +54,17 @@ assert.ok(
   'The loading cover must remain above the early Countryside frame until Home is complete'
 );
 
+assert.match(screenReaderCoordinator, /const LANDSCAPE_SETTLE_MS = 1200/,
+  'Automatic non-visual onboarding must leave a short quiet window after landscape settles');
+assert.match(screenReaderCoordinator, /function installLandscapeWatch\(\)[\s\S]*window\.addEventListener\('resize', handleLandscapeCandidate[\s\S]*window\.addEventListener\('orientationchange', handleLandscapeCandidate[\s\S]*visualViewport\?\.addEventListener\('resize', handleLandscapeCandidate/,
+  'The onboarding coordinator must react to both viewport and OS orientation transitions');
+assert.match(screenReaderCoordinator, /function scheduleNonVisualOnboarding\(\)[\s\S]*if \(viewportIsPortrait\(\)\) return;[\s\S]*window\.setTimeout\([\s\S]*viewportIsPortrait\(\)\) return;[\s\S]*speak\(`TURN is ready\. \$\{NON_VISUAL_ONBOARDING_MESSAGE\}`/,
+  'The onboarding itself must only enter the live region after landscape remains confirmed');
+assert.match(screenReaderCoordinator, /if \(viewportIsPortrait\(\)\) \{\s*speak\('TURN is ready\. Rotate your device to landscape\.', \{ priority: 'assertive' \}\);\s*\} else \{\s*scheduleNonVisualOnboarding\(\);/,
+  'Portrait Home may request rotation, but must not append the onboarding before landscape');
+assert.doesNotMatch(screenReaderCoordinator, /speak\(`\$\{readyMessage\} \$\{NON_VISUAL_ONBOARDING_MESSAGE\}`/,
+  'The old portrait-ready plus onboarding utterance must not return');
+
 assert.match(fixedLayout, /achievements\/unread-markers\.js\?build=\$\{buildKey\}-r159-unread-cards/);
 assert.match(fixedLayout, /installAchievementUnreadMarkers\(achievements\)/);
 assert.match(fixedLayout, /achievementUnreadMarkers,/);
@@ -67,7 +79,7 @@ assert.match(unreadMarkers, /Newly unlocked achievement\./);
 assert.match(unreadMarkers, /new MutationObserver\(queueDecoration\)/);
 assert.match(unreadMarkers, /listObserver\.observe\(list, \{ childList: true \}\)/);
 
-console.log(`TURN ${release.version} startup cover, screen-reader follow-up cache contracts, refreshed Bella graph, fixed Home viewport, spoken training labels and unread achievement markers passed.`);
+console.log(`TURN ${release.version} startup cover, landscape-gated screen-reader onboarding, refreshed Bella graph, fixed Home viewport, spoken training labels and unread achievement markers passed.`);
 
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
