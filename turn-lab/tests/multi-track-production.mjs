@@ -125,7 +125,10 @@ assert.ok(
   midnightLength >= harborLength * 2,
   `Midnight City must remain more than twice as long as Harbor (${midnightLength.toFixed(0)} vs ${harborLength.toFixed(0)})`
 );
-assert.ok(mountainLength > harborLength, 'Mountain must be a substantial alpine journey rather than a short technical loop');
+assert.ok(
+  mountainLength > 1500,
+  `Mountain must remain a substantial alpine journey rather than a short technical loop (${mountainLength.toFixed(0)} units)`
+);
 assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.cityGridRows, 5);
 assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.outerRingReturn, true);
 assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.districtCount, 4);
