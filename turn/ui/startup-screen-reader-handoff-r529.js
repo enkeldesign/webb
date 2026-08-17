@@ -173,10 +173,17 @@
     if (node?.querySelectorAll) candidates.push(...node.querySelectorAll('.turn-achievement-toast'));
 
     for (const toast of candidates) {
-      toast.removeAttribute('role');
-      toast.removeAttribute('aria-live');
-      toast.removeAttribute('aria-atomic');
-      toast.setAttribute('aria-hidden', 'true');
+      if (toast.dataset.turnSrToastManaged !== 'true') {
+        toast.dataset.turnSrToastManaged = 'true';
+        toast.removeAttribute('role');
+        toast.removeAttribute('aria-live');
+        toast.removeAttribute('aria-atomic');
+        toast.setAttribute('aria-hidden', 'true');
+        const observer = new MutationObserver(() => {
+          queueMicrotask(() => announceToastIfVisible(toast));
+        });
+        observer.observe(toast, { attributes: true, attributeFilter: ['hidden', 'aria-label'] });
+      }
       queueMicrotask(() => announceToastIfVisible(toast));
     }
   }
@@ -453,6 +460,9 @@
     scanAccessibilityTargets(document);
     discoveryObserver?.disconnect();
     discoveryObserver = null;
+    window.clearTimeout(externalPriorityTimer);
+    externalPriorityTimer = 0;
+    externalPriorityUntil = 0;
 
     const loadingCopy = document.querySelector('#installGate .install-copy');
     if (loadingCopy) {
