@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TURN MOUNTAIN visual smoke</title>
+  <style>
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#71cff1}
+    canvas{display:block;width:100%;height:100%}
+    #label{position:fixed;left:12px;bottom:10px;padding:6px 9px;border:2px solid #08090a;border-radius:8px;background:#fff8e8;color:#08090a;font:700 13px/1.1 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;z-index:2}
+  </style>
+  <script type="importmap">
+    {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/"}}
+  </script>
+</head>
+<body>
+  <div id="label">MOUNTAIN visual smoke</div>
+  <script type="module">
+    import * as THREE from 'three';
+    import { createTrackRuntime } from '/turn/tracks/catalog.js';
+    import { installMountainWorld } from '/turn/tracks/mountain-world-r3.js?visual=1';
+    import { createMountainTerrainSampler, createMountainRiverSamples, offsetPoint, MOUNTAIN_R3 } from '/turn/tracks/mountain-world-r3-terrain.js?visual=1';
+
+    const VIEWS = Object.freeze({
+      aerial: { position:[330,235,-345], target:[5,22,-10], fov:49 },
+      village:{ position:[118,48,-286], target:[8,8,-215], fov:52 },
+      summit:{ position:[325,95,160], target:[180,43,105], fov:50 },
+      descent:{ position:[235,92,-5], target:[62,22,-32], fov:52 },
+      waterfall:{ position:[385,72,-268], target:[246,12,-151], fov:48 }
+    });
+
+    const params = new URLSearchParams(location.search);
+    const viewName = VIEWS[params.get('view')] ? params.get('view') : 'aerial';
+    document.querySelector('#label').textContent = `MOUNTAIN · ${viewName}`;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x71cff1);
+    scene.fog = new THREE.Fog(0xc6e0ea, 410, 1180);
+    const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 1800);
+    const renderer = new THREE.WebGLRenderer({ antialias:true, preserveDrawingBuffer:true, powerPreference:'low-power' });
+    renderer.setPixelRatio(1);
+    renderer.setSize(innerWidth, innerHeight, false);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.shadowMap.enabled = false;
+    document.body.prepend(renderer.domElement);
+
+    scene.add(new THREE.HemisphereLight(0xd8f1ff, 0x617455, 1.18));
+    const sun = new THREE.DirectionalLight(0xfff2d4, 1.26);
+    sun.position.set(-160, 240, -110);
+    scene.add(sun);
+
+    const runtime = createTrackRuntime('mountain', 1080);
+    const trackWidth = 27;
+    const world = installMountainWorld({ scene, samples:runtime.samples, trackWidth, runtime:{} });
+    await world.ready;
+
+    const preset = VIEWS[viewName];
+    camera.position.set(...preset.position);
+    camera.up.set(0,1,0);
+    camera.lookAt(...preset.target);
+    camera.fov = preset.fov;
+    camera.updateProjectionMatrix();
+
+    const riverSamples = createMountainRiverSamples();
+    const sampler = createMountainTerrainSampler(runtime.samples, trackWidth, riverSamples);
+    const terrainMesh = world.getObjectByName('Mountain continuous terrain body r3');
+    const down = new THREE.Vector3(0,-1,0);
+    const ray = new THREE.Raycaster();
+
+    function renderedTerrainY(x,z,roadY) {
+      if (!terrainMesh) return Number.NEGATIVE_INFINITY;
+      ray.set(new THREE.Vector3(x, roadY + 100, z), down);
+      const hit = ray.intersectObject(terrainMesh, false)[0];
+      return hit ? hit.point.y : Number.NEGATIVE_INFINITY;
+    }
+
+    let maximumRoadSupportGap = 0;
+    let maximumEdgeSupportGap = 0;
+    let maximumRenderedRoadSupportGap = 0;
+    let maximumRenderedEdgeSupportGap = 0;
+    for (let index = 0; index < runtime.samples.length; index += 18) {
+      const sample = runtime.samples[index];
+      const roadY = sample.point.y + MOUNTAIN_R3.ROAD_HEIGHT;
+      const terrainY = sampler.terrainHeightAt(sample.point.x, sample.point.z);
+      maximumRoadSupportGap = Math.max(maximumRoadSupportGap, roadY - terrainY);
+      const renderedY = renderedTerrainY(sample.point.x, sample.point.z, roadY);
+      if (Number.isFinite(renderedY)) maximumRenderedRoadSupportGap = Math.max(maximumRenderedRoadSupportGap, roadY - renderedY);
+
+      for (const side of [-1,1]) {
+        const edge = offsetPoint(sample, side * (trackWidth/2 + MOUNTAIN_R3.EDGE_WHITE_WIDTH + MOUNTAIN_R3.EDGE_BLACK_WIDTH));
+        const edgeY = sample.point.y + MOUNTAIN_R3.ROAD_HEIGHT;
+        maximumEdgeSupportGap = Math.max(maximumEdgeSupportGap, edgeY - sampler.terrainHeightAt(edge.x, edge.z));
+        const renderedEdgeY = renderedTerrainY(edge.x, edge.z, edgeY);
+        if (Number.isFinite(renderedEdgeY)) maximumRenderedEdgeSupportGap = Math.max(maximumRenderedEdgeSupportGap, edgeY - renderedEdgeY);
+      }
+    }
+
+    const riverDepths = riverSamples.map(({point}) => point.y - sampler.terrainHeightAt(point.x, point.z));
+    const names = [];
+    world.traverse((object) => { if (object.name) names.push(object.name); });
+    const count = (fragment) => names.filter((name) => name.includes(fragment)).length;
+    const diagnostics = world.userData.turnMountainGroundingDiagnostics || [];
+    const maxGroundingDelta = diagnostics.reduce((max, entry) => Math.max(max, Math.abs(entry.delta)), 0);
+
+    globalThis.__mountainVisualMetrics = Object.freeze({
+      viewName,
+      assetsReady: world.userData.turnMountainAssetsReady === true,
+      assetErrors: [...(world.userData.turnMountainAssetErrors || [])],
+      maximumRoadSupportGap,
+      maximumEdgeSupportGap,
+      maximumRenderedRoadSupportGap,
+      maximumRenderedEdgeSupportGap,
+      riverDepthMin: Math.min(...riverDepths),
+      riverDepthMax: Math.max(...riverDepths),
+      maxGroundingDelta,
+      groundingCount: diagnostics.length,
+      terrainBodies: count('continuous terrain body r3'),
+      roadbedWalls: count('opaque roadbed side wall r3'),
+      roadbedUndersides: count('closed roadbed underside r3'),
+      cabins: count('Holiday cabin prefab r3'),
+      marketStalls: count('Fantasy market stall'),
+      fountains: count('Fantasy fountain r3'),
+      waterfallCliffModules: count('Nature cliff module r3'),
+      waterfallSheets: count('river-to-lake waterfall sheet r3'),
+      lakes: count('terrain-bounded waterfall lake r3'),
+      windmills: names.filter((name) => /windmill/i.test(name)).length
+    });
+
+    renderer.render(scene,camera);
+    globalThis.__mountainVisualReady = true;
+    window.dispatchEvent(new CustomEvent('turn:mountain-visual-ready', { detail:globalThis.__mountainVisualMetrics }));
+  </script>
+</body>
+</html>
