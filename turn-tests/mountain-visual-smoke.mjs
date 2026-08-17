@@ -5,7 +5,7 @@ import { chromium } from 'playwright';
 
 const baseUrl = process.env.TURN_VISUAL_BASE_URL || 'http://127.0.0.1:8000';
 const outputDir = process.env.TURN_VISUAL_OUTPUT || 'mountain-visual-artifact';
-const views = ['aerial', 'village', 'summit', 'descent', 'waterfall'];
+const views = ['aerial', 'village', 'summit', 'descent', 'waterfall', 'waterfall-road'];
 await fs.mkdir(outputDir, { recursive: true });
 
 const browser = await chromium.launch({
