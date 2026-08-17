@@ -5,7 +5,8 @@ export const TRACK_COLOR_CUES = Object.freeze({
   airport: 'yellow',
   harbor: 'orange',
   cliffside: 'cyan',
-  'midnight-city': 'violet'
+  'midnight-city': 'violet',
+  mountain: 'blue'
 });
 
 function normalizeHex(value) {
