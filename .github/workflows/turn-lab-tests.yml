@@ -103,6 +103,9 @@ jobs:
       - name: Run multi-track and Airport regression
         run: node turn-lab/tests/multi-track-production.mjs
 
+      - name: Run Mountain production regression
+        run: node turn-tests/mountain-track-production.mjs
+
       - name: Run track record 3D model regression
         run: node turn-lab/tests/track-best-model-production.mjs
 
