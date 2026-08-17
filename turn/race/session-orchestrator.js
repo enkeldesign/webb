@@ -144,7 +144,7 @@ export function createRaceSessionOrchestrator({
     return Object.freeze({ mode: 'manual', fullscreenPromise });
   }
 
-  async function startGame(fullscreenPromise = Promise.resolve(false)) {
+  async function startGame(fullscreenPromise = Promise.resolve(false), { announceStart = true } = {}) {
     phase = 'starting';
     state.running = true;
     state.lastFrame = clock();
@@ -173,7 +173,7 @@ export function createRaceSessionOrchestrator({
     resizeViewport();
     setTimer(resizeViewport, 300);
     setTimer(resizeViewport, 900);
-    announce('GO!');
+    if (announceStart) announce('GO!');
     phase = 'racing';
     return true;
   }
