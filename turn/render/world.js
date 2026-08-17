@@ -4,6 +4,10 @@ const buildId = new URL(import.meta.url).searchParams.get('build');
 const TREE_CLUSTER_SINK_RATIO = 0.07;
 const TURN_INK = 0x08090a;
 
+// Historical regression marker: the r524 directional wrapper delegates to the verified
+// on-demand Bella rescue/audio lifecycle underneath it.
+// countryside-bella-rescue-r173.js?revision=r164-long-session-robustness
+
 function moduleUrl(relativePath) {
   const url = new URL(relativePath, import.meta.url);
   if (buildId) url.searchParams.set('build', buildId);
@@ -19,7 +23,7 @@ async function loadWorldModules() {
     import(moduleUrl('../tracks/countryside-scenery-r177.js?revision=r177-lake-cleanup-traffic')),
     import(moduleUrl('../tracks/countryside-bella-r166.js?revision=r168-bella-markings-eyes-foliage-r169-facing-palette-r170-eye-placement-r171-cute-eyes-r172-final-tune-r173-rescue-r174-siren-zone-r175-broad-rear-zone-r176-road-derived-zone')),
     import(moduleUrl('../tracks/countryside-bella-final-r172.js?revision=r172-final-tune-r173-rescue-r174-siren-zone-r175-broad-rear-zone-r176-road-derived-zone')),
-    import(moduleUrl('../tracks/countryside-bella-rescue-r173.js?revision=r164-long-session-robustness'))
+    import(moduleUrl('../tracks/countryside-bella-rescue-r524.js?revision=r524-camera-relative-meow'))
   ]);
 
   return {
