@@ -14,6 +14,7 @@ const [
   worldRender,
   bellaRescue,
   bellaBootstrap,
+  screenReaderCoordinator,
   harborOptimized
 ] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
@@ -28,6 +29,7 @@ const [
   fs.readFile(new URL('../turn/render/world.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/countryside-bella-rescue-r173.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/countryside-bella-rescue-hotfix-r176.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/ui/startup-screen-reader-handoff-r529.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/harbor-world-r82.js', import.meta.url), 'utf8')
 ]);
 
@@ -37,6 +39,10 @@ function importMap(source) {
   const json = source.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
   assert.ok(json, 'TURN entry must expose an import map');
   return JSON.parse(json).imports;
+}
+
+function escapeRegex(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 const productionImports = importMap(index);
@@ -76,8 +82,13 @@ assert.match(
 );
 assert.match(
   index,
-  /countryside-bella-rescue-hotfix-r176\.js\?revision=r164-long-session-robustness/,
-  'Production must cache-bust the independent Bella bootstrap itself, not just the behavior it imports'
+  new RegExp(`countryside-bella-rescue-hotfix-r176\\.js\\?build=${escapeRegex(release.cacheKey)}&revision=r530-screen-reader-quality`),
+  'Production must bind the independent Bella bootstrap to the current release cache identity'
+);
+assert.match(
+  index,
+  new RegExp(`startup-screen-reader-handoff-r529\\.js\\?build=${escapeRegex(release.cacheKey)}&revision=r530-screen-reader-quality`),
+  'Production must bind the screen-reader coordinator to the current release cache identity'
 );
 
 // Touch hardware keeps 60 Hz gameplay but should not redraw the complete dynamic
@@ -138,6 +149,16 @@ assert.match(
   /achievements\/runtime\.js\?revision=r164-long-session-robustness/,
   'The achievement facade must cache-bust the race-scoped sampler implementation'
 );
+
+// The screen-reader quality coordinator may discover dynamic live regions while Home
+// is being assembled, but it must not keep a document-wide observer or polling loop
+// alive for the rest of a long race session.
+assert.match(screenReaderCoordinator, /discoveryObserver = new MutationObserver/);
+assert.match(screenReaderCoordinator, /discoveryObserver\.observe\(document\.body, \{ childList: true, subtree: true \}\)/);
+assert.match(screenReaderCoordinator, /discoveryObserver\?\.disconnect\(\);\s*discoveryObserver = null;/,
+  'The broad accessibility discovery observer must disconnect once Home is ready');
+assert.doesNotMatch(screenReaderCoordinator, /setInterval/,
+  'Screen-reader coordination must not add an independent polling interval');
 
 // Repeated vegetation is a poor place to spend a second draw call per source mesh.
 // Buildings/start landmarks may keep intentional contours; tree belts opt out before
@@ -223,4 +244,4 @@ assert.match(bellaBootstrap, /RETRY_DELAYS_MS = Object\.freeze/);
 assert.doesNotMatch(bellaBootstrap, /setInterval/,
   'The independent Bella bootstrap must use bounded startup retries rather than a fixed polling interval');
 
-console.log(`TURN ${release.id} long-session timers, touch shadows, scenery batching/contours, cache and Bella audio lifecycle passed.`);
+console.log(`TURN ${release.id} long-session timers, touch shadows, accessibility observers, scenery batching/contours, cache and Bella audio lifecycle passed.`);
