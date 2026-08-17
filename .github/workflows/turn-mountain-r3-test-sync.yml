@@ -1,0 +1,54 @@
+name: TURN MOUNTAIN r3 regression sync
+
+on:
+  push:
+    branches:
+      - feature/mountain-track
+    paths:
+      - '.github/workflows/turn-mountain-r3-test-sync.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/mountain-track
+
+      - name: Update stale r2 multi-track contract to r3
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('turn-lab/tests/multi-track-production.mjs')
+          s = p.read_text()
+
+          s = s.replace(
+          """  mountainWorld,\n  mountainTerrain,\n  mountainScenery,\n  home\n] = await Promise.all([""",
+          """  mountainWorld,\n  mountainTerrain,\n  mountainScenery,\n  mountainPolish,\n  home\n] = await Promise.all(["""
+          )
+
+          s = s.replace(
+          """  fs.readFile(new URL('../../turn/tracks/mountain-world-r2.js', import.meta.url), 'utf8'),\n  fs.readFile(new URL('../../turn/tracks/mountain-world-r2-terrain.js', import.meta.url), 'utf8'),\n  fs.readFile(new URL('../../turn/tracks/mountain-world-r2-scenery.js', import.meta.url), 'utf8'),\n  fs.readFile(new URL('../../turn/m8-home.js', import.meta.url), 'utf8')""",
+          """  fs.readFile(new URL('../../turn/tracks/mountain-world-r3.js', import.meta.url), 'utf8'),\n  fs.readFile(new URL('../../turn/tracks/mountain-world-r3-terrain.js', import.meta.url), 'utf8'),\n  fs.readFile(new URL('../../turn/tracks/mountain-world-r3-scenery.js', import.meta.url), 'utf8'),\n  fs.readFile(new URL('../../turn/tracks/mountain-world-r3-polish.js', import.meta.url), 'utf8'),\n  fs.readFile(new URL('../../turn/m8-home.js', import.meta.url), 'utf8')"""
+          )
+
+          old = """assert.match(registry, /mountain-world-r2\\.js\\?revision=r2/);\nassert.match(registry, /definition\\.sampleCount \\|\\| sampleCount/);\nassert.doesNotMatch(manager, /nextTrackId === 'mountain'/);\nassert.match(manager, /track\\.fogNear/);\nassert.match(cityWorld, /installMidnightCityWorld as installMidnightCityWorldR6/);\nassert.match(cityWorld, /new THREE\\.InstancedMesh/);\nassert.doesNotMatch(cityWorld, /setAnimationLoop|requestAnimationFrame|setInterval/);\nassert.match(mountainWorld, /ground: 'snow-first-with-rock-patches'/);\nassert.match(mountainTerrain, /Mountain solid white road edge/);\nassert.match(mountainTerrain, /Mountain black outer road contour/);\nassert.match(mountainTerrain, /Mountain integrated snowy peak backdrop/);\nassert.match(mountainScenery, /Mountain Kenney Holiday cabin/);\nassert.match(mountainScenery, /Mountain grounded river rock bed/);\nassert.match(mountainScenery, /Mountain waterfall lake r2/);\nassert.match(mountainScenery, /fantasy-town\\/windmill\\.glb/);\nassert.match(mountainScenery, /fantasy-town\\/fountainCenter\\.glb/);\nfor (const source of [mountainWorld, mountainTerrain, mountainScenery]) {\n  assert.doesNotMatch(source, /setAnimationLoop|requestAnimationFrame|setInterval/);\n}"""
+
+          new = """assert.match(registry, /mountain-world-r3\\.js\\?revision=r3-continuous-terrain-v1/);\nassert.match(registry, /definition\\.sampleCount \\|\\| sampleCount/);\nassert.doesNotMatch(manager, /nextTrackId === 'mountain'/);\nassert.match(manager, /track\\.fogNear/);\nassert.match(cityWorld, /installMidnightCityWorld as installMidnightCityWorldR6/);\nassert.match(cityWorld, /new THREE\\.InstancedMesh/);\nassert.doesNotMatch(cityWorld, /setAnimationLoop|requestAnimationFrame|setInterval/);\nassert.match(mountainWorld, /ground: 'continuous-snow-and-granite-terrain-body'/);\nassert.match(mountainWorld, /retainingFoundation: '4\\.6m-granite-skirt'/);\nassert.match(mountainWorld, /visibleWaterfallCurtain: true/);\nassert.match(mountainTerrain, /Mountain continuous terrain body r3/);\nassert.match(mountainTerrain, /Mountain opaque roadbed side wall r3/);\nassert.match(mountainTerrain, /Mountain closed roadbed underside r3/);\nassert.match(mountainTerrain, /Mountain solid white road edge r3/);\nassert.match(mountainTerrain, /Mountain black outer road contour r3/);\nassert.match(mountainTerrain, /Mountain integrated snowy peak backdrop r3/);\nassert.match(mountainScenery, /Mountain Kenney Holiday cabin prefab r3/);\nassert.match(mountainScenery, /Mountain river channel bed r3/);\nassert.match(mountainScenery, /Mountain terrain-bounded waterfall lake r3/);\nassert.match(mountainScenery, /fountain-round-detail\\.glb/);\nassert.match(mountainScenery, /stall-green\\.glb/);\nassert.doesNotMatch(mountainScenery, /windmill\\.glb/);\nassert.match(mountainPolish, /Mountain deep retaining road foundation r3/);\nassert.match(mountainPolish, /Mountain visible waterfall curtain r3/);\nassert.match(mountainPolish, /Mountain river waterfall spillway r3/);\nfor (const source of [mountainWorld, mountainTerrain, mountainScenery, mountainPolish]) {\n  assert.doesNotMatch(source, /setAnimationLoop|requestAnimationFrame|setInterval/);\n}"""
+
+          if old not in s:
+              raise SystemExit('Expected r2 assertion block not found; refusing broad rewrite')
+          s = s.replace(old, new, 1)
+          p.write_text(s)
+          PY
+
+      - name: Commit updated regression
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add turn-lab/tests/multi-track-production.mjs
+          git diff --cached --quiet || git commit -m 'Update six-track regression for MOUNTAIN r3'
+          git push origin HEAD:feature/mountain-track
