@@ -18,8 +18,8 @@
   <script type="module">
     import * as THREE from 'three';
     import { createTrackRuntime } from '/turn/tracks/catalog.js';
-    import { installMountainWorld } from '/turn/tracks/mountain-world-r3.js?visual=2';
-    import { createMountainTerrainSampler, createMountainRiverSamples, offsetPoint, MOUNTAIN_R3 } from '/turn/tracks/mountain-world-r3-terrain.js?visual=2';
+    import { installMountainWorld } from '/turn/tracks/mountain-world-r3.js?visual=3';
+    import { createMountainTerrainSampler, createMountainRiverSamples, offsetPoint, MOUNTAIN_R3 } from '/turn/tracks/mountain-world-r3-terrain.js?visual=3';
 
     const VIEWS = Object.freeze({
       aerial: { position:[330,235,-345], target:[5,22,-10], fov:49 },
@@ -101,11 +101,13 @@
     const count = (fragment) => names.filter((name) => name.includes(fragment)).length;
     const diagnostics = world.userData.turnMountainGroundingDiagnostics || [];
     const maxGroundingDelta = diagnostics.reduce((max, entry) => Math.max(max, Math.abs(entry.delta)), 0);
+    const r4 = world.userData.turnMountainR4VisualPolish || {};
 
     globalThis.__mountainVisualMetrics = Object.freeze({
       viewName,
       assetsReady: world.userData.turnMountainAssetsReady === true,
       assetErrors: [...(world.userData.turnMountainAssetErrors || [])],
+      r4AssetErrors: [...(world.userData.turnMountainR4AssetErrors || [])],
       maximumRoadSupportGap,
       maximumEdgeSupportGap,
       maximumRenderedRoadSupportGap,
@@ -120,14 +122,24 @@
       deepFoundations: count('deep retaining road foundation r3'),
       roadbedUndersides: count('closed roadbed underside r3'),
       cabins: count('Holiday cabin prefab r3'),
+      assembledCabins: count('assembled r4'),
       marketStalls: count('Fantasy market stall'),
+      winterMarketAssets: count('winter market'),
       fountains: count('Fantasy fountain r3'),
+      litStreetlights: count('Holiday lit streetlight r4'),
+      warmLanternHalos: count('warm lantern halo r4'),
+      decorativeVillageAssets: count('village ') + count('decorative Holiday spruce r4'),
+      distantLayeredRidges: count('distant layered ridge r4'),
       waterfallCliffModules: count('Nature cliff module r3'),
       waterfallSheets: count('river-to-lake waterfall sheet r3'),
       visibleWaterfallCurtains: count('visible waterfall curtain r3'),
+      trackVisibleWaterfallCurtains: count('track-visible waterfall curtain r4'),
       waterfallSpillways: count('waterfall spillway r3'),
       lakes: count('terrain-bounded waterfall lake r3'),
-      windmills: names.filter((name) => /windmill/i.test(name)).length
+      windmills: names.filter((name) => /windmill/i.test(name)).length,
+      r4CabinsReported: Number(r4.cabins || 0),
+      r4StreetlightsReported: Number(r4.streetlights || 0),
+      r4MarketAssetsReported: Number(r4.marketAssets || 0)
     });
 
     renderer.render(scene,camera);
