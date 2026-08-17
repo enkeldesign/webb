@@ -112,21 +112,42 @@ const TRACKS = [
       directionalColor: 0x9eb9ff,
       directionalIntensity: 0.68
     }
+  },
+  {
+    id: 'mountain',
+    name: 'Mountain',
+    difficulty: 'HARD',
+    eyebrow: 'TRACK 6',
+    description: 'Village climb. Snow line. Hairpin descent.',
+    accent: '#4dabf7',
+    accentSoft: '#d7efff',
+    storageRevision: 'mountain-r1',
+    sampleCount: 1080,
+    freeRoamDistance: 31,
+    collisionProfile: {
+      freeRoamDistance: 31,
+      shoulderStartDistance: 20.4,
+      shoulderDrag: 1.62,
+      boundaryBounce: 0.035,
+      boundaryTangentRetention: 0.95,
+      boundaryMinimumRecoverySpeed: 5.5,
+      colliders: []
+    },
+    sky: 0x71cff1,
+    fog: 0xc6e0ea,
+    fogNear: 360,
+    fogFar: 1180,
+    lighting: {
+      hemisphereSky: 0xd8f1ff,
+      hemisphereGround: 0x617455,
+      hemisphereIntensity: 1.04,
+      directionalColor: 0xfff2d4,
+      directionalIntensity: 1.16
+    }
   }
 ];
 
-const PLACEHOLDERS = [
-  {
-    id: 'track-6-tba',
-    name: 'TBA',
-    difficulty: '???',
-    eyebrow: 'TRACK 6',
-    description: 'The next district is still under construction.',
-    accent: '#8c98a8',
-    accentSoft: '#d7dde5',
-    locked: true
-  }
-];
+const PLACEHOLDERS = [];
 
 export const TRACK_DEFINITIONS = Object.freeze(TRACKS.map((track) => Object.freeze({
   ...track,
