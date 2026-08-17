@@ -13,6 +13,7 @@ export async function showTrackIntro(trackId) {
 
   intro.querySelector('.track-intro-meta').textContent = meta;
   intro.querySelector('.track-intro-name').textContent = track.name;
+  intro.querySelector('.track-intro-description').textContent = `Driving: ${track.description}`;
   intro.hidden = false;
   intro.setAttribute('aria-hidden', 'false');
   intro.classList.remove('is-visible');
@@ -50,6 +51,7 @@ function ensureTrackIntro() {
     <div class="track-intro-card">
       <span class="track-intro-meta"></span>
       <h2 class="track-intro-name"></h2>
+      <p class="track-intro-description" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0"></p>
     </div>
   `;
   document.body.appendChild(intro);
