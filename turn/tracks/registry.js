@@ -10,7 +10,7 @@ import { installCliffsideWorld } from './cliffside-world.js';
 import { installHarborWorld } from './harbor-world.js';
 // Historical regression markers: midnight-city-world-r9.js?build=20260802-r9, midnight-city-world-r10.js?build=20260802-r10
 import { installMidnightCityWorld } from './midnight-city-world-r11.js?build=20260802-r11';
-import { installMountainWorld } from './mountain-world-r2.js?revision=r2-r3-asset-placement';
+import { installMountainWorld } from './mountain-world-r3.js?revision=r3-continuous-terrain-v1';
 import { isForgivingTrackSurface } from './airport-runoff.js?build=20260722-r52';
 import './contextual-road-edges.js?revision=r518-signature-yellow';
 import './road-contour-color-r512.js?revision=r513-countryside';
