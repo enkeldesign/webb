@@ -460,7 +460,7 @@ function loadNatureWaterfallCliff(world) {
       cap.position.set(WATERFALL.x + site.x, 22.5 * site.scale, WATERFALL.z + site.z - 0.4);
       cap.rotation.y = Math.PI + site.yaw;
       cap.scale.set(27 * site.scale, 5.5 * site.scale, 18 * site.scale);
-      cap.name = `Mountain Kenney Nature snowy cliff cap ${index + 1}`;
+      cap.name = `Mountain Kenney Nature waterfall top cliff snowy cap ${index + 1}`;
       world.add(cap);
     });
   }).catch((error) => console.warn('TURN: Mountain Nature waterfall cliff failed to load', error));
@@ -522,7 +522,7 @@ function loadAssetVillage(world, samples, trackWidth) {
       cabin.rotation.y = Math.atan2(sample.tangent.x, sample.tangent.z)
         + (side > 0 ? Math.PI : 0)
         + (cabinIndex % 2 ? 0.12 : -0.08);
-      cabin.name = `Mountain Kenney Holiday assembled cabin ${cabinIndex + 1}`;
+      cabin.name = `Mountain Kenney Holiday cabin assembled ${cabinIndex + 1}`;
       world.add(cabin);
     });
 
