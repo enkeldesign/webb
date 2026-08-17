@@ -163,6 +163,7 @@ const [
   mountainWorld,
   mountainTerrain,
   mountainScenery,
+  mountainPolish,
   home
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/tracks/definitions.js', import.meta.url), 'utf8'),
@@ -170,9 +171,10 @@ const [
   fs.readFile(new URL('../../turn/tracks/registry.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/track-manager.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/midnight-city-world-r7.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/tracks/mountain-world-r2.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/tracks/mountain-world-r2-terrain.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/tracks/mountain-world-r2-scenery.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/mountain-world-r3.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/mountain-world-r3-terrain.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/mountain-world-r3-scenery.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/mountain-world-r3-polish.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/m8-home.js', import.meta.url), 'utf8')
 ]);
 assert.match(definitions, /id: 'midnight-city'[\s\S]*difficulty: 'HARD'/);
@@ -183,23 +185,32 @@ assert.match(definitions, /sampleCount: 1080/);
 assert.doesNotMatch(definitions, /id: 'track-6-tba'/);
 assert.match(catalog, /MIDNIGHT_CITY_CONTROL_POINTS\.map/);
 assert.match(catalog, /MOUNTAIN_CONTROL_POINTS\.map/);
-assert.match(registry, /mountain-world-r2\.js\?revision=r2/);
+assert.match(registry, /mountain-world-r3\.js\?revision=r3-continuous-terrain-v1/);
 assert.match(registry, /definition\.sampleCount \|\| sampleCount/);
 assert.doesNotMatch(manager, /nextTrackId === 'mountain'/);
 assert.match(manager, /track\.fogNear/);
 assert.match(cityWorld, /installMidnightCityWorld as installMidnightCityWorldR6/);
 assert.match(cityWorld, /new THREE\.InstancedMesh/);
 assert.doesNotMatch(cityWorld, /setAnimationLoop|requestAnimationFrame|setInterval/);
-assert.match(mountainWorld, /ground: 'snow-first-with-rock-patches'/);
-assert.match(mountainTerrain, /Mountain solid white road edge/);
-assert.match(mountainTerrain, /Mountain black outer road contour/);
-assert.match(mountainTerrain, /Mountain integrated snowy peak backdrop/);
-assert.match(mountainScenery, /Mountain Kenney Holiday cabin/);
-assert.match(mountainScenery, /Mountain grounded river rock bed/);
-assert.match(mountainScenery, /Mountain waterfall lake r2/);
-assert.match(mountainScenery, /fantasy-town\/windmill\.glb/);
-assert.match(mountainScenery, /fantasy-town\/fountainCenter\.glb/);
-for (const source of [mountainWorld, mountainTerrain, mountainScenery]) {
+assert.match(mountainWorld, /ground: 'continuous-snow-and-granite-terrain-body'/);
+assert.match(mountainWorld, /retainingFoundation: '4\.6m-granite-skirt'/);
+assert.match(mountainWorld, /visibleWaterfallCurtain: true/);
+assert.match(mountainTerrain, /Mountain continuous terrain body r3/);
+assert.match(mountainTerrain, /Mountain opaque roadbed side wall r3/);
+assert.match(mountainTerrain, /Mountain closed roadbed underside r3/);
+assert.match(mountainTerrain, /Mountain solid white road edge r3/);
+assert.match(mountainTerrain, /Mountain black outer road contour r3/);
+assert.match(mountainTerrain, /Mountain integrated snowy peak backdrop r3/);
+assert.match(mountainScenery, /Mountain Kenney Holiday cabin prefab r3/);
+assert.match(mountainScenery, /Mountain river channel bed r3/);
+assert.match(mountainScenery, /Mountain terrain-bounded waterfall lake r3/);
+assert.match(mountainScenery, /fountain-round-detail\.glb/);
+assert.match(mountainScenery, /stall-green\.glb/);
+assert.doesNotMatch(mountainScenery, /windmill\.glb/);
+assert.match(mountainPolish, /Mountain deep retaining road foundation r3/);
+assert.match(mountainPolish, /Mountain visible waterfall curtain r3/);
+assert.match(mountainPolish, /Mountain river waterfall spillway r3/);
+for (const source of [mountainWorld, mountainTerrain, mountainScenery, mountainPolish]) {
   assert.doesNotMatch(source, /setAnimationLoop|requestAnimationFrame|setInterval/);
 }
 assert.match(home, /TRACK_SELECTION_CATALOG\.map\(renderTrackCard\)/);
