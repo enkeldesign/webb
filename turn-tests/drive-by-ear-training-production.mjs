@@ -9,16 +9,28 @@ import {
   TRAINING_STAGES
 } from '../turn/training/stages.js';
 
-const [training, view, css, fixedLayout] = await Promise.all([
+const [training, view, css, fixedLayout, sessionOrchestrator, index] = await Promise.all([
   fs.readFile(new URL('../turn/training/drive-by-ear-training.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/training/view.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/training/drive-by-ear-training.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/race/session-orchestrator.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8')
 ]);
 
 assert.match(fixedLayout, /training\/drive-by-ear-training\.js\?build=\$\{buildKey\}-r151-dbe-training-device-fixes/);
 assert.match(fixedLayout, /installDriveByEarTraining\(globalThis\.__turnRuntime\)/);
 assert.match(fixedLayout, /driveByEarTraining/);
+assert.match(
+  index,
+  /"\/turn\/training\/drive-by-ear-training\.js\?build=20260817-r172-r151-dbe-training-device-fixes": "\/turn\/training\/drive-by-ear-training\.js\?build=20260817-r172&revision=r172-screen-reader-followup"/,
+  'Production must map the established training import to the r172 screen-reader follow-up module identity'
+);
+assert.match(
+  index,
+  /"\/turn\/race\/session-orchestrator\.js\?source=20260729-r118-m8": "\/turn\/race\/session-orchestrator\.js\?source=20260817-r172-screen-reader-followup"/,
+  'Production must map the established race-session import to the start-announcement-aware module identity'
+);
 
 assert.equal(TRAINING_STAGES.length, 5, 'Training must contain exactly five authored parts');
 assert.equal(FINISH_PROGRESS, 0.94);
@@ -81,7 +93,7 @@ for (const stage of TRAINING_STAGES) {
   assertCourseHasSpace(stage);
 }
 
-assert.match(training, /const TRAINING_REVISION = 'r150-dbe-training-refinement'/);
+assert.match(training, /const TRAINING_REVISION = 'r172-screen-reader-followup'/);
 assert.match(training, /applySlipperyAssist\(sample, side/);
 assert.match(training, /1 - Math\.exp\(-profile\.damping \* dt\)/);
 assert.match(training, /tangential motion instead of stopping or snapping the car back onto the road/);
@@ -93,6 +105,31 @@ assert.match(training, /data-training-race-restart/);
 assert.match(training, /restartPart/);
 assert.match(training, /renderTrainingNavigation/);
 assert.match(training, /dataset\.trainingTarget/);
+
+assert.match(
+  sessionOrchestrator,
+  /async function startGame\(fullscreenPromise = Promise\.resolve\(false\), \{ announceStart = true \} = \{\}\)/,
+  'The shared race session must let training suppress the ordinary GO announcement without changing normal races'
+);
+assert.match(sessionOrchestrator, /if \(announceStart\) announce\('GO!'\)/);
+assert.match(
+  training,
+  /raceSession\.startGame\(fullscreenPromise \|\| Promise\.resolve\(false\), \{ announceStart: false \}\)/,
+  'DBE 101 must suppress the ordinary race-session GO so its instructions can come first'
+);
+assert.match(
+  training,
+  /runtime\.state\.suppressNextLapStartMessage = true/,
+  'DBE 101 must also suppress the lap-system GO at each staged/restarted training start'
+);
+assert.match(training, /function signalStageStarted\(\{ restarted = false \} = \{\}\)/);
+assert.match(training, /new CustomEvent\('turn:dbe-training-stage-started'/);
+assert.match(training, /stageId: session\.stage\.id/);
+assert.match(training, /stageIndex: session\.stageIndex/);
+assert.match(training, /signalStageStarted\(\);\s*return true;/,
+  'A part-start event must be emitted only after that exact stage has finished starting');
+assert.match(training, /signalStageStarted\(\{ restarted: true \}\)/,
+  'Restart must emit the same exact-stage start event rather than relying on click timing');
 
 assert.match(view, /homeButton\.textContent = 'DRIVE BY EAR 101'/);
 assert.doesNotMatch(view, /homeButton\.textContent = 'DRIVE BY EAR TRAINING'/);
@@ -136,7 +173,7 @@ assert.match(css, /data-training-race-restart/);
 assert.match(css, /\.turn-dbe-training-race-nav\[hidden\]/);
 assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
 
-console.log('TURN Drive By Ear 101 device cue mapping, modal position and linked sequence passed.');
+console.log('TURN Drive By Ear 101 exact-stage instructions, single GO sequencing and device cue mapping passed.');
 
 function assertCourseHasSpace(stage) {
   const points = stage.points.map(([x, z]) => ({ x, z }));
