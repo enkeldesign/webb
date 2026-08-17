@@ -25,6 +25,18 @@ function nativeGroundedClone(template) {
   return clone;
 }
 
+function centeredGroundedClone(template) {
+  const clone = nativeGroundedClone(template);
+  clone.updateWorldMatrix(true, true);
+  const bounds = new THREE.Box3().setFromObject(clone, true);
+  if (!bounds.isEmpty()) {
+    const center = bounds.getCenter(new THREE.Vector3());
+    clone.position.x -= center.x;
+    clone.position.z -= center.z;
+  }
+  return clone;
+}
+
 function removeOldCabins(world) {
   const removals = [];
   world.traverse((object) => {
@@ -49,7 +61,7 @@ function makeGable(z, color = 0x8a5c3f) {
   geometry.setAttribute('position', new THREE.Float32BufferAttribute([
     -0.51, 1.0, z,
      0.51, 1.0, z,
-     0.00, 2.18, z
+     0.00, 2.02, z
   ], 3));
   geometry.computeVertexNormals();
   const mesh = new THREE.Mesh(geometry, material(color, 1, 0, { side: THREE.DoubleSide }));
@@ -63,19 +75,27 @@ function makeGable(z, color = 0x8a5c3f) {
 function makeNativePivotCabin(templates, variant = 0) {
   const cabin = new THREE.Group();
 
-  // Kenney's cabin panels already carry their half-cell outward offset in the
-  // model origin. Rotating four panels around the SAME origin is what closes
-  // a 1 x 1 cabin. Translating them outward again is what produced the loose
-  // log barricades in the first r4 render.
+  // Kenney's wall panels already carry their half-cell outward offset in the
+  // model origin. Rotating four panels around one origin closes a 1 x 1 hut;
+  // translating those panels outward again creates the loose-log effect seen
+  // in the earlier build.
   addPanel(cabin, templates.doorway, 0, 'Mountain Holiday native front doorway r4');
   addPanel(cabin, templates.wall, Math.PI, 'Mountain Holiday native back wall r4');
   addPanel(cabin, variant ? templates.window : templates.wall, -Math.PI / 2, 'Mountain Holiday native left wall r4');
   addPanel(cabin, templates.window, Math.PI / 2, 'Mountain Holiday native right window r4');
 
-  const roof = nativeGroundedClone(templates.roof);
-  roof.position.y += 1.0;
-  roof.name = 'Mountain Holiday single snow roof native-pivot r4';
-  cabin.add(roof);
+  // The Holiday roof model is one sloped half. Center it, mirror a second
+  // copy, and let the pair overlap slightly at the ridge. This preserves the
+  // cabin wall pivots while giving the compact hut a closed snow roof.
+  const roofA = centeredGroundedClone(templates.roof);
+  roofA.position.set(0.18, 0.98, 0);
+  roofA.name = 'Mountain Holiday fitted snow roof half r4';
+  cabin.add(roofA);
+  const roofB = centeredGroundedClone(templates.roof);
+  roofB.position.set(-0.18, 0.98, 0);
+  roofB.scale.x = -1;
+  roofB.name = 'Mountain Holiday fitted mirrored snow roof half r4';
+  cabin.add(roofB);
 
   cabin.add(makeGable(0.51), makeGable(-0.51));
 
@@ -91,9 +111,10 @@ function makeNativePivotCabin(templates, variant = 0) {
     footprint: '1x1',
     panelOriginsPreserved: true,
     outwardTranslations: 0,
-    roofPieces: 1,
+    roofPieces: 2,
+    roofMirror: true,
     gablesClosed: true,
-    revision: 'r4-native-pivot'
+    revision: 'r4-native-pivot-roof-pair'
   });
   return cabin;
 }
@@ -185,6 +206,7 @@ export async function installMountainR4CabinFix(world, samples, trackWidth, terr
     placed,
     nativePanelOrigins: true,
     outwardPanelTranslations: 0,
+    roofPair: true,
     footprint: '1x1'
   });
   return world;
