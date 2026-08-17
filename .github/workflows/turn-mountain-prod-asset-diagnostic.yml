@@ -26,17 +26,29 @@ jobs:
           set -euxo pipefail
           for path in \
             turn/assets/scenery/mountain/holiday/cabin-wall.glb \
+            turn/assets/scenery/mountain/holiday/cabin-doorway.glb \
+            turn/assets/scenery/mountain/holiday/cabin-window-large.glb \
             turn/assets/scenery/mountain/holiday/cabin-roof-snow.glb \
+            turn/assets/scenery/mountain/holiday/bench.glb \
+            turn/assets/scenery/mountain/holiday/lantern.glb \
+            turn/assets/scenery/mountain/holiday/sled.glb \
+            turn/assets/scenery/mountain/holiday/snow-pile.glb \
+            turn/assets/scenery/mountain/holiday/snow-flat-large.glb \
+            turn/assets/scenery/mountain/holiday/tree-snow-a.glb \
             turn/assets/scenery/mountain/holiday/Textures/colormap.png \
+            turn/assets/scenery/mountain/fantasy/stall-green.glb \
+            turn/assets/scenery/mountain/fantasy/stall-red.glb \
+            turn/assets/scenery/mountain/fantasy/cart.glb \
             turn/assets/scenery/mountain/fantasy/fountain-round-detail.glb \
+            turn/assets/scenery/mountain/fantasy/fence.glb \
             turn/assets/scenery/mountain/fantasy/Textures/colormap.png \
-            turn/assets/scenery/mountain/nature/rock-large.glb \
-            turn/assets/scenery/mountain/nature/Textures/colormap.png
+            turn/assets/scenery/mountain/nature/cliff-waterfall-top-rock.glb \
+            turn/assets/scenery/mountain/nature/cliff-waterfall-rock.glb
           do
             url="https://enkel.design/$path"
             printf '\n=== %s ===\n' "$url"
             curl --fail --silent --show-error --location --dump-header /tmp/headers --output /tmp/body "$url"
-            sed -n '1,20p' /tmp/headers
+            sed -n '1,8p' /tmp/headers
             wc -c /tmp/body
             file /tmp/body || true
           done
