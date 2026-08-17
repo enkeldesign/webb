@@ -84,18 +84,14 @@ function makeNativePivotCabin(templates, variant = 0) {
   addPanel(cabin, variant ? templates.window : templates.wall, -Math.PI / 2, 'Mountain Holiday native left wall r4');
   addPanel(cabin, templates.window, Math.PI / 2, 'Mountain Holiday native right window r4');
 
-  // The Holiday roof model is one sloped half. Center it, mirror a second
-  // copy, and let the pair overlap slightly at the ridge. This preserves the
-  // cabin wall pivots while giving the compact hut a closed snow roof.
-  const roofA = centeredGroundedClone(templates.roof);
-  roofA.position.set(0.18, 0.98, 0);
-  roofA.name = 'Mountain Holiday fitted snow roof half r4';
-  cabin.add(roofA);
-  const roofB = centeredGroundedClone(templates.roof);
-  roofB.position.set(-0.18, 0.98, 0);
-  roofB.scale.x = -1;
-  roofB.name = 'Mountain Holiday fitted mirrored snow roof half r4';
-  cabin.add(roofB);
+  // The snow roof is a complete modular section, but its authored pivot is
+  // offset for Kenney grid construction. Center the one module over the hut;
+  // duplicating/mirroring it creates crossed roof geometry when the cabin is
+  // viewed end-on.
+  const roof = centeredGroundedClone(templates.roof);
+  roof.position.y = 0.98;
+  roof.name = 'Mountain Holiday centered snow roof module r4';
+  cabin.add(roof);
 
   cabin.add(makeGable(0.51), makeGable(-0.51));
 
@@ -111,10 +107,10 @@ function makeNativePivotCabin(templates, variant = 0) {
     footprint: '1x1',
     panelOriginsPreserved: true,
     outwardTranslations: 0,
-    roofPieces: 2,
-    roofMirror: true,
+    roofPieces: 1,
+    roofCentered: true,
     gablesClosed: true,
-    revision: 'r4-native-pivot-roof-pair'
+    revision: 'r4-native-pivot-centered-roof'
   });
   return cabin;
 }
@@ -206,7 +202,7 @@ export async function installMountainR4CabinFix(world, samples, trackWidth, terr
     placed,
     nativePanelOrigins: true,
     outwardPanelTranslations: 0,
-    roofPair: true,
+    roofPieces: 1,
     footprint: '1x1'
   });
   return world;
