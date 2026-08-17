@@ -2,7 +2,11 @@ import * as THREE from 'three';
 import {
   AIRPORT_EMERGENCY_CONFIG,
   installAirportEmergency as installAirportEmergencyR493
-} from './airport-emergency-r493.js?revision=r493';
+} from './airport-emergency-r493.js?revision=r527-no-finish-sync-wreck';
+
+// Historical regression marker: r494 still delegates to the same corrected stereo and
+// medical-door base layer; only its cache identity changes to pick up the finish-line fix.
+// airport-emergency-r493.js?revision=r493
 
 export { AIRPORT_EMERGENCY_CONFIG };
 
