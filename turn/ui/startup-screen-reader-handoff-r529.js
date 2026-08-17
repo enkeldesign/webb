@@ -16,6 +16,9 @@
   let pendingPosition = '';
   let homeReadyHandled = false;
   let trainingAnnouncementToken = 0;
+  let externalPriorityTimer = 0;
+  let externalPriorityUntil = 0;
+  let discoveryObserver = null;
 
   function viewportIsPortrait() {
     const viewport = window.visualViewport;
@@ -53,13 +56,36 @@
     return Math.min(9500, Math.max(2400, 900 + words * 380));
   }
 
+  function externalSpeechActive() {
+    return performance.now() < externalPriorityUntil;
+  }
+
+  function positionSpeechBlocked() {
+    return speaking || speechQueue.length > 0 || externalSpeechActive();
+  }
+
   function setPositionSpeechEnabled(enabled) {
     if (!positionAnnouncer) return;
     positionAnnouncer.setAttribute('aria-live', enabled ? 'polite' : 'off');
   }
 
+  function reservePositionForSpeech(message) {
+    const normalized = String(message || '').trim();
+    if (!normalized || !positionAnnouncer) return;
+    const now = performance.now();
+    externalPriorityUntil = Math.max(externalPriorityUntil, now + speechDurationMs(normalized));
+    window.clearTimeout(externalPriorityTimer);
+    externalPriorityTimer = window.setTimeout(() => {
+      externalPriorityTimer = 0;
+      externalPriorityUntil = 0;
+      if (!speaking) flushPendingPosition();
+    }, Math.max(0, externalPriorityUntil - now));
+    setPositionSpeechEnabled(false);
+  }
+
   function flushPendingPosition() {
     if (!positionAnnouncer) return;
+    if (positionSpeechBlocked()) return;
     setPositionSpeechEnabled(true);
     const message = String(pendingPosition || positionAnnouncer.textContent || '').trim();
     pendingPosition = '';
@@ -67,7 +93,7 @@
 
     positionAnnouncer.textContent = '';
     requestAnimationFrame(() => {
-      if (speaking || !positionAnnouncer) {
+      if (positionSpeechBlocked() || !positionAnnouncer) {
         pendingPosition = message;
         return;
       }
@@ -78,6 +104,12 @@
   function playNextSpeech() {
     window.clearTimeout(speechTimer);
     speechTimer = 0;
+
+    if (externalSpeechActive()) {
+      setPositionSpeechEnabled(false);
+      speechTimer = window.setTimeout(playNextSpeech, Math.max(80, externalPriorityUntil - performance.now()));
+      return;
+    }
 
     const next = speechQueue.shift();
     if (!next) {
@@ -102,7 +134,7 @@
   function speak(message) {
     const normalized = String(message || '').trim();
     if (!normalized) return;
-    const tail = speechQueue.at(-1);
+    const tail = speechQueue[speechQueue.length - 1];
     if (tail === normalized) return;
     if (speaking && document.getElementById(STATUS_ID)?.textContent === normalized) return;
     speechQueue.push(normalized);
@@ -119,10 +151,10 @@
 
     positionAnnouncer = announcer;
     announcer.dataset.turnSrPriorityManaged = 'true';
-    setPositionSpeechEnabled(!speaking);
+    setPositionSpeechEnabled(!positionSpeechBlocked());
     const observer = new MutationObserver(() => {
       const text = String(announcer.textContent || '').trim();
-      if (speaking && text) pendingPosition = text;
+      if (positionSpeechBlocked() && text) pendingPosition = text;
     });
     observer.observe(announcer, { childList: true, characterData: true, subtree: true });
   }
@@ -159,7 +191,7 @@
 
   function focusDialogHeading(dialog) {
     if (!dialog || dialog.hidden) return;
-    if (dialog instanceof HTMLDialogElement && !dialog.open) return;
+    if (globalThis.HTMLDialogElement && dialog instanceof globalThis.HTMLDialogElement && !dialog.open) return;
     const heading = headingForDialog(dialog);
     if (!heading) return;
     if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
@@ -209,7 +241,7 @@
 
   function replaceMenuGlyphText(root) {
     if (!root || !document.createTreeWalker) return;
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const walker = document.createTreeWalker(root, globalThis.NodeFilter?.SHOW_TEXT || 4);
     const textNodes = [];
     while (walker.nextNode()) textNodes.push(walker.currentNode);
 
@@ -338,49 +370,73 @@
     return TRAINING_START_MESSAGES[runtimeId] ? runtimeId : '';
   }
 
-  function installGlobalObserver() {
-    if (typeof MutationObserver !== 'function' || !document.body) return;
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.type === 'childList') {
-          for (const node of mutation.addedNodes) {
-            if (!(node instanceof Element)) continue;
-            preparePositionAnnouncer(node);
-            prepareAchievementToast(node);
-            prepareBalanceSlider(node);
-            normalizeMenuButtons(node);
-          }
-        }
+  function externalLiveRegionReadable(live) {
+    if (!live || live.id === STATUS_ID || live === positionAnnouncer) return false;
+    if (live.getAttribute('aria-live') === 'off') return false;
+    if (live.closest('[hidden], [aria-hidden="true"]')) return false;
+    const closedDialog = live.closest('dialog');
+    if (closedDialog && !closedDialog.open) return false;
+    return true;
+  }
 
-        if (mutation.type === 'attributes') {
-          const target = mutation.target;
-          if (target?.matches?.('.turn-achievement-toast')) {
-            prepareAchievementToast(target);
-            queueMicrotask(() => announceToastIfVisible(target));
-          }
-          if (
-            mutation.attributeName === 'hidden'
-            && target?.matches?.('[role="dialog"]')
-            && !target.hidden
-          ) {
-            queueMicrotask(() => focusDialogHeading(target));
-          }
-          if (
-            mutation.attributeName === 'open'
-            && target instanceof HTMLDialogElement
-            && target.open
-          ) {
-            queueMicrotask(() => focusDialogHeading(target));
-          }
+  function prepareExternalLiveRegions(node = document) {
+    const selector = '[aria-live], [role="status"], [role="alert"]';
+    const candidates = [];
+    if (node?.matches?.(selector)) candidates.push(node);
+    if (node?.querySelectorAll) candidates.push(...node.querySelectorAll(selector));
+
+    for (const live of candidates) {
+      if (!live || live.id === STATUS_ID || live === positionAnnouncer) continue;
+      if (live.dataset.turnSrExternalPriority === 'true') continue;
+      live.dataset.turnSrExternalPriority = 'true';
+      const observer = new MutationObserver(() => {
+        if (!externalLiveRegionReadable(live)) return;
+        const message = String(live.textContent || '').trim();
+        if (message) reservePositionForSpeech(message);
+      });
+      observer.observe(live, { childList: true, characterData: true, subtree: true });
+    }
+  }
+
+  function prepareDialogOpenTracking(node = document) {
+    const dialogs = [];
+    if (node?.matches?.('dialog, [role="dialog"]')) dialogs.push(node);
+    if (node?.querySelectorAll) dialogs.push(...node.querySelectorAll('dialog, [role="dialog"]'));
+
+    for (const dialog of dialogs) {
+      if (dialog.dataset.turnSrHeadingTracked === 'true') continue;
+      dialog.dataset.turnSrHeadingTracked = 'true';
+      const observer = new MutationObserver(() => {
+        const nativeOpen = globalThis.HTMLDialogElement
+          && dialog instanceof globalThis.HTMLDialogElement
+          && dialog.open;
+        const roleDialogOpen = dialog.getAttribute('role') === 'dialog' && !dialog.hidden;
+        if (nativeOpen || roleDialogOpen) queueMicrotask(() => focusDialogHeading(dialog));
+      });
+      observer.observe(dialog, { attributes: true, attributeFilter: ['open', 'hidden'] });
+    }
+  }
+
+  function scanAccessibilityTargets(node = document) {
+    preparePositionAnnouncer(node);
+    prepareAchievementToast(node);
+    prepareBalanceSlider(node);
+    normalizeMenuButtons(node);
+    prepareDialogOpenTracking(node);
+    prepareExternalLiveRegions(node);
+  }
+
+  function installDiscoveryObserver() {
+    if (typeof MutationObserver !== 'function' || !document.body) return;
+    discoveryObserver = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes || []) {
+          if (!(node instanceof Element)) continue;
+          scanAccessibilityTargets(node);
         }
       }
     });
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['hidden', 'open', 'aria-label']
-    });
+    discoveryObserver.observe(document.body, { childList: true, subtree: true });
   }
 
   installDialogHeadingFocus();
@@ -388,14 +444,15 @@
   prepareInstallInstructions();
   normalizeMenuButtons();
   suppressDuplicateStartupReady();
-  preparePositionAnnouncer(document);
-  prepareAchievementToast(document);
-  prepareBalanceSlider(document);
-  installGlobalObserver();
+  scanAccessibilityTargets(document);
+  installDiscoveryObserver();
 
   document.addEventListener('turn:home-ready', () => {
     if (homeReadyHandled) return;
     homeReadyHandled = true;
+    scanAccessibilityTargets(document);
+    discoveryObserver?.disconnect();
+    discoveryObserver = null;
 
     const loadingCopy = document.querySelector('#installGate .install-copy');
     if (loadingCopy) {
@@ -413,11 +470,16 @@
   }, { once: true });
 
   window.addEventListener('turn:track-changed', (event) => {
+    scanAccessibilityTargets(document);
     const trackId = String(event.detail?.trackId || '');
     if (event.detail?.training === true && TRAINING_START_MESSAGES[trackId]) {
       announceTrainingWhenRunning(trackId);
     }
   });
+
+  for (const eventName of ['turn:ui-state-change', 'turn:achievements-updated', 'turn:trophy-road-updated']) {
+    window.addEventListener(eventName, () => scanAccessibilityTargets(document));
+  }
 
   document.addEventListener('click', (event) => {
     const restart = event.target?.closest?.('#resetButton, [data-training-race-restart]');
