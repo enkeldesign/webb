@@ -175,6 +175,21 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
       'TURN 1.8.0 · 2026.08.11-r164 with the Monster Truck all-terrain perk'
     ]
   }
+  ,{
+    period: '17 August',
+    title: 'MOUNTAIN turns Track 6 into an alpine journey',
+    paragraphs: [
+      'TURN’s sixth production track replaces the old Track 6 placeholder with MOUNTAIN: a 49-metre alpine route that begins in a warm snowy village, climbs in long flowing curves around the hidden backside, reaches a river at the snow line and then changes character into an exposed front-face hairpin descent beside a waterfall.',
+      'The world combines a procedural alpine ground treatment, batched spruce forests and Cliffside-style granite with a cozy chalet village, chapel, inn, lanterns, Kenney Fantasy Town landmarks, a lake, summit river, waterfall mist and a layered mountain backdrop. Snow is deliberately visual rather than an ice-grip gimmick, while guardrail-aligned containment keeps the descent difficult without letting cars pass through scenery.',
+      'MOUNTAIN also joins TURN’s non-visual and progression systems as a first-class track: Drive By Ear changes from long flowing climb notes to alternating severity-three slalom calls, Color Cues adds a distinct blue family, every-track achievements now include six tracks, and Trophy Road unlocks MOUNTAIN at 1,000 trophies.'
+    ],
+    milestones: [
+      'Sixth production track with a 49 m summit and cinematic village-to-peak intro',
+      'Snowy village, summit river, front-face slalom, waterfall and alpine backdrop',
+      'TURN 1.9.0 · 2026.08.17-r173 with MOUNTAIN at 1,000 trophies'
+    ]
+  }
+
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -360,10 +375,19 @@ export const CHANGELOG = Object.freeze([
       ['Interface/accessibility polish', 'Adds a non-colour edge to the Boost meter, fixes the Home header boundary and music-control alignment, and refreshes the startup loading copy.']
     ]
   }
+  ,{
+    date: '17 August',
+    entries: [
+      ['1.9.0 r173', 'Adds MOUNTAIN as TURN’s sixth production track and 1,000-trophy reward: snowy village, long alpine climb, summit river, technical slalom descent, waterfall and cinematic mountain backdrop.'],
+      ['MOUNTAIN world', 'Adds procedural alpine ground texture, snow line, batched spruce forest and granite, cozy chalets/inn/chapel/lanterns, Kenney Fantasy Town landmarks, lake, river, waterfall mist and guardrail-aligned containment.'],
+      ['MOUNTAIN accessibility', 'Adds a distinct blue Color Cue and Chromatic Camouflage family, six-track achievement semantics and a Drive By Ear map that deliberately changes from flowing climb calls to alternating tight descent calls.']
+    ]
+  }
+
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.8.5',
-  build: '2026.08.17-r172',
-  note: 'TURN 1.8.5 build r172 adds a screen-reader quality pass for startup guidance, speech priority, non-visual onboarding, dialog focus and directional audio while preserving racing behaviour.'
+  version: '1.9.0',
+  build: '2026.08.17-r173',
+  note: 'TURN 1.9.0 build r173 adds MOUNTAIN, a sixth production track with an alpine village climb, snow-line river, technical hairpin descent and waterfall, integrated with Trophy Road, Drive By Ear and Color Cues.'
 });
