@@ -72,7 +72,7 @@ assert.ok(metrics.decorativeVillageAssets >= 8,
   'Village approaches need benches, carts, fences, sleds and authored Holiday trees');
 
 assert.ok(metrics.marketStalls >= 2, `Expected the original village market stalls to remain, got ${metrics.marketStalls}`);
-assert.ok(metrics.waterfallCliffModules >= 6, 'The waterfall should use multiple modest Kenney Nature cliff modules');
+assert.ok(metrics.waterfallCliffModules >= 4, 'The waterfall should retain four outer Kenney Nature cliff shoulders after opening the driver sightline');
 assert.ok(metrics.waterfallSheets >= 3, 'The river must continue over the cliff toward the lake');
 assert.ok(metrics.visibleWaterfallCurtains >= 3, 'The waterfall needs the established r3 curtain in front of the cliff mass');
 assert.ok(metrics.trackVisibleWaterfallCurtains >= 1,
