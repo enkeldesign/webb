@@ -47,13 +47,17 @@ assert.equal(
   1850
 );
 assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 1850);
+assert.deepEqual(TRACK_IDS, [
+  'countryside', 'airport', 'cliffside', 'harbor', 'midnight-city', 'mountain'
+], 'Every-track achievements must include the sixth production track');
 
 const factoryRoute = Object.freeze({
   countryside: Object.freeze({ time: 18, carId: 'convertible', carColor: '#a8327a' }),
   airport: Object.freeze({ time: 21, carId: 'classic', carColor: '#ffcc00' }),
   harbor: Object.freeze({ time: 35, carId: 'vintage-racer', carColor: '#8b5a2b' }),
   cliffside: Object.freeze({ time: 24, carId: 'race-future', carColor: '#00aabb' }),
-  'midnight-city': Object.freeze({ time: 70, carId: 'sedan-sports', carColor: '#5e3c87' })
+  'midnight-city': Object.freeze({ time: 70, carId: 'sedan-sports', carColor: '#5e3c87' }),
+  mountain: Object.freeze({ time: 98, carId: 'toy-racer', carColor: '#4dabf7' })
 });
 
 for (const trackId of TRACK_IDS) {
@@ -68,6 +72,10 @@ assert.equal(matchesTrackColor('airport', '#ffd84f'), true);
 assert.equal(matchesTrackColor('harbor', '#f28b39'), true);
 assert.equal(matchesTrackColor('cliffside', '#3ccad6'), true);
 assert.equal(matchesTrackColor('midnight-city', '#a785ea'), true);
+assert.equal(matchesTrackColor('mountain', '#4dabf7'), true,
+  'Mountain should accept its alpine-blue track family without overlapping Cliffside cyan');
+assert.equal(matchesTrackColor('mountain', '#00aabb'), false,
+  'Cliffside cyan must not also satisfy the Mountain blue family');
 
 assert.equal(matchesTrackColor('countryside', '#ffcc00'), false,
   'A saturated wrong hue must not count');
@@ -97,6 +105,8 @@ assert.match(moduleSource, /minLightness: 0\.28/);
 assert.match(moduleSource, /maxLightness: 0\.85/);
 assert.match(moduleSource, /hueMin: 295/,
   'Countryside must include native canonical magenta at hue 300');
+assert.match(moduleSource, /mountain: Object\.freeze\(\{ hueMin: 206, hueMax: 230, name: 'blue' \}\)/,
+  'Mountain must own a distinct blue paint family');
 assert.match(moduleSource, /turn:lap-result/,
   'The state should be re-evaluated after a record can change');
 
@@ -113,4 +123,4 @@ assert.match(indexSource, /chromatic-camouflage-r183\.js/,
 assert.doesNotMatch(indexSource, /airport-runway/,
   'The TURN NEXT Airport prototype must not enter the production TURN entry point');
 
-console.log(`TURN ${release.version} production MAYDAY and Chromatic Camouflage achievement regression passed.`);
+console.log(`TURN ${release.version} production six-track Chromatic Camouflage achievement regression passed.`);
