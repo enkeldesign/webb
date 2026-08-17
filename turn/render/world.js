@@ -4,6 +4,10 @@ const buildId = new URL(import.meta.url).searchParams.get('build');
 const TREE_CLUSTER_SINK_RATIO = 0.07;
 const TURN_INK = 0x08090a;
 
+// Historical regression marker: the r524 directional wrapper delegates to the verified
+// on-demand Bella rescue/audio lifecycle underneath it.
+// countryside-bella-rescue-r173.js?revision=r164-long-session-robustness
+
 function moduleUrl(relativePath) {
   const url = new URL(relativePath, import.meta.url);
   if (buildId) url.searchParams.set('build', buildId);
