@@ -1,6 +1,89 @@
 const STYLE_ATTRIBUTE = 'data-turn-m8-fixed-home-styles';
 const SHORT_VIEWPORT_STYLE_ID = 'turn-m8-short-viewport-race-dock';
 const LAYOUT_ID = 'fixed-grid-v7';
+const MUSIC_VOLUME_STORAGE_KEY = 'turn-racing-music-volume-v1';
+const MUSIC_LAST_VOLUME_STORAGE_KEY = 'turn-racing-music-last-volume-v1';
+
+function storageSnapshot(key) {
+  try {
+    return Object.freeze({ available: true, value: globalThis.localStorage?.getItem(key) ?? null });
+  } catch (_) {
+    return Object.freeze({ available: false, value: null });
+  }
+}
+
+function restoreStorage(key, snapshot) {
+  if (!snapshot?.available) return;
+  try {
+    if (snapshot.value == null) globalThis.localStorage?.removeItem(key);
+    else globalThis.localStorage?.setItem(key, snapshot.value);
+  } catch (_) {}
+}
+
+function installDriveByEarTrainingMusicSilence(training, racingMusic) {
+  if (!training || !racingMusic || globalThis.__turnDbeTrainingMusicSilence) {
+    return globalThis.__turnDbeTrainingMusicSilence || null;
+  }
+
+  let temporary = null;
+
+  const restorePersistentMusicChoice = (snapshot) => {
+    restoreStorage(MUSIC_VOLUME_STORAGE_KEY, snapshot?.storedVolume);
+    restoreStorage(MUSIC_LAST_VOLUME_STORAGE_KEY, snapshot?.storedLastVolume);
+  };
+
+  const silence = () => {
+    if (temporary) return;
+    temporary = Object.freeze({
+      volume: Number.isFinite(Number(racingMusic.volume)) ? Number(racingMusic.volume) : 0,
+      storedVolume: storageSnapshot(MUSIC_VOLUME_STORAGE_KEY),
+      storedLastVolume: storageSnapshot(MUSIC_LAST_VOLUME_STORAGE_KEY)
+    });
+    racingMusic.setVolume?.(0);
+    // setVolume(0) intentionally updates the normal preference. DBE 101 is different:
+    // silence is temporary, so immediately put the player's persisted choice back.
+    restorePersistentMusicChoice(temporary);
+  };
+
+  const restore = () => {
+    if (!temporary) return;
+    const snapshot = temporary;
+    temporary = null;
+    racingMusic.setVolume?.(snapshot.volume);
+    restorePersistentMusicChoice(snapshot);
+  };
+
+  const entryButtons = [
+    training.entryPoints?.homeButton,
+    training.entryPoints?.howCallout?.querySelector?.('[data-turn-dbe-training-entry]'),
+    training.entryPoints?.settingsCallout?.querySelector?.('[data-turn-dbe-training-entry]'),
+    training.blankSuggestion?.dialog?.querySelector?.('[data-blank-training]')
+  ].filter(Boolean);
+
+  for (const button of entryButtons) {
+    button.addEventListener('click', silence, { capture: true });
+  }
+
+  training.introDialog?.addEventListener('close', () => {
+    queueMicrotask(() => {
+      if (training.getState?.().active !== true) restore();
+    });
+  });
+
+  globalThis.addEventListener('turn:dbe-training-stage-started', silence);
+  globalThis.addEventListener('turn:track-changed', (event) => {
+    if (event.detail?.training === true) silence();
+    else if (temporary) restore();
+  });
+
+  const api = Object.freeze({
+    silence,
+    restore,
+    get active() { return Boolean(temporary); }
+  });
+  globalThis.__turnDbeTrainingMusicSilence = api;
+  return api;
+}
 
 function installStylesheet() {
   if (document.querySelector(`link[${STYLE_ATTRIBUTE}]`)) return;
@@ -198,6 +281,7 @@ export async function installM8HomeFixedLayout() {
     `/turn/audio/racing-music-v2.js?build=${buildKey}-racing-music-warm-v2`
   );
   const racingMusic = installRacingMusic({ home });
+  const dbeTrainingMusicSilence = installDriveByEarTrainingMusicSilence(driveByEarTraining, racingMusic);
   const { installRacingMusicHealth } = await import(
     `/turn/audio/racing-music-health.js?build=${buildKey}&revision=r164-long-session-robustness`
   );
@@ -219,6 +303,7 @@ export async function installM8HomeFixedLayout() {
     trophyRoadFeedback,
     driveByEarTraining,
     racingMusic,
+    dbeTrainingMusicSilence,
     racingMusicHealth
   });
   return globalThis.__turnHomeLayout;

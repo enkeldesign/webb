@@ -8,6 +8,7 @@ on:
       - 'turn/training/**'
       - 'turn/m8-home-fixed-layout.js'
       - 'turn-tests/drive-by-ear-training-production.mjs'
+      - 'turn-tests/dbe-training-music-silence-production.mjs'
       - 'eslint.config.mjs'
       - '.github/workflows/turn-dbe-training-tests.yml'
   push:
@@ -17,6 +18,7 @@ on:
       - 'turn/training/**'
       - 'turn/m8-home-fixed-layout.js'
       - 'turn-tests/drive-by-ear-training-production.mjs'
+      - 'turn-tests/dbe-training-music-silence-production.mjs'
       - 'eslint.config.mjs'
       - '.github/workflows/turn-dbe-training-tests.yml'
 
@@ -36,10 +38,13 @@ jobs:
           node-version: '24'
 
       - name: Syntax-check training modules
-        run: find turn/training -type f -name '*.js' -print0 | xargs -0 -n1 node --check && node --check turn-tests/drive-by-ear-training-production.mjs
+        run: find turn/training -type f -name '*.js' -print0 | xargs -0 -n1 node --check && node --check turn-tests/drive-by-ear-training-production.mjs && node --check turn-tests/dbe-training-music-silence-production.mjs
 
       - name: Lint training modules
-        run: npx --yes eslint@9.39.1 turn/training/*.js turn-tests/drive-by-ear-training-production.mjs
+        run: npx --yes eslint@9.39.1 turn/training/*.js turn-tests/drive-by-ear-training-production.mjs turn-tests/dbe-training-music-silence-production.mjs
 
       - name: Run Drive By Ear training regression
         run: node turn-tests/drive-by-ear-training-production.mjs
+
+      - name: Run DBE 101 music silence regression
+        run: node turn-tests/dbe-training-music-silence-production.mjs
