@@ -25,7 +25,7 @@ import {
   updatePartDialog
 } from './view.js';
 
-const TRAINING_REVISION = 'r150-dbe-training-refinement';
+const TRAINING_REVISION = 'r172-screen-reader-followup';
 const AUDIO_ENABLED_STORAGE_KEY = 'turn-audio-enabled-v1';
 const AUDIO_BALANCE_STORAGE_KEY = 'turn-audio-balance-v1';
 const DRIVE_BY_EAR_STORAGE_KEY = 'turn-drive-by-ear-v1';
@@ -240,12 +240,13 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
       runtime.openLot = leaveTraining;
 
       const fullscreenPromise = first ? session.preparedAccess?.fullscreenPromise : Promise.resolve(false);
-      await raceSession.startGame(fullscreenPromise || Promise.resolve(false));
+      await raceSession.startGame(fullscreenPromise || Promise.resolve(false), { announceStart: false });
       positionStageStart(stage);
       session.previousProgress = runtime.state.progress;
       session.previousPosition = snapshotPosition(runtime.state.position);
       session.lastFrameAt = globalThis.performance?.now?.() || 0;
       if (!session.frame) session.frame = requestAnimationFrame(trainingFrame);
+      signalStageStarted();
       return true;
     } finally {
       session.switching = false;
@@ -302,12 +303,24 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
     runtime.state.lapInvalid = false;
     runtime.state.lapStartedAt = 0;
     runtime.state.lapElapsed = 0;
+    runtime.state.suppressNextLapStartMessage = true;
     runtime.state.lapPreviousPosition = { x: runtime.state.position.x, z: runtime.state.position.z };
     runtime.state.recording = [];
     runtime.playerCar.position.copy(runtime.state.position);
     runtime.playerCar.rotation.y = runtime.state.heading + Math.PI;
     runtime.setRacePosition?.(null, 1);
     session.previousPosition = snapshotPosition(runtime.state.position);
+  }
+
+  function signalStageStarted({ restarted = false } = {}) {
+    if (!session.active || !session.stage) return;
+    window.dispatchEvent(new CustomEvent('turn:dbe-training-stage-started', {
+      detail: Object.freeze({
+        stageId: session.stage.id,
+        stageIndex: session.stageIndex,
+        restarted
+      })
+    }));
   }
 
   function restartPart(event) {
@@ -320,6 +333,7 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
     session.previousPosition = snapshotPosition(runtime.state.position);
     session.finishing = false;
     silencePaceNotes();
+    signalStageStarted({ restarted: true });
   }
 
   function trainingFrame(timestamp) {

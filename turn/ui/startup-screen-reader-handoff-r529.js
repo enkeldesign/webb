@@ -1,5 +1,8 @@
 (() => {
   const STATUS_ID = 'turn-screen-reader-status';
+  const SKIP_STYLE_ID = 'turn-screen-reader-skip-link-styles';
+  const TRAINING_SPEECH_CHANNEL = 'dbe-training';
+  const NON_VISUAL_ONBOARDING_MESSAGE = 'Non-visual onboarding. To race, choose a track on Home, then choose a car. For a guided introduction to Drive By Ear and non-visual gameplay, choose Drive By Ear one oh one. The first two links on Home let you replay this introduction or jump directly to Drive By Ear one oh one.';
   const MENU_GLYPHS = new Set(['…', '⋮', '☰']);
   const TRAINING_START_MESSAGES = Object.freeze({
     'dbe-training-1': 'Part one, Find the ribbon. Steer toward the warm guiding hum and keep it centred.',
@@ -11,11 +14,11 @@
 
   let speechQueue = [];
   let speaking = false;
+  let activeSpeech = null;
   let speechTimer = 0;
   let positionAnnouncer = null;
   let pendingPosition = '';
   let homeReadyHandled = false;
-  let trainingAnnouncementToken = 0;
   let externalPriorityTimer = 0;
   let externalPriorityUntil = 0;
   let discoveryObserver = null;
@@ -113,32 +116,58 @@
 
     const next = speechQueue.shift();
     if (!next) {
+      activeSpeech = null;
       speaking = false;
       flushPendingPosition();
       return;
     }
 
+    activeSpeech = next;
     speaking = true;
     setPositionSpeechEnabled(false);
     const status = ensureStatusRegion();
+    status.setAttribute('aria-live', next.priority);
     status.textContent = '';
     requestAnimationFrame(() => {
-      status.textContent = next;
+      if (activeSpeech !== next) return;
+      status.textContent = next.message;
       speechTimer = window.setTimeout(() => {
+        if (activeSpeech !== next) return;
         status.textContent = '';
+        activeSpeech = null;
         playNextSpeech();
-      }, speechDurationMs(next));
+      }, speechDurationMs(next.message));
     });
   }
 
-  function speak(message) {
+  function speak(message, { priority = 'polite', channel = '' } = {}) {
     const normalized = String(message || '').trim();
     if (!normalized) return;
+    const entry = Object.freeze({
+      message: normalized,
+      priority: priority === 'assertive' ? 'assertive' : 'polite',
+      channel: String(channel || '')
+    });
     const tail = speechQueue[speechQueue.length - 1];
-    if (tail === normalized) return;
-    if (speaking && document.getElementById(STATUS_ID)?.textContent === normalized) return;
-    speechQueue.push(normalized);
+    if (tail?.message === normalized && tail?.channel === entry.channel) return;
+    if (activeSpeech?.message === normalized && activeSpeech?.channel === entry.channel) return;
+    speechQueue.push(entry);
     if (!speaking) playNextSpeech();
+  }
+
+  function clearSpeechChannel(channel) {
+    const normalized = String(channel || '');
+    if (!normalized) return;
+    speechQueue = speechQueue.filter((entry) => entry.channel !== normalized);
+    if (activeSpeech?.channel !== normalized) return;
+
+    window.clearTimeout(speechTimer);
+    speechTimer = 0;
+    const status = document.getElementById(STATUS_ID);
+    if (status) status.textContent = '';
+    activeSpeech = null;
+    speaking = false;
+    requestAnimationFrame(playNextSpeech);
   }
 
   globalThis.__turnScreenReaderSpeak = speak;
@@ -295,10 +324,10 @@
   }
 
   function balanceValueText(slider) {
-    const value = Math.max(0, Math.min(100, Math.round(Number(slider?.value) || 0)));
-    if (value < 45) return `${100 - value}% other sounds`;
-    if (value > 55) return `${value}% Drive By Ear`;
-    return 'Balanced';
+    const dbe = Math.max(0, Math.min(100, Math.round(Number(slider?.value) || 0)));
+    const other = 100 - dbe;
+    const balance = dbe === 50 ? ', balanced' : '';
+    return `${dbe}% Drive By Ear, ${other}% other sounds${balance}`;
   }
 
   function prepareBalanceSlider(node = document) {
@@ -323,6 +352,128 @@
         if (status?.textContent?.startsWith('Sound balance:')) status.textContent = '';
       });
     });
+  }
+
+  function spokenCardText(rawText) {
+    return String(rawText || '')
+      .trim()
+      .toLocaleLowerCase('en')
+      .replace(/(^|\s)\p{L}/gu, (character) => character.toLocaleUpperCase('en'));
+  }
+
+  function prepareHomeTrackCards(node = document) {
+    const cards = [];
+    if (node?.matches?.('.m8-track-rail .track-card')) cards.push(node);
+    if (node?.querySelectorAll) cards.push(...node.querySelectorAll('.m8-track-rail .track-card'));
+
+    for (const card of cards) {
+      const summary = card.querySelector('.track-card-summary');
+      if (!summary) continue;
+
+      if (!card.disabled) {
+        const name = spokenCardText(card.querySelector('.track-card-name')?.textContent);
+        const difficulty = String(card.querySelector('.track-card-difficulty')?.textContent || '').trim().toLocaleLowerCase('en');
+        const time = String(card.querySelector('.track-card-best-time')?.textContent || '').trim();
+        const car = spokenCardText(card.querySelector('.track-card-best-car:not([hidden])')?.textContent);
+        const label = [`${name}, ${difficulty} track`];
+        if (time && !/^(?:--:--\.---|NO TIME YET)$/i.test(time)) {
+          label.push(`Best ${time}${car ? ` with ${car}` : ''}`);
+        } else {
+          label.push('No time yet');
+        }
+        card.setAttribute('aria-label', `${label.join('. ')}.`);
+      }
+
+      summary.setAttribute('aria-hidden', 'true');
+      card.dataset.turnSrSingleObject = 'true';
+    }
+  }
+
+  function installSkipLinkStyles() {
+    if (document.getElementById(SKIP_STYLE_ID)) return;
+    const style = document.createElement('style');
+    style.id = SKIP_STYLE_ID;
+    style.textContent = `
+      .turn-sr-skip-links {
+        position: fixed;
+        z-index: 100000;
+        top: 0;
+        left: max(8px, env(safe-area-inset-left));
+        display: flex;
+        gap: 8px;
+        padding: 8px;
+        transform: translateY(-140%);
+        transition: transform 80ms linear;
+      }
+      .turn-sr-skip-links:focus-within { transform: translateY(0); }
+      .turn-sr-skip-links a {
+        display: inline-block;
+        padding: 10px 12px;
+        border: 3px solid #08090a;
+        border-radius: 8px;
+        background: #fff8e8;
+        color: #08090a;
+        font: 900 14px/1.1 system-ui, sans-serif;
+        text-decoration: underline;
+      }
+      .turn-sr-onboarding-target {
+        position: fixed;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+        border: 0;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function installHomeSkipLinks() {
+    const home = document.querySelector('.m8-home');
+    const trainingButton = document.querySelector('.turn-dbe-training-home');
+    if (!home || !trainingButton || home.querySelector('.turn-sr-skip-links')) return;
+
+    installSkipLinkStyles();
+    trainingButton.id = trainingButton.id || 'turnDbeTrainingHome';
+
+    const navigation = document.createElement('nav');
+    navigation.className = 'turn-sr-skip-links';
+    navigation.setAttribute('aria-label', 'Accessibility shortcuts');
+    navigation.innerHTML = `
+      <a href="#turnNonVisualOnboarding">Non-visual onboarding</a>
+      <a href="#${trainingButton.id}">Drive By Ear 101</a>
+    `;
+
+    const onboardingTarget = document.createElement('div');
+    onboardingTarget.id = 'turnNonVisualOnboarding';
+    onboardingTarget.className = 'turn-sr-onboarding-target';
+    onboardingTarget.tabIndex = -1;
+    onboardingTarget.setAttribute('role', 'note');
+    onboardingTarget.setAttribute('aria-label', NON_VISUAL_ONBOARDING_MESSAGE);
+
+    const [onboardingLink, trainingLink] = navigation.querySelectorAll('a');
+    onboardingLink.addEventListener('click', (event) => {
+      event.preventDefault();
+      try {
+        onboardingTarget.focus({ preventScroll: true });
+      } catch (_) {
+        onboardingTarget.focus?.();
+      }
+    });
+    trainingLink.addEventListener('click', (event) => {
+      event.preventDefault();
+      try {
+        trainingButton.focus({ preventScroll: true });
+      } catch (_) {
+        trainingButton.focus?.();
+      }
+    });
+
+    home.prepend(onboardingTarget);
+    home.prepend(navigation);
   }
 
   function suppressDuplicateStartupReady() {
@@ -350,31 +501,6 @@
       ? 'Use the on-screen steering control to steer.'
       : 'Turn the device like a steering wheel to steer.';
     return `${base} ${steering} Hold Gas to move. Brake is separate; Drift and Boost are in the drive area.`;
-  }
-
-  function announceTrainingWhenRunning(trackId) {
-    const token = ++trainingAnnouncementToken;
-    let attempts = 0;
-    const check = () => {
-      if (token !== trainingAnnouncementToken) return;
-      const runtime = globalThis.__turnRuntime;
-      const activeTrack = String(runtime?.state?.trackId || runtime?.trackId || '');
-      if (runtime?.state?.running === true && activeTrack === trackId) {
-        speak(trainingMessage(trackId));
-        return;
-      }
-      attempts += 1;
-      if (attempts < 60) window.setTimeout(check, 100);
-    };
-    window.setTimeout(check, 100);
-  }
-
-  function currentTrainingTrackId() {
-    const state = globalThis.__turnDriveByEarTraining?.getState?.();
-    const stageId = state?.stageId;
-    if (stageId) return stageId;
-    const runtimeId = String(globalThis.__turnRuntime?.state?.trackId || '');
-    return TRAINING_START_MESSAGES[runtimeId] ? runtimeId : '';
   }
 
   function externalLiveRegionReadable(live) {
@@ -428,6 +554,7 @@
     preparePositionAnnouncer(node);
     prepareAchievementToast(node);
     prepareBalanceSlider(node);
+    prepareHomeTrackCards(node);
     normalizeMenuButtons(node);
     prepareDialogOpenTracking(node);
     prepareExternalLiveRegions(node);
@@ -458,6 +585,7 @@
     if (homeReadyHandled) return;
     homeReadyHandled = true;
     scanAccessibilityTargets(document);
+    installHomeSkipLinks();
     discoveryObserver?.disconnect();
     discoveryObserver = null;
     window.clearTimeout(externalPriorityTimer);
@@ -473,28 +601,28 @@
       }
     }
 
-    speak(viewportIsPortrait()
+    const readyMessage = viewportIsPortrait()
       ? 'TURN is ready. Rotate your device to landscape.'
-      : 'TURN is ready.');
-    speak('To race, choose a track on Home, then choose a car. For an introduction to Drive By Ear and non-visual gameplay, choose Drive By Ear 101 on Home.');
+      : 'TURN is ready.';
+    speak(`${readyMessage} ${NON_VISUAL_ONBOARDING_MESSAGE}`, { priority: 'assertive' });
   }, { once: true });
 
-  window.addEventListener('turn:track-changed', (event) => {
+  window.addEventListener('turn:track-changed', () => {
     scanAccessibilityTargets(document);
-    const trackId = String(event.detail?.trackId || '');
-    if (event.detail?.training === true && TRAINING_START_MESSAGES[trackId]) {
-      announceTrainingWhenRunning(trackId);
-    }
+  });
+
+  window.addEventListener('turn:dbe-training-stage-started', (event) => {
+    const trackId = String(event.detail?.stageId || '');
+    if (!TRAINING_START_MESSAGES[trackId]) return;
+    clearSpeechChannel(TRAINING_SPEECH_CHANNEL);
+    const instructions = trainingMessage(trackId);
+    speak(`${instructions} Go!`, {
+      priority: 'assertive',
+      channel: TRAINING_SPEECH_CHANNEL
+    });
   });
 
   for (const eventName of ['turn:ui-state-change', 'turn:achievements-updated', 'turn:trophy-road-updated']) {
     window.addEventListener(eventName, () => scanAccessibilityTargets(document));
   }
-
-  document.addEventListener('click', (event) => {
-    const restart = event.target?.closest?.('#resetButton, [data-training-race-restart]');
-    if (!restart || !document.body.classList.contains('turn-dbe-training-active')) return;
-    const trackId = currentTrainingTrackId();
-    if (trackId) window.setTimeout(() => speak(trainingMessage(trackId)), 180);
-  }, true);
 })();

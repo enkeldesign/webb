@@ -23,8 +23,8 @@ assert.ok(
 );
 assert.match(
   index,
-  new RegExp(`startup-screen-reader-handoff-r529\\.js\\?build=${escapedCacheKey}&revision=r530-screen-reader-quality`),
-  'The screen-reader quality coordinator must be bound to the current release cache identity'
+  new RegExp(`startup-screen-reader-handoff-r529\\.js\\?build=${escapedCacheKey}&revision=r531-screen-reader-followup`),
+  'The screen-reader follow-up coordinator must be bound to the current release cache identity'
 );
 assert.match(
   index,
@@ -67,7 +67,7 @@ assert.match(unreadMarkers, /Newly unlocked achievement\./);
 assert.match(unreadMarkers, /new MutationObserver\(queueDecoration\)/);
 assert.match(unreadMarkers, /listObserver\.observe\(list, \{ childList: true \}\)/);
 
-console.log(`TURN ${release.version} startup cover, screen-reader cache contracts, refreshed Bella graph, fixed Home viewport, spoken training labels and unread achievement markers passed.`);
+console.log(`TURN ${release.version} startup cover, screen-reader follow-up cache contracts, refreshed Bella graph, fixed Home viewport, spoken training labels and unread achievement markers passed.`);
 
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
