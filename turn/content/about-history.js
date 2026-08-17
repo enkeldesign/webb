@@ -364,6 +364,6 @@ export const CHANGELOG = Object.freeze([
 
 export const CURRENT_RELEASE = Object.freeze({
   version: '1.8.5',
-  build: '2026.08.17-r171',
-  note: 'TURN 1.8.5 adds the latest visual-consistency pass, including lightweight Airport and Harbor ground detail, while preserving racing behaviour.'
+  build: '2026.08.17-r172',
+  note: 'TURN 1.8.5 build r172 adds a screen-reader quality pass for startup guidance, speech priority, non-visual onboarding, dialog focus and directional audio while preserving racing behaviour.'
 });
