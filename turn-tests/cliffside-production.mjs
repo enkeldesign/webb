@@ -27,7 +27,7 @@ const AIRPORT_CONTROL_POINTS = [
   [-229, 0, -45], [-215, 0, -88]
 ];
 
-assert.equal(TRACK_DEFINITIONS.length, 5, 'TURN must expose five playable tracks');
+assert.equal(TRACK_DEFINITIONS.length, 6, 'TURN must expose six playable tracks');
 assert.deepEqual(
   TRACK_DEFINITIONS.map(({ id, difficulty }) => ({ id, difficulty })),
   [
@@ -35,13 +35,14 @@ assert.deepEqual(
     { id: 'airport', difficulty: 'MEDIUM' },
     { id: 'cliffside', difficulty: 'MEDIUM' },
     { id: 'harbor', difficulty: 'HARD' },
-    { id: 'midnight-city', difficulty: 'HARD' }
+    { id: 'midnight-city', difficulty: 'HARD' },
+    { id: 'mountain', difficulty: 'HARD' }
   ]
 );
 assert.deepEqual(
-  TRACK_PLACEHOLDERS.map(({ id, name, locked }) => ({ id, name, locked })),
-  [{ id: 'track-6-tba', name: 'TBA', locked: true }],
-  'The sixth card must remain a locked teaser'
+  TRACK_PLACEHOLDERS,
+  [],
+  'Track 6 must now be the playable Mountain track rather than a locked teaser'
 );
 assert.equal(getTrackStorageRevision('cliffside'), 'cliffside-r68');
 assert.equal(CLIFFSIDE_LAYOUT_RULES.minimumTurnRadiusComparedWithAirport, 'not-smaller');
@@ -107,10 +108,12 @@ const [catalogSource, registrySource, managerSource, worldSource, selectorSource
 
 assert.match(catalogSource, /CLIFFSIDE_CONTROL_POINTS\.map/);
 assert.match(catalogSource, /MIDNIGHT_CITY_CONTROL_POINTS\.map/);
+assert.match(catalogSource, /MOUNTAIN_CONTROL_POINTS\.map/);
 assert.match(catalogSource, /TRACK_SELECTION_CATALOG = Object\.freeze/);
 assert.match(registrySource, /installCliffsideWorld/);
 assert.match(registrySource, /installMidnightCityWorld/);
-assert.doesNotMatch(managerSource, /nextTrackId === 'cliffside'|nextTrackId === 'midnight-city'/);
+assert.match(registrySource, /installMountainWorld/);
+assert.doesNotMatch(managerSource, /nextTrackId === 'cliffside'|nextTrackId === 'midnight-city'|nextTrackId === 'mountain'/);
 assert.match(worldSource, /sample\.point\.y \+ ROAD_HEIGHT/);
 assert.match(worldSource, /trackPitch\(sample\)/);
 assert.match(worldSource, /new THREE\.InstancedMesh/);
@@ -119,7 +122,7 @@ assert.match(selectorSource, /TRACK_SELECTION_CATALOG\.map\(renderTrackCard\)/);
 assert.match(selectorSource, /\.track-card:not\(\[disabled\]\)/);
 
 console.log(
-  `TURN Cliffside passed within the five-track lineup: radius ${cliffsideRadius.toFixed(2)}, elevation ${minimumElevation.toFixed(1)} to ${maximumElevation.toFixed(1)}.`
+  `TURN Cliffside passed within the six-track lineup: radius ${cliffsideRadius.toFixed(2)}, elevation ${minimumElevation.toFixed(1)} to ${maximumElevation.toFixed(1)}.`
 );
 
 function sampleCentripetalClosed(controlPoints, subdivisions) {
