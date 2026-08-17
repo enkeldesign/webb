@@ -1,0 +1,65 @@
+name: TURN MOUNTAIN visual smoke
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'turn/tracks/mountain-*'
+      - 'turn/assets/scenery/mountain/**'
+      - 'turn-lab/mountain-visual.html'
+      - 'turn-tests/mountain-visual-smoke.mjs'
+      - '.github/workflows/turn-mountain-visual-smoke.yml'
+  push:
+    branches:
+      - feature/mountain-track
+    paths:
+      - 'turn/tracks/mountain-*'
+      - 'turn/assets/scenery/mountain/**'
+      - 'turn-lab/mountain-visual.html'
+      - 'turn-tests/mountain-visual-smoke.mjs'
+      - '.github/workflows/turn-mountain-visual-smoke.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  visual-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start static TURN server
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/turn-mountain-http.log 2>&1 &
+          echo $! > /tmp/turn-mountain-http.pid
+          for attempt in {1..20}; do
+            curl --fail --silent http://127.0.0.1:8000/turn-lab/mountain-visual.html >/dev/null && exit 0
+            sleep 0.5
+          done
+          cat /tmp/turn-mountain-http.log
+          exit 1
+
+      - name: Render and validate fixed MOUNTAIN cameras
+        run: node turn-tests/mountain-visual-smoke.mjs
+
+      - name: Upload MOUNTAIN visual inspection frames
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mountain-visual-smoke
+          path: mountain-visual-artifact
+          if-no-files-found: warn
+          retention-days: 7

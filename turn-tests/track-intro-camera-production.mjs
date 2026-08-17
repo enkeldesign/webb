@@ -14,6 +14,10 @@ assert.match(cameraSource, /'midnight-city'/);
 assert.match(cameraSource, /position: Object\.freeze\(\[20, 150, 300\]\)/);
 assert.match(cameraSource, /target: Object\.freeze\(\[275, 3, 40\]\)/);
 assert.match(cameraSource, /fov: 52/);
+assert.match(cameraSource, /mountain: Object\.freeze/);
+assert.match(cameraSource, /position: Object\.freeze\(\[285, 128, -338\]\)/);
+assert.match(cameraSource, /target: Object\.freeze\(\[6, 45, 92\]\)/);
+assert.match(cameraSource, /fov: 48/);
 assert.doesNotMatch(cameraSource, /requestAnimationFrame|setInterval|setAnimationLoop/);
 
 const bodyClasses = new Set(['turn-track-intro']);
@@ -79,9 +83,21 @@ scene.onBeforeRender();
 assert.equal(camera.fov, 68, 'The normal race camera field of view is restored after the intro');
 
 calls.length = 0;
+runtime.activeTrack = { id: 'mountain' };
+bodyClasses.add('turn-track-intro');
+scene.onBeforeRender();
+assert.deepEqual(calls.find((call) => call[0] === 'position'), ['position', 285, 128, -338]);
+assert.deepEqual(calls.find((call) => call[0] === 'target'), ['target', 6, 45, 92]);
+assert.equal(camera.fov, 48, 'Mountain uses a wide alpine establishing frame from village/lake toward summit');
+
+bodyClasses.delete('turn-track-intro');
+scene.onBeforeRender();
+assert.equal(camera.fov, 68, 'Mountain also restores the normal race camera after the intro');
+
+calls.length = 0;
 runtime.activeTrack = { id: 'harbor' };
 bodyClasses.add('turn-track-intro');
 scene.onBeforeRender();
-assert.equal(calls.some((call) => call[0] === 'position'), false, 'Other track intros keep their established framing');
+assert.equal(calls.some((call) => call[0] === 'position'), false, 'Tracks without a showcase preset keep their established framing');
 
-console.log('TURN Midnight City track intro uses a filled Downtown and TURN Commons showcase angle.');
+console.log('TURN Midnight City and Mountain track intros use deliberate cinematic showcase angles.');

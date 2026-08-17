@@ -6,7 +6,8 @@ export const CLEAN_LAP_TARGETS = Object.freeze({
   airport: 30,
   cliffside: 30,
   harbor: 60,
-  'midnight-city': 120
+  'midnight-city': 120,
+  mountain: 110
 });
 
 const SAMPLE_INTERVAL_MS = 50;

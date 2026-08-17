@@ -5,6 +5,14 @@ const INTRO_CAMERA_PRESETS = Object.freeze({
     position: Object.freeze([20, 150, 300]),
     target: Object.freeze([275, 3, 40]),
     fov: 52
+  }),
+  mountain: Object.freeze({
+    // Start over the lake side of the village and look uphill through the chalets
+    // toward the summit. The waterfall sits on the right-hand third of the frame,
+    // so the intro foreshadows the descent before the player knows the route.
+    position: Object.freeze([285, 128, -338]),
+    target: Object.freeze([6, 45, 92]),
+    fov: 48
   })
 });
 

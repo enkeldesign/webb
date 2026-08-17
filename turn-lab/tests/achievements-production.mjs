@@ -88,6 +88,7 @@ assert.equal(byId('on-course-of-course')?.trophies, 100);
 assert.match(byId('on-course-of-course')?.description || '', /without going off-road/i);
 assert.match(byId('on-course-of-course')?.recommendation || '', /Countryside, Airport and Cliffside < 0:30/);
 assert.match(byId('on-course-of-course')?.recommendation || '', /Harbor < 1:00/);
+assert.match(byId('on-course-of-course')?.recommendation || '', /Mountain < 1:50/);
 assert.match(byId('on-course-of-course')?.recommendation || '', /Midnight City < 2:00/);
 
 for (const id of ['find-lilya', 'find-darvid', 'save-bella', 'satans-sedan']) {
@@ -135,7 +136,8 @@ assert.deepEqual(CLEAN_LAP_TARGETS, {
   airport: 30,
   cliffside: 30,
   harbor: 60,
-  'midnight-city': 120
+  'midnight-city': 120,
+  mountain: 110
 });
 assert.equal(qualifiesForArmyLap({ rivalCountAtStart: 4 }, { position: 1, total: 5 }), true);
 assert.equal(qualifiesForArmyLap({ rivalCountAtStart: 3 }, { position: 1, total: 4 }), false);
@@ -149,15 +151,19 @@ assert.equal(qualifiesForCleanLap(
   { time: 30 }
 ), false, 'Matching a clean-lap target exactly must not count');
 assert.equal(qualifiesForCleanLap(
+  { trackId: 'mountain', onCourseThroughout: true },
+  { time: 109.999 }
+), true, 'A clean Mountain lap below its 1:50 target should count');
+assert.equal(qualifiesForCleanLap(
   { trackId: 'harbor', onCourseThroughout: false },
   { time: 20 }
 ), false, 'Any sampled off-road state must void the clean-lap attempt');
 assert.deepEqual(normalizeChallengeProgress({
-  armyTracks: ['airport', 'airport', 'invented'],
-  cleanTracks: ['harbor', 'invented']
+  armyTracks: ['airport', 'mountain', 'airport', 'invented'],
+  cleanTracks: ['harbor', 'mountain', 'invented']
 }), {
-  armyTracks: ['airport'],
-  cleanTracks: ['harbor']
+  armyTracks: ['airport', 'mountain'],
+  cleanTracks: ['harbor', 'mountain']
 });
 
 const empty = normalizeAchievementState(null);
@@ -231,6 +237,7 @@ assert.match(timeTrialSource, /targetSeconds: 53/);
 assert.match(timeTrialSource, /seconds >= trial\.targetSeconds/);
 
 assert.match(challengeSource, /SAMPLE_INTERVAL_MS = 50/);
+assert.match(challengeSource, /mountain: 110/);
 assert.match(challengeSource, /rivalCountAtStart/);
 assert.match(challengeSource, /runtime\.state\.offRoad === true/);
 assert.match(challengeSource, /achievements\.unlock\('an-army-of-me'/);
@@ -276,4 +283,4 @@ assert.match(app, /achievements=r166-bella-records/);
 assert.match(workflow, /Run achievement system regression/);
 assert.match(workflow, /node turn-lab\/tests\/achievements-production\.mjs/);
 
-console.log('TURN Bella, developer records and all-track achievement regression passed.');
+console.log('TURN Bella, developer records and six-track achievement regression passed.');

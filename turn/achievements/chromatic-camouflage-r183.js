@@ -18,7 +18,8 @@ export const TRACK_COLOR_RULES = Object.freeze({
   airport: Object.freeze({ hueMin: 40, hueMax: 65, name: 'yellow' }),
   harbor: Object.freeze({ hueMin: 15, hueMax: 39.999, name: 'orange' }),
   cliffside: Object.freeze({ hueMin: 165, hueMax: 205, name: 'cyan' }),
-  'midnight-city': Object.freeze({ hueMin: 240, hueMax: 285, name: 'violet' })
+  'midnight-city': Object.freeze({ hueMin: 240, hueMax: 285, name: 'violet' }),
+  mountain: Object.freeze({ hueMin: 206, hueMax: 230, name: 'blue' })
 });
 
 function normalizeHex(color) {

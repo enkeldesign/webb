@@ -2,10 +2,53 @@
 
 The vehicle models in `cars/` are selected from Kenney Prototype Kit 1.0, Toy Car Kit 1.2, and Car Kit 3.1.
 The scenery pieces in `lot-bricks/` are selected from Kenney Brick Kit 1.0.
-The `scenery/fantasy-town/windmill.glb` rotor and its `Textures/colormap.png` palette are from Kenney Fantasy Town Kit 2.0.
+The legacy `scenery/fantasy-town/windmill.glb` file is the Fantasy Town rotor/blades component, not a complete windmill building. MOUNTAIN r3 deliberately does **not** place it as a freestanding landmark.
 The `scenery/watercraft/ship-ocean-liner.glb` model and its `Textures/colormap.png` palette are from Kenney Watercraft Kit 2.1.
 
-Each model stays beside its pack-specific palette because both GLBs refer to the same relative `Textures/colormap.png` path.
+## MOUNTAIN r3
 
-All six packs are released under Creative Commons CC0 1.0. Attribution is not required.
+MOUNTAIN treats Kenney's packs as modular kits rather than assuming every GLB is a complete building.
+
+### Holiday Kit
+
+`scenery/mountain/holiday/` contains the original Kenney Holiday Kit GLBs used for the alpine village and roadside winter detail:
+
+- `cabin-wall.glb`
+- `cabin-doorway.glb`
+- `cabin-window-large.glb`
+- `cabin-roof-snow.glb`
+- `bench.glb`
+- `lantern.glb`
+- `sled.glb`
+- `snow-pile.glb`
+- `snow-flat-large.glb`
+- `tree-snow-a.glb`
+
+The cabin wall/door/window pieces use Kenney's one-unit modular grid. TURN assembles one wall row and then builds the gable from two `cabin-roof-snow` halves: one normal half and one X-mirrored half meeting at the ridge. The roof halves are not rotated through each other and wall rows are not arbitrarily overlapped.
+
+### Fantasy Town Kit
+
+`scenery/mountain/fantasy/` supplies complete village details rather than the old loose windmill rotor:
+
+- `stall-green.glb`
+- `stall-red.glb`
+- `cart.glb`
+- `fountain-round-detail.glb`
+- `fence.glb`
+
+These provide a small market/plaza vocabulary around the Holiday cabins without turning MOUNTAIN into a Christmas theme park.
+
+### Nature Kit
+
+`scenery/mountain/nature/` contains `cliff-waterfall-top-rock.glb` and `cliff-waterfall-rock.glb`. They are used as repeated modest-scale accents on top of MOUNTAIN's structural low-poly waterfall cliff. They must not be stretched into one enormous rectangular cliff slab. Nature materials are mapped semantically: water stays water, grass becomes snow, dirt becomes granite and the remaining rock surfaces use MOUNTAIN granite.
+
+### Placement and loading rules
+
+Holiday and Fantasy Town GLBs retain their original `Textures/colormap.png` references, so each vendored pack keeps the corresponding palette in its own `Textures/` directory. The production regression parses every MOUNTAIN GLB and checks referenced images are readable, preventing the earlier Codespaces asset-loading failure.
+
+Imported MOUNTAIN props are grounded from their **transformed world-space bounding box** (`THREE.Box3.setFromObject`) against the same terrain-height function used to generate the visible mountain. Placement therefore does not assume a GLB origin is at its feet. Route-clearance checks run before placement so cabins, props, snow and rocks cannot silently migrate onto the road.
+
+MOUNTAIN also has browser-rendered fixed-camera smoke coverage (aerial, village, summit, descent and waterfall). CI uploads those screenshots together with geometry/grounding metrics so source-level tests are not the only visual quality gate.
+
+All bundled Kenney packs and models are released under Creative Commons CC0 1.0. Attribution is not required.
 Original source: https://kenney.nl/assets
