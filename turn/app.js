@@ -63,16 +63,24 @@ function installStartupCover() {
   const copy = gate.querySelector('.install-copy');
   const card = gate.querySelector('.install-card');
   const guide = gate.querySelector('.install-guide');
+  const statusTimers = [];
   guide?.setAttribute('hidden', '');
   if (title) title.textContent = 'LOADING';
   if (copy) {
-    copy.textContent = 'YOU’LL BE RACING IN NO TIME';
+    // WAI-ARIA status messages should live in an established polite live region. Keep
+    // the same node present throughout startup, make updates atomic, and update only
+    // its text so VoiceOver and other screen readers hear progress without focus moves.
     copy.setAttribute('role', 'status');
     copy.setAttribute('aria-live', 'polite');
+    copy.setAttribute('aria-atomic', 'true');
+    copy.textContent = 'YOU’LL BE RACING IN NO TIME';
   }
   if (card && !card.querySelector('.turn-startup-spinner')) {
     const spinner = document.createElement('div');
     spinner.className = 'turn-startup-spinner';
+    // TURN cannot currently measure trustworthy percent progress. Keep the visual
+    // spinner decorative rather than exposing a fake progressbar value; the status
+    // region above carries the meaningful indeterminate progress updates.
     spinner.setAttribute('aria-hidden', 'true');
     card.appendChild(spinner);
   }
@@ -80,10 +88,31 @@ function installStartupCover() {
   gate.hidden = false;
   gate.classList.add('turn-startup-loading');
   gate.style.setProperty('display', 'grid');
+  gate.setAttribute('aria-busy', 'true');
+  document.documentElement.setAttribute('aria-busy', 'true');
   document.documentElement.classList.add('turn-startup-pending');
+
+  const scheduleStatus = (delay, text) => {
+    if (!copy) return;
+    statusTimers.push(globalThis.setTimeout(() => {
+      if (!gate.classList.contains('turn-startup-loading')) return;
+      copy.textContent = text;
+    }, delay));
+  };
+
+  // A cold/new installation can spend noticeably longer fetching and compiling the
+  // module graph. Acknowledge that delay instead of leaving the initial optimistic copy
+  // frozen indefinitely, then keep providing low-frequency polite status updates.
+  scheduleStatus(4000, 'This might take a minute on a new installation…');
+  scheduleStatus(10000, 'Still loading TURN. First start can take a little longer.');
+  scheduleStatus(20000, 'Still loading TURN. The game will open as soon as it is ready.');
 
   return Object.freeze({
     finish() {
+      for (const timer of statusTimers) globalThis.clearTimeout(timer);
+      if (copy) copy.textContent = 'TURN is ready.';
+      gate.setAttribute('aria-busy', 'false');
+      document.documentElement.setAttribute('aria-busy', 'false');
       document.documentElement.classList.remove('turn-startup-pending');
       document.documentElement.classList.add('turn-home-ready');
       gate.classList.remove('turn-startup-loading');
