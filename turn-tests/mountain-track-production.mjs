@@ -29,7 +29,8 @@ assert.equal(definition.eyebrow, 'TRACK 6');
 assert.equal(definition.difficulty, 'HARD');
 assert.equal(definition.storageRevision, 'mountain-r1');
 assert.equal(definition.sampleCount, 1080);
-assert.equal(definition.freeRoamDistance, 31);
+assert.equal(definition.freeRoamDistance, 22.2,
+  'Mountain containment must sit at the exposed guardrails rather than behind them');
 assert.deepEqual(TRACK_PLACEHOLDERS, [], 'The former Track 6 TBA card must be gone');
 
 assert.equal(MOUNTAIN_LAYOUT_RULES.minimumElevation, 0);
