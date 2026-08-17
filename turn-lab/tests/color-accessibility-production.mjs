@@ -48,10 +48,13 @@ assert.deepEqual(TRACK_COLOR_CUES, {
   airport: 'yellow',
   harbor: 'orange',
   cliffside: 'cyan',
-  'midnight-city': 'violet'
+  'midnight-city': 'violet',
+  mountain: 'blue'
 });
 assert.equal(trackColorCue('countryside'), 'pink');
+assert.equal(trackColorCue('mountain'), 'blue');
 assert.equal(describeColorCue('#ff00ff'), 'magenta');
+assert.equal(describeColorCue('#4dabf7'), 'blue');
 
 const memory = new Map();
 const storage = {
@@ -117,9 +120,6 @@ assert.match(drivePadCssSource, /\.drive-pad[\s\S]*touch-action:\s*none/,
 assert.match(manualSteeringCssSource, /\.manual-steer[\s\S]*touch-action:\s*none/,
   'Gesture suppression must remain local to manual steering');
 
-// Keep native form activation out of click delegation. WebKit native pickers can
-// be sensitive to click listeners on ancestors; TURN has no reason to put unrelated
-// behavior anywhere in the color input's click ancestry.
 assert.doesNotMatch(orientationSource, /document\.addEventListener\(['"]click['"]/,
   'Orientation compatibility must not delegate click handling from document');
 assert.match(orientationSource, /querySelector\('#motionButton'\)\?\.addEventListener\('click', resetSensorCalibration\)/,
@@ -154,4 +154,4 @@ assert.match(historySource, /native HTML color input/i);
 assert.doesNotMatch(historySource, /native paint activation bridge|assistive-technology bridge/i,
   'Current release history must not claim an activation bridge that no longer exists');
 
-console.log(`TURN ${release.version} ${release.id} HTML-first native color input and click-ancestry regression passed.`);
+console.log(`TURN ${release.version} ${release.id} HTML-first native color input and six-track color-cue regression passed.`);
