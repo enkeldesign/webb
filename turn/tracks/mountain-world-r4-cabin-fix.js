@@ -84,13 +84,12 @@ function makeNativePivotCabin(templates, variant = 0) {
   addPanel(cabin, variant ? templates.window : templates.wall, -Math.PI / 2, 'Mountain Holiday native left wall r4');
   addPanel(cabin, templates.window, Math.PI / 2, 'Mountain Holiday native right window r4');
 
-  // The snow roof is a complete modular section, but its authored pivot is
-  // offset for Kenney grid construction. Center the one module over the hut;
-  // duplicating/mirroring it creates crossed roof geometry when the cabin is
-  // viewed end-on.
+  // This repo already carries a small preprocessed Holiday roof specifically
+  // for safe TURN use. Center that single asset over the native-pivot wall
+  // square instead of trying to reconstruct a roof from the sloped half.
   const roof = centeredGroundedClone(templates.roof);
   roof.position.y = 0.98;
-  roof.name = 'Mountain Holiday centered snow roof module r4';
+  roof.name = 'Mountain Holiday centered safe snow roof r4';
   cabin.add(roof);
 
   cabin.add(makeGable(0.51), makeGable(-0.51));
@@ -108,9 +107,10 @@ function makeNativePivotCabin(templates, variant = 0) {
     panelOriginsPreserved: true,
     outwardTranslations: 0,
     roofPieces: 1,
+    roofAsset: 'cabin-roof-safe.glb',
     roofCentered: true,
     gablesClosed: true,
-    revision: 'r4-native-pivot-centered-roof'
+    revision: 'r4-native-pivot-safe-roof'
   });
   return cabin;
 }
@@ -152,7 +152,7 @@ async function loadTemplates() {
     loader.loadAsync(`${HOLIDAY_ROOT}/cabin-wall.glb`),
     loader.loadAsync(`${HOLIDAY_ROOT}/cabin-doorway.glb`),
     loader.loadAsync(`${HOLIDAY_ROOT}/cabin-window-large.glb`),
-    loader.loadAsync(`${HOLIDAY_ROOT}/cabin-roof-snow.glb`)
+    loader.loadAsync(`${HOLIDAY_ROOT}/cabin-roof-safe.glb`)
   ]);
   return {
     wall: prepareAsset(wall.scene),
@@ -202,7 +202,7 @@ export async function installMountainR4CabinFix(world, samples, trackWidth, terr
     placed,
     nativePanelOrigins: true,
     outwardPanelTranslations: 0,
-    roofPieces: 1,
+    roofAsset: 'cabin-roof-safe.glb',
     footprint: '1x1'
   });
   return world;
