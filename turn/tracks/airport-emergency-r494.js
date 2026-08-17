@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {
   AIRPORT_EMERGENCY_CONFIG,
   installAirportEmergency as installAirportEmergencyR493
-} from './airport-emergency-r493.js?revision=r493';
+} from './airport-emergency-r493.js?revision=r527-no-finish-sync-wreck';
 
 export { AIRPORT_EMERGENCY_CONFIG };
 
