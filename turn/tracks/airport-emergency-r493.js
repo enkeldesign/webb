@@ -201,7 +201,12 @@ export function installAirportEmergency({ world, samples, runtime = globalThis._
     const attempt = () => {
       wreckPrepareTimer = 0;
       if (prepareWreckAircraft()) return;
-      if (!session.crashActive) wreckPrepareTimer = globalThis.setTimeout(attempt, 250);
+      // The remote B787 can still be loading on a genuinely cold installation when the
+      // first valid lap ends. Keep the preparation poll alive after MAYDAY starts rather
+      // than forcing clone/scale/Box3 work into the finish-line transition.
+      if (runtime.state.vehicleId === AMBULANCE_ID) {
+        wreckPrepareTimer = globalThis.setTimeout(attempt, 250);
+      }
     };
     wreckPrepareTimer = globalThis.setTimeout(attempt, 0);
   }
@@ -246,9 +251,15 @@ export function installAirportEmergency({ world, samples, runtime = globalThis._
   function revealCrashVisuals() {
     crashRevealTimer = 0;
     crashScene.visible = true;
-    if (!wreckAircraft) prepareWreckAircraft(0);
-    if (wreckAircraft) wreckAircraft.visible = true;
-    if (overflightAircraft) overflightAircraft.visible = false;
+    if (wreckAircraft) {
+      wreckAircraft.visible = true;
+      if (overflightAircraft) overflightAircraft.visible = false;
+    } else {
+      // Never build the full-scale wreck synchronously at the finish line. Fire/debris
+      // can appear immediately; the already-running prewarm installs the B787 as soon as
+      // its source asset is available.
+      startWreckPrewarm();
+    }
     syncResponders();
   }
 
@@ -257,7 +268,7 @@ export function installAirportEmergency({ world, samples, runtime = globalThis._
 
     // At the finish line we now only start audio, flip small state/DOM flags and schedule
     // a visibility change. The B787 clone, scale, ground fit, responder GLTFs and shaders
-    // are all prepared during the first lap.
+    // are all prepared during the first lap whenever their source assets are ready.
     playMaydayCrashSound();
 
     session.crashActive = true;
@@ -425,7 +436,7 @@ export function installAirportEmergency({ world, samples, runtime = globalThis._
     medicalPoint: placement.medicalPoint.clone(),
     sessionPersistent: true,
     clearsOnPageReload: true,
-    realAircraftWreck: 'prepares a hidden clone of the Airport B787 overflight before the finish line, then swaps visibility at the crash',
+    realAircraftWreck: 'prepares a hidden clone of the Airport B787 overflight before the finish line when available, otherwise completes preparation after the event without blocking the finish-line transition',
     medicalResponders: 'prewarmed Fire Truck and Ambulance with flashing lights',
     audibleGuidance: 'continuous fire at the crash trigger and the canonical Fire Truck siren voice at the Ambulance-centred medical trigger'
   });
