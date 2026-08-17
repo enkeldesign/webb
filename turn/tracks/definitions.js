@@ -123,9 +123,9 @@ const TRACKS = [
     accentSoft: '#d7efff',
     storageRevision: 'mountain-r1',
     sampleCount: 1080,
-    freeRoamDistance: 31,
+    freeRoamDistance: 22.2,
     collisionProfile: {
-      freeRoamDistance: 31,
+      freeRoamDistance: 22.2,
       shoulderStartDistance: 20.4,
       shoulderDrag: 1.62,
       boundaryBounce: 0.035,
