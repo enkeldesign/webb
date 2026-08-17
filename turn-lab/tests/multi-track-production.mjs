@@ -154,13 +154,25 @@ const spatialIndex = createTrackSpatialIndex(trackA, { cellSize: 16 });
 spatialIndex.replaceSamples(trackB);
 assert.equal(spatialIndex.find({ x: 19, z: 98 }).index, findNearestTrackBruteForce(trackB, { x: 19, z: 98 }).index);
 
-const [definitions, catalog, registry, manager, cityWorld, mountainWorld, home] = await Promise.all([
+const [
+  definitions,
+  catalog,
+  registry,
+  manager,
+  cityWorld,
+  mountainWorld,
+  mountainTerrain,
+  mountainScenery,
+  home
+] = await Promise.all([
   fs.readFile(new URL('../../turn/tracks/definitions.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/registry.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/track-manager.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/midnight-city-world-r7.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/tracks/mountain-world.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/mountain-world-r2.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/mountain-world-r2-terrain.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/mountain-world-r2-scenery.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/m8-home.js', import.meta.url), 'utf8')
 ]);
 assert.match(definitions, /id: 'midnight-city'[\s\S]*difficulty: 'HARD'/);
@@ -171,18 +183,25 @@ assert.match(definitions, /sampleCount: 1080/);
 assert.doesNotMatch(definitions, /id: 'track-6-tba'/);
 assert.match(catalog, /MIDNIGHT_CITY_CONTROL_POINTS\.map/);
 assert.match(catalog, /MOUNTAIN_CONTROL_POINTS\.map/);
-assert.match(registry, /mountain-world\.js\?revision=r1/);
+assert.match(registry, /mountain-world-r2\.js\?revision=r2/);
 assert.match(registry, /definition\.sampleCount \|\| sampleCount/);
 assert.doesNotMatch(manager, /nextTrackId === 'mountain'/);
 assert.match(manager, /track\.fogNear/);
 assert.match(cityWorld, /installMidnightCityWorld as installMidnightCityWorldR6/);
 assert.match(cityWorld, /new THREE\.InstancedMesh/);
 assert.doesNotMatch(cityWorld, /setAnimationLoop|requestAnimationFrame|setInterval/);
-assert.match(mountainWorld, /Mountain cozy chalet/);
-assert.match(mountainWorld, /Mountain waterfall sheet/);
-assert.match(mountainWorld, /fantasy-town\/windmill\.glb/);
-assert.match(mountainWorld, /fantasy-town\/fountainCenter\.glb/);
-assert.doesNotMatch(mountainWorld, /setAnimationLoop|requestAnimationFrame|setInterval/);
+assert.match(mountainWorld, /ground: 'snow-first-with-rock-patches'/);
+assert.match(mountainTerrain, /Mountain solid white road edge/);
+assert.match(mountainTerrain, /Mountain black outer road contour/);
+assert.match(mountainTerrain, /Mountain integrated snowy peak backdrop/);
+assert.match(mountainScenery, /Mountain Kenney Holiday cabin/);
+assert.match(mountainScenery, /Mountain grounded river rock bed/);
+assert.match(mountainScenery, /Mountain waterfall lake r2/);
+assert.match(mountainScenery, /fantasy-town\/windmill\.glb/);
+assert.match(mountainScenery, /fantasy-town\/fountainCenter\.glb/);
+for (const source of [mountainWorld, mountainTerrain, mountainScenery]) {
+  assert.doesNotMatch(source, /setAnimationLoop|requestAnimationFrame|setInterval/);
+}
 assert.match(home, /TRACK_SELECTION_CATALOG\.map\(renderTrackCard\)/);
 
 console.log(`TURN six-track runtime passed: Midnight City ${midnightLength.toFixed(0)} units, Mountain ${mountainLength.toFixed(0)} units.`);
