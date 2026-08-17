@@ -18,15 +18,15 @@
   <script type="module">
     import * as THREE from 'three';
     import { createTrackRuntime } from '/turn/tracks/catalog.js';
-    import { installMountainWorld } from '/turn/tracks/mountain-world-r3.js?visual=1';
-    import { createMountainTerrainSampler, createMountainRiverSamples, offsetPoint, MOUNTAIN_R3 } from '/turn/tracks/mountain-world-r3-terrain.js?visual=1';
+    import { installMountainWorld } from '/turn/tracks/mountain-world-r3.js?visual=2';
+    import { createMountainTerrainSampler, createMountainRiverSamples, offsetPoint, MOUNTAIN_R3 } from '/turn/tracks/mountain-world-r3-terrain.js?visual=2';
 
     const VIEWS = Object.freeze({
       aerial: { position:[330,235,-345], target:[5,22,-10], fov:49 },
       village:{ position:[118,48,-286], target:[8,8,-215], fov:52 },
       summit:{ position:[325,95,160], target:[180,43,105], fov:50 },
       descent:{ position:[235,92,-5], target:[62,22,-32], fov:52 },
-      waterfall:{ position:[385,72,-268], target:[246,12,-151], fov:48 }
+      waterfall:{ position:[354,51,-236], target:[244,11,-143], fov:43 }
     });
 
     const params = new URLSearchParams(location.search);
@@ -110,18 +110,22 @@
       maximumEdgeSupportGap,
       maximumRenderedRoadSupportGap,
       maximumRenderedEdgeSupportGap,
+      roadFoundationDepth: world.userData.turnMountainRoadFoundationDepth || 0,
       riverDepthMin: Math.min(...riverDepths),
       riverDepthMax: Math.max(...riverDepths),
       maxGroundingDelta,
       groundingCount: diagnostics.length,
       terrainBodies: count('continuous terrain body r3'),
       roadbedWalls: count('opaque roadbed side wall r3'),
+      deepFoundations: count('deep retaining road foundation r3'),
       roadbedUndersides: count('closed roadbed underside r3'),
       cabins: count('Holiday cabin prefab r3'),
       marketStalls: count('Fantasy market stall'),
       fountains: count('Fantasy fountain r3'),
       waterfallCliffModules: count('Nature cliff module r3'),
       waterfallSheets: count('river-to-lake waterfall sheet r3'),
+      visibleWaterfallCurtains: count('visible waterfall curtain r3'),
+      waterfallSpillways: count('waterfall spillway r3'),
       lakes: count('terrain-bounded waterfall lake r3'),
       windmills: names.filter((name) => /windmill/i.test(name)).length
     });
