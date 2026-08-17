@@ -3,7 +3,7 @@ export const TROPHY_ROAD_STORAGE_VERSION = 5;
 export const TROPHY_ROAD_MAX_THRESHOLD = 1700;
 export const TROPHY_ROAD_VIEWPORT_THRESHOLD = 600;
 
-export const TROPHY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 4h10v4c0 4-2 7-5 8-3-1-5-4-5-8V4Z"></path><path d="M7 6H4v2c0 2 1 3 4 4M17 6h3v2c0 2 1 3-4 4M9 20h6M12 16v4"></path></svg>'.replace('2 1 3-4 4', '2 1 3-4 4');
+export const TROPHY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 4h10v4c0 4-2 7-5 8-3-1-5-4-5-8V4Z"></path><path d="M7 6H4v2c0 2 1 3 4 4M17 6h3v2c0 2-1 3-4 4M9 20h6M12 16v4"></path></svg>';
 export const LOCK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="10" width="14" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"></path></svg>';
 
 export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
@@ -196,7 +196,7 @@ export function showTrophyUnlockNotice({ reward, itemName = reward?.shortTitle }
   notice.classList.add('is-visible');
   globalThis.clearTimeout?.(unlockNoticeTimer);
   unlockNoticeTimer = globalThis.setTimeout?.(() => {
-    unlockNotice.classList.remove('is-visible');
+    notice.classList.remove('is-visible');
     globalThis.setTimeout?.(() => {
       if (!notice.classList.contains('is-visible')) notice.hidden = true;
     }, 180);
