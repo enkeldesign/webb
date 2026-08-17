@@ -7,13 +7,28 @@ import { TROPHY_ROAD_REWARDS, rewardForTrack } from '../turn/progression/trophy-
 import { TRACK_COLOR_CUES } from '../turn/accessibility/color-cues.js';
 import { TRACK_COLOR_RULES } from '../turn/achievements/chromatic-camouflage-r183.js';
 
-const [world, terrain, scenery, registry, trophyGate, kenneyAssets] = await Promise.all([
+const [
+  world,
+  terrain,
+  scenery,
+  registry,
+  trophyGate,
+  kenneyAssets,
+  holidayWallAsset,
+  holidayRoofAsset,
+  natureTopAsset,
+  natureFallAsset
+] = await Promise.all([
   fs.readFile(new URL('../turn/tracks/mountain-world-r2.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/mountain-world-r2-terrain.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/mountain-world-r2-scenery.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/progression/m8-trophy-gate.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/assets/KENNEY-ASSETS.md', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/assets/KENNEY-ASSETS.md', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/assets/scenery/mountain/holiday/cabin-wall.glb', import.meta.url)),
+  fs.readFile(new URL('../turn/assets/scenery/mountain/holiday/cabin-roof-snow-dormer.glb', import.meta.url)),
+  fs.readFile(new URL('../turn/assets/scenery/mountain/nature/cliff-waterfall-top-rock.glb', import.meta.url)),
+  fs.readFile(new URL('../turn/assets/scenery/mountain/nature/cliff-waterfall-rock.glb', import.meta.url))
 ]);
 
 const definition = TRACK_DEFINITIONS.find((track) => track.id === 'mountain');
@@ -93,11 +108,44 @@ assert.doesNotMatch(scenery, /makeGabledRoofGeometry|Mountain cozy chalet/,
   'The hand-built inside-out-looking chalet roofs must not return');
 assert.doesNotMatch(scenery, /setAnimationLoop|requestAnimationFrame|setInterval/);
 
+const parsedMountainAssets = new Map([
+  ['Holiday cabin wall', parseGlbJson(holidayWallAsset, 'Holiday cabin wall')],
+  ['Holiday cabin roof', parseGlbJson(holidayRoofAsset, 'Holiday cabin roof')],
+  ['Nature waterfall top', parseGlbJson(natureTopAsset, 'Nature waterfall top')],
+  ['Nature waterfall face', parseGlbJson(natureFallAsset, 'Nature waterfall face')]
+]);
+for (const [label, gltf] of parsedMountainAssets) {
+  assert.equal(gltf.asset?.version, '2.0', `${label} must contain a valid glTF 2.0 JSON chunk`);
+  assert.ok(Array.isArray(gltf.meshes) && gltf.meshes.length > 0, `${label} must contain renderable mesh data`);
+}
+for (const label of ['Holiday cabin wall', 'Holiday cabin roof']) {
+  const gltf = parsedMountainAssets.get(label);
+  assert.equal(gltf.images, undefined,
+    `${label} must stay self-contained so Codespaces/static hosting cannot lose a palette dependency`);
+  assert.equal(gltf.textures, undefined,
+    `${label} must not reference an external texture after the self-contained asset conversion`);
+}
+
 assert.match(kenneyAssets, /Holiday Kit/i);
 assert.match(kenneyAssets, /Nature Kit/i);
 assert.match(kenneyAssets, /Fantasy Town/i);
+assert.match(kenneyAssets, /self-contained/i);
 
-console.log(`TURN MOUNTAIN r2 polish contract passed: ${closedLength(MOUNTAIN_CONTROL_POINTS).toFixed(0)} control units and corrected DBE directions.`);
+console.log(`TURN MOUNTAIN r2 polish contract passed: ${closedLength(MOUNTAIN_CONTROL_POINTS).toFixed(0)} control units, corrected DBE directions and validated GLB binaries.`);
+
+function parseGlbJson(buffer, label) {
+  assert.ok(Buffer.isBuffer(buffer), `${label} must be read as binary data`);
+  assert.ok(buffer.length >= 20, `${label} is too short to be a valid GLB`);
+  assert.equal(buffer.subarray(0, 4).toString('ascii'), 'glTF', `${label} has an invalid GLB magic header`);
+  assert.equal(buffer.readUInt32LE(4), 2, `${label} must use GLB version 2`);
+  assert.equal(buffer.readUInt32LE(8), buffer.length,
+    `${label} GLB header length must match the bytes actually committed to GitHub`);
+  const jsonChunkLength = buffer.readUInt32LE(12);
+  assert.equal(buffer.readUInt32LE(16), 0x4e4f534a, `${label} must begin with a JSON chunk`);
+  const jsonEnd = 20 + jsonChunkLength;
+  assert.ok(jsonEnd <= buffer.length, `${label} JSON chunk must fit inside the GLB`);
+  return JSON.parse(buffer.subarray(20, jsonEnd).toString('utf8').replace(/\u0000/g, '').trim());
+}
 
 function closedLength(points) {
   let length = 0;
