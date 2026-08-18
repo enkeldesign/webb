@@ -4,9 +4,9 @@ const REVISION = 'r7-world-yaw-cylinder-raised-moon';
 const SKY_NAME = 'Mountain star field skydome r6';
 const MOON_NAME = 'Mountain full moon sprite r6';
 const SKY_RADIUS = 840;
-const SKY_HEIGHT = 3000;
+const SKY_HEIGHT = 2200;
 const SKY_REPEAT_X = 4;
-const SKY_REPEAT_Y = 2;
+const SKY_REPEAT_Y = 4;
 const SKY_TRANSLATION_FOLLOW = 0.96;
 const MOON_DISTANCE = 810;
 
@@ -24,7 +24,9 @@ function worldLockSky(sky) {
   // world-space backdrop rather than stretching one 512px image through all
   // 360 degrees. A cylinder keeps the texture's verticals linear — unlike a
   // sphere, which visibly smears this non-equirectangular source toward its
-  // poles — while mirrored wrapping hides hard repeat seams.
+  // poles — while mirrored wrapping hides hard repeat seams. Four vertical
+  // repeats keep the source pixels close to square on the cylinder rather than
+  // stretching stars into tall streaks.
   texture.wrapS = THREE.MirroredRepeatWrapping;
   texture.wrapT = THREE.MirroredRepeatWrapping;
   texture.repeat.set(SKY_REPEAT_X, SKY_REPEAT_Y);
