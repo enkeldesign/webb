@@ -8,7 +8,7 @@ import { installMountainR4DriverFacingWaterfall } from './mountain-world-r4-wate
 import { installMountainR5SuburbanVillage } from './mountain-world-r5-suburban-village.js';
 import { installMountainR6Night } from './mountain-world-r6-night.js';
 import { installMountainR7SkyFix } from './mountain-world-r7-sky.js';
-import { installMountainSpotlightHeadlight } from './mountain-player-headlight-r8.js';
+import { installMountainSpotlightHeadlight } from './mountain-player-headlight-r8.js?revision=r560-shared-night-spotlight';
 
 const MOUNTAIN_VILLAGE_BENCHES = new Set([
   'Mountain village bench r4',
@@ -54,9 +54,9 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
   world.name = 'TURN Mountain r3';
   scene.add(world);
 
-  // Unlike the earlier projected wedges, this is one real shadowless light.
-  // It and its target are children of the player car, so the existing vehicle
-  // pitch follows MOUNTAIN's grade without any terrain-specific per-frame work.
+  // One real shadowless light shared with MIDNIGHT CITY. The lamp and target
+  // are children of the player car, so TURN's existing vehicle pitch carries
+  // the beam naturally over MOUNTAIN's grades without terrain-specific work.
   const playerHeadlightRig = installMountainSpotlightHeadlight(runtime?.playerCar, runtime);
   world.userData.turnMountainPlayerHeadlightRig = playerHeadlightRig;
 
@@ -80,7 +80,7 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
   world.userData.turnMountainTerrainHeightAt = terrainContext.terrainHeightAt;
   world.userData.turnMountainArtDirection = Object.freeze({
     version: 'r3',
-    visualPolish: 'r8-shadowless-player-spotlight-plus-r7-horizon-sky-plus-r6-night-plus-r5-suburban-village-plus-r4-waterfall-landmarks',
+    visualPolish: 'r560-shared-night-spotlight-plus-r7-horizon-sky-plus-r6-night-plus-r5-suburban-village-plus-r4-waterfall-landmarks',
     ground: 'continuous-snow-and-granite-terrain-body',
     roadEdge: 'white-with-black-outer-contour',
     roadbed: 'opaque-and-terrain-supported',
@@ -96,7 +96,7 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
     moon: 'same-depth-star-plane-child-sharing-yaw-pitch-roll-and-parallax',
     moonlight: 'cool-hemisphere-and-directional-track-atmosphere-plus-static-blue-hill-fill',
     playerVisibilityLight: playerHeadlightRig
-      ? 'single-warm-shadowless-spotlight-car-child-following-existing-road-pitch'
+      ? 'shared-warm-shadowless-spotlight-identical-to-midnight-city'
       : 'static-moonlight-only-when-no-player-car-is-present',
     streetlights: 'warm-static-halos-plus-midnight-city-style-ground-pools-and-local-fill',
     houseWindows: 'warm-emissive-looking-panels-on-every-suburban-house-with-limited-local-spill',
