@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { signalSecretAchievement } from '../achievements/secret-events.js?revision=r157-hidden-achievements';
 import { installMidnightCityWorld as installMidnightCityWorldR7 } from './midnight-city-world-r7.js?base=20260801-r7';
-import { installNightPlayerSpotlight } from './night-player-spotlight-r560.js?revision=r561-200m';
+import { installNightPlayerSpotlight } from './night-player-spotlight-r560.js?revision=r563-lower-target';
 
 const LILYA_TEXTURE_URL = new URL('../LILYA.PNG', import.meta.url).href;
 const MIDNIGHT_HEADLIGHT_ROAD = 0x292e38;
