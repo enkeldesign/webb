@@ -195,12 +195,14 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     paragraphs: [
       'MOUNTAIN’s daytime alpine world was retreated as a night track with a compact star field, full moon, moonlit snow and water, warm street-lamp pools and lit chalet windows. The celestial layer follows the world horizon with restrained parallax rather than the physical screen, and loading-camera cuts now snap the sky immediately instead of visibly rolling it into place.',
       'Reduced-motion players get the same deep-blue night atmosphere and moon without the moving star field or parallax. Window glow was snapped to real house facades, benches were oriented toward the road and the night treatment deliberately avoids expensive shadow maps.',
-      'A real shadowless Three.js spotlight replaced the earlier projected headlight wedges. MOUNTAIN and MIDNIGHT CITY now share one performance-conscious headlight rig; device testing then tuned its reach, intensity and emitter position without adding a second light, beam geometry, raycasts or a separate animation loop.'
+      'A real shadowless Three.js spotlight replaced the earlier projected headlight wedges. MOUNTAIN and MIDNIGHT CITY now share one performance-conscious headlight rig; device testing then tuned its reach, intensity and emitter position without adding a second light, beam geometry, raycasts or a separate animation loop.',
+      'A side-by-side device comparison then exposed a cache-order bug in that shared rig: an older module could create the named light first and later installers would reuse it without reapplying the current configuration. Build r175 makes every night-track activation reconcile the live light to the canonical settings and explicitly removes any surviving MIDNIGHT CITY projected-headlight nodes.'
     ],
     milestones: [
       'Moon, star field, moonlit terrain, warm village lamps and lit windows',
       'Reduced-motion night treatment with a static solid-colour sky and retained moon',
-      'TURN 1.9.1 · 2026.08.18-r174 with shared night-track headlights and MOUNTAIN night polish'
+      'TURN 1.9.1 · 2026.08.18-r174 with shared night-track headlights and MOUNTAIN night polish',
+      'TURN 1.9.1 · 2026.08.18-r175 with cache-order-independent night-headlight reconciliation'
     ]
   }
 ]);
@@ -400,14 +402,15 @@ export const CHANGELOG = Object.freeze([
     date: '18 August',
     entries: [
       ['1.9.1 r174', 'Turns MOUNTAIN into a moonlit night track and refreshes the release identity after the final alpine art and lighting pass.'],
+      ['1.9.1 r175', 'Fixes shared night-headlight activation so MIDNIGHT CITY and MOUNTAIN always reconcile the live named spotlight to the current 2600-intensity, 220 m configuration regardless of module-cache or track activation order.'],
       ['Night MOUNTAIN', 'Adds a horizon-locked star field and moon, moonlit snow and waterfall, warm street-light pools, lit chalet windows and reduced-motion behaviour that keeps the moon while replacing moving stars with a solid night sky.'],
-      ['Night-track headlights', 'MOUNTAIN and MIDNIGHT CITY share one shadowless physical spotlight with no projected beam geometry; r174 increases its reach and intensity and moves the emitter closer to the car without adding lights or shadow maps.']
+      ['Night-track headlights', 'MOUNTAIN and MIDNIGHT CITY share one shadowless physical spotlight with no projected beam geometry; r174 increases its reach and intensity and moves the emitter closer to the car, while r175 makes those settings authoritative on every install and removes surviving legacy MIDNIGHT CITY projected-headlight nodes.']
     ]
   }
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
   version: '1.9.1',
-  build: '2026.08.18-r174',
-  note: 'TURN 1.9.1 build r174 completes MOUNTAIN’s moonlit night treatment and tunes the single shared shadowless headlight spotlight used by MOUNTAIN and MIDNIGHT CITY.'
+  build: '2026.08.18-r175',
+  note: 'TURN 1.9.1 build r175 makes the shared MOUNTAIN and MIDNIGHT CITY headlight configuration authoritative at runtime, removing stale projected-headlight remnants and cache-order dependence.'
 });
