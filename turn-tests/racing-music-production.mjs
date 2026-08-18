@@ -68,7 +68,7 @@ for (const songFile of ['menu-theme', 'countryside', 'airport', 'cliffside', 'ha
     `${songFile} must use the current user-score cache revision`);
 }
 
-const expectedTrackIds = ['countryside', 'airport', 'cliffside', 'harbor', 'midnight-city'];
+const expectedTrackIds = ['countryside', 'airport', 'cliffside', 'harbor', 'midnight-city', 'mountain'];
 assert.equal(MENU_SONG.id, 'menu');
 assert.deepEqual(Object.keys(TRACK_SONGS), expectedTrackIds);
 assert.equal(SONGBOOK.length, 6, 'Songbook contains menu music plus five track songs');
