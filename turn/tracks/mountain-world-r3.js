@@ -7,6 +7,20 @@ import { installMountainR4WaterfallNotch } from './mountain-world-r4-waterfall-n
 import { installMountainR4DriverFacingWaterfall } from './mountain-world-r4-waterfall-face.js';
 import { installMountainR5SuburbanVillage } from './mountain-world-r5-suburban-village.js';
 
+const MOUNTAIN_VILLAGE_BENCHES = new Set([
+  'Mountain village bench r4',
+  'Mountain village overlook bench r4'
+]);
+
+function faceMountainVillageBenchesTowardTrack(world) {
+  world.traverse((object) => {
+    if (!MOUNTAIN_VILLAGE_BENCHES.has(object.name)) return;
+    if (object.userData.turnMountainBenchFacesTrack) return;
+    object.rotation.y += Math.PI;
+    object.userData.turnMountainBenchFacesTrack = true;
+  });
+}
+
 export function installMountainWorld({ scene, samples, trackWidth = 27, runtime } = {}) {
   if (!scene || !Array.isArray(samples) || samples.length < 3) {
     throw new Error('TURN: Mountain r3 requires a scene and sampled route.');
@@ -24,7 +38,10 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
     .then(() => installMountainR4WaterfallNotch(world))
     .then(() => installMountainR4DriverFacingWaterfall(world, samples))
     .then(() => installMountainR5SuburbanVillage(world, samples, trackWidth, terrainContext))
-    .then(() => world);
+    .then(() => {
+      faceMountainVillageBenchesTowardTrack(world);
+      return world;
+    });
   world.userData.turnMountainTerrainHeightAt = terrainContext.terrainHeightAt;
   world.userData.turnMountainArtDirection = Object.freeze({
     version: 'r3',
