@@ -16,6 +16,12 @@ const MOUNTAIN_VILLAGE_BENCHES = new Set([
 ]);
 const MOUNTAIN_PLAYER_LIGHT_RIG_NAME = 'TURN Mountain player light rig';
 const MOUNTAIN_HEADLIGHT_PROJECTION_NAME = 'Mountain projected headlights';
+const MOUNTAIN_HEADLIGHT_FILL_INTENSITY = 3.1;
+// The suburban village wraps around the start/finish seam. Its authored houses
+// occupy roughly 93–100% and 0–6.5% of the sampled lap; this small buffer keeps
+// the car lights off throughout the visibly lamp-lit settlement.
+const MOUNTAIN_VILLAGE_PROGRESS_START = 0.915;
+const MOUNTAIN_VILLAGE_PROGRESS_END = 0.085;
 
 function faceMountainVillageBenchesTowardTrack(world) {
   world.traverse((object) => {
@@ -24,6 +30,83 @@ function faceMountainVillageBenchesTowardTrack(world) {
     object.rotation.y += Math.PI;
     object.userData.turnMountainBenchFacesTrack = true;
   });
+}
+
+function wrappedSampleIndex(index, sampleCount) {
+  if (!sampleCount) return 0;
+  const numeric = Number.isFinite(Number(index)) ? Math.round(Number(index)) : 0;
+  return ((numeric % sampleCount) + sampleCount) % sampleCount;
+}
+
+function mountainVillageContainsSample(index, sampleCount) {
+  if (!sampleCount) return false;
+  const progress = wrappedSampleIndex(index, sampleCount) / sampleCount;
+  return progress >= MOUNTAIN_VILLAGE_PROGRESS_START || progress <= MOUNTAIN_VILLAGE_PROGRESS_END;
+}
+
+function roadPitchAlongHeading(state, sample) {
+  const tangent = sample?.tangent;
+  const tx = Number(tangent?.x);
+  const ty = Number(tangent?.y);
+  const tz = Number(tangent?.z);
+  const heading = Number(state?.heading);
+  if (![tx, ty, tz, heading].every(Number.isFinite)) return 0;
+
+  const horizontalLength = Math.hypot(tx, tz);
+  if (horizontalLength <= 1e-6) return 0;
+
+  const trackPitch = Math.atan2(ty, horizontalLength);
+  const trackHeading = Math.atan2(tx, tz);
+  const headingAlignment = Math.cos(heading - trackHeading);
+  // Project the road gradient onto the direction the car actually faces. This
+  // also makes the headlights pitch correctly if the player turns around.
+  return Math.atan(Math.tan(trackPitch) * headingAlignment);
+}
+
+function installMountainHeadlightRoadFollowing(rig, runtime, samples) {
+  const state = runtime?.state;
+  const projection = rig?.getObjectByName?.(MOUNTAIN_HEADLIGHT_PROJECTION_NAME);
+  const fill = rig?.children?.find((child) => child?.isPointLight);
+  const beams = projection?.children?.filter((child) => child?.isMesh && child.material) || [];
+  if (!state || !projection || !fill || !beams.length || !samples.length) return false;
+
+  for (const beam of beams) {
+    beam.frustumCulled = false;
+    beam.userData.turnMountainHeadlightBaseOpacity = Number(beam.material.opacity) || 0;
+  }
+
+  const updateHeadlights = () => {
+    const index = wrappedSampleIndex(state.nearestTrackIndex, samples.length);
+    const sample = samples[index];
+    projection.rotation.x = roadPitchAlongHeading(state, sample);
+
+    const village = mountainVillageContainsSample(index, samples.length);
+    fill.intensity = village ? 0 : MOUNTAIN_HEADLIGHT_FILL_INTENSITY;
+    for (const beam of beams) {
+      beam.material.opacity = village ? 0 : beam.userData.turnMountainHeadlightBaseOpacity;
+    }
+
+    rig.userData.turnMountainRoadPitch = projection.rotation.x;
+    rig.userData.turnMountainVillageLightsOff = village;
+  };
+
+  // Keep one always-rendered projection mesh as the cheap per-frame driver.
+  // We change opacity rather than visibility in the village so this hook still
+  // runs and can restore the headlights immediately when the car leaves it.
+  const driver = beams[0];
+  const previousOnBeforeRender = driver.onBeforeRender;
+  driver.onBeforeRender = function mountainHeadlightRoadFollow(...args) {
+    previousOnBeforeRender?.apply(this, args);
+    updateHeadlights();
+  };
+  updateHeadlights();
+
+  rig.userData.turnMountainHeadlightBehavior = 'road-pitch-following-with-village-blackout';
+  rig.userData.turnMountainVillageProgress = Object.freeze({
+    start: MOUNTAIN_VILLAGE_PROGRESS_START,
+    end: MOUNTAIN_VILLAGE_PROGRESS_END
+  });
+  return true;
 }
 
 export function installMountainWorld({ scene, samples, trackWidth = 27, runtime } = {}) {
@@ -36,14 +119,15 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
   scene.add(world);
 
   // Reuse MIDNIGHT CITY's deliberately cheap night-driving treatment exactly:
-  // one short-range fill plus two additive projected road wedges. No SpotLights,
-  // shadows or independent animation are added.
+  // one short-range fill plus two additive projected road wedges. MOUNTAIN only
+  // adds terrain-following pitch and switches that rig off in the lit village.
   const playerLightRig = installProjectedHeadlightsForTrack(runtime?.playerCar, {
     trackId: 'mountain',
     rigName: MOUNTAIN_PLAYER_LIGHT_RIG_NAME,
     label: 'Mountain',
     projectionName: MOUNTAIN_HEADLIGHT_PROJECTION_NAME
   });
+  const roadFollowingHeadlights = installMountainHeadlightRoadFollowing(playerLightRig, runtime, samples);
   world.userData.turnPlayerLightRig = playerLightRig;
 
   const terrainContext = installMountainTerrain(world, samples, trackWidth);
@@ -77,7 +161,9 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
     celestialLayer: 'r7-reparents-the-r6-moon-onto-the-star-plane-at-the-same-depth',
     moon: 'same-depth-star-plane-child-sharing-yaw-pitch-roll-and-parallax',
     moonlight: 'cool-hemisphere-and-directional-track-atmosphere',
-    playerVisibilityLight: 'MIDNIGHT CITY short-range fill plus projected unlit headlights',
+    playerVisibilityLight: 'MIDNIGHT CITY short-range fill plus projected unlit headlights, road-pitched and off in village',
+    playerHeadlightRoadFollowing: roadFollowingHeadlights,
+    playerHeadlightsVillageBlackout: roadFollowingHeadlights,
     streetlights: 'warm-static-halos-plus-midnight-city-style-ground-pools-and-local-fill',
     houseWindows: 'warm-emissive-looking-panels-on-every-suburban-house-with-limited-local-spill',
     waterfallLight: 'cool-moonlit-emissive-water-surfaces',
