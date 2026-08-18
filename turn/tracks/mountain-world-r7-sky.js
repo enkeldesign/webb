@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-const REVISION = 'r7-world-yaw-uv-raised-moon-celestial-layer';
+const REVISION = 'r7-world-yaw-uv-raised-moon-celestial-layer-cut-snap';
 const SKY_NAME = 'Mountain star field skydome r6';
 const MOON_NAME = 'Mountain full moon sprite r6';
 const SKY_DISTANCE = 840;
@@ -9,6 +9,8 @@ const SKY_HORIZONTAL_TILES = 4;
 const SKY_YAW_CATCHUP = 0.14;
 const SKY_POSITION_PARALLAX = 0.00004;
 const SKY_PITCH_PARALLAX = 0.025;
+const SKY_CAMERA_CUT_DISTANCE = 48;
+const SKY_CAMERA_CUT_HEADING = Math.PI / 8;
 const LEGACY_MOON_DISTANCE = 810;
 const TAU = Math.PI * 2;
 
@@ -52,6 +54,8 @@ function worldLockSky(sky) {
   sky.renderOrder = -100;
 
   const forward = new THREE.Vector3();
+  const previousCameraPosition = new THREE.Vector3();
+  let hasPreviousCameraPose = false;
   const motion = {
     heading: null,
     visualHeading: null,
@@ -60,7 +64,8 @@ function worldLockSky(sky) {
     visibleU: null,
     offsetU: null,
     offsetV: null,
-    coverHeight: null
+    coverHeight: null,
+    cameraCutCount: 0
   };
 
   sky.onBeforeRender = (_renderer, _scene, camera) => {
@@ -77,10 +82,31 @@ function worldLockSky(sky) {
     // Heading therefore moves the sampled UV region in the opposite direction
     // to camera yaw, exactly as a fixed distant sky should appear when the car
     // turns. A small catch-up lag gives the requested gentle parallax drag.
+    //
+    // The loading showcase is a deliberate camera cut, not a physical camera
+    // move. If that large jump is fed through the same catch-up, the sky visibly
+    // rolls into the pretty loading composition and rolls back out before the
+    // race. Detect those discontinuities and snap the celestial layer on the
+    // cut frame; normal driving still keeps the subtle parallax lag.
     const heading = Math.atan2(forward.x, forward.z);
-    if (motion.visualHeading === null) motion.visualHeading = heading;
-    motion.visualHeading += shortestAngle(motion.visualHeading, heading) * SKY_YAW_CATCHUP;
+    const headingJump = motion.heading === null
+      ? 0
+      : Math.abs(shortestAngle(motion.heading, heading));
+    const positionJump = hasPreviousCameraPose
+      ? previousCameraPosition.distanceTo(camera.position)
+      : 0;
+    const cameraCut = hasPreviousCameraPose
+      && (headingJump >= SKY_CAMERA_CUT_HEADING || positionJump >= SKY_CAMERA_CUT_DISTANCE);
+
+    if (motion.visualHeading === null || cameraCut) {
+      motion.visualHeading = heading;
+      if (cameraCut) motion.cameraCutCount += 1;
+    } else {
+      motion.visualHeading += shortestAngle(motion.visualHeading, heading) * SKY_YAW_CATCHUP;
+    }
     motion.heading = heading;
+    previousCameraPosition.copy(camera.position);
+    hasPreviousCameraPose = true;
 
     const verticalFov = THREE.MathUtils.degToRad(camera.fov);
     const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * camera.aspect);
@@ -107,6 +133,7 @@ function worldLockSky(sky) {
   sky.userData.turnMountainSkyLock = 'world-yaw-via-inverse-uv-with-world-up-roll-lock';
   sky.userData.turnMountainSkyHorizontalTiles = SKY_HORIZONTAL_TILES;
   sky.userData.turnMountainSkyYawCatchup = SKY_YAW_CATCHUP;
+  sky.userData.turnMountainSkyCameraCuts = 'snap-large-camera-jumps-without-parallax-roll';
   return motion;
 }
 
@@ -191,6 +218,7 @@ export function installMountainR7SkyFix(world) {
     skyYawLock: 'world-space-y-axis-via-inverse-four-tile-uv-rotation',
     skyGeometry: 'camera-facing-flat-backdrop',
     skyParallax: 'yaw-catchup-plus-subtle-position-and-pitch-drag',
+    skyCameraCuts: 'snap-large-camera-jumps-so-loading-cuts-are-not-animated',
     skyHorizontalTiles: SKY_HORIZONTAL_TILES,
     skyYawCatchup: SKY_YAW_CATCHUP,
     moonRepositioned: moonSkyLocked,
