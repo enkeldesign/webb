@@ -8,11 +8,14 @@ import { installMountainR4DriverFacingWaterfall } from './mountain-world-r4-wate
 import { installMountainR5SuburbanVillage } from './mountain-world-r5-suburban-village.js';
 import { installMountainR6Night } from './mountain-world-r6-night.js';
 import { installMountainR7SkyFix } from './mountain-world-r7-sky.js';
+import { installProjectedHeadlightsForTrack } from './projected-player-headlights.js';
 
 const MOUNTAIN_VILLAGE_BENCHES = new Set([
   'Mountain village bench r4',
   'Mountain village overlook bench r4'
 ]);
+const MOUNTAIN_PLAYER_LIGHT_RIG_NAME = 'TURN Mountain player light rig';
+const MOUNTAIN_HEADLIGHT_PROJECTION_NAME = 'Mountain projected headlights';
 
 function faceMountainVillageBenchesTowardTrack(world) {
   world.traverse((object) => {
@@ -31,6 +34,17 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
   const world = new THREE.Group();
   world.name = 'TURN Mountain r3';
   scene.add(world);
+
+  // Reuse MIDNIGHT CITY's deliberately cheap night-driving treatment exactly:
+  // one short-range fill plus two additive projected road wedges. No SpotLights,
+  // shadows or independent animation are added.
+  const playerLightRig = installProjectedHeadlightsForTrack(runtime?.playerCar, {
+    trackId: 'mountain',
+    rigName: MOUNTAIN_PLAYER_LIGHT_RIG_NAME,
+    label: 'Mountain',
+    projectionName: MOUNTAIN_HEADLIGHT_PROJECTION_NAME
+  });
+  world.userData.turnPlayerLightRig = playerLightRig;
 
   const terrainContext = installMountainTerrain(world, samples, trackWidth);
   installMountainR3Polish(world, samples, trackWidth);
@@ -63,6 +77,7 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
     celestialLayer: 'r7-reparents-the-r6-moon-onto-the-star-plane-at-the-same-depth',
     moon: 'same-depth-star-plane-child-sharing-yaw-pitch-roll-and-parallax',
     moonlight: 'cool-hemisphere-and-directional-track-atmosphere',
+    playerVisibilityLight: 'MIDNIGHT CITY short-range fill plus projected unlit headlights',
     streetlights: 'warm-static-halos-plus-midnight-city-style-ground-pools-and-local-fill',
     houseWindows: 'warm-emissive-looking-panels-on-every-suburban-house-with-limited-local-spill',
     waterfallLight: 'cool-moonlit-emissive-water-surfaces',
