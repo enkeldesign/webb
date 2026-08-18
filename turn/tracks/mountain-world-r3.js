@@ -59,7 +59,7 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
     villagePalette: 'dark-brown-walls-and-snow-white-roofs',
     villageSquare: 'winter-market-no-fountain',
     nightSky: 'local-star-field-skydome-with-separate-moon-sprite',
-    skyBehavior: 'world-yaw-locked-camera-centred-star-sphere-with-subtle-translation-drag',
+    skyBehavior: 'flat-star-backdrop-with-world-up-roll-lock-and-world-yaw-uv-lock-with-gentle-drag',
     moon: 'raised-separate-world-space-sprite-composed-with-lower-intro-camera',
     moonlight: 'cool-hemisphere-and-directional-track-atmosphere',
     streetlights: 'warm-static-halos-plus-midnight-city-style-ground-pools-and-local-fill',
