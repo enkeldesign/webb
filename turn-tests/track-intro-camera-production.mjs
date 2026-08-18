@@ -16,15 +16,21 @@ assert.match(cameraSource, /position: Object\.freeze\(\[20, 150, 300\]\)/);
 assert.match(cameraSource, /target: Object\.freeze\(\[275, 3, 40\]\)/);
 assert.match(cameraSource, /fov: 52/);
 assert.match(cameraSource, /mountain: Object\.freeze/);
-assert.match(cameraSource, /position: Object\.freeze\(\[285, 128, -338\]\)/);
-assert.match(cameraSource, /target: Object\.freeze\(\[6, 45, 92\]\)/);
+assert.match(cameraSource, /position: Object\.freeze\(\[300, 70, -340\]\)/);
+assert.match(cameraSource, /target: Object\.freeze\(\[0, 110, 100\]\)/);
 assert.match(cameraSource, /fov: 48/);
 assert.doesNotMatch(cameraSource, /requestAnimationFrame|setInterval|setAnimationLoop/);
 
-assert.match(mountainSkySource, /sky\.up\.set\(0, 1, 0\)/,
-  'MOUNTAIN stars must use world-up so they roll with the rendered horizon');
-assert.match(mountainSkySource, /sky\.lookAt\(camera\.position\)/,
-  'MOUNTAIN star backdrop should face the camera without inheriting camera roll');
+assert.match(mountainSkySource, /new THREE\.SphereGeometry\(SKY_RADIUS, 48, 24\)/,
+  'MOUNTAIN stars must live on a camera-centred sphere so yaw is world-locked');
+assert.match(mountainSkySource, /texture\.wrapS = THREE\.MirroredRepeatWrapping/,
+  'The compact star texture should repeat around the sky without hard seams');
+assert.match(mountainSkySource, /texture\.repeat\.set\(SKY_REPEAT_X, 1\)/,
+  'The compact star texture should repeat around the 360-degree sphere');
+assert.match(mountainSkySource, /const SKY_TRANSLATION_FOLLOW = 0\.96/,
+  'MOUNTAIN sky should keep only a small amount of translational parallax');
+assert.doesNotMatch(mountainSkySource, /sky\.lookAt\(camera\.position\)/,
+  'MOUNTAIN stars must not face the camera in yaw or they become screen-locked');
 assert.doesNotMatch(mountainSkySource, /sky\.quaternion\.copy\(camera\.quaternion\)/,
   'MOUNTAIN stars must never become screen-locked by copying the full camera quaternion');
 
@@ -33,10 +39,13 @@ const moonVector = mountainSkySource.match(
 );
 assert.ok(moonVector, 'MOUNTAIN sky fix must expose a fixed world-space moon direction');
 const moonDirection = moonVector.slice(1).map(Number);
+const moonElevation = Math.asin(moonDirection[1] / Math.hypot(...moonDirection)) * 180 / Math.PI;
+assert.ok(moonElevation >= 16.5,
+  `MOUNTAIN moon must clear the surrounding peaks during racing; elevation was ${moonElevation.toFixed(1)} degrees`);
 const introMoon = projectDirectionToScreen({
   direction: moonDirection,
-  position: [285, 128, -338],
-  target: [6, 45, 92],
+  position: [300, 70, -340],
+  target: [0, 110, 100],
   fov: 48,
   aspect: 1536 / 709
 });
@@ -112,9 +121,9 @@ calls.length = 0;
 runtime.activeTrack = { id: 'mountain' };
 bodyClasses.add('turn-track-intro');
 scene.onBeforeRender();
-assert.deepEqual(calls.find((call) => call[0] === 'position'), ['position', 285, 128, -338]);
-assert.deepEqual(calls.find((call) => call[0] === 'target'), ['target', 6, 45, 92]);
-assert.equal(camera.fov, 48, 'Mountain uses a wide alpine establishing frame from village/lake toward summit');
+assert.deepEqual(calls.find((call) => call[0] === 'position'), ['position', 300, 70, -340]);
+assert.deepEqual(calls.find((call) => call[0] === 'target'), ['target', 0, 110, 100]);
+assert.equal(camera.fov, 48, 'Mountain uses a lower alpine establishing frame so the raised moon stays in the loading composition');
 
 bodyClasses.delete('turn-track-intro');
 scene.onBeforeRender();
@@ -126,7 +135,7 @@ bodyClasses.add('turn-track-intro');
 scene.onBeforeRender();
 assert.equal(calls.some((call) => call[0] === 'position'), false, 'Tracks without a showcase preset keep their established framing');
 
-console.log('TURN Midnight City and Mountain track intros use deliberate cinematic showcase angles with a horizon-locked MOUNTAIN sky and composed moon.');
+console.log('TURN Midnight City and Mountain track intros use deliberate cinematic showcase angles with a world-yaw-locked MOUNTAIN sky and raised moon.');
 
 function projectDirectionToScreen({ direction, position, target, fov, aspect }) {
   const forward = normalize(subtract(target, position));
