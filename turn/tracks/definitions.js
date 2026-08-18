@@ -133,16 +133,16 @@ const TRACKS = [
       boundaryMinimumRecoverySpeed: 5.5,
       colliders: []
     },
-    sky: 0x71cff1,
-    fog: 0xc6e0ea,
-    fogNear: 360,
-    fogFar: 1180,
+    sky: 0x06132c,
+    fog: 0x172744,
+    fogNear: 430,
+    fogFar: 1250,
     lighting: {
-      hemisphereSky: 0xd8f1ff,
-      hemisphereGround: 0x617455,
-      hemisphereIntensity: 1.04,
-      directionalColor: 0xfff2d4,
-      directionalIntensity: 1.16
+      hemisphereSky: 0x5a78a8,
+      hemisphereGround: 0x07101b,
+      hemisphereIntensity: 0.56,
+      directionalColor: 0xb8d7ff,
+      directionalIntensity: 0.92
     }
   }
 ];

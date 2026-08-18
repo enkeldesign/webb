@@ -6,6 +6,7 @@ import { installMountainR4VisualPolish } from './mountain-world-r4-visual-polish
 import { installMountainR4WaterfallNotch } from './mountain-world-r4-waterfall-notch.js';
 import { installMountainR4DriverFacingWaterfall } from './mountain-world-r4-waterfall-face.js';
 import { installMountainR5SuburbanVillage } from './mountain-world-r5-suburban-village.js';
+import { installMountainR6Night } from './mountain-world-r6-night.js';
 
 const MOUNTAIN_VILLAGE_BENCHES = new Set([
   'Mountain village bench r4',
@@ -40,12 +41,13 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
     .then(() => installMountainR5SuburbanVillage(world, samples, trackWidth, terrainContext))
     .then(() => {
       faceMountainVillageBenchesTowardTrack(world);
-      return world;
-    });
+      return installMountainR6Night(world, samples, trackWidth, terrainContext);
+    })
+    .then(() => world);
   world.userData.turnMountainTerrainHeightAt = terrainContext.terrainHeightAt;
   world.userData.turnMountainArtDirection = Object.freeze({
     version: 'r3',
-    visualPolish: 'r5-suburban-village-plus-r4-waterfall-landmarks',
+    visualPolish: 'r6-night-plus-r5-suburban-village-plus-r4-waterfall-landmarks',
     ground: 'continuous-snow-and-granite-terrain-body',
     roadEdge: 'white-with-black-outer-contour',
     roadbed: 'opaque-and-terrain-supported',
@@ -54,7 +56,11 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
     assetVillage: 'Kenney-City-Kit-Suburban-complete-buildings-A-G-M-N-U',
     villagePalette: 'dark-brown-walls-and-snow-white-roofs',
     villageSquare: 'winter-market-no-fountain',
-    streetlights: 'warm-static-halos',
+    nightSky: 'local-star-field-skydome-with-separate-moon-sprite',
+    moonlight: 'cool-hemisphere-and-directional-track-atmosphere',
+    streetlights: 'warm-static-halos-plus-midnight-city-style-ground-pools-and-local-fill',
+    houseWindows: 'warm-emissive-looking-panels-on-every-suburban-house-with-limited-local-spill',
+    waterfallLight: 'cool-moonlit-emissive-water-surfaces',
     waterfallCliff: 'terrain-plus-Kenney-Nature-rock-shoulders-open-at-centre',
     visibleWaterfallCurtain: true,
     waterfallDriverSightline: 'open-rock-cleft-plus-driver-facing-water-plane',

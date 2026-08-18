@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>TURN MOUNTAIN visual smoke</title>
   <style>
-    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#71cff1}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#06132c}
     canvas{display:block;width:100%;height:100%}
     #label{position:fixed;left:12px;bottom:10px;padding:6px 9px;border:2px solid #08090a;border-radius:8px;background:#fff8e8;color:#08090a;font:700 13px/1.1 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;z-index:2}
   </style>
@@ -18,8 +18,8 @@
   <script type="module">
     import * as THREE from 'three';
     import { createTrackRuntime } from '/turn/tracks/catalog.js';
-    import { installMountainWorld } from '/turn/tracks/mountain-world-r3.js?visual=5';
-    import { createMountainTerrainSampler, createMountainRiverSamples, offsetPoint, MOUNTAIN_R3 } from '/turn/tracks/mountain-world-r3-terrain.js?visual=5';
+    import { installMountainWorld } from '/turn/tracks/mountain-world-r3.js?visual=6';
+    import { createMountainTerrainSampler, createMountainRiverSamples, offsetPoint, MOUNTAIN_R3 } from '/turn/tracks/mountain-world-r3-terrain.js?visual=6';
 
     const VIEWS = Object.freeze({
       aerial: { position:[330,235,-345], target:[5,22,-10], fov:49 },
@@ -35,8 +35,8 @@
     document.querySelector('#label').textContent = `MOUNTAIN · ${viewName}`;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x71cff1);
-    scene.fog = new THREE.Fog(0xc6e0ea, 410, 1180);
+    scene.background = new THREE.Color(0x06132c);
+    scene.fog = new THREE.Fog(0x172744, 430, 1250);
     const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 1800);
     const renderer = new THREE.WebGLRenderer({ antialias:true, preserveDrawingBuffer:true, powerPreference:'low-power' });
     renderer.setPixelRatio(1);
@@ -45,10 +45,10 @@
     renderer.shadowMap.enabled = false;
     document.body.prepend(renderer.domElement);
 
-    scene.add(new THREE.HemisphereLight(0xd8f1ff, 0x617455, 1.18));
-    const sun = new THREE.DirectionalLight(0xfff2d4, 1.26);
-    sun.position.set(-160, 240, -110);
-    scene.add(sun);
+    scene.add(new THREE.HemisphereLight(0x5a78a8, 0x07101b, 0.56));
+    const moonlight = new THREE.DirectionalLight(0xb8d7ff, 0.92);
+    moonlight.position.set(-90, 150, 70);
+    scene.add(moonlight);
 
     const runtime = createTrackRuntime('mountain', 1080);
     const trackWidth = 27;
@@ -126,6 +126,7 @@
     const maxGroundingDelta = diagnostics.reduce((max, entry) => Math.max(max, Math.abs(entry.delta)), 0);
     const r4 = world.userData.turnMountainR4VisualPolish || {};
     const r5 = world.userData.turnMountainR5SuburbanVillage || {};
+    const r6 = world.userData.turnMountainR6Night || {};
 
     globalThis.__mountainVisualMetrics = Object.freeze({
       viewName,
@@ -133,6 +134,7 @@
       assetErrors: [...(world.userData.turnMountainAssetErrors || [])],
       r4AssetErrors: [...(world.userData.turnMountainR4AssetErrors || [])],
       r5AssetErrors: [...(world.userData.turnMountainR5AssetErrors || [])],
+      r6AssetErrors: [...(world.userData.turnMountainR6AssetErrors || [])],
       maximumRoadSupportGap,
       maximumEdgeSupportGap,
       maximumRenderedRoadSupportGap,
@@ -154,6 +156,11 @@
       fountains: count('Fantasy fountain r3'),
       litStreetlights: count('Holiday lit streetlight r4'),
       warmLanternHalos: count('warm lantern halo r4'),
+      nightStreetlightFills: count('Mountain warm streetlight fill r6'),
+      starSkydomes: count('Mountain star field skydome r6'),
+      moonSprites: count('Mountain full moon sprite r6'),
+      warmHouseWindowMeshes: count('Mountain warm house windows r6'),
+      warmHouseWindowHaloMeshes: count('Mountain warm house window halos r6'),
       decorativeVillageAssets: count('village ') + count('decorative Holiday spruce r4'),
       distantLayeredRidges: count('distant layered ridge r4'),
       waterfallCliffModules: count('Nature cliff module r3'),
@@ -169,7 +176,15 @@
       r5SuburbanReported: Number(r5.placed || 0),
       r5RemovedCabins: Number(r5.removedAssembledCabins || 0),
       r5PaletteMode: String(r5.paletteMode || ''),
-      r5RequestedTypes: [...(r5.requestedTypes || [])]
+      r5RequestedTypes: [...(r5.requestedTypes || [])],
+      r6StarSky: r6.starSky === true,
+      r6Moon: r6.moon === true,
+      r6StreetLightPoolCount: Number(r6.streetLightPoolCount || 0),
+      r6StreetLightPointLightCount: Number(r6.streetLightPointLightCount || 0),
+      r6LitHouseCount: Number(r6.litHouseCount || 0),
+      r6WindowPanelCount: Number(r6.windowPanelCount || 0),
+      r6HouseSpillLightCount: Number(r6.houseSpillLightCount || 0),
+      r6MoonlitWaterMaterials: Number(r6.moonlitWaterMaterials || 0)
     });
 
     renderer.render(scene,camera);
