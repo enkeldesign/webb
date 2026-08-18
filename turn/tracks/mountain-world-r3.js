@@ -8,7 +8,7 @@ import { installMountainR4DriverFacingWaterfall } from './mountain-world-r4-wate
 import { installMountainR5SuburbanVillage } from './mountain-world-r5-suburban-village.js';
 import { installMountainR6Night } from './mountain-world-r6-night.js';
 import { installMountainR7SkyFix } from './mountain-world-r7-sky.js';
-import { installMountainSpotlightHeadlight } from './mountain-player-headlight-r8.js?revision=r560-shared-night-spotlight';
+import { installMountainSpotlightHeadlight } from './mountain-player-headlight-r8.js?revision=r175-reconcile';
 
 const MOUNTAIN_VILLAGE_BENCHES = new Set([
   'Mountain village bench r4',
