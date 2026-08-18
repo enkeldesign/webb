@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { signalSecretAchievement } from '../achievements/secret-events.js?revision=r157-hidden-achievements';
 import { installMidnightCityWorld as installMidnightCityWorldR7 } from './midnight-city-world-r7.js?base=20260801-r7';
+import { installNightPlayerSpotlight } from './night-player-spotlight-r560.js';
 
 const LILYA_TEXTURE_URL = new URL('../LILYA.PNG', import.meta.url).href;
 
@@ -23,8 +24,10 @@ export function installMidnightCityWorld(options) {
   const world = installMidnightCityWorldR7(options);
   const portrait = installHiddenLilyaPortrait(world);
   const lazyLoadArmed = armWrongWayTextureLoad(world, portrait, options);
+  const playerSpotlight = installNightPlayerSpotlight(options.runtime?.playerCar, options.runtime);
 
   world.name = 'TURN Midnight City r11';
+  world.userData.turnPlayerLightRig = playerSpotlight;
   world.userData.turnMidnightCityArtDirection = Object.freeze({
     ...(world.userData.turnMidnightCityArtDirection || {}),
     version: 'r11',
@@ -38,7 +41,11 @@ export function installMidnightCityWorld(options) {
     hiddenLilyaMipmaps: false,
     hiddenLilyaFitsFacade: true,
     gameplayGeometryUnchanged: true,
-    noDynamicLightsAdded: true,
+    playerVisibilityLight: playerSpotlight
+      ? 'shared-warm-shadowless-spotlight-identical-to-mountain'
+      : 'unavailable-without-player-car',
+    sharedNightSpotlight: Boolean(playerSpotlight),
+    hiddenLilyaAddsDynamicLights: false,
     noIndependentAnimationLoop: true
   });
 
