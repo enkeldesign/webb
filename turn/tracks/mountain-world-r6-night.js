@@ -35,6 +35,7 @@ async function loadNightTexture(url, options) {
 function installStarSky(world, texture) {
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.needsUpdate = true;
 
   const sky = new THREE.Mesh(
     new THREE.SphereGeometry(SKY_RADIUS, 40, 20),
@@ -259,6 +260,7 @@ function installHouseWindowGlow(world, samples) {
     geometry,
     new THREE.MeshBasicMaterial({
       color: WINDOW_LIGHT,
+      depthWrite: false,
       side: THREE.DoubleSide,
       toneMapped: false
     }),
@@ -289,7 +291,6 @@ function installHouseWindowGlow(world, samples) {
     marker.updateMatrix();
     core.setMatrixAt(index, marker.matrix);
 
-    marker.position.y += 0.015;
     marker.scale.set(spec.width * 1.65, spec.height * 1.55, 1);
     marker.updateMatrix();
     halo.setMatrixAt(index, marker.matrix);
