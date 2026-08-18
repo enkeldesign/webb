@@ -68,6 +68,9 @@ assert.doesNotMatch(signParkSource, /requestAnimationFrame|setAnimationLoop|setI
 
 await fs.access(new URL('../turn/LILYA.PNG', import.meta.url));
 assert.match(easterEggSource, /installMidnightCityWorld as installMidnightCityWorldR7/);
+assert.match(easterEggSource, /installNightPlayerSpotlight\(options\.runtime\?\.playerCar, options\.runtime\)/);
+assert.match(easterEggSource, /sharedNightSpotlight: Boolean\(playerSpotlight\)/);
+assert.match(easterEggSource, /hiddenLilyaAddsDynamicLights: false/);
 assert.match(easterEggSource, /new URL\('\.\.\/LILYA\.PNG', import\.meta\.url\)\.href/);
 assert.match(easterEggSource, /x: -500\.70[\s\S]*y: 11\.96[\s\S]*z: 40\.20/);
 assert.match(easterEggSource, /maxWidth: 46[\s\S]*maxHeight: 21/);
@@ -97,11 +100,11 @@ assert.match(easterEggSource, /gameplayGeometryUnchanged: true/);
 assert.doesNotMatch(
   easterEggSource,
   /requestAnimationFrame|setAnimationLoop|setInterval|setTimeout|new THREE\.PointLight|new THREE\.SpotLight/,
-  'The hidden portrait must use the existing render loop without adding timers or lights'
+  'The hidden portrait itself must use the existing render loop without adding timers or inline lights'
 );
 
-assert.match(registrySource, /midnight-city-world-r11\.js\?build=20260802-r11/);
+assert.match(registrySource, /midnight-city-world-r11\.js\?build=20260818-r560-shared-spotlight/);
 assert.match(registrySource, /'midnight-city'\(\{ scene, samples, trackWidth, runtime \}\)/);
 assert.match(registrySource, /installMidnightCityWorld\(\{ scene, samples, trackWidth, runtime \}\)/);
 
-console.log('TURN Midnight City lighting, scenery and wrong-way-only lazy LILYA placement passed.');
+console.log('TURN Midnight City lighting, shared night spotlight, scenery and wrong-way-only lazy LILYA placement passed.');
