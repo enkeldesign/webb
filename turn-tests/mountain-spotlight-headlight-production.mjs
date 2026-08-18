@@ -21,27 +21,27 @@ assert.match(sharedHeadlight, /new Set\(\['midnight-city', 'mountain'\]\)/,
   'Exactly the two night tracks should share the same spotlight configuration');
 assert.match(sharedHeadlight, /light\.castShadow = false/,
   'The shared headlight must never allocate a dynamic shadow map');
-assert.match(sharedHeadlight, /targetLocal: Object\.freeze\(\{ x: 0, y: -0\.15, z: -54 \}\)/,
-  'The spotlight target should remain ahead of the car so inherited road pitch drives the beam');
+assert.match(sharedHeadlight, /targetLocal: Object\.freeze\(\{ x: 0, y: -1\.5, z: -54 \}\)/,
+  'The shared spotlight should aim lower so flat and downhill roads meet the useful cone sooner');
 assert.match(sharedHeadlight, /rig\.add\(light, target\)/,
   'Light and target must share the player-car transform');
 assert.doesNotMatch(sharedHeadlight, /PlaneGeometry|BufferGeometry|CircleGeometry|requestAnimationFrame|setAnimationLoop/,
   'The spotlight solution must not reintroduce projected beam geometry or its own animation loop');
 
-assert.match(mountainWrapper, /night-player-spotlight-r560\.js\?revision=r561-200m/,
-  'MOUNTAIN must cache-bust to the 200 m shared spotlight configuration');
+assert.match(mountainWrapper, /night-player-spotlight-r560\.js\?revision=r563-lower-target/,
+  'MOUNTAIN must cache-bust to the lower shared spotlight aim');
 assert.match(mountainWrapper, /installNightPlayerSpotlight\(playerCar, runtime\)/,
   'MOUNTAIN must delegate to the shared night-track spotlight implementation');
 assert.match(world, /installMountainSpotlightHeadlight\(runtime\?\.playerCar, runtime\)/,
   'The MOUNTAIN world must attach the shared spotlight to the production player car');
-assert.match(midnight, /night-player-spotlight-r560\.js\?revision=r561-200m/,
-  'MIDNIGHT CITY must cache-bust to the exact same 200 m shared spotlight configuration');
+assert.match(midnight, /night-player-spotlight-r560\.js\?revision=r563-lower-target/,
+  'MIDNIGHT CITY must cache-bust to the exact same lower shared spotlight aim');
 assert.match(midnight, /installNightPlayerSpotlight\(options\.runtime\?\.playerCar, options\.runtime\)/,
   'MIDNIGHT CITY must install the exact same shared spotlight rig');
 assert.match(midnight, /shared-warm-shadowless-spotlight-identical-to-mountain/);
-assert.match(registry, /mountain-world-r3\.js\?revision=r561-200m-headlight/,
-  'Production must cache-bust MOUNTAIN to the 200 m headlight revision');
-assert.match(registry, /midnight-city-world-r11\.js\?build=20260818-r561-200m-headlight/,
-  'Production must cache-bust MIDNIGHT CITY to the 200 m headlight revision');
+assert.match(registry, /mountain-world-r3\.js\?revision=r563-lower-headlight-target/,
+  'Production must cache-bust MOUNTAIN to the lower headlight target revision');
+assert.match(registry, /midnight-city-world-r11\.js\?build=20260818-r563-lower-headlight-target/,
+  'Production must cache-bust MIDNIGHT CITY to the lower headlight target revision');
 
-console.log('TURN shared MOUNTAIN + MIDNIGHT CITY 200 m shadowless spotlight contract passed.');
+console.log('TURN shared MOUNTAIN + MIDNIGHT CITY lower-aim 200 m shadowless spotlight contract passed.');
