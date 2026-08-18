@@ -1,10 +1,9 @@
 import * as THREE from 'three';
 import { signalSecretAchievement } from '../achievements/secret-events.js?revision=r157-hidden-achievements';
 import { installMidnightCityWorld as installMidnightCityWorldR7 } from './midnight-city-world-r7.js?base=20260801-r7';
-import { installNightPlayerSpotlight } from './night-player-spotlight-r560.js?revision=r563-lower-target';
+import { installNightPlayerSpotlight } from './night-player-spotlight-r560.js?revision=r174-night-headlight-tune';
 
 const LILYA_TEXTURE_URL = new URL('../LILYA.PNG', import.meta.url).href;
-const MIDNIGHT_HEADLIGHT_ROAD = 0x292e38;
 
 const LILYA_WALL = Object.freeze({
   x: -500.70,
@@ -23,7 +22,6 @@ const LILYA_DISCOVERY_HOLD_MS = 650;
 
 export function installMidnightCityWorld(options) {
   const world = installMidnightCityWorldR7(options);
-  const headlightRoadLifted = liftRoadForSharedHeadlight(world);
   const portrait = installHiddenLilyaPortrait(world);
   const lazyLoadArmed = armWrongWayTextureLoad(world, portrait, options);
   const playerSpotlight = installNightPlayerSpotlight(options.runtime?.playerCar, options.runtime);
@@ -47,29 +45,12 @@ export function installMidnightCityWorld(options) {
       ? 'shared-warm-shadowless-spotlight-identical-to-mountain'
       : 'unavailable-without-player-car',
     sharedNightSpotlight: Boolean(playerSpotlight),
-    headlightRoadReflectance: headlightRoadLifted
-      ? 'asphalt-lifted-to-292e38-for-shared-spotlight-readability'
-      : 'race-road-not-found',
+    headlightRoadReflectance: 'original-midnight-city-road-material',
     hiddenLilyaAddsDynamicLights: false,
     noIndependentAnimationLoop: true
   });
 
   return world;
-}
-
-function liftRoadForSharedHeadlight(world) {
-  const road = world.getObjectByName('Midnight City race road');
-  if (!road?.isMesh) return false;
-
-  const materials = Array.isArray(road.material) ? road.material : [road.material];
-  let changed = false;
-  for (const material of materials) {
-    if (!material?.isMeshStandardMaterial || !material.color) continue;
-    material.color.setHex(MIDNIGHT_HEADLIGHT_ROAD);
-    material.needsUpdate = true;
-    changed = true;
-  }
-  return changed;
 }
 
 function installHiddenLilyaPortrait(world) {
