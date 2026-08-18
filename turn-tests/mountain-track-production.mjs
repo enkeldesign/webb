@@ -8,10 +8,11 @@ import { TROPHY_ROAD_REWARDS, rewardForTrack } from '../turn/progression/trophy-
 import { TRACK_COLOR_CUES } from '../turn/accessibility/color-cues.js';
 import { TRACK_COLOR_RULES } from '../turn/achievements/chromatic-camouflage-r183.js';
 
-const [world, terrain, scenery, registry, trophyGate, kenneyAssets, visualPage, visualSmoke, visualWorkflow] = await Promise.all([
+const [world, terrain, scenery, night, registry, trophyGate, kenneyAssets, visualPage, visualSmoke, visualWorkflow] = await Promise.all([
   fs.readFile(new URL('../turn/tracks/mountain-world-r3.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/mountain-world-r3-terrain.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/mountain-world-r3-scenery.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/mountain-world-r6-night.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/progression/m8-trophy-gate.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/assets/KENNEY-ASSETS.md', import.meta.url), 'utf8'),
@@ -36,6 +37,14 @@ assert.ok(closedLength(MOUNTAIN_CONTROL_POINTS) > 1500);
 assert.equal(findProperIntersections(MOUNTAIN_CONTROL_POINTS).length, 0);
 assert.ok(maximumTurn(MOUNTAIN_CONTROL_POINTS) < 100);
 
+assert.equal(definition.sky, 0x06132c, 'MOUNTAIN should use the deep-blue night fallback sky');
+assert.equal(definition.fog, 0x172744, 'MOUNTAIN fog should stay cool and moonlit');
+assert.equal(definition.lighting.hemisphereSky, 0x5a78a8);
+assert.equal(definition.lighting.hemisphereGround, 0x07101b);
+assert.equal(definition.lighting.hemisphereIntensity, 0.56);
+assert.equal(definition.lighting.directionalColor, 0xb8d7ff);
+assert.equal(definition.lighting.directionalIntensity, 0.92);
+
 const reward = rewardForTrack('mountain');
 assert.equal(reward?.id, 'mountain');
 assert.equal(reward?.threshold, 1000);
@@ -57,14 +66,48 @@ assert.deepEqual(
 assert.equal(TRACK_COLOR_CUES.mountain, 'blue');
 assert.deepEqual(TRACK_COLOR_RULES.mountain, { hueMin: 206, hueMax: 230, name: 'blue' });
 
-assert.match(registry, /mountain-world-r3\.js\?revision=r3-continuous-terrain-v1/);
+assert.match(registry, /mountain-world-r3\.js\?revision=r3-continuous-terrain-v1/,
+  'Keep the historical continuous-terrain regression marker');
+assert.match(registry, /mountain-world-r3\.js\?revision=r6-night-treatment/,
+  'Production must cache-bust to the MOUNTAIN night world revision');
 assert.match(world, /version: 'r3'/);
 assert.match(world, /continuous-snow-and-granite-terrain-body/);
 assert.match(world, /roadbed: 'opaque-and-terrain-supported'/);
 assert.match(world, /riverHasChannelBanksAndBed: true/);
 assert.match(world, /boundingBoxGroundedAssets: true/);
+assert.match(world, /installMountainR6Night/);
+assert.match(world, /nightSky: 'local-star-field-skydome-with-separate-moon-sprite'/);
+assert.match(world, /streetlights: 'warm-static-halos-plus-midnight-city-style-ground-pools-and-local-fill'/);
+assert.match(world, /houseWindows: 'warm-emissive-looking-panels-on-every-suburban-house-with-limited-local-spill'/);
+assert.match(world, /waterfallLight: 'cool-moonlit-emissive-water-surfaces'/);
 assert.match(world, /world\.ready = Promise\.resolve/);
 assert.doesNotMatch(world, /setAnimationLoop|requestAnimationFrame|setInterval/);
+
+assert.match(night, /mountain-night-sky\.jpg/);
+assert.match(night, /mountain-moon\.png/);
+assert.match(night, /Mountain star field skydome r6/);
+assert.match(night, /Mountain full moon sprite r6/);
+assert.match(night, /new THREE\.CircleGeometry\(11\.5, 24\)/,
+  'MOUNTAIN streetlight pools should reuse the established Midnight City footprint');
+assert.match(night, /new THREE\.PointLight\(WARM_LIGHT, 8\.4, 66, 1\.65\)/);
+assert.match(night, /Mountain warm house windows r6/);
+assert.match(night, /Mountain warm house window halos r6/);
+assert.match(night, /new THREE\.InstancedMesh/,
+  'Night windows and light pools must stay batched rather than becoming individual meshes');
+assert.match(night, /strengthenMoonlitWater/);
+assert.doesNotMatch(night, /setAnimationLoop|requestAnimationFrame|setInterval/,
+  'The night treatment must remain render-driven with no independent loop');
+
+const nightSkyAsset = await fs.readFile(new URL('../turn/assets/mountain/mountain-night-sky.jpg', import.meta.url));
+assert.equal(nightSkyAsset[0], 0xff, 'MOUNTAIN star field must remain a JPEG');
+assert.equal(nightSkyAsset[1], 0xd8, 'MOUNTAIN star field must remain a JPEG');
+assert.ok(nightSkyAsset.length < 20_000,
+  `MOUNTAIN star field should stay deliberately compact, got ${nightSkyAsset.length} bytes`);
+const moonAsset = await fs.readFile(new URL('../turn/assets/mountain/mountain-moon.png', import.meta.url));
+assert.deepEqual([...moonAsset.subarray(0, 8)], [0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a],
+  'MOUNTAIN moon must remain a transparent-capable PNG');
+assert.ok(moonAsset.length < 10_000,
+  `MOUNTAIN moon should stay deliberately compact, got ${moonAsset.length} bytes`);
 
 assert.match(terrain, /Mountain continuous terrain body r3/);
 assert.match(terrain, /createMountainTerrainSampler/);
@@ -148,17 +191,21 @@ assert.match(kenneyAssets, /Fantasy Town/i);
 assert.match(kenneyAssets, /Nature Kit/i);
 assert.match(kenneyAssets, /bounding/i);
 assert.match(visualPage, /__mountainVisualMetrics/);
+assert.match(visualPage, /r6WindowPanelCount/);
 for (const view of ['aerial', 'village', 'summit', 'descent', 'waterfall']) {
   assert.match(visualPage, new RegExp(`${view}:`));
   assert.match(visualSmoke, new RegExp(`['"]${view}['"]`));
 }
+assert.match(visualSmoke, /r6StarSky/);
+assert.match(visualSmoke, /r6StreetLightPoolCount/);
+assert.match(visualSmoke, /r6WindowPanelCount/);
 assert.match(visualSmoke, /maximumRenderedRoadSupportGap/);
 assert.match(visualSmoke, /maxGroundingDelta/);
 assert.match(visualWorkflow, /playwright@1\.55\.0/);
 assert.match(visualWorkflow, /upload-artifact@v4/);
 assert.match(visualWorkflow, /mountain-visual-smoke/);
 
-console.log(`TURN MOUNTAIN r3 production contract passed: ${closedLength(MOUNTAIN_CONTROL_POINTS).toFixed(0)} control units, continuous terrain, grounded Kenney village and browser visual QA.`);
+console.log(`TURN MOUNTAIN r3 production contract passed: ${closedLength(MOUNTAIN_CONTROL_POINTS).toFixed(0)} control units, continuous terrain, grounded Kenney village and moonlit night treatment.`);
 
 function parseGlbJson(buffer, label) {
   assert.ok(Buffer.isBuffer(buffer), `${label} must be read as binary data`);
