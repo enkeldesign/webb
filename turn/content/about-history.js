@@ -174,8 +174,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
       'Generated racing soundtrack with persistent 0–100% Music control and true OFF shutdown',
       'TURN 1.8.0 · 2026.08.11-r164 with the Monster Truck all-terrain perk'
     ]
-  }
-  ,{
+  },
+  {
     period: '17 August',
     title: 'MOUNTAIN turns Track 6 into an alpine journey',
     paragraphs: [
@@ -188,8 +188,21 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
       'Snowy village, summit river, front-face slalom, waterfall and alpine backdrop',
       'TURN 1.9.0 · 2026.08.17-r173 with MOUNTAIN at 1,000 trophies'
     ]
+  },
+  {
+    period: '18 August',
+    title: 'MOUNTAIN becomes a moonlit night race',
+    paragraphs: [
+      'MOUNTAIN’s daytime alpine world was retreated as a night track with a compact star field, full moon, moonlit snow and water, warm street-lamp pools and lit chalet windows. The celestial layer follows the world horizon with restrained parallax rather than the physical screen, and loading-camera cuts now snap the sky immediately instead of visibly rolling it into place.',
+      'Reduced-motion players get the same deep-blue night atmosphere and moon without the moving star field or parallax. Window glow was snapped to real house facades, benches were oriented toward the road and the night treatment deliberately avoids expensive shadow maps.',
+      'A real shadowless Three.js spotlight replaced the earlier projected headlight wedges. MOUNTAIN and MIDNIGHT CITY now share one performance-conscious headlight rig; device testing then tuned its reach, intensity and emitter position without adding a second light, beam geometry, raycasts or a separate animation loop.'
+    ],
+    milestones: [
+      'Moon, star field, moonlit terrain, warm village lamps and lit windows',
+      'Reduced-motion night treatment with a static solid-colour sky and retained moon',
+      'TURN 1.9.1 · 2026.08.18-r174 with shared night-track headlights and MOUNTAIN night polish'
+    ]
   }
-
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -374,20 +387,27 @@ export const CHANGELOG = Object.freeze([
       ['Desktop controls and vehicle identity', 'Q = Drift and E = Boost join the existing keyboard route; the Monster Truck becomes the first perk vehicle by taking no off-road terrain speed or handling penalty while preserving world collisions.'],
       ['Interface/accessibility polish', 'Adds a non-colour edge to the Boost meter, fixes the Home header boundary and music-control alignment, and refreshes the startup loading copy.']
     ]
-  }
-  ,{
+  },
+  {
     date: '17 August',
     entries: [
       ['1.9.0 r173', 'Adds MOUNTAIN as TURN’s sixth production track and 1,000-trophy reward: snowy village, long alpine climb, summit river, technical slalom descent, waterfall and cinematic mountain backdrop.'],
       ['MOUNTAIN world', 'Adds procedural alpine ground texture, snow line, batched spruce forest and granite, cozy chalets/inn/chapel/lanterns, Kenney Fantasy Town landmarks, lake, river, waterfall mist and guardrail-aligned containment.'],
       ['MOUNTAIN accessibility', 'Adds a distinct blue Color Cue and Chromatic Camouflage family, six-track achievement semantics and a Drive By Ear map that deliberately changes from flowing climb calls to alternating tight descent calls.']
     ]
+  },
+  {
+    date: '18 August',
+    entries: [
+      ['1.9.1 r174', 'Turns MOUNTAIN into a moonlit night track and refreshes the release identity after the final alpine art and lighting pass.'],
+      ['Night MOUNTAIN', 'Adds a horizon-locked star field and moon, moonlit snow and waterfall, warm street-light pools, lit chalet windows and reduced-motion behaviour that keeps the moon while replacing moving stars with a solid night sky.'],
+      ['Night-track headlights', 'MOUNTAIN and MIDNIGHT CITY share one shadowless physical spotlight with no projected beam geometry; r174 increases its reach and intensity and moves the emitter closer to the car without adding lights or shadow maps.']
+    ]
   }
-
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.9.0',
-  build: '2026.08.17-r173',
-  note: 'TURN 1.9.0 build r173 adds MOUNTAIN, a sixth production track with an alpine village climb, snow-line river, technical hairpin descent and waterfall, integrated with Trophy Road, Drive By Ear and Color Cues.'
+  version: '1.9.1',
+  build: '2026.08.18-r174',
+  note: 'TURN 1.9.1 build r174 completes MOUNTAIN’s moonlit night treatment and tunes the single shared shadowless headlight spotlight used by MOUNTAIN and MIDNIGHT CITY.'
 });
