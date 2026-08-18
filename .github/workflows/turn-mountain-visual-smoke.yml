@@ -9,6 +9,7 @@ on:
       - 'turn/assets/scenery/mountain/**'
       - 'turn-lab/mountain-visual.html'
       - 'turn-tests/mountain-visual-smoke.mjs'
+      - 'turn-tests/mountain-spotlight-headlight-production.mjs'
       - '.github/workflows/turn-mountain-visual-smoke.yml'
   push:
     branches:
@@ -18,6 +19,7 @@ on:
       - 'turn/assets/scenery/mountain/**'
       - 'turn-lab/mountain-visual.html'
       - 'turn-tests/mountain-visual-smoke.mjs'
+      - 'turn-tests/mountain-spotlight-headlight-production.mjs'
       - '.github/workflows/turn-mountain-visual-smoke.yml'
 
 permissions:
@@ -35,6 +37,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
+
+      - name: Validate MOUNTAIN spotlight contract
+        run: node turn-tests/mountain-spotlight-headlight-production.mjs
 
       - name: Install Playwright Chromium
         run: |
