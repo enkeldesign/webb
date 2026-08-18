@@ -7,11 +7,12 @@ const INTRO_CAMERA_PRESETS = Object.freeze({
     fov: 52
   }),
   mountain: Object.freeze({
-    // Start over the lake side of the village and look uphill through the chalets
-    // toward the summit. The waterfall sits on the right-hand third of the frame,
-    // so the intro foreshadows the descent before the player knows the route.
-    position: Object.freeze([285, 128, -338]),
-    target: Object.freeze([6, 45, 92]),
+    // Use a lower alpine establishing angle now that the moon lives higher in
+    // the real race sky. This preserves the mockup composition — moon tucked by
+    // the left peak — without forcing the celestial object down behind the
+    // surrounding mountains during normal driving.
+    position: Object.freeze([300, 70, -340]),
+    target: Object.freeze([0, 110, 100]),
     fov: 48
   })
 });
