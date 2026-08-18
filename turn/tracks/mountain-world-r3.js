@@ -84,6 +84,7 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
     villageSquare: 'winter-market-no-fountain',
     nightSky: 'local-star-field-skydome-with-separate-moon-sprite',
     skyBehavior: 'flat-star-backdrop-with-world-up-roll-lock-and-world-yaw-uv-lock-with-gentle-drag',
+    reducedMotionSky: 'solid-deep-blue-track-background-with-moon-retained-and-parallax-suppressed',
     celestialLayer: 'r7-reparents-the-r6-moon-onto-the-star-plane-at-the-same-depth',
     moon: 'same-depth-star-plane-child-sharing-yaw-pitch-roll-and-parallax',
     moonlight: 'cool-hemisphere-and-directional-track-atmosphere-plus-static-blue-hill-fill',
