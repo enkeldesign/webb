@@ -7,13 +7,13 @@ const LIGHT_NAME = 'TURN shared warm spotlight headlight r560';
 const LEGACY_MIDNIGHT_RIG_NAME = 'TURN Midnight City player light rig';
 const HEADLIGHT_COLOR = 0xffe3b3;
 
-// One configuration for both night tracks. This is deliberately a little more
-// assertive than the first MOUNTAIN experiment while keeping the same cheap
-// contract: one real light, finite range, no shadow map and no beam geometry.
+// One configuration for both night tracks. The longer 200 m reach is tuned for
+// TURN's racing speeds, while the performance contract remains deliberately
+// small: one real light, no shadow map, no beam geometry and no extra loop.
 export const NIGHT_SPOTLIGHT_CONFIG = Object.freeze({
   color: HEADLIGHT_COLOR,
-  intensity: 840,
-  distance: 66,
+  intensity: 2200,
+  distance: 200,
   angleDegrees: 14,
   penumbra: 0.78,
   decay: 2,
