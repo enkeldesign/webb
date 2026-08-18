@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-const REVISION = 'r7-world-yaw-uv-raised-moon-direction-fix';
+const REVISION = 'r7-world-yaw-uv-raised-moon-sky-lock';
 const SKY_NAME = 'Mountain star field skydome r6';
 const MOON_NAME = 'Mountain full moon sprite r6';
 const SKY_DISTANCE = 840;
@@ -27,7 +27,7 @@ function shortestAngle(from, to) {
 
 function worldLockSky(sky) {
   const texture = sky.material?.map;
-  if (!texture) return false;
+  if (!texture) return null;
 
   // Keep the generated star field on the flat backdrop that looked good on the
   // phone. The earlier sphere/cylinder experiments correctly solved yaw but
@@ -49,7 +49,12 @@ function worldLockSky(sky) {
   sky.renderOrder = -100;
 
   const forward = new THREE.Vector3();
-  let visualHeading = null;
+  const motion = {
+    heading: null,
+    visualHeading: null,
+    positionU: 0,
+    pitchV: 0
+  };
 
   sky.onBeforeRender = (_renderer, _scene, camera) => {
     camera.getWorldDirection(forward);
@@ -66,19 +71,21 @@ function worldLockSky(sky) {
     // to camera yaw, exactly as a fixed distant sky should appear when the car
     // turns. A small catch-up lag gives the requested gentle parallax drag.
     const heading = Math.atan2(forward.x, forward.z);
-    if (visualHeading === null) visualHeading = heading;
-    visualHeading += shortestAngle(visualHeading, heading) * SKY_YAW_CATCHUP;
+    if (motion.visualHeading === null) motion.visualHeading = heading;
+    motion.visualHeading += shortestAngle(motion.visualHeading, heading) * SKY_YAW_CATCHUP;
+    motion.heading = heading;
 
     const verticalFov = THREE.MathUtils.degToRad(camera.fov);
     const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * camera.aspect);
     const visibleU = Math.max(0.01, horizontalFov / TAU * SKY_HORIZONTAL_TILES);
     const baseU = 0.5 - visibleU * 0.5;
-    const yawU = -visualHeading / TAU * SKY_HORIZONTAL_TILES;
-    const positionU = (camera.position.x - camera.position.z) * SKY_POSITION_PARALLAX;
+    const yawU = -motion.visualHeading / TAU * SKY_HORIZONTAL_TILES;
+    motion.positionU = (camera.position.x - camera.position.z) * SKY_POSITION_PARALLAX;
+    motion.pitchV = forward.y * SKY_PITCH_PARALLAX;
     texture.repeat.set(visibleU, 1);
     texture.offset.set(
-      baseU + yawU + positionU,
-      forward.y * SKY_PITCH_PARALLAX
+      baseU + yawU + motion.positionU,
+      motion.pitchV
     );
 
     // Cover the camera frustum without stretching the texture around geometry.
@@ -92,16 +99,39 @@ function worldLockSky(sky) {
   sky.userData.turnMountainSkyLock = 'world-yaw-via-inverse-uv-with-world-up-roll-lock';
   sky.userData.turnMountainSkyHorizontalTiles = SKY_HORIZONTAL_TILES;
   sky.userData.turnMountainSkyYawCatchup = SKY_YAW_CATCHUP;
-  return true;
+  return motion;
 }
 
-function repositionMoon(moon) {
+function repositionMoon(moon, skyMotion) {
   if (!moon) return false;
+
+  const forward = new THREE.Vector3();
+  const visualDirection = new THREE.Vector3();
+  const yaw = new THREE.Quaternion();
+  const worldUp = new THREE.Vector3(0, 1, 0);
+
   moon.onBeforeRender = (_renderer, _scene, camera) => {
-    moon.position.copy(camera.position).addScaledVector(MOON_DIRECTION, MOON_DISTANCE);
+    camera.getWorldDirection(forward);
+    const heading = Math.atan2(forward.x, forward.z);
+    const visualHeading = Number.isFinite(skyMotion?.visualHeading)
+      ? skyMotion.visualHeading
+      : heading;
+
+    // The star texture deliberately trails the true camera heading. The moon
+    // used to stay at its exact world azimuth, so it slid across that lagging
+    // star field and looked detached. Apply the same effective sky heading to
+    // the moon: it remains a separate depth-tested sprite (so mountains can
+    // occult it), but now drags together with the stars as one celestial layer.
+    const positionHeading = (Number(skyMotion?.positionU) || 0) * TAU / SKY_HORIZONTAL_TILES;
+    const effectiveSkyHeading = visualHeading - positionHeading;
+    const moonYawCompensation = shortestAngle(effectiveSkyHeading, heading);
+    yaw.setFromAxisAngle(worldUp, moonYawCompensation);
+    visualDirection.copy(MOON_DIRECTION).applyQuaternion(yaw).normalize();
+
+    moon.position.copy(camera.position).addScaledVector(visualDirection, MOON_DISTANCE);
     moon.updateMatrixWorld(true);
   };
-  moon.userData.turnMountainMoonComposition = 'raised-world-moon-for-race-and-lower-intro-camera';
+  moon.userData.turnMountainMoonComposition = 'raised-world-moon-linked-to-star-field-yaw-parallax';
   return true;
 }
 
@@ -110,8 +140,9 @@ export function installMountainR7SkyFix(world) {
 
   const sky = world.getObjectByName(SKY_NAME);
   const moon = world.getObjectByName(MOON_NAME);
-  const horizonLockedSky = Boolean(sky && worldLockSky(sky));
-  const moonRepositioned = repositionMoon(moon);
+  const skyMotion = sky ? worldLockSky(sky) : null;
+  const horizonLockedSky = Boolean(skyMotion);
+  const moonRepositioned = repositionMoon(moon, skyMotion);
 
   world.userData.turnMountainR7Sky = Object.freeze({
     revision: REVISION,
@@ -122,6 +153,7 @@ export function installMountainR7SkyFix(world) {
     skyHorizontalTiles: SKY_HORIZONTAL_TILES,
     skyYawCatchup: SKY_YAW_CATCHUP,
     moonRepositioned,
+    moonSkyLock: 'shared-effective-yaw-and-position-parallax',
     moonDirection: Object.freeze(MOON_DIRECTION.toArray()),
     moonElevationDegrees: 17,
     moonIntroTarget: Object.freeze({ x: 0.15, y: 0.18 }),
