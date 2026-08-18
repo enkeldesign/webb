@@ -5,7 +5,7 @@ import { installMountainR3Polish } from './mountain-world-r3-polish.js';
 import { installMountainR4VisualPolish } from './mountain-world-r4-visual-polish.js';
 import { installMountainR4WaterfallNotch } from './mountain-world-r4-waterfall-notch.js';
 import { installMountainR4DriverFacingWaterfall } from './mountain-world-r4-waterfall-face.js';
-import { installMountainR4CabinFix } from './mountain-world-r4-cabin-fix.js';
+import { installMountainR5SuburbanVillage } from './mountain-world-r5-suburban-village.js';
 
 export function installMountainWorld({ scene, samples, trackWidth = 27, runtime } = {}) {
   if (!scene || !Array.isArray(samples) || samples.length < 3) {
@@ -23,18 +23,19 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
     .then(() => installMountainR4VisualPolish(world, samples, trackWidth, terrainContext))
     .then(() => installMountainR4WaterfallNotch(world))
     .then(() => installMountainR4DriverFacingWaterfall(world, samples))
-    .then(() => installMountainR4CabinFix(world, samples, trackWidth, terrainContext))
+    .then(() => installMountainR5SuburbanVillage(world, samples, trackWidth, terrainContext))
     .then(() => world);
   world.userData.turnMountainTerrainHeightAt = terrainContext.terrainHeightAt;
   world.userData.turnMountainArtDirection = Object.freeze({
     version: 'r3',
-    visualPolish: 'r4-village-waterfall-landmarks-native-cabins',
+    visualPolish: 'r5-suburban-village-plus-r4-waterfall-landmarks',
     ground: 'continuous-snow-and-granite-terrain-body',
     roadEdge: 'white-with-black-outer-contour',
     roadbed: 'opaque-and-terrain-supported',
     retainingFoundation: '4.6m-granite-skirt',
     routeClearanceProtected: true,
-    assetVillage: 'Kenney-Holiday-native-pivot-cabins-and-Fantasy-Town-market',
+    assetVillage: 'Kenney-City-Kit-Suburban-complete-buildings-A-G-M-N-U',
+    villagePalette: 'dark-brown-walls-and-snow-white-roofs',
     villageSquare: 'winter-market-no-fountain',
     streetlights: 'warm-static-halos',
     waterfallCliff: 'terrain-plus-Kenney-Nature-rock-shoulders-open-at-centre',

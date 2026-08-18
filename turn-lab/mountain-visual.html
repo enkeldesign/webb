@@ -18,8 +18,8 @@
   <script type="module">
     import * as THREE from 'three';
     import { createTrackRuntime } from '/turn/tracks/catalog.js';
-    import { installMountainWorld } from '/turn/tracks/mountain-world-r3.js?visual=4';
-    import { createMountainTerrainSampler, createMountainRiverSamples, offsetPoint, MOUNTAIN_R3 } from '/turn/tracks/mountain-world-r3-terrain.js?visual=4';
+    import { installMountainWorld } from '/turn/tracks/mountain-world-r3.js?visual=5';
+    import { createMountainTerrainSampler, createMountainRiverSamples, offsetPoint, MOUNTAIN_R3 } from '/turn/tracks/mountain-world-r3-terrain.js?visual=5';
 
     const VIEWS = Object.freeze({
       aerial: { position:[330,235,-345], target:[5,22,-10], fov:49 },
@@ -125,12 +125,14 @@
     const diagnostics = world.userData.turnMountainGroundingDiagnostics || [];
     const maxGroundingDelta = diagnostics.reduce((max, entry) => Math.max(max, Math.abs(entry.delta)), 0);
     const r4 = world.userData.turnMountainR4VisualPolish || {};
+    const r5 = world.userData.turnMountainR5SuburbanVillage || {};
 
     globalThis.__mountainVisualMetrics = Object.freeze({
       viewName,
       assetsReady: world.userData.turnMountainAssetsReady === true,
       assetErrors: [...(world.userData.turnMountainAssetErrors || [])],
       r4AssetErrors: [...(world.userData.turnMountainR4AssetErrors || [])],
+      r5AssetErrors: [...(world.userData.turnMountainR5AssetErrors || [])],
       maximumRoadSupportGap,
       maximumEdgeSupportGap,
       maximumRenderedRoadSupportGap,
@@ -146,6 +148,7 @@
       roadbedUndersides: count('closed roadbed underside r3'),
       cabins: count('Holiday cabin prefab r3'),
       assembledCabins: count('assembled r4'),
+      suburbanHouses: count('Mountain Kenney Suburban house r5'),
       marketStalls: count('Fantasy market stall'),
       winterMarketAssets: count('winter market'),
       fountains: count('Fantasy fountain r3'),
@@ -162,7 +165,11 @@
       windmills: names.filter((name) => /windmill/i.test(name)).length,
       r4CabinsReported: Number(r4.cabins || 0),
       r4StreetlightsReported: Number(r4.streetlights || 0),
-      r4MarketAssetsReported: Number(r4.marketAssets || 0)
+      r4MarketAssetsReported: Number(r4.marketAssets || 0),
+      r5SuburbanReported: Number(r5.placed || 0),
+      r5RemovedCabins: Number(r5.removedAssembledCabins || 0),
+      r5PaletteMode: String(r5.paletteMode || ''),
+      r5RequestedTypes: [...(r5.requestedTypes || [])]
     });
 
     renderer.render(scene,camera);
