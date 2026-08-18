@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { signalSecretAchievement } from '../achievements/secret-events.js?revision=r157-hidden-achievements';
 import { installMidnightCityWorld as installMidnightCityWorldR7 } from './midnight-city-world-r7.js?base=20260801-r7';
-import { installNightPlayerSpotlight } from './night-player-spotlight-r560.js';
+import { installNightPlayerSpotlight } from './night-player-spotlight-r560.js?revision=r561-200m';
 
 const LILYA_TEXTURE_URL = new URL('../LILYA.PNG', import.meta.url).href;
 
@@ -40,12 +40,10 @@ export function installMidnightCityWorld(options) {
     hiddenLilyaDiscoveryHoldMs: LILYA_DISCOVERY_HOLD_MS,
     hiddenLilyaMipmaps: false,
     hiddenLilyaFitsFacade: true,
-    gameplayGeometryUnchanged: true,
     playerVisibilityLight: playerSpotlight
       ? 'shared-warm-shadowless-spotlight-identical-to-mountain'
-      : 'unavailable-without-player-car',
-    sharedNightSpotlight: Boolean(playerSpotlight),
-    hiddenLilyaAddsDynamicLights: false,
+      : 'none-when-no-player-car-is-present',
+    gameplayGeometryUnchanged: true,
     noIndependentAnimationLoop: true
   });
 
