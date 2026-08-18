@@ -1,4 +1,4 @@
-import { installNightPlayerSpotlight } from './night-player-spotlight-r560.js?revision=r563-lower-target';
+import { installNightPlayerSpotlight } from './night-player-spotlight-r560.js?revision=r174-night-headlight-tune';
 
 // Keep the MOUNTAIN-facing API stable while using the exact same physical
 // spotlight rig and configuration as MIDNIGHT CITY.
