@@ -29,8 +29,10 @@ assert.match(mountainSkySource, /const SKY_YAW_CATCHUP = 0\.14/,
   'MOUNTAIN sky should retain a small heading drag instead of snapping');
 assert.match(mountainSkySource, /const heading = Math\.atan2\(forward\.x, forward\.z\)/,
   'MOUNTAIN sky UVs must derive from world heading');
-assert.match(mountainSkySource, /const yawU = visualHeading \/ TAU \* SKY_HORIZONTAL_TILES/,
-  'MOUNTAIN star texture must rotate through UV space with world yaw');
+assert.match(mountainSkySource, /const yawU = -visualHeading \/ TAU \* SKY_HORIZONTAL_TILES/,
+  'MOUNTAIN star texture must move opposite camera yaw so the distant sky appears world-fixed');
+assert.doesNotMatch(mountainSkySource, /const yawU = visualHeading \/ TAU \* SKY_HORIZONTAL_TILES/,
+  'MOUNTAIN sky must not rotate in the same direction as camera yaw');
 assert.match(mountainSkySource, /sky\.up\.set\(0, 1, 0\)/,
   'MOUNTAIN stars must keep world-up so they roll with the rendered horizon');
 assert.match(mountainSkySource, /sky\.lookAt\(camera\.position\)/,
@@ -139,7 +141,7 @@ bodyClasses.add('turn-track-intro');
 scene.onBeforeRender();
 assert.equal(calls.some((call) => call[0] === 'position'), false, 'Tracks without a showcase preset keep their established framing');
 
-console.log('TURN Midnight City and Mountain track intros use deliberate cinematic showcase angles with a world-yaw-locked MOUNTAIN sky and raised moon.');
+console.log('TURN Midnight City and Mountain track intros use deliberate cinematic showcase angles with an inverse-yaw world-locked MOUNTAIN sky and raised moon.');
 
 function projectDirectionToScreen({ direction, position, target, fov, aspect }) {
   const forward = normalize(subtract(target, position));

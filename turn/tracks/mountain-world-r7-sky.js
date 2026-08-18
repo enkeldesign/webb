@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-const REVISION = 'r7-world-yaw-uv-raised-moon';
+const REVISION = 'r7-world-yaw-uv-raised-moon-direction-fix';
 const SKY_NAME = 'Mountain star field skydome r6';
 const MOON_NAME = 'Mountain full moon sprite r6';
 const SKY_DISTANCE = 840;
@@ -62,10 +62,9 @@ function worldLockSky(sky) {
     sky.lookAt(camera.position);
 
     // Four copies of the compact star field represent one 360-degree turn.
-    // Heading therefore moves the sampled UV region by exactly four texture
-    // widths over a full rotation: the stars are effectively fixed to world Y
-    // instead of to the phone screen. A small catch-up lag gives the distant
-    // sky the requested gentle drag while still settling on the world heading.
+    // Heading therefore moves the sampled UV region in the opposite direction
+    // to camera yaw, exactly as a fixed distant sky should appear when the car
+    // turns. A small catch-up lag gives the requested gentle parallax drag.
     const heading = Math.atan2(forward.x, forward.z);
     if (visualHeading === null) visualHeading = heading;
     visualHeading += shortestAngle(visualHeading, heading) * SKY_YAW_CATCHUP;
@@ -74,7 +73,7 @@ function worldLockSky(sky) {
     const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * camera.aspect);
     const visibleU = Math.max(0.01, horizontalFov / TAU * SKY_HORIZONTAL_TILES);
     const baseU = 0.5 - visibleU * 0.5;
-    const yawU = visualHeading / TAU * SKY_HORIZONTAL_TILES;
+    const yawU = -visualHeading / TAU * SKY_HORIZONTAL_TILES;
     const positionU = (camera.position.x - camera.position.z) * SKY_POSITION_PARALLAX;
     texture.repeat.set(visibleU, 1);
     texture.offset.set(
@@ -90,7 +89,7 @@ function worldLockSky(sky) {
     sky.updateMatrixWorld(true);
   };
 
-  sky.userData.turnMountainSkyLock = 'world-yaw-via-uv-with-world-up-roll-lock';
+  sky.userData.turnMountainSkyLock = 'world-yaw-via-inverse-uv-with-world-up-roll-lock';
   sky.userData.turnMountainSkyHorizontalTiles = SKY_HORIZONTAL_TILES;
   sky.userData.turnMountainSkyYawCatchup = SKY_YAW_CATCHUP;
   return true;
@@ -117,7 +116,7 @@ export function installMountainR7SkyFix(world) {
   world.userData.turnMountainR7Sky = Object.freeze({
     revision: REVISION,
     horizonLockedSky,
-    skyYawLock: 'world-space-y-axis-via-four-tile-uv-rotation',
+    skyYawLock: 'world-space-y-axis-via-inverse-four-tile-uv-rotation',
     skyGeometry: 'camera-facing-flat-backdrop',
     skyParallax: 'yaw-catchup-plus-subtle-position-and-pitch-drag',
     skyHorizontalTiles: SKY_HORIZONTAL_TILES,
