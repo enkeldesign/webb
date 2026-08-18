@@ -67,14 +67,14 @@ const [
 
 assert.equal(ACHIEVEMENT_STORAGE_KEY, 'turn-achievements-v1');
 assert.equal(CHALLENGE_PROGRESS_STORAGE_KEY, 'turn-achievement-challenges-v1');
-assert.equal(ACHIEVEMENTS.length, 28,
-  'TURN should ship twenty-eight achievements including four hidden discoveries');
+assert.equal(ACHIEVEMENTS.length, 29,
+  'TURN should ship twenty-nine achievements including MOUNTAIN SPRINT and four hidden discoveries');
 assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 10,
   'Getting Started should remain a focused ten-achievement collection');
-assert.equal(totalAvailableTrophies(), 1700);
+assert.equal(totalAvailableTrophies(), 1725);
 assert.equal(
   ACHIEVEMENTS.reduce((total, achievement) => total + achievement.trophies, 0),
-  1700
+  1725
 );
 assert.ok(ACHIEVEMENTS.every((achievement) => Number.isFinite(achievement.trophies)));
 assert.ok(ACHIEVEMENTS.every((achievement) => !Object.hasOwn(achievement, 'points')));
@@ -108,9 +108,11 @@ assert.equal(byId('save-bella')?.lockedDescription, '');
 assert.equal(byId('satans-sedan')?.lockedDescription, undefined,
   'Satan’s Sedan may retain the generic hidden clue treatment');
 
-assert.equal(TIME_TRIALS.length, 5);
-assert.equal(TIME_TRIAL_ACHIEVEMENT_IDS.length, 5);
+assert.equal(TIME_TRIALS.length, 6);
+assert.equal(TIME_TRIAL_ACHIEVEMENT_IDS.length, 6);
 assert.equal(TIME_TRIAL_MASTER_ID, 'faster-than-the-dev');
+assert.equal(byId('faster-than-the-dev')?.progressMax, 6,
+  'FASTER THAN THE DEV must require all six developer targets');
 assert.deepEqual(
   TIME_TRIALS.map(({ trackId, targetSeconds }) => [trackId, targetSeconds]),
   [
@@ -118,7 +120,8 @@ assert.deepEqual(
     ['airport', 17],
     ['cliffside', 16],
     ['harbor', 24],
-    ['midnight-city', 53]
+    ['midnight-city', 53],
+    ['mountain', 27]
   ]
 );
 for (const trial of TIME_TRIALS) {
@@ -129,6 +132,8 @@ for (const trial of TIME_TRIALS) {
 }
 assert.equal(completedAllTimeTrials(() => true), true);
 assert.equal(completedAllTimeTrials((id) => id !== 'harbor-sprint'), false);
+assert.equal(completedAllTimeTrials((id) => id !== 'mountain-sprint'), false,
+  'FASTER THAN THE DEV must remain locked until MOUNTAIN SPRINT is complete');
 assert.equal(completedAllTimeTrials((id) => id !== 'harbor-sprint', 'harbor-sprint'), true);
 
 assert.deepEqual(CLEAN_LAP_TARGETS, {
@@ -234,6 +239,7 @@ assert.match(timeTrialSource, /targetSeconds: 17/);
 assert.match(timeTrialSource, /targetSeconds: 16/);
 assert.match(timeTrialSource, /targetSeconds: 24/);
 assert.match(timeTrialSource, /targetSeconds: 53/);
+assert.match(timeTrialSource, /targetSeconds: 27/);
 assert.match(timeTrialSource, /seconds >= trial\.targetSeconds/);
 
 assert.match(challengeSource, /SAMPLE_INTERVAL_MS = 50/);
