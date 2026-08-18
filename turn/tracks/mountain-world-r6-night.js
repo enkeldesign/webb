@@ -4,6 +4,7 @@ const REVISION = 'r6-night-treatment';
 const SKY_TEXTURE_URL = new URL('../assets/mountain/mountain-night-sky.jpg', import.meta.url).href;
 const MOON_TEXTURE_URL = new URL('../assets/mountain/mountain-moon.png', import.meta.url).href;
 const WARM_LIGHT = 0xffd27a;
+const STREET_POOL_LIGHT = 0xffb000;
 const WINDOW_LIGHT = 0xffc766;
 const MOON_BLUE = 0xaed3ff;
 const STREETLIGHT_PREFIX = 'Mountain Kenney Holiday lit streetlight r4';
@@ -16,7 +17,7 @@ const MOON_SIZE = 174;
 // lands at roughly 23% from the left and 19% from the top, matching the night
 // art-direction mockup. Keeping this as a world-space direction makes the moon
 // behave like a distant celestial object while the camera moves around the lap.
-const MOON_DIRECTION = new THREE.Vector3(-0.286712, -0.135528, 0.948382).normalize();
+const MOON_DIRECTION = new THREE.Vector3(-0.353323, -0.140080, 0.924954).normalize();
 
 function configureColorTexture(texture, { mipmaps = true } = {}) {
   texture.colorSpace = THREE.SRGBColorSpace;
@@ -33,8 +34,13 @@ async function loadNightTexture(url, options) {
 }
 
 function installStarSky(world, texture) {
+  // The deliberately tiny 512x256 source is tiled at its native 2:1 aspect
+  // rather than stretched once around all 360 degrees. This keeps individual
+  // stars crisp enough on mobile while retaining the very small download.
   texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(4, 2);
+  texture.offset.set(0.11, 0.07);
   texture.needsUpdate = true;
 
   const sky = new THREE.Mesh(
@@ -95,9 +101,9 @@ function installStreetlightPoolsAndFill(world, terrainHeightAt) {
 
   const poolGeometry = new THREE.CircleGeometry(11.5, 24);
   const poolMaterial = new THREE.MeshBasicMaterial({
-    color: WARM_LIGHT,
+    color: STREET_POOL_LIGHT,
     transparent: true,
-    opacity: 0.13,
+    opacity: 0.18,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
     side: THREE.DoubleSide,
