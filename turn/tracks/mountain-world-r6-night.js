@@ -9,7 +9,8 @@ const WINDOW_LIGHT = 0xffc766;
 const MOON_BLUE = 0xaed3ff;
 const STREETLIGHT_PREFIX = 'Mountain Kenney Holiday lit streetlight r4';
 const HOUSE_PREFIX = 'Mountain Kenney Suburban house r5';
-const SKY_RADIUS = 840;
+const SKY_DISTANCE = 840;
+const SKY_IMAGE_ASPECT = 2;
 const MOON_DISTANCE = 810;
 const MOON_SIZE = 174;
 
@@ -34,30 +35,40 @@ async function loadNightTexture(url, options) {
 }
 
 function installStarSky(world, texture) {
-  // The deliberately tiny 512x256 source is tiled at its native 2:1 aspect
-  // rather than stretched once around all 360 degrees. This keeps individual
-  // stars crisp enough on mobile while retaining the very small download.
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(4, 2);
-  texture.offset.set(0.11, 0.07);
+  // The generated asset is intentionally a tiny flat 2:1 star field rather
+  // than a large equirectangular panorama. Keep it crisp by using it as a
+  // distant camera-facing backdrop with cover sizing, instead of magnifying it
+  // around an entire 360-degree sphere.
+  texture.wrapS = THREE.ClampToEdgeWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
   texture.needsUpdate = true;
 
   const sky = new THREE.Mesh(
-    new THREE.SphereGeometry(SKY_RADIUS, 40, 20),
+    new THREE.PlaneGeometry(1, 1),
     new THREE.MeshBasicMaterial({
       map: texture,
-      side: THREE.BackSide,
+      side: THREE.DoubleSide,
       depthWrite: false,
+      depthTest: true,
       fog: false,
       toneMapped: false
     })
   );
+  // Keep the established diagnostic name even though r6 now uses a flat
+  // camera-centred backdrop rather than stretching the tiny texture as a dome.
   sky.name = 'Mountain star field skydome r6';
   sky.frustumCulled = false;
   sky.renderOrder = -100;
+  const forward = new THREE.Vector3();
   sky.onBeforeRender = (_renderer, _scene, camera) => {
-    sky.position.copy(camera.position);
+    camera.getWorldDirection(forward);
+    sky.position.copy(camera.position).addScaledVector(forward, SKY_DISTANCE);
+    sky.quaternion.copy(camera.quaternion);
+
+    const visibleHeight = 2 * SKY_DISTANCE * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
+    const visibleWidth = visibleHeight * camera.aspect;
+    const coverHeight = Math.max(visibleHeight, visibleWidth / SKY_IMAGE_ASPECT) * 1.03;
+    sky.scale.set(coverHeight * SKY_IMAGE_ASPECT, coverHeight, 1);
     sky.updateMatrixWorld(true);
   };
   world.add(sky);
