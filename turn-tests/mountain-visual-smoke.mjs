@@ -47,16 +47,25 @@ assert.equal(browserErrors.length, 0, `Browser-rendered MOUNTAIN produced errors
 assert.equal(metrics.assetsReady, true, 'MOUNTAIN Kenney/Nature assets must finish loading before visual capture');
 assert.deepEqual(metrics.assetErrors, [], 'MOUNTAIN r3 asset loaders must not hide failed GLBs/textures');
 assert.deepEqual(metrics.r4AssetErrors, [], 'MOUNTAIN r4 village polish assets must load without hidden failures');
+assert.deepEqual(metrics.r5AssetErrors, [], 'MOUNTAIN r5 Suburban houses and recolored palette must load without hidden failures');
 assert.ok(metrics.terrainBodies >= 1, 'MOUNTAIN needs a continuous terrain body beneath the road');
 assert.ok(metrics.roadbedWalls >= 2, 'Both road edges need opaque roadbed side walls');
 assert.ok(metrics.deepFoundations >= 2, 'Both road edges need deep retaining foundations for close stacked hairpins');
 assert.ok(metrics.roadbedUndersides >= 1, 'The elevated road must have a closed underside');
 assert.equal(metrics.windmills, 0, 'A loose Fantasy Town windmill rotor must not return');
 
-assert.ok(metrics.assembledCabins >= 6,
-  `Expected a substantial village of correctly assembled Holiday cabins, got ${metrics.assembledCabins}`);
-assert.equal(metrics.assembledCabins, metrics.r4CabinsReported,
-  'Visual scene count and r4 cabin placement diagnostics must agree');
+assert.equal(metrics.assembledCabins, 0,
+  'The final MOUNTAIN village must not expose hand-assembled Holiday cabins');
+assert.ok(metrics.suburbanHouses >= 8,
+  `Expected a substantial village of complete Kenney City Kit Suburban houses, got ${metrics.suburbanHouses}`);
+assert.equal(metrics.suburbanHouses, metrics.r5SuburbanReported,
+  'Visual scene count and r5 Suburban placement diagnostics must agree');
+assert.deepEqual(metrics.r5RequestedTypes, ['a', 'g', 'm', 'n', 'u'],
+  'MOUNTAIN must use the requested A/G/M/N/U City Kit Suburban variants');
+assert.equal(metrics.r5PaletteMode, 'mountain-brown-snow',
+  'Suburban houses should use the MOUNTAIN dark-brown wall / snow-white roof palette');
+assert.ok(metrics.r5RemovedCabins >= 1,
+  'The Suburban pass must actively remove the old assembled cabin layer');
 assert.equal(metrics.fountains, 0, 'The oversized fountain must be removed from the finished village');
 assert.ok(metrics.winterMarketAssets >= 5,
   `The fountain replacement should read as a winter market square, got ${metrics.winterMarketAssets} assets`);
