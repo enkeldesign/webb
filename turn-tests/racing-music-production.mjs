@@ -63,7 +63,7 @@ assert.match(trackerIndex, /tracker\.js\?revision=r196-song-recovery/,
 
 // Creative score files are intentionally user-editable. Cache-bust their direct imports whenever
 // the checked-in scores change so installed Safari PWAs do not keep stale song modules.
-for (const songFile of ['menu-theme', 'countryside', 'airport', 'cliffside', 'harbor', 'midnight-city']) {
+for (const songFile of ['menu-theme', 'countryside', 'airport', 'cliffside', 'harbor', 'midnight-city', 'mountain']) {
   assert.match(songbookSource, new RegExp(`${songFile}\\.js\\?revision=r197-audio-mix`),
     `${songFile} must use the current user-score cache revision`);
 }
@@ -71,7 +71,7 @@ for (const songFile of ['menu-theme', 'countryside', 'airport', 'cliffside', 'ha
 const expectedTrackIds = ['countryside', 'airport', 'cliffside', 'harbor', 'midnight-city', 'mountain'];
 assert.equal(MENU_SONG.id, 'menu');
 assert.deepEqual(Object.keys(TRACK_SONGS), expectedTrackIds);
-assert.equal(SONGBOOK.length, 6, 'Songbook contains menu music plus five track songs');
+assert.equal(SONGBOOK.length, 7, 'Songbook contains menu music plus six track songs');
 
 const leadNames = new Set(Object.keys(LEAD_VOICES));
 const bassNames = new Set(Object.keys(BASS_VOICES));
