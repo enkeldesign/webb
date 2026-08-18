@@ -31,43 +31,44 @@ assert.match(mountainSkySource, /const heading = Math\.atan2\(forward\.x, forwar
   'MOUNTAIN sky UVs must derive from world heading');
 assert.match(mountainSkySource, /const yawU = -motion\.visualHeading \/ TAU \* SKY_HORIZONTAL_TILES/,
   'MOUNTAIN star texture must move opposite camera yaw so the distant sky appears world-fixed');
-assert.doesNotMatch(mountainSkySource, /const yawU = motion\.visualHeading \/ TAU \* SKY_HORIZONTAL_TILES/,
-  'MOUNTAIN sky must not rotate in the same direction as camera yaw');
 assert.match(mountainSkySource, /sky\.up\.set\(0, 1, 0\)/,
   'MOUNTAIN stars must keep world-up so they roll with the rendered horizon');
 assert.match(mountainSkySource, /sky\.lookAt\(camera\.position\)/,
   'The flat backdrop may face the camera only after world-up is applied');
 assert.doesNotMatch(mountainSkySource, /sky\.quaternion\.copy\(camera\.quaternion\)/,
   'MOUNTAIN stars must never become screen-locked by copying the full camera quaternion');
-assert.match(mountainSkySource, /function repositionMoon\(moon, skyMotion\)/,
-  'MOUNTAIN moon must consume the same motion state as the star field');
-assert.match(mountainSkySource, /const effectiveSkyHeading = visualHeading - positionHeading/,
-  'MOUNTAIN moon must use the star field effective heading including position parallax');
-assert.match(mountainSkySource, /const moonYawCompensation = shortestAngle\(effectiveSkyHeading, heading\)/,
-  'MOUNTAIN moon must compensate true camera yaw by the same lagged visual sky heading');
-assert.doesNotMatch(mountainSkySource, /addScaledVector\(MOON_DIRECTION, MOON_DISTANCE\)/,
-  'MOUNTAIN moon must not return to independent exact-world positioning that slides across the lagging sky');
 
-const moonVector = mountainSkySource.match(
-  /const MOON_DIRECTION = new THREE\.Vector3\(([-\d.]+), ([-\d.]+), ([-\d.]+)\)/
-);
-assert.ok(moonVector, 'MOUNTAIN sky fix must expose a fixed world-space moon direction');
-const moonDirection = moonVector.slice(1).map(Number);
-const moonElevation = Math.asin(moonDirection[1] / Math.hypot(...moonDirection)) * 180 / Math.PI;
-assert.ok(moonElevation >= 16.5,
-  `MOUNTAIN moon must clear the surrounding peaks during racing; elevation was ${moonElevation.toFixed(1)} degrees`);
-const introMoon = projectDirectionToScreen({
-  direction: moonDirection,
+assert.match(mountainSkySource, /const LEGACY_MOON_DISTANCE = 810/,
+  'The previous closer moon distance should remain explicit only for apparent-size compensation');
+assert.match(mountainSkySource, /const MOON_SKY_ANCHOR_U = 0\.580888/,
+  'MOUNTAIN moon needs a stable horizontal anchor in the star texture');
+assert.match(mountainSkySource, /const MOON_SKY_ANCHOR_V = 0\.783222/,
+  'MOUNTAIN moon needs a stable vertical anchor in the star texture');
+assert.match(mountainSkySource, /sky\.add\(moonLayer\)/,
+  'The moon must be a literal child of the star backdrop so it shares the same 3D transform and depth');
+assert.match(mountainSkySource, /const localU = \(anchorU - skyMotion\.offsetU\) \/ skyMotion\.visibleU/,
+  'The moon horizontal position must invert the exact star-field UV transform');
+assert.match(mountainSkySource, /const localV = MOON_SKY_ANCHOR_V - skyMotion\.offsetV/,
+  'The moon vertical position must invert the exact star-field pitch/parallax transform');
+assert.match(mountainSkySource, /moonLayer\.position\.set\(localU - 0\.5, localV - 0\.5, 0\)/,
+  'The moon must live on the exact same Z plane as the stars');
+assert.match(mountainSkySource, /apparentSize = legacySize \* SKY_DISTANCE \/ LEGACY_MOON_DISTANCE/,
+  'Moving the moon from 810 to the 840-unit star layer must preserve its apparent diameter');
+assert.doesNotMatch(mountainSkySource, /moon\.position\.copy\(camera\.position\)\.addScaledVector/,
+  'The moon must not return to an independently positioned camera-relative sprite');
+
+const introMoon = projectSkyAnchorToScreen({
+  anchorU: 0.580888,
+  anchorV: 0.783222,
   position: [300, 70, -340],
   target: [0, 110, 100],
   fov: 48,
   aspect: 1536 / 709
 });
-assert.ok(introMoon.depth > 0, 'MOUNTAIN moon must sit in front of the intro camera');
 assert.ok(Math.abs(introMoon.x - 0.15) < 0.015,
-  `MOUNTAIN intro moon should sit around 15% from the left, got ${(introMoon.x * 100).toFixed(1)}%`);
+  `MOUNTAIN intro moon should remain around 15% from the left, got ${(introMoon.x * 100).toFixed(1)}%`);
 assert.ok(Math.abs(introMoon.y - 0.18) < 0.015,
-  `MOUNTAIN intro moon should sit around 18% from the top, got ${(introMoon.y * 100).toFixed(1)}%`);
+  `MOUNTAIN intro moon should remain around 18% from the top, got ${(introMoon.y * 100).toFixed(1)}%`);
 
 const bodyClasses = new Set(['turn-track-intro']);
 const calls = [];
@@ -149,34 +150,40 @@ bodyClasses.add('turn-track-intro');
 scene.onBeforeRender();
 assert.equal(calls.some((call) => call[0] === 'position'), false, 'Tracks without a showcase preset keep their established framing');
 
-console.log('TURN Midnight City and Mountain track intros use deliberate cinematic showcase angles with an inverse-yaw world-locked MOUNTAIN sky and a moon linked to the same parallax motion.');
+console.log('TURN Midnight City and Mountain track intros use deliberate cinematic showcase angles with a single shared MOUNTAIN celestial layer.');
 
-function projectDirectionToScreen({ direction, position, target, fov, aspect }) {
+function projectSkyAnchorToScreen({ anchorU, anchorV, position, target, fov, aspect }) {
+  const skyDistance = 840;
+  const skyImageAspect = 2;
+  const horizontalTiles = 4;
   const forward = normalize(subtract(target, position));
-  const right = normalize(cross(forward, [0, 1, 0]));
-  const up = normalize(cross(right, forward));
-  const unitDirection = normalize(direction);
-  const depth = dot(unitDirection, forward);
-  const tangent = Math.tan((fov * Math.PI / 180) / 2);
-  const ndcX = dot(unitDirection, right) / (depth * tangent * aspect);
-  const ndcY = dot(unitDirection, up) / (depth * tangent);
-  return { x: (ndcX + 1) / 2, y: (1 - ndcY) / 2, depth };
+  const heading = Math.atan2(forward[0], forward[2]);
+  const verticalFov = fov * Math.PI / 180;
+  const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * aspect);
+  const visibleU = horizontalFov / (Math.PI * 2) * horizontalTiles;
+  const baseU = 0.5 - visibleU * 0.5;
+  const yawU = -heading / (Math.PI * 2) * horizontalTiles;
+  const positionU = (position[0] - position[2]) * 0.00004;
+  const offsetU = baseU + yawU + positionU;
+  const offsetV = forward[1] * 0.025;
+  const centreSampleU = offsetU + visibleU * 0.5;
+  const equivalentAnchorU = anchorU
+    + Math.round((centreSampleU - anchorU) / horizontalTiles) * horizontalTiles;
+  const localU = (equivalentAnchorU - offsetU) / visibleU;
+  const localV = anchorV - offsetV;
+
+  const visibleHeight = 2 * skyDistance * Math.tan(verticalFov / 2);
+  const visibleWidth = visibleHeight * aspect;
+  const coverHeight = Math.max(visibleHeight, visibleWidth / skyImageAspect) * 1.05;
+  const worldX = (localU - 0.5) * coverHeight * skyImageAspect;
+  const worldY = (localV - 0.5) * coverHeight;
+  const ndcX = worldX / (visibleWidth / 2);
+  const ndcY = worldY / (visibleHeight / 2);
+  return { x: (ndcX + 1) / 2, y: (1 - ndcY) / 2 };
 }
 
 function subtract(a, b) {
   return a.map((value, index) => value - b[index]);
-}
-
-function dot(a, b) {
-  return a.reduce((sum, value, index) => sum + value * b[index], 0);
-}
-
-function cross(a, b) {
-  return [
-    a[1] * b[2] - a[2] * b[1],
-    a[2] * b[0] - a[0] * b[2],
-    a[0] * b[1] - a[1] * b[0]
-  ];
 }
 
 function normalize(vector) {

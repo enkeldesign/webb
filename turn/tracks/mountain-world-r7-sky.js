@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-const REVISION = 'r7-world-yaw-uv-raised-moon-sky-lock';
+const REVISION = 'r7-world-yaw-uv-raised-moon-celestial-layer';
 const SKY_NAME = 'Mountain star field skydome r6';
 const MOON_NAME = 'Mountain full moon sprite r6';
 const SKY_DISTANCE = 840;
@@ -9,14 +9,17 @@ const SKY_HORIZONTAL_TILES = 4;
 const SKY_YAW_CATCHUP = 0.14;
 const SKY_POSITION_PARALLAX = 0.00004;
 const SKY_PITCH_PARALLAX = 0.025;
-const MOON_DISTANCE = 810;
+const LEGACY_MOON_DISTANCE = 810;
 const TAU = Math.PI * 2;
 
-// Keep the moon at the same azimuth as the established composition, but raise
-// it to 17 degrees above the world horizon. The previous ~5.6-degree elevation
-// looked right in the high loading camera but spent most of a lap hidden below
-// the surrounding peaks.
-const MOON_DIRECTION = new THREE.Vector3(0.003344, 0.292372, 0.956299).normalize();
+// The moon is now a literal part of the same visual celestial layer as the
+// stars. These are unwrapped star-texture coordinates calibrated against the
+// established MOUNTAIN intro frame (15% from the left, 18% from the top).
+// Keeping the anchor in texture space means every bit of sky motion — yaw drag,
+// position parallax, pitch drift and horizon roll — moves the moon identically.
+const MOON_SKY_ANCHOR_U = 0.580888;
+const MOON_SKY_ANCHOR_V = 0.783222;
+const MOON_WORLD_U_PERIOD = SKY_HORIZONTAL_TILES;
 
 function shortestAngle(from, to) {
   let delta = to - from;
@@ -53,7 +56,11 @@ function worldLockSky(sky) {
     heading: null,
     visualHeading: null,
     positionU: 0,
-    pitchV: 0
+    pitchV: 0,
+    visibleU: null,
+    offsetU: null,
+    offsetV: null,
+    coverHeight: null
   };
 
   sky.onBeforeRender = (_renderer, _scene, camera) => {
@@ -82,16 +89,17 @@ function worldLockSky(sky) {
     const yawU = -motion.visualHeading / TAU * SKY_HORIZONTAL_TILES;
     motion.positionU = (camera.position.x - camera.position.z) * SKY_POSITION_PARALLAX;
     motion.pitchV = forward.y * SKY_PITCH_PARALLAX;
+    motion.visibleU = visibleU;
+    motion.offsetU = baseU + yawU + motion.positionU;
+    motion.offsetV = motion.pitchV;
     texture.repeat.set(visibleU, 1);
-    texture.offset.set(
-      baseU + yawU + motion.positionU,
-      motion.pitchV
-    );
+    texture.offset.set(motion.offsetU, motion.offsetV);
 
     // Cover the camera frustum without stretching the texture around geometry.
     const visibleHeight = 2 * SKY_DISTANCE * Math.tan(verticalFov / 2);
     const visibleWidth = visibleHeight * camera.aspect;
     const coverHeight = Math.max(visibleHeight, visibleWidth / SKY_IMAGE_ASPECT) * 1.05;
+    motion.coverHeight = coverHeight;
     sky.scale.set(coverHeight * SKY_IMAGE_ASPECT, coverHeight, 1);
     sky.updateMatrixWorld(true);
   };
@@ -102,36 +110,69 @@ function worldLockSky(sky) {
   return motion;
 }
 
-function repositionMoon(moon, skyMotion) {
-  if (!moon) return false;
+function lockMoonToSkyLayer(moon, sky, skyMotion) {
+  const texture = moon?.material?.map;
+  if (!moon || !sky || !skyMotion || !texture) return false;
 
-  const forward = new THREE.Vector3();
-  const visualDirection = new THREE.Vector3();
-  const yaw = new THREE.Quaternion();
-  const worldUp = new THREE.Vector3(0, 1, 0);
-
-  moon.onBeforeRender = (_renderer, _scene, camera) => {
-    camera.getWorldDirection(forward);
-    const heading = Math.atan2(forward.x, forward.z);
-    const visualHeading = Number.isFinite(skyMotion?.visualHeading)
-      ? skyMotion.visualHeading
-      : heading;
-
-    // The star texture deliberately trails the true camera heading. The moon
-    // used to stay at its exact world azimuth, so it slid across that lagging
-    // star field and looked detached. Apply the same effective sky heading to
-    // the moon: it remains a separate depth-tested sprite (so mountains can
-    // occult it), but now drags together with the stars as one celestial layer.
-    const positionHeading = (Number(skyMotion?.positionU) || 0) * TAU / SKY_HORIZONTAL_TILES;
-    const effectiveSkyHeading = visualHeading - positionHeading;
-    const moonYawCompensation = shortestAngle(effectiveSkyHeading, heading);
-    yaw.setFromAxisAngle(worldUp, moonYawCompensation);
-    visualDirection.copy(MOON_DIRECTION).applyQuaternion(yaw).normalize();
-
-    moon.position.copy(camera.position).addScaledVector(visualDirection, MOON_DISTANCE);
-    moon.updateMatrixWorld(true);
+  // The r6 moon lived 810 units from the camera while the stars lived at 840.
+  // Move the moon onto the exact star plane and compensate its world size so
+  // its apparent diameter is unchanged at the slightly greater distance.
+  const legacySize = Math.max(Number(moon.scale?.x) || 0, Number(moon.scale?.y) || 0, 1);
+  const apparentSize = legacySize * SKY_DISTANCE / LEGACY_MOON_DISTANCE;
+  const moonMaterial = new THREE.MeshBasicMaterial({
+    map: texture,
+    color: moon.material?.color?.clone?.() || new THREE.Color(0xffffff),
+    transparent: true,
+    alphaTest: Number(moon.material?.alphaTest) || 0.025,
+    depthTest: true,
+    depthWrite: false,
+    fog: false,
+    toneMapped: false,
+    side: THREE.DoubleSide
+  });
+  const moonLayer = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), moonMaterial);
+  moonLayer.name = MOON_NAME;
+  moonLayer.frustumCulled = false;
+  moonLayer.renderOrder = -90;
+  moonLayer.userData = {
+    ...moon.userData,
+    turnMountainMoonComposition: 'same-depth-child-of-star-plane-with-shared-xyz-and-uv-motion'
   };
-  moon.userData.turnMountainMoonComposition = 'raised-world-moon-linked-to-star-field-yaw-parallax';
+
+  moon.parent?.remove(moon);
+  moon.material?.dispose?.();
+  sky.add(moonLayer);
+
+  moonLayer.onBeforeRender = () => {
+    if (!Number.isFinite(skyMotion.visibleU)
+      || !Number.isFinite(skyMotion.offsetU)
+      || !Number.isFinite(skyMotion.offsetV)) return;
+
+    // Pick the equivalent anchor from the current 360-degree cycle. This keeps
+    // one moon in the world rather than repeating it with every mirrored star
+    // tile, while still bringing it back to the same place after a full turn.
+    const centreSampleU = skyMotion.offsetU + skyMotion.visibleU * 0.5;
+    const anchorU = MOON_SKY_ANCHOR_U
+      + Math.round((centreSampleU - MOON_SKY_ANCHOR_U) / MOON_WORLD_U_PERIOD) * MOON_WORLD_U_PERIOD;
+
+    // Invert the exact texture transform used by the stars. The moon therefore
+    // sits on one fixed point of the star field in X and Y; because it is also a
+    // child of the sky plane, it inherits the same Z depth, pitch and roll.
+    const localU = (anchorU - skyMotion.offsetU) / skyMotion.visibleU;
+    const localV = MOON_SKY_ANCHOR_V - skyMotion.offsetV;
+    moonLayer.position.set(localU - 0.5, localV - 0.5, 0);
+
+    // Parent scaling makes the backdrop cover the viewport. Divide it back out
+    // so the moon keeps the same apparent diameter even though it now really is
+    // at SKY_DISTANCE instead of the old 810-unit sprite distance.
+    moonLayer.scale.set(
+      apparentSize / Math.max(Math.abs(sky.scale.x), 1e-6),
+      apparentSize / Math.max(Math.abs(sky.scale.y), 1e-6),
+      1
+    );
+    moonLayer.updateMatrixWorld(true);
+  };
+
   return true;
 }
 
@@ -142,7 +183,7 @@ export function installMountainR7SkyFix(world) {
   const moon = world.getObjectByName(MOON_NAME);
   const skyMotion = sky ? worldLockSky(sky) : null;
   const horizonLockedSky = Boolean(skyMotion);
-  const moonRepositioned = repositionMoon(moon, skyMotion);
+  const moonSkyLocked = lockMoonToSkyLayer(moon, sky, skyMotion);
 
   world.userData.turnMountainR7Sky = Object.freeze({
     revision: REVISION,
@@ -152,10 +193,10 @@ export function installMountainR7SkyFix(world) {
     skyParallax: 'yaw-catchup-plus-subtle-position-and-pitch-drag',
     skyHorizontalTiles: SKY_HORIZONTAL_TILES,
     skyYawCatchup: SKY_YAW_CATCHUP,
-    moonRepositioned,
-    moonSkyLock: 'shared-effective-yaw-and-position-parallax',
-    moonDirection: Object.freeze(MOON_DIRECTION.toArray()),
-    moonElevationDegrees: 17,
+    moonRepositioned: moonSkyLocked,
+    moonSkyLock: 'literal-star-plane-child-with-shared-xyz-transform-and-fixed-uv-anchor',
+    moonDistance: SKY_DISTANCE,
+    moonSkyAnchor: Object.freeze({ u: MOON_SKY_ANCHOR_U, v: MOON_SKY_ANCHOR_V }),
     moonIntroTarget: Object.freeze({ x: 0.15, y: 0.18 }),
     noIndependentAnimationLoop: true
   });
