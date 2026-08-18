@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-const REVISION = 'r7-world-yaw-uv-raised-moon-celestial-layer-cut-snap';
+const REVISION = 'r7-world-yaw-uv-raised-moon-celestial-layer-cut-snap-reduced-motion';
 const SKY_NAME = 'Mountain star field skydome r6';
 const MOON_NAME = 'Mountain full moon sprite r6';
 const SKY_DISTANCE = 840;
@@ -12,6 +12,7 @@ const SKY_PITCH_PARALLAX = 0.025;
 const SKY_CAMERA_CUT_DISTANCE = 48;
 const SKY_CAMERA_CUT_HEADING = Math.PI / 8;
 const LEGACY_MOON_DISTANCE = 810;
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const TAU = Math.PI * 2;
 
 // The moon is now a literal part of the same visual celestial layer as the
@@ -65,8 +66,30 @@ function worldLockSky(sky) {
     offsetU: null,
     offsetV: null,
     coverHeight: null,
-    cameraCutCount: 0
+    cameraCutCount: 0,
+    reducedMotion: false
   };
+
+  const reducedMotionMedia = globalThis.matchMedia?.(REDUCED_MOTION_QUERY) || null;
+  const applyReducedMotionPreference = () => {
+    motion.reducedMotion = reducedMotionMedia?.matches === true;
+
+    // Under prefers-reduced-motion, do not present the moving star field at
+    // all. The track's existing scene.background is the solid deep-blue night
+    // colour, so making this backdrop transparent reveals that colour while
+    // still letting its child moon render normally.
+    sky.material.transparent = motion.reducedMotion;
+    sky.material.opacity = motion.reducedMotion ? 0 : 1;
+    sky.material.needsUpdate = true;
+    sky.userData.turnMountainReducedMotionSky = motion.reducedMotion
+      ? 'solid-track-background-with-moon-only'
+      : 'animated-star-field';
+  };
+  applyReducedMotionPreference();
+  reducedMotionMedia?.addEventListener?.('change', applyReducedMotionPreference);
+  if (!reducedMotionMedia?.addEventListener) {
+    reducedMotionMedia?.addListener?.(applyReducedMotionPreference);
+  }
 
   sky.onBeforeRender = (_renderer, _scene, camera) => {
     camera.getWorldDirection(forward);
@@ -98,7 +121,10 @@ function worldLockSky(sky) {
     const cameraCut = hasPreviousCameraPose
       && (headingJump >= SKY_CAMERA_CUT_HEADING || positionJump >= SKY_CAMERA_CUT_DISTANCE);
 
-    if (motion.visualHeading === null || cameraCut) {
+    // Reduced-motion users keep the moon as a world landmark, but get none of
+    // the deliberate sky drag/parallax. Snap celestial heading directly to the
+    // camera heading and suppress the extra position/pitch drift.
+    if (motion.visualHeading === null || cameraCut || motion.reducedMotion) {
       motion.visualHeading = heading;
       if (cameraCut) motion.cameraCutCount += 1;
     } else {
@@ -113,8 +139,10 @@ function worldLockSky(sky) {
     const visibleU = Math.max(0.01, horizontalFov / TAU * SKY_HORIZONTAL_TILES);
     const baseU = 0.5 - visibleU * 0.5;
     const yawU = -motion.visualHeading / TAU * SKY_HORIZONTAL_TILES;
-    motion.positionU = (camera.position.x - camera.position.z) * SKY_POSITION_PARALLAX;
-    motion.pitchV = forward.y * SKY_PITCH_PARALLAX;
+    motion.positionU = motion.reducedMotion
+      ? 0
+      : (camera.position.x - camera.position.z) * SKY_POSITION_PARALLAX;
+    motion.pitchV = motion.reducedMotion ? 0 : forward.y * SKY_PITCH_PARALLAX;
     motion.visibleU = visibleU;
     motion.offsetU = baseU + yawU + motion.positionU;
     motion.offsetV = motion.pitchV;
@@ -134,6 +162,7 @@ function worldLockSky(sky) {
   sky.userData.turnMountainSkyHorizontalTiles = SKY_HORIZONTAL_TILES;
   sky.userData.turnMountainSkyYawCatchup = SKY_YAW_CATCHUP;
   sky.userData.turnMountainSkyCameraCuts = 'snap-large-camera-jumps-without-parallax-roll';
+  sky.userData.turnMountainReducedMotionPolicy = 'hide-star-field-show-solid-track-background-keep-moon';
   return motion;
 }
 
@@ -221,6 +250,7 @@ export function installMountainR7SkyFix(world) {
     skyCameraCuts: 'snap-large-camera-jumps-so-loading-cuts-are-not-animated',
     skyHorizontalTiles: SKY_HORIZONTAL_TILES,
     skyYawCatchup: SKY_YAW_CATCHUP,
+    reducedMotionSky: 'solid-track-background-with-moon-only-and-no-deliberate-sky-parallax',
     moonRepositioned: moonSkyLocked,
     moonSkyLock: 'literal-star-plane-child-with-shared-xyz-transform-and-fixed-uv-anchor',
     moonDistance: SKY_DISTANCE,
