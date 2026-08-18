@@ -48,6 +48,7 @@ assert.equal(metrics.assetsReady, true, 'MOUNTAIN Kenney/Nature assets must fini
 assert.deepEqual(metrics.assetErrors, [], 'MOUNTAIN r3 asset loaders must not hide failed GLBs/textures');
 assert.deepEqual(metrics.r4AssetErrors, [], 'MOUNTAIN r4 village polish assets must load without hidden failures');
 assert.deepEqual(metrics.r5AssetErrors, [], 'MOUNTAIN r5 Suburban houses and recolored palette must load without hidden failures');
+assert.deepEqual(metrics.r6AssetErrors, [], 'MOUNTAIN r6 star field and moon assets must load without hidden failures');
 assert.ok(metrics.terrainBodies >= 1, 'MOUNTAIN needs a continuous terrain body beneath the road');
 assert.ok(metrics.roadbedWalls >= 2, 'Both road edges need opaque roadbed side walls');
 assert.ok(metrics.deepFoundations >= 2, 'Both road edges need deep retaining foundations for close stacked hairpins');
@@ -79,6 +80,29 @@ assert.ok(metrics.distantLayeredRidges >= 8,
   `The horizon should have a second layer of integrated-snow mountains, got ${metrics.distantLayeredRidges}`);
 assert.ok(metrics.decorativeVillageAssets >= 8,
   'Village approaches need benches, carts, fences, sleds and authored Holiday trees');
+
+assert.equal(metrics.r6StarSky, true, 'MOUNTAIN night treatment must install the generated star field');
+assert.equal(metrics.r6Moon, true, 'MOUNTAIN night treatment must install the separate generated moon');
+assert.equal(metrics.starSkydomes, 1, 'MOUNTAIN should render exactly one camera-centred star skydome');
+assert.equal(metrics.moonSprites, 1, 'MOUNTAIN should render exactly one distant moon sprite');
+assert.equal(metrics.r6StreetLightPoolCount, metrics.litStreetlights,
+  'Every MOUNTAIN streetlight should receive a Midnight City-style warm ground pool');
+assert.equal(metrics.r6StreetLightPointLightCount, metrics.litStreetlights,
+  'Every MOUNTAIN streetlight should receive one short-range non-shadow light');
+assert.equal(metrics.nightStreetlightFills, metrics.litStreetlights,
+  'Scene point-light count must agree with the r6 night diagnostics');
+assert.equal(metrics.r6LitHouseCount, metrics.suburbanHouses,
+  'Every final Suburban house should participate in the night window treatment');
+assert.ok(metrics.r6WindowPanelCount >= metrics.r6LitHouseCount * 2,
+  `Every house needs multiple warm windows, got ${metrics.r6WindowPanelCount} panels for ${metrics.r6LitHouseCount} houses`);
+assert.equal(metrics.warmHouseWindowMeshes, 1,
+  'House window cores should remain one cheap instanced draw-call layer');
+assert.equal(metrics.warmHouseWindowHaloMeshes, 1,
+  'House window halos should remain one cheap instanced draw-call layer');
+assert.ok(metrics.r6HouseSpillLightCount >= 3,
+  `A few houses should cast real local warmth onto the snow, got ${metrics.r6HouseSpillLightCount}`);
+assert.ok(metrics.r6MoonlitWaterMaterials >= 1,
+  'The waterfall should receive a cool moonlit emissive treatment');
 
 assert.ok(metrics.marketStalls >= 2, `Expected the original village market stalls to remain, got ${metrics.marketStalls}`);
 assert.ok(metrics.waterfallCliffModules >= 4, 'The waterfall should retain four outer Kenney Nature cliff shoulders after opening the driver sightline');
