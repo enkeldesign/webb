@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'turn/tracks/mountain-*'
+      - 'turn/tracks/night-player-spotlight-*'
       - 'turn/assets/scenery/mountain/**'
       - 'turn-lab/mountain-visual.html'
       - 'turn-tests/mountain-visual-smoke.mjs'
@@ -16,6 +17,7 @@ on:
       - feature/mountain-track
     paths:
       - 'turn/tracks/mountain-*'
+      - 'turn/tracks/night-player-spotlight-*'
       - 'turn/assets/scenery/mountain/**'
       - 'turn-lab/mountain-visual.html'
       - 'turn-tests/mountain-visual-smoke.mjs'
@@ -38,7 +40,7 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Validate MOUNTAIN spotlight contract
+      - name: Validate shared night spotlight contract
         run: node turn-tests/mountain-spotlight-headlight-production.mjs
 
       - name: Install Playwright Chromium
