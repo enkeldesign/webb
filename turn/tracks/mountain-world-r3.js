@@ -13,6 +13,8 @@ const MOUNTAIN_VILLAGE_BENCHES = new Set([
   'Mountain village bench r4',
   'Mountain village overlook bench r4'
 ]);
+const MOUNTAIN_MOONLIGHT_FILL = 0x18314c;
+const MOUNTAIN_MOONLIGHT_FILL_INTENSITY = 0.16;
 
 function faceMountainVillageBenchesTowardTrack(world) {
   world.traverse((object) => {
@@ -21,6 +23,25 @@ function faceMountainVillageBenchesTowardTrack(world) {
     object.rotation.y += Math.PI;
     object.userData.turnMountainBenchFacesTrack = true;
   });
+}
+
+function addStaticMoonlitHillFill(world) {
+  let meshCount = 0;
+  world.traverse((object) => {
+    if (!object?.isMesh || !/^Mountain (continuous terrain body|integrated snowy (peak backdrop|ridge)) r3$/.test(object.name || '')) return;
+    const materials = Array.isArray(object.material) ? object.material : [object.material];
+    let changed = false;
+    for (const material of materials) {
+      if (!material?.isMeshStandardMaterial || !material.emissive) continue;
+      material.emissive.setHex(MOUNTAIN_MOONLIGHT_FILL);
+      material.emissiveIntensity = MOUNTAIN_MOONLIGHT_FILL_INTENSITY;
+      material.needsUpdate = true;
+      changed = true;
+    }
+    if (changed) meshCount += 1;
+  });
+  world.userData.turnMountainMoonlitHillMeshes = meshCount;
+  return meshCount;
 }
 
 export function installMountainWorld({ scene, samples, trackWidth = 27, runtime } = {}) {
@@ -44,8 +65,11 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
       faceMountainVillageBenchesTowardTrack(world);
       return installMountainR6Night(world, samples, trackWidth, terrainContext);
     })
-    .then(() => installMountainR7SkyFix(world))
-    .then(() => world);
+    .then(() => {
+      installMountainR7SkyFix(world);
+      addStaticMoonlitHillFill(world);
+      return world;
+    });
   world.userData.turnMountainTerrainHeightAt = terrainContext.terrainHeightAt;
   world.userData.turnMountainArtDirection = Object.freeze({
     version: 'r3',
@@ -62,7 +86,7 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
     skyBehavior: 'flat-star-backdrop-with-world-up-roll-lock-and-world-yaw-uv-lock-with-gentle-drag',
     celestialLayer: 'r7-reparents-the-r6-moon-onto-the-star-plane-at-the-same-depth',
     moon: 'same-depth-star-plane-child-sharing-yaw-pitch-roll-and-parallax',
-    moonlight: 'cool-hemisphere-and-directional-track-atmosphere',
+    moonlight: 'cool-hemisphere-and-directional-track-atmosphere-plus-static-blue-hill-fill',
     playerVisibilityLight: 'none-car-headlights-removed-in-favor-of-static-moonlight',
     streetlights: 'warm-static-halos-plus-midnight-city-style-ground-pools-and-local-fill',
     houseWindows: 'warm-emissive-looking-panels-on-every-suburban-house-with-limited-local-spill',
