@@ -13,6 +13,7 @@ const SKY_DISTANCE = 840;
 const SKY_IMAGE_ASPECT = 2;
 const MOON_DISTANCE = 810;
 const MOON_SIZE = 174;
+const WINDOW_SURFACE_OFFSET = 0.025;
 
 // Chosen from the established MOUNTAIN aerial showcase camera so the moon
 // lands at roughly 23% from the left and 19% from the top, matching the night
@@ -211,6 +212,33 @@ function nearestTrackSample(samples, x, z) {
   return nearest;
 }
 
+function snapWindowToFacade(house, candidate, towardRoad, rayDistance) {
+  const raycaster = new THREE.Raycaster();
+  const inward = towardRoad.clone().negate();
+  const origin = candidate.clone().addScaledVector(towardRoad, 2.5);
+  raycaster.set(origin, inward);
+  raycaster.far = rayDistance + 5;
+
+  const normalMatrix = new THREE.Matrix3();
+  for (const hit of raycaster.intersectObject(house, true)) {
+    if (!hit.face || !hit.object?.isMesh) continue;
+    normalMatrix.getNormalMatrix(hit.object.matrixWorld);
+    const normal = hit.face.normal.clone().applyMatrix3(normalMatrix).normalize();
+
+    // Ignore roofs, floors and back-facing geometry. We want the first actual
+    // vertical wall surface facing the road, not the building's bounding box or
+    // a roof/eave that happens to stick farther out.
+    if (Math.abs(normal.y) > 0.45) continue;
+    if (normal.dot(towardRoad) < 0.25) continue;
+
+    return {
+      position: hit.point.clone().addScaledVector(normal, WINDOW_SURFACE_OFFSET),
+      yaw: Math.atan2(normal.x, normal.z)
+    };
+  }
+  return null;
+}
+
 function makeWindowSpecs(house, samples, houseIndex) {
   const box = localBounds(house);
   if (!box) return [];
@@ -243,7 +271,6 @@ function makeWindowSpecs(house, samples, houseIndex) {
   const columns = THREE.MathUtils.clamp(Math.floor(facadeWidth / 2.45), 2, 3);
   const windowWidth = THREE.MathUtils.clamp(facadeWidth / (columns * 2.05), 0.7, 1.18);
   const windowHeight = THREE.MathUtils.clamp(height * 0.085, 0.68, 0.95);
-  const yaw = Math.atan2(towardRoad.x, towardRoad.z);
   const facadeCenter = center.clone().addScaledVector(towardRoad, roadExtent + 0.075);
   const rows = [0.31];
   if (height >= 9.6 && houseIndex % 2 === 0) rows.push(0.52);
@@ -254,13 +281,16 @@ function makeWindowSpecs(house, samples, houseIndex) {
     const spread = Math.min(facadeWidth * 0.68, (count - 1) * 2.05);
     for (let column = 0; column < count; column += 1) {
       const along = count === 1 ? 0 : THREE.MathUtils.lerp(-spread / 2, spread / 2, column / (count - 1));
-      const position = facadeCenter.clone().addScaledVector(alongFacade, along);
-      position.y = minY + height * rows[rowIndex];
+      const candidate = facadeCenter.clone().addScaledVector(alongFacade, along);
+      candidate.y = minY + height * rows[rowIndex];
+      const surface = snapWindowToFacade(house, candidate, towardRoad, roadExtent * 2);
+      if (!surface) continue;
       specs.push({
-        position,
-        yaw,
+        position: surface.position,
+        yaw: surface.yaw,
         width: windowWidth,
-        height: windowHeight
+        height: windowHeight,
+        surfaceSnapped: true
       });
     }
   }
@@ -270,7 +300,7 @@ function makeWindowSpecs(house, samples, houseIndex) {
 function installHouseWindowGlow(world, samples) {
   const houses = collectNamed(world, HOUSE_PREFIX);
   const specs = houses.flatMap((house, index) => makeWindowSpecs(house, samples, index));
-  if (!specs.length) return { core: null, halo: null, windowCount: 0, houseCount: houses.length, spillLightCount: 0 };
+  if (!specs.length) return { core: null, halo: null, windowCount: 0, houseCount: houses.length, spillLightCount: 0, surfaceSnappedCount: 0 };
 
   const geometry = new THREE.PlaneGeometry(1, 1);
   const core = new THREE.InstancedMesh(
@@ -335,7 +365,14 @@ function installHouseWindowGlow(world, samples) {
     spillLightCount += 1;
   });
 
-  return { core, halo, windowCount: specs.length, houseCount: houses.length, spillLightCount };
+  return {
+    core,
+    halo,
+    windowCount: specs.length,
+    houseCount: houses.length,
+    spillLightCount,
+    surfaceSnappedCount: specs.filter((spec) => spec.surfaceSnapped).length
+  };
 }
 
 function strengthenMoonlitWater(world) {
@@ -390,6 +427,7 @@ export async function installMountainR6Night(world, samples, _trackWidth, terrai
     streetLightPointLightCount: streetlights.pointLightCount,
     litHouseCount: windows.houseCount,
     windowPanelCount: windows.windowCount,
+    surfaceSnappedWindowCount: windows.surfaceSnappedCount,
     houseSpillLightCount: windows.spillLightCount,
     moonlitWaterMaterials,
     noIndependentAnimationLoop: true
