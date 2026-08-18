@@ -1,10 +1,12 @@
 import * as THREE from 'three';
 
-const REVISION = 'r7-world-yaw-sky-raised-moon';
+const REVISION = 'r7-world-yaw-cylinder-raised-moon';
 const SKY_NAME = 'Mountain star field skydome r6';
 const MOON_NAME = 'Mountain full moon sprite r6';
 const SKY_RADIUS = 840;
+const SKY_HEIGHT = 3000;
 const SKY_REPEAT_X = 4;
+const SKY_REPEAT_Y = 2;
 const SKY_TRANSLATION_FOLLOW = 0.96;
 const MOON_DISTANCE = 810;
 
@@ -18,17 +20,26 @@ function worldLockSky(sky) {
   const texture = sky.material?.map;
   if (!texture) return false;
 
-  // The generated source is deliberately tiny. Repeat it around a world-space
-  // sphere instead of stretching one 512px image through all 360 degrees. A
-  // mirrored repeat hides hard texture seams while keeping the stars crisp.
+  // The generated source is deliberately tiny. Repeat it around a cylindrical
+  // world-space backdrop rather than stretching one 512px image through all
+  // 360 degrees. A cylinder keeps the texture's verticals linear — unlike a
+  // sphere, which visibly smears this non-equirectangular source toward its
+  // poles — while mirrored wrapping hides hard repeat seams.
   texture.wrapS = THREE.MirroredRepeatWrapping;
-  texture.wrapT = THREE.ClampToEdgeWrapping;
-  texture.repeat.set(SKY_REPEAT_X, 1);
+  texture.wrapT = THREE.MirroredRepeatWrapping;
+  texture.repeat.set(SKY_REPEAT_X, SKY_REPEAT_Y);
   texture.offset.set(0, 0);
   texture.needsUpdate = true;
 
   sky.geometry?.dispose?.();
-  sky.geometry = new THREE.SphereGeometry(SKY_RADIUS, 48, 24);
+  sky.geometry = new THREE.CylinderGeometry(
+    SKY_RADIUS,
+    SKY_RADIUS,
+    SKY_HEIGHT,
+    64,
+    1,
+    true
+  );
   sky.material.side = THREE.BackSide;
   sky.material.depthWrite = false;
   sky.material.depthTest = true;
@@ -41,14 +52,14 @@ function worldLockSky(sky) {
   sky.renderOrder = -100;
 
   sky.onBeforeRender = (_renderer, _scene, camera) => {
-    // Rotation stays fixed in world space. This is the important difference
-    // from the camera-facing r6/r7 plane: turning left/right now moves the star
-    // field together with the mountain horizon instead of leaving it glued to
-    // the phone screen.
+    // Rotation stays fixed in world space. Turning left/right therefore moves
+    // the stars together with the mountain horizon instead of leaving the
+    // texture glued to the phone screen.
     //
     // Follow 96% of camera translation in X/Z. The remaining 4% creates a very
     // small distant drag/parallax without making the sky feel like nearby
-    // scenery. Y follows exactly so vertical coverage remains stable.
+    // scenery. Y follows exactly so the tall open cylinder remains centred on
+    // the camera vertically.
     sky.position.set(
       camera.position.x * SKY_TRANSLATION_FOLLOW,
       camera.position.y,
@@ -57,8 +68,9 @@ function worldLockSky(sky) {
     sky.updateMatrixWorld(true);
   };
 
-  sky.userData.turnMountainSkyLock = 'world-yaw-with-subtle-translation-drag';
+  sky.userData.turnMountainSkyLock = 'world-yaw-cylinder-with-subtle-translation-drag';
   sky.userData.turnMountainSkyRepeatX = SKY_REPEAT_X;
+  sky.userData.turnMountainSkyRepeatY = SKY_REPEAT_Y;
   sky.userData.turnMountainSkyTranslationFollow = SKY_TRANSLATION_FOLLOW;
   return true;
 }
@@ -85,8 +97,10 @@ export function installMountainR7SkyFix(world) {
     revision: REVISION,
     horizonLockedSky,
     skyYawLock: 'world-space-y-axis',
+    skyGeometry: 'open-cylinder',
     skyParallax: 'four-percent-translation-drag',
     skyRepeatX: SKY_REPEAT_X,
+    skyRepeatY: SKY_REPEAT_Y,
     skyTranslationFollow: SKY_TRANSLATION_FOLLOW,
     moonRepositioned,
     moonDirection: Object.freeze(MOON_DIRECTION.toArray()),
