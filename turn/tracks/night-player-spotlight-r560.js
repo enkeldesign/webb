@@ -7,18 +7,18 @@ const LIGHT_NAME = 'TURN shared warm spotlight headlight r560';
 const LEGACY_MIDNIGHT_RIG_NAME = 'TURN Midnight City player light rig';
 const HEADLIGHT_COLOR = 0xffe3b3;
 
-// One configuration for both night tracks. The 200 m reach is tuned for TURN's
-// racing speeds, while the lower target makes the useful part of the cone meet
-// flatter/downhill road surfaces sooner. The performance contract stays small:
-// one real light, no shadow map, no beam geometry and no extra loop.
+// One configuration for both night tracks. Keep the performance contract tiny:
+// one real shadowless light, no beam geometry, raycasts or extra loop. The r174
+// tune adds a little more racing-speed reach and intensity, while moving the
+// emitter closer to the car so the beam reads as originating at the bumper.
 export const NIGHT_SPOTLIGHT_CONFIG = Object.freeze({
   color: HEADLIGHT_COLOR,
-  intensity: 2200,
-  distance: 200,
+  intensity: 2600,
+  distance: 220,
   angleDegrees: 14,
   penumbra: 0.78,
   decay: 2,
-  lightLocal: Object.freeze({ x: 0, y: 1.05, z: -1.65 }),
+  lightLocal: Object.freeze({ x: 0, y: 0.82, z: -0.85 }),
   targetLocal: Object.freeze({ x: 0, y: -1.5, z: -54 })
 });
 
