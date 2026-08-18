@@ -24,8 +24,8 @@ const release = JSON.parse(releaseSource);
 
 const achievement = getAchievement(CHROMATIC_CAMOUFLAGE_ID);
 const mayday = getAchievement('golden-hour');
-assert.equal(ACHIEVEMENTS.length, 30,
-  'Production TURN should expose the existing 28 achievements plus MAYDAY and Chromatic Camouflage');
+assert.equal(ACHIEVEMENTS.length, 31,
+  'Production TURN should expose the existing 29 achievements plus MAYDAY and Chromatic Camouflage');
 assert.equal(achievement?.title, 'CHROMATIC CAMOUFLAGE');
 assert.equal(achievement?.hidden, true);
 assert.equal(achievement?.category, 'exploration');
@@ -44,9 +44,9 @@ assert.match(mayday?.description || '', /Airport MAYDAY/);
 assert.match(mayday?.description || '', /30 seconds/);
 assert.equal(
   ACHIEVEMENTS.reduce((total, item) => total + item.trophies, 0),
-  1850
+  1875
 );
-assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 1850);
+assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 1875);
 assert.deepEqual(TRACK_IDS, [
   'countryside', 'airport', 'cliffside', 'harbor', 'midnight-city', 'mountain'
 ], 'Every-track achievements must include the sixth production track');
@@ -117,7 +117,7 @@ assert.ok(
 assert.match(indexSource, /catalog-chromatic-r183\.js/,
   'Production must route the achievement store and view through the production achievement catalog');
 assert.match(indexSource, /trophy-road-chromatic-r183\.js/,
-  'Production must expose the expanded 1850-trophy road maximum');
+  'Production must expose the expanded 1875-trophy road maximum');
 assert.match(indexSource, /chromatic-camouflage-r183\.js/,
   'Production must install the hidden achievement evaluator');
 assert.doesNotMatch(indexSource, /airport-runway/,
