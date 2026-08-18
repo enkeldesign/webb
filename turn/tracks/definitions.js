@@ -140,9 +140,9 @@ const TRACKS = [
     lighting: {
       hemisphereSky: 0x5a78a8,
       hemisphereGround: 0x07101b,
-      hemisphereIntensity: 0.64,
+      hemisphereIntensity: 0.56,
       directionalColor: 0xb8d7ff,
-      directionalIntensity: 1.06
+      directionalIntensity: 0.92
     }
   }
 ];
