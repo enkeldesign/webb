@@ -8,10 +8,10 @@ import {
 import { installAirportWorld } from './airport-world-r56.js?build=20260815-r498';
 import { installCliffsideWorld } from './cliffside-world.js';
 import { installHarborWorld } from './harbor-world.js';
-// Historical regression markers: midnight-city-world-r9.js?build=20260802-r9, midnight-city-world-r10.js?build=20260802-r10, midnight-city-world-r11.js?build=20260802-r11, midnight-city-world-r11.js?build=20260818-r560-shared-spotlight, midnight-city-world-r11.js?build=20260818-r561-200m-headlight
-import { installMidnightCityWorld } from './midnight-city-world-r11.js?build=20260818-r562-road-headlight-response';
-// Historical MOUNTAIN regression markers: mountain-world-r3.js?revision=r3-continuous-terrain-v1, mountain-world-r3.js?revision=r6-night-treatment, mountain-world-r3.js?revision=r8-shadowless-spotlight, mountain-world-r3.js?revision=r560-shared-night-spotlight
-import { installMountainWorld } from './mountain-world-r3.js?revision=r561-200m-headlight';
+// Historical regression markers: midnight-city-world-r9.js?build=20260802-r9, midnight-city-world-r10.js?build=20260802-r10, midnight-city-world-r11.js?build=20260802-r11, midnight-city-world-r11.js?build=20260818-r560-shared-spotlight, midnight-city-world-r11.js?build=20260818-r561-200m-headlight, midnight-city-world-r11.js?build=20260818-r562-road-headlight-response
+import { installMidnightCityWorld } from './midnight-city-world-r11.js?build=20260818-r563-lower-headlight-target';
+// Historical MOUNTAIN regression markers: mountain-world-r3.js?revision=r3-continuous-terrain-v1, mountain-world-r3.js?revision=r6-night-treatment, mountain-world-r3.js?revision=r8-shadowless-spotlight, mountain-world-r3.js?revision=r560-shared-night-spotlight, mountain-world-r3.js?revision=r561-200m-headlight
+import { installMountainWorld } from './mountain-world-r3.js?revision=r563-lower-headlight-target';
 import { isForgivingTrackSurface } from './airport-runoff.js?build=20260722-r52';
 import './contextual-road-edges.js?revision=r518-signature-yellow';
 import './road-contour-color-r512.js?revision=r513-countryside';
