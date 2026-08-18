@@ -21,12 +21,16 @@ assert.match(cameraSource, /target: Object\.freeze\(\[0, 110, 100\]\)/);
 assert.match(cameraSource, /fov: 48/);
 assert.doesNotMatch(cameraSource, /requestAnimationFrame|setInterval|setAnimationLoop/);
 
-assert.match(mountainSkySource, /new THREE\.SphereGeometry\(SKY_RADIUS, 48, 24\)/,
-  'MOUNTAIN stars must live on a camera-centred sphere so yaw is world-locked');
+assert.match(mountainSkySource, /new THREE\.CylinderGeometry\(/,
+  'MOUNTAIN stars must live on a world-yaw cylinder so horizontal rotation is horizon-locked');
+assert.match(mountainSkySource, /SKY_RADIUS,\s*SKY_RADIUS,\s*SKY_HEIGHT,\s*64,\s*1,\s*true/s,
+  'MOUNTAIN star cylinder must be tall, open and sufficiently segmented');
 assert.match(mountainSkySource, /texture\.wrapS = THREE\.MirroredRepeatWrapping/,
-  'The compact star texture should repeat around the sky without hard seams');
-assert.match(mountainSkySource, /texture\.repeat\.set\(SKY_REPEAT_X, 1\)/,
-  'The compact star texture should repeat around the 360-degree sphere');
+  'The compact star texture should repeat around the sky without hard horizontal seams');
+assert.match(mountainSkySource, /texture\.wrapT = THREE\.MirroredRepeatWrapping/,
+  'The compact star texture should repeat vertically without the polar smearing of a sphere');
+assert.match(mountainSkySource, /texture\.repeat\.set\(SKY_REPEAT_X, SKY_REPEAT_Y\)/,
+  'The compact star texture should repeat across the cylindrical backdrop');
 assert.match(mountainSkySource, /const SKY_TRANSLATION_FOLLOW = 0\.96/,
   'MOUNTAIN sky should keep only a small amount of translational parallax');
 assert.doesNotMatch(mountainSkySource, /sky\.lookAt\(camera\.position\)/,
