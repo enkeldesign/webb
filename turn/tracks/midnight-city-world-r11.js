@@ -40,10 +40,12 @@ export function installMidnightCityWorld(options) {
     hiddenLilyaDiscoveryHoldMs: LILYA_DISCOVERY_HOLD_MS,
     hiddenLilyaMipmaps: false,
     hiddenLilyaFitsFacade: true,
+    gameplayGeometryUnchanged: true,
     playerVisibilityLight: playerSpotlight
       ? 'shared-warm-shadowless-spotlight-identical-to-mountain'
-      : 'none-when-no-player-car-is-present',
-    gameplayGeometryUnchanged: true,
+      : 'unavailable-without-player-car',
+    sharedNightSpotlight: Boolean(playerSpotlight),
+    hiddenLilyaAddsDynamicLights: false,
     noIndependentAnimationLoop: true
   });
 
