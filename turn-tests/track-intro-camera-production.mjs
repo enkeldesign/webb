@@ -3,9 +3,10 @@ import fs from 'node:fs/promises';
 
 import { installTrackIntroCamera } from '../turn/render/track-intro-camera.js';
 
-const [appSource, cameraSource] = await Promise.all([
+const [appSource, cameraSource, mountainSkySource] = await Promise.all([
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/render/track-intro-camera.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/render/track-intro-camera.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/mountain-world-r7-sky.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(appSource, /installTrackIntroCamera/);
@@ -19,6 +20,31 @@ assert.match(cameraSource, /position: Object\.freeze\(\[285, 128, -338\]\)/);
 assert.match(cameraSource, /target: Object\.freeze\(\[6, 45, 92\]\)/);
 assert.match(cameraSource, /fov: 48/);
 assert.doesNotMatch(cameraSource, /requestAnimationFrame|setInterval|setAnimationLoop/);
+
+assert.match(mountainSkySource, /sky\.up\.set\(0, 1, 0\)/,
+  'MOUNTAIN stars must use world-up so they roll with the rendered horizon');
+assert.match(mountainSkySource, /sky\.lookAt\(camera\.position\)/,
+  'MOUNTAIN star backdrop should face the camera without inheriting camera roll');
+assert.doesNotMatch(mountainSkySource, /sky\.quaternion\.copy\(camera\.quaternion\)/,
+  'MOUNTAIN stars must never become screen-locked by copying the full camera quaternion');
+
+const moonVector = mountainSkySource.match(
+  /const MOON_DIRECTION = new THREE\.Vector3\(([-\d.]+), ([-\d.]+), ([-\d.]+)\)/
+);
+assert.ok(moonVector, 'MOUNTAIN sky fix must expose a fixed world-space moon direction');
+const moonDirection = moonVector.slice(1).map(Number);
+const introMoon = projectDirectionToScreen({
+  direction: moonDirection,
+  position: [285, 128, -338],
+  target: [6, 45, 92],
+  fov: 48,
+  aspect: 1536 / 709
+});
+assert.ok(introMoon.depth > 0, 'MOUNTAIN moon must sit in front of the intro camera');
+assert.ok(Math.abs(introMoon.x - 0.15) < 0.015,
+  `MOUNTAIN intro moon should sit around 15% from the left, got ${(introMoon.x * 100).toFixed(1)}%`);
+assert.ok(Math.abs(introMoon.y - 0.18) < 0.015,
+  `MOUNTAIN intro moon should sit around 18% from the top, got ${(introMoon.y * 100).toFixed(1)}%`);
 
 const bodyClasses = new Set(['turn-track-intro']);
 const calls = [];
@@ -100,4 +126,37 @@ bodyClasses.add('turn-track-intro');
 scene.onBeforeRender();
 assert.equal(calls.some((call) => call[0] === 'position'), false, 'Tracks without a showcase preset keep their established framing');
 
-console.log('TURN Midnight City and Mountain track intros use deliberate cinematic showcase angles.');
+console.log('TURN Midnight City and Mountain track intros use deliberate cinematic showcase angles with a horizon-locked MOUNTAIN sky and composed moon.');
+
+function projectDirectionToScreen({ direction, position, target, fov, aspect }) {
+  const forward = normalize(subtract(target, position));
+  const right = normalize(cross(forward, [0, 1, 0]));
+  const up = normalize(cross(right, forward));
+  const unitDirection = normalize(direction);
+  const depth = dot(unitDirection, forward);
+  const tangent = Math.tan((fov * Math.PI / 180) / 2);
+  const ndcX = dot(unitDirection, right) / (depth * tangent * aspect);
+  const ndcY = dot(unitDirection, up) / (depth * tangent);
+  return { x: (ndcX + 1) / 2, y: (1 - ndcY) / 2, depth };
+}
+
+function subtract(a, b) {
+  return a.map((value, index) => value - b[index]);
+}
+
+function dot(a, b) {
+  return a.reduce((sum, value, index) => sum + value * b[index], 0);
+}
+
+function cross(a, b) {
+  return [
+    a[1] * b[2] - a[2] * b[1],
+    a[2] * b[0] - a[0] * b[2],
+    a[0] * b[1] - a[1] * b[0]
+  ];
+}
+
+function normalize(vector) {
+  const length = Math.hypot(...vector);
+  return vector.map((value) => value / Math.max(length, 1e-9));
+}
