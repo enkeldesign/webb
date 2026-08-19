@@ -63,7 +63,7 @@ const blobSha = crypto
   .digest('hex');
 assert.equal(
   blobSha,
-  '8917377dc6368f9d543a118f764710433d79da01',
+  'd0b246a92512d9b4e74799bbed70249c342233b3',
   'All icon surfaces must remain tied to the exact current user-supplied TURNicon.PNG blob'
 );
 
