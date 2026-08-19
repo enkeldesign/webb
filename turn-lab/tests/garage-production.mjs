@@ -42,6 +42,14 @@ assert.deepEqual(
   trainingCar.stats,
   { speed: 1, acceleration: 1, control: 5, drift: 5, boostPower: 1, boostDuration: 5 }
 );
+assert.deepEqual(
+  truck.stats,
+  { speed: 3, acceleration: 2, control: 4, drift: 4, boostPower: 2, boostDuration: 3 }
+);
+assert.equal(race.defaultColor, '#ff7700');
+assert.deepEqual(race.defaultColorP3, [1, 0.467, 0]);
+assert.equal(truck.defaultColor, '#b93632');
+assert.deepEqual(truck.defaultColorP3, [0.72, 0.12, 0.12]);
 assert.equal(monsterTruck.visualScale, 0.83);
 assert.equal(sedan.tuning.topSpeedMultiplier, 1);
 assert.equal(sedan.tuning.accelerationMultiplier, 1);
@@ -59,11 +67,13 @@ assert.ok(race.tuning.controlMultiplier > sedan.tuning.controlMultiplier);
 assert.ok(race.tuning.driftDragAdd > sedan.tuning.driftDragAdd);
 assert.ok(race.tuning.driftStabilityMultiplier < sedan.tuning.driftStabilityMultiplier);
 assert.ok(race.tuning.boostDurationSeconds < sedan.tuning.boostDurationSeconds);
-assert.ok(truck.tuning.topSpeedMultiplier < sedan.tuning.topSpeedMultiplier);
+assert.equal(truck.tuning.topSpeedMultiplier, sedan.tuning.topSpeedMultiplier);
 assert.ok(truck.tuning.accelerationMultiplier < sedan.tuning.accelerationMultiplier);
+assert.ok(truck.tuning.controlMultiplier > sedan.tuning.controlMultiplier);
 assert.ok(truck.tuning.driftDragAdd < sedan.tuning.driftDragAdd);
 assert.ok(truck.tuning.driftStabilityMultiplier > sedan.tuning.driftStabilityMultiplier);
-assert.ok(truck.tuning.boostDurationSeconds > sedan.tuning.boostDurationSeconds);
+assert.ok(truck.tuning.boostPowerMultiplier < sedan.tuning.boostPowerMultiplier);
+assert.equal(truck.tuning.boostDurationSeconds, sedan.tuning.boostDurationSeconds);
 assert.notEqual(catalog.makeGhostColor('#ff4fa3'), '#ff4fa3');
 
 const easterEggSelection = {
