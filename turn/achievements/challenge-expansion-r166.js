@@ -40,6 +40,22 @@ export function qualifiesForCleanLap(attempt, detail) {
     && seconds < target;
 }
 
+function winnerAchievementId(trackId) {
+  return `${trackId}-winner`;
+}
+
+function safetyAchievementId(trackId) {
+  return `${trackId}-safety`;
+}
+
+function achievementContext(trackId, vehicleId = '', time = null) {
+  return {
+    trackId,
+    vehicleId,
+    time: Number.isFinite(Number(time)) ? Number(time) : null
+  };
+}
+
 function loadProgress(storage = globalThis.localStorage) {
   try {
     const raw = storage?.getItem?.(CHALLENGE_PROGRESS_STORAGE_KEY);
@@ -81,6 +97,21 @@ export function installAchievementChallengeExpansion({
   const progress = loadProgress(storage);
   let currentLap = null;
 
+  function unlockStoredTrackAchievements() {
+    for (const trackId of progress.armyTracks) {
+      achievements.unlock(winnerAchievementId(trackId), achievementContext(trackId));
+    }
+    for (const trackId of progress.cleanTracks) {
+      achievements.unlock(safetyAchievementId(trackId), achievementContext(trackId));
+    }
+    if (allTracksComplete(progress.armyTracks)) {
+      achievements.unlock('an-army-of-me', achievementContext(''));
+    }
+    if (allTracksComplete(progress.cleanTracks)) {
+      achievements.unlock('on-course-of-course', achievementContext(''));
+    }
+  }
+
   function beginLap() {
     const state = runtime.state;
     currentLap = {
@@ -104,26 +135,21 @@ export function installAchievementChallengeExpansion({
     resetLap();
     if (!attempt || !TRACK_IDS.includes(attempt.trackId)) return;
 
+    const context = achievementContext(attempt.trackId, attempt.vehicleId, detail?.time);
     let changed = false;
     if (qualifiesForArmyLap(attempt, detail)) {
+      achievements.unlock(winnerAchievementId(attempt.trackId), context);
       changed = addTrack(progress, 'armyTracks', attempt.trackId) || changed;
       if (allTracksComplete(progress.armyTracks)) {
-        achievements.unlock('an-army-of-me', {
-          trackId: attempt.trackId,
-          vehicleId: attempt.vehicleId,
-          time: Number(detail?.time)
-        });
+        achievements.unlock('an-army-of-me', context);
       }
     }
 
     if (qualifiesForCleanLap(attempt, detail)) {
+      achievements.unlock(safetyAchievementId(attempt.trackId), context);
       changed = addTrack(progress, 'cleanTracks', attempt.trackId) || changed;
       if (allTracksComplete(progress.cleanTracks)) {
-        achievements.unlock('on-course-of-course', {
-          trackId: attempt.trackId,
-          vehicleId: attempt.vehicleId,
-          time: Number(detail?.time)
-        });
+        achievements.unlock('on-course-of-course', context);
       }
     }
 
@@ -142,6 +168,7 @@ export function installAchievementChallengeExpansion({
   const handleLapResult = (event) => completeLap(event.detail || {});
   const handleLapInvalid = () => resetLap();
 
+  unlockStoredTrackAchievements();
   globalThis.addEventListener?.('turn:ui-state-change', handleUiState);
   globalThis.addEventListener?.('turn:lap-result', handleLapResult);
   globalThis.addEventListener?.('turn:lap-invalid', handleLapInvalid);
