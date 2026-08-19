@@ -11,6 +11,10 @@ import {
   matchesTrackColor,
   qualifyingChromaticCamouflage
 } from '../../turn/achievements/chromatic-camouflage-r183.js';
+import {
+  CHALLENGE_PROGRESS_STORAGE_KEY,
+  installAchievementChallengeExpansion
+} from '../../turn/achievements/challenge-expansion-r166.js';
 import { TROPHY_ROAD_MAX_THRESHOLD } from '../../turn/progression/trophy-road-chromatic-r183.js';
 
 const [releaseSource, indexSource] = await Promise.all([
@@ -57,6 +61,47 @@ for (const trackId of TRACK_IDS) {
   assert.equal(safety?.trophies, 50);
   assert.match(safety?.description || '', /without going off-road/i);
 }
+
+const challengeMemory = new Map([[
+  CHALLENGE_PROGRESS_STORAGE_KEY,
+  JSON.stringify({ armyTracks: ['airport'], cleanTracks: ['harbor'] })
+]]);
+const challengeStorage = {
+  getItem: (key) => challengeMemory.get(key) ?? null,
+  setItem: (key, value) => challengeMemory.set(key, value)
+};
+const challengeUnlocks = [];
+const challengeRuntime = {
+  state: {
+    trackId: 'countryside',
+    vehicleId: 'sedan',
+    competitorLaps: [{}, {}, {}, {}],
+    offRoad: false
+  }
+};
+const challengeApi = installAchievementChallengeExpansion({
+  runtime: challengeRuntime,
+  achievements: {
+    unlock(id, context) {
+      challengeUnlocks.push({ id, context });
+      return { id };
+    }
+  },
+  storage: challengeStorage
+});
+assert.ok(challengeUnlocks.some(({ id }) => id === 'airport-winner'),
+  'Stored all-track progress should backfill the corresponding WINNER achievement');
+assert.ok(challengeUnlocks.some(({ id }) => id === 'harbor-safety'),
+  'Stored all-track progress should backfill the corresponding SAFETY achievement');
+challengeUnlocks.length = 0;
+challengeApi.beginLap();
+challengeApi.completeLap({ position: 1, total: 5, time: 20 });
+assert.deepEqual(
+  challengeUnlocks.map(({ id }) => id),
+  ['countryside-winner', 'countryside-safety'],
+  'One qualifying lap should award both track-specific achievements immediately'
+);
+challengeApi.disconnect();
 
 assert.equal(
   ACHIEVEMENTS.reduce((total, item) => total + item.trophies, 0),
