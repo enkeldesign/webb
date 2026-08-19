@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-const REVISION = 'r7-world-yaw-uv-raised-moon-celestial-layer-cut-snap-reduced-motion';
+const REVISION = 'r7-world-yaw-uv-aspect-normalized-celestial-layer-cut-snap-reduced-motion';
 const SKY_NAME = 'Mountain star field skydome r6';
 const MOON_NAME = 'Mountain full moon sprite r6';
 const SKY_DISTANCE = 840;
@@ -11,6 +11,12 @@ const SKY_POSITION_PARALLAX = 0.00004;
 const SKY_PITCH_PARALLAX = 0.025;
 const SKY_CAMERA_CUT_DISTANCE = 48;
 const SKY_CAMERA_CUT_HEADING = Math.PI / 8;
+const SKY_OVERSCAN = 1.05;
+// The established phone composition was tuned and regression-tested at this
+// wide viewport. Treat its apparent star scale as canonical, then compensate
+// for how much of the fixed 2:1 sky plane is actually visible on other aspect
+// ratios (notably the iPad 9's 4:3 display).
+const SKY_REFERENCE_ASPECT = 1536 / 709;
 const LEGACY_MOON_DISTANCE = 810;
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const TAU = Math.PI * 2;
@@ -30,6 +36,17 @@ function shortestAngle(from, to) {
   while (delta < -Math.PI) delta += TAU;
   return delta;
 }
+
+function planeCoverageForAspect(aspect) {
+  const safeAspect = Math.max(0.1, Number(aspect) || SKY_REFERENCE_ASPECT);
+  const coverHeightInVisibleHeights = Math.max(1, safeAspect / SKY_IMAGE_ASPECT) * SKY_OVERSCAN;
+  return Object.freeze({
+    x: Math.min(1, safeAspect / (coverHeightInVisibleHeights * SKY_IMAGE_ASPECT)),
+    y: Math.min(1, 1 / coverHeightInVisibleHeights)
+  });
+}
+
+const REFERENCE_SKY_COVERAGE = planeCoverageForAspect(SKY_REFERENCE_ASPECT);
 
 function worldLockSky(sky) {
   const texture = sky.material?.map;
@@ -63,6 +80,10 @@ function worldLockSky(sky) {
     positionU: 0,
     pitchV: 0,
     visibleU: null,
+    repeatU: null,
+    repeatV: null,
+    visiblePlaneX: null,
+    visiblePlaneY: null,
     offsetU: null,
     offsetV: null,
     coverHeight: null,
@@ -137,23 +158,40 @@ function worldLockSky(sky) {
     const verticalFov = THREE.MathUtils.degToRad(camera.fov);
     const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * camera.aspect);
     const visibleU = Math.max(0.01, horizontalFov / TAU * SKY_HORIZONTAL_TILES);
-    const baseU = 0.5 - visibleU * 0.5;
+
+    // The 2:1 plane deliberately over-covers the frustum so camera roll never
+    // reveals its edges. On a wide phone the viewport sees almost the whole
+    // plane width; on 4:3 iPad it sees only about two thirds. The old code used
+    // the same UV repeat regardless, so that hidden overhang effectively zoomed
+    // the stars and amplified yaw motion on iPad. Compensate by measuring the
+    // visible fraction of the plane and preserving the established wide-phone
+    // texture scale rather than detecting any particular device.
+    const visibleHeight = 2 * SKY_DISTANCE * Math.tan(verticalFov / 2);
+    const visibleWidth = visibleHeight * camera.aspect;
+    const coverHeight = Math.max(visibleHeight, visibleWidth / SKY_IMAGE_ASPECT) * SKY_OVERSCAN;
+    const visiblePlaneX = Math.max(1e-6, Math.min(1, visibleWidth / (coverHeight * SKY_IMAGE_ASPECT)));
+    const visiblePlaneY = Math.max(1e-6, Math.min(1, visibleHeight / coverHeight));
+    const repeatU = visibleU * REFERENCE_SKY_COVERAGE.x / visiblePlaneX;
+    const repeatV = REFERENCE_SKY_COVERAGE.y / visiblePlaneY;
+    const baseU = 0.5 - repeatU * 0.5;
+    const baseV = 0.5 - repeatV * 0.5;
     const yawU = -motion.visualHeading / TAU * SKY_HORIZONTAL_TILES;
+
     motion.positionU = motion.reducedMotion
       ? 0
       : (camera.position.x - camera.position.z) * SKY_POSITION_PARALLAX;
     motion.pitchV = motion.reducedMotion ? 0 : forward.y * SKY_PITCH_PARALLAX;
     motion.visibleU = visibleU;
+    motion.repeatU = repeatU;
+    motion.repeatV = repeatV;
+    motion.visiblePlaneX = visiblePlaneX;
+    motion.visiblePlaneY = visiblePlaneY;
     motion.offsetU = baseU + yawU + motion.positionU;
-    motion.offsetV = motion.pitchV;
-    texture.repeat.set(visibleU, 1);
+    motion.offsetV = baseV + motion.pitchV;
+    motion.coverHeight = coverHeight;
+    texture.repeat.set(repeatU, repeatV);
     texture.offset.set(motion.offsetU, motion.offsetV);
 
-    // Cover the camera frustum without stretching the texture around geometry.
-    const visibleHeight = 2 * SKY_DISTANCE * Math.tan(verticalFov / 2);
-    const visibleWidth = visibleHeight * camera.aspect;
-    const coverHeight = Math.max(visibleHeight, visibleWidth / SKY_IMAGE_ASPECT) * 1.05;
-    motion.coverHeight = coverHeight;
     sky.scale.set(coverHeight * SKY_IMAGE_ASPECT, coverHeight, 1);
     sky.updateMatrixWorld(true);
   };
@@ -161,6 +199,8 @@ function worldLockSky(sky) {
   sky.userData.turnMountainSkyLock = 'world-yaw-via-inverse-uv-with-world-up-roll-lock';
   sky.userData.turnMountainSkyHorizontalTiles = SKY_HORIZONTAL_TILES;
   sky.userData.turnMountainSkyYawCatchup = SKY_YAW_CATCHUP;
+  sky.userData.turnMountainSkyReferenceAspect = SKY_REFERENCE_ASPECT;
+  sky.userData.turnMountainSkyAspectPolicy = 'preserve-wide-phone-angular-star-scale-across-plane-overcoverage';
   sky.userData.turnMountainSkyCameraCuts = 'snap-large-camera-jumps-without-parallax-roll';
   sky.userData.turnMountainReducedMotionPolicy = 'hide-star-field-show-solid-track-background-keep-moon';
   return motion;
@@ -200,22 +240,23 @@ function lockMoonToSkyLayer(moon, sky, skyMotion) {
   sky.add(moonLayer);
 
   moonLayer.onBeforeRender = () => {
-    if (!Number.isFinite(skyMotion.visibleU)
+    if (!Number.isFinite(skyMotion.repeatU)
+      || !Number.isFinite(skyMotion.repeatV)
       || !Number.isFinite(skyMotion.offsetU)
       || !Number.isFinite(skyMotion.offsetV)) return;
 
     // Pick the equivalent anchor from the current 360-degree cycle. This keeps
     // one moon in the world rather than repeating it with every mirrored star
     // tile, while still bringing it back to the same place after a full turn.
-    const centreSampleU = skyMotion.offsetU + skyMotion.visibleU * 0.5;
+    const centreSampleU = skyMotion.offsetU + skyMotion.repeatU * 0.5;
     const anchorU = MOON_SKY_ANCHOR_U
       + Math.round((centreSampleU - MOON_SKY_ANCHOR_U) / MOON_WORLD_U_PERIOD) * MOON_WORLD_U_PERIOD;
 
     // Invert the exact texture transform used by the stars. The moon therefore
     // sits on one fixed point of the star field in X and Y; because it is also a
     // child of the sky plane, it inherits the same Z depth, pitch and roll.
-    const localU = (anchorU - skyMotion.offsetU) / skyMotion.visibleU;
-    const localV = MOON_SKY_ANCHOR_V - skyMotion.offsetV;
+    const localU = (anchorU - skyMotion.offsetU) / skyMotion.repeatU;
+    const localV = (MOON_SKY_ANCHOR_V - skyMotion.offsetV) / skyMotion.repeatV;
     moonLayer.position.set(localU - 0.5, localV - 0.5, 0);
 
     // Parent scaling makes the backdrop cover the viewport. Divide it back out
@@ -247,6 +288,8 @@ export function installMountainR7SkyFix(world) {
     skyYawLock: 'world-space-y-axis-via-inverse-four-tile-uv-rotation',
     skyGeometry: 'camera-facing-flat-backdrop',
     skyParallax: 'yaw-catchup-plus-subtle-position-and-pitch-drag',
+    skyAspectPolicy: 'wide-phone-reference-normalized-for-4x3-and-other-aspects',
+    skyReferenceAspect: SKY_REFERENCE_ASPECT,
     skyCameraCuts: 'snap-large-camera-jumps-so-loading-cuts-are-not-animated',
     skyHorizontalTiles: SKY_HORIZONTAL_TILES,
     skyYawCatchup: SKY_YAW_CATCHUP,
