@@ -1,4 +1,4 @@
-/* ABOUT action buttons share one visual contract: two lines, equal height and equal type scale. */
+/* ABOUT keeps one prominent full-width History and Changelog action. */
 .m8-about-dialog {
   --turn-dialog-inline-size: min(660px, calc(100vw - 32px));
 }
@@ -34,7 +34,7 @@
 
 .m8-about-actions {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: 1fr;
   gap: 12px;
   align-items: stretch;
   margin-top: 16px;
