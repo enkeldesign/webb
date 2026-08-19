@@ -1,12 +1,17 @@
 import {
   applyColorCuesState,
+  describeColorCue,
   loadColorCuesEnabled,
   saveColorCuesEnabled,
   trackColorCue
 } from './color-cues.js?revision=r163';
+import {
+  getVehicleDefaultColor
+} from '../vehicle/catalog.js?build=20260804-r157-factory-colors';
 
 const RUNTIME_ID = 'color-cues-r163';
 let scheduled = false;
+const lotCueBindings = new Map();
 
 function settingsStatus(dialog) {
   return dialog.querySelector('.m8-settings-status');
@@ -68,10 +73,69 @@ function installTrackColorCues() {
   }
 }
 
+function selectedLotCarId(screen) {
+  return screen.querySelector('.lot-car-option[aria-checked="true"]')?.dataset.carId || '';
+}
+
+function selectedLotBodyColor(screen, carId) {
+  const bodyControl = [...screen.querySelectorAll('.lot-color-control')]
+    .find((control) => String(control.dataset.paintLabel || '').toLowerCase() === 'body');
+  const input = bodyControl?.querySelector('input[type="color"]');
+  return input?.value || getVehicleDefaultColor(carId);
+}
+
+function bindLotColorCueUpdates(screen) {
+  if (lotCueBindings.has(screen)) return;
+  const picker = screen.querySelector('.lot-car-picker');
+  const selectionObserver = new MutationObserver(scheduleSync);
+  if (picker) {
+    selectionObserver.observe(picker, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['aria-checked']
+    });
+  }
+  const handleInput = (event) => {
+    if (event.target?.matches?.('input[type="color"]')) scheduleSync();
+  };
+  screen.addEventListener('input', handleInput);
+  lotCueBindings.set(screen, { selectionObserver, handleInput });
+}
+
+function cleanupLotColorCueBindings() {
+  for (const [screen, binding] of lotCueBindings) {
+    if (screen.isConnected) continue;
+    binding.selectionObserver.disconnect();
+    screen.removeEventListener('input', binding.handleInput);
+    lotCueBindings.delete(screen);
+  }
+}
+
+function installLotCarColorCues() {
+  for (const screen of document.querySelectorAll('.lot-screen')) {
+    const description = screen.querySelector('.lot-car-description');
+    const carId = selectedLotCarId(screen);
+    if (!description || !carId) continue;
+
+    let cue = screen.querySelector('.lot-selected-car-color-cue');
+    if (!cue) {
+      cue = document.createElement('span');
+      cue.className = 'turn-color-cue lot-color-cue lot-selected-car-color-cue';
+      description.after(cue);
+    }
+
+    const text = `CAR COLOR · ${describeColorCue(selectedLotBodyColor(screen, carId)).toUpperCase()}`;
+    if (cue.textContent !== text) cue.textContent = text;
+    bindLotColorCueUpdates(screen);
+  }
+}
+
 function sync() {
   scheduled = false;
+  cleanupLotColorCueBindings();
   installColorCueSetting();
   installTrackColorCues();
+  installLotCarColorCues();
 }
 
 function scheduleSync() {
@@ -95,6 +159,11 @@ export function installColorAccessibility() {
     disconnect() {
       observer.disconnect();
       globalThis.removeEventListener('turn:home-ready', scheduleSync);
+      for (const [screen, binding] of lotCueBindings) {
+        binding.selectionObserver.disconnect();
+        screen.removeEventListener('input', binding.handleInput);
+      }
+      lotCueBindings.clear();
       globalThis.__turnColorAccessibility = null;
     }
   });

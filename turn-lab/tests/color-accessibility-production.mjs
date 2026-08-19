@@ -139,8 +139,17 @@ assert.match(paintGateSource, /button\.className = 'lot-paint-lock-button'/,
 assert.match(paintGateSource, /button\.addEventListener\('click', showLockedPaintInfo\)/,
   'The lock button may own its own click listener without becoming an ancestor of the color input');
 
-assert.doesNotMatch(runtimeSource, /describeColorCue|lot-color-control|input\[type="color"\]|onPaintValueChange|replaceWith/,
-  'The Color Cues runtime must not post-process paint controls');
+assert.match(runtimeSource, /getVehicleDefaultColor/,
+  'The selected-car cue must have a factory-colour fallback before Paintjob is unlocked');
+assert.match(runtimeSource, /lot-selected-car-color-cue/,
+  'The Lot must expose a selected-car colour cue independently of paint controls');
+assert.match(runtimeSource, /CAR COLOR ·/);
+assert.match(runtimeSource, /input\[type="color"\]/,
+  'Once Paintjob is available, the selected-car cue may read the current native paint value');
+assert.match(runtimeSource, /attributeFilter: \['aria-checked'\]/,
+  'Car colour cues must update for mouse, touch, keyboard and 3D car selection');
+assert.doesNotMatch(runtimeSource, /replaceWith|showPicker\(|focusNativeColorInput|input\.click\(/,
+  'Color Cues must read native paint state without replacing or proxying the native control');
 assert.match(runtimeSource, /Color cues/);
 assert.match(runtimeSource, /TRACK COLOR ·/);
 assert.doesNotMatch(runtimeSource, /setInterval|setAnimationLoop/);
@@ -148,10 +157,12 @@ assert.doesNotMatch(runtimeSource, /setInterval|setAnimationLoop/);
 assert.match(cueCssSource, /data-turn-color-cues='on'/);
 assert.match(cueCssSource, /track-card-color-cue/);
 assert.match(cueCssSource, /lot-color-cue/);
+assert.match(cueCssSource, /lot-selected-car-color-cue/,
+  'The selected-car cue must remain visible in The Lot even while the paint controls are Trophy Road locked');
 assert.match(cueCssSource, /repeating-linear-gradient/);
 
 assert.match(historySource, /native HTML color input/i);
 assert.doesNotMatch(historySource, /native paint activation bridge|assistive-technology bridge/i,
   'Current release history must not claim an activation bridge that no longer exists');
 
-console.log(`TURN ${release.version} ${release.id} HTML-first native color input and six-track color-cue regression passed.`);
+console.log(`TURN ${release.version} ${release.id} HTML-first native color input, pre-Paintjob car cue and six-track color-cue regression passed.`);
