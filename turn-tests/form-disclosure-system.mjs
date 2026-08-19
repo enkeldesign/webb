@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [app, tokens, components, guide, design] = await Promise.all([
+const [app, tokens, components, guide, design, selectionPolicy] = await Promise.all([
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/design-tokens.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/settings-components-r141.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/how-to-play-guide.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/design.html', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/design.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/drive-pad.css', import.meta.url), 'utf8')
 ]);
 
 assert.match(app, /settings-components-r141\.css\?revision=r141-form-disclosure/);
@@ -49,6 +50,35 @@ assert.ok(
   'The disclosure state symbol must precede and sit beside its summary label'
 );
 
+assert.match(
+  selectionPolicy,
+  /body,\s*body \*[\s\S]*-webkit-user-select: none !important;[\s\S]*user-select: none !important;[\s\S]*-webkit-touch-callout: none !important;/,
+  'TURN must suppress selection and the iOS text callout by default across the app'
+);
+for (const allowedSurface of [
+  '.m8-how-dialog .m8-guide-grid',
+  '.turn-dbe-training-dialog .m8-dialog-card',
+  '.m8-home-build',
+  '.install-kicker',
+  '.m8-about-content',
+  '.turn-history-panel',
+  '.turn-history-release',
+  '.turn-achievements-content',
+  '.m8-feedback-content'
+]) {
+  assert.ok(selectionPolicy.includes(`body ${allowedSurface}`), `Missing selection allowlist surface ${allowedSurface}`);
+}
+assert.match(
+  selectionPolicy,
+  /-webkit-user-select: text !important;[\s\S]*user-select: text !important;[\s\S]*-webkit-touch-callout: default !important;/,
+  'Allowed information surfaces must restore text selection and the native iOS text callout'
+);
+assert.doesNotMatch(
+  selectionPolicy,
+  /#game,\s*#hud,\s*#controls,\s*#message/,
+  'The old race-only selection guard must not remain as the policy boundary'
+);
+
 for (const specimen of [
   'Native form controls',
   'Legend and heading elements share one floating card-title treatment',
@@ -66,4 +96,4 @@ assert.match(design, /<input type="radio" name="designSteering" checked>/);
 assert.match(design, /<input type="checkbox" checked>/);
 assert.match(design, /<details class="disclosure-sample"[^>]*>[\s\S]*<summary><span class="disclosure-symbol" aria-hidden="true"><\/span><span>Explore the Drive By Ear sounds<\/span><\/summary>/);
 
-console.log('TURN native form controls, headings and disclosure system passed.');
+console.log('TURN native form controls, selection policy, headings and disclosure system passed.');
