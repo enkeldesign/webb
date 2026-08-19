@@ -58,10 +58,26 @@ html[data-turn-color-cues='on'] .turn-color-cue {
   content: '';
 }
 
+.lot-selected-car-color-cue {
+  width: max-content;
+  max-width: 100%;
+  margin-top: 5px;
+  padding: 3px 7px;
+  border: 2px solid var(--ink, #08090a);
+  border-radius: 999px;
+  background: rgb(255 248 232 / 0.94);
+  color: var(--ink, #08090a);
+}
+
 @media (max-height: 520px) {
   .lot-color-cue { font-size: 0.36rem; }
 }
 
 @media (max-height: 430px) {
   .lot-color-cue { font-size: 0.33rem; }
+
+  .lot-selected-car-color-cue {
+    margin-top: 3px;
+    padding: 2px 5px;
+  }
 }
