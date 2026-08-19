@@ -8,7 +8,7 @@ import {
   isPaintUnlocked,
   getTrophyRoadReward,
   showTrophyUnlockNotice
-} from './trophy-road.js?revision=r164-perks';
+} from './trophy-road.js?revision=r166-bella-records';
 
 const PAINT_REWARD_ID = 'paintjob';
 const CAR_BY_ID = new Map(CAR_CATALOG.map((car) => [car.id, car]));
@@ -108,7 +108,7 @@ export function gateLotPaintNow(root = document.body) {
       colors.prepend(button);
     }
 
-    const threshold = reward()?.threshold || 400;
+    const threshold = reward()?.threshold || 900;
     button.setAttribute(
       'aria-label',
       `Paintjob locked. Vehicle paint controls unlock at ${threshold} trophies on Trophy Road.`
