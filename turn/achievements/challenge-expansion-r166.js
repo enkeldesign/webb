@@ -188,7 +188,7 @@ export function installAchievementChallengeExpansion({
   };
   const handleLapResult = (event) => completeLap(event.detail || {});
   const handleLapInvalid = () => resetLap();
-  const handleAchievementsUpdated = () => syncGotStarted();
+  const handleAchievementsUpdated = () => queueMicrotask(syncGotStarted);
 
   unlockStoredTrackAchievements();
   syncGotStarted();
