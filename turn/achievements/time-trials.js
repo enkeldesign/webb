@@ -16,9 +16,9 @@ export const TIME_TRIALS = Object.freeze([
   Object.freeze({
     id: 'cliffside-sprint',
     trackId: 'cliffside',
-    targetSeconds: 16,
+    targetSeconds: 15,
     title: 'CLIFFSIDE SPRINT',
-    description: 'Finish Cliffside in under 16 seconds.'
+    description: 'Finish Cliffside in under 15 seconds.'
   }),
   Object.freeze({
     id: 'harbor-sprint',
