@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {
   ACHIEVEMENTS,
+  GOT_STARTED_ACHIEVEMENT,
+  ONBOARDING_ACHIEVEMENT_IDS,
   TRACK_IDS,
   TRACK_NAMES,
   getAchievement
@@ -15,22 +17,35 @@ import {
   CHALLENGE_PROGRESS_STORAGE_KEY,
   installAchievementChallengeExpansion
 } from '../../turn/achievements/challenge-expansion-r166.js';
-import { TROPHY_ROAD_MAX_THRESHOLD } from '../../turn/progression/trophy-road-chromatic-r183.js';
+import {
+  TROPHY_ROAD_MAX_THRESHOLD,
+  TROPHY_ROAD_REWARDS,
+  TROPHY_ROAD_REWARD_ICONS
+} from '../../turn/progression/trophy-road-chromatic-r183.js';
 
-const [releaseSource, indexSource] = await Promise.all([
+const [releaseSource, indexSource, moduleSource, trophyRoadCss] = await Promise.all([
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/achievements/chromatic-camouflage-r183.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/progression/trophy-road-r157.css', import.meta.url), 'utf8')
 ]);
-const moduleSource = await fs.readFile(
-  new URL('../../turn/achievements/chromatic-camouflage-r183.js', import.meta.url),
-  'utf8'
-);
 const release = JSON.parse(releaseSource);
 
 const achievement = getAchievement(CHROMATIC_CAMOUFLAGE_ID);
 const mayday = getAchievement('golden-hour');
-assert.equal(ACHIEVEMENTS.length, 43,
-  'Production TURN should expose 31 existing achievements plus twelve per-track racing achievements');
+const gotStarted = getAchievement('got-started');
+
+assert.equal(ACHIEVEMENTS.length, 44,
+  'Production TURN should expose 43 existing achievements plus GOT STARTED');
+assert.equal(GOT_STARTED_ACHIEVEMENT, gotStarted);
+assert.equal(gotStarted?.title, 'GOT STARTED');
+assert.equal(gotStarted?.category, 'onboarding');
+assert.equal(gotStarted?.trophies, 75);
+assert.equal(gotStarted?.description, 'Finish all Getting Started achievements.');
+assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 10,
+  'GOT STARTED is the master reward and must not recursively require itself');
+assert.equal(ONBOARDING_ACHIEVEMENT_IDS.includes('got-started'), false);
+
 assert.equal(achievement?.title, 'CHROMATIC CAMOUFLAGE');
 assert.equal(achievement?.hidden, true);
 assert.equal(achievement?.category, 'exploration');
@@ -62,17 +77,22 @@ for (const trackId of TRACK_IDS) {
   assert.match(safety?.description || '', /without going off-road/i);
 }
 
-const timeTrialAchievements = ACHIEVEMENTS.filter((item) => (
-  item.category === 'time-trials' && item.id !== 'faster-than-the-dev'
-));
-assert.equal(timeTrialAchievements.length, 6);
-for (const timeTrial of timeTrialAchievements) {
-  assert.equal(timeTrial.trophies, 75,
-    `${timeTrial.title} should award 75 trophies`);
+for (const achievementId of [
+  'countryside-sprint',
+  'airport-sprint',
+  'cliffside-sprint',
+  'harbor-sprint',
+  'midnight-sprint',
+  'mountain-sprint'
+]) {
+  assert.equal(getAchievement(achievementId)?.trophies, 75,
+    `${achievementId} should award 75 trophies`);
 }
-assert.equal(getAchievement('faster-than-the-dev')?.trophies, 300,
-  'FASTER THAN THE DEV should award 300 trophies');
+assert.equal(getAchievement('faster-than-the-dev')?.trophies, 300);
 
+const achievementState = {
+  unlocked: Object.fromEntries(ONBOARDING_ACHIEVEMENT_IDS.map((id) => [id, { unlockedAt: 1 }]))
+};
 const challengeMemory = new Map([[
   CHALLENGE_PROGRESS_STORAGE_KEY,
   JSON.stringify({ armyTracks: ['airport'], cleanTracks: ['harbor'] })
@@ -94,8 +114,13 @@ const challengeApi = installAchievementChallengeExpansion({
   runtime: challengeRuntime,
   achievements: {
     unlock(id, context) {
+      if (achievementState.unlocked[id]) return null;
+      achievementState.unlocked[id] = { unlockedAt: 1, ...context };
       challengeUnlocks.push({ id, context });
-      return { id };
+      return getAchievement(id) || { id };
+    },
+    getState() {
+      return achievementState;
     }
   },
   storage: challengeStorage
@@ -104,6 +129,8 @@ assert.ok(challengeUnlocks.some(({ id }) => id === 'airport-winner'),
   'Stored all-track progress should backfill the corresponding WINNER achievement');
 assert.ok(challengeUnlocks.some(({ id }) => id === 'harbor-safety'),
   'Stored all-track progress should backfill the corresponding SAFETY achievement');
+assert.ok(challengeUnlocks.some(({ id }) => id === 'got-started'),
+  'Existing players with all Getting Started achievements should receive GOT STARTED automatically');
 challengeUnlocks.length = 0;
 challengeApi.beginLap();
 challengeApi.completeLap({ position: 1, total: 5, time: 20 });
@@ -116,12 +143,48 @@ challengeApi.disconnect();
 
 assert.equal(
   ACHIEVEMENTS.reduce((total, item) => total + item.trophies, 0),
-  2975
+  3050
 );
-assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2975);
+assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 3050);
+assert.deepEqual(
+  TROPHY_ROAD_REWARDS.map(({ id, threshold }) => [id, threshold]),
+  [
+    ['vintage-racer', 300],
+    ['midnight-city', 400],
+    ['future-racer', 500],
+    ['emergency-pack', 600],
+    ['mountain', 700],
+    ['monster', 800],
+    ['paintjob', 900],
+    ['rally-racer', 1000]
+  ]
+);
 assert.deepEqual(TRACK_IDS, [
   'countryside', 'airport', 'cliffside', 'harbor', 'midnight-city', 'mountain'
 ], 'Every-track achievements must include the sixth production track');
+
+assert.match(TROPHY_ROAD_REWARD_ICONS.future, /M3 32h12l7-5/,
+  'Future Racer should use the sharper Formula silhouette in both marker and detail views');
+assert.match(TROPHY_ROAD_REWARD_ICONS.vintage, /r="7"/,
+  'Vintage Racer should read as an older racer with larger exposed wheels');
+assert.match(TROPHY_ROAD_REWARD_ICONS.rally, /circle cx="27" cy="29"/,
+  'Rally Racer should have recognisable auxiliary rally lamps');
+
+for (const variable of [
+  '--turn-reward-vehicle-locked',
+  '--turn-reward-vehicle-unlocked',
+  '--turn-reward-track-locked',
+  '--turn-reward-track-unlocked',
+  '--turn-reward-feature-locked',
+  '--turn-reward-feature-unlocked'
+]) {
+  assert.match(trophyRoadCss, new RegExp(variable));
+}
+assert.match(trophyRoadCss, /data-trophy-reward="mountain"/);
+assert.match(trophyRoadCss, /data-trophy-reward="paintjob"/);
+assert.match(trophyRoadCss, /data-trophy-reward="vintage-racer"/);
+assert.match(trophyRoadCss, /\.is-locked/);
+assert.match(trophyRoadCss, /\.is-unlocked/);
 
 const factoryRoute = Object.freeze({
   countryside: Object.freeze({ time: 18, carId: 'convertible', carColor: '#a8327a' }),
@@ -148,7 +211,6 @@ assert.equal(matchesTrackColor('mountain', '#4dabf7'), true,
   'Mountain should accept its alpine-blue track family without overlapping Cliffside cyan');
 assert.equal(matchesTrackColor('mountain', '#00aabb'), false,
   'Cliffside cyan must not also satisfy the Mountain blue family');
-
 assert.equal(matchesTrackColor('countryside', '#ffcc00'), false,
   'A saturated wrong hue must not count');
 assert.equal(matchesTrackColor('airport', '#fafafa'), false,
@@ -161,13 +223,11 @@ assert.equal(matchesTrackColor('cliffside', '#777777'), false,
 const qualifying = qualifyingChromaticCamouflage((trackId) => factoryRoute[trackId]);
 assert.equal(qualifying?.length, TRACK_IDS.length);
 assert.deepEqual(qualifying?.map(({ trackId }) => trackId), TRACK_IDS);
-
 assert.equal(qualifyingChromaticCamouflage((trackId) => (
   trackId === 'harbor'
     ? { ...factoryRoute[trackId], carColor: '#ff4fa3' }
     : factoryRoute[trackId]
 )), null, 'One wrong-colour personal best must keep the achievement locked');
-
 assert.equal(qualifyingChromaticCamouflage((trackId) => (
   trackId === 'airport' ? null : factoryRoute[trackId]
 )), null, 'Every canonical production track must have a stored personal best');
@@ -189,10 +249,10 @@ assert.ok(
 assert.match(indexSource, /catalog-chromatic-r183\.js/,
   'Production must route the achievement store and view through the production achievement catalog');
 assert.match(indexSource, /trophy-road-chromatic-r183\.js/,
-  'Production must expose the expanded 2975-trophy road maximum');
+  'Production must expose the expanded Trophy Road wrapper');
 assert.match(indexSource, /chromatic-camouflage-r183\.js/,
   'Production must install the hidden achievement evaluator');
 assert.doesNotMatch(indexSource, /airport-runway/,
   'The TURN NEXT Airport prototype must not enter the production TURN entry point');
 
-console.log(`TURN ${release.version} production six-track achievement regression passed.`);
+console.log(`TURN ${release.version} production achievements, Trophy Road order and Chromatic Camouflage regression passed.`);
