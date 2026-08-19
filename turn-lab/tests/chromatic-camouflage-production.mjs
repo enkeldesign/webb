@@ -62,6 +62,17 @@ for (const trackId of TRACK_IDS) {
   assert.match(safety?.description || '', /without going off-road/i);
 }
 
+const timeTrialAchievements = ACHIEVEMENTS.filter((item) => (
+  item.category === 'time-trials' && item.id !== 'faster-than-the-dev'
+));
+assert.equal(timeTrialAchievements.length, 6);
+for (const timeTrial of timeTrialAchievements) {
+  assert.equal(timeTrial.trophies, 75,
+    `${timeTrial.title} should award 75 trophies`);
+}
+assert.equal(getAchievement('faster-than-the-dev')?.trophies, 300,
+  'FASTER THAN THE DEV should award 300 trophies');
+
 const challengeMemory = new Map([[
   CHALLENGE_PROGRESS_STORAGE_KEY,
   JSON.stringify({ armyTracks: ['airport'], cleanTracks: ['harbor'] })
@@ -105,9 +116,9 @@ challengeApi.disconnect();
 
 assert.equal(
   ACHIEVEMENTS.reduce((total, item) => total + item.trophies, 0),
-  2475
+  2975
 );
-assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2475);
+assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2975);
 assert.deepEqual(TRACK_IDS, [
   'countryside', 'airport', 'cliffside', 'harbor', 'midnight-city', 'mountain'
 ], 'Every-track achievements must include the sixth production track');
@@ -178,7 +189,7 @@ assert.ok(
 assert.match(indexSource, /catalog-chromatic-r183\.js/,
   'Production must route the achievement store and view through the production achievement catalog');
 assert.match(indexSource, /trophy-road-chromatic-r183\.js/,
-  'Production must expose the expanded 2475-trophy road maximum');
+  'Production must expose the expanded 2975-trophy road maximum');
 assert.match(indexSource, /chromatic-camouflage-r183\.js/,
   'Production must install the hidden achievement evaluator');
 assert.doesNotMatch(indexSource, /airport-runway/,
