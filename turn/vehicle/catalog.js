@@ -41,14 +41,14 @@ const DEFAULT_COLOR_BY_ID = Object.freeze({
   'toy-racer': Object.freeze({ fallback: '#111111', p3: Object.freeze([0.067, 0.067, 0.067]) }),
   'monster-truck': Object.freeze({ fallback: '#3f5a3c', p3: Object.freeze([0.21, 0.35, 0.19]) }),
   'race-future': Object.freeze({ fallback: '#00aabb', p3: Object.freeze([0, 0.68, 0.74]) }),
-  race: Object.freeze({ fallback: '#b93632', p3: Object.freeze([0.72, 0.12, 0.12]) }),
+  race: Object.freeze({ fallback: '#ff7700', p3: Object.freeze([1, 0.467, 0]) }),
   'sedan-sports': Object.freeze({ fallback: '#5e3c87', p3: Object.freeze([0.36, 0.19, 0.56]) }),
   sedan: Object.freeze({ fallback: '#2b6a70', p3: Object.freeze([0.12, 0.41, 0.43]) }),
   suv: Object.freeze({ fallback: '#0555aa', p3: Object.freeze([0.02, 0.333, 0.667]) }),
   firetruck: Object.freeze({ fallback: '#d92d20', p3: Object.freeze([0.82, 0.08, 0.04]) }),
   police: Object.freeze({ fallback: '#0b0d10', p3: Object.freeze([0.035, 0.045, 0.06]) }),
   ambulance: Object.freeze({ fallback: '#f8f9fa', p3: Object.freeze([0.95, 0.97, 0.98]) }),
-  truck: Object.freeze({ fallback: '#ff7700', p3: Object.freeze([1, 0.467, 0]) }),
+  truck: Object.freeze({ fallback: '#b93632', p3: Object.freeze([0.72, 0.12, 0.12]) }),
   van: Object.freeze({ fallback: '#5d503f', p3: Object.freeze([0.34, 0.29, 0.21]) })
 });
 
@@ -129,7 +129,7 @@ const RAW_CARS = [
   ['firetruck', 'Fire Truck', 'car', { speed: 2, acceleration: 2, control: 4, drift: 4, boostPower: 1, boostDuration: 5 }, 1.10, 0, 0.66],
   ['police', 'Police Car', 'car', { speed: 4, acceleration: 3, control: 3, drift: 2, boostPower: 1, boostDuration: 5 }, 0.98, 0, 1.10],
   ['ambulance', 'Ambulance', 'car', { speed: 3, acceleration: 2, control: 3, drift: 4, boostPower: 1, boostDuration: 5 }, 1.05, 0, 0.78],
-  ['truck', 'Truck', 'car', { speed: 2, acceleration: 2, control: 3, drift: 5, boostPower: 1, boostDuration: 5 }, 1.12, 0, 0.68],
+  ['truck', 'Truck', 'car', { speed: 3, acceleration: 2, control: 4, drift: 4, boostPower: 2, boostDuration: 3 }, 1.12, 0, 0.68],
   ['van', 'Van', 'car', { speed: 2, acceleration: 3, control: 3, drift: 5, boostPower: 1, boostDuration: 4 }, 1.08, 0, 0.80]
 ];
 
