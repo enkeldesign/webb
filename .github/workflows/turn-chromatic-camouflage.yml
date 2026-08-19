@@ -8,7 +8,13 @@ on:
       - 'turn/index.html'
       - 'turn/achievements/catalog-chromatic-r183.js'
       - 'turn/achievements/chromatic-camouflage-r183.js'
+      - 'turn/achievements/challenge-expansion-r166.js'
+      - 'turn/progression/trophy-road-perks-r164.js'
       - 'turn/progression/trophy-road-chromatic-r183.js'
+      - 'turn/progression/trophy-road-r157.css'
+      - 'turn/progression/m8-trophy-gate.js'
+      - 'turn/progression/lot-trophy-gate.js'
+      - 'turn/progression/lot-paint-reward.js'
       - 'turn-lab/tests/chromatic-camouflage-production.mjs'
       - '.github/workflows/turn-chromatic-camouflage.yml'
   push:
@@ -18,7 +24,13 @@ on:
       - 'turn/index.html'
       - 'turn/achievements/catalog-chromatic-r183.js'
       - 'turn/achievements/chromatic-camouflage-r183.js'
+      - 'turn/achievements/challenge-expansion-r166.js'
+      - 'turn/progression/trophy-road-perks-r164.js'
       - 'turn/progression/trophy-road-chromatic-r183.js'
+      - 'turn/progression/trophy-road-r157.css'
+      - 'turn/progression/m8-trophy-gate.js'
+      - 'turn/progression/lot-trophy-gate.js'
+      - 'turn/progression/lot-paint-reward.js'
       - 'turn-lab/tests/chromatic-camouflage-production.mjs'
       - '.github/workflows/turn-chromatic-camouflage.yml'
 
@@ -37,12 +49,17 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Syntax-check Chromatic Camouflage modules
+      - name: Syntax-check achievement progression modules
         run: |
           node --check turn/achievements/catalog-chromatic-r183.js
           node --check turn/achievements/chromatic-camouflage-r183.js
+          node --check turn/achievements/challenge-expansion-r166.js
+          node --check turn/progression/trophy-road-perks-r164.js
           node --check turn/progression/trophy-road-chromatic-r183.js
+          node --check turn/progression/m8-trophy-gate.js
+          node --check turn/progression/lot-trophy-gate.js
+          node --check turn/progression/lot-paint-reward.js
           node --check turn-lab/tests/chromatic-camouflage-production.mjs
 
-      - name: Run Chromatic Camouflage production regression
+      - name: Run production achievement progression regression
         run: node turn-lab/tests/chromatic-camouflage-production.mjs
