@@ -1,3 +1,4 @@
+/* ABOUT action buttons share one visual contract: two lines, equal height and equal type scale. */
 .m8-about-dialog {
   --turn-dialog-inline-size: min(660px, calc(100vw - 32px));
 }
