@@ -97,10 +97,13 @@ assert.match(
   'Boost recharge must read the selected car tuning only while DRIFT is held'
 );
 
+const suv = CAR_CATALOG.find((car) => car.id === 'suv');
+assert.ok(suv, 'SUV must remain in the vehicle catalog');
+assert.equal(suv.defaultColor, '#0555aa', 'SUV factory paint must be #0555aa');
+
 const truck = CAR_CATALOG.find((car) => car.id === 'truck');
 assert.ok(truck, 'Truck must remain in the vehicle catalog');
-assert.equal(truck.defaultColor, '#8b5a2b',
-  'Truck must receive the former Vintage Racer factory colour');
+assert.equal(truck.defaultColor, '#ff7700', 'Truck factory paint must be #f70');
 
 assert.match(
   showcaseSource,
