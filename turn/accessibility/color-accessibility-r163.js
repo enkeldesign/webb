@@ -124,7 +124,8 @@ function installLotCarColorCues() {
       description.after(cue);
     }
 
-    cue.textContent = `CAR COLOR · ${describeColorCue(selectedLotBodyColor(screen, carId)).toUpperCase()}`;
+    const text = `CAR COLOR · ${describeColorCue(selectedLotBodyColor(screen, carId)).toUpperCase()}`;
+    if (cue.textContent !== text) cue.textContent = text;
     bindLotColorCueUpdates(screen);
   }
 }
