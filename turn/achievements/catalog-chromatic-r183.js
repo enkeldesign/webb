@@ -52,7 +52,15 @@ export const TRACK_SAFETY_ACHIEVEMENTS = Object.freeze(
   }))
 );
 
-const expandedBaseAchievements = base.ACHIEVEMENTS.flatMap((achievement) => {
+const rebalancedBaseAchievements = base.ACHIEVEMENTS.map((achievement) => {
+  if (achievement.category !== base.CATEGORY.TIME_TRIALS) return achievement;
+  return Object.freeze({
+    ...achievement,
+    trophies: achievement.id === 'faster-than-the-dev' ? 300 : 75
+  });
+});
+
+const expandedBaseAchievements = rebalancedBaseAchievements.flatMap((achievement) => {
   if (achievement.id === 'an-army-of-me') {
     return [...TRACK_WINNER_ACHIEVEMENTS, achievement];
   }
