@@ -1,4 +1,7 @@
-import { TRACK_IDS } from './catalog.js?revision=r166-bella-records';
+import {
+  ONBOARDING_ACHIEVEMENT_IDS,
+  TRACK_IDS
+} from './catalog.js?revision=r166-bella-records';
 
 export const CHALLENGE_PROGRESS_STORAGE_KEY = 'turn-achievement-challenges-v1';
 export const CLEAN_LAP_TARGETS = Object.freeze({
@@ -11,6 +14,7 @@ export const CLEAN_LAP_TARGETS = Object.freeze({
 });
 
 const SAMPLE_INTERVAL_MS = 50;
+const GOT_STARTED_ID = 'got-started';
 
 function normalizedTracks(value) {
   if (!Array.isArray(value)) return [];
@@ -97,6 +101,23 @@ export function installAchievementChallengeExpansion({
   const progress = loadProgress(storage);
   let currentLap = null;
 
+  function syncGotStarted() {
+    const state = achievements.getState?.();
+    const unlocked = state?.unlocked;
+    if (!unlocked || Object.prototype.hasOwnProperty.call(unlocked, GOT_STARTED_ID)) return null;
+    const complete = ONBOARDING_ACHIEVEMENT_IDS.every(
+      (id) => Object.prototype.hasOwnProperty.call(unlocked, id)
+    );
+    if (!complete) return null;
+    return achievements.unlock(
+      GOT_STARTED_ID,
+      achievementContext(
+        runtime.state.trackId || globalThis.__turnGetTrackId?.() || '',
+        runtime.state.vehicleId || ''
+      )
+    );
+  }
+
   function unlockStoredTrackAchievements() {
     for (const trackId of progress.armyTracks) {
       achievements.unlock(winnerAchievementId(trackId), achievementContext(trackId));
@@ -167,11 +188,14 @@ export function installAchievementChallengeExpansion({
   };
   const handleLapResult = (event) => completeLap(event.detail || {});
   const handleLapInvalid = () => resetLap();
+  const handleAchievementsUpdated = () => queueMicrotask(syncGotStarted);
 
   unlockStoredTrackAchievements();
+  syncGotStarted();
   globalThis.addEventListener?.('turn:ui-state-change', handleUiState);
   globalThis.addEventListener?.('turn:lap-result', handleLapResult);
   globalThis.addEventListener?.('turn:lap-invalid', handleLapInvalid);
+  globalThis.addEventListener?.('turn:achievements-updated', handleAchievementsUpdated);
   const sampler = globalThis.setInterval?.(sampleCourseState, SAMPLE_INTERVAL_MS) || 0;
 
   const api = Object.freeze({
@@ -179,10 +203,12 @@ export function installAchievementChallengeExpansion({
     beginLap,
     sampleCourseState,
     completeLap,
+    syncGotStarted,
     disconnect() {
       globalThis.removeEventListener?.('turn:ui-state-change', handleUiState);
       globalThis.removeEventListener?.('turn:lap-result', handleLapResult);
       globalThis.removeEventListener?.('turn:lap-invalid', handleLapInvalid);
+      globalThis.removeEventListener?.('turn:achievements-updated', handleAchievementsUpdated);
       globalThis.clearInterval?.(sampler);
       delete globalThis.__turnAchievementChallengeExpansion;
     }

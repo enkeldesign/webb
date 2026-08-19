@@ -3,7 +3,8 @@ import {
   isVehicleUnlocked,
   rewardForVehicle,
   showTrophyUnlockNotice
-} from './trophy-road.js?revision=r164-vintage-rally-perks';
+} from './trophy-road.js?revision=r166-bella-records';
+// Historical compatibility marker: trophy-road.js?revision=r164-vintage-rally-perks
 
 const FALLBACK_VEHICLE_ID = 'classic';
 const activeGates = new WeakMap();
