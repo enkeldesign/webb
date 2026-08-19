@@ -101,9 +101,13 @@ const suv = CAR_CATALOG.find((car) => car.id === 'suv');
 assert.ok(suv, 'SUV must remain in the vehicle catalog');
 assert.equal(suv.defaultColor, '#0555aa', 'SUV factory paint must be #0555aa');
 
+const raceCar = CAR_CATALOG.find((car) => car.id === 'race');
+assert.ok(raceCar, 'Race Car must remain in the vehicle catalog');
+assert.equal(raceCar.defaultColor, '#ff7700', 'Race Car factory paint must be the former Truck orange');
+
 const truck = CAR_CATALOG.find((car) => car.id === 'truck');
 assert.ok(truck, 'Truck must remain in the vehicle catalog');
-assert.equal(truck.defaultColor, '#ff7700', 'Truck factory paint must be #f70');
+assert.equal(truck.defaultColor, '#b93632', 'Truck factory paint must be the former Race Car red');
 
 assert.match(
   showcaseSource,
