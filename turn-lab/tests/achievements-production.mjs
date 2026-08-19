@@ -189,7 +189,7 @@ assert.equal(store.unlock('an-army-of-me', { trackId: 'midnight-city' })?.trophi
 assert.equal(store.unlock('on-course-of-course', { trackId: 'harbor' })?.trophies, 100);
 assert.equal(store.unlock('save-bella', { trackId: 'countryside', vehicleId: 'firetruck' })?.trophies, 25);
 assert.equal(store.trophyTotal(), 325);
-assert.deepEqual(store.syncRewards().map((reward) => reward.id), ['midnight-city']);
+assert.deepEqual(store.syncRewards().map((reward) => reward.id), ['vintage-racer']);
 assert.doesNotMatch(storeSource, /rival-storage|clearRivalsState|clearAllRivalsState/,
   'Rival resets must remain independent from achievements');
 
@@ -243,6 +243,7 @@ assert.match(timeTrialSource, /targetSeconds: 27/);
 assert.match(timeTrialSource, /seconds >= trial\.targetSeconds/);
 
 assert.match(challengeSource, /SAMPLE_INTERVAL_MS = 50/);
+assert.match(challengeSource, /GOT_STARTED_ID = 'got-started'/);
 assert.match(challengeSource, /mountain: 110/);
 assert.match(challengeSource, /rivalCountAtStart/);
 assert.match(challengeSource, /runtime\.state\.offRoad === true/);
@@ -250,6 +251,7 @@ assert.match(challengeSource, /achievements\.unlock\('an-army-of-me'/);
 assert.match(challengeSource, /achievements\.unlock\('on-course-of-course'/);
 assert.match(challengeSource, /turn:lap-result/);
 assert.match(challengeSource, /turn:lap-invalid/);
+assert.match(challengeSource, /turn:achievements-updated/);
 assert.match(challengeSource, /reason === 'lap-started'/);
 
 assert.match(bellaSource, /Kenney Cube Pets/);
