@@ -1,20 +1,41 @@
 /*
- * Keep browser text-selection gestures out of the live race surface. On iOS a
- * sustained driving touch can otherwise open the Copy / Look Up / Translate
- * callout. This stays deliberately local to gameplay so document text and the
- * native color input in The Lot keep normal browser interaction.
+ * TURN is gesture-first. Prevent browser text selection and the iOS Copy /
+ * Look Up / Translate callout throughout the app, then opt the deliberately
+ * readable/copyable information surfaces back in below.
  */
-#game,
-#hud,
-#controls,
-#message,
-#game *,
-#hud *,
-#controls *,
-#message * {
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
+body,
+body * {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+/*
+ * Selection allowlist: How to Play + Drive By Ear help/training, visible
+ * version information, About, History/Changelog, Achievements and Give
+ * Feedback. Keep controls and the rest of the game gesture-only.
+ */
+body .m8-how-dialog .m8-guide-grid,
+body .m8-how-dialog .m8-guide-grid *,
+body .turn-dbe-training-dialog .m8-dialog-card,
+body .turn-dbe-training-dialog .m8-dialog-card *,
+body .m8-home-build,
+body .m8-home-build *,
+body .install-kicker,
+body .install-kicker *,
+body .m8-about-content,
+body .m8-about-content *,
+body .turn-history-panel,
+body .turn-history-panel *,
+body .turn-history-release,
+body .turn-history-release *,
+body .turn-achievements-content,
+body .turn-achievements-content *,
+body .m8-feedback-content,
+body .m8-feedback-content * {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  -webkit-touch-callout: default !important;
 }
 
 .pedals {
