@@ -21,6 +21,15 @@ const GOLDEN_HOUR = Object.freeze({
   icon: 'siren'
 });
 
+export const GOT_STARTED_ACHIEVEMENT = Object.freeze({
+  id: 'got-started',
+  category: base.CATEGORY.ONBOARDING,
+  trophies: 75,
+  title: 'GOT STARTED',
+  description: 'Finish all Getting Started achievements.',
+  icon: 'trophy'
+});
+
 const SAFETY_TARGET_LABELS = Object.freeze({
   countryside: '0:30',
   airport: '0:30',
@@ -60,7 +69,19 @@ const rebalancedBaseAchievements = base.ACHIEVEMENTS.map((achievement) => {
   });
 });
 
-const expandedBaseAchievements = rebalancedBaseAchievements.flatMap((achievement) => {
+const firstNonOnboardingIndex = rebalancedBaseAchievements.findIndex(
+  (achievement) => achievement.category !== base.CATEGORY.ONBOARDING
+);
+const gotStartedInsertionIndex = firstNonOnboardingIndex >= 0
+  ? firstNonOnboardingIndex
+  : rebalancedBaseAchievements.length;
+const withGotStarted = [
+  ...rebalancedBaseAchievements.slice(0, gotStartedInsertionIndex),
+  GOT_STARTED_ACHIEVEMENT,
+  ...rebalancedBaseAchievements.slice(gotStartedInsertionIndex)
+];
+
+const expandedBaseAchievements = withGotStarted.flatMap((achievement) => {
   if (achievement.id === 'an-army-of-me') {
     return [...TRACK_WINNER_ACHIEVEMENTS, achievement];
   }
