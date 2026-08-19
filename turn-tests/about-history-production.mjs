@@ -91,10 +91,12 @@ assert.match(bootstrap, /aboutDialog\.showModal\(\)/,
   'Closing the reader should restore the source About dialog');
 assert.match(bootstrap, /historyButton\.focus\(\{ preventScroll: true \}\)/,
   'Focus should return to the History and Changelog action inside the restored About dialog');
-assert.match(bootstrap, /HISTORY &amp; CHANGELOG/);
+assert.match(bootstrap, /<span>HISTORY AND<br>CHANGELOG<\/span>/,
+  'The About history action must use the intended two-line label');
 assert.match(bootstrap, /href="\/turn\/design\.html"/,
   'The About action must open the main TURN design system');
-assert.match(bootstrap, />DESIGN SYSTEM<\/a>/);
+assert.match(bootstrap, /<span>DESIGN<br>SYSTEM<\/span>/,
+  'The Design System action must use the intended two-line label');
 assert.match(bootstrap, /installStylesheet\('\.\.\/m8-home\.css/);
 assert.match(bootstrap, /installStylesheet\('\.\.\/dialog-system-r163\.css/);
 assert.match(bootstrap, /installStylesheet\('\.\.\/about-history-r163\.css/);
