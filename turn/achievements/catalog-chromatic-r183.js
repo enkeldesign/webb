@@ -21,16 +21,59 @@ const GOLDEN_HOUR = Object.freeze({
   icon: 'siren'
 });
 
-const firstTimeTrialIndex = base.ACHIEVEMENTS.findIndex(
+const SAFETY_TARGET_LABELS = Object.freeze({
+  countryside: '0:30',
+  airport: '0:30',
+  cliffside: '0:30',
+  harbor: '1:00',
+  'midnight-city': '2:00',
+  mountain: '1:50'
+});
+
+export const TRACK_WINNER_ACHIEVEMENTS = Object.freeze(
+  base.TRACK_IDS.map((trackId) => Object.freeze({
+    id: `${trackId}-winner`,
+    category: base.CATEGORY.RACING,
+    trophies: 50,
+    title: `${base.TRACK_NAMES[trackId].toUpperCase()} WINNER`,
+    description: `Finish first against four saved rivals on ${base.TRACK_NAMES[trackId]}.`,
+    icon: 'rival'
+  }))
+);
+
+export const TRACK_SAFETY_ACHIEVEMENTS = Object.freeze(
+  base.TRACK_IDS.map((trackId) => Object.freeze({
+    id: `${trackId}-safety`,
+    category: base.CATEGORY.RACING,
+    trophies: 50,
+    title: `${base.TRACK_NAMES[trackId].toUpperCase()} SAFETY`,
+    description: `Finish ${base.TRACK_NAMES[trackId]} without going off-road in under ${SAFETY_TARGET_LABELS[trackId]}.`,
+    icon: 'route'
+  }))
+);
+
+const expandedBaseAchievements = base.ACHIEVEMENTS.flatMap((achievement) => {
+  if (achievement.id === 'an-army-of-me') {
+    return [...TRACK_WINNER_ACHIEVEMENTS, achievement];
+  }
+  if (achievement.id === 'on-course-of-course') {
+    return [...TRACK_SAFETY_ACHIEVEMENTS, achievement];
+  }
+  return [achievement];
+});
+
+const firstTimeTrialIndex = expandedBaseAchievements.findIndex(
   (achievement) => achievement.category === base.CATEGORY.TIME_TRIALS
 );
-const insertionIndex = firstTimeTrialIndex >= 0 ? firstTimeTrialIndex : base.ACHIEVEMENTS.length;
+const insertionIndex = firstTimeTrialIndex >= 0
+  ? firstTimeTrialIndex
+  : expandedBaseAchievements.length;
 
 export const ACHIEVEMENTS = Object.freeze([
-  ...base.ACHIEVEMENTS.slice(0, insertionIndex),
+  ...expandedBaseAchievements.slice(0, insertionIndex),
   GOLDEN_HOUR,
   CHROMATIC_CAMOUFLAGE,
-  ...base.ACHIEVEMENTS.slice(insertionIndex)
+  ...expandedBaseAchievements.slice(insertionIndex)
 ]);
 
 export const VEHICLE_NAMES = Object.freeze({
