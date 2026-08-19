@@ -19,9 +19,11 @@ const LILYA_MIN_VIEW_DOT = 0.56;
 const LILYA_MIN_FRONT_DOT = 0.12;
 const LILYA_MAX_TRACK_ALIGNMENT = -0.62;
 const LILYA_DISCOVERY_HOLD_MS = 650;
+const TRACK_SURFACE_NAME = /^Midnight City (race road|road edge|sidewalk)/;
 
 export function installMidnightCityWorld(options) {
   const world = installMidnightCityWorldR7(options);
+  const surfaceNormals = repairTrackSurfaceWinding(world);
   const portrait = installHiddenLilyaPortrait(world);
   const lazyLoadArmed = armWrongWayTextureLoad(world, portrait, options);
   const playerSpotlight = installNightPlayerSpotlight(options.runtime?.playerCar, options.runtime);
@@ -45,12 +47,55 @@ export function installMidnightCityWorld(options) {
       ? 'shared-warm-shadowless-spotlight-identical-to-mountain'
       : 'unavailable-without-player-car',
     sharedNightSpotlight: Boolean(playerSpotlight),
-    headlightRoadReflectance: 'original-midnight-city-road-material',
+    headlightRoadReflectance: 'original-midnight-city-road-material-with-upward-facing-surface-normals',
+    repairedDownwardSurfaceMeshes: surfaceNormals.repaired,
+    inspectedTrackSurfaceMeshes: surfaceNormals.inspected,
     hiddenLilyaAddsDynamicLights: false,
     noIndependentAnimationLoop: true
   });
 
   return world;
+}
+
+function repairTrackSurfaceWinding(world) {
+  let inspected = 0;
+  let repaired = 0;
+  const a = new THREE.Vector3();
+  const b = new THREE.Vector3();
+  const c = new THREE.Vector3();
+  const ab = new THREE.Vector3();
+  const ac = new THREE.Vector3();
+  const faceNormal = new THREE.Vector3();
+
+  world.traverse((node) => {
+    if (!node?.isMesh || !TRACK_SURFACE_NAME.test(node.name || '')) return;
+    const geometry = node.geometry;
+    const index = geometry?.index;
+    const position = geometry?.getAttribute?.('position');
+    if (!index || !position || index.count < 3) return;
+
+    inspected += 1;
+    a.fromBufferAttribute(position, index.getX(0));
+    b.fromBufferAttribute(position, index.getX(1));
+    c.fromBufferAttribute(position, index.getX(2));
+    ab.subVectors(b, a);
+    ac.subVectors(c, a);
+    faceNormal.crossVectors(ab, ac);
+    if (faceNormal.y >= 0) return;
+
+    for (let offset = 0; offset < index.count; offset += 3) {
+      const second = index.getX(offset + 1);
+      index.setX(offset + 1, index.getX(offset + 2));
+      index.setX(offset + 2, second);
+    }
+    index.needsUpdate = true;
+    geometry.computeVertexNormals();
+    geometry.getAttribute('normal').needsUpdate = true;
+    node.userData.turnMidnightSurfaceWinding = 'upward-r176';
+    repaired += 1;
+  });
+
+  return Object.freeze({ inspected, repaired });
 }
 
 function installHiddenLilyaPortrait(world) {

@@ -55,9 +55,11 @@ assert.match(midnight, /night-player-spotlight-r560\.js\?revision=r175-reconcile
 assert.match(midnight, /installNightPlayerSpotlight\(options\.runtime\?\.playerCar, options\.runtime\)/,
   'MIDNIGHT CITY must install the exact same shared spotlight rig');
 assert.match(midnight, /shared-warm-shadowless-spotlight-identical-to-mountain/);
+assert.match(midnight, /repairTrackSurfaceWinding\(world\)/,
+  'MIDNIGHT CITY must correct its inherited downward road normals before the shared spotlight is evaluated');
 assert.match(registry, /mountain-world-r3\.js\?revision=r175-reconcile-night-headlight/,
   'Production must cache-bust MOUNTAIN to the reconciled headlight revision');
-assert.match(registry, /midnight-city-world-r11\.js\?build=20260818-r175-reconcile-night-headlight/,
-  'Production must cache-bust MIDNIGHT CITY to the reconciled headlight revision');
+assert.match(registry, /midnight-city-world-r11\.js\?build=20260819-r176-upward-road-normals/,
+  'Production must cache-bust MIDNIGHT CITY to the upward road-normal repair');
 
 console.log('TURN shared MOUNTAIN + MIDNIGHT CITY reconciled 220 m shadowless spotlight contract passed.');

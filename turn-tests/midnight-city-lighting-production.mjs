@@ -68,12 +68,24 @@ assert.doesNotMatch(signParkSource, /requestAnimationFrame|setAnimationLoop|setI
 
 await fs.access(new URL('../turn/LILYA.PNG', import.meta.url));
 assert.match(easterEggSource, /installMidnightCityWorld as installMidnightCityWorldR7/);
+assert.match(easterEggSource, /repairTrackSurfaceWinding\(world\)/,
+  'MIDNIGHT CITY must repair the original downward-facing road ribbon winding before installing the physical headlight');
+assert.match(easterEggSource, /const TRACK_SURFACE_NAME = \/\^Midnight City \(race road\|road edge\|sidewalk\)\//,
+  'The normal repair must stay scoped to the authored drive surface');
+assert.match(easterEggSource, /if \(faceNormal\.y >= 0\) return/,
+  'Already-correct upward surfaces must be left untouched');
+assert.match(easterEggSource, /index\.setX\(offset \+ 1, index\.getX\(offset \+ 2\)\)/,
+  'Downward triangles must have their winding reversed rather than using a double-sided material workaround');
+assert.match(easterEggSource, /geometry\.computeVertexNormals\(\)/,
+  'Repaired winding must regenerate lighting normals');
+assert.match(easterEggSource, /repairedDownwardSurfaceMeshes: surfaceNormals\.repaired/,
+  'Runtime diagnostics must expose how many inherited surface meshes needed repair');
 assert.match(easterEggSource, /installNightPlayerSpotlight\(options\.runtime\?\.playerCar, options\.runtime\)/);
 assert.match(easterEggSource, /sharedNightSpotlight: Boolean\(playerSpotlight\)/);
-assert.match(easterEggSource, /headlightRoadReflectance: 'original-midnight-city-road-material'/,
-  'MIDNIGHT CITY should keep its established road material and let the shared physical spotlight carry the headlight treatment');
-assert.doesNotMatch(easterEggSource, /MIDNIGHT_HEADLIGHT_ROAD|liftRoadForSharedHeadlight|material\.color\.setHex/,
-  'The discarded road-color workaround must not remain in the production night-track wrapper');
+assert.match(easterEggSource, /headlightRoadReflectance: 'original-midnight-city-road-material-with-upward-facing-surface-normals'/,
+  'MIDNIGHT CITY should keep its road material but expose an upward normal to the shared physical spotlight');
+assert.doesNotMatch(easterEggSource, /MIDNIGHT_HEADLIGHT_ROAD|liftRoadForSharedHeadlight|material\.color\.setHex|THREE\.DoubleSide[\s\S]*race road/,
+  'The road-normal repair must not regress to color lifting or a double-sided material workaround');
 assert.match(easterEggSource, /hiddenLilyaAddsDynamicLights: false/);
 assert.match(easterEggSource, /new URL\('\.\.\/LILYA\.PNG', import\.meta\.url\)\.href/);
 assert.match(easterEggSource, /x: -500\.70[\s\S]*y: 11\.96[\s\S]*z: 40\.20/);
@@ -104,11 +116,12 @@ assert.match(easterEggSource, /gameplayGeometryUnchanged: true/);
 assert.doesNotMatch(
   easterEggSource,
   /requestAnimationFrame|setAnimationLoop|setInterval|setTimeout|new THREE\.PointLight|new THREE\.SpotLight/,
-  'The hidden portrait itself must use the existing render loop without adding timers or inline lights'
+  'The hidden portrait and surface repair must use the existing render loop without adding timers or inline lights'
 );
 
-assert.match(registrySource, /midnight-city-world-r11\.js\?build=20260818-r174-night-headlight-tune/);
+assert.match(registrySource, /midnight-city-world-r11\.js\?build=20260819-r176-upward-road-normals/,
+  'Production must cache-bust the Midnight City wrapper that repairs inherited surface normals');
 assert.match(registrySource, /'midnight-city'\(\{ scene, samples, trackWidth, runtime \}\)/);
 assert.match(registrySource, /installMidnightCityWorld\(\{ scene, samples, trackWidth, runtime \}\)/);
 
-console.log('TURN Midnight City lighting, shared night spotlight, original road material, scenery and wrong-way-only lazy LILYA placement passed.');
+console.log('TURN Midnight City lighting, upward road normals, shared night spotlight, scenery and wrong-way-only lazy LILYA placement passed.');
