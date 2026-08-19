@@ -211,8 +211,8 @@ function compactAboutDialog(aboutDialog, historyDialog, tabs) {
   content.innerHTML = `
     ${aboutTurnHtml()}
     <div class="m8-about-actions turn-dialog__actions">
-      <button class="m8-about-history" type="button" aria-haspopup="dialog">HISTORY &amp; CHANGELOG</button>
-      <a class="m8-about-design-system" href="/turn/design.html" target="_blank" rel="noreferrer">DESIGN SYSTEM</a>
+      <button class="m8-about-history" type="button" aria-haspopup="dialog"><span>HISTORY AND<br>CHANGELOG</span></button>
+      <a class="m8-about-design-system" href="/turn/design.html" target="_blank" rel="noreferrer"><span>DESIGN<br>SYSTEM</span></a>
     </div>`;
 
   const historyButton = content.querySelector('.m8-about-history');
