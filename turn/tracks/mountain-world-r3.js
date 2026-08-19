@@ -7,7 +7,7 @@ import { installMountainR4WaterfallNotch } from './mountain-world-r4-waterfall-n
 import { installMountainR4DriverFacingWaterfall } from './mountain-world-r4-waterfall-face.js';
 import { installMountainR5SuburbanVillage } from './mountain-world-r5-suburban-village.js';
 import { installMountainR6Night } from './mountain-world-r6-night.js';
-import { installMountainR7SkyFix } from './mountain-world-r7-sky.js';
+import { installMountainR7SkyFix } from './mountain-world-r7-sky.js?revision=r177-ipad-aspect-normalization';
 import { installMountainSpotlightHeadlight } from './mountain-player-headlight-r8.js?revision=r175-reconcile';
 
 const MOUNTAIN_VILLAGE_BENCHES = new Set([
@@ -80,7 +80,7 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
   world.userData.turnMountainTerrainHeightAt = terrainContext.terrainHeightAt;
   world.userData.turnMountainArtDirection = Object.freeze({
     version: 'r3',
-    visualPolish: 'r560-shared-night-spotlight-plus-r7-horizon-sky-plus-r6-night-plus-r5-suburban-village-plus-r4-waterfall-landmarks',
+    visualPolish: 'r177-ipad-aspect-normalized-r7-horizon-sky-plus-r6-night-plus-r5-suburban-village-plus-r4-waterfall-landmarks',
     ground: 'continuous-snow-and-granite-terrain-body',
     roadEdge: 'white-with-black-outer-contour',
     roadbed: 'opaque-and-terrain-supported',

@@ -10,6 +10,8 @@ on:
       - 'turn/assets/scenery/mountain/**'
       - 'turn-lab/mountain-visual.html'
       - 'turn-tests/mountain-visual-smoke.mjs'
+      - 'turn-tests/mountain-sky-aspect-production.mjs'
+      - 'turn-tests/mountain-sky-visual-ipad.mjs'
       - 'turn-tests/mountain-spotlight-headlight-production.mjs'
       - '.github/workflows/turn-mountain-visual-smoke.yml'
   push:
@@ -21,6 +23,8 @@ on:
       - 'turn/assets/scenery/mountain/**'
       - 'turn-lab/mountain-visual.html'
       - 'turn-tests/mountain-visual-smoke.mjs'
+      - 'turn-tests/mountain-sky-aspect-production.mjs'
+      - 'turn-tests/mountain-sky-visual-ipad.mjs'
       - 'turn-tests/mountain-spotlight-headlight-production.mjs'
       - '.github/workflows/turn-mountain-visual-smoke.yml'
 
@@ -43,6 +47,9 @@ jobs:
       - name: Validate shared night spotlight contract
         run: node turn-tests/mountain-spotlight-headlight-production.mjs
 
+      - name: Validate phone and iPad sky aspect contract
+        run: node turn-tests/mountain-sky-aspect-production.mjs
+
       - name: Install Playwright Chromium
         run: |
           npm install --no-save playwright@1.55.0
@@ -61,6 +68,9 @@ jobs:
 
       - name: Render and validate fixed MOUNTAIN cameras
         run: node turn-tests/mountain-visual-smoke.mjs
+
+      - name: Capture MOUNTAIN sky at iPad 4:3
+        run: node turn-tests/mountain-sky-visual-ipad.mjs
 
       - name: Upload MOUNTAIN visual inspection frames
         if: always()
