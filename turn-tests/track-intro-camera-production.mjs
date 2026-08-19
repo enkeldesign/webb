@@ -27,10 +27,16 @@ assert.match(mountainSkySource, /const SKY_HORIZONTAL_TILES = 4/,
   'MOUNTAIN yaw lock should map four star-field tiles to one world rotation');
 assert.match(mountainSkySource, /const SKY_YAW_CATCHUP = 0\.14/,
   'MOUNTAIN sky should retain a small heading drag instead of snapping');
+assert.match(mountainSkySource, /const SKY_REFERENCE_ASPECT = 1536 \/ 709/,
+  'The approved wide-phone composition should remain the sky-scale reference');
 assert.match(mountainSkySource, /const heading = Math\.atan2\(forward\.x, forward\.z\)/,
   'MOUNTAIN sky UVs must derive from world heading');
 assert.match(mountainSkySource, /const yawU = -motion\.visualHeading \/ TAU \* SKY_HORIZONTAL_TILES/,
   'MOUNTAIN star texture must move opposite camera yaw so the distant sky appears world-fixed');
+assert.match(mountainSkySource, /const repeatU = visibleU \* REFERENCE_SKY_COVERAGE\.x \/ visiblePlaneX/,
+  'MOUNTAIN horizontal star sampling must compensate for aspect-dependent plane overhang');
+assert.match(mountainSkySource, /const repeatV = REFERENCE_SKY_COVERAGE\.y \/ visiblePlaneY/,
+  'MOUNTAIN vertical star sampling must preserve the approved scale across aspect ratios');
 assert.match(mountainSkySource, /sky\.up\.set\(0, 1, 0\)/,
   'MOUNTAIN stars must keep world-up so they roll with the rendered horizon');
 assert.match(mountainSkySource, /sky\.lookAt\(camera\.position\)/,
@@ -46,10 +52,10 @@ assert.match(mountainSkySource, /const MOON_SKY_ANCHOR_V = 0\.783222/,
   'MOUNTAIN moon needs a stable vertical anchor in the star texture');
 assert.match(mountainSkySource, /sky\.add\(moonLayer\)/,
   'The moon must be a literal child of the star backdrop so it shares the same 3D transform and depth');
-assert.match(mountainSkySource, /const localU = \(anchorU - skyMotion\.offsetU\) \/ skyMotion\.visibleU/,
-  'The moon horizontal position must invert the exact star-field UV transform');
-assert.match(mountainSkySource, /const localV = MOON_SKY_ANCHOR_V - skyMotion\.offsetV/,
-  'The moon vertical position must invert the exact star-field pitch/parallax transform');
+assert.match(mountainSkySource, /const localU = \(anchorU - skyMotion\.offsetU\) \/ skyMotion\.repeatU/,
+  'The moon horizontal position must invert the exact aspect-corrected star-field UV transform');
+assert.match(mountainSkySource, /const localV = \(MOON_SKY_ANCHOR_V - skyMotion\.offsetV\) \/ skyMotion\.repeatV/,
+  'The moon vertical position must invert the exact aspect-corrected star-field UV transform');
 assert.match(mountainSkySource, /moonLayer\.position\.set\(localU - 0\.5, localV - 0\.5, 0\)/,
   'The moon must live on the exact same Z plane as the stars');
 assert.match(mountainSkySource, /apparentSize = legacySize \* SKY_DISTANCE \/ LEGACY_MOON_DISTANCE/,
@@ -156,30 +162,47 @@ function projectSkyAnchorToScreen({ anchorU, anchorV, position, target, fov, asp
   const skyDistance = 840;
   const skyImageAspect = 2;
   const horizontalTiles = 4;
+  const overscan = 1.05;
+  const referenceAspect = 1536 / 709;
   const forward = normalize(subtract(target, position));
   const heading = Math.atan2(forward[0], forward[2]);
   const verticalFov = fov * Math.PI / 180;
   const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * aspect);
   const visibleU = horizontalFov / (Math.PI * 2) * horizontalTiles;
-  const baseU = 0.5 - visibleU * 0.5;
-  const yawU = -heading / (Math.PI * 2) * horizontalTiles;
-  const positionU = (position[0] - position[2]) * 0.00004;
-  const offsetU = baseU + yawU + positionU;
-  const offsetV = forward[1] * 0.025;
-  const centreSampleU = offsetU + visibleU * 0.5;
-  const equivalentAnchorU = anchorU
-    + Math.round((centreSampleU - anchorU) / horizontalTiles) * horizontalTiles;
-  const localU = (equivalentAnchorU - offsetU) / visibleU;
-  const localV = anchorV - offsetV;
 
   const visibleHeight = 2 * skyDistance * Math.tan(verticalFov / 2);
   const visibleWidth = visibleHeight * aspect;
-  const coverHeight = Math.max(visibleHeight, visibleWidth / skyImageAspect) * 1.05;
+  const coverHeight = Math.max(visibleHeight, visibleWidth / skyImageAspect) * overscan;
+  const visiblePlaneX = Math.min(1, visibleWidth / (coverHeight * skyImageAspect));
+  const visiblePlaneY = Math.min(1, visibleHeight / coverHeight);
+  const referenceCoverage = planeCoverage(referenceAspect, skyImageAspect, overscan);
+  const repeatU = visibleU * referenceCoverage.x / visiblePlaneX;
+  const repeatV = referenceCoverage.y / visiblePlaneY;
+  const baseU = 0.5 - repeatU * 0.5;
+  const baseV = 0.5 - repeatV * 0.5;
+  const yawU = -heading / (Math.PI * 2) * horizontalTiles;
+  const positionU = (position[0] - position[2]) * 0.00004;
+  const offsetU = baseU + yawU + positionU;
+  const offsetV = baseV + forward[1] * 0.025;
+  const centreSampleU = offsetU + repeatU * 0.5;
+  const equivalentAnchorU = anchorU
+    + Math.round((centreSampleU - anchorU) / horizontalTiles) * horizontalTiles;
+  const localU = (equivalentAnchorU - offsetU) / repeatU;
+  const localV = (anchorV - offsetV) / repeatV;
+
   const worldX = (localU - 0.5) * coverHeight * skyImageAspect;
   const worldY = (localV - 0.5) * coverHeight;
   const ndcX = worldX / (visibleWidth / 2);
   const ndcY = worldY / (visibleHeight / 2);
   return { x: (ndcX + 1) / 2, y: (1 - ndcY) / 2 };
+}
+
+function planeCoverage(aspect, skyImageAspect, overscan) {
+  const coverHeightInVisibleHeights = Math.max(1, aspect / skyImageAspect) * overscan;
+  return {
+    x: Math.min(1, aspect / (coverHeightInVisibleHeights * skyImageAspect)),
+    y: Math.min(1, 1 / coverHeightInVisibleHeights)
+  };
 }
 
 function subtract(a, b) {
