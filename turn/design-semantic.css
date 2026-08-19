@@ -46,6 +46,7 @@
 
 .track-card-harbor .track-card-difficulty,
 .track-card-midnight-city .track-card-difficulty,
+.track-card-mountain .track-card-difficulty,
 .track-card[data-track-difficulty="hard"] .track-card-difficulty {
   background: var(--turn-difficulty-hard) !important;
 }
