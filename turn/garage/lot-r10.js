@@ -197,7 +197,7 @@ export function showTheLot({ initialSelection } = {}) {
         const beginnerMarker = makeBeginnerFriendlyMarker();
         // Keep the guide inside the car grid rather than the left hardware-safe area.
         // The bubble sits above/right of the Training Car and its tail points back left.
-        beginnerMarker.position.set(x + 2.45, 4.7, z + 0.65);
+        beginnerMarker.position.set(x + 2.0, 4.85, z + 0.65);
         lot.add(beginnerMarker);
       }
 
@@ -787,7 +787,7 @@ function makeBeginnerFriendlyMarker() {
     depthWrite: false
   });
   const sprite = new THREE.Sprite(material);
-  sprite.scale.set(5.5, 2.75, 1);
+  sprite.scale.set(5.7, 3.15, 1);
   sprite.renderOrder = 121;
   return sprite;
 }
@@ -830,37 +830,57 @@ function getLockBadgeTexture() {
 function getBeginnerBadgeTexture() {
   if (beginnerBadgeTexture) return beginnerBadgeTexture;
   const canvas = document.createElement('canvas');
-  canvas.width = 360;
-  canvas.height = 190;
+  canvas.width = 720;
+  canvas.height = 400;
   const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const scale = 2;
+  const width = canvas.width / scale;
+  const height = canvas.height / scale;
+  ctx.scale(scale, scale);
+  ctx.clearRect(0, 0, width, height);
 
-  roundedRectPath(ctx, 17, 15, 326, 128, 13);
-  ctx.fillStyle = '#fff8e8';
-  ctx.fill();
-  ctx.strokeStyle = '#08090a';
-  ctx.lineWidth = 9;
-  ctx.stroke();
+  // Draw the body and pointer as one continuous silhouette. Besides matching the
+  // reference more closely, this removes the horizontal seam created by the old
+  // rounded-rectangle-plus-triangle construction.
+  const left = 10;
+  const top = 10;
+  const right = 350;
+  const bottom = 146;
+  const radius = 34;
+  const tailLeft = 83;
+  const tailRight = 133;
+  const tailTipX = 108;
+  const tailTipY = 191;
 
-  // Bottom-left speech-bubble tail: the label can live safely to the right of
-  // the Training Car while still visually pointing back to it.
   ctx.beginPath();
-  ctx.moveTo(72, 142);
-  ctx.lineTo(128, 142);
-  ctx.lineTo(48, 181);
+  ctx.moveTo(left + radius, top);
+  ctx.lineTo(right - radius, top);
+  ctx.quadraticCurveTo(right, top, right, top + radius);
+  ctx.lineTo(right, bottom - radius);
+  ctx.quadraticCurveTo(right, bottom, right - radius, bottom);
+  ctx.lineTo(tailRight, bottom);
+  ctx.lineTo(tailTipX, tailTipY);
+  ctx.lineTo(tailLeft, bottom);
+  ctx.lineTo(left + radius, bottom);
+  ctx.quadraticCurveTo(left, bottom, left, bottom - radius);
+  ctx.lineTo(left, top + radius);
+  ctx.quadraticCurveTo(left, top, left + radius, top);
   ctx.closePath();
+
   ctx.fillStyle = '#fff8e8';
   ctx.fill();
   ctx.strokeStyle = '#08090a';
-  ctx.lineWidth = 8;
+  ctx.lineWidth = 10;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
   ctx.stroke();
 
   ctx.fillStyle = '#08090a';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.font = '900 38px system-ui, sans-serif';
-  ctx.fillText('BEGINNER-', 180, 55);
-  ctx.fillText('FRIENDLY', 180, 103);
+  ctx.font = '700 37px system-ui, sans-serif';
+  ctx.fillText('BEGINNER-', 180, 58);
+  ctx.fillText('FRIENDLY', 180, 108);
 
   beginnerBadgeTexture = new THREE.CanvasTexture(canvas);
   beginnerBadgeTexture.colorSpace = THREE.SRGBColorSpace;
