@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const CITY_BUILDER_COMMIT = '4535092b740b378b700efd9df9e27a631815b84a';
 const PLATFORMER_COMMIT = '3fa8a04b1c01ab23db43123d4ce814a34c3fc7f0';
+const STARTUP_IDLE_TIMEOUT_MS = 900;
 
 const CITY_BASE = `https://cdn.jsdelivr.net/gh/KenneyNL/Starter-Kit-City-Builder@${CITY_BUILDER_COMMIT}/models/`;
 const PLATFORMER_BASE = `https://cdn.jsdelivr.net/gh/KenneyNL/Starter-Kit-3D-Platformer@${PLATFORMER_COMMIT}/models/`;
@@ -25,6 +26,34 @@ const blackOutlineMaterial = new THREE.MeshBasicMaterial({
   color: 0x08090a,
   side: THREE.BackSide
 });
+
+function isYourTurnRecipient() {
+  return globalThis.document?.documentElement?.dataset?.turnDeployment === 'yourturn';
+}
+
+function waitForIdleSlot() {
+  return new Promise((resolve) => {
+    if (typeof globalThis.requestIdleCallback === 'function') {
+      globalThis.requestIdleCallback(() => resolve(), { timeout: STARTUP_IDLE_TIMEOUT_MS });
+      return;
+    }
+    globalThis.setTimeout(resolve, 80);
+  });
+}
+
+async function waitForSceneryWarmupSlot() {
+  // YOUR TURN does not have TURN Home and therefore must keep its existing immediate
+  // scenery path. Production TURN/TURN NEXT can make Home usable first and then spend
+  // network bandwidth on the nine external Kenney GLBs.
+  if (isYourTurnRecipient()) return;
+  const root = globalThis.document?.documentElement;
+  if (!root?.classList?.contains('turn-home-ready')) {
+    await new Promise((resolve) => {
+      globalThis.document?.addEventListener?.('turn:home-ready', resolve, { once: true });
+    });
+  }
+  await waitForIdleSlot();
+}
 
 function seeded01(seed) {
   const value = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
@@ -280,6 +309,8 @@ function placeStartArea({ world, samples, trackWidth, flag, garage }) {
 }
 
 export async function installKenneyWorld({ world, samples, trackWidth }) {
+  await waitForSceneryWarmupSlot();
+
   const results = await Promise.allSettled([
     loadModel('trees'),
     loadModel('tallTrees'),
@@ -324,6 +355,6 @@ export async function installKenneyWorld({ world, samples, trackWidth }) {
   if (failed) {
     console.warn(`TURN: ${failed} world asset(s) failed to load.`);
   } else {
-    console.info('TURN: Kenney world assets loaded.');
+    console.info('TURN: Kenney world assets loaded after Home became usable.');
   }
 }

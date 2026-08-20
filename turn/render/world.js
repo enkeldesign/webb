@@ -14,6 +14,21 @@ function moduleUrl(relativePath) {
   return url.href;
 }
 
+function isYourTurnRecipient() {
+  return globalThis.document?.documentElement?.dataset?.turnDeployment === 'yourturn';
+}
+
+async function waitForHomeBeforeCosmetics() {
+  // YOUR TURN has no production Home route, so preserve its existing immediate world
+  // bootstrap. TURN/TURN NEXT can expose Home first and fetch this cosmetic graph after.
+  if (isYourTurnRecipient()) return;
+  const root = globalThis.document?.documentElement;
+  if (root?.classList?.contains('turn-home-ready')) return;
+  await new Promise((resolve) => {
+    globalThis.document?.addEventListener?.('turn:home-ready', resolve, { once: true });
+  });
+}
+
 async function loadWorldModules() {
   const [beauty, art, identity, intensity, scenery, bella, bellaFinal, bellaRescue] = await Promise.all([
     import(moduleUrl('../world-beauty.js')),
@@ -130,6 +145,7 @@ async function install(runtime) {
   const worldSamples = samples.slice();
 
   try {
+    await waitForHomeBeforeCosmetics();
     const {
       installWorldBeauty,
       installArtPass,
