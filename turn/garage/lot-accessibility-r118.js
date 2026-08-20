@@ -9,6 +9,19 @@ const STAT_FIELDS = Object.freeze([
   Object.freeze({ key: 'boostDuration', label: 'Boost tank' })
 ]);
 
+const RALLY_RACER_DISPLAY_STATS = Object.freeze({
+  speed: 4,
+  acceleration: 5,
+  control: 5,
+  drift: 1,
+  boostPower: 2,
+  boostDuration: 1
+});
+
+function getLotDisplayStats(car) {
+  return car?.id === 'toy-racer' ? RALLY_RACER_DISPLAY_STATS : car?.stats;
+}
+
 export function installLotAccessibility(root = document.body) {
   const screen = root.querySelector('.lot-screen');
   const lotTitle = screen?.querySelector('#lot-title');
@@ -49,7 +62,7 @@ export function installLotAccessibility(root = document.body) {
     const description = document.createElement('span');
     description.id = `lot-${car.id}-complete-label`;
     const existingLabel = button.getAttribute('aria-label') || car.name;
-    const completeText = `${existingLabel} ${describeVehicleStats(car.stats)}`;
+    const completeText = `${existingLabel} ${describeVehicleStats(getLotDisplayStats(car))}`;
     description.textContent = completeText;
     descriptions.appendChild(description);
 

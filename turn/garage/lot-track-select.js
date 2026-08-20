@@ -1,7 +1,7 @@
 import {
   enhanceLotNow,
   prepareLotEnhancements
-} from './lot-enhancement-runtime.js?revision=r585-lot-redesign&build=20260804-r157';
+} from './lot-enhancement-runtime.js?revision=r587-rally-attributes&build=20260804-r157';
 import { chooseTrackBeforeLot } from '../tracks/track-manager.js?build=20260722-r52';
 import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
 
@@ -11,7 +11,7 @@ import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
 let originalLotPromise = null;
 function loadOriginalLot() {
   if (!originalLotPromise) {
-    originalLotPromise = import('./lot-r10.js?build=20260809-r163-native-html&revision=r585-lot-order-locks-guide');
+    originalLotPromise = import('./lot-r10.js?build=20260809-r163-native-html&revision=r587-rally-attributes-guide-type');
   }
   return originalLotPromise;
 }
