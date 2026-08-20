@@ -3,6 +3,7 @@ const SHORT_VIEWPORT_STYLE_ID = 'turn-m8-short-viewport-race-dock';
 const LAYOUT_ID = 'fixed-grid-v7';
 const MUSIC_VOLUME_STORAGE_KEY = 'turn-racing-music-volume-v1';
 const MUSIC_LAST_VOLUME_STORAGE_KEY = 'turn-racing-music-last-volume-v1';
+const POST_HOME_IDLE_TIMEOUT_MS = 900;
 
 function storageSnapshot(key) {
   try {
@@ -140,6 +141,24 @@ function waitForHome() {
   });
 }
 
+function waitForPostHomeIdle() {
+  return new Promise((resolve) => {
+    const scheduleIdle = () => {
+      if (typeof globalThis.requestIdleCallback === 'function') {
+        globalThis.requestIdleCallback(() => resolve(), { timeout: POST_HOME_IDLE_TIMEOUT_MS });
+        return;
+      }
+      globalThis.setTimeout(resolve, 80);
+    };
+
+    if (document.documentElement.classList.contains('turn-home-ready')) {
+      scheduleIdle();
+      return;
+    }
+    document.addEventListener('turn:home-ready', scheduleIdle, { once: true });
+  });
+}
+
 function spokenTrackName(rawName) {
   return rawName
     .toLocaleLowerCase('en')
@@ -230,62 +249,79 @@ export async function installM8HomeFixedLayout() {
   document.documentElement.dataset.turnHomeLayout = LAYOUT_ID;
 
   const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
-  const { installShortViewportAutoRepair } = await import(
-    `/turn/pwa-short-viewport-repair-r184.js?build=${buildKey}&revision=r184-start-settle-first-activation`
-  );
-  const shortViewportAutoRepair = installShortViewportAutoRepair({ home });
 
-  // Historical regression marker for the previous aligned-title bundle:
-  // /turn/m8-home-card-scroll-fixes.js?build=${buildKey}-m8.9-track-title-alignment
-  const { installM8HomeCardScrollFixes } = await import(
-    `/turn/m8-home-card-scroll-fixes.js?build=${buildKey}-m8.10-card-gap-rim`
-  );
-  const cardScrollFixes = await installM8HomeCardScrollFixes();
+  // These modules are required before the first race, but there is no dependency reason
+  // to fetch them one after another. Download the Home/race-critical graph in parallel,
+  // then preserve the established installation order below.
+  const [
+    shortViewportModule,
+    cardScrollModule,
+    trophyGateModule,
+    achievementsModule,
+    unreadMarkersModule,
+    secretAchievementsModule,
+    challengeExpansionModule,
+    trophyRoadFeedbackModule,
+    driveByEarTrainingModule
+  ] = await Promise.all([
+    import(`/turn/pwa-short-viewport-repair-r184.js?build=${buildKey}&revision=r184-start-settle-first-activation`),
+    // Historical regression marker for the previous aligned-title bundle:
+    // /turn/m8-home-card-scroll-fixes.js?build=${buildKey}-m8.9-track-title-alignment
+    import(`/turn/m8-home-card-scroll-fixes.js?build=${buildKey}-m8.10-card-gap-rim`),
+    import(`/turn/progression/m8-trophy-gate.js?build=${buildKey}-r157-paint-monster`),
+    import(`/turn/achievements.js?build=${buildKey}-r166-bella-records&robustness=r164-long-session`),
+    import(`/turn/achievements/unread-markers.js?build=${buildKey}-r159-unread-cards`),
+    import(`/turn/achievements/secret-achievements.js?build=${buildKey}-r174-bella-siren-zone`),
+    import(`/turn/achievements/challenge-expansion-r166.js?build=${buildKey}-r166-bella-records`),
+    import(`/turn/achievements/trophy-road-feedback.js?build=${buildKey}-r166-bella-records&robustness=r164-long-session`),
+    import(`/turn/training/drive-by-ear-training.js?build=${buildKey}-r151-dbe-training-device-fixes`)
+  ]);
 
-  const { installM8TrophyGate } = await import(
-    `/turn/progression/m8-trophy-gate.js?build=${buildKey}-r157-paint-monster`
-  );
-  const trophyGate = installM8TrophyGate(globalThis.__turnNextHome);
-
-  const { installAchievements } = await import(
-    `/turn/achievements.js?build=${buildKey}-r166-bella-records&robustness=r164-long-session`
-  );
-  const achievements = installAchievements(globalThis.__turnRuntime);
-  const { installAchievementUnreadMarkers } = await import(
-    `/turn/achievements/unread-markers.js?build=${buildKey}-r159-unread-cards`
-  );
-  const achievementUnreadMarkers = installAchievementUnreadMarkers(achievements);
-  const { installSecretAchievements } = await import(
-    `/turn/achievements/secret-achievements.js?build=${buildKey}-r174-bella-siren-zone`
-  );
-  const secretAchievements = installSecretAchievements(achievements);
-  const { installAchievementChallengeExpansion } = await import(
-    `/turn/achievements/challenge-expansion-r166.js?build=${buildKey}-r166-bella-records`
-  );
-  const achievementChallengeExpansion = installAchievementChallengeExpansion({
+  const shortViewportAutoRepair = shortViewportModule.installShortViewportAutoRepair({ home });
+  const cardScrollFixes = await cardScrollModule.installM8HomeCardScrollFixes();
+  const trophyGate = trophyGateModule.installM8TrophyGate(globalThis.__turnNextHome);
+  const achievements = achievementsModule.installAchievements(globalThis.__turnRuntime);
+  const achievementUnreadMarkers = unreadMarkersModule.installAchievementUnreadMarkers(achievements);
+  const secretAchievements = secretAchievementsModule.installSecretAchievements(achievements);
+  const achievementChallengeExpansion = challengeExpansionModule.installAchievementChallengeExpansion({
     runtime: globalThis.__turnRuntime,
     achievements
   });
-  const { installTrophyRoadFeedback } = await import(
-    `/turn/achievements/trophy-road-feedback.js?build=${buildKey}-r166-bella-records&robustness=r164-long-session`
-  );
-  const trophyRoadFeedback = installTrophyRoadFeedback(achievements);
-
-  const { installDriveByEarTraining } = await import(
-    `/turn/training/drive-by-ear-training.js?build=${buildKey}-r151-dbe-training-device-fixes`
-  );
-  const driveByEarTraining = await installDriveByEarTraining(globalThis.__turnRuntime);
+  const trophyRoadFeedback = trophyRoadFeedbackModule.installTrophyRoadFeedback(achievements);
+  const driveByEarTraining = await driveByEarTrainingModule.installDriveByEarTraining(globalThis.__turnRuntime);
   installDriveByEarSpokenLabels(driveByEarTraining);
 
-  const { installRacingMusic } = await import(
-    `/turn/audio/racing-music-v2.js?build=${buildKey}-racing-music-warm-v2`
-  );
-  const racingMusic = installRacingMusic({ home });
-  const dbeTrainingMusicSilence = installDriveByEarTrainingMusicSilence(driveByEarTraining, racingMusic);
-  const { installRacingMusicHealth } = await import(
-    `/turn/audio/racing-music-health.js?build=${buildKey}&revision=r164-long-session-robustness`
-  );
-  const racingMusicHealth = installRacingMusicHealth(racingMusic);
+  let racingMusic = null;
+  let dbeTrainingMusicSilence = null;
+  let racingMusicHealth = null;
+
+  // The score engine statically imports the menu score, six track scores, instrument
+  // banks and synth/drum runtimes. None is required to expose Home or start steering.
+  // Warm that graph only after Home is already interactive.
+  const musicReady = (async () => {
+    await waitForPostHomeIdle();
+    const [musicModule, musicHealthModule] = await Promise.all([
+      import(`/turn/audio/racing-music-v2.js?build=${buildKey}-racing-music-warm-v2`),
+      import(`/turn/audio/racing-music-health.js?build=${buildKey}&revision=r164-long-session-robustness`)
+    ]);
+    racingMusic = musicModule.installRacingMusic({ home });
+    const dbeTrainingMusicSilence = installDriveByEarTrainingMusicSilence(driveByEarTraining, racingMusic);
+    // If the player entered DBE 101 in the brief interval before music finished warming,
+    // never let the newly installed menu score start underneath training.
+    if (driveByEarTraining.getState?.().active === true || driveByEarTraining.introDialog?.open) {
+      dbeTrainingMusicSilence?.silence?.();
+    }
+    racingMusicHealth = musicHealthModule.installRacingMusicHealth(racingMusic);
+    globalThis.__turnDbeTrainingMusicSilence = dbeTrainingMusicSilence;
+    document.dispatchEvent(new CustomEvent('turn:home-music-ready'));
+    return Object.freeze({ racingMusic, dbeTrainingMusicSilence, racingMusicHealth });
+  })().then((result) => {
+    dbeTrainingMusicSilence = result.dbeTrainingMusicSilence;
+    return result;
+  }).catch((error) => {
+    console.warn('TURN: post-Home music warmup failed; racing remains available.', error);
+    return null;
+  });
 
   globalThis.__turnHomeLayout = Object.freeze({
     id: LAYOUT_ID,
@@ -302,9 +338,10 @@ export async function installM8HomeFixedLayout() {
     achievementChallengeExpansion,
     trophyRoadFeedback,
     driveByEarTraining,
-    racingMusic,
-    dbeTrainingMusicSilence,
-    racingMusicHealth
+    get racingMusic() { return racingMusic; },
+    get dbeTrainingMusicSilence() { return dbeTrainingMusicSilence; },
+    get racingMusicHealth() { return racingMusicHealth; },
+    musicReady
   });
   return globalThis.__turnHomeLayout;
 }
