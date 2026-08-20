@@ -62,10 +62,10 @@ assert.ok(
 );
 
 assert.match(wrapper, /export async function showEnhancedLot/);
-assert.match(wrapper, /lot-r10\.js\?build=20260809-r163-native-html&revision=r587-rally-attributes-guide-type/,
-  'The wrapper must load the refreshed Rally/guide Lot implementation under a fresh URL');
-assert.match(wrapper, /lot-enhancement-runtime\.js\?revision=r587-rally-attributes/,
-  'The wrapper must load the refreshed Rally accessibility bundle');
+assert.match(wrapper, /lot-r10\.js\?build=20260809-r163-native-html&revision=r588-canonical-attributes/,
+  'The wrapper must load the canonical-attribute Lot implementation under a fresh URL');
+assert.match(wrapper, /lot-enhancement-runtime\.js\?revision=r588-canonical-attributes/,
+  'The wrapper must load the canonical-attribute accessibility bundle');
 assert.match(wrapper, /const removeEnhancements = enhanceLotNow\(\)/);
 assert.match(wrapper, /await chooseTrackBeforeLot\(\)/);
 assert.doesNotMatch(wrapper, /installLotLayout|installLotStatLegend|installLotAccessibility/);
@@ -74,7 +74,7 @@ assert.match(enhancementRuntime, /ENHANCEMENT_ID = 'enhanced-lot-r164-vintage-ra
 assert.match(enhancementRuntime, /TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r164-vintage-rally-perks'/);
 assert.match(enhancementRuntime, /lot-perk-disclosure\.js\?revision=r164-vintage-rally-perks/);
 assert.match(enhancementRuntime, /lot-trophy-gate\.js\?revision=r585-visible-locks/);
-assert.match(enhancementRuntime, /lot-accessibility-r118\.js\?build=20260729-r118&revision=r587-rally-attributes/);
+assert.match(enhancementRuntime, /lot-accessibility-r118\.js\?build=20260729-r118&revision=r588-canonical-attributes/);
 assert.match(enhancementRuntime, /activeEnhancements = new WeakMap\(\)/);
 assert.match(enhancementRuntime, /LOT_ENTRY_CLICK_GUARD_MS = 600/);
 assert.match(enhancementRuntime, /installLotPerkDisclosure\(scope\)/);
@@ -148,10 +148,10 @@ assert.match(lot, /ctx\.font = '900 38px system-ui, sans-serif'/,
 assert.match(lot, /BEGINNER-/);
 assert.match(lot, /FRIENDLY/);
 assert.match(lot, /showBeginnerGuide = !hasTriedTrainingCar\(\)/);
-assert.match(lot, /const RALLY_RACER_DISPLAY_STATS = Object\.freeze\(\{[\s\S]*speed: 4,[\s\S]*acceleration: 5,[\s\S]*control: 5,[\s\S]*drift: 1,[\s\S]*boostPower: 2,[\s\S]*boostDuration: 1[\s\S]*\}\);/,
-  'The Rally Racer card must expose the current 4/5/5/1/2/1 profile');
-assert.match(lot, /car\.id === 'toy-racer' \? RALLY_RACER_DISPLAY_STATS : car\.stats/,
-  'The Rally Racer card must use the current profile even if an older cached catalog is present');
+assert.match(lot, /stats\.replaceChildren\(\.\.\.makeStats\(car\.stats\)\)/,
+  'Every visible attribute bar must render directly from the selected canonical car stats');
+assert.doesNotMatch(lot, /RALLY_RACER_DISPLAY_STATS|displayStats/,
+  'The Lot must not maintain display-only per-car attribute profiles');
 
 assert.match(trainingGuide, /TRAINING_CAR_ID = 'classic'/);
 assert.match(trainingGuide, /TRAINING_CAR_TRIED_STORAGE_KEY = 'turn-training-car-tried-v1'/);
@@ -212,8 +212,10 @@ assert.match(accessibility, /button\.setAttribute\('aria-labelledby', descriptio
 assert.match(accessibility, /selectedSummary\.textContent = completeTextByCarId\.get\(selectedCarId\)/);
 assert.match(accessibility, /visibleOrder\.slice\(selectedIndex\)/,
   'VoiceOver order must rotate through the same stable order as the visible parking lot');
-assert.match(accessibility, /getLotDisplayStats\(car\)/,
-  'VoiceOver must announce the same Rally profile shown by the visible bars');
+assert.match(accessibility, /describeVehicleStats\(car\.stats\)/,
+  'VoiceOver must announce attributes from the same canonical car stats as the visible bars');
+assert.doesNotMatch(accessibility, /RALLY_RACER_DISPLAY_STATS|getLotDisplayStats/,
+  'VoiceOver must not maintain a separate per-car attribute profile');
 assert.match(accessibility, /aria-posinset/);
 assert.match(accessibility, /aria-setsize/);
 assert.match(accessibility, /lotTitle\.focus\(\{ preventScroll: true \}\)/);
@@ -227,4 +229,4 @@ assert.match(legend, /role', 'dialog'/);
 assert.match(legend, /name\.textContent = entry\.label/);
 assert.match(legend, /description\.textContent = entry\.description/);
 
-console.log(`TURN ${release.id} redesigned full-colour Lot, stable 5x3 order, selection marker, progression locks, larger beginner guide, Rally profile and accessibility contract passed.`);
+console.log(`TURN ${release.id} redesigned full-colour Lot, stable 5x3 order, canonical attributes, selection marker, progression locks, larger beginner guide and accessibility contract passed.`);

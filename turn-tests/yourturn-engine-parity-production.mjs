@@ -20,6 +20,17 @@ function canonicalScriptUrl(source, basename, baseUrl, label) {
   return new URL(sourceUrl, baseUrl).href;
 }
 
+function resolveImport(importMap, specifier, baseUrl) {
+  const imports = importMap.imports || {};
+  if (imports[specifier]) return new URL(imports[specifier], baseUrl).href;
+
+  const requestedUrl = new URL(specifier, baseUrl).href;
+  for (const [key, target] of Object.entries(imports)) {
+    if (new URL(key, baseUrl).href === requestedUrl) return new URL(target, baseUrl).href;
+  }
+  return requestedUrl;
+}
+
 const turnImportMap = readImportMap(turnIndex, 'TURN');
 const yourTurnImportMap = readImportMap(yourTurnIndex, 'YOUR TURN');
 const motionSpecifier = '/turn/input/motion.js';
@@ -35,6 +46,29 @@ assert.match(
   'The shared production motion route must include the iPad steering profile cache bust'
 );
 
+for (const catalogSpecifier of [
+  '/turn/vehicle/catalog.js?build=20260720-r19',
+  '/turn/vehicle/catalog.js?build=20260720-r20'
+]) {
+  const turnCatalogUrl = new URL(
+    resolveImport(turnImportMap, catalogSpecifier, 'https://enkel.design/turn/')
+  );
+  const yourTurnCatalogUrl = new URL(
+    resolveImport(yourTurnImportMap, catalogSpecifier, 'https://enkel.design/yourturn/')
+  );
+  assert.equal(
+    yourTurnCatalogUrl.pathname,
+    turnCatalogUrl.pathname,
+    `YOUR TURN must use TURN's canonical vehicle catalog source for ${catalogSpecifier}`
+  );
+  assert.equal(yourTurnCatalogUrl.pathname, '/turn/vehicle/catalog.js');
+  assert.match(
+    yourTurnCatalogUrl.search,
+    /r588-canonical-attributes/,
+    'YOUR TURN must cache-bust the canonical attribute/tuning graph instead of carrying its own vehicle data'
+  );
+}
+
 for (const basename of ['motion-safe-zone.js', 'orientation-compat.js']) {
   assert.equal(
     canonicalScriptUrl(yourTurnIndex, basename, 'https://enkel.design/yourturn/', 'YOUR TURN'),
@@ -48,5 +82,10 @@ assert.doesNotMatch(
   /\/yourturn\/(?:input\/)?motion[^"']*\.js/i,
   'YOUR TURN must not grow a challenge-specific copy of the motion steering engine'
 );
+assert.doesNotMatch(
+  yourTurnIndex,
+  /\/yourturn\/(?:vehicle\/)?catalog[^"']*\.js/i,
+  'YOUR TURN must not grow a challenge-specific copy of vehicle attributes or tuning'
+);
 
-console.log('YOUR TURN production motion/orientation parity contract passed.');
+console.log('YOUR TURN production motion/orientation and canonical vehicle-source parity contract passed.');

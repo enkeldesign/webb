@@ -12,12 +12,110 @@ import {
   vehicleIgnoresOffRoadPenalty
 } from '../../turn/vehicle/physics.js';
 
-const [physicsSource, controlsSource, showcaseSource, trophyRoadSource] = await Promise.all([
+const [physicsSource, controlsSource, mainSource, showcaseSource, trophyRoadSource] = await Promise.all([
   fs.readFile(new URL('../../turn/vehicle/physics.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/gameplay-controls.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/trophy-road-showcase.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/progression/trophy-road.js', import.meta.url), 'utf8')
 ]);
+
+const STAT_KEYS = Object.freeze([
+  'speed',
+  'acceleration',
+  'control',
+  'drift',
+  'boostPower',
+  'boostDuration'
+]);
+const CORE_TUNING_KEYS = Object.freeze([
+  'topSpeedMultiplier',
+  'accelerationMultiplier',
+  'controlMultiplier',
+  'driftEngineMultiplier',
+  'driftDragAdd',
+  'driftSpeedMultiplier',
+  'driftStabilityMultiplier',
+  'boostPowerMultiplier',
+  'boostSpeedMultiplier',
+  'boostDurationSeconds'
+]);
+const CORE_TUNING_OVERRIDES = Object.freeze({
+  'vintage-racer': new Set(['driftDragAdd', 'driftSpeedMultiplier'])
+});
+
+// Attribute integrity: every ordinary 1–5 number is canonical game data, every car
+// keeps the shared 18-point budget, and the runtime tuning is derived from those
+// numbers unless an explicitly named perk owns that exact tuning field.
+for (const car of CAR_CATALOG) {
+  assert.equal(getVehicleStatTotal(car.stats), 18, `${car.name} must retain the shared 18-point attribute budget`);
+  for (const statKey of STAT_KEYS) {
+    assert.ok(Number.isInteger(car.stats[statKey]), `${car.name} ${statKey} must be an integer attribute`);
+    assert.ok(car.stats[statKey] >= 1 && car.stats[statKey] <= 5, `${car.name} ${statKey} must stay on the 1–5 scale`);
+  }
+
+  const derived = deriveVehicleTuning(car.stats);
+  const overrides = CORE_TUNING_OVERRIDES[car.id] || new Set();
+  for (const tuningKey of CORE_TUNING_KEYS) {
+    if (overrides.has(tuningKey)) continue;
+    assert.equal(
+      car.tuning[tuningKey],
+      derived[tuningKey],
+      `${car.name} ${tuningKey} must be derived from its displayed canonical attributes`
+    );
+  }
+}
+
+const neutralStats = Object.freeze({
+  speed: 3,
+  acceleration: 3,
+  control: 3,
+  drift: 3,
+  boostPower: 3,
+  boostDuration: 3
+});
+const tuningCurve = (statKey, tuningKey) => [1, 2, 3, 4, 5].map((value) => deriveVehicleTuning({
+  ...neutralStats,
+  [statKey]: value
+})[tuningKey]);
+assert.deepEqual(tuningCurve('speed', 'topSpeedMultiplier'), [0.84, 0.92, 1, 1.06, 1.12]);
+assert.deepEqual(tuningCurve('acceleration', 'accelerationMultiplier'), [0.82, 0.91, 1, 1.08, 1.16]);
+assert.deepEqual(tuningCurve('control', 'controlMultiplier'), [0.88, 0.94, 1, 1.07, 1.14]);
+assert.deepEqual(tuningCurve('drift', 'driftSpeedMultiplier'), [0.76, 0.8, 0.84, 0.88, 0.92]);
+assert.deepEqual(tuningCurve('drift', 'driftStabilityMultiplier'), [0.82, 0.91, 1, 1.09, 1.18]);
+assert.deepEqual(tuningCurve('drift', 'driftDragAdd'), [0.16, 0.13, 0.1, 0.075, 0.055]);
+assert.deepEqual(tuningCurve('boostPower', 'boostPowerMultiplier'), [0.78, 0.89, 1, 1.13, 1.26]);
+assert.deepEqual(tuningCurve('boostPower', 'boostSpeedMultiplier'), [1.23, 1.275, 1.32, 1.35, 1.38]);
+assert.deepEqual(tuningCurve('boostDuration', 'boostDurationSeconds'), [1.2, 1.6, 2, 2.65, 3.4]);
+
+// Runtime wiring: the six player-facing attributes must reach actual driving code,
+// not stop at the Lot card.
+assert.match(mainSource, /maxSpeed: MAX_SPEED \* state\.vehicleTuning\.topSpeedMultiplier/,
+  'TOP SPEED must scale the actual race speed ceiling');
+assert.match(physicsSource, /enginePower =[\s\S]*accelerationMultiplier/,
+  'ACCELERATION must scale forward engine power');
+assert.match(physicsSource, /reversePower = \(physicsOffRoad \? 20 : 27\) \* accelerationMultiplier/,
+  'ACCELERATION must also scale reverse power consistently');
+assert.match(physicsSource, /steeringStatMultiplier =[\s\S]*controlMultiplier/,
+  'CONTROL must scale actual steering authority');
+assert.match(physicsSource, /controlGripMultiplier =[\s\S]*controlMultiplier/,
+  'CONTROL must contribute to actual road grip');
+assert.match(physicsSource, /driftHeld \? driftEngineMultiplier : 1/,
+  'DRIFT must affect engine power while drifting');
+assert.match(physicsSource, /driftHeld \? driftDragAdd : 0/,
+  'DRIFT must affect drag while drifting');
+assert.match(physicsSource, /baseSpeedLimit \* effectiveDriftSpeedMultiplier/,
+  'DRIFT must affect the active speed ceiling');
+assert.match(physicsSource, /3\.2 \* driftStabilityMultiplier/,
+  'DRIFT must affect slide recovery');
+assert.match(physicsSource, /0\.42 \* driftStabilityMultiplier/,
+  'DRIFT must affect lateral stability');
+assert.match(physicsSource, /\* tuningBoostPowerMultiplier/,
+  'BOOST POWER must scale actual boost acceleration');
+assert.match(physicsSource, /boostSpeedMultiplier: tuningBoostSpeedMultiplier/,
+  'BOOST POWER must scale the actual boosted speed ceiling');
+assert.match(controlsSource, /getBoostDrainSeconds\(\)[\s\S]*__turnVehicleTuning\?\.boostDurationSeconds/,
+  'BOOST TANK must determine actual boost drain duration');
 
 const driftTunings = [1, 2, 3, 4, 5].map((drift) => deriveVehicleTuning({
   speed: 3,
@@ -78,6 +176,24 @@ assert.match(physicsSource, /slideStrength = \(driftHeld \? 0\.235 : 0\.12\) \* 
 const rallyRacer = CAR_CATALOG.find((car) => car.id === 'toy-racer');
 assert.ok(rallyRacer, 'The former Toy Racer asset/id must remain available for saved selections and ghosts');
 assert.equal(rallyRacer.name, 'Rally Racer', 'Toy Racer must be presented as Rally Racer without changing its stable id');
+assert.deepEqual(rallyRacer.stats, {
+  speed: 4,
+  acceleration: 4,
+  control: 1,
+  drift: 4,
+  boostPower: 4,
+  boostDuration: 1
+}, 'Rally Racer must keep the intentional high-skill 4/4/1/4/4/1 profile');
+assert.equal(getVehicleStatTotal(rallyRacer.stats), 18,
+  'Rally Racer must retain the shared 18-point vehicle budget');
+const ordinaryRallyTuning = deriveVehicleTuning(rallyRacer.stats);
+for (const tuningKey of CORE_TUNING_KEYS) {
+  assert.equal(
+    rallyRacer.tuning[tuningKey],
+    ordinaryRallyTuning[tuningKey],
+    `Rally Racer ${tuningKey} must come from its 4/4/1/4/4/1 attributes`
+  );
+}
 assert.equal(rallyRacer.defaultColor, '#111111', 'Rally Racer factory paint must be #111');
 assert.equal(rallyRacer.perk?.title, 'TWITCHY TURNY');
 assert.match(rallyRacer.perk?.description || '', /fills BOOST even faster/i);
@@ -237,4 +353,4 @@ for (const car of CAR_CATALOG) {
   }
 }
 
-console.log('TURN DRIFT, Vintage/Rally polish, DRIFTAGE, TWITCHY TURNY, OVERSIZED and OVERDRIVE contracts passed for all 15 cars.');
+console.log('TURN all-car attribute-to-physics integrity, DRIFT, DRIFTAGE, TWITCHY TURNY, OVERSIZED and OVERDRIVE contracts passed for all 15 cars.');
