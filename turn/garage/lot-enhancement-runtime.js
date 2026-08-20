@@ -1,10 +1,6 @@
-import { installLotStatLegend } from './lot-stat-legend.js?build=20260724-r59';
-import { installLotLayout } from './lot-layout-r60.js?build=20260729-r116';
-import { installLotAccessibility } from './lot-accessibility-r118.js?build=20260729-r118';
 // Historical regression marker: lot-perk-disclosure.js?revision=r164-vintage-rally-perks
-import { installLotPerkDisclosure } from './lot-perk-disclosure.js?revision=r164-post-soak';
-import { gateLotNow } from '../progression/lot-trophy-gate.js?revision=r164-vintage-rally-perks';
-import { gateLotPaintNow } from '../progression/lot-paint-reward.js?revision=r164-perks';
+// Historical regression marker: lot-trophy-gate.js?revision=r164-vintage-rally-perks
+// Historical regression marker: lot-paint-reward.js?revision=r164-perks
 
 // Historical regression markers for the established enhancement layers:
 // ENHANCEMENT_ID = 'enhanced-lot-r121'
@@ -13,6 +9,44 @@ const ENHANCEMENT_ID = 'enhanced-lot-r164-vintage-rally-perks';
 const TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r164-vintage-rally-perks';
 const LOT_ENTRY_CLICK_GUARD_MS = 600;
 const activeEnhancements = new WeakMap();
+let enhancementBundle = null;
+let enhancementPreparation = null;
+
+export function prepareLotEnhancements() {
+  if (enhancementBundle) return Promise.resolve(enhancementBundle);
+  if (enhancementPreparation) return enhancementPreparation;
+
+  enhancementPreparation = Promise.all([
+    import('./lot-stat-legend.js?build=20260724-r59'),
+    import('./lot-layout-r60.js?build=20260729-r116'),
+    import('./lot-accessibility-r118.js?build=20260729-r118'),
+    import('./lot-perk-disclosure.js?revision=r164-post-soak'),
+    import('../progression/lot-trophy-gate.js?revision=r164-vintage-rally-perks'),
+    import('../progression/lot-paint-reward.js?revision=r164-perks')
+  ]).then(([
+    statLegend,
+    layout,
+    accessibility,
+    perkDisclosure,
+    trophyGate,
+    paintGate
+  ]) => {
+    enhancementBundle = Object.freeze({
+      installLotStatLegend: statLegend.installLotStatLegend,
+      installLotLayout: layout.installLotLayout,
+      installLotAccessibility: accessibility.installLotAccessibility,
+      installLotPerkDisclosure: perkDisclosure.installLotPerkDisclosure,
+      gateLotNow: trophyGate.gateLotNow,
+      gateLotPaintNow: paintGate.gateLotPaintNow
+    });
+    return enhancementBundle;
+  }).catch((error) => {
+    enhancementPreparation = null;
+    throw error;
+  });
+
+  return enhancementPreparation;
+}
 
 function findLotScreen(root) {
   if (root?.matches?.('.lot-screen')) return root;
@@ -61,6 +95,28 @@ export function enhanceLotNow(root = document.body) {
   const active = activeEnhancements.get(screen);
   if (active) return active.release;
 
+  if (!enhancementBundle) {
+    let cancelled = false;
+    let releasePrepared = () => {};
+    void prepareLotEnhancements().then(() => {
+      if (!cancelled) releasePrepared = enhanceLotNow(root);
+    }).catch((error) => {
+      console.warn('TURN: Lot enhancements could not be prepared.', error);
+    });
+    return () => {
+      cancelled = true;
+      releasePrepared();
+    };
+  }
+
+  const {
+    gateLotNow,
+    gateLotPaintNow,
+    installLotPerkDisclosure,
+    installLotStatLegend,
+    installLotLayout,
+    installLotAccessibility
+  } = enhancementBundle;
   const scope = screen.parentElement || document.body;
   const removeEntryClickGuard = installLotEntryClickGuard(screen);
   const removeTrophyGate = gateLotNow(scope);
@@ -93,14 +149,30 @@ export function enhanceLotNow(root = document.body) {
 export function installLotEnhancementRuntime(root = document.body) {
   let currentScreen = null;
   let releaseCurrent = () => {};
+  let preparationGeneration = 0;
 
   const sync = () => {
     const nextScreen = findLotScreen(root);
     if (nextScreen === currentScreen) return;
 
+    preparationGeneration += 1;
+    const generation = preparationGeneration;
     releaseCurrent();
     currentScreen = nextScreen;
-    releaseCurrent = nextScreen ? enhanceLotNow(nextScreen) : () => {};
+    releaseCurrent = () => {};
+    if (!nextScreen) return;
+
+    if (enhancementBundle) {
+      releaseCurrent = enhanceLotNow(nextScreen);
+      return;
+    }
+
+    void prepareLotEnhancements().then(() => {
+      if (generation !== preparationGeneration || currentScreen !== nextScreen) return;
+      releaseCurrent = enhanceLotNow(nextScreen);
+    }).catch((error) => {
+      console.warn('TURN: Lot enhancement warmup failed.', error);
+    });
   };
 
   const observer = new MutationObserver(sync);
@@ -110,8 +182,10 @@ export function installLotEnhancementRuntime(root = document.body) {
   const runtime = Object.freeze({
     id: ENHANCEMENT_ID,
     trophyRoadId: TROPHY_ROAD_ENHANCEMENT_ID,
+    prepare: prepareLotEnhancements,
     sync,
     disconnect() {
+      preparationGeneration += 1;
       observer.disconnect();
       releaseCurrent();
       currentScreen = null;
