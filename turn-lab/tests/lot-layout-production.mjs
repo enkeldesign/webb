@@ -62,8 +62,8 @@ assert.ok(
 );
 
 assert.match(wrapper, /export async function showEnhancedLot/);
-assert.match(wrapper, /lot-r10\.js\?build=20260809-r163-native-html&revision=r588-canonical-attributes/,
-  'The wrapper must load the canonical-attribute Lot implementation under a fresh URL');
+assert.match(wrapper, /lot-r10\.js\?build=20260809-r163-native-html&revision=r589-beginner-bubble/,
+  'The wrapper must load the polished beginner-bubble Lot implementation under a fresh URL');
 assert.match(wrapper, /lot-enhancement-runtime\.js\?revision=r588-canonical-attributes/,
   'The wrapper must load the canonical-attribute accessibility bundle');
 assert.match(wrapper, /const removeEnhancements = enhanceLotNow\(\)/);
@@ -143,8 +143,20 @@ assert.match(lot, /function makeLockMarker\(\)/);
 assert.match(lot, /classList\.contains\('is-trophy-locked'\)/,
   '3D lock markers must follow the existing Trophy Road gate');
 assert.match(lot, /function makeBeginnerFriendlyMarker\(\)/);
-assert.match(lot, /ctx\.font = '900 38px system-ui, sans-serif'/,
-  'The beginner guide must use the larger physical-device-tested type size');
+assert.match(lot, /sprite\.scale\.set\(5\.7, 3\.15, 1\)/,
+  'The polished speech bubble must preserve the reference-like wider rounded silhouette');
+assert.match(lot, /canvas\.width = 720/,
+  'The beginner bubble must use a high-resolution texture for crisp 3D rendering');
+assert.match(lot, /canvas\.height = 400/);
+assert.match(lot, /ctx\.scale\(scale, scale\)/);
+assert.match(lot, /const radius = 34/,
+  'The speech bubble must keep the strongly rounded reference corners');
+assert.match(lot, /ctx\.lineTo\(tailRight, bottom\)[\s\S]*ctx\.lineTo\(tailTipX, tailTipY\)[\s\S]*ctx\.lineTo\(tailLeft, bottom\)/,
+  'The pointer must be part of the same continuous silhouette instead of a separate triangle');
+assert.match(lot, /ctx\.lineWidth = 10/,
+  'The speech bubble must retain the heavy black outline from the reference');
+assert.match(lot, /ctx\.font = '700 37px system-ui, sans-serif'/,
+  'The beginner guide must use the cleaner, slightly lighter reference-like type');
 assert.match(lot, /BEGINNER-/);
 assert.match(lot, /FRIENDLY/);
 assert.match(lot, /showBeginnerGuide = !hasTriedTrainingCar\(\)/);
@@ -229,4 +241,4 @@ assert.match(legend, /role', 'dialog'/);
 assert.match(legend, /name\.textContent = entry\.label/);
 assert.match(legend, /description\.textContent = entry\.description/);
 
-console.log(`TURN ${release.id} redesigned full-colour Lot, stable 5x3 order, canonical attributes, selection marker, progression locks, larger beginner guide and accessibility contract passed.`);
+console.log(`TURN ${release.id} redesigned full-colour Lot, stable 5x3 order, canonical attributes, selection marker, progression locks, polished beginner guide and accessibility contract passed.`);
