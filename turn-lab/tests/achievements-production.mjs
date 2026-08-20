@@ -118,7 +118,7 @@ assert.deepEqual(
   [
     ['countryside', 12],
     ['airport', 17],
-    ['cliffside', 16],
+    ['cliffside', 15],
     ['harbor', 24],
     ['midnight-city', 53],
     ['mountain', 27]
@@ -181,7 +181,7 @@ assert.deepEqual(empty.rewards.unlocked, []);
 const memory = new Map();
 const storage = {
   getItem: (key) => memory.get(key) ?? null,
-  setItem: (key, value) => memory.set(key, value)
+  setItem: (key, value) => memory.set(key, String(value))
 };
 assert.equal(loadAchievementState(storage).storageAvailable, true);
 const store = createAchievementStore(storage);
@@ -236,7 +236,7 @@ assert.match(sedanSource, /signalSecretAchievement\('satans-sedan'/);
 
 assert.match(timeTrialSource, /targetSeconds: 12/);
 assert.match(timeTrialSource, /targetSeconds: 17/);
-assert.match(timeTrialSource, /targetSeconds: 16/);
+assert.match(timeTrialSource, /targetSeconds: 15/);
 assert.match(timeTrialSource, /targetSeconds: 24/);
 assert.match(timeTrialSource, /targetSeconds: 53/);
 assert.match(timeTrialSource, /targetSeconds: 27/);
