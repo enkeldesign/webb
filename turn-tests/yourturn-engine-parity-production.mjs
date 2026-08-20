@@ -20,6 +20,17 @@ function canonicalScriptUrl(source, basename, baseUrl, label) {
   return new URL(sourceUrl, baseUrl).href;
 }
 
+function resolveImport(importMap, specifier, baseUrl) {
+  const imports = importMap.imports || {};
+  if (imports[specifier]) return new URL(imports[specifier], baseUrl).href;
+
+  const requestedUrl = new URL(specifier, baseUrl).href;
+  for (const [key, target] of Object.entries(imports)) {
+    if (new URL(key, baseUrl).href === requestedUrl) return new URL(target, baseUrl).href;
+  }
+  return requestedUrl;
+}
+
 const turnImportMap = readImportMap(turnIndex, 'TURN');
 const yourTurnImportMap = readImportMap(yourTurnIndex, 'YOUR TURN');
 const motionSpecifier = '/turn/input/motion.js';
@@ -35,6 +46,22 @@ assert.match(
   'The shared production motion route must include the iPad steering profile cache bust'
 );
 
+for (const catalogSpecifier of [
+  '/turn/vehicle/catalog.js?build=20260720-r19',
+  '/turn/vehicle/catalog.js?build=20260720-r20'
+]) {
+  assert.equal(
+    resolveImport(yourTurnImportMap, catalogSpecifier, 'https://enkel.design/yourturn/'),
+    resolveImport(turnImportMap, catalogSpecifier, 'https://enkel.design/turn/'),
+    `YOUR TURN must resolve ${catalogSpecifier} through the same canonical vehicle definition as TURN`
+  );
+  assert.match(
+    resolveImport(yourTurnImportMap, catalogSpecifier, 'https://enkel.design/yourturn/'),
+    /r588-canonical-attributes/,
+    'TURN and YOUR TURN must share the fresh canonical attribute/tuning graph'
+  );
+}
+
 for (const basename of ['motion-safe-zone.js', 'orientation-compat.js']) {
   assert.equal(
     canonicalScriptUrl(yourTurnIndex, basename, 'https://enkel.design/yourturn/', 'YOUR TURN'),
@@ -48,5 +75,10 @@ assert.doesNotMatch(
   /\/yourturn\/(?:input\/)?motion[^"']*\.js/i,
   'YOUR TURN must not grow a challenge-specific copy of the motion steering engine'
 );
+assert.doesNotMatch(
+  yourTurnIndex,
+  /\/yourturn\/(?:vehicle\/)?catalog[^"']*\.js/i,
+  'YOUR TURN must not grow a challenge-specific copy of vehicle attributes or tuning'
+);
 
-console.log('YOUR TURN production motion/orientation parity contract passed.');
+console.log('YOUR TURN production motion/orientation and canonical vehicle-attribute parity contract passed.');
