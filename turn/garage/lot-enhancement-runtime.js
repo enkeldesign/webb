@@ -1,6 +1,7 @@
 // Historical regression marker: lot-perk-disclosure.js?revision=r164-vintage-rally-perks
 // Historical regression marker: lot-trophy-gate.js?revision=r164-vintage-rally-perks
 // Historical regression marker: lot-paint-reward.js?revision=r164-perks
+// Historical regression marker: lot-accessibility-r118.js?build=20260729-r118
 
 // Historical regression markers for the established enhancement layers:
 // ENHANCEMENT_ID = 'enhanced-lot-r121'
@@ -19,9 +20,9 @@ export function prepareLotEnhancements() {
   enhancementPreparation = Promise.all([
     import('./lot-stat-legend.js?build=20260724-r59'),
     import('./lot-layout-r60.js?build=20260729-r116'),
-    import('./lot-accessibility-r118.js?build=20260729-r118'),
+    import('./lot-accessibility-r118.js?build=20260729-r118&revision=r585-visible-order'),
     import('./lot-perk-disclosure.js?revision=r164-post-soak'),
-    import('../progression/lot-trophy-gate.js?revision=r164-vintage-rally-perks'),
+    import('../progression/lot-trophy-gate.js?revision=r585-visible-locks'),
     import('../progression/lot-paint-reward.js?revision=r164-perks')
   ]).then(([
     statLegend,
