@@ -12,7 +12,8 @@ const [
   layoutCss,
   lot,
   legend,
-  accessibility
+  accessibility,
+  trainingGuide
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
@@ -24,7 +25,8 @@ const [
   fs.readFile(new URL('../../turn/garage/lot-layout-r60.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-stat-legend.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-accessibility-r118.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/garage/lot-accessibility-r118.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/training-car-guide.js', import.meta.url), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -60,8 +62,10 @@ assert.ok(
 );
 
 assert.match(wrapper, /export async function showEnhancedLot/);
-assert.match(wrapper, /lot-r10\.js\?build=20260809-r163-native-html&revision=r164-long-session-robustness/,
-  'The wrapper must load the optimized Lot implementation under a fresh URL');
+assert.match(wrapper, /lot-r10\.js\?build=20260809-r163-native-html&revision=r585-lot-order-locks-guide/,
+  'The wrapper must load the redesigned Lot implementation under a fresh URL');
+assert.match(wrapper, /lot-enhancement-runtime\.js\?revision=r585-lot-redesign/,
+  'The wrapper must load the refreshed Lot enhancement bundle');
 assert.match(wrapper, /const removeEnhancements = enhanceLotNow\(\)/);
 assert.match(wrapper, /await chooseTrackBeforeLot\(\)/);
 assert.doesNotMatch(wrapper, /installLotLayout|installLotStatLegend|installLotAccessibility/);
@@ -69,7 +73,8 @@ assert.doesNotMatch(wrapper, /installLotLayout|installLotStatLegend|installLotAc
 assert.match(enhancementRuntime, /ENHANCEMENT_ID = 'enhanced-lot-r164-vintage-rally-perks'/);
 assert.match(enhancementRuntime, /TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r164-vintage-rally-perks'/);
 assert.match(enhancementRuntime, /lot-perk-disclosure\.js\?revision=r164-vintage-rally-perks/);
-assert.match(enhancementRuntime, /lot-trophy-gate\.js\?revision=r164-vintage-rally-perks/);
+assert.match(enhancementRuntime, /lot-trophy-gate\.js\?revision=r585-visible-locks/);
+assert.match(enhancementRuntime, /lot-accessibility-r118\.js\?build=20260729-r118&revision=r585-visible-order/);
 assert.match(enhancementRuntime, /activeEnhancements = new WeakMap\(\)/);
 assert.match(enhancementRuntime, /LOT_ENTRY_CLICK_GUARD_MS = 600/);
 assert.match(enhancementRuntime, /installLotPerkDisclosure\(scope\)/);
@@ -115,6 +120,39 @@ assert.match(lot, /LOT_FRAME_INTERVAL_MS = 1000 \/ 30/,
   'The Lot must stay at a cooler 30fps without changing race rendering');
 assert.match(lot, /renderer\.forceContextLoss\?\.\(\)/,
   'Closing The Lot must release its WebGL context');
+
+const requestedOrder = [
+  'classic', 'truck', 'sedan', 'van', 'suv',
+  'convertible', 'sedan-sports', 'firetruck', 'ambulance', 'police',
+  'race', 'vintage-racer', 'race-future', 'monster-truck', 'toy-racer'
+];
+const orderSource = lot.match(/export const LOT_CAR_ORDER = Object\.freeze\(\[([\s\S]*?)\]\);/)?.[1] || '';
+const actualOrder = [...orderSource.matchAll(/'([^']+)'/g)].map((match) => match[1]);
+assert.deepEqual(actualOrder, requestedOrder,
+  'The visible 5x3 Lot order must stay stable and match the ease/category progression design');
+assert.match(lot, /color: getVehicleDefaultColor\(car\.id\)/,
+  'Unselected cars must be created in their own factory colours');
+assert.match(lot, /secondaryColor: getVehicleDefaultSecondaryColor\(car\.id\)/,
+  'Factory secondary colours must remain visible in the collection');
+assert.doesNotMatch(lot, /UNSELECTED_COLOR/,
+  'Selection must not be communicated by dulling every other vehicle');
+assert.match(lot, /function makeParkingPad\(selected = false\)/);
+assert.match(lot, /turnLotPadPointer/,
+  'The selected vehicle must have a shape cue in addition to the yellow bay');
+assert.match(lot, /function makeLockMarker\(\)/);
+assert.match(lot, /classList\.contains\('is-trophy-locked'\)/,
+  '3D lock markers must follow the existing Trophy Road gate');
+assert.match(lot, /function makeBeginnerFriendlyMarker\(\)/);
+assert.match(lot, /BEGINNER-/);
+assert.match(lot, /FRIENDLY/);
+assert.match(lot, /showBeginnerGuide = !hasTriedTrainingCar\(\)/);
+
+assert.match(trainingGuide, /TRAINING_CAR_ID = 'classic'/);
+assert.match(trainingGuide, /TRAINING_CAR_TRIED_STORAGE_KEY = 'turn-training-car-tried-v1'/);
+assert.match(trainingGuide, /event\.detail\?\.running !== true/,
+  'The beginner sign may retire only after TURN enters an actual running race');
+assert.match(trainingGuide, /vehicleId === TRAINING_CAR_ID/);
+assert.match(trainingGuide, /markTrainingCarTried\(\)/);
 
 assert.doesNotMatch(layout, /appendChild\(colors\)|lot-view-close|lot-view-open/);
 assert.match(layout, /document\.createTextNode\('ATTRIBUTES'\)/);
@@ -166,7 +204,8 @@ assert.match(accessibility, /makeHiddenHeading\('lot-paint-heading', 'Choose car
 assert.match(accessibility, /makeHiddenHeading\('lot-car-info-heading', 'Car information'\)/);
 assert.match(accessibility, /button\.setAttribute\('aria-labelledby', description\.id\)/);
 assert.match(accessibility, /selectedSummary\.textContent = completeTextByCarId\.get\(selectedCarId\)/);
-assert.match(accessibility, /CAR_CATALOG\.slice\(selectedIndex\)/);
+assert.match(accessibility, /visibleOrder\.slice\(selectedIndex\)/,
+  'VoiceOver order must rotate through the same stable order as the visible parking lot');
 assert.match(accessibility, /aria-posinset/);
 assert.match(accessibility, /aria-setsize/);
 assert.match(accessibility, /lotTitle\.focus\(\{ preventScroll: true \}\)/);
@@ -180,4 +219,4 @@ assert.match(legend, /role', 'dialog'/);
 assert.match(legend, /name\.textContent = entry\.label/);
 assert.match(legend, /description\.textContent = entry\.description/);
 
-console.log(`TURN ${release.id} compact optimized Lot layout, bounded details card, compact sticky race action, car-owned named perks and accessibility contract passed.`);
+console.log(`TURN ${release.id} redesigned full-colour Lot, stable 5x3 order, selection marker, progression locks, beginner guide and accessibility contract passed.`);
