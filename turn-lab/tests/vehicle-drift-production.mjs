@@ -114,7 +114,7 @@ assert.match(physicsSource, /\* tuningBoostPowerMultiplier/,
   'BOOST POWER must scale actual boost acceleration');
 assert.match(physicsSource, /boostSpeedMultiplier: tuningBoostSpeedMultiplier/,
   'BOOST POWER must scale the actual boosted speed ceiling');
-assert.match(controlsSource, /getBoostDurationSeconds\(\)[\s\S]*__turnVehicleTuning\?\.boostDurationSeconds/,
+assert.match(controlsSource, /getBoostDrainSeconds\(\)[\s\S]*__turnVehicleTuning\?\.boostDurationSeconds/,
   'BOOST TANK must determine actual boost drain duration');
 
 const driftTunings = [1, 2, 3, 4, 5].map((drift) => deriveVehicleTuning({
