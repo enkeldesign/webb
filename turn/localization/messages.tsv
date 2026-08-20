@@ -1,0 +1,1056 @@
+key	surface	english	sv
+meta.document.title	metadata	TURN	
+meta.description	metadata	TURN is a motion-controlled arcade drift racer. Tilt your device to steer, drift and boost through short tracks, then race your own best laps.	
+meta.social.title	metadata	TURN — Tilt. Drift. Boost.	
+meta.social.description	metadata	A motion-controlled arcade drift racer. Tilt your device to steer and chase your own best laps.	
+meta.social.imageAlt	metadata	TURN game artwork showing a tilted phone with a level racing horizon.	
+manifest.name	metadata	TURN	
+manifest.description	metadata	A motion-controlled arcade drift racer where you race your own best laps.	
+install.brand	install	TURN	
+install.pitch	install	TURN is a motion-controlled arcade drift racer. Turn your device to steer and race your own best laps.	
+install.primary	install	Install TURN	
+install.note	install	Install TURN as a home screen web app for the best fullscreen experience. You can also play here, but it is not recommended.	
+install.playBrowser	install	Play in browser anyway	
+install.about	install	ABOUT TURN	
+install.guide.title	install	Add TURN to your Home Screen	
+install.guide.close	install	Close install instructions	
+install.build	install	TURN v{version} · Build {build}	
+install.copy.addressCopied	install	{appName} address copied	
+install.copy.statusCopied	install	Copied. Now open {preferredBrowser} and paste the address.	
+install.copy.statusFallback	install	Copy the selected address, then open {preferredBrowser} and paste it into the address bar.	
+install.external.sourceNamed	install	You’re viewing {appName} inside {containerName}.	
+install.external.sourceGeneric	install	You’re viewing {appName} inside another app.	
+install.external.openBrowser	install	Open {appName} in {preferredBrowser}	
+install.external.detail	install	{source} Copy the address, then open {preferredBrowser} and paste it into the address bar.	
+install.external.copy	install	Copy {appName} address	
+install.external.addressLabel	install	{appName} address	
+install.ios.safari.share.title	install	In Safari, tap Share	
+install.ios.safari.share.detail	install	If Share is not visible, tap … to open the menu, then choose Share.	
+install.ios.addHome.title	install	Choose Add to Home Screen	
+install.ios.addHome.detail	install	Scroll down in the Share sheet if it is not visible.	
+install.openHome.title	install	Open {appName} from your Home Screen	
+install.openHome.detail	install	From now on, {appName} opens fullscreen like an app.	
+install.ios.browserMenu.ellipsis	install	In {browserName}, tap …, then Share	
+install.ios.browserMenu.generic	install	In {browserName}, open the menu, then Share	
+install.ios.browserMenu.ellipsisDetail	install	After {appName} opens, tap … and choose Share.	
+install.ios.browserMenu.genericDetail	install	After {appName} opens, open the browser menu and choose Share.	
+install.android.samsung.menu	install	In Samsung Internet, tap ☰	
+install.android.samsung.menuDetail	install	After {appName} opens, tap ☰ to open the browser menu.	
+install.android.samsung.add	install	Choose Add page to, then Home screen	
+install.android.samsung.addDetail	install	Confirm when Samsung Internet asks.	
+install.android.openHome	install	Open {appName} from your Home screen	
+install.android.openHomeDetail	install	From now on, {appName} opens in its standalone game view.	
+install.android.menu	install	In {browserName}, tap ⋮	
+install.android.menuDetail	install	After {appName} opens, tap ⋮ to open the browser menu.	
+install.android.install	install	Choose Install {appName}	
+install.android.installDetail	install	Depending on the browser, this may be called Add to Home screen.	
+install.macos.safari.menu	install	In Safari, open the File menu	
+install.macos.safari.menuDetail	install	Choose Add to Dock.	
+install.macos.safari.openDock	install	Open {appName} from the Dock	
+install.macos.safari.openDockDetail	install	From now on, {appName} opens in its standalone game view.	
+install.desktop.menu	install	Open {browserName}’s menu	
+install.desktop.menuDetail	install	Choose Install {appName} or Add to Home Screen.	
+install.desktop.confirm	install	Confirm the installation	
+install.desktop.confirmDetail	install	Your browser will add {appName} to your apps.	
+install.desktop.openIcon	install	Open {appName} from the new icon	
+install.desktop.openIconDetail	install	{appName} will open in its standalone game view.	
+install.note.embedded	install	To install {appName}, open it in {preferredBrowser}. You can still play inside {currentApp}.	
+install.note.browser	install	Install {appName} from {browserName} for the best fullscreen experience. You can also play here.	
+install.guide.mobileTitle	install	Add {appName} to your Home Screen	
+install.guide.desktopTitle	install	Install {appName}	
+install.accepted.button	install	{appName} installed	
+install.accepted.note	install	Open {appName} from its new Home Screen icon for the fullscreen game.	
+install.dismissed.note	install	No problem. You can install {appName} whenever you are ready.	
+install.ready.note	install	{browserName} can install {appName} directly.	
+install.installed.note	install	Done. Open {appName} from your Home Screen icon.	
+install.menu.aria	install	Menu	
+startup.kicker	startup	LOADING	
+startup.title	startup	YOU’LL BE RACING IN NO TIME	
+startup.message.initial	startup	This might take a minute on a new installation…	
+startup.message.slow	startup	Still loading TURN. First start can take a little longer.	
+startup.message.slower	startup	Still loading TURN. The game will open as soon as it is ready.	
+startup.ready	startup	TURN is ready.	
+startup.readyPortrait	startup	TURN is ready. Rotate your device to landscape.	
+orientation.rotate.aria	startup	Rotate your device to landscape	
+orientation.rotate.visible	startup	ROTATE YOUR DEVICE TO LANDSCAPE	
+startup.nonVisualOnboarding	startup	Non-visual onboarding. To race, choose a track on Home, then choose a car. For a guided introduction to Drive By Ear and non-visual gameplay, choose Drive By Ear one oh one. The first two links on Home let you replay this introduction or jump directly to Drive By Ear one oh one.	
+startup.nonVisualReady	startup	TURN is ready. {onboardingMessage}	
+accessibility.shortcuts.aria	accessibility	Accessibility shortcuts	
+accessibility.shortcuts.onboarding	accessibility	Non-visual onboarding	
+accessibility.shortcuts.training	accessibility	Drive By Ear 101	
+hud.speed	race	speed	
+hud.speed.unit	race	km/h	
+hud.lap	race	lap	
+hud.time	race	time	
+hud.best	race	best	
+hud.map.aria	race	Track map	
+hud.tilt.brake	race	brake	
+hud.tilt.gas	race	gas	
+hud.tilt.neutral	race	neutral	
+controls.steering.aria	race	Steering. Drag left or right.	
+controls.restartLap	race	Restart Lap	
+controls.restartLap.aria	race	Restart the current lap from the start line	
+controls.recalibrate	race	Recalibrate	
+home.pitch	home	TILT. DRIFT. BEAT YOUR BEST.	
+home.menu	home	MENU	
+home.settings	home	SETTINGS	
+home.howToPlay	home	HOW TO PLAY	
+home.chooseTrack	home	CHOOSE YOUR TRACK	
+home.scrollTracks.aria	home	Scroll tracks	
+home.scrollTracks.previous.aria	home	Scroll to previous tracks	
+home.scrollTracks.next.aria	home	Scroll to more tracks	
+home.race	home	RACE	
+home.race.aria	home	Race on {trackName}	
+home.feedback	home	GIVE FEEDBACK	
+home.about	home	ABOUT TURN	
+home.achievements	home	ACHIEVEMENTS	
+home.noTime	home	NO TIME YET	
+home.best	home	BEST:	
+home.comingSoon	home	COMING SOON	
+home.locked	home	LOCKED	
+home.trackCard.aria	home	{trackName}, {difficulty} track	
+home.trackCard.lockedAria	home	{eyebrow}, {trackName}, locked	
+track.countryside.name	tracks	Countryside	
+track.countryside.difficulty	tracks	EASY	
+track.countryside.eyebrow	tracks	TRACK 1	
+track.countryside.description	tracks	Fast, flowing and forgiving.	
+track.airport.name	tracks	Airport	
+track.airport.difficulty	tracks	MEDIUM	
+track.airport.eyebrow	tracks	TRACK 2	
+track.airport.description	tracks	Runway speed. Apron precision.	
+track.cliffside.name	tracks	Cliffside	
+track.cliffside.difficulty	tracks	MEDIUM	
+track.cliffside.eyebrow	tracks	TRACK 3	
+track.cliffside.description	tracks	Linked curves. Mountain rhythm. Ocean flow.	
+track.harbor.name	tracks	Harbor	
+track.harbor.difficulty	tracks	HARD	
+track.harbor.eyebrow	tracks	TRACK 4	
+track.harbor.description	tracks	Switchbacks. Container canyons. Quayside speed.	
+track.midnight-city.name	tracks	Midnight City	
+track.midnight-city.difficulty	tracks	HARD	
+track.midnight-city.eyebrow	tracks	TRACK 5	
+track.midnight-city.description	tracks	District avenues. Neon corners. A full-city endurance lap.	
+track.mountain.name	tracks	Mountain	
+track.mountain.difficulty	tracks	HARD	
+track.mountain.eyebrow	tracks	TRACK 6	
+track.mountain.description	tracks	Village climb. Snow line. Hairpin descent.	
+track.intro.driving	tracks	Driving: {description}	
+settings.title	settings	SETTINGS	
+settings.close.aria	settings	Close settings	
+settings.steering	settings	Steering	
+settings.steering.motion	settings	Device rotation	
+settings.steering.motionHelp	settings	Turn the whole device like a steering wheel.	
+settings.steering.manual	settings	On-screen steering	
+settings.steering.manualHelp	settings	Use the steering control or a keyboard.	
+settings.steering.unavailable	settings	Device rotation is not available in this browser.	
+settings.audio	settings	Audio	
+settings.sound	settings	Sound	
+settings.sound.help	settings	Turn every TURN sound on or off.	
+settings.dbe	settings	Drive By Ear™	
+settings.dbe.help	settings	Spatial steering guidance, pace notes, recovery cues and rival warnings.	
+settings.balance	settings	Sound balance	
+settings.balance.help	settings	Choose between car and world sounds or Drive By Ear guidance.	
+settings.balance.other	settings	Other sounds	
+settings.balance.dbe	settings	Drive By Ear	
+settings.balance.balanced	settings	Balanced	
+settings.balance.otherPercent	settings	{percent}% other sounds	
+settings.balance.dbePercent	settings	{percent}% Drive By Ear	
+settings.status.motion	settings	Steering set to device rotation.	
+settings.status.manual	settings	Steering set to the on-screen control.	
+settings.status.sound	settings	Sound {state}.	
+settings.status.dbeStorage	settings	Drive By Ear could not be changed because local storage is unavailable.	
+settings.status.dbeReload	settings	Drive By Ear enabled. Reloading TURN to build its audio system.	
+settings.status.dbeOn	settings	Drive By Ear on.	
+settings.status.dbeOff	settings	Drive By Ear off.	
+settings.status.balance	settings	Sound balance: {balanceLabel}.	
+settings.accessibility	settings	Accessibility	
+settings.colorCues	settings	Color cues	
+settings.colorCues.help	settings	Add text and pattern cues wherever TURN uses color to communicate.	
+settings.colorCues.storageError	settings	Color cues could not be changed because local storage is unavailable.	
+settings.colorCues.status	settings	Color cues {state}.	
+settings.music.volume	settings	Music volume	
+settings.music.help	settings	OFF stops the music engine completely.	
+settings.music.off	settings	OFF	
+settings.music.full	settings	100%	
+settings.music.statusOff	settings	Music off.	
+settings.music.statusVolume	settings	Music volume {percent}%.	
+rivals.heading	rivals	Personal rivals	
+rivals.home.description	rivals	Remove every recorded personal rival from every track. To reset only one track, use Settings at that track’s start line.	
+rivals.home.reset	rivals	RESET ALL RIVALS	
+rivals.home.reset.aria	rivals	Reset personal rivals on all tracks	
+rivals.home.target	rivals	ALL TRACKS	
+rivals.track.description	rivals	Remove the recorded personal rivals for {trackName}. Rivals on other tracks will be kept.	
+rivals.track.reset	rivals	RESET RIVALS	
+rivals.track.reset.aria	rivals	Reset personal rivals on {trackName}	
+rivals.confirm.question	rivals	Reset rivals on {trackName}?	
+rivals.confirm.cancel	rivals	CANCEL	
+rivals.confirm.yes	rivals	YES, RESET	
+rivals.status.all	rivals	Personal rivals reset on all tracks.	
+rivals.status.track	rivals	Personal rivals reset for {trackName}.	
+rivals.race.reset	rivals	RESET RIVALS	
+rivals.race.reset.aria	rivals	Reset rivals on {trackName}	
+rivals.race.confirmHeading	rivals	RESET RIVALS?	
+rivals.race.confirmBody	rivals	Remove the saved personal rivals and lap records for {trackName}? Rivals on other tracks will be kept.	
+rivals.message.reset	rivals	RIVALS RESET	
+race.menu.startActions.aria	race	Start actions	
+race.menu.raceActions.aria	race	Race actions	
+race.leave	race	Leave Race	
+race.leave.aria	race	Leave the race and choose another track	
+race.recalibrate	race	Recalibrate	
+race.recalibrate.aria	race	Recalibrate steering and tilt controls	
+race.settings	race	Settings	
+race.settings.aria	race	Open game settings	
+race.spectate	race	Spectate	
+race.spectate.stop.aria	race	Stop spectating	
+race.spectate.next	race	NEXT >	
+race.spectate.ghost	race	Ghost	
+race.spectate.previous	race	Previous record	
+race.spectate.today	race	Today, {time}	
+race.recalibrated	race	STEERING + TILT CENTERED	
+race.hud.position	race	POSITION	
+race.hud.boost	race	BOOST	
+race.drivePad.aria	race	Drive control. Double tap and hold, then slide between Drift, Boost, Gas, and Brake or Reverse.	
+race.drift	race	Drift	
+race.drift.aria	race	Gas and drift	
+race.boost	race	Boost	
+race.boost.aria	race	Gas and boost	
+race.gas	race	Gas	
+race.gas.aria	race	Gas	
+race.brakeReverse	race	Brake · Reverse	
+race.brakeReverse.aria	race	Brake. Hold after stopping to reverse.	
+race.boostCharge.aria	race	Boost {percent} percent charged	
+blank.idle.aria	accessibility	Blank screen for audio-only driving	
+blank.confirm.aria	accessibility	Confirm blank screen	
+blank.show.aria	accessibility	Show screen	
+blank.screenShownRestore	accessibility	Screen shown. Drive By Ear returned to your chosen setting.	
+blank.screenShown	accessibility	Screen shown.	
+blank.armOn	accessibility	Tap again to blank the screen. The race and controls will continue.	
+blank.armTemporary	accessibility	Tap again to blank the screen. Drive By Ear will turn on temporarily and return to your chosen setting afterwards.	
+blank.unavailable	accessibility	Audio-only driving could not start because Drive By Ear is unavailable.	
+blank.temporaryOn	accessibility	Drive By Ear is on for audio-only driving. Your chosen setting will return when the screen is shown.	
+blank.on	accessibility	Screen blanked. Drive By Ear is on.	
+steeringLimit.left	accessibility	Left steering limit reached.	
+steeringLimit.right	accessibility	Right steering limit reached.	
+steeringLimit.generic	accessibility	Steering limit reached.	
+motionDenied.kicker	accessibility	DEVICE ROTATION	
+motionDenied.title	accessibility	MOTION ACCESS DENIED	
+motionDenied.body	accessibility	You denied motion access. Close and reopen TURN to try again, or use on-screen steering in Settings.	
+motionDenied.ok	accessibility	OK	
+music.toggle.visible	audio	MUSIC {action}	
+music.toggle.aria	audio	Turn music {action}	
+raceAudio.open	audio	Audio	
+raceAudio.open.aria	audio	Open audio settings	
+raceAudio.title	audio	AUDIO	
+raceAudio.close.aria	audio	Close audio settings	
+raceAudio.sound	audio	Sound	
+raceAudio.sound.help	audio	Turn every TURN sound on or off.	
+raceAudio.dbe	audio	Drive By Ear™	
+raceAudio.dbe.help	audio	Spatial pace notes, predictive steering guidance, recovery cues and rival warnings.	
+raceAudio.balance	audio	Sound balance	
+raceAudio.balance.help	audio	Keep the middle position for TURN's intended mix, or favour either the driving guidance or the car and world sounds.	
+raceAudio.guide.summary	audio	Drive By Ear sound guide	
+help.kicker	help	QUICK GUIDE	
+help.title	help	HOW TO PLAY	
+help.close.aria	help	Close How to Play	
+help.1.title	help	Choose a track and car	
+help.1.body	help	Your saved best lap appears on each track card. TURN races you against recordings of your own fastest laps, not computer drivers.	
+help.2.title	help	Turn the device to steer	
+help.2.body	help	Hold the phone or tablet in landscape and rotate it like a steering wheel. Recalibrate at the start line whenever your resting angle changes.	
+help.3.title	help	Drive with one thumb	
+help.3.body	help	Keep one thumb on the drive area and slide between Gas, Drift and Boost. Brake and Reverse share the separate brake control.	
+help.4.title	help	Use Drift and Boost wisely	
+help.4.body	help	DRIFT helps the car rotate but costs grip. Holding DRIFT also charges BOOST faster, so a controlled slide can prepare the next burst. BOOST gives speed but can make the next corner harder. Fast laps come from balancing both.	
+help.dbe.title	help	Drive By Ear™	
+help.dbe.intro	help	Drive By Ear turns the racing line, upcoming corners, grip, surfaces, recovery and nearby rivals into spatial sound. Steer toward the warm guiding hum. Headphones provide the clearest left and right information. Together with a screen reader, it is designed to support complete non-visual play.	
+help.dbe.explore	help	Explore the Drive By Ear sounds	
+help.dbe.roles	help	The sounds have different jobs. Guidance tells you where to steer, pace notes tell you what is coming next, and car or surface sounds tell you what is happening now.	
+help.dbe.start	help	Start here	
+help.dbe.start.headphones	help	Use headphones and begin at a comfortable speed.	
+help.dbe.start.hum	help	Steer toward the warm guiding hum.	
+help.dbe.start.pace	help	Listen to pace notes before corners. The ear gives the direction and the beep count gives the severity.	
+help.dbe.start.status	help	Engine, tyre, BOOST and gravel sounds describe the car or surface. They are not steering instructions.	
+help.dbe.ribbon.title	help	Guiding ribbon	
+help.dbe.ribbon.body	help	A warm organic hum points toward the side you should steer toward. It combines your position with where the moving car is likely to go. As the trajectory becomes safer, the hum settles closer to the centre and softens. At higher speed it looks farther ahead, so smooth corrections work better than chasing every tiny movement.	
+help.dbe.pace.title	help	Pace notes	
+help.dbe.pace.body	help	Before major corners, one to three beeps play in the ear on the turn side. One beep means a gentler corner, two means medium and three means tight. A long corner keeps the same number of beeps but holds the final beep longer: bip-beeeep for a long medium corner and bip-bip-beeeep for a long tight corner. Separate groups describe linked corners in the order you will meet them.	
+help.dbe.drift.title	help	Drift and grip	
+help.dbe.drift.body	help	Tyre noise stays centred. As the car loses more grip, the sound spreads wider across both ears. This describes how much the car is sliding without becoming a second left or right instruction.	
+help.dbe.power.title	help	Engine and BOOST	
+help.dbe.power.body	help	Engine and BOOST sounds stay centred. A rising burst confirms that BOOST starts, while a separate empty cue tells you the charge is gone. These are status sounds, not steering guidance.	
+help.dbe.recovery.title	help	Off-road recovery	
+help.dbe.recovery.body	help	Centred gravel marks that the car is off road. The guiding hum changes to recovery guidance and points toward a useful place to rejoin, rather than simply the nearest edge. Steer toward the hum until normal on-road guidance returns.	
+help.dbe.rivals.title	help	Nearby rivals	
+help.dbe.rivals.body	help	A short directional cue sounds when a rival comes close. It plays from the side of the nearby car. Treat it as a heads-up rather than a continuous tracker.	
+help.dbe.wrongWay.title	help	Wrong way	
+help.dbe.wrongWay.body	help	A repeating low double falling tone confirms that you are facing the wrong direction. A final side tone indicates which way to turn. Continue turning until the regular guiding ribbon returns.	
+help.dbe.screenReader.title	help	With a screen reader	
+help.dbe.screenReader.body	help	Drive By Ear is designed to work alongside screen readers. The screen reader presents menus, controls, continuous position updates and lap results; Drive By Ear supplies the spatial information needed to steer and stay on course. Together they are intended to provide a complete non-visual way to play TURN.	
+raceAudio.guide.intro	audio	Drive By Ear™ turns the racing line, upcoming corners and nearby hazards into spatial sound. Pace notes tell you what comes next, while continuous guidance helps with the turn you are making now. It is designed to make the track understandable without relying on sight, while also helping any player drive more consistently. It works alongside screen readers so menus, spoken race information and spatial driving guidance can be used together. Headphones give the clearest left and right guidance.	
+raceAudio.guide.ribbon.title	audio	The guiding ribbon	
+raceAudio.guide.ribbon.body	audio	A warm organic hum guides your steering. On the road, it combines where the car is with where its current movement is likely to take it. The hum moves toward the side you should steer toward. As your trajectory becomes safer, it settles closer to the centre and softens. At higher speed it predicts farther ahead, so make smooth corrections rather than chasing every small movement.	
+raceAudio.guide.recovery.body	audio	Off road, centred gravel marks the surface. The ribbon changes to recovery guidance and points toward a useful place to rejoin, rather than simply the nearest edge. Steer toward the hum until normal on-road guidance returns.	
+raceAudio.guide.drift.body	audio	Tyre noise stays centred. As the car loses more grip, the sound spreads wider across both ears. This tells you how much the car is sliding without becoming a second steering command.	
+raceAudio.guide.rivals.body	audio	A short cue sounds when a rival comes close. These nearby-rival warnings are directional and play from the side of the nearby car. Treat the cue as a heads-up rather than a continuous tracker.	
+raceAudio.guide.wrongWay.body	audio	If you are on the road but facing the wrong direction, normal navigation makes room for a low warning. A repeating double falling tone confirms the problem; the warning and final side tone indicate which way to turn. Continue turning until the regular ribbon returns.	
+raceAudio.guide.screenReader.body	audio	Drive By Ear is designed to work alongside screen readers, including VoiceOver. The screen reader presents menus, controls, race position and lap results; Drive By Ear provides the continuous spatial information needed to steer and stay on course. Together they are intended to provide a complete non-visual way to play TURN, from choosing a car and track to completing a race.	
+raceAudio.guide.mix.title	audio	Sound balance and priority	
+raceAudio.guide.mix.body	audio	TURN automatically lowers engine, drift and boost when guidance needs room. Pace notes are deliberately prominent. Use Sound balance above to favour Drive By Ear or the car and world sounds; the middle position is TURN's intended mix.	
+raceAudio.status.storage	audio	Drive By Ear could not be changed because this browser blocked local storage.	
+raceAudio.status.off	audio	Drive By Ear off. Its processing will also stay unloaded next time TURN starts.	
+vehicle.convertible.name	vehicles	Convertible	
+vehicle.convertible.description	vehicles	A low, open-top sports car with a long bonnet and compact cabin.	
+vehicle.classic.name	vehicles	Training Car	
+vehicle.classic.description	vehicles	A small, upright classic car with rounded bodywork and a friendly shape.	
+vehicle.vintage-racer.name	vehicles	Vintage Racer	
+vehicle.vintage-racer.description	vehicles	A narrow vintage racing car with exposed wheels and a long nose.	
+vehicle.toy-racer.name	vehicles	Rally Racer	
+vehicle.toy-racer.description	vehicles	A compact single-seat racing car with exposed wheels and a playful toy-like shape.	
+vehicle.monster-truck.name	vehicles	Monster Truck	
+vehicle.monster-truck.description	vehicles	A tall off-road truck with oversized tyres and a short, chunky body.	
+vehicle.race-future.name	vehicles	Future Racer	
+vehicle.race-future.description	vehicles	A sleek futuristic racing car with a low cockpit and aerodynamic body.	
+vehicle.race.name	vehicles	Race Car	
+vehicle.race.description	vehicles	A low single-seat race car with exposed wheels and a large rear wing.	
+vehicle.sedan-sports.name	vehicles	Sport Sedan	
+vehicle.sedan-sports.description	vehicles	A sporty four-door sedan with a low stance and rear spoiler.	
+vehicle.sedan.name	vehicles	Sedan	
+vehicle.sedan.description	vehicles	A balanced four-door family car with a conventional three-box shape.	
+vehicle.suv.name	vehicles	SUV	
+vehicle.suv.description	vehicles	A high-riding sport utility vehicle with a broad body and practical proportions.	
+vehicle.firetruck.name	vehicles	Fire Truck	
+vehicle.firetruck.description	vehicles	A heavy fire engine with roof equipment, blue emergency lights and a deep two-tone siren.	
+vehicle.police.name	vehicles	Police Car	
+vehicle.police.description	vehicles	A quick patrol car with a red-and-blue light bar and an urgent electronic siren.	
+vehicle.ambulance.name	vehicles	Ambulance	
+vehicle.ambulance.description	vehicles	A stable emergency van with blue roof lights and a clear hi-lo siren.	
+vehicle.truck.name	vehicles	Truck	
+vehicle.truck.description	vehicles	A sturdy pickup truck with a separate cab and cargo bed.	
+vehicle.van.name	vehicles	Van	
+vehicle.van.description	vehicles	A tall enclosed van with a boxy body and short bonnet.	
+lot.title	lot	THE LOT	
+lot.subtitle	lot	Pick a ride. Then hit the road.	
+lot.back.aria	lot	Back to start	
+lot.chooseCar.aria	lot	Choose a car	
+lot.view	lot	3D VIEW	
+lot.drag	lot	DRAG TO ROTATE	
+lot.paint.aria	lot	Choose car paint colours	
+lot.yourRide	lot	YOUR RIDE	
+lot.race	lot	RACE THIS CAR	
+lot.race.aria	lot	Race the {carName}	
+lot.loading	lot	ROLLING OUT THE CARS…	
+lot.paint.body	lot	Body	
+lot.paint.spoiler	lot	Spoiler	
+lot.paint.colorCue	lot	COLOR · {colorName}	
+lot.trackColorCue	lot	TRACK COLOR · {colorName}	
+lot.carColorCue	lot	CAR COLOR · {colorName}	
+lot.fallbackDescription	lot	A selectable car in The Lot.	
+vehicleStat.speed.label	vehicles	TOP SPEED	
+vehicleStat.speed.description	vehicles	How fast the car can go without boost.	
+vehicleStat.acceleration.label	vehicles	ACCELERATION	
+vehicleStat.acceleration.description	vehicles	How quickly the car reaches speed.	
+vehicleStat.control.label	vehicles	CONTROL	
+vehicleStat.control.description	vehicles	How precisely and quickly the car steers while gripping the road.	
+vehicleStat.drift.label	vehicles	DRIFT	
+vehicleStat.drift.description	vehicles	How well the car retains speed and settles while drifting. Drift is always slower than Gas.	
+vehicleStat.boostPower.label	vehicles	BOOST POWER	
+vehicleStat.boostPower.description	vehicles	How strongly boost accelerates the car and raises its speed limit.	
+vehicleStat.boostTank.label	vehicles	BOOST TANK	
+vehicleStat.boostTank.description	vehicles	How long a full boost charge lasts.	
+lot.stats.help	lot	WHAT DO THE STATS MEAN?	
+lot.stats.title	lot	WHAT THE STATS DO	
+lot.stats.close.aria	lot	Close vehicle stat legend	
+lot.stats.rule	lot	GAS is fastest. DRIFT turns harder but always costs speed. BOOST is a limited burst.	
+perk.sirens.title	vehicles	SIRENS	
+perk.sirens.description	vehicles	Boost activates flashing emergency lights and sirens.	
+perk.driftage.title	vehicles	DRIFTAGE	
+perk.driftage.description	vehicles	DRIFT drains less speed, steering becomes more aggressive and the car can hold larger slip angles.	
+perk.twitchyTurny.title	vehicles	TWITCHY TURNY	
+perk.twitchyTurny.description	vehicles	DRIFT fills BOOST even faster than normal.	
+perk.oversized.title	vehicles	OVERSIZED	
+perk.oversized.description	vehicles	Going off-road doesn’t slow it down.	
+perk.overdrive.title	vehicles	OVERDRIVE	
+perk.overdrive.description	vehicles	5 clean seconds builds +6% top speed. Off-road or collisions reset it.	
+palette.solar	vehicles	Solar	
+palette.futurecyan	vehicles	Future Cyan	
+palette.bubblegum	vehicles	Bubblegum	
+palette.lime	vehicles	Lime	
+palette.orange	vehicles	Orange	
+palette.violet	vehicles	Violet	
+palette.coral	vehicles	Coral	
+palette.ice	vehicles	Ice	
+colorCue.custom_colour	accessibility	custom colour	
+colorCue.black	accessibility	black	
+colorCue.white	accessibility	white	
+colorCue.dark_grey	accessibility	dark grey	
+colorCue.light_grey	accessibility	light grey	
+colorCue.grey	accessibility	grey	
+colorCue.pink	accessibility	pink	
+colorCue.red	accessibility	red	
+colorCue.dark_brown	accessibility	dark brown	
+colorCue.brown	accessibility	brown	
+colorCue.orange	accessibility	orange	
+colorCue.yellow	accessibility	yellow	
+colorCue.yellow_green	accessibility	yellow green	
+colorCue.green	accessibility	green	
+colorCue.cyan	accessibility	cyan	
+colorCue.blue	accessibility	blue	
+colorCue.violet	accessibility	violet	
+colorCue.magenta	accessibility	magenta	
+colorCue.dark	accessibility	dark {color}	
+colorCue.light	accessibility	light {color}	
+lot.lock.badge	trophy-road	{threshold} TROPHIES	
+lot.lock.optionAria	trophy-road	{carName}. Locked. Unlocks at {threshold} trophies on Trophy Road. Select for unlock information.	
+lot.lock.raceAria	trophy-road	{carName} is locked. Unlocks at {threshold} trophies on Trophy Road.	
+achievement.category.onboarding	achievements	Getting started	
+achievement.category.ways	achievements	Ways to play	
+achievement.category.exploration	achievements	Exploration	
+achievement.category.racing	achievements	Racing	
+achievement.category.timeTrials	achievements	Time trials	
+achievement.first-turn.title	achievements	FIRST TURN	
+achievement.first-turn.description	achievements	Finish any valid lap.	
+achievement.take-it-from-the-top.title	achievements	TAKE IT FROM THE TOP	
+achievement.take-it-from-the-top.description	achievements	Use Restart Lap after the current lap becomes void.	
+achievement.charge-through-it.title	achievements	CHARGE THROUGH IT	
+achievement.charge-through-it.description	achievements	Recharge at least 25% of the Boost meter while drifting in one lap.	
+achievement.second-wind.title	achievements	SECOND WIND	
+achievement.second-wind.description	achievements	Run Boost empty, let it recharge, then activate Boost again.	
+achievement.flow-state.title	achievements	FLOW STATE	
+achievement.flow-state.description	achievements	Finish a valid lap using only Drift and Boost for forward drive.	
+achievement.flow-state.recommendation	achievements	Recommended: Training Car · Countryside	
+achievement.watch-and-learn.title	achievements	WATCH AND LEARN	
+achievement.watch-and-learn.description	achievements	Spectate a rival for five seconds, then return to the start.	
+achievement.your-own-rival.title	achievements	YOUR OWN RIVAL	
+achievement.your-own-rival.description	achievements	Finish a valid lap with one of your saved rivals on the track.	
+achievement.level-head.title	achievements	LEVEL HEAD	
+achievement.level-head.description	achievements	Recalibrate, then finish a valid lap.	
+achievement.new-wheels.title	achievements	NEW WHEELS	
+achievement.new-wheels.description	achievements	Finish a valid lap with a vehicle other than the Training Car.	
+achievement.new-ground.title	achievements	NEW GROUND	
+achievement.new-ground.description	achievements	Finish valid laps on two different tracks.	
+achievement.trust-your-ears.title	achievements	TRUST YOUR EARS	
+achievement.trust-your-ears.description	achievements	Finish a valid lap with Blank screen mode on from start to finish.	
+achievement.listen-closely.title	achievements	LISTEN CLOSELY	
+achievement.listen-closely.description	achievements	Set Sound balance to at least 75% Drive By Ear, then drive for ten seconds with Blank screen mode on.	
+achievement.listen-closely.recommendation	achievements	Recommended for non-visual driving: 90% Drive By Ear	
+achievement.beyond-sight.title	achievements	BEYOND SIGHT	
+achievement.beyond-sight.description	achievements	Finish a valid lap on every track with Blank screen mode on from start to finish.	
+achievement.around-the-turn.title	achievements	AROUND THE TURN	
+achievement.around-the-turn.description	achievements	Finish a valid lap on every track.	
+achievement.ahead-of-yourself.title	achievements	AHEAD OF YOURSELF	
+achievement.ahead-of-yourself.description	achievements	Finish first in a lap with at least one saved rival.	
+achievement.night-shift-sheriff.title	achievements	NIGHT SHIFT SHERIFF	
+achievement.night-shift-sheriff.description	achievements	In Midnight City, use the Police Car to beat four non-police rivals. Overtake each one while Boost is active.	
+achievement.army-of-me.title	achievements	AN ARMY OF ME	
+achievement.army-of-me.description	achievements	Finish first against four saved rivals on every track.	
+achievement.on-course-of-course.title	achievements	ON COURSE, OF COURSE	
+achievement.on-course-of-course.description	achievements	Finish every track without going off-road and within its clean-lap target.	
+achievement.on-course-of-course.recommendation	achievements	Targets: Countryside, Airport and Cliffside < 0:30 · Harbor < 1:00 · Mountain < 1:50 · Midnight City < 2:00	
+achievement.find-lilya.title	achievements	FIND LILYA!	
+achievement.find-lilya.description	achievements	Find the hidden Lilya portrait in Midnight City.	
+achievement.find-darvid.title	achievements	FIND DARVID!	
+achievement.find-darvid.description	achievements	Find Darvid’s hidden face in Harbor.	
+achievement.save-bella.title	achievements	SAVE BELLA!	
+achievement.save-bella.description	achievements	Find Bella in Countryside using the Fire Truck.	
+achievement.satans-sedan.title	achievements	SATAN’S SEDAN	
+achievement.satans-sedan.description	achievements	Unlock the Super Sedan by setting the Sport Sedan spoiler to color code #666.	
+achievement.countryside-sprint.title	achievements	COUNTRYSIDE SPRINT	
+achievement.countryside-sprint.description	achievements	Finish Countryside in under 12 seconds.	
+achievement.countryside-sprint.recommendation	achievements	Recommended: Future Racer	
+achievement.airport-sprint.title	achievements	AIRPORT SPRINT	
+achievement.airport-sprint.description	achievements	Finish Airport in under 17 seconds.	
+achievement.airport-sprint.recommendation	achievements	Recommended: Future Racer	
+achievement.cliffside-sprint.title	achievements	CLIFFSIDE SPRINT	
+achievement.cliffside-sprint.description	achievements	Finish Cliffside in under 15 seconds.	
+achievement.cliffside-sprint.recommendation	achievements	Recommended: Future Racer	
+achievement.harbor-sprint.title	achievements	HARBOR SPRINT	
+achievement.harbor-sprint.description	achievements	Finish Harbor in under 24 seconds.	
+achievement.harbor-sprint.recommendation	achievements	Recommended: Future Racer	
+achievement.midnight-sprint.title	achievements	MIDNIGHT SPRINT	
+achievement.midnight-sprint.description	achievements	Finish Midnight City in under 53 seconds.	
+achievement.midnight-sprint.recommendation	achievements	Recommended: Future Racer	
+achievement.mountain-sprint.title	achievements	MOUNTAIN SPRINT	
+achievement.mountain-sprint.description	achievements	Finish Mountain in under 27 seconds.	
+achievement.mountain-sprint.recommendation	achievements	Recommended: Future Racer	
+achievement.faster-than-dev.title	achievements	FASTER THAN THE DEV	
+achievement.faster-than-dev.description	achievements	Beat every developer target time.	
+achievement.faster-than-dev.recommendation	achievements	The target times were set with the Future Racer.	
+achievement.chromatic-camouflage.title	achievements	CHROMATIC CAMOUFLAGE	
+achievement.chromatic-camouflage.description	achievements	Set your personal best on every track in a car painted to match that track.	
+achievement.mayday.title	achievements	MAYDAY!	
+achievement.mayday.description	achievements	In the Ambulance, answer the Airport MAYDAY with sirens and deliver the patient to the terminal medical bay within 30 seconds.	
+achievement.got-started.title	achievements	GOT STARTED	
+achievement.got-started.description	achievements	Finish all Getting Started achievements.	
+achievement.winner.countryside.title	achievements	COUNTRYSIDE WINNER	
+achievement.winner.countryside.description	achievements	Finish first against four saved rivals on Countryside.	
+achievement.safety.countryside.title	achievements	COUNTRYSIDE SAFETY	
+achievement.safety.countryside.description	achievements	Finish Countryside without going off-road in under 0:30.	
+achievement.winner.airport.title	achievements	AIRPORT WINNER	
+achievement.winner.airport.description	achievements	Finish first against four saved rivals on Airport.	
+achievement.safety.airport.title	achievements	AIRPORT SAFETY	
+achievement.safety.airport.description	achievements	Finish Airport without going off-road in under 0:30.	
+achievement.winner.cliffside.title	achievements	CLIFFSIDE WINNER	
+achievement.winner.cliffside.description	achievements	Finish first against four saved rivals on Cliffside.	
+achievement.safety.cliffside.title	achievements	CLIFFSIDE SAFETY	
+achievement.safety.cliffside.description	achievements	Finish Cliffside without going off-road in under 0:30.	
+achievement.winner.harbor.title	achievements	HARBOR WINNER	
+achievement.winner.harbor.description	achievements	Finish first against four saved rivals on Harbor.	
+achievement.safety.harbor.title	achievements	HARBOR SAFETY	
+achievement.safety.harbor.description	achievements	Finish Harbor without going off-road in under 1:00.	
+achievement.winner.midnight-city.title	achievements	MIDNIGHT CITY WINNER	
+achievement.winner.midnight-city.description	achievements	Finish first against four saved rivals on Midnight City.	
+achievement.safety.midnight-city.title	achievements	MIDNIGHT CITY SAFETY	
+achievement.safety.midnight-city.description	achievements	Finish Midnight City without going off-road in under 2:00.	
+achievement.winner.mountain.title	achievements	MOUNTAIN WINNER	
+achievement.winner.mountain.description	achievements	Finish first against four saved rivals on Mountain.	
+achievement.safety.mountain.title	achievements	MOUNTAIN SAFETY	
+achievement.safety.mountain.description	achievements	Finish Mountain without going off-road in under 1:50.	
+achievements.trigger	achievements	ACHIEVEMENTS	
+achievements.trigger.aria	achievements	Achievements	
+achievements.trigger.new.aria	achievements	Achievements, {count} new {itemWord}	
+achievements.kicker	achievements	YOUR PROGRESS	
+achievements.title	achievements	ACHIEVEMENTS	
+achievements.close.aria	achievements	Close Achievements	
+achievements.summary	achievements	{unlocked} OF {total} UNLOCKED	
+achievements.trophyRoad.progress.aria	achievements	Trophy Road progress	
+achievements.trophyRoad.rewards.aria	achievements	Trophy Road rewards	
+achievements.trophies	achievements	TROPHIES	
+achievements.completion	achievements	COMPLETION	
+achievements.storageUnavailable	achievements	Achievement progress is available for this session but cannot be saved because local storage is unavailable.	
+achievements.filters.aria	achievements	Achievement filters	
+achievements.filter.all	achievements	ALL	
+achievements.filter.gettingStarted	achievements	GETTING STARTED	
+achievements.filter.timeTrials	achievements	TIME TRIALS	
+achievements.filter.unlocked	achievements	UNLOCKED	
+achievements.status.unlocked	achievements	UNLOCKED	
+achievements.status.inProgress	achievements	IN PROGRESS	
+achievements.status.locked	achievements	LOCKED	
+achievements.card.trophies	achievements	{category} · {trophies} trophies	
+achievements.card.progress	achievements	{progress} of {maximum}	
+achievements.card.progress.aria	achievements	{achievementTitle} progress	
+achievements.card.unlockedContext	achievements	Unlocked · {context}	
+achievements.road.valueNext	achievements	{total} trophies. {remaining} trophies until {rewardName}.	
+achievements.road.valueComplete	achievements	{total} trophies. Every current Trophy Road reward is unlocked.	
+achievements.road.marker.aria	achievements	{rewardName}. {threshold} trophies. {state}	
+achievements.road.detailUnlocked	achievements	{threshold} TROPHIES · UNLOCKED	
+achievements.road.detailRemaining	achievements	{threshold} TROPHIES · {remaining} TO GO	
+achievements.toast.one	achievements	ACHIEVEMENT UNLOCKED	
+achievements.toast.many	achievements	{count} ACHIEVEMENTS UNLOCKED	
+achievements.toast.more	achievements	{firstTitle} + {remaining} MORE	
+achievements.toast.trophies	achievements	+{trophies} TROPHIES	
+achievements.toast.rewardOne	achievements	TROPHY ROAD REWARD	
+achievements.toast.rewardMany	achievements	{count} TROPHY ROAD REWARDS	
+achievements.toast.rewardUnlocked	achievements	UNLOCKED	
+achievements.toast.ariaOne	achievements	Achievement unlocked. {titles}. {trophies} trophies.	
+achievements.toast.ariaMany	achievements	{count} achievements unlocked. {titles}. {trophies} trophies.	
+achievements.toast.rewardAriaOne	achievements	Trophy Road reward unlocked. {rewardNames}.	
+achievements.toast.rewardAriaMany	achievements	{count} Trophy Road rewards unlocked. {rewardNames}.	
+trophyRoad.vintage-racer.title	trophy-road	VINTAGE RACER	
+trophyRoad.vintage-racer.short	trophy-road	Vintage Racer	
+trophyRoad.vintage-racer.description	trophy-road	Unlock the Vintage Racer: the car for linking corners beautifully. DRIFTAGE: DRIFT drains less speed, steering becomes more aggressive and it can hold larger slip angles.	
+trophyRoad.midnight-city.title	trophy-road	MIDNIGHT CITY	
+trophyRoad.midnight-city.short	trophy-road	Midnight City	
+trophyRoad.midnight-city.description	trophy-road	Unlock TURN’s night-time city track, with neon streets, technical corners and the longest lap in the current track collection.	
+trophyRoad.future-racer.title	trophy-road	FUTURE RACER	
+trophyRoad.future-racer.short	trophy-road	Future Racer	
+trophyRoad.future-racer.description	trophy-road	Unlock the Future Racer: built for advanced time trials. OVERDRIVE: 5 clean seconds builds +6% top speed; off-road or hits reset.	
+trophyRoad.emergency-pack.title	trophy-road	EMERGENCY!	
+trophyRoad.emergency-pack.short	trophy-road	Emergency Pack	
+trophyRoad.emergency-pack.description	trophy-road	Unlock the Fire Truck, Ambulance and Police Car. All three have maximum Boost tanks. SIRENS: Boost activates flashing emergency lights and sirens.	
+trophyRoad.mountain.title	trophy-road	MOUNTAIN	
+trophyRoad.mountain.short	trophy-road	Mountain	
+trophyRoad.mountain.description	trophy-road	Unlock MOUNTAIN: leave a snowy village on a long alpine climb, round the summit river and attack the front-face hairpin descent beside the waterfall.	
+trophyRoad.monster.title	trophy-road	MONSTER	
+trophyRoad.monster.short	trophy-road	Monster Truck	
+trophyRoad.monster.description	trophy-road	Unlock the Monster Truck: a military-green heavyweight. OVERSIZED: Going off-road doesn’t slow it down.	
+trophyRoad.paintjob.title	trophy-road	PAINTJOB	
+trophyRoad.paintjob.short	trophy-road	Paintjob	
+trophyRoad.paintjob.description	trophy-road	Unlock body and secondary paint controls in The Lot. Every vehicle keeps its own distinctive factory colour until then.	
+trophyRoad.rally-racer.title	trophy-road	RALLY RACER	
+trophyRoad.rally-racer.short	trophy-road	Rally Racer	
+trophyRoad.rally-racer.description	trophy-road	Unlock the Rally Racer: twitchy and perfect for curvy tracks. TWITCHY TURNY: DRIFT fills BOOST even faster than normal.	
+trophyRoad.locked.badge	trophy-road	LOCKED · {threshold} TROPHIES	
+trophyRoad.locked.notice	trophy-road	{rewardName} unlocks on Trophy Road. Complete achievements to reach {threshold} trophies.	
+trophyRoad.locked.aria	trophy-road	{rewardName} is locked. Unlocks at {threshold} trophies on Trophy Road.	
+training.part1.title	training	Find the ribbon	
+training.part1.summary	training	Centre the warm guiding hum on a long straight.	
+training.part1.lead	training	The warm continuous hum is steering guidance. You begin to the right of the best route. Steer toward the hum until it settles in the centre, then keep it there to the finish.	
+training.part1.hint	training	The yellow guide rails behave like slippery ice rails: they gently guide the car back without stopping it.	
+training.part2.title	training	Listen ahead	
+training.part2.summary	training	Hear one gentle right and one broader left before they begin.	
+training.part2.lead	training	The sharp directional BIPs are pace notes. The ear gives the turn side and the count gives its severity. This course has one gentle right followed later by one broader two-BIP left.	
+training.part2.hint	training	Both cues play on the long approach before their curve. The guide rails remain so you can focus on matching sound to road.	
+training.part3.title	training	Leave and return	
+training.part3.summary	training	Use gravel and recovery guidance to rejoin, then hear one right.	
+training.part3.lead	training	You begin just off the right side of the road. Centred gravel confirms the surface; the warm recovery hum points toward a useful place to rejoin. After the long straight, one BIP in the right ear announces the gentle right.	
+training.part3.hint	training	There are no visible rails along the road. A wider invisible safety zone only intervenes if you travel far away.	
+training.part4.title	training	Trust the sequence	
+training.part4.summary	training	Recognise BIP BIP BEEP before one long tight left.	
+training.part4.lead	training	BIP BIP BEEP describes one long tight curve: three sounds mean tight, and the held final BEEP means the same curve continues. Hear the complete phrase in the left ear before the single long left begins.	
+training.part4.hint	training	This spacious course contains one uninterrupted curve and no road overlap. Try Blank screen mode when the phrase feels clear.	
+training.part5.title	training	Drive by ear	
+training.part5.summary	training	Combine the ribbon with a linked right–left pace-note sequence.	
+training.part5.lead	training	Put it together on a spacious course. After the first gentle right, listen for a linked sequence: BIP BIP in the right ear, then BIP BEEP in the left for the long curve immediately after it. Use gravel plus recovery guidance if you leave the road.	
+training.part5.hint	training	The final two curves follow closely without crossing the route. Try Blank screen mode, or keep the course visible and repeat any part from the navigation controls.	
+training.kicker	training	FIVE GUIDED PARTS	
+training.title	training	DRIVE BY EAR 101	
+training.title.spoken	training	Drive By Ear one oh one	
+training.close.aria	training	Close Drive By Ear 101	
+training.close.spoken	training	Close Drive By Ear one oh one	
+training.intro	training	Learn TURN's spatial guidance one layer at a time. Training temporarily uses the Training Car and puts Drive By Ear at 95% of the sound mix. Your car and audio choices return when you leave.	
+training.soundRoles.title	training	Know which sound is speaking	
+training.soundRoles.guidance	training	Steering guidance — The warm continuous hum points toward the route. Steer toward it.	
+training.soundRoles.pace	training	Pace notes — Sharp directional BIPs play before curves. The ear gives the turn side, the count gives severity, and a held final BEEP means the curve continues.	
+training.soundRoles.status	training	Status and safety — Engine, tyres, gravel and BOOST describe the car or surface. The short maximum-steering two-tone means you have reached the steering limit. These sounds are not corner instructions.	
+training.choosePart.aria	training	Choose a training part	
+training.visual	training	The screen stays on while you learn. Later parts invite you to try Blank screen mode.	
+training.cancel	training	CANCEL	
+training.start	training	START PART {part}	
+training.partHud	training	PART {part} OF {total}	
+training.previous	training	‹ PREVIOUS	
+training.restart	training	RESTART PART	
+training.next	training	NEXT ›	
+training.previous.aria	training	Previous: Part {part}, {title}	
+training.previous.none.aria	training	No previous training part	
+training.restart.aria	training	Restart Part {part}, {title}	
+training.next.aria	training	Next: Part {part}, {title}	
+training.next.none.aria	training	No next training part	
+training.nav.aria	training	Training part navigation	
+training.leave	training	LEAVE TRAINING	
+training.leave.aria	training	Leave Drive By Ear 101	
+training.leave.spoken	training	Leave Drive By Ear one oh one	
+training.complete.kicker	training	TRAINING	
+training.complete.title	training	DRIVE BY EAR	
+training.complete.body	training	You have heard the guiding ribbon, pace notes, status sounds and off-road recovery work together. Train again whenever you want, then take the same sound language onto any TURN track.	
+training.returnHome	training	RETURN HOME	
+training.returnHome.aria	training	Return Home	
+training.trainAgain	training	TRAIN AGAIN	
+training.home.title	training	DRIVE BY EAR 101	
+training.home.subtitle	training	Learn by listening.	
+training.home.body	training	Try five short guided parts covering the ribbon, pace notes, status sounds and off-road recovery.	
+training.home.start	training	START DRIVE BY EAR 101	
+training.home.start.spoken	training	Start Drive By Ear one oh one	
+training.home.prompt	training	New to these sounds?	
+training.home.try	training	TRY DRIVE BY EAR 101	
+training.home.try.spoken	training	Try Drive By Ear one oh one	
+training.balanceStatus	training	Drive By Ear is prominent in the sound mix. Drive By Ear 101 can help you recognise its guidance.	
+training.blank.kicker	training	BLANK SCREEN MODE	
+training.blank.title	training	DRIVE BY EAR	
+training.blank.close.aria	training	Close training suggestion	
+training.blank.body	training	Blank screen mode lets you drive using sound. Drive By Ear 101 introduces the ribbon, pace notes, status sounds and off-road recovery before you rely on them in a race.	
+training.blank.continue	training	CONTINUE	
+training.blank.try	training	TRY TRAINING	
+training.completeNext	training	PART {part} COMPLETE · NEXT: PART {nextPart}	
+training.repeatPart	training	REPEAT PART {part}	
+training.speech.1	training	Part one, Find the ribbon. Steer toward the warm guiding hum and keep it centred.	
+training.speech.2	training	Part two, Listen ahead. Follow the guiding hum and listen for one right pace note, then a broader two-BIP left.	
+training.speech.3	training	Part three, Leave and return. You start off-road. Use gravel and the warm recovery hum to rejoin, then listen for one right pace note.	
+training.speech.4	training	Part four, Trust the sequence. Listen for BIP BIP BEEP in the left ear before the long tight left.	
+training.speech.5	training	Part five, Drive by ear. Combine the guiding hum with the right-left pace-note sequence, and recover by sound if you leave the road.	
+speech.cardinal.0	speech	zero	
+speech.cardinal.1	speech	one	
+speech.cardinal.2	speech	two	
+speech.cardinal.3	speech	three	
+speech.cardinal.4	speech	four	
+speech.cardinal.5	speech	five	
+speech.cardinal.6	speech	six	
+speech.cardinal.7	speech	seven	
+speech.cardinal.8	speech	eight	
+speech.cardinal.9	speech	nine	
+speech.cardinal.10	speech	ten	
+speech.cardinal.11	speech	eleven	
+speech.cardinal.12	speech	twelve	
+speech.cardinal.13	speech	thirteen	
+speech.cardinal.14	speech	fourteen	
+speech.cardinal.15	speech	fifteen	
+speech.cardinal.16	speech	sixteen	
+speech.cardinal.17	speech	seventeen	
+speech.cardinal.18	speech	eighteen	
+speech.cardinal.19	speech	nineteen	
+speech.cardinal.20	speech	twenty	
+speech.ordinal.0	speech	zeroth	
+speech.ordinal.1	speech	first	
+speech.ordinal.2	speech	second	
+speech.ordinal.3	speech	third	
+speech.ordinal.4	speech	fourth	
+speech.ordinal.5	speech	fifth	
+speech.ordinal.6	speech	sixth	
+speech.ordinal.7	speech	seventh	
+speech.ordinal.8	speech	eighth	
+speech.ordinal.9	speech	ninth	
+speech.ordinal.10	speech	tenth	
+speech.ordinal.11	speech	eleventh	
+speech.ordinal.12	speech	twelfth	
+speech.ordinal.13	speech	thirteenth	
+speech.ordinal.14	speech	fourteenth	
+speech.ordinal.15	speech	fifteenth	
+speech.ordinal.16	speech	sixteenth	
+speech.ordinal.17	speech	seventeenth	
+speech.ordinal.18	speech	eighteenth	
+speech.ordinal.19	speech	nineteenth	
+speech.ordinal.20	speech	twentieth	
+speech.position	speech	{ordinalPosition} of {cardinalTotal}	
+speech.rival.one	speech	{countWord} rival	
+speech.rival.many	speech	{countWord} rivals	
+speech.noTime	speech	no time	
+speech.minute.one	speech	{countWord} minute	
+speech.minute.many	speech	{countWord} minutes	
+speech.second.one	speech	{countWord} second	
+speech.second.many	speech	{countWord} seconds	
+speech.decimalSeconds	speech	{secondsWord} point {decimalDigits} seconds	
+speech.lapResult	speech	Lap. Position: {ordinalPosition}. Time: {spokenTime}.	
+speech.lapVoid.track	speech	Lap void. Stay on the track.	
+speech.lapVoid.generic	speech	Lap void. Try again.	
+speech.positionLabel	speech	Position, {spokenPosition}	
+speech.lapTimeLabel	speech	Lap time, {spokenLapTime}	
+lapToast.aria	race	Lap result	
+lapToast.lap	race	LAP	
+lapToast.void	race	LAP VOID	
+lapToast.stayOnTrack	race	STAY ON THE TRACK!	
+lapToast.tryAgain	race	TRY AGAIN	
+share.title.kicker	sharing	YOUR TURN	
+share.title	sharing	SHARE YOUR TURN	
+share.close.aria	sharing	Close Share Your Turn	
+share.body	sharing	Send your best lap as a challenge. Anyone who races it can add their car and pass the challenge on.	
+share.nameLabel	sharing	Your name in the challenge	
+share.namePlaceholder	sharing	WRITE YOUR NAME HERE	
+share.submit	sharing	SHARE YOUR TURN	
+share.back	sharing	BACK	
+share.newPb.aria	sharing	Share this new personal best as a YOUR TURN challenge	
+share.track.aria	sharing	Share your best lap on {trackName} as a YOUR TURN challenge	
+share.track.none.aria	sharing	No shareable best lap on {trackName}	
+share.carFallback	sharing	Car	
+share.validation.name	sharing	Write your name before sharing.	
+share.preparing	sharing	Preparing challenge link…	
+share.native.title	sharing	{racerName} sends you YOUR TURN	
+share.native.text	sharing	{racerName} challenges you on {trackName} with {time}. Your turn.	
+share.copied.short	sharing	Short challenge link copied.	
+share.copied	sharing	Challenge link copied.	
+share.error	sharing	The challenge could not be shared.	
+feedback.emailSubject	about	TURN feedback	
+feedback.status.copied	about	Email address copied: {email}	
+feedback.status.failed	about	Could not copy automatically. The email address is {email}.	
+feedback.copied	about	COPIED	
+feedback.kicker	about	HELP MAKE TURN BETTER	
+feedback.title	about	GIVE FEEDBACK	
+feedback.close.aria	about	Close Give Feedback	
+feedback.lead	about	Found a bug, an accessibility barrier or something that made TURN harder to use? Tell us what happened and what you expected.	
+feedback.body	about	Feature ideas and improvement suggestions are welcome too. Feedback from every kind of player helps make TURN better for everyone. Mention your device, browser or assistive technology when it is relevant.	
+feedback.email	about	EMAIL FEEDBACK	
+feedback.copyEmail	about	COPY EMAIL ADDRESS	
+about.kicker	about	THE GAME	
+about.title	about	ABOUT TURN	
+about.close.aria	about	Close About TURN	
+about.lead	about	TURN is a racing game about tilt steering, personal rivals and learning to drive by ear.	
+about.summary	about	Built through inclusive and universal design so players can use sight, sound, touch, motion, a keyboard or assistive technology.	
+about.credits	about	© 2026 enkel.design. Created by Erik Jansson, aided by OpenAI Codex. Game assets include Kenney Game Assets. Drive By Ear™ is inspired by RAD – Racing Auditory Display.	
+about.privacy.summary	about	PRIVACY & USAGE STATISTICS	
+about.privacy.1	about	TURN sends a few anonymous gameplay events to Cloudflare after a race starts so enkel.design can see whether the game is being played, which tracks and cars are used, and where the game may need improvement.	
+about.privacy.2	about	The events can include TURN or YOUR TURN, app build, track, car, motion or manual steering, browser or installed web app, Drive By Ear and blank-screen state, valid or void laps and lap time.	
+about.privacy.3	about	TURN’s analytics payload does not include your name, challenge name, challenge link or ID, replay, driving path, control inputs, advertising identifiers, IP address or precise location. Cloudflare processes normal network request information while carrying the events, but TURN does not add that information to its gameplay statistics.	
+about.privacy.4	about	TURN sets no analytics cookie and creates no persistent analytics identifier. A random identifier exists only in memory for the current page load so events from that one play session can be grouped; it disappears when the page is closed or reloaded.	
+about.privacy.5	about	TURN keeps anonymous daily aggregate statistics in Cloudflare D1 for the private developer dashboard. It does not keep raw gameplay-event histories in that database. The statistics are not public and are not used for advertising.	
+about.history.action	about	HISTORY AND CHANGELOG	
+about.history.kicker	about	FROM FIRST PROTOTYPE TO TODAY	
+about.history.title	about	TURN HISTORY	
+about.history.close.aria	about	Close TURN history	
+about.history.tabs.aria	about	TURN history sections	
+about.history.development	about	DEVELOPMENT HISTORY	
+about.history.changelog	about	CHANGELOG	
+about.history.intro	about	TURN grew from a one-day sensor experiment into a six-track racing PWA with personal rivals, a fifteen-car garage, Drive By Ear, assistive-technology support and Trophy Road progression. This is the development story rather than a raw list of commits.	
+about.changelog.intro	about	Meaningful player-facing, accessibility, architecture, performance and content changes are consolidated by date. Reverted experiments remain visible because they explain the product decisions that followed.	
+about.history.entry01.period	about	18–19 July 2026	
+about.history.entry01.title	about	From sensor experiment to modular racer	
+about.history.entry01.paragraph1	about	TURN began as a mobile prototype built around one unusual idea: hold a phone or tablet in landscape and rotate it like a steering wheel.	
+about.history.entry01.paragraph2	about	The first day established the Three.js road, motion steering, touch driving, drift-oriented physics, lap timing, saved rivals and PWA installation. TURN LAB then split the fast prototype into explicit race, input, physics, rendering, replay, track and interface modules before the verified R7 runtime replaced production.	
+about.history.entry01.milestone1	about	Sensor-steered prototype and Three.js world	
+about.history.entry01.milestone2	about	Mobile HUD, touch controls and personal rival recordings	
+about.history.entry01.milestone3	about	Protected TURN LAB refactor and R7 production baseline	
+about.history.entry02.period	about	19–22 July	
+about.history.entry02.title	about	The Lot and dependable racing	
+about.history.entry02.paragraph1	about	TURN became a small racing game rather than a single-car experiment. The Lot introduced fifteen vehicles, a rotating 3D viewer, paint and an eighteen-point stat budget built around trade-offs.	
+about.history.entry02.paragraph2	about	The same period made racing trustworthy: ordered swept checkpoints, a physical start and finish line, brake-before-reverse behaviour, clearer lap results, restart handling and systematic model-orientation corrections.	
+about.history.entry02.milestone1	about	Fifteen-car garage with balanced attributes	
+about.history.entry02.milestone2	about	Unified thumb-operated drive surface	
+about.history.entry02.milestone3	about	Reliable checkpoints, lap validity and result presentation	
+about.history.entry03.period	about	22–25 July	
+about.history.entry03.title	about	One course becomes a track platform	
+about.history.entry03.paragraph1	about	Countryside gained Airport, then Cliffside and Harbor. Each track exposed another hard-coded assumption and pushed the runtime toward a generic registry for identity, storage, atmosphere, collision, elevation and activation.	
+about.history.entry03.paragraph2	about	Track cards evolved into postcards with best times and the actual record-setting car. World containment, scenery colliders, elevation-aware presentation and event-driven rendering work prepared the game for continued expansion.	
+about.history.entry03.milestone1	about	Airport, elevated Cliffside and Harbor	
+about.history.entry03.milestone2	about	Track-scoped records and generic runtime registry	
+about.history.entry03.milestone3	about	World collision, elevation and performance architecture	
+about.history.entry04.period	about	26–28 July	
+about.history.entry04.title	about	Drive By Ear becomes a driving language	
+about.history.entry04.paragraph1	about	Engine and tyre feedback expanded into Drive By Ear: spatial guidance designed to help every player and, together with a screen reader, support complete non-visual play.	
+about.history.entry04.paragraph2	about	Early separate cues were consolidated into a layered hierarchy with an organic steering ribbon, off-road recovery, wrong-way priority, directional rivals and hand-authored pace notes. Device recordings repeatedly corrected channel direction, recovery meaning, speech priority and rare note loss.	
+about.history.entry04.milestone1	about	All-track pace notes and central audio mixer	
+about.history.entry04.milestone2	about	One consistent steer-toward-the-sound rule	
+about.history.entry04.milestone3	about	Delivery-critical route guidance and screen-reader race speech	
+about.history.entry05.period	about	28–31 July	
+about.history.entry05.title	about	TURN NEXT validates the platform refactor	
+about.history.entry05.paragraph1	about	TURN NEXT was created as an isolated PWA with separate storage, then used to stage motion, display and race-session architecture without putting production records at risk.	
+about.history.entry05.paragraph2	about	A whole-screen orientation-freeze experiment was rejected after physical iOS testing. The accepted web solution became a truthful ±24° operating envelope with directional, non-flashing visual feedback plus audio, haptics and first-per-side screen-reader announcements.	
+about.history.entry05.paragraph3	about	The M5–M8 programme also replaced the old startup loop with Home → track → The Lot → introduction → race.	
+about.history.entry05.milestone1	about	Platform-owned motion and display lifecycle	
+about.history.entry05.milestone2	about	Validated 24° steering and horizon safe zone	
+about.history.entry05.milestone3	about	Home, consolidated Settings and central session orchestration	
+about.history.entry06.period	about	29 July–2 August	
+about.history.entry06.title	about	Accessibility becomes structural	
+about.history.entry06.paragraph1	about	Accessibility work changed information architecture and interaction rather than merely adding labels. The Lot became a keyboard-friendly radio group with complete car descriptions, human-readable paint colours and deliberate heading navigation.	
+about.history.entry06.paragraph2	about	VoiceOver testing invalidated two plausible ARIA techniques, so TURN replaced them with real hidden summary text and selected-first DOM ordering. Dialog focus return, installation guidance, motion-denial recovery, external-keyboard controls and non-visual instructions were hardened in the same period.	
+about.history.entry06.milestone1	about	Complete keyboard and assistive-technology car selection	
+about.history.entry06.milestone2	about	Composed lap speech and managed position announcements	
+about.history.entry06.milestone3	about	Browser-aware installation and truthful device support	
+about.history.entry07.period	about	31 July–2 August	
+about.history.entry07.title	about	Midnight City and a living design system	
+about.history.entry07.paragraph1	about	Midnight City became TURN’s fifth and longest track. Its first boulevard layout was rebuilt into distinct districts with parks, skyline, neon lore, a cinematic introduction and a deliberately hidden LILYA portrait.	
+about.history.entry07.paragraph2	about	The longer 1,080-sample route exposed a progress-normalisation defect that moved pace notes to two-thirds of their intended positions. Geometry-backed direction tests and sample-aware timing now protect the track.	
+about.history.entry07.paragraph3	about	A living design-system reference and shared semantic tokens established stable colour, control, form, disclosure, radius, border and shadow rules without flattening track personality.	
+about.history.entry07.milestone1	about	Five-track game with a long night-city course	
+about.history.entry07.milestone2	about	Geometry-backed Midnight City pace-note validation	
+about.history.entry07.milestone3	about	Production semantic tokens and design reference	
+about.history.entry08.period	about	3 August	
+about.history.entry08.title	about	Emergency vehicles and blank-screen play	
+about.history.entry08.paragraph1	about	Fire Truck, Police Car and Ambulance replaced three garage vehicles. Fixed service liveries, large Boost tanks, flashing lights and vehicle-specific procedural sirens made Boost part of each vehicle’s identity.	
+about.history.entry08.paragraph2	about	Blank-screen mode then covered the visual game with true black while retaining controls, tilt steering, audio and assistive-technology access. Drive By Ear can be enabled temporarily for that session without overwriting the player’s preference.	
+about.history.entry08.milestone1	about	Three fixed-livery emergency vehicles	
+about.history.entry08.milestone2	about	Boost-controlled lights and sirens	
+about.history.entry08.milestone3	about	Audio-only play with temporary Drive By Ear activation	
+about.history.entry09.period	about	3–5 August	
+about.history.entry09.title	about	Achievements become Trophy Road	
+about.history.entry09.paragraph1	about	An offline-first achievement collection grew from onboarding challenges into non-visual play, developer time trials, emergency-vehicle challenges, all-track rival and clean-driving goals, and hidden discoveries including Bella in Countryside.	
+about.history.entry09.paragraph2	about	Points became permanent trophies. Trophy Road now unlocks Midnight City, Future Racer, Paintjob, the Emergency Pack and Monster Truck while grandfathering existing profiles.	
+about.history.entry09.paragraph3	about	A serious Home-to-Lot freeze was eventually traced to a Paintjob MutationObserver that repeatedly changed the subtree it watched. The fix narrowed ownership and added a regression for the self-triggering pattern.	
+about.history.entry09.milestone1	about	28 achievements and 1,700 available trophies	
+about.history.entry09.milestone2	about	Persistent content rewards and legacy-player migration	
+about.history.entry09.milestone3	about	Critical observer-loop diagnosis and prevention	
+about.history.entry10.period	about	4–6 August	
+about.history.entry10.title	about	Stabilization and progression	
+about.history.entry10.paragraph1	about	TURN 1.5.0 added a branded loading cover, stable iOS Home sizing, compact Paintjob locking and new-achievement markers.	
+about.history.entry10.paragraph2	about	TURN 1.5.1 corrected Trophy Road’s initial reward card, transitions between 3D and line-art previews and the Paintjob lower rail. TURN 1.5.2 consolidated the later interface, progression, achievement and accessibility work together with the corrected usable iOS standalone viewport.	
+about.history.entry10.paragraph3	about	The game entered a refinement and hardening phase with five tracks, fifteen garage slots, local rivals, a mature non-visual audio system, assistive-technology navigation and persistent progression.	
+about.history.entry10.milestone1	about	TURN 1.5.2 · 2026.08.06-r161 stabilization baseline	
+about.history.entry10.milestone2	about	Post-r160 interface, progression, achievement and viewport stabilization	
+about.history.entry10.milestone3	about	Sixty-plus production regression gates plus DBE training tests	
+about.history.entry11.period	about	6–8 August	
+about.history.entry11.title	about	YOUR TURN makes personal rivals social	
+about.history.entry11.paragraph1	about	YOUR TURN grew from a focused recipient prototype into a browser-first social challenge flow that reuses TURN’s canonical track, vehicle, replay, audio and accessibility systems. TURN can now share the selected track’s stored best lap from Home and offer sharing directly from a new-personal-best lap result.	
+about.history.entry11.paragraph2	about	Recipients can race the challenge repeatedly, add their own named car and pass the challenge on. Growing chains preserve stable racer identities, keep up to four rival replays, stage the field together at the start and use player name plates and deliberate social colours instead of anonymous ghost language.	
+about.history.entry11.paragraph3	about	The first self-contained links proved too large for dependable social previews as a chain grew. A lightweight Cloudflare Worker and D1 snapshot store now turns the same immutable challenge payload into a short enkel.design link, while the complete self-contained link remains an automatic fallback. TURN and YOUR TURN also share one About presentation and credit Kenney Game Assets.	
+about.history.entry11.milestone1	about	TURN → YOUR TURN sharing from Home and personal-best results	
+about.history.entry11.milestone2	about	Growing named multi-racer challenge chains with stable identities	
+about.history.entry11.milestone3	about	Canonical release: TURN 1.6.0 · 2026.08.08-r162	
+about.history.entry12.period	about	8–9 August	
+about.history.entry12.title	about	A color-based achievement triggers an accessibility patch	
+about.history.entry12.paragraph1	about	CHROMATIC CAMOUFLAGE added a hidden 50-trophy challenge built around the five production track colours. It checks the current personal best on every track and deliberately accepts broad hue families rather than exact paint values, bringing the collection to 29 achievements and 1,750 available trophies. Device testing widened Countryside’s accepted pink family so canonical #FF00FF Magenta is not rejected on a five-degree technicality.	
+about.history.entry12.paragraph2	about	The new color-based achievement exposed an accessibility gap: common colour-vision simulations collapse several track colours toward similar greys, olives and violets. TURN 1.7.0 is therefore an accessibility patch, adding optional Color Cues, off by default, with compact text and pattern labels for track colours and selected vehicle paint without recolouring the game or creating a separate visual mode.	
+about.history.entry12.paragraph3	about	VoiceOver testing then showed TURN’s paint control behaving differently from a plain HTML color input in the same browser session. The response was to remove the workaround stack rather than add another bridge: the Lot now creates the real input in its final semantic location, leaves the native control appearance and accessible value untouched, stops globally disabling selection and touch behaviour, and progressively adds only TURN’s label and optional Color Cue.	
+about.history.entry12.milestone1	about	CHROMATIC CAMOUFLAGE · 50 trophies with generous pink-family matching	
+about.history.entry12.milestone2	about	Optional Color Cues with text and pattern redundancy	
+about.history.entry12.milestone3	about	TURN 1.7.0 · 2026.08.09-r163 accessibility patch returning paint to native HTML first	
+about.history.entry13.period	about	9–11 August	
+about.history.entry13.title	about	Music, resilience and vehicle character	
+about.history.entry13.paragraph1	about	Real-device investigation of an intermittent short iOS standalone viewport moved from observation to measurement in TURN LAB, where the failing 393/462-pixel state could be captured and repaired reproducibly. Production TURN now protects the primary RACE action in the short viewport and can perform the narrow, proven viewport-meta repair after Home has settled. YOUR TURN also gained canonical track maps and a clearer challenge-specific control set; a later cyan-screen failure was traced to another self-triggering MutationObserver loop and fixed at its source.	
+about.history.entry13.paragraph2	about	TURN gained its first continuous generated Web Audio soundtrack across Home, The Lot and racing. Reusable tune, bridge and chorus sections were repeatedly tuned by listening on real devices, while persistent Music controls provide an explicit OFF state that shuts down the music scheduler and AudioContext rather than merely muting it. The default volume is now 50%, and desktop players can hold Q for Drift and E for Boost through the same canonical drive-pad path as touch controls.	
+about.history.entry13.paragraph3	about	The Monster Truck became the first Trophy Road vehicle whose reward changes the rules rather than only unlocking a model: it treats off-road ground like track for acceleration, grip, drag, Boost and speed limits while still colliding normally with railings, walls and other world geometry. The perk establishes a new direction for achievement rewards built around distinctive ways to drive rather than simple stat inflation.	
+about.history.entry13.milestone1	about	Real-device iOS viewport repair and YOUR TURN control-loop hardening	
+about.history.entry13.milestone2	about	Generated racing soundtrack with persistent 0–100% Music control and true OFF shutdown	
+about.history.entry13.milestone3	about	TURN 1.8.0 · 2026.08.11-r164 with the Monster Truck all-terrain perk	
+about.history.entry14.period	about	17 August	
+about.history.entry14.title	about	MOUNTAIN turns Track 6 into an alpine journey	
+about.history.entry14.paragraph1	about	TURN’s sixth production track replaces the old Track 6 placeholder with MOUNTAIN: a 49-metre alpine route that begins in a warm snowy village, climbs in long flowing curves around the hidden backside, reaches a river at the snow line and then changes character into an exposed front-face hairpin descent beside a waterfall.	
+about.history.entry14.paragraph2	about	The world combines a procedural alpine ground treatment, batched spruce forests and Cliffside-style granite with a cozy chalet village, chapel, inn, lanterns, Kenney Fantasy Town landmarks, a lake, summit river, waterfall mist and a layered mountain backdrop. Snow is deliberately visual rather than an ice-grip gimmick, while guardrail-aligned containment keeps the descent difficult without letting cars pass through scenery.	
+about.history.entry14.paragraph3	about	MOUNTAIN also joins TURN’s non-visual and progression systems as a first-class track: Drive By Ear changes from long flowing climb notes to alternating severity-three slalom calls, Color Cues adds a distinct blue family, every-track achievements now include six tracks, and Trophy Road unlocks MOUNTAIN at 1,000 trophies.	
+about.history.entry14.milestone1	about	Sixth production track with a 49 m summit and cinematic village-to-peak intro	
+about.history.entry14.milestone2	about	Snowy village, summit river, front-face slalom, waterfall and alpine backdrop	
+about.history.entry14.milestone3	about	TURN 1.9.0 · 2026.08.17-r173 with MOUNTAIN at 1,000 trophies	
+about.history.entry15.period	about	18 August	
+about.history.entry15.title	about	MOUNTAIN becomes a moonlit night race	
+about.history.entry15.paragraph1	about	MOUNTAIN’s daytime alpine world was retreated as a night track with a compact star field, full moon, moonlit snow and water, warm street-lamp pools and lit chalet windows. The celestial layer follows the world horizon with restrained parallax rather than the physical screen, and loading-camera cuts now snap the sky immediately instead of visibly rolling it into place.	
+about.history.entry15.paragraph2	about	Reduced-motion players get the same deep-blue night atmosphere and moon without the moving star field or parallax. Window glow was snapped to real house facades, benches were oriented toward the road and the night treatment deliberately avoids expensive shadow maps.	
+about.history.entry15.paragraph3	about	A real shadowless Three.js spotlight replaced the earlier projected headlight wedges. MOUNTAIN and MIDNIGHT CITY now share one performance-conscious headlight rig; device testing then tuned its reach, intensity and emitter position without adding a second light, beam geometry, raycasts or a separate animation loop.	
+about.history.entry15.paragraph4	about	A side-by-side device comparison then exposed a cache-order bug in that shared rig: an older module could create the named light first and later installers would reuse it without reapplying the current configuration. Build r175 makes every night-track activation reconcile the live light to the canonical settings and explicitly removes any surviving MIDNIGHT CITY projected-headlight nodes.	
+about.history.entry15.milestone1	about	Moon, star field, moonlit terrain, warm village lamps and lit windows	
+about.history.entry15.milestone2	about	Reduced-motion night treatment with a static solid-colour sky and retained moon	
+about.history.entry15.milestone3	about	TURN 1.9.1 · 2026.08.18-r174 with shared night-track headlights and MOUNTAIN night polish	
+about.history.entry15.milestone4	about	TURN 1.9.1 · 2026.08.18-r175 with cache-order-independent night-headlight reconciliation	
+about.changelog.01.date	about	18 July 2026	
+about.changelog.01.entry1.label	about	Prototype	
+about.changelog.01.entry1.description	about	Sensor steering, Three.js road and world, touch driving, lap timing, saved rivals and first PWA work.	
+about.changelog.02.date	about	19 July	
+about.changelog.02.entry1.label	about	R7	
+about.changelog.02.entry1.description	about	Verified modular TURN LAB runtime promoted to production.	
+about.changelog.02.entry2.label	about	1.0.1 r8	
+about.changelog.02.entry2.description	about	Correct manual steering and visible on-screen steering.	
+about.changelog.02.entry3.label	about	1.1.0–1.1.3 r9–r12	
+about.changelog.02.entry3.description	about	The Lot, fifteen cars, viewer, balanced stats and ordered checkpoints.	
+about.changelog.02.entry4.label	about	1.2.0–1.2.1 r13–r14	
+about.changelog.02.entry4.description	about	Continuous Gas/Drift/Boost pad, Brake · Reverse and Boost rearming.	
+about.changelog.03.date	about	20 July	
+about.changelog.03.entry1.label	about	1.3.0 r15	
+about.changelog.03.entry1.description	about	State-aware race menu.	
+about.changelog.03.entry2.label	about	1.4.0 r16 — reverted	
+about.changelog.03.entry2.description	about	Ability Zones and nitrous removed after device testing.	
+about.changelog.03.entry3.label	about	1.3.1–1.3.9 r17–r25	
+about.changelog.03.entry3.description	about	Performance, orientation, paint, outlines and repeated Lot simplification.	
+about.changelog.04.date	about	21 July	
+about.changelog.04.entry1.label	about	1.3.10–1.3.15 r26–r31	
+about.changelog.04.entry1.description	about	Procedural audio, vehicle sound identity and stronger landscape handling.	
+about.changelog.04.entry2.label	about	1.3.16–1.3.21 r32–r38	
+about.changelog.04.entry2.description	about	Lap-result toast, swept gates, invalid-lap state and physical start/finish ownership.	
+about.changelog.04.entry3.label	about	1.4.0 r37 — reverted	
+about.changelog.04.entry3.description	about	Audio redesign rolled back after real-device regressions.	
+about.changelog.05.date	about	22 July	
+about.changelog.05.entry1.label	about	1.3.22–1.3.29 r39–r46	
+about.changelog.05.entry1.description	about	Rival onboarding, immediate invalid-lap feedback, mobile performance and new icon package.	
+about.changelog.05.entry2.label	about	1.5.0–1.6.2 r47–r52	
+about.changelog.05.entry2.description	about	Airport, track selection, track-scoped records and forgiving hairpin run-off.	
+about.changelog.06.date	about	23–24 July	
+about.changelog.06.entry1.label	about	1.7.0 r53	
+about.changelog.06.entry1.description	about	World containment and reusable scenery collision.	
+about.changelog.06.entry2.label	about	1.7.1–1.7.6 r62–r67	
+about.changelog.06.entry2.description	about	Release source of truth, generic track registry, covered-render pause, event-driven rivals, skid ring buffer and elevation foundation.	
+about.changelog.07.date	about	25 July	
+about.changelog.07.entry1.label	about	1.8.0–1.8.6 r68–r74	
+about.changelog.07.entry1.description	about	Cliffside, forgiving shoulders and iOS/iPad viewport coverage.	
+about.changelog.07.entry2.label	about	1.9.0–1.9.4 r75–r79	
+about.changelog.07.entry2.description	about	Track introductions, Cliffside highlands and track postcard identities.	
+about.changelog.07.entry3.label	about	1.10.0–1.10.5 r80–r85	
+about.changelog.07.entry3.description	about	Harbor, free roaming, top-HUD position and LAP VOID wording.	
+about.changelog.08.date	about	26 July	
+about.changelog.08.entry1.label	about	1.11.0–1.11.3 r86–r89	
+about.changelog.08.entry1.description	about	Super Sedan secret and hidden Harbor face.	
+about.changelog.08.entry2.label	about	1.12.0 r90	
+about.changelog.08.entry2.description	about	Brake/Reverse joins the continuous four-zone drive surface.	
+about.changelog.08.entry3.label	about	1.13.0–1.15.0 r91–r95	
+about.changelog.08.entry3.description	about	Universal soundscape, Sound Guide, race speech and first Airport pace notes.	
+about.changelog.09.date	about	27 July	
+about.changelog.09.entry1.label	about	1.16.0–1.17.0 r96–r97	
+about.changelog.09.entry1.description	about	Pace notes on every track and a true Drive By Ear off path.	
+about.changelog.09.entry2.label	about	1.18.0–1.22.0 r98–r103	
+about.changelog.09.entry2.description	about	RAD prototype, Training Car, unified Trajectory Slider, pure-pursuit recovery and organic hum.	
+about.changelog.09.entry3.label	about	r104	
+about.changelog.09.entry3.description	about	Audio controls, sound balance, Spectate rank and race-UI polish.	
+about.changelog.10.date	about	28 July	
+about.changelog.10.entry1.label	about	1.23.1–1.23.6 r105–r110	
+about.changelog.10.entry1.description	about	Recovery direction, speech priority, exact lap wording and delivery-critical pace notes.	
+about.changelog.10.entry2.label	about	TURN NEXT M1–M4.2	
+about.changelog.10.entry2.description	about	Isolated staging, platform contract, rejected orientation freeze, accepted 24° safe zone and non-flashing inertial warning.	
+about.changelog.11.date	about	29 July	
+about.changelog.11.entry1.label	about	1.24.0 r111	
+about.changelog.11.entry1.description	about	Validated 24° steering/horizon envelope promoted to production.	
+about.changelog.11.entry2.label	about	1.24.1–1.24.2 r112–r113	
+about.changelog.11.entry2.description	about	Expanded Drive By Ear guide and screen-reader compatibility explanation.	
+about.changelog.11.entry3.label	about	1.24.3–1.24.7 r114–r118	
+about.changelog.11.entry3.description	about	Accessible Lot navigation, unified 3D/paint panel and VoiceOver-correct selected-car structure.	
+about.changelog.12.date	about	30 July	
+about.changelog.12.entry1.label	about	1.24.8 r119 — reverted	
+about.changelog.12.entry1.description	about	Generated icon suite rolled back after visual review.	
+about.changelog.12.entry2.label	about	TURN NEXT M5–M7	
+about.changelog.12.entry2.description	about	Platform motion/display lifecycle and central race-session orchestration.	
+about.changelog.13.date	about	31 July	
+about.changelog.13.entry1.label	about	TURN NEXT M8	
+about.changelog.13.entry1.description	about	Track chooser becomes Home; native iOS scrolling, fixed layout and retired legacy startup screen.	
+about.changelog.13.entry2.label	about	1.25.0 r120	
+about.changelog.13.entry2.description	about	M5–M8 promoted to production; Home → track → The Lot → race.	
+about.changelog.13.entry3.label	about	Post-r120 fixes	
+about.changelog.13.entry3.description	about	Restore enhanced Lot, keep race action visible and make installation guidance browser-aware.	
+about.changelog.13.entry4.label	about	Midnight City	
+about.changelog.13.entry4.description	about	First long night-track implementation.	
+about.changelog.14.date	about	1 August	
+about.changelog.14.entry1.label	about	Midnight City rebuild	
+about.changelog.14.entry1.description	about	District route, parks, skyline, cinematic intro and deliberate hidden LILYA discovery.	
+about.changelog.14.entry2.label	about	Pace-note corrections	
+about.changelog.14.entry2.description	about	Mirrored directions fixed and 1,080/720 progress distortion removed.	
+about.changelog.14.entry3.label	about	1.3.0 r121	
+about.changelog.14.entry3.description	about	Human-facing version line reset from 1.25.0 for clearer reading.	
+about.changelog.14.entry4.label	about	r122 and hotfixes	
+about.changelog.14.entry4.description	about	Record-car thumbnails, canonical player marker, expanded help and contextual rival reset.	
+about.changelog.14.entry5.label	about	Accessibility	
+about.changelog.14.entry5.description	about	External-keyboard route, desktop support gate and motion-denial recovery.	
+about.changelog.15.date	about	2 August	
+about.changelog.15.entry1.label	about	1.3.1–1.3.2 r123–r124	
+about.changelog.15.entry1.description	about	Semantic difficulty, form-control and disclosure design system.	
+about.changelog.15.entry2.label	about	Design/brand fixes	
+about.changelog.15.entry2.description	about	Profile-aligned icon, complete palette reference and vehicle-size balancing.	
+about.changelog.16.date	about	3 August	
+about.changelog.16.entry1.label	about	1.4.0 r125 and r126	
+about.changelog.16.entry1.description	about	Emergency vehicles, fixed liveries, lights and sirens.	
+about.changelog.16.entry2.label	about	Blank screen	
+about.changelog.16.entry2.description	about	True-black audio-only play with temporary Drive By Ear activation.	
+about.changelog.16.entry3.label	about	Achievements	
+about.changelog.16.entry3.description	about	Onboarding, non-visual, Police and developer time-trial challenges.	
+about.changelog.16.entry4.label	about	Trophy Road	
+about.changelog.16.entry4.description	about	Permanent trophies, reward gates, hidden achievements and existing-player migration.	
+about.changelog.16.entry5.label	about	Critical hotfixes	
+about.changelog.16.entry5.description	about	Race-freeze investigation and actual Paintjob observer-loop correction.	
+about.changelog.17.date	about	4 August	
+about.changelog.17.entry1.label	about	1.5.0 r159	
+about.changelog.17.entry1.description	about	Branded loading cover, stable iOS Home surface, compact Paintjob lock and unread achievement dots.	
+about.changelog.18.date	about	5 August	
+about.changelog.18.entry1.label	about	1.5.1 r160	
+about.changelog.18.entry1.description	about	Trophy Road initial-card and preview-transition fixes; Paintjob lower rail.	
+about.changelog.18.entry2.label	about	Post-r160 interface work	
+about.changelog.18.entry2.description	about	Car-coloured Paintjob lock, stale lock-toast dismissal, “one oh one” pronunciation, in-game history, normative dialogs, unified design-system navigation and website About.	
+about.changelog.18.entry3.label	about	Achievement expansion	
+about.changelog.18.entry3.description	about	Harder developer records, FIND LILYA!, FIND DARVID!, Fire Truck-only SAVE BELLA!, AN ARMY OF ME and ON COURSE, OF COURSE.	
+about.changelog.19.date	about	6 August	
+about.changelog.19.entry1.label	about	1.5.2 r161	
+about.changelog.19.entry1.description	about	Consolidates post-r160 interface, progression, achievement and accessibility work; corrects the usable iOS standalone viewport and refreshes release caches.	
+about.changelog.20.date	about	7 August	
+about.changelog.20.entry1.label	about	YOUR TURN recipient	
+about.changelog.20.entry1.description	about	Browser-first challenge flow reusing TURN’s canonical race runtime, with motion steering, Drive By Ear support, real pause, repeat attempts and named rival cars.	
+about.changelog.20.entry2.label	about	Growing challenges	
+about.changelog.20.entry2.description	about	Challenges can accumulate up to four rival replays, preserve stable racer identity, replace a returning racer’s slower car and stage the field together at the start.	
+about.changelog.20.entry3.label	about	TURN sharing	
+about.changelog.20.entry3.description	about	Selected-track records and new personal-best lap results can launch the SHARE YOUR TURN composer without changing core race behaviour.	
+about.changelog.21.date	about	8 August	
+about.changelog.21.entry1.label	about	1.6.0 r162	
+about.changelog.21.entry1.description	about	Promotes YOUR TURN sharing into the release: social challenge creation from TURN, growing named challenge chains and refreshed release caches.	
+about.changelog.21.entry2.label	about	Short challenge links	
+about.changelog.21.entry2.description	about	Cloudflare Worker and D1 snapshots replace growing replay URLs with compact enkel.design links; self-contained links remain the automatic fallback.	
+about.changelog.21.entry3.label	about	Shared product language	
+about.changelog.21.entry3.description	about	TURN and YOUR TURN share the About presentation and Kenney Game Assets attribution, while the design system now documents social sharing and racer identity colours.	
+about.changelog.22.date	about	9 August	
+about.changelog.22.entry1.label	about	1.7.0 r163	
+about.changelog.22.entry1.description	about	Accessibility patch prompted by the new color-based CHROMATIC CAMOUFLAGE achievement: adds optional Color Cues while keeping vehicle paint on the native HTML color input.	
+about.changelog.22.entry2.label	about	CHROMATIC CAMOUFLAGE	
+about.changelog.22.entry2.description	about	Hidden 50-trophy achievement for setting a matching-colour personal best on all five production tracks; broad hue ranges now include canonical #FF00FF Magenta for Countryside’s pink family.	
+about.changelog.22.entry3.label	about	Color accessibility	
+about.changelog.22.entry3.description	about	Device comparison against a plain HTML color input led to removing activation bridges, named-color fallbacks, post-render paint relocation and broad interaction-suppressing CSS. TURN now starts with the native input and progressively adds only layout and optional Color Cues.	
+about.changelog.23.date	about	10–11 August	
+about.changelog.23.entry1.label	about	1.8.0 r164	
+about.changelog.23.entry1.description	about	Minor release combining post-r163 reliability, social-racing, control, music and vehicle-identity work with refreshed release caches.	
+about.changelog.23.entry2.label	about	iOS/PWA resilience	
+about.changelog.23.entry2.description	about	A real-device-proven repair handles the known short standalone viewport after Home settles, while the primary RACE action remains reachable in the reduced web layer.	
+about.changelog.23.entry3.label	about	YOUR TURN	
+about.changelog.23.entry3.description	about	Adds canonical track maps, challenge-specific Settings and Spectate controls, aligns race controls with TURN and removes a self-triggering control-row observer loop that could leave iOS on a cyan screen.	
+about.changelog.23.entry4.label	about	Generated racing music	
+about.changelog.23.entry4.description	about	Continuous Web Audio music spans Home, The Lot and racing with reusable tune, bridge and chorus material, persisted OFF–100% volume, a 50% default and true engine shutdown at OFF.	
+about.changelog.23.entry5.label	about	Desktop controls and vehicle identity	
+about.changelog.23.entry5.description	about	Q = Drift and E = Boost join the existing keyboard route; the Monster Truck becomes the first perk vehicle by taking no off-road terrain speed or handling penalty while preserving world collisions.	
+about.changelog.23.entry6.label	about	Interface/accessibility polish	
+about.changelog.23.entry6.description	about	Adds a non-colour edge to the Boost meter, fixes the Home header boundary and music-control alignment, and refreshes the startup loading copy.	
+about.changelog.24.date	about	17 August	
+about.changelog.24.entry1.label	about	1.9.0 r173	
+about.changelog.24.entry1.description	about	Adds MOUNTAIN as TURN’s sixth production track and 1,000-trophy reward: snowy village, long alpine climb, summit river, technical slalom descent, waterfall and cinematic mountain backdrop.	
+about.changelog.24.entry2.label	about	MOUNTAIN world	
+about.changelog.24.entry2.description	about	Adds procedural alpine ground texture, snow line, batched spruce forest and granite, cozy chalets/inn/chapel/lanterns, Kenney Fantasy Town landmarks, lake, river, waterfall mist and guardrail-aligned containment.	
+about.changelog.24.entry3.label	about	MOUNTAIN accessibility	
+about.changelog.24.entry3.description	about	Adds a distinct blue Color Cue and Chromatic Camouflage family, six-track achievement semantics and a Drive By Ear map that deliberately changes from flowing climb calls to alternating tight descent calls.	
+about.changelog.25.date	about	18 August	
+about.changelog.25.entry1.label	about	1.9.1 r174	
+about.changelog.25.entry1.description	about	Turns MOUNTAIN into a moonlit night track and refreshes the release identity after the final alpine art and lighting pass.	
+about.changelog.25.entry2.label	about	1.9.1 r175	
+about.changelog.25.entry2.description	about	Fixes shared night-headlight activation so MIDNIGHT CITY and MOUNTAIN always reconcile the live named spotlight to the current 2600-intensity, 220 m configuration regardless of module-cache or track activation order.	
+about.changelog.25.entry3.label	about	Night MOUNTAIN	
+about.changelog.25.entry3.description	about	Adds a horizon-locked star field and moon, moonlit snow and waterfall, warm street-light pools, lit chalet windows and reduced-motion behaviour that keeps the moon while replacing moving stars with a solid night sky.	
+about.changelog.25.entry4.label	about	Night-track headlights	
+about.changelog.25.entry4.description	about	MOUNTAIN and MIDNIGHT CITY share one shadowless physical spotlight with no projected beam geometry; r174 increases its reach and intensity and moves the emitter closer to the car, while r175 makes those settings authoritative on every install and removes surviving legacy MIDNIGHT CITY projected-headlight nodes.	
+about.currentRelease.note	about	TURN 1.9.1 build r175 makes the shared MOUNTAIN and MIDNIGHT CITY headlight configuration authoritative at runtime, removing stale projected-headlight remnants and cache-order dependence.	
+settings.balance.aria	settings	Sound balance	
+settings.balance.valueText	settings	{dbePercent}% Drive By Ear, {otherPercent}% other sounds{balancedSuffix}	
+home.trackCard.sr.best	home	Best {time} with {carName}	
+home.trackCard.sr.bestNoCar	home	Best {time}	
+home.trackCard.sr.noTime	home	No time yet	
+home.trackCard.sr.label	home	{trackName}, {difficulty} track. {recordClause}.	
