@@ -10,8 +10,34 @@ const THUMBNAIL_WIDTH = 240;
 const THUMBNAIL_HEIGHT = 140;
 const THUMBNAIL_ALPHA_THRESHOLD = 8;
 const THUMBNAIL_CROP_PADDING = 5;
+const HOME_THUMBNAIL_IDLE_TIMEOUT_MS = 700;
 const thumbnailCache = new Map();
 let renderQueue = Promise.resolve();
+
+function isYourTurnRecipient() {
+  return globalThis.document?.documentElement?.dataset?.turnDeployment === 'yourturn';
+}
+
+function waitForIdleSlot() {
+  return new Promise((resolve) => {
+    if (typeof globalThis.requestIdleCallback === 'function') {
+      globalThis.requestIdleCallback(() => resolve(), { timeout: HOME_THUMBNAIL_IDLE_TIMEOUT_MS });
+      return;
+    }
+    globalThis.setTimeout(resolve, 60);
+  });
+}
+
+async function waitForHomeThumbnailSlot() {
+  if (isYourTurnRecipient()) return;
+  const root = globalThis.document?.documentElement;
+  if (!root?.classList?.contains('turn-home-ready')) {
+    await new Promise((resolve) => {
+      globalThis.document?.addEventListener?.('turn:home-ready', resolve, { once: true });
+    });
+  }
+  await waitForIdleSlot();
+}
 
 export function renderBestCarThumbnail(bestLap) {
   const car = getCarDefinition(bestLap?.carId);
@@ -34,6 +60,11 @@ export function renderBestCarThumbnail(bestLap) {
 }
 
 async function renderThumbnail({ carId, color, secondaryColor }) {
+  // Record-car thumbnails are decorative Home enhancements. They used to instantiate a
+  // WebGL renderer and start car-model GLB downloads while the startup cover was still
+  // blocking the player. Let Home become interactive first, then fill these in lazily.
+  await waitForHomeThumbnailSlot();
+
   const renderer = new THREE.WebGLRenderer({
     alpha: true,
     antialias: true,
