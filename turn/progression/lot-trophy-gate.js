@@ -53,11 +53,12 @@ export function gateLotNow(root = document.body) {
       if (reward) button.dataset.trophyLockLabel = `${reward.threshold} TROPHIES`;
       else delete button.dataset.trophyLockLabel;
       const name = button.textContent.trim() || 'Vehicle';
+      const baseLabel = button.dataset.lotBaseLabel || button.getAttribute('aria-label') || name;
       button.setAttribute(
         'aria-label',
         locked
-          ? `${name}. Locked. Unlocks at ${reward.threshold} trophies on Trophy Road. Select for unlock information.`
-          : name
+          ? `${baseLabel} Locked. Unlocks at ${reward.threshold} trophies on Trophy Road. Select for unlock information.`
+          : baseLabel
       );
     }
   }
