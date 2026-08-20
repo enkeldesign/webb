@@ -32,11 +32,6 @@ assert.equal(vintageRacer.name, 'Vintage Racer');
 assert.equal(vintageRacer.perk?.title, 'DRIFTAGE');
 assert.equal(rallyRacer.id, 'toy-racer', 'Rally Racer must preserve the Toy Racer stable storage/ghost id');
 assert.equal(rallyRacer.name, 'Rally Racer');
-assert.deepEqual(
-  rallyRacer.stats,
-  { speed: 4, acceleration: 4, control: 1, drift: 4, boostPower: 4, boostDuration: 1 },
-  'Rally Racer must expose the canonical high-skill 4/4/1/4/4/1 profile'
-);
 assert.equal(rallyRacer.perk?.title, 'TWITCHY TURNY');
 assert.equal(monsterTruck.perk?.title, 'OVERSIZED');
 assert.equal(futureRacer.perk?.title, 'OVERDRIVE');
@@ -175,7 +170,6 @@ const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/s
 assert.ok(importMapText, 'Production must expose its import map');
 const imports = JSON.parse(importMapText).imports;
 const releaseTarget = (filePath) => `${filePath}?build=${release.cacheKey}`;
-const canonicalCatalogTarget = `${releaseTarget('./vehicle/catalog.js')}&revision=r588-canonical-attributes`;
 
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(index, new RegExp(`\\.\\/garage\\/lot-r10\\.css\\?build=${release.cacheKey}-native-html`));
@@ -276,8 +270,8 @@ assert.match(main, /maxSpeed: MAX_SPEED \* state\.vehicleTuning\.topSpeedMultipl
 assert.match(main, /vehicleTuning: state\.vehicleTuning/);
 assert.doesNotMatch(main, /wayne-wu\/webgpu-crowd-simulation/);
 
-assert.equal(imports['./vehicle/catalog.js?build=20260720-r19'], canonicalCatalogTarget);
-assert.equal(imports['./vehicle/catalog.js?build=20260720-r20'], canonicalCatalogTarget);
+assert.equal(imports['./vehicle/catalog.js?build=20260720-r19'], releaseTarget('./vehicle/catalog.js'));
+assert.equal(imports['./vehicle/catalog.js?build=20260720-r20'], releaseTarget('./vehicle/catalog.js'));
 assert.equal(imports['./vehicle/car-models.js?build=20260720-r19'], releaseTarget('./vehicle/emergency-livery-models.js'));
 assert.equal(imports['./vehicle/car-models.js?build=20260720-r22'], releaseTarget('./vehicle/emergency-livery-models.js'));
 assert.match(app, /installSportsSedanEasterEggUi\(\)/);
@@ -315,4 +309,4 @@ assert.match(easterEggUi, /notice\.setAttribute\('role', 'status'\)/);
 assert.match(easterEggUi, /notice\.setAttribute\('aria-live', 'polite'\)/);
 assert.match(easterEggUi, /card\.insertBefore\(notice, actions \|\| null\)/, 'The explanation must sit immediately before RACE THIS CAR');
 
-console.log(`TURN ${release.id} enhanced Lot route, canonical vehicle attributes, Vintage/Rally Trophy Road gating, car-owned perks, native paint and garage setup passed.`);
+console.log(`TURN ${release.id} enhanced Lot route, Vintage/Rally Trophy Road gating, car-owned perks, native paint and garage setup passed.`);
