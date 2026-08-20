@@ -11,7 +11,7 @@ import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
 let originalLotPromise = null;
 function loadOriginalLot() {
   if (!originalLotPromise) {
-    originalLotPromise = import('./lot-r10.js?build=20260809-r163-native-html&revision=r588-canonical-attributes');
+    originalLotPromise = import('./lot-r10.js?build=20260809-r163-native-html&revision=r589-beginner-bubble');
   }
   return originalLotPromise;
 }
