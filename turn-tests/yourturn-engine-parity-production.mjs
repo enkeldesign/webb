@@ -50,15 +50,22 @@ for (const catalogSpecifier of [
   '/turn/vehicle/catalog.js?build=20260720-r19',
   '/turn/vehicle/catalog.js?build=20260720-r20'
 ]) {
-  assert.equal(
-    resolveImport(yourTurnImportMap, catalogSpecifier, 'https://enkel.design/yourturn/'),
-    resolveImport(turnImportMap, catalogSpecifier, 'https://enkel.design/turn/'),
-    `YOUR TURN must resolve ${catalogSpecifier} through the same canonical vehicle definition as TURN`
+  const turnCatalogUrl = new URL(
+    resolveImport(turnImportMap, catalogSpecifier, 'https://enkel.design/turn/')
   );
+  const yourTurnCatalogUrl = new URL(
+    resolveImport(yourTurnImportMap, catalogSpecifier, 'https://enkel.design/yourturn/')
+  );
+  assert.equal(
+    yourTurnCatalogUrl.pathname,
+    turnCatalogUrl.pathname,
+    `YOUR TURN must use TURN's canonical vehicle catalog source for ${catalogSpecifier}`
+  );
+  assert.equal(yourTurnCatalogUrl.pathname, '/turn/vehicle/catalog.js');
   assert.match(
-    resolveImport(yourTurnImportMap, catalogSpecifier, 'https://enkel.design/yourturn/'),
+    yourTurnCatalogUrl.search,
     /r588-canonical-attributes/,
-    'TURN and YOUR TURN must share the fresh canonical attribute/tuning graph'
+    'YOUR TURN must cache-bust the canonical attribute/tuning graph instead of carrying its own vehicle data'
   );
 }
 
@@ -81,4 +88,4 @@ assert.doesNotMatch(
   'YOUR TURN must not grow a challenge-specific copy of vehicle attributes or tuning'
 );
 
-console.log('YOUR TURN production motion/orientation and canonical vehicle-attribute parity contract passed.');
+console.log('YOUR TURN production motion/orientation and canonical vehicle-source parity contract passed.');
