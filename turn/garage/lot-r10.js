@@ -4,6 +4,8 @@ import {
   DEFAULT_VEHICLE_COLOR,
   DEFAULT_VEHICLE_SECONDARY_COLOR,
   getCarDefinition,
+  getVehicleDefaultColor,
+  getVehicleDefaultSecondaryColor,
   normalizeVehicleColor,
   normalizeVehicleSecondaryColor,
   normalizeVehicleSelection
@@ -11,11 +13,39 @@ import {
 import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js?build=20260720-r22';
 import { recordPerformanceFrame } from '../performance-monitor.js?build=20260720-r20';
 import { describeColorCue } from '../accessibility/color-cues.js?revision=r163';
+import {
+  hasTriedTrainingCar,
+  installTrainingCarGuide,
+  TRAINING_CAR_ID
+} from './training-car-guide.js?revision=r1';
 
-const UNSELECTED_COLOR = new THREE.Color(0x313131);
 const VIEWER_INITIAL_YAW = Math.PI - 0.55;
 const LOT_FRAME_INTERVAL_MS = 1000 / 30;
 let paintControlSerial = 0;
+let lockBadgeTexture = null;
+let beginnerBadgeTexture = null;
+
+export const LOT_CAR_ORDER = Object.freeze([
+  'classic',
+  'truck',
+  'sedan',
+  'van',
+  'suv',
+  'convertible',
+  'sedan-sports',
+  'firetruck',
+  'ambulance',
+  'police',
+  'race',
+  'vintage-racer',
+  'race-future',
+  'monster-truck',
+  'toy-racer'
+]);
+
+const CAR_BY_ID = new Map(CAR_CATALOG.map((car) => [car.id, car]));
+const LOT_CARS = Object.freeze(LOT_CAR_ORDER.map((id) => CAR_BY_ID.get(id)).filter(Boolean));
+
 const CAR_DESCRIPTIONS = Object.freeze({
   convertible: 'A low, open-top sports car with a long bonnet and compact cabin.',
   classic: 'A small, upright classic car with rounded bodywork and a friendly shape.',
@@ -36,6 +66,8 @@ const CAR_DESCRIPTIONS = Object.freeze({
 
 export function showTheLot({ initialSelection } = {}) {
   return new Promise((resolve) => {
+    installTrainingCarGuide();
+    const showBeginnerGuide = !hasTriedTrainingCar();
     const selection = normalizeVehicleSelection(initialSelection);
     const overlay = document.createElement('section');
     overlay.className = 'lot-screen';
@@ -121,25 +153,29 @@ export function showTheLot({ initialSelection } = {}) {
     const carRoots = new Map();
     const platforms = new Map();
     const carButtons = new Map();
+    const lockMarkers = new Map();
     let selectedCarId = selection.carId;
     let selectedColor = selection.color;
     let selectedSecondaryColor = selection.secondaryColor;
     let disposed = false;
     let loadedCars = 0;
 
-    for (const car of CAR_CATALOG) {
+    for (const car of LOT_CARS) {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'lot-car-option';
       button.setAttribute('role', 'radio');
       button.dataset.carId = car.id;
       button.textContent = car.name;
+      const beginner = car.id === TRAINING_CAR_ID && showBeginnerGuide;
+      button.dataset.lotBaseLabel = beginner ? `${car.name}. Beginner-friendly.` : car.name;
+      button.setAttribute('aria-label', button.dataset.lotBaseLabel);
       button.addEventListener('click', () => selectCar(car.id));
       carPicker.appendChild(button);
       carButtons.set(car.id, button);
     }
 
-    const positions = CAR_CATALOG.map((car, index) => ({
+    const positions = LOT_CARS.map((car, index) => ({
       car,
       x: (index % 5 - 2) * 8.1,
       z: (1 - Math.floor(index / 5)) * 7.2
@@ -150,6 +186,18 @@ export function showTheLot({ initialSelection } = {}) {
       platform.position.set(x, 0.025, z);
       lot.add(platform);
       platforms.set(car.id, platform);
+
+      const lockMarker = makeLockMarker();
+      lockMarker.position.set(x + 2.05, 3.2, z + 0.3);
+      lockMarker.visible = false;
+      lot.add(lockMarker);
+      lockMarkers.set(car.id, lockMarker);
+
+      if (car.id === TRAINING_CAR_ID && showBeginnerGuide) {
+        const beginnerMarker = makeBeginnerFriendlyMarker();
+        beginnerMarker.position.set(x - 0.45, 4.7, z + 0.65);
+        lot.add(beginnerMarker);
+      }
 
       const target = new THREE.Mesh(
         new THREE.BoxGeometry(6.5, 3.2, 5.8),
@@ -162,8 +210,8 @@ export function showTheLot({ initialSelection } = {}) {
 
       createCarVisual({
         carId: car.id,
-        color: DEFAULT_VEHICLE_COLOR,
-        secondaryColor: DEFAULT_VEHICLE_SECONDARY_COLOR,
+        color: getVehicleDefaultColor(car.id),
+        secondaryColor: getVehicleDefaultSecondaryColor(car.id),
         targetLength: 5.15,
         outline: true
       }).then((visual) => {
@@ -182,18 +230,34 @@ export function showTheLot({ initialSelection } = {}) {
         carRoots.set(car.id, visual);
         applyLotCarPresentation(
           visual,
+          car.id,
           car.id === selectedCarId,
           selectedColor,
           selectedSecondaryColor
         );
         loadedCars += 1;
-        if (loadedCars >= CAR_CATALOG.length) loading.classList.add('is-done');
+        if (loadedCars >= LOT_CARS.length) loading.classList.add('is-done');
       }).catch((error) => {
         console.warn(`TURN: could not load ${car.name} in The Lot.`, error);
         loadedCars += 1;
-        if (loadedCars >= CAR_CATALOG.length) loading.classList.add('is-done');
+        if (loadedCars >= LOT_CARS.length) loading.classList.add('is-done');
       });
     }
+
+    function syncLockMarkers() {
+      for (const [carId, marker] of lockMarkers) {
+        marker.visible = carButtons.get(carId)?.classList.contains('is-trophy-locked') === true;
+      }
+    }
+
+    const lockObserver = new MutationObserver(syncLockMarkers);
+    lockObserver.observe(carPicker, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    window.addEventListener('turn:trophy-road-updated', syncLockMarkers);
+    queueMicrotask(syncLockMarkers);
 
     function updateSelectionUi({ refreshViewer = true } = {}) {
       const car = getCarDefinition(selectedCarId);
@@ -206,7 +270,11 @@ export function showTheLot({ initialSelection } = {}) {
         const selected = carId === selectedCarId;
         button.setAttribute('aria-checked', String(selected));
         button.tabIndex = selected ? 0 : -1;
-        button.setAttribute('aria-label', `${getCarDefinition(carId).name}. ${CAR_DESCRIPTIONS[carId] || ''}`.trim());
+        const baseLabel = button.dataset.lotBaseLabel || getCarDefinition(carId).name;
+        button.setAttribute(
+          'aria-label',
+          `${baseLabel} ${CAR_DESCRIPTIONS[carId] || ''}`.trim()
+        );
       }
 
       if (car.fixedLivery) {
@@ -247,7 +315,7 @@ export function showTheLot({ initialSelection } = {}) {
       for (const [carId, root] of carRoots) {
         const selected = carId === selectedCarId;
         root.userData.turnLotSelected = selected;
-        applyLotCarPresentation(root, selected, selectedColor, selectedSecondaryColor);
+        applyLotCarPresentation(root, carId, selected, selectedColor, selectedSecondaryColor);
       }
 
       if (refreshViewer) void viewer.show(selectedCarId, selectedColor, selectedSecondaryColor);
@@ -258,8 +326,8 @@ export function showTheLot({ initialSelection } = {}) {
       const changedCar = carId !== selectedCarId;
       selectedCarId = carId;
       if (changedCar) {
-        selectedColor = DEFAULT_VEHICLE_COLOR;
-        selectedSecondaryColor = DEFAULT_VEHICLE_SECONDARY_COLOR;
+        selectedColor = getVehicleDefaultColor(carId);
+        selectedSecondaryColor = getVehicleDefaultSecondaryColor(carId);
       }
       updateSelectionUi();
       if (focus) carButtons.get(carId)?.focus();
@@ -267,15 +335,15 @@ export function showTheLot({ initialSelection } = {}) {
     }
 
     carPicker.addEventListener('keydown', (event) => {
-      const currentIndex = CAR_CATALOG.findIndex((car) => car.id === selectedCarId);
+      const currentIndex = LOT_CARS.findIndex((car) => car.id === selectedCarId);
       let nextIndex = currentIndex;
-      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') nextIndex = (currentIndex + 1) % CAR_CATALOG.length;
-      if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') nextIndex = (currentIndex - 1 + CAR_CATALOG.length) % CAR_CATALOG.length;
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') nextIndex = (currentIndex + 1) % LOT_CARS.length;
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') nextIndex = (currentIndex - 1 + LOT_CARS.length) % LOT_CARS.length;
       if (event.key === 'Home') nextIndex = 0;
-      if (event.key === 'End') nextIndex = CAR_CATALOG.length - 1;
+      if (event.key === 'End') nextIndex = LOT_CARS.length - 1;
       if (nextIndex === currentIndex) return;
       event.preventDefault();
-      selectCar(CAR_CATALOG[nextIndex].id, { focus: true });
+      selectCar(LOT_CARS[nextIndex].id, { focus: true });
     });
 
     function makeColorInput({ label, value, secondary = false, onInput }) {
@@ -319,7 +387,13 @@ export function showTheLot({ initialSelection } = {}) {
     function applySelectedPaint() {
       const selectedRoot = carRoots.get(selectedCarId);
       if (selectedRoot) {
-        applyLotCarPresentation(selectedRoot, true, selectedColor, selectedSecondaryColor);
+        applyLotCarPresentation(
+          selectedRoot,
+          selectedCarId,
+          true,
+          selectedColor,
+          selectedSecondaryColor
+        );
       }
       viewer.recolor(selectedColor, selectedSecondaryColor);
     }
@@ -348,6 +422,8 @@ export function showTheLot({ initialSelection } = {}) {
     function finish(result) {
       if (disposed) return;
       disposed = true;
+      lockObserver.disconnect();
+      window.removeEventListener('turn:trophy-road-updated', syncLockMarkers);
       resizeObserver.disconnect();
       renderer.setAnimationLoop(null);
       for (const root of carRoots.values()) disposeVisualMaterials(root);
@@ -567,33 +643,24 @@ function rememberMaterialState(root) {
   root.userData.turnLotMaterialState = records;
 }
 
-function applyLotCarPresentation(root, selected, selectedColor, selectedSecondaryColor) {
+function applyLotCarPresentation(root, carId, selected, selectedColor, selectedSecondaryColor) {
   rememberMaterialState(root);
   const records = root.userData.turnLotMaterialState || [];
 
   for (const record of records) {
     const { material } = record;
-    if (selected || record.outline) {
-      material.transparent = record.transparent;
-      material.opacity = record.opacity;
-      material.depthWrite = record.depthWrite;
-      if (!record.paint && record.color && material.color) material.color.copy(record.color);
-    } else {
-      material.transparent = false;
-      material.opacity = 1;
-      material.depthWrite = true;
-      if (material.color) material.color.copy(UNSELECTED_COLOR);
-    }
+    material.transparent = record.transparent;
+    material.opacity = record.opacity;
+    material.depthWrite = record.depthWrite;
+    if (!record.paint && record.color && material.color) material.color.copy(record.color);
     material.needsUpdate = true;
   }
 
-  if (selected) {
-    recolorCarVisual(
-      root,
-      selectedColor || DEFAULT_VEHICLE_COLOR,
-      selectedSecondaryColor || DEFAULT_VEHICLE_SECONDARY_COLOR
-    );
-  }
+  recolorCarVisual(
+    root,
+    selected ? selectedColor : getVehicleDefaultColor(carId),
+    selected ? selectedSecondaryColor : getVehicleDefaultSecondaryColor(carId)
+  );
 }
 
 function makeLotGround(lot) {
@@ -626,11 +693,190 @@ function makeLotGround(lot) {
   lot.add(centerLine);
 }
 
-function makeParkingPad() {
-  return new THREE.Group();
+function makeParkingPad(selected = false) {
+  const group = new THREE.Group();
+  const width = 6.7;
+  const depth = 5.8;
+
+  const fill = new THREE.Mesh(
+    new THREE.PlaneGeometry(width, depth),
+    new THREE.MeshBasicMaterial({
+      color: 0xffd43b,
+      transparent: true,
+      opacity: 0.72,
+      depthWrite: false
+    })
+  );
+  fill.rotation.x = -Math.PI / 2;
+  fill.position.y = 0.003;
+  fill.renderOrder = 2;
+  group.add(fill);
+
+  const borderMaterial = new THREE.MeshBasicMaterial({ color: 0x08090a, depthWrite: false });
+  const border = new THREE.Group();
+  const horizontal = new THREE.PlaneGeometry(width, 0.18);
+  const vertical = new THREE.PlaneGeometry(0.18, depth);
+  for (const z of [-depth / 2, depth / 2]) {
+    const edge = new THREE.Mesh(horizontal, borderMaterial);
+    edge.rotation.x = -Math.PI / 2;
+    edge.position.set(0, 0.008, z);
+    border.add(edge);
+  }
+  for (const x of [-width / 2, width / 2]) {
+    const edge = new THREE.Mesh(vertical, borderMaterial);
+    edge.rotation.x = -Math.PI / 2;
+    edge.position.set(x, 0.008, 0);
+    border.add(edge);
+  }
+  group.add(border);
+
+  const pointerOutline = new THREE.Mesh(
+    new THREE.ConeGeometry(0.58, 1.05, 3),
+    new THREE.MeshBasicMaterial({ color: 0x08090a, depthWrite: false })
+  );
+  pointerOutline.position.set(0, 3.2, 0.1);
+  pointerOutline.rotation.z = Math.PI;
+  pointerOutline.renderOrder = 102;
+  group.add(pointerOutline);
+
+  const pointer = new THREE.Mesh(
+    new THREE.ConeGeometry(0.43, 0.78, 3),
+    new THREE.MeshBasicMaterial({ color: 0xffd43b, depthWrite: false })
+  );
+  pointer.position.set(0, 3.18, 0.1);
+  pointer.rotation.z = Math.PI;
+  pointer.renderOrder = 103;
+  group.add(pointer);
+
+  group.userData.turnLotPadFill = fill;
+  group.userData.turnLotPadBorder = border;
+  group.userData.turnLotPadPointerOutline = pointerOutline;
+  group.userData.turnLotPadPointer = pointer;
+  setParkingPadSelected(group, selected);
+  return group;
 }
 
-function setParkingPadSelected() {}
+function setParkingPadSelected(group, selected) {
+  const visible = Boolean(selected);
+  group.userData.turnLotPadFill.visible = visible;
+  group.userData.turnLotPadBorder.visible = visible;
+  group.userData.turnLotPadPointerOutline.visible = visible;
+  group.userData.turnLotPadPointer.visible = visible;
+}
+
+function makeLockMarker() {
+  const material = new THREE.SpriteMaterial({
+    map: getLockBadgeTexture(),
+    transparent: true,
+    depthTest: false,
+    depthWrite: false
+  });
+  const sprite = new THREE.Sprite(material);
+  sprite.scale.set(2.35, 2.35, 1);
+  sprite.renderOrder = 120;
+  return sprite;
+}
+
+function makeBeginnerFriendlyMarker() {
+  const material = new THREE.SpriteMaterial({
+    map: getBeginnerBadgeTexture(),
+    transparent: true,
+    depthTest: false,
+    depthWrite: false
+  });
+  const sprite = new THREE.Sprite(material);
+  sprite.scale.set(5.5, 2.75, 1);
+  sprite.renderOrder = 121;
+  return sprite;
+}
+
+function getLockBadgeTexture() {
+  if (lockBadgeTexture) return lockBadgeTexture;
+  const canvas = document.createElement('canvas');
+  canvas.width = 160;
+  canvas.height = 160;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 160, 160);
+
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = '#08090a';
+  ctx.lineWidth = 11;
+  ctx.beginPath();
+  ctx.arc(80, 64, 34, Math.PI, 0);
+  ctx.lineTo(114, 86);
+  ctx.stroke();
+
+  roundedRectPath(ctx, 30, 72, 100, 70, 14);
+  ctx.fillStyle = '#ffd43b';
+  ctx.fill();
+  ctx.strokeStyle = '#08090a';
+  ctx.lineWidth = 9;
+  ctx.stroke();
+
+  ctx.fillStyle = '#08090a';
+  ctx.beginPath();
+  ctx.arc(80, 104, 9, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillRect(76, 108, 8, 18);
+
+  lockBadgeTexture = new THREE.CanvasTexture(canvas);
+  lockBadgeTexture.colorSpace = THREE.SRGBColorSpace;
+  return lockBadgeTexture;
+}
+
+function getBeginnerBadgeTexture() {
+  if (beginnerBadgeTexture) return beginnerBadgeTexture;
+  const canvas = document.createElement('canvas');
+  canvas.width = 360;
+  canvas.height = 190;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  roundedRectPath(ctx, 17, 15, 326, 128, 13);
+  ctx.fillStyle = '#fff8e8';
+  ctx.fill();
+  ctx.strokeStyle = '#08090a';
+  ctx.lineWidth = 9;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(160, 142);
+  ctx.lineTo(200, 142);
+  ctx.lineTo(180, 181);
+  ctx.closePath();
+  ctx.fillStyle = '#ffd43b';
+  ctx.fill();
+  ctx.strokeStyle = '#08090a';
+  ctx.lineWidth = 8;
+  ctx.stroke();
+
+  ctx.fillStyle = '#08090a';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = '900 30px system-ui, sans-serif';
+  ctx.fillText('BEGINNER-', 180, 57);
+  ctx.fillText('FRIENDLY', 180, 101);
+
+  beginnerBadgeTexture = new THREE.CanvasTexture(canvas);
+  beginnerBadgeTexture.colorSpace = THREE.SRGBColorSpace;
+  return beginnerBadgeTexture;
+}
+
+function roundedRectPath(ctx, x, y, width, height, radius) {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + width - r, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+  ctx.lineTo(x + width, y + height - r);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+  ctx.lineTo(x + r, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
 
 function findCarId(object) {
   let node = object;
