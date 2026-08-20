@@ -195,7 +195,9 @@ export function showTheLot({ initialSelection } = {}) {
 
       if (car.id === TRAINING_CAR_ID && showBeginnerGuide) {
         const beginnerMarker = makeBeginnerFriendlyMarker();
-        beginnerMarker.position.set(x - 0.45, 4.7, z + 0.65);
+        // Keep the guide inside the car grid rather than the left hardware-safe area.
+        // The bubble sits above/right of the Training Car and its tail points back left.
+        beginnerMarker.position.set(x + 2.45, 4.7, z + 0.65);
         lot.add(beginnerMarker);
       }
 
@@ -840,12 +842,14 @@ function getBeginnerBadgeTexture() {
   ctx.lineWidth = 9;
   ctx.stroke();
 
+  // Bottom-left speech-bubble tail: the label can live safely to the right of
+  // the Training Car while still visually pointing back to it.
   ctx.beginPath();
-  ctx.moveTo(160, 142);
-  ctx.lineTo(200, 142);
-  ctx.lineTo(180, 181);
+  ctx.moveTo(72, 142);
+  ctx.lineTo(128, 142);
+  ctx.lineTo(48, 181);
   ctx.closePath();
-  ctx.fillStyle = '#ffd43b';
+  ctx.fillStyle = '#fff8e8';
   ctx.fill();
   ctx.strokeStyle = '#08090a';
   ctx.lineWidth = 8;
