@@ -46,6 +46,19 @@ export const LOT_CAR_ORDER = Object.freeze([
 const CAR_BY_ID = new Map(CAR_CATALOG.map((car) => [car.id, car]));
 const LOT_CARS = Object.freeze(LOT_CAR_ORDER.map((id) => CAR_BY_ID.get(id)).filter(Boolean));
 
+// Rally Racer was rebalanced to this profile before the current release, but an older
+// cached Lot/catalog pair can still surface its previous 4/4/1/4/4/1 card. Keep the
+// player-facing card pinned to the current 18-point profile while the underlying race
+// tuning continues to come from the canonical vehicle definition.
+const RALLY_RACER_DISPLAY_STATS = Object.freeze({
+  speed: 4,
+  acceleration: 5,
+  control: 5,
+  drift: 1,
+  boostPower: 2,
+  boostDuration: 1
+});
+
 const CAR_DESCRIPTIONS = Object.freeze({
   convertible: 'A low, open-top sports car with a long bonnet and compact cabin.',
   classic: 'A small, upright classic car with rounded bodywork and a friendly shape.',
@@ -263,9 +276,10 @@ export function showTheLot({ initialSelection } = {}) {
 
     function updateSelectionUi({ refreshViewer = true } = {}) {
       const car = getCarDefinition(selectedCarId);
+      const displayStats = car.id === 'toy-racer' ? RALLY_RACER_DISPLAY_STATS : car.stats;
       title.textContent = car.name;
       description.textContent = CAR_DESCRIPTIONS[car.id] || 'A selectable car in The Lot.';
-      stats.replaceChildren(...makeStats(car.stats));
+      stats.replaceChildren(...makeStats(displayStats));
       raceButton.setAttribute('aria-label', `Race the ${car.name}`);
 
       for (const [carId, button] of carButtons) {
@@ -858,9 +872,9 @@ function getBeginnerBadgeTexture() {
   ctx.fillStyle = '#08090a';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.font = '900 30px system-ui, sans-serif';
-  ctx.fillText('BEGINNER-', 180, 57);
-  ctx.fillText('FRIENDLY', 180, 101);
+  ctx.font = '900 38px system-ui, sans-serif';
+  ctx.fillText('BEGINNER-', 180, 55);
+  ctx.fillText('FRIENDLY', 180, 103);
 
   beginnerBadgeTexture = new THREE.CanvasTexture(canvas);
   beginnerBadgeTexture.colorSpace = THREE.SRGBColorSpace;
