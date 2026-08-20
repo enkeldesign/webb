@@ -73,6 +73,9 @@ jobs:
       - name: Run YOUR TURN recipient contract
         run: node turn-tests/yourturn-production.mjs
 
+      - name: Run YOUR TURN production engine parity
+        run: node turn-tests/yourturn-engine-parity-production.mjs
+
       - name: Run YOUR TURN r411 controls and maps regression
         run: node turn-tests/yourturn-r411-production.mjs
 
