@@ -1,4 +1,4 @@
-import { CAR_CATALOG } from '../vehicle/catalog.js?build=20260720-r20';
+import { getCarDefinition } from '../vehicle/catalog.js?build=20260720-r20';
 
 const STAT_FIELDS = Object.freeze([
   Object.freeze({ key: 'speed', label: 'Top speed' }),
@@ -33,15 +33,18 @@ export function installLotAccessibility(root = document.body) {
 
   const completeTextByCarId = new Map();
   const buttonsByCarId = new Map();
+  const visibleOrder = [...carPicker.querySelectorAll('.lot-car-option')]
+    .map((button) => button.dataset.carId)
+    .filter(Boolean);
 
-  CAR_CATALOG.forEach((car, index) => {
-    const button = [...carPicker.querySelectorAll('.lot-car-option')]
-      .find((option) => option.dataset.carId === car.id);
-    if (!button) return;
+  visibleOrder.forEach((carId, index) => {
+    const car = getCarDefinition(carId);
+    const button = carPicker.querySelector(`.lot-car-option[data-car-id="${carId}"]`);
+    if (!button || !car) return;
 
     button.id ||= `lot-car-option-${car.id}`;
     button.setAttribute('aria-posinset', String(index + 1));
-    button.setAttribute('aria-setsize', String(CAR_CATALOG.length));
+    button.setAttribute('aria-setsize', String(visibleOrder.length));
 
     const description = document.createElement('span');
     description.id = `lot-${car.id}-complete-label`;
@@ -100,15 +103,15 @@ export function installLotAccessibility(root = document.body) {
     // VoiceOver heading navigation resumes at the first radio in DOM order, not
     // at aria-activedescendant on a non-focusable radiogroup. Rotate the hidden
     // radio DOM order so the checked car is first, followed by the remaining cars
-    // in catalogue order. The visible 3D parking lot is unaffected.
+    // in the same order as the visible 5x3 parking lot.
     if (selectedCarId && orderedFromCarId !== selectedCarId) {
-      const selectedIndex = CAR_CATALOG.findIndex((car) => car.id === selectedCarId);
-      const orderedCars = selectedIndex >= 0
-        ? [...CAR_CATALOG.slice(selectedIndex), ...CAR_CATALOG.slice(0, selectedIndex)]
-        : CAR_CATALOG;
+      const selectedIndex = visibleOrder.indexOf(selectedCarId);
+      const orderedCarIds = selectedIndex >= 0
+        ? [...visibleOrder.slice(selectedIndex), ...visibleOrder.slice(0, selectedIndex)]
+        : visibleOrder;
       const fragment = document.createDocumentFragment();
-      for (const car of orderedCars) {
-        const button = buttonsByCarId.get(car.id);
+      for (const carId of orderedCarIds) {
+        const button = buttonsByCarId.get(carId);
         if (button) fragment.appendChild(button);
       }
       carPicker.appendChild(fragment);
