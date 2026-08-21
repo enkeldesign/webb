@@ -22,6 +22,7 @@ export function installLotAccessibility(root = document.body) {
     return () => {};
   }
 
+  const preserveVisualOrder = screen.classList.contains('lot-showroom-experiment');
   const chooseCarHeading = makeHiddenHeading('lot-choose-car-heading', 'Choose car');
   carPicker.insertAdjacentElement('beforebegin', chooseCarHeading);
   carPicker.setAttribute('aria-labelledby', chooseCarHeading.id);
@@ -100,11 +101,11 @@ export function installLotAccessibility(root = document.body) {
     const selectedCarId = selectedButton.dataset.carId;
     selectedSummary.textContent = completeTextByCarId.get(selectedCarId) || selectedButton.textContent;
 
-    // VoiceOver heading navigation resumes at the first radio in DOM order, not
-    // at aria-activedescendant on a non-focusable radiogroup. Rotate the hidden
-    // radio DOM order so the checked car is first, followed by the remaining cars
-    // in the same order as the visible 5x3 parking lot.
-    if (selectedCarId && orderedFromCarId !== selectedCarId) {
+    // The production 3D parking lot keeps its radios visually hidden, so rotating
+    // their DOM order helps VoiceOver resume from the selected vehicle. In the
+    // showroom experiment those same radios are the visible horizontal car rail;
+    // changing DOM order would make cards jump around as the player browses.
+    if (!preserveVisualOrder && selectedCarId && orderedFromCarId !== selectedCarId) {
       const selectedIndex = visibleOrder.indexOf(selectedCarId);
       const orderedCarIds = selectedIndex >= 0
         ? [...visibleOrder.slice(selectedIndex), ...visibleOrder.slice(0, selectedIndex)]
