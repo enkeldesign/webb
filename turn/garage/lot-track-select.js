@@ -2,7 +2,6 @@ import {
   enhanceLotNow,
   prepareLotEnhancements
 } from './lot-enhancement-runtime.js?revision=r588-canonical-attributes&build=20260804-r157';
-import { installLotSelectionBayPolish } from './lot-selection-bay.js?revision=r593-connected-bay';
 import { chooseTrackBeforeLot } from '../tracks/track-manager.js?build=20260722-r52';
 import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
 
@@ -39,13 +38,9 @@ export async function showEnhancedLot(options = {}) {
     prepareLotEnhancements()
   ]);
 
-  // The original Lot builds all 15 parking pads synchronously inside showTheLot().
-  // Install a temporary construction hook only for that moment so the selected bay
-  // can reuse the existing parking stripes without forking the garage renderer.
-  const restoreSelectionBayPolish = installLotSelectionBayPolish();
+  // lot-r10 now applies the selected-bay polish from its own synchronous entry
+  // bootstrap, so every caller—including M8 Home—gets the same presentation.
   const lotResult = showOriginalLot(options);
-  restoreSelectionBayPolish();
-
   const removeEnhancements = enhanceLotNow();
   try {
     return await lotResult;
