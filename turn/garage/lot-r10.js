@@ -13,6 +13,7 @@ import {
 import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js?build=20260720-r22';
 import { recordPerformanceFrame } from '../performance-monitor.js?build=20260720-r20';
 import { describeColorCue } from '../accessibility/color-cues.js?revision=r163';
+import { LOCK_ICON } from '../progression/trophy-road.js?revision=r166-bella-records';
 import {
   hasTriedTrainingCar,
   installTrainingCarGuide,
@@ -794,35 +795,24 @@ function makeBeginnerFriendlyMarker() {
 
 function getLockBadgeTexture() {
   if (lockBadgeTexture) return lockBadgeTexture;
-  const canvas = document.createElement('canvas');
-  canvas.width = 160;
-  canvas.height = 160;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, 160, 160);
 
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.strokeStyle = '#08090a';
-  ctx.lineWidth = 11;
-  ctx.beginPath();
-  ctx.arc(80, 64, 34, Math.PI, 0);
-  ctx.lineTo(114, 86);
-  ctx.stroke();
+  const icon = LOCK_ICON
+    .replace(/^<svg[^>]*>/, '')
+    .replace(/<\/svg>$/, '');
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
+      <rect x="18" y="18" width="124" height="124" rx="28"
+        fill="#ffd43b" stroke="#08090a" stroke-width="10"/>
+      <g transform="translate(40 40) scale(3.333333)"
+        fill="none" stroke="#08090a" stroke-width="2.4"
+        stroke-linecap="round" stroke-linejoin="round">
+        ${icon}
+      </g>
+    </svg>`;
 
-  roundedRectPath(ctx, 30, 72, 100, 70, 14);
-  ctx.fillStyle = '#ffd43b';
-  ctx.fill();
-  ctx.strokeStyle = '#08090a';
-  ctx.lineWidth = 9;
-  ctx.stroke();
-
-  ctx.fillStyle = '#08090a';
-  ctx.beginPath();
-  ctx.arc(80, 104, 9, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillRect(76, 108, 8, 18);
-
-  lockBadgeTexture = new THREE.CanvasTexture(canvas);
+  lockBadgeTexture = new THREE.TextureLoader().load(
+    `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+  );
   lockBadgeTexture.colorSpace = THREE.SRGBColorSpace;
   return lockBadgeTexture;
 }
@@ -885,21 +875,6 @@ function getBeginnerBadgeTexture() {
   beginnerBadgeTexture = new THREE.CanvasTexture(canvas);
   beginnerBadgeTexture.colorSpace = THREE.SRGBColorSpace;
   return beginnerBadgeTexture;
-}
-
-function roundedRectPath(ctx, x, y, width, height, radius) {
-  const r = Math.min(radius, width / 2, height / 2);
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + width - r, y);
-  ctx.quadraticCurveTo(x + width, y, x + width, y + r);
-  ctx.lineTo(x + width, y + height - r);
-  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
-  ctx.lineTo(x + r, y + height);
-  ctx.quadraticCurveTo(x, y + height, x, y + height - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
 }
 
 function findCarId(object) {
