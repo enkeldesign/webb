@@ -89,6 +89,7 @@ input:focus-visible {
 .stats-access,
 .stats-toolbar,
 .privacy-note,
+.developer-device,
 .metric,
 .feature-card,
 .panel,
@@ -126,6 +127,7 @@ input:focus-visible {
 .key-row input,
 .key-row button,
 .range-tabs button,
+#toggleDeveloperDevice,
 #forgetKey {
   min-height: 48px;
   border: 4px solid var(--turn-ink, #08090a);
@@ -156,6 +158,7 @@ input:focus-visible {
 
 .stats-toolbar {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 18px;
   align-items: end;
@@ -182,8 +185,13 @@ input:focus-visible {
   background: var(--turn-pink-500, #ff4fa3);
 }
 
+.audience-tabs button[aria-pressed="true"] {
+  background: var(--turn-blue-100, #bdeeff);
+}
+
 .updated {
   max-width: 30ch;
+  margin-left: auto;
   font-size: 0.78rem;
   text-align: right;
 }
@@ -195,6 +203,48 @@ input:focus-visible {
   background: var(--turn-paper, #fff8e8);
   font-size: 0.86rem;
   line-height: 1.45;
+}
+
+.developer-device {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px 18px;
+  align-items: center;
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 18px;
+  background: var(--turn-blue-100, #bdeeff);
+}
+
+.developer-device strong {
+  display: block;
+  margin-top: 3px;
+  font-size: clamp(1.4rem, 4vw, 2.2rem);
+  line-height: 1;
+}
+
+.developer-device small {
+  display: block;
+  max-width: 64ch;
+  margin-top: 6px;
+  font-size: 0.78rem;
+}
+
+#toggleDeveloperDevice {
+  padding: 8px 14px;
+  background: var(--turn-paper, #fff8e8);
+  box-shadow: 4px 4px 0 var(--turn-ink, #08090a);
+}
+
+#toggleDeveloperDevice[aria-pressed="true"] {
+  background: var(--turn-orange-100, #ffd0ae);
+}
+
+.device-status {
+  grid-column: 1 / -1;
+  min-height: 1.2em;
+  margin: 0;
+  font-size: 0.78rem;
 }
 
 .metric-grid {
@@ -380,7 +430,9 @@ input:focus-visible {
   .key-row { grid-template-columns: 1fr; }
   .stats-toolbar,
   .stats-footer { align-items: stretch; flex-direction: column; }
-  .updated { max-width: none; text-align: left; }
+  .updated { max-width: none; margin-left: 0; text-align: left; }
+  .developer-device { grid-template-columns: 1fr; }
+  .device-status { grid-column: 1; }
   .favourites-grid { grid-template-columns: 1fr; }
 }
 
