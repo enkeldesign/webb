@@ -419,8 +419,8 @@ function normalizeDays(value) {
 }
 
 function normalizeAudience(value) {
-  const audience = String(value || 'players').trim().toLowerCase();
-  return STATS_AUDIENCES.has(audience) ? audience : 'players';
+  const audience = String(value || 'all').trim().toLowerCase();
+  return STATS_AUDIENCES.has(audience) ? audience : 'all';
 }
 
 function utcDay(timestamp) {
