@@ -1,4 +1,5 @@
 const STATS_ENDPOINT = 'https://turn-challenges.erik-jansson-ux.workers.dev/v1/stats';
+const DEVELOPER_STORAGE_KEY = 'turn.telemetry.developer.v1';
 
 const TRACKS = Object.freeze([
   ['countryside', 'Countryside'],
@@ -32,11 +33,18 @@ const keyForm = document.querySelector('#statsKeyForm');
 const keyInput = document.querySelector('#statsKey');
 const accessStatus = document.querySelector('#statsAccessStatus');
 const rangeTabs = document.querySelector('#rangeTabs');
+const audienceTabs = document.querySelector('#audienceTabs');
 const updated = document.querySelector('#statsUpdated');
 const forgetKey = document.querySelector('#forgetKey');
+const cohortNote = document.querySelector('#statsCohortNote');
+const developerDeviceState = document.querySelector('#developerDeviceState');
+const developerDeviceDescription = document.querySelector('#developerDeviceDescription');
+const developerDeviceStatus = document.querySelector('#developerDeviceStatus');
+const toggleDeveloperDevice = document.querySelector('#toggleDeveloperDevice');
 
 let statsKey = keyFromFragment();
 let activeDays = 30;
+let activeAudience = 'players';
 let requestSequence = 0;
 
 keyForm.addEventListener('submit', (event) => {
@@ -44,7 +52,7 @@ keyForm.addEventListener('submit', (event) => {
   const key = keyInput.value.trim();
   if (!key) return;
   setKey(key);
-  void loadStats(activeDays);
+  void loadStats(activeDays, activeAudience);
 });
 
 rangeTabs.addEventListener('click', (event) => {
@@ -52,10 +60,29 @@ rangeTabs.addEventListener('click', (event) => {
   if (!button) return;
   const days = Number(button.dataset.days) || 30;
   activeDays = days;
-  for (const candidate of rangeTabs.querySelectorAll('button[data-days]')) {
-    candidate.setAttribute('aria-pressed', String(candidate === button));
+  setPressedButton(rangeTabs, button);
+  void loadStats(days, activeAudience);
+});
+
+audienceTabs.addEventListener('click', (event) => {
+  const button = event.target.closest('button[data-audience]');
+  if (!button) return;
+  const audience = String(button.dataset.audience || 'players');
+  activeAudience = ['players', 'all', 'developer'].includes(audience) ? audience : 'players';
+  setPressedButton(audienceTabs, button);
+  void loadStats(activeDays, activeAudience);
+});
+
+toggleDeveloperDevice.addEventListener('click', () => {
+  const nextValue = !isDeveloperDevice();
+  if (!setDeveloperDevice(nextValue)) {
+    developerDeviceStatus.textContent = 'This browser did not allow the developer marker to be saved.';
+    return;
   }
-  void loadStats(days);
+  renderDeveloperDevice();
+  developerDeviceStatus.textContent = nextValue
+    ? 'Marked as developer. Future TURN telemetry from this browser will be excluded from PLAYERS.'
+    : 'Developer marker removed. Future TURN telemetry from this browser will be included in PLAYERS.';
 });
 
 forgetKey.addEventListener('click', () => {
@@ -68,17 +95,22 @@ forgetKey.addEventListener('click', () => {
   keyInput.focus();
 });
 
-if (statsKey) void loadStats(activeDays);
+renderDeveloperDevice();
+if (statsKey) void loadStats(activeDays, activeAudience);
 else keyInput.focus();
 
-async function loadStats(days) {
+async function loadStats(days, audience) {
   if (!statsKey) return;
   const sequence = ++requestSequence;
   accessStatus.textContent = 'Loading private statistics…';
   updated.textContent = 'Loading…';
 
   try {
-    const response = await fetch(`${STATS_ENDPOINT}?days=${encodeURIComponent(days)}`, {
+    const query = new URLSearchParams({
+      days: String(days),
+      audience
+    });
+    const response = await fetch(`${STATS_ENDPOINT}?${query}`, {
       method: 'GET',
       mode: 'cors',
       credentials: 'omit',
@@ -139,12 +171,27 @@ function renderStats(stats) {
 
   const generatedAt = Number(stats.generatedAt) || Date.now();
   const range = Number(stats.rangeDays) === 3650 ? 'all recorded time' : `${Number(stats.rangeDays) || 30} days`;
-  updated.textContent = `${range} · refreshed ${formatDateTime(generatedAt)}`;
+  const audience = statsAudienceLabel(stats.audience);
+  updated.textContent = `${audience} · ${range} · refreshed ${formatDateTime(generatedAt)}`;
+
+  cohortNote.innerHTML = stats.audience === 'all'
+    ? '<strong>ALL</strong> combines the original unseparated history with new player and developer aggregates. Old activity cannot be retrospectively assigned to either cohort.'
+    : `<strong>${escapeHtml(audience)}</strong> contains only activity recorded after developer separation shipped. It does not guess who generated older aggregate statistics.`;
 
   const lastAt = Number(stats.lastActivityAt) || 0;
   text('#lastActivity', lastAt
-    ? `Last recorded gameplay: ${formatDateTime(lastAt)}`
-    : 'No recorded gameplay in this period yet.');
+    ? `Last recorded ${audience.toLowerCase()} gameplay: ${formatDateTime(lastAt)}`
+    : `No recorded ${audience.toLowerCase()} gameplay in this period yet.`);
+}
+
+function renderDeveloperDevice() {
+  const developer = isDeveloperDevice();
+  developerDeviceState.textContent = developer ? 'DEVELOPER' : 'PLAYER';
+  developerDeviceDescription.textContent = developer
+    ? 'Future TURN activity from this browser is excluded from PLAYERS and appears under DEVELOPER.'
+    : 'Future TURN activity from this browser is included in PLAYERS.';
+  toggleDeveloperDevice.textContent = developer ? 'REMOVE DEVELOPER MARKER' : 'MARK AS DEVELOPER';
+  toggleDeveloperDevice.setAttribute('aria-pressed', String(developer));
 }
 
 function renderFavourite(kind, rows, raceCount) {
@@ -239,6 +286,30 @@ function countMap(rows = []) {
   return new Map(rows.map((row) => [String(row.id), Number(row.count) || 0]));
 }
 
+function setPressedButton(container, activeButton) {
+  for (const candidate of container.querySelectorAll('button')) {
+    candidate.setAttribute('aria-pressed', String(candidate === activeButton));
+  }
+}
+
+function isDeveloperDevice() {
+  try {
+    return localStorage.getItem(DEVELOPER_STORAGE_KEY) === '1';
+  } catch (_) {
+    return false;
+  }
+}
+
+function setDeveloperDevice(value) {
+  try {
+    if (value) localStorage.setItem(DEVELOPER_STORAGE_KEY, '1');
+    else localStorage.removeItem(DEVELOPER_STORAGE_KEY);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 function setKey(value) {
   statsKey = String(value || '').trim();
   if (!statsKey) return;
@@ -249,6 +320,12 @@ function keyFromFragment() {
   const raw = location.hash.slice(1);
   if (!raw) return '';
   try { return decodeURIComponent(raw).trim(); } catch (_) { return raw.trim(); }
+}
+
+function statsAudienceLabel(value) {
+  if (value === 'developer') return 'DEVELOPER';
+  if (value === 'all') return 'ALL';
+  return 'PLAYERS';
 }
 
 function text(selector, value) {

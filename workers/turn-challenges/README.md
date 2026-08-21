@@ -18,10 +18,10 @@ There is intentionally no update or delete API for challenge snapshots. Two peop
 ## Private usage statistics
 
 - `POST /v1/telemetry` — accepts a small batch of allow-listed gameplay events from TURN/YOUR TURN.
-- `GET /v1/stats?days=30` — returns anonymous aggregate statistics to the private dashboard after bearer-key authentication.
+- `GET /v1/stats?days=30&audience=players` — returns anonymous aggregate statistics to the private dashboard after bearer-key authentication. `audience` can be `players`, `developer` or `all`; omitted/invalid values preserve the legacy `all` behavior.
 - D1 stores daily aggregate counts only. It does not store player IDs, page-session IDs or raw gameplay-event histories.
 
-TURN does not create an analytics cookie or persistent analytics identifier. A random page-session identifier exists only in browser memory and is never written to D1. Telemetry starts only after a race actually starts and is event-driven rather than frame-driven.
+TURN does not create an analytics cookie or persistent analytics identifier. A random page-session identifier exists only in browser memory and is never written to D1. Telemetry starts only after a race actually starts and is event-driven rather than frame-driven. Devices explicitly marked from the private dashboard store a local developer yes/no marker; that shared boolean is not unique to a device or person.
 
 Current event types are deliberately small:
 
@@ -30,14 +30,15 @@ Current event types are deliberately small:
 - `lap_complete`
 - `lap_invalid`
 
-Dimensions are limited to product surface, build, track, car, steering mode, browser/installed web app, Drive By Ear state, blank-screen state, lap time and invalid-lap reason. Names, challenge IDs/links, replay data, driving paths, control streams and precise location are not part of the analytics payload.
+Dimensions are limited to product surface, build, track, car, steering mode, browser/installed web app, Drive By Ear state, blank-screen state, developer yes/no, lap time and invalid-lap reason. Names, challenge IDs/links, replay data, driving paths, control streams and precise location are not part of the analytics payload.
 
-The private dashboard is a static page under `/turn/stats/`. It is `noindex`, unlinked from TURN and protected at the API layer by a bearer key whose plaintext is not committed to the repository.
+The private dashboard is a static page under `/turn/stats/`. It is `noindex`, unlinked from TURN and protected at the API layer by a bearer key whose plaintext is not committed to the repository. The `PLAYERS` view excludes developer-marked devices; `DEVELOPER` shows only those devices; `ALL` combines the original unseparated history with the newer cohort-separated aggregates.
 
 ## Storage and safety boundaries
 
 - D1 binding: `DB`.
 - Tables are created lazily with `CREATE TABLE IF NOT EXISTS`; deployment does not require a separate migration step.
+- The original `turn_telemetry_daily` table remains read-only legacy history. New events are written to `turn_telemetry_daily_v2`, whose primary key adds the developer boolean so player and developer activity never collapse into one daily aggregate.
 - Exact duplicate challenge payloads reuse the same snapshot ID; different challenge generations get different immutable snapshots.
 - Browser writes are accepted only with an `Origin` of `https://enkel.design` (or `https://www.enkel.design`). This is an origin guard, not user authentication.
 - Request and decompressed-payload limits protect the challenge store from accidental oversized writes.

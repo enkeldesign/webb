@@ -1,7 +1,8 @@
 const TELEMETRY_ENDPOINT = 'https://turn-challenges.erik-jansson-ux.workers.dev/v1/telemetry';
-const CLIENT_VERSION = 1;
+const CLIENT_VERSION = 2;
 const FLUSH_DELAY_MS = 120;
 const MAX_BATCH = 8;
+const DEVELOPER_STORAGE_KEY = 'turn.telemetry.developer.v1';
 
 let installed = false;
 let playSessionSent = false;
@@ -21,7 +22,8 @@ export function installTurnTelemetry() {
     version: CLIENT_VERSION,
     record: queueEvent,
     flush: flushQueue,
-    sessionId
+    sessionId,
+    isDeveloperDevice
   });
   globalThis.__turnTelemetry = api;
 
@@ -72,6 +74,7 @@ function queueEvent(event, extra = {}) {
     installed: isInstalledWebApp(),
     driveByEar: audio.dbeEnabled === true,
     blank: document.documentElement.classList.contains('turn-screen-blanked'),
+    developer: isDeveloperDevice(),
     occurredAt: Date.now(),
     value: Number(extra.value) || 0,
     reason: String(extra.reason || '')
@@ -132,6 +135,14 @@ function isInstalledWebApp() {
     || navigator.standalone === true
     || globalThis.matchMedia?.('(display-mode: standalone)').matches === true
     || globalThis.matchMedia?.('(display-mode: fullscreen)').matches === true;
+}
+
+function isDeveloperDevice() {
+  try {
+    return localStorage.getItem(DEVELOPER_STORAGE_KEY) === '1';
+  } catch (_) {
+    return false;
+  }
 }
 
 function createSessionId() {

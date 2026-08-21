@@ -8,7 +8,7 @@
   <title>TURN private usage stats</title>
   <link rel="icon" href="../TURNicon.PNG" type="image/png">
   <link rel="stylesheet" href="../design-tokens.css?build=20260808-r162">
-  <link rel="stylesheet" href="./stats.css?revision=r1">
+  <link rel="stylesheet" href="./stats.css?revision=r2">
   <script src="../ui/page-zoom-baseline-r193.js?revision=r193-canonical-75"></script>
 </head>
 <body>
@@ -36,8 +36,8 @@
     </section>
 
     <section id="statsDashboard" hidden>
-      <div class="stats-toolbar" aria-label="Statistics period">
-        <div>
+      <div class="stats-toolbar">
+        <div aria-label="Statistics period">
           <span class="toolbar-label">PERIOD</span>
           <div class="range-tabs" id="rangeTabs">
             <button type="button" data-days="1">24H</button>
@@ -47,10 +47,28 @@
             <button type="button" data-days="3650">ALL</button>
           </div>
         </div>
+        <div aria-label="Statistics audience">
+          <span class="toolbar-label">VIEW</span>
+          <div class="range-tabs audience-tabs" id="audienceTabs">
+            <button type="button" data-audience="players" aria-pressed="true">PLAYERS</button>
+            <button type="button" data-audience="all">ALL</button>
+            <button type="button" data-audience="developer">DEVELOPER</button>
+          </div>
+        </div>
         <div class="updated" id="statsUpdated" aria-live="polite"></div>
       </div>
 
-      <p class="privacy-note"><strong>PLAY SESSIONS</strong> means one page load that actually starts a race. TURN deliberately does not assign a persistent analytics identifier, so this dashboard does not pretend to count unique people.</p>
+      <p class="privacy-note" id="statsCohortNote"><strong>PLAYERS</strong> excludes telemetry from devices you mark as developer below. Developer separation starts with this update; older activity cannot be separated and therefore appears only in <strong>ALL</strong>.</p>
+
+      <section class="developer-device" aria-labelledby="developerDeviceTitle">
+        <div>
+          <span class="toolbar-label" id="developerDeviceTitle">THIS DEVICE</span>
+          <strong id="developerDeviceState">PLAYER</strong>
+          <small id="developerDeviceDescription">Future TURN activity from this browser is included in PLAYERS.</small>
+        </div>
+        <button id="toggleDeveloperDevice" type="button" aria-pressed="false">MARK AS DEVELOPER</button>
+        <p class="device-status" id="developerDeviceStatus" role="status" aria-live="polite"></p>
+      </section>
 
       <section class="metric-grid" aria-label="Headline statistics">
         <article class="metric"><span>PLAY SESSIONS</span><strong id="metricSessions">–</strong></article>
@@ -94,6 +112,6 @@
       </footer>
     </section>
   </main>
-  <script type="module" src="./stats.js?revision=r1"></script>
+  <script type="module" src="./stats.js?revision=r2"></script>
 </body>
 </html>
