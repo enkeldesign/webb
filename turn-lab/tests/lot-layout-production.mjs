@@ -62,8 +62,8 @@ assert.ok(
 );
 
 assert.match(wrapper, /export async function showEnhancedLot/);
-assert.match(wrapper, /lot-r10\.js\?build=20260809-r163-native-html&revision=r589-beginner-bubble/,
-  'The wrapper must load the polished beginner-bubble Lot implementation under a fresh URL');
+assert.match(wrapper, /lot-r10\.js\?build=20260809-r163-native-html&revision=r590-canonical-lock-icon/,
+  'The wrapper must load the canonical-lock Lot implementation under a fresh URL');
 assert.match(wrapper, /lot-enhancement-runtime\.js\?revision=r588-canonical-attributes/,
   'The wrapper must load the canonical-attribute accessibility bundle');
 assert.match(wrapper, /const removeEnhancements = enhanceLotNow\(\)/);
@@ -142,6 +142,12 @@ assert.match(lot, /turnLotPadPointer/,
 assert.match(lot, /function makeLockMarker\(\)/);
 assert.match(lot, /classList\.contains\('is-trophy-locked'\)/,
   '3D lock markers must follow the existing Trophy Road gate');
+assert.match(lot, /import \{ LOCK_ICON \} from '\.\.\/progression\/trophy-road\.js/,
+  'The Lot must reuse the canonical Trophy Road lock icon instead of drawing a second lock shape');
+assert.match(lot, /LOCK_ICON[\s\S]*new THREE\.TextureLoader\(\)\.load/,
+  'The canonical lock SVG must be rasterized directly into the 3D lock badge texture');
+assert.doesNotMatch(lot, /ctx\.arc\(80, 64, 34/,
+  'The old hand-drawn 3D padlock must not return');
 assert.match(lot, /function makeBeginnerFriendlyMarker\(\)/);
 assert.match(lot, /sprite\.scale\.set\(5\.7, 3\.15, 1\)/,
   'The polished speech bubble must preserve the reference-like wider rounded silhouette');
