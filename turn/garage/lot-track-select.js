@@ -43,12 +43,8 @@ export async function showEnhancedLot(options = {}) {
   // Install a temporary construction hook only for that moment so the selected bay
   // can reuse the existing parking stripes without forking the garage renderer.
   const restoreSelectionBayPolish = installLotSelectionBayPolish();
-  let lotResult;
-  try {
-    lotResult = showOriginalLot(options);
-  } finally {
-    restoreSelectionBayPolish();
-  }
+  const lotResult = showOriginalLot(options);
+  restoreSelectionBayPolish();
 
   const removeEnhancements = enhanceLotNow();
   try {
