@@ -1,4 +1,4 @@
-const TELEMETRY_API_VERSION = 1;
+const TELEMETRY_API_VERSION = 2;
 const MAX_BODY_BYTES = 16 * 1024;
 const MAX_EVENTS_PER_REQUEST = 8;
 const STATS_KEY_SHA256 = '18379b62d01eb7c33cf5bc56a9076268425a43eb17797a9bb4129306044c9803';
@@ -8,6 +8,7 @@ const TELEMETRY_EVENTS = new Set([
   'lap_complete',
   'lap_invalid'
 ]);
+const STATS_AUDIENCES = new Set(['players', 'all', 'developer']);
 const ALLOWED_ORIGINS = new Set([
   'https://enkel.design',
   'https://www.enkel.design'
@@ -54,7 +55,8 @@ export async function handleTelemetryRoute(request, env = {}, ctx = null) {
       requireAllowedOrigin(request, { allowMissing: true });
       await requireStatsKey(request);
       const days = normalizeDays(url.searchParams.get('days'));
-      const stats = await loadStats(env.DB, days);
+      const audience = normalizeAudience(url.searchParams.get('audience'));
+      const stats = await loadStats(env.DB, days, audience);
       return jsonResponse(stats, 200, request);
     }
 
@@ -94,7 +96,8 @@ async function recordTelemetryEvents(env, events) {
           event.value,
           event.installed ? 1 : 0,
           event.driveByEar ? 1 : 0,
-          event.blank ? 1 : 0
+          event.blank ? 1 : 0,
+          event.developer ? 1 : 0
         ]
       });
     } catch (error) {
@@ -107,14 +110,14 @@ async function recordTelemetryEvents(env, events) {
 async function upsertAggregate(db, event) {
   const day = new Date(event.occurredAt).toISOString().slice(0, 10);
   await db.prepare(`
-    INSERT INTO turn_telemetry_daily (
+    INSERT INTO turn_telemetry_daily_v2 (
       day, event, surface, track_id, car_id, steering,
-      installed, drive_by_ear, blank_screen,
+      installed, drive_by_ear, blank_screen, developer,
       count, value_sum, last_at
-    ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, 1, ?10, ?11)
+    ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, 1, ?11, ?12)
     ON CONFLICT (
       day, event, surface, track_id, car_id, steering,
-      installed, drive_by_ear, blank_screen
+      installed, drive_by_ear, blank_screen, developer
     ) DO UPDATE SET
       count = count + 1,
       value_sum = value_sum + excluded.value_sum,
@@ -129,14 +132,16 @@ async function upsertAggregate(db, event) {
     event.installed ? 1 : 0,
     event.driveByEar ? 1 : 0,
     event.blank ? 1 : 0,
+    event.developer ? 1 : 0,
     event.value,
     event.occurredAt
   ).run();
 }
 
-async function loadStats(db, days) {
+async function loadStats(db, days, audience) {
   await ensureTelemetrySchema(db);
   const sinceDay = utcDay(Date.now() - (days - 1) * 86_400_000);
+  const source = statsSource(audience);
   const [
     totalsRows,
     trackRows,
@@ -151,59 +156,59 @@ async function loadStats(db, days) {
   ] = await Promise.all([
     allRows(db.prepare(`
       SELECT event, SUM(count) AS count, SUM(value_sum) AS value_sum
-      FROM turn_telemetry_daily
+      FROM ${source}
       WHERE day >= ?1
       GROUP BY event
     `).bind(sinceDay)),
     allRows(db.prepare(`
       SELECT track_id AS id, SUM(count) AS count
-      FROM turn_telemetry_daily
+      FROM ${source}
       WHERE day >= ?1 AND event = 'race_start' AND track_id <> ''
       GROUP BY track_id ORDER BY count DESC
     `).bind(sinceDay)),
     allRows(db.prepare(`
       SELECT car_id AS id, SUM(count) AS count
-      FROM turn_telemetry_daily
+      FROM ${source}
       WHERE day >= ?1 AND event = 'race_start' AND car_id <> ''
       GROUP BY car_id ORDER BY count DESC
     `).bind(sinceDay)),
     allRows(db.prepare(`
       SELECT surface AS id, SUM(count) AS count
-      FROM turn_telemetry_daily
+      FROM ${source}
       WHERE day >= ?1 AND event = 'play_session'
       GROUP BY surface ORDER BY count DESC
     `).bind(sinceDay)),
     allRows(db.prepare(`
       SELECT steering AS id, SUM(count) AS count
-      FROM turn_telemetry_daily
+      FROM ${source}
       WHERE day >= ?1 AND event = 'race_start' AND steering <> ''
       GROUP BY steering ORDER BY count DESC
     `).bind(sinceDay)),
     allRows(db.prepare(`
       SELECT installed AS id, SUM(count) AS count
-      FROM turn_telemetry_daily
+      FROM ${source}
       WHERE day >= ?1 AND event = 'race_start'
       GROUP BY installed ORDER BY count DESC
     `).bind(sinceDay)),
     allRows(db.prepare(`
       SELECT drive_by_ear AS id, SUM(count) AS count
-      FROM turn_telemetry_daily
+      FROM ${source}
       WHERE day >= ?1 AND event = 'race_start'
       GROUP BY drive_by_ear ORDER BY count DESC
     `).bind(sinceDay)),
     allRows(db.prepare(`
       SELECT blank_screen AS id, SUM(count) AS count
-      FROM turn_telemetry_daily
+      FROM ${source}
       WHERE day >= ?1 AND event = 'lap_complete'
       GROUP BY blank_screen ORDER BY count DESC
     `).bind(sinceDay)),
     allRows(db.prepare(`
       SELECT track_id AS id, SUM(count) AS count, SUM(value_sum) AS value_sum
-      FROM turn_telemetry_daily
+      FROM ${source}
       WHERE day >= ?1 AND event = 'lap_complete' AND track_id <> ''
       GROUP BY track_id ORDER BY count DESC
     `).bind(sinceDay)),
-    db.prepare('SELECT MAX(last_at) AS last_at FROM turn_telemetry_daily WHERE day >= ?1').bind(sinceDay).first()
+    db.prepare(`SELECT MAX(last_at) AS last_at FROM ${source} WHERE day >= ?1`).bind(sinceDay).first()
   ]);
 
   const totals = Object.fromEntries(totalsRows.map((row) => [
@@ -213,6 +218,8 @@ async function loadStats(db, days) {
   return {
     version: TELEMETRY_API_VERSION,
     rangeDays: days,
+    audience,
+    includesLegacyUnseparatedStats: audience === 'all',
     sinceDay,
     generatedAt: Date.now(),
     lastActivityAt: Number(lastRow?.last_at) || 0,
@@ -235,6 +242,24 @@ async function loadStats(db, days) {
       average: Number(row.count) > 0 ? (Number(row.value_sum) || 0) / Number(row.count) : 0
     }))
   };
+}
+
+function statsSource(audience) {
+  const columns = [
+    'day', 'event', 'surface', 'track_id', 'car_id', 'steering',
+    'installed', 'drive_by_ear', 'blank_screen', 'count', 'value_sum', 'last_at'
+  ].join(', ');
+  if (audience === 'developer') {
+    return `(SELECT ${columns} FROM turn_telemetry_daily_v2 WHERE developer = 1)`;
+  }
+  if (audience === 'players') {
+    return `(SELECT ${columns} FROM turn_telemetry_daily_v2 WHERE developer = 0)`;
+  }
+  return `(
+    SELECT ${columns} FROM turn_telemetry_daily
+    UNION ALL
+    SELECT ${columns} FROM turn_telemetry_daily_v2
+  )`;
 }
 
 function normalizeTelemetryEvent(value) {
@@ -262,6 +287,7 @@ function normalizeTelemetryEvent(value) {
     installed: Boolean(value.installed),
     driveByEar: Boolean(value.driveByEar),
     blank: Boolean(value.blank),
+    developer: Boolean(value.developer),
     value: finiteNumber(value.value, 0, 600),
     occurredAt: finiteInteger(value.occurredAt, Date.now() - 86_400_000, Date.now() + 300_000, Date.now())
   });
@@ -289,6 +315,27 @@ async function ensureTelemetrySchema(db) {
       PRIMARY KEY (
         day, event, surface, track_id, car_id, steering,
         installed, drive_by_ear, blank_screen
+      )
+    )
+  `).run();
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS turn_telemetry_daily_v2 (
+      day TEXT NOT NULL,
+      event TEXT NOT NULL,
+      surface TEXT NOT NULL,
+      track_id TEXT NOT NULL,
+      car_id TEXT NOT NULL,
+      steering TEXT NOT NULL,
+      installed INTEGER NOT NULL,
+      drive_by_ear INTEGER NOT NULL,
+      blank_screen INTEGER NOT NULL,
+      developer INTEGER NOT NULL,
+      count INTEGER NOT NULL DEFAULT 0,
+      value_sum REAL NOT NULL DEFAULT 0,
+      last_at INTEGER NOT NULL,
+      PRIMARY KEY (
+        day, event, surface, track_id, car_id, steering,
+        installed, drive_by_ear, blank_screen, developer
       )
     )
   `).run();
@@ -369,6 +416,11 @@ function normalizeDays(value) {
   const days = Math.round(Number(value) || 30);
   if ([1, 7, 30, 90, 3650].includes(days)) return days;
   return 30;
+}
+
+function normalizeAudience(value) {
+  const audience = String(value || 'players').trim().toLowerCase();
+  return STATS_AUDIENCES.has(audience) ? audience : 'players';
 }
 
 function utcDay(timestamp) {
