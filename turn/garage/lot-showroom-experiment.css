@@ -1,0 +1,843 @@
+/*
+  Experimental showroom layout for THE LOT.
+  This branch deliberately keeps the existing Lot semantics and enhancement hooks,
+  while making one selected 3D car the visual focus and exposing the radio group as
+  a horizontally browsable vehicle rail.
+*/
+
+.lot-showroom-experiment {
+  --lot-header-height: 82px;
+  --lot-picker-height: 132px;
+  --lot-panel-gap: 14px;
+  --lot-info-width: clamp(286px, 34vw, 430px);
+  background:
+    radial-gradient(circle at 42% 42%, rgb(255 255 255 / .52), transparent 32%),
+    linear-gradient(180deg, #8ed8ff 0 58%, #61717c 58% 100%);
+}
+
+.lot-showroom-experiment::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  inset: var(--lot-header-height) var(--lot-info-width) var(--lot-picker-height) 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent 0 8%, rgb(255 255 255 / .2) 8% 8.4%, transparent 8.4% 91%, rgb(255 255 255 / .18) 91% 91.4%, transparent 91.4%),
+    linear-gradient(180deg, transparent 0 62%, rgb(8 9 10 / .08) 62% 63%, transparent 63%);
+}
+
+.lot-showroom-experiment .lot-heading {
+  position: absolute;
+  z-index: 8;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(18px, env(safe-area-inset-right));
+  left: max(92px, calc(env(safe-area-inset-left) + 86px));
+  display: flex;
+  height: 60px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  text-shadow: none;
+  pointer-events: none;
+}
+
+.lot-showroom-experiment .lot-heading-copy {
+  min-width: 0;
+}
+
+.lot-showroom-experiment .lot-heading h1 {
+  margin: 0;
+  font-size: clamp(2.15rem, 5vw, 4.2rem);
+  line-height: .78;
+  letter-spacing: -.045em;
+  text-shadow: 3px 3px 0 var(--paper, #fff8e8);
+}
+
+.lot-showroom-experiment .lot-heading p {
+  margin: 9px 0 0;
+  font-size: clamp(.58rem, 1.15vw, .76rem);
+  letter-spacing: .16em;
+}
+
+.lot-progress-summary {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  flex: 0 1 330px;
+  gap: 10px;
+  align-items: center;
+  min-height: 54px;
+  padding: 7px 12px 7px 7px;
+  border: 3px solid var(--ink, #08090a);
+  border-radius: 15px;
+  background: rgb(8 9 10 / .9);
+  color: var(--paper, #fff8e8);
+  box-shadow: 4px 4px 0 var(--ink, #08090a);
+}
+
+.lot-progress-lock {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  padding: 8px;
+  place-items: center;
+  border: 2px solid var(--ink, #08090a);
+  border-radius: 11px;
+  background: var(--yellow, #ffd43b);
+  color: var(--ink, #08090a);
+}
+
+.lot-progress-lock svg,
+.lot-showroom-experiment .lot-car-option-lock svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.lot-progress-summary > span:last-child {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.lot-progress-summary strong {
+  overflow: hidden;
+  font-size: .66rem;
+  letter-spacing: .08em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lot-progress-summary small {
+  overflow: hidden;
+  opacity: .82;
+  font-size: .46rem;
+  letter-spacing: .045em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lot-showroom-experiment .lot-back {
+  position: absolute;
+  z-index: 9;
+  top: max(14px, env(safe-area-inset-top));
+  right: auto;
+  bottom: auto;
+  left: max(16px, env(safe-area-inset-left));
+  width: auto;
+  height: 52px;
+  min-width: 68px;
+  min-height: 52px;
+  padding: 0 13px;
+  border-radius: 14px;
+  background: var(--paper, #fff8e8);
+  color: var(--ink, #08090a);
+  box-shadow: 4px 4px 0 var(--ink, #08090a);
+  font-size: .61rem;
+  letter-spacing: .05em;
+}
+
+.lot-showroom-experiment .lot-side {
+  --lot-viewbox-min-height: 0px;
+  --lot-side-gap: var(--lot-panel-gap);
+  position: absolute;
+  z-index: 4;
+  inset: var(--lot-header-height) max(16px, env(safe-area-inset-right)) var(--lot-picker-height) max(16px, env(safe-area-inset-left));
+  width: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--lot-info-width);
+  grid-template-rows: minmax(0, 1fr);
+  gap: var(--lot-panel-gap);
+  pointer-events: none;
+}
+
+.lot-showroom-experiment .lot-side > * {
+  pointer-events: auto;
+}
+
+.lot-showroom-experiment .lot-viewbox,
+.lot-showroom-experiment .lot-viewbox-with-paint {
+  --lot-paint-rail-height: 58px;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  flex: none;
+  overflow: hidden;
+  border: 4px solid var(--ink, #08090a);
+  border-radius: 21px;
+  background:
+    radial-gradient(ellipse at 50% 48%, rgb(255 255 255 / .9), rgb(255 255 255 / .12) 46%, transparent 64%),
+    linear-gradient(180deg, #bcedff 0 61%, #677581 61% 100%);
+  box-shadow: 8px 8px 0 var(--ink, #08090a);
+}
+
+.lot-showroom-experiment .lot-viewbox::before {
+  content: 'TURN';
+  position: absolute;
+  z-index: 0;
+  top: 18%;
+  right: 7%;
+  padding: 7px 12px;
+  border: 3px solid var(--ink, #08090a);
+  transform: rotate(-3deg);
+  background: var(--yellow, #ffd43b);
+  color: var(--ink, #08090a);
+  font-size: clamp(.75rem, 1.8vw, 1.2rem);
+  font-weight: 950;
+  letter-spacing: .08em;
+  opacity: .78;
+}
+
+.lot-showroom-experiment .lot-viewbox-head {
+  z-index: 5;
+  top: 10px;
+  right: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lot-showroom-experiment .lot-viewbox-head span,
+.lot-showroom-experiment .lot-viewbox-head b {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 9px;
+  border: 2px solid var(--ink, #08090a);
+  border-radius: 999px;
+  background: rgb(255 248 232 / .92);
+  color: var(--ink, #08090a);
+  font-size: .43rem;
+  font-weight: 950;
+  letter-spacing: .08em;
+}
+
+.lot-showroom-experiment .lot-viewbox-head span {
+  background: var(--yellow, #ffd43b);
+}
+
+.lot-showroom-experiment .lot-view-host {
+  position: absolute;
+  inset: 0 0 var(--lot-paint-rail-height);
+  height: auto;
+  touch-action: none;
+}
+
+.lot-showroom-experiment .lot-view-host canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.lot-showroom-experiment .lot-cycle {
+  position: absolute;
+  z-index: 6;
+  top: calc(50% - var(--lot-paint-rail-height) / 2);
+  display: grid;
+  width: 48px;
+  height: 48px;
+  min-height: 0;
+  padding: 0 0 5px;
+  place-items: center;
+  border: 3px solid var(--ink, #08090a);
+  border-radius: 14px;
+  background: var(--paper, #fff8e8);
+  box-shadow: 4px 4px 0 var(--ink, #08090a);
+  color: var(--ink, #08090a);
+  font: 950 2rem/1 system-ui, sans-serif;
+  transform: translateY(-50%);
+}
+
+.lot-showroom-experiment .lot-cycle-prev { left: 14px; }
+.lot-showroom-experiment .lot-cycle-next { right: 14px; }
+
+.lot-showroom-experiment .lot-colors,
+.lot-showroom-experiment .lot-viewbox-with-paint .lot-colors {
+  position: absolute;
+  z-index: 5;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  min-height: var(--lot-paint-rail-height);
+  margin: 0;
+  padding: 8px 10px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  border-top: 3px solid var(--ink, #08090a);
+  background: rgb(255 248 232 / .97);
+}
+
+.lot-showroom-experiment .lot-color-control {
+  flex: 0 1 185px;
+  min-width: 124px;
+  min-height: 39px;
+  box-shadow: none;
+}
+
+.lot-showroom-experiment .lot-card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  max-height: none;
+  height: 100%;
+  padding: 14px;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 4px solid var(--ink, #08090a);
+  border-radius: 21px;
+  background: rgb(255 248 232 / .98);
+  box-shadow: 8px 8px 0 var(--ink, #08090a);
+}
+
+.lot-showroom-experiment .lot-car-title {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  align-items: start;
+  padding-bottom: 10px;
+  border-bottom: 3px solid var(--ink, #08090a);
+}
+
+.lot-showroom-experiment .lot-car-title > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: .47rem;
+  letter-spacing: .12em;
+}
+
+.lot-showroom-experiment .lot-car-title strong {
+  overflow: visible;
+  font-size: clamp(1.25rem, 3vw, 2.2rem);
+  line-height: .95;
+  text-align: left;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.lot-showroom-experiment .lot-selected-car-lock {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.lot-showroom-experiment .lot-car-description {
+  margin: 9px 0 5px;
+  font-size: clamp(.52rem, 1vw, .66rem);
+  line-height: 1.35;
+}
+
+.lot-showroom-experiment .lot-perk-copy {
+  margin: 4px 0 7px;
+  font-size: clamp(.48rem, .92vw, .6rem);
+  line-height: 1.28;
+}
+
+.lot-showroom-experiment .lot-stats {
+  display: grid;
+  gap: 6px;
+  margin: 9px 0;
+}
+
+.lot-showroom-experiment .lot-stat {
+  grid-template-columns: 94px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.lot-showroom-experiment .lot-stat > span {
+  font-size: .45rem;
+  letter-spacing: .04em;
+}
+
+.lot-showroom-experiment .lot-stat i {
+  height: 10px;
+  gap: 3px;
+}
+
+.lot-showroom-experiment .lot-stat b {
+  border-width: 1.5px;
+  border-radius: 3px;
+}
+
+.lot-showroom-experiment .lot-stats-help {
+  width: 21px;
+  height: 21px;
+  min-height: 0;
+  font-size: .7rem;
+}
+
+.lot-showroom-experiment .lot-card-actions {
+  position: sticky;
+  z-index: 4;
+  right: auto;
+  bottom: -1px;
+  width: auto;
+  margin: auto -4px -4px;
+  padding: 8px 4px 4px;
+  background: linear-gradient(180deg, transparent, rgb(255 248 232 / .96) 26%);
+}
+
+.lot-showroom-experiment .lot-race {
+  width: 100%;
+  min-height: 52px;
+  padding: 9px 12px;
+  border-radius: 13px;
+  background: var(--yellow, #ffd43b);
+  font-size: clamp(.67rem, 1.35vw, .9rem);
+  letter-spacing: .035em;
+}
+
+.lot-showroom-experiment .lot-race.is-trophy-locked {
+  background: var(--muted, #d6d0c2);
+}
+
+.lot-showroom-experiment .lot-car-picker-shell {
+  position: absolute;
+  z-index: 7;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: var(--lot-picker-height);
+  padding: 10px max(16px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  border-top: 4px solid var(--ink, #08090a);
+  background: #111316;
+  box-shadow: 0 -4px 0 rgb(255 255 255 / .08);
+}
+
+.lot-showroom-experiment .lot-car-picker {
+  position: static;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  padding: 0 2px 4px;
+  gap: 9px;
+  align-items: stretch;
+  overflow-x: auto;
+  overflow-y: hidden;
+  pointer-events: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: var(--yellow, #ffd43b) #292d31;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.lot-showroom-experiment .lot-car-option {
+  position: relative;
+  display: grid;
+  width: clamp(126px, 15vw, 170px);
+  min-width: clamp(126px, 15vw, 170px);
+  height: auto;
+  min-height: 0;
+  padding: 6px;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 4px;
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
+  border: 3px solid #51575e;
+  border-radius: 14px;
+  background: #292d31;
+  box-shadow: none;
+  color: var(--paper, #fff8e8);
+  text-align: left;
+  white-space: normal;
+  pointer-events: auto;
+  scroll-snap-align: center;
+}
+
+.lot-showroom-experiment .lot-car-option:hover,
+.lot-showroom-experiment .lot-car-option:active {
+  transform: none;
+}
+
+.lot-showroom-experiment .lot-car-option:focus-visible {
+  position: relative;
+  inset: auto;
+  width: clamp(126px, 15vw, 170px);
+  height: auto;
+  padding: 6px;
+  clip: auto;
+  clip-path: none;
+  border: 3px solid var(--cyan, #38d9ff);
+  border-radius: 14px;
+  background: #292d31;
+  box-shadow: inset 0 0 0 2px var(--paper, #fff8e8);
+  font-size: inherit;
+  outline: 3px solid var(--paper, #fff8e8);
+  outline-offset: 2px;
+}
+
+.lot-showroom-experiment .lot-car-option[aria-checked="true"] {
+  border-color: var(--cyan, #38d9ff);
+  background: var(--paper, #fff8e8);
+  color: var(--ink, #08090a);
+  box-shadow: inset 0 0 0 2px var(--ink, #08090a);
+}
+
+.lot-showroom-experiment .lot-car-option-preview {
+  position: relative;
+  display: block;
+  min-height: 48px;
+  overflow: hidden;
+  border-radius: 9px;
+  background:
+    radial-gradient(ellipse at 50% 80%, rgb(255 255 255 / .22), transparent 54%),
+    linear-gradient(180deg, #8ed8ff 0 62%, #5a6268 62% 100%);
+}
+
+/* A deliberately generic miniature: the actual model remains the large 3D hero. */
+.lot-showroom-experiment .lot-car-option-preview i:first-child {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  width: 60%;
+  height: 27%;
+  border: 2px solid var(--ink, #08090a);
+  border-radius: 45% 36% 22% 22%;
+  transform: translate(-50%, -50%);
+  background:
+    linear-gradient(105deg, transparent 0 24%, var(--lot-car-secondary, #fff) 25% 40%, transparent 41%),
+    var(--lot-car-color, #8ce99a);
+  box-shadow: 0 4px 0 rgb(8 9 10 / .18);
+}
+
+.lot-showroom-experiment .lot-car-option-preview i:nth-child(2),
+.lot-showroom-experiment .lot-car-option-preview i:nth-child(3) {
+  position: absolute;
+  top: 59%;
+  width: 15%;
+  aspect-ratio: 1;
+  border: 2px solid var(--paper, #fff8e8);
+  border-radius: 50%;
+  background: var(--ink, #08090a);
+}
+
+.lot-showroom-experiment .lot-car-option-preview i:nth-child(2) { left: 25%; }
+.lot-showroom-experiment .lot-car-option-preview i:nth-child(3) { right: 25%; }
+
+.lot-showroom-experiment .lot-car-option-name {
+  display: block;
+  overflow: hidden;
+  padding: 0 2px 1px;
+  font-size: clamp(.46rem, .8vw, .58rem);
+  font-weight: 950;
+  letter-spacing: .035em;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lot-showroom-experiment .lot-car-option-lock {
+  position: absolute;
+  z-index: 3;
+  top: 7px;
+  right: 7px;
+  display: none;
+  width: 29px;
+  height: 29px;
+  padding: 6px;
+  place-items: center;
+  border: 2px solid var(--ink, #08090a);
+  border-radius: 8px;
+  background: var(--yellow, #ffd43b);
+  color: var(--ink, #08090a);
+  box-shadow: 2px 2px 0 var(--ink, #08090a);
+}
+
+.lot-showroom-experiment .lot-car-option.is-trophy-locked .lot-car-option-lock {
+  display: grid;
+}
+
+.lot-showroom-experiment .lot-car-option.is-trophy-locked .lot-car-option-preview {
+  filter: grayscale(.3) brightness(.82);
+}
+
+/* The lock badge carries the visual state; threshold remains in the accessible name. */
+.lot-showroom-experiment .lot-car-option.is-trophy-locked::after {
+  display: none;
+}
+
+.lot-showroom-experiment .lot-car-picker-help {
+  position: absolute;
+  top: 2px;
+  right: max(18px, env(safe-area-inset-right));
+  margin: 0;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #111316;
+  color: var(--paper, #fff8e8);
+  font-size: .37rem;
+  letter-spacing: .08em;
+  transform: translateY(-100%);
+}
+
+.lot-showroom-experiment .lot-loading {
+  z-index: 8;
+  left: calc((100% - var(--lot-info-width)) / 2);
+  bottom: calc(var(--lot-picker-height) + 14px);
+  transform: translateX(-50%);
+}
+
+.lot-showroom-experiment .lot-loading.is-done {
+  transform: translate(-50%, 8px);
+}
+
+@media (max-height: 520px) {
+  .lot-showroom-experiment {
+    --lot-header-height: 66px;
+    --lot-picker-height: 104px;
+    --lot-panel-gap: 9px;
+    --lot-info-width: clamp(260px, 34vw, 340px);
+  }
+
+  .lot-showroom-experiment .lot-heading {
+    top: max(7px, env(safe-area-inset-top));
+    left: max(78px, calc(env(safe-area-inset-left) + 74px));
+    height: 48px;
+  }
+
+  .lot-showroom-experiment .lot-heading h1 {
+    font-size: clamp(1.8rem, 5vw, 3.1rem);
+  }
+
+  .lot-showroom-experiment .lot-heading p {
+    margin-top: 6px;
+    font-size: .47rem;
+  }
+
+  .lot-progress-summary {
+    grid-template-columns: 35px minmax(0, 1fr);
+    flex-basis: 260px;
+    min-height: 44px;
+    gap: 7px;
+    padding: 5px 9px 5px 5px;
+  }
+
+  .lot-progress-lock {
+    width: 32px;
+    height: 32px;
+    padding: 6px;
+  }
+
+  .lot-progress-summary strong { font-size: .54rem; }
+  .lot-progress-summary small { font-size: .38rem; }
+
+  .lot-showroom-experiment .lot-back {
+    top: max(8px, env(safe-area-inset-top));
+    left: max(10px, env(safe-area-inset-left));
+    height: 43px;
+    min-width: 58px;
+    min-height: 43px;
+    padding: 0 10px;
+    font-size: .51rem;
+  }
+
+  .lot-showroom-experiment .lot-side {
+    top: var(--lot-header-height);
+    bottom: var(--lot-picker-height);
+    gap: var(--lot-panel-gap);
+  }
+
+  .lot-showroom-experiment .lot-viewbox,
+  .lot-showroom-experiment .lot-viewbox-with-paint,
+  .lot-showroom-experiment .lot-card {
+    border-width: 3px;
+    border-radius: 16px;
+    box-shadow: 5px 5px 0 var(--ink, #08090a);
+  }
+
+  .lot-showroom-experiment .lot-viewbox-with-paint {
+    --lot-paint-rail-height: 47px;
+  }
+
+  .lot-showroom-experiment .lot-viewbox-head {
+    top: 7px;
+    right: 8px;
+    left: 8px;
+  }
+
+  .lot-showroom-experiment .lot-viewbox-head span,
+  .lot-showroom-experiment .lot-viewbox-head b {
+    min-height: 23px;
+    padding: 4px 7px;
+    border-width: 1.5px;
+    font-size: .34rem;
+  }
+
+  .lot-showroom-experiment .lot-cycle {
+    width: 39px;
+    height: 39px;
+    border-width: 2px;
+    border-radius: 11px;
+    box-shadow: 3px 3px 0 var(--ink, #08090a);
+    font-size: 1.6rem;
+  }
+
+  .lot-showroom-experiment .lot-cycle-prev { left: 9px; }
+  .lot-showroom-experiment .lot-cycle-next { right: 9px; }
+
+  .lot-showroom-experiment .lot-colors,
+  .lot-showroom-experiment .lot-viewbox-with-paint .lot-colors {
+    min-height: var(--lot-paint-rail-height);
+    padding: 5px 7px;
+  }
+
+  .lot-showroom-experiment .lot-color-control {
+    min-height: 34px;
+  }
+
+  .lot-showroom-experiment .lot-card {
+    padding: 9px;
+  }
+
+  .lot-showroom-experiment .lot-car-title {
+    gap: 2px;
+    padding-bottom: 6px;
+  }
+
+  .lot-showroom-experiment .lot-car-title strong {
+    font-size: clamp(1rem, 2.6vw, 1.55rem);
+  }
+
+  .lot-showroom-experiment .lot-car-description {
+    margin-top: 5px;
+    font-size: .45rem;
+    line-height: 1.22;
+  }
+
+  .lot-showroom-experiment .lot-perk-copy {
+    font-size: .42rem;
+  }
+
+  .lot-showroom-experiment .lot-stats {
+    gap: 3px;
+    margin: 5px 0;
+  }
+
+  .lot-showroom-experiment .lot-stat {
+    grid-template-columns: 75px minmax(0, 1fr);
+    gap: 5px;
+  }
+
+  .lot-showroom-experiment .lot-stat > span { font-size: .37rem; }
+  .lot-showroom-experiment .lot-stat i { height: 7px; gap: 2px; }
+
+  .lot-showroom-experiment .lot-card-actions {
+    margin: auto -2px -2px;
+    padding: 5px 2px 2px;
+  }
+
+  .lot-showroom-experiment .lot-race {
+    min-height: 40px;
+    padding: 7px 9px;
+    font-size: .58rem;
+  }
+
+  .lot-showroom-experiment .lot-car-picker-shell {
+    padding-top: 7px;
+    padding-bottom: max(7px, env(safe-area-inset-bottom));
+  }
+
+  .lot-showroom-experiment .lot-car-picker {
+    gap: 6px;
+  }
+
+  .lot-showroom-experiment .lot-car-option,
+  .lot-showroom-experiment .lot-car-option:focus-visible {
+    width: clamp(106px, 14vw, 136px);
+    min-width: clamp(106px, 14vw, 136px);
+    padding: 4px;
+    border-width: 2px;
+    border-radius: 10px;
+  }
+
+  .lot-showroom-experiment .lot-car-option-preview { min-height: 35px; }
+  .lot-showroom-experiment .lot-car-option-name { font-size: .39rem; }
+  .lot-showroom-experiment .lot-car-option-lock {
+    top: 5px;
+    right: 5px;
+    width: 23px;
+    height: 23px;
+    padding: 5px;
+    border-width: 1.5px;
+  }
+}
+
+@media (max-height: 430px) {
+  .lot-showroom-experiment {
+    --lot-header-height: 58px;
+    --lot-picker-height: 92px;
+    --lot-info-width: clamp(240px, 35vw, 300px);
+  }
+
+  .lot-showroom-experiment .lot-heading {
+    height: 42px;
+  }
+
+  .lot-showroom-experiment .lot-heading h1 {
+    font-size: clamp(1.55rem, 4.8vw, 2.5rem);
+  }
+
+  .lot-showroom-experiment .lot-heading p,
+  .lot-progress-summary small,
+  .lot-showroom-experiment .lot-viewbox-head b,
+  .lot-showroom-experiment .lot-car-picker-help {
+    display: none;
+  }
+
+  .lot-progress-summary {
+    grid-template-columns: 30px minmax(0, 1fr);
+    flex-basis: 205px;
+    min-height: 38px;
+  }
+
+  .lot-progress-lock {
+    width: 28px;
+    height: 28px;
+    padding: 5px;
+  }
+
+  .lot-showroom-experiment .lot-back {
+    height: 38px;
+    min-height: 38px;
+  }
+
+  .lot-showroom-experiment .lot-viewbox-with-paint {
+    --lot-paint-rail-height: 43px;
+  }
+
+  .lot-showroom-experiment .lot-car-description {
+    display: none;
+  }
+
+  .lot-showroom-experiment .lot-perk-copy {
+    margin: 3px 0 4px;
+    font-size: .38rem;
+  }
+
+  .lot-showroom-experiment .lot-stat {
+    grid-template-columns: 67px minmax(0, 1fr);
+  }
+
+  .lot-showroom-experiment .lot-car-option,
+  .lot-showroom-experiment .lot-car-option:focus-visible {
+    width: 98px;
+    min-width: 98px;
+  }
+
+  .lot-showroom-experiment .lot-car-option-preview {
+    min-height: 31px;
+  }
+}
