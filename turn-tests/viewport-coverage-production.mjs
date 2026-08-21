@@ -106,26 +106,28 @@ assert.match(
   new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`)
 );
 
-// TURN LAB is a deployed diagnostic shell around the exact current production runtime.
+// TURN LAB is a deployed isolated experiment shell around the exact current production runtime.
 assert.match(labIndex, /<base href="\/turn\/">/,
   'TURN LAB must resolve all ordinary game assets from the current production TURN tree');
 assert.deepEqual(importMap(labIndex), importMap(index),
-  'TURN LAB must use the exact production import-map graph so viewport tests exercise current TURN code');
+  'TURN LAB must use the exact production import-map graph so experiments exercise current TURN code');
 assert.match(labIndex, new RegExp(`version: '${release.version.replaceAll('.', '\\.')}'`));
 assert.match(labIndex, new RegExp(`id: '${release.id.replaceAll('.', '\\.')}'`));
 assert.match(labIndex, new RegExp(`cacheKey: '${release.cacheKey}'`));
 assert.ok(
-  labIndex.indexOf('/turn-lab/lab-bootstrap.js') < labIndex.indexOf('/turn-lab/viewport-diagnostics.js'),
-  'LAB storage and standalone detection must exist before the flight recorder starts'
-);
-assert.ok(
-  labIndex.indexOf('/turn-lab/viewport-diagnostics.js') < labIndex.indexOf('pwa-usable-viewport-r181.js'),
-  'The flight recorder must observe the page before the production PWA viewport boundary mutates it'
+  labIndex.indexOf('/turn-lab/lab-bootstrap.js') < labIndex.indexOf('pwa-usable-viewport-r181.js'),
+  'LAB storage isolation and standalone detection must exist before production viewport setup'
 );
 assert.ok(
   labIndex.indexOf('pwa-usable-viewport-r181.js') < labIndex.indexOf('app.js?build='),
   'LAB must preserve the production PWA-boundary-before-runtime ordering'
 );
+assert.ok(
+  labIndex.indexOf('app.js?build=') < labIndex.indexOf('/turn-lab/roadtrip-world-r1.js'),
+  'LAB experiments must layer on top of the initialized production runtime rather than replace it'
+);
+assert.doesNotMatch(labIndex, /\/turn-lab\/viewport-diagnostics\.js/,
+  'Retired viewport recording must not run automatically in the revived general-purpose LAB shell');
 
 assert.equal(labManifest.id, '/turn-lab/');
 assert.equal(labManifest.start_url, '/turn-lab/');
@@ -133,19 +135,22 @@ assert.equal(labManifest.scope, '/turn-lab/');
 assert.equal(labManifest.display, 'standalone');
 assert.deepEqual(labManifest.display_override, ['standalone']);
 assert.equal(labManifest.orientation, 'any',
-  'TURN LAB deliberately removes the landscape manifest lock for the real-device startup-orientation experiment');
+  'TURN LAB must allow its normal rotate UI to handle startup orientation independently of the manifest');
 
 assert.match(labBootstrap, /LOCAL_PREFIX = 'turn-lab:'/,
   'LAB local storage must stay in its own namespace');
 assert.match(labBootstrap, /SESSION_PREFIX = 'turn-lab-session:'/,
   'LAB session storage must stay in its own namespace');
 assert.doesNotMatch(labBootstrap, /seed|COPY_ONCE|turn-personal-rivals/,
-  'The fresh viewport lab must not seed or modify production TURN save data');
+  'The isolated LAB must not seed or modify production TURN save data');
 assert.match(labBootstrap, /__turnLaunchReady/,
   'LAB must preserve the production startup gate contract');
-assert.match(labBootstrap, /viewport-repair-r7\.js\?revision=r7-staged-autorepair/,
-  'LAB must load the cache-busted staged lifecycle repair watchdog without modifying production TURN');
+assert.match(labBootstrap, /dataset\.turnLab = 'roadtrip-world-r1'/,
+  'The revived LAB shell must identify the active connected-world experiment');
+assert.doesNotMatch(labBootstrap, /viewport-repair-r7\.js/,
+  'The retired viewport repair watchdog must not run automatically in the revived LAB shell');
 
+// Keep the old diagnostic bench valid and available for targeted regressions even though LAB no longer auto-loads it.
 for (const requiredDiagnostic of [
   'screen.width',
   'screen.height',
@@ -162,15 +167,15 @@ for (const requiredDiagnostic of [
   'COLOR LAYERS',
   'COPY LOG'
 ]) {
-  assert.ok(labDiagnostics.includes(requiredDiagnostic), `TURN LAB recorder must include ${requiredDiagnostic}`);
+  assert.ok(labDiagnostics.includes(requiredDiagnostic), `TURN LAB archived recorder must include ${requiredDiagnostic}`);
 }
 assert.match(labDiagnostics, /MAX_SESSIONS = 8/,
-  'The recorder must retain several random good/bad cold launches for comparison');
+  'The archived recorder must retain several random good/bad cold launches for comparison');
 assert.match(labDiagnostics, /localStorage\.setItem\(STORAGE_KEY/,
-  'Viewport evidence must survive reloads and orientation cycles');
+  'Archived viewport evidence must survive reloads and orientation cycles when the recorder is invoked explicitly');
 
-// The repair bench remains LAB-only. Automatic mode waits for Home, watches later lifecycle events, and retries a failed pulse without looping forever.
-assert.doesNotThrow(() => new Function(labRepair), 'The LAB repair probe must remain valid JavaScript');
+// The old repair bench remains available as a LAB-only diagnostic tool, but is no longer part of normal LAB startup.
+assert.doesNotThrow(() => new Function(labRepair), 'The archived LAB repair probe must remain valid JavaScript');
 for (const requiredRepair of [
   "measureHeight('100dvh')",
   "measureHeight('100lvh')",
@@ -203,7 +208,7 @@ for (const requiredRepair of [
   'repairInFlight',
   'COPY REPAIR RESULT'
 ]) {
-  assert.ok(labRepair.includes(requiredRepair), `TURN LAB repair bench must include ${requiredRepair}`);
+  assert.ok(labRepair.includes(requiredRepair), `TURN LAB archived repair bench must include ${requiredRepair}`);
 }
 assert.doesNotMatch(labRepair, /AUTO_WATCHDOG_MS|performance\.now\(\) - startedAt >/,
   'Resume-time recovery must not expire just because the app has been alive longer than the cold-start window');
@@ -216,4 +221,4 @@ assert.match(labRepair, /if \(repairInFlight \|\| autoConfirmationTimer \|\| !do
 
 await import('./short-viewport-repair-production.mjs');
 
-console.log(`TURN ${release.id} usable iOS standalone viewport boundary and TURN LAB recorder/repair bench passed.`);
+console.log(`TURN ${release.id} usable iOS standalone viewport boundary, revived TURN LAB shell and archived diagnostic bench passed.`);

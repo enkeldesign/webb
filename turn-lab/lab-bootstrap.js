@@ -60,12 +60,7 @@
 
   document.documentElement.classList.toggle('turn-standalone', isStandalone);
   document.documentElement.classList.toggle('turn-browser', !isStandalone);
-  document.documentElement.dataset.turnLab = 'viewport-flight-recorder-r1';
-
-  const repairScript = document.createElement('script');
-  repairScript.src = '/turn-lab/viewport-repair-r7.js?revision=r7-staged-autorepair';
-  repairScript.async = true;
-  document.head.appendChild(repairScript);
+  document.documentElement.dataset.turnLab = 'roadtrip-world-r1';
 
   let releaseBrowserLaunch = null;
   let browserReleased = false;
@@ -100,7 +95,7 @@
       guideSteps.innerHTML = `
         <div class="install-step"><div class="install-step-number" aria-hidden="true">1</div><div><strong>Open Safari’s Share menu</strong><span>Use the Share button while TURN LAB is open.</span></div></div>
         <div class="install-step"><div class="install-step-number" aria-hidden="true">2</div><div><strong>Choose Add to Home Screen</strong><span>Keep the separate TURN LAB name so production TURN remains untouched.</span></div></div>
-        <div class="install-step"><div class="install-step-number" aria-hidden="true">3</div><div><strong>Launch TURN LAB from its icon</strong><span>The viewport recorder starts before the production TURN runtime.</span></div></div>`;
+        <div class="install-step"><div class="install-step-number" aria-hidden="true">3</div><div><strong>Launch TURN LAB from its icon</strong><span>LAB keeps its own saves and loads the connected-world experiment on top of the production TURN engine.</span></div></div>`;
       guide.hidden = false;
     });
     browserButton.addEventListener('click', () => {

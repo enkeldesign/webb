@@ -2,7 +2,7 @@
   "id": "/turn-lab/",
   "name": "TURN LAB",
   "short_name": "TURN LAB",
-  "description": "Temporary installed-app viewport diagnostics for the current production TURN runtime.",
+  "description": "TURN LAB runs isolated experiments on the current TURN engine. This build prototypes a connected six-track roadtrip world.",
   "start_url": "/turn-lab/",
   "scope": "/turn-lab/",
   "display": "standalone",
