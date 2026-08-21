@@ -127,6 +127,9 @@ jobs:
       - name: Run production garage regression
         run: node turn-lab/tests/garage-production.mjs
 
+      - name: Run M8 Lot selection entry regression
+        run: node turn-tests/m8-lot-selection-production.mjs
+
       - name: Run compact Lot layout regression
         run: node turn-lab/tests/lot-layout-production.mjs
 
@@ -237,7 +240,6 @@ jobs:
 
       - name: Run Cliffside containment regression
         run: node turn-tests/cliffside-containment-production.mjs
-
       - name: Run full viewport coverage regression
         run: node turn-tests/viewport-coverage-production.mjs
 
