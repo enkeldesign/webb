@@ -5,11 +5,23 @@ import {
 import { chooseTrackBeforeLot } from '../tracks/track-manager.js?build=20260722-r52';
 import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
 
+const SHOWROOM_STYLE_ID = 'turn-lot-showroom-experiment';
+
+function installShowroomStyles() {
+  if (document.getElementById(SHOWROOM_STYLE_ID)) return;
+  const link = document.createElement('link');
+  link.id = SHOWROOM_STYLE_ID;
+  link.rel = 'stylesheet';
+  link.href = new URL('./lot-showroom-experiment.css?revision=r1-showroom-test', import.meta.url).href;
+  document.head.appendChild(link);
+}
+
 // Keep the experimental Lot implementation out of TURN's initial module graph.
 // The track chooser gives us a natural warmup window, so start fetching it only
 // once the player has actually chosen to enter The Lot.
 let originalLotPromise = null;
 function loadOriginalLot() {
+  installShowroomStyles();
   if (!originalLotPromise) {
     originalLotPromise = import('./lot-showroom-experiment.js?revision=r1-showroom-test');
   }
