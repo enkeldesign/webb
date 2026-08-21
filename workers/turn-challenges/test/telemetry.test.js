@@ -40,9 +40,9 @@ class FakeStatement {
     if (this.sql.startsWith('CREATE TABLE IF NOT EXISTS turn_telemetry_daily')) {
       return { success: true, meta: { changes: 0 } };
     }
-    if (this.sql.startsWith('INSERT INTO turn_telemetry_daily')) {
-      const [day, event, surface, trackId, carId, steering, installed, driveByEar, blank, value, lastAt] = this.values;
-      const key = [day, event, surface, trackId, carId, steering, installed, driveByEar, blank].join('|');
+    if (this.sql.startsWith('INSERT INTO turn_telemetry_daily_v2')) {
+      const [day, event, surface, trackId, carId, steering, installed, driveByEar, blank, developer, value, lastAt] = this.values;
+      const key = [day, event, surface, trackId, carId, steering, installed, driveByEar, blank, developer].join('|');
       const existing = this.db.rows.get(key) || { count: 0, value_sum: 0, last_at: 0 };
       this.db.rows.set(key, {
         day,
@@ -54,6 +54,7 @@ class FakeStatement {
         installed,
         drive_by_ear: driveByEar,
         blank_screen: blank,
+        developer,
         count: existing.count + 1,
         value_sum: existing.value_sum + value,
         last_at: Math.max(existing.last_at, lastAt)
@@ -76,6 +77,7 @@ function event(overrides = {}) {
     installed: true,
     driveByEar: true,
     blank: false,
+    developer: false,
     occurredAt: Date.now(),
     value: 0,
     reason: '',
@@ -94,7 +96,7 @@ function post(events, origin = ORIGIN) {
   });
 }
 
-await test('accepts a small gameplay batch and writes aggregate plus Analytics Engine point', async () => {
+await test('accepts a small gameplay batch and writes cohort aggregate plus Analytics Engine point', async () => {
   const DB = new FakeD1();
   const ANALYTICS = new FakeAnalytics();
   const response = await handleTelemetryRoute(post([
@@ -114,13 +116,14 @@ await test('accepts a small gameplay batch and writes aggregate plus Analytics E
   assert.equal(point.blobs[2], 'countryside');
   assert.equal(point.blobs[3], 'classic');
   assert.equal(point.blobs[4], 'motion');
+  assert.equal(point.doubles[4], 0);
   assert.match(point.indexes[0], /^[a-f0-9]{64}$/);
   assert.notEqual(point.indexes[0], event().session, 'The ephemeral page-session ID must be hashed before Analytics Engine');
   assert.equal(JSON.stringify(point).includes('ERIK'), false);
   assert.equal(JSON.stringify(point).includes('challenge'), false);
 });
 
-await test('aggregates repeated events without keeping page-session identifiers in D1', async () => {
+await test('aggregates repeated player events without keeping page-session identifiers in D1', async () => {
   const DB = new FakeD1();
   const ANALYTICS = new FakeAnalytics();
   const first = event({ event: 'race_start' });
@@ -130,8 +133,24 @@ await test('aggregates repeated events without keeping page-session identifiers 
   assert.equal(DB.rows.size, 1);
   const [row] = DB.rows.values();
   assert.equal(row.count, 2);
+  assert.equal(row.developer, 0);
   assert.equal(Object.hasOwn(row, 'session'), false);
   assert.equal(Object.hasOwn(row, 'session_hash'), false);
+});
+
+await test('keeps developer and player activity in separate daily aggregates', async () => {
+  const DB = new FakeD1();
+  const ANALYTICS = new FakeAnalytics();
+  await handleTelemetryRoute(post([
+    event({ event: 'race_start', developer: false }),
+    event({ event: 'race_start', session: 'zT8mQ2pR6vN4cK7sL1xF5B', developer: true })
+  ]), { DB, ANALYTICS });
+
+  assert.equal(DB.rows.size, 2);
+  const cohorts = [...DB.rows.values()].map((row) => row.developer).sort();
+  assert.deepEqual(cohorts, [0, 1]);
+  assert.equal(ANALYTICS.points[0].doubles[4], 0);
+  assert.equal(ANALYTICS.points[1].doubles[4], 1);
 });
 
 await test('rejects telemetry writes outside enkel.design', async () => {
@@ -145,7 +164,7 @@ await test('rejects telemetry writes outside enkel.design', async () => {
 
 await test('keeps the private stats endpoint closed without a dashboard key', async () => {
   const response = await handleTelemetryRoute(new Request(
-    'https://turn-challenges.example/v1/stats?days=30',
+    'https://turn-challenges.example/v1/stats?days=30&audience=players',
     { headers: { Origin: ORIGIN } }
   ), { DB: new FakeD1() });
   assert.equal(response.status, 401);
