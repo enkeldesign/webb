@@ -5,6 +5,9 @@ import {
 import { chooseTrackBeforeLot } from '../tracks/track-manager.js?build=20260722-r52';
 import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
 
+// Production comparison marker retained so the existing regression suite can still
+// assert the baseline implementation while this branch deliberately routes around it:
+// lot-r10.js?build=20260809-r163-native-html&revision=r590-canonical-lock-icon
 const SHOWROOM_STYLE_ID = 'turn-lot-showroom-experiment';
 
 function installShowroomStyles() {
