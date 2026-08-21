@@ -2,6 +2,7 @@ import {
   enhanceLotNow,
   prepareLotEnhancements
 } from './lot-enhancement-runtime.js?revision=r588-canonical-attributes&build=20260804-r157';
+import { installLotSelectionBayPolish } from './lot-selection-bay.js?revision=r593-connected-bay';
 import { chooseTrackBeforeLot } from '../tracks/track-manager.js?build=20260722-r52';
 import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
 
@@ -37,9 +38,19 @@ export async function showEnhancedLot(options = {}) {
     loadOriginalLot(),
     prepareLotEnhancements()
   ]);
-  const lotResult = showOriginalLot(options);
-  const removeEnhancements = enhanceLotNow();
 
+  // The original Lot builds all 15 parking pads synchronously inside showTheLot().
+  // Install a temporary construction hook only for that moment so the selected bay
+  // can reuse the existing parking stripes without forking the garage renderer.
+  const restoreSelectionBayPolish = installLotSelectionBayPolish();
+  let lotResult;
+  try {
+    lotResult = showOriginalLot(options);
+  } finally {
+    restoreSelectionBayPolish();
+  }
+
+  const removeEnhancements = enhanceLotNow();
   try {
     return await lotResult;
   } finally {
