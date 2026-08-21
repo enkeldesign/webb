@@ -64,6 +64,21 @@ assert.match(postcardCss, /\.track-card-preview::after[\s\S]*repeating-linear-gr
 assert.match(postcardCss, /\.track-card-cliffside \.track-card-preview[\s\S]*#4ba8c8/, 'Cliffside preview must retain visible ocean blue');
 assert.match(postcardCss, /\.track-card-harbor \.track-card-preview[\s\S]*#287f9f/, 'Harbor preview must retain visible quay water');
 assert.match(postcardCss, /\.track-card-harbor \.track-card-preview[\s\S]*#c95b35[\s\S]*#167b82[\s\S]*#f5c542/, 'Harbor postcard must read as a colourful container yard');
+assert.match(
+  postcardCss,
+  /\.track-card-mountain \.track-card-preview \{[\s\S]*radial-gradient\(circle at 18% 20%, #fff8e8[\s\S]*#101832[\s\S]*#1c2c42/,
+  'Mountain must have its own moonlit night background behind the route map'
+);
+assert.match(
+  postcardCss,
+  /\.track-card-mountain \.track-card-preview::before[\s\S]*#e1edf5[\s\S]*#516a82[\s\S]*#405a72[\s\S]*#263b50/,
+  'Mountain must have layered snow-capped alpine silhouettes behind the route map'
+);
+assert.match(
+  postcardCss,
+  /\.track-card-mountain \.track-preview-road[\s\S]*stroke: #738797/,
+  'Mountain road geometry must remain readable against the dark postcard background'
+);
 
 const countrysideDepth = depthCss.match(/\.track-card-countryside \.track-card-preview \{([\s\S]*?)\n\}/)?.[1] || '';
 const firstHill = countrysideDepth.indexOf('radial-gradient(ellipse');
