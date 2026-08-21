@@ -3,15 +3,15 @@ import fs from 'node:fs/promises';
 
 const [index, guard] = await Promise.all([
   fs.readFile(new URL('../yourturn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../yourturn/motion-start-guard.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../yourturn/start-axis-guard.js', import.meta.url), 'utf8')
 ]);
 
-const guardScript = '/yourturn/motion-start-guard.js?revision=r592-ios-axis-lock';
+const guardScript = '/yourturn/start-axis-guard.js?revision=r592-ios-axis-lock';
 assert.match(index, new RegExp(guardScript.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')),
-  'YOUR TURN must load the iOS motion-start guard under a fresh cache identity');
+  'YOUR TURN must load the iOS axis-start guard under a fresh cache identity');
 assert.ok(
   index.indexOf(guardScript) < index.indexOf('/yourturn/app.js?revision=r6'),
-  'The motion-start guard must intercept the shared race session before app.js imports TURN main.js'
+  'The axis-start guard must intercept the shared race session before app.js imports TURN main.js'
 );
 
 assert.match(guard, /SESSION_KEY = '__turnNextRaceSession'/,
