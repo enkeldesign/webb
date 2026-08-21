@@ -1,3 +1,5 @@
+import { installLotSelectionBayPolish } from './lot-selection-bay.js?revision=r594-m8-entry';
+
 export const TRAINING_CAR_ID = 'classic';
 export const TRAINING_CAR_TRIED_STORAGE_KEY = 'turn-training-car-tried-v1';
 
@@ -20,6 +22,13 @@ export function markTrainingCarTried(storage = globalThis.localStorage) {
 }
 
 export function installTrainingCarGuide() {
+  // lot-r10 calls this synchronously at the start of every showTheLot() invocation,
+  // before any parking pads are constructed. Use that canonical entry boundary so
+  // both the active M8 Home route and the older wrapper route receive the same bay
+  // treatment. The temporary Three.js construction hook restores itself after all
+  // 15 pads have been created.
+  installLotSelectionBayPolish();
+
   if (installed) return globalThis.__turnTrainingCarGuide;
   installed = true;
 
