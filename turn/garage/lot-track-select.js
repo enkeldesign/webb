@@ -28,6 +28,7 @@ import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
 // Choosing or activating a track gives us a natural warmup window for these resources.
 const SHOWROOM_STYLE_ID = 'turn-lot-showroom-r200';
 const SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r209-polish';
+const SHOWROOM_THUMBNAIL_STYLE_ID = 'turn-lot-thumbnail-r211-composition';
 let showroomStylePromise = null;
 let originalLotPromise = null;
 let originalLotModule = null;
@@ -65,6 +66,10 @@ function prepareShowroomStyles() {
     prepareStylesheet(
       SHOWROOM_CLEANUP_STYLE_ID,
       './lot-showroom-cleanup-r201.css?revision=r209-picker-above-showroom'
+    ),
+    prepareStylesheet(
+      SHOWROOM_THUMBNAIL_STYLE_ID,
+      './lot-thumbnail-composition-r211.css?revision=r211-half-ground-zoom'
     )
   ]);
   return showroomStylePromise;
