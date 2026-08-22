@@ -25,6 +25,7 @@ export function prepareLotEnhancements() {
     import('./lot-layout-r60.js?build=20260729-r116'),
     import('./lot-accessibility-r118.js?build=20260729-r118&revision=r588-canonical-attributes'),
     import('./lot-perk-disclosure.js?revision=r203-idempotent'),
+    import('./lot-card-scroll-boundary.js?revision=r208-pwa-scroll-boundary'),
     import('../progression/lot-trophy-gate.js?revision=r585-visible-locks'),
     import('../progression/lot-paint-reward.js?revision=r206-pwa-color')
   ]).then(([
@@ -32,6 +33,7 @@ export function prepareLotEnhancements() {
     layout,
     accessibility,
     perkDisclosure,
+    scrollBoundary,
     trophyGate,
     paintGate
   ]) => {
@@ -40,6 +42,7 @@ export function prepareLotEnhancements() {
       installLotLayout: layout.installLotLayout,
       installLotAccessibility: accessibility.installLotAccessibility,
       installLotPerkDisclosure: perkDisclosure.installLotPerkDisclosure,
+      installLotCardScrollBoundary: scrollBoundary.installLotCardScrollBoundary,
       gateLotNow: trophyGate.gateLotNow,
       gateLotPaintNow: paintGate.gateLotPaintNow
     });
@@ -72,9 +75,8 @@ function installLotEntryClickGuard(screen) {
 
     // A VoiceOver double-tap that opens a full-screen route can leave a second
     // hit-test activation behind in standalone iOS landscape. Race This Car is
-    // mounted in almost the same screen region as Home RACE, so keep only this
-    // newly mounted action out of that finishing gesture. The paint picker is a
-    // sibling of .lot-card and therefore has no click-listener ancestor added.
+    // mounted in almost the same screen region as Home RACE, so keep only that
+    // newly mounted action out of the finishing gesture.
     event.preventDefault();
     event.stopImmediatePropagation();
   };
@@ -119,7 +121,8 @@ export function enhanceLotNow(root = document.body) {
     installLotPerkDisclosure,
     installLotStatLegend,
     installLotLayout,
-    installLotAccessibility
+    installLotAccessibility,
+    installLotCardScrollBoundary
   } = enhancementBundle;
   const scope = screen.parentElement || document.body;
   const removeEntryClickGuard = installLotEntryClickGuard(screen);
@@ -128,6 +131,7 @@ export function enhanceLotNow(root = document.body) {
   const removePerkDisclosure = installLotPerkDisclosure(scope);
   const removeStatLegend = installLotStatLegend(scope);
   const removeLayout = installLotLayout(scope);
+  const removeCardScrollBoundary = installLotCardScrollBoundary(scope);
   const removeAccessibility = installLotAccessibility(scope);
   let released = false;
 
@@ -135,6 +139,7 @@ export function enhanceLotNow(root = document.body) {
     if (released) return;
     released = true;
     removeAccessibility();
+    removeCardScrollBoundary();
     removeLayout();
     removeStatLegend();
     removePerkDisclosure();
