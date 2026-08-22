@@ -27,7 +27,8 @@
 
 /* The mockup's carousel cards are about 1.55:1. Keep the established rail height
    and derive card width from that ratio so the thumbnails stay consistently
-   narrower across landscape viewport sizes without changing their content. */
+   narrower across landscape viewport sizes. Reserve a real label strip so the
+   image can never overlap the car name. */
 .lot-showroom .lot-car-option,
 .lot-showroom .lot-car-option:focus-visible {
   box-sizing: border-box;
@@ -36,13 +37,36 @@
   min-width: 0;
   height: 100%;
   aspect-ratio: 1.55 / 1;
+  grid-template-rows: minmax(0, 1fr) 22px;
+  gap: 0;
 }
 
-/* The captured thumbnail canvas has a fixed 20:9 intrinsic ratio. Let it letterbox
-   inside responsive cards instead of stretching it to each card's current ratio. */
+.lot-showroom .lot-car-option-preview {
+  min-height: 0;
+}
+
+/* The captured thumbnail canvas remains undistorted, then gets a modest visual
+   zoom inside the clipped preview. This uses the available vertical room instead
+   of leaving the real car small in the middle of a 20:9 capture. */
 .lot-showroom .lot-car-option-thumbnail {
   object-fit: contain;
   object-position: center;
+  transform: scale(1.3);
+  transform-origin: center;
+}
+
+.lot-showroom .lot-car-option-name {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  min-height: 22px;
+  box-sizing: border-box;
+  padding: 3px 4px 1px;
+  align-items: center;
+  overflow: hidden;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Make the floating paint control read as COLOR first, lock state second. */
@@ -98,6 +122,14 @@
 }
 
 @media (max-height: 520px) {
+  .lot-showroom .lot-car-option,
+  .lot-showroom .lot-car-option:focus-visible {
+    grid-template-rows: minmax(0, 1fr) 18px;
+  }
+  .lot-showroom .lot-car-option-name {
+    min-height: 18px;
+    padding: 2px 3px 1px;
+  }
   .lot-showroom .lot-color-visible-label { font-size: .36rem; }
   .lot-showroom .lot-paint-lock-button { gap: 5px; }
   .lot-showroom .lot-paint-lock-copy strong { font-size: .36rem; }
