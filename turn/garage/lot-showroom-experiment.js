@@ -94,7 +94,7 @@ export function showTheLot({ initialSelection } = {}) {
         <section class="lot-viewbox lot-viewbox-with-paint">
           <div class="lot-viewbox-head" aria-hidden="true">
             <span>3D PREVIEW</span>
-            <b>DRAG TO ROTATE</b>
+            <b>DRAG LEFT / RIGHT TO ROTATE</b>
           </div>
           <div class="lot-view-host" aria-hidden="true"></div>
           <button class="lot-cycle lot-cycle-prev" type="button" aria-label="Previous car">‹</button>
@@ -458,11 +458,9 @@ function createViewer(host) {
   let currentColor = DEFAULT_VEHICLE_COLOR;
   let currentSecondaryColor = DEFAULT_VEHICLE_SECONDARY_COLOR;
   let yaw = VIEWER_INITIAL_YAW;
-  let pitch = 0.06;
   let dragging = false;
   let pointerId = null;
   let lastX = 0;
-  let lastY = 0;
   let disposed = false;
   let lastRenderAt = -Infinity;
   const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true;
@@ -473,18 +471,14 @@ function createViewer(host) {
     dragging = true;
     pointerId = event.pointerId;
     lastX = event.clientX;
-    lastY = event.clientY;
     host.setPointerCapture?.(event.pointerId);
   });
 
   host.addEventListener('pointermove', (event) => {
     if (!dragging || event.pointerId !== pointerId) return;
     const dx = event.clientX - lastX;
-    const dy = event.clientY - lastY;
     lastX = event.clientX;
-    lastY = event.clientY;
     yaw += dx * 0.012;
-    pitch = THREE.MathUtils.clamp(pitch + dy * 0.0035, -0.12, 0.24);
   });
 
   const stopDrag = (event) => {
@@ -501,8 +495,7 @@ function createViewer(host) {
     lastRenderAt = now;
     const elapsed = clock.getElapsedTime();
     if (!dragging && !reducedMotion) yaw += 0.0022;
-    stage.rotation.y = yaw;
-    stage.rotation.x = pitch;
+    stage.rotation.set(0, yaw, 0);
     if (visual) visual.position.y = reducedMotion ? 0 : Math.sin(elapsed * 2.1) * 0.035;
     renderer.render(scene, camera);
     recordPerformanceFrame('lot', renderer, now);
@@ -534,7 +527,6 @@ function createViewer(host) {
         stage.add(visual);
         recolorCarVisual(visual, currentColor, currentSecondaryColor);
         yaw = VIEWER_INITIAL_YAW;
-        pitch = 0.06;
       } catch (error) {
         console.warn('TURN: selected car could not load in the showroom preview.', error);
       }
