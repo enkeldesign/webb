@@ -23,7 +23,7 @@ export function prepareLotEnhancements() {
     import('./lot-accessibility-r118.js?build=20260729-r118&revision=r588-canonical-attributes'),
     import('./lot-perk-disclosure.js?revision=r203-idempotent'),
     import('../progression/lot-trophy-gate.js?revision=r585-visible-locks'),
-    import('../progression/lot-paint-reward.js?revision=r203-color-label')
+    import('../progression/lot-paint-reward.js?revision=r204-color-control-rebuild')
   ]).then(([
     statLegend,
     layout,
