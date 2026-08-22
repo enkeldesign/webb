@@ -1,7 +1,7 @@
 import * as maplibregl from 'maplibre-gl';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { resolveChaseCameraZoom } from './camera-model.mjs?build=20260823-r3';
+import { resolveChaseCameraZoom } from './camera-model.mjs?build=20260823-r4';
 
 const INK = 0x08090a;
 const PAPER = 0xfff8e8;
@@ -21,8 +21,8 @@ export const AIRPORT_ORIGIN = Object.freeze({
 });
 
 const PLACE_LABEL_SOURCE_LAYERS = new Set(['place', 'aerodrome_label']);
-const CAMERA_LOOK_AHEAD_METRES = 220;
-const CAMERA_TARGET_DROP_METRES = 64;
+const CAMERA_LOOK_AHEAD_METRES = 185;
+const CAMERA_TARGET_DROP_METRES = 78;
 const CAMERA_TERRAIN_CLEARANCE_METRES = 8;
 
 const originMercator = maplibregl.MercatorCoordinate.fromLngLat(AIRPORT_ORIGIN, 0);

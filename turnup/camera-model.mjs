@@ -1,6 +1,6 @@
 export const CHASE_CAMERA = Object.freeze({
   referenceViewportHeight: 390,
-  baseZoom: 16.2,
+  baseZoom: 16.05,
   minimumZoom: 15.9,
   maximumZoom: 17.45,
   altitudePullbackStart: 80,
