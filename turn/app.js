@@ -355,7 +355,7 @@ installStylesheet(
 );
 installStylesheet('./rival-reset-context-r127.css', 'data-turn-rival-reset-context');
 const { installM8HomeNavigation } = await import(
-  withBuild('./m8-home.js?revision=r131-motion-permission-retry&trophy-road=r159')
+  withBuild('./m8-home.js?revision=r131-motion-permission-retry&trophy-road=r159&showroom=r200')
 );
 const home = await installM8HomeNavigation();
 globalThis.__turnHome = home;
