@@ -3,6 +3,7 @@
 // Historical regression marker: lot-paint-reward.js?revision=r164-perks
 // Historical regression marker: lot-paint-reward.js?revision=r203-color-label
 // Historical regression marker: lot-paint-reward.js?revision=r204-color-control-rebuild
+// Historical regression marker: lot-paint-reward.js?revision=r205-color-baseline
 // Historical regression marker: lot-accessibility-r118.js?build=20260729-r118
 
 // Historical regression markers for the established enhancement layers:
@@ -25,7 +26,7 @@ export function prepareLotEnhancements() {
     import('./lot-accessibility-r118.js?build=20260729-r118&revision=r588-canonical-attributes'),
     import('./lot-perk-disclosure.js?revision=r203-idempotent'),
     import('../progression/lot-trophy-gate.js?revision=r585-visible-locks'),
-    import('../progression/lot-paint-reward.js?revision=r205-color-baseline')
+    import('../progression/lot-paint-reward.js?revision=r206-pwa-color')
   ]).then(([
     statLegend,
     layout,
