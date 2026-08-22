@@ -14,7 +14,7 @@ import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
 // Keep the showroom implementation and its CSS out of TURN's initial module graph.
 // Choosing or activating a track gives us a natural warmup window for these resources.
 const SHOWROOM_STYLE_ID = 'turn-lot-showroom-r200';
-const SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r203-polish';
+const SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r204-polish';
 let showroomStylePromise = null;
 let originalLotPromise = null;
 let originalLotModule = null;
@@ -51,7 +51,7 @@ function prepareShowroomStyles() {
     ),
     prepareStylesheet(
       SHOWROOM_CLEANUP_STYLE_ID,
-      './lot-showroom-cleanup-r201.css?revision=r203-thumbnail-color-polish-ratio155-zoom-label'
+      './lot-showroom-cleanup-r201.css?revision=r204-color-swatch-cue'
     )
   ]);
   return showroomStylePromise;
