@@ -6,7 +6,7 @@ import {
   normalizeTrackId
 } from '/turn/tracks/catalog.js?source=20260729-r118-m8';
 import { activateTrack } from '/turn/tracks/track-manager.js?source=20260729-r118-m8';
-import { showEnhancedLot as showTheLot } from '/turn/garage/lot-track-select.js?revision=r200-production-candidate';
+import { prepareEnhancedLot, showEnhancedLot as showTheLot } from '/turn/garage/lot-track-select.js?revision=r200-production-candidate';
 import { showTrackIntro } from '/turn/ui/track-intro.js?source=20260729-r118-m8';
 import { getStoredBestLap } from '/turn/race/rival-storage.js?source=20260729-r118-m8';
 import { getCarDefinition } from '/turn/vehicle/catalog.js?source=20260729-r118-m8';
@@ -593,7 +593,10 @@ export async function installM8HomeNavigation() {
     pendingAccess = null;
 
     try {
-      await activateTrack(selectedTrackId, runtime);
+      await Promise.all([
+        activateTrack(selectedTrackId, runtime),
+        prepareEnhancedLot()
+      ]);
       hideHome();
       const lotPromise = showTheLot({ initialSelection: selectedVehicle(runtime) });
       const removeRaceGate = installLotRaceGate({
