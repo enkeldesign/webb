@@ -12,32 +12,46 @@ import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
 // its existing Race This Car motion-access gate can bind immediately after mount.
 
 // Keep the showroom implementation and its CSS out of TURN's initial module graph.
-// Choosing or activating a track gives us a natural warmup window for both resources.
+// Choosing or activating a track gives us a natural warmup window for these resources.
 const SHOWROOM_STYLE_ID = 'turn-lot-showroom-r200';
+const SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r201-cleanup';
 let showroomStylePromise = null;
 let originalLotPromise = null;
 let originalLotModule = null;
 
-function prepareShowroomStyles() {
-  if (showroomStylePromise) return showroomStylePromise;
-  showroomStylePromise = new Promise((resolve) => {
-    const existing = document.getElementById(SHOWROOM_STYLE_ID);
+function prepareStylesheet(id, relativeUrl) {
+  return new Promise((resolve) => {
+    const existing = document.getElementById(id);
     if (existing) {
       resolve();
       return;
     }
 
     const link = document.createElement('link');
-    link.id = SHOWROOM_STYLE_ID;
+    link.id = id;
     link.rel = 'stylesheet';
-    link.href = new URL('./lot-showroom-experiment.css?revision=r200-production-candidate', import.meta.url).href;
+    link.href = new URL(relativeUrl, import.meta.url).href;
     link.addEventListener('load', resolve, { once: true });
     link.addEventListener('error', () => {
-      console.warn('TURN: showroom stylesheet could not be loaded.');
+      console.warn(`TURN: showroom stylesheet could not be loaded: ${relativeUrl}`);
       resolve();
     }, { once: true });
     document.head.appendChild(link);
   });
+}
+
+function prepareShowroomStyles() {
+  if (showroomStylePromise) return showroomStylePromise;
+  showroomStylePromise = Promise.all([
+    prepareStylesheet(
+      SHOWROOM_STYLE_ID,
+      './lot-showroom-experiment.css?revision=r200-production-candidate'
+    ),
+    prepareStylesheet(
+      SHOWROOM_CLEANUP_STYLE_ID,
+      './lot-showroom-cleanup-r201.css?revision=r201-loading-cleanup'
+    )
+  ]);
   return showroomStylePromise;
 }
 
