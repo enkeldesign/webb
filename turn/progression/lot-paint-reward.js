@@ -20,8 +20,16 @@ function findLotScreen(root) {
   return root?.querySelector?.('.lot-screen') || null;
 }
 
+function selectedCarButton(screen) {
+  return screen.querySelector('.lot-car-option[aria-checked="true"]');
+}
+
 function selectedCarId(screen) {
-  return screen.querySelector('.lot-car-option[aria-checked="true"]')?.dataset.carId || '';
+  return selectedCarButton(screen)?.dataset.carId || '';
+}
+
+function selectedCarIsLocked(screen) {
+  return selectedCarButton(screen)?.classList.contains('is-trophy-locked') === true;
 }
 
 function setInputValue(input, value) {
@@ -66,11 +74,22 @@ export function gateLotPaintNow(root = document.body) {
   let lastCarId = selectedCarId(screen);
   let paintWasUnlocked = isPaintUnlocked();
 
+  function paintControl(label = 'body') {
+    return [...colors.querySelectorAll('.lot-color-control')]
+      .find((control) => String(control.dataset.paintLabel || '').toLowerCase() === label.toLowerCase());
+  }
+
   function bodyColorValue(carId) {
-    const body = [...colors.querySelectorAll('.lot-color-control')]
-      .find((control) => control.dataset.paintLabel?.toLowerCase() === 'body')
-      ?.querySelector('input[type="color"]');
-    return body?.value || getVehicleDefaultColor(carId);
+    return paintControl('body')?.querySelector('input[type="color"]')?.value
+      || getVehicleDefaultColor(carId);
+  }
+
+  function secondaryColorValue(car) {
+    if (!car) return '';
+    const secondaryControl = [...colors.querySelectorAll('.lot-color-control')]
+      .find((control) => String(control.dataset.paintLabel || '').toLowerCase() !== 'body');
+    return secondaryControl?.querySelector('input[type="color"]')?.value
+      || getVehicleDefaultSecondaryColor(car.id);
   }
 
   function forceFactoryPaint(carId) {
@@ -96,15 +115,9 @@ export function gateLotPaintNow(root = document.body) {
     });
   }
 
-  function applyLockColour(icon, carId) {
-    const bodyColour = getVehicleDefaultColor(carId);
-    icon.style.setProperty('--lot-paint-lock-background', bodyColour);
-    icon.style.setProperty('--lot-paint-lock-foreground', contrastingInk(bodyColour));
-  }
-
   function ensureVisibleLabel(car) {
     let label = colors.querySelector('.lot-color-visible-label');
-    if (!car || car.fixedLivery) {
+    if (!car) {
       label?.remove();
       return null;
     }
@@ -116,6 +129,63 @@ export function gateLotPaintNow(root = document.body) {
       colors.prepend(label);
     }
     return label;
+  }
+
+  function applyNativeSwatchFace(control) {
+    if (!control) return;
+    const input = control.querySelector('input[type="color"]');
+    if (!input) return;
+    control.classList.add('has-turn-color-swatch');
+    control.style.setProperty('--lot-color-swatch', input.value);
+  }
+
+  function syncNativeSwatchFaces() {
+    for (const control of colors.querySelectorAll('.lot-color-control')) {
+      applyNativeSwatchFace(control);
+    }
+  }
+
+  function removeFixedColorDisplay() {
+    colors.querySelector('.lot-fixed-color-display')?.remove();
+  }
+
+  function ensureFixedColorDisplay(car) {
+    let swatch = colors.querySelector('.lot-fixed-color-display');
+    if (!car?.fixedLivery) {
+      swatch?.remove();
+      return null;
+    }
+
+    if (!swatch) {
+      swatch = document.createElement('span');
+      swatch.className = 'lot-fixed-color-display';
+      swatch.setAttribute('role', 'img');
+      const label = colors.querySelector('.lot-color-visible-label');
+      if (label) label.insertAdjacentElement('afterend', swatch);
+      else colors.prepend(swatch);
+    }
+
+    const primary = getVehicleDefaultColor(car.id);
+    const secondary = getVehicleDefaultSecondaryColor(car.id);
+    const primaryName = describeColorCue(primary);
+    const secondaryName = describeColorCue(secondary);
+    swatch.style.setProperty('--lot-fixed-primary', primary);
+    swatch.style.setProperty('--lot-fixed-secondary', secondary);
+    swatch.classList.toggle('is-two-tone', secondary.toLowerCase() !== primary.toLowerCase());
+    swatch.setAttribute(
+      'aria-label',
+      secondary.toLowerCase() !== primary.toLowerCase()
+        ? `Fixed car colors. ${primaryName} and ${secondaryName}.`
+        : `Fixed car color. ${primaryName}.`
+    );
+    swatch.title = 'Fixed vehicle colors';
+    return swatch;
+  }
+
+  function applyLockColour(icon, carId) {
+    const bodyColour = getVehicleDefaultColor(carId);
+    icon.style.setProperty('--lot-paint-lock-background', bodyColour);
+    icon.style.setProperty('--lot-paint-lock-foreground', contrastingInk(bodyColour));
   }
 
   function ensureLockButton(carId) {
@@ -153,9 +223,30 @@ export function gateLotPaintNow(root = document.body) {
     return button;
   }
 
+  function removeLockPresentation() {
+    colors.querySelector('.lot-paint-lock-button')?.remove();
+  }
+
+  function colorCueDescription(car) {
+    if (!car) return '';
+    const primary = describeColorCue(bodyColorValue(car.id)).toUpperCase();
+
+    if (car.fixedLivery) {
+      const secondary = describeColorCue(getVehicleDefaultSecondaryColor(car.id)).toUpperCase();
+      return secondary === primary ? primary : `${primary} + ${secondary}`;
+    }
+
+    if (car.secondaryPaint) {
+      const secondary = describeColorCue(secondaryColorValue(car)).toUpperCase();
+      return `${primary} + ${car.secondaryPaint.label.toUpperCase()} ${secondary}`;
+    }
+
+    return primary;
+  }
+
   function ensureVisualColorCue(car) {
     let cue = colors.querySelector('.lot-paint-color-cue');
-    if (!car || car.fixedLivery) {
+    if (!car) {
       cue?.remove();
       return null;
     }
@@ -164,13 +255,9 @@ export function gateLotPaintNow(root = document.body) {
       cue.className = 'turn-color-cue lot-color-cue lot-paint-color-cue';
       cue.setAttribute('aria-hidden', 'true');
     }
-    cue.textContent = `CAR COLOR · ${describeColorCue(bodyColorValue(car.id)).toUpperCase()}`;
+    cue.textContent = `CAR COLOR · ${colorCueDescription(car)}`;
     if (cue.parentElement !== colors || cue !== colors.lastElementChild) colors.append(cue);
     return cue;
-  }
-
-  function removeLockPresentation() {
-    colors.querySelector('.lot-paint-lock-button')?.remove();
   }
 
   function sync() {
@@ -182,24 +269,41 @@ export function gateLotPaintNow(root = document.body) {
       const car = CAR_BY_ID.get(carId);
       const paintUnlocked = isPaintUnlocked();
       const changedCar = Boolean(carId) && carId !== lastCarId;
+      const carLocked = selectedCarIsLocked(screen);
+      const freeColor = Boolean(car && !car.fixedLivery);
       const controls = [...colors.querySelectorAll('.lot-color-control:not(.lot-fixed-livery)')];
-      const hasPaintControl = Boolean(car && !car.fixedLivery);
 
-      screen.classList.toggle('lot-has-paint-control', hasPaintControl);
+      colors.hidden = false;
+      colors.removeAttribute('aria-hidden');
+      screen.classList.toggle('lot-color-baseline-active', Boolean(car));
+      colors.dataset.vehicleColorMode = car?.fixedLivery ? 'fixed' : 'free';
+      colors.dataset.paintState = car?.fixedLivery ? 'fixed' : (paintUnlocked ? 'editable' : 'locked');
+      colors.dataset.carState = carLocked ? 'locked' : 'unlocked';
+
       ensureVisibleLabel(car);
-      if (hasPaintControl && (!paintUnlocked || changedCar)) forceFactoryPaint(carId);
+      syncNativeSwatchFaces();
 
-      const locked = Boolean(hasPaintControl && !paintUnlocked);
-      colors.classList.toggle('is-paint-locked', locked);
+      if (freeColor && (!paintUnlocked || changedCar)) forceFactoryPaint(carId);
+
+      const paintLocked = Boolean(freeColor && !paintUnlocked);
+      colors.classList.toggle('is-paint-locked', paintLocked);
 
       for (const control of controls) {
-        control.hidden = locked;
+        control.hidden = paintLocked;
         const input = control.querySelector('input');
-        if (input) input.disabled = locked;
+        if (input) input.disabled = paintLocked;
+        applyNativeSwatchFace(control);
       }
 
-      if (locked) ensureLockButton(carId);
-      else removeLockPresentation();
+      if (car?.fixedLivery) {
+        removeLockPresentation();
+        ensureFixedColorDisplay(car);
+      } else {
+        removeFixedColorDisplay();
+        if (paintLocked) ensureLockButton(carId);
+        else removeLockPresentation();
+      }
+
       ensureVisualColorCue(car);
 
       if (!paintWasUnlocked && paintUnlocked) {
@@ -214,20 +318,19 @@ export function gateLotPaintNow(root = document.body) {
   }
 
   const observer = new MutationObserver(sync);
-  // Selection remains the primary signal. Keep this observer scoped to the picker,
-  // never the whole Lot screen.
+  // Selection and car-lock state are independent inputs to the COLOR baseline.
+  // Keep this observer scoped to the picker rather than the Lot screen.
   observer.observe(picker, {
     childList: true,
     subtree: true,
     attributes: true,
-    attributeFilter: ['aria-checked']
+    attributeFilter: ['aria-checked', 'class']
   });
 
-  // The showroom replaces the native color controls whenever a different car is
-  // selected. That replacement can remove the injected COLOR label and locked swatch
-  // after the picker mutation has already been observed. Watch only direct child-list
-  // changes that actually add/remove .lot-color-control nodes. Our own label/button/cue
-  // mutations are ignored, so this cannot create the old self-observer feedback loop.
+  // The showroom replaces native color controls whenever a different paintable car
+  // is selected. Watch only direct child-list changes that actually add/remove those
+  // controls. Our own label, fixed-display, lock and cue mutations are ignored, so
+  // this cannot recreate the old self-observer feedback loop.
   const controlObserver = new MutationObserver((mutations) => {
     if (mutations.some(mutationTouchesPaintControl)) sync();
   });
@@ -235,6 +338,7 @@ export function gateLotPaintNow(root = document.body) {
 
   const handlePaintInput = (event) => {
     if (!event.target?.matches?.('input[type="color"]')) return;
+    applyNativeSwatchFace(event.target.closest('.lot-color-control'));
     const car = CAR_BY_ID.get(selectedCarId(screen));
     ensureVisualColorCue(car);
   };
@@ -256,15 +360,21 @@ export function gateLotPaintNow(root = document.body) {
     window.removeEventListener('storage', handleStorage);
     raceButton.removeEventListener('click', sync, { capture: true });
     removeLockPresentation();
+    removeFixedColorDisplay();
     colors.querySelector('.lot-color-visible-label')?.remove();
     colors.querySelector('.lot-paint-color-cue')?.remove();
     for (const control of colors.querySelectorAll('.lot-color-control')) {
       control.hidden = false;
+      control.classList.remove('has-turn-color-swatch');
+      control.style.removeProperty('--lot-color-swatch');
       const input = control.querySelector('input');
       if (input) input.disabled = false;
     }
     colors.classList.remove('is-paint-locked');
-    screen.classList.remove('lot-has-paint-control');
+    delete colors.dataset.vehicleColorMode;
+    delete colors.dataset.paintState;
+    delete colors.dataset.carState;
+    screen.classList.remove('lot-color-baseline-active');
     delete screen.dataset.turnPaintUnlocked;
     activeGates.delete(screen);
   };
