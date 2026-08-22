@@ -9,7 +9,7 @@ import {
   getVehicleDefaultColor
 } from '../vehicle/catalog.js?build=20260804-r157-factory-colors';
 
-const RUNTIME_ID = 'color-cues-r163';
+const RUNTIME_ID = 'color-cues-r204-lot-swatch';
 let scheduled = false;
 const lotCueBindings = new Map();
 
@@ -84,6 +84,20 @@ function selectedLotBodyColor(screen, carId) {
   return input?.value || getVehicleDefaultColor(carId);
 }
 
+function placeLotColorCue(screen, description, cue) {
+  const colors = screen.querySelector('.lot-colors');
+  const paintControlsVisibleToA11y = colors && colors.getAttribute('aria-hidden') !== 'true';
+
+  if (paintControlsVisibleToA11y) {
+    cue.classList.add('is-by-paint-swatch');
+    if (cue.parentElement !== colors || cue !== colors.lastElementChild) colors.append(cue);
+    return;
+  }
+
+  cue.classList.remove('is-by-paint-swatch');
+  if (cue.previousElementSibling !== description) description.after(cue);
+}
+
 function bindLotColorCueUpdates(screen) {
   if (lotCueBindings.has(screen)) return;
   const picker = screen.querySelector('.lot-car-picker');
@@ -121,11 +135,11 @@ function installLotCarColorCues() {
     if (!cue) {
       cue = document.createElement('span');
       cue.className = 'turn-color-cue lot-color-cue lot-selected-car-color-cue';
-      description.after(cue);
     }
 
     const text = `CAR COLOR · ${describeColorCue(selectedLotBodyColor(screen, carId)).toUpperCase()}`;
     if (cue.textContent !== text) cue.textContent = text;
+    placeLotColorCue(screen, description, cue);
     bindLotColorCueUpdates(screen);
   }
 }
