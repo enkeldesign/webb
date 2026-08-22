@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [boundary, runtime, screenReader, perk, showroomCss] = await Promise.all([
+const [boundary, runtime, screenReader, perk, showroomCss, layout] = await Promise.all([
   fs.readFile(new URL('../../turn/garage/lot-card-scroll-boundary.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-enhancement-runtime.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-screen-reader-r202.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-perk-disclosure.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-showroom-experiment.css', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/garage/lot-showroom-experiment.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/lot-layout-r60.js', import.meta.url), 'utf8')
 ]);
 
 // COLOR is intentionally moved into .lot-card for the requested semantic order.
@@ -27,24 +28,32 @@ assert.match(boundary, /\.lot-showroom \.lot-card-info-scroll\s*\{[\s\S]*overflo
 assert.match(boundary, /-webkit-overflow-scrolling:\s*touch/,
   'The inner information scroller must retain native iOS momentum scrolling');
 
-// The wrapper must contain every variable-height information node, especially perk copy,
-// while COLOR and RACE stay as card siblings outside the scroll layer.
+// The wrapper must contain every variable-height information node, especially perk copy
+// and the visible ATTRIBUTES row, while COLOR and RACE stay as card siblings outside it.
 for (const selector of [
   "'.lot-car-title'",
   "'.lot-car-description'",
   "'.lot-perk-disclosure'",
+  "'.lot-attributes-row'",
   "'.lot-stats'",
   "'.lot-stats-help'"
 ]) {
   assert.match(boundary, new RegExp(`card\\.querySelector\\(${selector.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&')}\\)`));
 }
-assert.match(boundary, /for \(const node of \[title, description, perk, stats, statsHelp\]\)/);
+assert.match(boundary, /for \(const node of \[title, description, perk, attributes, stats, statsHelp\]\)/,
+  'ATTRIBUTES must move with the variable-height car information rather than becoming a fixed descendant');
 assert.doesNotMatch(boundary, /lot-colors|lot-race/,
   'COLOR and RACE must never be moved into the inner scroll region');
 
+// ATTRIBUTES is visual structure only; it must not add a new heading between
+// CAR INFORMATION and RACE, while the existing help button remains semantic.
+assert.match(layout, /label\.textContent = 'ATTRIBUTES'/);
+assert.match(layout, /label\.setAttribute\('aria-hidden', 'true'\)/);
+assert.match(layout, /attributesRow\.appendChild\(infoButton\)/);
+
 // The production enhancement lifecycle must install the boundary after perk/stat/layout
 // construction, before the later screen-reader pass moves COLOR into the card.
-assert.match(runtime, /lot-card-scroll-boundary\.js\?revision=r208-pwa-scroll-boundary/);
+assert.match(runtime, /lot-card-scroll-boundary\.js\?revision=r213-attributes-typography/);
 assert.match(runtime, /installLotCardScrollBoundary: scrollBoundary\.installLotCardScrollBoundary/);
 const installOrder = runtime.match(/const removePerkDisclosure[\s\S]*?const removeAccessibility = installLotAccessibility\(scope\);/)?.[0] || '';
 assert.ok(installOrder, 'Lot enhancement installation order must remain inspectable');
