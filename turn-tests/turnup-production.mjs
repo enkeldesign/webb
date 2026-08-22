@@ -15,6 +15,7 @@ import {
   shortestAngle,
   updateFlightState
 } from '../turnup/flight-model.mjs';
+import { CHASE_CAMERA, resolveChaseCameraZoom } from '../turnup/camera-model.mjs';
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (path) => readFile(resolve(repositoryRoot, path), 'utf8');
@@ -66,7 +67,7 @@ test('TURN UP imports the canonical TURN platform and steering engine', () => {
   assert.match(app, /resolveMotionSteeringProfile/);
   assert.match(app, /updateMotionInputState/);
   assert.match(app, /controlFromAngle\(motionState\.pitch - motionState\.neutralPitch/);
-  assert.match(app, /scene\.mjs\?build=20260823-r1/);
+  assert.match(app, /scene\.mjs\?build=20260823-r3/);
   assert.doesNotMatch(app, /DeviceMotionEvent\.requestPermission/);
 });
 
@@ -95,7 +96,26 @@ test('the map declutters labels and the chase camera follows aircraft elevation'
   assert.match(scene, /CAMERA_LOOK_AHEAD_METRES = 220/);
   assert.match(scene, /terrainAtOrigin \+ flightState\.position\.y - CAMERA_TARGET_DROP_METRES/);
   assert.match(scene, /elevation: targetElevation/);
+  assert.match(scene, /map\.getCanvas\(\)\.clientHeight/);
+  assert.match(scene, /zoom: chaseZoom/);
   assert.match(scene, /targetLength: 40/);
+});
+
+test('the chase camera keeps a TURN-like aircraft scale across viewports', () => {
+  const phoneZoom = resolveChaseCameraZoom(390, 80);
+  const tabletZoom = resolveChaseCameraZoom(780, 80);
+  assert.equal(phoneZoom, CHASE_CAMERA.baseZoom);
+  assert.equal(tabletZoom, phoneZoom + 1);
+
+  const phoneWorldHeight = 390 / (2 ** phoneZoom);
+  const tabletWorldHeight = 780 / (2 ** tabletZoom);
+  assert.ok(Math.abs(phoneWorldHeight - tabletWorldHeight) < 1e-12);
+
+  const highAltitudeZoom = resolveChaseCameraZoom(390, 800);
+  assert.ok(highAltitudeZoom < phoneZoom);
+  assert.ok(phoneZoom - highAltitudeZoom <= CHASE_CAMERA.maximumAltitudePullback);
+  assert.equal(resolveChaseCameraZoom(200, 80), CHASE_CAMERA.minimumZoom);
+  assert.equal(resolveChaseCameraZoom(2000, 80), CHASE_CAMERA.maximumZoom);
 });
 
 test('the real-world map uses a natural semantic palette', () => {
@@ -135,7 +155,7 @@ test('TURN styling includes focus, contrast and reduced-motion treatment', () =>
 
 test('the attitude indicator occupies the control lane above thrust', () => {
   assert.match(html, /styles\.css\?build=20260823-r2/);
-  assert.match(html, /app\.mjs\?build=20260823-r2/);
+  assert.match(html, /app\.mjs\?build=20260823-r3/);
   assert.match(css, /bottom: calc\(max\(18px, env\(safe-area-inset-bottom\)\) \+ clamp\(80px, 13vw, 120px\) \+ 12px\)/);
   assert.match(css, /width: clamp\(78px, 12vw, 118px\)/);
   assert.match(css, /\.attitude \{\n    right: max\(18px, env\(safe-area-inset-right\)\);\n    bottom: 94px;\n    width: 76px;/);
