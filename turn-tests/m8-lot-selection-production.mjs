@@ -1,13 +1,14 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [m8Home, showroom, showroomCss, showroomCleanupCss, wrapper, accessibility] = await Promise.all([
+const [m8Home, showroom, showroomCss, showroomCleanupCss, wrapper, accessibility, screenReaderPass] = await Promise.all([
   fs.readFile(new URL('../turn/m8-home.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/garage/lot-showroom-experiment.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/garage/lot-showroom-experiment.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/garage/lot-showroom-cleanup-r201.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/garage/lot-track-select.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/garage/lot-accessibility-r118.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/garage/lot-accessibility-r118.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/garage/lot-screen-reader-r202.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(
@@ -39,11 +40,19 @@ assert.match(wrapper, /export async function prepareEnhancedLot/,
 assert.match(wrapper, /let originalLotModule = null/);
 assert.match(wrapper, /originalLotModule = module/,
   'Warmup must retain the resolved showroom module for synchronous mounting');
+assert.match(wrapper, /lot-screen-reader-r202\.js\?revision=r202-heading-structure/,
+  'The production wrapper must preload the showroom-specific screen reader pass');
+assert.match(wrapper, /screenReaderPassModule = module/,
+  'The prepared accessibility pass must be retained for synchronous showroom mounting');
 assert.match(wrapper, /function mountEnhancedLot\(options\)/,
   'Prepared callers must have a synchronous showroom mount path');
+assert.match(wrapper, /const removeEnhancements = enhanceLotNow\(\);[\s\S]*const removeScreenReaderPass = installLotScreenReaderPass\(\);/,
+  'The semantic pass must run after established Trophy Road, paint, perk and layout enhancements have produced their final DOM');
+assert.match(wrapper, /removeScreenReaderPass\(\);[\s\S]*removeEnhancements\(\);/,
+  'Showroom semantic cleanup must release before the underlying enhancement bundle');
 assert.match(wrapper, /export function showEnhancedLot/);
-assert.match(wrapper, /if \(originalLotModule\) return mountEnhancedLot\(options\)/,
-  'M8 must not cross another asynchronous boundary once the showroom has been prepared');
+assert.match(wrapper, /if \(originalLotModule && screenReaderPassModule\) return mountEnhancedLot\(options\)/,
+  'M8 must not cross another asynchronous boundary once the showroom and semantic pass have been prepared');
 assert.match(wrapper, /lot-showroom-experiment\.js\?revision=r200-production-candidate/,
   'The production wrapper must lazy-load the current showroom implementation');
 assert.match(wrapper, /lot-showroom-experiment\.css\?revision=r200-production-candidate/,
@@ -94,7 +103,7 @@ assert.match(
 assert.match(
   showroomCss,
   /\.lot-showroom \.lot-viewbox-with-paint \.lot-colors\.is-paint-locked[\s\S]*bottom: 12px;[\s\S]*left: 12px;/,
-  'Locked PAINTJOB must remain a compact floating control inside the 3D preview'
+  'Locked PAINTJOB must retain the compact floating-control styling'
 );
 assert.match(showroomCss, /\.lot-showroom \.lot-color-control input\[type='color'\]/,
   'Unlocked paint must remain a native colour input presented as a swatch');
@@ -124,13 +133,56 @@ assert.match(
 assert.doesNotMatch(showroomCleanupCss, /lot-car-secondary/,
   'The loading placeholder should stay deliberately abstract instead of trying to mimic the finished car');
 
+// The established accessibility layer stays available for legacy Lot compatibility.
 assert.match(accessibility, /screen\.classList\.contains\('lot-showroom'\)/,
-  'Accessibility behavior must explicitly recognize the visible showroom radio rail');
-assert.match(accessibility, /if \(!preserveVisualOrder && selectedCarId/,
-  'VoiceOver support must preserve stable visual DOM order in the showroom while retaining the legacy hidden-radio behavior elsewhere');
+  'Accessibility behavior must still recognize the visible showroom radio rail');
 assert.match(accessibility, /aria-posinset/);
 assert.match(accessibility, /aria-setsize/);
-assert.match(accessibility, /describeVehicleStats\(car\.stats\)/,
-  'Screen-reader vehicle summaries must still use the same canonical attributes as the visible panel');
 
-console.log('TURN M8 Home now enters a prepared production showroom Lot with compact paint, yaw-only level car rotation, simple colour-block loading placeholders, real 3D car thumbnails, bounded rendering and stable accessible card order.');
+// The showroom-specific pass owns the final non-visual information architecture.
+assert.match(screenReaderPass, /makeHeading\(2, 'lot-sr-choose-car', 'Choose car'\)/,
+  'The Lot must expose CHOOSE CAR as the first H2');
+assert.match(screenReaderPass, /makeHeading\(3, 'lot-sr-car-information', 'Car information'\)/,
+  'Selected vehicle detail must be introduced by H3 CAR INFORMATION');
+assert.match(screenReaderPass, /makeHeading\(2, 'lot-sr-race', 'Race'\)/,
+  'RACE must be the next H2 after CAR INFORMATION');
+assert.doesNotMatch(screenReaderPass, /makeHeading\([^\n]*Choose (?:car )?colou?r/i,
+  'CHOOSE COLOR must not become another heading between CAR INFORMATION and RACE');
+assert.match(screenReaderPass, /colors\.setAttribute\('role', 'group'\);[\s\S]*colors\.setAttribute\('aria-label', 'Choose color'\)/,
+  'Colour controls must be a named control group rather than a heading');
+assert.match(screenReaderPass, /card\.insertBefore\(colors, raceHeading\)/,
+  'The actual colour controls must follow car information and precede RACE in DOM order');
+assert.match(screenReaderPass, /side\.insertAdjacentElement\('beforebegin', pickerShell\)/,
+  'The CHOOSE CAR section must precede CAR INFORMATION in DOM order without changing the absolute visual layout');
+assert.match(screenReaderPass, /screen\.removeAttribute\('aria-labelledby'\)/,
+  'The full-screen section must not duplicate THE LOT as a named region and an H1');
+assert.match(screenReaderPass, /headingPitch\?\.setAttribute\('aria-hidden', 'true'\)/,
+  'The decorative CHOOSE YOUR RIDE tagline must not duplicate the CHOOSE CAR section name');
+assert.match(screenReaderPass, /progressSummary\?\.removeAttribute\('aria-live'\)/,
+  'Availability decoration must not repeatedly announce itself while Trophy Road classes settle');
+assert.match(screenReaderPass, /carDescription\.removeAttribute\('aria-hidden'\);[\s\S]*stats\.removeAttribute\('aria-hidden'\)/,
+  'CAR INFORMATION must expose the real visible description and stat rows once instead of a duplicate hidden summary');
+assert.match(screenReaderPass, /button\.removeAttribute\('aria-labelledby'\);[\s\S]*button\.setAttribute\('aria-label', conciseCarLabel\(button\)\)/,
+  'Car radios must use concise names instead of hidden labels containing the description and all six stats');
+assert.doesNotMatch(screenReaderPass, /describeVehicleStats/,
+  'The car picker must not repeat all vehicle stats before CAR INFORMATION');
+assert.match(screenReaderPass, /raceSummary\.textContent = `\$\{carName\} on \$\{trackName\}`/,
+  'RACE must state the selected car and selected track before the action');
+assert.match(screenReaderPass, /raceButton\.removeAttribute\('aria-label'\);[\s\S]*raceButton\.setAttribute\('aria-describedby', descriptions\.join\(' '\)\)/,
+  'RACE THIS CAR must keep its visible button name while car/track and lock information are descriptions');
+assert.match(screenReaderPass, /event\.detail === 0\) queueInformationFocus\(\)/,
+  'Screen-reader or keyboard activation of a car must move focus to CAR INFORMATION');
+assert.match(screenReaderPass, /\['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'\]/,
+  'Arrow-key car selection must also move focus to CAR INFORMATION');
+assert.match(screenReaderPass, /infoHeading\.tabIndex = -1/,
+  'CAR INFORMATION must support programmatic focus without adding an extra Tab stop');
+assert.match(screenReaderPass, /cycle\.tabIndex = -1;[\s\S]*cycle\.setAttribute\('aria-hidden', 'true'\)/,
+  'Redundant visual previous/next buttons must not add duplicate non-visual navigation stops');
+assert.match(screenReaderPass, /lot-color-name'\)\?\.setAttribute\('aria-hidden', 'true'\)/,
+  'Hidden visual colour labels must not be read separately from their native colour input');
+assert.match(screenReaderPass, /input\.setAttribute\('aria-label', `\$\{label\} color\. \$\{cue\}\.`\)/,
+  'Each native colour input must expose one concise label including the non-visual colour cue');
+assert.match(screenReaderPass, /bottom: calc\(var\(--lot-picker-height, 122px\) \+ 12px\)/,
+  'Moving the colour controls semantically must preserve their floating position over the 3D view');
+
+console.log('TURN M8 Home now enters a production showroom with H1 THE LOT, H2 CHOOSE CAR, H3 CAR INFORMATION, grouped colour controls and H2 RACE; duplicate car/stat/color announcements are removed while the visual showroom remains unchanged.');
