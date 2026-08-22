@@ -1,7 +1,7 @@
 import {
   enhanceLotNow,
   prepareLotEnhancements
-} from './lot-enhancement-runtime.js?revision=r208-pwa-scroll-boundary&build=20260804-r157';
+} from './lot-enhancement-runtime.js?revision=r213-attributes-typography&build=20260804-r157';
 import { installLotPwaColorSwatches } from './lot-pwa-color-swatch.js?revision=r206-pwa-color';
 import { chooseTrackBeforeLot } from '../tracks/track-manager.js?build=20260722-r52';
 import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
@@ -30,6 +30,7 @@ const SHOWROOM_STYLE_ID = 'turn-lot-showroom-r200';
 const SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r209-polish';
 const SHOWROOM_THUMBNAIL_STYLE_ID = 'turn-lot-thumbnail-r211-composition';
 const SHOWROOM_INFO_STYLE_ID = 'turn-lot-info-r212-fit';
+const SHOWROOM_TYPOGRAPHY_STYLE_ID = 'turn-lot-info-r213-typography';
 let showroomStylePromise = null;
 let originalLotPromise = null;
 let originalLotModule = null;
@@ -75,6 +76,10 @@ function prepareShowroomStyles() {
     prepareStylesheet(
       SHOWROOM_INFO_STYLE_ID,
       './lot-info-panel-r212.css?revision=r212-future-racer-fit'
+    ),
+    prepareStylesheet(
+      SHOWROOM_TYPOGRAPHY_STYLE_ID,
+      './lot-info-typography-r213.css?revision=r213-attributes-readable-type'
     )
   ]);
   return showroomStylePromise;
