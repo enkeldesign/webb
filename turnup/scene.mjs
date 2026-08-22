@@ -61,6 +61,9 @@ export async function createFlightScene(container, {
   onModelStatus = () => {}
 } = {}) {
   if (!container) throw new Error('TURN UP needs a map container.');
+  if (!supportsWebGl2()) {
+    throw new Error('TURN UP needs WebGL2 for its 3D terrain and aircraft.');
+  }
 
   const map = new maplibregl.Map({
     container,
@@ -562,4 +565,12 @@ function degreesToRadians(value) {
 
 function radiansToDegrees(value) {
   return value * 180 / Math.PI;
+}
+
+function supportsWebGl2() {
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('webgl2');
+  if (!context) return false;
+  context.getExtension('WEBGL_lose_context')?.loseContext();
+  return true;
 }
