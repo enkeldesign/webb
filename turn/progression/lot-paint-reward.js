@@ -77,7 +77,7 @@ export function gateLotPaintNow(root = document.body) {
   function showLockedPaintInfo() {
     showTrophyUnlockNotice({
       reward: reward(),
-      itemName: 'Vehicle paint controls'
+      itemName: 'Car color'
     });
   }
 
@@ -94,25 +94,28 @@ export function gateLotPaintNow(root = document.body) {
       button.type = 'button';
       button.className = 'lot-paint-lock-button';
 
-      const copy = document.createElement('span');
-      copy.className = 'lot-paint-lock-copy';
-      copy.innerHTML = '<strong>PAINTJOB</strong>';
-
       const icon = document.createElement('span');
       icon.className = 'lot-paint-lock';
       icon.setAttribute('aria-hidden', 'true');
       icon.innerHTML = LOCK_ICON;
 
-      button.append(copy, icon);
+      const copy = document.createElement('span');
+      copy.className = 'lot-paint-lock-copy';
+      copy.setAttribute('aria-hidden', 'true');
+
+      button.append(icon, copy);
       button.addEventListener('click', showLockedPaintInfo);
       colors.prepend(button);
     }
 
     const threshold = reward()?.threshold || 900;
+    const copy = button.querySelector('.lot-paint-lock-copy');
+    if (copy) copy.innerHTML = `<strong>${threshold} 🏆</strong><small>TO UNLOCK</small>`;
     button.setAttribute(
       'aria-label',
-      `Paintjob locked. Vehicle paint controls unlock at ${threshold} trophies on Trophy Road.`
+      `Color locked. Car color controls unlock at ${threshold} trophies on Trophy Road.`
     );
+    button.title = `Color unlocks at ${threshold} trophies`;
     applyLockColour(button.querySelector('.lot-paint-lock'), carId);
     return button;
   }
