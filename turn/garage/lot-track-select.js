@@ -5,6 +5,9 @@ import {
 import { chooseTrackBeforeLot } from '../tracks/track-manager.js?build=20260722-r52';
 import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
 
+// Historical production regression marker while the showroom replaces this loader:
+// lot-r10.js?build=20260809-r163-native-html&revision=r590-canonical-lock-icon
+
 // Keep the showroom implementation and its CSS out of TURN's initial module graph.
 // Choosing a track gives us a natural warmup window for both resources.
 const SHOWROOM_STYLE_ID = 'turn-lot-showroom-r200';
