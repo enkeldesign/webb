@@ -87,6 +87,22 @@ export function gateLotPaintNow(root = document.body) {
     icon.style.setProperty('--lot-paint-lock-foreground', contrastingInk(bodyColour));
   }
 
+  function ensureVisibleLabel(car) {
+    let label = colors.querySelector('.lot-color-visible-label');
+    if (!car || car.fixedLivery) {
+      label?.remove();
+      return null;
+    }
+    if (!label) {
+      label = document.createElement('span');
+      label.className = 'lot-color-visible-label';
+      label.textContent = 'COLOR';
+      label.setAttribute('aria-hidden', 'true');
+      colors.prepend(label);
+    }
+    return label;
+  }
+
   function ensureLockButton(carId) {
     let button = colors.querySelector('.lot-paint-lock-button');
     if (!button) {
@@ -105,7 +121,9 @@ export function gateLotPaintNow(root = document.body) {
 
       button.append(icon, copy);
       button.addEventListener('click', showLockedPaintInfo);
-      colors.prepend(button);
+      const label = colors.querySelector('.lot-color-visible-label');
+      if (label) label.insertAdjacentElement('afterend', button);
+      else colors.prepend(button);
     }
 
     const threshold = reward()?.threshold || 900;
@@ -135,6 +153,7 @@ export function gateLotPaintNow(root = document.body) {
       const changedCar = Boolean(carId) && carId !== lastCarId;
       const controls = [...colors.querySelectorAll('.lot-color-control:not(.lot-fixed-livery)')];
 
+      ensureVisibleLabel(car);
       if (car && !car.fixedLivery && (!paintUnlocked || changedCar)) forceFactoryPaint(carId);
 
       const locked = Boolean(car && !car.fixedLivery && !paintUnlocked);
@@ -185,6 +204,7 @@ export function gateLotPaintNow(root = document.body) {
     window.removeEventListener('storage', handleStorage);
     raceButton.removeEventListener('click', sync, { capture: true });
     removeLockPresentation();
+    colors.querySelector('.lot-color-visible-label')?.remove();
     for (const control of colors.querySelectorAll('.lot-color-control')) {
       control.hidden = false;
       const input = control.querySelector('input');
