@@ -5,10 +5,9 @@ const [
   lotGate,
   paintGate,
   paintCss,
+  showroomCleanupCss,
   lotRuntime,
   perkPresentation,
-  colorAccessibility,
-  colorCueCss,
   app,
   index,
   releaseSource
@@ -16,10 +15,9 @@ const [
   fs.readFile(new URL('../../turn/progression/lot-trophy-gate.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/progression/lot-paint-reward.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/progression/trophy-road-r157.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/lot-showroom-cleanup-r201.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-enhancement-runtime.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-perk-disclosure.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/accessibility/color-accessibility-r163.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/accessibility/color-cues-r163.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8')
@@ -91,34 +89,43 @@ assert.match(paintGate, /--lot-paint-lock-foreground/);
 assert.match(paintGate, /getVehicleDefaultColor\(carId\)/,
   'The locked swatch must represent the selected car factory colour');
 
-assert.match(colorAccessibility, /function placeLotColorCue\(screen, description, cue\)/,
-  'Color cues must have an explicit placement rule in THE LOT');
+assert.match(paintGate, /import \{ describeColorCue \} from '\.\.\/accessibility\/color-cues\.js\?revision=r163'/,
+  'The visual swatch-side cue must use the same canonical color naming as COLOR CUES');
+assert.match(paintGate, /function ensureVisualColorCue\(car\)/,
+  'The paint layer must own a visual cue that stays associated with its swatch');
 assert.match(
-  colorAccessibility,
-  /colors\.getAttribute\('aria-hidden'\) !== 'true'/,
-  'Paintable cars must place their cue with the usable color-control group'
+  paintGate,
+  /cue\.className = 'turn-color-cue lot-color-cue lot-paint-color-cue'/,
+  'The swatch-side cue must obey the global COLOR CUES on/off state'
+);
+assert.match(paintGate, /cue\.setAttribute\('aria-hidden', 'true'\)/,
+  'The swatch-side copy is visual-only because the canonical selected-car cue remains semantic');
+assert.match(
+  paintGate,
+  /cue\.textContent = `CAR COLOR · \$\{describeColorCue\(bodyColorValue\(car\.id\)\)\.toUpperCase\(\)\}`/,
+  'The visual cue must always describe the actual body swatch color'
+);
+assert.match(paintGate, /const hasPaintControl = Boolean\(car && !car\.fixedLivery\)/,
+  'Only genuinely paintable cars may suppress the information-panel visual cue');
+assert.match(paintGate, /screen\.classList\.toggle\('lot-has-paint-control', hasPaintControl\)/);
+assert.match(paintGate, /colors\.addEventListener\('input', handlePaintInput\)/,
+  'Unlocked native color changes must refresh the swatch-side cue immediately');
+assert.match(paintGate, /colors\.removeEventListener\('input', handlePaintInput\)/);
+
+assert.match(
+  showroomCleanupCss,
+  /\.lot-showroom \.lot-paint-color-cue\s*\{[\s\S]*font-size: clamp\(\.52rem, 1vw, \.68rem\)/,
+  'The visible Lot color cue must be substantially larger than the old tiny annotation'
 );
 assert.match(
-  colorAccessibility,
-  /cue\.classList\.add\('is-by-paint-swatch'\)[\s\S]*colors\.append\(cue\)/,
-  'The selected car color cue must sit beside the floating swatch/lock'
+  showroomCleanupCss,
+  /\.lot-showroom \.lot-paint-color-cue::before[\s\S]*repeating-linear-gradient/,
+  'The enlarged cue must keep the redundant pattern signal as well as text'
 );
 assert.match(
-  colorAccessibility,
-  /cue\.classList\.remove\('is-by-paint-swatch'\)[\s\S]*description\.after\(cue\)/,
-  'Fixed-livery cars must retain their color cue with car information when no paint swatch exists'
-);
-assert.match(colorAccessibility, /RUNTIME_ID = 'color-cues-r204-lot-swatch'/,
-  'The updated color-cue runtime must expose a fresh identity');
-assert.match(
-  colorCueCss,
-  /\.lot-selected-car-color-cue\s*\{[\s\S]*font-size: clamp\(0\.52rem, 1vw, 0\.68rem\)/,
-  'The selected-car color cue must be materially larger than the old tiny annotation'
-);
-assert.match(
-  colorCueCss,
-  /\.lot-selected-car-color-cue\.is-by-paint-swatch\s*\{[\s\S]*align-self: center/,
-  'The enlarged cue must align with the floating color control'
+  showroomCleanupCss,
+  /\.lot-showroom\.lot-has-paint-control \.lot-card \.lot-selected-car-color-cue[\s\S]*clip-path: inset\(50%\)/,
+  'For paintable cars the old semantic cue must remain accessible without being drawn twice'
 );
 
 assert.match(paintCss, /\.lot-colors\.is-paint-locked[\s\S]*min-height: 54px/);
@@ -180,4 +187,4 @@ assert.match(
   new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click`)
 );
 
-console.log('TURN Lot color swatch rebuild, enlarged cue placement, observer safety and native paint ancestry regressions passed.');
+console.log('TURN Lot color swatch rebuild, enlarged swatch-side cue, observer safety and native paint ancestry regressions passed.');
