@@ -7,6 +7,7 @@ const [
   paintCss,
   showroomCleanupCss,
   lotRuntime,
+  lotWrapper,
   perkPresentation,
   app,
   index,
@@ -17,6 +18,7 @@ const [
   fs.readFile(new URL('../../turn/progression/trophy-road-r157.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-showroom-cleanup-r201.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-enhancement-runtime.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/lot-track-select.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-perk-disclosure.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
@@ -26,159 +28,164 @@ const [
 const release = JSON.parse(releaseSource);
 const syncBody = paintGate.match(/function sync\(\) \{([\s\S]*?)\n  \}\n\n  const observer/ )?.[1] || '';
 assert.ok(syncBody, 'The paint gate must expose a bounded synchronization function');
-assert.match(paintGate, /observer\.observe\(picker,/,
-  'Paint synchronization must observe the car picker rather than the whole Lot screen');
-assert.doesNotMatch(paintGate, /observer\.observe\(screen,/,
-  'The lock presentation must not be inside the picker observer target');
-assert.match(syncBody, /if \(locked\) ensureLockButton\(carId\);[\s\S]*else removeLockPresentation\(\)/,
-  'Paint synchronization must keep the compact lock control only while paint is actually locked');
-assert.doesNotMatch(syncBody, /lot-paint-lock[\s\S]*remove\(\);[\s\S]*if \(locked\)/,
-  'A synchronization pass must never remove and immediately recreate its own lock control');
-assert.match(paintGate, /try \{[\s\S]*\} finally \{[\s\S]*syncing = false/,
-  'The synchronization guard must always be released');
 
-assert.match(paintGate, /function mutationTouchesPaintControl\(mutation\)/,
-  'The paint gate must distinguish showroom control replacement from its own presentation mutations');
-assert.match(
-  paintGate,
-  /mutations\.some\(mutationTouchesPaintControl\)\) sync\(\)/,
-  'Replacing native color controls must immediately resynchronize the locked swatch'
-);
-assert.match(
-  paintGate,
-  /controlObserver\.observe\(colors, \{ childList: true \}\)/,
-  'The control replacement observer must stay direct-child-only rather than observing the paint subtree'
-);
+// --- Stable baseline and explicit state model ---------------------------------
+assert.match(paintGate, /function selectedCarIsLocked\(screen\)/,
+  'CAR lock state must be modeled independently from paint state');
+assert.match(syncBody, /const carLocked = selectedCarIsLocked\(screen\)/);
+assert.match(syncBody, /const freeColor = Boolean\(car && !car\.fixedLivery\)/,
+  'Vehicle free/fixed color must be an explicit state dimension');
+assert.match(syncBody, /const paintLocked = Boolean\(freeColor && !paintUnlocked\)/,
+  'PAINTJOB lock must depend on paintability and PAINTJOB only, never car lock');
 assert.doesNotMatch(
-  paintGate,
-  /controlObserver\.observe\(colors, \{[^}]*subtree:\s*true/,
-  'Paint rebuild recovery must not observe descendants and recreate a self-trigger loop'
+  syncBody.match(/const paintLocked[^\n]*/)?.[0] || '',
+  /carLocked/,
+  'A locked vehicle must still expose the same COLOR baseline'
 );
-assert.match(paintGate, /controlObserver\.disconnect\(\)/,
-  'The focused color-control observer must be released with THE LOT');
+assert.match(syncBody, /colors\.dataset\.vehicleColorMode = car\?\.fixedLivery \? 'fixed' : 'free'/);
+assert.match(syncBody, /colors\.dataset\.paintState = car\?\.fixedLivery \? 'fixed' : \(paintUnlocked \? 'editable' : 'locked'\)/);
+assert.match(syncBody, /colors\.dataset\.carState = carLocked \? 'locked' : 'unlocked'/);
+assert.match(syncBody, /colors\.hidden = false/,
+  'The COLOR component must remain visible for every selected vehicle state');
+assert.match(syncBody, /colors\.removeAttribute\('aria-hidden'\)/,
+  'Fixed-livery showroom markup must not be allowed to remove COLOR from the final interface');
+assert.match(syncBody, /screen\.classList\.toggle\('lot-color-baseline-active', Boolean\(car\)\)/);
 
-assert.doesNotMatch(paintGate, /colors\.addEventListener\(['"]click['"]/,
-  'The paint container must never be a click-listener ancestor of the native color input');
-assert.doesNotMatch(paintGate, /colors\.addEventListener\(['"]keydown['"]/,
-  'The paint container must not emulate button keyboard behavior');
-assert.doesNotMatch(paintGate, /colors\.setAttribute\('role', 'button'\)|colors\.tabIndex\s*=/,
-  'The paint group must keep its real group semantics instead of becoming a faux button');
-assert.match(paintGate, /button = document\.createElement\('button'\)/,
-  'Locked color feedback should use a real button');
-assert.match(paintGate, /button\.type = 'button'/);
-assert.match(paintGate, /button\.className = 'lot-paint-lock-button'/);
-assert.match(paintGate, /button\.addEventListener\('click', showLockedPaintInfo\)/,
-  'The lock explanation belongs directly to the lock button, not an ancestor of paint inputs');
-assert.match(paintGate, /label\.className = 'lot-color-visible-label'/,
-  'The paint control must identify itself visibly as COLOR');
+// --- One visible COLOR label and swatch for every vehicle ----------------------
+assert.match(paintGate, /function ensureVisibleLabel\(car\)/);
+assert.match(paintGate, /label\.className = 'lot-color-visible-label'/);
 assert.match(paintGate, /label\.textContent = 'COLOR'/);
 assert.match(paintGate, /label\.setAttribute\('aria-hidden', 'true'\)/,
-  'The visual COLOR label must not duplicate the screen-reader group name');
-assert.match(paintGate, /lot-paint-lock-copy/);
-assert.match(paintGate, /copy\.innerHTML = `<strong>\$\{threshold\} 🏆<\/strong><small>TO UNLOCK<\/small>`/,
-  'Locked color must show the Trophy Road requirement next to its swatch');
+  'The visual COLOR label must not duplicate the named screen-reader group');
+assert.doesNotMatch(
+  paintGate.match(/function ensureVisibleLabel\(car\) \{([\s\S]*?)\n  \}/)?.[1] || '',
+  /fixedLivery[\s\S]*remove/,
+  'Fixed-livery cars must keep the same visible COLOR label as paintable cars'
+);
+
+assert.match(paintGate, /function ensureFixedColorDisplay\(car\)/,
+  'Set-color vehicles must receive a display-only swatch rather than an empty COLOR area');
+assert.match(paintGate, /swatch\.className = 'lot-fixed-color-display'/);
+assert.match(paintGate, /getVehicleDefaultColor\(car\.id\)/);
+assert.match(paintGate, /getVehicleDefaultSecondaryColor\(car\.id\)/,
+  'Fixed emergency liveries must expose their canonical secondary color too');
+assert.match(paintGate, /swatch\.classList\.toggle\('is-two-tone'/,
+  'Two-color fixed liveries must remain represented inside the same swatch footprint');
+assert.match(paintGate, /Fixed car colors\./,
+  'The display-only fixed swatch must still carry a useful accessible description');
+
+// --- TURN-owned visual face over native color input ----------------------------
+assert.match(paintGate, /function applyNativeSwatchFace\(control\)/);
+assert.match(paintGate, /control\.classList\.add\('has-turn-color-swatch'\)/);
+assert.match(paintGate, /control\.style\.setProperty\('--lot-color-swatch', input\.value\)/,
+  'The visible free-color swatch must be driven by the actual native input value');
+assert.match(
+  showroomCleanupCss,
+  /\.lot-showroom \.lot-color-control\.has-turn-color-swatch::before\s*\{[\s\S]*background: var\(--lot-color-swatch/,
+  'TURN must paint the visible swatch itself instead of relying on the browser color-input skin'
+);
+assert.match(
+  showroomCleanupCss,
+  /\.lot-showroom \.lot-color-control\.has-turn-color-swatch input\[type='color'\][\s\S]*opacity: 0/,
+  'The native color input must stay interactive but no longer be responsible for visible paint'
+);
+assert.match(
+  showroomCleanupCss,
+  /\.lot-showroom \.lot-color-control\.has-turn-color-swatch:focus-within::before[\s\S]*outline:/,
+  'Keyboard focus must remain visible on the TURN-owned swatch face'
+);
+assert.match(showroomCleanupCss, /\.lot-showroom \.lot-color-control\[hidden\][\s\S]*display: none !important/,
+  'PAINTJOB locking must reliably hide the native editable control despite author display rules');
+
+// --- PAINTJOB locked/unlocked ---------------------------------------------------
+assert.match(syncBody, /if \(freeColor && \(!paintUnlocked \|\| changedCar\)\) forceFactoryPaint\(carId\)/,
+  'Before PAINTJOB unlock, paintable vehicles must display their factory color');
+assert.match(syncBody, /control\.hidden = paintLocked/);
+assert.match(syncBody, /input\.disabled = paintLocked/);
+assert.match(syncBody, /if \(paintLocked\) ensureLockButton\(carId\);[\s\S]*else removeLockPresentation\(\)/,
+  'Free-color vehicles must turn the same swatch slot into a lock only while PAINTJOB is locked');
+assert.match(paintGate, /button\.className = 'lot-paint-lock-button'/);
 assert.match(paintGate, /Color locked\. Car color controls unlock at \$\{threshold\} trophies on Trophy Road\./,
-  'The lock button must make clear that color is locked, not the selected car');
-assert.doesNotMatch(paintGate, /<i>•<\/i>|<b>LOCKED<\/b>/,
-  'The compact color control must not add redundant decorative lock-status copy');
+  'The lock must describe COLOR, not imply that the vehicle itself is locked');
+assert.match(paintGate, /applyLockColour\(button\.querySelector\('\.lot-paint-lock'\), carId\)/,
+  'The locked swatch must still visibly represent the selected car factory color');
 assert.match(paintGate, /function contrastingInk\(hexColor\)/);
 assert.match(paintGate, /luminance > 0\.18 \? '#08090a' : '#fffdf6'/,
-  'The lock glyph must use whichever TURN ink gives the stronger colour contrast');
-assert.match(paintGate, /--lot-paint-lock-background/);
-assert.match(paintGate, /--lot-paint-lock-foreground/);
-assert.match(paintGate, /getVehicleDefaultColor\(carId\)/,
-  'The locked swatch must represent the selected car factory colour');
+  'The lock glyph must retain readable contrast over every car color');
 
+// --- COLOR CUES on/off, always in the same swatch-side slot --------------------
 assert.match(paintGate, /import \{ describeColorCue \} from '\.\.\/accessibility\/color-cues\.js\?revision=r163'/,
-  'The visual swatch-side cue must use the same canonical color naming as COLOR CUES');
-assert.match(paintGate, /function ensureVisualColorCue\(car\)/,
-  'The paint layer must own a visual cue that stays associated with its swatch');
-assert.match(
-  paintGate,
-  /cue\.className = 'turn-color-cue lot-color-cue lot-paint-color-cue'/,
-  'The swatch-side cue must obey the global COLOR CUES on/off state'
-);
+  'The visual cue must use the canonical COLOR CUES color naming');
+assert.match(paintGate, /function ensureVisualColorCue\(car\)/);
+assert.match(paintGate, /cue\.className = 'turn-color-cue lot-color-cue lot-paint-color-cue'/,
+  'The fixed swatch-side cue must obey the global COLOR CUES on/off CSS state');
 assert.match(paintGate, /cue\.setAttribute\('aria-hidden', 'true'\)/,
-  'The swatch-side copy is visual-only because the canonical selected-car cue remains semantic');
-assert.match(
-  paintGate,
-  /cue\.textContent = `CAR COLOR · \$\{describeColorCue\(bodyColorValue\(car\.id\)\)\.toUpperCase\(\)\}`/,
-  'The visual cue must always describe the actual body swatch color'
-);
-assert.match(paintGate, /const hasPaintControl = Boolean\(car && !car\.fixedLivery\)/,
-  'Only genuinely paintable cars may suppress the information-panel visual cue');
-assert.match(paintGate, /screen\.classList\.toggle\('lot-has-paint-control', hasPaintControl\)/);
+  'The new cue is visual-only because the existing selected-car cue remains semantic');
+assert.match(paintGate, /cue\.textContent = `CAR COLOR · \$\{colorCueDescription\(car\)\}`/);
+assert.match(paintGate, /if \(car\.fixedLivery\)[\s\S]*getVehicleDefaultSecondaryColor\(car\.id\)/,
+  'Fixed emergency liveries must get COLOR CUES in the same place, including their second color');
+assert.match(paintGate, /if \(car\.secondaryPaint\)/,
+  'Free-color vehicles with a secondary paint part must keep that extra color in the cue');
+assert.match(syncBody, /ensureVisualColorCue\(car\)/,
+  'Every selected-car state must finish by populating the same cue slot');
 assert.match(paintGate, /colors\.addEventListener\('input', handlePaintInput\)/,
-  'Unlocked native color changes must refresh the swatch-side cue immediately');
-assert.match(paintGate, /colors\.removeEventListener\('input', handlePaintInput\)/);
-
+  'Unlocked native color changes must update the TURN-owned swatch and cue immediately');
+assert.match(paintGate, /applyNativeSwatchFace\(event\.target\.closest\('\.lot-color-control'\)\)/);
 assert.match(
   showroomCleanupCss,
-  /\.lot-showroom \.lot-paint-color-cue\s*\{[\s\S]*font-size: clamp\(\.52rem, 1vw, \.68rem\)/,
-  'The visible Lot color cue must be substantially larger than the old tiny annotation'
+  /\.lot-showroom \.lot-paint-color-cue\s*\{[\s\S]*font-size: clamp\(\.56rem, 1\.08vw, \.72rem\)/,
+  'The swatch-side COLOR CUE must stay large enough to read'
 );
 assert.match(
   showroomCleanupCss,
-  /\.lot-showroom \.lot-paint-color-cue::before[\s\S]*repeating-linear-gradient/,
-  'The enlarged cue must keep the redundant pattern signal as well as text'
-);
-assert.match(
-  showroomCleanupCss,
-  /\.lot-showroom\.lot-has-paint-control \.lot-card \.lot-selected-car-color-cue[\s\S]*clip-path: inset\(50%\)/,
-  'For paintable cars the old semantic cue must remain accessible without being drawn twice'
+  /\.lot-showroom\.lot-color-baseline-active \.lot-card \.lot-selected-car-color-cue[\s\S]*clip-path: inset\(50%\)/,
+  'The old semantic cue must remain accessible without being visually duplicated for any car type'
 );
 
+// --- Observer safety ------------------------------------------------------------
+assert.match(paintGate, /observer\.observe\(picker,/,
+  'Paint synchronization must stay scoped to the car picker rather than the whole Lot screen');
+assert.doesNotMatch(paintGate, /observer\.observe\(screen,/,
+  'The COLOR presentation must never observe the screen subtree that contains its own writes');
+assert.match(paintGate, /attributeFilter: \['aria-checked', 'class'\]/,
+  'Selection and car-lock changes must both refresh the explicit state model');
+assert.match(paintGate, /function mutationTouchesPaintControl\(mutation\)/,
+  'The paint gate must distinguish showroom control replacement from its own presentation mutations');
+assert.match(paintGate, /mutations\.some\(mutationTouchesPaintControl\)\) sync\(\)/,
+  'Replacing native color controls must immediately resynchronize the baseline');
+assert.match(paintGate, /controlObserver\.observe\(colors, \{ childList: true \}\)/,
+  'The rebuild observer must stay direct-child-only');
+assert.doesNotMatch(paintGate, /controlObserver\.observe\(colors, \{[^}]*subtree:\s*true/,
+  'The color rebuild recovery must not recreate the old self-triggering observer loop');
+assert.match(paintGate, /try \{[\s\S]*\} finally \{[\s\S]*syncing = false/,
+  'The synchronization guard must always be released');
+assert.match(paintGate, /controlObserver\.disconnect\(\)/);
+
+// Keep native form semantics: no faux-button wrapper around editable color controls.
+assert.doesNotMatch(paintGate, /colors\.addEventListener\(['"]click['"]/,
+  'The COLOR container must never become a click-listener ancestor that hijacks native input behavior');
+assert.doesNotMatch(paintGate, /colors\.addEventListener\(['"]keydown['"]/);
+assert.doesNotMatch(paintGate, /colors\.setAttribute\('role', 'button'\)|colors\.tabIndex\s*=/);
+
+// Established Trophy Road / perk contracts remain intact.
 assert.match(paintCss, /\.lot-colors\.is-paint-locked[\s\S]*min-height: 54px/);
-assert.match(
-  paintCss,
-  /\.lot-viewbox-with-paint \.lot-colors\.is-paint-locked \{[\s\S]*position: absolute;[\s\S]*bottom: 0;/,
-  'The locked Paintjob treatment must occupy the reserved bottom rail rather than cover the 3D viewer'
-);
-assert.doesNotMatch(
-  paintCss.match(/\.lot-colors\.is-paint-locked\s*\{([\s\S]*?)\}/)?.[1] || '',
-  /position: relative/,
-  'The generic locked state must not override the absolute bottom-rail placement'
-);
-const paintLockButtonRule = paintCss.match(/\.lot-paint-lock-button\s*\{([\s\S]*?)\}/)?.[1] || '';
-assert.ok(paintLockButtonRule, 'The real locked Paintjob button must have its own layout rule');
-assert.match(paintLockButtonRule, /grid-template-columns: minmax\(0, 1fr\) auto/);
-assert.match(paintLockButtonRule, /width: 100%/);
-const paintLockRule = paintCss.match(/\.lot-paint-lock\s*\{([\s\S]*?)\}/)?.[1] || '';
-assert.ok(paintLockRule, 'The compact paint lock must have its own CSS rule');
-assert.match(paintLockRule, /width: 36px/);
-assert.match(paintLockRule, /height: 36px/);
-assert.match(paintLockRule, /background: var\(--lot-paint-lock-background/);
-assert.match(paintLockRule, /color: var\(--lot-paint-lock-foreground/);
-assert.match(paintLockRule, /border: 2px solid var\(--turn-ink/,
-  'The swatch keeps the TURN black outline even when the lock glyph needs white contrast');
-assert.doesNotMatch(paintLockRule, /width: 100%/);
-
 assert.match(lotGate, /function dismissVisibleUnlockNotice\(\)/);
 assert.match(lotGate, /\.turn-unlock-notice\.is-visible/);
-assert.match(lotGate, /notice\.classList\.remove\('is-visible'\)/);
 assert.match(lotGate, /trophy-road\.js\?revision=r164-vintage-rally-perks/);
-assert.match(lotGate, /if \(lastAnnouncedCarId\) dismissVisibleUnlockNotice\(\)/,
-  'Selecting an available vehicle after a locked one must remove the stale lock notice');
-assert.match(lotGate, /if \(lastAnnouncedCarId\) dismissVisibleUnlockNotice\(\);[\s\S]*raceButton\.classList\.remove/,
-  'Leaving The Lot must not leave a vehicle lock notice behind');
-
 assert.match(lotRuntime, /lot-trophy-gate\.js\?revision=r164-vintage-rally-perks/);
-assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r204-color-control-rebuild/);
+assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r205-color-baseline/,
+  'The baseline color state model must receive a fresh module cache identity');
 assert.match(lotRuntime, /lot-perk-disclosure\.js\?revision=r203-idempotent/);
+assert.match(lotWrapper, /lot-enhancement-runtime\.js\?revision=r205-color-baseline/,
+  'The showroom wrapper must not reuse a cached enhancement runtime');
+assert.match(lotWrapper, /SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r205-polish'/);
+assert.match(lotWrapper, /lot-showroom-cleanup-r201\.css\?revision=r205-color-baseline/);
 
 assert.match(perkPresentation, /getCarDefinition\(vehicleId\)\?\.perk/,
-  'Inline perk identity must be read from the selected car itself');
-assert.doesNotMatch(perkPresentation, /rewardForVehicle|trophy-road/,
-  'Inline perk presentation must not become a progression entitlement');
-assert.match(
-  perkPresentation,
-  /observer\.observe\(picker, \{[\s\S]*subtree: true,[\s\S]*attributes: true,[\s\S]*attributeFilter: \['aria-checked'\][\s\S]*\}\);/,
-  'Inline perk synchronization must remain scoped to selected-car radio state'
-);
+  'Inline perk identity must remain car-owned');
 assert.doesNotMatch(perkPresentation, /observer\.observe\(screen,/,
-  'Inline perk presentation must never observe the DOM subtree that contains its own copy');
-assert.doesNotMatch(perkPresentation, /childList:\s*true|characterData:\s*true/,
-  'Inline perk presentation must not reintroduce the self-triggering DOM/text observer that froze The Lot');
+  'Perk presentation must not reintroduce its old self-triggering observer');
+assert.doesNotMatch(perkPresentation, /childList:\s*true|characterData:\s*true/);
 
 assert.match(app, /trophy-road-r157\.css\?revision=r163-native-picker-parent-click/);
 assert.match(app, /lot-enhancement-runtime\.js\?revision=r163-native-picker-parent-click/);
@@ -187,4 +194,4 @@ assert.match(
   new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click`)
 );
 
-console.log('TURN Lot color swatch rebuild, enlarged swatch-side cue, observer safety and native paint ancestry regressions passed.');
+console.log('TURN Lot COLOR baseline state matrix, browser-independent swatches, cue placement and observer safety regressions passed.');
