@@ -1,6 +1,7 @@
 import * as maplibregl from 'maplibre-gl';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { resolveChaseCameraZoom } from './camera-model.mjs?build=20260823-r3';
 
 const INK = 0x08090a;
 const PAPER = 0xfff8e8;
@@ -198,14 +199,17 @@ export async function createFlightScene(container, {
       minimumTargetElevation,
       terrainAtOrigin + flightState.position.y - CAMERA_TARGET_DROP_METRES
     );
-    const altitudeZoom = clamp((flightState.position.y - 80) / 720, 0, 1);
+    const chaseZoom = resolveChaseCameraZoom(
+      map.getCanvas().clientHeight,
+      flightState.position.y
+    );
     map.jumpTo({
       center: ahead,
       elevation: targetElevation,
       bearing: radiansToDegrees(flightState.heading),
       pitch: reducedMotion ? 65 : 68,
       roll: reducedMotion ? 0 : radiansToDegrees(flightState.bank) * 0.08,
-      zoom: 15.2 - altitudeZoom * 1.25
+      zoom: chaseZoom
     });
     map.triggerRepaint();
   }
