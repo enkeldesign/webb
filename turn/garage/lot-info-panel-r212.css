@@ -1,0 +1,116 @@
+/* Keep the complete worst-case car information visible without sacrificing copy size.
+   Future Racer's two-line perk is the acceptance case for this composition. */
+
+.lot-showroom.lot-card-scroll-boundary .lot-card {
+  padding: 10px 12px 10px;
+}
+
+.lot-showroom .lot-card-info-scroll {
+  position: relative;
+}
+
+/* "Selected car" is redundant beside the CAR INFORMATION structure. Reuse its
+   existing slot for the stat-help button so the title and help action share one row. */
+.lot-showroom .lot-car-title {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto;
+  gap: 8px;
+  align-items: center;
+  padding-bottom: 5px;
+}
+
+.lot-showroom .lot-car-title > span {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  gap: 0;
+  font-size: 0;
+  letter-spacing: 0;
+}
+
+.lot-showroom .lot-car-title strong {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: clamp(1.18rem, 2.55vw, 1.9rem);
+  line-height: .94;
+}
+
+.lot-showroom .lot-stats-help {
+  width: 24px;
+  height: 24px;
+  font-size: .78rem;
+}
+
+.lot-showroom .lot-car-description {
+  margin: 5px 0 2px;
+  line-height: 1.22;
+}
+
+.lot-showroom .lot-perk-disclosure {
+  margin-top: 3px !important;
+}
+
+.lot-showroom .lot-perk-copy {
+  line-height: 1.18;
+}
+
+.lot-showroom .lot-stats {
+  gap: 3px;
+  margin: 4px 0 2px;
+}
+
+.lot-showroom .lot-stat {
+  gap: 6px;
+}
+
+.lot-showroom .lot-stat i {
+  height: 8px;
+}
+
+/* Match the compact primary-action footprint used by CHOOSE TRACK rather than
+   spending the full information panel height on the button. */
+.lot-showroom .lot-card-actions {
+  position: static;
+  flex: 0 0 auto;
+  width: auto;
+  margin: auto 0 0;
+  padding: 5px 0 0;
+  background: transparent;
+}
+
+.lot-showroom .lot-race {
+  width: 100%;
+  min-height: 42px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  font-size: clamp(.62rem, 1.15vw, .8rem);
+  letter-spacing: .06em;
+}
+
+@media (max-height: 520px) {
+  .lot-showroom.lot-card-scroll-boundary .lot-card {
+    padding: 8px 10px 8px;
+  }
+
+  .lot-showroom .lot-car-title {
+    padding-bottom: 4px;
+  }
+
+  .lot-showroom .lot-car-description {
+    margin-top: 4px;
+  }
+
+  .lot-showroom .lot-perk-disclosure {
+    margin-top: 2px !important;
+  }
+
+  .lot-showroom .lot-stats {
+    gap: 2px;
+    margin: 3px 0 1px;
+  }
+
+  .lot-showroom .lot-race {
+    min-height: 38px;
+    padding-block: 5px;
+  }
+}
