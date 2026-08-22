@@ -9,9 +9,11 @@ import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
 // lot-r10.js?build=20260809-r163-native-html&revision=r590-canonical-lock-icon
 
 // Keep the showroom implementation and its CSS out of TURN's initial module graph.
-// Choosing a track gives us a natural warmup window for both resources.
+// Choosing or activating a track gives us a natural warmup window for both resources.
 const SHOWROOM_STYLE_ID = 'turn-lot-showroom-r200';
 let showroomStylePromise = null;
+let originalLotPromise = null;
+let originalLotModule = null;
 
 function prepareShowroomStyles() {
   if (showroomStylePromise) return showroomStylePromise;
@@ -36,41 +38,46 @@ function prepareShowroomStyles() {
   return showroomStylePromise;
 }
 
-let originalLotPromise = null;
 function loadOriginalLot() {
   if (!originalLotPromise) {
-    originalLotPromise = import('./lot-showroom-experiment.js?revision=r200-production-candidate');
+    originalLotPromise = import('./lot-showroom-experiment.js?revision=r200-production-candidate')
+      .then((module) => {
+        originalLotModule = module;
+        return module;
+      });
   }
   return originalLotPromise;
 }
 
-export async function showTheLot(options = {}) {
-  const lotWarmup = Promise.all([
+export async function prepareEnhancedLot() {
+  await Promise.all([
     loadOriginalLot(),
     prepareShowroomStyles(),
     prepareLotEnhancements()
   ]);
+}
+
+function mountEnhancedLot(options) {
+  if (!originalLotModule) {
+    throw new Error('TURN: showroom was mounted before its module finished preparing.');
+  }
+  const lotResult = originalLotModule.showTheLot(options);
+  const removeEnhancements = enhanceLotNow();
+  return Promise.resolve(lotResult).finally(removeEnhancements);
+}
+
+export async function showTheLot(options = {}) {
+  const lotWarmup = prepareEnhancedLot();
   const trackId = await chooseTrackBeforeLot();
   if (!trackId) return null;
 
   await lotWarmup;
-  const selection = await showEnhancedLot(options);
+  const selection = await mountEnhancedLot(options);
   if (selection) await showTrackIntro(trackId);
   return selection;
 }
 
-export async function showEnhancedLot(options = {}) {
-  const [{ showTheLot: showOriginalLot }] = await Promise.all([
-    loadOriginalLot(),
-    prepareShowroomStyles(),
-    prepareLotEnhancements()
-  ]);
-
-  const lotResult = showOriginalLot(options);
-  const removeEnhancements = enhanceLotNow();
-  try {
-    return await lotResult;
-  } finally {
-    removeEnhancements();
-  }
+export function showEnhancedLot(options = {}) {
+  if (originalLotModule) return mountEnhancedLot(options);
+  return prepareEnhancedLot().then(() => mountEnhancedLot(options));
 }
