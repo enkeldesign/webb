@@ -37,10 +37,10 @@ html[data-turn-color-cues='on'] .turn-color-cue {
 
 .lot-color-cue {
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   overflow: hidden;
-  font-size: 0.4rem;
-  font-weight: 900;
+  font-size: 0.48rem;
+  font-weight: 950;
   letter-spacing: 0.045em;
   line-height: 1;
   text-overflow: ellipsis;
@@ -49,10 +49,10 @@ html[data-turn-color-cues='on'] .turn-color-cue {
 }
 
 .lot-color-cue::before {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   flex: 0 0 auto;
-  border: 1px solid currentColor;
+  border: 1.5px solid currentColor;
   border-radius: 2px;
   background: repeating-linear-gradient(135deg, currentColor 0 1px, transparent 1px 3px);
   content: '';
@@ -62,22 +62,40 @@ html[data-turn-color-cues='on'] .turn-color-cue {
   width: max-content;
   max-width: 100%;
   margin-top: 5px;
-  padding: 3px 7px;
+  padding: 4px 8px;
   border: 2px solid var(--ink, #08090a);
   border-radius: 999px;
   background: rgb(255 248 232 / 0.94);
   color: var(--ink, #08090a);
+  font-size: clamp(0.52rem, 1vw, 0.68rem);
+}
+
+/* For cars with paint controls, keep the redundant text cue next to the actual
+   swatch/lock instead of separating the visual explanation from the control. */
+.lot-selected-car-color-cue.is-by-paint-swatch {
+  flex: 0 1 auto;
+  align-self: center;
+  max-width: min(44vw, 230px);
+  margin: 0 2px 0 3px;
 }
 
 @media (max-height: 520px) {
-  .lot-color-cue { font-size: 0.36rem; }
+  .lot-color-cue { font-size: 0.44rem; }
+  .lot-selected-car-color-cue { font-size: 0.48rem; }
+  .lot-selected-car-color-cue.is-by-paint-swatch { max-width: min(40vw, 200px); }
 }
 
 @media (max-height: 430px) {
-  .lot-color-cue { font-size: 0.33rem; }
+  .lot-color-cue { font-size: 0.4rem; }
 
   .lot-selected-car-color-cue {
     margin-top: 3px;
-    padding: 2px 5px;
+    padding: 3px 6px;
+    font-size: 0.44rem;
+  }
+
+  .lot-selected-car-color-cue.is-by-paint-swatch {
+    max-width: min(36vw, 176px);
+    margin-top: 0;
   }
 }
