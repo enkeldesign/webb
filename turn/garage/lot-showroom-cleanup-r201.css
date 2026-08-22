@@ -249,6 +249,61 @@
   white-space: nowrap !important;
 }
 
+/* Keep horizontal car browsing away from the OS home/app-switch gesture zone.
+   The screen-reader pass already places CHOOSE CAR before the showroom content
+   in DOM order; align the visual layout with that structure as well. */
+.lot-showroom {
+  --lot-content-bottom: max(14px, env(safe-area-inset-bottom));
+}
+
+.lot-showroom::before {
+  inset:
+    calc(var(--lot-header-height) + var(--lot-picker-height))
+    var(--lot-info-width)
+    var(--lot-content-bottom)
+    0;
+}
+
+.lot-showroom .lot-car-picker-shell {
+  top: var(--lot-header-height);
+  right: 0;
+  bottom: auto;
+  left: 0;
+  height: var(--lot-picker-height);
+  padding:
+    9px
+    max(14px, env(safe-area-inset-right))
+    9px
+    max(14px, env(safe-area-inset-left));
+  border-top: 0;
+  border-bottom: 4px solid var(--ink, #08090a);
+  box-shadow: 0 4px 0 rgb(255 255 255 / .08);
+}
+
+.lot-showroom .lot-side {
+  top: calc(var(--lot-header-height) + var(--lot-picker-height));
+  bottom: var(--lot-content-bottom);
+}
+
+/* The carousel itself already communicates horizontal browsing through its
+   partially visible cards. Keep the tiny visual helper out of the header/preview
+   boundary; screen readers retain the full hidden instructions. */
+.lot-showroom .lot-car-picker-help {
+  display: none;
+}
+
+/* COLOR is semantically inside the card but visually anchored over the preview.
+   The screen-reader pass injects its positioning after this stylesheet, so the
+   bottom override is intentionally important. It no longer depends on picker height. */
+.lot-showroom.lot-screen-reader-structured .lot-colors,
+.lot-showroom.lot-screen-reader-structured .lot-colors.is-paint-locked {
+  bottom: calc(var(--lot-content-bottom) + 12px) !important;
+}
+
+.lot-showroom .lot-loading {
+  bottom: calc(var(--lot-content-bottom) + 12px);
+}
+
 @media (max-height: 520px) {
   .lot-showroom .lot-car-option,
   .lot-showroom .lot-car-option:focus-visible {
@@ -273,6 +328,17 @@
     max-width: min(42vw, 215px);
     padding: 4px 7px;
     font-size: .5rem;
+  }
+  .lot-showroom .lot-car-picker-shell {
+    padding-top: 7px;
+    padding-bottom: 7px;
+  }
+  .lot-showroom.lot-screen-reader-structured .lot-colors,
+  .lot-showroom.lot-screen-reader-structured .lot-colors.is-paint-locked {
+    bottom: calc(var(--lot-content-bottom) + 8px) !important;
+  }
+  .lot-showroom .lot-loading {
+    bottom: calc(var(--lot-content-bottom) + 8px);
   }
 }
 

@@ -19,13 +19,15 @@ import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
 // lot-showroom-cleanup-r201.css?revision=r204-color-swatch-cue
 // SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r205-polish'
 // lot-showroom-cleanup-r201.css?revision=r205-color-baseline
+// SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r206-polish'
+// lot-showroom-cleanup-r201.css?revision=r206-pwa-color
 // The actual prepared M8 entry below is deliberately synchronous after warmup so
 // its existing Race This Car motion-access gate can bind immediately after mount.
 
 // Keep the showroom implementation and its CSS out of TURN's initial module graph.
 // Choosing or activating a track gives us a natural warmup window for these resources.
 const SHOWROOM_STYLE_ID = 'turn-lot-showroom-r200';
-const SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r206-polish';
+const SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r209-polish';
 let showroomStylePromise = null;
 let originalLotPromise = null;
 let originalLotModule = null;
@@ -62,7 +64,7 @@ function prepareShowroomStyles() {
     ),
     prepareStylesheet(
       SHOWROOM_CLEANUP_STYLE_ID,
-      './lot-showroom-cleanup-r201.css?revision=r206-pwa-color'
+      './lot-showroom-cleanup-r201.css?revision=r209-picker-above-showroom'
     )
   ]);
   return showroomStylePromise;
