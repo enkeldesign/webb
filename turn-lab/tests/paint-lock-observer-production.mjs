@@ -33,15 +33,23 @@ assert.doesNotMatch(paintGate, /colors\.addEventListener\(['"]keydown['"]/,
 assert.doesNotMatch(paintGate, /colors\.setAttribute\('role', 'button'\)|colors\.tabIndex\s*=/,
   'The paint group must keep its real group semantics instead of becoming a faux button');
 assert.match(paintGate, /button = document\.createElement\('button'\)/,
-  'Locked Paintjob feedback should use a real button');
+  'Locked color feedback should use a real button');
 assert.match(paintGate, /button\.type = 'button'/);
 assert.match(paintGate, /button\.className = 'lot-paint-lock-button'/);
 assert.match(paintGate, /button\.addEventListener\('click', showLockedPaintInfo\)/,
   'The lock explanation belongs directly to the lock button, not an ancestor of paint inputs');
+assert.match(paintGate, /label\.className = 'lot-color-visible-label'/,
+  'The paint control must identify itself visibly as COLOR');
+assert.match(paintGate, /label\.textContent = 'COLOR'/);
+assert.match(paintGate, /label\.setAttribute\('aria-hidden', 'true'\)/,
+  'The visual COLOR label must not duplicate the screen-reader group name');
 assert.match(paintGate, /lot-paint-lock-copy/);
-assert.match(paintGate, /<strong>PAINTJOB<\/strong>/);
+assert.match(paintGate, /copy\.innerHTML = `<strong>\$\{threshold\} 🏆<\/strong><small>TO UNLOCK<\/small>`/,
+  'Locked color must show the Trophy Road requirement next to its swatch');
+assert.match(paintGate, /Color locked\. Car color controls unlock at \$\{threshold\} trophies on Trophy Road\./,
+  'The lock button must make clear that color is locked, not the selected car');
 assert.doesNotMatch(paintGate, /<i>•<\/i>|<b>LOCKED<\/b>/,
-  'Visible lock-status copy must not crowd out the Paintjob label');
+  'The compact color control must not add redundant decorative lock-status copy');
 assert.match(paintGate, /function contrastingInk\(hexColor\)/);
 assert.match(paintGate, /luminance > 0\.18 \? '#08090a' : '#fffdf6'/,
   'The lock glyph must use whichever TURN ink gives the stronger colour contrast');
@@ -85,8 +93,8 @@ assert.match(lotGate, /if \(lastAnnouncedCarId\) dismissVisibleUnlockNotice\(\);
   'Leaving The Lot must not leave a vehicle lock notice behind');
 
 assert.match(lotRuntime, /lot-trophy-gate\.js\?revision=r164-vintage-rally-perks/);
-assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r164-perks/);
-assert.match(lotRuntime, /lot-perk-disclosure\.js\?revision=r164-vintage-rally-perks/);
+assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r203-color-label/);
+assert.match(lotRuntime, /lot-perk-disclosure\.js\?revision=r203-idempotent/);
 
 assert.match(perkPresentation, /getCarDefinition\(vehicleId\)\?\.perk/,
   'Inline perk identity must be read from the selected car itself');
@@ -109,4 +117,4 @@ assert.match(
   new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click`)
 );
 
-console.log('TURN Lot lock feedback, car-owned perk observer safety and native paint ancestry regressions passed.');
+console.log('TURN Lot color lock feedback, car-owned perk observer safety and native paint ancestry regressions passed.');
