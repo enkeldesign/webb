@@ -1,12 +1,25 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [lotGate, paintGate, paintCss, lotRuntime, perkPresentation, app, index, releaseSource] = await Promise.all([
+const [
+  lotGate,
+  paintGate,
+  paintCss,
+  lotRuntime,
+  perkPresentation,
+  colorAccessibility,
+  colorCueCss,
+  app,
+  index,
+  releaseSource
+] = await Promise.all([
   fs.readFile(new URL('../../turn/progression/lot-trophy-gate.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/progression/lot-paint-reward.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/progression/trophy-road-r157.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-enhancement-runtime.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-perk-disclosure.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/accessibility/color-accessibility-r163.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/accessibility/color-cues-r163.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8')
@@ -18,13 +31,33 @@ assert.ok(syncBody, 'The paint gate must expose a bounded synchronization functi
 assert.match(paintGate, /observer\.observe\(picker,/,
   'Paint synchronization must observe the car picker rather than the whole Lot screen');
 assert.doesNotMatch(paintGate, /observer\.observe\(screen,/,
-  'The lock presentation must not be inside the paint observer target');
+  'The lock presentation must not be inside the picker observer target');
 assert.match(syncBody, /if \(locked\) ensureLockButton\(carId\);[\s\S]*else removeLockPresentation\(\)/,
   'Paint synchronization must keep the compact lock control only while paint is actually locked');
 assert.doesNotMatch(syncBody, /lot-paint-lock[\s\S]*remove\(\);[\s\S]*if \(locked\)/,
   'A synchronization pass must never remove and immediately recreate its own lock control');
 assert.match(paintGate, /try \{[\s\S]*\} finally \{[\s\S]*syncing = false/,
   'The synchronization guard must always be released');
+
+assert.match(paintGate, /function mutationTouchesPaintControl\(mutation\)/,
+  'The paint gate must distinguish showroom control replacement from its own presentation mutations');
+assert.match(
+  paintGate,
+  /mutations\.some\(mutationTouchesPaintControl\)\) sync\(\)/,
+  'Replacing native color controls must immediately resynchronize the locked swatch'
+);
+assert.match(
+  paintGate,
+  /controlObserver\.observe\(colors, \{ childList: true \}\)/,
+  'The control replacement observer must stay direct-child-only rather than observing the paint subtree'
+);
+assert.doesNotMatch(
+  paintGate,
+  /controlObserver\.observe\(colors, \{[^}]*subtree:\s*true/,
+  'Paint rebuild recovery must not observe descendants and recreate a self-trigger loop'
+);
+assert.match(paintGate, /controlObserver\.disconnect\(\)/,
+  'The focused color-control observer must be released with THE LOT');
 
 assert.doesNotMatch(paintGate, /colors\.addEventListener\(['"]click['"]/,
   'The paint container must never be a click-listener ancestor of the native color input');
@@ -57,6 +90,36 @@ assert.match(paintGate, /--lot-paint-lock-background/);
 assert.match(paintGate, /--lot-paint-lock-foreground/);
 assert.match(paintGate, /getVehicleDefaultColor\(carId\)/,
   'The locked swatch must represent the selected car factory colour');
+
+assert.match(colorAccessibility, /function placeLotColorCue\(screen, description, cue\)/,
+  'Color cues must have an explicit placement rule in THE LOT');
+assert.match(
+  colorAccessibility,
+  /colors\.getAttribute\('aria-hidden'\) !== 'true'/,
+  'Paintable cars must place their cue with the usable color-control group'
+);
+assert.match(
+  colorAccessibility,
+  /cue\.classList\.add\('is-by-paint-swatch'\)[\s\S]*colors\.append\(cue\)/,
+  'The selected car color cue must sit beside the floating swatch/lock'
+);
+assert.match(
+  colorAccessibility,
+  /cue\.classList\.remove\('is-by-paint-swatch'\)[\s\S]*description\.after\(cue\)/,
+  'Fixed-livery cars must retain their color cue with car information when no paint swatch exists'
+);
+assert.match(colorAccessibility, /RUNTIME_ID = 'color-cues-r204-lot-swatch'/,
+  'The updated color-cue runtime must expose a fresh identity');
+assert.match(
+  colorCueCss,
+  /\.lot-selected-car-color-cue\s*\{[\s\S]*font-size: clamp\(0\.52rem, 1vw, 0\.68rem\)/,
+  'The selected-car color cue must be materially larger than the old tiny annotation'
+);
+assert.match(
+  colorCueCss,
+  /\.lot-selected-car-color-cue\.is-by-paint-swatch\s*\{[\s\S]*align-self: center/,
+  'The enlarged cue must align with the floating color control'
+);
 
 assert.match(paintCss, /\.lot-colors\.is-paint-locked[\s\S]*min-height: 54px/);
 assert.match(
@@ -93,7 +156,7 @@ assert.match(lotGate, /if \(lastAnnouncedCarId\) dismissVisibleUnlockNotice\(\);
   'Leaving The Lot must not leave a vehicle lock notice behind');
 
 assert.match(lotRuntime, /lot-trophy-gate\.js\?revision=r164-vintage-rally-perks/);
-assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r203-color-label/);
+assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r204-color-control-rebuild/);
 assert.match(lotRuntime, /lot-perk-disclosure\.js\?revision=r203-idempotent/);
 
 assert.match(perkPresentation, /getCarDefinition\(vehicleId\)\?\.perk/,
@@ -117,4 +180,4 @@ assert.match(
   new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click`)
 );
 
-console.log('TURN Lot color lock feedback, car-owned perk observer safety and native paint ancestry regressions passed.');
+console.log('TURN Lot color swatch rebuild, enlarged cue placement, observer safety and native paint ancestry regressions passed.');
