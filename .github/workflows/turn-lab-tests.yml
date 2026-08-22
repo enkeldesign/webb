@@ -184,6 +184,9 @@ jobs:
       - name: Run Lot paint observer freeze regression
         run: node turn-lab/tests/paint-lock-observer-production.mjs
 
+      - name: Run Lot PWA COLOR scroll-boundary regression
+        run: node turn-lab/tests/lot-pwa-color-scroll-boundary.mjs
+
       - name: Run production sound foundation regression
         run: node turn-lab/tests/audio-foundation-production.mjs
 
@@ -240,6 +243,7 @@ jobs:
 
       - name: Run Cliffside containment regression
         run: node turn-tests/cliffside-containment-production.mjs
+
       - name: Run full viewport coverage regression
         run: node turn-tests/viewport-coverage-production.mjs
 
