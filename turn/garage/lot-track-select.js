@@ -51,7 +51,7 @@ function prepareShowroomStyles() {
     ),
     prepareStylesheet(
       SHOWROOM_CLEANUP_STYLE_ID,
-      './lot-showroom-cleanup-r201.css?revision=r203-thumbnail-color-polish-ratio155'
+      './lot-showroom-cleanup-r201.css?revision=r203-thumbnail-color-polish-ratio155-zoom-label'
     )
   ]);
   return showroomStylePromise;
