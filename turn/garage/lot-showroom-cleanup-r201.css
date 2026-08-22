@@ -121,6 +121,52 @@
   letter-spacing: .06em;
 }
 
+/* COLOR CUES gets a large visual copy beside the real swatch/lock. The original
+   selected-car cue in CAR INFORMATION stays in the accessibility tree but is
+   visually hidden for paintable cars so the same message is not drawn twice. */
+.lot-showroom .lot-paint-color-cue {
+  flex: 0 1 auto;
+  align-self: center;
+  max-width: min(44vw, 230px);
+  margin: 0 2px 0 3px;
+  padding: 4px 8px;
+  overflow: hidden;
+  border: 2px solid var(--ink, #08090a);
+  border-radius: 999px;
+  background: rgb(255 248 232 / .94);
+  color: var(--ink, #08090a);
+  font-size: clamp(.52rem, 1vw, .68rem);
+  font-weight: 950;
+  letter-spacing: .045em;
+  line-height: 1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.lot-showroom .lot-paint-color-cue::before {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  background: repeating-linear-gradient(135deg, currentColor 0 1px, transparent 1px 3px);
+  content: '';
+}
+
+.lot-showroom.lot-has-paint-control .lot-card .lot-selected-car-color-cue {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+  border: 0 !important;
+  white-space: nowrap !important;
+}
+
 @media (max-height: 520px) {
   .lot-showroom .lot-car-option,
   .lot-showroom .lot-car-option:focus-visible {
@@ -134,4 +180,16 @@
   .lot-showroom .lot-paint-lock-button { gap: 5px; }
   .lot-showroom .lot-paint-lock-copy strong { font-size: .36rem; }
   .lot-showroom .lot-paint-lock-copy small { font-size: .27rem; }
+  .lot-showroom .lot-paint-color-cue {
+    max-width: min(40vw, 200px);
+    padding: 3px 6px;
+    font-size: .48rem;
+  }
+}
+
+@media (max-height: 430px) {
+  .lot-showroom .lot-paint-color-cue {
+    max-width: min(36vw, 176px);
+    font-size: .44rem;
+  }
 }
