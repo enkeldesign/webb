@@ -25,6 +25,19 @@
   display: none;
 }
 
+/* The mockup's carousel cards are about 1.55:1. Keep the established rail height
+   and derive card width from that ratio so the thumbnails stay consistently
+   narrower across landscape viewport sizes without changing their content. */
+.lot-showroom .lot-car-option,
+.lot-showroom .lot-car-option:focus-visible {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 0;
+  height: 100%;
+  aspect-ratio: 1.55 / 1;
+}
+
 /* The captured thumbnail canvas has a fixed 20:9 intrinsic ratio. Let it letterbox
    inside responsive cards instead of stretching it to each card's current ratio. */
 .lot-showroom .lot-car-option-thumbnail {
