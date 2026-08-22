@@ -18,6 +18,8 @@ const SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r201-cleanup';
 let showroomStylePromise = null;
 let originalLotPromise = null;
 let originalLotModule = null;
+let screenReaderPassPromise = null;
+let screenReaderPassModule = null;
 
 function prepareStylesheet(id, relativeUrl) {
   return new Promise((resolve) => {
@@ -66,22 +68,39 @@ function loadOriginalLot() {
   return originalLotPromise;
 }
 
+function loadScreenReaderPass() {
+  if (!screenReaderPassPromise) {
+    screenReaderPassPromise = import('./lot-screen-reader-r202.js?revision=r202-heading-structure')
+      .then((module) => {
+        screenReaderPassModule = module;
+        return module;
+      });
+  }
+  return screenReaderPassPromise;
+}
+
 export async function prepareEnhancedLot() {
   await Promise.all([
     loadOriginalLot(),
+    loadScreenReaderPass(),
     prepareShowroomStyles(),
     prepareLotEnhancements()
   ]);
 }
 
 function mountEnhancedLot(options) {
-  if (!originalLotModule) {
-    throw new Error('TURN: showroom was mounted before its module finished preparing.');
+  if (!originalLotModule || !screenReaderPassModule) {
+    throw new Error('TURN: showroom was mounted before its modules finished preparing.');
   }
   const { showTheLot: showOriginalLot } = originalLotModule;
+  const { installLotScreenReaderPass } = screenReaderPassModule;
   const lotResult = showOriginalLot(options);
   const removeEnhancements = enhanceLotNow();
-  return Promise.resolve(lotResult).finally(removeEnhancements);
+  const removeScreenReaderPass = installLotScreenReaderPass();
+  return Promise.resolve(lotResult).finally(() => {
+    removeScreenReaderPass();
+    removeEnhancements();
+  });
 }
 
 export async function showTheLot(options = {}) {
@@ -96,6 +115,6 @@ export async function showTheLot(options = {}) {
 }
 
 export function showEnhancedLot(options = {}) {
-  if (originalLotModule) return mountEnhancedLot(options);
+  if (originalLotModule && screenReaderPassModule) return mountEnhancedLot(options);
   return prepareEnhancedLot().then(() => mountEnhancedLot(options));
 }
