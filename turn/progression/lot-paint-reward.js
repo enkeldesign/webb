@@ -43,6 +43,13 @@ function contrastingInk(hexColor) {
   return luminance > 0.18 ? '#08090a' : '#fffdf6';
 }
 
+function mutationTouchesPaintControl(mutation) {
+  return [...mutation.addedNodes, ...mutation.removedNodes].some((node) => (
+    node?.nodeType === 1
+      && (node.matches?.('.lot-color-control') || node.querySelector?.('.lot-color-control'))
+  ));
+}
+
 export function gateLotPaintNow(root = document.body) {
   const screen = findLotScreen(root);
   if (!screen) return () => {};
@@ -180,14 +187,24 @@ export function gateLotPaintNow(root = document.body) {
   }
 
   const observer = new MutationObserver(sync);
-  // Observe only the car picker. The lock presentation lives in the separate
-  // paint rail, so adding or removing it cannot recursively trigger this observer.
+  // Selection remains the primary signal. Keep this observer scoped to the picker,
+  // never the whole Lot screen.
   observer.observe(picker, {
     childList: true,
     subtree: true,
     attributes: true,
     attributeFilter: ['aria-checked']
   });
+
+  // The showroom replaces the native color controls whenever a different car is
+  // selected. That replacement can remove the injected COLOR label and locked swatch
+  // after the picker mutation has already been observed. Watch only direct child-list
+  // changes that actually add/remove .lot-color-control nodes. Our own label/button
+  // mutations are ignored, so this cannot create the old self-observer feedback loop.
+  const controlObserver = new MutationObserver((mutations) => {
+    if (mutations.some(mutationTouchesPaintControl)) sync();
+  });
+  controlObserver.observe(colors, { childList: true });
 
   const handleReward = sync;
   const handleStorage = (event) => {
@@ -200,6 +217,7 @@ export function gateLotPaintNow(root = document.body) {
 
   const release = () => {
     observer.disconnect();
+    controlObserver.disconnect();
     window.removeEventListener('turn:trophy-road-updated', handleReward);
     window.removeEventListener('storage', handleStorage);
     raceButton.removeEventListener('click', sync, { capture: true });
