@@ -24,3 +24,69 @@
 .lot-showroom .lot-car-option-fallback i:nth-child(3) {
   display: none;
 }
+
+/* The captured thumbnail canvas has a fixed 20:9 intrinsic ratio. Let it letterbox
+   inside responsive cards instead of stretching it to each card's current ratio. */
+.lot-showroom .lot-car-option-thumbnail {
+  object-fit: contain;
+  object-position: center;
+}
+
+/* Make the floating paint control read as COLOR first, lock state second. */
+.lot-showroom .lot-color-visible-label {
+  flex: 0 0 auto;
+  align-self: center;
+  color: var(--ink, #08090a);
+  font-size: .42rem;
+  font-weight: 950;
+  letter-spacing: .09em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.lot-showroom .lot-paint-lock-button {
+  grid-template-columns: auto auto;
+  width: auto;
+  min-width: 0;
+  padding: 0;
+  gap: 7px;
+  align-items: center;
+  justify-items: start;
+}
+
+.lot-showroom .lot-paint-lock-copy {
+  position: static !important;
+  display: grid;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 3px 0 0 !important;
+  overflow: visible !important;
+  clip: auto !important;
+  clip-path: none !important;
+  border: 0 !important;
+  gap: 1px;
+  color: var(--ink, #08090a);
+  line-height: 1;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.lot-showroom .lot-paint-lock-copy strong {
+  font-size: .42rem;
+  font-weight: 950;
+  letter-spacing: .04em;
+}
+
+.lot-showroom .lot-paint-lock-copy small {
+  font-size: .31rem;
+  font-weight: 900;
+  letter-spacing: .06em;
+}
+
+@media (max-height: 520px) {
+  .lot-showroom .lot-color-visible-label { font-size: .36rem; }
+  .lot-showroom .lot-paint-lock-button { gap: 5px; }
+  .lot-showroom .lot-paint-lock-copy strong { font-size: .36rem; }
+  .lot-showroom .lot-paint-lock-copy small { font-size: .27rem; }
+}

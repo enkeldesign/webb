@@ -2,6 +2,7 @@ import { getCarDefinition } from '../vehicle/catalog.js?revision=r164-vintage-ra
 import { vehiclePerkPresentation } from '../vehicle/perk-presentation.js?revision=r164-post-soak';
 
 const STYLE_ID = 'turn-lot-perk-inline-styles';
+const activeDisclosures = new WeakMap();
 
 function installStyles() {
   if (document.getElementById(STYLE_ID)) return;
@@ -44,6 +45,14 @@ export function installLotPerkDisclosure(root = document.body) {
   const description = card?.querySelector?.('.lot-car-description');
   const picker = screen?.querySelector?.('.lot-car-picker');
   if (!screen || !card || !description || !picker) return () => {};
+
+  const active = activeDisclosures.get(screen);
+  if (active) return active.release;
+
+  // A Lot can be enhanced through both the prepared route and the long-lived
+  // enhancement runtime. Keep the perk presentation idempotent even if those
+  // paths overlap, and clean up any stale duplicate left by an older install.
+  for (const stale of card.querySelectorAll('.lot-perk-disclosure')) stale.remove();
 
   installStyles();
 
@@ -90,8 +99,15 @@ export function installLotPerkDisclosure(root = document.body) {
   });
   sync();
 
-  return () => {
+  let released = false;
+  const release = () => {
+    if (released) return;
+    released = true;
     observer.disconnect();
     perk.remove();
+    activeDisclosures.delete(screen);
   };
+
+  activeDisclosures.set(screen, { release });
+  return release;
 }

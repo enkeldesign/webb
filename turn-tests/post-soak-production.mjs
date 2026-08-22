@@ -159,7 +159,7 @@ assert.equal(
   'Other vehicle perk copy must remain untouched'
 );
 assert.match(lotPerk, /vehiclePerkPresentation\(vehicleId, getCarDefinition\(vehicleId\)\?\.perk\)/);
-assert.match(lotRuntime, /lot-perk-disclosure\.js\?revision=r164-post-soak/);
+assert.match(lotRuntime, /lot-perk-disclosure\.js\?revision=r203-idempotent/);
 assert.match(trophyWrapper, /FUTURE_RACER_REWARD_PERK_DESCRIPTION/);
 assert.match(trophyWrapper, /reward\.id !== 'future-racer'/);
 

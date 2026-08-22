@@ -1,14 +1,28 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [m8Home, showroom, showroomCss, showroomCleanupCss, wrapper, accessibility, screenReaderPass] = await Promise.all([
+const [
+  m8Home,
+  showroom,
+  showroomCss,
+  showroomCleanupCss,
+  wrapper,
+  accessibility,
+  screenReaderPass,
+  perkDisclosure,
+  paintReward,
+  enhancementRuntime
+] = await Promise.all([
   fs.readFile(new URL('../turn/m8-home.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/garage/lot-showroom-experiment.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/garage/lot-showroom-experiment.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/garage/lot-showroom-cleanup-r201.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/garage/lot-track-select.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/garage/lot-accessibility-r118.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/garage/lot-screen-reader-r202.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/garage/lot-screen-reader-r202.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/garage/lot-perk-disclosure.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/progression/lot-paint-reward.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/garage/lot-enhancement-runtime.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(
@@ -57,8 +71,10 @@ assert.match(wrapper, /lot-showroom-experiment\.js\?revision=r200-production-can
   'The production wrapper must lazy-load the current showroom implementation');
 assert.match(wrapper, /lot-showroom-experiment\.css\?revision=r200-production-candidate/,
   'The showroom stylesheet must have its own cache identity');
-assert.match(wrapper, /lot-showroom-cleanup-r201\.css\?revision=r201-loading-cleanup/,
-  'The production wrapper must preload the small showroom polish layer before mount');
+assert.match(wrapper, /lot-showroom-cleanup-r201\.css\?revision=r203-thumbnail-color-polish/,
+  'The production wrapper must preload the current showroom polish layer with a fresh cache identity');
+assert.match(wrapper, /SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r203-polish'/,
+  'The polish stylesheet link must not reuse the previous cached link identity');
 assert.match(wrapper, /link\.addEventListener\('load', resolve/,
   'The Lot must wait for its showroom stylesheets before mounting to avoid a layout flash');
 
@@ -107,11 +123,6 @@ assert.match(
 );
 assert.match(showroomCss, /\.lot-showroom \.lot-color-control input\[type='color'\]/,
   'Unlocked paint must remain a native colour input presented as a swatch');
-assert.match(
-  showroomCss,
-  /\.lot-showroom \.lot-paint-lock-copy[\s\S]*clip-path: inset\(50%\)/,
-  'The locked PAINTJOB explanation must remain accessible without occupying visible showroom space'
-);
 assert.match(showroomCss, /\.lot-showroom \.lot-car-option\.has-3d-thumbnail \.lot-car-option-thumbnail \{ opacity: 1; \}/,
   'Cards must progressively replace their lightweight fallback with the real model thumbnail');
 
@@ -132,6 +143,40 @@ assert.match(
 );
 assert.doesNotMatch(showroomCleanupCss, /lot-car-secondary/,
   'The loading placeholder should stay deliberately abstract instead of trying to mimic the finished car');
+assert.match(
+  showroomCleanupCss,
+  /\.lot-showroom \.lot-car-option-thumbnail\s*\{[\s\S]*object-fit: contain;[\s\S]*object-position: center;/,
+  'Rendered 20:9 car thumbnails must preserve their intrinsic aspect ratio instead of stretching with responsive cards'
+);
+assert.match(showroomCleanupCss, /\.lot-showroom \.lot-color-visible-label[\s\S]*font-weight: 950/,
+  'The floating paint swatch must have a visible COLOR label');
+assert.match(
+  showroomCleanupCss,
+  /\.lot-showroom \.lot-paint-lock-copy[\s\S]*position: static !important;[\s\S]*clip-path: none !important;/,
+  'Locked color must show its unlock requirement beside the swatch instead of hiding all explanatory copy'
+);
+
+assert.match(perkDisclosure, /const activeDisclosures = new WeakMap\(\)/,
+  'Perk disclosure must keep one active installer per Lot screen');
+assert.match(perkDisclosure, /const active = activeDisclosures\.get\(screen\);[\s\S]*if \(active\) return active\.release;/,
+  'A second enhancement pass must reuse the existing perk disclosure rather than append another copy');
+assert.match(perkDisclosure, /querySelectorAll\('\.lot-perk-disclosure'\)[\s\S]*stale\.remove\(\)/,
+  'Any stale duplicate perk block from an older install must be removed before mounting the canonical copy');
+assert.match(perkDisclosure, /activeDisclosures\.delete\(screen\)/,
+  'Perk disclosure idempotency state must be released with the Lot');
+
+assert.match(paintReward, /label\.className = 'lot-color-visible-label'/,
+  'Paint gating must create a real visible COLOR label rather than relying on generated CSS content');
+assert.match(paintReward, /label\.setAttribute\('aria-hidden', 'true'\)/,
+  'The visual COLOR label must not duplicate the named Choose color group for screen readers');
+assert.match(paintReward, /`<strong>\$\{threshold\} 🏆<\/strong><small>TO UNLOCK<\/small>`/,
+  'Locked paint must display its Trophy Road unlock requirement next to the swatch');
+assert.match(paintReward, /`Color locked\. Car color controls unlock at \$\{threshold\} trophies on Trophy Road\.`/,
+  'The locked color button must explain specifically that color, not the whole car, is locked');
+assert.match(enhancementRuntime, /lot-perk-disclosure\.js\?revision=r203-idempotent/,
+  'The fixed perk installer must receive a fresh module cache identity');
+assert.match(enhancementRuntime, /lot-paint-reward\.js\?revision=r203-color-label/,
+  'The clarified color gate must receive a fresh module cache identity');
 
 // The established accessibility layer stays available for legacy Lot compatibility.
 assert.match(accessibility, /screen\.classList\.contains\('lot-showroom'\)/,
@@ -185,4 +230,4 @@ assert.match(screenReaderPass, /input\.setAttribute\('aria-label', `\$\{label\} 
 assert.match(screenReaderPass, /bottom: calc\(var\(--lot-picker-height, 122px\) \+ 12px\)/,
   'Moving the colour controls semantically must preserve their floating position over the 3D view');
 
-console.log('TURN M8 Home now enters a production showroom with H1 THE LOT, H2 CHOOSE CAR, H3 CAR INFORMATION, grouped colour controls and H2 RACE; duplicate car/stat/color announcements are removed while the visual showroom remains unchanged.');
+console.log('TURN M8 Lot keeps proportional 3D thumbnails, one perk disclosure, a visibly labelled COLOR control with unlock info, and the H1/H2/H3/H2 screen-reader structure.');

@@ -77,7 +77,7 @@ export function gateLotPaintNow(root = document.body) {
   function showLockedPaintInfo() {
     showTrophyUnlockNotice({
       reward: reward(),
-      itemName: 'Vehicle paint controls'
+      itemName: 'Car color'
     });
   }
 
@@ -87,6 +87,22 @@ export function gateLotPaintNow(root = document.body) {
     icon.style.setProperty('--lot-paint-lock-foreground', contrastingInk(bodyColour));
   }
 
+  function ensureVisibleLabel(car) {
+    let label = colors.querySelector('.lot-color-visible-label');
+    if (!car || car.fixedLivery) {
+      label?.remove();
+      return null;
+    }
+    if (!label) {
+      label = document.createElement('span');
+      label.className = 'lot-color-visible-label';
+      label.textContent = 'COLOR';
+      label.setAttribute('aria-hidden', 'true');
+      colors.prepend(label);
+    }
+    return label;
+  }
+
   function ensureLockButton(carId) {
     let button = colors.querySelector('.lot-paint-lock-button');
     if (!button) {
@@ -94,25 +110,30 @@ export function gateLotPaintNow(root = document.body) {
       button.type = 'button';
       button.className = 'lot-paint-lock-button';
 
-      const copy = document.createElement('span');
-      copy.className = 'lot-paint-lock-copy';
-      copy.innerHTML = '<strong>PAINTJOB</strong>';
-
       const icon = document.createElement('span');
       icon.className = 'lot-paint-lock';
       icon.setAttribute('aria-hidden', 'true');
       icon.innerHTML = LOCK_ICON;
 
-      button.append(copy, icon);
+      const copy = document.createElement('span');
+      copy.className = 'lot-paint-lock-copy';
+      copy.setAttribute('aria-hidden', 'true');
+
+      button.append(icon, copy);
       button.addEventListener('click', showLockedPaintInfo);
-      colors.prepend(button);
+      const label = colors.querySelector('.lot-color-visible-label');
+      if (label) label.insertAdjacentElement('afterend', button);
+      else colors.prepend(button);
     }
 
     const threshold = reward()?.threshold || 900;
+    const copy = button.querySelector('.lot-paint-lock-copy');
+    if (copy) copy.innerHTML = `<strong>${threshold} 🏆</strong><small>TO UNLOCK</small>`;
     button.setAttribute(
       'aria-label',
-      `Paintjob locked. Vehicle paint controls unlock at ${threshold} trophies on Trophy Road.`
+      `Color locked. Car color controls unlock at ${threshold} trophies on Trophy Road.`
     );
+    button.title = `Color unlocks at ${threshold} trophies`;
     applyLockColour(button.querySelector('.lot-paint-lock'), carId);
     return button;
   }
@@ -132,6 +153,7 @@ export function gateLotPaintNow(root = document.body) {
       const changedCar = Boolean(carId) && carId !== lastCarId;
       const controls = [...colors.querySelectorAll('.lot-color-control:not(.lot-fixed-livery)')];
 
+      ensureVisibleLabel(car);
       if (car && !car.fixedLivery && (!paintUnlocked || changedCar)) forceFactoryPaint(carId);
 
       const locked = Boolean(car && !car.fixedLivery && !paintUnlocked);
@@ -182,6 +204,7 @@ export function gateLotPaintNow(root = document.body) {
     window.removeEventListener('storage', handleStorage);
     raceButton.removeEventListener('click', sync, { capture: true });
     removeLockPresentation();
+    colors.querySelector('.lot-color-visible-label')?.remove();
     for (const control of colors.querySelectorAll('.lot-color-control')) {
       control.hidden = false;
       const input = control.querySelector('input');

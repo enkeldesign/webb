@@ -21,9 +21,9 @@ export function prepareLotEnhancements() {
     import('./lot-stat-legend.js?build=20260724-r59'),
     import('./lot-layout-r60.js?build=20260729-r116'),
     import('./lot-accessibility-r118.js?build=20260729-r118&revision=r588-canonical-attributes'),
-    import('./lot-perk-disclosure.js?revision=r164-post-soak'),
+    import('./lot-perk-disclosure.js?revision=r203-idempotent'),
     import('../progression/lot-trophy-gate.js?revision=r585-visible-locks'),
-    import('../progression/lot-paint-reward.js?revision=r164-perks')
+    import('../progression/lot-paint-reward.js?revision=r203-color-label')
   ]).then(([
     statLegend,
     layout,
