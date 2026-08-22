@@ -133,6 +133,14 @@ test('TURN styling includes focus, contrast and reduced-motion treatment', () =>
   assert.match(icon, /#ff4fa3/);
 });
 
+test('the attitude indicator occupies the control lane above thrust', () => {
+  assert.match(html, /styles\.css\?build=20260823-r2/);
+  assert.match(html, /app\.mjs\?build=20260823-r2/);
+  assert.match(css, /bottom: calc\(max\(18px, env\(safe-area-inset-bottom\)\) \+ clamp\(80px, 13vw, 120px\) \+ 12px\)/);
+  assert.match(css, /width: clamp\(78px, 12vw, 118px\)/);
+  assert.match(css, /\.attitude \{\n    right: max\(18px, env\(safe-area-inset-right\)\);\n    bottom: 94px;\n    width: 76px;/);
+});
+
 test('pitch control has a calm dead zone and a reversible response', () => {
   assert.equal(controlFromAngle(degreesToRadians(1)), 0);
   const standard = controlFromAngle(degreesToRadians(10));

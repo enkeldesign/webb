@@ -21,7 +21,7 @@ import {
 } from './flight-model.mjs';
 import { COURSE_POINTS, createFlightScene } from './scene.mjs?build=20260823-r1';
 
-const BUILD = '2026.08.23-r1';
+const BUILD = '2026.08.23-r2';
 const BEST_TIME_KEY = 'turnup.bestCourseSeconds.v1';
 const SETTINGS_KEY = 'turnup.settings.v1';
 const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
