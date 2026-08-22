@@ -76,6 +76,7 @@ test('the real Midlanda–Söråker course uses open 3D map infrastructure', () 
   assert.match(scene, /type: 'fill-extrusion'/);
   assert.match(scene, /renderingMode: '3d'/);
   assert.match(scene, /defaultProjectionData\.mainMatrix/);
+  assert.doesNotMatch(scene, /maplibregl\.supported/);
   assert.match(scene, /RUNWAY 16/);
   assert.match(scene, /SÖRÅKER/);
   assert.match(scene, /STRIND AREA/);

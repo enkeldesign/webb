@@ -61,7 +61,6 @@ export async function createFlightScene(container, {
   onModelStatus = () => {}
 } = {}) {
   if (!container) throw new Error('TURN UP needs a map container.');
-  if (!maplibregl.supported()) throw new Error('This browser does not support the WebGL map TURN UP needs.');
 
   const map = new maplibregl.Map({
     container,
