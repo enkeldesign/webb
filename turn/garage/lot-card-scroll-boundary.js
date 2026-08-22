@@ -43,6 +43,7 @@ export function installLotCardScrollBoundary(root = document.body) {
   const title = card.querySelector('.lot-car-title');
   const description = card.querySelector('.lot-car-description');
   const perk = card.querySelector('.lot-perk-disclosure');
+  const attributes = card.querySelector('.lot-attributes-row');
   const stats = card.querySelector('.lot-stats');
   const statsHelp = card.querySelector('.lot-stats-help');
   if (!title || !description || !stats) return () => {};
@@ -52,7 +53,7 @@ export function installLotCardScrollBoundary(root = document.body) {
   const scroll = document.createElement('div');
   scroll.className = 'lot-card-info-scroll';
   card.insertBefore(scroll, title);
-  for (const node of [title, description, perk, stats, statsHelp]) {
+  for (const node of [title, description, perk, attributes, stats, statsHelp]) {
     if (node?.parentElement === card) scroll.appendChild(node);
   }
 
