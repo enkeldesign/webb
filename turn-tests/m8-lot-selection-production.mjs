@@ -11,8 +11,13 @@ const [m8Home, showroom, showroomCss, wrapper, accessibility] = await Promise.al
 
 assert.match(
   m8Home,
-  /import \{ showEnhancedLot as showTheLot \} from '\/turn\/garage\/lot-track-select\.js\?revision=r200-production-candidate';/,
-  'The active M8 Home route must enter the showroom wrapper instead of bypassing it through the legacy parking-lot implementation'
+  /import \{ prepareEnhancedLot, showEnhancedLot as showTheLot \} from '\/turn\/garage\/lot-track-select\.js\?revision=r200-production-candidate';/,
+  'The active M8 Home route must enter the prepared showroom wrapper instead of bypassing it through the legacy parking-lot implementation'
+);
+assert.match(
+  m8Home,
+  /await Promise\.all\(\[[\s\S]*activateTrack\(selectedTrackId, runtime\),[\s\S]*prepareEnhancedLot\(\)[\s\S]*\]\);/,
+  'M8 must prepare the showroom in parallel with track activation so its controls can mount synchronously once Home is hidden'
 );
 assert.match(
   m8Home,
@@ -20,11 +25,24 @@ assert.match(
   'M8 must still open car selection with the current saved vehicle after activating the selected track'
 );
 assert.ok(
-  m8Home.indexOf('await activateTrack(selectedTrackId, runtime);') < m8Home.indexOf('const lotPromise = showTheLot'),
-  'M8 must activate the chosen track before opening the car showroom'
+  m8Home.indexOf('prepareEnhancedLot()') < m8Home.indexOf('const lotPromise = showTheLot'),
+  'The showroom must be prepared before M8 attaches the existing Race This Car motion-access gate'
+);
+assert.ok(
+  m8Home.indexOf('const lotPromise = showTheLot') < m8Home.indexOf('const removeRaceGate = installLotRaceGate'),
+  'Opening the prepared showroom must synchronously mount Race This Car before the M8 race gate queries it'
 );
 
-assert.match(wrapper, /export async function showEnhancedLot/);
+assert.match(wrapper, /export async function prepareEnhancedLot/,
+  'The wrapper must expose an explicit showroom warmup contract');
+assert.match(wrapper, /let originalLotModule = null/);
+assert.match(wrapper, /originalLotModule = module/,
+  'Warmup must retain the resolved showroom module for synchronous mounting');
+assert.match(wrapper, /function mountEnhancedLot\(options\)/,
+  'Prepared callers must have a synchronous showroom mount path');
+assert.match(wrapper, /export function showEnhancedLot/);
+assert.match(wrapper, /if \(originalLotModule\) return mountEnhancedLot\(options\)/,
+  'M8 must not cross another asynchronous boundary once the showroom has been prepared');
 assert.match(wrapper, /lot-showroom-experiment\.js\?revision=r200-production-candidate/,
   'The production wrapper must lazy-load the current showroom implementation');
 assert.match(wrapper, /lot-showroom-experiment\.css\?revision=r200-production-candidate/,
@@ -86,4 +104,4 @@ assert.match(accessibility, /aria-setsize/);
 assert.match(accessibility, /describeVehicleStats\(car\.stats\)/,
   'Screen-reader vehicle summaries must still use the same canonical attributes as the visible panel');
 
-console.log('TURN M8 Home now enters the production showroom Lot with compact paint, real 3D car thumbnails, bounded rendering and stable accessible card order.');
+console.log('TURN M8 Home now enters a prepared production showroom Lot with compact paint, real 3D car thumbnails, bounded rendering and stable accessible card order.');
