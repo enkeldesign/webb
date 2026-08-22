@@ -1,0 +1,858 @@
+/* Production showroom layout for THE LOT. Loaded lazily with the Lot module. */
+
+.lot-showroom {
+  --lot-header-height: 76px;
+  --lot-picker-height: 122px;
+  --lot-panel-gap: 12px;
+  --lot-info-width: clamp(286px, 33vw, 410px);
+  background:
+    radial-gradient(circle at 38% 38%, rgb(255 255 255 / .5), transparent 32%),
+    linear-gradient(180deg, #8ed8ff 0 58%, #61717c 58% 100%);
+}
+
+.lot-showroom::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  inset: var(--lot-header-height) var(--lot-info-width) var(--lot-picker-height) 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent 0 8%, rgb(255 255 255 / .18) 8% 8.35%, transparent 8.35% 91%, rgb(255 255 255 / .16) 91% 91.35%, transparent 91.35%),
+    linear-gradient(180deg, transparent 0 62%, rgb(8 9 10 / .08) 62% 63%, transparent 63%);
+}
+
+.lot-showroom .lot-heading {
+  position: absolute;
+  z-index: 8;
+  top: max(10px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  left: max(88px, calc(env(safe-area-inset-left) + 82px));
+  display: flex;
+  height: 56px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  text-shadow: none;
+  pointer-events: none;
+}
+
+.lot-showroom .lot-heading-copy { min-width: 0; }
+
+.lot-showroom .lot-heading h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4.8vw, 3.9rem);
+  line-height: .8;
+  letter-spacing: -.045em;
+  text-shadow: 3px 3px 0 var(--paper, #fff8e8);
+}
+
+.lot-showroom .lot-heading p {
+  margin: 8px 0 0;
+  font-size: clamp(.54rem, 1.05vw, .72rem);
+  letter-spacing: .16em;
+}
+
+.lot-showroom .lot-progress-summary {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  flex: 0 1 300px;
+  gap: 8px;
+  align-items: center;
+  min-height: 50px;
+  padding: 6px 11px 6px 6px;
+  border: 3px solid var(--ink, #08090a);
+  border-radius: 14px;
+  background: rgb(8 9 10 / .92);
+  color: var(--paper, #fff8e8);
+  box-shadow: 4px 4px 0 var(--ink, #08090a);
+}
+
+.lot-showroom .lot-progress-lock {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  padding: 7px;
+  place-items: center;
+  border: 2px solid var(--ink, #08090a);
+  border-radius: 10px;
+  background: var(--yellow, #ffd43b);
+  color: var(--ink, #08090a);
+}
+
+.lot-showroom .lot-progress-lock svg,
+.lot-showroom .lot-car-option-lock svg,
+.lot-showroom .lot-selected-car-lock svg,
+.lot-showroom .lot-paint-lock svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.lot-showroom .lot-progress-summary > span:last-child {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.lot-showroom .lot-progress-summary strong {
+  overflow: hidden;
+  font-size: .62rem;
+  letter-spacing: .08em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lot-showroom .lot-progress-summary small {
+  overflow: hidden;
+  opacity: .8;
+  font-size: .43rem;
+  letter-spacing: .045em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lot-showroom .lot-back {
+  position: absolute;
+  z-index: 9;
+  top: max(12px, env(safe-area-inset-top));
+  right: auto;
+  bottom: auto;
+  left: max(14px, env(safe-area-inset-left));
+  width: auto;
+  height: 48px;
+  min-width: 66px;
+  min-height: 48px;
+  padding: 0 12px;
+  border-radius: 13px;
+  background: var(--pink, #ff4fa3);
+  color: var(--ink, #08090a);
+  box-shadow: 4px 4px 0 var(--ink, #08090a);
+  font-size: .58rem;
+  letter-spacing: .05em;
+}
+
+.lot-showroom .lot-side {
+  --lot-viewbox-min-height: 0px;
+  --lot-side-gap: var(--lot-panel-gap);
+  position: absolute;
+  z-index: 4;
+  inset: var(--lot-header-height) max(14px, env(safe-area-inset-right)) var(--lot-picker-height) max(14px, env(safe-area-inset-left));
+  width: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--lot-info-width);
+  grid-template-rows: minmax(0, 1fr);
+  gap: var(--lot-panel-gap);
+  pointer-events: none;
+}
+
+.lot-showroom .lot-side > * { pointer-events: auto; }
+
+.lot-showroom .lot-viewbox,
+.lot-showroom .lot-viewbox-with-paint {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  flex: none;
+  overflow: hidden;
+  border: 4px solid var(--ink, #08090a);
+  border-radius: 20px;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgb(255 255 255 / .9), rgb(255 255 255 / .12) 46%, transparent 65%),
+    linear-gradient(180deg, #bcedff 0 63%, #677581 63% 100%);
+  box-shadow: 7px 7px 0 var(--ink, #08090a);
+}
+
+.lot-showroom .lot-viewbox::before {
+  content: 'TURN';
+  position: absolute;
+  z-index: 0;
+  top: 17%;
+  right: 7%;
+  padding: 6px 11px;
+  border: 3px solid var(--ink, #08090a);
+  transform: rotate(-3deg);
+  background: var(--yellow, #ffd43b);
+  color: var(--ink, #08090a);
+  font-size: clamp(.72rem, 1.7vw, 1.12rem);
+  font-weight: 950;
+  letter-spacing: .08em;
+  opacity: .78;
+}
+
+.lot-showroom .lot-viewbox-head {
+  z-index: 5;
+  top: 9px;
+  right: 11px;
+  left: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lot-showroom .lot-viewbox-head span,
+.lot-showroom .lot-viewbox-head b {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 8px;
+  border: 2px solid var(--ink, #08090a);
+  border-radius: 999px;
+  background: rgb(255 248 232 / .92);
+  color: var(--ink, #08090a);
+  font-size: .4rem;
+  font-weight: 950;
+  letter-spacing: .08em;
+}
+
+.lot-showroom .lot-viewbox-head span { background: var(--yellow, #ffd43b); }
+
+.lot-showroom .lot-view-host,
+.lot-showroom .lot-viewbox-with-paint .lot-view-host {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.lot-showroom .lot-view-host canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.lot-showroom .lot-cycle {
+  position: absolute;
+  z-index: 6;
+  top: 50%;
+  display: grid;
+  width: 46px;
+  height: 46px;
+  min-height: 0;
+  padding: 0 0 5px;
+  place-items: center;
+  border: 3px solid var(--ink, #08090a);
+  border-radius: 13px;
+  background: var(--paper, #fff8e8);
+  box-shadow: 4px 4px 0 var(--ink, #08090a);
+  color: var(--ink, #08090a);
+  font: 950 1.9rem/1 system-ui, sans-serif;
+  transform: translateY(-50%);
+}
+
+.lot-showroom .lot-cycle-prev { left: 13px; }
+.lot-showroom .lot-cycle-next { right: 13px; }
+
+/* Paint is a compact floating swatch, not a rail. */
+.lot-showroom .lot-colors,
+.lot-showroom .lot-viewbox-with-paint .lot-colors,
+.lot-showroom .lot-viewbox-with-paint .lot-colors.is-paint-locked {
+  position: absolute;
+  z-index: 7;
+  right: auto;
+  bottom: 12px;
+  left: 12px;
+  display: flex;
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 5px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 5px;
+  border: 2px solid var(--ink, #08090a);
+  border-radius: 14px;
+  background: rgb(255 248 232 / .94);
+  box-shadow: 3px 3px 0 var(--ink, #08090a);
+}
+
+.lot-showroom .lot-colors:empty { display: none; }
+
+.lot-showroom .lot-color-control {
+  position: relative;
+  display: block;
+  flex: 0 0 42px;
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  min-height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.lot-showroom .lot-color-control input[type='color'] {
+  display: block;
+  width: 42px;
+  height: 42px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid var(--ink, #08090a);
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.lot-showroom .lot-color-control input[type='color']::-webkit-color-swatch-wrapper { padding: 0; }
+.lot-showroom .lot-color-control input[type='color']::-webkit-color-swatch {
+  border: 0;
+  border-radius: 7px;
+}
+.lot-showroom .lot-color-control input[type='color']::-moz-color-swatch {
+  border: 0;
+  border-radius: 7px;
+}
+
+.lot-showroom .lot-color-control input[type='color']:focus-visible {
+  outline: 4px solid var(--cyan, #38d9ff);
+  outline-offset: 2px;
+}
+
+.lot-showroom .lot-color-name {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+  border: 0 !important;
+  white-space: nowrap !important;
+}
+
+.lot-showroom .lot-paint-lock-button {
+  display: grid;
+  grid-template-columns: 1fr;
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  min-height: 42px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.lot-showroom .lot-paint-lock-copy {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+}
+
+.lot-showroom .lot-paint-lock {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  box-sizing: border-box;
+  padding: 9px;
+  place-items: center;
+  border: 2px solid var(--ink, #08090a);
+  border-radius: 10px;
+  background: var(--lot-paint-lock-background, var(--yellow, #ffd43b));
+  box-shadow: none;
+  color: var(--lot-paint-lock-foreground, var(--ink, #08090a));
+}
+
+.lot-showroom .lot-paint-lock-button:focus-visible {
+  outline: 4px solid var(--cyan, #38d9ff);
+  outline-offset: 2px;
+}
+
+.lot-showroom .lot-card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  max-height: none;
+  height: 100%;
+  padding: 13px;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 4px solid var(--ink, #08090a);
+  border-radius: 20px;
+  background: rgb(255 248 232 / .98);
+  box-shadow: 7px 7px 0 var(--ink, #08090a);
+}
+
+.lot-showroom .lot-car-title {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3px;
+  align-items: start;
+  padding-bottom: 8px;
+  border-bottom: 3px solid var(--ink, #08090a);
+}
+
+.lot-showroom .lot-car-title > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .45rem;
+  letter-spacing: .12em;
+}
+
+.lot-showroom .lot-car-title strong {
+  overflow: visible;
+  font-size: clamp(1.2rem, 2.8vw, 2rem);
+  line-height: .96;
+  text-align: left;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.lot-showroom .lot-selected-car-lock {
+  display: inline-grid;
+  flex: 0 0 19px;
+  width: 19px;
+  height: 19px;
+  margin-right: 5px;
+  place-items: center;
+  vertical-align: middle;
+}
+
+.lot-showroom .lot-car-description {
+  margin: 7px 0 4px;
+  font-size: clamp(.5rem, .95vw, .63rem);
+  line-height: 1.3;
+}
+
+.lot-showroom .lot-perk-copy {
+  margin: 3px 0 6px;
+  font-size: clamp(.46rem, .86vw, .57rem);
+  line-height: 1.25;
+}
+
+.lot-showroom .lot-stats {
+  display: grid;
+  gap: 5px;
+  margin: 7px 0;
+}
+
+.lot-showroom .lot-stat {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+}
+
+.lot-showroom .lot-stat > span {
+  font-size: .42rem;
+  letter-spacing: .04em;
+}
+
+.lot-showroom .lot-stat i {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
+  height: 9px;
+}
+
+.lot-showroom .lot-stat b {
+  border: 1.5px solid var(--ink, #08090a);
+  border-radius: 3px;
+  background: #fff;
+}
+
+.lot-showroom .lot-stat:nth-child(1) b.is-full,
+.lot-showroom .lot-stat:nth-child(2) b.is-full { background: var(--turn-control-gas, #8ce99a); }
+.lot-showroom .lot-stat:nth-child(3) b.is-full,
+.lot-showroom .lot-stat:nth-child(4) b.is-full { background: var(--turn-control-drift, #38d9ff); }
+.lot-showroom .lot-stat:nth-child(5) b.is-full,
+.lot-showroom .lot-stat:nth-child(6) b.is-full { background: var(--turn-control-boost, #ffd43b); }
+
+.lot-showroom .lot-stats-help {
+  width: 21px;
+  height: 21px;
+  min-height: 0;
+  font-size: .7rem;
+}
+
+.lot-showroom .lot-card-actions {
+  position: sticky;
+  z-index: 4;
+  right: auto;
+  bottom: -1px;
+  width: auto;
+  margin: auto -4px -4px;
+  padding: 7px 4px 4px;
+  background: linear-gradient(180deg, transparent, rgb(255 248 232 / .96) 26%);
+}
+
+.lot-showroom .lot-race {
+  width: 100%;
+  min-height: 50px;
+  padding: 8px 11px;
+  border-radius: 13px;
+  background: var(--pink, #ff4fa3);
+  font-size: clamp(.64rem, 1.25vw, .84rem);
+  letter-spacing: .035em;
+}
+
+.lot-showroom .lot-race.is-trophy-locked { background: var(--muted, #d6d0c2); }
+
+.lot-showroom .lot-car-picker-shell {
+  position: absolute;
+  z-index: 7;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: var(--lot-picker-height);
+  padding: 9px max(14px, env(safe-area-inset-right)) max(9px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+  border-top: 4px solid var(--ink, #08090a);
+  background: #111316;
+  box-shadow: 0 -4px 0 rgb(255 255 255 / .08);
+}
+
+.lot-showroom .lot-car-picker {
+  position: static;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  padding: 0 2px 3px;
+  gap: 8px;
+  align-items: stretch;
+  overflow-x: auto;
+  overflow-y: hidden;
+  pointer-events: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: var(--yellow, #ffd43b) #292d31;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.lot-showroom .lot-car-option,
+.lot-showroom .lot-car-option:focus-visible {
+  position: relative;
+  inset: auto;
+  display: grid;
+  width: clamp(124px, 14.6vw, 166px);
+  min-width: clamp(124px, 14.6vw, 166px);
+  height: auto;
+  min-height: 0;
+  padding: 5px;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 4px;
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
+  border: 3px solid #51575e;
+  border-radius: 13px;
+  background: #292d31;
+  box-shadow: none;
+  color: var(--paper, #fff8e8);
+  font-size: inherit;
+  text-align: left;
+  white-space: normal;
+  pointer-events: auto;
+  scroll-snap-align: center;
+}
+
+.lot-showroom .lot-car-option:hover,
+.lot-showroom .lot-car-option:active { transform: none; }
+
+.lot-showroom .lot-car-option:focus-visible {
+  border-color: var(--cyan, #38d9ff);
+  outline: 3px solid var(--paper, #fff8e8);
+  outline-offset: 2px;
+}
+
+.lot-showroom .lot-car-option[aria-checked='true'] {
+  border-color: var(--cyan, #38d9ff);
+  background: var(--paper, #fff8e8);
+  color: var(--ink, #08090a);
+  box-shadow: inset 0 0 0 2px var(--ink, #08090a);
+}
+
+.lot-showroom .lot-car-option-preview {
+  position: relative;
+  display: block;
+  min-height: 52px;
+  overflow: hidden;
+  border-radius: 8px;
+  background:
+    radial-gradient(ellipse at 50% 82%, rgb(255 255 255 / .28), transparent 52%),
+    linear-gradient(180deg, #8ed8ff 0 65%, #5a6268 65% 100%);
+}
+
+.lot-showroom .lot-car-option-thumbnail,
+.lot-showroom .lot-car-option-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transition: opacity 120ms linear;
+}
+
+.lot-showroom .lot-car-option-thumbnail {
+  display: block;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.lot-showroom .lot-car-option.has-3d-thumbnail .lot-car-option-thumbnail { opacity: 1; }
+.lot-showroom .lot-car-option.has-3d-thumbnail .lot-car-option-fallback { opacity: 0; }
+
+/* Lightweight fallback while each real model thumbnail is rendered serially. */
+.lot-showroom .lot-car-option-fallback i:first-child {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  width: 60%;
+  height: 27%;
+  border: 2px solid var(--ink, #08090a);
+  border-radius: 45% 36% 22% 22%;
+  transform: translate(-50%, -50%);
+  background:
+    linear-gradient(105deg, transparent 0 24%, var(--lot-car-secondary, #fff) 25% 40%, transparent 41%),
+    var(--lot-car-color, #8ce99a);
+  box-shadow: 0 4px 0 rgb(8 9 10 / .18);
+}
+
+.lot-showroom .lot-car-option-fallback i:nth-child(2),
+.lot-showroom .lot-car-option-fallback i:nth-child(3) {
+  position: absolute;
+  top: 59%;
+  width: 15%;
+  aspect-ratio: 1;
+  border: 2px solid var(--paper, #fff8e8);
+  border-radius: 50%;
+  background: var(--ink, #08090a);
+}
+.lot-showroom .lot-car-option-fallback i:nth-child(2) { left: 25%; }
+.lot-showroom .lot-car-option-fallback i:nth-child(3) { right: 25%; }
+
+.lot-showroom .lot-car-option-name {
+  display: block;
+  overflow: hidden;
+  padding: 0 2px 1px;
+  font-size: clamp(.44rem, .76vw, .55rem);
+  font-weight: 950;
+  letter-spacing: .035em;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lot-showroom .lot-car-option-lock {
+  position: absolute;
+  z-index: 3;
+  top: 6px;
+  right: 6px;
+  display: none;
+  width: 28px;
+  height: 28px;
+  padding: 6px;
+  place-items: center;
+  border: 2px solid var(--ink, #08090a);
+  border-radius: 8px;
+  background: var(--yellow, #ffd43b);
+  color: var(--ink, #08090a);
+  box-shadow: 2px 2px 0 var(--ink, #08090a);
+}
+
+.lot-showroom .lot-car-option.is-trophy-locked .lot-car-option-lock { display: grid; }
+.lot-showroom .lot-car-option.is-trophy-locked .lot-car-option-preview { filter: grayscale(.28) brightness(.84); }
+.lot-showroom .lot-car-option.is-trophy-locked::after { display: none; }
+
+.lot-showroom .lot-car-picker-help {
+  position: absolute;
+  top: 2px;
+  right: max(16px, env(safe-area-inset-right));
+  margin: 0;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #111316;
+  color: var(--paper, #fff8e8);
+  font-size: .36rem;
+  letter-spacing: .08em;
+  transform: translateY(-100%);
+}
+
+.lot-showroom .lot-loading {
+  z-index: 8;
+  left: calc((100% - var(--lot-info-width)) / 2);
+  bottom: calc(var(--lot-picker-height) + 12px);
+  transform: translateX(-50%);
+}
+
+.lot-showroom .lot-loading.is-done { transform: translate(-50%, 8px); }
+
+@media (max-height: 520px) {
+  .lot-showroom {
+    --lot-header-height: 64px;
+    --lot-picker-height: 102px;
+    --lot-panel-gap: 8px;
+    --lot-info-width: clamp(256px, 34vw, 334px);
+  }
+
+  .lot-showroom .lot-heading {
+    top: max(6px, env(safe-area-inset-top));
+    left: max(76px, calc(env(safe-area-inset-left) + 72px));
+    height: 46px;
+  }
+
+  .lot-showroom .lot-heading h1 { font-size: clamp(1.72rem, 4.8vw, 3rem); }
+  .lot-showroom .lot-heading p { margin-top: 5px; font-size: .45rem; }
+
+  .lot-showroom .lot-progress-summary {
+    grid-template-columns: 33px minmax(0, 1fr);
+    flex-basis: 245px;
+    min-height: 42px;
+    gap: 6px;
+    padding: 4px 8px 4px 4px;
+  }
+
+  .lot-showroom .lot-progress-lock { width: 30px; height: 30px; padding: 6px; }
+  .lot-showroom .lot-progress-summary strong { font-size: .51rem; }
+  .lot-showroom .lot-progress-summary small { font-size: .36rem; }
+
+  .lot-showroom .lot-back {
+    top: max(7px, env(safe-area-inset-top));
+    left: max(9px, env(safe-area-inset-left));
+    height: 41px;
+    min-width: 56px;
+    min-height: 41px;
+    padding: 0 9px;
+    font-size: .49rem;
+  }
+
+  .lot-showroom .lot-side { top: var(--lot-header-height); bottom: var(--lot-picker-height); gap: var(--lot-panel-gap); }
+
+  .lot-showroom .lot-viewbox,
+  .lot-showroom .lot-viewbox-with-paint,
+  .lot-showroom .lot-card {
+    border-width: 3px;
+    border-radius: 15px;
+    box-shadow: 5px 5px 0 var(--ink, #08090a);
+  }
+
+  .lot-showroom .lot-viewbox-head { top: 7px; right: 8px; left: 8px; }
+  .lot-showroom .lot-viewbox-head span,
+  .lot-showroom .lot-viewbox-head b {
+    min-height: 22px;
+    padding: 3px 7px;
+    border-width: 1.5px;
+    font-size: .33rem;
+  }
+
+  .lot-showroom .lot-cycle {
+    width: 38px;
+    height: 38px;
+    border-width: 2px;
+    border-radius: 10px;
+    box-shadow: 3px 3px 0 var(--ink, #08090a);
+    font-size: 1.55rem;
+  }
+  .lot-showroom .lot-cycle-prev { left: 9px; }
+  .lot-showroom .lot-cycle-next { right: 9px; }
+
+  .lot-showroom .lot-colors,
+  .lot-showroom .lot-viewbox-with-paint .lot-colors,
+  .lot-showroom .lot-viewbox-with-paint .lot-colors.is-paint-locked {
+    bottom: 8px;
+    left: 8px;
+    padding: 4px;
+    gap: 4px;
+    border-radius: 11px;
+  }
+
+  .lot-showroom .lot-color-control,
+  .lot-showroom .lot-color-control input[type='color'],
+  .lot-showroom .lot-paint-lock-button,
+  .lot-showroom .lot-paint-lock {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    min-height: 34px;
+  }
+  .lot-showroom .lot-paint-lock { padding: 7px; }
+
+  .lot-showroom .lot-card { padding: 8px; }
+  .lot-showroom .lot-car-title { gap: 2px; padding-bottom: 5px; }
+  .lot-showroom .lot-car-title strong { font-size: clamp(.96rem, 2.5vw, 1.5rem); }
+  .lot-showroom .lot-car-description { margin-top: 4px; font-size: .43rem; line-height: 1.2; }
+  .lot-showroom .lot-perk-copy { font-size: .4rem; }
+  .lot-showroom .lot-stats { gap: 3px; margin: 4px 0; }
+  .lot-showroom .lot-stat { grid-template-columns: 72px minmax(0, 1fr); gap: 5px; }
+  .lot-showroom .lot-stat > span { font-size: .35rem; }
+  .lot-showroom .lot-stat i { height: 7px; gap: 2px; }
+  .lot-showroom .lot-card-actions { margin: auto -2px -2px; padding: 4px 2px 2px; }
+  .lot-showroom .lot-race { min-height: 38px; padding: 6px 8px; font-size: .55rem; }
+
+  .lot-showroom .lot-car-picker-shell { padding-top: 7px; padding-bottom: max(7px, env(safe-area-inset-bottom)); }
+  .lot-showroom .lot-car-picker { gap: 6px; }
+  .lot-showroom .lot-car-option,
+  .lot-showroom .lot-car-option:focus-visible {
+    width: clamp(104px, 14vw, 134px);
+    min-width: clamp(104px, 14vw, 134px);
+    padding: 4px;
+    border-width: 2px;
+    border-radius: 10px;
+  }
+  .lot-showroom .lot-car-option-preview { min-height: 38px; }
+  .lot-showroom .lot-car-option-name { font-size: .38rem; }
+  .lot-showroom .lot-car-option-lock {
+    top: 5px;
+    right: 5px;
+    width: 23px;
+    height: 23px;
+    padding: 5px;
+    border-width: 1.5px;
+  }
+}
+
+@media (max-height: 430px) {
+  .lot-showroom {
+    --lot-header-height: 56px;
+    --lot-picker-height: 90px;
+    --lot-info-width: clamp(236px, 35vw, 296px);
+  }
+
+  .lot-showroom .lot-heading { height: 40px; }
+  .lot-showroom .lot-heading h1 { font-size: clamp(1.48rem, 4.6vw, 2.4rem); }
+  .lot-showroom .lot-heading p,
+  .lot-showroom .lot-progress-summary small,
+  .lot-showroom .lot-viewbox-head b,
+  .lot-showroom .lot-car-picker-help { display: none; }
+
+  .lot-showroom .lot-progress-summary {
+    grid-template-columns: 28px minmax(0, 1fr);
+    flex-basis: 200px;
+    min-height: 36px;
+  }
+  .lot-showroom .lot-progress-lock { width: 26px; height: 26px; padding: 5px; }
+  .lot-showroom .lot-back { height: 36px; min-height: 36px; }
+  .lot-showroom .lot-car-description { display: none; }
+  .lot-showroom .lot-perk-copy { margin: 2px 0 3px; font-size: .36rem; }
+  .lot-showroom .lot-stat { grid-template-columns: 64px minmax(0, 1fr); }
+  .lot-showroom .lot-car-option,
+  .lot-showroom .lot-car-option:focus-visible { width: 96px; min-width: 96px; }
+  .lot-showroom .lot-car-option-preview { min-height: 33px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lot-showroom .lot-car-option-thumbnail,
+  .lot-showroom .lot-car-option-fallback { transition: none; }
+}

@@ -63,13 +63,24 @@ for (const requiredCopy of [
 assert.match(homeSource, /TRACK_SELECTION_CATALOG\.map\(renderTrackCard\)/);
 assert.match(homeSource, /aria-pressed="false"/);
 assert.match(homeSource, /showTheLot\(\{ initialSelection: selectedVehicle\(runtime\) \}\)/);
-assert.doesNotMatch(homeSource, /chooseTrackBeforeLot|lot-track-select/);
+assert.match(
+  homeSource,
+  /prepareEnhancedLot, showEnhancedLot as showTheLot/,
+  'Home must use the prepared car-only showroom entry without invoking a second track chooser'
+);
+assert.match(
+  homeSource,
+  /await Promise\.all\(\[[\s\S]*activateTrack\(selectedTrackId, runtime\),[\s\S]*prepareEnhancedLot\(\)[\s\S]*\]\);/,
+  'Track activation and showroom preparation should share the same transition window'
+);
+assert.doesNotMatch(homeSource, /chooseTrackBeforeLot/);
 assert.match(homeSource, /raceSession\.prepareMotionAccess\(\)/);
 assert.match(homeSource, /raceSession\.prepareManualAccess\(\)/);
 assert.match(homeSource, /raceSession\.selectVehicle\(selection\)/);
 assert.match(homeSource, /showTrackIntro\(selectedTrackId\)/);
 assert.match(homeSource, /raceSession\.startGame\(pendingAccess\?\.fullscreenPromise\)/);
 assert.ok(homeSource.indexOf('activateTrack(selectedTrackId, runtime)') < homeSource.indexOf('showTheLot({ initialSelection: selectedVehicle(runtime) })'));
+assert.ok(homeSource.indexOf('prepareEnhancedLot()') < homeSource.indexOf('showTheLot({ initialSelection: selectedVehicle(runtime) })'));
 assert.ok(homeSource.indexOf('raceSession.selectVehicle(selection)') < homeSource.indexOf('showTrackIntro(selectedTrackId)'));
 assert.ok(homeSource.indexOf('showTrackIntro(selectedTrackId)') < homeSource.indexOf('raceSession.startGame(pendingAccess?.fullscreenPromise)'));
 assert.match(homeSource, /runtime\.openLot = leaveRaceForHome/);
@@ -300,4 +311,4 @@ assert.match(orchestrator, /function leaveRace\(\)/);
 assert.match(orchestrator, /publish\('home-open'\)/);
 assert.match(orchestrator, /phase = 'home'/);
 
-console.log('TURN production M8 Home, fresh-document motion permission recovery, larger aligned track names, native scrollbar divider and NEXT wrapper contracts passed.');
+console.log('TURN production M8 Home, prepared showroom entry, fresh-document motion permission recovery, larger aligned track names, native scrollbar divider and NEXT wrapper contracts passed.');

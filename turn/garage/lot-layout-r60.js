@@ -82,8 +82,23 @@ export function installLotLayout(root = document.body) {
 
   if (!screen || !attributesHeading) return () => {};
 
-  installBottomActionStyles();
   screen.classList.remove('is-view-closed');
+
+  // The showroom owns its large-scale placement in its lazy-loaded stylesheet.
+  // Keep this enhancement layer focused on copy and stat-help semantics so it
+  // cannot reintroduce the legacy floating action geometry.
+  if (screen.classList.contains('lot-showroom')) {
+    attributesHeading.replaceChildren(document.createTextNode('SELECTED CAR'));
+    if (infoButton) {
+      infoButton.textContent = 'i';
+      infoButton.setAttribute('aria-label', 'What do the attributes mean?');
+      infoButton.setAttribute('title', 'What do the attributes mean?');
+      attributesHeading.appendChild(infoButton);
+    }
+    return () => {};
+  }
+
+  installBottomActionStyles();
 
   if (headingCopy) headingCopy.textContent = 'Choose your car';
   if (backButton) {

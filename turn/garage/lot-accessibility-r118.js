@@ -22,6 +22,7 @@ export function installLotAccessibility(root = document.body) {
     return () => {};
   }
 
+  const preserveVisualOrder = screen.classList.contains('lot-showroom');
   const chooseCarHeading = makeHiddenHeading('lot-choose-car-heading', 'Choose car');
   carPicker.insertAdjacentElement('beforebegin', chooseCarHeading);
   carPicker.setAttribute('aria-labelledby', chooseCarHeading.id);
@@ -55,9 +56,6 @@ export function installLotAccessibility(root = document.body) {
 
     completeTextByCarId.set(car.id, completeText);
     buttonsByCarId.set(car.id, button);
-
-    // The radio itself uses real hidden text as its accessible name. This avoids
-    // depending on a generated aria-label that The Lot refreshes after selection.
     button.setAttribute('aria-labelledby', description.id);
   });
 
@@ -80,9 +78,6 @@ export function installLotAccessibility(root = document.body) {
   card.setAttribute('role', 'region');
   card.setAttribute('aria-labelledby', infoHeading.id);
 
-  // The visible paragraph and bars remain exactly as designed. Assistive
-  // technology receives one equivalent, complete text paragraph instead of an
-  // unreliable label on a generic paragraph followed by duplicated bar content.
   carDescription.setAttribute('aria-hidden', 'true');
   stats.setAttribute('aria-hidden', 'true');
 
@@ -100,11 +95,11 @@ export function installLotAccessibility(root = document.body) {
     const selectedCarId = selectedButton.dataset.carId;
     selectedSummary.textContent = completeTextByCarId.get(selectedCarId) || selectedButton.textContent;
 
-    // VoiceOver heading navigation resumes at the first radio in DOM order, not
-    // at aria-activedescendant on a non-focusable radiogroup. Rotate the hidden
-    // radio DOM order so the checked car is first, followed by the remaining cars
-    // in the same order as the visible 5x3 parking lot.
-    if (selectedCarId && orderedFromCarId !== selectedCarId) {
+    // The legacy 3D parking lot kept radios visually hidden, so rotating their
+    // DOM order helped VoiceOver resume at the selected vehicle. The showroom
+    // uses these radios as the visible card rail, so visual and DOM order must
+    // remain stable while roving tabindex carries the selected state.
+    if (!preserveVisualOrder && selectedCarId && orderedFromCarId !== selectedCarId) {
       const selectedIndex = visibleOrder.indexOf(selectedCarId);
       const orderedCarIds = selectedIndex >= 0
         ? [...visibleOrder.slice(selectedIndex), ...visibleOrder.slice(0, selectedIndex)]
@@ -121,9 +116,6 @@ export function installLotAccessibility(root = document.body) {
 
   syncSelectedCarSemantics();
 
-  // The Lot is a full-screen route. If focus is still on the Home control that
-  // opened it, explicitly hand focus to the new view before VoiceOver can retain
-  // the old screen position and accidentally activate Race This Car underneath.
   if (lotTitle && !screen.contains(document.activeElement)) {
     lotTitle.tabIndex = -1;
     try {
