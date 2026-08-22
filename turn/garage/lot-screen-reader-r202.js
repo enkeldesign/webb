@@ -97,7 +97,6 @@ export function installLotScreenReaderPass(root = document.body) {
   const carTitle = card?.querySelector('.lot-car-title');
   const carDescription = card?.querySelector('.lot-car-description');
   const stats = card?.querySelector('.lot-stats');
-  const statsHelp = card?.querySelector('.lot-stats-help');
   const colors = screen.querySelector('.lot-colors');
   const raceActions = card?.querySelector('.lot-card-actions');
   const raceButton = raceActions?.querySelector('.lot-race');
@@ -278,12 +277,13 @@ export function installLotScreenReaderPass(root = document.body) {
     attributeFilter: ['aria-checked', 'class', 'data-trophy-lock-label']
   });
 
+  // Child replacement is enough to catch car changes and paint lock/unlock changes.
+  // Do not observe descendant aria-hidden attributes: syncColorControls sets those
+  // itself, which would otherwise create a recursive MutationObserver loop.
   const colorObserver = new MutationObserver(syncColorControls);
   colorObserver.observe(colors, {
     childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['aria-hidden', 'hidden']
+    subtree: true
   });
 
   const raceObserver = new MutationObserver(syncRaceContext);
