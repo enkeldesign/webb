@@ -85,17 +85,38 @@ export function installLotLayout(root = document.body) {
   screen.classList.remove('is-view-closed');
 
   // The showroom owns its large-scale placement in its lazy-loaded stylesheet.
-  // Keep this enhancement layer focused on copy and stat-help semantics so it
-  // cannot reintroduce the legacy floating action geometry.
+  // Give ATTRIBUTES a stable visual row beside the existing stat-help action,
+  // without introducing another semantic heading between CAR INFORMATION and RACE.
   if (screen.classList.contains('lot-showroom')) {
     attributesHeading.replaceChildren(document.createTextNode('SELECTED CAR'));
-    if (infoButton) {
+
+    const stats = screen.querySelector('.lot-stats');
+    let attributesRow = screen.querySelector('.lot-attributes-row');
+    if (stats && !attributesRow) {
+      attributesRow = document.createElement('div');
+      attributesRow.className = 'lot-attributes-row';
+
+      const label = document.createElement('span');
+      label.className = 'lot-attributes-label';
+      label.textContent = 'ATTRIBUTES';
+      label.setAttribute('aria-hidden', 'true');
+      attributesRow.appendChild(label);
+      stats.insertAdjacentElement('beforebegin', attributesRow);
+    }
+
+    if (infoButton && attributesRow) {
       infoButton.textContent = 'i';
       infoButton.setAttribute('aria-label', 'What do the attributes mean?');
       infoButton.setAttribute('title', 'What do the attributes mean?');
-      attributesHeading.appendChild(infoButton);
+      attributesRow.appendChild(infoButton);
     }
-    return () => {};
+
+    return () => {
+      if (infoButton?.isConnected && attributesHeading.isConnected) {
+        attributesHeading.appendChild(infoButton);
+      }
+      attributesRow?.remove();
+    };
   }
 
   installBottomActionStyles();
