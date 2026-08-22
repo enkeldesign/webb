@@ -64,7 +64,7 @@ function applyFixedEmergencyLivery(root, livery, ghost) {
       if (!material?.color || isProtectedPart(node, material)) continue;
       const explicit = isExplicitBodyPart(node, material);
       if (explicit) explicitCount += 1;
-      candidates.push({ material, explicit });
+      candidates.push({ node, material, explicit });
     }
   });
 
@@ -79,7 +79,8 @@ function applyFixedEmergencyLivery(root, livery, ghost) {
     material.needsUpdate = true;
   }
 
-  installSecondaryAccent(root, model, secondary, livery.accent);
+  const bodyBounds = boundsForLiverySurface(records);
+  installSecondaryAccent(root, model, secondary, livery.accent, bodyBounds);
   root.userData.turnEmergencyLivery = Object.freeze({
     primary: livery.primary.fallback,
     secondary: livery.secondary.fallback,
@@ -87,15 +88,42 @@ function applyFixedEmergencyLivery(root, livery, ghost) {
   });
 }
 
-function installSecondaryAccent(root, model, color, accent) {
+function boundsForLiverySurface(records) {
+  const bounds = new THREE.Box3();
+  const nodes = new Set();
+  for (const { node } of records) {
+    if (!node || nodes.has(node)) continue;
+    nodes.add(node);
+    bounds.expandByObject(node);
+  }
+  return bounds.isEmpty() ? null : bounds;
+}
+
+function installSecondaryAccent(root, model, color, accent, bodyBounds = null) {
   model.updateMatrixWorld(true);
   const bounds = new THREE.Box3().setFromObject(model);
   const size = bounds.getSize(new THREE.Vector3());
   const center = bounds.getCenter(new THREE.Vector3());
   if (!Number.isFinite(size.x) || size.x <= 0 || size.z <= 0) return;
 
+  // The secondary livery is a real mesh, so its inner face must live outside the
+  // painted body surface. The previous 0.405 * total-width placement put these
+  // panels inside the vehicle volume; polygon offset cannot prevent another mesh
+  // from occluding geometry that is physically behind it as the car rotates.
+  // Derive the side surface from the paintable body meshes (not wheels/mirrors),
+  // then leave a tiny physical air gap. This is stable at every viewing angle.
+  const surfaceBounds = bodyBounds || bounds;
+  const surfaceSize = surfaceBounds.getSize(new THREE.Vector3());
+  const sideDepth = Math.max(0.012, surfaceSize.x * 0.004);
+  const surfaceGap = Math.max(0.006, surfaceSize.x * 0.002);
+  const sideX = Object.freeze({
+    left: surfaceBounds.min.x - sideDepth * 0.5 - surfaceGap,
+    right: surfaceBounds.max.x + sideDepth * 0.5 + surfaceGap
+  });
+
   const group = new THREE.Group();
   group.userData.turnEmergencyLiveryAccent = true;
+  group.userData.turnEmergencyLiverySurfaceGap = surfaceGap;
   const material = new THREE.MeshStandardMaterial({
     color: 0xffffff,
     roughness: 0.78,
@@ -106,14 +134,13 @@ function installSecondaryAccent(root, model, color, accent) {
   });
   setThreeColor(material.color, color);
 
-  const sideDepth = Math.max(0.028, size.x * 0.014);
-  const sideX = size.x * 0.405;
   const addSidePair = ({ length, height, y, z }) => {
     for (const direction of [-1, 1]) {
       const panel = new THREE.Mesh(new THREE.BoxGeometry(sideDepth, height, length), material);
-      panel.position.set(center.x + direction * sideX, y, z);
+      panel.position.set(direction < 0 ? sideX.left : sideX.right, y, z);
       panel.castShadow = false;
       panel.receiveShadow = true;
+      panel.userData.turnEmergencyLiverySide = direction < 0 ? 'left' : 'right';
       group.add(panel);
     }
   };
