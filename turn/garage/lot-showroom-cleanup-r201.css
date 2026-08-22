@@ -69,7 +69,7 @@
   white-space: nowrap;
 }
 
-/* Make the floating paint control read as COLOR first, lock state second. */
+/* COLOR is one stable component for every selected car. */
 .lot-showroom .lot-color-visible-label {
   flex: 0 0 auto;
   align-self: center;
@@ -79,6 +79,66 @@
   letter-spacing: .09em;
   line-height: 1;
   white-space: nowrap;
+}
+
+/* Never rely on WebKit's internal <input type=color> swatch for visible colour.
+   iOS can leave the input tappable while failing to paint its internal swatch after
+   repeated DOM replacement. TURN owns the square; the native input remains the real
+   interactive/accessibility control invisibly on top of it. */
+.lot-showroom .lot-color-control[hidden] {
+  display: none !important;
+}
+
+.lot-showroom .lot-color-control.has-turn-color-swatch::before {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  box-sizing: border-box;
+  border: 2px solid var(--ink, #08090a);
+  border-radius: 10px;
+  background: var(--lot-color-swatch, #ffcc00);
+  content: '';
+  pointer-events: none;
+}
+
+.lot-showroom .lot-color-control.has-turn-color-swatch input[type='color'] {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.lot-showroom .lot-color-control.has-turn-color-swatch:focus-within::before {
+  outline: 4px solid var(--cyan, #38d9ff);
+  outline-offset: 2px;
+}
+
+/* Fixed-livery vehicles use the exact same COLOR slot. Their swatch is display-only
+   because PAINTJOB never changes an ambulance/police/fire livery. A diagonal split
+   communicates the two canonical livery colours without inventing another control. */
+.lot-showroom .lot-fixed-color-display {
+  display: block;
+  flex: 0 0 42px;
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  min-height: 42px;
+  box-sizing: border-box;
+  border: 2px solid var(--ink, #08090a);
+  border-radius: 10px;
+  background: var(--lot-fixed-primary, #ffcc00);
+}
+
+.lot-showroom .lot-fixed-color-display.is-two-tone {
+  background: linear-gradient(
+    135deg,
+    var(--lot-fixed-primary, #ffcc00) 0 48%,
+    var(--lot-fixed-secondary, #fffdf6) 52% 100%
+  );
 }
 
 .lot-showroom .lot-paint-lock-button {
@@ -121,21 +181,21 @@
   letter-spacing: .06em;
 }
 
-/* COLOR CUES gets a large visual copy beside the real swatch/lock. The original
-   selected-car cue in CAR INFORMATION stays in the accessibility tree but is
-   visually hidden for paintable cars so the same message is not drawn twice. */
+/* COLOR CUES owns one fixed visual slot beside the swatch in every state: editable,
+   PAINTJOB locked, fixed livery, car locked or car unlocked. The older selected-car
+   cue stays in the accessibility tree but is never drawn a second time in the card. */
 .lot-showroom .lot-paint-color-cue {
   flex: 0 1 auto;
   align-self: center;
-  max-width: min(44vw, 230px);
+  max-width: min(46vw, 250px);
   margin: 0 2px 0 3px;
-  padding: 4px 8px;
+  padding: 5px 9px;
   overflow: hidden;
   border: 2px solid var(--ink, #08090a);
   border-radius: 999px;
   background: rgb(255 248 232 / .94);
   color: var(--ink, #08090a);
-  font-size: clamp(.52rem, 1vw, .68rem);
+  font-size: clamp(.56rem, 1.08vw, .72rem);
   font-weight: 950;
   letter-spacing: .045em;
   line-height: 1;
@@ -154,7 +214,7 @@
   content: '';
 }
 
-.lot-showroom.lot-has-paint-control .lot-card .lot-selected-car-color-cue {
+.lot-showroom.lot-color-baseline-active .lot-card .lot-selected-car-color-cue {
   position: absolute !important;
   width: 1px !important;
   height: 1px !important;
@@ -181,15 +241,15 @@
   .lot-showroom .lot-paint-lock-copy strong { font-size: .36rem; }
   .lot-showroom .lot-paint-lock-copy small { font-size: .27rem; }
   .lot-showroom .lot-paint-color-cue {
-    max-width: min(40vw, 200px);
-    padding: 3px 6px;
-    font-size: .48rem;
+    max-width: min(42vw, 215px);
+    padding: 4px 7px;
+    font-size: .5rem;
   }
 }
 
 @media (max-height: 430px) {
   .lot-showroom .lot-paint-color-cue {
-    max-width: min(36vw, 176px);
-    font-size: .44rem;
+    max-width: min(38vw, 190px);
+    font-size: .46rem;
   }
 }
