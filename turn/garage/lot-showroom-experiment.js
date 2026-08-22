@@ -22,6 +22,8 @@ import {
 
 const LOT_FRAME_INTERVAL_MS = 1000 / 30;
 const VIEWER_INITIAL_YAW = Math.PI - 0.55;
+const THUMBNAIL_WIDTH = 240;
+const THUMBNAIL_HEIGHT = 108;
 let paintControlSerial = 0;
 
 export const LOT_CAR_ORDER = Object.freeze([
@@ -69,7 +71,7 @@ export function showTheLot({ initialSelection } = {}) {
     const showBeginnerGuide = !hasTriedTrainingCar();
     const selection = normalizeVehicleSelection(initialSelection);
     const overlay = document.createElement('section');
-    overlay.className = 'lot-screen lot-showroom-experiment';
+    overlay.className = 'lot-screen lot-showroom';
     overlay.setAttribute('aria-labelledby', 'lot-title');
     overlay.innerHTML = `
       <header class="lot-heading">
@@ -139,6 +141,7 @@ export function showTheLot({ initialSelection } = {}) {
 
     const viewer = createViewer(viewHost);
     const carButtons = new Map();
+    const thumbnailRenderer = createThumbnailRenderer();
     let selectedCarId = selection.carId;
     let selectedColor = selection.color;
     let selectedSecondaryColor = selection.secondaryColor;
@@ -156,7 +159,17 @@ export function showTheLot({ initialSelection } = {}) {
       const preview = document.createElement('span');
       preview.className = 'lot-car-option-preview';
       preview.setAttribute('aria-hidden', 'true');
-      preview.innerHTML = '<i></i><i></i><i></i>';
+
+      const fallback = document.createElement('span');
+      fallback.className = 'lot-car-option-fallback';
+      fallback.innerHTML = '<i></i><i></i><i></i>';
+
+      const thumbnail = document.createElement('canvas');
+      thumbnail.className = 'lot-car-option-thumbnail';
+      thumbnail.width = THUMBNAIL_WIDTH;
+      thumbnail.height = THUMBNAIL_HEIGHT;
+      thumbnail.setAttribute('aria-hidden', 'true');
+      preview.append(fallback, thumbnail);
 
       const name = document.createElement('span');
       name.className = 'lot-car-option-name';
@@ -319,6 +332,8 @@ export function showTheLot({ initialSelection } = {}) {
       input.value = secondary
         ? normalizeVehicleSecondaryColor(value)
         : normalizeVehicleColor(value);
+      input.setAttribute('aria-label', `${label} colour`);
+      input.title = `${label} colour`;
 
       const inputLabel = document.createElement('label');
       inputLabel.className = 'lot-color-name';
@@ -332,7 +347,9 @@ export function showTheLot({ initialSelection } = {}) {
       cue.className = 'turn-color-cue lot-color-cue';
 
       const syncCue = () => {
-        cue.textContent = `COLOR · ${describeColorCue(input.value).toUpperCase()}`;
+        const description = describeColorCue(input.value).toUpperCase();
+        cue.textContent = `COLOR · ${description}`;
+        input.title = `${label} colour · ${description}`;
       };
 
       input.addEventListener('input', () => {
@@ -366,6 +383,7 @@ export function showTheLot({ initialSelection } = {}) {
       lockObserver.disconnect();
       window.removeEventListener('turn:trophy-road-updated', syncAvailabilitySummary);
       resizeObserver.disconnect();
+      thumbnailRenderer.cancel();
       viewer.dispose();
       overlay.remove();
       document.body.classList.remove('turn-lot-open');
@@ -377,6 +395,7 @@ export function showTheLot({ initialSelection } = {}) {
     requestAnimationFrame(() => {
       viewer.resize();
       revealSelectedCar();
+      void thumbnailRenderer.renderAll(LOT_CARS, carButtons);
     });
   });
 }
@@ -408,21 +427,21 @@ function createViewer(host) {
   const platform = new THREE.Group();
   scene.add(platform);
 
-  const baseGeometry = new THREE.CylinderGeometry(4.25, 4.45, 0.42, 64);
+  const baseGeometry = new THREE.CylinderGeometry(4.25, 4.45, 0.42, 48);
   const baseMaterial = new THREE.MeshStandardMaterial({ color: 0x252a31, roughness: 0.72 });
   const base = new THREE.Mesh(baseGeometry, baseMaterial);
   base.position.y = -0.12;
   platform.add(base);
   platformResources.push(baseGeometry, baseMaterial);
 
-  const topGeometry = new THREE.CylinderGeometry(3.85, 3.85, 0.12, 64);
+  const topGeometry = new THREE.CylinderGeometry(3.85, 3.85, 0.12, 48);
   const topMaterial = new THREE.MeshStandardMaterial({ color: 0x606c78, roughness: 0.38, metalness: 0.25 });
   const top = new THREE.Mesh(topGeometry, topMaterial);
   top.position.y = 0.14;
   platform.add(top);
   platformResources.push(topGeometry, topMaterial);
 
-  const ringGeometry = new THREE.TorusGeometry(3.62, 0.045, 8, 96);
+  const ringGeometry = new THREE.TorusGeometry(3.62, 0.045, 8, 64);
   const ringMaterial = new THREE.MeshBasicMaterial({ color: 0xffd43b });
   const ring = new THREE.Mesh(ringGeometry, ringMaterial);
   ring.rotation.x = Math.PI / 2;
@@ -478,13 +497,13 @@ function createViewer(host) {
   host.addEventListener('lostpointercapture', stopDrag);
 
   renderer.setAnimationLoop((now) => {
-    if (disposed || now - lastRenderAt < LOT_FRAME_INTERVAL_MS) return;
+    if (disposed || document.hidden || now - lastRenderAt < LOT_FRAME_INTERVAL_MS) return;
     lastRenderAt = now;
     const elapsed = clock.getElapsedTime();
     if (!dragging && !reducedMotion) yaw += 0.0022;
     stage.rotation.y = yaw;
     stage.rotation.x = pitch;
-    if (visual) visual.position.y = Math.sin(elapsed * 2.1) * 0.035;
+    if (visual) visual.position.y = reducedMotion ? 0 : Math.sin(elapsed * 2.1) * 0.035;
     renderer.render(scene, camera);
     recordPerformanceFrame('lot', renderer, now);
   });
@@ -532,8 +551,8 @@ function createViewer(host) {
       camera.aspect = rect.width / rect.height;
       camera.updateProjectionMatrix();
       renderer.setSize(Math.round(rect.width), Math.round(rect.height), false);
-      const compact = rect.height < 260;
-      camera.position.set(compact ? 9.4 : 8.6, compact ? 5.2 : 4.9, compact ? 10.4 : 9.7);
+      const compact = rect.height < 250;
+      camera.position.set(compact ? 9.6 : 8.6, compact ? 5.2 : 4.9, compact ? 10.6 : 9.7);
       camera.lookAt(0, 1.05, 0);
     },
     dispose() {
@@ -551,6 +570,132 @@ function createViewer(host) {
       renderer.domElement.remove();
     }
   };
+}
+
+function createThumbnailRenderer() {
+  let cancelled = false;
+  let renderer = null;
+  let activeVisual = null;
+
+  async function renderAll(cars, carButtons) {
+    if (cancelled) return;
+
+    const scene = new THREE.Scene();
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x43556c, 3.2));
+    const key = new THREE.DirectionalLight(0xfff2c9, 4.1);
+    key.position.set(-6, 9, 7);
+    scene.add(key);
+    const rim = new THREE.DirectionalLight(0x8ed8ff, 1.5);
+    rim.position.set(6, 4, -5);
+    scene.add(rim);
+
+    const stage = new THREE.Group();
+    stage.rotation.y = VIEWER_INITIAL_YAW;
+    scene.add(stage);
+    const camera = new THREE.PerspectiveCamera(36, THUMBNAIL_WIDTH / THUMBNAIL_HEIGHT, 0.1, 80);
+
+    renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      preserveDrawingBuffer: true,
+      powerPreference: 'low-power'
+    });
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.setPixelRatio(1);
+    renderer.setSize(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, false);
+    renderer.setClearColor(0x000000, 0);
+
+    try {
+      for (const car of cars) {
+        if (cancelled) break;
+        const button = carButtons.get(car.id);
+        const canvas = button?.querySelector('.lot-car-option-thumbnail');
+        if (!canvas) continue;
+
+        try {
+          const visual = await createCarVisual({
+            carId: car.id,
+            color: getVehicleDefaultColor(car.id),
+            secondaryColor: getVehicleDefaultSecondaryColor(car.id),
+            targetLength: 5.8,
+            outline: true
+          });
+          activeVisual = visual;
+          if (cancelled) {
+            disposeVisualMaterials(visual);
+            activeVisual = null;
+            break;
+          }
+
+          stage.add(visual);
+          fitThumbnailCamera(camera, visual);
+          renderer.render(scene, camera);
+          const context = canvas.getContext('2d');
+          context?.clearRect(0, 0, canvas.width, canvas.height);
+          context?.drawImage(renderer.domElement, 0, 0, canvas.width, canvas.height);
+          button.classList.add('has-3d-thumbnail');
+          stage.remove(visual);
+          disposeVisualMaterials(visual);
+          activeVisual = null;
+        } catch (error) {
+          console.warn(`TURN: could not render ${car.name} thumbnail in The Lot.`, error);
+          if (activeVisual) {
+            stage.remove(activeVisual);
+            disposeVisualMaterials(activeVisual);
+            activeVisual = null;
+          }
+        }
+        await yieldForThumbnailWork();
+      }
+    } finally {
+      if (activeVisual) {
+        stage.remove(activeVisual);
+        disposeVisualMaterials(activeVisual);
+        activeVisual = null;
+      }
+      renderer?.dispose();
+      renderer?.forceContextLoss?.();
+      renderer = null;
+    }
+  }
+
+  return {
+    renderAll,
+    cancel() {
+      cancelled = true;
+      if (activeVisual) disposeVisualMaterials(activeVisual);
+      activeVisual = null;
+      renderer?.dispose();
+      renderer?.forceContextLoss?.();
+      renderer = null;
+    }
+  };
+}
+
+function fitThumbnailCamera(camera, visual) {
+  visual.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(visual);
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const maxDimension = Math.max(size.x, size.y * 1.45, size.z);
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const distance = Math.max(6.8, (maxDimension / (2 * Math.tan(fov / 2))) * 1.45);
+  const direction = new THREE.Vector3(1, 0.56, 1).normalize();
+  camera.position.copy(center).add(direction.multiplyScalar(distance));
+  camera.near = 0.1;
+  camera.far = Math.max(80, distance * 5);
+  camera.lookAt(center.x, center.y + size.y * 0.04, center.z);
+  camera.updateProjectionMatrix();
+}
+
+function yieldForThumbnailWork() {
+  return new Promise((resolve) => {
+    if (typeof globalThis.requestIdleCallback === 'function') {
+      globalThis.requestIdleCallback(() => resolve(), { timeout: 80 });
+      return;
+    }
+    globalThis.setTimeout(resolve, 0);
+  });
 }
 
 function rendererPixelRatio(fallbackCap) {
