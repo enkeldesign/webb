@@ -7,7 +7,7 @@ The first route starts over Sundsvall–Timrå Airport (Midlanda), crosses Sör�
 ## Runtime
 
 - MapLibre GL JS 6.5 renders the vector map, 3D terrain, buildings and Three.js custom flight layer.
-- The chase camera compensates for viewport height so the B737 keeps a TURN-like player-vehicle scale on phones and tablets, with a small altitude pullback.
+- The chase camera compensates for viewport height so the B737 keeps a TURN-like player-vehicle scale on phones and tablets, with a small altitude pullback and forward-biased framing that keeps the complete aircraft visible.
 - OpenFreeMap's Liberty style supplies OpenStreetMap/OpenMapTiles map data. TURN UP applies a natural semantic palette for water, forest, fields, built-up land and airport surfaces, then hides road, route and POI labels while preserving place and airport names.
 - Mapterhorn supplies the Terrarium-encoded elevation tiles.
 - Three.js 0.184 renders gates and the aircraft.
