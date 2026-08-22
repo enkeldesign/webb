@@ -1,34 +1,46 @@
 /* Readability pass for THE LOT after the compact r212 information-panel fit.
-   Future Racer remains the height-budget acceptance case. */
+   Future Racer's two-line perk is the height-budget acceptance case: every six-stat
+   row must remain visible at rest without needing to scroll the information panel. */
 
 /* The old SELECTED CAR eyebrow stays in source for legacy compatibility, but the
    showroom no longer spends visible space on it. */
+.lot-showroom.lot-card-scroll-boundary .lot-card {
+  padding: 8px 10px 8px;
+}
+
 .lot-showroom .lot-car-title {
   grid-template-columns: minmax(0, 1fr);
   gap: 0;
-  padding-bottom: 4px;
+  padding-bottom: 3px;
 }
 
 .lot-showroom .lot-car-title > span {
   display: none;
 }
 
+/* Keep the selected-car title prominent, but do not let the wide landscape viewport
+   spend the vertical budget we need for the complete attribute table. */
 .lot-showroom .lot-car-title strong {
   grid-column: 1;
   grid-row: 1;
-  font-size: clamp(1.24rem, 2.65vw, 1.98rem);
-  line-height: .94;
+  font-size: clamp(1.18rem, 2.5vw, 1.9rem);
+  line-height: .92;
 }
 
 .lot-showroom .lot-car-description {
-  margin: 5px 0 2px;
-  font-size: clamp(.56rem, 1vw, .68rem);
-  line-height: 1.2;
+  margin: 4px 0 1px;
+  font-size: clamp(.52rem, .94vw, .63rem);
+  line-height: 1.16;
+}
+
+.lot-showroom .lot-perk-disclosure {
+  margin-top: 2px !important;
 }
 
 .lot-showroom .lot-perk-copy {
-  font-size: clamp(.51rem, .9vw, .62rem);
-  line-height: 1.18;
+  margin-bottom: 3px;
+  font-size: clamp(.48rem, .86vw, .58rem);
+  line-height: 1.14;
 }
 
 /* Visual section label only: screen-reader heading navigation intentionally stays
@@ -36,31 +48,31 @@
 .lot-showroom .lot-attributes-row {
   display: flex;
   min-width: 0;
-  min-height: 22px;
-  margin: 4px 0 1px;
+  min-height: 18px;
+  margin: 2px 0 0;
   align-items: center;
-  gap: 7px;
+  gap: 5px;
 }
 
 .lot-showroom .lot-attributes-label {
   color: var(--ink, #08090a);
-  font-size: clamp(.49rem, .82vw, .57rem);
+  font-size: clamp(.46rem, .76vw, .53rem);
   font-weight: 950;
   line-height: 1;
-  letter-spacing: .09em;
+  letter-spacing: .08em;
 }
 
 .lot-showroom .lot-stats-help {
-  flex: 0 0 23px;
-  width: 23px;
-  height: 23px;
+  flex: 0 0 21px;
+  width: 21px;
+  height: 21px;
   margin: 0;
-  font-size: .76rem;
+  font-size: .7rem;
 }
 
 .lot-showroom .lot-stats {
-  gap: 2px;
-  margin: 1px 0 2px;
+  gap: 1px;
+  margin: 0 0 1px;
 }
 
 .lot-showroom .lot-stat {
@@ -69,20 +81,24 @@
 }
 
 .lot-showroom .lot-stat > span {
-  font-size: clamp(.46rem, .78vw, .53rem);
+  font-size: clamp(.44rem, .73vw, .5rem);
   line-height: 1;
-  letter-spacing: .045em;
+  letter-spacing: .04em;
 }
 
 .lot-showroom .lot-stat i {
-  height: 8px;
+  height: 7px;
 }
 
+/* This button intentionally uses the compact CHOOSE TRACK-style footprint. */
 .lot-showroom .lot-race {
-  font-size: clamp(.68rem, 1.2vw, .86rem);
+  min-height: 38px;
+  padding: 5px 14px;
+  font-size: clamp(.62rem, 1.15vw, .8rem);
 }
 
-/* Raise the floor on the genuinely tiny supporting text around the showroom. */
+/* Keep the larger supporting text from r213: these labels do not compete with the
+   right-hand information panel's vertical budget. */
 .lot-showroom .lot-heading p {
   font-size: clamp(.58rem, 1.08vw, .76rem);
 }
@@ -113,39 +129,54 @@
 }
 
 @media (max-height: 520px) {
+  .lot-showroom.lot-card-scroll-boundary .lot-card {
+    padding: 7px 9px 7px;
+  }
+
   .lot-showroom .lot-car-title strong {
-    font-size: clamp(1.16rem, 2.45vw, 1.78rem);
+    font-size: clamp(1.12rem, 2.35vw, 1.72rem);
   }
 
   .lot-showroom .lot-car-description {
-    font-size: clamp(.52rem, .95vw, .63rem);
-    line-height: 1.17;
+    margin-top: 3px;
+    font-size: clamp(.5rem, .9vw, .6rem);
+    line-height: 1.13;
+  }
+
+  .lot-showroom .lot-perk-disclosure {
+    margin-top: 1px !important;
   }
 
   .lot-showroom .lot-perk-copy {
-    font-size: clamp(.48rem, .86vw, .58rem);
-    line-height: 1.15;
+    margin-bottom: 2px;
+    font-size: clamp(.46rem, .82vw, .55rem);
+    line-height: 1.12;
   }
 
   .lot-showroom .lot-attributes-row {
-    min-height: 20px;
-    margin-top: 3px;
-    gap: 6px;
+    min-height: 17px;
+    margin-top: 1px;
+    gap: 4px;
   }
 
   .lot-showroom .lot-attributes-label {
-    font-size: clamp(.46rem, .76vw, .53rem);
+    font-size: clamp(.44rem, .72vw, .5rem);
   }
 
   .lot-showroom .lot-stats-help {
-    flex-basis: 21px;
-    width: 21px;
-    height: 21px;
-    font-size: .7rem;
+    flex-basis: 20px;
+    width: 20px;
+    height: 20px;
+    font-size: .66rem;
   }
 
   .lot-showroom .lot-stat > span {
-    font-size: clamp(.44rem, .73vw, .5rem);
+    font-size: clamp(.42rem, .7vw, .48rem);
+  }
+
+  .lot-showroom .lot-race {
+    min-height: 35px;
+    padding-block: 4px;
   }
 
   .lot-showroom .lot-car-option-name {
