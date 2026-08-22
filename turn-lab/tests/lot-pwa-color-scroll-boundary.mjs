@@ -28,6 +28,13 @@ assert.match(boundary, /\.lot-showroom \.lot-card-info-scroll\s*\{[\s\S]*overflo
 assert.match(boundary, /-webkit-overflow-scrolling:\s*touch/,
   'The inner information scroller must retain native iOS momentum scrolling');
 
+// When the information is shorter than its viewport, do not dump all spare height
+// below the stat table. Keep the Race action anchored while sharing that room between
+// the visible information sections. With negative free space, space-between naturally
+// collapses back to normal packed flow and the same container can scroll.
+assert.match(boundary, /\.lot-showroom \.lot-card-info-scroll\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-direction:\s*column;[\s\S]*justify-content:\s*space-between;[\s\S]*gap:\s*2px;/,
+  'Spare car-information height must be distributed between sections instead of accumulating below the stats');
+
 // The wrapper must contain every variable-height information node, especially perk copy
 // and the visible ATTRIBUTES row, while COLOR and RACE stay as card siblings outside it.
 for (const selector of [
@@ -53,7 +60,7 @@ assert.match(layout, /attributesRow\.appendChild\(infoButton\)/);
 
 // The production enhancement lifecycle must install the boundary after perk/stat/layout
 // construction, before the later screen-reader pass moves COLOR into the card.
-assert.match(runtime, /lot-card-scroll-boundary\.js\?revision=r213-attributes-typography/);
+assert.match(runtime, /lot-card-scroll-boundary\.js\?revision=r215-info-space/);
 assert.match(runtime, /installLotCardScrollBoundary: scrollBoundary\.installLotCardScrollBoundary/);
 const installOrder = runtime.match(/const removePerkDisclosure[\s\S]*?const removeAccessibility = installLotAccessibility\(scope\);/)?.[0] || '';
 assert.ok(installOrder, 'Lot enhancement installation order must remain inspectable');
