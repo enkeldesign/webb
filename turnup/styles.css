@@ -1,0 +1,1094 @@
+@import url('/turn/design-tokens.css?revision=r162-social-sharing');
+
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-rounded, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --ink: var(--turn-ink, #08090a);
+  --paper: var(--turn-paper, #fff8e8);
+  --white: var(--turn-white, #fffdf6);
+  --cyan: var(--turn-blue-500, #38d9ff);
+  --cyan-soft: var(--turn-blue-100, #bdeeff);
+  --pink: var(--turn-pink-500, #ff4fa3);
+  --yellow: var(--turn-yellow-400, #ffd43b);
+  --yellow-dark: var(--turn-yellow-600, #ffbd12);
+  --green: var(--turn-green-500, #8ce99a);
+  --orange: var(--turn-orange-500, #ff7b54);
+  --red: var(--turn-red-500, #ff6b6b);
+  --app-width: 100vw;
+  --app-height: 100vh;
+}
+
+@supports (height: 100dvh) {
+  :root {
+    --app-width: 100dvw;
+    --app-height: 100dvh;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--cyan);
+}
+
+body {
+  position: fixed;
+  inset: 0;
+  width: var(--app-width);
+  min-width: 100vw;
+  height: var(--app-height);
+  min-height: 100vh;
+  color: var(--ink);
+  font-weight: 800;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  min-height: 44px;
+  appearance: none;
+  border: 3px solid var(--ink);
+  border-radius: var(--turn-radius-compact, 12px);
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: var(--turn-shadow-compact, 3px 3px 0 var(--ink));
+  font-weight: 950;
+  letter-spacing: 0.025em;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+button:hover:not(:disabled) {
+  filter: brightness(1.05) saturate(1.05);
+}
+
+button:active:not(:disabled),
+button.is-down {
+  transform: translate(3px, 3px);
+  box-shadow: none;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.54;
+  filter: grayscale(0.4);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 5px solid var(--cyan);
+  outline-offset: 4px;
+}
+
+a {
+  color: #005a78;
+  text-decoration-thickness: 0.13em;
+  text-underline-offset: 0.13em;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 1000;
+  padding: 10px 14px;
+  border: 3px solid var(--ink);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  transform: translateY(-160%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+#game {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--cyan);
+}
+
+#game canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.maplibregl-ctrl-bottom-left {
+  bottom: max(2px, env(safe-area-inset-bottom));
+  left: max(2px, env(safe-area-inset-left));
+  z-index: 12;
+}
+
+.maplibregl-ctrl-attrib {
+  border: 1px solid rgb(8 9 10 / 0.45);
+  background: rgb(255 248 232 / 0.88) !important;
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.maplibregl-ctrl-attrib a {
+  color: #004c68;
+}
+
+.launch-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  overflow: auto;
+  padding:
+    max(18px, env(safe-area-inset-top))
+    max(18px, env(safe-area-inset-right))
+    max(18px, env(safe-area-inset-bottom))
+    max(18px, env(safe-area-inset-left));
+  background:
+    radial-gradient(circle at 13% 18%, rgb(255 79 163 / 0.83) 0 8%, transparent 8.5%),
+    radial-gradient(circle at 83% 20%, rgb(255 212 59 / 0.78) 0 11%, transparent 11.5%),
+    linear-gradient(135deg, rgb(56 217 255 / 0.87), rgb(142 216 255 / 0.76));
+}
+
+.launch-card {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.55fr) minmax(370px, 1.45fr);
+  gap: clamp(20px, 4vw, 48px);
+  align-items: center;
+  width: min(1050px, 94vw);
+  min-height: min(82vh, 600px);
+  padding: clamp(22px, 4.2vw, 52px);
+  border: 6px solid var(--ink);
+  border-radius: var(--turn-radius-hero, 28px);
+  background: rgb(255 248 232 / 0.96);
+  box-shadow: var(--turn-shadow-hero, 12px 12px 0 var(--ink));
+  transform: rotate(-0.45deg);
+}
+
+.launch-mark {
+  display: grid;
+  place-items: center;
+}
+
+.launch-mark img {
+  width: min(27vw, 250px);
+  max-height: 52vh;
+  border: 5px solid var(--ink);
+  border-radius: 24%;
+  background: var(--cyan);
+  box-shadow: 9px 9px 0 var(--ink);
+  transform: rotate(3deg);
+}
+
+.kicker,
+.dialog-kicker {
+  display: inline-block;
+  padding: 6px 10px;
+  border: 3px solid var(--ink);
+  border-radius: var(--turn-radius-pill, 999px);
+  background: var(--yellow);
+  font-size: 0.72rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin: 14px 0 0;
+  font-size: clamp(4rem, 10vw, 8rem);
+  line-height: 0.72;
+  letter-spacing: -0.095em;
+  font-weight: 1000;
+}
+
+h1 span {
+  display: block;
+}
+
+.tagline {
+  margin: 17px 0 11px;
+  color: #006d8d;
+  font-size: clamp(1.1rem, 2.5vw, 1.65rem);
+  letter-spacing: 0.075em;
+}
+
+.intro-copy {
+  max-width: 58ch;
+  margin-bottom: 14px;
+  font-size: clamp(0.92rem, 1.55vw, 1.13rem);
+  line-height: 1.35;
+}
+
+.route-chip {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 5px 8px;
+  align-items: center;
+  margin: 0 0 20px;
+  padding: 8px 11px;
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  background: var(--cyan-soft);
+  font-size: 0.72rem;
+  letter-spacing: 0.035em;
+}
+
+.route-chip strong {
+  padding-right: 3px;
+  color: #00627e;
+}
+
+.launch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 11px;
+}
+
+.launch-actions button,
+.dialog-actions button {
+  padding: 11px 16px;
+}
+
+.primary {
+  border-radius: var(--turn-radius-pill, 999px);
+  background: var(--pink);
+}
+
+.game-action {
+  background: var(--cyan);
+}
+
+.utility-action {
+  background: var(--paper);
+}
+
+.warning-action {
+  background: var(--yellow);
+}
+
+.navigation-action,
+.close-button {
+  background: var(--orange);
+}
+
+.loading-status {
+  min-height: 1.4em;
+  margin: 17px 0 2px;
+  font-size: 0.82rem;
+  line-height: 1.3;
+}
+
+.model-status {
+  min-height: 1.2em;
+  margin: 0;
+  color: rgb(8 9 10 / 0.68);
+  font-size: 0.7rem;
+}
+
+.launch-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 16px;
+  align-items: center;
+  margin-top: 17px;
+  font-size: 0.64rem;
+  letter-spacing: 0.055em;
+}
+
+.launch-meta button {
+  min-height: auto;
+  padding: 2px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #005d7b;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+
+.hud {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  padding:
+    max(10px, env(safe-area-inset-top))
+    max(12px, env(safe-area-inset-right))
+    max(10px, env(safe-area-inset-bottom))
+    max(12px, env(safe-area-inset-left));
+  pointer-events: none;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: calc(100% - 100px);
+}
+
+.chip,
+.objective,
+.attitude {
+  border: 3px solid var(--ink);
+  background: rgb(255 248 232 / 0.91);
+  color: var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.chip {
+  min-width: 84px;
+  padding: 6px 9px 7px;
+  border-radius: 12px;
+  text-transform: uppercase;
+}
+
+.chip span {
+  display: block;
+  font-size: 0.55rem;
+  letter-spacing: 0.07em;
+}
+
+.chip strong {
+  display: block;
+  margin-top: 2px;
+  font-size: clamp(0.82rem, 1.7vw, 1.12rem);
+  letter-spacing: -0.025em;
+  white-space: nowrap;
+}
+
+.pause-button {
+  position: relative;
+  z-index: 3;
+  padding: 7px 11px;
+  background: var(--paper);
+  font-size: 0.68rem;
+  pointer-events: auto;
+}
+
+.objective {
+  position: absolute;
+  top: 50%;
+  left: max(13px, env(safe-area-inset-left));
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 14px;
+  transform: translateY(-50%);
+}
+
+.objective span {
+  display: block;
+  font-size: 0.52rem;
+  letter-spacing: 0.07em;
+}
+
+.objective b {
+  display: block;
+  max-width: 22ch;
+  margin: 1px 0;
+  color: #00637f;
+  font-size: 0.64rem;
+  letter-spacing: 0.025em;
+  line-height: 1.05;
+}
+
+.objective strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.course-dial {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  background: var(--cyan-soft);
+}
+
+.course-dial::after {
+  content: "N";
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  font-size: 0.42rem;
+  transform: translateX(-50%);
+}
+
+.course-dial i {
+  --course-angle: 0deg;
+  position: absolute;
+  inset: 6px 17px;
+  border: 2px solid var(--ink);
+  border-radius: 999px 999px 4px 4px;
+  background: var(--pink);
+  transform: rotate(var(--course-angle));
+  transform-origin: 50% 50%;
+}
+
+.course-dial i::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  border-right: 5px solid transparent;
+  border-bottom: 8px solid var(--ink);
+  border-left: 5px solid transparent;
+  transform: translateX(-50%);
+}
+
+.attitude {
+  --bank-angle: 0deg;
+  --pitch-offset: 0px;
+  position: absolute;
+  top: 51%;
+  left: 50%;
+  width: clamp(88px, 12vw, 132px);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.attitude-world {
+  position: absolute;
+  inset: -45%;
+  transform: translateY(var(--pitch-offset)) rotate(var(--bank-angle));
+  transform-origin: center;
+}
+
+.attitude-sky,
+.attitude-ground {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+}
+
+.attitude-sky {
+  top: 0;
+  background: var(--cyan);
+}
+
+.attitude-ground {
+  bottom: 0;
+  background: #72b77b;
+}
+
+.attitude-horizon {
+  position: absolute;
+  top: calc(50% - 2px);
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--ink);
+}
+
+.attitude-plane {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  transform: translate(-50%, -50%);
+}
+
+.attitude-plane i {
+  width: 26px;
+  height: 4px;
+  border: 1px solid var(--ink);
+  background: var(--yellow);
+}
+
+.attitude-plane b {
+  width: 10px;
+  height: 10px;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+}
+
+.flight-message {
+  position: absolute;
+  top: 23%;
+  left: 50%;
+  max-width: min(74vw, 680px);
+  margin: 0;
+  padding: 8px 13px;
+  border: 3px solid var(--ink);
+  border-radius: var(--turn-radius-pill, 999px);
+  background: var(--yellow);
+  box-shadow: 4px 4px 0 var(--ink);
+  font-size: clamp(0.72rem, 1.6vw, 0.94rem);
+  text-align: center;
+  opacity: 0;
+  transform: translateX(-50%) rotate(-1deg);
+  transition: opacity 130ms ease;
+}
+
+.flight-message.show {
+  opacity: 1;
+}
+
+.is-stalling .chip:nth-child(3),
+.is-stalling .attitude {
+  background: var(--red);
+}
+
+.is-stalling .chip:nth-child(3)::after {
+  content: " · STALL";
+  font-size: 0.64rem;
+}
+
+.flight-controls {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.flight-controls button {
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.manual-controls {
+  position: absolute;
+  bottom: max(22px, env(safe-area-inset-bottom));
+  left: max(18px, env(safe-area-inset-left));
+  display: grid;
+  grid-template-columns: repeat(3, clamp(56px, 8vw, 76px));
+  grid-template-rows: repeat(2, clamp(48px, 7vw, 66px));
+  gap: 8px;
+  grid-template-areas:
+    ". up ."
+    "left down right";
+}
+
+.direction {
+  padding: 6px;
+  background: var(--cyan);
+  font-size: clamp(0.55rem, 1.3vw, 0.72rem);
+}
+
+.direction.up { grid-area: up; }
+.direction.left { grid-area: left; }
+.direction.right { grid-area: right; }
+.direction.down { grid-area: down; }
+
+.recalibrate {
+  position: absolute;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  left: max(18px, env(safe-area-inset-left));
+  padding: 8px 10px;
+  background: var(--paper);
+  font-size: 0.62rem;
+}
+
+.throttle-controls {
+  position: absolute;
+  right: max(18px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: 17px clamp(70px, 10vw, 105px) clamp(78px, 12vw, 118px);
+  gap: 10px;
+  align-items: end;
+}
+
+.throttle-controls button {
+  height: clamp(68px, 11vw, 104px);
+  padding: 7px;
+  border-radius: 50%;
+  font-size: clamp(0.57rem, 1.3vw, 0.78rem);
+}
+
+.throttle-controls .thrust {
+  height: clamp(80px, 13vw, 120px);
+  background: var(--green);
+}
+
+.air-brake {
+  background: var(--orange);
+}
+
+.throttle-meter {
+  position: relative;
+  width: 17px;
+  height: clamp(82px, 13vw, 120px);
+  overflow: hidden;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.throttle-meter i {
+  --throttle: 70%;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: var(--throttle);
+  background: linear-gradient(to top, var(--green), var(--yellow));
+}
+
+.rotate-gate {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 90;
+  place-items: center;
+  padding: 22px;
+  background: linear-gradient(145deg, var(--cyan), #9775fa);
+  text-align: center;
+}
+
+.rotate-card {
+  max-width: 420px;
+  padding: 30px;
+  border: 5px solid var(--ink);
+  border-radius: 24px;
+  background: var(--yellow);
+  box-shadow: 10px 10px 0 var(--ink);
+}
+
+.rotate-card h2 {
+  margin: 0;
+  font-size: clamp(1.8rem, 8vw, 3.2rem);
+  line-height: 0.9;
+}
+
+.rotate-card p {
+  margin: 16px 0 0;
+  line-height: 1.3;
+}
+
+.rotate-phone {
+  width: 98px;
+  height: 56px;
+  margin: 0 auto 18px;
+  border: 5px solid var(--ink);
+  border-radius: 14px;
+  background: var(--paper);
+  transform: rotate(-11deg);
+}
+
+.turn-dialog {
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  padding: 0;
+  border: 5px solid var(--ink);
+  border-radius: 24px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 10px 10px 0 var(--ink);
+}
+
+.turn-dialog::backdrop {
+  background: rgb(8 9 10 / 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.turn-dialog article {
+  padding: clamp(20px, 4vw, 36px);
+}
+
+.turn-dialog header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.turn-dialog h2 {
+  margin: 9px 0 0;
+  font-size: clamp(2.2rem, 7vw, 4.8rem);
+  line-height: 0.82;
+  letter-spacing: -0.065em;
+}
+
+.turn-dialog h3 {
+  margin: 22px 0 7px;
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+}
+
+.turn-dialog p {
+  line-height: 1.44;
+}
+
+.close-button {
+  flex: 0 0 auto;
+  padding: 8px 11px;
+  font-size: 0.64rem;
+}
+
+.instruction-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.instruction-grid section {
+  padding: 14px;
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  background: var(--white);
+}
+
+.instruction-grid section:nth-child(1) { background: var(--cyan-soft); }
+.instruction-grid section:nth-child(2) { background: #ffd1e6; }
+.instruction-grid section:nth-child(3) { background: #d9f5c2; }
+.instruction-grid section:nth-child(4) { background: #fff0a8; }
+
+.instruction-grid strong {
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+}
+
+.instruction-grid p {
+  margin: 7px 0 0;
+  font-size: 0.88rem;
+}
+
+.keyboard-help {
+  margin: 16px 0 0;
+  padding: 11px;
+  border-left: 5px solid var(--cyan);
+  background: rgb(56 217 255 / 0.14);
+  font-size: 0.82rem;
+}
+
+.mode-pill {
+  padding: 7px 10px;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  background: var(--cyan);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.pause-dialog fieldset {
+  margin: 0 0 18px;
+  padding: 14px;
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+}
+
+.pause-dialog legend {
+  padding: 0 7px;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+
+.pause-dialog label {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.pause-dialog label + label {
+  border-top: 2px solid rgb(8 9 10 / 0.14);
+}
+
+.pause-dialog input {
+  width: 27px;
+  height: 27px;
+  accent-color: var(--pink);
+}
+
+.pause-dialog label span,
+.pause-dialog label strong,
+.pause-dialog label small {
+  display: block;
+}
+
+.pause-dialog label strong {
+  font-size: 0.82rem;
+}
+
+.pause-dialog label small {
+  margin-top: 2px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 11px;
+}
+
+.result-dialog {
+  text-align: center;
+}
+
+.result-dialog h2 {
+  margin-top: 16px;
+}
+
+.result-time {
+  margin: 24px 0 4px;
+  font-size: clamp(3rem, 10vw, 6.5rem);
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.result-best {
+  color: #00637f;
+  font-size: 1.1rem;
+}
+
+.result-dialog .dialog-actions {
+  justify-content: center;
+}
+
+.about-dialog code {
+  padding: 2px 5px;
+  border-radius: 5px;
+  background: rgb(8 9 10 / 0.1);
+  font-size: 0.85em;
+}
+
+.noscript {
+  position: fixed;
+  inset: 20px;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 30px;
+  border: 5px solid var(--ink);
+  background: var(--red);
+  color: var(--ink);
+  text-align: center;
+}
+
+@media (orientation: portrait) {
+  body.is-flying .rotate-gate {
+    display: grid;
+  }
+
+  .launch-card {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .launch-mark {
+    display: none;
+  }
+
+  h1 {
+    font-size: clamp(4rem, 22vw, 7rem);
+  }
+}
+
+@media (max-height: 510px) and (orientation: landscape) {
+  .launch-panel {
+    place-items: start center;
+    padding-top: max(11px, env(safe-area-inset-top));
+  }
+
+  .launch-card {
+    grid-template-columns: minmax(120px, 0.35fr) minmax(420px, 1.65fr);
+    min-height: 0;
+    padding: 18px 25px;
+    gap: 24px;
+  }
+
+  .launch-mark img {
+    width: min(22vw, 154px);
+  }
+
+  h1 {
+    margin-top: 10px;
+    font-size: clamp(3.4rem, 14vh, 5rem);
+  }
+
+  .tagline {
+    margin: 10px 0 5px;
+    font-size: 1rem;
+  }
+
+  .intro-copy {
+    margin-bottom: 8px;
+    font-size: 0.78rem;
+  }
+
+  .route-chip {
+    margin-bottom: 10px;
+    padding: 5px 8px;
+    font-size: 0.58rem;
+  }
+
+  .launch-actions button {
+    min-height: 38px;
+    padding: 6px 11px;
+    font-size: 0.68rem;
+  }
+
+  .loading-status {
+    margin-top: 9px;
+    font-size: 0.66rem;
+  }
+
+  .model-status,
+  .launch-meta {
+    font-size: 0.56rem;
+  }
+
+  .chip {
+    min-width: 68px;
+    padding: 4px 7px 5px;
+  }
+
+  .chip span {
+    font-size: 0.46rem;
+  }
+
+  .chip strong {
+    font-size: 0.78rem;
+  }
+
+  .optional-chip {
+    display: none;
+  }
+
+  .objective {
+    padding: 4px 7px;
+  }
+
+  .course-dial {
+    width: 34px;
+    height: 34px;
+  }
+
+  .course-dial i {
+    inset: 5px 13px;
+  }
+
+  .flight-message {
+    top: 17%;
+  }
+
+  .manual-controls {
+    grid-template-columns: repeat(3, 52px);
+    grid-template-rows: repeat(2, 44px);
+    bottom: 10px;
+  }
+
+  .recalibrate,
+  .throttle-controls {
+    bottom: 10px;
+  }
+
+  .throttle-controls {
+    grid-template-columns: 14px 66px 76px;
+    gap: 7px;
+  }
+
+  .throttle-controls button {
+    height: 64px;
+  }
+
+  .throttle-controls .thrust,
+  .throttle-meter {
+    height: 76px;
+  }
+}
+
+@media (max-width: 760px) {
+  .instruction-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .launch-card,
+  .launch-mark img,
+  .flight-message,
+  .rotate-phone {
+    transform: none;
+  }
+
+  .flight-message {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-contrast: more) {
+  .chip,
+  .objective,
+  .attitude,
+  .maplibregl-ctrl-attrib {
+    background: var(--paper) !important;
+  }
+}
+
+@media (forced-colors: active) {
+  button,
+  .launch-card,
+  .chip,
+  .objective,
+  .attitude,
+  .turn-dialog,
+  .instruction-grid section,
+  .route-chip {
+    forced-color-adjust: auto;
+  }
+
+  .attitude-sky,
+  .attitude-ground,
+  .throttle-meter i {
+    forced-color-adjust: none;
+  }
+}

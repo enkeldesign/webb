@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title description">
+  <title id="title">TURN UP</title>
+  <desc id="description">An aircraft banking upward in the TURN design style.</desc>
+  <rect x="5" y="5" width="118" height="118" rx="25" fill="#38d9ff" stroke="#08090a" stroke-width="10"/>
+  <path d="M24 80 54 66l9-42c1-6 9-6 11 0l3 34 25-12c4-2 9 0 11 4 2 5 0 9-5 11L77 77l-4 25 12 8H48l12-9-3-25-27 14c-5 2-10 0-12-5-1-4 1-8 6-10Z" fill="#fff8e8" stroke="#08090a" stroke-width="7" stroke-linejoin="round"/>
+  <path d="m83 26 12-12 12 12M95 15v25" fill="none" stroke="#ff4fa3" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,36 @@
+name: TURN UP production tests
+
+on:
+  pull_request:
+    paths:
+      - 'turnup/**'
+      - 'turn-tests/turnup-production.mjs'
+      - '.github/workflows/turnup-tests.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'turnup/**'
+      - 'turn-tests/turnup-production.mjs'
+      - '.github/workflows/turnup-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  production-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Check module syntax
+        run: |
+          node --check turnup/app.mjs
+          node --check turnup/audio.mjs
+          node --check turnup/flight-model.mjs
+          node --check turnup/scene.mjs
+      - name: Test flight and production contracts
+        run: node turn-tests/turnup-production.mjs

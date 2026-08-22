@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en" data-turn-deployment="turnup">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#38d9ff">
+  <meta name="application-name" content="TURN UP">
+  <meta name="apple-mobile-web-app-title" content="TURN UP">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="TURN UP is a motion-controlled flight game over Sundsvall–Timrå Airport, Söråker and the Strind area. Bank like TURN, then tilt up or down to climb and dive.">
+  <link rel="canonical" href="https://enkel.design/turnup/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="TURN UP">
+  <meta property="og:title" content="TURN UP — Tilt. Climb. Fly.">
+  <meta property="og:description" content="A motion-controlled flight over Midlanda, Söråker and the Strind area, powered by the TURN engine.">
+  <meta property="og:url" content="https://enkel.design/turnup/">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="TURN UP — Tilt. Climb. Fly.">
+  <meta name="twitter:description" content="A motion-controlled flight over Midlanda, Söråker and the Strind area.">
+  <title>TURN UP</title>
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://tiles.openfreemap.org">
+  <link rel="preconnect" href="https://s3.amazonaws.com">
+  <link rel="preload" as="fetch" crossorigin href="https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/B737_nologo.glb">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.5.0/dist/maplibre-gl.css">
+  <link rel="stylesheet" href="./styles.css?build=20260822-r1">
+  <script type="importmap">
+    {
+      "imports": {
+        "maplibre-gl": "https://unpkg.com/maplibre-gl@6.5.0/dist/maplibre-gl.mjs",
+        "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/",
+        "/turn/input/motion.js": "/turn/input/motion.js?revision=r164-ipad-motion-profile"
+      }
+    }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#intro">Skip to game controls</a>
+  <div id="game" aria-label="3D flight view over Sundsvall–Timrå Airport, Söråker and the Strind area"></div>
+
+  <main class="launch-panel" id="intro" aria-labelledby="gameTitle" aria-hidden="false">
+    <article class="launch-card">
+      <div class="launch-mark" aria-hidden="true">
+        <img src="./icon.svg" alt="">
+      </div>
+      <div class="launch-copy">
+        <span class="kicker">A TURN FLIGHT EXPERIMENT</span>
+        <h1 id="gameTitle"><span>TURN</span> UP</h1>
+        <p class="tagline">TILT. CLIMB. FLY.</p>
+        <p class="intro-copy">Bank left and right just like TURN. Tilt the top of your device up or down to climb and dive, then fly the gates across the real Midlanda–Söråker landscape.</p>
+        <p class="route-chip"><strong>FIRST ROUTE</strong> MIDLANDA <span aria-hidden="true">→</span> SÖRÅKER <span aria-hidden="true">→</span> STRIND AREA</p>
+        <div class="launch-actions">
+          <button class="primary" id="takeOffButton" type="button" disabled>TAKE OFF WITH TILT</button>
+          <button class="game-action" id="manualStartButton" type="button" disabled>FLY WITH BUTTONS</button>
+          <button class="utility-action" id="howButton" type="button">HOW TO FLY</button>
+        </div>
+        <p class="loading-status" id="loadingStatus" role="status" aria-live="polite" aria-atomic="true">Loading the TURN flight engine…</p>
+        <p class="model-status" id="modelStatus">Preparing the Midlanda map…</p>
+        <div class="launch-meta">
+          <span id="buildLabel">TURN UP</span>
+          <button id="aboutButton" type="button">ABOUT &amp; MAP CREDITS</button>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <section class="hud" id="hud" aria-label="Flight instruments" hidden>
+    <div class="topbar">
+      <div class="stats">
+        <div class="chip"><span>gate</span><strong id="gateValue">1 / 8</strong></div>
+        <div class="chip"><span>altitude</span><strong id="altitudeValue">78 m</strong></div>
+        <div class="chip"><span>airspeed</span><strong id="speedValue">177 kt</strong></div>
+        <div class="chip"><span>throttle</span><strong id="throttleValue">70%</strong></div>
+        <div class="chip optional-chip"><span>time</span><strong id="timeValue">0:00.00</strong></div>
+      </div>
+      <button class="pause-button" id="pauseButton" type="button" aria-label="Pause flight">PAUSE</button>
+    </div>
+
+    <div class="objective" aria-hidden="true">
+      <div class="course-dial">
+        <i id="courseNeedle"></i>
+      </div>
+      <div>
+        <span>NEXT GATE</span>
+        <b id="targetNameValue">RUNWAY 16</b>
+        <strong id="distanceValue">—</strong>
+      </div>
+    </div>
+
+    <div class="attitude" id="attitudeIndicator" aria-hidden="true">
+      <div class="attitude-world">
+        <div class="attitude-sky"></div>
+        <div class="attitude-ground"></div>
+        <i class="attitude-horizon"></i>
+      </div>
+      <div class="attitude-plane"><i></i><b></b><i></i></div>
+    </div>
+
+    <p class="flight-message" id="flightMessage" role="status" aria-live="polite" aria-atomic="true"></p>
+  </section>
+
+  <section class="flight-controls" id="controls" aria-label="Flight controls" hidden>
+    <div class="manual-controls" id="manualControls" aria-label="Bank and pitch controls" hidden>
+      <button id="pitchUpButton" class="direction up" type="button" aria-label="Pitch up">UP</button>
+      <button id="bankLeftButton" class="direction left" type="button" aria-label="Bank left">LEFT</button>
+      <button id="bankRightButton" class="direction right" type="button" aria-label="Bank right">RIGHT</button>
+      <button id="pitchDownButton" class="direction down" type="button" aria-label="Pitch down">DOWN</button>
+    </div>
+
+    <button class="recalibrate" id="recalibrateButton" type="button">RECALIBRATE</button>
+
+    <div class="throttle-controls" aria-label="Throttle controls">
+      <div class="throttle-meter" aria-hidden="true"><i id="throttleFill"></i></div>
+      <button class="air-brake" id="airBrakeButton" type="button">AIR BRAKE</button>
+      <button class="thrust" id="thrustButton" type="button">THRUST</button>
+    </div>
+  </section>
+
+  <section class="rotate-gate" aria-labelledby="rotateTitle">
+    <div class="rotate-card">
+      <div class="rotate-phone" aria-hidden="true"></div>
+      <h2 id="rotateTitle" tabindex="-1">ROTATE TO LANDSCAPE</h2>
+      <p>TURN UP needs the width for its flight view and controls.</p>
+    </div>
+  </section>
+
+  <dialog class="turn-dialog" id="howDialog" aria-labelledby="howTitle">
+    <article>
+      <header>
+        <div>
+          <span class="dialog-kicker">FLIGHT SCHOOL</span>
+          <h2 id="howTitle">HOW TO FLY</h2>
+        </div>
+        <button class="close-button" id="howCloseButton" type="button" aria-label="Close flight instructions">CLOSE</button>
+      </header>
+      <div class="instruction-grid">
+        <section>
+          <strong>1 · BANK</strong>
+          <p>Turn your device left or right exactly as you do in TURN. The aircraft banks into the turn.</p>
+        </section>
+        <section>
+          <strong>2 · CLIMB &amp; DIVE</strong>
+          <p>Tilt the top edge up to climb and down to dive. Recalibrate if your resting position changes. Invert pitch is available in Pause.</p>
+        </section>
+        <section>
+          <strong>3 · AIRSPEED</strong>
+          <p>Hold Thrust to speed up and Air Brake to slow down. If STALL appears, lower the nose or add thrust.</p>
+        </section>
+        <section>
+          <strong>4 · THE ROUTE</strong>
+          <p>Fly through the pink gate. Yellow gates show what comes later. The first course starts at Midlanda and stretches east past the Strind area.</p>
+        </section>
+      </div>
+      <p class="keyboard-help"><strong>KEYBOARD:</strong> Arrow keys or W/A/S/D fly · Space/R adds thrust · Shift/F slows · C recalibrates · Escape pauses.</p>
+    </article>
+  </dialog>
+
+  <dialog class="turn-dialog pause-dialog" id="pauseDialog" aria-labelledby="pauseTitle">
+    <article>
+      <header>
+        <div>
+          <span class="dialog-kicker">FLIGHT PAUSED</span>
+          <h2 id="pauseTitle">TURN UP</h2>
+        </div>
+        <span class="mode-pill" id="pauseMode">Tilt controls</span>
+      </header>
+      <fieldset>
+        <legend>SETTINGS</legend>
+        <label><input id="soundToggle" type="checkbox" checked> <span><strong>FLIGHT AUDIO</strong><small>Engine, wind and gate cues</small></span></label>
+        <label><input id="invertPitchToggle" type="checkbox"> <span><strong>INVERT PITCH</strong><small>Reverse the climb and dive direction</small></span></label>
+      </fieldset>
+      <div class="dialog-actions">
+        <button class="primary" id="resumeButton" type="button">RESUME FLIGHT</button>
+        <button class="game-action" id="switchControlsButton" type="button">USE BUTTON CONTROLS</button>
+        <button class="warning-action" id="restartButton" type="button">RESTART COURSE</button>
+        <button class="navigation-action" id="leaveButton" type="button">LEAVE FLIGHT</button>
+      </div>
+    </article>
+  </dialog>
+
+  <dialog class="turn-dialog result-dialog" id="resultDialog" aria-labelledby="resultTitle">
+    <article>
+      <span class="dialog-kicker">COURSE COMPLETE</span>
+      <h2 id="resultTitle">YOU TURNED UP.</h2>
+      <p class="result-time" id="resultTime">0:00.00</p>
+      <p class="result-best" id="resultBest">New best flight!</p>
+      <div class="dialog-actions">
+        <button class="primary" id="flyAgainButton" type="button">FLY AGAIN</button>
+        <button class="navigation-action" id="resultLeaveButton" type="button">LEAVE FLIGHT</button>
+      </div>
+    </article>
+  </dialog>
+
+  <dialog class="turn-dialog about-dialog" id="aboutDialog" aria-labelledby="aboutTitle">
+    <article>
+      <header>
+        <div>
+          <span class="dialog-kicker">OPEN FLIGHT</span>
+          <h2 id="aboutTitle">ABOUT TURN UP</h2>
+        </div>
+        <button class="close-button" id="aboutCloseButton" type="button" aria-label="Close about TURN UP">CLOSE</button>
+      </header>
+      <p>TURN UP is a small arcade flight simulator built from TURN’s production motion and platform engine. It uses the same iPad steering profile and adds a second tilt axis for pitch.</p>
+      <h3>REAL-WORLD MAP</h3>
+      <p>The Midlanda, Söråker and Strind-area landscape is rendered with <a href="https://maplibre.org/">MapLibre GL JS</a>, <a href="https://openfreemap.org/">OpenFreeMap</a>, <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, OpenMapTiles and open terrain elevation tiles hosted through the <a href="https://registry.opendata.aws/terrain-tiles/">AWS Registry of Open Data</a>.</p>
+      <p>The route identifies only the general Strind area; it does not place a marker on a private home.</p>
+      <h3>AIRCRAFT</h3>
+      <p>The logo-free B737 model comes from <a href="https://github.com/amvlab/aircraft-models">AMV Lab aircraft-models</a> at pinned commit <code>91d835e</code>, licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. TURN UP scales, orients and outlines it at runtime.</p>
+    </article>
+  </dialog>
+
+  <noscript><p class="noscript">TURN UP needs JavaScript to run its flight engine.</p></noscript>
+  <script type="module" src="./app.mjs?build=20260822-r1"></script>
+</body>
+</html>
