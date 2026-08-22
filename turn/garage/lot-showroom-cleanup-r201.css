@@ -1,0 +1,26 @@
+/* Small production polish layered over the showroom base stylesheet. */
+
+/* Keep the hero view clean: the page title already identifies TURN. */
+.lot-showroom .lot-viewbox::before {
+  content: none;
+  display: none;
+}
+
+/* While real 3D thumbnails are rendered, show only a simple colour swatch shape. */
+.lot-showroom .lot-car-option-fallback i:first-child {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 56%;
+  height: 28%;
+  border: 2px solid var(--ink, #08090a);
+  border-radius: 5px;
+  transform: translate(-50%, -50%);
+  background: var(--lot-car-color, #8ce99a);
+  box-shadow: 0 3px 0 rgb(8 9 10 / .14);
+}
+
+.lot-showroom .lot-car-option-fallback i:nth-child(2),
+.lot-showroom .lot-car-option-fallback i:nth-child(3) {
+  display: none;
+}
