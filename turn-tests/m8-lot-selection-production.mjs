@@ -58,6 +58,14 @@ assert.match(showroom, /document\.hidden/,
   'The hero renderer must stop doing useful work while the document is hidden');
 assert.match(showroom, /prefers-reduced-motion: reduce/,
   'The showroom must retain reduced-motion behavior');
+assert.match(showroom, /DRAG LEFT \/ RIGHT TO ROTATE/,
+  'The visible interaction hint must describe the showroom yaw-only rotation');
+assert.match(showroom, /yaw \+= dx \* 0\.012/,
+  'Horizontal dragging must rotate the selected car around its vertical axis');
+assert.match(showroom, /stage\.rotation\.set\(0, yaw, 0\)/,
+  'The selected car must stay level by applying yaw with zero pitch and roll');
+assert.doesNotMatch(showroom, /let pitch\s*=|pitch\s*=|stage\.rotation\.x\s*=|lastY|const dy = event\.clientY/,
+  'Vertical pointer movement must never pitch or roll the selected showroom car');
 assert.match(showroom, /function createThumbnailRenderer\(\)/,
   'The visible car rail must render actual TURN car models');
 assert.match(showroom, /preserveDrawingBuffer: true/,
@@ -104,4 +112,4 @@ assert.match(accessibility, /aria-setsize/);
 assert.match(accessibility, /describeVehicleStats\(car\.stats\)/,
   'Screen-reader vehicle summaries must still use the same canonical attributes as the visible panel');
 
-console.log('TURN M8 Home now enters a prepared production showroom Lot with compact paint, real 3D car thumbnails, bounded rendering and stable accessible card order.');
+console.log('TURN M8 Home now enters a prepared production showroom Lot with compact paint, yaw-only level car rotation, real 3D car thumbnails, bounded rendering and stable accessible card order.');
