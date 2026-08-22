@@ -29,6 +29,7 @@ import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
 const SHOWROOM_STYLE_ID = 'turn-lot-showroom-r200';
 const SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r209-polish';
 const SHOWROOM_THUMBNAIL_STYLE_ID = 'turn-lot-thumbnail-r211-composition';
+const SHOWROOM_INFO_STYLE_ID = 'turn-lot-info-r212-fit';
 let showroomStylePromise = null;
 let originalLotPromise = null;
 let originalLotModule = null;
@@ -70,6 +71,10 @@ function prepareShowroomStyles() {
     prepareStylesheet(
       SHOWROOM_THUMBNAIL_STYLE_ID,
       './lot-thumbnail-composition-r211.css?revision=r211-half-ground-zoom'
+    ),
+    prepareStylesheet(
+      SHOWROOM_INFO_STYLE_ID,
+      './lot-info-panel-r212.css?revision=r212-future-racer-fit'
     )
   ]);
   return showroomStylePromise;
