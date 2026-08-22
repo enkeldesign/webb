@@ -69,10 +69,22 @@
   white-space: nowrap;
 }
 
-/* COLOR is one stable component for every selected car. */
+/* COLOR is one stable component for every selected car. Keep its internal geometry
+   identical whether cues are on/off, paint is locked/unlocked, or the livery is fixed. */
+.lot-showroom .lot-colors,
+.lot-showroom .lot-viewbox-with-paint .lot-colors,
+.lot-showroom .lot-viewbox-with-paint .lot-colors.is-paint-locked {
+  box-sizing: border-box;
+  min-height: 54px;
+  padding: 5px 7px;
+  gap: 7px;
+  align-items: center;
+}
+
 .lot-showroom .lot-color-visible-label {
   flex: 0 0 auto;
   align-self: center;
+  margin: 0 1px 0 0;
   color: var(--ink, #08090a);
   font-size: .42rem;
   font-weight: 950;
@@ -81,38 +93,48 @@
   white-space: nowrap;
 }
 
-/* Never rely on WebKit's internal <input type=color> swatch for visible colour.
-   iOS can leave the input tappable while failing to paint its internal swatch after
-   repeated DOM replacement. TURN owns the square; the native input remains the real
-   interactive/accessibility control invisibly on top of it. */
+/* Standalone iOS can composite an invisible native <input type=color> as a blank
+   layer when it covers another element. Never overlay the native control on the
+   swatch. Keep the input real, focusable and accessible, but visually clip it; a
+   linked <label> is TURN's visible and tappable swatch face. */
 .lot-showroom .lot-color-control[hidden] {
   display: none !important;
 }
 
 .lot-showroom .lot-color-control.has-turn-color-swatch::before {
+  content: none;
+  display: none;
+}
+
+.lot-showroom .lot-turn-color-swatch-face {
   position: absolute;
   z-index: 1;
   inset: 0;
+  display: block;
   box-sizing: border-box;
   border: 2px solid var(--ink, #08090a);
   border-radius: 10px;
   background: var(--lot-color-swatch, #ffcc00);
-  content: '';
-  pointer-events: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .lot-showroom .lot-color-control.has-turn-color-swatch input[type='color'] {
-  position: absolute;
-  z-index: 2;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  opacity: 0;
-  cursor: pointer;
+  position: absolute !important;
+  z-index: 0 !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+  border: 0 !important;
+  white-space: nowrap !important;
 }
 
-.lot-showroom .lot-color-control.has-turn-color-swatch:focus-within::before {
+.lot-showroom .lot-color-control.has-turn-color-swatch:focus-within .lot-turn-color-swatch-face {
   outline: 4px solid var(--cyan, #38d9ff);
   outline-offset: 2px;
 }
@@ -188,7 +210,7 @@
   flex: 0 1 auto;
   align-self: center;
   max-width: min(46vw, 250px);
-  margin: 0 2px 0 3px;
+  margin: 0;
   padding: 5px 9px;
   overflow: hidden;
   border: 2px solid var(--ink, #08090a);
@@ -235,6 +257,13 @@
   .lot-showroom .lot-car-option-name {
     min-height: 18px;
     padding: 2px 3px 1px;
+  }
+  .lot-showroom .lot-colors,
+  .lot-showroom .lot-viewbox-with-paint .lot-colors,
+  .lot-showroom .lot-viewbox-with-paint .lot-colors.is-paint-locked {
+    min-height: 48px;
+    padding: 4px 6px;
+    gap: 6px;
   }
   .lot-showroom .lot-color-visible-label { font-size: .36rem; }
   .lot-showroom .lot-paint-lock-button { gap: 5px; }
