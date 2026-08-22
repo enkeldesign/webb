@@ -10,6 +10,7 @@ import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
 // lot-r10.js?build=20260809-r163-native-html&revision=r590-canonical-lock-icon
 // lot-enhancement-runtime.js?revision=r588-canonical-attributes
 // lot-enhancement-runtime.js?revision=r205-color-baseline
+// lot-showroom-experiment.js?revision=r200-production-candidate
 // export async function showEnhancedLot
 // SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r203-polish'
 // lot-showroom-cleanup-r201.css?revision=r203-thumbnail-color-polish
