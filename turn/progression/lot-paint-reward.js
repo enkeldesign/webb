@@ -3,6 +3,7 @@ import {
   getVehicleDefaultColor,
   getVehicleDefaultSecondaryColor
 } from '../vehicle/catalog.js?build=20260804-r157-factory-colors';
+import { describeColorCue } from '../accessibility/color-cues.js?revision=r163';
 import {
   LOCK_ICON,
   isPaintUnlocked,
@@ -64,6 +65,13 @@ export function gateLotPaintNow(root = document.body) {
   let syncing = false;
   let lastCarId = selectedCarId(screen);
   let paintWasUnlocked = isPaintUnlocked();
+
+  function bodyColorValue(carId) {
+    const body = [...colors.querySelectorAll('.lot-color-control')]
+      .find((control) => control.dataset.paintLabel?.toLowerCase() === 'body')
+      ?.querySelector('input[type="color"]');
+    return body?.value || getVehicleDefaultColor(carId);
+  }
 
   function forceFactoryPaint(carId) {
     const car = CAR_BY_ID.get(carId);
@@ -145,6 +153,22 @@ export function gateLotPaintNow(root = document.body) {
     return button;
   }
 
+  function ensureVisualColorCue(car) {
+    let cue = colors.querySelector('.lot-paint-color-cue');
+    if (!car || car.fixedLivery) {
+      cue?.remove();
+      return null;
+    }
+    if (!cue) {
+      cue = document.createElement('span');
+      cue.className = 'turn-color-cue lot-color-cue lot-paint-color-cue';
+      cue.setAttribute('aria-hidden', 'true');
+    }
+    cue.textContent = `CAR COLOR · ${describeColorCue(bodyColorValue(car.id)).toUpperCase()}`;
+    if (cue.parentElement !== colors || cue !== colors.lastElementChild) colors.append(cue);
+    return cue;
+  }
+
   function removeLockPresentation() {
     colors.querySelector('.lot-paint-lock-button')?.remove();
   }
@@ -159,11 +183,13 @@ export function gateLotPaintNow(root = document.body) {
       const paintUnlocked = isPaintUnlocked();
       const changedCar = Boolean(carId) && carId !== lastCarId;
       const controls = [...colors.querySelectorAll('.lot-color-control:not(.lot-fixed-livery)')];
+      const hasPaintControl = Boolean(car && !car.fixedLivery);
 
+      screen.classList.toggle('lot-has-paint-control', hasPaintControl);
       ensureVisibleLabel(car);
-      if (car && !car.fixedLivery && (!paintUnlocked || changedCar)) forceFactoryPaint(carId);
+      if (hasPaintControl && (!paintUnlocked || changedCar)) forceFactoryPaint(carId);
 
-      const locked = Boolean(car && !car.fixedLivery && !paintUnlocked);
+      const locked = Boolean(hasPaintControl && !paintUnlocked);
       colors.classList.toggle('is-paint-locked', locked);
 
       for (const control of controls) {
@@ -174,6 +200,7 @@ export function gateLotPaintNow(root = document.body) {
 
       if (locked) ensureLockButton(carId);
       else removeLockPresentation();
+      ensureVisualColorCue(car);
 
       if (!paintWasUnlocked && paintUnlocked) {
         window.dispatchEvent(new CustomEvent('turn:paint-controls-unlocked'));
@@ -199,17 +226,23 @@ export function gateLotPaintNow(root = document.body) {
   // The showroom replaces the native color controls whenever a different car is
   // selected. That replacement can remove the injected COLOR label and locked swatch
   // after the picker mutation has already been observed. Watch only direct child-list
-  // changes that actually add/remove .lot-color-control nodes. Our own label/button
+  // changes that actually add/remove .lot-color-control nodes. Our own label/button/cue
   // mutations are ignored, so this cannot create the old self-observer feedback loop.
   const controlObserver = new MutationObserver((mutations) => {
     if (mutations.some(mutationTouchesPaintControl)) sync();
   });
   controlObserver.observe(colors, { childList: true });
 
+  const handlePaintInput = (event) => {
+    if (!event.target?.matches?.('input[type="color"]')) return;
+    const car = CAR_BY_ID.get(selectedCarId(screen));
+    ensureVisualColorCue(car);
+  };
   const handleReward = sync;
   const handleStorage = (event) => {
     if (event.key === 'turn-achievements-v1') sync();
   };
+  colors.addEventListener('input', handlePaintInput);
   window.addEventListener('turn:trophy-road-updated', handleReward);
   window.addEventListener('storage', handleStorage);
   raceButton.addEventListener('click', sync, { capture: true });
@@ -218,17 +251,20 @@ export function gateLotPaintNow(root = document.body) {
   const release = () => {
     observer.disconnect();
     controlObserver.disconnect();
+    colors.removeEventListener('input', handlePaintInput);
     window.removeEventListener('turn:trophy-road-updated', handleReward);
     window.removeEventListener('storage', handleStorage);
     raceButton.removeEventListener('click', sync, { capture: true });
     removeLockPresentation();
     colors.querySelector('.lot-color-visible-label')?.remove();
+    colors.querySelector('.lot-paint-color-cue')?.remove();
     for (const control of colors.querySelectorAll('.lot-color-control')) {
       control.hidden = false;
       const input = control.querySelector('input');
       if (input) input.disabled = false;
     }
     colors.classList.remove('is-paint-locked');
+    screen.classList.remove('lot-has-paint-control');
     delete screen.dataset.turnPaintUnlocked;
     activeGates.delete(screen);
   };
