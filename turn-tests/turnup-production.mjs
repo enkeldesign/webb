@@ -66,6 +66,7 @@ test('TURN UP imports the canonical TURN platform and steering engine', () => {
   assert.match(app, /resolveMotionSteeringProfile/);
   assert.match(app, /updateMotionInputState/);
   assert.match(app, /controlFromAngle\(motionState\.pitch - motionState\.neutralPitch/);
+  assert.match(app, /scene\.mjs\?build=20260822-r3/);
   assert.doesNotMatch(app, /DeviceMotionEvent\.requestPermission/);
 });
 
