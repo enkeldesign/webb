@@ -8,6 +8,8 @@ import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
 // Historical production regression markers while the showroom replaces this loader:
 // lot-r10.js?build=20260809-r163-native-html&revision=r590-canonical-lock-icon
 // export async function showEnhancedLot
+// SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r203-polish'
+// lot-showroom-cleanup-r201.css?revision=r203-thumbnail-color-polish
 // The actual prepared M8 entry below is deliberately synchronous after warmup so
 // its existing Race This Car motion-access gate can bind immediately after mount.
 
