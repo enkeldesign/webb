@@ -66,15 +66,14 @@ test('TURN UP imports the canonical TURN platform and steering engine', () => {
   assert.match(app, /resolveMotionSteeringProfile/);
   assert.match(app, /updateMotionInputState/);
   assert.match(app, /controlFromAngle\(motionState\.pitch - motionState\.neutralPitch/);
-  assert.match(app, /scene\.mjs\?build=20260822-r4/);
+  assert.match(app, /scene\.mjs\?build=20260823-r1/);
   assert.doesNotMatch(app, /DeviceMotionEvent\.requestPermission/);
 });
 
 test('the real Midlanda–Söråker course uses open 3D map infrastructure', () => {
   assert.match(scene, /tiles\.openfreemap\.org\/styles\/liberty/);
-  assert.match(scene, /elevation-tiles-prod\/terrarium/);
+  assert.match(scene, /tiles\.mapterhorn\.com\/tilejson\.json/);
   assert.match(scene, /type: 'raster-dem'/);
-  assert.match(scene, /type: 'fill-extrusion'/);
   assert.match(scene, /renderingMode: '3d'/);
   assert.match(scene, /defaultProjectionData\.mainMatrix/);
   assert.doesNotMatch(scene, /maplibregl\.supported/);
@@ -85,6 +84,28 @@ test('the real Midlanda–Söråker course uses open 3D map infrastructure', () 
   assert.match(scene, /STRIND AREA/);
   assert.match(scene, /17\.66/);
   assert.match(scene, /maxBounds: \[\[17\.22, 62\.39\], \[17\.84, 62\.67\]\]/);
+});
+
+test('the map declutters labels and the chase camera follows aircraft elevation', () => {
+  assert.match(scene, /new Set\(\['place', 'aerodrome_label'\]\)/);
+  assert.match(scene, /layer\.type !== 'symbol'/);
+  assert.match(scene, /visible \? 'visible' : 'none'/);
+  assert.doesNotMatch(scene, /turn-up-buildings/);
+  assert.match(scene, /centerClampedToGround: false/);
+  assert.match(scene, /CAMERA_LOOK_AHEAD_METRES = 220/);
+  assert.match(scene, /terrainAtOrigin \+ flightState\.position\.y - CAMERA_TARGET_DROP_METRES/);
+  assert.match(scene, /elevation: targetElevation/);
+  assert.match(scene, /targetLength: 40/);
+});
+
+test('the real-world map uses a natural semantic palette', () => {
+  assert.match(scene, /function applyNaturalMapPalette/);
+  assert.match(scene, /\['water', '#4e9fc6'\]/);
+  assert.match(scene, /\['landcover_wood', '#6f9362'\]/);
+  assert.match(scene, /background-color', '#9eb47a'/);
+  assert.match(scene, /turn-up-semantic-landuse/);
+  assert.match(scene, /\['farmland', 'farmyard'\], '#b6b77c'/);
+  assert.match(scene, /layer\['source-layer'\] === 'aeroway'/);
 });
 
 test('aircraft asset is immutable, attributed and has an offline visual fallback', () => {
@@ -99,7 +120,7 @@ test('privacy and map credits are visible in the product', () => {
   assert.match(html, /general Strind area/);
   assert.match(html, /does not place a marker on a private home/);
   assert.match(html, /OpenStreetMap contributors/);
-  assert.match(html, /AWS Registry of Open Data/);
+  assert.match(html, /Mapterhorn/);
 });
 
 test('TURN styling includes focus, contrast and reduced-motion treatment', () => {

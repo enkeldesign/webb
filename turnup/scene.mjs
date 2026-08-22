@@ -12,12 +12,17 @@ const AIRCRAFT_URL = `https://raw.githubusercontent.com/amvlab/aircraft-models/$
 const B737_LENGTH_TO_SPAN = 39.5 / 35.8;
 
 export const MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
-export const TERRAIN_TILE_URL = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png';
+export const TERRAIN_TILEJSON_URL = 'https://tiles.mapterhorn.com/tilejson.json';
 export const AIRPORT_ORIGIN = Object.freeze({
   lng: 17.443,
   lat: 62.5285,
   elevation: 5
 });
+
+const PLACE_LABEL_SOURCE_LAYERS = new Set(['place', 'aerodrome_label']);
+const CAMERA_LOOK_AHEAD_METRES = 220;
+const CAMERA_TARGET_DROP_METRES = 64;
+const CAMERA_TERRAIN_CLEARANCE_METRES = 8;
 
 const originMercator = maplibregl.MercatorCoordinate.fromLngLat(AIRPORT_ORIGIN, 0);
 const metresToMercator = originMercator.meterInMercatorCoordinateUnits();
@@ -69,6 +74,8 @@ export async function createFlightScene(container, {
     container,
     style: MAP_STYLE_URL,
     center: [AIRPORT_ORIGIN.lng, AIRPORT_ORIGIN.lat],
+    centerClampedToGround: false,
+    elevation: AIRPORT_ORIGIN.elevation + MAP_START_POSE.y - CAMERA_TARGET_DROP_METRES,
     zoom: 14.3,
     pitch: 72,
     bearing: radiansToDegrees(MAP_START_POSE.heading),
@@ -83,10 +90,7 @@ export async function createFlightScene(container, {
     canvasContextAttributes: { antialias: true }
   });
 
-  map.addControl(new maplibregl.AttributionControl({
-    compact: true,
-    customAttribution: 'TURN UP · AMV Lab aircraft'
-  }), 'bottom-left');
+  map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
 
   map.on('error', (event) => {
     const message = String(event?.error?.message || '');
@@ -120,8 +124,9 @@ export async function createFlightScene(container, {
   });
 
   await new Promise((resolve) => map.once('load', resolve));
+  applyNaturalMapPalette(map);
+  simplifyMapLabels(map);
   installTerrain(map, reducedMotion);
-  installThreeDimensionalBuildings(map);
   installRouteLine(map);
   setSkyAndFog(map, reducedMotion);
 
@@ -182,16 +187,25 @@ export async function createFlightScene(container, {
     }
 
     const ahead = localToLngLat(
-      flightState.position.x + Math.sin(flightState.heading) * 310,
-      flightState.position.z - Math.cos(flightState.heading) * 310
+      flightState.position.x + Math.sin(flightState.heading) * CAMERA_LOOK_AHEAD_METRES,
+      flightState.position.z - Math.cos(flightState.heading) * CAMERA_LOOK_AHEAD_METRES
+    );
+    const terrainAtTarget = map.queryTerrainElevation(ahead);
+    const minimumTargetElevation = Number.isFinite(terrainAtTarget)
+      ? terrainAtTarget + CAMERA_TERRAIN_CLEARANCE_METRES
+      : AIRPORT_ORIGIN.elevation;
+    const targetElevation = Math.max(
+      minimumTargetElevation,
+      terrainAtOrigin + flightState.position.y - CAMERA_TARGET_DROP_METRES
     );
     const altitudeZoom = clamp((flightState.position.y - 80) / 720, 0, 1);
     map.jumpTo({
       center: ahead,
+      elevation: targetElevation,
       bearing: radiansToDegrees(flightState.heading),
-      pitch: reducedMotion ? 68 : 73,
-      roll: reducedMotion ? 0 : radiansToDegrees(flightState.bank) * 0.12,
-      zoom: 15.45 - altitudeZoom * 1.55
+      pitch: reducedMotion ? 65 : 68,
+      roll: reducedMotion ? 0 : radiansToDegrees(flightState.bank) * 0.08,
+      zoom: 15.2 - altitudeZoom * 1.25
     });
     map.triggerRepaint();
   }
@@ -259,11 +273,7 @@ function installTerrain(map, reducedMotion) {
   if (!map.getSource('turn-up-terrain')) {
     map.addSource('turn-up-terrain', {
       type: 'raster-dem',
-      tiles: [TERRAIN_TILE_URL],
-      tileSize: 256,
-      maxzoom: 15,
-      encoding: 'terrarium',
-      attribution: 'Terrain © Mapzen/AWS Open Data'
+      url: TERRAIN_TILEJSON_URL
     });
   }
 
@@ -274,40 +284,108 @@ function installTerrain(map, reducedMotion) {
       type: 'hillshade',
       source: 'turn-up-terrain',
       paint: {
-        'hillshade-shadow-color': '#143642',
-        'hillshade-highlight-color': '#fff0a8',
-        'hillshade-accent-color': '#2389b8',
+        'hillshade-shadow-color': '#28493c',
+        'hillshade-highlight-color': '#e3e4b6',
+        'hillshade-accent-color': '#5d806d',
         'hillshade-exaggeration': reducedMotion ? 0.24 : 0.36
       }
     }, firstLabelId);
   }
-  map.setTerrain({ source: 'turn-up-terrain', exaggeration: 1.18 });
+  map.setTerrain({ source: 'turn-up-terrain', exaggeration: 1 });
 }
 
-function installThreeDimensionalBuildings(map) {
-  const styleLayers = map.getStyle().layers || [];
-  const sourceLayer = styleLayers.find((layer) => layer['source-layer'] === 'building');
-  if (!sourceLayer || map.getLayer('turn-up-buildings')) return;
+function applyNaturalMapPalette(map) {
+  const fillColors = new Map([
+    ['park', '#83a66f'],
+    ['landcover_wood', '#6f9362'],
+    ['landcover_grass', '#a6ba7b'],
+    ['landcover_ice', '#dbe8e7'],
+    ['landcover_wetland', '#80a79c'],
+    ['landcover_sand', '#d9c99b'],
+    ['landuse_pitch', '#91ad70'],
+    ['landuse_track', '#aaa982'],
+    ['landuse_cemetery', '#8fa57b'],
+    ['landuse_hospital', '#c9c0ad'],
+    ['landuse_school', '#c8c2a8'],
+    ['water', '#4e9fc6'],
+    ['aeroway_fill', '#858b89'],
+    ['building', '#b5aa96']
+  ]);
 
-  const firstLabelId = styleLayers.find((layer) => layer.type === 'symbol')?.id;
-  map.addLayer({
-    id: 'turn-up-buildings',
-    source: sourceLayer.source,
-    'source-layer': 'building',
-    type: 'fill-extrusion',
-    minzoom: 13,
-    paint: {
-      'fill-extrusion-color': [
-        'interpolate', ['linear'], ['coalesce', ['get', 'render_height'], ['get', 'height'], 6],
-        0, '#fff8e8',
-        30, '#ffe087',
-        90, '#ff8caf'
-      ],
-      'fill-extrusion-height': ['coalesce', ['get', 'render_height'], ['get', 'height'], 6],
-      'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], ['get', 'min_height'], 0],
-      'fill-extrusion-opacity': 0.84
+  for (const layer of map.getStyle().layers || []) {
+    if (layer.type === 'background') {
+      map.setPaintProperty(layer.id, 'background-color', '#9eb47a');
+      continue;
     }
-  }, firstLabelId);
+
+    if (layer.type === 'fill' && fillColors.has(layer.id)) {
+      if (layer.id === 'landcover_wetland') {
+        map.setPaintProperty(layer.id, 'fill-pattern', null);
+      }
+      map.setPaintProperty(layer.id, 'fill-color', fillColors.get(layer.id));
+      if (layer.id === 'landcover_wood') map.setPaintProperty(layer.id, 'fill-opacity', 0.9);
+      if (layer.id === 'landcover_grass') map.setPaintProperty(layer.id, 'fill-opacity', 0.76);
+      continue;
+    }
+
+    if (layer.type === 'fill-extrusion' && layer['source-layer'] === 'building') {
+      map.setPaintProperty(layer.id, 'fill-extrusion-color', '#a99f8e');
+      map.setPaintProperty(layer.id, 'fill-extrusion-opacity', 0.86);
+      continue;
+    }
+
+    if (layer.type !== 'line') continue;
+    if (layer['source-layer'] === 'waterway') {
+      map.setPaintProperty(layer.id, 'line-color', '#4e9fc6');
+    } else if (layer['source-layer'] === 'aeroway') {
+      map.setPaintProperty(layer.id, 'line-color', layer.id.includes('runway') ? '#5e6463' : '#777d7b');
+    } else if (layer['source-layer'] === 'transportation') {
+      const color = layer.id.includes('casing')
+        ? '#74736b'
+        : layer.id.includes('rail')
+          ? '#626966'
+          : layer.id.includes('motorway')
+            ? '#c09a70'
+            : '#d4cbb5';
+      map.setPaintProperty(layer.id, 'line-color', color);
+    }
+  }
+
+  const styleLayers = map.getStyle().layers || [];
+  const landuseLayer = styleLayers.find((layer) => layer['source-layer'] === 'landuse');
+  const beforeLandcover = styleLayers.find((layer) => layer['source-layer'] === 'landcover')?.id;
+  if (landuseLayer && !map.getLayer('turn-up-semantic-landuse')) {
+    map.addLayer({
+      id: 'turn-up-semantic-landuse',
+      type: 'fill',
+      source: landuseLayer.source,
+      'source-layer': 'landuse',
+      filter: [
+        'match', ['get', 'class'],
+        ['residential', 'commercial', 'industrial', 'retail', 'farmland', 'farmyard', 'orchard'],
+        true,
+        false
+      ],
+      paint: {
+        'fill-color': [
+          'match', ['get', 'class'],
+          ['commercial', 'industrial', 'retail'], '#b9af9c',
+          ['farmland', 'farmyard'], '#b6b77c',
+          'orchard', '#91a66d',
+          '#d0c8b3'
+        ],
+        'fill-opacity': 0.64
+      }
+    }, beforeLandcover);
+  }
+}
+
+function simplifyMapLabels(map) {
+  for (const layer of map.getStyle().layers || []) {
+    if (layer.type !== 'symbol') continue;
+    const visible = PLACE_LABEL_SOURCE_LAYERS.has(layer['source-layer']);
+    map.setLayoutProperty(layer.id, 'visibility', visible ? 'visible' : 'none');
+  }
 }
 
 function installRouteLine(map) {
@@ -381,7 +459,7 @@ function createAircraftRig() {
 async function loadAircraft() {
   const gltf = await new GLTFLoader().loadAsync(AIRCRAFT_URL);
   return prepareAircraftAsset(gltf.scene, {
-    targetLength: 34,
+    targetLength: 40,
     lengthToSpanRatio: B737_LENGTH_TO_SPAN
   });
 }

@@ -22,10 +22,10 @@
   <title>TURN UP</title>
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://tiles.openfreemap.org">
-  <link rel="preconnect" href="https://s3.amazonaws.com">
+  <link rel="preconnect" href="https://tiles.mapterhorn.com">
   <link rel="preload" as="fetch" crossorigin href="https://raw.githubusercontent.com/amvlab/aircraft-models/91d835e8e851b2317fe79af291c9fed6153fd525/models/B737_nologo.glb">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.5.0/dist/maplibre-gl.css">
-  <link rel="stylesheet" href="./styles.css?build=20260822-r1">
+  <link rel="stylesheet" href="./styles.css?build=20260823-r1">
   <script type="importmap">
     {
       "imports": {
@@ -205,7 +205,7 @@
       </header>
       <p>TURN UP is a small arcade flight simulator built from TURN’s production motion and platform engine. It uses the same iPad steering profile and adds a second tilt axis for pitch.</p>
       <h3>REAL-WORLD MAP</h3>
-      <p>The Midlanda, Söråker and Strind-area landscape is rendered with <a href="https://maplibre.org/">MapLibre GL JS</a>, <a href="https://openfreemap.org/">OpenFreeMap</a>, <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, OpenMapTiles and open terrain elevation tiles hosted through the <a href="https://registry.opendata.aws/terrain-tiles/">AWS Registry of Open Data</a>.</p>
+      <p>The Midlanda, Söråker and Strind-area landscape is rendered with <a href="https://maplibre.org/">MapLibre GL JS</a>, <a href="https://openfreemap.org/">OpenFreeMap</a>, <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, OpenMapTiles and open elevation data served by <a href="https://mapterhorn.com/">Mapterhorn</a>. Water, woodland, fields and built-up land use a natural palette, and the flight view keeps only place and airport names visible.</p>
       <p>The route identifies only the general Strind area; it does not place a marker on a private home.</p>
       <h3>AIRCRAFT</h3>
       <p>The logo-free B737 model comes from <a href="https://github.com/amvlab/aircraft-models">AMV Lab aircraft-models</a> at pinned commit <code>91d835e</code>, licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. TURN UP scales, orients and outlines it at runtime.</p>
@@ -213,6 +213,6 @@
   </dialog>
 
   <noscript><p class="noscript">TURN UP needs JavaScript to run its flight engine.</p></noscript>
-  <script type="module" src="./app.mjs?build=20260822-r4"></script>
+  <script type="module" src="./app.mjs?build=20260823-r1"></script>
 </body>
 </html>

@@ -136,9 +136,10 @@ a {
 }
 
 .maplibregl-ctrl-bottom-left {
-  bottom: max(2px, env(safe-area-inset-bottom));
-  left: max(2px, env(safe-area-inset-left));
+  bottom: max(4px, env(safe-area-inset-bottom));
+  left: 50%;
   z-index: 12;
+  transform: translateX(-50%);
 }
 
 .maplibregl-ctrl-attrib {
@@ -147,6 +148,17 @@ a {
   color: var(--ink);
   font-size: 10px;
   font-weight: 650;
+  line-height: 1.2;
+}
+
+.maplibregl-ctrl-attrib.maplibregl-compact {
+  max-width: min(64vw, 540px);
+  margin: 0 !important;
+}
+
+.maplibregl-ctrl-attrib.maplibregl-compact-show {
+  max-height: 40px;
+  overflow: auto;
 }
 
 .maplibregl-ctrl-attrib a {
