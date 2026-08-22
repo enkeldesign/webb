@@ -7,8 +7,8 @@ The first route starts over Sundsvall–Timrå Airport (Midlanda), crosses Sör�
 ## Runtime
 
 - MapLibre GL JS 6.5 renders the vector map, 3D terrain, buildings and Three.js custom flight layer.
-- OpenFreeMap's Liberty style supplies OpenStreetMap/OpenMapTiles map data.
-- AWS Terrain Tiles supply Terrarium elevation data.
+- OpenFreeMap's Liberty style supplies OpenStreetMap/OpenMapTiles map data. TURN UP applies a natural semantic palette for water, forest, fields, built-up land and airport surfaces, then hides road, route and POI labels while preserving place and airport names.
+- Mapterhorn supplies the Terrarium-encoded elevation tiles.
 - Three.js 0.184 renders gates and the aircraft.
 - `B737_nologo.glb` loads at runtime from AMV Lab's `aircraft-models` commit `91d835e8e851b2317fe79af291c9fed6153fd525` under CC BY 4.0. A lightweight local aircraft is used if the remote asset is unavailable.
 - TURN design tokens, platform adapters and canonical motion steering remain shared from `/turn/`.
@@ -34,4 +34,4 @@ The production test checks the flight model, TURN integration contract, map/terr
 
 ## Credits
 
-Map data © OpenStreetMap contributors, served through OpenFreeMap/OpenMapTiles. Terrain data is hosted through the AWS Registry of Open Data. Aircraft © AMV Lab contributors, CC BY 4.0.
+Map data © OpenStreetMap contributors, served through OpenFreeMap/OpenMapTiles. Terrain data is served by Mapterhorn from open elevation datasets. Aircraft © AMV Lab contributors, CC BY 4.0.
