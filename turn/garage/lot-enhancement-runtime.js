@@ -1,6 +1,7 @@
 // Historical regression marker: lot-perk-disclosure.js?revision=r164-vintage-rally-perks
 // Historical regression marker: lot-trophy-gate.js?revision=r164-vintage-rally-perks
 // Historical regression marker: lot-paint-reward.js?revision=r164-perks
+// Historical regression marker: lot-paint-reward.js?revision=r203-color-label
 // Historical regression marker: lot-paint-reward.js?revision=r204-color-control-rebuild
 // Historical regression marker: lot-accessibility-r118.js?build=20260729-r118
 
