@@ -1,0 +1,14 @@
+/* Thumbnail composition only: keep the established black carousel treatment. */
+
+/* Split each thumbnail preview evenly between sky and grey ground. */
+.lot-showroom .lot-car-option-preview {
+  background:
+    radial-gradient(ellipse at 50% 82%, rgb(255 255 255 / .28), transparent 52%),
+    linear-gradient(180deg, #8ed8ff 0 50%, #5a6268 50% 100%);
+}
+
+/* The WebGL capture is transparent, so zoom the intact canvas rather than changing
+   camera/model geometry. This keeps every car undistorted while filling the card better. */
+.lot-showroom .lot-car-option-thumbnail {
+  transform: scale(1.45);
+}
