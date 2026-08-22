@@ -66,7 +66,7 @@ test('TURN UP imports the canonical TURN platform and steering engine', () => {
   assert.match(app, /resolveMotionSteeringProfile/);
   assert.match(app, /updateMotionInputState/);
   assert.match(app, /controlFromAngle\(motionState\.pitch - motionState\.neutralPitch/);
-  assert.match(app, /scene\.mjs\?build=20260822-r3/);
+  assert.match(app, /scene\.mjs\?build=20260822-r4/);
   assert.doesNotMatch(app, /DeviceMotionEvent\.requestPermission/);
 });
 
@@ -78,6 +78,8 @@ test('the real Midlanda–Söråker course uses open 3D map infrastructure', () 
   assert.match(scene, /renderingMode: '3d'/);
   assert.match(scene, /defaultProjectionData\.mainMatrix/);
   assert.doesNotMatch(scene, /maplibregl\.supported/);
+  assert.match(scene, /getContext\('webgl2'\)/);
+  assert.match(app, /TURN UP needs WebGL2 for its 3D map/);
   assert.match(scene, /RUNWAY 16/);
   assert.match(scene, /SÖRÅKER/);
   assert.match(scene, /STRIND AREA/);

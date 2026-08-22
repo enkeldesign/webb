@@ -19,9 +19,9 @@ import {
   shortestAngle,
   updateFlightState
 } from './flight-model.mjs';
-import { COURSE_POINTS, createFlightScene } from './scene.mjs?build=20260822-r3';
+import { COURSE_POINTS, createFlightScene } from './scene.mjs?build=20260822-r4';
 
-const BUILD = '2026.08.22-r3';
+const BUILD = '2026.08.22-r4';
 const BEST_TIME_KEY = 'turnup.bestCourseSeconds.v1';
 const SETTINGS_KEY = 'turnup.settings.v1';
 const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
@@ -147,9 +147,13 @@ const scenePromise = createFlightScene(elements.game, {
 }).catch((error) => {
   console.error('TURN UP could not start.', error);
   globalThis.clearTimeout(slowLoadingTimer);
-  elements.loadingStatus.textContent = 'TURN UP could not load. Check your connection and try again.';
+  elements.loadingStatus.textContent = /WebGL2/i.test(String(error?.message))
+    ? 'TURN UP needs WebGL2 for its 3D map. Try a current Safari, Chrome or Firefox browser.'
+    : 'TURN UP could not load. Check your connection and try again.';
+  elements.modelStatus.textContent = 'The map and aircraft could not start on this device.';
+  document.documentElement.dataset.turnUpReady = 'unsupported';
   setLaunchEnabled(false);
-  throw error;
+  return null;
 });
 
 elements.takeOff.addEventListener('click', () => startFlight('tilt'));
@@ -215,7 +219,8 @@ portraitQuery?.addEventListener?.('change', (event) => {
 async function startFlight(requestedMode) {
   setLaunchEnabled(false);
   elements.loadingStatus.textContent = 'Preparing your flight…';
-  await scenePromise;
+  const readyScene = await scenePromise;
+  if (!readyScene) return;
 
   let resolvedMode = requestedMode;
   if (requestedMode === 'tilt') {
