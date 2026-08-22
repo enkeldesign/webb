@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [m8Home, showroom, showroomCss, wrapper, accessibility] = await Promise.all([
+const [m8Home, showroom, showroomCss, showroomCleanupCss, wrapper, accessibility] = await Promise.all([
   fs.readFile(new URL('../turn/m8-home.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/garage/lot-showroom-experiment.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/garage/lot-showroom-experiment.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/garage/lot-showroom-cleanup-r201.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/garage/lot-track-select.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/garage/lot-accessibility-r118.js', import.meta.url), 'utf8')
 ]);
@@ -47,8 +48,10 @@ assert.match(wrapper, /lot-showroom-experiment\.js\?revision=r200-production-can
   'The production wrapper must lazy-load the current showroom implementation');
 assert.match(wrapper, /lot-showroom-experiment\.css\?revision=r200-production-candidate/,
   'The showroom stylesheet must have its own cache identity');
+assert.match(wrapper, /lot-showroom-cleanup-r201\.css\?revision=r201-loading-cleanup/,
+  'The production wrapper must preload the small showroom polish layer before mount');
 assert.match(wrapper, /link\.addEventListener\('load', resolve/,
-  'The Lot must wait for its showroom stylesheet before mounting to avoid a legacy-layout flash');
+  'The Lot must wait for its showroom stylesheets before mounting to avoid a layout flash');
 
 assert.match(showroom, /overlay\.className = 'lot-screen lot-showroom'/,
   'The production car selector must mount with the stable showroom state hook');
@@ -103,6 +106,24 @@ assert.match(
 assert.match(showroomCss, /\.lot-showroom \.lot-car-option\.has-3d-thumbnail \.lot-car-option-thumbnail \{ opacity: 1; \}/,
   'Cards must progressively replace their lightweight fallback with the real model thumbnail');
 
+assert.match(
+  showroomCleanupCss,
+  /\.lot-showroom \.lot-viewbox::before\s*\{[\s\S]*content: none;[\s\S]*display: none;/,
+  'The 3D hero view must not carry the redundant decorative TURN sign'
+);
+assert.match(
+  showroomCleanupCss,
+  /\.lot-showroom \.lot-car-option-fallback i:first-child[\s\S]*background: var\(--lot-car-color/,
+  'Thumbnail loading fallback must be a simple block using the car body colour'
+);
+assert.match(
+  showroomCleanupCss,
+  /\.lot-showroom \.lot-car-option-fallback i:nth-child\(2\),[\s\S]*i:nth-child\(3\)[\s\S]*display: none;/,
+  'Thumbnail loading fallback must not draw wheels or other hand-drawn car details'
+);
+assert.doesNotMatch(showroomCleanupCss, /lot-car-secondary/,
+  'The loading placeholder should stay deliberately abstract instead of trying to mimic the finished car');
+
 assert.match(accessibility, /screen\.classList\.contains\('lot-showroom'\)/,
   'Accessibility behavior must explicitly recognize the visible showroom radio rail');
 assert.match(accessibility, /if \(!preserveVisualOrder && selectedCarId/,
@@ -112,4 +133,4 @@ assert.match(accessibility, /aria-setsize/);
 assert.match(accessibility, /describeVehicleStats\(car\.stats\)/,
   'Screen-reader vehicle summaries must still use the same canonical attributes as the visible panel');
 
-console.log('TURN M8 Home now enters a prepared production showroom Lot with compact paint, yaw-only level car rotation, real 3D car thumbnails, bounded rendering and stable accessible card order.');
+console.log('TURN M8 Home now enters a prepared production showroom Lot with compact paint, yaw-only level car rotation, simple colour-block loading placeholders, real 3D car thumbnails, bounded rendering and stable accessible card order.');
