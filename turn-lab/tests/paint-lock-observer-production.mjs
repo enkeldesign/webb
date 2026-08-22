@@ -30,6 +30,10 @@ const [
 ]);
 
 const release = JSON.parse(releaseSource);
+const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1] || '';
+assert.ok(importMapText, 'TURN production entry must expose an import map');
+const importMap = JSON.parse(importMapText);
+const imports = importMap.imports || {};
 const syncBody = paintGate.match(/function sync\(\) \{([\s\S]*?)\n  \}\n\n  const observer/)?.[1] || '';
 assert.ok(syncBody, 'The paint gate must expose a bounded synchronization function');
 
@@ -144,9 +148,9 @@ assert.equal(order[order.indexOf('race') + 1], 'firetruck',
 
 // --- Fresh module identities for already-installed PWAs -----------------------
 assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r206-pwa-color/,
-  'The app-level enhancement runtime must force the current color state model');
+  'The app-level enhancement runtime must retain the current color state model specifier');
 assert.match(lotWrapper, /lot-enhancement-runtime\.js\?revision=r206-pwa-color/,
-  'The showroom wrapper must use the same fresh enhancement-runtime identity');
+  'The showroom wrapper must use the same enhancement-runtime identity');
 assert.match(lotWrapper, /lot-pwa-color-swatch\.js\?revision=r206-pwa-color/);
 assert.match(lotWrapper, /lot-showroom-experiment\.js\?revision=r206-race-before-locks/);
 assert.match(lotWrapper, /SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r206-polish'/);
@@ -158,8 +162,35 @@ assert.match(index, /\/turn\/garage\/lot-track-select\.js\?revision=r200-product
 assert.match(
   index,
   new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click[^\"]*-pwa-color-r206`),
-  'The top-level app script must receive a fresh URL so installed TURN enters the bridged module graph'
+  'The top-level app script must still enter the bridged module graph'
 );
+
+// The installed PWA previously allowed these nested Lot dependencies to keep old
+// HTTP/module-cache snapshots. All selected-car consumers must now converge on one
+// fresh vehicle-catalog module, and the state/showroom modules themselves get fresh
+// identities without requiring a reinstall or clearing site data.
+const canonicalLotCatalog = '/turn/vehicle/catalog.js?revision=r207-lot-color-canonical';
+assert.equal(
+  imports['/turn/progression/lot-paint-reward.js?revision=r206-pwa-color'],
+  '/turn/progression/lot-paint-reward.js?revision=r207-reward-color-catalog',
+  'Installed PWAs must refetch the COLOR state module'
+);
+assert.equal(
+  imports['/turn/garage/lot-showroom-experiment.js?revision=r206-race-before-locks'],
+  '/turn/garage/lot-showroom-experiment.js?revision=r207-reward-color-catalog',
+  'Installed PWAs must refetch the showroom module that creates paint controls'
+);
+for (const staleCatalogSpecifier of [
+  '/turn/vehicle/catalog.js?build=20260804-r157-factory-colors',
+  '/turn/vehicle/catalog.js?build=20260720-r20&revision=r588-canonical-attributes',
+  '/turn/vehicle/catalog.js?revision=r164-vintage-rally-polish'
+]) {
+  assert.equal(
+    imports[staleCatalogSpecifier],
+    canonicalLotCatalog,
+    `${staleCatalogSpecifier} must resolve to the same fresh Lot vehicle catalog`
+  );
+}
 
 // Established Trophy Road and perk contracts remain intact.
 assert.match(paintCss, /\.lot-colors\.is-paint-locked[\s\S]*min-height: 54px/);
@@ -170,4 +201,4 @@ assert.match(perkPresentation, /getCarDefinition\(vehicleId\)\?\.perk/);
 assert.doesNotMatch(perkPresentation, /observer\.observe\(screen,/);
 assert.match(app, /trophy-road-r157\.css\?revision=r163-native-picker-parent-click/);
 
-console.log('TURN Lot PWA swatch compositing, state matrix, cue geometry, cache bridge, car order and observer safety regressions passed.');
+console.log('TURN Lot PWA swatch compositing, reward-car catalog coherence, state matrix, cue geometry, cache bridge, car order and observer safety regressions passed.');
