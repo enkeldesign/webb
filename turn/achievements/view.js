@@ -318,8 +318,6 @@ export function createAchievementView({ store, session, utilityGroup }) {
       dialogDirty = true;
       return false;
     }
-    if (!force && !dialogDirty) return false;
-
     const unlockedCount = Object.keys(store.state.unlocked).length;
     const trophies = store.trophyTotal();
     const completion = Math.round((unlockedCount / ACHIEVEMENTS.length) * 100);

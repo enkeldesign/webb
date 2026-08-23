@@ -1,7 +1,6 @@
 import {
   CAR_CATALOG,
-  getVehicleDefaultColor,
-  getVehicleDefaultSecondaryColor
+  getVehicleDefaultColor
 } from '../vehicle/catalog.js?build=20260804-r157-factory-colors';
 import { describeColorCue } from '../accessibility/color-cues.js?revision=r163';
 import {
