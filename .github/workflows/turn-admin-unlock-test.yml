@@ -171,13 +171,7 @@ jobs:
             'world graph warmup await'
           );
 
-          // Make the hot-path regression part of the normal suite.
-          replace(
-            '.github/workflows/turn-lab-tests.yml',
-            `      - name: Run production performance and diagnostics regression\n        run: node turn-lab/tests/performance-production.mjs`,
-            `      - name: Run runtime hot-path and background-loading regression\n        run: node turn-lab/tests/runtime-hotpath-performance-production.mjs\n\n      - name: Run production performance and diagnostics regression\n        run: node turn-lab/tests/performance-production.mjs`,
-            'hot-path workflow step'
-          );
+          // Verify the new test against the working tree; the workflow file is wired separately.
           NODE
 
       - name: Verify changed modules
@@ -200,7 +194,7 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add turn turn-lab .github/workflows/turn-lab-tests.yml
+          git add turn turn-lab
           git commit -m "Optimize runtime hot paths and deferred loading"
           git push origin HEAD:turn-performance-loading-review
 
