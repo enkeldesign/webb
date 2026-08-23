@@ -22,8 +22,10 @@ const [
 // CHROMATIC CAMOUFLAGE matches the primary/body paint only. The visible Color Cue must
 // therefore describe that same signal rather than mixing in bumpers, trim or fixed livery.
 assert.match(paintReward, /function colorCueDescription\(car\)[\s\S]*describeColorCue\(bodyColorValue\(car\.id\)\)/);
+const colorCueFunction = paintReward.match(/  function colorCueDescription\(car\) \{[\s\S]*?\n  \}/)?.[0] || '';
+assert.ok(colorCueFunction, 'Lot paint gate must keep a dedicated Color Cue description function');
 assert.doesNotMatch(
-  paintReward.match(/function colorCueDescription\(car\)[\s\S]*?\n}\n/)?.[0] || '',
+  colorCueFunction,
   /secondary|fixedLivery|secondaryPaint/,
   'Lot Color Cue must communicate only the primary car color used by CHROMATIC CAMOUFLAGE'
 );
