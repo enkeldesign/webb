@@ -148,9 +148,6 @@ jobs:
       - name: Run all-car orientation regression
         run: node turn-lab/tests/car-orientation-production.mjs
 
-      - name: Run all-car surface finish regression
-        run: node turn-lab/tests/car-surface-finish-production.mjs
-
       - name: Run native and secondary paint regression
         run: node turn-lab/tests/native-paint-production.mjs
 

@@ -207,19 +207,17 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   },
   {
     period: '23 August',
-    title: 'The Lot gets a complete vehicle finish pass',
+    title: 'RALLY RACER becomes a true final reward',
     paragraphs: [
       'The final 1,000-trophy car now has a reward-grade visual identity rather than reading as an almost monochrome toy racer. Its black factory body is paired with a paintable trophy-gold competition kit: four auxiliary rally lamps, twin bonnet stripes, rim accents, body-integrated rocker steps and a high rear wing all remain visible in The Lot, Trophy Road, the race camera, saved rivals and ghosts. A compact dark rollover structure adds depth around the cabin without competing with those gold focal points.',
       'The upgrade is generated after every source model is normalized, so its proportions stay consistent across TURN’s differently sized rendering surfaces. The many individual-looking parts are also merged into three material batches, preserving the richer silhouette without multiplying real-time lights or adding a draw call for every lamp, bar and rim.',
-      'RALLY RACER is the first vehicle to use a reusable catalog-selected visual-upgrade pipeline. Future reward cars can opt into another bounded procedural kit while continuing to share the canonical paint, ghost, thumbnail, outline and disposal paths.',
-      'That foundation now finishes all fifteen source cars without replacing their familiar low-poly models. Every car receives pale low-poly glass, warm headlamps, red rear lamps and body-coloured wheel centres. VINTAGE RACER, MONSTER TRUCK and FUTURE RACER gain their own paintable reward accents, while the three emergency vehicles remain completely fixed service liveries with no repaint controls.'
+      'RALLY RACER is the first vehicle to use a reusable catalog-selected visual-upgrade pipeline. Future reward cars can opt into another bounded procedural kit while continuing to share the canonical paint, ghost, thumbnail, outline and disposal paths.'
     ],
     milestones: [
       'Black-and-gold four-lamp rally identity with bonnet stripes, rim accents, integrated steps and competition wing',
       'Reusable batched visual-upgrade pipeline across every canonical car rendering surface',
       'TURN 1.9.2 · 2026.08.23-r176 with the upgraded 1,000-trophy RALLY RACER',
-      'TURN 1.9.3 · 2026.08.23-r177 with integrated rocker steps and a subtler dark roll hoop',
-      'TURN 1.10.0 · 2026.08.23-r178 with glass, lamps and coloured rims across all fifteen cars plus three new reward accent recipes'
+      'TURN 1.9.3 · 2026.08.23-r177 with integrated rocker steps and a subtler dark roll hoop'
     ]
   }
 ]);
@@ -429,14 +427,13 @@ export const CHANGELOG = Object.freeze([
     entries: [
       ['1.9.2 r176', 'Makes the 1,000-trophy RALLY RACER a black-and-gold competition special with four rally lamps, bonnet stripes, rim accents, side rails, a roll hoop and a high rear wing.'],
       ['1.9.3 r177', 'Integrates RALLY RACER’s shorter gold steps into the rocker panels and replaces the conspicuous full-height gold hoop with a compact dark rollover structure.'],
-      ['1.10.0 r178', 'Finishes all fifteen existing car models with low-poly glass, front and rear lamps and body-coloured wheel centres; adds paintable accents to VINTAGE RACER, MONSTER TRUCK and FUTURE RACER while keeping emergency service liveries non-repaintable.'],
-      ['Reusable visual upgrades', 'Adds catalog-selected, bounds-derived vehicle kits and surface recipes that share TURN’s paint and ghost paths while batching parts by material.']
+      ['Reusable visual upgrades', 'Adds catalog-selected, bounds-derived vehicle kits that share TURN’s paint and ghost paths while merging their geometry into three low-cost material batches.']
     ]
   }
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.10.0',
-  build: '2026.08.23-r178',
-  note: 'TURN 1.10.0 build r178 finishes all fifteen familiar cars with glass, lamps and coloured wheel centres, plus paintable accents for three more Trophy Road rewards.'
+  version: '1.9.3',
+  build: '2026.08.23-r177',
+  note: 'TURN 1.9.3 build r177 integrates RALLY RACER’s gold rocker steps into the body and makes its rollover structure compact and dark.'
 });
