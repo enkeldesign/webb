@@ -65,15 +65,15 @@ function syncLotStats(lot) {
   const rows = [...lot.querySelectorAll('.lot-stats .lot-stat')];
   if (!car || rows.length !== STAT_KEYS.length) return;
 
-  const spoilerControl = [...lot.querySelectorAll('.lot-color-control')]
-    .find((control) => control.querySelector('span')?.textContent?.trim() === 'SPOILER');
-  const spoilerColor = spoilerControl?.querySelector('input[type="color"]')?.value;
+  const secondaryControl = [...lot.querySelectorAll('.lot-color-control')]
+    .find((control) => control.dataset.paintLabel === car.secondaryPaint?.label);
+  const secondaryColor = secondaryControl?.querySelector('input[type="color"]')?.value;
   const selection = {
     carId: car.id,
-    secondaryColor: normalizeVehicleSecondaryColor(spoilerColor)
+    secondaryColor: normalizeVehicleSecondaryColor(secondaryColor)
   };
   const stats = getEffectiveVehicleStats(selection);
-  const superSedanUnlocked = isSportsSedanEasterEgg(selection);
+  const superHatchbackUnlocked = isSportsSedanEasterEgg(selection);
 
   rows.forEach((row, rowIndex) => {
     const value = Number(stats[STAT_KEYS[rowIndex]]) || 0;
@@ -82,7 +82,7 @@ function syncLotStats(lot) {
     });
   });
 
-  syncUnlockPresentation(lot, car, superSedanUnlocked);
+  syncUnlockPresentation(lot, car, superHatchbackUnlocked);
 }
 
 function syncUnlockPresentation(lot, car, unlocked) {
@@ -90,7 +90,7 @@ function syncUnlockPresentation(lot, car, unlocked) {
   const raceButton = lot.querySelector('.lot-race');
   const notice = ensureUnlockNotice(lot);
 
-  const displayedName = unlocked ? 'Super Sedan' : car.name;
+  const displayedName = unlocked ? 'Super Hatchback' : car.name;
   if (title && title.textContent !== displayedName) title.textContent = displayedName;
   raceButton?.setAttribute('aria-label', `Race the ${displayedName}`);
 
@@ -118,11 +118,11 @@ function ensureUnlockNotice(lot) {
   notice.setAttribute('aria-atomic', 'true');
   notice.setAttribute(
     'aria-label',
-    'Super Sedan unlocked. Spoiler color code #666 maxes every attribute. Lap results with this secret car are not saved.'
+    'Super Hatchback unlocked. Sport trim color code #666 maxes every attribute. Lap results with this secret car are not saved.'
   );
   notice.innerHTML = `
     <span class="lot-secret-notice-chip">SECRET UNLOCKED</span>
-    <p>Spoiler <strong>color code #666</strong> maxes every attribute. Lap results with this secret car are not saved.</p>
+    <p>Sport trim <strong>color code #666</strong> maxes every attribute. Lap results with this secret car are not saved.</p>
   `;
 
   const card = lot.querySelector('.lot-card');
