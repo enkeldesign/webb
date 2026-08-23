@@ -26,4 +26,4 @@ jobs:
           node-version: '24'
 
       - name: Inspect authored UV cells
-        run: node turn-lab/scripts/inspect-semantic-palette.mjs classic
+        run: node turn-lab/scripts/inspect-semantic-palette.mjs
