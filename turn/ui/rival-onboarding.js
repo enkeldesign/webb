@@ -119,8 +119,8 @@ export function installRivalOnboarding() {
     plate.hidden = false;
     plate.classList.remove('is-visible', 'is-leaving');
 
-    // Cross a frame boundary instead of forcing layout with offsetWidth. The 3D preview
-    // is prepared independently; revealing CHASE YOUR BEST must never wait for WebGL.
+    // Cross a frame boundary instead of forcing a synchronous layout read. The 3D
+    // preview is prepared independently; revealing CHASE YOUR BEST must never wait for WebGL.
     revealFrame = requestAnimationFrame(() => {
       revealFrame = 0;
       if (plate.hidden) return;
