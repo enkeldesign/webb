@@ -14,9 +14,15 @@ assert.deepEqual(
 );
 
 const secondaryCars = catalog.CAR_CATALOG.filter((car) => car.secondaryPaint);
-assert.deepEqual(secondaryCars.map((car) => car.id), ['sedan-sports'], 'Only genuinely separate secondary meshes should expose a second picker');
-assert.equal(secondaryCars[0].secondaryPaint.label, 'Spoiler');
-assert.deepEqual(secondaryCars[0].secondaryPaint.meshNames, ['spoiler']);
+assert.deepEqual(
+  secondaryCars.map((car) => car.id),
+  ['toy-racer', 'sedan-sports'],
+  'Only a genuine secondary mesh or a procedural visual upgrade should expose a second picker'
+);
+assert.equal(secondaryCars[0].secondaryPaint.label, 'Rally kit');
+assert.deepEqual(secondaryCars[0].secondaryPaint.meshNames, []);
+assert.equal(secondaryCars[1].secondaryPaint.label, 'Spoiler');
+assert.deepEqual(secondaryCars[1].secondaryPaint.meshNames, ['spoiler']);
 
 const sportSedanGlb = await fs.readFile(new URL('../../turn/assets/cars/sedan-sports.glb', import.meta.url));
 const sportSedanJson = readGlbJson(sportSedanGlb);

@@ -3,7 +3,7 @@ import {
   createCarVisual as createBaseCarVisual,
   preloadCarModels,
   recolorCarVisual
-} from './car-models.js?build=20260804-r157-display-p3';
+} from './car-models.js?build=20260823-r176-rally-reward';
 import {
   getVehicleDefaultColorSpec
 } from './catalog.js?build=20260804-r157-factory-colors';

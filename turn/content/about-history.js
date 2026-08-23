@@ -204,6 +204,20 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
       'TURN 1.9.1 · 2026.08.18-r174 with shared night-track headlights and MOUNTAIN night polish',
       'TURN 1.9.1 · 2026.08.18-r175 with cache-order-independent night-headlight reconciliation'
     ]
+  },
+  {
+    period: '23 August',
+    title: 'RALLY RACER becomes a true final reward',
+    paragraphs: [
+      'The final 1,000-trophy car now has a reward-grade visual identity rather than reading as an almost monochrome toy racer. Its black factory body is paired with a paintable trophy-gold competition kit: four auxiliary rally lamps, twin bonnet stripes, rim accents, low side rails, a roll hoop and a high rear wing all remain visible in The Lot, Trophy Road, the race camera, saved rivals and ghosts.',
+      'The upgrade is generated after every source model is normalized, so its proportions stay consistent across TURN’s differently sized rendering surfaces. The many individual-looking parts are also merged into three material batches, preserving the richer silhouette without multiplying real-time lights or adding a draw call for every lamp, bar and rim.',
+      'RALLY RACER is the first vehicle to use a reusable catalog-selected visual-upgrade pipeline. Future reward cars can opt into another bounded procedural kit while continuing to share the canonical paint, ghost, thumbnail, outline and disposal paths.'
+    ],
+    milestones: [
+      'Black-and-gold four-lamp rally identity with bonnet stripes, rim accents, roll hoop and competition wing',
+      'Reusable batched visual-upgrade pipeline across every canonical car rendering surface',
+      'TURN 1.9.2 · 2026.08.23-r176 with the upgraded 1,000-trophy RALLY RACER'
+    ]
   }
 ]);
 
@@ -406,11 +420,18 @@ export const CHANGELOG = Object.freeze([
       ['Night MOUNTAIN', 'Adds a horizon-locked star field and moon, moonlit snow and waterfall, warm street-light pools, lit chalet windows and reduced-motion behaviour that keeps the moon while replacing moving stars with a solid night sky.'],
       ['Night-track headlights', 'MOUNTAIN and MIDNIGHT CITY share one shadowless physical spotlight with no projected beam geometry; r174 increases its reach and intensity and moves the emitter closer to the car, while r175 makes those settings authoritative on every install and removes surviving legacy MIDNIGHT CITY projected-headlight nodes.']
     ]
+  },
+  {
+    date: '23 August',
+    entries: [
+      ['1.9.2 r176', 'Makes the 1,000-trophy RALLY RACER a black-and-gold competition special with four rally lamps, bonnet stripes, rim accents, side rails, a roll hoop and a high rear wing.'],
+      ['Reusable visual upgrades', 'Adds catalog-selected, bounds-derived vehicle kits that share TURN’s paint and ghost paths while merging their geometry into three low-cost material batches.']
+    ]
   }
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.9.1',
-  build: '2026.08.18-r175',
-  note: 'TURN 1.9.1 build r175 makes the shared MOUNTAIN and MIDNIGHT CITY headlight configuration authoritative at runtime, removing stale projected-headlight remnants and cache-order dependence.'
+  version: '1.9.2',
+  build: '2026.08.23-r176',
+  note: 'TURN 1.9.2 build r176 gives the final 1,000-trophy RALLY RACER a paintable black-and-gold competition kit through a reusable batched vehicle-upgrade pipeline.'
 });

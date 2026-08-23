@@ -51,7 +51,7 @@ const CAR_DESCRIPTIONS = Object.freeze({
   convertible: 'A low, open-top sports car with a long bonnet and compact cabin.',
   classic: 'A small, upright classic car with rounded bodywork and a friendly shape.',
   'vintage-racer': 'A narrow vintage racing car with exposed wheels and a long nose.',
-  'toy-racer': 'A compact single-seat racing car with exposed wheels and a playful toy-like shape.',
+  'toy-racer': 'A black-and-gold competition special with four rally lamps, a roll hoop, rim accents and a high rear wing.',
   'monster-truck': 'A tall off-road truck with oversized tyres and a short, chunky body.',
   'race-future': 'A sleek futuristic racing car with a low cockpit and aerodynamic body.',
   race: 'A low single-seat race car with exposed wheels and a large rear wing.',

@@ -53,6 +53,7 @@ const DEFAULT_COLOR_BY_ID = Object.freeze({
 });
 
 const DEFAULT_SECONDARY_COLOR_BY_ID = Object.freeze({
+  'toy-racer': Object.freeze({ fallback: '#ffcc00', p3: Object.freeze([1, 0.76, 0]) }),
   'sedan-sports': Object.freeze({ fallback: '#252a35', p3: Object.freeze([0.13, 0.15, 0.21]) }),
   firetruck: Object.freeze({ fallback: '#ffcc00', p3: Object.freeze([1, 0.76, 0]) }),
   police: Object.freeze({ fallback: '#f8f9fa', p3: Object.freeze([0.95, 0.97, 0.98]) }),
@@ -133,8 +134,14 @@ const RAW_CARS = [
   ['van', 'Van', 'car', { speed: 2, acceleration: 3, control: 3, drift: 5, boostPower: 1, boostDuration: 4 }, 1.08, 0, 0.80]
 ];
 
-const SECONDARY_PAINT_BY_ID = Object.freeze({
-  'sedan-sports': Object.freeze({ label: 'Spoiler', meshNames: Object.freeze(['spoiler']) })
+const VISUAL_CUSTOMIZATION_BY_ID = Object.freeze({
+  'sedan-sports': Object.freeze({
+    secondaryPaint: Object.freeze({ label: 'Spoiler', meshNames: Object.freeze(['spoiler']) })
+  }),
+  'toy-racer': Object.freeze({
+    secondaryPaint: Object.freeze({ label: 'Rally kit', meshNames: Object.freeze([]) }),
+    visualUpgrade: 'rally-competition'
+  })
 });
 
 export const CAR_CATALOG = Object.freeze(RAW_CARS.map(([
@@ -153,7 +160,8 @@ export const CAR_CATALOG = Object.freeze(RAW_CARS.map(([
   defaultColorP3: DEFAULT_COLOR_BY_ID[id]?.p3 || null,
   defaultSecondaryColor: DEFAULT_SECONDARY_COLOR_BY_ID[id]?.fallback || DEFAULT_VEHICLE_SECONDARY_COLOR,
   defaultSecondaryColorP3: DEFAULT_SECONDARY_COLOR_BY_ID[id]?.p3 || null,
-  secondaryPaint: SECONDARY_PAINT_BY_ID[id] || null,
+  secondaryPaint: VISUAL_CUSTOMIZATION_BY_ID[id]?.secondaryPaint || null,
+  visualUpgrade: VISUAL_CUSTOMIZATION_BY_ID[id]?.visualUpgrade || null,
   emergencyService: EMERGENCY_SERVICE_BY_ID[id] || null,
   fixedLivery: FIXED_LIVERY_IDS.has(id),
   perk: VEHICLE_PERK_BY_ID[id] || null,
