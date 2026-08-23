@@ -112,6 +112,8 @@ export function createAchievementStore(storage = globalThis.localStorage) {
   const loaded = loadAchievementState(storage);
   const state = loaded.state;
   let storageAvailable = loaded.storageAvailable;
+  let batchDepth = 0;
+  let savePending = false;
 
   function save() {
     try {
@@ -120,6 +122,27 @@ export function createAchievementStore(storage = globalThis.localStorage) {
     } catch (_) {
       storageAvailable = false;
       return false;
+    }
+  }
+
+  function requestSave() {
+    if (batchDepth > 0) {
+      savePending = true;
+      return true;
+    }
+    return save();
+  }
+
+  function batch(callback) {
+    batchDepth += 1;
+    try {
+      return callback();
+    } finally {
+      batchDepth -= 1;
+      if (batchDepth === 0 && savePending) {
+        savePending = false;
+        requestSave();
+      }
     }
   }
 
@@ -144,7 +167,7 @@ export function createAchievementStore(storage = globalThis.localStorage) {
       vehicleId: context.vehicleId || '',
       time: Number.isFinite(Number(context.time)) ? Number(context.time) : null
     };
-    save();
+    requestSave();
     return achievement;
   }
 
@@ -156,7 +179,7 @@ export function createAchievementStore(storage = globalThis.localStorage) {
       const reward = getTrophyRoadReward(rewardId);
       if (reward) newlyUnlocked.push(reward);
     }
-    if (newlyUnlocked.length) save();
+    if (newlyUnlocked.length) requestSave();
     return newlyUnlocked;
   }
 
@@ -166,7 +189,7 @@ export function createAchievementStore(storage = globalThis.localStorage) {
       return false;
     }
     collection.push(trackId);
-    save();
+    requestSave();
     return true;
   }
 
@@ -181,7 +204,7 @@ export function createAchievementStore(storage = globalThis.localStorage) {
   function markAllSeen() {
     state.seen = Object.keys(state.unlocked);
     state.rewards.seen = [...state.rewards.unlocked];
-    save();
+    requestSave();
   }
 
   function unseenIds() {
@@ -202,6 +225,7 @@ export function createAchievementStore(storage = globalThis.localStorage) {
 
   return Object.freeze({
     state,
+    batch,
     isUnlocked,
     unlock,
     trophyTotal,

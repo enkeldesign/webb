@@ -251,7 +251,17 @@ export function createAchievementView({ store, session, utilityGroup }) {
   let returnFocus = null;
   let toastHideTimer = 0;
   let rewardToastHideTimer = 0;
+  let toastConcealTimer = 0;
+  let rewardToastConcealTimer = 0;
+  let toastShowFrame = 0;
+  let rewardToastShowFrame = 0;
   let attentionTimer = 0;
+  let attentionFrame = 0;
+  let dialogDirty = true;
+
+  function dialogIsOpen() {
+    return dialog.open === true || dialog.hasAttribute('open');
+  }
 
   function renderTrophyRoad(total) {
     if (!selectedRewardId || !getTrophyRoadReward(selectedRewardId)) {
@@ -303,7 +313,13 @@ export function createAchievementView({ store, session, utilityGroup }) {
     trophyRoadMarkers.querySelector(`[data-trophy-reward="${selectedRewardId}"]`)?.focus();
   });
 
-  function render() {
+  function render({ force = false } = {}) {
+    if (!force && !dialogIsOpen()) {
+      dialogDirty = true;
+      return false;
+    }
+    if (!force && !dialogDirty) return false;
+
     const unlockedCount = Object.keys(store.state.unlocked).length;
     const trophies = store.trophyTotal();
     const completion = Math.round((unlockedCount / ACHIEVEMENTS.length) * 100);
@@ -316,6 +332,8 @@ export function createAchievementView({ store, session, utilityGroup }) {
       .map((achievement) => achievementCard(achievement, store, session))
       .join('');
     applyFilter();
+    dialogDirty = false;
+    return true;
   }
 
   function syncTriggers() {
@@ -342,7 +360,7 @@ export function createAchievementView({ store, session, utilityGroup }) {
   function open(trigger) {
     returnFocus = trigger;
     selectedRewardId = initialRewardSelection(store);
-    render();
+    render({ force: true });
     if (typeof dialog.showModal === 'function') dialog.showModal();
     else dialog.setAttribute('open', '');
     closeButton.focus();
@@ -366,24 +384,34 @@ export function createAchievementView({ store, session, utilityGroup }) {
 
   function pulseRaceTrigger() {
     window.clearTimeout(attentionTimer);
+    if (attentionFrame) window.cancelAnimationFrame(attentionFrame);
     raceTrigger.classList.remove('is-achievement-pulsing', 'is-achievement-attention');
-    void raceTrigger.offsetWidth;
-    if (globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
-      raceTrigger.classList.add('is-achievement-attention');
-    } else {
-      raceTrigger.classList.add('is-achievement-pulsing');
-    }
-    attentionTimer = window.setTimeout(() => {
-      raceTrigger.classList.remove('is-achievement-pulsing', 'is-achievement-attention');
-      attentionTimer = 0;
-    }, ATTENTION_VISIBLE_MS);
+    attentionFrame = window.requestAnimationFrame(() => {
+      attentionFrame = 0;
+      if (globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+        raceTrigger.classList.add('is-achievement-attention');
+      } else {
+        raceTrigger.classList.add('is-achievement-pulsing');
+      }
+      attentionTimer = window.setTimeout(() => {
+        raceTrigger.classList.remove('is-achievement-pulsing', 'is-achievement-attention');
+        attentionTimer = 0;
+      }, ATTENTION_VISIBLE_MS);
+    });
   }
 
   function showToast(toastElement, batch, { reward = false } = {}) {
     if (!batch.length) return;
     const timerKey = reward ? 'reward' : 'achievement';
-    if (timerKey === 'reward') window.clearTimeout(rewardToastHideTimer);
-    else window.clearTimeout(toastHideTimer);
+    if (timerKey === 'reward') {
+      window.clearTimeout(rewardToastHideTimer);
+      window.clearTimeout(rewardToastConcealTimer);
+      if (rewardToastShowFrame) window.cancelAnimationFrame(rewardToastShowFrame);
+    } else {
+      window.clearTimeout(toastHideTimer);
+      window.clearTimeout(toastConcealTimer);
+      if (toastShowFrame) window.cancelAnimationFrame(toastShowFrame);
+    }
     const first = batch[0];
     const total = reward
       ? 0
@@ -401,15 +429,31 @@ export function createAchievementView({ store, session, utilityGroup }) {
       ? 'UNLOCKED'
       : `+${total} TROPHIES`;
     toastElement.setAttribute('aria-label', reward
-      ? `${batch.length === 1 ? 'Trophy Road reward unlocked' : `${batch.length} Trophy Road rewards unlocked`}. ${batch.map((item) => item.shortTitle).join(', ')}.`
-      : `${batch.length === 1 ? 'Achievement unlocked' : `${batch.length} achievements unlocked`}. ${batch.map((achievement) => achievement.title).join(', ')}. ${total} trophies.`);
+      ? `${batch.length === 1 ? 'Trophy Road reward unlocked' : `${batch.length} Trophy Road rewards unlocked`} . ${batch.map((item) => item.shortTitle).join(', ')} .`.replaceAll(' .', '.')
+      : `${batch.length === 1 ? 'Achievement unlocked' : `${batch.length} achievements unlocked`} . ${batch.map((achievement) => achievement.title).join(', ')} . ${total} trophies.`.replaceAll(' .', '.'));
+
+    const alreadyVisible = !toastElement.hidden && toastElement.classList.contains('is-visible');
     toastElement.hidden = false;
-    toastElement.classList.remove('is-visible');
-    void toastElement.offsetWidth;
-    toastElement.classList.add('is-visible');
+    if (!alreadyVisible) {
+      toastElement.classList.remove('is-visible');
+      const frame = window.requestAnimationFrame(() => {
+        toastElement.classList.add('is-visible');
+        if (reward) rewardToastShowFrame = 0;
+        else toastShowFrame = 0;
+      });
+      if (reward) rewardToastShowFrame = frame;
+      else toastShowFrame = frame;
+    }
+
     const timer = window.setTimeout(() => {
       toastElement.classList.remove('is-visible');
-      window.setTimeout(() => { toastElement.hidden = true; }, 220);
+      const concealTimer = window.setTimeout(() => {
+        toastElement.hidden = true;
+        if (reward) rewardToastConcealTimer = 0;
+        else toastConcealTimer = 0;
+      }, 220);
+      if (reward) rewardToastConcealTimer = concealTimer;
+      else toastConcealTimer = concealTimer;
     }, TOAST_VISIBLE_MS);
     if (timerKey === 'reward') rewardToastHideTimer = timer;
     else toastHideTimer = timer;

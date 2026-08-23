@@ -84,13 +84,6 @@ export function gateLotPaintNow(root = document.body) {
       || getVehicleDefaultColor(carId);
   }
 
-  function secondaryColorValue(car) {
-    if (!car) return '';
-    const secondaryControl = [...colors.querySelectorAll('.lot-color-control')]
-      .find((control) => String(control.dataset.paintLabel || '').toLowerCase() !== 'body');
-    return secondaryControl?.querySelector('input[type="color"]')?.value
-      || getVehicleDefaultSecondaryColor(car.id);
-  }
 
   function forceFactoryPaint(carId) {
     const car = CAR_BY_ID.get(carId);
@@ -229,19 +222,7 @@ export function gateLotPaintNow(root = document.body) {
 
   function colorCueDescription(car) {
     if (!car) return '';
-    const primary = describeColorCue(bodyColorValue(car.id)).toUpperCase();
-
-    if (car.fixedLivery) {
-      const secondary = describeColorCue(getVehicleDefaultSecondaryColor(car.id)).toUpperCase();
-      return secondary === primary ? primary : `${primary} + ${secondary}`;
-    }
-
-    if (car.secondaryPaint) {
-      const secondary = describeColorCue(secondaryColorValue(car)).toUpperCase();
-      return `${primary} + ${car.secondaryPaint.label.toUpperCase()} ${secondary}`;
-    }
-
-    return primary;
+    return describeColorCue(bodyColorValue(car.id)).toUpperCase();
   }
 
   function ensureVisualColorCue(car) {

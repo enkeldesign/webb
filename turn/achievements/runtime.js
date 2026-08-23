@@ -161,40 +161,42 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     if (delay >= 0) scheduleRewardToastFlush(delay);
   }
 
-  function syncRewards({ delay = 0, silent = false } = {}) {
-    const rewards = store.syncRewards();
-    if (!rewards.length) return [];
-    announceRewardUpdate(rewards);
-    if (silent) {
-      view.syncTriggers();
-      view.render();
-    } else {
-      queueRewards(rewards, { delay });
-    }
-    return rewards;
-  }
-
   function unlock(ids, context, options = {}) {
-    const unlocked = ids
-      .map((id) => store.unlock(id, context))
-      .filter(Boolean);
+    let unlocked = [];
+    let rewards = [];
+    store.batch(() => {
+      unlocked = ids
+        .map((id) => store.unlock(id, context))
+        .filter(Boolean);
+      if (unlocked.length) rewards = store.syncRewards();
+    });
     if (!unlocked.length) return [];
+
     announceAchievementUpdate(unlocked);
     queueUnlocked(unlocked, options);
-    const rewardDelay = options.delay >= 0
-      ? options.delay + REWARD_TOAST_OFFSET_MS
-      : -1;
-    syncRewards({ delay: rewardDelay });
+    if (rewards.length) {
+      announceRewardUpdate(rewards);
+      const rewardDelay = options.delay >= 0
+        ? options.delay + REWARD_TOAST_OFFSET_MS
+        : -1;
+      queueRewards(rewards, { delay: rewardDelay });
+    }
     return unlocked;
   }
 
   function unlockSilently(entries) {
-    const unlocked = entries
-      .map(({ id, context }) => store.unlock(id, context))
-      .filter(Boolean);
+    let unlocked = [];
+    let rewards = [];
+    store.batch(() => {
+      unlocked = entries
+        .map(({ id, context }) => store.unlock(id, context))
+        .filter(Boolean);
+      if (unlocked.length) rewards = store.syncRewards();
+    });
     if (!unlocked.length) return [];
+
     announceAchievementUpdate(unlocked);
-    syncRewards({ silent: true });
+    if (rewards.length) announceRewardUpdate(rewards);
     view.syncTriggers();
     view.render();
     return unlocked;
