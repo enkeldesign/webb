@@ -229,6 +229,9 @@ jobs:
       - name: Run Drive By Ear preference and shutdown regression
         run: node turn-lab/tests/drive-by-ear-production.mjs
 
+      - name: Run runtime hot-path and background-loading regression
+        run: node turn-lab/tests/runtime-hotpath-performance-production.mjs
+
       - name: Run production performance and diagnostics regression
         run: node turn-lab/tests/performance-production.mjs
 
