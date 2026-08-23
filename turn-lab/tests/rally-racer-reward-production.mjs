@@ -33,7 +33,7 @@ assert.ok(
 );
 assert.match(carModelsSource, /secondaryPaintMaterials/,
   'Procedural secondary paint must participate in the existing live recolor pipeline');
-assert.match(emergencyModelsSource, /car-models\.js\?build=20260823-r177-rally-refinement/,
+assert.match(emergencyModelsSource, /car-models\.js\?build=20260823-r178-all-car-surface-finish/,
   'The release wrapper must bypass cached pre-upgrade car factories in installed apps');
 
 assert.match(upgradeSource, /mergeGeometries/,

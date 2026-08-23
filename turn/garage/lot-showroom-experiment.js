@@ -50,10 +50,10 @@ const LOT_CARS = Object.freeze(LOT_CAR_ORDER.map((id) => CAR_BY_ID.get(id)).filt
 const CAR_DESCRIPTIONS = Object.freeze({
   convertible: 'A low, open-top sports car with a long bonnet and compact cabin.',
   classic: 'A small, upright classic car with rounded bodywork and a friendly shape.',
-  'vintage-racer': 'A narrow vintage racing car with exposed wheels and a long nose.',
+  'vintage-racer': 'A narrow vintage racer with exposed wheels, an ice-blue bonnet stripe and matching deck trim.',
   'toy-racer': 'A black-and-gold competition special with four rally lamps, a roll hoop, rim accents and a high rear wing.',
-  'monster-truck': 'A tall off-road truck with oversized tyres and a short, chunky body.',
-  'race-future': 'A sleek futuristic racing car with a low cockpit and aerodynamic body.',
+  'monster-truck': 'A tall off-road truck with oversized tyres, bright suspension bracing and contrasting mirror caps.',
+  'race-future': 'A sleek futuristic racer with a low cockpit, central aero spine and contrasting rear deck trim.',
   race: 'A low single-seat race car with exposed wheels and a large rear wing.',
   'sedan-sports': 'A sporty four-door sedan with a low stance and rear spoiler.',
   sedan: 'A balanced four-door family car with a conventional three-box shape.',
@@ -699,12 +699,15 @@ function rendererPixelRatio(fallbackCap) {
 
 function disposeVisualMaterials(root) {
   const materials = new Set();
+  const ownedGeometry = new Set();
   root?.traverse?.((node) => {
-    if (!node?.isMesh || !node.material) return;
+    if (node?.userData?.turnOwnedGeometry && node.geometry) ownedGeometry.add(node.geometry);
+    if (!node?.material) return;
     const nodeMaterials = Array.isArray(node.material) ? node.material : [node.material];
     for (const material of nodeMaterials) materials.add(material);
   });
   for (const material of materials) material.dispose?.();
+  for (const owned of ownedGeometry) owned.dispose?.();
 }
 
 function makeStats(vehicleStats) {

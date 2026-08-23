@@ -13,7 +13,10 @@ import {
   makeWideGamutSpec,
   setThreeColor
 } from './wide-gamut.js?revision=r157-display-p3';
-import { installVehicleVisualUpgrade } from './visual-upgrades.js?revision=r177-rally-refinement';
+import {
+  installVehicleSurfaceFinish,
+  installVehicleVisualUpgrade
+} from './visual-upgrades.js?revision=r178-all-car-surface-finish';
 
 const loader = new GLTFLoader();
 const sourceCache = new Map();
@@ -129,6 +132,21 @@ export async function createCarVisual({
     * car.visualSizeMultiplier
     * featuredVisualSizeMultiplier;
   normalizeModelToGround(model, targetLength * effectiveVisualScale);
+  installVehicleSurfaceFinish({
+    root,
+    model,
+    car,
+    primaryColor: car.fixedLivery
+      ? (ghost ? makeGhostColor(car.defaultColor) : getVehicleDefaultColorSpec(car.id))
+      : (ghost ? ghostColor : requestedColorSpec),
+    secondaryColor: car.fixedLivery
+      ? (ghost ? makeGhostColor(car.defaultSecondaryColor) : getVehicleDefaultSecondaryColorSpec(car.id))
+      : (ghost ? ghostSecondaryColor : requestedSecondaryColorSpec),
+    ghost,
+    outline,
+    primaryPaintMaterials,
+    secondaryPaintMaterials
+  });
   installVehicleVisualUpgrade({
     root,
     model,

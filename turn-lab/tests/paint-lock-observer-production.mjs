@@ -169,15 +169,15 @@ assert.match(
 // HTTP/module-cache snapshots. All selected-car consumers must now converge on one
 // fresh vehicle-catalog module, and the state/showroom modules themselves get fresh
 // identities without requiring a reinstall or clearing site data.
-const canonicalLotCatalog = '/turn/vehicle/catalog.js?revision=r208-rally-reward';
+const canonicalLotCatalog = '/turn/vehicle/catalog.js?revision=r178-all-car-surface-finish';
 assert.equal(
   imports['/turn/progression/lot-paint-reward.js?revision=r206-pwa-color'],
-  '/turn/progression/lot-paint-reward.js?revision=r207-reward-color-catalog',
+  '/turn/progression/lot-paint-reward.js?revision=r178-all-car-surface-finish',
   'Installed PWAs must refetch the COLOR state module'
 );
 assert.equal(
   imports['/turn/garage/lot-showroom-experiment.js?revision=r206-race-before-locks'],
-  '/turn/garage/lot-showroom-experiment.js?revision=r208-rally-reward',
+  '/turn/garage/lot-showroom-experiment.js?revision=r178-all-car-surface-finish',
   'Installed PWAs must refetch the showroom module that creates paint controls'
 );
 for (const staleCatalogSpecifier of [

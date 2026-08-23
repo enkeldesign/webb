@@ -614,12 +614,15 @@ function rendererPixelRatio(fallbackCap) {
 
 function disposeVisualMaterials(root) {
   const materials = new Set();
+  const ownedGeometry = new Set();
   root?.traverse?.((node) => {
-    if (!node?.isMesh || !node.material) return;
+    if (node?.userData?.turnOwnedGeometry && node.geometry) ownedGeometry.add(node.geometry);
+    if (!node?.material) return;
     const nodeMaterials = Array.isArray(node.material) ? node.material : [node.material];
     for (const material of nodeMaterials) materials.add(material);
   });
   for (const material of materials) material.dispose?.();
+  for (const owned of ownedGeometry) owned.dispose?.();
 }
 
 function rememberMaterialState(root) {

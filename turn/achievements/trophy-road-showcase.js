@@ -3,7 +3,7 @@ import {
   getVehicleDefaultColor,
   getVehicleDefaultSecondaryColor
 } from '../vehicle/catalog.js?revision=r164-vintage-rally-polish';
-import { createCarVisual } from '../vehicle/emergency-livery-models.js?build=20260823-r177';
+import { createCarVisual } from '../vehicle/emergency-livery-models.js?build=20260823-r178';
 import { configureRendererWideGamut } from '../vehicle/wide-gamut.js?revision=r157-display-p3';
 
 const SHOWCASE_FRAME_INTERVAL_MS = 1000 / 30;

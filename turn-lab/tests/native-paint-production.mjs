@@ -16,13 +16,25 @@ assert.deepEqual(
 const secondaryCars = catalog.CAR_CATALOG.filter((car) => car.secondaryPaint);
 assert.deepEqual(
   secondaryCars.map((car) => car.id),
-  ['toy-racer', 'sedan-sports'],
-  'Only a genuine secondary mesh or a procedural visual upgrade should expose a second picker'
+  ['vintage-racer', 'toy-racer', 'monster-truck', 'race-future', 'sedan-sports'],
+  'Only reward-car recipes, a genuine secondary mesh or a procedural visual upgrade should expose a second picker'
 );
-assert.equal(secondaryCars[0].secondaryPaint.label, 'Rally kit');
+assert.equal(secondaryCars[0].secondaryPaint.label, 'Racing stripe');
 assert.deepEqual(secondaryCars[0].secondaryPaint.meshNames, []);
-assert.equal(secondaryCars[1].secondaryPaint.label, 'Spoiler');
-assert.deepEqual(secondaryCars[1].secondaryPaint.meshNames, ['spoiler']);
+assert.equal(secondaryCars[1].secondaryPaint.label, 'Rally kit');
+assert.deepEqual(secondaryCars[1].secondaryPaint.meshNames, []);
+assert.equal(secondaryCars[2].secondaryPaint.label, 'Suspension');
+assert.deepEqual(secondaryCars[2].secondaryPaint.meshNames, []);
+assert.equal(secondaryCars[3].secondaryPaint.label, 'Aero accents');
+assert.deepEqual(secondaryCars[3].secondaryPaint.meshNames, []);
+assert.equal(secondaryCars[4].secondaryPaint.label, 'Spoiler');
+assert.deepEqual(secondaryCars[4].secondaryPaint.meshNames, ['spoiler']);
+
+for (const id of ['firetruck', 'police', 'ambulance']) {
+  const emergency = catalog.getCarDefinition(id);
+  assert.equal(emergency.fixedLivery, true);
+  assert.equal(emergency.secondaryPaint, null, `${emergency.name} must never expose repaint controls`);
+}
 
 const sportSedanGlb = await fs.readFile(new URL('../../turn/assets/cars/sedan-sports.glb', import.meta.url));
 const sportSedanJson = readGlbJson(sportSedanGlb);
