@@ -8,7 +8,7 @@ const expectedQuarterTurns = new Map([
   ['convertible', 1],
   ['classic', 1],
   ['vintage-racer', 0],
-  ['toy-racer', 2],
+  ['toy-racer', 0],
   ['monster-truck', 0],
   ['race-future', 0],
   ['race', 0],
@@ -26,7 +26,7 @@ const expectedVisualScales = new Map([
   ['convertible', 0.98],
   ['classic', 1],
   ['vintage-racer', 0.96],
-  ['toy-racer', 0.94],
+  ['toy-racer', 0.98],
   ['monster-truck', 0.83],
   ['race-future', 0.96],
   ['race', 0.94],
@@ -44,7 +44,6 @@ const expectedGlobalSizeMultipliers = new Map([
   ['convertible', 0.72],
   ['classic', 0.72],
   ['vintage-racer', 0.75],
-  ['toy-racer', 0.7],
   ['police', 1.15]
 ]);
 
@@ -108,15 +107,19 @@ for (const car of catalog.CAR_CATALOG) {
 const convertible = catalog.getCarDefinition('convertible');
 const trainingCar = catalog.getCarDefinition('classic');
 const vintageRacer = catalog.getCarDefinition('vintage-racer');
-const toyRacer = catalog.getCarDefinition('toy-racer');
+const rallyRacer = catalog.getCarDefinition('toy-racer');
+const hatchback = catalog.getCarDefinition('sedan-sports');
 const policeCar = catalog.getCarDefinition('police');
 const monsterTruck = catalog.getCarDefinition('monster-truck');
 assert.equal(monsterTruck.pack, 'rgsdev');
 assert.equal(monsterTruck.asset, './assets/cars/monster-truck-rgsdev.glb');
+assert.equal(hatchback.asset, './assets/cars/hatchback-sports.glb');
+assert.equal(rallyRacer.asset, './assets/cars/sedan-sports.glb');
 assertClose(convertible.visualScale * convertible.visualSizeMultiplier, 0.7056, 'Convertible effective visual scale');
 assertClose(trainingCar.visualScale * trainingCar.visualSizeMultiplier, 0.72, 'Training Car effective visual scale');
 assertClose(vintageRacer.visualScale * vintageRacer.visualSizeMultiplier, 0.72, 'Vintage Racer effective visual scale');
-assertClose(toyRacer.visualScale * toyRacer.visualSizeMultiplier, 0.658, 'Toy Racer effective visual scale');
+assertClose(rallyRacer.visualScale * rallyRacer.visualSizeMultiplier, 0.98, 'Rally Racer effective visual scale');
+assertClose(hatchback.visualScale * hatchback.visualSizeMultiplier, 0.98, 'Hatchback effective visual scale');
 assertClose(policeCar.visualScale * policeCar.visualSizeMultiplier, 1.127, 'Police Car effective visual scale');
 assertClose(monsterTruck.visualScale * monsterTruck.visualSizeMultiplier, 0.83, 'Monster Truck compact visual scale');
 assertClose(
