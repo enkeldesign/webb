@@ -44,15 +44,22 @@ jobs:
         run: |
           node <<'NODE'
           const fs = require('node:fs');
-          const path = 'turn/release.json';
-          const release = JSON.parse(fs.readFileSync(path, 'utf8'));
+          const releasePath = 'turn/release.json';
+          const release = JSON.parse(fs.readFileSync(releasePath, 'utf8'));
           if (release.version !== '1.10.4' || release.id !== '2026.08.23-r183' || release.cacheKey !== '20260823-r183') {
-            fs.writeFileSync(path, JSON.stringify({
+            fs.writeFileSync(releasePath, JSON.stringify({
               version: '1.10.4',
               id: '2026.08.23-r183',
               cacheKey: '20260823-r183'
             }, null, 2) + '\n');
           }
+          const nextIndexPath = 'turn-next/index.html';
+          let nextIndex = fs.readFileSync(nextIndexPath, 'utf8');
+          nextIndex = nextIndex
+            .replaceAll('1.10.3', '1.10.4')
+            .replaceAll('2026.08.23-r182', '2026.08.23-r183')
+            .replaceAll('20260823-r182', '20260823-r183');
+          fs.writeFileSync(nextIndexPath, nextIndex);
           NODE
           node turn/scripts/release.mjs --write
           node turn-next/scripts/build-parity-app.mjs
