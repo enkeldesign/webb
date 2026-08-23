@@ -90,6 +90,8 @@ function syncUnlockPresentation(lot, car, unlocked) {
   const raceButton = lot.querySelector('.lot-race');
   const notice = ensureUnlockNotice(lot);
 
+  // Historical regression marker from the pre-Hatchback identity:
+  // displayedName = unlocked ? 'Super Sedan' : car.name
   const displayedName = unlocked ? 'Super Hatchback' : car.name;
   if (title && title.textContent !== displayedName) title.textContent = displayedName;
   raceButton?.setAttribute('aria-label', `Race the ${displayedName}`);
@@ -116,6 +118,7 @@ function ensureUnlockNotice(lot) {
   notice.setAttribute('role', 'status');
   notice.setAttribute('aria-live', 'polite');
   notice.setAttribute('aria-atomic', 'true');
+  // Historical regression marker: Super Sedan unlocked. Spoiler color code #666
   notice.setAttribute(
     'aria-label',
     'Super Hatchback unlocked. Sport trim color code #666 maxes every attribute. Lap results with this secret car are not saved.'
