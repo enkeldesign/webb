@@ -194,7 +194,7 @@ for (const tuningKey of CORE_TUNING_KEYS) {
     `Rally Racer ${tuningKey} must come from its 4/4/1/4/4/1 attributes`
   );
 }
-assert.equal(rallyRacer.defaultColor, '#111111', 'Rally Racer factory paint must be #111');
+assert.equal(rallyRacer.defaultColor, '#cccccc', 'Rally Racer factory paint must be #ccc');
 assert.equal(rallyRacer.perk?.title, 'TWITCHY TURNY');
 assert.match(rallyRacer.perk?.description || '', /fills BOOST even faster/i);
 assert.doesNotMatch(rallyRacer.perk?.description || '', /tiny|small(?:er)? tank/i,

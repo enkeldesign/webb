@@ -8,7 +8,7 @@ import {
   makeGhostColor,
   normalizeVehicleColor,
   normalizeVehicleSecondaryColor
-} from './catalog.js?build=20260804-r157-factory-colors';
+} from './catalog.js?revision=r182-vintage-rally-paint';
 import {
   makeWideGamutSpec,
   setThreeColor
@@ -17,7 +17,7 @@ import {
   getKenneyPaletteAsset,
   installSemanticCarFinish,
   recolorSemanticCarFinish
-} from './semantic-car-finish.js?revision=r181-hatchback-rally';
+} from './semantic-car-finish.js?revision=r182-vintage-rally-paint';
 
 const loadersByPack = new Map();
 const sourceCache = new Map();

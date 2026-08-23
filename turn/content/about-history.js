@@ -446,13 +446,14 @@ export const CHANGELOG = Object.freeze([
       ['1.10.0 r179', 'Replaces generated presentation layers with authored Kenney palette detail, semantic body/accent/rim paint and the selected standalone RGSDev Monster Truck.'],
       ['Native surfaces', 'Restores windows, lamps, trim and wheel detail from the source UVs; keeps emergency liveries fixed and removes the procedural RALLY RACER kit.'],
       ['1.10.1 r180', 'Corrects semantic palette UV orientation so factory colors and PAINTJOB affect the authored body, trim and rim cells.'],
-      ['1.10.2 r181', 'Renames Sport Sedan to Hatchback, gives it the authored Sport Hatchback model and promotes the former Sport Sedan body to the black-and-gold Rally Racer while preserving both cars’ stable gameplay IDs.']
+      ['1.10.2 r181', 'Renames Sport Sedan to Hatchback, gives it the authored Sport Hatchback model and promotes the former Sport Sedan body to Rally Racer while preserving both cars’ stable gameplay IDs.'],
+      ['1.10.3 r182', 'Fixes Vintage Racer secondary PAINTJOB targeting and changes Rally Racer factory paint to #ccc body with #fc0 trim.']
     ]
   }
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.10.2',
-  build: '2026.08.23-r181',
-  note: 'TURN 1.10.2 build r181 promotes the Sport Hatchback to Hatchback and the former Sport Sedan model to Rally Racer while preserving PAINTJOB, progression and stable vehicle identities.'
+  version: '1.10.3',
+  build: '2026.08.23-r182',
+  note: 'TURN 1.10.3 build r182 fixes Vintage Racer secondary PAINTJOB targeting and gives Rally Racer its new #ccc and #fc0 factory palette.'
 });

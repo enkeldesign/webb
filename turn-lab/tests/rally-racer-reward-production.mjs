@@ -27,9 +27,10 @@ assert.equal(rally.id, 'toy-racer', 'Rally must preserve its stable storage, rep
 assert.equal(rally.pack, 'car', 'The new Rally source belongs to the Kenney Car Kit palette family');
 assert.equal(rally.asset, './assets/cars/sedan-sports.glb', 'Rally should use the former Sport Sedan model');
 assert.equal(rally.surfaceProfileId, 'sedan-sports-rally');
-assert.equal(rally.defaultColor, '#111111', 'The final reward should retain its black competition body');
-assert.equal(rally.defaultSecondaryColor, '#ffcc00', 'The native rally trim should use TURN trophy gold');
-assert.deepEqual(rally.defaultSecondaryColorP3, [1, 0.76, 0]);
+assert.equal(rally.defaultColor, '#cccccc', 'Rally Racer should default to the requested #ccc body');
+assert.equal(rally.defaultColorP3, null, 'Rally Racer must use the exact requested sRGB #ccc factory body');
+assert.equal(rally.defaultSecondaryColor, '#ffcc00', 'Rally Racer should default to the requested #fc0 trim');
+assert.equal(rally.defaultSecondaryColorP3, null, 'Rally Racer must use the exact requested sRGB #fc0 factory trim');
 assert.equal(rally.secondaryPaint?.label, 'Rally trim');
 assert.deepEqual(rally.secondaryPaint?.meshNames, ['spoiler']);
 assert.equal(rally.visualUpgrade, null, 'Rally must not opt into generated presentation geometry');
@@ -45,7 +46,7 @@ assert.match(semanticSource, /rims: \[\[5, 4\], \[5, 5\]\]/);
 assert.match(semanticSource, /rimRole: 'secondary'/,
   'Rally wheel centres should share the trophy-gold trim colour');
 assert.match(semanticSource, /secondaryPrimaryNodes: \['spoiler'\]/,
-  'The former Sport Sedan spoiler must become Rally gold rather than body black');
+  'The former Sport Sedan spoiler must become Rally gold rather than body grey');
 assert.match(semanticSource, /surfaceProfileId \|\| car\.id/,
   'Paint semantics must follow the mounted source model while logical IDs stay stable');
 assert.match(semanticSource, /turnPaletteCell/);
@@ -65,7 +66,7 @@ assert.match(emergencyModelsSource, new RegExp(`car-models\\.js\\?build=${releas
   'The release bridge must bypass cached pre-palette car factories');
 assert.doesNotMatch(emergencyModelsSource, /BoxGeometry|applyFixedEmergencyLivery|installSecondaryAccent/);
 
-assert.match(lotVehicleCopySource, /'toy-racer': 'A black-and-gold competition car/);
+assert.match(lotVehicleCopySource, /'toy-racer': 'A grey-and-gold competition car/);
 assert.match(lotVehicleCopySource, /high rear wing and rally-bred trim/);
 
-console.log('TURN Rally Racer former-Sport-Sedan black-and-gold surface reward passed.');
+console.log('TURN Rally Racer former-Sport-Sedan grey-and-gold surface reward passed.');
