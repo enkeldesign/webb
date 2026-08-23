@@ -1,5 +1,8 @@
 import { ACHIEVEMENTS, ICONS } from './catalog.js?revision=r181-hatchback-rally';
-import { takePendingSecretAchievements } from './secret-events.js?revision=r174-bella-siren-zone';
+import {
+  acknowledgeSecretAchievement,
+  pendingSecretAchievements
+} from './secret-events.js?revision=r184-achievement-integrity';
 
 const SAVE_BELLA_ID = 'save-bella';
 const HIDDEN_BY_ID = new Map(
@@ -49,8 +52,20 @@ export function installSecretAchievements(achievements = globalThis.__turnAchiev
 
   const unlockId = (achievementId, context = {}) => {
     if (!validSecretContext(achievementId, context)) return false;
-    if (!HIDDEN_BY_ID.has(achievementId) || achievements.store.isUnlocked(achievementId)) return false;
+
+    // If the catalog temporarily does not know the id, leave its durable evidence
+    // untouched so a later fixed catalog can recover the one-shot achievement.
+    if (!HIDDEN_BY_ID.has(achievementId)) return false;
+
+    if (achievements.store.isUnlocked(achievementId)) {
+      acknowledgeSecretAchievement(achievementId);
+      return false;
+    }
+
     achievements.unlock(achievementId, context);
+    if (!achievements.store.isUnlocked(achievementId)) return false;
+
+    acknowledgeSecretAchievement(achievementId);
     decorateHiddenCards(achievements);
     return true;
   };
@@ -60,7 +75,7 @@ export function installSecretAchievements(achievements = globalThis.__turnAchiev
   };
   globalThis.addEventListener?.('turn:secret-achievement', handleSecret);
 
-  for (const pending of takePendingSecretAchievements()) {
+  for (const pending of pendingSecretAchievements()) {
     unlockId(pending.achievementId, pending.context);
   }
 
