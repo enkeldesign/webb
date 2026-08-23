@@ -211,6 +211,11 @@ const imports = JSON.parse(importMapText).imports;
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(index, new RegExp(`lap-result-toast\\.css\\?build=${release.cacheKey}`));
 assert.match(index, new RegExp(`rival-onboarding\\.css\\?build=${release.cacheKey}`));
+assert.equal(
+  imports[`/turn/ui/rival-onboarding.js?build=${release.cacheKey}`],
+  `/turn/ui/rival-onboarding.js?build=${release.cacheKey}&revision=r209-prewarmed-ghost`,
+  'Installed PWAs must refetch the prewarmed CHASE YOUR BEST runtime'
+);
 assert.ok(
   imports['./race/lap-system.js?build=20260720-r19']?.startsWith(`./race/lap-system-r86.js?build=${release.cacheKey}`),
   'The current release must publish the current unranked easter egg policy around the verified lap engine'
@@ -265,9 +270,9 @@ assert.doesNotMatch(gameState, /READY FOR THE LINE/, 'Restart Lap must not show 
 assert.match(onboarding, /CHASE YOUR BEST/, 'The first rival must introduce the core chase-your-best loop');
 assert.match(onboarding, /reason === 'lap-completed'/, 'Onboarding must be tied to the first newly saved rival after a completed lap');
 assert.match(onboarding, /!hadRival && hasRival\) schedule\(rivals\[0\]\)/, 'The onboarding must use the newly saved rival rather than the current selection');
-assert.match(onboarding, /rival\?\.carId/, 'The first-rival preview must use the saved ghost model');
-assert.match(onboarding, /rival\?\.carColor/, 'The first-rival preview must use the saved ghost body paint');
-assert.match(onboarding, /rival\?\.carSecondaryColor/, 'The first-rival preview must preserve saved secondary paint');
+assert.match(onboarding, /source\.carId \|\| source\.vehicleId/, 'The prepared preview must use the selected model and confirm it against the saved ghost model');
+assert.match(onboarding, /source\.carColor \|\| source\.vehicleColor/, 'The prepared preview must use the selected body paint and confirm it against saved ghost paint');
+assert.match(onboarding, /source\.carSecondaryColor \|\| source\.vehicleSecondaryColor/, 'The prepared preview must preserve selected and saved secondary paint');
 assert.match(onboarding, /ghost: true/, 'The onboarding model must use the same lighter solid ghost treatment as race rivals');
 assert.match(onboarding, /targetLength: 6\.4/, 'The onboarding model must use the Lot 3D viewer presentation scale');
 assert.match(onboarding, /PerspectiveCamera\(34, 1, 0\.1, 60\)/, 'The onboarding model must reuse the Lot viewer camera language');
