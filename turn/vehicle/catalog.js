@@ -53,10 +53,7 @@ const DEFAULT_COLOR_BY_ID = Object.freeze({
 });
 
 const DEFAULT_SECONDARY_COLOR_BY_ID = Object.freeze({
-  'vintage-racer': Object.freeze({ fallback: '#4dabf7', p3: Object.freeze([0.20, 0.58, 1]) }),
   'toy-racer': Object.freeze({ fallback: '#ffcc00', p3: Object.freeze([1, 0.76, 0]) }),
-  'monster-truck': Object.freeze({ fallback: '#d5e33b', p3: Object.freeze([0.78, 0.87, 0.08]) }),
-  'race-future': Object.freeze({ fallback: '#9775fa', p3: Object.freeze([0.56, 0.38, 1]) }),
   'sedan-sports': Object.freeze({ fallback: '#252a35', p3: Object.freeze([0.13, 0.15, 0.21]) }),
   firetruck: Object.freeze({ fallback: '#ffcc00', p3: Object.freeze([1, 0.76, 0]) }),
   police: Object.freeze({ fallback: '#f8f9fa', p3: Object.freeze([0.95, 0.97, 0.98]) }),
@@ -138,15 +135,6 @@ const RAW_CARS = [
 ];
 
 const VISUAL_CUSTOMIZATION_BY_ID = Object.freeze({
-  'vintage-racer': Object.freeze({
-    secondaryPaint: Object.freeze({ label: 'Racing stripe', meshNames: Object.freeze([]) })
-  }),
-  'monster-truck': Object.freeze({
-    secondaryPaint: Object.freeze({ label: 'Suspension', meshNames: Object.freeze([]) })
-  }),
-  'race-future': Object.freeze({
-    secondaryPaint: Object.freeze({ label: 'Aero accents', meshNames: Object.freeze([]) })
-  }),
   'sedan-sports': Object.freeze({
     secondaryPaint: Object.freeze({ label: 'Spoiler', meshNames: Object.freeze(['spoiler']) })
   }),

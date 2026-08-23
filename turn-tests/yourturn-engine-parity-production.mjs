@@ -64,8 +64,8 @@ for (const catalogSpecifier of [
   assert.equal(yourTurnCatalogUrl.pathname, '/turn/vehicle/catalog.js');
   assert.match(
     yourTurnCatalogUrl.search,
-    /r178-all-car-surface-finish/,
-    'YOUR TURN must cache-bust the canonical all-car finish graph instead of carrying its own vehicle data'
+    /r208-rally-reward/,
+    'YOUR TURN must cache-bust the canonical reward customization graph instead of carrying its own vehicle data'
   );
 }
 
