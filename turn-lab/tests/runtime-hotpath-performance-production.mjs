@@ -54,8 +54,11 @@ assert.match(achievementRuntime, /store\.batch\(\(\) =>/,
 // The color accessibility observer lives for the entire app lifetime. It must ignore unrelated DOM
 // churn (achievement toasts/dialogs, HUD updates, etc.) instead of rescanning Home and The Lot.
 assert.match(colorAccessibility, /function mutationTouchesColorCueUi\(mutation\)/);
-assert.doesNotMatch(colorAccessibility, /new MutationObserver\(scheduleSync\)/);
-assert.match(colorAccessibility, /mutations\.some\(mutationTouchesColorCueUi\)/);
+assert.match(
+  colorAccessibility,
+  /const observer = new MutationObserver\(\(mutations\) => \{[\s\S]*mutations\.some\(mutationTouchesColorCueUi\)[\s\S]*\}\);/,
+  'The app-wide Color Cue observer must filter mutations before scheduling a global rescan'
+);
 
 // Large optional graphs can download/compile behind TURN's startup cover, but installation remains
 // deferred until Home is ready/idle so user-visible lifecycle behavior stays unchanged.
