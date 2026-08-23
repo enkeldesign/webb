@@ -23,9 +23,60 @@ on:
       - '.github/workflows/turn-admin-unlock-test.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
+  about-release-sync:
+    if: github.event_name == 'pull_request' && github.head_ref == 'turn-performance-loading-review'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out performance branch
+        uses: actions/checkout@v4
+        with:
+          ref: turn-performance-loading-review
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Synchronize About and changelog release identity
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          const bootstrapPath = 'turn/ui/about-history-bootstrap-r165.js';
+          let bootstrap = fs.readFileSync(bootstrapPath, 'utf8');
+          bootstrap = bootstrap.replace("about-history.js?build=20260823-r182", "about-history.js?build=20260823-r183");
+          fs.writeFileSync(bootstrapPath, bootstrap);
+
+          const historyPath = 'turn/content/about-history.js';
+          let history = fs.readFileSync(historyPath, 'utf8');
+          history = history.replace(
+            "      ['1.10.3 r182', 'Fixes Vintage Racer secondary PAINTJOB targeting and changes Rally Racer factory paint to #ccc body with #fc0 trim.']",
+            "      ['1.10.3 r182', 'Fixes Vintage Racer secondary PAINTJOB targeting and changes Rally Racer factory paint to #ccc body with #fc0 trim.'],\n      ['1.10.4 r183', 'Performance and loading pass: primary-only Color Cues, cheaper achievement updates, batched persistence, filtered DOM observation, earlier background module warmup and deferred rival replay storage.']"
+          );
+          history = history.replace(
+            "export const CURRENT_RELEASE = Object.freeze({\n  version: '1.10.3',\n  build: '2026.08.23-r182',\n  note: 'TURN 1.10.3 build r182 fixes Vintage Racer secondary PAINTJOB targeting and gives Rally Racer its new #ccc and #fc0 factory palette.'\n});",
+            "export const CURRENT_RELEASE = Object.freeze({\n  version: '1.10.4',\n  build: '2026.08.23-r183',\n  note: 'TURN 1.10.4 build r183 reduces runtime hitches by moving achievement, observer, module-loading and rival-replay persistence work away from critical interaction frames.'\n});"
+          );
+          fs.writeFileSync(historyPath, history);
+          NODE
+          node turn-tests/about-history-production.mjs
+          git diff --check
+
+      - name: Commit About release sync
+        run: |
+          if git diff --quiet; then
+            echo "About history already matches r183"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn/ui/about-history-bootstrap-r165.js turn/content/about-history.js
+          git commit -m "Document TURN 1.10.4 performance release"
+          git push origin HEAD:turn-performance-loading-review
+
   admin-unlock:
     runs-on: ubuntu-latest
     steps:
