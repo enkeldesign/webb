@@ -10,18 +10,6 @@ import {
   normalizeVehicleSecondaryColor
 } from './catalog.js?build=20260804-r157-factory-colors';
 import {
-  getRgsdevModelYawQuarterTurns,
-  getRgsdevPrimaryPaintMaterial,
-  isRgsdevCar,
-  loadRgsdevCarSource
-} from './rgsdev-model-source.js?revision=r208-rgsdev-vehicles';
-import {
-  getSupercarModelYawQuarterTurns,
-  getSupercarPrimaryPaintMaterial,
-  isSupercar,
-  loadSupercarSource
-} from './supercar-model-source.js?revision=r209-supercar';
-import {
   makeWideGamutSpec,
   setThreeColor
 } from './wide-gamut.js?revision=r157-display-p3';
@@ -60,10 +48,7 @@ export async function createCarVisual({
   const source = await loadCarSource(car.id);
   const root = new THREE.Group();
   const model = source.clone(true);
-  const modelYawQuarterTurns = isSupercar(car.id)
-    ? getSupercarModelYawQuarterTurns(car.id, car.modelYawQuarterTurns)
-    : getRgsdevModelYawQuarterTurns(car.id, car.modelYawQuarterTurns);
-  model.rotation.y = Math.PI + modelYawQuarterTurns * Math.PI / 2;
+  model.rotation.y = Math.PI + car.modelYawQuarterTurns * Math.PI / 2;
   root.add(model);
 
   const requestedColor = normalizeVehicleColor(color, car.defaultColor);
@@ -89,9 +74,9 @@ export async function createCarVisual({
         node,
         material,
         protected: isProtectedPart(node, material),
-        wheel: isWheelPart(node, material, car),
+        wheel: isWheelPart(node, material),
         secondaryPaint: isSecondaryPaint(node, car),
-        explicitPaint: isExplicitPaint(node, material, car)
+        explicitPaint: isExplicitPaint(node, material)
       };
       if (record.explicitPaint && !record.protected) explicitPaintCount += 1;
       meshRecords.push(record);
@@ -111,7 +96,7 @@ export async function createCarVisual({
     const paintable = !car.fixedLivery && !protectedPart && !secondaryPaint && (
       explicitPaint
       || (explicitPaintCount === 0 && isFallbackPaintCandidate(material))
-      || (!isRgsdevCar(car.id) && !isSupercar(car.id) && car.pack !== 'car' && isFallbackPaintCandidate(material))
+      || (car.pack !== 'car' && isFallbackPaintCandidate(material))
     );
 
     if (wheelPart && material.color) {
@@ -149,7 +134,7 @@ export async function createCarVisual({
   root.userData.turnCarColor = requestedColor;
   root.userData.turnCarSecondaryColor = requestedSecondaryColor;
   root.userData.turnGhost = ghost;
-  root.userData.turnModelYawQuarterTurns = modelYawQuarterTurns;
+  root.userData.turnModelYawQuarterTurns = car.modelYawQuarterTurns;
   root.userData.turnVisualSizeMultiplier = car.visualSizeMultiplier;
   root.userData.turnFeaturedVisualSizeMultiplier = featuredVisualSizeMultiplier;
   root.userData.turnFeaturedVisualSurface = featuredSurface;
@@ -272,15 +257,7 @@ export function recolorCarVisual(root, color, secondaryColor = root?.userData?.t
 async function loadCarSource(carId) {
   const car = getCarDefinition(carId);
   if (!sourceCache.has(car.id)) {
-    const legacy = () => loader.loadAsync(assetUrl(car.asset)).then((gltf) => gltf.scene);
-    sourceCache.set(
-      car.id,
-      isSupercar(car.id)
-        ? loadSupercarSource({ carId: car.id, buildKey }).catch(legacy)
-        : isRgsdevCar(car.id)
-          ? loadRgsdevCarSource({ carId: car.id, buildKey }).catch(legacy)
-          : legacy()
-    );
+    sourceCache.set(car.id, loader.loadAsync(assetUrl(car.asset)).then((gltf) => gltf.scene));
   }
   return sourceCache.get(car.id);
 }
@@ -340,9 +317,8 @@ function isProtectedPart(node, material) {
   return /wheel|tire|tyre|rubber|glass|window|windscreen|light|lamp|chrome|axle/.test(label);
 }
 
-function isWheelPart(node, material, car) {
+function isWheelPart(node, material) {
   const label = `${node.name || ''} ${material.name || ''}`.toLowerCase();
-  if (isRgsdevCar(car?.id) || isSupercar(car?.id)) return /tire|tyre|rubber/.test(label);
   return /wheel|tire|tyre|rubber/.test(label);
 }
 
@@ -351,12 +327,7 @@ function isSecondaryPaint(node, car) {
   return (car.secondaryPaint?.meshNames || []).includes(name);
 }
 
-function isExplicitPaint(node, material, car) {
-  const importedMaterial = getSupercarPrimaryPaintMaterial(car?.id)
-    || getRgsdevPrimaryPaintMaterial(car?.id);
-  if (importedMaterial) {
-    return String(material?.name || '').replace(/\0/g, '').trim().toLowerCase() === importedMaterial;
-  }
+function isExplicitPaint(node, material) {
   const label = `${node.name || ''} ${material.name || ''}`.toLowerCase();
   return /paint|body|primary|vehiclecolor|carcolor/.test(label);
 }
