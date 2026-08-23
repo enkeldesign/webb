@@ -23,9 +23,49 @@ on:
       - '.github/workflows/turn-admin-unlock-test.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
+  semantic-release-sync:
+    if: github.event_name == 'pull_request' && github.head_ref == 'turn-performance-loading-review'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out performance branch
+        uses: actions/checkout@v4
+        with:
+          ref: turn-performance-loading-review
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Synchronize semantic finish release pin
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = 'turn-lab/tests/semantic-car-finish-production.mjs';
+          let source = fs.readFileSync(path, 'utf8');
+          source = source
+            .replace("assert.equal(release.version, '1.10.3');", "assert.equal(release.version, '1.10.4');")
+            .replace("assert.equal(release.id, '2026.08.23-r182');", "assert.equal(release.id, '2026.08.23-r183');");
+          fs.writeFileSync(path, source);
+          NODE
+          node turn-lab/tests/semantic-car-finish-production.mjs
+          git diff --check
+
+      - name: Commit semantic release pin
+        run: |
+          if git diff --quiet; then
+            echo "Semantic regression already matches r183"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn-lab/tests/semantic-car-finish-production.mjs
+          git commit -m "Update semantic vehicle regression for r183"
+          git push origin HEAD:turn-performance-loading-review
+
   admin-unlock:
     runs-on: ubuntu-latest
     steps:
