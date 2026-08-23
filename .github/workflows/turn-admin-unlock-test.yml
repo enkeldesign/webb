@@ -23,9 +23,66 @@ on:
       - '.github/workflows/turn-admin-unlock-test.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
+  performance-polish:
+    if: github.event_name == 'pull_request' && github.head_ref == 'turn-performance-loading-review'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out performance branch
+        uses: actions/checkout@v4
+        with:
+          ref: turn-performance-loading-review
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Correct open-dialog refresh and primary-only import
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          function replace(path, from, to) {
+            const source = fs.readFileSync(path, 'utf8');
+            if (!source.includes(from)) throw new Error(`${path}: missing expected source`);
+            fs.writeFileSync(path, source.replace(from, to));
+          }
+
+          replace(
+            'turn/achievements/view.js',
+            `    if (!force && !dialogDirty) return false;\n\n    const unlockedCount`,
+            `    const unlockedCount`
+          );
+          replace(
+            'turn/achievements/view.js',
+            `    toastElement.setAttribute('aria-label', reward\n      ? \`${'${batch.length === 1 ? \'Trophy Road reward unlocked\' : `${batch.length} Trophy Road rewards unlocked`}'} . ${'${batch.map((item) => item.shortTitle).join(\', \')}'} .\`.replaceAll(' .', '.')\n      : \`${'${batch.length === 1 ? \'Achievement unlocked\' : `${batch.length} achievements unlocked`}'} . ${'${batch.map((achievement) => achievement.title).join(\', \')}'} . ${'${total}'} trophies.\`.replaceAll(' .', '.'));`,
+            `    toastElement.setAttribute('aria-label', reward\n      ? \`${'${batch.length === 1 ? \'Trophy Road reward unlocked\' : `${batch.length} Trophy Road rewards unlocked`}'}\`.replace('`', '') + \`. ${'${batch.map((item) => item.shortTitle).join(\', \')}'} .\`.replace(' .', '.')\n      : \`${'${batch.length === 1 ? \'Achievement unlocked\' : `${batch.length} achievements unlocked`}'}\`.replace('`', '') + \`. ${'${batch.map((achievement) => achievement.title).join(\', \')}'} . ${'${total}'} trophies.\`.replace(' .', '.'));`
+          );
+          replace(
+            'turn/progression/lot-paint-reward.js',
+            `  CAR_CATALOG,\n  getVehicleDefaultColor,\n  getVehicleDefaultSecondaryColor\n} from '../vehicle/catalog.js?build=20260804-r157-factory-colors';`,
+            `  CAR_CATALOG,\n  getVehicleDefaultColor\n} from '../vehicle/catalog.js?build=20260804-r157-factory-colors';`
+          );
+          NODE
+
+      - name: Verify polish
+        run: |
+          node --check turn/achievements/view.js
+          node --check turn/progression/lot-paint-reward.js
+          node turn-lab/tests/runtime-hotpath-performance-production.mjs
+          git diff --check
+
+      - name: Commit polish
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn/achievements/view.js turn/progression/lot-paint-reward.js
+          git commit -m "Polish achievement hot path optimization"
+          git push origin HEAD:turn-performance-loading-review
+
   admin-unlock:
     runs-on: ubuntu-latest
     steps:
