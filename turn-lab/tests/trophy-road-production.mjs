@@ -257,7 +257,10 @@ assert.deepEqual(
 );
 assert.equal(store.unlock('around-the-turn', { trackId: 'harbor' })?.trophies, 100);
 assert.deepEqual(store.syncRewards().map((reward) => reward.id), ['emergency-pack']);
-assert.equal(store.unlock('faster-than-the-dev', { trackId: 'midnight-city' })?.trophies, 100);
+assert.equal(store.unlock('countryside-sprint', { trackId: 'countryside' })?.trophies, 75,
+  'A sprint must retain its rebalanced 75-trophy value');
+assert.deepEqual(store.syncRewards(), []);
+assert.equal(store.unlock('first-turn', { trackId: 'countryside' })?.trophies, 25);
 assert.deepEqual(store.syncRewards().map((reward) => reward.id), ['mountain']);
 assert.equal(isTrackUnlocked('mountain', progressionStorage), true,
   'Mountain must unlock as soon as the player reaches 700 trophies');
@@ -269,6 +272,10 @@ assert.equal(store.unlock('ahead-of-yourself', { trackId: 'harbor' })?.trophies,
 assert.deepEqual(store.syncRewards(), []);
 assert.equal(store.unlock('flow-state', { trackId: 'countryside' })?.trophies, 50);
 assert.deepEqual(store.syncRewards().map((reward) => reward.id), ['rally-racer']);
+assert.equal(store.unlock('faster-than-the-dev', { trackId: 'midnight-city' })?.trophies, 300,
+  'FASTER THAN THE DEV must retain its rebalanced 300-trophy value');
+assert.deepEqual(store.syncRewards(), [],
+  'No Trophy Road reward should exist beyond the intentional 1000-trophy final reward');
 assert.equal(isTrackUnlocked('midnight-city', progressionStorage), true);
 assert.equal(isTrackUnlocked('mountain', progressionStorage), true);
 assert.equal(isVehicleUnlocked('firetruck', progressionStorage), true);
