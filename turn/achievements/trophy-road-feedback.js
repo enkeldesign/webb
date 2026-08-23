@@ -1,5 +1,5 @@
 import { CATEGORY } from './catalog.js?revision=r166-bella-records';
-import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r176-rally-reward';
+import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r177-rally-refinement';
 import {
   LOCK_ICON,
   TROPHY_ROAD_MAX_THRESHOLD,
