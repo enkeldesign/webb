@@ -9,6 +9,7 @@ import {
   TIME_TRIALS,
   TIME_TRIAL_ACHIEVEMENT_IDS,
   TIME_TRIAL_MASTER_ID,
+  TROPHY_ROAD_MAX_THRESHOLD,
   completedAllTimeTrials,
   loadAchievementState,
   normalizeAchievementState,
@@ -18,6 +19,8 @@ import {
   qualifyingTimeTrial,
   totalAvailableTrophies
 } from '../../turn/achievements.js';
+import { TRACK_IDS } from '../../turn/achievements/catalog.js';
+import { ACHIEVEMENTS as BASE_ACHIEVEMENTS } from '../../turn/achievements/catalog-base.js';
 import { createAchievementStore } from '../../turn/achievements/store.js';
 import {
   completedNightShiftSheriff,
@@ -26,7 +29,10 @@ import {
 } from '../../turn/achievements/night-shift.js';
 
 const [
-  catalog,
+  catalogSource,
+  baseCatalogSource,
+  productionCatalogSource,
+  legacyCatalogSource,
   secretCatalog,
   secretEvents,
   secretRuntime,
@@ -46,6 +52,9 @@ const [
   workflow
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/achievements/catalog.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/achievements/catalog-base.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/achievements/catalog-production.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/achievements/catalog-chromatic-r183.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/secret-catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/secret-events.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/secret-achievements.js', import.meta.url), 'utf8'),
@@ -67,19 +76,52 @@ const [
 
 assert.equal(ACHIEVEMENT_STORAGE_KEY, 'turn-achievements-v1');
 assert.equal(CHALLENGE_PROGRESS_STORAGE_KEY, 'turn-achievement-challenges-v1');
-assert.equal(ACHIEVEMENTS.length, 29,
-  'TURN should ship twenty-nine achievements including MOUNTAIN SPRINT and four hidden discoveries');
+assert.equal(BASE_ACHIEVEMENTS.length, 29,
+  'The internal base catalog should remain the 29-achievement foundation');
+assert.equal(
+  BASE_ACHIEVEMENTS.reduce((total, achievement) => total + achievement.trophies, 0),
+  1725,
+  'The base catalog must stay separate from production progression balancing'
+);
+assert.equal(ACHIEVEMENTS.length, 44,
+  'Production TURN must expose all 44 intended achievements');
+assert.equal(new Set(ACHIEVEMENTS.map((achievement) => achievement.id)).size, 44,
+  'Production achievement ids must remain unique');
 assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 10,
-  'Getting Started should remain a focused ten-achievement collection');
-assert.equal(totalAvailableTrophies(), 1725);
+  'GOT STARTED must remain the master of the ten prerequisite Getting Started achievements, not recursively require itself');
+assert.equal(totalAvailableTrophies(), 3050);
+assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 3050);
 assert.equal(
   ACHIEVEMENTS.reduce((total, achievement) => total + achievement.trophies, 0),
-  1725
+  3050
 );
 assert.ok(ACHIEVEMENTS.every((achievement) => Number.isFinite(achievement.trophies)));
 assert.ok(ACHIEVEMENTS.every((achievement) => !Object.hasOwn(achievement, 'points')));
 
 const byId = (id) => ACHIEVEMENTS.find((achievement) => achievement.id === id);
+assert.equal(byId('got-started')?.title, 'GOT STARTED');
+assert.equal(byId('got-started')?.trophies, 75);
+assert.equal(byId('got-started')?.category, 'onboarding');
+assert.equal(byId('golden-hour')?.title, 'MAYDAY!');
+assert.equal(byId('golden-hour')?.trophies, 100);
+assert.equal(byId('golden-hour')?.hidden, true);
+assert.match(byId('golden-hour')?.description || '', /Ambulance/);
+assert.match(byId('golden-hour')?.description || '', /30 seconds/);
+assert.equal(byId('chromatic-camouflage')?.title, 'CHROMATIC CAMOUFLAGE');
+assert.equal(byId('chromatic-camouflage')?.trophies, 50);
+assert.equal(byId('chromatic-camouflage')?.hidden, true);
+
+for (const trackId of TRACK_IDS) {
+  const winner = byId(`${trackId}-winner`);
+  const safety = byId(`${trackId}-safety`);
+  assert.equal(winner?.trophies, 50, `${trackId} WINNER must remain a 50-trophy stepping stone`);
+  assert.equal(winner?.category, 'racing');
+  assert.match(winner?.title || '', /WINNER$/);
+  assert.equal(safety?.trophies, 50, `${trackId} SAFETY must remain a 50-trophy stepping stone`);
+  assert.equal(safety?.category, 'racing');
+  assert.match(safety?.title || '', /SAFETY$/);
+}
+
 assert.equal(byId('an-army-of-me')?.title, 'AN ARMY OF ME');
 assert.equal(byId('an-army-of-me')?.trophies, 200);
 assert.match(byId('an-army-of-me')?.description || '', /four saved rivals on every track/i);
@@ -106,13 +148,15 @@ assert.equal(byId('find-lilya')?.lockedDescription, '');
 assert.equal(byId('find-darvid')?.lockedDescription, '');
 assert.equal(byId('save-bella')?.lockedDescription, '');
 assert.equal(byId('satans-sedan')?.lockedDescription, undefined,
-  'Satan’s Sedan may retain the generic hidden clue treatment');
+  'Satan’s Hatchback may retain the generic hidden clue treatment');
 
 assert.equal(TIME_TRIALS.length, 6);
 assert.equal(TIME_TRIAL_ACHIEVEMENT_IDS.length, 6);
 assert.equal(TIME_TRIAL_MASTER_ID, 'faster-than-the-dev');
 assert.equal(byId('faster-than-the-dev')?.progressMax, 6,
   'FASTER THAN THE DEV must require all six developer targets');
+assert.equal(byId('faster-than-the-dev')?.trophies, 300,
+  'FASTER THAN THE DEV must retain the August progression rebalance');
 assert.deepEqual(
   TIME_TRIALS.map(({ trackId, targetSeconds }) => [trackId, targetSeconds]),
   [
@@ -128,6 +172,8 @@ for (const trial of TIME_TRIALS) {
   assert.equal(qualifyingTimeTrial(trial.trackId, trial.targetSeconds - 0.001)?.id, trial.id);
   assert.equal(qualifyingTimeTrial(trial.trackId, trial.targetSeconds), null,
     `${trial.title} must require a time strictly below the target`);
+  assert.equal(byId(trial.id)?.trophies, 75,
+    `${trial.title} must retain the 75-trophy progression rebalance`);
   assert.match(byId(trial.id)?.recommendation || '', /Future Racer/);
 }
 assert.equal(completedAllTimeTrials(() => true), true);
@@ -177,6 +223,52 @@ assert.equal(empty.version, 5,
 assert.deepEqual(empty.progress.tracks, []);
 assert.deepEqual(empty.progress.blankTracks, []);
 assert.deepEqual(empty.rewards.unlocked, []);
+
+const preservedUnknown = normalizeAchievementState({
+  version: 5,
+  unlocked: {
+    'temporarily-unknown-achievement': {
+      unlockedAt: 123,
+      trackId: 'airport',
+      vehicleId: 'ambulance',
+      time: 42
+    }
+  },
+  seen: ['temporarily-unknown-achievement'],
+  progress: {},
+  rewards: {}
+});
+assert.deepEqual(preservedUnknown.unlocked['temporarily-unknown-achievement'], {
+  unlockedAt: 123,
+  trackId: 'airport',
+  vehicleId: 'ambulance',
+  time: 42
+}, 'Temporarily unknown unlocks must survive normalization instead of being erased');
+assert.deepEqual(preservedUnknown.seen, ['temporarily-unknown-achievement'],
+  'Seen state for temporarily unknown unlocks must survive too');
+
+const unknownMemory = new Map([[ACHIEVEMENT_STORAGE_KEY, JSON.stringify({
+  version: 5,
+  unlocked: {
+    'first-turn': { unlockedAt: 1 },
+    'temporarily-unknown-achievement': { unlockedAt: 2 }
+  },
+  seen: [],
+  progress: {},
+  rewards: {}
+})]]);
+const unknownStorage = {
+  getItem: (key) => unknownMemory.get(key) ?? null,
+  setItem: (key, value) => unknownMemory.set(key, String(value))
+};
+const unknownStore = createAchievementStore(unknownStorage);
+assert.equal(unknownStore.trophyTotal(), 25,
+  'Unknown preserved records must contribute zero trophies');
+assert.equal(unknownStore.isUnlocked('temporarily-unknown-achievement'), false,
+  'Unknown preserved records must stay inactive until a catalog recognizes them');
+assert.ok(JSON.parse(unknownMemory.get(ACHIEVEMENT_STORAGE_KEY)).unlocked['temporarily-unknown-achievement'],
+  'Store creation must not destructively rewrite unknown unlock evidence');
+
 const memory = new Map();
 const storage = {
   getItem: (key) => memory.get(key) ?? null,
@@ -191,6 +283,36 @@ assert.equal(store.trophyTotal(), 325);
 assert.deepEqual(store.syncRewards().map((reward) => reward.id), ['vintage-racer']);
 assert.doesNotMatch(storeSource, /rival-storage|clearRivalsState|clearAllRivalsState/,
   'Rival resets must remain independent from achievements');
+
+const evidenceMemory = new Map();
+const evidenceStorage = {
+  getItem: (key) => evidenceMemory.get(key) ?? null,
+  setItem: (key, value) => evidenceMemory.set(key, String(value))
+};
+const localStorageDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+Object.defineProperty(globalThis, 'localStorage', {
+  configurable: true,
+  value: evidenceStorage
+});
+const secretEventApi = await import(`../../turn/achievements/secret-events.js?integrity-test=${Date.now()}`);
+assert.equal(secretEventApi.signalSecretAchievement('golden-hour', {
+  trackId: 'airport',
+  vehicleId: 'ambulance',
+  time: 28.5
+}), true);
+assert.match(
+  evidenceMemory.get(secretEventApi.SECRET_ACHIEVEMENT_EVIDENCE_STORAGE_KEY) || '',
+  /golden-hour/,
+  'One-shot secret achievement evidence must be durable until acknowledged'
+);
+assert.equal(secretEventApi.pendingSecretAchievements(evidenceStorage)[0]?.achievementId, 'golden-hour');
+secretEventApi.acknowledgeSecretAchievement('golden-hour', evidenceStorage);
+assert.deepEqual(secretEventApi.pendingSecretAchievements(evidenceStorage), []);
+if (localStorageDescriptor) {
+  Object.defineProperty(globalThis, 'localStorage', localStorageDescriptor);
+} else {
+  delete globalThis.localStorage;
+}
 
 const rivals = [0.1, 0.2, 0.3, 0.4].map((progress, index) => ({
   carId: index === 2 ? 'ambulance' : 'sedan',
@@ -214,10 +336,24 @@ for (let index = 0; index < rivals.length; index += 1) {
 assert.equal(completedNightShiftSheriff(nightShift, { position: 1, total: 5 }), true);
 assert.equal(completedNightShiftSheriff(nightShift, { position: 2, total: 5 }), false);
 
-assert.match(catalog, /id: 'an-army-of-me'/);
-assert.match(catalog, /id: 'on-course-of-course'/);
-assert.match(catalog, /cat: '<svg/);
-assert.doesNotMatch(catalog, /points:/);
+assert.match(catalogSource, /Stable production achievement facade/);
+assert.match(catalogSource, /catalog-production\.js\?revision=r184-achievement-integrity/);
+assert.doesNotMatch(catalogSource, /id: 'an-army-of-me'/,
+  'The stable facade must not duplicate the production achievement definitions');
+assert.match(baseCatalogSource, /id: 'an-army-of-me'/);
+assert.match(baseCatalogSource, /id: 'on-course-of-course'/);
+assert.match(baseCatalogSource, /cat: '<svg/);
+assert.doesNotMatch(baseCatalogSource, /points:/);
+assert.match(productionCatalogSource, /catalog-base\.js\?revision=r184-achievement-integrity/);
+assert.doesNotMatch(productionCatalogSource, /from '.\/catalog\.js/,
+  'The production catalog must extend the explicit base module, never depend on the public facade');
+assert.match(productionCatalogSource, /title: 'MAYDAY!'/);
+assert.match(productionCatalogSource, /title: 'GOT STARTED'/);
+assert.match(productionCatalogSource, /TRACK_WINNER_ACHIEVEMENTS/);
+assert.match(productionCatalogSource, /TRACK_SAFETY_ACHIEVEMENTS/);
+assert.match(legacyCatalogSource, /catalog-production\.js\?revision=r184-achievement-integrity/,
+  'The old Chromatic catalog URL must converge on the same production source of truth');
+
 assert.match(secretCatalog, /title: 'FIND LILYA!'/);
 assert.match(secretCatalog, /title: 'FIND DARVID!'/);
 assert.match(secretCatalog, /title: 'SAVE BELLA!'/);
@@ -228,7 +364,10 @@ assert.match(secretRuntime, /else description\.remove\(\)/,
   'Clue-only hidden cards must remove rather than replace their description');
 assert.match(secretRuntime, /Hidden achievement\. The title is your clue\./,
   'The generic clue remains available for hidden achievements that use it');
-assert.match(secretEvents, /turn:secret-achievement/);
+assert.match(secretRuntime, /pendingSecretAchievements/);
+assert.match(secretRuntime, /acknowledgeSecretAchievement/);
+assert.match(secretEvents, /SECRET_ACHIEVEMENT_EVIDENCE_STORAGE_KEY/);
+assert.match(secretEvents, /protects one-shot events such as MAYDAY!/);
 assert.match(lilyaSource, /signalSecretAchievement\('find-lilya'/);
 assert.match(darvidSource, /signalSecretAchievement\('find-darvid'/);
 assert.match(sedanSource, /signalSecretAchievement\('satans-sedan'/);
@@ -279,9 +418,15 @@ assert.match(worldSource, /countryside-bella-r166\.js/);
 assert.match(worldSource, /r168-bella-markings-eyes-foliage/,
   'The world loader must cache-bust the corrected Bella visual module');
 
-assert.match(runtime, /catalog\.js\?revision=r181-hatchback-rally/);
+for (const source of [runtime, view, storeSource, challengeSource, secretRuntime]) {
+  assert.doesNotMatch(source, /catalog-base\.js/,
+    'Runtime consumers must use the stable production catalog facade, never the internal base catalog');
+}
+assert.match(runtime, /catalog\.js\?revision=r181-hatchback-rally/,
+  'Older cache-key imports must remain safe because catalog.js is now a stable production facade');
 assert.match(runtime, /view\.js\?revision=r166-bella-records/);
 assert.match(view, /TROPHY_ROAD_MAX_THRESHOLD/);
+assert.match(storeSource, /Preserve syntactically valid unlock records/);
 assert.match(nightShiftSource, /RIVAL_COUNT = 4/);
 assert.match(fixedLayout, /installAchievementChallengeExpansion/);
 assert.match(fixedLayout, /r166-bella-records/);
@@ -290,4 +435,4 @@ assert.match(app, /achievements=r166-bella-records/);
 assert.match(workflow, /Run achievement system regression/);
 assert.match(workflow, /node turn-lab\/tests\/achievements-production\.mjs/);
 
-console.log('TURN Bella, developer records and six-track achievement regression passed.');
+console.log('TURN 44-achievement, 3050-trophy production catalog integrity regression passed.');

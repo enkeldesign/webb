@@ -37,6 +37,18 @@ function normalizedStringArray(value, allowed = null) {
   return allowed ? unique.filter((item) => allowed.includes(item)) : unique;
 }
 
+function normalizedUnlockRecord(record) {
+  if (!record || typeof record !== 'object') return null;
+  return {
+    unlockedAt: Number.isFinite(Number(record.unlockedAt))
+      ? Number(record.unlockedAt)
+      : Date.now(),
+    trackId: typeof record.trackId === 'string' ? record.trackId : '',
+    vehicleId: typeof record.vehicleId === 'string' ? record.vehicleId : '',
+    time: Number.isFinite(Number(record.time)) ? Number(record.time) : null
+  };
+}
+
 function totalTrophiesFromUnlocked(unlocked) {
   return Object.keys(unlocked).reduce((total, id) => {
     const trophies = Number(getAchievement(id)?.trophies);
@@ -44,20 +56,23 @@ function totalTrophiesFromUnlocked(unlocked) {
   }, 0);
 }
 
+function knownUnlockedIds(unlocked) {
+  return Object.keys(unlocked).filter((id) => Boolean(getAchievement(id)));
+}
+
 export function normalizeAchievementState(value) {
   if (!value || typeof value !== 'object') return defaultStoredState();
 
   const unlocked = {};
   for (const [id, record] of Object.entries(value.unlocked || {})) {
-    if (!getAchievement(id) || !record || typeof record !== 'object') continue;
-    unlocked[id] = {
-      unlockedAt: Number.isFinite(Number(record.unlockedAt))
-        ? Number(record.unlockedAt)
-        : Date.now(),
-      trackId: typeof record.trackId === 'string' ? record.trackId : '',
-      vehicleId: typeof record.vehicleId === 'string' ? record.vehicleId : '',
-      time: Number.isFinite(Number(record.time)) ? Number(record.time) : null
-    };
+    const normalized = normalizedUnlockRecord(record);
+    if (!normalized) continue;
+
+    // Preserve syntactically valid unlock records even when the current catalog
+    // does not recognize the id. Unknown records contribute zero trophies and
+    // stay invisible, but survive temporary catalog regressions and can become
+    // active again if a later production catalog restores the achievement.
+    unlocked[id] = normalized;
   }
 
   const tracks = normalizedStringArray(value.progress?.tracks, TRACK_IDS);
@@ -147,7 +162,7 @@ export function createAchievementStore(storage = globalThis.localStorage) {
   }
 
   function isUnlocked(id) {
-    return Boolean(state.unlocked[id]);
+    return Boolean(getAchievement(id) && state.unlocked[id]);
   }
 
   function trophyTotal() {
@@ -202,14 +217,14 @@ export function createAchievementStore(storage = globalThis.localStorage) {
   }
 
   function markAllSeen() {
-    state.seen = Object.keys(state.unlocked);
+    state.seen = [...new Set([...state.seen, ...knownUnlockedIds(state.unlocked)])];
     state.rewards.seen = [...state.rewards.unlocked];
     requestSave();
   }
 
   function unseenIds() {
     const seen = new Set(state.seen);
-    return Object.keys(state.unlocked).filter((id) => !seen.has(id));
+    return knownUnlockedIds(state.unlocked).filter((id) => !seen.has(id));
   }
 
   function unseenRewardIds() {
