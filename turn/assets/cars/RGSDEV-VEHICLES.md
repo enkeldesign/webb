@@ -11,7 +11,7 @@ The source pack's `License.txt` states:
 > Public domain and free to use on any project, even commercial.
 > Credit is not required.
 
-The original FBX files were converted to compact glTF 2.0 binary files for TURN while preserving geometry, normals, material assignments, material names and diffuse colours. The converted GLBs are stored in a gzip-compressed tar bundle split into text-safe base64 parts for repository transport. Browsers without `DecompressionStream` keep using TURN's previous individual GLB models as a compatibility fallback.
+The original FBX files are stored in TURN as a compact, gzip-compressed runtime mesh bundle. Triangle topology, material assignments, material names and source colours are preserved. Vertex positions are quantized inside each vehicle's source bounds before compression; at TURN's approximately five-metre display scale the maximum coordinate error is about two centimetres. Three.js supplies flat-shaded surface normals at render time. Browsers without `DecompressionStream` keep using TURN's previous individual GLB models as a compatibility fallback.
 
 ## TURN mapping
 
@@ -32,4 +32,4 @@ The original FBX files were converted to compact glTF 2.0 binary files for TURN 
 
 TURN deliberately retains its existing `toy-racer` (Rally Racer), `race-future` (Future Racer) and `sedan-sports` (Sport Sedan) models because those cars have distinctive visual/gameplay contracts. In particular, Sport Sedan retains its separately paintable spoiler and hidden secondary-colour easter egg.
 
-PAINTJOB is applied only to the selected primary body material of each paintable RGSDev model; trim, windows, lights, wheels and secondary body accents retain the source art. Emergency vehicle liveries, flashing light rigs and siren behaviour remain TURN-owned systems keyed to the existing logical vehicle IDs.
+PAINTJOB is applied only to the selected primary body material of each paintable RGSDev model; trim, windows, lights, wheel rims and secondary body accents retain the source art. Emergency vehicle liveries, flashing light rigs and siren behaviour remain TURN-owned systems keyed to the existing logical vehicle IDs.
