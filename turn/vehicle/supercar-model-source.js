@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 
 const SUPERCAR_ID = 'toy-racer';
-const BUNDLE_FILE = 'supercar.compact.gz.b64';
+const BUNDLE_PART_COUNT = 4;
+const BUNDLE_PART_PREFIX = 'supercar.compact.gz.b64.';
 const COMPACT_MAGIC = 'TRVC';
 const POSITION_QUANTIZATION_MAX = 127;
 const PRIMARY_PAINT_MATERIAL = 'car';
@@ -40,7 +41,7 @@ export async function loadSupercarSource({ carId, buildKey = '' } = {}) {
 
 async function loadBundle(buildKey) {
   if (!bundlePromise) {
-    bundlePromise = fetchBundle(buildKey)
+    bundlePromise = fetchBundleParts(buildKey)
       .then(decodeBase64)
       .then(decompressGzip)
       .then(parseCompactBundle)
@@ -52,12 +53,21 @@ async function loadBundle(buildKey) {
   return bundlePromise;
 }
 
-async function fetchBundle(buildKey) {
-  const url = new URL(`../assets/cars/${BUNDLE_FILE}`, import.meta.url);
-  if (buildKey) url.searchParams.set('build', buildKey);
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`Supercar source request failed: ${response.status}`);
-  return (await response.text()).replace(/\s+/g, '');
+async function fetchBundleParts(buildKey) {
+  const urls = Array.from({ length: BUNDLE_PART_COUNT }, (_, index) => {
+    const suffix = String(index).padStart(2, '0');
+    const url = new URL(`../assets/cars/${BUNDLE_PART_PREFIX}${suffix}`, import.meta.url);
+    if (buildKey) url.searchParams.set('build', buildKey);
+    return url;
+  });
+
+  const responses = await Promise.all(urls.map((url) => fetch(url)));
+  for (const response of responses) {
+    if (!response.ok) throw new Error(`Supercar source request failed: ${response.status}`);
+  }
+  return (await Promise.all(responses.map((response) => response.text())))
+    .join('')
+    .replace(/\s+/g, '');
 }
 
 function decodeBase64(encoded) {
