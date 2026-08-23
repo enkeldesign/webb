@@ -17,7 +17,7 @@ import {
   getKenneyPaletteAsset,
   installSemanticCarFinish,
   recolorSemanticCarFinish
-} from './semantic-car-finish.js?revision=r180-paint-uv';
+} from './semantic-car-finish.js?revision=r181-hatchback-rally';
 
 const loadersByPack = new Map();
 const sourceCache = new Map();

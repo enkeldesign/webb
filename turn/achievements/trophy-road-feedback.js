@@ -1,4 +1,4 @@
-import { CATEGORY } from './catalog.js?revision=r166-bella-records';
+import { CATEGORY } from './catalog.js?revision=r181-hatchback-rally';
 import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r179-native-car-surfaces';
 import {
   LOCK_ICON,

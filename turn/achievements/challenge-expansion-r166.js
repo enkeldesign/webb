@@ -1,7 +1,7 @@
 import {
   ONBOARDING_ACHIEVEMENT_IDS,
   TRACK_IDS
-} from './catalog.js?revision=r166-bella-records';
+} from './catalog.js?revision=r181-hatchback-rally';
 
 export const CHALLENGE_PROGRESS_STORAGE_KEY = 'turn-achievement-challenges-v1';
 export const CLEAN_LAP_TARGETS = Object.freeze({

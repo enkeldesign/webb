@@ -1,7 +1,7 @@
 export {
   ACHIEVEMENTS,
   ONBOARDING_ACHIEVEMENT_IDS
-} from './achievements/catalog.js?revision=r166-bella-records';
+} from './achievements/catalog.js?revision=r181-hatchback-rally';
 export {
   ACHIEVEMENT_STORAGE_KEY,
   loadAchievementState,

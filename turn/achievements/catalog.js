@@ -2,7 +2,7 @@ import {
   TIME_TRIALS,
   TIME_TRIAL_ACHIEVEMENT_IDS
 } from './time-trials.js?revision=r166-bella-records';
-import { SECRET_ACHIEVEMENTS } from './secret-catalog.js?revision=r166-bella-records';
+import { SECRET_ACHIEVEMENTS } from './secret-catalog.js?revision=r181-hatchback-rally';
 
 export const TRACK_IDS = Object.freeze([
   'countryside',

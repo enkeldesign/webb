@@ -2,7 +2,7 @@ import {
   ACHIEVEMENTS,
   TRACK_IDS,
   TRAINING_CAR_ID
-} from './catalog.js?revision=r166-bella-records';
+} from './catalog.js?revision=r181-hatchback-rally';
 import {
   createAchievementStore,
   normalizeAchievementState
