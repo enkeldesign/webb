@@ -23,16 +23,16 @@ const race = catalog.getCarDefinition('race');
 const truck = catalog.getCarDefinition('truck');
 const monsterTruck = catalog.getCarDefinition('monster-truck');
 const vintageRacer = catalog.getCarDefinition('vintage-racer');
-const rallyRacer = catalog.getCarDefinition('toy-racer');
+const supercar = catalog.getCarDefinition('toy-racer');
 const futureRacer = catalog.getCarDefinition('race-future');
 const trainingCar = catalog.getCarDefinition('classic');
 assert.equal(catalog.DEFAULT_VEHICLE_ID, 'classic');
 assert.equal(trainingCar.name, 'Training Car');
 assert.equal(vintageRacer.name, 'Vintage Racer');
 assert.equal(vintageRacer.perk?.title, 'DRIFTAGE');
-assert.equal(rallyRacer.id, 'toy-racer', 'Rally Racer must preserve the Toy Racer stable storage/ghost id');
-assert.equal(rallyRacer.name, 'Rally Racer');
-assert.equal(rallyRacer.perk?.title, 'TWITCHY TURNY');
+assert.equal(supercar.id, 'toy-racer', 'Supercar must preserve the Toy Racer stable storage/ghost id');
+assert.equal(supercar.name, 'Supercar');
+assert.equal(supercar.perk?.title, 'TWITCHY TURNY');
 assert.equal(monsterTruck.perk?.title, 'OVERSIZED');
 assert.equal(futureRacer.perk?.title, 'OVERDRIVE');
 for (const id of ['firetruck', 'police', 'ambulance']) {
@@ -105,9 +105,9 @@ globalThis.localStorage = {
 };
 try {
   assert.equal(catalog.loadVehicleSelection().carId, 'classic');
-  const savedRally = catalog.saveVehicleSelection({ carId: 'toy-racer' });
-  assert.equal(savedRally.carId, 'toy-racer');
-  assert.equal(catalog.getCarDefinition(savedRally.carId).name, 'Rally Racer');
+  const savedSupercar = catalog.saveVehicleSelection({ carId: 'toy-racer' });
+  assert.equal(savedSupercar.carId, 'toy-racer');
+  assert.equal(catalog.getCarDefinition(savedSupercar.carId).name, 'Supercar');
   const savedEgg = catalog.saveVehicleSelection(easterEggSelection);
   assert.equal(savedEgg.secondaryColor, '#666666');
   assert.deepEqual(catalog.getCarDefinition('sedan-sports').stats, catalog.MAXED_VEHICLE_STATS);
@@ -291,7 +291,7 @@ assert.match(controls, /driftBoostRechargeMultiplier/);
 assert.match(catalogSource, /asset: `\.\/assets\/cars\/\$\{id\}\.glb`/);
 assert.match(catalogSource, /SPORTS_SEDAN_EASTER_EGG_COLOR = '#666666'/);
 assert.match(catalogSource, /MAXED_VEHICLE_STATS/);
-assert.match(catalogSource, /'toy-racer', 'Rally Racer'/);
+assert.match(catalogSource, /'toy-racer', 'Supercar'/);
 assert.match(catalogSource, /title: 'DRIFTAGE'/);
 assert.match(catalogSource, /title: 'TWITCHY TURNY'/);
 assert.match(carModels, /loadCarSource\(car\.id\)/);
@@ -309,4 +309,4 @@ assert.match(easterEggUi, /notice\.setAttribute\('role', 'status'\)/);
 assert.match(easterEggUi, /notice\.setAttribute\('aria-live', 'polite'\)/);
 assert.match(easterEggUi, /card\.insertBefore\(notice, actions \|\| null\)/, 'The explanation must sit immediately before RACE THIS CAR');
 
-console.log(`TURN ${release.id} enhanced Lot route, Vintage/Rally Trophy Road gating, car-owned perks, native paint and garage setup passed.`);
+console.log(`TURN ${release.id} enhanced Lot route, Vintage/Supercar Trophy Road gating, car-owned perks, native paint and garage setup passed.`);
