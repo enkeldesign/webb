@@ -16,6 +16,9 @@ const DEFAULT_TRACK_ID = 'countryside';
 const GHOST_KEY = 'turn-three-ghost-v4';
 const COMPETITOR_KEY = 'turn-personal-rivals-v1';
 const LEGACY_RIVAL_COLORS = ['#38d9ff', '#ff4fa3', '#9775fa', '#ff922b'];
+const pendingRivalSaves = new Map();
+let pendingRivalFlush = null;
+let persistenceLifecycleInstalled = false;
 
 function normalizeTrackId(trackId) {
   return typeof trackId === 'string' && trackId.trim() ? trackId.trim() : DEFAULT_TRACK_ID;
@@ -39,15 +42,88 @@ function stateTrackId(state, explicitTrackId) {
   return normalizeTrackId(explicitTrackId || state?.trackId || DEFAULT_TRACK_ID);
 }
 
-export function saveRivalsState(state, { trackId } = {}) {
-  try {
-    const activeTrackId = stateTrackId(state, trackId);
-    localStorage.setItem(rivalKey(activeTrackId), JSON.stringify({
+function rivalSavePayload(state, trackId) {
+  const activeTrackId = stateTrackId(state, trackId);
+  return {
+    key: rivalKey(activeTrackId),
+    value: {
       version: 6,
       trackId: activeTrackId,
       trackRevision: storageTrackId(activeTrackId),
       laps: state.competitorLaps.filter(isValidLap)
-    }));
+    }
+  };
+}
+
+function writeRivalPayload(payload) {
+  localStorage.setItem(payload.key, JSON.stringify(payload.value));
+}
+
+function cancelScheduledRivalFlush() {
+  if (!pendingRivalFlush) return;
+  if (pendingRivalFlush.type === 'idle') globalThis.cancelIdleCallback?.(pendingRivalFlush.id);
+  else globalThis.clearTimeout?.(pendingRivalFlush.id);
+  pendingRivalFlush = null;
+}
+
+export function flushScheduledRivalsState() {
+  cancelScheduledRivalFlush();
+  if (!pendingRivalSaves.size) return true;
+  let success = true;
+  const payloads = [...pendingRivalSaves.values()];
+  pendingRivalSaves.clear();
+  for (const payload of payloads) {
+    try {
+      writeRivalPayload(payload);
+    } catch (_) {
+      success = false;
+    }
+  }
+  return success;
+}
+
+function ensurePersistenceLifecycle() {
+  if (persistenceLifecycleInstalled) return;
+  persistenceLifecycleInstalled = true;
+  globalThis.addEventListener?.('pagehide', flushScheduledRivalsState);
+  globalThis.document?.addEventListener?.('visibilitychange', () => {
+    if (globalThis.document?.visibilityState === 'hidden') flushScheduledRivalsState();
+  });
+}
+
+function schedulePendingRivalFlush() {
+  if (pendingRivalFlush) return;
+  const flush = () => {
+    pendingRivalFlush = null;
+    flushScheduledRivalsState();
+  };
+  if (typeof globalThis.requestIdleCallback === 'function') {
+    const id = globalThis.requestIdleCallback(flush, { timeout: 800 });
+    pendingRivalFlush = { type: 'idle', id };
+  } else {
+    const id = globalThis.setTimeout(flush, 32);
+    pendingRivalFlush = { type: 'timeout', id };
+  }
+}
+
+export function scheduleRivalsStateSave(state, { trackId } = {}) {
+  try {
+    const payload = rivalSavePayload(state, trackId);
+    pendingRivalSaves.set(payload.key, payload);
+    ensurePersistenceLifecycle();
+    schedulePendingRivalFlush();
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+export function saveRivalsState(state, { trackId } = {}) {
+  try {
+    const payload = rivalSavePayload(state, trackId);
+    pendingRivalSaves.delete(payload.key);
+    if (!pendingRivalSaves.size) cancelScheduledRivalFlush();
+    writeRivalPayload(payload);
     return true;
   } catch (_) {
     return false;
@@ -100,7 +176,7 @@ export function loadRivalsState({ state, samples, findNearestTrack, trackId }) {
       .slice(0, RIVAL_LIMIT);
 
     syncPrimaryRivalState(state);
-    if (state.competitorLaps.length) saveRivalsState(state, { trackId: activeTrackId });
+    if (state.competitorLaps.length) scheduleRivalsStateSave(state, { trackId: activeTrackId });
     return state.competitorLaps;
   } catch (_) {
     state.trackId = activeTrackId;
