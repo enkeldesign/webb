@@ -25,17 +25,23 @@ const expected = Object.freeze({
   van: 'body dark blue'
 });
 
-const parts = await Promise.all(Array.from({ length: 7 }, (_, index) => (
-  fs.readFile(path.join(carsDir, `rgsdev-vehicles.tar.gz.b64.${String(index).padStart(2, '0')}`), 'utf8')
+const parts = await Promise.all(Array.from({ length: 9 }, (_, index) => (
+  fs.readFile(path.join(carsDir, `rgsdev-vehicles.compact.gz.b64.${String(index).padStart(2, '0')}`), 'utf8')
 )));
 const compressed = Buffer.from(parts.join('').replace(/\s+/g, ''), 'base64');
-const entries = parseTar(zlib.gunzipSync(compressed));
+const bundle = zlib.gunzipSync(compressed);
+const meta = readCompactHeader(bundle);
 
-assert.deepEqual([...entries.keys()].sort(), Object.keys(expected).map((id) => `${id}.glb`).sort());
+assert.deepEqual(Object.keys(meta.models).sort(), Object.keys(expected).sort());
+assert.equal(meta.version, 2);
+assert.equal(meta.bits, 8);
+assert.ok(compressed.length < 60_000, 'All 12 replacement cars should remain a lightweight compressed payload');
 assert.match(provenance, /CC0 License/);
 assert.match(provenance, /Raphael Gonçalves \(Rgsdev\)/);
 assert.match(modelSource, /typeof globalThis\.DecompressionStream !== 'function'/,
   'Legacy browsers must be able to fall back to TURN’s existing GLBs');
+assert.match(modelSource, /flatShading: true/,
+  'The compact source geometry should retain its low-poly faceted appearance');
 assert.match(carModels, /loadRgsdevCarSource/);
 assert.match(carModels, /installEmergencyLightRig/,
   'Emergency light rigs must remain TURN-owned and model-independent');
@@ -49,12 +55,13 @@ for (const retained of ['toy-racer', 'race-future', 'sedan-sports']) {
 }
 
 for (const [id, primaryMaterial] of Object.entries(expected)) {
-  const glb = entries.get(`${id}.glb`);
-  assert.equal(glb.toString('utf8', 0, 4), 'glTF', `${id} must be a valid binary glTF`);
-  const json = readGlbJson(glb);
-  const materialNames = (json.materials || []).map((material) => String(material.name || '').toLowerCase());
-  assert.ok(materialNames.some((name) => name.includes('wheels')), `${id} should preserve wheel materials`);
+  const model = meta.models[id];
+  assert.ok(model.positionCount > 0, `${id} must include source vertices`);
+  const materialNames = model.materials.map((material) => String(material.name || '').toLowerCase());
+  assert.ok(materialNames.some((name) => name.includes('wheels')), `${id} should preserve wheel-rim materials`);
   assert.ok(materialNames.some((name) => name.includes('tires')), `${id} should preserve tyre materials`);
+  assert.ok(model.materials.every((material) => material.indexCount > 0 && material.indexCount % 3 === 0),
+    `${id} material streams must contain complete triangles`);
   if (primaryMaterial) {
     assert.ok(materialNames.includes(primaryMaterial), `${id} must preserve ${primaryMaterial} for PAINTJOB`);
   }
@@ -62,37 +69,9 @@ for (const [id, primaryMaterial] of Object.entries(expected)) {
 
 console.log('TURN RGSDev CC0 vehicle refresh passed.');
 
-function parseTar(buffer) {
-  const entries = new Map();
-  let offset = 0;
-  while (offset + 512 <= buffer.length) {
-    const header = buffer.subarray(offset, offset + 512);
-    if (header.every((value) => value === 0)) break;
-    const name = readString(header.subarray(0, 100));
-    const size = Number.parseInt(readString(header.subarray(124, 136)) || '0', 8);
-    const start = offset + 512;
-    const end = start + size;
-    assert.ok(end <= buffer.length, `tar entry ${name} must fit inside bundle`);
-    entries.set(name, Buffer.from(buffer.subarray(start, end)));
-    offset = start + Math.ceil(size / 512) * 512;
-  }
-  return entries;
-}
-
-function readString(buffer) {
-  const zero = buffer.indexOf(0);
-  return buffer.subarray(0, zero >= 0 ? zero : buffer.length).toString('utf8').trim();
-}
-
-function readGlbJson(buffer) {
-  let offset = 12;
-  while (offset + 8 <= buffer.length) {
-    const length = buffer.readUInt32LE(offset);
-    const type = buffer.toString('utf8', offset + 4, offset + 8);
-    if (type === 'JSON') {
-      return JSON.parse(buffer.subarray(offset + 8, offset + 8 + length).toString('utf8').trim());
-    }
-    offset += 8 + length;
-  }
-  assert.fail('GLB has no JSON chunk');
+function readCompactHeader(buffer) {
+  assert.equal(buffer.toString('utf8', 0, 4), 'TRVC');
+  const headerLength = buffer.readUInt32LE(4);
+  assert.ok(8 + headerLength <= buffer.length, 'compact vehicle header must fit inside bundle');
+  return JSON.parse(buffer.subarray(8, 8 + headerLength).toString('utf8'));
 }
