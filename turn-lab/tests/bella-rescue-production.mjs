@@ -80,7 +80,10 @@ assert.match(secretEvents, /achievementId === SAVE_BELLA_ID && context\.rescueCo
 assert.match(secretEvents, /takePendingSecretAchievements/);
 assert.match(secretAchievements, /validSecretContext/);
 assert.match(secretAchievements, /context\.rescueConfirmed === true/);
-assert.match(secretAchievements, /takePendingSecretAchievements\(\)/);
+assert.match(secretAchievements, /pendingSecretAchievements\(\)/,
+  'Hidden-achievement bootstrap must inspect durable pending evidence without consuming it first');
+assert.match(secretAchievements, /acknowledgeSecretAchievement\(achievementId\)/,
+  'Hidden-achievement evidence must be cleared only after a recognized unlock');
 assert.match(behavior, /store\?\.isUnlocked\?\.\(SAVE_BELLA_ID\)/);
 
 assert.match(behavior, /MEOW_RANGE_METERS = 108/);
