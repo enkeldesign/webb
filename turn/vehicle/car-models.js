@@ -10,6 +10,12 @@ import {
   normalizeVehicleSecondaryColor
 } from './catalog.js?build=20260804-r157-factory-colors';
 import {
+  getRgsdevModelYawQuarterTurns,
+  getRgsdevPrimaryPaintMaterial,
+  isRgsdevCar,
+  loadRgsdevCarSource
+} from './rgsdev-model-source.js?revision=r208-rgsdev-vehicles';
+import {
   makeWideGamutSpec,
   setThreeColor
 } from './wide-gamut.js?revision=r157-display-p3';
@@ -48,7 +54,8 @@ export async function createCarVisual({
   const source = await loadCarSource(car.id);
   const root = new THREE.Group();
   const model = source.clone(true);
-  model.rotation.y = Math.PI + car.modelYawQuarterTurns * Math.PI / 2;
+  const modelYawQuarterTurns = getRgsdevModelYawQuarterTurns(car.id, car.modelYawQuarterTurns);
+  model.rotation.y = Math.PI + modelYawQuarterTurns * Math.PI / 2;
   root.add(model);
 
   const requestedColor = normalizeVehicleColor(color, car.defaultColor);
@@ -74,9 +81,9 @@ export async function createCarVisual({
         node,
         material,
         protected: isProtectedPart(node, material),
-        wheel: isWheelPart(node, material),
+        wheel: isWheelPart(node, material, car),
         secondaryPaint: isSecondaryPaint(node, car),
-        explicitPaint: isExplicitPaint(node, material)
+        explicitPaint: isExplicitPaint(node, material, car)
       };
       if (record.explicitPaint && !record.protected) explicitPaintCount += 1;
       meshRecords.push(record);
@@ -96,7 +103,7 @@ export async function createCarVisual({
     const paintable = !car.fixedLivery && !protectedPart && !secondaryPaint && (
       explicitPaint
       || (explicitPaintCount === 0 && isFallbackPaintCandidate(material))
-      || (car.pack !== 'car' && isFallbackPaintCandidate(material))
+      || (!isRgsdevCar(car.id) && car.pack !== 'car' && isFallbackPaintCandidate(material))
     );
 
     if (wheelPart && material.color) {
@@ -134,7 +141,7 @@ export async function createCarVisual({
   root.userData.turnCarColor = requestedColor;
   root.userData.turnCarSecondaryColor = requestedSecondaryColor;
   root.userData.turnGhost = ghost;
-  root.userData.turnModelYawQuarterTurns = car.modelYawQuarterTurns;
+  root.userData.turnModelYawQuarterTurns = modelYawQuarterTurns;
   root.userData.turnVisualSizeMultiplier = car.visualSizeMultiplier;
   root.userData.turnFeaturedVisualSizeMultiplier = featuredVisualSizeMultiplier;
   root.userData.turnFeaturedVisualSurface = featuredSurface;
@@ -257,7 +264,13 @@ export function recolorCarVisual(root, color, secondaryColor = root?.userData?.t
 async function loadCarSource(carId) {
   const car = getCarDefinition(carId);
   if (!sourceCache.has(car.id)) {
-    sourceCache.set(car.id, loader.loadAsync(assetUrl(car.asset)).then((gltf) => gltf.scene));
+    const legacy = () => loader.loadAsync(assetUrl(car.asset)).then((gltf) => gltf.scene);
+    sourceCache.set(
+      car.id,
+      isRgsdevCar(car.id)
+        ? loadRgsdevCarSource({ carId: car.id, buildKey }).catch(legacy)
+        : legacy()
+    );
   }
   return sourceCache.get(car.id);
 }
@@ -317,8 +330,9 @@ function isProtectedPart(node, material) {
   return /wheel|tire|tyre|rubber|glass|window|windscreen|light|lamp|chrome|axle/.test(label);
 }
 
-function isWheelPart(node, material) {
+function isWheelPart(node, material, car) {
   const label = `${node.name || ''} ${material.name || ''}`.toLowerCase();
+  if (isRgsdevCar(car?.id)) return /tire|tyre|rubber/.test(label);
   return /wheel|tire|tyre|rubber/.test(label);
 }
 
@@ -327,7 +341,11 @@ function isSecondaryPaint(node, car) {
   return (car.secondaryPaint?.meshNames || []).includes(name);
 }
 
-function isExplicitPaint(node, material) {
+function isExplicitPaint(node, material, car) {
+  const rgsdevMaterial = getRgsdevPrimaryPaintMaterial(car?.id);
+  if (rgsdevMaterial) {
+    return String(material?.name || '').replace(/\0/g, '').trim().toLowerCase() === rgsdevMaterial;
+  }
   const label = `${node.name || ''} ${material.name || ''}`.toLowerCase();
   return /paint|body|primary|vehiclecolor|carcolor/.test(label);
 }
