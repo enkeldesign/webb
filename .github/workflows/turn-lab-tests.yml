@@ -23,9 +23,78 @@ on:
       - '.github/workflows/turn-lab-tests.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
+  release_sync:
+    if: github.event_name == 'pull_request' && github.head_ref == 'fix/semantic-car-paint-r180'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out r180 branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/semantic-car-paint-r180
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Prepare TURN 1.10.1 r180 cache identity
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          fs.writeFileSync('turn/release.json', `${JSON.stringify({
+            version: '1.10.1',
+            id: '2026.08.23-r180',
+            cacheKey: '20260823-r180'
+          }, null, 2)}\n`);
+
+          function replace(path, from, to) {
+            const before = fs.readFileSync(path, 'utf8');
+            if (before.includes(to)) return;
+            if (!before.includes(from)) throw new Error(`${path}: missing expected text: ${from}`);
+            fs.writeFileSync(path, before.replaceAll(from, to));
+          }
+
+          replace('turn/vehicle/car-models.js', "./semantic-car-finish.js?revision=r179-native-surfaces", "./semantic-car-finish.js?revision=r180-paint-uv");
+          replace('turn/vehicle/emergency-livery-models.js', "./car-models.js?build=20260823-r179-native-car-surfaces", "./car-models.js?build=20260823-r180-native-car-surfaces");
+          replace('turn-lab/tests/semantic-car-finish-production.mjs', "assert.equal(release.version, '1.10.0');", "assert.equal(release.version, '1.10.1');");
+          replace('turn-lab/tests/semantic-car-finish-production.mjs', "assert.equal(release.id, '2026.08.23-r179');", "assert.equal(release.id, '2026.08.23-r180');");
+
+          for (const path of ['turn-next/index.html', 'yourturn/index.html']) {
+            let source = fs.readFileSync(path, 'utf8');
+            source = source
+              .replaceAll('2026.08.23-r179', '2026.08.23-r180')
+              .replaceAll('20260823-r179', '20260823-r180');
+            if (path === 'turn-next/index.html') source = source.replaceAll('1.10.0', '1.10.1');
+            fs.writeFileSync(path, source);
+          }
+          NODE
+
+      - name: Synchronize generated production and LAB release surfaces
+        run: node turn/scripts/release.mjs --write
+
+      - name: Verify synchronized release surfaces
+        run: |
+          node turn/scripts/release.mjs --check
+          node turn-next/scripts/build-parity-app.mjs --check
+          node turn-next/scripts/build-parity-main.mjs --check
+          node turn-next/scripts/build-parity-entry.mjs --check
+          git diff --check
+
+      - name: Commit synchronized r180 release
+        run: |
+          if git diff --quiet; then
+            echo "r180 release already synchronized"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn/release.json turn/index.html turn-lab/index.html turn-next/index.html yourturn/index.html turn/vehicle/car-models.js turn/vehicle/emergency-livery-models.js turn-lab/tests/semantic-car-finish-production.mjs
+          git commit -m "Ship semantic vehicle paint fix as TURN 1.10.1 r180"
+          git push origin HEAD:fix/semantic-car-paint-r180
+
   regression:
     runs-on: ubuntu-latest
     steps:
