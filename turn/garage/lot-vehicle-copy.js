@@ -1,6 +1,6 @@
 const VEHICLE_COPY_BY_ID = Object.freeze({
   'sedan-sports': 'A compact sporty hatchback with a short wheelbase, rear hatch and practical everyday shape.',
-  'toy-racer': 'A black-and-gold competition car with a low stance, high rear wing and rally-bred trim.'
+  'toy-racer': 'A grey-and-gold competition car with a low stance, high rear wing and rally-bred trim.'
 });
 
 export function installLotVehicleCopy(root = document.body) {
