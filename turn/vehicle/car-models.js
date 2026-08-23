@@ -13,6 +13,7 @@ import {
   makeWideGamutSpec,
   setThreeColor
 } from './wide-gamut.js?revision=r157-display-p3';
+import { installVehicleVisualUpgrade } from './visual-upgrades.js?revision=r176-rally-reward';
 
 const loader = new GLTFLoader();
 const sourceCache = new Map();
@@ -128,6 +129,15 @@ export async function createCarVisual({
     * car.visualSizeMultiplier
     * featuredVisualSizeMultiplier;
   normalizeModelToGround(model, targetLength * effectiveVisualScale);
+  installVehicleVisualUpgrade({
+    root,
+    model,
+    car,
+    secondaryColor: ghost ? ghostSecondaryColor : requestedSecondaryColorSpec,
+    ghost,
+    outline,
+    secondaryPaintMaterials
+  });
   if (car.emergencyService && !ghost) installEmergencyLightRig(root, model, car.emergencyService);
 
   root.userData.turnCarId = car.id;

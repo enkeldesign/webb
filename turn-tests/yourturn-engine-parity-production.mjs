@@ -64,8 +64,19 @@ for (const catalogSpecifier of [
   assert.equal(yourTurnCatalogUrl.pathname, '/turn/vehicle/catalog.js');
   assert.match(
     yourTurnCatalogUrl.search,
-    /r588-canonical-attributes/,
-    'YOUR TURN must cache-bust the canonical attribute/tuning graph instead of carrying its own vehicle data'
+    /r208-rally-reward/,
+    'YOUR TURN must cache-bust the canonical reward customization graph instead of carrying its own vehicle data'
+  );
+}
+
+for (const carModelSpecifier of [
+  '/turn/vehicle/car-models.js?build=20260720-r19',
+  '/turn/vehicle/car-models.js?build=20260720-r22'
+]) {
+  assert.equal(
+    resolveImport(yourTurnImportMap, carModelSpecifier, 'https://enkel.design/yourturn/'),
+    resolveImport(turnImportMap, carModelSpecifier, 'https://enkel.design/turn/'),
+    `YOUR TURN must load the current production car factory for ${carModelSpecifier}`
   );
 }
 
@@ -88,4 +99,4 @@ assert.doesNotMatch(
   'YOUR TURN must not grow a challenge-specific copy of vehicle attributes or tuning'
 );
 
-console.log('YOUR TURN production motion/orientation and canonical vehicle-source parity contract passed.');
+console.log('YOUR TURN production motion/orientation and canonical vehicle-rendering parity contract passed.');
