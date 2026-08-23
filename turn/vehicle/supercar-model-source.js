@@ -1,10 +1,9 @@
-import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+import * as THREE from 'three';
 
 const SUPERCAR_ID = 'toy-racer';
-const BUNDLE_PART_COUNT = 5;
-const BUNDLE_PART_PREFIX = 'supercar-fbx.tar.gz.b64.';
-const BODY_ENTRY = 'body.fbx';
-const COMPONENT_ENTRIES = Object.freeze(['rims-r.fbx', 'rims-l.fbx', 'spoiler.fbx']);
+const BUNDLE_FILE = 'supercar.compact.gz.b64';
+const COMPACT_MAGIC = 'TRVC';
+const POSITION_QUANTIZATION_MAX = 127;
 const PRIMARY_PAINT_MATERIAL = 'car';
 
 let bundlePromise = null;
@@ -30,7 +29,7 @@ export async function loadSupercarSource({ carId, buildKey = '' } = {}) {
 
   if (!sourcePromise) {
     sourcePromise = loadBundle(buildKey)
-      .then(buildSupercarSource)
+      .then((bundle) => createModelGroup(bundle.payload, bundle.meta.models?.[SUPERCAR_ID]))
       .catch((error) => {
         sourcePromise = null;
         throw error;
@@ -41,10 +40,10 @@ export async function loadSupercarSource({ carId, buildKey = '' } = {}) {
 
 async function loadBundle(buildKey) {
   if (!bundlePromise) {
-    bundlePromise = fetchBundleParts(buildKey)
+    bundlePromise = fetchBundle(buildKey)
       .then(decodeBase64)
       .then(decompressGzip)
-      .then(parseTarEntries)
+      .then(parseCompactBundle)
       .catch((error) => {
         bundlePromise = null;
         throw error;
@@ -53,21 +52,12 @@ async function loadBundle(buildKey) {
   return bundlePromise;
 }
 
-async function fetchBundleParts(buildKey) {
-  const urls = Array.from({ length: BUNDLE_PART_COUNT }, (_, index) => {
-    const suffix = String(index).padStart(2, '0');
-    const url = new URL(`../assets/cars/${BUNDLE_PART_PREFIX}${suffix}`, import.meta.url);
-    if (buildKey) url.searchParams.set('build', buildKey);
-    return url;
-  });
-
-  const responses = await Promise.all(urls.map((url) => fetch(url)));
-  for (const response of responses) {
-    if (!response.ok) throw new Error(`Supercar source request failed: ${response.status}`);
-  }
-  return (await Promise.all(responses.map((response) => response.text())))
-    .join('')
-    .replace(/\s+/g, '');
+async function fetchBundle(buildKey) {
+  const url = new URL(`../assets/cars/${BUNDLE_FILE}`, import.meta.url);
+  if (buildKey) url.searchParams.set('build', buildKey);
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Supercar source request failed: ${response.status}`);
+  return (await response.text()).replace(/\s+/g, '');
 }
 
 function decodeBase64(encoded) {
@@ -84,55 +74,100 @@ async function decompressGzip(compressed) {
   return new Uint8Array(await new Response(stream).arrayBuffer());
 }
 
-function parseTarEntries(bytes) {
-  const entries = new Map();
-  const decoder = new TextDecoder();
-  let offset = 0;
+function parseCompactBundle(bytes) {
+  if (bytes.length < 8) throw new Error('Supercar bundle is truncated');
+  const magic = String.fromCharCode(...bytes.subarray(0, 4));
+  if (magic !== COMPACT_MAGIC) throw new Error('Supercar bundle has invalid magic');
+  const headerLength = new DataView(bytes.buffer, bytes.byteOffset + 4, 4).getUint32(0, true);
+  const headerEnd = 8 + headerLength;
+  if (headerEnd > bytes.length) throw new Error('Supercar bundle header is truncated');
+  const meta = JSON.parse(new TextDecoder().decode(bytes.subarray(8, headerEnd)));
+  if (meta.version !== 2 || meta.bits !== 8) throw new Error('Unsupported Supercar bundle version');
+  return { meta, payload: bytes.subarray(headerEnd) };
+}
 
-  while (offset + 512 <= bytes.length) {
-    const header = bytes.subarray(offset, offset + 512);
-    if (header.every((value) => value === 0)) break;
+function createModelGroup(payload, model) {
+  if (!model) throw new Error('Supercar bundle is missing toy-racer');
+  const group = new THREE.Group();
+  group.name = 'TURN Supercar';
+  const positions = decodePositions(payload, model);
 
-    const name = readTarString(decoder, header.subarray(0, 100));
-    const sizeText = readTarString(decoder, header.subarray(124, 136));
-    const size = Number.parseInt(sizeText || '0', 8);
-    if (!name || !Number.isFinite(size) || size < 0) throw new Error('Invalid Supercar tar header');
+  for (const record of model.materials || []) {
+    const indices = decodeIndices(payload, record);
+    if (!indices.length) continue;
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setIndex(new THREE.BufferAttribute(indices, 1));
 
-    const dataStart = offset + 512;
-    const dataEnd = dataStart + size;
-    if (dataEnd > bytes.length) throw new Error(`Truncated Supercar tar entry: ${name}`);
-    entries.set(name, bytes.slice(dataStart, dataEnd).buffer);
-    offset = dataStart + Math.ceil(size / 512) * 512;
+    const material = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(...record.color),
+      roughness: 0.82,
+      metalness: 0,
+      flatShading: true
+    });
+    material.name = record.name;
+
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.name = `Supercar-${record.name}`;
+    group.add(mesh);
   }
 
-  return entries;
+  group.userData.turnSource = 'A_R7 CC0';
+  group.userData.turnPrimaryPaintMaterial = PRIMARY_PAINT_MATERIAL;
+  return group;
 }
 
-function readTarString(decoder, bytes) {
-  const zero = bytes.indexOf(0);
-  const end = zero >= 0 ? zero : bytes.length;
-  return decoder.decode(bytes.subarray(0, end)).trim();
-}
+function decodePositions(payload, model) {
+  const positions = new Float32Array(model.positionCount * 3);
+  const end = model.positionOffset + model.positionLength;
+  let cursor = model.positionOffset;
+  const previous = [0, 0, 0];
 
-function buildSupercarSource(entries) {
-  const loader = new FBXLoader();
-  const bodyBuffer = requireEntry(entries, BODY_ENTRY);
-  const body = loader.parse(bodyBuffer, '');
-  body.name = 'TURN Supercar body';
-
-  for (const entryName of COMPONENT_ENTRIES) {
-    const component = loader.parse(requireEntry(entries, entryName), '');
-    component.name = `TURN Supercar ${entryName.replace('.fbx', '')}`;
-    body.add(component);
+  for (let vertex = 0; vertex < model.positionCount; vertex += 1) {
+    for (let axis = 0; axis < 3; axis += 1) {
+      const decoded = readSignedVarint(payload, cursor, end);
+      cursor = decoded.cursor;
+      previous[axis] += decoded.value;
+      positions[vertex * 3 + axis] = model.center[axis]
+        + (previous[axis] / POSITION_QUANTIZATION_MAX) * model.half[axis];
+    }
   }
 
-  body.userData.turnSource = 'A_R7 CC0';
-  body.userData.turnPrimaryPaintMaterial = PRIMARY_PAINT_MATERIAL;
-  return body;
+  if (cursor !== end) throw new Error('Supercar position stream length mismatch');
+  return positions;
 }
 
-function requireEntry(entries, name) {
-  const value = entries.get(name);
-  if (!value) throw new Error(`Supercar bundle is missing ${name}`);
-  return value;
+function decodeIndices(payload, record) {
+  const indices = new Uint16Array(record.indexCount);
+  const end = record.indexOffset + record.indexLength;
+  let cursor = record.indexOffset;
+  let previous = 0;
+
+  for (let index = 0; index < record.indexCount; index += 1) {
+    const decoded = readSignedVarint(payload, cursor, end);
+    cursor = decoded.cursor;
+    previous += decoded.value;
+    if (previous < 0 || previous > 65535) throw new Error('Supercar index is out of range');
+    indices[index] = previous;
+  }
+
+  if (cursor !== end) throw new Error('Supercar index stream length mismatch');
+  return indices;
+}
+
+function readSignedVarint(bytes, start, end) {
+  let cursor = start;
+  let value = 0;
+  let shift = 0;
+
+  while (cursor < end && shift <= 28) {
+    const byte = bytes[cursor++];
+    value |= (byte & 0x7f) << shift;
+    if ((byte & 0x80) === 0) {
+      return { value: (value >>> 1) ^ -(value & 1), cursor };
+    }
+    shift += 7;
+  }
+
+  throw new Error('Invalid Supercar varint stream');
 }
