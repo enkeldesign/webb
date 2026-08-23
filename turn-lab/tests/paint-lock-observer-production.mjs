@@ -34,6 +34,11 @@ const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/s
 assert.ok(importMapText, 'TURN production entry must expose an import map');
 const importMap = JSON.parse(importMapText);
 const imports = importMap.imports || {};
+const catalogImport = paintGate.match(/import\s*\{([\s\S]*?)\}\s*from '\.\.\/vehicle\/catalog\.js[^']*';/)?.[1] || '';
+assert.ok(catalogImport, 'The paint gate must import its vehicle-catalog helpers explicitly');
+assert.match(catalogImport, /\bgetVehicleDefaultColor\b/);
+assert.match(catalogImport, /\bgetVehicleDefaultSecondaryColor\b/,
+  'The paint gate must import the secondary factory-color helper it calls');
 const syncBody = paintGate.match(/function sync\(\) \{([\s\S]*?)\n  \}\n\n  const observer/)?.[1] || '';
 assert.ok(syncBody, 'The paint gate must expose a bounded synchronization function');
 
@@ -172,8 +177,8 @@ assert.match(
 const canonicalLotCatalog = '/turn/vehicle/catalog.js?revision=r179-native-car-surfaces';
 assert.equal(
   imports['/turn/progression/lot-paint-reward.js?revision=r206-pwa-color'],
-  '/turn/progression/lot-paint-reward.js?revision=r207-reward-color-catalog',
-  'Installed PWAs must refetch the COLOR state module'
+  '/turn/progression/lot-paint-reward.js?revision=r208-secondary-color-import',
+  'Installed PWAs must refetch the corrected COLOR state module'
 );
 assert.equal(
   imports['/turn/garage/lot-showroom-experiment.js?revision=r206-race-before-locks'],
@@ -201,4 +206,4 @@ assert.match(perkPresentation, /getCarDefinition\(vehicleId\)\?\.perk/);
 assert.doesNotMatch(perkPresentation, /observer\.observe\(screen,/);
 assert.match(app, /trophy-road-r157\.css\?revision=r163-native-picker-parent-click/);
 
-console.log('TURN Lot PWA swatch compositing, reward-car catalog coherence, state matrix, cue geometry, cache bridge, car order and observer safety regressions passed.');
+console.log('TURN Lot PWA swatch compositing, factory-color imports, reward-car catalog coherence, state matrix, cue geometry, cache bridge, car order and observer safety regressions passed.');
