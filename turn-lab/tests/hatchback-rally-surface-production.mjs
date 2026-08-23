@@ -1,14 +1,20 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const catalogSource = await fs.readFile(new URL('../../turn/vehicle/catalog.js', import.meta.url), 'utf8');
+const [catalogSource, semanticSource] = await Promise.all([
+  fs.readFile(new URL('../../turn/vehicle/catalog.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/vehicle/semantic-car-finish.js', import.meta.url), 'utf8')
+]);
 const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
 
 const hatchback = catalog.getCarDefinition('sedan-sports');
+const vintage = catalog.getCarDefinition('vintage-racer');
 const rally = catalog.getCarDefinition('toy-racer');
 assert.equal(hatchback.name, 'Hatchback');
 assert.equal(hatchback.asset, './assets/cars/hatchback-sports.glb');
 assert.equal(hatchback.surfaceProfileId, 'hatchback-sports');
+assert.equal(vintage.name, 'Vintage Racer');
+assert.equal(vintage.secondaryPaint?.label, 'Racing stripe');
 assert.equal(rally.name, 'Rally Racer');
 assert.equal(rally.asset, './assets/cars/sedan-sports.glb');
 assert.equal(rally.surfaceProfileId, 'sedan-sports-rally');
@@ -25,6 +31,19 @@ assert.ok(cellHits(mergeNodeCells(hatchbackCells, (name) => !/wheel/i.test(name)
 assert.ok(cellHits(mergeNodeCells(hatchbackCells, (name) => /wheel/i.test(name)), [[5, 4], [5, 5]]) > 0,
   'Hatchback primary rim paint must intersect real wheel triangles');
 
+const vintageGlb = readGlb(
+  await fs.readFile(new URL('../../turn/assets/cars/vintage-racer.glb', import.meta.url)),
+  'Vintage Racer'
+);
+const vintageCells = triangleCellCounts(vintageGlb);
+const vintageBody = mergeNodeCells(vintageCells, (name) => !/wheel/i.test(name));
+assert.ok(cellHits(vintageBody, [[7, 4], [7, 5]]) > 0,
+  'Vintage Racer primary paint must intersect real body triangles');
+assert.ok(cellHits(vintageBody, [[1, 6], [1, 7]]) > 0,
+  'Vintage Racer racing-stripe cells must intersect real visible body triangles');
+assert.doesNotMatch(semanticSource, /secondaryNodes: \['vehicle-vintage-racer'\]/,
+  'Vintage Racer secondary paint must follow authored UV cells instead of a non-rendered parent node name');
+
 const rallyGlb = readGlb(
   await fs.readFile(new URL('../../turn/assets/cars/sedan-sports.glb', import.meta.url)),
   'Rally Racer'
@@ -34,7 +53,7 @@ const rallyBody = mergeNodeCells(rallyCells, (name) => name.toLowerCase() === 'b
 const rallySpoiler = mergeNodeCells(rallyCells, (name) => name.toLowerCase() === 'spoiler');
 const rallyWheels = mergeNodeCells(rallyCells, (name) => /wheel/i.test(name));
 assert.ok(cellHits(rallyBody, [[6, 2], [6, 3]]) > 0,
-  'Rally Racer black body paint must intersect the former Sport Sedan body triangles');
+  'Rally Racer grey body paint must intersect the former Sport Sedan body triangles');
 assert.ok(cellHits(rallyBody, [[3, 4], [3, 5]]) > 0,
   'Rally Racer gold trim must intersect the former Sport Sedan trim triangles');
 assert.ok(cellHits(rallySpoiler, [[6, 2], [6, 3]]) > 0,
@@ -42,7 +61,7 @@ assert.ok(cellHits(rallySpoiler, [[6, 2], [6, 3]]) > 0,
 assert.ok(cellHits(rallyWheels, [[5, 4], [5, 5]]) > 0,
   'Rally Racer gold rim paint must intersect the authored wheel triangles');
 
-console.log('TURN Hatchback and Rally Racer GLB-backed semantic surface contract passed.');
+console.log('TURN Hatchback, Vintage Racer and Rally Racer GLB-backed semantic surface contract passed.');
 
 function readGlb(buffer, label) {
   assert.equal(buffer.toString('utf8', 0, 4), 'glTF', `${label} must remain a binary glTF`);
