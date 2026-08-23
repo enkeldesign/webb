@@ -139,6 +139,12 @@ jobs:
       - name: Run emergency livery layering regression
         run: node turn-lab/tests/emergency-livery-layering-production.mjs
 
+      - name: Run RGSDev vehicle refresh regression
+        run: node turn-lab/tests/rgsdev-vehicle-refresh-production.mjs
+
+      - name: Run Supercar vehicle refresh regression
+        run: node turn-lab/tests/supercar-production.mjs
+
       - name: Run DRIFT handling contract regression
         run: node turn-lab/tests/vehicle-drift-production.mjs
 
