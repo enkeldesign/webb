@@ -444,13 +444,14 @@ export const CHANGELOG = Object.freeze([
       ['1.9.3 r177', 'Integrates RALLY RACER’s shorter gold steps into the rocker panels and replaces the conspicuous full-height gold hoop with a compact dark rollover structure.'],
       ['Reusable visual upgrades', 'Adds catalog-selected, bounds-derived vehicle kits that share TURN’s paint and ghost paths while merging their geometry into three low-cost material batches.'],
       ['1.10.0 r179', 'Replaces generated presentation layers with authored Kenney palette detail, semantic body/accent/rim paint and the selected standalone RGSDev Monster Truck.'],
-      ['Native surfaces', 'Restores windows, lamps, trim and wheel detail from the source UVs; keeps emergency liveries fixed and removes the procedural RALLY RACER kit.']
+      ['Native surfaces', 'Restores windows, lamps, trim and wheel detail from the source UVs; keeps emergency liveries fixed and removes the procedural RALLY RACER kit.'],
+      ['1.10.1 r180', 'Corrects semantic palette UV orientation so factory colors and PAINTJOB affect the authored body, trim and rim cells.']
     ]
   }
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.10.0',
-  build: '2026.08.23-r179',
-  note: 'TURN 1.10.0 build r179 restores authored vehicle surfaces, semantic palette paint and the selected RGSDev Monster Truck without generated presentation geometry.'
+  version: '1.10.1',
+  build: '2026.08.23-r180',
+  note: 'TURN 1.10.1 build r180 corrects semantic vehicle paint UV orientation so factory colors and PAINTJOB reach the authored body, trim and rim surfaces.'
 });

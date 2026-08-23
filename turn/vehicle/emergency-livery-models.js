@@ -2,7 +2,7 @@ import {
   createCarVisual as createBaseCarVisual,
   preloadCarModels,
   recolorCarVisual
-} from './car-models.js?build=20260823-r179-native-car-surfaces';
+} from './car-models.js?build=20260823-r180-native-car-surfaces';
 
 const EMERGENCY_IDS = new Set(['police', 'ambulance', 'firetruck']);
 

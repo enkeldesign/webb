@@ -96,21 +96,11 @@ export function installSemanticCarFinish({
     shader.fragmentShader = shader.fragmentShader
       .replace(
         '#include <map_pars_fragment>',
-        `#include <map_pars_fragment>
-uniform vec3 turnPrimaryColor;
-uniform vec3 turnSecondaryColor;`
+        `#include <map_pars_fragment>\nuniform vec3 turnPrimaryColor;\nuniform vec3 turnSecondaryColor;`
       )
       .replace(
         '#include <map_fragment>',
-        `#include <map_fragment>
-#ifdef USE_MAP
-  ivec2 turnPaletteCell = ivec2(floor(vec2(vMapUv.x, 1.0 - vMapUv.y) * 8.0));
-  float turnPrimaryMask = clamp(${primaryExpression}, 0.0, 1.0);
-  float turnSecondaryMask = clamp(${secondaryExpression}, 0.0, 1.0);
-  float turnPanelShade = mod(float(turnPaletteCell.y), 2.0) < 0.5 ? 1.08 : 0.82;
-  diffuseColor.rgb = mix(diffuseColor.rgb, turnPrimaryColor * turnPanelShade, turnPrimaryMask);
-  diffuseColor.rgb = mix(diffuseColor.rgb, turnSecondaryColor * turnPanelShade, turnSecondaryMask);
-#endif`
+        `#include <map_fragment>\n#ifdef USE_MAP\n  ivec2 turnPaletteCell = ivec2(floor(vMapUv * 8.0));\n  float turnPrimaryMask = clamp(${primaryExpression}, 0.0, 1.0);\n  float turnSecondaryMask = clamp(${secondaryExpression}, 0.0, 1.0);\n  float turnPanelShade = mod(float(turnPaletteCell.y), 2.0) < 0.5 ? 1.08 : 0.82;\n  diffuseColor.rgb = mix(diffuseColor.rgb, turnPrimaryColor * turnPanelShade, turnPrimaryMask);\n  diffuseColor.rgb = mix(diffuseColor.rgb, turnSecondaryColor * turnPanelShade, turnSecondaryMask);\n#endif`
       );
   };
   material.customProgramCacheKey = () => `turn-semantic-palette:${cacheKey}`;

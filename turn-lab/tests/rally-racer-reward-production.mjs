@@ -39,7 +39,10 @@ assert.match(semanticSource, /rims: \[\[4, 6\], \[4, 7\]\]/);
 assert.match(semanticSource, /rimRole: 'secondary'/,
   'Rally wheel centres should share the trophy-gold trim colour');
 assert.match(semanticSource, /turnPaletteCell/);
-assert.match(semanticSource, /vMapUv\.x, 1\.0 - vMapUv\.y/);
+assert.match(semanticSource, /ivec2\(floor\(vMapUv \* 8\.0\)\)/,
+  'Rally paint masks must use the authored glTF UV orientation');
+assert.doesNotMatch(semanticSource, /1\.0 - vMapUv\.y/,
+  'Rally paint must not vertically flip the already-oriented glTF UVs');
 assert.match(semanticSource, /turnPanelShade/,
   'The two authored palette shades must survive runtime recolouring');
 assert.doesNotMatch(semanticSource, /BoxGeometry|CylinderGeometry|SphereGeometry|mergeGeometries|PointLight/,
