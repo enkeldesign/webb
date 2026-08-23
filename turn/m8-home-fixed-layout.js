@@ -296,14 +296,15 @@ export async function installM8HomeFixedLayout() {
   let racingMusicHealth = null;
 
   // The score engine statically imports the menu score, six track scores, instrument
-  // banks and synth/drum runtimes. None is required to expose Home or start steering.
-  // Warm that graph only after Home is already interactive.
+  // banks and synth/drum runtimes. Start fetching/compiling that graph while TURN's startup
+  // cover is still up; installation and playback still wait for post-Home idle.
+  const musicModulesPromise = Promise.all([
+    import(`/turn/audio/racing-music-v2.js?build=${buildKey}-racing-music-warm-v2`),
+    import(`/turn/audio/racing-music-health.js?build=${buildKey}&revision=r164-long-session-robustness`)
+  ]);
   const musicReady = (async () => {
     await waitForPostHomeIdle();
-    const [musicModule, musicHealthModule] = await Promise.all([
-      import(`/turn/audio/racing-music-v2.js?build=${buildKey}-racing-music-warm-v2`),
-      import(`/turn/audio/racing-music-health.js?build=${buildKey}&revision=r164-long-session-robustness`)
-    ]);
+    const [musicModule, musicHealthModule] = await musicModulesPromise;
     racingMusic = musicModule.installRacingMusic({ home });
     const dbeTrainingMusicSilence = installDriveByEarTrainingMusicSilence(driveByEarTraining, racingMusic);
     // If the player entered DBE 101 in the brief interval before music finished warming,

@@ -145,6 +145,7 @@ async function install(runtime) {
   const worldSamples = samples.slice();
 
   try {
+    const worldModulesPromise = loadWorldModules();
     await waitForHomeBeforeCosmetics();
     const {
       installWorldBeauty,
@@ -155,7 +156,7 @@ async function install(runtime) {
       installCountrysideBella,
       applyBellaFinalVisuals,
       installBellaRescueBehavior
-    } = await loadWorldModules();
+    } = await worldModulesPromise;
 
     // Compatibility helper retained from the previous world tuning layer.
     if (!THREE.Object3D.prototype.addScaledVector) {

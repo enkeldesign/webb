@@ -130,6 +130,20 @@ function installLotCarColorCues() {
   }
 }
 
+function mutationTouchesColorCueUi(mutation) {
+  const selector = [
+    '.m8-home',
+    '.m8-settings-dialog',
+    '.track-card[data-track-id]',
+    '.lot-screen',
+    '.lot-color-control'
+  ].join(',');
+  return [...mutation.addedNodes, ...mutation.removedNodes].some((node) => (
+    node?.nodeType === 1
+      && (node.matches?.(selector) || node.querySelector?.(selector))
+  ));
+}
+
 function sync() {
   scheduled = false;
   cleanupLotColorCueBindings();
@@ -148,7 +162,9 @@ export function installColorAccessibility() {
   if (globalThis.__turnColorAccessibility) return globalThis.__turnColorAccessibility;
   applyColorCuesState();
 
-  const observer = new MutationObserver(scheduleSync);
+  const observer = new MutationObserver((mutations) => {
+    if (mutations.some(mutationTouchesColorCueUi)) scheduleSync();
+  });
   observer.observe(document.body, { childList: true, subtree: true });
   globalThis.addEventListener('turn:home-ready', scheduleSync);
   sync();

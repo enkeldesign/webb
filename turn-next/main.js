@@ -11,7 +11,7 @@ import { GAME_MODE, installGameModeState, prepareRaceStartState, resetRaceToStag
 import { createRaceSessionOrchestrator } from '/turn/race/session-orchestrator.js?source=20260729-r118-m8';
 import { beginTimedLapState, completeLapState, updateLapProgressState } from '/turn/race/lap-system.js?build=20260720-r19';
 import { recordReplayFrame, replayFrameAt } from '/turn/race/replay-system.js';
-import { RIVAL_LIMIT, loadRivalsState, saveRivalsState } from '/turn/race/rival-storage.js?build=20260720-r19';
+import { RIVAL_LIMIT, loadRivalsState, scheduleRivalsStateSave } from '/turn/race/rival-storage.js?build=20260720-r19';
 import { createTrackSpatialIndex } from '/turn/race/track-spatial-index.js?build=20260720-r19';
 import { trackPitch, trackSampleAtProgress, trackSurfaceY } from '/turn/tracks/elevation.js?build=20260725-r67';
 import { showTheLot } from '/turn/garage/lot-r10.js?build=20260720-r19';
@@ -979,7 +979,7 @@ function completeLap(now) {
 }
 
 function saveGhost() {
-  saveRivalsState(state);
+  scheduleRivalsStateSave(state);
 }
 
 function loadGhost() {
