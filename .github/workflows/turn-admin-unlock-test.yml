@@ -53,18 +53,13 @@ jobs:
 
           replace(
             'turn/achievements/view.js',
-            `    if (!force && !dialogDirty) return false;\n\n    const unlockedCount`,
-            `    const unlockedCount`
-          );
-          replace(
-            'turn/achievements/view.js',
-            `    toastElement.setAttribute('aria-label', reward\n      ? \`${'${batch.length === 1 ? \'Trophy Road reward unlocked\' : `${batch.length} Trophy Road rewards unlocked`}'} . ${'${batch.map((item) => item.shortTitle).join(\', \')}'} .\`.replaceAll(' .', '.')\n      : \`${'${batch.length === 1 ? \'Achievement unlocked\' : `${batch.length} achievements unlocked`}'} . ${'${batch.map((achievement) => achievement.title).join(\', \')}'} . ${'${total}'} trophies.\`.replaceAll(' .', '.'));`,
-            `    toastElement.setAttribute('aria-label', reward\n      ? \`${'${batch.length === 1 ? \'Trophy Road reward unlocked\' : `${batch.length} Trophy Road rewards unlocked`}'}\`.replace('`', '') + \`. ${'${batch.map((item) => item.shortTitle).join(\', \')}'} .\`.replace(' .', '.')\n      : \`${'${batch.length === 1 ? \'Achievement unlocked\' : `${batch.length} achievements unlocked`}'}\`.replace('`', '') + \`. ${'${batch.map((achievement) => achievement.title).join(\', \')}'} . ${'${total}'} trophies.\`.replace(' .', '.'));`
+            "    if (!force && !dialogDirty) return false;\n\n",
+            ""
           );
           replace(
             'turn/progression/lot-paint-reward.js',
-            `  CAR_CATALOG,\n  getVehicleDefaultColor,\n  getVehicleDefaultSecondaryColor\n} from '../vehicle/catalog.js?build=20260804-r157-factory-colors';`,
-            `  CAR_CATALOG,\n  getVehicleDefaultColor\n} from '../vehicle/catalog.js?build=20260804-r157-factory-colors';`
+            "  CAR_CATALOG,\n  getVehicleDefaultColor,\n  getVehicleDefaultSecondaryColor\n} from '../vehicle/catalog.js?build=20260804-r157-factory-colors';",
+            "  CAR_CATALOG,\n  getVehicleDefaultColor\n} from '../vehicle/catalog.js?build=20260804-r157-factory-colors';"
           );
           NODE
 
