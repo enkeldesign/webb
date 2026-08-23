@@ -30,6 +30,6 @@ The original FBX files are stored in TURN as a compact, gzip-compressed runtime 
 | `truck` | Truck |
 | `van` | Van |
 
-TURN deliberately retains its existing `toy-racer` (Rally Racer), `race-future` (Future Racer) and `sedan-sports` (Sport Sedan) models because those cars have distinctive visual/gameplay contracts. In particular, Sport Sedan retains its separately paintable spoiler and hidden secondary-colour easter egg.
+TURN retains its existing `race-future` (Future Racer) and `sedan-sports` (Sport Sedan) models because those cars have distinctive visual/gameplay contracts. In particular, Sport Sedan retains its separately paintable spoiler and hidden secondary-colour easter egg. The former `toy-racer` / Rally Racer slot is refreshed separately as the CC0 **Supercar** documented in `SUPERCAR-CC0.md`, while keeping the `toy-racer` logical id for compatibility.
 
 PAINTJOB is applied only to the selected primary body material of each paintable RGSDev model; trim, windows, lights, wheel rims and secondary body accents retain the source art. Emergency vehicle liveries, flashing light rigs and siren behaviour remain TURN-owned systems keyed to the existing logical vehicle IDs.
