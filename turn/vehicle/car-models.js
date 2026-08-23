@@ -17,7 +17,7 @@ import {
   getKenneyPaletteAsset,
   installSemanticCarFinish,
   recolorSemanticCarFinish
-} from './semantic-car-finish.js?revision=r179-native-surfaces';
+} from './semantic-car-finish.js?revision=r180-paint-uv';
 
 const loadersByPack = new Map();
 const sourceCache = new Map();
