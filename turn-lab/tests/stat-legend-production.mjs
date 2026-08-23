@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
 import { VEHICLE_STAT_LEGEND } from '../../turn/vehicle/catalog.js';
-await import('../scripts/vehicle-swap-diagnostic.mjs');
 
 assert.deepEqual(
   VEHICLE_STAT_LEGEND.map((entry) => entry.label),
