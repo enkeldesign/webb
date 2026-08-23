@@ -11,7 +11,9 @@ import { createCarVisual } from '../vehicle/car-models.js?build=20260720-r22';
 const RESULT_TOAST_HANDOFF_MS = 4300;
 const ONBOARDING_VISIBLE_MS = 3200;
 const ONBOARDING_EXIT_MS = 180;
-const PREVIEW_PREP_IDLE_TIMEOUT_MS = 2400;
+const PREVIEW_FALLBACK_PREP_DELAY_MS = 500;
+const PREVIEW_WARM_WIDTH = 126;
+const PREVIEW_WARM_HEIGHT = 92;
 const VIEWER_INITIAL_YAW = Math.PI - 0.55;
 const VIEWER_ROTATION_RADIANS_PER_SECOND = 0.144;
 const VIEWER_FRAME_INTERVAL_MS = 1000 / 30;
@@ -49,6 +51,8 @@ export function installRivalOnboarding() {
   let preparationIdleHandle = 0;
   let preparationTimer = 0;
   let previewGeneration = 0;
+  let pendingPreviewIdentity = '';
+  let previewIdentity = '';
   let preview = null;
 
   function clearTimers() {
@@ -70,13 +74,19 @@ export function installRivalOnboarding() {
     window.clearTimeout(preparationTimer);
     preparationIdleHandle = 0;
     preparationTimer = 0;
+    pendingPreviewIdentity = '';
+  }
+
+  function disposePreviewVisual() {
+    preview?.dispose();
+    preview = null;
+    previewIdentity = '';
+    modelHost.replaceChildren();
   }
 
   function destroyPreview() {
     cancelPreparation();
-    preview?.dispose();
-    preview = null;
-    modelHost.replaceChildren();
+    disposePreviewVisual();
     plate.classList.remove('is-model-unavailable');
   }
 
@@ -110,7 +120,7 @@ export function installRivalOnboarding() {
     plate.classList.remove('is-visible', 'is-leaving');
 
     // Cross a frame boundary instead of forcing layout with offsetWidth. The 3D preview
-    // has already been prepared independently; revealing the copy must never wait for it.
+    // is prepared independently; revealing CHASE YOUR BEST must never wait for WebGL.
     revealFrame = requestAnimationFrame(() => {
       revealFrame = 0;
       if (plate.hidden) return;
@@ -120,49 +130,76 @@ export function installRivalOnboarding() {
     hideTimer = window.setTimeout(() => hide(), ONBOARDING_VISIBLE_MS);
   }
 
-  function preparePreview({ carId, color, secondaryColor }) {
-    const generation = ++previewGeneration;
+  function normalizedPreviewData(source = {}) {
+    return {
+      carId: source.carId || source.vehicleId || 'sedan',
+      color: normalizeVehicleColor(
+        source.carColor || source.vehicleColor || DEFAULT_VEHICLE_COLOR
+      ),
+      secondaryColor: normalizeVehicleSecondaryColor(
+        source.carSecondaryColor || source.vehicleSecondaryColor || DEFAULT_VEHICLE_SECONDARY_COLOR
+      )
+    };
+  }
+
+  function previewKey({ carId, color, secondaryColor }) {
+    return `${carId}|${color}|${secondaryColor}`;
+  }
+
+  function preparePreview(data) {
+    const normalized = normalizedPreviewData(data);
+    const identity = previewKey(normalized);
+    if ((preview && previewIdentity === identity) || pendingPreviewIdentity === identity) return;
+
+    cancelPreparation();
+    disposePreviewVisual();
+    plate.classList.remove('is-model-unavailable');
+    pendingPreviewIdentity = identity;
+    const generation = previewGeneration;
+
     const prepare = () => {
       preparationIdleHandle = 0;
       preparationTimer = 0;
-      if (generation !== previewGeneration) return;
+      if (generation !== previewGeneration || pendingPreviewIdentity !== identity) return;
 
-      const nextPreview = createGhostPreview({ modelHost, carId, color, secondaryColor, onError() {
-        plate.classList.add('is-model-unavailable');
-      } });
-      if (generation !== previewGeneration) {
+      const nextPreview = createGhostPreview({
+        modelHost,
+        ...normalized,
+        onError() {
+          plate.classList.add('is-model-unavailable');
+        }
+      });
+      if (generation !== previewGeneration || pendingPreviewIdentity !== identity) {
         nextPreview.dispose();
         return;
       }
       preview = nextPreview;
+      previewIdentity = identity;
+      pendingPreviewIdentity = '';
       if (!plate.hidden) preview.start();
     };
 
-    // Creating a second WebGL context and cloning the ghost scene is optional onboarding
-    // work. Give it the quiet result-toast handoff window instead of the lap-completion frame.
+    // With no rival yet, race-started gives us an entire first lap to prepare the
+    // optional second WebGL context. Do it only when the browser reports idle time.
+    // Older engines get a delayed fallback, still well before the first rival reveal.
     if (typeof globalThis.requestIdleCallback === 'function') {
-      preparationIdleHandle = globalThis.requestIdleCallback(prepare, {
-        timeout: PREVIEW_PREP_IDLE_TIMEOUT_MS
-      });
+      preparationIdleHandle = globalThis.requestIdleCallback(prepare);
     } else {
-      preparationTimer = window.setTimeout(prepare, 120);
+      preparationTimer = window.setTimeout(prepare, PREVIEW_FALLBACK_PREP_DELAY_MS);
     }
   }
 
   function schedule(rival) {
     clearTimers();
-    destroyPreview();
     plate.hidden = true;
     plate.classList.remove('is-visible', 'is-leaving');
 
-    const carId = rival?.carId || 'sedan';
-    const color = normalizeVehicleColor(rival?.carColor || DEFAULT_VEHICLE_COLOR);
-    const secondaryColor = normalizeVehicleSecondaryColor(
-      rival?.carSecondaryColor || DEFAULT_VEHICLE_SECONDARY_COLOR
-    );
-
-    plate.style.setProperty('--rival-onboarding-color', makeGhostColor(color));
-    preparePreview({ carId, color, secondaryColor });
+    const normalized = normalizedPreviewData(rival);
+    plate.style.setProperty('--rival-onboarding-color', makeGhostColor(normalized.color));
+    // Normally this is already the exact preview prepared at race-started. If the
+    // saved rival differs for any reason, prepare the corrected model without making
+    // the reveal wait for it.
+    preparePreview(normalized);
 
     showTimer = window.setTimeout(() => {
       showTimer = 0;
@@ -177,11 +214,16 @@ export function installRivalOnboarding() {
 
   window.addEventListener('turn:ui-state-change', (event) => {
     const reason = event.detail?.reason;
-    const rivals = globalThis.__turnRuntime?.state?.competitorLaps || [];
+    const state = globalThis.__turnRuntime?.state;
+    const rivals = state?.competitorLaps || [];
     const hasRival = rivals.length > 0;
 
-    if (reason === 'rivals-loaded' || reason === 'race-started') {
+    if (reason === 'rivals-loaded') {
       hadRival = hasRival;
+    } else if (reason === 'race-started') {
+      hadRival = hasRival;
+      if (!hasRival && state) preparePreview(state);
+      else if (hasRival) destroyPreview();
     } else if (reason === 'lap-completed') {
       if (!hadRival && hasRival) schedule(rivals[0]);
       hadRival = hasRival;
@@ -203,12 +245,12 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.35));
   renderer.setClearColor(0x000000, 0);
-  // Keep the hidden warm-up surface tiny. ResizeObserver supplies the real size only
-  // after the onboarding becomes visible, avoiding a reveal-time layout read.
-  renderer.setSize(1, 1, false);
+  // Warm at the maximum CSS preview size so the visible reveal does not discover a
+  // larger drawing buffer. This surface is still tiny compared with the race canvas.
+  renderer.setSize(PREVIEW_WARM_WIDTH, PREVIEW_WARM_HEIGHT, false);
   modelHost.appendChild(renderer.domElement);
 
-  const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 60);
+  const camera = new THREE.PerspectiveCamera(34, PREVIEW_WARM_WIDTH / PREVIEW_WARM_HEIGHT, 0.1, 60);
   camera.position.set(7.8, 4.8, 8.8);
   camera.lookAt(0, 1.1, 0);
 
@@ -286,7 +328,7 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
       warmIdleHandle = globalThis.requestIdleCallback(() => {
         warmIdleHandle = 0;
         if (!disposed) callback();
-      }, { timeout: PREVIEW_PREP_IDLE_TIMEOUT_MS });
+      });
     } else {
       warmTimer = window.setTimeout(() => {
         warmTimer = 0;
@@ -297,8 +339,8 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
 
   const finishWarmup = () => {
     if (disposed || !visual) return;
-    // One 1×1 hidden render uploads geometry/textures after compilation. The visible
-    // first frame then has no new program or texture work to discover.
+    // One hidden render uploads geometry and textures after shader compilation. The
+    // first visible frame then has no new GPU program or texture work to discover.
     renderer.render(scene, camera);
     warmed = true;
     if (active && !animationFrame) {
@@ -311,8 +353,9 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
     if (disposed || !visual) return;
     try {
       if (typeof renderer.compileAsync === 'function') {
-        // KHR_parallel_shader_compile lets the separate onboarding context prepare the
-        // newer semantic paint shaders without stalling the racing frame.
+        // The native semantic paint system made these shaders more substantial than
+        // the original r40 onboarding. Compile them asynchronously in this separate
+        // WebGL context rather than on the CHASE YOUR BEST reveal frame.
         await renderer.compileAsync(scene, camera);
         if (disposed) return;
         runWarmupWhenIdle(finishWarmup);
@@ -326,9 +369,18 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
     } catch (error) {
       if (disposed) return;
       console.warn('TURN: first rival preview shader warm-up failed.', error);
-      // A failed optimization must not suppress onboarding; let the ordinary render path recover.
-      warmed = true;
-      if (active && !animationFrame) animationFrame = requestAnimationFrame(tick);
+      // Even the recovery compile stays off the reveal path. If it fails too, keep the
+      // onboarding copy and hide only the optional model.
+      runWarmupWhenIdle(() => {
+        if (disposed) return;
+        try {
+          renderer.compile(scene, camera);
+          finishWarmup();
+        } catch (fallbackError) {
+          console.warn('TURN: first rival preview fallback warm-up failed.', fallbackError);
+          onError?.(fallbackError);
+        }
+      });
     }
   };
 
@@ -358,8 +410,8 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
       active = true;
       lastTickAt = performance.now();
       if (!observer) resize();
-      // Never synchronously render on reveal. If warm-up is still finishing, the copy
-      // appears on time and the 3D model joins on a later animation frame.
+      // Never synchronously render on reveal. If warm-up is still finishing, CHASE
+      // YOUR BEST appears on time and the 3D ghost joins on a later animation frame.
       animationFrame = requestAnimationFrame(tick);
     },
     dispose() {
