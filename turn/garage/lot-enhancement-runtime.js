@@ -26,6 +26,7 @@ export function prepareLotEnhancements() {
     import('./lot-accessibility-r118.js?build=20260729-r118&revision=r588-canonical-attributes'),
     import('./lot-perk-disclosure.js?revision=r203-idempotent'),
     import('./lot-card-scroll-boundary.js?revision=r215-info-space'),
+    import('./lot-vehicle-copy.js?revision=r181-hatchback-rally'),
     import('../progression/lot-trophy-gate.js?revision=r585-visible-locks'),
     import('../progression/lot-paint-reward.js?revision=r206-pwa-color')
   ]).then(([
@@ -34,6 +35,7 @@ export function prepareLotEnhancements() {
     accessibility,
     perkDisclosure,
     scrollBoundary,
+    vehicleCopy,
     trophyGate,
     paintGate
   ]) => {
@@ -43,6 +45,7 @@ export function prepareLotEnhancements() {
       installLotAccessibility: accessibility.installLotAccessibility,
       installLotPerkDisclosure: perkDisclosure.installLotPerkDisclosure,
       installLotCardScrollBoundary: scrollBoundary.installLotCardScrollBoundary,
+      installLotVehicleCopy: vehicleCopy.installLotVehicleCopy,
       gateLotNow: trophyGate.gateLotNow,
       gateLotPaintNow: paintGate.gateLotPaintNow
     });
@@ -122,7 +125,8 @@ export function enhanceLotNow(root = document.body) {
     installLotStatLegend,
     installLotLayout,
     installLotAccessibility,
-    installLotCardScrollBoundary
+    installLotCardScrollBoundary,
+    installLotVehicleCopy
   } = enhancementBundle;
   const scope = screen.parentElement || document.body;
   const removeEntryClickGuard = installLotEntryClickGuard(screen);
@@ -133,11 +137,13 @@ export function enhanceLotNow(root = document.body) {
   const removeLayout = installLotLayout(scope);
   const removeCardScrollBoundary = installLotCardScrollBoundary(scope);
   const removeAccessibility = installLotAccessibility(scope);
+  const removeVehicleCopy = installLotVehicleCopy(scope);
   let released = false;
 
   const release = () => {
     if (released) return;
     released = true;
+    removeVehicleCopy();
     removeAccessibility();
     removeCardScrollBoundary();
     removeLayout();
