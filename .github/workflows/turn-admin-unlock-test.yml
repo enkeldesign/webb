@@ -23,9 +23,62 @@ on:
       - '.github/workflows/turn-admin-unlock-test.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
+  release-sync:
+    if: github.event_name == 'pull_request' && github.head_ref == 'turn-performance-loading-review'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out performance branch
+        uses: actions/checkout@v4
+        with:
+          ref: turn-performance-loading-review
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Synchronize parity and release identity
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = 'turn/release.json';
+          const release = JSON.parse(fs.readFileSync(path, 'utf8'));
+          if (release.version !== '1.10.4' || release.id !== '2026.08.23-r183' || release.cacheKey !== '20260823-r183') {
+            fs.writeFileSync(path, JSON.stringify({
+              version: '1.10.4',
+              id: '2026.08.23-r183',
+              cacheKey: '20260823-r183'
+            }, null, 2) + '\n');
+          }
+          NODE
+          node turn/scripts/release.mjs --write
+          node turn-next/scripts/build-parity-app.mjs
+          node turn-next/scripts/build-parity-main.mjs
+          node turn-next/scripts/build-parity-entry.mjs
+
+      - name: Verify synchronized build
+        run: |
+          node turn/scripts/release.mjs --check
+          node turn-next/scripts/build-parity-app.mjs --check
+          node turn-next/scripts/build-parity-main.mjs --check
+          node turn-next/scripts/build-parity-entry.mjs --check
+          git diff --check
+
+      - name: Commit synchronized build
+        run: |
+          if git diff --quiet; then
+            echo "Release and parity files already synchronized"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn turn-lab turn-next
+          git commit -m "Release TURN 1.10.4 r183 performance pass"
+          git push origin HEAD:turn-performance-loading-review
+
   admin-unlock:
     runs-on: ubuntu-latest
     steps:
