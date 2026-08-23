@@ -74,7 +74,6 @@ const VISUAL_SIZE_MULTIPLIER_BY_ID = Object.freeze({
   convertible: 0.72,
   classic: 0.72,
   'vintage-racer': 0.75,
-  'toy-racer': 0.7,
   police: 1.15
 });
 const FEATURED_VISUAL_SIZE_MULTIPLIER_BY_ID = Object.freeze({ 'monster-truck': 1.2 });
@@ -130,11 +129,11 @@ const RAW_CARS = [
   ['convertible', 'Convertible', 'prototype', { speed: 4, acceleration: 4, control: 4, drift: 2, boostPower: 3, boostDuration: 1 }, 0.98, 1, 1.08],
   ['classic', 'Training Car', 'prototype', { speed: 1, acceleration: 1, control: 5, drift: 5, boostPower: 1, boostDuration: 5 }, 1.00, 1, 0.88],
   ['vintage-racer', 'Vintage Racer', 'toy', { speed: 4, acceleration: 3, control: 2, drift: 5, boostPower: 2, boostDuration: 2 }, 0.96, 0, 1.28],
-  ['toy-racer', 'Rally Racer', 'toy', { speed: 4, acceleration: 4, control: 1, drift: 4, boostPower: 4, boostDuration: 1 }, 0.94, 2, 1.18],
+  ['toy-racer', 'Rally Racer', 'car', { speed: 4, acceleration: 4, control: 1, drift: 4, boostPower: 4, boostDuration: 1 }, 0.98, 0, 1.18],
   ['monster-truck', 'Monster Truck', 'rgsdev', { speed: 2, acceleration: 3, control: 2, drift: 5, boostPower: 2, boostDuration: 4 }, 0.83, 0, 0.62],
   ['race-future', 'Future Racer', 'car', { speed: 5, acceleration: 5, control: 3, drift: 1, boostPower: 3, boostDuration: 1 }, 0.96, 0, 1.42],
   ['race', 'Race Car', 'car', { speed: 5, acceleration: 4, control: 4, drift: 2, boostPower: 2, boostDuration: 1 }, 0.94, 0, 1.55],
-  ['sedan-sports', 'Sport Sedan', 'car', { speed: 4, acceleration: 4, control: 4, drift: 2, boostPower: 2, boostDuration: 2 }, 0.98, 0, 1.12],
+  ['sedan-sports', 'Hatchback', 'car', { speed: 4, acceleration: 4, control: 4, drift: 2, boostPower: 2, boostDuration: 2 }, 0.98, 0, 1.12],
   ['sedan', 'Sedan', 'car', { speed: 3, acceleration: 3, control: 3, drift: 3, boostPower: 3, boostDuration: 3 }, 1.00, 0, 1.00],
   ['suv', 'SUV', 'car', { speed: 3, acceleration: 3, control: 3, drift: 4, boostPower: 2, boostDuration: 3 }, 1.05, 0, 0.90],
   ['firetruck', 'Fire Truck', 'car', { speed: 2, acceleration: 2, control: 4, drift: 4, boostPower: 1, boostDuration: 5 }, 1.10, 0, 0.66],
@@ -173,18 +172,25 @@ const VISUAL_CUSTOMIZATION_BY_ID = Object.freeze({
     secondaryPaint: Object.freeze({ label: 'Aero accents', meshNames: Object.freeze([]) })
   }),
   'sedan-sports': Object.freeze({
-    secondaryPaint: Object.freeze({ label: 'Spoiler & trim', meshNames: Object.freeze(['spoiler']) })
+    secondaryPaint: Object.freeze({ label: 'Sport trim', meshNames: Object.freeze([]) })
   }),
   race: Object.freeze({
     secondaryPaint: Object.freeze({ label: 'Aero trim', meshNames: Object.freeze([]) })
   }),
   'toy-racer': Object.freeze({
-    secondaryPaint: Object.freeze({ label: 'Rally trim', meshNames: Object.freeze([]) })
+    secondaryPaint: Object.freeze({ label: 'Rally trim', meshNames: Object.freeze(['spoiler']) })
   })
 });
 
 const MODEL_ASSET_BY_ID = Object.freeze({
-  'monster-truck': './assets/cars/monster-truck-rgsdev.glb'
+  'monster-truck': './assets/cars/monster-truck-rgsdev.glb',
+  'sedan-sports': './assets/cars/hatchback-sports.glb',
+  'toy-racer': './assets/cars/sedan-sports.glb'
+});
+
+const SURFACE_PROFILE_BY_ID = Object.freeze({
+  'sedan-sports': 'hatchback-sports',
+  'toy-racer': 'sedan-sports-rally'
 });
 
 export const CAR_CATALOG = Object.freeze(RAW_CARS.map(([
@@ -194,6 +200,7 @@ export const CAR_CATALOG = Object.freeze(RAW_CARS.map(([
   name,
   pack,
   asset: MODEL_ASSET_BY_ID[id] || `./assets/cars/${id}.glb`,
+  surfaceProfileId: SURFACE_PROFILE_BY_ID[id] || id,
   stats: Object.freeze({ ...stats }),
   visualScale,
   visualSizeMultiplier: VISUAL_SIZE_MULTIPLIER_BY_ID[id] || 1,
