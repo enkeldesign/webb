@@ -18,22 +18,22 @@ export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
 });
 
 export const TROPHY_ROAD_REWARDS = Object.freeze(PERK_TROPHY_ROAD_REWARDS.map((reward) => {
-  if (reward.id === 'future-racer') {
-    return Object.freeze({
-      ...reward,
-      perkDescription: FUTURE_RACER_REWARD_PERK_DESCRIPTION,
-      description: `Unlock the Future Racer: built for advanced time trials.<br><strong>OVERDRIVE:</strong> ${FUTURE_RACER_REWARD_PERK_DESCRIPTION}`
-    });
+  if (reward.id !== 'future-racer') {
+    if (reward.id === 'rally-racer') {
+      return Object.freeze({
+        ...reward,
+        title: 'SUPERCAR',
+        shortTitle: 'Supercar',
+        description: 'Unlock the Supercar: brutally quick, twitchy and built to turn DRIFT into BOOST.<br><strong>TWITCHY TURNY:</strong> DRIFT fills BOOST even faster than normal.'
+      });
+    }
+    return reward;
   }
-  if (reward.id === 'rally-racer') {
-    return Object.freeze({
-      ...reward,
-      title: 'SUPERCAR',
-      shortTitle: 'Supercar',
-      description: 'Unlock the Supercar: brutally quick, twitchy and built to turn DRIFT into BOOST.<br><strong>TWITCHY TURNY:</strong> DRIFT fills BOOST even faster than normal.'
-    });
-  }
-  return reward;
+  return Object.freeze({
+    ...reward,
+    perkDescription: FUTURE_RACER_REWARD_PERK_DESCRIPTION,
+    description: `Unlock the Future Racer: built for advanced time trials.<br><strong>OVERDRIVE:</strong> ${FUTURE_RACER_REWARD_PERK_DESCRIPTION}`
+  });
 }));
 
 const REWARD_BY_ID = new Map(TROPHY_ROAD_REWARDS.map((reward) => [reward.id, reward]));
