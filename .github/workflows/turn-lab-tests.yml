@@ -23,60 +23,9 @@ on:
       - '.github/workflows/turn-lab-tests.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  release_history_sync:
-    if: github.event_name == 'pull_request' && github.head_ref == 'fix/semantic-car-paint-r180'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out r180 branch
-        uses: actions/checkout@v4
-        with:
-          ref: fix/semantic-car-paint-r180
-
-      - name: Synchronize About history release identity
-        run: |
-          node <<'NODE'
-          const fs = require('node:fs');
-
-          function replace(path, from, to) {
-            const before = fs.readFileSync(path, 'utf8');
-            if (before.includes(to)) return;
-            if (!before.includes(from)) throw new Error(`${path}: missing expected text: ${from}`);
-            fs.writeFileSync(path, before.replace(from, to));
-          }
-
-          replace(
-            'turn/ui/about-history-bootstrap-r165.js',
-            "../content/about-history.js?build=20260823-r179",
-            "../content/about-history.js?build=20260823-r180"
-          );
-          replace(
-            'turn/content/about-history.js',
-            "      ['Native surfaces', 'Restores windows, lamps, trim and wheel detail from the source UVs; keeps emergency liveries fixed and removes the procedural RALLY RACER kit.']",
-            "      ['Native surfaces', 'Restores windows, lamps, trim and wheel detail from the source UVs; keeps emergency liveries fixed and removes the procedural RALLY RACER kit.'],\n      ['1.10.1 r180', 'Corrects semantic palette UV orientation so factory colors and PAINTJOB affect the authored body, trim and rim cells.']"
-          );
-          replace(
-            'turn/content/about-history.js',
-            "export const CURRENT_RELEASE = Object.freeze({\n  version: '1.10.0',\n  build: '2026.08.23-r179',\n  note: 'TURN 1.10.0 build r179 restores authored vehicle surfaces, semantic palette paint and the selected RGSDev Monster Truck without generated presentation geometry.'\n});",
-            "export const CURRENT_RELEASE = Object.freeze({\n  version: '1.10.1',\n  build: '2026.08.23-r180',\n  note: 'TURN 1.10.1 build r180 corrects semantic vehicle paint UV orientation so factory colors and PAINTJOB reach the authored body, trim and rim surfaces.'\n});"
-          );
-          NODE
-          git diff --check
-
-      - name: Commit synchronized history identity
-        run: |
-          if git diff --quiet; then
-            echo "History identity already synchronized"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add turn/ui/about-history-bootstrap-r165.js turn/content/about-history.js
-          git commit -m "Synchronize TURN history with r180"
-          git push origin HEAD:fix/semantic-car-paint-r180
-
   regression:
     runs-on: ubuntu-latest
     steps:
