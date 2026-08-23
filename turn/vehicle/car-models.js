@@ -13,9 +13,13 @@ import {
   makeWideGamutSpec,
   setThreeColor
 } from './wide-gamut.js?revision=r157-display-p3';
-import { installVehicleVisualUpgrade } from './visual-upgrades.js?revision=r177-rally-refinement';
+import {
+  getKenneyPaletteAsset,
+  installSemanticCarFinish,
+  recolorSemanticCarFinish
+} from './semantic-car-finish.js?revision=r179-native-surfaces';
 
-const loader = new GLTFLoader();
+const loadersByPack = new Map();
 const sourceCache = new Map();
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
 const TIRE_COLOR = 0x17191c;
@@ -62,6 +66,9 @@ export async function createCarVisual({
   const ghostColor = makeGhostColor(requestedColor);
   const ghostSecondaryColor = makeGhostColor(requestedSecondaryColor);
   const meshRecords = [];
+  const primaryPaintMaterials = [];
+  const secondaryPaintMaterials = [];
+  const semanticPaintRecords = [];
   let explicitPaintCount = 0;
 
   model.traverse((node) => {
@@ -71,39 +78,49 @@ export async function createCarVisual({
     node.material = Array.isArray(node.material) ? cloned : cloned[0];
 
     cloned.forEach((material) => {
+      const semantic = installSemanticCarFinish({
+        node,
+        material,
+        car,
+        primaryColor: ghost ? ghostColor : requestedColorSpec,
+        secondaryColor: ghost ? ghostSecondaryColor : requestedSecondaryColorSpec,
+        primaryPaintMaterials,
+        secondaryPaintMaterials,
+        semanticPaintRecords
+      });
       const record = {
         node,
         material,
+        semantic,
         protected: isProtectedPart(node, material),
         wheel: isWheelPart(node, material),
         secondaryPaint: isSecondaryPaint(node, car),
         explicitPaint: isExplicitPaint(node, material)
       };
-      if (record.explicitPaint && !record.protected) explicitPaintCount += 1;
+      if (!semantic && record.explicitPaint && !record.protected) explicitPaintCount += 1;
       meshRecords.push(record);
     });
   });
 
-  const primaryPaintMaterials = [];
-  const secondaryPaintMaterials = [];
   for (const record of meshRecords) {
     const {
       material,
+      semantic,
       protected: protectedPart,
       wheel: wheelPart,
       secondaryPaint,
       explicitPaint
     } = record;
-    const paintable = !car.fixedLivery && !protectedPart && !secondaryPaint && (
+    const paintable = !semantic && !car.fixedLivery && !protectedPart && !secondaryPaint && (
       explicitPaint
       || (explicitPaintCount === 0 && isFallbackPaintCandidate(material))
       || (car.pack !== 'car' && isFallbackPaintCandidate(material))
     );
 
-    if (wheelPart && material.color) {
+    if (!semantic && wheelPart && material.color) {
       material.color.setHex(TIRE_COLOR);
       if ('roughness' in material) material.roughness = Math.max(Number(material.roughness) || 0, 0.82);
-    } else if (secondaryPaint && !protectedPart && material.color) {
+    } else if (!semantic && secondaryPaint && !protectedPart && material.color) {
       setThreeColor(material.color, ghost ? ghostSecondaryColor : requestedSecondaryColorSpec);
       secondaryPaintMaterials.push(material);
     } else if (paintable && material.color) {
@@ -129,15 +146,6 @@ export async function createCarVisual({
     * car.visualSizeMultiplier
     * featuredVisualSizeMultiplier;
   normalizeModelToGround(model, targetLength * effectiveVisualScale);
-  installVehicleVisualUpgrade({
-    root,
-    model,
-    car,
-    secondaryColor: ghost ? ghostSecondaryColor : requestedSecondaryColorSpec,
-    ghost,
-    outline,
-    secondaryPaintMaterials
-  });
   if (car.emergencyService && !ghost) installEmergencyLightRig(root, model, car.emergencyService);
 
   root.userData.turnCarId = car.id;
@@ -152,6 +160,7 @@ export async function createCarVisual({
   root.userData.turnPrimaryPaintMaterials = primaryPaintMaterials;
   root.userData.turnSecondaryPaintMaterials = secondaryPaintMaterials;
   root.userData.turnPaintMaterials = [...primaryPaintMaterials, ...secondaryPaintMaterials];
+  root.userData.turnSemanticPaintRecords = semanticPaintRecords;
   root.userData.frontWheelPivots = [];
   root.userData.wheelSpinners = [];
   return root;
@@ -252,10 +261,13 @@ export function recolorCarVisual(root, color, secondaryColor = root?.userData?.t
   const displaySecondary = ghost
     ? makeGhostColor(normalizedSecondary)
     : secondaryColorSpec(car, normalizedSecondary);
+  recolorSemanticCarFinish(root, displayColor, displaySecondary);
   for (const material of root?.userData?.turnPrimaryPaintMaterials || []) {
+    if (material.userData?.turnSemanticPaint) continue;
     setThreeColor(material.color, displayColor);
   }
   for (const material of root?.userData?.turnSecondaryPaintMaterials || []) {
+    if (material.userData?.turnSemanticPaint) continue;
     setThreeColor(material.color, displaySecondary);
   }
   if (root?.userData) {
@@ -267,9 +279,29 @@ export function recolorCarVisual(root, color, secondaryColor = root?.userData?.t
 async function loadCarSource(carId) {
   const car = getCarDefinition(carId);
   if (!sourceCache.has(car.id)) {
-    sourceCache.set(car.id, loader.loadAsync(assetUrl(car.asset)).then((gltf) => gltf.scene));
+    sourceCache.set(car.id, loaderForPack(car.pack).loadAsync(assetUrl(car.asset)).then((gltf) => gltf.scene));
   }
   return sourceCache.get(car.id);
+}
+
+function loaderForPack(pack) {
+  const key = String(pack || 'default');
+  if (loadersByPack.has(key)) return loadersByPack.get(key);
+  const paletteAsset = getKenneyPaletteAsset(key);
+  if (!paletteAsset) {
+    const loader = new GLTFLoader();
+    loadersByPack.set(key, loader);
+    return loader;
+  }
+  const manager = new THREE.LoadingManager();
+  manager.setURLModifier((url) => (
+    /(?:^|\/)Textures\/colormap\.png(?:[?#]|$)/i.test(url)
+      ? assetUrl(paletteAsset)
+      : url
+  ));
+  const loader = new GLTFLoader(manager);
+  loadersByPack.set(key, loader);
+  return loader;
 }
 
 function assetUrl(relativePath) {

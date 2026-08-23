@@ -100,15 +100,11 @@ assert.match(carModels, /prefers-reduced-motion: reduce/);
 assert.match(carModels, /periodMs = reducedMotion \? 1400/);
 assert.match(carModels, /globalThis\.__turnBoostActive/);
 
-assert.match(emergencyLiveries, /police:[\s\S]*primary: makeWideGamutSpec\('#0b0d10'[\s\S]*secondary: makeWideGamutSpec\('#f8f9fa'/);
-assert.match(emergencyLiveries, /ambulance:[\s\S]*primary: makeWideGamutSpec\('#f8f9fa'[\s\S]*secondary: makeWideGamutSpec\('#d92d20'[\s\S]*accent: 'rear-side-stripe'/);
-assert.match(emergencyLiveries, /firetruck:[\s\S]*primary: makeWideGamutSpec\('#d92d20'[\s\S]*secondary: makeWideGamutSpec\('#ffcc00'/);
-assert.match(emergencyLiveries, /applyFixedEmergencyLivery/);
-assert.match(emergencyLiveries, /turnEmergencyLiveryAccent/);
-assert.match(emergencyLiveries, /length: size\.z \* 0\.52/);
 assert.match(emergencyLiveries, /createBaseCarVisual/);
-assert.match(emergencyLiveries, /installLotUnselectedTint/,
-  'Unselected Lot vehicles should retain a subtle hint of their factory colour');
+assert.match(emergencyLiveries, /native-kenney-palette/,
+  'Emergency vehicles must keep the livery already authored into the Kenney atlas');
+assert.doesNotMatch(emergencyLiveries, /applyFixedEmergencyLivery|turnEmergencyLiveryAccent|BoxGeometry|installSecondaryAccent/,
+  'Emergency liveries must not add recolour geometry or procedural panels');
 assert.doesNotMatch(emergencyLiveries, /turnEmergencyLightRig|PointLight|AdditiveBlending/);
 
 assert.match(lot, /if \(car\.fixedLivery\)[\s\S]*colors\.replaceChildren\(\)[\s\S]*colors\.setAttribute\('aria-hidden', 'true'\)/,

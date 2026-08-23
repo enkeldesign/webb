@@ -16,13 +16,20 @@ assert.deepEqual(
 const secondaryCars = catalog.CAR_CATALOG.filter((car) => car.secondaryPaint);
 assert.deepEqual(
   secondaryCars.map((car) => car.id),
-  ['toy-racer', 'sedan-sports'],
-  'Only a genuine secondary mesh or a procedural visual upgrade should expose a second picker'
+  ['convertible', 'classic', 'vintage-racer', 'toy-racer', 'monster-truck', 'race-future', 'race', 'sedan-sports', 'sedan', 'suv', 'truck', 'van'],
+  'Every player-repaintable car should expose a semantic second picker'
 );
-assert.equal(secondaryCars[0].secondaryPaint.label, 'Rally kit');
+assert.equal(secondaryCars[0].secondaryPaint.label, 'Interior & trim');
 assert.deepEqual(secondaryCars[0].secondaryPaint.meshNames, []);
-assert.equal(secondaryCars[1].secondaryPaint.label, 'Spoiler');
-assert.deepEqual(secondaryCars[1].secondaryPaint.meshNames, ['spoiler']);
+assert.equal(secondaryCars[1].secondaryPaint.label, 'Bumpers & trim');
+assert.equal(secondaryCars[2].secondaryPaint.label, 'Racing stripe');
+assert.equal(secondaryCars[3].secondaryPaint.label, 'Rally trim');
+assert.equal(secondaryCars[4].secondaryPaint.label, 'Suspension trim');
+assert.equal(secondaryCars[5].secondaryPaint.label, 'Aero accents');
+assert.equal(secondaryCars[6].secondaryPaint.label, 'Aero trim');
+assert.equal(secondaryCars[7].secondaryPaint.label, 'Spoiler & trim');
+assert.deepEqual(secondaryCars[7].secondaryPaint.meshNames, ['spoiler']);
+assert.ok(secondaryCars.slice(8).every((car) => car.secondaryPaint.label === 'Lower body trim'));
 
 const sportSedanGlb = await fs.readFile(new URL('../../turn/assets/cars/sedan-sports.glb', import.meta.url));
 const sportSedanJson = readGlbJson(sportSedanGlb);
@@ -30,12 +37,13 @@ const meshNodeNames = (sportSedanJson.nodes || []).filter((node) => Number.isInt
 assert.ok(meshNodeNames.includes('body'), 'Sport Sedan body must remain a separate primary mesh');
 assert.ok(meshNodeNames.includes('spoiler'), 'Sport Sedan spoiler must remain a separate secondary mesh');
 
-const [index, releaseSource, lot, css, carModels, main, lapSystem, rivalStorage] = await Promise.all([
+const [index, releaseSource, lot, css, carModels, semanticFinish, main, lapSystem, rivalStorage] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/vehicle/semantic-car-finish.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/race/lap-system.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/race/rival-storage.js', import.meta.url), 'utf8')
@@ -51,7 +59,12 @@ assert.doesNotMatch(lot, /input\.className|input\.classList|input\.setAttribute\
 assert.doesNotMatch(css, /\.lot-color-input|input\[type=['"]?color/, 'TURN must not style the native color input itself');
 assert.doesNotMatch(css, /\.lot-color\[aria-pressed=/, 'The retired custom swatch state must be removed');
 assert.match(carModels, /turnSecondaryPaintMaterials/);
-assert.match(carModels, /isSecondaryPaint\(node, car\)/);
+assert.match(carModels, /turnSemanticPaintRecords/);
+assert.match(carModels, /recolorSemanticCarFinish/);
+assert.match(semanticFinish, /material\.onBeforeCompile/,
+  'Kenney paint must recolour the existing texture surface in the material shader');
+assert.match(semanticFinish, /RGSDEV_PRIMARY_MATERIALS/,
+  'Named-material models must share the same canonical paint API');
 assert.match(main, /vehicleSecondaryColor: initialVehicleSelection\.secondaryColor/);
 assert.match(main, /secondaryColor: state\.vehicleSecondaryColor/);
 assert.match(lapSystem, /carSecondaryColor: state\.vehicleSecondaryColor \|\| '#f8f9fa'/);
