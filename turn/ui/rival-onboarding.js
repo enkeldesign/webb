@@ -250,7 +250,7 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
   renderer.setSize(PREVIEW_WARM_WIDTH, PREVIEW_WARM_HEIGHT, false);
   modelHost.appendChild(renderer.domElement);
 
-  const camera = new THREE.PerspectiveCamera(34, PREVIEW_WARM_WIDTH / PREVIEW_WARM_HEIGHT, 0.1, 60);
+  const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 60);
   camera.position.set(7.8, 4.8, 8.8);
   camera.lookAt(0, 1.1, 0);
 
