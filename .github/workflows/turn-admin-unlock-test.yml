@@ -23,46 +23,9 @@ on:
       - '.github/workflows/turn-admin-unlock-test.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  stale-contract-sync:
-    if: github.event_name == 'pull_request' && github.head_ref == 'turn-vintage-secondary-rally-defaults'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out paint fix branch
-        uses: actions/checkout@v4
-        with:
-          ref: turn-vintage-secondary-rally-defaults
-
-      - name: Align Rally factory-paint contract
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          path = Path('turn-lab/tests/vehicle-drift-production.mjs')
-          source = path.read_text()
-          old = "assert.equal(rallyRacer.defaultColor, '#111111', 'Rally Racer factory paint must be #111');"
-          new = "assert.equal(rallyRacer.defaultColor, '#cccccc', 'Rally Racer factory paint must be #ccc');"
-          if new not in source:
-              if old not in source:
-                  raise SystemExit('missing expected Rally factory-paint assertion')
-              source = source.replace(old, new)
-              path.write_text(source)
-          PY
-          node turn-lab/tests/vehicle-drift-production.mjs
-
-      - name: Commit corrected contract
-        run: |
-          if git diff --quiet; then
-            echo "Rally factory-paint contract already synchronized"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add turn-lab/tests/vehicle-drift-production.mjs
-          git commit -m "Align Rally Racer drift contract with r182 paint"
-          git push origin HEAD:turn-vintage-secondary-rally-defaults
-
   admin-unlock:
     runs-on: ubuntu-latest
     steps:
