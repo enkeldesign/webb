@@ -11,6 +11,7 @@ import { createCarVisual } from '../vehicle/car-models.js?build=20260720-r22';
 const RESULT_TOAST_HANDOFF_MS = 4300;
 const ONBOARDING_VISIBLE_MS = 3200;
 const ONBOARDING_EXIT_MS = 180;
+const PREVIEW_PREP_IDLE_TIMEOUT_MS = 2400;
 const VIEWER_INITIAL_YAW = Math.PI - 0.55;
 const VIEWER_ROTATION_RADIANS_PER_SECOND = 0.144;
 const VIEWER_FRAME_INTERVAL_MS = 1000 / 30;
@@ -44,18 +45,35 @@ export function installRivalOnboarding() {
   let showTimer = 0;
   let hideTimer = 0;
   let exitTimer = 0;
+  let revealFrame = 0;
+  let preparationIdleHandle = 0;
+  let preparationTimer = 0;
+  let previewGeneration = 0;
   let preview = null;
 
   function clearTimers() {
     window.clearTimeout(showTimer);
     window.clearTimeout(hideTimer);
     window.clearTimeout(exitTimer);
+    cancelAnimationFrame(revealFrame);
     showTimer = 0;
     hideTimer = 0;
     exitTimer = 0;
+    revealFrame = 0;
+  }
+
+  function cancelPreparation() {
+    previewGeneration += 1;
+    if (preparationIdleHandle && typeof globalThis.cancelIdleCallback === 'function') {
+      globalThis.cancelIdleCallback(preparationIdleHandle);
+    }
+    window.clearTimeout(preparationTimer);
+    preparationIdleHandle = 0;
+    preparationTimer = 0;
   }
 
   function destroyPreview() {
+    cancelPreparation();
     preview?.dispose();
     preview = null;
     modelHost.replaceChildren();
@@ -90,11 +108,45 @@ export function installRivalOnboarding() {
     clearTimers();
     plate.hidden = false;
     plate.classList.remove('is-visible', 'is-leaving');
-    preview?.resize();
-    preview?.start();
-    void plate.offsetWidth;
-    plate.classList.add('is-visible');
+
+    // Cross a frame boundary instead of forcing layout with offsetWidth. The 3D preview
+    // has already been prepared independently; revealing the copy must never wait for it.
+    revealFrame = requestAnimationFrame(() => {
+      revealFrame = 0;
+      if (plate.hidden) return;
+      preview?.start();
+      plate.classList.add('is-visible');
+    });
     hideTimer = window.setTimeout(() => hide(), ONBOARDING_VISIBLE_MS);
+  }
+
+  function preparePreview({ carId, color, secondaryColor }) {
+    const generation = ++previewGeneration;
+    const prepare = () => {
+      preparationIdleHandle = 0;
+      preparationTimer = 0;
+      if (generation !== previewGeneration) return;
+
+      const nextPreview = createGhostPreview({ modelHost, carId, color, secondaryColor, onError() {
+        plate.classList.add('is-model-unavailable');
+      } });
+      if (generation !== previewGeneration) {
+        nextPreview.dispose();
+        return;
+      }
+      preview = nextPreview;
+      if (!plate.hidden) preview.start();
+    };
+
+    // Creating a second WebGL context and cloning the ghost scene is optional onboarding
+    // work. Give it the quiet result-toast handoff window instead of the lap-completion frame.
+    if (typeof globalThis.requestIdleCallback === 'function') {
+      preparationIdleHandle = globalThis.requestIdleCallback(prepare, {
+        timeout: PREVIEW_PREP_IDLE_TIMEOUT_MS
+      });
+    } else {
+      preparationTimer = window.setTimeout(prepare, 120);
+    }
   }
 
   function schedule(rival) {
@@ -110,9 +162,7 @@ export function installRivalOnboarding() {
     );
 
     plate.style.setProperty('--rival-onboarding-color', makeGhostColor(color));
-    preview = createGhostPreview({ modelHost, carId, color, secondaryColor, onError() {
-      plate.classList.add('is-model-unavailable');
-    } });
+    preparePreview({ carId, color, secondaryColor });
 
     showTimer = window.setTimeout(() => {
       showTimer = 0;
@@ -153,6 +203,9 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.35));
   renderer.setClearColor(0x000000, 0);
+  // Keep the hidden warm-up surface tiny. ResizeObserver supplies the real size only
+  // after the onboarding becomes visible, avoiding a reveal-time layout read.
+  renderer.setSize(1, 1, false);
   modelHost.appendChild(renderer.domElement);
 
   const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 60);
@@ -172,23 +225,31 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
   let visual = null;
   let disposed = false;
   let active = false;
+  let warmed = false;
   let animationFrame = 0;
+  let warmIdleHandle = 0;
+  let warmTimer = 0;
   let lastTickAt = 0;
   let lastRenderAt = 0;
   let yaw = VIEWER_INITIAL_YAW;
   const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true;
 
+  const resizeTo = (width, height) => {
+    if (disposed || !width || !height) return;
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(Math.round(width), Math.round(height), false);
+    if (active && warmed && reducedMotion) renderer.render(scene, camera);
+  };
+
   const resize = () => {
     if (disposed) return;
     const rect = modelHost.getBoundingClientRect();
-    if (!rect.width || !rect.height) return;
-    camera.aspect = rect.width / rect.height;
-    camera.updateProjectionMatrix();
-    renderer.setSize(Math.round(rect.width), Math.round(rect.height), false);
+    resizeTo(rect.width, rect.height);
   };
 
   const renderFrame = (now) => {
-    if (disposed) return;
+    if (disposed || !warmed) return;
     stage.rotation.y = yaw;
     stage.rotation.x = 0.08;
     if (visual) visual.position.y = reducedMotion ? 0 : Math.sin((now / 1000) * 2.1) * 0.04;
@@ -197,6 +258,10 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
 
   const tick = (now) => {
     if (!active || disposed) return;
+    if (!warmed) {
+      animationFrame = requestAnimationFrame(tick);
+      return;
+    }
     const dt = Math.min(0.1, Math.max(0, (now - lastTickAt) / 1000));
     lastTickAt = now;
     if (!reducedMotion) yaw += dt * VIEWER_ROTATION_RADIANS_PER_SECOND;
@@ -204,11 +269,68 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
       lastRenderAt = now;
       renderFrame(now);
     }
-    animationFrame = requestAnimationFrame(tick);
+    animationFrame = reducedMotion ? 0 : requestAnimationFrame(tick);
   };
 
-  const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(resize) : null;
+  const observer = typeof ResizeObserver === 'function'
+    ? new ResizeObserver((entries) => {
+      const rect = entries[0]?.contentRect;
+      if (rect) resizeTo(rect.width, rect.height);
+    })
+    : null;
   observer?.observe(modelHost);
+
+  const runWarmupWhenIdle = (callback) => {
+    if (disposed) return;
+    if (typeof globalThis.requestIdleCallback === 'function') {
+      warmIdleHandle = globalThis.requestIdleCallback(() => {
+        warmIdleHandle = 0;
+        if (!disposed) callback();
+      }, { timeout: PREVIEW_PREP_IDLE_TIMEOUT_MS });
+    } else {
+      warmTimer = window.setTimeout(() => {
+        warmTimer = 0;
+        if (!disposed) callback();
+      }, 120);
+    }
+  };
+
+  const finishWarmup = () => {
+    if (disposed || !visual) return;
+    // One 1×1 hidden render uploads geometry/textures after compilation. The visible
+    // first frame then has no new program or texture work to discover.
+    renderer.render(scene, camera);
+    warmed = true;
+    if (active && !animationFrame) {
+      lastTickAt = performance.now();
+      animationFrame = requestAnimationFrame(tick);
+    }
+  };
+
+  const warmRenderer = async () => {
+    if (disposed || !visual) return;
+    try {
+      if (typeof renderer.compileAsync === 'function') {
+        // KHR_parallel_shader_compile lets the separate onboarding context prepare the
+        // newer semantic paint shaders without stalling the racing frame.
+        await renderer.compileAsync(scene, camera);
+        if (disposed) return;
+        runWarmupWhenIdle(finishWarmup);
+      } else {
+        runWarmupWhenIdle(() => {
+          if (disposed) return;
+          renderer.compile(scene, camera);
+          finishWarmup();
+        });
+      }
+    } catch (error) {
+      if (disposed) return;
+      console.warn('TURN: first rival preview shader warm-up failed.', error);
+      // A failed optimization must not suppress onboarding; let the ordinary render path recover.
+      warmed = true;
+      if (active && !animationFrame) animationFrame = requestAnimationFrame(tick);
+    }
+  };
 
   void createCarVisual({
     carId,
@@ -221,15 +343,12 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
     if (disposed) return;
     visual = next;
     stage.add(visual);
-    resize();
-    if (active) renderFrame(performance.now());
+    void warmRenderer();
   }).catch((error) => {
     if (disposed) return;
     console.warn('TURN: first rival could not load in the onboarding viewer.', error);
     onError?.(error);
   });
-
-  resize();
 
   return {
     renderer,
@@ -237,18 +356,21 @@ function createGhostPreview({ modelHost, carId, color, secondaryColor, onError }
     start() {
       if (disposed || active) return;
       active = true;
-      resize();
-      const now = performance.now();
-      lastTickAt = now;
-      lastRenderAt = 0;
-      renderFrame(now);
-      if (!reducedMotion) animationFrame = requestAnimationFrame(tick);
+      lastTickAt = performance.now();
+      if (!observer) resize();
+      // Never synchronously render on reveal. If warm-up is still finishing, the copy
+      // appears on time and the 3D model joins on a later animation frame.
+      animationFrame = requestAnimationFrame(tick);
     },
     dispose() {
       if (disposed) return;
       disposed = true;
       active = false;
       cancelAnimationFrame(animationFrame);
+      if (warmIdleHandle && typeof globalThis.cancelIdleCallback === 'function') {
+        globalThis.cancelIdleCallback(warmIdleHandle);
+      }
+      window.clearTimeout(warmTimer);
       observer?.disconnect();
       renderer.dispose();
       renderer.domElement.remove();
