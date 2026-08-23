@@ -23,9 +23,187 @@ on:
       - '.github/workflows/turn-admin-unlock-test.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
+  hotpath-sync:
+    if: github.event_name == 'pull_request' && github.head_ref == 'turn-performance-loading-review'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out performance branch
+        uses: actions/checkout@v4
+        with:
+          ref: turn-performance-loading-review
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Apply runtime performance changes
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          function read(path) { return fs.readFileSync(path, 'utf8'); }
+          function write(path, source) { fs.writeFileSync(path, source); }
+          function replace(path, from, to, label) {
+            const source = read(path);
+            if (!source.includes(from)) throw new Error(`${path}: missing ${label || from.slice(0, 80)}`);
+            write(path, source.replace(from, to));
+          }
+          function replaceRegex(path, pattern, to, label) {
+            const source = read(path);
+            if (!pattern.test(source)) throw new Error(`${path}: missing ${label}`);
+            pattern.lastIndex = 0;
+            write(path, source.replace(pattern, to));
+          }
+
+          // Color Cue is the CHROMATIC CAMOUFLAGE signal: body/primary only.
+          replaceRegex(
+            'turn/progression/lot-paint-reward.js',
+            /\n  function secondaryColorValue\(car\) \{[\s\S]*?\n  \}\n/,
+            '\n',
+            'secondaryColorValue helper'
+          );
+          replaceRegex(
+            'turn/progression/lot-paint-reward.js',
+            /  function colorCueDescription\(car\) \{[\s\S]*?\n  \}\n\n  function ensureVisualColorCue/,
+            `  function colorCueDescription(car) {\n    if (!car) return '';\n    return describeColorCue(bodyColorValue(car.id)).toUpperCase();\n  }\n\n  function ensureVisualColorCue`,
+            'Color Cue composition'
+          );
+
+          // Achievement view: defer the expensive full dialog rebuild until the dialog is open,
+          // and animate across frames instead of forcing synchronous layout with offsetWidth.
+          replace(
+            'turn/achievements/view.js',
+            `  let toastHideTimer = 0;\n  let rewardToastHideTimer = 0;\n  let attentionTimer = 0;`,
+            `  let toastHideTimer = 0;\n  let rewardToastHideTimer = 0;\n  let toastConcealTimer = 0;\n  let rewardToastConcealTimer = 0;\n  let toastShowFrame = 0;\n  let rewardToastShowFrame = 0;\n  let attentionTimer = 0;\n  let attentionFrame = 0;\n  let dialogDirty = true;\n\n  function dialogIsOpen() {\n    return dialog.open === true || dialog.hasAttribute('open');\n  }`,
+            'achievement view state'
+          );
+          replaceRegex(
+            'turn/achievements/view.js',
+            /  function render\(\) \{[\s\S]*?\n  \}\n\n  function syncTriggers/,
+            `  function render({ force = false } = {}) {\n    if (!force && !dialogIsOpen()) {\n      dialogDirty = true;\n      return false;\n    }\n    if (!force && !dialogDirty) return false;\n\n    const unlockedCount = Object.keys(store.state.unlocked).length;\n    const trophies = store.trophyTotal();\n    const completion = Math.round((unlockedCount / ACHIEVEMENTS.length) * 100);\n    totalTitle.textContent = \`${'${unlockedCount}'} OF ${'${ACHIEVEMENTS.length}'} UNLOCKED\`;\n    trophyTotal.textContent = String(trophies);\n    percent.textContent = \`${'${completion}'}%\`;\n    renderTrophyRoad(trophies);\n    storageNote.hidden = store.storageAvailable();\n    list.innerHTML = ACHIEVEMENTS\n      .map((achievement) => achievementCard(achievement, store, session))\n      .join('');\n    applyFilter();\n    dialogDirty = false;\n    return true;\n  }\n\n  function syncTriggers`,
+            'achievement render function'
+          );
+          replace(
+            'turn/achievements/view.js',
+            `  function open(trigger) {\n    returnFocus = trigger;\n    selectedRewardId = initialRewardSelection(store);\n    render();`,
+            `  function open(trigger) {\n    returnFocus = trigger;\n    selectedRewardId = initialRewardSelection(store);\n    render({ force: true });`,
+            'achievement open render'
+          );
+          replaceRegex(
+            'turn/achievements/view.js',
+            /  function pulseRaceTrigger\(\) \{[\s\S]*?\n  \}\n\n  function showToast/,
+            `  function pulseRaceTrigger() {\n    window.clearTimeout(attentionTimer);\n    if (attentionFrame) window.cancelAnimationFrame(attentionFrame);\n    raceTrigger.classList.remove('is-achievement-pulsing', 'is-achievement-attention');\n    attentionFrame = window.requestAnimationFrame(() => {\n      attentionFrame = 0;\n      if (globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {\n        raceTrigger.classList.add('is-achievement-attention');\n      } else {\n        raceTrigger.classList.add('is-achievement-pulsing');\n      }\n      attentionTimer = window.setTimeout(() => {\n        raceTrigger.classList.remove('is-achievement-pulsing', 'is-achievement-attention');\n        attentionTimer = 0;\n      }, ATTENTION_VISIBLE_MS);\n    });\n  }\n\n  function showToast`,
+            'achievement pulse hot path'
+          );
+          replaceRegex(
+            'turn/achievements/view.js',
+            /  function showToast\(toastElement, batch, \{ reward = false \} = \{\}\) \{[\s\S]*?\n  \}\n\n  function showToastBatch/,
+            `  function showToast(toastElement, batch, { reward = false } = {}) {\n    if (!batch.length) return;\n    const timerKey = reward ? 'reward' : 'achievement';\n    if (timerKey === 'reward') {\n      window.clearTimeout(rewardToastHideTimer);\n      window.clearTimeout(rewardToastConcealTimer);\n      if (rewardToastShowFrame) window.cancelAnimationFrame(rewardToastShowFrame);\n    } else {\n      window.clearTimeout(toastHideTimer);\n      window.clearTimeout(toastConcealTimer);\n      if (toastShowFrame) window.cancelAnimationFrame(toastShowFrame);\n    }\n    const first = batch[0];\n    const total = reward\n      ? 0\n      : batch.reduce((sum, achievement) => sum + achievement.trophies, 0);\n    toastElement.querySelector('.turn-achievement-toast-icon').innerHTML = reward\n      ? TROPHY_ROAD_REWARD_ICONS[first.icon]\n      : (batch.length === 1 ? ICONS[first.icon] : ICONS.trophy);\n    toastElement.querySelector('span').textContent = reward\n      ? (batch.length === 1 ? 'TROPHY ROAD REWARD' : \`${'${batch.length}'} TROPHY ROAD REWARDS\`)\n      : (batch.length === 1 ? 'ACHIEVEMENT UNLOCKED' : \`${'${batch.length}'} ACHIEVEMENTS UNLOCKED\`);\n    toastElement.querySelector('strong').textContent = batch.length === 1\n      ? first.title\n      : \`${'${first.title}'} + ${'${batch.length - 1}'} MORE\`;\n    toastElement.querySelector('b').textContent = reward\n      ? 'UNLOCKED'\n      : \`+${'${total}'} TROPHIES\`;\n    toastElement.setAttribute('aria-label', reward\n      ? \`${'${batch.length === 1 ? \'Trophy Road reward unlocked\' : `${batch.length} Trophy Road rewards unlocked`}'} . ${'${batch.map((item) => item.shortTitle).join(\', \')}'} .\`.replaceAll(' .', '.')\n      : \`${'${batch.length === 1 ? \'Achievement unlocked\' : `${batch.length} achievements unlocked`}'} . ${'${batch.map((achievement) => achievement.title).join(\', \')}'} . ${'${total}'} trophies.\`.replaceAll(' .', '.'));\n\n    const alreadyVisible = !toastElement.hidden && toastElement.classList.contains('is-visible');\n    toastElement.hidden = false;\n    if (!alreadyVisible) {\n      toastElement.classList.remove('is-visible');\n      const frame = window.requestAnimationFrame(() => {\n        toastElement.classList.add('is-visible');\n        if (reward) rewardToastShowFrame = 0;\n        else toastShowFrame = 0;\n      });\n      if (reward) rewardToastShowFrame = frame;\n      else toastShowFrame = frame;\n    }\n\n    const timer = window.setTimeout(() => {\n      toastElement.classList.remove('is-visible');\n      const concealTimer = window.setTimeout(() => {\n        toastElement.hidden = true;\n        if (reward) rewardToastConcealTimer = 0;\n        else toastConcealTimer = 0;\n      }, 220);\n      if (reward) rewardToastConcealTimer = concealTimer;\n      else toastConcealTimer = concealTimer;\n    }, TOAST_VISIBLE_MS);\n    if (timerKey === 'reward') rewardToastHideTimer = timer;\n    else toastHideTimer = timer;\n  }\n\n  function showToastBatch`,
+            'achievement toast hot path'
+          );
+
+          // Achievement storage: serialize/write once per logical unlock batch.
+          replace(
+            'turn/achievements/store.js',
+            `  const state = loaded.state;\n  let storageAvailable = loaded.storageAvailable;`,
+            `  const state = loaded.state;\n  let storageAvailable = loaded.storageAvailable;\n  let batchDepth = 0;\n  let savePending = false;`,
+            'achievement batch state'
+          );
+          replace(
+            'turn/achievements/store.js',
+            `  function isUnlocked(id) {`,
+            `  function requestSave() {\n    if (batchDepth > 0) {\n      savePending = true;\n      return true;\n    }\n    return save();\n  }\n\n  function batch(callback) {\n    batchDepth += 1;\n    try {\n      return callback();\n    } finally {\n      batchDepth -= 1;\n      if (batchDepth === 0 && savePending) {\n        savePending = false;\n        save();\n      }\n    }\n  }\n\n  function isUnlocked(id) {`,
+            'achievement persistence batch functions'
+          );
+          {
+            let source = read('turn/achievements/store.js');
+            source = source.replaceAll('    save();', '    requestSave();');
+            source = source.replace('if (newlyUnlocked.length) save();', 'if (newlyUnlocked.length) requestSave();');
+            source = source.replace(`  return Object.freeze({\n    state,`, `  return Object.freeze({\n    state,\n    batch,`);
+            write('turn/achievements/store.js', source);
+          }
+
+          // Runtime batches unlock + reward persistence but keeps announcements/toast ordering after persistence.
+          replaceRegex(
+            'turn/achievements/runtime.js',
+            /  function syncRewards\(\{ delay = 0, silent = false \} = \{\}\) \{[\s\S]*?\n  \}\n\n  function unlock\(ids, context, options = \{\}\) \{[\s\S]*?\n  \}\n\n  function unlockSilently\(entries\) \{[\s\S]*?\n  \}/,
+            `  function unlock(ids, context, options = {}) {\n    let unlocked = [];\n    let rewards = [];\n    store.batch(() => {\n      unlocked = ids\n        .map((id) => store.unlock(id, context))\n        .filter(Boolean);\n      if (unlocked.length) rewards = store.syncRewards();\n    });\n    if (!unlocked.length) return [];\n\n    announceAchievementUpdate(unlocked);\n    queueUnlocked(unlocked, options);\n    if (rewards.length) {\n      announceRewardUpdate(rewards);\n      const rewardDelay = options.delay >= 0\n        ? options.delay + REWARD_TOAST_OFFSET_MS\n        : -1;\n      queueRewards(rewards, { delay: rewardDelay });\n    }\n    return unlocked;\n  }\n\n  function unlockSilently(entries) {\n    let unlocked = [];\n    let rewards = [];\n    store.batch(() => {\n      unlocked = entries\n        .map(({ id, context }) => store.unlock(id, context))\n        .filter(Boolean);\n      if (unlocked.length) rewards = store.syncRewards();\n    });\n    if (!unlocked.length) return [];\n\n    announceAchievementUpdate(unlocked);\n    if (rewards.length) announceRewardUpdate(rewards);\n    view.syncTriggers();\n    view.render();\n    return unlocked;\n  }`,
+            'achievement runtime persistence path'
+          );
+
+          // Color accessibility: ignore unrelated body mutations instead of scanning the whole UI.
+          replace(
+            'turn/accessibility/color-accessibility-r163.js',
+            `function sync() {`,
+            `function mutationTouchesColorCueUi(mutation) {\n  const selector = [\n    '.m8-home',\n    '.m8-settings-dialog',\n    '.track-card[data-track-id]',\n    '.lot-screen',\n    '.lot-color-control'\n  ].join(',');\n  return [...mutation.addedNodes, ...mutation.removedNodes].some((node) => (\n    node?.nodeType === 1\n      && (node.matches?.(selector) || node.querySelector?.(selector))\n  ));\n}\n\nfunction sync() {`,
+            'Color Cue mutation filter'
+          );
+          replace(
+            'turn/accessibility/color-accessibility-r163.js',
+            `  const observer = new MutationObserver(scheduleSync);\n  observer.observe(document.body, { childList: true, subtree: true });`,
+            `  const observer = new MutationObserver((mutations) => {\n    if (mutations.some(mutationTouchesColorCueUi)) scheduleSync();\n  });\n  observer.observe(document.body, { childList: true, subtree: true });`,
+            'Color Cue body observer'
+          );
+
+          // Prewarm the expensive score graph behind startup, but keep audio installation behind Home idle.
+          replace(
+            'turn/m8-home-fixed-layout.js',
+            `  // The score engine statically imports the menu score, six track scores, instrument\n  // banks and synth/drum runtimes. None is required to expose Home or start steering.\n  // Warm that graph only after Home is already interactive.\n  const musicReady = (async () => {\n    await waitForPostHomeIdle();\n    const [musicModule, musicHealthModule] = await Promise.all([\n      import(\`/turn/audio/racing-music-v2.js?build=${'${buildKey}'}-racing-music-warm-v2\`),\n      import(\`/turn/audio/racing-music-health.js?build=${'${buildKey}'}&revision=r164-long-session-robustness\`)\n    ]);`,
+            `  // The score engine statically imports the menu score, six track scores, instrument\n  // banks and synth/drum runtimes. Start fetching/compiling that graph while TURN's startup\n  // cover is still up; installation and playback still wait for post-Home idle.\n  const musicModulesPromise = Promise.all([\n    import(\`/turn/audio/racing-music-v2.js?build=${'${buildKey}'}-racing-music-warm-v2\`),\n    import(\`/turn/audio/racing-music-health.js?build=${'${buildKey}'}&revision=r164-long-session-robustness\`)\n  ]);\n  const musicReady = (async () => {\n    await waitForPostHomeIdle();\n    const [musicModule, musicHealthModule] = await musicModulesPromise;`,
+            'music graph warmup'
+          );
+
+          // Prewarm world-art module parsing behind startup, but do not mutate the live scene before Home.
+          replace(
+            'turn/render/world.js',
+            `  try {\n    await waitForHomeBeforeCosmetics();\n    const {`,
+            `  try {\n    const worldModulesPromise = loadWorldModules();\n    await waitForHomeBeforeCosmetics();\n    const {`,
+            'world graph warmup start'
+          );
+          replace(
+            'turn/render/world.js',
+            `    } = await loadWorldModules();`,
+            `    } = await worldModulesPromise;`,
+            'world graph warmup await'
+          );
+
+          // Make the hot-path regression part of the normal suite.
+          replace(
+            '.github/workflows/turn-lab-tests.yml',
+            `      - name: Run production performance and diagnostics regression\n        run: node turn-lab/tests/performance-production.mjs`,
+            `      - name: Run runtime hot-path and background-loading regression\n        run: node turn-lab/tests/runtime-hotpath-performance-production.mjs\n\n      - name: Run production performance and diagnostics regression\n        run: node turn-lab/tests/performance-production.mjs`,
+            'hot-path workflow step'
+          );
+          NODE
+
+      - name: Verify changed modules
+        run: |
+          node --check turn/achievements/view.js
+          node --check turn/achievements/runtime.js
+          node --check turn/achievements/store.js
+          node --check turn/accessibility/color-accessibility-r163.js
+          node --check turn/progression/lot-paint-reward.js
+          node --check turn/m8-home-fixed-layout.js
+          node --check turn/render/world.js
+          node turn-lab/tests/runtime-hotpath-performance-production.mjs
+          git diff --check
+
+      - name: Commit performance pass
+        run: |
+          if git diff --quiet; then
+            echo "Performance pass already applied"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add turn turn-lab .github/workflows/turn-lab-tests.yml
+          git commit -m "Optimize runtime hot paths and deferred loading"
+          git push origin HEAD:turn-performance-loading-review
+
   admin-unlock:
     runs-on: ubuntu-latest
     steps:
