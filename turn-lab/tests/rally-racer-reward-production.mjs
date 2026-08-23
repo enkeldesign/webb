@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
+await import('./hatchback-rally-surface-production.mjs');
+
 const [
   catalogSource,
   carModelsSource,
