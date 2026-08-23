@@ -24,18 +24,25 @@ assert.deepEqual(secondaryCars[0].secondaryPaint.meshNames, []);
 assert.equal(secondaryCars[1].secondaryPaint.label, 'Bumpers & trim');
 assert.equal(secondaryCars[2].secondaryPaint.label, 'Racing stripe');
 assert.equal(secondaryCars[3].secondaryPaint.label, 'Rally trim');
+assert.deepEqual(secondaryCars[3].secondaryPaint.meshNames, ['spoiler']);
 assert.equal(secondaryCars[4].secondaryPaint.label, 'Suspension trim');
 assert.equal(secondaryCars[5].secondaryPaint.label, 'Aero accents');
 assert.equal(secondaryCars[6].secondaryPaint.label, 'Aero trim');
-assert.equal(secondaryCars[7].secondaryPaint.label, 'Spoiler & trim');
-assert.deepEqual(secondaryCars[7].secondaryPaint.meshNames, ['spoiler']);
+assert.equal(secondaryCars[7].secondaryPaint.label, 'Sport trim');
+assert.deepEqual(secondaryCars[7].secondaryPaint.meshNames, []);
 assert.ok(secondaryCars.slice(8).every((car) => car.secondaryPaint.label === 'Lower body trim'));
 
-const sportSedanGlb = await fs.readFile(new URL('../../turn/assets/cars/sedan-sports.glb', import.meta.url));
-const sportSedanJson = readGlbJson(sportSedanGlb);
-const meshNodeNames = (sportSedanJson.nodes || []).filter((node) => Number.isInteger(node.mesh)).map((node) => String(node.name || '').toLowerCase());
-assert.ok(meshNodeNames.includes('body'), 'Sport Sedan body must remain a separate primary mesh');
-assert.ok(meshNodeNames.includes('spoiler'), 'Sport Sedan spoiler must remain a separate secondary mesh');
+const rallyGlb = await fs.readFile(new URL('../../turn/assets/cars/sedan-sports.glb', import.meta.url));
+const rallyJson = readGlbJson(rallyGlb, 'Rally Racer');
+const rallyMeshNames = meshNodeNames(rallyJson);
+assert.ok(rallyMeshNames.includes('body'), 'Rally Racer must inherit the Sport Sedan body mesh');
+assert.ok(rallyMeshNames.includes('spoiler'), 'Rally Racer must inherit the Sport Sedan rear spoiler');
+
+const hatchbackGlb = await fs.readFile(new URL('../../turn/assets/cars/hatchback-sports.glb', import.meta.url));
+const hatchbackJson = readGlbJson(hatchbackGlb, 'Hatchback');
+const hatchbackMeshNames = meshNodeNames(hatchbackJson);
+assert.ok(hatchbackMeshNames.includes('body'), 'Hatchback must expose its authored body mesh');
+assert.equal(hatchbackMeshNames.includes('spoiler'), false, 'Hatchback must not advertise the old Sedan spoiler control');
 
 const [index, releaseSource, lot, css, carModels, semanticFinish, main, lapSystem, rivalStorage] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
@@ -61,6 +68,8 @@ assert.doesNotMatch(css, /\.lot-color\[aria-pressed=/, 'The retired custom swatc
 assert.match(carModels, /turnSecondaryPaintMaterials/);
 assert.match(carModels, /turnSemanticPaintRecords/);
 assert.match(carModels, /recolorSemanticCarFinish/);
+assert.match(semanticFinish, /surfaceProfileId \|\| car\.id/,
+  'Semantic paint must follow the mounted source model rather than assuming gameplay ID equals mesh identity');
 assert.match(semanticFinish, /material\.onBeforeCompile/,
   'Kenney paint must recolour the existing texture surface in the material shader');
 assert.match(semanticFinish, /RGSDEV_PRIMARY_MATERIALS/,
@@ -71,9 +80,9 @@ assert.match(lapSystem, /carSecondaryColor: state\.vehicleSecondaryColor \|\| '#
 assert.match(rivalStorage, /version: 6/, 'Track-scoped rivals must preserve geometry revision and secondary paint metadata');
 assert.match(rivalStorage, /normalizeVehicleSecondaryColor\(lap\.carSecondaryColor\)/);
 
-console.log(`TURN ${release.id} bare native and secondary paint passed.`);
+console.log(`TURN ${release.id} Hatchback, Rally Racer and native secondary paint passed.`);
 
-function readGlbJson(buffer) {
+function readGlbJson(buffer, label) {
   assert.equal(buffer.toString('utf8', 0, 4), 'glTF');
   let offset = 12;
   while (offset + 8 <= buffer.length) {
@@ -82,5 +91,11 @@ function readGlbJson(buffer) {
     if (type === 'JSON') return JSON.parse(buffer.subarray(offset + 8, offset + 8 + length).toString('utf8').trim());
     offset += 8 + length;
   }
-  assert.fail('Sport Sedan has no GLB JSON chunk');
+  assert.fail(`${label} has no GLB JSON chunk`);
+}
+
+function meshNodeNames(json) {
+  return (json.nodes || [])
+    .filter((node) => Number.isInteger(node.mesh))
+    .map((node) => String(node.name || '').toLowerCase());
 }

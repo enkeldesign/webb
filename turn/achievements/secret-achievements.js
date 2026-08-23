@@ -1,4 +1,4 @@
-import { ACHIEVEMENTS, ICONS } from './catalog.js?revision=r166-bella-records';
+import { ACHIEVEMENTS, ICONS } from './catalog.js?revision=r181-hatchback-rally';
 import { takePendingSecretAchievements } from './secret-events.js?revision=r174-bella-siren-zone';
 
 const SAVE_BELLA_ID = 'save-bella';

@@ -14,10 +14,22 @@ const KENNEY_PROFILE_BY_ID = Object.freeze({
   van: profile({ primary: [[7, 2], [7, 3]], secondary: [[3, 4], [3, 5]], rims: [[5, 4], [5, 5]] }),
   suv: profile({ primary: [[3, 2], [3, 3]], secondary: [[3, 4], [3, 5]], rims: [[5, 4], [5, 5]] }),
   convertible: profile({ primary: [[2, 4], [2, 5]], secondary: [[1, 6], [1, 7]], rims: [[4, 6], [4, 7]] }),
+  'hatchback-sports': profile({
+    primary: [[3, 2], [3, 3]],
+    secondary: [[3, 4], [3, 5]],
+    rims: [[5, 4], [5, 5]]
+  }),
   'sedan-sports': profile({
     primary: [[6, 2], [6, 3]],
     secondary: [[3, 4], [3, 5]],
     rims: [[5, 4], [5, 5]],
+    secondaryPrimaryNodes: ['spoiler']
+  }),
+  'sedan-sports-rally': profile({
+    primary: [[6, 2], [6, 3]],
+    secondary: [[3, 4], [3, 5]],
+    rims: [[5, 4], [5, 5]],
+    rimRole: 'secondary',
     secondaryPrimaryNodes: ['spoiler']
   }),
   race: profile({ primary: [[6, 2], [6, 3]], secondary: [[3, 4], [3, 5]], rims: [[4, 2], [4, 3]] }),
@@ -79,7 +91,8 @@ export function installSemanticCarFinish({
   if ('roughness' in material) material.roughness = Math.max(Number(material.roughness) || 0, 0.76);
   if (car.fixedLivery) return true;
 
-  const masks = semanticMasksForNode(car.id, node?.name);
+  const profileId = String(car.surfaceProfileId || car.id || '');
+  const masks = semanticMasksForNode(profileId, node?.name);
   if (!masks.primary.length && !masks.secondary.length) return true;
 
   const uniforms = {
@@ -88,7 +101,7 @@ export function installSemanticCarFinish({
   };
   const primaryExpression = cellMaskExpression(masks.primary);
   const secondaryExpression = cellMaskExpression(masks.secondary);
-  const cacheKey = `${car.id}:${String(node?.name || '').toLowerCase()}:${primaryExpression}:${secondaryExpression}`;
+  const cacheKey = `${profileId}:${String(node?.name || '').toLowerCase()}:${primaryExpression}:${secondaryExpression}`;
 
   material.onBeforeCompile = (shader) => {
     shader.uniforms.turnPrimaryColor = uniforms.turnPrimaryColor;
@@ -143,8 +156,8 @@ function installRgsdevMaterial({
   return true;
 }
 
-function semanticMasksForNode(carId, nodeName) {
-  const profile = KENNEY_PROFILE_BY_ID[carId];
+function semanticMasksForNode(profileId, nodeName) {
+  const profile = KENNEY_PROFILE_BY_ID[profileId];
   if (!profile) return { primary: [], secondary: [] };
   const name = String(nodeName || '').toLowerCase();
   const wheel = /wheel/.test(name);

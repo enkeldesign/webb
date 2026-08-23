@@ -177,7 +177,6 @@ assert.equal(empty.version, 5,
 assert.deepEqual(empty.progress.tracks, []);
 assert.deepEqual(empty.progress.blankTracks, []);
 assert.deepEqual(empty.rewards.unlocked, []);
-
 const memory = new Map();
 const storage = {
   getItem: (key) => memory.get(key) ?? null,
@@ -280,7 +279,7 @@ assert.match(worldSource, /countryside-bella-r166\.js/);
 assert.match(worldSource, /r168-bella-markings-eyes-foliage/,
   'The world loader must cache-bust the corrected Bella visual module');
 
-assert.match(runtime, /catalog\.js\?revision=r166-bella-records/);
+assert.match(runtime, /catalog\.js\?revision=r181-hatchback-rally/);
 assert.match(runtime, /view\.js\?revision=r166-bella-records/);
 assert.match(view, /TROPHY_ROAD_MAX_THRESHOLD/);
 assert.match(nightShiftSource, /RIVAL_COUNT = 4/);

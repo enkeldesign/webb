@@ -2,7 +2,7 @@ import {
   TIME_TRIALS,
   TIME_TRIAL_ACHIEVEMENT_IDS
 } from './time-trials.js?revision=r166-bella-records';
-import { SECRET_ACHIEVEMENTS } from './secret-catalog.js?revision=r166-bella-records';
+import { SECRET_ACHIEVEMENTS } from './secret-catalog.js?revision=r181-hatchback-rally';
 
 export const TRACK_IDS = Object.freeze([
   'countryside',
@@ -46,11 +46,11 @@ export const VEHICLE_NAMES = Object.freeze({
   convertible: 'Convertible',
   classic: 'Training Car',
   'vintage-racer': 'Vintage Racer',
-  'toy-racer': 'Toy Racer',
+  'toy-racer': 'Rally Racer',
   'monster-truck': 'Monster Truck',
   'race-future': 'Future Racer',
   race: 'Race Car',
-  'sedan-sports': 'Sport Sedan',
+  'sedan-sports': 'Hatchback',
   sedan: 'Sedan',
   suv: 'SUV',
   firetruck: 'Fire Truck',
