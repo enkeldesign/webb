@@ -23,8 +23,8 @@ const [
 const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
 const release = JSON.parse(releaseSource);
 
-assert.equal(release.version, '1.10.3');
-assert.equal(release.id, '2026.08.23-r182');
+assert.equal(release.version, '1.10.4');
+assert.equal(release.id, '2026.08.23-r183');
 assert.equal(catalog.CAR_CATALOG.length, 15);
 assert.deepEqual(
   catalog.CAR_CATALOG.filter((car) => !car.fixedLivery && !car.secondaryPaint).map((car) => car.id),
