@@ -16,6 +16,12 @@ import {
   loadRgsdevCarSource
 } from './rgsdev-model-source.js?revision=r208-rgsdev-vehicles';
 import {
+  getSupercarModelYawQuarterTurns,
+  getSupercarPrimaryPaintMaterial,
+  isSupercar,
+  loadSupercarSource
+} from './supercar-model-source.js?revision=r209-supercar';
+import {
   makeWideGamutSpec,
   setThreeColor
 } from './wide-gamut.js?revision=r157-display-p3';
@@ -54,7 +60,9 @@ export async function createCarVisual({
   const source = await loadCarSource(car.id);
   const root = new THREE.Group();
   const model = source.clone(true);
-  const modelYawQuarterTurns = getRgsdevModelYawQuarterTurns(car.id, car.modelYawQuarterTurns);
+  const modelYawQuarterTurns = isSupercar(car.id)
+    ? getSupercarModelYawQuarterTurns(car.id, car.modelYawQuarterTurns)
+    : getRgsdevModelYawQuarterTurns(car.id, car.modelYawQuarterTurns);
   model.rotation.y = Math.PI + modelYawQuarterTurns * Math.PI / 2;
   root.add(model);
 
@@ -103,7 +111,7 @@ export async function createCarVisual({
     const paintable = !car.fixedLivery && !protectedPart && !secondaryPaint && (
       explicitPaint
       || (explicitPaintCount === 0 && isFallbackPaintCandidate(material))
-      || (!isRgsdevCar(car.id) && car.pack !== 'car' && isFallbackPaintCandidate(material))
+      || (!isRgsdevCar(car.id) && !isSupercar(car.id) && car.pack !== 'car' && isFallbackPaintCandidate(material))
     );
 
     if (wheelPart && material.color) {
@@ -267,9 +275,11 @@ async function loadCarSource(carId) {
     const legacy = () => loader.loadAsync(assetUrl(car.asset)).then((gltf) => gltf.scene);
     sourceCache.set(
       car.id,
-      isRgsdevCar(car.id)
-        ? loadRgsdevCarSource({ carId: car.id, buildKey }).catch(legacy)
-        : legacy()
+      isSupercar(car.id)
+        ? loadSupercarSource({ carId: car.id, buildKey }).catch(legacy)
+        : isRgsdevCar(car.id)
+          ? loadRgsdevCarSource({ carId: car.id, buildKey }).catch(legacy)
+          : legacy()
     );
   }
   return sourceCache.get(car.id);
@@ -332,7 +342,7 @@ function isProtectedPart(node, material) {
 
 function isWheelPart(node, material, car) {
   const label = `${node.name || ''} ${material.name || ''}`.toLowerCase();
-  if (isRgsdevCar(car?.id)) return /tire|tyre|rubber/.test(label);
+  if (isRgsdevCar(car?.id) || isSupercar(car?.id)) return /tire|tyre|rubber/.test(label);
   return /wheel|tire|tyre|rubber/.test(label);
 }
 
@@ -342,9 +352,10 @@ function isSecondaryPaint(node, car) {
 }
 
 function isExplicitPaint(node, material, car) {
-  const rgsdevMaterial = getRgsdevPrimaryPaintMaterial(car?.id);
-  if (rgsdevMaterial) {
-    return String(material?.name || '').replace(/\0/g, '').trim().toLowerCase() === rgsdevMaterial;
+  const importedMaterial = getSupercarPrimaryPaintMaterial(car?.id)
+    || getRgsdevPrimaryPaintMaterial(car?.id);
+  if (importedMaterial) {
+    return String(material?.name || '').replace(/\0/g, '').trim().toLowerCase() === importedMaterial;
   }
   const label = `${node.name || ''} ${material.name || ''}`.toLowerCase();
   return /paint|body|primary|vehiclecolor|carcolor/.test(label);
