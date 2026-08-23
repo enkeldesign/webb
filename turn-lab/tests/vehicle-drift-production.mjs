@@ -173,37 +173,37 @@ assert.match(physicsSource, /0\.42 \* driftStabilityMultiplier \* driftGripTunin
 assert.match(physicsSource, /slideStrength = \(driftHeld \? 0\.235 : 0\.12\) \* driftSlideMultiplier/,
   'Vehicle physics must apply the car-owned sustained-slide multiplier');
 
-const rallyRacer = CAR_CATALOG.find((car) => car.id === 'toy-racer');
-assert.ok(rallyRacer, 'The former Toy Racer asset/id must remain available for saved selections and ghosts');
-assert.equal(rallyRacer.name, 'Rally Racer', 'Toy Racer must be presented as Rally Racer without changing its stable id');
-assert.deepEqual(rallyRacer.stats, {
+const supercar = CAR_CATALOG.find((car) => car.id === 'toy-racer');
+assert.ok(supercar, 'The former Toy Racer asset/id must remain available for saved selections and ghosts');
+assert.equal(supercar.name, 'Supercar', 'Toy Racer must be presented as Supercar without changing its stable id');
+assert.deepEqual(supercar.stats, {
   speed: 4,
   acceleration: 4,
   control: 1,
   drift: 4,
   boostPower: 4,
   boostDuration: 1
-}, 'Rally Racer must keep the intentional high-skill 4/4/1/4/4/1 profile');
-assert.equal(getVehicleStatTotal(rallyRacer.stats), 18,
-  'Rally Racer must retain the shared 18-point vehicle budget');
-const ordinaryRallyTuning = deriveVehicleTuning(rallyRacer.stats);
+}, 'Supercar must keep the intentional high-skill 4/4/1/4/4/1 profile');
+assert.equal(getVehicleStatTotal(supercar.stats), 18,
+  'Supercar must retain the shared 18-point vehicle budget');
+const ordinarySupercarTuning = deriveVehicleTuning(supercar.stats);
 for (const tuningKey of CORE_TUNING_KEYS) {
   assert.equal(
-    rallyRacer.tuning[tuningKey],
-    ordinaryRallyTuning[tuningKey],
-    `Rally Racer ${tuningKey} must come from its 4/4/1/4/4/1 attributes`
+    supercar.tuning[tuningKey],
+    ordinarySupercarTuning[tuningKey],
+    `Supercar ${tuningKey} must come from its 4/4/1/4/4/1 attributes`
   );
 }
-assert.equal(rallyRacer.defaultColor, '#111111', 'Rally Racer factory paint must be #111');
-assert.equal(rallyRacer.perk?.title, 'TWITCHY TURNY');
-assert.match(rallyRacer.perk?.description || '', /fills BOOST even faster/i);
-assert.doesNotMatch(rallyRacer.perk?.description || '', /tiny|small(?:er)? tank/i,
+assert.equal(supercar.defaultColor, '#111111', 'Supercar factory paint must be #111');
+assert.equal(supercar.perk?.title, 'TWITCHY TURNY');
+assert.match(supercar.perk?.description || '', /fills BOOST even faster/i);
+assert.doesNotMatch(supercar.perk?.description || '', /tiny|small(?:er)? tank/i,
   'TWITCHY TURNY copy must not imply a special Boost-tank penalty');
-assert.equal(rallyRacer.stats.boostDuration, 1,
-  'Rally Racer must use the ordinary minimum 1/5 Boost Tank attribute');
-assert.equal(rallyRacer.tuning.boostDurationSeconds, 1.2,
-  'Rating 1 must remain the ordinary 1.2-second Boost tank with no Rally-specific downsizing');
-assert.equal(rallyRacer.tuning.driftBoostRechargeMultiplier, 3.6,
+assert.equal(supercar.stats.boostDuration, 1,
+  'Supercar must use the ordinary minimum 1/5 Boost Tank attribute');
+assert.equal(supercar.tuning.boostDurationSeconds, 1.2,
+  'Rating 1 must remain the ordinary 1.2-second Boost tank with no Supercar-specific downsizing');
+assert.equal(supercar.tuning.driftBoostRechargeMultiplier, 3.6,
   'TWITCHY TURNY must recharge Boost 50% faster than the ordinary 2.4x DRIFT recharge');
 assert.match(controlsSource, /function getDriftRechargeMultiplier\(\)/);
 assert.match(controlsSource, /driftBoostRechargeMultiplier/);
@@ -233,12 +233,12 @@ assert.match(
 assert.match(
   showcaseSource,
   /'rally-racer': Object\.freeze\(\[[\s\S]*carId: 'toy-racer'/,
-  'Rally Racer Trophy Road detail must use the stable Toy Racer 3D asset'
+  'Supercar Trophy Road detail must keep the stable Rally/Toy Racer ids for existing profiles'
 );
 assert.match(showcaseSource, /catalog\.js\?revision=r164-vintage-rally-polish/,
   'Trophy Road models must use the refreshed factory colours');
 assert.doesNotMatch(trophyRoadSource, /tank is tiny|tiny tank/i,
-  'Trophy Road must not describe the ordinary 1\/5 Rally tank as an extra penalty');
+  'Trophy Road must not describe the ordinary 1\/5 Supercar tank as an extra penalty');
 
 const monsterTruck = CAR_CATALOG.find((car) => car.id === 'monster-truck');
 assert.ok(monsterTruck, 'Monster Truck must remain in the vehicle catalog');
