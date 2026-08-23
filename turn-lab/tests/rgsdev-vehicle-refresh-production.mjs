@@ -47,10 +47,10 @@ assert.match(carModels, /installEmergencyLightRig/,
   'Emergency light rigs must remain TURN-owned and model-independent');
 assert.match(carModels, /getRgsdevPrimaryPaintMaterial/,
   'PAINTJOB must use the RGSDev primary material contract');
-assert.match(carModels, /!isRgsdevCar\(car\.id\) && car\.pack !== 'car'/,
-  'Legacy toy/prototype paint fallback must not flatten RGSDev secondary materials');
+assert.match(carModels, /!isRgsdevCar\(car\.id\) && !isSupercar\(car\.id\) && car\.pack !== 'car'/,
+  'Legacy toy/prototype paint fallback must not flatten imported-car secondary materials');
 
-for (const retained of ['toy-racer', 'race-future', 'sedan-sports']) {
+for (const retained of ['race-future', 'sedan-sports']) {
   assert.doesNotMatch(modelSource, new RegExp(`['"]${retained}['"]`), `${retained} should keep its existing TURN model`);
 }
 
