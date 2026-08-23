@@ -5,6 +5,12 @@ The scenery pieces in `lot-bricks/` are selected from Kenney Brick Kit 1.0.
 The legacy `scenery/fantasy-town/windmill.glb` file is the Fantasy Town rotor/blades component, not a complete windmill building. MOUNTAIN r3 deliberately does **not** place it as a freestanding landmark.
 The `scenery/watercraft/ship-ocean-liner.glb` model and its `Textures/colormap.png` palette are from Kenney Watercraft Kit 2.1.
 
+## Vehicle palette routing
+
+The vehicle GLBs retain Kenney's authored `TEXCOORD_0` palette mapping for body panels, glass, lamps, trim and wheels. Car Kit models use `cars/palettes/car-kit.png`; Prototype Kit and Toy Car Kit share `cars/palettes/toy-prototype.png`. Although the source GLBs all refer to `Textures/colormap.png`, TURN routes that URI by the catalog's `pack` field so models from different kits cannot receive the wrong palette.
+
+Player paint is applied at render time to selected palette cells on the existing surfaces. Every repaintable car exposes primary body/rim paint plus a secondary native trim region; the exact regions vary with the source model. This does not add meshes or change source topology. Police, Ambulance and Fire Truck use the authored Car Kit service liveries without player recolouring.
+
 ## MOUNTAIN r3
 
 MOUNTAIN treats Kenney's packs as modular kits rather than assuming every GLB is a complete building.

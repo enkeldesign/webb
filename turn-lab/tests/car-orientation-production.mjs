@@ -9,7 +9,7 @@ const expectedQuarterTurns = new Map([
   ['classic', 1],
   ['vintage-racer', 0],
   ['toy-racer', 2],
-  ['monster-truck', 2],
+  ['monster-truck', 0],
   ['race-future', 0],
   ['race', 0],
   ['sedan-sports', 0],
@@ -81,15 +81,12 @@ for (const car of catalog.CAR_CATALOG) {
     `${car.name} must keep its Lot-and-race featured multiplier`
   );
 
-  const glb = await fs.readFile(new URL(`../../turn/assets/cars/${car.id}.glb`, import.meta.url));
+  const assetPath = car.asset.replace(/^\.\//, '');
+  const glb = await fs.readFile(new URL(`../../turn/${assetPath}`, import.meta.url));
   const json = readGlbJson(glb, car.id);
-  const wheelNodes = (json.nodes || []).filter((node) => /wheel/i.test(node.name || '') && node.translation);
-  const front = averageWheelPosition(wheelNodes.filter((node) => wheelRole(node.name) === 'front'));
-  const back = averageWheelPosition(wheelNodes.filter((node) => wheelRole(node.name) === 'back'));
-  const labelAxis = { x: front.x - back.x, z: front.z - back.z };
-  const rawFront = reversedWheelLabelAxes.has(car.id)
-    ? { x: -labelAxis.x, z: -labelAxis.z }
-    : labelAxis;
+  const rawFront = car.pack === 'rgsdev'
+    ? { x: 0, z: 1 }
+    : getKenneyWheelAxis(json, car);
   const rawLength = Math.hypot(rawFront.x, rawFront.z);
   assert.ok(rawLength > 0.1, `${car.name} must expose a usable front/back wheel axis`);
 
@@ -114,6 +111,8 @@ const vintageRacer = catalog.getCarDefinition('vintage-racer');
 const toyRacer = catalog.getCarDefinition('toy-racer');
 const policeCar = catalog.getCarDefinition('police');
 const monsterTruck = catalog.getCarDefinition('monster-truck');
+assert.equal(monsterTruck.pack, 'rgsdev');
+assert.equal(monsterTruck.asset, './assets/cars/monster-truck-rgsdev.glb');
 assertClose(convertible.visualScale * convertible.visualSizeMultiplier, 0.7056, 'Convertible effective visual scale');
 assertClose(trainingCar.visualScale * trainingCar.visualSizeMultiplier, 0.72, 'Training Car effective visual scale');
 assertClose(vintageRacer.visualScale * vintageRacer.visualSizeMultiplier, 0.72, 'Vintage Racer effective visual scale');
@@ -219,6 +218,16 @@ function wheelRole(name = '') {
   if (/^wheel-(?:front|f[lr])(?:-|$)/.test(label)) return 'front';
   if (/^wheel-(?:back|b[lr])(?:-|$)/.test(label)) return 'back';
   return null;
+}
+
+function getKenneyWheelAxis(json, car) {
+  const wheelNodes = (json.nodes || []).filter((node) => /wheel/i.test(node.name || '') && node.translation);
+  const front = averageWheelPosition(wheelNodes.filter((node) => wheelRole(node.name) === 'front'));
+  const back = averageWheelPosition(wheelNodes.filter((node) => wheelRole(node.name) === 'back'));
+  const labelAxis = { x: front.x - back.x, z: front.z - back.z };
+  return reversedWheelLabelAxes.has(car.id)
+    ? { x: -labelAxis.x, z: -labelAxis.z }
+    : labelAxis;
 }
 
 function averageWheelPosition(nodes) {

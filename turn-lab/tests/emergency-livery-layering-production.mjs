@@ -1,25 +1,25 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const source = await fs.readFile(new URL('../../turn/vehicle/emergency-livery-models.js', import.meta.url), 'utf8');
+const [bridge, semantic, catalogSource] = await Promise.all([
+  fs.readFile(new URL('../../turn/vehicle/emergency-livery-models.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/vehicle/semantic-car-finish.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/vehicle/catalog.js', import.meta.url), 'utf8')
+]);
+const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
 
-assert.match(source, /candidates\.push\(\{ node, material, explicit \}\)/,
-  'Emergency livery placement must retain the body mesh that owns each paint material');
-assert.match(source, /function boundsForLiverySurface\(records\)/,
-  'Secondary accents must derive a body-surface envelope rather than use total vehicle width');
-assert.match(source, /bounds\.expandByObject\(node\)/,
-  'The livery surface envelope must be measured from the actual paintable body meshes');
-assert.match(source, /const surfaceBounds = bodyBounds \|\| bounds/,
-  'The full model bounds may be used only as a defensive fallback');
-assert.match(source, /const surfaceGap = Math\.max\(0\.006, surfaceSize\.x \* 0\.002\)/,
-  'Secondary geometry must keep a small physical gap outside the body surface');
-assert.match(source, /left: surfaceBounds\.min\.x - sideDepth \* 0\.5 - surfaceGap/);
-assert.match(source, /right: surfaceBounds\.max\.x \+ sideDepth \* 0\.5 \+ surfaceGap/);
-assert.match(source, /panel\.position\.set\(direction < 0 \? sideX\.left : sideX\.right, y, z\)/,
-  'Left and right accents must be placed fully outside their respective body surfaces');
-assert.doesNotMatch(source, /size\.x \* 0\.405/,
-  'The old in-body accent placement that caused angle-dependent occlusion must not return');
-assert.match(source, /turnEmergencyLiverySurfaceGap/,
-  'The resolved surface gap should remain inspectable on the visual for diagnostics');
+for (const id of ['police', 'ambulance', 'firetruck']) {
+  const car = catalog.getCarDefinition(id);
+  assert.equal(car.fixedLivery, true, `${id} must keep a fixed service livery`);
+  assert.equal(car.secondaryPaint, null, `${id} must expose no secondary paint`);
+}
 
-console.log('Emergency livery layering regression passed.');
+assert.match(bridge, /native-kenney-palette/);
+assert.match(bridge, /createBaseCarVisual\(options\)/);
+assert.doesNotMatch(bridge, /BoxGeometry|PlaneGeometry|applyFixedEmergencyLivery|installSecondaryAccent/,
+  'Emergency liveries must not add side panels or other presentation layers');
+assert.match(semantic, /if \(car\.fixedLivery\) return true/,
+  'Fixed emergency models must retain the atlas before paint masks are installed');
+assert.match(semantic, /car: '\.\/assets\/cars\/palettes\/car-kit\.png'/);
+
+console.log('Emergency vehicles use their authored fixed Kenney livery without overlay geometry.');

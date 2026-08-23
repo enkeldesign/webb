@@ -5,59 +5,55 @@ const [
   catalogSource,
   carModelsSource,
   emergencyModelsSource,
-  upgradeSource,
-  lotSource
+  semanticSource,
+  lotSource,
+  releaseSource
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/vehicle/catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/emergency-livery-models.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/vehicle/visual-upgrades.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-showroom-experiment.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/vehicle/semantic-car-finish.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/lot-showroom-experiment.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8')
 ]);
 const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
 const rally = catalog.getCarDefinition('toy-racer');
+const release = JSON.parse(releaseSource);
 
 assert.equal(rally.name, 'Rally Racer');
+assert.equal(rally.pack, 'toy');
+assert.equal(rally.asset, './assets/cars/toy-racer.glb', 'Rally should retain the distinctive authored Toy Kit model');
 assert.equal(rally.defaultColor, '#111111', 'The final reward should retain its black competition body');
-assert.equal(rally.defaultSecondaryColor, '#ffcc00', 'The factory rally kit should use TURN trophy gold');
-assert.deepEqual(rally.defaultSecondaryColorP3, [1, 0.76, 0], 'Factory gold should retain its Display-P3 definition');
-assert.equal(rally.secondaryPaint?.label, 'Rally kit', 'The Lot should expose the body kit as a real second paint choice');
-assert.deepEqual(rally.secondaryPaint?.meshNames, [], 'Procedural kit paint must not claim a nonexistent GLB mesh');
-assert.equal(rally.visualUpgrade, 'rally-competition', 'The stable Toy Racer asset should opt into the reusable competition kit');
+assert.equal(rally.defaultSecondaryColor, '#ffcc00', 'The native rally trim should use TURN trophy gold');
+assert.deepEqual(rally.defaultSecondaryColorP3, [1, 0.76, 0]);
+assert.equal(rally.secondaryPaint?.label, 'Rally trim');
+assert.deepEqual(rally.secondaryPaint?.meshNames, []);
+assert.equal(rally.visualUpgrade, null, 'Rally must not opt into generated presentation geometry');
 
-assert.match(carModelsSource, /installVehicleVisualUpgrade\(\{/,
-  'Every rendering surface must install catalog-selected visual upgrades through the canonical car factory');
-assert.ok(
-  carModelsSource.indexOf('normalizeModelToGround(model') < carModelsSource.indexOf('installVehicleVisualUpgrade({'),
-  'Upgrade proportions must be derived after the GLB has been normalized for the current rendering surface'
-);
-assert.match(carModelsSource, /secondaryPaintMaterials/,
-  'Procedural secondary paint must participate in the existing live recolor pipeline');
-assert.match(emergencyModelsSource, /car-models\.js\?build=20260823-r177-rally-refinement/,
-  'The release wrapper must bypass cached pre-upgrade car factories in installed apps');
+assert.match(semanticSource, /'toy-racer': profile\(\{/);
+assert.match(semanticSource, /primary: \[\[1, 4\], \[1, 5\]\]/,
+  'Rally body paint must target its authored Toy Kit palette cells');
+assert.match(semanticSource, /secondary: \[\[1, 6\], \[1, 7\]\]/,
+  'Rally gold must target the existing bumper, wing and body-trim cells');
+assert.match(semanticSource, /rims: \[\[4, 6\], \[4, 7\]\]/);
+assert.match(semanticSource, /rimRole: 'secondary'/,
+  'Rally wheel centres should share the trophy-gold trim colour');
+assert.match(semanticSource, /turnPaletteCell/);
+assert.match(semanticSource, /vMapUv\.x, 1\.0 - vMapUv\.y/);
+assert.match(semanticSource, /turnPanelShade/,
+  'The two authored palette shades must survive runtime recolouring');
+assert.doesNotMatch(semanticSource, /BoxGeometry|CylinderGeometry|SphereGeometry|mergeGeometries|PointLight/,
+  'Semantic paint must not manufacture any presentation geometry or lights');
 
-assert.match(upgradeSource, /mergeGeometries/,
-  'The richer reward silhouette should batch generated parts rather than add a draw call per part');
-assert.match(upgradeSource, /addRallyLampBank/);
-assert.match(upgradeSource, /for \(const factor of \[-0\.3, -0\.1, 0\.1, 0\.3\]\)/,
-  'Rally Racer should carry a recognisable four-lamp bank');
-assert.match(upgradeSource, /addBonnetStripes/);
-assert.match(upgradeSource, /addCompetitionWing/);
-assert.match(upgradeSource, /addRollHoop\(\{ bodyBounds, size, center, darkGeometry \}\)/,
-  'The slimmer roll hoop should use the dark structural batch instead of competing with the gold features');
-assert.match(upgradeSource, /const lowerY = bodyBounds\.min\.y \+ size\.y \* 0\.59/,
-  'The roll hoop should start at the cabin rather than draw a bright bar down the full body side');
-assert.match(upgradeSource, /addRockerSteps/);
-assert.match(upgradeSource, /const y = bodyBounds\.min\.y \+ size\.y \* 0\.16/,
-  'The rocker steps should meet the lower body instead of floating below it');
-assert.match(upgradeSource, /addWheelRimAccents/);
-assert.doesNotMatch(upgradeSource, /PointLight/,
-  'Decorative reward lamps must not multiply real-time light cost for the player and four ghosts');
-assert.match(upgradeSource, /turnVisualUpgrade/,
-  'Rendered roots should expose upgrade identity for diagnostics and future kits');
+assert.match(carModelsSource, /installSemanticCarFinish\(\{/,
+  'Every canonical rendering surface must use the shared semantic finish');
+assert.doesNotMatch(carModelsSource, /installVehicleVisualUpgrade|rally-competition/);
+assert.match(emergencyModelsSource, new RegExp(`car-models\\.js\\?build=${release.cacheKey}-native-car-surfaces`),
+  'The release bridge must bypass cached pre-palette car factories');
+assert.doesNotMatch(emergencyModelsSource, /BoxGeometry|applyFixedEmergencyLivery|installSecondaryAccent/);
 
-assert.match(lotSource, /black-and-gold competition special/i);
-assert.match(lotSource, /four rally lamps/i);
-assert.match(lotSource, /high rear wing/i);
+assert.match(lotSource, /black-and-gold competition coupe/i);
+assert.match(lotSource, /integrated high rear wing/i);
+assert.doesNotMatch(lotSource, /four rally lamps|roll hoop|rocker steps/i);
 
-console.log('TURN Rally Racer 1000-trophy visual reward and reusable upgrade pipeline passed.');
+console.log('TURN Rally Racer native black-and-gold surface reward passed.');
