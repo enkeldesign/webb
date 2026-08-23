@@ -183,7 +183,7 @@ assert.equal(
 );
 assert.equal(
   imports['/turn/achievements/trophy-road-showcase.js?revision=r160-reward-detail-sync'],
-  '/turn/achievements/trophy-road-showcase.js?revision=r177-rally-refinement',
+  '/turn/achievements/trophy-road-showcase.js?revision=r178-all-car-surface-finish',
   'Trophy Road must receive the fresh throttled preview renderer instead of a cached full-refresh module'
 );
 assert.match(app, /performance-profile\.js\?revision=r164-long-session-robustness/,
