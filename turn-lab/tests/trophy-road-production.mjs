@@ -153,7 +153,7 @@ assert.equal(getCarDefinition('vintage-racer').perk?.title, 'DRIFTAGE');
 const rallyPerk = getProductionTrophyRoadReward('rally-racer');
 assert.equal(rallyPerk?.perkTitle, 'TWITCHY TURNY');
 assert.match(rallyPerk?.perkDescription || '', /fills BOOST even faster/i);
-assert.equal(getCarDefinition('toy-racer').name, 'Rally Racer');
+assert.equal(getCarDefinition('toy-racer').name, 'Supercar');
 assert.equal(getCarDefinition('toy-racer').perk?.title, 'TWITCHY TURNY');
 
 assert.equal(getCarDefinition('race-future').perk?.title, 'OVERDRIVE');
@@ -221,7 +221,7 @@ const newVersionFiveProfile = normalizeAchievementState({
   rewards: { unlocked: [], seen: [] }
 });
 assert.deepEqual(newVersionFiveProfile.rewards.unlocked, [],
-  'New v5 players must earn Vintage, Rally and Mountain rather than inherit them');
+  'New v5 players must earn Vintage, Supercar and Mountain rather than inherit them');
 
 const legacyWithoutAchievements = createMemoryStorage({
   'turn-vehicle-selection-v1': JSON.stringify({ carId: 'police' })

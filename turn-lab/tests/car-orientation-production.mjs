@@ -44,7 +44,6 @@ const expectedGlobalSizeMultipliers = new Map([
   ['convertible', 0.72],
   ['classic', 0.72],
   ['vintage-racer', 0.75],
-  ['toy-racer', 0.7],
   ['police', 1.15]
 ]);
 
@@ -111,13 +110,13 @@ for (const car of catalog.CAR_CATALOG) {
 const convertible = catalog.getCarDefinition('convertible');
 const trainingCar = catalog.getCarDefinition('classic');
 const vintageRacer = catalog.getCarDefinition('vintage-racer');
-const toyRacer = catalog.getCarDefinition('toy-racer');
+const supercar = catalog.getCarDefinition('toy-racer');
 const policeCar = catalog.getCarDefinition('police');
 const monsterTruck = catalog.getCarDefinition('monster-truck');
 assertClose(convertible.visualScale * convertible.visualSizeMultiplier, 0.7056, 'Convertible effective visual scale');
 assertClose(trainingCar.visualScale * trainingCar.visualSizeMultiplier, 0.72, 'Training Car effective visual scale');
 assertClose(vintageRacer.visualScale * vintageRacer.visualSizeMultiplier, 0.72, 'Vintage Racer effective visual scale');
-assertClose(toyRacer.visualScale * toyRacer.visualSizeMultiplier, 0.658, 'Toy Racer effective visual scale');
+assertClose(supercar.visualScale * supercar.visualSizeMultiplier, 0.94, 'Supercar effective visual scale');
 assertClose(policeCar.visualScale * policeCar.visualSizeMultiplier, 1.127, 'Police Car effective visual scale');
 assertClose(monsterTruck.visualScale * monsterTruck.visualSizeMultiplier, 0.83, 'Monster Truck compact visual scale');
 assertClose(
@@ -139,8 +138,13 @@ const release = JSON.parse(releaseSource);
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(
   carModels,
-  /model\.rotation\.y = Math\.PI \+ car\.modelYawQuarterTurns \* Math\.PI \/ 2/,
-  'The shared model factory must apply the catalog correction'
+  /const modelYawQuarterTurns = isSupercar\(car\.id\)[\s\S]*getSupercarModelYawQuarterTurns\(car\.id, car\.modelYawQuarterTurns\)[\s\S]*getRgsdevModelYawQuarterTurns\(car\.id, car\.modelYawQuarterTurns\)/,
+  'The shared model factory must resolve source-specific orientation corrections'
+);
+assert.match(
+  carModels,
+  /model\.rotation\.y = Math\.PI \+ modelYawQuarterTurns \* Math\.PI \/ 2/,
+  'The shared model factory must apply the resolved orientation correction'
 );
 assert.match(
   carModels,

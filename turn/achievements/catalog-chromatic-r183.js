@@ -107,7 +107,7 @@ export const ACHIEVEMENTS = Object.freeze([
 
 export const VEHICLE_NAMES = Object.freeze({
   ...base.VEHICLE_NAMES,
-  'toy-racer': 'Rally Racer'
+  'toy-racer': 'Supercar'
 });
 
 const ACHIEVEMENT_BY_ID = new Map(
