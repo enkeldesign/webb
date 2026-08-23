@@ -138,8 +138,13 @@ const release = JSON.parse(releaseSource);
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(
   carModels,
-  /model\.rotation\.y = Math\.PI \+ car\.modelYawQuarterTurns \* Math\.PI \/ 2/,
-  'The shared model factory must apply the catalog correction'
+  /const modelYawQuarterTurns = isSupercar\(car\.id\)[\s\S]*getSupercarModelYawQuarterTurns\(car\.id, car\.modelYawQuarterTurns\)[\s\S]*getRgsdevModelYawQuarterTurns\(car\.id, car\.modelYawQuarterTurns\)/,
+  'The shared model factory must resolve source-specific orientation corrections'
+);
+assert.match(
+  carModels,
+  /model\.rotation\.y = Math\.PI \+ modelYawQuarterTurns \* Math\.PI \/ 2/,
+  'The shared model factory must apply the resolved orientation correction'
 );
 assert.match(
   carModels,
