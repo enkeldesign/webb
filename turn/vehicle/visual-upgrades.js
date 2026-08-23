@@ -83,8 +83,8 @@ function installRallyCompetitionKit({
   addRallyLampBank({ bodyBounds, size, center, accentGeometry, lampGeometry });
   addBonnetStripes({ bodyBounds, size, center, accentGeometry });
   addCompetitionWing({ bodyBounds, size, center, accentGeometry, darkGeometry });
-  addRollHoop({ bodyBounds, size, center, accentGeometry });
-  addSideRails({ bodyBounds, size, center, accentGeometry });
+  addRollHoop({ bodyBounds, size, center, darkGeometry });
+  addRockerSteps({ bodyBounds, size, center, accentGeometry });
   addWheelRimAccents({ model, bodyBounds, accentGeometry });
 
   const group = new THREE.Group();
@@ -151,39 +151,38 @@ function addCompetitionWing({ bodyBounds, size, center, accentGeometry, darkGeom
   }
 }
 
-function addRollHoop({ bodyBounds, size, center, accentGeometry }) {
+function addRollHoop({ bodyBounds, size, center, darkGeometry }) {
   const z = center.z - size.z * 0.045;
-  const lowerY = bodyBounds.min.y + size.y * 0.43;
-  const topY = bodyBounds.max.y + size.y * 0.1;
-  const lowerSpread = size.x * 0.36;
-  const topSpread = size.x * 0.3;
-  const radius = Math.max(size.x * 0.026, 0.038);
+  const lowerY = bodyBounds.min.y + size.y * 0.59;
+  const topY = bodyBounds.max.y + size.y * 0.025;
+  const lowerSpread = size.x * 0.29;
+  const topSpread = size.x * 0.255;
+  const radius = Math.max(size.x * 0.017, 0.03);
   const lowerLeft = new THREE.Vector3(center.x - lowerSpread, lowerY, z);
   const lowerRight = new THREE.Vector3(center.x + lowerSpread, lowerY, z);
   const topLeft = new THREE.Vector3(center.x - topSpread, topY, z);
   const topRight = new THREE.Vector3(center.x + topSpread, topY, z);
-  accentGeometry.push(cylinderBetween(lowerLeft, topLeft, radius));
-  accentGeometry.push(cylinderBetween(topLeft, topRight, radius));
-  accentGeometry.push(cylinderBetween(topRight, lowerRight, radius));
+  darkGeometry.push(cylinderBetween(lowerLeft, topLeft, radius));
+  darkGeometry.push(cylinderBetween(topLeft, topRight, radius));
+  darkGeometry.push(cylinderBetween(topRight, lowerRight, radius));
 }
 
-function addSideRails({ bodyBounds, size, center, accentGeometry }) {
-  const railSize = new THREE.Vector3(
+function addRockerSteps({ bodyBounds, size, center, accentGeometry }) {
+  const stepSize = new THREE.Vector3(
     Math.max(size.x * 0.025, 0.035),
-    size.y * 0.055,
-    size.z * 0.42
+    size.y * 0.07,
+    size.z * 0.29
   );
-  const y = bodyBounds.min.y + size.y * 0.065;
-  const z = center.z + size.z * 0.035;
+  const y = bodyBounds.min.y + size.y * 0.16;
   for (const direction of [-1, 1]) {
     accentGeometry.push(boxGeometry(
-      railSize,
+      stepSize,
       new THREE.Vector3(
         direction < 0
-          ? bodyBounds.min.x - railSize.x * 0.34
-          : bodyBounds.max.x + railSize.x * 0.34,
+          ? bodyBounds.min.x - stepSize.x * 0.25
+          : bodyBounds.max.x + stepSize.x * 0.25,
         y,
-        z
+        center.z
       )
     ));
   }

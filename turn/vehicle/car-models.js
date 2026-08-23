@@ -13,7 +13,7 @@ import {
   makeWideGamutSpec,
   setThreeColor
 } from './wide-gamut.js?revision=r157-display-p3';
-import { installVehicleVisualUpgrade } from './visual-upgrades.js?revision=r176-rally-reward';
+import { installVehicleVisualUpgrade } from './visual-upgrades.js?revision=r177-rally-refinement';
 
 const loader = new GLTFLoader();
 const sourceCache = new Map();

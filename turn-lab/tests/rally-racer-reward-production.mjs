@@ -33,7 +33,7 @@ assert.ok(
 );
 assert.match(carModelsSource, /secondaryPaintMaterials/,
   'Procedural secondary paint must participate in the existing live recolor pipeline');
-assert.match(emergencyModelsSource, /car-models\.js\?build=20260823-r176-rally-reward/,
+assert.match(emergencyModelsSource, /car-models\.js\?build=20260823-r177-rally-refinement/,
   'The release wrapper must bypass cached pre-upgrade car factories in installed apps');
 
 assert.match(upgradeSource, /mergeGeometries/,
@@ -43,7 +43,13 @@ assert.match(upgradeSource, /for \(const factor of \[-0\.3, -0\.1, 0\.1, 0\.3\]\
   'Rally Racer should carry a recognisable four-lamp bank');
 assert.match(upgradeSource, /addBonnetStripes/);
 assert.match(upgradeSource, /addCompetitionWing/);
-assert.match(upgradeSource, /addRollHoop/);
+assert.match(upgradeSource, /addRollHoop\(\{ bodyBounds, size, center, darkGeometry \}\)/,
+  'The slimmer roll hoop should use the dark structural batch instead of competing with the gold features');
+assert.match(upgradeSource, /const lowerY = bodyBounds\.min\.y \+ size\.y \* 0\.59/,
+  'The roll hoop should start at the cabin rather than draw a bright bar down the full body side');
+assert.match(upgradeSource, /addRockerSteps/);
+assert.match(upgradeSource, /const y = bodyBounds\.min\.y \+ size\.y \* 0\.16/,
+  'The rocker steps should meet the lower body instead of floating below it');
 assert.match(upgradeSource, /addWheelRimAccents/);
 assert.doesNotMatch(upgradeSource, /PointLight/,
   'Decorative reward lamps must not multiply real-time light cost for the player and four ghosts');
