@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-const REVISION = 'r517-kenney-landmark-framing';
+const REVISION = 'r531-countryside-world-redesign';
 const INK = 0x08090a;
 const SEA_LEVEL = -16.5;
 const WINDMILL_TRACK_FRACTION = 0.52;
@@ -70,7 +70,8 @@ function prepareModel(source, {
   horizontalSpan = false,
   outlineScale = 1.02,
   castShadow = false,
-  receiveShadow = false
+  receiveShadow = false,
+  paletteLocked = false
 }) {
   const model = source.clone(true);
   model.traverse((node) => {
@@ -78,6 +79,10 @@ function prepareModel(source, {
     node.castShadow = castShadow;
     node.receiveShadow = receiveShadow;
     node.userData.turnOutlined = true;
+    if (paletteLocked) {
+      node.userData.turnPaletteLocked = true;
+      node.userData.turnZoneStyled = true;
+    }
   });
 
   model.updateMatrixWorld(true);
@@ -168,15 +173,24 @@ function createCountrysideWindmill(source, samples, trackWidth) {
     targetSpan: 18.6,
     outlineScale: 1.025,
     castShadow: true,
-    receiveShadow: true
+    receiveShadow: true,
+    paletteLocked: true
   });
   rotor.name = 'Kenney Fantasy Town Windmill Rotor';
+  rotor.userData.turnBladePalette = 'authored warm wood and pale sail cloth';
   // The source rotor lies in its local Y/Z plane. Turn its normal toward local +Z,
   // then turn the complete landmark so the blades face the road.
   rotor.rotation.y = -Math.PI / 2;
   rotor.position.add(new THREE.Vector3(0, 8.2, 6.55));
 
   landmark.add(tower, roof, door, rotor);
+  landmark.traverse((node) => {
+    if (!node?.isMesh) return;
+    // The former global zone tint pushed the Fantasy Town blades toward orange/pink.
+    // Keep both the supplied blade palette and the deliberately neutral mill body.
+    node.userData.turnPaletteLocked = true;
+    node.userData.turnZoneStyled = true;
+  });
   landmark.scale.setScalar(WINDMILL_LANDMARK_SCALE);
   landmark.position.copy(position);
   landmark.position.y = sample.point.y + 0.08;

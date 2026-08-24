@@ -1,0 +1,67 @@
+name: TURN COUNTRYSIDE visual smoke
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'turn/world-assets.js'
+      - 'turn/world-beauty.js'
+      - 'turn/world-art-pass.js'
+      - 'turn/track-identity.js'
+      - 'turn/section-intensity.js'
+      - 'turn/tracks/countryside-*'
+      - 'turn/tracks/kenney-track-landmarks-*'
+      - 'turn/assets/scenery/countryside/**'
+      - 'turn/assets/scenery/fantasy-town/**'
+      - 'turn/assets/scenery/watercraft/boat-row-small.glb'
+      - 'turn-lab/countryside-visual.html'
+      - 'turn-tests/countryside-visual-smoke.mjs'
+      - 'turn-tests/countryside-world-redesign-production.mjs'
+      - '.github/workflows/turn-countryside-visual-smoke.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  visual-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Validate the scenery-only production contract
+        run: node turn-tests/countryside-world-redesign-production.mjs
+
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install chromium
+
+      - name: Start static TURN server
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/turn-countryside-http.log 2>&1 &
+          for attempt in {1..20}; do
+            curl --fail --silent http://127.0.0.1:8000/turn-lab/countryside-visual.html >/dev/null && exit 0
+            sleep 0.5
+          done
+          cat /tmp/turn-countryside-http.log
+          exit 1
+
+      - name: Render and validate fixed COUNTRYSIDE cameras
+        run: node turn-tests/countryside-visual-smoke.mjs
+
+      - name: Upload COUNTRYSIDE visual inspection frames
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: countryside-visual-smoke
+          path: countryside-visual-artifact
+          if-no-files-found: warn
+          retention-days: 7

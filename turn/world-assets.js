@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { installCountrysideWorld } from './tracks/countryside-world-r531.js?revision=r531-countryside-world-redesign';
 
 const CITY_BUILDER_COMMIT = '4535092b740b378b700efd9df9e27a631815b84a';
 const PLATFORMER_COMMIT = '3fa8a04b1c01ab23db43123d4ce814a34c3fc7f0';
@@ -11,12 +12,6 @@ const PLATFORMER_BASE = `https://cdn.jsdelivr.net/gh/KenneyNL/Starter-Kit-3D-Pla
 const ASSETS = {
   trees: `${CITY_BASE}grass-trees.glb`,
   tallTrees: `${CITY_BASE}grass-trees-tall.glb`,
-  garage: `${CITY_BASE}building-garage.glb`,
-  buildingA: `${CITY_BASE}building-small-a.glb`,
-  buildingB: `${CITY_BASE}building-small-b.glb`,
-  buildingC: `${CITY_BASE}building-small-c.glb`,
-  buildingD: `${CITY_BASE}building-small-d.glb`,
-  fountain: `${CITY_BASE}pavement-fountain.glb`,
   flag: `${PLATFORMER_BASE}flag.glb`
 };
 
@@ -117,6 +112,7 @@ function prepareModel(source, {
     // back-face mesh. Repeated vegetation keeps its native silhouette instead
     // of doubling its draw calls for the entire race.
     if (suppressAutoOutline) node.userData.turnOutlined = true;
+    if (suppressAutoOutline) node.userData.turnPaletteLocked = true;
   });
 
   model.updateMatrixWorld(true);
@@ -223,59 +219,7 @@ function placeTreeBelt({ world, samples, trackWidth, trees, tallTrees }) {
   }
 }
 
-function placeTracksideTown({ world, samples, trackWidth, buildings, garage, fountain }) {
-  for (let i = 0; i < 14; i += 1) {
-    const side = i % 2 === 0 ? 1 : -1;
-    const source = buildings[i % buildings.length];
-    const random = seeded01(200 + i);
-
-    placeAlongTrack({
-      world,
-      samples,
-      trackWidth,
-      source,
-      index: 48 + i * 49,
-      side,
-      distance: 42 + random * 30,
-      targetHeight: 10 + seeded01(400 + i) * 7,
-      outline: true,
-      faceTrack: true,
-      rotationOffset: (random - 0.5) * 0.35
-    });
-  }
-
-  for (const [index, side] of [[36, 1], [376, -1]]) {
-    placeAlongTrack({
-      world,
-      samples,
-      trackWidth,
-      source: garage,
-      index,
-      side,
-      distance: 31,
-      targetHeight: 11.5,
-      outline: true,
-      faceTrack: true
-    });
-  }
-
-  for (const [index, side] of [[120, -1], [286, 1], [516, -1]]) {
-    placeAlongTrack({
-      world,
-      samples,
-      trackWidth,
-      source: fountain,
-      index,
-      side,
-      distance: 34,
-      targetHeight: 4.2,
-      outline: true,
-      faceTrack: true
-    });
-  }
-}
-
-function placeStartArea({ world, samples, trackWidth, flag, garage }) {
+function placeStartArea({ world, samples, trackWidth, flag }) {
   const startIndex = 0;
 
   for (const side of [-1, 1]) {
@@ -293,19 +237,6 @@ function placeStartArea({ world, samples, trackWidth, flag, garage }) {
       rotationOffset: side > 0 ? 0.15 : -0.15
     });
   }
-
-  placeAlongTrack({
-    world,
-    samples,
-    trackWidth,
-    source: garage,
-    index: 12,
-    side: 1,
-    distance: 24,
-    targetHeight: 13,
-    outline: true,
-    faceTrack: true
-  });
 }
 
 export async function installKenneyWorld({ world, samples, trackWidth }) {
@@ -314,24 +245,12 @@ export async function installKenneyWorld({ world, samples, trackWidth }) {
   const results = await Promise.allSettled([
     loadModel('trees'),
     loadModel('tallTrees'),
-    loadModel('garage'),
-    loadModel('buildingA'),
-    loadModel('buildingB'),
-    loadModel('buildingC'),
-    loadModel('buildingD'),
-    loadModel('fountain'),
     loadModel('flag')
   ]);
 
   const [
     trees,
     tallTrees,
-    garage,
-    buildingA,
-    buildingB,
-    buildingC,
-    buildingD,
-    fountain,
     flag
   ] = results.map((result) => result.status === 'fulfilled' ? result.value : null);
 
@@ -339,22 +258,17 @@ export async function installKenneyWorld({ world, samples, trackWidth }) {
     placeTreeBelt({ world, samples, trackWidth, trees, tallTrees });
   }
 
-  const buildings = [buildingA, buildingB, buildingC, buildingD].filter(Boolean);
-  if (buildings.length && garage && fountain) {
-    placeTracksideTown({ world, samples, trackWidth, buildings, garage, fountain });
-  }
+  if (flag) placeStartArea({ world, samples, trackWidth, flag });
 
-  // Distant mountains now belong exclusively to world-art-pass.js. The removed legacy
-  // horizon path was both obsolete and broken, and could abort the remaining asset setup.
-
-  if (flag && garage) {
-    placeStartArea({ world, samples, trackWidth, flag, garage });
-  }
+  // The first TURN track now reads as one authored rural place: a compact village,
+  // farm, orchard, managed forest edge and lake detail. This pass remains scenery-only;
+  // the road samples, collision model and Bella rescue module stay outside it.
+  await installCountrysideWorld({ world, samples, trackWidth });
 
   const failed = results.filter((result) => result.status === 'rejected').length;
   if (failed) {
     console.warn(`TURN: ${failed} world asset(s) failed to load.`);
   } else {
-    console.info('TURN: Kenney world assets loaded after Home became usable.');
+    console.info('TURN: planned Countryside assets loaded after Home became usable.');
   }
 }

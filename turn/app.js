@@ -330,7 +330,7 @@ installTrackIntroCamera();
 // render/world.js?revision=r166-bella-records
 // render/world.js?revision=r174-bella-siren-zone
 await Promise.all([
-  import(withBuild('./render/world.js?revision=r164-long-session-robustness')),
+  import(withBuild('./render/world.js?revision=r531-countryside-world-redesign')),
   import(withBuild('./ui/spectate.js?revision=r164-elevation-aware')),
   import(withBuild('./ui/back-to-lot.js'))
 ]);

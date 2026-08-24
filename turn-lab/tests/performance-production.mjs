@@ -178,8 +178,8 @@ assert.equal(imports['./race/track-spatial-index.js?build=20260720-r19'], releas
 assert.equal(imports['./performance-monitor.js?build=20260720-r19'], releaseTarget('./performance-monitor.js'), 'The current release must publish the diagnostics module');
 assert.equal(
   imports['./world-assets.js'],
-  `${releaseTarget('./world-assets.js')}&revision=r164-long-session-robustness`,
-  'The current release must publish the fresh tree-grounding and contour-suppression pass'
+  `${releaseTarget('./world-assets.js')}&revision=r531-countryside-world-redesign`,
+  'The current release must publish the fresh planned Countryside world pass'
 );
 assert.equal(
   imports['/turn/achievements/trophy-road-showcase.js?revision=r160-reward-detail-sync'],

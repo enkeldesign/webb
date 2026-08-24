@@ -56,6 +56,10 @@ assert.match(moduleSource, /assets\/scenery\/fantasy-town\/windmill\.glb\?asset=
 assert.match(moduleSource, /assets\/scenery\/watercraft\/ship-ocean-liner\.glb\?asset=kenney-watercraft-kit-2\.1-luxury-palette-31113835/);
 assert.match(moduleSource, /WINDMILL_TRACK_FRACTION = 0\.52/);
 assert.match(moduleSource, /WINDMILL_LANDMARK_SCALE = 1\.35/);
+assert.match(moduleSource, /paletteLocked: true/,
+  'The windmill rotor must keep its authored warm-wood palette');
+assert.match(moduleSource, /node\.userData\.turnPaletteLocked = true/,
+  'Every windmill surface must opt out of the retired global zone tint');
 assert.match(moduleSource, /OCEAN_LINER_TRACK_FRACTION = 0\.55/);
 assert.match(moduleSource, /landmark\.scale\.setScalar\(WINDMILL_LANDMARK_SCALE\)/);
 assert.match(moduleSource, /currentTrackId\(runtime\) !== 'countryside'/);
@@ -70,7 +74,7 @@ assert.doesNotMatch(
   'Landmarks must stay static, scenery-only additions with no physics, record, or animation loop changes'
 );
 
-const landmarkScript = './tracks/kenney-track-landmarks-r517.js?revision=r517-kenney-landmark-framing';
+const landmarkScript = './tracks/kenney-track-landmarks-r517.js?revision=r531-countryside-world-redesign';
 assert.ok(indexSource.includes(landmarkScript), 'Production TURN must load the cache-revisioned landmark module');
 assert.ok(
   indexSource.indexOf('cliffside-house-inset-r203.js') < indexSource.indexOf(landmarkScript),
@@ -81,7 +85,7 @@ assert.match(attributionSource, /Fantasy Town Kit 2\.0/);
 assert.match(attributionSource, /Watercraft Kit 2\.1/);
 assert.match(attributionSource, /scenery\/fantasy-town\/windmill\.glb/);
 assert.match(attributionSource, /scenery\/watercraft\/ship-ocean-liner\.glb/);
-assert.match(attributionSource, /All six packs are released under Creative Commons CC0 1\.0/);
+assert.match(attributionSource, /All referenced Kenney packs and models are released under Creative Commons CC0 1\.0/);
 
 console.log('TURN Kenney windmill and luxury-colour ocean-liner landmark assets passed.');
 

@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TURN COUNTRYSIDE visual review</title>
+  <style>
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#53d3f2}
+    canvas{display:block;width:100%;height:100%}
+    #label{position:fixed;left:14px;bottom:12px;padding:7px 10px;border:2px solid #08090a;border-radius:9px;background:#fff8e8;color:#08090a;font:800 13px/1.1 system-ui,sans-serif;letter-spacing:.07em;text-transform:uppercase;z-index:2}
+  </style>
+  <script type="importmap">
+    {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/"}}
+  </script>
+</head>
+<body>
+  <div id="label">COUNTRYSIDE visual review</div>
+  <script type="module">
+    import * as THREE from 'three';
+    import { createTrackRuntime } from '/turn/tracks/catalog.js';
+    import { installKenneyWorld } from '/turn/world-assets.js?revision=r531-countryside-world-redesign';
+    import { installWorldBeauty } from '/turn/world-beauty.js?revision=r531-countryside-world-redesign';
+    import { installArtPass } from '/turn/world-art-pass.js?revision=r514-road-contour';
+    import { installTrackIdentity } from '/turn/track-identity.js?revision=r531-countryside-world-redesign';
+    import { installSectionIntensity } from '/turn/section-intensity.js?revision=r531-countryside-world-redesign';
+    import { installCountrysideSceneryCleanup } from '/turn/tracks/countryside-scenery-r177.js?revision=r531-countryside-world-redesign';
+    import { installCountrysideBella } from '/turn/tracks/countryside-bella-r166.js?revision=r176-road-derived-zone';
+    import { applyBellaFinalVisuals } from '/turn/tracks/countryside-bella-final-r172.js?revision=r172-final-tune';
+    import { installCountrysideWindmill } from '/turn/tracks/kenney-track-landmarks-r517.js?revision=r531-countryside-world-redesign';
+
+    const TRACK_WIDTH = 27;
+    const BELLA_SAMPLE_INDEX = 500;
+    const BELLA_SIDE = -1;
+    const BELLA_DISTANCE_FROM_ROAD = 42;
+    const BELLA_TANGENT_OFFSET = 18;
+    const VALID_VIEWS = new Set(['aerial', 'first-impression', 'village', 'farm-windmill', 'orchard', 'lake', 'bella']);
+    const queryView = new URLSearchParams(location.search).get('view');
+    let currentView = VALID_VIEWS.has(queryView) ? queryView : 'aerial';
+
+    document.documentElement.classList.add('turn-home-ready');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x53d3f2);
+    scene.fog = new THREE.Fog(0x53d3f2, 250, 865);
+    const camera = new THREE.PerspectiveCamera(49, innerWidth / innerHeight, 0.1, 1800);
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      preserveDrawingBuffer: true,
+      powerPreference: 'low-power'
+    });
+    renderer.setPixelRatio(1);
+    renderer.setSize(innerWidth, innerHeight, false);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.shadowMap.enabled = false;
+    document.body.prepend(renderer.domElement);
+
+    const hemi = new THREE.HemisphereLight(0xfffdf4, 0x6b8b62, 2.45);
+    const sun = new THREE.DirectionalLight(0xfff0bd, 4.6);
+    sun.position.set(-120, 175, 95);
+    scene.add(hemi, sun);
+
+    const world = new THREE.Group();
+    world.name = 'COUNTRYSIDE visual review world';
+    scene.add(world);
+    const track = createTrackRuntime('countryside', 720);
+    const samples = track.samples;
+    const runtime = {
+      trackId: 'countryside',
+      activeWorld: world,
+      world,
+      scene,
+      samples,
+      trackWidth: TRACK_WIDTH,
+      sun,
+      hemi,
+      state: { selectedVehicle: 'firetruck' }
+    };
+    globalThis.__turnRuntime = runtime;
+    globalThis.__turnGetTrackId = () => 'countryside';
+
+    function trackCentre() {
+      const centre = new THREE.Vector3();
+      for (const sample of samples) centre.add(sample.point);
+      return centre.multiplyScalar(1 / samples.length).setY(0);
+    }
+
+    const centre = trackCentre();
+
+    function outwardFrame(index) {
+      const sample = samples[((index % samples.length) + samples.length) % samples.length];
+      const towardsCentre = centre.clone().sub(sample.point).setY(0);
+      const side = sample.normal.dot(towardsCentre) > 0 ? -1 : 1;
+      return {
+        sample,
+        tangent: sample.tangent.clone().setY(0).normalize(),
+        outward: sample.normal.clone().setY(0).normalize().multiplyScalar(side)
+      };
+    }
+
+    function addRoad() {
+      const roadPositions = [];
+      const roadColours = [];
+      const roadIndices = [];
+      const dark = new THREE.Color(0x34383d);
+      const light = new THREE.Color(0x4a4f55);
+
+      for (let index = 0; index <= samples.length; index += 1) {
+        const sample = samples[index % samples.length];
+        const left = sample.point.clone().addScaledVector(sample.normal, TRACK_WIDTH / 2).setY(0.13);
+        const right = sample.point.clone().addScaledVector(sample.normal, -TRACK_WIDTH / 2).setY(0.13);
+        roadPositions.push(left.x, left.y, left.z, right.x, right.y, right.z);
+        const amount = THREE.MathUtils.clamp(0.42 + Math.sin(index * 0.19) * 0.12, 0, 1);
+        const colour = dark.clone().lerp(light, amount);
+        roadColours.push(colour.r, colour.g, colour.b, colour.r, colour.g, colour.b);
+      }
+      for (let index = 0; index < samples.length; index += 1) {
+        const a = index * 2;
+        roadIndices.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
+      }
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(roadPositions, 3));
+      geometry.setAttribute('color', new THREE.Float32BufferAttribute(roadColours, 3));
+      geometry.setIndex(roadIndices);
+      geometry.computeVertexNormals();
+      const road = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        roughness: 0.98,
+        metalness: 0,
+        side: THREE.DoubleSide
+      }));
+      road.name = 'COUNTRYSIDE unchanged track surface';
+      road.receiveShadow = true;
+      world.add(road);
+
+      const curbColours = [new THREE.Color(0xe63946), new THREE.Color(0xfff8e8)];
+      for (const side of [-1, 1]) {
+        const positions = [];
+        const colours = [];
+        for (let index = 0; index < samples.length; index += 1) {
+          const sample = samples[index];
+          const next = samples[(index + 1) % samples.length];
+          const inner = side * (TRACK_WIDTH / 2 - 0.05);
+          const outer = side * (TRACK_WIDTH / 2 + 1.75);
+          const a = sample.point.clone().addScaledVector(sample.normal, inner).setY(0.165);
+          const b = sample.point.clone().addScaledVector(sample.normal, outer).setY(0.165);
+          const c = next.point.clone().addScaledVector(next.normal, inner).setY(0.165);
+          const d = next.point.clone().addScaledVector(next.normal, outer).setY(0.165);
+          positions.push(a.x,a.y,a.z,b.x,b.y,b.z,c.x,c.y,c.z,b.x,b.y,b.z,d.x,d.y,d.z,c.x,c.y,c.z);
+          const colour = curbColours[Math.floor(index / 12) % 2];
+          for (let vertex = 0; vertex < 6; vertex += 1) colours.push(colour.r, colour.g, colour.b);
+        }
+        const curbGeometry = new THREE.BufferGeometry();
+        curbGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        curbGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colours, 3));
+        curbGeometry.computeVertexNormals();
+        const curb = new THREE.Mesh(curbGeometry, new THREE.MeshStandardMaterial({
+          vertexColors: true,
+          roughness: 0.9,
+          side: THREE.DoubleSide
+        }));
+        curb.name = 'COUNTRYSIDE unchanged curb';
+        world.add(curb);
+      }
+    }
+
+    function placeCamera(position, target, fov = 49) {
+      camera.position.copy(position);
+      camera.up.set(0, 1, 0);
+      camera.lookAt(target);
+      camera.fov = fov;
+      camera.updateProjectionMatrix();
+    }
+
+    function districtView(index, targetDistance, cameraOutward, cameraAlong, height, fov = 47) {
+      const frame = outwardFrame(index);
+      const target = frame.sample.point.clone()
+        .addScaledVector(frame.outward, TRACK_WIDTH / 2 + targetDistance)
+        .setY(5);
+      const position = target.clone()
+        .addScaledVector(frame.outward, cameraOutward)
+        .addScaledVector(frame.tangent, cameraAlong);
+      position.y = height;
+      placeCamera(position, target, fov);
+    }
+
+    function setView(name) {
+      currentView = VALID_VIEWS.has(name) ? name : 'aerial';
+      document.querySelector('#label').textContent = `COUNTRYSIDE · ${currentView.replaceAll('-', ' ')}`;
+      if (currentView === 'aerial') {
+        placeCamera(centre.clone().add(new THREE.Vector3(340, 355, -370)), centre.clone().setY(4), 48);
+      } else if (currentView === 'first-impression') {
+        const start = samples[0];
+        const target = start.point.clone().addScaledVector(start.tangent, 76).setY(4.5);
+        const position = start.point.clone().addScaledVector(start.tangent, -58).addScaledVector(start.normal, -20);
+        position.y = 24;
+        placeCamera(position, target, 49);
+      } else if (currentView === 'village') {
+        districtView(590, 50, 92, -84, 62, 48);
+      } else if (currentView === 'farm-windmill') {
+        districtView(370, 45, 92, -76, 64, 47);
+      } else if (currentView === 'orchard') {
+        districtView(430, 36, 78, 66, 54, 47);
+      } else if (currentView === 'lake') {
+        placeCamera(centre.clone().add(new THREE.Vector3(112, 72, -106)), centre.clone().add(new THREE.Vector3(8, 1, -4)), 45);
+      } else if (currentView === 'bella') {
+        const sample = samples[BELLA_SAMPLE_INDEX];
+        const target = sample.point.clone()
+          .addScaledVector(sample.normal, BELLA_SIDE * (TRACK_WIDTH / 2 + BELLA_DISTANCE_FROM_ROAD))
+          .addScaledVector(sample.tangent, BELLA_TANGENT_OFFSET)
+          .setY(9);
+        const position = target.clone()
+          .addScaledVector(sample.normal, BELLA_SIDE * 32)
+          .addScaledVector(sample.tangent, -37);
+        position.y = 27;
+        placeCamera(position, target, 43);
+      }
+      renderer.render(scene, camera);
+      return currentView;
+    }
+
+    function allNames() {
+      const names = [];
+      world.traverse((object) => { if (object.name) names.push(object.name); });
+      return names;
+    }
+
+    function descendants(root) {
+      const result = [];
+      root?.traverse((object) => result.push(object));
+      return result;
+    }
+
+    function textureUrls(root) {
+      const urls = new Set();
+      root?.traverse((node) => {
+        if (!node?.isMesh) return;
+        const materials = Array.isArray(node.material) ? node.material : [node.material];
+        for (const material of materials) {
+          const source = material?.map?.source?.data?.currentSrc || material?.map?.source?.data?.src;
+          if (source) urls.add(String(source));
+        }
+      });
+      return [...urls];
+    }
+
+    function texturedMeshCount(root) {
+      let count = 0;
+      root?.traverse((node) => {
+        if (!node?.isMesh || node.userData?.turnOutline) return;
+        const materials = Array.isArray(node.material) ? node.material : [node.material];
+        if (materials.some((material) => material?.map)) count += 1;
+      });
+      return count;
+    }
+
+    addRoad();
+    await installArtPass({ world, scene, samples, trackWidth: TRACK_WIDTH });
+    installTrackIdentity({ world, samples, trackWidth: TRACK_WIDTH });
+    installSectionIntensity({ world, samples, trackWidth: TRACK_WIDTH });
+
+    const bellaPromise = installCountrysideBella({ world, samples, trackWidth: TRACK_WIDTH, runtime });
+    const [, , bella] = await Promise.all([
+      installKenneyWorld({ world, samples, trackWidth: TRACK_WIDTH }),
+      installWorldBeauty({ world, scene, samples, trackWidth: TRACK_WIDTH, sun, hemi }),
+      bellaPromise
+    ]);
+    applyBellaFinalVisuals(bella);
+    await installCountrysideWindmill(runtime);
+    await installCountrysideSceneryCleanup({ world, samples, trackWidth: TRACK_WIDTH });
+
+    // Let the same delayed contour and intensity sweeps used in production complete.
+    await new Promise((resolve) => window.setTimeout(resolve, 4900));
+    await installCountrysideSceneryCleanup({ world, samples, trackWidth: TRACK_WIDTH });
+    world.updateMatrixWorld(true);
+
+    const planned = world.getObjectByName('Countryside Planned World');
+    const windmill = world.getObjectByName('Countryside Kenney Windmill');
+    const bellaRoot = world.getObjectByName('Countryside Bella rescue · Kenney Cube Pets cat');
+    const names = allNames();
+    const lockedNodes = [];
+    const lockedPaletteViolations = [];
+    world.traverse((node) => {
+      if (!node?.isMesh) return;
+      let ancestor = node;
+      let locked = false;
+      while (ancestor) {
+        if (ancestor.userData?.turnPaletteLocked) locked = true;
+        ancestor = ancestor.parent;
+      }
+      if (locked) lockedNodes.push(node.name || '(unnamed mesh)');
+      if (locked && node.userData?.turnSectionPunch) lockedPaletteViolations.push(node.name || '(unnamed mesh)');
+    });
+
+    const bellaPoint = samples[BELLA_SAMPLE_INDEX].point.clone()
+      .addScaledVector(samples[BELLA_SAMPLE_INDEX].normal, BELLA_SIDE * (TRACK_WIDTH / 2 + BELLA_DISTANCE_FROM_ROAD))
+      .addScaledVector(samples[BELLA_SAMPLE_INDEX].tangent, BELLA_TANGENT_OFFSET)
+      .setY(0);
+    const box = new THREE.Box3();
+    let closestPlannedGeometryToBella = Infinity;
+    planned?.traverse((node) => {
+      if (!node?.isMesh || node.userData?.turnOutline) return;
+      box.setFromObject(node, true);
+      closestPlannedGeometryToBella = Math.min(closestPlannedGeometryToBella, box.distanceToPoint(bellaPoint));
+    });
+
+    const count = (pattern) => names.filter((name) => pattern.test(name)).length;
+    const metrics = world.userData.turnCountrysideWorldMetrics || {};
+    globalThis.__countrysideVisualMetrics = Object.freeze({
+      viewName: currentView,
+      revision: metrics.revision || '',
+      districts: [...(metrics.districts || [])],
+      assetErrors: [...(world.userData.turnCountrysideAssetErrors || [])],
+      villageHouses: count(/^Birchfield red house /),
+      privateDrives: count(/^Birchfield private drive /),
+      cropBeds: count(/^Windmill farm ordered crop bed$/),
+      orchardTrees: count(/^Countryside orchard tree$/),
+      parkedCars: count(/^Countryside parked /),
+      rowBoats: count(/^Countryside moored rowboat$/),
+      windmills: count(/^Countryside Kenney Windmill$/),
+      bellaScenes: count(/^Countryside Bella rescue/),
+      oldGoldRings: count(/gold zone landmark|torus/i),
+      oldCrystalLandmarks: count(/crystal zone landmark/i),
+      oldScatteredBuildings: count(/town building|building-small/i),
+      oversizedFountains: count(/fountain/i),
+      lockedMeshCount: lockedNodes.length,
+      lockedPaletteViolations,
+      bellaPaletteViolations: descendants(bellaRoot)
+        .filter((node) => node.userData?.turnSectionPunch)
+        .map((node) => node.name || '(unnamed Bella node)'),
+      closestPlannedGeometryToBella,
+      suburbanTextureUrls: textureUrls(planned).filter((url) => /suburban\/Textures\/colormap\.png/i.test(url)),
+      windmillTextureUrls: textureUrls(windmill).filter((url) => /fantasy-town\/Textures\/colormap\.png/i.test(url)),
+      plannedTexturedMeshCount: texturedMeshCount(planned),
+      windmillTexturedMeshCount: texturedMeshCount(windmill),
+      windmillPaletteLocked: descendants(windmill)
+        .filter((node) => node?.isMesh && !node.userData?.turnOutline)
+        .every((node) => node.userData?.turnPaletteLocked === true || node.name.startsWith('Countryside Windmill')),
+      gameplayGeometryUnchanged: metrics.gameplayGeometryUnchanged === true
+    });
+
+    globalThis.__turnSetCountrysideVisualView = (view) => setView(view);
+    setView(currentView);
+    globalThis.__countrysideVisualReady = true;
+    window.dispatchEvent(new CustomEvent('turn:countryside-visual-ready', {
+      detail: globalThis.__countrysideVisualMetrics
+    }));
+  </script>
+</body>
+</html>
