@@ -1,29 +1,39 @@
-# TURN LAB — viewport flight recorder
+# TURN LAB — isolated gameplay experiments
 
-`/turn-lab/` is a temporary real-device diagnostic shell for issue #394.
+`/turn-lab/` runs the current production TURN module graph through `<base href="/turn/">`, while keeping a separate PWA identity and separate `turn-lab:` storage namespace. Production `/turn/` files and save data are not modified by LAB testing.
 
-It intentionally runs the **current production TURN 1.7.0 / 2026.08.09-r163 module graph** through `<base href="/turn/">`, while keeping a separate PWA identity and a separate storage namespace. Production `/turn/` files and save data are not modified by LAB testing.
+## Active experiments
 
-## Why this exists
+### Portrait play R1
 
-The intermittent bottom strip only reproduces reliably in the installed iOS Home Screen app. Desktop/browser DevTools are therefore not a sufficient observation point. The LAB flight recorder starts before the production PWA viewport boundary and persists several launches so a random good launch can be compared with a random bad launch later.
+Portrait is now a real race layout rather than a rotate-device blocker:
 
-## Real-device procedure
+- the rendered game occupies the upper portrait stage;
+- the existing four-zone drive pad occupies a dedicated lower control deck;
+- the HUD is condensed into a five-chip row with the map, boost and a LAB-only live steering meter above it;
+- the camera uses `zoom = 0.78` to recover useful horizontal road context without changing race physics;
+- production's forced landscape lock is suppressed only while LAB is already in portrait.
+
+The first steering hypothesis deliberately preserves the proven production transfer function. Phone steering still engages at 2.2°, releases at 0.9°, and reaches full lock at ±24°. The existing damped iPad profile still engages at 3.2° and releases at 1.4°. Only visible camera roll is reduced to ±16° in portrait; landscape LAB remains at ±24°.
+
+This makes the first real-device comparison interpretable: any difference in steering feel comes from the portrait grip and viewport, not a hidden sensitivity change.
+
+### Connected roadtrip R1
+
+The six-track connected-world experiment remains active in both orientations. Each track retains its two experimental exits and isolated LAB state.
+
+## Try it
 
 1. Open `https://enkel.design/turn-lab/` in Safari.
-2. Add **TURN LAB** to the Home Screen.
-3. Cold-launch it in the orientations that have produced the strip.
-4. Open the fixed **LAB** control.
-5. While the symptom is visible, choose **MARK BAD**. For a normal launch choose **MARK GOOD**.
-6. Optionally choose **COLOR LAYERS** while the strip is visible. This changes diagnostic backgrounds only after launch: HTML = red/pink, BODY = green, `#game` = blue, with outlined full-screen TURN surfaces.
-7. After at least one good and one bad session, choose **COPY LOG** and paste the JSON into the debugging thread.
-
-The recorder captures screen, window, document, Visual Viewport, orientation, body/game/Home/rotate/loading rectangles, TURN's own `__turnPwaViewportDiagnostics`, CSS app dimensions, and event timing around startup/rotation/visibility changes.
+2. Add **TURN LAB** to the Home Screen, or choose **Play in browser anyway**.
+3. Keep the device in portrait, choose a car and track, and start a motion-steering race.
+4. Recalibrate in your natural two-handed portrait grip.
+5. Use the live steering meter to compare physical angle with delivered steering. Full lock is ±24°.
+6. Rotate back to landscape before starting another race if you want a direct control comparison.
 
 ## Safety
 
-- No production TURN code is changed to make the diagnostic build work.
+- No production TURN file is changed for these experiments.
 - LAB uses `turn-lab:` / `turn-lab-session:` storage prefixes and does not seed data from production.
-- The diagnostic UI is fixed/overlayed and does not consume layout space.
-- The production PWA viewport boundary remains unchanged, so the lab should preserve the failure mode instead of "fixing" it before measurement.
-- Old historical `turn-lab` implementation files may still exist in the repository, but the current LAB entry point does not load them; current gameplay assets resolve from `/turn/`.
+- Portrait layout and orientation-lock behavior are scoped to `data-turn-deployment="lab"`.
+- The production physics, vehicle handling, drift, boost, Drive By Ear and accessibility systems remain the runtime source of truth.

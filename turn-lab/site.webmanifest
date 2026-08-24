@@ -2,7 +2,7 @@
   "id": "/turn-lab/",
   "name": "TURN LAB",
   "short_name": "TURN LAB",
-  "description": "TURN LAB runs isolated experiments on the current TURN engine. This build prototypes a connected six-track roadtrip world.",
+  "description": "TURN LAB runs isolated experiments on the current TURN engine, including portrait racing and a connected six-track roadtrip world.",
   "start_url": "/turn-lab/",
   "scope": "/turn-lab/",
   "display": "standalone",
