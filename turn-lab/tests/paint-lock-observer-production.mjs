@@ -146,10 +146,17 @@ assert.doesNotMatch(paintGate, /colors\.setAttribute\('role', 'button'\)|colors\
 const orderMatch = showroom.match(/export const LOT_CAR_ORDER = Object\.freeze\(\[([\s\S]*?)\]\);/);
 assert.ok(orderMatch, 'The showroom must expose one canonical car order');
 const order = [...orderMatch[1].matchAll(/'([^']+)'/g)].map((match) => match[1]);
-assert.ok(order.indexOf('race') < order.indexOf('firetruck'),
-  'Race Car must be the final base car before Trophy Road/emergency locked cars');
-assert.equal(order[order.indexOf('race') + 1], 'firetruck',
-  'Race Car and Fire Truck must form the visible/keyboard entitlement boundary');
+const lockedTail = [
+  'vintage-racer',
+  'race-future',
+  'firetruck',
+  'ambulance',
+  'police',
+  'monster-truck',
+  'toy-racer'
+];
+assert.deepEqual(order.slice(order.indexOf('race') + 1), lockedTail,
+  'The horizontal Lot and its keyboard/VoiceOver order must follow the Trophy Road vehicle unlock sequence');
 
 // --- Fresh module identities for already-installed PWAs -----------------------
 assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r206-pwa-color/,
@@ -182,8 +189,8 @@ assert.equal(
 );
 assert.equal(
   imports['/turn/garage/lot-showroom-experiment.js?revision=r206-race-before-locks'],
-  '/turn/garage/lot-showroom-experiment.js?revision=r179-native-car-surfaces',
-  'Installed PWAs must refetch the showroom module that creates paint controls'
+  '/turn/garage/lot-showroom-experiment.js?revision=r210-trophy-unlock-order',
+  'Installed PWAs must refetch the showroom module when the visible Trophy Road order changes'
 );
 for (const staleCatalogSpecifier of [
   '/turn/vehicle/catalog.js?build=20260804-r157-factory-colors',

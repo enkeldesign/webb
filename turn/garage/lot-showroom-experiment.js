@@ -35,11 +35,11 @@ export const LOT_CAR_ORDER = Object.freeze([
   'convertible',
   'sedan-sports',
   'race',
+  'vintage-racer',
+  'race-future',
   'firetruck',
   'ambulance',
   'police',
-  'vintage-racer',
-  'race-future',
   'monster-truck',
   'toy-racer'
 ]);
