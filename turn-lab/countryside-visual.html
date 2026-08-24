@@ -25,7 +25,6 @@
     import { installSectionIntensity } from '/turn/section-intensity.js?revision=r531-countryside-world-redesign';
     import { installCountrysideSceneryCleanup } from '/turn/tracks/countryside-scenery-r177.js?revision=r531-countryside-world-redesign';
     import { installCountrysideBella } from '/turn/tracks/countryside-bella-r166.js?revision=r176-road-derived-zone';
-    import { applyBellaFinalVisuals } from '/turn/tracks/countryside-bella-final-r172.js?revision=r172-final-tune';
     import { installCountrysideWindmill } from '/turn/tracks/kenney-track-landmarks-r517.js?revision=r531-countryside-world-redesign';
 
     const TRACK_WIDTH = 27;
@@ -288,7 +287,10 @@
         observedInstall('beauty dressing', installWorldBeauty({ world, scene, samples, trackWidth: TRACK_WIDTH, sun, hemi })),
         observedInstall('BELLA scene', installCountrysideBella({ world, samples, trackWidth: TRACK_WIDTH, runtime }))
       ]);
-      applyBellaFinalVisuals(bella);
+      // The redesign deliberately does not invoke or modify BELLA's separate final-tune
+      // layer. This visual gate needs her established rescue composition as installed by
+      // the byte-protected base module, while remaining scoped to Countryside scenery.
+      void bella;
       await observedInstall('windmill', installCountrysideWindmill(runtime));
       await installCountrysideSceneryCleanup({ world, samples, trackWidth: TRACK_WIDTH });
 
