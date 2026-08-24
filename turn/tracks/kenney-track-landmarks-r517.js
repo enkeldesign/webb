@@ -69,6 +69,7 @@ function prepareModel(source, {
   targetSpan,
   horizontalSpan = false,
   outlineScale = 1.02,
+  outline = true,
   castShadow = false,
   receiveShadow = false,
   paletteLocked = false
@@ -99,7 +100,7 @@ function prepareModel(source, {
   model.position.x -= centre.x;
   model.position.y -= bounds.min.y;
   model.position.z -= centre.z;
-  addInkOutline(model, outlineScale);
+  if (outline) addInkOutline(model, outlineScale);
   return model;
 }
 
@@ -171,7 +172,7 @@ function createCountrysideWindmill(source, samples, trackWidth) {
 
   const rotor = prepareModel(source, {
     targetSpan: 18.6,
-    outlineScale: 1.025,
+    outline: false,
     castShadow: true,
     receiveShadow: true,
     paletteLocked: true

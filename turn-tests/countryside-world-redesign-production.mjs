@@ -56,6 +56,8 @@ assert.match(plannedWorld, /turnTownPlan = 'five red homes around a T-shaped gra
 assert.match(plannedWorld, /turnTownPlan = 'parallel crop beds contained by a roadside fence and centred gate'/);
 assert.match(plannedWorld, /turnTownPlan = 'two aligned rows with a clear sightline between trunks'/);
 assert.match(plannedWorld, /turnPalette: 'Swedish-red variation B'/);
+assert.match(plannedWorld, /mesh\.userData\.turnPaletteLocked = true/,
+  'Village lanes, farm soil and orchard ground must keep their planned rural palette');
 assert.match(plannedWorld, /turnStaticSceneryCar = true/);
 assert.match(plannedWorld, /randomZoneLandmarks: 0/);
 assert.match(plannedWorld, /scatteredTownBuildings: 0/);
@@ -96,6 +98,8 @@ assert.match(cleanup, /scatteredRoadsideVehicles: 0/);
 assert.match(cleanup, /lakeRelocationHacks: 0/);
 
 assert.match(landmark, /paletteLocked: true/);
+assert.match(landmark, /outline: false/,
+  'Thin windmill sail panels must not be obscured by a back-face contour shell');
 assert.match(landmark, /turnBladePalette = 'authored warm wood and pale sail cloth'/);
 assert.match(landmark, /node\.userData\.turnPaletteLocked = true/);
 assert.match(landmark, /node\.userData\.turnZoneStyled = true/);

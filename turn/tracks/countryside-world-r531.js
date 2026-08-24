@@ -227,6 +227,7 @@ function sceneryGround(name, position, width, depth, yaw, color, y = 0.006) {
   mesh.receiveShadow = true;
   mesh.userData.turnNoAutoOutline = true;
   mesh.userData.turnSceneryOnly = true;
+  mesh.userData.turnPaletteLocked = true;
   return mesh;
 }
 
