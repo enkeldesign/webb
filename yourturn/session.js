@@ -88,12 +88,17 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     useChallengeField();
     document.body.classList.add('yourturn-active', 'yourturn-preview');
 
+    // The invitation preview needs TURN's render loop, but it is not gameplay.
+    // Publish STAGED while running is still false so TURN's orientation guard stays
+    // unlocked through the portrait invitation and portrait -> landscape rotation.
+    // The canonical race-started event is the first running:true state event and is
+    // therefore the only point where TURN locks the gameplay steering orientation.
+    runtime.setGameMode(GAME_MODE.STAGED);
     runtime.state.running = true;
     runtime.state.lastFrame = performance.now();
     runtime.state.touchGas = false;
     runtime.state.touchBrake = false;
     runtime.state.velocity.set(0, 0, 0);
-    runtime.setGameMode(GAME_MODE.STAGED);
     runtime.playerCar.visible = false;
 
     state.scene = createChallengeScene({
