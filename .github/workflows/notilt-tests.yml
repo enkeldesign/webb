@@ -1,0 +1,33 @@
+name: NO TILT tests
+
+on:
+  push:
+    paths:
+      - 'notilt/**'
+      - '.github/workflows/notilt-tests.yml'
+  pull_request:
+    paths:
+      - 'notilt/**'
+      - '.github/workflows/notilt-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax check modules
+        run: |
+          node --check notilt/app.mjs
+          node --check notilt/audio.mjs
+          node --check notilt/game-core.mjs
+          node --check notilt/game-view.mjs
+          node --check notilt/input.mjs
+      - name: Run NO TILT regression suite
+        run: node --test notilt/*.test.mjs

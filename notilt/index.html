@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en" data-game="notilt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#38d9ff">
+  <meta name="application-name" content="NO TILT">
+  <meta name="apple-mobile-web-app-title" content="NO TILT">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="NO TILT is a portrait motion-controlled balancing game. Counter every wobble, build your flow and keep it up.">
+  <link rel="canonical" href="https://enkel.design/notilt/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NO TILT">
+  <meta property="og:title" content="NO TILT — Keep it up">
+  <meta property="og:description" content="A portrait motion-controlled balance game in the world of TURN.">
+  <meta property="og:url" content="https://enkel.design/notilt/">
+  <title>NO TILT</title>
+  <link rel="stylesheet" href="/turn/design-tokens.css?revision=notilt-r1">
+  <link rel="stylesheet" href="./styles.css?revision=r1">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js"
+      }
+    }
+  </script>
+</head>
+<body data-phase="home" data-stage="0">
+  <div class="scene" id="scene" aria-hidden="true"></div>
+  <div class="scene-wash" aria-hidden="true"></div>
+
+  <header class="game-hud" id="hud" hidden aria-label="Current run">
+    <div class="hud-stats">
+      <div class="hud-chip"><span>TIME</span><strong id="timeValue">0.0s</strong></div>
+      <div class="hud-chip hud-chip-score"><span>SCORE</span><strong id="scoreValue">0</strong></div>
+      <div class="hud-chip"><span>BEST</span><strong id="bestValue">—</strong></div>
+    </div>
+    <div class="flow-card" id="flowCard">
+      <div class="flow-copy">
+        <span id="flowName">STEADY</span>
+        <strong id="comboValue">×1</strong>
+      </div>
+      <div class="flow-track" role="progressbar" aria-label="Flow combo progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="flowProgress">
+        <i id="flowFill"></i>
+      </div>
+    </div>
+  </header>
+
+  <div class="callout" id="callout" role="status" aria-live="polite"></div>
+
+  <main>
+    <section class="screen home-screen" id="home" aria-labelledby="gameTitle">
+      <article class="start-card">
+        <span class="kicker">A TURN EXPERIMENT</span>
+        <h1 class="logo" id="gameTitle"><span>NO</span><span>TILT</span></h1>
+        <p class="tagline">KEEP IT UP.</p>
+        <p class="intro-copy">Hold your phone in portrait. Tilt against every wobble. Stay centered long enough and the whole game builds into something bigger.</p>
+
+        <fieldset class="mode-picker">
+          <legend>CHOOSE YOUR BALANCE</legend>
+          <label class="mode-card easy-card">
+            <input type="radio" name="mode" value="easy" checked>
+            <span class="mode-art broom-art" aria-hidden="true"><i></i><b></b></span>
+            <span><strong>EASY</strong><small>Broom on a broad concave dish.</small></span>
+          </label>
+          <label class="mode-card medium-card">
+            <input type="radio" name="mode" value="medium">
+            <span class="mode-art marker-art" aria-hidden="true"><i></i><b></b></span>
+            <span><strong>MEDIUM</strong><small>Marker on marker. Smaller pivot, quicker fall.</small></span>
+          </label>
+          <label class="mode-card hard-card">
+            <input type="radio" name="mode" value="hard">
+            <span class="mode-art signal-art" aria-hidden="true"><i></i><b></b></span>
+            <span><strong>HARD</strong><small>Balance, dodge side attacks, lift your phone to jump.</small></span>
+          </label>
+        </fieldset>
+
+        <p class="start-status" id="startStatus">For tilt play, allow motion access when your phone asks.</p>
+        <div class="start-actions">
+          <button class="button primary-button" id="startTilt" type="button">PLAY WITH TILT</button>
+          <button class="button secondary-button" id="startTouch" type="button">TOUCH MODE</button>
+        </div>
+        <p class="storage-note">Your best try stays on this device, ready for the future YOUR TURN challenge mode.</p>
+      </article>
+    </section>
+
+    <section class="countdown-screen" id="countdown" hidden aria-labelledby="countdownTitle">
+      <div class="countdown-card">
+        <span id="countdownHint">HOLD YOUR PHONE COMFORTABLY</span>
+        <strong id="countdownTitle">3</strong>
+        <small id="countdownMode">CALIBRATING</small>
+      </div>
+    </section>
+
+    <section class="balance-control" id="balanceControl" hidden aria-label="Balance direction">
+      <div class="balance-orb" id="balanceOrb">
+        <span class="orb-cross" aria-hidden="true"></span>
+        <i class="lean-dot" id="leanDot" aria-hidden="true"></i>
+        <b class="input-dot" id="inputDot" aria-hidden="true"></b>
+      </div>
+      <p id="controlHint">TILT AGAINST THE FALL</p>
+    </section>
+
+    <nav class="game-controls" id="gameControls" hidden aria-label="Run controls">
+      <button class="utility-button" id="calibrateButton" type="button">RECENTER</button>
+      <button class="jump-button" id="jumpButton" type="button" hidden><span>JUMP</span><small>LIFT PHONE OR TAP</small></button>
+      <button class="utility-button" id="soundButton" type="button" aria-pressed="true">SOUND ON</button>
+      <button class="utility-button" id="pauseButton" type="button">PAUSE</button>
+    </nav>
+
+    <dialog class="game-dialog" id="pauseDialog" aria-labelledby="pauseTitle">
+      <article class="dialog-card">
+        <span class="dialog-kicker">NO TILT</span>
+        <h2 id="pauseTitle">PAUSED</h2>
+        <p>Take your time. Recenter before you continue if your grip changed.</p>
+        <div class="dialog-actions">
+          <button class="button primary-button" id="resumeButton" type="button">KEEP BALANCING</button>
+          <button class="button secondary-button" id="pauseRecenterButton" type="button">RECENTER</button>
+          <button class="button navigation-button" id="leaveButton" type="button">BACK TO START</button>
+        </div>
+      </article>
+    </dialog>
+
+    <dialog class="game-dialog" id="resultDialog" aria-labelledby="resultTitle">
+      <article class="dialog-card result-card">
+        <span class="dialog-kicker" id="resultKicker">RUN COMPLETE</span>
+        <h2 id="resultTitle">THAT TILTED.</h2>
+        <div class="result-stats">
+          <div><span>TIME</span><strong id="resultTime">0.0s</strong></div>
+          <div><span>SCORE</span><strong id="resultScore">0</strong></div>
+          <div><span>BEST COMBO</span><strong id="resultCombo">×1</strong></div>
+        </div>
+        <p id="resultCopy">Your best try is saved on this device.</p>
+        <div class="dialog-actions">
+          <button class="button primary-button" id="againButton" type="button">TRY AGAIN</button>
+          <button class="button navigation-button" id="changeModeButton" type="button">CHANGE MODE</button>
+        </div>
+      </article>
+    </dialog>
+
+    <section class="orientation-guard" id="orientationGuard" role="dialog" aria-modal="true" aria-labelledby="orientationTitle">
+      <div class="orientation-card">
+        <div class="portrait-phone" aria-hidden="true"><i></i></div>
+        <strong id="orientationTitle">ROTATE BACK TO PORTRAIT</strong>
+        <p>NO TILT is built upright.</p>
+      </div>
+    </section>
+
+    <p class="sr-status" id="screenReaderStatus" role="status" aria-live="polite"></p>
+  </main>
+
+  <script type="module" src="./app.mjs?revision=r1"></script>
+</body>
+</html>
