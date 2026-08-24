@@ -1,0 +1,301 @@
+html.turn-lab-portrait {
+  --turn-portrait-deck-height: clamp(310px, 43dvh, 400px);
+  --turn-portrait-stage-height: calc(100dvh - var(--turn-portrait-deck-height));
+}
+
+@media (orientation: portrait) {
+  html.turn-lab-portrait,
+  html.turn-lab-portrait body {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    background: #242628 !important;
+  }
+
+  html.turn-lab-portrait .rotate-panel {
+    display: none !important;
+  }
+
+  html.turn-lab-portrait #game {
+    position: fixed !important;
+    inset: 0 0 auto !important;
+    width: 100% !important;
+    height: var(--turn-portrait-stage-height) !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    border-bottom: 4px solid var(--ink) !important;
+    background: var(--cyan) !important;
+  }
+
+  html.turn-lab-portrait #game canvas {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  html.turn-lab-portrait .hud {
+    position: fixed !important;
+    inset: 0 0 auto !important;
+    width: 100% !important;
+    height: var(--turn-portrait-stage-height) !important;
+    padding: max(8px, env(safe-area-inset-top)) 8px 8px !important;
+  }
+
+  html.turn-lab-portrait .hud .topbar {
+    position: absolute !important;
+    inset: auto 8px 8px !important;
+    display: grid !important;
+    grid-template-columns: 86px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    gap: 6px !important;
+    align-items: end !important;
+  }
+
+  html.turn-lab-portrait .hud .map-wrap {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: 86px !important;
+    min-width: 0 !important;
+    padding: 3px !important;
+    border-width: 2px !important;
+    border-radius: 11px !important;
+    box-shadow: 3px 3px 0 var(--ink) !important;
+  }
+
+  html.turn-lab-portrait .hud .stats {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    display: grid !important;
+    grid-template-columns: 1.14fr 0.64fr 0.84fr 1.18fr 1.2fr !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+  }
+
+  html.turn-lab-portrait .hud .stats > .chip,
+  html.turn-lab-portrait .hud .stats > .race-position-hud {
+    width: auto !important;
+    min-width: 0 !important;
+    padding: 5px 4px 6px !important;
+    overflow: hidden !important;
+    border-width: 2px !important;
+    border-radius: 10px !important;
+    box-shadow: 3px 3px 0 var(--ink) !important;
+    font-size: clamp(0.43rem, 1.65vw, 0.57rem) !important;
+    letter-spacing: 0.025em !important;
+  }
+
+  html.turn-lab-portrait .hud .stats > .chip strong,
+  html.turn-lab-portrait .hud .stats > .race-position-hud strong {
+    margin-top: 2px !important;
+    overflow: hidden !important;
+    font-size: clamp(0.72rem, 3.25vw, 1rem) !important;
+    letter-spacing: -0.055em !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+  }
+
+  html.turn-lab-portrait .hud .message {
+    top: 14% !important;
+    max-width: calc(100vw - 28px) !important;
+    text-align: center !important;
+  }
+
+  html.turn-lab-portrait .boost-hud {
+    bottom: 118px !important;
+    width: min(46vw, 184px) !important;
+  }
+
+  html.turn-lab-portrait .turn-lab-portrait-meter {
+    --turn-portrait-steer: 0;
+    position: absolute;
+    z-index: 4;
+    left: 50%;
+    bottom: 66px;
+    width: min(50vw, 200px);
+    padding: 5px 8px 6px;
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    background: rgb(255 248 232 / 0.9);
+    color: var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+    transform: translateX(-50%);
+    text-align: center;
+  }
+
+  html.turn-lab-portrait .turn-lab-portrait-meter-head {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 3px;
+    font-size: 0.46rem;
+    letter-spacing: 0.07em;
+  }
+
+  html.turn-lab-portrait .turn-lab-portrait-meter-track {
+    position: relative;
+    height: 10px;
+    overflow: hidden;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    background: linear-gradient(90deg, #54c2ef 0 48%, #fff8e8 48% 52%, #ffd43b 52% 100%);
+  }
+
+  html.turn-lab-portrait .turn-lab-portrait-meter-track::after {
+    content: "";
+    position: absolute;
+    inset: -2px auto -2px 50%;
+    width: 2px;
+    background: var(--ink);
+    transform: translateX(-50%);
+  }
+
+  html.turn-lab-portrait .turn-lab-portrait-meter-dead {
+    position: absolute;
+    inset: 0 auto 0 45.4%;
+    width: 9.2%;
+    background: rgb(255 248 232 / 0.72);
+  }
+
+  html.turn-lab-portrait .turn-lab-portrait-meter-needle {
+    position: absolute;
+    z-index: 2;
+    top: 50%;
+    left: calc(50% + var(--turn-portrait-steer) * 48%);
+    width: 7px;
+    height: 16px;
+    border: 2px solid var(--ink);
+    border-radius: 5px;
+    background: #ff5a5f;
+    transform: translate(-50%, -50%);
+  }
+
+  html.turn-lab-portrait .turn-lab-portrait-meter-value {
+    display: block;
+    margin-top: 3px;
+    color: var(--ink);
+    font: 900 0.48rem/1 system-ui, sans-serif;
+    letter-spacing: 0.045em;
+  }
+
+  html.turn-lab-portrait .controls {
+    position: fixed !important;
+    z-index: 20 !important;
+    inset: var(--turn-portrait-stage-height) 0 0 !important;
+    width: 100% !important;
+    height: var(--turn-portrait-deck-height) !important;
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) !important;
+    justify-items: center !important;
+    align-items: start !important;
+    gap: 8px !important;
+    padding: 10px max(12px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)) !important;
+    border-top: 4px solid var(--cyan) !important;
+    background: #242628 !important;
+  }
+
+  html.turn-lab-portrait .controls .utility-group {
+    width: min(100%, 520px) !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex: none !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 1px 4px 5px !important;
+    pointer-events: auto !important;
+    scrollbar-width: none;
+  }
+
+  html.turn-lab-portrait .controls .utility-group::-webkit-scrollbar {
+    display: none;
+  }
+
+  html.turn-lab-portrait .controls .utility-group[data-menu-state="racing"] {
+    justify-content: center !important;
+  }
+
+  html.turn-lab-portrait .controls .utility-group .utility {
+    flex: 0 0 auto !important;
+    min-height: 40px !important;
+    padding: 6px 9px !important;
+    border-radius: 11px !important;
+    font-size: clamp(0.52rem, 2.2vw, 0.66rem) !important;
+  }
+
+  html.turn-lab-portrait .controls .pedals {
+    width: min(100%, 390px) !important;
+    min-height: 0 !important;
+    display: grid !important;
+    place-items: start center !important;
+    align-self: stretch !important;
+    padding: 0 !important;
+  }
+
+  html.turn-lab-portrait .controls .drive-stack {
+    width: min(100%, 370px) !important;
+    min-height: 0 !important;
+    align-self: stretch !important;
+  }
+
+  html.turn-lab-portrait .controls .drive-pad {
+    width: 100% !important;
+    height: min(292px, calc(var(--turn-portrait-deck-height) - 64px - max(10px, env(safe-area-inset-bottom)))) !important;
+    grid-template-rows: 29% 47% 24% !important;
+    border-radius: 23px !important;
+    box-shadow: 6px 7px 0 var(--ink) !important;
+  }
+
+  html.turn-lab-portrait .controls .drive-zone,
+  html.turn-lab-portrait .controls .drive-pad .drive-gas-zone,
+  html.turn-lab-portrait .controls .drive-pad .drive-brake-zone {
+    font-size: clamp(0.78rem, 4vw, 1.05rem) !important;
+  }
+
+  html.turn-lab-portrait .controls .drive-pad .drive-brake-zone {
+    font-size: clamp(0.66rem, 3.5vw, 0.9rem) !important;
+  }
+
+  html.turn-lab-portrait .manual-steer {
+    position: fixed !important;
+    z-index: 24 !important;
+    left: 14px !important;
+    right: 14px !important;
+    top: auto !important;
+    bottom: calc(var(--turn-portrait-deck-height) + 74px) !important;
+    width: auto !important;
+    height: 86px !important;
+  }
+
+  html.turn-lab-portrait .turn-steering-limit-edge {
+    top: 0 !important;
+    bottom: auto !important;
+    height: var(--turn-portrait-stage-height) !important;
+  }
+
+  html.turn-lab-portrait[data-turn-deployment="lab"]::after {
+    content: "TURN LAB · PORTRAIT R1";
+    right: auto;
+    bottom: auto;
+    left: max(7px, env(safe-area-inset-left));
+    top: max(6px, env(safe-area-inset-top));
+  }
+}
+
+@media (orientation: portrait) and (max-height: 720px) {
+  html.turn-lab-portrait {
+    --turn-portrait-deck-height: 310px;
+  }
+
+  html.turn-lab-portrait .boost-hud {
+    bottom: 108px !important;
+  }
+
+  html.turn-lab-portrait .turn-lab-portrait-meter {
+    bottom: 60px;
+  }
+}
+
+@media (orientation: landscape) {
+  html.turn-lab-portrait .turn-lab-portrait-meter {
+    display: none !important;
+  }
+}
