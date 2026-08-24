@@ -143,6 +143,18 @@ function punchSceneryColors(world, samples, trackWidth) {
 
   world.traverse((node) => {
     if (!node.isMesh || node.userData.turnOutline || node.userData.turnSectionIntensity) return;
+    // District colour belongs on the verge and repeater language, not on authored
+    // models. In particular, recolouring the Fantasy Town rotor made the windmill's
+    // pale sails look orange, and recolouring Bella's rescue scene changed a protected
+    // landmark. A parent walk covers GLB meshes nested several groups deep.
+    let ancestor = node;
+    while (ancestor) {
+      if (
+        ancestor.userData?.turnPaletteLocked
+        || ancestor.userData?.turnEasterEgg === 'save-bella'
+      ) return;
+      ancestor = ancestor.parent;
+    }
     if (node.userData.turnSectionPunch) return;
     if (!node.material) return;
 

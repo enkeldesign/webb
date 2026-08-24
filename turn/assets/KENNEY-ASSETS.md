@@ -2,8 +2,28 @@
 
 The vehicle models in `cars/` are selected from Kenney Prototype Kit 1.0, Toy Car Kit 1.2, and Car Kit 3.1.
 The scenery pieces in `lot-bricks/` are selected from Kenney Brick Kit 1.0.
-The legacy `scenery/fantasy-town/windmill.glb` file is the Fantasy Town rotor/blades component, not a complete windmill building. MOUNTAIN r3 deliberately does **not** place it as a freestanding landmark.
+The legacy `scenery/fantasy-town/windmill.glb` file is the Fantasy Town Kit 2.0 rotor/blades component, not a complete windmill building. MOUNTAIN r3 deliberately does **not** place it as a freestanding landmark.
 The `scenery/watercraft/ship-ocean-liner.glb` model and its `Textures/colormap.png` palette are from Kenney Watercraft Kit 2.1.
+
+## COUNTRYSIDE planned world
+
+`scenery/countryside/` contains the restrained asset vocabulary used to turn the original scattershot scenery into six readable rural districts: race paddock, managed forest edge, windmill farm, orchard, Birchfield village and lake.
+
+### City Kit Suburban
+
+The complete `building-type-a`, `b`, `h`, `m`, `s` and `u` GLBs, together with `driveway-short` and `fence-low`, come from Kenney City Kit Suburban 2.0. The local `Textures/colormap.png` is Kenney's supplied Variation B palette. It gives the small village a coherent Swedish-red house family instead of distributing unrelated City Builder shops around the circuit.
+
+### Nature Kit
+
+The selected crop beds, wheat, corn, fences, broadleaf trees, shrubs, logs and shoreline rocks come from Kenney Nature Kit. TURN maps the named flat-colour materials into a quieter countryside palette at load time while preserving the original geometry. Assets are placed in rows, boundaries and small clusters rather than scattered randomly.
+
+### Watercraft Kit
+
+`scenery/watercraft/boat-row-small.glb` shares the Watercraft Kit palette already vendored for CLIFFSIDE. COUNTRYSIDE places one rowboat beside the lake island; it is decorative and static.
+
+The planned-world group is explicitly scenery-only. It does not import or alter track samples, road meshes, collision profiles, lap rules, achievements or the separate BELLA rescue module. Every authored placement also observes a protected clearing around BELLA and her tree.
+
+The Fantasy Town windmill remains in its established track-relative position. Its supplied warm-wood/pale-cloth blade palette and the neutral custom tower are now locked against the retired global zone tint that previously shifted the blades toward orange/pink.
 
 ## Vehicle palette routing
 
@@ -56,5 +76,5 @@ Imported MOUNTAIN props are grounded from their **transformed world-space boundi
 
 MOUNTAIN also has browser-rendered fixed-camera smoke coverage (aerial, village, summit, descent and waterfall). CI uploads those screenshots together with geometry/grounding metrics so source-level tests are not the only visual quality gate.
 
-All bundled Kenney packs and models are released under Creative Commons CC0 1.0. Attribution is not required.
+All referenced Kenney packs and models are released under Creative Commons CC0 1.0. Attribution is not required.
 Original source: https://kenney.nl/assets

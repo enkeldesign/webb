@@ -9,7 +9,6 @@ const PLATFORMER_BASE = `https://cdn.jsdelivr.net/gh/KenneyNL/Starter-Kit-3D-Pla
 const ASSETS = {
   trees: `${CITY_BASE}grass-trees.glb`,
   tallTrees: `${CITY_BASE}grass-trees-tall.glb`,
-  flag: `${PLATFORMER_BASE}flag.glb`,
   cloud: `${PLATFORMER_BASE}cloud.glb`
 };
 
@@ -107,6 +106,7 @@ function prepareModel(source, targetHeight, { castShadow = true, opacity = 1 } =
     if (!node.isMesh) return;
     node.castShadow = castShadow;
     node.receiveShadow = true;
+    node.userData.turnPaletteLocked = true;
 
     if (opacity < 1 && node.material) {
       const materials = Array.isArray(node.material) ? node.material : [node.material];
@@ -386,97 +386,6 @@ function addPaddock(world, samples, trackWidth) {
   }
 }
 
-function addTownPads(world, samples, trackWidth) {
-  const padMaterial = new THREE.MeshStandardMaterial({ color: 0x9ca3aa, roughness: 1 });
-  const curbMaterial = new THREE.MeshStandardMaterial({ color: 0xdfe3e6, roughness: 0.95 });
-
-  for (let i = 0; i < 5; i += 1) {
-    const sample = sampleAt(samples, 510 + i * 35);
-    const side = i % 2 === 0 ? 1 : -1;
-    const pad = new THREE.Mesh(new THREE.BoxGeometry(32, 0.09, 22), padMaterial);
-    pad.position.copy(sample.point).addScaledVector(sample.normal, side * (trackWidth / 2 + 30));
-    pad.position.y = 0.025;
-    pad.rotation.y = yawFor(sample) + (side < 0 ? Math.PI : 0);
-    pad.receiveShadow = true;
-    world.add(pad);
-
-    for (let stripeIndex = -2; stripeIndex <= 2; stripeIndex += 1) {
-      const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.025, 14), curbMaterial);
-      stripe.position.copy(pad.position);
-      stripe.position.y = 0.082;
-      stripe.addScaledVector(sample.normal, stripeIndex * 5);
-      stripe.rotation.y = pad.rotation.y;
-      world.add(stripe);
-    }
-  }
-}
-
-function makeSignTexture(label, background) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 512;
-  canvas.height = 256;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = background;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.strokeStyle = '#08090a';
-  ctx.lineWidth = 26;
-  ctx.strokeRect(13, 13, canvas.width - 26, canvas.height - 26);
-  ctx.fillStyle = '#08090a';
-  ctx.font = '900 92px system-ui, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(label, canvas.width / 2, canvas.height / 2 + 5);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 4;
-  return texture;
-}
-
-function addSign(world, sample, side, distance, label, background) {
-  const group = new THREE.Group();
-  const panel = new THREE.Mesh(
-    new THREE.PlaneGeometry(8.8, 4.4),
-    new THREE.MeshBasicMaterial({ map: makeSignTexture(label, background), side: THREE.DoubleSide })
-  );
-  panel.position.y = 6.1;
-  group.add(panel);
-
-  const postMaterial = new THREE.MeshStandardMaterial({ color: 0x70401f, roughness: 1 });
-  for (const x of [-2.7, 2.7]) {
-    const post = new THREE.Mesh(new THREE.BoxGeometry(0.45, 5.2, 0.45), postMaterial);
-    post.position.set(x, 2.6, -0.18);
-    post.castShadow = true;
-    group.add(post);
-  }
-
-  group.position.copy(sample.point).addScaledVector(sample.normal, side * distance);
-  const inward = sample.normal.clone().multiplyScalar(-side);
-  group.rotation.y = Math.atan2(inward.x, inward.z);
-  world.add(group);
-}
-
-function addSigns(world, samples, trackWidth) {
-  const signs = [
-    [74, 1, 'TURN', '#ffd43b'],
-    [190, -1, 'FOREST', '#8ce99a'],
-    [365, 1, 'FLY', '#38d9ff'],
-    [470, -1, 'BRAKE?', '#ff4fa3'],
-    [565, 1, 'TOWN', '#9775fa'],
-    [680, -1, 'GO!', '#ffd43b']
-  ];
-
-  for (const [index, side, label, background] of signs) {
-    addSign(
-      world,
-      sampleAt(samples, index),
-      side,
-      trackWidth / 2 + 15,
-      label,
-      background
-    );
-  }
-}
-
 function addRoadWear(world, samples) {
   const patchMaterial = new THREE.MeshStandardMaterial({
     color: 0x292d31,
@@ -571,10 +480,9 @@ async function addAssetDressing(world, samples, trackWidth) {
   const results = await Promise.allSettled([
     loadAsset('trees'),
     loadAsset('tallTrees'),
-    loadAsset('flag'),
     loadAsset('cloud')
   ]);
-  const [trees, tallTrees, flag, cloud] = results.map((result) =>
+  const [trees, tallTrees, cloud] = results.map((result) =>
     result.status === 'fulfilled' ? result.value : null
   );
 
@@ -592,18 +500,6 @@ async function addAssetDressing(world, samples, trackWidth) {
         .addScaledVector(sample.normal, side * (trackWidth / 2 + 11 + seeded01(15200 + i) * 29))
         .addScaledVector(sample.tangent, (seeded01(15300 + i) - 0.5) * 16);
       model.rotation.y = seeded01(15400 + i) * TAU;
-      world.add(model);
-    }
-  }
-
-  // Paddock flags.
-  if (flag) {
-    for (const [index, side] of [[0, -1], [0, 1], [24, 1], [696, -1]]) {
-      const sample = sampleAt(samples, index);
-      const model = prepareModel(flag, 9.5, { castShadow: true });
-      model.position.add(sample.point)
-        .addScaledVector(sample.normal, side * (trackWidth / 2 + 7));
-      model.rotation.y = yawFor(sample) + (side < 0 ? Math.PI : 0);
       world.add(model);
     }
   }
@@ -654,8 +550,6 @@ export async function installWorldBeauty({ world, scene, samples, trackWidth, su
   addZoneGround(world, samples, trackWidth);
   addStartFinish(world, samples, trackWidth);
   addPaddock(world, samples, trackWidth);
-  addTownPads(world, samples, trackWidth);
-  addSigns(world, samples, trackWidth);
   addRoadWear(world, samples);
   addFlowerFields(world, samples, trackWidth);
   addSun(world);
