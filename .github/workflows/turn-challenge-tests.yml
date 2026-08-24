@@ -76,7 +76,7 @@ jobs:
       - name: Run YOUR TURN production engine parity
         run: node turn-tests/yourturn-engine-parity-production.mjs
 
-      - name: Run YOUR TURN iOS motion start guard
+      - name: Run YOUR TURN canonical motion ownership
         run: node turn-tests/yourturn-motion-start-guard-production.mjs
 
       - name: Run YOUR TURN r411 controls and maps regression
