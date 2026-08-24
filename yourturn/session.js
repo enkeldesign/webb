@@ -280,6 +280,9 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
       window.addEventListener('resize', check, { passive: true });
       window.addEventListener('orientationchange', check, { passive: true });
     });
+    // Let the landscape viewport paint before handing control to TURN. This is a UI
+    // transition only; YOUR TURN does not sample or rewrite motion steering state.
+    await nextPaint();
     return startAcceptedRace();
   }
 
@@ -297,7 +300,6 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     document.querySelector('#resetButton')?.click();
     useChallengeField();
     const access = state.pendingAccess || raceSession.prepareManualAccess();
-    await centerMotionAfterLandscape();
     await raceSession.startGame(access.fullscreenPromise);
     runtime.setGameMode(GAME_MODE.STAGED);
     runtime.state.velocity.set(0, 0, 0);
@@ -308,37 +310,6 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     runtime.state.lastFrame = performance.now();
     ui.showRaceChrome();
     animation.resume();
-  }
-
-  async function centerMotionAfterLandscape() {
-    if (!runtime.state.sensorMode) return;
-    await new Promise((resolve) => {
-      let samples = 0;
-      let finished = false;
-      let timer = 0;
-      const finish = () => {
-        if (finished) return;
-        finished = true;
-        window.removeEventListener('devicemotion', onMotion);
-        window.clearTimeout(timer);
-        resolve();
-      };
-      const onMotion = () => {
-        samples += 1;
-        if (samples >= 2) finish();
-      };
-      window.addEventListener('devicemotion', onMotion, { passive: true });
-      timer = window.setTimeout(finish, 320);
-    });
-
-    runtime.state.neutralRoll = runtime.state.targetRoll;
-    runtime.state.horizonRollReference = runtime.state.targetRoll;
-    runtime.state.roll = runtime.state.targetRoll;
-    runtime.state.neutralPitch = runtime.state.targetPitch;
-    runtime.state.pitch = runtime.state.targetPitch;
-    runtime.state.steering = 0;
-    runtime.state.steeringEngaged = false;
-    runtime.state.tiltDrive = 0;
   }
 
   function handleLapResult(event) {

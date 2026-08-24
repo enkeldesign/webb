@@ -29,17 +29,21 @@
   <title>YOUR TURN</title>
   <link rel="icon" href="/turn/TURNicon.PNG?icon=20260803-profile-512" type="image/png">
 
-  <link rel="stylesheet" href="/turn/styles.css?source=yourturn-r4">
-  <link rel="stylesheet" href="/turn/vertical-drive.css?source=yourturn-r4">
-  <link rel="stylesheet" href="/turn/hud-tuning.css?source=yourturn-r4">
-  <link rel="stylesheet" href="/turn/gameplay-features.css?source=yourturn-r4">
-  <link rel="stylesheet" href="/turn/gameplay-v2.css?source=yourturn-r4">
-  <link rel="stylesheet" href="/turn/position-hud-r83.css?source=yourturn-r4">
-  <link rel="stylesheet" href="/turn/drive-pad.css?source=yourturn-r4">
-  <link rel="stylesheet" href="/turn/manual-steering.css?source=yourturn-r4">
-  <link rel="stylesheet" href="/turn/steering-limit-warning.css?source=yourturn-r4">
-  <link rel="stylesheet" href="/turn/lap-result-toast.css?source=yourturn-r4">
-  <link rel="stylesheet" href="/turn/r104-polish.css?source=yourturn-r4">
+  <!-- YOUR TURN consumes TURN's current race presentation instead of pinning an
+       old visual snapshot. The semantic layer below is what makes BOOST yellow,
+       GAS green, DRIFT blue and BRAKE pink in current TURN. -->
+  <link rel="stylesheet" href="/turn/styles.css?build=20260823-r183&source=yourturn-r593">
+  <link rel="stylesheet" href="/turn/vertical-drive.css?build=20260823-r183&source=yourturn-r593">
+  <link rel="stylesheet" href="/turn/hud-tuning.css?build=20260823-r183&source=yourturn-r593">
+  <link rel="stylesheet" href="/turn/gameplay-features.css?build=20260823-r183&source=yourturn-r593">
+  <link rel="stylesheet" href="/turn/gameplay-v2.css?build=20260823-r183&source=yourturn-r593">
+  <link rel="stylesheet" href="/turn/position-hud-r83.css?build=20260823-r183&source=yourturn-r593">
+  <link rel="stylesheet" href="/turn/drive-pad.css?build=20260823-r183&source=yourturn-r593">
+  <link rel="stylesheet" href="/turn/manual-steering.css?build=20260823-r183&source=yourturn-r593">
+  <link rel="stylesheet" href="/turn/steering-limit-warning.css?build=20260823-r183&source=yourturn-r593">
+  <link rel="stylesheet" href="/turn/lap-result-toast.css?build=20260823-r183&source=yourturn-r593">
+  <link rel="stylesheet" href="/turn/r104-polish.css?build=20260823-r183&source=yourturn-r593">
+  <link rel="stylesheet" href="/turn/design-semantic.css?revision=r593-yourturn-parity">
   <link rel="stylesheet" href="/yourturn/yourturn.css?revision=r3">
   <link rel="stylesheet" href="/yourturn/nonvisual.css?revision=r1">
   <link rel="stylesheet" href="/yourturn/growing-challenge.css?revision=r2">
@@ -63,7 +67,7 @@
         "/turn/vehicle/catalog.js?revision=r164-vintage-rally-polish": "/turn/vehicle/catalog.js?revision=r179-native-car-surfaces",
         "/turn/vehicle/car-models.js?build=20260720-r19": "/turn/vehicle/emergency-livery-models.js?build=20260823-r183",
         "/turn/vehicle/car-models.js?build=20260720-r22": "/turn/vehicle/emergency-livery-models.js?build=20260823-r183",
-        "/yourturn/session.js?revision=r3": "/yourturn/session.js?revision=r7",
+        "/yourturn/session.js?revision=r3": "/yourturn/session.js?revision=r593-canonical-motion",
         "/yourturn/ui.js?revision=r3": "/yourturn/ui.js?revision=r10",
         "/yourturn/protocol.js?revision=r3": "/yourturn/protocol-social.js?revision=r1",
         "/yourturn/scene.js?revision=r1": "/yourturn/scene.js?revision=r7"
@@ -159,11 +163,8 @@
     <span>Loading challenge…</span>
   </div>
 
-  <!-- YOUR TURN grants motion in portrait, then rotates to landscape. Stabilize the
-       adaptive TURN orientation axis before the shared race session publishes
-       race-started and freezes its gameplay angle. -->
-  <script src="/yourturn/start-axis-guard.js?revision=r592-ios-axis-lock"></script>
-  <script type="module" src="/yourturn/app.js?revision=r6"></script>
+  <!-- Challenge orchestration is YOUR TURN-specific; steering is not. -->
+  <script type="module" src="/yourturn/app.js?revision=r593-canonical-motion"></script>
   <script type="module" src="/yourturn/nonvisual.js?revision=r1"></script>
   <script type="module" src="/yourturn/race-controls-r417.js?revision=r417"></script>
   <script type="module" src="/yourturn/track-map-r417.js?revision=r417"></script>

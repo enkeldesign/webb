@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [turnIndex, yourTurnIndex] = await Promise.all([
+const [turnIndex, yourTurnIndex, yourTurnApp, yourTurnSession] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../yourturn/index.html', import.meta.url), 'utf8')
+  fs.readFile(new URL('../yourturn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../yourturn/app.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../yourturn/session.js', import.meta.url), 'utf8')
 ]);
 
 function readImportMap(source, label) {
@@ -99,4 +101,46 @@ assert.doesNotMatch(
   'YOUR TURN must not grow a challenge-specific copy of vehicle attributes or tuning'
 );
 
-console.log('YOUR TURN production motion/orientation and canonical vehicle-rendering parity contract passed.');
+assert.match(
+  yourTurnApp,
+  /installMotionLifecycleBridge\(\{ platform: webPlatform \}\)/,
+  'YOUR TURN must install TURN’s production motion lifecycle bridge'
+);
+assert.doesNotMatch(
+  yourTurnApp,
+  /__turnMotionLifecycle\?\.uninstall|__turnMotionLifecycle\.uninstall/,
+  'YOUR TURN must never tear down TURN’s canonical motion lifecycle after startup'
+);
+assert.doesNotMatch(
+  `${yourTurnApp}\n${yourTurnSession}`,
+  /addEventListener\(['"]devicemotion/,
+  'YOUR TURN orchestration must not own a parallel device-motion subscription'
+);
+assert.doesNotMatch(
+  `${yourTurnApp}\n${yourTurnSession}`,
+  /neutralRoll\s*=|horizonRollReference\s*=/,
+  'YOUR TURN orchestration must not rewrite TURN steering calibration state'
+);
+assert.doesNotMatch(
+  yourTurnIndex,
+  /start-axis-guard\.js/,
+  'YOUR TURN must not wrap TURN race start with a challenge-specific motion guard'
+);
+
+assert.match(
+  yourTurnIndex,
+  /\/turn\/design-semantic\.css\?revision=r593-yourturn-parity/,
+  'YOUR TURN must consume TURN’s semantic control colors so BOOST/GAS/DRIFT/BRAKE stay visually current'
+);
+assert.match(
+  yourTurnIndex,
+  /\/turn\/drive-pad\.css\?build=20260823-r183&source=yourturn-r593/,
+  'YOUR TURN must use a fresh production drive-pad cache identity'
+);
+assert.match(
+  yourTurnImportMap.imports?.['/yourturn/session.js?revision=r3'] || '',
+  /r593-canonical-motion/,
+  'YOUR TURN must cache-bust the canonical-motion session handoff'
+);
+
+console.log('YOUR TURN production steering, controls and vehicle parity contract passed.');

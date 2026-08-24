@@ -108,7 +108,7 @@ assert.match(turnShareSource, /Preparing challenge link…/,
   'The composer should announce the short-link preparation delay');
 assert.match(turnIndex, /your-turn-share-bootstrap\.js\?revision=r2/,
   'TURN must cache-bust the short-link sharing bootstrap');
-assert.match(yourTurnIndex, /session\.js\?revision=r3[^\n]*session\.js\?revision=r7/,
-  'YOUR TURN must cache-bust the session that understands short IDs');
+assert.match(yourTurnIndex, /session\.js\?revision=r3[^\n]*session\.js\?revision=r593-canonical-motion/,
+  'YOUR TURN must cache-bust the current session that understands short IDs');
 
 console.log('TURN and YOUR TURN short snapshot links, readback and self-contained fallback regression passed.');

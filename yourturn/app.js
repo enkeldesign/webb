@@ -3,10 +3,6 @@ import { trackPitch, trackSurfaceY } from '/turn/tracks/elevation.js?build=20260
 import { createYourTurnUi, escapeHtml } from '/yourturn/ui.js?revision=r3';
 import { createYourTurnSession, readYourTurnRequest } from '/yourturn/session.js?revision=r3';
 
-const FINAL_MOTION_CENTER_DELAY_MS = 320;
-const FINAL_MOTION_QUIET_MS = 120;
-const FINAL_MOTION_TIMEOUT_MS = 1100;
-const FINAL_MOTION_SAMPLE_COUNT = 3;
 const PLAYER_START_LANE_OFFSET = 4.1;
 
 if (globalThis.__YOUR_TURN_STORAGE_READY__ === false) {
@@ -15,11 +11,11 @@ if (globalThis.__YOUR_TURN_STORAGE_READY__ === false) {
 
 const release = await loadTurnRelease();
 globalThis.__TURN_BUILD__ = Object.freeze(release);
-document.documentElement.dataset.yourTurnRuntime = 'recipient-r4';
+document.documentElement.dataset.yourTurnRuntime = 'recipient-r5-canonical-motion';
 
 function withBuild(path) {
   const url = new URL(path, globalThis.location?.href || 'https://enkel.design/yourturn/');
-  if (release.cacheKey) url.searchParams.set('build', `${release.cacheKey}-yourturn-r4`);
+  if (release.cacheKey) url.searchParams.set('build', `${release.cacheKey}-yourturn-r593-canonical-motion`);
   return url.href;
 }
 
@@ -76,12 +72,8 @@ const runtime = globalThis.__turnRuntime;
 const raceSession = globalThis.__turnNextRaceSession;
 if (!runtime || !raceSession) throw new Error('TURN racing runtime did not become available.');
 
-// TURN's production lifecycle bridge intentionally owns a single devicemotion
-// subscription. YOUR TURN also samples motion after the portrait → landscape
-// transition. Restore normal browser multi-listener semantics here so sampling can
-// coexist with the canonical racing listener.
-globalThis.__turnMotionLifecycle?.uninstall?.();
-
+// Keep TURN's production motion lifecycle installed. YOUR TURN may orchestrate the
+// challenge flow, but TURN alone owns the sensor subscription and steering state.
 globalThis.__turnRaceSession = raceSession;
 const { installWideGamutRuntime } = await import(withBuild('/turn/vehicle/wide-gamut.js?revision=r157-display-p3'));
 installWideGamutRuntime(runtime);
@@ -89,8 +81,6 @@ await import(withBuild('/turn/render/world.js?revision=r175-bella-broad-rear-zon
 
 const { installScreenBlanking } = await import(withBuild('/turn/ui/screen-blanking.js?revision=r143-temporary-dbe-position'));
 installScreenBlanking(runtime);
-
-installFinalMotionCentering(runtime, animation);
 
 const ui = createYourTurnUi();
 const request = readYourTurnRequest();
@@ -127,106 +117,11 @@ async function loadTurnRelease() {
   } catch (error) {
     console.warn('YOUR TURN: using bundled TURN release fallback.', error);
     return {
-      version: '1.6.0',
-      id: '2026.08.08-r162',
-      cacheKey: '20260808-r162'
+      version: '1.10.4',
+      id: '2026.08.23-r183',
+      cacheKey: '20260823-r183'
     };
   }
-}
-
-function installFinalMotionCentering(runtime, animation) {
-  window.addEventListener('turn:ui-state-change', (event) => {
-    if (event.detail?.reason !== 'race-started' || !runtime.state.sensorMode) return;
-
-    // Canonical TURN performs its own startup center shortly after race-started.
-    // In YOUR TURN that can land while Safari is still settling the portrait →
-    // landscape coordinate system and overwrite a good neutral with a left/right
-    // biased one. Keep the runtime hard-paused and make the final, silent center only
-    // after the landscape viewport has settled and fresh motion samples have arrived.
-    animation.deferResumeUntil(silentlyCenterAfterLandscape(runtime));
-  });
-}
-
-async function silentlyCenterAfterLandscape(runtime) {
-  const startedAt = performance.now();
-  await waitForSettledLandscape(startedAt);
-  await waitForFreshMotionSamples(FINAL_MOTION_SAMPLE_COUNT, 600);
-
-  const state = runtime.state;
-  if (!state.sensorMode) return;
-  state.neutralRoll = state.targetRoll;
-  state.horizonRollReference = state.targetRoll;
-  state.roll = state.targetRoll;
-  state.neutralPitch = state.targetPitch;
-  state.pitch = state.targetPitch;
-  state.steering = 0;
-  state.steeringEngaged = false;
-  state.tiltDrive = 0;
-}
-
-function waitForSettledLandscape(startedAt) {
-  return new Promise((resolve) => {
-    let lastViewportChangeAt = performance.now();
-    let settled = false;
-    let frame = 0;
-
-    const noteViewportChange = () => {
-      lastViewportChangeAt = performance.now();
-    };
-    const finish = () => {
-      if (settled) return;
-      settled = true;
-      cancelAnimationFrame(frame);
-      window.removeEventListener('resize', noteViewportChange);
-      window.removeEventListener('orientationchange', noteViewportChange);
-      screen.orientation?.removeEventListener?.('change', noteViewportChange);
-      resolve();
-    };
-    const check = () => {
-      const now = performance.now();
-      const minimumDelayPassed = now - startedAt >= FINAL_MOTION_CENTER_DELAY_MS;
-      const viewportQuiet = now - lastViewportChangeAt >= FINAL_MOTION_QUIET_MS;
-      const landscape = globalThis.matchMedia?.('(orientation: landscape)').matches
-        || globalThis.innerWidth > globalThis.innerHeight;
-      const timedOut = now - startedAt >= FINAL_MOTION_TIMEOUT_MS;
-
-      if ((landscape && minimumDelayPassed && viewportQuiet) || timedOut) {
-        finish();
-        return;
-      }
-      frame = requestAnimationFrame(check);
-    };
-
-    window.addEventListener('resize', noteViewportChange, { passive: true });
-    window.addEventListener('orientationchange', noteViewportChange, { passive: true });
-    screen.orientation?.addEventListener?.('change', noteViewportChange, { passive: true });
-    frame = requestAnimationFrame(check);
-  });
-}
-
-function waitForFreshMotionSamples(count, timeoutMs) {
-  return new Promise((resolve) => {
-    let samples = 0;
-    let finished = false;
-    let timer = 0;
-
-    const finish = () => {
-      if (finished) return;
-      finished = true;
-      window.removeEventListener('devicemotion', onMotion);
-      window.clearTimeout(timer);
-      resolve();
-    };
-    const onMotion = (event) => {
-      const gravity = event?.accelerationIncludingGravity;
-      if (!gravity || gravity.x == null || gravity.y == null || gravity.z == null) return;
-      samples += 1;
-      if (samples >= count) finish();
-    };
-
-    window.addEventListener('devicemotion', onMotion, { passive: true });
-    timer = window.setTimeout(finish, timeoutMs);
-  });
 }
 
 function installStartLineFormationAdapter(runtime, getSessionState) {
@@ -430,15 +325,11 @@ function clamp(value, min, max) {
 function installHardPauseController() {
   let paused = false;
   let pausedAt = 0;
-  let resumeBarrier = null;
-  let resumeRequested = false;
-  let barrierVersion = 0;
 
   function pause() {
     if (paused) return;
     paused = true;
     pausedAt = performance.now();
-    resumeRequested = false;
 
     // The canonical TURN loop already has a hard occlusion path for The Lot.
     // YOUR TURN has no Lot UI, so reusing that class gives us a tested frame-level
@@ -447,7 +338,7 @@ function installHardPauseController() {
     globalThis.__turnAudio?.silence?.();
   }
 
-  function finishResume() {
+  function resume() {
     if (!paused) return;
     const now = performance.now();
     const state = globalThis.__turnRuntime?.state;
@@ -462,38 +353,11 @@ function installHardPauseController() {
     document.body.classList.remove('turn-lot-open', 'yourturn-runtime-paused');
     paused = false;
     pausedAt = 0;
-    resumeRequested = false;
-  }
-
-  function resume() {
-    if (!paused) return;
-    if (resumeBarrier) {
-      resumeRequested = true;
-      return;
-    }
-    finishResume();
-  }
-
-  function deferResumeUntil(promise) {
-    pause();
-    const version = ++barrierVersion;
-    const barrier = Promise.resolve(promise)
-      .catch((error) => {
-        console.warn('YOUR TURN: final motion centering did not complete cleanly.', error);
-      })
-      .finally(() => {
-        if (version !== barrierVersion) return;
-        resumeBarrier = null;
-        if (resumeRequested) finishResume();
-      });
-    resumeBarrier = barrier;
-    return barrier;
   }
 
   return Object.freeze({
     pause,
     resume,
-    deferResumeUntil,
     isPaused: () => paused
   });
 }
