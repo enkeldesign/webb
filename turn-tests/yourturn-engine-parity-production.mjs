@@ -139,8 +139,8 @@ assert.match(
 );
 assert.match(
   yourTurnImportMap.imports?.['/yourturn/session.js?revision=r3'] || '',
-  /r593-canonical-motion/,
-  'YOUR TURN must cache-bust the canonical-motion session handoff'
+  /r595-landscape-recalibrate/,
+  'YOUR TURN must cache-bust the canonical-motion session handoff while preserving canonical TURN steering ownership'
 );
 
 console.log('YOUR TURN production steering, controls and vehicle parity contract passed.');
