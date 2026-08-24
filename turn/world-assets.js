@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { installCountrysideWorld } from './tracks/countryside-world-r531.js?revision=r531-countryside-world-redesign';
+import { installCountrysideWorld } from './tracks/countryside-world-r531.js?revision=r532-countryside-nature-polish';
 
 const CITY_BUILDER_COMMIT = '4535092b740b378b700efd9df9e27a631815b84a';
 const PLATFORMER_COMMIT = '3fa8a04b1c01ab23db43123d4ce814a34c3fc7f0';
@@ -200,7 +200,7 @@ function placeTreeBelt({ world, samples, trackWidth, trees, tallTrees }) {
     const random = seeded01(i + 11);
     const secondRandom = seeded01(i * 3 + 7);
     const source = sources[i % sources.length];
-    const targetHeight = 7.5 + secondRandom * 7;
+    const targetHeight = 11.5 + secondRandom * 9;
 
     placeAlongTrack({
       world,

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createCarVisual } from '../vehicle/emergency-livery-models.js?build=20260811-r164';
 
-const REVISION = 'r531-countryside-world-redesign';
+const REVISION = 'r532-countryside-nature-polish';
 const INK = 0x08090a;
 const LAKE_LEVEL = 0.051;
 const BELLA_SAMPLE_INDEX = 500;
@@ -31,9 +31,15 @@ const ASSET_URLS = Object.freeze({
   oak: new URL('tree_oak.glb', NATURE_ROOT).href,
   broadleaf: new URL('tree_default.glb', NATURE_ROOT).href,
   smallTree: new URL('tree_small.glb', NATURE_ROOT).href,
+  pine: new URL('tree_pineRoundB.glb', NATURE_ROOT).href,
   bush: new URL('plant_bushDetailed.glb', NATURE_ROOT).href,
+  largeBush: new URL('plant_bushLarge.glb', NATURE_ROOT).href,
+  meadowGrass: new URL('grass_large.glb', NATURE_ROOT).href,
   logStack: new URL('log_stack.glb', NATURE_ROOT).href,
   lakeRock: new URL('rock_largeA.glb', NATURE_ROOT).href,
+  fieldRock: new URL('rock_largeB.glb', NATURE_ROOT).href,
+  smallRock: new URL('rock_smallD.glb', NATURE_ROOT).href,
+  oldStump: new URL('stump_oldTall.glb', NATURE_ROOT).href,
   rowBoat: new URL(
     '../assets/scenery/watercraft/boat-row-small.glb?asset=kenney-watercraft-kit-2.1-row-boat',
     import.meta.url
@@ -501,7 +507,7 @@ function installOrchard(root, sources, samples, trackWidth, protectedPoint) {
       const source = (trees + (outward > 35 ? 1 : 0)) % 2 ? broadleaf : oak;
       if (!source) continue;
       placePrepared(orchard, source, {
-        targetHeight: 7.7 + (trees % 3) * 0.55,
+        targetHeight: 9.4 + (trees % 3) * 0.7,
         semantic: 'tree',
         castShadow: trees % 3 === 0
       }, {
@@ -559,23 +565,170 @@ function installForestEdge(root, sources, samples, trackWidth, protectedPoint) {
     }
   }
 
-  const smallTree = sources.get('smallTree');
-  if (smallTree) {
-    for (const [along, outward, height] of [[-18, 27, 6.2], [8, 31, 6.8], [19, 25, 5.9]]) {
+  const forestTrees = [sources.get('pine'), sources.get('oak'), sources.get('broadleaf')].filter(Boolean);
+  if (forestTrees.length) {
+    for (const [index, [along, outward, height]] of [
+      [-25, 34, 13.8], [-16, 27, 11.7], [-7, 39, 15.2],
+      [4, 31, 12.9], [13, 42, 15.8], [22, 27, 11.4], [29, 37, 14.5]
+    ].entries()) {
       const position = pointInFrame(frame, outward, along, 0.03);
       if (!safelyOutsideBella(position, protectedPoint)) continue;
-      placePrepared(forest, smallTree, {
+      placePrepared(forest, forestTrees[index % forestTrees.length], {
         targetHeight: height,
         semantic: 'tree',
-        castShadow: false
+        castShadow: index % 3 === 0
       }, {
-        name: 'Managed forest young tree',
+        name: 'Managed forest canopy tree',
         position,
         rotation: frame.yaw + along * 0.05,
         metadata: { turnCountrysideDistrict: 'forest-edge' }
       });
     }
   }
+
+  const largeBush = sources.get('largeBush');
+  if (largeBush) {
+    for (const [along, outward, height] of [[-21, 22, 2.9], [-2, 25, 3.3], [18, 22, 2.7]]) {
+      const position = pointInFrame(frame, outward, along, 0.03);
+      if (!safelyOutsideBella(position, protectedPoint)) continue;
+      placePrepared(forest, largeBush, {
+        targetHeight: height,
+        semantic: 'bush',
+        castShadow: false
+      }, {
+        name: 'Managed forest understorey bush',
+        position,
+        rotation: frame.yaw + along * 0.09,
+        metadata: { turnCountrysideDistrict: 'forest-edge' }
+      });
+    }
+  }
+}
+
+const NATURE_COPSES = Object.freeze([
+  Object.freeze({ sample: 72, side: 1, label: 'Paddock shelterbelt' }),
+  Object.freeze({ sample: 118, side: -1, label: 'North meadow copse' }),
+  Object.freeze({ sample: 205, side: 1, label: 'Hill meadow copse' }),
+  Object.freeze({ sample: 252, side: -1, label: 'Woodland approach' }),
+  Object.freeze({ sample: 670, side: 1, label: 'South pasture copse' })
+]);
+
+function installNatureLandscape(root, sources, samples, trackWidth, protectedPoint) {
+  const landscape = new THREE.Group();
+  landscape.name = 'Countryside Nature Kit Landscape';
+  landscape.userData.turnCountrysideDistrict = 'nature-landscape';
+  landscape.userData.turnTownPlan = 'five large-scale copses with layered canopy, understorey, meadow grass and rock accents';
+  root.add(landscape);
+
+  const trees = [sources.get('pine'), sources.get('oak'), sources.get('broadleaf')].filter(Boolean);
+  const bushes = [sources.get('largeBush'), sources.get('bush')].filter(Boolean);
+  const meadowGrass = sources.get('meadowGrass');
+  const rocks = [sources.get('fieldRock'), sources.get('smallRock')].filter(Boolean);
+  const stump = sources.get('oldStump');
+  const metrics = { copses: 0, canopyTrees: 0, bushes: 0, grassClumps: 0, rocks: 0, stumps: 0 };
+
+  for (const [copseIndex, spec] of NATURE_COPSES.entries()) {
+    const frame = frameAt(samples, spec.sample, trackWidth, spec.side);
+    const copse = new THREE.Group();
+    copse.name = spec.label;
+    copse.userData.turnCountrysideDistrict = 'nature-landscape';
+    landscape.add(copse);
+
+    const treeLayout = [
+      [-20, 35, 12.4], [-9, 48, 15.2], [3, 33, 13.8],
+      [14, 52, 16.4], [24, 38, 12.9]
+    ];
+    for (const [treeIndex, [along, outward, height]] of treeLayout.entries()) {
+      if (!trees.length) break;
+      const position = pointInFrame(frame, outward, along, 0.035);
+      if (!safelyOutsideBella(position, protectedPoint)) continue;
+      placePrepared(copse, trees[(copseIndex + treeIndex) % trees.length], {
+        targetHeight: height + (copseIndex % 2) * 0.8,
+        semantic: 'tree',
+        castShadow: treeIndex === 1 || treeIndex === 3
+      }, {
+        name: `${spec.label} canopy tree`,
+        position,
+        rotation: frame.yaw + copseIndex * 0.63 + treeIndex * 0.91,
+        metadata: { turnCountrysideDistrict: 'nature-landscape', turnNatureLayer: 'canopy' }
+      });
+      metrics.canopyTrees += 1;
+    }
+
+    const bushLayout = [[-15, 26, 3.2], [0, 25, 2.7], [18, 27, 3.5]];
+    for (const [bushIndex, [along, outward, height]] of bushLayout.entries()) {
+      if (!bushes.length) break;
+      const position = pointInFrame(frame, outward, along, 0.03);
+      if (!safelyOutsideBella(position, protectedPoint)) continue;
+      placePrepared(copse, bushes[(copseIndex + bushIndex) % bushes.length], {
+        targetHeight: height,
+        semantic: 'bush',
+        castShadow: false
+      }, {
+        name: `${spec.label} understorey bush`,
+        position,
+        rotation: frame.yaw + bushIndex * 1.37,
+        metadata: { turnCountrysideDistrict: 'nature-landscape', turnNatureLayer: 'understorey' }
+      });
+      metrics.bushes += 1;
+    }
+
+    if (meadowGrass) {
+      for (const [grassIndex, [along, outward, span]] of [[-25, 24, 3.9], [10, 23, 4.5]].entries()) {
+        const position = pointInFrame(frame, outward, along, 0.025);
+        if (!safelyOutsideBella(position, protectedPoint)) continue;
+        placePrepared(copse, meadowGrass, {
+          targetSpan: span,
+          semantic: 'grass',
+          castShadow: false
+        }, {
+          name: `${spec.label} meadow grass`,
+          position,
+          rotation: frame.yaw + grassIndex * 1.73 + copseIndex * 0.29,
+          metadata: { turnCountrysideDistrict: 'nature-landscape', turnNatureLayer: 'ground-cover' }
+        });
+        metrics.grassClumps += 1;
+      }
+    }
+
+    if (rocks.length) {
+      const position = pointInFrame(frame, 29, 27, 0.03);
+      if (safelyOutsideBella(position, protectedPoint)) {
+        placePrepared(copse, rocks[copseIndex % rocks.length], {
+          targetSpan: 2.8 + (copseIndex % 3) * 0.55,
+          semantic: 'rock',
+          castShadow: false
+        }, {
+          name: `${spec.label} field rock`,
+          position,
+          rotation: frame.yaw + copseIndex * 0.84,
+          metadata: { turnCountrysideDistrict: 'nature-landscape', turnNatureLayer: 'ground-cover' }
+        });
+        metrics.rocks += 1;
+      }
+    }
+
+    if (stump && copseIndex === 3) {
+      const position = pointInFrame(frame, 25, -29, 0.03);
+      if (safelyOutsideBella(position, protectedPoint)) {
+        placePrepared(copse, stump, {
+          targetHeight: 2.7,
+          semantic: 'wood',
+          castShadow: false
+        }, {
+          name: 'Woodland approach old stump',
+          position,
+          rotation: frame.yaw + 0.52,
+          metadata: { turnCountrysideDistrict: 'nature-landscape', turnNatureLayer: 'ground-cover' }
+        });
+        metrics.stumps += 1;
+      }
+    }
+    metrics.copses += 1;
+  }
+
+  landscape.userData.turnNatureMetrics = Object.freeze({ ...metrics });
+  return metrics;
 }
 
 function installLakeLife(root, sources, samples) {
@@ -713,6 +866,7 @@ export async function installCountrysideWorld({ world, samples, trackWidth }) {
     const cropBeds = installFarmFields(root, sources, samples, trackWidth, protectedPoint);
     const orchardTrees = installOrchard(root, sources, samples, trackWidth, protectedPoint);
     installForestEdge(root, sources, samples, trackWidth, protectedPoint);
+    const nature = installNatureLandscape(root, sources, samples, trackWidth, protectedPoint);
     installLakeLife(root, sources, samples);
     const parkedCars = await installParkedCars(root, samples, trackWidth);
 
@@ -722,12 +876,22 @@ export async function installCountrysideWorld({ world, samples, trackWidth }) {
     world.userData.turnCountrysideAssetErrors = [...errors, ...parkedCars.errors];
     world.userData.turnCountrysideWorldMetrics = Object.freeze({
       revision: REVISION,
-      districts: ['paddock', 'forest-edge', 'windmill-farm', 'orchard', 'village', 'lake'],
+      districts: ['paddock', 'forest-edge', 'nature-landscape', 'windmill-farm', 'orchard', 'village', 'lake'],
       villageHouses,
       paddockBuildings,
       cropBeds,
       orchardTrees,
+      natureCopses: nature.copses,
+      natureCanopyTrees: nature.canopyTrees,
+      natureBushes: nature.bushes,
+      natureGrassClumps: nature.grassClumps,
+      natureRocks: nature.rocks,
+      natureStumps: nature.stumps,
       parkedCars: parkedCars.placed,
+      legacyPaddockPads: 0,
+      legacyPaddockBarriers: 0,
+      proceduralFlowerDots: 0,
+      sectionColourOverlays: 0,
       randomZoneLandmarks: 0,
       scatteredTownBuildings: 0,
       bellaClearRadius: BELLA_CLEAR_RADIUS,

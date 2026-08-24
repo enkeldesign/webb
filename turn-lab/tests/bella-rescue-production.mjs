@@ -121,7 +121,7 @@ assert.match(
 assert.match(world, /countryside-bella-rescue-r173\.js\?revision=r164-long-session-robustness/,
   'The Countryside world bootstrap must request the on-demand Bella audio lifecycle under a fresh URL');
 assert.match(world, /applyBellaFinalVisuals\(bellaRoot\);\s*installBellaRescueBehavior\(\{ root: bellaRoot, runtime \}\);/);
-assert.match(app, /render\/world\.js\?revision=r531-countryside-world-redesign/,
+assert.match(app, /render\/world\.js\?revision=r532-countryside-nature-polish/,
   'The app must request the optimized world graph rather than an older Bella world cache identity');
 assert.match(homeLayout, /secret-achievements\.js\?build=\$\{buildKey\}-r174-bella-siren-zone/);
 

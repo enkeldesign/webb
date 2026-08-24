@@ -40,13 +40,17 @@ const [
   readText('../.github/workflows/turn-countryside-visual-smoke.yml')
 ]);
 
-assert.match(plannedWorld, /REVISION = 'r531-countryside-world-redesign'/);
+assert.match(plannedWorld, /REVISION = 'r532-countryside-nature-polish'/);
 assert.match(plannedWorld, /name = 'Countryside Planned World'/);
-assert.match(plannedWorld, /districts: \['paddock', 'forest-edge', 'windmill-farm', 'orchard', 'village', 'lake'\]/);
+assert.match(plannedWorld, /districts: \['paddock', 'forest-edge', 'nature-landscape', 'windmill-farm', 'orchard', 'village', 'lake'\]/);
 assert.match(plannedWorld, /name = 'Countryside Birchfield Village'/);
 assert.match(plannedWorld, /name = 'Countryside Windmill Farm Fields'/);
 assert.match(plannedWorld, /name = 'Countryside Ordered Orchard'/);
 assert.match(plannedWorld, /name = 'Countryside Lake Life'/);
+assert.match(plannedWorld, /name = 'Countryside Nature Kit Landscape'/);
+assert.match(plannedWorld, /five large-scale copses with layered canopy, understorey, meadow grass and rock accents/);
+assert.match(plannedWorld, /natureCopses: nature\.copses/);
+assert.match(plannedWorld, /natureCanopyTrees: nature\.canopyTrees/);
 assert.match(plannedWorld, /gameplayGeometryUnchanged = true/);
 assert.match(plannedWorld, /BELLA_CLEAR_RADIUS = 34/);
 assert.match(plannedWorld, /function bellaProtectedPoint\(/);
@@ -77,20 +81,27 @@ assert.doesNotMatch(worldAssets, /building-small-[a-d]\.glb|building-garage\.glb
 
 assert.doesNotMatch(beauty, /addTownPads|addSigns|BRAKE\?|FOREST|TOWN|GO!/,
   'Unexplained parking pads and billboard slogans must not return');
-assert.match(beauty, /addPaddock\(world, samples, trackWidth\)/,
-  'The established start paddock remains part of the visual world');
-assert.match(beauty, /addFlowerFields\(world, samples, trackWidth\)/,
-  'The well-liked meadow detail remains');
+assert.doesNotMatch(beauty, /addPaddock|barrierColors|BoxGeometry\(58, 0\.12, 34\)/,
+  'The broad parking slab and random coloured blocks must not return');
+assert.doesNotMatch(beauty, /addZoneGround|addGroundPatch/,
+  'Legacy section-coloured ground patches must not return');
+assert.doesNotMatch(beauty, /addFlowerFields|DodecahedronGeometry\(0\.32|proceduralFlower/,
+  'Tiny procedural coloured flower dots must not return');
+assert.match(beauty, /prepareModel\(source, 12 \+ seeded01\(15100 \+ i\) \* 9/,
+  'Beauty-pass tree clusters must read at a substantial landscape scale');
+assert.match(worldAssets, /targetHeight = 11\.5 \+ secondRandom \* 9/,
+  'Original tree-belt clusters must no longer appear miniature');
 
 assert.doesNotMatch(identity, /TorusGeometry|RingGeometry|crystalLandmark|sunsetLandmark|addTurnLandmarks|tintTracksideAssets/,
   'The gold ring, crystals and global scenery tint must be gone');
 assert.match(identity, /randomZoneLandmarks: 0/);
 assert.match(identity, /globalAssetTinting: false/);
 
-assert.match(intensity, /ancestor\.userData\?\.turnPaletteLocked/,
-  'Section colour must respect authored Kenney palettes at any GLB nesting depth');
-assert.match(intensity, /ancestor\.userData\?\.turnEasterEgg === 'save-bella'/,
-  'Section colour must leave BELLA and her tree untouched');
+assert.doesNotMatch(intensity, /new THREE\.|setTimeout|turnSectionPunch/,
+  'Section identity must no longer add coloured geometry or recolour scenery');
+assert.match(intensity, /colouredVerges: 0/);
+assert.match(intensity, /repeaterPosts: 0/);
+assert.match(intensity, /sceneryMaterialTints: 0/);
 
 assert.doesNotMatch(cleanup, /VEHICLE_SLOTS|createCarVisual|relocateLakeBuildings|expectedTownPlacements/,
   'The legacy random roadside traffic and lake-building relocation hack must be gone');
@@ -104,15 +115,15 @@ assert.match(landmark, /turnBladePalette = 'authored warm wood and pale sail clo
 assert.match(landmark, /node\.userData\.turnPaletteLocked = true/);
 assert.match(landmark, /node\.userData\.turnZoneStyled = true/);
 
-assert.match(worldRender, /world-beauty\.js\?revision=r531-countryside-world-redesign/);
-assert.match(worldRender, /track-identity\.js\?revision=r531-countryside-world-redesign/);
-assert.match(worldRender, /section-intensity\.js\?revision=r531-countryside-world-redesign/);
-assert.match(worldRender, /countryside-scenery-r177\.js\?revision=r531-countryside-world-redesign/);
-assert.match(app, /render\/world\.js\?revision=r531-countryside-world-redesign/);
-assert.match(index, /world-assets\.js\?build=20260823-r183&revision=r531-countryside-world-redesign/);
-assert.match(index, /kenney-track-landmarks-r517\.js\?revision=r531-countryside-world-redesign/);
-assert.match(index, /app\.js\?build=[^"']*-r531-countryside-world/);
-assert.match(labIndex, /world-assets\.js\?build=20260823-r183&revision=r531-countryside-world-redesign/);
+assert.match(worldRender, /world-beauty\.js\?revision=r532-countryside-nature-polish/);
+assert.match(worldRender, /track-identity\.js\?revision=r532-countryside-nature-polish/);
+assert.match(worldRender, /section-intensity\.js\?revision=r532-countryside-nature-polish/);
+assert.match(worldRender, /countryside-scenery-r177\.js\?revision=r532-countryside-nature-polish/);
+assert.match(app, /render\/world\.js\?revision=r532-countryside-nature-polish/);
+assert.match(index, /world-assets\.js\?build=20260823-r183&revision=r532-countryside-nature-polish/);
+assert.match(index, /kenney-track-landmarks-r517\.js\?revision=r532-countryside-nature-polish/);
+assert.match(index, /app\.js\?build=[^"']*-r532-countryside-nature/);
+assert.match(labIndex, /world-assets\.js\?build=20260823-r183&revision=r532-countryside-nature-polish/);
 
 assert.equal(sha256(bella), '7133abe99b37322407cebe8ab4c627e3cd91663c3a981427fd328d403a734bf4',
   'BELLA and her rescue tree implementation must remain byte-for-byte unchanged');
@@ -141,7 +152,9 @@ assert.equal(sha256(suburbanPalette), '476b218961c0485bc4c32f80368db7cfdd5d3f1ab
 const natureFiles = [
   'crops_wheatStageB.glb', 'crops_cornStageD.glb', 'crops_dirtDoubleRow.glb',
   'fence_simple.glb', 'fence_gate.glb', 'tree_oak.glb', 'tree_default.glb',
-  'tree_small.glb', 'plant_bushDetailed.glb', 'log_stack.glb', 'rock_largeA.glb'
+  'tree_small.glb', 'tree_pineRoundB.glb', 'plant_bushDetailed.glb',
+  'plant_bushLarge.glb', 'grass_large.glb', 'log_stack.glb', 'rock_largeA.glb',
+  'rock_largeB.glb', 'rock_smallD.glb', 'stump_oldTall.glb'
 ];
 for (const file of natureFiles) {
   const glb = readGlb(await readBuffer(`../turn/assets/scenery/countryside/nature/${file}`));
@@ -160,7 +173,7 @@ assert.match(visualHarness, /installKenneyWorld/);
 assert.match(visualHarness, /installCountrysideBella/);
 assert.match(visualHarness, /installCountrysideWindmill/);
 assert.match(visualHarness, /__turnSetCountrysideVisualView/);
-for (const view of ['aerial', 'first-impression', 'village', 'farm-windmill', 'orchard', 'lake', 'bella']) {
+for (const view of ['aerial', 'first-impression', 'nature', 'village', 'farm-windmill', 'orchard', 'lake', 'bella']) {
   assert.match(visualSmoke, new RegExp(`['\"]${view}['\"]`), `Visual smoke must capture the ${view} view`);
 }
 assert.match(visualSmoke, /lockedPaletteViolations/);

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-const REVISION = 'r531-countryside-world-redesign';
+const REVISION = 'r532-countryside-nature-polish';
 const INK = 0x08090a;
 
 function materialList(material) {

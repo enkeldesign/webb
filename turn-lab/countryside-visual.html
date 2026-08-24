@@ -18,21 +18,21 @@
   <script type="module">
     import * as THREE from 'three';
     import { createTrackRuntime } from '/turn/tracks/catalog.js';
-    import { installKenneyWorld } from '/turn/world-assets.js?revision=r531-countryside-world-redesign';
-    import { installWorldBeauty } from '/turn/world-beauty.js?revision=r531-countryside-world-redesign';
+    import { installKenneyWorld } from '/turn/world-assets.js?revision=r532-countryside-nature-polish';
+    import { installWorldBeauty } from '/turn/world-beauty.js?revision=r532-countryside-nature-polish';
     import { installArtPass } from '/turn/world-art-pass.js?revision=r514-road-contour';
-    import { installTrackIdentity } from '/turn/track-identity.js?revision=r531-countryside-world-redesign';
-    import { installSectionIntensity } from '/turn/section-intensity.js?revision=r531-countryside-world-redesign';
-    import { installCountrysideSceneryCleanup } from '/turn/tracks/countryside-scenery-r177.js?revision=r531-countryside-world-redesign';
+    import { installTrackIdentity } from '/turn/track-identity.js?revision=r532-countryside-nature-polish';
+    import { installSectionIntensity } from '/turn/section-intensity.js?revision=r532-countryside-nature-polish';
+    import { installCountrysideSceneryCleanup } from '/turn/tracks/countryside-scenery-r177.js?revision=r532-countryside-nature-polish';
     import { installCountrysideBella } from '/turn/tracks/countryside-bella-r166.js?revision=r176-road-derived-zone';
-    import { installCountrysideWindmill } from '/turn/tracks/kenney-track-landmarks-r517.js?revision=r531-countryside-world-redesign';
+    import { installCountrysideWindmill } from '/turn/tracks/kenney-track-landmarks-r517.js?revision=r532-countryside-nature-polish';
 
     const TRACK_WIDTH = 27;
     const BELLA_SAMPLE_INDEX = 500;
     const BELLA_SIDE = -1;
     const BELLA_DISTANCE_FROM_ROAD = 42;
     const BELLA_TANGENT_OFFSET = 18;
-    const VALID_VIEWS = new Set(['aerial', 'first-impression', 'village', 'farm-windmill', 'orchard', 'lake', 'bella']);
+    const VALID_VIEWS = new Set(['aerial', 'first-impression', 'nature', 'village', 'farm-windmill', 'orchard', 'lake', 'bella']);
     const queryView = new URLSearchParams(location.search).get('view');
     let currentView = VALID_VIEWS.has(queryView) ? queryView : 'aerial';
     const visualProgress = [];
@@ -207,6 +207,8 @@
         const position = start.point.clone().addScaledVector(start.tangent, -58).addScaledVector(start.normal, -20);
         position.y = 24;
         placeCamera(position, target, 49);
+      } else if (currentView === 'nature') {
+        districtView(118, 40, 88, -66, 48, 46);
       } else if (currentView === 'village') {
         districtView(590, 50, 92, -84, 62, 48);
       } else if (currentView === 'farm-windmill') {
@@ -347,6 +349,17 @@
       privateDrives: count(/^Birchfield private drive /),
       cropBeds: count(/^Windmill farm ordered crop bed$/),
       orchardTrees: count(/^Countryside orchard tree$/),
+      natureCopses: metrics.natureCopses || 0,
+      natureCanopyTrees: count(/(?:shelterbelt|copse|approach) canopy tree$/i),
+      natureBushes: count(/(?:shelterbelt|copse|approach) understorey bush$/i),
+      natureGrassClumps: count(/(?:shelterbelt|copse|approach) meadow grass$/i),
+      natureRocks: count(/(?:shelterbelt|copse|approach) field rock$/i),
+      legacyPaddockPads: metrics.legacyPaddockPads ?? -1,
+      legacyPaddockBarriers: metrics.legacyPaddockBarriers ?? -1,
+      proceduralFlowerDots: metrics.proceduralFlowerDots ?? -1,
+      sectionColourOverlays: world.userData.turnSectionIntensity?.colouredVerges ?? -1,
+      sectionRepeaterPosts: world.userData.turnSectionIntensity?.repeaterPosts ?? -1,
+      sectionMaterialTints: world.userData.turnSectionIntensity?.sceneryMaterialTints ?? -1,
       parkedCars: count(/^Countryside parked /),
       rowBoats: count(/^Countryside moored rowboat$/),
       windmills: count(/^Countryside Kenney Windmill$/),

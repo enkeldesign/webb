@@ -255,56 +255,6 @@ function addShoulders(world, samples, trackWidth) {
   }
 }
 
-function addGroundPatch(world, sample, side, distance, width, depth, color, rotation = 0) {
-  const geometry = new THREE.CircleGeometry(1, 28);
-  const material = new THREE.MeshStandardMaterial({ color, roughness: 1, metalness: 0 });
-  const patch = new THREE.Mesh(geometry, material);
-  patch.rotation.x = -Math.PI / 2;
-  patch.rotation.z = rotation;
-  patch.scale.set(width, depth, 1);
-  patch.position.copy(sample.point).addScaledVector(sample.normal, side * distance);
-  patch.position.y = 0.004;
-  patch.receiveShadow = true;
-  world.add(patch);
-  return patch;
-}
-
-function addZoneGround(world, samples, trackWidth) {
-  // Forest floor: darker, cooler patches close enough to make the section feel enclosed.
-  for (let i = 0; i < 16; i += 1) {
-    const index = 145 + i * 11;
-    const sample = sampleAt(samples, index);
-    const side = i % 2 === 0 ? 1 : -1;
-    addGroundPatch(
-      world,
-      sample,
-      side,
-      trackWidth / 2 + 24 + seeded01(12000 + i) * 22,
-      18 + seeded01(12100 + i) * 18,
-      12 + seeded01(12200 + i) * 15,
-      i % 3 === 0 ? 0x629b68 : 0x6eaa70,
-      seeded01(12300 + i) * Math.PI
-    );
-  }
-
-  // Meadow: broad yellow-green islands that read at racing speed.
-  for (let i = 0; i < 10; i += 1) {
-    const index = 340 + i * 15;
-    const sample = sampleAt(samples, index);
-    const side = i % 2 === 0 ? 1 : -1;
-    addGroundPatch(
-      world,
-      sample,
-      side,
-      trackWidth / 2 + 28 + seeded01(12400 + i) * 34,
-      20 + seeded01(12500 + i) * 24,
-      13 + seeded01(12600 + i) * 20,
-      i % 2 === 0 ? 0xa8db79 : 0x9bd678,
-      seeded01(12700 + i) * Math.PI
-    );
-  }
-}
-
 function addStartFinish(world, samples, trackWidth) {
   const start = sampleAt(samples, 0);
   const yaw = yawFor(start);
@@ -342,47 +292,6 @@ function addStartFinish(world, samples, trackWidth) {
       marker.rotation.y = gridYaw;
       world.add(marker);
     }
-  }
-}
-
-function addPaddock(world, samples, trackWidth) {
-  const sample = sampleAt(samples, 18);
-  const yaw = yawFor(sample);
-  const side = 1;
-  const pad = new THREE.Mesh(
-    new THREE.BoxGeometry(58, 0.12, 34),
-    new THREE.MeshStandardMaterial({ color: 0x70777e, roughness: 0.98, metalness: 0 })
-  );
-  pad.position.copy(sample.point).addScaledVector(sample.normal, side * (trackWidth / 2 + 32));
-  pad.position.y = 0.035;
-  pad.rotation.y = yaw;
-  pad.receiveShadow = true;
-  world.add(pad);
-
-  const stripeMaterial = new THREE.MeshStandardMaterial({ color: 0xffd43b, roughness: 0.9 });
-  for (let i = -3; i <= 3; i += 1) {
-    const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.035, 23), stripeMaterial);
-    stripe.position.copy(pad.position);
-    stripe.position.y = 0.115;
-    stripe.addScaledVector(sample.normal, i * 6.5);
-    stripe.rotation.y = yaw;
-    world.add(stripe);
-  }
-
-  const barrierColors = [0xffd43b, 0xff4fa3, 0x38d9ff];
-  for (let i = 0; i < 9; i += 1) {
-    const barrier = new THREE.Mesh(
-      new THREE.BoxGeometry(4.8, 1.35, 1.3),
-      new THREE.MeshStandardMaterial({ color: barrierColors[i % barrierColors.length], roughness: 0.8 })
-    );
-    barrier.position.copy(sample.point)
-      .addScaledVector(sample.normal, trackWidth / 2 + 10)
-      .addScaledVector(sample.tangent, -20 + i * 5.2);
-    barrier.position.y = 0.7;
-    barrier.rotation.y = yaw;
-    barrier.castShadow = true;
-    barrier.receiveShadow = true;
-    world.add(barrier);
   }
 }
 
@@ -426,47 +335,6 @@ function addRoadWear(world, samples) {
   }
 }
 
-function addFlowerFields(world, samples, trackWidth) {
-  const palette = [0xff4fa3, 0xffd43b, 0x9775fa, 0xffffff];
-  const geometry = new THREE.DodecahedronGeometry(0.32, 0);
-  const meshes = palette.map((color) => {
-    const mesh = new THREE.InstancedMesh(
-      geometry,
-      new THREE.MeshBasicMaterial({ color }),
-      45
-    );
-    mesh.frustumCulled = false;
-    world.add(mesh);
-    return mesh;
-  });
-  const counts = new Array(meshes.length).fill(0);
-  const marker = new THREE.Object3D();
-
-  for (let i = 0; i < 180; i += 1) {
-    const sample = sampleAt(samples, 340 + Math.floor(seeded01(14000 + i) * 145));
-    const side = seeded01(14100 + i) > 0.5 ? 1 : -1;
-    const distance = trackWidth / 2 + 18 + seeded01(14200 + i) * 48;
-    marker.position.copy(sample.point)
-      .addScaledVector(sample.normal, side * distance)
-      .addScaledVector(sample.tangent, (seeded01(14300 + i) - 0.5) * 22);
-    marker.position.y = 0.22 + seeded01(14400 + i) * 0.28;
-    marker.scale.setScalar(0.6 + seeded01(14500 + i) * 1.2);
-    marker.rotation.set(0, seeded01(14600 + i) * TAU, 0);
-    marker.updateMatrix();
-
-    const colorIndex = i % meshes.length;
-    const instanceIndex = counts[colorIndex];
-    if (instanceIndex < meshes[colorIndex].count) {
-      meshes[colorIndex].setMatrixAt(instanceIndex, marker.matrix);
-      counts[colorIndex] += 1;
-    }
-  }
-
-  meshes.forEach((mesh) => {
-    mesh.instanceMatrix.needsUpdate = true;
-  });
-}
-
 function addSun(world) {
   const sun = new THREE.Mesh(
     new THREE.SphereGeometry(31, 18, 12),
@@ -493,7 +361,7 @@ async function addAssetDressing(world, samples, trackWidth) {
       const sample = sampleAt(samples, 135 + Math.floor(seeded01(15000 + i) * 190));
       const side = i % 2 === 0 ? 1 : -1;
       const source = sources[i % sources.length];
-      const model = prepareModel(source, 8 + seeded01(15100 + i) * 8, {
+      const model = prepareModel(source, 12 + seeded01(15100 + i) * 9, {
         castShadow: i % 4 === 0
       });
       model.position.add(sample.point)
@@ -547,11 +415,8 @@ export async function installWorldBeauty({ world, scene, samples, trackWidth, su
 
   addTexturedGround(world);
   addShoulders(world, samples, trackWidth);
-  addZoneGround(world, samples, trackWidth);
   addStartFinish(world, samples, trackWidth);
-  addPaddock(world, samples, trackWidth);
   addRoadWear(world, samples);
-  addFlowerFields(world, samples, trackWidth);
   addSun(world);
 
   await addAssetDressing(world, samples, trackWidth);
