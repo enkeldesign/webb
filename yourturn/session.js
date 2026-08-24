@@ -28,6 +28,7 @@ import { createChallengeScene } from '/yourturn/scene.js?revision=r1';
 import { aboutTurnHtml, escapeHtml, newcomerAssistiveText } from '/yourturn/ui.js?revision=r3';
 
 const RACER_ID_KEY = 'yourturn-racer-id-v1';
+const POST_LANDSCAPE_RECALIBRATE_DELAY_MS = 360;
 
 export function readYourTurnRequest(locationRef = globalThis.location) {
   const query = new URLSearchParams(locationRef?.search || '');
@@ -306,6 +307,16 @@ export function createYourTurnSession({ runtime, raceSession, ui, animation, req
     useChallengeField();
     const access = state.pendingAccess || raceSession.prepareManualAccess();
     await raceSession.startGame(access.fullscreenPromise);
+
+    // TURN's built-in 220 ms start centering can run while YOUR TURN is still
+    // completing its portrait -> landscape fullscreen/orientation handoff. Keep the
+    // staged scene paused, let fresh landscape motion readings arrive, then invoke
+    // TURN's existing RECALIBRATE control once before the player can start driving.
+    if (access.mode === 'motion' && runtime.state.sensorMode) {
+      await new Promise((resolve) => setTimeout(resolve, POST_LANDSCAPE_RECALIBRATE_DELAY_MS));
+      document.querySelector('#calibrateButton')?.click();
+    }
+
     runtime.setGameMode(GAME_MODE.STAGED);
     runtime.state.velocity.set(0, 0, 0);
     stopDrivingInputs();

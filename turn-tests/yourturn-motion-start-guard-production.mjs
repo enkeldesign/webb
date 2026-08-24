@@ -12,8 +12,8 @@ assert.doesNotMatch(index, /start-axis-guard\.js/,
   'YOUR TURN must not load a challenge-specific motion-axis guard');
 assert.match(index, /\/yourturn\/app\.js\?revision=r593-canonical-motion/,
   'YOUR TURN must cache-bust the canonical-motion app handoff');
-assert.match(index, /\/yourturn\/session\.js\?revision=r593-canonical-motion-r594-preview-orientation/,
-  'YOUR TURN must load the preview-safe session under a fresh cache identity');
+assert.match(index, /\/yourturn\/session\.js\?revision=r595-landscape-recalibrate/,
+  'YOUR TURN must load the post-landscape recalibration session under a fresh cache identity');
 
 assert.match(app, /installMotionLifecycleBridge/,
   'YOUR TURN must install TURN’s production motion lifecycle bridge');
@@ -48,5 +48,19 @@ assert.match(session, /await nextPaint\(\);[\s\S]*return startAcceptedRace\(\);/
   'YOUR TURN may wait for the landscape UI to paint before handing off to TURN');
 assert.match(session, /await raceSession\.startGame\(access\.fullscreenPromise\)/,
   'YOUR TURN must hand race start directly to TURN’s canonical race session');
+assert.match(session, /const POST_LANDSCAPE_RECALIBRATE_DELAY_MS = 360/,
+  'YOUR TURN must allow fresh landscape sensor readings after TURN finishes fullscreen/orientation locking');
 
-console.log('YOUR TURN canonical motion ownership and preview orientation-lock contract passed.');
+const startBlock = session.match(/async function startAcceptedRace\(\) \{([\s\S]*?)\n  function handleLapResult/)?.[1] || '';
+const canonicalStart = startBlock.indexOf('await raceSession.startGame(access.fullscreenPromise)');
+const settleDelay = startBlock.indexOf('POST_LANDSCAPE_RECALIBRATE_DELAY_MS');
+const canonicalRecalibrate = startBlock.indexOf("document.querySelector('#calibrateButton')?.click()");
+const controlsVisible = startBlock.indexOf('ui.showRaceChrome()');
+assert.ok(canonicalStart >= 0 && settleDelay >= 0 && canonicalRecalibrate >= 0 && controlsVisible >= 0,
+  'YOUR TURN motion start must include canonical start, landscape settling, canonical recalibration and control reveal');
+assert.ok(canonicalStart < settleDelay && settleDelay < canonicalRecalibrate && canonicalRecalibrate < controlsVisible,
+  'YOUR TURN must recalibrate only after landscape start settles and before controls become interactive');
+assert.match(startBlock, /if \(access\.mode === 'motion' && runtime\.state\.sensorMode\)/,
+  'Automatic post-landscape recalibration must run only for motion steering');
+
+console.log('YOUR TURN canonical motion ownership, preview orientation-lock and landscape recalibration contract passed.');
