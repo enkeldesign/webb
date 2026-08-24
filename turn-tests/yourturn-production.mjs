@@ -48,7 +48,7 @@ assert.match(indexSource, /\/yourturn\/storage-bootstrap\.js/);
 assert.match(indexSource, /\/yourturn\/app\.js\?revision=r593-canonical-motion/);
 assert.match(indexSource, /growing-challenge\.css/);
 assert.match(indexSource, /racer-labels-bootstrap\.js/);
-assert.match(indexSource, /session\.js\?revision=r3[^\n]*session\.js\?revision=r593-canonical-motion/,
+assert.match(indexSource, /session\.js\?revision=r3[^\n]*session\.js\?revision=r595-landscape-recalibrate/,
   'The page must cache-bust the current YOUR TURN session while app.js stays on canonical TURN runtime modules');
 assert.match(indexSource, /Your name in the challenge/);
 assert.match(indexSource, /id="yourTurnChallengeButton"[\s\S]*>THE CHALLENGE<\/button>/);
@@ -101,7 +101,7 @@ assert.match(sessionSource, /navigator\.clipboard/);
 assert.doesNotMatch(sessionSource, /ghost/i,
   'Recipient-facing YOUR TURN challenge code describes people and cars, not ghosts');
 assert.doesNotMatch(sessionSource, /devicemotion|neutralRoll\s*=|horizonRollReference\s*=/,
-  'YOUR TURN session orchestration must leave sensor sampling and calibration to TURN');
+  'YOUR TURN session orchestration must leave sensor sampling and calibration state writes to TURN');
 
 assert.match(uiSource, /action\.share/);
 assert.match(uiSource, /action\.game/);
