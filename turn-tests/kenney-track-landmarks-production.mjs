@@ -74,7 +74,7 @@ assert.doesNotMatch(
   'Landmarks must stay static, scenery-only additions with no physics, record, or animation loop changes'
 );
 
-const landmarkScript = './tracks/kenney-track-landmarks-r517.js?revision=r531-countryside-world-redesign';
+const landmarkScript = './tracks/kenney-track-landmarks-r517.js?revision=r532-countryside-nature-polish';
 assert.ok(indexSource.includes(landmarkScript), 'Production TURN must load the cache-revisioned landmark module');
 assert.ok(
   indexSource.indexOf('cliffside-house-inset-r203.js') < indexSource.indexOf(landmarkScript),

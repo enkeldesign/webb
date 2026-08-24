@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-const REVISION = 'r531-countryside-world-redesign';
+const REVISION = 'r532-countryside-nature-polish';
 const INK = 0x08090a;
 const SEA_LEVEL = -16.5;
 const WINDMILL_TRACK_FRACTION = 0.52;

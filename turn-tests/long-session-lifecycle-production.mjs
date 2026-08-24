@@ -47,7 +47,7 @@ function escapeRegex(value) {
 
 const productionImports = importMap(index);
 const labImports = importMap(labIndex);
-const optimizedWorldAssetTarget = `./world-assets.js?build=${release.cacheKey}&revision=r531-countryside-world-redesign`;
+const optimizedWorldAssetTarget = `./world-assets.js?build=${release.cacheKey}&revision=r532-countryside-nature-polish`;
 const optimizedHarborTarget = `./tracks/harbor-world-r82.js?build=${release.cacheKey}&revision=r164-long-session-robustness`;
 
 assert.equal(
@@ -72,7 +72,7 @@ assert.equal(
 );
 assert.match(
   app,
-  /render\/world\.js\?revision=r531-countryside-world-redesign/,
+  /render\/world\.js\?revision=r532-countryside-nature-polish/,
   'The runtime must receive the planned Countryside world bootstrap through a fresh URL'
 );
 assert.match(

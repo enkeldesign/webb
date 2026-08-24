@@ -522,7 +522,7 @@ async function addAssetDressing(world, samples, trackWidth) {
       const sample = sampleAt(samples, 135 + Math.floor(seeded01(15000 + i) * 190));
       const side = i % 2 === 0 ? 1 : -1;
       const source = sources[i % sources.length];
-      const model = prepareModel(source, 8 + seeded01(15100 + i) * 8, {
+      const model = prepareModel(source, 12 + seeded01(15100 + i) * 9, {
         castShadow: i % 4 === 0
       });
       model.position.add(sample.point)
@@ -588,13 +588,10 @@ export async function installWorldBeauty({ world, scene, samples, trackWidth, su
 
   addTexturedGround(world);
   addShoulders(world, samples, trackWidth);
-  addZoneGround(world, samples, trackWidth);
   addStartFinish(world, samples, trackWidth);
-  addPaddock(world, samples, trackWidth);
   addTownPads(world, samples, trackWidth);
   addSigns(world, samples, trackWidth);
   addRoadWear(world, samples);
-  addFlowerFields(world, samples, trackWidth);
   addSun(world);
 
   await addAssetDressing(world, samples, trackWidth);

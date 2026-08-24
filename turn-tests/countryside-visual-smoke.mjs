@@ -5,7 +5,7 @@ import { chromium } from 'playwright';
 
 const baseUrl = process.env.TURN_VISUAL_BASE_URL || 'http://127.0.0.1:8000';
 const outputDir = process.env.TURN_VISUAL_OUTPUT || 'countryside-visual-artifact';
-const views = ['aerial', 'first-impression', 'village', 'farm-windmill', 'orchard', 'lake', 'bella'];
+const views = ['aerial', 'first-impression', 'nature', 'village', 'farm-windmill', 'orchard', 'lake', 'bella'];
 await fs.mkdir(outputDir, { recursive: true });
 
 const browser = await chromium.launch({
@@ -71,13 +71,24 @@ await fs.writeFile(
 );
 
 assert.equal(browserErrors.length, 0, `Browser-rendered COUNTRYSIDE produced errors:\n${browserErrors.join('\n')}`);
-assert.equal(metrics.revision, 'r531-countryside-world-redesign');
+assert.equal(metrics.revision, 'r532-countryside-nature-polish');
 assert.deepEqual(metrics.assetErrors, [], 'All local COUNTRYSIDE kit assets must load');
-assert.deepEqual(metrics.districts, ['paddock', 'forest-edge', 'windmill-farm', 'orchard', 'village', 'lake']);
+assert.deepEqual(metrics.districts, ['paddock', 'forest-edge', 'nature-landscape', 'windmill-farm', 'orchard', 'village', 'lake']);
 assert.equal(metrics.villageHouses, 5, 'Birchfield must contain five deliberately planned houses');
 assert.equal(metrics.privateDrives, 5, 'Each Birchfield home must have a logical private drive');
 assert.equal(metrics.cropBeds, 10, 'The windmill farm must retain its ordered crop grid');
 assert.equal(metrics.orchardTrees, 8, 'The orchard must retain two rows of four trees');
+assert.equal(metrics.natureCopses, 5, 'Five composed Nature Kit copses should fill the formerly empty stretches');
+assert.equal(metrics.natureCanopyTrees, 25, 'Nature copses should provide a substantial full-size canopy');
+assert.equal(metrics.natureBushes, 15, 'Nature copses should include a coherent understorey layer');
+assert.equal(metrics.natureGrassClumps, 10, 'Nature copses should use real grass geometry instead of coloured dots');
+assert.equal(metrics.natureRocks, 5, 'Each Nature copse should have one restrained rock accent');
+assert.equal(metrics.legacyPaddockPads, 0, 'The legacy parking slab must remain retired');
+assert.equal(metrics.legacyPaddockBarriers, 0, 'The random coloured paddock blocks must remain retired');
+assert.equal(metrics.proceduralFlowerDots, 0, 'Procedural coloured flower spheres must remain retired');
+assert.equal(metrics.sectionColourOverlays, 0, 'Pink and other coloured verge overlays must remain retired');
+assert.equal(metrics.sectionRepeaterPosts, 0, 'Legacy coloured T-shaped posts must remain retired');
+assert.equal(metrics.sectionMaterialTints, 0, 'Scenery materials must not receive delayed section tinting');
 assert.equal(metrics.parkedCars, 3, 'Only three purposefully parked scenery cars should remain');
 assert.equal(metrics.rowBoats, 1, 'The lake should have one restrained moored rowboat');
 assert.equal(metrics.windmills, 1, 'The requested windmill must remain as one complete landmark');

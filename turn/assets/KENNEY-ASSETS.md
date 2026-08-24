@@ -7,7 +7,7 @@ The `scenery/watercraft/ship-ocean-liner.glb` model and its `Textures/colormap.p
 
 ## COUNTRYSIDE planned world
 
-`scenery/countryside/` contains the restrained asset vocabulary used to turn the original scattershot scenery into six readable rural districts: race paddock, managed forest edge, windmill farm, orchard, Birchfield village and lake.
+`scenery/countryside/` contains the restrained asset vocabulary used to turn the original scattershot scenery into seven readable rural districts: race paddock, managed forest edge, Nature Kit landscape, windmill farm, orchard, Birchfield village and lake.
 
 ### City Kit Suburban
 
@@ -15,7 +15,7 @@ The complete `building-type-a`, `b`, `h`, `m`, `s` and `u` GLBs, together with `
 
 ### Nature Kit
 
-The selected crop beds, wheat, corn, fences, broadleaf trees, shrubs, logs and shoreline rocks come from Kenney Nature Kit. TURN maps the named flat-colour materials into a quieter countryside palette at load time while preserving the original geometry. Assets are placed in rows, boundaries and small clusters rather than scattered randomly.
+The selected crop beds, wheat, corn, fences, broadleaf and rounded pine trees, full bushes, meadow grass, stumps, logs and varied rocks come from Kenney Nature Kit. TURN maps the named flat-colour materials into a quieter countryside palette at load time while preserving the original geometry. Assets are placed in rows, boundaries and five layered copses rather than scattered randomly. The old procedural coloured flower dots, broad parking slab, coloured blocks and section-tinted ground ribbons are deliberately retired.
 
 ### Watercraft Kit
 

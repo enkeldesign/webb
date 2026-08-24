@@ -31,11 +31,11 @@ async function waitForHomeBeforeCosmetics() {
 
 async function loadWorldModules() {
   const [beauty, art, identity, intensity, scenery, bella, bellaFinal, bellaRescue] = await Promise.all([
-    import(moduleUrl('../world-beauty.js?revision=r531-countryside-world-redesign')),
+    import(moduleUrl('../world-beauty.js?revision=r532-countryside-nature-polish')),
     import(moduleUrl('../world-art-pass.js?revision=r514-road-contour')),
-    import(moduleUrl('../track-identity.js?revision=r531-countryside-world-redesign')),
-    import(moduleUrl('../section-intensity.js?revision=r531-countryside-world-redesign')),
-    import(moduleUrl('../tracks/countryside-scenery-r177.js?revision=r531-countryside-world-redesign')),
+    import(moduleUrl('../track-identity.js?revision=r532-countryside-nature-polish')),
+    import(moduleUrl('../section-intensity.js?revision=r532-countryside-nature-polish')),
+    import(moduleUrl('../tracks/countryside-scenery-r177.js?revision=r532-countryside-nature-polish')),
     import(moduleUrl('../tracks/countryside-bella-r166.js?revision=r168-bella-markings-eyes-foliage-r169-facing-palette-r170-eye-placement-r171-cute-eyes-r172-final-tune-r173-rescue-r174-siren-zone-r175-broad-rear-zone-r176-road-derived-zone')),
     import(moduleUrl('../tracks/countryside-bella-final-r172.js?revision=r172-final-tune-r173-rescue-r174-siren-zone-r175-broad-rear-zone-r176-road-derived-zone')),
     import(moduleUrl('../tracks/countryside-bella-rescue-r524.js?revision=r524-camera-relative-meow'))
