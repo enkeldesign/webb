@@ -16,7 +16,10 @@ const context = await browser.newContext({ viewport: { width: 1440, height: 900 
 const page = await context.newPage();
 const browserErrors = [];
 
-page.on('pageerror', (error) => browserErrors.push(`pageerror: ${error.message}`));
+page.on('pageerror', (error) => {
+  browserErrors.push(`pageerror: ${error.message}`);
+  console.error(`COUNTRYSIDE pageerror: ${error.message}`);
+});
 page.on('console', (message) => {
   const value = message.text();
   if (message.type() === 'error' || /failed to load|countryside .* failed/i.test(value)) {
@@ -25,13 +28,20 @@ page.on('console', (message) => {
 });
 
 let metrics;
+let visualFailure = null;
 try {
   const response = await page.goto(`${baseUrl}/turn-lab/countryside-visual.html?view=aerial`, {
     waitUntil: 'networkidle',
     timeout: 90_000
   });
   assert.equal(response?.ok(), true, 'COUNTRYSIDE visual page must load successfully');
-  await page.waitForFunction(() => globalThis.__countrysideVisualReady === true, null, { timeout: 90_000 });
+  await page.waitForFunction(
+    () => globalThis.__countrysideVisualReady === true || Boolean(globalThis.__countrysideVisualFailure),
+    null,
+    { timeout: 60_000 }
+  );
+  visualFailure = await page.evaluate(() => globalThis.__countrysideVisualFailure || null);
+  assert.equal(visualFailure, null, `COUNTRYSIDE visual bootstrap failed: ${visualFailure}`);
   metrics = await page.evaluate(() => globalThis.__countrysideVisualMetrics);
   assert.ok(metrics, 'COUNTRYSIDE must expose browser-rendered visual metrics');
 
@@ -40,9 +50,20 @@ try {
     assert.equal(selected, view, `Fixed visual camera ${view} must be selectable`);
     await page.screenshot({ path: path.join(outputDir, `${view}.png`), fullPage: true });
   }
+} catch (error) {
+  visualFailure = String(error?.stack || error?.message || error);
+  const diagnostics = await page.evaluate(() => ({
+    progress: [...(globalThis.__countrysideVisualProgress || [])],
+    failure: globalThis.__countrysideVisualFailure || null,
+    ready: globalThis.__countrysideVisualReady === true
+  })).catch(() => ({ progress: [], failure: null, ready: false }));
+  await page.screenshot({ path: path.join(outputDir, 'failure.png'), fullPage: true }).catch(() => {});
+  await fs.writeFile(path.join(outputDir, 'failure.json'), `${JSON.stringify({ diagnostics, browserErrors, visualFailure }, null, 2)}\n`);
 } finally {
   await browser.close();
 }
+
+if (visualFailure) throw new Error(visualFailure);
 
 await fs.writeFile(
   path.join(outputDir, 'metrics.json'),

@@ -36,6 +36,13 @@
     const VALID_VIEWS = new Set(['aerial', 'first-impression', 'village', 'farm-windmill', 'orchard', 'lake', 'bella']);
     const queryView = new URLSearchParams(location.search).get('view');
     let currentView = VALID_VIEWS.has(queryView) ? queryView : 'aerial';
+    const visualProgress = [];
+    globalThis.__countrysideVisualProgress = visualProgress;
+
+    function markProgress(message) {
+      visualProgress.push(message);
+      console.info(`TURN COUNTRYSIDE visual: ${message}`);
+    }
 
     document.documentElement.classList.add('turn-home-ready');
     const scene = new THREE.Scene();
@@ -252,25 +259,42 @@
       return count;
     }
 
-    addRoad();
-    await installArtPass({ world, scene, samples, trackWidth: TRACK_WIDTH });
-    installTrackIdentity({ world, samples, trackWidth: TRACK_WIDTH });
-    installSectionIntensity({ world, samples, trackWidth: TRACK_WIDTH });
+    try {
+      markProgress('base road');
+      addRoad();
+      await installArtPass({ world, scene, samples, trackWidth: TRACK_WIDTH });
+      markProgress('art pass');
+      installTrackIdentity({ world, samples, trackWidth: TRACK_WIDTH });
+      installSectionIntensity({ world, samples, trackWidth: TRACK_WIDTH });
+      markProgress('identity and section language');
 
-    const bellaPromise = installCountrysideBella({ world, samples, trackWidth: TRACK_WIDTH, runtime });
-    const [, , bella] = await Promise.all([
-      installKenneyWorld({ world, samples, trackWidth: TRACK_WIDTH }),
-      installWorldBeauty({ world, scene, samples, trackWidth: TRACK_WIDTH, sun, hemi }),
-      bellaPromise
-    ]);
-    applyBellaFinalVisuals(bella);
-    await installCountrysideWindmill(runtime);
-    await installCountrysideSceneryCleanup({ world, samples, trackWidth: TRACK_WIDTH });
+      const observedInstall = (name, promise) => {
+        markProgress(`${name} started`);
+        return promise.then((value) => {
+          markProgress(`${name} complete`);
+          return value;
+        });
+      };
+      const [, , bella] = await Promise.all([
+        observedInstall('planned world and tree belt', installKenneyWorld({ world, samples, trackWidth: TRACK_WIDTH })),
+        observedInstall('beauty dressing', installWorldBeauty({ world, scene, samples, trackWidth: TRACK_WIDTH, sun, hemi })),
+        observedInstall('BELLA scene', installCountrysideBella({ world, samples, trackWidth: TRACK_WIDTH, runtime }))
+      ]);
+      applyBellaFinalVisuals(bella);
+      await observedInstall('windmill', installCountrysideWindmill(runtime));
+      await installCountrysideSceneryCleanup({ world, samples, trackWidth: TRACK_WIDTH });
 
-    // Let the same delayed contour and intensity sweeps used in production complete.
-    await new Promise((resolve) => window.setTimeout(resolve, 4900));
-    await installCountrysideSceneryCleanup({ world, samples, trackWidth: TRACK_WIDTH });
-    world.updateMatrixWorld(true);
+      // Let the same delayed contour and intensity sweeps used in production complete.
+      await new Promise((resolve) => window.setTimeout(resolve, 4900));
+      await installCountrysideSceneryCleanup({ world, samples, trackWidth: TRACK_WIDTH });
+      world.updateMatrixWorld(true);
+      markProgress('production sweeps complete');
+    } catch (error) {
+      globalThis.__countrysideVisualFailure = String(error?.stack || error?.message || error);
+      markProgress(`failed: ${String(error?.message || error)}`);
+      setView(currentView);
+      throw error;
+    }
 
     const planned = world.getObjectByName('Countryside Planned World');
     const windmill = world.getObjectByName('Countryside Kenney Windmill');
