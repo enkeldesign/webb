@@ -45,11 +45,11 @@ const [
 
 assert.match(indexSource, /<title>YOUR TURN<\/title>/);
 assert.match(indexSource, /\/yourturn\/storage-bootstrap\.js/);
-assert.match(indexSource, /\/yourturn\/app\.js\?revision=r6/);
+assert.match(indexSource, /\/yourturn\/app\.js\?revision=r593-canonical-motion/);
 assert.match(indexSource, /growing-challenge\.css/);
 assert.match(indexSource, /racer-labels-bootstrap\.js/);
-assert.match(indexSource, /session\.js\?revision=r3[^\n]*session\.js\?revision=r7/,
-  'The page must cache-bust the short-link growing-challenge session even though app.js stays canonical');
+assert.match(indexSource, /session\.js\?revision=r3[^\n]*session\.js\?revision=r593-canonical-motion/,
+  'The page must cache-bust the current YOUR TURN session while app.js stays on canonical TURN runtime modules');
 assert.match(indexSource, /Your name in the challenge/);
 assert.match(indexSource, /id="yourTurnChallengeButton"[\s\S]*>THE CHALLENGE<\/button>/);
 assert.match(indexSource, /Press Gas, Drift or Boost to start the race\./);
@@ -63,7 +63,10 @@ assert.doesNotMatch(appSource, /\/turn\/app\.js|m8-home|installM8HomeNavigation/
 assert.match(appSource, /installHardPauseController/);
 assert.match(appSource, /classList\.add\('turn-lot-open', 'yourturn-runtime-paused'\)/,
   'THE CHALLENGE modal must hard-pause physics and replay movement');
-assert.match(appSource, /FINAL_MOTION_CENTER_DELAY_MS = 320/);
+assert.match(appSource, /installMotionLifecycleBridge/,
+  'YOUR TURN must retain TURN’s canonical motion lifecycle instead of replacing it');
+assert.doesNotMatch(appSource, /__turnMotionLifecycle\?\.uninstall|__turnMotionLifecycle\.uninstall/,
+  'YOUR TURN must not tear down TURN’s canonical motion lifecycle');
 assert.match(appSource, /installStartLineFormationAdapter/);
 assert.match(appSource, /formation\.rivalDistance = Math\.min\(formation\.rivalDistance, playerDistance\)/);
 assert.match(appSource, /installScreenBlanking/);
@@ -97,6 +100,8 @@ assert.match(sessionSource, /navigator\.share/);
 assert.match(sessionSource, /navigator\.clipboard/);
 assert.doesNotMatch(sessionSource, /ghost/i,
   'Recipient-facing YOUR TURN challenge code describes people and cars, not ghosts');
+assert.doesNotMatch(sessionSource, /devicemotion|neutralRoll\s*=|horizonRollReference\s*=/,
+  'YOUR TURN session orchestration must leave sensor sampling and calibration to TURN');
 
 assert.match(uiSource, /action\.share/);
 assert.match(uiSource, /action\.game/);
