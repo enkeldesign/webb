@@ -83,6 +83,14 @@
     };
     globalThis.__turnRuntime = runtime;
     globalThis.__turnGetTrackId = () => 'countryside';
+    // Production's render/world bridge supplies this compatibility helper before the
+    // legacy beauty pass. Mirror that bootstrap detail in the isolated visual scene.
+    if (!THREE.Object3D.prototype.addScaledVector) {
+      THREE.Object3D.prototype.addScaledVector = function addScaledVector(vector, scalar) {
+        this.position.addScaledVector(vector, scalar);
+        return this;
+      };
+    }
 
     function trackCentre() {
       const centre = new THREE.Vector3();
