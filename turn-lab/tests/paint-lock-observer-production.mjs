@@ -189,8 +189,8 @@ assert.equal(
 );
 assert.equal(
   imports['/turn/garage/lot-showroom-experiment.js?revision=r206-race-before-locks'],
-  '/turn/garage/lot-showroom-experiment.js?revision=r179-native-car-surfaces',
-  'Installed PWAs must refetch the showroom module that creates paint controls'
+  '/turn/garage/lot-showroom-experiment.js?revision=r210-trophy-unlock-order',
+  'Installed PWAs must refetch the showroom module when the visible Trophy Road order changes'
 );
 for (const staleCatalogSpecifier of [
   '/turn/vehicle/catalog.js?build=20260804-r157-factory-colors',
