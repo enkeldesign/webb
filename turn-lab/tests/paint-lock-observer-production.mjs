@@ -146,10 +146,17 @@ assert.doesNotMatch(paintGate, /colors\.setAttribute\('role', 'button'\)|colors\
 const orderMatch = showroom.match(/export const LOT_CAR_ORDER = Object\.freeze\(\[([\s\S]*?)\]\);/);
 assert.ok(orderMatch, 'The showroom must expose one canonical car order');
 const order = [...orderMatch[1].matchAll(/'([^']+)'/g)].map((match) => match[1]);
-assert.ok(order.indexOf('race') < order.indexOf('firetruck'),
-  'Race Car must be the final base car before Trophy Road/emergency locked cars');
-assert.equal(order[order.indexOf('race') + 1], 'firetruck',
-  'Race Car and Fire Truck must form the visible/keyboard entitlement boundary');
+const lockedTail = [
+  'vintage-racer',
+  'race-future',
+  'firetruck',
+  'ambulance',
+  'police',
+  'monster-truck',
+  'toy-racer'
+];
+assert.deepEqual(order.slice(order.indexOf('race') + 1), lockedTail,
+  'The horizontal Lot and its keyboard/VoiceOver order must follow the Trophy Road vehicle unlock sequence');
 
 // --- Fresh module identities for already-installed PWAs -----------------------
 assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r206-pwa-color/,
