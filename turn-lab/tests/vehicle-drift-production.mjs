@@ -218,8 +218,8 @@ assert.match(controlsSource, /function getDriftRechargeMultiplier\(\)/);
 assert.match(controlsSource, /driftBoostRechargeMultiplier/);
 assert.match(
   controlsSource,
-  /globalThis\.__turnDriftHeld \? getDriftRechargeMultiplier\(\) : 1/,
-  'Boost recharge must read the selected car tuning only while DRIFT is held'
+  /resolveDriftBoostRechargeMultiplier\(\{[\s\S]*lockedMultiplier: getDriftRechargeMultiplier\(\)/,
+  'The selected car tuning must remain the LOCK recharge ceiling while regular DRIFT uses the midpoint'
 );
 
 const suv = CAR_CATALOG.find((car) => car.id === 'suv');
