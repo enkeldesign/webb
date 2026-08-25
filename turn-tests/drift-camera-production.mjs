@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {
+  resolveCameraMotionLeadTime,
   resolveDriftCameraBlend,
   resolveDriftCameraYawOffset,
   updateRaceCameraState
@@ -66,6 +67,11 @@ approximately(resolveDriftCameraBlend(0), 0);
 approximately(resolveDriftCameraBlend(8 / 3.6), 0);
 approximately(resolveDriftCameraBlend(28 / 3.6), 1);
 approximately(resolveDriftCameraBlend(100 / 3.6), 1);
+approximately(resolveCameraMotionLeadTime(6.2, 0), 1 / 6.2);
+approximately(
+  resolveCameraMotionLeadTime(6.2, 1 / 60),
+  (1 / 60) / Math.expm1(6.2 / 60)
+);
 
 const forward = { x: 0, z: 1 };
 const right = { x: 1, z: 0 };
@@ -169,7 +175,6 @@ assert.ok(
   'Enabled Drift Camera should look along actual travel instead of only the car nose'
 );
 approximately(drift.state.driftCameraYawOffset, combined.state.driftCameraYawOffset, 1e-9);
-approximately(drift.cameraTarget.x, combined.cameraTarget.x, 1e-9);
 approximately(drift.camera.fov, classic.camera.fov, 1e-9);
 approximately(combined.camera.fov, speedResponsive.camera.fov, 1e-9);
 assert.equal(
@@ -216,6 +221,72 @@ approximately(legacyFast.camera.fov, 82);
 approximately(responsiveFast.camera.fov, 82);
 approximately(legacyFast.cameraTarget.z, responsiveFast.cameraTarget.z);
 
+function movingCameraRun(speedResponsiveEnabled, dt = 1 / 60) {
+  globalThis.__turnDriftCameraEnabled = false;
+  globalThis.__turnSpeedResponsiveCameraEnabled = speedResponsiveEnabled;
+  const speed = 88;
+  const cameraPosition = { x: 0, y: 7.7, z: speedResponsiveEnabled ? -14 : -21 };
+  const cameraTarget = { x: 0, y: 2, z: 27 };
+  const camera = {
+    position: { copy(value) { this.x = value.x; this.y = value.y; this.z = value.z; } },
+    up: { set() {} },
+    lookAt() {},
+    rotateZ() {},
+    fov: 68,
+    updateProjectionMatrix() {}
+  };
+  const state = {
+    speed,
+    velocity: makeVelocity(0, speed),
+    position: { x: 0, y: 0, z: 0 },
+    nearestTrackIndex: 0,
+    sensorMode: false,
+    driftCameraYawOffset: 0
+  };
+
+  const frameCount = Math.ceil(10 / dt);
+  for (let frame = 0; frame < frameCount; frame += 1) {
+    state.position.z += speed * dt;
+    updateRaceCameraState({
+      state,
+      camera,
+      cameraPosition,
+      cameraTarget,
+      getForward: () => forward,
+      getRight: () => right,
+      samples: [],
+      maxSpeed: 88,
+      dt
+    });
+  }
+
+  return {
+    followDistance: state.position.z - cameraPosition.z,
+    targetDistance: cameraTarget.z - state.position.z,
+    fov: camera.fov
+  };
+}
+
+const movingLegacy = movingCameraRun(false);
+const movingResponsive = movingCameraRun(true);
+assert.ok(
+  movingLegacy.followDistance > 30,
+  'The regression harness must reproduce the established high-speed world-space camera lag'
+);
+assert.ok(
+  movingLegacy.targetDistance < 20,
+  'The regression harness must reproduce the established high-speed look-target lag'
+);
+approximately(movingResponsive.followDistance, 14, 1e-6);
+approximately(movingResponsive.targetDistance, 27, 1e-6);
+approximately(movingResponsive.fov, 82, 1e-6);
+for (const dt of [1 / 30, 1 / 120, 0.12]) {
+  const frameRateVariant = movingCameraRun(true, dt);
+  approximately(frameRateVariant.followDistance, 14, 1e-6);
+  approximately(frameRateVariant.targetDistance, 27, 1e-6);
+  approximately(frameRateVariant.fov, 82, 1e-6);
+}
+
 const settingSource = await fs.readFile(new URL('../turn/ui/drift-camera-setting.js', import.meta.url), 'utf8');
 const cameraSource = await fs.readFile(new URL('../turn/render/camera.js', import.meta.url), 'utf8');
 assert.match(settingSource, /getItem\(DRIFT_CAMERA_STORAGE_KEY\) === 'on'/,
@@ -235,7 +306,11 @@ assert.match(cameraSource, /\? 15 - speedRatio/,
   'The responsive camera must move from distance 15 toward 14 as speed builds');
 assert.match(cameraSource, /: 14 \+ speedRatio \* 7/,
   'Speed-responsive Camera OFF must preserve the established pull-back exactly');
+assert.match(cameraSource, /resolveCameraMotionLeadTime\(CAMERA_POSITION_RESPONSE_RATE, dt\)/,
+  'The responsive camera must cancel speed-dependent world-space follow lag');
+assert.match(cameraSource, /resolveCameraMotionLeadTime\(CAMERA_TARGET_RESPONSE_RATE, dt\)/,
+  'The responsive look target must cancel speed-dependent world-space follow lag');
 assert.match(cameraSource, /camera\.fov = lerp\(camera\.fov, 68 \+ speedRatio \* 14/,
   'FOV must remain the primary speed cue in either camera profile');
 
-console.log('TURN independent Drift and Speed-responsive Camera preferences, profiles and parity passed.');
+console.log('TURN independent camera preferences, motion-compensated speed profile and legacy parity passed.');
