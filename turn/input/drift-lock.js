@@ -5,6 +5,7 @@ export const DRIFT_LOCK_OUTER_SLOP_PX = 18;
 export const DRIFT_LOCK_VERTICAL_SLOP_PX = 12;
 export const DRIFT_LOCK_SEAM_OVERLAP_PX = 4;
 export const REGULAR_DRIFT_RECHARGE_BLEND = 0.5;
+export const DRIFT_LOCK_RECHARGE_MULTIPLIER = 3.6;
 
 export function pointerUsesDriftLock({
   driftActive = false,
@@ -52,14 +53,26 @@ export function driftThrottleForLock(lockAmount) {
 export function resolveDriftBoostRechargeMultiplier({
   driftHeld = false,
   driftLockAmount = 0,
-  lockedMultiplier = 1
+  lockedMultiplier = 1,
+  lockCeilingMultiplier = null
 } = {}) {
   if (!driftHeld) return 0;
 
-  const locked = Math.max(1, finiteNumber(lockedMultiplier));
-  const regular = 1 + (locked - 1) * REGULAR_DRIFT_RECHARGE_BLEND;
+  const tunedMultiplier = Math.max(1, finiteNumber(lockedMultiplier));
   const lockMix = clamp(finiteNumber(driftLockAmount), 0, 1);
-  return regular + (locked - regular) * lockMix;
+
+  // Current production balance: the selected car's historical DRIFT recharge
+  // rate is the regular-DRIFT rate, while LOCK ramps to the shared 3.6x ceiling.
+  // Rally Racer already owns a 3.6x tuning value, so its regular DRIFT and LOCK
+  // naturally recharge at the same rate. Keep the legacy midpoint behavior when
+  // no explicit ceiling is supplied so older callers/tests remain deterministic.
+  if (lockCeilingMultiplier != null) {
+    const locked = Math.max(tunedMultiplier, finiteNumber(lockCeilingMultiplier));
+    return tunedMultiplier + (locked - tunedMultiplier) * lockMix;
+  }
+
+  const regular = 1 + (tunedMultiplier - 1) * REGULAR_DRIFT_RECHARGE_BLEND;
+  return regular + (tunedMultiplier - regular) * lockMix;
 }
 
 function finiteNumber(value) {
