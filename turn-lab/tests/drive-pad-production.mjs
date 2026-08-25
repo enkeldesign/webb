@@ -1,5 +1,12 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import {
+  DRIFT_LOCK_ENGAGE_SECONDS,
+  DRIFT_LOCK_RELEASE_SECONDS,
+  advanceDriftLockAmount,
+  driftThrottleForLock,
+  pointerUsesDriftLock
+} from '../../turn/input/drift-lock.js';
 import { updateVehiclePhysicsState } from '../../turn/vehicle/physics.js';
 import { spokenRivalCount } from '../../turn/ui/race-announcements.js';
 import { lapAnnouncementPriorityMs } from '../../turn/ui/race-speech.js';
@@ -14,6 +21,28 @@ assert.ok(
   lapAnnouncementPriorityMs('Lap void. Stay on the track.') >= 3200,
   'A void-lap summary also needs priority over live race updates'
 );
+
+const driftLockGeometry = {
+  driftActive: true,
+  padLeft: 100,
+  padTop: 50,
+  padHeight: 200,
+  bubbleWidth: 60
+};
+assert.equal(pointerUsesDriftLock({ ...driftLockGeometry, pointerX: 50, pointerY: 80 }), true);
+assert.equal(pointerUsesDriftLock({ ...driftLockGeometry, pointerX: 104, pointerY: 80 }), true);
+assert.equal(pointerUsesDriftLock({ ...driftLockGeometry, pointerX: 105, pointerY: 80 }), false);
+assert.equal(pointerUsesDriftLock({ ...driftLockGeometry, pointerX: 21, pointerY: 80 }), false);
+assert.equal(pointerUsesDriftLock({ ...driftLockGeometry, pointerX: 50, pointerY: 37 }), false);
+assert.equal(pointerUsesDriftLock({ ...driftLockGeometry, pointerX: 50, pointerY: 127 }), false);
+assert.equal(pointerUsesDriftLock({ ...driftLockGeometry, pointerX: 50, pointerY: 80, driftActive: false }), false);
+assert.equal(advanceDriftLockAmount(0, true, DRIFT_LOCK_ENGAGE_SECONDS / 2), 0.5);
+assert.equal(advanceDriftLockAmount(0.5, true, DRIFT_LOCK_ENGAGE_SECONDS / 2), 1);
+assert.equal(advanceDriftLockAmount(1, false, DRIFT_LOCK_RELEASE_SECONDS / 2), 0.5);
+assert.equal(advanceDriftLockAmount(0.5, false, DRIFT_LOCK_RELEASE_SECONDS / 2), 0);
+assert.equal(driftThrottleForLock(0), 1);
+assert.equal(driftThrottleForLock(0.5), 0.5);
+assert.equal(driftThrottleForLock(1), 0);
 
 class Vec3 {
   constructor(x = 0, y = 0, z = 0) { this.x = x; this.y = y; this.z = z; }
@@ -35,7 +64,8 @@ const [
   gameplayCss,
   positionCss,
   analogGas,
-  spectate
+  spectate,
+  mainSource
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
@@ -47,7 +77,8 @@ const [
   fs.readFile(new URL('../../turn/gameplay-v2.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/position-hud-r83.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/input/analog-gas.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/ui/spectate.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/ui/spectate.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -96,8 +127,23 @@ assert.match(controls, /return x < 0\.5 \? 'drift' : 'boost'/, 'Top drive pad mu
 assert.match(controls, /y >= BRAKE_ZONE_START\) return 'brake'/, 'Bottom drive pad must map to Brake and Reverse');
 assert.match(controls, /return 'gas'/, 'Middle drive pad must map to Gas');
 assert.match(controls, /const forwardDrive = nextZone === 'gas' \|\| nextZone === 'drift' \|\| nextZone === 'boost'/, 'Only forward-driving zones may keep gas engaged');
-assert.match(controls, /globalThis\.__turnAnalogGas = forwardDrive \? 1 : 0/, 'Brake must immediately release gas');
+assert.match(controls, /globalThis\.__turnAnalogGas = forwardDrive \? forwardThrottle : 0/,
+  'Brake must release gas while the smooth binary LOCK transition may reduce it');
 assert.match(controls, /globalThis\.__turnDriftHeld = nextZone === 'drift'/, 'Drift zone must add drift to gas');
+assert.match(controls, /pointerUsesDriftLock\(\{/,
+  'The external bubble must own a dedicated forgiving hit target');
+assert.match(controls, /driftActive: driveZone === 'drift'/,
+  'LOCK must only become available after the player has engaged DRIFT');
+assert.match(controls, /if \(lockRequested\) return \{ zone: 'drift', lockRequested: true \}/,
+  'Entering the bubble must keep DRIFT held while switching binary LOCK on');
+assert.match(controls, /advanceDriftLockAmount\(/,
+  'The binary target must use a short mechanical transition instead of snapping');
+assert.match(controls, /globalThis\.__turnDriftLockAmount = lockCanRun \? driftLockAmount : 0/,
+  'The smoothed LOCK amount must be published for vehicle physics');
+assert.match(controls, /driftThrottleForLock\(driftLockAmount\)/,
+  'Gas must fade out over the same short LOCK transition');
+assert.doesNotMatch(controls, /Advanced DRIFT|turn:advanced-drift-change/,
+  'Binary LOCK must be standard behavior without an experimental setting');
 assert.match(controls, /boostRequested = nextZone === 'boost'/, 'Boost zone must add boost to gas');
 assert.match(controls, /runtimeState\.touchBrake = Boolean\(active\)/, 'The unified Brake zone must drive the existing brake and reverse physics');
 assert.match(controls, /brakeButton\.classList\.toggle\('is-active', nextZone === 'brake'\)/, 'Brake must receive the same active-state treatment as every other zone');
@@ -119,7 +165,23 @@ assert.match(css, /place-items: center/, 'Drive-zone labels must be vertically a
 assert.match(css, /content: "LEAVE"/, 'Boost lock hint must explain that leaving the Boost zone re-arms it');
 assert.match(css, /\.drive-pad \.drive-brake-zone \{/, 'Brake and Reverse must be styled as an internal drive-pad zone');
 assert.match(css, /\.drive-brake-zone\.is-active/, 'Brake must have visible active feedback');
+assert.match(css, /\.drive-lock-bubble \{[\s\S]*right: calc\(100% - 4px\);[\s\S]*background: #748ffc/,
+  'LOCK must be a separate bubble attached outside the left edge of the pad');
+assert.match(css, /\.drive-stack\.is-drift-ready \.drive-lock-bubble \{[\s\S]*opacity: 1;[\s\S]*scaleX\(1\)/,
+  'The LOCK bubble must animate quickly into view while DRIFT is held');
+assert.match(css, /\.drive-stack\.is-drift-locking \.drive-lock-bubble \{[\s\S]*#8b5cf6/,
+  'The bubble must visibly confirm the binary LOCK state in purple');
+assert.match(css, /prefers-reduced-motion: reduce[\s\S]*\.drive-lock-bubble/,
+  'The bubble reveal must respect reduced-motion preferences');
 assert.match(gameplayCss, /\.boost-hud i \{[\s\S]*box-shadow: 3px 0 0 var\(--ink\);/, 'Boost charge must have a high-contrast ink edge at the live fill level');
+assert.match(gameplayCss, /\.boost-hud\.is-drift-charging i \{[\s\S]*background-color: #38d9ff/,
+  'Ordinary DRIFT recharge must show the Boost charge in light blue');
+assert.match(gameplayCss, /\.boost-hud\.is-drift-locking i \{[\s\S]*background-color: #8b5cf6/,
+  'Using LOCK must simply turn the existing Boost charge fill purple');
+assert.match(controls, /boostHud\.innerHTML = '<span>BOOST<\/span>/,
+  'The Boost HUD label must stay BOOST instead of becoming a second LOCK meter');
+assert.match(mainSource, /driftLock: globalThis\.__turnDriftLockAmount \|\| 0/,
+  'The production runtime must pass the smoothed binary LOCK value into vehicle physics');
 assert.match(gameplayCss, /\.boost-hud\.is-boost-full-flash/, 'Boost HUD must visibly react when recharge reaches full capacity');
 assert.match(gameplayCss, /\.boost-hud\.is-boost-empty-flash/, 'Boost HUD must react distinctly when the tank becomes empty');
 assert.match(gameplayCss, /@keyframes turn-boost-full-flash/, 'Full boost feedback must have its own animation');
@@ -151,4 +213,38 @@ assert.ok(state.velocity.z < -0.1, 'Holding Brake after stopping must engage rev
 for (let i = 0; i < 100; i += 1) updateVehiclePhysicsState(physicsArgs);
 assert.ok(state.velocity.z >= -(80 * 0.32 + 0.5), 'Reverse must stay capped well below forward top speed');
 
-console.log(`TURN ${release.id} four-zone drive pad, lap-priority race speech, topbar position HUD, restart boost refill and reverse passed.`);
+function runDriftLock(lockAmount) {
+  const driftState = {
+    position: new Vec3(), velocity: new Vec3(0, 0, 30), touchGas: false, touchBrake: false,
+    throttle: 0, brake: 0, steering: 1, driftAmount: 0.7, heading: 0, progress: 0,
+    lastProgress: 0, nearestTrackIndex: 0, trackDistance: 0, offRoad: false, speed: 30
+  };
+  updateVehiclePhysicsState({
+    ...physicsArgs,
+    state: driftState,
+    analogGas: driftThrottleForLock(lockAmount),
+    boostActive: false,
+    driftHeld: true,
+    driftLock: lockAmount
+  });
+  return driftState;
+}
+
+const ordinaryDrift = runDriftLock(0);
+const fullLockDrift = runDriftLock(1);
+assert.equal(ordinaryDrift.driftLockAmount, 0);
+assert.equal(fullLockDrift.driftLockAmount, 1);
+assert.ok(
+  Math.abs(fullLockDrift.heading) > Math.abs(ordinaryDrift.heading),
+  'LOCK must increase yaw authority for a larger slip angle'
+);
+assert.ok(
+  Math.abs(fullLockDrift.velocity.x) > Math.abs(ordinaryDrift.velocity.x),
+  'LOCK must preserve and strengthen the lateral slide'
+);
+assert.ok(
+  fullLockDrift.speed < ordinaryDrift.speed,
+  'Full LOCK must release gas and add modest handbrake drag'
+);
+
+console.log(`TURN ${release.id} binary DRIFT LOCK bubble, smooth lock physics, Boost color, restart refill and reverse passed.`);

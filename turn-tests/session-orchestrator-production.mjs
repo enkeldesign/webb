@@ -65,7 +65,8 @@ function createHarness({ selection = { carId: 'sedan', color: '#fff', secondaryC
     },
     __turnAnalogGas: 0.7,
     __turnBoostActive: true,
-    __turnDriftHeld: true
+    __turnDriftHeld: true,
+    __turnDriftLockAmount: 0.8
   };
   environment.window = environment;
 
@@ -208,6 +209,7 @@ assert.equal(lotCancelled.state.touchGas, false);
 assert.equal(lotCancelled.environment.__turnAnalogGas, 0);
 assert.equal(lotCancelled.environment.__turnBoostActive, false);
 assert.equal(lotCancelled.environment.__turnDriftHeld, false);
+assert.equal(lotCancelled.environment.__turnDriftLockAmount, 0);
 assert.deepEqual(lotCancelled.published, ['lot-open', 'lot-cancelled']);
 assert.equal(lotCancelled.orchestrator.getPhase(), 'racing');
 
