@@ -1,4 +1,4 @@
-import { installDriftCameraSetting } from '../ui/drift-camera-setting.js?revision=r213-speed-responsive-camera';
+import { installDriftCameraSetting } from '../ui/drift-camera-setting.js?revision=r214-shared-speed-fov';
 
 const DEFAULT_MAX_SENSOR_CAMERA_ROLL = 18 * Math.PI / 180;
 const MAX_CONFIGURED_SAFE_ZONE_DEGREES = 45;
@@ -180,9 +180,9 @@ export function updateRaceCameraState({
     ? finiteNumber(samples[lookAheadIndex]?.point?.y, roadY)
     : roadY;
 
-  // The experimental speed-responsive profile reverses the established pull-back:
-  // it moves slightly closer and lower as speed builds while FOV supplies the
-  // primary sense of acceleration. OFF remains exact legacy camera behavior.
+  // Zoom reverses the established physical pull-back: it moves slightly closer
+  // and lower as speed builds. Both profiles share the same widening FOV, while
+  // OFF preserves the classic distance and height curves.
   const followDistance = speedResponsiveCamera
     ? 16 - speedRatio * 2
     : 14 + speedRatio * 7;
@@ -255,8 +255,7 @@ export function updateRaceCameraState({
     state.horizonCameraRoll = 0;
   }
 
-  const fovSpeedGain = speedResponsiveCamera ? 20 : 14;
-  camera.fov = lerp(camera.fov, 68 + speedRatio * fovSpeedGain, Math.min(1, dt * 4.5));
+  camera.fov = lerp(camera.fov, 68 + speedRatio * 20, Math.min(1, dt * 4.5));
   camera.updateProjectionMatrix();
 }
 

@@ -97,8 +97,8 @@ function attachSettingsControl() {
       <label class="m8-toggle-row">
         <input id="m8SpeedResponsiveCameraEnabled" type="checkbox">
         <span>
-          <strong>Speed-responsive camera</strong>
-          <small>Keeps the car close while the view widens as speed builds. Experimental; the current camera remains the default.</small>
+          <strong>Zoom</strong>
+          <small>Keeps the car close as speed builds. Off uses the classic pull-back; both modes widen the view with speed.</small>
         </span>
       </label>`;
     const steering = list.querySelector('.m8-steering-setting');
@@ -124,11 +124,11 @@ function attachSettingsControl() {
       const next = speedCheckbox.checked;
       if (!saveSpeedResponsiveCameraEnabled(next)) {
         speedCheckbox.checked = previous;
-        announce(dialog, 'Speed-responsive camera could not be changed because local storage is unavailable.');
+        announce(dialog, 'Zoom could not be changed because local storage is unavailable.');
         return;
       }
       globalThis.__turnSpeedResponsiveCameraEnabled = next;
-      announce(dialog, `Speed-responsive camera ${next ? 'on' : 'off'}.`);
+      announce(dialog, `Zoom ${next ? 'on' : 'off'}.`);
     });
   }
 

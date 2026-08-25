@@ -217,7 +217,7 @@ assert.ok(
 );
 approximately(legacyStopped.camera.fov, 68);
 approximately(responsiveStopped.camera.fov, 68);
-approximately(legacyFast.camera.fov, 82);
+approximately(legacyFast.camera.fov, 88);
 approximately(responsiveFast.camera.fov, 88);
 approximately(legacyFast.cameraTarget.z, responsiveFast.cameraTarget.z);
 
@@ -277,6 +277,7 @@ assert.ok(
   movingLegacy.targetDistance < 20,
   'The regression harness must reproduce the established high-speed look-target lag'
 );
+approximately(movingLegacy.fov, 88, 1e-6);
 approximately(movingResponsive.followDistance, 14, 1e-6);
 approximately(movingResponsive.targetDistance, 27, 1e-6);
 approximately(movingResponsive.fov, 88, 1e-6);
@@ -293,7 +294,8 @@ const gameplayCss = await fs.readFile(new URL('../turn/gameplay-v2.css', import.
 assert.match(settingSource, /getItem\(DRIFT_CAMERA_STORAGE_KEY\) === 'on'/,
   'Missing storage must continue to mean classic drift direction');
 assert.match(settingSource, /SPEED_RESPONSIVE_CAMERA_DEFAULT = false/);
-assert.match(settingSource, /Speed-responsive camera/);
+assert.match(settingSource, /<strong>Zoom<\/strong>/);
+assert.match(settingSource, /Off uses the classic pull-back; both modes widen the view with speed\./);
 assert.match(settingSource, /globalThis\.__turnDriftCameraEnabled = next/,
   'The Drift Camera toggle must update camera behavior live without a reload');
 assert.match(settingSource, /globalThis\.__turnSpeedResponsiveCameraEnabled = next/,
@@ -301,7 +303,7 @@ assert.match(settingSource, /globalThis\.__turnSpeedResponsiveCameraEnabled = ne
 assert.match(cameraSource, /DRIFT_CAMERA_TRAVEL_WEIGHT = 0\.85/);
 assert.match(cameraSource, /DRIFT_CAMERA_BLEND_START_SPEED = 8 \/ 3\.6/);
 assert.match(cameraSource, /DRIFT_CAMERA_FULL_BLEND_SPEED = 28 \/ 3\.6/);
-assert.match(cameraSource, /\?revision=r213-speed-responsive-camera/,
+assert.match(cameraSource, /\?revision=r214-shared-speed-fov/,
   'The combined Camera settings module must be cache-busted');
 assert.match(cameraSource, /\? 16 - speedRatio \* 2/,
   'The responsive camera must move from distance 16 toward 14 as speed builds');
@@ -313,10 +315,10 @@ assert.match(cameraSource, /resolveCameraMotionLeadTime\(CAMERA_POSITION_RESPONS
   'The responsive camera must cancel speed-dependent world-space follow lag');
 assert.match(cameraSource, /resolveCameraMotionLeadTime\(CAMERA_TARGET_RESPONSE_RATE, dt\)/,
   'The responsive look target must cancel speed-dependent world-space follow lag');
-assert.match(cameraSource, /const fovSpeedGain = speedResponsiveCamera \? 20 : 14/,
-  'The responsive profile must increase FOV more strongly without changing legacy FOV');
-assert.match(cameraSource, /camera\.fov = lerp\(camera\.fov, 68 \+ speedRatio \* fovSpeedGain/,
-  'FOV must remain the primary speed cue in either camera profile');
+assert.match(cameraSource, /camera\.fov = lerp\(camera\.fov, 68 \+ speedRatio \* 20/,
+  'Both distance profiles must share the same 68-to-88-degree speed FOV');
+assert.doesNotMatch(cameraSource, /fovSpeedGain/,
+  'The FOV curve must not depend on the Zoom preference');
 assert.match(gameplayCss, /--boost-hud-downshift: 20px/,
   'Boost bar must move down by approximately its own racing height');
 assert.match(
@@ -330,4 +332,4 @@ assert.match(
   'Short landscape HUD must preserve the same Boost bar downshift'
 );
 
-console.log('TURN tuned speed camera, independent Boost HUD shift and legacy parity passed.');
+console.log('TURN shared speed FOV, Zoom preference, classic pull-back and Boost HUD shift passed.');
