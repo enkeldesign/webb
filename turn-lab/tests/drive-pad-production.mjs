@@ -1,10 +1,5 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {
-  ADVANCED_DRIFT_LOCK_ZONE_SHARE,
-  resolveAdvancedDriftLock,
-  resolveAdvancedDriftThrottle
-} from '../../turn/input/advanced-drift.js';
 import { updateVehiclePhysicsState } from '../../turn/vehicle/physics.js';
 import { spokenRivalCount } from '../../turn/ui/race-announcements.js';
 import { lapAnnouncementPriorityMs } from '../../turn/ui/race-speech.js';
@@ -19,19 +14,6 @@ assert.ok(
   lapAnnouncementPriorityMs('Lap void. Stay on the track.') >= 3200,
   'A void-lap summary also needs priority over live race updates'
 );
-
-assert.equal(ADVANCED_DRIFT_LOCK_ZONE_SHARE, 0.24);
-const driftLockGeometry = { enabled: true, driftActive: true, padLeft: 100, padWidth: 200 };
-assert.equal(resolveAdvancedDriftLock({ ...driftLockGeometry, pointerX: 124 }), 0);
-assert.ok(Math.abs(resolveAdvancedDriftLock({ ...driftLockGeometry, pointerX: 112 }) - 1 / 3) < 1e-12);
-assert.ok(Math.abs(resolveAdvancedDriftLock({ ...driftLockGeometry, pointerX: 100 }) - 2 / 3) < 1e-12);
-assert.equal(resolveAdvancedDriftLock({ ...driftLockGeometry, pointerX: 88 }), 1);
-assert.equal(resolveAdvancedDriftLock({ ...driftLockGeometry, pointerX: 60 }), 1);
-assert.equal(resolveAdvancedDriftLock({ ...driftLockGeometry, pointerX: 100, enabled: false }), 0);
-assert.equal(resolveAdvancedDriftLock({ ...driftLockGeometry, pointerX: 100, driftActive: false }), 0);
-assert.equal(resolveAdvancedDriftThrottle(0), 1);
-assert.ok(Math.abs(resolveAdvancedDriftThrottle(2 / 3) - 1 / 3) < 1e-12);
-assert.equal(resolveAdvancedDriftThrottle(1), 0);
 
 class Vec3 {
   constructor(x = 0, y = 0, z = 0) { this.x = x; this.y = y; this.z = z; }
@@ -53,9 +35,7 @@ const [
   gameplayCss,
   positionCss,
   analogGas,
-  spectate,
-  settingsSource,
-  mainSource
+  spectate
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
@@ -67,9 +47,7 @@ const [
   fs.readFile(new URL('../../turn/gameplay-v2.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/position-hud-r83.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/input/analog-gas.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/ui/spectate.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/ui/drift-camera-setting.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/ui/spectate.js', import.meta.url), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -118,15 +96,8 @@ assert.match(controls, /return x < 0\.5 \? 'drift' : 'boost'/, 'Top drive pad mu
 assert.match(controls, /y >= BRAKE_ZONE_START\) return 'brake'/, 'Bottom drive pad must map to Brake and Reverse');
 assert.match(controls, /return 'gas'/, 'Middle drive pad must map to Gas');
 assert.match(controls, /const forwardDrive = nextZone === 'gas' \|\| nextZone === 'drift' \|\| nextZone === 'boost'/, 'Only forward-driving zones may keep gas engaged');
-assert.match(controls, /globalThis\.__turnAnalogGas = forwardDrive \? forwardThrottle : 0/,
-  'Brake must release gas while Advanced DRIFT may progressively reduce it');
+assert.match(controls, /globalThis\.__turnAnalogGas = forwardDrive \? 1 : 0/, 'Brake must immediately release gas');
 assert.match(controls, /globalThis\.__turnDriftHeld = nextZone === 'drift'/, 'Drift zone must add drift to gas');
-assert.match(controls, /globalThis\.__turnDriftLockAmount = lockAmount/,
-  'The drive pad must publish one normalized LOCK value for vehicle physics');
-assert.match(controls, /resolveAdvancedDriftThrottle\(lockAmount\)/,
-  'LOCK must progressively release gas instead of acting as a binary brake button');
-assert.match(controls, /turn:advanced-drift-change/,
-  'Changing the setting must update the live drive pad without a reload');
 assert.match(controls, /boostRequested = nextZone === 'boost'/, 'Boost zone must add boost to gas');
 assert.match(controls, /runtimeState\.touchBrake = Boolean\(active\)/, 'The unified Brake zone must drive the existing brake and reverse physics');
 assert.match(controls, /brakeButton\.classList\.toggle\('is-active', nextZone === 'brake'\)/, 'Brake must receive the same active-state treatment as every other zone');
@@ -148,17 +119,7 @@ assert.match(css, /place-items: center/, 'Drive-zone labels must be vertically a
 assert.match(css, /content: "LEAVE"/, 'Boost lock hint must explain that leaving the Boost zone re-arms it');
 assert.match(css, /\.drive-pad \.drive-brake-zone \{/, 'Brake and Reverse must be styled as an internal drive-pad zone');
 assert.match(css, /\.drive-brake-zone\.is-active/, 'Brake must have visible active feedback');
-assert.match(css, /\.drive-pad\.has-advanced-drift \.drive-drift-zone \{[\s\S]*#8b5cf6[\s\S]*#54c2ef/,
-  'Advanced DRIFT must integrate a purple-to-cyan LOCK affordance into the Drift surface');
 assert.match(gameplayCss, /\.boost-hud i \{[\s\S]*box-shadow: 3px 0 0 var\(--ink\);/, 'Boost charge must have a high-contrast ink edge at the live fill level');
-assert.match(gameplayCss, /\.boost-hud\.is-drift-locking i \{[\s\S]*width: var\(--drift-lock\);[\s\S]*#9b5de5/,
-  'The unobscured Boost HUD must visualize actual LOCK intensity in purple');
-assert.match(controls, /boostLabel\.textContent = driftLocking \? 'DRIFT LOCK' : 'BOOST'/,
-  'The shared HUD must name the temporary LOCK meter while it is active');
-assert.match(settingsSource, /<strong>Advanced DRIFT<\/strong>/);
-assert.match(settingsSource, /Experimental; off by default\./);
-assert.match(mainSource, /driftLock: globalThis\.__turnDriftLockAmount \|\| 0/,
-  'The production runtime must pass the progressive LOCK value into vehicle physics');
 assert.match(gameplayCss, /\.boost-hud\.is-boost-full-flash/, 'Boost HUD must visibly react when recharge reaches full capacity');
 assert.match(gameplayCss, /\.boost-hud\.is-boost-empty-flash/, 'Boost HUD must react distinctly when the tank becomes empty');
 assert.match(gameplayCss, /@keyframes turn-boost-full-flash/, 'Full boost feedback must have its own animation');
@@ -190,38 +151,4 @@ assert.ok(state.velocity.z < -0.1, 'Holding Brake after stopping must engage rev
 for (let i = 0; i < 100; i += 1) updateVehiclePhysicsState(physicsArgs);
 assert.ok(state.velocity.z >= -(80 * 0.32 + 0.5), 'Reverse must stay capped well below forward top speed');
 
-function runDriftLock(lockAmount) {
-  const driftState = {
-    position: new Vec3(), velocity: new Vec3(0, 0, 30), touchGas: false, touchBrake: false,
-    throttle: 0, brake: 0, steering: 1, driftAmount: 0.7, heading: 0, progress: 0,
-    lastProgress: 0, nearestTrackIndex: 0, trackDistance: 0, offRoad: false, speed: 30
-  };
-  updateVehiclePhysicsState({
-    ...physicsArgs,
-    state: driftState,
-    analogGas: resolveAdvancedDriftThrottle(lockAmount),
-    boostActive: false,
-    driftHeld: true,
-    driftLock: lockAmount
-  });
-  return driftState;
-}
-
-const ordinaryDrift = runDriftLock(0);
-const fullLockDrift = runDriftLock(1);
-assert.equal(ordinaryDrift.driftLockAmount, 0);
-assert.equal(fullLockDrift.driftLockAmount, 1);
-assert.ok(
-  Math.abs(fullLockDrift.heading) > Math.abs(ordinaryDrift.heading),
-  'Progressive LOCK must increase yaw authority for a larger slip angle'
-);
-assert.ok(
-  Math.abs(fullLockDrift.velocity.x) > Math.abs(ordinaryDrift.velocity.x),
-  'Progressive LOCK must preserve and strengthen the lateral slide'
-);
-assert.ok(
-  fullLockDrift.speed < ordinaryDrift.speed,
-  'Full LOCK must release gas and add modest handbrake drag'
-);
-
-console.log(`TURN ${release.id} Advanced DRIFT, four-zone drive pad, LOCK HUD, restart boost refill and reverse passed.`);
+console.log(`TURN ${release.id} four-zone drive pad, lap-priority race speech, topbar position HUD, restart boost refill and reverse passed.`);

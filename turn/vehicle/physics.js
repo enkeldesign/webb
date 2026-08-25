@@ -86,7 +86,6 @@ export function updateVehiclePhysicsState({
   analogGas = 0,
   boostActive = false,
   driftHeld = false,
-  driftLock = 0,
   vehicleTuning = null
 }) {
   updateMotionInput(dt);
@@ -107,13 +106,6 @@ export function updateVehiclePhysicsState({
   const driftSlideMultiplier = driftHeld
     ? clamp(positiveNumber(tuning?.driftSlideMultiplier, 1), 0.75, 1.5)
     : 1;
-  const driftLockAmount = driftHeld
-    ? clamp(nonNegativeNumber(driftLock, 0), 0, 1)
-    : 0;
-  const lockYawMultiplier = lerp(1, 1.55, driftLockAmount);
-  const lockGripMultiplier = lerp(1, 0.22, driftLockAmount);
-  const lockSlideMultiplier = lerp(1, 1.25, driftLockAmount);
-  state.driftLockAmount = driftLockAmount;
   const tuningBoostPowerMultiplier = positiveNumber(tuning?.boostPowerMultiplier, 1);
   const tuningBoostSpeedMultiplier = positiveNumber(tuning?.boostSpeedMultiplier, 1.32);
   const effectiveMaxSpeed = maxSpeed;
@@ -183,8 +175,7 @@ export function updateVehiclePhysicsState({
     Math.abs(state.steering) * speedRatio * 0.9 +
       brakeDriftInput * Math.abs(state.steering) * 1.35 +
       Math.abs(lateralSpeed) / 22 +
-      (driftHeld ? 0.48 + Math.abs(state.steering) * 0.5 : 0) +
-      driftLockAmount * (0.25 + Math.abs(state.steering) * 0.35),
+      (driftHeld ? 0.48 + Math.abs(state.steering) * 0.5 : 0),
     0,
     1
   );
@@ -209,7 +200,6 @@ export function updateVehiclePhysicsState({
     steeringAuthority *
     steeringStatMultiplier *
     driftYawMultiplier *
-    lockYawMultiplier *
     (1 + state.driftAmount * 0.65 + (driftHeld ? 0.58 : 0));
 
   state.heading = normalizeAngle(state.heading + yawRate * dt);
@@ -221,7 +211,7 @@ export function updateVehiclePhysicsState({
     ? 1
     : 0.92 + controlMultiplier * 0.08;
   const driftGripMultiplier = driftHeld
-    ? 0.42 * driftStabilityMultiplier * driftGripTuningMultiplier * lockGripMultiplier
+    ? 0.42 * driftStabilityMultiplier * driftGripTuningMultiplier
     : 1;
   const grip = (
     physicsOffRoad
@@ -233,8 +223,7 @@ export function updateVehiclePhysicsState({
   state.velocity.addScaledVector(newRight, -lateralSpeed * lateralCorrection);
 
   if ((state.driftAmount > 0.18 || driftHeld) && speed > 14) {
-    const slideStrength = (driftHeld ? 0.235 : 0.12) *
-      driftSlideMultiplier * lockSlideMultiplier;
+    const slideStrength = (driftHeld ? 0.235 : 0.12) * driftSlideMultiplier;
     state.velocity.addScaledVector(
       newRight,
       state.steering * speed * Math.max(state.driftAmount, 0.48) * slideStrength * dt
@@ -243,7 +232,7 @@ export function updateVehiclePhysicsState({
 
   const drag = physicsOffRoad
     ? 0.34
-    : 0.11 + speed * 0.0009 + (driftHeld ? driftDragAdd : 0) + driftLockAmount * 0.18;
+    : 0.11 + speed * 0.0009 + (driftHeld ? driftDragAdd : 0);
   state.velocity.multiplyScalar(Math.exp(-drag * dt));
 
   speed = state.velocity.length();
