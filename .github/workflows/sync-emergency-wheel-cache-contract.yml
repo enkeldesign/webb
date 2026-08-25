@@ -1,0 +1,46 @@
+name: Sync emergency wheel cache contract
+
+on:
+  push:
+    branches:
+      - feature/turn-steering-wheels-kenney-monster
+    paths:
+      - '.github/workflows/sync-emergency-wheel-cache-contract.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/turn-steering-wheels-kenney-monster
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Sync emergency bridge assertions
+        run: node turn-tests/sync-emergency-wheel-cache-contract.mjs
+      - name: Verify complete vehicle regression chain
+        run: |
+          node turn-lab/tests/emergency-vehicles-production.mjs
+          node turn-lab/tests/emergency-livery-layering-production.mjs
+          node turn-lab/tests/vehicle-drift-production.mjs
+          node turn-lab/tests/stat-legend-production.mjs
+          node turn-lab/tests/car-orientation-production.mjs
+          node turn-lab/tests/native-paint-production.mjs
+          node turn-lab/tests/semantic-car-finish-production.mjs
+          node turn-lab/tests/rally-racer-reward-production.mjs
+      - name: Remove sync scaffolding
+        run: |
+          rm -f turn-tests/sync-emergency-wheel-cache-contract.mjs
+          rm -f .github/workflows/sync-emergency-wheel-cache-contract.yml
+      - name: Commit contract sync
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Sync emergency steering-wheel cache contract [emergency-cache]"
+          git push origin HEAD:feature/turn-steering-wheels-kenney-monster
