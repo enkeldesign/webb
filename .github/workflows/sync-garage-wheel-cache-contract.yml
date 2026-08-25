@@ -21,7 +21,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Sync garage cache assertions
+      - name: Sync garage cache and Kenney model assertions
         run: node turn-tests/sync-garage-wheel-cache-contract.mjs
       - name: Verify garage plus wheel/palette contracts
         run: |
