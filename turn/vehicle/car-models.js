@@ -8,7 +8,7 @@ import {
   makeGhostColor,
   normalizeVehicleColor,
   normalizeVehicleSecondaryColor
-} from './catalog.js?revision=r182-vintage-rally-paint';
+} from './catalog.js?revision=r211-steering-wheels';
 import {
   makeWideGamutSpec,
   setThreeColor
@@ -17,13 +17,14 @@ import {
   getKenneyPaletteAsset,
   installSemanticCarFinish,
   recolorSemanticCarFinish
-} from './semantic-car-finish.js?revision=r182-vintage-rally-paint';
+} from './semantic-car-finish.js?revision=r211-steering-wheels';
 
 const loadersByPack = new Map();
 const sourceCache = new Map();
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
 const TIRE_COLOR = 0x17191c;
 const FEATURED_SURFACE_TARGET_LENGTHS = new Set([5.15, 5.5]);
+const REVERSED_FRONT_WHEEL_LABEL_IDS = new Set(['vintage-racer']);
 
 export async function preloadCarModels(carIds) {
   await Promise.all(carIds.map((carId) => loadCarSource(carId).catch(() => null)));
@@ -140,6 +141,7 @@ export async function createCarVisual({
   }
 
   if (outline) addOutlines(model);
+  const frontWheelPivots = installFrontWheelSteeringRig(model, car);
   const featuredSurface = FEATURED_SURFACE_TARGET_LENGTHS.has(targetLength);
   const featuredVisualSizeMultiplier = featuredSurface ? car.featuredVisualSizeMultiplier : 1;
   const effectiveVisualScale = car.visualScale
@@ -161,7 +163,7 @@ export async function createCarVisual({
   root.userData.turnSecondaryPaintMaterials = secondaryPaintMaterials;
   root.userData.turnPaintMaterials = [...primaryPaintMaterials, ...secondaryPaintMaterials];
   root.userData.turnSemanticPaintRecords = semanticPaintRecords;
-  root.userData.frontWheelPivots = [];
+  root.userData.frontWheelPivots = frontWheelPivots;
   root.userData.wheelSpinners = [];
   return root;
 }
@@ -337,6 +339,39 @@ function addOutlines(model) {
     outline.userData.turnOutline = true;
     node.add(outline);
   }
+}
+
+function installFrontWheelSteeringRig(model, car) {
+  const actualFrontRole = REVERSED_FRONT_WHEEL_LABEL_IDS.has(car.id) ? 'back' : 'front';
+  const frontWheels = [];
+  model.traverse((node) => {
+    if (!node?.parent || wheelRole(node.name) !== actualFrontRole) return;
+    frontWheels.push(node);
+  });
+
+  const pivots = [];
+  for (const wheel of frontWheels) {
+    const parent = wheel.parent;
+    const localPosition = wheel.position.clone();
+    parent.remove(wheel);
+
+    const pivot = new THREE.Group();
+    pivot.name = `${wheel.name || 'wheel'}-steer-pivot`;
+    pivot.position.copy(localPosition);
+    parent.add(pivot);
+
+    wheel.position.set(0, 0, 0);
+    pivot.add(wheel);
+    pivots.push(pivot);
+  }
+  return pivots;
+}
+
+function wheelRole(name = '') {
+  const label = String(name).toLowerCase();
+  if (/^wheel-(?:front|f[lr])(?:-|$)/.test(label)) return 'front';
+  if (/^wheel-(?:back|b[lr])(?:-|$)/.test(label)) return 'back';
+  return null;
 }
 
 function normalizeModelToGround(model, targetLength) {

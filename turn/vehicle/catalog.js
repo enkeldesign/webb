@@ -130,7 +130,7 @@ const RAW_CARS = [
   ['classic', 'Training Car', 'prototype', { speed: 1, acceleration: 1, control: 5, drift: 5, boostPower: 1, boostDuration: 5 }, 1.00, 1, 0.88],
   ['vintage-racer', 'Vintage Racer', 'toy', { speed: 4, acceleration: 3, control: 2, drift: 5, boostPower: 2, boostDuration: 2 }, 0.96, 0, 1.28],
   ['toy-racer', 'Rally Racer', 'car', { speed: 4, acceleration: 4, control: 1, drift: 4, boostPower: 4, boostDuration: 1 }, 0.98, 0, 1.18],
-  ['monster-truck', 'Monster Truck', 'rgsdev', { speed: 2, acceleration: 3, control: 2, drift: 5, boostPower: 2, boostDuration: 4 }, 0.83, 0, 0.62],
+  ['monster-truck', 'Monster Truck', 'toy', { speed: 2, acceleration: 3, control: 2, drift: 5, boostPower: 2, boostDuration: 4 }, 0.83, 2, 0.62],
   ['race-future', 'Future Racer', 'car', { speed: 5, acceleration: 5, control: 3, drift: 1, boostPower: 3, boostDuration: 1 }, 0.96, 0, 1.42],
   ['race', 'Race Car', 'car', { speed: 5, acceleration: 4, control: 4, drift: 2, boostPower: 2, boostDuration: 1 }, 0.94, 0, 1.55],
   ['sedan-sports', 'Hatchback', 'car', { speed: 4, acceleration: 4, control: 4, drift: 2, boostPower: 2, boostDuration: 2 }, 0.98, 0, 1.12],
@@ -183,7 +183,6 @@ const VISUAL_CUSTOMIZATION_BY_ID = Object.freeze({
 });
 
 const MODEL_ASSET_BY_ID = Object.freeze({
-  'monster-truck': './assets/cars/monster-truck-rgsdev.glb',
   'sedan-sports': './assets/cars/hatchback-sports.glb',
   'toy-racer': './assets/cars/sedan-sports.glb'
 });
