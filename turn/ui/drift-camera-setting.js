@@ -1,4 +1,6 @@
 export const DRIFT_CAMERA_STORAGE_KEY = 'turn-drift-camera-v1';
+export const SPEED_RESPONSIVE_CAMERA_STORAGE_KEY = 'turn-speed-responsive-camera-v1';
+export const SPEED_RESPONSIVE_CAMERA_DEFAULT = false;
 
 let installed = false;
 let settingsObserver = null;
@@ -21,13 +23,39 @@ export function saveDriftCameraEnabled(enabled, storage = getStorage()) {
   }
 }
 
+export function speedResponsiveCameraEnabled(
+  storage = getStorage(),
+  defaultEnabled = SPEED_RESPONSIVE_CAMERA_DEFAULT
+) {
+  try {
+    const preference = storage?.getItem(SPEED_RESPONSIVE_CAMERA_STORAGE_KEY);
+    if (preference === 'on') return true;
+    if (preference === 'off') return false;
+    return defaultEnabled === true;
+  } catch (_) {
+    return defaultEnabled === true;
+  }
+}
+
+export function saveSpeedResponsiveCameraEnabled(enabled, storage = getStorage()) {
+  if (!storage || typeof storage.setItem !== 'function') return false;
+  try {
+    storage.setItem(SPEED_RESPONSIVE_CAMERA_STORAGE_KEY, enabled ? 'on' : 'off');
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 export function installDriftCameraSetting() {
-  const enabled = driftCameraEnabled();
-  globalThis.__turnDriftCameraEnabled = enabled;
-  if (typeof document === 'undefined') return enabled;
+  const driftEnabled = driftCameraEnabled();
+  const speedResponsiveEnabled = speedResponsiveCameraEnabled();
+  globalThis.__turnDriftCameraEnabled = driftEnabled;
+  globalThis.__turnSpeedResponsiveCameraEnabled = speedResponsiveEnabled;
+  if (typeof document === 'undefined') return driftEnabled;
   if (installed) {
     attachSettingsControl();
-    return enabled;
+    return driftEnabled;
   }
   installed = true;
 
@@ -43,7 +71,7 @@ export function installDriftCameraSetting() {
     settingsObserver.observe(document.body, { childList: true, subtree: true });
   }
   document.addEventListener('turn:home-ready', attach, { once: true });
-  return enabled;
+  return driftEnabled;
 }
 
 function attachSettingsControl() {
@@ -65,28 +93,52 @@ function attachSettingsControl() {
           <strong>Drift camera</strong>
           <small>Follows the car’s actual direction of travel during slides. Experimental; the classic camera remains the default.</small>
         </span>
+      </label>
+      <label class="m8-toggle-row">
+        <input id="m8SpeedResponsiveCameraEnabled" type="checkbox">
+        <span>
+          <strong>Speed-responsive camera</strong>
+          <small>Keeps the car close while the view widens as speed builds. Experimental; the current camera remains the default.</small>
+        </span>
       </label>`;
     const steering = list.querySelector('.m8-steering-setting');
     if (steering) steering.after(section);
     else list.prepend(section);
 
-    const checkbox = section.querySelector('#m8DriftCameraEnabled');
-    checkbox.addEventListener('change', () => {
+    const driftCheckbox = section.querySelector('#m8DriftCameraEnabled');
+    driftCheckbox.addEventListener('change', () => {
       const previous = globalThis.__turnDriftCameraEnabled === true;
-      const next = checkbox.checked;
+      const next = driftCheckbox.checked;
       if (!saveDriftCameraEnabled(next)) {
-        checkbox.checked = previous;
+        driftCheckbox.checked = previous;
         announce(dialog, 'Drift camera could not be changed because local storage is unavailable.');
         return;
       }
       globalThis.__turnDriftCameraEnabled = next;
       announce(dialog, `Drift camera ${next ? 'on' : 'off'}.`);
     });
+
+    const speedCheckbox = section.querySelector('#m8SpeedResponsiveCameraEnabled');
+    speedCheckbox.addEventListener('change', () => {
+      const previous = globalThis.__turnSpeedResponsiveCameraEnabled === true;
+      const next = speedCheckbox.checked;
+      if (!saveSpeedResponsiveCameraEnabled(next)) {
+        speedCheckbox.checked = previous;
+        announce(dialog, 'Speed-responsive camera could not be changed because local storage is unavailable.');
+        return;
+      }
+      globalThis.__turnSpeedResponsiveCameraEnabled = next;
+      announce(dialog, `Speed-responsive camera ${next ? 'on' : 'off'}.`);
+    });
   }
 
   const sync = () => {
-    const checkbox = section.querySelector('#m8DriftCameraEnabled');
-    if (checkbox) checkbox.checked = globalThis.__turnDriftCameraEnabled === true;
+    const driftCheckbox = section.querySelector('#m8DriftCameraEnabled');
+    if (driftCheckbox) driftCheckbox.checked = globalThis.__turnDriftCameraEnabled === true;
+    const speedCheckbox = section.querySelector('#m8SpeedResponsiveCameraEnabled');
+    if (speedCheckbox) {
+      speedCheckbox.checked = globalThis.__turnSpeedResponsiveCameraEnabled === true;
+    }
   };
   sync();
   if (!dialog.dataset.turnDriftCameraSync) {
