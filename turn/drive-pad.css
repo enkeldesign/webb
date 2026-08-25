@@ -102,6 +102,16 @@ body .m8-feedback-content * {
   background: #54c2ef;
 }
 
+.drive-pad.has-advanced-drift .drive-drift-zone {
+  background: linear-gradient(
+    90deg,
+    #8b5cf6 0%,
+    #7668e4 10%,
+    #54c2ef 24%,
+    #54c2ef 100%
+  );
+}
+
 .drive-boost-zone {
   position: relative;
   overflow: hidden;
@@ -161,6 +171,22 @@ body .m8-feedback-content * {
 
 .drive-drift-zone.is-active {
   background: #38d9ff;
+}
+
+.drive-pad.has-advanced-drift .drive-drift-zone.is-active {
+  background: linear-gradient(
+    90deg,
+    #9b5de5 0%,
+    #806ee8 10%,
+    #38d9ff 24%,
+    #38d9ff 100%
+  );
+}
+
+.drive-pad.is-drift-locking .drive-drift-zone {
+  box-shadow:
+    inset 0 0 0 6px rgb(255 248 232 / 0.78),
+    inset 14px 0 0 rgb(155 93 229 / 0.3);
 }
 
 .drive-brake-zone.is-active {
