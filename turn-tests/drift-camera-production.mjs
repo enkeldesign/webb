@@ -14,6 +14,12 @@ import {
   saveSpeedResponsiveCameraEnabled,
   speedResponsiveCameraEnabled
 } from '../turn/ui/drift-camera-setting.js';
+import {
+  ADVANCED_DRIFT_DEFAULT,
+  ADVANCED_DRIFT_STORAGE_KEY,
+  advancedDriftEnabled,
+  saveAdvancedDriftEnabled
+} from '../turn/input/advanced-drift.js';
 
 const toRadians = (degrees) => degrees * Math.PI / 180;
 const approximately = (actual, expected, tolerance = 1e-6) => {
@@ -28,6 +34,8 @@ const emptyStorage = {
   setItem() {}
 };
 assert.equal(driftCameraEnabled(emptyStorage), false, 'Drift Camera must remain opt-in during playtesting');
+assert.equal(ADVANCED_DRIFT_DEFAULT, false, 'Advanced DRIFT must remain opt-in during playtesting');
+assert.equal(advancedDriftEnabled(emptyStorage), false);
 assert.equal(
   speedResponsiveCameraEnabled(emptyStorage),
   false,
@@ -50,6 +58,18 @@ assert.equal(driftCameraEnabled(storage), true);
 assert.equal(saveDriftCameraEnabled(false, storage), true);
 assert.equal(values.get(DRIFT_CAMERA_STORAGE_KEY), 'off');
 assert.equal(driftCameraEnabled(storage), false);
+
+assert.equal(saveAdvancedDriftEnabled(true, storage), true);
+assert.equal(values.get(ADVANCED_DRIFT_STORAGE_KEY), 'on');
+assert.equal(advancedDriftEnabled(storage), true);
+assert.equal(saveAdvancedDriftEnabled(false, storage), true);
+assert.equal(values.get(ADVANCED_DRIFT_STORAGE_KEY), 'off');
+assert.equal(advancedDriftEnabled(storage), false);
+assert.equal(
+  advancedDriftEnabled(storage, true),
+  false,
+  'An explicit Advanced DRIFT off preference must survive a future default-on change'
+);
 
 assert.equal(saveSpeedResponsiveCameraEnabled(true, storage), true);
 assert.equal(values.get(SPEED_RESPONSIVE_CAMERA_STORAGE_KEY), 'on');
@@ -294,6 +314,10 @@ const gameplayCss = await fs.readFile(new URL('../turn/gameplay-v2.css', import.
 assert.match(settingSource, /getItem\(DRIFT_CAMERA_STORAGE_KEY\) === 'on'/,
   'Missing storage must continue to mean classic drift direction');
 assert.match(settingSource, /SPEED_RESPONSIVE_CAMERA_DEFAULT = false/);
+assert.match(settingSource, /<strong>Advanced DRIFT<\/strong>/);
+assert.match(settingSource, /progressively release the gas and lock the rear wheels/);
+assert.match(settingSource, /turn:advanced-drift-change/,
+  'Advanced DRIFT must update the live drive pad without a reload');
 assert.match(settingSource, /<strong>Zoom<\/strong>/);
 assert.match(settingSource, /Off uses the classic pull-back; both modes widen the view with speed\./);
 assert.match(settingSource, /globalThis\.__turnDriftCameraEnabled = next/,
@@ -303,7 +327,7 @@ assert.match(settingSource, /globalThis\.__turnSpeedResponsiveCameraEnabled = ne
 assert.match(cameraSource, /DRIFT_CAMERA_TRAVEL_WEIGHT = 0\.85/);
 assert.match(cameraSource, /DRIFT_CAMERA_BLEND_START_SPEED = 8 \/ 3\.6/);
 assert.match(cameraSource, /DRIFT_CAMERA_FULL_BLEND_SPEED = 28 \/ 3\.6/);
-assert.match(cameraSource, /\?revision=r214-shared-speed-fov/,
+assert.match(cameraSource, /\?revision=r215-advanced-drift/,
   'The combined Camera settings module must be cache-busted');
 assert.match(cameraSource, /\? 16 - speedRatio \* 2/,
   'The responsive camera must move from distance 16 toward 14 as speed builds');
