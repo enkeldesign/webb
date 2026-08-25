@@ -84,6 +84,7 @@ const state = {
   velocity: new THREE.Vector3(),
   heading: 0,
   driftAmount: 0,
+  driftLockAmount: 0,
   offRoad: false,
   trackDistance: 0,
   progress: 0,
@@ -942,6 +943,7 @@ function updatePhysics(dt, now) {
     analogGas: globalThis.__turnAnalogGas || 0,
     boostActive: Boolean(globalThis.__turnBoostActive),
     driftHeld: Boolean(globalThis.__turnDriftHeld),
+    driftLock: globalThis.__turnDriftLockAmount || 0,
     vehicleTuning: state.vehicleTuning
   });
 
