@@ -55,4 +55,8 @@ assert.doesNotMatch(repair, /TURN viewport repair bench|COPY REPAIR RESULT|COLOR
 assert.doesNotMatch(repair, /document\.addEventListener\('click'|window\.addEventListener\('click'/,
   'The first-interaction fallback must stay scoped to Home rather than becoming a global click delegate');
 
+// Drift Camera adds its opt-in control to the same Home Settings surface. Keep its
+// preference and camera-direction contract in the production Home regression path.
+await import('./drift-camera-production.mjs');
+
 console.log('TURN short iOS viewport production repair and vertical-only Home menu passed.');
