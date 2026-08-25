@@ -12,7 +12,8 @@ export { preloadCarModels, recolorCarVisual };
  * Legacy import-map bridge. Emergency paint, glass, lamps, wheel details and the
  * shared front-wheel steering pivots all come from the authored-model car factory.
  * TURN still installs its functional Boost light rig there, but no livery panels
- * or other presentation geometry are generated here; steering remains visual-only.
+ * or other presentation geometry are generated here; steering is visual-only and
+ * never changes vehicle physics.
  */
 export async function createCarVisual(options = {}) {
   const root = await createBaseCarVisual(options);
