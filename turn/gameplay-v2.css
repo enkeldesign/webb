@@ -34,9 +34,10 @@
 
 .boost-hud {
   --boost-charge: 100%;
+  --boost-hud-downshift: 20px;
   position: absolute;
   left: 50%;
-  bottom: clamp(92px, 20vh, 150px);
+  bottom: calc(clamp(92px, 20vh, 150px) - var(--boost-hud-downshift));
   width: clamp(116px, 18vw, 178px);
   transform: translateX(-50%) rotate(-1deg);
   color: var(--ink);
@@ -212,7 +213,7 @@
   }
 
   .boost-hud {
-    bottom: 74px;
+    bottom: calc(74px - var(--boost-hud-downshift));
     width: 112px;
   }
 
