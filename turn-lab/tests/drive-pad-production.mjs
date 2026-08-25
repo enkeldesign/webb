@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import {
   DRIFT_LOCK_ENGAGE_SECONDS,
   DRIFT_LOCK_RELEASE_SECONDS,
+  DRIFT_LOCK_RECHARGE_MULTIPLIER,
   REGULAR_DRIFT_RECHARGE_BLEND,
   advanceDriftLockAmount,
   driftThrottleForLock,
@@ -46,10 +47,43 @@ assert.equal(driftThrottleForLock(0), 1);
 assert.equal(driftThrottleForLock(0.5), 0.5);
 assert.equal(driftThrottleForLock(1), 0);
 assert.equal(REGULAR_DRIFT_RECHARGE_BLEND, 0.5);
+assert.equal(DRIFT_LOCK_RECHARGE_MULTIPLIER, 3.6);
 assert.equal(resolveDriftBoostRechargeMultiplier({ driftHeld: false, driftLockAmount: 1, lockedMultiplier: 2.4 }), 0);
+// Legacy helper calls remain deterministic for older callers.
 assert.ok(Math.abs(resolveDriftBoostRechargeMultiplier({ driftHeld: true, driftLockAmount: 0, lockedMultiplier: 2.4 }) - 1.7) < 1e-12);
 assert.ok(Math.abs(resolveDriftBoostRechargeMultiplier({ driftHeld: true, driftLockAmount: 0.5, lockedMultiplier: 2.4 }) - 2.05) < 1e-12);
 assert.ok(Math.abs(resolveDriftBoostRechargeMultiplier({ driftHeld: true, driftLockAmount: 1, lockedMultiplier: 2.4 }) - 2.4) < 1e-12);
+// Production balance restores the old ordinary DRIFT rate and makes LOCK use the former Rally perk rate.
+assert.ok(Math.abs(resolveDriftBoostRechargeMultiplier({
+  driftHeld: true,
+  driftLockAmount: 0,
+  lockedMultiplier: 2.4,
+  lockCeilingMultiplier: 3.6
+}) - 2.4) < 1e-12);
+assert.ok(Math.abs(resolveDriftBoostRechargeMultiplier({
+  driftHeld: true,
+  driftLockAmount: 0.5,
+  lockedMultiplier: 2.4,
+  lockCeilingMultiplier: 3.6
+}) - 3.0) < 1e-12);
+assert.ok(Math.abs(resolveDriftBoostRechargeMultiplier({
+  driftHeld: true,
+  driftLockAmount: 1,
+  lockedMultiplier: 2.4,
+  lockCeilingMultiplier: 3.6
+}) - 3.6) < 1e-12);
+assert.ok(Math.abs(resolveDriftBoostRechargeMultiplier({
+  driftHeld: true,
+  driftLockAmount: 0,
+  lockedMultiplier: 3.6,
+  lockCeilingMultiplier: 3.6
+}) - 3.6) < 1e-12);
+assert.ok(Math.abs(resolveDriftBoostRechargeMultiplier({
+  driftHeld: true,
+  driftLockAmount: 1,
+  lockedMultiplier: 3.6,
+  lockCeilingMultiplier: 3.6
+}) - 3.6) < 1e-12);
 
 class Vec3 {
   constructor(x = 0, y = 0, z = 0) { this.x = x; this.y = y; this.z = z; }
@@ -70,6 +104,7 @@ const [
   raceSpeech,
   css,
   gameplayCss,
+  semanticCss,
   positionCss,
   analogGas,
   spectate,
@@ -84,6 +119,7 @@ const [
   fs.readFile(new URL('../../turn/ui/race-speech.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/drive-pad.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/gameplay-v2.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/design-semantic.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/position-hud-r83.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/input/analog-gas.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/spectate.js', import.meta.url), 'utf8'),
@@ -106,8 +142,8 @@ assert.ok(
   'The topbar position override must load after the legacy gameplay HUD rules'
 );
 assert.match(app, /race-position-layout\.js/, 'The production module graph must install the position layout after gameplay controls');
-assert.match(app, /gameplay-controls\.js\?revision=r217-drift-lock-balance/,
-  'The new recharge balance must bypass stale production module caches');
+assert.match(app, /gameplay-controls\.js\?revision=r218-boost-balance-lock-color/,
+  'The current Boost balance and LOCK-color controls must bypass stale production module caches');
 assert.match(app, /installRaceSpeech\(\)/, 'The production graph must install concise race speech before the runtime starts');
 assert.ok(
   app.indexOf('./ui/gameplay-controls.js') < app.indexOf('./ui/race-speech.js')
@@ -161,6 +197,12 @@ assert.match(controls, /driftThrottleForLock\(driftLockAmount\)/,
   'Gas must fade out over the same short LOCK transition');
 assert.match(controls, /resolveDriftBoostRechargeMultiplier\(\{/,
   'Boost recharge must be owned by the standard-versus-LOCK DRIFT balance rule');
+assert.match(controls, /BOOST_TANK_DURATION_MULTIPLIER = 1\.5/,
+  'Every Boost tank must last 50 percent longer after passive recharge removal');
+assert.match(controls, /DRIFT_RECHARGE_MULTIPLIER = 2\.4/,
+  'Ordinary DRIFT must restore the former default recharge rate');
+assert.match(controls, /lockCeilingMultiplier: DRIFT_LOCK_RECHARGE_MULTIPLIER/,
+  'LOCK recharge must use the shared 3.6x ceiling');
 assert.doesNotMatch(controls, /__turnDriftHeld \? getDriftRechargeMultiplier\(\) : 1/,
   'Boost must no longer refill passively outside DRIFT');
 assert.doesNotMatch(controls, /Advanced DRIFT|turn:advanced-drift-change/,
@@ -204,6 +246,10 @@ assert.match(gameplayCss, /\.boost-hud\.is-drift-charging i \{[\s\S]*linear-grad
   'Ordinary DRIFT recharge must show the Boost gradient from blue to green');
 assert.match(gameplayCss, /\.boost-hud\.is-drift-locking i \{[\s\S]*linear-gradient\(90deg, #8b5cf6, #8ce99a\)/,
   'LOCK must change the existing Boost gradient from purple to green');
+assert.match(semanticCss, /\.boost-hud\.is-drift-locking i \{[\s\S]*#8b5cf6[\s\S]*!important/,
+  'The semantic !important layer must define LOCK after ordinary DRIFT so it cannot mask the purple state');
+assert.match(controls, /setProperty\('background', DRIFT_LOCK_BOOST_GRADIENT, 'important'\)/,
+  'Runtime LOCK feedback must also survive stale semantic CSS precedence');
 assert.match(controls, /boostHud\.innerHTML = '<span>BOOST<\/span>/,
   'The Boost HUD label must stay BOOST instead of becoming a second LOCK meter');
 assert.match(mainSource, /driftLock: globalThis\.__turnDriftLockAmount \|\| 0/,
@@ -273,4 +319,4 @@ assert.ok(
   'Full LOCK must release gas and add modest handbrake drag'
 );
 
-console.log(`TURN ${release.id} connected DRIFT LOCK bubble, DRIFT-only Boost recharge, gradients, restart refill and reverse passed.`);
+console.log(`TURN ${release.id} connected DRIFT LOCK, 50% larger Boost tanks, 2.4x→3.6x recharge balance, reliable LOCK gradient, restart refill and reverse passed.`);
