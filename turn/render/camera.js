@@ -1,9 +1,17 @@
+import { installDriftCameraSetting } from '../ui/drift-camera-setting.js?revision=r212-drift-camera';
+
 const DEFAULT_MAX_SENSOR_CAMERA_ROLL = 18 * Math.PI / 180;
 const MAX_CONFIGURED_SAFE_ZONE_DEGREES = 45;
 const LOW_SPEED_HORIZON_DEAD_ZONE = 1.25 * Math.PI / 180;
 const LOW_SPEED_HORIZON_FULL_STABILIZATION_SPEED = 5 / 3.6;
 const LOW_SPEED_HORIZON_RELEASE_SPEED = 25 / 3.6;
 const LOW_SPEED_HORIZON_SMOOTHING_RATE = 10;
+const DRIFT_CAMERA_BLEND_START_SPEED = 8 / 3.6;
+const DRIFT_CAMERA_FULL_BLEND_SPEED = 28 / 3.6;
+const DRIFT_CAMERA_TRAVEL_WEIGHT = 0.85;
+const DRIFT_CAMERA_RESPONSE_RATE = 7.5;
+
+installDriftCameraSetting();
 
 export function resolveSensorCameraRollLimit(
   configuration = globalThis.__TURN_MOTION_SAFE_ZONE__
@@ -71,6 +79,44 @@ export function smoothLowSpeedHorizonRoll(previousRoll, targetRoll, speed, dt) {
   return lerp(target, smoothedRoll, stabilizationAmount);
 }
 
+export function resolveDriftCameraBlend(speed) {
+  const magnitude = Math.abs(Number(speed) || 0);
+  if (magnitude <= DRIFT_CAMERA_BLEND_START_SPEED) return 0;
+  if (magnitude >= DRIFT_CAMERA_FULL_BLEND_SPEED) return 1;
+  const progress = (
+    magnitude - DRIFT_CAMERA_BLEND_START_SPEED
+  ) / (
+    DRIFT_CAMERA_FULL_BLEND_SPEED - DRIFT_CAMERA_BLEND_START_SPEED
+  );
+  return progress * progress * (3 - 2 * progress);
+}
+
+export function resolveDriftCameraYawOffset({
+  velocity,
+  forward,
+  right,
+  previousOffset = 0,
+  dt = 0,
+  enabled = globalThis.__turnDriftCameraEnabled === true
+}) {
+  if (!enabled) return 0;
+
+  const velocityX = finiteNumber(velocity?.x, 0);
+  const velocityZ = finiteNumber(velocity?.z, 0);
+  const travelSpeed = Math.hypot(velocityX, velocityZ);
+  const blend = resolveDriftCameraBlend(travelSpeed);
+  const previous = normalizeAngle(previousOffset);
+  const longitudinal = velocityX * finiteNumber(forward?.x, 0)
+    + velocityZ * finiteNumber(forward?.z, 0);
+  const lateral = velocityX * finiteNumber(right?.x, 0)
+    + velocityZ * finiteNumber(right?.z, 0);
+  const travelOffset = travelSpeed > 0.0001 ? Math.atan2(lateral, longitudinal) : 0;
+  const targetOffset = travelOffset * DRIFT_CAMERA_TRAVEL_WEIGHT * blend;
+  const targetDelta = normalizeAngle(targetOffset - previous);
+  const response = 1 - Math.exp(-Math.max(0, Number(dt) || 0) * DRIFT_CAMERA_RESPONSE_RATE);
+  return normalizeAngle(previous + targetDelta * response);
+}
+
 export function updateRaceCameraState({
   state,
   camera,
@@ -82,10 +128,32 @@ export function updateRaceCameraState({
   maxSpeed,
   dt
 }) {
-  const forward = getForward();
-  const right = getRight();
+  const carForward = getForward();
+  const carRight = getRight();
+  state.driftCameraYawOffset = resolveDriftCameraYawOffset({
+    velocity: state.velocity,
+    forward: carForward,
+    right: carRight,
+    previousOffset: state.driftCameraYawOffset,
+    dt
+  });
+  const driftCosine = Math.cos(state.driftCameraYawOffset);
+  const driftSine = Math.sin(state.driftCameraYawOffset);
+  const forward = {
+    x: carForward.x * driftCosine + carRight.x * driftSine,
+    y: 0,
+    z: carForward.z * driftCosine + carRight.z * driftSine
+  };
+  const right = {
+    x: carRight.x * driftCosine - carForward.x * driftSine,
+    y: 0,
+    z: carRight.z * driftCosine - carForward.z * driftSine
+  };
   const speedRatio = clamp(state.speed / maxSpeed, 0, 1);
-  const lateralVelocity = state.velocity.dot(right);
+  // Keep the established lateral-drift offset driven by the car's own axis.
+  // Drift Camera changes only camera orientation, not handling or the amount of
+  // existing lateral camera movement.
+  const lateralVelocity = state.velocity.dot(carRight);
   const roadY = finiteNumber(state.position?.y, 0);
   const lookAheadCount = 18 + Math.round(speedRatio * 12);
   const lookAheadIndex = Array.isArray(samples) && samples.length && Number.isFinite(state.nearestTrackIndex)
