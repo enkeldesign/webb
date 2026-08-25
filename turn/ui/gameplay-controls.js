@@ -1,6 +1,13 @@
+import {
+  advanceDriftLockAmount,
+  driftThrottleForLock,
+  pointerUsesDriftLock
+} from '../input/drift-lock.js?revision=r216-binary-lock';
+
 globalThis.__turnBoostActive = false;
 globalThis.__turnBoostCharge = 1;
 globalThis.__turnDriftHeld = false;
+globalThis.__turnDriftLockAmount = 0;
 
 if (!globalThis.__turnGameplayControlsInstalled) {
   globalThis.__turnGameplayControlsInstalled = true;
@@ -97,9 +104,14 @@ function installGameplayUi() {
   drivePad.setAttribute('role', 'group');
   drivePad.setAttribute(
     'aria-label',
-    'Drive control. Double tap and hold, then slide between Drift, Boost, Gas, and Brake or Reverse.'
+    'Drive control. Double tap and hold, then slide between Drift, Boost, Gas, and Brake or Reverse. While holding Drift, slide left into Lock for rear-wheel lock.'
   );
   drivePad.style.setProperty('--boost-charge', '100%');
+
+  const driftLockBubble = document.createElement('div');
+  driftLockBubble.className = 'drive-lock-bubble';
+  driftLockBubble.setAttribute('aria-hidden', 'true');
+  driftLockBubble.innerHTML = '<span>LOCK</span>';
 
   const driveTop = document.createElement('div');
   driveTop.className = 'drive-pad-top';
@@ -108,7 +120,7 @@ function installGameplayUi() {
   driftZone.type = 'button';
   driftZone.className = 'drive-zone drive-drift-zone';
   driftZone.textContent = 'Drift';
-  driftZone.setAttribute('aria-label', 'Gas and drift');
+  driftZone.setAttribute('aria-label', 'Gas and drift. Slide left into Lock for rear-wheel lock.');
 
   const boostZone = document.createElement('button');
   boostZone.type = 'button';
@@ -126,13 +138,15 @@ function installGameplayUi() {
 
   driveTop.append(driftZone, boostZone);
   drivePad.append(driveTop, gasButton, brakeButton);
-  driveStack.append(drivePad);
+  driveStack.append(driftLockBubble, drivePad);
   pedals.replaceChildren(driveStack);
 
   let drivePointerId = null;
   let driveZone = null;
   let boostRequested = false;
   let boostExhausted = false;
+  let driftLockRequested = false;
+  let driftLockAmount = 0;
   let boostCharge = 1;
   let previousBoostCharge = boostCharge;
   let boostFlashTimer = 0;
@@ -148,8 +162,9 @@ function installGameplayUi() {
   let publishedBoosting = null;
   let publishedLocked = null;
   let publishedDriftCharging = null;
+  let publishedDriftLocking = null;
   let publishedChargePercent = null;
-  let publishedAriaPercent = null;
+  let publishedAriaLabel = null;
 
   function safeVibrate(pattern) {
     try {
@@ -190,20 +205,29 @@ function installGameplayUi() {
     boostVisualDirty = true;
     lastBoostVisualAt = -Infinity;
     publishedChargePercent = null;
-    publishedAriaPercent = null;
+    publishedAriaLabel = null;
     publishedLocked = null;
+    publishedDriftLocking = null;
+    driftLockRequested = false;
+    driftLockAmount = 0;
+    globalThis.__turnDriftLockAmount = 0;
     drivePad.style.setProperty('--boost-charge', '100%');
     boostHud.style.setProperty('--boost-charge', '100%');
     boostHud.setAttribute('aria-label', 'Boost 100 percent charged');
+    driveStack.classList.toggle('is-drift-ready', driveZone === 'drift');
+    driveStack.classList.remove('is-drift-locking');
     drivePad.classList.remove('is-boost-locked');
     boostZone.classList.remove('is-locked');
-    boostHud.classList.remove('is-boost-full-flash', 'is-boost-empty-flash');
+    boostHud.classList.remove(
+      'is-boost-full-flash',
+      'is-boost-empty-flash',
+      'is-drift-locking'
+    );
   }
 
   globalThis.__turnRefillBoost = refillBoost;
 
-  function zoneFromPointer(event) {
-    const rect = drivePad.getBoundingClientRect();
+  function zoneFromPointer(event, rect = drivePad.getBoundingClientRect()) {
     const margin = 24;
     if (
       event.clientX < rect.left - margin ||
@@ -219,23 +243,54 @@ function installGameplayUi() {
     return 'gas';
   }
 
+  function driveInputFromPointer(event) {
+    const rect = drivePad.getBoundingClientRect();
+    const lockRequested = pointerUsesDriftLock({
+      driftActive: driveZone === 'drift',
+      pointerX: event.clientX,
+      pointerY: event.clientY,
+      padLeft: rect.left,
+      padTop: rect.top,
+      padHeight: rect.height,
+      bubbleWidth: driftLockBubble.offsetWidth
+    });
+    if (lockRequested) return { zone: 'drift', lockRequested: true };
+
+    const zone = zoneFromPointer(event, rect);
+    return { zone, lockRequested: false };
+  }
+
   function setBrakeInput(active) {
     const runtimeState = globalThis.__turnRuntime?.state;
     if (runtimeState) runtimeState.touchBrake = Boolean(active);
   }
 
-  function setDriveZone(nextZone, { announce = true } = {}) {
-    if (nextZone === driveZone) return;
+  function setDriveZone(nextZone, lockRequested = false, { announce = true } = {}) {
+    const nextLockRequested = nextZone === 'drift' && lockRequested === true;
+    const zoneChanged = nextZone !== driveZone;
+    const lockRequestChanged = nextLockRequested !== driftLockRequested;
+    if (!zoneChanged && !lockRequestChanged) return;
     const previousZone = driveZone;
     if (previousZone === 'boost' && nextZone !== 'boost') boostExhausted = false;
     driveZone = nextZone;
+    driftLockRequested = nextLockRequested;
+    if (nextZone !== 'drift') {
+      driftLockAmount = 0;
+      globalThis.__turnDriftLockAmount = 0;
+    }
     const forwardDrive = nextZone === 'gas' || nextZone === 'drift' || nextZone === 'boost';
-    globalThis.__turnAnalogGas = forwardDrive ? 1 : 0;
+    const forwardThrottle = nextZone === 'drift'
+      ? driftThrottleForLock(driftLockAmount)
+      : 1;
+    globalThis.__turnAnalogGas = forwardDrive ? forwardThrottle : 0;
     globalThis.__turnDriftHeld = nextZone === 'drift';
     boostRequested = nextZone === 'boost';
     setBrakeInput(nextZone === 'brake');
+    boostVisualDirty = boostVisualDirty || lockRequestChanged;
 
     drivePad.dataset.driveZone = nextZone || '';
+    driveStack.classList.toggle('is-drift-ready', nextZone === 'drift');
+    driveStack.classList.toggle('is-drift-locking', nextLockRequested);
     gasButton.classList.toggle('is-active', nextZone === 'gas');
     driftZone.classList.toggle('is-active', nextZone === 'drift');
     boostZone.classList.toggle('is-active', nextZone === 'boost');
@@ -243,6 +298,9 @@ function installGameplayUi() {
 
     if (announce && nextZone && nextZone !== previousZone && (nextZone === 'drift' || nextZone === 'boost')) {
       safeVibrate(14);
+    }
+    if (announce && lockRequestChanged && nextZone === 'drift') {
+      safeVibrate(nextLockRequested ? 18 : 8);
     }
   }
 
@@ -254,7 +312,8 @@ function installGameplayUi() {
   function updateDrivePointer(event) {
     consumeDrivePointer(event);
     if (drivePointerId === null || event.pointerId !== drivePointerId) return;
-    setDriveZone(zoneFromPointer(event));
+    const input = driveInputFromPointer(event);
+    setDriveZone(input.zone, input.lockRequested);
   }
 
   function releaseDrive(event) {
@@ -263,7 +322,7 @@ function installGameplayUi() {
     const releasedPointerId = drivePointerId;
     drivePointerId = null;
     drivePad.releasePointerCapture?.(releasedPointerId);
-    setDriveZone(null, { announce: false });
+    setDriveZone(null, false, { announce: false });
     boostRequested = false;
     boostExhausted = false;
     globalThis.__turnBoostActive = false;
@@ -276,7 +335,8 @@ function installGameplayUi() {
     drivePointerId = event.pointerId;
     boostExhausted = false;
     drivePad.setPointerCapture?.(event.pointerId);
-    setDriveZone(zoneFromPointer(event), { announce: false });
+    const input = driveInputFromPointer(event);
+    setDriveZone(input.zone, input.lockRequested, { announce: false });
   }, { capture: true });
   drivePad.addEventListener('pointermove', updateDrivePointer, { capture: true });
   drivePad.addEventListener('pointerup', releaseDrive, { capture: true });
@@ -389,6 +449,7 @@ function installGameplayUi() {
       throttle: runtimeState?.throttle || 0,
       driftAmount: runtimeState?.driftAmount || 0,
       driftHeld: Boolean(globalThis.__turnDriftHeld),
+      driftLockAmount: Math.max(0, Number(globalThis.__turnDriftLockAmount) || 0),
       boostActive: boosting,
       vehicleId: runtimeState?.vehicleId || '',
       enginePitch: runtimeState?.vehicleTuning?.enginePitch || 1,
@@ -399,6 +460,16 @@ function installGameplayUi() {
   function updateBoost(now) {
     const dt = Math.min(0.05, Math.max(0, (now - previousTime) / 1000));
     previousTime = now;
+    const lockCanRun = driveZone === 'drift' && globalThis.__turnDriftHeld === true;
+    driftLockAmount = advanceDriftLockAmount(
+      driftLockAmount,
+      lockCanRun && driftLockRequested,
+      dt
+    );
+    globalThis.__turnDriftLockAmount = lockCanRun ? driftLockAmount : 0;
+    if (lockCanRun) {
+      globalThis.__turnAnalogGas = driftThrottleForLock(driftLockAmount);
+    }
     const active = boostRequested && !boostExhausted && boostCharge > 0.001;
 
     if (active) {
@@ -423,13 +494,18 @@ function installGameplayUi() {
 
     const locked = boostRequested && boostExhausted;
     const driftCharging = globalThis.__turnDriftHeld && !boosting;
+    const driftLocking = driftCharging && (driftLockRequested || driftLockAmount > 0.001);
     const chargePercent = (boostCharge * 100).toFixed(1) + '%';
     const ariaPercent = Math.round(boostCharge * 100);
+    const ariaLabel = driftLocking
+      ? `Drift lock active. Boost ${ariaPercent} percent charged`
+      : `Boost ${ariaPercent} percent charged`;
     const controlsVisible = !controlsRoot?.hidden && !document.hidden;
     const stateChanged =
       boosting !== publishedBoosting ||
       locked !== publishedLocked ||
-      driftCharging !== publishedDriftCharging;
+      driftCharging !== publishedDriftCharging ||
+      driftLocking !== publishedDriftLocking;
     const visualDue = now - lastBoostVisualAt >= BOOST_VISUAL_INTERVAL_MS;
 
     if (!controlsVisible) {
@@ -459,19 +535,23 @@ function installGameplayUi() {
       boostHud.classList.toggle('is-drift-charging', driftCharging);
       publishedDriftCharging = driftCharging;
     }
+    if (boostVisualDirty || driftLocking !== publishedDriftLocking) {
+      boostHud.classList.toggle('is-drift-locking', driftLocking);
+      publishedDriftLocking = driftLocking;
+    }
     if (boostVisualDirty || chargePercent !== publishedChargePercent) {
       drivePad.style.setProperty('--boost-charge', chargePercent);
       boostHud.style.setProperty('--boost-charge', chargePercent);
       publishedChargePercent = chargePercent;
     }
-    if (boostVisualDirty || ariaPercent !== publishedAriaPercent) {
-      boostHud.setAttribute('aria-label', 'Boost ' + ariaPercent + ' percent charged');
-      publishedAriaPercent = ariaPercent;
+    if (boostVisualDirty || ariaLabel !== publishedAriaLabel) {
+      boostHud.setAttribute('aria-label', ariaLabel);
+      publishedAriaLabel = ariaLabel;
     }
     boostVisualDirty = false;
     lastBoostVisualAt = now;
   }
 
-  setDriveZone(null, { announce: false });
+  setDriveZone(null, false, { announce: false });
   globalThis.__turnUpdateGameplayControls = updateBoost;
 }
