@@ -9,7 +9,7 @@ const expectedQuarterTurns = new Map([
   ['classic', 1],
   ['vintage-racer', 0],
   ['toy-racer', 0],
-  ['monster-truck', 0],
+  ['monster-truck', 2],
   ['race-future', 0],
   ['race', 0],
   ['sedan-sports', 0],
@@ -83,9 +83,7 @@ for (const car of catalog.CAR_CATALOG) {
   const assetPath = car.asset.replace(/^\.\//, '');
   const glb = await fs.readFile(new URL(`../../turn/${assetPath}`, import.meta.url));
   const json = readGlbJson(glb, car.id);
-  const rawFront = car.pack === 'rgsdev'
-    ? { x: 0, z: 1 }
-    : getKenneyWheelAxis(json, car);
+  const rawFront = getKenneyWheelAxis(json, car);
   const rawLength = Math.hypot(rawFront.x, rawFront.z);
   assert.ok(rawLength > 0.1, `${car.name} must expose a usable front/back wheel axis`);
 
@@ -111,8 +109,8 @@ const rallyRacer = catalog.getCarDefinition('toy-racer');
 const hatchback = catalog.getCarDefinition('sedan-sports');
 const policeCar = catalog.getCarDefinition('police');
 const monsterTruck = catalog.getCarDefinition('monster-truck');
-assert.equal(monsterTruck.pack, 'rgsdev');
-assert.equal(monsterTruck.asset, './assets/cars/monster-truck-rgsdev.glb');
+assert.equal(monsterTruck.pack, 'toy');
+assert.equal(monsterTruck.asset, './assets/cars/monster-truck.glb');
 assert.equal(hatchback.asset, './assets/cars/hatchback-sports.glb');
 assert.equal(rallyRacer.asset, './assets/cars/sedan-sports.glb');
 assertClose(convertible.visualScale * convertible.visualSizeMultiplier, 0.7056, 'Convertible effective visual scale');
@@ -169,6 +167,12 @@ assert.match(carModels, /turnVisualSizeMultiplier = car\.visualSizeMultiplier/);
 assert.match(carModels, /turnFeaturedVisualSizeMultiplier = featuredVisualSizeMultiplier/);
 assert.match(carModels, /turnFeaturedVisualSurface = featuredSurface/);
 assert.match(carModels, /turnEffectiveVisualScale = effectiveVisualScale/);
+assert.match(carModels, /REVERSED_FRONT_WHEEL_LABEL_IDS = new Set\(\['vintage-racer'\]\)/,
+  'Vintage Racer must keep its verified authored wheel-label reversal');
+assert.match(carModels, /installFrontWheelSteeringRig\(model, car\)/,
+  'Every GLB visual must install the shared steering-wheel rig');
+assert.match(carModels, /root\.userData\.frontWheelPivots = frontWheelPivots/,
+  'The race wheel animator must receive the real GLB front-wheel pivots');
 assert.match(carModels, /side: THREE\.BackSide/, 'Car outlines must remain inverted back-face shells');
 assert.match(carModels, /depthTest: true/, 'Car outlines must still respect the body depth buffer');
 assert.match(carModels, /depthWrite: false/, 'Car outlines must not write depth and compete with body surfaces');

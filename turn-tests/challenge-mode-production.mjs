@@ -44,7 +44,8 @@ assert.match(nextIndex, new RegExp(`TURN NEXT · Source TURN v${escapeRegex(rele
 assert.match(nextIndex, /"\/turn\/tracks\/track-manager\.js\?build=20260805-r160": "\/turn\/tracks\/track-manager\.js\?source=20260729-r118-m8"/,
   'Challenge mode must reuse TURN NEXT’s canonical Track Manager singleton');
 assert.match(nextIndex, /"\/turn\/tracks\/catalog\.js\?build=20260805-r160": "\/turn\/tracks\/catalog\.js\?source=20260729-r118-m8"/);
-assert.match(nextIndex, /"\/turn\/vehicle\/catalog\.js\?build=20260805-r160": "\/turn\/vehicle\/catalog\.js\?source=20260729-r118-m8"/);
+assert.match(nextIndex, /"\/turn\/vehicle\/catalog\.js\?build=20260805-r160": "\/turn\/vehicle\/catalog\.js\?source=20260729-r118-m8&wheel=r211-steering-wheels"/,
+  'Challenge mode must reuse the canonical vehicle catalog while fetching the steering-wheel revision');
 assert.match(nextApp, /\/turn-next\/challenge-mode\.js\?revision=r182-race-my-ghost/);
 assert.ok(
   nextApp.indexOf('/turn-next/challenge-mode.js') < nextApp.indexOf("new URL('/turn/app.js'"),

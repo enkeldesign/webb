@@ -127,29 +127,33 @@ assert.match(emergencyBridgeSource, /native-kenney-palette/);
 assert.doesNotMatch(emergencyBridgeSource, /BoxGeometry|PlaneGeometry|applyFixedEmergencyLivery|installSecondaryAccent/);
 
 const monster = catalog.getCarDefinition('monster-truck');
-assert.equal(monster.pack, 'rgsdev');
-assert.equal(monster.asset, './assets/cars/monster-truck-rgsdev.glb');
+assert.equal(monster.pack, 'toy');
+assert.equal(monster.asset, './assets/cars/monster-truck.glb');
 assert.equal(monster.secondaryPaint?.label, 'Suspension trim');
-const monsterGlb = await fs.readFile(new URL('../../turn/assets/cars/monster-truck-rgsdev.glb', import.meta.url));
-assert.equal(sha256(monsterGlb), '7119741b9647855ffd050ddbc1618dca2868574271beffdf9c79e4846919c7a3');
-const monsterJson = readGlbJson(monsterGlb, monster.id);
+const monsterGlb = await fs.readFile(new URL('../../turn/assets/cars/monster-truck.glb', import.meta.url));
+const monsterNative = readGlb(monsterGlb, monster.id);
+const monsterJson = monsterNative.json;
 assert.deepEqual(
-  (monsterJson.materials || []).map((material) => material.name),
-  ['body light blue', 'body black', 'windows', 'rear lights', 'body grey', 'headlights', 'tires', 'wheels'],
-  'The standalone Monster Truck must preserve the source semantic material split'
+  (monsterJson.images || []).map((image) => image.uri),
+  ['Textures/colormap.png'],
+  'Monster Truck must use the authored Kenney Toy/Prototype palette URI'
 );
-assert.equal((monsterJson.images || []).length, 0, 'The Monster Truck must have no missing runtime texture dependency');
-const monsterPrimitives = (monsterJson.meshes || []).flatMap((mesh) => mesh.primitives || []);
-assert.equal(monsterPrimitives.length, 8);
-assert.ok(monsterPrimitives.every((primitive) => Number.isInteger(primitive.attributes?.NORMAL)),
-  'Every Monster Truck surface must retain explicit flat normals');
-assert.equal(
-  monsterPrimitives.reduce((count, primitive) => count + monsterJson.accessors[primitive.attributes.POSITION].count / 3, 0),
-  3588,
-  'The selected RGSDev mesh must retain its verified source triangle count'
+assert.deepEqual(
+  (monsterJson.nodes || []).map((node) => node.name).filter(Boolean),
+  ['wheel-bl', 'wheel-fr', 'wheel-fl', 'wheel-br', 'body'],
+  'Monster Truck must preserve four independently addressable authored wheel nodes'
 );
-assert.match(semanticSource, /RGSDEV_PRIMARY_MATERIALS = new Set\(\['body light blue', 'wheels'\]\)/);
-assert.match(semanticSource, /RGSDEV_SECONDARY_MATERIALS = new Set\(\['body grey'\]\)/);
+const monsterCells = triangleCellCounts(monsterNative, { flipV: false });
+const monsterBody = mergeNodeCells(monsterCells, (name) => !/wheel/i.test(name));
+const monsterWheels = mergeNodeCells(monsterCells, (name) => /wheel/i.test(name));
+assert.ok(cellHits(monsterBody, [[7, 4], [7, 5]]) > 0,
+  'Monster Truck primary body paint must intersect authored body triangles');
+assert.ok(cellHits(monsterBody, [[1, 6], [1, 7]]) > 0,
+  'Monster Truck secondary trim must intersect authored body triangles');
+assert.ok(cellHits(monsterWheels, [[4, 7]]) > 0,
+  'Monster Truck rim paint must intersect authored wheel triangles');
+assert.match(semanticSource, /'monster-truck': profile\(\{[\s\S]*primary: \[\[7, 4\], \[7, 5\]\][\s\S]*secondary: \[\[1, 6\], \[1, 7\]\][\s\S]*rims: \[\[4, 7\]\]/,
+  'Monster Truck semantic paint profile must follow its verified native palette cells');
 
 await assert.rejects(
   fs.access(new URL('../../turn/vehicle/visual-upgrades.js', import.meta.url)),

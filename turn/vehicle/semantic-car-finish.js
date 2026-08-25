@@ -38,6 +38,11 @@ const KENNEY_PROFILE_BY_ID = Object.freeze({
     secondary: [[1, 6], [1, 7]],
     rims: [[4, 6], [4, 7]]
   }),
+  'monster-truck': profile({
+    primary: [[7, 4], [7, 5]],
+    secondary: [[1, 6], [1, 7]],
+    rims: [[4, 7]]
+  }),
   'race-future': profile({
     primary: [[7, 2], [7, 3]],
     secondary: [[3, 4], [3, 5]],
