@@ -37,12 +37,12 @@ assert.match(index, new RegExp(`\\.\\/app\\.js\\?build=${release.cacheKey}[^\"]*
   'The installed-app root must request a fresh robustness app module');
 assert.equal(
   imports['./vehicle/catalog.js?build=20260720-r19'],
-  `./vehicle/catalog.js?build=${release.cacheKey}`,
+  `./vehicle/catalog.js?build=${release.cacheKey}&wheel=r211-steering-wheels`,
   'The main runtime must publish the current vehicle handling catalog'
 );
 assert.equal(
   imports['./vehicle/catalog.js?build=20260720-r20'],
-  `./vehicle/catalog.js?build=${release.cacheKey}`,
+  `./vehicle/catalog.js?build=${release.cacheKey}&wheel=r211-steering-wheels`,
   'The Lot must use the same current vehicle handling catalog'
 );
 
