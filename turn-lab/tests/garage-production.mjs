@@ -170,6 +170,9 @@ const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/s
 assert.ok(importMapText, 'Production must expose its import map');
 const imports = JSON.parse(importMapText).imports;
 const releaseTarget = (filePath) => `${filePath}?build=${release.cacheKey}`;
+const wheelRevision = 'r211-steering-wheels';
+const vehicleCatalogTarget = `${releaseTarget('./vehicle/catalog.js')}&wheel=${wheelRevision}`;
+const carModelBridgeTarget = `${releaseTarget('./vehicle/emergency-livery-models.js')}&wheel=${wheelRevision}`;
 
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(index, new RegExp(`\\.\\/garage\\/lot-r10\\.css\\?build=${release.cacheKey}-native-html`));
@@ -270,10 +273,10 @@ assert.match(main, /maxSpeed: MAX_SPEED \* state\.vehicleTuning\.topSpeedMultipl
 assert.match(main, /vehicleTuning: state\.vehicleTuning/);
 assert.doesNotMatch(main, /wayne-wu\/webgpu-crowd-simulation/);
 
-assert.equal(imports['./vehicle/catalog.js?build=20260720-r19'], releaseTarget('./vehicle/catalog.js'));
-assert.equal(imports['./vehicle/catalog.js?build=20260720-r20'], releaseTarget('./vehicle/catalog.js'));
-assert.equal(imports['./vehicle/car-models.js?build=20260720-r19'], releaseTarget('./vehicle/emergency-livery-models.js'));
-assert.equal(imports['./vehicle/car-models.js?build=20260720-r22'], releaseTarget('./vehicle/emergency-livery-models.js'));
+assert.equal(imports['./vehicle/catalog.js?build=20260720-r19'], vehicleCatalogTarget);
+assert.equal(imports['./vehicle/catalog.js?build=20260720-r20'], vehicleCatalogTarget);
+assert.equal(imports['./vehicle/car-models.js?build=20260720-r19'], carModelBridgeTarget);
+assert.equal(imports['./vehicle/car-models.js?build=20260720-r22'], carModelBridgeTarget);
 assert.match(app, /installSportsSedanEasterEggUi\(\)/);
 assert.match(lapSystem, /carId: state\.vehicleId \|\| 'sedan'/);
 assert.match(lapSystem, /carColor: state\.vehicleColor \|\| '#ffd43b'/);
@@ -289,7 +292,10 @@ assert.match(rivalStorage, /normalizeVehicleSecondaryColor\(lap\.carSecondaryCol
 assert.match(controls, /boostDurationSeconds/);
 assert.match(controls, /driftBoostRechargeMultiplier/);
 assert.match(catalogSource, /MODEL_ASSET_BY_ID\[id\] \|\| `\.\/assets\/cars\/\$\{id\}\.glb`/);
-assert.match(catalogSource, /'monster-truck': '\.\/assets\/cars\/monster-truck-rgsdev\.glb'/);
+assert.equal(monsterTruck.pack, 'toy', 'Monster Truck must use the retained Kenney Toy Car Kit model');
+assert.equal(monsterTruck.asset, './assets/cars/monster-truck.glb');
+assert.doesNotMatch(catalogSource, /monster-truck-rgsdev\.glb/,
+  'The retired RGSDev Monster Truck must no longer override the Kenney asset');
 assert.match(catalogSource, /SPORTS_SEDAN_EASTER_EGG_COLOR = '#666666'/);
 assert.match(catalogSource, /MAXED_VEHICLE_STATS/);
 assert.match(catalogSource, /'toy-racer', 'Rally Racer'/);
