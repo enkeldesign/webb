@@ -1,0 +1,95 @@
+/*
+ * TURN LAB portrait R3: keep the production four-zone Drive Pad familiar,
+ * large and centred. The 32 / 44 / 24 rows and 50 / 50 top split match
+ * gameplay-controls.js exactly, so no LAB hit-geometry adapter is needed.
+ */
+@media (orientation: portrait) {
+  html.turn-lab-portrait {
+    --turn-portrait-deck-height: clamp(330px, 45dvh, 420px);
+  }
+
+  html.turn-lab-portrait .controls {
+    grid-template-columns: minmax(0, 1fr) !important;
+    justify-items: center !important;
+    padding-right: max(8px, env(safe-area-inset-right)) !important;
+    padding-left: max(8px, env(safe-area-inset-left)) !important;
+  }
+
+  html.turn-lab-portrait .controls .utility-group {
+    justify-self: center !important;
+  }
+
+  html.turn-lab-portrait .controls .pedals {
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    place-items: start center !important;
+    justify-self: stretch !important;
+    align-self: stretch !important;
+  }
+
+  html.turn-lab-portrait .controls .drive-stack {
+    width: min(100%, 480px) !important;
+    height: min(100%, 320px) !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    margin: 0 auto !important;
+    display: grid !important;
+    justify-self: center !important;
+    align-self: start !important;
+  }
+
+  html.turn-lab-portrait .controls .drive-pad {
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: minmax(0, 32fr) minmax(0, 44fr) minmax(0, 24fr) !important;
+    overflow: hidden !important;
+    border: 4px solid var(--ink) !important;
+    border-radius: 30px !important;
+    background: var(--lime) !important;
+    box-shadow: 7px 8px 0 var(--ink) !important;
+    filter: none !important;
+    clip-path: none !important;
+    -webkit-clip-path: none !important;
+  }
+
+  html.turn-lab-portrait .controls .drive-pad.is-boosting {
+    box-shadow:
+      7px 8px 0 var(--ink),
+      0 0 0 5px rgb(255 212 59 / 0.32) !important;
+  }
+
+  html.turn-lab-portrait .controls .drive-pad-top {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  }
+
+  html.turn-lab-portrait .controls .drive-zone,
+  html.turn-lab-portrait .controls .drive-pad .drive-gas-zone,
+  html.turn-lab-portrait .controls .drive-pad .drive-brake-zone {
+    font-size: clamp(0.82rem, 4.2vw, 1.12rem) !important;
+  }
+
+  html.turn-lab-portrait .controls .drive-pad .drive-brake-zone {
+    font-size: clamp(0.68rem, 3.5vw, 0.92rem) !important;
+  }
+
+  html.turn-lab-portrait[data-turn-deployment="lab"]::after {
+    content: "TURN LAB · PORTRAIT R3";
+  }
+}
+
+@media (orientation: portrait) and (max-height: 640px) {
+  html.turn-lab-portrait {
+    --turn-portrait-deck-height: 318px;
+  }
+}
