@@ -204,7 +204,7 @@ const responsiveFast = cameraSnapshot({
 });
 
 approximately(-legacyStopped.cameraPosition.z, 14);
-approximately(-legacyFast.cameraPosition.z, 21);
+approximately(-legacyFast.cameraPosition.z, 18);
 approximately(legacyStopped.cameraPosition.y, 7.7);
 approximately(legacyFast.cameraPosition.y, 10.2);
 approximately(-responsiveStopped.cameraPosition.z, 16);
@@ -225,7 +225,7 @@ function movingCameraRun(speedResponsiveEnabled, dt = 1 / 60) {
   globalThis.__turnDriftCameraEnabled = false;
   globalThis.__turnSpeedResponsiveCameraEnabled = speedResponsiveEnabled;
   const speed = 88;
-  const cameraPosition = { x: 0, y: 7.7, z: speedResponsiveEnabled ? -14 : -21 };
+  const cameraPosition = { x: 0, y: 7.7, z: speedResponsiveEnabled ? -14 : -18 };
   const cameraTarget = { x: 0, y: 2, z: 27 };
   const camera = {
     position: { copy(value) { this.x = value.x; this.y = value.y; this.z = value.z; } },
@@ -309,8 +309,8 @@ assert.match(cameraSource, /\? 16 - speedRatio \* 2/,
   'The responsive camera must move from distance 16 toward 14 as speed builds');
 assert.match(cameraSource, /\? 8\.7 - speedRatio/,
   'Responsive camera height must preserve the tuned vertical composition');
-assert.match(cameraSource, /: 14 \+ speedRatio \* 7/,
-  'Speed-responsive Camera OFF must preserve the established pull-back exactly');
+assert.match(cameraSource, /: 14 \+ speedRatio \* 4/,
+  'Zoom OFF must use the tuned 14-to-18 classic pull-back');
 assert.match(cameraSource, /resolveCameraMotionLeadTime\(CAMERA_POSITION_RESPONSE_RATE, dt\)/,
   'The responsive camera must cancel speed-dependent world-space follow lag');
 assert.match(cameraSource, /resolveCameraMotionLeadTime\(CAMERA_TARGET_RESPONSE_RATE, dt\)/,
@@ -332,4 +332,4 @@ assert.match(
   'Short landscape HUD must preserve the same Boost bar downshift'
 );
 
-console.log('TURN shared speed FOV, Zoom preference, classic pull-back and Boost HUD shift passed.');
+console.log('TURN shared speed FOV, tuned classic pull-back, Zoom preference and Boost HUD shift passed.');
