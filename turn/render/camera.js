@@ -1,4 +1,4 @@
-import { installDriftCameraSetting } from '../ui/drift-camera-setting.js?revision=r214-shared-speed-fov';
+import { installDriftCameraSetting } from '../ui/drift-camera-setting.js?revision=r215-advanced-drift';
 
 const DEFAULT_MAX_SENSOR_CAMERA_ROLL = 18 * Math.PI / 180;
 const MAX_CONFIGURED_SAFE_ZONE_DEGREES = 45;
