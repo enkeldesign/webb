@@ -45,6 +45,7 @@ body .m8-feedback-content * {
 .drive-stack {
   --drive-pad-height: clamp(190px, 26vw, 268px);
   --drift-lock-bubble-width: clamp(52px, 7.2vw, 74px);
+  --drift-lock-row-offset: 8px;
   position: relative;
   isolation: isolate;
   width: clamp(190px, 24vw, 260px);
@@ -76,7 +77,7 @@ body .m8-feedback-content * {
   top: 0;
   right: calc(100% - 4px);
   width: var(--drift-lock-bubble-width);
-  height: 32%;
+  height: calc(32% + var(--drift-lock-row-offset));
   box-sizing: border-box;
   display: grid;
   place-items: center;
@@ -107,6 +108,10 @@ body .m8-feedback-content * {
 .drive-stack.is-drift-ready .drive-lock-bubble {
   opacity: 1;
   transform: translateX(0) scaleX(1);
+}
+
+.drive-stack.is-drift-ready .drive-pad {
+  border-top-left-radius: 0;
 }
 
 .drive-stack.is-drift-locking .drive-lock-bubble {
@@ -249,6 +254,7 @@ body .m8-feedback-content * {
   .drive-stack {
     --drive-pad-height: clamp(174px, 23.5vw, 205px);
     --drift-lock-bubble-width: clamp(48px, 6.8vw, 64px);
+    --drift-lock-row-offset: 6px;
     width: clamp(174px, 23vw, 224px);
   }
 
