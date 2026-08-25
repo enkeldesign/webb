@@ -1,0 +1,46 @@
+name: Apply steering wheel implementation
+
+on:
+  push:
+    branches:
+      - feature/turn-steering-wheels-kenney-monster
+    paths:
+      - '.github/workflows/steering-wheel-implementation.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  implement:
+    if: ${{ !contains(github.event.head_commit.message, '[wheel-impl]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/turn-steering-wheels-kenney-monster
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Apply implementation patches
+        run: node turn-tests/implement-steering-wheel-feature.mjs
+      - name: Syntax and focused regressions
+        run: |
+          node --check turn/vehicle/car-models.js
+          node --check turn/vehicle/catalog.js
+          node --check turn/vehicle/semantic-car-finish.js
+          node turn-lab/tests/car-orientation-production.mjs
+          node turn-lab/tests/semantic-car-finish-production.mjs
+      - name: Remove temporary diagnostics and implementation scaffolding
+        run: |
+          rm -f turn-tests/monster-truck-palette-diagnostic.mjs
+          rm -f .github/workflows/monster-truck-palette-diagnostic.yml
+          rm -f turn-tests/implement-steering-wheel-feature.mjs
+          rm -f .github/workflows/steering-wheel-implementation.yml
+      - name: Commit implementation
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Add steering front wheels and restore Kenney Monster Truck [wheel-impl]"
+          git push origin HEAD:feature/turn-steering-wheels-kenney-monster
