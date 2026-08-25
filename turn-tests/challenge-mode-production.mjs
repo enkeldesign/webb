@@ -44,7 +44,8 @@ assert.match(nextIndex, new RegExp(`TURN NEXT · Source TURN v${escapeRegex(rele
 assert.match(nextIndex, /"\/turn\/tracks\/track-manager\.js\?build=20260805-r160": "\/turn\/tracks\/track-manager\.js\?source=20260729-r118-m8"/,
   'Challenge mode must reuse TURN NEXT’s canonical Track Manager singleton');
 assert.match(nextIndex, /"\/turn\/tracks\/catalog\.js\?build=20260805-r160": "\/turn\/tracks\/catalog\.js\?source=20260729-r118-m8"/);
-assert.match(nextIndex, /"\/turn\/vehicle\/catalog\.js\?build=20260805-r160": "\/turn\/vehicle\/catalog\.js\?source=20260729-r118-m8"/);
+assert.match(nextIndex, /"\/turn\/vehicle\/catalog\.js\?build=20260805-r160": "\/turn\/vehicle\/catalog\.js\?source=20260729-r118-m8&wheel=r211-steering-wheels"/,
+  'Challenge mode must reuse the canonical vehicle catalog while fetching the steering-wheel revision');
 assert.match(nextApp, /\/turn-next\/challenge-mode\.js\?revision=r182-race-my-ghost/);
 assert.ok(
   nextApp.indexOf('/turn-next/challenge-mode.js') < nextApp.indexOf("new URL('/turn/app.js'"),
@@ -181,18 +182,18 @@ const builtInStyleChallenge = normalizeChallenge({
   trackId: 'countryside',
   trackRevision: 'countryside',
   trackName: 'Countryside',
+  carId: 'sedan',
+  carColor: '#ffcc00',
+  carSecondaryColor: '#f8f9fa',
   time: 65,
-  carId: 'sedan-sports',
-  carColor: '#ff4fa3',
-  carSecondaryColor: '#252a35',
   frames: builtInStyleFrames
 });
-assert.ok(builtInStyleChallenge.frames.length <= 450);
-assert.ok(builtInStyleChallenge.frames.at(-1).t > 64.99,
-  'The stable built-in device challenge must retain its finish frame');
-assert.equal(builtInStyleChallenge.frames.at(-1).x, 719);
+assert.equal(builtInStyleChallenge.frames.length, 450,
+  'Built-in generated challenges must obey the same replay cap as direct lap sharing');
+assert.equal(builtInStyleChallenge.frames.at(-1).t, 65,
+  'Built-in replay normalization must retain the final frame');
 
-console.log('TURN NEXT Race My Ghost challenge, repeat attempts, top-four isolation, compact links and replies passed.');
+console.log('TURN NEXT Race My Ghost prototype preserves production TURN and passes challenge codec/session contracts.');
 
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
