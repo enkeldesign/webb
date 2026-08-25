@@ -110,6 +110,14 @@ assert.match(physicsSource, /3\.2 \* driftStabilityMultiplier/,
   'DRIFT must affect slide recovery');
 assert.match(physicsSource, /0\.42 \* driftStabilityMultiplier/,
   'DRIFT must affect lateral stability');
+assert.match(mainSource, /driftLock: globalThis\.__turnDriftLockAmount \|\| 0/,
+  'The runtime must pass progressive Advanced DRIFT LOCK into vehicle physics');
+assert.match(physicsSource, /lockYawMultiplier = lerp\(1, 1\.55, driftLockAmount\)/,
+  'LOCK must progressively increase rotation without adding wheel simulations');
+assert.match(physicsSource, /lockGripMultiplier = lerp\(1, 0\.22, driftLockAmount\)/,
+  'LOCK must progressively release rear lateral grip');
+assert.match(physicsSource, /driftLockAmount \* 0\.18/,
+  'LOCK must add a modest handbrake-like speed cost');
 assert.match(physicsSource, /\* tuningBoostPowerMultiplier/,
   'BOOST POWER must scale actual boost acceleration');
 assert.match(physicsSource, /boostSpeedMultiplier: tuningBoostSpeedMultiplier/,
@@ -170,8 +178,9 @@ assert.match(physicsSource, /steeringStatMultiplier \*[\s\S]*driftYawMultiplier/
   'Vehicle physics must apply the car-owned DRIFT yaw multiplier');
 assert.match(physicsSource, /0\.42 \* driftStabilityMultiplier \* driftGripTuningMultiplier/,
   'Vehicle physics must apply the car-owned slip/grip multiplier');
-assert.match(physicsSource, /slideStrength = \(driftHeld \? 0\.235 : 0\.12\) \* driftSlideMultiplier/,
-  'Vehicle physics must apply the car-owned sustained-slide multiplier');
+assert.match(physicsSource,
+  /slideStrength = \(driftHeld \? 0\.235 : 0\.12\) \*[\s\S]*driftSlideMultiplier \* lockSlideMultiplier/,
+  'Vehicle physics must apply both the car-owned and progressive LOCK slide multipliers');
 
 const rallyRacer = CAR_CATALOG.find((car) => car.id === 'toy-racer');
 assert.ok(rallyRacer, 'The former Toy Racer asset/id must remain available for saved selections and ghosts');

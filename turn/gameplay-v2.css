@@ -34,6 +34,7 @@
 
 .boost-hud {
   --boost-charge: 100%;
+  --drift-lock: 0%;
   --boost-hud-downshift: 20px;
   position: absolute;
   left: 50%;
@@ -88,6 +89,30 @@
 
 .boost-hud.is-drift-charging i {
   background: linear-gradient(90deg, #38d9ff, #8ce99a);
+}
+
+.boost-hud.is-drift-locking {
+  transform: translateX(-50%) scale(1.06) rotate(1deg);
+}
+
+.boost-hud.is-drift-locking > span {
+  background: #e9d5ff;
+}
+
+.boost-hud.is-drift-locking > div {
+  background: rgb(155 93 229 / 0.16);
+  box-shadow:
+    3px 3px 0 var(--ink),
+    0 0 0 4px rgb(155 93 229 / 0.22);
+}
+
+.boost-hud.is-drift-locking i {
+  width: var(--drift-lock);
+  background: linear-gradient(90deg, #38d9ff, #9b5de5);
+}
+
+.boost-hud.is-drift-lock-max {
+  animation: turn-drift-lock-max 420ms ease-in-out infinite alternate;
 }
 
 .boost-hud.is-boost-full-flash {
@@ -155,9 +180,15 @@
   }
 }
 
+@keyframes turn-drift-lock-max {
+  from { transform: translateX(-50%) scale(1.06) rotate(-1deg); }
+  to { transform: translateX(-50%) scale(1.11) rotate(1deg); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .boost-hud.is-boost-full-flash,
-  .boost-hud.is-boost-empty-flash {
+  .boost-hud.is-boost-empty-flash,
+  .boost-hud.is-drift-lock-max {
     animation: none;
   }
 }
