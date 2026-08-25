@@ -172,7 +172,13 @@ assert.match(carModels, /REVERSED_FRONT_WHEEL_LABEL_IDS = new Set\(\['vintage-ra
 assert.match(carModels, /installFrontWheelSteeringRig\(model, car\)/,
   'Every GLB visual must install the shared steering-wheel rig');
 assert.match(carModels, /root\.userData\.frontWheelPivots = frontWheelPivots/,
-  'The race wheel animator must receive the real GLB front-wheel pivots');
+  'Each GLB visual must retain its real front-wheel pivots');
+assert.match(carModels, /installWheelAnimationHostBridge\(root\)/,
+  'Each GLB visual must bridge its wheel rig to the outer race-car host');
+assert.match(carModels, /visual\.addEventListener\('added',[\s\S]*host\.userData\.frontWheelPivots = visual\.userData\.frontWheelPivots \|\| \[\]/,
+  'The bridge must publish the visible GLB pivots when main.js adds the visual to playerCar or a rival');
+assert.match(main, /for \(const pivot of car\.userData\.frontWheelPivots \|\| \[\]\)/,
+  'The runtime wheel animator must consume the host-level pivots populated by the bridge');
 assert.match(carModels, /side: THREE\.BackSide/, 'Car outlines must remain inverted back-face shells');
 assert.match(carModels, /depthTest: true/, 'Car outlines must still respect the body depth buffer');
 assert.match(carModels, /depthWrite: false/, 'Car outlines must not write depth and compete with body surfaces');
@@ -197,7 +203,7 @@ assert.match(lot, /VIEWER_INITIAL_YAW = Math\.PI - 0\.55/, 'The viewer must star
 assert.match(main, /playerCar\.rotation\.y = state\.heading \+ Math\.PI/);
 assert.match(main, /car\.rotation\.y = frame\.h \+ Math\.PI/);
 
-console.log(`TURN ${release.id} car orientation and surface-specific visual sizing passed for all 15 models.`);
+console.log(`TURN ${release.id} car orientation, visible steering integration and surface-specific visual sizing passed for all 15 models.`);
 
 function assertClose(actual, expected, label) {
   assert.ok(
