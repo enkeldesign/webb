@@ -12,6 +12,10 @@ const DRIFT_CAMERA_TRAVEL_WEIGHT = 0.85;
 const DRIFT_CAMERA_RESPONSE_RATE = 7.5;
 const CAMERA_POSITION_RESPONSE_RATE = 6.2;
 const CAMERA_TARGET_RESPONSE_RATE = 8.5;
+const BASE_CAMERA_FOV = 68;
+const CLASSIC_MAX_CAMERA_FOV = 78;
+const ZOOM_MAX_CAMERA_FOV = 88;
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 
 installDriftCameraSetting();
 
@@ -131,6 +135,17 @@ export function resolveCameraMotionLeadTime(responseRate, dt) {
   return denominator > 0 ? elapsed / denominator : 1 / rate;
 }
 
+export function resolveRaceCameraFov({
+  speedRatio = 0,
+  speedResponsiveCamera = globalThis.__turnSpeedResponsiveCameraEnabled === true,
+  reducedMotion = globalThis.matchMedia?.(REDUCED_MOTION_QUERY)?.matches === true
+} = {}) {
+  if (reducedMotion) return BASE_CAMERA_FOV;
+  const ratio = clamp(Number(speedRatio) || 0, 0, 1);
+  const maxFov = speedResponsiveCamera ? ZOOM_MAX_CAMERA_FOV : CLASSIC_MAX_CAMERA_FOV;
+  return BASE_CAMERA_FOV + ratio * (maxFov - BASE_CAMERA_FOV);
+}
+
 export function updateRaceCameraState({
   state,
   camera,
@@ -181,8 +196,8 @@ export function updateRaceCameraState({
     : roadY;
 
   // Zoom reverses the established physical pull-back: it moves slightly closer
-  // and lower as speed builds. Both profiles share the same widening FOV, while
-  // OFF preserves the classic distance and height curves.
+  // and lower as speed builds. Classic keeps its pull-back but now widens more
+  // modestly (68–78°), while Zoom keeps the stronger 68–88° speed cue.
   const followDistance = speedResponsiveCamera
     ? 16 - speedRatio * 2
     : 14 + speedRatio * 4;
@@ -255,7 +270,8 @@ export function updateRaceCameraState({
     state.horizonCameraRoll = 0;
   }
 
-  camera.fov = lerp(camera.fov, 68 + speedRatio * 20, Math.min(1, dt * 4.5));
+  const targetFov = resolveRaceCameraFov({ speedRatio, speedResponsiveCamera });
+  camera.fov = lerp(camera.fov, targetFov, Math.min(1, dt * 4.5));
   camera.updateProjectionMatrix();
 }
 

@@ -1,9 +1,10 @@
 import {
+  DRIFT_LOCK_RECHARGE_MULTIPLIER,
   advanceDriftLockAmount,
   driftThrottleForLock,
   pointerUsesDriftLock,
   resolveDriftBoostRechargeMultiplier
-} from '../input/drift-lock.js?revision=r217-drift-lock-balance';
+} from '../input/drift-lock.js?revision=r218-boost-balance';
 
 globalThis.__turnBoostActive = false;
 globalThis.__turnBoostCharge = 1;
@@ -96,6 +97,7 @@ function installGameplayUi() {
   boostHud.className = 'boost-hud';
   boostHud.innerHTML = '<span>BOOST</span><div><i></i></div>';
   hud.appendChild(boostHud);
+  const boostFill = boostHud.querySelector('i');
 
   const driveStack = document.createElement('div');
   driveStack.className = 'drive-stack';
@@ -155,8 +157,10 @@ function installGameplayUi() {
   const TOP_ZONE_SHARE = 0.32;
   const BRAKE_ZONE_START = 0.76;
   const DEFAULT_BOOST_DRAIN_SECONDS = 2.0;
+  const BOOST_TANK_DURATION_MULTIPLIER = 1.5;
   const BOOST_RECHARGE_SECONDS = 4.2;
   const DRIFT_RECHARGE_MULTIPLIER = 2.4;
+  const DRIFT_LOCK_BOOST_GRADIENT = 'linear-gradient(90deg, #8b5cf6, #8ce99a)';
   const BOOST_VISUAL_INTERVAL_MS = 1000 / 30;
   let lastBoostVisualAt = -Infinity;
   let boostVisualDirty = true;
@@ -186,8 +190,10 @@ function installGameplayUi() {
 
   function getBoostDrainSeconds() {
     const duration = Number(globalThis.__turnVehicleTuning?.boostDurationSeconds);
-    if (!Number.isFinite(duration)) return DEFAULT_BOOST_DRAIN_SECONDS;
-    return Math.max(0.8, Math.min(5, duration));
+    const baseDuration = Number.isFinite(duration)
+      ? Math.max(0.8, Math.min(5, duration))
+      : DEFAULT_BOOST_DRAIN_SECONDS;
+    return baseDuration * BOOST_TANK_DURATION_MULTIPLIER;
   }
 
   function getDriftRechargeMultiplier() {
@@ -212,6 +218,7 @@ function installGameplayUi() {
     driftLockRequested = false;
     driftLockAmount = 0;
     globalThis.__turnDriftLockAmount = 0;
+    boostFill?.style.removeProperty('background');
     drivePad.style.setProperty('--boost-charge', '100%');
     boostHud.style.setProperty('--boost-charge', '100%');
     boostHud.setAttribute('aria-label', 'Boost 100 percent charged');
@@ -483,7 +490,8 @@ function installGameplayUi() {
       const rechargeMultiplier = resolveDriftBoostRechargeMultiplier({
         driftHeld: globalThis.__turnDriftHeld === true,
         driftLockAmount,
-        lockedMultiplier: getDriftRechargeMultiplier()
+        lockedMultiplier: getDriftRechargeMultiplier(),
+        lockCeilingMultiplier: DRIFT_LOCK_RECHARGE_MULTIPLIER
       });
       boostCharge = Math.min(1, boostCharge + dt * rechargeMultiplier / BOOST_RECHARGE_SECONDS);
     }
@@ -542,6 +550,16 @@ function installGameplayUi() {
     }
     if (boostVisualDirty || driftLocking !== publishedDriftLocking) {
       boostHud.classList.toggle('is-drift-locking', driftLocking);
+      if (boostFill) {
+        if (driftLocking) {
+          // design-semantic.css intentionally owns the normal DRIFT gradient with
+          // !important. LOCK is a stronger transient state, so publish its fill
+          // directly at the element level with the same cascade priority.
+          boostFill.style.setProperty('background', DRIFT_LOCK_BOOST_GRADIENT, 'important');
+        } else {
+          boostFill.style.removeProperty('background');
+        }
+      }
       publishedDriftLocking = driftLocking;
     }
     if (boostVisualDirty || chargePercent !== publishedChargePercent) {

@@ -142,3 +142,7 @@
 .boost-hud.is-drift-charging i {
   background: linear-gradient(90deg, var(--turn-control-drift), var(--turn-control-gas)) !important;
 }
+
+.boost-hud.is-drift-locking i {
+  background: linear-gradient(90deg, #8b5cf6, var(--turn-control-gas)) !important;
+}
