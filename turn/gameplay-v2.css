@@ -73,9 +73,7 @@
   width: var(--boost-charge);
   background: linear-gradient(90deg, #ff922b, #ff5a5f);
   box-shadow: 3px 0 0 var(--ink);
-  transition:
-    width 70ms linear,
-    background-color 120ms ease;
+  transition: width 70ms linear;
 }
 
 .boost-hud.is-boosting {
@@ -89,12 +87,11 @@
 }
 
 .boost-hud.is-drift-charging i {
-  background-color: #38d9ff;
-  background-image: none;
+  background: linear-gradient(90deg, #38d9ff, #8ce99a);
 }
 
 .boost-hud.is-drift-locking i {
-  background-color: #8b5cf6;
+  background: linear-gradient(90deg, #8b5cf6, #8ce99a);
 }
 
 .boost-hud.is-boost-full-flash {

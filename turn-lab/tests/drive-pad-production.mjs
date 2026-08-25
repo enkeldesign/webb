@@ -3,9 +3,11 @@ import fs from 'node:fs/promises';
 import {
   DRIFT_LOCK_ENGAGE_SECONDS,
   DRIFT_LOCK_RELEASE_SECONDS,
+  REGULAR_DRIFT_RECHARGE_BLEND,
   advanceDriftLockAmount,
   driftThrottleForLock,
-  pointerUsesDriftLock
+  pointerUsesDriftLock,
+  resolveDriftBoostRechargeMultiplier
 } from '../../turn/input/drift-lock.js';
 import { updateVehiclePhysicsState } from '../../turn/vehicle/physics.js';
 import { spokenRivalCount } from '../../turn/ui/race-announcements.js';
@@ -43,6 +45,11 @@ assert.equal(advanceDriftLockAmount(0.5, false, DRIFT_LOCK_RELEASE_SECONDS / 2),
 assert.equal(driftThrottleForLock(0), 1);
 assert.equal(driftThrottleForLock(0.5), 0.5);
 assert.equal(driftThrottleForLock(1), 0);
+assert.equal(REGULAR_DRIFT_RECHARGE_BLEND, 0.5);
+assert.equal(resolveDriftBoostRechargeMultiplier({ driftHeld: false, driftLockAmount: 1, lockedMultiplier: 2.4 }), 0);
+assert.ok(Math.abs(resolveDriftBoostRechargeMultiplier({ driftHeld: true, driftLockAmount: 0, lockedMultiplier: 2.4 }) - 1.7) < 1e-12);
+assert.ok(Math.abs(resolveDriftBoostRechargeMultiplier({ driftHeld: true, driftLockAmount: 0.5, lockedMultiplier: 2.4 }) - 2.05) < 1e-12);
+assert.ok(Math.abs(resolveDriftBoostRechargeMultiplier({ driftHeld: true, driftLockAmount: 1, lockedMultiplier: 2.4 }) - 2.4) < 1e-12);
 
 class Vec3 {
   constructor(x = 0, y = 0, z = 0) { this.x = x; this.y = y; this.z = z; }
@@ -55,6 +62,7 @@ class Vec3 {
 
 const [
   index,
+  nextIndex,
   releaseSource,
   app,
   controls,
@@ -68,6 +76,7 @@ const [
   mainSource
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn-next/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/gameplay-controls.js', import.meta.url), 'utf8'),
@@ -85,12 +94,20 @@ const release = JSON.parse(releaseSource);
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(index, new RegExp(`drive-pad\\.css\\?build=${release.cacheKey}`));
 assert.match(index, new RegExp(`gameplay-v2\\.css\\?build=${release.cacheKey}`));
+assert.match(index, /gameplay-v2\.css\?build=20260823-r183&revision=r217-drift-lock-design/,
+  'The Boost gradient fix must bypass stale production CSS caches');
+assert.match(index, /drive-pad\.css\?build=20260823-r183&revision=r217-drift-lock-design/,
+  'The connected LOCK geometry must bypass stale production CSS caches');
+assert.match(nextIndex, /gameplay-v2\.css\?build=20260823-r183&revision=r217-drift-lock-design/);
+assert.match(nextIndex, /drive-pad\.css\?build=20260823-r183&revision=r217-drift-lock-design/);
 assert.match(index, new RegExp(`position-hud-r83\\.css\\?build=${release.cacheKey}`));
 assert.ok(
   index.indexOf('gameplay-v2.css') < index.indexOf('position-hud-r83.css'),
   'The topbar position override must load after the legacy gameplay HUD rules'
 );
 assert.match(app, /race-position-layout\.js/, 'The production module graph must install the position layout after gameplay controls');
+assert.match(app, /gameplay-controls\.js\?revision=r217-drift-lock-balance/,
+  'The new recharge balance must bypass stale production module caches');
 assert.match(app, /installRaceSpeech\(\)/, 'The production graph must install concise race speech before the runtime starts');
 assert.ok(
   app.indexOf('./ui/gameplay-controls.js') < app.indexOf('./ui/race-speech.js')
@@ -142,6 +159,10 @@ assert.match(controls, /globalThis\.__turnDriftLockAmount = lockCanRun \? driftL
   'The smoothed LOCK amount must be published for vehicle physics');
 assert.match(controls, /driftThrottleForLock\(driftLockAmount\)/,
   'Gas must fade out over the same short LOCK transition');
+assert.match(controls, /resolveDriftBoostRechargeMultiplier\(\{/,
+  'Boost recharge must be owned by the standard-versus-LOCK DRIFT balance rule');
+assert.doesNotMatch(controls, /__turnDriftHeld \? getDriftRechargeMultiplier\(\) : 1/,
+  'Boost must no longer refill passively outside DRIFT');
 assert.doesNotMatch(controls, /Advanced DRIFT|turn:advanced-drift-change/,
   'Binary LOCK must be standard behavior without an experimental setting');
 assert.match(controls, /boostRequested = nextZone === 'boost'/, 'Boost zone must add boost to gas');
@@ -153,6 +174,7 @@ assert.match(controls, /boostRequested && !boostExhausted/, 'Boost must stay loc
 assert.match(controls, /previousZone === 'boost' && nextZone !== 'boost'\) boostExhausted = false/, 'Leaving Boost for any other drive zone must re-arm Boost without requiring pointer release');
 assert.match(controls, /Brake · Reverse/, 'The integrated brake control must advertise reverse');
 assert.match(controls, /function refillBoost\(\)/, 'Gameplay controls must expose one reset-safe boost refill path');
+assert.match(controls, /let boostCharge = 1;/, 'Boost must still begin full even though passive recharge is removed');
 assert.match(controls, /boostCharge = 1;\s*previousBoostCharge = 1;\s*boostExhausted = false;/s, 'Restarting must fully refill and unlock boost without creating a recharge transition');
 assert.match(controls, /event\.detail\?\.reason === 'race-reset'\) refillBoost\(\)/, 'The race reset event must refill boost');
 assert.match(controls, /globalThis\.__turnRefillBoost = refillBoost/, 'Boost refill must remain reusable by the runtime');
@@ -169,15 +191,19 @@ assert.match(css, /\.drive-lock-bubble \{[\s\S]*right: calc\(100% - 4px\);[\s\S]
   'LOCK must be a separate bubble attached outside the left edge of the pad');
 assert.match(css, /\.drive-stack\.is-drift-ready \.drive-lock-bubble \{[\s\S]*opacity: 1;[\s\S]*scaleX\(1\)/,
   'The LOCK bubble must animate quickly into view while DRIFT is held');
+assert.match(css, /--drift-lock-row-offset: 8px;[\s\S]*height: calc\(32% \+ var\(--drift-lock-row-offset\)\)/,
+  'The bubble bottom must align with the lower edge of the DRIFT row divider');
+assert.match(css, /\.drive-stack\.is-drift-ready \.drive-pad \{[\s\S]*border-top-left-radius: 0;/,
+  'The pad must drop its upper-left radius while LOCK is attached');
 assert.match(css, /\.drive-stack\.is-drift-locking \.drive-lock-bubble \{[\s\S]*#8b5cf6/,
   'The bubble must visibly confirm the binary LOCK state in purple');
 assert.match(css, /prefers-reduced-motion: reduce[\s\S]*\.drive-lock-bubble/,
   'The bubble reveal must respect reduced-motion preferences');
 assert.match(gameplayCss, /\.boost-hud i \{[\s\S]*box-shadow: 3px 0 0 var\(--ink\);/, 'Boost charge must have a high-contrast ink edge at the live fill level');
-assert.match(gameplayCss, /\.boost-hud\.is-drift-charging i \{[\s\S]*background-color: #38d9ff/,
-  'Ordinary DRIFT recharge must show the Boost charge in light blue');
-assert.match(gameplayCss, /\.boost-hud\.is-drift-locking i \{[\s\S]*background-color: #8b5cf6/,
-  'Using LOCK must simply turn the existing Boost charge fill purple');
+assert.match(gameplayCss, /\.boost-hud\.is-drift-charging i \{[\s\S]*linear-gradient\(90deg, #38d9ff, #8ce99a\)/,
+  'Ordinary DRIFT recharge must show the Boost gradient from blue to green');
+assert.match(gameplayCss, /\.boost-hud\.is-drift-locking i \{[\s\S]*linear-gradient\(90deg, #8b5cf6, #8ce99a\)/,
+  'LOCK must change the existing Boost gradient from purple to green');
 assert.match(controls, /boostHud\.innerHTML = '<span>BOOST<\/span>/,
   'The Boost HUD label must stay BOOST instead of becoming a second LOCK meter');
 assert.match(mainSource, /driftLock: globalThis\.__turnDriftLockAmount \|\| 0/,
@@ -247,4 +273,4 @@ assert.ok(
   'Full LOCK must release gas and add modest handbrake drag'
 );
 
-console.log(`TURN ${release.id} binary DRIFT LOCK bubble, smooth lock physics, Boost color, restart refill and reverse passed.`);
+console.log(`TURN ${release.id} connected DRIFT LOCK bubble, DRIFT-only Boost recharge, gradients, restart refill and reverse passed.`);

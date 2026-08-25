@@ -4,6 +4,7 @@ export const DRIFT_LOCK_TOP_ZONE_SHARE = 0.32;
 export const DRIFT_LOCK_OUTER_SLOP_PX = 18;
 export const DRIFT_LOCK_VERTICAL_SLOP_PX = 12;
 export const DRIFT_LOCK_SEAM_OVERLAP_PX = 4;
+export const REGULAR_DRIFT_RECHARGE_BLEND = 0.5;
 
 export function pointerUsesDriftLock({
   driftActive = false,
@@ -46,6 +47,19 @@ export function advanceDriftLockAmount(currentAmount, lockRequested, dt) {
 
 export function driftThrottleForLock(lockAmount) {
   return 1 - clamp(finiteNumber(lockAmount), 0, 1);
+}
+
+export function resolveDriftBoostRechargeMultiplier({
+  driftHeld = false,
+  driftLockAmount = 0,
+  lockedMultiplier = 1
+} = {}) {
+  if (!driftHeld) return 0;
+
+  const locked = Math.max(1, finiteNumber(lockedMultiplier));
+  const regular = 1 + (locked - 1) * REGULAR_DRIFT_RECHARGE_BLEND;
+  const lockMix = clamp(finiteNumber(driftLockAmount), 0, 1);
+  return regular + (locked - regular) * lockMix;
 }
 
 function finiteNumber(value) {
