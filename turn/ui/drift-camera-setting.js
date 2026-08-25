@@ -1,3 +1,8 @@
+import {
+  advancedDriftEnabled,
+  saveAdvancedDriftEnabled
+} from '../input/advanced-drift.js?revision=r215-advanced-drift';
+
 export const DRIFT_CAMERA_STORAGE_KEY = 'turn-drift-camera-v1';
 export const SPEED_RESPONSIVE_CAMERA_STORAGE_KEY = 'turn-speed-responsive-camera-v1';
 export const SPEED_RESPONSIVE_CAMERA_DEFAULT = false;
@@ -50,8 +55,10 @@ export function saveSpeedResponsiveCameraEnabled(enabled, storage = getStorage()
 export function installDriftCameraSetting() {
   const driftEnabled = driftCameraEnabled();
   const speedResponsiveEnabled = speedResponsiveCameraEnabled();
+  const advancedDrift = advancedDriftEnabled();
   globalThis.__turnDriftCameraEnabled = driftEnabled;
   globalThis.__turnSpeedResponsiveCameraEnabled = speedResponsiveEnabled;
+  globalThis.__turnAdvancedDriftEnabled = advancedDrift;
   if (typeof document === 'undefined') return driftEnabled;
   if (installed) {
     attachSettingsControl();
@@ -79,6 +86,42 @@ function attachSettingsControl() {
   const list = dialog?.querySelector('.m8-settings-list');
   if (!dialog || !list) return false;
 
+  let drivingSection = list.querySelector('[data-turn-advanced-drift-setting]');
+  if (!drivingSection) {
+    drivingSection = document.createElement('section');
+    drivingSection.className = 'm8-setting-card';
+    drivingSection.dataset.turnAdvancedDriftSetting = '';
+    drivingSection.setAttribute('aria-labelledby', 'm8DrivingTitle');
+    drivingSection.innerHTML = `
+      <h3 id="m8DrivingTitle">Driving</h3>
+      <label class="m8-toggle-row">
+        <input id="m8AdvancedDriftEnabled" type="checkbox">
+        <span>
+          <strong>Advanced DRIFT</strong>
+          <small>Pull farther left in DRIFT to progressively release the gas and lock the rear wheels. Experimental; off by default.</small>
+        </span>
+      </label>`;
+    const steering = list.querySelector('.m8-steering-setting');
+    if (steering) steering.after(drivingSection);
+    else list.prepend(drivingSection);
+
+    const advancedDriftCheckbox = drivingSection.querySelector('#m8AdvancedDriftEnabled');
+    advancedDriftCheckbox.addEventListener('change', () => {
+      const previous = globalThis.__turnAdvancedDriftEnabled === true;
+      const next = advancedDriftCheckbox.checked;
+      if (!saveAdvancedDriftEnabled(next)) {
+        advancedDriftCheckbox.checked = previous;
+        announce(dialog, 'Advanced DRIFT could not be changed because local storage is unavailable.');
+        return;
+      }
+      globalThis.__turnAdvancedDriftEnabled = next;
+      globalThis.dispatchEvent(new CustomEvent('turn:advanced-drift-change', {
+        detail: { enabled: next }
+      }));
+      announce(dialog, `Advanced DRIFT ${next ? 'on' : 'off'}.`);
+    });
+  }
+
   let section = list.querySelector('[data-turn-drift-camera-setting]');
   if (!section) {
     section = document.createElement('section');
@@ -101,9 +144,7 @@ function attachSettingsControl() {
           <small>Keeps the car close as speed builds. Off uses the classic pull-back; both modes widen the view with speed.</small>
         </span>
       </label>`;
-    const steering = list.querySelector('.m8-steering-setting');
-    if (steering) steering.after(section);
-    else list.prepend(section);
+    drivingSection.after(section);
 
     const driftCheckbox = section.querySelector('#m8DriftCameraEnabled');
     driftCheckbox.addEventListener('change', () => {
@@ -133,6 +174,10 @@ function attachSettingsControl() {
   }
 
   const sync = () => {
+    const advancedDriftCheckbox = drivingSection.querySelector('#m8AdvancedDriftEnabled');
+    if (advancedDriftCheckbox) {
+      advancedDriftCheckbox.checked = globalThis.__turnAdvancedDriftEnabled === true;
+    }
     const driftCheckbox = section.querySelector('#m8DriftCameraEnabled');
     if (driftCheckbox) driftCheckbox.checked = globalThis.__turnDriftCameraEnabled === true;
     const speedCheckbox = section.querySelector('#m8SpeedResponsiveCameraEnabled');
@@ -141,8 +186,8 @@ function attachSettingsControl() {
     }
   };
   sync();
-  if (!dialog.dataset.turnDriftCameraSync) {
-    dialog.dataset.turnDriftCameraSync = 'true';
+  if (!dialog.dataset.turnDrivingCameraSync) {
+    dialog.dataset.turnDrivingCameraSync = 'true';
     dialog.addEventListener('toggle', sync);
   }
   return true;
