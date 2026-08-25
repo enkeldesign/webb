@@ -185,7 +185,7 @@ export function updateRaceCameraState({
   // OFF preserves the classic distance and height curves.
   const followDistance = speedResponsiveCamera
     ? 16 - speedRatio * 2
-    : 14 + speedRatio * 7;
+    : 14 + speedRatio * 4;
   const cameraHeight = speedResponsiveCamera
     ? 8.7 - speedRatio
     : 7.7 + speedRatio * 2.5;
