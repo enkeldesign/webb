@@ -207,9 +207,9 @@ approximately(-legacyStopped.cameraPosition.z, 14);
 approximately(-legacyFast.cameraPosition.z, 21);
 approximately(legacyStopped.cameraPosition.y, 7.7);
 approximately(legacyFast.cameraPosition.y, 10.2);
-approximately(-responsiveStopped.cameraPosition.z, 15);
+approximately(-responsiveStopped.cameraPosition.z, 16);
 approximately(-responsiveFast.cameraPosition.z, 14);
-approximately(responsiveStopped.cameraPosition.y, 8.2);
+approximately(responsiveStopped.cameraPosition.y, 8.7);
 approximately(responsiveFast.cameraPosition.y, 7.7);
 assert.ok(
   -responsiveFast.cameraPosition.z < -responsiveStopped.cameraPosition.z,
@@ -218,7 +218,7 @@ assert.ok(
 approximately(legacyStopped.camera.fov, 68);
 approximately(responsiveStopped.camera.fov, 68);
 approximately(legacyFast.camera.fov, 82);
-approximately(responsiveFast.camera.fov, 82);
+approximately(responsiveFast.camera.fov, 88);
 approximately(legacyFast.cameraTarget.z, responsiveFast.cameraTarget.z);
 
 function movingCameraRun(speedResponsiveEnabled, dt = 1 / 60) {
@@ -279,16 +279,17 @@ assert.ok(
 );
 approximately(movingResponsive.followDistance, 14, 1e-6);
 approximately(movingResponsive.targetDistance, 27, 1e-6);
-approximately(movingResponsive.fov, 82, 1e-6);
+approximately(movingResponsive.fov, 88, 1e-6);
 for (const dt of [1 / 30, 1 / 120, 0.12]) {
   const frameRateVariant = movingCameraRun(true, dt);
   approximately(frameRateVariant.followDistance, 14, 1e-6);
   approximately(frameRateVariant.targetDistance, 27, 1e-6);
-  approximately(frameRateVariant.fov, 82, 1e-6);
+  approximately(frameRateVariant.fov, 88, 1e-6);
 }
 
 const settingSource = await fs.readFile(new URL('../turn/ui/drift-camera-setting.js', import.meta.url), 'utf8');
 const cameraSource = await fs.readFile(new URL('../turn/render/camera.js', import.meta.url), 'utf8');
+const gameplayCss = await fs.readFile(new URL('../turn/gameplay-v2.css', import.meta.url), 'utf8');
 assert.match(settingSource, /getItem\(DRIFT_CAMERA_STORAGE_KEY\) === 'on'/,
   'Missing storage must continue to mean classic drift direction');
 assert.match(settingSource, /SPEED_RESPONSIVE_CAMERA_DEFAULT = false/);
@@ -302,15 +303,31 @@ assert.match(cameraSource, /DRIFT_CAMERA_BLEND_START_SPEED = 8 \/ 3\.6/);
 assert.match(cameraSource, /DRIFT_CAMERA_FULL_BLEND_SPEED = 28 \/ 3\.6/);
 assert.match(cameraSource, /\?revision=r213-speed-responsive-camera/,
   'The combined Camera settings module must be cache-busted');
-assert.match(cameraSource, /\? 15 - speedRatio/,
-  'The responsive camera must move from distance 15 toward 14 as speed builds');
+assert.match(cameraSource, /\? 16 - speedRatio \* 2/,
+  'The responsive camera must move from distance 16 toward 14 as speed builds');
+assert.match(cameraSource, /\? 8\.7 - speedRatio/,
+  'Responsive camera height must preserve the tuned vertical composition');
 assert.match(cameraSource, /: 14 \+ speedRatio \* 7/,
   'Speed-responsive Camera OFF must preserve the established pull-back exactly');
 assert.match(cameraSource, /resolveCameraMotionLeadTime\(CAMERA_POSITION_RESPONSE_RATE, dt\)/,
   'The responsive camera must cancel speed-dependent world-space follow lag');
 assert.match(cameraSource, /resolveCameraMotionLeadTime\(CAMERA_TARGET_RESPONSE_RATE, dt\)/,
   'The responsive look target must cancel speed-dependent world-space follow lag');
-assert.match(cameraSource, /camera\.fov = lerp\(camera\.fov, 68 \+ speedRatio \* 14/,
+assert.match(cameraSource, /const fovSpeedGain = speedResponsiveCamera \? 20 : 14/,
+  'The responsive profile must increase FOV more strongly without changing legacy FOV');
+assert.match(cameraSource, /camera\.fov = lerp\(camera\.fov, 68 \+ speedRatio \* fovSpeedGain/,
   'FOV must remain the primary speed cue in either camera profile');
+assert.match(gameplayCss, /--boost-hud-downshift: 20px/,
+  'Boost bar must move down by approximately its own racing height');
+assert.match(
+  gameplayCss,
+  /bottom: calc\(clamp\(92px, 20vh, 150px\) - var\(--boost-hud-downshift\)\)/,
+  'Standard-height HUD must apply the independent Boost bar downshift'
+);
+assert.match(
+  gameplayCss,
+  /bottom: calc\(74px - var\(--boost-hud-downshift\)\)/,
+  'Short landscape HUD must preserve the same Boost bar downshift'
+);
 
-console.log('TURN independent camera preferences, motion-compensated speed profile and legacy parity passed.');
+console.log('TURN tuned speed camera, independent Boost HUD shift and legacy parity passed.');
