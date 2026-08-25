@@ -10,6 +10,8 @@ const DRIFT_CAMERA_BLEND_START_SPEED = 8 / 3.6;
 const DRIFT_CAMERA_FULL_BLEND_SPEED = 28 / 3.6;
 const DRIFT_CAMERA_TRAVEL_WEIGHT = 0.85;
 const DRIFT_CAMERA_RESPONSE_RATE = 7.5;
+const CAMERA_POSITION_RESPONSE_RATE = 6.2;
+const CAMERA_TARGET_RESPONSE_RATE = 8.5;
 
 installDriftCameraSetting();
 
@@ -117,6 +119,18 @@ export function resolveDriftCameraYawOffset({
   return normalizeAngle(previous + targetDelta * response);
 }
 
+export function resolveCameraMotionLeadTime(responseRate, dt) {
+  const rate = Math.max(0, Number(responseRate) || 0);
+  if (!rate) return 0;
+
+  const elapsed = Math.max(0, Number(dt) || 0);
+  if (!elapsed) return 1 / rate;
+
+  const denominator = Math.expm1(elapsed * rate);
+  if (!Number.isFinite(denominator)) return 0;
+  return denominator > 0 ? elapsed / denominator : 1 / rate;
+}
+
 export function updateRaceCameraState({
   state,
   camera,
@@ -151,6 +165,8 @@ export function updateRaceCameraState({
   };
   const speedRatio = clamp(state.speed / maxSpeed, 0, 1);
   const speedResponsiveCamera = globalThis.__turnSpeedResponsiveCameraEnabled === true;
+  const velocityX = finiteNumber(state.velocity?.x, 0);
+  const velocityZ = finiteNumber(state.velocity?.z, 0);
   // Keep the established lateral-drift offset driven by the car's own axis.
   // Drift Camera changes only camera orientation, not handling or the amount of
   // existing lateral camera movement.
@@ -174,32 +190,45 @@ export function updateRaceCameraState({
     ? 8.2 - speedRatio * 0.5
     : 7.7 + speedRatio * 2.5;
   const lateralOffset = lateralVelocity * 0.11;
-  const cameraResponse = 1 - Math.exp(-dt * 6.2);
+  const cameraResponse = 1 - Math.exp(-dt * CAMERA_POSITION_RESPONSE_RATE);
+  // Exponential world-space following otherwise adds a second, much larger
+  // speed-dependent pull-back: at racing speed the camera trails the moving car
+  // by roughly velocity / responseRate. Lead the moving target by the exact
+  // discrete-time amount so smoothing remains available for turns without
+  // allowing straight-line translation to move the car away on screen.
+  const cameraMotionLead = speedResponsiveCamera
+    ? resolveCameraMotionLeadTime(CAMERA_POSITION_RESPONSE_RATE, dt)
+    : 0;
   cameraPosition.x = lerp(
     cameraPosition.x,
-    state.position.x - forward.x * followDistance - right.x * lateralOffset,
+    state.position.x + velocityX * cameraMotionLead
+      - forward.x * followDistance - right.x * lateralOffset,
     cameraResponse
   );
   cameraPosition.y = lerp(cameraPosition.y, roadY + cameraHeight, cameraResponse);
   cameraPosition.z = lerp(
     cameraPosition.z,
-    state.position.z - forward.z * followDistance - right.z * lateralOffset,
+    state.position.z + velocityZ * cameraMotionLead
+      - forward.z * followDistance - right.z * lateralOffset,
     cameraResponse
   );
   camera.position.copy(cameraPosition);
 
   const targetDistance = 15 + speedRatio * 12;
-  const targetResponse = 1 - Math.exp(-dt * 8.5);
+  const targetResponse = 1 - Math.exp(-dt * CAMERA_TARGET_RESPONSE_RATE);
+  const targetMotionLead = speedResponsiveCamera
+    ? resolveCameraMotionLeadTime(CAMERA_TARGET_RESPONSE_RATE, dt)
+    : 0;
   cameraTarget.x = lerp(
     cameraTarget.x,
-    state.position.x + forward.x * targetDistance,
+    state.position.x + velocityX * targetMotionLead + forward.x * targetDistance,
     targetResponse
   );
   const anticipatedRoadY = roadY + (lookAheadRoadY - roadY) * 0.35;
   cameraTarget.y = lerp(cameraTarget.y, anticipatedRoadY + 2, targetResponse);
   cameraTarget.z = lerp(
     cameraTarget.z,
-    state.position.z + forward.z * targetDistance,
+    state.position.z + velocityZ * targetMotionLead + forward.z * targetDistance,
     targetResponse
   );
   camera.up.set(0, 1, 0);
