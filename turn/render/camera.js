@@ -1,4 +1,4 @@
-import { installDriftCameraSetting } from '../ui/drift-camera-setting.js?revision=r212-drift-camera';
+import { installDriftCameraSetting } from '../ui/drift-camera-setting.js?revision=r213-speed-responsive-camera';
 
 const DEFAULT_MAX_SENSOR_CAMERA_ROLL = 18 * Math.PI / 180;
 const MAX_CONFIGURED_SAFE_ZONE_DEGREES = 45;
@@ -150,6 +150,7 @@ export function updateRaceCameraState({
     z: carRight.z * driftCosine - carForward.z * driftSine
   };
   const speedRatio = clamp(state.speed / maxSpeed, 0, 1);
+  const speedResponsiveCamera = globalThis.__turnSpeedResponsiveCameraEnabled === true;
   // Keep the established lateral-drift offset driven by the car's own axis.
   // Drift Camera changes only camera orientation, not handling or the amount of
   // existing lateral camera movement.
@@ -163,7 +164,15 @@ export function updateRaceCameraState({
     ? finiteNumber(samples[lookAheadIndex]?.point?.y, roadY)
     : roadY;
 
-  const followDistance = 14 + speedRatio * 7;
+  // The experimental speed-responsive profile reverses the established pull-back:
+  // it moves slightly closer and lower as speed builds while FOV supplies the
+  // primary sense of acceleration. OFF remains exact legacy camera behavior.
+  const followDistance = speedResponsiveCamera
+    ? 15 - speedRatio
+    : 14 + speedRatio * 7;
+  const cameraHeight = speedResponsiveCamera
+    ? 8.2 - speedRatio * 0.5
+    : 7.7 + speedRatio * 2.5;
   const lateralOffset = lateralVelocity * 0.11;
   const cameraResponse = 1 - Math.exp(-dt * 6.2);
   cameraPosition.x = lerp(
@@ -171,7 +180,7 @@ export function updateRaceCameraState({
     state.position.x - forward.x * followDistance - right.x * lateralOffset,
     cameraResponse
   );
-  cameraPosition.y = lerp(cameraPosition.y, roadY + 7.7 + speedRatio * 2.5, cameraResponse);
+  cameraPosition.y = lerp(cameraPosition.y, roadY + cameraHeight, cameraResponse);
   cameraPosition.z = lerp(
     cameraPosition.z,
     state.position.z - forward.z * followDistance - right.z * lateralOffset,
