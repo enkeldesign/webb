@@ -184,10 +184,10 @@ export function updateRaceCameraState({
   // it moves slightly closer and lower as speed builds while FOV supplies the
   // primary sense of acceleration. OFF remains exact legacy camera behavior.
   const followDistance = speedResponsiveCamera
-    ? 15 - speedRatio
+    ? 16 - speedRatio * 2
     : 14 + speedRatio * 7;
   const cameraHeight = speedResponsiveCamera
-    ? 8.2 - speedRatio * 0.5
+    ? 8.7 - speedRatio
     : 7.7 + speedRatio * 2.5;
   const lateralOffset = lateralVelocity * 0.11;
   const cameraResponse = 1 - Math.exp(-dt * CAMERA_POSITION_RESPONSE_RATE);
@@ -255,7 +255,8 @@ export function updateRaceCameraState({
     state.horizonCameraRoll = 0;
   }
 
-  camera.fov = lerp(camera.fov, 68 + speedRatio * 14, Math.min(1, dt * 4.5));
+  const fovSpeedGain = speedResponsiveCamera ? 20 : 14;
+  camera.fov = lerp(camera.fov, 68 + speedRatio * fovSpeedGain, Math.min(1, dt * 4.5));
   camera.updateProjectionMatrix();
 }
 
