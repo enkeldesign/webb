@@ -93,6 +93,7 @@ export function createRaceSessionOrchestrator({
     environment.__turnAnalogGas = 0;
     environment.__turnBoostActive = false;
     environment.__turnDriftHeld = false;
+    environment.__turnDriftLockAmount = 0;
   }
 
   function stopSpectating() {
