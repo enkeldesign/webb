@@ -180,9 +180,9 @@ export function updateRaceCameraState({
     ? finiteNumber(samples[lookAheadIndex]?.point?.y, roadY)
     : roadY;
 
-  // The experimental speed-responsive profile reverses the established pull-back:
-  // it moves slightly closer and lower as speed builds while FOV supplies the
-  // primary sense of acceleration. OFF remains exact legacy camera behavior.
+  // Zoom reverses the established physical pull-back: it moves slightly closer
+  // and lower as speed builds. Both profiles share the same widening FOV, while
+  // OFF preserves the classic distance and height curves.
   const followDistance = speedResponsiveCamera
     ? 16 - speedRatio * 2
     : 14 + speedRatio * 7;
