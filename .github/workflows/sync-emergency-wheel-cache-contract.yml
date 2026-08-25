@@ -1,4 +1,4 @@
-name: Sync emergency wheel cache contract
+name: Finish vehicle cache contract sync
 
 on:
   push:
@@ -21,9 +21,32 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Sync emergency bridge assertions
-        run: node turn-tests/sync-emergency-wheel-cache-contract.mjs
-      - name: Verify complete vehicle regression chain
+      - name: Sync permanent vehicle cache assertions
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          emergency = Path('turn-lab/tests/emergency-vehicles-production.mjs')
+          text = emergency.read_text()
+          old = '${escapedBuild}\\"`)' 
+          new = '${escapedBuild}&wheel=r211-steering-wheels\\"`)'
+          count = text.count(old)
+          if count != 2:
+              raise SystemExit(f'Expected 2 emergency cache assertions, found {count}')
+          emergency.write_text(text.replace(old, new))
+
+          stat = Path('turn-lab/tests/stat-legend-production.mjs')
+          text = stat.read_text()
+          old = "`./vehicle/catalog.js?build=${release.cacheKey}`"
+          new = "`./vehicle/catalog.js?build=${release.cacheKey}&wheel=r211-steering-wheels`"
+          count = text.count(old)
+          if count != 1:
+              raise SystemExit(f'Expected 1 stat legend catalog assertion, found {count}')
+          stat.write_text(text.replace(old, new))
+          PY
+      - name: Verify remaining TURN regression chain
+        id: verify
+        continue-on-error: true
         run: |
           node turn-lab/tests/emergency-vehicles-production.mjs
           node turn-lab/tests/emergency-livery-layering-production.mjs
@@ -33,14 +56,56 @@ jobs:
           node turn-lab/tests/native-paint-production.mjs
           node turn-lab/tests/semantic-car-finish-production.mjs
           node turn-lab/tests/rally-racer-reward-production.mjs
-      - name: Remove sync scaffolding
+          node turn-lab/tests/app-icon-production.mjs
+          node turn-lab/tests/social-preview-production.mjs
+          node turn-lab/tests/balance-and-checkpoints.mjs
+          node turn-lab/tests/drive-pad-production.mjs
+          node turn-lab/tests/in-game-menu-production.mjs
+          node turn-lab/tests/lap-result-toast-production.mjs
+          node turn-lab/tests/achievements-production.mjs
+          node turn-tests/super-sedan-unranked-production.mjs
+          node turn-lab/tests/bella-rescue-production.mjs
+          node turn-lab/tests/trophy-road-production.mjs
+          node turn-tests/trophy-road-detail-production.mjs
+          node turn-lab/tests/paint-lock-observer-production.mjs
+          node turn-lab/tests/lot-pwa-color-scroll-boundary.mjs
+          node turn-lab/tests/audio-foundation-production.mjs
+          node turn-tests/racing-music-production.mjs
+          node turn-tests/music-tracker-demo-feedback.mjs
+          node turn-tests/music-tracker-mobile-sheet.mjs
+          node turn-tests/racing-music-note-ties.mjs
+          node turn-lab/tests/driving-soundscape-production.mjs
+          node turn-lab/tests/recovery-guidance-production.mjs
+          node turn-lab/tests/offroad-ear-direction-production.mjs
+          node turn-lab/tests/pace-notes-production.mjs
+          node turn-tests/midnight-city-pace-note-map-production.mjs
+          node turn-lab/tests/drive-by-ear-production.mjs
+          node turn-lab/tests/runtime-hotpath-performance-production.mjs
+          node turn-lab/tests/performance-production.mjs
+          node turn-tests/long-session-lifecycle-production.mjs
+          node turn-tests/covered-rendering-production.mjs
+          node turn-tests/rival-visual-sync-production.mjs
+          node turn-tests/skid-ring-buffer-production.mjs
+          node turn-tests/elevation-production.mjs
+          node turn-tests/cliffside-production.mjs
+          node turn-tests/cliffside-containment-production.mjs
+          node turn-tests/viewport-coverage-production.mjs
+          node turn-tests/release-production.mjs
+      - name: Remove temporary sync scaffolding
+        if: always()
         run: |
           rm -f turn-tests/sync-emergency-wheel-cache-contract.mjs
           rm -f .github/workflows/sync-emergency-wheel-cache-contract.yml
-      - name: Commit contract sync
+      - name: Commit permanent fixes and cleanup
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "Sync emergency steering-wheel cache contract [emergency-cache]"
-          git push origin HEAD:feature/turn-steering-wheels-kenney-monster
+          if ! git diff --cached --quiet; then
+            git commit -m "Sync vehicle cache contracts and clean diagnostics"
+            git push origin HEAD:feature/turn-steering-wheels-kenney-monster
+          fi
+      - name: Propagate verification result
+        if: steps.verify.outcome != 'success'
+        run: exit 1
