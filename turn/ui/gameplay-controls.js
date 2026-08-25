@@ -1,8 +1,9 @@
 import {
   advanceDriftLockAmount,
   driftThrottleForLock,
-  pointerUsesDriftLock
-} from '../input/drift-lock.js?revision=r216-binary-lock';
+  pointerUsesDriftLock,
+  resolveDriftBoostRechargeMultiplier
+} from '../input/drift-lock.js?revision=r217-drift-lock-balance';
 
 globalThis.__turnBoostActive = false;
 globalThis.__turnBoostCharge = 1;
@@ -479,7 +480,11 @@ function installGameplayUi() {
         safeVibrate([28, 36, 62]);
       }
     } else {
-      const rechargeMultiplier = globalThis.__turnDriftHeld ? getDriftRechargeMultiplier() : 1;
+      const rechargeMultiplier = resolveDriftBoostRechargeMultiplier({
+        driftHeld: globalThis.__turnDriftHeld === true,
+        driftLockAmount,
+        lockedMultiplier: getDriftRechargeMultiplier()
+      });
       boostCharge = Math.min(1, boostCharge + dt * rechargeMultiplier / BOOST_RECHARGE_SECONDS);
     }
 
