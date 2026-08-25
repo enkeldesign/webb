@@ -165,7 +165,17 @@ export async function createCarVisual({
   root.userData.turnSemanticPaintRecords = semanticPaintRecords;
   root.userData.frontWheelPivots = frontWheelPivots;
   root.userData.wheelSpinners = [];
+  installWheelAnimationHostBridge(root);
   return root;
+}
+
+function installWheelAnimationHostBridge(visual) {
+  visual.addEventListener('added', () => {
+    const host = visual.parent;
+    if (!host?.userData) return;
+    host.userData.frontWheelPivots = visual.userData.frontWheelPivots || [];
+    host.userData.wheelSpinners = visual.userData.wheelSpinners || [];
+  });
 }
 
 function installEmergencyLightRig(root, model, service) {
