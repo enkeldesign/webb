@@ -4,6 +4,7 @@ import {
   resolveCameraMotionLeadTime,
   resolveDriftCameraBlend,
   resolveDriftCameraYawOffset,
+  resolveRaceCameraFov,
   updateRaceCameraState
 } from '../turn/render/camera.js';
 import {
@@ -72,6 +73,10 @@ approximately(
   resolveCameraMotionLeadTime(6.2, 1 / 60),
   (1 / 60) / Math.expm1(6.2 / 60)
 );
+approximately(resolveRaceCameraFov({ speedRatio: 1, speedResponsiveCamera: false, reducedMotion: false }), 78);
+approximately(resolveRaceCameraFov({ speedRatio: 1, speedResponsiveCamera: true, reducedMotion: false }), 88);
+approximately(resolveRaceCameraFov({ speedRatio: 1, speedResponsiveCamera: false, reducedMotion: true }), 68);
+approximately(resolveRaceCameraFov({ speedRatio: 1, speedResponsiveCamera: true, reducedMotion: true }), 68);
 
 const forward = { x: 0, z: 1 };
 const right = { x: 1, z: 0 };
@@ -217,7 +222,7 @@ assert.ok(
 );
 approximately(legacyStopped.camera.fov, 68);
 approximately(responsiveStopped.camera.fov, 68);
-approximately(legacyFast.camera.fov, 88);
+approximately(legacyFast.camera.fov, 78);
 approximately(responsiveFast.camera.fov, 88);
 approximately(legacyFast.cameraTarget.z, responsiveFast.cameraTarget.z);
 
@@ -277,7 +282,7 @@ assert.ok(
   movingLegacy.targetDistance < 20,
   'The regression harness must reproduce the established high-speed look-target lag'
 );
-approximately(movingLegacy.fov, 88, 1e-6);
+approximately(movingLegacy.fov, 78, 1e-6);
 approximately(movingResponsive.followDistance, 14, 1e-6);
 approximately(movingResponsive.targetDistance, 27, 1e-6);
 approximately(movingResponsive.fov, 88, 1e-6);
@@ -305,6 +310,14 @@ assert.match(cameraSource, /DRIFT_CAMERA_BLEND_START_SPEED = 8 \/ 3\.6/);
 assert.match(cameraSource, /DRIFT_CAMERA_FULL_BLEND_SPEED = 28 \/ 3\.6/);
 assert.match(cameraSource, /\?revision=r214-shared-speed-fov/,
   'The combined Camera settings module must be cache-busted');
+assert.match(cameraSource, /CLASSIC_MAX_CAMERA_FOV = 78/,
+  'Zoom OFF must top out at the calmer 78-degree FOV');
+assert.match(cameraSource, /ZOOM_MAX_CAMERA_FOV = 88/,
+  'Zoom ON must retain the stronger 88-degree FOV');
+assert.match(cameraSource, /prefers-reduced-motion: reduce/,
+  'Speed-based FOV changes must respect the platform reduced-motion preference');
+assert.match(cameraSource, /if \(reducedMotion\) return BASE_CAMERA_FOV/,
+  'Reduced motion must pin FOV to the 68-degree baseline');
 assert.match(cameraSource, /\? 16 - speedRatio \* 2/,
   'The responsive camera must move from distance 16 toward 14 as speed builds');
 assert.match(cameraSource, /\? 8\.7 - speedRatio/,
@@ -315,10 +328,8 @@ assert.match(cameraSource, /resolveCameraMotionLeadTime\(CAMERA_POSITION_RESPONS
   'The responsive camera must cancel speed-dependent world-space follow lag');
 assert.match(cameraSource, /resolveCameraMotionLeadTime\(CAMERA_TARGET_RESPONSE_RATE, dt\)/,
   'The responsive look target must cancel speed-dependent world-space follow lag');
-assert.match(cameraSource, /camera\.fov = lerp\(camera\.fov, 68 \+ speedRatio \* 20/,
-  'Both distance profiles must share the same 68-to-88-degree speed FOV');
-assert.doesNotMatch(cameraSource, /fovSpeedGain/,
-  'The FOV curve must not depend on the Zoom preference');
+assert.match(cameraSource, /const targetFov = resolveRaceCameraFov\(\{ speedRatio, speedResponsiveCamera \}\)/,
+  'Race camera updates must use the reduced-motion-aware FOV resolver');
 assert.match(gameplayCss, /--boost-hud-downshift: 20px/,
   'Boost bar must move down by approximately its own racing height');
 assert.match(
@@ -332,4 +343,4 @@ assert.match(
   'Short landscape HUD must preserve the same Boost bar downshift'
 );
 
-console.log('TURN shared speed FOV, tuned classic pull-back, Zoom preference and Boost HUD shift passed.');
+console.log('TURN classic 78-degree FOV, Zoom 88-degree FOV, reduced-motion guard and tuned pull-back passed.');
