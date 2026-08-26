@@ -8,19 +8,16 @@ const [
   carModelsSource,
   emergencyModelsSource,
   semanticSource,
-  lotVehicleCopySource,
-  releaseSource
+  lotVehicleCopySource
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/vehicle/catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/emergency-livery-models.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/semantic-car-finish.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/garage/lot-vehicle-copy.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/garage/lot-vehicle-copy.js', import.meta.url), 'utf8')
 ]);
 const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
 const rally = catalog.getCarDefinition('toy-racer');
-const release = JSON.parse(releaseSource);
 
 assert.equal(rally.name, 'Rally Racer');
 assert.equal(rally.id, 'toy-racer', 'Rally must preserve its stable storage, replay and reward ID');
@@ -62,8 +59,8 @@ assert.doesNotMatch(semanticSource, /BoxGeometry|CylinderGeometry|SphereGeometry
 assert.match(carModelsSource, /installSemanticCarFinish\(\{/,
   'Every canonical rendering surface must use the shared semantic finish');
 assert.doesNotMatch(carModelsSource, /installVehicleVisualUpgrade|rally-competition/);
-assert.match(emergencyModelsSource, new RegExp(`car-models\\.js\\?build=${release.cacheKey}-native-car-surfaces`),
-  'The release bridge must bypass cached pre-palette car factories');
+assert.match(emergencyModelsSource, /from '\.\/car-models\.js'/,
+  'The emergency bridge must use the canonical car factory');
 assert.doesNotMatch(emergencyModelsSource, /BoxGeometry|applyFixedEmergencyLivery|installSecondaryAccent/);
 
 assert.match(lotVehicleCopySource, /'toy-racer': 'A grey-and-gold competition car/);

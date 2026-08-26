@@ -38,7 +38,7 @@ assert.equal(
   'Production must publish the optimized native HTML Lot wrapper through the current release'
 );
 assert.equal(imports['./vehicle/physics.js?build=20260720-r19'], `./vehicle/physics.js?build=${release.cacheKey}`, 'Production must publish the mandatory DRIFT penalty through the current release');
-assert.equal(imports['./vehicle/catalog.js?build=20260720-r19'], `./vehicle/catalog.js?build=${release.cacheKey}&wheel=r211-steering-wheels`, 'Production must publish the shared stat definitions through the current release');
+assert.equal(imports['./vehicle/catalog.js?build=20260720-r19'], '/turn/vehicle/catalog.js', 'Production must publish the shared stat definitions through the canonical vehicle catalog');
 assert.match(wrapper, /const lotResult = showOriginalLot\(options\)/, 'The verified Lot must mount synchronously before enhancement');
 assert.ok(
   wrapper.indexOf('showOriginalLot(options)') < wrapper.indexOf('enhanceLotNow()'),
