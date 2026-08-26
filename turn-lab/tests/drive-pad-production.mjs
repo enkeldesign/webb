@@ -130,12 +130,12 @@ const release = JSON.parse(releaseSource);
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(index, new RegExp(`drive-pad\\.css\\?build=${release.cacheKey}`));
 assert.match(index, new RegExp(`gameplay-v2\\.css\\?build=${release.cacheKey}`));
-assert.match(index, /gameplay-v2\.css\?build=20260823-r183&revision=r217-drift-lock-design/,
+assert.match(index, new RegExp(`gameplay-v2\\.css\\?build=${release.cacheKey}&revision=r217-drift-lock-design`),
   'The Boost gradient fix must bypass stale production CSS caches');
-assert.match(index, /drive-pad\.css\?build=20260823-r183&revision=r217-drift-lock-design/,
+assert.match(index, new RegExp(`drive-pad\\.css\\?build=${release.cacheKey}&revision=r217-drift-lock-design`),
   'The connected LOCK geometry must bypass stale production CSS caches');
-assert.match(nextIndex, /gameplay-v2\.css\?build=20260823-r183&revision=r217-drift-lock-design/);
-assert.match(nextIndex, /drive-pad\.css\?build=20260823-r183&revision=r217-drift-lock-design/);
+assert.match(nextIndex, new RegExp(`gameplay-v2\\.css\\?build=${release.cacheKey}&revision=r217-drift-lock-design`));
+assert.match(nextIndex, new RegExp(`drive-pad\\.css\\?build=${release.cacheKey}&revision=r217-drift-lock-design`));
 assert.match(index, new RegExp(`position-hud-r83\\.css\\?build=${release.cacheKey}`));
 assert.ok(
   index.indexOf('gameplay-v2.css') < index.indexOf('position-hud-r83.css'),
