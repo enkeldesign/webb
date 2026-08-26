@@ -70,8 +70,10 @@ assert.doesNotMatch(carModels, /(?:catalog|semantic-car-finish)\.js\?revision=/,
 
 assert.match(semantic, /const POLICE_FIXED_GREY = '#222222'/,
   'Police Car authored grey must use the requested #222 value');
-assert.match(semantic, /if \(car\.id === 'police'\) installPoliceFixedGrey\(node, material\)/,
+assert.match(semantic, /if \(car\.fixedLivery && car\.id === 'police'\) installPoliceFixedGrey\(node, material\)/,
   'Fixed Police Car livery must apply the grey treatment on its authored atlas');
+assert.match(semantic, /if \(car\.fixedLivery\) return true/,
+  'Fixed emergency models must retain the authored atlas after Police-specific treatment');
 assert.match(semantic, /function installPoliceFixedGrey\(node, material\)/);
 assert.match(semantic, /wheel\|tire\|tyre\|rubber/,
   'Police grey treatment must leave authored wheels alone');
