@@ -156,8 +156,15 @@ export function openBuildACar({ initialBuild = null, onSave = () => {} } = {}) {
       live.textContent = validation.errors[0];
       return;
     }
-    onSave(candidate);
-    dialog.close('saved');
+    try {
+      onSave(candidate);
+      dialog.close('saved');
+    } catch (error) {
+      const message = "Build not saved. TURN LAB could not access this browser's storage.";
+      saveReason.textContent = message;
+      live.textContent = message;
+      console.warn('TURN LAB: BUILD-A-CAR save failed.', error);
+    }
   });
 
   dialog.addEventListener('close', cleanup, { once: true });
