@@ -35,7 +35,7 @@ export const CAR_PALETTE = Object.freeze([
 ]);
 
 const DEFAULT_COLOR_BY_ID = Object.freeze({
-  convertible: Object.freeze({ fallback: '#a8327a', p3: Object.freeze([0.66, 0.14, 0.43]) }),
+  convertible: Object.freeze({ fallback: '#ff4fa3' }),
   classic: Object.freeze({ fallback: '#ffcc00', p3: Object.freeze([1, 0.76, 0]) }),
   'vintage-racer': Object.freeze({ fallback: '#004455' }),
   'toy-racer': Object.freeze({ fallback: '#cccccc' }),
