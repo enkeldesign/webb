@@ -8,7 +8,7 @@ import {
   makeGhostColor,
   normalizeVehicleColor,
   normalizeVehicleSecondaryColor
-} from './catalog.js?revision=r211-steering-wheels';
+} from './catalog.js';
 import {
   makeWideGamutSpec,
   setThreeColor
@@ -17,7 +17,7 @@ import {
   getKenneyPaletteAsset,
   installSemanticCarFinish,
   recolorSemanticCarFinish
-} from './semantic-car-finish.js?revision=r211-steering-wheels';
+} from './semantic-car-finish.js';
 
 const loadersByPack = new Map();
 const sourceCache = new Map();
