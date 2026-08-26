@@ -150,6 +150,7 @@ export function createRaceSessionOrchestrator({
     state.running = true;
     state.lastFrame = clock();
     prepareRace(state);
+    environment.__turnRefillBoost?.();
     intro.hidden = true;
     hud.hidden = false;
     controls.hidden = false;
