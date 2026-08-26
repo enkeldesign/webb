@@ -83,12 +83,12 @@ const expectedCatalogTargets = [
   ['/turn/vehicle/catalog.js?build=20260804-r157-factory-colors', '/turn/vehicle/catalog.js'],
   ['/turn/vehicle/catalog.js?build=20260720-r20&revision=r588-canonical-attributes', '/turn/vehicle/catalog.js'],
   ['/turn/vehicle/catalog.js?revision=r164-vintage-rally-polish', '/turn/vehicle/catalog.js'],
-  ['./vehicle/catalog.js?build=20260720-r19', './vehicle/catalog.js'],
-  ['./vehicle/catalog.js?build=20260720-r20', './vehicle/catalog.js']
+  ['./vehicle/catalog.js?build=20260720-r19', '/turn/vehicle/catalog.js'],
+  ['./vehicle/catalog.js?build=20260720-r20', '/turn/vehicle/catalog.js']
 ];
 const expectedEmergencyTargets = [
-  ['./vehicle/car-models.js?build=20260720-r19', './vehicle/emergency-livery-models.js'],
-  ['./vehicle/car-models.js?build=20260720-r22', './vehicle/emergency-livery-models.js']
+  ['./vehicle/car-models.js?build=20260720-r19', '/turn/vehicle/emergency-livery-models.js'],
+  ['./vehicle/car-models.js?build=20260720-r22', '/turn/vehicle/emergency-livery-models.js']
 ];
 
 for (const [name, source] of [['production', productionEntry], ['TURN LAB', labEntry]]) {
