@@ -25,7 +25,7 @@ import { createCarVisual } from '/turn/vehicle/car-models.js?build=20260720-r19'
 import {
   FRONT_WHEEL_STEER_ANGLE,
   resolveFrontWheelSteeringAngle
-} from '/turn/vehicle/front-wheel-steering.js?revision=r219-trajectory-wheel-steering';
+} from '/turn/vehicle/front-wheel-steering.js?revision=r220-trajectory-wheel-steering-35';
 import { installPerformanceMonitor, recordPerformanceFrame } from '/turn/performance-monitor.js?build=20260720-r19';
 
 const intro = document.querySelector('#intro');
@@ -1033,7 +1033,7 @@ function animateWheels(
   steerAngle = steering * FRONT_WHEEL_STEER_ANGLE
 ) {
   for (const pivot of car.userData.frontWheelPivots || []) {
-    pivot.rotation.y = lerpAngle(pivot.rotation.y, steerAngle, Math.min(1, dt * 16));
+    pivot.rotation.y = lerpAngle(pivot.rotation.y, steerAngle, Math.min(1, dt * 12));
   }
   for (const spinner of car.userData.wheelSpinners || []) {
     spinner.rotation.y -= speed * dt * 1.35;
