@@ -2,7 +2,7 @@ import {
   createCarVisual as createBaseCarVisual,
   preloadCarModels,
   recolorCarVisual
-} from './car-models.js?build=20260826-r184-native-car-surfaces&revision=r211-steering-wheels';
+} from './car-models.js?build=20260826-r184';
 
 const EMERGENCY_IDS = new Set(['police', 'ambulance', 'firetruck']);
 const DARK_TIRE_COLOR = 0x060708;
@@ -18,8 +18,13 @@ export { preloadCarModels, recolorCarVisual };
  */
 export async function createCarVisual(options = {}) {
   const root = await createBaseCarVisual(options);
-  darkenVisibleWheels(root);
-  if (EMERGENCY_IDS.has(root?.userData?.turnCarId)) {
+  const emergency = EMERGENCY_IDS.has(root?.userData?.turnCarId);
+
+  // Fixed-livery emergency wheels use one authored palette texture for tyre and rim.
+  // They intentionally skip semantic repaint, so tinting the whole wheel would also
+  // blacken the authored rim cells. Preserve the native wheel atlas for those cars.
+  if (!emergency) darkenVisibleWheels(root);
+  if (emergency) {
     root.userData.turnEmergencyLivery = 'native-kenney-palette';
   }
   return root;
@@ -33,9 +38,9 @@ function darkenVisibleWheels(root) {
       const label = `${node.name || ''} ${material?.name || ''}`.toLowerCase();
       if (!/wheel|tire|tyre|rubber/.test(label) || !material?.color) continue;
 
-      // Kenney wheel meshes use palette textures. Their semantic rim shader runs
-      // after the material tint, so this makes the tyre/rubber nearly black while
-      // keeping paintable rim cells legible in their authored/selected colour.
+      // Repaintable Kenney wheel meshes use palette textures. Their semantic rim
+      // shader runs after this material tint, leaving painted rim cells legible while
+      // the tyre/rubber reads almost black.
       material.color.setHex(DARK_TIRE_COLOR);
       if ('roughness' in material) {
         material.roughness = Math.max(Number(material.roughness) || 0, 0.9);
