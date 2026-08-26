@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import { matchesTrackColor } from '../../turn/achievements/chromatic-camouflage-r183.js';
 
 const [
   bridge,
@@ -27,6 +28,7 @@ function importMapFrom(source) {
 }
 
 const expectedFactoryColors = new Map([
+  ['convertible', ['#ff4fa3', '#792766']],
   ['van', ['#ff7700', '#222222']],
   ['race', ['#5d503f', '#222222']],
   ['vintage-racer', ['#004455', '#222222']],
@@ -39,6 +41,24 @@ for (const [id, [primary, secondary]] of expectedFactoryColors) {
   const car = catalog.getCarDefinition(id);
   assert.equal(car.defaultColor, primary, `${car.name} factory primary color`);
   assert.equal(car.defaultSecondaryColor, secondary, `${car.name} factory secondary color`);
+}
+
+const chromaticFactoryRoute = Object.freeze({
+  countryside: 'convertible',
+  airport: 'classic',
+  harbor: 'van',
+  cliffside: 'sedan',
+  'midnight-city': 'sedan-sports',
+  mountain: 'suv'
+});
+
+for (const [trackId, carId] of Object.entries(chromaticFactoryRoute)) {
+  const car = catalog.getCarDefinition(carId);
+  assert.equal(
+    matchesTrackColor(trackId, car.defaultColor),
+    true,
+    `CHROMATIC CAMOUFLAGE must remain achievable without PAINTJOB: ${car.name} factory ${car.defaultColor} should match ${trackId}`
+  );
 }
 
 for (const id of ['police', 'ambulance', 'firetruck']) {
@@ -126,4 +146,4 @@ for (const specifier of [
     `YOUR TURN must share the canonical car presentation for ${specifier}`);
 }
 
-console.log('TURN and YOUR TURN factory vehicle colors, Police fixed grey and canonical module routes passed.');
+console.log('TURN factory colors keep CHROMATIC CAMOUFLAGE paint-free, with Police fixed grey and canonical module routes.');
