@@ -22,6 +22,10 @@ import {
   saveVehicleSelection
 } from '/turn/vehicle/catalog.js?build=20260720-r19';
 import { createCarVisual } from '/turn/vehicle/car-models.js?build=20260720-r19';
+import {
+  FRONT_WHEEL_STEER_ANGLE,
+  resolveFrontWheelSteeringAngle
+} from '/turn/vehicle/front-wheel-steering.js?revision=r219-trajectory-wheel-steering';
 import { installPerformanceMonitor, recordPerformanceFrame } from '/turn/performance-monitor.js?build=20260720-r19';
 
 const intro = document.querySelector('#intro');
@@ -1021,10 +1025,15 @@ function ghostFrameAt(time) {
   return bestLap ? lapFrameAt(bestLap, time) : null;
 }
 
-function animateWheels(car, steering, speed, dt) {
-  const steerAngle = steering * 0.58;
+function animateWheels(
+  car,
+  steering,
+  speed,
+  dt,
+  steerAngle = steering * FRONT_WHEEL_STEER_ANGLE
+) {
   for (const pivot of car.userData.frontWheelPivots || []) {
-    pivot.rotation.y = THREE.MathUtils.lerp(pivot.rotation.y, steerAngle, Math.min(1, dt * 16));
+    pivot.rotation.y = lerpAngle(pivot.rotation.y, steerAngle, Math.min(1, dt * 16));
   }
   for (const spinner of car.userData.wheelSpinners || []) {
     spinner.rotation.y -= speed * dt * 1.35;
@@ -1033,11 +1042,19 @@ function animateWheels(car, steering, speed, dt) {
 
 function placePlayerCar(dt) {
   const surfaceSample = samples[state.nearestTrackIndex] || findNearestTrack(state.position).sample;
+  const frontWheelSteeringAngle = resolveFrontWheelSteeringAngle({
+    steering: state.steering,
+    heading: state.heading,
+    velocityX: state.velocity.x,
+    velocityZ: state.velocity.z,
+    driftHeld: Boolean(globalThis.__turnDriftHeld),
+    driftLockAmount: state.driftLockAmount
+  });
   playerCar.position.copy(state.position);
   playerCar.rotation.x = trackPitch(surfaceSample);
   playerCar.rotation.y = state.heading + Math.PI;
   playerCar.rotation.z = -state.steering * 0.035 - state.velocity.dot(getRight()) * 0.0025;
-  animateWheels(playerCar, state.steering, state.speed, dt);
+  animateWheels(playerCar, state.steering, state.speed, dt, frontWheelSteeringAngle);
 }
 
 function placeCompetitorCars(dt) {

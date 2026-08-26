@@ -3,6 +3,13 @@ import fs from 'node:fs/promises';
 
 const catalogSource = await fs.readFile(new URL('../../turn/vehicle/catalog.js', import.meta.url), 'utf8');
 const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
+const frontWheelSteeringSource = await fs.readFile(
+  new URL('../../turn/vehicle/front-wheel-steering.js', import.meta.url),
+  'utf8'
+);
+const frontWheelSteering = await import(
+  `data:text/javascript;base64,${Buffer.from(frontWheelSteeringSource).toString('base64')}`
+);
 
 const expectedQuarterTurns = new Map([
   ['convertible', 1],
@@ -203,7 +210,90 @@ assert.match(lot, /VIEWER_INITIAL_YAW = Math\.PI - 0\.55/, 'The viewer must star
 assert.match(main, /playerCar\.rotation\.y = state\.heading \+ Math\.PI/);
 assert.match(main, /car\.rotation\.y = frame\.h \+ Math\.PI/);
 
-console.log(`TURN ${release.id} car orientation, visible steering integration and surface-specific visual sizing passed for all 15 models.`);
+const degrees = (value) => value * Math.PI / 180;
+const trajectoryVelocity = (angle, speed = 30) => ({
+  velocityX: Math.sin(angle) * speed,
+  velocityZ: Math.cos(angle) * speed
+});
+const halfInputAngle = frontWheelSteering.FRONT_WHEEL_STEER_ANGLE * 0.5;
+
+assertClose(
+  frontWheelSteering.EXTREME_DRIFT_SLIP_THRESHOLD,
+  degrees(45),
+  'Extreme DRIFT trajectory threshold'
+);
+assertClose(
+  frontWheelSteering.resolveFrontWheelSteeringAngle({
+    steering: 0.5,
+    heading: 0,
+    ...trajectoryVelocity(degrees(70)),
+    driftHeld: false
+  }),
+  halfInputAngle,
+  'Normal steering must remain tilt-driven outside DRIFT'
+);
+assertClose(
+  frontWheelSteering.resolveFrontWheelSteeringAngle({
+    steering: 0.5,
+    heading: 0,
+    ...trajectoryVelocity(degrees(44)),
+    driftHeld: true
+  }),
+  halfInputAngle,
+  'DRIFT below 45 degrees must remain tilt-driven'
+);
+assertClose(
+  frontWheelSteering.resolveFrontWheelSteeringAngle({
+    steering: -1,
+    heading: 0,
+    ...trajectoryVelocity(degrees(45)),
+    driftHeld: true
+  }),
+  degrees(45),
+  'DRIFT at 45 degrees must align the wheels with trajectory'
+);
+assertClose(
+  frontWheelSteering.resolveFrontWheelSteeringAngle({
+    steering: 1,
+    heading: 0,
+    ...trajectoryVelocity(degrees(-70)),
+    driftLockAmount: 1
+  }),
+  degrees(-70),
+  'DRIFT LOCK must align the wheels with a negative trajectory angle'
+);
+assertClose(
+  frontWheelSteering.resolveFrontWheelSteeringAngle({
+    steering: 0,
+    heading: degrees(150),
+    ...trajectoryVelocity(degrees(-150)),
+    driftLockAmount: 1
+  }),
+  degrees(60),
+  'Trajectory alignment must take the shortest angle across the wrap boundary'
+);
+assertClose(
+  frontWheelSteering.resolveFrontWheelSteeringAngle({
+    steering: 0.5,
+    heading: 0,
+    ...trajectoryVelocity(degrees(70), 0.5),
+    driftHeld: true
+  }),
+  halfInputAngle,
+  'Near-zero velocity must retain stable tilt-driven steering'
+);
+assert.match(
+  main,
+  /resolveFrontWheelSteeringAngle\(\{[\s\S]*driftHeld: Boolean\(globalThis\.__turnDriftHeld\)[\s\S]*driftLockAmount: state\.driftLockAmount/,
+  'The player wheel animator must use both DRIFT and LOCK state'
+);
+assert.match(
+  main,
+  /pivot\.rotation\.y = lerpAngle\(pivot\.rotation\.y, steerAngle, Math\.min\(1, dt \* 16\)\)/,
+  'Trajectory takeover must retain the quick smooth wheel transition'
+);
+
+console.log(`TURN ${release.id} car orientation, trajectory steering, visible wheel integration and surface-specific visual sizing passed for all 15 models.`);
 
 function assertClose(actual, expected, label) {
   assert.ok(
