@@ -157,8 +157,8 @@ assert.deepEqual(vintageRacer.stats, {
 }, 'Vintage Racer must spend three ordinary stat points to reach maximum DRIFT');
 assert.equal(getVehicleStatTotal(vintageRacer.stats), 18,
   'Vintage Racer must retain the shared 18-point vehicle budget');
-assert.equal(vintageRacer.defaultColor, '#3f5368',
-  'Vintage Racer must receive the Truck factory colour');
+assert.equal(vintageRacer.defaultColor, '#004455',
+  'Vintage Racer must retain its current deep teal factory colour');
 assert.equal(vintageRacer.perk?.title, 'DRIFTAGE');
 assert.match(vintageRacer.perk?.description || '', /larger slip angles/i);
 assert.equal(vintageRacer.tuning.driftSpeedMultiplier, 0.95,
@@ -228,7 +228,7 @@ assert.equal(suv.defaultColor, '#0555aa', 'SUV factory paint must be #0555aa');
 
 const raceCar = CAR_CATALOG.find((car) => car.id === 'race');
 assert.ok(raceCar, 'Race Car must remain in the vehicle catalog');
-assert.equal(raceCar.defaultColor, '#ff7700', 'Race Car factory paint must be the former Truck orange');
+assert.equal(raceCar.defaultColor, '#5d503f', 'Race Car factory paint must be the current brown');
 
 const truck = CAR_CATALOG.find((car) => car.id === 'truck');
 assert.ok(truck, 'Truck must remain in the vehicle catalog');

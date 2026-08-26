@@ -4,6 +4,24 @@
 
 ## Active experiments
 
+### BUILD-A-CAR prototype 1
+
+The Lot now exposes a LAB-only **BUILD-A-CAR** action. It opens an accessible modal with a persistent live 3D preview and one isolated custom-car slot.
+
+The first vertical prototype deliberately tests the smallest useful modular system:
+
+- two compatible lower bodies and two cabins, virtually separated from Kenney Car Kit models at render time;
+- three standalone wheel sets and two standalone spoilers from Kenney Car Kit 3.1;
+- optional taxi and emergency-light roof accessories plus two headlight treatments;
+- primary, secondary and accent paint channels;
+- six attributes constrained to exactly 18 points, with values from 1 to 5;
+- one explicit sidegrade perk from Long Burn, Holeshot and Drift Dynamo;
+- a named build saved under the existing LAB-prefixed storage boundary.
+
+This stage proves composition, fit, builder interaction and persistence. It does not yet replace the selected production vehicle in a race, alter physics, write rivals or extend YOUR TURN. The saved definition already separates visual parts, colours, stats, perk and deterministic build identity so those integrations can follow without changing the schema's basic shape.
+
+The part system is removable by deleting its single dynamic entry installer from `turn-lab/index.html`. The canonical TURN catalogue, Lot, renderer and physics remain unchanged.
+
 ### Portrait play R3
 
 Portrait is now a real race layout rather than a rotate-device blocker:
@@ -33,15 +51,15 @@ The six-track connected-world experiment remains active in both orientations. Ea
 
 1. Open `https://enkel.design/turn-lab/` in Safari.
 2. Add **TURN LAB** to the Home Screen, or choose **Play in browser anyway**.
-3. Keep the device in portrait, choose a car and track, and start a motion-steering race.
-4. Recalibrate in your natural two-handed portrait grip.
-5. Use the centred Drive Pad and slide through Brake/Reverse → Gas → Drift or Boost.
-6. Use the live steering meter to compare physical angle with delivered steering. Full lock is ±24°.
-7. Rotate back to landscape before starting another race if you want a direct control comparison.
+3. Choose a track and continue to **The Lot**.
+4. Open **BUILD-A-CAR**, combine parts, spend exactly 18 attribute points and save your LAB build.
+5. Reopen **EDIT MY CAR** to confirm that the isolated slot persists.
+6. For portrait play, start a normal race, recalibrate in your natural grip and use the centred Drive Pad.
 
 ## Safety
 
 - No production TURN file is changed for these experiments.
 - LAB uses `turn-lab:` / `turn-lab-session:` storage prefixes and does not seed data from production.
+- BUILD-A-CAR stores only its versioned definition; it does not modify the production vehicle selection.
 - Portrait layout, centred Drive Pad and orientation-lock behavior are scoped to `data-turn-deployment="lab"`.
 - The production physics, vehicle handling, drift, boost, Drive By Ear and accessibility systems remain the runtime source of truth.

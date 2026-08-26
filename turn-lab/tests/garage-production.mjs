@@ -46,8 +46,8 @@ assert.deepEqual(
   truck.stats,
   { speed: 3, acceleration: 2, control: 4, drift: 4, boostPower: 2, boostDuration: 3 }
 );
-assert.equal(race.defaultColor, '#ff7700');
-assert.deepEqual(race.defaultColorP3, [1, 0.467, 0]);
+assert.equal(race.defaultColor, '#5d503f');
+assert.equal(race.defaultColorP3, null);
 assert.equal(truck.defaultColor, '#b93632');
 assert.deepEqual(truck.defaultColorP3, [0.72, 0.12, 0.12]);
 assert.equal(monsterTruck.visualScale, 0.83);
@@ -170,9 +170,8 @@ const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/s
 assert.ok(importMapText, 'Production must expose its import map');
 const imports = JSON.parse(importMapText).imports;
 const releaseTarget = (filePath) => `${filePath}?build=${release.cacheKey}`;
-const wheelRevision = 'r211-steering-wheels';
-const vehicleCatalogTarget = `${releaseTarget('./vehicle/catalog.js')}&wheel=${wheelRevision}`;
-const carModelBridgeTarget = `${releaseTarget('./vehicle/emergency-livery-models.js')}&wheel=${wheelRevision}`;
+const vehicleCatalogTarget = '/turn/vehicle/catalog.js';
+const carModelBridgeTarget = '/turn/vehicle/emergency-livery-models.js';
 
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(index, new RegExp(`\\.\\/garage\\/lot-r10\\.css\\?build=${release.cacheKey}-native-html`));

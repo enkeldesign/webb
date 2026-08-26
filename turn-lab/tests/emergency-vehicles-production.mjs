@@ -273,15 +273,17 @@ assert.match(maydayAudio, /createStereoPanner/,
 assert.match(maydayAudio, /__turnAudioPreferences\?\.getSettings/,
   'The supplemental rescue audio must respect TURN audio-off preferences');
 
-const escapedBuild = release.cacheKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-for (const html of [index, nextIndex]) {
+for (const [html, target] of [
+  [index, '/turn/vehicle/emergency-livery-models.js'],
+  [nextIndex, `./vehicle/emergency-livery-models.js?build=${release.cacheKey}&wheel=r211-steering-wheels`]
+]) {
   assert.match(
     html,
-    new RegExp(`"\\.\\/vehicle\\/car-models\\.js\\?build=20260720-r19": "\\.\\/vehicle\\/emergency-livery-models\\.js\\?build=${escapedBuild}&wheel=r211-steering-wheels"`)
+    new RegExp(`"\\.\\/vehicle\\/car-models\\.js\\?build=20260720-r19": "${target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`)
   );
   assert.match(
     html,
-    new RegExp(`"\\.\\/vehicle\\/car-models\\.js\\?build=20260720-r22": "\\.\\/vehicle\\/emergency-livery-models\\.js\\?build=${escapedBuild}&wheel=r211-steering-wheels"`)
+    new RegExp(`"\\.\\/vehicle\\/car-models\\.js\\?build=20260720-r22": "${target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`)
   );
 }
 
