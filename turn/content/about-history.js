@@ -234,6 +234,21 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
       'Selective CC0 RGSDev Monster Truck with preserved named materials',
       'TURN 1.10.0 · 2026.08.23-r179 native car surfaces release'
     ]
+  },
+  {
+    period: '24–26 August',
+    title: 'Playtesting reshapes the driving feel',
+    paragraphs: [
+      'After hands-on playtesting, TURN’s chase camera was reshaped around a clearer sense of speed without letting the car drift away on screen. The optional Drift Camera now follows the car’s actual direction of travel, while speed-responsive field of view reaches both Classic and Zoom profiles; reduced-motion players keep the stable original field of view.',
+      'The same testing made the cars’ front wheels part of the feedback loop. Existing model pivots are now bridged into the race-car host so the visible wheels turn with steering input instead of remaining fixed while the car changes direction.',
+      'A progressive DRIFT LOCK experiment was rolled back after it proved too crowded for useful analog thumb movement. The standard control now uses a binary LOCK target with a short smooth transition, a connected LOCK bubble and purple-to-green Boost feedback. Boost starts full, recharges only while drifting and rewards locked drifting at the former full drift rate.'
+    ],
+    milestones: [
+      'Playtest-driven Drift Camera, speed-responsive field of view and a clearer Zoom choice',
+      'Visible front-wheel steering tied to player input',
+      'Standard binary DRIFT LOCK with quick smoothing, LOCK bubble and state-aware Boost',
+      'TURN 1.11.0 · 2026.08.26-r184 driving-feel release'
+    ]
   }
 ]);
 
@@ -450,11 +465,20 @@ export const CHANGELOG = Object.freeze([
       ['1.10.3 r182', 'Fixes Vintage Racer secondary PAINTJOB targeting and changes Rally Racer factory paint to #ccc body with #fc0 trim.'],
       ['1.10.4 r183', 'Performance and loading pass: primary-only Color Cues, cheaper achievement updates, batched persistence, filtered DOM observation, earlier background module warmup and deferred rival replay storage.']
     ]
+  },
+  {
+    date: '25–26 August',
+    entries: [
+      ['1.11.0 r184', 'Playtest-driven driving-feel release combining the new camera behaviour, standard binary DRIFT LOCK, rebalanced Boost and visible front-wheel steering.'],
+      ['Camera', 'Adds the optional Drift Camera, gives Classic a 68–78° speed FOV with a 14–18 follow range, lets Zoom reach 88° and keeps reduced-motion play at a stable 68°.'],
+      ['DRIFT LOCK and Boost', 'Replaces the progressive experiment with a binary left-pull LOCK using a short smooth transition, connected LOCK bubble and purple-to-green charge feedback; Boost lasts 50% longer and recharges only through Drift.'],
+      ['Visible wheel steering', 'Connects the authored front-wheel pivots to steering input so production cars visibly turn their wheels while driving.']
+    ]
   }
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.10.4',
-  build: '2026.08.23-r183',
-  note: 'TURN 1.10.4 build r183 reduces runtime hitches by moving achievement, observer, module-loading and rival-replay persistence work away from critical interaction frames.'
+  version: '1.11.0',
+  build: '2026.08.26-r184',
+  note: 'TURN 1.11.0 build r184 promotes the playtested camera, standard binary DRIFT LOCK, Boost balance and visible front-wheel steering.'
 });

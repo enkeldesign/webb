@@ -134,6 +134,9 @@ assert.match(content, /SAVE BELLA!/);
 assert.match(content, /AN ARMY OF ME/);
 assert.match(content, /ON COURSE, OF COURSE/);
 assert.match(content, /Paintjob MutationObserver/);
+assert.match(content, /Playtesting reshapes the driving feel/);
+assert.match(content, /Visible front-wheel steering tied to player input/);
+assert.match(content, /Standard binary DRIFT LOCK/);
 
 for (const size of ['compact', 'standard', 'wide', 'reader']) {
   assert.match(dialogCss, new RegExp(`\\.turn-dialog--${size}`),
