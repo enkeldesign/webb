@@ -2,7 +2,7 @@ import {
   createCarVisual as createBaseCarVisual,
   preloadCarModels,
   recolorCarVisual
-} from './car-models.js?build=20260823-r183-native-car-surfaces&revision=r211-steering-wheels';
+} from './car-models.js?build=20260826-r184-native-car-surfaces&revision=r211-steering-wheels';
 
 const EMERGENCY_IDS = new Set(['police', 'ambulance', 'firetruck']);
 const DARK_TIRE_COLOR = 0x060708;

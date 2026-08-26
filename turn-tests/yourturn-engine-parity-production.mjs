@@ -1,12 +1,15 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [turnIndex, yourTurnIndex, yourTurnApp, yourTurnSession] = await Promise.all([
+const [turnIndex, yourTurnIndex, yourTurnApp, yourTurnSession, releaseSource] = await Promise.all([
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/app.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../yourturn/session.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../yourturn/session.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8')
 ]);
+
+const release = JSON.parse(releaseSource);
 
 function readImportMap(source, label) {
   const match = source.match(/<script\s+type="importmap">\s*([\s\S]*?)\s*<\/script>/i);
@@ -134,7 +137,7 @@ assert.match(
 );
 assert.match(
   yourTurnIndex,
-  /\/turn\/drive-pad\.css\?build=20260823-r183&source=yourturn-r593/,
+  new RegExp(`/turn/drive-pad\\.css\\?build=${release.cacheKey}&source=yourturn-r593`),
   'YOUR TURN must use a fresh production drive-pad cache identity'
 );
 assert.match(

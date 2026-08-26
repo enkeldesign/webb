@@ -14,6 +14,7 @@ const [
   app,
   index,
   labIndex,
+  releaseSource,
   attribution,
   bella,
   bellaRescue,
@@ -32,6 +33,7 @@ const [
   readText('../turn/app.js'),
   readText('../turn/index.html'),
   readText('../turn-lab/index.html'),
+  readText('../turn/release.json'),
   readText('../turn/assets/KENNEY-ASSETS.md'),
   readBuffer('../turn/tracks/countryside-bella-r166.js'),
   readBuffer('../turn/tracks/countryside-bella-rescue-r524.js'),
@@ -39,6 +41,8 @@ const [
   readText('./countryside-visual-smoke.mjs'),
   readText('../.github/workflows/turn-countryside-visual-smoke.yml')
 ]);
+
+const release = JSON.parse(releaseSource);
 
 assert.match(plannedWorld, /REVISION = 'r532-countryside-nature-polish'/);
 assert.match(plannedWorld, /name = 'Countryside Planned World'/);
@@ -120,10 +124,10 @@ assert.match(worldRender, /track-identity\.js\?revision=r532-countryside-nature-
 assert.match(worldRender, /section-intensity\.js\?revision=r532-countryside-nature-polish/);
 assert.match(worldRender, /countryside-scenery-r177\.js\?revision=r532-countryside-nature-polish/);
 assert.match(app, /render\/world\.js\?revision=r532-countryside-nature-polish/);
-assert.match(index, /world-assets\.js\?build=20260823-r183&revision=r532-countryside-nature-polish/);
+assert.match(index, new RegExp(`world-assets\\.js\\?build=${release.cacheKey}&revision=r532-countryside-nature-polish`));
 assert.match(index, /kenney-track-landmarks-r517\.js\?revision=r532-countryside-nature-polish/);
 assert.match(index, /app\.js\?build=[^"']*-r532-countryside-nature/);
-assert.match(labIndex, /world-assets\.js\?build=20260823-r183&revision=r532-countryside-nature-polish/);
+assert.match(labIndex, new RegExp(`world-assets\\.js\\?build=${release.cacheKey}&revision=r532-countryside-nature-polish`));
 
 assert.equal(sha256(bella), '7133abe99b37322407cebe8ab4c627e3cd91663c3a981427fd328d403a734bf4',
   'BELLA and her rescue tree implementation must remain byte-for-byte unchanged');

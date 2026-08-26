@@ -11,6 +11,7 @@ const labIndexPath = path.resolve(turnDir, '../turn-lab/index.html');
 const RACING_MUSIC_SPECIFIER_PATTERN = /^\/turn\/audio\/racing-music-v2\.js\?build=\d{8}-r\d+-racing-music-warm-v2$/;
 const AUDIO_PREFERENCES_SPECIFIER_PATTERN = /^\/turn\/audio\/audio-preferences\.js\?build=\d{8}-r\d+$/;
 const COVERED_RENDERING_SPECIFIER_PATTERN = /^\/turn\/render\/covered-rendering\.js\?build=\d{8}-r\d+$/;
+const RIVAL_ONBOARDING_SPECIFIER_PATTERN = /^\/turn\/ui\/rival-onboarding\.js\?build=\d{8}-r\d+$/;
 
 export async function loadReleaseDefinition() {
   const release = JSON.parse(await fs.readFile(releasePath, 'utf8'));
@@ -73,6 +74,12 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
     COVERED_RENDERING_SPECIFIER_PATTERN,
     `/turn/render/covered-rendering.js?build=${release.cacheKey}`
   );
+  synchronizeReleaseBoundSpecifier(
+    importMap,
+    release,
+    RIVAL_ONBOARDING_SPECIFIER_PATTERN,
+    `/turn/ui/rival-onboarding.js?build=${release.cacheKey}`
+  );
 }
 
 export function renderReleaseIndex(source, release) {
@@ -117,12 +124,16 @@ export function renderLabReleaseIndex(source, productionIndex, release) {
 
   return source
     .replace(
-      /<!-- TURN LAB viewport diagnostics\. Runtime source: production TURN [^>]* -->/,
-      `<!-- TURN LAB viewport diagnostics. Runtime source: production TURN ${release.id}. -->`
+      /(<!-- TURN LAB [^>]*Runtime source: production TURN )\d{4}\.\d{2}\.\d{2}-r\d+(\. -->)/,
+      `$1${release.id}$2`
     )
     .replace(
       /globalThis\.__TURN_BUILD__ = Object\.freeze\(\{[\s\S]*?\}\);/,
       `globalThis.__TURN_BUILD__ = Object.freeze({\n      version: '${release.version}',\n      id: '${release.id}',\n      cacheKey: '${release.cacheKey}'\n    });`
+    )
+    .replace(
+      /runtime: 'production TURN \d{4}\.\d{2}\.\d{2}-r\d+'/g,
+      `runtime: 'production TURN ${release.id}'`
     )
     .replace(
       /TURN LAB · production TURN \d+\.\d+\.\d+ r\d+/g,

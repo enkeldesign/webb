@@ -23,8 +23,13 @@ const [
 const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
 const release = JSON.parse(releaseSource);
 
-assert.equal(release.version, '1.10.4');
-assert.equal(release.id, '2026.08.23-r183');
+const [releaseMajor, releaseMinor, releasePatch] = release.version.split('.').map(Number);
+assert.ok(
+  releaseMajor > 1
+    || (releaseMajor === 1 && (releaseMinor > 10 || (releaseMinor === 10 && releasePatch >= 4))),
+  'Semantic native car finishes must remain part of TURN 1.10.4 or later'
+);
+assert.match(release.id, /^\d{4}\.\d{2}\.\d{2}-r\d+$/);
 assert.equal(catalog.CAR_CATALOG.length, 15);
 assert.deepEqual(
   catalog.CAR_CATALOG.filter((car) => !car.fixedLivery && !car.secondaryPaint).map((car) => car.id),

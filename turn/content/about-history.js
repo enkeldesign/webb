@@ -241,7 +241,7 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     paragraphs: [
       'After hands-on playtesting, TURN’s chase camera was reshaped around a clearer sense of speed without letting the car drift away on screen. The optional Drift Camera now follows the car’s actual direction of travel, while speed-responsive field of view reaches both Classic and Zoom profiles; reduced-motion players keep the stable original field of view.',
       'The same testing made the cars’ front wheels part of the feedback loop. Existing model pivots are now bridged into the race-car host so the visible wheels turn with steering input instead of remaining fixed while the car changes direction.',
-      'A progressive DRIFT LOCK experiment was rolled back after it proved too crowded for useful analog thumb movement. The standard control now uses a binary LOCK target with a short smooth transition, a connected LOCK bubble and purple-to-green Boost feedback. Boost starts full, recharges only while drifting and rewards locked drifting at the former full drift rate.'
+      'A progressive DRIFT LOCK experiment was rolled back after it proved too crowded for useful analog thumb movement. The standard control now uses a binary LOCK target with a short smooth transition, a connected LOCK bubble and purple-to-green Boost feedback. Boost recharges only while drifting and rewards locked drifting at the former full drift rate.'
     ],
     milestones: [
       'Playtest-driven Drift Camera, speed-responsive field of view and a clearer Zoom choice',
