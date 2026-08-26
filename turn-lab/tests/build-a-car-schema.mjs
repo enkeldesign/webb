@@ -59,6 +59,13 @@ const memory = createMemoryStorage();
 const saved = saveCustomCar(factory, memory);
 assert.equal(memory.has(CUSTOM_CAR_STORAGE_KEY), true);
 assert.deepEqual(loadCustomCar(memory), saved);
+assert.throws(
+  () => saveCustomCar(factory, {
+    setItem() { throw new Error('Storage blocked.'); }
+  }),
+  /Storage blocked/,
+  'Storage write failures must reach the modal error boundary'
+);
 memory.setItem(CUSTOM_CAR_STORAGE_KEY, '{broken json');
 assert.equal(loadCustomCar(memory), null, 'Malformed LAB storage must fail closed without throwing');
 
@@ -82,6 +89,16 @@ assert.match(entry, /turn-lab:custom-car-saved/);
 assert.match(modal, /dialog\.showModal\(\)/);
 assert.match(modal, /role="status" aria-live="polite"/);
 assert.match(modal, /aria-label="Decrease \$\{label\.toLowerCase\(\)\}"/);
+assert.match(
+  modal,
+  /try \\{\\s+onSave\\(candidate\\);\\s+dialog\\.close\\('saved'\\);\\s+\\} catch \\(error\\) \\{/,
+  'The dialog must only close after a successful persistence callback'
+);
+assert.match(
+  modal,
+  /saveReason\\.textContent = message;\\s+live\\.textContent = message;/,
+  'Persistence failures must be visible and announced'
+);
 assert.match(renderer, /sliceGeometry\(node, part\.extraction, part\.splitY\)/);
 assert.match(renderer, /frontWheelPivots/);
 assert.match(styles, /\.build-a-car-dialog::backdrop/);
