@@ -219,7 +219,7 @@ const halfInputAngle = frontWheelSteering.FRONT_WHEEL_STEER_ANGLE * 0.5;
 
 assertClose(
   frontWheelSteering.EXTREME_DRIFT_SLIP_THRESHOLD,
-  degrees(35),
+  degrees(30),
   'Extreme DRIFT trajectory threshold'
 );
 assertClose(
@@ -236,21 +236,21 @@ assertClose(
   frontWheelSteering.resolveFrontWheelSteeringAngle({
     steering: 0.5,
     heading: 0,
-    ...trajectoryVelocity(degrees(34)),
+    ...trajectoryVelocity(degrees(29)),
     driftHeld: true
   }),
   halfInputAngle,
-  'DRIFT below 35 degrees must remain tilt-driven'
+  'DRIFT below 30 degrees must remain tilt-driven'
 );
 assertClose(
   frontWheelSteering.resolveFrontWheelSteeringAngle({
     steering: -1,
     heading: 0,
-    ...trajectoryVelocity(degrees(35)),
+    ...trajectoryVelocity(degrees(30)),
     driftHeld: true
   }),
-  degrees(35),
-  'DRIFT at 35 degrees must align the wheels with trajectory'
+  degrees(30),
+  'DRIFT at 30 degrees must align the wheels with trajectory'
 );
 assertClose(
   frontWheelSteering.resolveFrontWheelSteeringAngle({
@@ -289,7 +289,7 @@ assert.match(
 );
 assert.match(
   main,
-  /pivot\.rotation\.y = lerpAngle\(pivot\.rotation\.y, steerAngle, Math\.min\(1, dt \* 12\)\)/,
+  /pivot\.rotation\.y = lerpAngle\(pivot\.rotation\.y, steerAngle, Math\.min\(1, dt \* 8\)\)/,
   'Trajectory takeover must retain the quick smooth wheel transition'
 );
 
