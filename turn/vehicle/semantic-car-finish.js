@@ -94,10 +94,8 @@ export function installSemanticCarFinish({
 
   material.color.set(0xffffff);
   if ('roughness' in material) material.roughness = Math.max(Number(material.roughness) || 0, 0.76);
-  if (car.fixedLivery) {
-    if (car.id === 'police') installPoliceFixedGrey(node, material);
-    return true;
-  }
+  if (car.fixedLivery && car.id === 'police') installPoliceFixedGrey(node, material);
+  if (car.fixedLivery) return true;
 
   const profileId = String(car.surfaceProfileId || car.id || '');
   const masks = semanticMasksForNode(profileId, node?.name);
