@@ -62,6 +62,7 @@ const RGSDEV_PRIMARY_MATERIALS = new Set(['body light blue', 'wheels']);
 const RGSDEV_SECONDARY_MATERIALS = new Set(['body grey']);
 const RGSDEV_TIRE_MATERIALS = new Set(['tires']);
 const TIRE_COLOR = 0x17191c;
+const POLICE_FIXED_GREY = '#222222';
 
 export function getKenneyPaletteAsset(pack) {
   return KENNEY_PALETTE_BY_PACK[String(pack || '')] || null;
@@ -93,7 +94,10 @@ export function installSemanticCarFinish({
 
   material.color.set(0xffffff);
   if ('roughness' in material) material.roughness = Math.max(Number(material.roughness) || 0, 0.76);
-  if (car.fixedLivery) return true;
+  if (car.fixedLivery) {
+    if (car.id === 'police') installPoliceFixedGrey(node, material);
+    return true;
+  }
 
   const profileId = String(car.surfaceProfileId || car.id || '');
   const masks = semanticMasksForNode(profileId, node?.name);
@@ -135,6 +139,28 @@ export function recolorSemanticCarFinish(root, primaryColor, secondaryColor) {
     setThreeColor(record.uniforms.turnPrimaryColor.value, primaryColor);
     setThreeColor(record.uniforms.turnSecondaryColor.value, secondaryColor);
   }
+}
+
+function installPoliceFixedGrey(node, material) {
+  const label = `${node?.name || ''} ${material?.name || ''}`.toLowerCase();
+  if (/wheel|tire|tyre|rubber/.test(label)) return;
+
+  const turnPoliceGrey = { value: colorFrom(POLICE_FIXED_GREY) };
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.turnPoliceGrey = turnPoliceGrey;
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <map_pars_fragment>',
+        `#include <map_pars_fragment>\nuniform vec3 turnPoliceGrey;`
+      )
+      .replace(
+        '#include <map_fragment>',
+        `#include <map_fragment>\n#ifdef USE_MAP\n  float turnPoliceMax = max(diffuseColor.r, max(diffuseColor.g, diffuseColor.b));\n  float turnPoliceMin = min(diffuseColor.r, min(diffuseColor.g, diffuseColor.b));\n  float turnPoliceChroma = turnPoliceMax - turnPoliceMin;\n  float turnPoliceNeutral = 1.0 - smoothstep(0.04, 0.10, turnPoliceChroma);\n  float turnPoliceAboveBlack = smoothstep(0.16, 0.26, turnPoliceMax);\n  float turnPoliceBelowWhite = 1.0 - smoothstep(0.68, 0.82, turnPoliceMax);\n  float turnPoliceGreyMask = turnPoliceNeutral * turnPoliceAboveBlack * turnPoliceBelowWhite;\n  diffuseColor.rgb = mix(diffuseColor.rgb, turnPoliceGrey, turnPoliceGreyMask);\n#endif`
+      );
+  };
+  material.customProgramCacheKey = () => `turn-fixed-police-grey:${label}`;
+  material.userData.turnFixedPoliceGrey = POLICE_FIXED_GREY;
+  material.needsUpdate = true;
 }
 
 function installRgsdevMaterial({
