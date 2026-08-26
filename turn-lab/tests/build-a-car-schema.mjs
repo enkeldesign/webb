@@ -91,12 +91,12 @@ assert.match(modal, /role="status" aria-live="polite"/);
 assert.match(modal, /aria-label="Decrease \$\{label\.toLowerCase\(\)\}"/);
 assert.match(
   modal,
-  /try \\{\\s+onSave\\(candidate\\);\\s+dialog\\.close\\('saved'\\);\\s+\\} catch \\(error\\) \\{/,
+  /try \{\s+onSave\(candidate\);\s+dialog\.close\('saved'\);\s+\} catch \(error\) \{/,
   'The dialog must only close after a successful persistence callback'
 );
 assert.match(
   modal,
-  /saveReason\\.textContent = message;\\s+live\\.textContent = message;/,
+  /saveReason\.textContent = message;\s+live\.textContent = message;/,
   'Persistence failures must be visible and announced'
 );
 assert.match(renderer, /sliceGeometry\(node, part\.extraction, part\.splitY\)/);
