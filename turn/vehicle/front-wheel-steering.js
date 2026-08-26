@@ -1,5 +1,5 @@
 export const FRONT_WHEEL_STEER_ANGLE = 0.58;
-export const EXTREME_DRIFT_SLIP_THRESHOLD = 35 * Math.PI / 180;
+export const EXTREME_DRIFT_SLIP_THRESHOLD = 30 * Math.PI / 180;
 export const MIN_TRAJECTORY_ALIGNMENT_SPEED = 1;
 
 function clamp(value, min, max) {
