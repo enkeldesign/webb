@@ -7,14 +7,16 @@ const [
   carModels,
   catalogSource,
   productionEntry,
-  labEntry
+  labEntry,
+  yourTurnEntry
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/vehicle/emergency-livery-models.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/semantic-car-finish.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../index.html', import.meta.url), 'utf8')
+  fs.readFile(new URL('../index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../yourturn/index.html', import.meta.url), 'utf8')
 ]);
 const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogSource).toString('base64')}`);
 
@@ -106,4 +108,22 @@ assert.deepEqual(
   'TURN LAB must retain the exact production import map'
 );
 
-console.log('TURN factory vehicle colors, Police fixed grey and canonical vehicle module routes passed.');
+const yourTurnImports = importMapFrom(yourTurnEntry);
+for (const specifier of [
+  '/turn/vehicle/catalog.js?build=20260720-r19',
+  '/turn/vehicle/catalog.js?build=20260720-r20',
+  '/turn/vehicle/catalog.js?build=20260804-r157-factory-colors',
+  '/turn/vehicle/catalog.js?revision=r164-vintage-rally-polish'
+]) {
+  assert.equal(yourTurnImports[specifier], '/turn/vehicle/catalog.js',
+    `YOUR TURN must share the canonical factory color catalog for ${specifier}`);
+}
+for (const specifier of [
+  '/turn/vehicle/car-models.js?build=20260720-r19',
+  '/turn/vehicle/car-models.js?build=20260720-r22'
+]) {
+  assert.equal(yourTurnImports[specifier], '/turn/vehicle/emergency-livery-models.js',
+    `YOUR TURN must share the canonical car presentation for ${specifier}`);
+}
+
+console.log('TURN and YOUR TURN factory vehicle colors, Police fixed grey and canonical module routes passed.');
