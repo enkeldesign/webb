@@ -15,6 +15,7 @@ function createHarness({ selection = { carId: 'sedan', color: '#fff', secondaryC
   let motionListener = null;
   let fullscreenRequests = 0;
   let orientationLocks = 0;
+  let boostRefills = 0;
   let clock = 1000;
 
   class FakeDeviceMotionEvent {
@@ -66,7 +67,11 @@ function createHarness({ selection = { carId: 'sedan', color: '#fff', secondaryC
     __turnAnalogGas: 0.7,
     __turnBoostActive: true,
     __turnDriftHeld: true,
-    __turnDriftLockAmount: 0.8
+    __turnDriftLockAmount: 0.8,
+    __turnRefillBoost() {
+      boostRefills += 1;
+      order.push('refill-boost');
+    }
   };
   environment.window = environment;
 
@@ -135,6 +140,7 @@ function createHarness({ selection = { carId: 'sedan', color: '#fff', secondaryC
 
   return {
     applied,
+    get boostRefills() { return boostRefills; },
     elements,
     environment,
     get fullscreenRequests() { return fullscreenRequests; },
@@ -155,12 +161,15 @@ assert.equal(motion.orchestrator.route, 'session-orchestrator');
 assert.equal(motion.orchestrator.getPhase(), 'racing');
 assert.equal(motion.fullscreenRequests, 1);
 assert.equal(motion.orientationLocks, 1);
+assert.equal(motion.boostRefills, 1, 'Every successful race start must refill Boost exactly once');
 assert.deepEqual(motion.motionListener.options, { passive: true });
 motion.motionListener.listener({ sample: 'tilt' });
 assert.ok(motion.order.indexOf('fullscreen') < motion.order.indexOf('permission'));
 assert.ok(motion.order.indexOf('permission') < motion.order.indexOf('show-setup'));
 assert.ok(motion.order.indexOf('show-setup') < motion.order.indexOf('apply-selection'));
 assert.ok(motion.order.indexOf('apply-selection') < motion.order.indexOf('prepare-race'));
+assert.ok(motion.order.indexOf('prepare-race') < motion.order.indexOf('refill-boost'));
+assert.ok(motion.order.indexOf('refill-boost') < motion.order.indexOf('publish:race-started'));
 assert.equal(motion.state.sensorMode, true);
 assert.equal(motion.state.running, true);
 assert.equal(motion.elements.intro.hidden, true);
@@ -178,6 +187,7 @@ const cancelled = createHarness({ selection: null });
 assert.equal(await cancelled.orchestrator.useManualMode(), false);
 assert.equal(cancelled.orchestrator.getPhase(), 'idle');
 assert.equal(cancelled.state.running, false);
+assert.equal(cancelled.boostRefills, 0, 'Cancelling setup must not refill Boost because no race starts');
 assert.equal(cancelled.elements.intro.hidden, false);
 assert.deepEqual(cancelled.applied, []);
 
