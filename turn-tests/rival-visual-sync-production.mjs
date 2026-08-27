@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [releaseSource, index, main, trackManager, leaderMarker] = await Promise.all([
+const [releaseSource, index, main, trackManager, leaderMarker, carModels] = await Promise.all([
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/track-manager.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/ui/leader-marker-r500.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/ui/leader-marker-r500.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/vehicle/car-models.js', import.meta.url), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -50,6 +51,50 @@ assert.ok(
 assert.match(main, /competitorCars,\s*ensureCompetitorCars,\s*syncCompetitorVisuals,/, 'The runtime must expose separate pool and identity operations');
 assert.match(main, /if \(root\.userData\.turnVisualKey === key \|\| root\.userData\.turnVisualPendingKey === key\) return;/, 'Model installation must retain its duplicate-key fast path');
 
+const createVisualSection = section(carModels, 'export async function createCarVisual({', '\nfunction reusableCompetitorGhostKey');
+assert.match(createVisualSection, /competitorGhostTemplateCache\.get\(competitorTemplateKey\)/,
+  'Repeated 5.5-unit rival identities must consult the in-memory visual template cache');
+assert.ok(
+  createVisualSection.indexOf('competitorGhostTemplateCache.get(competitorTemplateKey)')
+    < createVisualSection.indexOf('const source = await loadCarSource(car.id)'),
+  'A cached rival identity must avoid GLTF cloning, material classification and normalization entirely'
+);
+assert.match(createVisualSection, /return cloneCompetitorGhostVisual\(cachedCompetitorTemplate\)/,
+  'Cached rival identities must use the lightweight clone path');
+assert.match(createVisualSection, /rememberCompetitorGhostTemplate\(competitorTemplateKey, root\)/,
+  'The first fully prepared rival identity must become the reusable template');
+
+const cloneSection = section(carModels, 'function cloneCompetitorGhostVisual(template)', '\nfunction installWheelAnimationHostBridge');
+assert.match(cloneSection, /for \(const child of template\.children\) clone\.add\(child\.clone\(true\)\)/,
+  'Fast rival clones must reuse the already-prepared geometry/material graph');
+assert.match(cloneSection, /frontWheelPivots\.push\(node\)/,
+  'Fast rival clones must rebuild their own steering-pivot references');
+assert.match(cloneSection, /turnFastGhostClone = true/,
+  'The optimized path must remain inspectable in diagnostics');
+assert.doesNotMatch(cloneSection, /loadCarSource|installSemanticCarFinish|normalizeModelToGround|addOutlines/,
+  'Fast rival cloning must not repeat the expensive first-build pipeline');
+
+const outlineSection = section(carModels, 'function addOutlines(model)', '\nfunction installFrontWheelSteeringRig');
+assert.match(carModels, /const CAR_OUTLINE_MATERIAL = new THREE\.MeshBasicMaterial\(/,
+  'All car outlines must share one immutable material instead of allocating one material per mesh');
+assert.match(outlineSection, /new THREE\.Mesh\(node\.geometry, CAR_OUTLINE_MATERIAL\)/,
+  'Outline meshes must reuse the shared material');
+assert.doesNotMatch(outlineSection, /new THREE\.MeshBasicMaterial/,
+  'Repeated rival creation must not allocate outline materials per mesh');
+
+const normalizationSection = section(carModels, 'function normalizeModelToGround', '\nfunction isProtectedPart');
+assert.match(carModels, /const normalizationMetricsCache = new Map\(\)/,
+  'Geometry normalization metrics must be cached by stable car geometry identity');
+assert.match(normalizationSection, /normalizationMetricsCache\.get\(cacheKey\)/,
+  'Repeated visuals must reuse the already-measured footprint');
+assert.equal(
+  (normalizationSection.match(/new THREE\.Box3\(\)\.setFromObject\(model\)/g) || []).length,
+  1,
+  'A cold normalization may measure bounds once; the old second full scene traversal must not return'
+);
+assert.doesNotMatch(normalizationSection, /model\.updateMatrixWorld\(true\)[\s\S]*model\.updateMatrixWorld\(true\)/,
+  'Normalization must not force two complete matrix/bounds passes per visual');
+
 const leaderRoofSection = section(leaderMarker, 'function carRoofHeight', '\nfunction installRuntime');
 assert.match(leaderRoofSection, /child\.userData\?\.turnAssetVisual/, 'The leader marker must measure the installed rival model');
 assert.match(leaderRoofSection, /child\.visible !== false/, 'The procedural car must remain a fallback while its asset loads');
@@ -64,7 +109,7 @@ const infrastructureSection = section(trackManager, 'function ensureTrackInfrast
 assert.match(infrastructureSection, /currentRuntime\.ensureCompetitorCars\?\.\(\)/, 'Dynamic-world setup must still create the full fixed rival pool before reparenting');
 assert.doesNotMatch(infrastructureSection, /syncCompetitorVisuals/, 'World-layer setup must not perform unrelated model identity work');
 
-console.log(`TURN ${release.id} event-driven rival model synchronisation passed.`);
+console.log(`TURN ${release.id} event-driven rival model synchronisation and reusable finish-line visual fast path passed.`);
 
 function section(source, startMarker, endMarker) {
   const start = source.indexOf(startMarker);
