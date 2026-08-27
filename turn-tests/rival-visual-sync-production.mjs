@@ -1,13 +1,32 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [releaseSource, index, main, trackManager, leaderMarker, carModels] = await Promise.all([
+const [
+  releaseSource,
+  index,
+  main,
+  trackManager,
+  leaderMarker,
+  carModels,
+  trackRegistry,
+  rivalPrewarm,
+  airportWorld,
+  maydayPolish,
+  maydayHud,
+  maydayFinal
+] = await Promise.all([
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/track-manager.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/leader-marker-r500.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/vehicle/car-models.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/race/rival-visual-prewarm.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/airport-world-r56.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/airport-emergency-r494.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/airport-emergency-r496.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/airport-emergency-r497.js', import.meta.url), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -95,6 +114,32 @@ assert.equal(
 assert.doesNotMatch(normalizationSection, /model\.updateMatrixWorld\(true\)[\s\S]*model\.updateMatrixWorld\(true\)/,
   'Normalization must not force two complete matrix/bounds passes per visual');
 
+assert.match(trackRegistry, /import '\.\.\/race\/rival-visual-prewarm\.js';/,
+  'The track runtime must install the selected-car rival prewarm before the first completed lap');
+assert.match(rivalPrewarm, /state\.running === true/,
+  'Prewarming must never deliberately start while a race is already running');
+assert.match(rivalPrewarm, /requestIdleCallback\(runPrewarm, \{ timeout: IDLE_TIMEOUT_MS \}\)/,
+  'Browsers with idle scheduling should move selected-rival preparation away from active interaction');
+assert.match(rivalPrewarm, /ghost: true[\s\S]*targetLength: RIVAL_TARGET_LENGTH[\s\S]*outline: true/,
+  'Prewarming must populate the exact 5.5-unit ghost template used by finish-line rival sync');
+assert.doesNotMatch(rivalPrewarm, /localStorage|sessionStorage|syncCompetitorVisuals/,
+  'Visual prewarming must not touch replay persistence or race ordering');
+
+assert.match(airportWorld, /deferWreckCalibration: true/,
+  'Production Airport must consolidate historical MAYDAY depth calibration into one pass');
+assert.match(maydayPolish, /if \(options\.deferWreckCalibration !== true\) installWreckPenetration\(world, runtime\)/,
+  'r494 must skip its legacy first-lap polling loop in production');
+assert.match(maydayHud, /if \(options\.deferWreckCalibration !== true\) installWreckCalibration\(options\.world, runtime\)/,
+  'r496 must skip its second legacy first-lap polling loop in production');
+assert.match(maydayFinal, /deferredParentCalibration = options\.deferWreckCalibration === true/,
+  'The final MAYDAY layer must know when it owns the complete tested wreck depth');
+assert.match(maydayFinal, /mount\.position\.y -= TARGET_WRECK_PENETRATION_Y/,
+  'The consolidated production path must apply the tested 16-unit penetration directly');
+assert.match(maydayFinal, /turnMaydayR494DepthApplied = true[\s\S]*turnMaydayR496DepthApplied = true/,
+  'Consolidated calibration must preserve historical depth-stage diagnostics');
+assert.doesNotMatch(maydayFinal, /world\.updateMatrixWorld\(true\)/,
+  'The final MAYDAY calibration must not synchronously traverse the whole Airport world');
+
 const leaderRoofSection = section(leaderMarker, 'function carRoofHeight', '\nfunction installRuntime');
 assert.match(leaderRoofSection, /child\.userData\?\.turnAssetVisual/, 'The leader marker must measure the installed rival model');
 assert.match(leaderRoofSection, /child\.visible !== false/, 'The procedural car must remain a fallback while its asset loads');
@@ -109,7 +154,7 @@ const infrastructureSection = section(trackManager, 'function ensureTrackInfrast
 assert.match(infrastructureSection, /currentRuntime\.ensureCompetitorCars\?\.\(\)/, 'Dynamic-world setup must still create the full fixed rival pool before reparenting');
 assert.doesNotMatch(infrastructureSection, /syncCompetitorVisuals/, 'World-layer setup must not perform unrelated model identity work');
 
-console.log(`TURN ${release.id} event-driven rival model synchronisation and reusable finish-line visual fast path passed.`);
+console.log(`TURN ${release.id} event-driven rival synchronisation, first-lap visual prewarm and MAYDAY finish-line fast paths passed.`);
 
 function section(source, startMarker, endMarker) {
   const start = source.indexOf(startMarker);
