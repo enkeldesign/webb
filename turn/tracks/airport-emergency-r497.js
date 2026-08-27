@@ -65,8 +65,8 @@ function installFinalWreckDepth(world, runtime, { deferredParentCalibration = fa
         mount.position.y -= EXTRA_WRECK_PENETRATION_Y;
       }
       mount.userData.turnMaydayR497DepthApplied = true;
-      // No forced world.updateMatrixWorld(true): the renderer updates this small transform
-      // naturally on the next frame, avoiding a synchronous traversal of the full Airport.
+      // No forced full-world matrix refresh: normal rendering updates this small transform
+      // on the next frame instead of synchronously traversing the entire Airport scene.
       applied = true;
       return;
     }
