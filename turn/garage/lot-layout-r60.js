@@ -75,6 +75,7 @@ function installBottomActionStyles() {
 export function installLotLayout(root = document.body) {
   const screen = root.querySelector('.lot-screen');
   const attributesHeading = screen?.querySelector('.lot-car-title > span');
+  const carDescription = screen?.querySelector('.lot-car-description');
   const infoButton = screen?.querySelector('.lot-stats-help');
   const headingCopy = screen?.querySelector('.lot-heading > p');
   const backButton = screen?.querySelector('.lot-back');
@@ -89,6 +90,7 @@ export function installLotLayout(root = document.body) {
   // without introducing another semantic heading between CAR INFORMATION and RACE.
   if (screen.classList.contains('lot-showroom')) {
     attributesHeading.replaceChildren(document.createTextNode('SELECTED CAR'));
+    carDescription?.classList.add('lot-a11y-only');
 
     const stats = screen.querySelector('.lot-stats');
     let attributesRow = screen.querySelector('.lot-attributes-row');
@@ -115,6 +117,7 @@ export function installLotLayout(root = document.body) {
       if (infoButton?.isConnected && attributesHeading.isConnected) {
         attributesHeading.appendChild(infoButton);
       }
+      carDescription?.classList.remove('lot-a11y-only');
       attributesRow?.remove();
     };
   }

@@ -1,6 +1,6 @@
-/* Readability pass for THE LOT after the compact r212 information-panel fit.
-   Future Racer's two-line perk is the height-budget acceptance case: every six-stat
-   row must remain visible at rest without needing to scroll the information panel. */
+/* Readable car attributes for THE LOT. Descriptive copy remains available in CAR
+   INFORMATION for assistive technology, while the visual panel gives its space to
+   the six canonical attributes and opens optional perk copy in a popover. */
 
 /* The old SELECTED CAR eyebrow stays in source for legacy compatibility, but the
    showroom no longer spends visible space on it. */
@@ -11,7 +11,7 @@
 .lot-showroom .lot-car-title {
   grid-template-columns: minmax(0, 1fr);
   gap: 0;
-  padding-bottom: 3px;
+  padding-bottom: 5px;
 }
 
 .lot-showroom .lot-car-title > span {
@@ -27,20 +27,11 @@
   line-height: .92;
 }
 
-.lot-showroom .lot-car-description {
-  margin: 4px 0 1px;
-  font-size: clamp(.52rem, .94vw, .63rem);
-  line-height: 1.16;
-}
-
-.lot-showroom .lot-perk-disclosure {
-  margin-top: 2px !important;
-}
-
-.lot-showroom .lot-perk-copy {
-  margin-bottom: 3px;
-  font-size: clamp(.48rem, .86vw, .58rem);
-  line-height: 1.14;
+/* The selected-car description is useful alt-style information, but no longer
+   competes with the visual meters. Keep it in the accessibility tree at every
+   viewport height, including the old <=430px landscape breakpoint. */
+.lot-showroom .lot-car-description.lot-a11y-only {
+  display: block !important;
 }
 
 /* Visual section label only: screen-reader heading navigation intentionally stays
@@ -48,46 +39,84 @@
 .lot-showroom .lot-attributes-row {
   display: flex;
   min-width: 0;
-  min-height: 18px;
-  margin: 2px 0 0;
+  min-height: 28px;
+  margin: 5px 0 1px;
   align-items: center;
-  gap: 5px;
+  gap: 7px;
 }
 
 .lot-showroom .lot-attributes-label {
   color: var(--ink, #08090a);
-  font-size: clamp(.46rem, .76vw, .53rem);
+  font-size: clamp(.68rem, 1.35vw, .92rem);
   font-weight: 950;
   line-height: 1;
-  letter-spacing: .08em;
+  letter-spacing: .055em;
 }
 
 .lot-showroom .lot-stats-help {
-  flex: 0 0 21px;
-  width: 21px;
-  height: 21px;
+  flex: 0 0 27px;
+  width: 27px;
+  height: 27px;
   margin: 0;
-  font-size: .7rem;
+  font-size: .78rem;
 }
 
 .lot-showroom .lot-stats {
-  gap: 1px;
-  margin: 0 0 1px;
+  flex: 1 0 112px;
+  grid-template-rows: repeat(6, minmax(17px, 34px));
+  align-content: space-evenly;
+  gap: 2px;
+  min-height: 112px;
+  margin: 0;
 }
 
 .lot-showroom .lot-stat {
-  grid-template-columns: 88px minmax(0, 1fr);
-  gap: 6px;
+  grid-template-columns: clamp(82px, 11vw, 104px) minmax(0, 1fr);
+  gap: clamp(6px, .85vw, 10px);
 }
 
 .lot-showroom .lot-stat > span {
-  font-size: clamp(.44rem, .73vw, .5rem);
+  font-size: clamp(.56rem, 1.05vw, .72rem);
   line-height: 1;
-  letter-spacing: .04em;
+  letter-spacing: .025em;
 }
 
 .lot-showroom .lot-stat i {
-  height: 7px;
+  grid-template-columns: repeat(5, minmax(12px, 1fr));
+  gap: clamp(3px, .48vw, 6px);
+  height: clamp(13px, 2.7vh, 18px);
+}
+
+.lot-showroom .lot-stat b {
+  border: 3px solid var(--lot-stat-accent);
+  border-radius: 999px;
+  background: var(--paper, #fff8e8);
+}
+
+.lot-showroom .lot-stat:nth-child(1),
+.lot-showroom .lot-stat:nth-child(2) {
+  --lot-stat-accent: var(--turn-control-gas, #8ce99a);
+}
+
+.lot-showroom .lot-stat:nth-child(3),
+.lot-showroom .lot-stat:nth-child(4) {
+  --lot-stat-accent: var(--turn-control-drift, #38d9ff);
+}
+
+.lot-showroom .lot-stat:nth-child(5),
+.lot-showroom .lot-stat:nth-child(6) {
+  --lot-stat-accent: var(--turn-control-boost, #ffd43b);
+}
+
+.lot-showroom .lot-stat:is(
+  :nth-child(1),
+  :nth-child(2),
+  :nth-child(3),
+  :nth-child(4),
+  :nth-child(5),
+  :nth-child(6)
+) b.is-full {
+  background: #313131;
 }
 
 /* This button intentionally uses the compact CHOOSE TRACK-style footprint. */
@@ -137,41 +166,29 @@
     font-size: clamp(1.12rem, 2.35vw, 1.72rem);
   }
 
-  .lot-showroom .lot-car-description {
-    margin-top: 3px;
-    font-size: clamp(.5rem, .9vw, .6rem);
-    line-height: 1.13;
-  }
-
-  .lot-showroom .lot-perk-disclosure {
-    margin-top: 1px !important;
-  }
-
-  .lot-showroom .lot-perk-copy {
-    margin-bottom: 2px;
-    font-size: clamp(.46rem, .82vw, .55rem);
-    line-height: 1.12;
-  }
-
   .lot-showroom .lot-attributes-row {
-    min-height: 17px;
-    margin-top: 1px;
-    gap: 4px;
+    min-height: 25px;
+    margin-top: 3px;
+    gap: 6px;
   }
 
   .lot-showroom .lot-attributes-label {
-    font-size: clamp(.44rem, .72vw, .5rem);
+    font-size: clamp(.64rem, 1.22vw, .82rem);
   }
 
   .lot-showroom .lot-stats-help {
-    flex-basis: 20px;
-    width: 20px;
-    height: 20px;
-    font-size: .66rem;
+    flex-basis: 24px;
+    width: 24px;
+    height: 24px;
+    font-size: .72rem;
   }
 
   .lot-showroom .lot-stat > span {
-    font-size: clamp(.42rem, .7vw, .48rem);
+    font-size: clamp(.54rem, 1vw, .66rem);
+  }
+
+  .lot-showroom .lot-stat i {
+    height: 13px;
   }
 
   .lot-showroom .lot-race {
