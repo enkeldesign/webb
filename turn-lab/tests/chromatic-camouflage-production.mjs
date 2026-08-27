@@ -49,7 +49,8 @@ assert.equal(catchTheCharge?.trophies, 25);
 assert.equal(catchTheCharge?.progressMax, 3);
 assert.match(catchTheCharge?.description || '', /DRIFT/);
 assert.match(catchTheCharge?.description || '', /purple OVERCHARGE/);
-assert.match(catchTheCharge?.description || '', /GAS for three seconds/);
+assert.match(catchTheCharge?.description || '', /Switch to GAS to catch it/);
+assert.match(catchTheCharge?.description || '', /keep GAS held for three seconds/);
 assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 11,
   'GOT STARTED must require every Getting Started lesson, including CATCH THE CHARGE, without requiring itself');
 assert.equal(ONBOARDING_ACHIEVEMENT_IDS.includes('catch-the-charge'), true);
