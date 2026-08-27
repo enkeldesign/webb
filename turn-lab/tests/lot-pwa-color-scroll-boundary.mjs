@@ -30,10 +30,10 @@ assert.match(boundary, /-webkit-overflow-scrolling:\s*touch/,
   'The inner information scroller must retain native iOS momentum scrolling');
 
 // With description and perk copy removed from visual flow, keep title, ATTRIBUTES and
-// the responsive stat grid packed in a predictable order. The stat grid itself owns
-// spare height; negative space still becomes ordinary inner scrolling.
-assert.match(boundary, /\.lot-showroom \.lot-card-info-scroll\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-direction:\s*column;[\s\S]*justify-content:\s*flex-start;[\s\S]*gap:\s*clamp\(4px, 0\.8vh, 8px\);/,
-  'Car-information sections must stay packed while the larger attribute grid owns responsive height');
+// the responsive stat grid packed in a predictable order. Keep the inter-section
+// spacing small enough that all six rows fit before the fixed race action.
+assert.match(boundary, /\.lot-showroom \.lot-card-info-scroll\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-direction:\s*column;[\s\S]*justify-content:\s*flex-start;[\s\S]*gap:\s*clamp\(2px, 0\.5vh, 5px\);/,
+  'Car-information sections must stay packed without creating avoidable inner scrolling');
 
 // The wrapper must contain every car-information node, including the hidden popover
 // source and visible ATTRIBUTES row, while COLOR and RACE stay as card siblings outside it.
@@ -60,7 +60,7 @@ assert.match(layout, /attributesRow\.appendChild\(infoButton\)/);
 
 // The production enhancement lifecycle must install the boundary after perk/stat/layout
 // construction, before the later screen-reader pass moves COLOR into the card.
-assert.match(runtime, /lot-card-scroll-boundary\.js\?revision=r215-info-space/);
+assert.match(runtime, /lot-card-scroll-boundary\.js\?revision=r216-meter-density/);
 assert.match(runtime, /installLotCardScrollBoundary: scrollBoundary\.installLotCardScrollBoundary/);
 const installOrder = runtime.match(/const removePerkDisclosure[\s\S]*?const removeAccessibility = installLotAccessibility\(scope\);/)?.[0] || '';
 assert.ok(installOrder, 'Lot enhancement installation order must remain inspectable');

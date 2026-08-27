@@ -10,6 +10,7 @@ const [
   perkDisclosure,
   layout,
   layoutCss,
+  infoPanel,
   infoTypography,
   lot,
   legend,
@@ -24,6 +25,7 @@ const [
   fs.readFile(new URL('../../turn/garage/lot-perk-disclosure.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-layout-r60.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-layout-r60.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/lot-info-panel-r212.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-info-typography-r213.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-stat-legend.js', import.meta.url), 'utf8'),
@@ -68,6 +70,12 @@ assert.match(wrapper, /lot-r10\.js\?build=20260809-r163-native-html&revision=r59
   'The wrapper must load the canonical-lock Lot implementation under a fresh URL');
 assert.match(wrapper, /lot-enhancement-runtime\.js\?revision=r588-canonical-attributes/,
   'The wrapper must load the canonical-attribute accessibility bundle');
+assert.match(wrapper, /lot-enhancement-runtime\.js\?revision=r216-meter-density&build=20260804-r157/,
+  'The wrapper must bypass cached Lot layout enhancements');
+assert.match(wrapper, /lot-info-panel-r212\.css\?revision=r216-meter-density/,
+  'The tightened race-action spacing must load under a fresh stylesheet URL');
+assert.match(wrapper, /lot-info-typography-r213\.css\?revision=r216-meter-density/,
+  'The refined attribute meters must load under a fresh stylesheet URL');
 assert.match(wrapper, /const removeEnhancements = enhanceLotNow\(\)/);
 assert.match(wrapper, /await chooseTrackBeforeLot\(\)/);
 assert.doesNotMatch(wrapper, /installLotLayout|installLotStatLegend|installLotAccessibility/);
@@ -247,12 +255,14 @@ assert.match(
   /\.lot-showroom \.lot-car-description\.lot-a11y-only\s*\{[\s\S]*display: block !important;/,
   'Short landscape layouts must keep the visually hidden description in the accessibility tree'
 );
-assert.match(infoTypography, /grid-template-rows: repeat\(6, minmax\(17px, 34px\)\)/,
-  'All six attribute rows must retain a readable responsive height');
+assert.match(infoTypography, /flex: 1 1 88px;[\s\S]*grid-template-rows: repeat\(6, minmax\(13px, 34px\)\);[\s\S]*align-content: space-between;[\s\S]*min-height: 88px;/,
+  'All six attribute rows must stay readable while yielding enough height to avoid inner scrolling');
 assert.match(infoTypography, /height: clamp\(13px, 2\.7vh, 18px\)/,
   'Meter segments must remain substantially larger than the old 7px bars');
-assert.match(infoTypography, /border: 3px solid var\(--lot-stat-accent\)/,
-  'Attribute category color must live on every segment outline');
+assert.match(infoTypography, /border: 2px solid var\(--lot-stat-accent\)/,
+  'Attribute category outlines must stay thin enough to preserve the dark meter fill');
+assert.match(infoPanel, /\.lot-showroom \.lot-card-actions\s*\{[\s\S]*padding: 2px 0 0;/,
+  'The race action must sit close to the last attribute row');
 assert.match(infoTypography, /--lot-stat-accent: var\(--turn-control-gas, #8ce99a\)/);
 assert.match(infoTypography, /--lot-stat-accent: var\(--turn-control-drift, #38d9ff\)/);
 assert.match(infoTypography, /--lot-stat-accent: var\(--turn-control-boost, #ffd43b\)/);
