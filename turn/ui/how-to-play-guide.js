@@ -20,7 +20,7 @@ function updateDriftAndBoostCopy(dialog) {
   const paragraph = section?.querySelector('p');
   if (!paragraph) return;
 
-  paragraph.innerHTML = 'DRIFT helps the car rotate but costs grip. Holding <strong>DRIFT</strong> also charges <strong>BOOST</strong> faster, so a controlled slide can prepare the next burst. BOOST gives speed but can make the next corner harder. Fast laps come from balancing both.';
+  paragraph.innerHTML = '<strong>DRIFT</strong> charges <strong>BOOST</strong> as you slide. Keep drifting after the bar is full to build purple <strong>OVERCHARGE</strong>. At its peak, OVERCHARGE starts leaking: slide to <strong>GAS</strong> to catch and hold it, or <strong>BOOST</strong> to spend it.';
 }
 
 function installDriveByEarDisclosure(dialog) {
