@@ -33,17 +33,26 @@ const release = JSON.parse(releaseSource);
 
 const achievement = getAchievement(CHROMATIC_CAMOUFLAGE_ID);
 const mayday = getAchievement('golden-hour');
+const catchTheCharge = getAchievement('catch-the-charge');
 const gotStarted = getAchievement('got-started');
 
-assert.equal(ACHIEVEMENTS.length, 44,
-  'Production TURN should expose 43 existing achievements plus GOT STARTED');
+assert.equal(ACHIEVEMENTS.length, 45,
+  'Production TURN should expose the existing achievement set, CATCH THE CHARGE and GOT STARTED');
 assert.equal(GOT_STARTED_ACHIEVEMENT, gotStarted);
 assert.equal(gotStarted?.title, 'GOT STARTED');
 assert.equal(gotStarted?.category, 'onboarding');
 assert.equal(gotStarted?.trophies, 75);
 assert.equal(gotStarted?.description, 'Finish all Getting Started achievements.');
-assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 10,
-  'GOT STARTED is the master reward and must not recursively require itself');
+assert.equal(catchTheCharge?.title, 'CATCH THE CHARGE');
+assert.equal(catchTheCharge?.category, 'onboarding');
+assert.equal(catchTheCharge?.trophies, 25);
+assert.equal(catchTheCharge?.progressMax, 3);
+assert.match(catchTheCharge?.description || '', /DRIFT/);
+assert.match(catchTheCharge?.description || '', /purple OVERCHARGE/);
+assert.match(catchTheCharge?.description || '', /GAS for three seconds/);
+assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 11,
+  'GOT STARTED must require every Getting Started lesson, including CATCH THE CHARGE, without requiring itself');
+assert.equal(ONBOARDING_ACHIEVEMENT_IDS.includes('catch-the-charge'), true);
 assert.equal(ONBOARDING_ACHIEVEMENT_IDS.includes('got-started'), false);
 
 assert.equal(achievement?.title, 'CHROMATIC CAMOUFLAGE');
@@ -130,7 +139,7 @@ assert.ok(challengeUnlocks.some(({ id }) => id === 'airport-winner'),
 assert.ok(challengeUnlocks.some(({ id }) => id === 'harbor-safety'),
   'Stored all-track progress should backfill the corresponding SAFETY achievement');
 assert.ok(challengeUnlocks.some(({ id }) => id === 'got-started'),
-  'Existing players with all Getting Started achievements should receive GOT STARTED automatically');
+  'Existing players with every Getting Started achievement should receive GOT STARTED automatically');
 challengeUnlocks.length = 0;
 challengeApi.beginLap();
 challengeApi.completeLap({ position: 1, total: 5, time: 20 });
@@ -143,9 +152,9 @@ challengeApi.disconnect();
 
 assert.equal(
   ACHIEVEMENTS.reduce((total, item) => total + item.trophies, 0),
-  3050
+  3075
 );
-assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 3050);
+assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 3075);
 assert.deepEqual(
   TROPHY_ROAD_REWARDS.map(({ id, threshold }) => [id, threshold]),
   [
