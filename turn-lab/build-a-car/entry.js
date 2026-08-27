@@ -17,8 +17,7 @@ export function installBuildACarExperiment(root = document.body) {
   const sync = () => {
     const screen = root.querySelector?.('.lot-screen');
     if (!screen || installedScreens.has(screen)) return;
-    installedScreens.add(screen);
-    decorateLot(screen);
+    if (decorateLot(screen)) installedScreens.add(screen);
   };
   const observer = new MutationObserver((mutations) => {
     if (!mutations.some((mutation) => mutation.addedNodes.length || mutation.removedNodes.length)) return;
@@ -39,9 +38,10 @@ export function installBuildACarExperiment(root = document.body) {
 }
 
 function decorateLot(screen) {
+  if (screen.querySelector('.build-a-car-lot-entry')) return true;
   const actions = screen.querySelector('.lot-card-actions') || screen.querySelector('.lot-card');
   const raceButton = screen.querySelector('.lot-race');
-  if (!actions || !raceButton) return;
+  if (!actions || !raceButton) return false;
 
   const wrapper = document.createElement('section');
   wrapper.className = 'build-a-car-lot-entry';
@@ -69,6 +69,8 @@ function decorateLot(screen) {
     const cabin = getPart('cabin', saved.parts.cabin)?.label || 'CAR';
     summary.textContent = `${saved.name} · ${body} + ${cabin} · saved in TURN LAB`;
   }
+
+  return true;
 }
 
 function openBuilder(trigger, afterSave) {
