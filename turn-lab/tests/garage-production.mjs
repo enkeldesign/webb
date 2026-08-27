@@ -223,9 +223,14 @@ assert.match(lotEnhancementRuntime, /screen\.dataset\.lotEnhancements = ENHANCEM
 assert.match(lotPerkDisclosure, /getCarDefinition\(vehicleId\)\?\.perk/);
 assert.doesNotMatch(lotPerkDisclosure, /rewardForVehicle|trophy-road/,
   'Perk identity and display must come directly from the car definition');
-assert.match(lotPerkDisclosure, /<strong>\$\{perkTitle\}:<\/strong>/);
-assert.match(lotPerkDisclosure, /color: #2f6f38/);
-assert.doesNotMatch(lotPerkDisclosure, /lot-perk-button|aria-expanded|<strong>PERK:<\/strong>/);
+assert.match(lotPerkDisclosure, /className = 'lot-perk-button'/);
+assert.match(lotPerkDisclosure, /trigger\.textContent = 'PERK'/);
+assert.match(lotPerkDisclosure, /aria-haspopup', 'dialog'/);
+assert.match(lotPerkDisclosure, /aria-expanded', 'false'/);
+assert.match(lotPerkDisclosure, /setAttribute\('popover', 'auto'\)/);
+assert.match(lotPerkDisclosure, /trigger\.hidden = !perkText/);
+assert.match(lotPerkDisclosure, /copy\.textContent = perkDescription/);
+assert.doesNotMatch(lotPerkDisclosure, /innerHTML\s*=/);
 assert.match(lotTrophyGate, /trophy-road\.js\?revision=r164-vintage-rally-perks/);
 assert.match(lotTrophyGate, /FALLBACK_VEHICLE_ID = 'classic'/);
 assert.match(lotTrophyGate, /raceButton\.disabled = locked/);

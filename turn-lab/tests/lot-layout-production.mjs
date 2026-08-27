@@ -10,6 +10,7 @@ const [
   perkDisclosure,
   layout,
   layoutCss,
+  infoTypography,
   lot,
   legend,
   accessibility,
@@ -23,6 +24,7 @@ const [
   fs.readFile(new URL('../../turn/garage/lot-perk-disclosure.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-layout-r60.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-layout-r60.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/lot-info-typography-r213.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-stat-legend.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-accessibility-r118.js', import.meta.url), 'utf8'),
@@ -93,10 +95,23 @@ assert.match(perkDisclosure, /className = 'lot-perk-copy'/);
 assert.match(perkDisclosure, /getCarDefinition\(vehicleId\)\?\.perk/);
 assert.doesNotMatch(perkDisclosure, /rewardForVehicle|trophy-road/,
   'Perk display must be driven by the selected car definition rather than Trophy Road ownership');
-assert.match(perkDisclosure, /<strong>\$\{perkTitle\}:<\/strong>/);
-assert.match(perkDisclosure, /color: #2f6f38/);
-assert.doesNotMatch(perkDisclosure, /lot-perk-button|aria-expanded/,
-  'Perk content must be inline instead of hidden behind a disclosure button');
+assert.match(perkDisclosure, /className = 'lot-perk-button'/);
+assert.match(perkDisclosure, /trigger\.textContent = 'PERK'/);
+assert.match(perkDisclosure, /trigger\.setAttribute\('aria-haspopup', 'dialog'\)/);
+assert.match(perkDisclosure, /trigger\.setAttribute\('aria-controls', popoverId\)/);
+assert.match(perkDisclosure, /trigger\.setAttribute\('aria-expanded', 'false'\)/);
+assert.match(perkDisclosure, /popover\.setAttribute\('popover', 'auto'\)/);
+assert.match(perkDisclosure, /popover\.setAttribute\('role', 'dialog'\)/);
+assert.match(perkDisclosure, /popover\.setAttribute\('aria-labelledby', titleId\)/);
+assert.match(perkDisclosure, /popover\.setAttribute\('aria-describedby', descriptionId\)/);
+assert.match(perkDisclosure, /trigger\.hidden = !perkText/,
+  'The PERK action must exist only for cars with named perk content');
+assert.match(perkDisclosure, /closePopover\(\);[\s\S]*trigger\.hidden = !perkText/,
+  'Changing cars must close any open perk before updating the trigger');
+assert.match(perkDisclosure, /event\.key !== 'Escape'/);
+assert.match(perkDisclosure, /closePopover\(\{ restoreFocus: true \}\)/);
+assert.doesNotMatch(perkDisclosure, /innerHTML\s*=/,
+  'Perk names and descriptions must be written as text rather than parsed markup');
 assert.match(perkDisclosure, /const picker = screen\?\.querySelector\?\.\('\.lot-car-picker'\)/);
 assert.match(
   perkDisclosure,
@@ -180,6 +195,10 @@ assert.match(trainingGuide, /markTrainingCarTried\(\)/);
 
 assert.doesNotMatch(layout, /appendChild\(colors\)|lot-view-close|lot-view-open/);
 assert.match(layout, /document\.createTextNode\('ATTRIBUTES'\)/);
+assert.match(layout, /carDescription\?\.classList\.add\('lot-a11y-only'\)/,
+  'The visual description must become screen-reader-only without leaving CAR INFORMATION');
+assert.match(layout, /carDescription\?\.classList\.remove\('lot-a11y-only'\)/,
+  'The layout cleanup must restore the original description class state');
 assert.match(layout, /infoButton\.textContent = 'i'/);
 assert.match(layout, /aria-label', 'What do the attributes mean\?'/);
 assert.doesNotMatch(layout, /MutationObserver|setAnimationLoop|requestAnimationFrame/);
@@ -222,6 +241,23 @@ assert.doesNotMatch(layoutCss, /\.lot-color-input|\.lot-color-preset/);
 assert.match(layoutCss, /\.lot-race \{[\s\S]*background: var\(--pink\)/);
 assert.match(layoutCss, /@media \(max-height: 520px\)/);
 assert.match(layoutCss, /@media \(max-height: 430px\)/);
+
+assert.match(
+  infoTypography,
+  /\.lot-showroom \.lot-car-description\.lot-a11y-only\s*\{[\s\S]*display: block !important;/,
+  'Short landscape layouts must keep the visually hidden description in the accessibility tree'
+);
+assert.match(infoTypography, /grid-template-rows: repeat\(6, minmax\(17px, 34px\)\)/,
+  'All six attribute rows must retain a readable responsive height');
+assert.match(infoTypography, /height: clamp\(13px, 2\.7vh, 18px\)/,
+  'Meter segments must remain substantially larger than the old 7px bars');
+assert.match(infoTypography, /border: 3px solid var\(--lot-stat-accent\)/,
+  'Attribute category color must live on every segment outline');
+assert.match(infoTypography, /--lot-stat-accent: var\(--turn-control-gas, #8ce99a\)/);
+assert.match(infoTypography, /--lot-stat-accent: var\(--turn-control-drift, #38d9ff\)/);
+assert.match(infoTypography, /--lot-stat-accent: var\(--turn-control-boost, #ffd43b\)/);
+assert.match(infoTypography, /b\.is-full\s*\{[\s\S]*background: #313131;/,
+  'Filled attribute segments must use the requested neutral #313131 fill');
 
 assert.match(accessibility, /makeHiddenHeading\('lot-choose-car-heading', 'Choose car'\)/);
 assert.match(accessibility, /makeHiddenHeading\('lot-paint-heading', 'Choose car colour'\)/);

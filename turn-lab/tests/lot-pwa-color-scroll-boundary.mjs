@@ -14,9 +14,10 @@ const [boundary, runtime, screenReader, perk, showroomCss, layout] = await Promi
 assert.match(screenReader, /card\.insertBefore\(colors, raceHeading\)/,
   'The screen-reader pass must keep COLOR between Car information and Race in DOM order');
 
-// Reward cars have perk copy, which can make the information panel genuinely scroll.
-assert.match(perk, /description\.after\(perk\)/,
-  'Perk copy must remain part of car information rather than the floating COLOR control');
+// The perk popover remains adjacent to the description in source order, while its
+// fixed/top-layer presentation keeps it from consuming information-panel height.
+assert.match(perk, /description\.after\(popover\)/,
+  'Perk content must remain associated with car information rather than the floating COLOR control');
 assert.match(showroomCss, /\.lot-showroom \.lot-card\s*\{[\s\S]*overflow-y:\s*auto/,
   'The base showroom still documents the historical card-level scroll behavior this compatibility layer overrides');
 
@@ -28,15 +29,14 @@ assert.match(boundary, /\.lot-showroom \.lot-card-info-scroll\s*\{[\s\S]*overflo
 assert.match(boundary, /-webkit-overflow-scrolling:\s*touch/,
   'The inner information scroller must retain native iOS momentum scrolling');
 
-// When the information is shorter than its viewport, do not dump all spare height
-// below the stat table. Keep the Race action anchored while sharing that room between
-// the visible information sections. With negative free space, space-between naturally
-// collapses back to normal packed flow and the same container can scroll.
-assert.match(boundary, /\.lot-showroom \.lot-card-info-scroll\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-direction:\s*column;[\s\S]*justify-content:\s*space-between;[\s\S]*gap:\s*2px;/,
-  'Spare car-information height must be distributed between sections instead of accumulating below the stats');
+// With description and perk copy removed from visual flow, keep title, ATTRIBUTES and
+// the responsive stat grid packed in a predictable order. The stat grid itself owns
+// spare height; negative space still becomes ordinary inner scrolling.
+assert.match(boundary, /\.lot-showroom \.lot-card-info-scroll\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-direction:\s*column;[\s\S]*justify-content:\s*flex-start;[\s\S]*gap:\s*clamp\(4px, 0\.8vh, 8px\);/,
+  'Car-information sections must stay packed while the larger attribute grid owns responsive height');
 
-// The wrapper must contain every variable-height information node, especially perk copy
-// and the visible ATTRIBUTES row, while COLOR and RACE stay as card siblings outside it.
+// The wrapper must contain every car-information node, including the hidden popover
+// source and visible ATTRIBUTES row, while COLOR and RACE stay as card siblings outside it.
 for (const selector of [
   "'.lot-car-title'",
   "'.lot-car-description'",

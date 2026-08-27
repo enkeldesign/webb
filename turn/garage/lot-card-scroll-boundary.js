@@ -25,8 +25,8 @@ function installStyle() {
       flex: 1 1 auto;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      gap: 2px;
+      justify-content: flex-start;
+      gap: clamp(4px, 0.8vh, 8px);
       overflow-x: hidden;
       overflow-y: auto;
       overscroll-behavior: contain;

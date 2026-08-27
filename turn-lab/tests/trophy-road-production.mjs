@@ -311,11 +311,15 @@ assert.match(perkDisclosure, /getCarDefinition\(vehicleId\)\?\.perk/,
 assert.doesNotMatch(perkDisclosure, /rewardForVehicle|trophy-road/,
   'Vehicle perks must not be free-floating Trophy Road entitlements');
 assert.match(perkDisclosure, /className = 'lot-perk-copy'/);
-assert.match(perkDisclosure, /color: #2f6f38/,
-  'Named vehicle perk copy must use the dark achievement-green treatment');
-assert.doesNotMatch(perkDisclosure, /lot-perk-button|aria-expanded/,
-  'Named perk information must be inline and must not spend vertical space on a disclosure button');
-assert.match(perkDisclosure, /<strong>\$\{perkTitle\}:<\/strong>/);
+assert.match(perkDisclosure, /className = 'lot-perk-button'/);
+assert.match(perkDisclosure, /trigger\.hidden = !perkText/,
+  'Only cars that own a perk may expose the PERK action');
+assert.match(perkDisclosure, /trigger\.setAttribute\('aria-expanded', String\(nextOpen\)\)/,
+  'The PERK action must expose its popover state');
+assert.match(perkDisclosure, /popover\.setAttribute\('role', 'dialog'\)/,
+  'Named perk information must open as a labelled popover dialog');
+assert.match(perkDisclosure, /title\.textContent = perkTitle/);
+assert.match(perkDisclosure, /copy\.textContent = perkDescription/);
 assert.match(enhancementRuntime, /installLotPerkDisclosure/);
 assert.match(enhancementRuntime, /lot-perk-disclosure\.js\?revision=r164-vintage-rally-perks/);
 assert.match(enhancementRuntime, /lot-trophy-gate\.js\?revision=r164-vintage-rally-perks/);
