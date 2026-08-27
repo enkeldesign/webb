@@ -13,6 +13,7 @@ import { installMidnightCityWorld } from './midnight-city-world-r11.js?build=202
 // Historical MOUNTAIN regression markers: mountain-world-r3.js?revision=r3-continuous-terrain-v1, mountain-world-r3.js?revision=r6-night-treatment, mountain-world-r3.js?revision=r8-shadowless-spotlight, mountain-world-r3.js?revision=r560-shared-night-spotlight, mountain-world-r3.js?revision=r561-200m-headlight, mountain-world-r3.js?revision=r563-lower-headlight-target, mountain-world-r3.js?revision=r174-night-headlight-tune, mountain-world-r3.js?revision=r175-reconcile-night-headlight
 import { installMountainWorld } from './mountain-world-r3.js?revision=r177-ipad-sky-aspect';
 import { isForgivingTrackSurface } from './airport-runoff.js?build=20260722-r52';
+import '../race/rival-visual-prewarm.js';
 import './contextual-road-edges.js?revision=r518-signature-yellow';
 import './road-contour-color-r512.js?revision=r513-countryside';
 import './start-area-polish-r519.js?revision=r519-start-area-consistency-v2';

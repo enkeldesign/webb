@@ -11,7 +11,11 @@ export function installAirportWorld(options = {}) {
   installAirportEmergency({
     world,
     samples: options.samples,
-    runtime: options.runtime || globalThis.__turnRuntime
+    runtime: options.runtime || globalThis.__turnRuntime,
+    // r494, r496 and r497 used to run three independent first-lap polling loops and
+    // full-world matrix refreshes for the same final wreck depth. Production delegates
+    // those historical increments to r497 so the tested 16-unit result is applied once.
+    deferWreckCalibration: true
   });
 
   world.name = 'TURN Airport r56';
@@ -37,7 +41,8 @@ export function installAirportWorld(options = {}) {
     maydayStandardAchievementToast: true,
     maydayLongerGuidanceHold: true,
     maydayFinalWreckDepth: true,
-    maydayLargerCrashFire: true
+    maydayLargerCrashFire: true,
+    maydaySingleWreckCalibration: true
   });
   return world;
 }
