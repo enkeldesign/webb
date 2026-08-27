@@ -91,6 +91,8 @@
 
 .lot-showroom .lot-stat b {
   border: 2px solid var(--lot-stat-accent);
+  outline: 0.5px solid #000;
+  outline-offset: -0.5px;
   border-radius: 999px;
   background: var(--paper, #fff8e8);
 }
