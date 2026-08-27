@@ -167,8 +167,8 @@ assert.match(
 );
 assert.match(
   carModels,
-  /normalizeModelToGround\(model, targetLength \* effectiveVisualScale\)/,
-  'Every model surface must receive its resolved scale through the shared factory'
+  /normalizeModelToGround\(\s*model,\s*targetLength \* effectiveVisualScale,\s*`\$\{car\.id\}\|\$\{outline \? 1 : 0\}`\s*\)/,
+  'Every model surface must receive its resolved scale and stable geometry cache identity through the shared factory'
 );
 assert.match(carModels, /turnVisualSizeMultiplier = car\.visualSizeMultiplier/);
 assert.match(carModels, /turnFeaturedVisualSizeMultiplier = featuredVisualSizeMultiplier/);
