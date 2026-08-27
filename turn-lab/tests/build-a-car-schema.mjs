@@ -83,6 +83,17 @@ assert.match(index, /buildACarEntry\.searchParams\.set\('build', globalThis\.__T
 assert.doesNotMatch(index, /build-a-car\/entry\.js\?revision=/,
   'BUILD-A-CAR must not create a private revision-string namespace');
 assert.match(entry, /root\.querySelector\?\.\('\.lot-screen'\)/);
+assert.match(
+  entry,
+  /if \(decorateLot\(screen\)\) installedScreens\.add\(screen\);/,
+  'A Lot screen must only be marked installed after its action area is ready'
+);
+assert.match(entry, /if \(screen\.querySelector\('\.build-a-car-lot-entry'\)\) return true;/,
+  'Repeated observer passes must remain idempotent');
+assert.match(entry, /if \(!actions \|\| !raceButton\) return false;/,
+  'An incomplete Lot must stay eligible for the next mutation pass');
+assert.doesNotMatch(entry, /installedScreens\.add\(screen\);\s+decorateLot\(screen\)/,
+  'The installer must not permanently skip a partially mounted Lot');
 assert.match(entry, /actions\.insertBefore\(wrapper, raceButton\)/,
   'The LAB installer must enter through The Lot without forking it');
 assert.match(entry, /turn-lab:custom-car-saved/);
