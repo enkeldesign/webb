@@ -31,7 +31,9 @@ assert.ok(
 );
 
 assert.match(guide, /GUIDE_VERSION = 'r141-form-disclosure-system'/);
-assert.match(guide, /Holding <strong>DRIFT<\/strong> also charges <strong>BOOST<\/strong> faster/);
+assert.match(guide, /<strong>DRIFT<\/strong> charges <strong>BOOST<\/strong> as you slide/);
+assert.match(guide, /Keep drifting after the bar is full to build purple <strong>OVERCHARGE<\/strong>/);
+assert.match(guide, /slide to <strong>GAS<\/strong> to catch and hold it, or <strong>BOOST<\/strong> to spend it/);
 assert.match(guide, /<details class="m8-dbe-guide">/);
 assert.match(
   guide,
