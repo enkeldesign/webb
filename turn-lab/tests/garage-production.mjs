@@ -60,7 +60,7 @@ assert.equal(sedan.tuning.driftSpeedMultiplier, 0.84);
 assert.equal(sedan.tuning.driftStabilityMultiplier, 1);
 assert.equal(sedan.tuning.boostPowerMultiplier, 1);
 assert.equal(sedan.tuning.boostSpeedMultiplier, 1.32);
-assert.equal(sedan.tuning.boostDurationSeconds, 2);
+assert.equal(sedan.tuning.boostDurationSeconds, 2.3);
 assert.ok(race.tuning.topSpeedMultiplier > sedan.tuning.topSpeedMultiplier);
 assert.ok(race.tuning.accelerationMultiplier > sedan.tuning.accelerationMultiplier);
 assert.ok(race.tuning.controlMultiplier > sedan.tuning.controlMultiplier);

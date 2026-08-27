@@ -7,6 +7,7 @@ import {
   OVERDRIVE_MAX_SPEED_MULTIPLIER,
   getOverdriveSpeedMultiplier,
   getVehicleSpeedLimit,
+  resolveDriftSpeedMultiplier,
   updateVehicleOverdriveState,
   vehicleHasOverdrive,
   vehicleIgnoresOffRoadPenalty
@@ -86,7 +87,18 @@ assert.deepEqual(tuningCurve('drift', 'driftStabilityMultiplier'), [0.82, 0.91, 
 assert.deepEqual(tuningCurve('drift', 'driftDragAdd'), [0.16, 0.13, 0.1, 0.075, 0.055]);
 assert.deepEqual(tuningCurve('boostPower', 'boostPowerMultiplier'), [0.78, 0.89, 1, 1.13, 1.26]);
 assert.deepEqual(tuningCurve('boostPower', 'boostSpeedMultiplier'), [1.23, 1.275, 1.32, 1.35, 1.38]);
-assert.deepEqual(tuningCurve('boostDuration', 'boostDurationSeconds'), [1.2, 1.6, 2, 2.65, 3.4]);
+assert.deepEqual(tuningCurve('boostDuration', 'boostDurationSeconds'), [1.56, 1.96, 2.3, 2.92, 3.74]);
+
+// The new tank curve deliberately helps the weakest tanks most while retaining a
+// meaningful duration spread between 1/5 and 5/5. Gameplay controls still apply the
+// existing shared 1.5x duration multiplier on top of these stat-derived base seconds.
+const previousTankCurve = [1.2, 1.6, 2, 2.65, 3.4];
+const currentTankCurve = tuningCurve('boostDuration', 'boostDurationSeconds');
+const tankGrowth = currentTankCurve.map((seconds, index) => seconds / previousTankCurve[index] - 1);
+assert.ok(tankGrowth[0] >= 0.29 && tankGrowth[0] <= 0.31, '1/5 BOOST TANK should gain about 30 percent capacity');
+assert.ok(tankGrowth[1] > tankGrowth[2], '2/5 BOOST TANK should receive more help than the middle rating');
+assert.ok(tankGrowth[2] > tankGrowth[3], 'The BOOST TANK expansion should taper toward stronger tanks');
+assert.ok(tankGrowth[4] >= 0.09 && tankGrowth[4] <= 0.11, '5/5 BOOST TANK should gain only about 10 percent capacity');
 
 // Runtime wiring: the six player-facing attributes must reach actual driving code,
 // not stop at the Lot card.
@@ -106,6 +118,10 @@ assert.match(physicsSource, /driftHeld \? driftDragAdd : 0/,
   'DRIFT must affect drag while drifting');
 assert.match(physicsSource, /baseSpeedLimit \* effectiveDriftSpeedMultiplier/,
   'DRIFT must affect the active speed ceiling');
+assert.match(physicsSource, /driftSlipAngle = Math\.atan2\(/,
+  'The DRIFT ceiling must respond to real velocity slip instead of only button state');
+assert.match(physicsSource, /driftSlipAngle,[\s\S]*driftLockAmount/,
+  'The live speed-limit call must pass both slip angle and LOCK state');
 assert.match(physicsSource, /3\.2 \* driftStabilityMultiplier/,
   'DRIFT must affect slide recovery');
 assert.match(physicsSource, /0\.42 \* driftStabilityMultiplier/,
@@ -137,13 +153,36 @@ const driftTunings = [1, 2, 3, 4, 5].map((drift) => deriveVehicleTuning({
 assert.deepEqual(
   driftTunings.map((tuning) => tuning.driftSpeedMultiplier),
   [0.76, 0.8, 0.84, 0.88, 0.92],
-  'Ordinary DRIFT ratings must retain the agreed 24% to 8% speed-penalty curve'
+  'Ordinary DRIFT ratings must retain the 24% to 8% committed-slide base penalty curve'
 );
 assert.deepEqual(
   driftTunings.map((tuning) => tuning.driftStabilityMultiplier),
   [0.82, 0.91, 1, 1.09, 1.18],
   'Higher ordinary DRIFT ratings must settle lateral motion more cleanly'
 );
+
+const neutralDriftBase = driftTunings[2].driftSpeedMultiplier;
+const flowingDriftMultiplier = resolveDriftSpeedMultiplier({
+  driftSpeedMultiplier: neutralDriftBase,
+  slipAngle: 0
+});
+const highSlipDriftMultiplier = resolveDriftSpeedMultiplier({
+  driftSpeedMultiplier: neutralDriftBase,
+  slipAngle: Math.PI * 70 / 180
+});
+const lockedDriftMultiplier = resolveDriftSpeedMultiplier({
+  driftSpeedMultiplier: neutralDriftBase,
+  slipAngle: 0,
+  driftLockAmount: 1
+});
+assert.ok(Math.abs(flowingDriftMultiplier - 0.896) < 1e-12,
+  'Low-slip DRIFT should retain 35 percent more of the old speed penalty budget');
+assert.ok(Math.abs(highSlipDriftMultiplier - 0.872) < 1e-12,
+  'A 70-degree slide should still retain 20 percent more speed than the former ordinary DRIFT cap');
+assert.equal(lockedDriftMultiplier, neutralDriftBase,
+  'Full DRIFT LOCK must retain the committed legacy speed cost');
+assert.ok(flowingDriftMultiplier > highSlipDriftMultiplier && highSlipDriftMultiplier > lockedDriftMultiplier,
+  'DRIFT speed cost must rise progressively from flowing slide to high slip to LOCK');
 
 const vintageRacer = CAR_CATALOG.find((car) => car.id === 'vintage-racer');
 assert.ok(vintageRacer, 'Vintage Racer must remain in the vehicle catalog');
@@ -210,8 +249,8 @@ assert.doesNotMatch(rallyRacer.perk?.description || '', /tiny|small(?:er)? tank/
   'TWITCHY TURNY copy must not imply a special Boost-tank penalty');
 assert.equal(rallyRacer.stats.boostDuration, 1,
   'Rally Racer must use the ordinary minimum 1/5 Boost Tank attribute');
-assert.equal(rallyRacer.tuning.boostDurationSeconds, 1.2,
-  'Rating 1 must remain the ordinary 1.2-second Boost tank with no Rally-specific downsizing');
+assert.equal(rallyRacer.tuning.boostDurationSeconds, 1.56,
+  'Rating 1 must use the new larger ordinary Boost tank with no Rally-specific downsizing');
 assert.equal(rallyRacer.tuning.driftBoostRechargeMultiplier, 3.6,
   'TWITCHY TURNY must recharge Boost 50% faster than the ordinary 2.4x DRIFT recharge');
 assert.match(controlsSource, /function getDriftRechargeMultiplier\(\)/);
@@ -343,23 +382,40 @@ for (const car of CAR_CATALOG) {
       driftHeld: false,
       driftSpeedMultiplier: car.tuning.driftSpeedMultiplier
     });
-    const driftLimit = getVehicleSpeedLimit({
+    const flowLimit = getVehicleSpeedLimit({
       ...mode,
       maxSpeed,
       boostSpeedMultiplier: car.tuning.boostSpeedMultiplier,
       driftHeld: true,
-      driftSpeedMultiplier: car.tuning.driftSpeedMultiplier
+      driftSpeedMultiplier: car.tuning.driftSpeedMultiplier,
+      driftSlipAngle: Math.PI / 12
+    });
+    const highSlipLimit = getVehicleSpeedLimit({
+      ...mode,
+      maxSpeed,
+      boostSpeedMultiplier: car.tuning.boostSpeedMultiplier,
+      driftHeld: true,
+      driftSpeedMultiplier: car.tuning.driftSpeedMultiplier,
+      driftSlipAngle: Math.PI * 70 / 180
+    });
+    const lockLimit = getVehicleSpeedLimit({
+      ...mode,
+      maxSpeed,
+      boostSpeedMultiplier: car.tuning.boostSpeedMultiplier,
+      driftHeld: true,
+      driftSpeedMultiplier: car.tuning.driftSpeedMultiplier,
+      driftSlipAngle: Math.PI / 12,
+      driftLockAmount: 1
     });
 
+    assert.ok(flowLimit < gasLimit, `${car.name} must remain slower in flowing DRIFT than GAS on ${mode.name}`);
+    assert.ok(highSlipLimit < flowLimit, `${car.name} must pay more speed for high slip than a flowing DRIFT on ${mode.name}`);
+    assert.ok(lockLimit < highSlipLimit, `${car.name} must pay the strongest speed cost in full LOCK on ${mode.name}`);
     assert.ok(
-      driftLimit < gasLimit,
-      `${car.name} must be slower in DRIFT than GAS on ${mode.name}`
-    );
-    assert.ok(
-      Math.abs(driftLimit / gasLimit - car.tuning.driftSpeedMultiplier) < 1e-12,
-      `${car.name} must apply its DRIFT ceiling consistently on ${mode.name}`
+      Math.abs(lockLimit / gasLimit - car.tuning.driftSpeedMultiplier) < 1e-12,
+      `${car.name} full LOCK must retain its stat-derived committed DRIFT ceiling on ${mode.name}`
     );
   }
 }
 
-console.log('TURN all-car attribute-to-physics integrity, DRIFT, DRIFTAGE, TWITCHY TURNY, OVERSIZED and OVERDRIVE contracts passed for all 15 cars.');
+console.log('TURN all-car attribute-to-physics integrity, flow-friendly DRIFT, larger BOOST TANKS, DRIFTAGE, TWITCHY TURNY, OVERSIZED and OVERDRIVE contracts passed for all 15 cars.');

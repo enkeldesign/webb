@@ -4,6 +4,10 @@ import { trackPitch, trackSurfaceY } from '../tracks/elevation.js?build=20260725
 const OFFROAD_CAPABLE_VEHICLE_IDS = new Set(['monster-truck']);
 const OVERDRIVE_VEHICLE_ID = 'race-future';
 const OVERDRIVE_MIN_SPEED = 8;
+const DRIFT_FLOW_SLIP_ANGLE = Math.PI / 12;
+const DRIFT_HIGH_SLIP_ANGLE = Math.PI * 70 / 180;
+const DRIFT_FLOW_PENALTY_SCALE = 0.65;
+const DRIFT_HIGH_SLIP_PENALTY_SCALE = 0.80;
 export const OVERDRIVE_BUILD_SECONDS = 5;
 export const OVERDRIVE_MAX_SPEED_MULTIPLIER = 1.06;
 
@@ -49,21 +53,50 @@ export function updateVehicleOverdriveState({
   return getOverdriveSpeedMultiplier(state.overdriveCleanSeconds);
 }
 
+export function resolveDriftSpeedMultiplier({
+  driftSpeedMultiplier = 0.84,
+  slipAngle = 0,
+  driftLockAmount = 0
+} = {}) {
+  const baseMultiplier = clamp(
+    positiveNumber(driftSpeedMultiplier, 0.84),
+    0.5,
+    0.99
+  );
+  const slip = Math.abs(Number(slipAngle) || 0);
+  const slipMix = smoothstep(DRIFT_FLOW_SLIP_ANGLE, DRIFT_HIGH_SLIP_ANGLE, slip);
+  const ordinaryPenaltyScale = lerp(
+    DRIFT_FLOW_PENALTY_SCALE,
+    DRIFT_HIGH_SLIP_PENALTY_SCALE,
+    slipMix
+  );
+  // Ordinary flowing DRIFT keeps more momentum, especially at modest slip angles.
+  // LOCK remains the committed handbrake state and restores the full legacy speed cost.
+  const penaltyScale = lerp(
+    ordinaryPenaltyScale,
+    1,
+    clamp(nonNegativeNumber(driftLockAmount, 0), 0, 1)
+  );
+  return 1 - (1 - baseMultiplier) * penaltyScale;
+}
+
 export function getVehicleSpeedLimit({
   offRoad = false,
   boostActive = false,
   maxSpeed,
   boostSpeedMultiplier = 1.32,
   driftHeld = false,
-  driftSpeedMultiplier = 0.84
+  driftSpeedMultiplier = 0.84,
+  driftSlipAngle = 0,
+  driftLockAmount = 0
 }) {
   const effectiveMaxSpeed = positiveNumber(maxSpeed, 1);
   const effectiveBoostSpeedMultiplier = positiveNumber(boostSpeedMultiplier, 1.32);
-  const effectiveDriftSpeedMultiplier = clamp(
-    positiveNumber(driftSpeedMultiplier, 0.84),
-    0.5,
-    0.99
-  );
+  const effectiveDriftSpeedMultiplier = resolveDriftSpeedMultiplier({
+    driftSpeedMultiplier,
+    slipAngle: driftSlipAngle,
+    driftLockAmount
+  });
   const baseSpeedLimit = offRoad
     ? (boostActive ? effectiveMaxSpeed * 0.82 : effectiveMaxSpeed * 0.73)
     : (boostActive ? effectiveMaxSpeed * effectiveBoostSpeedMultiplier : effectiveMaxSpeed);
@@ -253,13 +286,21 @@ export function updateVehiclePhysicsState({
     offRoad: state.offRoad,
     speed
   });
+  const currentForward = getForward();
+  const currentRight = getRight();
+  const driftSlipAngle = Math.atan2(
+    Math.abs(state.velocity.dot(currentRight)),
+    Math.max(0.001, Math.abs(state.velocity.dot(currentForward)))
+  );
   const speedLimit = getVehicleSpeedLimit({
     offRoad: physicsOffRoad,
     boostActive: effectiveBoostActive,
     maxSpeed: effectiveMaxSpeed,
     boostSpeedMultiplier: tuningBoostSpeedMultiplier,
     driftHeld,
-    driftSpeedMultiplier
+    driftSpeedMultiplier,
+    driftSlipAngle,
+    driftLockAmount
   }) * overdriveSpeedMultiplier;
 
   if (speed > speedLimit) state.velocity.multiplyScalar(speedLimit / speed);
@@ -322,6 +363,11 @@ function normalizeAngle(angle) {
   while (value > Math.PI) value -= Math.PI * 2;
   while (value < -Math.PI) value += Math.PI * 2;
   return value;
+}
+
+function smoothstep(edge0, edge1, value) {
+  const t = clamp((value - edge0) / Math.max(0.000001, edge1 - edge0), 0, 1);
+  return t * t * (3 - 2 * t);
 }
 
 function lerp(a, b, t) {

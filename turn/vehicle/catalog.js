@@ -336,7 +336,7 @@ export function deriveVehicleTuning(stats) {
     driftStabilityMultiplier: centeredStat(stats.drift, [0.82, 0.91, 1, 1.09, 1.18]),
     boostPowerMultiplier: centeredStat(stats.boostPower, [0.78, 0.89, 1, 1.13, 1.26]),
     boostSpeedMultiplier: centeredStat(stats.boostPower, [1.23, 1.275, 1.32, 1.35, 1.38]),
-    boostDurationSeconds: centeredStat(stats.boostDuration, [1.2, 1.6, 2, 2.65, 3.4])
+    boostDurationSeconds: centeredStat(stats.boostDuration, [1.56, 1.96, 2.30, 2.92, 3.74])
   };
 }
 
