@@ -21,10 +21,25 @@ import {
 
 const loadersByPack = new Map();
 const sourceCache = new Map();
+const normalizationMetricsCache = new Map();
+const competitorGhostTemplateCache = new Map();
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
 const TIRE_COLOR = 0x17191c;
 const FEATURED_SURFACE_TARGET_LENGTHS = new Set([5.15, 5.5]);
 const REVERSED_FRONT_WHEEL_LABEL_IDS = new Set(['vintage-racer']);
+const COMPETITOR_GHOST_TARGET_LENGTH = 5.5;
+const COMPETITOR_GHOST_TEMPLATE_LIMIT = 16;
+const CAR_OUTLINE_MATERIAL = new THREE.MeshBasicMaterial({
+  color: 0x08090a,
+  side: THREE.BackSide,
+  transparent: false,
+  opacity: 1,
+  depthTest: true,
+  depthWrite: false,
+  polygonOffset: true,
+  polygonOffsetFactor: 1,
+  polygonOffsetUnits: 1
+});
 
 export async function preloadCarModels(carIds) {
   await Promise.all(carIds.map((carId) => loadCarSource(carId).catch(() => null)));
@@ -51,17 +66,30 @@ export async function createCarVisual({
   outline = true
 }) {
   const car = getCarDefinition(carId);
+  const requestedColor = normalizeVehicleColor(color, car.defaultColor);
+  const requestedSecondaryColor = normalizeVehicleSecondaryColor(
+    secondaryColor,
+    car.defaultSecondaryColor
+  );
+  const competitorTemplateKey = reusableCompetitorGhostKey({
+    car,
+    color: requestedColor,
+    secondaryColor: requestedSecondaryColor,
+    ghost,
+    targetLength,
+    outline
+  });
+  const cachedCompetitorTemplate = competitorTemplateKey
+    ? competitorGhostTemplateCache.get(competitorTemplateKey)
+    : null;
+  if (cachedCompetitorTemplate) return cloneCompetitorGhostVisual(cachedCompetitorTemplate);
+
   const source = await loadCarSource(car.id);
   const root = new THREE.Group();
   const model = source.clone(true);
   model.rotation.y = Math.PI + car.modelYawQuarterTurns * Math.PI / 2;
   root.add(model);
 
-  const requestedColor = normalizeVehicleColor(color, car.defaultColor);
-  const requestedSecondaryColor = normalizeVehicleSecondaryColor(
-    secondaryColor,
-    car.defaultSecondaryColor
-  );
   const requestedColorSpec = primaryColorSpec(car, requestedColor);
   const requestedSecondaryColorSpec = secondaryColorSpec(car, requestedSecondaryColor);
   const ghostColor = makeGhostColor(requestedColor);
@@ -147,7 +175,11 @@ export async function createCarVisual({
   const effectiveVisualScale = car.visualScale
     * car.visualSizeMultiplier
     * featuredVisualSizeMultiplier;
-  normalizeModelToGround(model, targetLength * effectiveVisualScale);
+  normalizeModelToGround(
+    model,
+    targetLength * effectiveVisualScale,
+    `${car.id}|${outline ? 1 : 0}`
+  );
   if (car.emergencyService && !ghost) installEmergencyLightRig(root, model, car.emergencyService);
 
   root.userData.turnCarId = car.id;
@@ -166,7 +198,61 @@ export async function createCarVisual({
   root.userData.frontWheelPivots = frontWheelPivots;
   root.userData.wheelSpinners = [];
   installWheelAnimationHostBridge(root);
+  if (competitorTemplateKey) rememberCompetitorGhostTemplate(competitorTemplateKey, root);
   return root;
+}
+
+function reusableCompetitorGhostKey({ car, color, secondaryColor, ghost, targetLength, outline }) {
+  if (
+    ghost !== true
+    || outline !== true
+    || Math.abs(Number(targetLength) - COMPETITOR_GHOST_TARGET_LENGTH) > 0.000001
+  ) return '';
+  return `${car.id}|${color}|${secondaryColor}|${COMPETITOR_GHOST_TARGET_LENGTH}`;
+}
+
+function rememberCompetitorGhostTemplate(key, visual) {
+  if (competitorGhostTemplateCache.has(key)) competitorGhostTemplateCache.delete(key);
+  competitorGhostTemplateCache.set(key, visual);
+  while (competitorGhostTemplateCache.size > COMPETITOR_GHOST_TEMPLATE_LIMIT) {
+    competitorGhostTemplateCache.delete(competitorGhostTemplateCache.keys().next().value);
+  }
+}
+
+function cloneCompetitorGhostVisual(template) {
+  const clone = new THREE.Group();
+  clone.name = template.name;
+  clone.position.copy(template.position);
+  clone.quaternion.copy(template.quaternion);
+  clone.scale.copy(template.scale);
+  clone.visible = template.visible;
+  for (const child of template.children) clone.add(child.clone(true));
+
+  const frontWheelPivots = [];
+  clone.traverse((node) => {
+    if (!String(node?.name || '').endsWith('-steer-pivot')) return;
+    node.rotation.y = 0;
+    frontWheelPivots.push(node);
+  });
+
+  clone.userData.turnCarId = template.userData.turnCarId;
+  clone.userData.turnCarColor = template.userData.turnCarColor;
+  clone.userData.turnCarSecondaryColor = template.userData.turnCarSecondaryColor;
+  clone.userData.turnGhost = true;
+  clone.userData.turnModelYawQuarterTurns = template.userData.turnModelYawQuarterTurns;
+  clone.userData.turnVisualSizeMultiplier = template.userData.turnVisualSizeMultiplier;
+  clone.userData.turnFeaturedVisualSizeMultiplier = template.userData.turnFeaturedVisualSizeMultiplier;
+  clone.userData.turnFeaturedVisualSurface = template.userData.turnFeaturedVisualSurface;
+  clone.userData.turnEffectiveVisualScale = template.userData.turnEffectiveVisualScale;
+  clone.userData.turnPrimaryPaintMaterials = [];
+  clone.userData.turnSecondaryPaintMaterials = [];
+  clone.userData.turnPaintMaterials = [];
+  clone.userData.turnSemanticPaintRecords = [];
+  clone.userData.frontWheelPivots = frontWheelPivots;
+  clone.userData.wheelSpinners = [];
+  clone.userData.turnFastGhostClone = true;
+  installWheelAnimationHostBridge(clone);
+  return clone;
 }
 
 function installWheelAnimationHostBridge(visual) {
@@ -329,20 +415,7 @@ function addOutlines(model) {
   });
 
   for (const node of originals) {
-    const outline = new THREE.Mesh(
-      node.geometry,
-      new THREE.MeshBasicMaterial({
-        color: 0x08090a,
-        side: THREE.BackSide,
-        transparent: false,
-        opacity: 1,
-        depthTest: true,
-        depthWrite: false,
-        polygonOffset: true,
-        polygonOffsetFactor: 1,
-        polygonOffsetUnits: 1
-      })
-    );
+    const outline = new THREE.Mesh(node.geometry, CAR_OUTLINE_MATERIAL);
     outline.scale.setScalar(1.035);
     outline.castShadow = false;
     outline.receiveShadow = false;
@@ -384,19 +457,27 @@ function wheelRole(name = '') {
   return null;
 }
 
-function normalizeModelToGround(model, targetLength) {
-  model.updateMatrixWorld(true);
-  const initialBounds = new THREE.Box3().setFromObject(model);
-  const size = initialBounds.getSize(new THREE.Vector3());
-  const footprintLength = Math.max(0.001, size.x, size.z);
-  model.scale.multiplyScalar(targetLength / footprintLength);
-  model.updateMatrixWorld(true);
+function normalizeModelToGround(model, targetLength, cacheKey = '') {
+  let metrics = cacheKey ? normalizationMetricsCache.get(cacheKey) : null;
+  if (!metrics) {
+    model.updateMatrixWorld(true);
+    const initialBounds = new THREE.Box3().setFromObject(model);
+    const size = initialBounds.getSize(new THREE.Vector3());
+    const center = initialBounds.getCenter(new THREE.Vector3());
+    metrics = Object.freeze({
+      footprintLength: Math.max(0.001, size.x, size.z),
+      centerOffsetX: center.x - model.position.x,
+      centerOffsetZ: center.z - model.position.z,
+      minYOffset: initialBounds.min.y - model.position.y
+    });
+    if (cacheKey) normalizationMetricsCache.set(cacheKey, metrics);
+  }
 
-  const bounds = new THREE.Box3().setFromObject(model);
-  const center = bounds.getCenter(new THREE.Vector3());
-  model.position.x -= center.x;
-  model.position.z -= center.z;
-  model.position.y -= bounds.min.y;
+  const scaleFactor = targetLength / metrics.footprintLength;
+  model.scale.multiplyScalar(scaleFactor);
+  model.position.x -= model.position.x + metrics.centerOffsetX * scaleFactor;
+  model.position.z -= model.position.z + metrics.centerOffsetZ * scaleFactor;
+  model.position.y -= model.position.y + metrics.minYOffset * scaleFactor;
 }
 
 function isProtectedPart(node, material) {
