@@ -21,6 +21,16 @@ const MAYDAY = Object.freeze({
   icon: 'siren'
 });
 
+export const CATCH_THE_CHARGE_ACHIEVEMENT = Object.freeze({
+  id: 'catch-the-charge',
+  category: base.CATEGORY.ONBOARDING,
+  trophies: 25,
+  title: 'CATCH THE CHARGE',
+  description: 'Keep holding DRIFT after BOOST is full to build purple OVERCHARGE. Hold GAS for three seconds to catch it.',
+  icon: 'charge',
+  progressMax: 3
+});
+
 export const GOT_STARTED_ACHIEVEMENT = Object.freeze({
   id: 'got-started',
   category: base.CATEGORY.ONBOARDING,
@@ -29,6 +39,11 @@ export const GOT_STARTED_ACHIEVEMENT = Object.freeze({
   description: 'Finish all Getting Started achievements.',
   icon: 'trophy'
 });
+
+export const ONBOARDING_ACHIEVEMENT_IDS = Object.freeze([
+  ...base.ONBOARDING_ACHIEVEMENT_IDS,
+  CATCH_THE_CHARGE_ACHIEVEMENT.id
+]);
 
 const SAFETY_TARGET_LABELS = Object.freeze({
   countryside: '0:30',
@@ -72,13 +87,14 @@ const rebalancedBaseAchievements = base.ACHIEVEMENTS.map((achievement) => {
 const firstNonOnboardingIndex = rebalancedBaseAchievements.findIndex(
   (achievement) => achievement.category !== base.CATEGORY.ONBOARDING
 );
-const gotStartedInsertionIndex = firstNonOnboardingIndex >= 0
+const onboardingInsertionIndex = firstNonOnboardingIndex >= 0
   ? firstNonOnboardingIndex
   : rebalancedBaseAchievements.length;
 const withGotStarted = [
-  ...rebalancedBaseAchievements.slice(0, gotStartedInsertionIndex),
+  ...rebalancedBaseAchievements.slice(0, onboardingInsertionIndex),
+  CATCH_THE_CHARGE_ACHIEVEMENT,
   GOT_STARTED_ACHIEVEMENT,
-  ...rebalancedBaseAchievements.slice(gotStartedInsertionIndex)
+  ...rebalancedBaseAchievements.slice(onboardingInsertionIndex)
 ];
 
 const expandedBaseAchievements = withGotStarted.flatMap((achievement) => {
