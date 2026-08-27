@@ -26,7 +26,9 @@ export function installAirportEmergency(options = {}) {
   const installation = installAirportEmergencyR494(options);
   installHudStyle();
   installAchievementToastHook();
-  installWreckCalibration(options.world, runtime);
+  // Production r56 lets r497 apply the complete tested depth once. This avoids a second
+  // 120 ms wreck poll plus a full Airport matrix traversal during the first lap.
+  if (options.deferWreckCalibration !== true) installWreckCalibration(options.world, runtime);
   return installation;
 }
 
