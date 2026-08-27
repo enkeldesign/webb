@@ -87,7 +87,15 @@
 }
 
 .boost-hud.has-overcharge > div {
-  background: #8b5cf6;
+  background: linear-gradient(
+    90deg,
+    #5f3dc4 0%,
+    #8b5cf6 4%,
+    #d0bfff 9%,
+    #d0bfff 91%,
+    #8b5cf6 96%,
+    #5f3dc4 100%
+  );
 }
 
 .boost-hud.has-overcharge i {
@@ -131,12 +139,12 @@
   animation: turn-boost-empty-bar-flash 620ms ease-out;
 }
 
-.boost-hud.is-overcharge-volatile:not(.is-boost-full-flash):not(.is-boost-empty-flash) > div {
+.boost-hud.is-overcharge-volatile:not(.is-boost-full-flash):not(.is-boost-empty-flash):not(.is-overcharge-peak) > div {
   animation: turn-overcharge-wiggle 620ms ease-in-out infinite;
 }
 
-.boost-hud.is-overcharge-peak > div {
-  animation: turn-overcharge-peak 400ms cubic-bezier(.18,.88,.24,1);
+.boost-hud.is-overcharge-peak {
+  animation: turn-boost-empty-flash 420ms cubic-bezier(.28,.78,.34,1);
 }
 
 @keyframes turn-boost-full-flash {
@@ -195,18 +203,11 @@
   78% { transform: translateX(-50%) rotate(-0.25deg) scaleY(1.018); }
 }
 
-@keyframes turn-overcharge-peak {
-  0%, 100% { transform: translateX(-50%) rotate(0deg) scaleY(1); }
-  22% { transform: translateX(-50%) rotate(-1.1deg) scaleY(1.1); }
-  48% { transform: translateX(-50%) rotate(0.9deg) scaleY(0.94); }
-  72% { transform: translateX(-50%) rotate(-0.45deg) scaleY(1.05); }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .boost-hud.is-boost-full-flash,
   .boost-hud.is-boost-empty-flash,
   .boost-hud.is-overcharge-volatile > div,
-  .boost-hud.is-overcharge-peak > div {
+  .boost-hud.is-overcharge-peak {
     animation: none;
   }
 }
