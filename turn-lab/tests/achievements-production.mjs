@@ -83,17 +83,17 @@ assert.equal(
   1725,
   'The base catalog must stay separate from production progression balancing'
 );
-assert.equal(ACHIEVEMENTS.length, 44,
-  'Production TURN must expose all 44 intended achievements');
-assert.equal(new Set(ACHIEVEMENTS.map((achievement) => achievement.id)).size, 44,
+assert.equal(ACHIEVEMENTS.length, 45,
+  'Production TURN must expose all 45 intended achievements');
+assert.equal(new Set(ACHIEVEMENTS.map((achievement) => achievement.id)).size, 45,
   'Production achievement ids must remain unique');
-assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 10,
-  'GOT STARTED must remain the master of the ten prerequisite Getting Started achievements, not recursively require itself');
-assert.equal(totalAvailableTrophies(), 3050);
-assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 3050);
+assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 11,
+  'GOT STARTED must remain the master of the eleven prerequisite Getting Started achievements, not recursively require itself');
+assert.equal(totalAvailableTrophies(), 3075);
+assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 3075);
 assert.equal(
   ACHIEVEMENTS.reduce((total, achievement) => total + achievement.trophies, 0),
-  3050
+  3075
 );
 assert.ok(ACHIEVEMENTS.every((achievement) => Number.isFinite(achievement.trophies)));
 assert.ok(ACHIEVEMENTS.every((achievement) => !Object.hasOwn(achievement, 'points')));
@@ -102,6 +102,12 @@ const byId = (id) => ACHIEVEMENTS.find((achievement) => achievement.id === id);
 assert.equal(byId('got-started')?.title, 'GOT STARTED');
 assert.equal(byId('got-started')?.trophies, 75);
 assert.equal(byId('got-started')?.category, 'onboarding');
+assert.equal(byId('catch-the-charge')?.title, 'CATCH THE CHARGE');
+assert.equal(byId('catch-the-charge')?.trophies, 25);
+assert.equal(byId('catch-the-charge')?.category, 'onboarding');
+assert.equal(byId('catch-the-charge')?.progressMax, 3);
+assert.match(byId('catch-the-charge')?.description || '', /Switch to GAS to catch it/);
+assert.match(byId('catch-the-charge')?.description || '', /keep GAS held for three seconds/);
 assert.equal(byId('golden-hour')?.title, 'MAYDAY!');
 assert.equal(byId('golden-hour')?.trophies, 100);
 assert.equal(byId('golden-hour')?.hidden, true);
@@ -349,6 +355,7 @@ assert.doesNotMatch(productionCatalogSource, /from '.\/catalog\.js/,
   'The production catalog must extend the explicit base module, never depend on the public facade');
 assert.match(productionCatalogSource, /title: 'MAYDAY!'/);
 assert.match(productionCatalogSource, /title: 'GOT STARTED'/);
+assert.match(productionCatalogSource, /title: 'CATCH THE CHARGE'/);
 assert.match(productionCatalogSource, /TRACK_WINNER_ACHIEVEMENTS/);
 assert.match(productionCatalogSource, /TRACK_SAFETY_ACHIEVEMENTS/);
 assert.match(legacyCatalogSource, /catalog-production\.js\?revision=r184-achievement-integrity/,
@@ -435,4 +442,4 @@ assert.match(app, /achievements=r166-bella-records/);
 assert.match(workflow, /Run achievement system regression/);
 assert.match(workflow, /node turn-lab\/tests\/achievements-production\.mjs/);
 
-console.log('TURN 44-achievement, 3050-trophy production catalog integrity regression passed.');
+console.log('TURN 45-achievement, 3075-trophy production catalog integrity regression passed.');
