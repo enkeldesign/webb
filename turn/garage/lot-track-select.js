@@ -80,7 +80,7 @@ function prepareShowroomStyles() {
     ),
     prepareStylesheet(
       SHOWROOM_TYPOGRAPHY_STYLE_ID,
-      './lot-info-typography-r213.css?revision=r216-meter-density'
+      './lot-info-typography-r213.css?revision=r218-meter-black-outline'
     )
   ]);
   return showroomStylePromise;
