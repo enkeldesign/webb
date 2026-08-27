@@ -70,7 +70,7 @@ assert.match(wrapper, /lot-r10\.js\?build=20260809-r163-native-html&revision=r59
   'The wrapper must load the canonical-lock Lot implementation under a fresh URL');
 assert.match(wrapper, /lot-enhancement-runtime\.js\?revision=r588-canonical-attributes/,
   'The wrapper must load the canonical-attribute accessibility bundle');
-assert.match(wrapper, /lot-enhancement-runtime\.js\?revision=r216-meter-density&build=20260804-r157/,
+assert.match(wrapper, /lot-enhancement-runtime\.js\?revision=r217-stable-perk-slot&build=20260804-r157/,
   'The wrapper must bypass cached Lot layout enhancements');
 assert.match(wrapper, /lot-info-panel-r212\.css\?revision=r216-meter-density/,
   'The tightened race-action spacing must load under a fresh stylesheet URL');
@@ -103,7 +103,7 @@ assert.match(perkDisclosure, /className = 'lot-perk-copy'/);
 assert.match(perkDisclosure, /getCarDefinition\(vehicleId\)\?\.perk/);
 assert.doesNotMatch(perkDisclosure, /rewardForVehicle|trophy-road/,
   'Perk display must be driven by the selected car definition rather than Trophy Road ownership');
-assert.match(perkDisclosure, /className = 'lot-perk-button'/);
+assert.match(perkDisclosure, /className = 'lot-perk-button is-layout-placeholder'/);
 assert.match(perkDisclosure, /trigger\.textContent = 'PERK'/);
 assert.match(perkDisclosure, /trigger\.setAttribute\('aria-haspopup', 'dialog'\)/);
 assert.match(perkDisclosure, /trigger\.setAttribute\('aria-controls', popoverId\)/);
@@ -112,10 +112,22 @@ assert.match(perkDisclosure, /popover\.setAttribute\('popover', 'auto'\)/);
 assert.match(perkDisclosure, /popover\.setAttribute\('role', 'dialog'\)/);
 assert.match(perkDisclosure, /popover\.setAttribute\('aria-labelledby', titleId\)/);
 assert.match(perkDisclosure, /popover\.setAttribute\('aria-describedby', descriptionId\)/);
-assert.match(perkDisclosure, /trigger\.hidden = !perkText/,
-  'The PERK action must exist only for cars with named perk content');
-assert.match(perkDisclosure, /closePopover\(\);[\s\S]*trigger\.hidden = !perkText/,
-  'Changing cars must close any open perk before updating the trigger');
+assert.match(perkDisclosure, /\.lot-perk-button\.is-layout-placeholder\s*\{[\s\S]*visibility: hidden;[\s\S]*pointer-events: none;/,
+  'Cars without perks must reserve the same title-row footprint without drawing a false action');
+assert.match(perkDisclosure, /trigger\.disabled = !available;[\s\S]*trigger\.classList\.toggle\('is-layout-placeholder', !available\)/,
+  'Only cars with named perk content may expose an interactive PERK action');
+assert.match(perkDisclosure, /trigger\.setAttribute\('aria-hidden', 'true'\)[\s\S]*trigger\.tabIndex = -1/,
+  'The layout placeholder must stay out of the accessibility tree and tab order');
+assert.match(perkDisclosure, /trigger\.removeAttribute\('aria-hidden'\);[\s\S]*trigger\.removeAttribute\('tabindex'\)/,
+  'A real PERK action must return to the accessibility tree and normal tab order');
+assert.match(perkDisclosure, /if \(isOpen \|\| !currentPerkText \|\| trigger\.disabled\) return;/,
+  'The invisible layout placeholder must never open the perk popover');
+assert.match(perkDisclosure, /restoreFocus && trigger\.isConnected && !trigger\.disabled/,
+  'Popover cleanup must never move focus to an unavailable placeholder');
+assert.match(perkDisclosure, /closePopover\(\);[\s\S]*setTriggerAvailable\(Boolean\(perkText\)\)/,
+  'Changing cars must close any open perk before updating action availability');
+assert.doesNotMatch(perkDisclosure, /trigger\.hidden = !perkText/,
+  'Hiding the PERK action must not collapse the shared information layout');
 assert.match(perkDisclosure, /event\.key !== 'Escape'/);
 assert.match(perkDisclosure, /closePopover\(\{ restoreFocus: true \}\)/);
 assert.doesNotMatch(perkDisclosure, /innerHTML\s*=/,
@@ -130,6 +142,8 @@ assert.doesNotMatch(perkDisclosure, /observer\.observe\(screen,/,
   'The perk presentation must never observe the subtree that contains its own generated copy');
 assert.doesNotMatch(perkDisclosure, /childList:\s*true|characterData:\s*true/,
   'The perk presentation must not react to DOM/text mutations that its own sync function can create');
+assert.match(enhancementRuntime, /lot-perk-disclosure\.js\?revision=r217-stable-perk-slot/,
+  'The stable PERK slot must load under a fresh module URL');
 
 assert.match(
   lot,

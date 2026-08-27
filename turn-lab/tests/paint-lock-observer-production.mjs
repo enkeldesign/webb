@@ -208,7 +208,7 @@ for (const staleCatalogSpecifier of [
 assert.match(paintCss, /\.lot-colors\.is-paint-locked[\s\S]*min-height: 54px/);
 assert.match(lotGate, /function dismissVisibleUnlockNotice\(\)/);
 assert.match(lotRuntime, /lot-trophy-gate\.js\?revision=r164-vintage-rally-perks/);
-assert.match(lotRuntime, /lot-perk-disclosure\.js\?revision=r203-idempotent/);
+assert.match(lotRuntime, /lot-perk-disclosure\.js\?revision=r217-stable-perk-slot/);
 assert.match(perkPresentation, /getCarDefinition\(vehicleId\)\?\.perk/);
 assert.doesNotMatch(perkPresentation, /observer\.observe\(screen,/);
 assert.match(app, /trophy-road-r157\.css\?revision=r163-native-picker-parent-click/);

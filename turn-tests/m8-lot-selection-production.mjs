@@ -173,7 +173,7 @@ assert.match(paintReward, /`<strong>\$\{threshold\} 🏆<\/strong><small>TO UNLO
   'Locked paint must display its Trophy Road unlock requirement next to the swatch');
 assert.match(paintReward, /`Color locked\. Car color controls unlock at \$\{threshold\} trophies on Trophy Road\.`/,
   'The locked color button must explain specifically that color, not the whole car, is locked');
-assert.match(enhancementRuntime, /lot-perk-disclosure\.js\?revision=r203-idempotent/,
+assert.match(enhancementRuntime, /lot-perk-disclosure\.js\?revision=r217-stable-perk-slot/,
   'The fixed perk installer must receive a fresh module cache identity');
 assert.match(enhancementRuntime, /lot-paint-reward\.js\?revision=r203-color-label/,
   'The clarified color gate must receive a fresh module cache identity');
