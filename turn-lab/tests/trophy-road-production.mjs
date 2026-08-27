@@ -77,7 +77,7 @@ assert.equal(TROPHY_ROAD_STORAGE_VERSION, 5,
   'Adding locks to previously unrestricted cars requires a one-time ownership grandfather migration');
 assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 1700,
   'The legacy base module keeps its historical scale for compatibility');
-assert.equal(PRODUCTION_TROPHY_ROAD_MAX_THRESHOLD, 3050,
+assert.equal(PRODUCTION_TROPHY_ROAD_MAX_THRESHOLD, 3075,
   'Production must expose the complete current achievement-trophy scale');
 assert.equal(TROPHY_ROAD_VIEWPORT_THRESHOLD, 600);
 
@@ -105,7 +105,7 @@ assert.deepEqual(productionRewardIdsForTrophies(800), through800);
 assert.deepEqual(productionRewardIdsForTrophies(900), through900);
 assert.deepEqual(productionRewardIdsForTrophies(999), through900);
 assert.deepEqual(productionRewardIdsForTrophies(1000), through1000);
-assert.deepEqual(productionRewardIdsForTrophies(3050), productionRewardIds);
+assert.deepEqual(productionRewardIdsForTrophies(3075), productionRewardIds);
 
 assert.equal(getProductionTrophyRoadReward('mountain')?.threshold, 700);
 assert.equal(getProductionTrophyRoadReward('paintjob')?.threshold, 900);
@@ -294,7 +294,7 @@ assert.match(app, /trophy-road\.js\?revision=r166-bella-records/);
 assert.match(fixedLayout, /r166-bella-records/);
 assert.match(workflow, /Run Trophy Road progression regression/);
 assert.match(workflow, /node turn-lab\/tests\/trophy-road-production\.mjs/);
-assert.match(perkWrapper, /TROPHY_ROAD_MAX_THRESHOLD = 3050/);
+assert.match(perkWrapper, /TROPHY_ROAD_MAX_THRESHOLD = 3075/);
 assert.match(perkWrapper, /\['vintage-racer', 300\]/);
 assert.match(perkWrapper, /\['midnight-city', 400\]/);
 assert.match(perkWrapper, /\['mountain', 700\]/);
