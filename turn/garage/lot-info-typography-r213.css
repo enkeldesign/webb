@@ -61,12 +61,14 @@
   font-size: .78rem;
 }
 
+/* Six 13px meters plus five 2px row gaps need exactly 88px. Let the grid shrink
+   to that honest minimum and place spare height between rows, never below BOOST TANK. */
 .lot-showroom .lot-stats {
-  flex: 1 0 112px;
-  grid-template-rows: repeat(6, minmax(17px, 34px));
-  align-content: space-evenly;
+  flex: 1 1 88px;
+  grid-template-rows: repeat(6, minmax(13px, 34px));
+  align-content: space-between;
   gap: 2px;
-  min-height: 112px;
+  min-height: 88px;
   margin: 0;
 }
 
@@ -88,7 +90,7 @@
 }
 
 .lot-showroom .lot-stat b {
-  border: 3px solid var(--lot-stat-accent);
+  border: 2px solid var(--lot-stat-accent);
   border-radius: 999px;
   background: var(--paper, #fff8e8);
 }

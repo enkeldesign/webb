@@ -1,4 +1,4 @@
-const STYLE_ID = 'turn-lot-card-scroll-boundary-r215-style';
+const STYLE_ID = 'turn-lot-card-scroll-boundary-r216-style';
 const activeBoundaries = new WeakMap();
 
 function findLotScreen(root) {
@@ -26,7 +26,7 @@ function installStyle() {
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
-      gap: clamp(4px, 0.8vh, 8px);
+      gap: clamp(2px, 0.5vh, 5px);
       overflow-x: hidden;
       overflow-y: auto;
       overscroll-behavior: contain;
