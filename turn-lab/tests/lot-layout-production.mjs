@@ -74,8 +74,8 @@ assert.match(wrapper, /lot-enhancement-runtime\.js\?revision=r217-stable-perk-sl
   'The wrapper must bypass cached Lot layout enhancements');
 assert.match(wrapper, /lot-info-panel-r212\.css\?revision=r216-meter-density/,
   'The tightened race-action spacing must load under a fresh stylesheet URL');
-assert.match(wrapper, /lot-info-typography-r213\.css\?revision=r216-meter-density/,
-  'The refined attribute meters must load under a fresh stylesheet URL');
+assert.match(wrapper, /lot-info-typography-r213\.css\?revision=r218-meter-black-outline/,
+  'The black-edged attribute meters must load under a fresh stylesheet URL');
 assert.match(wrapper, /const removeEnhancements = enhanceLotNow\(\)/);
 assert.match(wrapper, /await chooseTrackBeforeLot\(\)/);
 assert.doesNotMatch(wrapper, /installLotLayout|installLotStatLegend|installLotAccessibility/);
@@ -275,6 +275,10 @@ assert.match(infoTypography, /height: clamp\(13px, 2\.7vh, 18px\)/,
   'Meter segments must remain substantially larger than the old 7px bars');
 assert.match(infoTypography, /border: 2px solid var\(--lot-stat-accent\)/,
   'Attribute category outlines must stay thin enough to preserve the dark meter fill');
+assert.match(infoTypography, /outline: 0\.5px solid #000/,
+  'Attribute meters must gain a 0.5px black outer edge');
+assert.match(infoTypography, /outline-offset: -0\.5px/,
+  'The black edge must sit inside the existing meter footprint rather than increase its size');
 assert.match(infoPanel, /\.lot-showroom \.lot-card-actions\s*\{[\s\S]*padding: 2px 0 0;/,
   'The race action must sit close to the last attribute row');
 assert.match(infoTypography, /--lot-stat-accent: var\(--turn-control-gas, #8ce99a\)/);
