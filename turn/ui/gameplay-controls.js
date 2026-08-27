@@ -5,9 +5,18 @@ import {
   pointerUsesDriftLock,
   resolveDriftBoostRechargeMultiplier
 } from '../input/drift-lock.js?revision=r218-boost-balance';
+import {
+  BOOST_OVERCHARGE_PHASE,
+  advanceBoostOvercharge,
+  boostOverchargeVisualWidth,
+  qualifiesForBoostOvercharge,
+  resolveBoostSlipAngle
+} from '../input/boost-overcharge.js';
 
 globalThis.__turnBoostActive = false;
 globalThis.__turnBoostCharge = 1;
+globalThis.__turnBoostOvercharge = 0;
+globalThis.__turnBoostOverchargeCaught = false;
 globalThis.__turnDriftHeld = false;
 globalThis.__turnDriftLockAmount = 0;
 
@@ -107,7 +116,7 @@ function installGameplayUi() {
   drivePad.setAttribute('role', 'group');
   drivePad.setAttribute(
     'aria-label',
-    'Drive control. Double tap and hold, then slide between Drift, Boost, Gas, and Brake or Reverse. While holding Drift, slide left into Lock for rear-wheel lock.'
+    'Drive control. Double tap and hold, then slide between Drift, Boost, Gas, and Brake or Reverse. Drift charges Boost and can build Overcharge past full. Gas catches Overcharge. While holding Drift, slide left into Lock for rear-wheel lock.'
   );
   drivePad.style.setProperty('--boost-charge', '100%');
 
@@ -123,7 +132,7 @@ function installGameplayUi() {
   driftZone.type = 'button';
   driftZone.className = 'drive-zone drive-drift-zone';
   driftZone.textContent = 'Drift';
-  driftZone.setAttribute('aria-label', 'Gas and drift. Slide left into Lock for rear-wheel lock.');
+  driftZone.setAttribute('aria-label', 'Gas and drift. Drift charges Boost and can build Overcharge past full. Slide left into Lock for rear-wheel lock.');
 
   const boostZone = document.createElement('button');
   boostZone.type = 'button';
@@ -133,7 +142,7 @@ function installGameplayUi() {
 
   gasButton.classList.add('drive-gas-zone');
   gasButton.textContent = 'Gas';
-  gasButton.setAttribute('aria-label', 'Gas');
+  gasButton.setAttribute('aria-label', 'Gas. Holds any purple Boost Overcharge.');
 
   brakeButton.classList.add('drive-brake-zone', 'brake-reverse');
   brakeButton.textContent = 'Brake · Reverse';
@@ -151,8 +160,11 @@ function installGameplayUi() {
   let driftLockRequested = false;
   let driftLockAmount = 0;
   let boostCharge = 1;
+  let boostOvercharge = 0;
+  let boostOverchargePhase = BOOST_OVERCHARGE_PHASE.READY;
   let previousBoostCharge = boostCharge;
   let boostFlashTimer = 0;
+  let overchargePeakTimer = 0;
   let previousTime = performance.now();
   const TOP_ZONE_SHARE = 0.32;
   const BRAKE_ZONE_START = 0.76;
@@ -168,6 +180,9 @@ function installGameplayUi() {
   let publishedLocked = null;
   let publishedDriftCharging = null;
   let publishedDriftLocking = null;
+  let publishedOvercharge = null;
+  let publishedOverchargeCaught = null;
+  let publishedOverchargeVolatile = null;
   let publishedChargePercent = null;
   let publishedAriaLabel = null;
 
@@ -188,6 +203,17 @@ function installGameplayUi() {
     }, 700);
   }
 
+  function flashOverchargePeak() {
+    window.clearTimeout(overchargePeakTimer);
+    boostHud.classList.remove('is-overcharge-peak');
+    boostHud.classList.add('is-overcharge-peak');
+    safeVibrate([14, 18, 24]);
+    overchargePeakTimer = window.setTimeout(() => {
+      boostHud.classList.remove('is-overcharge-peak');
+      overchargePeakTimer = 0;
+    }, 420);
+  }
+
   function getBoostDrainSeconds() {
     const duration = Number(globalThis.__turnVehicleTuning?.boostDurationSeconds);
     const baseDuration = Number.isFinite(duration)
@@ -204,23 +230,34 @@ function installGameplayUi() {
 
   function refillBoost() {
     window.clearTimeout(boostFlashTimer);
+    window.clearTimeout(overchargePeakTimer);
     boostFlashTimer = 0;
+    overchargePeakTimer = 0;
     boostCharge = 1;
     previousBoostCharge = 1;
     boostExhausted = false;
+    boostOvercharge = 0;
+    boostOverchargePhase = BOOST_OVERCHARGE_PHASE.READY;
     globalThis.__turnBoostCharge = 1;
+    globalThis.__turnBoostOvercharge = 0;
+    globalThis.__turnBoostOverchargeCaught = false;
     boostVisualDirty = true;
     lastBoostVisualAt = -Infinity;
     publishedChargePercent = null;
     publishedAriaLabel = null;
     publishedLocked = null;
     publishedDriftLocking = null;
+    publishedOvercharge = null;
+    publishedOverchargeCaught = null;
+    publishedOverchargeVolatile = null;
     driftLockRequested = false;
     driftLockAmount = 0;
     globalThis.__turnDriftLockAmount = 0;
     boostFill?.style.removeProperty('background');
     drivePad.style.setProperty('--boost-charge', '100%');
     boostHud.style.setProperty('--boost-charge', '100%');
+    boostHud.style.setProperty('--boost-overcharge-width', '0%');
+    boostHud.style.setProperty('--boost-base-width', '100%');
     boostHud.setAttribute('aria-label', 'Boost 100 percent charged');
     driveStack.classList.toggle('is-drift-ready', driveZone === 'drift');
     driveStack.classList.remove('is-drift-locking');
@@ -229,7 +266,11 @@ function installGameplayUi() {
     boostHud.classList.remove(
       'is-boost-full-flash',
       'is-boost-empty-flash',
-      'is-drift-locking'
+      'is-drift-locking',
+      'has-overcharge',
+      'is-overcharge-caught',
+      'is-overcharge-volatile',
+      'is-overcharge-peak'
     );
   }
 
@@ -294,7 +335,7 @@ function installGameplayUi() {
     globalThis.__turnDriftHeld = nextZone === 'drift';
     boostRequested = nextZone === 'boost';
     setBrakeInput(nextZone === 'brake');
-    boostVisualDirty = boostVisualDirty || lockRequestChanged;
+    boostVisualDirty = boostVisualDirty || lockRequestChanged || zoneChanged;
 
     drivePad.dataset.driveZone = nextZone || '';
     driveStack.classList.toggle('is-drift-ready', nextZone === 'drift');
@@ -478,47 +519,110 @@ function installGameplayUi() {
     if (lockCanRun) {
       globalThis.__turnAnalogGas = driftThrottleForLock(driftLockAmount);
     }
-    const active = boostRequested && !boostExhausted && boostCharge > 0.001;
+
+    const rechargeMultiplier = resolveDriftBoostRechargeMultiplier({
+      driftHeld: globalThis.__turnDriftHeld === true,
+      driftLockAmount,
+      lockedMultiplier: getDriftRechargeMultiplier(),
+      lockCeilingMultiplier: DRIFT_LOCK_RECHARGE_MULTIPLIER
+    });
+    const active = boostRequested && !boostExhausted && (boostOvercharge > 0.001 || boostCharge > 0.001);
 
     if (active) {
-      boostCharge = Math.max(0, boostCharge - dt / getBoostDrainSeconds());
-      if (boostCharge <= 0) {
-        boostExhausted = true;
-        safeVibrate([28, 36, 62]);
+      if (boostOvercharge > 0.001) {
+        const overchargeState = advanceBoostOvercharge({
+          amount: boostOvercharge,
+          phase: boostOverchargePhase,
+          dt,
+          zone: driveZone,
+          consuming: true
+        });
+        boostOvercharge = overchargeState.amount;
+        boostOverchargePhase = overchargeState.phase;
+      } else {
+        boostCharge = Math.max(0, boostCharge - dt / getBoostDrainSeconds());
+        if (boostCharge <= 0) {
+          boostExhausted = true;
+          safeVibrate([28, 36, 62]);
+        }
       }
     } else {
-      const rechargeMultiplier = resolveDriftBoostRechargeMultiplier({
-        driftHeld: globalThis.__turnDriftHeld === true,
-        driftLockAmount,
-        lockedMultiplier: getDriftRechargeMultiplier(),
-        lockCeilingMultiplier: DRIFT_LOCK_RECHARGE_MULTIPLIER
-      });
-      boostCharge = Math.min(1, boostCharge + dt * rechargeMultiplier / BOOST_RECHARGE_SECONDS);
+      if (boostCharge < 0.999999) {
+        boostCharge = Math.min(1, boostCharge + dt * rechargeMultiplier / BOOST_RECHARGE_SECONDS);
+      }
+
+      if (boostCharge >= 0.999999 || boostOvercharge > 0) {
+        const runtimeState = globalThis.__turnRuntime?.state;
+        const slipAngle = resolveBoostSlipAngle({
+          heading: runtimeState?.heading,
+          velocity: runtimeState?.velocity
+        });
+        const qualifyingDrift = qualifiesForBoostOvercharge({
+          driftHeld: globalThis.__turnDriftHeld === true,
+          speed: runtimeState?.speed,
+          slipAngle
+        });
+        const overchargeState = advanceBoostOvercharge({
+          amount: boostOvercharge,
+          phase: boostOverchargePhase,
+          dt,
+          zone: driveZone,
+          qualifyingDrift,
+          rechargeMultiplier
+        });
+        boostOvercharge = overchargeState.amount;
+        boostOverchargePhase = overchargeState.phase;
+        if (overchargeState.peaked) flashOverchargePeak();
+      }
     }
 
     const becameEmpty = previousBoostCharge > 0.001 && boostCharge <= 0.001;
     const becameFull = previousBoostCharge < 0.999 && boostCharge >= 0.999;
     previousBoostCharge = boostCharge;
 
-    const boosting = boostRequested && !boostExhausted && boostCharge > 0.001;
+    const boosting = boostRequested && !boostExhausted && (boostOvercharge > 0.001 || boostCharge > 0.001);
+    const overchargeCaught = boostOvercharge > 0.001 && driveZone === 'gas' && !boosting;
+    const overchargeVolatile = boostOvercharge > 0.001 && !overchargeCaught && !boosting;
     globalThis.__turnBoostActive = boosting;
     globalThis.__turnBoostCharge = boostCharge;
+    globalThis.__turnBoostOvercharge = boostOvercharge;
+    globalThis.__turnBoostOverchargeCaught = overchargeCaught;
     updateAudio(now, boosting);
 
     const locked = boostRequested && boostExhausted;
     const driftCharging = globalThis.__turnDriftHeld && !boosting;
     const driftLocking = driftCharging && (driftLockRequested || driftLockAmount > 0.001);
+    const hasOvercharge = boostOvercharge > 0.001;
     const chargePercent = (boostCharge * 100).toFixed(1) + '%';
+    const overchargePercent = Math.round(boostOvercharge * 100);
+    const overchargeWidth = boostOverchargeVisualWidth(boostOvercharge);
+    const overchargeWidthPercent = (overchargeWidth * 100).toFixed(1) + '%';
+    const baseWidthPercent = (100 / (1 + overchargeWidth)).toFixed(2) + '%';
     const ariaPercent = Math.round(boostCharge * 100);
-    const ariaLabel = driftLocking
-      ? `Drift lock active. Boost ${ariaPercent} percent charged`
-      : `Boost ${ariaPercent} percent charged`;
+    let ariaLabel;
+    if (hasOvercharge) {
+      const overchargeStateLabel = overchargeCaught
+        ? 'caught with Gas'
+        : boosting
+          ? 'being used'
+          : boostOverchargePhase === BOOST_OVERCHARGE_PHASE.DECAYING
+            ? 'leaking'
+            : 'building';
+      ariaLabel = `Boost full. Overcharge ${overchargePercent} percent ${overchargeStateLabel}.`;
+    } else {
+      ariaLabel = driftLocking
+        ? `Drift lock active. Boost ${ariaPercent} percent charged`
+        : `Boost ${ariaPercent} percent charged`;
+    }
     const controlsVisible = !controlsRoot?.hidden && !document.hidden;
     const stateChanged =
       boosting !== publishedBoosting ||
       locked !== publishedLocked ||
       driftCharging !== publishedDriftCharging ||
-      driftLocking !== publishedDriftLocking;
+      driftLocking !== publishedDriftLocking ||
+      hasOvercharge !== publishedOvercharge ||
+      overchargeCaught !== publishedOverchargeCaught ||
+      overchargeVolatile !== publishedOverchargeVolatile;
     const visualDue = now - lastBoostVisualAt >= BOOST_VISUAL_INTERVAL_MS;
 
     if (!controlsVisible) {
@@ -562,9 +666,23 @@ function installGameplayUi() {
       }
       publishedDriftLocking = driftLocking;
     }
-    if (boostVisualDirty || chargePercent !== publishedChargePercent) {
+    if (boostVisualDirty || hasOvercharge !== publishedOvercharge) {
+      boostHud.classList.toggle('has-overcharge', hasOvercharge);
+      publishedOvercharge = hasOvercharge;
+    }
+    if (boostVisualDirty || overchargeCaught !== publishedOverchargeCaught) {
+      boostHud.classList.toggle('is-overcharge-caught', overchargeCaught);
+      publishedOverchargeCaught = overchargeCaught;
+    }
+    if (boostVisualDirty || overchargeVolatile !== publishedOverchargeVolatile) {
+      boostHud.classList.toggle('is-overcharge-volatile', overchargeVolatile);
+      publishedOverchargeVolatile = overchargeVolatile;
+    }
+    if (boostVisualDirty || chargePercent !== publishedChargePercent || hasOvercharge) {
       drivePad.style.setProperty('--boost-charge', chargePercent);
       boostHud.style.setProperty('--boost-charge', chargePercent);
+      boostHud.style.setProperty('--boost-overcharge-width', overchargeWidthPercent);
+      boostHud.style.setProperty('--boost-base-width', baseWidthPercent);
       publishedChargePercent = chargePercent;
     }
     if (boostVisualDirty || ariaLabel !== publishedAriaLabel) {

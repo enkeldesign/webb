@@ -34,6 +34,8 @@
 
 .boost-hud {
   --boost-charge: 100%;
+  --boost-overcharge-width: 0%;
+  --boost-base-width: 100%;
   --boost-hud-downshift: 20px;
   position: absolute;
   left: 50%;
@@ -59,12 +61,20 @@
 
 .boost-hud > div {
   position: relative;
+  left: 50%;
+  width: calc(100% + var(--boost-overcharge-width));
   height: 15px;
   overflow: hidden;
   border: 3px solid var(--ink);
   border-radius: 999px;
   background: rgb(255 248 232 / 0.82);
   box-shadow: 3px 3px 0 var(--ink);
+  transform: translateX(-50%);
+  transform-origin: center;
+  transition:
+    width 80ms linear,
+    background 120ms ease,
+    box-shadow 120ms ease;
 }
 
 .boost-hud i {
@@ -74,6 +84,17 @@
   background: linear-gradient(90deg, #ff922b, #ff5a5f);
   box-shadow: 3px 0 0 var(--ink);
   transition: width 70ms linear;
+}
+
+.boost-hud.has-overcharge > div {
+  background: #8b5cf6;
+}
+
+.boost-hud.has-overcharge i {
+  left: 50%;
+  width: var(--boost-base-width);
+  transform: translateX(-50%);
+  box-shadow: none;
 }
 
 .boost-hud.is-boosting {
@@ -108,6 +129,14 @@
 
 .boost-hud.is-boost-empty-flash > div {
   animation: turn-boost-empty-bar-flash 620ms ease-out;
+}
+
+.boost-hud.is-overcharge-volatile:not(.is-boost-full-flash):not(.is-boost-empty-flash) > div {
+  animation: turn-overcharge-wiggle 620ms ease-in-out infinite;
+}
+
+.boost-hud.is-overcharge-peak > div {
+  animation: turn-overcharge-peak 400ms cubic-bezier(.18,.88,.24,1);
 }
 
 @keyframes turn-boost-full-flash {
@@ -159,9 +188,25 @@
   }
 }
 
+@keyframes turn-overcharge-wiggle {
+  0%, 100% { transform: translateX(-50%) rotate(0deg) scaleY(1); }
+  26% { transform: translateX(-50%) rotate(-0.45deg) scaleY(1.025); }
+  54% { transform: translateX(-50%) rotate(0.55deg) scaleY(0.985); }
+  78% { transform: translateX(-50%) rotate(-0.25deg) scaleY(1.018); }
+}
+
+@keyframes turn-overcharge-peak {
+  0%, 100% { transform: translateX(-50%) rotate(0deg) scaleY(1); }
+  22% { transform: translateX(-50%) rotate(-1.1deg) scaleY(1.1); }
+  48% { transform: translateX(-50%) rotate(0.9deg) scaleY(0.94); }
+  72% { transform: translateX(-50%) rotate(-0.45deg) scaleY(1.05); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .boost-hud.is-boost-full-flash,
-  .boost-hud.is-boost-empty-flash {
+  .boost-hud.is-boost-empty-flash,
+  .boost-hud.is-overcharge-volatile > div,
+  .boost-hud.is-overcharge-peak > div {
     animation: none;
   }
 }

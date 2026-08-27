@@ -12,9 +12,13 @@ export const CLEAN_LAP_TARGETS = Object.freeze({
   'midnight-city': 120,
   mountain: 110
 });
+export const CATCH_GAS_REQUIRED_MS = 3000;
+export const CATCH_GAS_MIN_OVERCHARGE = 0.05;
 
 const SAMPLE_INTERVAL_MS = 50;
+const MAX_SAMPLE_DELTA_MS = 250;
 const GOT_STARTED_ID = 'got-started';
+const CATCH_THE_CHARGE_ID = 'catch-the-charge';
 
 function normalizedTracks(value) {
   if (!Array.isArray(value)) return [];
@@ -42,6 +46,18 @@ export function qualifiesForCleanLap(attempt, detail) {
     && Number.isFinite(seconds)
     && seconds > 5
     && seconds < target;
+}
+
+export function qualifiesForCatchGas({
+  running = false,
+  caught = false,
+  overcharge = 0,
+  visible = true
+} = {}) {
+  return running === true
+    && caught === true
+    && Number(overcharge) >= CATCH_GAS_MIN_OVERCHARGE
+    && visible === true;
 }
 
 function winnerAchievementId(trackId) {
@@ -100,6 +116,11 @@ export function installAchievementChallengeExpansion({
 
   const progress = loadProgress(storage);
   let currentLap = null;
+  let catchGasMs = 0;
+  let catchGasUnlocked = Boolean(
+    achievements.getState?.().unlocked?.[CATCH_THE_CHARGE_ID]
+  );
+  let lastSampleAt = performance.now();
 
   function syncGotStarted() {
     const state = achievements.getState?.();
@@ -143,12 +164,48 @@ export function installAchievementChallengeExpansion({
     };
   }
 
+  function sampleCatchGas(elapsedMs) {
+    if (catchGasUnlocked) return;
+    const qualifies = qualifiesForCatchGas({
+      running: runtime.state.running === true,
+      caught: globalThis.__turnBoostOverchargeCaught === true,
+      overcharge: globalThis.__turnBoostOvercharge,
+      visible: document.visibilityState !== 'hidden'
+    });
+    if (!qualifies) {
+      catchGasMs = 0;
+      return;
+    }
+
+    catchGasMs += elapsedMs;
+    if (catchGasMs < CATCH_GAS_REQUIRED_MS) return;
+
+    const unlocked = achievements.unlock(
+      CATCH_THE_CHARGE_ID,
+      achievementContext(
+        runtime.state.trackId || globalThis.__turnGetTrackId?.() || '',
+        runtime.state.vehicleId || ''
+      )
+    );
+    if (unlocked?.length) catchGasUnlocked = true;
+    catchGasMs = 0;
+  }
+
   function sampleCourseState() {
+    const now = performance.now();
+    const elapsedMs = Math.min(MAX_SAMPLE_DELTA_MS, Math.max(0, now - lastSampleAt));
+    lastSampleAt = now;
     if (currentLap && runtime.state.offRoad === true) currentLap.onCourseThroughout = false;
+    sampleCatchGas(elapsedMs);
   }
 
   function resetLap() {
     currentLap = null;
+  }
+
+  function resetCatchGas() {
+    catchGasMs = 0;
+    lastSampleAt = performance.now();
   }
 
   function completeLap(detail) {
@@ -180,15 +237,22 @@ export function installAchievementChallengeExpansion({
   const handleUiState = (event) => {
     const reason = event.detail?.reason;
     if (reason === 'lap-started') beginLap();
-    if (reason === 'race-reset') resetLap();
+    if (reason === 'race-reset') {
+      resetLap();
+      resetCatchGas();
+    }
     if (Object.prototype.hasOwnProperty.call(event.detail || {}, 'running')
         && event.detail.running === false) {
       resetLap();
+      resetCatchGas();
     }
   };
   const handleLapResult = (event) => completeLap(event.detail || {});
   const handleLapInvalid = () => resetLap();
-  const handleAchievementsUpdated = () => queueMicrotask(syncGotStarted);
+  const handleAchievementsUpdated = (event) => {
+    if (event.detail?.unlocked?.includes(CATCH_THE_CHARGE_ID)) catchGasUnlocked = true;
+    queueMicrotask(syncGotStarted);
+  };
 
   unlockStoredTrackAchievements();
   syncGotStarted();
@@ -202,6 +266,7 @@ export function installAchievementChallengeExpansion({
     progress,
     beginLap,
     sampleCourseState,
+    sampleCatchGas,
     completeLap,
     syncGotStarted,
     disconnect() {
