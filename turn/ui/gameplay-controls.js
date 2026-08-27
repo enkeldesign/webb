@@ -208,7 +208,6 @@ function installGameplayUi() {
     boostHud.classList.remove('is-overcharge-peak');
     boostHud.classList.add('is-overcharge-peak');
     safeVibrate([14, 18, 24]);
-    globalThis.__turnAudio?.cue('boost-overcharge-peak');
     overchargePeakTimer = window.setTimeout(() => {
       boostHud.classList.remove('is-overcharge-peak');
       overchargePeakTimer = 0;
@@ -235,10 +234,10 @@ function installGameplayUi() {
     boostFlashTimer = 0;
     overchargePeakTimer = 0;
     boostCharge = 1;
-    boostOvercharge = 0;
-    boostOverchargePhase = BOOST_OVERCHARGE_PHASE.READY;
     previousBoostCharge = 1;
     boostExhausted = false;
+    boostOvercharge = 0;
+    boostOverchargePhase = BOOST_OVERCHARGE_PHASE.READY;
     globalThis.__turnBoostCharge = 1;
     globalThis.__turnBoostOvercharge = 0;
     globalThis.__turnBoostOverchargeCaught = false;
