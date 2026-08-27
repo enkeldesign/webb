@@ -40,7 +40,10 @@ export function installAirportEmergency(options = {}) {
 
   if (world) {
     installMedicalEntrance(world);
-    installWreckPenetration(world, runtime);
+    // Production r56 delegates the three historical depth corrections to the final r497
+    // layer so only one wreck lookup/poll runs during the first lap. Keep this local path
+    // for older standalone wrappers that still install r494 directly.
+    if (options.deferWreckCalibration !== true) installWreckPenetration(world, runtime);
   }
 
   return installation;
