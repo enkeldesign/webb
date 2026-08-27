@@ -1,7 +1,7 @@
 import { getCarDefinition } from '../vehicle/catalog.js?revision=r164-vintage-rally-polish';
 import { vehiclePerkPresentation } from '../vehicle/perk-presentation.js?revision=r164-post-soak';
 
-const STYLE_ID = 'turn-lot-perk-popover-styles';
+const STYLE_ID = 'turn-lot-perk-popover-r217-styles';
 const activeDisclosures = new WeakMap();
 let nextPopoverId = 0;
 
@@ -40,7 +40,13 @@ function installStyles() {
       line-height: 1;
     }
 
-    .lot-showroom .lot-perk-button[hidden],
+    /* Keep the PERK footprint in every title row. Cars without a perk use an
+       inert, invisible placeholder so their attributes start at the same height. */
+    .lot-showroom .lot-perk-button.is-layout-placeholder {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
     .lot-perk-disclosure[hidden] {
       display: none !important;
     }
@@ -191,9 +197,11 @@ export function installLotPerkDisclosure(root = document.body) {
 
   const trigger = document.createElement('button');
   trigger.type = 'button';
-  trigger.className = 'lot-perk-button';
+  trigger.className = 'lot-perk-button is-layout-placeholder';
   trigger.textContent = 'PERK';
-  trigger.hidden = true;
+  trigger.disabled = true;
+  trigger.tabIndex = -1;
+  trigger.setAttribute('aria-hidden', 'true');
   trigger.setAttribute('aria-haspopup', 'dialog');
   trigger.setAttribute('aria-controls', popoverId);
   trigger.setAttribute('aria-expanded', 'false');
@@ -296,7 +304,7 @@ export function installLotPerkDisclosure(root = document.body) {
   }
 
   function openPopover() {
-    if (isOpen || !currentPerkText || trigger.hidden) return;
+    if (isOpen || !currentPerkText || trigger.disabled) return;
     popover.hidden = false;
     if (supportsNativePopover) popover.showPopover();
     setOpenState(true);
@@ -317,7 +325,7 @@ export function installLotPerkDisclosure(root = document.body) {
     if (supportsNativePopover && popover.matches(':popover-open')) popover.hidePopover();
     popover.hidden = true;
     setOpenState(false);
-    if (restoreFocus && trigger.isConnected && !trigger.hidden) focusWithoutScroll(trigger);
+    if (restoreFocus && trigger.isConnected && !trigger.disabled) focusWithoutScroll(trigger);
   }
 
   function handleTriggerClick() {
@@ -351,6 +359,19 @@ export function installLotPerkDisclosure(root = document.body) {
   close.addEventListener('click', handleCloseClick);
   if (supportsNativePopover) popover.addEventListener('toggle', handleNativeToggle);
 
+  function setTriggerAvailable(available) {
+    if (!available && document.activeElement === trigger) trigger.blur();
+    trigger.disabled = !available;
+    trigger.classList.toggle('is-layout-placeholder', !available);
+    if (available) {
+      trigger.removeAttribute('aria-hidden');
+      trigger.removeAttribute('tabindex');
+    } else {
+      trigger.setAttribute('aria-hidden', 'true');
+      trigger.tabIndex = -1;
+    }
+  }
+
   function sync() {
     const vehicleId = selectedVehicleId(screen);
     const vehiclePerk = vehiclePerkPresentation(vehicleId, getCarDefinition(vehicleId)?.perk);
@@ -361,7 +382,7 @@ export function installLotPerkDisclosure(root = document.body) {
       : '';
 
     closePopover();
-    trigger.hidden = !perkText;
+    setTriggerAvailable(Boolean(perkText));
     if (!perkText) {
       trigger.removeAttribute('aria-label');
       title.textContent = '';

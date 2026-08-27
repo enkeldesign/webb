@@ -311,9 +311,11 @@ assert.match(perkDisclosure, /getCarDefinition\(vehicleId\)\?\.perk/,
 assert.doesNotMatch(perkDisclosure, /rewardForVehicle|trophy-road/,
   'Vehicle perks must not be free-floating Trophy Road entitlements');
 assert.match(perkDisclosure, /className = 'lot-perk-copy'/);
-assert.match(perkDisclosure, /className = 'lot-perk-button'/);
-assert.match(perkDisclosure, /trigger\.hidden = !perkText/,
-  'Only cars that own a perk may expose the PERK action');
+assert.match(perkDisclosure, /className = 'lot-perk-button is-layout-placeholder'/);
+assert.match(perkDisclosure, /trigger\.classList\.toggle\('is-layout-placeholder', !available\)/,
+  'Only cars that own a perk may expose an interactive PERK action');
+assert.match(perkDisclosure, /trigger\.disabled = !available/,
+  'The reserved PERK footprint must remain inert for cars without perks');
 assert.match(perkDisclosure, /trigger\.setAttribute\('aria-expanded', String\(nextOpen\)\)/,
   'The PERK action must expose its popover state');
 assert.match(perkDisclosure, /popover\.setAttribute\('role', 'dialog'\)/,
