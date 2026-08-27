@@ -8,7 +8,7 @@ import {
 
 export * from './trophy-road-perks-r164.js?revision=r164-trophy-road-order';
 
-export const TROPHY_ROAD_MAX_THRESHOLD = 3050;
+export const TROPHY_ROAD_MAX_THRESHOLD = 3075;
 
 export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
   ...BASE_TROPHY_ROAD_REWARD_ICONS,
