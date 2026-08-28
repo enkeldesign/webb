@@ -77,9 +77,8 @@ export const TRACK_SAFETY_ACHIEVEMENTS = Object.freeze(
 
 const rebalancedBaseAchievements = base.ACHIEVEMENTS.map((achievement) => {
   if (achievement.category !== base.CATEGORY.TIME_TRIALS) return achievement;
-  const { recommendation: _oldRecommendation, ...withoutRecommendation } = achievement;
   return Object.freeze({
-    ...withoutRecommendation,
+    ...achievement,
     trophies: achievement.id === 'faster-than-the-dev' ? 300 : 75,
     ...(achievement.id === 'faster-than-the-dev'
       ? { recommendation: 'A variety of cars were used to set the target times. Choosing the right car for each track matters.' }
