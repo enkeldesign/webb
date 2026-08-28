@@ -44,7 +44,7 @@ const DEFAULT_COLOR_BY_ID = Object.freeze({
   race: Object.freeze({ fallback: '#5d503f' }),
   'sedan-sports': Object.freeze({ fallback: '#5e3c87', p3: Object.freeze([0.36, 0.19, 0.56]) }),
   sedan: Object.freeze({ fallback: '#2b6a70', p3: Object.freeze([0.12, 0.41, 0.43]) }),
-  suv: Object.freeze({ fallback: '#580e2d' }),
+  suv: Object.freeze({ fallback: '#7d123e' }),
   firetruck: Object.freeze({ fallback: '#d92d20', p3: Object.freeze([0.82, 0.08, 0.04]) }),
   police: Object.freeze({ fallback: '#222222' }),
   ambulance: Object.freeze({ fallback: '#f8f9fa', p3: Object.freeze([0.95, 0.97, 0.98]) }),
