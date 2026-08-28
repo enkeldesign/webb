@@ -1,8 +1,8 @@
 /* TURN Home header boundary + metadata alignment.
-   The fixed Home canvas is blue; the header itself owns the yellow fill so
+   The fixed Home canvas uses TURN paper; the header itself owns the yellow fill so
    yellow can never extend below the header's real grid-row height. */
 html .m8-home.m8-home-fixed-layout {
-  background: var(--m8-blue);
+  background: var(--m8-cream);
 }
 
 html .m8-home.m8-home-fixed-layout .m8-home-head {
