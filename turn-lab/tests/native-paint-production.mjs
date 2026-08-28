@@ -19,7 +19,7 @@ assert.deepEqual(
   ['convertible', 'classic', 'vintage-racer', 'toy-racer', 'monster-truck', 'race-future', 'race', 'sedan-sports', 'sedan', 'suv', 'truck', 'van'],
   'Every player-repaintable car should expose a semantic second picker'
 );
-assert.equal(secondaryCars[0].secondaryPaint.label, 'Interior & trim');
+assert.equal(secondaryCars[0].secondaryPaint.label, 'Lower body trim');
 assert.deepEqual(secondaryCars[0].secondaryPaint.meshNames, []);
 assert.equal(secondaryCars[1].secondaryPaint.label, 'Bumpers & trim');
 assert.equal(secondaryCars[2].secondaryPaint.label, 'Racing stripe');
