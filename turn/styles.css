@@ -29,7 +29,7 @@ body {
   margin: 0;
   overflow: hidden;
   overscroll-behavior: none;
-  background: var(--paper);
+  background: var(--cyan);
 }
 
 body {
