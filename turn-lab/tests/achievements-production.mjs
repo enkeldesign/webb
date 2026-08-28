@@ -15,6 +15,7 @@ import {
   normalizeAchievementState,
   normalizeChallengeProgress,
   qualifiesForArmyLap,
+  qualifiesForCatchGas,
   qualifiesForCleanLap,
   qualifyingTimeTrial,
   totalAvailableTrophies
@@ -105,12 +106,19 @@ assert.equal(byId('got-started')?.category, 'onboarding');
 assert.equal(byId('catch-the-charge')?.title, 'CATCH THE CHARGE');
 assert.equal(byId('catch-the-charge')?.trophies, 25);
 assert.equal(byId('catch-the-charge')?.category, 'onboarding');
-assert.equal(byId('catch-the-charge')?.progressMax, 3);
-assert.match(byId('catch-the-charge')?.description || '', /Switch to GAS to catch it/);
-assert.match(byId('catch-the-charge')?.description || '', /keep GAS held for three seconds/);
+assert.equal(Object.hasOwn(byId('catch-the-charge') || {}, 'progressMax'), false,
+  'CATCH THE CHARGE must not imply a timed GAS hold');
+assert.equal(
+  byId('catch-the-charge')?.description,
+  'Overcharge the BOOST bar using DRIFT. Retain the overcharge using GAS.'
+);
 assert.equal(byId('golden-hour')?.title, 'MAYDAY!');
 assert.equal(byId('golden-hour')?.trophies, 100);
 assert.equal(byId('golden-hour')?.hidden, true);
+assert.equal(
+  byId('golden-hour')?.lockedDescription,
+  'Hidden achievement. You’ll know what to do when the moment comes.'
+);
 assert.match(byId('golden-hour')?.description || '', /Ambulance/);
 assert.match(byId('golden-hour')?.description || '', /30 seconds/);
 assert.equal(byId('chromatic-camouflage')?.title, 'CHROMATIC CAMOUFLAGE');
@@ -150,11 +158,14 @@ assert.equal(byId('find-darvid')?.title, 'FIND DARVID!');
 assert.equal(byId('save-bella')?.title, 'SAVE BELLA!');
 assert.equal(byId('save-bella')?.icon, 'cat');
 assert.match(byId('save-bella')?.description || '', /Fire Truck/);
-assert.equal(byId('find-lilya')?.lockedDescription, '');
-assert.equal(byId('find-darvid')?.lockedDescription, '');
-assert.equal(byId('save-bella')?.lockedDescription, '');
+assert.equal(byId('find-lilya')?.lockedDescription, 'Hidden achievement.');
+assert.equal(byId('find-darvid')?.lockedDescription, 'Hidden achievement.');
+assert.equal(
+  byId('save-bella')?.lockedDescription,
+  'Hidden achievement. You’ll know what to do when the moment comes.'
+);
 assert.equal(byId('satans-sedan')?.lockedDescription, undefined,
-  'Satan’s Hatchback may retain the generic hidden clue treatment');
+  'Satan’s Hatchback may retain the generic hidden title-clue treatment');
 
 assert.equal(TIME_TRIALS.length, 6);
 assert.equal(TIME_TRIAL_ACHIEVEMENT_IDS.length, 6);
@@ -169,9 +180,9 @@ assert.deepEqual(
     ['countryside', 12],
     ['airport', 17],
     ['cliffside', 15],
-    ['harbor', 24],
+    ['harbor', 23],
     ['midnight-city', 53],
-    ['mountain', 27]
+    ['mountain', 25]
   ]
 );
 for (const trial of TIME_TRIALS) {
@@ -199,6 +210,10 @@ assert.deepEqual(CLEAN_LAP_TARGETS, {
 assert.equal(qualifiesForArmyLap({ rivalCountAtStart: 4 }, { position: 1, total: 5 }), true);
 assert.equal(qualifiesForArmyLap({ rivalCountAtStart: 3 }, { position: 1, total: 4 }), false);
 assert.equal(qualifiesForArmyLap({ rivalCountAtStart: 4 }, { position: 2, total: 5 }), false);
+assert.equal(qualifiesForCatchGas({ running: true, caught: true, overcharge: 0.001, visible: true }), true,
+  'Any real caught overcharge should satisfy CATCH THE CHARGE immediately');
+assert.equal(qualifiesForCatchGas({ running: true, caught: true, overcharge: 0, visible: true }), false);
+assert.equal(qualifiesForCatchGas({ running: true, caught: false, overcharge: 0.5, visible: true }), false);
 assert.equal(qualifiesForCleanLap(
   { trackId: 'countryside', onCourseThroughout: true },
   { time: 29.999 }
@@ -364,13 +379,15 @@ assert.match(legacyCatalogSource, /catalog-production\.js\?revision=r184-achieve
 assert.match(secretCatalog, /title: 'FIND LILYA!'/);
 assert.match(secretCatalog, /title: 'FIND DARVID!'/);
 assert.match(secretCatalog, /title: 'SAVE BELLA!'/);
+assert.match(secretCatalog, /lockedDescription: 'Hidden achievement\.'/,
+  'LILYA and DARVID must identify themselves as hidden without giving a clue');
+assert.match(secretCatalog, /You’ll know what to do when the moment comes/,
+  'SAVE BELLA should promise contextual discovery rather than expose its solution');
 assert.equal((secretCatalog.match(/hidden: true/g) || []).length, 4);
 assert.equal((secretCatalog.match(/trophies: 25/g) || []).length, 4);
 assert.match(secretRuntime, /Object\.hasOwn\(achievement, 'lockedDescription'\)/);
-assert.match(secretRuntime, /else description\.remove\(\)/,
-  'Clue-only hidden cards must remove rather than replace their description');
 assert.match(secretRuntime, /Hidden achievement\. The title is your clue\./,
-  'The generic clue remains available for hidden achievements that use it');
+  'The generic clue remains available for hidden achievements that use their title as the clue');
 assert.match(secretRuntime, /pendingSecretAchievements/);
 assert.match(secretRuntime, /acknowledgeSecretAchievement/);
 assert.match(secretEvents, /SECRET_ACHIEVEMENT_EVIDENCE_STORAGE_KEY/);
@@ -382,16 +399,21 @@ assert.match(sedanSource, /signalSecretAchievement\('satans-sedan'/);
 assert.match(timeTrialSource, /targetSeconds: 12/);
 assert.match(timeTrialSource, /targetSeconds: 17/);
 assert.match(timeTrialSource, /targetSeconds: 15/);
-assert.match(timeTrialSource, /targetSeconds: 24/);
+assert.match(timeTrialSource, /targetSeconds: 23/);
 assert.match(timeTrialSource, /targetSeconds: 53/);
-assert.match(timeTrialSource, /targetSeconds: 27/);
+assert.match(timeTrialSource, /targetSeconds: 25/);
 assert.match(timeTrialSource, /seconds >= trial\.targetSeconds/);
 
 assert.match(challengeSource, /SAMPLE_INTERVAL_MS = 50/);
+assert.match(challengeSource, /CATCH_GAS_MIN_OVERCHARGE = 0\.001/);
+assert.doesNotMatch(challengeSource, /CATCH_GAS_REQUIRED_MS|catchGasMs|3000/,
+  'CATCH THE CHARGE must not retain a hidden timed-hold requirement');
 assert.match(challengeSource, /GOT_STARTED_ID = 'got-started'/);
 assert.match(challengeSource, /mountain: 110/);
 assert.match(challengeSource, /rivalCountAtStart/);
 assert.match(challengeSource, /runtime\.state\.offRoad === true/);
+assert.match(challengeSource, /achievements\.unlock\(\s*CATCH_THE_CHARGE_ID/,
+  'A qualifying GAS catch must unlock CATCH THE CHARGE directly');
 assert.match(challengeSource, /achievements\.unlock\('an-army-of-me'/);
 assert.match(challengeSource, /achievements\.unlock\('on-course-of-course'/);
 assert.match(challengeSource, /turn:lap-result/);
