@@ -1,21 +1,19 @@
 import { normalizeReplayFrames } from './replay-system.js';
 import {
-  DEFAULT_VEHICLE_COLOR,
   LEGACY_VEHICLE_ID,
-  DEFAULT_VEHICLE_SECONDARY_COLOR,
+  getVehicleDefaultColor,
+  getVehicleDefaultSecondaryColor,
   isSportsSedanEasterEgg,
-  normalizeVehicleColor,
-  normalizeVehicleId,
-  normalizeVehicleSecondaryColor
+  normalizeStoredVehiclePaint
 } from '../vehicle/catalog.js?build=20260720-r19';
 import { getTrackStorageRevision } from '../tracks/definitions.js';
 
 export const RIVAL_LIMIT = 4;
+export const RIVAL_STORAGE_VERSION = 7;
 
 const DEFAULT_TRACK_ID = 'countryside';
 const GHOST_KEY = 'turn-three-ghost-v4';
 const COMPETITOR_KEY = 'turn-personal-rivals-v1';
-const LEGACY_RIVAL_COLORS = ['#38d9ff', '#ff4fa3', '#9775fa', '#ff922b'];
 const pendingRivalSaves = new Map();
 let pendingRivalFlush = null;
 let persistenceLifecycleInstalled = false;
@@ -47,7 +45,7 @@ function rivalSavePayload(state, trackId) {
   return {
     key: rivalKey(activeTrackId),
     value: {
-      version: 6,
+      version: RIVAL_STORAGE_VERSION,
       trackId: activeTrackId,
       trackRevision: storageTrackId(activeTrackId),
       laps: state.competitorLaps.filter(isValidLap)
@@ -136,6 +134,7 @@ export function loadRivalsState({ state, samples, findNearestTrack, trackId }) {
   try {
     const savedRivals = JSON.parse(localStorage.getItem(rivalKey(activeTrackId)));
     let laps = Array.isArray(savedRivals?.laps) ? savedRivals.laps : [];
+    let sourceVersion = Number(savedRivals?.version) || 0;
 
     if (!laps.length && activeTrackId === DEFAULT_TRACK_ID) {
       const oldGhost = JSON.parse(localStorage.getItem(ghostKey(activeTrackId)));
@@ -149,10 +148,9 @@ export function loadRivalsState({ state, samples, findNearestTrack, trackId }) {
           time: oldGhost.bestTime,
           hitAt: null,
           carId: LEGACY_VEHICLE_ID,
-          carColor: DEFAULT_VEHICLE_COLOR,
-          carSecondaryColor: DEFAULT_VEHICLE_SECONDARY_COLOR,
           frames: oldGhost.frames
         }];
+        sourceVersion = 0;
       }
     }
 
@@ -162,16 +160,18 @@ export function loadRivalsState({ state, samples, findNearestTrack, trackId }) {
     state.trackId = activeTrackId;
     state.competitorLaps = laps
       .filter(isValidLap)
-      .map((lap, index) => ({
-        ...lap,
-        hitAt: lap.hitAt != null && Number.isFinite(Number(lap.hitAt)) ? Number(lap.hitAt) : null,
-        carId: lap.carId ? normalizeVehicleId(lap.carId) : LEGACY_VEHICLE_ID,
-        carColor: lap.carColor
-          ? normalizeVehicleColor(lap.carColor)
-          : LEGACY_RIVAL_COLORS[index % LEGACY_RIVAL_COLORS.length],
-        carSecondaryColor: normalizeVehicleSecondaryColor(lap.carSecondaryColor),
-        frames: normalizeReplayFrames(lap.frames, { startSample, findProgress })
-      }))
+      .map((lap) => {
+        const paint = normalizeStoredLapPaint(lap, sourceVersion);
+        return {
+          ...lap,
+          hitAt: lap.hitAt != null && Number.isFinite(Number(lap.hitAt)) ? Number(lap.hitAt) : null,
+          carId: paint.carId,
+          carColor: paint.color,
+          carSecondaryColor: paint.secondaryColor,
+          factoryPaint: paint.factoryPaint,
+          frames: normalizeReplayFrames(lap.frames, { startSample, findProgress })
+        };
+      })
       .sort((a, b) => a.time - b.time)
       .slice(0, RIVAL_LIMIT);
 
@@ -253,18 +253,21 @@ export function getStoredBestReplayLap(trackId = DEFAULT_TRACK_ID) {
   const activeTrackId = normalizeTrackId(trackId);
   try {
     const savedRivals = JSON.parse(localStorage.getItem(rivalKey(activeTrackId)));
+    const sourceVersion = Number(savedRivals?.version) || 0;
     const bestLap = Array.isArray(savedRivals?.laps)
       ? savedRivals.laps
         .filter(isValidLap)
         .reduce((best, lap) => {
           const time = Number(lap?.time);
           if (!best || time < best.time) {
+            const paint = normalizeStoredLapPaint(lap, sourceVersion);
             return {
               time,
               hitAt: lap.hitAt != null && Number.isFinite(Number(lap.hitAt)) ? Number(lap.hitAt) : null,
-              carId: lap?.carId ? normalizeVehicleId(lap.carId) : LEGACY_VEHICLE_ID,
-              carColor: lap?.carColor ? normalizeVehicleColor(lap.carColor) : DEFAULT_VEHICLE_COLOR,
-              carSecondaryColor: normalizeVehicleSecondaryColor(lap?.carSecondaryColor),
+              carId: paint.carId,
+              carColor: paint.color,
+              carSecondaryColor: paint.secondaryColor,
+              factoryPaint: paint.factoryPaint,
               frames: lap.frames.map((frame) => ({ ...frame }))
             };
           }
@@ -281,14 +284,26 @@ export function getStoredBestReplayLap(trackId = DEFAULT_TRACK_ID) {
           time: legacyTime,
           hitAt: null,
           carId: LEGACY_VEHICLE_ID,
-          carColor: DEFAULT_VEHICLE_COLOR,
-          carSecondaryColor: DEFAULT_VEHICLE_SECONDARY_COLOR,
+          carColor: getVehicleDefaultColor(LEGACY_VEHICLE_ID),
+          carSecondaryColor: getVehicleDefaultSecondaryColor(LEGACY_VEHICLE_ID),
+          factoryPaint: true,
           frames: oldGhost.frames.map((frame) => ({ ...frame }))
         };
       }
     }
   } catch (_) {}
   return null;
+}
+
+function normalizeStoredLapPaint(lap, sourceVersion) {
+  return normalizeStoredVehiclePaint({
+    carId: lap?.carId || LEGACY_VEHICLE_ID,
+    color: lap?.carColor,
+    secondaryColor: lap?.carSecondaryColor,
+    factoryPaint: lap?.factoryPaint
+  }, {
+    migrateReplacedFactoryPaint: sourceVersion < RIVAL_STORAGE_VERSION
+  });
 }
 
 export function getStoredBestTime(trackId = DEFAULT_TRACK_ID) {

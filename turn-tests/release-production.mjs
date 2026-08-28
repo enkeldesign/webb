@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-import { checkReleaseFiles, loadReleaseDefinition } from '../turn/scripts/release.mjs';
+import {
+  checkReleaseFiles,
+  loadReleaseDefinition,
+  renderReleaseIndex
+} from '../turn/scripts/release.mjs';
 
 const [
   release,
@@ -120,6 +124,20 @@ for (const [specifier, target] of Object.entries(importMap.imports)) {
   if (!target.startsWith('./')) continue;
   assert.equal(new URL(target, 'https://enkel.design/turn/').searchParams.get('build'), release.cacheKey, `${specifier} must resolve through the current release cache key`);
 }
+
+const futureRelease = {
+  version: '1.11.1',
+  id: '2026.08.27-r185',
+  cacheKey: '20260827-r185'
+};
+const futureIndex = renderReleaseIndex(index, futureRelease);
+const futureImportMapText = futureIndex.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
+const futureImports = JSON.parse(futureImportMapText).imports;
+assert.equal(
+  futureImports['/turn/garage/lot-enhancement-runtime.js?revision=r164-post-soak&build=20260827-r185'],
+  '/turn/garage/lot-enhancement-runtime.js?revision=r222-awd-suv-paint&build=20260827-r185',
+  'A future release must keep the prewarmed Lot runtime on the current color-migration module graph'
+);
 
 assert.match(app, /const buildKey = globalThis\.__TURN_BUILD__\?\.cacheKey/);
 assert.match(app, /function withBuild\(path\)/);

@@ -358,14 +358,16 @@ assert.equal(completedNightShiftSheriff(nightShift, { position: 1, total: 5 }), 
 assert.equal(completedNightShiftSheriff(nightShift, { position: 2, total: 5 }), false);
 
 assert.match(catalogSource, /Stable production achievement facade/);
-assert.match(catalogSource, /catalog-production\.js\?revision=r184-achievement-integrity/);
+assert.match(catalogSource, /catalog-production\.js\?revision=r222-awd-label/);
 assert.doesNotMatch(catalogSource, /id: 'an-army-of-me'/,
   'The stable facade must not duplicate the production achievement definitions');
 assert.match(baseCatalogSource, /id: 'an-army-of-me'/);
 assert.match(baseCatalogSource, /id: 'on-course-of-course'/);
 assert.match(baseCatalogSource, /cat: '<svg/);
 assert.doesNotMatch(baseCatalogSource, /points:/);
-assert.match(productionCatalogSource, /catalog-base\.js\?revision=r184-achievement-integrity/);
+assert.match(baseCatalogSource, /convertible: 'AWD'/,
+  'Stable vehicle IDs must use the current AWD name in achievement copy');
+assert.match(productionCatalogSource, /catalog-base\.js\?revision=r222-awd-label/);
 assert.doesNotMatch(productionCatalogSource, /from '.\/catalog\.js/,
   'The production catalog must extend the explicit base module, never depend on the public facade');
 assert.match(productionCatalogSource, /title: 'MAYDAY!'/);
@@ -373,7 +375,7 @@ assert.match(productionCatalogSource, /title: 'GOT STARTED'/);
 assert.match(productionCatalogSource, /title: 'CATCH THE CHARGE'/);
 assert.match(productionCatalogSource, /TRACK_WINNER_ACHIEVEMENTS/);
 assert.match(productionCatalogSource, /TRACK_SAFETY_ACHIEVEMENTS/);
-assert.match(legacyCatalogSource, /catalog-production\.js\?revision=r184-achievement-integrity/,
+assert.match(legacyCatalogSource, /catalog-production\.js\?revision=r222-awd-label/,
   'The old Chromatic catalog URL must converge on the same production source of truth');
 
 assert.match(secretCatalog, /title: 'FIND LILYA!'/);
@@ -451,8 +453,8 @@ for (const source of [runtime, view, storeSource, challengeSource, secretRuntime
   assert.doesNotMatch(source, /catalog-base\.js/,
     'Runtime consumers must use the stable production catalog facade, never the internal base catalog');
 }
-assert.match(runtime, /catalog\.js\?revision=r181-hatchback-rally/,
-  'Older cache-key imports must remain safe because catalog.js is now a stable production facade');
+assert.match(runtime, /catalog\.js\?revision=r222-awd-label/,
+  'Achievement consumers must load the current AWD vehicle label');
 assert.match(runtime, /view\.js\?revision=r166-bella-records/);
 assert.match(view, /TROPHY_ROAD_MAX_THRESHOLD/);
 assert.match(storeSource, /Preserve syntactically valid unlock records/);

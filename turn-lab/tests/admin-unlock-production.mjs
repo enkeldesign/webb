@@ -52,15 +52,15 @@ for (const token of ADMIN_UNLOCK_SEQUENCE.slice(0, 10)) {
 }
 assert.equal(ADMIN_UNLOCK_SEQUENCE[lotEntryIndex], 'vehicle:convertible');
 assert.equal(completeAdminUnlockFromLot(lotEntryIndex, 'convertible').completed, true,
-  'Convertible already selected on Lot entry must complete without another vehicle click');
+  'AWD already selected on Lot entry must complete without another vehicle click');
 assert.equal(completeAdminUnlockFromLot(lotEntryIndex, 'classic').completed, false,
   'RACE THIS CAR must not complete while another vehicle is selected');
-const explicitConvertibleIndex = advanceAdminUnlockSequence(
+const explicitAwdIndex = advanceAdminUnlockSequence(
   lotEntryIndex,
   'vehicle:convertible'
 ).nextIndex;
-assert.equal(completeAdminUnlockFromLot(explicitConvertibleIndex, 'convertible').completed, true,
-  'Selecting Convertible after entering The Lot must also complete');
+assert.equal(completeAdminUnlockFromLot(explicitAwdIndex, 'convertible').completed, true,
+  'Selecting AWD after entering The Lot must also complete');
 
 const rewardIds = TROPHY_ROAD_REWARDS.map(({ id }) => id);
 const existing = {
@@ -135,7 +135,7 @@ assert.equal(repaired.snapshot.unlocked['save-bella'], undefined,
 assert.match(source, /target\.closest\('\.m8-track-continue'\)/,
   'The Home RACE action must be the separator that opens The Lot');
 assert.match(source, /aria-checked="true"/,
-  'The final action must detect a Convertible that was already selected on Lot entry');
+  'The final action must detect an AWD that was already selected on Lot entry');
 assert.match(source, /completeAdminUnlockFromLot\(sequenceIndex, selectedVehicleId\)/);
 assert.match(source, /unlockRewardsForTesting\(storage\)/);
 assert.match(source, /snapshot\.rewards\.unlocked = \[\.\.\.rewardIds\]/);

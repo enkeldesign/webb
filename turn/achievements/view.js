@@ -7,7 +7,7 @@ import {
   TRACK_NAMES,
   VEHICLE_NAMES,
   TRACK_IDS
-} from './catalog.js?revision=r181-hatchback-rally';
+} from './catalog.js?revision=r222-awd-label';
 import {
   TIME_TRIAL_ACHIEVEMENT_IDS
 } from './time-trials.js?revision=r166-bella-records';
