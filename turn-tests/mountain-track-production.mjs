@@ -47,8 +47,8 @@ assert.equal(definition.lighting.directionalIntensity, 0.92);
 
 const reward = rewardForTrack('mountain');
 assert.equal(reward?.id, 'mountain');
-assert.equal(reward?.threshold, 1000);
-assert.equal(TROPHY_ROAD_REWARDS.at(-1)?.id, 'mountain');
+assert.equal(reward?.threshold, 700);
+assert.equal(TROPHY_ROAD_REWARDS.at(-1)?.id, 'rally-racer');
 assert.match(trophyGate, /rewardForTrack\(trackId\)/);
 assert.doesNotMatch(trophyGate, /trackId === ['"]mountain['"]/);
 

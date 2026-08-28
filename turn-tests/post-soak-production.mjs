@@ -143,11 +143,11 @@ assert.ok(Math.abs(steeringAfterFrames(namedIPadProfile, 24, 120)) > 0.99,
 
 assert.equal(
   FUTURE_RACER_REWARD_PERK_DESCRIPTION,
-  'After a few seconds of clean driving on-track the speed cap starts increasing. Going off-track resets it.'
+  'After a few seconds of clean driving on-track the speed cap starts increasing. Leaving the track or colliding resets it.'
 );
 assert.equal(
   FUTURE_RACER_CAR_PERK_DESCRIPTION,
-  'A few seconds of staying on-track raises speed cap. Going off-track resets it.'
+  'A few seconds of staying on-track raises the speed cap. Leaving the track or colliding resets it.'
 );
 assert.equal(
   vehiclePerkPresentation('race-future', { title: 'OVERDRIVE', description: 'old' }).description,
@@ -166,8 +166,8 @@ assert.match(trophyWrapper, /reward\.id !== 'future-racer'/);
 for (const index of [productionIndex, labIndex]) {
   assert.match(
     index,
-    /\/turn\/progression\/trophy-road-chromatic-r183\.js\?revision=r183-post-soak/,
-    'Production and LAB must load the fresh Future Racer reward-copy wrapper'
+    /\/turn\/progression\/trophy-road-chromatic-r183\.js\?revision=r220-race-reward/,
+    'Production and LAB must load the fresh Race Car reward and Future Racer copy wrapper'
   );
   assert.match(index, /app\.js\?build=[^"']*r164-long-session-robustness-post-soak/);
   assert.match(

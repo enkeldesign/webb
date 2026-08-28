@@ -1,8 +1,8 @@
 import {
   TROPHY_ROAD_REWARDS as BASE_TROPHY_ROAD_REWARDS
-} from './trophy-road.js?revision=r164-vintage-rally-perks';
+} from './trophy-road.js?revision=r220-race-reward';
 
-export * from './trophy-road.js?revision=r164-vintage-rally-perks';
+export * from './trophy-road.js?revision=r220-race-reward';
 
 export const TROPHY_ROAD_MAX_THRESHOLD = 3075;
 
@@ -13,12 +13,13 @@ const BASE_REWARD_BY_ID = new Map(
 const REWARD_ORDER = Object.freeze([
   Object.freeze(['vintage-racer', 300]),
   Object.freeze(['midnight-city', 400]),
-  Object.freeze(['future-racer', 500]),
+  Object.freeze(['race-car', 500]),
   Object.freeze(['emergency-pack', 600]),
   Object.freeze(['mountain', 700]),
   Object.freeze(['monster', 800]),
   Object.freeze(['paintjob', 900]),
-  Object.freeze(['rally-racer', 1000])
+  Object.freeze(['future-racer', 1000]),
+  Object.freeze(['rally-racer', 1100])
 ]);
 
 export const TROPHY_ROAD_REWARDS = Object.freeze(REWARD_ORDER.map(([id, threshold]) => {

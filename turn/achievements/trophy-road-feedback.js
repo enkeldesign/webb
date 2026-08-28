@@ -1,5 +1,5 @@
 import { CATEGORY } from './catalog.js?revision=r181-hatchback-rally';
-import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r179-native-car-surfaces';
+import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r220-race-reward';
 import {
   achievementCardMatchesFilters
 } from './filter-state.js?revision=r219-unified-achievement-filters';

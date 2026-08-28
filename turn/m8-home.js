@@ -247,8 +247,8 @@ function createHowToPlayDialog() {
       <div class="m8-guide-grid">
         <section><strong>1</strong><div><h3>Choose a track and car</h3><p>Your saved best lap appears on each track card. TURN races you against recordings of your own fastest laps, not computer drivers.</p></div></section>
         <section><strong>2</strong><div><h3>Turn the device to steer</h3><p>Hold the phone or tablet in landscape and rotate it like a steering wheel. Recalibrate at the start line whenever your resting angle changes.</p></div></section>
-        <section><strong>3</strong><div><h3>Drive with one thumb</h3><p>Keep one thumb on the drive area and slide between Gas, Drift and Boost. Brake and Reverse share the separate brake control.</p></div></section>
-        <section><strong>4</strong><div><h3>Use Drift and Boost wisely</h3><p>Drift helps the car rotate but costs grip. Boost gives speed but can make the next corner harder. Fast laps come from balancing both.</p></div></section>
+        <section><strong>3</strong><div><h3>Drive with one thumb</h3><p>Keep one thumb on the drive pad and slide between GAS, DRIFT, BOOST and BRAKE · REVERSE. While using DRIFT, slide farther left into LOCK for a stronger slide.</p></div></section>
+        <section><strong>4</strong><div><h3>Build and use OVERCHARGE</h3><p>DRIFT charges BOOST as you slide. With BOOST full, keep using DRIFT to build purple OVERCHARGE. GAS catches it and BOOST spends it.</p></div></section>
         <section class="m8-guide-wide"><strong>♪</strong><div><h3>Drive By Ear™</h3><p>Drive By Ear turns the racing line, upcoming corners, grip, off-road recovery and nearby rivals into spatial sound. Steer toward the warm guiding hum. Headphones provide the clearest left and right information. Together with a screen reader, it is designed to support complete non-visual play.</p></div></section>
       </div>
     </article>`;

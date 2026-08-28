@@ -103,9 +103,13 @@ const VEHICLE_PERK_BY_ID = Object.freeze({
     title: 'OVERSIZED',
     description: 'Going off-road doesn’t slow it down.'
   }),
+  race: Object.freeze({
+    title: 'APEX GRIP',
+    description: 'Increased CONTROL when OVERCHARGED.'
+  }),
   'race-future': Object.freeze({
     title: 'OVERDRIVE',
-    description: '5 clean seconds builds +6% top speed. Off-road or collisions reset it.'
+    description: 'A few seconds of staying on-track raises the speed cap. Leaving the track or colliding resets it.'
   }),
   firetruck: SIRENS_PERK,
   police: SIRENS_PERK,
@@ -122,6 +126,9 @@ const TUNING_OVERRIDE_BY_ID = Object.freeze({
   }),
   'toy-racer': Object.freeze({
     driftBoostRechargeMultiplier: 3.6
+  }),
+  race: Object.freeze({
+    overchargeControlMultiplier: 1.21
   })
 });
 

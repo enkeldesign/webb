@@ -1,5 +1,5 @@
-import { getCarDefinition } from '../vehicle/catalog.js?revision=r164-vintage-rally-polish';
-import { vehiclePerkPresentation } from '../vehicle/perk-presentation.js?revision=r164-post-soak';
+import { getCarDefinition } from '../vehicle/catalog.js?revision=r220-apex-grip';
+import { vehiclePerkPresentation } from '../vehicle/perk-presentation.js?revision=r220-apex-grip';
 
 const STYLE_ID = 'turn-lot-perk-popover-r217-styles';
 const activeDisclosures = new WeakMap();

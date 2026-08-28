@@ -8,6 +8,7 @@ import {
   getOverdriveSpeedMultiplier,
   getVehicleSpeedLimit,
   resolveDriftSpeedMultiplier,
+  resolveOverchargedControlMultiplier,
   updateVehicleOverdriveState,
   vehicleHasOverdrive,
   vehicleIgnoresOffRoadPenalty
@@ -276,11 +277,44 @@ assert.equal(suv.defaultColor, '#0555aa', 'SUV factory paint must be #0555aa');
 const raceCar = CAR_CATALOG.find((car) => car.id === 'race');
 assert.ok(raceCar, 'Race Car must remain in the vehicle catalog');
 assert.equal(raceCar.defaultColor, '#5d503f', 'Race Car factory paint must be the current brown');
+assert.equal(raceCar.perk?.title, 'APEX GRIP');
+assert.equal(raceCar.perk?.description, 'Increased CONTROL when OVERCHARGED.');
+assert.equal(raceCar.tuning.controlMultiplier, 1.07,
+  'Race Car must retain its ordinary 4/5 CONTROL tuning when it is not OVERCHARGED');
+assert.equal(raceCar.tuning.overchargeControlMultiplier, 1.21,
+  'APEX GRIP must extend the established CONTROL curve one tier beyond its visible 5/5 ceiling');
+assert.equal(resolveOverchargedControlMultiplier({
+  controlMultiplier: raceCar.tuning.controlMultiplier,
+  overchargeControlMultiplier: raceCar.tuning.overchargeControlMultiplier,
+  overcharge: 0
+}), 1.07);
+assert.equal(resolveOverchargedControlMultiplier({
+  controlMultiplier: raceCar.tuning.controlMultiplier,
+  overchargeControlMultiplier: raceCar.tuning.overchargeControlMultiplier,
+  overcharge: 0.001
+}), 1.21,
+  'Any live OVERCHARGE must activate APEX GRIP without requiring a separate catch flag');
+for (const car of CAR_CATALOG.filter((candidate) => candidate.id !== 'race')) {
+  assert.equal(resolveOverchargedControlMultiplier({
+    controlMultiplier: car.tuning.controlMultiplier,
+    overchargeControlMultiplier: car.tuning.overchargeControlMultiplier,
+    overcharge: 1
+  }), car.tuning.controlMultiplier, `${car.name} must not inherit APEX GRIP`);
+}
+assert.match(mainSource, /boostOvercharge: globalThis\.__turnBoostOvercharge \|\| 0/,
+  'The current OVERCHARGE amount must reach vehicle physics every frame');
+assert.match(physicsSource, /state\.apexGripActive = controlMultiplier > baseControlMultiplier/,
+  'Physics must expose whether the selected tuning is actively receiving APEX GRIP');
 
 const truck = CAR_CATALOG.find((car) => car.id === 'truck');
 assert.ok(truck, 'Truck must remain in the vehicle catalog');
 assert.equal(truck.defaultColor, '#b93632', 'Truck factory paint must be the former Race Car red');
 
+assert.match(
+  showcaseSource,
+  /'race-car': Object\.freeze\(\[[\s\S]*carId: 'race'/,
+  'Race Car Trophy Road detail must use its 3D vehicle model'
+);
 assert.match(
   showcaseSource,
   /'vintage-racer': Object\.freeze\(\[[\s\S]*carId: 'vintage-racer'/,
@@ -291,7 +325,7 @@ assert.match(
   /'rally-racer': Object\.freeze\(\[[\s\S]*carId: 'toy-racer'/,
   'Rally Racer Trophy Road detail must use the stable Toy Racer 3D asset'
 );
-assert.match(showcaseSource, /catalog\.js\?revision=r164-vintage-rally-polish/,
+assert.match(showcaseSource, /catalog\.js\?revision=r220-apex-grip/,
   'Trophy Road models must use the refreshed factory colours');
 assert.doesNotMatch(trophyRoadSource, /tank is tiny|tiny tank/i,
   'Trophy Road must not describe the ordinary 1\/5 Rally tank as an extra penalty');
@@ -426,4 +460,4 @@ for (const car of CAR_CATALOG) {
   }
 }
 
-console.log('TURN all-car attribute-to-physics integrity, flow-friendly DRIFT, larger BOOST TANKS, DRIFTAGE, TWITCHY TURNY, OVERSIZED and OVERDRIVE contracts passed for all 15 cars.');
+console.log('TURN all-car attribute-to-physics integrity, APEX GRIP, DRIFTAGE, TWITCHY TURNY, OVERSIZED and OVERDRIVE contracts passed for all 15 cars.');

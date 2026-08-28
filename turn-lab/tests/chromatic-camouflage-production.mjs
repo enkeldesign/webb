@@ -50,7 +50,7 @@ assert.equal(Object.hasOwn(catchTheCharge || {}, 'progressMax'), false,
   'CATCH THE CHARGE should unlock on the catch itself, without a timed hold');
 assert.equal(
   catchTheCharge?.description,
-  'Overcharge the BOOST bar using DRIFT. Retain the overcharge using GAS.'
+  'With BOOST full, keep using DRIFT to build purple OVERCHARGE. Slide to GAS to catch it before it leaks away.'
 );
 assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 11,
   'GOT STARTED must require every Getting Started lesson, including CATCH THE CHARGE, without requiring itself');
@@ -165,12 +165,13 @@ assert.deepEqual(
   [
     ['vintage-racer', 300],
     ['midnight-city', 400],
-    ['future-racer', 500],
+    ['race-car', 500],
     ['emergency-pack', 600],
     ['mountain', 700],
     ['monster', 800],
     ['paintjob', 900],
-    ['rally-racer', 1000]
+    ['future-racer', 1000],
+    ['rally-racer', 1100]
   ]
 );
 assert.deepEqual(TRACK_IDS, [
@@ -179,6 +180,8 @@ assert.deepEqual(TRACK_IDS, [
 
 assert.match(TROPHY_ROAD_REWARD_ICONS.future, /M3 32h12l7-5/,
   'Future Racer should use the sharper Formula silhouette in both marker and detail views');
+assert.match(TROPHY_ROAD_REWARD_ICONS.race, /M4 31h10l7-11/,
+  'Race Car should receive a dedicated formula-car reward silhouette');
 assert.match(TROPHY_ROAD_REWARD_ICONS.vintage, /r="7"/,
   'Vintage Racer should read as an older racer with larger exposed wheels');
 assert.match(TROPHY_ROAD_REWARD_ICONS.rally, /circle cx="27" cy="29"/,

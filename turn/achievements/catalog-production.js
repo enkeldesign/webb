@@ -26,7 +26,7 @@ export const CATCH_THE_CHARGE_ACHIEVEMENT = Object.freeze({
   category: base.CATEGORY.ONBOARDING,
   trophies: 25,
   title: 'CATCH THE CHARGE',
-  description: 'Overcharge the BOOST bar using DRIFT. Retain the overcharge using GAS.',
+  description: 'With BOOST full, keep using DRIFT to build purple OVERCHARGE. Slide to GAS to catch it before it leaks away.',
   icon: 'charge'
 });
 

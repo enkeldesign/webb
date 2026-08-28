@@ -147,6 +147,7 @@ const orderMatch = showroom.match(/export const LOT_CAR_ORDER = Object\.freeze\(
 assert.ok(orderMatch, 'The showroom must expose one canonical car order');
 const order = [...orderMatch[1].matchAll(/'([^']+)'/g)].map((match) => match[1]);
 const lockedTail = [
+  'race',
   'vintage-racer',
   'race-future',
   'firetruck',
@@ -155,8 +156,8 @@ const lockedTail = [
   'monster-truck',
   'toy-racer'
 ];
-assert.deepEqual(order.slice(order.indexOf('race') + 1), lockedTail,
-  'The horizontal Lot and its keyboard/VoiceOver order must follow the Trophy Road vehicle unlock sequence');
+assert.deepEqual(order.slice(order.indexOf('race')), lockedTail,
+  'The horizontal Lot and its keyboard/VoiceOver order must put every reward car after the standard starting cars');
 
 // --- Fresh module identities for already-installed PWAs -----------------------
 assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r206-pwa-color/,
@@ -181,7 +182,7 @@ assert.match(
 // HTTP/module-cache snapshots. All selected-car consumers must now converge on one
 // fresh vehicle-catalog module, and the state/showroom modules themselves get fresh
 // identities without requiring a reinstall or clearing site data.
-const canonicalLotCatalog = '/turn/vehicle/catalog.js?revision=r219-canonical-vehicle-catalog';
+const canonicalLotCatalog = '/turn/vehicle/catalog.js?revision=r220-apex-grip';
 assert.equal(
   imports['/turn/progression/lot-paint-reward.js?revision=r206-pwa-color'],
   '/turn/progression/lot-paint-reward.js?revision=r208-secondary-color-import',

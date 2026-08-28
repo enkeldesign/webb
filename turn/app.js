@@ -307,7 +307,7 @@ const { installLotEnhancementRuntime } = await import(
 installLotEnhancementRuntime();
 
 await import(withBuild('./input/analog-gas.js'));
-await import(withBuild('./ui/gameplay-controls.js?revision=r219-overcharge-state'));
+await import(withBuild('./ui/gameplay-controls.js?revision=r220-overcharge-vocabulary'));
 const { installRaceSpeech } = await import(withBuild('./ui/race-speech.js'));
 installRaceSpeech();
 const { installRacePositionLayout } = await import(withBuild('./ui/race-position-layout.js'));
@@ -346,11 +346,11 @@ installStylesheet(
   'data-turn-midnight-city-postcard'
 );
 installStylesheet(
-  './m8-how-to-play-r126.css?revision=r141-form-disclosure',
+  './m8-how-to-play-r126.css?revision=r220-overcharge-disclosure',
   'data-turn-m8-how-to-play'
 );
 installStylesheet(
-  './settings-components-r141.css?revision=r141-form-disclosure',
+  './settings-components-r141.css?revision=r220-overcharge-disclosure',
   'data-turn-settings-components'
 );
 installStylesheet('./rival-reset-context-r127.css', 'data-turn-rival-reset-context');
@@ -361,7 +361,7 @@ const home = await installM8HomeNavigation();
 globalThis.__turnHome = home;
 motionPermissionCancelRecovery.resume(home, globalThis.__turnRuntime);
 const { installHowToPlayGuide } = await import(
-  withBuild('./ui/how-to-play-guide.js?revision=r141-form-disclosure')
+  withBuild('./ui/how-to-play-guide.js?revision=r220-overcharge-disclosure')
 );
 installHowToPlayGuide();
 const { installHomeRivalReset } = await import(
