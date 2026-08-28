@@ -32,7 +32,7 @@ for (const [id, contract] of expected) {
   assert.ok(glb.length > 10_000, `${id}.glb must contain the vendored Kenney model`);
 }
 
-assert.equal(catalog.normalizeVehicleId('suv-luxury'), 'firetruck');
+assert.equal(catalog.normalizeVehicleId('suv-luxury'), 'suv');
 assert.equal(catalog.normalizeVehicleId('hatchback-sports'), 'police');
 assert.equal(catalog.normalizeVehicleId('truck-flat'), 'ambulance');
 
