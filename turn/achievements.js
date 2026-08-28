@@ -17,7 +17,6 @@ export {
 } from './achievements/time-trials.js?revision=r166-bella-records';
 export {
   CATCH_GAS_MIN_OVERCHARGE,
-  CATCH_GAS_REQUIRED_MS,
   CLEAN_LAP_TARGETS,
   CHALLENGE_PROGRESS_STORAGE_KEY,
   normalizeChallengeProgress,
