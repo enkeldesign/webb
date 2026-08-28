@@ -22,6 +22,7 @@
 
 .turn-trophy-road-marker:is(
   [data-trophy-reward="vintage-racer"],
+  [data-trophy-reward="race-car"],
   [data-trophy-reward="future-racer"],
   [data-trophy-reward="emergency-pack"],
   [data-trophy-reward="monster"],
@@ -32,6 +33,7 @@
 
 .turn-trophy-road-marker:is(
   [data-trophy-reward="vintage-racer"],
+  [data-trophy-reward="race-car"],
   [data-trophy-reward="future-racer"],
   [data-trophy-reward="emergency-pack"],
   [data-trophy-reward="monster"],
@@ -67,6 +69,7 @@
    :has() is progressive enhancement; older engines retain the standard green detail card. */
 .turn-achievements-dialog:has(.turn-trophy-road-marker:is(
   [data-trophy-reward="vintage-racer"],
+  [data-trophy-reward="race-car"],
   [data-trophy-reward="future-racer"],
   [data-trophy-reward="emergency-pack"],
   [data-trophy-reward="monster"],
@@ -77,6 +80,7 @@
 
 .turn-achievements-dialog:has(.turn-trophy-road-marker:is(
   [data-trophy-reward="vintage-racer"],
+  [data-trophy-reward="race-car"],
   [data-trophy-reward="future-racer"],
   [data-trophy-reward="emergency-pack"],
   [data-trophy-reward="monster"],
