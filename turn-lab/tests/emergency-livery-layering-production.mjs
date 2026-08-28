@@ -29,7 +29,7 @@ function importMapFrom(source) {
 
 const expectedFactoryColors = new Map([
   ['convertible', ['#0555aa', '#163f7a']],
-  ['suv', ['#580e2d', '#2f0918']],
+  ['suv', ['#7d123e', '#2f0918']],
   ['van', ['#ff7700', '#222222']],
   ['race', ['#5d503f', '#222222']],
   ['vintage-racer', ['#004455', '#222222']],
