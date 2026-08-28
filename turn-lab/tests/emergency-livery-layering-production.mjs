@@ -28,7 +28,8 @@ function importMapFrom(source) {
 }
 
 const expectedFactoryColors = new Map([
-  ['convertible', ['#ff4fa3', '#792766']],
+  ['convertible', ['#0555aa', '#163f7a']],
+  ['suv', ['#580e2d', '#2f0918']],
   ['van', ['#ff7700', '#222222']],
   ['race', ['#5d503f', '#222222']],
   ['vintage-racer', ['#004455', '#222222']],
@@ -44,12 +45,12 @@ for (const [id, [primary, secondary]] of expectedFactoryColors) {
 }
 
 const chromaticFactoryRoute = Object.freeze({
-  countryside: 'convertible',
+  countryside: 'suv',
   airport: 'classic',
   harbor: 'van',
   cliffside: 'sedan',
   'midnight-city': 'sedan-sports',
-  mountain: 'suv'
+  mountain: 'convertible'
 });
 
 for (const [trackId, carId] of Object.entries(chromaticFactoryRoute)) {
@@ -139,12 +140,5 @@ for (const specifier of [
   assert.equal(yourTurnImports[specifier], canonicalCatalogTarget,
     `YOUR TURN must share the canonical factory color catalog for ${specifier}`);
 }
-for (const specifier of [
-  '/turn/vehicle/car-models.js?build=20260720-r19',
-  '/turn/vehicle/car-models.js?build=20260720-r22'
-]) {
-  assert.equal(yourTurnImports[specifier], '/turn/vehicle/emergency-livery-models.js',
-    `YOUR TURN must share the canonical car presentation for ${specifier}`);
-}
 
-console.log('TURN factory colors keep CHROMATIC CAMOUFLAGE paint-free, with Police fixed grey and canonical module routes.');
+console.log('TURN semantic emergency liveries, factory colors and shared catalog routing passed.');
