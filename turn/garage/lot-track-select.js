@@ -1,7 +1,7 @@
 import {
   enhanceLotNow,
   prepareLotEnhancements
-} from './lot-enhancement-runtime.js?revision=r217-stable-perk-slot&build=20260804-r157';
+} from './lot-enhancement-runtime.js?revision=r221-trophy-order';
 import { installLotPwaColorSwatches } from './lot-pwa-color-swatch.js?revision=r206-pwa-color';
 import { chooseTrackBeforeLot } from '../tracks/track-manager.js?build=20260722-r52';
 import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
@@ -12,6 +12,7 @@ import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
 // lot-enhancement-runtime.js?revision=r205-color-baseline
 // lot-enhancement-runtime.js?revision=r206-pwa-color
 // lot-enhancement-runtime.js?revision=r214-future-racer-fit
+// lot-enhancement-runtime.js?revision=r217-stable-perk-slot&build=20260804-r157
 // lot-showroom-experiment.js?revision=r200-production-candidate
 // export async function showEnhancedLot
 // SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r203-polish'
