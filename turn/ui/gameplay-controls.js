@@ -122,7 +122,7 @@ function installGameplayUi() {
   drivePad.setAttribute('role', 'group');
   drivePad.setAttribute(
     'aria-label',
-    'Drive control. Double tap and hold, then slide between Drift, Boost, Gas, and Brake or Reverse. Drift charges Boost and can build Overcharge past full. Gas catches Overcharge. While holding Drift, slide left into Lock for rear-wheel lock.'
+    'Drive control. Double tap and hold, then slide between GAS, DRIFT, BOOST, and BRAKE or REVERSE. DRIFT charges BOOST and builds OVERCHARGE after the bar is full. GAS catches and holds OVERCHARGE. BOOST spends OVERCHARGE before normal BOOST. While holding DRIFT, slide left into LOCK for rear-wheel lock.'
   );
   drivePad.style.setProperty('--boost-charge', '100%');
 
@@ -138,17 +138,17 @@ function installGameplayUi() {
   driftZone.type = 'button';
   driftZone.className = 'drive-zone drive-drift-zone';
   driftZone.textContent = 'Drift';
-  driftZone.setAttribute('aria-label', 'Gas and drift. Drift charges Boost and can build Overcharge past full. Slide left into Lock for rear-wheel lock.');
+  driftZone.setAttribute('aria-label', 'GAS and DRIFT. DRIFT charges BOOST; after the bar is full, it builds OVERCHARGE. Slide left into LOCK for rear-wheel lock.');
 
   const boostZone = document.createElement('button');
   boostZone.type = 'button';
   boostZone.className = 'drive-zone drive-boost-zone';
   boostZone.textContent = 'Boost';
-  boostZone.setAttribute('aria-label', 'Gas and boost');
+  boostZone.setAttribute('aria-label', 'GAS and BOOST. BOOST spends OVERCHARGE before normal BOOST.');
 
   gasButton.classList.add('drive-gas-zone');
   gasButton.textContent = 'Gas';
-  gasButton.setAttribute('aria-label', 'Gas. Holds any purple Boost Overcharge.');
+  gasButton.setAttribute('aria-label', 'GAS. Catches and holds OVERCHARGE.');
 
   brakeButton.classList.add('drive-brake-zone', 'brake-reverse');
   brakeButton.textContent = 'Brake · Reverse';
@@ -612,7 +612,7 @@ function installGameplayUi() {
     let ariaValueText;
     if (hasOvercharge) {
       const overchargeStateLabel = overchargeCaught
-        ? 'caught with Gas'
+        ? 'caught and held with GAS'
         : boosting
           ? 'being used'
           : boostOverchargePhase === BOOST_OVERCHARGE_PHASE.DECAYING

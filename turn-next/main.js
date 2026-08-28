@@ -946,6 +946,7 @@ function updatePhysics(dt, now) {
     maxSpeed: MAX_SPEED * state.vehicleTuning.topSpeedMultiplier,
     analogGas: globalThis.__turnAnalogGas || 0,
     boostActive: Boolean(globalThis.__turnBoostActive),
+    boostOvercharge: globalThis.__turnBoostOvercharge || 0,
     driftHeld: Boolean(globalThis.__turnDriftHeld),
     driftLock: globalThis.__turnDriftLockAmount || 0,
     vehicleTuning: state.vehicleTuning

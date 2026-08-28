@@ -12,12 +12,12 @@ const [app, guide, css, components, homeReset, resetCss, rivalStorage, trackMana
   fs.readFile(new URL('../turn/tracks/track-manager.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(app, /m8-how-to-play-r126\.css\?revision=r141-form-disclosure/);
-assert.match(app, /settings-components-r141\.css\?revision=r141-form-disclosure/);
+assert.match(app, /m8-how-to-play-r126\.css\?revision=r220-overcharge-disclosure/);
+assert.match(app, /settings-components-r141\.css\?revision=r220-overcharge-disclosure/);
 assert.match(app, /data-turn-m8-how-to-play/);
 assert.match(app, /data-turn-settings-components/);
 assert.match(app, /installStylesheet\('\.\/rival-reset-context-r127\.css', 'data-turn-rival-reset-context'\)/);
-assert.match(app, /how-to-play-guide\.js\?revision=r141-form-disclosure/);
+assert.match(app, /how-to-play-guide\.js\?revision=r220-overcharge-disclosure/);
 assert.match(app, /installHowToPlayGuide\(\)/);
 assert.match(app, /home-rival-reset\.js\?revision=r127-contextual/);
 assert.match(app, /installHomeRivalReset\(\)/);
@@ -30,10 +30,18 @@ assert.ok(
   'The contextual reset enhancer must run only after the shared Settings dialog exists'
 );
 
-assert.match(guide, /GUIDE_VERSION = 'r141-form-disclosure-system'/);
+assert.match(guide, /GUIDE_VERSION = 'r220-overcharge-disclosure'/);
+assert.match(guide, /slide between <strong>GAS<\/strong>, <strong>DRIFT<\/strong>, <strong>BOOST<\/strong> and <strong>BRAKE · REVERSE<\/strong>/);
+assert.match(guide, /slide farther left into <strong>LOCK<\/strong>/);
 assert.match(guide, /<strong>DRIFT<\/strong> charges <strong>BOOST<\/strong> as you slide/);
-assert.match(guide, /Keep drifting after the bar is full to build purple <strong>OVERCHARGE<\/strong>/);
-assert.match(guide, /slide to <strong>GAS<\/strong> to catch and hold it, or <strong>BOOST<\/strong> to spend it/);
+assert.match(guide, /With BOOST full, keep using DRIFT to build purple <strong>OVERCHARGE<\/strong>/);
+assert.match(guide, /<details class="m8-guide-disclosure m8-overcharge-guide">/);
+assert.match(guide, /How to catch and use OVERCHARGE/);
+assert.match(guide, /<strong>BUILD<\/strong><span>With BOOST full, keep using DRIFT\.<\/span>/);
+assert.match(guide, /<strong>CATCH<\/strong><span>Slide to GAS before OVERCHARGE leaks away\.<\/span>/);
+assert.match(guide, /<strong>HOLD<\/strong><span>Stay on GAS to hold the OVERCHARGE you caught\.<\/span>/);
+assert.match(guide, /<strong>SPEND<\/strong><span>Slide to BOOST\. OVERCHARGE is spent before normal BOOST\.<\/span>/);
+assert.match(guide, /Uncaught OVERCHARGE leaks\. At its peak, it starts leaking even while you keep using DRIFT/);
 assert.match(guide, /<details class="m8-dbe-guide">/);
 assert.match(
   guide,
@@ -74,6 +82,10 @@ assert.match(css, /\.m8-how-dialog \.m8-dialog-card[\s\S]*overscroll-behavior-y:
 assert.match(css, /scroll-padding-block-end: max\(32px, env\(safe-area-inset-bottom\)\)/);
 assert.match(css, /scrollbar-gutter: stable/, 'The dialog width must remain stable when expanded content creates a scrollbar');
 assert.match(css, /\.m8-dbe-guide[\s\S]*border: 3px solid[\s\S]*border-radius: 16px[\s\S]*overflow: clip/, 'The summary and expanded content must share one containing card');
+assert.match(css, /\.m8-guide-disclosure/,
+  'The Overcharge lesson must share the native disclosure component without masquerading as Drive By Ear');
+assert.match(css, /\.m8-overcharge-steps[\s\S]*display: grid/);
+assert.match(css, /\.m8-overcharge-leak[\s\S]*border-top: 2px solid/);
 assert.match(css, /\.m8-dbe-guide > summary/);
 assert.match(css, /cursor: pointer/);
 assert.match(css, /\.m8-dbe-guide\[open\] > summary[\s\S]*border-bottom: 3px solid/, 'The expanded panel must stay visibly attached below the summary');
@@ -85,8 +97,10 @@ assert.match(css, /@media \(max-width: 720px\)[\s\S]*grid-template-columns: 1fr/
 
 assert.match(components, /\.m8-guide-wide[\s\S]*background: var\(--turn-surface-raised\) !important/);
 assert.match(components, /\.m8-dbe-guide > summary[\s\S]*background: var\(--turn-disclosure-trigger\)/);
+assert.match(components, /\.m8-guide-disclosure > summary[\s\S]*background: var\(--turn-disclosure-trigger\)/);
 assert.match(components, /\.m8-disclosure-symbol::before[\s\S]*content: '\+'/);
 assert.match(components, /\.m8-dbe-guide\[open\] \.m8-disclosure-symbol::before[\s\S]*content: '−'/);
+assert.match(components, /\.m8-guide-disclosure\[open\] \.m8-disclosure-symbol::before[\s\S]*content: '−'/);
 assert.match(components, /\.m8-dbe-guide-panel,[\s\S]*background: var\(--turn-disclosure-panel\)/);
 assert.doesNotMatch(components, /#eaf9ef/);
 assert.doesNotMatch(`${guide}\n${css}\n${components}`, /setInterval|setTimeout|@keyframes|animation:/, 'Help content must add no runtime loop or distracting motion');

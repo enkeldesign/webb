@@ -24,6 +24,19 @@ export function getOverdriveSpeedMultiplier(cleanSeconds = 0) {
   return 1 + (OVERDRIVE_MAX_SPEED_MULTIPLIER - 1) * progress;
 }
 
+export function resolveOverchargedControlMultiplier({
+  controlMultiplier = 1,
+  overchargeControlMultiplier = controlMultiplier,
+  overcharge = 0
+} = {}) {
+  const baseControlMultiplier = positiveNumber(controlMultiplier, 1);
+  if (nonNegativeNumber(overcharge, 0) <= 0) return baseControlMultiplier;
+  return Math.max(
+    baseControlMultiplier,
+    positiveNumber(overchargeControlMultiplier, baseControlMultiplier)
+  );
+}
+
 export function updateVehicleOverdriveState({
   state,
   dt = 0,
@@ -118,6 +131,7 @@ export function updateVehiclePhysicsState({
   maxSpeed,
   analogGas = 0,
   boostActive = false,
+  boostOvercharge = 0,
   driftHeld = false,
   driftLock = 0,
   vehicleTuning = null
@@ -126,7 +140,13 @@ export function updateVehiclePhysicsState({
 
   const tuning = vehicleTuning || globalThis.__turnVehicleTuning;
   const accelerationMultiplier = positiveNumber(tuning?.accelerationMultiplier, 1);
-  const controlMultiplier = positiveNumber(tuning?.controlMultiplier, 1);
+  const baseControlMultiplier = positiveNumber(tuning?.controlMultiplier, 1);
+  const controlMultiplier = resolveOverchargedControlMultiplier({
+    controlMultiplier: baseControlMultiplier,
+    overchargeControlMultiplier: tuning?.overchargeControlMultiplier,
+    overcharge: boostOvercharge
+  });
+  state.apexGripActive = controlMultiplier > baseControlMultiplier;
   const driftEngineMultiplier = positiveNumber(tuning?.driftEngineMultiplier, 0.86);
   const driftDragAdd = nonNegativeNumber(tuning?.driftDragAdd, 0.1);
   const driftSpeedMultiplier = clamp(positiveNumber(tuning?.driftSpeedMultiplier, 0.84), 0.5, 0.99);

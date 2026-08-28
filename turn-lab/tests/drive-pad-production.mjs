@@ -194,8 +194,8 @@ assert.ok(
   'The topbar position override must load after the legacy gameplay HUD rules'
 );
 assert.match(app, /race-position-layout\.js/, 'The production module graph must install the position layout after gameplay controls');
-assert.match(app, /gameplay-controls\.js\?revision=r219-overcharge-state/,
-  'The corrected Overcharge state and accessible meter must bypass stale production module caches');
+assert.match(app, /gameplay-controls\.js\?revision=r220-overcharge-vocabulary/,
+  'The clarified OVERCHARGE vocabulary must bypass stale production module caches');
 assert.match(app, /installRaceSpeech\(\)/, 'The production graph must install concise race speech before the runtime starts');
 assert.ok(
   app.indexOf('./ui/gameplay-controls.js') < app.indexOf('./ui/race-speech.js')
@@ -226,7 +226,12 @@ assert.doesNotMatch(raceSpeech, /LAP_RESULT_HANDOFF_MS|suppressPositionUntil/, '
 assert.match(raceSpeech, /reason === 'lap-started'/, 'Rival count must remain tied to crossing the start line');
 assert.doesNotMatch(raceSpeech, /VoiceOver|screenReader|blindMode|userAgent/i, 'The same race information must remain available without detecting disability');
 assert.match(controls, /className = 'drive-pad'/, 'Gameplay controls must create one unified drive pad');
-assert.match(controls, /Double tap and hold, then slide between Drift, Boost, Gas, and Brake or Reverse/, 'The drive group must explain its continuous VoiceOver gesture');
+assert.match(controls, /Double tap and hold, then slide between GAS, DRIFT, BOOST, and BRAKE or REVERSE/, 'The drive group must explain its continuous VoiceOver gesture');
+assert.match(controls, /DRIFT charges BOOST and builds OVERCHARGE after the bar is full/);
+assert.match(controls, /GAS catches and holds OVERCHARGE/);
+assert.match(controls, /BOOST spends OVERCHARGE before normal BOOST/);
+assert.match(controls, /caught and held with GAS/,
+  'The accessible meter must use the same catch-and-hold vocabulary as the guide');
 assert.match(controls, /drivePad\.append\(driveTop, gasButton, brakeButton\)/, 'Brake and Reverse must live inside the same continuous drive surface');
 assert.match(controls, /return x < 0\.5 \? 'drift' : 'boost'/, 'Top drive pad must split into Drift and Boost');
 assert.match(controls, /y >= BRAKE_ZONE_START\) return 'brake'/, 'Bottom drive pad must map to Brake and Reverse');

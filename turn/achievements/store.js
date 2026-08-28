@@ -9,8 +9,9 @@ import {
   TROPHY_ROAD_STORAGE_VERSION,
   getTrophyRoadReward,
   grandfatheredRewardIdsForVersion,
+  migrateStoredRewardIdsForVersion,
   rewardIdsForTrophies
-} from '../progression/trophy-road-perks-r164.js?revision=r164-vintage-rally-perks';
+} from '../progression/trophy-road-perks-r164.js?revision=r220-race-reward';
 
 export const ACHIEVEMENT_STORAGE_KEY = TROPHY_ROAD_STORAGE_KEY;
 const STORAGE_VERSION = TROPHY_ROAD_STORAGE_VERSION;
@@ -85,7 +86,10 @@ export function normalizeAchievementState(value) {
   const sourceVersion = Number(value.version || 0);
   const rewardIds = TROPHY_ROAD_REWARDS.map((reward) => reward.id);
   const earnedRewardIds = rewardIdsForTrophies(totalTrophiesFromUnlocked(unlocked));
-  const storedRewardIds = normalizedStringArray(value.rewards?.unlocked, rewardIds);
+  const storedRewardIds = migrateStoredRewardIdsForVersion(
+    normalizedStringArray(value.rewards?.unlocked, rewardIds),
+    sourceVersion
+  );
   const migratedRewardIds = grandfatheredRewardIdsForVersion(sourceVersion);
   const unlockedRewards = [...new Set([
     ...storedRewardIds,

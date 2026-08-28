@@ -1,5 +1,5 @@
 export const TROPHY_ROAD_STORAGE_KEY = 'turn-achievements-v1';
-export const TROPHY_ROAD_STORAGE_VERSION = 5;
+export const TROPHY_ROAD_STORAGE_VERSION = 6;
 export const TROPHY_ROAD_MAX_THRESHOLD = 1700;
 export const TROPHY_ROAD_VIEWPORT_THRESHOLD = 600;
 
@@ -8,6 +8,7 @@ export const LOCK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable=
 
 export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
   skyline: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M3 43h58M8 43V24h10v19M21 43V13h13v30M37 43V20h8v23M48 43V9h10v34"></path><path d="M11 29h3M11 35h3M25 19h4M25 26h4M25 33h4M51 15h3M51 22h3M51 29h3"></path><path d="M8 8a8 8 0 1 0 9 9A7 7 0 0 1 8 8Z"></path></svg>',
+  race: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M4 31h10l7-11h22l8 11h9v7H4Z"></path><path d="M22 20h17l7 11M16 27h33M27 20v11M47 17h11v7H51"></path><circle cx="17" cy="39" r="6"></circle><circle cx="50" cy="39" r="6"></circle></svg>',
   future: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M5 32h8l7-7h9l5-8h8l5 8h9l4 7v7H5Z"></path><path d="M21 25h26M36 17l5 8M47 13h12v6H45"></path><circle cx="17" cy="39" r="5"></circle><circle cx="50" cy="39" r="5"></circle><path d="M2 22h12M1 16h17M7 28h9"></path></svg>',
   paint: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M10 7h29v13H10Z"></path><path d="M39 11h8c5 0 7 3 7 7v4H31v8"></path><path d="M27 28h8v16h-8Z"></path><path d="M15 12h18M15 16h12"></path></svg>',
   emergency: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M18 35V21a14 14 0 0 1 28 0v14"></path><path d="M12 35h40v9H12Z"></path><path d="M32 2v7M9 9l6 6M55 9l-6 6M3 25h8M53 25h8"></path><path d="M24 34V22a8 8 0 0 1 16 0v12"></path></svg>',
@@ -19,8 +20,20 @@ export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
 
 export const TROPHY_ROAD_REWARDS = Object.freeze([
   Object.freeze({
-    id: 'midnight-city',
+    id: 'vintage-racer',
     threshold: 300,
+    title: 'VINTAGE RACER',
+    shortTitle: 'Vintage Racer',
+    type: 'vehicle',
+    vehicleIds: Object.freeze(['vintage-racer']),
+    icon: 'vintage',
+    perkTitle: 'DRIFTAGE',
+    perkDescription: 'DRIFT drains less speed, steering becomes more aggressive and the car can hold larger slip angles.',
+    description: 'Unlock the Vintage Racer: the car for linking corners beautifully.<br><strong>DRIFTAGE:</strong> DRIFT drains less speed, steering becomes more aggressive and it can hold larger slip angles.'
+  }),
+  Object.freeze({
+    id: 'midnight-city',
+    threshold: 400,
     title: 'MIDNIGHT CITY',
     shortTitle: 'Midnight City',
     type: 'track',
@@ -29,26 +42,16 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     description: 'Unlock TURN’s night-time city track, with neon streets, technical corners and the longest lap in the current track collection.'
   }),
   Object.freeze({
-    id: 'paintjob',
-    threshold: 400,
-    title: 'PAINTJOB',
-    shortTitle: 'Paintjob',
-    type: 'feature',
-    featureId: 'vehicle-paint',
-    icon: 'paint',
-    description: 'Unlock body and secondary paint controls in The Lot. Every vehicle keeps its own distinctive factory colour until then.'
-  }),
-  Object.freeze({
-    id: 'future-racer',
+    id: 'race-car',
     threshold: 500,
-    title: 'FUTURE RACER',
-    shortTitle: 'Future Racer',
+    title: 'RACE CAR',
+    shortTitle: 'Race Car',
     type: 'vehicle',
-    vehicleIds: Object.freeze(['race-future']),
-    icon: 'future',
-    perkTitle: 'OVERDRIVE',
-    perkDescription: '5 clean seconds builds +6% top speed. Off-road or collisions reset it.',
-    description: 'Unlock the Future Racer: built for advanced time trials.<br><strong>OVERDRIVE:</strong> 5 clean seconds builds +6% top speed; off-road or hits reset.'
+    vehicleIds: Object.freeze(['race']),
+    icon: 'race',
+    perkTitle: 'APEX GRIP',
+    perkDescription: 'Increased CONTROL when OVERCHARGED.',
+    description: 'Unlock the Race Car: high-speed handling built for precise lines.<br><strong>APEX GRIP:</strong> Increased CONTROL when OVERCHARGED.'
   }),
   Object.freeze({
     id: 'emergency-pack',
@@ -63,8 +66,18 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     description: 'Unlock the Fire Truck, Ambulance and Police Car. All three have maximum Boost tanks.<br><strong>SIRENS:</strong> Boost activates flashing emergency lights and sirens.'
   }),
   Object.freeze({
-    id: 'monster',
+    id: 'mountain',
     threshold: 700,
+    title: 'MOUNTAIN',
+    shortTitle: 'Mountain',
+    type: 'track',
+    trackId: 'mountain',
+    icon: 'mountain',
+    description: 'Unlock MOUNTAIN: leave a snowy village on a long alpine climb, round the summit river and attack the front-face hairpin descent beside the waterfall.'
+  }),
+  Object.freeze({
+    id: 'monster',
+    threshold: 800,
     title: 'MONSTER',
     shortTitle: 'Monster Truck',
     type: 'vehicle',
@@ -75,20 +88,30 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     description: 'Unlock the Monster Truck: a military-green heavyweight.<br><strong>OVERSIZED:</strong> Going off-road doesn’t slow it down.'
   }),
   Object.freeze({
-    id: 'vintage-racer',
-    threshold: 800,
-    title: 'VINTAGE RACER',
-    shortTitle: 'Vintage Racer',
+    id: 'paintjob',
+    threshold: 900,
+    title: 'PAINTJOB',
+    shortTitle: 'Paintjob',
+    type: 'feature',
+    featureId: 'vehicle-paint',
+    icon: 'paint',
+    description: 'Unlock body and secondary paint controls in The Lot. Every vehicle keeps its own distinctive factory colour until then.'
+  }),
+  Object.freeze({
+    id: 'future-racer',
+    threshold: 1000,
+    title: 'FUTURE RACER',
+    shortTitle: 'Future Racer',
     type: 'vehicle',
-    vehicleIds: Object.freeze(['vintage-racer']),
-    icon: 'vintage',
-    perkTitle: 'DRIFTAGE',
-    perkDescription: 'DRIFT drains less speed, steering becomes more aggressive and the car can hold larger slip angles.',
-    description: 'Unlock the Vintage Racer: the car for linking corners beautifully.<br><strong>DRIFTAGE:</strong> DRIFT drains less speed, steering becomes more aggressive and it can hold larger slip angles.'
+    vehicleIds: Object.freeze(['race-future']),
+    icon: 'future',
+    perkTitle: 'OVERDRIVE',
+    perkDescription: 'A few seconds of staying on-track raises the speed cap. Leaving the track or colliding resets it.',
+    description: 'Unlock the Future Racer: built for advanced time trials.<br><strong>OVERDRIVE:</strong> A few seconds of staying on-track raises the speed cap. Leaving the track or colliding resets it.'
   }),
   Object.freeze({
     id: 'rally-racer',
-    threshold: 900,
+    threshold: 1100,
     title: 'RALLY RACER',
     shortTitle: 'Rally Racer',
     type: 'vehicle',
@@ -97,16 +120,6 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     perkTitle: 'TWITCHY TURNY',
     perkDescription: 'DRIFT fills BOOST even faster than normal.',
     description: 'Unlock the Rally Racer: twitchy and perfect for curvy tracks.<br><strong>TWITCHY TURNY:</strong> DRIFT fills BOOST even faster than normal.'
-  }),
-  Object.freeze({
-    id: 'mountain',
-    threshold: 1000,
-    title: 'MOUNTAIN',
-    shortTitle: 'Mountain',
-    type: 'track',
-    trackId: 'mountain',
-    icon: 'mountain',
-    description: 'Unlock MOUNTAIN: leave a snowy village on a long alpine climb, round the summit river and attack the front-face hairpin descent beside the waterfall.'
   })
 ]);
 
@@ -154,6 +167,12 @@ export function grandfatheredRewardIdsForVersion(version) {
   if (numericVersion === 3) return [...VERSION_THREE_GRANDFATHERED_REWARDS];
   if (numericVersion === 4) return [...VERSION_FOUR_GRANDFATHERED_REWARDS];
   return [];
+}
+
+export function migrateStoredRewardIdsForVersion(ids, version) {
+  const storedIds = Array.isArray(ids) ? [...new Set(ids)] : [];
+  if (Number(version) !== 5) return storedIds;
+  return storedIds.filter((id) => id !== 'future-racer' && id !== 'rally-racer');
 }
 
 export function rewardIdsForTrophies(trophies) {
@@ -290,8 +309,9 @@ export function readTrophyRoadSnapshot(storage = globalThis.localStorage) {
   const stored = Array.isArray(state?.rewards?.unlocked)
     ? state.rewards.unlocked.filter((id) => REWARD_BY_ID.has(id))
     : [];
+  const migratedStored = migrateStoredRewardIdsForVersion(stored, sourceVersion);
   const migrated = state ? grandfatheredRewardIdsForVersion(sourceVersion) : [];
-  const unlockedRewardIds = [...new Set([...stored, ...migrated])];
+  const unlockedRewardIds = [...new Set([...migratedStored, ...migrated])];
 
   return Object.freeze({
     isLegacyProfile: Boolean(state) && sourceVersion < 3,

@@ -10,9 +10,9 @@ const [app, tokens, components, guide, design, selectionPolicy] = await Promise.
   fs.readFile(new URL('../turn/drive-pad.css', import.meta.url), 'utf8')
 ]);
 
-assert.match(app, /settings-components-r141\.css\?revision=r141-form-disclosure/);
-assert.match(app, /m8-how-to-play-r126\.css\?revision=r141-form-disclosure/);
-assert.match(app, /how-to-play-guide\.js\?revision=r141-form-disclosure/);
+assert.match(app, /settings-components-r141\.css\?revision=r220-overcharge-disclosure/);
+assert.match(app, /m8-how-to-play-r126\.css\?revision=r220-overcharge-disclosure/);
+assert.match(app, /how-to-play-guide\.js\?revision=r220-overcharge-disclosure/);
 
 for (const mapping of [
   '--turn-form-control-idle: var(--turn-paper)',
@@ -34,13 +34,14 @@ assert.match(components, /input\[type='radio'\]:focus-visible,[\s\S]*input\[type
 assert.match(components, /#m8AudioBalance[\s\S]*appearance: none/);
 assert.match(components, /\.m8-guide-wide[\s\S]*background: var\(--turn-surface-raised\) !important/);
 assert.match(components, /\.m8-dbe-guide > summary[\s\S]*justify-content: flex-start[\s\S]*background: var\(--turn-disclosure-trigger\)/);
+assert.match(components, /\.m8-guide-disclosure > summary[\s\S]*justify-content: flex-start[\s\S]*background: var\(--turn-disclosure-trigger\)/);
 assert.match(components, /\.m8-disclosure-symbol[\s\S]*border-radius: var\(--turn-radius-circle\)/);
 assert.match(components, /\.m8-disclosure-symbol::before[\s\S]*content: '\+'/);
 assert.match(components, /\.m8-dbe-guide\[open\] \.m8-disclosure-symbol::before[\s\S]*content: '−'/);
 assert.match(components, /\.m8-dbe-guide-panel,[\s\S]*background: var\(--turn-disclosure-panel\)/);
 assert.doesNotMatch(components, /#eaf9ef/);
 
-assert.match(guide, /GUIDE_VERSION = 'r141-form-disclosure-system'/);
+assert.match(guide, /GUIDE_VERSION = 'r220-overcharge-disclosure'/);
 assert.match(
   guide,
   /<summary><span class="m8-disclosure-symbol" aria-hidden="true"><\/span><span>Explore the Drive By Ear sounds<\/span><\/summary>/

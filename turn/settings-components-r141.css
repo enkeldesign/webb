@@ -126,16 +126,19 @@
   background: var(--turn-disclosure-trigger) !important;
 }
 
-.m8-dbe-guide {
+.m8-dbe-guide,
+.m8-guide-disclosure {
   background: var(--turn-disclosure-panel);
 }
 
-.m8-dbe-guide > summary {
+.m8-dbe-guide > summary,
+.m8-guide-disclosure > summary {
   justify-content: flex-start;
   background: var(--turn-disclosure-trigger);
 }
 
-.m8-dbe-guide > summary::after {
+.m8-dbe-guide > summary::after,
+.m8-guide-disclosure > summary::after {
   display: none;
   content: none;
 }
@@ -158,11 +161,13 @@
   content: '+';
 }
 
-.m8-dbe-guide[open] .m8-disclosure-symbol::before {
+.m8-dbe-guide[open] .m8-disclosure-symbol::before,
+.m8-guide-disclosure[open] .m8-disclosure-symbol::before {
   content: '−';
 }
 
 .m8-dbe-guide-panel,
+.m8-guide-disclosure-panel,
 .m8-dbe-guide-basics,
 .m8-dbe-guide-section {
   background: var(--turn-disclosure-panel);

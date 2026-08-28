@@ -15,7 +15,8 @@
   font-size: 1rem;
 }
 
-.m8-dbe-guide {
+.m8-dbe-guide,
+.m8-guide-disclosure {
   width: 100%;
   margin-top: 14px;
   border: 3px solid var(--m8-ink);
@@ -29,7 +30,8 @@
   line-height: 1.42;
 }
 
-.m8-dbe-guide > summary {
+.m8-dbe-guide > summary,
+.m8-guide-disclosure > summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -48,16 +50,19 @@
   box-sizing: border-box;
 }
 
-.m8-dbe-guide[open] > summary {
+.m8-dbe-guide[open] > summary,
+.m8-guide-disclosure[open] > summary {
   border-bottom: 3px solid var(--m8-ink);
   border-radius: 12px 12px 0 0;
 }
 
-.m8-dbe-guide > summary::-webkit-details-marker {
+.m8-dbe-guide > summary::-webkit-details-marker,
+.m8-guide-disclosure > summary::-webkit-details-marker {
   display: none;
 }
 
-.m8-dbe-guide > summary::after {
+.m8-dbe-guide > summary::after,
+.m8-guide-disclosure > summary::after {
   content: "+";
   flex: 0 0 auto;
   display: grid;
@@ -71,19 +76,60 @@
   line-height: 1;
 }
 
-.m8-dbe-guide[open] > summary::after {
+.m8-dbe-guide[open] > summary::after,
+.m8-guide-disclosure[open] > summary::after {
   content: "−";
 }
 
-.m8-dbe-guide > summary:focus-visible {
+.m8-dbe-guide > summary:focus-visible,
+.m8-guide-disclosure > summary:focus-visible {
   outline: 5px solid var(--m8-pink);
   outline-offset: 4px;
 }
 
-.m8-dbe-guide-panel {
+.m8-dbe-guide-panel,
+.m8-guide-disclosure-panel {
   padding: 14px 14px max(36px, env(safe-area-inset-bottom));
   background: rgb(255 255 255 / 0.5);
   overflow-anchor: none;
+}
+
+.m8-overcharge-guide {
+  margin-top: 12px;
+}
+
+.m8-overcharge-guide .m8-guide-disclosure-panel {
+  padding: 12px;
+}
+
+.m8-overcharge-steps {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.m8-overcharge-steps li {
+  display: grid;
+  grid-template-columns: 5.4rem minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.m8-overcharge-steps strong,
+.m8-overcharge-leak strong {
+  letter-spacing: 0.06em;
+}
+
+.m8-overcharge-leak {
+  margin: 11px 0 0;
+  padding-top: 10px;
+  border-top: 2px solid var(--m8-ink);
+  font-size: 1rem;
+  line-height: 1.38;
 }
 
 .m8-dbe-guide-content {
@@ -155,7 +201,8 @@
 }
 
 @media (max-height: 560px) and (orientation: landscape) {
-  .m8-dbe-guide-panel {
+  .m8-dbe-guide-panel,
+  .m8-guide-disclosure-panel {
     padding: 10px 10px max(30px, env(safe-area-inset-bottom));
   }
 

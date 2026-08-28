@@ -1,12 +1,12 @@
 import {
   TROPHY_ROAD_REWARDS as PERK_TROPHY_ROAD_REWARDS,
   TROPHY_ROAD_REWARD_ICONS as BASE_TROPHY_ROAD_REWARD_ICONS
-} from './trophy-road-perks-r164.js?revision=r164-trophy-road-order';
+} from './trophy-road-perks-r164.js?revision=r220-race-reward';
 import {
   FUTURE_RACER_REWARD_PERK_DESCRIPTION
-} from '../vehicle/perk-presentation.js?revision=r164-post-soak';
+} from '../vehicle/perk-presentation.js?revision=r220-apex-grip';
 
-export * from './trophy-road-perks-r164.js?revision=r164-trophy-road-order';
+export * from './trophy-road-perks-r164.js?revision=r220-race-reward';
 
 export const TROPHY_ROAD_MAX_THRESHOLD = 3075;
 

@@ -110,7 +110,7 @@ assert.equal(Object.hasOwn(byId('catch-the-charge') || {}, 'progressMax'), false
   'CATCH THE CHARGE must not imply a timed GAS hold');
 assert.equal(
   byId('catch-the-charge')?.description,
-  'Overcharge the BOOST bar using DRIFT. Retain the overcharge using GAS.'
+  'With BOOST full, keep using DRIFT to build purple OVERCHARGE. Slide to GAS to catch it before it leaks away.'
 );
 assert.equal(byId('golden-hour')?.title, 'MAYDAY!');
 assert.equal(byId('golden-hour')?.trophies, 100);
@@ -239,8 +239,8 @@ assert.deepEqual(normalizeChallengeProgress({
 });
 
 const empty = normalizeAchievementState(null);
-assert.equal(empty.version, 5,
-  'Trophy Road v5 distinguishes existing owners of Vintage/Rally from new profiles after those cars become locked rewards');
+assert.equal(empty.version, 6,
+  'Trophy Road v6 migrates the Race, Future and Rally reward-slot changes');
 assert.deepEqual(empty.progress.tracks, []);
 assert.deepEqual(empty.progress.blankTracks, []);
 assert.deepEqual(empty.rewards.unlocked, []);

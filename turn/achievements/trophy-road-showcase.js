@@ -2,12 +2,15 @@ import * as THREE from 'three';
 import {
   getVehicleDefaultColor,
   getVehicleDefaultSecondaryColor
-} from '../vehicle/catalog.js?revision=r164-vintage-rally-polish';
+} from '../vehicle/catalog.js?revision=r220-apex-grip';
 import { createCarVisual } from '../vehicle/emergency-livery-models.js?build=20260823-r179';
 import { configureRendererWideGamut } from '../vehicle/wide-gamut.js?revision=r157-display-p3';
 
 const SHOWCASE_FRAME_INTERVAL_MS = 1000 / 30;
 const REWARD_CARS = Object.freeze({
+  'race-car': Object.freeze([
+    Object.freeze({ carId: 'race', x: 0, targetLength: 6.2, yaw: Math.PI - 0.55 })
+  ]),
   'future-racer': Object.freeze([
     Object.freeze({ carId: 'race-future', x: 0, targetLength: 6.4, yaw: Math.PI - 0.55 })
   ]),

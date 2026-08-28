@@ -1,4 +1,4 @@
-const GUIDE_VERSION = 'r141-form-disclosure-system';
+const GUIDE_VERSION = 'r220-overcharge-disclosure';
 const PACE_NOTE_EXPLANATION = 'Before major corners, one to three beeps play in the ear on the turn side. One beep means a gentler corner, two means medium and three means tight. A long corner keeps the same number of beeps but holds the final beep longer: bip-beeeep for a long medium corner and bip-bip-beeeep for a long tight corner. Separate groups describe linked corners in the order you will meet them.';
 
 export function installHowToPlayGuide(root = document) {
@@ -6,6 +6,7 @@ export function installHowToPlayGuide(root = document) {
   if (!dialog) return false;
   if (dialog.dataset.guideVersion === GUIDE_VERSION) return true;
 
+  updateDriveControlCopy(dialog);
   updateDriftAndBoostCopy(dialog);
   installDriveByEarDisclosure(dialog);
   updateAudioPanelCopy(root);
@@ -15,12 +16,35 @@ export function installHowToPlayGuide(root = document) {
   return true;
 }
 
-function updateDriftAndBoostCopy(dialog) {
-  const section = findGuideSection(dialog, 'Use Drift and Boost wisely');
+function updateDriveControlCopy(dialog) {
+  const section = findGuideSection(dialog, 'Drive with one thumb');
   const paragraph = section?.querySelector('p');
   if (!paragraph) return;
 
-  paragraph.innerHTML = '<strong>DRIFT</strong> charges <strong>BOOST</strong> as you slide. Keep drifting after the bar is full to build purple <strong>OVERCHARGE</strong>. At its peak, OVERCHARGE starts leaking: slide to <strong>GAS</strong> to catch and hold it, or <strong>BOOST</strong> to spend it.';
+  paragraph.innerHTML = 'Keep one thumb on the drive pad and slide between <strong>GAS</strong>, <strong>DRIFT</strong>, <strong>BOOST</strong> and <strong>BRAKE · REVERSE</strong>. While using DRIFT, slide farther left into <strong>LOCK</strong> for a stronger slide.';
+}
+
+function updateDriftAndBoostCopy(dialog) {
+  const section = findGuideSection(dialog, 'Build and use OVERCHARGE')
+    || findGuideSection(dialog, 'Use Drift and Boost wisely');
+  const content = section?.querySelector('div');
+  if (!content) return;
+
+  content.innerHTML = `
+    <h3>Build and use OVERCHARGE</h3>
+    <p><strong>DRIFT</strong> charges <strong>BOOST</strong> as you slide. With BOOST full, keep using DRIFT to build purple <strong>OVERCHARGE</strong>.</p>
+    <details class="m8-guide-disclosure m8-overcharge-guide">
+      <summary><span class="m8-disclosure-symbol" aria-hidden="true"></span><span>How to catch and use OVERCHARGE</span></summary>
+      <div class="m8-guide-disclosure-panel">
+        <ol class="m8-overcharge-steps">
+          <li><strong>BUILD</strong><span>With BOOST full, keep using DRIFT.</span></li>
+          <li><strong>CATCH</strong><span>Slide to GAS before OVERCHARGE leaks away.</span></li>
+          <li><strong>HOLD</strong><span>Stay on GAS to hold the OVERCHARGE you caught.</span></li>
+          <li><strong>SPEND</strong><span>Slide to BOOST. OVERCHARGE is spent before normal BOOST.</span></li>
+        </ol>
+        <p class="m8-overcharge-leak"><strong>WATCH THE PEAK</strong> Uncaught OVERCHARGE leaks. At its peak, it starts leaking even while you keep using DRIFT.</p>
+      </div>
+    </details>`;
 }
 
 function installDriveByEarDisclosure(dialog) {
