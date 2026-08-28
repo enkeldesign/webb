@@ -81,9 +81,15 @@ assert.match(unreadMarkers, /listObserver\.observe\(list, \{ childList: true \}\
 assert.match(unreadMarkers, /createFilterButton\(HIDDEN_FILTER, 'HIDDEN'\)/,
   'Achievements must expose a dedicated Hidden filter');
 assert.match(unreadMarkers, /createFilterButton\(NEW_FILTER, 'NEW'\)/,
-  'Achievements must expose a New filter for unseen achievement notifications');
-assert.match(unreadMarkers, /newFilter\.hidden = !hasNewAchievements/,
-  'The New filter must only appear while there are unseen achievements to inspect');
+  'Achievements must always expose a New filter');
+assert.match(unreadMarkers, /createFilterButton\(LOCKED_FILTER, 'LOCKED'\)/,
+  'The existing Locked filter must remain available alongside the composable tags');
+assert.doesNotMatch(unreadMarkers, /newFilter\.hidden\s*=/,
+  'NEW must stay visible in the filter row even when there is nothing new');
+assert.match(unreadMarkers, /newFilter\.disabled = !hasNewAchievements/,
+  'NEW should remain visible but inert when there are no unseen achievements');
+assert.match(unreadMarkers, /min-height: 34px/,
+  'Achievement filter pills should use the more compact requested height');
 assert.match(unreadMarkers, /achievement\?\.hidden === true/,
   'The Hidden filter must derive from the achievement hidden contract rather than title matching');
 assert.match(unreadMarkers, /turn-achievement-toast-open/,
