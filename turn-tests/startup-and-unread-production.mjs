@@ -78,8 +78,22 @@ assert.match(unreadMarkers, /turn-achievement-unread-dot/);
 assert.match(unreadMarkers, /Newly unlocked achievement\./);
 assert.match(unreadMarkers, /new MutationObserver\(queueDecoration\)/);
 assert.match(unreadMarkers, /listObserver\.observe\(list, \{ childList: true \}\)/);
+assert.match(unreadMarkers, /createFilterButton\(HIDDEN_FILTER, 'HIDDEN'\)/,
+  'Achievements must expose a dedicated Hidden filter');
+assert.match(unreadMarkers, /createFilterButton\(NEW_FILTER, 'NEW'\)/,
+  'Achievements must expose a New filter for unseen achievement notifications');
+assert.match(unreadMarkers, /newFilter\.hidden = !hasNewAchievements/,
+  'The New filter must only appear while there are unseen achievements to inspect');
+assert.match(unreadMarkers, /achievement\?\.hidden === true/,
+  'The Hidden filter must derive from the achievement hidden contract rather than title matching');
+assert.match(unreadMarkers, /turn-achievement-toast-open/,
+  'Achievement toasts must expose a full-toast activation target');
+assert.match(unreadMarkers, /function achievementFromToast\(\)/);
+assert.match(unreadMarkers, /function focusAchievement\(achievementId\)/);
+assert.match(unreadMarkers, /scrollIntoView\(\{ block: 'center', behavior: 'auto' \}\)/,
+  'Opening a toast must take the player directly to the unlocked achievement without extra motion');
 
-console.log(`TURN ${release.version} startup cover, landscape-gated screen-reader onboarding, refreshed Bella graph, fixed Home viewport, spoken training labels and unread achievement markers passed.`);
+console.log(`TURN ${release.version} startup cover, landscape-gated screen-reader onboarding, refreshed Bella graph, fixed Home viewport, spoken training labels and unread achievement navigation passed.`);
 
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
