@@ -27,6 +27,7 @@ export function prepareLotEnhancements() {
     import('./lot-perk-disclosure.js?revision=r217-stable-perk-slot'),
     import('./lot-card-scroll-boundary.js?revision=r216-meter-density'),
     import('./lot-vehicle-copy.js?revision=r181-hatchback-rally'),
+    import('./lot-trophy-order.js'),
     import('../progression/lot-trophy-gate.js?revision=r585-visible-locks'),
     import('../progression/lot-paint-reward.js?revision=r206-pwa-color')
   ]).then(([
@@ -36,6 +37,7 @@ export function prepareLotEnhancements() {
     perkDisclosure,
     scrollBoundary,
     vehicleCopy,
+    trophyOrder,
     trophyGate,
     paintGate
   ]) => {
@@ -46,6 +48,7 @@ export function prepareLotEnhancements() {
       installLotPerkDisclosure: perkDisclosure.installLotPerkDisclosure,
       installLotCardScrollBoundary: scrollBoundary.installLotCardScrollBoundary,
       installLotVehicleCopy: vehicleCopy.installLotVehicleCopy,
+      installLotTrophyOrder: trophyOrder.installLotTrophyOrder,
       gateLotNow: trophyGate.gateLotNow,
       gateLotPaintNow: paintGate.gateLotPaintNow
     });
@@ -126,10 +129,12 @@ export function enhanceLotNow(root = document.body) {
     installLotLayout,
     installLotAccessibility,
     installLotCardScrollBoundary,
-    installLotVehicleCopy
+    installLotVehicleCopy,
+    installLotTrophyOrder
   } = enhancementBundle;
   const scope = screen.parentElement || document.body;
   const removeEntryClickGuard = installLotEntryClickGuard(screen);
+  const removeTrophyOrder = installLotTrophyOrder(scope);
   const removeTrophyGate = gateLotNow(scope);
   const removePaintGate = gateLotPaintNow(scope);
   const removePerkDisclosure = installLotPerkDisclosure(scope);
@@ -151,6 +156,7 @@ export function enhanceLotNow(root = document.body) {
     removePerkDisclosure();
     removePaintGate();
     removeTrophyGate();
+    removeTrophyOrder();
     removeEntryClickGuard();
     activeEnhancements.delete(screen);
     delete screen.dataset.lotEnhancements;
