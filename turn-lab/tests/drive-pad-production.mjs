@@ -10,6 +10,14 @@ import {
   pointerUsesDriftLock,
   resolveDriftBoostRechargeMultiplier
 } from '../../turn/input/drift-lock.js';
+import {
+  BOOST_OVERCHARGE_MAX_WIDTH,
+  BOOST_OVERCHARGE_PHASE,
+  advanceBoostOvercharge,
+  boostOverchargeVisualWidth,
+  qualifiesForBoostOvercharge,
+  resolveBoostSlipAngle
+} from '../../turn/input/boost-overcharge.js';
 import { updateVehiclePhysicsState } from '../../turn/vehicle/physics.js';
 import { spokenRivalCount } from '../../turn/ui/race-announcements.js';
 import { lapAnnouncementPriorityMs } from '../../turn/ui/race-speech.js';
@@ -85,6 +93,50 @@ assert.ok(Math.abs(resolveDriftBoostRechargeMultiplier({
   lockCeilingMultiplier: 3.6
 }) - 3.6) < 1e-12);
 
+assert.equal(resolveBoostSlipAngle({ heading: 0, velocity: { x: 0, z: 20 } }), 0);
+assert.ok(Math.abs(resolveBoostSlipAngle({ heading: 0, velocity: { x: 20, z: 0 } }) - Math.PI / 2) < 1e-12);
+assert.ok(Math.abs(resolveBoostSlipAngle({ heading: 0, velocity: { x: 0, z: -20 } }) - Math.PI) < 1e-12,
+  'A backwards spin must retain its full slip angle instead of folding back toward zero');
+assert.equal(qualifiesForBoostOvercharge({
+  driftHeld: true,
+  speed: 14,
+  slipAngle: 10 * Math.PI / 180
+}), true, 'Overcharge should engage at the documented speed and slip thresholds');
+assert.equal(qualifiesForBoostOvercharge({ driftHeld: false, speed: 40, slipAngle: Math.PI / 2 }), false);
+
+const halfBuiltOvercharge = advanceBoostOvercharge({
+  dt: 0.9,
+  zone: 'drift',
+  qualifyingDrift: true
+});
+assert.ok(Math.abs(halfBuiltOvercharge.amount - 0.5) < 1e-12);
+assert.equal(halfBuiltOvercharge.phase, BOOST_OVERCHARGE_PHASE.BUILDING);
+const caughtOvercharge = advanceBoostOvercharge({
+  ...halfBuiltOvercharge,
+  dt: 4,
+  zone: 'gas'
+});
+assert.equal(caughtOvercharge.amount, halfBuiltOvercharge.amount,
+  'GAS must freeze caught Overcharge without silently draining it');
+const peakedOvercharge = advanceBoostOvercharge({
+  ...caughtOvercharge,
+  dt: 0.9,
+  zone: 'drift',
+  qualifyingDrift: true
+});
+assert.equal(peakedOvercharge.amount, 1);
+assert.equal(peakedOvercharge.phase, BOOST_OVERCHARGE_PHASE.DECAYING);
+assert.equal(peakedOvercharge.peaked, true);
+const consumedOvercharge = advanceBoostOvercharge({
+  ...peakedOvercharge,
+  dt: 0.6,
+  zone: 'boost',
+  consuming: true
+});
+assert.equal(consumedOvercharge.amount, 0);
+assert.equal(consumedOvercharge.phase, BOOST_OVERCHARGE_PHASE.READY);
+assert.equal(boostOverchargeVisualWidth(1), BOOST_OVERCHARGE_MAX_WIDTH);
+
 class Vec3 {
   constructor(x = 0, y = 0, z = 0) { this.x = x; this.y = y; this.z = z; }
   clone() { return new Vec3(this.x, this.y, this.z); }
@@ -142,8 +194,8 @@ assert.ok(
   'The topbar position override must load after the legacy gameplay HUD rules'
 );
 assert.match(app, /race-position-layout\.js/, 'The production module graph must install the position layout after gameplay controls');
-assert.match(app, /gameplay-controls\.js\?revision=r218-boost-balance-lock-color/,
-  'The current Boost balance and LOCK-color controls must bypass stale production module caches');
+assert.match(app, /gameplay-controls\.js\?revision=r219-overcharge-state/,
+  'The corrected Overcharge state and accessible meter must bypass stale production module caches');
 assert.match(app, /installRaceSpeech\(\)/, 'The production graph must install concise race speech before the runtime starts');
 assert.ok(
   app.indexOf('./ui/gameplay-controls.js') < app.indexOf('./ui/race-speech.js')
@@ -213,6 +265,8 @@ assert.match(controls, /brakeButton\.classList\.toggle\('is-active', nextZone ==
 assert.match(controls, /pointerdown'[\s\S]*capture: true/, 'The unified pad must own the gesture before the legacy standalone brake listener');
 assert.match(controls, /event\.stopPropagation\(\)/, 'The continuous pad gesture must not leak into the old per-button pointer handler');
 assert.match(controls, /boostRequested && !boostExhausted/, 'Boost must stay locked while the thumb remains in Boost after exhaustion');
+assert.match(controls, /boostOvercharge > 0 \|\| boostCharge > 0\.001/,
+  'Tiny Overcharge remainders must keep flowing through the state machine until they reach zero');
 assert.match(controls, /previousZone === 'boost' && nextZone !== 'boost'\) boostExhausted = false/, 'Leaving Boost for any other drive zone must re-arm Boost without requiring pointer release');
 assert.match(controls, /Brake · Reverse/, 'The integrated brake control must advertise reverse');
 assert.match(controls, /function refillBoost\(\)/, 'Gameplay controls must expose one reset-safe boost refill path');
@@ -259,6 +313,12 @@ assert.match(gameplayCss, /\.boost-hud\.is-boost-empty-flash/, 'Boost HUD must r
 assert.match(gameplayCss, /@keyframes turn-boost-full-flash/, 'Full boost feedback must have its own animation');
 assert.match(gameplayCss, /@keyframes turn-boost-empty-flash/, 'Empty boost feedback must have a distinct animation');
 assert.match(gameplayCss, /prefers-reduced-motion: reduce/, 'Boost feedback must respect reduced-motion preferences');
+assert.match(controls, /boostHud\.setAttribute\('role', 'meter'\)/,
+  'The visual Boost and Overcharge bar must expose meter semantics');
+assert.match(controls, /boostHud\.setAttribute\('aria-valuemax', '120'\)/,
+  'The accessible meter range must include the visible 20 percent Overcharge extension');
+assert.match(controls, /boostHud\.setAttribute\('aria-valuetext', ariaValueText\)/,
+  'The meter must expose whether Overcharge is building, leaking, caught or being used');
 assert.doesNotMatch(analogGas, /pointerdown/, 'Legacy analog gas pointer handling must stay retired');
 assert.doesNotMatch(spectate, /updateBoostZoneHaptic/, 'Spectator UI must not own obsolete gas-zone pointer state');
 

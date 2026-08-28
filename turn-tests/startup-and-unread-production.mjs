@@ -1,13 +1,27 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import {
+  achievementCardMatchesFilters,
+  achievementCardTags
+} from '../turn/achievements/filter-state.js';
 
-const [releaseSource, index, nextIndex, app, fixedLayout, unreadMarkers, screenReaderCoordinator] = await Promise.all([
+const [
+  releaseSource,
+  index,
+  nextIndex,
+  app,
+  fixedLayout,
+  unreadMarkers,
+  trophyRoadFeedback,
+  screenReaderCoordinator
+] = await Promise.all([
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/achievements/unread-markers.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/achievements/trophy-road-feedback.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/startup-screen-reader-handoff-r529.js', import.meta.url), 'utf8')
 ]);
 
@@ -65,7 +79,8 @@ assert.match(screenReaderCoordinator, /if \(viewportIsPortrait\(\)\) \{\s*speak\
 assert.doesNotMatch(screenReaderCoordinator, /speak\(`\$\{readyMessage\} \$\{NON_VISUAL_ONBOARDING_MESSAGE\}`/,
   'The old portrait-ready plus onboarding utterance must not return');
 
-assert.match(fixedLayout, /achievements\/unread-markers\.js\?build=\$\{buildKey\}-r159-unread-cards/);
+assert.match(fixedLayout, /achievements\/unread-markers\.js\?build=\$\{buildKey\}-r219-unified-filters/);
+assert.match(fixedLayout, /achievements\/trophy-road-feedback\.js\?build=\$\{buildKey\}-r219-unified-filters/);
 assert.match(fixedLayout, /installAchievementUnreadMarkers\(achievements\)/);
 assert.match(fixedLayout, /achievementUnreadMarkers,/);
 assert.match(fixedLayout, /function installDriveByEarSpokenLabels\(training\)/);
@@ -78,15 +93,17 @@ assert.match(unreadMarkers, /turn-achievement-unread-dot/);
 assert.match(unreadMarkers, /Newly unlocked achievement\./);
 assert.match(unreadMarkers, /new MutationObserver\(queueDecoration\)/);
 assert.match(unreadMarkers, /listObserver\.observe\(list, \{ childList: true \}\)/);
-assert.match(unreadMarkers, /createFilterButton\(HIDDEN_FILTER, 'HIDDEN'\)/,
+assert.doesNotMatch(unreadMarkers, /function installFilterButtons|function handleFilterClick/,
+  'Unread decoration must not install a second competing achievement-filter controller');
+assert.match(trophyRoadFeedback, /Object\.freeze\(\{ id: 'hidden', label: 'HIDDEN' \}\)/,
   'Achievements must expose a dedicated Hidden filter');
-assert.match(unreadMarkers, /createFilterButton\(NEW_FILTER, 'NEW'\)/,
+assert.match(trophyRoadFeedback, /Object\.freeze\(\{ id: 'new', label: 'NEW' \}\)/,
   'Achievements must always expose a New filter');
-assert.match(unreadMarkers, /createFilterButton\(LOCKED_FILTER, 'LOCKED'\)/,
+assert.match(trophyRoadFeedback, /Object\.freeze\(\{ id: 'locked', label: 'LOCKED' \}\)/,
   'The existing Locked filter must remain available alongside the composable tags');
-assert.doesNotMatch(unreadMarkers, /newFilter\.hidden\s*=/,
+assert.doesNotMatch(trophyRoadFeedback, /newButton\.hidden\s*=/,
   'NEW must stay visible in the filter row even when there is nothing new');
-assert.match(unreadMarkers, /newFilter\.disabled = !hasNewAchievements/,
+assert.match(trophyRoadFeedback, /newButton\.disabled = !available/,
   'NEW should remain visible but inert when there are no unseen achievements');
 assert.match(unreadMarkers, /min-height: 34px/,
   'Achievement filter pills should use the more compact requested height');
@@ -98,6 +115,30 @@ assert.match(unreadMarkers, /function achievementFromToast\(\)/);
 assert.match(unreadMarkers, /function focusAchievement\(achievementId\)/);
 assert.match(unreadMarkers, /scrollIntoView\(\{ block: 'center', behavior: 'auto' \}\)/,
   'Opening a toast must take the player directly to the unlocked achievement without extra motion');
+assert.match(trophyRoadFeedback, /tags: card\.dataset\.achievementTags/,
+  'The active controller must filter by composable achievement tags rather than the single primary category');
+assert.match(trophyRoadFeedback, /unseen: card\.dataset\.achievementUnseen === 'true'/,
+  'The active controller must include live NEW state in the same filter model');
+assert.match(trophyRoadFeedback, /attributeFilter: \[[\s\S]*'data-achievement-tags'[\s\S]*'data-achievement-unseen'/,
+  'Filter results and NEW availability must react when unread decoration updates existing cards');
+
+assert.deepEqual(
+  [...achievementCardTags({ category: 'time-trials' })].sort(),
+  ['racing', 'time-trials'],
+  'Time trials must remain discoverable through both RACING and TIME TRIALS'
+);
+assert.equal(achievementCardMatchesFilters(
+  { tags: 'exploration hidden', category: 'exploration', status: 'locked' },
+  { activeTags: new Set(['hidden']), activeStatuses: new Set(['locked']) }
+), true, 'HIDDEN and LOCKED must compose against the same card');
+assert.equal(achievementCardMatchesFilters(
+  { tags: 'racing time-trials', category: 'time-trials', status: 'locked' },
+  { activeTags: new Set(['racing']), activeStatuses: new Set(['unlocked']) }
+), false, 'Status filters must narrow the union of selected tags');
+assert.equal(achievementCardMatchesFilters(
+  { tags: 'onboarding', category: 'onboarding', unseen: true, status: 'unlocked' },
+  { activeTags: new Set(['new']), activeStatuses: new Set() }
+), true, 'NEW must be derived from the live unseen marker without replacing static tags');
 
 console.log(`TURN ${release.version} startup cover, landscape-gated screen-reader onboarding, refreshed Bella graph, fixed Home viewport, spoken training labels and unread achievement navigation passed.`);
 

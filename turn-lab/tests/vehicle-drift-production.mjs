@@ -118,8 +118,10 @@ assert.match(physicsSource, /driftHeld \? driftDragAdd : 0/,
   'DRIFT must affect drag while drifting');
 assert.match(physicsSource, /baseSpeedLimit \* effectiveDriftSpeedMultiplier/,
   'DRIFT must affect the active speed ceiling');
-assert.match(physicsSource, /driftSlipAngle = Math\.atan2\(/,
+assert.match(physicsSource, /driftSlipAngle = Math\.abs\(Math\.atan2\(/,
   'The DRIFT ceiling must respond to real velocity slip instead of only button state');
+assert.doesNotMatch(physicsSource, /driftSlipAngle = Math\.atan2\([\s\S]{0,140}Math\.abs\(state\.velocity\.dot\(currentForward\)\)/,
+  'The DRIFT ceiling must not fold reverse-heading spins back into a mild forward slip');
 assert.match(physicsSource, /driftSlipAngle,[\s\S]*driftLockAmount/,
   'The live speed-limit call must pass both slip angle and LOCK state');
 assert.match(physicsSource, /3\.2 \* driftStabilityMultiplier/,
@@ -170,6 +172,10 @@ const highSlipDriftMultiplier = resolveDriftSpeedMultiplier({
   driftSpeedMultiplier: neutralDriftBase,
   slipAngle: Math.PI * 70 / 180
 });
+const reverseSpinDriftMultiplier = resolveDriftSpeedMultiplier({
+  driftSpeedMultiplier: neutralDriftBase,
+  slipAngle: Math.PI * 170 / 180
+});
 const lockedDriftMultiplier = resolveDriftSpeedMultiplier({
   driftSpeedMultiplier: neutralDriftBase,
   slipAngle: 0,
@@ -179,6 +185,8 @@ assert.ok(Math.abs(flowingDriftMultiplier - 0.896) < 1e-12,
   'Low-slip DRIFT should retain 35 percent more of the old speed penalty budget');
 assert.ok(Math.abs(highSlipDriftMultiplier - 0.872) < 1e-12,
   'A 70-degree slide should still retain 20 percent more speed than the former ordinary DRIFT cap');
+assert.equal(reverseSpinDriftMultiplier, highSlipDriftMultiplier,
+  'A car spun beyond 90 degrees must retain the full high-slip speed cost');
 assert.equal(lockedDriftMultiplier, neutralDriftBase,
   'Full DRIFT LOCK must retain the committed legacy speed cost');
 assert.ok(flowingDriftMultiplier > highSlipDriftMultiplier && highSlipDriftMultiplier > lockedDriftMultiplier,

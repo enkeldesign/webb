@@ -288,10 +288,13 @@ export function updateVehiclePhysicsState({
   });
   const currentForward = getForward();
   const currentRight = getRight();
-  const driftSlipAngle = Math.atan2(
-    Math.abs(state.velocity.dot(currentRight)),
-    Math.max(0.001, Math.abs(state.velocity.dot(currentForward)))
-  );
+  // Keep the full 0..PI relationship between the car and its velocity. Folding
+  // the longitudinal component with Math.abs made a car spinning past 90 degrees
+  // look like a mild forward slide and incorrectly restored most of its momentum.
+  const driftSlipAngle = Math.abs(Math.atan2(
+    state.velocity.dot(currentRight),
+    state.velocity.dot(currentForward)
+  ));
   const speedLimit = getVehicleSpeedLimit({
     offRoad: physicsOffRoad,
     boostActive: effectiveBoostActive,
