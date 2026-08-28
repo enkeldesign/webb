@@ -46,11 +46,12 @@ assert.equal(gotStarted?.description, 'Finish all Getting Started achievements.'
 assert.equal(catchTheCharge?.title, 'CATCH THE CHARGE');
 assert.equal(catchTheCharge?.category, 'onboarding');
 assert.equal(catchTheCharge?.trophies, 25);
-assert.equal(catchTheCharge?.progressMax, 3);
-assert.match(catchTheCharge?.description || '', /DRIFT/);
-assert.match(catchTheCharge?.description || '', /purple OVERCHARGE/);
-assert.match(catchTheCharge?.description || '', /Switch to GAS to catch it/);
-assert.match(catchTheCharge?.description || '', /keep GAS held for three seconds/);
+assert.equal(Object.hasOwn(catchTheCharge || {}, 'progressMax'), false,
+  'CATCH THE CHARGE should unlock on the catch itself, without a timed hold');
+assert.equal(
+  catchTheCharge?.description,
+  'Overcharge the BOOST bar using DRIFT. Retain the overcharge using GAS.'
+);
 assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 11,
   'GOT STARTED must require every Getting Started lesson, including CATCH THE CHARGE, without requiring itself');
 assert.equal(ONBOARDING_ACHIEVEMENT_IDS.includes('catch-the-charge'), true);
@@ -68,7 +69,10 @@ assert.equal(mayday?.title, 'MAYDAY!');
 assert.equal(mayday?.hidden, true);
 assert.equal(mayday?.category, 'racing');
 assert.equal(mayday?.trophies, 100);
-assert.equal(mayday?.lockedDescription, '');
+assert.equal(
+  mayday?.lockedDescription,
+  'Hidden achievement. You’ll know what to do when the moment comes.'
+);
 assert.match(mayday?.description || '', /Ambulance/);
 assert.match(mayday?.description || '', /Airport MAYDAY/);
 assert.match(mayday?.description || '', /30 seconds/);
