@@ -11,7 +11,7 @@ import {
   boostOverchargeVisualWidth,
   qualifiesForBoostOvercharge,
   resolveBoostSlipAngle
-} from '../input/boost-overcharge.js';
+} from '../input/boost-overcharge.js?revision=r219-overcharge-state';
 
 globalThis.__turnBoostActive = false;
 globalThis.__turnBoostCharge = 1;
@@ -104,6 +104,12 @@ function installGameplayUi() {
 
   const boostHud = document.createElement('div');
   boostHud.className = 'boost-hud';
+  boostHud.setAttribute('role', 'meter');
+  boostHud.setAttribute('aria-label', 'Boost');
+  boostHud.setAttribute('aria-valuemin', '0');
+  boostHud.setAttribute('aria-valuemax', '120');
+  boostHud.setAttribute('aria-valuenow', '100');
+  boostHud.setAttribute('aria-valuetext', '100 percent charged.');
   boostHud.innerHTML = '<span>BOOST</span><div><i></i></div>';
   hud.appendChild(boostHud);
   const boostFill = boostHud.querySelector('i');
@@ -184,7 +190,8 @@ function installGameplayUi() {
   let publishedOverchargeCaught = null;
   let publishedOverchargeVolatile = null;
   let publishedChargePercent = null;
-  let publishedAriaLabel = null;
+  let publishedMeterValue = null;
+  let publishedAriaValueText = null;
 
   function safeVibrate(pattern) {
     try {
@@ -244,7 +251,8 @@ function installGameplayUi() {
     boostVisualDirty = true;
     lastBoostVisualAt = -Infinity;
     publishedChargePercent = null;
-    publishedAriaLabel = null;
+    publishedMeterValue = null;
+    publishedAriaValueText = null;
     publishedLocked = null;
     publishedDriftLocking = null;
     publishedOvercharge = null;
@@ -258,7 +266,8 @@ function installGameplayUi() {
     boostHud.style.setProperty('--boost-charge', '100%');
     boostHud.style.setProperty('--boost-overcharge-width', '0%');
     boostHud.style.setProperty('--boost-base-width', '100%');
-    boostHud.setAttribute('aria-label', 'Boost 100 percent charged');
+    boostHud.setAttribute('aria-valuenow', '100');
+    boostHud.setAttribute('aria-valuetext', '100 percent charged.');
     driveStack.classList.toggle('is-drift-ready', driveZone === 'drift');
     driveStack.classList.remove('is-drift-locking');
     drivePad.classList.remove('is-boost-locked');
@@ -526,10 +535,10 @@ function installGameplayUi() {
       lockedMultiplier: getDriftRechargeMultiplier(),
       lockCeilingMultiplier: DRIFT_LOCK_RECHARGE_MULTIPLIER
     });
-    const active = boostRequested && !boostExhausted && (boostOvercharge > 0.001 || boostCharge > 0.001);
+    const active = boostRequested && !boostExhausted && (boostOvercharge > 0 || boostCharge > 0.001);
 
     if (active) {
-      if (boostOvercharge > 0.001) {
+      if (boostOvercharge > 0) {
         const overchargeState = advanceBoostOvercharge({
           amount: boostOvercharge,
           phase: boostOverchargePhase,
@@ -580,9 +589,9 @@ function installGameplayUi() {
     const becameFull = previousBoostCharge < 0.999 && boostCharge >= 0.999;
     previousBoostCharge = boostCharge;
 
-    const boosting = boostRequested && !boostExhausted && (boostOvercharge > 0.001 || boostCharge > 0.001);
-    const overchargeCaught = boostOvercharge > 0.001 && driveZone === 'gas' && !boosting;
-    const overchargeVolatile = boostOvercharge > 0.001 && !overchargeCaught && !boosting;
+    const boosting = boostRequested && !boostExhausted && (boostOvercharge > 0 || boostCharge > 0.001);
+    const overchargeCaught = boostOvercharge > 0 && driveZone === 'gas' && !boosting;
+    const overchargeVolatile = boostOvercharge > 0 && !overchargeCaught && !boosting;
     globalThis.__turnBoostActive = boosting;
     globalThis.__turnBoostCharge = boostCharge;
     globalThis.__turnBoostOvercharge = boostOvercharge;
@@ -592,14 +601,15 @@ function installGameplayUi() {
     const locked = boostRequested && boostExhausted;
     const driftCharging = globalThis.__turnDriftHeld && !boosting;
     const driftLocking = driftCharging && (driftLockRequested || driftLockAmount > 0.001);
-    const hasOvercharge = boostOvercharge > 0.001;
+    const hasOvercharge = boostOvercharge > 0;
     const chargePercent = (boostCharge * 100).toFixed(1) + '%';
     const overchargePercent = Math.round(boostOvercharge * 100);
     const overchargeWidth = boostOverchargeVisualWidth(boostOvercharge);
     const overchargeWidthPercent = (overchargeWidth * 100).toFixed(1) + '%';
     const baseWidthPercent = (100 / (1 + overchargeWidth)).toFixed(2) + '%';
+    const meterValue = Math.round(boostCharge * 100 + overchargeWidth * 100);
     const ariaPercent = Math.round(boostCharge * 100);
-    let ariaLabel;
+    let ariaValueText;
     if (hasOvercharge) {
       const overchargeStateLabel = overchargeCaught
         ? 'caught with Gas'
@@ -608,11 +618,11 @@ function installGameplayUi() {
           : boostOverchargePhase === BOOST_OVERCHARGE_PHASE.DECAYING
             ? 'leaking'
             : 'building';
-      ariaLabel = `Boost full. Overcharge ${overchargePercent} percent ${overchargeStateLabel}.`;
+      ariaValueText = `Full. Overcharge ${overchargePercent} percent ${overchargeStateLabel}.`;
     } else {
-      ariaLabel = driftLocking
-        ? `Drift lock active. Boost ${ariaPercent} percent charged`
-        : `Boost ${ariaPercent} percent charged`;
+      ariaValueText = driftLocking
+        ? `Drift lock active. ${ariaPercent} percent charged.`
+        : `${ariaPercent} percent charged.`;
     }
     const controlsVisible = !controlsRoot?.hidden && !document.hidden;
     const stateChanged =
@@ -685,9 +695,13 @@ function installGameplayUi() {
       boostHud.style.setProperty('--boost-base-width', baseWidthPercent);
       publishedChargePercent = chargePercent;
     }
-    if (boostVisualDirty || ariaLabel !== publishedAriaLabel) {
-      boostHud.setAttribute('aria-label', ariaLabel);
-      publishedAriaLabel = ariaLabel;
+    if (boostVisualDirty || meterValue !== publishedMeterValue) {
+      boostHud.setAttribute('aria-valuenow', String(meterValue));
+      publishedMeterValue = meterValue;
+    }
+    if (boostVisualDirty || ariaValueText !== publishedAriaValueText) {
+      boostHud.setAttribute('aria-valuetext', ariaValueText);
+      publishedAriaValueText = ariaValueText;
     }
     boostVisualDirty = false;
     lastBoostVisualAt = now;

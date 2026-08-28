@@ -1,5 +1,4 @@
 const STYLE_ID = 'turn-achievement-unread-marker-styles';
-const ALL_FILTER = 'all';
 const NEW_FILTER = 'new';
 const ONBOARDING_FILTER = 'onboarding';
 const WAYS_TO_PLAY_FILTER = 'ways-to-play';
@@ -7,8 +6,6 @@ const EXPLORATION_FILTER = 'exploration';
 const RACING_FILTER = 'racing';
 const TIME_TRIALS_FILTER = 'time-trials';
 const HIDDEN_FILTER = 'hidden';
-const UNLOCKED_FILTER = 'unlocked';
-const LOCKED_FILTER = 'locked';
 
 const TAG_LABELS = Object.freeze({
   [ONBOARDING_FILTER]: 'GETTING STARTED',
@@ -122,33 +119,6 @@ function installStyles() {
   document.head.appendChild(style);
 }
 
-function createFilterButton(filter, label) {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.dataset.achievementFilter = filter;
-  button.setAttribute('aria-pressed', String(filter === ALL_FILTER));
-  button.textContent = label;
-  return button;
-}
-
-function installFilterButtons(filters) {
-  if (!filters) return new Map();
-  const nodes = [
-    createFilterButton(ALL_FILTER, 'ALL'),
-    createFilterButton(NEW_FILTER, 'NEW'),
-    createFilterButton(ONBOARDING_FILTER, 'GETTING STARTED'),
-    createFilterButton(WAYS_TO_PLAY_FILTER, 'WAYS TO PLAY'),
-    createFilterButton(EXPLORATION_FILTER, 'EXPLORATION'),
-    createFilterButton(RACING_FILTER, 'RACING'),
-    createFilterButton(TIME_TRIALS_FILTER, 'TIME TRIALS'),
-    createFilterButton(HIDDEN_FILTER, 'HIDDEN'),
-    createFilterButton(UNLOCKED_FILTER, 'UNLOCKED'),
-    createFilterButton(LOCKED_FILTER, 'LOCKED')
-  ];
-  filters.replaceChildren(...nodes);
-  return new Map(nodes.map((button) => [button.dataset.achievementFilter, button]));
-}
-
 function staticAchievementTags(achievement) {
   const declared = Array.isArray(achievement?.tags)
     ? achievement.tags
@@ -217,15 +187,12 @@ export function installAchievementUnreadMarkers(
   const dialog = achievements.dialog;
   const list = dialog.querySelector('.turn-achievements-list');
   const filters = dialog.querySelector('.turn-achievements-filters');
-  const filterButtons = installFilterButtons(filters);
-  const newFilter = filterButtons.get(NEW_FILTER) || null;
   const triggers = [achievements.homeTrigger, achievements.raceTrigger].filter(Boolean);
   const achievementById = new Map(
     achievements.catalog.map((achievement) => [achievement.id, achievement])
   );
   let pendingIds = new Set();
   let decorationQueued = false;
-  let activeFilter = ALL_FILTER;
 
   function cardsWithAchievements() {
     return [...list.querySelectorAll('.turn-achievement-card')].map((card, index) => ({
@@ -236,49 +203,8 @@ export function installAchievementUnreadMarkers(
     }));
   }
 
-  function matchesFilter(card, achievement) {
-    if (activeFilter === ALL_FILTER) return true;
-    if (activeFilter === UNLOCKED_FILTER) return card.dataset.achievementStatus === 'unlocked';
-    if (activeFilter === LOCKED_FILTER) return card.dataset.achievementStatus !== 'unlocked';
-    if (activeFilter === NEW_FILTER) return Boolean(achievement && pendingIds.has(achievement.id));
-    return staticAchievementTags(achievement).includes(activeFilter);
-  }
-
-  function applyFilter() {
-    for (const { card, achievement } of cardsWithAchievements()) {
-      card.hidden = !matchesFilter(card, achievement);
-    }
-  }
-
-  function setActiveFilter(filter) {
-    if (!filterButtons.has(filter)) filter = ALL_FILTER;
-    if (filter === NEW_FILTER && pendingIds.size === 0) filter = ALL_FILTER;
-    activeFilter = filter;
-    for (const [candidate, button] of filterButtons) {
-      button.setAttribute('aria-pressed', String(candidate === activeFilter));
-    }
-    applyFilter();
-  }
-
-  function syncNewFilter() {
-    if (!newFilter) return;
-    const hasNewAchievements = pendingIds.size > 0;
-    newFilter.disabled = !hasNewAchievements;
-    newFilter.setAttribute('aria-disabled', String(!hasNewAchievements));
-    newFilter.title = hasNewAchievements ? 'Show newly unlocked achievements' : 'No new achievements';
-    if (!hasNewAchievements && activeFilter === NEW_FILTER) setActiveFilter(ALL_FILTER);
-  }
-
-  function handleFilterClick(event) {
-    const button = event.target.closest?.('[data-achievement-filter]');
-    if (!button || !filters?.contains(button)) return;
-    setActiveFilter(button.dataset.achievementFilter || ALL_FILTER);
-  }
-  filters?.addEventListener('click', handleFilterClick);
-
   function snapshotUnseen() {
     pendingIds = new Set(achievements.store.unseenIds());
-    syncNewFilter();
   }
 
   function decorate() {
@@ -318,8 +244,6 @@ export function installAchievementUnreadMarkers(
         delete card.dataset.achievementUnseen;
       }
     }
-    syncNewFilter();
-    applyFilter();
   }
 
   function queueDecoration() {
@@ -342,7 +266,6 @@ export function installAchievementUnreadMarkers(
 
   const handleAchievementUpdate = (event) => {
     for (const id of event.detail?.unlocked || []) pendingIds.add(id);
-    syncNewFilter();
     queueDecoration();
   };
   window.addEventListener('turn:achievements-updated', handleAchievementUpdate);
@@ -357,7 +280,7 @@ export function installAchievementUnreadMarkers(
   function focusAchievement(achievementId) {
     const target = list.querySelector(`[data-achievement-id="${achievementId}"]`);
     if (!target) return false;
-    setActiveFilter(ALL_FILTER);
+    filters?.querySelector('[data-achievement-filter="all"]')?.click();
     target.hidden = false;
     target.focus({ preventScroll: true });
     target.scrollIntoView({ block: 'center', behavior: 'auto' });
@@ -392,8 +315,7 @@ export function installAchievementUnreadMarkers(
 
   dialog.addEventListener('close', () => {
     pendingIds.clear();
-    syncNewFilter();
-    setActiveFilter(ALL_FILTER);
+    queueDecoration();
   });
 
   // The first achievement list already exists before this enhancer installs.
@@ -409,7 +331,6 @@ export function installAchievementUnreadMarkers(
     disconnect() {
       listObserver.disconnect();
       window.removeEventListener('turn:achievements-updated', handleAchievementUpdate);
-      filters?.removeEventListener('click', handleFilterClick);
       toastOpen?.removeEventListener('click', openToastAchievement);
       toastOpen?.remove();
       for (const trigger of triggers) {

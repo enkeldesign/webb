@@ -103,12 +103,13 @@ assert.match(semantic, /turnPoliceGreyMask/,
   'Police grey treatment must target neutral mid-grey pixels instead of flattening the service livery');
 assert.match(semantic, /car: '\.\/assets\/cars\/palettes\/car-kit\.png'/);
 
+const canonicalCatalogTarget = '/turn/vehicle/catalog.js?revision=r219-canonical-vehicle-catalog';
 const expectedCatalogTargets = [
-  ['/turn/vehicle/catalog.js?build=20260804-r157-factory-colors', '/turn/vehicle/catalog.js'],
-  ['/turn/vehicle/catalog.js?build=20260720-r20&revision=r588-canonical-attributes', '/turn/vehicle/catalog.js'],
-  ['/turn/vehicle/catalog.js?revision=r164-vintage-rally-polish', '/turn/vehicle/catalog.js'],
-  ['./vehicle/catalog.js?build=20260720-r19', '/turn/vehicle/catalog.js'],
-  ['./vehicle/catalog.js?build=20260720-r20', '/turn/vehicle/catalog.js']
+  ['/turn/vehicle/catalog.js?build=20260804-r157-factory-colors', canonicalCatalogTarget],
+  ['/turn/vehicle/catalog.js?build=20260720-r20&revision=r588-canonical-attributes', canonicalCatalogTarget],
+  ['/turn/vehicle/catalog.js?revision=r164-vintage-rally-polish', canonicalCatalogTarget],
+  ['./vehicle/catalog.js?build=20260720-r19', canonicalCatalogTarget],
+  ['./vehicle/catalog.js?build=20260720-r20', canonicalCatalogTarget]
 ];
 const expectedEmergencyTargets = [
   ['./vehicle/car-models.js?build=20260720-r19', '/turn/vehicle/emergency-livery-models.js'],
@@ -135,7 +136,7 @@ for (const specifier of [
   '/turn/vehicle/catalog.js?build=20260804-r157-factory-colors',
   '/turn/vehicle/catalog.js?revision=r164-vintage-rally-polish'
 ]) {
-  assert.equal(yourTurnImports[specifier], '/turn/vehicle/catalog.js',
+  assert.equal(yourTurnImports[specifier], canonicalCatalogTarget,
     `YOUR TURN must share the canonical factory color catalog for ${specifier}`);
 }
 for (const specifier of [

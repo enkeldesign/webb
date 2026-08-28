@@ -62,15 +62,15 @@ for (const catalogSpecifier of [
     resolveImport(yourTurnImportMap, catalogSpecifier, 'https://enkel.design/yourturn/')
   );
   assert.equal(
-    yourTurnCatalogUrl.pathname,
-    turnCatalogUrl.pathname,
-    `YOUR TURN must use TURN's canonical vehicle catalog source for ${catalogSpecifier}`
+    yourTurnCatalogUrl.href,
+    turnCatalogUrl.href,
+    `YOUR TURN must use TURN's exact canonical vehicle catalog route for ${catalogSpecifier}`
   );
   assert.equal(yourTurnCatalogUrl.pathname, '/turn/vehicle/catalog.js');
   assert.match(
     yourTurnCatalogUrl.search,
-    /r179-native-car-surfaces/,
-    'YOUR TURN must cache-bust the canonical native-surface customization graph instead of carrying its own vehicle data'
+    /r219-canonical-vehicle-catalog/,
+    'TURN and YOUR TURN must cache-bust the shared vehicle catalog instead of carrying stale or separate data'
   );
 }
 

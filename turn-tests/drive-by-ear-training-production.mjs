@@ -9,14 +9,19 @@ import {
   TRAINING_STAGES
 } from '../turn/training/stages.js';
 
-const [training, view, css, fixedLayout, sessionOrchestrator, index] = await Promise.all([
+const [training, view, css, fixedLayout, sessionOrchestrator, index, releaseSource] = await Promise.all([
   fs.readFile(new URL('../turn/training/drive-by-ear-training.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/training/view.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/training/drive-by-ear-training.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/race/session-orchestrator.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8')
 ]);
+const release = JSON.parse(releaseSource);
+const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
+assert.ok(importMapText, 'Production must expose its import map');
+const productionImports = JSON.parse(importMapText).imports;
 
 assert.match(fixedLayout, /training\/drive-by-ear-training\.js\?build=\$\{buildKey\}-r151-dbe-training-device-fixes/);
 assert.match(fixedLayout, /installDriveByEarTraining\(globalThis\.__turnRuntime\)/);
@@ -26,10 +31,10 @@ assert.match(
   /"\/turn\/training\/drive-by-ear-training\.js\?build=20260817-r172-r151-dbe-training-device-fixes": "\/turn\/training\/drive-by-ear-training\.js\?build=20260817-r172&revision=r172-screen-reader-followup"/,
   'Production must map the established training import to the r172 screen-reader follow-up module identity'
 );
-assert.match(
-  index,
-  /"\/turn\/race\/session-orchestrator\.js\?source=20260729-r118-m8": "\/turn\/race\/session-orchestrator\.js\?source=20260817-r172-screen-reader-followup"/,
-  'Production must map the established race-session import to the start-announcement-aware module identity'
+assert.equal(
+  productionImports['/turn/race/session-orchestrator.js?source=20260729-r118-m8'],
+  `/turn/race/session-orchestrator.js?build=${release.cacheKey}`,
+  'Production must map the start-announcement-aware race session through the current release identity'
 );
 
 assert.equal(TRAINING_STAGES.length, 5, 'Training must contain exactly five authored parts');

@@ -31,18 +31,19 @@ const release = JSON.parse(releaseSource);
 const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/script>/)?.[1];
 assert.ok(importMapText, 'Production must expose its import map');
 const imports = JSON.parse(importMapText).imports;
+const vehicleCatalogTarget = '/turn/vehicle/catalog.js?revision=r219-canonical-vehicle-catalog';
 
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(index, new RegExp(`\\.\\/app\\.js\\?build=${release.cacheKey}[^\"]*r164-long-session-robustness`),
   'The installed-app root must request a fresh robustness app module');
 assert.equal(
   imports['./vehicle/catalog.js?build=20260720-r19'],
-  '/turn/vehicle/catalog.js',
+  vehicleCatalogTarget,
   'The main runtime must publish the canonical vehicle handling catalog'
 );
 assert.equal(
   imports['./vehicle/catalog.js?build=20260720-r20'],
-  '/turn/vehicle/catalog.js',
+  vehicleCatalogTarget,
   'The Lot must use the same canonical vehicle handling catalog'
 );
 
