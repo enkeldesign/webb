@@ -272,7 +272,10 @@ assert.match(
 
 const suv = CAR_CATALOG.find((car) => car.id === 'suv');
 assert.ok(suv, 'SUV must remain in the vehicle catalog');
-assert.equal(suv.defaultColor, '#7d123e', 'SUV factory paint must be the darkest qualifying pink');
+assert.equal(suv.defaultColor, '#0555aa', 'Luxury SUV factory paint must remain blue');
+const awd = CAR_CATALOG.find((car) => car.id === 'convertible');
+assert.ok(awd, 'AWD must remain in the stable Convertible catalog slot');
+assert.equal(awd.defaultColor, '#ff4fa3', 'AWD factory paint must be the qualifying countryside pink');
 
 const raceCar = CAR_CATALOG.find((car) => car.id === 'race');
 assert.ok(raceCar, 'Race Car must remain in the vehicle catalog');
@@ -325,7 +328,7 @@ assert.match(
   /'rally-racer': Object\.freeze\(\[[\s\S]*carId: 'toy-racer'/,
   'Rally Racer Trophy Road detail must use the stable Toy Racer 3D asset'
 );
-assert.match(showcaseSource, /catalog\.js\?revision=r220-apex-grip/,
+assert.match(showcaseSource, /catalog\.js\?revision=r222-awd-suv-paint/,
   'Trophy Road models must use the refreshed factory colours');
 assert.doesNotMatch(trophyRoadSource, /tank is tiny|tiny tank/i,
   'Trophy Road must not describe the ordinary 1\/5 Rally tank as an extra penalty');

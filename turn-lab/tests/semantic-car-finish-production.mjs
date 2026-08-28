@@ -122,6 +122,23 @@ assert.equal(cellHits(classicBodyDoubleFlipped, classicSecondary), 0,
 assert.equal(cellHits(classicWheelsDoubleFlipped, classicRims), 0,
   'The retired double-V-flip must miss the Training Car rim cells');
 
+const luxurySuvCar = catalog.getCarDefinition('suv');
+assert.equal(luxurySuvCar.surfaceProfileId, 'suv-luxury',
+  'The stable SUV ID must select the mounted Luxury SUV surface profile');
+const luxurySuvGlb = await fs.readFile(new URL('../../turn/assets/cars/suv-luxury.glb', import.meta.url));
+const luxurySuv = readGlb(luxurySuvGlb, 'suv-luxury');
+const luxurySuvCells = triangleCellCounts(luxurySuv, { flipV: false });
+const luxurySuvBody = mergeNodeCells(luxurySuvCells, (name) => !/wheel/i.test(name));
+const luxurySuvWheels = mergeNodeCells(luxurySuvCells, (name) => /wheel/i.test(name));
+assert.ok(cellHits(luxurySuvBody, [[4, 2], [4, 3]]) > 0,
+  'Luxury SUV primary paint cells must intersect its authored body triangles');
+assert.ok(cellHits(luxurySuvBody, [[3, 4], [3, 5]]) > 0,
+  'Luxury SUV secondary trim cells must intersect its authored body triangles');
+assert.ok(cellHits(luxurySuvWheels, [[5, 4], [5, 5]]) > 0,
+  'Luxury SUV rim paint cells must intersect its authored wheel triangles');
+assert.match(semanticSource, /'suv-luxury': profile\(\{ primary: \[\[4, 2\], \[4, 3\]\]/,
+  'Luxury SUV must use its verified native palette cells instead of the old SUV mask');
+
 for (const id of ['police', 'ambulance', 'firetruck']) {
   const car = catalog.getCarDefinition(id);
   assert.equal(car.fixedLivery, true, `${car.name} must remain non-repaintable`);

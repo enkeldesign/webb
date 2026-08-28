@@ -48,16 +48,16 @@ const CAR_BY_ID = new Map(CAR_CATALOG.map((car) => [car.id, car]));
 const LOT_CARS = Object.freeze(LOT_CAR_ORDER.map((id) => CAR_BY_ID.get(id)).filter(Boolean));
 
 const CAR_DESCRIPTIONS = Object.freeze({
-  convertible: 'A low, open-top sports car with a long bonnet and compact cabin.',
+  convertible: 'A compact all-wheel-drive utility car with a short wheelbase, high ride height and sure-footed handling.',
   classic: 'A small, upright classic car with rounded bodywork and a friendly shape.',
   'vintage-racer': 'A narrow vintage racer with exposed wheels, a contrasting bonnet stripe and matching deck trim.',
-  'toy-racer': 'A compact black-and-gold competition coupe with an integrated high rear wing and rally-bred trim.',
+  'toy-racer': 'A grey-and-gold competition car with a low stance, high rear wing and rally-bred trim.',
   'monster-truck': 'A tall off-road truck with oversized tyres, exposed suspension and a rugged roll cage.',
   'race-future': 'A sleek futuristic racer with a low cockpit, central aero spine and contrasting rear deck trim.',
   race: 'A low single-seat race car with exposed wheels and a large rear wing.',
-  'sedan-sports': 'A sporty four-door sedan with a low stance and rear spoiler.',
+  'sedan-sports': 'A compact sporty hatchback with a short wheelbase, rear hatch and practical everyday shape.',
   sedan: 'A balanced four-door family car with a conventional three-box shape.',
-  suv: 'A high-riding sport utility vehicle with a broad body and practical proportions.',
+  suv: 'A road-focused luxury SUV with a broad body, high cabin and strong acceleration.',
   firetruck: 'A heavy fire engine with roof equipment, blue emergency lights and a deep two-tone siren.',
   police: 'A quick patrol car with a red-and-blue light bar and an urgent electronic siren.',
   ambulance: 'A stable emergency van with blue roof lights and a clear hi-lo siren.',

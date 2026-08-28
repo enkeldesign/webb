@@ -44,7 +44,7 @@ assert.match(nextIndex, new RegExp(`TURN NEXT · Source TURN v${escapeRegex(rele
 assert.match(nextIndex, /"\/turn\/tracks\/track-manager\.js\?build=20260805-r160": "\/turn\/tracks\/track-manager\.js\?source=20260729-r118-m8"/,
   'Challenge mode must reuse TURN NEXT’s canonical Track Manager singleton');
 assert.match(nextIndex, /"\/turn\/tracks\/catalog\.js\?build=20260805-r160": "\/turn\/tracks\/catalog\.js\?source=20260729-r118-m8"/);
-assert.match(nextIndex, /"\/turn\/vehicle\/catalog\.js\?build=20260805-r160": "\/turn\/vehicle\/catalog\.js\?revision=r220-apex-grip"/,
+assert.match(nextIndex, /"\/turn\/vehicle\/catalog\.js\?build=20260805-r160": "\/turn\/vehicle\/catalog\.js\?revision=r222-awd-suv-paint"/,
   'Challenge mode must reuse the fresh canonical vehicle catalog containing steering wheels and APEX GRIP');
 assert.match(nextApp, /\/turn-next\/challenge-mode\.js\?revision=r182-race-my-ghost/);
 assert.ok(

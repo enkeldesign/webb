@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import {
-  DEFAULT_VEHICLE_COLOR,
-  DEFAULT_VEHICLE_SECONDARY_COLOR,
+  getVehicleDefaultColor,
+  getVehicleDefaultSecondaryColor,
   makeGhostColor,
   normalizeVehicleColor,
+  normalizeVehicleId,
   normalizeVehicleSecondaryColor
 } from '../vehicle/catalog.js?build=20260720-r19';
 import { createCarVisual } from '../vehicle/car-models.js?build=20260720-r22';
@@ -131,13 +132,16 @@ export function installRivalOnboarding() {
   }
 
   function normalizedPreviewData(source = {}) {
+    const carId = normalizeVehicleId(source.carId || source.vehicleId || 'sedan');
     return {
-      carId: source.carId || source.vehicleId || 'sedan',
+      carId,
       color: normalizeVehicleColor(
-        source.carColor || source.vehicleColor || DEFAULT_VEHICLE_COLOR
+        source.carColor || source.vehicleColor,
+        getVehicleDefaultColor(carId)
       ),
       secondaryColor: normalizeVehicleSecondaryColor(
-        source.carSecondaryColor || source.vehicleSecondaryColor || DEFAULT_VEHICLE_SECONDARY_COLOR
+        source.carSecondaryColor || source.vehicleSecondaryColor,
+        getVehicleDefaultSecondaryColor(carId)
       )
     };
   }

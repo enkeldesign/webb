@@ -2,7 +2,7 @@ import {
   ACHIEVEMENTS,
   TRACK_IDS,
   getAchievement
-} from './catalog.js?revision=r181-hatchback-rally';
+} from './catalog.js?revision=r222-awd-label';
 import {
   TROPHY_ROAD_REWARDS,
   TROPHY_ROAD_STORAGE_KEY,
