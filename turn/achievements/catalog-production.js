@@ -15,7 +15,7 @@ const MAYDAY = Object.freeze({
   category: base.CATEGORY.RACING,
   trophies: 100,
   hidden: true,
-  lockedDescription: '',
+  lockedDescription: 'Hidden achievement. You’ll know what to do when the moment comes.',
   title: 'MAYDAY!',
   description: 'In the Ambulance, answer the Airport MAYDAY with sirens and deliver the patient to the terminal medical bay within 30 seconds.',
   icon: 'siren'
@@ -26,9 +26,8 @@ export const CATCH_THE_CHARGE_ACHIEVEMENT = Object.freeze({
   category: base.CATEGORY.ONBOARDING,
   trophies: 25,
   title: 'CATCH THE CHARGE',
-  description: 'Keep holding DRIFT after BOOST is full to build purple OVERCHARGE. Switch to GAS to catch it, then keep GAS held for three seconds.',
-  icon: 'charge',
-  progressMax: 3
+  description: 'Overcharge the BOOST bar using DRIFT. Retain the overcharge using GAS.',
+  icon: 'charge'
 });
 
 export const GOT_STARTED_ACHIEVEMENT = Object.freeze({
