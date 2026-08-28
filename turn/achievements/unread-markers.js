@@ -8,6 +8,7 @@ const RACING_FILTER = 'racing';
 const TIME_TRIALS_FILTER = 'time-trials';
 const HIDDEN_FILTER = 'hidden';
 const UNLOCKED_FILTER = 'unlocked';
+const LOCKED_FILTER = 'locked';
 
 const TAG_LABELS = Object.freeze({
   [ONBOARDING_FILTER]: 'GETTING STARTED',
@@ -87,6 +88,15 @@ function installStyles() {
       text-transform: uppercase;
       white-space: nowrap;
     }
+    .turn-achievements-filters button {
+      min-height: 34px;
+      padding: 3px 10px;
+      line-height: 1;
+    }
+    .turn-achievements-filters button:disabled {
+      opacity: .5;
+      cursor: default;
+    }
     .turn-achievement-card:focus {
       outline: 5px solid var(--turn-action-information, #38d9ff);
       outline-offset: 4px;
@@ -132,7 +142,8 @@ function installFilterButtons(filters) {
     createFilterButton(RACING_FILTER, 'RACING'),
     createFilterButton(TIME_TRIALS_FILTER, 'TIME TRIALS'),
     createFilterButton(HIDDEN_FILTER, 'HIDDEN'),
-    createFilterButton(UNLOCKED_FILTER, 'UNLOCKED')
+    createFilterButton(UNLOCKED_FILTER, 'UNLOCKED'),
+    createFilterButton(LOCKED_FILTER, 'LOCKED')
   ];
   filters.replaceChildren(...nodes);
   return new Map(nodes.map((button) => [button.dataset.achievementFilter, button]));
@@ -216,8 +227,6 @@ export function installAchievementUnreadMarkers(
   let decorationQueued = false;
   let activeFilter = ALL_FILTER;
 
-  if (newFilter) newFilter.hidden = true;
-
   function cardsWithAchievements() {
     return [...list.querySelectorAll('.turn-achievement-card')].map((card, index) => ({
       card,
@@ -230,6 +239,7 @@ export function installAchievementUnreadMarkers(
   function matchesFilter(card, achievement) {
     if (activeFilter === ALL_FILTER) return true;
     if (activeFilter === UNLOCKED_FILTER) return card.dataset.achievementStatus === 'unlocked';
+    if (activeFilter === LOCKED_FILTER) return card.dataset.achievementStatus !== 'unlocked';
     if (activeFilter === NEW_FILTER) return Boolean(achievement && pendingIds.has(achievement.id));
     return staticAchievementTags(achievement).includes(activeFilter);
   }
@@ -253,7 +263,9 @@ export function installAchievementUnreadMarkers(
   function syncNewFilter() {
     if (!newFilter) return;
     const hasNewAchievements = pendingIds.size > 0;
-    newFilter.hidden = !hasNewAchievements;
+    newFilter.disabled = !hasNewAchievements;
+    newFilter.setAttribute('aria-disabled', String(!hasNewAchievements));
+    newFilter.title = hasNewAchievements ? 'Show newly unlocked achievements' : 'No new achievements';
     if (!hasNewAchievements && activeFilter === NEW_FILTER) setActiveFilter(ALL_FILTER);
   }
 
