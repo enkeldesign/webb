@@ -126,7 +126,7 @@ assert.equal(suv.name, 'SUV');
 assert.equal(suv.asset, './assets/cars/suv-luxury.glb');
 assert.deepEqual(suv.stats, { speed: 3, acceleration: 4, control: 4, drift: 2, boostPower: 3, boostDuration: 2 });
 assert.equal(catalog.getVehicleStatTotal(suv.stats), catalog.VEHICLE_STAT_BUDGET);
-assert.equal(suv.defaultColor, '#580e2d');
+assert.equal(suv.defaultColor, '#7d123e');
 assert.equal(suv.defaultSecondaryColor, '#2f0918');
 assert.equal(monsterTruck.pack, 'toy');
 assert.equal(monsterTruck.asset, './assets/cars/monster-truck.glb');
