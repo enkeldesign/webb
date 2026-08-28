@@ -19,18 +19,6 @@ const TAG_LABELS = Object.freeze({
   [NEW_FILTER]: 'NEW'
 });
 
-const FILTERS = Object.freeze([
-  [ALL_FILTER, 'ALL'],
-  [NEW_FILTER, 'NEW'],
-  [ONBOARDING_FILTER, 'GETTING STARTED'],
-  [WAYS_TO_PLAY_FILTER, 'WAYS TO PLAY'],
-  [EXPLORATION_FILTER, 'EXPLORATION'],
-  [RACING_FILTER, 'RACING'],
-  [TIME_TRIALS_FILTER, 'TIME TRIALS'],
-  [HIDDEN_FILTER, 'HIDDEN'],
-  [UNLOCKED_FILTER, 'UNLOCKED']
-]);
-
 function installStyles() {
   if (document.querySelector(`#${STYLE_ID}`)) return;
   const style = document.createElement('style');
@@ -135,14 +123,19 @@ function createFilterButton(filter, label) {
 
 function installFilterButtons(filters) {
   if (!filters) return new Map();
-  const buttons = new Map();
-  const nodes = FILTERS.map(([filter, label]) => {
-    const button = createFilterButton(filter, label);
-    buttons.set(filter, button);
-    return button;
-  });
+  const nodes = [
+    createFilterButton(ALL_FILTER, 'ALL'),
+    createFilterButton(NEW_FILTER, 'NEW'),
+    createFilterButton(ONBOARDING_FILTER, 'GETTING STARTED'),
+    createFilterButton(WAYS_TO_PLAY_FILTER, 'WAYS TO PLAY'),
+    createFilterButton(EXPLORATION_FILTER, 'EXPLORATION'),
+    createFilterButton(RACING_FILTER, 'RACING'),
+    createFilterButton(TIME_TRIALS_FILTER, 'TIME TRIALS'),
+    createFilterButton(HIDDEN_FILTER, 'HIDDEN'),
+    createFilterButton(UNLOCKED_FILTER, 'UNLOCKED')
+  ];
   filters.replaceChildren(...nodes);
-  return buttons;
+  return new Map(nodes.map((button) => [button.dataset.achievementFilter, button]));
 }
 
 function staticAchievementTags(achievement) {
@@ -214,7 +207,6 @@ export function installAchievementUnreadMarkers(
   const list = dialog.querySelector('.turn-achievements-list');
   const filters = dialog.querySelector('.turn-achievements-filters');
   const filterButtons = installFilterButtons(filters);
-  const allFilter = filterButtons.get(ALL_FILTER) || null;
   const newFilter = filterButtons.get(NEW_FILTER) || null;
   const triggers = [achievements.homeTrigger, achievements.raceTrigger].filter(Boolean);
   const achievementById = new Map(
