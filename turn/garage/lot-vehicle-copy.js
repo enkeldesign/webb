@@ -1,4 +1,6 @@
 const VEHICLE_COPY_BY_ID = Object.freeze({
+  convertible: 'A compact all-wheel-drive utility car with a short wheelbase, high ride height and sure-footed handling.',
+  suv: 'A road-focused luxury SUV with a broad body, high cabin and strong acceleration.',
   'sedan-sports': 'A compact sporty hatchback with a short wheelbase, rear hatch and practical everyday shape.',
   'toy-racer': 'A grey-and-gold competition car with a low stance, high rear wing and rally-bred trim.'
 });

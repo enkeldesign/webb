@@ -35,7 +35,7 @@ export const CAR_PALETTE = Object.freeze([
 ]);
 
 const DEFAULT_COLOR_BY_ID = Object.freeze({
-  convertible: Object.freeze({ fallback: '#ff4fa3' }),
+  convertible: Object.freeze({ fallback: '#0555aa', p3: Object.freeze([0.02, 0.333, 0.667]) }),
   classic: Object.freeze({ fallback: '#ffcc00', p3: Object.freeze([1, 0.76, 0]) }),
   'vintage-racer': Object.freeze({ fallback: '#004455' }),
   'toy-racer': Object.freeze({ fallback: '#cccccc' }),
@@ -44,7 +44,7 @@ const DEFAULT_COLOR_BY_ID = Object.freeze({
   race: Object.freeze({ fallback: '#5d503f' }),
   'sedan-sports': Object.freeze({ fallback: '#5e3c87', p3: Object.freeze([0.36, 0.19, 0.56]) }),
   sedan: Object.freeze({ fallback: '#2b6a70', p3: Object.freeze([0.12, 0.41, 0.43]) }),
-  suv: Object.freeze({ fallback: '#0555aa', p3: Object.freeze([0.02, 0.333, 0.667]) }),
+  suv: Object.freeze({ fallback: '#7d123e' }),
   firetruck: Object.freeze({ fallback: '#d92d20', p3: Object.freeze([0.82, 0.08, 0.04]) }),
   police: Object.freeze({ fallback: '#222222' }),
   ambulance: Object.freeze({ fallback: '#f8f9fa', p3: Object.freeze([0.95, 0.97, 0.98]) }),
@@ -57,8 +57,8 @@ const DEFAULT_SECONDARY_COLOR_BY_ID = Object.freeze({
   truck: Object.freeze({ fallback: '#7b3032' }),
   sedan: Object.freeze({ fallback: '#163f45' }),
   van: Object.freeze({ fallback: '#222222' }),
-  suv: Object.freeze({ fallback: '#163f7a' }),
-  convertible: Object.freeze({ fallback: '#792766' }),
+  suv: Object.freeze({ fallback: '#2f0918' }),
+  convertible: Object.freeze({ fallback: '#163f7a' }),
   'vintage-racer': Object.freeze({ fallback: '#222222' }),
   'toy-racer': Object.freeze({ fallback: '#ffcc00' }),
   'monster-truck': Object.freeze({ fallback: '#4f5504' }),
@@ -71,7 +71,6 @@ const DEFAULT_SECONDARY_COLOR_BY_ID = Object.freeze({
 });
 
 const VISUAL_SIZE_MULTIPLIER_BY_ID = Object.freeze({
-  convertible: 0.72,
   classic: 0.72,
   'vintage-racer': 0.75,
   police: 1.15
@@ -80,7 +79,7 @@ const FEATURED_VISUAL_SIZE_MULTIPLIER_BY_ID = Object.freeze({ 'monster-truck': 1
 const EMERGENCY_SERVICE_BY_ID = Object.freeze({ firetruck: 'firetruck', police: 'police', ambulance: 'ambulance' });
 const FIXED_LIVERY_IDS = new Set(Object.keys(EMERGENCY_SERVICE_BY_ID));
 const RETIRED_VEHICLE_REPLACEMENTS = Object.freeze({
-  'suv-luxury': 'firetruck',
+  'suv-luxury': 'suv',
   'hatchback-sports': 'police',
   'truck-flat': 'ambulance'
 });
@@ -133,7 +132,7 @@ const TUNING_OVERRIDE_BY_ID = Object.freeze({
 });
 
 const RAW_CARS = [
-  ['convertible', 'Convertible', 'prototype', { speed: 4, acceleration: 4, control: 4, drift: 2, boostPower: 3, boostDuration: 1 }, 0.98, 1, 1.08],
+  ['convertible', 'AWD', 'car', { speed: 2, acceleration: 3, control: 4, drift: 4, boostPower: 2, boostDuration: 3 }, 0.98, 0, 0.90],
   ['classic', 'Training Car', 'prototype', { speed: 1, acceleration: 1, control: 5, drift: 5, boostPower: 1, boostDuration: 5 }, 1.00, 1, 0.88],
   ['vintage-racer', 'Vintage Racer', 'toy', { speed: 4, acceleration: 3, control: 2, drift: 5, boostPower: 2, boostDuration: 2 }, 0.96, 0, 1.28],
   ['toy-racer', 'Rally Racer', 'car', { speed: 4, acceleration: 4, control: 1, drift: 4, boostPower: 4, boostDuration: 1 }, 0.98, 0, 1.18],
@@ -142,7 +141,7 @@ const RAW_CARS = [
   ['race', 'Race Car', 'car', { speed: 5, acceleration: 4, control: 4, drift: 2, boostPower: 2, boostDuration: 1 }, 0.94, 0, 1.55],
   ['sedan-sports', 'Hatchback', 'car', { speed: 4, acceleration: 4, control: 4, drift: 2, boostPower: 2, boostDuration: 2 }, 0.98, 0, 1.12],
   ['sedan', 'Sedan', 'car', { speed: 3, acceleration: 3, control: 3, drift: 3, boostPower: 3, boostDuration: 3 }, 1.00, 0, 1.00],
-  ['suv', 'SUV', 'car', { speed: 3, acceleration: 3, control: 3, drift: 4, boostPower: 2, boostDuration: 3 }, 1.05, 0, 0.90],
+  ['suv', 'SUV', 'car', { speed: 3, acceleration: 4, control: 4, drift: 2, boostPower: 3, boostDuration: 2 }, 1.05, 0, 0.90],
   ['firetruck', 'Fire Truck', 'car', { speed: 2, acceleration: 2, control: 4, drift: 4, boostPower: 1, boostDuration: 5 }, 1.10, 0, 0.66],
   ['police', 'Police Car', 'car', { speed: 4, acceleration: 3, control: 3, drift: 2, boostPower: 1, boostDuration: 5 }, 0.98, 0, 1.10],
   ['ambulance', 'Ambulance', 'car', { speed: 3, acceleration: 2, control: 3, drift: 4, boostPower: 1, boostDuration: 5 }, 1.05, 0, 0.78],
@@ -167,7 +166,7 @@ const VISUAL_CUSTOMIZATION_BY_ID = Object.freeze({
     secondaryPaint: Object.freeze({ label: 'Lower body trim', meshNames: Object.freeze([]) })
   }),
   convertible: Object.freeze({
-    secondaryPaint: Object.freeze({ label: 'Interior & trim', meshNames: Object.freeze([]) })
+    secondaryPaint: Object.freeze({ label: 'Lower body trim', meshNames: Object.freeze([]) })
   }),
   'vintage-racer': Object.freeze({
     secondaryPaint: Object.freeze({ label: 'Racing stripe', meshNames: Object.freeze([]) })
@@ -190,11 +189,14 @@ const VISUAL_CUSTOMIZATION_BY_ID = Object.freeze({
 });
 
 const MODEL_ASSET_BY_ID = Object.freeze({
+  convertible: './assets/cars/suv.glb',
+  suv: './assets/cars/suv-luxury.glb',
   'sedan-sports': './assets/cars/hatchback-sports.glb',
   'toy-racer': './assets/cars/sedan-sports.glb'
 });
 
 const SURFACE_PROFILE_BY_ID = Object.freeze({
+  convertible: 'suv',
   'sedan-sports': 'hatchback-sports',
   'toy-racer': 'sedan-sports-rally'
 });
