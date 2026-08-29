@@ -176,7 +176,7 @@ assert.ok(importMapText, 'Production must expose its import map');
 const imports = JSON.parse(importMapText).imports;
 const releaseTarget = (filePath) => `${filePath}?build=${release.cacheKey}`;
 const vehicleCatalogTarget = '/turn/vehicle/catalog.js?revision=r223-training-car-taxi';
-const carModelBridgeTarget = '/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi';
+const carModelBridgeTarget = '/turn/vehicle/emergency-livery-models.js?revision=r224-training-car-signage';
 
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(index, new RegExp(`\\.\\/garage\\/lot-r10\\.css\\?build=${release.cacheKey}-native-html`));
