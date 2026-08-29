@@ -20,13 +20,17 @@ export function loadControlHandedness(storage = globalThis.localStorage) {
 
 export function applyControlHandedness(value) {
   const handedness = normalizeControlHandedness(value);
-  const root = document.documentElement;
-  root.dataset.turnControlHandedness = handedness;
-  root.classList.toggle('turn-left-handed-controls', handedness === CONTROL_HANDEDNESS.LEFT);
-  root.classList.toggle('turn-right-handed-controls', handedness === CONTROL_HANDEDNESS.RIGHT);
-  window.dispatchEvent(new CustomEvent('turn:control-handedness-change', {
-    detail: { handedness }
-  }));
+  const root = globalThis.document?.documentElement;
+  if (root) {
+    root.dataset.turnControlHandedness = handedness;
+    root.classList.toggle('turn-left-handed-controls', handedness === CONTROL_HANDEDNESS.LEFT);
+    root.classList.toggle('turn-right-handed-controls', handedness === CONTROL_HANDEDNESS.RIGHT);
+  }
+  try {
+    globalThis.dispatchEvent?.(new CustomEvent('turn:control-handedness-change', {
+      detail: { handedness }
+    }));
+  } catch (_) {}
   return handedness;
 }
 
