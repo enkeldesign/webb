@@ -95,7 +95,7 @@ function installDoorMarkShader(material) {
         // fragment colour only; the Kenney body mesh remains untouched.
         float turnLearnerSideFacing = smoothstep(0.72, 0.92, abs(normalize(turnLearnerLocalNormal).x));
         float turnLearnerRawU = (turnLearnerLocalPosition.z + 0.34) / 0.76;
-        float turnLearnerU = turnLearnerLocalPosition.x >= 0.0 ? turnLearnerRawU : 1.0 - turnLearnerRawU;
+        float turnLearnerU = turnLearnerLocalPosition.x >= 0.0 ? 1.0 - turnLearnerRawU : turnLearnerRawU;
         float turnLearnerV = (turnLearnerLocalPosition.y - 0.36) / 0.28;
         float turnLearnerInside = turnLearnerSideFacing
           * step(0.0, turnLearnerU) * step(turnLearnerU, 1.0)
