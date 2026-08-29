@@ -1,7 +1,7 @@
 import { getCarDefinition } from '../vehicle/catalog.js?revision=r223-training-car-taxi';
 import { vehiclePerkPresentation } from '../vehicle/perk-presentation.js?revision=r220-apex-grip';
 
-const STYLE_ID = 'turn-lot-perk-popover-r217-styles';
+const STYLE_ID = 'turn-lot-perk-popover-r225-styles';
 const activeDisclosures = new WeakMap();
 let nextPopoverId = 0;
 
@@ -31,7 +31,7 @@ function installStyles() {
       padding: 5px 13px;
       border: 2.5px solid var(--ink, #08090a);
       border-radius: 999px;
-      background: var(--pink, #ff4fa3);
+      background: var(--turn-action-information, #38d9ff);
       box-shadow: 4px 4px 0 var(--ink, #08090a);
       color: var(--ink, #08090a);
       font-size: clamp(.58rem, 1.05vw, .72rem);
