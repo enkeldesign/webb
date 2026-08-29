@@ -35,13 +35,8 @@ export function installTrainingCarSignage(root) {
   const doorThickness = Math.max(0.025, size.x * 0.012);
   const doorHeight = size.y * 0.14;
   const doorLength = size.z * 0.22;
-  for (const side of [-1, 1]) {
-    const doorSign = makeOutlinedSignBox(
-      doorThickness,
-      doorHeight,
-      doorLength,
-      `door-sign-${side < 0 ? 'left' : 'right'}`
-    );
+  for (const [side, name] of [[-1, 'door-sign-left'], [1, 'door-sign-right']]) {
+    const doorSign = makeOutlinedSignBox(doorThickness, doorHeight, doorLength, name);
     doorSign.position.set(
       center.x + side * (size.x * 0.502),
       bounds.min.y + size.y * 0.48,
