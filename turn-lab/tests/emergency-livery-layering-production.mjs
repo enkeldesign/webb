@@ -4,6 +4,7 @@ import { matchesTrackColor } from '../../turn/achievements/chromatic-camouflage-
 
 const [
   bridge,
+  trainingSignage,
   semantic,
   carModels,
   catalogSource,
@@ -12,6 +13,7 @@ const [
   yourTurnEntry
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/vehicle/emergency-livery-models.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/vehicle/training-car-signage-r224.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/semantic-car-finish.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/vehicle/catalog.js', import.meta.url), 'utf8'),
@@ -81,21 +83,23 @@ assert.match(
   /const emergency = EMERGENCY_IDS\.has\(root\?\.userData\?\.turnCarId\);[\s\S]*if \(!emergency\) darkenVisibleWheels\(root\);/,
   'Fixed-livery emergency wheel atlases must skip whole-material darkening so authored rims remain visible'
 );
-assert.doesNotMatch(bridge, /applyFixedEmergencyLivery|installSecondaryAccent/,
-  'Emergency liveries must not add side panels or other presentation layers');
+assert.doesNotMatch(bridge, /applyFixedEmergencyLivery|installSecondaryAccent|BoxGeometry/,
+  'Emergency liveries must not add side panels or other presentation geometry');
 
 assert.match(bridge, /TRAINING_CAR_ID = 'classic'/,
   'The Taxi-derived Training Car must be the only non-emergency presentation exception');
-assert.match(bridge, /TRAINING_SIGN_COLOR = 0x2f9e44/,
-  'Training identifiers must use the fixed green treatment');
+assert.match(bridge, /training-car-signage-r224\.js/,
+  'Training Car geometry must live in its own cache-identifiable presentation module');
 assert.match(bridge, /installTrainingCarSignage\(root\)/);
-assert.match(bridge, /turnTrainingCarSignage/);
-assert.match(bridge, /roof-sign/);
-assert.match(bridge, /door-sign-left/);
-assert.match(bridge, /door-sign-right/);
-assert.match(bridge, /bounds\.max\.y \+ roofHeight \* 0\.34/,
+assert.match(trainingSignage, /TRAINING_SIGN_COLOR = 0x2f9e44/,
+  'Training identifiers must use the fixed green treatment');
+assert.match(trainingSignage, /turnTrainingCarSignage/);
+assert.match(trainingSignage, /roof-sign/);
+assert.match(trainingSignage, /door-sign-left/);
+assert.match(trainingSignage, /door-sign-right/);
+assert.match(trainingSignage, /bounds\.max\.y \+ roofHeight \* 0\.34/,
   'The replacement roof sign must overlap and visually close the exposed Taxi roof mount');
-assert.match(bridge, /BoxGeometry/,
+assert.match(trainingSignage, /BoxGeometry/,
   'The Training Car sign must be real geometry so the old roof opening is covered from oblique cameras');
 
 assert.match(carModels, /from '\.\/catalog\.js'/,
@@ -159,6 +163,14 @@ for (const specifier of [
 ]) {
   assert.equal(yourTurnImports[specifier], canonicalCatalogTarget,
     `YOUR TURN must share the canonical factory color catalog for ${specifier}`);
+}
+for (const specifier of [
+  '/turn/vehicle/emergency-livery-models.js',
+  '/turn/vehicle/car-models.js?build=20260720-r19',
+  '/turn/vehicle/car-models.js?build=20260720-r22'
+]) {
+  assert.equal(yourTurnImports[specifier], canonicalBridgeTarget,
+    `YOUR TURN must share the refreshed Training Car presentation bridge for ${specifier}`);
 }
 
 console.log('TURN semantic emergency liveries, Training Car signage, factory colors and shared catalog routing passed.');
