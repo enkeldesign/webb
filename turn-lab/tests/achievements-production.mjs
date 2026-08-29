@@ -181,7 +181,7 @@ assert.deepEqual(
     ['airport', 16],
     ['cliffside', 15],
     ['harbor', 22],
-    ['midnight-city', 53],
+    ['midnight-city', 52],
     ['mountain', 25]
   ]
 );
@@ -402,7 +402,7 @@ assert.match(timeTrialSource, /targetSeconds: 11/);
 assert.match(timeTrialSource, /targetSeconds: 16/);
 assert.match(timeTrialSource, /targetSeconds: 15/);
 assert.match(timeTrialSource, /targetSeconds: 22/);
-assert.match(timeTrialSource, /targetSeconds: 53/);
+assert.match(timeTrialSource, /targetSeconds: 52/);
 assert.match(timeTrialSource, /targetSeconds: 25/);
 assert.match(timeTrialSource, /seconds >= trial\.targetSeconds/);
 
