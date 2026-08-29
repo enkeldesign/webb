@@ -1,4 +1,5 @@
 const VEHICLE_COPY_BY_ID = Object.freeze({
+  classic: 'A bright yellow learner car with black L markings, dark trim and the original Kenney Taxi roof sign.',
   convertible: 'A compact all-wheel-drive utility car with a short wheelbase, high ride height and sure-footed handling.',
   suv: 'A road-focused luxury SUV with a broad body, high cabin and strong acceleration.',
   'sedan-sports': 'A compact sporty hatchback with a short wheelbase, rear hatch and practical everyday shape.',
