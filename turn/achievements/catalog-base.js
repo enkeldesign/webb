@@ -46,7 +46,7 @@ export const TRACK_NAMES = Object.freeze({
 });
 
 export const VEHICLE_NAMES = Object.freeze({
-  convertible: 'AWD',
+  convertible: 'Convertible',
   classic: 'Training Car',
   'vintage-racer': 'Vintage Racer',
   'toy-racer': 'Rally Racer',

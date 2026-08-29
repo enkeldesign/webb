@@ -69,7 +69,7 @@ for (const catalogSpecifier of [
   assert.equal(yourTurnCatalogUrl.pathname, '/turn/vehicle/catalog.js');
   assert.match(
     yourTurnCatalogUrl.search,
-    /r223-training-car-taxi/,
+    /r220-apex-grip/,
     'TURN and YOUR TURN must cache-bust the shared vehicle catalog instead of carrying stale or separate data'
   );
 }

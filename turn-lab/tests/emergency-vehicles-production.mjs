@@ -274,8 +274,8 @@ assert.match(maydayAudio, /__turnAudioPreferences\?\.getSettings/,
   'The supplemental rescue audio must respect TURN audio-off preferences');
 
 for (const [html, target] of [
-  [index, '/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi'],
-  [nextIndex, '/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi']
+  [index, '/turn/vehicle/emergency-livery-models.js'],
+  [nextIndex, `./vehicle/emergency-livery-models.js?build=${release.cacheKey}&wheel=r211-steering-wheels`]
 ]) {
   assert.match(
     html,

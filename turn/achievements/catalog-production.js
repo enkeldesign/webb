@@ -1,4 +1,4 @@
-import * as base from './catalog-base.js?revision=r222-awd-label';
+import * as base from './catalog-base.js?revision=r184-achievement-integrity';
 
 const CHROMATIC_CAMOUFLAGE = Object.freeze({
   id: 'chromatic-camouflage',
@@ -136,4 +136,4 @@ export function getAchievement(id) {
   return ACHIEVEMENT_BY_ID.get(id) || null;
 }
 
-export * from './catalog-base.js?revision=r222-awd-label';
+export * from './catalog-base.js?revision=r184-achievement-integrity';

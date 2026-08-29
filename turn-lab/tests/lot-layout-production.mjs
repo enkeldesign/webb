@@ -46,7 +46,7 @@ assert.match(
 assert.match(index, new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent`));
 assert.equal(
   imports['./garage/lot-r10.js?build=20260720-r19'],
-  `./garage/lot-track-select.js?build=${release.cacheKey}&revision=r223-training-car-taxi`,
+  `./garage/lot-track-select.js?build=${release.cacheKey}&revision=r164-long-session-robustness`,
   'Production must request the optimized Lot wrapper under a fresh cache identity'
 );
 assert.equal(
@@ -55,7 +55,7 @@ assert.equal(
 );
 assert.equal(
   imports['./garage/lot-enhancement-runtime.js?revision=r163-native-picker-parent-click&build=20260809-r163'],
-  `./garage/lot-enhancement-runtime.js?build=${release.cacheKey}&revision=r223-training-car-taxi`,
+  `./garage/lot-enhancement-runtime.js?build=${release.cacheKey}&revision=r164-perk-observer-hotfix`,
   'The interaction-freeze hotfix must retain its cache-safe enhancement-runtime route'
 );
 

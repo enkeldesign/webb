@@ -93,38 +93,22 @@ assert.match(semanticSource, /turnSecondaryColor/);
 assert.doesNotMatch(semanticSource, /BoxGeometry|PlaneGeometry|CylinderGeometry|SphereGeometry|mergeGeometries|PointLight/,
   'Semantic paint must add no model or presentation geometry');
 
-// Read the actual sign-free Taxi-derived Training Car binary so this regression proves
-// both that its semantic masks intersect real triangles and that the removed roof sign
-// cannot return through outlines, ghosts or thumbnails.
-const classicGlb = await fs.readFile(new URL('../../turn/assets/cars/training-car.glb', import.meta.url));
+// The previous r179 shader inverted vMapUv.y after GLTFLoader had already prepared the
+// UVs for texture sampling. That put every Training Car paint mask on empty/opposite
+// atlas cells: PAINTJOB changed uniforms but no visible body pixels. Read the actual
+// shipped GLB binary here so this regression proves the semantic masks intersect real
+// triangles instead of merely checking that TEXCOORD_0 and shader source strings exist.
+const classicGlb = await fs.readFile(new URL('../../turn/assets/cars/classic.glb', import.meta.url));
 const classic = readGlb(classicGlb, 'classic');
-assert.equal(catalog.getCarDefinition('classic').pack, 'car');
-assert.equal(catalog.getCarDefinition('classic').surfaceProfileId, 'training-car');
-assert.equal(classic.json.scenes?.[0]?.name, 'training-car');
-assert.deepEqual(
-  (classic.json.nodes || []).map((node) => node.name),
-  ['body', 'wheel-front-right', 'wheel-front-left', 'wheel-back-left', 'wheel-back-right'],
-  'Training Car must preserve the Taxi body and four independently addressable wheel nodes'
-);
-const classicBodyNode = classic.json.nodes.find((node) => node.name === 'body');
-const classicBodyPrimitive = classic.json.meshes?.[classicBodyNode?.mesh]?.primitives?.[0];
-const classicBodyPositions = classic.json.accessors?.[classicBodyPrimitive?.attributes?.POSITION];
-const classicBodyIndices = classic.json.accessors?.[classicBodyPrimitive?.indices];
-assert.ok(classicBodyPositions?.max?.[1] <= 1.15,
-  'Training Car body bounds must end at the roof instead of the removed Taxi sign');
-assert.equal(classicBodyPositions?.count, 1118,
-  'Training Car must omit the Taxi sign\'s 20 authored vertices');
-assert.equal(classicBodyIndices?.count, 2202,
-  'Training Car must omit the Taxi sign\'s 10 authored triangles');
 const classicAuthoredCells = triangleCellCounts(classic, { flipV: false });
 const classicDoubleFlippedCells = triangleCellCounts(classic, { flipV: true });
 const classicBody = mergeNodeCells(classicAuthoredCells, (name) => !/wheel/i.test(name));
 const classicWheels = mergeNodeCells(classicAuthoredCells, (name) => /wheel/i.test(name));
 const classicBodyDoubleFlipped = mergeNodeCells(classicDoubleFlippedCells, (name) => !/wheel/i.test(name));
 const classicWheelsDoubleFlipped = mergeNodeCells(classicDoubleFlippedCells, (name) => /wheel/i.test(name));
-const classicPrimary = [[4, 2], [4, 3]];
-const classicSecondary = [[3, 4], [3, 5]];
-const classicRims = [[3, 4], [3, 5]];
+const classicPrimary = [[4, 4], [4, 5]];
+const classicSecondary = [[1, 6], [1, 7]];
+const classicRims = [[4, 6], [4, 7]];
 assert.ok(cellHits(classicBody, classicPrimary) > 0,
   'Training Car primary paint cells must intersect authored body triangles');
 assert.ok(cellHits(classicBody, classicSecondary) > 0,
@@ -137,25 +121,6 @@ assert.equal(cellHits(classicBodyDoubleFlipped, classicSecondary), 0,
   'The retired double-V-flip must miss the Training Car secondary cells');
 assert.equal(cellHits(classicWheelsDoubleFlipped, classicRims), 0,
   'The retired double-V-flip must miss the Training Car rim cells');
-assert.match(semanticSource, /'training-car': profile\(\{ primary: \[\[4, 2\], \[4, 3\]\], secondary: \[\[3, 4\], \[3, 5\]\], rims: \[\[3, 4\], \[3, 5\]\] \}\)/,
-  'Training Car must use the verified Taxi-derived Car Kit palette cells');
-
-const luxurySuvCar = catalog.getCarDefinition('suv');
-assert.equal(luxurySuvCar.surfaceProfileId, 'suv-luxury',
-  'The stable SUV ID must select the mounted Luxury SUV surface profile');
-const luxurySuvGlb = await fs.readFile(new URL('../../turn/assets/cars/suv-luxury.glb', import.meta.url));
-const luxurySuv = readGlb(luxurySuvGlb, 'suv-luxury');
-const luxurySuvCells = triangleCellCounts(luxurySuv, { flipV: false });
-const luxurySuvBody = mergeNodeCells(luxurySuvCells, (name) => !/wheel/i.test(name));
-const luxurySuvWheels = mergeNodeCells(luxurySuvCells, (name) => /wheel/i.test(name));
-assert.ok(cellHits(luxurySuvBody, [[4, 2], [4, 3]]) > 0,
-  'Luxury SUV primary paint cells must intersect its authored body triangles');
-assert.ok(cellHits(luxurySuvBody, [[3, 4], [3, 5]]) > 0,
-  'Luxury SUV secondary trim cells must intersect its authored body triangles');
-assert.ok(cellHits(luxurySuvWheels, [[5, 4], [5, 5]]) > 0,
-  'Luxury SUV rim paint cells must intersect its authored wheel triangles');
-assert.match(semanticSource, /'suv-luxury': profile\(\{ primary: \[\[4, 2\], \[4, 3\]\]/,
-  'Luxury SUV must use its verified native palette cells instead of the old SUV mask');
 
 for (const id of ['police', 'ambulance', 'firetruck']) {
   const car = catalog.getCarDefinition(id);

@@ -1,4 +1,4 @@
-import * as baseLapSystem from './lap-system.js?revision=r223-training-car-taxi';
+import * as baseLapSystem from './lap-system.js?revision=r195-unranked-super-sedan';
 import { isSportsSedanEasterEgg } from '../vehicle/catalog.js?build=20260720-r20';
 
 export const LAP_CHECKPOINTS = baseLapSystem.LAP_CHECKPOINTS;

@@ -28,8 +28,8 @@ function importMapFrom(source) {
 }
 
 const expectedFactoryColors = new Map([
-  ['convertible', ['#ff4fa3', '#792766']],
-  ['suv', ['#0555aa', '#163f7a']],
+  ['convertible', ['#0555aa', '#163f7a']],
+  ['suv', ['#7d123e', '#2f0918']],
   ['van', ['#ff7700', '#222222']],
   ['race', ['#5d503f', '#222222']],
   ['vintage-racer', ['#004455', '#222222']],
@@ -45,12 +45,12 @@ for (const [id, [primary, secondary]] of expectedFactoryColors) {
 }
 
 const chromaticFactoryRoute = Object.freeze({
-  countryside: 'convertible',
+  countryside: 'suv',
   airport: 'classic',
   harbor: 'van',
   cliffside: 'sedan',
   'midnight-city': 'sedan-sports',
-  mountain: 'suv'
+  mountain: 'convertible'
 });
 
 for (const [trackId, carId] of Object.entries(chromaticFactoryRoute)) {
@@ -104,9 +104,8 @@ assert.match(semantic, /turnPoliceGreyMask/,
   'Police grey treatment must target neutral mid-grey pixels instead of flattening the service livery');
 assert.match(semantic, /car: '\.\/assets\/cars\/palettes\/car-kit\.png'/);
 
-const canonicalCatalogTarget = '/turn/vehicle/catalog.js?revision=r223-training-car-taxi';
+const canonicalCatalogTarget = '/turn/vehicle/catalog.js?revision=r220-apex-grip';
 const expectedCatalogTargets = [
-  ['/turn/vehicle/catalog.js', canonicalCatalogTarget],
   ['/turn/vehicle/catalog.js?build=20260804-r157-factory-colors', canonicalCatalogTarget],
   ['/turn/vehicle/catalog.js?build=20260720-r20&revision=r588-canonical-attributes', canonicalCatalogTarget],
   ['/turn/vehicle/catalog.js?revision=r164-vintage-rally-polish', canonicalCatalogTarget],
@@ -114,11 +113,8 @@ const expectedCatalogTargets = [
   ['./vehicle/catalog.js?build=20260720-r20', canonicalCatalogTarget]
 ];
 const expectedEmergencyTargets = [
-  ['/turn/vehicle/semantic-car-finish.js', '/turn/vehicle/semantic-car-finish.js?revision=r223-training-car-taxi'],
-  ['/turn/vehicle/car-models.js', '/turn/vehicle/car-models.js?revision=r223-training-car-taxi'],
-  ['/turn/vehicle/emergency-livery-models.js', '/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi'],
-  ['./vehicle/car-models.js?build=20260720-r19', '/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi'],
-  ['./vehicle/car-models.js?build=20260720-r22', '/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi']
+  ['./vehicle/car-models.js?build=20260720-r19', '/turn/vehicle/emergency-livery-models.js'],
+  ['./vehicle/car-models.js?build=20260720-r22', '/turn/vehicle/emergency-livery-models.js']
 ];
 
 for (const [name, source] of [['production', productionEntry], ['TURN LAB', labEntry]]) {
@@ -136,7 +132,6 @@ assert.deepEqual(
 
 const yourTurnImports = importMapFrom(yourTurnEntry);
 for (const specifier of [
-  '/turn/vehicle/catalog.js',
   '/turn/vehicle/catalog.js?build=20260720-r19',
   '/turn/vehicle/catalog.js?build=20260720-r20',
   '/turn/vehicle/catalog.js?build=20260804-r157-factory-colors',

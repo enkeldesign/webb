@@ -3,7 +3,6 @@ export const LEGACY_VEHICLE_ID = 'sedan';
 export const DEFAULT_VEHICLE_COLOR = '#ffcc00';
 export const DEFAULT_VEHICLE_SECONDARY_COLOR = '#f8f9fa';
 export const VEHICLE_SELECTION_KEY = 'turn-vehicle-selection-v1';
-export const VEHICLE_SELECTION_VERSION = 2;
 export const VEHICLE_STAT_BUDGET = 18;
 export const SPORTS_SEDAN_EASTER_EGG_COLOR = '#666666';
 export const MAXED_VEHICLE_STATS = Object.freeze({
@@ -36,7 +35,7 @@ export const CAR_PALETTE = Object.freeze([
 ]);
 
 const DEFAULT_COLOR_BY_ID = Object.freeze({
-  convertible: Object.freeze({ fallback: '#ff4fa3' }),
+  convertible: Object.freeze({ fallback: '#0555aa', p3: Object.freeze([0.02, 0.333, 0.667]) }),
   classic: Object.freeze({ fallback: '#ffcc00', p3: Object.freeze([1, 0.76, 0]) }),
   'vintage-racer': Object.freeze({ fallback: '#004455' }),
   'toy-racer': Object.freeze({ fallback: '#cccccc' }),
@@ -45,7 +44,7 @@ const DEFAULT_COLOR_BY_ID = Object.freeze({
   race: Object.freeze({ fallback: '#5d503f' }),
   'sedan-sports': Object.freeze({ fallback: '#5e3c87', p3: Object.freeze([0.36, 0.19, 0.56]) }),
   sedan: Object.freeze({ fallback: '#2b6a70', p3: Object.freeze([0.12, 0.41, 0.43]) }),
-  suv: Object.freeze({ fallback: '#0555aa', p3: Object.freeze([0.02, 0.333, 0.667]) }),
+  suv: Object.freeze({ fallback: '#7d123e' }),
   firetruck: Object.freeze({ fallback: '#d92d20', p3: Object.freeze([0.82, 0.08, 0.04]) }),
   police: Object.freeze({ fallback: '#222222' }),
   ambulance: Object.freeze({ fallback: '#f8f9fa', p3: Object.freeze([0.95, 0.97, 0.98]) }),
@@ -58,8 +57,8 @@ const DEFAULT_SECONDARY_COLOR_BY_ID = Object.freeze({
   truck: Object.freeze({ fallback: '#7b3032' }),
   sedan: Object.freeze({ fallback: '#163f45' }),
   van: Object.freeze({ fallback: '#222222' }),
-  suv: Object.freeze({ fallback: '#163f7a' }),
-  convertible: Object.freeze({ fallback: '#792766' }),
+  suv: Object.freeze({ fallback: '#2f0918' }),
+  convertible: Object.freeze({ fallback: '#163f7a' }),
   'vintage-racer': Object.freeze({ fallback: '#222222' }),
   'toy-racer': Object.freeze({ fallback: '#ffcc00' }),
   'monster-truck': Object.freeze({ fallback: '#4f5504' }),
@@ -72,6 +71,7 @@ const DEFAULT_SECONDARY_COLOR_BY_ID = Object.freeze({
 });
 
 const VISUAL_SIZE_MULTIPLIER_BY_ID = Object.freeze({
+  classic: 0.72,
   'vintage-racer': 0.75,
   police: 1.15
 });
@@ -82,14 +82,6 @@ const RETIRED_VEHICLE_REPLACEMENTS = Object.freeze({
   'suv-luxury': 'suv',
   'hatchback-sports': 'police',
   'truck-flat': 'ambulance'
-});
-
-// Version 1 briefly shipped these factory pairs after the AWD/Luxury SUV model
-// swap. They are intentionally matched as complete pairs so a genuine PAINTJOB
-// color is never replaced just because one channel happens to match a default.
-const REPLACED_FACTORY_PAINT_BY_ID = Object.freeze({
-  convertible: Object.freeze({ color: '#0555aa', secondaryColor: '#163f7a' }),
-  suv: Object.freeze({ color: '#7d123e', secondaryColor: '#2f0918' })
 });
 
 const SIRENS_PERK = Object.freeze({
@@ -141,7 +133,7 @@ const TUNING_OVERRIDE_BY_ID = Object.freeze({
 
 const RAW_CARS = [
   ['convertible', 'AWD', 'car', { speed: 2, acceleration: 3, control: 4, drift: 4, boostPower: 2, boostDuration: 3 }, 0.98, 0, 0.90],
-  ['classic', 'Training Car', 'car', { speed: 1, acceleration: 1, control: 5, drift: 5, boostPower: 1, boostDuration: 5 }, 1.00, 0, 0.88],
+  ['classic', 'Training Car', 'prototype', { speed: 1, acceleration: 1, control: 5, drift: 5, boostPower: 1, boostDuration: 5 }, 1.00, 1, 0.88],
   ['vintage-racer', 'Vintage Racer', 'toy', { speed: 4, acceleration: 3, control: 2, drift: 5, boostPower: 2, boostDuration: 2 }, 0.96, 0, 1.28],
   ['toy-racer', 'Rally Racer', 'car', { speed: 4, acceleration: 4, control: 1, drift: 4, boostPower: 4, boostDuration: 1 }, 0.98, 0, 1.18],
   ['monster-truck', 'Monster Truck', 'toy', { speed: 2, acceleration: 3, control: 2, drift: 5, boostPower: 2, boostDuration: 4 }, 0.83, 2, 0.62],
@@ -197,7 +189,6 @@ const VISUAL_CUSTOMIZATION_BY_ID = Object.freeze({
 });
 
 const MODEL_ASSET_BY_ID = Object.freeze({
-  classic: './assets/cars/training-car.glb',
   convertible: './assets/cars/suv.glb',
   suv: './assets/cars/suv-luxury.glb',
   'sedan-sports': './assets/cars/hatchback-sports.glb',
@@ -205,9 +196,7 @@ const MODEL_ASSET_BY_ID = Object.freeze({
 });
 
 const SURFACE_PROFILE_BY_ID = Object.freeze({
-  classic: 'training-car',
   convertible: 'suv',
-  suv: 'suv-luxury',
   'sedan-sports': 'hatchback-sports',
   'toy-racer': 'sedan-sports-rally'
 });
@@ -302,28 +291,6 @@ export function normalizeVehicleSelection(selection) {
   };
 }
 
-export function normalizeStoredVehiclePaint(selection, { migrateReplacedFactoryPaint = false } = {}) {
-  const normalized = normalizeVehicleSelection(selection);
-  const replacedFactoryPaint = REPLACED_FACTORY_PAINT_BY_ID[normalized.carId];
-  const matchesReplacedFactoryPaint = migrateReplacedFactoryPaint
-    && normalized.color === replacedFactoryPaint?.color
-    && normalized.secondaryColor === replacedFactoryPaint?.secondaryColor;
-  const matchesCurrentFactoryPaint = normalized.color === getVehicleDefaultColor(normalized.carId)
-    && normalized.secondaryColor === getVehicleDefaultSecondaryColor(normalized.carId);
-  const factoryPaint = selection?.factoryPaint === true
-    || matchesReplacedFactoryPaint
-    || matchesCurrentFactoryPaint;
-
-  return factoryPaint
-    ? {
-        carId: normalized.carId,
-        color: getVehicleDefaultColor(normalized.carId),
-        secondaryColor: getVehicleDefaultSecondaryColor(normalized.carId),
-        factoryPaint: true
-      }
-    : { ...normalized, factoryPaint: false };
-}
-
 export function isSportsSedanEasterEgg(selection) {
   return normalizeVehicleId(selection?.carId) === 'sedan-sports'
     && normalizeVehicleSecondaryColor(selection?.secondaryColor) === SPORTS_SEDAN_EASTER_EGG_COLOR;
@@ -339,15 +306,7 @@ export function getEffectiveVehicleTuning(selection) {
 
 export function loadVehicleSelection() {
   try {
-    const stored = JSON.parse(localStorage.getItem(VEHICLE_SELECTION_KEY));
-    const normalized = normalizeStoredVehiclePaint(stored, {
-      migrateReplacedFactoryPaint: (Number(stored?.version) || 0) < VEHICLE_SELECTION_VERSION
-    });
-    activeVehicleSelection = normalizeVehicleSelection(normalized);
-    localStorage.setItem(VEHICLE_SELECTION_KEY, JSON.stringify({
-      version: VEHICLE_SELECTION_VERSION,
-      ...normalized
-    }));
+    activeVehicleSelection = normalizeVehicleSelection(JSON.parse(localStorage.getItem(VEHICLE_SELECTION_KEY)));
   } catch (_) {
     activeVehicleSelection = normalizeVehicleSelection(null);
   }
@@ -355,15 +314,10 @@ export function loadVehicleSelection() {
 }
 
 export function saveVehicleSelection(selection) {
-  const stored = normalizeStoredVehiclePaint(selection);
-  activeVehicleSelection = normalizeVehicleSelection(stored);
-  try {
-    localStorage.setItem(VEHICLE_SELECTION_KEY, JSON.stringify({
-      version: VEHICLE_SELECTION_VERSION,
-      ...stored
-    }));
-  } catch (_) {}
-  return activeVehicleSelection;
+  const normalized = normalizeVehicleSelection(selection);
+  activeVehicleSelection = normalized;
+  try { localStorage.setItem(VEHICLE_SELECTION_KEY, JSON.stringify(normalized)); } catch (_) {}
+  return normalized;
 }
 
 export function makeGhostColor(color) {
