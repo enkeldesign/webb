@@ -6,14 +6,30 @@ import {
   completeAdminUnlockFromLot,
   createAdminRewardState
 } from '../../turn/testing/admin-unlock-sequence.js';
-import { TROPHY_ROAD_REWARDS } from '../../turn/progression/trophy-road.js';
+import {
+  TROPHY_ROAD_REWARDS,
+  prepareTrophyRoadProfile,
+  readTrophyRoadSnapshot
+} from '../../turn/progression/trophy-road.js';
 
-const [source, indexSource, releaseSource] = await Promise.all([
+const [source, roadSource, indexSource, releaseSource] = await Promise.all([
   fs.readFile(new URL('../../turn/testing/admin-unlock-sequence.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/progression/trophy-road.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8')
 ]);
 const release = JSON.parse(releaseSource);
+
+function createMemoryStorage(initial = {}) {
+  const memory = new Map(Object.entries(initial));
+  return {
+    get length() { return memory.size; },
+    key(index) { return [...memory.keys()][index] ?? null; },
+    getItem(key) { return memory.get(key) ?? null; },
+    setItem(key, value) { memory.set(key, String(value)); },
+    removeItem(key) { memory.delete(key); }
+  };
+}
 
 assert.deepEqual(ADMIN_UNLOCK_SEQUENCE, [
   'track:countryside',
@@ -132,6 +148,54 @@ assert.deepEqual(repaired.snapshot.rewards.unlocked, rewardIds);
 assert.equal(repaired.snapshot.unlocked['save-bella'], undefined,
   'SAVE BELLA! must remain available for real rescue testing');
 
+// A clean domain can legitimately acquire default preference/selection keys before
+// Trophy Road finishes startup. Those keys must never be mistaken for an old player.
+const freshStartupStorage = createMemoryStorage({
+  'turn-vehicle-selection-v1': JSON.stringify({ carId: 'classic' }),
+  'turn-selected-track-v1': 'countryside',
+  'turn-steering-mode-v1': 'motion',
+  'turn-drive-by-ear-v1': 'true'
+});
+assert.equal(prepareTrophyRoadProfile(freshStartupStorage), null,
+  'Default startup keys on a cleared domain must not create a grandfathered profile');
+assert.deepEqual(readTrophyRoadSnapshot(freshStartupStorage).unlockedRewardIds, [],
+  'A clean installation must begin with Trophy Road rewards locked');
+
+// Repair the exact bad state produced by the former settings-only legacy heuristic:
+// no achievements, current storage version, every reward silently grandfathered.
+const falseGrandfatherStorage = createMemoryStorage({
+  'turn-vehicle-selection-v1': JSON.stringify({ carId: 'classic' }),
+  'turn-achievements-v1': JSON.stringify({
+    version: 6,
+    unlocked: {},
+    seen: [],
+    progress: { tracks: [], blankTracks: [] },
+    rewards: { unlocked: rewardIds, seen: rewardIds }
+  })
+});
+const repairedFreshProfile = prepareTrophyRoadProfile(falseGrandfatherStorage);
+assert.equal(repairedFreshProfile?.version, 6);
+assert.deepEqual(repairedFreshProfile?.rewards?.unlocked, [],
+  'The accidental all-rewards fresh profile must self-repair without another data clear');
+assert.deepEqual(readTrophyRoadSnapshot(falseGrandfatherStorage).unlockedRewardIds, []);
+
+// The explicit hidden admin path remains intentional and must survive the repair guard.
+const intentionalAdminStorage = createMemoryStorage({
+  'turn-admin-unlock-v1': JSON.stringify({ version: 2, rewardsOnly: true }),
+  'turn-achievements-v1': JSON.stringify({
+    version: 6,
+    unlocked: {},
+    seen: [],
+    progress: { tracks: [], blankTracks: [] },
+    rewards: { unlocked: rewardIds, seen: rewardIds }
+  })
+});
+assert.deepEqual(
+  prepareTrophyRoadProfile(intentionalAdminStorage)?.rewards?.unlocked,
+  rewardIds,
+  'The hidden developer rewards profile must not be mistaken for the fresh-install bug'
+);
+
 assert.match(source, /target\.closest\('\.m8-track-continue'\)/,
   'The Home RACE action must be the separator that opens The Lot');
 assert.match(source, /aria-checked="true"/,
@@ -152,6 +216,10 @@ assert.match(source, /globalThis\.setTimeout\?\.\(reload, 0\)/,
   'The final action must reload so all pre-rendered reward gates rebuild unlocked');
 assert.match(source, /installAdminUnlockSequence\(\);\s*$/,
   'The isolated production module must install itself');
+assert.match(roadSource, /hasLegacyProfileEvidence\(storage\)/,
+  'Trophy Road legacy migration must require meaningful player evidence rather than any TURN setting key');
+assert.match(roadSource, /repairFalseFreshProfile\(existing, storage\)/,
+  'Known accidentally-grandfathered clean profiles must repair during startup');
 assert.match(indexSource,
   /<script type="module" src="\.\/testing\/admin-unlock-sequence\.js\?revision=r176-admin-rewards"><\/script>/,
   'The production entry must publish the rewards-only recognizer with a fresh cache identity');
@@ -159,7 +227,7 @@ assert.match(indexSource,
   new RegExp(`src="\\.\\/live-steering-setting\\.js\\?build=${escapeRegex(release.cacheKey)}-live-steering"`),
   'The hidden recognizer must not disturb the canonical steering entry');
 
-console.log('TURN rewards-only admin unlock regression passed.');
+console.log('TURN rewards-only admin unlock and fresh-profile reward locking regression passed.');
 
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
