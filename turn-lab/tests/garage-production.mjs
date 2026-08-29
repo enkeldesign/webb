@@ -27,12 +27,14 @@ const monsterTruck = catalog.getCarDefinition('monster-truck');
 const vintageRacer = catalog.getCarDefinition('vintage-racer');
 const rallyRacer = catalog.getCarDefinition('toy-racer');
 const futureRacer = catalog.getCarDefinition('race-future');
-const trainingCar = catalog.getCarDefinition('classic');
+const learnerCar = catalog.getCarDefinition('classic');
 assert.equal(catalog.DEFAULT_VEHICLE_ID, 'classic');
-assert.equal(trainingCar.name, 'Training Car');
-assert.equal(trainingCar.pack, 'car');
-assert.equal(trainingCar.asset, './assets/cars/training-car.glb');
-assert.equal(trainingCar.surfaceProfileId, 'training-car');
+assert.equal(learnerCar.name, 'Learner Car');
+assert.equal(learnerCar.pack, 'car');
+assert.equal(learnerCar.asset, './assets/cars/training-car.glb');
+assert.equal(learnerCar.surfaceProfileId, 'training-car');
+assert.equal(learnerCar.defaultColor, '#ffcc00');
+assert.equal(learnerCar.defaultSecondaryColor, '#222222');
 assert.equal(vintageRacer.name, 'Vintage Racer');
 assert.equal(vintageRacer.perk?.title, 'DRIFTAGE');
 assert.equal(rallyRacer.id, 'toy-racer', 'Rally Racer must preserve the Toy Racer stable storage/ghost id');
@@ -44,7 +46,7 @@ for (const id of ['firetruck', 'police', 'ambulance']) {
   assert.equal(catalog.getCarDefinition(id).perk?.title, 'SIRENS');
 }
 assert.deepEqual(
-  trainingCar.stats,
+  learnerCar.stats,
   { speed: 1, acceleration: 1, control: 5, drift: 5, boostPower: 1, boostDuration: 5 }
 );
 assert.deepEqual(
