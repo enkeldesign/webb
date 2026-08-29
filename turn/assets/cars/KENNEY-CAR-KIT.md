@@ -6,11 +6,17 @@ TURN includes these unmodified model files from Kenney's **Car Kit 3.1**:
 - `firetruck.glb`
 - `police.glb`
 
-`training-car.glb` is derived from the kit's `taxi.glb`. Its five disconnected
-roof-sign surfaces (10 triangles) were removed and the remaining body and four
-independently addressable wheel meshes retain Kenney's authored geometry, UVs
-and `Textures/colormap.png` reference. TURN supplies the shared Car Kit palette
-and applies the Training Car's selected body and trim colours at render time.
+`training-car.glb` uses the kit's `taxi.glb` body and four independently
+addressable wheel meshes. An earlier conversion removed the Taxi roof sign;
+TURN restores that sign from the **exact original Kenney Taxi source geometry**
+(`taxi.obj` vertices 367–370 and 375–378, using the same 10 source triangles).
+No substitute sign shape is generated.
+
+The player-facing vehicle is the **Learner Car**. TURN keeps the Taxi body yellow,
+uses dark trim, and applies fixed yellow learner identifiers with a black border
+and black `L`. The door identifier is a colour treatment on the existing body
+surface; it adds no door geometry. The body and trim retain the normal PAINTJOB
+behaviour while the learner identifiers stay visually stable.
 
 Asset source: https://kenney.nl/assets/car-kit
 
