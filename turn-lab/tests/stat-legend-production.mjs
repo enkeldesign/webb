@@ -14,7 +14,19 @@ assert.match(
   'The DRIFT legend must state the permanent speed tradeoff'
 );
 
-const [index, releaseSource, wrapper, enhancementRuntime, legendModule, legendCss, lotCss, lotSource, physicsSource] = await Promise.all([
+const [
+  index,
+  releaseSource,
+  wrapper,
+  enhancementRuntime,
+  legendModule,
+  legendCss,
+  lotCss,
+  lotSource,
+  physicsSource,
+  achievementsEntry,
+  homeRewardReplay
+] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-track-select.js', import.meta.url), 'utf8'),
@@ -23,7 +35,9 @@ const [index, releaseSource, wrapper, enhancementRuntime, legendModule, legendCs
   fs.readFile(new URL('../../turn/garage/lot-stat-legend.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-r10.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/vehicle/physics.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/vehicle/physics.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/achievements.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/achievements/home-reward-replay-r225.js', import.meta.url), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -53,6 +67,8 @@ assert.ok(
   'Enhancement must connect to the already-created synchronous Lot DOM'
 );
 assert.match(enhancementRuntime, /installLotStatLegend\(scope\)/, 'Every Lot route must mount the shared stat legend');
+assert.match(enhancementRuntime, /lot-stat-legend\.js\?revision=r225-18-point-budget/,
+  'The revised attribute explanation must load under a fresh module identity');
 assert.ok(
   enhancementRuntime.indexOf('installLotStatLegend(scope)') < enhancementRuntime.indexOf('installLotLayout(scope)'),
   'The legend trigger must exist before the compact layout turns it into an info icon'
@@ -60,6 +76,10 @@ assert.ok(
 assert.match(legendModule, /VEHICLE_STAT_LEGEND/, 'The in-game legend must use the shared source of truth');
 assert.match(legendModule, /aria-modal/, 'The legend must open as an accessible modal');
 assert.match(legendModule, /WHAT DO THE STATS MEAN\?/, 'The legend trigger must be discoverable before the compact layout turns it into an info icon');
+assert.match(legendModule, /Every car always has 18 attribute points in total\./,
+  'The attribute modal must explain the fixed 18-point budget shared by every car');
+assert.match(legendModule, /What changes is how those 18 points are distributed\./,
+  'The attribute modal must explain that car identity comes from point distribution');
 assert.doesNotMatch(legendModule, /mountObserver|subtree: true/, 'The legend module must not observe the whole game DOM');
 assert.match(legendModule, /statsObserver\.observe\(stats, \{ childList: true \}\)/, 'Only actual car-stat replacement must trigger relabelling');
 assert.match(legendModule, /label\.textContent !== definition\.label/, 'Relabelling must not rewrite unchanged labels');
@@ -75,4 +95,25 @@ assert.match(physicsSource, /baseSpeedLimit \* effectiveDriftSpeedMultiplier/, '
 assert.match(physicsSource, /3\.2 \* driftStabilityMultiplier/, 'The DRIFT stat must improve recovery from a slide');
 assert.match(physicsSource, /0\.42 \* driftStabilityMultiplier/, 'The DRIFT stat must improve lateral stability while the control is held');
 
-console.log(`TURN ${release.id} route-independent shared vehicle stat legend passed.`);
+assert.match(achievementsEntry, /home-reward-replay-r225\.js\?revision=r225-home-reward-replay/,
+  'The achievements entry must install the Home reward reminder persistently');
+assert.match(homeRewardReplay, /PENDING_STORAGE_KEY = 'turn-home-reward-replay-v1'/,
+  'A reward reminder must survive closing the installed app or browser');
+assert.match(homeRewardReplay, /window\.addEventListener\('turn:trophy-road-updated', handleRewardUpdate\)/,
+  'New Trophy Road rewards must be captured synchronously when they unlock');
+assert.match(homeRewardReplay, /document\.documentElement\.classList\.contains\('turn-home-ready'\)/);
+assert.match(homeRewardReplay, /document\.body\.classList\.contains\('turn-home-open'\)/,
+  'Reward reminders must be gated to the CHOOSE TRACK\/Home screen');
+assert.match(homeRewardReplay, /document\.addEventListener\('turn:home-ready', handleHomeReady\)/,
+  'A pending reward from a closed previous session must replay when the next Home becomes ready');
+assert.match(homeRewardReplay, /const addedThisSession = new Set\(\)/);
+assert.match(homeRewardReplay, /const shownAwayFromHome = new Set\(\)/,
+  'The runtime must distinguish a reward already shown during the race from one first shown on Home');
+assert.match(homeRewardReplay, /if \(!addedThisSession\.has\(id\)\) return true;/,
+  'Rewards carried across sessions must be ready for immediate Home replay');
+assert.match(homeRewardReplay, /if \(shownAwayFromHome\.has\(id\)\) return true;/,
+  'A reward already shown in-race must be deliberately shown again after returning Home');
+assert.match(homeRewardReplay, /consume\(currentIds\)/,
+  'If the ordinary reward toast first appears after Home is already open, it must count as the Home reminder instead of duplicating immediately');
+
+console.log(`TURN ${release.id} route-independent vehicle stat legend and persistent Home reward reminder passed.`);

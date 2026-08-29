@@ -1,3 +1,5 @@
+import './achievements/home-reward-replay-r225.js?revision=r225-home-reward-replay';
+
 export {
   ACHIEVEMENTS,
   ONBOARDING_ACHIEVEMENT_IDS
