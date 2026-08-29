@@ -22,7 +22,7 @@ export function prepareLotEnhancements() {
   if (enhancementPreparation) return enhancementPreparation;
 
   enhancementPreparation = Promise.all([
-    import('./lot-stat-legend.js?build=20260724-r59'),
+    import('./lot-stat-legend.js?revision=r225-18-point-budget'),
     import('./lot-layout-r60.js?build=20260729-r116&revision=r213-attributes-typography'),
     import('./lot-accessibility-r118.js?build=20260729-r118&revision=r588-canonical-attributes'),
     import('./lot-perk-disclosure.js?revision=r225-information-blue'),
