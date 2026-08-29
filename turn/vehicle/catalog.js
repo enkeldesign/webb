@@ -3,7 +3,7 @@ export const LEGACY_VEHICLE_ID = 'sedan';
 export const DEFAULT_VEHICLE_COLOR = '#ffcc00';
 export const DEFAULT_VEHICLE_SECONDARY_COLOR = '#f8f9fa';
 export const VEHICLE_SELECTION_KEY = 'turn-vehicle-selection-v1';
-export const VEHICLE_SELECTION_VERSION = 2;
+export const VEHICLE_SELECTION_VERSION = 3;
 export const VEHICLE_STAT_BUDGET = 18;
 export const SPORTS_SEDAN_EASTER_EGG_COLOR = '#666666';
 export const MAXED_VEHICLE_STATS = Object.freeze({
@@ -54,7 +54,7 @@ const DEFAULT_COLOR_BY_ID = Object.freeze({
 });
 
 const DEFAULT_SECONDARY_COLOR_BY_ID = Object.freeze({
-  classic: Object.freeze({ fallback: '#f8f9fa' }),
+  classic: Object.freeze({ fallback: '#222222' }),
   truck: Object.freeze({ fallback: '#7b3032' }),
   sedan: Object.freeze({ fallback: '#163f45' }),
   van: Object.freeze({ fallback: '#222222' }),
@@ -84,10 +84,11 @@ const RETIRED_VEHICLE_REPLACEMENTS = Object.freeze({
   'truck-flat': 'ambulance'
 });
 
-// Version 1 briefly shipped these factory pairs after the AWD/Luxury SUV model
-// swap. They are intentionally matched as complete pairs so a genuine PAINTJOB
-// color is never replaced just because one channel happens to match a default.
+// Earlier selection versions briefly shipped these complete factory paint pairs.
+// They are intentionally matched as pairs so a genuine PAINTJOB color is never
+// replaced just because one channel happens to match an old default.
 const REPLACED_FACTORY_PAINT_BY_ID = Object.freeze({
+  classic: Object.freeze({ color: '#ffcc00', secondaryColor: '#f8f9fa' }),
   convertible: Object.freeze({ color: '#0555aa', secondaryColor: '#163f7a' }),
   suv: Object.freeze({ color: '#7d123e', secondaryColor: '#2f0918' })
 });
@@ -141,7 +142,7 @@ const TUNING_OVERRIDE_BY_ID = Object.freeze({
 
 const RAW_CARS = [
   ['convertible', 'AWD', 'car', { speed: 2, acceleration: 3, control: 4, drift: 4, boostPower: 2, boostDuration: 3 }, 0.98, 0, 0.90],
-  ['classic', 'Training Car', 'car', { speed: 1, acceleration: 1, control: 5, drift: 5, boostPower: 1, boostDuration: 5 }, 1.00, 0, 0.88],
+  ['classic', 'Learner Car', 'car', { speed: 1, acceleration: 1, control: 5, drift: 5, boostPower: 1, boostDuration: 5 }, 1.00, 0, 0.88],
   ['vintage-racer', 'Vintage Racer', 'toy', { speed: 4, acceleration: 3, control: 2, drift: 5, boostPower: 2, boostDuration: 2 }, 0.96, 0, 1.28],
   ['toy-racer', 'Rally Racer', 'car', { speed: 4, acceleration: 4, control: 1, drift: 4, boostPower: 4, boostDuration: 1 }, 0.98, 0, 1.18],
   ['monster-truck', 'Monster Truck', 'toy', { speed: 2, acceleration: 3, control: 2, drift: 5, boostPower: 2, boostDuration: 4 }, 0.83, 2, 0.62],
