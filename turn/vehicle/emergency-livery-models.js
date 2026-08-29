@@ -2,7 +2,7 @@ import {
   createCarVisual as createBaseCarVisual,
   preloadCarModels,
   recolorCarVisual
-} from './car-models.js?revision=r224-learner-car-base';
+} from './car-models.js';
 import { installLearnerCarLivery } from './learner-car-livery.js';
 
 const EMERGENCY_IDS = new Set(['police', 'ambulance', 'firetruck']);
