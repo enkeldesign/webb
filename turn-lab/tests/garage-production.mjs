@@ -14,7 +14,9 @@ const expectedIds = [
 
 assert.equal(catalog.CAR_CATALOG.length, 15, 'The Lot must contain exactly 15 cars');
 assert.deepEqual(catalog.CAR_CATALOG.map((car) => car.id), expectedIds, 'The Lot car order changed unexpectedly');
-for (const id of expectedIds) await fs.access(path.join(turnDir, `assets/cars/${id}.glb`));
+for (const car of catalog.CAR_CATALOG) {
+  await fs.access(path.join(turnDir, car.asset.replace(/^\.\//, '')));
+}
 const brickFiles = (await fs.readdir(path.join(turnDir, 'assets/lot-bricks'))).filter((file) => file.endsWith('.glb'));
 assert.equal(brickFiles.length, 9, 'The vendored Kenney Brick Kit subset must remain available');
 
@@ -25,9 +27,14 @@ const monsterTruck = catalog.getCarDefinition('monster-truck');
 const vintageRacer = catalog.getCarDefinition('vintage-racer');
 const rallyRacer = catalog.getCarDefinition('toy-racer');
 const futureRacer = catalog.getCarDefinition('race-future');
-const trainingCar = catalog.getCarDefinition('classic');
+const learnerCar = catalog.getCarDefinition('classic');
 assert.equal(catalog.DEFAULT_VEHICLE_ID, 'classic');
-assert.equal(trainingCar.name, 'Training Car');
+assert.equal(learnerCar.name, 'Learner Car');
+assert.equal(learnerCar.pack, 'car');
+assert.equal(learnerCar.asset, './assets/cars/training-car.glb');
+assert.equal(learnerCar.surfaceProfileId, 'training-car');
+assert.equal(learnerCar.defaultColor, '#ffcc00');
+assert.equal(learnerCar.defaultSecondaryColor, '#222222');
 assert.equal(vintageRacer.name, 'Vintage Racer');
 assert.equal(vintageRacer.perk?.title, 'DRIFTAGE');
 assert.equal(rallyRacer.id, 'toy-racer', 'Rally Racer must preserve the Toy Racer stable storage/ghost id');
@@ -39,7 +46,7 @@ for (const id of ['firetruck', 'police', 'ambulance']) {
   assert.equal(catalog.getCarDefinition(id).perk?.title, 'SIRENS');
 }
 assert.deepEqual(
-  trainingCar.stats,
+  learnerCar.stats,
   { speed: 1, acceleration: 1, control: 5, drift: 5, boostPower: 1, boostDuration: 5 }
 );
 assert.deepEqual(
@@ -170,8 +177,8 @@ const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/s
 assert.ok(importMapText, 'Production must expose its import map');
 const imports = JSON.parse(importMapText).imports;
 const releaseTarget = (filePath) => `${filePath}?build=${release.cacheKey}`;
-const vehicleCatalogTarget = '/turn/vehicle/catalog.js?revision=r222-awd-suv-paint';
-const carModelBridgeTarget = '/turn/vehicle/emergency-livery-models.js?revision=r222-awd-suv-paint';
+const vehicleCatalogTarget = '/turn/vehicle/catalog.js?revision=r223-training-car-taxi';
+const carModelBridgeTarget = '/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi';
 
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(index, new RegExp(`\\.\\/garage\\/lot-r10\\.css\\?build=${release.cacheKey}-native-html`));
@@ -179,7 +186,7 @@ assert.match(index, new RegExp(`\\.\\/track-intro\\.css\\?build=${release.cacheK
 assert.match(index, new RegExp(`src="\\.\\/app\\.js\\?build=${release.cacheKey}-browser-consent(?:-[^"]+)?"`));
 assert.equal(
   imports['./garage/lot-r10.js?build=20260720-r19'],
-  `${releaseTarget('./garage/lot-track-select.js')}&revision=r222-awd-suv-paint`
+  `${releaseTarget('./garage/lot-track-select.js')}&revision=r223-training-car-taxi`
 );
 assert.equal(imports['./ui/track-intro.js?build=20260725-r75'], releaseTarget('./ui/track-intro.js'));
 assert.ok(
@@ -214,7 +221,7 @@ assert.match(lotEnhancementRuntime, /installLotPerkDisclosure\(scope\)/);
 assert.match(lotEnhancementRuntime, /installLotStatLegend\(scope\)/);
 assert.match(lotEnhancementRuntime, /installLotLayout\(scope\)/);
 assert.match(lotEnhancementRuntime, /installLotAccessibility\(scope\)/);
-assert.match(lotEnhancementRuntime, /lot-vehicle-copy\.js\?revision=r222-awd-suv-paint/);
+assert.match(lotEnhancementRuntime, /lot-vehicle-copy\.js\?revision=r223-training-car-taxi/);
 assert.ok(
   lotEnhancementRuntime.indexOf('gateLotNow(scope)') < lotEnhancementRuntime.indexOf('installLotAccessibility(scope)'),
   'Trophy locks must be included in the accessible car names before the accessibility enhancer runs'

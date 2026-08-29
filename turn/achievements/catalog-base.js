@@ -47,7 +47,7 @@ export const TRACK_NAMES = Object.freeze({
 
 export const VEHICLE_NAMES = Object.freeze({
   convertible: 'AWD',
-  classic: 'Training Car',
+  classic: 'Learner Car',
   'vintage-racer': 'Vintage Racer',
   'toy-racer': 'Rally Racer',
   'monster-truck': 'Monster Truck',
@@ -90,11 +90,11 @@ export const ACHIEVEMENTS = Object.freeze([
   Object.freeze({ id: 'take-it-from-the-top', category: CATEGORY.ONBOARDING, trophies: 25, title: 'TAKE IT FROM THE TOP', description: 'Use Restart Lap after the current lap becomes void.', icon: 'restart' }),
   Object.freeze({ id: 'charge-through-it', category: CATEGORY.ONBOARDING, trophies: 25, title: 'CHARGE THROUGH IT', description: 'Recharge at least 25% of the Boost meter while drifting in one lap.', icon: 'charge', progressMax: 25 }),
   Object.freeze({ id: 'second-wind', category: CATEGORY.ONBOARDING, trophies: 25, title: 'SECOND WIND', description: 'Run Boost empty, let it recharge, then activate Boost again.', icon: 'wind' }),
-  Object.freeze({ id: 'flow-state', category: CATEGORY.ONBOARDING, trophies: 50, title: 'FLOW STATE', description: 'Finish a valid lap using only Drift and Boost for forward drive.', recommendation: 'Recommended: Training Car · Countryside', icon: 'flow' }),
+  Object.freeze({ id: 'flow-state', category: CATEGORY.ONBOARDING, trophies: 50, title: 'FLOW STATE', description: 'Finish a valid lap using only Drift and Boost for forward drive.', recommendation: 'Recommended: Learner Car · Countryside', icon: 'flow' }),
   Object.freeze({ id: 'watch-and-learn', category: CATEGORY.ONBOARDING, trophies: 25, title: 'WATCH AND LEARN', description: 'Spectate a rival for five seconds, then return to the start.', icon: 'spectate', progressMax: 5 }),
   Object.freeze({ id: 'your-own-rival', category: CATEGORY.ONBOARDING, trophies: 25, title: 'YOUR OWN RIVAL', description: 'Finish a valid lap with one of your saved rivals on the track.', icon: 'rival' }),
   Object.freeze({ id: 'level-head', category: CATEGORY.ONBOARDING, trophies: 25, title: 'LEVEL HEAD', description: 'Recalibrate, then finish a valid lap.', icon: 'level' }),
-  Object.freeze({ id: 'new-wheels', category: CATEGORY.ONBOARDING, trophies: 25, title: 'NEW WHEELS', description: 'Finish a valid lap with a vehicle other than the Training Car.', icon: 'wheel' }),
+  Object.freeze({ id: 'new-wheels', category: CATEGORY.ONBOARDING, trophies: 25, title: 'NEW WHEELS', description: 'Finish a valid lap with a vehicle other than the Learner Car.', icon: 'wheel' }),
   Object.freeze({ id: 'new-ground', category: CATEGORY.ONBOARDING, trophies: 25, title: 'NEW GROUND', description: 'Finish valid laps on two different tracks.', icon: 'map', progressMax: 2 }),
   Object.freeze({ id: 'trust-your-ears', category: CATEGORY.WAYS_TO_PLAY, trophies: 200, title: 'TRUST YOUR EARS', description: 'Finish a valid lap with Blank screen mode on from start to finish.', icon: 'blind' }),
   Object.freeze({ id: 'listen-closely', category: CATEGORY.WAYS_TO_PLAY, trophies: 50, title: 'LISTEN CLOSELY', description: 'Set Sound balance to at least 75% Drive By Ear, then drive for ten seconds with Blank screen mode on.', recommendation: 'Recommended for non-visual driving: 90% Drive By Ear', icon: 'listen', progressMax: 10 }),
