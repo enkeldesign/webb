@@ -35,8 +35,9 @@ const KENNEY_TAXI_SIGN_TRIANGLES = Object.freeze([
   Object.freeze([7, 2, 5])
 ]);
 
-// Broad sign faces in the source triangle list: +X (2,3) and -X (8,9).
-const SIGN_GRAPHIC_TRIANGLES = new Set([2, 3, 8, 9]);
+// The learner L belongs on the two short end faces of the original Taxi sign:
+// +Z (triangles 0,1) and -Z (4,5). The long side faces stay plain yellow.
+const SIGN_GRAPHIC_TRIANGLES = new Set([0, 1, 4, 5]);
 let signFaceTexture = null;
 
 export function installLearnerCarLivery(model, car, { ghost = false } = {}) {
@@ -126,12 +127,12 @@ function createAuthenticKenneyTaxiSign({ ghost }) {
     const start = positions.length / 3;
     for (const vertexIndex of triangle) positions.push(...KENNEY_TAXI_SIGN_POSITIONS[vertexIndex]);
 
-    // Map the two broad faces independently so the L reads normally from either
-    // side of the car. The opposite side intentionally mirrors U in model space.
-    if (triangleIndex === 2) uvs.push(0, 1, 1, 0, 1, 1);
-    else if (triangleIndex === 3) uvs.push(1, 0, 0, 1, 0, 0);
-    else if (triangleIndex === 8) uvs.push(1, 0, 0, 1, 0, 0);
-    else if (triangleIndex === 9) uvs.push(0, 1, 1, 0, 1, 1);
+    // The front and back short faces use opposite horizontal UV directions so the
+    // same texture reads as a normal upright L from either end of the car.
+    if (triangleIndex === 0) uvs.push(1, 1, 0, 0, 1, 0);
+    else if (triangleIndex === 1) uvs.push(0, 0, 1, 1, 0, 1);
+    else if (triangleIndex === 4) uvs.push(1, 1, 0, 0, 1, 0);
+    else if (triangleIndex === 5) uvs.push(0, 0, 1, 1, 0, 1);
     else uvs.push(0, 0, 0, 0, 0, 0);
 
     groups.push({ start, count: 3, materialIndex: SIGN_GRAPHIC_TRIANGLES.has(triangleIndex) ? 1 : 0 });
@@ -158,7 +159,7 @@ function createAuthenticKenneyTaxiSign({ ghost }) {
     roughness: 0.78,
     metalness: 0
   });
-  faceMaterial.name = 'learner-sign-l-face';
+  faceMaterial.name = 'learner-sign-l-end-face';
 
   const sign = new THREE.Mesh(geometry, [yellowMaterial, faceMaterial]);
   sign.name = 'kenney-taxi-roof-sign-learner-livery';
@@ -207,5 +208,6 @@ export const LEARNER_CAR_KENNEY_SIGN_CONTRACT = Object.freeze({
   positions: KENNEY_TAXI_SIGN_POSITIONS,
   triangles: KENNEY_TAXI_SIGN_TRIANGLES,
   sourceVertexIds: Object.freeze([367, 368, 369, 370, 375, 376, 377, 378]),
-  sourceTriangleCount: 10
+  sourceTriangleCount: 10,
+  graphicTriangleIds: Object.freeze([0, 1, 4, 5])
 });
