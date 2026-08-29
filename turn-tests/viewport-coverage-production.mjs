@@ -123,9 +123,12 @@ assert.ok(
   'LAB must preserve the production PWA-boundary-before-runtime ordering'
 );
 assert.ok(
-  labIndex.indexOf('app.js?build=') < labIndex.indexOf('/turn-lab/roadtrip-world-r1.js'),
-  'LAB experiments must layer on top of the initialized production runtime rather than replace it'
+  labIndex.indexOf('"scopes"') > labIndex.indexOf('"imports"')
+    && labIndex.indexOf('"scopes"') < labIndex.indexOf('app.js?build='),
+  'LAB must declare its narrow MOUNTAIN module scope after the production import graph and before runtime starts'
 );
+assert.doesNotMatch(labIndex, /roadtrip-world|portrait-play|portrait-centered-pad|build-a-car/i,
+  'The MOUNTAIN-only LAB shell must not activate retired experiments');
 assert.doesNotMatch(labIndex, /\/turn-lab\/viewport-diagnostics\.js/,
   'Retired viewport recording must not run automatically in the revived general-purpose LAB shell');
 
@@ -134,8 +137,8 @@ assert.equal(labManifest.start_url, '/turn-lab/');
 assert.equal(labManifest.scope, '/turn-lab/');
 assert.equal(labManifest.display, 'standalone');
 assert.deepEqual(labManifest.display_override, ['standalone']);
-assert.equal(labManifest.orientation, 'any',
-  'TURN LAB must allow its normal rotate UI to handle startup orientation independently of the manifest');
+assert.equal(labManifest.orientation, 'landscape',
+  'TURN LAB must return to production landscape behavior while portrait play is retired');
 
 assert.match(labBootstrap, /LOCAL_PREFIX = 'turn-lab:'/,
   'LAB local storage must stay in its own namespace');
@@ -145,8 +148,8 @@ assert.doesNotMatch(labBootstrap, /seed|COPY_ONCE|turn-personal-rivals/,
   'The isolated LAB must not seed or modify production TURN save data');
 assert.match(labBootstrap, /__turnLaunchReady/,
   'LAB must preserve the production startup gate contract');
-assert.match(labBootstrap, /dataset\.turnLab = 'roadtrip-world-r1'/,
-  'The revived LAB shell must identify the active connected-world experiment');
+assert.match(labBootstrap, /dataset\.turnLab = 'mountain-long-course'/,
+  'The LAB shell must identify the active long-course MOUNTAIN experiment');
 assert.doesNotMatch(labBootstrap, /viewport-repair-r7\.js/,
   'The retired viewport repair watchdog must not run automatically in the revived LAB shell');
 

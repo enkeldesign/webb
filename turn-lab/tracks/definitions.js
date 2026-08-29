@@ -1,6 +1,26 @@
 // TURN LAB definition overlay. All tracks inherit the current production contract;
 // only MOUNTAIN gets an experiment-specific identity and a tighter no-drop envelope.
 import * as production from '/turn/tracks/definitions.js?lab-base=mountain-long-r1';
+import { MOUNTAIN_BRIDGE_CENTERS } from './mountain-layout.js';
+
+const BRIDGE_RAIL_COLLIDERS = Object.freeze(MOUNTAIN_BRIDGE_CENTERS.flatMap(({ x, z }, index) => [
+  Object.freeze({
+    id: `mountain-lab-bridge-north-${index + 1}`,
+    type: 'box',
+    minX: x - 16.6,
+    maxX: x + 16.6,
+    minZ: z + 14.0,
+    maxZ: z + 23.0
+  }),
+  Object.freeze({
+    id: `mountain-lab-bridge-south-${index + 1}`,
+    type: 'box',
+    minX: x - 16.6,
+    maxX: x + 16.6,
+    minZ: z - 23.0,
+    maxZ: z - 14.0
+  })
+]));
 
 export const DEFAULT_TRACK_ID = production.DEFAULT_TRACK_ID;
 export const TRACK_SAMPLE_COUNT = production.TRACK_SAMPLE_COUNT;
@@ -12,6 +32,7 @@ export const TRACK_DEFINITIONS = Object.freeze(production.TRACK_DEFINITIONS.map(
     ...track,
     description: 'Summit climb. Waterfall descent. Lake bridge. Valley lights.',
     storageRevision: 'mountain-lab-long-r1',
+    sampleCount: 2160,
     // TURN already resolves a hard track-envelope collision before snapping the car
     // to the route surface. Tightening the LAB envelope keeps the car on the road or
     // bridge deck and prevents nearby folded road sections becoming shortcut portals.
@@ -24,7 +45,10 @@ export const TRACK_DEFINITIONS = Object.freeze(production.TRACK_DEFINITIONS.map(
       boundaryBounce: 0.025,
       boundaryTangentRetention: 0.96,
       boundaryMinimumRecoverySpeed: 5.5,
-      colliders: track.collisionProfile.colliders
+      colliders: Object.freeze([
+        ...(track.collisionProfile.colliders || []),
+        ...BRIDGE_RAIL_COLLIDERS
+      ])
     })
   });
 }));

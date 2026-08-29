@@ -1,12 +1,12 @@
 <!doctype html>
-<!-- TURN LAB connected-world + portrait-play experiments. Runtime source: production TURN 2026.08.26-r184. -->
+<!-- TURN LAB MOUNTAIN long-course experiment. Runtime source: production TURN 2026.08.26-r184. -->
 <html lang="en" data-turn-deployment="lab"><head>
   <base href="/turn/">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, shrink-to-fit=no">
   <meta name="theme-color" content="#08090a">
   <meta name="application-name" content="TURN LAB">
-  <meta name="description" content="TURN LAB runs isolated experiments on the current production TURN runtime. Build a modular custom car, test portrait racing and explore a connected six-track roadtrip world.">
+  <meta name="description" content="TURN LAB runs an isolated long-course MOUNTAIN experiment on the current production TURN runtime.">
   <meta name="robots" content="noindex,nofollow">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
@@ -21,21 +21,21 @@
     });
     globalThis.__TURN_LAB_SOURCE__ = Object.freeze({
       runtime: 'production TURN 2026.08.26-r184',
-      purpose: 'roadtrip-world-r1+portrait-play-r3-centered-pad'
+      purpose: 'mountain-long-course'
     });
   </script>
   <link rel="icon" href="/turn/TURNicon.PNG?icon=20260803-profile-512" type="image/png" sizes="512x512">
   <link rel="apple-touch-icon" href="/turn/TURNicon.PNG?icon=20260803-profile-512" sizes="512x512">
-  <link rel="manifest" href="/turn-lab/site.webmanifest?revision=portrait-play-r1">
+  <link rel="manifest" href="/turn-lab/site.webmanifest">
   <link rel="stylesheet" href="./styles.css?build=20260826-r184-native-html">
   <link rel="stylesheet" href="./vertical-drive.css?build=20260826-r184">
   <link rel="stylesheet" href="./hud-tuning.css?build=20260826-r184">
   <link rel="stylesheet" href="./install-gate.css?build=20260826-r184-social-browser">
   <link rel="stylesheet" href="./browser-install-r165.css?revision=r165-browser-about">
   <link rel="stylesheet" href="./gameplay-features.css?build=20260826-r184">
-  <link rel="stylesheet" href="./gameplay-v2.css?build=20260826-r184">
+  <link rel="stylesheet" href="./gameplay-v2.css?build=20260826-r184&revision=r217-drift-lock-design">
   <link rel="stylesheet" href="./position-hud-r83.css?build=20260826-r184">
-  <link rel="stylesheet" href="./drive-pad.css?build=20260826-r184">
+  <link rel="stylesheet" href="./drive-pad.css?build=20260826-r184&revision=r217-drift-lock-design">
   <link rel="stylesheet" href="./in-game-menu.css?build=20260826-r184">
   <link rel="stylesheet" href="./spectate-v3.css?build=20260826-r184">
   <link rel="stylesheet" href="./manual-steering.css?build=20260826-r184">
@@ -56,13 +56,10 @@
   <link rel="stylesheet" href="./m8-menu-font-fix.css?build=20260826-r184-menu-font-v3">
   <link rel="stylesheet" href="./home-header-r425.css?revision=r425-header-boundary">
   <link rel="stylesheet" href="./home-track-row-gap-r200.css?revision=r200-match-horizontal-gap">
-  <link rel="stylesheet" href="/turn-lab/roadtrip-world-r1.css?revision=r1">
-  <link rel="stylesheet" href="/turn-lab/portrait-play-r1.css?revision=r1">
-  <link rel="stylesheet" href="/turn-lab/portrait-centered-pad-r3.css?revision=r3">
-  <script src="/turn-lab/lab-bootstrap.js?revision=roadtrip-world-r1"></script>
+  <script src="./ui/page-zoom-baseline-r193.js?revision=r193-canonical-75"></script>
+  <script src="/turn-lab/lab-bootstrap.js"></script>
   <script src="./pwa-usable-viewport-r181.js?revision=r181-usable-web-layer"></script>
   <script src="./motion-safe-zone.js?build=20260826-r184"></script>
-  <script src="/turn-lab/portrait-play-r1.js?revision=r1"></script>
   <script src="./orientation-compat.js?build=20260826-r184&revision=r163-voiceover-native-picker-events"></script>
   <script src="./live-steering-setting.js?build=20260826-r184-live-steering"></script>
   <script type="importmap">
@@ -136,17 +133,30 @@
       }
     }
   </script>
+  <script type="importmap">
+    {
+      "scopes": {
+        "/turn/": {
+          "./tracks/definitions.js": "/turn-lab/tracks/definitions.js",
+          "./tracks/mountain-layout.js": "/turn-lab/tracks/mountain-layout.js",
+          "./tracks/pace-notes.js": "/turn-lab/tracks/pace-notes.js",
+          "./tracks/mountain-world-r3.js?revision=r177-ipad-sky-aspect": "/turn-lab/tracks/mountain-world-lab-r1.js",
+          "/turn/race/lap-system.js?build=20260720-r19": "/turn-lab/race/mountain-lap-system.js"
+        }
+      }
+    }
+  </script>
 </head><body>
   <section class="install-gate" id="installGate" aria-labelledby="installTitle">
     <div class="install-shell">
       <div class="install-art" aria-hidden="true"><img class="install-icon" src="./TURNicon.PNG?icon=20260803-profile-512" alt=""></div>
       <div class="install-card">
-        <span class="install-kicker">TURN LAB · BUILD-A-CAR P1 · PORTRAIT PLAY R3 · ROADTRIP WORLD R1</span>
+        <span class="install-kicker">TURN LAB · MOUNTAIN LONG COURSE</span>
         <h1 id="installTitle">TURN LAB</h1>
-        <p class="install-copy">Build a custom car and race the current TURN engine in portrait or landscape. Production TURN stays untouched.</p>
+        <p class="install-copy">Test a substantially longer MOUNTAIN lap on the current production TURN engine. Production TURN stays untouched.</p>
         <div class="install-actions">
           <button id="installTurnButton" class="install-primary" type="button">Install TURN LAB</button>
-          <p class="install-note" id="installNote">TURN LAB has separate saves. Install it as a separate Home Screen app, or test portrait play and the roadtrip in this browser.</p>
+          <p class="install-note" id="installNote">TURN LAB has separate saves. Install it as a separate Home Screen app, or test the MOUNTAIN experiment in this browser.</p>
           <button class="install-secondary" id="playBrowserButton" type="button">Play in browser anyway</button>
         </div>
       </div>
@@ -175,22 +185,18 @@
   </div>
   <div class="manual-steer" id="manualSteer" role="slider" aria-label="Steering. Drag left or right." aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0" hidden><span class="manual-steer-knob" aria-hidden="true"></span></div>
   <div class="controls" id="controls" hidden><div class="utility-group"><button class="utility" id="calibrateButton" type="button">Recalibrate</button><button class="utility" id="resetButton" type="button" aria-label="Restart the current lap from the start line">Restart Lap</button></div><div class="pedals"><button class="pedal brake" id="brakeButton" type="button">Brake</button><button class="pedal gas" id="gasButton" type="button">Gas</button></div></div>
-  <script type="module" src="./ui/about-history-bootstrap-r165.js?build=20260826-r184-r168-shared-about-credits"></script>
+  <script type="module" src="./ui/about-history-bootstrap-r165.js?build=20260826-r184-r534-heading-first-about"></script>
+  <script src="./ui/startup-screen-reader-handoff-r529.js?build=20260826-r184&revision=r531-screen-reader-followup"></script>
   <script type="module" src="./testing/admin-unlock-sequence.js?revision=r176-admin-rewards"></script>
-  <script type="module" src="./app.js?build=20260826-r184-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click-r164-long-session-robustness-post-soak-r199-card-gap-rim-r532-countryside-nature-r220-race-apex-guide"></script>
-  <script type="module" src="/turn-lab/roadtrip-world-r1.js?revision=r1"></script>
+  <script type="module" src="./app.js?build=20260826-r184-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click-r420-music-warm-r426-loading-copy-r164-long-session-robustness-post-soak-r199-card-gap-rim-r518-landmark-framing-ground-layering-showroom-r200-pwa-color-r206-r532-countryside-nature-r221-trajectory-wheel-steering-30-r220-race-apex-guide"></script>
   <script type="module" src="./render/skid-continuity-r198.js?revision=r198-skid-continuity"></script>
+  <script type="module" src="./tracks/cliffside-inner-buildings-r202.js?revision=r202-kenney-suburban-village"></script>
+  <script type="module" src="./tracks/cliffside-house-inset-r203.js?revision=r203-inset-edge-houses"></script>
+  <script type="module" src="./tracks/kenney-track-landmarks-r517.js?revision=r532-countryside-nature-polish"></script>
+  <script type="module" src="./input/qe-drive-controls-bootstrap.js?revision=r418-qe"></script>
+  <script type="module" src="./ui/r411-race-controls.js?revision=r411"></script>
   <script type="module" src="./accessibility/color-accessibility-r163.js?build=20260826-r184-paint-basics"></script>
   <script type="module" src="./achievements/chromatic-camouflage-r183.js?revision=r183-production"></script>
   <script type="module" src="./social/your-turn-share-bootstrap.js?revision=r2"></script>
   <script type="module" src="./tracks/countryside-bella-rescue-hotfix-r176.js?build=20260826-r184&revision=r530-screen-reader-quality"></script>
-  <script type="module">
-    const buildACarEntry = new URL('/turn-lab/build-a-car/entry.js', globalThis.location.href);
-    if (globalThis.__TURN_BUILD__?.cacheKey) {
-      buildACarEntry.searchParams.set('build', globalThis.__TURN_BUILD__.cacheKey);
-    }
-    void import(buildACarEntry.href).catch((error) => {
-      console.warn('TURN LAB: BUILD-A-CAR prototype could not start.', error);
-    });
-  </script>
 </body></html>

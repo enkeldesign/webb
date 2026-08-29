@@ -1,0 +1,64 @@
+name: TURN LAB MOUNTAIN long-course visual smoke
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'turn-lab/index.html'
+      - 'turn-lab/lab-bootstrap.js'
+      - 'turn-lab/site.webmanifest'
+      - 'turn-lab/tracks/**'
+      - 'turn-lab/race/**'
+      - 'turn-lab/mountain-long-visual.html'
+      - 'turn-lab/tests/mountain-long-*.mjs'
+      - '.github/workflows/turn-lab-mountain-long-visual.yml'
+  push:
+    branches:
+      - turn-lab-mountain-long-r1
+
+permissions:
+  contents: read
+
+jobs:
+  visual-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Validate long-course topology and performance contract
+        run: node turn-lab/tests/mountain-long-lab.mjs
+
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install chromium
+
+      - name: Start static TURN server
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/turn-lab-mountain-http.log 2>&1 &
+          for attempt in {1..20}; do
+            curl --fail --silent http://127.0.0.1:8000/turn-lab/mountain-long-visual.html >/dev/null && exit 0
+            sleep 0.5
+          done
+          cat /tmp/turn-lab-mountain-http.log
+          exit 1
+
+      - name: Render and validate long MOUNTAIN views and runtime
+        run: node turn-lab/tests/mountain-long-visual-smoke.mjs
+
+      - name: Upload long MOUNTAIN inspection frames
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: turn-lab-mountain-long-visual
+          path: mountain-long-visual-artifact
+          if-no-files-found: warn
+          retention-days: 7

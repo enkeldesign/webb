@@ -54,41 +54,81 @@ export const MOUNTAIN_CONTROL_POINTS = Object.freeze([
   Object.freeze([305, 3.0, -205]),
   Object.freeze([350, 3.0, -210]),
 
-  // East valley turn and the long southern release section.
-  Object.freeze([388, 2.8, -245]),
-  Object.freeze([378, 2.4, -285]),
-  Object.freeze([338, 2.0, -305]),
-  Object.freeze([270, 1.6, -308]),
-  Object.freeze([180, 1.3, -309]),
-  Object.freeze([90, 1.1, -308]),
-  Object.freeze([0, 0.9, -306]),
-  Object.freeze([-90, 0.8, -305]),
-  Object.freeze([-180, 0.9, -305]),
-  Object.freeze([-255, 1.0, -298]),
+  // East-valley descent and the long southern release section. Moving the lower
+  // run beyond the production terrain edge creates real separation from the
+  // forest return instead of two overlapping track envelopes.
+  Object.freeze([400, 2.8, -245]),
+  Object.freeze([410, 2.4, -300]),
+  Object.freeze([390, 2.0, -350]),
+  Object.freeze([330, 1.7, -370]),
+  Object.freeze([240, 1.4, -372]),
+  Object.freeze([140, 1.1, -374]),
+  Object.freeze([40, 0.9, -375]),
+  Object.freeze([-60, 0.8, -374]),
+  Object.freeze([-160, 0.9, -370]),
+  Object.freeze([-250, 1.0, -360]),
+  Object.freeze([-330, 1.2, -335]),
 
-  // Lower village / forest side: a broad hooked return, intentionally well away
-  // from the upper road so the track-envelope cannot become an accidental shortcut.
-  Object.freeze([-315, 1.2, -280]),
-  Object.freeze([-350, 1.5, -250]),
-  Object.freeze([-355, 1.8, -215]),
-  Object.freeze([-342, 2.1, -180]),
-  Object.freeze([-315, 2.3, -153]),
-  Object.freeze([-282, 2.3, -167]),
-  Object.freeze([-258, 2.2, -190]),
-  Object.freeze([-242, 2.0, -218]),
-  Object.freeze([-218, 1.8, -242]),
-  Object.freeze([-178, 1.5, -262]),
-  Object.freeze([-128, 1.2, -271]),
-  Object.freeze([-73, 1.0, -272]),
-  Object.freeze([-18, 0.8, -270]),
-  Object.freeze([30, 0.7, -266]),
-  Object.freeze([68, 0.6, -254]),
-  Object.freeze([92, 0.5, -240]),
-  Object.freeze([98, 0.4, -228]),
-  Object.freeze([85, 0.3, -219]),
-  Object.freeze([62, 0.2, -214]),
-  Object.freeze([35, 0.1, -216])
+  // Lower village: one broad, readable sweep instead of another hairpin wall.
+  Object.freeze([-385, 1.5, -300]),
+  Object.freeze([-405, 1.8, -245]),
+  Object.freeze([-395, 2.1, -190]),
+  Object.freeze([-365, 2.4, -145]),
+  Object.freeze([-325, 2.7, -120]),
+  Object.freeze([-285, 3.0, -135]),
+  Object.freeze([-260, 3.3, -170]),
+  Object.freeze([-250, 3.6, -215]),
+
+  // Forest return and final climb. This parallel leg stays roughly 80 metres
+  // from the southern run, then makes one deliberate climbing hairpin before
+  // reconnecting with the original village start.
+  Object.freeze([-240, 3.0, -255]),
+  Object.freeze([-190, 2.7, -282]),
+  Object.freeze([-120, 2.4, -286]),
+  Object.freeze([-40, 2.1, -288]),
+  Object.freeze([40, 1.8, -286]),
+  Object.freeze([95, 1.6, -282]),
+  Object.freeze([125, 2.4, -262]),
+  Object.freeze([125, 4.0, -240]),
+  Object.freeze([100, 6.0, -218]),
+  Object.freeze([65, 4.2, -207]),
+  Object.freeze([30, 1.7, -214])
 ]);
+
+export const MOUNTAIN_BRIDGE_CENTERS = Object.freeze([
+  Object.freeze({ x: 176, z: -202 }),
+  Object.freeze({ x: 208, z: -204 }),
+  Object.freeze({ x: 240, z: -205 }),
+  Object.freeze({ x: 272, z: -206 }),
+  Object.freeze({ x: 304, z: -208 }),
+  Object.freeze({ x: 336, z: -209 })
+]);
+
+export const MOUNTAIN_LOWER_VILLAGE_SITES = Object.freeze([
+  Object.freeze({ x: -385, z: -300, side: 1 }),
+  Object.freeze({ x: -405, z: -245, side: -1 }),
+  Object.freeze({ x: -395, z: -190, side: 1 }),
+  Object.freeze({ x: -365, z: -145, side: -1 }),
+  Object.freeze({ x: -325, z: -120, side: 1 }),
+  Object.freeze({ x: -285, z: -135, side: -1 }),
+  Object.freeze({ x: -260, z: -170, side: 1 }),
+  Object.freeze({ x: -250, z: -215, side: -1 })
+]);
+
+export const MOUNTAIN_VIEW_SCREEN_SPECS = Object.freeze([
+  Object.freeze({ x: 250, z: -300, sx: 34, sy: 14, sz: 18, yaw: 0.18 }),
+  Object.freeze({ x: 350, z: -285, sx: 22, sy: 11, sz: 16, yaw: -0.22 }),
+  Object.freeze({ x: -95, z: -330, sx: 24, sy: 10, sz: 12, yaw: 0.30 })
+]);
+
+export const MOUNTAIN_LOWER_TERRAIN_BOUNDS = Object.freeze({
+  minX: -480,
+  maxX: 460,
+  minZ: -430,
+  maxZ: -292,
+  segmentsX: 94,
+  segmentsZ: 28
+});
 
 export const MOUNTAIN_LAYOUT_RULES = Object.freeze({
   villageControlPoint: 0,
@@ -99,11 +139,14 @@ export const MOUNTAIN_LAYOUT_RULES = Object.freeze({
   bridgeStartControlPoint: 37,
   bridgeEndControlPoint: 41,
   valleyStartControlPoint: 42,
-  lowerVillageControlPoint: 52,
+  lowerRunControlPoint: 44,
+  lowerVillageControlPoint: 53,
+  forestReturnControlPoint: 61,
+  finalClimbControlPoint: 67,
   snowLineElevation: 37,
   minimumElevation: 0,
   maximumElevation: 49,
-  targetLength: 'long-course-about-twice-production-mountain',
+  targetLength: 'long-course-about-2.1-times-production-mountain',
   noDropCourse: true,
   routeNarrative: Object.freeze([
     'village',
@@ -114,10 +157,11 @@ export const MOUNTAIN_LAYOUT_RULES = Object.freeze({
     'slalom-descent',
     'waterfall',
     'lake-bridge',
-    'east-valley',
-    'southern-run',
+    'east-valley-descent',
+    'lower-run',
     'lower-village',
     'forest-return',
+    'final-climb',
     'village-return'
   ])
 });
