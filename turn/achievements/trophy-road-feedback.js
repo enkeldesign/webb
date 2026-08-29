@@ -1,4 +1,4 @@
-import { CATEGORY } from './catalog.js?revision=r181-hatchback-rally';
+import { CATEGORY } from './catalog.js?revision=r222-awd-label';
 import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r220-race-reward';
 import {
   achievementCardMatchesFilters

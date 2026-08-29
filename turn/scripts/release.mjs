@@ -12,6 +12,7 @@ const RACING_MUSIC_SPECIFIER_PATTERN = /^\/turn\/audio\/racing-music-v2\.js\?bui
 const AUDIO_PREFERENCES_SPECIFIER_PATTERN = /^\/turn\/audio\/audio-preferences\.js\?build=\d{8}-r\d+$/;
 const COVERED_RENDERING_SPECIFIER_PATTERN = /^\/turn\/render\/covered-rendering\.js\?build=\d{8}-r\d+$/;
 const RIVAL_ONBOARDING_SPECIFIER_PATTERN = /^\/turn\/ui\/rival-onboarding\.js\?build=\d{8}-r\d+$/;
+const LOT_ENHANCEMENT_SPECIFIER_PATTERN = /^\/turn\/garage\/lot-enhancement-runtime\.js\?revision=r164-post-soak&build=\d{8}-r\d+$/;
 
 export async function loadReleaseDefinition() {
   const release = JSON.parse(await fs.readFile(releasePath, 'utf8'));
@@ -79,6 +80,12 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
     release,
     RIVAL_ONBOARDING_SPECIFIER_PATTERN,
     `/turn/ui/rival-onboarding.js?build=${release.cacheKey}`
+  );
+  synchronizeReleaseBoundSpecifier(
+    importMap,
+    release,
+    LOT_ENHANCEMENT_SPECIFIER_PATTERN,
+    `/turn/garage/lot-enhancement-runtime.js?revision=r164-post-soak&build=${release.cacheKey}`
   );
 }
 

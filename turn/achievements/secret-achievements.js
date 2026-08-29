@@ -1,4 +1,4 @@
-import { ACHIEVEMENTS, ICONS } from './catalog.js?revision=r181-hatchback-rally';
+import { ACHIEVEMENTS, ICONS } from './catalog.js?revision=r222-awd-label';
 import {
   acknowledgeSecretAchievement,
   pendingSecretAchievements

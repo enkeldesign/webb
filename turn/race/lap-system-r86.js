@@ -1,4 +1,4 @@
-import * as baseLapSystem from './lap-system.js?revision=r195-unranked-super-sedan';
+import * as baseLapSystem from './lap-system.js?revision=r222-awd-suv-paint';
 import { isSportsSedanEasterEgg } from '../vehicle/catalog.js?build=20260720-r20';
 
 export const LAP_CHECKPOINTS = baseLapSystem.LAP_CHECKPOINTS;

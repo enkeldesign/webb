@@ -1,3 +1,5 @@
+import { normalizeStoredVehiclePaint } from '../vehicle/catalog.js';
+
 export const LAP_CHECKPOINTS = Object.freeze([
   0.08,
   0.16,
@@ -170,12 +172,18 @@ export function completeLapState({
         };
       }
 
+      const paint = normalizeStoredVehiclePaint({
+        carId: state.vehicleId || 'sedan',
+        color: state.vehicleColor,
+        secondaryColor: state.vehicleSecondaryColor
+      });
       const candidate = {
         time: finishedTime,
         hitAt: Date.now(),
-        carId: state.vehicleId || 'sedan',
-        carColor: state.vehicleColor || '#ffd43b',
-        carSecondaryColor: state.vehicleSecondaryColor || '#f8f9fa',
+        carId: paint.carId,
+        carColor: paint.color,
+        carSecondaryColor: paint.secondaryColor,
+        factoryPaint: paint.factoryPaint,
         frames: candidateFrames
       };
 

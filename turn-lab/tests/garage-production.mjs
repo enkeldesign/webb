@@ -170,8 +170,8 @@ const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/s
 assert.ok(importMapText, 'Production must expose its import map');
 const imports = JSON.parse(importMapText).imports;
 const releaseTarget = (filePath) => `${filePath}?build=${release.cacheKey}`;
-const vehicleCatalogTarget = '/turn/vehicle/catalog.js?revision=r220-apex-grip';
-const carModelBridgeTarget = '/turn/vehicle/emergency-livery-models.js';
+const vehicleCatalogTarget = '/turn/vehicle/catalog.js?revision=r222-awd-suv-paint';
+const carModelBridgeTarget = '/turn/vehicle/emergency-livery-models.js?revision=r222-awd-suv-paint';
 
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.match(index, new RegExp(`\\.\\/garage\\/lot-r10\\.css\\?build=${release.cacheKey}-native-html`));
@@ -179,7 +179,7 @@ assert.match(index, new RegExp(`\\.\\/track-intro\\.css\\?build=${release.cacheK
 assert.match(index, new RegExp(`src="\\.\\/app\\.js\\?build=${release.cacheKey}-browser-consent(?:-[^"]+)?"`));
 assert.equal(
   imports['./garage/lot-r10.js?build=20260720-r19'],
-  `${releaseTarget('./garage/lot-track-select.js')}&revision=r164-long-session-robustness`
+  `${releaseTarget('./garage/lot-track-select.js')}&revision=r222-awd-suv-paint`
 );
 assert.equal(imports['./ui/track-intro.js?build=20260725-r75'], releaseTarget('./ui/track-intro.js'));
 assert.ok(
@@ -214,6 +214,7 @@ assert.match(lotEnhancementRuntime, /installLotPerkDisclosure\(scope\)/);
 assert.match(lotEnhancementRuntime, /installLotStatLegend\(scope\)/);
 assert.match(lotEnhancementRuntime, /installLotLayout\(scope\)/);
 assert.match(lotEnhancementRuntime, /installLotAccessibility\(scope\)/);
+assert.match(lotEnhancementRuntime, /lot-vehicle-copy\.js\?revision=r222-awd-suv-paint/);
 assert.ok(
   lotEnhancementRuntime.indexOf('gateLotNow(scope)') < lotEnhancementRuntime.indexOf('installLotAccessibility(scope)'),
   'Trophy locks must be included in the accessible car names before the accessibility enhancer runs'
@@ -284,17 +285,17 @@ assert.equal(imports['./vehicle/catalog.js?build=20260720-r20'], vehicleCatalogT
 assert.equal(imports['./vehicle/car-models.js?build=20260720-r19'], carModelBridgeTarget);
 assert.equal(imports['./vehicle/car-models.js?build=20260720-r22'], carModelBridgeTarget);
 assert.match(app, /installSportsSedanEasterEggUi\(\)/);
-assert.match(lapSystem, /carId: state\.vehicleId \|\| 'sedan'/);
-assert.match(lapSystem, /carColor: state\.vehicleColor \|\| '#ffd43b'/);
-assert.match(lapSystem, /carSecondaryColor: state\.vehicleSecondaryColor \|\| '#f8f9fa'/);
+assert.match(lapSystem, /carId: paint\.carId/);
+assert.match(lapSystem, /carColor: paint\.color/);
+assert.match(lapSystem, /carSecondaryColor: paint\.secondaryColor/);
+assert.match(lapSystem, /factoryPaint: paint\.factoryPaint/);
 assert.match(lapPolicy, /isSportsSedanEasterEgg/);
 assert.match(lapPolicy, /const ranked = !isSportsSedanEasterEgg/);
 assert.match(lapPolicy, /saveGhost: ranked \? options\?\.saveGhost : undefined/);
-assert.match(rivalStorage, /version: 6/);
+assert.match(rivalStorage, /RIVAL_STORAGE_VERSION = 7/);
 assert.match(rivalStorage, /trackRevision: storageTrackId\(activeTrackId\)/);
-assert.match(rivalStorage, /normalizeVehicleId\(lap\.carId\)/);
-assert.match(rivalStorage, /normalizeVehicleColor\(lap\.carColor\)/);
-assert.match(rivalStorage, /normalizeVehicleSecondaryColor\(lap\.carSecondaryColor\)/);
+assert.match(rivalStorage, /normalizeStoredVehiclePaint\(/);
+assert.match(rivalStorage, /migrateReplacedFactoryPaint: sourceVersion < RIVAL_STORAGE_VERSION/);
 assert.match(controls, /boostDurationSeconds/);
 assert.match(controls, /driftBoostRechargeMultiplier/);
 assert.match(catalogSource, /MODEL_ASSET_BY_ID\[id\] \|\| `\.\/assets\/cars\/\$\{id\}\.glb`/);

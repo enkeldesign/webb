@@ -162,16 +162,16 @@ assert.deepEqual(order.slice(order.indexOf('race')), lockedTail,
 // --- Fresh module identities for already-installed PWAs -----------------------
 assert.match(lotRuntime, /lot-paint-reward\.js\?revision=r206-pwa-color/,
   'The app-level enhancement runtime must retain the current color state model specifier');
-assert.match(lotWrapper, /lot-enhancement-runtime\.js\?revision=r206-pwa-color/,
+assert.match(lotWrapper, /lot-enhancement-runtime\.js\?revision=r222-awd-suv-paint/,
   'The showroom wrapper must use the same enhancement-runtime identity');
 assert.match(lotWrapper, /lot-pwa-color-swatch\.js\?revision=r206-pwa-color/);
-assert.match(lotWrapper, /lot-showroom-experiment\.js\?revision=r206-race-before-locks/);
+assert.match(lotWrapper, /lot-showroom-experiment\.js\?revision=r222-awd-suv-paint/);
 assert.match(lotWrapper, /SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r206-polish'/);
 assert.match(lotWrapper, /lot-showroom-cleanup-r201\.css\?revision=r206-pwa-color/);
-assert.match(index, /\/turn\/garage\/lot-enhancement-runtime\.js\?revision=r164-post-soak&build=20260818-r175"\s*:\s*"\/turn\/garage\/lot-enhancement-runtime\.js\?revision=r206-pwa-color&build=20260804-r157/,
+assert.match(index, /\/turn\/garage\/lot-enhancement-runtime\.js\?revision=r164-post-soak&build=20260826-r184"\s*:\s*"\/turn\/garage\/lot-enhancement-runtime\.js\?revision=r222-awd-suv-paint/,
   'Old installed app runtime URLs must bridge to the current Lot runtime');
 assert.match(index, /\/turn\/m8-home\.js\?revision=r131-motion-permission-retry&trophy-road=r159&showroom=r200&build=20260818-r175"\s*:\s*"\/turn\/m8-home\.js\?revision=r131-motion-permission-retry&trophy-road=r159&showroom=r206-pwa-color&build=20260818-r175/);
-assert.match(index, /\/turn\/garage\/lot-track-select\.js\?revision=r200-production-candidate"\s*:\s*"\/turn\/garage\/lot-track-select\.js\?revision=r206-pwa-color/);
+assert.match(index, /\/turn\/garage\/lot-track-select\.js\?revision=r200-production-candidate"\s*:\s*"\/turn\/garage\/lot-track-select\.js\?revision=r222-awd-suv-paint/);
 assert.match(
   index,
   new RegExp(`app\\.js\\?build=${release.cacheKey}-browser-consent-r176-bella-road-derived-zone-voiceover-paint-parent-click[^\"]*-pwa-color-r206`),
@@ -182,7 +182,7 @@ assert.match(
 // HTTP/module-cache snapshots. All selected-car consumers must now converge on one
 // fresh vehicle-catalog module, and the state/showroom modules themselves get fresh
 // identities without requiring a reinstall or clearing site data.
-const canonicalLotCatalog = '/turn/vehicle/catalog.js?revision=r220-apex-grip';
+const canonicalLotCatalog = '/turn/vehicle/catalog.js?revision=r222-awd-suv-paint';
 assert.equal(
   imports['/turn/progression/lot-paint-reward.js?revision=r206-pwa-color'],
   '/turn/progression/lot-paint-reward.js?revision=r208-secondary-color-import',
@@ -190,7 +190,7 @@ assert.equal(
 );
 assert.equal(
   imports['/turn/garage/lot-showroom-experiment.js?revision=r206-race-before-locks'],
-  '/turn/garage/lot-showroom-experiment.js?revision=r210-trophy-unlock-order',
+  '/turn/garage/lot-showroom-experiment.js?revision=r222-awd-suv-paint',
   'Installed PWAs must refetch the showroom module when the visible Trophy Road order changes'
 );
 for (const staleCatalogSpecifier of [

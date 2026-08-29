@@ -10,7 +10,7 @@ const TRACKS = Object.freeze([
 ]);
 
 const CARS = Object.freeze([
-  ['convertible', 'Convertible'],
+  ['convertible', 'AWD'],
   ['classic', 'Training Car'],
   ['vintage-racer', 'Vintage Racer'],
   ['toy-racer', 'Rally Racer'],

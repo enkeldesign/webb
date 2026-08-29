@@ -13,6 +13,7 @@ const KENNEY_PROFILE_BY_ID = Object.freeze({
   sedan: profile({ primary: [[6, 2], [6, 3]], secondary: [[3, 4], [3, 5]], rims: [[5, 4], [5, 5]] }),
   van: profile({ primary: [[7, 2], [7, 3]], secondary: [[3, 4], [3, 5]], rims: [[5, 4], [5, 5]] }),
   suv: profile({ primary: [[3, 2], [3, 3]], secondary: [[3, 4], [3, 5]], rims: [[5, 4], [5, 5]] }),
+  'suv-luxury': profile({ primary: [[4, 2], [4, 3]], secondary: [[3, 4], [3, 5]], rims: [[5, 4], [5, 5]] }),
   convertible: profile({ primary: [[2, 4], [2, 5]], secondary: [[1, 6], [1, 7]], rims: [[4, 6], [4, 7]] }),
   'hatchback-sports': profile({
     primary: [[3, 2], [3, 3]],

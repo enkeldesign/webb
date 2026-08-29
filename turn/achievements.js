@@ -1,7 +1,7 @@
 export {
   ACHIEVEMENTS,
   ONBOARDING_ACHIEVEMENT_IDS
-} from './achievements/catalog.js?revision=r181-hatchback-rally';
+} from './achievements/catalog.js?revision=r222-awd-label';
 export {
   ACHIEVEMENT_STORAGE_KEY,
   loadAchievementState,
