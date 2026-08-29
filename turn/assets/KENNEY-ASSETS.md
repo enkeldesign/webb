@@ -1,6 +1,6 @@
 # TURN vendored Kenney assets
 
-The vehicle models in `cars/` are selected from Kenney Prototype Kit 1.0, Toy Car Kit 1.2, and Car Kit 3.1. The Training Car uses Car Kit 3.1's Taxi body with only the disconnected roof-sign surfaces removed; the edit is documented in `cars/KENNEY-CAR-KIT.md`.
+The vehicle models in `cars/` are selected from Kenney Prototype Kit 1.0, Toy Car Kit 1.2, and Car Kit 3.1. The **Learner Car** uses Car Kit 3.1's Taxi body and exact original roof-sign source geometry; its yellow/black learner treatment is documented in `cars/KENNEY-CAR-KIT.md`.
 The scenery pieces in `lot-bricks/` are selected from Kenney Brick Kit 1.0.
 The legacy `scenery/fantasy-town/windmill.glb` file is the Fantasy Town Kit 2.0 rotor/blades component, not a complete windmill building. MOUNTAIN r3 deliberately does **not** place it as a freestanding landmark.
 The `scenery/watercraft/ship-ocean-liner.glb` model and its `Textures/colormap.png` palette are from Kenney Watercraft Kit 2.1.
