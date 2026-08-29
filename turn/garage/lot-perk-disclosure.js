@@ -1,4 +1,4 @@
-import { getCarDefinition } from '../vehicle/catalog.js?revision=r222-awd-suv-paint';
+import { getCarDefinition } from '../vehicle/catalog.js?revision=r223-training-car-taxi';
 import { vehiclePerkPresentation } from '../vehicle/perk-presentation.js?revision=r220-apex-grip';
 
 const STYLE_ID = 'turn-lot-perk-popover-r217-styles';

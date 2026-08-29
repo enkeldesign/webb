@@ -72,7 +72,6 @@ const DEFAULT_SECONDARY_COLOR_BY_ID = Object.freeze({
 });
 
 const VISUAL_SIZE_MULTIPLIER_BY_ID = Object.freeze({
-  classic: 0.72,
   'vintage-racer': 0.75,
   police: 1.15
 });
@@ -142,7 +141,7 @@ const TUNING_OVERRIDE_BY_ID = Object.freeze({
 
 const RAW_CARS = [
   ['convertible', 'AWD', 'car', { speed: 2, acceleration: 3, control: 4, drift: 4, boostPower: 2, boostDuration: 3 }, 0.98, 0, 0.90],
-  ['classic', 'Training Car', 'prototype', { speed: 1, acceleration: 1, control: 5, drift: 5, boostPower: 1, boostDuration: 5 }, 1.00, 1, 0.88],
+  ['classic', 'Training Car', 'car', { speed: 1, acceleration: 1, control: 5, drift: 5, boostPower: 1, boostDuration: 5 }, 1.00, 0, 0.88],
   ['vintage-racer', 'Vintage Racer', 'toy', { speed: 4, acceleration: 3, control: 2, drift: 5, boostPower: 2, boostDuration: 2 }, 0.96, 0, 1.28],
   ['toy-racer', 'Rally Racer', 'car', { speed: 4, acceleration: 4, control: 1, drift: 4, boostPower: 4, boostDuration: 1 }, 0.98, 0, 1.18],
   ['monster-truck', 'Monster Truck', 'toy', { speed: 2, acceleration: 3, control: 2, drift: 5, boostPower: 2, boostDuration: 4 }, 0.83, 2, 0.62],
@@ -198,6 +197,7 @@ const VISUAL_CUSTOMIZATION_BY_ID = Object.freeze({
 });
 
 const MODEL_ASSET_BY_ID = Object.freeze({
+  classic: './assets/cars/training-car.glb',
   convertible: './assets/cars/suv.glb',
   suv: './assets/cars/suv-luxury.glb',
   'sedan-sports': './assets/cars/hatchback-sports.glb',
@@ -205,6 +205,7 @@ const MODEL_ASSET_BY_ID = Object.freeze({
 });
 
 const SURFACE_PROFILE_BY_ID = Object.freeze({
+  classic: 'training-car',
   convertible: 'suv',
   suv: 'suv-luxury',
   'sedan-sports': 'hatchback-sports',

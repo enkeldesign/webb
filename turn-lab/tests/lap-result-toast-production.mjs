@@ -213,7 +213,7 @@ assert.match(index, new RegExp(`lap-result-toast\\.css\\?build=${release.cacheKe
 assert.match(index, new RegExp(`rival-onboarding\\.css\\?build=${release.cacheKey}`));
 assert.equal(
   imports[`/turn/ui/rival-onboarding.js?build=${release.cacheKey}`],
-  `/turn/ui/rival-onboarding.js?build=${release.cacheKey}&revision=r222-awd-suv-paint`,
+  `/turn/ui/rival-onboarding.js?build=${release.cacheKey}&revision=r223-training-car-taxi`,
   'Installed PWAs must refetch the prewarmed CHASE YOUR BEST runtime'
 );
 assert.ok(

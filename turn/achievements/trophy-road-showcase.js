@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {
   getVehicleDefaultColor,
   getVehicleDefaultSecondaryColor
-} from '../vehicle/catalog.js?revision=r222-awd-suv-paint';
+} from '../vehicle/catalog.js?revision=r223-training-car-taxi';
 import { createCarVisual } from '../vehicle/emergency-livery-models.js?build=20260823-r179';
 import { configureRendererWideGamut } from '../vehicle/wide-gamut.js?revision=r157-display-p3';
 

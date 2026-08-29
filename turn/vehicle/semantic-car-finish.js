@@ -8,7 +8,7 @@ const KENNEY_PALETTE_BY_PACK = Object.freeze({
 });
 
 const KENNEY_PROFILE_BY_ID = Object.freeze({
-  classic: profile({ primary: [[4, 4], [4, 5]], secondary: [[1, 6], [1, 7]], rims: [[4, 6], [4, 7]] }),
+  'training-car': profile({ primary: [[4, 2], [4, 3]], secondary: [[3, 4], [3, 5]], rims: [[3, 4], [3, 5]] }),
   truck: profile({ primary: [[3, 2], [3, 3]], secondary: [[3, 4], [3, 5]], rims: [[5, 4], [5, 5]] }),
   sedan: profile({ primary: [[6, 2], [6, 3]], secondary: [[3, 4], [3, 5]], rims: [[5, 4], [5, 5]] }),
   van: profile({ primary: [[7, 2], [7, 3]], secondary: [[3, 4], [3, 5]], rims: [[5, 4], [5, 5]] }),

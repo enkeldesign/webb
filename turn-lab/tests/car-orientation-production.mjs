@@ -13,7 +13,7 @@ const frontWheelSteering = await import(
 
 const expectedQuarterTurns = new Map([
   ['convertible', 0],
-  ['classic', 1],
+  ['classic', 0],
   ['vintage-racer', 0],
   ['toy-racer', 0],
   ['monster-truck', 2],
@@ -48,7 +48,6 @@ const expectedVisualScales = new Map([
 ]);
 
 const expectedGlobalSizeMultipliers = new Map([
-  ['classic', 0.72],
   ['vintage-racer', 0.75],
   ['police', 1.15]
 ]);
@@ -131,13 +130,16 @@ assert.deepEqual(suv.stats, { speed: 3, acceleration: 4, control: 4, drift: 2, b
 assert.equal(catalog.getVehicleStatTotal(suv.stats), catalog.VEHICLE_STAT_BUDGET);
 assert.equal(suv.defaultColor, '#0555aa');
 assert.equal(suv.defaultSecondaryColor, '#163f7a');
+assert.equal(trainingCar.pack, 'car');
+assert.equal(trainingCar.asset, './assets/cars/training-car.glb');
+assert.equal(trainingCar.surfaceProfileId, 'training-car');
 assert.equal(monsterTruck.pack, 'toy');
 assert.equal(monsterTruck.asset, './assets/cars/monster-truck.glb');
 assert.equal(hatchback.asset, './assets/cars/hatchback-sports.glb');
 assert.equal(rallyRacer.asset, './assets/cars/sedan-sports.glb');
 assertClose(awd.visualScale * awd.visualSizeMultiplier, 0.98, 'AWD effective visual scale');
 assertClose(suv.visualScale * suv.visualSizeMultiplier, 1.05, 'SUV effective visual scale');
-assertClose(trainingCar.visualScale * trainingCar.visualSizeMultiplier, 0.72, 'Training Car effective visual scale');
+assertClose(trainingCar.visualScale * trainingCar.visualSizeMultiplier, 1, 'Training Car standard-car visual scale');
 assertClose(vintageRacer.visualScale * vintageRacer.visualSizeMultiplier, 0.72, 'Vintage Racer effective visual scale');
 assertClose(rallyRacer.visualScale * rallyRacer.visualSizeMultiplier, 0.98, 'Rally Racer effective visual scale');
 assertClose(hatchback.visualScale * hatchback.visualSizeMultiplier, 0.98, 'Hatchback effective visual scale');
