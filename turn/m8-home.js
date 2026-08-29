@@ -12,6 +12,12 @@ import { getStoredBestLap } from '/turn/race/rival-storage.js?source=20260729-r1
 import { getCarDefinition } from '/turn/vehicle/catalog.js?source=20260729-r118-m8';
 import { renderBestCarThumbnail } from '/turn/ui/track-best-car.js?source=20260729-r118-m8';
 import { saveDriveByEarEnabled } from '/turn/ui/drive-by-ear-setting.js?source=20260729-r118-m8';
+import {
+  CONTROL_HANDEDNESS,
+  installControlHandedness,
+  loadControlHandedness,
+  saveControlHandedness
+} from '/turn/ui/control-handedness.js?revision=r228-left-handed-controls';
 
 const STEERING_MODE_KEY = 'turn-steering-mode-v1';
 const STEERING_MODE = Object.freeze({ MOTION: 'motion', MANUAL: 'manual' });
@@ -19,6 +25,8 @@ const ICON_REVISION = '20260803-profile-512';
 
 let installed = false;
 let previewGeneration = 0;
+
+installControlHandedness();
 
 function waitForRuntime() {
   if (globalThis.__turnRuntime && globalThis.__turnNextRaceSession) {
@@ -273,6 +281,7 @@ function createSettingsDialog({ getSelectedTrackId, onRivalsReset }) {
           <legend>Steering</legend>
           <label><input type="radio" name="m8Steering" value="motion"><span><strong>Device rotation</strong><small>Turn the whole device like a steering wheel.</small></span></label>
           <label><input type="radio" name="m8Steering" value="manual"><span><strong>On-screen steering</strong><small>Use the steering control or a keyboard.</small></span></label>
+          <label class="m8-toggle-row m8-handedness-setting"><input id="m8LeftHanded" type="checkbox"><span><strong>Left-handed controls</strong><small>Move the drive pad to the left. With on-screen steering, steering moves to the right.</small></span></label>
           <p class="m8-motion-note" hidden>Device rotation is not available in this browser.</p>
         </fieldset>
 
@@ -304,6 +313,7 @@ function createSettingsDialog({ getSelectedTrackId, onRivalsReset }) {
 
   const motionRadio = dialog.querySelector('input[value="motion"]');
   const manualRadio = dialog.querySelector('input[value="manual"]');
+  const leftHandedToggle = dialog.querySelector('#m8LeftHanded');
   const motionNote = dialog.querySelector('.m8-motion-note');
   const soundToggle = dialog.querySelector('#m8AudioEnabled');
   const dbeToggle = dialog.querySelector('#m8DbeEnabled');
@@ -328,9 +338,11 @@ function createSettingsDialog({ getSelectedTrackId, onRivalsReset }) {
 
   function sync() {
     const steering = loadSteeringMode();
+    const handedness = loadControlHandedness();
     motionRadio.disabled = !motionAvailable();
     motionRadio.checked = steering === STEERING_MODE.MOTION;
     manualRadio.checked = steering === STEERING_MODE.MANUAL;
+    leftHandedToggle.checked = handedness === CONTROL_HANDEDNESS.LEFT;
     motionNote.hidden = motionAvailable();
 
     const audio = audioPreferences()?.getSettings?.() || {
@@ -363,6 +375,16 @@ function createSettingsDialog({ getSelectedTrackId, onRivalsReset }) {
         : 'Steering set to the on-screen control.';
     });
   }
+
+  leftHandedToggle.addEventListener('change', () => {
+    const handedness = saveControlHandedness(
+      leftHandedToggle.checked ? CONTROL_HANDEDNESS.LEFT : CONTROL_HANDEDNESS.RIGHT
+    );
+    leftHandedToggle.checked = handedness === CONTROL_HANDEDNESS.LEFT;
+    status.textContent = handedness === CONTROL_HANDEDNESS.LEFT
+      ? 'Left-handed controls on.'
+      : 'Left-handed controls off.';
+  });
 
   soundToggle.addEventListener('change', () => {
     const enabled = audioPreferences()?.setAudioEnabled?.(soundToggle.checked) ?? soundToggle.checked;
@@ -433,251 +455,161 @@ function installLotRaceGate({ raceSession, getSteeringMode, onAccessReady }) {
     status.className = 'lot-race-status';
     status.setAttribute('role', 'status');
     status.setAttribute('aria-live', 'polite');
-    raceButton.insertAdjacentElement('beforebegin', status);
+    raceButton.insertAdjacentElement('afterend', status);
   }
 
-  const gate = async (event) => {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    raceButton.disabled = true;
+  let pending = false;
+
+  async function ensureAccess() {
+    if (pending) return false;
+    pending = true;
     status.textContent = '';
     try {
-      const access = getSteeringMode() === STEERING_MODE.MOTION
-        ? await raceSession.prepareMotionAccess()
-        : raceSession.prepareManualAccess();
-      onAccessReady(access);
-      raceButton.removeEventListener('click', gate, true);
-      raceButton.disabled = false;
-      raceButton.click();
-    } catch (error) {
-      if (!motionPermissionWasDismissed(error)) {
-        status.textContent = `${error instanceof Error ? error.message : 'The race could not start.'} Choose on-screen steering in Settings to continue without motion.`;
+      const steeringMode = getSteeringMode();
+      if (steeringMode === STEERING_MODE.MOTION) {
+        await raceSession.requestMotion();
+      } else {
+        raceSession.useManualMode();
       }
-      raceButton.disabled = false;
-      raceButton.focus();
+      onAccessReady();
+      return true;
+    } catch (error) {
+      if (motionPermissionWasDismissed(error)) {
+        status.textContent = 'Motion access was not granted. Choose on-screen steering in Settings, or try again.';
+        return false;
+      }
+      throw error;
+    } finally {
+      pending = false;
     }
-  };
+  }
 
-  raceButton.addEventListener('click', gate, true);
-  return () => raceButton.removeEventListener('click', gate, true);
+  raceButton.addEventListener('click', (event) => {
+    event.preventDefault();
+    void ensureAccess();
+  });
+
+  return { ensureAccess };
+}
+
+function focusTrackCard(root, trackId) {
+  root.querySelector(`[data-track-id="${trackId}"]`)?.focus();
+}
+
+function updateTrackSelection(root, trackId) {
+  const normalized = normalizeTrackId(trackId);
+  for (const card of root.querySelectorAll('[data-track-id]')) {
+    const selected = card.dataset.trackId === normalized;
+    card.classList.toggle('is-selected', selected);
+    card.setAttribute('aria-pressed', selected ? 'true' : 'false');
+  }
+  return normalized;
+}
+
+function setVisible(home, visible) {
+  home.hidden = !visible;
+  home.setAttribute('aria-hidden', visible ? 'false' : 'true');
 }
 
 export async function installM8HomeNavigation() {
-  if (installed) return globalThis.__turnNextHome;
+  if (installed) return globalThis.__turnHome;
   installed = true;
 
   const { runtime, raceSession } = await waitForRuntime();
-  const intro = document.querySelector('#intro');
-  const utilityGroup = document.querySelector('.utility-group');
-  const spectateButton = utilityGroup?.querySelector('.spectate-button');
+  const root = document.createElement('section');
+  root.className = 'm8-home';
+  root.setAttribute('aria-label', 'TURN home');
 
-  let selectedTrackId = normalizeTrackId(loadTrackSelection());
-  let setupPending = false;
-  let pendingAccess = null;
+  const activeTrack = loadTrackSelection();
+  let selectedTrackId = activeTrack.id;
 
-  const home = document.createElement('section');
-  home.className = 'm8-home';
-  home.setAttribute('aria-labelledby', 'm8HomeTitle');
-  home.innerHTML = `
-    <div class="m8-home-shell">
-      <header class="m8-home-head">
-        <img class="m8-home-logo" src="/turn/TURNicon.PNG?icon=${ICON_REVISION}" alt="TURN">
-        <div class="m8-home-pitch">
-          <p>TILT. DRIFT.<br>BEAT YOUR BEST.</p>
-          <button class="m8-how-button" type="button">HOW TO PLAY</button>
-        </div>
-        <span class="m8-home-build">TURN NEXT · M8 · SOURCE 2026.07.29-R118</span>
-        <button class="m8-home-settings" type="button"><span aria-hidden="true">⚙</span> SETTINGS</button>
-      </header>
-
-      <main class="m8-home-main">
-        <div class="m8-track-heading-row">
-          <h1 id="m8HomeTitle" tabindex="-1">CHOOSE YOUR TRACK</h1>
-          <div class="m8-track-scroll-buttons" aria-label="Scroll tracks">
-            <button class="m8-track-previous" type="button" aria-label="Scroll to previous tracks">‹</button>
-            <button class="m8-track-next" type="button" aria-label="Scroll to more tracks">›</button>
-          </div>
-        </div>
-        <div class="m8-track-rail" aria-label="Available tracks">
-          ${TRACK_SELECTION_CATALOG.map(renderTrackCard).join('')}
-        </div>
-        <button class="m8-track-continue" type="button">CONTINUE</button>
-        <p class="m8-home-status" role="status" aria-live="polite"></p>
-      </main>
+  const trackCards = TRACK_SELECTION_CATALOG.map(renderTrackCard).join('');
+  root.innerHTML = `
+    <header class="m8-home-header">
+      <div class="m8-home-brand"><img src="./TURNicon.PNG?icon=${ICON_REVISION}" alt=""><div><strong>TURN</strong><span>TILT · DRIFT · BOOST</span></div></div>
+      <div class="m8-home-actions"><button type="button" data-home-settings>SETTINGS</button><button type="button" data-home-how>HOW TO PLAY</button></div>
+    </header>
+    <div class="m8-home-main">
+      <section class="m8-track-panel" aria-label="Tracks">
+        <div class="m8-track-list">${trackCards}</div>
+      </section>
+      <section class="m8-menu-panel" aria-label="Menu">
+        <div class="m8-selected-track"><span>SELECTED</span><strong>${activeTrack.name}</strong></div>
+        <button type="button" class="m8-race-track">RACE THIS TRACK</button>
+        <button type="button" class="m8-lot-button">THE LOT</button>
+      </section>
     </div>`;
-  document.body.appendChild(home);
 
-  const rail = home.querySelector('.m8-track-rail');
-  const cards = [...rail.querySelectorAll('.track-card:not([disabled])')];
-  const continueButton = home.querySelector('.m8-track-continue');
-  const previousButton = home.querySelector('.m8-track-previous');
-  const nextButton = home.querySelector('.m8-track-next');
-  const howButton = home.querySelector('.m8-how-button');
-  const homeSettingsButton = home.querySelector('.m8-home-settings');
-  const homeStatus = home.querySelector('.m8-home-status');
-  const howDialog = createHowToPlayDialog();
+  document.body.appendChild(root);
+  refreshTrackRecords(root);
+  updateTrackSelection(root, selectedTrackId);
 
   const settings = createSettingsDialog({
     getSelectedTrackId: () => selectedTrackId,
-    async onRivalsReset() {
-      await activateTrack(selectedTrackId, runtime);
+    onRivalsReset: async () => {
       globalThis.__turnResetRivals?.();
-      refreshTrackRecords(home);
+      refreshTrackRecords(root);
     }
   });
+  const how = createHowToPlayDialog();
+  const raceTrackButton = root.querySelector('.m8-race-track');
+  const lotButton = root.querySelector('.m8-lot-button');
+  const selectedName = root.querySelector('.m8-selected-track strong');
 
-  const raceSettingsButton = document.createElement('button');
-  raceSettingsButton.type = 'button';
-  raceSettingsButton.className = 'utility m8-race-settings-button';
-  raceSettingsButton.textContent = 'Settings';
-  raceSettingsButton.setAttribute('aria-label', 'Open game settings');
-  if (utilityGroup) {
-    if (spectateButton) utilityGroup.insertBefore(raceSettingsButton, spectateButton);
-    else utilityGroup.appendChild(raceSettingsButton);
+  function selectTrack(trackId, { focus = false } = {}) {
+    selectedTrackId = updateTrackSelection(root, trackId);
+    const track = TRACK_CATALOG.find((entry) => entry.id === selectedTrackId) || activeTrack;
+    selectedName.textContent = track.name;
+    if (focus) focusTrackCard(root, selectedTrackId);
+    return track;
   }
 
-  function selectedTrack() {
-    return TRACK_CATALOG.find((track) => track.id === selectedTrackId) || TRACK_CATALOG[0];
-  }
+  root.addEventListener('click', (event) => {
+    const card = event.target.closest('[data-track-id]');
+    if (card && !card.disabled) selectTrack(card.dataset.trackId);
+  });
 
-  function syncSelection({ scroll = false } = {}) {
-    for (const card of cards) {
-      const selected = card.dataset.trackId === selectedTrackId;
-      card.classList.toggle('is-selected', selected);
-      card.setAttribute('aria-pressed', String(selected));
-    }
-    const track = selectedTrack();
-    continueButton.textContent = `CONTINUE TO ${track.name.toUpperCase()}`;
-    continueButton.style.setProperty('--selected-track-accent', track.accent || '#ff4fa3');
-    if (scroll) {
-      rail.querySelector(`[data-track-id="${selectedTrackId}"]`)?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'center'
-      });
-    }
-  }
-
-  function syncScrollButtons() {
-    const max = Math.max(0, rail.scrollWidth - rail.clientWidth);
-    previousButton.disabled = rail.scrollLeft <= 4;
-    nextButton.disabled = rail.scrollLeft >= max - 4;
-  }
-
-  function syncRaceSettingsVisibility() {
-    raceSettingsButton.hidden = utilityGroup?.dataset.menuState !== 'staged';
-  }
-
-  function showHome({ focus = false } = {}) {
-    intro.hidden = true;
-    home.hidden = false;
-    document.body.classList.add('turn-m8-active', 'turn-home-open');
-    refreshTrackRecords(home);
-    syncSelection();
-    requestAnimationFrame(() => {
-      syncScrollButtons();
-      if (focus) home.querySelector('#m8HomeTitle')?.focus?.();
-    });
-  }
-
-  function hideHome() {
-    home.hidden = true;
-    document.body.classList.remove('turn-home-open');
-  }
-
-  async function continueToTrack() {
-    if (setupPending) return;
-    setupPending = true;
-    continueButton.disabled = true;
-    homeStatus.textContent = '';
-    pendingAccess = null;
-
-    try {
-      await Promise.all([
-        activateTrack(selectedTrackId, runtime),
-        prepareEnhancedLot()
-      ]);
-      hideHome();
-      const lotPromise = showTheLot({ initialSelection: selectedVehicle(runtime) });
-      const removeRaceGate = installLotRaceGate({
-        raceSession,
-        getSteeringMode: loadSteeringMode,
-        onAccessReady(access) {
-          pendingAccess = access;
-        }
-      });
-      const selection = await lotPromise;
-      removeRaceGate();
-
-      if (!selection) {
-        showHome({ focus: true });
-        return false;
-      }
-
-      await raceSession.selectVehicle(selection);
-      await showTrackIntro(selectedTrackId);
-      await raceSession.startGame(pendingAccess?.fullscreenPromise);
-      return true;
-    } catch (error) {
-      showHome();
-      homeStatus.textContent = error instanceof Error ? error.message : 'The race setup could not be opened.';
-      continueButton.focus();
-      return false;
-    } finally {
-      setupPending = false;
-      continueButton.disabled = false;
-    }
-  }
-
-  async function leaveRaceForHome() {
-    raceSession.leaveRace();
-    showHome({ focus: true });
-    return true;
-  }
-
-  for (const card of cards) {
-    card.addEventListener('click', () => {
-      selectedTrackId = normalizeTrackId(card.dataset.trackId);
-      syncSelection({ scroll: true });
-    });
-  }
-  continueButton.addEventListener('click', continueToTrack);
-  previousButton.addEventListener('click', () => rail.scrollBy({ left: -rail.clientWidth * 0.82, behavior: 'smooth' }));
-  nextButton.addEventListener('click', () => rail.scrollBy({ left: rail.clientWidth * 0.82, behavior: 'smooth' }));
-  rail.addEventListener('scroll', syncScrollButtons, { passive: true });
-  window.addEventListener('resize', syncScrollButtons, { passive: true });
-  howButton.addEventListener('click', () => openDialog(howDialog, howButton));
-  homeSettingsButton.addEventListener('click', () => {
+  root.querySelector('[data-home-settings]')?.addEventListener('click', (event) => {
     settings.sync();
-    openDialog(settings.dialog, homeSettingsButton);
+    openDialog(settings.dialog, event.currentTarget);
   });
-  raceSettingsButton.addEventListener('click', () => {
-    settings.sync();
-    openDialog(settings.dialog, raceSettingsButton);
+  root.querySelector('[data-home-how]')?.addEventListener('click', (event) => openDialog(how, event.currentTarget));
+
+  const accessGate = installLotRaceGate({
+    raceSession,
+    getSteeringMode: loadSteeringMode,
+    onAccessReady: () => setVisible(root, false)
   });
 
-  const menuObserver = utilityGroup && typeof MutationObserver === 'function'
-    ? new MutationObserver(syncRaceSettingsVisibility)
-    : null;
-  menuObserver?.observe(utilityGroup, { attributes: true, attributeFilter: ['data-menu-state'] });
-  window.addEventListener('turn:ui-state-change', syncRaceSettingsVisibility);
-  window.addEventListener('turn:rivals-reset', () => refreshTrackRecords(home));
+  raceTrackButton.addEventListener('click', async () => {
+    const track = selectTrack(selectedTrackId);
+    await activateTrack(track.id);
+    await showTrackIntro(track);
+    await prepareEnhancedLot({ selectedVehicle: selectedVehicle(runtime) });
+    showTheLot();
+  });
 
-  runtime.openLot = leaveRaceForHome;
-  runtime.openHome = leaveRaceForHome;
-  document.documentElement.dataset.turnHomeLifecycle = 'home-m8';
-  globalThis.__turnNextHome = Object.freeze({
-    route: 'home-m8',
-    showHome,
-    hideHome,
-    continueToTrack,
-    leaveRaceForHome,
+  lotButton.addEventListener('click', async () => {
+    await prepareEnhancedLot({ selectedVehicle: selectedVehicle(runtime) });
+    showTheLot();
+  });
+
+  const home = {
+    root,
+    show() {
+      setVisible(root, true);
+      refreshTrackRecords(root);
+      settings.sync();
+      selectTrack(loadTrackSelection().id);
+    },
+    hide() {
+      setVisible(root, false);
+    },
     getSelectedTrackId: () => selectedTrackId,
-    getSteeringMode: loadSteeringMode
-  });
+    ensureRaceAccess: accessGate.ensureAccess
+  };
 
-  syncSelection();
-  syncRaceSettingsVisibility();
-  showHome();
-  return globalThis.__turnNextHome;
+  setVisible(root, true);
+  globalThis.__turnHome = home;
+  return home;
 }
