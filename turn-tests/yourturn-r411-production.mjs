@@ -21,7 +21,8 @@ const [
 assert.match(yourTurnIndex, /race-controls-r417\.js\?revision=r417/);
 assert.match(yourTurnIndex, /track-map-r417\.js\?revision=r417/);
 assert.match(yourTurnIndex, /r411\.css\?revision=r411/);
-assert.match(turnIndex, /ui\/r411-race-controls\.js\?revision=r411/);
+assert.match(turnIndex, /ui\/r411-race-controls\.js\?revision=[^"']+/,
+  'TURN must load its r411 race-control behavior regardless of the current cache revision');
 
 assert.match(yourTurnMap, /getTrackPreviewPoints/,
   'YOUR TURN maps must derive from TURN canonical track geometry');
