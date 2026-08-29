@@ -126,7 +126,9 @@ function createAuthenticKenneyTaxiSign({ ghost }) {
     const start = positions.length / 3;
     for (const vertexIndex of triangle) positions.push(...KENNEY_TAXI_SIGN_POSITIONS[vertexIndex]);
 
-    if (triangleIndex === 2) uvs.push(0, 0, 1, 0, 1, 1);
+    // Map the two broad faces independently so the L reads normally from either
+    // side of the car. The opposite side intentionally mirrors U in model space.
+    if (triangleIndex === 2) uvs.push(0, 1, 1, 0, 1, 1);
     else if (triangleIndex === 3) uvs.push(1, 0, 0, 1, 0, 0);
     else if (triangleIndex === 8) uvs.push(1, 0, 0, 1, 0, 0);
     else if (triangleIndex === 9) uvs.push(0, 1, 1, 0, 1, 1);
