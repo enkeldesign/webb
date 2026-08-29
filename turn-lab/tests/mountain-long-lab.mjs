@@ -75,6 +75,12 @@ assert.doesNotMatch(labIndex, /portrait-play|portrait-centered-pad|roadtrip-worl
 assert.match(bootstrapSource, /LOCAL_PREFIX = 'turn-lab:'/);
 assert.match(bootstrapSource, /SESSION_PREFIX = 'turn-lab-session:'/);
 assert.match(bootstrapSource, /dataset\.turnLab = 'mountain-long-course'/);
+assert.match(bootstrapSource, /ACHIEVEMENT_KEY = `\$\{LOCAL_PREFIX\}turn-achievements-v1`/);
+assert.match(bootstrapSource, /MOUNTAIN_REWARD_ID = 'mountain'/);
+assert.match(bootstrapSource, /nativeStorage\.setItem\.call\(localStorageRef, ACHIEVEMENT_KEY/,
+  'LAB MOUNTAIN access must write only through the already-prefixed isolated storage key');
+assert.doesNotMatch(bootstrapSource, /localStorageRef\.setItem\(['"]turn-achievements-v1/,
+  'LAB bootstrap must never write the production achievement key directly');
 const manifest = JSON.parse(manifestSource);
 assert.equal(manifest.orientation, 'landscape', 'The retired portrait experiment must not keep an any-orientation manifest');
 

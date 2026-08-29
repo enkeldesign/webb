@@ -25,8 +25,11 @@
     const VIEWS = Object.freeze({
       aerial: { position:[620,610,-690], target:[0,7,-115], fov:49 },
       summit: { position:[330,110,165], target:[135,39,80], fov:52 },
-      bridge: { position:[420,90,-330], target:[255,2,-205], fov:48 },
-      'lower-village': { position:[-520,98,-320], target:[-335,2,-220], fov:50 },
+      // The production ridge at 432/-266 and the lower-village peak at
+      // -392/-228 are intentional sightline screens. Review from their open
+      // sides so the bridge modules and house grounding remain inspectable.
+      bridge: { position:[70,96,-92], target:[255,3,-205], fov:47 },
+      'lower-village': { position:[-392,210,-228], target:[-330,2,-215], fov:56 },
       forest: { position:[20,78,-430], target:[-70,2,-285], fov:52 },
       'final-climb': { position:[245,72,-330], target:[80,3,-235], fov:48 }
     });

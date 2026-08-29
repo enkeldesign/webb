@@ -53,6 +53,64 @@
     return keys[index] ?? null;
   };
 
+  // MOUNTAIN is the subject of this LAB build, so a fresh isolated LAB profile
+  // must not inherit production's 700-trophy gate. Seed only that reward in the
+  // prefixed LAB achievement record; production TURN storage is never read or
+  // written, and every other Trophy Road reward keeps its production behavior.
+  const ACHIEVEMENT_KEY = `${LOCAL_PREFIX}turn-achievements-v1`;
+  const MOUNTAIN_REWARD_ID = 'mountain';
+  const TROPHY_ROAD_STORAGE_VERSION = 6;
+
+  function ensureMountainLabAccess() {
+    let stored = null;
+    try {
+      const raw = nativeStorage.getItem.call(localStorageRef, ACHIEVEMENT_KEY);
+      stored = raw ? JSON.parse(raw) : null;
+    } catch (_) {}
+
+    const state = stored && typeof stored === 'object' ? stored : {};
+    const rewards = state.rewards && typeof state.rewards === 'object' ? state.rewards : {};
+    const unlocked = Array.isArray(rewards.unlocked)
+      ? rewards.unlocked.filter((id) => typeof id === 'string')
+      : [];
+    const seenRewards = Array.isArray(rewards.seen)
+      ? rewards.seen.filter((id) => typeof id === 'string')
+      : [];
+    if (
+      Number(state.version) >= TROPHY_ROAD_STORAGE_VERSION
+      && unlocked.includes(MOUNTAIN_REWARD_ID)
+      && seenRewards.includes(MOUNTAIN_REWARD_ID)
+    ) {
+      return true;
+    }
+    if (!unlocked.includes(MOUNTAIN_REWARD_ID)) unlocked.push(MOUNTAIN_REWARD_ID);
+    if (!seenRewards.includes(MOUNTAIN_REWARD_ID)) seenRewards.push(MOUNTAIN_REWARD_ID);
+
+    const next = {
+      ...state,
+      version: Math.max(TROPHY_ROAD_STORAGE_VERSION, Number(state.version) || 0),
+      unlocked: state.unlocked && typeof state.unlocked === 'object' ? state.unlocked : {},
+      seen: Array.isArray(state.seen) ? state.seen : [],
+      progress: state.progress && typeof state.progress === 'object'
+        ? state.progress
+        : { tracks: [], blankTracks: [] },
+      rewards: {
+        ...rewards,
+        unlocked,
+        seen: seenRewards
+      }
+    };
+
+    try {
+      nativeStorage.setItem.call(localStorageRef, ACHIEVEMENT_KEY, JSON.stringify(next));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  const mountainAccessReady = ensureMountainLabAccess();
+
   const isStandalone =
     window.matchMedia?.('(display-mode: standalone)').matches ||
     window.matchMedia?.('(display-mode: fullscreen)').matches ||
@@ -61,6 +119,7 @@
   document.documentElement.classList.toggle('turn-standalone', isStandalone);
   document.documentElement.classList.toggle('turn-browser', !isStandalone);
   document.documentElement.dataset.turnLab = 'mountain-long-course';
+  document.documentElement.dataset.turnLabMountainAccess = mountainAccessReady ? 'unlocked' : 'storage-blocked';
 
   let releaseBrowserLaunch = null;
   let browserReleased = false;

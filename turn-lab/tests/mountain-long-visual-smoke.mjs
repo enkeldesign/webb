@@ -12,7 +12,7 @@ const browser = await chromium.launch({
   headless: true,
   args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist']
 });
-const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
+let context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
 const visualPage = await context.newPage();
 const browserErrors = [];
 
@@ -43,8 +43,16 @@ try {
     await visualPage.screenshot({ path: path.join(outputDir, `${view}.png`), fullPage: true });
   }
 
+  await visualPage.close();
+  await context.close();
+
   // The real TURN LAB shell proves that the two import maps compose and that
   // production registry imports resolve to the MOUNTAIN-only LAB overlays.
+  // Use a fresh browser context and turn audio/DBE off in this geometry smoke.
+  // Current production's optional audio capture can otherwise select a music
+  // AudioContext in headless Chromium; audio has its own production regressions
+  // and is intentionally outside this MOUNTAIN rendering check.
+  context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
   const runtimePage = await context.newPage();
   collectErrors(runtimePage, 'runtime');
   const runtimeResponse = await runtimePage.goto(`${baseUrl}/turn-lab/?visual-smoke=mountain-long`, {
@@ -52,12 +60,28 @@ try {
     timeout: 90_000
   });
   assert.equal(runtimeResponse?.ok(), true, 'TURN LAB runtime shell must load successfully');
+  await runtimePage.evaluate(() => {
+    localStorage.setItem('turn-audio-enabled-v1', 'off');
+    localStorage.setItem('turn-drive-by-ear-v1', 'off');
+  });
   await runtimePage.getByRole('button', { name: 'Play in browser anyway' }).click();
   await runtimePage.waitForFunction(
     () => Boolean(globalThis.__turnRuntime && globalThis.__turnChooseTrack),
     null,
     { timeout: 90_000 }
   );
+  await runtimePage.waitForFunction(
+    () => document.querySelector('.m8-home .track-card[data-track-id="mountain"]')
+      ?.dataset?.trophyLocked === 'false',
+    null,
+    { timeout: 90_000 }
+  );
+  const mountainHomeCard = runtimePage.locator('.m8-home .track-card[data-track-id="mountain"]');
+  assert.equal(await mountainHomeCard.getAttribute('data-trophy-locked'), 'false',
+    'The isolated TURN LAB profile must expose its MOUNTAIN experiment without production trophies');
+  assert.notEqual(await mountainHomeCard.getAttribute('aria-disabled'), 'true');
+  assert.equal(await runtimePage.locator('html').getAttribute('data-turn-lab-mountain-access'), 'unlocked');
+  await runtimePage.screenshot({ path: path.join(outputDir, 'runtime-shell.png'), fullPage: true });
   await runtimePage.evaluate(() => {
     globalThis.__mountainLongChoice = globalThis.__turnChooseTrack();
     return true;
@@ -89,7 +113,6 @@ try {
       labResources: resources.filter((pathname) => pathname.startsWith('/turn-lab/'))
     };
   });
-  await runtimePage.screenshot({ path: path.join(outputDir, 'runtime-shell.png'), fullPage: true });
 } finally {
   await browser.close();
 }
