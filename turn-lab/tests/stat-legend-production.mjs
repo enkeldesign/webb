@@ -53,6 +53,8 @@ assert.ok(
   'Enhancement must connect to the already-created synchronous Lot DOM'
 );
 assert.match(enhancementRuntime, /installLotStatLegend\(scope\)/, 'Every Lot route must mount the shared stat legend');
+assert.match(enhancementRuntime, /lot-stat-legend\.js\?revision=r225-18-point-budget/,
+  'The revised attribute explanation must load under a fresh module identity');
 assert.ok(
   enhancementRuntime.indexOf('installLotStatLegend(scope)') < enhancementRuntime.indexOf('installLotLayout(scope)'),
   'The legend trigger must exist before the compact layout turns it into an info icon'
@@ -60,6 +62,10 @@ assert.ok(
 assert.match(legendModule, /VEHICLE_STAT_LEGEND/, 'The in-game legend must use the shared source of truth');
 assert.match(legendModule, /aria-modal/, 'The legend must open as an accessible modal');
 assert.match(legendModule, /WHAT DO THE STATS MEAN\?/, 'The legend trigger must be discoverable before the compact layout turns it into an info icon');
+assert.match(legendModule, /Every car always has 18 attribute points in total\./,
+  'The attribute modal must explain the fixed 18-point budget shared by every car');
+assert.match(legendModule, /What changes is how those 18 points are distributed\./,
+  'The attribute modal must explain that car identity comes from point distribution');
 assert.doesNotMatch(legendModule, /mountObserver|subtree: true/, 'The legend module must not observe the whole game DOM');
 assert.match(legendModule, /statsObserver\.observe\(stats, \{ childList: true \}\)/, 'Only actual car-stat replacement must trigger relabelling');
 assert.match(legendModule, /label\.textContent !== definition\.label/, 'Relabelling must not rewrite unchanged labels');
