@@ -1,11 +1,15 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {
+  ADMIN_SESSION_KEY,
   ADMIN_UNLOCK_SEQUENCE,
   advanceAdminUnlockSequence,
   completeAdminUnlockFromLot,
-  createAdminRewardState
+  createAdminRewardState,
+  repairPersistedAdminState,
+  unlockRewardsForTesting
 } from '../../turn/testing/admin-unlock-sequence.js';
+import { ACHIEVEMENT_STORAGE_KEY } from '../../turn/achievements/store.js';
 import { TROPHY_ROAD_REWARDS } from '../../turn/progression/trophy-road.js';
 
 const [source, indexSource, releaseSource] = await Promise.all([
@@ -64,7 +68,7 @@ assert.equal(completeAdminUnlockFromLot(explicitAwdIndex, 'convertible').complet
 
 const rewardIds = TROPHY_ROAD_REWARDS.map(({ id }) => id);
 const existing = {
-  version: 4,
+  version: 6,
   unlocked: {
     'first-turn': {
       unlockedAt: 123,
@@ -77,59 +81,110 @@ const existing = {
   progress: { tracks: ['countryside'], blankTracks: [] },
   rewards: { unlocked: [], seen: [] }
 };
-const preserved = createAdminRewardState(existing).snapshot;
-assert.deepEqual(Object.keys(preserved.unlocked), ['first-turn'],
+const temporary = createAdminRewardState(existing).snapshot;
+assert.deepEqual(Object.keys(temporary.unlocked), ['first-turn'],
   'The admin sequence must not create achievement records');
-assert.deepEqual(preserved.seen, ['first-turn']);
-assert.deepEqual(preserved.progress.tracks, ['countryside']);
-assert.deepEqual(preserved.progress.blankTracks, []);
-assert.deepEqual(preserved.rewards.unlocked, rewardIds);
-assert.deepEqual(preserved.rewards.seen, rewardIds);
-assert.equal(preserved.unlocked['first-turn'].unlockedAt, 123,
+assert.deepEqual(temporary.seen, ['first-turn']);
+assert.deepEqual(temporary.progress.tracks, ['countryside']);
+assert.deepEqual(temporary.progress.blankTracks, []);
+assert.deepEqual(temporary.rewards.unlocked, rewardIds,
+  'The active testing session still needs every Trophy Road reward');
+assert.deepEqual(temporary.rewards.seen, rewardIds);
+assert.equal(temporary.unlocked['first-turn'].unlockedAt, 123,
   'Real achievement history must be preserved');
 
-const cleanProfile = createAdminRewardState(null).snapshot;
-assert.deepEqual(cleanProfile.unlocked, {},
-  'A new testing profile must receive rewards without any achievements');
-assert.deepEqual(cleanProfile.seen, []);
-assert.deepEqual(cleanProfile.rewards.unlocked, rewardIds);
+const originalRaw = JSON.stringify(existing);
+const storage = memoryStorage({ [ACHIEVEMENT_STORAGE_KEY]: originalRaw });
+const activeSession = memoryStorage();
+assert.equal(unlockRewardsForTesting(storage, activeSession), true);
+assert.equal(activeSession.getItem(ADMIN_SESSION_KEY), '1',
+  'Admin mode must be scoped to the current browser/PWA session');
+const activeStored = JSON.parse(storage.getItem(ACHIEVEMENT_STORAGE_KEY));
+assert.deepEqual(activeStored.rewards.unlocked, rewardIds);
+const marker = JSON.parse(storage.getItem('turn-admin-unlock-v1'));
+assert.equal(marker.version, 3);
+assert.equal(marker.sessionOnly, true);
+assert.equal(marker.backup, originalRaw,
+  'The exact pre-admin achievement payload must be backed up before rewards are granted');
+
+const sameSessionRepair = repairPersistedAdminState(storage, activeSession);
+assert.equal(sameSessionRepair.repaired, false);
+assert.equal(sameSessionRepair.activeSession, true);
+assert.deepEqual(JSON.parse(storage.getItem(ACHIEVEMENT_STORAGE_KEY)).rewards.unlocked, rewardIds,
+  'A normal reload inside the testing session must keep admin rewards available');
+
+const freshSession = memoryStorage();
+const freshSessionRepair = repairPersistedAdminState(storage, freshSession);
+assert.equal(freshSessionRepair.repaired, true);
+assert.equal(freshSessionRepair.activeSession, false);
+assert.equal(storage.getItem(ACHIEVEMENT_STORAGE_KEY), originalRaw,
+  'A fresh browser/PWA session must restore the exact profile that existed before admin mode');
+assert.equal(storage.getItem('turn-admin-unlock-v1'), null);
+
+const pollutedV2 = memoryStorage({
+  [ACHIEVEMENT_STORAGE_KEY]: JSON.stringify({
+    version: 6,
+    unlocked: {},
+    seen: [],
+    progress: { tracks: [], blankTracks: [] },
+    rewards: { unlocked: rewardIds, seen: rewardIds }
+  }),
+  'turn-admin-unlock-v1': JSON.stringify({
+    version: 2,
+    activatedAt: 456,
+    rewardsOnly: true
+  })
+});
+const repairedV2 = repairPersistedAdminState(pollutedV2, memoryStorage());
+assert.equal(repairedV2.repaired, true,
+  'Profiles polluted by the previous permanent rewards-only admin path must self-repair');
+assert.deepEqual(JSON.parse(pollutedV2.getItem(ACHIEVEMENT_STORAGE_KEY)).rewards.unlocked, [],
+  'A zero-trophy profile must not retain admin-granted rewards after repair');
+assert.equal(pollutedV2.getItem('turn-admin-unlock-v1'), null);
 
 const allTracks = ['countryside', 'airport', 'cliffside', 'harbor', 'midnight-city'];
-const legacyAdminProfile = {
-  version: 4,
-  unlocked: {
-    'first-turn': {
-      unlockedAt: 123,
-      trackId: 'countryside',
-      vehicleId: 'classic',
-      time: 18
+const legacyTimestamp = 456;
+const pollutedV1 = memoryStorage({
+  [ACHIEVEMENT_STORAGE_KEY]: JSON.stringify({
+    version: 4,
+    unlocked: {
+      'first-turn': {
+        unlockedAt: 123,
+        trackId: 'countryside',
+        vehicleId: 'classic',
+        time: 18
+      },
+      'save-bella': {
+        unlockedAt: legacyTimestamp,
+        trackId: '',
+        vehicleId: '',
+        time: null
+      },
+      'beyond-sight': {
+        unlockedAt: legacyTimestamp,
+        trackId: '',
+        vehicleId: '',
+        time: null
+      }
     },
-    'save-bella': {
-      unlockedAt: 456,
-      trackId: '',
-      vehicleId: '',
-      time: null
-    },
-    'beyond-sight': {
-      unlockedAt: 456,
-      trackId: '',
-      vehicleId: '',
-      time: null
-    }
-  },
-  seen: ['first-turn', 'save-bella', 'beyond-sight'],
-  progress: { tracks: allTracks, blankTracks: allTracks },
-  rewards: { unlocked: rewardIds, seen: rewardIds }
-};
-const repaired = createAdminRewardState(legacyAdminProfile, 458);
-assert.equal(repaired.repairedLegacyAdminState, true);
-assert.deepEqual(Object.keys(repaired.snapshot.unlocked), ['first-turn'],
-  'Re-running the corrected sequence must remove achievements fabricated by the old admin path');
-assert.deepEqual(repaired.snapshot.seen, ['first-turn']);
-assert.deepEqual(repaired.snapshot.progress.tracks, []);
-assert.deepEqual(repaired.snapshot.progress.blankTracks, []);
-assert.deepEqual(repaired.snapshot.rewards.unlocked, rewardIds);
-assert.equal(repaired.snapshot.unlocked['save-bella'], undefined,
+    seen: ['first-turn', 'save-bella', 'beyond-sight'],
+    progress: { tracks: allTracks, blankTracks: allTracks },
+    rewards: { unlocked: rewardIds, seen: rewardIds }
+  }),
+  'turn-admin-unlock-v1': JSON.stringify({
+    version: 1,
+    activatedAt: legacyTimestamp
+  })
+});
+const repairedV1 = repairPersistedAdminState(pollutedV1, memoryStorage());
+assert.equal(repairedV1.repaired, true);
+const repairedLegacy = JSON.parse(pollutedV1.getItem(ACHIEVEMENT_STORAGE_KEY));
+assert.deepEqual(Object.keys(repairedLegacy.unlocked), ['first-turn'],
+  'The original full-profile admin path must still have its fabricated achievements removed');
+assert.deepEqual(repairedLegacy.seen, ['first-turn']);
+assert.deepEqual(repairedLegacy.progress.tracks, []);
+assert.deepEqual(repairedLegacy.progress.blankTracks, []);
+assert.equal(repairedLegacy.unlocked['save-bella'], undefined,
   'SAVE BELLA! must remain available for real rescue testing');
 
 assert.match(source, /target\.closest\('\.m8-track-continue'\)/,
@@ -137,8 +192,12 @@ assert.match(source, /target\.closest\('\.m8-track-continue'\)/,
 assert.match(source, /aria-checked="true"/,
   'The final action must detect an AWD that was already selected on Lot entry');
 assert.match(source, /completeAdminUnlockFromLot\(sequenceIndex, selectedVehicleId\)/);
-assert.match(source, /unlockRewardsForTesting\(storage\)/);
-assert.match(source, /snapshot\.rewards\.unlocked = \[\.\.\.rewardIds\]/);
+assert.match(source, /unlockRewardsForTesting\(storage, sessionStore\)/);
+assert.match(source, /sessionOnly: true/);
+assert.match(source, /backup/,
+  'Admin mode must preserve a pre-unlock backup instead of making rewards permanent');
+assert.match(source, /repairPersistedAdminState\(storage, sessionStore\)/,
+  'Startup must repair previous pollution and restore completed session-scoped admin modes');
 assert.match(source, /resetLegacyChallengeProgress\(storage\)/,
   'The corrected path must clear challenge progress polluted by the old all-achievement unlock');
 assert.doesNotMatch(source, /ACHIEVEMENTS|TRACK_IDS/,
@@ -153,13 +212,22 @@ assert.match(source, /globalThis\.setTimeout\?\.\(reload, 0\)/,
 assert.match(source, /installAdminUnlockSequence\(\);\s*$/,
   'The isolated production module must install itself');
 assert.match(indexSource,
-  /<script type="module" src="\.\/testing\/admin-unlock-sequence\.js\?revision=r176-admin-rewards"><\/script>/,
-  'The production entry must publish the rewards-only recognizer with a fresh cache identity');
+  /<script type="module" src="\.\/testing\/admin-unlock-sequence\.js\?revision=r224-admin-session-rewards"><\/script>/,
+  'Production must publish the self-repairing session-only recognizer under a fresh cache identity');
 assert.match(indexSource,
   new RegExp(`src="\\.\\/live-steering-setting\\.js\\?build=${escapeRegex(release.cacheKey)}-live-steering"`),
   'The hidden recognizer must not disturb the canonical steering entry');
 
-console.log('TURN rewards-only admin unlock regression passed.');
+console.log('TURN session-scoped admin unlock regression passed.');
+
+function memoryStorage(initial = {}) {
+  const values = new Map(Object.entries(initial).map(([key, value]) => [key, String(value)]));
+  return {
+    getItem(key) { return values.has(key) ? values.get(key) : null; },
+    setItem(key, value) { values.set(key, String(value)); },
+    removeItem(key) { values.delete(key); }
+  };
+}
 
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
