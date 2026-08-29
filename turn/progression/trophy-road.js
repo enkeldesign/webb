@@ -134,6 +134,9 @@ const REWARD_BY_FEATURE = new Map(
   TROPHY_ROAD_REWARDS.filter((reward) => reward.featureId).map((reward) => [reward.featureId, reward])
 );
 const PREPARED_STORAGE = new WeakSet();
+const ADMIN_UNLOCK_MARKER = 'turn-admin-unlock-v1';
+const RIVAL_STORAGE_PREFIX = 'turn-personal-rivals-v1';
+const LEGACY_GHOST_STORAGE_PREFIX = 'turn-three-ghost-v4';
 const VERSION_THREE_GRANDFATHERED_REWARDS = Object.freeze([
   'paintjob',
   'monster',
@@ -245,41 +248,109 @@ function markPreparationChecked(storage) {
   if (canRememberStorage(storage)) PREPARED_STORAGE.add(storage);
 }
 
-function hasLegacyTurnProfile(storage) {
-  const exactKeys = [
-    'turn-vehicle-selection-v1',
-    'turn-selected-track-v1',
-    'turn-steering-mode-v1',
-    'turn-drive-by-ear-v1',
-    'turn-personal-rivals-v1',
-    'turn-three-ghost-v4'
-  ];
-  for (const key of exactKeys) {
+function storageKeys(storage) {
+  const keys = [];
+  try {
+    const length = Number(storage?.length) || 0;
+    for (let index = 0; index < length; index += 1) {
+      const key = storage?.key?.(index);
+      if (typeof key === 'string' && key) keys.push(key);
+    }
+  } catch (_) {}
+  return keys;
+}
+
+function hasPlayedRivalPayload(payload) {
+  return Array.isArray(payload?.laps)
+    && payload.laps.some((lap) => Number.isFinite(Number(lap?.time)) && Number(lap.time) > 5);
+}
+
+function hasPlayedLegacyGhost(payload) {
+  return Number.isFinite(Number(payload?.bestTime)) && Number(payload.bestTime) > 5;
+}
+
+function hasLegacyRaceProgress(storage) {
+  const keys = new Set([
+    RIVAL_STORAGE_PREFIX,
+    LEGACY_GHOST_STORAGE_PREFIX,
+    ...storageKeys(storage).filter((key) =>
+      key.startsWith(`${RIVAL_STORAGE_PREFIX}:`) || key.startsWith(`${LEGACY_GHOST_STORAGE_PREFIX}:`)
+    )
+  ]);
+
+  for (const key of keys) {
     try {
-      if (storage?.getItem?.(key) != null) return true;
+      const payload = safeParse(storage?.getItem?.(key));
+      if (key.startsWith(RIVAL_STORAGE_PREFIX) && hasPlayedRivalPayload(payload)) return true;
+      if (key.startsWith(LEGACY_GHOST_STORAGE_PREFIX) && hasPlayedLegacyGhost(payload)) return true;
     } catch (_) {
       return false;
     }
   }
-
-  try {
-    const length = Number(storage?.length) || 0;
-    for (let index = 0; index < length; index += 1) {
-      const key = storage?.key?.(index) || '';
-      if (key.startsWith('turn-personal-rivals-v1:') || key.startsWith('turn-three-ghost-v4:')) return true;
-    }
-  } catch (_) {}
   return false;
+}
+
+function hasAdminRewardMarker(storage) {
+  try {
+    return storage?.getItem?.(ADMIN_UNLOCK_MARKER) != null;
+  } catch (_) {
+    return false;
+  }
+}
+
+function hasAchievementProgress(state) {
+  return Object.keys(state?.unlocked || {}).length > 0
+    || (Array.isArray(state?.progress?.tracks) && state.progress.tracks.length > 0)
+    || (Array.isArray(state?.progress?.blankTracks) && state.progress.blankTracks.length > 0);
+}
+
+function hasEveryRewardStored(state) {
+  const stored = new Set(Array.isArray(state?.rewards?.unlocked) ? state.rewards.unlocked : []);
+  return TROPHY_ROAD_REWARDS.every((reward) => stored.has(reward.id));
+}
+
+function cleanTrophyRoadState() {
+  return {
+    version: TROPHY_ROAD_STORAGE_VERSION,
+    unlocked: {},
+    seen: [],
+    progress: { tracks: [], blankTracks: [] },
+    rewards: { unlocked: [], seen: [] }
+  };
+}
+
+function repairFalseFreshProfile(state, storage) {
+  if (!state || hasAchievementProgress(state) || hasAdminRewardMarker(storage) || hasLegacyRaceProgress(storage)) {
+    return state;
+  }
+
+  const sourceVersion = Number(state.version || 0);
+  const looksLikeSettingsOnlyLegacyShell = sourceVersion < 3;
+  const looksLikeFalseGrandfather = sourceVersion >= 5 && hasEveryRewardStored(state);
+  if (!looksLikeSettingsOnlyLegacyShell && !looksLikeFalseGrandfather) return state;
+
+  const clean = cleanTrophyRoadState();
+  try {
+    storage?.setItem?.(TROPHY_ROAD_STORAGE_KEY, JSON.stringify(clean));
+  } catch (_) {
+    return state;
+  }
+  return clean;
 }
 
 export function prepareTrophyRoadProfile(storage = globalThis.localStorage) {
   try {
     const raw = storage?.getItem?.(TROPHY_ROAD_STORAGE_KEY);
     const existing = safeParse(raw);
-    if (existing) return existing;
+    if (existing) return repairFalseFreshProfile(existing, storage);
     if (preparationAlreadyChecked(storage)) return null;
     markPreparationChecked(storage);
-    if (!hasLegacyTurnProfile(storage)) return null;
+
+    // Settings such as the selected car, track, steering mode and audio preference can
+    // be written during a brand-new startup. They are not proof of an older TURN
+    // profile. Grandfather rewards only when there is actual pre-Trophy-Road race
+    // progress: a saved rival lap or a legacy best ghost.
+    if (!hasLegacyRaceProgress(storage)) return null;
 
     const legacyShell = {
       version: 2,
