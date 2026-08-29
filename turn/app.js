@@ -67,9 +67,6 @@ function installStartupCover() {
   guide?.setAttribute('hidden', '');
   if (title) title.textContent = 'LOADING';
   if (copy) {
-    // WAI-ARIA status messages should live in an established polite live region. Keep
-    // the same node present throughout startup, make updates atomic, and update only
-    // its text so VoiceOver and other screen readers hear progress without focus moves.
     copy.setAttribute('role', 'status');
     copy.setAttribute('aria-live', 'polite');
     copy.setAttribute('aria-atomic', 'true');
@@ -78,9 +75,6 @@ function installStartupCover() {
   if (card && !card.querySelector('.turn-startup-spinner')) {
     const spinner = document.createElement('div');
     spinner.className = 'turn-startup-spinner';
-    // TURN cannot currently measure trustworthy percent progress. Keep the visual
-    // spinner decorative rather than exposing a fake progressbar value; the status
-    // region above carries the meaningful indeterminate progress updates.
     spinner.setAttribute('aria-hidden', 'true');
     card.appendChild(spinner);
   }
@@ -100,9 +94,6 @@ function installStartupCover() {
     }, delay));
   };
 
-  // A cold/new installation can spend noticeably longer fetching and compiling the
-  // module graph. Acknowledge that delay instead of leaving the initial optimistic copy
-  // frozen indefinitely, then keep providing low-frequency polite status updates.
   scheduleStatus(4000, 'This might take a minute on a new installation…');
   scheduleStatus(10000, 'Still loading TURN. First start can take a little longer.');
   scheduleStatus(20000, 'Still loading TURN. The game will open as soon as it is ready.');
@@ -174,8 +165,6 @@ const webPlatform = createWebPlatform();
 installTurnPlatform(webPlatform);
 const motionLifecycle = installMotionLifecycleBridge({ platform: webPlatform });
 const displayLifecycle = installDisplayLifecycleBridge({ platform: webPlatform });
-// Historical regression marker for the ordinary-browser fresh-document path:
-// motion-permission-cancel-recovery.js?revision=r132-fresh-document
 const { installMotionPermissionCancelRecovery } = await import(
   withBuild('./ui/motion-permission-cancel-recovery.js?revision=r134-dialog-event')
 );
@@ -200,8 +189,6 @@ installStylesheet(
   './garage/lot-layout-r60.css?revision=r121-viewer-r122-fit-r128-super-sedan-notice-r129-race-button-fit',
   'data-turn-lot-layout-r121'
 );
-// Historical stylesheet bundle marker retained for the Trophy Road regression contract:
-// trophy-road-r157.css?revision=r157-paint-monster
 installStylesheet(
   './progression/trophy-road-r157.css?revision=r163-native-picker-parent-click',
   'data-turn-trophy-road'
@@ -232,15 +219,6 @@ const {
 );
 await prepareDriveByEarRuntime();
 
-// Runtime-loader regression markers. These operations now live in drive-by-ear-runtime.js,
-// but their ordering relative to the central graph remains a production contract:
-// organicRibbon = await import(withBuild('./audio/organic-ribbon.js'))
-// organicRibbon.prepareOrganicRibbonCapture();
-// recoveryGuidance = await import(withBuild('./audio/recovery-guidance.js'))
-// recoveryGuidance.prepareRecoveryGuidanceCapture();
-// paceNotePriority = await import(withBuild('./audio/pace-note-priority.js?revision=r123-final-hold'))
-// paceNotePriority.preparePaceNotePriorityCapture();
-
 globalThis.__turnDriveByEarEnabled = true;
 const { installAudioPreferences } = await import(withBuild('./audio/audio-preferences.js'));
 const audioPreferences = installAudioPreferences({ driveByEarGraphAvailable: driveByEarEnabled });
@@ -250,21 +228,6 @@ const { installTurnAudio } = await import(
 );
 installTurnAudio();
 audioPreferences.setDriveByEarEnabled(driveByEarEnabled);
-
-// Runtime-loader regression markers for the post-graph wrapper order:
-// organicRibbon.installOrganicRibbon();
-// paceNotePriority.installPaceNotePriority();
-// import(withBuild('./audio/driving-soundscape.js'))
-// installUniversalDrivingSoundscape();
-// import(withBuild('./audio/pace-notes.js?revision=r123-final-hold'))
-// installPaceNotes();
-// withBuild('./audio/offroad-ear-direction.js')
-// installOffroadEarDirection();
-// recoveryGuidance.installRecoveryGuidance();
-// if (driveByEarEnabled) {
-//   installUniversalDrivingSoundscape();
-//   installPaceNotes();
-// }
 
 const { installSteeringLimitWarning } = await import(
   withBuild('./ui/steering-limit-warning.js?revision=r164-post-soak')
@@ -285,8 +248,6 @@ installLapResultToast();
 const { installRivalOnboarding } = await import(withBuild('./ui/rival-onboarding.js'));
 installRivalOnboarding();
 
-// Historical regression marker for the established Super Sedan notice bundle:
-// sports-sedan-easter-egg.js?revision=r128-unlock-notice
 const { installSportsSedanEasterEggUi } = await import(
   withBuild('./vehicle/sports-sedan-easter-egg.js?revision=r157-hidden-achievements')
 );
@@ -297,10 +258,6 @@ const { installHarborHiddenFaceOrientation } = await import(
 );
 installHarborHiddenFaceOrientation();
 
-// Historical regression markers for established Trophy Road Lot enhancement bundles:
-// lot-enhancement-runtime.js?revision=r121&trophy-road=r154
-// lot-enhancement-runtime.js?revision=r121&trophy-road=r157
-// lot-enhancement-runtime.js?revision=r163-native-picker-parent-click
 const { installLotEnhancementRuntime } = await import(
   withBuild('./garage/lot-enhancement-runtime.js?revision=r164-post-soak')
 );
@@ -326,9 +283,6 @@ const { installTrackIntroCamera } = await import(
 );
 installTrackIntroCamera();
 
-// Historical Bella world entries retained for established achievement regressions:
-// render/world.js?revision=r166-bella-records
-// render/world.js?revision=r174-bella-siren-zone
 await Promise.all([
   import(withBuild('./render/world.js?revision=r532-countryside-nature-polish')),
   import(withBuild('./ui/spectate.js?revision=r164-elevation-aware')),
@@ -353,9 +307,13 @@ installStylesheet(
   './settings-components-r141.css?revision=r220-overcharge-disclosure',
   'data-turn-settings-components'
 );
+installStylesheet(
+  './control-handedness.css?revision=r228-left-handed-controls',
+  'data-turn-control-handedness'
+);
 installStylesheet('./rival-reset-context-r127.css', 'data-turn-rival-reset-context');
 const { installM8HomeNavigation } = await import(
-  withBuild('./m8-home.js?revision=r131-motion-permission-retry&trophy-road=r159&showroom=r200')
+  withBuild('./m8-home.js?revision=r228-left-handed-controls')
 );
 const home = await installM8HomeNavigation();
 globalThis.__turnHome = home;
@@ -373,8 +331,6 @@ if (buildLabel) {
   const release = globalThis.__TURN_BUILD__;
   buildLabel.textContent = `TURN V${release?.version || ''} · BUILD ${(release?.id || '').toUpperCase()}`;
 }
-// Historical regression marker for the paint and Monster Home bundle:
-// m8-home-fixed-layout.js?revision=m8.9-track-title-alignment&trophy-road=r157
 const { installM8HomeFixedLayout } = await import(
   withBuild('./m8-home-fixed-layout.js?revision=m8.10-card-gap-rim&trophy-road=r159&achievements=r166-bella-records&bella-rescue=r174-siren-zone&music=warm-v2&robustness=r164-long-session')
 );

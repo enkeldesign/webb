@@ -124,6 +124,9 @@ jobs:
       - name: Run production manual steering regression
         run: node turn-lab/tests/manual-steering-production.mjs
 
+      - name: Run left-handed controls regression
+        run: node turn-tests/control-handedness-production.mjs
+
       - name: Run production garage regression
         run: node turn-lab/tests/garage-production.mjs
 

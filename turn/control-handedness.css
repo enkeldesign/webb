@@ -1,0 +1,35 @@
+:root.turn-left-handed-controls .controls {
+  flex-direction: row-reverse;
+}
+
+:root.turn-left-handed-controls .manual-steer {
+  left: auto;
+  right: max(22px, env(safe-area-inset-right));
+}
+
+:root.turn-left-handed-controls .drive-lock-bubble {
+  right: auto;
+  left: calc(100% - 4px);
+  border-radius: 0 999px 999px 0;
+  transform-origin: left center;
+  transform: translateX(-62%) scaleX(0.38);
+}
+
+:root.turn-left-handed-controls .drive-stack.is-drift-ready .drive-lock-bubble {
+  transform: translateX(0) scaleX(1);
+}
+
+:root.turn-left-handed-controls .drive-stack.is-drift-ready .drive-pad {
+  border-top-left-radius: 30px;
+  border-top-right-radius: 0;
+}
+
+@media (max-height: 430px) {
+  :root.turn-left-handed-controls .drive-lock-bubble {
+    left: calc(100% - 3px);
+  }
+
+  :root.turn-left-handed-controls .drive-stack.is-drift-ready .drive-pad {
+    border-top-left-radius: 24px;
+  }
+}
