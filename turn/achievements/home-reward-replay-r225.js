@@ -17,13 +17,17 @@ function normalizedIds(value) {
   return [...new Set(value.filter((id) => typeof id === 'string' && getTrophyRoadReward(id)))];
 }
 
-function loadPending(storage = globalThis.localStorage) {
+function loadReplayState(storage = globalThis.localStorage) {
   try {
     const raw = storage?.getItem?.(PENDING_STORAGE_KEY);
-    if (!raw) return [];
-    return normalizedIds(JSON.parse(raw)?.pending);
+    if (!raw) return { pending: [], presented: [] };
+    const parsed = JSON.parse(raw);
+    return {
+      pending: normalizedIds(parsed?.pending),
+      presented: normalizedIds(parsed?.presented)
+    };
   } catch (_) {
-    return [];
+    return { pending: [], presented: [] };
   }
 }
 
@@ -40,11 +44,12 @@ function unseenStoredRewards(storage = globalThis.localStorage) {
   }
 }
 
-function savePending(pending, storage = globalThis.localStorage) {
+function saveReplayState(pending, presented, storage = globalThis.localStorage) {
   try {
     storage?.setItem?.(PENDING_STORAGE_KEY, JSON.stringify({
       version: 1,
-      pending: [...pending]
+      pending: [...pending],
+      presented: [...presented]
     }));
     return true;
   } catch (_) {
@@ -53,9 +58,11 @@ function savePending(pending, storage = globalThis.localStorage) {
 }
 
 function homeIsReady() {
-  return document.documentElement.classList.contains('turn-home-ready')
+  return Boolean(
+    document.documentElement.classList.contains('turn-home-ready')
     && document.body.classList.contains('turn-home-open')
-    && document.querySelector('.m8-home:not([hidden])');
+    && document.querySelector('.m8-home:not([hidden])')
+  );
 }
 
 function rewardToastElement() {
@@ -104,11 +111,13 @@ export function installHomeRewardReplay({ storage = globalThis.localStorage } = 
   if (installed) return installed;
   if (typeof document === 'undefined' || typeof window === 'undefined') return null;
 
-  const pending = new Set([
-    ...loadPending(storage),
-    ...unseenStoredRewards(storage)
-  ]);
-  savePending(pending, storage);
+  const stored = loadReplayState(storage);
+  const presented = new Set(stored.presented);
+  const pending = new Set(stored.pending.filter((id) => !presented.has(id)));
+  for (const id of unseenStoredRewards(storage)) {
+    if (!presented.has(id)) pending.add(id);
+  }
+  saveReplayState(pending, presented, storage);
 
   // These distinguish rewards earned during this document from rewards carried
   // across a closed/reopened app. A carried reward has no live race-toast timer,
@@ -122,16 +131,19 @@ export function installHomeRewardReplay({ storage = globalThis.localStorage } = 
   let toastWasVisible = false;
   let toastObserver = null;
 
-  const persist = () => savePending(pending, storage);
+  const persist = () => saveReplayState(pending, presented, storage);
 
   function consume(ids) {
     let changed = false;
     for (const id of ids) {
-      if (!pending.delete(id)) continue;
+      if (pending.delete(id)) changed = true;
+      if (!presented.has(id)) {
+        presented.add(id);
+        changed = true;
+      }
       addedThisSession.delete(id);
       shownAwayFromHome.delete(id);
       addedAt.delete(id);
-      changed = true;
     }
     if (changed) persist();
   }
@@ -193,10 +205,11 @@ export function installHomeRewardReplay({ storage = globalThis.localStorage } = 
 
     const ids = idsReadyForHomeReplay();
     if (!ids.length) {
-      const nextWait = Math.max(250, Math.min(...[...pending]
+      const waits = [...pending]
         .filter((id) => addedThisSession.has(id))
-        .map((id) => CURRENT_SESSION_FALLBACK_MS - (Date.now() - (addedAt.get(id) || Date.now())))));
-      replayTimer = globalThis.setTimeout(flushHomeReplay, Number.isFinite(nextWait) ? nextWait : 500);
+        .map((id) => CURRENT_SESSION_FALLBACK_MS - (Date.now() - (addedAt.get(id) || Date.now())));
+      const nextWait = waits.length ? Math.max(250, Math.min(...waits)) : 500;
+      replayTimer = globalThis.setTimeout(flushHomeReplay, nextWait);
       return;
     }
 
@@ -227,6 +240,7 @@ export function installHomeRewardReplay({ storage = globalThis.localStorage } = 
     if (!ids.length) return;
     const now = Date.now();
     for (const id of ids) {
+      presented.delete(id);
       pending.add(id);
       addedThisSession.add(id);
       shownAwayFromHome.delete(id);
@@ -258,6 +272,7 @@ export function installHomeRewardReplay({ storage = globalThis.localStorage } = 
   installed = Object.freeze({
     storageKey: PENDING_STORAGE_KEY,
     pendingIds: () => [...pending],
+    presentedIds: () => [...presented],
     flush: flushHomeReplay,
     disconnect() {
       globalThis.clearTimeout(replayTimer);
