@@ -135,7 +135,7 @@ const futureImportMapText = futureIndex.match(/<script type="importmap">\s*([\s\
 const futureImports = JSON.parse(futureImportMapText).imports;
 assert.equal(
   futureImports['/turn/garage/lot-enhancement-runtime.js?revision=r164-post-soak&build=20260827-r185'],
-  '/turn/garage/lot-enhancement-runtime.js?revision=r222-awd-suv-paint&build=20260827-r185',
+  '/turn/garage/lot-enhancement-runtime.js?revision=r223-training-car-taxi&build=20260827-r185',
   'A future release must keep the prewarmed Lot runtime on the current color-migration module graph'
 );
 

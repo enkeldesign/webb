@@ -34,7 +34,7 @@ const imports = JSON.parse(importMapText).imports;
 assert.match(index, new RegExp(`lot-stat-legend\\.css\\?build=${release.cacheKey}`), 'Production must load the stat-legend styling through the current release');
 assert.equal(
   imports['./garage/lot-r10.js?build=20260720-r19'],
-  `./garage/lot-track-select.js?build=${release.cacheKey}&revision=r222-awd-suv-paint`,
+  `./garage/lot-track-select.js?build=${release.cacheKey}&revision=r223-training-car-taxi`,
   'Production must publish the optimized native HTML Lot wrapper through the current release'
 );
 assert.equal(
@@ -44,7 +44,7 @@ assert.equal(
 );
 assert.equal(
   imports['./vehicle/catalog.js?build=20260720-r19'],
-  '/turn/vehicle/catalog.js?revision=r222-awd-suv-paint',
+  '/turn/vehicle/catalog.js?revision=r223-training-car-taxi',
   'Production must publish fresh shared stat definitions through the canonical vehicle catalog'
 );
 assert.match(wrapper, /const lotResult = showOriginalLot\(options\)/, 'The verified Lot must mount synchronously before enhancement');

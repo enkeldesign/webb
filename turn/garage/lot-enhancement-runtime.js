@@ -26,7 +26,7 @@ export function prepareLotEnhancements() {
     import('./lot-accessibility-r118.js?build=20260729-r118&revision=r588-canonical-attributes'),
     import('./lot-perk-disclosure.js?revision=r217-stable-perk-slot'),
     import('./lot-card-scroll-boundary.js?revision=r216-meter-density'),
-    import('./lot-vehicle-copy.js?revision=r222-awd-suv-paint'),
+    import('./lot-vehicle-copy.js?revision=r223-training-car-taxi'),
     import('./lot-trophy-order.js'),
     import('../progression/lot-trophy-gate.js?revision=r585-visible-locks'),
     import('../progression/lot-paint-reward.js?revision=r206-pwa-color')
