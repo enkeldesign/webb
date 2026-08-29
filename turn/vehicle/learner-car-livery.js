@@ -4,6 +4,7 @@ const LEARNER_CAR_ID = 'classic';
 const LEARNER_YELLOW = new THREE.Color('#ffcc00');
 const LEARNER_INK = new THREE.Color('#08090a');
 const SIGN_FACE_TEXTURE_SIZE = 128;
+const SIGN_FACE_BORDER_PX = 10;
 
 // Exact Taxi roof-sign geometry from Kenney Car Kit 3.1 `taxi.obj`.
 // These are the original eight authored positions and ten authored triangles
@@ -174,7 +175,7 @@ function getLearnerSignFaceTexture() {
   if (signFaceTexture) return signFaceTexture;
 
   const size = SIGN_FACE_TEXTURE_SIZE;
-  const border = 8;
+  const border = SIGN_FACE_BORDER_PX;
   const pixels = new Uint8Array(size * size * 4);
   const yellow = [255, 204, 0, 255];
   const ink = [8, 9, 10, 255];
@@ -182,8 +183,11 @@ function getLearnerSignFaceTexture() {
   for (let y = 0; y < size; y += 1) {
     for (let x = 0; x < size; x += 1) {
       const edge = x < border || x >= size - border || y < border || y >= size - border;
-      const stem = x >= 53 && x <= 67 && y >= 31 && y <= 88;
-      const foot = x >= 53 && x <= 88 && y >= 31 && y <= 45;
+      // The roof sign is tiny in the Lot and during racing, so use a deliberately
+      // broad, almost sign-painter-weight L. It occupies most of the short face and
+      // remains recognizable after perspective reduction on a phone display.
+      const stem = x >= 44 && x <= 69 && y >= 21 && y <= 103;
+      const foot = x >= 44 && x <= 99 && y >= 21 && y <= 46;
       const color = edge || stem || foot ? ink : yellow;
       const offset = (y * size + x) * 4;
       pixels[offset] = color[0];
@@ -196,9 +200,11 @@ function getLearnerSignFaceTexture() {
   signFaceTexture = new THREE.DataTexture(pixels, size, size, THREE.RGBAFormat);
   signFaceTexture.name = 'learner-car-yellow-black-l';
   signFaceTexture.colorSpace = THREE.SRGBColorSpace;
+  // Avoid mipmap averaging turning the already-small black L into a grey smudge in
+  // The Lot. The learner sign is intentionally graphic/pixel-crisp at this scale.
   signFaceTexture.magFilter = THREE.NearestFilter;
-  signFaceTexture.minFilter = THREE.LinearMipmapLinearFilter;
-  signFaceTexture.generateMipmaps = true;
+  signFaceTexture.minFilter = THREE.NearestFilter;
+  signFaceTexture.generateMipmaps = false;
   signFaceTexture.flipY = false;
   signFaceTexture.needsUpdate = true;
   return signFaceTexture;
