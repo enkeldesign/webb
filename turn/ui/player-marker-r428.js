@@ -13,6 +13,9 @@ const MARKER_SIZE_MIN_PX = 17;
 const MARKER_SIZE_MAX_PX = 23;
 const FALLBACK_ROOF_HEIGHT = 1.8;
 const FALLBACK_MARKER_COLOR = '#38d9ff';
+const DARK_MARKER_OUTLINE = '#08090a';
+const LIGHT_MARKER_OUTLINE = '#ffffff';
+const LIGHT_OUTLINE_TRACKS = new Set(['midnight-city', 'mountain']);
 const FIXED_LIVERY_MARKER_COLORS = Object.freeze({
   firetruck: '#d92d20',
   police: '#0b0d10',
@@ -31,6 +34,12 @@ function markerSizePixels(viewportHeight) {
   );
 }
 
+export function playerMarkerOutlineColor(trackId) {
+  return LIGHT_OUTLINE_TRACKS.has(String(trackId || '').toLowerCase())
+    ? LIGHT_MARKER_OUTLINE
+    : DARK_MARKER_OUTLINE;
+}
+
 function installStyles() {
   if (document.querySelector('#turn-player-marker-r428-styles')) return;
   const style = document.createElement('style');
@@ -43,6 +52,7 @@ function installStyles() {
 
     .turn-player-marker path {
       fill: var(--turn-player-marker-color, ${FALLBACK_MARKER_COLOR});
+      stroke: var(--turn-player-marker-outline, ${DARK_MARKER_OUTLINE});
       stroke-width: 2.5px;
       vector-effect: non-scaling-stroke;
     }
@@ -172,6 +182,7 @@ function installRuntime(runtime) {
   let nextAutoCheckAt = 0;
   let autoNearby = false;
   let lastColor = '';
+  let lastOutlineColor = '';
   let lastCarId = null;
   let roofHeight = FALLBACK_ROOF_HEIGHT;
 
@@ -246,6 +257,12 @@ function installRuntime(runtime) {
     if (color !== lastColor) {
       marker.style.setProperty('--turn-player-marker-color', color);
       lastColor = color;
+    }
+
+    const outlineColor = playerMarkerOutlineColor(runtime.state?.trackId);
+    if (outlineColor !== lastOutlineColor) {
+      marker.style.setProperty('--turn-player-marker-outline', outlineColor);
+      lastOutlineColor = outlineColor;
     }
 
     marker.style.left = `${pose.x.toFixed(1)}px`;
