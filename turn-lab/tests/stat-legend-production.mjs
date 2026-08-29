@@ -80,6 +80,11 @@ assert.match(legendModule, /Every car always has 18 attribute points in total\./
   'The attribute modal must explain the fixed 18-point budget shared by every car');
 assert.match(legendModule, /What changes is how those 18 points are distributed\./,
   'The attribute modal must explain that car identity comes from point distribution');
+assert.doesNotMatch(
+  legendModule,
+  /GAS is fastest|DRIFT turns harder|BOOST is a limited burst/,
+  'The yellow attribute summary must stay focused on the shared 18-point budget rather than repeat control behavior'
+);
 assert.doesNotMatch(legendModule, /mountObserver|subtree: true/, 'The legend module must not observe the whole game DOM');
 assert.match(legendModule, /statsObserver\.observe\(stats, \{ childList: true \}\)/, 'Only actual car-stat replacement must trigger relabelling');
 assert.match(legendModule, /label\.textContent !== definition\.label/, 'Relabelling must not rewrite unchanged labels');

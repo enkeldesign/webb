@@ -90,7 +90,7 @@ export function installLotStatLegend(root = document.body) {
 
     const rule = document.createElement('p');
     rule.className = 'lot-stats-dialog-rule';
-    rule.textContent = 'Every car always has 18 attribute points in total. What changes is how those 18 points are distributed. GAS is fastest. DRIFT turns harder but always costs speed. BOOST is a limited burst.';
+    rule.textContent = 'Every car always has 18 attribute points in total. What changes is how those 18 points are distributed.';
 
     panel.append(header, list, rule);
     overlay.appendChild(panel);
