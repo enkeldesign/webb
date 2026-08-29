@@ -81,8 +81,22 @@ assert.match(
   /const emergency = EMERGENCY_IDS\.has\(root\?\.userData\?\.turnCarId\);[\s\S]*if \(!emergency\) darkenVisibleWheels\(root\);/,
   'Fixed-livery emergency wheel atlases must skip whole-material darkening so authored rims remain visible'
 );
-assert.doesNotMatch(bridge, /BoxGeometry|PlaneGeometry|applyFixedEmergencyLivery|installSecondaryAccent/,
+assert.doesNotMatch(bridge, /applyFixedEmergencyLivery|installSecondaryAccent/,
   'Emergency liveries must not add side panels or other presentation layers');
+
+assert.match(bridge, /TRAINING_CAR_ID = 'classic'/,
+  'The Taxi-derived Training Car must be the only non-emergency presentation exception');
+assert.match(bridge, /TRAINING_SIGN_COLOR = 0x2f9e44/,
+  'Training identifiers must use the fixed green treatment');
+assert.match(bridge, /installTrainingCarSignage\(root\)/);
+assert.match(bridge, /turnTrainingCarSignage/);
+assert.match(bridge, /roof-sign/);
+assert.match(bridge, /door-sign-left/);
+assert.match(bridge, /door-sign-right/);
+assert.match(bridge, /bounds\.max\.y \+ roofHeight \* 0\.34/,
+  'The replacement roof sign must overlap and visually close the exposed Taxi roof mount');
+assert.match(bridge, /BoxGeometry/,
+  'The Training Car sign must be real geometry so the old roof opening is covered from oblique cameras');
 
 assert.match(carModels, /from '\.\/catalog\.js'/,
   'Car models must resolve the changed catalog through its canonical URL');
@@ -105,6 +119,7 @@ assert.match(semantic, /turnPoliceGreyMask/,
 assert.match(semantic, /car: '\.\/assets\/cars\/palettes\/car-kit\.png'/);
 
 const canonicalCatalogTarget = '/turn/vehicle/catalog.js?revision=r223-training-car-taxi';
+const canonicalBridgeTarget = '/turn/vehicle/emergency-livery-models.js?revision=r224-training-car-signage';
 const expectedCatalogTargets = [
   ['/turn/vehicle/catalog.js', canonicalCatalogTarget],
   ['/turn/vehicle/catalog.js?build=20260804-r157-factory-colors', canonicalCatalogTarget],
@@ -116,9 +131,9 @@ const expectedCatalogTargets = [
 const expectedEmergencyTargets = [
   ['/turn/vehicle/semantic-car-finish.js', '/turn/vehicle/semantic-car-finish.js?revision=r223-training-car-taxi'],
   ['/turn/vehicle/car-models.js', '/turn/vehicle/car-models.js?revision=r223-training-car-taxi'],
-  ['/turn/vehicle/emergency-livery-models.js', '/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi'],
-  ['./vehicle/car-models.js?build=20260720-r19', '/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi'],
-  ['./vehicle/car-models.js?build=20260720-r22', '/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi']
+  ['/turn/vehicle/emergency-livery-models.js', canonicalBridgeTarget],
+  ['./vehicle/car-models.js?build=20260720-r19', canonicalBridgeTarget],
+  ['./vehicle/car-models.js?build=20260720-r22', canonicalBridgeTarget]
 ];
 
 for (const [name, source] of [['production', productionEntry], ['TURN LAB', labEntry]]) {
@@ -146,4 +161,4 @@ for (const specifier of [
     `YOUR TURN must share the canonical factory color catalog for ${specifier}`);
 }
 
-console.log('TURN semantic emergency liveries, factory colors and shared catalog routing passed.');
+console.log('TURN semantic emergency liveries, Training Car signage, factory colors and shared catalog routing passed.');
