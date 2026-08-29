@@ -96,6 +96,12 @@ assert.match(learnerLivery, /sourceVertexIds: Object\.freeze\(\[367, 368, 369, 3
   'Learner roof signage must retain the documented original Kenney Taxi source vertices');
 assert.match(learnerLivery, /sourceTriangleCount: 10/,
   'Learner roof signage must retain all ten original Kenney Taxi sign triangles');
+assert.match(learnerLivery, /const SIGN_GRAPHIC_TRIANGLES = new Set\(\[0, 1, 4, 5\]\)/,
+  'Only the two short front/back end faces of the Taxi sign may carry the roof L graphic');
+assert.match(learnerLivery, /graphicTriangleIds: Object\.freeze\(\[0, 1, 4, 5\]\)/,
+  'The Learner Car sign contract must record its exact decorated source faces');
+assert.doesNotMatch(learnerLivery, /SIGN_GRAPHIC_TRIANGLES = new Set\(\[2, 3, 8, 9\]\)/,
+  'The long side faces must stay plain yellow');
 assert.match(learnerLivery, /Object\.freeze\(\[-0\.1, 1\.3, -0\.45\]\)/);
 assert.match(learnerLivery, /Object\.freeze\(\[0\.05, 1\.5, 0\.05\]\)/);
 assert.doesNotMatch(learnerLivery, /BoxGeometry|PlaneGeometry|CylinderGeometry|SphereGeometry/,
@@ -173,4 +179,4 @@ for (const specifier of [
     `YOUR TURN must share the canonical factory color catalog for ${specifier}`);
 }
 
-console.log('TURN semantic emergency liveries, authentic Learner Car livery, factory colors and shared catalog routing passed.');
+console.log('TURN semantic emergency liveries, end-faced Learner Car sign, factory colors and shared catalog routing passed.');
