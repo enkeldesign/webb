@@ -135,6 +135,7 @@ const REWARD_BY_FEATURE = new Map(
 );
 const PREPARED_STORAGE = new WeakSet();
 const ADMIN_UNLOCK_MARKER = 'turn-admin-unlock-v1';
+const LEGACY_VEHICLE_SELECTION_KEY = 'turn-vehicle-selection-v1';
 const RIVAL_STORAGE_PREFIX = 'turn-personal-rivals-v1';
 const LEGACY_GHOST_STORAGE_PREFIX = 'turn-three-ghost-v4';
 const VERSION_THREE_GRANDFATHERED_REWARDS = Object.freeze([
@@ -290,6 +291,20 @@ function hasLegacyRaceProgress(storage) {
   return false;
 }
 
+function hasLegacyVehicleChoice(storage) {
+  try {
+    const selection = safeParse(storage?.getItem?.(LEGACY_VEHICLE_SELECTION_KEY));
+    const carId = typeof selection?.carId === 'string' ? selection.carId : '';
+    return Boolean(carId && carId !== 'classic');
+  } catch (_) {
+    return false;
+  }
+}
+
+function hasLegacyProfileEvidence(storage) {
+  return hasLegacyRaceProgress(storage) || hasLegacyVehicleChoice(storage);
+}
+
 function hasAdminRewardMarker(storage) {
   try {
     return storage?.getItem?.(ADMIN_UNLOCK_MARKER) != null;
@@ -320,7 +335,7 @@ function cleanTrophyRoadState() {
 }
 
 function repairFalseFreshProfile(state, storage) {
-  if (!state || hasAchievementProgress(state) || hasAdminRewardMarker(storage) || hasLegacyRaceProgress(storage)) {
+  if (!state || hasAchievementProgress(state) || hasAdminRewardMarker(storage) || hasLegacyProfileEvidence(storage)) {
     return state;
   }
 
@@ -346,11 +361,11 @@ export function prepareTrophyRoadProfile(storage = globalThis.localStorage) {
     if (preparationAlreadyChecked(storage)) return null;
     markPreparationChecked(storage);
 
-    // Settings such as the selected car, track, steering mode and audio preference can
-    // be written during a brand-new startup. They are not proof of an older TURN
-    // profile. Grandfather rewards only when there is actual pre-Trophy-Road race
-    // progress: a saved rival lap or a legacy best ghost.
-    if (!hasLegacyRaceProgress(storage)) return null;
+    // Default settings can be written during a brand-new startup, so their mere
+    // presence is not proof of an older TURN profile. Grandfather only when there
+    // is meaningful pre-Trophy-Road evidence: a completed saved lap/ghost or a
+    // genuinely non-default historical vehicle choice.
+    if (!hasLegacyProfileEvidence(storage)) return null;
 
     const legacyShell = {
       version: 2,
