@@ -24,36 +24,73 @@ export const ADMIN_UNLOCK_SEQUENCE = Object.freeze([
   'action:race-this-car'
 ]);
 
+export const ADMIN_SESSION_KEY = 'turn-admin-unlock-session-v1';
 const INSTALL_FLAG = '__turnAdminUnlockSequenceInstalled';
 const ADMIN_UNLOCK_MARKER = 'turn-admin-unlock-v1';
-const ADMIN_REWARD_PROFILE_VERSION = 2;
+const ADMIN_REWARD_PROFILE_VERSION = 3;
 const FINAL_VEHICLE_ID = 'convertible';
 const LEGACY_TIMESTAMP_TOLERANCE_MS = 5000;
 
+function safeGet(storage, key) {
+  try {
+    return storage?.getItem?.(key) ?? null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function safeSet(storage, key, value) {
+  try {
+    storage?.setItem?.(key, String(value));
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function safeRemove(storage, key) {
+  try {
+    storage?.removeItem?.(key);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 function parseStoredState(storage) {
   try {
-    const raw = storage?.getItem?.(ACHIEVEMENT_STORAGE_KEY);
+    const raw = safeGet(storage, ACHIEVEMENT_STORAGE_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch (_) {
     return null;
   }
 }
 
-function readLegacyAdminTimestamp(storage) {
+function parseAdminMarker(storage) {
+  const raw = safeGet(storage, ADMIN_UNLOCK_MARKER);
+  if (!raw) return null;
+
+  const numeric = Number(raw);
+  if (Number.isFinite(numeric)) {
+    return Object.freeze({ version: 1, activatedAt: numeric, rewardsOnly: false });
+  }
+
   try {
-    const raw = storage?.getItem?.(ADMIN_UNLOCK_MARKER);
-    if (!raw) return null;
-
-    const numeric = Number(raw);
-    if (Number.isFinite(numeric)) return numeric;
-
     const marker = JSON.parse(raw);
-    if (Number(marker?.version) >= ADMIN_REWARD_PROFILE_VERSION) return null;
-    const timestamp = Number(marker?.activatedAt);
-    return Number.isFinite(timestamp) ? timestamp : null;
+    return marker && typeof marker === 'object' ? marker : null;
   } catch (_) {
     return null;
   }
+}
+
+function activeAdminSession(sessionStore) {
+  return safeGet(sessionStore, ADMIN_SESSION_KEY) === '1';
+}
+
+function readLegacyAdminTimestamp(marker) {
+  if (!marker || Number(marker.version) >= 2) return null;
+  const timestamp = Number(marker.activatedAt);
+  return Number.isFinite(timestamp) ? timestamp : null;
 }
 
 function isLegacyAdminAchievementRecord(record, legacyAdminTimestamp) {
@@ -80,13 +117,15 @@ export function createAdminRewardState(existing, legacyAdminTimestamp = null) {
 
   if (removedLegacyAchievements) {
     snapshot.seen = snapshot.seen.filter((achievementId) => Boolean(snapshot.unlocked[achievementId]));
-    // The previous admin implementation overwrote these collections with all tracks.
+    // The first admin implementation overwrote these collections with all tracks.
     // Their earlier values cannot be recovered, so reset them rather than leaving
     // achievement progress falsely complete.
     snapshot.progress.tracks = [];
     snapshot.progress.blankTracks = [];
   }
 
+  // This snapshot is temporary. unlockRewardsForTesting() always stores an exact
+  // pre-admin backup before this all-rewards view is written to the canonical key.
   snapshot.rewards.unlocked = [...rewardIds];
   snapshot.rewards.seen = [...rewardIds];
 
@@ -94,6 +133,80 @@ export function createAdminRewardState(existing, legacyAdminTimestamp = null) {
     snapshot,
     repairedLegacyAdminState: removedLegacyAchievements
   });
+}
+
+function createRepairedPersistentState(existing, legacyAdminTimestamp = null) {
+  const normalized = normalizeAchievementState(existing);
+  let removedLegacyAchievements = false;
+
+  for (const [achievementId, record] of Object.entries(normalized.unlocked)) {
+    if (!isLegacyAdminAchievementRecord(record, legacyAdminTimestamp)) continue;
+    delete normalized.unlocked[achievementId];
+    removedLegacyAchievements = true;
+  }
+
+  if (removedLegacyAchievements) {
+    normalized.seen = normalized.seen.filter((achievementId) => Boolean(normalized.unlocked[achievementId]));
+    normalized.progress.tracks = [];
+    normalized.progress.blankTracks = [];
+  }
+
+  const previouslySeenRewards = new Set(
+    Array.isArray(existing?.rewards?.seen) ? existing.rewards.seen : []
+  );
+
+  // Version 2 of the hidden sequence permanently wrote every reward id into
+  // rewards.unlocked. Re-normalize with that contaminated list removed so the store
+  // derives only rewards actually earned from genuine achievement trophies.
+  const repaired = normalizeAchievementState({
+    ...normalized,
+    rewards: { unlocked: [], seen: [] }
+  });
+  repaired.rewards.seen = repaired.rewards.unlocked.filter((rewardId) => previouslySeenRewards.has(rewardId));
+
+  return Object.freeze({
+    snapshot: repaired,
+    repairedLegacyAdminState: removedLegacyAchievements
+  });
+}
+
+export function repairPersistedAdminState(
+  storage = globalThis.localStorage,
+  sessionStore = globalThis.sessionStorage
+) {
+  const marker = parseAdminMarker(storage);
+  if (!marker) return Object.freeze({ repaired: false, activeSession: false });
+
+  if (Number(marker.version) >= ADMIN_REWARD_PROFILE_VERSION && marker.sessionOnly === true) {
+    if (activeAdminSession(sessionStore)) {
+      return Object.freeze({ repaired: false, activeSession: true });
+    }
+
+    const restored = marker.backup == null
+      ? safeRemove(storage, ACHIEVEMENT_STORAGE_KEY)
+      : safeSet(storage, ACHIEVEMENT_STORAGE_KEY, marker.backup);
+    if (!restored) return Object.freeze({ repaired: false, activeSession: false });
+    safeRemove(storage, ADMIN_UNLOCK_MARKER);
+    return Object.freeze({ repaired: true, activeSession: false });
+  }
+
+  // Repair profiles polluted by either historical admin implementation. Version 1
+  // fabricated achievement records as well as rewards; version 2 stopped fabricating
+  // achievements but still made every reward permanent. Preserve genuine achievements
+  // and let their trophy total derive the legitimate reward set again.
+  const existing = parseStoredState(storage);
+  const legacyAdminTimestamp = readLegacyAdminTimestamp(marker);
+  const { snapshot, repairedLegacyAdminState } = createRepairedPersistentState(
+    existing,
+    legacyAdminTimestamp
+  );
+  if (!safeSet(storage, ACHIEVEMENT_STORAGE_KEY, JSON.stringify(snapshot))) {
+    return Object.freeze({ repaired: false, activeSession: false });
+  }
+  if (repairedLegacyAdminState) resetLegacyChallengeProgress(storage);
+  safeRemove(storage, ADMIN_UNLOCK_MARKER);
+  safeRemove(sessionStore, ADMIN_SESSION_KEY);
+  return Object.freeze({ repaired: true, activeSession: false });
 }
 
 export function advanceAdminUnlockSequence(currentIndex, token) {
@@ -158,31 +271,47 @@ function resetLegacyChallengeProgress(storage) {
   return true;
 }
 
-export function unlockRewardsForTesting(storage = globalThis.localStorage) {
-  const legacyAdminTimestamp = readLegacyAdminTimestamp(storage);
-  const { snapshot, repairedLegacyAdminState } = createAdminRewardState(
-    parseStoredState(storage),
-    legacyAdminTimestamp
-  );
+export function unlockRewardsForTesting(
+  storage = globalThis.localStorage,
+  sessionStore = globalThis.sessionStorage
+) {
+  const existingMarker = parseAdminMarker(storage);
+  if (
+    Number(existingMarker?.version) >= ADMIN_REWARD_PROFILE_VERSION
+    && existingMarker?.sessionOnly === true
+    && activeAdminSession(sessionStore)
+  ) {
+    return true;
+  }
+
+  const backup = safeGet(storage, ACHIEVEMENT_STORAGE_KEY);
+  const { snapshot } = createAdminRewardState(parseStoredState(storage));
   const marker = {
     version: ADMIN_REWARD_PROFILE_VERSION,
     activatedAt: Date.now(),
-    rewardsOnly: true
+    rewardsOnly: true,
+    sessionOnly: true,
+    backup
   };
 
-  try {
-    storage?.setItem?.(ACHIEVEMENT_STORAGE_KEY, JSON.stringify(snapshot));
-    storage?.setItem?.(ADMIN_UNLOCK_MARKER, JSON.stringify(marker));
-  } catch (_) {
+  if (!safeSet(sessionStore, ADMIN_SESSION_KEY, '1')) return false;
+  if (!safeSet(storage, ADMIN_UNLOCK_MARKER, JSON.stringify(marker))) {
+    safeRemove(sessionStore, ADMIN_SESSION_KEY);
+    return false;
+  }
+  if (!safeSet(storage, ACHIEVEMENT_STORAGE_KEY, JSON.stringify(snapshot))) {
+    if (backup == null) safeRemove(storage, ACHIEVEMENT_STORAGE_KEY);
+    else safeSet(storage, ACHIEVEMENT_STORAGE_KEY, backup);
+    safeRemove(storage, ADMIN_UNLOCK_MARKER);
+    safeRemove(sessionStore, ADMIN_SESSION_KEY);
     return false;
   }
 
-  if (repairedLegacyAdminState) resetLegacyChallengeProgress(storage);
   copyStateIntoLiveStore(snapshot);
   if (globalThis.document?.documentElement) {
     globalThis.document.documentElement.dataset.turnAdminRewardsUnlocked = 'true';
   }
-  console.info('TURN: hidden test rewards unlocked.');
+  console.info('TURN: hidden test rewards unlocked for this session.');
   return true;
 }
 
@@ -203,8 +332,14 @@ function selectedVehicleFromLot(lotScreen, rememberedVehicleId = '') {
 export function installAdminUnlockSequence({
   documentRef = globalThis.document,
   storage = globalThis.localStorage,
+  sessionStore = globalThis.sessionStorage,
   reload = () => globalThis.location?.reload?.()
 } = {}) {
+  const repair = repairPersistedAdminState(storage, sessionStore);
+  if (repair.activeSession && documentRef?.documentElement) {
+    documentRef.documentElement.dataset.turnAdminRewardsUnlocked = 'true';
+  }
+
   if (!documentRef?.addEventListener) return null;
   if (globalThis[INSTALL_FLAG]) return globalThis[INSTALL_FLAG];
 
@@ -258,10 +393,11 @@ export function installAdminUnlockSequence({
     const selectedVehicleId = selectedVehicleFromLot(lotScreen, rememberedVehicleId);
     const result = completeAdminUnlockFromLot(sequenceIndex, selectedVehicleId);
     resetSequence();
-    if (!result.completed || !unlockRewardsForTesting(storage)) return;
+    if (!result.completed || !unlockRewardsForTesting(storage, sessionStore)) return;
 
     // The current Home and Lot were rendered from the pre-unlock snapshot. Stop this
-    // race launch and reload once so every reward gate rebuilds from the test profile.
+    // race launch and reload once so every reward gate rebuilds from the temporary
+    // session profile. A later fresh browser/PWA session restores the exact backup.
     event.preventDefault();
     event.stopImmediatePropagation();
     globalThis.setTimeout?.(reload, 0);
