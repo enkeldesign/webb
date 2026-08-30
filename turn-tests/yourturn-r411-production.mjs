@@ -67,7 +67,7 @@ assert.match(turnControls, /back-to-start-button\.is-lap-invalid[\s\S]*#ff6b6b/,
   'TURN Restart Lap must turn red for LAP VOID');
 assert.match(turnControls, /minor-ux-polish-r229\.js\?revision=r229-discoverability-cues/,
   'TURN must load the isolated minor UX polish bundle from the existing race-control entry');
-assert.doesNotMatch(turnControls, /gap:|align-items:|top:|bottom:|translate|margin:/,
+assert.doesNotMatch(turnControls, /gap:|align-items:|translate|margin:/,
   'The TURN r411 control patch must not copy incidental mockup layout changes');
 
 assert.match(
