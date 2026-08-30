@@ -395,6 +395,10 @@ assert.match(extensionSource, /moduleIndex === 0 && side === 1/,
 assert.match(extensionSource, /Mountain carved tunnel continuous rock lining LAB/);
 assert.match(extensionSource, /Mountain Kenney Nature tunnel portal rocks LAB/);
 assert.match(extensionSource, /Mountain tunnel batched mountain-aligned granite arches LAB/);
+assert.match(extensionSource, /const snowCap = new THREE\.Color\(0xdce8ec\)/,
+  'The retained portal crown should remain readable against the night mountain without a real light');
+assert.match(extensionSource, /vertexColors: true/,
+  'Portal stone and snow variation should stay inside the existing batched arch draw call');
 assert.match(extensionSource, /Mountain tunnel instanced warm wall lamps LAB/);
 assert.doesNotMatch(extensionSource, /Mountain tunnel instanced granite portal frames LAB/,
   'The floating rectangular portal-frame experiment must stay retired');

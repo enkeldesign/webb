@@ -9,7 +9,7 @@ import {
   MOUNTAIN_VIEW_SCREEN_SPECS
 } from './mountain-layout.js';
 
-const REVISION = 'mountain-long-course-r6-face-aligned-tunnel-collar';
+const REVISION = 'mountain-long-course-r7-snow-capped-tunnel-collar';
 const CITY_ROAD_URL = '/postal/assets/kenney/roads/road-straight.glb';
 const FANTASY_FENCE_URL = '/turn/assets/scenery/mountain/fantasy/fence.glb';
 const NATURE_ROCK_URL = '/turn/assets/scenery/mountain/nature/cliff-waterfall-rock.glb';
@@ -448,16 +448,22 @@ function tunnelPortalWorldPoint(portal, profilePoint, inwardDepth) {
   return point;
 }
 
-function appendPortalQuad(positions, indices, a, b, c, d) {
+function appendPortalQuad(positions, colors, indices, color, a, b, c, d) {
   const base = positions.length / 3;
   for (const point of [a, b, c, d]) positions.push(point.x, point.y, point.z);
+  for (let vertex = 0; vertex < 4; vertex += 1) colors.push(color.r, color.g, color.b);
   indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
 }
 
 function installTunnelPortalArches(world, portals) {
   if (!portals.length) return { arches: 0, triangles: 0, drawCalls: 0 };
   const positions = [];
+  const colors = [];
   const indices = [];
+  const granite = [0x69777e, 0x78868c, 0x849198].map((color) => new THREE.Color(color));
+  const graniteReveal = new THREE.Color(0x56636a);
+  const snowCap = new THREE.Color(0xdce8ec);
+  const snowReveal = new THREE.Color(0xb9cbd2);
   for (const portal of portals) {
     const inner = tunnelPortalProfile(portal.spec);
     const outer = tunnelPortalProfile(portal.spec, true);
@@ -470,28 +476,33 @@ function installTunnelPortalArches(world, portals) {
       const innerBackNext = tunnelPortalWorldPoint(portal, inner[segment + 1], TUNNEL_PORTAL_DEPTH);
       const outerBack = tunnelPortalWorldPoint(portal, outer[segment], TUNNEL_PORTAL_DEPTH);
       const outerBackNext = tunnelPortalWorldPoint(portal, outer[segment + 1], TUNNEL_PORTAL_DEPTH);
+      const crowned = segment >= 4 && segment <= 9;
+      const frontColor = crowned ? snowCap : granite[segment % granite.length];
+      const revealColor = crowned ? snowReveal : graniteReveal;
 
-      appendPortalQuad(positions, indices, innerFront, innerFrontNext, outerFrontNext, outerFront);
-      appendPortalQuad(positions, indices, outerBack, outerBackNext, innerBackNext, innerBack);
-      appendPortalQuad(positions, indices, outerFront, outerFrontNext, outerBackNext, outerBack);
-      appendPortalQuad(positions, indices, innerBack, innerBackNext, innerFrontNext, innerFront);
+      appendPortalQuad(positions, colors, indices, frontColor,
+        innerFront, innerFrontNext, outerFrontNext, outerFront);
+      appendPortalQuad(positions, colors, indices, graniteReveal,
+        outerBack, outerBackNext, innerBackNext, innerBack);
+      appendPortalQuad(positions, colors, indices, revealColor,
+        outerFront, outerFrontNext, outerBackNext, outerBack);
+      appendPortalQuad(positions, colors, indices, graniteReveal,
+        innerBack, innerBackNext, innerFrontNext, innerFront);
     }
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
   geometry.computeBoundingSphere();
   const mesh = new THREE.Mesh(
     geometry,
-    new THREE.MeshStandardMaterial({
-      color: 0x879399,
-      emissive: 0x26333b,
-      emissiveIntensity: 0.32,
-      roughness: 1,
-      metalness: 0,
+    new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      vertexColors: true,
       side: THREE.DoubleSide,
-      flatShading: true
+      toneMapped: true
     })
   );
   mesh.name = 'Mountain tunnel batched mountain-aligned granite arches LAB';
