@@ -5,7 +5,16 @@ import { chromium } from 'playwright';
 
 const baseUrl = process.env.TURN_VISUAL_BASE_URL || 'http://127.0.0.1:8000';
 const outputDir = process.env.TURN_VISUAL_OUTPUT || 'mountain-long-visual-artifact';
-const views = ['aerial', 'summit', 'bridge', 'lower-village', 'forest', 'final-climb'];
+const views = [
+  'aerial',
+  'summit',
+  'bridge',
+  'east-tunnel',
+  'lower-village',
+  'lower-tunnel',
+  'forest',
+  'final-climb'
+];
 await fs.mkdir(outputDir, { recursive: true });
 
 const browser = await chromium.launch({
@@ -137,6 +146,17 @@ assert.equal(metrics.bridgeDeckModules, 6);
 assert.equal(metrics.bridgeRailModules, 12);
 assert.equal(metrics.bridgePillars, 6);
 assert.equal(metrics.bridgeAbutments, 4);
+assert.equal(metrics.bridgeEntryRailLength, 20.5);
+assert.equal(metrics.tunnels, 2);
+assert.equal(metrics.tunnelPortals, 4);
+assert.equal(metrics.carvedMountainMeshes, 2);
+assert.ok(metrics.carvedMountainTriangles > 0 && metrics.carvedMountainTriangles <= 400,
+  `The two one-time CPU tunnel cuts removed an unexpected triangle count: ${metrics.carvedMountainTriangles}`);
+assert.ok(metrics.tunnelLiningTriangles >= 300 && metrics.tunnelLiningTriangles <= 700,
+  `Tunnel lining should stay a modest batched mesh, got ${metrics.tunnelLiningTriangles} triangles`);
+assert.equal(metrics.tunnelPortalFrames, 12);
+assert.equal(metrics.tunnelPortalRocks, 16);
+assert.ok(metrics.tunnelReflectors >= 20 && metrics.tunnelReflectors <= 40);
 assert.equal(metrics.lowerTerrainVertices, 2755);
 assert.equal(metrics.lowerTerrainTriangles, 5264);
 assert.equal(metrics.lowerVillageHouses, 8);
@@ -161,6 +181,10 @@ assert.equal(runtimeMetrics.sampleCount, 2160, 'The minimap/physics runtime must
 assert.equal(runtimeMetrics.sampling.runtimeSamples, 2160);
 assert.equal(runtimeMetrics.sampling.productionWorldSamples, 1080);
 assert.equal(runtimeMetrics.extension.bridgeDeckModules, 6);
+assert.equal(runtimeMetrics.extension.bridgeEntryRailLength, 20.5);
+assert.equal(runtimeMetrics.extension.tunnels, 2);
+assert.equal(runtimeMetrics.extension.carvedMountainMeshes, 2);
+assert.equal(runtimeMetrics.extension.carvedMountainTriangles, metrics.carvedMountainTriangles);
 assert.ok(runtimeMetrics.bounds.minZ < -370 && runtimeMetrics.bounds.maxZ > 190);
 for (const resource of [
   '/turn-lab/tracks/definitions.js',

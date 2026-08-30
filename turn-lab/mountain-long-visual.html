@@ -29,7 +29,9 @@
       // -392/-228 are intentional sightline screens. Review from their open
       // sides so the bridge modules and house grounding remain inspectable.
       bridge: { position:[70,96,-92], target:[255,3,-205], fov:47 },
+      'east-tunnel': { position:[235,48,-132], target:[340,6,-224], fov:49 },
       'lower-village': { position:[-392,210,-228], target:[-330,2,-215], fov:56 },
+      'lower-tunnel': { position:[-210,52,-405], target:[-340,6,-326], fov:49 },
       forest: { position:[20,78,-430], target:[-70,2,-285], fov:52 },
       'final-climb': { position:[245,72,-330], target:[80,3,-235], fov:48 }
     });
@@ -120,6 +122,15 @@
       bridgeRailModules: Number(extension.bridgeRailModules || 0),
       bridgePillars: Number(extension.bridgePillars || 0),
       bridgeAbutments: Number(extension.bridgeAbutments || 0),
+      bridgeEntryRailLength: Number(extension.bridgeEntryRailLength || 0),
+      tunnels: Number(extension.tunnels || 0),
+      tunnelPortals: Number(extension.tunnelPortals || 0),
+      carvedMountainMeshes: Number(extension.carvedMountainMeshes || 0),
+      carvedMountainTriangles: Number(extension.carvedMountainTriangles || 0),
+      tunnelLiningTriangles: Number(extension.tunnelLiningTriangles || 0),
+      tunnelPortalFrames: Number(extension.tunnelPortalFrames || 0),
+      tunnelPortalRocks: Number(extension.tunnelPortalRocks || 0),
+      tunnelReflectors: Number(extension.tunnelReflectors || 0),
       lowerTerrainVertices: Number(extension.lowerTerrainVertices || 0),
       lowerTerrainTriangles: Number(extension.lowerTerrainTriangles || 0),
       lowerVillageHouses: Number(extension.lowerVillageHouses || 0),

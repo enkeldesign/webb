@@ -104,6 +104,29 @@ export const MOUNTAIN_BRIDGE_CENTERS = Object.freeze([
   Object.freeze({ x: 336, z: -209 })
 ]);
 
+// The production mountain body contains two deliberately large integrated
+// peaks which the longer route crosses. Keep those occluders, but carve and
+// line explicit driveable passages through them instead of letting asphalt
+// visually intersect the rock shell.
+export const MOUNTAIN_TUNNEL_SPECS = Object.freeze([
+  Object.freeze({
+    id: 'east-valley',
+    start: Object.freeze({ x: 318, z: -207 }),
+    end: Object.freeze({ x: 330, z: -370 }),
+    peak: Object.freeze({ x: 432, z: -266, radius: 148, height: 151 }),
+    halfWidth: 20.5,
+    clearHeight: 14
+  }),
+  Object.freeze({
+    id: 'lower-village',
+    start: Object.freeze({ x: -330, z: -335 }),
+    end: Object.freeze({ x: -325, z: -120 }),
+    peak: Object.freeze({ x: -392, z: -228, radius: 132, height: 136 }),
+    halfWidth: 20.5,
+    clearHeight: 14
+  })
+]);
+
 export const MOUNTAIN_LOWER_VILLAGE_SITES = Object.freeze([
   Object.freeze({ x: -385, z: -300, side: 1 }),
   Object.freeze({ x: -405, z: -245, side: -1 }),
@@ -157,8 +180,10 @@ export const MOUNTAIN_LAYOUT_RULES = Object.freeze({
     'slalom-descent',
     'waterfall',
     'lake-bridge',
+    'east-valley-tunnel',
     'east-valley-descent',
     'lower-run',
+    'lower-village-tunnel',
     'lower-village',
     'forest-return',
     'final-climb',

@@ -7,7 +7,10 @@ const BRIDGE_RAIL_COLLIDERS = Object.freeze(MOUNTAIN_BRIDGE_CENTERS.flatMap(({ x
   Object.freeze({
     id: `mountain-lab-bridge-north-${index + 1}`,
     type: 'box',
-    minX: x - 16.6,
+    // The west approach is still turning as it reaches the deck. Start the
+    // first hard rail where the shortened visible rail begins, leaving a
+    // contained but forgiving funnel onto the bridge.
+    minX: x - (index === 0 ? 3.8 : 16.6),
     maxX: x + 16.6,
     minZ: z + 14.0,
     maxZ: z + 23.0
@@ -15,7 +18,7 @@ const BRIDGE_RAIL_COLLIDERS = Object.freeze(MOUNTAIN_BRIDGE_CENTERS.flatMap(({ x
   Object.freeze({
     id: `mountain-lab-bridge-south-${index + 1}`,
     type: 'box',
-    minX: x - 16.6,
+    minX: x - (index === 0 ? 3.8 : 16.6),
     maxX: x + 16.6,
     minZ: z - 23.0,
     maxZ: z - 14.0

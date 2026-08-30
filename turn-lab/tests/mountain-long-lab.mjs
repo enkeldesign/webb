@@ -8,6 +8,7 @@ import {
   MOUNTAIN_LAYOUT_RULES,
   MOUNTAIN_LOWER_TERRAIN_BOUNDS,
   MOUNTAIN_LOWER_VILLAGE_SITES,
+  MOUNTAIN_TUNNEL_SPECS,
   MOUNTAIN_VIEW_SCREEN_SPECS
 } from '../tracks/mountain-layout.js';
 import { MOUNTAIN_CONTROL_POINTS as PRODUCTION_MOUNTAIN_CONTROL_POINTS } from '../../turn/tracks/mountain-layout.js';
@@ -97,8 +98,10 @@ assert.deepEqual(MOUNTAIN_LAYOUT_RULES.routeNarrative, [
   'slalom-descent',
   'waterfall',
   'lake-bridge',
+  'east-valley-tunnel',
   'east-valley-descent',
   'lower-run',
+  'lower-village-tunnel',
   'lower-village',
   'forest-return',
   'final-climb',
@@ -191,8 +194,13 @@ for (let index = 0; index < MOUNTAIN_BRIDGE_CENTERS.length; index += 1) {
   const [north, south] = mountainDefinition.collisionProfile.colliders.slice(index * 2, index * 2 + 2);
   assert.equal(north.minZ - center.z, 14);
   assert.equal(center.z - south.maxZ, 14);
-  assert.ok(north.minX <= center.x - 16 && north.maxX >= center.x + 16);
-  assert.ok(south.minX <= center.x - 16 && south.maxX >= center.x + 16);
+  if (index === 0) {
+    assert.equal(north.minX, center.x - 3.8);
+    assert.equal(south.minX, center.x - 3.8);
+  } else {
+    assert.ok(north.minX <= center.x - 16 && north.maxX >= center.x + 16);
+    assert.ok(south.minX <= center.x - 16 && south.maxX >= center.x + 16);
+  }
 
   for (const side of [-1, 1]) {
     const state = {
@@ -213,6 +221,40 @@ for (let index = 0; index < MOUNTAIN_BRIDGE_CENTERS.length; index += 1) {
     assert.ok(Math.abs(state.position.z - center.z) <= 11.5,
       'Bridge rail resolution must eject the car back onto the deck, never over the outside edge');
   }
+}
+
+for (const side of [-1, 1]) {
+  const entry = MOUNTAIN_BRIDGE_CENTERS[0];
+  const state = {
+    position: { x: entry.x - 11, y: 3.18, z: entry.z + side * 12.5 },
+    velocity: { x: 24, y: 0, z: -side * 2 },
+    speed: 0
+  };
+  const collision = resolveWorldCollisionState({
+    state,
+    trackId: 'mountain',
+    nearestTrack: {
+      distance: 12.5,
+      sample: { point: { x: entry.x - 11, y: 3, z: entry.z } }
+    },
+    collisionProfile: mountainDefinition.collisionProfile
+  });
+  assert.equal(collision.collided, false,
+    'The shortened first hard rail must leave a forgiving, envelope-contained bridge funnel');
+}
+
+assert.equal(MOUNTAIN_TUNNEL_SPECS.length, 2);
+for (const tunnel of MOUNTAIN_TUNNEL_SPECS) {
+  const start = nearestRoutePoint(route, tunnel.start.x, tunnel.start.z);
+  const end = nearestRoutePoint(route, tunnel.end.x, tunnel.end.z);
+  assert.ok(start.distance <= 4 && end.distance <= 4,
+    `${tunnel.id} tunnel endpoints must remain tied to the sampled route`);
+  assert.ok(tunnel.halfWidth >= FREE_ROAM_DISTANCE + 2,
+    `${tunnel.id} tunnel lining must stay outside the complete no-drop envelope`);
+  assert.ok(tunnel.clearHeight >= 13, `${tunnel.id} tunnel needs generous camera and vehicle clearance`);
+  const midpoint = route[Math.round((start.index + end.index) / 2) % route.length];
+  assert.ok(Math.hypot(midpoint[0] - tunnel.peak.x, midpoint[2] - tunnel.peak.z) < tunnel.peak.radius,
+    `${tunnel.id} tunnel must correspond to a real integrated mountain crossing`);
 }
 
 const productionCheckpoints = Object.freeze([0.2, 0.4, 0.6, 0.8]);
@@ -288,6 +330,22 @@ assert.doesNotMatch(extensionSource, /road-bridge\.glb|bridge-pillar-wide\.glb|p
 assert.ok((extensionSource.match(/new THREE\.InstancedMesh/g) || []).length >= 10,
   'Bridge, houses, lights, forest and view screens should be aggressively instanced');
 assert.match(extensionSource, /Mountain lower village instanced brown snow houses LAB/);
+assert.match(extensionSource, /BRIDGE_ENTRY_RAIL_LENGTH = 20\.5/,
+  'The visible first bridge rails must match the forgiving collider funnel');
+assert.match(extensionSource, /Mountain carved tunnel continuous rock lining LAB/);
+assert.match(extensionSource, /Mountain Kenney Nature tunnel portal rocks LAB/);
+assert.match(extensionSource, /Mountain tunnel instanced warm reflectors LAB/);
+assert.match(extensionSource, /cpuCarvedMountainGeometry/,
+  'The two existing integrated peaks should be carved once on the CPU instead of removed or duplicated');
+assert.match(extensionSource, /previousGeometry\?\.dispose\?\.\(\)/,
+  'The replaced low-detail peak geometry should be released after the one-time carve');
+assert.match(extensionSource, /cpu-carved-existing-peaks-once/);
+assert.doesNotMatch(extensionSource, /onBeforeCompile|customProgramCacheKey/,
+  'Tunnel openings must not add recurring per-fragment shader work to the large mountain occluders');
+assert.match(extensionSource, /carvedMountainMeshes: tunnels\.carvedMountainMeshes/);
+assert.match(extensionSource, /carvedMountainTriangles: tunnels\.carvedMountainTriangles/);
+assert.match(extensionSource, /\+ tunnels\.drawCalls/,
+  'Tunnel lining, portals and reflectors must be included in the draw-call budget');
 assert.match(extensionSource, /\+ village\.drawCalls/,
   'House batching cost must be included in the published draw-call budget');
 assert.doesNotMatch(extensionSource, /new THREE\.(PointLight|SpotLight|DirectionalLight|HemisphereLight)/,
@@ -307,7 +365,7 @@ assert.match(workflowSource, /node turn-lab\/tests\/mountain-long-lab\.mjs/,
 console.log(
   `TURN LAB MOUNTAIN long-course contract passed: ${routeLength.toFixed(0)} m, `
   + `${lengthRatio.toFixed(3)}x production, ${separation.distance.toFixed(1)} m minimum non-local separation, `
-  + '24 checkpoints, instanced Kenney bridge/village/forest and zero added dynamic lights.'
+  + '24 checkpoints, a forgiving bridge funnel, two carved tunnels, instanced scenery and zero added dynamic lights.'
 );
 
 async function readText(path) {

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import './player-marker-r428.js?revision=r432';
+import './player-marker-r428.js?revision=r227-night-marker-outline';
 
 const LEADER_MARKER_SIZE_VIEWPORT_RATIO = 0.032;
 const LEADER_MARKER_SIZE_MIN_PX = 12;
@@ -11,6 +11,9 @@ const LEADER_PROGRESS_EPSILON = 0.002;
 const LEADER_CHECK_INTERVAL_MS = 50;
 const FALLBACK_ROOF_HEIGHT = 1.8;
 const FALLBACK_MARKER_COLOR = '#38d9ff';
+const DARK_MARKER_OUTLINE = '#08090a';
+const LIGHT_MARKER_OUTLINE = '#ffffff';
+const LIGHT_OUTLINE_TRACKS = new Set(['midnight-city', 'mountain']);
 const FIXED_LIVERY_MARKER_COLORS = Object.freeze({
   firetruck: '#d92d20',
   police: '#0b0d10',
@@ -28,6 +31,12 @@ function markerSizePixels(viewportHeight) {
     LEADER_MARKER_SIZE_MIN_PX,
     LEADER_MARKER_SIZE_MAX_PX
   );
+}
+
+export function leaderMarkerOutlineColor(trackId) {
+  return LIGHT_OUTLINE_TRACKS.has(String(trackId || '').toLowerCase())
+    ? LIGHT_MARKER_OUTLINE
+    : DARK_MARKER_OUTLINE;
 }
 
 export function leaderMarkerNeedsHelp(apparentRoofPixels, wasVisible = false) {
@@ -115,7 +124,7 @@ function installStyles() {
 
     .turn-leader-marker path {
       fill: var(--turn-leader-marker-color, ${FALLBACK_MARKER_COLOR});
-      stroke: #08090a;
+      stroke: var(--turn-leader-marker-outline, ${DARK_MARKER_OUTLINE});
       stroke-width: 2.5px;
       stroke-linejoin: round;
       vector-effect: non-scaling-stroke;
@@ -216,6 +225,7 @@ function installRuntime(runtime) {
   let visualHelpActive = false;
   let lastLeaderIndex = -1;
   let lastColor = '';
+  let lastOutlineColor = '';
 
   function measure() {
     rect = runtime.renderer?.domElement?.getBoundingClientRect?.() || null;
@@ -281,6 +291,12 @@ function installRuntime(runtime) {
     if (color !== lastColor) {
       marker.style.setProperty('--turn-leader-marker-color', color);
       lastColor = color;
+    }
+
+    const outlineColor = leaderMarkerOutlineColor(runtime.state?.trackId);
+    if (outlineColor !== lastOutlineColor) {
+      marker.style.setProperty('--turn-leader-marker-outline', outlineColor);
+      lastOutlineColor = outlineColor;
     }
 
     marker.style.left = `${pose.x.toFixed(1)}px`;

@@ -177,11 +177,11 @@ assert.equal(byId('faster-than-the-dev')?.trophies, 300,
 assert.deepEqual(
   TIME_TRIALS.map(({ trackId, targetSeconds }) => [trackId, targetSeconds]),
   [
-    ['countryside', 12],
-    ['airport', 17],
+    ['countryside', 11],
+    ['airport', 16],
     ['cliffside', 15],
-    ['harbor', 23],
-    ['midnight-city', 53],
+    ['harbor', 22],
+    ['midnight-city', 52],
     ['mountain', 25]
   ]
 );
@@ -398,11 +398,11 @@ assert.match(lilyaSource, /signalSecretAchievement\('find-lilya'/);
 assert.match(darvidSource, /signalSecretAchievement\('find-darvid'/);
 assert.match(sedanSource, /signalSecretAchievement\('satans-sedan'/);
 
-assert.match(timeTrialSource, /targetSeconds: 12/);
-assert.match(timeTrialSource, /targetSeconds: 17/);
+assert.match(timeTrialSource, /targetSeconds: 11/);
+assert.match(timeTrialSource, /targetSeconds: 16/);
 assert.match(timeTrialSource, /targetSeconds: 15/);
-assert.match(timeTrialSource, /targetSeconds: 23/);
-assert.match(timeTrialSource, /targetSeconds: 53/);
+assert.match(timeTrialSource, /targetSeconds: 22/);
+assert.match(timeTrialSource, /targetSeconds: 52/);
 assert.match(timeTrialSource, /targetSeconds: 25/);
 assert.match(timeTrialSource, /seconds >= trial\.targetSeconds/);
 
