@@ -178,6 +178,7 @@ assert.ok(metrics.tunnelReflectors >= 12 && metrics.tunnelReflectors <= 24);
 assert.equal(metrics.tunnelPortalRadius, 99);
 assert.equal(metrics.tunnelPortalApertureMargin, 5.25);
 assert.equal(metrics.tunnelPortalApertureHeightMargin, 5.25);
+assert.equal(metrics.tunnelPortalCarveProfile, 'arched');
 assert.equal(metrics.tunnelCarveHalfWidth, 34);
 assert.equal(metrics.tunnelCarveClearHeight, 23);
 assert.equal(metrics.lowerTerrainVertices, 2755);

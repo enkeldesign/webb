@@ -423,8 +423,12 @@ assert.match(extensionSource, /visibleTunnelSampleRange/,
   'The visible arch and lining must start deeper than the hidden exterior camera carve');
 assert.match(extensionSource, /cameraExpansion = THREE\.MathUtils\.smoothstep/,
   'The wide camera cut must taper down at the portal instead of punching an oversized hole through the mountain face');
+assert.match(extensionSource, /1 - normalizedLateral \* normalizedLateral/,
+  'The portal carve must follow the arched collar instead of exposing a rectangular hole above it');
 assert.match(extensionSource, /tunnelPortalApertureMargin: TUNNEL_PORTAL_APERTURE_MARGIN/,
   'The portal-shell clearance must be exposed to the browser geometry smoke test');
+assert.match(extensionSource, /tunnelPortalCarveProfile: 'arched'/,
+  'The browser geometry smoke test must identify the profiled portal carve');
 assert.match(extensionSource, /appendPortalRetainingReturn/,
   'The mountain-side shell must transition through a batched retaining return instead of ending as a sliced tongue');
 assert.match(extensionSource, /relative\.dot\(portalSample\.tangent\) \* direction/,

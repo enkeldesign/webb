@@ -9,7 +9,7 @@ import {
   MOUNTAIN_VIEW_SCREEN_SPECS
 } from './mountain-layout.js';
 
-const REVISION = 'mountain-long-course-r11-clean-portal-crowns';
+const REVISION = 'mountain-long-course-r12-profiled-portal-carves';
 const CITY_ROAD_URL = '/postal/assets/kenney/roads/road-straight.glb';
 const FANTASY_FENCE_URL = '/turn/assets/scenery/mountain/fantasy/fence.glb';
 const NATURE_ROCK_URL = '/turn/assets/scenery/mountain/nature/cliff-waterfall-rock.glb';
@@ -721,8 +721,16 @@ function tunnelContainsWorldPoint(point, path, spec) {
     // one-time triangle boundary hidden, while clearing the low, oblique cone
     // shell that otherwise extends beyond the portal on the mountain side.
     // The full chase-camera clearance still blends in behind the portal.
+    const lateralDistance = Math.hypot(point.x - nearestX, point.z - nearestZ);
     const portalCarveHalfWidth = spec.halfWidth + TUNNEL_PORTAL_APERTURE_MARGIN;
-    const portalCarveClearHeight = spec.clearHeight + TUNNEL_PORTAL_APERTURE_HEIGHT_MARGIN;
+    const springHeight = spec.clearHeight * 0.36;
+    const normalizedLateral = Math.min(1, lateralDistance / portalCarveHalfWidth);
+    // Match the portal's elliptical crown instead of removing a rectangular
+    // block above it. This keeps the mountain seated on the arch while the
+    // 0.75 m overlap hides the one-time triangle boundary behind the collar.
+    const portalCarveClearHeight = springHeight
+      + (spec.clearHeight - springHeight + TUNNEL_PORTAL_APERTURE_HEIGHT_MARGIN)
+        * Math.sqrt(Math.max(0, 1 - normalizedLateral * normalizedLateral));
     const carveHalfWidth = THREE.MathUtils.lerp(
       portalCarveHalfWidth,
       spec.carveHalfWidth,
@@ -734,7 +742,7 @@ function tunnelContainsWorldPoint(point, path, spec) {
       cameraExpansion
     );
     if (
-      Math.hypot(point.x - nearestX, point.z - nearestZ) < carveHalfWidth
+      lateralDistance < carveHalfWidth
       && point.y > floorY - 2
       && point.y < floorY + carveClearHeight
     ) return true;
@@ -1327,6 +1335,7 @@ export async function installMountainLongExtension(world, samples, trackWidth = 
     tunnelPortalRadius: Math.max(...MOUNTAIN_TUNNEL_SPECS.map((spec) => spec.portalRadius)),
     tunnelPortalApertureMargin: TUNNEL_PORTAL_APERTURE_MARGIN,
     tunnelPortalApertureHeightMargin: TUNNEL_PORTAL_APERTURE_HEIGHT_MARGIN,
+    tunnelPortalCarveProfile: 'arched',
     tunnelCarveHalfWidth: Math.max(...MOUNTAIN_TUNNEL_SPECS.map((spec) => spec.carveHalfWidth)),
     tunnelCarveClearHeight: Math.max(...MOUNTAIN_TUNNEL_SPECS.map((spec) => spec.carveClearHeight)),
     lowerTerrainVertices: terrain.vertices,
