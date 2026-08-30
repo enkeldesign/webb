@@ -77,11 +77,8 @@ const [index, entry, modal, renderer, styles] = await Promise.all([
   fs.readFile(new URL('../build-a-car/builder.css', import.meta.url), 'utf8')
 ]);
 
-assert.match(index, /new URL\('\/turn-lab\/build-a-car\/entry\.js'/);
-assert.match(index, /buildACarEntry\.searchParams\.set\('build', globalThis\.__TURN_BUILD__\.cacheKey\)/,
-  'The experiment entry must use canonical generated build identity');
-assert.doesNotMatch(index, /build-a-car\/entry\.js\?revision=/,
-  'BUILD-A-CAR must not create a private revision-string namespace');
+assert.doesNotMatch(index, /build-a-car\/entry\.js/,
+  'The retained BUILD-A-CAR prototype must stay dormant during the MOUNTAIN-only experiment');
 assert.match(entry, /root\.querySelector\?\.\('\.lot-screen'\)/);
 assert.match(
   entry,
@@ -115,7 +112,7 @@ assert.match(renderer, /frontWheelPivots/);
 assert.match(styles, /\.build-a-car-dialog::backdrop/);
 assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
 
-console.log('TURN LAB BUILD-A-CAR schema, budget, identity, storage, entry and accessible modal contracts passed.');
+console.log('TURN LAB dormant BUILD-A-CAR schema, budget, identity, storage and accessible modal contracts passed.');
 
 function createMemoryStorage() {
   const values = new Map();

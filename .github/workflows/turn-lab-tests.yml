@@ -38,7 +38,7 @@ jobs:
           node-version: '24'
 
       - name: Syntax-check TURN modules
-        run: find turn turn-next turn-tests turn-lab/tests turn-lab/scripts turn-lab/build-a-car -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
+        run: find turn turn-next turn-tests turn-lab/tests turn-lab/scripts turn-lab/build-a-car turn-lab/tracks turn-lab/race -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
 
       - name: Lint TURN domain modules
         run: npx --yes eslint@9.39.1
@@ -106,6 +106,9 @@ jobs:
       - name: Run Mountain production regression
         run: node turn-tests/mountain-track-production.mjs
 
+      - name: Run TURN LAB MOUNTAIN long-course regression
+        run: node turn-lab/tests/mountain-long-lab.mjs
+
       - name: Run track record 3D model regression
         run: node turn-lab/tests/track-best-model-production.mjs
 
@@ -133,7 +136,7 @@ jobs:
       - name: Run compact Lot layout regression
         run: node turn-lab/tests/lot-layout-production.mjs
 
-      - name: Run BUILD-A-CAR schema and storage regression
+      - name: Run dormant BUILD-A-CAR schema and storage regression
         run: node turn-lab/tests/build-a-car-schema.mjs
 
       - name: Run BUILD-A-CAR modular asset regression

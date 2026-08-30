@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TURN LAB MOUNTAIN long-course visual smoke</title>
+  <style>
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#06132c}
+    canvas{display:block;width:100%;height:100%}
+    #label{position:fixed;left:12px;bottom:10px;padding:6px 9px;border:2px solid #08090a;border-radius:8px;background:#fff8e8;color:#08090a;font:700 13px/1.1 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;z-index:2}
+  </style>
+  <script type="importmap">
+    {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/"}}
+  </script>
+</head>
+<body>
+  <div id="label">TURN LAB MOUNTAIN long course</div>
+  <script type="module">
+    import * as THREE from 'three';
+    import { MOUNTAIN_CONTROL_POINTS } from '/turn-lab/tracks/mountain-layout.js';
+    import { installMountainWorld } from '/turn-lab/tracks/mountain-world-lab-r1.js';
+
+    const TRACK_WIDTH = 27;
+    const SAMPLE_COUNT = 2160;
+    const VIEWS = Object.freeze({
+      aerial: { position:[620,610,-690], target:[0,7,-115], fov:49 },
+      summit: { position:[330,110,165], target:[135,39,80], fov:52 },
+      // The production ridge at 432/-266 and the lower-village peak at
+      // -392/-228 are intentional sightline screens. Review from their open
+      // sides so the bridge modules and house grounding remain inspectable.
+      bridge: { position:[70,96,-92], target:[255,3,-205], fov:47 },
+      'east-tunnel': { position:[235,48,-132], target:[340,6,-224], fov:49 },
+      'lower-village': { position:[-180,155,-430], target:[-345,2,-230], fov:52 },
+      'lower-tunnel': { position:[-210,52,-405], target:[-340,6,-326], fov:49 },
+      forest: { position:[20,78,-430], target:[-70,2,-285], fov:52 },
+      'final-climb': { position:[245,72,-330], target:[80,3,-235], fov:48 }
+    });
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x06132c);
+    scene.fog = new THREE.Fog(0x172744, 430, 1250);
+    const camera = new THREE.PerspectiveCamera(49, innerWidth / innerHeight, 0.1, 2200);
+    const renderer = new THREE.WebGLRenderer({ antialias:true, preserveDrawingBuffer:true, powerPreference:'low-power' });
+    renderer.setPixelRatio(1);
+    renderer.setSize(innerWidth, innerHeight, false);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.shadowMap.enabled = false;
+    document.body.prepend(renderer.domElement);
+
+    scene.add(new THREE.HemisphereLight(0x5a78a8, 0x07101b, 0.56));
+    const moonlight = new THREE.DirectionalLight(0xb8d7ff, 0.92);
+    moonlight.position.set(-90, 150, 70);
+    scene.add(moonlight);
+
+    const curve = new THREE.CatmullRomCurve3(
+      MOUNTAIN_CONTROL_POINTS.map(([x,y,z]) => new THREE.Vector3(x,y,z)),
+      true,
+      'centripetal'
+    );
+    const samples = [];
+    let distance = 0;
+    for (let index = 0; index < SAMPLE_COUNT; index += 1) {
+      const progress = index / SAMPLE_COUNT;
+      const point = curve.getPointAt(progress);
+      const tangent = curve.getTangentAt(progress).normalize();
+      const normal = new THREE.Vector3(-tangent.z, 0, tangent.x).normalize();
+      if (index > 0) distance += point.distanceTo(samples[index - 1].point);
+      samples.push({ point, tangent, normal, distance });
+    }
+    distance += samples[0].point.distanceTo(samples.at(-1).point);
+
+    const runtime = {};
+    const world = installMountainWorld({ scene, samples, trackWidth:TRACK_WIDTH, runtime });
+    await world.ready;
+
+    function setView(name) {
+      const selected = VIEWS[name] || VIEWS.aerial;
+      camera.position.set(...selected.position);
+      camera.up.set(0,1,0);
+      camera.lookAt(...selected.target);
+      camera.fov = selected.fov;
+      camera.updateProjectionMatrix();
+      document.querySelector('#label').textContent = `TURN LAB MOUNTAIN · ${name in VIEWS ? name : 'aerial'}`;
+      renderer.render(scene,camera);
+      return true;
+    }
+
+    const extension = world.userData.turnMountainLongExtension || {};
+    const sampling = world.userData.turnMountainLabSampling || {};
+    const extensionObjects = [];
+    const extensionLights = [];
+    const extensionShadowCasters = [];
+    let instancedMeshes = 0;
+    world.traverse((object) => {
+      if (object.isInstancedMesh) instancedMeshes += 1;
+      if (!/LAB/.test(object.name || '')) return;
+      extensionObjects.push(object);
+      if (object.isLight) extensionLights.push(object);
+      if (object.castShadow) extensionShadowCasters.push(object);
+    });
+    const routeBounds = new THREE.Box3().setFromPoints(samples.map((sample) => sample.point));
+    setView(new URLSearchParams(location.search).get('view') || 'aerial');
+
+    globalThis.__mountainLongSetView = setView;
+    globalThis.__mountainLongVisualMetrics = Object.freeze({
+      assetsReady: world.userData.turnMountainAssetsReady === true,
+      productionAssetErrors: Object.freeze([...(world.userData.turnMountainAssetErrors || [])]),
+      r4AssetErrors: Object.freeze([...(world.userData.turnMountainR4AssetErrors || [])]),
+      r5AssetErrors: Object.freeze([...(world.userData.turnMountainR5AssetErrors || [])]),
+      r6AssetErrors: Object.freeze([...(world.userData.turnMountainR6AssetErrors || [])]),
+      bridgeAssetErrors: Object.freeze([...(extension.bridgeAssetErrors || [])]),
+      routeSamples: samples.length,
+      routeLength: distance,
+      routeBounds: Object.freeze({
+        minX: routeBounds.min.x, maxX: routeBounds.max.x,
+        minY: routeBounds.min.y, maxY: routeBounds.max.y,
+        minZ: routeBounds.min.z, maxZ: routeBounds.max.z
+      }),
+      productionWorldSamples: Number(sampling.productionWorldSamples || 0),
+      runtimeSamples: Number(sampling.runtimeSamples || 0),
+      bridgeDeckModules: Number(extension.bridgeDeckModules || 0),
+      bridgeRailModules: Number(extension.bridgeRailModules || 0),
+      bridgePillars: Number(extension.bridgePillars || 0),
+      bridgeAbutments: Number(extension.bridgeAbutments || 0),
+      bridgeEntryRailLength: Number(extension.bridgeEntryRailLength || 0),
+      tunnels: Number(extension.tunnels || 0),
+      tunnelPortals: Number(extension.tunnelPortals || 0),
+      carvedMountainMeshes: Number(extension.carvedMountainMeshes || 0),
+      carvedMountainTriangles: Number(extension.carvedMountainTriangles || 0),
+      tunnelLiningTriangles: Number(extension.tunnelLiningTriangles || 0),
+      tunnelPortalFrames: Number(extension.tunnelPortalFrames || 0),
+      tunnelPortalRocks: Number(extension.tunnelPortalRocks || 0),
+      tunnelReflectors: Number(extension.tunnelReflectors || 0),
+      lowerTerrainVertices: Number(extension.lowerTerrainVertices || 0),
+      lowerTerrainTriangles: Number(extension.lowerTerrainTriangles || 0),
+      lowerVillageHouses: Number(extension.lowerVillageHouses || 0),
+      maximumHouseGroundDelta: Number(extension.maximumHouseGroundDelta ?? Infinity),
+      cheapStreetlights: Number(extension.cheapStreetlights || 0),
+      forestTrees: Number(extension.forestTrees || 0),
+      viewScreens: Number(extension.viewScreens || 0),
+      addedDrawCalls: Number(extension.addedDrawCalls || 0),
+      dynamicPointLightsAdded: Number(extension.dynamicPointLightsAdded ?? -1),
+      addedShadowCasters: Number(extension.addedShadowCasters ?? -1),
+      instancedMeshes,
+      extensionObjects: extensionObjects.length,
+      extensionLights: extensionLights.length,
+      extensionShadowCasters: extensionShadowCasters.length,
+      renderedDrawCalls: renderer.info.render.calls,
+      roadSurfaces: world.children.filter((object) => object.name === 'Mountain asphalt road r3').length,
+      roadbedWalls: world.children.filter((object) => object.name === 'Mountain opaque roadbed side wall r3').length,
+      roadbedUndersides: world.children.filter((object) => object.name === 'Mountain closed roadbed underside r3').length,
+      deepFoundations: world.children.filter((object) => object.name === 'Mountain deep retaining road foundation r3').length
+    });
+    globalThis.__mountainLongVisualReady = true;
+    window.dispatchEvent(new CustomEvent('turn:mountain-long-visual-ready', { detail:globalThis.__mountainLongVisualMetrics }));
+  </script>
+</body>
+</html>
