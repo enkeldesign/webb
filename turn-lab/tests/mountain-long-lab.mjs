@@ -409,14 +409,31 @@ assert.match(extensionSource, /removeRetiredEastTunnelMountain/,
 assert.match(extensionSource, /disposeObjectMesh\(peak\)/,
   'Retiring the east peak must also release its one-off GPU resources');
 assert.match(extensionSource, /TUNNEL_PORTAL_MARGIN = 5/);
-assert.match(extensionSource, /TUNNEL_PORTAL_FACE_OFFSET = 3\.2/);
+assert.match(extensionSource, /TUNNEL_PORTAL_DEPTH = 8/);
+assert.match(extensionSource, /TUNNEL_PORTAL_FACE_OFFSET = 6\.4/,
+  'The collar front must sit beyond the faceted shell while its back remains joined to the lining');
 assert.match(extensionSource, /TUNNEL_PORTAL_RING = 6/);
-assert.match(extensionSource, /TUNNEL_PORTAL_APERTURE_MARGIN = 1\.5/);
+assert.match(extensionSource, /TUNNEL_PORTAL_APERTURE_MARGIN = TUNNEL_PORTAL_RING - 0\.75/,
+  'The baked opening must clear the full collar while retaining a narrow seam overlap');
+assert.match(extensionSource, /TUNNEL_PORTAL_APERTURE_HEIGHT_MARGIN = TUNNEL_PORTAL_RING - 0\.75/,
+  'The projected crown must clear the faceted shell while retaining a narrow hidden overlap');
+assert.match(extensionSource, /TUNNEL_PORTAL_RETURN_LENGTH = 34/);
 assert.match(extensionSource, /TUNNEL_PORTAL_ARC_SEGMENTS = 12/);
 assert.match(extensionSource, /visibleTunnelSampleRange/,
   'The visible arch and lining must start deeper than the hidden exterior camera carve');
 assert.match(extensionSource, /cameraExpansion = THREE\.MathUtils\.smoothstep/,
   'The wide camera cut must taper down at the portal instead of punching an oversized hole through the mountain face');
+assert.match(extensionSource, /1 - normalizedLateral \* normalizedLateral/,
+  'The portal carve must follow the arched collar instead of exposing a rectangular hole above it');
+assert.match(extensionSource, /tunnelPortalApertureMargin: TUNNEL_PORTAL_APERTURE_MARGIN/,
+  'The portal-shell clearance must be exposed to the browser geometry smoke test');
+assert.match(extensionSource, /tunnelPortalCarveProfile: 'arched'/,
+  'The browser geometry smoke test must identify the profiled portal carve');
+assert.match(extensionSource, /appendPortalRetainingReturn/,
+  'The mountain-side shell must transition through a batched retaining return instead of ending as a sliced tongue');
+assert.match(extensionSource, /relative\.dot\(portalSample\.tangent\) \* direction/,
+  'Each retaining return must extend out of its portal rather than doubling back into the lining');
+assert.match(extensionSource, /tunnelPortalRetainingReturns: tunnels\.portalRetainingReturns/);
 assert.match(extensionSource, /expandedTunnelSampleRange/,
   'The hidden CPU cut should extend cleanly outside each integrated peak shell');
 assert.match(extensionSource, /carvePath: Object\.freeze/,
