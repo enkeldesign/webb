@@ -13,6 +13,28 @@ function installStyles() {
     .utility-group[data-menu-state="racing"] .back-to-start-button.is-lap-invalid {
       background: #ff6b6b;
     }
+
+    /* NEW is an availability cue: draw attention while unseen achievements exist,
+       then get out of the way once the player has actively chosen the filter. */
+    .turn-achievements-filters button[data-achievement-filter="new"]:not(:disabled):not([aria-pressed="true"])::after {
+      content: "";
+      position: absolute;
+      z-index: 3;
+      top: -9px;
+      right: -9px;
+      width: 16px;
+      height: 16px;
+      box-sizing: border-box;
+      border: 3px solid var(--turn-ink, #08090a);
+      border-radius: 50%;
+      background: var(--turn-action-warning, #ffd43b);
+      box-shadow: 2px 2px 0 var(--turn-ink, #08090a);
+      pointer-events: none;
+    }
+
+    .turn-achievements-filters button[data-achievement-filter="new"][aria-pressed="true"]::after {
+      content: none;
+    }
   `;
   document.head.appendChild(style);
 }

@@ -67,16 +67,21 @@ assert.match(turnControls, /back-to-start-button\.is-lap-invalid[\s\S]*#ff6b6b/,
   'TURN Restart Lap must turn red for LAP VOID');
 assert.match(turnControls, /minor-ux-polish-r229\.js\?revision=r229-discoverability-cues/,
   'TURN must load the isolated minor UX polish bundle from the existing race-control entry');
-assert.doesNotMatch(turnControls, /gap:|align-items:|top:|bottom:|translate|margin:/,
+assert.doesNotMatch(turnControls, /gap:|align-items:|translate|margin:/,
   'The TURN r411 control patch must not copy incidental mockup layout changes');
 
 assert.match(
-  minorUx,
-  /button\[data-achievement-filter="new"\]\[aria-pressed="true"\]:not\(:disabled\)::after/,
-  'The NEW filter must show its notification dot only while the filter is active'
+  turnControls,
+  /button\[data-achievement-filter="new"\]:not\(:disabled\):not\(\[aria-pressed="true"\]\)::after/,
+  'The NEW filter notification must represent available unseen achievements before the player selects it'
 );
-assert.match(minorUx, /background: var\(--turn-action-warning, #ffd43b\)/,
-  'The active NEW filter dot must use TURN warning yellow');
+assert.match(
+  turnControls,
+  /button\[data-achievement-filter="new"\]\[aria-pressed="true"\]::after\s*\{[\s\S]*content: none/,
+  'The NEW notification must disappear once the player has already selected the filter'
+);
+assert.match(turnControls, /background: var\(--turn-action-warning, #ffd43b\)/,
+  'The available NEW filter dot must use TURN warning yellow');
 assert.match(minorUx, /PERK_ATTENTION_STORAGE_KEY = 'turn-perk-first-encounter-seen-v1'/,
   'The PERK attention cue must be a persisted first-encounter behavior');
 assert.match(
