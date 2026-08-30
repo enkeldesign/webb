@@ -125,7 +125,7 @@ export const MOUNTAIN_TUNNEL_SPECS = Object.freeze([
     // The visible mouth begins only where the cone has enough rock above it
     // to read as part of the mountain. The wider hidden cut covers TURN's
     // complete no-drop envelope plus the low-speed chase-camera offset.
-    portalRadius: 84,
+    portalRadius: 76,
     halfWidth: 21,
     clearHeight: 18,
     carveHalfWidth: 34,

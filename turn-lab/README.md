@@ -10,7 +10,7 @@ The long course retains the established village, forest climb, summit river, sla
 
 The production MOUNTAIN world still builds from 1,080 evenly spaced world samples, so road/scenery setup stays within the established cost. The LAB runtime uses 2,160 samples for collision, progress, checkpoints, ghosts and minimaps, preserving approximately the production route's spatial resolution across the longer lap.
 
-Bridge deck, rails and supports reuse the repository's Kenney City Kit Roads, Fantasy Town and Nature Kit assets. The retained tunnel begins deeper inside its mountain, uses a batched low-poly stone arch blended with instanced Nature Kit rocks, and has a wider hidden camera-safe carve behind its continuous lining. Its warm wall lamps are instanced without real lights. Added houses, forest, rock screens, light pools and road furniture use shared geometry or instancing. The lower village and tunnel add no dynamic lights, and no LAB scenery casts shadows.
+Bridge deck, rails and supports reuse the repository's Kenney City Kit Roads, Fantasy Town and Nature Kit assets. The retained tunnel begins deeper inside its mountain, uses a broad batched low-poly stone collar blended with instanced Nature Kit rocks, and has a wider hidden camera-safe carve behind its continuous lining. The narrow exterior aperture is deliberately overlapped by the collar so the mountain cut stays clean, while its warm wall lamps remain instanced without real lights. Added houses, forest, rock screens, light pools and road furniture use shared geometry or instancing. The lower village and tunnel add no dynamic lights, and no LAB scenery casts shadows.
 
 ## Retired experiments
 

@@ -9,7 +9,7 @@ import {
   MOUNTAIN_VIEW_SCREEN_SPECS
 } from './mountain-layout.js';
 
-const REVISION = 'mountain-long-course-r4-open-pass-arched-tunnel';
+const REVISION = 'mountain-long-course-r5-grounded-tunnel-collar';
 const CITY_ROAD_URL = '/postal/assets/kenney/roads/road-straight.glb';
 const FANTASY_FENCE_URL = '/turn/assets/scenery/mountain/fantasy/fence.glb';
 const NATURE_ROCK_URL = '/turn/assets/scenery/mountain/nature/cliff-waterfall-rock.glb';
@@ -22,8 +22,11 @@ const BRIDGE_DECK_THICKNESS = 0.08;
 const BRIDGE_RAIL_HEIGHT = 2.05;
 const TUNNEL_PORTAL_MARGIN = 5;
 const TUNNEL_PORTAL_DEPTH = 4.8;
-const TUNNEL_PORTAL_RING = 3.2;
+const TUNNEL_PORTAL_RING = 6;
+const TUNNEL_PORTAL_APERTURE_MARGIN = 1.5;
 const TUNNEL_PORTAL_ARC_SEGMENTS = 12;
+const TUNNEL_PEAK_RADIAL_SEGMENTS = 144;
+const TUNNEL_PEAK_HEIGHT_SEGMENTS = 72;
 const WARM_LIGHT = 0xffc766;
 const WARM_POOL = 0xffb000;
 const INK = 0x17191d;
@@ -481,9 +484,9 @@ function installTunnelPortalArches(world, portals) {
   const mesh = new THREE.Mesh(
     geometry,
     new THREE.MeshStandardMaterial({
-      color: 0x7d878d,
-      emissive: 0x111920,
-      emissiveIntensity: 0.16,
+      color: 0x879399,
+      emissive: 0x26333b,
+      emissiveIntensity: 0.32,
       roughness: 1,
       metalness: 0,
       side: THREE.DoubleSide,
@@ -592,16 +595,25 @@ function tunnelContainsWorldPoint(point, path, spec) {
     const floorY = THREE.MathUtils.lerp(start.y, end.y, along);
     const centreRadius = Math.hypot(nearestX - spec.peak.x, nearestZ - spec.peak.z);
     const cameraExpansion = THREE.MathUtils.smoothstep(spec.portalRadius - centreRadius, 0, 28);
-    const portalCarveHalfWidth = spec.halfWidth + TUNNEL_PORTAL_RING + 2;
+    // Keep the exterior aperture smaller than the broad stone collar so the
+    // one-time triangle cut cannot leave a visible saw-tooth gap around it.
+    // The full chase-camera clearance still blends in behind the portal.
+    const portalCarveHalfWidth = spec.halfWidth + TUNNEL_PORTAL_APERTURE_MARGIN;
+    const portalCarveClearHeight = spec.clearHeight + TUNNEL_PORTAL_APERTURE_MARGIN;
     const carveHalfWidth = THREE.MathUtils.lerp(
       portalCarveHalfWidth,
       spec.carveHalfWidth,
       cameraExpansion
     );
+    const carveClearHeight = THREE.MathUtils.lerp(
+      portalCarveClearHeight,
+      spec.carveClearHeight,
+      cameraExpansion
+    );
     if (
       Math.hypot(point.x - nearestX, point.z - nearestZ) < carveHalfWidth
       && point.y > floorY - 2
-      && point.y < floorY + spec.carveClearHeight
+      && point.y < floorY + carveClearHeight
     ) return true;
   }
   return false;
@@ -632,7 +644,12 @@ function cpuCarvedMountainGeometry(peak, path, spec) {
   // This is the only higher-detail peak mesh in the LAB. The extra
   // tessellation makes the baked portal cut clean while staying far cheaper
   // than a per-fragment carve on the large occluders every frame.
-  const geometry = new THREE.ConeGeometry(spec.peak.radius, spec.peak.height, 72, 36);
+  const geometry = new THREE.ConeGeometry(
+    spec.peak.radius,
+    spec.peak.height,
+    TUNNEL_PEAK_RADIAL_SEGMENTS,
+    TUNNEL_PEAK_HEIGHT_SEGMENTS
+  );
   mountainVertexColors(geometry, spec);
   peak.updateWorldMatrix(true, false);
   const positions = geometry.getAttribute('position');

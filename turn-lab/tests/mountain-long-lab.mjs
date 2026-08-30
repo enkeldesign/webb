@@ -300,14 +300,14 @@ for (const tunnel of MOUNTAIN_TUNNEL_SPECS) {
     const portalIndex = route.indexOf(portal);
     const tangent = routeTangent(route, portalIndex);
     const normal = [-tangent[2], 0, tangent[0]];
-    const outerHalfWidth = tunnel.halfWidth + 3.2;
+    const outerHalfWidth = tunnel.halfWidth + 6;
     const widestPortalRadius = Math.max(...[-1, 1].map((side) => Math.hypot(
       portal[0] + normal[0] * outerHalfWidth * side - tunnel.peak.x,
       portal[2] + normal[2] * outerHalfWidth * side - tunnel.peak.z
     )));
     const coneSurfaceAtPortalEdge = -7
       + tunnel.peak.height * (1 - widestPortalRadius / tunnel.peak.radius);
-    assert.ok(coneSurfaceAtPortalEdge >= portal[1] + tunnel.clearHeight + 3.2,
+    assert.ok(coneSurfaceAtPortalEdge >= portal[1] + tunnel.clearHeight + 6,
       `${tunnel.id} complete arch width must sit inside enough mountain shell to look structurally grounded`);
   }
 }
@@ -409,6 +409,8 @@ assert.match(extensionSource, /removeRetiredEastTunnelMountain/,
 assert.match(extensionSource, /disposeObjectMesh\(peak\)/,
   'Retiring the east peak must also release its one-off GPU resources');
 assert.match(extensionSource, /TUNNEL_PORTAL_MARGIN = 5/);
+assert.match(extensionSource, /TUNNEL_PORTAL_RING = 6/);
+assert.match(extensionSource, /TUNNEL_PORTAL_APERTURE_MARGIN = 1\.5/);
 assert.match(extensionSource, /TUNNEL_PORTAL_ARC_SEGMENTS = 12/);
 assert.match(extensionSource, /visibleTunnelSampleRange/,
   'The visible arch and lining must start deeper than the hidden exterior camera carve');
@@ -418,7 +420,8 @@ assert.match(extensionSource, /expandedTunnelSampleRange/,
   'The hidden CPU cut should extend cleanly outside each integrated peak shell');
 assert.match(extensionSource, /carvePath: Object\.freeze/,
   'The hidden exterior carve path must be separate from the visible tunnel lining');
-assert.match(extensionSource, /new THREE\.ConeGeometry\(spec\.peak\.radius, spec\.peak\.height, 72, 36\)/,
+assert.match(extensionSource, /TUNNEL_PEAK_RADIAL_SEGMENTS = 144/);
+assert.match(extensionSource, /TUNNEL_PEAK_HEIGHT_SEGMENTS = 72/,
   'Only the retained tunnel peak should receive enough one-time tessellation for a clean opening');
 assert.match(extensionSource, /previousGeometry\?\.dispose\?\.\(\)/,
   'The replaced low-detail peak geometry should be released after the one-time carve');

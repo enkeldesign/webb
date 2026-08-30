@@ -157,7 +157,7 @@ assert.ok(metrics.tunnelSceneryTreesRemoved >= 1 && metrics.tunnelSceneryTreesRe
 assert.equal(metrics.eastPeakMeshes, 0, 'The retired post-bridge tunnel mountain must be absent');
 assert.equal(metrics.carvedMountainMeshes, 1);
 assert.equal(metrics.carvedTunnelPeaks, 1);
-assert.ok(metrics.carvedMountainTriangles > 0 && metrics.carvedMountainTriangles <= 600,
+assert.ok(metrics.carvedMountainTriangles > 0 && metrics.carvedMountainTriangles <= 1800,
   `The one-time camera-safe tunnel cut removed an unexpected triangle count: ${metrics.carvedMountainTriangles}`);
 assert.ok(metrics.tunnelLiningTriangles >= 140 && metrics.tunnelLiningTriangles <= 360,
   `Tunnel lining should stay a modest batched mesh, got ${metrics.tunnelLiningTriangles} triangles`);
@@ -165,7 +165,7 @@ assert.equal(metrics.tunnelPortalArches, 2);
 assert.equal(metrics.tunnelPortalTriangles, 224);
 assert.equal(metrics.tunnelPortalRocks, 8);
 assert.ok(metrics.tunnelReflectors >= 12 && metrics.tunnelReflectors <= 24);
-assert.equal(metrics.tunnelPortalRadius, 84);
+assert.equal(metrics.tunnelPortalRadius, 76);
 assert.equal(metrics.tunnelCarveHalfWidth, 34);
 assert.equal(metrics.tunnelCarveClearHeight, 23);
 assert.equal(metrics.lowerTerrainVertices, 2755);
