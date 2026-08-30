@@ -95,7 +95,7 @@ try {
     globalThis.__mountainLongChoice = globalThis.__turnChooseTrack();
     return true;
   });
-  await runtimePage.locator('.track-card[data-track-id="mountain"]').click();
+  await mountainHomeCard.click();
   await runtimePage.locator('.track-select-continue').click();
   await runtimePage.waitForFunction(
     () => globalThis.__turnRuntime?.trackId === 'mountain'
@@ -150,7 +150,7 @@ assert.equal(metrics.bridgeEntryRailLength, 20.5);
 assert.equal(metrics.tunnels, 2);
 assert.equal(metrics.tunnelPortals, 4);
 assert.equal(metrics.carvedMountainMeshes, 2);
-assert.ok(metrics.carvedMountainTriangles > 0 && metrics.carvedMountainTriangles <= 400,
+assert.ok(metrics.carvedMountainTriangles > 0 && metrics.carvedMountainTriangles <= 800,
   `The two one-time CPU tunnel cuts removed an unexpected triangle count: ${metrics.carvedMountainTriangles}`);
 assert.ok(metrics.tunnelLiningTriangles >= 300 && metrics.tunnelLiningTriangles <= 700,
   `Tunnel lining should stay a modest batched mesh, got ${metrics.tunnelLiningTriangles} triangles`);

@@ -337,6 +337,11 @@ assert.match(extensionSource, /Mountain Kenney Nature tunnel portal rocks LAB/);
 assert.match(extensionSource, /Mountain tunnel instanced warm reflectors LAB/);
 assert.match(extensionSource, /cpuCarvedMountainGeometry/,
   'The two existing integrated peaks should be carved once on the CPU instead of removed or duplicated');
+assert.match(extensionSource, /TUNNEL_PORTAL_MARGIN = 5/);
+assert.match(extensionSource, /expandedTunnelSampleRange/,
+  'Tunnel portals and linings should extend cleanly outside each integrated peak shell');
+assert.match(extensionSource, /new THREE\.ConeGeometry\(spec\.peak\.radius, spec\.peak\.height, 48, 24\)/,
+  'Only the two carved peaks should receive enough one-time tessellation for clean openings');
 assert.match(extensionSource, /previousGeometry\?\.dispose\?\.\(\)/,
   'The replaced low-detail peak geometry should be released after the one-time carve');
 assert.match(extensionSource, /cpu-carved-existing-peaks-once/);

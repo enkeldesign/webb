@@ -19,6 +19,7 @@ const BRIDGE_ENTRY_RAIL_LENGTH = 20.5;
 const BRIDGE_TARGET_WIDTH = 30.4;
 const BRIDGE_DECK_THICKNESS = 0.08;
 const BRIDGE_RAIL_HEIGHT = 2.05;
+const TUNNEL_PORTAL_MARGIN = 5;
 const WARM_LIGHT = 0xffc766;
 const WARM_POOL = 0xffb000;
 const INK = 0x17191d;
@@ -271,9 +272,20 @@ function installKenneyBridge(world, sources, errors, samples, trackWidth, terrai
   };
 }
 
-function forwardSampleRange(samples, start, end) {
-  const startIndex = nearestSampleIndex(samples, start.x, start.z);
-  const endIndex = nearestSampleIndex(samples, end.x, end.z);
+function outsidePeak(point, spec) {
+  return Math.hypot(point.x - spec.peak.x, point.z - spec.peak.z)
+    >= spec.peak.radius + TUNNEL_PORTAL_MARGIN;
+}
+
+function expandedTunnelSampleRange(samples, spec) {
+  let startIndex = nearestSampleIndex(samples, spec.start.x, spec.start.z);
+  let endIndex = nearestSampleIndex(samples, spec.end.x, spec.end.z);
+  for (let step = 0; step < samples.length && !outsidePeak(samples[startIndex].point, spec); step += 1) {
+    startIndex = (startIndex - 1 + samples.length) % samples.length;
+  }
+  for (let step = 0; step < samples.length && !outsidePeak(samples[endIndex].point, spec); step += 1) {
+    endIndex = (endIndex + 1) % samples.length;
+  }
   const range = [];
   let index = startIndex;
   for (let step = 0; step <= samples.length; step += 1) {
@@ -300,7 +312,9 @@ function decimateTunnelPath(samples, spacing = 11) {
 function tunnelPaths(samples) {
   return MOUNTAIN_TUNNEL_SPECS.map((spec) => Object.freeze({
     spec,
-    path: Object.freeze(decimateTunnelPath(forwardSampleRange(samples, spec.start, spec.end)))
+    // Specs identify the road/mountain overlap. Expand to the actual exterior
+    // shell so the portal, lining and CPU cut meet cleanly outside the cone.
+    path: Object.freeze(decimateTunnelPath(expandedTunnelSampleRange(samples, spec)))
   }));
 }
 
@@ -515,7 +529,10 @@ function mountainVertexColors(geometry, spec) {
 }
 
 function cpuCarvedMountainGeometry(peak, path, spec) {
-  const geometry = new THREE.ConeGeometry(spec.peak.radius, spec.peak.height, 28, 12);
+  // These are the only two higher-detail peak meshes in the LAB. The extra
+  // tessellation makes the baked portal cut clean while staying far cheaper
+  // than a per-fragment carve on the large occluders every frame.
+  const geometry = new THREE.ConeGeometry(spec.peak.radius, spec.peak.height, 48, 24);
   mountainVertexColors(geometry, spec);
   peak.updateWorldMatrix(true, false);
   const positions = geometry.getAttribute('position');
@@ -525,12 +542,20 @@ function cpuCarvedMountainGeometry(peak, path, spec) {
   const b = new THREE.Vector3();
   const c = new THREE.Vector3();
   const centroid = new THREE.Vector3();
+  const edge = new THREE.Vector3();
   for (let offset = 0; offset < sourceIndex.count; offset += 3) {
     a.fromBufferAttribute(positions, sourceIndex.getX(offset)).applyMatrix4(peak.matrixWorld);
     b.fromBufferAttribute(positions, sourceIndex.getX(offset + 1)).applyMatrix4(peak.matrixWorld);
     c.fromBufferAttribute(positions, sourceIndex.getX(offset + 2)).applyMatrix4(peak.matrixWorld);
     centroid.copy(a).add(b).add(c).multiplyScalar(1 / 3);
-    if (tunnelContainsWorldPoint(centroid, path, spec)) continue;
+    const intersectsTunnel = tunnelContainsWorldPoint(a, path, spec)
+      || tunnelContainsWorldPoint(b, path, spec)
+      || tunnelContainsWorldPoint(c, path, spec)
+      || tunnelContainsWorldPoint(centroid, path, spec)
+      || tunnelContainsWorldPoint(edge.copy(a).add(b).multiplyScalar(0.5), path, spec)
+      || tunnelContainsWorldPoint(edge.copy(b).add(c).multiplyScalar(0.5), path, spec)
+      || tunnelContainsWorldPoint(edge.copy(c).add(a).multiplyScalar(0.5), path, spec);
+    if (intersectsTunnel) continue;
     kept.push(sourceIndex.getX(offset), sourceIndex.getX(offset + 1), sourceIndex.getX(offset + 2));
   }
   geometry.setIndex(kept);
