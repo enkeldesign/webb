@@ -9,7 +9,7 @@ import {
   MOUNTAIN_VIEW_SCREEN_SPECS
 } from './mountain-layout.js';
 
-const REVISION = 'mountain-long-course-r9-portal-retaining-returns';
+const REVISION = 'mountain-long-course-r10-projected-portal-hood';
 const CITY_ROAD_URL = '/postal/assets/kenney/roads/road-straight.glb';
 const FANTASY_FENCE_URL = '/turn/assets/scenery/mountain/fantasy/fence.glb';
 const NATURE_ROCK_URL = '/turn/assets/scenery/mountain/nature/cliff-waterfall-rock.glb';
@@ -21,8 +21,11 @@ const BRIDGE_TARGET_WIDTH = 30.4;
 const BRIDGE_DECK_THICKNESS = 0.08;
 const BRIDGE_RAIL_HEIGHT = 2.05;
 const TUNNEL_PORTAL_MARGIN = 5;
-const TUNNEL_PORTAL_DEPTH = 4.8;
-const TUNNEL_PORTAL_FACE_OFFSET = 3.2;
+// The back edge remains 1.6 m inside the lining sample while the front lip is
+// projected beyond the faceted cone shell. This keeps baked mountain triangles
+// behind the readable snow crown instead of letting them nick its front face.
+const TUNNEL_PORTAL_DEPTH = 8;
+const TUNNEL_PORTAL_FACE_OFFSET = 6.4;
 const TUNNEL_PORTAL_RING = 6;
 // Keep a narrow rock overlap behind the constructed collar without leaving
 // enough of the oblique cone shell to project through it. The previous 1.5 m

@@ -409,7 +409,9 @@ assert.match(extensionSource, /removeRetiredEastTunnelMountain/,
 assert.match(extensionSource, /disposeObjectMesh\(peak\)/,
   'Retiring the east peak must also release its one-off GPU resources');
 assert.match(extensionSource, /TUNNEL_PORTAL_MARGIN = 5/);
-assert.match(extensionSource, /TUNNEL_PORTAL_FACE_OFFSET = 3\.2/);
+assert.match(extensionSource, /TUNNEL_PORTAL_DEPTH = 8/);
+assert.match(extensionSource, /TUNNEL_PORTAL_FACE_OFFSET = 6\.4/,
+  'The collar front must sit beyond the faceted shell while its back remains joined to the lining');
 assert.match(extensionSource, /TUNNEL_PORTAL_RING = 6/);
 assert.match(extensionSource, /TUNNEL_PORTAL_APERTURE_MARGIN = TUNNEL_PORTAL_RING - 0\.75/,
   'The baked opening must clear the full collar while retaining a narrow seam overlap');
