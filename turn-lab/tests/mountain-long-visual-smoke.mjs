@@ -169,11 +169,14 @@ assert.ok(
 assert.ok(metrics.tunnelLiningTriangles >= 140 && metrics.tunnelLiningTriangles <= 360,
   `Tunnel lining should stay a modest batched mesh, got ${metrics.tunnelLiningTriangles} triangles`);
 assert.equal(metrics.tunnelPortalArches, 2);
-assert.equal(metrics.tunnelPortalTriangles, 224);
+assert.equal(metrics.tunnelPortalRetainingReturns, 2);
+assert.ok(metrics.tunnelPortalTriangles >= 240 && metrics.tunnelPortalTriangles <= 272,
+  `Portal retaining returns exceeded their batched triangle budget: ${metrics.tunnelPortalTriangles}`);
 assert.equal(metrics.tunnelPortalRocks, 8);
 assert.ok(metrics.tunnelReflectors >= 12 && metrics.tunnelReflectors <= 24);
 assert.equal(metrics.tunnelPortalRadius, 99);
 assert.equal(metrics.tunnelPortalApertureMargin, 5.25);
+assert.equal(metrics.tunnelPortalApertureHeightMargin, 3.75);
 assert.equal(metrics.tunnelCarveHalfWidth, 34);
 assert.equal(metrics.tunnelCarveClearHeight, 23);
 assert.equal(metrics.lowerTerrainVertices, 2755);

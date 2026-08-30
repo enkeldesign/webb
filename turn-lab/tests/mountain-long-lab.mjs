@@ -413,6 +413,9 @@ assert.match(extensionSource, /TUNNEL_PORTAL_FACE_OFFSET = 3\.2/);
 assert.match(extensionSource, /TUNNEL_PORTAL_RING = 6/);
 assert.match(extensionSource, /TUNNEL_PORTAL_APERTURE_MARGIN = TUNNEL_PORTAL_RING - 0\.75/,
   'The baked opening must clear the full collar while retaining a narrow seam overlap');
+assert.match(extensionSource, /TUNNEL_PORTAL_APERTURE_HEIGHT_MARGIN = TUNNEL_PORTAL_RING - 2\.25/,
+  'The vertical carve must keep enough mountain overlap to visually seat the arch');
+assert.match(extensionSource, /TUNNEL_PORTAL_RETURN_LENGTH = 34/);
 assert.match(extensionSource, /TUNNEL_PORTAL_ARC_SEGMENTS = 12/);
 assert.match(extensionSource, /visibleTunnelSampleRange/,
   'The visible arch and lining must start deeper than the hidden exterior camera carve');
@@ -420,6 +423,11 @@ assert.match(extensionSource, /cameraExpansion = THREE\.MathUtils\.smoothstep/,
   'The wide camera cut must taper down at the portal instead of punching an oversized hole through the mountain face');
 assert.match(extensionSource, /tunnelPortalApertureMargin: TUNNEL_PORTAL_APERTURE_MARGIN/,
   'The portal-shell clearance must be exposed to the browser geometry smoke test');
+assert.match(extensionSource, /appendPortalRetainingReturn/,
+  'The mountain-side shell must transition through a batched retaining return instead of ending as a sliced tongue');
+assert.match(extensionSource, /relative\.dot\(portalSample\.tangent\) \* direction/,
+  'Each retaining return must extend out of its portal rather than doubling back into the lining');
+assert.match(extensionSource, /tunnelPortalRetainingReturns: tunnels\.portalRetainingReturns/);
 assert.match(extensionSource, /expandedTunnelSampleRange/,
   'The hidden CPU cut should extend cleanly outside each integrated peak shell');
 assert.match(extensionSource, /carvePath: Object\.freeze/,
