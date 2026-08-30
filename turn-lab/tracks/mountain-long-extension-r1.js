@@ -9,7 +9,7 @@ import {
   MOUNTAIN_VIEW_SCREEN_SPECS
 } from './mountain-layout.js';
 
-const REVISION = 'mountain-long-course-r5-grounded-tunnel-collar';
+const REVISION = 'mountain-long-course-r6-face-aligned-tunnel-collar';
 const CITY_ROAD_URL = '/postal/assets/kenney/roads/road-straight.glb';
 const FANTASY_FENCE_URL = '/turn/assets/scenery/mountain/fantasy/fence.glb';
 const NATURE_ROCK_URL = '/turn/assets/scenery/mountain/nature/cliff-waterfall-rock.glb';
@@ -22,6 +22,7 @@ const BRIDGE_DECK_THICKNESS = 0.08;
 const BRIDGE_RAIL_HEIGHT = 2.05;
 const TUNNEL_PORTAL_MARGIN = 5;
 const TUNNEL_PORTAL_DEPTH = 4.8;
+const TUNNEL_PORTAL_FACE_OFFSET = 3.2;
 const TUNNEL_PORTAL_RING = 6;
 const TUNNEL_PORTAL_APERTURE_MARGIN = 1.5;
 const TUNNEL_PORTAL_ARC_SEGMENTS = 12;
@@ -435,13 +436,14 @@ function tunnelPortalProfile(spec, outer = false) {
   return profile;
 }
 
-function tunnelPortalWorldPoint(portal, profilePoint, depthOffset) {
-  // direction points out of the tunnel. Centre the extrusion one half-depth
-  // inward so the visible front face is flush with the authored mountain mouth.
-  const inwardCentre = -portal.direction * TUNNEL_PORTAL_DEPTH / 2;
+function tunnelPortalWorldPoint(portal, profilePoint, inwardDepth) {
+  // direction points out of the tunnel. Project the front lip slightly beyond
+  // the sampled cut, then extrude back into the lining. This makes the curved
+  // collar—not a baked cone triangle—the readable mountain entrance.
+  const tangentOffset = portal.direction * (TUNNEL_PORTAL_FACE_OFFSET - inwardDepth);
   const point = portal.sample.point.clone()
     .addScaledVector(portal.sample.normal, profilePoint.lateral)
-    .addScaledVector(portal.sample.tangent, inwardCentre + depthOffset);
+    .addScaledVector(portal.sample.tangent, tangentOffset);
   point.y = portal.sample.point.y + profilePoint.height;
   return point;
 }
@@ -456,19 +458,18 @@ function installTunnelPortalArches(world, portals) {
   if (!portals.length) return { arches: 0, triangles: 0, drawCalls: 0 };
   const positions = [];
   const indices = [];
-  const halfDepth = TUNNEL_PORTAL_DEPTH / 2;
   for (const portal of portals) {
     const inner = tunnelPortalProfile(portal.spec);
     const outer = tunnelPortalProfile(portal.spec, true);
     for (let segment = 0; segment < inner.length - 1; segment += 1) {
-      const innerFront = tunnelPortalWorldPoint(portal, inner[segment], -halfDepth);
-      const innerFrontNext = tunnelPortalWorldPoint(portal, inner[segment + 1], -halfDepth);
-      const outerFront = tunnelPortalWorldPoint(portal, outer[segment], -halfDepth);
-      const outerFrontNext = tunnelPortalWorldPoint(portal, outer[segment + 1], -halfDepth);
-      const innerBack = tunnelPortalWorldPoint(portal, inner[segment], halfDepth);
-      const innerBackNext = tunnelPortalWorldPoint(portal, inner[segment + 1], halfDepth);
-      const outerBack = tunnelPortalWorldPoint(portal, outer[segment], halfDepth);
-      const outerBackNext = tunnelPortalWorldPoint(portal, outer[segment + 1], halfDepth);
+      const innerFront = tunnelPortalWorldPoint(portal, inner[segment], 0);
+      const innerFrontNext = tunnelPortalWorldPoint(portal, inner[segment + 1], 0);
+      const outerFront = tunnelPortalWorldPoint(portal, outer[segment], 0);
+      const outerFrontNext = tunnelPortalWorldPoint(portal, outer[segment + 1], 0);
+      const innerBack = tunnelPortalWorldPoint(portal, inner[segment], TUNNEL_PORTAL_DEPTH);
+      const innerBackNext = tunnelPortalWorldPoint(portal, inner[segment + 1], TUNNEL_PORTAL_DEPTH);
+      const outerBack = tunnelPortalWorldPoint(portal, outer[segment], TUNNEL_PORTAL_DEPTH);
+      const outerBackNext = tunnelPortalWorldPoint(portal, outer[segment + 1], TUNNEL_PORTAL_DEPTH);
 
       appendPortalQuad(positions, indices, innerFront, innerFrontNext, outerFrontNext, outerFront);
       appendPortalQuad(positions, indices, outerBack, outerBackNext, innerBackNext, innerBack);

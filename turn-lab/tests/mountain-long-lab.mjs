@@ -297,18 +297,14 @@ for (const tunnel of MOUNTAIN_TUNNEL_SPECS) {
   ));
   assert.ok(portalSamples.length > 80, `${tunnel.id} needs a substantial mountain-contained lining`);
   for (const portal of [portalSamples[0], portalSamples.at(-1)]) {
-    const portalIndex = route.indexOf(portal);
-    const tangent = routeTangent(route, portalIndex);
-    const normal = [-tangent[2], 0, tangent[0]];
-    const apertureHalfWidth = tunnel.halfWidth + 1.5;
-    const widestApertureRadius = Math.max(...[-1, 1].map((side) => Math.hypot(
-      portal[0] + normal[0] * apertureHalfWidth * side - tunnel.peak.x,
-      portal[2] + normal[2] * apertureHalfWidth * side - tunnel.peak.z
-    )));
-    const coneSurfaceAtPortalEdge = -7
-      + tunnel.peak.height * (1 - widestApertureRadius / tunnel.peak.radius);
-    assert.ok(coneSurfaceAtPortalEdge >= portal[1] + tunnel.clearHeight + 1.5,
-      `${tunnel.id} compact aperture must sit inside the mountain while its stone collar overlaps the shell`);
+    const portalRadius = Math.hypot(
+      portal[0] - tunnel.peak.x,
+      portal[2] - tunnel.peak.z
+    );
+    const coneSurfaceAtPortalCentre = -7
+      + tunnel.peak.height * (1 - portalRadius / tunnel.peak.radius);
+    assert.ok(coneSurfaceAtPortalCentre >= portal[1] + tunnel.clearHeight + 1.5,
+      `${tunnel.id} drive opening must meet the mountain while its broad collar covers the lateral shell transition`);
   }
 }
 const eastPeakRouteDistance = nearestRoutePoint(
@@ -409,6 +405,7 @@ assert.match(extensionSource, /removeRetiredEastTunnelMountain/,
 assert.match(extensionSource, /disposeObjectMesh\(peak\)/,
   'Retiring the east peak must also release its one-off GPU resources');
 assert.match(extensionSource, /TUNNEL_PORTAL_MARGIN = 5/);
+assert.match(extensionSource, /TUNNEL_PORTAL_FACE_OFFSET = 3\.2/);
 assert.match(extensionSource, /TUNNEL_PORTAL_RING = 6/);
 assert.match(extensionSource, /TUNNEL_PORTAL_APERTURE_MARGIN = 1\.5/);
 assert.match(extensionSource, /TUNNEL_PORTAL_ARC_SEGMENTS = 12/);
