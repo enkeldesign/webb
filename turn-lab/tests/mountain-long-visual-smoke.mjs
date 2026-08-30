@@ -186,11 +186,12 @@ assert.equal(runtimeMetrics.extension.tunnels, 2);
 assert.equal(runtimeMetrics.extension.carvedMountainMeshes, 2);
 assert.equal(runtimeMetrics.extension.carvedMountainTriangles, metrics.carvedMountainTriangles);
 assert.ok(runtimeMetrics.bounds.minZ < -370 && runtimeMetrics.bounds.maxZ > 190);
+// Pace notes are imported only when countdown/race guidance starts; their LAB
+// mapping and long-route semantics are covered by the static contract above.
 for (const resource of [
   '/turn-lab/tracks/definitions.js',
   '/turn-lab/tracks/mountain-layout.js',
   '/turn-lab/tracks/mountain-world-lab-r1.js',
-  '/turn-lab/tracks/pace-notes.js',
   '/turn-lab/race/mountain-lap-system.js'
 ]) {
   assert.ok(runtimeMetrics.labResources.includes(resource), `Scoped runtime did not load ${resource}`);
