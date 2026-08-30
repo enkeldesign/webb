@@ -136,16 +136,25 @@ for (const trackId of TRACK_IDS) {
   assert.match(safety?.title || '', /SAFETY$/);
 }
 
+assert.equal(byId('countryside-safety')?.description, 'Finish Countryside without going off-road in under 15 seconds.');
+assert.equal(byId('airport-safety')?.description, 'Finish Airport without going off-road in under 20 seconds.');
+assert.equal(byId('cliffside-safety')?.description, 'Finish Cliffside without going off-road in under 20 seconds.');
+assert.equal(byId('harbor-safety')?.description, 'Finish Harbor without going off-road in under 30 seconds.');
+assert.equal(byId('midnight-city-safety')?.description, 'Finish Midnight City without going off-road in under 70 seconds.');
+assert.equal(byId('mountain-safety')?.description, 'Finish Mountain without going off-road in under 40 seconds.');
+
 assert.equal(byId('an-army-of-me')?.title, 'AN ARMY OF ME');
 assert.equal(byId('an-army-of-me')?.trophies, 200);
 assert.match(byId('an-army-of-me')?.description || '', /four saved rivals on every track/i);
 assert.equal(byId('on-course-of-course')?.title, 'ON COURSE, OF COURSE');
 assert.equal(byId('on-course-of-course')?.trophies, 100);
 assert.match(byId('on-course-of-course')?.description || '', /without going off-road/i);
-assert.match(byId('on-course-of-course')?.recommendation || '', /Countryside, Airport and Cliffside < 0:30/);
-assert.match(byId('on-course-of-course')?.recommendation || '', /Harbor < 1:00/);
-assert.match(byId('on-course-of-course')?.recommendation || '', /Mountain < 1:50/);
-assert.match(byId('on-course-of-course')?.recommendation || '', /Midnight City < 2:00/);
+assert.match(byId('on-course-of-course')?.recommendation || '', /Countryside < 15 seconds/);
+assert.match(byId('on-course-of-course')?.recommendation || '', /Airport < 20 seconds/);
+assert.match(byId('on-course-of-course')?.recommendation || '', /Cliffside < 20 seconds/);
+assert.match(byId('on-course-of-course')?.recommendation || '', /Harbor < 30 seconds/);
+assert.match(byId('on-course-of-course')?.recommendation || '', /Midnight City < 70 seconds/);
+assert.match(byId('on-course-of-course')?.recommendation || '', /Mountain < 40 seconds/);
 
 for (const id of ['find-lilya', 'find-darvid', 'save-bella', 'satans-sedan']) {
   const achievement = byId(id);
@@ -200,12 +209,12 @@ assert.equal(completedAllTimeTrials((id) => id !== 'mountain-sprint'), false,
 assert.equal(completedAllTimeTrials((id) => id !== 'harbor-sprint', 'harbor-sprint'), true);
 
 assert.deepEqual(CLEAN_LAP_TARGETS, {
-  countryside: 30,
-  airport: 30,
-  cliffside: 30,
-  harbor: 60,
-  'midnight-city': 120,
-  mountain: 110
+  countryside: 15,
+  airport: 20,
+  cliffside: 20,
+  harbor: 30,
+  'midnight-city': 70,
+  mountain: 40
 });
 assert.equal(qualifiesForArmyLap({ rivalCountAtStart: 4 }, { position: 1, total: 5 }), true);
 assert.equal(qualifiesForArmyLap({ rivalCountAtStart: 3 }, { position: 1, total: 4 }), false);
@@ -216,16 +225,16 @@ assert.equal(qualifiesForCatchGas({ running: true, caught: true, overcharge: 0, 
 assert.equal(qualifiesForCatchGas({ running: true, caught: false, overcharge: 0.5, visible: true }), false);
 assert.equal(qualifiesForCleanLap(
   { trackId: 'countryside', onCourseThroughout: true },
-  { time: 29.999 }
+  { time: 14.999 }
 ), true);
 assert.equal(qualifiesForCleanLap(
   { trackId: 'countryside', onCourseThroughout: true },
-  { time: 30 }
+  { time: 15 }
 ), false, 'Matching a clean-lap target exactly must not count');
 assert.equal(qualifiesForCleanLap(
   { trackId: 'mountain', onCourseThroughout: true },
-  { time: 109.999 }
-), true, 'A clean Mountain lap below its 1:50 target should count');
+  { time: 39.999 }
+), true, 'A clean Mountain lap below its 40-second target should count');
 assert.equal(qualifiesForCleanLap(
   { trackId: 'harbor', onCourseThroughout: false },
   { time: 20 }
@@ -375,6 +384,8 @@ assert.match(productionCatalogSource, /title: 'GOT STARTED'/);
 assert.match(productionCatalogSource, /title: 'CATCH THE CHARGE'/);
 assert.match(productionCatalogSource, /TRACK_WINNER_ACHIEVEMENTS/);
 assert.match(productionCatalogSource, /TRACK_SAFETY_ACHIEVEMENTS/);
+assert.match(productionCatalogSource, /countryside: '15 seconds'/);
+assert.match(productionCatalogSource, /'midnight-city': '70 seconds'/);
 assert.match(legacyCatalogSource, /catalog-production\.js\?revision=r222-awd-label/,
   'The old Chromatic catalog URL must converge on the same production source of truth');
 
@@ -411,7 +422,7 @@ assert.match(challengeSource, /CATCH_GAS_MIN_OVERCHARGE = 0\.001/);
 assert.doesNotMatch(challengeSource, /CATCH_GAS_REQUIRED_MS|catchGasMs|3000/,
   'CATCH THE CHARGE must not retain a hidden timed-hold requirement');
 assert.match(challengeSource, /GOT_STARTED_ID = 'got-started'/);
-assert.match(challengeSource, /mountain: 110/);
+assert.match(challengeSource, /mountain: 40/);
 assert.match(challengeSource, /rivalCountAtStart/);
 assert.match(challengeSource, /runtime\.state\.offRoad === true/);
 assert.match(challengeSource, /achievements\.unlock\(\s*CATCH_THE_CHARGE_ID/,
