@@ -178,7 +178,7 @@ assert.deepEqual(
   TIME_TRIALS.map(({ trackId, targetSeconds }) => [trackId, targetSeconds]),
   [
     ['countryside', 11],
-    ['airport', 16],
+    ['airport', 15],
     ['cliffside', 15],
     ['harbor', 22],
     ['midnight-city', 52],
@@ -399,7 +399,7 @@ assert.match(darvidSource, /signalSecretAchievement\('find-darvid'/);
 assert.match(sedanSource, /signalSecretAchievement\('satans-sedan'/);
 
 assert.match(timeTrialSource, /targetSeconds: 11/);
-assert.match(timeTrialSource, /targetSeconds: 16/);
+assert.match(timeTrialSource, /targetSeconds: 15/);
 assert.match(timeTrialSource, /targetSeconds: 15/);
 assert.match(timeTrialSource, /targetSeconds: 22/);
 assert.match(timeTrialSource, /targetSeconds: 52/);
