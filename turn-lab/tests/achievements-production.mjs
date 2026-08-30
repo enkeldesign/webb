@@ -179,7 +179,7 @@ assert.deepEqual(
   [
     ['countryside', 11],
     ['airport', 15],
-    ['cliffside', 15],
+    ['cliffside', 14],
     ['harbor', 22],
     ['midnight-city', 52],
     ['mountain', 25]
@@ -400,7 +400,7 @@ assert.match(sedanSource, /signalSecretAchievement\('satans-sedan'/);
 
 assert.match(timeTrialSource, /targetSeconds: 11/);
 assert.match(timeTrialSource, /targetSeconds: 15/);
-assert.match(timeTrialSource, /targetSeconds: 15/);
+assert.match(timeTrialSource, /targetSeconds: 14/);
 assert.match(timeTrialSource, /targetSeconds: 22/);
 assert.match(timeTrialSource, /targetSeconds: 52/);
 assert.match(timeTrialSource, /targetSeconds: 25/);
