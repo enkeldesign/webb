@@ -5,12 +5,12 @@ import {
 
 export const CHALLENGE_PROGRESS_STORAGE_KEY = 'turn-achievement-challenges-v1';
 export const CLEAN_LAP_TARGETS = Object.freeze({
-  countryside: 30,
-  airport: 30,
-  cliffside: 30,
-  harbor: 60,
-  'midnight-city': 120,
-  mountain: 110
+  countryside: 15,
+  airport: 20,
+  cliffside: 20,
+  harbor: 30,
+  'midnight-city': 70,
+  mountain: 40
 });
 export const CATCH_GAS_MIN_OVERCHARGE = 0.001;
 
