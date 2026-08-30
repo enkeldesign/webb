@@ -9,7 +9,7 @@ import {
   MOUNTAIN_VIEW_SCREEN_SPECS
 } from './mountain-layout.js';
 
-const REVISION = 'mountain-long-course-r10-projected-portal-hood';
+const REVISION = 'mountain-long-course-r11-clean-portal-crowns';
 const CITY_ROAD_URL = '/postal/assets/kenney/roads/road-straight.glb';
 const FANTASY_FENCE_URL = '/turn/assets/scenery/mountain/fantasy/fence.glb';
 const NATURE_ROCK_URL = '/turn/assets/scenery/mountain/nature/cliff-waterfall-rock.glb';
@@ -32,7 +32,7 @@ const TUNNEL_PORTAL_RING = 6;
 // margin left 4.5 m of mountain under the six-metre ring, which read as a
 // sliced tongue at both ends of this curved tunnel.
 const TUNNEL_PORTAL_APERTURE_MARGIN = TUNNEL_PORTAL_RING - 0.75;
-const TUNNEL_PORTAL_APERTURE_HEIGHT_MARGIN = TUNNEL_PORTAL_RING - 2.25;
+const TUNNEL_PORTAL_APERTURE_HEIGHT_MARGIN = TUNNEL_PORTAL_RING - 0.75;
 const TUNNEL_PORTAL_RETURN_LENGTH = 34;
 const TUNNEL_PORTAL_ARC_SEGMENTS = 12;
 const TUNNEL_PEAK_RADIAL_SEGMENTS = 144;

@@ -415,8 +415,8 @@ assert.match(extensionSource, /TUNNEL_PORTAL_FACE_OFFSET = 6\.4/,
 assert.match(extensionSource, /TUNNEL_PORTAL_RING = 6/);
 assert.match(extensionSource, /TUNNEL_PORTAL_APERTURE_MARGIN = TUNNEL_PORTAL_RING - 0\.75/,
   'The baked opening must clear the full collar while retaining a narrow seam overlap');
-assert.match(extensionSource, /TUNNEL_PORTAL_APERTURE_HEIGHT_MARGIN = TUNNEL_PORTAL_RING - 2\.25/,
-  'The vertical carve must keep enough mountain overlap to visually seat the arch');
+assert.match(extensionSource, /TUNNEL_PORTAL_APERTURE_HEIGHT_MARGIN = TUNNEL_PORTAL_RING - 0\.75/,
+  'The projected crown must clear the faceted shell while retaining a narrow hidden overlap');
 assert.match(extensionSource, /TUNNEL_PORTAL_RETURN_LENGTH = 34/);
 assert.match(extensionSource, /TUNNEL_PORTAL_ARC_SEGMENTS = 12/);
 assert.match(extensionSource, /visibleTunnelSampleRange/,
