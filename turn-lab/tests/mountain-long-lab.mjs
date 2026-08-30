@@ -411,12 +411,15 @@ assert.match(extensionSource, /disposeObjectMesh\(peak\)/,
 assert.match(extensionSource, /TUNNEL_PORTAL_MARGIN = 5/);
 assert.match(extensionSource, /TUNNEL_PORTAL_FACE_OFFSET = 3\.2/);
 assert.match(extensionSource, /TUNNEL_PORTAL_RING = 6/);
-assert.match(extensionSource, /TUNNEL_PORTAL_APERTURE_MARGIN = 1\.5/);
+assert.match(extensionSource, /TUNNEL_PORTAL_APERTURE_MARGIN = TUNNEL_PORTAL_RING - 0\.75/,
+  'The baked opening must clear the full collar while retaining a narrow seam overlap');
 assert.match(extensionSource, /TUNNEL_PORTAL_ARC_SEGMENTS = 12/);
 assert.match(extensionSource, /visibleTunnelSampleRange/,
   'The visible arch and lining must start deeper than the hidden exterior camera carve');
 assert.match(extensionSource, /cameraExpansion = THREE\.MathUtils\.smoothstep/,
   'The wide camera cut must taper down at the portal instead of punching an oversized hole through the mountain face');
+assert.match(extensionSource, /tunnelPortalApertureMargin: TUNNEL_PORTAL_APERTURE_MARGIN/,
+  'The portal-shell clearance must be exposed to the browser geometry smoke test');
 assert.match(extensionSource, /expandedTunnelSampleRange/,
   'The hidden CPU cut should extend cleanly outside each integrated peak shell');
 assert.match(extensionSource, /carvePath: Object\.freeze/,

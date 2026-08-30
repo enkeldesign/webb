@@ -9,7 +9,7 @@ import {
   MOUNTAIN_VIEW_SCREEN_SPECS
 } from './mountain-layout.js';
 
-const REVISION = 'mountain-long-course-r7-snow-capped-tunnel-collar';
+const REVISION = 'mountain-long-course-r8-portal-shell-clearance';
 const CITY_ROAD_URL = '/postal/assets/kenney/roads/road-straight.glb';
 const FANTASY_FENCE_URL = '/turn/assets/scenery/mountain/fantasy/fence.glb';
 const NATURE_ROCK_URL = '/turn/assets/scenery/mountain/nature/cliff-waterfall-rock.glb';
@@ -24,7 +24,11 @@ const TUNNEL_PORTAL_MARGIN = 5;
 const TUNNEL_PORTAL_DEPTH = 4.8;
 const TUNNEL_PORTAL_FACE_OFFSET = 3.2;
 const TUNNEL_PORTAL_RING = 6;
-const TUNNEL_PORTAL_APERTURE_MARGIN = 1.5;
+// Keep a narrow rock overlap behind the constructed collar without leaving
+// enough of the oblique cone shell to project through it. The previous 1.5 m
+// margin left 4.5 m of mountain under the six-metre ring, which read as a
+// sliced tongue at both ends of this curved tunnel.
+const TUNNEL_PORTAL_APERTURE_MARGIN = TUNNEL_PORTAL_RING - 0.75;
 const TUNNEL_PORTAL_ARC_SEGMENTS = 12;
 const TUNNEL_PEAK_RADIAL_SEGMENTS = 144;
 const TUNNEL_PEAK_HEIGHT_SEGMENTS = 72;
@@ -607,8 +611,9 @@ function tunnelContainsWorldPoint(point, path, spec) {
     const floorY = THREE.MathUtils.lerp(start.y, end.y, along);
     const centreRadius = Math.hypot(nearestX - spec.peak.x, nearestZ - spec.peak.z);
     const cameraExpansion = THREE.MathUtils.smoothstep(spec.portalRadius - centreRadius, 0, 28);
-    // Keep the exterior aperture smaller than the broad stone collar so the
-    // one-time triangle cut cannot leave a visible saw-tooth gap around it.
+    // Cut almost to the collar's outer profile. A small overlap keeps the
+    // one-time triangle boundary hidden, while clearing the low, oblique cone
+    // shell that otherwise extends beyond the portal on the mountain side.
     // The full chase-camera clearance still blends in behind the portal.
     const portalCarveHalfWidth = spec.halfWidth + TUNNEL_PORTAL_APERTURE_MARGIN;
     const portalCarveClearHeight = spec.clearHeight + TUNNEL_PORTAL_APERTURE_MARGIN;
@@ -1212,6 +1217,7 @@ export async function installMountainLongExtension(world, samples, trackWidth = 
     tunnelPortalRocks: tunnels.portalRocks,
     tunnelReflectors: tunnels.reflectors,
     tunnelPortalRadius: Math.max(...MOUNTAIN_TUNNEL_SPECS.map((spec) => spec.portalRadius)),
+    tunnelPortalApertureMargin: TUNNEL_PORTAL_APERTURE_MARGIN,
     tunnelCarveHalfWidth: Math.max(...MOUNTAIN_TUNNEL_SPECS.map((spec) => spec.carveHalfWidth)),
     tunnelCarveClearHeight: Math.max(...MOUNTAIN_TUNNEL_SPECS.map((spec) => spec.carveClearHeight)),
     lowerTerrainVertices: terrain.vertices,

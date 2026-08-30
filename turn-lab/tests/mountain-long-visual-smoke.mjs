@@ -12,7 +12,9 @@ const views = [
   'bridge-release',
   'lower-village',
   'lower-tunnel',
+  'lower-tunnel-entry-drive',
   'lower-tunnel-interior',
+  'lower-tunnel-exit-drive',
   'forest',
   'final-climb'
 ];
@@ -171,6 +173,7 @@ assert.equal(metrics.tunnelPortalTriangles, 224);
 assert.equal(metrics.tunnelPortalRocks, 8);
 assert.ok(metrics.tunnelReflectors >= 12 && metrics.tunnelReflectors <= 24);
 assert.equal(metrics.tunnelPortalRadius, 99);
+assert.equal(metrics.tunnelPortalApertureMargin, 5.25);
 assert.equal(metrics.tunnelCarveHalfWidth, 34);
 assert.equal(metrics.tunnelCarveClearHeight, 23);
 assert.equal(metrics.lowerTerrainVertices, 2755);
