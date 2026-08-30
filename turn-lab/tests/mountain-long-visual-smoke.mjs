@@ -95,7 +95,7 @@ try {
     globalThis.__mountainLongChoice = globalThis.__turnChooseTrack();
     return true;
   });
-  await mountainHomeCard.click();
+  await runtimePage.locator('.track-select.is-visible .track-card[data-track-id="mountain"]').click();
   await runtimePage.locator('.track-select-continue').click();
   await runtimePage.waitForFunction(
     () => globalThis.__turnRuntime?.trackId === 'mountain'
@@ -155,7 +155,7 @@ assert.ok(metrics.carvedMountainTriangles > 0 && metrics.carvedMountainTriangles
 assert.ok(metrics.tunnelLiningTriangles >= 300 && metrics.tunnelLiningTriangles <= 700,
   `Tunnel lining should stay a modest batched mesh, got ${metrics.tunnelLiningTriangles} triangles`);
 assert.equal(metrics.tunnelPortalFrames, 12);
-assert.equal(metrics.tunnelPortalRocks, 16);
+assert.equal(metrics.tunnelPortalRocks, 8);
 assert.ok(metrics.tunnelReflectors >= 20 && metrics.tunnelReflectors <= 40);
 assert.equal(metrics.lowerTerrainVertices, 2755);
 assert.equal(metrics.lowerTerrainTriangles, 5264);

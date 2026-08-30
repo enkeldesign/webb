@@ -339,7 +339,9 @@ assert.match(extensionSource, /cpuCarvedMountainGeometry/,
   'The two existing integrated peaks should be carved once on the CPU instead of removed or duplicated');
 assert.match(extensionSource, /TUNNEL_PORTAL_MARGIN = 5/);
 assert.match(extensionSource, /expandedTunnelSampleRange/,
-  'Tunnel portals and linings should extend cleanly outside each integrated peak shell');
+  'The hidden CPU cut should extend cleanly outside each integrated peak shell');
+assert.match(extensionSource, /carvePath: Object\.freeze/,
+  'The hidden exterior carve path must be separate from the visible tunnel lining');
 assert.match(extensionSource, /new THREE\.ConeGeometry\(spec\.peak\.radius, spec\.peak\.height, 48, 24\)/,
   'Only the two carved peaks should receive enough one-time tessellation for clean openings');
 assert.match(extensionSource, /previousGeometry\?\.dispose\?\.\(\)/,
