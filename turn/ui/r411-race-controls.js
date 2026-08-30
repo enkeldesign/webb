@@ -1,4 +1,5 @@
 import './leader-marker-r500.js?revision=r227-night-marker-outline';
+import './minor-ux-polish-r229.js?revision=r229-discoverability-cues';
 
 function installStyles() {
   if (document.querySelector('#turn-r411-race-control-styles')) return;
