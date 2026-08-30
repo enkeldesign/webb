@@ -159,6 +159,11 @@ assert.equal(metrics.carvedMountainMeshes, 1);
 assert.equal(metrics.carvedTunnelPeaks, 1);
 assert.ok(metrics.carvedMountainTriangles > 0 && metrics.carvedMountainTriangles <= 1800,
   `The one-time camera-safe tunnel cut removed an unexpected triangle count: ${metrics.carvedMountainTriangles}`);
+assert.ok(
+  metrics.carvedMountainRenderedTriangles >= 19000
+    && metrics.carvedMountainRenderedTriangles <= 21000,
+  `The retained tunnel peak exceeded its static triangle budget: ${metrics.carvedMountainRenderedTriangles}`
+);
 assert.ok(metrics.tunnelLiningTriangles >= 140 && metrics.tunnelLiningTriangles <= 360,
   `Tunnel lining should stay a modest batched mesh, got ${metrics.tunnelLiningTriangles} triangles`);
 assert.equal(metrics.tunnelPortalArches, 2);
@@ -199,6 +204,10 @@ assert.equal(runtimeMetrics.extension.removedMountainMeshes, 1);
 assert.equal(runtimeMetrics.extension.tunnelSceneryTreesRemoved, metrics.tunnelSceneryTreesRemoved);
 assert.equal(runtimeMetrics.extension.carvedMountainMeshes, 1);
 assert.equal(runtimeMetrics.extension.carvedMountainTriangles, metrics.carvedMountainTriangles);
+assert.equal(
+  runtimeMetrics.extension.carvedMountainRenderedTriangles,
+  metrics.carvedMountainRenderedTriangles
+);
 assert.ok(runtimeMetrics.bounds.minZ < -370 && runtimeMetrics.bounds.maxZ > 190);
 // Pace notes are imported only when countdown/race guidance starts; their LAB
 // mapping and long-route semantics are covered by the static contract above.

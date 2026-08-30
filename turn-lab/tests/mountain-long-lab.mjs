@@ -431,6 +431,8 @@ assert.doesNotMatch(extensionSource, /onBeforeCompile|customProgramCacheKey/,
   'Tunnel openings must not add recurring per-fragment shader work to the large mountain occluders');
 assert.match(extensionSource, /carvedMountainMeshes: tunnels\.carvedMountainMeshes/);
 assert.match(extensionSource, /carvedMountainTriangles: tunnels\.carvedMountainTriangles/);
+assert.match(extensionSource, /carvedMountainRenderedTriangles: tunnels\.carvedMountainRenderedTriangles/,
+  'The retained peak total must be exposed so the visual smoke test guards its static triangle budget');
 assert.match(extensionSource, /removedMountainMeshes: tunnels\.removedMountainMeshes/);
 assert.match(extensionSource, /tunnelSceneryTreesRemoved: tunnels\.removedSceneryTrees/);
 assert.match(extensionSource, /clearTunnelSpruceInstances/,

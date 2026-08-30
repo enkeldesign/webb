@@ -691,7 +691,8 @@ function cpuCarvedMountainGeometry(peak, path, spec) {
   geometry.computeBoundingSphere();
   return {
     geometry,
-    removedTriangles: (sourceIndex.count - kept.length) / 3
+    removedTriangles: (sourceIndex.count - kept.length) / 3,
+    renderedTriangles: kept.length / 3
   };
 }
 
@@ -721,6 +722,7 @@ function removeRetiredEastTunnelMountain(world) {
 function installTunnelMountainCarves(world, tunnels) {
   let carved = 0;
   let removedTriangles = 0;
+  let renderedTriangles = 0;
   for (const { spec, carvePath } of tunnels) {
     const peak = findIntegratedPeak(world, spec.peak);
     if (!peak?.isMesh || !peak.material) continue;
@@ -730,9 +732,10 @@ function installTunnelMountainCarves(world, tunnels) {
     previousGeometry?.dispose?.();
     peak.userData.turnMountainTunnelCarve = spec.id;
     removedTriangles += carve.removedTriangles;
+    renderedTriangles += carve.renderedTriangles;
     carved += 1;
   }
-  return { carved, removedTriangles };
+  return { carved, removedTriangles, renderedTriangles };
 }
 
 function pointInsideTunnelSceneryClearance(point, tunnels) {
@@ -811,6 +814,7 @@ function installMountainTunnels(world, samples, rockSource, terrainHeightAt) {
     removedSceneryTrees,
     carvedMountainMeshes: carves.carved,
     carvedMountainTriangles: carves.removedTriangles,
+    carvedMountainRenderedTriangles: carves.renderedTriangles,
     liningTriangles: lining.triangles,
     portalArches: arches.arches,
     portalTriangles: arches.triangles,
@@ -1201,6 +1205,7 @@ export async function installMountainLongExtension(world, samples, trackWidth = 
     tunnelSceneryTreesRemoved: tunnels.removedSceneryTrees,
     carvedMountainMeshes: tunnels.carvedMountainMeshes,
     carvedMountainTriangles: tunnels.carvedMountainTriangles,
+    carvedMountainRenderedTriangles: tunnels.carvedMountainRenderedTriangles,
     tunnelLiningTriangles: tunnels.liningTriangles,
     tunnelPortalArches: tunnels.portalArches,
     tunnelPortalTriangles: tunnels.portalTriangles,
