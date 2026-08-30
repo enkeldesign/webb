@@ -104,26 +104,34 @@ export const MOUNTAIN_BRIDGE_CENTERS = Object.freeze([
   Object.freeze({ x: 336, z: -209 })
 ]);
 
-// The production mountain body contains two deliberately large integrated
-// peaks which the longer route crosses. Keep those occluders, but carve and
-// line explicit driveable passages through them instead of letting asphalt
-// visually intersect the rock shell.
+// The east-valley peak used by the first tunnel is deliberately retired: the
+// lake bridge is the landmark in that section and the road now releases into
+// open valley immediately afterwards. Keep the lower-village peak as the one
+// authored tunnel mountain.
+export const MOUNTAIN_REMOVED_EAST_PEAK = Object.freeze({
+  id: 'east-valley-open-pass',
+  x: 432,
+  z: -266,
+  radius: 148,
+  height: 151
+});
+
 export const MOUNTAIN_TUNNEL_SPECS = Object.freeze([
-  Object.freeze({
-    id: 'east-valley',
-    start: Object.freeze({ x: 318, z: -207 }),
-    end: Object.freeze({ x: 330, z: -370 }),
-    peak: Object.freeze({ x: 432, z: -266, radius: 148, height: 151 }),
-    halfWidth: 20.5,
-    clearHeight: 14
-  }),
   Object.freeze({
     id: 'lower-village',
     start: Object.freeze({ x: -330, z: -335 }),
     end: Object.freeze({ x: -325, z: -120 }),
     peak: Object.freeze({ x: -392, z: -228, radius: 132, height: 136 }),
-    halfWidth: 20.5,
-    clearHeight: 14
+    // The visible collar begins at the readable mountain face. Its compact
+    // cut is covered by a broader constructed stone surround and Kenney
+    // portal rocks instead of exposing the cone's triangle boundary.
+    // The wider hidden cut covers TURN's complete no-drop envelope plus the
+    // low-speed chase-camera offset.
+    portalRadius: 99,
+    halfWidth: 21,
+    clearHeight: 18,
+    carveHalfWidth: 34,
+    carveClearHeight: 23
   })
 ]);
 
@@ -180,7 +188,6 @@ export const MOUNTAIN_LAYOUT_RULES = Object.freeze({
     'slalom-descent',
     'waterfall',
     'lake-bridge',
-    'east-valley-tunnel',
     'east-valley-descent',
     'lower-run',
     'lower-village-tunnel',

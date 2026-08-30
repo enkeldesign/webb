@@ -17,7 +17,10 @@
   <div id="label">TURN LAB MOUNTAIN long course</div>
   <script type="module">
     import * as THREE from 'three';
-    import { MOUNTAIN_CONTROL_POINTS } from '/turn-lab/tracks/mountain-layout.js';
+    import {
+      MOUNTAIN_CONTROL_POINTS,
+      MOUNTAIN_REMOVED_EAST_PEAK
+    } from '/turn-lab/tracks/mountain-layout.js';
     import { installMountainWorld } from '/turn-lab/tracks/mountain-world-lab-r1.js';
 
     const TRACK_WIDTH = 27;
@@ -25,13 +28,11 @@
     const VIEWS = Object.freeze({
       aerial: { position:[620,610,-690], target:[0,7,-115], fov:49 },
       summit: { position:[330,110,165], target:[135,39,80], fov:52 },
-      // The production ridge at 432/-266 and the lower-village peak at
-      // -392/-228 are intentional sightline screens. Review from their open
-      // sides so the bridge modules and house grounding remain inspectable.
       bridge: { position:[70,96,-92], target:[255,3,-205], fov:47 },
-      'east-tunnel': { position:[235,48,-132], target:[340,6,-224], fov:49 },
+      'bridge-release': { position:[205,112,-92], target:[390,3,-285], fov:49 },
       'lower-village': { position:[-180,155,-430], target:[-345,2,-230], fov:52 },
-      'lower-tunnel': { position:[-210,52,-405], target:[-340,6,-326], fov:49 },
+      'lower-tunnel': { position:[-225,52,-400], target:[-375,8,-310], fov:49 },
+      'lower-tunnel-interior': { position:[-402,10.5,-272], target:[-399,4,-218], fov:68 },
       forest: { position:[20,78,-430], target:[-70,2,-285], fov:52 },
       'final-climb': { position:[245,72,-330], target:[80,3,-235], fov:48 }
     });
@@ -91,8 +92,17 @@
     const extensionLights = [];
     const extensionShadowCasters = [];
     let instancedMeshes = 0;
+    let eastPeakMeshes = 0;
+    let carvedTunnelPeaks = 0;
     world.traverse((object) => {
       if (object.isInstancedMesh) instancedMeshes += 1;
+      if (object.name === 'Mountain integrated snowy ridge r3') {
+        if (Math.hypot(
+          object.position.x - MOUNTAIN_REMOVED_EAST_PEAK.x,
+          object.position.z - MOUNTAIN_REMOVED_EAST_PEAK.z
+        ) <= 2) eastPeakMeshes += 1;
+        if (object.userData.turnMountainTunnelCarve === 'lower-village') carvedTunnelPeaks += 1;
+      }
       if (!/LAB/.test(object.name || '')) return;
       extensionObjects.push(object);
       if (object.isLight) extensionLights.push(object);
@@ -123,14 +133,24 @@
       bridgePillars: Number(extension.bridgePillars || 0),
       bridgeAbutments: Number(extension.bridgeAbutments || 0),
       bridgeEntryRailLength: Number(extension.bridgeEntryRailLength || 0),
+      bridgeOpenLeftEntry: extension.bridgeOpenLeftEntry === true,
       tunnels: Number(extension.tunnels || 0),
       tunnelPortals: Number(extension.tunnelPortals || 0),
+      removedMountainMeshes: Number(extension.removedMountainMeshes || 0),
+      tunnelSceneryTreesRemoved: Number(extension.tunnelSceneryTreesRemoved || 0),
       carvedMountainMeshes: Number(extension.carvedMountainMeshes || 0),
       carvedMountainTriangles: Number(extension.carvedMountainTriangles || 0),
+      carvedMountainRenderedTriangles: Number(extension.carvedMountainRenderedTriangles || 0),
       tunnelLiningTriangles: Number(extension.tunnelLiningTriangles || 0),
-      tunnelPortalFrames: Number(extension.tunnelPortalFrames || 0),
+      tunnelPortalArches: Number(extension.tunnelPortalArches || 0),
+      tunnelPortalTriangles: Number(extension.tunnelPortalTriangles || 0),
       tunnelPortalRocks: Number(extension.tunnelPortalRocks || 0),
       tunnelReflectors: Number(extension.tunnelReflectors || 0),
+      tunnelPortalRadius: Number(extension.tunnelPortalRadius || 0),
+      tunnelCarveHalfWidth: Number(extension.tunnelCarveHalfWidth || 0),
+      tunnelCarveClearHeight: Number(extension.tunnelCarveClearHeight || 0),
+      eastPeakMeshes,
+      carvedTunnelPeaks,
       lowerTerrainVertices: Number(extension.lowerTerrainVertices || 0),
       lowerTerrainTriangles: Number(extension.lowerTerrainTriangles || 0),
       lowerVillageHouses: Number(extension.lowerVillageHouses || 0),

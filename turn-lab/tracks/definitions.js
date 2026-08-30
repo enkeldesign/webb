@@ -3,27 +3,31 @@
 import * as production from '/turn/tracks/definitions.js?lab-base=mountain-long-r1';
 import { MOUNTAIN_BRIDGE_CENTERS } from './mountain-layout.js';
 
-const BRIDGE_RAIL_COLLIDERS = Object.freeze(MOUNTAIN_BRIDGE_CENTERS.flatMap(({ x, z }, index) => [
-  Object.freeze({
+const BRIDGE_RAIL_COLLIDERS = Object.freeze(MOUNTAIN_BRIDGE_CENTERS.flatMap(({ x, z }, index) => {
+  const colliders = [];
+  // The west approach is still turning as it reaches the deck. The first
+  // north (+z) collider was intercepting the car while it was visibly on the
+  // left-hand asphalt, because TURN expands boxes by the car radius. Leave
+  // that first side open; the no-drop road envelope remains active and the
+  // second north rail takes over before the bridge's exposed span.
+  if (index > 0) colliders.push(Object.freeze({
     id: `mountain-lab-bridge-north-${index + 1}`,
     type: 'box',
-    // The west approach is still turning as it reaches the deck. Start the
-    // first hard rail where the shortened visible rail begins, leaving a
-    // contained but forgiving funnel onto the bridge.
-    minX: x - (index === 0 ? 3.8 : 16.6),
+    minX: x - 16.6,
     maxX: x + 16.6,
     minZ: z + 14.0,
     maxZ: z + 23.0
-  }),
-  Object.freeze({
+  }));
+  colliders.push(Object.freeze({
     id: `mountain-lab-bridge-south-${index + 1}`,
     type: 'box',
     minX: x - (index === 0 ? 3.8 : 16.6),
     maxX: x + 16.6,
     minZ: z - 23.0,
     maxZ: z - 14.0
-  })
-]));
+  }));
+  return colliders;
+}));
 
 export const DEFAULT_TRACK_ID = production.DEFAULT_TRACK_ID;
 export const TRACK_SAMPLE_COUNT = production.TRACK_SAMPLE_COUNT;
