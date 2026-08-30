@@ -8,21 +8,23 @@ const [
   yourTurnMap,
   yourTurnCss,
   turnIndex,
-  turnControls
+  turnControls,
+  minorUx
 ] = await Promise.all([
   fs.readFile(new URL('../yourturn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/race-controls-r411.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/track-map-r417.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../yourturn/r411.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/ui/r411-race-controls.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/ui/r411-race-controls.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/ui/minor-ux-polish-r229.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(yourTurnIndex, /race-controls-r417\.js\?revision=r417/);
 assert.match(yourTurnIndex, /track-map-r417\.js\?revision=r417/);
 assert.match(yourTurnIndex, /r411\.css\?revision=r411/);
-assert.match(turnIndex, /ui\/r411-race-controls\.js\?revision=[^"']+/,
-  'TURN must load its r411 race-control behavior regardless of the current cache revision');
+assert.match(turnIndex, /ui\/r411-race-controls\.js\?revision=r229-minor-ux-polish/,
+  'TURN must cache-bust the race-control entry when the UX polish bundle changes');
 
 assert.match(yourTurnMap, /getTrackPreviewPoints/,
   'YOUR TURN maps must derive from TURN canonical track geometry');
@@ -63,7 +65,38 @@ assert.match(turnControls, /back-to-start-button[\s\S]*#ff7b54/,
   'TURN Restart Lap must be orange during a valid active lap');
 assert.match(turnControls, /back-to-start-button\.is-lap-invalid[\s\S]*#ff6b6b/,
   'TURN Restart Lap must turn red for LAP VOID');
+assert.match(turnControls, /minor-ux-polish-r229\.js\?revision=r229-discoverability-cues/,
+  'TURN must load the isolated minor UX polish bundle from the existing race-control entry');
 assert.doesNotMatch(turnControls, /gap:|align-items:|top:|bottom:|translate|margin:/,
   'The TURN r411 control patch must not copy incidental mockup layout changes');
 
-console.log('TURN/YOUR TURN r411 maps and race-control alignment regression passed.');
+assert.match(
+  minorUx,
+  /button\[data-achievement-filter="new"\]\[aria-pressed="true"\]:not\(:disabled\)::after/,
+  'The NEW filter must show its notification dot only while the filter is active'
+);
+assert.match(minorUx, /background: var\(--turn-action-warning, #ffd43b\)/,
+  'The active NEW filter dot must use TURN warning yellow');
+assert.match(minorUx, /PERK_ATTENTION_STORAGE_KEY = 'turn-perk-first-encounter-seen-v1'/,
+  'The PERK attention cue must be a persisted first-encounter behavior');
+assert.match(
+  minorUx,
+  /\.lot-showroom \.lot-perk-button:not\(\.is-layout-placeholder\):not\(:disabled\)/,
+  'PERK attention must wait until the player actually encounters an available perk'
+);
+assert.match(minorUx, /turn-first-perk-attention/,
+  'The first available PERK button must receive the attention animation class');
+assert.match(minorUx, /prefers-reduced-motion: reduce/,
+  'PERK attention must have a reduced-motion treatment');
+assert.match(minorUx, /className = 'turn-player-marker turn-spectate-player-marker'/,
+  'Spectate must reuse the established player-marker visual language');
+assert.match(minorUx, /globalThis\.__turnGetSpectateV3State\?\.\(\)/,
+  'The spectate marker must follow the currently selected spectate record');
+assert.match(minorUx, /runtime\.competitorCars\?\.\[current\.index\]/,
+  'The marker must attach to the selected spectated car rather than the ordinary player car');
+assert.match(minorUx, /playerMarkerOutlineColor\(runtime\.state\?\.trackId\)/,
+  'The spectate marker must retain the night-track white outline behavior');
+assert.match(minorUx, /typeof document !== 'undefined' && typeof window !== 'undefined'/,
+  'The polish bundle must guard browser-only startup work');
+
+console.log('TURN/YOUR TURN r411 maps, race-control alignment and minor UX polish regression passed.');
