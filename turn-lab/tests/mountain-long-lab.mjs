@@ -296,11 +296,20 @@ for (const tunnel of MOUNTAIN_TUNNEL_SPECS) {
     Math.hypot(point[0] - tunnel.peak.x, point[2] - tunnel.peak.z) <= tunnel.portalRadius
   ));
   assert.ok(portalSamples.length > 80, `${tunnel.id} needs a substantial mountain-contained lining`);
-  const highestPortalRoad = Math.max(portalSamples[0][1], portalSamples.at(-1)[1]);
-  const coneSurfaceAtPortal = -7
-    + tunnel.peak.height * (1 - tunnel.portalRadius / tunnel.peak.radius);
-  assert.ok(coneSurfaceAtPortal >= highestPortalRoad + tunnel.clearHeight + 3.2,
-    `${tunnel.id} arch must sit inside enough mountain shell to look structurally grounded`);
+  for (const portal of [portalSamples[0], portalSamples.at(-1)]) {
+    const portalIndex = route.indexOf(portal);
+    const tangent = routeTangent(route, portalIndex);
+    const normal = [-tangent[2], 0, tangent[0]];
+    const outerHalfWidth = tunnel.halfWidth + 3.2;
+    const widestPortalRadius = Math.max(...[-1, 1].map((side) => Math.hypot(
+      portal[0] + normal[0] * outerHalfWidth * side - tunnel.peak.x,
+      portal[2] + normal[2] * outerHalfWidth * side - tunnel.peak.z
+    )));
+    const coneSurfaceAtPortalEdge = -7
+      + tunnel.peak.height * (1 - widestPortalRadius / tunnel.peak.radius);
+    assert.ok(coneSurfaceAtPortalEdge >= portal[1] + tunnel.clearHeight + 3.2,
+      `${tunnel.id} complete arch width must sit inside enough mountain shell to look structurally grounded`);
+  }
 }
 const eastPeakRouteDistance = nearestRoutePoint(
   route,
@@ -409,7 +418,7 @@ assert.match(extensionSource, /expandedTunnelSampleRange/,
   'The hidden CPU cut should extend cleanly outside each integrated peak shell');
 assert.match(extensionSource, /carvePath: Object\.freeze/,
   'The hidden exterior carve path must be separate from the visible tunnel lining');
-assert.match(extensionSource, /new THREE\.ConeGeometry\(spec\.peak\.radius, spec\.peak\.height, 48, 24\)/,
+assert.match(extensionSource, /new THREE\.ConeGeometry\(spec\.peak\.radius, spec\.peak\.height, 72, 36\)/,
   'Only the retained tunnel peak should receive enough one-time tessellation for a clean opening');
 assert.match(extensionSource, /previousGeometry\?\.dispose\?\.\(\)/,
   'The replaced low-detail peak geometry should be released after the one-time carve');
@@ -419,6 +428,9 @@ assert.doesNotMatch(extensionSource, /onBeforeCompile|customProgramCacheKey/,
 assert.match(extensionSource, /carvedMountainMeshes: tunnels\.carvedMountainMeshes/);
 assert.match(extensionSource, /carvedMountainTriangles: tunnels\.carvedMountainTriangles/);
 assert.match(extensionSource, /removedMountainMeshes: tunnels\.removedMountainMeshes/);
+assert.match(extensionSource, /tunnelSceneryTreesRemoved: tunnels\.removedSceneryTrees/);
+assert.match(extensionSource, /clearTunnelSpruceInstances/,
+  'Production spruce batching should be compacted once so trees do not grow inside the retained tunnel');
 assert.match(extensionSource, /tunnelPortalArches: tunnels\.portalArches/);
 assert.match(extensionSource, /\+ tunnels\.drawCalls/,
   'Tunnel lining, portals and reflectors must be included in the draw-call budget');

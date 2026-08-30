@@ -632,7 +632,7 @@ function cpuCarvedMountainGeometry(peak, path, spec) {
   // This is the only higher-detail peak mesh in the LAB. The extra
   // tessellation makes the baked portal cut clean while staying far cheaper
   // than a per-fragment carve on the large occluders every frame.
-  const geometry = new THREE.ConeGeometry(spec.peak.radius, spec.peak.height, 48, 24);
+  const geometry = new THREE.ConeGeometry(spec.peak.radius, spec.peak.height, 72, 36);
   mountainVertexColors(geometry, spec);
   peak.updateWorldMatrix(true, false);
   const positions = geometry.getAttribute('position');
@@ -706,9 +706,69 @@ function installTunnelMountainCarves(world, tunnels) {
   return { carved, removedTriangles };
 }
 
+function pointInsideTunnelSceneryClearance(point, tunnels) {
+  for (const { spec, path } of tunnels) {
+    if (Math.hypot(point.x - spec.peak.x, point.z - spec.peak.z) > spec.peak.radius + 3) continue;
+    for (let index = 0; index < path.length - 1; index += 1) {
+      const start = path[index].point;
+      const end = path[index + 1].point;
+      const dx = end.x - start.x;
+      const dz = end.z - start.z;
+      const denominator = Math.max(0.0001, dx * dx + dz * dz);
+      const along = THREE.MathUtils.clamp(
+        ((point.x - start.x) * dx + (point.z - start.z) * dz) / denominator,
+        0,
+        1
+      );
+      const nearestX = start.x + dx * along;
+      const nearestZ = start.z + dz * along;
+      if (Math.hypot(point.x - nearestX, point.z - nearestZ) <= spec.halfWidth + 6) return true;
+    }
+  }
+  return false;
+}
+
+function clearTunnelSpruceInstances(world, tunnels) {
+  const crowns = world.getObjectByName('Mountain terrain-grounded spruce crowns r3');
+  const snowCaps = world.getObjectByName('Mountain terrain-grounded spruce snow caps r3');
+  const siblings = crowns?.parent?.children;
+  const crownIndex = siblings?.indexOf(crowns) ?? -1;
+  const meshes = crownIndex > 0
+    ? [siblings[crownIndex - 1], crowns, siblings[crownIndex + 1], snowCaps]
+    : [];
+  if (
+    meshes.length !== 4
+    || new Set(meshes).size !== 4
+    || meshes.some((mesh) => !mesh?.isInstancedMesh || mesh.count !== crowns.count)
+  ) return 0;
+
+  const matrix = new THREE.Matrix4();
+  const position = new THREE.Vector3();
+  const keep = [];
+  for (let index = 0; index < crowns.count; index += 1) {
+    crowns.getMatrixAt(index, matrix);
+    position.setFromMatrixPosition(matrix);
+    if (!pointInsideTunnelSceneryClearance(position, tunnels)) keep.push(index);
+  }
+  const removed = crowns.count - keep.length;
+  if (!removed) return 0;
+
+  for (const mesh of meshes) {
+    keep.forEach((sourceIndex, targetIndex) => {
+      mesh.getMatrixAt(sourceIndex, matrix);
+      mesh.setMatrixAt(targetIndex, matrix);
+    });
+    mesh.count = keep.length;
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.computeBoundingSphere();
+  }
+  return removed;
+}
+
 function installMountainTunnels(world, samples, rockSource, terrainHeightAt) {
   const removedMountainMeshes = removeRetiredEastTunnelMountain(world);
   const tunnels = tunnelPaths(samples);
+  const removedSceneryTrees = clearTunnelSpruceInstances(world, tunnels);
   const portals = tunnelPortals(tunnels);
   const carves = installTunnelMountainCarves(world, tunnels);
   const lining = installTunnelLining(world, tunnels);
@@ -719,6 +779,7 @@ function installMountainTunnels(world, samples, rockSource, terrainHeightAt) {
     tunnels: tunnels.length,
     portals: portals.length,
     removedMountainMeshes,
+    removedSceneryTrees,
     carvedMountainMeshes: carves.carved,
     carvedMountainTriangles: carves.removedTriangles,
     liningTriangles: lining.triangles,
@@ -1108,6 +1169,7 @@ export async function installMountainLongExtension(world, samples, trackWidth = 
     tunnels: tunnels.tunnels,
     tunnelPortals: tunnels.portals,
     removedMountainMeshes: tunnels.removedMountainMeshes,
+    tunnelSceneryTreesRemoved: tunnels.removedSceneryTrees,
     carvedMountainMeshes: tunnels.carvedMountainMeshes,
     carvedMountainTriangles: tunnels.carvedMountainTriangles,
     tunnelLiningTriangles: tunnels.liningTriangles,
