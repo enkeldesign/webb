@@ -9,9 +9,10 @@ const views = [
   'aerial',
   'summit',
   'bridge',
-  'east-tunnel',
+  'bridge-release',
   'lower-village',
   'lower-tunnel',
+  'lower-tunnel-interior',
   'forest',
   'final-climb'
 ];
@@ -143,20 +144,28 @@ assert.ok(metrics.routeLength > 3750 && metrics.routeLength < 3950);
 assert.equal(metrics.runtimeSamples, 2160);
 assert.equal(metrics.productionWorldSamples, 1080);
 assert.equal(metrics.bridgeDeckModules, 6);
-assert.equal(metrics.bridgeRailModules, 12);
+assert.equal(metrics.bridgeRailModules, 11);
 assert.equal(metrics.bridgePillars, 6);
 assert.equal(metrics.bridgeAbutments, 4);
 assert.equal(metrics.bridgeEntryRailLength, 20.5);
-assert.equal(metrics.tunnels, 2);
-assert.equal(metrics.tunnelPortals, 4);
-assert.equal(metrics.carvedMountainMeshes, 2);
-assert.ok(metrics.carvedMountainTriangles > 0 && metrics.carvedMountainTriangles <= 800,
-  `The two one-time CPU tunnel cuts removed an unexpected triangle count: ${metrics.carvedMountainTriangles}`);
-assert.ok(metrics.tunnelLiningTriangles >= 300 && metrics.tunnelLiningTriangles <= 700,
+assert.equal(metrics.bridgeOpenLeftEntry, true);
+assert.equal(metrics.tunnels, 1);
+assert.equal(metrics.tunnelPortals, 2);
+assert.equal(metrics.removedMountainMeshes, 1);
+assert.equal(metrics.eastPeakMeshes, 0, 'The retired post-bridge tunnel mountain must be absent');
+assert.equal(metrics.carvedMountainMeshes, 1);
+assert.equal(metrics.carvedTunnelPeaks, 1);
+assert.ok(metrics.carvedMountainTriangles > 0 && metrics.carvedMountainTriangles <= 600,
+  `The one-time camera-safe tunnel cut removed an unexpected triangle count: ${metrics.carvedMountainTriangles}`);
+assert.ok(metrics.tunnelLiningTriangles >= 140 && metrics.tunnelLiningTriangles <= 360,
   `Tunnel lining should stay a modest batched mesh, got ${metrics.tunnelLiningTriangles} triangles`);
-assert.equal(metrics.tunnelPortalFrames, 12);
+assert.equal(metrics.tunnelPortalArches, 2);
+assert.equal(metrics.tunnelPortalTriangles, 224);
 assert.equal(metrics.tunnelPortalRocks, 8);
-assert.ok(metrics.tunnelReflectors >= 20 && metrics.tunnelReflectors <= 40);
+assert.ok(metrics.tunnelReflectors >= 12 && metrics.tunnelReflectors <= 24);
+assert.equal(metrics.tunnelPortalRadius, 99);
+assert.equal(metrics.tunnelCarveHalfWidth, 34);
+assert.equal(metrics.tunnelCarveClearHeight, 23);
 assert.equal(metrics.lowerTerrainVertices, 2755);
 assert.equal(metrics.lowerTerrainTriangles, 5264);
 assert.equal(metrics.lowerVillageHouses, 8);
@@ -182,8 +191,10 @@ assert.equal(runtimeMetrics.sampling.runtimeSamples, 2160);
 assert.equal(runtimeMetrics.sampling.productionWorldSamples, 1080);
 assert.equal(runtimeMetrics.extension.bridgeDeckModules, 6);
 assert.equal(runtimeMetrics.extension.bridgeEntryRailLength, 20.5);
-assert.equal(runtimeMetrics.extension.tunnels, 2);
-assert.equal(runtimeMetrics.extension.carvedMountainMeshes, 2);
+assert.equal(runtimeMetrics.extension.bridgeOpenLeftEntry, true);
+assert.equal(runtimeMetrics.extension.tunnels, 1);
+assert.equal(runtimeMetrics.extension.removedMountainMeshes, 1);
+assert.equal(runtimeMetrics.extension.carvedMountainMeshes, 1);
 assert.equal(runtimeMetrics.extension.carvedMountainTriangles, metrics.carvedMountainTriangles);
 assert.ok(runtimeMetrics.bounds.minZ < -370 && runtimeMetrics.bounds.maxZ > 190);
 // Pace notes are imported only when countdown/race guidance starts; their LAB

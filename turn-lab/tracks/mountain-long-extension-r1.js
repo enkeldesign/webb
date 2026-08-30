@@ -4,11 +4,12 @@ import {
   MOUNTAIN_BRIDGE_CENTERS,
   MOUNTAIN_LOWER_TERRAIN_BOUNDS,
   MOUNTAIN_LOWER_VILLAGE_SITES,
+  MOUNTAIN_REMOVED_EAST_PEAK,
   MOUNTAIN_TUNNEL_SPECS,
   MOUNTAIN_VIEW_SCREEN_SPECS
 } from './mountain-layout.js';
 
-const REVISION = 'mountain-long-course-r3-tunnels';
+const REVISION = 'mountain-long-course-r4-open-pass-arched-tunnel';
 const CITY_ROAD_URL = '/postal/assets/kenney/roads/road-straight.glb';
 const FANTASY_FENCE_URL = '/turn/assets/scenery/mountain/fantasy/fence.glb';
 const NATURE_ROCK_URL = '/turn/assets/scenery/mountain/nature/cliff-waterfall-rock.glb';
@@ -20,6 +21,9 @@ const BRIDGE_TARGET_WIDTH = 30.4;
 const BRIDGE_DECK_THICKNESS = 0.08;
 const BRIDGE_RAIL_HEIGHT = 2.05;
 const TUNNEL_PORTAL_MARGIN = 5;
+const TUNNEL_PORTAL_DEPTH = 4.8;
+const TUNNEL_PORTAL_RING = 3.2;
+const TUNNEL_PORTAL_ARC_SEGMENTS = 12;
 const WARM_LIGHT = 0xffc766;
 const WARM_POOL = 0xffb000;
 const INK = 0x17191d;
@@ -190,7 +194,7 @@ function installBridgeDeck(world, source, samples) {
 
 function installBridgeRails(world, source, samples, trackWidth) {
   const modules = bridgeSamples(samples);
-  const mesh = makeAssetInstances(source, modules.length * 2, 'Mountain Kenney Fantasy bridge rails LAB');
+  const mesh = makeAssetInstances(source, modules.length * 2 - 1, 'Mountain Kenney Fantasy bridge rails LAB');
   if (!mesh) return 0;
   let cursor = 0;
   modules.forEach((sample, moduleIndex) => {
@@ -198,6 +202,10 @@ function installBridgeRails(world, source, samples, trackWidth) {
     const length = entryRail ? BRIDGE_ENTRY_RAIL_LENGTH : BRIDGE_MODULE_LENGTH;
     const tangentOffset = entryRail ? (BRIDGE_MODULE_LENGTH - length) / 2 : 0;
     for (const side of [-1, 1]) {
+      // Travelling east, +normal is the left/north edge. Its first rail is
+      // omitted to match the collision opening and give the turning approach
+      // a full car-width of visual and physical forgiveness.
+      if (moduleIndex === 0 && side === 1) continue;
       setAssetMatrix(mesh, cursor, source, sample, {
         width: 0.46,
         height: BRIDGE_RAIL_HEIGHT,
@@ -210,6 +218,7 @@ function installBridgeRails(world, source, samples, trackWidth) {
     }
   });
   mesh.instanceMatrix.needsUpdate = true;
+  mesh.count = cursor;
   mesh.computeBoundingSphere();
   world.add(mesh);
   return cursor;
@@ -267,6 +276,7 @@ function installKenneyBridge(world, sources, errors, samples, trackWidth, terrai
     pillars: supports.pillars,
     abutments: supports.abutments,
     entryRailLength: BRIDGE_ENTRY_RAIL_LENGTH,
+    openLeftEntry: true,
     assetErrors: errors,
     drawCalls: Number(Boolean(deckModules)) + Number(Boolean(railModules)) + Number(Boolean(supports.pillars))
   };
@@ -294,6 +304,20 @@ function tunnelSampleRange(samples, spec) {
     nearestSampleIndex(samples, spec.start.x, spec.start.z),
     nearestSampleIndex(samples, spec.end.x, spec.end.z)
   );
+}
+
+function visibleTunnelSampleRange(samples, spec) {
+  const authored = tunnelSampleRange(samples, spec);
+  const inside = authored.reduce((range, sample, index) => {
+    const radius = Math.hypot(sample.point.x - spec.peak.x, sample.point.z - spec.peak.z);
+    if (radius <= spec.portalRadius) {
+      if (range.start < 0) range.start = index;
+      range.end = index;
+    }
+    return range;
+  }, { start: -1, end: -1 });
+  if (inside.start < 0 || inside.end <= inside.start) return authored;
+  return authored.slice(inside.start, inside.end + 1);
 }
 
 function expandedTunnelSampleRange(samples, spec) {
@@ -324,10 +348,10 @@ function decimateTunnelPath(samples, spacing = 11) {
 function tunnelPaths(samples) {
   return MOUNTAIN_TUNNEL_SPECS.map((spec) => Object.freeze({
     spec,
-    // Keep the visible lining at the authored road/mountain overlap, while a
-    // separate hidden carve path reaches past the sloped exterior shell. This
-    // avoids a dark covered gallery protruding into the open approach.
-    path: Object.freeze(decimateTunnelPath(tunnelSampleRange(samples, spec))),
+    // Sink the visible lining and portal into rock tall enough to surround the
+    // complete arch. A separate, wider hidden carve still reaches past the
+    // exterior shell so the chase camera never crosses an uncut cone face.
+    path: Object.freeze(decimateTunnelPath(visibleTunnelSampleRange(samples, spec))),
     carvePath: Object.freeze(decimateTunnelPath(expandedTunnelSampleRange(samples, spec)))
   }));
 }
@@ -392,61 +416,110 @@ function tunnelPortals(tunnels) {
   ]);
 }
 
-function installTunnelPortalFrames(world, portals) {
-  const mesh = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(1, 1, 1),
+function tunnelPortalProfile(spec, outer = false) {
+  const radiusX = spec.halfWidth + (outer ? TUNNEL_PORTAL_RING : 0);
+  const springHeight = spec.clearHeight * 0.36;
+  const archRise = spec.clearHeight - springHeight + (outer ? TUNNEL_PORTAL_RING : 0);
+  const profile = [{ lateral: -radiusX, height: outer ? -0.95 : -0.7 }];
+  for (let segment = 0; segment <= TUNNEL_PORTAL_ARC_SEGMENTS; segment += 1) {
+    const angle = Math.PI - segment / TUNNEL_PORTAL_ARC_SEGMENTS * Math.PI;
+    profile.push({
+      lateral: Math.cos(angle) * radiusX,
+      height: springHeight + Math.sin(angle) * archRise
+    });
+  }
+  profile.push({ lateral: radiusX, height: outer ? -0.95 : -0.7 });
+  return profile;
+}
+
+function tunnelPortalWorldPoint(portal, profilePoint, depthOffset) {
+  // direction points out of the tunnel. Centre the extrusion one half-depth
+  // inward so the visible front face is flush with the authored mountain mouth.
+  const inwardCentre = -portal.direction * TUNNEL_PORTAL_DEPTH / 2;
+  const point = portal.sample.point.clone()
+    .addScaledVector(portal.sample.normal, profilePoint.lateral)
+    .addScaledVector(portal.sample.tangent, inwardCentre + depthOffset);
+  point.y = portal.sample.point.y + profilePoint.height;
+  return point;
+}
+
+function appendPortalQuad(positions, indices, a, b, c, d) {
+  const base = positions.length / 3;
+  for (const point of [a, b, c, d]) positions.push(point.x, point.y, point.z);
+  indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+}
+
+function installTunnelPortalArches(world, portals) {
+  if (!portals.length) return { arches: 0, triangles: 0, drawCalls: 0 };
+  const positions = [];
+  const indices = [];
+  const halfDepth = TUNNEL_PORTAL_DEPTH / 2;
+  for (const portal of portals) {
+    const inner = tunnelPortalProfile(portal.spec);
+    const outer = tunnelPortalProfile(portal.spec, true);
+    for (let segment = 0; segment < inner.length - 1; segment += 1) {
+      const innerFront = tunnelPortalWorldPoint(portal, inner[segment], -halfDepth);
+      const innerFrontNext = tunnelPortalWorldPoint(portal, inner[segment + 1], -halfDepth);
+      const outerFront = tunnelPortalWorldPoint(portal, outer[segment], -halfDepth);
+      const outerFrontNext = tunnelPortalWorldPoint(portal, outer[segment + 1], -halfDepth);
+      const innerBack = tunnelPortalWorldPoint(portal, inner[segment], halfDepth);
+      const innerBackNext = tunnelPortalWorldPoint(portal, inner[segment + 1], halfDepth);
+      const outerBack = tunnelPortalWorldPoint(portal, outer[segment], halfDepth);
+      const outerBackNext = tunnelPortalWorldPoint(portal, outer[segment + 1], halfDepth);
+
+      appendPortalQuad(positions, indices, innerFront, innerFrontNext, outerFrontNext, outerFront);
+      appendPortalQuad(positions, indices, outerBack, outerBackNext, innerBackNext, innerBack);
+      appendPortalQuad(positions, indices, outerFront, outerFrontNext, outerBackNext, outerBack);
+      appendPortalQuad(positions, indices, innerBack, innerBackNext, innerFrontNext, innerFront);
+    }
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  geometry.computeBoundingSphere();
+  const mesh = new THREE.Mesh(
+    geometry,
     new THREE.MeshStandardMaterial({
       color: 0x7d878d,
       emissive: 0x111920,
       emissiveIntensity: 0.16,
       roughness: 1,
-      metalness: 0
-    }),
-    portals.length * 3
+      metalness: 0,
+      side: THREE.DoubleSide,
+      flatShading: true
+    })
   );
-  mesh.name = 'Mountain tunnel instanced granite portal frames LAB';
-  const marker = new THREE.Object3D();
-  let cursor = 0;
-  for (const { spec, sample } of portals) {
-    const yaw = Math.atan2(sample.tangent.x, sample.tangent.z);
-    for (const side of [-1, 1]) {
-      marker.position.copy(sample.point).addScaledVector(sample.normal, side * (spec.halfWidth + 0.9));
-      marker.position.y += spec.clearHeight * 0.43;
-      marker.rotation.set(0, yaw, 0);
-      marker.scale.set(2.7, spec.clearHeight * 0.92, 4.2);
-      marker.updateMatrix();
-      mesh.setMatrixAt(cursor++, marker.matrix);
-    }
-    marker.position.copy(sample.point);
-    marker.position.y += spec.clearHeight - 0.45;
-    marker.rotation.set(0, yaw, 0);
-    marker.scale.set(spec.halfWidth * 2 + 4.5, 2.5, 4.2);
-    marker.updateMatrix();
-    mesh.setMatrixAt(cursor++, marker.matrix);
-  }
-  mesh.count = cursor;
-  mesh.instanceMatrix.needsUpdate = true;
+  mesh.name = 'Mountain tunnel batched mountain-aligned granite arches LAB';
   mesh.castShadow = false;
   mesh.receiveShadow = true;
-  mesh.computeBoundingSphere();
+  mesh.userData.turnOutlined = true;
   world.add(mesh);
-  return { frames: cursor, drawCalls: cursor ? 1 : 0 };
+  return { arches: portals.length, triangles: indices.length / 3, drawCalls: 1 };
 }
 
-function setTunnelPortalRockMatrix(mesh, index, source, portal, terrainHeightAt, side) {
+function setTunnelPortalRockMatrix(mesh, index, source, portal, terrainHeightAt, side, layer) {
   const { spec, sample, direction } = portal;
   const marker = new THREE.Object3D();
-  const sideOffset = spec.halfWidth + 4.3;
-  const tangentOffset = direction * 0.9;
+  const shoulder = layer === 1;
+  const sideOffset = spec.halfWidth + (shoulder ? 1.8 : 4.6);
+  const tangentOffset = -direction * (shoulder ? 2.1 : 1.0);
   const point = sample.point.clone()
     .addScaledVector(sample.normal, side * sideOffset)
     .addScaledVector(sample.tangent, tangentOffset);
-  marker.position.set(point.x, terrainHeightAt(point.x, point.z) - 0.3, point.z);
-  marker.rotation.set(0, Math.atan2(sample.tangent.x, sample.tangent.z) + side * 0.18, 0);
+  const baseY = shoulder
+    ? sample.point.y + spec.clearHeight * 0.38
+    : terrainHeightAt(point.x, point.z) - 0.3;
+  marker.position.set(point.x, baseY, point.z);
+  marker.rotation.set(
+    shoulder ? side * 0.08 : 0,
+    Math.atan2(sample.tangent.x, sample.tangent.z) + side * (shoulder ? 0.34 : 0.18),
+    shoulder ? -side * 0.12 : 0
+  );
   marker.scale.set(
-    8.2 / Math.max(0.001, source.size.x),
-    6.6 / Math.max(0.001, source.size.y),
-    7.2 / Math.max(0.001, source.size.z)
+    (shoulder ? 5.6 : 8.2) / Math.max(0.001, source.size.x),
+    (shoulder ? 5.2 : 6.6) / Math.max(0.001, source.size.y),
+    (shoulder ? 5.0 : 7.2) / Math.max(0.001, source.size.z)
   );
   marker.updateMatrix();
   mesh.setMatrixAt(index, marker.matrix);
@@ -454,13 +527,15 @@ function setTunnelPortalRockMatrix(mesh, index, source, portal, terrainHeightAt,
 
 function installTunnelPortalRocks(world, source, portals, terrainHeightAt) {
   if (!source || !portals.length) return { rocks: 0, drawCalls: 0 };
-  const count = portals.length * 2;
+  const count = portals.length * 4;
   const mesh = makeAssetInstances(source, count, 'Mountain Kenney Nature tunnel portal rocks LAB');
   if (!mesh) return { rocks: 0, drawCalls: 0 };
   let cursor = 0;
   for (const portal of portals) {
     for (const side of [-1, 1]) {
-      setTunnelPortalRockMatrix(mesh, cursor++, source, portal, terrainHeightAt, side);
+      for (const layer of [0, 1]) {
+        setTunnelPortalRockMatrix(mesh, cursor++, source, portal, terrainHeightAt, side, layer);
+      }
     }
   }
   mesh.count = cursor;
@@ -473,21 +548,21 @@ function installTunnelPortalRocks(world, source, portals, terrainHeightAt) {
 function installTunnelReflectors(world, tunnels) {
   const placements = [];
   for (const { spec, path } of tunnels) {
-    for (let index = 2; index < path.length - 2; index += 3) {
+    for (let index = 1; index < path.length - 1; index += 2) {
       for (const side of [-1, 1]) placements.push({ spec, sample: path[index], side });
     }
   }
   if (!placements.length) return { reflectors: 0, drawCalls: 0 };
   const mesh = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(0.34, 0.52, 0.9),
+    new THREE.BoxGeometry(0.46, 0.66, 1.05),
     new THREE.MeshBasicMaterial({ color: WARM_LIGHT, toneMapped: false }),
     placements.length
   );
-  mesh.name = 'Mountain tunnel instanced warm reflectors LAB';
+  mesh.name = 'Mountain tunnel instanced warm wall lamps LAB';
   const marker = new THREE.Object3D();
   placements.forEach(({ spec, sample, side }, index) => {
     marker.position.copy(sample.point).addScaledVector(sample.normal, side * (spec.halfWidth - 0.35));
-    marker.position.y += 2.2;
+    marker.position.y += 3.0;
     marker.rotation.set(0, Math.atan2(sample.tangent.x, sample.tangent.z), 0);
     marker.scale.set(1, 1, 1);
     marker.updateMatrix();
@@ -515,10 +590,18 @@ function tunnelContainsWorldPoint(point, path, spec) {
     const nearestX = start.x + dx * along;
     const nearestZ = start.z + dz * along;
     const floorY = THREE.MathUtils.lerp(start.y, end.y, along);
+    const centreRadius = Math.hypot(nearestX - spec.peak.x, nearestZ - spec.peak.z);
+    const cameraExpansion = THREE.MathUtils.smoothstep(spec.portalRadius - centreRadius, 0, 28);
+    const portalCarveHalfWidth = spec.halfWidth + TUNNEL_PORTAL_RING + 2;
+    const carveHalfWidth = THREE.MathUtils.lerp(
+      portalCarveHalfWidth,
+      spec.carveHalfWidth,
+      cameraExpansion
+    );
     if (
-      Math.hypot(point.x - nearestX, point.z - nearestZ) < spec.halfWidth + 3.4
+      Math.hypot(point.x - nearestX, point.z - nearestZ) < carveHalfWidth
       && point.y > floorY - 2
-      && point.y < floorY + spec.clearHeight + 1.8
+      && point.y < floorY + spec.carveClearHeight
     ) return true;
   }
   return false;
@@ -546,7 +629,7 @@ function mountainVertexColors(geometry, spec) {
 }
 
 function cpuCarvedMountainGeometry(peak, path, spec) {
-  // These are the only two higher-detail peak meshes in the LAB. The extra
+  // This is the only higher-detail peak mesh in the LAB. The extra
   // tessellation makes the baked portal cut clean while staying far cheaper
   // than a per-fragment carve on the large occluders every frame.
   const geometry = new THREE.ConeGeometry(spec.peak.radius, spec.peak.height, 48, 24);
@@ -583,15 +666,34 @@ function cpuCarvedMountainGeometry(peak, path, spec) {
   };
 }
 
+function findIntegratedPeak(world, spec) {
+  let peak = null;
+  world.traverse((object) => {
+    if (peak || object.name !== 'Mountain integrated snowy ridge r3') return;
+    if (Math.hypot(object.position.x - spec.x, object.position.z - spec.z) <= 2) peak = object;
+  });
+  return peak;
+}
+
+function disposeObjectMesh(object) {
+  object?.geometry?.dispose?.();
+  const materials = Array.isArray(object?.material) ? object.material : [object?.material];
+  for (const material of materials) material?.dispose?.();
+}
+
+function removeRetiredEastTunnelMountain(world) {
+  const peak = findIntegratedPeak(world, MOUNTAIN_REMOVED_EAST_PEAK);
+  if (!peak?.isMesh || !peak.parent) return 0;
+  peak.parent.remove(peak);
+  disposeObjectMesh(peak);
+  return 1;
+}
+
 function installTunnelMountainCarves(world, tunnels) {
   let carved = 0;
   let removedTriangles = 0;
   for (const { spec, carvePath } of tunnels) {
-    let peak = null;
-    world.traverse((object) => {
-      if (peak || object.name !== 'Mountain integrated snowy ridge r3') return;
-      if (Math.hypot(object.position.x - spec.peak.x, object.position.z - spec.peak.z) <= 2) peak = object;
-    });
+    const peak = findIntegratedPeak(world, spec.peak);
     if (!peak?.isMesh || !peak.material) continue;
     const previousGeometry = peak.geometry;
     const carve = cpuCarvedMountainGeometry(peak, carvePath, spec);
@@ -605,23 +707,26 @@ function installTunnelMountainCarves(world, tunnels) {
 }
 
 function installMountainTunnels(world, samples, rockSource, terrainHeightAt) {
+  const removedMountainMeshes = removeRetiredEastTunnelMountain(world);
   const tunnels = tunnelPaths(samples);
   const portals = tunnelPortals(tunnels);
   const carves = installTunnelMountainCarves(world, tunnels);
   const lining = installTunnelLining(world, tunnels);
-  const frames = installTunnelPortalFrames(world, portals);
+  const arches = installTunnelPortalArches(world, portals);
   const rocks = installTunnelPortalRocks(world, rockSource, portals, terrainHeightAt);
   const reflectors = installTunnelReflectors(world, tunnels);
   return {
     tunnels: tunnels.length,
     portals: portals.length,
+    removedMountainMeshes,
     carvedMountainMeshes: carves.carved,
     carvedMountainTriangles: carves.removedTriangles,
     liningTriangles: lining.triangles,
-    portalFrames: frames.frames,
+    portalArches: arches.arches,
+    portalTriangles: arches.triangles,
     portalRocks: rocks.rocks,
     reflectors: reflectors.reflectors,
-    drawCalls: lining.drawCalls + frames.drawCalls + rocks.drawCalls + reflectors.drawCalls
+    drawCalls: lining.drawCalls + arches.drawCalls + rocks.drawCalls + reflectors.drawCalls
   };
 }
 
@@ -998,15 +1103,21 @@ export async function installMountainLongExtension(world, samples, trackWidth = 
     bridgePillars: bridge.pillars,
     bridgeAbutments: bridge.abutments,
     bridgeEntryRailLength: bridge.entryRailLength,
+    bridgeOpenLeftEntry: bridge.openLeftEntry,
     bridgeAssetErrors: Object.freeze([...bridge.assetErrors]),
     tunnels: tunnels.tunnels,
     tunnelPortals: tunnels.portals,
+    removedMountainMeshes: tunnels.removedMountainMeshes,
     carvedMountainMeshes: tunnels.carvedMountainMeshes,
     carvedMountainTriangles: tunnels.carvedMountainTriangles,
     tunnelLiningTriangles: tunnels.liningTriangles,
-    tunnelPortalFrames: tunnels.portalFrames,
+    tunnelPortalArches: tunnels.portalArches,
+    tunnelPortalTriangles: tunnels.portalTriangles,
     tunnelPortalRocks: tunnels.portalRocks,
     tunnelReflectors: tunnels.reflectors,
+    tunnelPortalRadius: Math.max(...MOUNTAIN_TUNNEL_SPECS.map((spec) => spec.portalRadius)),
+    tunnelCarveHalfWidth: Math.max(...MOUNTAIN_TUNNEL_SPECS.map((spec) => spec.carveHalfWidth)),
+    tunnelCarveClearHeight: Math.max(...MOUNTAIN_TUNNEL_SPECS.map((spec) => spec.carveClearHeight)),
     lowerTerrainVertices: terrain.vertices,
     lowerTerrainTriangles: terrain.triangles,
     lowerVillageHouses: village.houses,
@@ -1025,7 +1136,7 @@ export async function installMountainLongExtension(world, samples, trackWidth = 
     dynamicPointLightsAdded: 0,
     addedShadowCasters: 0,
     noDropEnvelope: true,
-    performanceStrategy: 'production-world-1080; runtime-2160; instanced-bridge-tunnel-portals-reflectors-forest-lights-screens; cpu-carved-existing-peaks-once; no-new-dynamic-lights-or-shadow-casters'
+    performanceStrategy: 'production-world-1080; runtime-2160; removed-east-peak; one-cpu-carved-camera-safe-peak; batched-arch-and-lining; instanced-bridge-rocks-lamps-forest-lights-screens; no-new-dynamic-lights-or-shadow-casters'
   });
   return world;
 }

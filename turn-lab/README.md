@@ -6,11 +6,11 @@
 
 TURN LAB currently replaces only MOUNTAIN's route definition, collision profile, pace-note map, checkpoint density and world installer. Everything else comes from the current production TURN import map and entry scripts.
 
-The long course retains the established village, forest climb, summit river, slalom descent and waterfall, then continues across a Kenney-asset bridge into a lower valley. The added half contains two carved rock tunnels, an east-valley descent, long lower run, brown-and-snow village, forest return and final climb back to the original start area. The first bridge rails and hard colliders begin farther onto the deck, creating a forgiving but still envelope-contained entry funnel.
+The long course retains the established village, forest climb, summit river, slalom descent and waterfall, then continues across a Kenney-asset bridge into a lower valley. The post-bridge mountain has been removed so the bridge remains the landmark and the road releases directly into the east-valley descent. The added half then continues through a long lower run, one carved lower-village tunnel, the brown-and-snow village, forest return and final climb back to the original start area. The bridge's first left rail and hard collider are open while TURN's no-drop road envelope and the next rail section keep the deck contained.
 
 The production MOUNTAIN world still builds from 1,080 evenly spaced world samples, so road/scenery setup stays within the established cost. The LAB runtime uses 2,160 samples for collision, progress, checkpoints, ghosts and minimaps, preserving approximately the production route's spatial resolution across the longer lap.
 
-Bridge deck, rails and supports reuse the repository's Kenney City Kit Roads, Fantasy Town and Nature Kit assets. The tunnel portals reuse the same Nature Kit rock source; their continuous interior lining is one modest mesh and their warm guidance reflectors are instanced without real lights. Added houses, forest, rock screens, light pools and road furniture use shared geometry or instancing. The lower village and tunnels add no dynamic lights, and no LAB scenery casts shadows.
+Bridge deck, rails and supports reuse the repository's Kenney City Kit Roads, Fantasy Town and Nature Kit assets. The retained tunnel begins deeper inside its mountain, uses a batched low-poly stone arch blended with instanced Nature Kit rocks, and has a wider hidden camera-safe carve behind its continuous lining. Its warm wall lamps are instanced without real lights. Added houses, forest, rock screens, light pools and road furniture use shared geometry or instancing. The lower village and tunnel add no dynamic lights, and no LAB scenery casts shadows.
 
 ## Retired experiments
 
@@ -21,7 +21,7 @@ Portrait play, Connected Roadtrip and BUILD-A-CAR are not loaded by this branch.
 1. Open `https://enkel.design/turn-lab/` in Safari.
 2. Add **TURN LAB** to the Home Screen, or choose **Play in browser anyway**.
 3. Choose **MOUNTAIN**, continue through The Lot and start the race.
-4. Check the summit, descent, bridge, east-valley tunnel, lower-village tunnel, forest return and final climb as separate sections.
+4. Check the summit, descent, bridge, open east-valley release, lower-village tunnel, forest return and final climb as separate sections.
 5. Try to leave the bridge and cut between folded road sections; containment and ordered checkpoints should prevent both.
 
 ## Safety
