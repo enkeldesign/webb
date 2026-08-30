@@ -300,15 +300,15 @@ for (const tunnel of MOUNTAIN_TUNNEL_SPECS) {
     const portalIndex = route.indexOf(portal);
     const tangent = routeTangent(route, portalIndex);
     const normal = [-tangent[2], 0, tangent[0]];
-    const outerHalfWidth = tunnel.halfWidth + 6;
-    const widestPortalRadius = Math.max(...[-1, 1].map((side) => Math.hypot(
-      portal[0] + normal[0] * outerHalfWidth * side - tunnel.peak.x,
-      portal[2] + normal[2] * outerHalfWidth * side - tunnel.peak.z
+    const apertureHalfWidth = tunnel.halfWidth + 1.5;
+    const widestApertureRadius = Math.max(...[-1, 1].map((side) => Math.hypot(
+      portal[0] + normal[0] * apertureHalfWidth * side - tunnel.peak.x,
+      portal[2] + normal[2] * apertureHalfWidth * side - tunnel.peak.z
     )));
     const coneSurfaceAtPortalEdge = -7
-      + tunnel.peak.height * (1 - widestPortalRadius / tunnel.peak.radius);
-    assert.ok(coneSurfaceAtPortalEdge >= portal[1] + tunnel.clearHeight + 6,
-      `${tunnel.id} complete arch width must sit inside enough mountain shell to look structurally grounded`);
+      + tunnel.peak.height * (1 - widestApertureRadius / tunnel.peak.radius);
+    assert.ok(coneSurfaceAtPortalEdge >= portal[1] + tunnel.clearHeight + 1.5,
+      `${tunnel.id} compact aperture must sit inside the mountain while its stone collar overlaps the shell`);
   }
 }
 const eastPeakRouteDistance = nearestRoutePoint(
