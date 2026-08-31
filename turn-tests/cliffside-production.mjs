@@ -34,9 +34,9 @@ assert.deepEqual(
     { id: 'countryside', difficulty: 'EASY' },
     { id: 'airport', difficulty: 'MEDIUM' },
     { id: 'cliffside', difficulty: 'MEDIUM' },
-    { id: 'harbor', difficulty: 'HARD' },
-    { id: 'midnight-city', difficulty: 'HARD' },
-    { id: 'mountain', difficulty: 'HARD' }
+    { id: 'harbor', difficulty: 'ADVANCED' },
+    { id: 'midnight-city', difficulty: 'ADVANCED' },
+    { id: 'mountain', difficulty: 'EXPERT' }
   ]
 );
 assert.deepEqual(
