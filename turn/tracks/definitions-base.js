@@ -67,7 +67,7 @@ const TRACKS = [
   {
     id: 'harbor',
     name: 'Harbor',
-    difficulty: 'HARD',
+    difficulty: 'ADVANCED',
     eyebrow: 'TRACK 4',
     description: 'Switchbacks. Container canyons. Quayside speed.',
     accent: '#ff8f3d',
@@ -84,7 +84,7 @@ const TRACKS = [
   {
     id: 'midnight-city',
     name: 'Midnight City',
-    difficulty: 'HARD',
+    difficulty: 'ADVANCED',
     eyebrow: 'TRACK 5',
     description: 'District avenues. Neon corners. A full-city endurance lap.',
     accent: '#9d7cff',
@@ -116,7 +116,7 @@ const TRACKS = [
   {
     id: 'mountain',
     name: 'Mountain',
-    difficulty: 'HARD',
+    difficulty: 'EXPERT',
     eyebrow: 'TRACK 6',
     description: 'Village climb. Snow line. Hairpin descent.',
     accent: '#4dabf7',
