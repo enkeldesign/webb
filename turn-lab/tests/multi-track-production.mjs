@@ -41,14 +41,14 @@ assert.deepEqual(
     { id: 'cliffside', difficulty: 'MEDIUM', storageRevision: 'cliffside-r68', freeRoamDistance: 22.2 },
     { id: 'harbor', difficulty: 'HARD', storageRevision: 'harbor-r80', freeRoamDistance: 170 },
     { id: 'midnight-city', difficulty: 'HARD', storageRevision: 'midnight-city-r2', freeRoamDistance: 34 },
-    { id: 'mountain', difficulty: 'HARD', storageRevision: 'mountain-r2-long', freeRoamDistance: 18.2 }
+    { id: 'mountain', difficulty: 'HARD', storageRevision: 'mountain-r3-start-seam', freeRoamDistance: 18.2 }
   ],
   'Every playable track must own identity, difficulty, record namespace and containment in one source of truth'
 );
 assert.deepEqual(TRACK_PLACEHOLDERS, [], 'Track 6 must be a real playable MOUNTAIN track rather than the old TBA teaser');
 assert.equal(getTrackStorageRevision('midnight-city'), 'midnight-city-r2');
 assert.equal(getTrackFreeRoamDistance('midnight-city'), 34);
-assert.equal(getTrackStorageRevision('mountain'), 'mountain-r2-long');
+assert.equal(getTrackStorageRevision('mountain'), 'mountain-r3-start-seam');
 assert.equal(getTrackFreeRoamDistance('mountain'), 18.2);
 assert.equal(getTrackStorageRevision('future-track'), 'future-track');
 assert.equal(getTrackFreeRoamDistance('future-track'), 170);
@@ -127,7 +127,7 @@ try {
     { trackId: 'airport', time: 22.42, key: 'turn-personal-rivals-v1:airport-r50' },
     { trackId: 'harbor', time: 38.61, key: 'turn-personal-rivals-v1:harbor-r80' },
     { trackId: 'midnight-city', time: 104.82, key: 'turn-personal-rivals-v1:midnight-city-r2' },
-    { trackId: 'mountain', time: 98.14, key: 'turn-personal-rivals-v1:mountain-r2-long' }
+    { trackId: 'mountain', time: 98.14, key: 'turn-personal-rivals-v1:mountain-r3-start-seam' }
   ];
   for (const entry of states) {
     const state = { trackId: entry.trackId, competitorLaps: [{ time: entry.time, carId: 'hatchback-sports', frames: Array.from({ length: 25 }, (_, index) => ({ t: index / 10, p: index / 24 })) }] };
@@ -138,7 +138,9 @@ try {
   clearRivalsState({ trackId: 'midnight-city', competitorLaps: [] });
   assert.equal(storage.has('turn-personal-rivals-v1:midnight-city-r2'), false);
   assert.equal(storage.has('turn-personal-rivals-v1:harbor-r80'), true);
-  assert.equal(storage.has('turn-personal-rivals-v1:mountain-r2-long'), true);
+  assert.equal(storage.has('turn-personal-rivals-v1:mountain-r3-start-seam'), true);
+  assert.equal(storage.has('turn-personal-rivals-v1:mountain-r2-long'), false,
+    'The smoothed MOUNTAIN must never reinterpret or overwrite pre-seam long-course rivals');
   assert.equal(storage.has('turn-personal-rivals-v1:mountain-r1'), false,
     'The promoted MOUNTAIN must never migrate or overwrite the old short-course namespace');
   assert.equal(storage.has('turn-personal-rivals-v1'), true);
@@ -190,7 +192,7 @@ const [
 assert.match(definitionsBase, /id: 'midnight-city'[\s\S]*difficulty: 'HARD'/);
 assert.match(definitionsBase, /storageRevision: 'midnight-city-r2'/);
 assert.match(definitionsBase, /id: 'mountain'[\s\S]*difficulty: 'HARD'/);
-assert.match(definitions, /storageRevision: 'mountain-r2-long'/);
+assert.match(definitions, /storageRevision: 'mountain-r3-start-seam'/);
 assert.match(definitions, /sampleCount: 2160/);
 assert.doesNotMatch(definitionsBase, /id: 'track-6-tba'/);
 assert.match(catalog, /MIDNIGHT_CITY_CONTROL_POINTS\.map/);
