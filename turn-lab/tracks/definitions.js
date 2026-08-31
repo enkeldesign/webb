@@ -24,17 +24,16 @@ const bridgeGuide = Object.freeze({
   minimumInwardSpeed: 2.4,
   offRoadDrag: 0.34,
   sampleCount: 2160,
-  // These indices are the tested nearest samples for the actual instanced rail
-  // endpoints on the 2,160-sample long route. +normal is the omitted left/north
-  // entry rail, hence its later start. Feathering stays inside each visible span.
+  // The start/finish smoothing shortens the full closed route slightly. These
+  // are the re-sampled indices of the same physical instanced rail endpoints.
   positiveNormalRange: Object.freeze({
-    startIndex: 1003,
-    endIndex: 1093,
+    startIndex: 1005,
+    endIndex: 1095,
     featherSamples: 4
   }),
   negativeNormalRange: Object.freeze({
-    startIndex: 992,
-    endIndex: 1093,
+    startIndex: 994,
+    endIndex: 1095,
     featherSamples: 4
   })
 });
@@ -44,7 +43,7 @@ export const TRACK_DEFINITIONS = Object.freeze(production.TRACK_DEFINITIONS.map(
   return Object.freeze({
     ...track,
     description: 'Summit climb. Waterfall descent. Lake bridge. Valley lights.',
-    storageRevision: 'mountain-lab-long-r1',
+    storageRevision: 'mountain-lab-long-r2',
     sampleCount: 2160,
     // TURN's sampled envelope remains the general no-drop/anti-shortcut guard.
     // The bridge adds one O(1), route-normal slippery guide aligned with the

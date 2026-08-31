@@ -60,7 +60,7 @@ assert.ok(mountain, 'MOUNTAIN must remain a production track');
 assert.equal(mountain.name, 'Mountain');
 assert.equal(mountain.eyebrow, 'TRACK 6');
 assert.equal(mountain.difficulty, 'HARD');
-assert.equal(mountain.storageRevision, 'mountain-r2-long');
+assert.equal(mountain.storageRevision, 'mountain-r3-start-seam');
 assert.equal(mountain.sampleCount, 2160);
 assert.equal(mountain.freeRoamDistance, 18.2);
 assert.equal(mountain.collisionProfile.shoulderStartDistance, 15.0);
@@ -69,6 +69,16 @@ assert.equal(mountain.collisionProfile.colliders.length, 0,
   'The promoted bridge must not reintroduce padded box colliders');
 assert.ok(Object.isFrozen(mountain.collisionProfile.bridgeGuide));
 assert.equal(mountain.collisionProfile.bridgeGuide.offRoadDrag, 0.34);
+assert.deepEqual(
+  mountain.collisionProfile.bridgeGuide.positiveNormalRange,
+  { startIndex: 1005, endIndex: 1095, featherSamples: 4 },
+  'Smoothed route must keep the positive-side bridge guide aligned to the same visible rails'
+);
+assert.deepEqual(
+  mountain.collisionProfile.bridgeGuide.negativeNormalRange,
+  { startIndex: 994, endIndex: 1095, featherSamples: 4 },
+  'Smoothed route must keep the negative-side bridge guide aligned to the same visible rails'
+);
 assert.deepEqual(TRACK_PLACEHOLDERS, []);
 
 for (const baseTrack of BASE_TRACK_DEFINITIONS) {
@@ -93,6 +103,20 @@ assert.ok(closedLength(MOUNTAIN_CONTROL_POINTS) > 3000,
   'Promoted MOUNTAIN must retain the substantially longer route');
 assert.equal(findProperIntersections(MOUNTAIN_CONTROL_POINTS).length, 0);
 assert.ok(maximumTurn(MOUNTAIN_CONTROL_POINTS) < 100);
+
+const startSeam = [
+  ...MOUNTAIN_CONTROL_POINTS.slice(-3),
+  ...MOUNTAIN_CONTROL_POINTS.slice(0, 2)
+];
+assert.ok(maximumOpenTurn(startSeam) < 16,
+  `MOUNTAIN start/finish must not reintroduce a steering S-kink: ${maximumOpenTurn(startSeam).toFixed(2)}°`);
+const startLanding = [
+  ...MOUNTAIN_CONTROL_POINTS.slice(-4),
+  ...MOUNTAIN_CONTROL_POINTS.slice(0, 2)
+];
+assert.ok(maximumGrade(startLanding) < 0.05,
+  `MOUNTAIN final landing must stay below a 5% control-point grade: ${(maximumGrade(startLanding) * 100).toFixed(2)}%`);
+
 assert.equal(MOUNTAIN_BRIDGE_CENTERS.length, 6);
 assert.equal(MOUNTAIN_TUNNEL_SPECS.length, 1);
 
@@ -110,7 +134,7 @@ assert.ok(MOUNTAIN_LONG_CHECKPOINTS.every((value, index, values) => (
 )), 'Long MOUNTAIN checkpoints must be ordered around the full lap');
 
 assert.match(definitions, /definitions-base\.js/);
-assert.match(definitions, /storageRevision: 'mountain-r2-long'/);
+assert.match(definitions, /storageRevision: 'mountain-r3-start-seam'/);
 assert.match(definitions, /sampleCount: 2160/);
 assert.match(definitionsBase, /storageRevision: 'mountain-r1'/,
   'The retired short-course definition remains intact only as the rollback/base contract');
@@ -178,11 +202,34 @@ function maximumTurn(points) {
     const previous = points[(index - 1 + points.length) % points.length];
     const current = points[index];
     const next = points[(index + 1) % points.length];
-    const incoming = [current[0] - previous[0], current[2] - previous[2]];
-    const outgoing = [next[0] - current[0], next[2] - current[2]];
-    const denominator = Math.max(1e-9, Math.hypot(...incoming) * Math.hypot(...outgoing));
-    const cosine = (incoming[0] * outgoing[0] + incoming[1] * outgoing[1]) / denominator;
-    maximum = Math.max(maximum, Math.acos(Math.max(-1, Math.min(1, cosine))) * 180 / Math.PI);
+    maximum = Math.max(maximum, turnDegrees(previous, current, next));
+  }
+  return maximum;
+}
+
+function maximumOpenTurn(points) {
+  let maximum = 0;
+  for (let index = 1; index < points.length - 1; index += 1) {
+    maximum = Math.max(maximum, turnDegrees(points[index - 1], points[index], points[index + 1]));
+  }
+  return maximum;
+}
+
+function turnDegrees(previous, current, next) {
+  const incoming = [current[0] - previous[0], current[2] - previous[2]];
+  const outgoing = [next[0] - current[0], next[2] - current[2]];
+  const denominator = Math.max(1e-9, Math.hypot(...incoming) * Math.hypot(...outgoing));
+  const cosine = (incoming[0] * outgoing[0] + incoming[1] * outgoing[1]) / denominator;
+  return Math.acos(Math.max(-1, Math.min(1, cosine))) * 180 / Math.PI;
+}
+
+function maximumGrade(points) {
+  let maximum = 0;
+  for (let index = 1; index < points.length; index += 1) {
+    const previous = points[index - 1];
+    const current = points[index];
+    const horizontal = Math.max(1e-9, Math.hypot(current[0] - previous[0], current[2] - previous[2]));
+    maximum = Math.max(maximum, Math.abs(current[1] - previous[1]) / horizontal);
   }
   return maximum;
 }
