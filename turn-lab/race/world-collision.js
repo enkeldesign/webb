@@ -26,6 +26,15 @@ export function resolveWorldCollisionState(options = {}) {
     dt = 1 / 60
   } = options;
 
+  // Once the long MOUNTAIN is promoted, production already owns the tested
+  // bridge guide. Return that result directly so LAB cannot apply it twice.
+  const promotedCollision = resolveProductionWorldCollisionState(options);
+  if (trackId !== 'mountain' || promotedCollision?.bridgeGuide === true) {
+    return promotedCollision;
+  }
+
+  // Compatibility fallback for checking this LAB branch against an older
+  // production TURN revision that does not yet contain the bridge guide.
   const freeRoamDistance = positiveNumber(
     collisionProfile?.freeRoamDistance,
     WORLD_FREE_ROAM_DISTANCE[trackId]
@@ -44,9 +53,6 @@ export function resolveWorldCollisionState(options = {}) {
     })
     : INACTIVE_BRIDGE_GUIDE;
 
-  // The LAB guide owns the route-normal bridge boundary while active. Feed its
-  // smoothly tapered limit to production so the wider global envelope cannot
-  // apply a second response; production still resolves every ordinary collider.
   const productionNearestTrack = bridgeGuide.active && nearestTrack
     ? {
       ...nearestTrack,
@@ -58,7 +64,7 @@ export function resolveWorldCollisionState(options = {}) {
       ...options,
       nearestTrack: productionNearestTrack
     })
-    : resolveProductionWorldCollisionState(options);
+    : promotedCollision;
 
   if ((bridgeGuide.assisted || bridgeGuide.contained) && state?.velocity) {
     state.speed = vectorLength(state.velocity);
