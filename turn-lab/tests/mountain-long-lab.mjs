@@ -92,13 +92,25 @@ assert.ok(ratio >= 2.0 && ratio <= 2.25,
   `Promoted MOUNTAIN should remain ~2.1x the retired short course, got ${ratio.toFixed(3)}x`);
 
 const productionMountain = PRODUCTION_TRACK_DEFINITIONS.find((track) => track.id === 'mountain');
-assert.equal(productionMountain?.storageRevision, 'mountain-r2-long');
+assert.equal(productionMountain?.storageRevision, 'mountain-r3-start-seam');
 assert.equal(productionMountain?.sampleCount, 2160);
 assert.equal(productionMountain?.freeRoamDistance, 18.2);
 assert.equal(productionMountain?.collisionProfile?.colliders?.length, 0);
 assert.equal(productionMountain?.collisionProfile?.bridgeGuide?.sampleCount, 2160);
-assert.match(labDefinitions, /storageRevision: 'mountain-lab-long-r1'/,
-  'LAB may keep its isolated rival namespace even though geometry is now production');
+assert.deepEqual(
+  productionMountain?.collisionProfile?.bridgeGuide?.positiveNormalRange,
+  { startIndex: 1005, endIndex: 1095, featherSamples: 4 }
+);
+assert.deepEqual(
+  productionMountain?.collisionProfile?.bridgeGuide?.negativeNormalRange,
+  { startIndex: 994, endIndex: 1095, featherSamples: 4 }
+);
+assert.match(labDefinitions, /storageRevision: 'mountain-lab-long-r2'/,
+  'LAB keeps an isolated fresh rival namespace for the smoothed shared geometry');
+assert.match(labDefinitions, /startIndex: 1005[\s\S]*endIndex: 1095/,
+  'LAB positive-side guide must follow the same re-sampled physical rail span');
+assert.match(labDefinitions, /startIndex: 994[\s\S]*endIndex: 1095/,
+  'LAB negative-side guide must follow the same re-sampled physical rail span');
 
 // The tested MOUNTAIN content promoted to production must remain byte-identical to
 // the LAB source where possible, preventing accidental divergence during promotion.
