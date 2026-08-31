@@ -81,7 +81,9 @@ export const MOUNTAIN_CONTROL_POINTS = Object.freeze([
 
   // Forest return and final climb. This parallel leg stays roughly 80 metres
   // from the southern run, then makes one deliberate climbing hairpin before
-  // reconnecting with the original village start.
+  // reconnecting with the original village start. The final landing is kept
+  // shallow and tangent-aligned so the start/finish seam does not introduce a
+  // small S-wiggle or abrupt pitch change under the player car.
   Object.freeze([-240, 3.0, -255]),
   Object.freeze([-190, 2.7, -282]),
   Object.freeze([-120, 2.4, -286]),
@@ -90,9 +92,9 @@ export const MOUNTAIN_CONTROL_POINTS = Object.freeze([
   Object.freeze([95, 1.6, -282]),
   Object.freeze([125, 2.4, -262]),
   Object.freeze([125, 4.0, -240]),
-  Object.freeze([100, 6.0, -218]),
-  Object.freeze([65, 4.2, -207]),
-  Object.freeze([30, 1.7, -214])
+  Object.freeze([105, 3.2, -226]),
+  Object.freeze([72, 1.8, -225]),
+  Object.freeze([38, 0.6, -227])
 ]);
 
 export const MOUNTAIN_BRIDGE_CENTERS = Object.freeze([
