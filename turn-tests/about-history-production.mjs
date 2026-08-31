@@ -137,6 +137,14 @@ assert.match(content, /Paintjob MutationObserver/);
 assert.match(content, /Playtesting reshapes the driving feel/);
 assert.match(content, /Visible front-wheel steering tied to player input/);
 assert.match(content, /Standard binary DRIFT LOCK/);
+assert.match(content, /29–31 August/);
+assert.match(content, /Long MOUNTAIN reaches production and difficulty gets clearer/);
+assert.match(content, /EASY \/ MEDIUM \/ ADVANCED \/ EXPERT/);
+assert.match(content, /MIDNIGHT CITY/);
+assert.match(content, /≈4\.7 km/);
+assert.match(content, /≈3\.8 km/);
+assert.doesNotMatch(content, /MOUNTAIN at 1,000 trophies/);
+
 
 for (const size of ['compact', 'standard', 'wide', 'reader']) {
   assert.match(dialogCss, new RegExp(`\\.turn-dialog--${size}`),

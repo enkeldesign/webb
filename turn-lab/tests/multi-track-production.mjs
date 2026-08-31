@@ -39,9 +39,9 @@ assert.deepEqual(
     { id: 'countryside', difficulty: 'EASY', storageRevision: 'countryside', freeRoamDistance: 170 },
     { id: 'airport', difficulty: 'MEDIUM', storageRevision: 'airport-r50', freeRoamDistance: 95 },
     { id: 'cliffside', difficulty: 'MEDIUM', storageRevision: 'cliffside-r68', freeRoamDistance: 22.2 },
-    { id: 'harbor', difficulty: 'HARD', storageRevision: 'harbor-r80', freeRoamDistance: 170 },
-    { id: 'midnight-city', difficulty: 'HARD', storageRevision: 'midnight-city-r2', freeRoamDistance: 34 },
-    { id: 'mountain', difficulty: 'HARD', storageRevision: 'mountain-r3-start-seam', freeRoamDistance: 18.2 }
+    { id: 'harbor', difficulty: 'ADVANCED', storageRevision: 'harbor-r80', freeRoamDistance: 170 },
+    { id: 'midnight-city', difficulty: 'ADVANCED', storageRevision: 'midnight-city-r2', freeRoamDistance: 34 },
+    { id: 'mountain', difficulty: 'EXPERT', storageRevision: 'mountain-r3-start-seam', freeRoamDistance: 18.2 }
   ],
   'Every playable track must own identity, difficulty, record namespace and containment in one source of truth'
 );
@@ -189,9 +189,9 @@ const [
   fs.readFile(new URL('../../turn/tracks/mountain-world-r3-polish.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/m8-home.js', import.meta.url), 'utf8')
 ]);
-assert.match(definitionsBase, /id: 'midnight-city'[\s\S]*difficulty: 'HARD'/);
+assert.match(definitionsBase, /id: 'midnight-city'[\s\S]*difficulty: 'ADVANCED'/);
 assert.match(definitionsBase, /storageRevision: 'midnight-city-r2'/);
-assert.match(definitionsBase, /id: 'mountain'[\s\S]*difficulty: 'HARD'/);
+assert.match(definitionsBase, /id: 'mountain'[\s\S]*difficulty: 'EXPERT'/);
 assert.match(definitions, /storageRevision: 'mountain-r3-start-seam'/);
 assert.match(definitions, /sampleCount: 2160/);
 assert.doesNotMatch(definitionsBase, /id: 'track-6-tba'/);

@@ -39,7 +39,7 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     type: 'track',
     trackId: 'midnight-city',
     icon: 'skyline',
-    description: 'Unlock TURN’s night-time city track, with neon streets, technical corners and the longest lap in the current track collection.'
+    description: 'Unlock MIDNIGHT CITY: an ADVANCED ≈4.7 km night-time city endurance lap through neon avenues and technical corners.'
   }),
   Object.freeze({
     id: 'race-car',
@@ -73,7 +73,7 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     type: 'track',
     trackId: 'mountain',
     icon: 'mountain',
-    description: 'Unlock MOUNTAIN: leave a snowy village on a long alpine climb, round the summit river and attack the front-face hairpin descent beside the waterfall.'
+    description: 'Unlock MOUNTAIN: an EXPERT ≈3.8 km alpine route from the snowy village through the summit and waterfall, across the lake bridge, then through the lower valley and village tunnel return.'
   }),
   Object.freeze({
     id: 'monster',

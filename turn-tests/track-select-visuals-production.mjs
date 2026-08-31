@@ -32,7 +32,9 @@ assert.equal(tracks.cliffside.accent, '#26c7c3', 'Cliffside keeps its blue-green
 assert.equal(tracks.harbor.accent, '#ff8f3d', 'Harbor needs a distinct rust-orange dock identity');
 assert.equal(tracks['midnight-city'].accent, '#9d7cff', 'Midnight City keeps its established violet identity');
 assert.equal(tracks.mountain.accent, '#4dabf7', 'Mountain keeps its established alpine-blue identity');
-assert.equal(tracks.harbor.difficulty, 'HARD');
+assert.equal(tracks.harbor.difficulty, 'ADVANCED');
+assert.equal(tracks['midnight-city'].difficulty, 'ADVANCED');
+assert.equal(tracks.mountain.difficulty, 'EXPERT');
 assert.equal(new Set(TRACK_DEFINITIONS.map((track) => track.accent)).size, TRACK_DEFINITIONS.length, 'Every playable track needs a distinct accent');
 
 for (const track of TRACK_DEFINITIONS) {
@@ -116,6 +118,8 @@ assert.match(midnightCss, /\.track-card-midnight-city \.track-preview-road[\s\S]
 assert.doesNotMatch(`${postcardCss}\n${depthCss}\n${runwayCss}\n${midnightCss}`, /@keyframes|animation(?:-name)?:/, 'Track postcards must add no looping or distracting motion');
 
 assert.match(chooserSource, /card\.setAttribute\('aria-pressed', String\(selected\)\)/, 'Selection remains programmatically exposed');
+assert.match(chooserSource, /data-track-difficulty=\"\$\{track\.difficulty\.toLowerCase\(\)\}\"/, 'Track chooser must expose the canonical difficulty as data');
+assert.match(chooserSource, /aria-label=\"\$\{track\.name\}, \$\{track\.difficulty\} difficulty track\"/, 'Track chooser ARIA must explicitly announce the canonical difficulty');
 assert.match(chooserSource, /CONTINUE TO \$\{track\?\.name\.toUpperCase\(\)/, 'Continue copy remains the explicit textual confirmation');
 assert.match(chooserSource, /track-card-choice-marker/, 'The radio-style marker remains the extra visual choice indicator');
 

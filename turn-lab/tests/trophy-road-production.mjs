@@ -130,9 +130,16 @@ assert.equal(rewardForVehicle('toy-racer')?.id, 'rally-racer');
 assert.equal(rewardForFeature('vehicle-paint')?.id, 'paintjob');
 assert.equal(getTrophyRoadReward('invented'), null);
 
+const midnightReward = getProductionTrophyRoadReward('midnight-city');
+assert.equal(midnightReward?.threshold, 400);
+assert.match(midnightReward?.description || '', /ADVANCED/);
+assert.match(midnightReward?.description || '', /≈4\.7 km/);
+
 const mountainReward = getProductionTrophyRoadReward('mountain');
 assert.equal(mountainReward?.threshold, 700);
 assert.equal(mountainReward?.type, 'track');
+assert.match(mountainReward?.description || '', /EXPERT/);
+assert.match(mountainReward?.description || '', /≈3\.8 km/);
 assert.match(mountainReward?.description || '', /snowy village/i);
 assert.match(mountainReward?.description || '', /waterfall/i);
 
