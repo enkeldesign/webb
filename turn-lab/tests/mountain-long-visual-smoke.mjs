@@ -13,9 +13,11 @@ const views = [
   'lower-village',
   'lower-tunnel',
   'lower-tunnel-entry-drive',
+  'lower-tunnel-entry-profile',
   'lower-tunnel-interior',
   'lower-tunnel-exit-drive',
   'lower-tunnel-exit-exterior',
+  'lower-tunnel-exit-profile',
   'forest',
   'final-climb'
 ];
@@ -160,6 +162,9 @@ assert.ok(metrics.tunnelSceneryTreesRemoved >= 1 && metrics.tunnelSceneryTreesRe
 assert.equal(metrics.eastPeakMeshes, 0, 'The retired post-bridge tunnel mountain must be absent');
 assert.equal(metrics.carvedMountainMeshes, 1);
 assert.equal(metrics.carvedTunnelPeaks, 1);
+assert.equal(metrics.relocatedTunnelMountainMeshes, 1);
+assert.ok(metrics.tunnelMountainRelocationDistance > 70 && metrics.tunnelMountainRelocationDistance < 71,
+  `The LAB tunnel peak relocation drifted: ${metrics.tunnelMountainRelocationDistance}`);
 assert.ok(metrics.carvedMountainTriangles > 0 && metrics.carvedMountainTriangles <= 1800,
   `The one-time camera-safe tunnel cut removed an unexpected triangle count: ${metrics.carvedMountainTriangles}`);
 assert.ok(
@@ -167,17 +172,27 @@ assert.ok(
     && metrics.carvedMountainRenderedTriangles <= 21000,
   `The retained tunnel peak exceeded its static triangle budget: ${metrics.carvedMountainRenderedTriangles}`
 );
-assert.ok(metrics.tunnelLiningTriangles >= 140 && metrics.tunnelLiningTriangles <= 360,
+assert.ok(metrics.tunnelLiningTriangles >= 120 && metrics.tunnelLiningTriangles <= 360,
   `Tunnel lining should stay a modest batched mesh, got ${metrics.tunnelLiningTriangles} triangles`);
 assert.equal(metrics.tunnelPortalArches, 2);
-assert.equal(metrics.tunnelPortalRetainingReturns, 2);
-assert.ok(metrics.tunnelPortalTriangles >= 240 && metrics.tunnelPortalTriangles <= 272,
-  `Portal retaining returns exceeded their batched triangle budget: ${metrics.tunnelPortalTriangles}`);
+assert.equal(metrics.tunnelPortalRetainingReturns, 0,
+  'Radial surface-aligned portals must not need asymmetric retaining tongues');
+assert.equal(metrics.tunnelPortalTriangles, 224,
+  'Both slope-conforming collars must remain in one compact batched mesh');
+assert.ok(metrics.tunnelPortalMaximumYawError < 0.75,
+  `Portal plane is not perpendicular to the mountain radius: ${metrics.tunnelPortalMaximumYawError}°`);
+assert.ok(metrics.tunnelPortalSlopeDegrees > 45 && metrics.tunnelPortalSlopeDegrees < 47,
+  `Portal pitch does not match the mountainside: ${metrics.tunnelPortalSlopeDegrees}°`);
+assert.ok(metrics.tunnelPortalFrontLean > 25 && metrics.tunnelPortalFrontLean < 27,
+  `Portal face does not lean into the cone from foot to crown: ${metrics.tunnelPortalFrontLean} m`);
+assert.equal(metrics.tunnelPortalSurfaceAligned, true);
+assert.equal(metrics.tunnelPortalBackInset, 1.6);
+assert.equal(metrics.tunnelPortalSurfaceOffset, 0.65);
 assert.equal(metrics.tunnelPortalRocks, 8);
 assert.ok(metrics.tunnelReflectors >= 12 && metrics.tunnelReflectors <= 24);
 assert.equal(metrics.tunnelPortalRadius, 99);
-assert.equal(metrics.tunnelPortalApertureMargin, 5.25);
-assert.equal(metrics.tunnelPortalApertureHeightMargin, 5.25);
+assert.equal(metrics.tunnelPortalApertureMargin, 3);
+assert.equal(metrics.tunnelPortalApertureHeightMargin, 3);
 assert.equal(metrics.tunnelPortalCarveProfile, 'arched');
 assert.equal(metrics.tunnelCarveHalfWidth, 34);
 assert.equal(metrics.tunnelCarveClearHeight, 23);
@@ -211,10 +226,20 @@ assert.equal(runtimeMetrics.extension.tunnels, 1);
 assert.equal(runtimeMetrics.extension.removedMountainMeshes, 1);
 assert.equal(runtimeMetrics.extension.tunnelSceneryTreesRemoved, metrics.tunnelSceneryTreesRemoved);
 assert.equal(runtimeMetrics.extension.carvedMountainMeshes, 1);
+assert.equal(runtimeMetrics.extension.relocatedTunnelMountainMeshes, 1);
+assert.equal(
+  runtimeMetrics.extension.tunnelMountainRelocationDistance,
+  metrics.tunnelMountainRelocationDistance
+);
 assert.equal(runtimeMetrics.extension.carvedMountainTriangles, metrics.carvedMountainTriangles);
 assert.equal(
   runtimeMetrics.extension.carvedMountainRenderedTriangles,
   metrics.carvedMountainRenderedTriangles
+);
+assert.equal(runtimeMetrics.extension.tunnelPortalSurfaceAligned, true);
+assert.equal(
+  runtimeMetrics.extension.tunnelPortalMaximumYawError,
+  metrics.tunnelPortalMaximumYawError
 );
 assert.ok(runtimeMetrics.bounds.minZ < -370 && runtimeMetrics.bounds.maxZ > 190);
 // Pace notes are imported only when countdown/race guidance starts; their LAB

@@ -121,12 +121,16 @@ export const MOUNTAIN_TUNNEL_SPECS = Object.freeze([
     id: 'lower-village',
     start: Object.freeze({ x: -330, z: -335 }),
     end: Object.freeze({ x: -325, z: -120 }),
-    peak: Object.freeze({ x: -392, z: -228, radius: 132, height: 136 }),
-    // The visible collar begins at the readable mountain face. Its compact
-    // cut is covered by a broader constructed stone surround and Kenney
-    // portal rocks instead of exposing the cone's triangle boundary.
-    // The wider hidden cut covers TURN's complete no-drop envelope plus the
-    // low-speed chase-camera offset.
+    // Reuse the production peak, but move its LAB instance so the road meets
+    // both sides almost exactly on a radius. Portal faces can then sit on the
+    // cone tangent instead of slicing obliquely through the mountain shell.
+    sourcePeak: Object.freeze({ x: -392, z: -228 }),
+    peak: Object.freeze({ x: -431, z: -287, radius: 132, height: 136 }),
+    // The lining begins inside the readable face. A sloped stone reveal joins
+    // it to a collar whose every front vertex is projected onto the cone, so
+    // the entrance follows both the mountain tangent and mountainside pitch.
+    // The wider hidden cut still covers TURN's complete no-drop envelope plus
+    // the low-speed chase-camera offset.
     portalRadius: 99,
     halfWidth: 21,
     clearHeight: 18,
