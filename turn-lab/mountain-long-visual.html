@@ -21,7 +21,7 @@
       MOUNTAIN_CONTROL_POINTS,
       MOUNTAIN_REMOVED_EAST_PEAK
     } from '/turn-lab/tracks/mountain-layout.js';
-    import { installMountainWorld } from '/turn-lab/tracks/mountain-world-lab-r1.js';
+    import { installMountainWorld } from '/turn-lab/tracks/mountain-world-lab-r1.js?revision=mountain-slip-bridge-r18';
 
     const TRACK_WIDTH = 27;
     const SAMPLE_COUNT = 2160;
@@ -114,6 +114,10 @@
       if (object.castShadow) extensionShadowCasters.push(object);
     });
     const routeBounds = new THREE.Box3().setFromPoints(samples.map((sample) => sample.point));
+    const portalRockMesh = world.getObjectByName('Mountain Kenney Nature tunnel portal rocks LAB');
+    const portalRockMaterial = Array.isArray(portalRockMesh?.material)
+      ? portalRockMesh.material[0]
+      : portalRockMesh?.material;
     setView(new URLSearchParams(location.search).get('view') || 'aerial');
 
     globalThis.__mountainLongSetView = setView;
@@ -159,6 +163,10 @@
       tunnelPortalBackInset: Number(extension.tunnelPortalBackInset || 0),
       tunnelPortalSurfaceOffset: Number(extension.tunnelPortalSurfaceOffset || 0),
       tunnelPortalRocks: Number(extension.tunnelPortalRocks || 0),
+      tunnelPortalRockColor: Number(portalRockMaterial?.color?.getHex?.() ?? -1),
+      tunnelPortalRockEmissive: Number(portalRockMaterial?.emissive?.getHex?.() ?? -1),
+      tunnelPortalRockEmissiveIntensity: Number(portalRockMaterial?.emissiveIntensity ?? -1),
+      tunnelPortalRocksReceiveShadow: portalRockMesh?.receiveShadow === true,
       tunnelReflectors: Number(extension.tunnelReflectors || 0),
       tunnelPortalRadius: Number(extension.tunnelPortalRadius || 0),
       tunnelPortalApertureMargin: Number(extension.tunnelPortalApertureMargin || 0),
