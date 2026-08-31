@@ -13,6 +13,7 @@ const AUDIO_PREFERENCES_SPECIFIER_PATTERN = /^\/turn\/audio\/audio-preferences\.
 const COVERED_RENDERING_SPECIFIER_PATTERN = /^\/turn\/render\/covered-rendering\.js\?build=\d{8}-r\d+$/;
 const RIVAL_ONBOARDING_SPECIFIER_PATTERN = /^\/turn\/ui\/rival-onboarding\.js\?build=\d{8}-r\d+$/;
 const LOT_ENHANCEMENT_SPECIFIER_PATTERN = /^\/turn\/garage\/lot-enhancement-runtime\.js\?revision=r164-post-soak&build=\d{8}-r\d+$/;
+const KNOWN_INSTALLED_LOT_SPECIFIER = '/turn/garage/lot-enhancement-runtime.js?revision=r164-post-soak&build=20260826-r184';
 
 export async function loadReleaseDefinition() {
   const release = JSON.parse(await fs.readFile(releasePath, 'utf8'));
@@ -61,6 +62,41 @@ function synchronizeReleaseBoundSpecifier(importMap, release, pattern, currentSp
   importMap.imports = synchronizedImports;
 }
 
+function synchronizeLotEnhancementSpecifiers(importMap, release) {
+  const imports = importMap.imports || {};
+  const currentSpecifier = `/turn/garage/lot-enhancement-runtime.js?revision=r164-post-soak&build=${release.cacheKey}`;
+  const sourceSpecifier = Object.keys(imports).find((specifier) =>
+    LOT_ENHANCEMENT_SPECIFIER_PATTERN.test(specifier) && specifier !== KNOWN_INSTALLED_LOT_SPECIFIER
+  ) || Object.keys(imports).find((specifier) => LOT_ENHANCEMENT_SPECIFIER_PATTERN.test(specifier));
+  if (!sourceSpecifier) return;
+
+  const sourceTarget = imports[sourceSpecifier];
+  const targetUrl = new URL(sourceTarget, 'https://enkel.design');
+  targetUrl.searchParams.set('build', release.cacheKey);
+  const currentTarget = `${targetUrl.pathname}${targetUrl.search}`;
+
+  const synchronizedImports = {};
+  let inserted = false;
+  for (const [specifier, target] of Object.entries(imports)) {
+    if (!LOT_ENHANCEMENT_SPECIFIER_PATTERN.test(specifier)) {
+      synchronizedImports[specifier] = target;
+      continue;
+    }
+    if (inserted) continue;
+
+    // r184 shipped a Lot runtime URL that installed PWAs can still request from
+    // their module cache. Keep that one known compatibility route while the
+    // canonical current-build route advances normally. This is intentionally
+    // narrow rather than a general revision-history system.
+    if (KNOWN_INSTALLED_LOT_SPECIFIER !== currentSpecifier) {
+      synchronizedImports[KNOWN_INSTALLED_LOT_SPECIFIER] = currentTarget;
+    }
+    synchronizedImports[currentSpecifier] = currentTarget;
+    inserted = true;
+  }
+  importMap.imports = synchronizedImports;
+}
+
 function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
   // Keep this list to modules imported through withBuild(); historical alias keys intentionally retain their source revisions.
   synchronizeReleaseBoundSpecifier(
@@ -81,12 +117,7 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
     RIVAL_ONBOARDING_SPECIFIER_PATTERN,
     `/turn/ui/rival-onboarding.js?build=${release.cacheKey}`
   );
-  synchronizeReleaseBoundSpecifier(
-    importMap,
-    release,
-    LOT_ENHANCEMENT_SPECIFIER_PATTERN,
-    `/turn/garage/lot-enhancement-runtime.js?revision=r164-post-soak&build=${release.cacheKey}`
-  );
+  synchronizeLotEnhancementSpecifiers(importMap, release);
 }
 
 export function renderReleaseIndex(source, release) {
