@@ -44,6 +44,7 @@ const [
   scenicWorldSource,
   physicsSource,
   collisionSource,
+  collisionBaseSource,
   indexSource,
   releaseSource
 ] = await Promise.all([
@@ -53,6 +54,7 @@ const [
   fs.readFile(new URL('../turn/tracks/cliffside-world-r76.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/vehicle/physics.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/race/world-collision.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/race/world-collision-base.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8')
 ]);
@@ -88,7 +90,12 @@ assert.equal(
 );
 assert.match(scenicWorldSource, /world\.name = 'TURN Cliffside r76'/);
 assert.match(physicsSource, /collisionProfile: currentCollisionProfile\(\),[\s\S]*dt/, 'Shoulder drag must remain frame-rate independent');
-assert.match(collisionSource, /minimumNormalSpeed: minimumRecoverySpeed/, 'The final edge must keep its inward escape speed');
+assert.match(
+  collisionSource,
+  /if \(trackId !== 'mountain'\) return resolveBaseWorldCollisionState\(options\)/,
+  'Cliffside must take the exact retained production collision path'
+);
+assert.match(collisionBaseSource, /minimumNormalSpeed: minimumRecoverySpeed/, 'The final edge must keep its inward escape speed');
 
 console.log(`TURN ${release.id} natural Cliffside highlands and grounded forest passed.`);
 
