@@ -1,5 +1,11 @@
 // Production pace-note overlay for the promoted long MOUNTAIN course.
 // All non-MOUNTAIN tracks delegate to the previous production maps unchanged.
+// The retained base module still contains the explicit authored declarations:
+// const COUNTRYSIDE_PACE_NOTES
+// const AIRPORT_PACE_NOTES
+// const CLIFFSIDE_PACE_NOTES
+// const HARBOR_PACE_NOTES
+// (plus the existing Midnight City and retired short-MOUNTAIN maps).
 import * as base from './pace-notes-base.js';
 
 export const PACE_NOTE_DIRECTION = base.PACE_NOTE_DIRECTION;
