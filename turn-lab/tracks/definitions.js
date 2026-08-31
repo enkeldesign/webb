@@ -1,29 +1,20 @@
 // TURN LAB definition overlay. All tracks inherit the current production contract;
 // only MOUNTAIN gets the long-course identity and its no-drop collision profile.
 import * as production from '/turn/tracks/definitions.js?lab-base=mountain-long-r1';
-import { MOUNTAIN_BRIDGE_CENTERS } from './mountain-layout.js';
 
 export const DEFAULT_TRACK_ID = production.DEFAULT_TRACK_ID;
 export const TRACK_SAMPLE_COUNT = production.TRACK_SAMPLE_COUNT;
 export const TRACK_SELECTION_KEY = production.TRACK_SELECTION_KEY;
 
-const BRIDGE_MODULE_LENGTH = 33.4;
-const BRIDGE_ENTRY_RAIL_LENGTH = 20.5;
-const BRIDGE_RAIL_DISTANCE = 27 / 2 + 0.42;
-const BRIDGE_GUIDE_FEATHER = 6;
-const firstBridgeCenter = MOUNTAIN_BRIDGE_CENTERS[0];
-const secondBridgeCenter = MOUNTAIN_BRIDGE_CENTERS[1];
-const lastBridgeCenter = MOUNTAIN_BRIDGE_CENTERS.at(-1);
-const bridgeRailEndX = lastBridgeCenter.x + BRIDGE_MODULE_LENGTH / 2;
 const bridgeGuide = Object.freeze({
   // Match DBE 101: assistance begins at the visible rail, applies ordinary
-  // off-road drag and removes only outward motion. A route-normal fallback at
-  // the rail centre keeps the car on the deck without an orthogonal end face.
+  // off-road drag and removes only route-normal outward motion. A route-normal
+  // fallback at the rail centre keeps the car on the deck without an end face.
   baselineLimitDistance: 18.2 - 2.6,
   baselineAssistStartDistance: 15.0,
   assistStartDistance: 27 / 2 + 0.35,
   safetyAssistStartDistance: 14.45,
-  hardLimitDistance: BRIDGE_RAIL_DISTANCE,
+  hardLimitDistance: 27 / 2 + 0.42,
   railDamping: 6,
   railAcceleration: 9,
   safetyDamping: 12,
@@ -32,20 +23,19 @@ const bridgeGuide = Object.freeze({
   maximumPenetrationAcceleration: 28,
   minimumInwardSpeed: 2.4,
   offRoadDrag: 0.34,
-  // +normal is the omitted left/north entry rail on this eastbound bridge.
-  // Each influence begins and ends exactly with its visible rail, then feathers
-  // internally so the rail can never expose a perpendicular collision cap.
+  sampleCount: 2160,
+  // These indices are the tested nearest samples for the actual instanced rail
+  // endpoints on the 2,160-sample long route. +normal is the omitted left/north
+  // entry rail, hence its later start. Feathering stays inside each visible span.
   positiveNormalRange: Object.freeze({
-    startX: secondBridgeCenter.x - BRIDGE_MODULE_LENGTH / 2,
-    endX: bridgeRailEndX,
-    feather: BRIDGE_GUIDE_FEATHER
+    startIndex: 1003,
+    endIndex: 1093,
+    featherSamples: 4
   }),
   negativeNormalRange: Object.freeze({
-    startX: firstBridgeCenter.x
-      + (BRIDGE_MODULE_LENGTH - BRIDGE_ENTRY_RAIL_LENGTH) / 2
-      - BRIDGE_ENTRY_RAIL_LENGTH / 2,
-    endX: bridgeRailEndX,
-    feather: BRIDGE_GUIDE_FEATHER
+    startIndex: 992,
+    endIndex: 1093,
+    featherSamples: 4
   })
 });
 
@@ -58,7 +48,7 @@ export const TRACK_DEFINITIONS = Object.freeze(production.TRACK_DEFINITIONS.map(
     sampleCount: 2160,
     // TURN's sampled envelope remains the general no-drop/anti-shortcut guard.
     // The bridge adds one O(1), route-normal slippery guide aligned with the
-    // visible rail. It has no box seams or longitudinal end faces.
+    // visible rail and selected by this bridge's unique sampled route segment.
     freeRoamDistance: 18.2,
     collisionProfile: Object.freeze({
       ...track.collisionProfile,

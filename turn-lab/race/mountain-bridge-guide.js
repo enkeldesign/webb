@@ -22,31 +22,40 @@ export function resolveMountainBridgeGuideState({
     || !state?.velocity
     || !nearestTrack?.sample?.point
     || !Number.isFinite(nearestTrack.distance)
+    || !Number.isFinite(nearestTrack.index)
   ) {
     return INACTIVE_GUIDE;
   }
 
-  const anchor = nearestTrack.sample.point;
-  let dx = Number(state.position.x) - Number(anchor.x);
-  let dz = Number(state.position.z) - Number(anchor.z);
-  const distance = Math.hypot(dx, dz);
-  if (!Number.isFinite(distance)) return INACTIVE_GUIDE;
-
-  // A centred car still needs a stable direction for the normal projection, but
-  // its lateral distance must remain zero. Reusing speed as distance would turn
-  // an exactly centred fast car into a false bridge-boundary hit.
-  let directionLength = distance;
-  if (directionLength < EPSILON) {
-    dx = -(Number(state.velocity.x) || 0);
-    dz = -(Number(state.velocity.z) || 0);
-    directionLength = Math.hypot(dx, dz) || 1;
+  // Route index identifies this one physical bridge. Coordinate-only activation
+  // would also catch the summit and lower run where their x values happen to match.
+  const routeIndex = Number(nearestTrack.index);
+  const sample = nearestTrack.sample;
+  let normalX = Number(sample?.normal?.x);
+  let normalZ = Number(sample?.normal?.z);
+  if (!Number.isFinite(normalX) || !Number.isFinite(normalZ)) {
+    const tangentX = Number(sample?.tangent?.x);
+    const tangentZ = Number(sample?.tangent?.z);
+    if (!Number.isFinite(tangentX) || !Number.isFinite(tangentZ)) return INACTIVE_GUIDE;
+    normalX = -tangentZ;
+    normalZ = tangentX;
   }
+  const normalLength = Math.hypot(normalX, normalZ);
+  if (normalLength < EPSILON) return INACTIVE_GUIDE;
+  normalX /= normalLength;
+  normalZ /= normalLength;
 
-  const outwardX = dx / directionLength;
-  const outwardZ = dz / directionLength;
-  const side = resolveNormalSide(nearestTrack.sample, outwardX, outwardZ);
+  const anchor = sample.point;
+  const dx = Number(state.position.x) - Number(anchor.x);
+  const dz = Number(state.position.z) - Number(anchor.z);
+  if (!Number.isFinite(dx) || !Number.isFinite(dz)) return INACTIVE_GUIDE;
+  const signedDistance = dx * normalX + dz * normalZ;
+  const side = signedDistance >= 0 ? 1 : -1;
+  const outwardX = normalX * side;
+  const outwardZ = normalZ * side;
+  const distance = Math.abs(signedDistance);
   const range = side > 0 ? guide.positiveNormalRange : guide.negativeNormalRange;
-  const influence = taperedRangeInfluence(Number(anchor.x), range);
+  const influence = taperedRangeInfluence(routeIndex, range);
   if (influence <= 0) return INACTIVE_GUIDE;
 
   const safeBaselineLimit = positiveNumber(baselineLimit, positiveNumber(guide.baselineLimitDistance, 15.6));
@@ -115,8 +124,11 @@ export function resolveMountainBridgeGuideState({
 
   let contained = false;
   if (distance > limit) {
-    state.position.x = Number(anchor.x) + outwardX * limit;
-    state.position.z = Number(anchor.z) + outwardZ * limit;
+    // Move only along the sampled route normal. Preserve the sub-sample
+    // along-track offset instead of snapping the car back to sample.point.
+    const excess = distance - limit;
+    state.position.x -= outwardX * excess;
+    state.position.z -= outwardZ * excess;
 
     // This fallback is normal-only: forward motion along the bridge is retained
     // exactly (apart from the off-road drag above), so it cannot act like an end cap.
@@ -171,25 +183,10 @@ function applySlipperyAssist({
   velocity.z -= outwardZ * inwardAcceleration * seconds;
 }
 
-function resolveNormalSide(sample, outwardX, outwardZ) {
-  const normalX = Number(sample?.normal?.x);
-  const normalZ = Number(sample?.normal?.z);
-  if (Number.isFinite(normalX) && Number.isFinite(normalZ)) {
-    return outwardX * normalX + outwardZ * normalZ >= 0 ? 1 : -1;
-  }
-
-  const tangentX = Number(sample?.tangent?.x);
-  const tangentZ = Number(sample?.tangent?.z);
-  if (Number.isFinite(tangentX) && Number.isFinite(tangentZ)) {
-    return outwardX * -tangentZ + outwardZ * tangentX >= 0 ? 1 : -1;
-  }
-  return outwardZ >= 0 ? 1 : -1;
-}
-
 function taperedRangeInfluence(value, range) {
-  const start = Number(range?.startX);
-  const end = Number(range?.endX);
-  const feather = nonNegativeNumber(range?.feather, 0);
+  const start = Number(range?.startIndex);
+  const end = Number(range?.endIndex);
+  const feather = nonNegativeNumber(range?.featherSamples, 0);
   if (!Number.isFinite(value) || !Number.isFinite(start) || !Number.isFinite(end) || value <= start || value >= end) {
     return 0;
   }

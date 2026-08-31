@@ -207,10 +207,18 @@ assert.ok(bridgeGuide.hardLimitDistance < 30.4 / 2,
   'The route-normal fallback must keep the car centre on the Kenney bridge deck');
 assert.equal(bridgeGuide.offRoadDrag, 0.34,
   'A rail scrape should receive only TURN\'s ordinary off-road drag');
-assert.ok(bridgeGuide.positiveNormalRange.startX > bridgeGuide.negativeNormalRange.startX,
+assert.equal(bridgeGuide.sampleCount, ROUTE_SAMPLE_COUNT);
+const negativeRailStart = nearestRoutePoint(route, 172.2, -202);
+const positiveRailStart = nearestRoutePoint(route, 191.3, -204);
+const commonRailEnd = nearestRoutePoint(route, 352.7, -209);
+assert.equal(bridgeGuide.negativeNormalRange.startIndex, negativeRailStart.index);
+assert.equal(bridgeGuide.positiveNormalRange.startIndex, positiveRailStart.index);
+assert.equal(bridgeGuide.positiveNormalRange.endIndex, commonRailEnd.index);
+assert.equal(bridgeGuide.negativeNormalRange.endIndex, commonRailEnd.index);
+assert.ok(bridgeGuide.positiveNormalRange.startIndex > bridgeGuide.negativeNormalRange.startIndex,
   'The omitted left entry rail must retain the longer open funnel');
-assert.equal(bridgeGuide.positiveNormalRange.endX, bridgeGuide.negativeNormalRange.endX);
-assert.equal(bridgeGuide.positiveNormalRange.feather, 6);
+assert.equal(bridgeGuide.positiveNormalRange.featherSamples, 4);
+assert.equal(bridgeGuide.negativeNormalRange.featherSamples, 4);
 assert.match(collisionSource, /resolveProductionWorldCollisionState/,
   'The LAB adapter must wrap the current production collision resolver');
 assert.match(collisionSource, /bridgeGuide\.active[\s\S]*Math\.min/,
@@ -221,45 +229,95 @@ assert.match(bridgeGuideSource, /outwardSpeed > -minimumInwardSpeed/,
   'The containment fallback must preserve route-tangential velocity');
 assert.doesNotMatch(bridgeGuideSource, /for\s*\(|while\s*\(/,
   'The per-frame bridge guide must remain O(1)');
-assert.match(bridgeGuideSource, /const distance = Math\.hypot\(dx, dz\)/);
-assert.match(bridgeGuideSource, /let directionLength = distance/,
-  'A zero-distance direction fallback must not overwrite the real lateral distance');
+assert.match(bridgeGuideSource, /Number\(nearestTrack\.index\)/,
+  'Only the bridge\'s unique sampled route segment may activate the guide');
+assert.match(bridgeGuideSource, /const signedDistance = dx \* normalX \+ dz \* normalZ/,
+  'Lateral distance must be projected onto the authored route normal');
+assert.match(bridgeGuideSource, /state\.position\.x -= outwardX \* excess/,
+  'Containment must preserve the sub-sample along-track position');
+assert.doesNotMatch(bridgeGuideSource, /const outwardX = dx \//,
+  'The car-to-sample vector must never become the collision response normal');
 
-// A fast car exactly on the sampled centreline must remain untouched. The guide
-// may be longitudinally active here, but zero lateral distance can never become
-// a false boundary merely because velocity supplies its fallback direction.
+// A fast car exactly on a sampled bridge centreline must remain untouched.
 {
+  const site = nearestRoutePoint(
+    route,
+    MOUNTAIN_BRIDGE_CENTERS[3].x,
+    MOUNTAIN_BRIDGE_CENTERS[3].z
+  );
+  const tangent = routeTangent(route, site.index);
+  const normal = [-tangent[2], 0, tangent[0]];
   const state = {
-    position: { x: MOUNTAIN_BRIDGE_CENTERS[3].x, y: 3.18, z: MOUNTAIN_BRIDGE_CENTERS[3].z },
-    velocity: { x: 30, y: 0, z: 0 },
+    position: { x: site.point[0], y: site.point[1] + 0.18, z: site.point[2] },
+    velocity: { x: tangent[0] * 30, y: 0, z: tangent[2] * 30 },
     speed: 30
   };
   const collision = resolveWorldCollisionState({
     state,
     trackId: 'mountain',
     nearestTrack: {
+      index: site.index,
       distance: 0,
       sample: {
-        point: { x: state.position.x, y: 3, z: state.position.z },
-        tangent: { x: 1, y: 0, z: 0 },
-        normal: { x: 0, y: 0, z: 1 }
+        point: { x: site.point[0], y: site.point[1], z: site.point[2] },
+        tangent: { x: tangent[0], y: 0, z: tangent[2] },
+        normal: { x: normal[0], y: 0, z: normal[2] }
       }
     },
     collisionProfile: mountainDefinition.collisionProfile
   });
   assert.equal(collision.collided, false, 'A centred bridge car must not hit the rail');
-  assert.equal(collision.bridgeGuide, true, 'The centreline case must exercise the active bridge span');
+  assert.equal(collision.bridgeGuide, true, 'The centreline case must exercise the active bridge segment');
   assert.deepEqual(state.position, {
-    x: MOUNTAIN_BRIDGE_CENTERS[3].x,
-    y: 3.18,
-    z: MOUNTAIN_BRIDGE_CENTERS[3].z
+    x: site.point[0],
+    y: site.point[1] + 0.18,
+    z: site.point[2]
   });
-  assert.deepEqual(state.velocity, { x: 30, y: 0, z: 0 });
+  assert.deepEqual(state.velocity, { x: tangent[0] * 30, y: 0, z: tangent[2] * 30 });
 }
 
-// Reproduce the old padded x-faces on the open shoulder. They sit outside
-// the visible longitudinal rail spans, so neither the soft guide nor production
-// may register a collision, reverse the car or scrub its forward speed.
+// Samples elsewhere on MOUNTAIN can share the bridge's x range. They must never
+// inherit bridge assistance or the tighter rail limit.
+for (const remote of [
+  nearestRoutePoint(route, 176, 138),
+  nearestRoutePoint(route, 330, -370)
+]) {
+  assert.ok(
+    remote.index < bridgeGuide.negativeNormalRange.startIndex
+      || remote.index > bridgeGuide.negativeNormalRange.endIndex,
+    'The remote regression site must be outside the bridge sample segment'
+  );
+  const tangent = routeTangent(route, remote.index);
+  const normal = [-tangent[2], 0, tangent[0]];
+  const state = {
+    position: {
+      x: remote.point[0] + normal[0] * 14.5,
+      y: remote.point[1] + 0.18,
+      z: remote.point[2] + normal[2] * 14.5
+    },
+    velocity: { x: tangent[0] * 28, y: 0, z: tangent[2] * 28 },
+    speed: 28
+  };
+  const collision = resolveWorldCollisionState({
+    state,
+    trackId: 'mountain',
+    nearestTrack: {
+      index: remote.index,
+      distance: 14.5,
+      sample: {
+        point: { x: remote.point[0], y: remote.point[1], z: remote.point[2] },
+        tangent: { x: tangent[0], y: 0, z: tangent[2] },
+        normal: { x: normal[0], y: 0, z: normal[2] }
+      }
+    },
+    collisionProfile: mountainDefinition.collisionProfile
+  });
+  assert.equal(collision.bridgeGuide, false, 'A non-bridge MOUNTAIN section must not activate the guide');
+  assert.equal(collision.collided, false);
+  assert.deepEqual(state.velocity, { x: tangent[0] * 28, y: 0, z: tangent[2] * 28 });
+}
+
+// Reproduce the old padded x-faces outside the visible sampled rail spans.
 const formerBridgeCaps = [
   { label: 'south entry cap', x: MOUNTAIN_BRIDGE_CENTERS[0].x - 6.3, center: MOUNTAIN_BRIDGE_CENTERS[0], side: -1, velocityX: 30 },
   { label: 'north handoff cap', x: MOUNTAIN_BRIDGE_CENTERS[1].x - 19.1, center: MOUNTAIN_BRIDGE_CENTERS[1], side: 1, velocityX: 30 },
@@ -267,8 +325,15 @@ const formerBridgeCaps = [
   { label: 'north exit cap', x: MOUNTAIN_BRIDGE_CENTERS.at(-1).x + 19.1, center: MOUNTAIN_BRIDGE_CENTERS.at(-1), side: 1, velocityX: -30 }
 ];
 for (const cap of formerBridgeCaps) {
+  const site = nearestRoutePoint(route, cap.x, cap.center.z);
+  const tangent = routeTangent(route, site.index);
+  const normal = [-tangent[2], 0, tangent[0]];
   const state = {
-    position: { x: cap.x, y: 3.18, z: cap.center.z + cap.side * 15 },
+    position: {
+      x: cap.x + normal[0] * cap.side * 15,
+      y: site.point[1] + 0.18,
+      z: cap.center.z + normal[2] * cap.side * 15
+    },
     velocity: { x: cap.velocityX, y: 0, z: 0 },
     speed: Math.abs(cap.velocityX)
   };
@@ -276,11 +341,12 @@ for (const cap of formerBridgeCaps) {
     state,
     trackId: 'mountain',
     nearestTrack: {
+      index: site.index,
       distance: 15,
       sample: {
-        point: { x: cap.x, y: 3, z: cap.center.z },
-        tangent: { x: Math.sign(cap.velocityX), y: 0, z: 0 },
-        normal: { x: 0, y: 0, z: 1 }
+        point: { x: site.point[0], y: site.point[1], z: site.point[2] },
+        tangent: { x: tangent[0], y: 0, z: tangent[2] },
+        normal: { x: normal[0], y: 0, z: normal[2] }
       }
     },
     collisionProfile: mountainDefinition.collisionProfile
@@ -290,39 +356,47 @@ for (const cap of formerBridgeCaps) {
   assert.equal(state.velocity.x, cap.velocityX, cap.label + ' must not reverse or scrub forward motion');
 }
 
-// The exact visible rail endpoints have zero influence. This is the deliberate
-// no-end-cap contract: assistance grows only after the car moves alongside a rail.
+// The exact sampled rail endpoints have zero influence: no orthogonal cap.
 for (const [side, range] of [
   [-1, bridgeGuide.negativeNormalRange],
   [1, bridgeGuide.positiveNormalRange]
 ]) {
-  for (const [label, x] of [['start', range.startX], ['end', range.endX]]) {
+  for (const [label, index] of [['start', range.startIndex], ['end', range.endIndex]]) {
+    const point = route[index];
+    const tangent = routeTangent(route, index);
+    const normal = [-tangent[2], 0, tangent[0]];
     const state = {
-      position: { x, y: 3.18, z: -205 + side * 15 },
-      velocity: { x: 30, y: 0, z: 0 },
+      position: {
+        x: point[0] + normal[0] * side * 15,
+        y: point[1] + 0.18,
+        z: point[2] + normal[2] * side * 15
+      },
+      velocity: { x: tangent[0] * 30, y: 0, z: tangent[2] * 30 },
       speed: 30
     };
     const collision = resolveWorldCollisionState({
       state,
       trackId: 'mountain',
       nearestTrack: {
+        index,
         distance: 15,
         sample: {
-          point: { x, y: 3, z: -205 },
-          tangent: { x: 1, y: 0, z: 0 },
-          normal: { x: 0, y: 0, z: 1 }
+          point: { x: point[0], y: point[1], z: point[2] },
+          tangent: { x: tangent[0], y: 0, z: tangent[2] },
+          normal: { x: normal[0], y: 0, z: normal[2] }
         }
       },
       collisionProfile: mountainDefinition.collisionProfile
     });
-    assert.equal(collision.bridgeGuide, false, 'Rail ' + label + ' side ' + side + ' must expose no orthogonal cap');
-    assert.equal(state.velocity.x, 30, 'Rail ' + label + ' side ' + side + ' must preserve forward speed');
+    const retainedForward = state.velocity.x * tangent[0] + state.velocity.z * tangent[2];
+    assert.equal(collision.bridgeGuide, false, 'Rail ' + label + ' side ' + side + ' must expose no cap');
+    assert.ok(Math.abs(retainedForward - 30) <= 1e-9,
+      'Rail ' + label + ' side ' + side + ' must preserve forward speed');
   }
 }
 
-// Alongside the actual rails, exercise both sides at the beginning, middle and
-// release. The guide must contain the car at the rail centre, remove only outward
-// motion, and retain at least 99% of one-frame forward speed (ordinary off-road drag).
+// Alongside the actual rails, include a deliberate 0.8 m along-track sample
+// offset. Only the route-normal component may be assisted or clamped.
 const bridgeGuideSites = [
   nearestRoutePoint(route, MOUNTAIN_BRIDGE_CENTERS[1].x, MOUNTAIN_BRIDGE_CENTERS[1].z),
   nearestRoutePoint(route, MOUNTAIN_BRIDGE_CENTERS[3].x, MOUNTAIN_BRIDGE_CENTERS[3].z),
@@ -335,11 +409,12 @@ for (const [siteIndex, site] of bridgeGuideSites.entries()) {
     const forwardSpeed = 28;
     const outwardSpeed = 4;
     const distance = bridgeGuide.hardLimitDistance + 0.8;
+    const alongTrackOffset = 0.8;
     const state = {
       position: {
-        x: site.point[0] + normal[0] * side * distance,
+        x: site.point[0] + normal[0] * side * distance + tangent[0] * alongTrackOffset,
         y: site.point[1] + 0.18,
-        z: site.point[2] + normal[2] * side * distance
+        z: site.point[2] + normal[2] * side * distance + tangent[2] * alongTrackOffset
       },
       velocity: {
         x: tangent[0] * forwardSpeed + normal[0] * side * outwardSpeed,
@@ -352,7 +427,8 @@ for (const [siteIndex, site] of bridgeGuideSites.entries()) {
       state,
       trackId: 'mountain',
       nearestTrack: {
-        distance,
+        index: site.index,
+        distance: Math.hypot(distance, alongTrackOffset),
         sample: {
           point: { x: site.point[0], y: site.point[1], z: site.point[2] },
           tangent: { x: tangent[0], y: 0, z: tangent[2] },
@@ -366,6 +442,10 @@ for (const [siteIndex, site] of bridgeGuideSites.entries()) {
     const remainingOutward = (
       state.velocity.x * normal[0] + state.velocity.z * normal[2]
     ) * side;
+    const positionX = state.position.x - site.point[0];
+    const positionZ = state.position.z - site.point[2];
+    const retainedAlongPosition = positionX * tangent[0] + positionZ * tangent[2];
+    const normalPosition = Math.abs(positionX * normal[0] + positionZ * normal[2]);
     const siteLabel = 'Bridge guide site ' + (siteIndex + 1) + ' side ' + side;
     assert.equal(collision.bridgeGuide, true, siteLabel + ' must engage beside a visible rail');
     assert.equal(collision.bridgeRailAssist, true, siteLabel + ' must use the slippery assist');
@@ -376,11 +456,10 @@ for (const [siteIndex, site] of bridgeGuideSites.entries()) {
       siteLabel + ' must retain its forward slide, got ' + retainedForward.toFixed(3));
     assert.ok(remainingOutward < 0, siteLabel + ' must guide the car gently inward');
     assert.ok(state.speed >= forwardSpeed * 0.99, siteLabel + ' must never produce a stop');
-    assert.ok(Math.hypot(
-      state.position.x - site.point[0],
-      state.position.z - site.point[2]
-    ) <= bridgeGuide.hardLimitDistance + 1e-6,
-    siteLabel + ' must keep the car centre at or inside the visible rail');
+    assert.ok(normalPosition <= bridgeGuide.hardLimitDistance + 1e-6,
+      siteLabel + ' must keep the car centre at or inside the visible rail');
+    assert.ok(Math.abs(retainedAlongPosition - alongTrackOffset) <= 1e-6,
+      siteLabel + ' must preserve its sub-sample along-track position');
   }
 }
 
