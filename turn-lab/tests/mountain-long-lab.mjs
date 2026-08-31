@@ -221,6 +221,41 @@ assert.match(bridgeGuideSource, /outwardSpeed > -minimumInwardSpeed/,
   'The containment fallback must preserve route-tangential velocity');
 assert.doesNotMatch(bridgeGuideSource, /for\s*\(|while\s*\(/,
   'The per-frame bridge guide must remain O(1)');
+assert.match(bridgeGuideSource, /const distance = Math\.hypot\(dx, dz\)/);
+assert.match(bridgeGuideSource, /let directionLength = distance/,
+  'A zero-distance direction fallback must not overwrite the real lateral distance');
+
+// A fast car exactly on the sampled centreline must remain untouched. The guide
+// may be longitudinally active here, but zero lateral distance can never become
+// a false boundary merely because velocity supplies its fallback direction.
+{
+  const state = {
+    position: { x: MOUNTAIN_BRIDGE_CENTERS[3].x, y: 3.18, z: MOUNTAIN_BRIDGE_CENTERS[3].z },
+    velocity: { x: 30, y: 0, z: 0 },
+    speed: 30
+  };
+  const collision = resolveWorldCollisionState({
+    state,
+    trackId: 'mountain',
+    nearestTrack: {
+      distance: 0,
+      sample: {
+        point: { x: state.position.x, y: 3, z: state.position.z },
+        tangent: { x: 1, y: 0, z: 0 },
+        normal: { x: 0, y: 0, z: 1 }
+      }
+    },
+    collisionProfile: mountainDefinition.collisionProfile
+  });
+  assert.equal(collision.collided, false, 'A centred bridge car must not hit the rail');
+  assert.equal(collision.bridgeGuide, true, 'The centreline case must exercise the active bridge span');
+  assert.deepEqual(state.position, {
+    x: MOUNTAIN_BRIDGE_CENTERS[3].x,
+    y: 3.18,
+    z: MOUNTAIN_BRIDGE_CENTERS[3].z
+  });
+  assert.deepEqual(state.velocity, { x: 30, y: 0, z: 0 });
+}
 
 // Reproduce the old padded x-faces on the open shoulder. They sit outside
 // the visible longitudinal rail spans, so neither the soft guide nor production

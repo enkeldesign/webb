@@ -1,6 +1,13 @@
 const EPSILON = 1e-6;
 const DEFAULT_SECONDS = 1 / 60;
 const MAX_SECONDS = 0.1;
+const INACTIVE_GUIDE = Object.freeze({
+  active: false,
+  assisted: false,
+  contained: false,
+  influence: 0,
+  limit: Infinity
+});
 
 export function resolveMountainBridgeGuideState({
   state,
@@ -9,13 +16,6 @@ export function resolveMountainBridgeGuideState({
   baselineLimit = Infinity,
   dt = DEFAULT_SECONDS
 } = {}) {
-  const inactive = {
-    active: false,
-    assisted: false,
-    contained: false,
-    influence: 0,
-    limit: baselineLimit
-  };
   if (
     !guide
     || !state?.position
@@ -23,27 +23,31 @@ export function resolveMountainBridgeGuideState({
     || !nearestTrack?.sample?.point
     || !Number.isFinite(nearestTrack.distance)
   ) {
-    return inactive;
+    return INACTIVE_GUIDE;
   }
 
   const anchor = nearestTrack.sample.point;
   let dx = Number(state.position.x) - Number(anchor.x);
   let dz = Number(state.position.z) - Number(anchor.z);
-  let distance = Math.hypot(dx, dz);
-  if (!Number.isFinite(distance)) return inactive;
+  const distance = Math.hypot(dx, dz);
+  if (!Number.isFinite(distance)) return INACTIVE_GUIDE;
 
-  if (distance < EPSILON) {
+  // A centred car still needs a stable direction for the normal projection, but
+  // its lateral distance must remain zero. Reusing speed as distance would turn
+  // an exactly centred fast car into a false bridge-boundary hit.
+  let directionLength = distance;
+  if (directionLength < EPSILON) {
     dx = -(Number(state.velocity.x) || 0);
     dz = -(Number(state.velocity.z) || 0);
-    distance = Math.hypot(dx, dz) || 1;
+    directionLength = Math.hypot(dx, dz) || 1;
   }
 
-  const outwardX = dx / distance;
-  const outwardZ = dz / distance;
+  const outwardX = dx / directionLength;
+  const outwardZ = dz / directionLength;
   const side = resolveNormalSide(nearestTrack.sample, outwardX, outwardZ);
   const range = side > 0 ? guide.positiveNormalRange : guide.negativeNormalRange;
   const influence = taperedRangeInfluence(Number(anchor.x), range);
-  if (influence <= 0) return inactive;
+  if (influence <= 0) return INACTIVE_GUIDE;
 
   const safeBaselineLimit = positiveNumber(baselineLimit, positiveNumber(guide.baselineLimitDistance, 15.6));
   const baselineAssistStart = positiveNumber(

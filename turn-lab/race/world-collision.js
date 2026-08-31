@@ -7,6 +7,12 @@ import {
 } from './mountain-bridge-guide.js?revision=mountain-slip-bridge-r15';
 
 const DEFAULT_CAR_RADIUS = 2.6;
+const INACTIVE_BRIDGE_GUIDE = Object.freeze({
+  active: false,
+  assisted: false,
+  contained: false,
+  limit: Infinity
+});
 
 export { WORLD_FREE_ROAM_DISTANCE };
 
@@ -36,7 +42,7 @@ export function resolveWorldCollisionState(options = {}) {
       baselineLimit,
       dt
     })
-    : { active: false, assisted: false, contained: false, limit: baselineLimit };
+    : INACTIVE_BRIDGE_GUIDE;
 
   // The LAB guide owns the route-normal bridge boundary while active. Feed its
   // smoothly tapered limit to production so the wider global envelope cannot
@@ -47,23 +53,23 @@ export function resolveWorldCollisionState(options = {}) {
       distance: Math.min(Number(nearestTrack.distance) || 0, bridgeGuide.limit)
     }
     : nearestTrack;
-  const collision = resolveProductionWorldCollisionState({
-    ...options,
-    nearestTrack: productionNearestTrack
-  });
+  const collision = bridgeGuide.active
+    ? resolveProductionWorldCollisionState({
+      ...options,
+      nearestTrack: productionNearestTrack
+    })
+    : resolveProductionWorldCollisionState(options);
 
   if ((bridgeGuide.assisted || bridgeGuide.contained) && state?.velocity) {
     state.speed = vectorLength(state.velocity);
   }
-  return {
-    ...collision,
-    collided: collision.collided || bridgeGuide.contained,
-    boundary: collision.boundary || bridgeGuide.contained,
-    shoulder: collision.shoulder || bridgeGuide.assisted,
-    bridgeGuide: bridgeGuide.active,
-    bridgeRailAssist: bridgeGuide.assisted,
-    bridgeRailContainment: bridgeGuide.contained
-  };
+  collision.collided = collision.collided || bridgeGuide.contained;
+  collision.boundary = collision.boundary || bridgeGuide.contained;
+  collision.shoulder = collision.shoulder || bridgeGuide.assisted;
+  collision.bridgeGuide = bridgeGuide.active;
+  collision.bridgeRailAssist = bridgeGuide.assisted;
+  collision.bridgeRailContainment = bridgeGuide.contained;
+  return collision;
 }
 
 function vectorLength(vector) {
