@@ -93,6 +93,20 @@ assert.ok(closedLength(MOUNTAIN_CONTROL_POINTS) > 3000,
   'Promoted MOUNTAIN must retain the substantially longer route');
 assert.equal(findProperIntersections(MOUNTAIN_CONTROL_POINTS).length, 0);
 assert.ok(maximumTurn(MOUNTAIN_CONTROL_POINTS) < 100);
+
+const startSeam = [
+  ...MOUNTAIN_CONTROL_POINTS.slice(-3),
+  ...MOUNTAIN_CONTROL_POINTS.slice(0, 2)
+];
+assert.ok(maximumOpenTurn(startSeam) < 16,
+  `MOUNTAIN start/finish must not reintroduce a steering S-kink: ${maximumOpenTurn(startSeam).toFixed(2)}°`);
+const startLanding = [
+  ...MOUNTAIN_CONTROL_POINTS.slice(-4),
+  ...MOUNTAIN_CONTROL_POINTS.slice(0, 2)
+];
+assert.ok(maximumGrade(startLanding) < 0.05,
+  `MOUNTAIN final landing must stay below a 5% control-point grade: ${(maximumGrade(startLanding) * 100).toFixed(2)}%`);
+
 assert.equal(MOUNTAIN_BRIDGE_CENTERS.length, 6);
 assert.equal(MOUNTAIN_TUNNEL_SPECS.length, 1);
 
@@ -178,11 +192,34 @@ function maximumTurn(points) {
     const previous = points[(index - 1 + points.length) % points.length];
     const current = points[index];
     const next = points[(index + 1) % points.length];
-    const incoming = [current[0] - previous[0], current[2] - previous[2]];
-    const outgoing = [next[0] - current[0], next[2] - current[2]];
-    const denominator = Math.max(1e-9, Math.hypot(...incoming) * Math.hypot(...outgoing));
-    const cosine = (incoming[0] * outgoing[0] + incoming[1] * outgoing[1]) / denominator;
-    maximum = Math.max(maximum, Math.acos(Math.max(-1, Math.min(1, cosine))) * 180 / Math.PI);
+    maximum = Math.max(maximum, turnDegrees(previous, current, next));
+  }
+  return maximum;
+}
+
+function maximumOpenTurn(points) {
+  let maximum = 0;
+  for (let index = 1; index < points.length - 1; index += 1) {
+    maximum = Math.max(maximum, turnDegrees(points[index - 1], points[index], points[index + 1]));
+  }
+  return maximum;
+}
+
+function turnDegrees(previous, current, next) {
+  const incoming = [current[0] - previous[0], current[2] - previous[2]];
+  const outgoing = [next[0] - current[0], next[2] - current[2]];
+  const denominator = Math.max(1e-9, Math.hypot(...incoming) * Math.hypot(...outgoing));
+  const cosine = (incoming[0] * outgoing[0] + incoming[1] * outgoing[1]) / denominator;
+  return Math.acos(Math.max(-1, Math.min(1, cosine))) * 180 / Math.PI;
+}
+
+function maximumGrade(points) {
+  let maximum = 0;
+  for (let index = 1; index < points.length; index += 1) {
+    const previous = points[index - 1];
+    const current = points[index];
+    const horizontal = Math.max(1e-9, Math.hypot(current[0] - previous[0], current[2] - previous[2]));
+    maximum = Math.max(maximum, Math.abs(current[1] - previous[1]) / horizontal);
   }
   return maximum;
 }
