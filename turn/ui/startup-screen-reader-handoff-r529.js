@@ -423,7 +423,7 @@
         const difficulty = String(card.querySelector('.track-card-difficulty')?.textContent || '').trim().toLocaleLowerCase('en');
         const time = String(card.querySelector('.track-card-best-time')?.textContent || '').trim();
         const car = spokenCardText(card.querySelector('.track-card-best-car:not([hidden])')?.textContent);
-        const label = [`${name}, ${difficulty} track`];
+        const label = [`${name}, ${difficulty} difficulty track`];
         if (time && !/^(?:--:--\.---|NO TIME YET)$/i.test(time)) {
           label.push(`Best ${time}${car ? ` with ${car}` : ''}`);
         } else {

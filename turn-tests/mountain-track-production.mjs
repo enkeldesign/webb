@@ -59,7 +59,7 @@ const mountain = TRACK_DEFINITIONS.find((track) => track.id === 'mountain');
 assert.ok(mountain, 'MOUNTAIN must remain a production track');
 assert.equal(mountain.name, 'Mountain');
 assert.equal(mountain.eyebrow, 'TRACK 6');
-assert.equal(mountain.difficulty, 'HARD');
+assert.equal(mountain.difficulty, 'EXPERT');
 assert.equal(mountain.storageRevision, 'mountain-r3-start-seam');
 assert.equal(mountain.sampleCount, 2160);
 assert.equal(mountain.freeRoamDistance, 18.2);

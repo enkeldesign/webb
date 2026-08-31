@@ -54,10 +54,12 @@
   --turn-disclosure-trigger: var(--turn-blue-300);
   --turn-disclosure-panel: var(--turn-paper);
 
-  /* Difficulty communicates challenge, not success or failure. */
+  /* Four track difficulty tiers communicate challenge, not success or failure. */
   --turn-difficulty-easy: var(--turn-green-200);
   --turn-difficulty-medium: var(--turn-yellow-200);
-  --turn-difficulty-hard: var(--turn-red-200);
+  --turn-difficulty-advanced: var(--turn-orange-200);
+  --turn-difficulty-expert: var(--turn-red-200);
+  --turn-difficulty-hard: var(--turn-difficulty-expert);
   --turn-difficulty-locked: var(--turn-muted);
 
   /* Driving-control roles. */

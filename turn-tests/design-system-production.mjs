@@ -79,7 +79,8 @@ const semanticMappings = new Map([
   ['--turn-disclosure-panel', '--turn-paper'],
   ['--turn-difficulty-easy', '--turn-green-200'],
   ['--turn-difficulty-medium', '--turn-yellow-200'],
-  ['--turn-difficulty-hard', '--turn-red-200'],
+  ['--turn-difficulty-advanced', '--turn-orange-200'],
+  ['--turn-difficulty-expert', '--turn-red-200'],
   ['--turn-difficulty-locked', '--turn-muted'],
   ['--turn-control-gas', '--turn-green-500'],
   ['--turn-control-drift', '--turn-blue-500'],
@@ -164,6 +165,7 @@ for (const difficultyContract of [
   '.track-card-cliffside .track-card-difficulty',
   '.track-card-harbor .track-card-difficulty',
   '.track-card-midnight-city .track-card-difficulty',
+  '.track-card-mountain .track-card-difficulty',
   '.track-card-locked .track-card-difficulty'
 ]) {
   assert.ok(semantic.includes(difficultyContract), `Missing difficulty contract ${difficultyContract}`);
@@ -192,7 +194,7 @@ for (const decision of [
   'Racer identity',
   'Utility',
   'Navigation',
-  'Easy green 200, Medium yellow 200, Hard red 200',
+  'Easy green 200, Medium yellow 200, Advanced orange 200, Expert red 200',
   'Form controls',
   'Disclosure',
   'ABOUT TURN is visually a link but semantically a button',

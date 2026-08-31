@@ -138,6 +138,11 @@ assert.equal(
   '/turn/garage/lot-enhancement-runtime.js?revision=r223-training-car-taxi&build=20260827-r185',
   'A future release must keep the prewarmed Lot runtime on the current color-migration module graph'
 );
+assert.equal(
+  futureImports['/turn/garage/lot-enhancement-runtime.js?revision=r164-post-soak&build=20260826-r184'],
+  '/turn/garage/lot-enhancement-runtime.js?revision=r223-training-car-taxi&build=20260827-r185',
+  'The one known r184 installed-PWA Lot URL must remain a narrow compatibility bridge to the current release'
+);
 
 assert.match(app, /const buildKey = globalThis\.__TURN_BUILD__\?\.cacheKey/);
 assert.match(app, /function withBuild\(path\)/);

@@ -181,12 +181,12 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     paragraphs: [
       'TURN’s sixth production track replaces the old Track 6 placeholder with MOUNTAIN: a 49-metre alpine route that begins in a warm snowy village, climbs in long flowing curves around the hidden backside, reaches a river at the snow line and then changes character into an exposed front-face hairpin descent beside a waterfall.',
       'The world combines a procedural alpine ground treatment, batched spruce forests and Cliffside-style granite with a cozy chalet village, chapel, inn, lanterns, Kenney Fantasy Town landmarks, a lake, summit river, waterfall mist and a layered mountain backdrop. Snow is deliberately visual rather than an ice-grip gimmick, while guardrail-aligned containment keeps the descent difficult without letting cars pass through scenery.',
-      'MOUNTAIN also joins TURN’s non-visual and progression systems as a first-class track: Drive By Ear changes from long flowing climb notes to alternating severity-three slalom calls, Color Cues adds a distinct blue family, every-track achievements now include six tracks, and Trophy Road unlocks MOUNTAIN at 1,000 trophies.'
+      'MOUNTAIN also joins TURN’s non-visual and progression systems as a first-class track: Drive By Ear changes from long flowing climb notes to alternating severity-three slalom calls, Color Cues adds a distinct blue family, every-track achievements now include six tracks, and Trophy Road unlocks MOUNTAIN at 700 trophies.'
     ],
     milestones: [
       'Sixth production track with a 49 m summit and cinematic village-to-peak intro',
       'Snowy village, summit river, front-face slalom, waterfall and alpine backdrop',
-      'TURN 1.9.0 · 2026.08.17-r173 with MOUNTAIN at 1,000 trophies'
+      'TURN 1.9.0 · 2026.08.17-r173 with MOUNTAIN at 700 trophies'
     ]
   },
   {
@@ -249,7 +249,22 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
       'Standard binary DRIFT LOCK with quick smoothing, LOCK bubble and state-aware Boost',
       'TURN 1.11.0 · 2026.08.26-r184 driving-feel release'
     ]
-  }
+  },
+{
+  period: '29–31 August',
+  title: 'Long MOUNTAIN reaches production and difficulty gets clearer',
+  paragraphs: [
+    'The long MOUNTAIN course moved from TURN LAB into production without replacing the production runtime around it. The original alpine climb now continues across the lake bridge into an open lower valley, a village tunnel and forest return before reconnecting with the snowy start.',
+    'Playtesting then exposed a small start/finish S-kink and steep landing in the rebuilt return. The final approach was smoothed while the start line stayed fixed, and MOUNTAIN records were given a fresh geometry-safe namespace rather than reinterpreting older replay coordinates.',
+    'TURN’s track language now uses four explicit difficulty tiers: EASY, MEDIUM, ADVANCED and EXPERT. Green, yellow, orange and red reinforce those text labels, while track-card ARIA names the same difficulty. MIDNIGHT CITY and MOUNTAIN unlock information now also states their rounded lap length and challenge tier.'
+  ],
+  milestones: [
+    'Long MOUNTAIN production route with lake bridge, lower valley, village tunnel and forest return',
+    'Smoothed MOUNTAIN start/finish approach with geometry-safe record isolation',
+    'Accessible EASY / MEDIUM / ADVANCED / EXPERT hierarchy across all six tracks',
+    'TURN 1.12.0 · 2026.08.31-r185 difficulty and long-MOUNTAIN release'
+  ]
+}
 ]);
 
 export const CHANGELOG = Object.freeze([
@@ -474,11 +489,20 @@ export const CHANGELOG = Object.freeze([
       ['DRIFT LOCK and Boost', 'Replaces the progressive experiment with a binary left-pull LOCK using a short smooth transition, connected LOCK bubble and purple-to-green charge feedback; Boost lasts 50% longer and recharges only through Drift.'],
       ['Visible wheel steering', 'Connects the authored front-wheel pivots to steering input so production cars visibly turn their wheels while driving.']
     ]
-  }
+  },
+{
+  date: '29–31 August',
+  entries: [
+    ['1.12.0 r185', 'Promotes the tested long MOUNTAIN course and introduces the four-tier EASY, MEDIUM, ADVANCED and EXPERT difficulty language.'],
+    ['Long MOUNTAIN', 'Adds the lake bridge, lower valley, village tunnel and forest return to production, then smooths the start/finish approach after device playtesting.'],
+    ['Difficulty and accessibility', 'Uses green EASY, yellow MEDIUM, orange ADVANCED and red EXPERT badges while keeping the same textual difficulty in track-card ARIA.'],
+    ['Unlock information', 'MIDNIGHT CITY now identifies its ADVANCED ≈4.7 km lap; MOUNTAIN identifies its EXPERT ≈3.8 km lap.']
+  ]
+}
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.11.0',
-  build: '2026.08.26-r184',
-  note: 'TURN 1.11.0 build r184 promotes the playtested camera, standard binary DRIFT LOCK, Boost balance and visible front-wheel steering.'
+  version: '1.12.0',
+  build: '2026.08.31-r185',
+  note: 'TURN 1.12.0 promotes long MOUNTAIN and introduces accessible EASY, MEDIUM, ADVANCED and EXPERT track difficulty tiers.'
 });

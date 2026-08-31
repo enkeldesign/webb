@@ -114,7 +114,8 @@ function renderTrackCard(track) {
       class="track-card track-card-${track.id}"
       type="button"
       data-track-id="${track.id}"
-      aria-label="${track.name}, ${track.difficulty} track"
+      data-track-difficulty="${track.difficulty.toLowerCase()}"
+      aria-label="${track.name}, ${track.difficulty} difficulty track"
       aria-pressed="false"
       style="--track-accent:${track.accent};--track-accent-soft:${track.accentSoft}"
     >
@@ -144,6 +145,7 @@ function renderLockedTrackCard(track) {
       class="track-card track-card-locked is-locked"
       type="button"
       data-track-id="${track.id}"
+      data-track-difficulty="locked"
       aria-label="${track.eyebrow}, ${track.name}, locked"
       aria-disabled="true"
       disabled
