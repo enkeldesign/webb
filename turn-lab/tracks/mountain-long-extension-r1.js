@@ -28,11 +28,11 @@ const TUNNEL_PEAK_BASE_Y = -7;
 // naturally leans into the slope instead of standing vertically in front of it.
 const TUNNEL_PORTAL_SURFACE_OFFSET = 0.65;
 const TUNNEL_PORTAL_BACK_INSET = 1.6;
-const TUNNEL_PORTAL_RING = 6;
+const TUNNEL_PORTAL_RING = 8;
 // Keep a full triangle-step of mountain hidden behind the constructed collar.
 // A hairline overlap is not enough for the finite CPU-carve tessellation and
 // can reveal small sky wedges around an otherwise aligned portal.
-const TUNNEL_PORTAL_SEAM_OVERLAP = 3;
+const TUNNEL_PORTAL_SEAM_OVERLAP = 5;
 const TUNNEL_PORTAL_APERTURE_MARGIN = TUNNEL_PORTAL_RING - TUNNEL_PORTAL_SEAM_OVERLAP;
 const TUNNEL_PORTAL_APERTURE_HEIGHT_MARGIN = TUNNEL_PORTAL_RING - TUNNEL_PORTAL_SEAM_OVERLAP;
 const TUNNEL_PORTAL_ARC_SEGMENTS = 12;
@@ -593,7 +593,7 @@ function setTunnelPortalRockMatrix(mesh, index, source, portal, terrainHeightAt,
   const { spec } = portal;
   const marker = new THREE.Object3D();
   const shoulder = layer === 1;
-  const sideOffset = spec.halfWidth + (shoulder ? 1.8 : 4.6);
+  const sideOffset = spec.halfWidth + TUNNEL_PORTAL_RING + (shoulder ? 0.8 : 4.2);
   const point = tunnelPortalFrontPoint(portal, {
     lateral: side * sideOffset,
     height: shoulder ? spec.clearHeight * 0.38 : -0.55

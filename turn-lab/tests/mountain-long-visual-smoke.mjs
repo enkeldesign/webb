@@ -183,7 +183,7 @@ assert.ok(metrics.tunnelPortalMaximumYawError < 0.75,
   `Portal plane is not perpendicular to the mountain radius: ${metrics.tunnelPortalMaximumYawError}°`);
 assert.ok(metrics.tunnelPortalSlopeDegrees > 45 && metrics.tunnelPortalSlopeDegrees < 47,
   `Portal pitch does not match the mountainside: ${metrics.tunnelPortalSlopeDegrees}°`);
-assert.ok(metrics.tunnelPortalFrontLean > 22 && metrics.tunnelPortalFrontLean < 27,
+assert.ok(metrics.tunnelPortalFrontLean > 25 && metrics.tunnelPortalFrontLean < 27,
   `Portal face does not lean into the cone from foot to crown: ${metrics.tunnelPortalFrontLean} m`);
 assert.equal(metrics.tunnelPortalSurfaceAligned, true);
 assert.equal(metrics.tunnelPortalBackInset, 1.6);

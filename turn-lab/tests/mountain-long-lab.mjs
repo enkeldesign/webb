@@ -333,8 +333,8 @@ for (const tunnel of MOUNTAIN_TUNNEL_SPECS) {
   const portalBottomSurfaceRadius = tunnel.peak.radius
     * (1 - ((portalSamples[0][1] - 0.95) + 7) / tunnel.peak.height);
   const portalCrownSurfaceRadius = tunnel.peak.radius
-    * (1 - ((portalSamples[0][1] + tunnel.clearHeight + 6) + 7) / tunnel.peak.height);
-  assert.ok(portalBottomSurfaceRadius - portalCrownSurfaceRadius > 22,
+    * (1 - ((portalSamples[0][1] + tunnel.clearHeight + 8) + 7) / tunnel.peak.height);
+  assert.ok(portalBottomSurfaceRadius - portalCrownSurfaceRadius > 25,
     `${tunnel.id} portal face must lean materially into the mountain slope from foot to crown`);
   const mountainSlopeDegrees = Math.atan(tunnel.peak.height / tunnel.peak.radius) * 180 / Math.PI;
   assert.ok(mountainSlopeDegrees > 45 && mountainSlopeDegrees < 47,
@@ -447,9 +447,9 @@ assert.match(extensionSource, /TUNNEL_PORTAL_SURFACE_OFFSET = 0\.65/,
   'The collar must clear the faceted shell without floating visibly off the mountain');
 assert.match(extensionSource, /TUNNEL_PORTAL_BACK_INSET = 1\.6/,
   'The slope-matched reveal must remain joined to the sampled tunnel lining');
-assert.match(extensionSource, /TUNNEL_PORTAL_RING = 6/);
-assert.match(extensionSource, /TUNNEL_PORTAL_SEAM_OVERLAP = 3/,
-  'The collar must hide at least one full step of the finite CPU-carve tessellation');
+assert.match(extensionSource, /TUNNEL_PORTAL_RING = 8/);
+assert.match(extensionSource, /TUNNEL_PORTAL_SEAM_OVERLAP = 5/,
+  'The collar must hide the complete finite CPU-carve triangle step');
 assert.match(extensionSource, /TUNNEL_PORTAL_APERTURE_MARGIN = TUNNEL_PORTAL_RING - TUNNEL_PORTAL_SEAM_OVERLAP/,
   'The baked opening must clear the drive aperture while leaving a robust hidden seam');
 assert.match(extensionSource, /TUNNEL_PORTAL_APERTURE_HEIGHT_MARGIN = TUNNEL_PORTAL_RING - TUNNEL_PORTAL_SEAM_OVERLAP/,
