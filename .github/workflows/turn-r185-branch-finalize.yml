@@ -35,14 +35,12 @@ jobs:
                   raise SystemExit(f'Missing expected source in {path}: {old[:90]!r}')
               write(path, text.replace(old, new, 1))
 
-          # Track-card semantics: difficulty remains visible text and is explicitly part of ARIA.
           for path in ['turn/m8-home.js', 'turn/ui/track-select.js']:
               replace_once(
                   path,
                   'data-track-id="${track.id}"\n      aria-label="${track.name}, ${track.difficulty} track"',
                   'data-track-id="${track.id}"\n      data-track-difficulty="${track.difficulty.toLowerCase()}"\n      aria-label="${track.name}, ${track.difficulty} difficulty track"'
               )
-              # Locked cards expose their semantic locked state to the same generic styling hook.
               text = read(path)
               text = text.replace(
                   'data-track-id="${track.id}"\n      aria-label="${track.eyebrow}, ${track.name}, locked"',
@@ -50,7 +48,6 @@ jobs:
               )
               write(path, text)
 
-          # Trophy Road track unlocks: current measured production route lengths, rounded for people.
           replace_once(
               'turn/progression/trophy-road.js',
               'Unlock TURN’s night-time city track, with neon streets, technical corners and the longest lap in the current track collection.',
@@ -62,7 +59,6 @@ jobs:
               'Unlock MOUNTAIN: an EXPERT ≈3.8 km alpine route from the snowy village through the summit and waterfall, across the lake bridge, then through the lower valley and village tunnel return.'
           )
 
-          # Keep the static design-system reference aligned with the production difficulty language.
           design_path = 'turn/design.html'
           design = read(design_path)
           design = design.replace(
@@ -79,7 +75,6 @@ jobs:
           design = design.replace('<span class="difficulty hard">Hard</span>', '<span class="difficulty advanced">Advanced</span>\n              <span class="difficulty expert">Expert</span>')
           write(design_path, design)
 
-          # ABOUT: correct old threshold wording, then add the recent production history and changelog.
           about_path = 'turn/content/about-history.js'
           about = read(about_path)
           about = about.replace('Trophy Road unlocks MOUNTAIN at 1,000 trophies.', 'Trophy Road unlocks MOUNTAIN at 700 trophies.')
@@ -128,7 +123,6 @@ jobs:
           )
           write(about_path, about)
 
-          # Regression expectations that are intentionally superseded by this release.
           multi = 'turn-lab/tests/multi-track-production.mjs'
           text = read(multi)
           text = text.replace("{ id: 'harbor', difficulty: 'HARD'", "{ id: 'harbor', difficulty: 'ADVANCED'")
@@ -139,8 +133,7 @@ jobs:
           write(multi, text)
 
           mountain_test = 'turn-tests/mountain-track-production.mjs'
-          text = read(mountain_test).replace("assert.equal(mountain.difficulty, 'HARD');", "assert.equal(mountain.difficulty, 'EXPERT');")
-          write(mountain_test, text)
+          write(mountain_test, read(mountain_test).replace("assert.equal(mountain.difficulty, 'HARD');", "assert.equal(mountain.difficulty, 'EXPERT');"))
 
           visual_test = 'turn-tests/track-select-visuals-production.mjs'
           text = read(visual_test)
@@ -202,9 +195,18 @@ jobs:
       - name: Synchronize canonical release and TURN NEXT wrappers
         run: |
           node turn/scripts/release.mjs --write
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('turn-next/index.html')
+          text = path.read_text()
+          text = text.replace('1.11.0', '1.12.0')
+          text = text.replace('2026.08.26-r184', '2026.08.31-r185')
+          text = text.replace('20260826-r184', '20260831-r185')
+          path.write_text(text)
+          PY
           node turn-next/scripts/build-parity-app.mjs
           node turn-next/scripts/build-parity-main.mjs
-          node turn-next/scripts/build-parity-entry.mjs
+          node turn-next/scripts/build-parity-entry.mjs --check
       - name: Validate focused release contracts
         run: |
           node turn/scripts/release.mjs --check
