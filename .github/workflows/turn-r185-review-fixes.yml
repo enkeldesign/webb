@@ -1,0 +1,59 @@
+name: TURN r185 review fixes
+
+on:
+  push:
+    branches:
+      - track-difficulty-release-r185
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: track-difficulty-release-r185
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Apply review fixes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          sr = Path('turn/ui/startup-screen-reader-handoff-r529.js')
+          text = sr.read_text()
+          old = "const label = [`${name}, ${difficulty} track`];"
+          new = "const label = [`${name}, ${difficulty} difficulty track`];"
+          if old not in text:
+              raise SystemExit('Expected Home screen-reader label normalizer not found')
+          sr.write_text(text.replace(old, new, 1))
+
+          design = Path('turn/design.html')
+          text = design.read_text()
+          old = '<strong>HARBOR</strong><span class="difficulty advanced">Advanced</span>\n              <span class="difficulty expert">Expert</span>'
+          new = '<strong>HARBOR</strong><span class="difficulty advanced">Advanced</span>'
+          if old not in text:
+              raise SystemExit('Expected contradictory Harbor design specimen not found')
+          design.write_text(text.replace(old, new, 1))
+          PY
+      - name: Verify affected contracts
+        run: |
+          node --check turn/ui/startup-screen-reader-handoff-r529.js
+          node turn-tests/cliffside-production.mjs
+          node turn-tests/startup-and-unread-production.mjs
+          node turn-tests/design-system-production.mjs
+          node turn-tests/track-select-visuals-production.mjs
+          node turn/scripts/release.mjs --check
+      - name: Publish fixes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add turn/ui/startup-screen-reader-handoff-r529.js turn/design.html
+          git commit -m 'Address final difficulty accessibility review'
+          git push origin HEAD:track-difficulty-release-r185
