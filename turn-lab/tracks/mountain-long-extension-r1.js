@@ -9,7 +9,7 @@ import {
   MOUNTAIN_VIEW_SCREEN_SPECS
 } from './mountain-layout.js';
 
-const REVISION = 'mountain-long-course-r13-surface-aligned-portals';
+const REVISION = 'mountain-long-course-r14-slip-bridge-grey-portals';
 const CITY_ROAD_URL = '/postal/assets/kenney/roads/road-straight.glb';
 const FANTASY_FENCE_URL = '/turn/assets/scenery/mountain/fantasy/fence.glb';
 const NATURE_ROCK_URL = '/turn/assets/scenery/mountain/nature/cliff-waterfall-rock.glb';
@@ -45,6 +45,8 @@ const SNOW = 0xeaf1f4;
 const SNOW_SHADOW = 0xd5e1e7;
 const GRANITE = 0x626b72;
 const GRANITE_DARK = 0x4d565d;
+const PORTAL_ROCK_GREY = 0x7d878d;
+const PORTAL_ROCK_EMISSIVE = 0x30383d;
 
 function nearestSampleIndex(samples, x, z) {
   let nearest = 0;
@@ -102,6 +104,17 @@ function cloneMaterials(material, overrideColor = null) {
     return next;
   };
   return Array.isArray(material) ? material.map(cloneOne) : cloneOne(material);
+}
+
+function clonePortalRockMaterials(material) {
+  const result = cloneMaterials(material, PORTAL_ROCK_GREY);
+  const materials = Array.isArray(result) ? result : [result];
+  for (const next of materials) {
+    if (next.emissive) next.emissive.setHex(PORTAL_ROCK_EMISSIVE);
+    if ('emissiveIntensity' in next) next.emissiveIntensity = 0.42;
+    next.needsUpdate = true;
+  }
+  return result;
 }
 
 function prepareMeshSource(scene, { overrideColor = null } = {}) {
@@ -621,6 +634,12 @@ function installTunnelPortalRocks(world, source, portals, terrainHeightAt) {
   const count = portals.length * 4;
   const mesh = makeAssetInstances(source, count, 'Mountain Kenney Nature tunnel portal rocks LAB');
   if (!mesh) return { rocks: 0, drawCalls: 0 };
+  // These low side rocks sit below the night mountain's direct light. Give
+  // their dedicated instanced mesh the mountain's mid-grey plus a small baked
+  // emissive floor so the facets stay readable instead of collapsing to black.
+  // This changes one material only: no light, shadow caster or draw call is added.
+  mesh.material = clonePortalRockMaterials(source.material);
+  mesh.receiveShadow = false;
   let cursor = 0;
   for (const portal of portals) {
     for (const side of [-1, 1]) {

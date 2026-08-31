@@ -1,33 +1,6 @@
 // TURN LAB definition overlay. All tracks inherit the current production contract;
 // only MOUNTAIN gets an experiment-specific identity and a tighter no-drop envelope.
 import * as production from '/turn/tracks/definitions.js?lab-base=mountain-long-r1';
-import { MOUNTAIN_BRIDGE_CENTERS } from './mountain-layout.js';
-
-const BRIDGE_RAIL_COLLIDERS = Object.freeze(MOUNTAIN_BRIDGE_CENTERS.flatMap(({ x, z }, index) => {
-  const colliders = [];
-  // The west approach is still turning as it reaches the deck. The first
-  // north (+z) collider was intercepting the car while it was visibly on the
-  // left-hand asphalt, because TURN expands boxes by the car radius. Leave
-  // that first side open; the no-drop road envelope remains active and the
-  // second north rail takes over before the bridge's exposed span.
-  if (index > 0) colliders.push(Object.freeze({
-    id: `mountain-lab-bridge-north-${index + 1}`,
-    type: 'box',
-    minX: x - 16.6,
-    maxX: x + 16.6,
-    minZ: z + 14.0,
-    maxZ: z + 23.0
-  }));
-  colliders.push(Object.freeze({
-    id: `mountain-lab-bridge-south-${index + 1}`,
-    type: 'box',
-    minX: x - (index === 0 ? 3.8 : 16.6),
-    maxX: x + 16.6,
-    minZ: z - 23.0,
-    maxZ: z - 14.0
-  }));
-  return colliders;
-}));
 
 export const DEFAULT_TRACK_ID = production.DEFAULT_TRACK_ID;
 export const TRACK_SAMPLE_COUNT = production.TRACK_SAMPLE_COUNT;
@@ -40,9 +13,12 @@ export const TRACK_DEFINITIONS = Object.freeze(production.TRACK_DEFINITIONS.map(
     description: 'Summit climb. Waterfall descent. Lake bridge. Valley lights.',
     storageRevision: 'mountain-lab-long-r1',
     sampleCount: 2160,
-    // TURN already resolves a hard track-envelope collision before snapping the car
-    // to the route surface. Tightening the LAB envelope keeps the car on the road or
-    // bridge deck and prevents nearby folded road sections becoming shortcut portals.
+    // TURN already resolves a centreline-following track envelope before snapping the
+    // car to the route surface. Tightening the LAB envelope keeps the car on the road
+    // or bridge deck and prevents nearby folded sections becoming shortcut portals.
+    // Let that continuous envelope contain the bridge too: unlike a chain of padded
+    // boxes it has no perpendicular end caps, retains tangential speed and cannot
+    // create invisible stops at the entry, module seams or exit.
     freeRoamDistance: 18.2,
     collisionProfile: Object.freeze({
       ...track.collisionProfile,
@@ -53,8 +29,7 @@ export const TRACK_DEFINITIONS = Object.freeze(production.TRACK_DEFINITIONS.map(
       boundaryTangentRetention: 0.96,
       boundaryMinimumRecoverySpeed: 5.5,
       colliders: Object.freeze([
-        ...(track.collisionProfile.colliders || []),
-        ...BRIDGE_RAIL_COLLIDERS
+        ...(track.collisionProfile.colliders || [])
       ])
     })
   });
