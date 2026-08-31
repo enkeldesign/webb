@@ -2,7 +2,7 @@
 // only the long-course bridge/valley dressing. The query suffix deliberately avoids
 // the LAB import-map key so this import cannot recurse back into this wrapper.
 import { installMountainWorld as installProductionMountainWorld } from '/turn/tracks/mountain-world-r3.js?lab-base=mountain-long';
-import { installMountainLongExtension } from './mountain-long-extension-r1.js';
+import { installMountainLongExtension } from './mountain-long-extension-r1.js?revision=mountain-long-r18';
 
 const PRODUCTION_WORLD_SAMPLE_COUNT = 1080;
 

@@ -57,12 +57,12 @@ assert.deepEqual(labImportMaps[0], productionImportMaps[0], 'TURN LAB first impo
 assert.deepEqual(labImportMaps[1], {
   scopes: {
     '/turn/': {
-      './tracks/definitions.js': '/turn-lab/tracks/definitions.js',
+      './tracks/definitions.js': '/turn-lab/tracks/definitions.js?revision=mountain-slip-bridge-r18',
       './tracks/mountain-layout.js': '/turn-lab/tracks/mountain-layout.js',
       './tracks/pace-notes.js': '/turn-lab/tracks/pace-notes.js',
-      './tracks/mountain-world-r3.js?revision=r177-ipad-sky-aspect': '/turn-lab/tracks/mountain-world-lab-r1.js',
+      './tracks/mountain-world-r3.js?revision=r177-ipad-sky-aspect': '/turn-lab/tracks/mountain-world-lab-r1.js?revision=mountain-slip-bridge-r18',
       '/turn/race/lap-system.js?build=20260720-r19': '/turn-lab/race/mountain-lap-system.js',
-      '/turn/race/world-collision.js?build=20260723-r53': '/turn-lab/race/world-collision.js?revision=mountain-slip-bridge-r15'
+      '/turn/race/world-collision.js?build=20260723-r53': '/turn-lab/race/world-collision.js?revision=mountain-slip-bridge-r18'
     }
   }
 });
@@ -719,6 +719,8 @@ assert.doesNotMatch(extensionSource, /requestAnimationFrame|setAnimationLoop|set
 assert.match(extensionSource, /dynamicPointLightsAdded: 0/);
 assert.match(extensionSource, /addedShadowCasters: 0/);
 assert.match(worldSource, /PRODUCTION_WORLD_SAMPLE_COUNT = 1080/);
+assert.match(worldSource, /mountain-long-extension-r1\.js\?revision=mountain-long-r18/,
+  'The final portal material and bridge scenery revision must bypass stale LAB module caches');
 assert.match(worldSource, /installMountainLongExtension\(world, fullSamples/);
 assert.match(worldSource, /runtimeSamples: fullSamples\.length/);
 assert.match(workflowSource, /node turn-lab\/tests\/mountain-long-lab\.mjs/,

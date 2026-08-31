@@ -1,10 +1,10 @@
 import {
   WORLD_FREE_ROAM_DISTANCE,
   resolveWorldCollisionState as resolveProductionWorldCollisionState
-} from '../../turn/race/world-collision.js?lab-base=mountain-slip-bridge-r15';
+} from '../../turn/race/world-collision.js?lab-base=mountain-slip-bridge-r18';
 import {
   resolveMountainBridgeGuideState
-} from './mountain-bridge-guide.js?revision=mountain-slip-bridge-r15';
+} from './mountain-bridge-guide.js?revision=mountain-slip-bridge-r18';
 
 const DEFAULT_CAR_RADIUS = 2.6;
 const INACTIVE_BRIDGE_GUIDE = Object.freeze({
