@@ -1,0 +1,228 @@
+name: TURN r185 branch finalizer
+
+on:
+  push:
+    branches:
+      - track-difficulty-release-r185
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: track-difficulty-release-r185
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Apply requested difficulty, accessibility, unlock and About changes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          def read(path): return Path(path).read_text()
+          def write(path, text): Path(path).write_text(text)
+          def replace_once(path, old, new):
+              text = read(path)
+              if old not in text:
+                  raise SystemExit(f'Missing expected source in {path}: {old[:90]!r}')
+              write(path, text.replace(old, new, 1))
+
+          # Track-card semantics: difficulty remains visible text and is explicitly part of ARIA.
+          for path in ['turn/m8-home.js', 'turn/ui/track-select.js']:
+              replace_once(
+                  path,
+                  'data-track-id="${track.id}"\n      aria-label="${track.name}, ${track.difficulty} track"',
+                  'data-track-id="${track.id}"\n      data-track-difficulty="${track.difficulty.toLowerCase()}"\n      aria-label="${track.name}, ${track.difficulty} difficulty track"'
+              )
+              # Locked cards expose their semantic locked state to the same generic styling hook.
+              text = read(path)
+              text = text.replace(
+                  'data-track-id="${track.id}"\n      aria-label="${track.eyebrow}, ${track.name}, locked"',
+                  'data-track-id="${track.id}"\n      data-track-difficulty="locked"\n      aria-label="${track.eyebrow}, ${track.name}, locked"'
+              )
+              write(path, text)
+
+          # Trophy Road track unlocks: current measured production route lengths, rounded for people.
+          replace_once(
+              'turn/progression/trophy-road.js',
+              'Unlock TURN’s night-time city track, with neon streets, technical corners and the longest lap in the current track collection.',
+              'Unlock MIDNIGHT CITY: an ADVANCED ≈4.7 km night-time city endurance lap through neon avenues and technical corners.'
+          )
+          replace_once(
+              'turn/progression/trophy-road.js',
+              'Unlock MOUNTAIN: leave a snowy village on a long alpine climb, round the summit river and attack the front-face hairpin descent beside the waterfall.',
+              'Unlock MOUNTAIN: an EXPERT ≈3.8 km alpine route from the snowy village through the summit and waterfall, across the lake bridge, then through the lower valley and village tunnel return.'
+          )
+
+          # Keep the static design-system reference aligned with the production difficulty language.
+          design_path = 'turn/design.html'
+          design = read(design_path)
+          design = design.replace(
+              '.difficulty.hard { background: var(--turn-difficulty-hard); }',
+              '.difficulty.advanced { background: var(--turn-difficulty-advanced); }\n    .difficulty.expert { background: var(--turn-difficulty-expert); }\n    .difficulty.hard { background: var(--turn-difficulty-hard); }'
+          )
+          hard_row = re.search(r'<tr[^>]*data-semantic="--turn-difficulty-hard"[\s\S]*?</tr>', design)
+          if hard_row:
+              row = hard_row.group(0)
+              advanced = row.replace('--turn-difficulty-hard', '--turn-difficulty-advanced').replace('--turn-red-200', '--turn-orange-200')
+              expert = row.replace('--turn-difficulty-hard', '--turn-difficulty-expert')
+              design = design[:hard_row.start()] + advanced + '\n' + expert + design[hard_row.end():]
+          design = design.replace('Easy green 200, Medium yellow 200, Hard red 200', 'Easy green 200, Medium yellow 200, Advanced orange 200, Expert red 200')
+          design = design.replace('<span class="difficulty hard">Hard</span>', '<span class="difficulty advanced">Advanced</span>\n              <span class="difficulty expert">Expert</span>')
+          write(design_path, design)
+
+          # ABOUT: correct old threshold wording, then add the recent production history and changelog.
+          about_path = 'turn/content/about-history.js'
+          about = read(about_path)
+          about = about.replace('Trophy Road unlocks MOUNTAIN at 1,000 trophies.', 'Trophy Road unlocks MOUNTAIN at 700 trophies.')
+          about = about.replace('with MOUNTAIN at 1,000 trophies', 'with MOUNTAIN at 700 trophies')
+          history_entry = """  },
+          {
+            period: '29–31 August',
+            title: 'Long MOUNTAIN reaches production and difficulty gets clearer',
+            paragraphs: [
+              'The long MOUNTAIN course moved from TURN LAB into production without replacing the production runtime around it. The original alpine climb now continues across the lake bridge into an open lower valley, a village tunnel and forest return before reconnecting with the snowy start.',
+              'Playtesting then exposed a small start/finish S-kink and steep landing in the rebuilt return. The final approach was smoothed while the start line stayed fixed, and MOUNTAIN records were given a fresh geometry-safe namespace rather than reinterpreting older replay coordinates.',
+              'TURN’s track language now uses four explicit difficulty tiers: EASY, MEDIUM, ADVANCED and EXPERT. Green, yellow, orange and red reinforce those text labels, while track-card ARIA names the same difficulty. MIDNIGHT CITY and MOUNTAIN unlock information now also states their rounded lap length and challenge tier.'
+            ],
+            milestones: [
+              'Long MOUNTAIN production route with lake bridge, lower valley, village tunnel and forest return',
+              'Smoothed MOUNTAIN start/finish approach with geometry-safe record isolation',
+              'Accessible EASY / MEDIUM / ADVANCED / EXPERT hierarchy across all six tracks',
+              'TURN 1.12.0 · 2026.08.31-r185 difficulty and long-MOUNTAIN release'
+            ]
+          }
+          """
+          marker = '  }\n]);\n\nexport const CHANGELOG'
+          if marker not in about:
+              raise SystemExit('Could not locate Development History tail')
+          about = about.replace(marker, history_entry + ']);\n\nexport const CHANGELOG', 1)
+          changelog_entry = """  },
+          {
+            date: '29–31 August',
+            entries: [
+              ['1.12.0 r185', 'Promotes the tested long MOUNTAIN course and introduces the four-tier EASY, MEDIUM, ADVANCED and EXPERT difficulty language.'],
+              ['Long MOUNTAIN', 'Adds the lake bridge, lower valley, village tunnel and forest return to production, then smooths the start/finish approach after device playtesting.'],
+              ['Difficulty and accessibility', 'Uses green EASY, yellow MEDIUM, orange ADVANCED and red EXPERT badges while keeping the same textual difficulty in track-card ARIA.'],
+              ['Unlock information', 'MIDNIGHT CITY now identifies its ADVANCED ≈4.7 km lap; MOUNTAIN identifies its EXPERT ≈3.8 km lap.']
+            ]
+          }
+          """
+          marker = '  }\n]);\n\nexport const CURRENT_RELEASE'
+          if marker not in about:
+              raise SystemExit('Could not locate Changelog tail')
+          about = about.replace(marker, changelog_entry + ']);\n\nexport const CURRENT_RELEASE', 1)
+          about = re.sub(
+              r"export const CURRENT_RELEASE = Object\.freeze\(\{[\s\S]*?\}\);",
+              "export const CURRENT_RELEASE = Object.freeze({\n  version: '1.12.0',\n  build: '2026.08.31-r185',\n  note: 'TURN 1.12.0 promotes long MOUNTAIN and introduces accessible EASY, MEDIUM, ADVANCED and EXPERT track difficulty tiers.'\n});",
+              about,
+              count=1
+          )
+          write(about_path, about)
+
+          # Regression expectations that are intentionally superseded by this release.
+          multi = 'turn-lab/tests/multi-track-production.mjs'
+          text = read(multi)
+          text = text.replace("{ id: 'harbor', difficulty: 'HARD'", "{ id: 'harbor', difficulty: 'ADVANCED'")
+          text = text.replace("{ id: 'midnight-city', difficulty: 'HARD'", "{ id: 'midnight-city', difficulty: 'ADVANCED'")
+          text = text.replace("{ id: 'mountain', difficulty: 'HARD'", "{ id: 'mountain', difficulty: 'EXPERT'")
+          text = text.replace("id: 'midnight-city'[\\s\\S]*difficulty: 'HARD'", "id: 'midnight-city'[\\s\\S]*difficulty: 'ADVANCED'")
+          text = text.replace("id: 'mountain'[\\s\\S]*difficulty: 'HARD'", "id: 'mountain'[\\s\\S]*difficulty: 'EXPERT'")
+          write(multi, text)
+
+          mountain_test = 'turn-tests/mountain-track-production.mjs'
+          text = read(mountain_test).replace("assert.equal(mountain.difficulty, 'HARD');", "assert.equal(mountain.difficulty, 'EXPERT');")
+          write(mountain_test, text)
+
+          visual_test = 'turn-tests/track-select-visuals-production.mjs'
+          text = read(visual_test)
+          text = text.replace("assert.equal(tracks.harbor.difficulty, 'HARD');", "assert.equal(tracks.harbor.difficulty, 'ADVANCED');\nassert.equal(tracks['midnight-city'].difficulty, 'ADVANCED');\nassert.equal(tracks.mountain.difficulty, 'EXPERT');")
+          text = text.replace(
+              "assert.match(chooserSource, /card\\.setAttribute\\('aria-pressed', String\\(selected\\)\\)/, 'Selection remains programmatically exposed');",
+              "assert.match(chooserSource, /card\\.setAttribute\\('aria-pressed', String\\(selected\\)\\)/, 'Selection remains programmatically exposed');\nassert.match(chooserSource, /data-track-difficulty=\\\"\\$\\{track\\.difficulty\\.toLowerCase\\(\\)\\}\\\"/, 'Track chooser must expose the canonical difficulty as data');\nassert.match(chooserSource, /aria-label=\\\"\\$\\{track\\.name\\}, \\$\\{track\\.difficulty\\} difficulty track\\\"/, 'Track chooser ARIA must explicitly announce the canonical difficulty');"
+          )
+          write(visual_test, text)
+
+          design_test = 'turn-tests/design-system-production.mjs'
+          text = read(design_test)
+          text = text.replace("['--turn-difficulty-hard', '--turn-red-200'],", "['--turn-difficulty-advanced', '--turn-orange-200'],\n  ['--turn-difficulty-expert', '--turn-red-200'],")
+          text = text.replace("  '.track-card-midnight-city .track-card-difficulty',\n  '.track-card-locked .track-card-difficulty'", "  '.track-card-midnight-city .track-card-difficulty',\n  '.track-card-mountain .track-card-difficulty',\n  '.track-card-locked .track-card-difficulty'")
+          text = text.replace("'Easy green 200, Medium yellow 200, Hard red 200',", "'Easy green 200, Medium yellow 200, Advanced orange 200, Expert red 200',")
+          write(design_test, text)
+
+          trophy_test = 'turn-lab/tests/trophy-road-production.mjs'
+          text = read(trophy_test)
+          old = """const mountainReward = getProductionTrophyRoadReward('mountain');
+          assert.equal(mountainReward?.threshold, 700);
+          assert.equal(mountainReward?.type, 'track');
+          assert.match(mountainReward?.description || '', /snowy village/i);
+          assert.match(mountainReward?.description || '', /waterfall/i);
+          """
+          new = """const midnightReward = getProductionTrophyRoadReward('midnight-city');
+          assert.equal(midnightReward?.threshold, 400);
+          assert.match(midnightReward?.description || '', /ADVANCED/);
+          assert.match(midnightReward?.description || '', /≈4\\.7 km/);
+
+          const mountainReward = getProductionTrophyRoadReward('mountain');
+          assert.equal(mountainReward?.threshold, 700);
+          assert.equal(mountainReward?.type, 'track');
+          assert.match(mountainReward?.description || '', /EXPERT/);
+          assert.match(mountainReward?.description || '', /≈3\\.8 km/);
+          assert.match(mountainReward?.description || '', /snowy village/i);
+          assert.match(mountainReward?.description || '', /waterfall/i);
+          """
+          if old not in text:
+              raise SystemExit('Could not locate Trophy Road Mountain regression block')
+          write(trophy_test, text.replace(old, new, 1))
+
+          about_test = 'turn-tests/about-history-production.mjs'
+          text = read(about_test)
+          anchor = "assert.match(content, /Standard binary DRIFT LOCK/);"
+          addition = """assert.match(content, /Standard binary DRIFT LOCK/);
+          assert.match(content, /29–31 August/);
+          assert.match(content, /Long MOUNTAIN reaches production and difficulty gets clearer/);
+          assert.match(content, /EASY \/ MEDIUM \/ ADVANCED \/ EXPERT/);
+          assert.match(content, /MIDNIGHT CITY/);
+          assert.match(content, /≈4\\.7 km/);
+          assert.match(content, /≈3\\.8 km/);
+          assert.doesNotMatch(content, /MOUNTAIN at 1,000 trophies/);
+          """
+          if anchor not in text:
+              raise SystemExit('Could not locate About regression anchor')
+          write(about_test, text.replace(anchor, addition, 1))
+          PY
+      - name: Synchronize canonical release and TURN NEXT wrappers
+        run: |
+          node turn/scripts/release.mjs --write
+          node turn-next/scripts/build-parity-app.mjs
+          node turn-next/scripts/build-parity-main.mjs
+          node turn-next/scripts/build-parity-entry.mjs
+      - name: Validate focused release contracts
+        run: |
+          node turn/scripts/release.mjs --check
+          node turn-next/scripts/build-parity-app.mjs --check
+          node turn-next/scripts/build-parity-main.mjs --check
+          node turn-next/scripts/build-parity-entry.mjs --check
+          node turn-lab/tests/multi-track-production.mjs
+          node turn-tests/mountain-track-production.mjs
+          node turn-tests/track-select-visuals-production.mjs
+          node turn-tests/design-system-production.mjs
+          node turn-lab/tests/trophy-road-production.mjs
+          node turn-tests/about-history-production.mjs
+          node turn-tests/release-production.mjs
+      - name: Remove helper and publish generated branch
+        run: |
+          rm -f .github/workflows/turn-r185-branch-finalize.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Complete TURN 1.12.0 difficulty release'
+          git push origin HEAD:track-difficulty-release-r185
