@@ -1,6 +1,6 @@
 // Production pace-note overlay for the promoted long MOUNTAIN course.
 // All non-MOUNTAIN tracks delegate to the previous production maps unchanged.
-import * as base from './pace-notes-base.js?revision=mountain-long-r1';
+import * as base from './pace-notes-base.js';
 
 export const PACE_NOTE_DIRECTION = base.PACE_NOTE_DIRECTION;
 export const PACE_NOTE_LENGTH = base.PACE_NOTE_LENGTH;

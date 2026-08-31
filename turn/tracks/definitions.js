@@ -1,6 +1,6 @@
 // Production track-definition overlay for the promoted long MOUNTAIN course.
 // Every non-MOUNTAIN track is the exact previous production definition.
-import * as base from './definitions-base.js?revision=mountain-long-r1';
+import * as base from './definitions-base.js';
 
 export const DEFAULT_TRACK_ID = base.DEFAULT_TRACK_ID;
 export const TRACK_SAMPLE_COUNT = base.TRACK_SAMPLE_COUNT;
