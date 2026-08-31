@@ -119,11 +119,17 @@ try {
       minZ: Math.min(result.minZ, sample.point.z),
       maxZ: Math.max(result.maxZ, sample.point.z)
     }), { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity });
+    const labSampling = runtime.activeWorld.userData.turnMountainLabSampling;
+    const productionSampling = runtime.activeWorld.userData.turnMountainSampling;
+    const sampling = labSampling || (productionSampling ? {
+      runtimeSamples: productionSampling.runtimeSamples,
+      productionWorldSamples: productionSampling.baseWorldSamples
+    } : null);
     return {
       trackId: runtime.trackId,
       sampleCount: runtime.samples.length,
       bounds,
-      sampling: runtime.activeWorld.userData.turnMountainLabSampling,
+      sampling,
       extension: runtime.activeWorld.userData.turnMountainLongExtension,
       labResources: resources.filter((pathname) => pathname.startsWith('/turn-lab/'))
     };
@@ -221,6 +227,7 @@ assert.equal(metrics.deepFoundations, 2);
 
 assert.equal(runtimeMetrics.trackId, 'mountain');
 assert.equal(runtimeMetrics.sampleCount, 2160, 'The minimap/physics runtime must receive the long route sample count');
+assert.ok(runtimeMetrics.sampling, 'The runtime world must expose either LAB or promoted-production sampling diagnostics');
 assert.equal(runtimeMetrics.sampling.runtimeSamples, 2160);
 assert.equal(runtimeMetrics.sampling.productionWorldSamples, 1080);
 assert.equal(runtimeMetrics.extension.bridgeDeckModules, 6);
@@ -251,7 +258,6 @@ assert.ok(runtimeMetrics.bounds.minZ < -370 && runtimeMetrics.bounds.maxZ > 190)
 for (const resource of [
   '/turn-lab/tracks/definitions.js',
   '/turn-lab/tracks/mountain-layout.js',
-  '/turn-lab/tracks/mountain-world-lab-r1.js',
   '/turn-lab/race/mountain-lap-system.js'
 ]) {
   assert.ok(runtimeMetrics.labResources.includes(resource), `Scoped runtime did not load ${resource}`);

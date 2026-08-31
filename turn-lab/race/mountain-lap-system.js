@@ -1,4 +1,4 @@
-import * as production from '/turn/race/lap-system-r86.js?lab-base=mountain-long';
+import * as production from '../../turn/race/lap-system-r86.js?lab-base=mountain-long';
 
 export const LAP_CHECKPOINTS = production.LAP_CHECKPOINTS;
 export const MOUNTAIN_LAB_CHECKPOINTS = Object.freeze(

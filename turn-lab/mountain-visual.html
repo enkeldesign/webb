@@ -17,7 +17,7 @@
   <div id="label">MOUNTAIN visual smoke</div>
   <script type="module">
     import * as THREE from 'three';
-    import { createTrackRuntime } from '/turn/tracks/catalog.js';
+    import { MOUNTAIN_CONTROL_POINTS } from '/turn/tracks/mountain-layout-base.js?visual=short-base';
     import { installMountainWorld } from '/turn/tracks/mountain-world-r3.js?visual=6';
     import { createMountainTerrainSampler, createMountainRiverSamples, offsetPoint, MOUNTAIN_R3 } from '/turn/tracks/mountain-world-r3-terrain.js?visual=6';
 
@@ -50,7 +50,25 @@
     moonlight.position.set(-90, 150, 70);
     scene.add(moonlight);
 
-    const runtime = createTrackRuntime('mountain', 1080);
+    // This harness intentionally validates the mature base MOUNTAIN world against
+    // the retired short-course geometry it was authored for. The separate
+    // long-course visual smoke validates the promoted 2160-sample extension.
+    const curve = new THREE.CatmullRomCurve3(
+      MOUNTAIN_CONTROL_POINTS.map(([x,y,z]) => new THREE.Vector3(x,y,z)),
+      true,
+      'centripetal'
+    );
+    const samples = [];
+    let distance = 0;
+    for (let index = 0; index < 1080; index += 1) {
+      const progress = index / 1080;
+      const point = curve.getPointAt(progress);
+      const tangent = curve.getTangentAt(progress).normalize();
+      const normal = new THREE.Vector3(-tangent.z, 0, tangent.x).normalize();
+      if (index > 0) distance += point.distanceTo(samples[index - 1].point);
+      samples.push({ point, tangent, normal, distance, progress });
+    }
+    const runtime = { samples };
     const trackWidth = 27;
     const world = installMountainWorld({ scene, samples:runtime.samples, trackWidth, runtime:{} });
     await world.ready;

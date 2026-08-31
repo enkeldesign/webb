@@ -141,7 +141,7 @@ assert.equal(byId('airport-safety')?.description, 'Finish Airport without going 
 assert.equal(byId('cliffside-safety')?.description, 'Finish Cliffside without going off-road in under 20 seconds.');
 assert.equal(byId('harbor-safety')?.description, 'Finish Harbor without going off-road in under 30 seconds.');
 assert.equal(byId('midnight-city-safety')?.description, 'Finish Midnight City without going off-road in under 70 seconds.');
-assert.equal(byId('mountain-safety')?.description, 'Finish Mountain without going off-road in under 40 seconds.');
+assert.equal(byId('mountain-safety')?.description, 'Finish Mountain without going off-road in under 70 seconds.');
 
 assert.equal(byId('an-army-of-me')?.title, 'AN ARMY OF ME');
 assert.equal(byId('an-army-of-me')?.trophies, 200);
@@ -154,7 +154,7 @@ assert.match(byId('on-course-of-course')?.recommendation || '', /Airport < 20 se
 assert.match(byId('on-course-of-course')?.recommendation || '', /Cliffside < 20 seconds/);
 assert.match(byId('on-course-of-course')?.recommendation || '', /Harbor < 30 seconds/);
 assert.match(byId('on-course-of-course')?.recommendation || '', /Midnight City < 70 seconds/);
-assert.match(byId('on-course-of-course')?.recommendation || '', /Mountain < 40 seconds/);
+assert.match(byId('on-course-of-course')?.recommendation || '', /Mountain < 70 seconds/);
 
 for (const id of ['find-lilya', 'find-darvid', 'save-bella', 'satans-sedan']) {
   const achievement = byId(id);
@@ -191,7 +191,7 @@ assert.deepEqual(
     ['cliffside', 14],
     ['harbor', 22],
     ['midnight-city', 52],
-    ['mountain', 25]
+    ['mountain', 48]
   ]
 );
 for (const trial of TIME_TRIALS) {
@@ -214,7 +214,7 @@ assert.deepEqual(CLEAN_LAP_TARGETS, {
   cliffside: 20,
   harbor: 30,
   'midnight-city': 70,
-  mountain: 40
+  mountain: 70
 });
 assert.equal(qualifiesForArmyLap({ rivalCountAtStart: 4 }, { position: 1, total: 5 }), true);
 assert.equal(qualifiesForArmyLap({ rivalCountAtStart: 3 }, { position: 1, total: 4 }), false);
@@ -233,8 +233,8 @@ assert.equal(qualifiesForCleanLap(
 ), false, 'Matching a clean-lap target exactly must not count');
 assert.equal(qualifiesForCleanLap(
   { trackId: 'mountain', onCourseThroughout: true },
-  { time: 39.999 }
-), true, 'A clean Mountain lap below its 40-second target should count');
+  { time: 69.999 }
+), true, 'A clean Mountain lap below its 70-second target should count');
 assert.equal(qualifiesForCleanLap(
   { trackId: 'harbor', onCourseThroughout: false },
   { time: 20 }
@@ -386,6 +386,7 @@ assert.match(productionCatalogSource, /TRACK_WINNER_ACHIEVEMENTS/);
 assert.match(productionCatalogSource, /TRACK_SAFETY_ACHIEVEMENTS/);
 assert.match(productionCatalogSource, /countryside: '15 seconds'/);
 assert.match(productionCatalogSource, /'midnight-city': '70 seconds'/);
+assert.match(productionCatalogSource, /mountain: '70 seconds'/);
 assert.match(legacyCatalogSource, /catalog-production\.js\?revision=r222-awd-label/,
   'The old Chromatic catalog URL must converge on the same production source of truth');
 
@@ -414,7 +415,7 @@ assert.match(timeTrialSource, /targetSeconds: 15/);
 assert.match(timeTrialSource, /targetSeconds: 14/);
 assert.match(timeTrialSource, /targetSeconds: 22/);
 assert.match(timeTrialSource, /targetSeconds: 52/);
-assert.match(timeTrialSource, /targetSeconds: 25/);
+assert.match(timeTrialSource, /targetSeconds: 48/);
 assert.match(timeTrialSource, /seconds >= trial\.targetSeconds/);
 
 assert.match(challengeSource, /SAMPLE_INTERVAL_MS = 50/);
@@ -422,7 +423,7 @@ assert.match(challengeSource, /CATCH_GAS_MIN_OVERCHARGE = 0\.001/);
 assert.doesNotMatch(challengeSource, /CATCH_GAS_REQUIRED_MS|catchGasMs|3000/,
   'CATCH THE CHARGE must not retain a hidden timed-hold requirement');
 assert.match(challengeSource, /GOT_STARTED_ID = 'got-started'/);
-assert.match(challengeSource, /mountain: 40/);
+assert.match(challengeSource, /mountain: 70/);
 assert.match(challengeSource, /rivalCountAtStart/);
 assert.match(challengeSource, /runtime\.state\.offRoad === true/);
 assert.match(challengeSource, /achievements\.unlock\(\s*CATCH_THE_CHARGE_ID/,

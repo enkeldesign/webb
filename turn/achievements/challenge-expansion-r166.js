@@ -10,7 +10,7 @@ export const CLEAN_LAP_TARGETS = Object.freeze({
   cliffside: 20,
   harbor: 30,
   'midnight-city': 70,
-  mountain: 40
+  mountain: 70
 });
 export const CATCH_GAS_MIN_OVERCHARGE = 0.001;
 

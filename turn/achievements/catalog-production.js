@@ -50,7 +50,7 @@ const SAFETY_TARGET_LABELS = Object.freeze({
   cliffside: '20 seconds',
   harbor: '30 seconds',
   'midnight-city': '70 seconds',
-  mountain: '40 seconds'
+  mountain: '70 seconds'
 });
 
 export const TRACK_WINNER_ACHIEVEMENTS = Object.freeze(
@@ -79,7 +79,7 @@ const rebalancedBaseAchievements = base.ACHIEVEMENTS.map((achievement) => {
   if (achievement.id === 'on-course-of-course') {
     return Object.freeze({
       ...achievement,
-      recommendation: 'Targets: Countryside < 15 seconds · Airport < 20 seconds · Cliffside < 20 seconds · Harbor < 30 seconds · Midnight City < 70 seconds · Mountain < 40 seconds'
+      recommendation: 'Targets: Countryside < 15 seconds · Airport < 20 seconds · Cliffside < 20 seconds · Harbor < 30 seconds · Midnight City < 70 seconds · Mountain < 70 seconds'
     });
   }
   if (achievement.category !== base.CATEGORY.TIME_TRIALS) return achievement;

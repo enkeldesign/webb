@@ -1,207 +1,69 @@
 import {
-  TRACK_DEFINITIONS,
-  getTrackFreeRoamDistance
-} from '../tracks/definitions.js';
+  WORLD_FREE_ROAM_DISTANCE,
+  resolveWorldCollisionState as resolveBaseWorldCollisionState
+} from './world-collision-base.js?revision=mountain-long-r1';
+import { resolveMountainBridgeGuideState } from './mountain-bridge-guide.js?revision=mountain-long-r1';
 
 const DEFAULT_CAR_RADIUS = 2.6;
-const COLLISION_BOUNCE = 0.16;
-const COLLISION_TANGENT_RETENTION = 0.78;
-const MAX_COLLIDER_RESOLVES = 4;
-const EPSILON = 1e-6;
+const INACTIVE_BRIDGE_GUIDE = Object.freeze({
+  active: false,
+  assisted: false,
+  contained: false,
+  limit: Infinity
+});
 
-export const WORLD_FREE_ROAM_DISTANCE = Object.freeze(Object.fromEntries(
-  TRACK_DEFINITIONS.map((track) => [track.id, track.freeRoamDistance])
-));
+export { WORLD_FREE_ROAM_DISTANCE };
 
-export function resolveWorldCollisionState({
-  state,
-  trackId = 'countryside',
-  nearestTrack = null,
-  collisionProfile = null,
-  carRadius = DEFAULT_CAR_RADIUS,
-  dt = 1 / 60
-}) {
-  if (!state?.position || !state?.velocity) {
-    return { collided: false, boundary: false, shoulder: false, obstacles: 0 };
-  }
+export function resolveWorldCollisionState(options = {}) {
+  const {
+    state,
+    trackId = 'countryside',
+    nearestTrack = null,
+    collisionProfile = null,
+    carRadius = DEFAULT_CAR_RADIUS,
+    dt = 1 / 60
+  } = options;
 
-  let boundary = false;
-  let shoulder = false;
-  let obstacles = 0;
+  // Exact previous production path for every non-MOUNTAIN track.
+  if (trackId !== 'mountain') return resolveBaseWorldCollisionState(options);
+
   const freeRoamDistance = positiveNumber(
     collisionProfile?.freeRoamDistance,
-    getTrackFreeRoamDistance(trackId)
+    WORLD_FREE_ROAM_DISTANCE[trackId]
   );
-  const limit = Math.max(1, freeRoamDistance - Math.max(0, Number(carRadius) || 0));
+  const baselineLimit = Math.max(
+    1,
+    freeRoamDistance - Math.max(0, Number(carRadius) || 0)
+  );
+  const bridgeGuide = resolveMountainBridgeGuideState({
+    state,
+    nearestTrack,
+    guide: collisionProfile?.bridgeGuide,
+    baselineLimit,
+    dt
+  }) || INACTIVE_BRIDGE_GUIDE;
 
-  if (nearestTrack?.sample?.point && Number.isFinite(nearestTrack.distance)) {
-    shoulder = applySoftShoulder({
-      state,
-      distance: nearestTrack.distance,
-      limit,
-      start: positiveNumber(collisionProfile?.shoulderStartDistance, Infinity),
-      drag: nonNegativeNumber(collisionProfile?.shoulderDrag, 0),
-      dt
-    });
-    boundary = resolveTrackEnvelopeBoundary({
-      state,
-      nearestTrack,
-      limit,
-      bounce: boundedNumber(collisionProfile?.boundaryBounce, COLLISION_BOUNCE, 0, 1),
-      tangentRetention: boundedNumber(
-        collisionProfile?.boundaryTangentRetention,
-        COLLISION_TANGENT_RETENTION,
-        0,
-        1
-      ),
-      minimumRecoverySpeed: nonNegativeNumber(
-        collisionProfile?.boundaryMinimumRecoverySpeed,
-        0
-      )
-    });
-  }
-
-  for (const collider of collisionProfile?.colliders || []) {
-    if (obstacles >= MAX_COLLIDER_RESOLVES) break;
-    if (resolveStaticCollider(state, collider, carRadius)) obstacles += 1;
-  }
-
-  if (boundary || obstacles) {
-    state.position.y = 0.18;
-    state.speed = vectorLength(state.velocity);
-  } else if (shoulder) {
-    state.speed = vectorLength(state.velocity);
-  }
-
-  return {
-    collided: boundary || obstacles > 0,
-    boundary,
-    shoulder,
-    obstacles
-  };
-}
-
-function applySoftShoulder({ state, distance, limit, start, drag, dt }) {
-  if (!Number.isFinite(start) || drag <= 0 || distance <= start || limit <= start) return false;
-  const intensity = clamp((distance - start) / (limit - start), 0, 1);
-  const seconds = clamp(Number(dt) || 0, 0, 0.1);
-  const damping = Math.exp(-drag * intensity * seconds);
-  state.velocity.x *= damping;
-  state.velocity.z *= damping;
-  return true;
-}
-
-function resolveTrackEnvelopeBoundary({
-  state,
-  nearestTrack,
-  limit,
-  bounce,
-  tangentRetention,
-  minimumRecoverySpeed
-}) {
-  if (nearestTrack.distance <= limit) return false;
-
-  const anchor = nearestTrack.sample.point;
-  let dx = state.position.x - anchor.x;
-  let dz = state.position.z - anchor.z;
-  let length = Math.hypot(dx, dz);
-
-  if (length < EPSILON) {
-    dx = -(Number(state.velocity.x) || 0);
-    dz = -(Number(state.velocity.z) || 0);
-    length = Math.hypot(dx, dz) || 1;
-  }
-
-  const outwardX = dx / length;
-  const outwardZ = dz / length;
-  state.position.x = anchor.x + outwardX * limit;
-  state.position.z = anchor.z + outwardZ * limit;
-
-  applyCollisionResponse(state.velocity, -outwardX, -outwardZ, {
-    bounce,
-    tangentRetention,
-    minimumNormalSpeed: minimumRecoverySpeed
+  const baseNearestTrack = bridgeGuide.active && nearestTrack
+    ? {
+      ...nearestTrack,
+      distance: Math.min(Number(nearestTrack.distance) || 0, bridgeGuide.limit)
+    }
+    : nearestTrack;
+  const collision = resolveBaseWorldCollisionState({
+    ...options,
+    nearestTrack: baseNearestTrack
   });
-  return true;
-}
 
-function resolveStaticCollider(state, collider, carRadius) {
-  if (!collider || collider.enabled === false) return false;
-  if (collider.type === 'circle') return resolveCircleCollider(state, collider, carRadius);
-  if (collider.type === 'box') return resolveBoxCollider(state, collider, carRadius);
-  return false;
-}
-
-function resolveCircleCollider(state, collider, carRadius) {
-  const centerX = Number(collider.x) || 0;
-  const centerZ = Number(collider.z) || 0;
-  const radius = Math.max(0, Number(collider.radius) || 0) + Math.max(0, Number(carRadius) || 0);
-  let dx = state.position.x - centerX;
-  let dz = state.position.z - centerZ;
-  const distance = Math.hypot(dx, dz);
-  if (distance >= radius) return false;
-
-  let length = distance;
-  if (length < EPSILON) {
-    dx = -(Number(state.velocity.x) || 0) || 1;
-    dz = -(Number(state.velocity.z) || 0);
-    length = Math.hypot(dx, dz) || 1;
+  if ((bridgeGuide.assisted || bridgeGuide.contained) && state?.velocity) {
+    state.speed = vectorLength(state.velocity);
   }
-
-  const normalX = dx / length;
-  const normalZ = dz / length;
-  state.position.x = centerX + normalX * radius;
-  state.position.z = centerZ + normalZ * radius;
-  applyCollisionResponse(state.velocity, normalX, normalZ);
-  return true;
-}
-
-function resolveBoxCollider(state, collider, carRadius) {
-  const padding = Math.max(0, Number(carRadius) || 0);
-  const minX = Number(collider.minX) - padding;
-  const maxX = Number(collider.maxX) + padding;
-  const minZ = Number(collider.minZ) - padding;
-  const maxZ = Number(collider.maxZ) + padding;
-
-  if (![minX, maxX, minZ, maxZ].every(Number.isFinite)) return false;
-  if (
-    state.position.x <= minX || state.position.x >= maxX
-    || state.position.z <= minZ || state.position.z >= maxZ
-  ) return false;
-
-  const candidates = [
-    { penetration: state.position.x - minX, x: minX, z: state.position.z, nx: -1, nz: 0 },
-    { penetration: maxX - state.position.x, x: maxX, z: state.position.z, nx: 1, nz: 0 },
-    { penetration: state.position.z - minZ, x: state.position.x, z: minZ, nx: 0, nz: -1 },
-    { penetration: maxZ - state.position.z, x: state.position.x, z: maxZ, nx: 0, nz: 1 }
-  ];
-  candidates.sort((a, b) => a.penetration - b.penetration);
-  const escape = candidates[0];
-
-  state.position.x = escape.x;
-  state.position.z = escape.z;
-  applyCollisionResponse(state.velocity, escape.nx, escape.nz);
-  return true;
-}
-
-function applyCollisionResponse(velocity, normalX, normalZ, {
-  bounce = COLLISION_BOUNCE,
-  tangentRetention = COLLISION_TANGENT_RETENTION,
-  minimumNormalSpeed = 0
-} = {}) {
-  const vx = Number(velocity.x) || 0;
-  const vz = Number(velocity.z) || 0;
-  const normalSpeed = vx * normalX + vz * normalZ;
-  if (normalSpeed >= 0) return;
-
-  const tangentX = -normalZ;
-  const tangentZ = normalX;
-  const tangentSpeed = vx * tangentX + vz * tangentZ;
-  const returnedNormalSpeed = Math.max(-normalSpeed * bounce, minimumNormalSpeed);
-  const retainedTangentSpeed = tangentSpeed * tangentRetention;
-
-  velocity.x = normalX * returnedNormalSpeed + tangentX * retainedTangentSpeed;
-  velocity.z = normalZ * returnedNormalSpeed + tangentZ * retainedTangentSpeed;
+  collision.collided = collision.collided || bridgeGuide.contained;
+  collision.boundary = collision.boundary || bridgeGuide.contained;
+  collision.shoulder = collision.shoulder || bridgeGuide.assisted;
+  collision.bridgeGuide = bridgeGuide.active;
+  collision.bridgeRailAssist = bridgeGuide.assisted;
+  collision.bridgeRailContainment = bridgeGuide.contained;
+  return collision;
 }
 
 function vectorLength(vector) {
@@ -212,18 +74,4 @@ function vectorLength(vector) {
 function positiveNumber(value, fallback) {
   const number = Number(value);
   return Number.isFinite(number) && number > 0 ? number : fallback;
-}
-
-function nonNegativeNumber(value, fallback) {
-  const number = Number(value);
-  return Number.isFinite(number) && number >= 0 ? number : fallback;
-}
-
-function boundedNumber(value, fallback, min, max) {
-  const number = Number(value);
-  return Number.isFinite(number) ? clamp(number, min, max) : fallback;
-}
-
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
 }

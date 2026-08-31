@@ -41,15 +41,15 @@ assert.deepEqual(
     { id: 'cliffside', difficulty: 'MEDIUM', storageRevision: 'cliffside-r68', freeRoamDistance: 22.2 },
     { id: 'harbor', difficulty: 'HARD', storageRevision: 'harbor-r80', freeRoamDistance: 170 },
     { id: 'midnight-city', difficulty: 'HARD', storageRevision: 'midnight-city-r2', freeRoamDistance: 34 },
-    { id: 'mountain', difficulty: 'HARD', storageRevision: 'mountain-r1', freeRoamDistance: 22.2 }
+    { id: 'mountain', difficulty: 'HARD', storageRevision: 'mountain-r2-long', freeRoamDistance: 18.2 }
   ],
   'Every playable track must own identity, difficulty, record namespace and containment in one source of truth'
 );
 assert.deepEqual(TRACK_PLACEHOLDERS, [], 'Track 6 must be a real playable MOUNTAIN track rather than the old TBA teaser');
 assert.equal(getTrackStorageRevision('midnight-city'), 'midnight-city-r2');
 assert.equal(getTrackFreeRoamDistance('midnight-city'), 34);
-assert.equal(getTrackStorageRevision('mountain'), 'mountain-r1');
-assert.equal(getTrackFreeRoamDistance('mountain'), 22.2);
+assert.equal(getTrackStorageRevision('mountain'), 'mountain-r2-long');
+assert.equal(getTrackFreeRoamDistance('mountain'), 18.2);
 assert.equal(getTrackStorageRevision('future-track'), 'future-track');
 assert.equal(getTrackFreeRoamDistance('future-track'), 170);
 
@@ -94,7 +94,7 @@ const midnightLength = closedPolylineLength(MIDNIGHT_CITY_CONTROL_POINTS);
 const harborLength = closedPolylineLength(HARBOR_CONTROL_POINTS);
 const mountainLength = closedPolylineLength(MOUNTAIN_CONTROL_POINTS);
 assert.ok(midnightLength >= harborLength * 2);
-assert.ok(mountainLength > 1500, `Mountain route too short: ${mountainLength.toFixed(0)}`);
+assert.ok(mountainLength > 3000, `Long Mountain route too short: ${mountainLength.toFixed(0)}`);
 assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.cityGridRows, 5);
 assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.outerRingReturn, true);
 assert.equal(MIDNIGHT_CITY_LAYOUT_RULES.districtCount, 4);
@@ -110,6 +110,8 @@ assert.equal(findProperIntersections(MOUNTAIN_CONTROL_POINTS).length, 0);
 assert.equal(MOUNTAIN_LAYOUT_RULES.minimumElevation, 0);
 assert.equal(MOUNTAIN_LAYOUT_RULES.maximumElevation, 49);
 assert.equal(MOUNTAIN_LAYOUT_RULES.snowLineElevation, 37);
+assert.equal(MOUNTAIN_LAYOUT_RULES.noDropCourse, true);
+assert.equal(MOUNTAIN_LAYOUT_RULES.targetLength, 'long-course-about-2.1-times-production-mountain');
 assert.ok(maximumControlTurn(MOUNTAIN_CONTROL_POINTS) < 100);
 
 const storage = new Map();
@@ -125,7 +127,7 @@ try {
     { trackId: 'airport', time: 22.42, key: 'turn-personal-rivals-v1:airport-r50' },
     { trackId: 'harbor', time: 38.61, key: 'turn-personal-rivals-v1:harbor-r80' },
     { trackId: 'midnight-city', time: 104.82, key: 'turn-personal-rivals-v1:midnight-city-r2' },
-    { trackId: 'mountain', time: 98.14, key: 'turn-personal-rivals-v1:mountain-r1' }
+    { trackId: 'mountain', time: 98.14, key: 'turn-personal-rivals-v1:mountain-r2-long' }
   ];
   for (const entry of states) {
     const state = { trackId: entry.trackId, competitorLaps: [{ time: entry.time, carId: 'hatchback-sports', frames: Array.from({ length: 25 }, (_, index) => ({ t: index / 10, p: index / 24 })) }] };
@@ -136,7 +138,9 @@ try {
   clearRivalsState({ trackId: 'midnight-city', competitorLaps: [] });
   assert.equal(storage.has('turn-personal-rivals-v1:midnight-city-r2'), false);
   assert.equal(storage.has('turn-personal-rivals-v1:harbor-r80'), true);
-  assert.equal(storage.has('turn-personal-rivals-v1:mountain-r1'), true);
+  assert.equal(storage.has('turn-personal-rivals-v1:mountain-r2-long'), true);
+  assert.equal(storage.has('turn-personal-rivals-v1:mountain-r1'), false,
+    'The promoted MOUNTAIN must never migrate or overwrite the old short-course namespace');
   assert.equal(storage.has('turn-personal-rivals-v1'), true);
 } finally {
   if (originalLocalStorage === undefined) delete globalThis.localStorage;
@@ -156,36 +160,42 @@ assert.equal(spatialIndex.find({ x: 19, z: 98 }).index, findNearestTrackBruteFor
 
 const [
   definitions,
+  definitionsBase,
   catalog,
   registry,
   manager,
   cityWorld,
   mountainWorld,
+  mountainLongWorld,
+  mountainExtension,
   mountainTerrain,
   mountainScenery,
   mountainPolish,
   home
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/tracks/definitions.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/definitions-base.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/registry.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/track-manager.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/midnight-city-world-r7.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/mountain-world-r3.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/mountain-world-long.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/mountain-long-extension-r1.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/mountain-world-r3-terrain.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/mountain-world-r3-scenery.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/tracks/mountain-world-r3-polish.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/m8-home.js', import.meta.url), 'utf8')
 ]);
-assert.match(definitions, /id: 'midnight-city'[\s\S]*difficulty: 'HARD'/);
-assert.match(definitions, /storageRevision: 'midnight-city-r2'/);
-assert.match(definitions, /id: 'mountain'[\s\S]*difficulty: 'HARD'/);
-assert.match(definitions, /storageRevision: 'mountain-r1'/);
-assert.match(definitions, /sampleCount: 1080/);
-assert.doesNotMatch(definitions, /id: 'track-6-tba'/);
+assert.match(definitionsBase, /id: 'midnight-city'[\s\S]*difficulty: 'HARD'/);
+assert.match(definitionsBase, /storageRevision: 'midnight-city-r2'/);
+assert.match(definitionsBase, /id: 'mountain'[\s\S]*difficulty: 'HARD'/);
+assert.match(definitions, /storageRevision: 'mountain-r2-long'/);
+assert.match(definitions, /sampleCount: 2160/);
+assert.doesNotMatch(definitionsBase, /id: 'track-6-tba'/);
 assert.match(catalog, /MIDNIGHT_CITY_CONTROL_POINTS\.map/);
 assert.match(catalog, /MOUNTAIN_CONTROL_POINTS\.map/);
-assert.match(registry, /mountain-world-r3\.js\?revision=r3-continuous-terrain-v1/);
+assert.match(registry, /mountain-world-long\.js\?revision=mountain-long-r1/);
 assert.match(registry, /definition\.sampleCount \|\| sampleCount/);
 assert.doesNotMatch(manager, /nextTrackId === 'mountain'/);
 assert.match(manager, /track\.fogNear/);
@@ -195,6 +205,12 @@ assert.doesNotMatch(cityWorld, /setAnimationLoop|requestAnimationFrame|setInterv
 assert.match(mountainWorld, /ground: 'continuous-snow-and-granite-terrain-body'/);
 assert.match(mountainWorld, /retainingFoundation: '4\.6m-granite-skirt'/);
 assert.match(mountainWorld, /visibleWaterfallCurtain: true/);
+assert.match(mountainLongWorld, /installBaseMountainWorld/);
+assert.match(mountainLongWorld, /installMountainLongExtension/);
+assert.match(mountainLongWorld, /BASE_WORLD_SAMPLE_COUNT = 1080/);
+assert.match(mountainExtension, /installMountainLongExtension/);
+assert.match(mountainExtension, /PORTAL_ROCK_GREY = 0x7d878d/);
+assert.match(mountainExtension, /dynamicPointLightsAdded: 0/);
 assert.match(mountainTerrain, /Mountain continuous terrain body r3/);
 assert.match(mountainTerrain, /Mountain opaque roadbed side wall r3/);
 assert.match(mountainTerrain, /Mountain closed roadbed underside r3/);
@@ -210,12 +226,12 @@ assert.doesNotMatch(mountainScenery, /windmill\.glb/);
 assert.match(mountainPolish, /Mountain deep retaining road foundation r3/);
 assert.match(mountainPolish, /Mountain visible waterfall curtain r3/);
 assert.match(mountainPolish, /Mountain river waterfall spillway r3/);
-for (const source of [mountainWorld, mountainTerrain, mountainScenery, mountainPolish]) {
+for (const source of [mountainWorld, mountainLongWorld, mountainExtension, mountainTerrain, mountainScenery, mountainPolish]) {
   assert.doesNotMatch(source, /setAnimationLoop|requestAnimationFrame|setInterval/);
 }
 assert.match(home, /TRACK_SELECTION_CATALOG\.map\(renderTrackCard\)/);
 
-console.log(`TURN six-track runtime passed: Midnight City ${midnightLength.toFixed(0)} units, Mountain ${mountainLength.toFixed(0)} units.`);
+console.log(`TURN six-track runtime passed: Midnight City ${midnightLength.toFixed(0)} units, long Mountain ${mountainLength.toFixed(0)} units.`);
 
 function closedPolylineLength(points) {
   let length = 0;

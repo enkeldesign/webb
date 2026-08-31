@@ -1,6 +1,6 @@
 // TURN LAB pace-note overlay for the extended MOUNTAIN route.
 // All non-MOUNTAIN tracks delegate directly to the current production maps.
-import * as production from '/turn/tracks/pace-notes.js?lab-base=mountain-long';
+import * as production from '../../turn/tracks/pace-notes.js?lab-base=mountain-long';
 
 export const PACE_NOTE_DIRECTION = production.PACE_NOTE_DIRECTION;
 export const PACE_NOTE_LENGTH = production.PACE_NOTE_LENGTH;
