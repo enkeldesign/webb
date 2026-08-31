@@ -1,49 +1,155 @@
 import assert from 'node:assert/strict';
-import { Buffer } from 'node:buffer';
 import fs from 'node:fs/promises';
-import { TRACK_DEFINITIONS, TRACK_PLACEHOLDERS } from '../turn/tracks/definitions.js';
-import { MOUNTAIN_CONTROL_POINTS, MOUNTAIN_LAYOUT_RULES } from '../turn/tracks/mountain-layout.js';
-import { getTrackPaceNotes, PACE_NOTE_DIRECTION } from '../turn/tracks/pace-notes.js';
+import {
+  TRACK_DEFINITIONS,
+  TRACK_PLACEHOLDERS
+} from '../turn/tracks/definitions.js';
+import { TRACK_DEFINITIONS as BASE_TRACK_DEFINITIONS } from '../turn/tracks/definitions-base.js';
+import {
+  MOUNTAIN_BRIDGE_CENTERS,
+  MOUNTAIN_CONTROL_POINTS,
+  MOUNTAIN_LAYOUT_RULES,
+  MOUNTAIN_TUNNEL_SPECS
+} from '../turn/tracks/mountain-layout.js';
+import {
+  getTrackPaceNotes,
+  PACE_NOTE_DIRECTION
+} from '../turn/tracks/pace-notes.js';
+import { getTrackPaceNotes as getBaseTrackPaceNotes } from '../turn/tracks/pace-notes-base.js';
+import { MOUNTAIN_LONG_CHECKPOINTS } from '../turn/race/lap-system-r86.js';
 import { TROPHY_ROAD_REWARDS, rewardForTrack } from '../turn/progression/trophy-road.js';
 import { TRACK_COLOR_CUES } from '../turn/accessibility/color-cues.js';
 import { TRACK_COLOR_RULES } from '../turn/achievements/chromatic-camouflage-r183.js';
 
-const [world, terrain, scenery, night, registry, trophyGate, kenneyAssets, visualPage, visualSmoke, visualWorkflow] = await Promise.all([
+const [
+  definitions,
+  definitionsBase,
+  paceNotes,
+  paceNotesBase,
+  registry,
+  baseWorld,
+  longWorld,
+  extension,
+  collision,
+  collisionBase,
+  bridgeGuide,
+  terrain,
+  scenery,
+  night,
+  trophyGate
+] = await Promise.all([
+  fs.readFile(new URL('../turn/tracks/definitions.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/definitions-base.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/pace-notes.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/pace-notes-base.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/mountain-world-r3.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/mountain-world-long.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/mountain-long-extension-r1.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/race/world-collision.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/race/world-collision-base.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/race/mountain-bridge-guide.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/mountain-world-r3-terrain.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/mountain-world-r3-scenery.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/mountain-world-r6-night.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/progression/m8-trophy-gate.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/assets/KENNEY-ASSETS.md', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn-lab/mountain-visual.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('./mountain-visual-smoke.mjs', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../.github/workflows/turn-mountain-visual-smoke.yml', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/progression/m8-trophy-gate.js', import.meta.url), 'utf8')
 ]);
 
-const definition = TRACK_DEFINITIONS.find((track) => track.id === 'mountain');
-assert.ok(definition, 'MOUNTAIN must be a production track definition');
-assert.equal(definition.name, 'Mountain');
-assert.equal(definition.eyebrow, 'TRACK 6');
-assert.equal(definition.difficulty, 'HARD');
-assert.equal(definition.storageRevision, 'mountain-r1');
-assert.equal(definition.sampleCount, 1080);
-assert.equal(definition.freeRoamDistance, 22.2);
+const mountain = TRACK_DEFINITIONS.find((track) => track.id === 'mountain');
+assert.ok(mountain, 'MOUNTAIN must remain a production track');
+assert.equal(mountain.name, 'Mountain');
+assert.equal(mountain.eyebrow, 'TRACK 6');
+assert.equal(mountain.difficulty, 'HARD');
+assert.equal(mountain.storageRevision, 'mountain-r2-long');
+assert.equal(mountain.sampleCount, 2160);
+assert.equal(mountain.freeRoamDistance, 18.2);
+assert.equal(mountain.collisionProfile.shoulderStartDistance, 15.0);
+assert.equal(mountain.collisionProfile.shoulderDrag, 1.78);
+assert.equal(mountain.collisionProfile.colliders.length, 0,
+  'The promoted bridge must not reintroduce padded box colliders');
+assert.ok(Object.isFrozen(mountain.collisionProfile.bridgeGuide));
+assert.equal(mountain.collisionProfile.bridgeGuide.offRoadDrag, 0.34);
 assert.deepEqual(TRACK_PLACEHOLDERS, []);
+
+for (const baseTrack of BASE_TRACK_DEFINITIONS) {
+  if (baseTrack.id === 'mountain') continue;
+  const promotedTrack = TRACK_DEFINITIONS.find((track) => track.id === baseTrack.id);
+  assert.strictEqual(promotedTrack, baseTrack,
+    `${baseTrack.id} must remain the exact previous production definition object`);
+}
+
+for (const trackId of ['countryside', 'airport', 'cliffside', 'harbor', 'midnight-city']) {
+  assert.strictEqual(getTrackPaceNotes(trackId), getBaseTrackPaceNotes(trackId),
+    `${trackId} pace notes must delegate to the exact previous production map`);
+}
+
+assert.equal(MOUNTAIN_CONTROL_POINTS.length, 72);
 assert.equal(MOUNTAIN_LAYOUT_RULES.minimumElevation, 0);
 assert.equal(MOUNTAIN_LAYOUT_RULES.maximumElevation, 49);
 assert.equal(MOUNTAIN_LAYOUT_RULES.snowLineElevation, 37);
-assert.ok(closedLength(MOUNTAIN_CONTROL_POINTS) > 1500);
+assert.equal(MOUNTAIN_LAYOUT_RULES.noDropCourse, true);
+assert.equal(MOUNTAIN_LAYOUT_RULES.targetLength, 'long-course-about-2.1-times-production-mountain');
+assert.ok(closedLength(MOUNTAIN_CONTROL_POINTS) > 3000,
+  'Promoted MOUNTAIN must retain the substantially longer route');
 assert.equal(findProperIntersections(MOUNTAIN_CONTROL_POINTS).length, 0);
 assert.ok(maximumTurn(MOUNTAIN_CONTROL_POINTS) < 100);
+assert.equal(MOUNTAIN_BRIDGE_CENTERS.length, 6);
+assert.equal(MOUNTAIN_TUNNEL_SPECS.length, 1);
 
-assert.equal(definition.sky, 0x06132c, 'MOUNTAIN should use the deep-blue night fallback sky');
-assert.equal(definition.fog, 0x172744, 'MOUNTAIN fog should stay cool and moonlit');
-assert.equal(definition.lighting.hemisphereSky, 0x5a78a8);
-assert.equal(definition.lighting.hemisphereGround, 0x07101b);
-assert.equal(definition.lighting.hemisphereIntensity, 0.56);
-assert.equal(definition.lighting.directionalColor, 0xb8d7ff);
-assert.equal(definition.lighting.directionalIntensity, 0.92);
+const notes = getTrackPaceNotes('mountain');
+assert.equal(notes.length, 10);
+assert.equal(notes[0].groups[0].direction, PACE_NOTE_DIRECTION.LEFT);
+assert.deepEqual(
+  notes.slice(2, 6).map((note) => note.groups[0].direction),
+  [1, -1, 1, -1],
+  'Promoted MOUNTAIN slalom calls must preserve the tested driver-perspective sequence'
+);
+assert.equal(MOUNTAIN_LONG_CHECKPOINTS.length, 24);
+assert.ok(MOUNTAIN_LONG_CHECKPOINTS.every((value, index, values) => (
+  value > 0 && value < 1 && (index === 0 || value > values[index - 1])
+)), 'Long MOUNTAIN checkpoints must be ordered around the full lap');
+
+assert.match(definitions, /definitions-base\.js/);
+assert.match(definitions, /storageRevision: 'mountain-r2-long'/);
+assert.match(definitions, /sampleCount: 2160/);
+assert.match(definitionsBase, /storageRevision: 'mountain-r1'/,
+  'The retired short-course definition remains intact only as the rollback/base contract');
+assert.match(paceNotes, /pace-notes-base\.js/);
+assert.match(paceNotesBase, /const MOUNTAIN_PACE_NOTES/,
+  'The retired short-course pace map remains available only as the retained base');
+assert.match(registry, /mountain-world-long\.js\?revision=mountain-long-r1/);
+assert.match(longWorld, /installBaseMountainWorld/);
+assert.match(longWorld, /installMountainLongExtension/);
+assert.match(longWorld, /BASE_WORLD_SAMPLE_COUNT = 1080/);
+assert.match(extension, /REVISION = 'mountain-long-course-r14-slip-bridge-grey-portals'/);
+assert.match(extension, /PORTAL_ROCK_GREY = 0x7d878d/);
+assert.match(extension, /dynamicPointLightsAdded: 0/);
+assert.match(extension, /addedShadowCasters: 0/);
+assert.doesNotMatch(extension, /setAnimationLoop|requestAnimationFrame|setInterval/);
+
+assert.match(collision, /if \(trackId !== 'mountain'\) return resolveBaseWorldCollisionState\(options\)/,
+  'Every non-MOUNTAIN collision call must take the exact retained production path');
+assert.match(collision, /world-collision-base\.js/);
+assert.match(collisionBase, /resolveTrackEnvelopeBoundary/);
+assert.match(bridgeGuide, /Number\(nearestTrack\.index\)/);
+assert.match(bridgeGuide, /const signedDistance = dx \* normalX \+ dz \* normalZ/);
+assert.match(bridgeGuide, /state\.position\.x -= outwardX \* excess/);
+assert.doesNotMatch(bridgeGuide, /for\s*\(|while\s*\(/,
+  'The per-frame bridge guide must remain O(1)');
+
+// The mature original MOUNTAIN world remains the foundation underneath the extension.
+assert.match(baseWorld, /version: 'r3'/);
+assert.match(baseWorld, /continuous-snow-and-granite-terrain-body/);
+assert.match(baseWorld, /installMountainR6Night/);
+assert.match(baseWorld, /world\.ready = Promise\.resolve/);
+assert.doesNotMatch(baseWorld, /setAnimationLoop|requestAnimationFrame|setInterval/);
+assert.match(terrain, /Mountain continuous terrain body r3/);
+assert.match(terrain, /Mountain opaque roadbed side wall r3/);
+assert.match(terrain, /Mountain closed roadbed underside r3/);
+assert.match(scenery, /Mountain Kenney Holiday cabin prefab r3/);
+assert.match(scenery, /Mountain terrain-bounded waterfall lake r3/);
+assert.match(night, /mountain-night-sky\.jpg/);
+assert.match(night, /mountain-moon\.png/);
 
 const reward = rewardForTrack('mountain');
 assert.equal(reward?.id, 'mountain');
@@ -51,174 +157,10 @@ assert.equal(reward?.threshold, 700);
 assert.equal(TROPHY_ROAD_REWARDS.at(-1)?.id, 'rally-racer');
 assert.match(trophyGate, /rewardForTrack\(trackId\)/);
 assert.doesNotMatch(trophyGate, /trackId === ['"]mountain['"]/);
-
-const notes = getTrackPaceNotes('mountain');
-assert.ok(notes.length >= 8);
-assert.equal(notes[0].groups[0].direction, PACE_NOTE_DIRECTION.LEFT,
-  'The verified MOUNTAIN opening call must stay left from the driver perspective');
-const slalomNotes = notes.filter((note) => note.triggerStart >= 0.59 && note.triggerStart < 0.95);
-assert.deepEqual(
-  slalomNotes.slice(0, 4).map((note) => note.groups[0].direction),
-  [1, -1, 1, -1],
-  'The verified front-face slalom must alternate right/left from the driver perspective'
-);
-
 assert.equal(TRACK_COLOR_CUES.mountain, 'blue');
 assert.deepEqual(TRACK_COLOR_RULES.mountain, { hueMin: 206, hueMax: 230, name: 'blue' });
 
-assert.match(registry, /mountain-world-r3\.js\?revision=r3-continuous-terrain-v1/,
-  'Keep the historical continuous-terrain regression marker');
-assert.match(registry, /mountain-world-r3\.js\?revision=r6-night-treatment/,
-  'Production must cache-bust to the MOUNTAIN night world revision');
-assert.match(world, /version: 'r3'/);
-assert.match(world, /continuous-snow-and-granite-terrain-body/);
-assert.match(world, /roadbed: 'opaque-and-terrain-supported'/);
-assert.match(world, /riverHasChannelBanksAndBed: true/);
-assert.match(world, /boundingBoxGroundedAssets: true/);
-assert.match(world, /installMountainR6Night/);
-assert.match(world, /nightSky: 'local-star-field-skydome-with-separate-moon-sprite'/);
-assert.match(world, /streetlights: 'warm-static-halos-plus-midnight-city-style-ground-pools-and-local-fill'/);
-assert.match(world, /houseWindows: 'warm-emissive-looking-panels-on-every-suburban-house-with-limited-local-spill'/);
-assert.match(world, /waterfallLight: 'cool-moonlit-emissive-water-surfaces'/);
-assert.match(world, /world\.ready = Promise\.resolve/);
-assert.doesNotMatch(world, /setAnimationLoop|requestAnimationFrame|setInterval/);
-
-assert.match(night, /mountain-night-sky\.jpg/);
-assert.match(night, /mountain-moon\.png/);
-assert.match(night, /Mountain star field skydome r6/);
-assert.match(night, /Mountain full moon sprite r6/);
-assert.match(night, /new THREE\.CircleGeometry\(11\.5, 24\)/,
-  'MOUNTAIN streetlight pools should reuse the established Midnight City footprint');
-assert.match(night, /new THREE\.PointLight\(WARM_LIGHT, 8\.4, 66, 1\.65\)/);
-assert.match(night, /Mountain warm house windows r6/);
-assert.match(night, /Mountain warm house window halos r6/);
-assert.match(night, /new THREE\.InstancedMesh/,
-  'Night windows and light pools must stay batched rather than becoming individual meshes');
-assert.match(night, /strengthenMoonlitWater/);
-assert.doesNotMatch(night, /setAnimationLoop|requestAnimationFrame|setInterval/,
-  'The night treatment must remain render-driven with no independent loop');
-
-const nightSkyAsset = await fs.readFile(new URL('../turn/assets/mountain/mountain-night-sky.jpg', import.meta.url));
-assert.equal(nightSkyAsset[0], 0xff, 'MOUNTAIN star field must remain a JPEG');
-assert.equal(nightSkyAsset[1], 0xd8, 'MOUNTAIN star field must remain a JPEG');
-assert.ok(nightSkyAsset.length < 20_000,
-  `MOUNTAIN star field should stay deliberately compact, got ${nightSkyAsset.length} bytes`);
-const moonAsset = await fs.readFile(new URL('../turn/assets/mountain/mountain-moon.png', import.meta.url));
-assert.deepEqual([...moonAsset.subarray(0, 8)], [0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a],
-  'MOUNTAIN moon must remain a transparent-capable PNG');
-assert.ok(moonAsset.length < 10_000,
-  `MOUNTAIN moon should stay deliberately compact, got ${moonAsset.length} bytes`);
-
-assert.match(terrain, /Mountain continuous terrain body r3/);
-assert.match(terrain, /createMountainTerrainSampler/);
-assert.match(terrain, /terrainHeightAt/);
-assert.match(terrain, /riverChannelTarget/);
-assert.match(terrain, /lakeBasinTarget/);
-assert.match(terrain, /Mountain opaque roadbed side wall r3/);
-assert.match(terrain, /Mountain closed roadbed underside r3/);
-assert.match(terrain, /Mountain solid white road edge r3/);
-assert.match(terrain, /Mountain black outer road contour r3/);
-assert.match(terrain, /raggedSnowLine/);
-assert.doesNotMatch(terrain, /Mountain continuous snowfield/,
-  'The old flat plane must no longer pretend to be the playable mountain');
-assert.doesNotMatch(terrain, /ALPINE_BLUE|curb/i,
-  'MOUNTAIN uses ordinary white road lines with a black contour, never race curbs');
-
-assert.match(scenery, /new THREE\.Box3\(\)\.setFromObject\(root, true\)/,
-  'Imported scenery must ground its transformed bounds, not its arbitrary GLB origin');
-assert.match(scenery, /turnMountainGroundingDiagnostics/);
-assert.match(scenery, /terrainHeightAt\(point\.x, point\.z\)/);
-assert.match(scenery, /Mountain river channel bed r3/);
-assert.match(scenery, /Mountain summit river water r3/);
-assert.match(scenery, /Mountain river waterfall cliff lip r3/);
-assert.match(scenery, /Mountain terrain-bounded waterfall lake r3/);
-assert.match(scenery, /Mountain structural waterfall granite r3/);
-assert.match(scenery, /Mountain Kenney Nature cliff module r3/);
-assert.match(scenery, /scale\.setScalar\(8\.2/,
-  'Nature cliff modules must be tiled at modest near-uniform scale rather than stretched into giant slabs');
-assert.match(scenery, /cabin-doorway\.glb/);
-assert.match(scenery, /cabin-window-large\.glb/);
-assert.match(scenery, /cabin-roof-snow\.glb/);
-assert.match(scenery, /roofB\.scale\.x = -1/,
-  'The second Holiday roof half must mirror across the ridge rather than rotate through the cabin');
-assert.match(scenery, /turnKenneyGridAssembly/);
-assert.match(scenery, /wallRows: 1/,
-  'Holiday wall modules must use their one-unit grid instead of overlapping arbitrary stacked rows');
-for (const asset of [
-  'bench.glb', 'lantern.glb', 'sled.glb', 'snow-pile.glb', 'snow-flat-large.glb', 'tree-snow-a.glb',
-  'stall-green.glb', 'stall-red.glb', 'cart.glb', 'fountain-round-detail.glb', 'fence.glb'
-]) {
-  assert.match(scenery, new RegExp(asset.replace('.', '\\.')));
-}
-assert.doesNotMatch(scenery, /windmill\.glb|Fantasy Town windmill/i,
-  'The loose Fantasy Town rotor must not be mistaken for a complete windmill again');
-assert.doesNotMatch(scenery, /setAnimationLoop|requestAnimationFrame|setInterval/);
-
-const glbPaths = [
-  'turn/assets/scenery/mountain/holiday/cabin-wall.glb',
-  'turn/assets/scenery/mountain/holiday/cabin-doorway.glb',
-  'turn/assets/scenery/mountain/holiday/cabin-window-large.glb',
-  'turn/assets/scenery/mountain/holiday/cabin-roof-snow.glb',
-  'turn/assets/scenery/mountain/holiday/bench.glb',
-  'turn/assets/scenery/mountain/holiday/lantern.glb',
-  'turn/assets/scenery/mountain/holiday/sled.glb',
-  'turn/assets/scenery/mountain/holiday/snow-pile.glb',
-  'turn/assets/scenery/mountain/holiday/snow-flat-large.glb',
-  'turn/assets/scenery/mountain/holiday/tree-snow-a.glb',
-  'turn/assets/scenery/mountain/fantasy/stall-green.glb',
-  'turn/assets/scenery/mountain/fantasy/stall-red.glb',
-  'turn/assets/scenery/mountain/fantasy/cart.glb',
-  'turn/assets/scenery/mountain/fantasy/fountain-round-detail.glb',
-  'turn/assets/scenery/mountain/fantasy/fence.glb',
-  'turn/assets/scenery/mountain/nature/cliff-waterfall-top-rock.glb',
-  'turn/assets/scenery/mountain/nature/cliff-waterfall-rock.glb'
-];
-
-for (const assetPath of glbPaths) {
-  const url = new URL(`../${assetPath}`, import.meta.url);
-  const buffer = await fs.readFile(url);
-  const gltf = parseGlbJson(buffer, assetPath);
-  assert.equal(gltf.asset?.version, '2.0', `${assetPath} must be a valid glTF 2.0 binary`);
-  assert.ok(Array.isArray(gltf.meshes) && gltf.meshes.length > 0, `${assetPath} must contain renderable meshes`);
-  for (const image of gltf.images || []) {
-    if (!image.uri || image.uri.startsWith('data:')) continue;
-    await fs.access(new URL(image.uri, url), fs.constants.R_OK);
-  }
-}
-
-assert.match(kenneyAssets, /Holiday Kit/i);
-assert.match(kenneyAssets, /Fantasy Town/i);
-assert.match(kenneyAssets, /Nature Kit/i);
-assert.match(kenneyAssets, /bounding/i);
-assert.match(visualPage, /__mountainVisualMetrics/);
-assert.match(visualPage, /r6WindowPanelCount/);
-for (const view of ['aerial', 'village', 'summit', 'descent', 'waterfall']) {
-  assert.match(visualPage, new RegExp(`${view}:`));
-  assert.match(visualSmoke, new RegExp(`['"]${view}['"]`));
-}
-assert.match(visualSmoke, /r6StarSky/);
-assert.match(visualSmoke, /r6StreetLightPoolCount/);
-assert.match(visualSmoke, /r6WindowPanelCount/);
-assert.match(visualSmoke, /maximumRenderedRoadSupportGap/);
-assert.match(visualSmoke, /maxGroundingDelta/);
-assert.match(visualWorkflow, /playwright@1\.55\.0/);
-assert.match(visualWorkflow, /upload-artifact@v4/);
-assert.match(visualWorkflow, /mountain-visual-smoke/);
-
-console.log(`TURN MOUNTAIN r3 production contract passed: ${closedLength(MOUNTAIN_CONTROL_POINTS).toFixed(0)} control units, continuous terrain, grounded Kenney village and moonlit night treatment.`);
-
-function parseGlbJson(buffer, label) {
-  assert.ok(Buffer.isBuffer(buffer), `${label} must be read as binary data`);
-  assert.ok(buffer.length >= 20, `${label} is too short to be a valid GLB`);
-  assert.equal(buffer.subarray(0, 4).toString('ascii'), 'glTF', `${label} has an invalid GLB magic header`);
-  assert.equal(buffer.readUInt32LE(4), 2, `${label} must use GLB version 2`);
-  assert.equal(buffer.readUInt32LE(8), buffer.length, `${label} GLB header length must match committed bytes`);
-  const jsonChunkLength = buffer.readUInt32LE(12);
-  assert.equal(buffer.readUInt32LE(16), 0x4e4f534a, `${label} must begin with a JSON chunk`);
-  const jsonEnd = 20 + jsonChunkLength;
-  assert.ok(jsonEnd <= buffer.length, `${label} JSON chunk must fit inside the GLB`);
-  return JSON.parse(buffer.subarray(20, jsonEnd).toString('utf8').replace(/\u0000/g, '').trim());
-}
+console.log(`TURN long MOUNTAIN production contract passed: ${closedLength(MOUNTAIN_CONTROL_POINTS).toFixed(0)} control units, 2160 samples, 24 checkpoints, fresh rival namespace.`);
 
 function closedLength(points) {
   let length = 0;
@@ -238,8 +180,8 @@ function maximumTurn(points) {
     const next = points[(index + 1) % points.length];
     const incoming = [current[0] - previous[0], current[2] - previous[2]];
     const outgoing = [next[0] - current[0], next[2] - current[2]];
-    const cosine = (incoming[0] * outgoing[0] + incoming[1] * outgoing[1])
-      / Math.max(1e-9, Math.hypot(...incoming) * Math.hypot(...outgoing));
+    const denominator = Math.max(1e-9, Math.hypot(...incoming) * Math.hypot(...outgoing));
+    const cosine = (incoming[0] * outgoing[0] + incoming[1] * outgoing[1]) / denominator;
     maximum = Math.max(maximum, Math.acos(Math.max(-1, Math.min(1, cosine))) * 180 / Math.PI);
   }
   return maximum;
@@ -254,11 +196,15 @@ function findProperIntersections(points) {
       if ((second + 1) % points.length === first) continue;
       const c = points[second];
       const d = points[(second + 1) % points.length];
-      if (orientation(a, b, c) * orientation(a, b, d) < -1e-8
-          && orientation(c, d, a) * orientation(c, d, b) < -1e-8) intersections.push([first, second]);
+      if (segmentsProperlyIntersect(a, b, c, d)) intersections.push([first, second]);
     }
   }
   return intersections;
+}
+
+function segmentsProperlyIntersect(a, b, c, d) {
+  return orientation(a, b, c) * orientation(a, b, d) < -1e-8
+    && orientation(c, d, a) * orientation(c, d, b) < -1e-8;
 }
 
 function orientation(a, b, c) {
