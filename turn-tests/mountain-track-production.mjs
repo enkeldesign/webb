@@ -60,7 +60,7 @@ assert.ok(mountain, 'MOUNTAIN must remain a production track');
 assert.equal(mountain.name, 'Mountain');
 assert.equal(mountain.eyebrow, 'TRACK 6');
 assert.equal(mountain.difficulty, 'HARD');
-assert.equal(mountain.storageRevision, 'mountain-r2-long');
+assert.equal(mountain.storageRevision, 'mountain-r3-start-seam');
 assert.equal(mountain.sampleCount, 2160);
 assert.equal(mountain.freeRoamDistance, 18.2);
 assert.equal(mountain.collisionProfile.shoulderStartDistance, 15.0);
@@ -69,6 +69,16 @@ assert.equal(mountain.collisionProfile.colliders.length, 0,
   'The promoted bridge must not reintroduce padded box colliders');
 assert.ok(Object.isFrozen(mountain.collisionProfile.bridgeGuide));
 assert.equal(mountain.collisionProfile.bridgeGuide.offRoadDrag, 0.34);
+assert.deepEqual(
+  mountain.collisionProfile.bridgeGuide.positiveNormalRange,
+  { startIndex: 1005, endIndex: 1095, featherSamples: 4 },
+  'Smoothed route must keep the positive-side bridge guide aligned to the same visible rails'
+);
+assert.deepEqual(
+  mountain.collisionProfile.bridgeGuide.negativeNormalRange,
+  { startIndex: 994, endIndex: 1095, featherSamples: 4 },
+  'Smoothed route must keep the negative-side bridge guide aligned to the same visible rails'
+);
 assert.deepEqual(TRACK_PLACEHOLDERS, []);
 
 for (const baseTrack of BASE_TRACK_DEFINITIONS) {
@@ -124,7 +134,7 @@ assert.ok(MOUNTAIN_LONG_CHECKPOINTS.every((value, index, values) => (
 )), 'Long MOUNTAIN checkpoints must be ordered around the full lap');
 
 assert.match(definitions, /definitions-base\.js/);
-assert.match(definitions, /storageRevision: 'mountain-r2-long'/);
+assert.match(definitions, /storageRevision: 'mountain-r3-start-seam'/);
 assert.match(definitions, /sampleCount: 2160/);
 assert.match(definitionsBase, /storageRevision: 'mountain-r1'/,
   'The retired short-course definition remains intact only as the rollback/base contract');
