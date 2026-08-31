@@ -54,7 +54,7 @@
   --turn-disclosure-trigger: var(--turn-blue-300);
   --turn-disclosure-panel: var(--turn-paper);
 
-  /* Difficulty communicates challenge, not success or failure. */
+  /* Four track difficulty tiers communicate challenge, not success or failure. */
   --turn-difficulty-easy: var(--turn-green-200);
   --turn-difficulty-medium: var(--turn-yellow-200);
   --turn-difficulty-advanced: var(--turn-orange-200);
