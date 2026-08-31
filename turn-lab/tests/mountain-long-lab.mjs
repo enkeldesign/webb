@@ -275,6 +275,14 @@ assert.ok(envelopeState.position.z - entry.z <= FREE_ROAM_DISTANCE - 2.6 + 1e-6)
 assert.equal(MOUNTAIN_TUNNEL_SPECS.length, 1);
 assert.equal(MOUNTAIN_TUNNEL_SPECS[0].id, 'lower-village');
 for (const tunnel of MOUNTAIN_TUNNEL_SPECS) {
+  assert.deepEqual(tunnel.sourcePeak, { x: -392, z: -228 },
+    `${tunnel.id} must relocate the known production peak rather than duplicating it`);
+  assert.deepEqual(tunnel.peak, { x: -431, z: -287, radius: 132, height: 136 },
+    `${tunnel.id} must use the radial portal alignment derived from the long route`);
+  assert.ok(Math.hypot(
+    tunnel.peak.x - tunnel.sourcePeak.x,
+    tunnel.peak.z - tunnel.sourcePeak.z
+  ) > 65, `${tunnel.id} production peak needs a material LAB-only relocation`);
   const start = nearestRoutePoint(route, tunnel.start.x, tunnel.start.z);
   const end = nearestRoutePoint(route, tunnel.end.x, tunnel.end.z);
   assert.ok(start.distance <= 4 && end.distance <= 4,
@@ -296,7 +304,7 @@ for (const tunnel of MOUNTAIN_TUNNEL_SPECS) {
     Math.hypot(point[0] - tunnel.peak.x, point[2] - tunnel.peak.z) <= tunnel.portalRadius
   ));
   assert.ok(portalSamples.length > 80, `${tunnel.id} needs a substantial mountain-contained lining`);
-  for (const portal of [portalSamples[0], portalSamples.at(-1)]) {
+  for (const [portalIndex, portal] of [portalSamples[0], portalSamples.at(-1)].entries()) {
     const portalRadius = Math.hypot(
       portal[0] - tunnel.peak.x,
       portal[2] - tunnel.peak.z
@@ -305,7 +313,32 @@ for (const tunnel of MOUNTAIN_TUNNEL_SPECS) {
       + tunnel.peak.height * (1 - portalRadius / tunnel.peak.radius);
     assert.ok(coneSurfaceAtPortalCentre >= portal[1] + tunnel.clearHeight + 1.5,
       `${tunnel.id} drive opening must meet the mountain while its broad collar covers the lateral shell transition`);
+    const routeIndex = route.indexOf(portal);
+    const previous = route[(routeIndex - 1 + route.length) % route.length];
+    const next = route[(routeIndex + 1) % route.length];
+    const tangentLength = Math.hypot(next[0] - previous[0], next[2] - previous[2]);
+    const direction = portalIndex === 0 ? -1 : 1;
+    const roadOutwardX = direction * (next[0] - previous[0]) / tangentLength;
+    const roadOutwardZ = direction * (next[2] - previous[2]) / tangentLength;
+    const radialLength = Math.hypot(portal[0] - tunnel.peak.x, portal[2] - tunnel.peak.z);
+    const radialOutwardX = (portal[0] - tunnel.peak.x) / radialLength;
+    const radialOutwardZ = (portal[2] - tunnel.peak.z) / radialLength;
+    const yawError = Math.acos(Math.max(-1, Math.min(
+      1,
+      roadOutwardX * radialOutwardX + roadOutwardZ * radialOutwardZ
+    ))) * 180 / Math.PI;
+    assert.ok(yawError < 0.75,
+      `${tunnel.id} portal ${portalIndex + 1} must meet the circular mountain radially; got ${yawError.toFixed(3)}°`);
   }
+  const portalBottomSurfaceRadius = tunnel.peak.radius
+    * (1 - ((portalSamples[0][1] - 0.95) + 7) / tunnel.peak.height);
+  const portalCrownSurfaceRadius = tunnel.peak.radius
+    * (1 - ((portalSamples[0][1] + tunnel.clearHeight + 6) + 7) / tunnel.peak.height);
+  assert.ok(portalBottomSurfaceRadius - portalCrownSurfaceRadius > 22,
+    `${tunnel.id} portal face must lean materially into the mountain slope from foot to crown`);
+  const mountainSlopeDegrees = Math.atan(tunnel.peak.height / tunnel.peak.radius) * 180 / Math.PI;
+  assert.ok(mountainSlopeDegrees > 45 && mountainSlopeDegrees < 47,
+    `${tunnel.id} portal pitch must follow the integrated peak's mountainside`);
 }
 const eastPeakRouteDistance = nearestRoutePoint(
   route,
@@ -409,18 +442,28 @@ assert.match(extensionSource, /removeRetiredEastTunnelMountain/,
 assert.match(extensionSource, /disposeObjectMesh\(peak\)/,
   'Retiring the east peak must also release its one-off GPU resources');
 assert.match(extensionSource, /TUNNEL_PORTAL_MARGIN = 5/);
-assert.match(extensionSource, /TUNNEL_PORTAL_DEPTH = 8/);
-assert.match(extensionSource, /TUNNEL_PORTAL_FACE_OFFSET = 6\.4/,
-  'The collar front must sit beyond the faceted shell while its back remains joined to the lining');
+assert.match(extensionSource, /TUNNEL_PEAK_BASE_Y = -7/);
+assert.match(extensionSource, /TUNNEL_PORTAL_SURFACE_OFFSET = 0\.65/,
+  'The collar must clear the faceted shell without floating visibly off the mountain');
+assert.match(extensionSource, /TUNNEL_PORTAL_BACK_INSET = 1\.6/,
+  'The slope-matched reveal must remain joined to the sampled tunnel lining');
 assert.match(extensionSource, /TUNNEL_PORTAL_RING = 6/);
 assert.match(extensionSource, /TUNNEL_PORTAL_APERTURE_MARGIN = TUNNEL_PORTAL_RING - 0\.75/,
   'The baked opening must clear the full collar while retaining a narrow seam overlap');
 assert.match(extensionSource, /TUNNEL_PORTAL_APERTURE_HEIGHT_MARGIN = TUNNEL_PORTAL_RING - 0\.75/,
   'The projected crown must clear the faceted shell while retaining a narrow hidden overlap');
-assert.match(extensionSource, /TUNNEL_PORTAL_RETURN_LENGTH = 34/);
 assert.match(extensionSource, /TUNNEL_PORTAL_ARC_SEGMENTS = 12/);
 assert.match(extensionSource, /visibleTunnelSampleRange/,
   'The visible arch and lining must start deeper than the hidden exterior camera carve');
+assert.match(extensionSource, /function makeTunnelPortal/);
+assert.match(extensionSource, /outward\.dot\(roadOutward\)/,
+  'Each portal must measure the road-radius error instead of assuming an aligned mountain');
+assert.match(extensionSource, /surfaceRadius \* surfaceRadius - profilePoint\.lateral \* profilePoint\.lateral/,
+  'Every collar vertex must be projected onto the cone, including the tangent-axis displacement');
+assert.match(extensionSource, /tunnelMountainSurfaceRadius/,
+  'The portal foot and crown must follow the actual mountain pitch');
+assert.match(extensionSource, /addScaledVector\(portal\.roadOutward, -TUNNEL_PORTAL_BACK_INSET\)/,
+  'The slope-matched front must taper cleanly back into the road-aligned lining');
 assert.match(extensionSource, /cameraExpansion = THREE\.MathUtils\.smoothstep/,
   'The wide camera cut must taper down at the portal instead of punching an oversized hole through the mountain face');
 assert.match(extensionSource, /1 - normalizedLateral \* normalizedLateral/,
@@ -429,11 +472,18 @@ assert.match(extensionSource, /tunnelPortalApertureMargin: TUNNEL_PORTAL_APERTUR
   'The portal-shell clearance must be exposed to the browser geometry smoke test');
 assert.match(extensionSource, /tunnelPortalCarveProfile: 'arched'/,
   'The browser geometry smoke test must identify the profiled portal carve');
-assert.match(extensionSource, /appendPortalRetainingReturn/,
-  'The mountain-side shell must transition through a batched retaining return instead of ending as a sliced tongue');
-assert.match(extensionSource, /relative\.dot\(portalSample\.tangent\) \* direction/,
-  'Each retaining return must extend out of its portal rather than doubling back into the lining');
+assert.doesNotMatch(extensionSource, /appendPortalRetainingReturn|TUNNEL_PORTAL_RETURN_LENGTH/,
+  'The relocated radial portal must not retain the old asymmetric tongue workaround');
 assert.match(extensionSource, /tunnelPortalRetainingReturns: tunnels\.portalRetainingReturns/);
+assert.match(extensionSource, /tunnelPortalSurfaceAligned: true/);
+assert.match(extensionSource, /tunnelPortalMaximumYawError: tunnels\.portalMaximumYawError/);
+assert.match(extensionSource, /tunnelPortalSlopeDegrees: tunnels\.portalSlopeDegrees/);
+assert.match(extensionSource, /tunnelPortalFrontLean: tunnels\.portalFrontLean/);
+assert.match(extensionSource, /findIntegratedPeak\(world, spec\.sourcePeak \|\| spec\.peak\)/,
+  'The existing production peak must be found at its source position before its LAB-only relocation');
+assert.match(extensionSource, /peak\.position\.x = spec\.peak\.x/);
+assert.match(extensionSource, /peak\.position\.z = spec\.peak\.z/);
+assert.match(extensionSource, /relocatedTunnelMountainMeshes: tunnels\.relocatedMountainMeshes/);
 assert.match(extensionSource, /expandedTunnelSampleRange/,
   'The hidden CPU cut should extend cleanly outside each integrated peak shell');
 assert.match(extensionSource, /carvePath: Object\.freeze/,
@@ -443,7 +493,7 @@ assert.match(extensionSource, /TUNNEL_PEAK_HEIGHT_SEGMENTS = 72/,
   'Only the retained tunnel peak should receive enough one-time tessellation for a clean opening');
 assert.match(extensionSource, /previousGeometry\?\.dispose\?\.\(\)/,
   'The replaced low-detail peak geometry should be released after the one-time carve');
-assert.match(extensionSource, /one-cpu-carved-camera-safe-peak/);
+assert.match(extensionSource, /one-relocated-cpu-carved-camera-safe-peak/);
 assert.doesNotMatch(extensionSource, /onBeforeCompile|customProgramCacheKey/,
   'Tunnel openings must not add recurring per-fragment shader work to the large mountain occluders');
 assert.match(extensionSource, /carvedMountainMeshes: tunnels\.carvedMountainMeshes/);
