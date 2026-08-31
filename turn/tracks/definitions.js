@@ -21,14 +21,17 @@ const bridgeGuide = Object.freeze({
   minimumInwardSpeed: 2.4,
   offRoadDrag: 0.34,
   sampleCount: 2160,
+  // The smoothed start/finish approach shortens the closed curve slightly, so
+  // the same physical rail endpoints land two samples later after arc-length
+  // resampling. Keep the slippery guide aligned with the visible bridge rails.
   positiveNormalRange: Object.freeze({
-    startIndex: 1003,
-    endIndex: 1093,
+    startIndex: 1005,
+    endIndex: 1095,
     featherSamples: 4
   }),
   negativeNormalRange: Object.freeze({
-    startIndex: 992,
-    endIndex: 1093,
+    startIndex: 994,
+    endIndex: 1095,
     featherSamples: 4
   })
 });
@@ -38,9 +41,9 @@ export const TRACK_DEFINITIONS = Object.freeze(base.TRACK_DEFINITIONS.map((track
   return Object.freeze({
     ...track,
     description: 'Summit climb. Waterfall descent. Lake bridge. Valley lights.',
-    // Deliberately start a fresh MOUNTAIN rival/PB namespace. The old short-course
-    // records remain stored but are never interpreted against the new geometry.
-    storageRevision: 'mountain-r2-long',
+    // The smoothed start/finish approach changes absolute replay coordinates.
+    // Deliberately start fresh rather than reinterpret r2 ghosts/PBs on r3 geometry.
+    storageRevision: 'mountain-r3-start-seam',
     sampleCount: 2160,
     freeRoamDistance: 18.2,
     collisionProfile: Object.freeze({
