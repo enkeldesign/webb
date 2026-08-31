@@ -167,8 +167,8 @@ assert.match(runtimeSource, /detail\?\.ranked === false[\s\S]*?qualifyingTimeTri
 assert.match(chromaticSource, /getStoredBestLap/,
   'Chromatic Camouflage must continue to use the centrally filtered ranked best lap');
 for (const index of [productionIndex, labIndex]) {
-  assert.match(index, new RegExp(`lap-system-r86\\.js\\?build=${release.cacheKey}&revision=r223-training-car-taxi`),
-    'Prod and TURN LAB must cache-bust the unranked lap runtime with the current release identity');
+  assert.match(index, new RegExp(`lap-system-r86\\.js\\?build=${release.cacheKey}&revision=mountain-long-prod-r1`),
+    'Prod and TURN LAB must route the lap runtime through the fresh MOUNTAIN-safe module URL');
   assert.match(index, new RegExp(`rival-storage\\.js\\?build=${release.cacheKey}&revision=r223-training-car-taxi`),
     'Prod and TURN LAB must cache-bust ranked rival storage with the current release identity');
   assert.match(index, /achievements\/runtime\.js\?revision=r195-unranked-super-sedan/,
