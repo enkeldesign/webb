@@ -29,12 +29,12 @@ const TUNNEL_PEAK_BASE_Y = -7;
 const TUNNEL_PORTAL_SURFACE_OFFSET = 0.65;
 const TUNNEL_PORTAL_BACK_INSET = 1.6;
 const TUNNEL_PORTAL_RING = 6;
-// Keep a narrow rock overlap behind the constructed collar without leaving
-// enough of the oblique cone shell to project through it. The previous 1.5 m
-// margin left 4.5 m of mountain under the six-metre ring, which read as a
-// sliced tongue at both ends of this curved tunnel.
-const TUNNEL_PORTAL_APERTURE_MARGIN = TUNNEL_PORTAL_RING - 0.75;
-const TUNNEL_PORTAL_APERTURE_HEIGHT_MARGIN = TUNNEL_PORTAL_RING - 0.75;
+// Keep a full triangle-step of mountain hidden behind the constructed collar.
+// A hairline overlap is not enough for the finite CPU-carve tessellation and
+// can reveal small sky wedges around an otherwise aligned portal.
+const TUNNEL_PORTAL_SEAM_OVERLAP = 3;
+const TUNNEL_PORTAL_APERTURE_MARGIN = TUNNEL_PORTAL_RING - TUNNEL_PORTAL_SEAM_OVERLAP;
+const TUNNEL_PORTAL_APERTURE_HEIGHT_MARGIN = TUNNEL_PORTAL_RING - TUNNEL_PORTAL_SEAM_OVERLAP;
 const TUNNEL_PORTAL_ARC_SEGMENTS = 12;
 const TUNNEL_PEAK_RADIAL_SEGMENTS = 144;
 const TUNNEL_PEAK_HEIGHT_SEGMENTS = 72;

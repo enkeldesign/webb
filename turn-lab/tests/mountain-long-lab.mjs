@@ -448,10 +448,12 @@ assert.match(extensionSource, /TUNNEL_PORTAL_SURFACE_OFFSET = 0\.65/,
 assert.match(extensionSource, /TUNNEL_PORTAL_BACK_INSET = 1\.6/,
   'The slope-matched reveal must remain joined to the sampled tunnel lining');
 assert.match(extensionSource, /TUNNEL_PORTAL_RING = 6/);
-assert.match(extensionSource, /TUNNEL_PORTAL_APERTURE_MARGIN = TUNNEL_PORTAL_RING - 0\.75/,
-  'The baked opening must clear the full collar while retaining a narrow seam overlap');
-assert.match(extensionSource, /TUNNEL_PORTAL_APERTURE_HEIGHT_MARGIN = TUNNEL_PORTAL_RING - 0\.75/,
-  'The projected crown must clear the faceted shell while retaining a narrow hidden overlap');
+assert.match(extensionSource, /TUNNEL_PORTAL_SEAM_OVERLAP = 3/,
+  'The collar must hide at least one full step of the finite CPU-carve tessellation');
+assert.match(extensionSource, /TUNNEL_PORTAL_APERTURE_MARGIN = TUNNEL_PORTAL_RING - TUNNEL_PORTAL_SEAM_OVERLAP/,
+  'The baked opening must clear the drive aperture while leaving a robust hidden seam');
+assert.match(extensionSource, /TUNNEL_PORTAL_APERTURE_HEIGHT_MARGIN = TUNNEL_PORTAL_RING - TUNNEL_PORTAL_SEAM_OVERLAP/,
+  'The projected crown must keep the same robust hidden seam');
 assert.match(extensionSource, /TUNNEL_PORTAL_ARC_SEGMENTS = 12/);
 assert.match(extensionSource, /visibleTunnelSampleRange/,
   'The visible arch and lining must start deeper than the hidden exterior camera carve');
