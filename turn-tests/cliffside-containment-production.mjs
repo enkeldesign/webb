@@ -39,6 +39,7 @@ assert.ok(hillSide.state.velocity.z > 10, 'The hill edge must retain useful forw
 
 const [
   definitionsSource,
+  baseDefinitionsSource,
   baseWorldSource,
   scenicWorldSource,
   physicsSource,
@@ -47,6 +48,7 @@ const [
   releaseSource
 ] = await Promise.all([
   fs.readFile(new URL('../turn/tracks/definitions.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/tracks/definitions-base.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/cliffside-world.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/cliffside-world-r76.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/vehicle/physics.js', import.meta.url), 'utf8'),
@@ -59,7 +61,8 @@ const importMapText = indexSource.match(/<script type="importmap">\s*([\s\S]*?)\
 assert.ok(importMapText, 'Production must expose the release import map');
 const imports = JSON.parse(importMapText).imports;
 
-assert.match(definitionsSource, /freeRoamDistance: 22\.2,[\s\S]*shoulderStartDistance: 15\.2[\s\S]*shoulderDrag: 1\.65/);
+assert.match(definitionsSource, /if \(track\.id !== 'mountain'\) return track/, 'The production overlay must leave Cliffside on the retained base object');
+assert.match(baseDefinitionsSource, /freeRoamDistance: 22\.2,[\s\S]*shoulderStartDistance: 15\.2[\s\S]*shoulderDrag: 1\.65/);
 assert.match(baseWorldSource, /makeShoulders\(world, samples, trackWidth\)/, 'The extra driving buffer must remain visually legible');
 assert.match(baseWorldSource, /trackWidth \/ 2 \+ 8\.7/, 'The visible guardrail must remain beyond the usable shoulder');
 assert.match(baseWorldSource, /function makeStartArch/, 'The start line may keep its lightweight arch');
