@@ -4,9 +4,9 @@
 
 ## Active experiment
 
-TURN LAB currently replaces only MOUNTAIN's route definition, collision profile, pace-note map, checkpoint density and world installer. Everything else comes from the current production TURN import map and entry scripts.
+TURN LAB currently replaces only MOUNTAIN's route definition, collision profile, bridge-guide adapter, pace-note map, checkpoint density and world installer. Everything else comes from the current production TURN import map and entry scripts.
 
-The long course retains the established village, forest climb, summit river, slalom descent and waterfall, then continues across a Kenney-asset bridge into a lower valley. The post-bridge mountain has been removed so the bridge remains the landmark and the road releases directly into the east-valley descent. The added half then continues through a long lower run, one carved lower-village tunnel, the brown-and-snow village, forest return and final climb back to the original start area. The bridge is contained by TURN's continuous no-drop road envelope rather than padded rail boxes, so its visible rails behave as a forgiving slippery guide with no invisible entry, seam or exit stops.
+The long course retains the established village, forest climb, summit river, slalom descent and waterfall, then continues across a Kenney-asset bridge into a lower valley. The post-bridge mountain has been removed so the bridge remains the landmark and the road releases directly into the east-valley descent. The added half then continues through a long lower run, one carved lower-village tunnel, the brown-and-snow village, forest return and final climb back to the original start area. The bridge uses a LAB-only route-normal guide at the visible rail rather than padded rail boxes. It copies DBE 101's slippery assist and ordinary off-road drag, preserves forward motion, and tapers within each visible rail so there are no invisible entry, seam or exit stops; the wider sampled no-drop envelope remains the general anti-shortcut fallback.
 
 The production MOUNTAIN world still builds from 1,080 evenly spaced world samples, so road/scenery setup stays within the established cost. The LAB runtime uses 2,160 samples for collision, progress, checkpoints, ghosts and minimaps, preserving approximately the production route's spatial resolution across the longer lap.
 
@@ -30,4 +30,4 @@ Portrait play, Connected Roadtrip and BUILD-A-CAR are not loaded by this branch.
 - The first import map and all production entry scripts stay synchronized with `turn/index.html`.
 - LAB route overrides live in a second `/turn/` scope and affect only requests made by the production TURN module graph inside `/turn-lab/`.
 - LAB storage is isolated, never reads production saves and seeds only the MOUNTAIN reward so the active experiment is immediately testable.
-- Production physics, handling, drift, boost, Drive By Ear, accessibility and vehicle systems remain the runtime source of truth.
+- Production physics, handling, drift, boost, Drive By Ear, accessibility and vehicle systems remain the runtime source of truth; the scoped LAB collision adapter adds only the MOUNTAIN bridge's O(1) route-normal guide.

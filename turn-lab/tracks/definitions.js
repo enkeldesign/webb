@@ -1,10 +1,53 @@
 // TURN LAB definition overlay. All tracks inherit the current production contract;
-// only MOUNTAIN gets an experiment-specific identity and a tighter no-drop envelope.
+// only MOUNTAIN gets the long-course identity and its no-drop collision profile.
 import * as production from '/turn/tracks/definitions.js?lab-base=mountain-long-r1';
+import { MOUNTAIN_BRIDGE_CENTERS } from './mountain-layout.js';
 
 export const DEFAULT_TRACK_ID = production.DEFAULT_TRACK_ID;
 export const TRACK_SAMPLE_COUNT = production.TRACK_SAMPLE_COUNT;
 export const TRACK_SELECTION_KEY = production.TRACK_SELECTION_KEY;
+
+const BRIDGE_MODULE_LENGTH = 33.4;
+const BRIDGE_ENTRY_RAIL_LENGTH = 20.5;
+const BRIDGE_RAIL_DISTANCE = 27 / 2 + 0.42;
+const BRIDGE_GUIDE_FEATHER = 6;
+const firstBridgeCenter = MOUNTAIN_BRIDGE_CENTERS[0];
+const secondBridgeCenter = MOUNTAIN_BRIDGE_CENTERS[1];
+const lastBridgeCenter = MOUNTAIN_BRIDGE_CENTERS.at(-1);
+const bridgeRailEndX = lastBridgeCenter.x + BRIDGE_MODULE_LENGTH / 2;
+const bridgeGuide = Object.freeze({
+  // Match DBE 101: assistance begins at the visible rail, applies ordinary
+  // off-road drag and removes only outward motion. A route-normal fallback at
+  // the rail centre keeps the car on the deck without an orthogonal end face.
+  baselineLimitDistance: 18.2 - 2.6,
+  baselineAssistStartDistance: 15.0,
+  assistStartDistance: 27 / 2 + 0.35,
+  safetyAssistStartDistance: 14.45,
+  hardLimitDistance: BRIDGE_RAIL_DISTANCE,
+  railDamping: 6,
+  railAcceleration: 9,
+  safetyDamping: 12,
+  safetyAcceleration: 24,
+  penetrationAcceleration: 3.5,
+  maximumPenetrationAcceleration: 28,
+  minimumInwardSpeed: 2.4,
+  offRoadDrag: 0.34,
+  // +normal is the omitted left/north entry rail on this eastbound bridge.
+  // Each influence begins and ends exactly with its visible rail, then feathers
+  // internally so the rail can never expose a perpendicular collision cap.
+  positiveNormalRange: Object.freeze({
+    startX: secondBridgeCenter.x - BRIDGE_MODULE_LENGTH / 2,
+    endX: bridgeRailEndX,
+    feather: BRIDGE_GUIDE_FEATHER
+  }),
+  negativeNormalRange: Object.freeze({
+    startX: firstBridgeCenter.x
+      + (BRIDGE_MODULE_LENGTH - BRIDGE_ENTRY_RAIL_LENGTH) / 2
+      - BRIDGE_ENTRY_RAIL_LENGTH / 2,
+    endX: bridgeRailEndX,
+    feather: BRIDGE_GUIDE_FEATHER
+  })
+});
 
 export const TRACK_DEFINITIONS = Object.freeze(production.TRACK_DEFINITIONS.map((track) => {
   if (track.id !== 'mountain') return track;
@@ -13,12 +56,9 @@ export const TRACK_DEFINITIONS = Object.freeze(production.TRACK_DEFINITIONS.map(
     description: 'Summit climb. Waterfall descent. Lake bridge. Valley lights.',
     storageRevision: 'mountain-lab-long-r1',
     sampleCount: 2160,
-    // TURN already resolves a centreline-following track envelope before snapping the
-    // car to the route surface. Tightening the LAB envelope keeps the car on the road
-    // or bridge deck and prevents nearby folded sections becoming shortcut portals.
-    // Let that continuous envelope contain the bridge too: unlike a chain of padded
-    // boxes it has no perpendicular end caps, retains tangential speed and cannot
-    // create invisible stops at the entry, module seams or exit.
+    // TURN's sampled envelope remains the general no-drop/anti-shortcut guard.
+    // The bridge adds one O(1), route-normal slippery guide aligned with the
+    // visible rail. It has no box seams or longitudinal end faces.
     freeRoamDistance: 18.2,
     collisionProfile: Object.freeze({
       ...track.collisionProfile,
@@ -28,6 +68,7 @@ export const TRACK_DEFINITIONS = Object.freeze(production.TRACK_DEFINITIONS.map(
       boundaryBounce: 0.025,
       boundaryTangentRetention: 0.96,
       boundaryMinimumRecoverySpeed: 5.5,
+      bridgeGuide,
       colliders: Object.freeze([
         ...(track.collisionProfile.colliders || [])
       ])

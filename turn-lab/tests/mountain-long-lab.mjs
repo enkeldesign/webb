@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { Buffer } from 'node:buffer';
 import fs from 'node:fs/promises';
-import { resolveWorldCollisionState } from '../../turn/race/world-collision.js';
+import { resolveWorldCollisionState } from '../race/world-collision.js';
 import {
   MOUNTAIN_BRIDGE_CENTERS,
   MOUNTAIN_CONTROL_POINTS,
@@ -25,6 +25,8 @@ const [
   manifestSource,
   bootstrapSource,
   definitionsSource,
+  collisionSource,
+  bridgeGuideSource,
   lapSource,
   paceSource,
   worldSource,
@@ -36,6 +38,8 @@ const [
   readText('turn-lab/site.webmanifest'),
   readText('turn-lab/lab-bootstrap.js'),
   readText('turn-lab/tracks/definitions.js'),
+  readText('turn-lab/race/world-collision.js'),
+  readText('turn-lab/race/mountain-bridge-guide.js'),
   readText('turn-lab/race/mountain-lap-system.js'),
   readText('turn-lab/tracks/pace-notes.js'),
   readText('turn-lab/tracks/mountain-world-lab-r1.js'),
@@ -57,7 +61,8 @@ assert.deepEqual(labImportMaps[1], {
       './tracks/mountain-layout.js': '/turn-lab/tracks/mountain-layout.js',
       './tracks/pace-notes.js': '/turn-lab/tracks/pace-notes.js',
       './tracks/mountain-world-r3.js?revision=r177-ipad-sky-aspect': '/turn-lab/tracks/mountain-world-lab-r1.js',
-      '/turn/race/lap-system.js?build=20260720-r19': '/turn-lab/race/mountain-lap-system.js'
+      '/turn/race/lap-system.js?build=20260720-r19': '/turn-lab/race/mountain-lap-system.js',
+      '/turn/race/world-collision.js?build=20260723-r53': '/turn-lab/race/world-collision.js?revision=mountain-slip-bridge-r15'
     }
   }
 });
@@ -192,10 +197,34 @@ assert.deepEqual(mountainDefinition.collisionProfile.colliders, [],
   'The bridge must not append padded boxes with perpendicular entry, seam or exit faces');
 assert.doesNotMatch(definitionsSource, /mountain-lab-bridge-(?:north|south)|BRIDGE_RAIL_COLLIDERS/,
   'TURN LAB must not reconstruct the invisible bridge boxes under another name');
+const bridgeGuide = mountainDefinition.collisionProfile.bridgeGuide;
+assert.ok(Object.isFrozen(bridgeGuide), 'The bridge guide must remain immutable with the track definition');
+assert.equal(bridgeGuide.assistStartDistance, TRACK_WIDTH / 2 + 0.35,
+  'Slippery assistance must start at the visible rail, as in DBE 101');
+assert.equal(bridgeGuide.hardLimitDistance, TRACK_WIDTH / 2 + 0.42,
+  'The continuous fallback must align with the visible rail rather than the deck edge');
+assert.ok(bridgeGuide.hardLimitDistance < 30.4 / 2,
+  'The route-normal fallback must keep the car centre on the Kenney bridge deck');
+assert.equal(bridgeGuide.offRoadDrag, 0.34,
+  'A rail scrape should receive only TURN\'s ordinary off-road drag');
+assert.ok(bridgeGuide.positiveNormalRange.startX > bridgeGuide.negativeNormalRange.startX,
+  'The omitted left entry rail must retain the longer open funnel');
+assert.equal(bridgeGuide.positiveNormalRange.endX, bridgeGuide.negativeNormalRange.endX);
+assert.equal(bridgeGuide.positiveNormalRange.feather, 6);
+assert.match(collisionSource, /resolveProductionWorldCollisionState/,
+  'The LAB adapter must wrap the current production collision resolver');
+assert.match(collisionSource, /bridgeGuide\.active[\s\S]*Math\.min/,
+  'Production must receive the guide\'s tapered normal limit instead of applying a second envelope response');
+assert.match(bridgeGuideSource, /1 - Math\.exp\(-damping \* influence \* seconds\)/,
+  'The rail must use DBE 101-style frame-rate-independent outward damping');
+assert.match(bridgeGuideSource, /outwardSpeed > -minimumInwardSpeed/,
+  'The containment fallback must preserve route-tangential velocity');
+assert.doesNotMatch(bridgeGuideSource, /for\s*\(|while\s*\(/,
+  'The per-frame bridge guide must remain O(1)');
 
-// Reproduce the three padded x-faces that could reverse a car even though its
-// centre remained on the open bridge shoulder. With no rail boxes, none of
-// these former entry/handoff/exit caps may register a collision or alter speed.
+// Reproduce the old padded x-faces on the open shoulder. They sit outside
+// the visible longitudinal rail spans, so neither the soft guide nor production
+// may register a collision, reverse the car or scrub its forward speed.
 const formerBridgeCaps = [
   { label: 'south entry cap', x: MOUNTAIN_BRIDGE_CENTERS[0].x - 6.3, center: MOUNTAIN_BRIDGE_CENTERS[0], side: -1, velocityX: 30 },
   { label: 'north handoff cap', x: MOUNTAIN_BRIDGE_CENTERS[1].x - 19.1, center: MOUNTAIN_BRIDGE_CENTERS[1], side: 1, velocityX: 30 },
@@ -213,31 +242,64 @@ for (const cap of formerBridgeCaps) {
     trackId: 'mountain',
     nearestTrack: {
       distance: 15,
-      sample: { point: { x: cap.x, y: 3, z: cap.center.z } }
+      sample: {
+        point: { x: cap.x, y: 3, z: cap.center.z },
+        tangent: { x: Math.sign(cap.velocityX), y: 0, z: 0 },
+        normal: { x: 0, y: 0, z: 1 }
+      }
     },
     collisionProfile: mountainDefinition.collisionProfile
   });
   assert.equal(collision.collided, false, cap.label + ' must be completely absent');
+  assert.equal(collision.bridgeGuide, false, cap.label + ' must remain outside the tapered rail span');
   assert.equal(state.velocity.x, cap.velocityX, cap.label + ' must not reverse or scrub forward motion');
 }
 
-// The existing sampled envelope is the slippery rail: it follows the route
-// continuously, sheds a little shoulder speed, preserves tangential motion and
-// pushes inward without any orthogonal cap. Exercise both sides before, on and
-// after the bridge rather than checking only a midspan box.
-const bridgeEnvelopeLimit = FREE_ROAM_DISTANCE - 2.6;
-const bridgeEnvelopeSites = [
-  nearestRoutePoint(route, MOUNTAIN_BRIDGE_CENTERS[0].x - 12, MOUNTAIN_BRIDGE_CENTERS[0].z),
+// The exact visible rail endpoints have zero influence. This is the deliberate
+// no-end-cap contract: assistance grows only after the car moves alongside a rail.
+for (const [side, range] of [
+  [-1, bridgeGuide.negativeNormalRange],
+  [1, bridgeGuide.positiveNormalRange]
+]) {
+  for (const [label, x] of [['start', range.startX], ['end', range.endX]]) {
+    const state = {
+      position: { x, y: 3.18, z: -205 + side * 15 },
+      velocity: { x: 30, y: 0, z: 0 },
+      speed: 30
+    };
+    const collision = resolveWorldCollisionState({
+      state,
+      trackId: 'mountain',
+      nearestTrack: {
+        distance: 15,
+        sample: {
+          point: { x, y: 3, z: -205 },
+          tangent: { x: 1, y: 0, z: 0 },
+          normal: { x: 0, y: 0, z: 1 }
+        }
+      },
+      collisionProfile: mountainDefinition.collisionProfile
+    });
+    assert.equal(collision.bridgeGuide, false, 'Rail ' + label + ' side ' + side + ' must expose no orthogonal cap');
+    assert.equal(state.velocity.x, 30, 'Rail ' + label + ' side ' + side + ' must preserve forward speed');
+  }
+}
+
+// Alongside the actual rails, exercise both sides at the beginning, middle and
+// release. The guide must contain the car at the rail centre, remove only outward
+// motion, and retain at least 99% of one-frame forward speed (ordinary off-road drag).
+const bridgeGuideSites = [
+  nearestRoutePoint(route, MOUNTAIN_BRIDGE_CENTERS[1].x, MOUNTAIN_BRIDGE_CENTERS[1].z),
   nearestRoutePoint(route, MOUNTAIN_BRIDGE_CENTERS[3].x, MOUNTAIN_BRIDGE_CENTERS[3].z),
-  nearestRoutePoint(route, MOUNTAIN_BRIDGE_CENTERS.at(-1).x + 12, MOUNTAIN_BRIDGE_CENTERS.at(-1).z)
+  nearestRoutePoint(route, MOUNTAIN_BRIDGE_CENTERS.at(-1).x, MOUNTAIN_BRIDGE_CENTERS.at(-1).z)
 ];
-for (const [siteIndex, site] of bridgeEnvelopeSites.entries()) {
+for (const [siteIndex, site] of bridgeGuideSites.entries()) {
   const tangent = routeTangent(route, site.index);
   const normal = [-tangent[2], 0, tangent[0]];
   for (const side of [-1, 1]) {
     const forwardSpeed = 28;
     const outwardSpeed = 4;
-    const distance = bridgeEnvelopeLimit + 0.8;
+    const distance = bridgeGuide.hardLimitDistance + 0.8;
     const state = {
       position: {
         x: site.point[0] + normal[0] * side * distance,
@@ -256,25 +318,34 @@ for (const [siteIndex, site] of bridgeEnvelopeSites.entries()) {
       trackId: 'mountain',
       nearestTrack: {
         distance,
-        sample: { point: { x: site.point[0], y: site.point[1], z: site.point[2] } }
+        sample: {
+          point: { x: site.point[0], y: site.point[1], z: site.point[2] },
+          tangent: { x: tangent[0], y: 0, z: tangent[2] },
+          normal: { x: normal[0], y: 0, z: normal[2] }
+        }
       },
-      collisionProfile: mountainDefinition.collisionProfile
+      collisionProfile: mountainDefinition.collisionProfile,
+      dt: 1 / 60
     });
     const retainedForward = state.velocity.x * tangent[0] + state.velocity.z * tangent[2];
     const remainingOutward = (
       state.velocity.x * normal[0] + state.velocity.z * normal[2]
     ) * side;
-    const siteLabel = 'Bridge envelope site ' + (siteIndex + 1) + ' side ' + side;
-    assert.equal(collision.boundary, true, siteLabel + ' must remain contained');
-    assert.equal(collision.obstacles, 0, siteLabel + ' must have no hard rail hit');
-    assert.ok(retainedForward >= forwardSpeed * 0.92,
-      siteLabel + ' must retain forward slide, got ' + retainedForward.toFixed(3));
+    const siteLabel = 'Bridge guide site ' + (siteIndex + 1) + ' side ' + side;
+    assert.equal(collision.bridgeGuide, true, siteLabel + ' must engage beside a visible rail');
+    assert.equal(collision.bridgeRailAssist, true, siteLabel + ' must use the slippery assist');
+    assert.equal(collision.bridgeRailContainment, true, siteLabel + ' must remain on the deck');
+    assert.equal(collision.boundary, true, siteLabel + ' must report containment');
+    assert.equal(collision.obstacles, 0, siteLabel + ' must have no hard box hit');
+    assert.ok(retainedForward >= forwardSpeed * 0.99,
+      siteLabel + ' must retain its forward slide, got ' + retainedForward.toFixed(3));
     assert.ok(remainingOutward < 0, siteLabel + ' must guide the car gently inward');
-    assert.ok(state.speed >= forwardSpeed * 0.92, siteLabel + ' must never produce a stop');
+    assert.ok(state.speed >= forwardSpeed * 0.99, siteLabel + ' must never produce a stop');
     assert.ok(Math.hypot(
       state.position.x - site.point[0],
       state.position.z - site.point[2]
-    ) <= bridgeEnvelopeLimit + 1e-6, siteLabel + ' must keep the car on the deck envelope');
+    ) <= bridgeGuide.hardLimitDistance + 1e-6,
+    siteLabel + ' must keep the car centre at or inside the visible rail');
   }
 }
 
@@ -542,7 +613,7 @@ assert.match(workflowSource, /node turn-lab\/tests\/mountain-long-lab\.mjs/,
 console.log(
   `TURN LAB MOUNTAIN long-course contract passed: ${routeLength.toFixed(0)} m, `
   + `${lengthRatio.toFixed(3)}x production, ${separation.distance.toFixed(1)} m minimum non-local separation, `
-  + '24 checkpoints, an open-left bridge funnel, one camera-safe arched tunnel, instanced scenery and zero added dynamic lights.'
+  + '24 checkpoints, an open-left slippery bridge guide, one camera-safe arched tunnel, instanced scenery and zero added dynamic lights.'
 );
 
 async function readText(path) {
