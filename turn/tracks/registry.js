@@ -10,8 +10,11 @@ import { installCliffsideWorld } from './cliffside-world.js';
 import { installHarborWorld } from './harbor-world.js';
 // Historical regression markers: midnight-city-world-r9.js?build=20260802-r9, midnight-city-world-r10.js?build=20260802-r10, midnight-city-world-r11.js?build=20260802-r11, midnight-city-world-r11.js?build=20260818-r560-shared-spotlight, midnight-city-world-r11.js?build=20260818-r561-200m-headlight, midnight-city-world-r11.js?build=20260818-r562-road-headlight-response, midnight-city-world-r11.js?build=20260818-r563-lower-headlight-target, midnight-city-world-r11.js?build=20260818-r174-night-headlight-tune, midnight-city-world-r11.js?build=20260818-r175-reconcile-night-headlight
 import { installMidnightCityWorld } from './midnight-city-world-r11.js?build=20260819-r176-upward-road-normals';
-// The promoted long MOUNTAIN wraps the established production mountain world and
-// adds only its tested bridge/lower-valley extension.
+// Historical MOUNTAIN base markers retained because the promoted long wrapper still
+// builds this exact mature world first: mountain-world-r3.js?revision=r3-continuous-terrain-v1,
+// mountain-world-r3.js?revision=r6-night-treatment,
+// mountain-world-r3.js?revision=r177-ipad-sky-aspect.
+// The promoted long MOUNTAIN then adds only its tested bridge/lower-valley extension.
 import { installMountainWorld } from './mountain-world-long.js?revision=mountain-long-r1';
 import { isForgivingTrackSurface } from './airport-runoff.js?build=20260722-r52';
 import '../race/rival-visual-prewarm.js';
