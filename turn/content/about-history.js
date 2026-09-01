@@ -502,6 +502,8 @@ export const CHANGELOG = Object.freeze([
   {
     date: '1 September',
     entries: [
+      ['1.12.2 r187', 'Improves MOUNTAIN performance on the 10.2-inch legacy iPad class by disabling only its global dynamic shadows.'],
+      ['Legacy-tablet MOUNTAIN shadows', 'Keeps every streetlight, window glow and player spotlight, leaves DPR unchanged and automatically restores track shadows on every other course.'],
       ['1.12.1 r186', 'Optimizes track loading, first-rival creation and the finished MOUNTAIN village while preserving its complete night-lighting treatment.'],
       ['First-rival finish line', 'Transfers the completed replay buffer without cloning every frame and prepares an empty roster’s hidden rival car before racing starts.'],
       ['Track and MOUNTAIN loading', 'Loads substantial world modules only when selected and skips two retired Holiday-cabin layers instead of constructing and removing them.'],
@@ -511,7 +513,7 @@ export const CHANGELOG = Object.freeze([
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.12.1',
-  build: '2026.09.01-r186',
-  note: 'TURN 1.12.1 moves first-rival preparation out of the finish-line hot path, lazily loads track worlds and makes MOUNTAIN SAFETY a real clean-lap challenge.'
+  version: '1.12.2',
+  build: '2026.09.01-r187',
+  note: 'TURN 1.12.2 keeps MOUNTAIN’s complete night lighting while removing its dynamic track shadows on the 10.2-inch legacy iPad class.'
 });
