@@ -31,6 +31,8 @@ export function beginTimedLapState({ state, samples, now, showMessage }) {
   state.lapActive = true;
   state.lapCheckpointIndex = 0;
   state.lapInvalid = false;
+  state.courseSafetyOffRoad = false;
+  state.lapCourseViolation = false;
   state.lapStartedAt = now;
   state.lapElapsed = 0;
   state.lapPreviousPosition = snapshotPosition(state.position);
@@ -145,6 +147,7 @@ export function completeLapState({
   const completedLap = finishedTime > 5;
   const validLap = completedLap && state.recording.length > 20;
   const rankedLap = ranked !== false;
+  const onCourseThroughout = state.lapCourseViolation !== true;
   let finishingPosition = null;
   let finishingTotal = null;
   let savedLap = false;
@@ -159,7 +162,9 @@ export function completeLapState({
 
   if (validLap && rankedLap) {
     try {
-      const candidateFrames = state.recording.map((frame) => ({ ...frame }));
+      // Transfer the completed recording to its immutable rival snapshot. Copying
+      // every frame here caused a visible finish-line spike on the two long tracks.
+      const candidateFrames = state.recording;
       if (candidateFrames.length) {
         const start = samples[0];
         candidateFrames[0] = {
@@ -208,12 +213,15 @@ export function completeLapState({
       time: finishedTime,
       valid: validLap,
       saved: savedLap,
-      ranked: rankedLap
+      ranked: rankedLap,
+      onCourseThroughout
     });
   }
 
   state.lapCheckpointIndex = 0;
   state.lapInvalid = false;
+  state.courseSafetyOffRoad = false;
+  state.lapCourseViolation = false;
   state.lapActive = true;
   state.lap += 1;
   state.lapStartedAt = now;
@@ -226,6 +234,7 @@ export function completeLapState({
     validLap,
     savedLap,
     ranked: rankedLap,
+    onCourseThroughout,
     position: finishingPosition,
     total: finishingTotal
   };

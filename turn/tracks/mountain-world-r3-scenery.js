@@ -463,14 +463,24 @@ function makeHolidayCabin(templates, variant = 0) {
   return cabin;
 }
 
-async function loadVillageAndRoadsideAssets(world, samples, trackWidth, terrainHeightAt) {
+async function loadVillageAndRoadsideAssets(
+  world,
+  samples,
+  trackWidth,
+  terrainHeightAt,
+  { skipRetiredHolidayCabins = false } = {}
+) {
   const loader = new GLTFLoader();
-  const [wall, doorway, windowLarge, roof, bench, lantern, sled, snowPile, snowFlat, snowTree,
+  const [retiredCabinSources, bench, lantern, sled, snowPile, snowFlat, snowTree,
     stallGreen, stallRed, cart, fountain, fence] = await Promise.all([
-    loader.loadAsync(`${HOLIDAY_ROOT}/cabin-wall.glb`),
-    loader.loadAsync(`${HOLIDAY_ROOT}/cabin-doorway.glb`),
-    loader.loadAsync(`${HOLIDAY_ROOT}/cabin-window-large.glb`),
-    loader.loadAsync(`${HOLIDAY_ROOT}/cabin-roof-snow.glb`),
+    skipRetiredHolidayCabins
+      ? Promise.resolve(null)
+      : Promise.all([
+        loader.loadAsync(`${HOLIDAY_ROOT}/cabin-wall.glb`),
+        loader.loadAsync(`${HOLIDAY_ROOT}/cabin-doorway.glb`),
+        loader.loadAsync(`${HOLIDAY_ROOT}/cabin-window-large.glb`),
+        loader.loadAsync(`${HOLIDAY_ROOT}/cabin-roof-snow.glb`)
+      ]),
     loader.loadAsync(`${HOLIDAY_ROOT}/bench.glb`),
     loader.loadAsync(`${HOLIDAY_ROOT}/lantern.glb`),
     loader.loadAsync(`${HOLIDAY_ROOT}/sled.glb`),
@@ -484,28 +494,39 @@ async function loadVillageAndRoadsideAssets(world, samples, trackWidth, terrainH
     loader.loadAsync(`${FANTASY_ROOT}/fence.glb`)
   ]);
   const templates = {
-    wall: prepareAsset(wall.scene), doorway: prepareAsset(doorway.scene), window: prepareAsset(windowLarge.scene),
-    roof: prepareAsset(roof.scene), bench: prepareAsset(bench.scene), lantern: prepareAsset(lantern.scene),
+    bench: prepareAsset(bench.scene), lantern: prepareAsset(lantern.scene),
     sled: prepareAsset(sled.scene), snowPile: prepareAsset(snowPile.scene), snowFlat: prepareAsset(snowFlat.scene),
     snowTree: prepareAsset(snowTree.scene), stallGreen: prepareAsset(stallGreen.scene), stallRed: prepareAsset(stallRed.scene),
     cart: prepareAsset(cart.scene), fountain: prepareAsset(fountain.scene), fence: prepareAsset(fence.scene)
   };
-
-  const cabinSites = [
-    [5, 1, 7.2, 0], [23, 1, 6.3, 1], [45, 1, 6.6, 0],
-    [1038, -1, 6.2, 1], [1060, -1, 6.8, 0]
-  ];
-  cabinSites.forEach(([index, side, scale, variant], cabinIndex) => {
-    const point = safeTracksidePosition(samples, index, side, trackWidth, 7.4, 24, 48, 2.8);
-    if (!point) return;
-    const sample = samples[index % samples.length];
-    groundImportedAsset(makeHolidayCabin(templates, variant), {
-      x: point.x, z: point.z,
-      yaw: Math.atan2(sample.tangent.x, sample.tangent.z) + (side > 0 ? Math.PI : 0) + (cabinIndex % 2 ? 0.12 : -0.08),
-      scale, terrainHeightAt, world, sink: 0.08,
-      name: `Mountain Kenney Holiday cabin prefab r3 ${cabinIndex + 1}`
+  if (retiredCabinSources) {
+    const [wall, doorway, windowLarge, roof] = retiredCabinSources;
+    Object.assign(templates, {
+      wall: prepareAsset(wall.scene),
+      doorway: prepareAsset(doorway.scene),
+      window: prepareAsset(windowLarge.scene),
+      roof: prepareAsset(roof.scene)
     });
-  });
+  }
+  world.userData.turnMountainRetiredR3CabinsSkipped = retiredCabinSources === null;
+
+  if (retiredCabinSources) {
+    const cabinSites = [
+      [5, 1, 7.2, 0], [23, 1, 6.3, 1], [45, 1, 6.6, 0],
+      [1038, -1, 6.2, 1], [1060, -1, 6.8, 0]
+    ];
+    cabinSites.forEach(([index, side, scale, variant], cabinIndex) => {
+      const point = safeTracksidePosition(samples, index, side, trackWidth, 7.4, 24, 48, 2.8);
+      if (!point) return;
+      const sample = samples[index % samples.length];
+      groundImportedAsset(makeHolidayCabin(templates, variant), {
+        x: point.x, z: point.z,
+        yaw: Math.atan2(sample.tangent.x, sample.tangent.z) + (side > 0 ? Math.PI : 0) + (cabinIndex % 2 ? 0.12 : -0.08),
+        scale, terrainHeightAt, world, sink: 0.08,
+        name: `Mountain Kenney Holiday cabin prefab r3 ${cabinIndex + 1}`
+      });
+    });
+  }
 
   const landmarkSites = [
     { template: templates.fountain, index: 10, side: -1, radius: 5.5, offset: 23, scale: 8.0, name: 'Mountain Kenney Fantasy fountain r3' },
@@ -585,7 +606,7 @@ async function loadVillageAndRoadsideAssets(world, samples, trackWidth, terrainH
   }
 }
 
-export function installMountainScenery(world, samples, trackWidth, terrainContext) {
+export function installMountainScenery(world, samples, trackWidth, terrainContext, options = {}) {
   const { terrainHeightAt } = terrainContext;
   makeSafeGuardrails(world, samples, trackWidth, terrainHeightAt);
   makeSnowForest(world, samples, trackWidth, terrainHeightAt);
@@ -594,7 +615,7 @@ export function installMountainScenery(world, samples, trackWidth, terrainContex
 
   const loaders = [
     loadNatureCliffAccents(world),
-    loadVillageAndRoadsideAssets(world, samples, trackWidth, terrainHeightAt)
+    loadVillageAndRoadsideAssets(world, samples, trackWidth, terrainHeightAt, options)
   ];
   return Promise.allSettled(loaders).then((results) => {
     const rejected = results.filter((result) => result.status === 'rejected');

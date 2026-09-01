@@ -16,6 +16,7 @@ const MOUNTAIN_VILLAGE_BENCHES = new Set([
 ]);
 const MOUNTAIN_MOONLIGHT_FILL = 0x18314c;
 const MOUNTAIN_MOONLIGHT_FILL_INTENSITY = 0.16;
+const FINAL_VILLAGE_OPTIONS = Object.freeze({ skipRetiredHolidayCabins: true });
 
 function faceMountainVillageBenchesTowardTrack(world) {
   world.traverse((object) => {
@@ -62,9 +63,21 @@ export function installMountainWorld({ scene, samples, trackWidth = 27, runtime 
 
   const terrainContext = installMountainTerrain(world, samples, trackWidth);
   installMountainR3Polish(world, samples, trackWidth);
-  const sceneryReady = installMountainScenery(world, samples, trackWidth, terrainContext);
+  const sceneryReady = installMountainScenery(
+    world,
+    samples,
+    trackWidth,
+    terrainContext,
+    FINAL_VILLAGE_OPTIONS
+  );
   world.ready = Promise.resolve(sceneryReady)
-    .then(() => installMountainR4VisualPolish(world, samples, trackWidth, terrainContext))
+    .then(() => installMountainR4VisualPolish(
+      world,
+      samples,
+      trackWidth,
+      terrainContext,
+      FINAL_VILLAGE_OPTIONS
+    ))
     .then(() => installMountainR4WaterfallNotch(world))
     .then(() => installMountainR4DriverFacingWaterfall(world, samples))
     .then(() => installMountainR5SuburbanVillage(world, samples, trackWidth, terrainContext))

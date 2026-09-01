@@ -1,4 +1,5 @@
 import { resolveWorldCollisionState } from '../race/world-collision.js?build=20260723-r53';
+import { recordLapCourseSafetyState } from '../race/course-safety.js?revision=r186-road-edge-latch';
 import { trackPitch, trackSurfaceY } from '../tracks/elevation.js?build=20260725-r67';
 
 const OFFROAD_CAPABLE_VEHICLE_IDS = new Set(['monster-truck']);
@@ -332,6 +333,12 @@ export function updateVehiclePhysicsState({
   state.speed = state.velocity.length();
 
   let nearestAfter = findNearestTrack(state.position);
+  recordLapCourseSafetyState({
+    state,
+    nearestTrack: nearestAfter,
+    trackWidth,
+    forgivingSurface: isForgivingSurface(state.position)
+  });
   const collision = resolveWorldCollisionState({
     state,
     trackId: state.trackId,

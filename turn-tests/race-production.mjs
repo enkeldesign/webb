@@ -19,6 +19,11 @@ import {
   recordReplayFrame,
   replayFrameAt
 } from '../turn/race/replay-system.js';
+import {
+  COURSE_SAFETY_ROAD_EDGE_FACTOR,
+  isOutsideCourseForSafety,
+  recordLapCourseSafetyState
+} from '../turn/race/course-safety.js';
 
 class Vec3 {
   constructor(x = 0, y = 0, z = 0) {
@@ -187,6 +192,37 @@ test('timed lap pins the exact start frame and snapshots the physical position',
   assert.equal(message, 'GO!');
 });
 
+test('SAFETY uses the visible road edge and latches any excursion for the whole lap', () => {
+  assert.equal(COURSE_SAFETY_ROAD_EDGE_FACTOR, 0.5);
+  assert.equal(isOutsideCourseForSafety({ distance: 13.5, trackWidth: 27 }), false);
+  assert.equal(isOutsideCourseForSafety({ distance: 13.501, trackWidth: 27 }), true);
+  assert.equal(isOutsideCourseForSafety({
+    distance: 40,
+    trackWidth: 27,
+    forgivingSurface: true
+  }), false);
+
+  const state = makeState({ vehicleId: 'monster-truck' });
+  state.lapActive = true;
+  recordLapCourseSafetyState({
+    state,
+    nearestTrack: { distance: 15.6 },
+    trackWidth: 27
+  });
+  assert.equal(state.courseSafetyOffRoad, true);
+  assert.equal(state.lapCourseViolation, true,
+    'MOUNTAIN containment must not erase a clean-lap violation');
+
+  recordLapCourseSafetyState({
+    state,
+    nearestTrack: { distance: 0 },
+    trackWidth: 27
+  });
+  assert.equal(state.courseSafetyOffRoad, false);
+  assert.equal(state.lapCourseViolation, true,
+    'Returning to the road must not repair the current SAFETY attempt');
+});
+
 test('swept checkpoint gates require a forward crossing inside their width', () => {
   const gate = {
     point: { x: 10, z: 0 },
@@ -272,6 +308,7 @@ test('the physical start gate completes only a valid full checkpoint chain', () 
 
 test('completed laps keep the fastest four rivals and preserve exact vehicle paint', () => {
   const samples = makeSamples();
+  const completedRecording = makeFrames();
   const oldLaps = [10, 11, 12, 13].map((time) => ({
     time,
     hitAt: null,
@@ -279,7 +316,7 @@ test('completed laps keep the fastest four rivals and preserve exact vehicle pai
   }));
   const state = makeState({
     competitorLaps: oldLaps,
-    recording: makeFrames(),
+    recording: completedRecording,
     lapStartedAt: 0,
     bestTime: 10,
     lap: 1,
@@ -317,6 +354,29 @@ test('completed laps keep the fastest four rivals and preserve exact vehicle pai
   assert.equal(state.competitorLaps[0].frames[0].t, 0);
   assert.equal(state.competitorLaps[0].frames[0].p, 0);
   assert.equal(state.competitorLaps[0].frames[0].x, samples[0].point.x);
+  assert.equal(state.competitorLaps[0].frames, completedRecording,
+    'Lap completion must transfer the replay buffer instead of cloning every long-track frame');
+});
+
+test('completed lap results expose the physics-latched SAFETY verdict', () => {
+  const samples = makeSamples();
+  const state = makeState({
+    recording: makeFrames(),
+    lapStartedAt: 0,
+    lapCourseViolation: true
+  });
+  state.lapActive = true;
+
+  const result = completeLapState({
+    state,
+    samples,
+    now: 60_000,
+    competitorLimit: 4
+  });
+
+  assert.equal(result.onCourseThroughout, false);
+  assert.equal(state.lapCourseViolation, false,
+    'The next lap must begin with a fresh SAFETY attempt');
 });
 
 test('replay interpolation wraps time, caches identical lookups and uses the shortest angle path', () => {

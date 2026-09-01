@@ -50,7 +50,7 @@ export async function activateTrack(trackId, currentRuntime = runtime) {
     throw new Error('TURN: the active track index cannot rebuild for track changes.');
   }
 
-  const nextState = ensureTrackState(nextTrack, currentRuntime);
+  const nextState = await ensureTrackState(nextTrack, currentRuntime);
   replaceSamples(currentRuntime.samples, nextState.trackRuntime.samples);
   currentRuntime.trackSpatialIndex.replaceSamples(currentRuntime.samples);
   for (const state of trackStates.values()) {
@@ -121,12 +121,12 @@ function installRuntime(nextRuntime) {
   runtimeReadyResolve(runtime);
 }
 
-function ensureTrackState(entry, currentRuntime) {
+async function ensureTrackState(entry, currentRuntime) {
   const existing = trackStates.get(entry.id);
   if (existing) return existing;
 
   const trackRuntime = entry.createRuntime(currentRuntime.trackSampleCount || 720);
-  const world = entry.installWorld({
+  const world = await entry.installWorld({
     scene: currentRuntime.scene,
     samples: trackRuntime.samples,
     trackWidth: currentRuntime.trackWidth,

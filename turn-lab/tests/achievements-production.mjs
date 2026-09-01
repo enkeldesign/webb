@@ -236,6 +236,10 @@ assert.equal(qualifiesForCleanLap(
   { time: 69.999 }
 ), true, 'A clean Mountain lap below its 70-second target should count');
 assert.equal(qualifiesForCleanLap(
+  { trackId: 'mountain', onCourseThroughout: true },
+  { time: 60, onCourseThroughout: false }
+), false, 'The physics-step lap latch must veto MOUNTAIN SAFETY even when interval sampling missed the excursion');
+assert.equal(qualifiesForCleanLap(
   { trackId: 'harbor', onCourseThroughout: false },
   { time: 20 }
 ), false, 'Any sampled off-road state must void the clean-lap attempt');

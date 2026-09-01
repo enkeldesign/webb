@@ -209,6 +209,8 @@ async function loadSources() {
 export async function installMountainR5SuburbanVillage(world, samples, trackWidth, terrainContext) {
   if (!world || !Array.isArray(samples) || !terrainContext?.terrainHeightAt) return world;
   const removed = removeAssembledCabins(world);
+  const retiredCabinsSkipped = world.userData.turnMountainRetiredR3CabinsSkipped === true
+    && world.userData.turnMountainR4VisualPolish?.retiredCabinsSkipped === true;
   const errors = [];
   let placed = 0;
   let paletteMode = 'mountain-brown-snow';
@@ -238,6 +240,7 @@ export async function installMountainR5SuburbanVillage(world, samples, trackWidt
   world.userData.turnMountainR5SuburbanVillage = Object.freeze({
     revision: REVISION,
     removedAssembledCabins: removed,
+    retiredCabinsSkipped,
     placed,
     requestedTypes: [...HOUSE_TYPES],
     paletteMode,
