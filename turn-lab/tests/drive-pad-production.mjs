@@ -47,6 +47,15 @@ assert.equal(pointerUsesDriftLock({ ...driftLockGeometry, pointerX: 21, pointerY
 assert.equal(pointerUsesDriftLock({ ...driftLockGeometry, pointerX: 50, pointerY: 37 }), false);
 assert.equal(pointerUsesDriftLock({ ...driftLockGeometry, pointerX: 50, pointerY: 127 }), false);
 assert.equal(pointerUsesDriftLock({ ...driftLockGeometry, pointerX: 50, pointerY: 80, driftActive: false }), false);
+const rightDriftLockGeometry = {
+  ...driftLockGeometry,
+  padRight: 300,
+  lockSide: 'right'
+};
+assert.equal(pointerUsesDriftLock({ ...rightDriftLockGeometry, pointerX: 296, pointerY: 80 }), true);
+assert.equal(pointerUsesDriftLock({ ...rightDriftLockGeometry, pointerX: 350, pointerY: 80 }), true);
+assert.equal(pointerUsesDriftLock({ ...rightDriftLockGeometry, pointerX: 295, pointerY: 80 }), false);
+assert.equal(pointerUsesDriftLock({ ...rightDriftLockGeometry, pointerX: 379, pointerY: 80 }), false);
 assert.equal(advanceDriftLockAmount(0, true, DRIFT_LOCK_ENGAGE_SECONDS / 2), 0.5);
 assert.equal(advanceDriftLockAmount(0.5, true, DRIFT_LOCK_ENGAGE_SECONDS / 2), 1);
 assert.equal(advanceDriftLockAmount(1, false, DRIFT_LOCK_RELEASE_SECONDS / 2), 0.5);
@@ -233,7 +242,8 @@ assert.match(controls, /BOOST spends OVERCHARGE before normal BOOST/);
 assert.match(controls, /caught and held with GAS/,
   'The accessible meter must use the same catch-and-hold vocabulary as the guide');
 assert.match(controls, /drivePad\.append\(driveTop, gasButton, brakeButton\)/, 'Brake and Reverse must live inside the same continuous drive surface');
-assert.match(controls, /return x < 0\.5 \? 'drift' : 'boost'/, 'Top drive pad must split into Drift and Boost');
+assert.match(controls, /topDriveZoneAt\(x, controlHandedness\)/,
+  'Top drive pad must split into Drift and Boost according to the selected handedness');
 assert.match(controls, /y >= BRAKE_ZONE_START\) return 'brake'/, 'Bottom drive pad must map to Brake and Reverse');
 assert.match(controls, /return 'gas'/, 'Middle drive pad must map to Gas');
 assert.match(controls, /const forwardDrive = nextZone === 'gas' \|\| nextZone === 'drift' \|\| nextZone === 'boost'/, 'Only forward-driving zones may keep gas engaged');

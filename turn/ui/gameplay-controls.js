@@ -12,6 +12,12 @@ import {
   qualifiesForBoostOvercharge,
   resolveBoostSlipAngle
 } from '../input/boost-overcharge.js?revision=r219-overcharge-state';
+import {
+  driftLockSideForHandedness,
+  installControlHandedness,
+  normalizeControlHandedness,
+  topDriveZoneAt
+} from './control-handedness.js';
 
 globalThis.__turnBoostActive = false;
 globalThis.__turnBoostCharge = 1;
@@ -122,7 +128,7 @@ function installGameplayUi() {
   drivePad.setAttribute('role', 'group');
   drivePad.setAttribute(
     'aria-label',
-    'Drive control. Double tap and hold, then slide between GAS, DRIFT, BOOST, and BRAKE or REVERSE. DRIFT charges BOOST and builds OVERCHARGE after the bar is full. GAS catches and holds OVERCHARGE. BOOST spends OVERCHARGE before normal BOOST. While holding DRIFT, slide left into LOCK for rear-wheel lock.'
+    'Drive control. Double tap and hold, then slide between GAS, DRIFT, BOOST, and BRAKE or REVERSE. DRIFT charges BOOST and builds OVERCHARGE after the bar is full. GAS catches and holds OVERCHARGE. BOOST spends OVERCHARGE before normal BOOST. While holding DRIFT, slide outward into LOCK for rear-wheel lock.'
   );
   drivePad.style.setProperty('--boost-charge', '100%');
 
@@ -138,7 +144,7 @@ function installGameplayUi() {
   driftZone.type = 'button';
   driftZone.className = 'drive-zone drive-drift-zone';
   driftZone.textContent = 'Drift';
-  driftZone.setAttribute('aria-label', 'GAS and DRIFT. DRIFT charges BOOST; after the bar is full, it builds OVERCHARGE. Slide left into LOCK for rear-wheel lock.');
+  driftZone.setAttribute('aria-label', 'GAS and DRIFT. DRIFT charges BOOST; after the bar is full, it builds OVERCHARGE. Slide outward into LOCK for rear-wheel lock.');
 
   const boostZone = document.createElement('button');
   boostZone.type = 'button';
@@ -158,6 +164,11 @@ function installGameplayUi() {
   drivePad.append(driveTop, gasButton, brakeButton);
   driveStack.append(driftLockBubble, drivePad);
   pedals.replaceChildren(driveStack);
+
+  let controlHandedness = installControlHandedness();
+  globalThis.addEventListener?.('turn:control-handedness-change', (event) => {
+    controlHandedness = normalizeControlHandedness(event.detail?.handedness);
+  });
 
   let drivePointerId = null;
   let driveZone = null;
@@ -296,7 +307,7 @@ function installGameplayUi() {
 
     const x = Math.max(0, Math.min(1, (event.clientX - rect.left) / Math.max(1, rect.width)));
     const y = Math.max(0, Math.min(1, (event.clientY - rect.top) / Math.max(1, rect.height)));
-    if (y < TOP_ZONE_SHARE) return x < 0.5 ? 'drift' : 'boost';
+    if (y < TOP_ZONE_SHARE) return topDriveZoneAt(x, controlHandedness);
     if (y >= BRAKE_ZONE_START) return 'brake';
     return 'gas';
   }
@@ -308,9 +319,11 @@ function installGameplayUi() {
       pointerX: event.clientX,
       pointerY: event.clientY,
       padLeft: rect.left,
+      padRight: rect.right,
       padTop: rect.top,
       padHeight: rect.height,
-      bubbleWidth: driftLockBubble.offsetWidth
+      bubbleWidth: driftLockBubble.offsetWidth,
+      lockSide: driftLockSideForHandedness(controlHandedness)
     });
     if (lockRequested) return { zone: 'drift', lockRequested: true };
 

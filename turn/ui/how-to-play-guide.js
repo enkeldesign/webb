@@ -21,7 +21,7 @@ function updateDriveControlCopy(dialog) {
   const paragraph = section?.querySelector('p');
   if (!paragraph) return;
 
-  paragraph.innerHTML = 'Keep one thumb on the drive pad and slide between <strong>GAS</strong>, <strong>DRIFT</strong>, <strong>BOOST</strong> and <strong>BRAKE · REVERSE</strong>. While using DRIFT, slide farther left into <strong>LOCK</strong> for a stronger slide.';
+  paragraph.innerHTML = 'Keep one thumb on the drive pad and slide between <strong>GAS</strong>, <strong>DRIFT</strong>, <strong>BOOST</strong> and <strong>BRAKE · REVERSE</strong>. While using DRIFT, slide outward past it into <strong>LOCK</strong> for a stronger slide.';
 }
 
 function updateDriftAndBoostCopy(dialog) {

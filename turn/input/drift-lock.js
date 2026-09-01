@@ -12,13 +12,17 @@ export function pointerUsesDriftLock({
   pointerX = 0,
   pointerY = 0,
   padLeft = 0,
+  padRight,
   padTop = 0,
   padHeight = 0,
-  bubbleWidth = 0
+  bubbleWidth = 0,
+  lockSide = 'left'
 } = {}) {
   if (!driftActive) return false;
 
   const left = finiteNumber(padLeft);
+  const measuredRight = Number(padRight);
+  const right = Number.isFinite(measuredRight) ? measuredRight : left;
   const top = finiteNumber(padTop);
   const height = Math.max(1, finiteNumber(padHeight));
   const width = Math.max(1, finiteNumber(bubbleWidth));
@@ -26,8 +30,13 @@ export function pointerUsesDriftLock({
   const y = finiteNumber(pointerY);
   const lockTop = top - DRIFT_LOCK_VERTICAL_SLOP_PX;
   const lockBottom = top + height * DRIFT_LOCK_TOP_ZONE_SHARE + DRIFT_LOCK_VERTICAL_SLOP_PX;
-  const lockLeft = left - width - DRIFT_LOCK_OUTER_SLOP_PX;
-  const lockRight = left + DRIFT_LOCK_SEAM_OVERLAP_PX;
+  const lockOnRight = lockSide === 'right';
+  const lockLeft = lockOnRight
+    ? right - DRIFT_LOCK_SEAM_OVERLAP_PX
+    : left - width - DRIFT_LOCK_OUTER_SLOP_PX;
+  const lockRight = lockOnRight
+    ? right + width + DRIFT_LOCK_OUTER_SLOP_PX
+    : left + DRIFT_LOCK_SEAM_OVERLAP_PX;
 
   return x >= lockLeft && x <= lockRight && y >= lockTop && y <= lockBottom;
 }

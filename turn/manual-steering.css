@@ -74,6 +74,11 @@
   transform: translate(-50%, -50%);
 }
 
+:root.turn-left-handed-controls .manual-steer {
+  right: max(22px, env(safe-area-inset-right));
+  left: auto;
+}
+
 @media (max-height: 430px) {
   .manual-steer {
     bottom: max(58px, calc(env(safe-area-inset-bottom) + 50px));
