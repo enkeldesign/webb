@@ -294,6 +294,8 @@ function createSettingsDialog({ getSelectedTrackId, onRivalsReset }) {
           <output id="m8AudioBalanceValue" for="m8AudioBalance">Balanced</output>
         </section>
 
+        <div class="m8-visual-settings"></div>
+
         <section class="m8-setting-card m8-record-setting" aria-labelledby="m8RecordsTitle">
           <h3 id="m8RecordsTitle">Personal rivals</h3>
           <p>Remove the recorded laps for the currently selected track.</p>

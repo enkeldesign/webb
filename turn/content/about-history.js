@@ -502,6 +502,8 @@ export const CHANGELOG = Object.freeze([
   {
     date: '1 September',
     entries: [
+      ['1.13.2 r190', 'Reflows Settings into a balanced two-column layout, placing Player marker and Color beside Audio while retaining a logical single-column flow on narrow portrait screens.'],
+      ['Clearer visual preferences', 'Renames the broad Accessibility heading to Color and gives On, Auto and Off readable full-width rows inside the compact Player marker card.'],
       ['1.13.1 r189', 'Moves the left-handed race-action bar to the bottom-right slot, beside the drive pad and beneath on-screen steering.'],
       ['1.13.0 r188', 'Adds a persistent Left-handed controls setting that applies immediately in TURN and YOUR TURN.'],
       ['Left-handed drive layout', 'Moves only the drive pad to the left, moves on-screen steering to the right when enabled and mirrors BOOST, DRIFT and the outward LOCK gesture without changing their values or touch behaviour.'],
@@ -517,7 +519,7 @@ export const CHANGELOG = Object.freeze([
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.13.1',
-  build: '2026.09.01-r189',
-  note: 'TURN 1.13.1 places the left-handed race menu beside the drive pad and beneath on-screen steering.'
+  version: '1.13.2',
+  build: '2026.09.01-r190',
+  note: 'TURN 1.13.2 uses the open Settings space for Player marker and Color preferences.'
 });

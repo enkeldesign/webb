@@ -27,7 +27,7 @@ function installColorCueSetting() {
   section.dataset.turnColorCuesSetting = '';
   section.setAttribute('aria-labelledby', 'm8ColorCuesTitle');
   section.innerHTML = `
-    <h3 id="m8ColorCuesTitle">Accessibility</h3>
+    <h3 id="m8ColorCuesTitle">Color</h3>
     <label class="m8-toggle-row">
       <input id="m8ColorCuesEnabled" type="checkbox">
       <span>
@@ -36,8 +36,10 @@ function installColorCueSetting() {
       </span>
     </label>`;
 
+  const visualSettings = list.querySelector('.m8-visual-settings');
   const records = list.querySelector('.m8-record-setting');
-  if (records) list.insertBefore(section, records);
+  if (visualSettings) visualSettings.append(section);
+  else if (records) list.insertBefore(section, records);
   else list.append(section);
 
   const toggle = section.querySelector('#m8ColorCuesEnabled');

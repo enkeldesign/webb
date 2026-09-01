@@ -213,6 +213,10 @@ function installStyles() {
       line-height: 1.3;
     }
 
+    .m8-visual-settings .turn-player-marker-options {
+      grid-template-columns: 1fr;
+    }
+
     @media (max-width: 760px) and (orientation: portrait) {
       .turn-player-marker-options {
         grid-template-columns: 1fr;
@@ -259,8 +263,10 @@ function installSettings(modeApi) {
       </label>
     </div>`;
 
+  const visualSettings = dialog.querySelector('.m8-visual-settings');
   const records = dialog.querySelector('.m8-record-setting');
-  if (records) records.insertAdjacentElement('beforebegin', fieldset);
+  if (visualSettings) visualSettings.prepend(fieldset);
+  else if (records) records.insertAdjacentElement('beforebegin', fieldset);
   else dialog.querySelector('.m8-settings-list')?.appendChild(fieldset);
 
   const radios = [...fieldset.querySelectorAll('input[type="radio"]')];
