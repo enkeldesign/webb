@@ -12,6 +12,12 @@ import { getStoredBestLap } from '/turn/race/rival-storage.js?source=20260729-r1
 import { getCarDefinition } from '/turn/vehicle/catalog.js?source=20260729-r118-m8';
 import { renderBestCarThumbnail } from '/turn/ui/track-best-car.js?source=20260729-r118-m8';
 import { saveDriveByEarEnabled } from '/turn/ui/drive-by-ear-setting.js?source=20260729-r118-m8';
+import {
+  CONTROL_HANDEDNESS,
+  controlHandednessDescription,
+  loadControlHandedness,
+  saveControlHandedness
+} from './ui/control-handedness.js';
 
 const STEERING_MODE_KEY = 'turn-steering-mode-v1';
 const STEERING_MODE = Object.freeze({ MOTION: 'motion', MANUAL: 'manual' });
@@ -248,7 +254,7 @@ function createHowToPlayDialog() {
       <div class="m8-guide-grid">
         <section><strong>1</strong><div><h3>Choose a track and car</h3><p>Your saved best lap appears on each track card. TURN races you against recordings of your own fastest laps, not computer drivers.</p></div></section>
         <section><strong>2</strong><div><h3>Turn the device to steer</h3><p>Hold the phone or tablet in landscape and rotate it like a steering wheel. Recalibrate at the start line whenever your resting angle changes.</p></div></section>
-        <section><strong>3</strong><div><h3>Drive with one thumb</h3><p>Keep one thumb on the drive pad and slide between GAS, DRIFT, BOOST and BRAKE · REVERSE. While using DRIFT, slide farther left into LOCK for a stronger slide.</p></div></section>
+        <section><strong>3</strong><div><h3>Drive with one thumb</h3><p>Keep one thumb on the drive pad and slide between GAS, DRIFT, BOOST and BRAKE · REVERSE. While using DRIFT, slide outward past it into LOCK for a stronger slide.</p></div></section>
         <section><strong>4</strong><div><h3>Build and use OVERCHARGE</h3><p>DRIFT charges BOOST as you slide. With BOOST full, keep using DRIFT to build purple OVERCHARGE. GAS catches it and BOOST spends it.</p></div></section>
         <section class="m8-guide-wide"><strong>♪</strong><div><h3>Drive By Ear™</h3><p>Drive By Ear turns the racing line, upcoming corners, grip, off-road recovery and nearby rivals into spatial sound. Steer toward the warm guiding hum. Headphones provide the clearest left and right information. Together with a screen reader, it is designed to support complete non-visual play.</p></div></section>
       </div>
@@ -274,6 +280,7 @@ function createSettingsDialog({ getSelectedTrackId, onRivalsReset }) {
           <legend>Steering</legend>
           <label><input type="radio" name="m8Steering" value="motion"><span><strong>Device rotation</strong><small>Turn the whole device like a steering wheel.</small></span></label>
           <label><input type="radio" name="m8Steering" value="manual"><span><strong>On-screen steering</strong><small>Use the steering control or a keyboard.</small></span></label>
+          <label class="m8-toggle-row m8-handedness-setting"><input id="m8LeftHanded" type="checkbox" aria-describedby="m8LeftHandedDescription"><span><strong>Left-handed controls</strong><small id="m8LeftHandedDescription"></small></span></label>
           <p class="m8-motion-note" hidden>Device rotation is not available in this browser.</p>
         </fieldset>
 
@@ -305,6 +312,8 @@ function createSettingsDialog({ getSelectedTrackId, onRivalsReset }) {
 
   const motionRadio = dialog.querySelector('input[value="motion"]');
   const manualRadio = dialog.querySelector('input[value="manual"]');
+  const leftHandedToggle = dialog.querySelector('#m8LeftHanded');
+  const leftHandedDescription = dialog.querySelector('#m8LeftHandedDescription');
   const motionNote = dialog.querySelector('.m8-motion-note');
   const soundToggle = dialog.querySelector('#m8AudioEnabled');
   const dbeToggle = dialog.querySelector('#m8DbeEnabled');
@@ -329,9 +338,12 @@ function createSettingsDialog({ getSelectedTrackId, onRivalsReset }) {
 
   function sync() {
     const steering = loadSteeringMode();
+    const handedness = loadControlHandedness();
     motionRadio.disabled = !motionAvailable();
     motionRadio.checked = steering === STEERING_MODE.MOTION;
     manualRadio.checked = steering === STEERING_MODE.MANUAL;
+    leftHandedToggle.checked = handedness === CONTROL_HANDEDNESS.LEFT;
+    leftHandedDescription.textContent = controlHandednessDescription(handedness);
     motionNote.hidden = motionAvailable();
 
     const audio = audioPreferences()?.getSettings?.() || {
@@ -364,6 +376,17 @@ function createSettingsDialog({ getSelectedTrackId, onRivalsReset }) {
         : 'Steering set to the on-screen control.';
     });
   }
+
+  leftHandedToggle.addEventListener('change', () => {
+    const handedness = saveControlHandedness(
+      leftHandedToggle.checked ? CONTROL_HANDEDNESS.LEFT : CONTROL_HANDEDNESS.RIGHT
+    );
+    leftHandedToggle.checked = handedness === CONTROL_HANDEDNESS.LEFT;
+    leftHandedDescription.textContent = controlHandednessDescription(handedness);
+    status.textContent = handedness === CONTROL_HANDEDNESS.LEFT
+      ? 'Left-handed controls on.'
+      : 'Left-handed controls off.';
+  });
 
   soundToggle.addEventListener('change', () => {
     const enabled = audioPreferences()?.setAudioEnabled?.(soundToggle.checked) ?? soundToggle.checked;

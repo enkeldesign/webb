@@ -502,6 +502,9 @@ export const CHANGELOG = Object.freeze([
   {
     date: '1 September',
     entries: [
+      ['1.13.0 r188', 'Adds a persistent Left-handed controls setting that applies immediately in TURN and YOUR TURN.'],
+      ['Left-handed drive layout', 'Moves only the drive pad to the left, moves on-screen steering to the right when enabled and mirrors BOOST, DRIFT and the outward LOCK gesture without changing their values or touch behaviour.'],
+      ['Focused accessibility', 'Keeps race utilities, HUD and minimap in their established layout while matching keyboard focus order to the visible BOOST and DRIFT order and exposing explicit on/off descriptions.'],
       ['1.12.2 r187', 'Improves MOUNTAIN performance on the 10.2-inch legacy iPad class by disabling only its global dynamic shadows.'],
       ['Legacy-tablet MOUNTAIN shadows', 'Keeps every streetlight, window glow and player spotlight, leaves DPR unchanged and automatically restores track shadows on every other course.'],
       ['1.12.1 r186', 'Optimizes track loading, first-rival creation and the finished MOUNTAIN village while preserving its complete night-lighting treatment.'],
@@ -513,7 +516,7 @@ export const CHANGELOG = Object.freeze([
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.12.2',
-  build: '2026.09.01-r187',
-  note: 'TURN 1.12.2 keeps MOUNTAIN’s complete night lighting while removing its dynamic track shadows on the 10.2-inch legacy iPad class.'
+  version: '1.13.0',
+  build: '2026.09.01-r188',
+  note: 'TURN 1.13.0 adds persistent left-handed drive controls without mirroring the race HUD or utility controls.'
 });

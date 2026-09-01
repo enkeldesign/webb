@@ -237,6 +237,52 @@ body .m8-feedback-content * {
     0 0 0 5px rgb(255 90 95 / 0.28);
 }
 
+:root.turn-left-handed-controls .controls {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+}
+
+:root.turn-left-handed-controls .pedals {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+}
+
+:root.turn-left-handed-controls .utility-group {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  align-self: start;
+  justify-self: center;
+  transform: translateY(calc(-100% - 10px));
+}
+
+:root.turn-left-handed-controls .drive-lock-bubble {
+  right: auto;
+  left: calc(100% - 4px);
+  border-radius: 0 999px 999px 0;
+  transform: translateX(-62%) scaleX(0.38);
+  transform-origin: left center;
+}
+
+:root.turn-left-handed-controls .drive-stack.is-drift-ready .drive-lock-bubble {
+  transform: translateX(0) scaleX(1);
+}
+
+:root.turn-left-handed-controls .drive-stack.is-drift-ready .drive-pad {
+  border-top-left-radius: 30px;
+  border-top-right-radius: 0;
+}
+
+:root.turn-left-handed-controls .drive-boost-zone {
+  border-right: 2px solid var(--ink);
+  border-left: 0;
+}
+
+:root.turn-left-handed-controls .drive-drift-zone {
+  border-right: 0;
+  border-left: 2px solid var(--ink);
+}
+
 .drive-boost-zone.is-locked::after {
   content: "LEAVE";
   position: absolute;
@@ -280,6 +326,27 @@ body .m8-feedback-content * {
   .drive-lock-bubble {
     right: calc(100% - 3px);
     border-width: 3px;
+  }
+
+  :root.turn-left-handed-controls .utility-group {
+    transform: translateY(calc(-100% - 7px));
+  }
+
+  :root.turn-left-handed-controls .drive-lock-bubble {
+    right: auto;
+    left: calc(100% - 3px);
+  }
+
+  :root.turn-left-handed-controls .drive-stack.is-drift-ready .drive-pad {
+    border-top-left-radius: 24px;
+  }
+
+  :root.turn-left-handed-controls .drive-boost-zone {
+    border-right-width: 1.5px;
+  }
+
+  :root.turn-left-handed-controls .drive-drift-zone {
+    border-left-width: 1.5px;
   }
 }
 

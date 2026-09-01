@@ -14,6 +14,7 @@ const COVERED_RENDERING_SPECIFIER_PATTERN = /^\/turn\/render\/covered-rendering\
 const RIVAL_ONBOARDING_SPECIFIER_PATTERN = /^\/turn\/ui\/rival-onboarding\.js\?build=\d{8}-r\d+$/;
 const LOT_ENHANCEMENT_SPECIFIER_PATTERN = /^\/turn\/garage\/lot-enhancement-runtime\.js\?revision=r164-post-soak&build=\d{8}-r\d+$/;
 const KNOWN_INSTALLED_LOT_SPECIFIER = '/turn/garage/lot-enhancement-runtime.js?revision=r164-post-soak&build=20260826-r184';
+const SESSION_ORCHESTRATOR_SPECIFIER = '/turn/race/session-orchestrator.js?source=20260729-r118-m8';
 
 export async function loadReleaseDefinition() {
   const release = JSON.parse(await fs.readFile(releasePath, 'utf8'));
@@ -60,6 +61,15 @@ function synchronizeReleaseBoundSpecifier(importMap, release, pattern, currentSp
       specifier === sourceSpecifier ? currentTarget : target;
   }
   importMap.imports = synchronizedImports;
+}
+
+function synchronizeReleaseBoundImportTarget(importMap, release, specifier) {
+  const sourceTarget = importMap.imports?.[specifier];
+  if (typeof sourceTarget !== 'string') return;
+
+  const targetUrl = new URL(sourceTarget, 'https://enkel.design');
+  targetUrl.searchParams.set('build', release.cacheKey);
+  importMap.imports[specifier] = `${targetUrl.pathname}${targetUrl.search}`;
 }
 
 function synchronizeLotEnhancementSpecifiers(importMap, release) {
@@ -118,6 +128,7 @@ function synchronizeRuntimeReleaseBoundSpecifiers(importMap, release) {
     `/turn/ui/rival-onboarding.js?build=${release.cacheKey}`
   );
   synchronizeLotEnhancementSpecifiers(importMap, release);
+  synchronizeReleaseBoundImportTarget(importMap, release, SESSION_ORCHESTRATOR_SPECIFIER);
 }
 
 export function renderReleaseIndex(source, release) {

@@ -32,7 +32,7 @@ assert.ok(
 
 assert.match(guide, /GUIDE_VERSION = 'r220-overcharge-disclosure'/);
 assert.match(guide, /slide between <strong>GAS<\/strong>, <strong>DRIFT<\/strong>, <strong>BOOST<\/strong> and <strong>BRAKE · REVERSE<\/strong>/);
-assert.match(guide, /slide farther left into <strong>LOCK<\/strong>/);
+assert.match(guide, /slide outward past it into <strong>LOCK<\/strong>/);
 assert.match(guide, /<strong>DRIFT<\/strong> charges <strong>BOOST<\/strong> as you slide/);
 assert.match(guide, /With BOOST full, keep using DRIFT to build purple <strong>OVERCHARGE<\/strong>/);
 assert.match(guide, /<details class="m8-guide-disclosure m8-overcharge-guide">/);
