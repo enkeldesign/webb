@@ -90,6 +90,8 @@ const state = {
   driftAmount: 0,
   driftLockAmount: 0,
   offRoad: false,
+  courseSafetyOffRoad: false,
+  lapCourseViolation: false,
   trackDistance: 0,
   progress: 0,
   lastProgress: 0,
@@ -546,6 +548,22 @@ async function applyVehicleSelection(selection) {
   } catch (error) {
     console.warn('TURN: selected car model failed to load, using procedural fallback.', error);
     for (const part of playerCar.userData.turnProceduralParts || []) part.visible = true;
+  }
+
+  // A first saved lap uses the player's exact car identity. Install that hidden
+  // rival model during the pre-race handoff so the finish-line frame only reveals
+  // an existing object instead of cloning/preparing it on demand.
+  if (!state.competitorLaps.length) {
+    try {
+      await installCarVisual(ghostCar, {
+        carId: state.vehicleId,
+        color: state.vehicleColor,
+        secondaryColor: state.vehicleSecondaryColor,
+        ghost: true
+      });
+    } catch (error) {
+      console.warn('TURN: first rival model failed to prepare, using procedural fallback.', error);
+    }
   }
 }
 

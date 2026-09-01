@@ -9,7 +9,6 @@ const [
   leaderMarker,
   carModels,
   trackRegistry,
-  rivalPrewarm,
   airportWorld,
   maydayPolish,
   maydayHud,
@@ -22,7 +21,6 @@ const [
   fs.readFile(new URL('../turn/ui/leader-marker-r500.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/vehicle/car-models.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/registry.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/race/rival-visual-prewarm.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/airport-world-r56.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/airport-emergency-r494.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/tracks/airport-emergency-r496.js', import.meta.url), 'utf8'),
@@ -70,6 +68,17 @@ assert.ok(
 assert.match(main, /competitorCars,\s*ensureCompetitorCars,\s*syncCompetitorVisuals,/, 'The runtime must expose separate pool and identity operations');
 assert.match(main, /if \(root\.userData\.turnVisualKey === key \|\| root\.userData\.turnVisualPendingKey === key\) return;/, 'Model installation must retain its duplicate-key fast path');
 
+const selectionSection = section(main, 'async function applyVehicleSelection(selection)', '\nvoid installCarVisual(playerCar');
+assert.match(selectionSection, /if \(!state\.competitorLaps\.length\)/,
+  'Only an empty rival roster should prepare the first saved rival from the player identity');
+assert.match(selectionSection, /await installCarVisual\(ghostCar,[\s\S]*ghost: true/,
+  'The first hidden rival visual must finish preparing before racing starts');
+assert.ok(
+  selectionSection.indexOf('await installCarVisual(playerCar')
+    < selectionSection.indexOf('await installCarVisual(ghostCar'),
+  'The visible player model should load before its hidden first-rival counterpart'
+);
+
 const createVisualSection = section(carModels, 'export async function createCarVisual({', '\nfunction reusableCompetitorGhostKey');
 assert.match(createVisualSection, /competitorGhostTemplateCache\.get\(competitorTemplateKey\)/,
   'Repeated 5.5-unit rival identities must consult the in-memory visual template cache');
@@ -114,16 +123,8 @@ assert.equal(
 assert.doesNotMatch(normalizationSection, /model\.updateMatrixWorld\(true\)[\s\S]*model\.updateMatrixWorld\(true\)/,
   'Normalization must not force two complete matrix/bounds passes per visual');
 
-assert.match(trackRegistry, /import '\.\.\/race\/rival-visual-prewarm\.js';/,
-  'The track runtime must install the selected-car rival prewarm before the first completed lap');
-assert.match(rivalPrewarm, /state\.running === true/,
-  'Prewarming must never deliberately start while a race is already running');
-assert.match(rivalPrewarm, /requestIdleCallback\(runPrewarm, \{ timeout: IDLE_TIMEOUT_MS \}\)/,
-  'Browsers with idle scheduling should move selected-rival preparation away from active interaction');
-assert.match(rivalPrewarm, /ghost: true[\s\S]*targetLength: RIVAL_TARGET_LENGTH[\s\S]*outline: true/,
-  'Prewarming must populate the exact 5.5-unit ghost template used by finish-line rival sync');
-assert.doesNotMatch(rivalPrewarm, /localStorage|sessionStorage|syncCompetitorVisuals/,
-  'Visual prewarming must not touch replay persistence or race ordering');
+assert.doesNotMatch(trackRegistry, /rival-visual-prewarm/,
+  'Track metadata loading must not own unrelated rival preparation side effects');
 
 assert.match(airportWorld, /deferWreckCalibration: true/,
   'Production Airport must consolidate historical MAYDAY depth calibration into one pass');
@@ -147,6 +148,8 @@ assert.doesNotMatch(leaderRoofSection, /children\?\.\[0\]/, 'The hidden procedur
 
 const activationSection = section(trackManager, 'export async function activateTrack', '\nfunction installRuntime');
 assert.match(activationSection, /loadRivalsState\(/, 'Track activation must load the selected track rival namespace');
+assert.match(activationSection, /await ensureTrackState\(nextTrack, currentRuntime\)/,
+  'Track activation must await the selected lazy world installer');
 assert.match(activationSection, /currentRuntime\.syncCompetitorVisuals\?\.\(\)/, 'Track changes must refresh model identity once after rival loading');
 assert.doesNotMatch(activationSection, /currentRuntime\.ensureCompetitorCars\?\.\(\)/, 'Track activation must not stop at pool creation without refreshing models');
 
@@ -154,7 +157,7 @@ const infrastructureSection = section(trackManager, 'function ensureTrackInfrast
 assert.match(infrastructureSection, /currentRuntime\.ensureCompetitorCars\?\.\(\)/, 'Dynamic-world setup must still create the full fixed rival pool before reparenting');
 assert.doesNotMatch(infrastructureSection, /syncCompetitorVisuals/, 'World-layer setup must not perform unrelated model identity work');
 
-console.log(`TURN ${release.id} event-driven rival synchronisation, first-lap visual prewarm and MAYDAY finish-line fast paths passed.`);
+console.log(`TURN ${release.id} event-driven rival synchronisation, deterministic first-rival preparation and MAYDAY finish-line fast paths passed.`);
 
 function section(source, startMarker, endMarker) {
   const start = source.indexOf(startMarker);

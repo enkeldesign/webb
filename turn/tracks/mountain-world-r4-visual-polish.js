@@ -343,13 +343,17 @@ function makeLayeredDistantMountains(world) {
   });
 }
 
-async function loadVillageTemplates() {
+async function loadVillageTemplates({ skipRetiredHolidayCabins = false } = {}) {
   const loader = new GLTFLoader();
-  const [wall, doorway, windowLarge, roof, bench, lantern, sled, snowTree, stallGreen, stallRed, cart, fence] = await Promise.all([
-    loader.loadAsync(`${HOLIDAY_ROOT}/cabin-wall.glb`),
-    loader.loadAsync(`${HOLIDAY_ROOT}/cabin-doorway.glb`),
-    loader.loadAsync(`${HOLIDAY_ROOT}/cabin-window-large.glb`),
-    loader.loadAsync(`${HOLIDAY_ROOT}/cabin-roof-snow.glb`),
+  const [retiredCabinSources, bench, lantern, sled, snowTree, stallGreen, stallRed, cart, fence] = await Promise.all([
+    skipRetiredHolidayCabins
+      ? Promise.resolve(null)
+      : Promise.all([
+        loader.loadAsync(`${HOLIDAY_ROOT}/cabin-wall.glb`),
+        loader.loadAsync(`${HOLIDAY_ROOT}/cabin-doorway.glb`),
+        loader.loadAsync(`${HOLIDAY_ROOT}/cabin-window-large.glb`),
+        loader.loadAsync(`${HOLIDAY_ROOT}/cabin-roof-snow.glb`)
+      ]),
     loader.loadAsync(`${HOLIDAY_ROOT}/bench.glb`),
     loader.loadAsync(`${HOLIDAY_ROOT}/lantern.glb`),
     loader.loadAsync(`${HOLIDAY_ROOT}/sled.glb`),
@@ -359,11 +363,7 @@ async function loadVillageTemplates() {
     loader.loadAsync(`${FANTASY_ROOT}/cart.glb`),
     loader.loadAsync(`${FANTASY_ROOT}/fence.glb`)
   ]);
-  return {
-    wall: prepareAsset(wall.scene),
-    doorway: prepareAsset(doorway.scene),
-    window: prepareAsset(windowLarge.scene),
-    roof: prepareAsset(roof.scene),
+  const templates = {
     bench: prepareAsset(bench.scene),
     lantern: prepareAsset(lantern.scene),
     sled: prepareAsset(sled.scene),
@@ -373,6 +373,16 @@ async function loadVillageTemplates() {
     cart: prepareAsset(cart.scene),
     fence: prepareAsset(fence.scene)
   };
+  if (retiredCabinSources) {
+    const [wall, doorway, windowLarge, roof] = retiredCabinSources;
+    Object.assign(templates, {
+      wall: prepareAsset(wall.scene),
+      doorway: prepareAsset(doorway.scene),
+      window: prepareAsset(windowLarge.scene),
+      roof: prepareAsset(roof.scene)
+    });
+  }
+  return templates;
 }
 
 function trackYaw(sample, faceRoad) {
@@ -523,7 +533,13 @@ function placeVillageSetDressing(world, samples, trackWidth, terrainHeightAt, te
   return placed;
 }
 
-export async function installMountainR4VisualPolish(world, samples, trackWidth, terrainContext) {
+export async function installMountainR4VisualPolish(
+  world,
+  samples,
+  trackWidth,
+  terrainContext,
+  options = {}
+) {
   if (!world || !Array.isArray(samples) || !terrainContext?.terrainHeightAt) return world;
   const { terrainHeightAt } = terrainContext;
 
@@ -531,7 +547,7 @@ export async function installMountainR4VisualPolish(world, samples, trackWidth, 
   openAndEmphasiseWaterfall(world, samples);
 
   try {
-    const templates = await loadVillageTemplates();
+    const templates = await loadVillageTemplates(options);
 
     // Replace only the weak r3 village pieces. Terrain, road, trees, rocks,
     // river and handling remain untouched.
@@ -539,13 +555,17 @@ export async function installMountainR4VisualPolish(world, samples, trackWidth, 
     removeNamed(world, (object) => object.name === 'Mountain Kenney Fantasy fountain r3');
     removeNamed(world, (object) => object.name === 'Mountain Kenney Holiday lantern r3');
 
-    const cabins = placeCabins(world, samples, trackWidth, terrainHeightAt, templates);
+    const retiredCabinsSkipped = options.skipRetiredHolidayCabins === true;
+    const cabins = retiredCabinsSkipped
+      ? 0
+      : placeCabins(world, samples, trackWidth, terrainHeightAt, templates);
     const streetlights = placeLitStreetlights(world, samples, trackWidth, terrainHeightAt, templates);
     const market = placeWinterMarket(world, samples, trackWidth, terrainHeightAt, templates);
     const dressing = placeVillageSetDressing(world, samples, trackWidth, terrainHeightAt, templates);
 
     world.userData.turnMountainR4VisualPolish = Object.freeze({
       cabins,
+      retiredCabinsSkipped,
       streetlights,
       marketAssets: market,
       decorativeAssets: dressing,

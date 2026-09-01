@@ -10,8 +10,11 @@ const [
   homeLayout,
   worldRender,
   rivalStorage,
+  lapSystem,
   mainSource,
-  rivalOnboarding
+  rivalOnboarding,
+  trackRegistry,
+  trackManager
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/progression/lot-paint-reward.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/view.js', import.meta.url), 'utf8'),
@@ -21,8 +24,11 @@ const [
   fs.readFile(new URL('../../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/render/world.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/race/rival-storage.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/race/lap-system.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/main.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/ui/rival-onboarding.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/ui/rival-onboarding.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/registry.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/tracks/track-manager.js', import.meta.url), 'utf8')
 ]);
 
 // CHROMATIC CAMOUFLAGE matches the primary/body paint only. The visible Color Cue must
@@ -104,6 +110,29 @@ assert.doesNotMatch(mainSource, /function saveGhost\(\) \{[\s\S]*saveRivalsState
 assert.match(rivalStorage, /requestIdleCallback\(flush, \{ timeout: 800 \}\)/);
 assert.match(rivalStorage, /addEventListener\?\.\('pagehide', flushScheduledRivalsState\)/);
 assert.match(rivalStorage, /pendingRivalSaves = new Map\(\)/);
+assert.match(lapSystem, /const candidateFrames = state\.recording;/,
+  'Lap completion must transfer ownership of the replay buffer');
+assert.doesNotMatch(lapSystem, /state\.recording\.map\(/,
+  'Long-track finish-line work must not clone every replay frame synchronously');
+
+// Home needs track metadata, not every track's complete Three.js world graph.
+for (const worldModule of [
+  'airport-world-r56.js',
+  'cliffside-world.js',
+  'harbor-world.js',
+  'midnight-city-world-r11.js',
+  'mountain-world-long.js'
+]) {
+  const escapedWorldModule = worldModule.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  assert.match(trackRegistry, new RegExp(`await import\\([\\s\\S]{0,160}${escapedWorldModule}`),
+    `${worldModule} must load only after its track is selected`);
+}
+assert.doesNotMatch(trackRegistry, /^import\s+\{[^\n]*install(?:Airport|Cliffside|Harbor|MidnightCity|Mountain)World/m,
+  'Track world installers must not return to the static startup graph');
+assert.match(trackManager, /const nextState = await ensureTrackState\(nextTrack, currentRuntime\)/,
+  'Track activation must await its selected lazy installer before swapping samples and worlds');
+assert.match(trackManager, /const world = await entry\.installWorld\(/,
+  'The track-state cache must store the resolved world rather than a pending Promise');
 
 const worldPrewarm = worldRender.indexOf('const worldModulesPromise = loadWorldModules();');
 const worldHomeGate = worldRender.indexOf('await waitForHomeBeforeCosmetics();');

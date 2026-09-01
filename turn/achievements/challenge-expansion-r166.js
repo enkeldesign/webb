@@ -39,7 +39,10 @@ export function qualifiesForArmyLap(attempt, detail) {
 export function qualifiesForCleanLap(attempt, detail) {
   const target = CLEAN_LAP_TARGETS[attempt?.trackId];
   const seconds = Number(detail?.time);
-  return attempt?.onCourseThroughout === true
+  const onCourseThroughout = typeof detail?.onCourseThroughout === 'boolean'
+    ? detail.onCourseThroughout
+    : attempt?.onCourseThroughout;
+  return onCourseThroughout === true
     && Number.isFinite(target)
     && Number.isFinite(seconds)
     && seconds > 5

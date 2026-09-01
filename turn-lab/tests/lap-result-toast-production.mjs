@@ -95,7 +95,8 @@ try {
     time: 13.5,
     valid: true,
     saved: true,
-    ranked: true
+    ranked: true,
+    onCourseThroughout: true
   });
 
   const shortRecordingState = makeState({ recording: makeFrames(5), lapElapsed: 14 });
@@ -120,7 +121,8 @@ try {
     time: 14,
     valid: false,
     saved: false,
-    ranked: true
+    ranked: true,
+    onCourseThroughout: true
   }, 'Every completed lap must publish the frozen lap result and its ranking eligibility');
 
   for (const rivalTimes of [[], [11, 14], [10, 11, 12, 13]]) {
@@ -178,7 +180,8 @@ try {
     time: 9,
     valid: true,
     saved: false,
-    ranked: false
+    ranked: false,
+    onCourseThroughout: true
   }, 'The player may still see the completed lap result while consumers know it is unranked');
 } finally {
   if (originalCustomEvent === undefined) delete globalThis.CustomEvent;

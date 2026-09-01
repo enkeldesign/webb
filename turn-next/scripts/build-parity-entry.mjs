@@ -8,13 +8,20 @@ const repositoryRoot = path.resolve(fileURLToPath(new URL('../..', import.meta.u
 const releasePath = path.join(repositoryRoot, 'turn', 'release.json');
 const outputPath = path.join(repositoryRoot, 'turn-next', 'index.html');
 
-async function main() {
-  const [releaseSource, current] = await Promise.all([
-    fs.readFile(releasePath, 'utf8'),
-    fs.readFile(outputPath, 'utf8')
-  ]);
-  const release = JSON.parse(releaseSource);
+export function renderParityEntry(source, release) {
+  const currentBuild = source.match(
+    /globalThis\.__TURN_BUILD__ = Object\.freeze\(\{\s*version: '([^']+)',\s*id: '([^']+)',\s*cacheKey: '([^']+)'\s*\}\);/
+  );
+  assert.ok(currentBuild, 'TURN NEXT entry must expose its source TURN build identity');
 
+  const [, currentVersion, currentId, currentCacheKey] = currentBuild;
+  return source
+    .replaceAll(currentVersion, release.version)
+    .replaceAll(currentId, release.id)
+    .replaceAll(currentCacheKey, release.cacheKey);
+}
+
+function validateParityEntry(current, release) {
   assert.match(current, /data-turn-deployment="next"/);
   assert.match(current, /<base href="\/turn\/">/);
   assert.match(current, new RegExp(`TURN NEXT · Source TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
@@ -38,13 +45,26 @@ async function main() {
   assert.match(current, /id="manualButton"/);
   assert.match(current, /id="status"/);
   assert.doesNotMatch(current, /class="start-card"|Enable motion &amp; race|Desktop \/ manual mode/);
+}
 
-  if (!process.argv.includes('--check')) {
-    console.log('TURN NEXT entry is maintained as the isolated wrapper template; no rewrite was needed.');
+async function main() {
+  const [releaseSource, current] = await Promise.all([
+    fs.readFile(releasePath, 'utf8'),
+    fs.readFile(outputPath, 'utf8')
+  ]);
+  const release = JSON.parse(releaseSource);
+  const expected = renderParityEntry(current, release);
+
+  if (process.argv.includes('--check')) {
+    assert.equal(current, expected, 'TURN NEXT entry is not synchronized with turn/release.json. Run: node turn-next/scripts/build-parity-entry.mjs');
+    validateParityEntry(current, release);
+    console.log(`TURN NEXT entry wraps canonical TURN ${release.id} with isolated identity and storage.`);
     return;
   }
 
-  console.log(`TURN NEXT entry wraps canonical TURN ${release.id} with isolated identity and storage.`);
+  if (current !== expected) await fs.writeFile(outputPath, expected);
+  validateParityEntry(expected, release);
+  console.log(`TURN NEXT entry synchronized with canonical TURN ${release.id}.`);
 }
 
 if (import.meta.url === new URL(process.argv[1], 'file:').href) await main();

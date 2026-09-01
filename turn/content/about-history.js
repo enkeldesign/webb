@@ -490,19 +490,28 @@ export const CHANGELOG = Object.freeze([
       ['Visible wheel steering', 'Connects the authored front-wheel pivots to steering input so production cars visibly turn their wheels while driving.']
     ]
   },
-{
-  date: '29–31 August',
-  entries: [
-    ['1.12.0 r185', 'Promotes the tested long MOUNTAIN course and introduces the four-tier EASY, MEDIUM, ADVANCED and EXPERT difficulty language.'],
-    ['Long MOUNTAIN', 'Adds the lake bridge, lower valley, village tunnel and forest return to production, then smooths the start/finish approach after device playtesting.'],
-    ['Difficulty and accessibility', 'Uses green EASY, yellow MEDIUM, orange ADVANCED and red EXPERT badges while keeping the same textual difficulty in track-card ARIA.'],
-    ['Unlock information', 'MIDNIGHT CITY now identifies its ADVANCED ≈4.7 km lap; MOUNTAIN identifies its EXPERT ≈3.8 km lap.']
-  ]
-}
+  {
+    date: '29–31 August',
+    entries: [
+      ['1.12.0 r185', 'Promotes the tested long MOUNTAIN course and introduces the four-tier EASY, MEDIUM, ADVANCED and EXPERT difficulty language.'],
+      ['Long MOUNTAIN', 'Adds the lake bridge, lower valley, village tunnel and forest return to production, then smooths the start/finish approach after device playtesting.'],
+      ['Difficulty and accessibility', 'Uses green EASY, yellow MEDIUM, orange ADVANCED and red EXPERT badges while keeping the same textual difficulty in track-card ARIA.'],
+      ['Unlock information', 'MIDNIGHT CITY now identifies its ADVANCED ≈4.7 km lap; MOUNTAIN identifies its EXPERT ≈3.8 km lap.']
+    ]
+  },
+  {
+    date: '1 September',
+    entries: [
+      ['1.12.1 r186', 'Optimizes track loading, first-rival creation and the finished MOUNTAIN village while preserving its complete night-lighting treatment.'],
+      ['First-rival finish line', 'Transfers the completed replay buffer without cloning every frame and prepares an empty roster’s hidden rival car before racing starts.'],
+      ['Track and MOUNTAIN loading', 'Loads substantial world modules only when selected and skips two retired Holiday-cabin layers instead of constructing and removing them.'],
+      ['MOUNTAIN SAFETY', 'Uses a physics-step clean-lap latch at the visible road edge, independent of vehicle off-road perks and containment correction.']
+    ]
+  }
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.12.0',
-  build: '2026.08.31-r185',
-  note: 'TURN 1.12.0 promotes long MOUNTAIN and introduces accessible EASY, MEDIUM, ADVANCED and EXPERT track difficulty tiers.'
+  version: '1.12.1',
+  build: '2026.09.01-r186',
+  note: 'TURN 1.12.1 moves first-rival preparation out of the finish-line hot path, lazily loads track worlds and makes MOUNTAIN SAFETY a real clean-lap challenge.'
 });

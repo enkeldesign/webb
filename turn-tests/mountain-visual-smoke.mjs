@@ -57,6 +57,12 @@ assert.equal(metrics.windmills, 0, 'A loose Fantasy Town windmill rotor must not
 
 assert.equal(metrics.assembledCabins, 0,
   'The final MOUNTAIN village must not expose hand-assembled Holiday cabins');
+assert.equal(metrics.r3RetiredCabinsSkipped, true,
+  'The final production path must skip the first retired Holiday cabin layer');
+assert.equal(metrics.r4RetiredCabinsSkipped, true,
+  'The final production path must skip the replacement retired Holiday cabin layer');
+assert.equal(metrics.r4CabinsReported, 0,
+  'MOUNTAIN must not construct cabins that the Suburban pass will immediately remove');
 assert.ok(metrics.suburbanHouses >= 8,
   `Expected a substantial village of complete Kenney City Kit Suburban houses, got ${metrics.suburbanHouses}`);
 assert.equal(metrics.suburbanHouses, metrics.r5SuburbanReported,
@@ -65,8 +71,10 @@ assert.deepEqual(metrics.r5RequestedTypes, ['a', 'g', 'm', 'n', 'u'],
   'MOUNTAIN must use the requested A/G/M/N/U City Kit Suburban variants');
 assert.equal(metrics.r5PaletteMode, 'mountain-brown-snow',
   'Suburban houses should use the MOUNTAIN dark-brown wall / snow-white roof palette');
-assert.ok(metrics.r5RemovedCabins >= 1,
-  'The Suburban pass must actively remove the old assembled cabin layer');
+assert.equal(metrics.r5RemovedCabins, 0,
+  'The Suburban pass must have no retired cabins left to detach');
+assert.equal(metrics.r5RetiredCabinsSkipped, true,
+  'The final Suburban diagnostics must confirm both retired cabin layers were skipped');
 assert.equal(metrics.fountains, 0, 'The oversized fountain must be removed from the finished village');
 assert.ok(metrics.winterMarketAssets >= 5,
   `The fountain replacement should read as a winter market square, got ${metrics.winterMarketAssets} assets`);

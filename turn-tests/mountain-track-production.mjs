@@ -166,11 +166,17 @@ assert.match(baseWorld, /version: 'r3'/);
 assert.match(baseWorld, /continuous-snow-and-granite-terrain-body/);
 assert.match(baseWorld, /installMountainR6Night/);
 assert.match(baseWorld, /world\.ready = Promise\.resolve/);
+assert.match(baseWorld, /FINAL_VILLAGE_OPTIONS = Object\.freeze\(\{ skipRetiredHolidayCabins: true \}\)/,
+  'The finished production village must skip both cabin layers that r5 replaces');
+assert.match(baseWorld, /installMountainScenery\([\s\S]*FINAL_VILLAGE_OPTIONS/);
+assert.match(baseWorld, /installMountainR4VisualPolish\([\s\S]*FINAL_VILLAGE_OPTIONS/);
 assert.doesNotMatch(baseWorld, /setAnimationLoop|requestAnimationFrame|setInterval/);
 assert.match(terrain, /Mountain continuous terrain body r3/);
 assert.match(terrain, /Mountain opaque roadbed side wall r3/);
 assert.match(terrain, /Mountain closed roadbed underside r3/);
 assert.match(scenery, /Mountain Kenney Holiday cabin prefab r3/);
+assert.match(scenery, /skipRetiredHolidayCabins[\s\S]*Promise\.resolve\(null\)/,
+  'Production must avoid downloading the retired r3 cabin GLBs, not merely hide them later');
 assert.match(scenery, /Mountain terrain-bounded waterfall lake r3/);
 assert.match(night, /mountain-night-sky\.jpg/);
 assert.match(night, /mountain-moon\.png/);
