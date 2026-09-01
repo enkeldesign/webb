@@ -1,4 +1,4 @@
-// Generated from the canonical TURN v1.13.0 runtime. Do not edit by hand.
+// Generated from the canonical TURN v1.13.1 runtime. Do not edit by hand.
 await import('/turn-next/challenge-mode.js?revision=r182-race-my-ghost');
 const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
 const url = new URL('/turn/app.js', globalThis.location?.href || 'https://enkel.design/turn-next/');
