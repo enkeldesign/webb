@@ -212,7 +212,7 @@ const { prepareTrophyRoadProfile } = await import(
 prepareTrophyRoadProfile();
 
 const { installPerformanceProfile } = await import(
-  withBuild('./performance-profile.js?revision=r164-long-session-robustness')
+  withBuild('./performance-profile.js?revision=r187-legacy-tablet-mountain-shadows')
 );
 installPerformanceProfile();
 

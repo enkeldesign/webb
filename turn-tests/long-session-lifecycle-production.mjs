@@ -95,13 +95,17 @@ assert.match(
 // shadow map at 60 Hz too. The profile piggybacks the existing renderer call rather
 // than adding another timer or animation loop.
 assert.match(performanceProfile, /TOUCH_SHADOW_REFRESH_INTERVAL_MS = 1000 \/ 30/);
-assert.match(performanceProfile, /function installTouchShadowRefreshCap\(renderer, profile\)/);
+assert.match(performanceProfile, /function installTouchShadowRefreshCap\(renderer, profile, runtime\)/);
 assert.match(performanceProfile, /renderer\.shadowMap\.autoUpdate = false/,
   'Touch rendering should explicitly own shadow refresh cadence');
 assert.match(performanceProfile, /renderer\.userData\.turnOriginalRender = originalRender/,
   'The runtime renderer must only be wrapped once');
 assert.match(performanceProfile, /now - lastShadowRefreshAt >= TOUCH_SHADOW_REFRESH_INTERVAL_MS/);
 assert.match(performanceProfile, /renderer\.shadowMap\.needsUpdate = true/);
+assert.match(performanceProfile, /syncTrackShadowPolicy\(\)/,
+  'Touch shadow throttling must update its policy when the selected track changes');
+assert.match(performanceProfile, /renderer\.shadowMap\.enabled = enabled/,
+  'The renderer must restore normal shadows after leaving legacy-tablet MOUNTAIN');
 assert.match(performanceProfile, /renderer\.shadowMap\.autoUpdate = true/,
   'Desktop and non-touch rendering must retain full-refresh shadow behavior');
 assert.doesNotMatch(performanceProfile, /setInterval|requestAnimationFrame|setAnimationLoop/,

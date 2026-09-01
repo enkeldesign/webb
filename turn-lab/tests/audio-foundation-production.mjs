@@ -51,8 +51,8 @@ assert.match(app, /audio\/audio-system\.js\?revision=r164-long-session-robustnes
   'Production must load the cache-safe long-session central audio module');
 assert.match(app, /audio\/drive-by-ear-runtime\.js\?revision=r164-long-session-robustness/,
   'Production must load the cache-safe Drive By Ear robustness graph');
-assert.match(app, /performance-profile\.js\?revision=r164-long-session-robustness/,
-  'Production must load the cache-safe mobile performance profile');
+assert.match(app, /performance-profile\.js\?revision=r187-legacy-tablet-mountain-shadows/,
+  'Production must load the cache-safe track-aware mobile performance profile');
 assert.match(app, /installTurnAudio\(\)/, 'The audio foundation must install before gameplay starts');
 assert.ok(
   app.indexOf('./audio/audio-system.js') < app.indexOf('./ui/gameplay-controls.js'),

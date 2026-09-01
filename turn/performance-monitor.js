@@ -99,6 +99,7 @@ export function installPerformanceMonitor({ getMode, getTrackStats } = {}) {
         mode: getMode?.() || null,
         samples: timeline.count,
         profile: currentPerformanceProfile(),
+        shadowPolicy: currentTrackShadowPolicy(),
         ...summary,
         ...render,
         trackChecksPerQuery: track.average
@@ -132,6 +133,10 @@ function currentPerformanceProfile() {
     shadowMapSize: 1024,
     label: 'DPR≤2.00 · shadows 1024'
   });
+}
+
+function currentTrackShadowPolicy() {
+  return globalThis.__turnTrackShadowPolicy || null;
 }
 
 function normalizeRenderers(renderers) {
@@ -179,11 +184,12 @@ function formatSnapshot(snapshot) {
   return [
     `TURN PERF · ${snapshot.label}`,
     snapshot.profile?.label || 'DPR≤2.00 · shadows 1024',
+    snapshot.shadowPolicy?.label || null,
     `${snapshot.fps.toFixed(1)} fps · p50 ${snapshot.p50Ms.toFixed(1)} · p95 ${snapshot.p95Ms.toFixed(1)} ms`,
     `${snapshot.drawCalls} calls · ${compactNumber(snapshot.triangles)} tris · ${snapshot.renderers} renderer${snapshot.renderers === 1 ? '' : 's'}`,
     `${snapshot.geometries} geo · ${snapshot.textures} tex · actual DPR ${snapshot.pixelRatio.toFixed(2)}`,
     `track ${snapshot.trackChecksPerQuery.toFixed(1)} checks/query · >33ms ${snapshot.slowPercent.toFixed(1)}%`
-  ].join('\n');
+  ].filter(Boolean).join('\n');
 }
 
 function compactNumber(value) {
