@@ -1,13 +1,28 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [app, tokens, components, guide, design, selectionPolicy] = await Promise.all([
+const [
+  app,
+  tokens,
+  components,
+  guide,
+  design,
+  selectionPolicy,
+  settingsHome,
+  settingsLayout,
+  playerMarker,
+  colorAccessibility
+] = await Promise.all([
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/design-tokens.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/settings-components-r141.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/how-to-play-guide.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/design.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/drive-pad.css', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/drive-pad.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/m8-home.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/m8-home.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/ui/player-marker-r427.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/accessibility/color-accessibility-r163.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(app, /settings-components-r141\.css\?revision=r220-overcharge-disclosure/);
@@ -96,5 +111,33 @@ assert.match(design, /<section class="form-card" aria-labelledby="designAudioTit
 assert.match(design, /<input type="radio" name="designSteering" checked>/);
 assert.match(design, /<input type="checkbox" checked>/);
 assert.match(design, /<details class="disclosure-sample"[^>]*>[\s\S]*<summary><span class="disclosure-symbol" aria-hidden="true"><\/span><span>Explore the Drive By Ear sounds<\/span><\/summary>/);
+
+assert.match(
+  settingsHome,
+  /id="m8AudioTitle"[\s\S]*<div class="m8-visual-settings"><\/div>[\s\S]*m8-record-setting/,
+  'Settings must reserve the second-column space beside Audio for visual preferences'
+);
+assert.match(
+  settingsLayout,
+  /\.m8-visual-settings \{[\s\S]*display: grid;[\s\S]*grid-template-rows: minmax\(0, 1fr\) auto;[\s\S]*gap: 16px;/,
+  'Player marker and Color must share a stacked visual-settings column'
+);
+assert.match(
+  settingsLayout,
+  /@media \(max-width: 760px\) and \(orientation: portrait\)[\s\S]*\.m8-visual-settings \{[\s\S]*display: contents;/,
+  'The visual-settings wrapper must preserve the one-column portrait flow'
+);
+assert.match(playerMarker, /visualSettings\.prepend\(fieldset\)/,
+  'Player marker must be the first card in the visual-settings column');
+assert.match(
+  playerMarker,
+  /\.m8-visual-settings \.turn-player-marker-options \{[\s\S]*grid-template-columns: 1fr;/,
+  'Player marker choices must remain readable in the half-width visual-settings column'
+);
+assert.match(colorAccessibility, /<h3 id="m8ColorCuesTitle">Color<\/h3>/,
+  'Color cues must use the concise Color section heading');
+assert.doesNotMatch(colorAccessibility, /m8ColorCuesTitle">Accessibility/);
+assert.match(colorAccessibility, /visualSettings\.append\(section\)/,
+  'Color must be the final card in the visual-settings column');
 
 console.log('TURN native form controls, selection policy, headings and disclosure system passed.');

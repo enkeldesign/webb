@@ -389,6 +389,18 @@
   gap: 16px;
 }
 
+.m8-visual-settings {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 16px;
+}
+
+.m8-visual-settings > .m8-player-marker-setting {
+  margin-inline: 0;
+}
+
 .m8-setting-card {
   min-width: 0;
   padding: 18px;
@@ -615,6 +627,10 @@
   .m8-guide-wide,
   .m8-record-setting {
     grid-column: 1;
+  }
+
+  .m8-visual-settings {
+    display: contents;
   }
 }
 
