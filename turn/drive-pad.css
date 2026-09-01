@@ -249,11 +249,11 @@ body .m8-feedback-content * {
 }
 
 :root.turn-left-handed-controls .utility-group {
-  grid-column: 1 / -1;
+  grid-column: 2;
   grid-row: 1;
-  align-self: start;
-  justify-self: center;
-  transform: translateY(calc(-100% - 10px));
+  align-self: end;
+  justify-self: end;
+  transform: none;
 }
 
 :root.turn-left-handed-controls .drive-lock-bubble {
@@ -328,10 +328,6 @@ body .m8-feedback-content * {
     border-width: 3px;
   }
 
-  :root.turn-left-handed-controls .utility-group {
-    transform: translateY(calc(-100% - 7px));
-  }
-
   :root.turn-left-handed-controls .drive-lock-bubble {
     right: auto;
     left: calc(100% - 3px);
@@ -347,6 +343,12 @@ body .m8-feedback-content * {
 
   :root.turn-left-handed-controls .drive-drift-zone {
     border-left-width: 1.5px;
+  }
+}
+
+@media (max-width: 700px) and (max-height: 430px) {
+  :root.turn-left-handed-controls .utility-group[data-menu-state="staged"] {
+    gap: 5px;
   }
 }
 

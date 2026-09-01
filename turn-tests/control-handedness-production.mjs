@@ -106,8 +106,18 @@ assert.match(controls, /slide outward into LOCK/,
 
 assert.match(driveCss, /:root\.turn-left-handed-controls \.pedals \{[\s\S]*grid-column: 1;/,
   'Only the primary drive surface should move to the left');
-assert.match(driveCss, /:root\.turn-left-handed-controls \.utility-group \{[\s\S]*justify-self: center;/,
-  'Race utility buttons must remain unmirrored and clear of the left drive pad');
+assert.match(
+  driveCss,
+  /:root\.turn-left-handed-controls \.utility-group \{[\s\S]*grid-column: 2;[\s\S]*align-self: end;[\s\S]*justify-self: end;[\s\S]*transform: none;/,
+  'The left-handed menu bar must occupy the bottom-right slot beneath on-screen steering'
+);
+assert.match(manualCss, /bottom: max\(68px, calc\(env\(safe-area-inset-bottom\) \+ 56px\)\)/,
+  'The on-screen steering pad must reserve the bottom strip for the menu bar');
+assert.match(
+  driveCss,
+  /@media \(max-width: 700px\) and \(max-height: 430px\)[\s\S]*turn-left-handed-controls \.utility-group\[data-menu-state="staged"\][\s\S]*gap: 5px/,
+  'The left-handed menu must preserve separation from the drive pad on narrow landscape screens'
+);
 assert.doesNotMatch(driveCss, /turn-left-handed-controls[\s\S]{0,100}row-reverse/,
   'The handedness policy must not reverse the complete race UI');
 assert.match(driveCss, /:root\.turn-left-handed-controls \.drive-lock-bubble \{[\s\S]*left: calc\(100% - 4px\)/,
