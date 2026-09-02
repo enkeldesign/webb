@@ -1,13 +1,18 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [app, feedback, css] = await Promise.all([
+const [app, feedback, css, homeCss, achievementsCss, achievementsView, aboutHistory] = await Promise.all([
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/home-feedback.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/home-feedback-r135.css', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/home-feedback-r135.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/m8-home.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/achievements.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/achievements/view.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/ui/about-history-bootstrap-r165.js', import.meta.url), 'utf8')
 ]);
 
-assert.match(app, /home-feedback-r135\.css\?revision=r137-feedback-above-fold/);
+assert.match(app, /m8-home\.css\?revision=r224-modal-headings/);
+assert.match(app, /home-feedback-r135\.css\?revision=r224-modal-headings/);
 assert.match(app, /data-turn-home-feedback/);
 assert.match(app, /home-feedback\.js\?revision=r137-feedback-above-fold/);
 assert.match(app, /installHomeFeedback\(\)/);
@@ -101,6 +106,19 @@ assert.match(css, /\.m8-feedback-status:not\(:empty\)[\s\S]*min-height: 1\.5em/,
 assert.doesNotMatch(css, /\.m8-feedback-attribution/, 'Removed feedback attribution must leave no stale layout rules');
 assert.match(css, /\.m8-feedback-email[\s\S]*background: var\(--m8-pink\)/);
 assert.match(css, /\.m8-feedback-copy[\s\S]*background: var\(--m8-yellow\)/);
+assert.doesNotMatch(css, /\.m8-dialog-head > div > span/,
+  'The shared modal heading fix belongs in the base Home dialog stylesheet');
+assert.match(homeCss, /\.m8-dialog-head > div\s*\{[\s\S]*display: grid[\s\S]*row-gap: 4px/,
+  'Modal eyebrow, title and optional metadata need independent grid rows');
+assert.match(homeCss, /\.m8-dialog-head > div > span\s*\{[\s\S]*min-height: 1\.7em[\s\S]*padding-block: 0\.24em 0\.34em[\s\S]*line-height: 1\.4/,
+  'Modal eyebrows need enough paint-box space for iOS Safari font metrics');
+assert.match(homeCss, /\.m8-dialog-head h2\s*\{[\s\S]*margin: 0[\s\S]*line-height: 1/,
+  'Modal titles must not overlap the eyebrow row');
+assert.match(achievementsCss, /\.turn-achievements-head\s*\{[\s\S]*border-bottom: var\(--turn-border-default, 4px\) solid var\(--turn-action-success, #8ce99a\)[\s\S]*background: transparent/,
+  'Achievements should use a restrained success accent instead of a solid green title block');
+assert.match(achievementsView, /achievements\.css\?build=\$\{buildKey\}-r224-modal-headings/);
+assert.match(aboutHistory, /m8-home\.css\?revision=r224-modal-headings/,
+  'Install-gate About and History must load the corrected shared heading geometry');
 assert.match(css, /@media \(max-width: 760px\) and \(orientation: portrait\)[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/, 'Four Home menu actions should remain a readable two-by-two grid in portrait');
 assert.match(css, /@media \(max-width: 760px\) and \(orientation: portrait\)[\s\S]*\.m8-home-fixed-layout \.m8-home-meta[\s\S]*display: none/, 'Header metadata must stay out of the compact portrait layout');
 assert.doesNotMatch(`${feedback}\n${css}`, /setInterval|@keyframes|animation:/, 'Feedback and About must add no loop or decorative animation');

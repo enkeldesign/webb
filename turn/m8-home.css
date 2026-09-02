@@ -315,16 +315,31 @@
   margin-bottom: 22px;
 }
 
-.m8-dialog-head span {
+.m8-dialog-head > div {
+  display: grid;
+  align-content: start;
+  min-width: 0;
+  row-gap: 4px;
+}
+
+/* Give iOS Safari a generous, independent paint box for the small kicker.
+   Keeping it in its own grid row also prevents the title from painting over
+   the lower half of the glyphs. */
+.m8-dialog-head > div > span {
+  display: block;
+  min-height: 1.7em;
+  padding-block: 0.24em 0.34em;
+  overflow: visible;
   font-size: 0.78rem;
   font-weight: 900;
+  line-height: 1.4;
   letter-spacing: 0.16em;
 }
 
 .m8-dialog-head h2 {
-  margin: 2px 0 0;
+  margin: 0;
   font-size: clamp(2rem, 5vw, 4rem);
-  line-height: 0.9;
+  line-height: 1;
   letter-spacing: -0.05em;
 }
 

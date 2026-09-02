@@ -340,7 +340,10 @@ const { installScreenBlanking } = await import(
   withBuild('./ui/screen-blanking.js?revision=r143-temporary-dbe-position')
 );
 installScreenBlanking(globalThis.__turnRuntime);
-installStylesheet('./m8-home.css', 'data-turn-m8-home-styles');
+installStylesheet(
+  './m8-home.css?revision=r224-modal-headings',
+  'data-turn-m8-home-styles'
+);
 installStylesheet(
   './m8-midnight-city-postcard-r130.css?revision=r130-neon-skyline',
   'data-turn-midnight-city-postcard'
@@ -380,7 +383,7 @@ const { installM8HomeFixedLayout } = await import(
 );
 await installM8HomeFixedLayout();
 installStylesheet(
-  './home-feedback-r135.css?revision=r137-feedback-above-fold',
+  './home-feedback-r135.css?revision=r224-modal-headings',
   'data-turn-home-feedback'
 );
 const { installHomeFeedback } = await import(
