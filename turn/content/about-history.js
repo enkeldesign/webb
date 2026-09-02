@@ -271,12 +271,14 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   paragraphs: [
     'SHIFT becomes TURN’s 1,500-trophy reward and adds a saved alternate setup to every standard eighteen-point car. A six-lever gearbox shows the standard attributes in blue, gains in green and reductions in red. Players move exactly three attributes up one point; the remaining three move down automatically, keeping the total and each one-to-five boundary intact.',
     'During a race, holding GAS slides out a connected SHIFT control. Every crossing from GAS into SHIFT toggles the alternate setup, so returning to GAS and crossing again switches back without lifting the thumb. A green button darkens and gains a visible dot when active, while the same real toggle remains operable by keyboard and assistive technology.',
-    'The change preserves each car’s named perk and the current percentage of Boost charge. Attribute effects swap live, while a lower top-speed cap eases down instead of abruptly snapping a moving car to the new limit.'
+    'The change preserves each car’s named perk and the current percentage of Boost charge. Attribute effects swap live, while a lower top-speed cap eases down instead of abruptly snapping a moving car to the new limit.',
+    'Follow-up playtesting gave every fixed gearbox lever an explanation and a brief visual response. Each race shift now rolls the three attributes that just gained a point beneath the Boost bar, with the same detail announced non-visually. SHIFT and LOCK were also fitted to their exact GAS and DRIFT rows so their shared seams meet cleanly without overlapping.'
   ],
   milestones: [
     'Per-car six-lever gearbox with an invariant eighteen-point budget',
     'Persistent GAS-to-SHIFT slide toggle with visible and non-visual state feedback',
-    'TURN 1.14.2 · 2026.09.02-r193 SHIFT gearbox refinement'
+    'Fixed-lever explanations, rolling attribute feedback and exact LOCK / SHIFT row alignment',
+    'TURN 1.14.3 · 2026.09.02-r194 SHIFT feedback refinement'
   ]
 }
 ]);
@@ -533,6 +535,8 @@ export const CHANGELOG = Object.freeze([
   {
     date: '2 September',
     entries: [
+      ['1.14.3 r194', 'Adds clear fixed-lever responses, a rolling three-attribute race summary and exact row-aligned SHIFT / LOCK controls.'],
+      ['SHIFT feedback', 'Tapping an automatic 1→2 or 5→4 lever now explains its constraint. Every shift names the three attributes that gain a point beneath Boost and in the live-region announcement.'],
       ['1.14.2 r193', 'Rebuilds SHIFT setup as a six-lever gearbox with clear neutral, gain and reduction positions.'],
       ['SHIFT gearbox', 'Attributes already at one or five begin in their required direction; the third upward choice moves every undetermined lever down and enables Save. Reverting a chosen upward lever returns only automatic reductions to neutral.'],
       ['1.14.1 r192', 'Refines SHIFT after first-device testing with direct +1 attribute buttons, a centered green control and repeat switching without lifting the thumb.'],
@@ -546,7 +550,7 @@ export const CHANGELOG = Object.freeze([
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.14.2',
-  build: '2026.09.02-r193',
-  note: 'TURN 1.14.2 turns SHIFT setup into a clear six-lever gearbox.'
+  version: '1.14.3',
+  build: '2026.09.02-r194',
+  note: 'TURN 1.14.3 adds clearer SHIFT constraints, attribute-roll feedback and exact control seams.'
 });

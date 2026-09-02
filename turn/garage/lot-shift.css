@@ -223,6 +223,14 @@
   cursor: default;
 }
 
+.lot-shift-option.has-constraint-feedback {
+  animation: turn-shift-lever-constraint 340ms ease-out;
+}
+
+.lot-shift-option.has-constraint-feedback .lot-shift-lever-knob {
+  box-shadow: 0 0 0 4px var(--yellow, #ffd43b);
+}
+
 .lot-shift-option:active {
   transform: none;
   box-shadow: none;
@@ -251,6 +259,13 @@
 .lot-shift-deactivate { margin-right: auto; background: var(--pink, #ff4fa3); }
 .lot-shift-save { background: var(--violet, #9775fa); }
 .lot-shift-save:disabled { opacity: .42; }
+
+@keyframes turn-shift-lever-constraint {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  50% { transform: translateX(3px); }
+  75% { transform: translateX(-2px); }
+}
 
 @media (max-width: 520px) {
   .lot-shift-options {
@@ -337,5 +352,9 @@
 
   .lot-shift-lever-knob {
     transition: none;
+  }
+
+  .lot-shift-option.has-constraint-feedback {
+    animation: none;
   }
 }

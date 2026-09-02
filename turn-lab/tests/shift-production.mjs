@@ -34,6 +34,9 @@ import {
   resolveVehicleShiftGearbox
 } from '../../turn/garage/lot-shift-gearbox.js';
 import {
+  resolveVehicleShiftFeedback
+} from '../../turn/ui/shift-feedback.js';
+import {
   getTrophyRoadReward,
   isFeatureUnlocked,
   rewardForFeature,
@@ -114,6 +117,25 @@ assert.deepEqual(shiftedVehicleStats(raceCar.stats, mountainShiftReducers), {
 });
 assert.deepEqual(vehicleShiftReceiversForReducers(mountainShiftReducers), mountainShiftReceivers);
 assert.deepEqual(vehicleShiftReducersForReceivers(mountainShiftReceivers), mountainShiftReducers);
+const shiftOnFeedback = resolveVehicleShiftFeedback(
+  { reducedStats: mountainShiftReducers },
+  true
+);
+assert.equal(shiftOnFeedback?.title, 'SHIFT ON');
+assert.deepEqual(shiftOnFeedback?.gainKeys, mountainShiftReceivers);
+assert.deepEqual(shiftOnFeedback?.labels, ['CONTROL', 'DRIFT', 'BOOST TANK']);
+assert.equal(
+  shiftOnFeedback?.announcement,
+  'SHIFT on. Control, drift, and boost tank gain one point.'
+);
+const shiftOffFeedback = resolveVehicleShiftFeedback(
+  { reducedStats: mountainShiftReducers },
+  false
+);
+assert.equal(shiftOffFeedback?.title, 'SHIFT OFF');
+assert.deepEqual(shiftOffFeedback?.gainKeys, mountainShiftReducers);
+assert.deepEqual(shiftOffFeedback?.labels, ['TOP SPEED', 'ACCELERATION', 'BOOST POWER']);
+assert.equal(resolveVehicleShiftFeedback({ reducedStats: ['speed'] }, true), null);
 assert.deepEqual(
   shiftedVehicleStatsFromReceivers(raceCar.stats, mountainShiftReceivers),
   shiftedVehicleStats(raceCar.stats, mountainShiftReducers),
@@ -288,12 +310,13 @@ assert.equal(advanceShiftTopSpeedMultiplier(easedTopSpeed, 1.06, 1), 1.06);
 assert.equal(advanceShiftTopSpeedMultiplier(1.06, 1.12, 0.01), 1.12,
   'Raising the top-speed cap may apply immediately');
 
-const [lotShift, lotGearbox, lotRuntime, lotStyles, controls, driveStyles, workflow] = await Promise.all([
+const [lotShift, lotGearbox, lotRuntime, lotStyles, controls, gameplayStyles, driveStyles, workflow] = await Promise.all([
   fs.readFile(new URL('../../turn/garage/lot-shift.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-shift-gearbox.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-enhancement-runtime.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-shift.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/gameplay-controls.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/gameplay-v2.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/drive-pad.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../.github/workflows/turn-lab-tests.yml', import.meta.url), 'utf8')
 ]);
@@ -312,6 +335,12 @@ assert.match(lotGearbox, /automaticallyLoses/);
 assert.match(lotGearbox, /displayValue/);
 assert.match(lotShift, /setVehicleShiftProfileEnabled/);
 assert.match(lotShift, /turn:shift-profile-change/);
+assert.match(lotShift, /is fixed at 1→2/,
+  'A tapped minimum lever must explain why its upward move is automatic');
+assert.match(lotShift, /is fixed at 5→4/,
+  'A tapped maximum lever must explain why its downward move is automatic');
+assert.match(lotShift, /showConstraintFeedback/,
+  'Unavailable gearbox levers must produce visible and live-region feedback');
 assert.match(lotStyles, /\.lot-shift-trigger\.is-active/);
 assert.match(lotStyles, /\.lot-shift-dialog::backdrop/);
 assert.match(lotStyles, /grid-template-columns: repeat\(6/,
@@ -324,6 +353,8 @@ assert.match(lotStyles, /background: #69db7c/,
   'Upward levers must have a distinct green state');
 assert.match(lotStyles, /background: #ff8787/,
   'Downward levers must have a distinct red state');
+assert.match(lotStyles, /\.lot-shift-option\.has-constraint-feedback/,
+  'A fixed lever tap must provide a visual constraint cue');
 assert.match(lotStyles, /prefers-reduced-motion: reduce/);
 
 assert.match(controls, /className = 'drive-shift-bubble'/);
@@ -339,6 +370,17 @@ assert.match(controls, /reason === 'race-started'[\s\S]*syncShiftAvailability\(\
   'Every race must begin in the standard setup');
 assert.match(controls, /globalThis\.__turnBoostCharge = boostCharge/,
   'Boost remains normalized as a charge percentage while SHIFT changes tank duration');
+assert.match(controls, /className = 'shift-change-feedback'/,
+  'The race HUD must expose transient SHIFT feedback beneath Boost');
+assert.match(controls, /resolveVehicleShiftFeedback\(shiftContext\(\)\.profile, shiftActive\)/,
+  'Every announced toggle must resolve the three attributes gained in that direction');
+assert.match(controls, /line\.textContent = `\+ \$\{label\}`/,
+  'Visible SHIFT feedback must roll the three gained attributes as plus values');
+assert.match(gameplayStyles, /\.shift-change-feedback\.is-visible/);
+assert.match(gameplayStyles, /@keyframes turn-shift-feedback-line/,
+  'SHIFT attribute gains must use a brief rolling HUD treatment');
+assert.match(gameplayStyles, /prefers-reduced-motion: reduce[\s\S]*\.shift-change-feedback\.is-visible/,
+  'SHIFT feedback must remain readable without rolling motion');
 assert.match(driveStyles, /\.controls \.drive-shift-bubble[\s\S]*background: #8ce99a/,
   'The ready SHIFT bubble must be green');
 assert.match(driveStyles, /\.drive-stack\.is-shift-active \.drive-shift-bubble[\s\S]*#51cf66/,
@@ -348,7 +390,13 @@ assert.match(driveStyles, /\.drive-shift-bubble span \{[\s\S]*display: inline-fl
   'The vertical SHIFT label must stay centered inside its attached bubble');
 assert.match(driveStyles, /\.controls \.drive-shift-bubble \{[\s\S]*pointer-events: none/,
   'A retracted SHIFT button must not intercept the drive surface through the global control-button rule');
+assert.match(driveStyles, /\.drive-lock-bubble \{[\s\S]*height: calc\(32% \+ 5\.44px\)/,
+  'LOCK must end on the bottom edge of the top-row border');
+assert.match(driveStyles, /\.controls \.drive-shift-bubble \{[\s\S]*top: calc\(32% \+ 1\.44px\)[\s\S]*height: calc\(44% \+ 0\.48px\)/,
+  'SHIFT must share both GAS row borders without entering LOCK or BRAKE');
+assert.doesNotMatch(driveStyles, /drift-lock-row-offset/,
+  'LOCK and SHIFT must not use overlapping row expansion offsets');
 assert.match(driveStyles, /turn-left-handed-controls \.drive-shift-bubble/);
 assert.match(workflow, /node turn-lab\/tests\/shift-production\.mjs/);
 
-console.log('TURN SHIFT gearbox, per-car setup, GAS-slide toggle and live tuning contract passed.');
+console.log('TURN SHIFT gearbox, constraint feedback, HUD roll, aligned controls and live tuning contract passed.');

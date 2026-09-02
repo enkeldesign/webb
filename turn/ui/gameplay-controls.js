@@ -32,6 +32,9 @@ import {
   enteredShiftToggle,
   pointerUsesShiftToggle
 } from '../input/shift-toggle.js?revision=r227-shift-feedback';
+import {
+  resolveVehicleShiftFeedback
+} from './shift-feedback.js?revision=r229-shift-feedback';
 
 globalThis.__turnBoostActive = false;
 globalThis.__turnBoostCharge = 1;
@@ -132,6 +135,10 @@ function installGameplayUi() {
   boostHud.setAttribute('aria-valuenow', '100');
   boostHud.setAttribute('aria-valuetext', '100 percent charged.');
   boostHud.innerHTML = '<span>BOOST</span><div><i></i></div>';
+  const shiftFeedback = document.createElement('aside');
+  shiftFeedback.className = 'shift-change-feedback';
+  shiftFeedback.setAttribute('aria-hidden', 'true');
+  boostHud.appendChild(shiftFeedback);
   hud.appendChild(boostHud);
   const boostFill = boostHud.querySelector('i');
 
@@ -215,6 +222,7 @@ function installGameplayUi() {
   let previousBoostCharge = boostCharge;
   let boostFlashTimer = 0;
   let overchargePeakTimer = 0;
+  let shiftFeedbackTimer = 0;
   let previousTime = performance.now();
   const TOP_ZONE_SHARE = 0.32;
   const BRAKE_ZONE_START = 0.76;
@@ -251,6 +259,32 @@ function installGameplayUi() {
     return { runtime, vehicleId, car, profile };
   }
 
+  function clearShiftFeedback() {
+    window.clearTimeout(shiftFeedbackTimer);
+    shiftFeedbackTimer = 0;
+    shiftFeedback.classList.remove('is-visible', 'is-shift-on', 'is-shift-off');
+  }
+
+  function showShiftFeedback(feedback) {
+    clearShiftFeedback();
+    if (!feedback) return;
+
+    const heading = document.createElement('strong');
+    heading.textContent = feedback.title;
+    const lines = feedback.labels.map((label) => {
+      const line = document.createElement('span');
+      line.textContent = `+ ${label}`;
+      return line;
+    });
+    shiftFeedback.replaceChildren(heading, ...lines);
+    void shiftFeedback.offsetWidth;
+    shiftFeedback.classList.add(
+      feedback.active ? 'is-shift-on' : 'is-shift-off',
+      'is-visible'
+    );
+    shiftFeedbackTimer = window.setTimeout(clearShiftFeedback, 1600);
+  }
+
   function syncShiftVisual() {
     driveStack.classList.toggle('is-shift-available', shiftAvailable);
     driveStack.classList.toggle('is-shift-active', shiftActive);
@@ -277,9 +311,13 @@ function installGameplayUi() {
     const runtimeState = globalThis.__turnRuntime?.state;
     if (runtimeState) runtimeState.shiftActive = shiftActive;
     if (announce) {
-      shiftStatus.textContent = shiftActive
+      const feedback = resolveVehicleShiftFeedback(shiftContext().profile, shiftActive);
+      shiftStatus.textContent = feedback?.announcement || (shiftActive
         ? 'SHIFT active. Alternate attributes engaged.'
-        : 'SHIFT off. Standard attributes restored.';
+        : 'SHIFT off. Standard attributes restored.');
+      showShiftFeedback(feedback);
+    } else {
+      clearShiftFeedback();
     }
     if (typeof globalThis.CustomEvent === 'function') {
       globalThis.dispatchEvent?.(new CustomEvent('turn:shift-change', {

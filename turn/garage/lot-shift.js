@@ -18,7 +18,7 @@ import {
 import {
   VEHICLE_SHIFT_LEVER_STATES,
   resolveVehicleShiftGearbox
-} from './lot-shift-gearbox.js?revision=r228-shift-gearbox';
+} from './lot-shift-gearbox.js?revision=r229-shift-feedback';
 
 const activeShiftSetups = new WeakMap();
 let dialogSerial = 0;
@@ -111,6 +111,9 @@ export function installLotShift(root = document.body) {
   let editingProfile = null;
   let selectedReceivers = new Set();
   let previousFocus = null;
+  let currentGearbox = null;
+  let constraintFeedbackTimer = 0;
+  let constraintFeedbackOption = null;
 
   function rewardUnlocked() {
     return !reward || isFeatureUnlocked(VEHICLE_SHIFT_FEATURE_ID);
@@ -197,6 +200,7 @@ export function installLotShift(root = document.body) {
     if (!editingStats) return;
     const gearbox = resolveVehicleShiftGearbox(editingStats, [...selectedReceivers]);
     if (!gearbox) return;
+    currentGearbox = gearbox;
     selectedReceivers = new Set(gearbox.selectedReceivers);
     options.classList.toggle('is-complete', gearbox.complete);
 
@@ -228,10 +232,46 @@ export function installLotShift(root = document.body) {
     }
   }
 
+  function constraintMessage(lever) {
+    if (lever.forced && lever.state === VEHICLE_SHIFT_LEVER_STATES.GAIN) {
+      return `${lever.label} is fixed at 1→2. An attribute at 1 must gain one point.`;
+    }
+    if (lever.forced && lever.state === VEHICLE_SHIFT_LEVER_STATES.LOSS) {
+      return `${lever.label} is fixed at 5→4. An attribute at 5 must lose one point.`;
+    }
+    if (lever.automaticallyLoses) {
+      return `${lever.label} is set automatically. Move one green lever back to neutral before choosing a different gain.`;
+    }
+    return `${lever.label} cannot move from its current position.`;
+  }
+
+  function showConstraintFeedback(option, lever) {
+    window.clearTimeout(constraintFeedbackTimer);
+    constraintFeedbackOption?.classList.remove('has-constraint-feedback');
+    constraintFeedbackOption = option;
+    option.classList.remove('has-constraint-feedback');
+    void option.offsetWidth;
+    option.classList.add('has-constraint-feedback');
+    status.textContent = constraintMessage(lever);
+    try {
+      navigator.vibrate?.(8);
+    } catch (_) {}
+    constraintFeedbackTimer = window.setTimeout(() => {
+      option.classList.remove('has-constraint-feedback');
+      if (constraintFeedbackOption === option) constraintFeedbackOption = null;
+      constraintFeedbackTimer = 0;
+    }, 720);
+  }
+
   function handleOptionClick(event) {
     const option = event.currentTarget;
-    if (option.getAttribute('aria-disabled') === 'true') return;
     const key = option.dataset.shiftStat;
+    const lever = currentGearbox?.levers.find((candidate) => candidate.key === key);
+    if (!lever) return;
+    if (!lever.interactive) {
+      showConstraintFeedback(option, lever);
+      return;
+    }
     if (selectedReceivers.has(key)) {
       selectedReceivers.delete(key);
     } else {
@@ -329,6 +369,8 @@ export function installLotShift(root = document.body) {
   const release = () => {
     if (released) return;
     released = true;
+    window.clearTimeout(constraintFeedbackTimer);
+    constraintFeedbackOption?.classList.remove('has-constraint-feedback');
     selectionObserver.disconnect();
     globalThis.removeEventListener?.('turn:trophy-road-updated', syncTrigger);
     globalThis.removeEventListener?.('turn:shift-profile-change', syncTrigger);
