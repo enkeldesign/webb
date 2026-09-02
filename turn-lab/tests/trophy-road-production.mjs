@@ -10,6 +10,7 @@ import {
   TROPHY_ROAD_VIEWPORT_THRESHOLD,
   getTrophyRoadReward,
   grandfatheredRewardIdsForVersion,
+  isFeatureUnlocked,
   isPaintUnlocked,
   isTrackUnlocked,
   isVehicleUnlocked,
@@ -74,6 +75,8 @@ const through800 = [...through700, 'monster'];
 const through900 = [...through800, 'paintjob'];
 const through1000 = [...through900, 'future-racer'];
 const through1100 = [...through1000, 'rally-racer'];
+const through1500 = [...through1100, 'shift'];
+const preShiftRewardIds = legacyRewardIds.filter((id) => id !== 'shift');
 
 assert.equal(TROPHY_ROAD_STORAGE_KEY, 'turn-achievements-v1');
 assert.equal(TROPHY_ROAD_STORAGE_VERSION, 6,
@@ -95,7 +98,8 @@ assert.deepEqual(
     ['monster', 800],
     ['paintjob', 900],
     ['future-racer', 1000],
-    ['rally-racer', 1100]
+    ['rally-racer', 1100],
+    ['shift', 1500]
   ]
 );
 
@@ -111,12 +115,15 @@ assert.deepEqual(productionRewardIdsForTrophies(999), through900);
 assert.deepEqual(productionRewardIdsForTrophies(1000), through1000);
 assert.deepEqual(productionRewardIdsForTrophies(1099), through1000);
 assert.deepEqual(productionRewardIdsForTrophies(1100), through1100);
+assert.deepEqual(productionRewardIdsForTrophies(1499), through1100);
+assert.deepEqual(productionRewardIdsForTrophies(1500), through1500);
 assert.deepEqual(productionRewardIdsForTrophies(3075), productionRewardIds);
 
 assert.equal(getProductionTrophyRoadReward('mountain')?.threshold, 700);
 assert.equal(getProductionTrophyRoadReward('paintjob')?.threshold, 900);
 assert.equal(getProductionTrophyRoadReward('future-racer')?.threshold, 1000);
 assert.equal(getProductionTrophyRoadReward('rally-racer')?.threshold, 1100);
+assert.equal(getProductionTrophyRoadReward('shift')?.threshold, 1500);
 assert.equal(getProductionTrophyRoadReward('invented'), null);
 
 assert.equal(rewardForTrack('midnight-city')?.id, 'midnight-city');
@@ -128,6 +135,7 @@ assert.equal(rewardForVehicle('monster-truck')?.id, 'monster');
 assert.equal(rewardForVehicle('vintage-racer')?.id, 'vintage-racer');
 assert.equal(rewardForVehicle('toy-racer')?.id, 'rally-racer');
 assert.equal(rewardForFeature('vehicle-paint')?.id, 'paintjob');
+assert.equal(rewardForFeature('vehicle-shift')?.id, 'shift');
 assert.equal(getTrophyRoadReward('invented'), null);
 
 const midnightReward = getProductionTrophyRoadReward('midnight-city');
@@ -192,7 +200,8 @@ assert.deepEqual(
   ['paintjob', 'monster', 'vintage-racer', 'rally-racer']
 );
 assert.deepEqual(grandfatheredRewardIdsForVersion(4), ['vintage-racer', 'rally-racer']);
-assert.deepEqual(grandfatheredRewardIdsForVersion(2), legacyRewardIds);
+assert.deepEqual(grandfatheredRewardIdsForVersion(2), preShiftRewardIds,
+  'Legacy profiles may retain historical rewards but must still earn the new SHIFT feature');
 assert.deepEqual(grandfatheredRewardIdsForVersion(5), []);
 assert.deepEqual(grandfatheredRewardIdsForVersion(6), []);
 assert.deepEqual(
@@ -217,6 +226,7 @@ assert.equal(isVehicleUnlocked('monster-truck', freshStorage), false);
 assert.equal(isVehicleUnlocked('vintage-racer', freshStorage), false);
 assert.equal(isVehicleUnlocked('toy-racer', freshStorage), false);
 assert.equal(isPaintUnlocked(freshStorage), false);
+assert.equal(isFeatureUnlocked('vehicle-shift', freshStorage), false);
 
 const priorProductionProfile = createMemoryStorage({
   'turn-achievements-v1': JSON.stringify({
@@ -282,7 +292,7 @@ const legacyWithoutAchievements = createMemoryStorage({
 });
 const preparedLegacy = prepareTrophyRoadProfile(legacyWithoutAchievements);
 assert.equal(preparedLegacy?.version, 2);
-assert.deepEqual(readTrophyRoadSnapshot(legacyWithoutAchievements).unlockedRewardIds, legacyRewardIds);
+assert.deepEqual(readTrophyRoadSnapshot(legacyWithoutAchievements).unlockedRewardIds, preShiftRewardIds);
 assert.equal(isPaintUnlocked(legacyWithoutAchievements), true);
 assert.equal(isVehicleUnlocked('monster-truck', legacyWithoutAchievements), true);
 assert.equal(isVehicleUnlocked('vintage-racer', legacyWithoutAchievements), true);
@@ -297,7 +307,7 @@ const migratedLegacy = normalizeAchievementState({
   progress: { tracks: ['countryside'], blankTracks: [] }
 });
 assert.equal(migratedLegacy.version, 6);
-assert.deepEqual(migratedLegacy.rewards.unlocked, legacyRewardIds);
+assert.deepEqual(migratedLegacy.rewards.unlocked, preShiftRewardIds);
 assert.deepEqual(migratedLegacy.rewards.seen, migratedLegacy.rewards.unlocked);
 
 const progressionStorage = createMemoryStorage();
@@ -359,6 +369,7 @@ assert.match(perkWrapper, /\['mountain', 700\]/);
 assert.match(perkWrapper, /\['paintjob', 900\]/);
 assert.match(perkWrapper, /\['future-racer', 1000\]/);
 assert.match(perkWrapper, /\['rally-racer', 1100\]/);
+assert.match(perkWrapper, /\['shift', 1500\]/);
 assert.match(perkWrapper, /rewardIdsForTrophies/);
 assert.match(homeGate, /trophy-road\.js\?revision=r166-bella-records/);
 assert.match(lotGate, /trophy-road\.js\?revision=r166-bella-records/);

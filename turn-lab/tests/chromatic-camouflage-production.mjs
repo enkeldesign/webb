@@ -171,7 +171,8 @@ assert.deepEqual(
     ['monster', 800],
     ['paintjob', 900],
     ['future-racer', 1000],
-    ['rally-racer', 1100]
+    ['rally-racer', 1100],
+    ['shift', 1500]
   ]
 );
 assert.deepEqual(TRACK_IDS, [

@@ -15,7 +15,8 @@ export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
   monster: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M10 28h8l5-10h20l7 10h5v9H9Z"></path><path d="M28 18v10M23 28h27M45 22h8l4 6"></path><circle cx="18" cy="38" r="8"></circle><circle cx="48" cy="38" r="8"></circle><circle cx="18" cy="38" r="3"></circle><circle cx="48" cy="38" r="3"></circle></svg>',
   vintage: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M5 31h9l7-8h20l8 4h9v10H5Z"></path><path d="M21 23l5-8h12l6 8M27 15v8M12 31h39"></path><circle cx="17" cy="38" r="6"></circle><circle cx="49" cy="38" r="6"></circle></svg>',
   rally: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M7 31h7l6-12h24l8 12h6v7H7Z"></path><path d="M24 19v12M20 24h27M11 27h7M47 15h8l3 7"></path><circle cx="18" cy="39" r="5"></circle><circle cx="49" cy="39" r="5"></circle></svg>',
-  mountain: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M4 42 23 13l8 12L40 8l20 34Z"></path><path d="m17 22 6-9 5 8 4-6 8-7 7 13"></path><path d="M39 42c5-8 9-11 15-13M43 35l4 2-2 4 5 2"></path></svg>'
+  mountain: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M4 42 23 13l8 12L40 8l20 34Z"></path><path d="m17 22 6-9 5 8 4-6 8-7 7 13"></path><path d="M39 42c5-8 9-11 15-13M43 35l4 2-2 4 5 2"></path></svg>',
+  shift: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M14 39V24c0-8 5-13 13-13h10c8 0 13 5 13 13v15"></path><path d="M20 39h24M32 11v28M23 20h18"></path><circle cx="23" cy="20" r="4"></circle><circle cx="41" cy="20" r="4"></circle><circle cx="32" cy="11" r="4"></circle><circle cx="32" cy="39" r="4"></circle></svg>'
 });
 
 export const TROPHY_ROAD_REWARDS = Object.freeze([
@@ -120,6 +121,16 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     perkTitle: 'TWITCHY TURNY',
     perkDescription: 'DRIFT fills BOOST even faster than normal.',
     description: 'Unlock the Rally Racer: twitchy and perfect for curvy tracks.<br><strong>TWITCHY TURNY:</strong> DRIFT fills BOOST even faster than normal.'
+  }),
+  Object.freeze({
+    id: 'shift',
+    threshold: 1500,
+    title: 'SHIFT',
+    shortTitle: 'Shift',
+    type: 'feature',
+    featureId: 'vehicle-shift',
+    icon: 'shift',
+    description: 'Unlock SHIFT for every car. Move one point away from three attributes and into the other three, then toggle between STANDARD and SHIFT while racing.'
   })
 ]);
 
@@ -145,6 +156,9 @@ const VERSION_THREE_GRANDFATHERED_REWARDS = Object.freeze([
   'rally-racer'
 ]);
 const VERSION_FOUR_GRANDFATHERED_REWARDS = Object.freeze(['vintage-racer', 'rally-racer']);
+const PRE_SHIFT_GRANDFATHERED_REWARDS = Object.freeze(
+  TROPHY_ROAD_REWARDS.filter((reward) => reward.id !== 'shift').map((reward) => reward.id)
+);
 
 let unlockNotice = null;
 let unlockNoticeTimer = 0;
@@ -167,7 +181,7 @@ export function rewardForFeature(featureId) {
 
 export function grandfatheredRewardIdsForVersion(version) {
   const numericVersion = Number(version) || 0;
-  if (numericVersion < 3) return TROPHY_ROAD_REWARDS.map((reward) => reward.id);
+  if (numericVersion < 3) return [...PRE_SHIFT_GRANDFATHERED_REWARDS];
   if (numericVersion === 3) return [...VERSION_THREE_GRANDFATHERED_REWARDS];
   if (numericVersion === 4) return [...VERSION_FOUR_GRANDFATHERED_REWARDS];
   return [];
@@ -321,7 +335,7 @@ function hasAchievementProgress(state) {
 
 function hasEveryRewardStored(state) {
   const stored = new Set(Array.isArray(state?.rewards?.unlocked) ? state.rewards.unlocked : []);
-  return TROPHY_ROAD_REWARDS.every((reward) => stored.has(reward.id));
+  return PRE_SHIFT_GRANDFATHERED_REWARDS.every((rewardId) => stored.has(rewardId));
 }
 
 function cleanTrophyRoadState() {

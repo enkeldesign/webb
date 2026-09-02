@@ -1,8 +1,8 @@
 import {
   TROPHY_ROAD_REWARDS as BASE_TROPHY_ROAD_REWARDS
-} from './trophy-road.js?revision=r220-race-reward';
+} from './trophy-road.js?revision=r226-shift';
 
-export * from './trophy-road.js?revision=r220-race-reward';
+export * from './trophy-road.js?revision=r226-shift';
 
 export const TROPHY_ROAD_MAX_THRESHOLD = 3075;
 
@@ -19,7 +19,8 @@ const REWARD_ORDER = Object.freeze([
   Object.freeze(['monster', 800]),
   Object.freeze(['paintjob', 900]),
   Object.freeze(['future-racer', 1000]),
-  Object.freeze(['rally-racer', 1100])
+  Object.freeze(['rally-racer', 1100]),
+  Object.freeze(['shift', 1500])
 ]);
 
 export const TROPHY_ROAD_REWARDS = Object.freeze(REWARD_ORDER.map(([id, threshold]) => {

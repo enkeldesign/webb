@@ -254,7 +254,7 @@ assert.match(controls, /pointerUsesDriftLock\(\{/,
   'The external bubble must own a dedicated forgiving hit target');
 assert.match(controls, /driftActive: driveZone === 'drift'/,
   'LOCK must only become available after the player has engaged DRIFT');
-assert.match(controls, /if \(lockRequested\) return \{ zone: 'drift', lockRequested: true \}/,
+assert.match(controls, /if \(lockRequested\) return \{ zone: 'drift', lockRequested: true, shiftRequested: false \}/,
   'Entering the bubble must keep DRIFT held while switching binary LOCK on');
 assert.match(controls, /advanceDriftLockAmount\(/,
   'The binary target must use a short mechanical transition instead of snapping');
@@ -287,7 +287,8 @@ assert.match(controls, /Brake · Reverse/, 'The integrated brake control must ad
 assert.match(controls, /function refillBoost\(\)/, 'Gameplay controls must expose one reset-safe boost refill path');
 assert.match(controls, /let boostCharge = 1;/, 'Boost must still begin full even though passive recharge is removed');
 assert.match(controls, /boostCharge = 1;\s*previousBoostCharge = 1;\s*boostExhausted = false;/s, 'Restarting must fully refill and unlock boost without creating a recharge transition');
-assert.match(controls, /event\.detail\?\.reason === 'race-reset'\) refillBoost\(\)/, 'The race reset event must refill boost');
+assert.match(controls, /const reason = event\.detail\?\.reason;[\s\S]*if \(reason === 'race-reset'\) refillBoost\(\)/,
+  'The race reset event must refill boost');
 assert.match(controls, /globalThis\.__turnRefillBoost = refillBoost/, 'Boost refill must remain reusable by the runtime');
 assert.match(controls, /becameEmpty = previousBoostCharge > 0\.001 && boostCharge <= 0\.001/, 'Empty feedback must trigger on the actual depletion transition');
 assert.match(controls, /becameFull = previousBoostCharge < 0\.999 && boostCharge >= 0\.999/, 'Full feedback must trigger only when recharge crosses the full threshold');

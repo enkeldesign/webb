@@ -1,7 +1,7 @@
 import {
   TROPHY_ROAD_REWARD_ICONS,
   getTrophyRoadReward
-} from '../progression/trophy-road-perks-r164.js?revision=r220-race-reward';
+} from '../progression/trophy-road-perks-r164.js?revision=r226-shift';
 
 const PENDING_STORAGE_KEY = 'turn-home-reward-replay-v1';
 const ACHIEVEMENT_STORAGE_KEY = 'turn-achievements-v1';
