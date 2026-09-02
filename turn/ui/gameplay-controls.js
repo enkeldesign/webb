@@ -34,7 +34,7 @@ import {
 } from '../input/shift-toggle.js?revision=r227-shift-feedback';
 import {
   resolveVehicleShiftFeedback
-} from './shift-feedback.js?revision=r229-shift-feedback';
+} from './shift-feedback.js?revision=r230-shift-feedback-duration';
 
 globalThis.__turnBoostActive = false;
 globalThis.__turnBoostCharge = 1;
@@ -223,6 +223,7 @@ function installGameplayUi() {
   let boostFlashTimer = 0;
   let overchargePeakTimer = 0;
   let shiftFeedbackTimer = 0;
+  let shiftDetailsAnnouncedThisRace = false;
   let previousTime = performance.now();
   const TOP_ZONE_SHARE = 0.32;
   const BRAKE_ZONE_START = 0.76;
@@ -232,6 +233,7 @@ function installGameplayUi() {
   const DRIFT_RECHARGE_MULTIPLIER = 2.4;
   const DRIFT_LOCK_BOOST_GRADIENT = 'linear-gradient(90deg, #8b5cf6, #8ce99a)';
   const BOOST_VISUAL_INTERVAL_MS = 1000 / 30;
+  const SHIFT_FEEDBACK_CLEAR_MS = 3200;
   let lastBoostVisualAt = -Infinity;
   let boostVisualDirty = true;
   let publishedBoosting = null;
@@ -282,7 +284,7 @@ function installGameplayUi() {
       feedback.active ? 'is-shift-on' : 'is-shift-off',
       'is-visible'
     );
-    shiftFeedbackTimer = window.setTimeout(clearShiftFeedback, 1600);
+    shiftFeedbackTimer = window.setTimeout(clearShiftFeedback, SHIFT_FEEDBACK_CLEAR_MS);
   }
 
   function syncShiftVisual() {
@@ -312,9 +314,16 @@ function installGameplayUi() {
     if (runtimeState) runtimeState.shiftActive = shiftActive;
     if (announce) {
       const feedback = resolveVehicleShiftFeedback(shiftContext().profile, shiftActive);
-      shiftStatus.textContent = feedback?.announcement || (shiftActive
-        ? 'SHIFT active. Alternate attributes engaged.'
+      const detailedAnnouncement = feedback?.announcement || (shiftActive
+        ? 'SHIFT on. Alternate attributes engaged.'
         : 'SHIFT off. Standard attributes restored.');
+      const briefAnnouncement = feedback?.briefAnnouncement || (shiftActive
+        ? 'SHIFT on.'
+        : 'SHIFT off.');
+      shiftStatus.textContent = shiftDetailsAnnouncedThisRace
+        ? briefAnnouncement
+        : detailedAnnouncement;
+      shiftDetailsAnnouncedThisRace = true;
       showShiftFeedback(feedback);
     } else {
       clearShiftFeedback();
@@ -380,6 +389,24 @@ function installGameplayUi() {
     applyShiftMode(!shiftActive, { announce });
     safeVibrate(shiftActive ? [16, 12, 24] : 10);
     return true;
+  }
+
+  function resetShiftAnnouncementCycle() {
+    shiftDetailsAnnouncedThisRace = false;
+    shiftStatus.textContent = '';
+  }
+
+  function restoreShiftControlAfterInterruption() {
+    if (document.hidden) return;
+    if (!shiftAvailable && !shiftActive && globalThis.__turnRuntime?.state?.running) {
+      syncShiftAvailability();
+    }
+    syncShiftVisual();
+  }
+
+  function resumeDriveControlsAfterInterruption() {
+    releaseDrive();
+    centerManualSteerVisual();
   }
 
   function advanceShiftTuning(dt) {
@@ -597,7 +624,10 @@ function installGameplayUi() {
 
   function releaseDrive(event) {
     if (event) consumeDrivePointer(event);
-    if (drivePointerId === null || (event?.pointerId != null && event.pointerId !== drivePointerId)) return;
+    if (drivePointerId === null || (event?.pointerId != null && event.pointerId !== drivePointerId)) {
+      restoreShiftControlAfterInterruption();
+      return;
+    }
     const releasedPointerId = drivePointerId;
     drivePointerId = null;
     drivePad.releasePointerCapture?.(releasedPointerId);
@@ -607,6 +637,7 @@ function installGameplayUi() {
     shiftPointerInside = false;
     globalThis.__turnBoostActive = false;
     drivePad.classList.remove('is-boosting', 'is-boost-locked');
+    restoreShiftControlAfterInterruption();
   }
 
   drivePad.addEventListener('pointerdown', (event) => {
@@ -693,10 +724,12 @@ function installGameplayUi() {
     const reason = event.detail?.reason;
     if (reason === 'race-reset') refillBoost();
     if (reason === 'runtime-ready' || reason === 'race-started' || reason === 'race-reset') {
+      resetShiftAnnouncementCycle();
       syncShiftAvailability({ reset: true });
     }
   });
   window.addEventListener('turn:runtime-ready', () => {
+    resetShiftAnnouncementCycle();
     syncShiftAvailability({ reset: true });
   });
   window.addEventListener('turn:shift-profile-change', (event) => {
@@ -713,8 +746,12 @@ function installGameplayUi() {
     if (document.hidden) {
       releaseDrive();
       centerManualSteerVisual();
+      return;
     }
+    resumeDriveControlsAfterInterruption();
   });
+  window.addEventListener('focus', resumeDriveControlsAfterInterruption, { passive: true });
+  window.addEventListener('pageshow', resumeDriveControlsAfterInterruption, { passive: true });
 
   function nearestRivalDistance(runtime, active) {
     if (!active || !runtime?.state?.lapActive || !runtime?.playerCar?.position) return Infinity;
