@@ -18,6 +18,19 @@ import {
   normalizeControlHandedness,
   topDriveZoneAt
 } from './control-handedness.js';
+import {
+  deriveVehicleTuningForCar,
+  getCarDefinition
+} from '../vehicle/catalog.js?revision=r226-shift';
+import { isFeatureUnlocked } from '../progression/trophy-road.js?revision=r226-shift';
+import {
+  VEHICLE_SHIFT_FEATURE_ID,
+  loadVehicleShiftProfile
+} from '../vehicle/shift-profile.js?revision=r226-shift';
+import {
+  advanceShiftTopSpeedMultiplier,
+  pointerUsesShiftToggle
+} from '../input/shift-toggle.js?revision=r226-shift';
 
 globalThis.__turnBoostActive = false;
 globalThis.__turnBoostCharge = 1;
@@ -25,6 +38,7 @@ globalThis.__turnBoostOvercharge = 0;
 globalThis.__turnBoostOverchargeCaught = false;
 globalThis.__turnDriftHeld = false;
 globalThis.__turnDriftLockAmount = 0;
+globalThis.__turnShiftActive = false;
 
 if (!globalThis.__turnGameplayControlsInstalled) {
   globalThis.__turnGameplayControlsInstalled = true;
@@ -137,6 +151,20 @@ function installGameplayUi() {
   driftLockBubble.setAttribute('aria-hidden', 'true');
   driftLockBubble.innerHTML = '<span>LOCK</span>';
 
+  const shiftBubble = document.createElement('button');
+  shiftBubble.type = 'button';
+  shiftBubble.className = 'drive-shift-bubble';
+  shiftBubble.disabled = true;
+  shiftBubble.setAttribute('aria-pressed', 'false');
+  shiftBubble.setAttribute('aria-label', 'SHIFT unavailable. Configure SHIFT in The Lot.');
+  shiftBubble.innerHTML = '<span>SHIFT</span><i aria-hidden="true">●</i>';
+
+  const shiftStatus = document.createElement('div');
+  shiftStatus.className = 'turn-sr-only';
+  shiftStatus.setAttribute('role', 'status');
+  shiftStatus.setAttribute('aria-live', 'polite');
+  shiftStatus.setAttribute('aria-atomic', 'true');
+
   const driveTop = document.createElement('div');
   driveTop.className = 'drive-pad-top';
 
@@ -162,7 +190,7 @@ function installGameplayUi() {
 
   driveTop.append(driftZone, boostZone);
   drivePad.append(driveTop, gasButton, brakeButton);
-  driveStack.append(driftLockBubble, drivePad);
+  driveStack.append(driftLockBubble, drivePad, shiftBubble, shiftStatus);
   pedals.replaceChildren(driveStack);
 
   let controlHandedness = installControlHandedness();
@@ -176,6 +204,10 @@ function installGameplayUi() {
   let boostExhausted = false;
   let driftLockRequested = false;
   let driftLockAmount = 0;
+  let shiftAvailable = false;
+  let shiftActive = false;
+  let shiftToggledThisGesture = false;
+  let shiftTuningTarget = null;
   let boostCharge = 1;
   let boostOvercharge = 0;
   let boostOverchargePhase = BOOST_OVERCHARGE_PHASE.READY;
@@ -208,6 +240,126 @@ function installGameplayUi() {
     try {
       navigator.vibrate?.(pattern);
     } catch (_) {}
+  }
+
+  function shiftContext() {
+    const runtime = globalThis.__turnRuntime;
+    const vehicleId = runtime?.state?.vehicleId || '';
+    const car = vehicleId ? getCarDefinition(vehicleId) : null;
+    const profile = car ? loadVehicleShiftProfile(vehicleId, car.stats) : null;
+    return { runtime, vehicleId, car, profile };
+  }
+
+  function syncShiftVisual() {
+    driveStack.classList.toggle('is-shift-available', shiftAvailable);
+    driveStack.classList.toggle('is-shift-active', shiftActive);
+    shiftBubble.disabled = !shiftAvailable;
+    shiftBubble.setAttribute('aria-pressed', String(shiftActive));
+    shiftBubble.setAttribute(
+      'aria-label',
+      !shiftAvailable
+        ? 'SHIFT unavailable. Configure SHIFT in The Lot.'
+        : shiftActive
+          ? 'SHIFT active. Activate to return to standard attributes.'
+          : 'SHIFT ready. Activate alternate attributes.'
+    );
+    gasButton.setAttribute(
+      'aria-label',
+      shiftAvailable
+        ? 'GAS. Catches and holds OVERCHARGE. While holding GAS, slide outward into SHIFT to toggle alternate attributes.'
+        : 'GAS. Catches and holds OVERCHARGE.'
+    );
+  }
+
+  function publishShiftState({ announce = true } = {}) {
+    globalThis.__turnShiftActive = shiftActive;
+    const runtimeState = globalThis.__turnRuntime?.state;
+    if (runtimeState) runtimeState.shiftActive = shiftActive;
+    if (announce) {
+      shiftStatus.textContent = shiftActive
+        ? 'SHIFT active. Alternate attributes engaged.'
+        : 'SHIFT off. Standard attributes restored.';
+    }
+    if (typeof globalThis.CustomEvent === 'function') {
+      globalThis.dispatchEvent?.(new CustomEvent('turn:shift-change', {
+        detail: { active: shiftActive, available: shiftAvailable }
+      }));
+    }
+  }
+
+  function applyShiftMode(active, { announce = true } = {}) {
+    const { runtime, vehicleId, car, profile } = shiftContext();
+    const canActivate = Boolean(
+      shiftAvailable &&
+      runtime?.state &&
+      car &&
+      profile?.enabled &&
+      profile.shiftedStats
+    );
+    const nextActive = Boolean(active && canActivate);
+    const target = nextActive
+      ? deriveVehicleTuningForCar(vehicleId, profile.shiftedStats)
+      : car?.tuning;
+
+    if (runtime?.state && target) {
+      const currentTopSpeed = Number(runtime.state.vehicleTuning?.topSpeedMultiplier);
+      const targetTopSpeed = Number(target.topSpeedMultiplier);
+      const loweringTopSpeed = Number.isFinite(currentTopSpeed) &&
+        Number.isFinite(targetTopSpeed) &&
+        targetTopSpeed < currentTopSpeed;
+      const appliedTuning = loweringTopSpeed
+        ? { ...target, topSpeedMultiplier: currentTopSpeed }
+        : target;
+      runtime.state.vehicleTuning = appliedTuning;
+      globalThis.__turnVehicleTuning = appliedTuning;
+      shiftTuningTarget = target;
+    } else {
+      shiftTuningTarget = null;
+    }
+
+    shiftActive = nextActive;
+    syncShiftVisual();
+    publishShiftState({ announce });
+  }
+
+  function syncShiftAvailability({ reset = false, announce = false } = {}) {
+    const { car, profile } = shiftContext();
+    let unlocked = false;
+    try {
+      unlocked = isFeatureUnlocked(VEHICLE_SHIFT_FEATURE_ID);
+    } catch (_) {}
+    shiftAvailable = Boolean(unlocked && car && profile?.enabled && profile.shiftedStats);
+    if (reset || !shiftAvailable) {
+      applyShiftMode(false, { announce });
+      return;
+    }
+    syncShiftVisual();
+  }
+
+  function toggleShift({ announce = true } = {}) {
+    if (!shiftAvailable) return false;
+    applyShiftMode(!shiftActive, { announce });
+    safeVibrate(shiftActive ? [16, 12, 24] : 10);
+    return true;
+  }
+
+  function advanceShiftTuning(dt) {
+    const runtimeState = globalThis.__turnRuntime?.state;
+    if (!runtimeState?.vehicleTuning || !shiftTuningTarget) return;
+    const current = Number(runtimeState.vehicleTuning.topSpeedMultiplier);
+    const target = Number(shiftTuningTarget.topSpeedMultiplier);
+    const next = advanceShiftTopSpeedMultiplier(current, target, dt);
+    if (Math.abs(next - target) <= 0.000001) {
+      runtimeState.vehicleTuning = shiftTuningTarget;
+      globalThis.__turnVehicleTuning = shiftTuningTarget;
+      shiftTuningTarget = null;
+      return;
+    }
+    if (Object.isFrozen(runtimeState.vehicleTuning)) {
+      runtimeState.vehicleTuning = { ...runtimeState.vehicleTuning };
+    }
+    runtimeState.vehicleTuning.topSpeedMultiplier = next;
+    globalThis.__turnVehicleTuning = runtimeState.vehicleTuning;
   }
 
   function flashBoostHud(className) {
@@ -325,10 +477,24 @@ function installGameplayUi() {
       bubbleWidth: driftLockBubble.offsetWidth,
       lockSide: driftLockSideForHandedness(controlHandedness)
     });
-    if (lockRequested) return { zone: 'drift', lockRequested: true };
+    if (lockRequested) return { zone: 'drift', lockRequested: true, shiftRequested: false };
+
+    const shiftRequested = pointerUsesShiftToggle({
+      available: shiftAvailable,
+      gasActive: driveZone === 'gas',
+      pointerX: event.clientX,
+      pointerY: event.clientY,
+      padLeft: rect.left,
+      padRight: rect.right,
+      padTop: rect.top,
+      padHeight: rect.height,
+      bubbleWidth: shiftBubble.offsetWidth,
+      shiftSide: driftLockSideForHandedness(controlHandedness)
+    });
+    if (shiftRequested) return { zone: 'gas', lockRequested: false, shiftRequested: true };
 
     const zone = zoneFromPointer(event, rect);
-    return { zone, lockRequested: false };
+    return { zone, lockRequested: false, shiftRequested: false };
   }
 
   function setBrakeInput(active) {
@@ -362,6 +528,7 @@ function installGameplayUi() {
     drivePad.dataset.driveZone = nextZone || '';
     driveStack.classList.toggle('is-drift-ready', nextZone === 'drift');
     driveStack.classList.toggle('is-drift-locking', nextLockRequested);
+    driveStack.classList.toggle('is-gas-ready', nextZone === 'gas' && shiftAvailable);
     gasButton.classList.toggle('is-active', nextZone === 'gas');
     driftZone.classList.toggle('is-active', nextZone === 'drift');
     boostZone.classList.toggle('is-active', nextZone === 'boost');
@@ -384,6 +551,9 @@ function installGameplayUi() {
     consumeDrivePointer(event);
     if (drivePointerId === null || event.pointerId !== drivePointerId) return;
     const input = driveInputFromPointer(event);
+    if (input.shiftRequested && !shiftToggledThisGesture) {
+      shiftToggledThisGesture = toggleShift() || shiftToggledThisGesture;
+    }
     setDriveZone(input.zone, input.lockRequested);
   }
 
@@ -396,6 +566,7 @@ function installGameplayUi() {
     setDriveZone(null, false, { announce: false });
     boostRequested = false;
     boostExhausted = false;
+    shiftToggledThisGesture = false;
     globalThis.__turnBoostActive = false;
     drivePad.classList.remove('is-boosting', 'is-boost-locked');
   }
@@ -405,6 +576,7 @@ function installGameplayUi() {
     if (drivePointerId !== null) return;
     drivePointerId = event.pointerId;
     boostExhausted = false;
+    shiftToggledThisGesture = false;
     drivePad.setPointerCapture?.(event.pointerId);
     const input = driveInputFromPointer(event);
     setDriveZone(input.zone, input.lockRequested, { announce: false });
@@ -415,6 +587,7 @@ function installGameplayUi() {
   drivePad.addEventListener('lostpointercapture', (event) => {
     if (drivePointerId === event.pointerId) releaseDrive(event);
   });
+  shiftBubble.addEventListener('click', () => toggleShift());
 
   const resetRivalsButton = document.createElement('button');
   resetRivalsButton.type = 'button';
@@ -479,7 +652,24 @@ function installGameplayUi() {
     centerManualSteerVisual();
   });
   window.addEventListener('turn:ui-state-change', (event) => {
-    if (event.detail?.reason === 'race-reset') refillBoost();
+    const reason = event.detail?.reason;
+    if (reason === 'race-reset') refillBoost();
+    if (reason === 'runtime-ready' || reason === 'race-started' || reason === 'race-reset') {
+      syncShiftAvailability({ reset: true });
+    }
+  });
+  window.addEventListener('turn:runtime-ready', () => {
+    syncShiftAvailability({ reset: true });
+  });
+  window.addEventListener('turn:shift-profile-change', (event) => {
+    const runtimeVehicleId = globalThis.__turnRuntime?.state?.vehicleId || '';
+    if (event.detail?.vehicleId && event.detail.vehicleId !== runtimeVehicleId) return;
+    const wasActive = shiftActive;
+    syncShiftAvailability();
+    if (wasActive && shiftAvailable) applyShiftMode(true, { announce: false });
+  });
+  window.addEventListener('turn:trophy-road-updated', () => {
+    syncShiftAvailability({ reset: !shiftActive });
   });
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
@@ -531,6 +721,7 @@ function installGameplayUi() {
   function updateBoost(now) {
     const dt = Math.min(0.05, Math.max(0, (now - previousTime) / 1000));
     previousTime = now;
+    advanceShiftTuning(dt);
     const lockCanRun = driveZone === 'drift' && globalThis.__turnDriftHeld === true;
     driftLockAmount = advanceDriftLockAmount(
       driftLockAmount,
@@ -721,5 +912,6 @@ function installGameplayUi() {
   }
 
   setDriveZone(null, false, { announce: false });
+  syncShiftAvailability({ reset: true });
   globalThis.__turnUpdateGameplayControls = updateBoost;
 }

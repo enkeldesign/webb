@@ -338,6 +338,15 @@ export function getEffectiveVehicleTuning(selection) {
   return isSportsSedanEasterEgg(selection) ? MAXED_SPORTS_SEDAN_TUNING : getBaseCarDefinition(selection?.carId).tuning;
 }
 
+export function deriveVehicleTuningForCar(id, stats) {
+  const car = getBaseCarDefinition(id);
+  return Object.freeze({
+    ...deriveVehicleTuning(stats),
+    ...(TUNING_OVERRIDE_BY_ID[car.id] || {}),
+    enginePitch: car.tuning.enginePitch
+  });
+}
+
 export function loadVehicleSelection() {
   try {
     const stored = JSON.parse(localStorage.getItem(VEHICLE_SELECTION_KEY));

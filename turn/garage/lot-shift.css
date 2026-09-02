@@ -1,0 +1,287 @@
+.lot-showroom .lot-shift-trigger {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 27px;
+  margin: 0 2px 2px auto;
+  padding: 4px 9px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 2px solid var(--ink, #08090a);
+  border-radius: 999px;
+  background: var(--yellow, #ffd43b);
+  box-shadow: 2px 2px 0 var(--ink, #08090a);
+  color: var(--ink, #08090a);
+  font-size: clamp(.48rem, .9vw, .62rem);
+  font-weight: 950;
+  letter-spacing: .045em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.lot-showroom .lot-shift-trigger i {
+  display: none;
+  font-size: .7rem;
+  font-style: normal;
+  line-height: 1;
+}
+
+.lot-showroom .lot-shift-trigger.is-active {
+  background: var(--violet, #9775fa);
+}
+
+.lot-showroom .lot-shift-trigger.is-active i {
+  display: inline;
+}
+
+.lot-showroom .lot-shift-trigger.is-locked {
+  background: var(--paper, #fff8e8);
+}
+
+.lot-showroom .lot-shift-trigger.is-unavailable {
+  opacity: .55;
+}
+
+.lot-showroom .lot-shift-trigger:focus-visible,
+.lot-shift-dialog button:focus-visible,
+.lot-shift-option:has(input:focus-visible) {
+  outline: 3px solid var(--cyan, #38d9ff);
+  outline-offset: 3px;
+}
+
+.lot-shift-dialog {
+  width: min(760px, calc(100vw - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 24px);
+  margin: auto;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  color: var(--ink, #08090a);
+}
+
+.lot-shift-dialog::backdrop {
+  background: rgb(8 9 10 / .72);
+  backdrop-filter: blur(3px);
+}
+
+.lot-shift-dialog-card {
+  display: grid;
+  max-height: calc(100dvh - 24px);
+  padding: clamp(12px, 2.4vw, 22px);
+  gap: clamp(8px, 1.5vh, 14px);
+  overflow-y: auto;
+  border: 4px solid var(--ink, #08090a);
+  border-radius: 22px;
+  background: var(--paper, #fff8e8);
+  box-shadow: 8px 8px 0 var(--ink, #08090a);
+}
+
+.lot-shift-dialog-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.lot-shift-dialog-head span {
+  display: block;
+  margin-bottom: 3px;
+  font-size: .55rem;
+  font-weight: 950;
+  letter-spacing: .12em;
+}
+
+.lot-shift-dialog-head h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 4vw, 2.35rem);
+  line-height: .92;
+  letter-spacing: -.025em;
+}
+
+.lot-shift-close {
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  min-height: 42px;
+  padding: 0 0 4px;
+  border: 3px solid var(--ink, #08090a);
+  border-radius: 12px;
+  background: var(--pink, #ff4fa3);
+  box-shadow: 3px 3px 0 var(--ink, #08090a);
+  color: var(--ink, #08090a);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.lot-shift-description,
+.lot-shift-status {
+  margin: 0;
+  font-size: clamp(.66rem, 1.35vw, .84rem);
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.lot-shift-status {
+  min-height: 1.3em;
+}
+
+.lot-shift-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.lot-shift-option {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  min-height: 70px;
+  padding: 9px;
+  align-items: center;
+  gap: 8px;
+  border: 3px solid var(--ink, #08090a);
+  border-radius: 13px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.lot-shift-option.is-selected {
+  background: #ffe3e3;
+}
+
+.lot-shift-option:not(.is-selected):not(.is-blocked):has(input:not(:disabled)) {
+  background: #d3f9d8;
+}
+
+.lot-shift-option.is-required {
+  background: #fff3bf;
+}
+
+.lot-shift-option.is-blocked {
+  background: #e7f5ff;
+}
+
+.lot-shift-option:has(input:disabled):not(.is-required):not(.is-blocked) {
+  opacity: .58;
+}
+
+.lot-shift-option input {
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  accent-color: var(--violet, #9775fa);
+}
+
+.lot-shift-option > span {
+  display: grid;
+  min-width: 0;
+  gap: 7px;
+}
+
+.lot-shift-option strong {
+  font-size: clamp(.56rem, 1vw, .72rem);
+  letter-spacing: .045em;
+}
+
+.lot-shift-option small {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .64rem;
+}
+
+.lot-shift-option small b {
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  border: 2px solid var(--ink, #08090a);
+  border-radius: 7px;
+  background: var(--paper, #fff8e8);
+  font-size: .78rem;
+}
+
+.lot-shift-option small i {
+  font-style: normal;
+}
+
+.lot-shift-option small em {
+  margin-left: auto;
+  font-size: .48rem;
+  font-style: normal;
+  font-weight: 950;
+  letter-spacing: .04em;
+}
+
+.lot-shift-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.lot-shift-actions button {
+  min-height: 42px;
+  padding: 7px 13px;
+  border: 3px solid var(--ink, #08090a);
+  border-radius: 999px;
+  box-shadow: 3px 3px 0 var(--ink, #08090a);
+  color: var(--ink, #08090a);
+  font-size: clamp(.56rem, 1vw, .7rem);
+  font-weight: 950;
+  letter-spacing: .045em;
+}
+
+.lot-shift-cancel { background: var(--paper, #fff8e8); }
+.lot-shift-deactivate { margin-right: auto; background: var(--pink, #ff4fa3); }
+.lot-shift-save { background: var(--violet, #9775fa); }
+.lot-shift-save:disabled { opacity: .42; }
+
+@media (max-width: 640px) {
+  .lot-shift-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-height: 430px) {
+  .lot-showroom .lot-shift-trigger {
+    min-height: 24px;
+    padding: 3px 7px;
+  }
+
+  .lot-shift-dialog-card {
+    gap: 6px;
+    padding: 10px 12px;
+  }
+
+  .lot-shift-dialog-head h2 {
+    font-size: 1.25rem;
+  }
+
+  .lot-shift-close {
+    width: 36px;
+    height: 36px;
+    min-height: 36px;
+  }
+
+  .lot-shift-option {
+    min-height: 58px;
+    padding: 6px 8px;
+  }
+
+  .lot-shift-option > span {
+    gap: 4px;
+  }
+
+  .lot-shift-actions button {
+    min-height: 36px;
+    padding-block: 5px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lot-shift-dialog::backdrop {
+    backdrop-filter: none;
+  }
+}

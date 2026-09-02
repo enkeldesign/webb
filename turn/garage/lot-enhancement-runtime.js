@@ -24,6 +24,7 @@ export function prepareLotEnhancements() {
   enhancementPreparation = Promise.all([
     import('./lot-stat-legend.js?revision=r225-18-point-budget'),
     import('./lot-layout-r60.js?build=20260729-r116&revision=r213-attributes-typography'),
+    import('./lot-shift.js?revision=r226-shift'),
     import('./lot-accessibility-r118.js?build=20260729-r118&revision=r588-canonical-attributes'),
     import('./lot-perk-disclosure.js?revision=r225-information-blue'),
     import('./lot-card-scroll-boundary.js?revision=r216-meter-density'),
@@ -34,6 +35,7 @@ export function prepareLotEnhancements() {
   ]).then(([
     statLegend,
     layout,
+    shift,
     accessibility,
     perkDisclosure,
     scrollBoundary,
@@ -45,6 +47,7 @@ export function prepareLotEnhancements() {
     enhancementBundle = Object.freeze({
       installLotStatLegend: statLegend.installLotStatLegend,
       installLotLayout: layout.installLotLayout,
+      installLotShift: shift.installLotShift,
       installLotAccessibility: accessibility.installLotAccessibility,
       installLotPerkDisclosure: perkDisclosure.installLotPerkDisclosure,
       installLotCardScrollBoundary: scrollBoundary.installLotCardScrollBoundary,
@@ -128,6 +131,7 @@ export function enhanceLotNow(root = document.body) {
     installLotPerkDisclosure,
     installLotStatLegend,
     installLotLayout,
+    installLotShift,
     installLotAccessibility,
     installLotCardScrollBoundary,
     installLotVehicleCopy,
@@ -141,6 +145,7 @@ export function enhanceLotNow(root = document.body) {
   const removePerkDisclosure = installLotPerkDisclosure(scope);
   const removeStatLegend = installLotStatLegend(scope);
   const removeLayout = installLotLayout(scope);
+  const removeShift = installLotShift(scope);
   const removeCardScrollBoundary = installLotCardScrollBoundary(scope);
   const removeAccessibility = installLotAccessibility(scope);
   const removeVehicleCopy = installLotVehicleCopy(scope);
@@ -152,6 +157,7 @@ export function enhanceLotNow(root = document.body) {
     removeVehicleCopy();
     removeAccessibility();
     removeCardScrollBoundary();
+    removeShift();
     removeLayout();
     removeStatLegend();
     removePerkDisclosure();

@@ -33,6 +33,7 @@ const SHOWROOM_CLEANUP_STYLE_ID = 'turn-lot-showroom-r209-polish';
 const SHOWROOM_THUMBNAIL_STYLE_ID = 'turn-lot-thumbnail-r211-composition';
 const SHOWROOM_INFO_STYLE_ID = 'turn-lot-info-r212-fit';
 const SHOWROOM_TYPOGRAPHY_STYLE_ID = 'turn-lot-info-r214-worst-case-fit';
+const SHOWROOM_SHIFT_STYLE_ID = 'turn-lot-shift-r226';
 let showroomStylePromise = null;
 let originalLotPromise = null;
 let originalLotModule = null;
@@ -82,6 +83,10 @@ function prepareShowroomStyles() {
     prepareStylesheet(
       SHOWROOM_TYPOGRAPHY_STYLE_ID,
       './lot-info-typography-r213.css?revision=r218-meter-black-outline'
+    ),
+    prepareStylesheet(
+      SHOWROOM_SHIFT_STYLE_ID,
+      './lot-shift.css?revision=r226-shift'
     )
   ]);
   return showroomStylePromise;

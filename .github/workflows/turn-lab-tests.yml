@@ -181,6 +181,9 @@ jobs:
       - name: Run unified drive pad and reverse regression
         run: node turn-lab/tests/drive-pad-production.mjs
 
+      - name: Run SHIFT reward and live tuning regression
+        run: node turn-lab/tests/shift-production.mjs
+
       - name: Run state-aware in-game menu regression
         run: node turn-lab/tests/in-game-menu-production.mjs
 

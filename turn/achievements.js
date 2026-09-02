@@ -34,5 +34,5 @@ export {
   isVehicleUnlocked,
   isPaintUnlocked,
   prepareTrophyRoadProfile
-} from './progression/trophy-road-perks-r164.js?revision=r220-race-reward';
+} from './progression/trophy-road-perks-r164.js?revision=r226-shift';
 export { installAchievements } from './achievements/runtime.js?revision=r164-long-session-robustness';
