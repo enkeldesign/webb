@@ -77,6 +77,63 @@
     box-shadow 120ms ease;
 }
 
+.shift-change-feedback {
+  position: absolute;
+  z-index: 3;
+  top: calc(100% + 9px);
+  left: 50%;
+  width: max-content;
+  min-width: 106px;
+  visibility: hidden;
+  color: var(--paper, #fff8e8);
+  filter: drop-shadow(2px 2px 0 var(--ink, #08090a));
+  font-size: clamp(.48rem, 1.05vw, .64rem);
+  font-weight: 950;
+  letter-spacing: .055em;
+  line-height: 1.18;
+  text-align: left;
+  opacity: 0;
+  transform: translate(-50%, 5px);
+  pointer-events: none;
+}
+
+.shift-change-feedback strong,
+.shift-change-feedback span {
+  display: block;
+  white-space: nowrap;
+}
+
+.shift-change-feedback strong {
+  margin-bottom: 3px;
+  font-size: .92em;
+  letter-spacing: .09em;
+}
+
+.shift-change-feedback.is-shift-on strong {
+  color: #8ce99a;
+}
+
+.shift-change-feedback.is-shift-off strong {
+  color: #ffd43b;
+}
+
+.shift-change-feedback.is-visible {
+  visibility: visible;
+  animation: turn-shift-feedback 1550ms ease-out both;
+}
+
+.shift-change-feedback.is-visible span {
+  animation: turn-shift-feedback-line 1120ms ease-out both;
+}
+
+.shift-change-feedback.is-visible span:nth-of-type(2) {
+  animation-delay: 70ms;
+}
+
+.shift-change-feedback.is-visible span:nth-of-type(3) {
+  animation-delay: 140ms;
+}
+
 .boost-hud i {
   position: absolute;
   inset: 0 auto 0 0;
@@ -203,12 +260,53 @@
   78% { transform: translateX(-50%) rotate(-0.25deg) scaleY(1.018); }
 }
 
+@keyframes turn-shift-feedback {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 7px);
+  }
+  12%, 76% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -12px);
+  }
+}
+
+@keyframes turn-shift-feedback-line {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  18%, 76% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-7px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .boost-hud.is-boost-full-flash,
   .boost-hud.is-boost-empty-flash,
   .boost-hud.is-overcharge-volatile > div,
   .boost-hud.is-overcharge-peak {
     animation: none;
+  }
+
+  .shift-change-feedback.is-visible,
+  .shift-change-feedback.is-visible span {
+    animation: none;
+  }
+
+  .shift-change-feedback.is-visible {
+    visibility: visible;
+    opacity: 1;
+    transform: translate(-50%, 0);
   }
 }
 
@@ -265,6 +363,12 @@
   .boost-hud {
     bottom: calc(74px - var(--boost-hud-downshift));
     width: 112px;
+  }
+
+  .shift-change-feedback {
+    top: calc(100% + 5px);
+    min-width: 96px;
+    font-size: .46rem;
   }
 
   .race-position-hud {

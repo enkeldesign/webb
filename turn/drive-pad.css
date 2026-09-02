@@ -46,7 +46,6 @@ body .m8-feedback-content * {
   --drive-pad-height: clamp(190px, 26vw, 268px);
   --drift-lock-bubble-width: clamp(52px, 7.2vw, 74px);
   --shift-bubble-width: clamp(58px, 7.8vw, 80px);
-  --drift-lock-row-offset: 8px;
   position: relative;
   isolation: isolate;
   width: clamp(190px, 24vw, 260px);
@@ -78,7 +77,8 @@ body .m8-feedback-content * {
   top: 0;
   right: calc(100% - 4px);
   width: var(--drift-lock-bubble-width);
-  height: calc(32% + var(--drift-lock-row-offset));
+  /* Grid percentages use the pad's inner height; finish on the GAS border's far edge. */
+  height: calc(32% + 5.44px);
   box-sizing: border-box;
   display: grid;
   place-items: center;
@@ -109,10 +109,11 @@ body .m8-feedback-content * {
 .controls .drive-shift-bubble {
   position: absolute;
   z-index: 1;
-  top: calc(32% - 4px);
+  /* Share the GAS row's two 4px horizontal borders exactly. */
+  top: calc(32% + 1.44px);
   right: calc(100% - 4px);
   width: var(--shift-bubble-width);
-  height: calc(44% + 8px);
+  height: calc(44% + 0.48px);
   min-height: 0;
   margin: 0;
   padding: 0;
@@ -392,7 +393,6 @@ body .m8-feedback-content * {
     --drive-pad-height: clamp(174px, 23.5vw, 205px);
     --drift-lock-bubble-width: clamp(48px, 6.8vw, 64px);
     --shift-bubble-width: clamp(52px, 7.2vw, 70px);
-    --drift-lock-row-offset: 6px;
     width: clamp(174px, 23vw, 224px);
   }
 
@@ -417,13 +417,14 @@ body .m8-feedback-content * {
 
   .drive-lock-bubble {
     right: calc(100% - 3px);
+    height: calc(32% + 4.08px);
     border-width: 3px;
   }
 
   .controls .drive-shift-bubble {
     right: calc(100% - 3px);
-    top: calc(32% - 3px);
-    height: calc(44% + 6px);
+    top: calc(32% + 1.08px);
+    height: calc(44% + 0.36px);
     border-width: 3px;
   }
 

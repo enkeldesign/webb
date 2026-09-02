@@ -86,7 +86,7 @@ function prepareShowroomStyles() {
     ),
     prepareStylesheet(
       SHOWROOM_SHIFT_STYLE_ID,
-      './lot-shift.css?revision=r228-shift-gearbox'
+      './lot-shift.css?revision=r229-shift-feedback'
     )
   ]);
   return showroomStylePromise;
