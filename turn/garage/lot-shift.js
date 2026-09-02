@@ -7,16 +7,18 @@ import {
 import {
   VEHICLE_SHIFT_FEATURE_ID,
   VEHICLE_SHIFT_STAT_FIELDS,
-  blockedVehicleShiftReceivers,
   loadVehicleShiftProfile,
   requiredVehicleShiftReceivers,
   saveVehicleShiftProfile,
   setVehicleShiftProfileEnabled,
-  shiftedVehicleStatsFromReceivers,
   vehicleShiftReceiversForReducers,
   vehicleShiftReducersForReceivers,
   vehicleStatsSupportShift
 } from '../vehicle/shift-profile.js?revision=r227-shift-feedback';
+import {
+  VEHICLE_SHIFT_LEVER_STATES,
+  resolveVehicleShiftGearbox
+} from './lot-shift-gearbox.js?revision=r228-shift-gearbox';
 
 const activeShiftSetups = new WeakMap();
 let dialogSerial = 0;
@@ -84,8 +86,8 @@ export function installLotShift(root = document.body) {
         <div><span>ALTERNATE SETUP</span><h2 id="${titleId}">SHIFT</h2></div>
         <button type="button" class="lot-shift-close" aria-label="Close SHIFT setup">×</button>
       </header>
-      <p id="${descriptionId}" class="lot-shift-description">Choose three attributes to give +1. The other three get −1 automatically. During a race, slide from GAS into SHIFT to switch on or off.</p>
-      <div class="lot-shift-options" role="group" aria-label="Attributes to gain one point in SHIFT"></div>
+      <p id="${descriptionId}" class="lot-shift-description">Move three attribute levers up by 1. The other three move down by 1 automatically. Attributes at 1 must move up; attributes at 5 must move down. During a race, slide from GAS into SHIFT to switch on or off.</p>
+      <div class="lot-shift-options" role="group" aria-label="SHIFT attribute gearbox. Choose three attributes to gain one point."></div>
       <p class="lot-shift-status" role="status" aria-live="polite"></p>
       <div class="lot-shift-actions">
         <button type="button" class="lot-shift-cancel">CANCEL</button>
@@ -163,83 +165,66 @@ export function installLotShift(root = document.body) {
     button.className = 'lot-shift-option';
     button.dataset.shiftStat = field.key;
     button.innerHTML = `
-      <i class="lot-shift-option-plus" aria-hidden="true">+</i>
-      <span class="lot-shift-option-copy">
-        <strong>${field.label}</strong>
-        <small><b data-shift-from></b><i aria-hidden="true">→</i><b data-shift-to></b><em data-shift-direction></em></small>
+      <strong class="lot-shift-option-label">${field.label}</strong>
+      <span class="lot-shift-lever" aria-hidden="true">
+        <i class="lot-shift-lever-track"></i>
+        <span class="lot-shift-lever-knob"><span data-shift-value></span></span>
       </span>`;
     button.addEventListener('click', handleOptionClick);
     return button;
   }
 
+  function leverAriaLabel(lever) {
+    const value = lever.state === VEHICLE_SHIFT_LEVER_STATES.NEUTRAL
+      ? String(lever.baseValue)
+      : `${lever.baseValue} to ${lever.shiftedValue}`;
+    if (lever.forced && lever.state === VEHICLE_SHIFT_LEVER_STATES.GAIN) {
+      return `${lever.label}, ${value}. Must gain one point because it is at the minimum.`;
+    }
+    if (lever.forced) {
+      return `${lever.label}, ${value}. Must lose one point because it is at the maximum.`;
+    }
+    if (lever.selectedToGain) {
+      return `${lever.label}, ${value}. Selected to gain one point. Activate to return this lever to neutral.`;
+    }
+    if (lever.automaticallyLoses) {
+      return `${lever.label}, ${value}. Automatically loses one point because three gains are selected.`;
+    }
+    return `${lever.label}, ${value}. Neutral. Activate to make this attribute gain one point.`;
+  }
+
   function renderOptions() {
     if (!editingStats) return;
-    // A 1-point attribute must receive +1; a 5-point attribute cannot receive
-    // another point. Profiles continue to store the complementary reducers so
-    // existing saved SHIFT setups remain compatible.
-    const required = new Set(requiredVehicleShiftReceivers(editingStats));
-    const blocked = new Set(blockedVehicleShiftReceivers(editingStats));
-    for (const key of required) selectedReceivers.add(key);
-    const complete = selectedReceivers.size === 3;
-    const shifted = complete
-      ? shiftedVehicleStatsFromReceivers(editingStats, [...selectedReceivers])
-      : null;
+    const gearbox = resolveVehicleShiftGearbox(editingStats, [...selectedReceivers]);
+    if (!gearbox) return;
+    selectedReceivers = new Set(gearbox.selectedReceivers);
+    options.classList.toggle('is-complete', gearbox.complete);
 
     for (const option of options.querySelectorAll('.lot-shift-option')) {
       const key = option.dataset.shiftStat;
-      const field = VEHICLE_SHIFT_STAT_FIELDS.find((candidate) => candidate.key === key);
-      const selected = selectedReceivers.has(key);
-      const isRequired = required.has(key);
-      const isBlocked = blocked.has(key);
-      const selectionFull = !selected && selectedReceivers.size >= 3;
-      const knownReduction = isBlocked || complete;
-      const nextValue = selected
-        ? editingStats[key] + 1
-        : knownReduction
-          ? editingStats[key] - 1
-          : null;
+      const lever = gearbox.levers.find((candidate) => candidate.key === key);
+      if (!lever) continue;
 
-      option.setAttribute('aria-pressed', String(selected));
-      option.setAttribute('aria-disabled', String(isRequired || isBlocked || selectionFull));
-      option.classList.toggle('is-selected', selected);
-      option.classList.toggle('is-required', isRequired);
-      option.classList.toggle('is-blocked', isBlocked);
-      option.classList.toggle('is-full', selectionFull && !isBlocked);
-      option.querySelector('[data-shift-from]').textContent = String(editingStats[key]);
-      option.querySelector('[data-shift-to]').textContent = nextValue == null ? '—' : String(nextValue);
-      option.querySelector('[data-shift-direction]').textContent = isRequired
-        ? '+1'
-        : isBlocked
-          ? '−1'
-          : selected
-            ? '+1'
-            : complete
-              ? '−1'
-              : '';
-      option.setAttribute(
-        'aria-label',
-        `${field?.label || key}, ${editingStats[key]}${nextValue == null ? '' : ` to ${nextValue}`}. ${
-          isRequired
-            ? 'Selected to gain one point because it is at the minimum.'
-            : isBlocked
-              ? 'Cannot gain a point because it is already at the maximum.'
-              : selected
-                ? 'Selected to gain one point.'
-                : complete
-                  ? 'Will lose one point.'
-                  : 'Not selected.'
-        }`
-      );
+      option.dataset.leverState = lever.state;
+      option.setAttribute('aria-pressed', String(lever.selectedToGain));
+      option.setAttribute('aria-disabled', String(!lever.interactive));
+      option.classList.toggle('is-gain', lever.state === VEHICLE_SHIFT_LEVER_STATES.GAIN);
+      option.classList.toggle('is-neutral', lever.state === VEHICLE_SHIFT_LEVER_STATES.NEUTRAL);
+      option.classList.toggle('is-loss', lever.state === VEHICLE_SHIFT_LEVER_STATES.LOSS);
+      option.classList.toggle('is-forced', lever.forced);
+      option.classList.toggle('is-automatic', lever.automaticallyLoses);
+      option.querySelector('[data-shift-value]').textContent = lever.displayValue;
+      option.setAttribute('aria-label', leverAriaLabel(lever));
     }
 
-    saveButton.disabled = !shifted;
+    saveButton.disabled = !gearbox.complete;
     saveButton.textContent = editingProfile?.enabled ? 'SAVE SHIFT' : 'ACTIVATE SHIFT';
     deactivateButton.hidden = editingProfile?.enabled !== true;
-    if (shifted) {
+    if (gearbox.complete) {
       status.textContent = 'Ready. Three attributes gain 1, three lose 1, and the total stays 18.';
     } else {
-      const remaining = Math.max(0, 3 - selectedReceivers.size);
-      status.textContent = `${selectedReceivers.size} of 3 +1 attributes selected. Choose ${remaining} more.`;
+      const remaining = 3 - gearbox.selectedReceivers.length;
+      status.textContent = `${gearbox.selectedReceivers.length} of 3 upward levers set. Choose ${remaining} more.`;
     }
   }
 

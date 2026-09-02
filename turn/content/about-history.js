@@ -269,14 +269,14 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   period: '2 September',
   title: 'SHIFT turns the garage into two-mode machines',
   paragraphs: [
-    'SHIFT becomes TURN’s 1,500-trophy reward and adds a saved alternate setup to every standard eighteen-point car. Players choose exactly three attributes to gain one point; the remaining three lose one automatically, keeping the total and each one-to-five boundary intact.',
+    'SHIFT becomes TURN’s 1,500-trophy reward and adds a saved alternate setup to every standard eighteen-point car. A six-lever gearbox shows the standard attributes in blue, gains in green and reductions in red. Players move exactly three attributes up one point; the remaining three move down automatically, keeping the total and each one-to-five boundary intact.',
     'During a race, holding GAS slides out a connected SHIFT control. Every crossing from GAS into SHIFT toggles the alternate setup, so returning to GAS and crossing again switches back without lifting the thumb. A green button darkens and gains a visible dot when active, while the same real toggle remains operable by keyboard and assistive technology.',
     'The change preserves each car’s named perk and the current percentage of Boost charge. Attribute effects swap live, while a lower top-speed cap eases down instead of abruptly snapping a moving car to the new limit.'
   ],
   milestones: [
-    'Per-car alternate attributes with an invariant eighteen-point budget',
+    'Per-car six-lever gearbox with an invariant eighteen-point budget',
     'Persistent GAS-to-SHIFT slide toggle with visible and non-visual state feedback',
-    'TURN 1.14.1 · 2026.09.02-r192 SHIFT interaction refinement'
+    'TURN 1.14.2 · 2026.09.02-r193 SHIFT gearbox refinement'
   ]
 }
 ]);
@@ -533,6 +533,8 @@ export const CHANGELOG = Object.freeze([
   {
     date: '2 September',
     entries: [
+      ['1.14.2 r193', 'Rebuilds SHIFT setup as a six-lever gearbox with clear neutral, gain and reduction positions.'],
+      ['SHIFT gearbox', 'Attributes already at one or five begin in their required direction; the third upward choice moves every undetermined lever down and enables Save. Reverting a chosen upward lever returns only automatic reductions to neutral.'],
       ['1.14.1 r192', 'Refines SHIFT after first-device testing with direct +1 attribute buttons, a centered green control and repeat switching without lifting the thumb.'],
       ['SHIFT crossing', 'Every new move from GAS into SHIFT switches on or off; returning to GAS rearms the same held gesture immediately.'],
       ['1.14.0 r191', 'Adds SHIFT as the 1,500-trophy reward: a saved alternate eighteen-point setup for every standard car and a persistent GAS-slide toggle during races.'],
@@ -544,7 +546,7 @@ export const CHANGELOG = Object.freeze([
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.14.1',
-  build: '2026.09.02-r192',
-  note: 'TURN 1.14.1 makes SHIFT setup and repeated thumb switching more direct.'
+  version: '1.14.2',
+  build: '2026.09.02-r193',
+  note: 'TURN 1.14.2 turns SHIFT setup into a clear six-lever gearbox.'
 });
