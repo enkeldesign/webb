@@ -88,7 +88,9 @@
 }
 
 .turn-achievements-head {
-  background: var(--turn-action-success, #8ce99a);
+  padding-bottom: clamp(12px, 2vh, 18px);
+  border-bottom: var(--turn-border-default, 4px) solid var(--turn-action-success, #8ce99a);
+  background: transparent;
 }
 
 .turn-achievements-content {

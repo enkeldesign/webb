@@ -50,7 +50,9 @@ const [
   sedanSource,
   fixedLayout,
   app,
-  workflow
+  workflow,
+  productionEntry,
+  labEntry
 ] = await Promise.all([
   fs.readFile(new URL('../../turn/achievements/catalog.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/catalog-base.js', import.meta.url), 'utf8'),
@@ -72,7 +74,9 @@ const [
   fs.readFile(new URL('../../turn/vehicle/sports-sedan-easter-egg.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/m8-home-fixed-layout.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../.github/workflows/turn-lab-tests.yml', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../.github/workflows/turn-lab-tests.yml', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../index.html', import.meta.url), 'utf8')
 ]);
 
 assert.equal(ACHIEVEMENT_STORAGE_KEY, 'turn-achievements-v1');
@@ -190,10 +194,12 @@ assert.deepEqual(
     ['airport', 15],
     ['cliffside', 14],
     ['harbor', 22],
-    ['midnight-city', 52],
-    ['mountain', 48]
+    ['midnight-city', 50],
+    ['mountain', 47]
   ]
 );
+assert.equal(byId('midnight-sprint')?.description, 'Finish Midnight City in under 50 seconds.');
+assert.equal(byId('mountain-sprint')?.description, 'Finish Mountain in under 47 seconds.');
 for (const trial of TIME_TRIALS) {
   assert.equal(qualifyingTimeTrial(trial.trackId, trial.targetSeconds - 0.001)?.id, trial.id);
   assert.equal(qualifyingTimeTrial(trial.trackId, trial.targetSeconds), null,
@@ -418,9 +424,15 @@ assert.match(timeTrialSource, /targetSeconds: 11/);
 assert.match(timeTrialSource, /targetSeconds: 15/);
 assert.match(timeTrialSource, /targetSeconds: 14/);
 assert.match(timeTrialSource, /targetSeconds: 22/);
-assert.match(timeTrialSource, /targetSeconds: 52/);
-assert.match(timeTrialSource, /targetSeconds: 48/);
+assert.match(timeTrialSource, /targetSeconds: 50/);
+assert.match(timeTrialSource, /targetSeconds: 47/);
 assert.match(timeTrialSource, /seconds >= trial\.targetSeconds/);
+for (const entry of [productionEntry, labEntry]) {
+  assert.match(entry, /"\/turn\/achievements\/time-trials\.js\?revision=r166-bella-records": "\/turn\/achievements\/time-trials\.js\?revision=r224-sprint-targets"/,
+    'Production and Lab must route cached achievement imports to the new Sprint targets');
+  assert.match(entry, /"\/turn\/achievements\/view\.js\?revision=r166-bella-records": "\/turn\/achievements\/view\.js\?revision=r224-modal-headings"/,
+    'Production and Lab must route cached achievement views to the corrected modal header');
+}
 
 assert.match(challengeSource, /SAMPLE_INTERVAL_MS = 50/);
 assert.match(challengeSource, /CATCH_GAS_MIN_OVERCHARGE = 0\.001/);

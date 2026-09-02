@@ -31,7 +31,7 @@ const [
 
 const release = JSON.parse(releaseSource);
 
-assert.match(productionEntry, new RegExp(`about-history-bootstrap-r165\\.js\\?build=${escapeRegex(release.cacheKey)}-r534-heading-first-about`),
+assert.match(productionEntry, new RegExp(`about-history-bootstrap-r165\\.js\\?build=${escapeRegex(release.cacheKey)}-r534-heading-first-about-r224-modal-headings`),
   'The public website must load the heading-first browser-aware About implementation directly with the current release cache identity');
 assert.ok(
   productionEntry.indexOf('about-history-bootstrap-r165.js') < productionEntry.indexOf('./app.js?build='),

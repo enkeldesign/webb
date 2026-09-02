@@ -365,7 +365,7 @@ function waitForAbout() {
 }
 
 export async function installAboutHistory() {
-  installStylesheet('../m8-home.css?revision=r165-browser-about', 'data-turn-home-dialog-foundation');
+  installStylesheet('../m8-home.css?revision=r224-modal-headings', 'data-turn-home-dialog-foundation');
   installStylesheet('../dialog-system-r163.css?revision=r165-browser-about', 'data-turn-dialog-system');
   installStylesheet('../about-history-r163.css?revision=r165-browser-about', 'data-turn-about-history');
   installStylesheet('../browser-install-r165.css?revision=r165-browser-about', 'data-turn-browser-install');

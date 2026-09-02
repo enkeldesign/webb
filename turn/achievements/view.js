@@ -112,7 +112,7 @@ function installStylesheet() {
   const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
   const stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet';
-  stylesheet.href = `/turn/achievements.css?build=${buildKey}-r166-bella-records`;
+  stylesheet.href = `/turn/achievements.css?build=${buildKey}-r224-modal-headings`;
   stylesheet.setAttribute('data-turn-achievements', '');
   document.head.appendChild(stylesheet);
 }

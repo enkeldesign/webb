@@ -1,15 +1,5 @@
 @import url('./design-semantic.css?revision=r140-difficulty-system');
 
-/* Keep the small modal kicker fully inside its own line box. iOS Safari can
-   clip the lower half of these heavy, letter-spaced labels at the compact
-   UI baseline unless the inline span gets explicit block geometry. */
-.m8-dialog-head > div > span {
-  display: block;
-  line-height: 1.35;
-  padding-block: 0.14em;
-  overflow: visible;
-}
-
 .m8-home-fixed-layout .m8-feedback-button {
   align-self: auto;
   display: block;
