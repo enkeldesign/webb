@@ -36,7 +36,10 @@ const [
 assert.match(productionApp, /installM8HomeNavigation/);
 assert.match(productionApp, /m8-home\.js\?revision=r131-motion-permission-retry/);
 assert.match(productionApp, /installM8HomeFixedLayout/);
-assert.match(productionApp, /installStylesheet\('\.\/m8-home\.css'/);
+assert.match(
+  productionApp,
+  /installStylesheet\(\s*'\.\/m8-home\.css\?revision=r224-modal-headings',\s*'data-turn-m8-home-styles'\s*\)/
+);
 assert.match(productionApp, /m8-home-fixed-layout\.js\?revision=m8\.9-track-title-alignment/);
 assert.ok(productionApp.indexOf('installM8HomeNavigation()') < productionApp.indexOf('installM8HomeFixedLayout()'));
 assert.match(productionApp, /turnHomeLifecycle = 'home-m8'/);
