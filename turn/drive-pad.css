@@ -118,12 +118,11 @@ body .m8-feedback-content * {
   padding: 0;
   box-sizing: border-box;
   display: grid;
-  grid-template-rows: 1fr auto;
   place-items: center;
   overflow: hidden;
   border: 4px solid var(--ink);
   border-radius: 999px 0 0 999px;
-  background: #ffd43b;
+  background: #8ce99a;
   color: var(--ink);
   box-shadow: none;
   opacity: 0;
@@ -137,22 +136,28 @@ body .m8-feedback-content * {
 }
 
 .drive-shift-bubble span {
-  align-self: end;
-  padding-bottom: 4px;
+  display: inline-flex;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  gap: .32em;
   transform: rotate(-90deg);
-  font-size: clamp(0.52rem, 1.38vw, 0.74rem);
+  font-size: clamp(0.58rem, 1.48vw, 0.8rem);
   font-weight: 950;
   letter-spacing: 0.035em;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .drive-shift-bubble i {
-  align-self: start;
-  padding-top: 3px;
+  display: inline-block;
+  width: 0;
+  overflow: hidden;
   opacity: 0;
-  font-size: clamp(0.56rem, 1.5vw, 0.78rem);
+  font-size: .9em;
   font-style: normal;
   line-height: 1;
+  transition: width 100ms ease, opacity 100ms ease;
 }
 
 .drive-stack.is-shift-available.is-gas-ready .drive-shift-bubble,
@@ -164,11 +169,11 @@ body .m8-feedback-content * {
 }
 
 .drive-stack.is-shift-active .drive-shift-bubble {
-  background: #9775fa;
-  box-shadow: inset 0 0 0 5px rgb(255 248 232 / 0.62);
+  background: #51cf66;
 }
 
 .drive-stack.is-shift-active .drive-shift-bubble i {
+  width: .72em;
   opacity: 1;
 }
 
@@ -453,7 +458,8 @@ body .m8-feedback-content * {
 
 @media (prefers-reduced-motion: reduce) {
   .drive-lock-bubble,
-  .controls .drive-shift-bubble {
+  .controls .drive-shift-bubble,
+  .drive-shift-bubble i {
     transition: none;
   }
 }

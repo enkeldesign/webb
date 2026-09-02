@@ -269,14 +269,14 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   period: '2 September',
   title: 'SHIFT turns the garage into two-mode machines',
   paragraphs: [
-    'SHIFT becomes TURN’s 1,500-trophy reward and adds a saved alternate setup to every standard eighteen-point car. Players choose exactly three attributes to lower by one; the remaining three rise automatically, keeping the total and each one-to-five boundary intact.',
-    'During a race, holding GAS slides out a connected SHIFT control. Sliding outward toggles the alternate setup, which stays latched after leaving GAS; repeating the gesture returns to standard. A violet button and visible dot identify the active state, while the same real toggle remains operable by keyboard and assistive technology.',
+    'SHIFT becomes TURN’s 1,500-trophy reward and adds a saved alternate setup to every standard eighteen-point car. Players choose exactly three attributes to gain one point; the remaining three lose one automatically, keeping the total and each one-to-five boundary intact.',
+    'During a race, holding GAS slides out a connected SHIFT control. Every crossing from GAS into SHIFT toggles the alternate setup, so returning to GAS and crossing again switches back without lifting the thumb. A green button darkens and gains a visible dot when active, while the same real toggle remains operable by keyboard and assistive technology.',
     'The change preserves each car’s named perk and the current percentage of Boost charge. Attribute effects swap live, while a lower top-speed cap eases down instead of abruptly snapping a moving car to the new limit.'
   ],
   milestones: [
     'Per-car alternate attributes with an invariant eighteen-point budget',
     'Persistent GAS-to-SHIFT slide toggle with visible and non-visual state feedback',
-    'TURN 1.14.0 · 2026.09.02-r191 SHIFT release'
+    'TURN 1.14.1 · 2026.09.02-r192 SHIFT interaction refinement'
   ]
 }
 ]);
@@ -533,6 +533,8 @@ export const CHANGELOG = Object.freeze([
   {
     date: '2 September',
     entries: [
+      ['1.14.1 r192', 'Refines SHIFT after first-device testing with direct +1 attribute buttons, a centered green control and repeat switching without lifting the thumb.'],
+      ['SHIFT crossing', 'Every new move from GAS into SHIFT switches on or off; returning to GAS rearms the same held gesture immediately.'],
       ['1.14.0 r191', 'Adds SHIFT as the 1,500-trophy reward: a saved alternate eighteen-point setup for every standard car and a persistent GAS-slide toggle during races.'],
       ['SHIFT setup', 'Choose three attributes to lose one point; the complementary three gain one automatically, with one-to-five limits enforced and each car’s perk retained.'],
       ['Live switching', 'A connected SHIFT button slides out from GAS, latches violet with a visible dot, preserves normalized Boost charge and lowers a reduced top-speed cap smoothly.'],
@@ -542,7 +544,7 @@ export const CHANGELOG = Object.freeze([
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.14.0',
-  build: '2026.09.02-r191',
-  note: 'TURN 1.14.0 adds the 1,500-trophy SHIFT reward and saved alternate car setups.'
+  version: '1.14.1',
+  build: '2026.09.02-r192',
+  note: 'TURN 1.14.1 makes SHIFT setup and repeated thumb switching more direct.'
 });

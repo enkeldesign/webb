@@ -44,7 +44,7 @@
 
 .lot-showroom .lot-shift-trigger:focus-visible,
 .lot-shift-dialog button:focus-visible,
-.lot-shift-option:has(input:focus-visible) {
+.lot-shift-option:focus-visible {
   outline: 3px solid var(--cyan, #38d9ff);
   outline-offset: 3px;
 }
@@ -135,7 +135,7 @@
 
 .lot-shift-option {
   display: grid;
-  grid-template-columns: 26px minmax(0, 1fr);
+  grid-template-columns: 34px minmax(0, 1fr);
   min-height: 70px;
   padding: 9px;
   align-items: center;
@@ -143,37 +143,63 @@
   border: 3px solid var(--ink, #08090a);
   border-radius: 13px;
   background: #fff;
+  box-shadow: none;
+  color: var(--ink, #08090a);
+  font: inherit;
+  text-align: left;
   cursor: pointer;
 }
 
 .lot-shift-option.is-selected {
-  background: #ffe3e3;
-}
-
-.lot-shift-option:not(.is-selected):not(.is-blocked):has(input:not(:disabled)) {
   background: #d3f9d8;
 }
 
+.lot-shift-option:not(.is-selected):not(.is-blocked):not(.is-full):hover {
+  background: #ebfbee;
+}
+
 .lot-shift-option.is-required {
-  background: #fff3bf;
+  background: #d3f9d8;
 }
 
 .lot-shift-option.is-blocked {
-  background: #e7f5ff;
+  background: #f1f3f5;
 }
 
-.lot-shift-option:has(input:disabled):not(.is-required):not(.is-blocked) {
+.lot-shift-option.is-full {
   opacity: .58;
 }
 
-.lot-shift-option input {
-  width: 24px;
-  height: 24px;
-  margin: 0;
-  accent-color: var(--violet, #9775fa);
+.lot-shift-option[aria-disabled="true"] {
+  cursor: default;
 }
 
-.lot-shift-option > span {
+.lot-shift-option:active {
+  transform: none;
+  box-shadow: none;
+}
+
+.lot-shift-option-plus {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  place-items: center;
+  border: 3px solid var(--ink, #08090a);
+  border-radius: 9px;
+  background: #d3f9d8;
+  color: var(--ink, #08090a);
+  font-size: 1.35rem;
+  font-style: normal;
+  font-weight: 950;
+  line-height: .8;
+}
+
+.lot-shift-option.is-selected .lot-shift-option-plus {
+  background: #51cf66;
+}
+
+.lot-shift-option-copy {
   display: grid;
   min-width: 0;
   gap: 7px;
@@ -202,11 +228,11 @@
   font-size: .78rem;
 }
 
-.lot-shift-option small i {
+.lot-shift-option-copy small i {
   font-style: normal;
 }
 
-.lot-shift-option small em {
+.lot-shift-option-copy small em {
   margin-left: auto;
   font-size: .48rem;
   font-style: normal;
@@ -270,7 +296,7 @@
     padding: 6px 8px;
   }
 
-  .lot-shift-option > span {
+  .lot-shift-option-copy {
     gap: 4px;
   }
 
