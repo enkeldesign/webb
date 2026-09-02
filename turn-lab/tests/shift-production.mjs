@@ -30,6 +30,10 @@ import {
   pointerUsesShiftToggle
 } from '../../turn/input/shift-toggle.js';
 import {
+  VEHICLE_SHIFT_LEVER_STATES,
+  resolveVehicleShiftGearbox
+} from '../../turn/garage/lot-shift-gearbox.js';
+import {
   getTrophyRoadReward,
   isFeatureUnlocked,
   rewardForFeature,
@@ -132,6 +136,73 @@ assert.deepEqual(shiftedVehicleStats(learner.stats, requiredVehicleShiftReducers
   boostDuration: 4
 });
 
+const gearboxExample = {
+  speed: 2,
+  acceleration: 4,
+  control: 1,
+  drift: 5,
+  boostPower: 2,
+  boostDuration: 4
+};
+const defaultGearbox = resolveVehicleShiftGearbox(gearboxExample);
+assert.equal(defaultGearbox?.complete, false);
+assert.deepEqual(defaultGearbox?.selectedReceivers, ['control']);
+assert.deepEqual(defaultGearbox?.levers.map(({ state }) => state), [
+  VEHICLE_SHIFT_LEVER_STATES.NEUTRAL,
+  VEHICLE_SHIFT_LEVER_STATES.NEUTRAL,
+  VEHICLE_SHIFT_LEVER_STATES.GAIN,
+  VEHICLE_SHIFT_LEVER_STATES.LOSS,
+  VEHICLE_SHIFT_LEVER_STATES.NEUTRAL,
+  VEHICLE_SHIFT_LEVER_STATES.NEUTRAL
+], 'One-point and five-point attributes must begin in their forced lever positions');
+assert.deepEqual(defaultGearbox?.levers.map(({ displayValue }) => displayValue), [
+  '2', '4', '1→2', '5→4', '2', '4'
+]);
+
+const partialGearbox = resolveVehicleShiftGearbox(gearboxExample, ['control', 'speed']);
+assert.equal(partialGearbox?.complete, false);
+assert.deepEqual(partialGearbox?.selectedReceivers, ['speed', 'control']);
+assert.equal(partialGearbox?.levers.find(({ key }) => key === 'speed')?.displayValue, '2→3');
+assert.equal(partialGearbox?.levers.find(({ key }) => key === 'boostPower')?.state,
+  VEHICLE_SHIFT_LEVER_STATES.NEUTRAL,
+  'Undetermined levers must remain centered while fewer than three gains are set');
+
+const completeGearbox = resolveVehicleShiftGearbox(
+  gearboxExample,
+  ['control', 'speed', 'acceleration']
+);
+assert.equal(completeGearbox?.complete, true);
+assert.deepEqual(completeGearbox?.shiftedStats, {
+  speed: 3,
+  acceleration: 5,
+  control: 2,
+  drift: 4,
+  boostPower: 1,
+  boostDuration: 3
+});
+assert.deepEqual(completeGearbox?.levers.map(({ state }) => state), [
+  VEHICLE_SHIFT_LEVER_STATES.GAIN,
+  VEHICLE_SHIFT_LEVER_STATES.GAIN,
+  VEHICLE_SHIFT_LEVER_STATES.GAIN,
+  VEHICLE_SHIFT_LEVER_STATES.LOSS,
+  VEHICLE_SHIFT_LEVER_STATES.LOSS,
+  VEHICLE_SHIFT_LEVER_STATES.LOSS
+], 'The third upward lever must move every remaining neutral lever down automatically');
+assert.deepEqual(completeGearbox?.levers.map(({ displayValue }) => displayValue), [
+  '3', '5', '2', '4', '1', '3'
+], 'A determined gearbox must show the six final attribute values');
+assert.equal(completeGearbox?.levers.find(({ key }) => key === 'boostPower')?.automaticallyLoses, true);
+assert.equal(completeGearbox?.levers.find(({ key }) => key === 'boostPower')?.interactive, false);
+
+const revertedGearbox = resolveVehicleShiftGearbox(gearboxExample, ['control', 'speed']);
+assert.equal(revertedGearbox?.complete, false);
+assert.equal(revertedGearbox?.levers.find(({ key }) => key === 'boostPower')?.state,
+  VEHICLE_SHIFT_LEVER_STATES.NEUTRAL,
+  'Removing one chosen gain must reset automatically determined losses to neutral');
+assert.equal(revertedGearbox?.levers.find(({ key }) => key === 'drift')?.state,
+  VEHICLE_SHIFT_LEVER_STATES.LOSS,
+  'Removing one chosen gain must preserve a maximum attribute\'s forced loss');
+
 const profileStorage = createMemoryStorage();
 const savedRaceShift = saveVehicleShiftProfile({
   vehicleId: raceCar.id,
@@ -217,8 +288,9 @@ assert.equal(advanceShiftTopSpeedMultiplier(easedTopSpeed, 1.06, 1), 1.06);
 assert.equal(advanceShiftTopSpeedMultiplier(1.06, 1.12, 0.01), 1.12,
   'Raising the top-speed cap may apply immediately');
 
-const [lotShift, lotRuntime, lotStyles, controls, driveStyles, workflow] = await Promise.all([
+const [lotShift, lotGearbox, lotRuntime, lotStyles, controls, driveStyles, workflow] = await Promise.all([
   fs.readFile(new URL('../../turn/garage/lot-shift.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/garage/lot-shift-gearbox.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-enhancement-runtime.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/garage/lot-shift.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/ui/gameplay-controls.js', import.meta.url), 'utf8'),
@@ -227,16 +299,31 @@ const [lotShift, lotRuntime, lotStyles, controls, driveStyles, workflow] = await
 ]);
 
 assert.match(lotRuntime, /installLotShift/);
-assert.match(lotShift, /Choose three attributes to give \+1/);
+assert.match(lotShift, /Move three attribute levers up by 1/);
 assert.match(lotShift, /class="lot-shift-options" role="group"/);
 assert.match(lotShift, /document\.createElement\('button'\)/,
   'SHIFT attributes must be presented as direct toggle buttons');
+assert.match(lotShift, /class="lot-shift-lever"/);
+assert.match(lotShift, /dataset\.leverState/,
+  'Each SHIFT button must expose its resolved lever position to the rendered interface');
 assert.match(lotShift, /selectedReceivers/,
   'The setup interaction must select the attributes receiving +1');
+assert.match(lotGearbox, /automaticallyLoses/);
+assert.match(lotGearbox, /displayValue/);
 assert.match(lotShift, /setVehicleShiftProfileEnabled/);
 assert.match(lotShift, /turn:shift-profile-change/);
 assert.match(lotStyles, /\.lot-shift-trigger\.is-active/);
 assert.match(lotStyles, /\.lot-shift-dialog::backdrop/);
+assert.match(lotStyles, /grid-template-columns: repeat\(6/,
+  'The landscape gearbox must keep all six levers in one row');
+assert.match(lotStyles, /\.lot-shift-option\.is-gain \.lot-shift-lever-knob/);
+assert.match(lotStyles, /\.lot-shift-option\.is-loss \.lot-shift-lever-knob/);
+assert.match(lotStyles, /background: #4dabf7/,
+  'Neutral levers must have a distinct blue middle state');
+assert.match(lotStyles, /background: #69db7c/,
+  'Upward levers must have a distinct green state');
+assert.match(lotStyles, /background: #ff8787/,
+  'Downward levers must have a distinct red state');
 assert.match(lotStyles, /prefers-reduced-motion: reduce/);
 
 assert.match(controls, /className = 'drive-shift-bubble'/);
@@ -264,4 +351,4 @@ assert.match(driveStyles, /\.controls \.drive-shift-bubble \{[\s\S]*pointer-even
 assert.match(driveStyles, /turn-left-handed-controls \.drive-shift-bubble/);
 assert.match(workflow, /node turn-lab\/tests\/shift-production\.mjs/);
 
-console.log('TURN SHIFT reward, per-car setup, GAS-slide toggle and live tuning contract passed.');
+console.log('TURN SHIFT gearbox, per-car setup, GAS-slide toggle and live tuning contract passed.');
