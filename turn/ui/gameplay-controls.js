@@ -26,11 +26,12 @@ import { isFeatureUnlocked } from '../progression/trophy-road.js?revision=r226-s
 import {
   VEHICLE_SHIFT_FEATURE_ID,
   loadVehicleShiftProfile
-} from '../vehicle/shift-profile.js?revision=r226-shift';
+} from '../vehicle/shift-profile.js?revision=r227-shift-feedback';
 import {
   advanceShiftTopSpeedMultiplier,
+  enteredShiftToggle,
   pointerUsesShiftToggle
-} from '../input/shift-toggle.js?revision=r226-shift';
+} from '../input/shift-toggle.js?revision=r227-shift-feedback';
 
 globalThis.__turnBoostActive = false;
 globalThis.__turnBoostCharge = 1;
@@ -142,7 +143,7 @@ function installGameplayUi() {
   drivePad.setAttribute('role', 'group');
   drivePad.setAttribute(
     'aria-label',
-    'Drive control. Double tap and hold, then slide between GAS, DRIFT, BOOST, and BRAKE or REVERSE. DRIFT charges BOOST and builds OVERCHARGE after the bar is full. GAS catches and holds OVERCHARGE. BOOST spends OVERCHARGE before normal BOOST. While holding DRIFT, slide outward into LOCK for rear-wheel lock.'
+    'Drive control. Double tap and hold, then slide between GAS, DRIFT, BOOST, and BRAKE or REVERSE. DRIFT charges BOOST and builds OVERCHARGE after the bar is full. GAS catches and holds OVERCHARGE. BOOST spends OVERCHARGE before normal BOOST. While holding DRIFT, slide outward into LOCK for rear-wheel lock. When SHIFT is available, slide from GAS into SHIFT each time you want to switch setup.'
   );
   drivePad.style.setProperty('--boost-charge', '100%');
 
@@ -157,7 +158,7 @@ function installGameplayUi() {
   shiftBubble.disabled = true;
   shiftBubble.setAttribute('aria-pressed', 'false');
   shiftBubble.setAttribute('aria-label', 'SHIFT unavailable. Configure SHIFT in The Lot.');
-  shiftBubble.innerHTML = '<span>SHIFT</span><i aria-hidden="true">●</i>';
+  shiftBubble.innerHTML = '<span>SHIFT<i aria-hidden="true">●</i></span>';
 
   const shiftStatus = document.createElement('div');
   shiftStatus.className = 'turn-sr-only';
@@ -206,7 +207,7 @@ function installGameplayUi() {
   let driftLockAmount = 0;
   let shiftAvailable = false;
   let shiftActive = false;
-  let shiftToggledThisGesture = false;
+  let shiftPointerInside = false;
   let shiftTuningTarget = null;
   let boostCharge = 1;
   let boostOvercharge = 0;
@@ -551,9 +552,8 @@ function installGameplayUi() {
     consumeDrivePointer(event);
     if (drivePointerId === null || event.pointerId !== drivePointerId) return;
     const input = driveInputFromPointer(event);
-    if (input.shiftRequested && !shiftToggledThisGesture) {
-      shiftToggledThisGesture = toggleShift() || shiftToggledThisGesture;
-    }
+    if (enteredShiftToggle(shiftPointerInside, input.shiftRequested)) toggleShift();
+    shiftPointerInside = input.shiftRequested;
     setDriveZone(input.zone, input.lockRequested);
   }
 
@@ -566,7 +566,7 @@ function installGameplayUi() {
     setDriveZone(null, false, { announce: false });
     boostRequested = false;
     boostExhausted = false;
-    shiftToggledThisGesture = false;
+    shiftPointerInside = false;
     globalThis.__turnBoostActive = false;
     drivePad.classList.remove('is-boosting', 'is-boost-locked');
   }
@@ -576,7 +576,7 @@ function installGameplayUi() {
     if (drivePointerId !== null) return;
     drivePointerId = event.pointerId;
     boostExhausted = false;
-    shiftToggledThisGesture = false;
+    shiftPointerInside = false;
     drivePad.setPointerCapture?.(event.pointerId);
     const input = driveInputFromPointer(event);
     setDriveZone(input.zone, input.lockRequested, { announce: false });

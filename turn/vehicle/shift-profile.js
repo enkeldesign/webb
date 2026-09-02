@@ -96,6 +96,29 @@ export function blockedVehicleShiftReducers(stats) {
   return Object.freeze(VEHICLE_SHIFT_STAT_KEYS.filter((key) => Number(stats[key]) === 1));
 }
 
+function complementaryVehicleShiftStats(selectedStats) {
+  const selected = normalizedReducedStats(selectedStats);
+  if (selected.length !== 3) return Object.freeze([]);
+  const selectedSet = new Set(selected);
+  return Object.freeze(VEHICLE_SHIFT_STAT_KEYS.filter((key) => !selectedSet.has(key)));
+}
+
+export function requiredVehicleShiftReceivers(stats) {
+  return blockedVehicleShiftReducers(stats);
+}
+
+export function blockedVehicleShiftReceivers(stats) {
+  return requiredVehicleShiftReducers(stats);
+}
+
+export function vehicleShiftReceiversForReducers(reducedStats) {
+  return complementaryVehicleShiftStats(reducedStats);
+}
+
+export function vehicleShiftReducersForReceivers(receivingStats) {
+  return complementaryVehicleShiftStats(receivingStats);
+}
+
 export function shiftedVehicleStats(stats, reducedStats) {
   if (!vehicleStatsSupportShift(stats)) return null;
   const reduced = normalizedReducedStats(reducedStats);
@@ -109,6 +132,11 @@ export function shiftedVehicleStats(stats, reducedStats) {
   }
   const total = VEHICLE_SHIFT_STAT_KEYS.reduce((sum, key) => sum + shifted[key], 0);
   return total === VEHICLE_SHIFT_STAT_BUDGET ? Object.freeze(shifted) : null;
+}
+
+export function shiftedVehicleStatsFromReceivers(stats, receivingStats) {
+  const reducedStats = vehicleShiftReducersForReceivers(receivingStats);
+  return reducedStats.length === 3 ? shiftedVehicleStats(stats, reducedStats) : null;
 }
 
 export function isVehicleShiftConfigurationValid(stats, reducedStats) {

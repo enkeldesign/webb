@@ -10,17 +10,23 @@ import {
   VEHICLE_SHIFT_FEATURE_ID,
   VEHICLE_SHIFT_STAT_KEYS,
   VEHICLE_SHIFT_STORAGE_KEY,
+  blockedVehicleShiftReceivers,
   blockedVehicleShiftReducers,
   isVehicleShiftConfigurationValid,
   loadVehicleShiftProfile,
+  requiredVehicleShiftReceivers,
   requiredVehicleShiftReducers,
   saveVehicleShiftProfile,
   setVehicleShiftProfileEnabled,
   shiftedVehicleStats,
+  shiftedVehicleStatsFromReceivers,
+  vehicleShiftReceiversForReducers,
+  vehicleShiftReducersForReceivers,
   vehicleStatsSupportShift
 } from '../../turn/vehicle/shift-profile.js';
 import {
   advanceShiftTopSpeedMultiplier,
+  enteredShiftToggle,
   pointerUsesShiftToggle
 } from '../../turn/input/shift-toggle.js';
 import {
@@ -93,6 +99,7 @@ for (const car of CAR_CATALOG) {
 
 const raceCar = getCarDefinition('race');
 const mountainShiftReducers = ['speed', 'acceleration', 'boostPower'];
+const mountainShiftReceivers = ['control', 'drift', 'boostDuration'];
 assert.deepEqual(shiftedVehicleStats(raceCar.stats, mountainShiftReducers), {
   speed: 4,
   acceleration: 3,
@@ -101,12 +108,21 @@ assert.deepEqual(shiftedVehicleStats(raceCar.stats, mountainShiftReducers), {
   boostPower: 1,
   boostDuration: 2
 });
+assert.deepEqual(vehicleShiftReceiversForReducers(mountainShiftReducers), mountainShiftReceivers);
+assert.deepEqual(vehicleShiftReducersForReceivers(mountainShiftReceivers), mountainShiftReducers);
+assert.deepEqual(
+  shiftedVehicleStatsFromReceivers(raceCar.stats, mountainShiftReceivers),
+  shiftedVehicleStats(raceCar.stats, mountainShiftReducers),
+  'Choosing the three +1 attributes must produce the complementary saved reducer profile'
+);
 assert.equal(shiftedVehicleStats(raceCar.stats, ['acceleration', 'control', 'drift']), null,
   'A five-point attribute must donate because SHIFT cannot raise it above five');
 
 const learner = getCarDefinition('classic');
 assert.deepEqual(requiredVehicleShiftReducers(learner.stats), ['control', 'drift', 'boostDuration']);
 assert.deepEqual(blockedVehicleShiftReducers(learner.stats), ['speed', 'acceleration', 'boostPower']);
+assert.deepEqual(requiredVehicleShiftReceivers(learner.stats), ['speed', 'acceleration', 'boostPower']);
+assert.deepEqual(blockedVehicleShiftReceivers(learner.stats), ['control', 'drift', 'boostDuration']);
 assert.deepEqual(shiftedVehicleStats(learner.stats, requiredVehicleShiftReducers(learner.stats)), {
   speed: 2,
   acceleration: 2,
@@ -185,6 +201,15 @@ assert.equal(pointerUsesShiftToggle({ ...leftGeometry, pointerX: 50, pointerY: 9
 assert.equal(pointerUsesShiftToggle({ ...leftGeometry, pointerX: 350, shiftSide: 'right' }), true);
 assert.equal(pointerUsesShiftToggle({ ...leftGeometry, pointerX: 295, shiftSide: 'right' }), false);
 
+let wasInsideShift = false;
+let shiftEntries = 0;
+for (const isInsideShift of [false, true, true, false, true]) {
+  if (enteredShiftToggle(wasInsideShift, isInsideShift)) shiftEntries += 1;
+  wasInsideShift = isInsideShift;
+}
+assert.equal(shiftEntries, 2,
+  'Returning to GAS and crossing into SHIFT again must toggle a second time without lifting the pointer');
+
 const easedTopSpeed = advanceShiftTopSpeedMultiplier(1.12, 1.06, 0.25);
 assert.ok(easedTopSpeed < 1.12 && easedTopSpeed > 1.06,
   'Lowering the top-speed cap must begin gradually instead of snapping');
@@ -202,8 +227,12 @@ const [lotShift, lotRuntime, lotStyles, controls, driveStyles, workflow] = await
 ]);
 
 assert.match(lotRuntime, /installLotShift/);
-assert.match(lotShift, /Choose three attributes to lower by one/);
+assert.match(lotShift, /Choose three attributes to give \+1/);
 assert.match(lotShift, /class="lot-shift-options" role="group"/);
+assert.match(lotShift, /document\.createElement\('button'\)/,
+  'SHIFT attributes must be presented as direct toggle buttons');
+assert.match(lotShift, /selectedReceivers/,
+  'The setup interaction must select the attributes receiving +1');
 assert.match(lotShift, /setVehicleShiftProfileEnabled/);
 assert.match(lotShift, /turn:shift-profile-change/);
 assert.match(lotStyles, /\.lot-shift-trigger\.is-active/);
@@ -211,16 +240,25 @@ assert.match(lotStyles, /\.lot-shift-dialog::backdrop/);
 assert.match(lotStyles, /prefers-reduced-motion: reduce/);
 
 assert.match(controls, /className = 'drive-shift-bubble'/);
+assert.match(controls, /shiftBubble\.innerHTML = '<span>SHIFT<i aria-hidden="true">●<\/i><\/span>'/,
+  'SHIFT and its active dot must share one centered label');
 assert.match(controls, /setAttribute\('aria-pressed', String\(shiftActive\)\)/);
 assert.match(controls, /pointerUsesShiftToggle/);
-assert.match(controls, /shiftToggledThisGesture/,
-  'A held GAS gesture must toggle SHIFT only once even if the pointer re-enters its bubble');
+assert.match(controls, /enteredShiftToggle\(shiftPointerInside, input\.shiftRequested\)/,
+  'Every new GAS-to-SHIFT crossing must toggle the setup');
+assert.doesNotMatch(controls, /shiftToggledThisGesture/,
+  'SHIFT must not stay locked out until finger-up');
 assert.match(controls, /reason === 'race-started'[\s\S]*syncShiftAvailability\(\{ reset: true \}\)/,
   'Every race must begin in the standard setup');
 assert.match(controls, /globalThis\.__turnBoostCharge = boostCharge/,
   'Boost remains normalized as a charge percentage while SHIFT changes tank duration');
-assert.match(driveStyles, /\.drive-stack\.is-shift-active \.drive-shift-bubble[\s\S]*#9775fa/);
+assert.match(driveStyles, /\.controls \.drive-shift-bubble[\s\S]*background: #8ce99a/,
+  'The ready SHIFT bubble must be green');
+assert.match(driveStyles, /\.drive-stack\.is-shift-active \.drive-shift-bubble[\s\S]*#51cf66/,
+  'The active SHIFT bubble must be darker green');
 assert.match(driveStyles, /\.drive-stack\.is-shift-active \.drive-shift-bubble i[\s\S]*opacity: 1/);
+assert.match(driveStyles, /\.drive-shift-bubble span \{[\s\S]*display: inline-flex;[\s\S]*justify-content: center;/,
+  'The vertical SHIFT label must stay centered inside its attached bubble');
 assert.match(driveStyles, /\.controls \.drive-shift-bubble \{[\s\S]*pointer-events: none/,
   'A retracted SHIFT button must not intercept the drive surface through the global control-button rule');
 assert.match(driveStyles, /turn-left-handed-controls \.drive-shift-bubble/);

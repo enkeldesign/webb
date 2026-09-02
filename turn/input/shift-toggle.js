@@ -43,6 +43,10 @@ export function pointerUsesShiftToggle({
   return x >= shiftLeft && x <= shiftRight;
 }
 
+export function enteredShiftToggle(previouslyInside, currentlyInside) {
+  return Boolean(currentlyInside && !previouslyInside);
+}
+
 export function advanceShiftTopSpeedMultiplier(current, target, dt) {
   const currentValue = Math.max(0.01, finiteNumber(current, 1));
   const targetValue = Math.max(0.01, finiteNumber(target, currentValue));

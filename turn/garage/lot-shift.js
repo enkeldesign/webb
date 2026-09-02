@@ -7,14 +7,16 @@ import {
 import {
   VEHICLE_SHIFT_FEATURE_ID,
   VEHICLE_SHIFT_STAT_FIELDS,
-  blockedVehicleShiftReducers,
+  blockedVehicleShiftReceivers,
   loadVehicleShiftProfile,
-  requiredVehicleShiftReducers,
+  requiredVehicleShiftReceivers,
   saveVehicleShiftProfile,
   setVehicleShiftProfileEnabled,
-  shiftedVehicleStats,
+  shiftedVehicleStatsFromReceivers,
+  vehicleShiftReceiversForReducers,
+  vehicleShiftReducersForReceivers,
   vehicleStatsSupportShift
-} from '../vehicle/shift-profile.js?revision=r226-shift';
+} from '../vehicle/shift-profile.js?revision=r227-shift-feedback';
 
 const activeShiftSetups = new WeakMap();
 let dialogSerial = 0;
@@ -82,8 +84,8 @@ export function installLotShift(root = document.body) {
         <div><span>ALTERNATE SETUP</span><h2 id="${titleId}">SHIFT</h2></div>
         <button type="button" class="lot-shift-close" aria-label="Close SHIFT setup">×</button>
       </header>
-      <p id="${descriptionId}" class="lot-shift-description">Choose three attributes to lower by one. The other three gain one point automatically. During a race, hold GAS and slide outward into SHIFT to toggle setups.</p>
-      <div class="lot-shift-options" role="group" aria-label="Attributes to lower in SHIFT"></div>
+      <p id="${descriptionId}" class="lot-shift-description">Choose three attributes to give +1. The other three get −1 automatically. During a race, slide from GAS into SHIFT to switch on or off.</p>
+      <div class="lot-shift-options" role="group" aria-label="Attributes to gain one point in SHIFT"></div>
       <p class="lot-shift-status" role="status" aria-live="polite"></p>
       <div class="lot-shift-actions">
         <button type="button" class="lot-shift-cancel">CANCEL</button>
@@ -105,7 +107,7 @@ export function installLotShift(root = document.body) {
   let editingVehicleId = '';
   let editingStats = null;
   let editingProfile = null;
-  let selectedReducers = new Set();
+  let selectedReceivers = new Set();
   let previousFocus = null;
 
   function rewardUnlocked() {
@@ -156,72 +158,99 @@ export function installLotShift(root = document.body) {
   }
 
   function makeOption(field) {
-    const label = document.createElement('label');
-    label.className = 'lot-shift-option';
-    label.dataset.shiftStat = field.key;
-    label.innerHTML = `
-      <input type="checkbox" value="${field.key}">
-      <span>
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'lot-shift-option';
+    button.dataset.shiftStat = field.key;
+    button.innerHTML = `
+      <i class="lot-shift-option-plus" aria-hidden="true">+</i>
+      <span class="lot-shift-option-copy">
         <strong>${field.label}</strong>
         <small><b data-shift-from></b><i aria-hidden="true">→</i><b data-shift-to></b><em data-shift-direction></em></small>
       </span>`;
-    label.querySelector('input').addEventListener('change', handleOptionChange);
-    return label;
+    button.addEventListener('click', handleOptionClick);
+    return button;
   }
 
   function renderOptions() {
     if (!editingStats) return;
-    const required = new Set(requiredVehicleShiftReducers(editingStats));
-    const blocked = new Set(blockedVehicleShiftReducers(editingStats));
-    for (const key of required) selectedReducers.add(key);
-    const complete = selectedReducers.size === 3;
-    const shifted = complete ? shiftedVehicleStats(editingStats, [...selectedReducers]) : null;
+    // A 1-point attribute must receive +1; a 5-point attribute cannot receive
+    // another point. Profiles continue to store the complementary reducers so
+    // existing saved SHIFT setups remain compatible.
+    const required = new Set(requiredVehicleShiftReceivers(editingStats));
+    const blocked = new Set(blockedVehicleShiftReceivers(editingStats));
+    for (const key of required) selectedReceivers.add(key);
+    const complete = selectedReceivers.size === 3;
+    const shifted = complete
+      ? shiftedVehicleStatsFromReceivers(editingStats, [...selectedReceivers])
+      : null;
 
     for (const option of options.querySelectorAll('.lot-shift-option')) {
       const key = option.dataset.shiftStat;
-      const input = option.querySelector('input');
-      const selected = selectedReducers.has(key);
+      const field = VEHICLE_SHIFT_STAT_FIELDS.find((candidate) => candidate.key === key);
+      const selected = selectedReceivers.has(key);
       const isRequired = required.has(key);
       const isBlocked = blocked.has(key);
-      const waiting = !complete && !selected;
+      const selectionFull = !selected && selectedReceivers.size >= 3;
+      const knownReduction = isBlocked || complete;
+      const nextValue = selected
+        ? editingStats[key] + 1
+        : knownReduction
+          ? editingStats[key] - 1
+          : null;
 
-      input.checked = selected;
-      input.disabled = isRequired || isBlocked || (!selected && selectedReducers.size >= 3);
+      option.setAttribute('aria-pressed', String(selected));
+      option.setAttribute('aria-disabled', String(isRequired || isBlocked || selectionFull));
       option.classList.toggle('is-selected', selected);
       option.classList.toggle('is-required', isRequired);
       option.classList.toggle('is-blocked', isBlocked);
+      option.classList.toggle('is-full', selectionFull && !isBlocked);
       option.querySelector('[data-shift-from]').textContent = String(editingStats[key]);
-      option.querySelector('[data-shift-to]').textContent = waiting
-        ? '—'
-        : String(selected ? editingStats[key] - 1 : shifted?.[key] ?? editingStats[key] + 1);
+      option.querySelector('[data-shift-to]').textContent = nextValue == null ? '—' : String(nextValue);
       option.querySelector('[data-shift-direction]').textContent = isRequired
-        ? 'REQUIRED ↓'
+        ? '+1'
         : isBlocked
-          ? (complete ? '↑' : 'MUST RISE')
+          ? '−1'
           : selected
-            ? '↓'
+            ? '+1'
             : complete
-              ? '↑'
-              : 'PENDING';
+              ? '−1'
+              : '';
+      option.setAttribute(
+        'aria-label',
+        `${field?.label || key}, ${editingStats[key]}${nextValue == null ? '' : ` to ${nextValue}`}. ${
+          isRequired
+            ? 'Selected to gain one point because it is at the minimum.'
+            : isBlocked
+              ? 'Cannot gain a point because it is already at the maximum.'
+              : selected
+                ? 'Selected to gain one point.'
+                : complete
+                  ? 'Will lose one point.'
+                  : 'Not selected.'
+        }`
+      );
     }
 
     saveButton.disabled = !shifted;
     saveButton.textContent = editingProfile?.enabled ? 'SAVE SHIFT' : 'ACTIVATE SHIFT';
     deactivateButton.hidden = editingProfile?.enabled !== true;
     if (shifted) {
-      status.textContent = 'Ready. Three points move, and the total stays 18.';
+      status.textContent = 'Ready. Three attributes gain 1, three lose 1, and the total stays 18.';
     } else {
-      const remaining = Math.max(0, 3 - selectedReducers.size);
-      status.textContent = `${selectedReducers.size} of 3 selected. Choose ${remaining} more.`;
+      const remaining = Math.max(0, 3 - selectedReceivers.size);
+      status.textContent = `${selectedReceivers.size} of 3 +1 attributes selected. Choose ${remaining} more.`;
     }
   }
 
-  function handleOptionChange(event) {
-    const key = event.target.value;
-    if (event.target.checked) {
-      if (selectedReducers.size < 3) selectedReducers.add(key);
+  function handleOptionClick(event) {
+    const option = event.currentTarget;
+    if (option.getAttribute('aria-disabled') === 'true') return;
+    const key = option.dataset.shiftStat;
+    if (selectedReceivers.has(key)) {
+      selectedReceivers.delete(key);
     } else {
-      selectedReducers.delete(key);
+      if (selectedReceivers.size < 3) selectedReceivers.add(key);
     }
     renderOptions();
   }
@@ -237,8 +266,11 @@ export function installLotShift(root = document.body) {
     editingVehicleId = car.id;
     editingStats = car.stats;
     editingProfile = loadVehicleShiftProfile(car.id, car.stats);
-    selectedReducers = new Set(
-      editingProfile?.reducedStats || requiredVehicleShiftReducers(car.stats)
+    const reducedStats = new Set(editingProfile?.reducedStats || []);
+    selectedReceivers = new Set(
+      editingProfile
+        ? vehicleShiftReceiversForReducers([...reducedStats])
+        : requiredVehicleShiftReceivers(car.stats)
     );
     title.textContent = `SHIFT · ${car.name.toUpperCase()}`;
     options.replaceChildren(...VEHICLE_SHIFT_STAT_FIELDS.map(makeOption));
@@ -257,10 +289,11 @@ export function installLotShift(root = document.body) {
 
   function saveProfile() {
     if (!editingVehicleId || !editingStats) return;
+    const reducedStats = vehicleShiftReducersForReceivers([...selectedReceivers]);
     const saved = saveVehicleShiftProfile({
       vehicleId: editingVehicleId,
       stats: editingStats,
-      reducedStats: [...selectedReducers],
+      reducedStats,
       enabled: true
     });
     if (!saved) return;
