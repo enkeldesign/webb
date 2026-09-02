@@ -33,13 +33,15 @@ export function resolveVehicleShiftFeedback(profile, active) {
     const spoken = label.toLowerCase();
     return index === 0 ? `${spoken.charAt(0).toUpperCase()}${spoken.slice(1)}` : spoken;
   });
-  const title = active ? 'SHIFT ON' : 'SHIFT OFF';
+  const activeState = active === true;
+  const stateAnnouncement = activeState ? 'SHIFT on.' : 'SHIFT off.';
 
   return Object.freeze({
-    active: active === true,
-    title,
+    active: activeState,
+    title: 'SHIFT',
     gainKeys: Object.freeze(gainKeys),
     labels: Object.freeze(labels),
-    announcement: `${active ? 'SHIFT on' : 'SHIFT off'}. ${naturalList(spokenLabels)} gain one point.`
+    briefAnnouncement: stateAnnouncement,
+    announcement: `${stateAnnouncement} ${naturalList(spokenLabels)} gain one point.`
   });
 }

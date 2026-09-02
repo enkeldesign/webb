@@ -121,20 +121,22 @@ const shiftOnFeedback = resolveVehicleShiftFeedback(
   { reducedStats: mountainShiftReducers },
   true
 );
-assert.equal(shiftOnFeedback?.title, 'SHIFT ON');
+assert.equal(shiftOnFeedback?.title, 'SHIFT');
 assert.deepEqual(shiftOnFeedback?.gainKeys, mountainShiftReceivers);
 assert.deepEqual(shiftOnFeedback?.labels, ['CONTROL', 'DRIFT', 'BOOST TANK']);
 assert.equal(
   shiftOnFeedback?.announcement,
   'SHIFT on. Control, drift, and boost tank gain one point.'
 );
+assert.equal(shiftOnFeedback?.briefAnnouncement, 'SHIFT on.');
 const shiftOffFeedback = resolveVehicleShiftFeedback(
   { reducedStats: mountainShiftReducers },
   false
 );
-assert.equal(shiftOffFeedback?.title, 'SHIFT OFF');
+assert.equal(shiftOffFeedback?.title, 'SHIFT');
 assert.deepEqual(shiftOffFeedback?.gainKeys, mountainShiftReducers);
 assert.deepEqual(shiftOffFeedback?.labels, ['TOP SPEED', 'ACCELERATION', 'BOOST POWER']);
+assert.equal(shiftOffFeedback?.briefAnnouncement, 'SHIFT off.');
 assert.equal(resolveVehicleShiftFeedback({ reducedStats: ['speed'] }, true), null);
 assert.deepEqual(
   shiftedVehicleStatsFromReceivers(raceCar.stats, mountainShiftReceivers),
@@ -373,10 +375,28 @@ assert.match(controls, /globalThis\.__turnBoostCharge = boostCharge/,
 assert.match(controls, /className = 'shift-change-feedback'/,
   'The race HUD must expose transient SHIFT feedback beneath Boost');
 assert.match(controls, /resolveVehicleShiftFeedback\(shiftContext\(\)\.profile, shiftActive\)/,
-  'Every announced toggle must resolve the three attributes gained in that direction');
+  'Every visible toggle must resolve the three attributes gained in that direction');
+assert.match(controls, /shiftDetailsAnnouncedThisRace[\s\S]*briefAnnouncement[\s\S]*detailedAnnouncement/,
+  'Only the first SHIFT in a race must announce the full attribute list');
+assert.match(controls, /resetShiftAnnouncementCycle\(\)[\s\S]*syncShiftAvailability\(\{ reset: true \}\)/,
+  'Starting or resetting a race must restore the one-time detailed SHIFT announcement');
+assert.match(controls, /function releaseDrive[\s\S]*restoreShiftControlAfterInterruption\(\)/,
+  'Releasing an interrupted drive pointer must restore the SHIFT visual state');
+assert.match(controls, /resumeDriveControlsAfterInterruption\(\)[\s\S]*releaseDrive\(\)/,
+  'Screenshot recovery must clear a stale drive pointer');
+assert.match(controls, /window\.addEventListener\('pageshow', resumeDriveControlsAfterInterruption/,
+  'Returning from an interrupted screenshot lifecycle must restore the SHIFT control state');
+assert.match(controls, /visibilitychange[\s\S]*resumeDriveControlsAfterInterruption\(\)/,
+  'Returning to a visible page must restore the complete drive control state');
+assert.match(controls, /SHIFT_FEEDBACK_CLEAR_MS = 3200/,
+  'The SHIFT roll must remain visible for roughly twice its original duration');
 assert.match(controls, /line\.textContent = `\+ \$\{label\}`/,
   'Visible SHIFT feedback must roll the three gained attributes as plus values');
 assert.match(gameplayStyles, /\.shift-change-feedback\.is-visible/);
+assert.match(gameplayStyles, /animation: turn-shift-feedback 3100ms/,
+  'The complete SHIFT roll must last roughly twice as long');
+assert.match(gameplayStyles, /animation: turn-shift-feedback-line 2240ms/,
+  'Each rolling attribute must remain readable roughly twice as long');
 assert.match(gameplayStyles, /@keyframes turn-shift-feedback-line/,
   'SHIFT attribute gains must use a brief rolling HUD treatment');
 assert.match(gameplayStyles, /prefers-reduced-motion: reduce[\s\S]*\.shift-change-feedback\.is-visible/,

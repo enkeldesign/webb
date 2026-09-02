@@ -119,19 +119,19 @@
 
 .shift-change-feedback.is-visible {
   visibility: visible;
-  animation: turn-shift-feedback 1550ms ease-out both;
+  animation: turn-shift-feedback 3100ms ease-out both;
 }
 
 .shift-change-feedback.is-visible span {
-  animation: turn-shift-feedback-line 1120ms ease-out both;
+  animation: turn-shift-feedback-line 2240ms ease-out both;
 }
 
 .shift-change-feedback.is-visible span:nth-of-type(2) {
-  animation-delay: 70ms;
+  animation-delay: 140ms;
 }
 
 .shift-change-feedback.is-visible span:nth-of-type(3) {
-  animation-delay: 140ms;
+  animation-delay: 280ms;
 }
 
 .boost-hud i {
