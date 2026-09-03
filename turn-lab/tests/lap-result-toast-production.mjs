@@ -19,6 +19,14 @@ assert.equal(
   lapResultAnnouncement({ position: 1, time: 75.346 }),
   'Lap. Position: first. Time: one minute, fifteen point three four six seconds.'
 );
+assert.equal(
+  lapResultAnnouncement({
+    position: 1,
+    time: 75.346,
+    drift: { available: true, score: 8420, bestScore: 8420, newBest: true }
+  }),
+  'Lap. Position: first. Time: one minute, fifteen point three four six seconds. Drift score: 8420 points. New best.'
+);
 
 function makeFrames(count = 25) {
   return Array.from({ length: count }, (_, index) => ({
@@ -183,6 +191,32 @@ try {
     ranked: false,
     onCourseThroughout: true
   }, 'The player may still see the completed lap result while consumers know it is unranked');
+
+  const scoredState = makeState();
+  let scoreContext = null;
+  const scoredResult = completeLapState({
+    state: scoredState,
+    samples,
+    now: 13500,
+    competitorLimit: 4,
+    saveGhost() {},
+    finalizeScores(context) {
+      scoreContext = context;
+      return {
+        drift: { available: true, score: 8420, bestScore: 8420, newBest: true }
+      };
+    }
+  });
+  assert.deepEqual(scoreContext, {
+    finishedTime: 13.5,
+    completedLap: true,
+    validLap: true,
+    rankedLap: true,
+    onCourseThroughout: true
+  }, 'Scoring engines receive the frozen lap validity and ranking context once');
+  assert.equal(scoredResult.drift.score, 8420);
+  assert.equal(publishedResults.at(-1)?.detail.drift.newBest, true,
+    'The composed lap-result event carries DRIFT without creating a competing finish event');
 } finally {
   if (originalCustomEvent === undefined) delete globalThis.CustomEvent;
   else globalThis.CustomEvent = originalCustomEvent;
@@ -226,6 +260,7 @@ assert.ok(
 assert.equal(imports['./race/game-state.js'], `./race/game-state.js?build=${release.cacheKey}`, 'The current release must publish reset-safe invalid-lap state');
 assert.equal(imports['./ui/race-announcements.js'], `./ui/race-announcements.js?build=${release.cacheKey}`, 'Shared spoken race formatting must follow the release cache key');
 assert.match(app, /installLapResultToast\(\)/, 'The lap result toast must install before the game runtime starts');
+assert.match(app, /installDriftAttackSetting\(\)/, 'The live DRIFT HUD setting must install after Home exists');
 assert.match(app, /installRivalOnboarding\(\)/, 'The rival onboarding plate must install before the game runtime starts');
 assert.match(lapSystem, /turn:lap-result/, 'Completed lap finish must publish one frozen result event');
 assert.match(lapSystem, /turn:lap-invalid/, 'Incomplete checkpoint chains must publish explicit invalid-lap feedback');
@@ -262,6 +297,8 @@ assert.doesNotMatch(toast, /MISSED CHECKPOINT/, 'Technical checkpoint language m
 assert.match(toast, /turn:lap-invalid/, 'The unified toast must listen for invalid-lap events');
 assert.match(toast, /lap-result-position/, 'The toast must show frozen finishing position');
 assert.match(toast, /lap-result-time/, 'The toast must show the completed lap time');
+assert.match(toast, /lap-result-drift-score/, 'The single finish toast must include the DRIFT result');
+assert.match(toast, /NEW BEST/, 'A new per-track DRIFT best must be explicit in the finish toast');
 assert.match(toast, /toast\.setAttribute\('aria-label', 'Lap result'\)/, 'The visible result must remain inspectable without becoming another live region');
 assert.doesNotMatch(toast, /toast\.setAttribute\('role', 'status'\)/, 'The visible toast must not duplicate the dedicated announcer');
 assert.doesNotMatch(toast, /toast\.setAttribute\('aria-live'/, 'The visible toast must not announce each child mutation');
@@ -289,6 +326,7 @@ assert.match(toastCss, /background: var\(--yellow\)/, 'Valid lap results must ke
 assert.match(toastCss, /\.lap-result-toast\.is-invalid \{\s*background: #ff6b6b;/s, 'STAY ON THE TRACK must use the same red void-lap colour as the TIME card');
 assert.match(toastCss, /left: 50%/, 'The lap toast must occupy the central finish-message position');
 assert.match(toastCss, /top: 22%/, 'The lap toast must sit where the old TOP X LAP message appeared');
+assert.match(toastCss, /\.lap-result-drift/, 'The DRIFT result must reuse the existing finish surface');
 assert.doesNotMatch(toastCss, /left: max\(112px/, 'The retired lower-left toast placement must stay removed');
 assert.match(toastCss, /prefers-reduced-motion: reduce/, 'Toast animation must respect reduced-motion preferences');
 assert.match(onboardingCss, /\.rival-onboarding-model/, 'The onboarding must reserve an adjacent host for the ghost model');

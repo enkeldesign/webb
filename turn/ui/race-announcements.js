@@ -120,8 +120,16 @@ export function spokenLapTime(seconds) {
   return parts.join(', ');
 }
 
-export function lapResultAnnouncement({ position, time } = {}) {
-  return `Lap. Position: ${ordinalWord(position)}. Time: ${spokenLapTime(time)}.`;
+export function lapResultAnnouncement({ position, time, drift } = {}) {
+  const lap = `Lap. Position: ${ordinalWord(position)}. Time: ${spokenLapTime(time)}.`;
+  if (drift?.available !== true || !Number.isFinite(Number(drift.score))) return lap;
+
+  const score = Math.max(0, Math.round(Number(drift.score)));
+  if (drift.newBest === true) return `${lap} Drift score: ${score} points. New best.`;
+
+  const best = Math.max(0, Math.round(Number(drift.bestScore) || 0));
+  const bestResult = best > 0 ? ` Best: ${best} points.` : '';
+  return `${lap} Drift score: ${score} points.${bestResult}`;
 }
 
 export function lapVoidAnnouncement(reason) {

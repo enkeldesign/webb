@@ -62,6 +62,32 @@
   font-size: 0.72em;
 }
 
+.lap-result-drift {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 2px solid rgb(8 9 10 / .38);
+  font-size: clamp(0.56rem, 1.3vw, 0.72rem);
+  line-height: 1;
+  letter-spacing: 0.045em;
+  white-space: nowrap;
+}
+
+.lap-result-drift[hidden] {
+  display: none;
+}
+
+.lap-result-drift b {
+  font-size: 1.3em;
+}
+
+.lap-result-drift em {
+  font-style: normal;
+}
+
 @media (max-height: 430px) {
   .lap-result-toast {
     top: 17%;

@@ -64,6 +64,8 @@ export function resetRaceToStage({
   state.heading = Math.atan2(start.tangent.x, start.tangent.z);
   state.speed = 0;
   state.driftAmount = 0;
+  state.driftSlipAngle = 0;
+  state.collided = false;
   state.vehiclePerkProgress = 0;
   state.vehiclePerkStage = 0;
   state.vehicleEffectiveTuning = state.vehicleTuning || null;

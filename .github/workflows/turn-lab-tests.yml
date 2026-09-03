@@ -193,6 +193,18 @@ jobs:
       - name: Run lap result toast regression
         run: node turn-lab/tests/lap-result-toast-production.mjs
 
+      - name: Run shared ScoreFeedback regression
+        run: node turn-tests/score-feedback-production.mjs
+
+      - name: Run DRIFT ATTACK core regression
+        run: node turn-tests/drift-attack-core-production.mjs
+
+      - name: Run DRIFT ATTACK runtime regression
+        run: node turn-tests/drift-attack-runtime-production.mjs
+
+      - name: Run DRIFT ATTACK integration regression
+        run: node turn-tests/drift-attack-integration-production.mjs
+
       - name: Run achievement system regression
         run: node turn-lab/tests/achievements-production.mjs
 
