@@ -203,7 +203,7 @@ assert.ok(
   'The topbar position override must load after the legacy gameplay HUD rules'
 );
 assert.match(app, /race-position-layout\.js/, 'The production module graph must install the position layout after gameplay controls');
-assert.match(app, /gameplay-controls\.js\?revision=r231-shift-feedback-layer/,
+assert.match(app, /gameplay-controls\.js\?revision=r233-graduated/,
   'The layered SHIFT attribute feedback must bypass stale production module caches');
 assert.match(app, /installRaceSpeech\(\)/, 'The production graph must install concise race speech before the runtime starts');
 assert.ok(

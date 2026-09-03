@@ -287,6 +287,7 @@ export function createAchievementView({ store, session, utilityGroup }) {
         type="button"
         class="turn-trophy-road-marker ${unlocked ? 'is-unlocked' : 'is-locked'} ${selected ? 'is-selected' : ''}"
         data-trophy-reward="${reward.id}"
+        data-trophy-reward-type="${reward.type}"
         style="--turn-trophy-road-position:${position}%"
         aria-pressed="${selected}"
         aria-label="${reward.shortTitle}. ${reward.threshold} trophies. ${unlocked ? 'Unlocked' : 'Locked'}"

@@ -92,7 +92,7 @@ const imports = JSON.parse(importMapText).imports;
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
 assert.equal(
   imports['./vehicle/physics.js?build=20260720-r19'],
-  `./vehicle/physics.js?build=${release.cacheKey}&revision=r220-apex-grip`,
+  `./vehicle/physics.js?build=${release.cacheKey}&revision=r233-graduated`,
   'Production must publish collision-aware APEX GRIP and full-angle DRIFT physics through a fresh release URL'
 );
 assert.match(physics, /world-collision\.js\?build=20260723-r53/, 'Vehicle physics must load the world collision resolver');

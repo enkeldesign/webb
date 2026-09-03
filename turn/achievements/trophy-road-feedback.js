@@ -328,7 +328,7 @@ function installRoadBehavior({ achievements, summary }) {
       return;
     }
 
-    if (reward.type === 'track' || reward.type === 'feature') {
+    if (reward.type === 'track' || reward.type === 'feature' || reward.type === 'vehicle-perk') {
       showcase.clear();
       restoreStaticRewardIcon(reward, host);
       return;

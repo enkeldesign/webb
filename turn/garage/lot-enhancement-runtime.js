@@ -24,9 +24,9 @@ export function prepareLotEnhancements() {
   enhancementPreparation = Promise.all([
     import('./lot-stat-legend.js?revision=r225-18-point-budget'),
     import('./lot-layout-r60.js?build=20260729-r116&revision=r213-attributes-typography'),
-    import('./lot-shift.js?revision=r229-shift-feedback'),
+    import('./lot-shift.js?revision=r232-double-shift'),
     import('./lot-accessibility-r118.js?build=20260729-r118&revision=r588-canonical-attributes'),
-    import('./lot-perk-disclosure.js?revision=r225-information-blue'),
+    import('./lot-perk-disclosure.js?revision=r230-vehicle-perks'),
     import('./lot-card-scroll-boundary.js?revision=r216-meter-density'),
     import('./lot-vehicle-copy.js?revision=r223-training-car-taxi'),
     import('./lot-trophy-order.js'),

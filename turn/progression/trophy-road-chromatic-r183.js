@@ -1,12 +1,12 @@
 import {
   TROPHY_ROAD_REWARDS as PERK_TROPHY_ROAD_REWARDS,
   TROPHY_ROAD_REWARD_ICONS as BASE_TROPHY_ROAD_REWARD_ICONS
-} from './trophy-road-perks-r164.js?revision=r226-shift';
+} from './trophy-road-perks-r164.js?revision=r230-vehicle-perks';
 import {
   FUTURE_RACER_REWARD_PERK_DESCRIPTION
 } from '../vehicle/perk-presentation.js?revision=r220-apex-grip';
 
-export * from './trophy-road-perks-r164.js?revision=r226-shift';
+export * from './trophy-road-perks-r164.js?revision=r230-vehicle-perks';
 
 export const TROPHY_ROAD_MAX_THRESHOLD = 3075;
 
@@ -36,6 +36,11 @@ const REWARD_BY_VEHICLE = new Map(
 const REWARD_BY_FEATURE = new Map(
   TROPHY_ROAD_REWARDS.filter((reward) => reward.featureId).map((reward) => [reward.featureId, reward])
 );
+const REWARD_BY_VEHICLE_PERK = new Map(
+  TROPHY_ROAD_REWARDS
+    .filter((reward) => reward.type === 'vehicle-perk' && reward.vehicleId)
+    .map((reward) => [reward.vehicleId, reward])
+);
 
 export function getTrophyRoadReward(id) {
   return REWARD_BY_ID.get(id) || null;
@@ -51,4 +56,8 @@ export function rewardForVehicle(vehicleId) {
 
 export function rewardForFeature(featureId) {
   return REWARD_BY_FEATURE.get(featureId) || null;
+}
+
+export function rewardForVehiclePerk(vehicleId) {
+  return REWARD_BY_VEHICLE_PERK.get(vehicleId) || null;
 }

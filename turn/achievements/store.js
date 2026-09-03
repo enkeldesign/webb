@@ -11,7 +11,7 @@ import {
   grandfatheredRewardIdsForVersion,
   migrateStoredRewardIdsForVersion,
   rewardIdsForTrophies
-} from '../progression/trophy-road-perks-r164.js?revision=r226-shift';
+} from '../progression/trophy-road-perks-r164.js?revision=r230-vehicle-perks';
 
 export const ACHIEVEMENT_STORAGE_KEY = TROPHY_ROAD_STORAGE_KEY;
 const STORAGE_VERSION = TROPHY_ROAD_STORAGE_VERSION;

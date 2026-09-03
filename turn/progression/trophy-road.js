@@ -1,6 +1,6 @@
 export const TROPHY_ROAD_STORAGE_KEY = 'turn-achievements-v1';
-export const TROPHY_ROAD_STORAGE_VERSION = 6;
-export const TROPHY_ROAD_MAX_THRESHOLD = 1700;
+export const TROPHY_ROAD_STORAGE_VERSION = 7;
+export const TROPHY_ROAD_MAX_THRESHOLD = 2000;
 export const TROPHY_ROAD_VIEWPORT_THRESHOLD = 600;
 
 export const TROPHY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 4h10v4c0 4-2 7-5 8-3-1-5-4-5-8V4Z"></path><path d="M7 6H4v2c0 2 1 3 4 4M17 6h3v2c0 2-1 3-4 4M9 20h6M12 16v4"></path></svg>';
@@ -16,7 +16,8 @@ export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
   vintage: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M5 31h9l7-8h20l8 4h9v10H5Z"></path><path d="M21 23l5-8h12l6 8M27 15v8M12 31h39"></path><circle cx="17" cy="38" r="6"></circle><circle cx="49" cy="38" r="6"></circle></svg>',
   rally: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M7 31h7l6-12h24l8 12h6v7H7Z"></path><path d="M24 19v12M20 24h27M11 27h7M47 15h8l3 7"></path><circle cx="18" cy="39" r="5"></circle><circle cx="49" cy="39" r="5"></circle></svg>',
   mountain: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M4 42 23 13l8 12L40 8l20 34Z"></path><path d="m17 22 6-9 5 8 4-6 8-7 7 13"></path><path d="M39 42c5-8 9-11 15-13M43 35l4 2-2 4 5 2"></path></svg>',
-  shift: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M14 39V24c0-8 5-13 13-13h10c8 0 13 5 13 13v15"></path><path d="M20 39h24M32 11v28M23 20h18"></path><circle cx="23" cy="20" r="4"></circle><circle cx="41" cy="20" r="4"></circle><circle cx="32" cy="11" r="4"></circle><circle cx="32" cy="39" r="4"></circle></svg>'
+  shift: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M14 39V24c0-8 5-13 13-13h10c8 0 13 5 13 13v15"></path><path d="M20 39h24M32 11v28M23 20h18"></path><circle cx="23" cy="20" r="4"></circle><circle cx="41" cy="20" r="4"></circle><circle cx="32" cy="11" r="4"></circle><circle cx="32" cy="39" r="4"></circle></svg>',
+  perk: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M35 3 14 28h15l-3 17 24-28H35Z"></path><path d="M8 11h12M5 18h10M46 35h11"></path></svg>'
 });
 
 export const TROPHY_ROAD_REWARDS = Object.freeze([
@@ -123,6 +124,42 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     description: 'Unlock the Rally Racer: twitchy and perfect for curvy tracks.<br><strong>TWITCHY TURNY:</strong> DRIFT fills BOOST even faster than normal.'
   }),
   Object.freeze({
+    id: 'awd-traction',
+    threshold: 1200,
+    title: 'AWD · TRACTION',
+    shortTitle: 'AWD Traction',
+    type: 'vehicle-perk',
+    vehicleId: 'convertible',
+    icon: 'perk',
+    perkTitle: 'TRACTION',
+    perkDescription: 'Shallow off-road driving causes much less slowdown, while deep off-road remains punishing.',
+    description: 'Unlock <strong>TRACTION</strong> for AWD. Shallow off-road driving causes much less slowdown, while deep off-road remains punishing.'
+  }),
+  Object.freeze({
+    id: 'truck-torque',
+    threshold: 1300,
+    title: 'TRUCK · TORQUE',
+    shortTitle: 'Truck Torque',
+    type: 'vehicle-perk',
+    vehicleId: 'truck',
+    icon: 'perk',
+    perkTitle: 'TORQUE',
+    perkDescription: 'ACCELERATION builds while GAS is held, up to 5/5.',
+    description: 'Unlock <strong>TORQUE</strong> for Truck. ACCELERATION builds while GAS is held, up to 5/5.'
+  }),
+  Object.freeze({
+    id: 'van-carry-on',
+    threshold: 1400,
+    title: 'VAN · CARRY ON',
+    shortTitle: 'Van Carry On',
+    type: 'vehicle-perk',
+    vehicleId: 'van',
+    icon: 'perk',
+    perkTitle: 'CARRY ON',
+    perkDescription: 'LOCK loses much less speed.',
+    description: 'Unlock <strong>CARRY ON</strong> for Van. LOCK loses much less speed.'
+  }),
+  Object.freeze({
     id: 'shift',
     threshold: 1500,
     title: 'SHIFT',
@@ -131,6 +168,54 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     featureId: 'vehicle-shift',
     icon: 'shift',
     description: 'Unlock SHIFT for every car. Move one point away from three attributes and into the other three, then toggle between STANDARD and SHIFT while racing.'
+  }),
+  Object.freeze({
+    id: 'suv-full-tank',
+    threshold: 1600,
+    title: 'SUV · FULL TANK',
+    shortTitle: 'SUV Full Tank',
+    type: 'vehicle-perk',
+    vehicleId: 'suv',
+    icon: 'perk',
+    perkTitle: 'FULL TANK',
+    perkDescription: 'Clean driving builds BOOST TANK up to 5/5.',
+    description: 'Unlock <strong>FULL TANK</strong> for SUV. Clean driving builds BOOST TANK up to 5/5.'
+  }),
+  Object.freeze({
+    id: 'sedan-double-shift',
+    threshold: 1700,
+    title: 'SEDAN · DOUBLE SHIFT',
+    shortTitle: 'Sedan Double Shift',
+    type: 'vehicle-perk',
+    vehicleId: 'sedan',
+    icon: 'perk',
+    perkTitle: 'DOUBLE SHIFT',
+    perkDescription: 'SHIFT moves 2 points between attributes instead of 1.',
+    description: 'Unlock <strong>DOUBLE SHIFT</strong> for Sedan. SHIFT moves 2 points between attributes instead of 1.'
+  }),
+  Object.freeze({
+    id: 'sports-car-drift-demon',
+    threshold: 1800,
+    title: 'SPORTS CAR · DRIFT DEMON',
+    shortTitle: 'Sports Car Drift Demon',
+    type: 'vehicle-perk',
+    vehicleId: 'sedan-sports',
+    icon: 'perk',
+    perkTitle: 'DRIFT DEMON',
+    perkDescription: 'DRIFT builds during sustained DRIFT or LOCK, up to 5/5.',
+    description: 'Unlock <strong>DRIFT DEMON</strong> for Sports Car. DRIFT builds during sustained DRIFT or LOCK, up to 5/5.'
+  }),
+  Object.freeze({
+    id: 'learner-graduated',
+    threshold: 2000,
+    title: 'LEARNER CAR · GRADUATED',
+    shortTitle: 'Learner Car Graduated',
+    type: 'vehicle-perk',
+    vehicleId: 'classic',
+    icon: 'perk',
+    perkTitle: 'GRADUATED',
+    perkDescription: 'Clean driving improves CONTROL, then ACCELERATION, then TOP SPEED.',
+    description: 'Unlock <strong>GRADUATED</strong> for Learner Car. Clean driving improves CONTROL, then ACCELERATION, then TOP SPEED.'
   })
 ]);
 
@@ -144,6 +229,11 @@ const REWARD_BY_VEHICLE = new Map(
 const REWARD_BY_FEATURE = new Map(
   TROPHY_ROAD_REWARDS.filter((reward) => reward.featureId).map((reward) => [reward.featureId, reward])
 );
+const REWARD_BY_VEHICLE_PERK = new Map(
+  TROPHY_ROAD_REWARDS
+    .filter((reward) => reward.type === 'vehicle-perk' && reward.vehicleId)
+    .map((reward) => [reward.vehicleId, reward])
+);
 const PREPARED_STORAGE = new WeakSet();
 const ADMIN_UNLOCK_MARKER = 'turn-admin-unlock-v1';
 const LEGACY_VEHICLE_SELECTION_KEY = 'turn-vehicle-selection-v1';
@@ -156,9 +246,17 @@ const VERSION_THREE_GRANDFATHERED_REWARDS = Object.freeze([
   'rally-racer'
 ]);
 const VERSION_FOUR_GRANDFATHERED_REWARDS = Object.freeze(['vintage-racer', 'rally-racer']);
-const PRE_SHIFT_GRANDFATHERED_REWARDS = Object.freeze(
-  TROPHY_ROAD_REWARDS.filter((reward) => reward.id !== 'shift').map((reward) => reward.id)
-);
+const PRE_SHIFT_GRANDFATHERED_REWARDS = Object.freeze([
+  'vintage-racer',
+  'midnight-city',
+  'race-car',
+  'emergency-pack',
+  'mountain',
+  'monster',
+  'paintjob',
+  'future-racer',
+  'rally-racer'
+]);
 
 let unlockNotice = null;
 let unlockNoticeTimer = 0;
@@ -177,6 +275,10 @@ export function rewardForVehicle(vehicleId) {
 
 export function rewardForFeature(featureId) {
   return REWARD_BY_FEATURE.get(featureId) || null;
+}
+
+export function rewardForVehiclePerk(vehicleId) {
+  return REWARD_BY_VEHICLE_PERK.get(vehicleId) || null;
 }
 
 export function grandfatheredRewardIdsForVersion(version) {
@@ -438,6 +540,11 @@ export function isVehicleUnlocked(vehicleId, storage = globalThis.localStorage) 
 
 export function isFeatureUnlocked(featureId, storage = globalThis.localStorage) {
   const reward = rewardForFeature(featureId);
+  return !reward || isTrophyRoadRewardUnlocked(reward.id, storage);
+}
+
+export function isVehiclePerkUnlocked(vehicleId, storage = globalThis.localStorage) {
+  const reward = rewardForVehiclePerk(vehicleId);
   return !reward || isTrophyRoadRewardUnlocked(reward.id, storage);
 }
 

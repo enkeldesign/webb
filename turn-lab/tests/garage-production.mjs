@@ -177,7 +177,7 @@ const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/s
 assert.ok(importMapText, 'Production must expose its import map');
 const imports = JSON.parse(importMapText).imports;
 const releaseTarget = (filePath) => `${filePath}?build=${release.cacheKey}`;
-const vehicleCatalogTarget = '/turn/vehicle/catalog.js?revision=r223-training-car-taxi';
+const vehicleCatalogTarget = '/turn/vehicle/catalog.js?revision=r230-vehicle-perks';
 const carModelBridgeTarget = '/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi';
 
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));
@@ -229,8 +229,12 @@ assert.ok(
 assert.match(lotEnhancementRuntime, /new MutationObserver\(sync\)/);
 assert.match(lotEnhancementRuntime, /screen\.dataset\.lotEnhancements = ENHANCEMENT_ID/);
 assert.match(lotPerkDisclosure, /getCarDefinition\(vehicleId\)\?\.perk/);
-assert.doesNotMatch(lotPerkDisclosure, /rewardForVehicle|trophy-road/,
-  'Perk identity and display must come directly from the car definition');
+assert.doesNotMatch(lotPerkDisclosure, /rewardForVehicle\(/,
+  'Independent perk entitlements must never route through the vehicle lock lookup');
+assert.match(lotPerkDisclosure, /rewardForVehiclePerk\(vehicleId\)/,
+  'The Lot must look up only the selected car’s independent perk entitlement');
+assert.match(lotPerkDisclosure, /isVehiclePerkUnlocked\(vehicleId\)/,
+  'The Lot must disclose the selected perk’s live locked or unlocked state');
 assert.match(lotPerkDisclosure, /className = 'lot-perk-button is-layout-placeholder'/);
 assert.match(lotPerkDisclosure, /trigger\.textContent = 'PERK'/);
 assert.match(lotPerkDisclosure, /aria-haspopup', 'dialog'/);
@@ -239,7 +243,7 @@ assert.match(lotPerkDisclosure, /setAttribute\('popover', 'auto'\)/);
 assert.match(lotPerkDisclosure, /trigger\.classList\.toggle\('is-layout-placeholder', !available\)/);
 assert.match(lotPerkDisclosure, /trigger\.disabled = !available/);
 assert.doesNotMatch(lotPerkDisclosure, /trigger\.hidden = !perkText/);
-assert.match(lotPerkDisclosure, /copy\.textContent = perkDescription/);
+assert.match(lotPerkDisclosure, /copy\.textContent = perkReward && !perkUnlocked[\s\S]*: perkDescription/);
 assert.doesNotMatch(lotPerkDisclosure, /innerHTML\s*=/);
 assert.match(lotTrophyGate, /trophy-road\.js\?revision=r164-vintage-rally-perks/);
 assert.match(lotTrophyGate, /FALLBACK_VEHICLE_ID = 'classic'/);

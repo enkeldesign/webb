@@ -27,6 +27,11 @@ import {
   resolveFrontWheelSteeringAngle
 } from '/turn/vehicle/front-wheel-steering.js?revision=r221-trajectory-wheel-steering-30';
 import { installPerformanceMonitor, recordPerformanceFrame } from '/turn/performance-monitor.js?build=20260720-r19';
+import { isVehiclePerkUnlocked } from '/turn/progression/trophy-road.js?revision=r230-vehicle-perks';
+import {
+  resetVehiclePerkRuntimeState,
+  resolveGraduatedStageFeedback
+} from '/turn/vehicle/perk-runtime.js?revision=r233-graduated';
 
 const intro = document.querySelector('#intro');
 const hud = document.querySelector('#hud');
@@ -107,12 +112,18 @@ const state = {
   vehicleId: initialVehicleSelection.carId,
   vehicleColor: initialVehicleSelection.color,
   vehicleSecondaryColor: initialVehicleSelection.secondaryColor,
+  vehicleStats: initialVehicleDefinition.stats,
   vehicleTuning: initialVehicleDefinition.tuning,
+  vehicleEffectiveTuning: initialVehicleDefinition.tuning,
+  vehiclePerkUnlocked: isVehiclePerkUnlocked(initialVehicleSelection.carId),
+  vehiclePerkProgress: 0,
+  vehiclePerkStage: 0,
   lastFrame: performance.now(),
   messageTimer: 0
 };
 
 globalThis.__turnVehicleTuning = state.vehicleTuning;
+resetVehiclePerkRuntimeState(state);
 
 installGameModeState(state);
 
@@ -535,7 +546,10 @@ async function applyVehicleSelection(selection) {
   state.vehicleId = saved.carId;
   state.vehicleColor = saved.color;
   state.vehicleSecondaryColor = saved.secondaryColor;
+  state.vehicleStats = definition.stats;
   state.vehicleTuning = definition.tuning;
+  state.vehiclePerkUnlocked = isVehiclePerkUnlocked(saved.carId);
+  resetVehiclePerkRuntimeState(state);
   globalThis.__turnVehicleTuning = definition.tuning;
 
   try {
@@ -801,6 +815,7 @@ function resetCar(showFeedback = true) {
     showMessage,
     setRacePosition: globalThis.__turnSetRacePosition
   });
+  resetVehiclePerkRuntimeState(state);
   publishUiState('race-reset');
 }
 
@@ -952,6 +967,7 @@ function beginTimedLap(now) {
 }
 
 function updatePhysics(dt, now) {
+  const previousVehiclePerkStage = state.vehiclePerkStage;
   const nearestAfter = updateVehiclePhysicsState({
     state,
     dt,
@@ -969,6 +985,11 @@ function updatePhysics(dt, now) {
     driftLock: globalThis.__turnDriftLockAmount || 0,
     vehicleTuning: state.vehicleTuning
   });
+  const graduatedFeedback = resolveGraduatedStageFeedback(
+    previousVehiclePerkStage,
+    state.vehiclePerkStage
+  );
+  if (graduatedFeedback) showMessage(graduatedFeedback, 1800);
 
   updateLapProgressState({
     state,
@@ -1402,6 +1423,20 @@ const turnRuntime = {
   }
 };
 globalThis.__turnRuntime = turnRuntime;
+function syncSelectedVehiclePerkEntitlement() {
+  const unlocked = isVehiclePerkUnlocked(state.vehicleId);
+  if (unlocked === state.vehiclePerkUnlocked) return;
+  state.vehiclePerkUnlocked = unlocked;
+  resetVehiclePerkRuntimeState(state);
+}
+
+window.addEventListener('turn:trophy-road-updated', syncSelectedVehiclePerkEntitlement);
+window.addEventListener('turn:achievements-ready', syncSelectedVehiclePerkEntitlement);
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) resetVehiclePerkRuntimeState(state);
+});
+window.addEventListener('pagehide', () => resetVehiclePerkRuntimeState(state));
+window.addEventListener('blur', () => resetVehiclePerkRuntimeState(state));
 window.dispatchEvent(new CustomEvent('turn:runtime-ready', { detail: turnRuntime }));
 publishUiState('runtime-ready');
 
