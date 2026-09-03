@@ -344,6 +344,18 @@ assert.match(lotShift, /is fixed at 5→4/,
 assert.match(lotShift, /showConstraintFeedback/,
   'Unavailable gearbox levers must produce visible and live-region feedback');
 assert.match(lotStyles, /\.lot-shift-trigger\.is-active/);
+assert.match(lotStyles, /background: var\(--turn-control-gas, #8ce99a\)/,
+  'Activate SHIFT must use the semantic GAS green');
+assert.match(lotStyles, /color-mix\(in srgb, var\(--turn-control-gas, #8ce99a\) 72%, var\(--turn-ink, #08090a\)\)/,
+  'Edit SHIFT must use a darker semantic GAS green');
+assert.match(lotStyles, /\.lot-shift-close[\s\S]*?background: var\(--turn-action-navigation, #ff7b54\)/,
+  'The SHIFT close control must use navigation orange');
+assert.match(lotStyles, /\.lot-shift-cancel \{ background: var\(--turn-action-navigation, #ff7b54\); \}/,
+  'Cancel must use navigation orange');
+assert.match(lotStyles, /\.lot-shift-deactivate \{ margin-right: auto; background: var\(--turn-action-utility, #fff8e8\); \}/,
+  'Deactivate must use the secondary paper action');
+assert.match(lotStyles, /\.lot-shift-save \{ background: var\(--turn-action-primary, #ff4fa3\); \}/,
+  'Save must use primary pink');
 assert.match(lotStyles, /\.lot-shift-dialog::backdrop/);
 assert.match(lotStyles, /grid-template-columns: repeat\(6/,
   'The landscape gearbox must keep all six levers in one row');

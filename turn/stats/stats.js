@@ -17,7 +17,7 @@ const CARS = Object.freeze([
   ['monster-truck', 'Monster Truck'],
   ['race-future', 'Future Racer'],
   ['race', 'Race Car'],
-  ['sedan-sports', 'Hatchback'],
+  ['sedan-sports', 'Sports Car'],
   ['sedan', 'Sedan'],
   ['suv', 'SUV'],
   ['firetruck', 'Fire Truck'],

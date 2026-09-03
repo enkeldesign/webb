@@ -16,21 +16,21 @@ const [runtimeSource, chromaticSource, productionIndex, labIndex, easterEggUi, s
   fs.readFile(new URL('../turn/achievements/secret-catalog.js', import.meta.url), 'utf8')
 ]);
 
-assert.equal(getCarDefinition('sedan-sports').name, 'Hatchback', 'The stable sedan-sports ID must now present as Hatchback');
+assert.equal(getCarDefinition('sedan-sports').name, 'Sports Car', 'The stable sedan-sports ID must present as Sports Car');
 assert.equal(isSportsSedanEasterEgg({
   carId: 'sedan-sports',
   secondaryColor: '#666666'
-}), true, 'The #666666 Hatchback is the unranked Super/Satan’s Hatchback');
+}), true, 'The #666666 Sports Car is the unranked SATAN’S SPORTS CAR');
 assert.equal(isSportsSedanEasterEgg({
   carId: 'sedan-sports',
   secondaryColor: '#f8f9fa'
-}), false, 'The ordinary Hatchback must remain ranked');
-assert.match(easterEggUi, /displayedName = unlocked \? 'Super Hatchback' : car\.name/);
-assert.match(easterEggUi, /Super Hatchback unlocked\. Sport trim color code #666/);
+}), false, 'The ordinary Sports Car must remain ranked');
+assert.match(easterEggUi, /displayedName = unlocked \? 'SATAN’S SPORTS CAR' : car\.name/);
+assert.match(easterEggUi, /SATAN’S SPORTS CAR unlocked\. Sport trim color code #666/);
 assert.match(easterEggUi, /dataset\.paintLabel === car\.secondaryPaint\?\.label/,
   'The hidden state must follow the current semantic secondary-paint control instead of a retired SPOILER label');
-assert.match(secretCatalog, /title: 'SATAN’S HATCHBACK'/);
-assert.match(secretCatalog, /Unlock the Super Hatchback by setting the Hatchback sport trim to color code #666/);
+assert.match(secretCatalog, /title: 'SATAN’S SPORTS CAR'/);
+assert.match(secretCatalog, /Unlock SATAN’S SPORTS CAR by setting the Sports Car sport trim to color code #666/);
 
 function replayFrames() {
   return Array.from({ length: 21 }, (_, index) => ({
@@ -103,9 +103,9 @@ const superResult = completeLapState({
 });
 
 assert.equal(superResult.validLap, true);
-assert.equal(superResult.ranked, false, 'Super Hatchback laps must be explicitly unranked');
-assert.equal(superResult.savedLap, false, 'Super Hatchback laps must never be saved');
-assert.equal(saveCalls, 0, 'Super Hatchback must never invoke rival persistence');
+assert.equal(superResult.ranked, false, 'SATAN’S SPORTS CAR laps must be explicitly unranked');
+assert.equal(superResult.savedLap, false, 'SATAN’S SPORTS CAR laps must never be saved');
+assert.equal(saveCalls, 0, 'SATAN’S SPORTS CAR must never invoke rival persistence');
 assert.equal(superState.competitorLaps, originalRivals,
   'An unranked lap must not temporarily replace the in-memory record list');
 assert.equal(superState.bestTime, 20, 'An unranked lap must not change the track best time');
@@ -126,7 +126,7 @@ const normalResult = completeLapState({
   competitorLimit: 4,
   saveGhost: () => { saveCalls += 1; }
 });
-assert.equal(normalResult.ranked, true, 'The ordinary Hatchback must remain fully ranked');
+assert.equal(normalResult.ranked, true, 'The ordinary Sports Car must remain fully ranked');
 assert.equal(normalResult.savedLap, true);
 assert.equal(saveCalls, 1);
 assert.equal(normalState.competitorLaps[0]?.time, 10);
@@ -156,10 +156,10 @@ assert.equal(saveRivalsState({
 }, { trackId: 'countryside' }), true);
 const storedBest = getStoredBestLap('countryside');
 assert.equal(storedBest?.time, 12,
-  'Legacy Super Hatchback records must be ignored so ranked records and Chromatic Camouflage can recover');
+  'Legacy #666 Sports Car records must be ignored so ranked records and Chromatic Camouflage can recover');
 assert.notEqual(storedBest?.carId, 'sedan-sports');
 const persisted = [...memory.values()].map((value) => JSON.parse(value)).find((value) => Array.isArray(value?.laps));
-assert.equal(persisted?.laps?.length, 1, 'Re-saving rivals must scrub stale Super Hatchback laps');
+assert.equal(persisted?.laps?.length, 1, 'Re-saving rivals must scrub stale #666 Sports Car laps');
 assert.equal(persisted?.laps?.[0]?.time, 12);
 
 assert.match(runtimeSource, /detail\?\.ranked === false[\s\S]*?qualifyingTimeTrial/,
@@ -182,4 +182,4 @@ else globalThis.dispatchEvent = previousDispatchEvent;
 if (previousLocalStorage === undefined) delete globalThis.localStorage;
 else globalThis.localStorage = previousLocalStorage;
 
-console.log('TURN Super Hatchback compatibility, unranked record and achievement regression passed.');
+console.log('TURN SATAN’S SPORTS CAR compatibility, unranked record and achievement regression passed.');

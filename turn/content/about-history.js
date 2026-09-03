@@ -273,14 +273,16 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     'During a race, holding GAS slides out a connected SHIFT control. Every crossing from GAS into SHIFT toggles the alternate setup, so returning to GAS and crossing again switches back without lifting the thumb. A green button darkens and gains a visible dot when active, while the same real toggle remains operable by keyboard and assistive technology.',
     'The change preserves each car’s named perk and the current percentage of Boost charge. Attribute effects swap live, while a lower top-speed cap eases down instead of abruptly snapping a moving car to the new limit.',
     'Follow-up playtesting gave every fixed gearbox lever an explanation and a brief visual response. Each race shift now rolls the three attributes that just gained a point beneath the Boost bar. The roll lingers twice as long under one consistent SHIFT heading, while the complete non-visual attribute summary plays only on the first shift of each race and later toggles announce just the state. SHIFT and LOCK were also fitted to their exact GAS and DRIFT rows so their shared seams meet cleanly without overlapping, and interrupted screenshot or app-focus transitions now restore the connected control state.',
-    'The SHIFT roll now temporarily rises above the pre-race action bar and carries its own subtle translucent backing. It remains readable across bright and dark tracks without permanently moving the rest of the HUD above the driving controls.'
+    'The SHIFT roll now temporarily rises above the pre-race action bar and carries its own subtle translucent backing. It remains readable across bright and dark tracks without permanently moving the rest of the HUD above the driving controls.',
+    'The Lot now applies TURN’s semantic action hierarchy throughout SHIFT setup: GAS green for activation, a darker GAS green for editing, pink for Save, orange for Cancel and Close, and paper for the secondary Deactivate action. The hatchback-shaped vehicle also returns to its user-facing Sports Car identity, while color code #666 reveals SATAN’S SPORTS CAR without changing stable vehicle, achievement or saved-data IDs.'
   ],
   milestones: [
     'Per-car six-lever gearbox with an invariant eighteen-point budget',
     'Persistent GAS-to-SHIFT slide toggle with visible and non-visual state feedback',
     'Fixed-lever explanations, longer rolling feedback and exact LOCK / SHIFT row alignment',
     'Universally readable SHIFT roll above the pre-race action bar',
-    'TURN 1.14.5 · 2026.09.03-r196 SHIFT feedback layering refinement'
+    'Semantic SHIFT actions and the restored SPORTS CAR / SATAN’S SPORTS CAR identity',
+    'TURN 1.14.6 · 2026.09.03-r197 semantic actions and Sports Car identity'
   ]
 }
 ]);
@@ -554,6 +556,8 @@ export const CHANGELOG = Object.freeze([
   {
     date: '3 September',
     entries: [
+      ['1.14.6 r197', 'Restores Sports Car as the user-facing vehicle name, carries the #666 secret through SATAN’S SPORTS CAR and aligns SHIFT setup with TURN’s semantic action hierarchy.'],
+      ['SHIFT action hierarchy', 'Uses GAS green and darker GAS green for Activate and Edit, pink for Save, orange for Cancel and Close, and paper for Deactivate.'],
       ['1.14.5 r196', 'Keeps the SHIFT attribute roll above the pre-race action bar and gives it a subtle translucent dark backing for consistent readability.'],
       ['Temporary HUD layer', 'Raises the HUD only while SHIFT feedback is visible, then restores the normal controls-over-HUD stacking order.']
     ]
@@ -561,7 +565,7 @@ export const CHANGELOG = Object.freeze([
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.14.5',
-  build: '2026.09.03-r196',
-  note: 'TURN 1.14.5 keeps SHIFT feedback readable above the race menu on every track.'
+  version: '1.14.6',
+  build: '2026.09.03-r197',
+  note: 'TURN 1.14.6 restores the Sports Car identity and gives SHIFT actions their semantic colors.'
 });
