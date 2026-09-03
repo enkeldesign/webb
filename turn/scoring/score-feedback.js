@@ -199,7 +199,13 @@ export function createScoreFeedback({
   }
 
   function setChannelVisible(channel, visible, now = 0) {
-    channels[normalizeChannel(channel)].visible = visible !== false;
+    const normalizedChannel = normalizeChannel(channel);
+    channels[normalizedChannel].visible = visible !== false;
+    if (!channels[normalizedChannel].visible
+      && activeEvent.active
+      && activeEvent.channel === normalizedChannel) {
+      clearEvent();
+    }
     dirty = true;
     return commit(now, true);
   }
@@ -209,10 +215,9 @@ export function createScoreFeedback({
     const normalizedType = normalizeEventType(type);
     const timestamp = finiteNumber(now);
     if (normalizedType === SCORE_FEEDBACK_EVENT.RESET) {
-      clearEvent();
-      dirty = true;
-      return commit(timestamp, true);
+      return clearChannel(normalizedChannel, timestamp);
     }
+    if (!channels[normalizedChannel].visible) return false;
 
     const priority = Math.max(
       SCORE_FEEDBACK_PRIORITY[normalizedType] || 0,
@@ -281,14 +286,26 @@ export function createScoreFeedback({
     activeEvent.announcement = '';
   }
 
+  function resetChannelState(channel) {
+    channel.active = false;
+    channel.score = 0;
+    channel.unbanked = 0;
+    channel.multiplier = 1;
+    channel.intensity = 0;
+    channel.phase = 'quiet';
+  }
+
+  function clearChannel(channel, now = 0) {
+    const normalizedChannel = normalizeChannel(channel);
+    resetChannelState(channels[normalizedChannel]);
+    if (activeEvent.active && activeEvent.channel === normalizedChannel) clearEvent();
+    dirty = true;
+    return commit(now, true);
+  }
+
   function reset(now = 0) {
     for (const channel of Object.values(channels)) {
-      channel.active = false;
-      channel.score = 0;
-      channel.unbanked = 0;
-      channel.multiplier = 1;
-      channel.intensity = 0;
-      channel.phase = 'quiet';
+      resetChannelState(channel);
     }
     clearEvent();
     announcementRevision += 1;
@@ -367,6 +384,7 @@ export function createScoreFeedback({
     publishEvent,
     setChannelVisible,
     commit,
+    clearChannel,
     reset,
     inspect
   });

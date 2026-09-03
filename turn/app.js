@@ -362,6 +362,8 @@ const { installM8HomeNavigation } = await import(
 );
 const home = await installM8HomeNavigation();
 globalThis.__turnHome = home;
+const { installDriftAttackSetting } = await import(withBuild('./ui/drift-attack-setting.js'));
+installDriftAttackSetting();
 motionPermissionCancelRecovery.resume(home, globalThis.__turnRuntime);
 const { installHowToPlayGuide } = await import(
   withBuild('./ui/how-to-play-guide.js?revision=r220-overcharge-disclosure')

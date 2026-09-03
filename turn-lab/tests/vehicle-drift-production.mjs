@@ -119,9 +119,13 @@ assert.match(physicsSource, /driftHeld \? driftDragAdd : 0/,
   'DRIFT must affect drag while drifting');
 assert.match(physicsSource, /baseSpeedLimit \* effectiveDriftSpeedMultiplier/,
   'DRIFT must affect the active speed ceiling');
-assert.match(physicsSource, /driftSlipAngle = Math\.abs\(Math\.atan2\(/,
+assert.match(physicsSource, /signedDriftSlipAngle = Math\.atan2\(/,
   'The DRIFT ceiling must respond to real velocity slip instead of only button state');
-assert.doesNotMatch(physicsSource, /driftSlipAngle = Math\.atan2\([\s\S]{0,140}Math\.abs\(state\.velocity\.dot\(currentForward\)\)/,
+assert.match(physicsSource, /state\.driftSlipAngle = signedDriftSlipAngle/,
+  'Automatic drift scoring must receive the signed physical slip direction');
+assert.match(physicsSource, /driftSlipAngle = Math\.abs\(signedDriftSlipAngle\)/,
+  'The existing speed ceiling must continue using slip magnitude');
+assert.doesNotMatch(physicsSource, /signedDriftSlipAngle = Math\.atan2\([\s\S]{0,140}Math\.abs\(state\.velocity\.dot\(currentForward\)\)/,
   'The DRIFT ceiling must not fold reverse-heading spins back into a mild forward slip');
 assert.match(physicsSource, /driftSlipAngle,[\s\S]*driftLockAmount/,
   'The live speed-limit call must pass both slip angle and LOCK state');

@@ -141,6 +141,8 @@ export function completeLapState({
   competitorLimit,
   saveGhost,
   onError,
+  finalizeScores,
+  onScoreError,
   ranked = true
 }) {
   const finishedTime = (now - state.lapStartedAt) / 1000;
@@ -151,6 +153,7 @@ export function completeLapState({
   let finishingPosition = null;
   let finishingTotal = null;
   let savedLap = false;
+  let scoreResults = null;
 
   if (completedLap) {
     const raceRivals = state.competitorLaps
@@ -206,6 +209,20 @@ export function completeLapState({
     }
   }
 
+  if (typeof finalizeScores === 'function') {
+    try {
+      scoreResults = finalizeScores({
+        finishedTime,
+        completedLap,
+        validLap,
+        rankedLap,
+        onCourseThroughout
+      }) || null;
+    } catch (error) {
+      onScoreError?.(error);
+    }
+  }
+
   if (completedLap) {
     publishLapResult({
       position: finishingPosition,
@@ -214,7 +231,8 @@ export function completeLapState({
       valid: validLap,
       saved: savedLap,
       ranked: rankedLap,
-      onCourseThroughout
+      onCourseThroughout,
+      ...(scoreResults || {})
     });
   }
 
@@ -236,7 +254,8 @@ export function completeLapState({
     ranked: rankedLap,
     onCourseThroughout,
     position: finishingPosition,
-    total: finishingTotal
+    total: finishingTotal,
+    ...(scoreResults || {})
   };
 }
 

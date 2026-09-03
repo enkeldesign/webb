@@ -27,12 +27,19 @@ import {
   resolveFrontWheelSteeringAngle
 } from '/turn/vehicle/front-wheel-steering.js?revision=r221-trajectory-wheel-steering-30';
 import { installPerformanceMonitor, recordPerformanceFrame } from '/turn/performance-monitor.js?build=20260720-r19';
-import { isVehiclePerkUnlocked } from '/turn/progression/trophy-road.js?revision=r230-vehicle-perks';
+import {
+  isFeatureUnlocked,
+  isVehiclePerkUnlocked
+} from '/turn/progression/trophy-road.js?revision=r230-vehicle-perks';
 import {
   resetVehiclePerkRuntimeState,
   resolveGraduatedStageFeedback
 } from '/turn/vehicle/perk-runtime.js?revision=r233-graduated';
 import { createScoreFeedback } from '/turn/scoring/score-feedback.js';
+import {
+  DRIFT_ATTACK_FEATURE_ID,
+  createDriftAttackRuntime
+} from '/turn/scoring/drift-attack-runtime.js';
 
 const intro = document.querySelector('#intro');
 const hud = document.querySelector('#hud');
@@ -95,7 +102,9 @@ const state = {
   velocity: new THREE.Vector3(),
   heading: 0,
   driftAmount: 0,
+  driftSlipAngle: 0,
   driftLockAmount: 0,
+  collided: false,
   offRoad: false,
   courseSafetyOffRoad: false,
   lapCourseViolation: false,
@@ -137,6 +146,13 @@ const scoreFeedback = createScoreFeedback({
     }));
   }
 });
+const driftAttack = createDriftAttackRuntime({
+  state,
+  scoreFeedback,
+  eventTarget: window,
+  isUnlocked: () => isFeatureUnlocked(DRIFT_ATTACK_FEATURE_ID)
+});
+globalThis.__turnDriftAttack = driftAttack;
 
 function publishUiState(reason) {
   window.dispatchEvent(new CustomEvent('turn:ui-state-change', {
@@ -974,6 +990,7 @@ function updateMotionInput(dt) {
 
 function beginTimedLap(now) {
   beginTimedLapState({ state, samples, now, showMessage });
+  driftAttack.beginLap(now);
   publishUiState('lap-started');
 }
 
@@ -1002,6 +1019,8 @@ function updatePhysics(dt, now) {
   );
   if (graduatedFeedback) showMessage(graduatedFeedback, 1800);
 
+  driftAttack.advance(dt, now);
+
   updateLapProgressState({
     state,
     nearestAfter,
@@ -1026,6 +1045,22 @@ function completeLap(now) {
     competitorLimit: RIVAL_LIMIT,
     saveGhost,
     showMessage,
+    finalizeScores({ finishedTime, validLap, rankedLap }) {
+      return {
+        drift: driftAttack.completeLap({
+          now,
+          time: finishedTime,
+          valid: validLap,
+          ranked: rankedLap,
+          trackId: state.trackId,
+          carId: state.vehicleId
+        })
+      };
+    },
+    onScoreError(error) {
+      console.error('TURN: DRIFT ATTACK could not finalize this lap.', error);
+      globalThis.__turnLastDriftScoreError = error;
+    },
     onError(error) {
       console.error('TURN: completed lap could not be added to rivals, continuing race.', error);
       globalThis.__turnLastLapError = error;
@@ -1433,7 +1468,8 @@ const turnRuntime = {
   runSceneOverride(dt) {
     return turnSceneOverride ? turnSceneOverride(dt) === true : false;
   },
-  scoreFeedback
+  scoreFeedback,
+  driftAttack
 };
 globalThis.__turnRuntime = turnRuntime;
 function syncSelectedVehiclePerkEntitlement() {

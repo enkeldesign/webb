@@ -35,6 +35,7 @@ export default [
       'turn/render/covered-rendering.js',
       'turn/scoring/*.js',
       'turn/training/*.js',
+      'turn/ui/drift-attack-setting.js',
       'turn/ui/steering-limit-warning.js',
       'turn/ui/track-select.js',
       'turn/vehicle/catalog.js',

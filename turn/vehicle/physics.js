@@ -342,10 +342,12 @@ export function updateVehiclePhysicsState({
   // Keep the full 0..PI relationship between the car and its velocity. Folding
   // the longitudinal component with Math.abs made a car spinning past 90 degrees
   // look like a mild forward slide and incorrectly restored most of its momentum.
-  const driftSlipAngle = Math.abs(Math.atan2(
+  const signedDriftSlipAngle = Math.atan2(
     state.velocity.dot(currentRight),
     state.velocity.dot(currentForward)
-  ));
+  );
+  state.driftSlipAngle = signedDriftSlipAngle;
+  const driftSlipAngle = Math.abs(signedDriftSlipAngle);
   const speedLimit = getVehicleSpeedLimit({
     offRoad: physicsOffRoad,
     offRoadPenalty,
@@ -377,6 +379,7 @@ export function updateVehiclePhysicsState({
     collisionProfile: currentCollisionProfile(),
     dt
   });
+  state.collided = collision.collided === true;
   if (collision.collided) updateVehicleOverdriveState({ state, collided: true });
   if (collision.collided) nearestAfter = findNearestTrack(state.position);
 

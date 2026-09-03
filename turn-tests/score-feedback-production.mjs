@@ -165,18 +165,32 @@ assert.equal(element(fixture, '[data-score-feedback-callout-label]').textContent
 feedback.setChannelVisible(SCORE_FEEDBACK_CHANNEL.DRIFT, false, 3100);
 assert.equal(element(fixture, '[data-score-feedback-callout]').hidden, true);
 assert.equal(fixture.root.hidden, false, 'Hiding DRIFT presentation leaves active FLOW context visible');
+assert.equal(feedback.publishEvent(SCORE_FEEDBACK_CHANNEL.DRIFT, SCORE_FEEDBACK_EVENT.BANK, {
+  score: 9999
+}, 3150), false, 'A hidden channel cannot take presentation priority from a visible channel');
+assert.equal(feedback.publishEvent(SCORE_FEEDBACK_CHANNEL.FLOW, SCORE_FEEDBACK_EVENT.TECHNIQUE, {
+  label: 'CLEAN LINE'
+}, 3160), true);
+assert.equal(element(fixture, '[data-score-feedback-callout-label]').textContent, 'CLEAN LINE');
 feedback.setChannelVisible(SCORE_FEEDBACK_CHANNEL.FLOW, false, 3200);
 assert.equal(fixture.root.hidden, true, 'Presentation visibility is independent per scoring channel');
+
+feedback.setChannelVisible(SCORE_FEEDBACK_CHANNEL.FLOW, true, 3300);
+feedback.updateState(SCORE_FEEDBACK_CHANNEL.FLOW, flowState, 3400);
+feedback.clearChannel(SCORE_FEEDBACK_CHANNEL.DRIFT, 3500);
+assert.equal(fixture.root.dataset.channel, 'flow', 'Clearing DRIFT must not reset FLOW');
+assert.equal(feedback.inspect().flow.score, 18420);
 
 feedback.reset(4000);
 assert.equal(fixture.root.hidden, true);
 assert.equal(feedback.inspect().drift.score, 0);
 
-const [source, css, index, nextIndex, main] = await Promise.all([
+const [source, css, index, nextIndex, labIndex, main] = await Promise.all([
   fs.readFile(new URL('../turn/scoring/score-feedback.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/scoring/score-feedback.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn-next/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn-lab/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/main.js', import.meta.url), 'utf8')
 ]);
 
@@ -189,6 +203,8 @@ assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
 assert.match(index, /id="scoreFeedback"/);
 assert.match(nextIndex, /id="scoreFeedback"/,
   'TURN NEXT must provide the fixed ScoreFeedback DOM expected by the canonical runtime');
+assert.match(labIndex, /id="scoreFeedback"/,
+  'TURN LAB must provide the fixed ScoreFeedback DOM expected by the canonical runtime');
 assert.match(index, /data-score-feedback-announcer role="status" aria-live="polite"/);
 assert.doesNotMatch(index, /data-score-feedback-current[^>]*aria-live/);
 assert.match(main, /scoreFeedback\.commit\(now\)/,

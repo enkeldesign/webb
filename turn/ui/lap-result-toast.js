@@ -8,6 +8,7 @@ import {
 
 const TOAST_VISIBLE_MS = 4000;
 const TOAST_EXIT_MS = 220;
+const scoreFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
 
 export function installLapResultToast() {
   if (globalThis.__turnLapResultToastInstalled) return;
@@ -27,6 +28,11 @@ export function installLapResultToast() {
       <i aria-hidden="true">•</i>
       <b class="lap-result-time">0:00.000</b>
     </strong>
+    <div class="lap-result-drift" hidden>
+      <span>DRIFT</span>
+      <b class="lap-result-drift-score">0</b>
+      <em class="lap-result-drift-status"></em>
+    </div>
   `;
 
   const announcer = document.createElement('div');
@@ -39,6 +45,9 @@ export function installLapResultToast() {
   const position = toast.querySelector('.lap-result-position');
   const separator = toast.querySelector('i');
   const time = toast.querySelector('.lap-result-time');
+  const drift = toast.querySelector('.lap-result-drift');
+  const driftScore = toast.querySelector('.lap-result-drift-score');
+  const driftStatus = toast.querySelector('.lap-result-drift-status');
   let hideTimer = 0;
   let exitTimer = 0;
 
@@ -92,9 +101,31 @@ export function installLapResultToast() {
     time.hidden = false;
     time.textContent = formatLapTime(seconds);
     time.setAttribute('aria-label', `Lap time, ${spokenLapTime(seconds)}`);
+    showDriftResult(result?.drift);
     toast.classList.remove('is-invalid');
     reveal();
-    setLiveAnnouncement(announcer, lapResultAnnouncement({ position: normalizedPlace, time: seconds }));
+    setLiveAnnouncement(announcer, lapResultAnnouncement({
+      position: normalizedPlace,
+      time: seconds,
+      drift: result?.drift
+    }));
+  }
+
+  function showDriftResult(result) {
+    if (result?.available !== true || !Number.isFinite(Number(result.score))) {
+      drift.hidden = true;
+      return;
+    }
+
+    const score = Math.max(0, Math.round(Number(result.score)));
+    const best = Math.max(0, Math.round(Number(result.bestScore) || 0));
+    driftScore.textContent = scoreFormatter.format(score);
+    driftStatus.textContent = result.newBest === true
+      ? 'NEW BEST'
+      : best > 0
+        ? `BEST ${scoreFormatter.format(best)}`
+        : '';
+    drift.hidden = false;
   }
 
   function showInvalid(result) {
@@ -107,6 +138,7 @@ export function installLapResultToast() {
     separator.hidden = true;
     time.hidden = true;
     time.removeAttribute('aria-label');
+    drift.hidden = true;
     toast.classList.add('is-invalid');
     reveal();
     setLiveAnnouncement(announcer, lapVoidAnnouncement(result?.reason));
