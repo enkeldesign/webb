@@ -33,6 +33,7 @@ export default [
       'turn/race/track-spatial-index.js',
       'turn/render/camera.js',
       'turn/render/covered-rendering.js',
+      'turn/scoring/*.js',
       'turn/training/*.js',
       'turn/ui/steering-limit-warning.js',
       'turn/ui/track-select.js',

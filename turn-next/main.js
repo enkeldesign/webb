@@ -32,6 +32,7 @@ import {
   resetVehiclePerkRuntimeState,
   resolveGraduatedStageFeedback
 } from '/turn/vehicle/perk-runtime.js?revision=r233-graduated';
+import { createScoreFeedback } from '/turn/scoring/score-feedback.js';
 
 const intro = document.querySelector('#intro');
 const hud = document.querySelector('#hud');
@@ -54,6 +55,7 @@ const mapCtx = mapCanvas.getContext('2d');
 const tiltNeedle = document.querySelector('#tiltNeedle');
 const tiltValue = document.querySelector('#tiltValue');
 const installGate = document.querySelector('#installGate');
+const scoreFeedbackRoot = document.querySelector('#scoreFeedback');
 
 const TAU = Math.PI * 2;
 const TRACK_WIDTH = 27;
@@ -126,6 +128,15 @@ globalThis.__turnVehicleTuning = state.vehicleTuning;
 resetVehiclePerkRuntimeState(state);
 
 installGameModeState(state);
+
+const scoreFeedback = createScoreFeedback({
+  root: scoreFeedbackRoot,
+  onSound(type, channel, detail) {
+    window.dispatchEvent(new CustomEvent('turn:score-feedback-sound', {
+      detail: { type, channel, cue: detail?.sound || type }
+    }));
+  }
+});
 
 function publishUiState(reason) {
   window.dispatchEvent(new CustomEvent('turn:ui-state-change', {
@@ -1328,7 +1339,7 @@ function updateRacePosition() {
   globalThis.__turnSetRacePosition?.(rivalsAhead + 1, total);
 }
 
-function updateHud() {
+function updateHud(now = performance.now()) {
   updateHudState({
     state,
     speedEl,
@@ -1345,6 +1356,7 @@ function updateHud() {
     findNearestTrack,
     setRacePosition: globalThis.__turnSetRacePosition
   });
+  scoreFeedback.commit(now);
 }
 
 function showMessage(text, duration = 1600) {
@@ -1420,7 +1432,8 @@ const turnRuntime = {
   },
   runSceneOverride(dt) {
     return turnSceneOverride ? turnSceneOverride(dt) === true : false;
-  }
+  },
+  scoreFeedback
 };
 globalThis.__turnRuntime = turnRuntime;
 function syncSelectedVehiclePerkEntitlement() {
@@ -1477,7 +1490,7 @@ renderer.setAnimationLoop((now) => {
 
     updateScene(frameDt);
     if (now >= nextHudUpdateAt) {
-      updateHud();
+      updateHud(now);
       nextHudUpdateAt = now + HUD_UPDATE_INTERVAL_MS;
     }
   } else {

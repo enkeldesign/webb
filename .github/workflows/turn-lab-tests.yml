@@ -193,6 +193,9 @@ jobs:
       - name: Run lap result toast regression
         run: node turn-lab/tests/lap-result-toast-production.mjs
 
+      - name: Run shared ScoreFeedback regression
+        run: node turn-tests/score-feedback-production.mjs
+
       - name: Run achievement system regression
         run: node turn-lab/tests/achievements-production.mjs
 
