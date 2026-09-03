@@ -264,6 +264,7 @@ function installGameplayUi() {
   function clearShiftFeedback() {
     window.clearTimeout(shiftFeedbackTimer);
     shiftFeedbackTimer = 0;
+    hud.classList.remove('has-shift-feedback');
     shiftFeedback.classList.remove('is-visible', 'is-shift-on', 'is-shift-off');
   }
 
@@ -280,6 +281,7 @@ function installGameplayUi() {
     });
     shiftFeedback.replaceChildren(heading, ...lines);
     void shiftFeedback.offsetWidth;
+    hud.classList.add('has-shift-feedback');
     shiftFeedback.classList.add(
       feedback.active ? 'is-shift-on' : 'is-shift-off',
       'is-visible'

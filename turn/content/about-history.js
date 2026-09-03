@@ -266,19 +266,21 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   ]
 },
 {
-  period: '2 September',
+  period: '2–3 September',
   title: 'SHIFT turns the garage into two-mode machines',
   paragraphs: [
     'SHIFT becomes TURN’s 1,500-trophy reward and adds a saved alternate setup to every standard eighteen-point car. A six-lever gearbox shows the standard attributes in blue, gains in green and reductions in red. Players move exactly three attributes up one point; the remaining three move down automatically, keeping the total and each one-to-five boundary intact.',
     'During a race, holding GAS slides out a connected SHIFT control. Every crossing from GAS into SHIFT toggles the alternate setup, so returning to GAS and crossing again switches back without lifting the thumb. A green button darkens and gains a visible dot when active, while the same real toggle remains operable by keyboard and assistive technology.',
     'The change preserves each car’s named perk and the current percentage of Boost charge. Attribute effects swap live, while a lower top-speed cap eases down instead of abruptly snapping a moving car to the new limit.',
-    'Follow-up playtesting gave every fixed gearbox lever an explanation and a brief visual response. Each race shift now rolls the three attributes that just gained a point beneath the Boost bar. The roll lingers twice as long under one consistent SHIFT heading, while the complete non-visual attribute summary plays only on the first shift of each race and later toggles announce just the state. SHIFT and LOCK were also fitted to their exact GAS and DRIFT rows so their shared seams meet cleanly without overlapping, and interrupted screenshot or app-focus transitions now restore the connected control state.'
+    'Follow-up playtesting gave every fixed gearbox lever an explanation and a brief visual response. Each race shift now rolls the three attributes that just gained a point beneath the Boost bar. The roll lingers twice as long under one consistent SHIFT heading, while the complete non-visual attribute summary plays only on the first shift of each race and later toggles announce just the state. SHIFT and LOCK were also fitted to their exact GAS and DRIFT rows so their shared seams meet cleanly without overlapping, and interrupted screenshot or app-focus transitions now restore the connected control state.',
+    'The SHIFT roll now temporarily rises above the pre-race action bar and carries its own subtle translucent backing. It remains readable across bright and dark tracks without permanently moving the rest of the HUD above the driving controls.'
   ],
   milestones: [
     'Per-car six-lever gearbox with an invariant eighteen-point budget',
     'Persistent GAS-to-SHIFT slide toggle with visible and non-visual state feedback',
     'Fixed-lever explanations, longer rolling feedback and exact LOCK / SHIFT row alignment',
-    'TURN 1.14.4 · 2026.09.02-r195 SHIFT feedback and continuity refinement'
+    'Universally readable SHIFT roll above the pre-race action bar',
+    'TURN 1.14.5 · 2026.09.03-r196 SHIFT feedback layering refinement'
   ]
 }
 ]);
@@ -548,11 +550,18 @@ export const CHANGELOG = Object.freeze([
       ['Live switching', 'A connected SHIFT button slides out from GAS, latches violet with a visible dot, preserves normalized Boost charge and lowers a reduced top-speed cap smoothly.'],
       ['Accessible control', 'SHIFT is a real pressed-state button with explicit state announcements, keyboard activation and mirrored left-handed placement.']
     ]
+  },
+  {
+    date: '3 September',
+    entries: [
+      ['1.14.5 r196', 'Keeps the SHIFT attribute roll above the pre-race action bar and gives it a subtle translucent dark backing for consistent readability.'],
+      ['Temporary HUD layer', 'Raises the HUD only while SHIFT feedback is visible, then restores the normal controls-over-HUD stacking order.']
+    ]
   }
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.14.4',
-  build: '2026.09.02-r195',
-  note: 'TURN 1.14.4 lengthens SHIFT feedback, quiets repeat speech and restores controls after app interruptions.'
+  version: '1.14.5',
+  build: '2026.09.03-r196',
+  note: 'TURN 1.14.5 keeps SHIFT feedback readable above the race menu on every track.'
 });

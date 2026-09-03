@@ -390,9 +390,17 @@ assert.match(controls, /visibilitychange[\s\S]*resumeDriveControlsAfterInterrupt
   'Returning to a visible page must restore the complete drive control state');
 assert.match(controls, /SHIFT_FEEDBACK_CLEAR_MS = 3200/,
   'The SHIFT roll must remain visible for roughly twice its original duration');
+assert.match(controls, /hud\.classList\.add\('has-shift-feedback'\)/,
+  'Visible SHIFT feedback must temporarily lift the HUD above the race menu');
+assert.match(controls, /clearShiftFeedback\(\)[\s\S]*hud\.classList\.remove\('has-shift-feedback'\)/,
+  'Clearing SHIFT feedback must restore the normal HUD stacking order');
 assert.match(controls, /line\.textContent = `\+ \$\{label\}`/,
   'Visible SHIFT feedback must roll the three gained attributes as plus values');
 assert.match(gameplayStyles, /\.shift-change-feedback\.is-visible/);
+assert.match(gameplayStyles, /\.hud\.has-shift-feedback \{[\s\S]*z-index: 21;/,
+  'The temporary SHIFT feedback layer must sit above the z-index 20 controls');
+assert.match(gameplayStyles, /\.shift-change-feedback \{[\s\S]*background: rgb\(8 9 10 \/ \.7\);/,
+  'SHIFT feedback must have a subtle dark backing that remains readable over every track');
 assert.match(gameplayStyles, /animation: turn-shift-feedback 3100ms/,
   'The complete SHIFT roll must last roughly twice as long');
 assert.match(gameplayStyles, /animation: turn-shift-feedback-line 2240ms/,
