@@ -47,6 +47,13 @@
   transition: transform 120ms ease;
 }
 
+/* Controls normally sit above the HUD. Lift the HUD only for the brief SHIFT
+   roll so feedback can cross the pre-race action bar without permanently
+   changing the game's stacking order. */
+.hud.has-shift-feedback {
+  z-index: 21;
+}
+
 .boost-hud > span {
   display: inline-block;
   margin-bottom: 4px;
@@ -84,9 +91,13 @@
   left: 50%;
   width: max-content;
   min-width: 106px;
+  padding: 6px 9px 7px;
+  border: 1px solid rgb(255 248 232 / .2);
+  border-radius: 8px;
   visibility: hidden;
+  background: rgb(8 9 10 / .7);
   color: var(--paper, #fff8e8);
-  filter: drop-shadow(2px 2px 0 var(--ink, #08090a));
+  box-shadow: 0 3px 12px rgb(8 9 10 / .24);
   font-size: clamp(.48rem, 1.05vw, .64rem);
   font-weight: 950;
   letter-spacing: .055em;

@@ -307,7 +307,7 @@ const { installLotEnhancementRuntime } = await import(
 installLotEnhancementRuntime();
 
 await import(withBuild('./input/analog-gas.js'));
-await import(withBuild('./ui/gameplay-controls.js?revision=r230-shift-feedback-duration'));
+await import(withBuild('./ui/gameplay-controls.js?revision=r231-shift-feedback-layer'));
 const { installRaceSpeech } = await import(withBuild('./ui/race-speech.js'));
 installRaceSpeech();
 const { installRacePositionLayout } = await import(withBuild('./ui/race-position-layout.js'));
