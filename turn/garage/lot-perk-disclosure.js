@@ -1,5 +1,9 @@
-import { getCarDefinition } from '../vehicle/catalog.js?revision=r223-training-car-taxi';
+import { getCarDefinition } from '../vehicle/catalog.js?revision=r230-vehicle-perks';
 import { vehiclePerkPresentation } from '../vehicle/perk-presentation.js?revision=r220-apex-grip';
+import {
+  isVehiclePerkUnlocked,
+  rewardForVehiclePerk
+} from '../progression/trophy-road.js?revision=r166-bella-records';
 
 const STYLE_ID = 'turn-lot-perk-popover-r225-styles';
 const activeDisclosures = new WeakMap();
@@ -38,6 +42,14 @@ function installStyles() {
       font-weight: 950;
       letter-spacing: .07em;
       line-height: 1;
+    }
+
+    .lot-showroom .lot-perk-button.is-trophy-road-perk.is-locked {
+      background: var(--turn-reward-feature-locked, #fff1b8);
+    }
+
+    .lot-showroom .lot-perk-button.is-trophy-road-perk.is-unlocked {
+      background: var(--turn-reward-feature-unlocked, #ffd43b);
     }
 
     /* Keep the PERK footprint in every title row. Cars without a perk use an
@@ -375,6 +387,8 @@ export function installLotPerkDisclosure(root = document.body) {
   function sync() {
     const vehicleId = selectedVehicleId(screen);
     const vehiclePerk = vehiclePerkPresentation(vehicleId, getCarDefinition(vehicleId)?.perk);
+    const perkReward = rewardForVehiclePerk(vehicleId);
+    const perkUnlocked = !perkReward || isVehiclePerkUnlocked(vehicleId);
     const perkTitle = vehiclePerk?.title || '';
     const perkDescription = vehiclePerk?.description || '';
     const perkText = perkTitle && perkDescription
@@ -383,6 +397,9 @@ export function installLotPerkDisclosure(root = document.body) {
 
     closePopover();
     setTriggerAvailable(Boolean(perkText));
+    trigger.classList.toggle('is-trophy-road-perk', Boolean(perkReward));
+    trigger.classList.toggle('is-locked', Boolean(perkReward && !perkUnlocked));
+    trigger.classList.toggle('is-unlocked', Boolean(perkReward && perkUnlocked));
     if (!perkText) {
       trigger.removeAttribute('aria-label');
       title.textContent = '';
@@ -391,12 +408,23 @@ export function installLotPerkDisclosure(root = document.body) {
       return;
     }
 
-    trigger.setAttribute('aria-label', `Perk: ${perkTitle}`);
-    if (perkText !== currentPerkText) {
-      title.textContent = perkTitle;
-      copy.textContent = perkDescription;
-      currentPerkText = perkText;
-    }
+    trigger.textContent = perkReward && !perkUnlocked
+      ? `PERK · ${perkReward.threshold}`
+      : 'PERK';
+    trigger.setAttribute(
+      'aria-label',
+      perkReward && !perkUnlocked
+        ? `Perk: ${perkTitle}. Locked until ${perkReward.threshold} trophies.`
+        : `Perk: ${perkTitle}. Unlocked.`
+    );
+    eyebrow.textContent = perkReward
+      ? `PERK · ${perkUnlocked ? 'UNLOCKED' : 'LOCKED'}`
+      : 'PERK';
+    title.textContent = perkTitle;
+    copy.textContent = perkReward && !perkUnlocked
+      ? `${perkDescription} Unlocks at ${perkReward.threshold} trophies.`
+      : perkDescription;
+    currentPerkText = perkText;
   }
 
   // Observe only the radio-selection state. The button and popover live outside
@@ -408,6 +436,7 @@ export function installLotPerkDisclosure(root = document.body) {
     attributes: true,
     attributeFilter: ['aria-checked']
   });
+  globalThis.addEventListener?.('turn:trophy-road-updated', sync);
   sync();
 
   let released = false;
@@ -415,6 +444,7 @@ export function installLotPerkDisclosure(root = document.body) {
     if (released) return;
     released = true;
     observer.disconnect();
+    globalThis.removeEventListener?.('turn:trophy-road-updated', sync);
     closePopover();
     trigger.removeEventListener('click', handleTriggerClick);
     close.removeEventListener('click', handleCloseClick);

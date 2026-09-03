@@ -99,6 +99,18 @@ const SIRENS_PERK = Object.freeze({
 });
 
 const VEHICLE_PERK_BY_ID = Object.freeze({
+  convertible: Object.freeze({
+    title: 'TRACTION',
+    description: 'Shallow off-road driving causes much less slowdown, while deep off-road remains punishing.',
+    rewardId: 'awd-traction',
+    threshold: 1200
+  }),
+  classic: Object.freeze({
+    title: 'GRADUATED',
+    description: 'Clean driving improves CONTROL, then ACCELERATION, then TOP SPEED.',
+    rewardId: 'learner-graduated',
+    threshold: 2000
+  }),
   'vintage-racer': Object.freeze({
     title: 'DRIFTAGE',
     description: 'DRIFT drains less speed, steering becomes more aggressive and the car can hold larger slip angles.'
@@ -114,6 +126,36 @@ const VEHICLE_PERK_BY_ID = Object.freeze({
   race: Object.freeze({
     title: 'APEX GRIP',
     description: 'Increased CONTROL when OVERCHARGED.'
+  }),
+  'sedan-sports': Object.freeze({
+    title: 'DRIFT DEMON',
+    description: 'DRIFT builds during sustained DRIFT or LOCK, up to 5/5.',
+    rewardId: 'sports-car-drift-demon',
+    threshold: 1800
+  }),
+  sedan: Object.freeze({
+    title: 'DOUBLE SHIFT',
+    description: 'SHIFT moves 2 points between attributes instead of 1.',
+    rewardId: 'sedan-double-shift',
+    threshold: 1700
+  }),
+  suv: Object.freeze({
+    title: 'FULL TANK',
+    description: 'Clean driving builds BOOST TANK up to 5/5.',
+    rewardId: 'suv-full-tank',
+    threshold: 1600
+  }),
+  truck: Object.freeze({
+    title: 'TORQUE',
+    description: 'ACCELERATION builds while GAS is held, up to 5/5.',
+    rewardId: 'truck-torque',
+    threshold: 1300
+  }),
+  van: Object.freeze({
+    title: 'CARRY ON',
+    description: 'LOCK loses much less speed.',
+    rewardId: 'van-carry-on',
+    threshold: 1400
   }),
   'race-future': Object.freeze({
     title: 'OVERDRIVE',
@@ -137,6 +179,9 @@ const TUNING_OVERRIDE_BY_ID = Object.freeze({
   }),
   race: Object.freeze({
     overchargeControlMultiplier: 1.21
+  }),
+  van: Object.freeze({
+    lockDragAdd: 0.07
   })
 });
 

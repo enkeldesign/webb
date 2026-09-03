@@ -487,5 +487,6 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     getState: () => normalizeAchievementState(store.state)
   });
   globalThis.__turnAchievements = api;
+  window.dispatchEvent(new CustomEvent('turn:achievements-ready', { detail: api }));
   return api;
 }

@@ -53,12 +53,12 @@ assert.equal(
 );
 assert.equal(
   imports['./vehicle/physics.js?build=20260720-r19'],
-  `./vehicle/physics.js?build=${release.cacheKey}&revision=r220-apex-grip`,
-  'Production must publish APEX GRIP and the mandatory full-angle DRIFT penalty through a fresh release URL'
+  `./vehicle/physics.js?build=${release.cacheKey}&revision=r233-graduated`,
+  'Production must publish vehicle perks and the mandatory full-angle DRIFT penalty through a fresh release URL'
 );
 assert.equal(
   imports['./vehicle/catalog.js?build=20260720-r19'],
-  '/turn/vehicle/catalog.js?revision=r223-training-car-taxi',
+  '/turn/vehicle/catalog.js?revision=r230-vehicle-perks',
   'Production must publish fresh shared stat definitions through the canonical vehicle catalog'
 );
 assert.match(wrapper, /const lotResult = showOriginalLot\(options\)/, 'The verified Lot must mount synchronously before enhancement');

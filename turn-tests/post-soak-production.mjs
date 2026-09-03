@@ -166,7 +166,7 @@ assert.match(trophyWrapper, /reward\.id !== 'future-racer'/);
 for (const index of [productionIndex, labIndex]) {
   assert.match(
     index,
-    /\/turn\/progression\/trophy-road-chromatic-r183\.js\?revision=r226-shift/,
+    /\/turn\/progression\/trophy-road-chromatic-r183\.js\?revision=r230-vehicle-perks/,
     'Production and LAB must load the fresh Race Car reward and Future Racer copy wrapper'
   );
   assert.match(index, /app\.js\?build=[^"']*r164-long-session-robustness-post-soak/);

@@ -258,8 +258,8 @@ assert.deepEqual(normalizeChallengeProgress({
 });
 
 const empty = normalizeAchievementState(null);
-assert.equal(empty.version, 6,
-  'Trophy Road v6 migrates the Race, Future and Rally reward-slot changes');
+assert.equal(empty.version, 7,
+  'Trophy Road v7 adds independently gated vehicle-perk rewards');
 assert.deepEqual(empty.progress.tracks, []);
 assert.deepEqual(empty.progress.blankTracks, []);
 assert.deepEqual(empty.rewards.unlocked, []);

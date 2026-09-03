@@ -3,6 +3,8 @@ export const VEHICLE_SHIFT_REWARD_ID = 'shift';
 export const VEHICLE_SHIFT_STORAGE_KEY = 'turn-vehicle-shift-v1';
 export const VEHICLE_SHIFT_STORAGE_VERSION = 1;
 export const VEHICLE_SHIFT_STAT_BUDGET = 18;
+export const VEHICLE_SHIFT_STANDARD_AMOUNT = 1;
+export const VEHICLE_SHIFT_DOUBLE_AMOUNT = 2;
 
 export const VEHICLE_SHIFT_STAT_FIELDS = Object.freeze([
   Object.freeze({ key: 'speed', label: 'TOP SPEED' }),
@@ -86,14 +88,28 @@ export function vehicleStatsSupportShift(stats) {
   }) && VEHICLE_SHIFT_STAT_KEYS.reduce((total, key) => total + Number(stats[key]), 0) === VEHICLE_SHIFT_STAT_BUDGET;
 }
 
-export function requiredVehicleShiftReducers(stats) {
-  if (!vehicleStatsSupportShift(stats)) return Object.freeze([]);
-  return Object.freeze(VEHICLE_SHIFT_STAT_KEYS.filter((key) => Number(stats[key]) === 5));
+export function vehicleShiftAmount(vehicleId, perkUnlocked = false) {
+  return normalizedVehicleId(vehicleId) === 'sedan' && perkUnlocked === true
+    ? VEHICLE_SHIFT_DOUBLE_AMOUNT
+    : VEHICLE_SHIFT_STANDARD_AMOUNT;
 }
 
-export function blockedVehicleShiftReducers(stats) {
+function normalizedShiftAmount(value) {
+  return Number(value) === VEHICLE_SHIFT_DOUBLE_AMOUNT
+    ? VEHICLE_SHIFT_DOUBLE_AMOUNT
+    : VEHICLE_SHIFT_STANDARD_AMOUNT;
+}
+
+export function requiredVehicleShiftReducers(stats, shiftAmount = VEHICLE_SHIFT_STANDARD_AMOUNT) {
+  if (!vehicleStatsSupportShift(stats)) return Object.freeze([]);
+  const amount = normalizedShiftAmount(shiftAmount);
+  return Object.freeze(VEHICLE_SHIFT_STAT_KEYS.filter((key) => Number(stats[key]) > 5 - amount));
+}
+
+export function blockedVehicleShiftReducers(stats, shiftAmount = VEHICLE_SHIFT_STANDARD_AMOUNT) {
   if (!vehicleStatsSupportShift(stats)) return Object.freeze([...VEHICLE_SHIFT_STAT_KEYS]);
-  return Object.freeze(VEHICLE_SHIFT_STAT_KEYS.filter((key) => Number(stats[key]) === 1));
+  const amount = normalizedShiftAmount(shiftAmount);
+  return Object.freeze(VEHICLE_SHIFT_STAT_KEYS.filter((key) => Number(stats[key]) < 1 + amount));
 }
 
 function complementaryVehicleShiftStats(selectedStats) {
@@ -103,12 +119,12 @@ function complementaryVehicleShiftStats(selectedStats) {
   return Object.freeze(VEHICLE_SHIFT_STAT_KEYS.filter((key) => !selectedSet.has(key)));
 }
 
-export function requiredVehicleShiftReceivers(stats) {
-  return blockedVehicleShiftReducers(stats);
+export function requiredVehicleShiftReceivers(stats, shiftAmount = VEHICLE_SHIFT_STANDARD_AMOUNT) {
+  return blockedVehicleShiftReducers(stats, shiftAmount);
 }
 
-export function blockedVehicleShiftReceivers(stats) {
-  return requiredVehicleShiftReducers(stats);
+export function blockedVehicleShiftReceivers(stats, shiftAmount = VEHICLE_SHIFT_STANDARD_AMOUNT) {
+  return requiredVehicleShiftReducers(stats, shiftAmount);
 }
 
 export function vehicleShiftReceiversForReducers(reducedStats) {
@@ -119,14 +135,15 @@ export function vehicleShiftReducersForReceivers(receivingStats) {
   return complementaryVehicleShiftStats(receivingStats);
 }
 
-export function shiftedVehicleStats(stats, reducedStats) {
+export function shiftedVehicleStats(stats, reducedStats, shiftAmount = VEHICLE_SHIFT_STANDARD_AMOUNT) {
   if (!vehicleStatsSupportShift(stats)) return null;
   const reduced = normalizedReducedStats(reducedStats);
   if (reduced.length !== 3) return null;
   const reducedSet = new Set(reduced);
+  const amount = normalizedShiftAmount(shiftAmount);
   const shifted = {};
   for (const key of VEHICLE_SHIFT_STAT_KEYS) {
-    const value = Number(stats[key]) + (reducedSet.has(key) ? -1 : 1);
+    const value = Number(stats[key]) + (reducedSet.has(key) ? -amount : amount);
     if (value < 1 || value > 5) return null;
     shifted[key] = value;
   }
@@ -134,23 +151,38 @@ export function shiftedVehicleStats(stats, reducedStats) {
   return total === VEHICLE_SHIFT_STAT_BUDGET ? Object.freeze(shifted) : null;
 }
 
-export function shiftedVehicleStatsFromReceivers(stats, receivingStats) {
+export function shiftedVehicleStatsFromReceivers(
+  stats,
+  receivingStats,
+  shiftAmount = VEHICLE_SHIFT_STANDARD_AMOUNT
+) {
   const reducedStats = vehicleShiftReducersForReceivers(receivingStats);
-  return reducedStats.length === 3 ? shiftedVehicleStats(stats, reducedStats) : null;
+  return reducedStats.length === 3 ? shiftedVehicleStats(stats, reducedStats, shiftAmount) : null;
 }
 
-export function isVehicleShiftConfigurationValid(stats, reducedStats) {
-  return Boolean(shiftedVehicleStats(stats, reducedStats));
+export function isVehicleShiftConfigurationValid(
+  stats,
+  reducedStats,
+  shiftAmount = VEHICLE_SHIFT_STANDARD_AMOUNT
+) {
+  return Boolean(shiftedVehicleStats(stats, reducedStats, shiftAmount));
 }
 
-export function loadVehicleShiftProfile(vehicleId, stats, storage) {
+export function loadVehicleShiftProfile(
+  vehicleId,
+  stats,
+  storage,
+  shiftAmount = VEHICLE_SHIFT_STANDARD_AMOUNT
+) {
   const id = normalizedVehicleId(vehicleId);
   const profile = readVehicleShiftState(storage).profiles[id];
-  if (!profile || !isVehicleShiftConfigurationValid(stats, profile.reducedStats)) return null;
+  const amount = normalizedShiftAmount(shiftAmount);
+  if (!profile || !isVehicleShiftConfigurationValid(stats, profile.reducedStats, amount)) return null;
   return Object.freeze({
     enabled: profile.enabled,
     reducedStats: profile.reducedStats,
-    shiftedStats: shiftedVehicleStats(stats, profile.reducedStats)
+    shiftAmount: amount,
+    shiftedStats: shiftedVehicleStats(stats, profile.reducedStats, amount)
   });
 }
 
@@ -169,11 +201,13 @@ export function saveVehicleShiftProfile({
   stats,
   reducedStats,
   enabled = true,
-  storage
+  storage,
+  shiftAmount = VEHICLE_SHIFT_STANDARD_AMOUNT
 } = {}) {
   const id = normalizedVehicleId(vehicleId);
   const reduced = normalizedReducedStats(reducedStats);
-  if (!id || !isVehicleShiftConfigurationValid(stats, reduced)) return null;
+  const amount = normalizedShiftAmount(shiftAmount);
+  if (!id || !isVehicleShiftConfigurationValid(stats, reduced, amount)) return null;
 
   const current = readVehicleShiftState(storage);
   const next = {
@@ -187,17 +221,24 @@ export function saveVehicleShiftProfile({
     }
   };
   if (!writeVehicleShiftState(next, storage)) return null;
-  return loadVehicleShiftProfile(id, stats, storage);
+  return loadVehicleShiftProfile(id, stats, storage, amount);
 }
 
-export function setVehicleShiftProfileEnabled(vehicleId, stats, enabled, storage) {
-  const current = loadVehicleShiftProfile(vehicleId, stats, storage);
+export function setVehicleShiftProfileEnabled(
+  vehicleId,
+  stats,
+  enabled,
+  storage,
+  shiftAmount = VEHICLE_SHIFT_STANDARD_AMOUNT
+) {
+  const current = loadVehicleShiftProfile(vehicleId, stats, storage, shiftAmount);
   if (!current) return null;
   return saveVehicleShiftProfile({
     vehicleId,
     stats,
     reducedStats: current.reducedStats,
     enabled,
-    storage
+    storage,
+    shiftAmount
   });
 }

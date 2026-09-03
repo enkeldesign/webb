@@ -107,7 +107,7 @@ assert.match(mainSource, /maxSpeed: MAX_SPEED \* state\.vehicleTuning\.topSpeedM
   'TOP SPEED must scale the actual race speed ceiling');
 assert.match(physicsSource, /enginePower =[\s\S]*accelerationMultiplier/,
   'ACCELERATION must scale forward engine power');
-assert.match(physicsSource, /reversePower = \(physicsOffRoad \? 20 : 27\) \* accelerationMultiplier/,
+assert.match(physicsSource, /reversePower = lerp\(27, 20, offRoadPenalty\) \* accelerationMultiplier/,
   'ACCELERATION must also scale reverse power consistently');
 assert.match(physicsSource, /steeringStatMultiplier =[\s\S]*controlMultiplier/,
   'CONTROL must scale actual steering authority');
@@ -135,8 +135,8 @@ assert.match(physicsSource, /lockYawMultiplier = lerp\(1, 1\.55, driftLockAmount
   'The short LOCK transition must scale rotation without adding wheel simulations');
 assert.match(physicsSource, /lockGripMultiplier = lerp\(1, 0\.22, driftLockAmount\)/,
   'The short LOCK transition must release rear lateral grip');
-assert.match(physicsSource, /driftLockAmount \* 0\.18/,
-  'LOCK must add a modest handbrake-like speed cost');
+assert.match(physicsSource, /driftLockAmount \* lockDragAdd/,
+  'LOCK must apply the selected vehicle’s gated handbrake-like speed cost');
 assert.match(physicsSource, /\* tuningBoostPowerMultiplier/,
   'BOOST POWER must scale actual boost acceleration');
 assert.match(physicsSource, /boostSpeedMultiplier: tuningBoostSpeedMultiplier/,
@@ -328,7 +328,7 @@ assert.match(
   /'rally-racer': Object\.freeze\(\[[\s\S]*carId: 'toy-racer'/,
   'Rally Racer Trophy Road detail must use the stable Toy Racer 3D asset'
 );
-assert.match(showcaseSource, /catalog\.js\?revision=r223-training-car-taxi/,
+assert.match(showcaseSource, /catalog\.js\?revision=r230-vehicle-perks/,
   'Trophy Road models must use the refreshed factory colours');
 assert.doesNotMatch(trophyRoadSource, /tank is tiny|tiny tank/i,
   'Trophy Road must not describe the ordinary 1\/5 Rally tank as an extra penalty');

@@ -101,8 +101,10 @@ assert.match(enhancementRuntime, /released = true/);
 
 assert.match(perkDisclosure, /className = 'lot-perk-copy'/);
 assert.match(perkDisclosure, /getCarDefinition\(vehicleId\)\?\.perk/);
-assert.doesNotMatch(perkDisclosure, /rewardForVehicle|trophy-road/,
-  'Perk display must be driven by the selected car definition rather than Trophy Road ownership');
+assert.doesNotMatch(perkDisclosure, /rewardForVehicle\(/,
+  'Perk ownership must never be confused with the selected car’s own Trophy Road lock');
+assert.match(perkDisclosure, /rewardForVehiclePerk\(vehicleId\)/,
+  'The selected car’s independent perk reward must drive locked/unlocked disclosure');
 assert.match(perkDisclosure, /className = 'lot-perk-button is-layout-placeholder'/);
 assert.match(perkDisclosure, /trigger\.textContent = 'PERK'/);
 assert.match(perkDisclosure, /trigger\.setAttribute\('aria-haspopup', 'dialog'\)/);

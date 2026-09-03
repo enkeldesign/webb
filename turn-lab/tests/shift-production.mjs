@@ -20,6 +20,7 @@ import {
   setVehicleShiftProfileEnabled,
   shiftedVehicleStats,
   shiftedVehicleStatsFromReceivers,
+  vehicleShiftAmount,
   vehicleShiftReceiversForReducers,
   vehicleShiftReducersForReceivers,
   vehicleStatsSupportShift
@@ -81,7 +82,7 @@ assert.equal(rewardIdsForTrophies(1500).includes('shift'), true);
 const lockedStorage = createMemoryStorage();
 const unlockedStorage = createMemoryStorage({
   'turn-achievements-v1': JSON.stringify({
-    version: 6,
+    version: 7,
     unlocked: {},
     seen: [],
     progress: { tracks: [], blankTracks: [] },
@@ -145,6 +146,35 @@ assert.deepEqual(
 );
 assert.equal(shiftedVehicleStats(raceCar.stats, ['acceleration', 'control', 'drift']), null,
   'A five-point attribute must donate because SHIFT cannot raise it above five');
+
+const sedan = getCarDefinition('sedan');
+const sedanReducers = ['control', 'drift', 'boostDuration'];
+const sedanReceivers = ['speed', 'acceleration', 'boostPower'];
+assert.equal(vehicleShiftAmount(sedan.id, false), 1);
+assert.equal(vehicleShiftAmount(sedan.id, true), 2);
+assert.equal(vehicleShiftAmount(raceCar.id, true), 1,
+  'DOUBLE SHIFT must never change another car’s one-point gearbox');
+assert.deepEqual(shiftedVehicleStats(sedan.stats, sedanReducers, 2), {
+  speed: 5,
+  acceleration: 5,
+  control: 1,
+  drift: 1,
+  boostPower: 5,
+  boostDuration: 1
+}, 'Unlocked DOUBLE SHIFT must turn the Sedan’s six 3s into three 5s and three 1s');
+assert.equal(getVehicleStatTotal(shiftedVehicleStats(sedan.stats, sedanReducers, 2)), 18);
+const doubleGearbox = resolveVehicleShiftGearbox(sedan.stats, sedanReceivers, 2);
+assert.equal(doubleGearbox?.complete, true);
+assert.equal(doubleGearbox?.shiftAmount, 2);
+assert.deepEqual(doubleGearbox?.shiftedStats, shiftedVehicleStats(sedan.stats, sedanReducers, 2));
+assert.deepEqual(doubleGearbox?.levers.map(({ displayValue }) => displayValue), ['5', '5', '1', '1', '5', '1']);
+const doubleFeedback = resolveVehicleShiftFeedback({
+  reducedStats: sedanReducers,
+  shiftAmount: 2
+}, true);
+assert.equal(doubleFeedback?.amount, 2);
+assert.equal(doubleFeedback?.announcement,
+  'SHIFT on. Top speed, acceleration, and boost power gain two points.');
 
 const learner = getCarDefinition('classic');
 assert.deepEqual(requiredVehicleShiftReducers(learner.stats), ['control', 'drift', 'boostDuration']);
@@ -245,6 +275,25 @@ assert.deepEqual(deactivatedRaceShift?.reducedStats, mountainShiftReducers,
   'Deactivating SHIFT must preserve the saved setup for later reactivation');
 assert.match(profileStorage.getItem(VEHICLE_SHIFT_STORAGE_KEY) || '', /"race"/);
 
+const existingSedanProfileStorage = createMemoryStorage();
+const existingSedanProfile = saveVehicleShiftProfile({
+  vehicleId: sedan.id,
+  stats: sedan.stats,
+  reducedStats: sedanReducers,
+  storage: existingSedanProfileStorage
+});
+assert.equal(existingSedanProfile?.shiftAmount, 1);
+const upgradedSedanProfile = loadVehicleShiftProfile(
+  sedan.id,
+  sedan.stats,
+  existingSedanProfileStorage,
+  2
+);
+assert.deepEqual(upgradedSedanProfile?.reducedStats, existingSedanProfile?.reducedStats,
+  'DOUBLE SHIFT must retain an existing Sedan profile’s saved directions');
+assert.equal(upgradedSedanProfile?.shiftAmount, 2);
+assert.deepEqual(upgradedSedanProfile?.shiftedStats, shiftedVehicleStats(sedan.stats, sedanReducers, 2));
+
 const malformedStorage = createMemoryStorage({
   [VEHICLE_SHIFT_STORAGE_KEY]: '{not json'
 });
@@ -325,6 +374,8 @@ const [lotShift, lotGearbox, lotRuntime, lotStyles, controls, gameplayStyles, dr
 
 assert.match(lotRuntime, /installLotShift/);
 assert.match(lotShift, /Move three attribute levers up by 1/);
+assert.match(lotShift, /vehicleShiftAmount\(car\.id, isVehiclePerkUnlocked\(car\.id\)\)/,
+  'The Lot gearbox must switch the Sedan magnitude from its independent perk entitlement');
 assert.match(lotShift, /class="lot-shift-options" role="group"/);
 assert.match(lotShift, /document\.createElement\('button'\)/,
   'SHIFT attributes must be presented as direct toggle buttons');
@@ -337,9 +388,9 @@ assert.match(lotGearbox, /automaticallyLoses/);
 assert.match(lotGearbox, /displayValue/);
 assert.match(lotShift, /setVehicleShiftProfileEnabled/);
 assert.match(lotShift, /turn:shift-profile-change/);
-assert.match(lotShift, /is fixed at 1→2/,
+assert.match(lotShift, /is fixed at \$\{lever\.baseValue\}→\$\{lever\.shiftedValue\}/,
   'A tapped minimum lever must explain why its upward move is automatic');
-assert.match(lotShift, /is fixed at 5→4/,
+assert.match(lotShift, /It must lose \$\{editingShiftAmount\}/,
   'A tapped maximum lever must explain why its downward move is automatic');
 assert.match(lotShift, /showConstraintFeedback/,
   'Unavailable gearbox levers must produce visible and live-region feedback');
@@ -406,8 +457,10 @@ assert.match(controls, /hud\.classList\.add\('has-shift-feedback'\)/,
   'Visible SHIFT feedback must temporarily lift the HUD above the race menu');
 assert.match(controls, /clearShiftFeedback\(\)[\s\S]*hud\.classList\.remove\('has-shift-feedback'\)/,
   'Clearing SHIFT feedback must restore the normal HUD stacking order');
-assert.match(controls, /line\.textContent = `\+ \$\{label\}`/,
-  'Visible SHIFT feedback must roll the three gained attributes as plus values');
+assert.match(controls, /line\.textContent = `\+\$\{feedback\.amount \|\| 1\} \$\{label\}`/,
+  'Visible SHIFT feedback must roll each gained attribute with its one- or two-point value');
+assert.match(controls, /if \(wasActive && shiftAvailable\) applyShiftMode\(true, \{ announce: false \}\)/,
+  'An active Sedan setup must adopt DOUBLE SHIFT immediately when its reward unlocks');
 assert.match(gameplayStyles, /\.shift-change-feedback\.is-visible/);
 assert.match(gameplayStyles, /\.hud\.has-shift-feedback \{[\s\S]*z-index: 21;/,
   'The temporary SHIFT feedback layer must sit above the z-index 20 controls');

@@ -21,12 +21,17 @@ import {
 import {
   deriveVehicleTuningForCar,
   getCarDefinition
-} from '../vehicle/catalog.js?revision=r226-shift';
-import { isFeatureUnlocked } from '../progression/trophy-road.js?revision=r226-shift';
+} from '../vehicle/catalog.js?revision=r230-vehicle-perks';
+import {
+  isFeatureUnlocked,
+  isVehiclePerkUnlocked
+} from '../progression/trophy-road.js?revision=r230-vehicle-perks';
 import {
   VEHICLE_SHIFT_FEATURE_ID,
-  loadVehicleShiftProfile
-} from '../vehicle/shift-profile.js?revision=r227-shift-feedback';
+  loadVehicleShiftProfile,
+  vehicleShiftAmount
+} from '../vehicle/shift-profile.js?revision=r232-double-shift';
+import { resolveVehiclePerkTuning } from '../vehicle/perk-runtime.js?revision=r233-graduated';
 import {
   advanceShiftTopSpeedMultiplier,
   enteredShiftToggle,
@@ -34,7 +39,7 @@ import {
 } from '../input/shift-toggle.js?revision=r227-shift-feedback';
 import {
   resolveVehicleShiftFeedback
-} from './shift-feedback.js?revision=r230-shift-feedback-duration';
+} from './shift-feedback.js?revision=r232-double-shift';
 
 globalThis.__turnBoostActive = false;
 globalThis.__turnBoostCharge = 1;
@@ -257,8 +262,14 @@ function installGameplayUi() {
     const runtime = globalThis.__turnRuntime;
     const vehicleId = runtime?.state?.vehicleId || '';
     const car = vehicleId ? getCarDefinition(vehicleId) : null;
-    const profile = car ? loadVehicleShiftProfile(vehicleId, car.stats) : null;
-    return { runtime, vehicleId, car, profile };
+    const perkUnlocked = runtime?.state?.vehicleId === vehicleId
+      ? runtime.state.vehiclePerkUnlocked === true
+      : isVehiclePerkUnlocked(vehicleId);
+    const shiftAmount = vehicleShiftAmount(vehicleId, perkUnlocked);
+    const profile = car
+      ? loadVehicleShiftProfile(vehicleId, car.stats, undefined, shiftAmount)
+      : null;
+    return { runtime, vehicleId, car, profile, shiftAmount };
   }
 
   function clearShiftFeedback() {
@@ -276,7 +287,7 @@ function installGameplayUi() {
     heading.textContent = feedback.title;
     const lines = feedback.labels.map((label) => {
       const line = document.createElement('span');
-      line.textContent = `+ ${label}`;
+      line.textContent = `+${feedback.amount || 1} ${label}`;
       return line;
     });
     shiftFeedback.replaceChildren(heading, ...lines);
@@ -361,6 +372,11 @@ function installGameplayUi() {
         ? { ...target, topSpeedMultiplier: currentTopSpeed }
         : target;
       runtime.state.vehicleTuning = appliedTuning;
+      runtime.state.vehicleStats = nextActive ? profile.shiftedStats : car.stats;
+      runtime.state.vehicleEffectiveTuning = resolveVehiclePerkTuning({
+        state: runtime.state,
+        tuning: appliedTuning
+      });
       globalThis.__turnVehicleTuning = appliedTuning;
       shiftTuningTarget = target;
     } else {
@@ -419,6 +435,10 @@ function installGameplayUi() {
     const next = advanceShiftTopSpeedMultiplier(current, target, dt);
     if (Math.abs(next - target) <= 0.000001) {
       runtimeState.vehicleTuning = shiftTuningTarget;
+      runtimeState.vehicleEffectiveTuning = resolveVehiclePerkTuning({
+        state: runtimeState,
+        tuning: shiftTuningTarget
+      });
       globalThis.__turnVehicleTuning = shiftTuningTarget;
       shiftTuningTarget = null;
       return;
@@ -427,6 +447,10 @@ function installGameplayUi() {
       runtimeState.vehicleTuning = { ...runtimeState.vehicleTuning };
     }
     runtimeState.vehicleTuning.topSpeedMultiplier = next;
+    runtimeState.vehicleEffectiveTuning = resolveVehiclePerkTuning({
+      state: runtimeState,
+      tuning: runtimeState.vehicleTuning
+    });
     globalThis.__turnVehicleTuning = runtimeState.vehicleTuning;
   }
 
@@ -453,7 +477,10 @@ function installGameplayUi() {
   }
 
   function getBoostDrainSeconds() {
-    const duration = Number(globalThis.__turnVehicleTuning?.boostDurationSeconds);
+    const duration = Number(
+      globalThis.__turnRuntime?.state?.vehicleEffectiveTuning?.boostDurationSeconds
+      ?? globalThis.__turnVehicleTuning?.boostDurationSeconds
+    );
     const baseDuration = Number.isFinite(duration)
       ? Math.max(0.8, Math.min(5, duration))
       : DEFAULT_BOOST_DRAIN_SECONDS;
@@ -742,7 +769,9 @@ function installGameplayUi() {
     if (wasActive && shiftAvailable) applyShiftMode(true, { announce: false });
   });
   window.addEventListener('turn:trophy-road-updated', () => {
+    const wasActive = shiftActive;
     syncShiftAvailability({ reset: !shiftActive });
+    if (wasActive && shiftAvailable) applyShiftMode(true, { announce: false });
   });
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
@@ -778,12 +807,15 @@ function installGameplayUi() {
       !document.hidden &&
       !document.body.classList.contains('turn-lot-open') &&
       !spectating;
-    const tuningTopSpeed = Number(runtimeState?.vehicleTuning?.topSpeedMultiplier) || 1;
+    const tuningTopSpeed = Number(runtimeState?.vehicleEffectiveTuning?.topSpeedMultiplier)
+      || Number(runtimeState?.vehicleTuning?.topSpeedMultiplier)
+      || 1;
 
     globalThis.__turnAudio?.update({
       active,
       speed: runtimeState?.speed || 0,
-      maxSpeed: (runtime?.maxSpeed || 88) * tuningTopSpeed,
+      maxSpeed: Number(runtimeState?.vehicleEffectiveMaxSpeed)
+        || (runtime?.maxSpeed || 88) * tuningTopSpeed,
       throttle: runtimeState?.throttle || 0,
       driftAmount: runtimeState?.driftAmount || 0,
       driftHeld: Boolean(globalThis.__turnDriftHeld),

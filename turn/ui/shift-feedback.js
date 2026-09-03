@@ -1,7 +1,7 @@
 import {
   VEHICLE_SHIFT_STAT_FIELDS,
   vehicleShiftReceiversForReducers
-} from '../vehicle/shift-profile.js?revision=r227-shift-feedback';
+} from '../vehicle/shift-profile.js?revision=r232-double-shift';
 
 function canonicalKeys(keys) {
   const requested = new Set(Array.isArray(keys) ? keys : []);
@@ -35,13 +35,16 @@ export function resolveVehicleShiftFeedback(profile, active) {
   });
   const activeState = active === true;
   const stateAnnouncement = activeState ? 'SHIFT on.' : 'SHIFT off.';
+  const amount = Number(profile?.shiftAmount) === 2 ? 2 : 1;
+  const points = amount === 1 ? 'one point' : 'two points';
 
   return Object.freeze({
     active: activeState,
     title: 'SHIFT',
+    amount,
     gainKeys: Object.freeze(gainKeys),
     labels: Object.freeze(labels),
     briefAnnouncement: stateAnnouncement,
-    announcement: `${stateAnnouncement} ${naturalList(spokenLabels)} gain one point.`
+    announcement: `${stateAnnouncement} ${naturalList(spokenLabels)} gain ${points}.`
   });
 }

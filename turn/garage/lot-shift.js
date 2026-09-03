@@ -1,6 +1,7 @@
-import { getCarDefinition } from '../vehicle/catalog.js?revision=r223-training-car-taxi';
+import { getCarDefinition } from '../vehicle/catalog.js?revision=r230-vehicle-perks';
 import {
   isFeatureUnlocked,
+  isVehiclePerkUnlocked,
   rewardForFeature,
   showTrophyUnlockNotice
 } from '../progression/trophy-road.js?revision=r166-bella-records';
@@ -11,14 +12,15 @@ import {
   requiredVehicleShiftReceivers,
   saveVehicleShiftProfile,
   setVehicleShiftProfileEnabled,
+  vehicleShiftAmount,
   vehicleShiftReceiversForReducers,
   vehicleShiftReducersForReceivers,
   vehicleStatsSupportShift
-} from '../vehicle/shift-profile.js?revision=r227-shift-feedback';
+} from '../vehicle/shift-profile.js?revision=r232-double-shift';
 import {
   VEHICLE_SHIFT_LEVER_STATES,
   resolveVehicleShiftGearbox
-} from './lot-shift-gearbox.js?revision=r229-shift-feedback';
+} from './lot-shift-gearbox.js?revision=r232-double-shift';
 
 const activeShiftSetups = new WeakMap();
 let dialogSerial = 0;
@@ -109,6 +111,7 @@ export function installLotShift(root = document.body) {
   let editingVehicleId = '';
   let editingStats = null;
   let editingProfile = null;
+  let editingShiftAmount = 1;
   let selectedReceivers = new Set();
   let previousFocus = null;
   let currentGearbox = null;
@@ -124,12 +127,17 @@ export function installLotShift(root = document.body) {
     return carId ? getCarDefinition(carId) : null;
   }
 
+  function shiftAmountForCar(car) {
+    return car ? vehicleShiftAmount(car.id, isVehiclePerkUnlocked(car.id)) : 1;
+  }
+
   function syncTrigger() {
     const car = selectedDefinition();
     const unlocked = rewardUnlocked();
     const supported = Boolean(car && vehicleStatsSupportShift(car.stats));
+    const shiftAmount = shiftAmountForCar(car);
     const profile = car && supported
-      ? loadVehicleShiftProfile(car.id, car.stats)
+      ? loadVehicleShiftProfile(car.id, car.stats, undefined, shiftAmount)
       : null;
     const active = unlocked && profile?.enabled === true;
 
@@ -178,27 +186,29 @@ export function installLotShift(root = document.body) {
   }
 
   function leverAriaLabel(lever) {
+    const amount = Math.abs(lever.shiftedValue - lever.baseValue);
+    const points = `${amount} ${amount === 1 ? 'point' : 'points'}`;
     const value = lever.state === VEHICLE_SHIFT_LEVER_STATES.NEUTRAL
       ? String(lever.baseValue)
       : `${lever.baseValue} to ${lever.shiftedValue}`;
     if (lever.forced && lever.state === VEHICLE_SHIFT_LEVER_STATES.GAIN) {
-      return `${lever.label}, ${value}. Must gain one point because it is at the minimum.`;
+      return `${lever.label}, ${value}. Must gain ${points} because it is at the minimum.`;
     }
     if (lever.forced) {
-      return `${lever.label}, ${value}. Must lose one point because it is at the maximum.`;
+      return `${lever.label}, ${value}. Must lose ${points} because it is at the maximum.`;
     }
     if (lever.selectedToGain) {
-      return `${lever.label}, ${value}. Selected to gain one point. Activate to return this lever to neutral.`;
+      return `${lever.label}, ${value}. Selected to gain ${points}. Activate to return this lever to neutral.`;
     }
     if (lever.automaticallyLoses) {
-      return `${lever.label}, ${value}. Automatically loses one point because three gains are selected.`;
+      return `${lever.label}, ${value}. Automatically loses ${points} because three gains are selected.`;
     }
-    return `${lever.label}, ${value}. Neutral. Activate to make this attribute gain one point.`;
+    return `${lever.label}, ${value}. Neutral. Activate to make this attribute gain ${editingShiftAmount} ${editingShiftAmount === 1 ? 'point' : 'points'}.`;
   }
 
   function renderOptions() {
     if (!editingStats) return;
-    const gearbox = resolveVehicleShiftGearbox(editingStats, [...selectedReceivers]);
+    const gearbox = resolveVehicleShiftGearbox(editingStats, [...selectedReceivers], editingShiftAmount);
     if (!gearbox) return;
     currentGearbox = gearbox;
     selectedReceivers = new Set(gearbox.selectedReceivers);
@@ -225,7 +235,7 @@ export function installLotShift(root = document.body) {
     saveButton.textContent = editingProfile?.enabled ? 'SAVE SHIFT' : 'ACTIVATE SHIFT';
     deactivateButton.hidden = editingProfile?.enabled !== true;
     if (gearbox.complete) {
-      status.textContent = 'Ready. Three attributes gain 1, three lose 1, and the total stays 18.';
+      status.textContent = `Ready. Three attributes gain ${editingShiftAmount}, three lose ${editingShiftAmount}, and the total stays 18.`;
     } else {
       const remaining = 3 - gearbox.selectedReceivers.length;
       status.textContent = `${gearbox.selectedReceivers.length} of 3 upward levers set. Choose ${remaining} more.`;
@@ -234,10 +244,10 @@ export function installLotShift(root = document.body) {
 
   function constraintMessage(lever) {
     if (lever.forced && lever.state === VEHICLE_SHIFT_LEVER_STATES.GAIN) {
-      return `${lever.label} is fixed at 1→2. An attribute at 1 must gain one point.`;
+      return `${lever.label} is fixed at ${lever.baseValue}→${lever.shiftedValue}. It must gain ${editingShiftAmount} ${editingShiftAmount === 1 ? 'point' : 'points'} to stay within the gearbox.`;
     }
     if (lever.forced && lever.state === VEHICLE_SHIFT_LEVER_STATES.LOSS) {
-      return `${lever.label} is fixed at 5→4. An attribute at 5 must lose one point.`;
+      return `${lever.label} is fixed at ${lever.baseValue}→${lever.shiftedValue}. It must lose ${editingShiftAmount} ${editingShiftAmount === 1 ? 'point' : 'points'} to stay within the gearbox.`;
     }
     if (lever.automaticallyLoses) {
       return `${lever.label} is set automatically. Move one green lever back to neutral before choosing a different gain.`;
@@ -290,12 +300,20 @@ export function installLotShift(root = document.body) {
 
     editingVehicleId = car.id;
     editingStats = car.stats;
-    editingProfile = loadVehicleShiftProfile(car.id, car.stats);
+    editingShiftAmount = shiftAmountForCar(car);
+    editingProfile = loadVehicleShiftProfile(car.id, car.stats, undefined, editingShiftAmount);
     const reducedStats = new Set(editingProfile?.reducedStats || []);
     selectedReceivers = new Set(
       editingProfile
         ? vehicleShiftReceiversForReducers([...reducedStats])
-        : requiredVehicleShiftReceivers(car.stats)
+        : requiredVehicleShiftReceivers(car.stats, editingShiftAmount)
+    );
+    const points = `${editingShiftAmount} ${editingShiftAmount === 1 ? 'point' : 'points'}`;
+    dialog.querySelector('.lot-shift-description').textContent =
+      `Move three attribute levers up by ${points}. The other three move down by ${points} automatically. Attributes that cannot move down must move up; attributes that cannot move up must move down. During a race, slide from GAS into SHIFT to switch on or off.`;
+    options.setAttribute(
+      'aria-label',
+      `SHIFT attribute gearbox. Choose three attributes to gain ${points}.`
     );
     title.textContent = `SHIFT · ${car.name.toUpperCase()}`;
     options.replaceChildren(...VEHICLE_SHIFT_STAT_FIELDS.map(makeOption));
@@ -319,7 +337,8 @@ export function installLotShift(root = document.body) {
       vehicleId: editingVehicleId,
       stats: editingStats,
       reducedStats,
-      enabled: true
+      enabled: true,
+      shiftAmount: editingShiftAmount
     });
     if (!saved) return;
     editingProfile = saved;
@@ -330,7 +349,13 @@ export function installLotShift(root = document.body) {
 
   function deactivateProfile() {
     if (!editingVehicleId || !editingStats) return;
-    const saved = setVehicleShiftProfileEnabled(editingVehicleId, editingStats, false);
+    const saved = setVehicleShiftProfileEnabled(
+      editingVehicleId,
+      editingStats,
+      false,
+      undefined,
+      editingShiftAmount
+    );
     if (!saved) return;
     editingProfile = saved;
     announceProfileChange(editingVehicleId, saved);

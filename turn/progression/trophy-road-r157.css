@@ -21,93 +21,77 @@
 }
 
 .turn-trophy-road-marker:is(
-  [data-trophy-reward="vintage-racer"],
-  [data-trophy-reward="race-car"],
-  [data-trophy-reward="future-racer"],
-  [data-trophy-reward="emergency-pack"],
-  [data-trophy-reward="monster"],
-  [data-trophy-reward="rally-racer"]
+  [data-trophy-reward-type="vehicle"],
+  [data-trophy-reward-type="vehicle-pack"]
 ).is-locked {
   background: var(--turn-reward-vehicle-locked);
 }
 
 .turn-trophy-road-marker:is(
-  [data-trophy-reward="vintage-racer"],
-  [data-trophy-reward="race-car"],
-  [data-trophy-reward="future-racer"],
-  [data-trophy-reward="emergency-pack"],
-  [data-trophy-reward="monster"],
-  [data-trophy-reward="rally-racer"]
+  [data-trophy-reward-type="vehicle"],
+  [data-trophy-reward-type="vehicle-pack"]
 ).is-unlocked {
   background: var(--turn-reward-vehicle-unlocked);
   color: var(--turn-ink, #08090a);
 }
 
-.turn-trophy-road-marker:is(
-  [data-trophy-reward="midnight-city"],
-  [data-trophy-reward="mountain"]
-).is-locked {
+.turn-trophy-road-marker[data-trophy-reward-type="track"].is-locked {
   background: var(--turn-reward-track-locked);
 }
 
-.turn-trophy-road-marker:is(
-  [data-trophy-reward="midnight-city"],
-  [data-trophy-reward="mountain"]
-).is-unlocked {
+.turn-trophy-road-marker[data-trophy-reward-type="track"].is-unlocked {
   background: var(--turn-reward-track-unlocked);
 }
 
-.turn-trophy-road-marker[data-trophy-reward="paintjob"].is-locked {
+.turn-trophy-road-marker:is(
+  [data-trophy-reward-type="feature"],
+  [data-trophy-reward-type="vehicle-perk"]
+).is-locked {
   background: var(--turn-reward-feature-locked);
 }
 
-.turn-trophy-road-marker[data-trophy-reward="paintjob"].is-unlocked {
+.turn-trophy-road-marker:is(
+  [data-trophy-reward-type="feature"],
+  [data-trophy-reward-type="vehicle-perk"]
+).is-unlocked {
   background: var(--turn-reward-feature-unlocked);
 }
 
 /* Keep the selected reward detail in the same semantic family as its road marker.
    :has() is progressive enhancement; older engines retain the standard green detail card. */
 .turn-achievements-dialog:has(.turn-trophy-road-marker:is(
-  [data-trophy-reward="vintage-racer"],
-  [data-trophy-reward="race-car"],
-  [data-trophy-reward="future-racer"],
-  [data-trophy-reward="emergency-pack"],
-  [data-trophy-reward="monster"],
-  [data-trophy-reward="rally-racer"]
+  [data-trophy-reward-type="vehicle"],
+  [data-trophy-reward-type="vehicle-pack"]
 ).is-selected.is-locked) .turn-trophy-road-detail {
   background: var(--turn-reward-vehicle-locked);
 }
 
 .turn-achievements-dialog:has(.turn-trophy-road-marker:is(
-  [data-trophy-reward="vintage-racer"],
-  [data-trophy-reward="race-car"],
-  [data-trophy-reward="future-racer"],
-  [data-trophy-reward="emergency-pack"],
-  [data-trophy-reward="monster"],
-  [data-trophy-reward="rally-racer"]
+  [data-trophy-reward-type="vehicle"],
+  [data-trophy-reward-type="vehicle-pack"]
 ).is-selected.is-unlocked) .turn-trophy-road-detail {
   background: var(--turn-reward-vehicle-unlocked);
 }
 
-.turn-achievements-dialog:has(.turn-trophy-road-marker:is(
-  [data-trophy-reward="midnight-city"],
-  [data-trophy-reward="mountain"]
-).is-selected.is-locked) .turn-trophy-road-detail {
+.turn-achievements-dialog:has(.turn-trophy-road-marker[data-trophy-reward-type="track"].is-selected.is-locked) .turn-trophy-road-detail {
   background: var(--turn-reward-track-locked);
 }
 
-.turn-achievements-dialog:has(.turn-trophy-road-marker:is(
-  [data-trophy-reward="midnight-city"],
-  [data-trophy-reward="mountain"]
-).is-selected.is-unlocked) .turn-trophy-road-detail {
+.turn-achievements-dialog:has(.turn-trophy-road-marker[data-trophy-reward-type="track"].is-selected.is-unlocked) .turn-trophy-road-detail {
   background: var(--turn-reward-track-unlocked);
 }
 
-.turn-achievements-dialog:has(.turn-trophy-road-marker[data-trophy-reward="paintjob"].is-selected.is-locked) .turn-trophy-road-detail {
+.turn-achievements-dialog:has(.turn-trophy-road-marker:is(
+  [data-trophy-reward-type="feature"],
+  [data-trophy-reward-type="vehicle-perk"]
+).is-selected.is-locked) .turn-trophy-road-detail {
   background: var(--turn-reward-feature-locked);
 }
 
-.turn-achievements-dialog:has(.turn-trophy-road-marker[data-trophy-reward="paintjob"].is-selected.is-unlocked) .turn-trophy-road-detail {
+.turn-achievements-dialog:has(.turn-trophy-road-marker:is(
+  [data-trophy-reward-type="feature"],
+  [data-trophy-reward-type="vehicle-perk"]
+).is-selected.is-unlocked) .turn-trophy-road-detail {
   background: var(--turn-reward-feature-unlocked);
 }
 

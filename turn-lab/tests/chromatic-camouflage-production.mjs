@@ -172,7 +172,14 @@ assert.deepEqual(
     ['paintjob', 900],
     ['future-racer', 1000],
     ['rally-racer', 1100],
-    ['shift', 1500]
+    ['awd-traction', 1200],
+    ['truck-torque', 1300],
+    ['van-carry-on', 1400],
+    ['shift', 1500],
+    ['suv-full-tank', 1600],
+    ['sedan-double-shift', 1700],
+    ['sports-car-drift-demon', 1800],
+    ['learner-graduated', 2000]
   ]
 );
 assert.deepEqual(TRACK_IDS, [
@@ -198,9 +205,10 @@ for (const variable of [
 ]) {
   assert.match(trophyRoadCss, new RegExp(variable));
 }
-assert.match(trophyRoadCss, /data-trophy-reward="mountain"/);
-assert.match(trophyRoadCss, /data-trophy-reward="paintjob"/);
-assert.match(trophyRoadCss, /data-trophy-reward="vintage-racer"/);
+assert.match(trophyRoadCss, /data-trophy-reward-type="track"/);
+assert.match(trophyRoadCss, /data-trophy-reward-type="feature"/);
+assert.match(trophyRoadCss, /data-trophy-reward-type="vehicle-perk"/);
+assert.match(trophyRoadCss, /data-trophy-reward-type="vehicle"/);
 assert.match(trophyRoadCss, /\.is-locked/);
 assert.match(trophyRoadCss, /\.is-unlocked/);
 

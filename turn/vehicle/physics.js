@@ -1,6 +1,12 @@
 import { resolveWorldCollisionState } from '../race/world-collision.js?build=20260723-r53';
 import { recordLapCourseSafetyState } from '../race/course-safety.js?revision=r186-road-edge-latch';
 import { trackPitch, trackSurfaceY } from '../tracks/elevation.js?build=20260725-r67';
+import {
+  advanceVehiclePerkRuntimeState,
+  resolveVehicleLockDragAdd,
+  resolveVehicleOffRoadPenalty,
+  resolveVehiclePerkTuning
+} from './perk-runtime.js?revision=r233-graduated';
 
 const OFFROAD_CAPABLE_VEHICLE_IDS = new Set(['monster-truck']);
 const OVERDRIVE_VEHICLE_ID = 'race-future';
@@ -96,6 +102,7 @@ export function resolveDriftSpeedMultiplier({
 
 export function getVehicleSpeedLimit({
   offRoad = false,
+  offRoadPenalty = offRoad ? 1 : 0,
   boostActive = false,
   maxSpeed,
   boostSpeedMultiplier = 1.32,
@@ -111,9 +118,17 @@ export function getVehicleSpeedLimit({
     slipAngle: driftSlipAngle,
     driftLockAmount
   });
-  const baseSpeedLimit = offRoad
-    ? (boostActive ? effectiveMaxSpeed * 0.82 : effectiveMaxSpeed * 0.73)
-    : (boostActive ? effectiveMaxSpeed * effectiveBoostSpeedMultiplier : effectiveMaxSpeed);
+  const roadSpeedLimit = boostActive
+    ? effectiveMaxSpeed * effectiveBoostSpeedMultiplier
+    : effectiveMaxSpeed;
+  const offRoadSpeedLimit = boostActive
+    ? effectiveMaxSpeed * 0.82
+    : effectiveMaxSpeed * 0.73;
+  const baseSpeedLimit = lerp(
+    roadSpeedLimit,
+    offRoadSpeedLimit,
+    clamp(nonNegativeNumber(offRoadPenalty, offRoad ? 1 : 0), 0, 1)
+  );
 
   return driftHeld
     ? baseSpeedLimit * effectiveDriftSpeedMultiplier
@@ -139,7 +154,8 @@ export function updateVehiclePhysicsState({
 }) {
   updateMotionInput(dt);
 
-  const tuning = vehicleTuning || globalThis.__turnVehicleTuning;
+  const baseTuning = vehicleTuning || globalThis.__turnVehicleTuning;
+  const tuning = resolveVehiclePerkTuning({ state, tuning: baseTuning });
   const accelerationMultiplier = positiveNumber(tuning?.accelerationMultiplier, 1);
   const baseControlMultiplier = positiveNumber(tuning?.controlMultiplier, 1);
   const controlMultiplier = resolveOverchargedControlMultiplier({
@@ -167,10 +183,18 @@ export function updateVehiclePhysicsState({
   const lockYawMultiplier = lerp(1, 1.55, driftLockAmount);
   const lockGripMultiplier = lerp(1, 0.22, driftLockAmount);
   const lockSlideMultiplier = lerp(1, 1.25, driftLockAmount);
+  const lockDragAdd = resolveVehicleLockDragAdd({
+    vehicleId: state.vehicleId,
+    perkUnlocked: state.vehiclePerkUnlocked,
+    perkLockDragAdd: tuning?.lockDragAdd
+  });
   state.driftLockAmount = driftLockAmount;
   const tuningBoostPowerMultiplier = positiveNumber(tuning?.boostPowerMultiplier, 1);
   const tuningBoostSpeedMultiplier = positiveNumber(tuning?.boostSpeedMultiplier, 1.32);
-  const effectiveMaxSpeed = maxSpeed;
+  const baseTopSpeedMultiplier = positiveNumber(baseTuning?.topSpeedMultiplier, 1);
+  const effectiveTopSpeedMultiplier = positiveNumber(tuning?.topSpeedMultiplier, baseTopSpeedMultiplier);
+  const effectiveMaxSpeed = maxSpeed * effectiveTopSpeedMultiplier / baseTopSpeedMultiplier;
+  state.vehicleEffectiveMaxSpeed = effectiveMaxSpeed;
   const activeTrackSampleCount = positiveNumber(state.trackSampleCount, trackSampleCount);
   const directGas = Math.max(0, Number(analogGas) || 0);
   const directBrake = 0;
@@ -182,6 +206,13 @@ export function updateVehiclePhysicsState({
   state.trackDistance = nearestBefore.distance;
   state.offRoad = nearestBefore.distance > trackWidth * 0.58 && !isForgivingSurface(state.position);
   const physicsOffRoad = state.offRoad && !vehicleIgnoresOffRoadPenalty(state.vehicleId);
+  const offRoadPenalty = resolveVehicleOffRoadPenalty({
+    vehicleId: state.vehicleId,
+    perkUnlocked: state.vehiclePerkUnlocked,
+    offRoad: physicsOffRoad,
+    trackDistance: state.trackDistance,
+    trackWidth
+  });
 
   const forward = getForward();
   const right = getRight();
@@ -194,11 +225,11 @@ export function updateVehiclePhysicsState({
   const effectiveBoostActive = boostActive && !brakingOrReversing;
 
   const enginePower =
-    (physicsOffRoad ? 36 : 43) *
+    lerp(43, 36, offRoadPenalty) *
     accelerationMultiplier *
     (driftHeld ? driftEngineMultiplier : 1);
   const boostPower = effectiveBoostActive
-    ? (physicsOffRoad ? 16 : 36) * tuningBoostPowerMultiplier
+    ? lerp(36, 16, offRoadPenalty) * tuningBoostPowerMultiplier
     : 0;
   state.velocity.addScaledVector(
     forward,
@@ -217,7 +248,7 @@ export function updateVehiclePhysicsState({
       );
     } else {
       // Once forward motion is essentially gone, the same held control becomes reverse.
-      const reversePower = (physicsOffRoad ? 20 : 27) * accelerationMultiplier;
+      const reversePower = lerp(27, 20, offRoadPenalty) * accelerationMultiplier;
       state.velocity.addScaledVector(forward, -reversePower * state.brake * dt);
 
       const reverseSpeed = state.velocity.dot(forward);
@@ -277,11 +308,10 @@ export function updateVehiclePhysicsState({
   const driftGripMultiplier = driftHeld
     ? 0.42 * driftStabilityMultiplier * driftGripTuningMultiplier * lockGripMultiplier
     : 1;
-  const grip = (
-    physicsOffRoad
-      ? lerp(3.4, 1.35, state.driftAmount)
-      : lerp(11.5, 1.45, state.driftAmount)
-  ) * controlGripMultiplier * driftGripMultiplier;
+  const roadGrip = lerp(11.5, 1.45, state.driftAmount);
+  const offRoadGrip = lerp(3.4, 1.35, state.driftAmount);
+  const grip = lerp(roadGrip, offRoadGrip, offRoadPenalty) *
+    controlGripMultiplier * driftGripMultiplier;
 
   const lateralCorrection = 1 - Math.exp(-grip * dt);
   state.velocity.addScaledVector(newRight, -lateralSpeed * lateralCorrection);
@@ -295,9 +325,9 @@ export function updateVehiclePhysicsState({
     );
   }
 
-  const drag = physicsOffRoad
-    ? 0.34
-    : 0.11 + speed * 0.0009 + (driftHeld ? driftDragAdd : 0) + driftLockAmount * 0.18;
+  const roadDrag = 0.11 + speed * 0.0009 +
+    (driftHeld ? driftDragAdd : 0) + driftLockAmount * lockDragAdd;
+  const drag = lerp(roadDrag, 0.34, offRoadPenalty);
   state.velocity.multiplyScalar(Math.exp(-drag * dt));
 
   speed = state.velocity.length();
@@ -318,6 +348,7 @@ export function updateVehiclePhysicsState({
   ));
   const speedLimit = getVehicleSpeedLimit({
     offRoad: physicsOffRoad,
+    offRoadPenalty,
     boostActive: effectiveBoostActive,
     maxSpeed: effectiveMaxSpeed,
     boostSpeedMultiplier: tuningBoostSpeedMultiplier,
@@ -358,6 +389,16 @@ export function updateVehiclePhysicsState({
   state.progress = nearestAfter.index / activeTrackSampleCount;
   state.nearestTrackIndex = nearestAfter.index;
   state.speed = state.velocity.length();
+
+  advanceVehiclePerkRuntimeState({
+    state,
+    dt,
+    gasHeld: driveThrottle > 0 && !driftHeld && !effectiveBoostActive,
+    driftHeld,
+    offRoad: state.offRoad,
+    collided: collision.collided,
+    speed: state.speed
+  });
 
   return nearestAfter;
 }
