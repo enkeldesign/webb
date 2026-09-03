@@ -34,8 +34,8 @@ export const SECRET_ACHIEVEMENTS = Object.freeze([
     category: 'exploration',
     trophies: 25,
     hidden: true,
-    title: 'SATAN’S HATCHBACK',
-    description: 'Unlock the Super Hatchback by setting the Hatchback sport trim to color code #666.',
+    title: 'SATAN’S SPORTS CAR',
+    description: 'Unlock SATAN’S SPORTS CAR by setting the Sports Car sport trim to color code #666.',
     icon: 'rival'
   })
 ]);

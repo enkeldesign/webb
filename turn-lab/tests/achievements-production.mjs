@@ -178,7 +178,7 @@ assert.equal(
   'Hidden achievement. You’ll know what to do when the moment comes.'
 );
 assert.equal(byId('satans-sedan')?.lockedDescription, undefined,
-  'Satan’s Hatchback may retain the generic hidden title-clue treatment');
+  'Satan’s Sports Car may retain the generic hidden title-clue treatment');
 
 assert.equal(TIME_TRIALS.length, 6);
 assert.equal(TIME_TRIAL_ACHIEVEMENT_IDS.length, 6);

@@ -10,7 +10,7 @@ const catalog = await import(`data:text/javascript;base64,${Buffer.from(catalogS
 const hatchback = catalog.getCarDefinition('sedan-sports');
 const vintage = catalog.getCarDefinition('vintage-racer');
 const rally = catalog.getCarDefinition('toy-racer');
-assert.equal(hatchback.name, 'Hatchback');
+assert.equal(hatchback.name, 'Sports Car');
 assert.equal(hatchback.asset, './assets/cars/hatchback-sports.glb');
 assert.equal(hatchback.surfaceProfileId, 'hatchback-sports');
 assert.equal(vintage.name, 'Vintage Racer');

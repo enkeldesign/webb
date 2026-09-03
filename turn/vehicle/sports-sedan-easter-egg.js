@@ -73,7 +73,7 @@ function syncLotStats(lot) {
     secondaryColor: normalizeVehicleSecondaryColor(secondaryColor)
   };
   const stats = getEffectiveVehicleStats(selection);
-  const superHatchbackUnlocked = isSportsSedanEasterEgg(selection);
+  const satansSportsCarUnlocked = isSportsSedanEasterEgg(selection);
 
   rows.forEach((row, rowIndex) => {
     const value = Number(stats[STAT_KEYS[rowIndex]]) || 0;
@@ -82,7 +82,7 @@ function syncLotStats(lot) {
     });
   });
 
-  syncUnlockPresentation(lot, car, superHatchbackUnlocked);
+  syncUnlockPresentation(lot, car, satansSportsCarUnlocked);
 }
 
 function syncUnlockPresentation(lot, car, unlocked) {
@@ -90,9 +90,9 @@ function syncUnlockPresentation(lot, car, unlocked) {
   const raceButton = lot.querySelector('.lot-race');
   const notice = ensureUnlockNotice(lot);
 
-  // Historical regression marker from the pre-Hatchback identity:
+  // Historical regression marker from the original pre-Hatchback identity:
   // displayedName = unlocked ? 'Super Sedan' : car.name
-  const displayedName = unlocked ? 'Super Hatchback' : car.name;
+  const displayedName = unlocked ? 'SATAN’S SPORTS CAR' : car.name;
   if (title && title.textContent !== displayedName) title.textContent = displayedName;
   raceButton?.setAttribute('aria-label', `Race the ${displayedName}`);
 
@@ -121,7 +121,7 @@ function ensureUnlockNotice(lot) {
   // Historical regression marker: Super Sedan unlocked. Spoiler color code #666
   notice.setAttribute(
     'aria-label',
-    'Super Hatchback unlocked. Sport trim color code #666 maxes every attribute. Lap results with this secret car are not saved.'
+    'SATAN’S SPORTS CAR unlocked. Sport trim color code #666 maxes every attribute. Lap results with this secret car are not saved.'
   );
   notice.innerHTML = `
     <span class="lot-secret-notice-chip">SECRET UNLOCKED</span>

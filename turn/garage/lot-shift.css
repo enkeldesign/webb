@@ -9,7 +9,7 @@
   gap: 5px;
   border: 2px solid var(--ink, #08090a);
   border-radius: 999px;
-  background: var(--yellow, #ffd43b);
+  background: var(--turn-control-gas, #8ce99a);
   box-shadow: 2px 2px 0 var(--ink, #08090a);
   color: var(--ink, #08090a);
   font-size: clamp(.48rem, .9vw, .62rem);
@@ -27,7 +27,8 @@
 }
 
 .lot-showroom .lot-shift-trigger.is-active {
-  background: var(--violet, #9775fa);
+  background: #65ad71;
+  background: color-mix(in srgb, var(--turn-control-gas, #8ce99a) 72%, var(--turn-ink, #08090a));
 }
 
 .lot-showroom .lot-shift-trigger.is-active i {
@@ -44,7 +45,7 @@
 
 .lot-showroom .lot-shift-trigger:focus-visible,
 .lot-shift-dialog button:not(.lot-shift-option):focus-visible {
-  outline: 3px solid var(--cyan, #38d9ff);
+  outline: 3px solid var(--turn-form-control-focus, #38d9ff);
   outline-offset: 3px;
 }
 
@@ -107,7 +108,7 @@
   padding: 0 0 4px;
   border: 3px solid var(--ink, #08090a);
   border-radius: 12px;
-  background: var(--pink, #ff4fa3);
+  background: var(--turn-action-navigation, #ff7b54);
   box-shadow: 3px 3px 0 var(--ink, #08090a);
   color: var(--ink, #08090a);
   font-size: 1.5rem;
@@ -255,9 +256,9 @@
   letter-spacing: .045em;
 }
 
-.lot-shift-cancel { background: var(--paper, #fff8e8); }
-.lot-shift-deactivate { margin-right: auto; background: var(--pink, #ff4fa3); }
-.lot-shift-save { background: var(--violet, #9775fa); }
+.lot-shift-cancel { background: var(--turn-action-navigation, #ff7b54); }
+.lot-shift-deactivate { margin-right: auto; background: var(--turn-action-utility, #fff8e8); }
+.lot-shift-save { background: var(--turn-action-primary, #ff4fa3); }
 .lot-shift-save:disabled { opacity: .42; }
 
 @keyframes turn-shift-lever-constraint {
