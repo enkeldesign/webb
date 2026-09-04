@@ -1,8 +1,9 @@
 .score-feedback {
   --score-feedback-paper-width: clamp(164px, 21vw, 226px);
   --score-feedback-paper-height: 104px;
-  --score-feedback-gauge-width: clamp(52px, 7vw, 76px);
-  --score-feedback-gauge-height: clamp(34px, 5vw, 48px);
+  --score-feedback-gauge-width: clamp(48px, 6vw, 64px);
+  --score-feedback-gauge-height: calc(var(--score-feedback-paper-height) - 14px);
+  --score-feedback-gauge-inset-y: 7px;
   --score-feedback-gauge-overlap: 3px;
   position: absolute;
   z-index: 14;
@@ -135,7 +136,7 @@
   --score-feedback-gauge-track: var(--turn-ink, #08090a);
   position: absolute;
   z-index: -1;
-  top: 30px;
+  top: var(--score-feedback-gauge-inset-y);
   left: calc(100% - var(--score-feedback-gauge-overlap));
   box-sizing: border-box;
   width: var(--score-feedback-gauge-width);
@@ -165,11 +166,11 @@
 
 /* Future FLOW row aligns its gauge with the second fixed scoring row. */
 .score-feedback-gauge[data-score-channel="flow"] {
-  top: calc(var(--score-feedback-paper-height) + 30px);
+  top: calc(var(--score-feedback-paper-height) + var(--score-feedback-gauge-inset-y));
 }
 
 .score-feedback[data-drift-active="false"] .score-feedback-gauge[data-score-channel="flow"] {
-  top: 30px;
+  top: var(--score-feedback-gauge-inset-y);
 }
 
 .score-feedback[data-flow-gauge-visible="false"] .score-feedback-gauge[data-score-channel="flow"] {
@@ -402,7 +403,8 @@
     --score-feedback-paper-width: 150px;
     --score-feedback-paper-height: 88px;
     --score-feedback-gauge-width: 46px;
-    --score-feedback-gauge-height: 32px;
+    --score-feedback-gauge-height: calc(var(--score-feedback-paper-height) - 12px);
+    --score-feedback-gauge-inset-y: 6px;
     --score-feedback-gauge-overlap: 2px;
     top: 80px;
   }
@@ -415,17 +417,8 @@
 
   .score-feedback-meter,
   .score-feedback-gauge {
-    top: 26px;
     border-width: 2px;
     border-radius: 0 8px 8px 0;
-  }
-
-  .score-feedback-gauge[data-score-channel="flow"] {
-    top: calc(var(--score-feedback-paper-height) + 26px);
-  }
-
-  .score-feedback[data-drift-active="false"] .score-feedback-gauge[data-score-channel="flow"] {
-    top: 26px;
   }
 
   .score-feedback-meter::before,
