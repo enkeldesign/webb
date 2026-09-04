@@ -4,7 +4,7 @@ import {
 
 export * from './trophy-road.js?revision=r230-vehicle-perks';
 
-export const TROPHY_ROAD_MAX_THRESHOLD = 3075;
+export const TROPHY_ROAD_MAX_THRESHOLD = 3975;
 
 const BASE_REWARD_BY_ID = new Map(
   BASE_TROPHY_ROAD_REWARDS.map((reward) => [reward.id, reward])
