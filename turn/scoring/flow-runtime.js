@@ -368,7 +368,6 @@ export function createFlowRuntime({
     pendingShift = null;
     driftContext = null;
     boostShiftContext = null;
-    latestLockRequested = false;
     lastDriftBankAt = -Infinity;
     lastMilestoneTier = 1;
     scorer.beginLap(now);
