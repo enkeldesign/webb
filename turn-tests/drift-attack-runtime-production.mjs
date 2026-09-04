@@ -45,6 +45,7 @@ function makeFeedback() {
     states: [],
     events: [],
     cleared: [],
+    dismissed: [],
     activeEvent: { active: false },
     updateState(channel, state, now) {
       this.states.push({ channel, score: state.score, unbanked: state.unbanked, now });
@@ -58,6 +59,10 @@ function makeFeedback() {
     },
     clearChannel(channel) {
       this.cleared.push(channel);
+      if (this.activeEvent.channel === channel) this.activeEvent = { active: false };
+    },
+    dismissEvent(channel) {
+      this.dismissed.push(channel);
       if (this.activeEvent.channel === channel) this.activeEvent = { active: false };
     },
     inspect() {
@@ -234,13 +239,13 @@ for (let index = 0; index < 8; index += 1) {
 }
 visibleState.collided = false;
 assert.ok(visibleFeedback.events.some((event) => event.type === 'loss'));
-const clearsAfterLoss = visibleFeedback.cleared.length;
+const dismissalsAfterLoss = visibleFeedback.dismissed.length;
 for (let index = 0; index < 8; index += 1) {
   recoveryNow += 1000 / 60;
   visibleRuntime.advance(1 / 60, recoveryNow);
 }
-assert.ok(visibleFeedback.cleared.length > clearsAfterLoss,
-  'Starting a fresh drift must dismiss stale LOSS presentation instead of blocking the new buildup');
+assert.ok(visibleFeedback.dismissed.length > dismissalsAfterLoss,
+  'Starting a fresh drift must dismiss stale LOSS feedback without clearing the persistent score row');
 
 const failingStorage = {
   getItem() {

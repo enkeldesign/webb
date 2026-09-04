@@ -50,7 +50,7 @@ const numberFormatter = new Intl.NumberFormat('en-US', {
 function makeChannel(label) {
   return {
     active: false,
-    visible: true,
+    visible: false,
     score: 0,
     unbanked: 0,
     multiplier: 1,
@@ -318,9 +318,18 @@ export function createScoreFeedback({
     return commit(now, true);
   }
 
+  function dismissEvent(channel, now = 0) {
+    const normalizedChannel = normalizeChannel(channel);
+    if (!activeEvent.active || activeEvent.channel !== normalizedChannel) return false;
+    clearEvent();
+    dirty = true;
+    return commit(now, true);
+  }
+
   function reset(now = 0) {
     for (const channel of Object.values(channels)) {
       resetChannelState(channel);
+      channel.visible = false;
     }
     clearEvent();
     announcementRevision += 1;
@@ -347,11 +356,16 @@ export function createScoreFeedback({
       ? flow
       : driftActive
         ? drift
-        : null;
+        : drift.visible
+          ? drift
+          : flow.visible
+            ? flow
+            : null;
     const eventVisible = activeEvent.active && channels[activeEvent.channel].visible;
     const flowHasOwnGauge = Boolean(flowGaugeFill);
     const fallbackGaugeToFlow = !flowHasOwnGauge && flowActive && primary === flow;
     const driftGaugeActive = driftActive || fallbackGaugeToFlow;
+    const driftGaugeVisible = drift.visible || fallbackGaugeToFlow;
     const driftGaugeIntensity = fallbackGaugeToFlow ? flow.intensity : drift.intensity;
 
     driftGaugeFill.style.setProperty(
@@ -366,8 +380,10 @@ export function createScoreFeedback({
     }
     setData(root, 'driftActive', driftActive);
     setData(root, 'flowActive', flowActive);
-    setData(root, 'driftGaugeVisible', driftGaugeActive);
-    setData(root, 'flowGaugeVisible', Boolean(flowHasOwnGauge && flowActive));
+    setData(root, 'driftVisible', drift.visible);
+    setData(root, 'flowVisible', flow.visible);
+    setData(root, 'driftGaugeVisible', driftGaugeVisible);
+    setData(root, 'flowGaugeVisible', Boolean(flowHasOwnGauge && flow.visible));
     setData(root, 'driftHeat', heatTier(drift.intensity, driftActive));
     setData(root, 'flowHeat', heatTier(flow.intensity, flowActive));
     setData(root, 'gaugeHeat', heatTier(driftGaugeIntensity, driftGaugeActive));
@@ -375,13 +391,15 @@ export function createScoreFeedback({
     setData(
       statePanel,
       'scoreLayout',
-      flowReadout && flowActive && driftActive ? 'dual' : 'single'
+      flowReadout && flow.visible && drift.visible ? 'dual' : 'single'
     );
-    if (flowReadout) setHidden(flowReadout, !flowActive);
+    if (flowReadout) setHidden(flowReadout, !flow.visible);
 
     setHidden(statePanel, !primary);
     if (primary) {
-      const liveScore = primary.unbanked > 0 ? primary.unbanked : primary.score;
+      const liveScore = primary.active
+        ? primary.unbanked > 0 ? primary.unbanked : primary.score
+        : 0;
       setData(root, 'channel', primary === flow ? SCORE_FEEDBACK_CHANNEL.FLOW : SCORE_FEEDBACK_CHANNEL.DRIFT);
       setData(root, 'phase', primary.phase);
       setText(stateLabel, primary.label);
@@ -430,6 +448,7 @@ export function createScoreFeedback({
     setChannelVisible,
     commit,
     clearChannel,
+    dismissEvent,
     reset,
     inspect
   });
