@@ -105,6 +105,7 @@ export function createFlowRuntime({
   let pendingShift = null;
   let driftContext = null;
   let boostShiftContext = null;
+  let latestLockRequested = false;
   let lastDriftBankAt = -Infinity;
   let chainTimer = 0;
   let lastMilestoneTier = 1;
@@ -232,7 +233,10 @@ export function createFlowRuntime({
 
   function onDriveTechniqueState(event) {
     if (!enabled || state.lapActive !== true) return;
-    if (driftContext?.active && event.detail?.lockRequested === true) driftContext.usedLock = true;
+    if (typeof event.detail?.lockRequested === 'boolean') {
+      latestLockRequested = event.detail.lockRequested;
+    }
+    if (driftContext?.active && latestLockRequested) driftContext.usedLock = true;
     if (event.detail?.zone !== 'boost') return;
     const now = nowFrom(event);
     const shift = validPendingShift(now);
@@ -254,7 +258,7 @@ export function createFlowRuntime({
       if (contextualShift) pendingShift = null;
       driftContext = {
         active: true,
-        usedLock: false,
+        usedLock: latestLockRequested,
         contextualShift
       };
       return;
@@ -351,6 +355,7 @@ export function createFlowRuntime({
     pendingShift = null;
     driftContext = null;
     boostShiftContext = null;
+    latestLockRequested = false;
     lastDriftBankAt = -Infinity;
     lastMilestoneTier = 1;
     scorer.reset(now);
@@ -363,6 +368,7 @@ export function createFlowRuntime({
     pendingShift = null;
     driftContext = null;
     boostShiftContext = null;
+    latestLockRequested = false;
     lastDriftBankAt = -Infinity;
     lastMilestoneTier = 1;
     scorer.beginLap(now);
