@@ -56,7 +56,7 @@ assert.match(components, /\.m8-dbe-guide\[open\] \.m8-disclosure-symbol::before[
 assert.match(components, /\.m8-dbe-guide-panel,[\s\S]*background: var\(--turn-disclosure-panel\)/);
 assert.doesNotMatch(components, /#eaf9ef/);
 
-assert.match(guide, /GUIDE_VERSION = 'r220-overcharge-disclosure'/);
+assert.match(guide, /GUIDE_VERSION = 'r221-scoring-links'/);
 assert.match(
   guide,
   /<summary><span class="m8-disclosure-symbol" aria-hidden="true"><\/span><span>Explore the Drive By Ear sounds<\/span><\/summary>/
