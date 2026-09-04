@@ -28,11 +28,16 @@ assert.match(announcements, /spokenScoreResult\('Flow', flow\)/);
 
 assert.match(achievements, /TRACK_SCORING_ACHIEVEMENTS/);
 assert.equal((scoringCatalog.match(/trophies: 50/g) || []).length, 1,
-  'One generated contract supplies 50 trophies to every track/channel placeholder');
+  'One generated contract supplies 50 trophies to every track/channel achievement');
 assert.match(scoringCatalog, /trophies: 300/);
-assert.match(scoringCatalog, /target pending playtest calibration/i);
-assert.match(scoringCatalog, /drift:[\s\S]*TRACK_IDS\.map[\s\S]*flow:/);
-assert.doesNotMatch(scoringCatalog, /countryside:\s*\d|airport:\s*\d|mountain:\s*\d/,
-  'No achievement target is guessed before playtest calibration');
+for (const target of [8000, 11000, 20000, 18000, 7000, 12000, 13000, 23000, 25000]) {
+  assert.match(scoringCatalog, new RegExp(`\\b${target}\\b`), `Missing calibrated scoring target ${target}`);
+}
+assert.match(scoringCatalog, /'midnight-city': 20000/);
+assert.match(scoringCatalog, /mountain: 20000/);
+assert.doesNotMatch(scoringCatalog, /target pending playtest calibration/i,
+  'Production scoring achievements must no longer expose placeholder targets');
+assert.match(scoringCatalog, /value < target/,
+  'A score equal to the calibrated target must qualify');
 
-console.log('TURN FLOW integration and placeholder scoring-achievement regressions passed.');
+console.log('TURN FLOW integration and calibrated scoring-achievement regressions passed.');
