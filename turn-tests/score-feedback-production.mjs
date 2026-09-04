@@ -59,6 +59,7 @@ function makeFixture() {
     '[data-score-feedback-multiplier]',
     '[data-score-feedback-total]',
     '[data-score-feedback-meter-fill]',
+    '[data-score-feedback-flow-meter-fill]',
     '[data-score-feedback-callout]',
     '[data-score-feedback-callout-label]',
     '[data-score-feedback-callout-score]',
@@ -101,6 +102,15 @@ assert.equal(
   element(fixture, '[data-score-feedback-meter-fill]').style.getPropertyValue('--score-feedback-progress'),
   '0.72'
 );
+assert.equal(
+  element(fixture, '[data-score-feedback-flow-meter-fill]').style.getPropertyValue('--score-feedback-progress'),
+  '0',
+  'The future FLOW gauge stays dormant while only DRIFT is active'
+);
+assert.equal(fixture.root.dataset.driftGaugeVisible, 'true');
+assert.equal(fixture.root.dataset.flowGaugeVisible, 'false');
+assert.equal(fixture.root.dataset.gaugeChannel, 'drift');
+assert.equal(fixture.root.dataset.gaugeHeat, 'warm');
 
 driftState.unbanked = 1820;
 feedback.updateState(SCORE_FEEDBACK_CHANNEL.DRIFT, driftState, 100 + SCORE_FEEDBACK_COMMIT_INTERVAL_MS / 2);
@@ -153,6 +163,18 @@ const flowState = {
 feedback.updateState(SCORE_FEEDBACK_CHANNEL.FLOW, flowState, 500);
 assert.equal(fixture.root.dataset.channel, 'flow', 'FLOW becomes persistent context when both channels are active');
 assert.equal(element(fixture, '[data-score-feedback-current]').textContent, '18,420');
+assert.equal(
+  element(fixture, '[data-score-feedback-meter-fill]').style.getPropertyValue('--score-feedback-progress'),
+  '0.72',
+  'DRIFT keeps its own independent gauge value when FLOW becomes active'
+);
+assert.equal(
+  element(fixture, '[data-score-feedback-flow-meter-fill]').style.getPropertyValue('--score-feedback-progress'),
+  '0.84',
+  'FLOW can drive the same gauge contract independently'
+);
+assert.equal(fixture.root.dataset.flowGaugeVisible, 'true');
+assert.equal(fixture.root.dataset.flowHeat, 'hot');
 
 feedback.publishEvent(SCORE_FEEDBACK_CHANNEL.DRIFT, SCORE_FEEDBACK_EVENT.BANK, {
   label: 'DRIFT +2,840 ×4',
@@ -165,6 +187,8 @@ assert.equal(element(fixture, '[data-score-feedback-callout-label]').textContent
 feedback.setChannelVisible(SCORE_FEEDBACK_CHANNEL.DRIFT, false, 3100);
 assert.equal(element(fixture, '[data-score-feedback-callout]').hidden, true);
 assert.equal(fixture.root.hidden, false, 'Hiding DRIFT presentation leaves active FLOW context visible');
+assert.equal(fixture.root.dataset.driftGaugeVisible, 'false');
+assert.equal(fixture.root.dataset.flowGaugeVisible, 'true');
 assert.equal(feedback.publishEvent(SCORE_FEEDBACK_CHANNEL.DRIFT, SCORE_FEEDBACK_EVENT.BANK, {
   score: 9999
 }, 3150), false, 'A hidden channel cannot take presentation priority from a visible channel');
@@ -184,6 +208,14 @@ assert.equal(feedback.inspect().flow.score, 18420);
 feedback.reset(4000);
 assert.equal(fixture.root.hidden, true);
 assert.equal(feedback.inspect().drift.score, 0);
+assert.equal(
+  element(fixture, '[data-score-feedback-meter-fill]').style.getPropertyValue('--score-feedback-progress'),
+  '0'
+);
+assert.equal(
+  element(fixture, '[data-score-feedback-flow-meter-fill]').style.getPropertyValue('--score-feedback-progress'),
+  '0'
+);
 
 const [source, css, index, nextIndex, labIndex, main] = await Promise.all([
   fs.readFile(new URL('../turn/scoring/score-feedback.js', import.meta.url), 'utf8'),
@@ -197,7 +229,21 @@ const [source, css, index, nextIndex, labIndex, main] = await Promise.all([
 assert.doesNotMatch(source, /requestAnimationFrame/);
 assert.doesNotMatch(source, /createElement|appendChild|replaceChildren/,
   'ScoreFeedback must reuse the fixed document nodes');
-assert.match(css, /transform: scaleX\(var\(--score-feedback-progress, 0\)\)/);
+assert.match(source, /data-score-feedback-flow-meter-fill/,
+  'The shared engine must already understand the optional future FLOW gauge mount');
+assert.match(css, /--score-feedback-paper-height: 104px/,
+  'The paper shell has a stable gameplay height');
+assert.match(css, /height: var\(--score-feedback-paper-height\)/,
+  'The paper and gauge share one height token so they stay aligned');
+assert.match(css, /transform: scaleY\(var\(--score-feedback-progress, 0\)\)/,
+  'Score gauges fill vertically without layout work');
+assert.match(css, /data-score-channel="flow"/,
+  'The reusable gauge primitive has a FLOW channel treatment ready for #739');
+assert.match(css, /@keyframes turn-score-gauge-rush/,
+  'High-intensity scoring has a transform-driven peripheral-noise layer');
+assert.match(css, /@keyframes turn-score-gauge-critical/);
+assert.doesNotMatch(css, /filter\s*:/,
+  'ScoreFeedback buildup avoids filter effects on the low-end hot path');
 assert.doesNotMatch(css, /transition:[^;]*(?:width|height|top|left)/);
 assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
 assert.match(index, /id="scoreFeedback"/);
