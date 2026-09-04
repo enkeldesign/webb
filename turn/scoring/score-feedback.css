@@ -74,16 +74,6 @@
   text-transform: uppercase;
 }
 
-/* CURRENT is visually presented as the more useful TURN vocabulary: COMBO. */
-.score-feedback-heading > span:last-child {
-  font-size: 0;
-}
-
-.score-feedback-heading > span:last-child::after {
-  content: "COMBO";
-  font-size: clamp(.48rem, 1.1vw, .63rem);
-}
-
 .score-feedback-values {
   align-self: stretch;
   margin-top: 3px;

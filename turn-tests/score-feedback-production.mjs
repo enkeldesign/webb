@@ -241,8 +241,17 @@ assert.doesNotMatch(css, /transform: scaleY\(var\(--score-feedback-progress, 0\)
   'The old vertical fill contract is gone');
 assert.match(css, /background: linear-gradient\(\s*to right,/,
   'The channel colour also travels along the x-axis');
-assert.match(css, /content: "COMBO"/,
-  'The instrument uses COMBO vocabulary over the multiplier');
+for (const [mountName, markup] of [
+  ['TURN', index],
+  ['TURN NEXT', nextIndex],
+  ['TURN LAB', labIndex]
+]) {
+  assert.match(
+    markup,
+    /data-score-feedback-label>DRIFT<\/span><span>COMBO<\/span>/,
+    `${mountName} exposes COMBO vocabulary in accessible markup`
+  );
+}
 assert.match(css, /data-score-channel="flow"/,
   'The reusable horizontal gauge primitive has a FLOW channel treatment ready for #739');
 assert.match(css, /top: calc\(var\(--score-feedback-paper-height\) \+ 30px\)/,
