@@ -232,16 +232,36 @@ assert.doesNotMatch(source, /createElement|appendChild|replaceChildren/,
 assert.match(source, /data-score-feedback-flow-meter-fill/,
   'The shared engine must already understand the optional future FLOW gauge mount');
 assert.match(css, /--score-feedback-paper-height: 104px/,
-  'The paper shell has a stable gameplay height');
-assert.match(css, /height: var\(--score-feedback-paper-height\)/,
-  'The paper and gauge share one height token so they stay aligned');
-assert.match(css, /transform: scaleY\(var\(--score-feedback-progress, 0\)\)/,
-  'Score gauges fill vertically without layout work');
+  'Each scoring paper row has a stable gameplay height');
+assert.match(css, /--score-feedback-gauge-height:/,
+  'The horizontal instrument has an explicit stable height');
+assert.match(css, /transform: scaleX\(var\(--score-feedback-progress, 0\)\)/,
+  'Score gauges fill horizontally without layout work');
+assert.doesNotMatch(css, /transform: scaleY\(var\(--score-feedback-progress, 0\)\)/,
+  'The old vertical fill contract is gone');
+assert.match(css, /background: linear-gradient\(\s*to right,/,
+  'The channel colour also travels along the x-axis');
+for (const [mountName, markup] of [
+  ['TURN', index],
+  ['TURN NEXT', nextIndex],
+  ['TURN LAB', labIndex]
+]) {
+  assert.match(
+    markup,
+    /data-score-feedback-label>DRIFT<\/span><span>COMBO<\/span>/,
+    `${mountName} exposes COMBO vocabulary in accessible markup`
+  );
+}
 assert.match(css, /data-score-channel="flow"/,
-  'The reusable gauge primitive has a FLOW channel treatment ready for #739');
+  'The reusable horizontal gauge primitive has a FLOW channel treatment ready for #739');
+assert.match(css, /top: calc\(var\(--score-feedback-paper-height\) \+ 30px\)/,
+  'The future FLOW gauge is aligned to its own fixed paper row');
 assert.match(css, /@keyframes turn-score-gauge-rush/,
-  'High-intensity scoring has a transform-driven peripheral-noise layer');
-assert.match(css, /@keyframes turn-score-gauge-critical/);
+  'High-intensity scoring keeps a transform-driven peripheral-noise layer');
+assert.match(css, /translateX/,
+  'Gauge rush/noise follows the horizontal scoring axis');
+assert.match(css, /score-feedback-meter::before/,
+  'A type-coloured zero remnant survives inside the black track');
 assert.doesNotMatch(css, /filter\s*:/,
   'ScoreFeedback buildup avoids filter effects on the low-end hot path');
 assert.doesNotMatch(css, /transition:[^;]*(?:width|height|top|left)/);
