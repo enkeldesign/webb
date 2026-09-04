@@ -31,7 +31,7 @@ assert.ok(
   'The contextual reset enhancer must run only after the shared Settings dialog exists'
 );
 
-assert.match(guide, /GUIDE_VERSION = 'r221-scoring-links'/);
+assert.match(guide, /GUIDE_VERSION = 'r222-collapsible-cards'/);
 assert.match(guide, /slide between <strong>GAS<\/strong>, <strong>DRIFT<\/strong>, <strong>BOOST<\/strong> and <strong>BRAKE · REVERSE<\/strong>/);
 assert.match(guide, /slide outward past it into <strong>LOCK<\/strong>/);
 assert.match(guide, /<strong>DRIFT<\/strong> charges <strong>BOOST<\/strong> as you slide/);
@@ -59,27 +59,21 @@ assert.match(guide, /FLOW POINTS<\/strong> reward useful choreography between sy
 assert.match(guide, /Button presses alone score nothing/);
 assert.match(guide, /Variety and useful timing build <strong>COMBO<\/strong>/);
 assert.match(guide, /gauge shows your current FLOW momentum/);
-assert.match(guide, /HOW_TO_PLAY_OPEN_EVENT = 'turn:open-how-to-play'/);
-assert.match(guide, /TARGET_SECTION_ID/);
-assert.match(guide, /m8HowDriftPoints/);
-assert.match(guide, /m8HowFlowPoints/);
-assert.match(guide, /dialog\.__turnReturnFocus = trigger/);
-assert.match(guide, /heading\.focus\?\.\(\{ preventScroll: true \}\)/);
-assert.match(guide, /section\.scrollIntoView\?\.\(\{ behavior: 'auto', block: 'center', inline: 'nearest' \}\)/);
-assert.match(guide, /globalThis\.__turnOpenHowToPlaySection = openTarget/);
 
-assert.match(scorekeeper, /className = 'score-feedback-info'/);
-assert.match(scorekeeper, /button\.textContent = 'i'/);
-assert.match(scorekeeper, /About \$\{channel\.toUpperCase\(\)\} scoring/);
-assert.match(scorekeeper, /data-score-feedback-help/);
-assert.match(scorekeeper, /HOW_TO_PLAY_OPEN_EVENT = 'turn:open-how-to-play'/);
-assert.match(scorekeeper, /detail: \{ section: channel, trigger: button \}/);
-assert.match(scorekeeper, /pointer-events: auto/,
-  'The info button must remain tappable even though the scorekeeper HUD itself ignores pointer input');
-assert.match(scorekeeper, /touch-action: manipulation/);
-assert.match(scorekeeper, /\.score-feedback-info:focus-visible/);
+assert.match(guide, /installGuideCardDisclosures\(dialog\)/);
+assert.match(guide, /section\.classList\.contains\('m8-guide-wide'\)/,
+  'Drive By Ear must remain the one ordinary card with its disclosure inside');
+assert.match(guide, /details\.className = 'm8-guide-card-disclosure'/);
+assert.match(guide, /summary\.append\(badge, title\)/);
+assert.match(guide, /title\.setAttribute\('role', 'heading'\)/);
+assert.match(guide, /title\.setAttribute\('aria-level', '3'\)/);
+assert.doesNotMatch(guide, /turn:open-how-to-play|installTargetedOpening|__turnOpenHowToPlaySection|TARGET_SECTION_ID/,
+  'Removing the scorekeeper info buttons must also remove their deep-link event wiring');
+
+assert.doesNotMatch(scorekeeper, /score-feedback-info|data-score-feedback-help|turn:open-how-to-play|About .* scoring/,
+  'The live scorekeeper must stay visually clean and contain no scoring help controls');
 assert.doesNotMatch(scorekeeper, /setInterval|setTimeout|requestAnimationFrame/,
-  'Scorekeeper help links must remain event-driven and add no racing-loop work');
+  'The scorekeeper record helper must remain event-driven and add no racing-loop work');
 
 assert.match(guide, /<details class="m8-dbe-guide">/);
 assert.match(
@@ -89,7 +83,7 @@ assert.match(
 assert.match(
   guide,
   /<summary><span class="m8-disclosure-symbol" aria-hidden="true"><\/span><span>Explore the Drive By Ear sounds<\/span><\/summary>[\s\S]*<div class="m8-dbe-guide-panel">[\s\S]*<div class="m8-dbe-guide-content">/,
-  'Every expanded help section must remain inside one visual disclosure panel'
+  'Every expanded Drive By Ear help section must remain inside one visual disclosure panel'
 );
 assert.ok(
   guide.indexOf('m8-disclosure-symbol') < guide.indexOf('Explore the Drive By Ear sounds'),
@@ -120,9 +114,17 @@ assert.match(css, /\.m8-how-dialog[\s\S]*-webkit-text-size-adjust: 100%[\s\S]*te
 assert.match(css, /\.m8-how-dialog \.m8-dialog-card[\s\S]*overscroll-behavior-y: contain/);
 assert.match(css, /scroll-padding-block-end: max\(32px, env\(safe-area-inset-bottom\)\)/);
 assert.match(css, /scrollbar-gutter: stable/, 'The dialog width must remain stable when expanded content creates a scrollbar');
-assert.match(css, /\.m8-dbe-guide[\s\S]*border: 3px solid[\s\S]*border-radius: 16px[\s\S]*overflow: clip/, 'The summary and expanded content must share one containing card');
+assert.match(css, /\.m8-guide-grid section\.m8-guide-card-shell[\s\S]*background: transparent[\s\S]*box-shadow: none/,
+  'Ordinary guide sections become neutral grid shells around the disclosure card');
+assert.match(css, /\.m8-guide-card-disclosure[\s\S]*border: 4px solid var\(--m8-ink\)[\s\S]*border-radius: 20px[\s\S]*box-shadow: 5px 5px 0 var\(--m8-ink\)/);
+assert.match(css, /\.m8-guide-card-disclosure > summary[\s\S]*display: grid[\s\S]*cursor: pointer/);
+assert.match(css, /\.m8-guide-card-disclosure\[open\] > summary[\s\S]*border-bottom: 3px solid/);
+assert.match(css, /\.m8-guide-card-disclosure > summary::after[\s\S]*content: "\+"/);
+assert.match(css, /\.m8-guide-card-disclosure\[open\] > summary::after[\s\S]*content: "−"/);
+assert.match(css, /\.m8-guide-card-panel[\s\S]*overflow-anchor: none/);
+assert.match(css, /\.m8-dbe-guide[\s\S]*border: 3px solid[\s\S]*border-radius: 16px[\s\S]*overflow: clip/, 'The Drive By Ear summary and expanded content must share one containing card');
 assert.match(css, /\.m8-guide-disclosure/,
-  'The Overcharge lesson must share the native disclosure component without masquerading as Drive By Ear');
+  'The Overcharge lesson must share the native nested disclosure component without masquerading as Drive By Ear');
 assert.match(css, /\.m8-overcharge-steps[\s\S]*display: grid/);
 assert.match(css, /\.m8-overcharge-leak[\s\S]*border-top: 2px solid/);
 assert.match(css, /\.m8-dbe-guide > summary/);
@@ -178,4 +180,4 @@ assert.match(rivalStorage, /syncPrimaryRivalState\(state\)/);
 assert.match(trackManager, /clearRivalsState\(currentRuntime\.state, \{ trackId: activeTrackId \}\)/, 'The race reset implementation must clear only the current track storage key');
 assert.match(trackManager, /globalThis\.__turnResetRivals = resetCurrentTrackRivals/);
 
-console.log('TURN native disclosure help, SHIFT/scoring guidance, scorekeeper deep links and contextual rival reset passed.');
+console.log('TURN collapsible How to Play cards, SHIFT/scoring guidance, clean scorekeeper and contextual rival reset passed.');
