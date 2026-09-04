@@ -278,11 +278,23 @@ assert.match(scorekeeperRecordsSource, /getBestDriftRecord/);
 assert.match(scorekeeperRecordsSource, /getBestFlowRecord/);
 assert.match(scorekeeperRecordsSource, /data-score-feedback-drift-best/);
 assert.match(scorekeeperRecordsSource, /data-score-feedback-flow-best/);
+assert.match(scorekeeperRecordsSource, /data-score-feedback-drift-last/);
+assert.match(scorekeeperRecordsSource, /data-score-feedback-flow-last/);
+assert.match(scorekeeperRecordsSource, /score-feedback-history/,
+  'LAST and BEST must share a stable secondary scorekeeper row beneath the active LAP score');
+assert.match(scorekeeperRecordsSource, /setLast\(drift\.last, event\?\.detail\?\.score\)/);
+assert.match(scorekeeperRecordsSource, /setLast\(flow\.last, event\?\.detail\?\.score\)/);
+assert.match(scorekeeperRecordsSource, /clearLastLap\(\)[\s\S]*race-started/,
+  'LAST is session context and must clear when a race session is restarted');
+assert.match(scorekeeperRecordsSource, /--score-feedback-paper-width: clamp\(148px, 18\.5vw, 198px\)/,
+  'The scorekeeper paper should be narrower than the original 226px maximum');
+assert.match(scorekeeperRecordsSource, /font-size: clamp\(1\.22rem, 3vw, 1\.78rem\)/,
+  'The live score should be reduced so LAP, LAST and BEST gain hierarchy');
 assert.match(scorekeeperRecordsSource, /turn:drift-lap-result/);
 assert.match(scorekeeperRecordsSource, /turn:flow-lap-result/);
 assert.doesNotMatch(scorekeeperRecordsSource, /requestAnimationFrame|setInterval|setTimeout/,
-  'BEST is lifecycle/event-driven and must not introduce another racing-loop or polling path');
+  'LAST/BEST are lifecycle/event-driven and must not introduce another racing-loop or polling path');
 assert.match(flowScorerSource, /feedbackState\.tokens\.includes/,
   'FLOW must retain its tiny internal token history because repetition/variety is scoring logic, not HUD decoration');
 
-console.log('TURN DRIFT ATTACK runtime, hidden-HUD and stable scorekeeper BEST regressions passed.');
+console.log('TURN DRIFT ATTACK runtime, hidden-HUD and LAP/LAST/BEST scorekeeper regressions passed.');
