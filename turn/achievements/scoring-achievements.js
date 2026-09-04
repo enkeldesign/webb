@@ -6,12 +6,25 @@ import {
 
 export const SCORING_MASTER_ACHIEVEMENT_ID = 'drift-flow-master';
 
-// Score targets deliberately stay unset until real DRIFT and FLOW lap
-// distributions have been collected. Keeping calibration in one data object
-// makes the eventual tuning change explicit and reviewable.
+// Calibrated from production playtesting. Keep all track/channel targets in one
+// reviewable data object so future balance changes remain explicit.
 export const SCORING_ACHIEVEMENT_TARGETS = Object.freeze({
-  drift: Object.freeze(Object.fromEntries(TRACK_IDS.map((trackId) => [trackId, null]))),
-  flow: Object.freeze(Object.fromEntries(TRACK_IDS.map((trackId) => [trackId, null])))
+  drift: Object.freeze({
+    countryside: 8000,
+    airport: 11000,
+    cliffside: 20000,
+    harbor: 18000,
+    'midnight-city': 20000,
+    mountain: 20000
+  }),
+  flow: Object.freeze({
+    countryside: 7000,
+    airport: 12000,
+    cliffside: 13000,
+    harbor: 23000,
+    'midnight-city': 25000,
+    mountain: 20000
+  })
 });
 
 function targetFor(channel, trackId) {
@@ -55,7 +68,7 @@ export const SCORING_MASTER_ACHIEVEMENT = Object.freeze({
   trophies: 300,
   title: 'DRIFT & FLOW MASTER',
   description: 'Clear every track’s calibrated DRIFT and FLOW achievement.',
-  recommendation: 'The twelve track targets are pending playtest calibration.',
+  recommendation: 'Clear both scoring targets on all six tracks.',
   icon: 'trophy',
   progressMax: TRACK_SCORING_ACHIEVEMENT_IDS.length,
   calibrationPending: TRACK_SCORING_ACHIEVEMENTS.some((achievement) => achievement.calibrationPending)
