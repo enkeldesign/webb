@@ -40,6 +40,8 @@ function ensureBestReadout(documentRef, root, channel) {
   const footer = row?.querySelector?.('.score-feedback-footer');
   if (!footer) return null;
 
+  // Concrete rendered hooks are data-score-feedback-drift-best and
+  // data-score-feedback-flow-best; keep one shared builder so both rows stay identical.
   const selector = `[data-score-feedback-${channel}-best]`;
   const existing = footer.querySelector?.(selector);
   if (existing) return existing.querySelector?.('b') || null;
