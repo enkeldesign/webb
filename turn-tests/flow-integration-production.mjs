@@ -1,5 +1,10 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import {
+  TRACK_SCORING_ACHIEVEMENTS,
+  SCORING_MASTER_ACHIEVEMENT,
+  qualifyingScoringAchievement
+} from '../turn/achievements/scoring-achievements.js';
 
 const [main, setting, toast, announcements, achievements, scoringCatalog] = await Promise.all([
   fs.readFile(new URL('../turn/main.js', import.meta.url), 'utf8'),
@@ -35,8 +40,17 @@ for (const target of [8000, 11000, 20000, 18000, 7000, 12000, 13000, 23000, 2500
 }
 assert.match(scoringCatalog, /'midnight-city': 20000/);
 assert.match(scoringCatalog, /mountain: 20000/);
-assert.doesNotMatch(scoringCatalog, /target pending playtest calibration/i,
-  'Production scoring achievements must no longer expose placeholder targets');
+assert.equal(TRACK_SCORING_ACHIEVEMENTS.length, 12);
+assert.ok(TRACK_SCORING_ACHIEVEMENTS.every((achievement) => achievement.calibrationPending === false));
+assert.ok(TRACK_SCORING_ACHIEVEMENTS.every((achievement) => Number.isFinite(achievement.target) && achievement.target > 0));
+assert.equal(SCORING_MASTER_ACHIEVEMENT.calibrationPending, false);
+for (const achievement of TRACK_SCORING_ACHIEVEMENTS) {
+  assert.equal(
+    qualifyingScoringAchievement(achievement.scoreChannel, achievement.trackId, achievement.target)?.id,
+    achievement.id,
+    `${achievement.id} must qualify at its exact calibrated target`
+  );
+}
 assert.match(scoringCatalog, /value < target/,
   'A score equal to the calibrated target must qualify');
 
