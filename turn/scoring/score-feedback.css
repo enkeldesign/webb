@@ -161,6 +161,19 @@
   opacity: 0;
 }
 
+/* A tiny type-coloured remnant marks a true zero without weakening the black track. */
+.score-feedback-meter::before,
+.score-feedback-gauge::before {
+  content: "";
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  left: 3px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--score-feedback-gauge-fill-a);
+}
+
 .score-feedback-meter > i,
 .score-feedback-gauge > i {
   position: absolute;
@@ -383,6 +396,14 @@
   .score-feedback-meter,
   .score-feedback-gauge {
     border-width: 2px;
+  }
+
+  .score-feedback-meter::before,
+  .score-feedback-gauge::before {
+    right: 2px;
+    bottom: 2px;
+    left: 2px;
+    height: 4px;
   }
 
   .score-feedback-meter > i,
