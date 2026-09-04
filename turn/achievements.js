@@ -2,7 +2,12 @@ import './achievements/home-reward-replay-r225.js?revision=r225-home-reward-repl
 
 export {
   ACHIEVEMENTS,
-  ONBOARDING_ACHIEVEMENT_IDS
+  ONBOARDING_ACHIEVEMENT_IDS,
+  SCORING_MASTER_ACHIEVEMENT_ID,
+  TRACK_SCORING_ACHIEVEMENTS,
+  TRACK_SCORING_ACHIEVEMENT_IDS,
+  completedAllScoringAchievements,
+  qualifyingScoringAchievement
 } from './achievements/catalog.js?revision=r222-awd-label';
 export {
   ACHIEVEMENT_STORAGE_KEY,

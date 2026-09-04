@@ -39,7 +39,7 @@ assert.match(setting, /Scores, records and achievements continue when hidden\./)
 assert.doesNotMatch(setting, /scorer\.reset|runtime\.reset/,
   'The presentation preference must never turn scoring off');
 assert.match(toast, /lap-result-drift/);
-assert.match(announcements, /Drift score:/,
+assert.match(announcements, /spokenScoreResult\('Drift', drift\)/,
   'Lap and DRIFT results must form one assistive-technology announcement');
 
 console.log('TURN DRIFT ATTACK physics, settings and lap-result integration regressions passed.');

@@ -25,6 +25,7 @@ export const CATEGORY = Object.freeze({
   WAYS_TO_PLAY: 'ways-to-play',
   EXPLORATION: 'exploration',
   RACING: 'racing',
+  SCORING: 'scoring',
   TIME_TRIALS: 'time-trials'
 });
 
@@ -33,6 +34,7 @@ export const CATEGORY_LABELS = Object.freeze({
   [CATEGORY.WAYS_TO_PLAY]: 'Ways to play',
   [CATEGORY.EXPLORATION]: 'Exploration',
   [CATEGORY.RACING]: 'Racing',
+  [CATEGORY.SCORING]: 'Scoring',
   [CATEGORY.TIME_TRIALS]: 'Time trials'
 });
 
@@ -68,6 +70,7 @@ export const ICONS = Object.freeze({
   restart: '<svg viewBox="0 0 24 24"><path d="M4 9V4l4 3"></path><path d="M5 7a8 8 0 1 1-1 8"></path><path d="M12 8v5l3 2"></path></svg>',
   charge: '<svg viewBox="0 0 24 24"><path d="M7 4h8v16H7Z"></path><path d="M9 2h4"></path><path d="m13 7-3 5h3l-2 5"></path><path d="M18 9c2 1 3 3 3 5"></path></svg>',
   wind: '<svg viewBox="0 0 24 24"><path d="M4 8h10c3 0 3-4 0-4-2 0-2 2-2 2"></path><path d="M3 12h14c4 0 4 6 0 6-2 0-3-2-2-3"></path><path d="M5 16h6"></path></svg>',
+  drift: '<svg viewBox="0 0 24 24"><path d="M4 5c8 1 11 5 10 14"></path><path d="M10 4c8 2 11 7 9 15"></path><path d="M3 9h3M8 12h3M12 16h3M16 20h3"></path></svg>',
   flow: '<svg viewBox="0 0 24 24"><path d="M3 12c3-6 6-6 9 0s6 6 9 0c-3-6-6-6-9 0s-6 6-9 0Z"></path></svg>',
   spectate: '<svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6S2.5 12 2.5 12Z"></path><circle cx="12" cy="12" r="2.5"></circle><path d="m17 17 4 4"></path></svg>',
   rival: '<svg viewBox="0 0 24 24"><path d="M3 15h8l2-5h5l3 5v4h-2"></path><path d="M5 19H3v-4"></path><circle cx="7" cy="19" r="2"></circle><circle cx="17" cy="19" r="2"></circle><path d="M4 10h6l1-3h4"></path></svg>',

@@ -1,8 +1,8 @@
 const TELEMETRY_ENDPOINT = 'https://turn-challenges.erik-jansson-ux.workers.dev/v1/telemetry';
-const CLIENT_VERSION = 2;
+const CLIENT_VERSION = 3;
 const FLUSH_DELAY_MS = 120;
 const MAX_BATCH = 8;
-const DEVELOPER_STORAGE_KEY = 'turn.telemetry.developer.v1';
+export const DEVELOPER_STORAGE_KEY = 'turn.telemetry.developer.v1';
 
 let installed = false;
 let playSessionSent = false;
@@ -40,6 +40,17 @@ export function installTurnTelemetry() {
     queueEvent('lap_complete', {
       value: Number(event.detail?.time) || 0
     });
+    // Keep the established event in its own batch during the Worker v2 -> v3
+    // rollout. An older Worker can reject the new score vocabulary without
+    // also losing lap completion telemetry.
+    flushQueue();
+    for (const channel of ['drift', 'flow']) {
+      const result = event.detail?.[channel];
+      if (result?.available !== true || result?.eligible !== true) continue;
+      queueEvent(`${channel}_score`, {
+        value: Number(result.score) || 0
+      });
+    }
   });
 
   window.addEventListener('turn:lap-invalid', (event) => {
@@ -140,6 +151,15 @@ function isInstalledWebApp() {
 function isDeveloperDevice() {
   try {
     return localStorage.getItem(DEVELOPER_STORAGE_KEY) === '1';
+  } catch (_) {
+    return false;
+  }
+}
+
+export function markDeveloperDevice(storage = globalThis.localStorage) {
+  try {
+    storage?.setItem?.(DEVELOPER_STORAGE_KEY, '1');
+    return storage?.getItem?.(DEVELOPER_STORAGE_KEY) === '1';
   } catch (_) {
     return false;
   }

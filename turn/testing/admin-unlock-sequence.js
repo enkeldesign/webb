@@ -8,6 +8,9 @@ import {
 import {
   CHALLENGE_PROGRESS_STORAGE_KEY
 } from '../achievements/challenge-expansion-r166.js?revision=r166-bella-records';
+import {
+  markDeveloperDevice
+} from '../telemetry/client.js?revision=r3-scoring-calibration';
 
 export const ADMIN_UNLOCK_SEQUENCE = Object.freeze([
   'track:countryside',
@@ -173,6 +176,7 @@ export function unlockRewardsForTesting(storage = globalThis.localStorage) {
   try {
     storage?.setItem?.(ACHIEVEMENT_STORAGE_KEY, JSON.stringify(snapshot));
     storage?.setItem?.(ADMIN_UNLOCK_MARKER, JSON.stringify(marker));
+    if (!markDeveloperDevice(storage)) return false;
   } catch (_) {
     return false;
   }
@@ -181,8 +185,9 @@ export function unlockRewardsForTesting(storage = globalThis.localStorage) {
   copyStateIntoLiveStore(snapshot);
   if (globalThis.document?.documentElement) {
     globalThis.document.documentElement.dataset.turnAdminRewardsUnlocked = 'true';
+    globalThis.document.documentElement.dataset.turnDeveloperDevice = 'true';
   }
-  console.info('TURN: hidden test rewards unlocked.');
+  console.info('TURN: hidden test rewards unlocked; this browser is marked as a developer/tester.');
   return true;
 }
 

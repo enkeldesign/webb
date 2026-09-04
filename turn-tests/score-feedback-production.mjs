@@ -48,11 +48,17 @@ class FakeElement {
     this.dataset = {};
     this.style = new FakeStyle();
     this.classList = new FakeClassList();
+    this.children = [];
+  }
+
+  querySelectorAll(selector) {
+    return selector === 'span' ? this.children : [];
   }
 }
 
 function makeFixture() {
   const selectors = [
+    '[data-score-feedback-drift-readout]',
     '[data-score-feedback-state]',
     '[data-score-feedback-label]',
     '[data-score-feedback-current]',
@@ -60,12 +66,22 @@ function makeFixture() {
     '[data-score-feedback-total]',
     '[data-score-feedback-meter-fill]',
     '[data-score-feedback-flow-meter-fill]',
+    '[data-score-feedback-flow-readout]',
+    '[data-score-feedback-flow-state]',
+    '[data-score-feedback-flow-current]',
+    '[data-score-feedback-flow-multiplier]',
+    '[data-score-feedback-flow-total]',
+    '[data-score-feedback-flow-techniques]',
     '[data-score-feedback-callout]',
     '[data-score-feedback-callout-label]',
     '[data-score-feedback-callout-score]',
     '[data-score-feedback-announcer]'
   ];
   const elements = new Map(selectors.map((selector) => [selector, new FakeElement()]));
+  elements.get('[data-score-feedback-flow-techniques]').children = Array.from(
+    { length: 5 },
+    () => new FakeElement()
+  );
   const root = new FakeElement();
   root.querySelector = (selector) => elements.get(selector) || null;
   return { root, elements };
@@ -163,12 +179,22 @@ const flowState = {
   multiplier: 5.1,
   intensity: 0.84,
   phase: 'intensify',
-  label: 'FLOW'
+  label: 'FLOW',
+  tokens: ['SHIFT', 'DRIFT', 'LOCK', 'BOOST', 'EXIT']
 };
 feedback.setChannelVisible(SCORE_FEEDBACK_CHANNEL.FLOW, true, 500);
 feedback.updateState(SCORE_FEEDBACK_CHANNEL.FLOW, flowState, 600);
 assert.equal(fixture.root.dataset.channel, 'flow', 'FLOW becomes persistent context when both channels are active');
-assert.equal(element(fixture, '[data-score-feedback-current]').textContent, '18,420');
+assert.equal(element(fixture, '[data-score-feedback-current]').textContent, '1,820',
+  'DRIFT keeps its own paper readout when FLOW is active');
+assert.equal(element(fixture, '[data-score-feedback-flow-current]').textContent, '18,420');
+assert.equal(element(fixture, '[data-score-feedback-flow-total]').textContent, '18,420');
+assert.equal(element(fixture, '[data-score-feedback-flow-multiplier]').textContent, '×5.1');
+assert.deepEqual(
+  element(fixture, '[data-score-feedback-flow-techniques]').children.map((token) => token.textContent),
+  ['SHIFT', 'DRIFT', 'LOCK', 'BOOST', 'EXIT'],
+  'FLOW reuses its fixed technique-token pool instead of creating DOM nodes in the scoring path'
+);
 assert.equal(
   element(fixture, '[data-score-feedback-meter-fill]').style.getPropertyValue('--score-feedback-progress'),
   '0.72',
@@ -289,6 +315,10 @@ for (const [mountName, markup] of [
     /data-score-feedback-label>DRIFT<\/span><span>COMBO<\/span>/,
     `${mountName} exposes COMBO vocabulary in accessible markup`
   );
+  assert.match(markup, /data-score-feedback-flow-current>0<\/strong>/,
+    `${mountName} includes the fixed FLOW paper row`);
+  assert.equal((markup.match(/data-score-feedback-flow-techniques/g) || []).length, 1,
+    `${mountName} includes one fixed FLOW technique pool`);
   assert.ok(
     markup.indexOf('class="score-feedback-meter"') < markup.indexOf('class="score-feedback-state"'),
     `${mountName} keeps the gauge behind the paper as a sibling stacking layer`
@@ -298,6 +328,8 @@ assert.match(css, /\.score-feedback-state \{[\s\S]*?z-index: 1;/,
   'The paper owns the foreground stacking layer');
 assert.match(css, /\.score-feedback-meter,[\s\S]*?z-index: 0;/,
   'The attached gauge sits behind the paper instead of intruding into it');
+assert.match(css, /\.score-feedback-row \{[\s\S]*?height: var\(--score-feedback-paper-height\)/,
+  'DRIFT and FLOW each retain one fixed-height scoring row');
 assert.match(css, /--score-feedback-gauge-track: var\(--turn-ink\);/,
   'The gauge body uses the canonical TURN ink token');
 assert.doesNotMatch(css, /#(?:000(?:000)?|08090a)\b/i,
@@ -306,8 +338,8 @@ assert.match(css, /data-score-channel="flow"/,
   'The reusable horizontal gauge primitive has a FLOW channel treatment ready for #739');
 assert.match(
   css,
-  /top: calc\(var\(--score-feedback-paper-height\) \+ var\(--score-feedback-gauge-inset-y\)\)/,
-  'The future FLOW gauge is aligned to its own fixed paper row');
+  /\.score-feedback-row \{[\s\S]*?position: relative;[\s\S]*?height: var\(--score-feedback-paper-height\)/,
+  'Each FLOW gauge is aligned inside its own fixed paper row');
 assert.match(css, /@keyframes turn-score-gauge-rush/,
   'High-intensity scoring keeps a transform-driven peripheral-noise layer');
 assert.match(css, /translateX/,

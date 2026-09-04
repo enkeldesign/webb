@@ -34,11 +34,12 @@ assert.doesNotMatch(client, /requestAnimationFrame|setInterval|devicemotion|poin
   'Telemetry must remain event-driven and stay out of the racing/rendering loops');
 
 assert.match(about, /installTurnTelemetry\(\)/);
-assert.match(about, /telemetry\/client\.js\?revision=r2/);
+assert.match(about, /telemetry\/client\.js\?revision=r3-scoring-calibration/);
 assert.match(about, /<details class="turn-about-privacy">/);
 assert.match(about, /<summary>PRIVACY &amp; USAGE STATISTICS<\/summary>/);
 assert.match(about, /no analytics cookie and creates no persistent analytics identifier/i);
 assert.match(about, /developer yes\/no flag/i);
+assert.match(about, /DRIFT or FLOW lap scores/i);
 assert.match(about, /same local yes\/no marker used by every developer device/i);
 assert.match(about, /does not include your name, challenge name, challenge link or ID, replay, driving path, control inputs/i);
 assert.match(about, /private developer dashboard/i);
@@ -72,6 +73,9 @@ assert.doesNotMatch(statsJs, /localStorage\.(?:setItem|getItem)\([^\n]*statsKey|
 assert.match(statsJs, /audience/);
 assert.match(statsJs, /renderFavourite\('Track', tracks, races\)/);
 assert.match(statsJs, /renderFavourite\('Car', cars, races\)/);
+assert.match(statsJs, /renderScoreDistributions/);
+assert.match(statsJs, /\['mountain', 'Mountain'\]/,
+  'Calibration distributions must include every current TURN track');
 assert.match(statsJs, /YOUR TURN play sessions/);
 assert.match(statsJs, /Motion-steered races/);
 assert.match(statsJs, /Drive By Ear races/);
@@ -83,7 +87,9 @@ assert.doesNotMatch(workerConfig, /analytics_engine_datasets|"binding": "ANALYTI
   'Private stats must deploy using the already-proven D1 binding only');
 assert.match(workerRouter, /handleTelemetryRoute/);
 assert.match(workerTelemetry, /'play_session'[\s\S]*'race_start'[\s\S]*'lap_complete'[\s\S]*'lap_invalid'/);
+assert.match(workerTelemetry, /'drift_score'[\s\S]*'flow_score'/);
 assert.match(workerTelemetry, /CREATE TABLE IF NOT EXISTS turn_telemetry_daily_v2/);
+assert.match(workerTelemetry, /CREATE TABLE IF NOT EXISTS turn_score_daily_v1/);
 assert.match(workerTelemetry, /developer INTEGER NOT NULL/);
 assert.match(workerTelemetry, /developer: Boolean\(value\.developer\)/);
 assert.match(workerTelemetry, /STATS_AUDIENCES/);

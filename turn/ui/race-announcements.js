@@ -120,16 +120,17 @@ export function spokenLapTime(seconds) {
   return parts.join(', ');
 }
 
-export function lapResultAnnouncement({ position, time, drift } = {}) {
+export function lapResultAnnouncement({ position, time, drift, flow } = {}) {
   const lap = `Lap. Position: ${ordinalWord(position)}. Time: ${spokenLapTime(time)}.`;
-  if (drift?.available !== true || !Number.isFinite(Number(drift.score))) return lap;
+  return `${lap}${spokenScoreResult('Drift', drift)}${spokenScoreResult('Flow', flow)}`;
+}
 
-  const score = Math.max(0, Math.round(Number(drift.score)));
-  if (drift.newBest === true) return `${lap} Drift score: ${score} points. New best.`;
-
-  const best = Math.max(0, Math.round(Number(drift.bestScore) || 0));
-  const bestResult = best > 0 ? ` Best: ${best} points.` : '';
-  return `${lap} Drift score: ${score} points.${bestResult}`;
+function spokenScoreResult(label, result) {
+  if (result?.available !== true || !Number.isFinite(Number(result.score))) return '';
+  const score = Math.max(0, Math.round(Number(result.score)));
+  if (result.newBest === true) return ` ${label} score: ${score} points. New best.`;
+  const best = Math.max(0, Math.round(Number(result.bestScore) || 0));
+  return ` ${label} score: ${score} points.${best > 0 ? ` Best: ${best} points.` : ''}`;
 }
 
 export function lapVoidAnnouncement(reason) {

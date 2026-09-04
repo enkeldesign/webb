@@ -22,6 +22,11 @@ import {
   completedAllTimeTrials,
   qualifyingTimeTrial
 } from './time-trials.js?revision=r166-bella-records';
+import {
+  SCORING_MASTER_ACHIEVEMENT_ID,
+  completedAllScoringAchievements,
+  qualifyingScoringAchievement
+} from './scoring-achievements.js?revision=r1-placeholder-targets';
 import { replayFrameAt } from '../race/replay-system.js?revision=r146-achievement-expansion';
 import { getStoredBestLap } from '../race/rival-storage.js';
 
@@ -375,6 +380,21 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
       if (completedAllTimeTrials((id) => store.isUnlocked(id), timeTrial.id)) {
         candidates.push(TIME_TRIAL_MASTER_ID);
       }
+    }
+
+    const scoringAchievements = ['drift', 'flow']
+      .map((channel) => qualifyingScoringAchievement(
+        channel,
+        context.trackId,
+        detail?.[channel]?.eligible === true ? detail[channel].score : null
+      ))
+      .filter(Boolean);
+    candidates.push(...scoringAchievements.map((achievement) => achievement.id));
+    if (completedAllScoringAchievements(
+      (id) => store.isUnlocked(id),
+      scoringAchievements.map((achievement) => achievement.id)
+    )) {
+      candidates.push(SCORING_MASTER_ACHIEVEMENT_ID);
     }
 
     unlock(candidates, context, { delay: LAP_TOAST_DELAY_MS });

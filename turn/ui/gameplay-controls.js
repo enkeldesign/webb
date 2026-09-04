@@ -27,6 +27,7 @@ import {
   isVehiclePerkUnlocked
 } from '../progression/trophy-road.js?revision=r230-vehicle-perks';
 import {
+  VEHICLE_SHIFT_STAT_FIELDS,
   VEHICLE_SHIFT_FEATURE_ID,
   loadVehicleShiftProfile,
   vehicleShiftAmount
@@ -221,6 +222,11 @@ function installGameplayUi() {
   let shiftActive = false;
   let shiftPointerInside = false;
   let shiftTuningTarget = null;
+  let shiftOutcomeAttempt = null;
+  let shiftOutcomeTimer = 0;
+  let boostOutcomeAttempt = null;
+  let previousBoostingForOutcome = false;
+  let previousOverchargeCaughtForOutcome = false;
   let boostCharge = 1;
   let boostOvercharge = 0;
   let boostOverchargePhase = BOOST_OVERCHARGE_PHASE.READY;
@@ -322,11 +328,19 @@ function installGameplayUi() {
   }
 
   function publishShiftState({ announce = true } = {}) {
+    const context = shiftContext();
+    const feedback = resolveVehicleShiftFeedback(context.profile, shiftActive);
+    const at = globalThis.performance?.now?.() || 0;
+    const intentional = announce === true && context.runtime?.state?.lapActive === true;
+    const gainKeys = [...(feedback?.gainKeys || [])];
+    const gainKeySet = new Set(gainKeys);
+    const lossKeys = VEHICLE_SHIFT_STAT_FIELDS
+      .map(({ key }) => key)
+      .filter((key) => !gainKeySet.has(key));
     globalThis.__turnShiftActive = shiftActive;
     const runtimeState = globalThis.__turnRuntime?.state;
     if (runtimeState) runtimeState.shiftActive = shiftActive;
     if (announce) {
-      const feedback = resolveVehicleShiftFeedback(shiftContext().profile, shiftActive);
       const detailedAnnouncement = feedback?.announcement || (shiftActive
         ? 'SHIFT on. Alternate attributes engaged.'
         : 'SHIFT off. Standard attributes restored.');
@@ -341,11 +355,94 @@ function installGameplayUi() {
     } else {
       clearShiftFeedback();
     }
+    scheduleShiftOutcome({ intentional, at, gainKeys, active: shiftActive });
     if (typeof globalThis.CustomEvent === 'function') {
       globalThis.dispatchEvent?.(new CustomEvent('turn:shift-change', {
-        detail: { active: shiftActive, available: shiftAvailable }
+        detail: {
+          active: shiftActive,
+          available: shiftAvailable,
+          intentional,
+          gainKeys,
+          lossKeys,
+          amount: feedback?.amount || 1,
+          zone: driveZone || '',
+          boostCharge: Math.max(0, Number(boostCharge) || 0),
+          overcharge: Math.max(0, Number(boostOvercharge) || 0),
+          boosting: globalThis.__turnBoostActive === true,
+          at
+        }
       }));
     }
+  }
+
+  function publishDrivingOutcome(type, detail) {
+    if (typeof globalThis.CustomEvent !== 'function') return;
+    globalThis.dispatchEvent?.(new CustomEvent(type, { detail }));
+  }
+
+  function clearShiftOutcome() {
+    window.clearTimeout(shiftOutcomeTimer);
+    shiftOutcomeTimer = 0;
+    shiftOutcomeAttempt = null;
+  }
+
+  function scheduleShiftOutcome({ intentional, at, gainKeys, active }) {
+    clearShiftOutcome();
+    if (!intentional || !gainKeys.some((key) => key === 'acceleration' || key === 'speed')) return;
+    shiftOutcomeAttempt = {
+      at,
+      startSpeed: Math.max(0, Number(globalThis.__turnRuntime?.state?.speed) || 0),
+      gainKeys,
+      active
+    };
+    shiftOutcomeTimer = window.setTimeout(resolveShiftOutcome, 450);
+  }
+
+  function resolveShiftOutcome() {
+    shiftOutcomeTimer = 0;
+    const attempt = shiftOutcomeAttempt;
+    if (!attempt) return;
+    const now = globalThis.performance?.now?.() || attempt.at;
+    const speed = Math.max(0, Number(globalThis.__turnRuntime?.state?.speed) || 0);
+    const elapsed = now - attempt.at;
+    const speedGain = Math.max(0, speed - attempt.startSpeed);
+    const accelerationGain = attempt.gainKeys.includes('acceleration') || attempt.gainKeys.includes('speed');
+    const useful = elapsed >= 350 && accelerationGain && speedGain >= 1.4 && driveZone !== 'drift';
+    if (useful || elapsed >= 1800) {
+      publishDrivingOutcome('turn:shift-outcome', {
+        active: attempt.active,
+        gainKeys: attempt.gainKeys,
+        useful,
+        speedGain,
+        duration: elapsed / 1000,
+        at: now
+      });
+      shiftOutcomeAttempt = null;
+      return;
+    }
+    shiftOutcomeTimer = window.setTimeout(resolveShiftOutcome, Math.min(450, 1800 - elapsed));
+  }
+
+  function resetScoringOutcomeTracking({ continueBoost = false } = {}) {
+    clearShiftOutcome();
+    const now = globalThis.performance?.now?.() || 0;
+    const runtimeState = globalThis.__turnRuntime?.state;
+    const boosting = continueBoost
+      && runtimeState?.lapActive === true
+      && globalThis.__turnBoostActive === true;
+    const speed = Math.max(0, Number(runtimeState?.speed) || 0);
+    boostOutcomeAttempt = boosting
+      ? {
+        at: now,
+        startSpeed: speed,
+        peakSpeed: speed,
+        overchargeStart: Math.max(0, Number(boostOvercharge) || 0)
+      }
+      : null;
+    previousBoostingForOutcome = boosting;
+    previousOverchargeCaughtForOutcome = continueBoost
+      && runtimeState?.lapActive === true
+      && globalThis.__turnBoostOverchargeCaught === true;
   }
 
   function applyShiftMode(active, { announce = true } = {}) {
@@ -516,6 +613,7 @@ function installGameplayUi() {
     publishedOvercharge = null;
     publishedOverchargeCaught = null;
     publishedOverchargeVolatile = null;
+    resetScoringOutcomeTracking();
     driftLockRequested = false;
     driftLockAmount = 0;
     globalThis.__turnDriftLockAmount = 0;
@@ -635,6 +733,14 @@ function installGameplayUi() {
     if (announce && lockRequestChanged && nextZone === 'drift') {
       safeVibrate(nextLockRequested ? 18 : 8);
     }
+    if (globalThis.__turnRuntime?.state?.lapActive === true) {
+      publishDrivingOutcome('turn:drive-technique-state', {
+        zone: nextZone || '',
+        previousZone: previousZone || '',
+        lockRequested: nextLockRequested,
+        at: globalThis.performance?.now?.() || 0
+      });
+    }
   }
 
   function consumeDrivePointer(event) {
@@ -752,6 +858,9 @@ function installGameplayUi() {
   window.addEventListener('turn:ui-state-change', (event) => {
     const reason = event.detail?.reason;
     if (reason === 'race-reset') refillBoost();
+    if (reason === 'lap-started' || reason === 'lap-completed') {
+      resetScoringOutcomeTracking({ continueBoost: true });
+    }
     if (reason === 'runtime-ready' || reason === 'race-started' || reason === 'race-reset') {
       resetShiftAnnouncementCycle();
       syncShiftAvailability({ reset: true });
@@ -909,6 +1018,42 @@ function installGameplayUi() {
     globalThis.__turnBoostCharge = boostCharge;
     globalThis.__turnBoostOvercharge = boostOvercharge;
     globalThis.__turnBoostOverchargeCaught = overchargeCaught;
+    const runtimeSpeed = Math.max(0, Number(globalThis.__turnRuntime?.state?.speed) || 0);
+    if (boosting && !previousBoostingForOutcome) {
+      boostOutcomeAttempt = {
+        at: now,
+        startSpeed: runtimeSpeed,
+        peakSpeed: runtimeSpeed,
+        overchargeStart: Math.max(0, boostOvercharge)
+      };
+    } else if (boosting && boostOutcomeAttempt) {
+      boostOutcomeAttempt.peakSpeed = Math.max(boostOutcomeAttempt.peakSpeed, runtimeSpeed);
+    } else if (!boosting && previousBoostingForOutcome && boostOutcomeAttempt) {
+      const duration = Math.max(0, (now - boostOutcomeAttempt.at) / 1000);
+      const speedGain = Math.max(0, boostOutcomeAttempt.peakSpeed - boostOutcomeAttempt.startSpeed);
+      const overchargeSpent = Math.max(0, boostOutcomeAttempt.overchargeStart - boostOvercharge);
+      const useful = duration >= 0.35 && (
+        speedGain >= 1.5 ||
+        (duration >= 0.8 && boostOutcomeAttempt.peakSpeed >= 20) ||
+        overchargeSpent >= 0.05
+      );
+      publishDrivingOutcome('turn:boost-outcome', {
+        useful,
+        duration,
+        speedGain,
+        overchargeSpent,
+        at: now
+      });
+      boostOutcomeAttempt = null;
+    }
+    if (overchargeCaught && !previousOverchargeCaughtForOutcome) {
+      publishDrivingOutcome('turn:overcharge-catch', {
+        amount: boostOvercharge,
+        at: now
+      });
+    }
+    previousBoostingForOutcome = boosting;
+    previousOverchargeCaughtForOutcome = overchargeCaught;
     updateAudio(now, boosting);
 
     const locked = boostRequested && boostExhausted;

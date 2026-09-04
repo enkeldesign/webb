@@ -27,6 +27,15 @@ assert.equal(
   }),
   'Lap. Position: first. Time: one minute, fifteen point three four six seconds. Drift score: 8420 points. New best.'
 );
+assert.equal(
+  lapResultAnnouncement({
+    position: 1,
+    time: 75.346,
+    drift: { available: true, score: 8420, bestScore: 9000 },
+    flow: { available: true, score: 19760, bestScore: 19760, newBest: true }
+  }),
+  'Lap. Position: first. Time: one minute, fifteen point three four six seconds. Drift score: 8420 points. Best: 9000 points. Flow score: 19760 points. New best.'
+);
 
 function makeFrames(count = 25) {
   return Array.from({ length: count }, (_, index) => ({
@@ -298,6 +307,7 @@ assert.match(toast, /turn:lap-invalid/, 'The unified toast must listen for inval
 assert.match(toast, /lap-result-position/, 'The toast must show frozen finishing position');
 assert.match(toast, /lap-result-time/, 'The toast must show the completed lap time');
 assert.match(toast, /lap-result-drift-score/, 'The single finish toast must include the DRIFT result');
+assert.match(toast, /lap-result-flow-score/, 'The single finish toast must include the FLOW result');
 assert.match(toast, /NEW BEST/, 'A new per-track DRIFT best must be explicit in the finish toast');
 assert.match(toast, /toast\.setAttribute\('aria-label', 'Lap result'\)/, 'The visible result must remain inspectable without becoming another live region');
 assert.doesNotMatch(toast, /toast\.setAttribute\('role', 'status'\)/, 'The visible toast must not duplicate the dedicated announcer');
@@ -324,8 +334,17 @@ assert.match(onboarding, /renderer\.dispose\(\)/, 'The temporary onboarding rend
 assert.match(onboarding, /RESULT_TOAST_HANDOFF_MS = 4300/, 'First-rival onboarding must wait until the lap-result toast has cleared');
 assert.match(toastCss, /background: var\(--yellow\)/, 'Valid lap results must keep the yellow finish-result colour');
 assert.match(toastCss, /\.lap-result-toast\.is-invalid \{\s*background: #ff6b6b;/s, 'STAY ON THE TRACK must use the same red void-lap colour as the TIME card');
-assert.match(toastCss, /left: 50%/, 'The lap toast must occupy the central finish-message position');
-assert.match(toastCss, /top: 22%/, 'The lap toast must sit where the old TOP X LAP message appeared');
+assert.match(toastCss, /--lap-result-topbar-clearance:/,
+  'The expanded result must clear the top chips rather than cover the forward road');
+assert.match(toastCss, /grid-template-columns:[^;]*repeat\(2,/,
+  'LAP, DRIFT and FLOW must use horizontal width when both scores are present');
+assert.match(toastCss, /--lap-result-map-clearance: min\(24vw, 184px\)/,
+  'The wide top strip must reserve room for the minimap');
+assert.match(toastCss, /--lap-result-left: max\(12px, env\(safe-area-inset-left\)\)/);
+assert.match(toastCss, /var\(--lap-result-right-clearance\)/,
+  'The top result must account for both landscape safe areas as well as the minimap');
+assert.doesNotMatch(toastCss, /top: 22%|translate\(-50%/,
+  'The retired centre-screen finish placement must not return');
 assert.match(toastCss, /\.lap-result-drift/, 'The DRIFT result must reuse the existing finish surface');
 assert.doesNotMatch(toastCss, /left: max\(112px/, 'The retired lower-left toast placement must stay removed');
 assert.match(toastCss, /prefers-reduced-motion: reduce/, 'Toast animation must respect reduced-motion preferences');

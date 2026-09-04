@@ -40,6 +40,10 @@ import {
   DRIFT_ATTACK_FEATURE_ID,
   createDriftAttackRuntime
 } from '/turn/scoring/drift-attack-runtime.js';
+import {
+  FLOW_FEATURE_ID,
+  createFlowRuntime
+} from '/turn/scoring/flow-runtime.js';
 
 const intro = document.querySelector('#intro');
 const hud = document.querySelector('#hud');
@@ -153,6 +157,13 @@ const driftAttack = createDriftAttackRuntime({
   isUnlocked: () => isFeatureUnlocked(DRIFT_ATTACK_FEATURE_ID)
 });
 globalThis.__turnDriftAttack = driftAttack;
+const flowAttack = createFlowRuntime({
+  state,
+  scoreFeedback,
+  eventTarget: window,
+  isUnlocked: () => isFeatureUnlocked(FLOW_FEATURE_ID)
+});
+globalThis.__turnFlow = flowAttack;
 
 function publishUiState(reason) {
   window.dispatchEvent(new CustomEvent('turn:ui-state-change', {
@@ -991,6 +1002,7 @@ function updateMotionInput(dt) {
 function beginTimedLap(now) {
   beginTimedLapState({ state, samples, now, showMessage });
   driftAttack.beginLap(now);
+  flowAttack.beginLap(now);
   publishUiState('lap-started');
 }
 
@@ -1046,8 +1058,17 @@ function completeLap(now) {
     saveGhost,
     showMessage,
     finalizeScores({ finishedTime, validLap, rankedLap }) {
+      const drift = driftAttack.completeLap({
+        now,
+        time: finishedTime,
+        valid: validLap,
+        ranked: rankedLap,
+        trackId: state.trackId,
+        carId: state.vehicleId
+      });
       return {
-        drift: driftAttack.completeLap({
+        drift,
+        flow: flowAttack.completeLap({
           now,
           time: finishedTime,
           valid: validLap,
@@ -1058,8 +1079,8 @@ function completeLap(now) {
       };
     },
     onScoreError(error) {
-      console.error('TURN: DRIFT ATTACK could not finalize this lap.', error);
-      globalThis.__turnLastDriftScoreError = error;
+      console.error('TURN: scoring could not finalize this lap.', error);
+      globalThis.__turnLastScoreError = error;
     },
     onError(error) {
       console.error('TURN: completed lap could not be added to rivals, continuing race.', error);
@@ -1469,7 +1490,8 @@ const turnRuntime = {
     return turnSceneOverride ? turnSceneOverride(dt) === true : false;
   },
   scoreFeedback,
-  driftAttack
+  driftAttack,
+  flowAttack
 };
 globalThis.__turnRuntime = turnRuntime;
 function syncSelectedVehiclePerkEntitlement() {

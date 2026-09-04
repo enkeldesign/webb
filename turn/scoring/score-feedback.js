@@ -56,7 +56,8 @@ function makeChannel(label) {
     multiplier: 1,
     intensity: 0,
     phase: 'quiet',
-    label
+    label,
+    tokens: ['', '', '', '', '']
   };
 }
 
@@ -160,6 +161,7 @@ export function createScoreFeedback({
   if (!root) throw new Error('TURN ScoreFeedback requires a fixed root element.');
 
   const statePanel = requiredElement(root, '[data-score-feedback-state]');
+  const driftReadout = optionalElement(root, '[data-score-feedback-drift-readout]') || statePanel;
   const stateLabel = requiredElement(root, '[data-score-feedback-label]');
   const currentScore = requiredElement(root, '[data-score-feedback-current]');
   const multiplier = requiredElement(root, '[data-score-feedback-multiplier]');
@@ -167,6 +169,12 @@ export function createScoreFeedback({
   const driftGaugeFill = requiredElement(root, '[data-score-feedback-meter-fill]');
   const flowGaugeFill = optionalElement(root, '[data-score-feedback-flow-meter-fill]');
   const flowReadout = optionalElement(root, '[data-score-feedback-flow-readout]');
+  const flowStatePanel = optionalElement(root, '[data-score-feedback-flow-state]');
+  const flowCurrentScore = optionalElement(root, '[data-score-feedback-flow-current]');
+  const flowMultiplier = optionalElement(root, '[data-score-feedback-flow-multiplier]');
+  const flowLapScore = optionalElement(root, '[data-score-feedback-flow-total]');
+  const flowTechniquePool = optionalElement(root, '[data-score-feedback-flow-techniques]');
+  const flowTechniqueTokens = flowTechniquePool?.querySelectorAll?.('span') || [];
   const callout = requiredElement(root, '[data-score-feedback-callout]');
   const calloutLabel = requiredElement(root, '[data-score-feedback-callout-label]');
   const calloutScore = requiredElement(root, '[data-score-feedback-callout-score]');
@@ -209,6 +217,11 @@ export function createScoreFeedback({
     target.intensity = clamp(finiteNumber(snapshot.intensity), 0, 1);
     target.phase = String(snapshot.phase || (target.active ? 'build' : 'quiet'));
     target.label = String(snapshot.label || CHANNEL_LABEL[normalizedChannel]);
+    if (Array.isArray(snapshot.tokens)) {
+      for (let index = 0; index < target.tokens.length; index += 1) {
+        target.tokens[index] = String(snapshot.tokens[index] || '');
+      }
+    }
     dirty = true;
     return commit(now);
   }
@@ -308,6 +321,7 @@ export function createScoreFeedback({
     channel.multiplier = 1;
     channel.intensity = 0;
     channel.phase = 'quiet';
+    channel.tokens.fill('');
   }
 
   function clearChannel(channel, now = 0) {
@@ -388,24 +402,35 @@ export function createScoreFeedback({
     setData(root, 'flowHeat', heatTier(flow.intensity, flowActive));
     setData(root, 'gaugeHeat', heatTier(driftGaugeIntensity, driftGaugeActive));
     setData(root, 'gaugeChannel', fallbackGaugeToFlow ? SCORE_FEEDBACK_CHANNEL.FLOW : SCORE_FEEDBACK_CHANNEL.DRIFT);
-    setData(
-      statePanel,
-      'scoreLayout',
-      flowReadout && flow.visible && drift.visible ? 'dual' : 'single'
-    );
+    setData(root, 'scoreLayout', flow.visible && drift.visible ? 'dual' : 'single');
+    setHidden(driftReadout, !drift.visible);
     if (flowReadout) setHidden(flowReadout, !flow.visible);
 
-    setHidden(statePanel, !primary);
-    if (primary) {
-      const liveScore = primary.active
-        ? primary.unbanked > 0 ? primary.unbanked : primary.score
+    if (drift.visible) {
+      const liveScore = drift.active
+        ? drift.unbanked > 0 ? drift.unbanked : drift.score
         : 0;
+      setData(driftReadout, 'phase', drift.phase);
+      setText(stateLabel, drift.label);
+      setText(currentScore, formatScore(liveScore));
+      setText(multiplier, `×${formatMultiplier(drift.multiplier)}`);
+      setText(lapScore, formatScore(drift.score));
+    }
+    if (flow.visible && flowStatePanel && flowCurrentScore && flowMultiplier && flowLapScore) {
+      const liveScore = flow.active
+        ? flow.unbanked > 0 ? flow.unbanked : flow.score
+        : 0;
+      setData(flowReadout, 'phase', flow.phase);
+      setText(flowCurrentScore, formatScore(liveScore));
+      setText(flowMultiplier, `×${formatMultiplier(flow.multiplier)}`);
+      setText(flowLapScore, formatScore(flow.score));
+      for (let index = 0; index < flowTechniqueTokens.length; index += 1) {
+        setText(flowTechniqueTokens[index], flow.tokens[index] || '');
+      }
+    }
+    if (primary) {
       setData(root, 'channel', primary === flow ? SCORE_FEEDBACK_CHANNEL.FLOW : SCORE_FEEDBACK_CHANNEL.DRIFT);
       setData(root, 'phase', primary.phase);
-      setText(stateLabel, primary.label);
-      setText(currentScore, formatScore(liveScore));
-      setText(multiplier, `×${formatMultiplier(primary.multiplier)}`);
-      setText(lapScore, formatScore(primary.score));
     }
 
     setHidden(callout, !eventVisible);
@@ -426,7 +451,7 @@ export function createScoreFeedback({
       callout.classList.remove('is-release', 'is-event-a', 'is-event-b');
     }
 
-    setHidden(root, !primary && !eventVisible);
+    setHidden(root, !drift.visible && !flow.visible && !eventVisible);
     dirty = false;
     lastCommitAt = timestamp;
     return true;

@@ -36,8 +36,8 @@ const mayday = getAchievement('golden-hour');
 const catchTheCharge = getAchievement('catch-the-charge');
 const gotStarted = getAchievement('got-started');
 
-assert.equal(ACHIEVEMENTS.length, 45,
-  'Production TURN should expose the existing achievement set, CATCH THE CHARGE and GOT STARTED');
+assert.equal(ACHIEVEMENTS.length, 58,
+  'Production TURN should expose the existing achievements plus scoring calibration placeholders');
 assert.equal(GOT_STARTED_ACHIEVEMENT, gotStarted);
 assert.equal(gotStarted?.title, 'GOT STARTED');
 assert.equal(gotStarted?.category, 'onboarding');
@@ -157,7 +157,8 @@ challengeApi.disconnect();
 
 assert.equal(
   ACHIEVEMENTS.reduce((total, item) => total + item.trophies, 0),
-  3075
+  3975,
+  'The raw catalog includes 900 trophies held behind pending score calibration'
 );
 assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 3075);
 assert.deepEqual(
