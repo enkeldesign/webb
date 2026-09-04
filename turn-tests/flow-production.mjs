@@ -118,6 +118,25 @@ try {
   });
   runtime.beginLap(0);
 
+  eventTarget.emit('turn:drive-technique-state', {
+    zone: 'drift',
+    previousZone: 'gas',
+    lockRequested: true,
+    at: 20
+  });
+  eventTarget.emit('turn:drift-score-event', { type: 'build', at: 40 });
+  eventTarget.emit('turn:drift-score-event', {
+    type: 'bank',
+    score: 500,
+    duration: 1.1,
+    reason: 'exit',
+    at: 900
+  });
+  assert.deepEqual(runtime.scorer.inspect().tokens.slice(-3), ['LOCK', 'DRIFT', 'EXIT'],
+    'LOCK engaged before DRIFT BUILD must remain part of the drift context and score FLOW');
+  runtime.reset(950);
+  runtime.beginLap(960);
+
   eventTarget.emit('turn:shift-change', {
     intentional: true,
     active: true,
@@ -125,17 +144,17 @@ try {
     gainKeys: ['drift', 'control', 'boostDuration'],
     lossKeys: ['speed', 'acceleration', 'boostPower'],
     boostCharge: 0,
-    at: 100
+    at: 1000
   });
   assert.equal(runtime.scorer.inspect().lapScore, 0, 'SHIFT alone scores zero');
-  eventTarget.emit('turn:drift-score-event', { type: 'build', at: 250 });
-  eventTarget.emit('turn:drive-technique-state', { lockRequested: true, at: 400 });
+  eventTarget.emit('turn:drift-score-event', { type: 'build', at: 1150 });
+  eventTarget.emit('turn:drive-technique-state', { lockRequested: true, at: 1300 });
   eventTarget.emit('turn:drift-score-event', {
     type: 'bank',
     score: 900,
     duration: 2.4,
     reason: 'exit',
-    at: 2600
+    at: 3500
   });
   const afterDrift = runtime.scorer.inspect();
   assert.ok(afterDrift.lapScore > 0);
@@ -147,10 +166,10 @@ try {
     active: false,
     amount: 1,
     gainKeys: ['acceleration', 'boostPower', 'boostDuration'],
-    at: 2700
+    at: 3600
   });
   const beforeOutcome = runtime.scorer.inspect().lapScore;
-  eventTarget.emit('turn:shift-outcome', { useful: true, speedGain: 2.5, at: 3300 });
+  eventTarget.emit('turn:shift-outcome', { useful: true, speedGain: 2.5, at: 4200 });
   assert.ok(runtime.scorer.inspect().lapScore > beforeOutcome,
     'SHIFTing out of a drift is rewarded after its acceleration gain is observed');
 
@@ -160,12 +179,13 @@ try {
     speedGain: 4,
     duration: 1.1,
     overchargeSpent: 0.2,
-    at: 3900
+    at: 4800
   });
-  eventTarget.emit('turn:overcharge-catch', { amount: 0.45, at: 4200 });
+  eventTarget.emit('turn:overcharge-catch', { amount: 0.45, at: 5100 });
   assert.ok(runtime.scorer.inspect().lapScore > beforeBoost);
 
-  eventTarget.emit('turn:drift-score-event', { type: 'build', at: 4300 });
+  eventTarget.emit('turn:drive-technique-state', { zone: 'gas', lockRequested: false, at: 5150 });
+  eventTarget.emit('turn:drift-score-event', { type: 'build', at: 5200 });
   const beforeMidDriftShift = runtime.scorer.inspect().lapScore;
   eventTarget.emit('turn:shift-change', {
     intentional: true,
@@ -175,7 +195,7 @@ try {
     lossKeys: ['speed', 'acceleration', 'boostPower'],
     boostCharge: 0,
     zone: 'drift',
-    at: 4400
+    at: 5300
   });
   assert.equal(runtime.scorer.inspect().lapScore, beforeMidDriftShift,
     'SHIFTing during a drift still waits for a meaningful result');
@@ -184,7 +204,7 @@ try {
     score: 1200,
     duration: 2.6,
     reason: 'exit',
-    at: 7000
+    at: 7900
   });
   assert.ok(runtime.scorer.inspect().lapScore > beforeMidDriftShift,
     'A useful +DRIFT/+CONTROL/+BOOST TANK change during a banked drift contributes to FLOW');
@@ -198,12 +218,13 @@ try {
     boostCharge: 0.8,
     overcharge: 0.35,
     zone: 'gas',
-    at: 7100
+    at: 8000
   });
   eventTarget.emit('turn:drive-technique-state', {
     zone: 'boost',
     previousZone: 'gas',
-    at: 7200
+    lockRequested: false,
+    at: 8100
   });
   const beforeContextualBoost = runtime.scorer.inspect().lapScore;
   eventTarget.emit('turn:boost-outcome', {
@@ -211,7 +232,7 @@ try {
     speedGain: 5,
     duration: 2.3,
     overchargeSpent: 0.3,
-    at: 9500
+    at: 10400
   });
   assert.ok(runtime.scorer.inspect().lapScore > beforeContextualBoost,
     'A SHIFT captured on BOOST entry remains eligible through a useful boost longer than the causal window');
@@ -221,19 +242,19 @@ try {
       && event.detail?.outcome === 'drift-exit-overcharge-boost'
   )), 'FLOW exposes the proven SHIFT/OVERCHARGE/BOOST link as a semantic score event');
 
-  runtime.setHudVisible(false, { now: 10000 });
+  runtime.setHudVisible(false, { now: 10900 });
   assert.equal(storage.getItem(FLOW_HUD_STORAGE_KEY), 'off');
   const hiddenCommitCount = feedback.states.length;
   eventTarget.emit('turn:boost-outcome', {
     useful: true,
     speedGain: 3,
     duration: 1,
-    at: 10300
+    at: 11200
   });
   assert.equal(feedback.states.length, hiddenCommitCount,
     'Hidden FLOW presentation does not stop semantic scoring or perform HUD commits');
 
-  const result = runtime.completeLap({ now: 11000, time: 52, valid: true, ranked: true });
+  const result = runtime.completeLap({ now: 11900, time: 52, valid: true, ranked: true });
   assert.ok(result.score > 0);
   assert.equal(result.newBest, true);
   assert.equal(result.maxMultiplier > 1, true);
