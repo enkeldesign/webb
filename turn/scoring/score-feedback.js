@@ -89,6 +89,10 @@ function requiredElement(root, selector) {
   return element;
 }
 
+function optionalElement(root, selector) {
+  return root?.querySelector?.(selector) || null;
+}
+
 function normalizeChannel(channel) {
   return channel === SCORE_FEEDBACK_CHANNEL.FLOW
     ? SCORE_FEEDBACK_CHANNEL.FLOW
@@ -99,6 +103,15 @@ function normalizeEventType(type) {
   return Object.values(SCORE_FEEDBACK_EVENT).includes(type)
     ? type
     : SCORE_FEEDBACK_EVENT.BUILD;
+}
+
+function heatTier(intensity, active = true) {
+  const value = clamp(finiteNumber(intensity), 0, 1);
+  if (!active || value <= 0) return 'quiet';
+  if (value >= 0.92) return 'critical';
+  if (value >= 0.74) return 'hot';
+  if (value >= 0.5) return 'warm';
+  return 'build';
 }
 
 function defaultEventLabel(type, channel, score, multiplier) {
@@ -151,7 +164,9 @@ export function createScoreFeedback({
   const currentScore = requiredElement(root, '[data-score-feedback-current]');
   const multiplier = requiredElement(root, '[data-score-feedback-multiplier]');
   const lapScore = requiredElement(root, '[data-score-feedback-total]');
-  const meterFill = requiredElement(root, '[data-score-feedback-meter-fill]');
+  const driftGaugeFill = requiredElement(root, '[data-score-feedback-meter-fill]');
+  const flowGaugeFill = optionalElement(root, '[data-score-feedback-flow-meter-fill]');
+  const flowReadout = optionalElement(root, '[data-score-feedback-flow-readout]');
   const callout = requiredElement(root, '[data-score-feedback-callout]');
   const calloutLabel = requiredElement(root, '[data-score-feedback-callout-label]');
   const calloutScore = requiredElement(root, '[data-score-feedback-callout-score]');
@@ -326,12 +341,43 @@ export function createScoreFeedback({
 
     const flow = channels[SCORE_FEEDBACK_CHANNEL.FLOW];
     const drift = channels[SCORE_FEEDBACK_CHANNEL.DRIFT];
-    const primary = flow.visible && flow.active
+    const driftActive = drift.visible && drift.active;
+    const flowActive = flow.visible && flow.active;
+    const primary = flowActive
       ? flow
-      : drift.visible && drift.active
+      : driftActive
         ? drift
         : null;
     const eventVisible = activeEvent.active && channels[activeEvent.channel].visible;
+    const flowHasOwnGauge = Boolean(flowGaugeFill);
+    const fallbackGaugeToFlow = !flowHasOwnGauge && flowActive && primary === flow;
+    const driftGaugeActive = driftActive || fallbackGaugeToFlow;
+    const driftGaugeIntensity = fallbackGaugeToFlow ? flow.intensity : drift.intensity;
+
+    driftGaugeFill.style.setProperty(
+      '--score-feedback-progress',
+      String(driftGaugeActive ? driftGaugeIntensity : 0)
+    );
+    if (flowGaugeFill) {
+      flowGaugeFill.style.setProperty(
+        '--score-feedback-progress',
+        String(flowActive ? flow.intensity : 0)
+      );
+    }
+    setData(root, 'driftActive', driftActive);
+    setData(root, 'flowActive', flowActive);
+    setData(root, 'driftGaugeVisible', driftGaugeActive);
+    setData(root, 'flowGaugeVisible', Boolean(flowHasOwnGauge && flowActive));
+    setData(root, 'driftHeat', heatTier(drift.intensity, driftActive));
+    setData(root, 'flowHeat', heatTier(flow.intensity, flowActive));
+    setData(root, 'gaugeHeat', heatTier(driftGaugeIntensity, driftGaugeActive));
+    setData(root, 'gaugeChannel', fallbackGaugeToFlow ? SCORE_FEEDBACK_CHANNEL.FLOW : SCORE_FEEDBACK_CHANNEL.DRIFT);
+    setData(
+      statePanel,
+      'scoreLayout',
+      flowReadout && flowActive && driftActive ? 'dual' : 'single'
+    );
+    if (flowReadout) setHidden(flowReadout, !flowActive);
 
     setHidden(statePanel, !primary);
     if (primary) {
@@ -342,7 +388,6 @@ export function createScoreFeedback({
       setText(currentScore, formatScore(liveScore));
       setText(multiplier, `×${formatMultiplier(primary.multiplier)}`);
       setText(lapScore, formatScore(primary.score));
-      meterFill.style.setProperty('--score-feedback-progress', String(primary.intensity));
     }
 
     setHidden(callout, !eventVisible);
