@@ -26,6 +26,7 @@
   padding: 9px 11px 10px;
   border-radius: 15px;
   transform: translateZ(0);
+  transform-origin: left center;
   transition: opacity 140ms linear, transform 180ms ease-out;
 }
 
@@ -53,10 +54,13 @@
 }
 
 .score-feedback-values strong {
+  display: inline-block;
   overflow: hidden;
   font-size: clamp(1.32rem, 3.4vw, 2rem);
   letter-spacing: -.055em;
   text-overflow: ellipsis;
+  transform-origin: left center;
+  transition: transform 160ms ease-out;
 }
 
 .score-feedback-values b {
@@ -94,9 +98,23 @@
   font-size: 1.08em;
 }
 
+/* Buildup uses only composited transforms: no new animation loop or layout work. */
+.score-feedback[data-phase="intensify"] .score-feedback-state {
+  transform: translateZ(0) scale(1.018);
+}
+
+.score-feedback[data-phase="intensify"] .score-feedback-values strong {
+  transform: scale(1.055);
+}
+
+.score-feedback[data-phase="settle"] .score-feedback-state {
+  opacity: .96;
+  transform: translateZ(0) scale(.992);
+}
+
 .score-feedback[data-channel="flow"] .score-feedback-values b,
 .score-feedback[data-channel="flow"] .score-feedback-meter > i {
-  background-color: var(--turn-pink-500, #ff4fa3);
+  background: var(--turn-pink-500, #ff4fa3);
 }
 
 .score-feedback-callout {
@@ -190,8 +208,16 @@
 
 @media (prefers-reduced-motion: reduce) {
   .score-feedback-state,
+  .score-feedback-values strong,
   .score-feedback-meter > i {
     transition: none;
+  }
+
+  .score-feedback[data-phase="intensify"] .score-feedback-state,
+  .score-feedback[data-phase="settle"] .score-feedback-state,
+  .score-feedback[data-phase="intensify"] .score-feedback-values strong {
+    opacity: 1;
+    transform: none;
   }
 
   .score-feedback-callout.is-event-a,

@@ -45,17 +45,23 @@ function makeFeedback() {
     states: [],
     events: [],
     cleared: [],
+    activeEvent: { active: false },
     updateState(channel, state, now) {
       this.states.push({ channel, score: state.score, unbanked: state.unbanked, now });
     },
     publishEvent(channel, type, detail, now) {
       this.events.push({ channel, type, detail: { ...detail }, now });
+      this.activeEvent = { active: true, channel, type };
     },
     setChannelVisible(_channel, visible) {
       this.visible = visible;
     },
     clearChannel(channel) {
       this.cleared.push(channel);
+      if (this.activeEvent.channel === channel) this.activeEvent = { active: false };
+    },
+    inspect() {
+      return { activeEvent: { ...this.activeEvent } };
     }
   };
 }
@@ -70,6 +76,8 @@ function scoreLap(runtime, state, startAt = 0) {
   state.lapActive = true;
   state.speed = 25;
   state.driftSlipAngle = radians(60);
+  state.offRoad = false;
+  state.collided = false;
   for (let index = 0; index < 180; index += 1) {
     now += 1000 / 60;
     runtime.advance(1 / 60, now);
@@ -159,5 +167,99 @@ assert.equal(dormant.scorer.inspect().sampleCount, 0, 'Locked DRIFT processing r
 unlocked = true;
 assert.equal(dormant.refreshEntitlement(2000), true);
 assert.equal(dormantFeedback.visible, true);
+
+const visibleStorage = new MemoryStorage();
+const visibleFeedback = makeFeedback();
+const visibleState = {
+  speed: 0,
+  driftSlipAngle: 0,
+  offRoad: false,
+  collided: false,
+  lapActive: false,
+  trackId: 'harbor',
+  vehicleId: 'vintage-racer'
+};
+const visibleRuntime = createDriftAttackRuntime({
+  state: visibleState,
+  scoreFeedback: visibleFeedback,
+  storage: visibleStorage,
+  eventTarget: new EventTargetStub(),
+  isUnlocked: () => true,
+  wallClock: () => 654321
+});
+
+const visibleFirstLap = scoreLap(visibleRuntime, visibleState);
+const visibleFirstResult = visibleRuntime.completeLap({
+  now: visibleFirstLap.now,
+  time: visibleFirstLap.time,
+  valid: true,
+  ranked: true
+});
+assert.equal(visibleFirstResult.newBest, true);
+assert.ok(visibleFeedback.events.some((event) => event.type === 'personal-best'),
+  'A new DRIFT PB keeps its separate pink celebration');
+const neutralBank = visibleFeedback.events.find((event) => event.type === 'bank');
+assert.equal(neutralBank?.detail.label, '✓ BANKED',
+  'Neutral ×1 must not spend release emphasis on the default multiplier');
+
+const finishCelebrationsBefore = visibleFeedback.events.filter((event) =>
+  event.type === 'personal-best' || event.type === 'lap-result'
+).length;
+const visibleSecondLap = scoreLap(visibleRuntime, visibleState, visibleFirstLap.now + 1000);
+const visibleSecondResult = visibleRuntime.completeLap({
+  now: visibleSecondLap.now,
+  time: visibleSecondLap.time,
+  valid: true,
+  ranked: true
+});
+assert.equal(visibleSecondResult.newBest, false);
+assert.equal(visibleFeedback.events.filter((event) =>
+  event.type === 'personal-best' || event.type === 'lap-result'
+).length, finishCelebrationsBefore,
+'An ordinary lap must use the yellow lap card without a duplicate pink DRIFT LAP card');
+
+let recoveryNow = visibleSecondLap.now + 2000;
+visibleRuntime.beginLap(recoveryNow);
+visibleState.speed = 25;
+visibleState.driftSlipAngle = radians(60);
+visibleState.collided = false;
+for (let index = 0; index < 30; index += 1) {
+  recoveryNow += 1000 / 60;
+  visibleRuntime.advance(1 / 60, recoveryNow);
+}
+visibleState.collided = true;
+for (let index = 0; index < 8; index += 1) {
+  recoveryNow += 1000 / 60;
+  visibleRuntime.advance(1 / 60, recoveryNow);
+}
+visibleState.collided = false;
+assert.ok(visibleFeedback.events.some((event) => event.type === 'loss'));
+const clearsAfterLoss = visibleFeedback.cleared.length;
+for (let index = 0; index < 8; index += 1) {
+  recoveryNow += 1000 / 60;
+  visibleRuntime.advance(1 / 60, recoveryNow);
+}
+assert.ok(visibleFeedback.cleared.length > clearsAfterLoss,
+  'Starting a fresh drift must dismiss stale LOSS presentation instead of blocking the new buildup');
+
+const failingStorage = {
+  getItem() {
+    return null;
+  },
+  setItem() {
+    throw new Error('storage unavailable');
+  }
+};
+const failingRuntime = createDriftAttackRuntime({
+  state: { ...visibleState },
+  scoreFeedback: makeFeedback(),
+  storage: failingStorage,
+  eventTarget: new EventTargetStub(),
+  isUnlocked: () => true
+});
+assert.equal(failingRuntime.setHudVisible(false, { now: 10 }), false,
+  'A failed persistence write is still reported to Settings');
+assert.equal(failingRuntime.isHudVisible(), false,
+  'The current session must still honor the HUD visibility choice when persistence fails');
 
 console.log('TURN DRIFT ATTACK runtime, hidden-HUD and dormant-lock regressions passed.');
