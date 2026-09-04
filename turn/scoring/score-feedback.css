@@ -1,8 +1,9 @@
 .score-feedback {
-  --score-feedback-paper-width: clamp(148px, 20vw, 214px);
+  --score-feedback-paper-width: clamp(164px, 21vw, 226px);
   --score-feedback-paper-height: 104px;
-  --score-feedback-gauge-width: clamp(15px, 2.1vw, 19px);
-  --score-feedback-gauge-gap: clamp(7px, .9vw, 10px);
+  --score-feedback-gauge-width: clamp(52px, 7vw, 76px);
+  --score-feedback-gauge-height: clamp(34px, 5vw, 48px);
+  --score-feedback-gauge-overlap: 3px;
   position: absolute;
   z-index: 14;
   top: clamp(92px, 24vh, 160px);
@@ -23,14 +24,15 @@
 .score-feedback-callout {
   box-sizing: border-box;
   border: 3px solid var(--turn-ink, #08090a);
-  background: rgb(255 248 232 / .92);
+  background: rgb(255 248 232 / .94);
   box-shadow: 4px 4px 0 var(--turn-ink, #08090a);
 }
 
 /*
- * The paper is the stable information surface. Its height never changes while
- * visible, so detached gauges can remain perfectly aligned regardless of score
- * width, multiplier, or the future DRIFT + FLOW dual readout.
+ * The paper is the stable information surface. A scoring row always has the
+ * same height, so its horizontal gauge can stay optically locked to the live
+ * score. FLOW can later add a second fixed-height row below DRIFT without
+ * changing either row's geometry.
  */
 .score-feedback-state {
   position: relative;
@@ -45,9 +47,9 @@
   transition: opacity 140ms linear;
 }
 
-/* Reserved contract for the future two-column DRIFT + FLOW paper layout. */
+/* Future stacked DRIFT + FLOW shell: width remains stable; rows stack on Y. */
 .score-feedback-state[data-score-layout="dual"] {
-  width: clamp(260px, 36vw, 340px);
+  height: calc(var(--score-feedback-paper-height) * 2);
 }
 
 .score-feedback-heading,
@@ -55,8 +57,12 @@
 .score-feedback-lap {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
   gap: 8px;
+}
+
+.score-feedback-heading,
+.score-feedback-values {
+  justify-content: space-between;
 }
 
 .score-feedback-heading,
@@ -66,6 +72,16 @@
   letter-spacing: .075em;
   line-height: 1;
   text-transform: uppercase;
+}
+
+/* CURRENT is visually presented as the more useful TURN vocabulary: COMBO. */
+.score-feedback-heading > span:last-child {
+  font-size: 0;
+}
+
+.score-feedback-heading > span:last-child::after {
+  content: "COMBO";
+  font-size: clamp(.48rem, 1.1vw, .63rem);
 }
 
 .score-feedback-values {
@@ -78,7 +94,7 @@
   display: inline-block;
   align-self: center;
   overflow: hidden;
-  font-size: clamp(1.32rem, 3.4vw, 2rem);
+  font-size: clamp(1.45rem, 3.7vw, 2.2rem);
   letter-spacing: -.055em;
   text-overflow: ellipsis;
   transform-origin: left center;
@@ -100,18 +116,27 @@
   background: var(--turn-pink-500, #ff4fa3);
 }
 
+.score-feedback-lap {
+  justify-content: flex-start;
+  gap: 4px;
+}
+
+.score-feedback-lap span::after {
+  content: ":";
+}
+
 .score-feedback-lap b {
   font: inherit;
   font-size: 1.08em;
 }
 
 /*
- * Reusable vertical scoring gauge.
+ * Reusable horizontal scoring gauge.
  *
- * `.score-feedback-meter` is the existing DRIFT mount. FLOW can later add the
- * same primitive as `.score-feedback-gauge[data-score-channel="flow"]` with an
- * `<i data-score-feedback-flow-meter-fill>` child; ScoreFeedback already knows
- * how to drive that optional fill independently.
+ * DRIFT uses `.score-feedback-meter` today. FLOW can mount the same primitive
+ * as `.score-feedback-gauge[data-score-channel="flow"]` with an
+ * `<i data-score-feedback-flow-meter-fill>` child. Both fill on the x-axis and
+ * sit beside the live number they describe.
  */
 .score-feedback-meter,
 .score-feedback-gauge {
@@ -119,19 +144,20 @@
   --score-feedback-gauge-fill-b: #67e2ff;
   --score-feedback-gauge-track: var(--turn-ink, #08090a);
   position: absolute;
-  top: 0;
-  left: calc(100% + var(--score-feedback-gauge-gap));
+  z-index: -1;
+  top: 30px;
+  left: calc(100% - var(--score-feedback-gauge-overlap));
   box-sizing: border-box;
   width: var(--score-feedback-gauge-width);
-  height: var(--score-feedback-paper-height);
+  height: var(--score-feedback-gauge-height);
   margin: 0;
   overflow: hidden;
   border: 3px solid var(--turn-ink, #08090a);
-  border-radius: 999px;
+  border-radius: 0 10px 10px 0;
   background: var(--score-feedback-gauge-track);
   opacity: 1;
   transform: translateZ(0);
-  transform-origin: center bottom;
+  transform-origin: left center;
   transition: opacity 140ms linear, transform 120ms ease-out;
   will-change: transform, opacity;
 }
@@ -147,29 +173,29 @@
   --score-feedback-gauge-track: var(--turn-ink, #08090a);
 }
 
+/* Future FLOW row aligns its gauge with the second fixed scoring row. */
 .score-feedback-gauge[data-score-channel="flow"] {
-  left: calc(
-    100% + var(--score-feedback-gauge-gap) + var(--score-feedback-gauge-width) + var(--score-feedback-gauge-gap)
-  );
+  top: calc(var(--score-feedback-paper-height) + 30px);
 }
 
 .score-feedback[data-drift-active="false"] .score-feedback-gauge[data-score-channel="flow"] {
-  left: calc(100% + var(--score-feedback-gauge-gap));
+  top: 30px;
 }
 
 .score-feedback[data-flow-gauge-visible="false"] .score-feedback-gauge[data-score-channel="flow"] {
   opacity: 0;
 }
 
-/* A tiny type-coloured remnant marks a true zero without weakening the black track. */
+/* A tiny type-coloured remnant marks true zero inside the black instrument. */
 .score-feedback-meter::before,
 .score-feedback-gauge::before {
   content: "";
   position: absolute;
-  right: 3px;
-  bottom: 3px;
-  left: 3px;
-  height: 5px;
+  z-index: 0;
+  top: 5px;
+  bottom: 5px;
+  left: 5px;
+  width: 5px;
   border-radius: 999px;
   background: var(--score-feedback-gauge-fill-a);
 }
@@ -177,38 +203,39 @@
 .score-feedback-meter > i,
 .score-feedback-gauge > i {
   position: absolute;
-  inset: 3px;
+  z-index: 1;
+  inset: 5px;
   display: block;
   overflow: hidden;
-  border-radius: 999px;
+  border-radius: 4px;
   background: linear-gradient(
-    to top,
+    to right,
     var(--score-feedback-gauge-fill-a),
     var(--score-feedback-gauge-fill-b)
   );
-  transform: scaleY(var(--score-feedback-progress, 0));
-  transform-origin: center bottom;
+  transform: scaleX(var(--score-feedback-progress, 0));
+  transform-origin: left center;
   transition: transform 100ms linear;
   will-change: transform;
 }
 
-/* Moving highlights live inside the fill, so the noisy buildup remains clipped. */
+/* Moving highlights stay clipped inside the coloured fill. */
 .score-feedback-meter > i::before,
 .score-feedback-gauge > i::before {
   content: "";
   position: absolute;
-  top: -80%;
-  right: -45%;
-  left: -45%;
-  height: 260%;
+  top: -45%;
+  bottom: -45%;
+  left: -90%;
+  width: 280%;
   background: repeating-linear-gradient(
-    0deg,
+    90deg,
     transparent 0 11px,
     rgb(255 255 255 / .72) 11px 14px,
     transparent 14px 24px
   );
   opacity: 0;
-  transform: translateY(30%);
+  transform: translateX(-18%);
   will-change: transform, opacity;
 }
 
@@ -216,19 +243,19 @@
 .score-feedback-gauge > i::after {
   content: "";
   position: absolute;
-  top: 0;
-  right: 12%;
-  left: 12%;
-  height: 7px;
+  top: 12%;
+  right: 0;
+  bottom: 12%;
+  width: 7px;
   border-radius: 999px;
   background: rgb(255 255 255 / .92);
   opacity: 0;
-  transform: translateY(-35%) scaleX(.65);
+  transform: translateX(35%) scaleY(.65);
   transform-origin: center;
   will-change: transform, opacity;
 }
 
-/* The paper stays still; only the live number nudges up as the drift intensifies. */
+/* The paper stays still; only the live number nudges as the score intensifies. */
 .score-feedback[data-phase="intensify"] .score-feedback-values strong {
   transform: scale(1.055);
 }
@@ -238,14 +265,12 @@
 }
 
 /*
- * Gauge heat tiers use only transform/opacity animations. The scoring engine
- * still updates at its existing throttled cadence; no new JS animation loop is
- * introduced. Hot/critical deliberately become noisy enough for peripheral
- * vision, while reduced-motion below removes the animation entirely.
+ * Heat tiers use only transform/opacity animation. The scoring engine continues
+ * on its existing throttled path; this visual noise adds no JS sampling loop.
  */
 .score-feedback[data-gauge-heat="warm"] .score-feedback-meter > i,
 .score-feedback[data-flow-heat="warm"] .score-feedback-gauge[data-score-channel="flow"] > i {
-  transform: scaleY(var(--score-feedback-progress, 0)) scaleX(1.025);
+  transform: scaleX(var(--score-feedback-progress, 0)) scaleY(1.025);
 }
 
 .score-feedback[data-gauge-heat="hot"] .score-feedback-meter,
@@ -272,7 +297,7 @@
 
 .score-feedback[data-gauge-heat="critical"] .score-feedback-meter > i,
 .score-feedback[data-flow-heat="critical"] .score-feedback-gauge[data-score-channel="flow"] > i {
-  transform: scaleY(var(--score-feedback-progress, 0)) scaleX(1.075);
+  transform: scaleX(var(--score-feedback-progress, 0)) scaleY(1.075);
 }
 
 .score-feedback[data-gauge-heat="critical"] .score-feedback-meter > i::before,
@@ -297,6 +322,10 @@
   border-radius: 12px;
   opacity: 1;
   transform-origin: left top;
+}
+
+.score-feedback-state[data-score-layout="dual"] + .score-feedback-callout {
+  top: calc((var(--score-feedback-paper-height) * 2) + 9px);
 }
 
 .score-feedback-callout strong,
@@ -347,23 +376,23 @@
 }
 
 @keyframes turn-score-gauge-hot {
-  0%, 100% { transform: translateZ(0) scaleX(1); }
-  50% { transform: translateZ(0) scaleX(1.055); }
+  0%, 100% { transform: translateZ(0) scaleY(1); }
+  50% { transform: translateZ(0) scaleY(1.06); }
 }
 
 @keyframes turn-score-gauge-critical {
-  0%, 100% { transform: translateZ(0) scaleX(1); }
-  50% { transform: translateZ(0) scaleX(1.13); }
+  0%, 100% { transform: translateZ(0) scaleY(1); }
+  50% { transform: translateZ(0) scaleY(1.14); }
 }
 
 @keyframes turn-score-gauge-rush {
-  from { transform: translateY(34%); }
-  to { transform: translateY(-18%); }
+  from { transform: translateX(-18%); }
+  to { transform: translateX(18%); }
 }
 
 @keyframes turn-score-gauge-cap {
-  0%, 100% { transform: translateY(-35%) scaleX(.65); }
-  50% { transform: translateY(45%) scaleX(1.12); }
+  0%, 100% { transform: translateX(35%) scaleY(.65); }
+  50% { transform: translateX(-15%) scaleY(1.12); }
 }
 
 @keyframes turn-score-callout-a {
@@ -380,10 +409,11 @@
 
 @media (max-height: 430px) {
   .score-feedback {
-    --score-feedback-paper-width: 142px;
+    --score-feedback-paper-width: 150px;
     --score-feedback-paper-height: 88px;
-    --score-feedback-gauge-width: 13px;
-    --score-feedback-gauge-gap: 6px;
+    --score-feedback-gauge-width: 46px;
+    --score-feedback-gauge-height: 32px;
+    --score-feedback-gauge-overlap: 2px;
     top: 80px;
   }
 
@@ -395,20 +425,30 @@
 
   .score-feedback-meter,
   .score-feedback-gauge {
+    top: 26px;
     border-width: 2px;
+    border-radius: 0 8px 8px 0;
+  }
+
+  .score-feedback-gauge[data-score-channel="flow"] {
+    top: calc(var(--score-feedback-paper-height) + 26px);
+  }
+
+  .score-feedback[data-drift-active="false"] .score-feedback-gauge[data-score-channel="flow"] {
+    top: 26px;
   }
 
   .score-feedback-meter::before,
   .score-feedback-gauge::before {
-    right: 2px;
-    bottom: 2px;
-    left: 2px;
-    height: 4px;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    width: 4px;
   }
 
   .score-feedback-meter > i,
   .score-feedback-gauge > i {
-    inset: 2px;
+    inset: 4px;
   }
 }
 
