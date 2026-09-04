@@ -2,6 +2,7 @@ import { getBestDriftRecord } from './drift-records.js';
 import { getBestFlowRecord } from './flow-records.js';
 
 const SCOREKEEPER_STYLE_ID = 'turn-scorekeeper-history-style';
+const HOW_TO_PLAY_OPEN_EVENT = 'turn:open-how-to-play';
 const numberFormatter = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 0
 });
@@ -58,6 +59,47 @@ function ensureScorekeeperStyle(documentRef) {
   font-size: clamp(1.22rem, 3vw, 1.78rem);
 }
 
+.score-feedback-heading {
+  align-items: center;
+}
+
+.score-feedback-title {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+}
+
+.score-feedback-info {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  margin: -5px 0;
+  padding: 0;
+  border: 2px solid var(--turn-ink);
+  border-radius: 50%;
+  color: var(--turn-ink);
+  background: var(--turn-action-information, #38d9ff);
+  box-shadow: none;
+  font: inherit;
+  font-size: .58rem;
+  font-weight: 950;
+  line-height: 1;
+  text-transform: none;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+.score-feedback-info:focus-visible {
+  outline: 3px solid var(--turn-yellow-400, #ffd43b);
+  outline-offset: 2px;
+}
+
 .score-feedback-footer {
   justify-content: flex-start;
 }
@@ -100,6 +142,15 @@ function ensureScorekeeperStyle(documentRef) {
     font-size: 1.18rem;
   }
 
+  .score-feedback-info {
+    flex-basis: 22px;
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    min-height: 22px;
+    font-size: .54rem;
+  }
+
   .score-feedback-footer .score-feedback-lap {
     font-size: .56rem;
   }
@@ -132,12 +183,54 @@ function makeReadout(documentRef, channel, kind, label) {
   return { readout, value };
 }
 
-function ensureHistoryReadouts(documentRef, root, channel) {
-  const row = root.querySelector(
+function scoreState(root, channel) {
+  return root.querySelector(
     channel === 'flow'
       ? '[data-score-feedback-flow-state]'
       : '[data-score-feedback-state]'
   );
+}
+
+function ensureInfoButton(documentRef, root, channel, eventTarget) {
+  const row = scoreState(root, channel);
+  const heading = row?.querySelector?.('.score-feedback-heading');
+  const label = channel === 'flow'
+    ? heading?.querySelector?.('span')
+    : heading?.querySelector?.('[data-score-feedback-label]');
+  if (!heading || !label) return null;
+
+  let title = heading.querySelector?.('.score-feedback-title');
+  if (!title) {
+    title = documentRef.createElement('span');
+    title.className = 'score-feedback-title';
+    label.insertAdjacentElement?.('beforebegin', title);
+    title.append?.(label);
+  }
+
+  const selector = `[data-score-feedback-help="${channel}"]`;
+  let button = title.querySelector?.(selector);
+  if (button) return button;
+
+  button = documentRef.createElement('button');
+  button.type = 'button';
+  button.className = 'score-feedback-info';
+  button.textContent = 'i';
+  button.setAttribute('data-score-feedback-help', channel);
+  button.setAttribute('aria-label', `About ${channel.toUpperCase()} scoring`);
+  button.setAttribute('title', `About ${channel.toUpperCase()} scoring`);
+  button.addEventListener?.('click', (event) => {
+    event.stopPropagation?.();
+    if (typeof globalThis.CustomEvent !== 'function') return;
+    eventTarget?.dispatchEvent?.(new globalThis.CustomEvent(HOW_TO_PLAY_OPEN_EVENT, {
+      detail: { section: channel, trigger: button }
+    }));
+  });
+  title.append?.(button);
+  return button;
+}
+
+function ensureHistoryReadouts(documentRef, root, channel) {
+  const row = scoreState(root, channel);
   if (!row) return { last: null, best: null };
 
   const selector = `[data-score-feedback-${channel}-history]`;
@@ -199,6 +292,8 @@ export function installScorekeeperRecords({
   root.querySelector?.('[data-score-feedback-flow-techniques]')?.remove?.();
 
   ensureScorekeeperStyle(documentRef);
+  ensureInfoButton(documentRef, root, 'drift', eventTarget);
+  ensureInfoButton(documentRef, root, 'flow', eventTarget);
   const drift = ensureHistoryReadouts(documentRef, root, 'drift');
   const flow = ensureHistoryReadouts(documentRef, root, 'flow');
   const targetStorage = storageOrDefault(storage);

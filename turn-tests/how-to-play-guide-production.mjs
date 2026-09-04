@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [app, guide, css, components, homeReset, resetCss, rivalStorage, trackManager] = await Promise.all([
+const [app, guide, css, components, homeReset, resetCss, rivalStorage, trackManager, scorekeeper] = await Promise.all([
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/how-to-play-guide.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-how-to-play-r126.css', import.meta.url), 'utf8'),
@@ -9,7 +9,8 @@ const [app, guide, css, components, homeReset, resetCss, rivalStorage, trackMana
   fs.readFile(new URL('../turn/ui/home-rival-reset.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/rival-reset-context-r127.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/race/rival-storage.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/tracks/track-manager.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/tracks/track-manager.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/scoring/scorekeeper-records.js', import.meta.url), 'utf8')
 ]);
 
 assert.match(app, /m8-how-to-play-r126\.css\?revision=r220-overcharge-disclosure/);
@@ -30,7 +31,7 @@ assert.ok(
   'The contextual reset enhancer must run only after the shared Settings dialog exists'
 );
 
-assert.match(guide, /GUIDE_VERSION = 'r220-overcharge-disclosure'/);
+assert.match(guide, /GUIDE_VERSION = 'r221-scoring-links'/);
 assert.match(guide, /slide between <strong>GAS<\/strong>, <strong>DRIFT<\/strong>, <strong>BOOST<\/strong> and <strong>BRAKE · REVERSE<\/strong>/);
 assert.match(guide, /slide outward past it into <strong>LOCK<\/strong>/);
 assert.match(guide, /<strong>DRIFT<\/strong> charges <strong>BOOST<\/strong> as you slide/);
@@ -42,6 +43,44 @@ assert.match(guide, /<strong>CATCH<\/strong><span>Slide to GAS before OVERCHARGE
 assert.match(guide, /<strong>HOLD<\/strong><span>Stay on GAS to hold the OVERCHARGE you caught\.<\/span>/);
 assert.match(guide, /<strong>SPEND<\/strong><span>Slide to BOOST\. OVERCHARGE is spent before normal BOOST\.<\/span>/);
 assert.match(guide, /Uncaught OVERCHARGE leaks\. At its peak, it starts leaking even while you keep using DRIFT/);
+
+assert.match(guide, /title: 'SHIFT'/);
+assert.match(guide, /normal attributes and the alternate setup you configured in <strong>THE LOT<\/strong>/);
+assert.match(guide, /redistributes attribute points — it does not add free power/);
+assert.match(guide, /slide from GAS into SHIFT to swap setup, then SHIFT again to return/);
+assert.match(guide, /title: 'DRIFT POINTS'/);
+assert.match(guide, /DRIFT POINTS<\/strong> reward strong, fast, controlled slides — not pressing DRIFT/);
+assert.match(guide, /large live number is the current drift value at risk/);
+assert.match(guide, /Link drifts to raise <strong>COMBO<\/strong>/);
+assert.match(guide, /clean exit <strong>BANKS<\/strong>/);
+assert.match(guide, /<strong>LAP<\/strong> is this lap, <strong>LAST<\/strong> is your previous completed lap and <strong>BEST<\/strong> is the saved record for this track/);
+assert.match(guide, /title: 'FLOW POINTS'/);
+assert.match(guide, /FLOW POINTS<\/strong> reward useful choreography between systems such as SHIFT, BOOST, DRIFT, LOCK, OVERCHARGE catches and clean exits/);
+assert.match(guide, /Button presses alone score nothing/);
+assert.match(guide, /Variety and useful timing build <strong>COMBO<\/strong>/);
+assert.match(guide, /gauge shows your current FLOW momentum/);
+assert.match(guide, /HOW_TO_PLAY_OPEN_EVENT = 'turn:open-how-to-play'/);
+assert.match(guide, /TARGET_SECTION_ID/);
+assert.match(guide, /m8HowDriftPoints/);
+assert.match(guide, /m8HowFlowPoints/);
+assert.match(guide, /dialog\.__turnReturnFocus = trigger/);
+assert.match(guide, /heading\.focus\?\.\(\{ preventScroll: true \}\)/);
+assert.match(guide, /section\.scrollIntoView\?\.\(\{ behavior: 'auto', block: 'center', inline: 'nearest' \}\)/);
+assert.match(guide, /globalThis\.__turnOpenHowToPlaySection = openTarget/);
+
+assert.match(scorekeeper, /className = 'score-feedback-info'/);
+assert.match(scorekeeper, /button\.textContent = 'i'/);
+assert.match(scorekeeper, /About \$\{channel\.toUpperCase\(\)\} scoring/);
+assert.match(scorekeeper, /data-score-feedback-help/);
+assert.match(scorekeeper, /HOW_TO_PLAY_OPEN_EVENT = 'turn:open-how-to-play'/);
+assert.match(scorekeeper, /detail: \{ section: channel, trigger: button \}/);
+assert.match(scorekeeper, /pointer-events: auto/,
+  'The info button must remain tappable even though the scorekeeper HUD itself ignores pointer input');
+assert.match(scorekeeper, /touch-action: manipulation/);
+assert.match(scorekeeper, /\.score-feedback-info:focus-visible/);
+assert.doesNotMatch(scorekeeper, /setInterval|setTimeout|requestAnimationFrame/,
+  'Scorekeeper help links must remain event-driven and add no racing-loop work');
+
 assert.match(guide, /<details class="m8-dbe-guide">/);
 assert.match(
   guide,
@@ -139,4 +178,4 @@ assert.match(rivalStorage, /syncPrimaryRivalState\(state\)/);
 assert.match(trackManager, /clearRivalsState\(currentRuntime\.state, \{ trackId: activeTrackId \}\)/, 'The race reset implementation must clear only the current track storage key');
 assert.match(trackManager, /globalThis\.__turnResetRivals = resetCurrentTrackRivals/);
 
-console.log('TURN native disclosure help, scroll stability and contextual rival reset passed.');
+console.log('TURN native disclosure help, SHIFT/scoring guidance, scorekeeper deep links and contextual rival reset passed.');
