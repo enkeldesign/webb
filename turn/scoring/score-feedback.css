@@ -10,7 +10,7 @@
   top: clamp(92px, 24vh, 160px);
   left: max(14px, env(safe-area-inset-left));
   width: var(--score-feedback-paper-width);
-  color: var(--turn-ink, #08090a);
+  color: var(--turn-ink);
   pointer-events: none;
 }
 
@@ -24,9 +24,9 @@
 .score-feedback-state,
 .score-feedback-callout {
   box-sizing: border-box;
-  border: 3px solid var(--turn-ink, #08090a);
+  border: 3px solid var(--turn-ink);
   background: rgb(255 248 232 / .94);
-  box-shadow: 4px 4px 0 var(--turn-ink, #08090a);
+  box-shadow: 4px 4px 0 var(--turn-ink);
 }
 
 /*
@@ -37,6 +37,7 @@
  */
 .score-feedback-state {
   position: relative;
+  z-index: 1;
   display: grid;
   grid-template-rows: auto 1fr auto;
   width: 100%;
@@ -133,9 +134,9 @@
 .score-feedback-gauge {
   --score-feedback-gauge-fill-a: #0bbcf4;
   --score-feedback-gauge-fill-b: #67e2ff;
-  --score-feedback-gauge-track: var(--turn-ink, #08090a);
+  --score-feedback-gauge-track: var(--turn-ink);
   position: absolute;
-  z-index: -1;
+  z-index: 0;
   top: var(--score-feedback-gauge-inset-y);
   left: calc(100% - var(--score-feedback-gauge-overlap));
   box-sizing: border-box;
@@ -143,7 +144,7 @@
   height: var(--score-feedback-gauge-height);
   margin: 0;
   overflow: hidden;
-  border: 3px solid var(--turn-ink, #08090a);
+  border: 3px solid var(--turn-ink);
   border-radius: 0 10px 10px 0;
   background: var(--score-feedback-gauge-track);
   opacity: 1;
@@ -161,7 +162,7 @@
 .score-feedback-gauge[data-score-channel="flow"] {
   --score-feedback-gauge-fill-a: #ff4f8d;
   --score-feedback-gauge-fill-b: #ff91bd;
-  --score-feedback-gauge-track: var(--turn-ink, #08090a);
+  --score-feedback-gauge-track: var(--turn-ink);
 }
 
 /* Future FLOW row aligns its gauge with the second fixed scoring row. */
@@ -169,7 +170,7 @@
   top: calc(var(--score-feedback-paper-height) + var(--score-feedback-gauge-inset-y));
 }
 
-.score-feedback[data-drift-active="false"] .score-feedback-gauge[data-score-channel="flow"] {
+.score-feedback[data-drift-visible="false"] .score-feedback-gauge[data-score-channel="flow"] {
   top: var(--score-feedback-gauge-inset-y);
 }
 
@@ -305,6 +306,7 @@
 
 .score-feedback-callout {
   position: absolute;
+  z-index: 2;
   top: calc(var(--score-feedback-paper-height) + 9px);
   left: 8px;
   width: max-content;
@@ -363,7 +365,7 @@
 }
 
 .score-feedback-callout.is-release {
-  box-shadow: 5px 5px 0 var(--turn-ink, #08090a);
+  box-shadow: 5px 5px 0 var(--turn-ink);
 }
 
 @keyframes turn-score-gauge-hot {
@@ -412,7 +414,7 @@
   .score-feedback-state {
     padding: 7px 9px 8px;
     border-width: 2px;
-    box-shadow: 3px 3px 0 var(--turn-ink, #08090a);
+    box-shadow: 3px 3px 0 var(--turn-ink);
   }
 
   .score-feedback-meter,

@@ -83,6 +83,11 @@ const feedback = createScoreFeedback({
 });
 
 assert.equal(fixture.root.hidden, true, 'An idle ScoreFeedback root stays out of the HUD');
+feedback.setChannelVisible(SCORE_FEEDBACK_CHANNEL.DRIFT, true, 0);
+assert.equal(fixture.root.hidden, false, 'An available scoring row remains visible at zero');
+assert.equal(element(fixture, '[data-score-feedback-state]').hidden, false);
+assert.equal(element(fixture, '[data-score-feedback-current]').textContent, '0');
+assert.equal(fixture.root.dataset.driftGaugeVisible, 'true');
 
 const driftState = {
   active: true,
@@ -160,7 +165,8 @@ const flowState = {
   phase: 'intensify',
   label: 'FLOW'
 };
-feedback.updateState(SCORE_FEEDBACK_CHANNEL.FLOW, flowState, 500);
+feedback.setChannelVisible(SCORE_FEEDBACK_CHANNEL.FLOW, true, 500);
+feedback.updateState(SCORE_FEEDBACK_CHANNEL.FLOW, flowState, 600);
 assert.equal(fixture.root.dataset.channel, 'flow', 'FLOW becomes persistent context when both channels are active');
 assert.equal(element(fixture, '[data-score-feedback-current]').textContent, '18,420');
 assert.equal(
@@ -212,6 +218,36 @@ assert.equal(
   element(fixture, '[data-score-feedback-meter-fill]').style.getPropertyValue('--score-feedback-progress'),
   '0'
 );
+
+feedback.setChannelVisible(SCORE_FEEDBACK_CHANNEL.DRIFT, true, 4100);
+feedback.updateState(SCORE_FEEDBACK_CHANNEL.DRIFT, {
+  active: false,
+  score: 4820,
+  unbanked: 0,
+  multiplier: 1,
+  intensity: 0,
+  phase: 'quiet',
+  label: 'DRIFT'
+}, 4200);
+assert.equal(fixture.root.hidden, false, 'The DRIFT instrument does not flicker out between drifts');
+assert.equal(element(fixture, '[data-score-feedback-current]').textContent, '0');
+assert.equal(element(fixture, '[data-score-feedback-total]').textContent, '4,820');
+assert.equal(
+  element(fixture, '[data-score-feedback-meter-fill]').style.getPropertyValue('--score-feedback-progress'),
+  '0'
+);
+feedback.publishEvent(SCORE_FEEDBACK_CHANNEL.DRIFT, SCORE_FEEDBACK_EVENT.LOSS, {
+  score: 120
+}, 4300);
+feedback.dismissEvent(SCORE_FEEDBACK_CHANNEL.DRIFT, 4350);
+assert.equal(element(fixture, '[data-score-feedback-callout]').hidden, true);
+assert.equal(element(fixture, '[data-score-feedback-total]').textContent, '4,820',
+  'Dismissing stale feedback must not clear the persistent lap total');
+feedback.clearChannel(SCORE_FEEDBACK_CHANNEL.DRIFT, 4400);
+assert.equal(fixture.root.hidden, false, 'Clearing a visible channel leaves its zero-state instrument mounted');
+assert.equal(element(fixture, '[data-score-feedback-total]').textContent, '0');
+feedback.setChannelVisible(SCORE_FEEDBACK_CHANNEL.DRIFT, false, 4500);
+assert.equal(fixture.root.hidden, true, 'The HUD setting still removes the scoring instrument');
 assert.equal(
   element(fixture, '[data-score-feedback-flow-meter-fill]').style.getPropertyValue('--score-feedback-progress'),
   '0'
@@ -253,7 +289,19 @@ for (const [mountName, markup] of [
     /data-score-feedback-label>DRIFT<\/span><span>COMBO<\/span>/,
     `${mountName} exposes COMBO vocabulary in accessible markup`
   );
+  assert.ok(
+    markup.indexOf('class="score-feedback-meter"') < markup.indexOf('class="score-feedback-state"'),
+    `${mountName} keeps the gauge behind the paper as a sibling stacking layer`
+  );
 }
+assert.match(css, /\.score-feedback-state \{[\s\S]*?z-index: 1;/,
+  'The paper owns the foreground stacking layer');
+assert.match(css, /\.score-feedback-meter,[\s\S]*?z-index: 0;/,
+  'The attached gauge sits behind the paper instead of intruding into it');
+assert.match(css, /--score-feedback-gauge-track: var\(--turn-ink\);/,
+  'The gauge body uses the canonical TURN ink token');
+assert.doesNotMatch(css, /#(?:000(?:000)?|08090a)\b/i,
+  'ScoreFeedback never substitutes a local black for --turn-ink');
 assert.match(css, /data-score-channel="flow"/,
   'The reusable horizontal gauge primitive has a FLOW channel treatment ready for #739');
 assert.match(

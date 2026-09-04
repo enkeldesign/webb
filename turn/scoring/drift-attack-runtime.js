@@ -89,7 +89,7 @@ export function createDriftAttackRuntime({
         if (activeEvent?.active
           && activeEvent.channel === SCORE_FEEDBACK_CHANNEL.DRIFT
           && activeEvent.type === SCORE_FEEDBACK_EVENT.LOSS) {
-          scoreFeedback.clearChannel(SCORE_FEEDBACK_CHANNEL.DRIFT, now);
+          scoreFeedback.dismissEvent(SCORE_FEEDBACK_CHANNEL.DRIFT, now);
         }
       } else {
         scoreFeedback.publishEvent(
