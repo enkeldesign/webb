@@ -117,7 +117,7 @@
 .score-feedback-gauge {
   --score-feedback-gauge-fill-a: #0bbcf4;
   --score-feedback-gauge-fill-b: #67e2ff;
-  --score-feedback-gauge-track: rgb(56 217 255 / .16);
+  --score-feedback-gauge-track: var(--turn-ink, #08090a);
   position: absolute;
   top: 0;
   left: calc(100% + var(--score-feedback-gauge-gap));
@@ -144,7 +144,7 @@
 .score-feedback-gauge[data-score-channel="flow"] {
   --score-feedback-gauge-fill-a: #ff4f8d;
   --score-feedback-gauge-fill-b: #ff91bd;
-  --score-feedback-gauge-track: rgb(255 79 163 / .15);
+  --score-feedback-gauge-track: var(--turn-ink, #08090a);
 }
 
 .score-feedback-gauge[data-score-channel="flow"] {
@@ -159,6 +159,19 @@
 
 .score-feedback[data-flow-gauge-visible="false"] .score-feedback-gauge[data-score-channel="flow"] {
   opacity: 0;
+}
+
+/* A tiny type-coloured remnant marks a true zero without weakening the black track. */
+.score-feedback-meter::before,
+.score-feedback-gauge::before {
+  content: "";
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  left: 3px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--score-feedback-gauge-fill-a);
 }
 
 .score-feedback-meter > i,
@@ -383,6 +396,14 @@
   .score-feedback-meter,
   .score-feedback-gauge {
     border-width: 2px;
+  }
+
+  .score-feedback-meter::before,
+  .score-feedback-gauge::before {
+    right: 2px;
+    bottom: 2px;
+    left: 2px;
+    height: 4px;
   }
 
   .score-feedback-meter > i,
