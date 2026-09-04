@@ -1,4 +1,4 @@
-import { installTurnTelemetry } from '../telemetry/client.js?revision=r2';
+import { installTurnTelemetry } from '../telemetry/client.js?revision=r3-scoring-calibration';
 
 installTurnTelemetry();
 installSharedAboutStyles();
@@ -22,7 +22,7 @@ export function aboutTurnHtml() {
         <summary>PRIVACY &amp; USAGE STATISTICS</summary>
         <div class="turn-about-privacy-copy">
           <p>TURN sends a few anonymous gameplay events to Cloudflare after a race starts so enkel.design can see whether the game is being played, which tracks and cars are used, and where the game may need improvement.</p>
-          <p>The events can include TURN or YOUR TURN, app build, track, car, motion or manual steering, browser or installed web app, Drive By Ear and blank-screen state, valid or void laps and lap time. Devices explicitly marked as developer in the private dashboard also send a developer yes/no flag so test activity can be excluded from player statistics.</p>
+          <p>The events can include TURN or YOUR TURN, app build, track, car, motion or manual steering, browser or installed web app, Drive By Ear and blank-screen state, valid or void laps, lap time, and eligible DRIFT or FLOW lap scores. Devices explicitly marked as developer in the private dashboard—or through TURN’s hidden admin test unlock—also send a developer yes/no flag so test activity can be excluded from player statistics.</p>
           <p>TURN’s analytics payload does not include your name, challenge name, challenge link or ID, replay, driving path, control inputs, advertising identifiers, IP address or precise location. Cloudflare processes normal network request information while carrying the events, but TURN does not add that information to its gameplay statistics.</p>
           <p>TURN sets no analytics cookie and creates no persistent analytics identifier. A random identifier exists only in memory for the current page load so events from that one play session can be grouped; it disappears when the page is closed or reloaded. A device marked as developer stores only the same local yes/no marker used by every developer device, not a unique identifier.</p>
           <p>TURN keeps anonymous daily aggregate statistics in Cloudflare D1 for the private developer dashboard. It does not keep raw gameplay-event histories in that database. The statistics are not public and are not used for advertising.</p>

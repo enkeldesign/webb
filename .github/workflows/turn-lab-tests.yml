@@ -205,6 +205,12 @@ jobs:
       - name: Run DRIFT ATTACK integration regression
         run: node turn-tests/drift-attack-integration-production.mjs
 
+      - name: Run FLOW scoring regression
+        run: node turn-tests/flow-production.mjs
+
+      - name: Run FLOW integration regression
+        run: node turn-tests/flow-integration-production.mjs
+
       - name: Run achievement system regression
         run: node turn-lab/tests/achievements-production.mjs
 

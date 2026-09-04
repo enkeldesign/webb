@@ -1,4 +1,4 @@
-const TELEMETRY_API_VERSION = 2;
+const TELEMETRY_API_VERSION = 3;
 const MAX_BODY_BYTES = 16 * 1024;
 const MAX_EVENTS_PER_REQUEST = 8;
 const STATS_KEY_SHA256 = '18379b62d01eb7c33cf5bc56a9076268425a43eb17797a9bb4129306044c9803';
@@ -6,8 +6,12 @@ const TELEMETRY_EVENTS = new Set([
   'play_session',
   'race_start',
   'lap_complete',
-  'lap_invalid'
+  'lap_invalid',
+  'drift_score',
+  'flow_score'
 ]);
+const SCORE_EVENTS = new Set(['drift_score', 'flow_score']);
+const SCORE_BAND_SIZE = 500;
 const STATS_AUDIENCES = new Set(['players', 'all', 'developer']);
 const ALLOWED_ORIGINS = new Set([
   'https://enkel.design',
@@ -104,6 +108,7 @@ async function recordTelemetryEvents(env, events) {
       console.warn('TURN telemetry Analytics Engine write failed', error);
     }
     await upsertAggregate(env.DB, event);
+    if (SCORE_EVENTS.has(event.event)) await upsertScoreAggregate(env.DB, event);
   }
 }
 
@@ -138,6 +143,32 @@ async function upsertAggregate(db, event) {
   ).run();
 }
 
+async function upsertScoreAggregate(db, event) {
+  const day = new Date(event.occurredAt).toISOString().slice(0, 10);
+  const scoreBand = Math.floor(event.value / SCORE_BAND_SIZE) * SCORE_BAND_SIZE;
+  await db.prepare(`
+    INSERT INTO turn_score_daily_v1 (
+      day, event, track_id, developer, score_band,
+      count, value_sum, value_min, value_max, last_at
+    ) VALUES (?1, ?2, ?3, ?4, ?5, 1, ?6, ?6, ?6, ?7)
+    ON CONFLICT (day, event, track_id, developer, score_band)
+    DO UPDATE SET
+      count = count + 1,
+      value_sum = value_sum + excluded.value_sum,
+      value_min = MIN(value_min, excluded.value_min),
+      value_max = MAX(value_max, excluded.value_max),
+      last_at = MAX(last_at, excluded.last_at)
+  `).bind(
+    day,
+    event.event,
+    event.trackId,
+    event.developer ? 1 : 0,
+    scoreBand,
+    event.value,
+    event.occurredAt
+  ).run();
+}
+
 async function loadStats(db, days, audience) {
   await ensureTelemetrySchema(db);
   const sinceDay = utcDay(Date.now() - (days - 1) * 86_400_000);
@@ -152,6 +183,7 @@ async function loadStats(db, days, audience) {
     driveByEarRows,
     blankRows,
     lapTimeRows,
+    scoreRows,
     lastRow
   ] = await Promise.all([
     allRows(db.prepare(`
@@ -208,6 +240,15 @@ async function loadStats(db, days, audience) {
       WHERE day >= ?1 AND event = 'lap_complete' AND track_id <> ''
       GROUP BY track_id ORDER BY count DESC
     `).bind(sinceDay)),
+    allRows(db.prepare(`
+      SELECT event, track_id AS id, score_band,
+        SUM(count) AS count, SUM(value_sum) AS value_sum,
+        MIN(value_min) AS value_min, MAX(value_max) AS value_max
+      FROM ${scoreStatsSource(audience)}
+      WHERE day >= ?1 AND track_id <> ''
+      GROUP BY event, track_id, score_band
+      ORDER BY event, track_id, score_band
+    `).bind(sinceDay)),
     db.prepare(`SELECT MAX(last_at) AS last_at FROM ${source} WHERE day >= ?1`).bind(sinceDay).first()
   ]);
 
@@ -240,8 +281,47 @@ async function loadStats(db, days, audience) {
       id: String(row.id || ''),
       count: Number(row.count) || 0,
       average: Number(row.count) > 0 ? (Number(row.value_sum) || 0) / Number(row.count) : 0
-    }))
+    })),
+    scoreDistributions: normalizeScoreDistributions(scoreRows)
   };
+}
+
+function scoreStatsSource(audience) {
+  const source = 'turn_score_daily_v1';
+  if (audience === 'developer') return `(SELECT * FROM ${source} WHERE developer = 1)`;
+  if (audience === 'players') return `(SELECT * FROM ${source} WHERE developer = 0)`;
+  return source;
+}
+
+function normalizeScoreDistributions(rows) {
+  const channels = { drift: new Map(), flow: new Map() };
+  for (const row of rows) {
+    const channel = row.event === 'flow_score' ? 'flow' : row.event === 'drift_score' ? 'drift' : '';
+    const trackId = String(row.id || '');
+    if (!channel || !trackId) continue;
+    let entry = channels[channel].get(trackId);
+    if (!entry) {
+      entry = { id: trackId, count: 0, valueSum: 0, minimum: Infinity, maximum: 0, buckets: [] };
+      channels[channel].set(trackId, entry);
+    }
+    const count = Number(row.count) || 0;
+    entry.count += count;
+    entry.valueSum += Number(row.value_sum) || 0;
+    entry.minimum = Math.min(entry.minimum, Number(row.value_min) || 0);
+    entry.maximum = Math.max(entry.maximum, Number(row.value_max) || 0);
+    entry.buckets.push({ floor: Number(row.score_band) || 0, count });
+  }
+  return Object.fromEntries(Object.entries(channels).map(([channel, entries]) => [
+    channel,
+    [...entries.values()].map((entry) => ({
+      id: entry.id,
+      count: entry.count,
+      average: entry.count ? entry.valueSum / entry.count : 0,
+      minimum: Number.isFinite(entry.minimum) ? entry.minimum : 0,
+      maximum: entry.maximum,
+      buckets: entry.buckets
+    }))
+  ]));
 }
 
 function statsSource(audience) {
@@ -288,7 +368,7 @@ function normalizeTelemetryEvent(value) {
     driveByEar: Boolean(value.driveByEar),
     blank: Boolean(value.blank),
     developer: Boolean(value.developer),
-    value: finiteNumber(value.value, 0, 600),
+    value: finiteNumber(value.value, 0, SCORE_EVENTS.has(event) ? 10_000_000 : 600),
     occurredAt: finiteInteger(value.occurredAt, Date.now() - 86_400_000, Date.now() + 300_000, Date.now())
   });
 }
@@ -337,6 +417,21 @@ async function ensureTelemetrySchema(db) {
         day, event, surface, track_id, car_id, steering,
         installed, drive_by_ear, blank_screen, developer
       )
+    )
+  `).run();
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS turn_score_daily_v1 (
+      day TEXT NOT NULL,
+      event TEXT NOT NULL,
+      track_id TEXT NOT NULL,
+      developer INTEGER NOT NULL,
+      score_band INTEGER NOT NULL,
+      count INTEGER NOT NULL DEFAULT 0,
+      value_sum REAL NOT NULL DEFAULT 0,
+      value_min REAL NOT NULL DEFAULT 0,
+      value_max REAL NOT NULL DEFAULT 0,
+      last_at INTEGER NOT NULL,
+      PRIMARY KEY (day, event, track_id, developer, score_band)
     )
   `).run();
   initializedDatabases.add(db);

@@ -23,6 +23,7 @@ import {
 import { TRACK_IDS } from '../../turn/achievements/catalog.js';
 import { ACHIEVEMENTS as BASE_ACHIEVEMENTS } from '../../turn/achievements/catalog-base.js';
 import { createAchievementStore } from '../../turn/achievements/store.js';
+import { TROPHY_ROAD_STORAGE_VERSION } from '../../turn/progression/trophy-road.js';
 import {
   completedNightShiftSheriff,
   createNightShiftAttempt,
@@ -88,17 +89,18 @@ assert.equal(
   1725,
   'The base catalog must stay separate from production progression balancing'
 );
-assert.equal(ACHIEVEMENTS.length, 45,
-  'Production TURN must expose all 45 intended achievements');
-assert.equal(new Set(ACHIEVEMENTS.map((achievement) => achievement.id)).size, 45,
+assert.equal(ACHIEVEMENTS.length, 58,
+  'Production TURN must expose the existing 45 achievements plus 13 scoring placeholders');
+assert.equal(new Set(ACHIEVEMENTS.map((achievement) => achievement.id)).size, 58,
   'Production achievement ids must remain unique');
 assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 11,
   'GOT STARTED must remain the master of the eleven prerequisite Getting Started achievements, not recursively require itself');
-assert.equal(totalAvailableTrophies(), 3075);
+assert.equal(totalAvailableTrophies(), 3075,
+  'Pending calibration trophies must not inflate the currently available total');
 assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 3075);
 assert.equal(
   ACHIEVEMENTS.reduce((total, achievement) => total + achievement.trophies, 0),
-  3075
+  3975
 );
 assert.ok(ACHIEVEMENTS.every((achievement) => Number.isFinite(achievement.trophies)));
 assert.ok(ACHIEVEMENTS.every((achievement) => !Object.hasOwn(achievement, 'points')));
@@ -138,7 +140,34 @@ for (const trackId of TRACK_IDS) {
   assert.equal(safety?.trophies, 50, `${trackId} SAFETY must remain a 50-trophy stepping stone`);
   assert.equal(safety?.category, 'racing');
   assert.match(safety?.title || '', /SAFETY$/);
+  for (const channel of ['drift', 'flow']) {
+    const scoring = byId(`${trackId}-${channel}-score`);
+    assert.equal(scoring?.trophies, 50);
+    assert.equal(scoring?.category, 'scoring');
+    assert.equal(scoring?.target, null);
+    assert.equal(scoring?.calibrationPending, true);
+    assert.match(scoring?.description || '', /target pending playtest calibration/i);
+  }
 }
+
+assert.equal(byId('drift-flow-master')?.trophies, 300);
+assert.equal(byId('drift-flow-master')?.progressMax, 12);
+assert.equal(byId('drift-flow-master')?.calibrationPending, true);
+
+const pendingUnlockMemory = new Map([[ACHIEVEMENT_STORAGE_KEY, JSON.stringify({
+    version: TROPHY_ROAD_STORAGE_VERSION,
+    unlocked: {
+      'countryside-drift-score': { unlockedAt: Date.now() }
+    }
+  })]]);
+const pendingUnlockStorage = {
+  getItem: (key) => pendingUnlockMemory.get(key) ?? null,
+  setItem: (key, value) => pendingUnlockMemory.set(key, String(value))
+};
+const pendingUnlockStore = createAchievementStore(pendingUnlockStorage);
+assert.equal(pendingUnlockStore.isUnlocked('countryside-drift-score'), false);
+assert.equal(pendingUnlockStore.trophyTotal(), 0,
+  'A calibration-pending id in storage must not grant trophies before its target exists');
 
 assert.equal(byId('countryside-safety')?.description, 'Finish Countryside without going off-road in under 15 seconds.');
 assert.equal(byId('airport-safety')?.description, 'Finish Airport without going off-road in under 20 seconds.');
@@ -494,4 +523,4 @@ assert.match(app, /achievements=r166-bella-records/);
 assert.match(workflow, /Run achievement system regression/);
 assert.match(workflow, /node turn-lab\/tests\/achievements-production\.mjs/);
 
-console.log('TURN 45-achievement, 3075-trophy production catalog integrity regression passed.');
+console.log('TURN achievement catalog and pending scoring calibration integrity regression passed.');

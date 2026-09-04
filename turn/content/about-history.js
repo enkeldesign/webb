@@ -287,6 +287,23 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     'Seven yellow PERK rewards from 1,200–2,000 trophies with a deliberate 1,900 gap',
     'TURN 1.15.0 · 2026.09.03-r198 vehicle-perk progression release'
   ]
+},
+{
+  period: '4 September',
+  title: 'DRIFT and FLOW make every lap expressive',
+  paragraphs: [
+    'DRIFT ATTACK becomes a progressive scoring layer inside ordinary TURN rather than a separate mode. Its event-driven scorer samples existing vehicle state through the normal throttled HUD path, saves only the best score for each track and leaves lap timing and rival racing intact.',
+    'The shared ScoreFeedback instrument now keeps a stable paper row attached to a horizontal black gauge. DRIFT uses immediate cyan buildup; FLOW adds a second fixed-height pink row beneath it. Either live row can be hidden in Settings without disabling scoring, and the unified top-of-screen lap result presents LAP, DRIFT and FLOW together.',
+    'FLOW rewards varied, sustained driving technique without another animation or physics loop. Semantic DRIFT, LOCK, Boost, overcharge and SHIFT events feed one short chain. A SHIFT earns nothing by itself: it contributes only when its gained and sacrificed attributes prove useful entering a banked drift, exiting cleanly, or carrying speed and overcharge into useful Boost.',
+    'Per-track DRIFT and FLOW achievement cards are present with their trophy values but remain explicitly calibration-pending until real-device playtests establish fair targets. Anonymous score distributions are aggregated by track and channel in the existing Cloudflare statistics path, with developer and tester laps marked separately.'
+  ],
+  milestones: [
+    'Simultaneous DRIFT and FLOW scoring layers with independent per-track records',
+    'Contextual SHIFT technique that rewards outcomes rather than button presses',
+    'Stable dual-row ScoreFeedback and a horizontal top-of-screen lap summary',
+    'Calibration-pending scoring achievements and anonymous aggregate score statistics',
+    'TURN 1.16.0 · 2026.09.04-r199 expressive-scoring release'
+  ]
 }
 ]);
 
@@ -569,11 +586,20 @@ export const CHANGELOG = Object.freeze([
       ['1.14.5 r196', 'Keeps the SHIFT attribute roll above the pre-race action bar and gives it a subtle translucent dark backing for consistent readability.'],
       ['Temporary HUD layer', 'Raises the HUD only while SHIFT feedback is visible, then restores the normal controls-over-HUD stacking order.']
     ]
+  },
+  {
+    date: '4 September',
+    entries: [
+      ['1.16.0 r199', 'Adds FLOW beside DRIFT as a simultaneous, event-driven scoring layer while keeping ordinary lap timing and racing authoritative.'],
+      ['Contextual SHIFT technique', 'Awards no points for a toggle alone; useful attribute choices contribute when they lead into a banked drift, support a controlled exit or improve a meaningful Boost and OVERCHARGE sequence.'],
+      ['One scoring instrument', 'Completes the permanent cyan DRIFT and pink FLOW paper rows with attached horizontal gauges, independent HUD preferences and a unified top-of-screen LAP / DRIFT / FLOW result.'],
+      ['Records and calibration', 'Saves only each track’s best DRIFT and FLOW score, adds explicitly target-pending achievement cards and aggregates anonymous per-track score distributions for playtest calibration.']
+    ]
   }
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.15.0',
-  build: '2026.09.03-r198',
-  note: 'TURN 1.15.0 adds seven independently earned vehicle perks from 1,200 through 2,000 trophies.'
+  version: '1.16.0',
+  build: '2026.09.04-r199',
+  note: 'TURN 1.16.0 adds simultaneous DRIFT and FLOW scoring with contextual SHIFT technique.'
 });

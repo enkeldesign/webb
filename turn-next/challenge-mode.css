@@ -228,7 +228,10 @@
 }
 
 .lap-result-toast [data-share-lap-challenge] {
-  margin-top: 9px;
+  grid-column: 1 / -1;
+  grid-row: 3;
+  justify-self: start;
+  margin: 7px 0 0;
   padding: 7px 11px;
   background: #8ce99a;
   box-shadow: 3px 3px 0 #08090a;

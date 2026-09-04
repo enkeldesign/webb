@@ -103,6 +103,7 @@ export function createDriftAttackRuntime({
     dispatchSemanticEvent(eventTarget, 'turn:drift-score-event', {
       channel: SCORE_FEEDBACK_CHANNEL.DRIFT,
       type,
+      at: now,
       ...detail
     });
   }

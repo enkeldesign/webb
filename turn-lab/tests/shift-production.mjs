@@ -437,8 +437,12 @@ assert.match(controls, /globalThis\.__turnBoostCharge = boostCharge/,
   'Boost remains normalized as a charge percentage while SHIFT changes tank duration');
 assert.match(controls, /className = 'shift-change-feedback'/,
   'The race HUD must expose transient SHIFT feedback beneath Boost');
-assert.match(controls, /resolveVehicleShiftFeedback\(shiftContext\(\)\.profile, shiftActive\)/,
-  'Every visible toggle must resolve the three attributes gained in that direction');
+assert.match(controls, /const context = shiftContext\(\);[\s\S]*resolveVehicleShiftFeedback\(context\.profile, shiftActive\)/,
+  'Every visible toggle must resolve the three attributes gained in that direction from one shared context snapshot');
+assert.match(controls, /gainKeys,[\s\S]*lossKeys,[\s\S]*boostCharge:[\s\S]*overcharge:/,
+  'SHIFT events must expose gained and sacrificed attributes plus current Boost context for FLOW');
+assert.doesNotMatch(controls, /advanceShiftOutcome\(now\)/,
+  'SHIFT outcome detection must not add a per-frame FLOW polling path');
 assert.match(controls, /shiftDetailsAnnouncedThisRace[\s\S]*briefAnnouncement[\s\S]*detailedAnnouncement/,
   'Only the first SHIFT in a race must announce the full attribute list');
 assert.match(controls, /resetShiftAnnouncementCycle\(\)[\s\S]*syncShiftAvailability\(\{ reset: true \}\)/,

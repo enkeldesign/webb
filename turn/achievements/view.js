@@ -12,6 +12,9 @@ import {
   TIME_TRIAL_ACHIEVEMENT_IDS
 } from './time-trials.js?revision=r166-bella-records';
 import {
+  TRACK_SCORING_ACHIEVEMENT_IDS
+} from './scoring-achievements.js?revision=r1-placeholder-targets';
+import {
   TROPHY_ICON,
   TROPHY_ROAD_MAX_THRESHOLD,
   TROPHY_ROAD_REWARDS,
@@ -21,6 +24,9 @@ import {
 
 const TOAST_VISIBLE_MS = 3600;
 const ATTENTION_VISIBLE_MS = 900;
+const AVAILABLE_ACHIEVEMENTS = Object.freeze(
+  ACHIEVEMENTS.filter((achievement) => achievement.calibrationPending !== true)
+);
 
 function formatTime(seconds) {
   if (!Number.isFinite(seconds)) return '';
@@ -50,6 +56,9 @@ function progressFor(achievement, store, session) {
   if (achievement.id === 'faster-than-the-dev') {
     return TIME_TRIAL_ACHIEVEMENT_IDS.filter((id) => store.isUnlocked(id)).length;
   }
+  if (achievement.id === 'drift-flow-master') {
+    return TRACK_SCORING_ACHIEVEMENT_IDS.filter((id) => store.isUnlocked(id)).length;
+  }
   if (achievement.id === 'listen-closely') {
     return Math.min(10, Math.floor((session.listenCloselyMs || 0) / 1000));
   }
@@ -68,6 +77,7 @@ function progressFor(achievement, store, session) {
 
 function statusFor(achievement, store, session) {
   if (store.isUnlocked(achievement.id)) return 'UNLOCKED';
+  if (achievement.calibrationPending === true) return 'TARGET PENDING';
   const progress = progressFor(achievement, store, session);
   if (progress != null && progress > 0) return 'IN PROGRESS';
   return 'LOCKED';
@@ -142,7 +152,7 @@ function createDialog() {
       <div class="turn-achievements-content">
         <section class="turn-achievements-summary" aria-labelledby="turnAchievementsSummaryTitle">
           <div class="turn-achievements-summary-main">
-            <strong id="turnAchievementsSummaryTitle">0 OF ${ACHIEVEMENTS.length} UNLOCKED</strong>
+            <strong id="turnAchievementsSummaryTitle">0 OF ${AVAILABLE_ACHIEVEMENTS.length} UNLOCKED</strong>
             <div class="turn-trophy-road">
               <div class="turn-trophy-road-track">
                 <div class="turn-trophy-road-progress" role="progressbar" aria-label="Trophy Road progress" aria-valuemin="0" aria-valuemax="${TROPHY_ROAD_MAX_THRESHOLD}" aria-valuenow="0"><i></i></div>
@@ -159,6 +169,7 @@ function createDialog() {
           <button type="button" aria-pressed="true" data-achievement-filter="all">ALL</button>
           <button type="button" aria-pressed="false" data-achievement-filter="onboarding">GETTING STARTED</button>
           <button type="button" aria-pressed="false" data-achievement-filter="time-trials">TIME TRIALS</button>
+          <button type="button" aria-pressed="false" data-achievement-filter="scoring">SCORING</button>
           <button type="button" aria-pressed="false" data-achievement-filter="unlocked">UNLOCKED</button>
         </div>
         <div class="turn-achievements-list"></div>
@@ -192,6 +203,7 @@ function installFilters(dialog) {
       const visible = current === 'all'
         || (current === 'onboarding' && card.dataset.achievementCategory === CATEGORY.ONBOARDING)
         || (current === 'time-trials' && card.dataset.achievementCategory === CATEGORY.TIME_TRIALS)
+        || (current === 'scoring' && card.dataset.achievementCategory === CATEGORY.SCORING)
         || (current === 'unlocked' && card.dataset.achievementStatus === 'unlocked');
       card.hidden = !visible;
     }
@@ -319,10 +331,12 @@ export function createAchievementView({ store, session, utilityGroup }) {
       dialogDirty = true;
       return false;
     }
-    const unlockedCount = Object.keys(store.state.unlocked).length;
+    const unlockedCount = AVAILABLE_ACHIEVEMENTS.filter((achievement) => (
+      store.isUnlocked(achievement.id)
+    )).length;
     const trophies = store.trophyTotal();
-    const completion = Math.round((unlockedCount / ACHIEVEMENTS.length) * 100);
-    totalTitle.textContent = `${unlockedCount} OF ${ACHIEVEMENTS.length} UNLOCKED`;
+    const completion = Math.round((unlockedCount / AVAILABLE_ACHIEVEMENTS.length) * 100);
+    totalTitle.textContent = `${unlockedCount} OF ${AVAILABLE_ACHIEVEMENTS.length} UNLOCKED`;
     trophyTotal.textContent = String(trophies);
     percent.textContent = `${completion}%`;
     renderTrophyRoad(trophies);

@@ -4,7 +4,8 @@ import {
   ADMIN_UNLOCK_SEQUENCE,
   advanceAdminUnlockSequence,
   completeAdminUnlockFromLot,
-  createAdminRewardState
+  createAdminRewardState,
+  unlockRewardsForTesting
 } from '../../turn/testing/admin-unlock-sequence.js';
 import {
   TROPHY_ROAD_REWARDS,
@@ -110,6 +111,11 @@ assert.deepEqual(cleanProfile.unlocked, {},
 assert.deepEqual(cleanProfile.seen, []);
 assert.deepEqual(cleanProfile.rewards.unlocked, rewardIds);
 
+const developerStorage = createMemoryStorage();
+assert.equal(unlockRewardsForTesting(developerStorage), true);
+assert.equal(developerStorage.getItem('turn.telemetry.developer.v1'), '1',
+  'The hidden admin rewards path must automatically mark calibration laps as developer/tester data');
+
 const allTracks = ['countryside', 'airport', 'cliffside', 'harbor', 'midnight-city'];
 const legacyAdminProfile = {
   version: 4,
@@ -202,6 +208,7 @@ assert.match(source, /aria-checked="true"/,
   'The final action must detect an AWD that was already selected on Lot entry');
 assert.match(source, /completeAdminUnlockFromLot\(sequenceIndex, selectedVehicleId\)/);
 assert.match(source, /unlockRewardsForTesting\(storage\)/);
+assert.match(source, /markDeveloperDevice\(storage\)/);
 assert.match(source, /snapshot\.rewards\.unlocked = \[\.\.\.rewardIds\]/);
 assert.match(source, /resetLegacyChallengeProgress\(storage\)/,
   'The corrected path must clear challenge progress polluted by the old all-achievement unlock');
@@ -221,7 +228,7 @@ assert.match(roadSource, /hasLegacyProfileEvidence\(storage\)/,
 assert.match(roadSource, /repairFalseFreshProfile\(existing, storage\)/,
   'Known accidentally-grandfathered clean profiles must repair during startup');
 assert.match(indexSource,
-  /<script type="module" src="\.\/testing\/admin-unlock-sequence\.js\?revision=r176-admin-rewards"><\/script>/,
+  /<script type="module" src="\.\/testing\/admin-unlock-sequence\.js\?revision=r177-developer-telemetry"><\/script>/,
   'The production entry must publish the rewards-only recognizer with a fresh cache identity');
 assert.match(indexSource,
   new RegExp(`src="\\.\\/live-steering-setting\\.js\\?build=${escapeRegex(release.cacheKey)}-live-steering"`),

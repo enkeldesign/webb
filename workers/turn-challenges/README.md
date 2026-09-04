@@ -3,7 +3,7 @@
 This is TURN's deliberately small server component. It currently has two jobs:
 
 1. store immutable YOUR TURN challenge snapshots behind short opaque IDs; and
-2. receive privacy-minimal gameplay events for Erik's private usage dashboard.
+2. receive privacy-minimal gameplay and score-calibration events for Erik's private usage dashboard.
 
 TURN's racing runtime remains local in the browser. The Worker does not simulate races, synchronize players or understand driving physics.
 
@@ -19,7 +19,7 @@ There is intentionally no update or delete API for challenge snapshots. Two peop
 
 - `POST /v1/telemetry` — accepts a small batch of allow-listed gameplay events from TURN/YOUR TURN.
 - `GET /v1/stats?days=30&audience=players` — returns anonymous aggregate statistics to the private dashboard after bearer-key authentication. `audience` can be `players`, `developer` or `all`; omitted/invalid values preserve the legacy `all` behavior.
-- D1 stores daily aggregate counts only. It does not store player IDs, page-session IDs or raw gameplay-event histories.
+- D1 stores daily aggregate counts and coarse score distributions only. It does not store player IDs, page-session IDs or raw gameplay-event histories.
 
 TURN does not create an analytics cookie or persistent analytics identifier. A random page-session identifier exists only in browser memory and is never written to D1. Telemetry starts only after a race actually starts and is event-driven rather than frame-driven. Devices explicitly marked from the private dashboard store a local developer yes/no marker; that shared boolean is not unique to a device or person.
 
@@ -29,8 +29,10 @@ Current event types are deliberately small:
 - `race_start`
 - `lap_complete`
 - `lap_invalid`
+- `drift_score`
+- `flow_score`
 
-Dimensions are limited to product surface, build, track, car, steering mode, browser/installed web app, Drive By Ear state, blank-screen state, developer yes/no, lap time and invalid-lap reason. Names, challenge IDs/links, replay data, driving paths, control streams and precise location are not part of the analytics payload.
+Dimensions are limited to product surface, build, track, car, steering mode, browser/installed web app, Drive By Ear state, blank-screen state, developer yes/no, lap time, lap score and invalid-lap reason. Score events are retained only as per-day, per-track 500-point bands with count, sum, minimum and maximum. Names, challenge IDs/links, replay data, driving paths, control streams, exact per-session score histories and precise location are not part of the analytics payload.
 
 The private dashboard is a static page under `/turn/stats/`. It is `noindex`, unlinked from TURN and protected at the API layer by a bearer key whose plaintext is not committed to the repository. The `PLAYERS` view excludes developer-marked devices; `DEVELOPER` shows only those devices; `ALL` combines the original unseparated history with the newer cohort-separated aggregates.
 
@@ -38,7 +40,8 @@ The private dashboard is a static page under `/turn/stats/`. It is `noindex`, un
 
 - D1 binding: `DB`.
 - Tables are created lazily with `CREATE TABLE IF NOT EXISTS`; deployment does not require a separate migration step.
-- The original `turn_telemetry_daily` table remains read-only legacy history. New events are written to `turn_telemetry_daily_v2`, whose primary key adds the developer boolean so player and developer activity never collapse into one daily aggregate.
+- The original `turn_telemetry_daily` table remains read-only legacy history. New activity events are written to `turn_telemetry_daily_v2`, whose primary key adds the developer boolean so player and developer activity never collapse into one daily aggregate.
+- DRIFT/FLOW calibration events are aggregated into `turn_score_daily_v1`; it stores no session identifier and cannot reconstruct an individual lap history.
 - Exact duplicate challenge payloads reuse the same snapshot ID; different challenge generations get different immutable snapshots.
 - Browser writes are accepted only with an `Origin` of `https://enkel.design` (or `https://www.enkel.design`). This is an origin guard, not user authentication.
 - Request and decompressed-payload limits protect the challenge store from accidental oversized writes.
@@ -48,6 +51,8 @@ The private dashboard is a static page under `/turn/stats/`. It is `noindex`, un
 ## Cloudflare deployment
 
 Cloudflare Workers Builds deploys this project directly from `enkeldesign/webb`.
+
+Deploy the Worker changes before publishing the matching TURN client. Worker v2 does not know the `drift_score` and `flow_score` event names. The v3 client isolates `lap_complete` in its own batch so an out-of-order rollout does not lose established lap telemetry, but score calibration begins only after Worker v3 is live.
 
 - Worker/project name: `turn-challenges`
 - Production branch: `main`

@@ -17,6 +17,7 @@ class FakeAnalytics {
 class FakeD1 {
   constructor() {
     this.rows = new Map();
+    this.scoreRows = new Map();
   }
 
   prepare(sql) {
@@ -40,6 +41,9 @@ class FakeStatement {
     if (this.sql.startsWith('CREATE TABLE IF NOT EXISTS turn_telemetry_daily')) {
       return { success: true, meta: { changes: 0 } };
     }
+    if (this.sql.startsWith('CREATE TABLE IF NOT EXISTS turn_score_daily_v1')) {
+      return { success: true, meta: { changes: 0 } };
+    }
     if (this.sql.startsWith('INSERT INTO turn_telemetry_daily_v2')) {
       const [day, event, surface, trackId, carId, steering, installed, driveByEar, blank, developer, value, lastAt] = this.values;
       const key = [day, event, surface, trackId, carId, steering, installed, driveByEar, blank, developer].join('|');
@@ -57,6 +61,30 @@ class FakeStatement {
         developer,
         count: existing.count + 1,
         value_sum: existing.value_sum + value,
+        last_at: Math.max(existing.last_at, lastAt)
+      });
+      return { success: true, meta: { changes: 1 } };
+    }
+    if (this.sql.startsWith('INSERT INTO turn_score_daily_v1')) {
+      const [day, event, trackId, developer, scoreBand, value, lastAt] = this.values;
+      const key = [day, event, trackId, developer, scoreBand].join('|');
+      const existing = this.db.scoreRows.get(key) || {
+        count: 0,
+        value_sum: 0,
+        value_min: Infinity,
+        value_max: 0,
+        last_at: 0
+      };
+      this.db.scoreRows.set(key, {
+        day,
+        event,
+        track_id: trackId,
+        developer,
+        score_band: scoreBand,
+        count: existing.count + 1,
+        value_sum: existing.value_sum + value,
+        value_min: Math.min(existing.value_min, value),
+        value_max: Math.max(existing.value_max, value),
         last_at: Math.max(existing.last_at, lastAt)
       });
       return { success: true, meta: { changes: 1 } };
@@ -151,6 +179,22 @@ await test('keeps developer and player activity in separate daily aggregates', a
   assert.deepEqual(cohorts, [0, 1]);
   assert.equal(ANALYTICS.points[0].doubles[4], 0);
   assert.equal(ANALYTICS.points[1].doubles[4], 1);
+});
+
+await test('accepts eligible DRIFT and FLOW scores into anonymous calibration bands', async () => {
+  const DB = new FakeD1();
+  const ANALYTICS = new FakeAnalytics();
+  const response = await handleTelemetryRoute(post([
+    event({ event: 'drift_score', value: 3421, developer: true }),
+    event({ event: 'flow_score', value: 8745, developer: true })
+  ]), { DB, ANALYTICS });
+
+  assert.equal(response.status, 202);
+  assert.equal(DB.scoreRows.size, 2);
+  const rows = [...DB.scoreRows.values()];
+  assert.deepEqual(rows.map((row) => row.score_band), [3000, 8500]);
+  assert.deepEqual(rows.map((row) => row.developer), [1, 1]);
+  assert.ok(rows.every((row) => !Object.hasOwn(row, 'session')));
 });
 
 await test('rejects telemetry writes outside enkel.design', async () => {

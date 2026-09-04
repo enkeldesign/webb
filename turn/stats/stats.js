@@ -6,7 +6,8 @@ const TRACKS = Object.freeze([
   ['airport', 'Airport'],
   ['cliffside', 'Cliffside'],
   ['harbor', 'Harbor'],
-  ['midnight-city', 'Midnight City']
+  ['midnight-city', 'Midnight City'],
+  ['mountain', 'Mountain']
 ]);
 
 const CARS = Object.freeze([
@@ -168,6 +169,7 @@ function renderStats(stats) {
 
   renderModes(stats);
   renderLapTimes(stats.lapTimes || []);
+  renderScoreDistributions(stats.scoreDistributions || {});
 
   const generatedAt = Number(stats.generatedAt) || Date.now();
   const range = Number(stats.rangeDays) === 3650 ? 'all recorded time' : `${Number(stats.rangeDays) || 30} days`;
@@ -260,6 +262,36 @@ function renderLapTimes(sourceRows) {
   renderDefinitionList(document.querySelector('#lapTimes'), rows, (value) => (
     Number.isFinite(value) ? formatLapTime(value) : '–'
   ));
+}
+
+function renderScoreDistributions(distributions) {
+  for (const channel of ['drift', 'flow']) {
+    const source = new Map((distributions[channel] || []).map((row) => [String(row.id), row]));
+    const rows = TRACKS.map(([id, name]) => [name, source.get(id) || null]);
+    renderDefinitionList(document.querySelector(`#${channel}Scores`), rows, (entry) => {
+      if (!entry?.count) return '–';
+      const p50 = percentileBand(entry.buckets, 0.5);
+      const p90 = percentileBand(entry.buckets, 0.9);
+      return `${formatCount(Math.round(entry.average))} avg · P50 ${formatBand(p50)} · P90 ${formatBand(p90)} · ${formatCount(entry.count)} laps`;
+    });
+  }
+}
+
+function percentileBand(buckets = [], percentile) {
+  const ordered = [...buckets].sort((a, b) => Number(a.floor) - Number(b.floor));
+  const total = ordered.reduce((sum, bucket) => sum + (Number(bucket.count) || 0), 0);
+  const target = total * percentile;
+  let cumulative = 0;
+  for (const bucket of ordered) {
+    cumulative += Number(bucket.count) || 0;
+    if (cumulative >= target) return Number(bucket.floor) || 0;
+  }
+  return ordered.length ? Number(ordered.at(-1).floor) || 0 : null;
+}
+
+function formatBand(floor) {
+  if (!Number.isFinite(floor)) return '–';
+  return `${formatCount(floor)}–${formatCount(floor + 499)}`;
 }
 
 function renderDefinitionList(list, rows, formatter) {

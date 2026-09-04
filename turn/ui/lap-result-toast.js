@@ -33,6 +33,11 @@ export function installLapResultToast() {
       <b class="lap-result-drift-score">0</b>
       <em class="lap-result-drift-status"></em>
     </div>
+    <div class="lap-result-drift lap-result-flow" hidden>
+      <span>FLOW</span>
+      <b class="lap-result-flow-score">0</b>
+      <em class="lap-result-flow-status"></em>
+    </div>
   `;
 
   const announcer = document.createElement('div');
@@ -48,6 +53,9 @@ export function installLapResultToast() {
   const drift = toast.querySelector('.lap-result-drift');
   const driftScore = toast.querySelector('.lap-result-drift-score');
   const driftStatus = toast.querySelector('.lap-result-drift-status');
+  const flow = toast.querySelector('.lap-result-flow');
+  const flowScore = toast.querySelector('.lap-result-flow-score');
+  const flowStatus = toast.querySelector('.lap-result-flow-status');
   let hideTimer = 0;
   let exitTimer = 0;
 
@@ -101,20 +109,40 @@ export function installLapResultToast() {
     time.hidden = false;
     time.textContent = formatLapTime(seconds);
     time.setAttribute('aria-label', `Lap time, ${spokenLapTime(seconds)}`);
-    showDriftResult(result?.drift);
+    const scoreCount = Number(showDriftResult(result?.drift)) + Number(showFlowResult(result?.flow));
+    toast.dataset.scoreCount = String(scoreCount);
     toast.classList.remove('is-invalid');
     reveal();
     setLiveAnnouncement(announcer, lapResultAnnouncement({
       position: normalizedPlace,
       time: seconds,
-      drift: result?.drift
+      drift: result?.drift,
+      flow: result?.flow
     }));
+  }
+
+  function showFlowResult(result) {
+    if (result?.available !== true || !Number.isFinite(Number(result.score))) {
+      flow.hidden = true;
+      return false;
+    }
+
+    const score = Math.max(0, Math.round(Number(result.score)));
+    const best = Math.max(0, Math.round(Number(result.bestScore) || 0));
+    flowScore.textContent = scoreFormatter.format(score);
+    flowStatus.textContent = result.newBest === true
+      ? 'NEW BEST'
+      : best > 0
+        ? `BEST ${scoreFormatter.format(best)}`
+        : '';
+    flow.hidden = false;
+    return true;
   }
 
   function showDriftResult(result) {
     if (result?.available !== true || !Number.isFinite(Number(result.score))) {
       drift.hidden = true;
-      return;
+      return false;
     }
 
     const score = Math.max(0, Math.round(Number(result.score)));
@@ -126,6 +154,7 @@ export function installLapResultToast() {
         ? `BEST ${scoreFormatter.format(best)}`
         : '';
     drift.hidden = false;
+    return true;
   }
 
   function showInvalid(result) {
@@ -139,6 +168,8 @@ export function installLapResultToast() {
     time.hidden = true;
     time.removeAttribute('aria-label');
     drift.hidden = true;
+    flow.hidden = true;
+    toast.dataset.scoreCount = '0';
     toast.classList.add('is-invalid');
     reveal();
     setLiveAnnouncement(announcer, lapVoidAnnouncement(result?.reason));

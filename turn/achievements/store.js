@@ -52,7 +52,9 @@ function normalizedUnlockRecord(record) {
 
 function totalTrophiesFromUnlocked(unlocked) {
   return Object.keys(unlocked).reduce((total, id) => {
-    const trophies = Number(getAchievement(id)?.trophies);
+    const achievement = getAchievement(id);
+    if (achievement?.calibrationPending === true) return total;
+    const trophies = Number(achievement?.trophies);
     return total + (Number.isFinite(trophies) ? trophies : 0);
   }, 0);
 }
@@ -166,7 +168,8 @@ export function createAchievementStore(storage = globalThis.localStorage) {
   }
 
   function isUnlocked(id) {
-    return Boolean(getAchievement(id) && state.unlocked[id]);
+    const achievement = getAchievement(id);
+    return Boolean(achievement && achievement.calibrationPending !== true && state.unlocked[id]);
   }
 
   function trophyTotal() {
@@ -179,7 +182,7 @@ export function createAchievementStore(storage = globalThis.localStorage) {
 
   function unlock(id, context = {}) {
     const achievement = getAchievement(id);
-    if (!achievement || isUnlocked(id)) return null;
+    if (!achievement || achievement.calibrationPending === true || isUnlocked(id)) return null;
     state.unlocked[id] = {
       unlockedAt: Date.now(),
       trackId: context.trackId || '',
@@ -261,5 +264,9 @@ export function createAchievementStore(storage = globalThis.localStorage) {
 }
 
 export function totalAvailableTrophies() {
-  return ACHIEVEMENTS.reduce((total, achievement) => total + achievement.trophies, 0);
+  return ACHIEVEMENTS.reduce((total, achievement) => (
+    achievement.calibrationPending === true
+      ? total
+      : total + achievement.trophies
+  ), 0);
 }

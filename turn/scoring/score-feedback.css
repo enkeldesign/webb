@@ -15,10 +15,21 @@
 }
 
 .score-feedback[hidden],
+.score-feedback-row[hidden],
 .score-feedback-state[hidden],
 .score-feedback-callout[hidden],
 .score-feedback-gauge[hidden] {
   display: none;
+}
+
+.score-feedback-row {
+  position: relative;
+  width: 100%;
+  height: var(--score-feedback-paper-height);
+}
+
+.score-feedback-flow-row {
+  margin-top: 3px;
 }
 
 .score-feedback-state,
@@ -32,8 +43,8 @@
 /*
  * The paper is the stable information surface. A scoring row always has the
  * same height, so its horizontal gauge can stay optically locked to the live
- * score. FLOW can later add a second fixed-height row below DRIFT without
- * changing either row's geometry.
+ * score. FLOW adds a second fixed-height row below DRIFT without changing
+ * either row's geometry.
  */
 .score-feedback-state {
   position: relative;
@@ -49,14 +60,10 @@
   transition: opacity 140ms linear;
 }
 
-/* Future stacked DRIFT + FLOW shell: width remains stable; rows stack on Y. */
-.score-feedback-state[data-score-layout="dual"] {
-  height: calc(var(--score-feedback-paper-height) * 2);
-}
-
 .score-feedback-heading,
 .score-feedback-values,
-.score-feedback-lap {
+.score-feedback-lap,
+.score-feedback-footer {
   display: flex;
   align-items: baseline;
   gap: 8px;
@@ -104,8 +111,9 @@
   line-height: 1;
 }
 
-.score-feedback[data-channel="flow"] .score-feedback-values b {
+.score-feedback-flow-state .score-feedback-values b {
   background: var(--turn-pink-500, #ff4fa3);
+  font-size: clamp(.78rem, 1.8vw, 1.02rem);
 }
 
 .score-feedback-lap {
@@ -122,11 +130,39 @@
   font-size: 1.08em;
 }
 
+.score-feedback-footer {
+  min-width: 0;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.score-feedback-techniques {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  justify-content: flex-end;
+  overflow: hidden;
+  font-size: clamp(.34rem, .78vw, .45rem);
+  font-weight: 950;
+  letter-spacing: .015em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.score-feedback-techniques span:empty {
+  display: none;
+}
+
+.score-feedback-techniques span + span:not(:empty)::before {
+  content: "›";
+  margin: 0 2px;
+}
+
 /*
  * Reusable horizontal scoring gauge.
  *
- * DRIFT uses `.score-feedback-meter` today. FLOW can mount the same primitive
- * as `.score-feedback-gauge[data-score-channel="flow"]` with an
+ * DRIFT uses `.score-feedback-meter`. FLOW uses the same primitive as
+ * `.score-feedback-gauge[data-score-channel="flow"]` with an
  * `<i data-score-feedback-flow-meter-fill>` child. Both fill on the x-axis and
  * sit beside the live number they describe.
  */
@@ -158,20 +194,10 @@
   opacity: 0;
 }
 
-.score-feedback[data-gauge-channel="flow"] .score-feedback-meter,
 .score-feedback-gauge[data-score-channel="flow"] {
   --score-feedback-gauge-fill-a: #ff4f8d;
   --score-feedback-gauge-fill-b: #ff91bd;
   --score-feedback-gauge-track: var(--turn-ink);
-}
-
-/* Future FLOW row aligns its gauge with the second fixed scoring row. */
-.score-feedback-gauge[data-score-channel="flow"] {
-  top: calc(var(--score-feedback-paper-height) + var(--score-feedback-gauge-inset-y));
-}
-
-.score-feedback[data-drift-visible="false"] .score-feedback-gauge[data-score-channel="flow"] {
-  top: var(--score-feedback-gauge-inset-y);
 }
 
 .score-feedback[data-flow-gauge-visible="false"] .score-feedback-gauge[data-score-channel="flow"] {
@@ -248,11 +274,11 @@
 }
 
 /* The paper stays still; only the live number nudges as the score intensifies. */
-.score-feedback[data-phase="intensify"] .score-feedback-values strong {
+.score-feedback-row[data-phase="intensify"] .score-feedback-values strong {
   transform: scale(1.055);
 }
 
-.score-feedback[data-phase="settle"] .score-feedback-values strong {
+.score-feedback-row[data-phase="settle"] .score-feedback-values strong {
   transform: scale(.992);
 }
 
@@ -317,8 +343,8 @@
   transform-origin: left top;
 }
 
-.score-feedback-state[data-score-layout="dual"] + .score-feedback-callout {
-  top: calc((var(--score-feedback-paper-height) * 2) + 9px);
+.score-feedback[data-score-layout="dual"] .score-feedback-callout {
+  top: calc((var(--score-feedback-paper-height) * 2) + 12px);
 }
 
 .score-feedback-callout strong,
@@ -447,8 +473,8 @@
     transition: none;
   }
 
-  .score-feedback[data-phase="intensify"] .score-feedback-values strong,
-  .score-feedback[data-phase="settle"] .score-feedback-values strong {
+  .score-feedback-row[data-phase="intensify"] .score-feedback-values strong,
+  .score-feedback-row[data-phase="settle"] .score-feedback-values strong {
     transform: none;
   }
 
