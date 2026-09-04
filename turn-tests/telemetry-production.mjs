@@ -60,6 +60,8 @@ assert.match(statsHtml, /data-audience="players" aria-pressed="true">PLAYERS/);
 assert.match(statsHtml, /data-audience="developer">DEVELOPER/);
 assert.match(statsHtml, /MARK AS DEVELOPER/);
 assert.match(statsHtml, /older activity cannot be separated/i);
+assert.match(statsHtml, /stats\.js\?revision=r4-score-calibration/,
+  'The private dashboard must bust the pre-calibration stats script cache');
 assert.doesNotMatch(productionIndex, /href=["'][^"']*\/turn\/stats|href=["'][^"']*stats\//i,
   'The private dashboard must not be linked into public TURN navigation');
 assert.match(statsJs, /location\.hash\.slice\(1\)/,
