@@ -44,6 +44,22 @@ function dispatchSemanticEvent(eventTarget, type, detail) {
   eventTarget.dispatchEvent(new globalThis.CustomEvent(type, { detail }));
 }
 
+function presentationDetail(type, detail) {
+  if (type === SCORE_FEEDBACK_EVENT.LOSS) {
+    return {
+      ...detail,
+      durationMs: detail?.durationMs ?? 1050
+    };
+  }
+  if (type === SCORE_FEEDBACK_EVENT.BANK && Number(detail?.multiplier) <= 1 && !detail?.label) {
+    return {
+      ...detail,
+      label: '✓ BANKED'
+    };
+  }
+  return detail;
+}
+
 export function createDriftAttackRuntime({
   state,
   scoreFeedback,
@@ -68,7 +84,12 @@ export function createDriftAttackRuntime({
 
   function publishEvent(type, detail, now) {
     if (enabled && hudVisible) {
-      scoreFeedback.publishEvent(SCORE_FEEDBACK_CHANNEL.DRIFT, type, detail, now);
+      scoreFeedback.publishEvent(
+        SCORE_FEEDBACK_CHANNEL.DRIFT,
+        type,
+        presentationDetail(type, detail),
+        now
+      );
     }
     dispatchSemanticEvent(eventTarget, 'turn:drift-score-event', {
       channel: SCORE_FEEDBACK_CHANNEL.DRIFT,
@@ -154,14 +175,13 @@ export function createDriftAttackRuntime({
       lapTime: Number(time) || 0
     });
 
-    if (hudVisible && scoreResult.score > 0) {
-      const type = result.newBest
-        ? SCORE_FEEDBACK_EVENT.PERSONAL_BEST
-        : SCORE_FEEDBACK_EVENT.LAP_RESULT;
-      scoreFeedback.publishEvent(SCORE_FEEDBACK_CHANNEL.DRIFT, type, {
+    // The yellow lap-result card is the authoritative finish summary. Keep a
+    // separate pink ScoreFeedback release only when the result is exceptional.
+    if (hudVisible && result.newBest && scoreResult.score > 0) {
+      scoreFeedback.publishEvent(SCORE_FEEDBACK_CHANNEL.DRIFT, SCORE_FEEDBACK_EVENT.PERSONAL_BEST, {
         score: result.score,
         multiplier: result.maxMultiplier,
-        label: result.newBest ? 'NEW DRIFT BEST' : 'DRIFT LAP',
+        label: 'NEW DRIFT BEST',
         announce: false
       }, now);
     }
@@ -171,14 +191,15 @@ export function createDriftAttackRuntime({
 
   function setHudVisible(visible, { persist = true, now = 0 } = {}) {
     const next = visible !== false;
-    if (persist && !saveDriftHudVisible(next, targetStorage)) return false;
+    const persisted = !persist || saveDriftHudVisible(next, targetStorage);
     hudVisible = next;
     syncPresentation(now);
     dispatchSemanticEvent(eventTarget, 'turn:drift-hud-visibility-change', {
       visible: hudVisible,
-      enabled
+      enabled,
+      persisted
     });
-    return true;
+    return persisted;
   }
 
   function refreshEntitlement(now = 0) {
