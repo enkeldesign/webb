@@ -134,6 +134,19 @@ try {
   });
   assert.deepEqual(runtime.scorer.inspect().tokens.slice(-3), ['LOCK', 'DRIFT', 'EXIT'],
     'LOCK engaged before DRIFT BUILD must remain part of the drift context and score FLOW');
+
+  runtime.beginLap(920);
+  eventTarget.emit('turn:drift-score-event', { type: 'build', at: 930 });
+  eventTarget.emit('turn:drift-score-event', {
+    type: 'bank',
+    score: 520,
+    duration: 1.2,
+    reason: 'exit',
+    at: 940
+  });
+  assert.deepEqual(runtime.scorer.inspect().tokens.slice(-3), ['LOCK', 'DRIFT', 'EXIT'],
+    'A continuously held LOCK must remain recognised when a new lap starts without another control event');
+
   runtime.reset(950);
   runtime.beginLap(960);
 
