@@ -84,12 +84,21 @@ export function createDriftAttackRuntime({
 
   function publishEvent(type, detail, now) {
     if (enabled && hudVisible) {
-      scoreFeedback.publishEvent(
-        SCORE_FEEDBACK_CHANNEL.DRIFT,
-        type,
-        presentationDetail(type, detail),
-        now
-      );
+      if (type === SCORE_FEEDBACK_EVENT.BUILD) {
+        const activeEvent = scoreFeedback.inspect?.().activeEvent;
+        if (activeEvent?.active
+          && activeEvent.channel === SCORE_FEEDBACK_CHANNEL.DRIFT
+          && activeEvent.type === SCORE_FEEDBACK_EVENT.LOSS) {
+          scoreFeedback.clearChannel(SCORE_FEEDBACK_CHANNEL.DRIFT, now);
+        }
+      } else {
+        scoreFeedback.publishEvent(
+          SCORE_FEEDBACK_CHANNEL.DRIFT,
+          type,
+          presentationDetail(type, detail),
+          now
+        );
+      }
     }
     dispatchSemanticEvent(eventTarget, 'turn:drift-score-event', {
       channel: SCORE_FEEDBACK_CHANNEL.DRIFT,
