@@ -276,10 +276,10 @@ assert.match(scorekeeperRecordsSource, /data-score-feedback-flow-techniques[\s\S
   'The unreadable rolling FLOW token strip must be removed before ScoreFeedback can retain its DOM nodes');
 assert.match(scorekeeperRecordsSource, /getBestDriftRecord/);
 assert.match(scorekeeperRecordsSource, /getBestFlowRecord/);
-assert.match(scorekeeperRecordsSource, /data-score-feedback-drift-best/);
-assert.match(scorekeeperRecordsSource, /data-score-feedback-flow-best/);
-assert.match(scorekeeperRecordsSource, /data-score-feedback-drift-last/);
-assert.match(scorekeeperRecordsSource, /data-score-feedback-flow-last/);
+assert.match(scorekeeperRecordsSource, /data-score-feedback-\$\{channel\}-\$\{kind\}/,
+  'DRIFT and FLOW LAST/BEST hooks must use the shared channel/kind builder');
+assert.match(scorekeeperRecordsSource, /makeReadout\(documentRef, channel, 'last', 'LAST'\)/);
+assert.match(scorekeeperRecordsSource, /makeReadout\(documentRef, channel, 'best', 'BEST'\)/);
 assert.match(scorekeeperRecordsSource, /score-feedback-history/,
   'LAST and BEST must share a stable secondary scorekeeper row beneath the active LAP score');
 assert.match(scorekeeperRecordsSource, /setLast\(drift\.last, event\?\.detail\?\.score\)/);
