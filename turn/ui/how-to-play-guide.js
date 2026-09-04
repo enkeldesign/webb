@@ -1,12 +1,5 @@
-const GUIDE_VERSION = 'r221-scoring-links';
-const HOW_TO_PLAY_OPEN_EVENT = 'turn:open-how-to-play';
+const GUIDE_VERSION = 'r222-collapsible-cards';
 const PACE_NOTE_EXPLANATION = 'Before major corners, one to three beeps play in the ear on the turn side. One beep means a gentler corner, two means medium and three means tight. A long corner keeps the same number of beeps but holds the final beep longer: bip-beeeep for a long medium corner and bip-bip-beeeep for a long tight corner. Separate groups describe linked corners in the order you will meet them.';
-
-const TARGET_SECTION_ID = Object.freeze({
-  shift: 'm8HowShift',
-  drift: 'm8HowDriftPoints',
-  flow: 'm8HowFlowPoints'
-});
 
 export function installHowToPlayGuide(root = document) {
   const dialog = root.querySelector('.m8-how-dialog');
@@ -17,7 +10,7 @@ export function installHowToPlayGuide(root = document) {
   updateDriftAndBoostCopy(dialog);
   installShiftAndScoringSections(dialog);
   installDriveByEarDisclosure(dialog);
-  installTargetedOpening(dialog);
+  installGuideCardDisclosures(dialog);
   updateAudioPanelCopy(root);
 
   dialog.dataset.guideVersion = GUIDE_VERSION;
@@ -56,14 +49,13 @@ function updateDriftAndBoostCopy(dialog) {
     </details>`;
 }
 
-function makeGuideSection(dialog, { number, id, target, title, copy }) {
+function makeGuideSection(dialog, { number, title, copy }) {
   const section = dialog.ownerDocument.createElement('section');
   section.className = 'm8-guide-system';
-  section.dataset.howToPlayTarget = target;
   section.innerHTML = `
     <strong>${number}</strong>
     <div>
-      <h3 id="${id}" tabindex="-1">${title}</h3>
+      <h3>${title}</h3>
       <p>${copy}</p>
     </div>`;
   return section;
@@ -78,22 +70,16 @@ function installShiftAndScoringSections(dialog) {
 
   const shift = makeGuideSection(dialog, {
     number: '5',
-    id: TARGET_SECTION_ID.shift,
-    target: 'shift',
     title: 'SHIFT',
     copy: '<strong>SHIFT</strong> swaps between your car’s normal attributes and the alternate setup you configured in <strong>THE LOT</strong>. It redistributes attribute points — it does not add free power. During a race, slide from GAS into SHIFT to swap setup, then SHIFT again to return. Trade for what you need next: for example more DRIFT or CONTROL into a slide, or more acceleration and BOOST performance on the exit.'
   });
   const drift = makeGuideSection(dialog, {
     number: '6',
-    id: TARGET_SECTION_ID.drift,
-    target: 'drift',
     title: 'DRIFT POINTS',
     copy: '<strong>DRIFT POINTS</strong> reward strong, fast, controlled slides — not pressing DRIFT. The large live number is the current drift value at risk and the gauge shows how strongly it is scoring right now. Link drifts to raise <strong>COMBO</strong>. A clean exit <strong>BANKS</strong> the current drift; a failed drift can lose the unbanked points without erasing points already banked this lap. <strong>LAP</strong> is this lap, <strong>LAST</strong> is your previous completed lap and <strong>BEST</strong> is the saved record for this track.'
   });
   const flow = makeGuideSection(dialog, {
     number: '7',
-    id: TARGET_SECTION_ID.flow,
-    target: 'flow',
     title: 'FLOW POINTS',
     copy: '<strong>FLOW POINTS</strong> reward useful choreography between systems such as SHIFT, BOOST, DRIFT, LOCK, OVERCHARGE catches and clean exits. Button presses alone score nothing. Variety and useful timing build <strong>COMBO</strong>; repeating the same idea adds less and mistakes can break the chain. The gauge shows your current FLOW momentum. <strong>LAP</strong> is this lap, <strong>LAST</strong> is your previous completed lap and <strong>BEST</strong> is the saved record for this track.'
   });
@@ -103,32 +89,42 @@ function installShiftAndScoringSections(dialog) {
   grid.insertBefore(flow, before);
 }
 
-function installTargetedOpening(dialog, eventTarget = globalThis) {
-  if (dialog.dataset.targetedHelp === 'scoring-v1') return;
-  dialog.dataset.targetedHelp = 'scoring-v1';
+function installGuideCardDisclosures(dialog) {
+  const sections = [...dialog.querySelectorAll('.m8-guide-grid > section')];
+  for (const section of sections) {
+    if (section.classList.contains('m8-guide-wide')
+      || section.classList.contains('m8-guide-card-shell')) continue;
 
-  const openTarget = (target, trigger = null) => {
-    const id = TARGET_SECTION_ID[String(target || '').toLowerCase()];
-    const heading = id ? dialog.querySelector(`#${id}`) : null;
-    const section = heading?.closest?.('[data-how-to-play-target]');
-    if (!heading || !section) return false;
+    const number = section.querySelector(':scope > strong');
+    const content = section.querySelector(':scope > div');
+    const heading = content?.querySelector(':scope > h3');
+    if (!number || !content || !heading) continue;
 
-    dialog.__turnReturnFocus = trigger || eventTarget.document?.activeElement || null;
-    if (!dialog.open) {
-      if (typeof dialog.showModal === 'function') dialog.showModal();
-      else dialog.setAttribute('open', '');
+    const details = dialog.ownerDocument.createElement('details');
+    details.className = 'm8-guide-card-disclosure';
+
+    const summary = dialog.ownerDocument.createElement('summary');
+    const badge = dialog.ownerDocument.createElement('strong');
+    badge.className = 'm8-guide-card-number';
+    badge.textContent = number.textContent;
+
+    const title = dialog.ownerDocument.createElement('span');
+    title.className = 'm8-guide-card-title';
+    title.setAttribute('role', 'heading');
+    title.setAttribute('aria-level', '3');
+    title.textContent = heading.textContent;
+    summary.append(badge, title);
+
+    const panel = dialog.ownerDocument.createElement('div');
+    panel.className = 'm8-guide-card-panel';
+    for (const child of [...content.children]) {
+      if (child !== heading) panel.append(child);
     }
 
-    heading.focus?.({ preventScroll: true });
-    section.scrollIntoView?.({ behavior: 'auto', block: 'center', inline: 'nearest' });
-    return true;
-  };
-
-  eventTarget.addEventListener?.(HOW_TO_PLAY_OPEN_EVENT, (event) => {
-    openTarget(event?.detail?.section, event?.detail?.trigger || null);
-  });
-
-  globalThis.__turnOpenHowToPlaySection = openTarget;
+    details.append(summary, panel);
+    section.classList.add('m8-guide-card-shell');
+    section.replaceChildren(details);
+  }
 }
 
 function installDriveByEarDisclosure(dialog) {
