@@ -2,6 +2,7 @@ import {
   SCORE_FEEDBACK_CHANNEL,
   SCORE_FEEDBACK_EVENT
 } from './score-feedback.js';
+import './scorekeeper-records.js';
 import { createDriftAttackScorer } from './drift-attack.js';
 import {
   getBestDriftRecord,

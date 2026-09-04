@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
 
 import {
   DRIFT_HUD_STORAGE_KEY,
@@ -267,4 +268,21 @@ assert.equal(failingRuntime.setHudVisible(false, { now: 10 }), false,
 assert.equal(failingRuntime.isHudVisible(), false,
   'The current session must still honor the HUD visibility choice when persistence fails');
 
-console.log('TURN DRIFT ATTACK runtime, hidden-HUD and dormant-lock regressions passed.');
+const [scorekeeperRecordsSource, flowScorerSource] = await Promise.all([
+  fs.readFile(new URL('../turn/scoring/scorekeeper-records.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/scoring/flow.js', import.meta.url), 'utf8')
+]);
+assert.match(scorekeeperRecordsSource, /data-score-feedback-flow-techniques[\s\S]*remove\?\.\(\)/,
+  'The unreadable rolling FLOW token strip must be removed before ScoreFeedback can retain its DOM nodes');
+assert.match(scorekeeperRecordsSource, /getBestDriftRecord/);
+assert.match(scorekeeperRecordsSource, /getBestFlowRecord/);
+assert.match(scorekeeperRecordsSource, /data-score-feedback-drift-best/);
+assert.match(scorekeeperRecordsSource, /data-score-feedback-flow-best/);
+assert.match(scorekeeperRecordsSource, /turn:drift-lap-result/);
+assert.match(scorekeeperRecordsSource, /turn:flow-lap-result/);
+assert.doesNotMatch(scorekeeperRecordsSource, /requestAnimationFrame|setInterval|setTimeout/,
+  'BEST is lifecycle/event-driven and must not introduce another racing-loop or polling path');
+assert.match(flowScorerSource, /feedbackState\.tokens\.includes/,
+  'FLOW must retain its tiny internal token history because repetition/variety is scoring logic, not HUD decoration');
+
+console.log('TURN DRIFT ATTACK runtime, hidden-HUD and stable scorekeeper BEST regressions passed.');
