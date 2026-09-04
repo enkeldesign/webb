@@ -233,8 +233,10 @@ assert.match(source, /data-score-feedback-flow-meter-fill/,
   'The shared engine must already understand the optional future FLOW gauge mount');
 assert.match(css, /--score-feedback-paper-height: 104px/,
   'Each scoring paper row has a stable gameplay height');
-assert.match(css, /--score-feedback-gauge-height:/,
-  'The horizontal instrument has an explicit stable height');
+assert.match(css, /--score-feedback-gauge-height: calc\(var\(--score-feedback-paper-height\) - 14px\)/,
+  'The attached gauge fills nearly the full stable scoring-row height');
+assert.match(css, /top: var\(--score-feedback-gauge-inset-y\)/,
+  'The attached gauge keeps equal optical insets inside its scoring row');
 assert.match(css, /transform: scaleX\(var\(--score-feedback-progress, 0\)\)/,
   'Score gauges fill horizontally without layout work');
 assert.doesNotMatch(css, /transform: scaleY\(var\(--score-feedback-progress, 0\)\)/,
@@ -254,7 +256,9 @@ for (const [mountName, markup] of [
 }
 assert.match(css, /data-score-channel="flow"/,
   'The reusable horizontal gauge primitive has a FLOW channel treatment ready for #739');
-assert.match(css, /top: calc\(var\(--score-feedback-paper-height\) \+ 30px\)/,
+assert.match(
+  css,
+  /top: calc\(var\(--score-feedback-paper-height\) \+ var\(--score-feedback-gauge-inset-y\)\)/,
   'The future FLOW gauge is aligned to its own fixed paper row');
 assert.match(css, /@keyframes turn-score-gauge-rush/,
   'High-intensity scoring keeps a transform-driven peripheral-noise layer');
