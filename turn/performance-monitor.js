@@ -1,5 +1,7 @@
 const SAMPLE_LIMIT = 240;
 const DISPLAY_INTERVAL_MS = 500;
+const PERFORMANCE_PHASES = Object.freeze(['physics', 'scoring', 'hud', 'render']);
+const RENDER_TIMING_FLAG = Symbol.for('turn.performance-render-timing');
 
 let activeMonitor = null;
 
@@ -31,6 +33,15 @@ export function summarizeFrameSamples(samples) {
   });
 }
 
+export function summarizePerformancePhases(totals = {}, frameCount = 0) {
+  const frames = Math.max(1, Number(frameCount) || 0);
+  const summary = {};
+  for (const phase of PERFORMANCE_PHASES) {
+    summary[`${phase}Ms`] = Math.max(0, Number(totals?.[phase]) || 0) / frames;
+  }
+  return Object.freeze(summary);
+}
+
 export function installPerformanceMonitor({ getMode, getTrackStats } = {}) {
   if (!performanceModeRequested() || typeof document === 'undefined') return null;
   if (activeMonitor) return activeMonitor;
@@ -56,6 +67,8 @@ export function installPerformanceMonitor({ getMode, getTrackStats } = {}) {
   document.body.appendChild(panel);
 
   const timelines = new Map();
+  const phaseTotals = Object.fromEntries(PERFORMANCE_PHASES.map((phase) => [phase, 0]));
+  let phaseFrames = 0;
   let activeLabel = 'starting';
   let latestRenderers = [];
   let lastDisplayAt = 0;
@@ -64,9 +77,19 @@ export function installPerformanceMonitor({ getMode, getTrackStats } = {}) {
 
   activeMonitor = Object.freeze({
     enabled: true,
+    recordPhase(phase, durationMs) {
+      if (!PERFORMANCE_PHASES.includes(phase)) return false;
+      const duration = Number(durationMs);
+      if (!Number.isFinite(duration) || duration < 0 || duration > 1000) return false;
+      phaseTotals[phase] += duration;
+      return true;
+    },
     record(label, renderers, now = performance.now(), { rendered = true } = {}) {
       activeLabel = label || getMode?.() || 'unknown';
       latestRenderers = normalizeRenderers(renderers);
+      for (const renderer of latestRenderers) installRendererTiming(renderer);
+      if (rendered) phaseFrames += 1;
+
       let timeline = timelines.get(activeLabel);
       if (!timeline) {
         timeline = { samples: new Float32Array(SAMPLE_LIMIT), cursor: 0, count: 0, lastAt: null };
@@ -91,6 +114,8 @@ export function installPerformanceMonitor({ getMode, getTrackStats } = {}) {
       const summary = summarizeFrameSamples(frames);
       const render = summarizeRenderers(latestRenderers);
       const track = summarizeTrackChecks(getTrackStats?.(), lastTrackStats);
+      const phases = summarizePerformancePhases(phaseTotals, phaseFrames);
+      const scoringHud = currentScoringHudState();
       if (track.current) lastTrackStats = track.current;
 
       snapshot = Object.freeze({
@@ -100,10 +125,14 @@ export function installPerformanceMonitor({ getMode, getTrackStats } = {}) {
         samples: timeline.count,
         profile: currentPerformanceProfile(),
         shadowPolicy: currentTrackShadowPolicy(),
+        scoringHud,
         ...summary,
         ...render,
+        ...phases,
         trackChecksPerQuery: track.average
       });
+      resetPhaseWindow(phaseTotals);
+      phaseFrames = 0;
       globalThis.__turnPerfSnapshot = snapshot;
       panel.textContent = formatSnapshot(snapshot);
       window.dispatchEvent(new CustomEvent('turn:perf-snapshot', { detail: snapshot }));
@@ -115,12 +144,57 @@ export function installPerformanceMonitor({ getMode, getTrackStats } = {}) {
 
   globalThis.__turnPerfMonitor = activeMonitor;
   globalThis.__turnGetPerfSnapshot = () => activeMonitor?.getSnapshot() || null;
+  globalThis.__turnPerfRecordPhase = (phase, durationMs) => activeMonitor?.recordPhase(phase, durationMs) || false;
   panel.textContent = `TURN PERF · collecting…\n${currentPerformanceProfile().label}`;
   return activeMonitor;
 }
 
 export function recordPerformanceFrame(label, renderers, now, options) {
   activeMonitor?.record(label, renderers, now, options);
+}
+
+export function recordPerformancePhase(phase, durationMs) {
+  return activeMonitor?.recordPhase(phase, durationMs) || false;
+}
+
+function installRendererTiming(renderer) {
+  if (!renderer || renderer[RENDER_TIMING_FLAG] || typeof renderer.render !== 'function') return false;
+  const originalRender = renderer.render;
+  try {
+    renderer.render = function renderWithTurnPerformanceTiming(...args) {
+      const startedAt = performance.now();
+      try {
+        return originalRender.apply(this, args);
+      } finally {
+        recordPerformancePhase('render', Math.max(0, performance.now() - startedAt));
+      }
+    };
+    Object.defineProperty(renderer, RENDER_TIMING_FLAG, {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: true
+    });
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function resetPhaseWindow(totals) {
+  for (const phase of PERFORMANCE_PHASES) totals[phase] = 0;
+}
+
+function currentScoringHudState() {
+  return Object.freeze({
+    drift: channelHudState(globalThis.__turnDriftAttack),
+    flow: channelHudState(globalThis.__turnFlow)
+  });
+}
+
+function channelHudState(runtime) {
+  if (!runtime || runtime.isEnabled?.() !== true) return 'locked';
+  return runtime.isHudVisible?.() === false ? 'off' : 'on';
 }
 
 function currentPerformanceProfile() {
@@ -181,11 +255,14 @@ function summarizeTrackChecks(current, previous) {
 }
 
 function formatSnapshot(snapshot) {
+  const scoreHud = snapshot.scoringHud || { drift: 'unknown', flow: 'unknown' };
   return [
     `TURN PERF · ${snapshot.label}`,
     snapshot.profile?.label || 'DPR≤2.00 · shadows 1024',
     snapshot.shadowPolicy?.label || null,
+    `score HUD D:${scoreHud.drift} · F:${scoreHud.flow}`,
     `${snapshot.fps.toFixed(1)} fps · p50 ${snapshot.p50Ms.toFixed(1)} · p95 ${snapshot.p95Ms.toFixed(1)} ms`,
+    `cpu/frame phy ${snapshot.physicsMs.toFixed(2)} · score ${snapshot.scoringMs.toFixed(2)} · HUD ${snapshot.hudMs.toFixed(2)} · render ${snapshot.renderMs.toFixed(2)} ms`,
     `${snapshot.drawCalls} calls · ${compactNumber(snapshot.triangles)} tris · ${snapshot.renderers} renderer${snapshot.renderers === 1 ? '' : 's'}`,
     `${snapshot.geometries} geo · ${snapshot.textures} tex · actual DPR ${snapshot.pixelRatio.toFixed(2)}`,
     `track ${snapshot.trackChecksPerQuery.toFixed(1)} checks/query · >33ms ${snapshot.slowPercent.toFixed(1)}%`
