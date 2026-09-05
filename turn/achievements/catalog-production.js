@@ -1,8 +1,14 @@
-import * as base from './catalog-base.js?revision=r222-awd-label';
+import * as base from './catalog-base.js?revision=r241-trophy-balance';
 import {
   SCORING_MASTER_ACHIEVEMENT,
   TRACK_SCORING_ACHIEVEMENTS
-} from './scoring-achievements.js?revision=r2-calibrated-targets';
+} from './scoring-achievements.js?revision=r3-trophy-balance';
+import {
+  DRIVE_BY_EAR_ACHIEVEMENT_ID,
+  DRIVE_BY_EAR_PART_IDS,
+  HOW_TO_PLAY_DISCLOSURE_IDS,
+  LEARN_TO_PLAY_ACHIEVEMENT_ID
+} from './learning-progress.js?revision=r1-learning-achievements';
 
 const CHROMATIC_CAMOUFLAGE = Object.freeze({
   id: 'chromatic-camouflage',
@@ -43,6 +49,26 @@ export const GOT_STARTED_ACHIEVEMENT = Object.freeze({
   icon: 'trophy'
 });
 
+export const LEARN_TO_PLAY_ACHIEVEMENT = Object.freeze({
+  id: LEARN_TO_PLAY_ACHIEVEMENT_ID,
+  category: base.CATEGORY.WAYS_TO_PLAY,
+  trophies: 50,
+  title: 'LEARN TO PLAY',
+  description: 'Read all parts of How to Play.',
+  icon: 'map',
+  progressMax: HOW_TO_PLAY_DISCLOSURE_IDS.length
+});
+
+export const DRIVE_BY_EAR_ACHIEVEMENT = Object.freeze({
+  id: DRIVE_BY_EAR_ACHIEVEMENT_ID,
+  category: base.CATEGORY.WAYS_TO_PLAY,
+  trophies: 50,
+  title: 'DRIVE BY EAR',
+  description: 'Finish all five parts of Drive By Ear 101.',
+  icon: 'listen',
+  progressMax: DRIVE_BY_EAR_PART_IDS.length
+});
+
 export const ONBOARDING_ACHIEVEMENT_IDS = Object.freeze([
   ...base.ONBOARDING_ACHIEVEMENT_IDS,
   CATCH_THE_CHARGE_ACHIEVEMENT.id
@@ -72,7 +98,7 @@ export const TRACK_SAFETY_ACHIEVEMENTS = Object.freeze(
   base.TRACK_IDS.map((trackId) => Object.freeze({
     id: `${trackId}-safety`,
     category: base.CATEGORY.RACING,
-    trophies: 50,
+    trophies: 75,
     title: `${base.TRACK_NAMES[trackId].toUpperCase()} SAFETY`,
     description: `Finish ${base.TRACK_NAMES[trackId]} without going off-road in under ${SAFETY_TARGET_LABELS[trackId]}.`,
     icon: 'route'
@@ -89,7 +115,7 @@ const rebalancedBaseAchievements = base.ACHIEVEMENTS.map((achievement) => {
   if (achievement.category !== base.CATEGORY.TIME_TRIALS) return achievement;
   return Object.freeze({
     ...achievement,
-    trophies: achievement.id === 'faster-than-the-dev' ? 300 : 75,
+    trophies: achievement.id === 'faster-than-the-dev' ? 300 : 100,
     ...(achievement.id === 'faster-than-the-dev'
       ? { recommendation: 'A variety of cars were used to set the target times. Choosing the right car for each track matters.' }
       : {})
@@ -106,6 +132,8 @@ const withGotStarted = [
   ...rebalancedBaseAchievements.slice(0, onboardingInsertionIndex),
   CATCH_THE_CHARGE_ACHIEVEMENT,
   GOT_STARTED_ACHIEVEMENT,
+  LEARN_TO_PLAY_ACHIEVEMENT,
+  DRIVE_BY_EAR_ACHIEVEMENT,
   ...rebalancedBaseAchievements.slice(onboardingInsertionIndex)
 ];
 
@@ -142,7 +170,7 @@ export {
   TRACK_SCORING_ACHIEVEMENT_IDS,
   completedAllScoringAchievements,
   qualifyingScoringAchievement
-} from './scoring-achievements.js?revision=r2-calibrated-targets';
+} from './scoring-achievements.js?revision=r3-trophy-balance';
 
 export const VEHICLE_NAMES = Object.freeze({
   ...base.VEHICLE_NAMES,
@@ -157,4 +185,4 @@ export function getAchievement(id) {
   return ACHIEVEMENT_BY_ID.get(id) || null;
 }
 
-export * from './catalog-base.js?revision=r222-awd-label';
+export * from './catalog-base.js?revision=r241-trophy-balance';

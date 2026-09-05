@@ -2,15 +2,15 @@ import {
   ACHIEVEMENTS,
   TRACK_IDS,
   TRAINING_CAR_ID
-} from './catalog.js?revision=r240-trophy-road-2';
+} from './catalog.js?revision=r241-learning-achievements';
 import {
   createAchievementStore,
   normalizeAchievementState
-} from './store.js?revision=r240-trophy-road-2';
+} from './store.js?revision=r241-learning-achievements';
 import {
   allOnboardingComplete,
   createAchievementView
-} from './view.js?revision=r240-trophy-road-2';
+} from './view.js?revision=r241-learning-achievements';
 import {
   completedNightShiftSheriff,
   createNightShiftAttempt,
@@ -27,7 +27,17 @@ import {
   completedAllScoringAchievements,
   qualifyingScoringAchievement,
   storedScoringAchievementUnlockEntries
-} from './scoring-achievements.js?revision=r2-calibrated-targets';
+} from './scoring-achievements.js?revision=r3-trophy-balance';
+import {
+  DRIVE_BY_EAR_ACHIEVEMENT_ID,
+  DRIVE_BY_EAR_PART_COMPLETED_EVENT,
+  DRIVE_BY_EAR_PART_IDS,
+  HOW_TO_PLAY_DISCLOSURE_IDS,
+  HOW_TO_PLAY_DISCLOSURE_OPENED_EVENT,
+  LEARNING_FEEDBACK_READY_EVENT,
+  LEARN_TO_PLAY_ACHIEVEMENT_ID,
+  completedLearningSet
+} from './learning-progress.js?revision=r1-learning-achievements';
 import { replayFrameAt } from '../race/replay-system.js?revision=r146-achievement-expansion';
 import { getStoredBestLap } from '../race/rival-storage.js';
 
@@ -244,6 +254,43 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     unlockSilently(storedScoringAchievementUnlockEntries(undefined, store.isUnlocked));
   }
 
+  function importStoredLearningAchievements() {
+    const entries = [];
+    if (completedLearningSet(store.state.progress.driveByEarParts, DRIVE_BY_EAR_PART_IDS)) {
+      entries.push({ id: DRIVE_BY_EAR_ACHIEVEMENT_ID, context: {} });
+    }
+    if (completedLearningSet(
+      store.state.progress.howToPlayDisclosures,
+      HOW_TO_PLAY_DISCLOSURE_IDS
+    )) {
+      entries.push({ id: LEARN_TO_PLAY_ACHIEVEMENT_ID, context: {} });
+    }
+    unlockSilently(entries);
+  }
+
+  function recordDriveByEarPart(partId) {
+    if (!store.addDriveByEarPart(partId)) return false;
+    if (completedLearningSet(store.state.progress.driveByEarParts, DRIVE_BY_EAR_PART_IDS)) {
+      unlock([DRIVE_BY_EAR_ACHIEVEMENT_ID], {}, { delay: -1 });
+    } else {
+      view.render();
+    }
+    return true;
+  }
+
+  function recordHowToPlayDisclosure(disclosureId) {
+    if (!store.addHowToPlayDisclosure(disclosureId)) return false;
+    if (completedLearningSet(
+      store.state.progress.howToPlayDisclosures,
+      HOW_TO_PLAY_DISCLOSURE_IDS
+    )) {
+      unlock([LEARN_TO_PLAY_ACHIEVEMENT_ID], {}, { delay: -1 });
+    } else {
+      view.render();
+    }
+    return true;
+  }
+
   function sampleListenClosely(state, elapsedMs) {
     if (store.isUnlocked('listen-closely')) return;
     const settings = globalThis.__turnAudioPreferences?.getSettings?.();
@@ -448,6 +495,22 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     session.pendingTrackEntryPulse = true;
   });
 
+  window.addEventListener(DRIVE_BY_EAR_PART_COMPLETED_EVENT, (event) => {
+    recordDriveByEarPart(event.detail?.stageId);
+  });
+
+  window.addEventListener(HOW_TO_PLAY_DISCLOSURE_OPENED_EVENT, (event) => {
+    recordHowToPlayDisclosure(event.detail?.disclosureId);
+  });
+
+  window.addEventListener(LEARNING_FEEDBACK_READY_EVENT, () => {
+    const hasAchievementFeedback = session.pendingToastAchievements.length > 0;
+    if (hasAchievementFeedback) scheduleToastFlush(0);
+    if (session.pendingToastRewards.length > 0) {
+      scheduleRewardToastFlush(hasAchievementFeedback ? REWARD_TOAST_OFFSET_MS : 0);
+    }
+  });
+
   window.addEventListener('turn:ui-state-change', (event) => {
     const reason = event.detail?.reason;
     if (reason === 'lap-started') beginLap();
@@ -496,6 +559,7 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
 
   importStoredTimeTrials();
   importStoredScoringAchievements();
+  importStoredLearningAchievements();
   syncDrivingSampler();
   syncRaceTriggerVisibility();
 

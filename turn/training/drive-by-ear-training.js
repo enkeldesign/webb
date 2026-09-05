@@ -1,4 +1,8 @@
 import * as THREE from 'three';
+import {
+  DRIVE_BY_EAR_PART_COMPLETED_EVENT,
+  LEARNING_FEEDBACK_READY_EVENT
+} from '../achievements/learning-progress.js?revision=r1-learning-achievements';
 import { activateTrack } from '/turn/tracks/track-manager.js?source=20260729-r118-m8';
 import {
   DEFAULT_VEHICLE_COLOR,
@@ -25,7 +29,7 @@ import {
   updatePartDialog
 } from './view.js';
 
-const TRAINING_REVISION = 'r172-screen-reader-followup';
+const TRAINING_REVISION = 'r241-learning-achievements';
 const AUDIO_ENABLED_STORAGE_KEY = 'turn-audio-enabled-v1';
 const AUDIO_BALANCE_STORAGE_KEY = 'turn-audio-balance-v1';
 const DRIVE_BY_EAR_STORAGE_KEY = 'turn-drive-by-ear-v1';
@@ -464,6 +468,13 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
     silencePaceNotes();
     view.raceNavigation.hidden = true;
     view.visualHud.hidden = true;
+    globalThis.dispatchEvent(new CustomEvent(DRIVE_BY_EAR_PART_COMPLETED_EVENT, {
+      detail: Object.freeze({
+        stageId: session.stage.id,
+        stageIndex: session.stageIndex,
+        totalStages: TRAINING_STAGES.length
+      })
+    }));
     if (session.stageIndex >= TRAINING_STAGES.length - 1) {
       showTrainingDialog(view.completeDialog, '[data-training-again]');
       return;
@@ -478,6 +489,9 @@ export async function installDriveByEarTraining(runtime = globalThis.__turnRunti
     hideTrainingDialog(view.completeDialog);
     await restoreSession();
     session.returnFocus?.focus?.();
+    globalThis.dispatchEvent(new CustomEvent(LEARNING_FEEDBACK_READY_EVENT, {
+      detail: Object.freeze({ source: 'drive-by-ear-training' })
+    }));
     return true;
   }
 

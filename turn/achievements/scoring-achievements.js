@@ -2,7 +2,7 @@ import {
   CATEGORY,
   TRACK_IDS,
   TRACK_NAMES
-} from './catalog-base.js?revision=r222-awd-label';
+} from './catalog-base.js?revision=r241-trophy-balance';
 import { getBestDriftRecord } from '../scoring/drift-records.js';
 import { getBestFlowRecord } from '../scoring/flow-records.js';
 
@@ -41,7 +41,7 @@ function achievementFor(channel, trackId) {
   return Object.freeze({
     id: `${trackId}-${channel}-score`,
     category: CATEGORY.SCORING,
-    trophies: 50,
+    trophies: channel === 'drift' ? 75 : 50,
     title: `${trackName.toUpperCase()} ${label}`,
     description: target == null
       ? `${label} target pending playtest calibration on ${trackName}.`

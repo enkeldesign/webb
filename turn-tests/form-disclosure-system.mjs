@@ -27,7 +27,7 @@ const [
 
 assert.match(app, /settings-components-r141\.css\?revision=r220-overcharge-disclosure/);
 assert.match(app, /m8-how-to-play-r126\.css\?revision=r220-overcharge-disclosure/);
-assert.match(app, /how-to-play-guide\.js\?revision=r220-overcharge-disclosure/);
+assert.match(app, /how-to-play-guide\.js\?revision=r241-learning-achievements/);
 
 for (const mapping of [
   '--turn-form-control-idle: var(--turn-paper)',
@@ -56,7 +56,7 @@ assert.match(components, /\.m8-dbe-guide\[open\] \.m8-disclosure-symbol::before[
 assert.match(components, /\.m8-dbe-guide-panel,[\s\S]*background: var\(--turn-disclosure-panel\)/);
 assert.doesNotMatch(components, /#eaf9ef/);
 
-assert.match(guide, /GUIDE_VERSION = 'r222-collapsible-cards'/);
+assert.match(guide, /GUIDE_VERSION = 'r241-learning-achievements'/);
 assert.match(guide, /details\.className = 'm8-guide-card-disclosure'/);
 assert.match(guide, /section\.classList\.contains\('m8-guide-wide'\)/,
   'Drive By Ear must remain the non-collapsible outer card');

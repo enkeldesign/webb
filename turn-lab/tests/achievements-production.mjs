@@ -5,11 +5,14 @@ import {
   ACHIEVEMENT_STORAGE_KEY,
   CHALLENGE_PROGRESS_STORAGE_KEY,
   CLEAN_LAP_TARGETS,
+  DRIVE_BY_EAR_PART_IDS,
+  HOW_TO_PLAY_DISCLOSURE_IDS,
   ONBOARDING_ACHIEVEMENT_IDS,
   TIME_TRIALS,
   TIME_TRIAL_ACHIEVEMENT_IDS,
   TIME_TRIAL_MASTER_ID,
   TROPHY_ROAD_MAX_THRESHOLD,
+  completedLearningSet,
   completedAllTimeTrials,
   loadAchievementState,
   normalizeAchievementState,
@@ -86,22 +89,22 @@ assert.equal(BASE_ACHIEVEMENTS.length, 29,
   'The internal base catalog should remain the 29-achievement foundation');
 assert.equal(
   BASE_ACHIEVEMENTS.reduce((total, achievement) => total + achievement.trophies, 0),
-  1725,
+  1775,
   'The base catalog must stay separate from production progression balancing'
 );
-assert.equal(ACHIEVEMENTS.length, 58,
-  'Production TURN must expose the existing 45 achievements plus 13 scoring achievements');
-assert.equal(new Set(ACHIEVEMENTS.map((achievement) => achievement.id)).size, 58,
+assert.equal(ACHIEVEMENTS.length, 60,
+  'Production TURN must expose 47 core achievements plus 13 scoring achievements');
+assert.equal(new Set(ACHIEVEMENTS.map((achievement) => achievement.id)).size, 60,
   'Production achievement ids must remain unique');
 assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 11,
   'GOT STARTED must remain the master of the eleven prerequisite Getting Started achievements, not recursively require itself');
-assert.equal(totalAvailableTrophies(), 3975,
-  'Calibrated DRIFT and FLOW achievements must contribute their 900-trophy scoring reservoir');
+assert.equal(totalAvailableTrophies(), 4575,
+  'The learning and balance pass must expose the complete 4,575-trophy supply');
 assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2200,
   'Trophy Road 2 uses the first 2200 trophies while the full catalog retains headroom');
 assert.equal(
   ACHIEVEMENTS.reduce((total, achievement) => total + achievement.trophies, 0),
-  3975
+  4575
 );
 assert.ok(ACHIEVEMENTS.every((achievement) => Number.isFinite(achievement.trophies)));
 assert.ok(ACHIEVEMENTS.every((achievement) => !Object.hasOwn(achievement, 'points')));
@@ -110,6 +113,17 @@ const byId = (id) => ACHIEVEMENTS.find((achievement) => achievement.id === id);
 assert.equal(byId('got-started')?.title, 'GOT STARTED');
 assert.equal(byId('got-started')?.trophies, 75);
 assert.equal(byId('got-started')?.category, 'onboarding');
+assert.equal(byId('learn-to-play')?.title, 'LEARN TO PLAY');
+assert.equal(byId('learn-to-play')?.trophies, 50);
+assert.equal(byId('learn-to-play')?.category, 'ways-to-play');
+assert.equal(byId('learn-to-play')?.progressMax, HOW_TO_PLAY_DISCLOSURE_IDS.length);
+assert.equal(byId('learn-to-play')?.description, 'Read all parts of How to Play.');
+assert.equal(byId('drive-by-ear')?.title, 'DRIVE BY EAR');
+assert.equal(byId('drive-by-ear')?.trophies, 50);
+assert.equal(byId('drive-by-ear')?.category, 'ways-to-play');
+assert.equal(byId('drive-by-ear')?.progressMax, DRIVE_BY_EAR_PART_IDS.length);
+assert.equal(byId('drive-by-ear')?.description, 'Finish all five parts of Drive By Ear 101.');
+assert.equal(byId('listen-closely')?.trophies, 100);
 assert.equal(byId('catch-the-charge')?.title, 'CATCH THE CHARGE');
 assert.equal(byId('catch-the-charge')?.trophies, 25);
 assert.equal(byId('catch-the-charge')?.category, 'onboarding');
@@ -147,13 +161,13 @@ for (const trackId of TRACK_IDS) {
   assert.equal(winner?.trophies, 50, `${trackId} WINNER must remain a 50-trophy stepping stone`);
   assert.equal(winner?.category, 'racing');
   assert.match(winner?.title || '', /WINNER$/);
-  assert.equal(safety?.trophies, 50, `${trackId} SAFETY must remain a 50-trophy stepping stone`);
+  assert.equal(safety?.trophies, 75, `${trackId} SAFETY must award 75 trophies`);
   assert.equal(safety?.category, 'racing');
   assert.match(safety?.title || '', /SAFETY$/);
   for (const channel of ['drift', 'flow']) {
     const scoring = byId(`${trackId}-${channel}-score`);
     const target = scoringTargets[trackId][channel];
-    assert.equal(scoring?.trophies, 50);
+    assert.equal(scoring?.trophies, channel === 'drift' ? 75 : 50);
     assert.equal(scoring?.category, 'scoring');
     assert.equal(scoring?.target, target);
     assert.equal(scoring?.calibrationPending, false);
@@ -178,7 +192,7 @@ const scoringUnlockStorage = {
 };
 const scoringUnlockStore = createAchievementStore(scoringUnlockStorage);
 assert.equal(scoringUnlockStore.isUnlocked('countryside-drift-score'), true);
-assert.equal(scoringUnlockStore.trophyTotal(), 50,
+assert.equal(scoringUnlockStore.trophyTotal(), 75,
   'A calibrated scoring achievement in storage must grant its trophies');
 
 assert.equal(byId('countryside-safety')?.description, 'Finish Countryside without going off-road in under 15 seconds.');
@@ -245,8 +259,8 @@ for (const trial of TIME_TRIALS) {
   assert.equal(qualifyingTimeTrial(trial.trackId, trial.targetSeconds - 0.001)?.id, trial.id);
   assert.equal(qualifyingTimeTrial(trial.trackId, trial.targetSeconds), null,
     `${trial.title} must require a time strictly below the target`);
-  assert.equal(byId(trial.id)?.trophies, 75,
-    `${trial.title} must retain the 75-trophy progression rebalance`);
+  assert.equal(byId(trial.id)?.trophies, 100,
+    `${trial.title} must award 100 trophies`);
   assert.match(byId(trial.id)?.recommendation || '', /Future Racer/);
 }
 assert.equal(completedAllTimeTrials(() => true), true);
@@ -303,7 +317,24 @@ assert.equal(empty.version, 8,
   'Trophy Road v8 adds the reordered road and explicit grandfathering');
 assert.deepEqual(empty.progress.tracks, []);
 assert.deepEqual(empty.progress.blankTracks, []);
+assert.deepEqual(empty.progress.driveByEarParts, []);
+assert.deepEqual(empty.progress.howToPlayDisclosures, []);
 assert.deepEqual(empty.rewards.unlocked, []);
+
+const normalizedLearningProgress = normalizeAchievementState({
+  version: TROPHY_ROAD_STORAGE_VERSION,
+  progress: {
+    driveByEarParts: [DRIVE_BY_EAR_PART_IDS[0], DRIVE_BY_EAR_PART_IDS[0], 'invented-part'],
+    howToPlayDisclosures: [HOW_TO_PLAY_DISCLOSURE_IDS[0], 'invented-disclosure']
+  }
+});
+assert.deepEqual(normalizedLearningProgress.progress.driveByEarParts, [DRIVE_BY_EAR_PART_IDS[0]]);
+assert.deepEqual(
+  normalizedLearningProgress.progress.howToPlayDisclosures,
+  [HOW_TO_PLAY_DISCLOSURE_IDS[0]]
+);
+assert.equal(completedLearningSet(DRIVE_BY_EAR_PART_IDS, DRIVE_BY_EAR_PART_IDS), true);
+assert.equal(completedLearningSet(DRIVE_BY_EAR_PART_IDS.slice(0, -1), DRIVE_BY_EAR_PART_IDS), false);
 
 const preservedUnknown = normalizeAchievementState({
   version: 5,
@@ -357,6 +388,18 @@ const storage = {
 };
 assert.equal(loadAchievementState(storage).storageAvailable, true);
 const store = createAchievementStore(storage);
+for (const partId of DRIVE_BY_EAR_PART_IDS) assert.equal(store.addDriveByEarPart(partId), true);
+assert.equal(store.addDriveByEarPart(DRIVE_BY_EAR_PART_IDS[0]), false,
+  'Completing the same DBE 101 part twice must not inflate progress');
+for (const disclosureId of HOW_TO_PLAY_DISCLOSURE_IDS) {
+  assert.equal(store.addHowToPlayDisclosure(disclosureId), true);
+}
+assert.equal(store.addHowToPlayDisclosure('invented-disclosure'), false);
+assert.equal(
+  JSON.parse(memory.get(ACHIEVEMENT_STORAGE_KEY)).progress.driveByEarParts.length,
+  DRIVE_BY_EAR_PART_IDS.length,
+  'Learning progress must persist even before its achievement unlock is recorded'
+);
 assert.equal(store.unlock('an-army-of-me', { trackId: 'midnight-city' })?.trophies, 200);
 assert.equal(store.unlock('on-course-of-course', { trackId: 'harbor' })?.trophies, 100);
 assert.equal(store.unlock('save-bella', { trackId: 'countryside', vehicleId: 'firetruck' })?.trophies, 25);
@@ -419,7 +462,7 @@ assert.equal(completedNightShiftSheriff(nightShift, { position: 1, total: 5 }), 
 assert.equal(completedNightShiftSheriff(nightShift, { position: 2, total: 5 }), false);
 
 assert.match(catalogSource, /Stable production achievement facade/);
-assert.match(catalogSource, /catalog-production\.js\?revision=r240-trophy-road-2/);
+assert.match(catalogSource, /catalog-production\.js\?revision=r241-learning-achievements/);
 assert.doesNotMatch(catalogSource, /id: 'an-army-of-me'/,
   'The stable facade must not duplicate the production achievement definitions');
 assert.match(baseCatalogSource, /id: 'an-army-of-me'/);
@@ -428,7 +471,7 @@ assert.match(baseCatalogSource, /cat: '<svg/);
 assert.doesNotMatch(baseCatalogSource, /points:/);
 assert.match(baseCatalogSource, /convertible: 'AWD'/,
   'Stable vehicle IDs must use the current AWD name in achievement copy');
-assert.match(productionCatalogSource, /catalog-base\.js\?revision=r222-awd-label/);
+assert.match(productionCatalogSource, /catalog-base\.js\?revision=r241-trophy-balance/);
 assert.doesNotMatch(productionCatalogSource, /from '.\/catalog\.js/,
   'The production catalog must extend the explicit base module, never depend on the public facade');
 assert.match(productionCatalogSource, /title: 'MAYDAY!'/);
@@ -439,7 +482,7 @@ assert.match(productionCatalogSource, /TRACK_SAFETY_ACHIEVEMENTS/);
 assert.match(productionCatalogSource, /countryside: '15 seconds'/);
 assert.match(productionCatalogSource, /'midnight-city': '70 seconds'/);
 assert.match(productionCatalogSource, /mountain: '70 seconds'/);
-assert.match(legacyCatalogSource, /catalog-production\.js\?revision=r240-trophy-road-2/,
+assert.match(legacyCatalogSource, /catalog-production\.js\?revision=r241-learning-achievements/,
   'The old Chromatic catalog URL must converge on the same production source of truth');
 
 assert.match(secretCatalog, /title: 'FIND LILYA!'/);
@@ -472,8 +515,12 @@ assert.match(timeTrialSource, /seconds >= trial\.targetSeconds/);
 for (const entry of [productionEntry, labEntry]) {
   assert.match(entry, /"\/turn\/achievements\/time-trials\.js\?revision=r166-bella-records": "\/turn\/achievements\/time-trials\.js\?revision=r224-sprint-targets"/,
     'Production and Lab must route cached achievement imports to the new Sprint targets');
-  assert.match(entry, /"\/turn\/achievements\/view\.js\?revision=r166-bella-records": "\/turn\/achievements\/view\.js\?revision=r240-trophy-road-2"/,
+  assert.match(entry, /"\/turn\/achievements\/view\.js\?revision=r166-bella-records": "\/turn\/achievements\/view\.js\?revision=r241-learning-achievements"/,
     'Production and Lab must route cached achievement views to the corrected modal header');
+  assert.match(entry, /"\/turn\/achievements\/catalog-base\.js\?revision=r222-awd-label": "\/turn\/achievements\/catalog-base\.js\?revision=r241-trophy-balance"/,
+    'Installed builds must not retain the old LISTEN CLOSELY trophy value');
+  assert.match(entry, /"\/turn\/achievements\/scoring-achievements\.js\?revision=r2-calibrated-targets": "\/turn\/achievements\/scoring-achievements\.js\?revision=r3-trophy-balance"/,
+    'Installed builds must not retain the old DRIFT trophy value');
 }
 
 assert.match(challengeSource, /SAMPLE_INTERVAL_MS = 50/);
@@ -523,11 +570,21 @@ for (const source of [runtime, view, storeSource, challengeSource, secretRuntime
   assert.doesNotMatch(source, /catalog-base\.js/,
     'Runtime consumers must use the stable production catalog facade, never the internal base catalog');
 }
-assert.match(runtime, /catalog\.js\?revision=r240-trophy-road-2/,
+assert.match(runtime, /catalog\.js\?revision=r241-learning-achievements/,
   'Achievement consumers must load the current AWD vehicle label');
-assert.match(runtime, /store\.js\?revision=r240-trophy-road-2/,
+assert.match(runtime, /store\.js\?revision=r241-learning-achievements/,
   'The runtime must execute the Trophy Road 2 migration under a fresh module identity');
-assert.match(runtime, /view\.js\?revision=r240-trophy-road-2/);
+assert.match(runtime, /view\.js\?revision=r241-learning-achievements/);
+assert.match(runtime, /DRIVE_BY_EAR_PART_COMPLETED_EVENT/);
+assert.match(runtime, /HOW_TO_PLAY_DISCLOSURE_OPENED_EVENT/);
+assert.match(runtime, /unlock\(\[DRIVE_BY_EAR_ACHIEVEMENT_ID\], \{\}, \{ delay: -1 \}\)/);
+assert.match(runtime, /unlock\(\[LEARN_TO_PLAY_ACHIEVEMENT_ID\], \{\}, \{ delay: -1 \}\)/);
+assert.match(runtime, /window\.addEventListener\(LEARNING_FEEDBACK_READY_EVENT/,
+  'Learning feedback must be released only after its modal top layer closes');
+assert.match(runtime, /importStoredLearningAchievements\(\)/,
+  'A complete persisted learning set must backfill its achievement after startup');
+assert.match(view, /store\.state\.progress\.driveByEarParts\.length/);
+assert.match(view, /store\.state\.progress\.howToPlayDisclosures\.length/);
 assert.match(view, /TROPHY_ROAD_MAX_THRESHOLD/);
 assert.match(storeSource, /Preserve syntactically valid unlock records/);
 assert.match(nightShiftSource, /RIVAL_COUNT = 4/);

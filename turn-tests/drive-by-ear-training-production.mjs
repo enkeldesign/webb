@@ -8,6 +8,11 @@ import {
   ROAD_HALF_WIDTH,
   TRAINING_STAGES
 } from '../turn/training/stages.js';
+import {
+  DRIVE_BY_EAR_PART_COMPLETED_EVENT,
+  DRIVE_BY_EAR_PART_IDS,
+  LEARNING_FEEDBACK_READY_EVENT
+} from '../turn/achievements/learning-progress.js';
 
 const [training, view, css, fixedLayout, sessionOrchestrator, index, releaseSource] = await Promise.all([
   fs.readFile(new URL('../turn/training/drive-by-ear-training.js', import.meta.url), 'utf8'),
@@ -28,8 +33,8 @@ assert.match(fixedLayout, /installDriveByEarTraining\(globalThis\.__turnRuntime\
 assert.match(fixedLayout, /driveByEarTraining/);
 assert.match(
   index,
-  /"\/turn\/training\/drive-by-ear-training\.js\?build=20260817-r172-r151-dbe-training-device-fixes": "\/turn\/training\/drive-by-ear-training\.js\?build=20260817-r172&revision=r172-screen-reader-followup"/,
-  'Production must map the established training import to the r172 screen-reader follow-up module identity'
+  /"\/turn\/training\/drive-by-ear-training\.js\?build=20260817-r172-r151-dbe-training-device-fixes": "\/turn\/training\/drive-by-ear-training\.js\?build=20260905-r201&revision=r241-learning-achievements"/,
+  'Production must map the established training import to the learning-achievement module identity'
 );
 assert.equal(
   productionImports['/turn/race/session-orchestrator.js?source=20260729-r118-m8'],
@@ -38,6 +43,8 @@ assert.equal(
 );
 
 assert.equal(TRAINING_STAGES.length, 5, 'Training must contain exactly five authored parts');
+assert.deepEqual(DRIVE_BY_EAR_PART_IDS, TRAINING_STAGES.map((stage) => stage.id),
+  'The DRIVE BY EAR achievement must require every authored training part exactly once');
 assert.equal(FINISH_PROGRESS, 0.94);
 assert.ok(
   RAIL_ASSIST_START > ROAD_HALF_WIDTH && RAIL_ASSIST_START < ROAD_HALF_WIDTH + 1,
@@ -98,7 +105,7 @@ for (const stage of TRAINING_STAGES) {
   assertCourseHasSpace(stage);
 }
 
-assert.match(training, /const TRAINING_REVISION = 'r172-screen-reader-followup'/);
+assert.match(training, /const TRAINING_REVISION = 'r241-learning-achievements'/);
 assert.match(training, /applySlipperyAssist\(sample, side/);
 assert.match(training, /1 - Math\.exp\(-profile\.damping \* dt\)/);
 assert.match(training, /tangential motion instead of stopping or snapping the car back onto the road/);
@@ -135,6 +142,13 @@ assert.match(training, /signalStageStarted\(\);\s*return true;/,
   'A part-start event must be emitted only after that exact stage has finished starting');
 assert.match(training, /signalStageStarted\(\{ restarted: true \}\)/,
   'Restart must emit the same exact-stage start event rather than relying on click timing');
+assert.equal(DRIVE_BY_EAR_PART_COMPLETED_EVENT, 'turn:dbe-training-stage-completed');
+assert.match(training, /new CustomEvent\(DRIVE_BY_EAR_PART_COMPLETED_EVENT/);
+assert.match(training, /async function completePart\(\)[\s\S]*stageId: session\.stage\.id[\s\S]*stageIndex: session\.stageIndex/,
+  'Finishing a part must report the completed authored stage, not merely the selected button');
+assert.equal(LEARNING_FEEDBACK_READY_EVENT, 'turn:learning-feedback-ready');
+assert.match(training, /async function leaveTraining\(\)[\s\S]*new CustomEvent\(LEARNING_FEEDBACK_READY_EVENT/,
+  'Achievement feedback must wait until the training dialog has left the top layer');
 
 assert.match(view, /homeButton\.textContent = 'DRIVE BY EAR 101'/);
 assert.doesNotMatch(view, /homeButton\.textContent = 'DRIVE BY EAR TRAINING'/);
