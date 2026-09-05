@@ -74,10 +74,10 @@ function reducerCombinations() {
 
 assert.equal(VEHICLE_SHIFT_FEATURE_ID, 'vehicle-shift');
 assert.equal(rewardForFeature(VEHICLE_SHIFT_FEATURE_ID)?.id, 'shift');
-assert.equal(getTrophyRoadReward('shift')?.threshold, 1500);
-assert.equal(PRODUCTION_TROPHY_ROAD_REWARDS.find(({ id }) => id === 'shift')?.threshold, 1500);
-assert.equal(rewardIdsForTrophies(1499).includes('shift'), false);
-assert.equal(rewardIdsForTrophies(1500).includes('shift'), true);
+assert.equal(getTrophyRoadReward('shift')?.threshold, 1000);
+assert.equal(PRODUCTION_TROPHY_ROAD_REWARDS.find(({ id }) => id === 'shift')?.threshold, 1000);
+assert.equal(rewardIdsForTrophies(999).includes('shift'), false);
+assert.equal(rewardIdsForTrophies(1000).includes('shift'), true);
 
 const lockedStorage = createMemoryStorage();
 const unlockedStorage = createMemoryStorage({

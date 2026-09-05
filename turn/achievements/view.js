@@ -7,20 +7,22 @@ import {
   TRACK_NAMES,
   VEHICLE_NAMES,
   TRACK_IDS
-} from './catalog.js?revision=r222-awd-label';
+} from './catalog.js?revision=r240-trophy-road-2';
 import {
   TIME_TRIAL_ACHIEVEMENT_IDS
 } from './time-trials.js?revision=r166-bella-records';
 import {
   TRACK_SCORING_ACHIEVEMENT_IDS
-} from './scoring-achievements.js?revision=r1-placeholder-targets';
+} from './scoring-achievements.js?revision=r2-calibrated-targets';
 import {
+  LOCK_ICON,
   TROPHY_ICON,
   TROPHY_ROAD_MAX_THRESHOLD,
   TROPHY_ROAD_REWARDS,
   TROPHY_ROAD_REWARD_ICONS,
-  getTrophyRoadReward
-} from '../progression/trophy-road.js?revision=r166-bella-records';
+  getTrophyRoadReward,
+  trophyRoadOverview
+} from '../progression/trophy-road.js?revision=r240-trophy-road-2';
 
 const TOAST_VISIBLE_MS = 3600;
 const ATTENTION_VISIBLE_MS = 900;
@@ -151,17 +153,39 @@ function createDialog() {
       </header>
       <div class="turn-achievements-content">
         <section class="turn-achievements-summary" aria-labelledby="turnAchievementsSummaryTitle">
-          <div class="turn-achievements-summary-main">
+          <div class="turn-achievements-summary-header">
             <strong id="turnAchievementsSummaryTitle">0 OF ${AVAILABLE_ACHIEVEMENTS.length} UNLOCKED</strong>
+            <div class="turn-achievements-summary-metrics">
+              <p class="turn-achievements-trophy-total"><span>TROPHIES</span><strong><i aria-hidden="true">${TROPHY_ICON}</i><b>0</b></strong></p>
+              <p><span>COMPLETION</span><strong class="turn-achievements-percent">0%</strong></p>
+            </div>
+          </div>
+          <div class="turn-achievements-summary-main">
             <div class="turn-trophy-road">
-              <div class="turn-trophy-road-track">
+              <div class="turn-trophy-road-position">
+                <div>
+                  <span>TROPHY ROAD 2</span>
+                  <strong data-trophy-road-position>0 / ${TROPHY_ROAD_MAX_THRESHOLD}</strong>
+                  <small data-trophy-road-next-copy>First reward at 400 trophies.</small>
+                </div>
                 <div class="turn-trophy-road-progress" role="progressbar" aria-label="Trophy Road progress" aria-valuemin="0" aria-valuemax="${TROPHY_ROAD_MAX_THRESHOLD}" aria-valuenow="0"><i></i></div>
-                <div class="turn-trophy-road-markers" aria-label="Trophy Road rewards"></div>
+              </div>
+              <div class="turn-trophy-road-highlights" aria-label="Trophy Road status">
+                <article data-trophy-road-highlight="earned"></article>
+                <article data-trophy-road-highlight="next"></article>
+                <article data-trophy-road-highlight="horizon"></article>
+              </div>
+              <div class="turn-trophy-road-map">
+                <div class="turn-trophy-road-map-heading">
+                  <strong>THE ROAD</strong>
+                  <span>Choose any reward for details.</span>
+                </div>
+                <div class="turn-trophy-road-track">
+                  <ol class="turn-trophy-road-markers" aria-label="Trophy Road rewards in unlock order"></ol>
+                </div>
               </div>
             </div>
           </div>
-          <p class="turn-achievements-trophy-total"><span>TROPHIES</span><strong><i aria-hidden="true">${TROPHY_ICON}</i><b>0</b></strong></p>
-          <p><span>COMPLETION</span><strong class="turn-achievements-percent">0%</strong></p>
           <div class="turn-trophy-road-detail" aria-live="polite"></div>
         </section>
         <p class="turn-achievements-storage-note" hidden>Achievement progress is available for this session but cannot be saved because local storage is unavailable.</p>
@@ -254,6 +278,12 @@ export function createAchievementView({ store, session, utilityGroup }) {
   const trophyRoadFill = trophyRoad.querySelector('i');
   const trophyRoadMarkers = dialog.querySelector('.turn-trophy-road-markers');
   const trophyRoadDetail = dialog.querySelector('.turn-trophy-road-detail');
+  const trophyRoadPosition = dialog.querySelector('[data-trophy-road-position]');
+  const trophyRoadNextCopy = dialog.querySelector('[data-trophy-road-next-copy]');
+  const trophyRoadHighlights = Object.fromEntries(
+    [...dialog.querySelectorAll('[data-trophy-road-highlight]')]
+      .map((element) => [element.dataset.trophyRoadHighlight, element])
+  );
   const trophyTotal = dialog.querySelector('.turn-achievements-trophy-total b');
   const percent = dialog.querySelector('.turn-achievements-percent');
   const storageNote = dialog.querySelector('.turn-achievements-storage-note');
@@ -279,40 +309,89 @@ export function createAchievementView({ store, session, utilityGroup }) {
     if (!selectedRewardId || !getTrophyRoadReward(selectedRewardId)) {
       selectedRewardId = initialRewardSelection(store);
     }
-    const nextReward = TROPHY_ROAD_REWARDS.find((reward) => !store.isRewardUnlocked(reward.id));
+    const unlockedRewardIds = TROPHY_ROAD_REWARDS
+      .filter((reward) => store.isRewardUnlocked(reward.id))
+      .map((reward) => reward.id);
+    const overview = trophyRoadOverview({
+      trophies: total,
+      unlockedRewardIds,
+      unseenRewardIds: store.unseenRewardIds()
+    });
+    const nextReward = overview.next;
     trophyRoad.setAttribute('aria-valuenow', String(Math.min(total, TROPHY_ROAD_MAX_THRESHOLD)));
     trophyRoad.setAttribute(
       'aria-valuetext',
       nextReward
-        ? `${total} trophies. ${Math.max(0, nextReward.threshold - total)} trophies until ${nextReward.shortTitle}.`
+        ? `${total} trophies. ${overview.remaining} trophies until ${nextReward.shortTitle}.`
         : `${total} trophies. Every current Trophy Road reward is unlocked.`
     );
     trophyRoadFill.style.setProperty(
       '--turn-trophy-road-progress',
-      `${Math.min(100, (total / TROPHY_ROAD_MAX_THRESHOLD) * 100)}%`
+      `${overview.progress * 100}%`
     );
+    trophyRoadPosition.textContent = `${total} / ${TROPHY_ROAD_MAX_THRESHOLD}`;
+    trophyRoadNextCopy.textContent = nextReward
+      ? `${overview.remaining} trophies to ${nextReward.title}.`
+      : 'Road complete. Every current reward is yours.';
+    const grandfatheredIds = new Set(store.state.rewards?.grandfathered || []);
+
+    function renderHighlight(element, label, reward, copy) {
+      if (!element) return;
+      const icon = reward ? TROPHY_ROAD_REWARD_ICONS[reward.icon] : TROPHY_ICON;
+      element.innerHTML = `
+        <div class="turn-trophy-road-highlight-icon" aria-hidden="true">${icon}</div>
+        <div><span>${label}</span><strong>${reward?.title || 'ROAD OPEN'}</strong><small>${copy}</small></div>`;
+      element.dataset.trophyRewardType = reward?.type || 'complete';
+    }
+    renderHighlight(
+      trophyRoadHighlights.earned,
+      overview.earnedIsNew
+        ? (overview.newRewards.length > 1 ? `${overview.newRewards.length} JUST EARNED` : 'JUST EARNED')
+        : (grandfatheredIds.has(overview.earned?.id) ? 'KEPT REWARD' : 'LATEST REWARD'),
+      overview.earned,
+      overview.earned
+        ? `${overview.earned.threshold} trophies · ${overview.earnedIsNew
+          ? (overview.newRewards.length > 1 ? `Plus ${overview.newRewards.length - 1} more` : 'New on this visit')
+          : (grandfatheredIds.has(overview.earned.id) ? 'Kept from Trophy Road 1' : 'Unlocked')}`
+        : 'First reward begins at 400 trophies'
+    );
+    renderHighlight(
+      trophyRoadHighlights.next,
+      nextReward ? 'NEXT' : 'COMPLETE',
+      nextReward,
+      nextReward ? `${overview.remaining} trophies to go` : 'Every current reward unlocked'
+    );
+    renderHighlight(
+      trophyRoadHighlights.horizon,
+      overview.horizon ? 'ON THE HORIZON' : 'FINISH LINE',
+      overview.horizon,
+      overview.horizon ? `${overview.horizon.threshold} trophies` : `${TROPHY_ROAD_MAX_THRESHOLD} trophies`
+    );
+
     trophyRoadMarkers.innerHTML = TROPHY_ROAD_REWARDS.map((reward) => {
       const unlocked = store.isRewardUnlocked(reward.id);
       const selected = reward.id === selectedRewardId;
-      const position = Math.min(100, (reward.threshold / TROPHY_ROAD_MAX_THRESHOLD) * 100);
-      return `<button
-        type="button"
-        class="turn-trophy-road-marker ${unlocked ? 'is-unlocked' : 'is-locked'} ${selected ? 'is-selected' : ''}"
-        data-trophy-reward="${reward.id}"
-        data-trophy-reward-type="${reward.type}"
-        style="--turn-trophy-road-position:${position}%"
-        aria-pressed="${selected}"
-        aria-label="${reward.shortTitle}. ${reward.threshold} trophies. ${unlocked ? 'Unlocked' : 'Locked'}"
-      ><span aria-hidden="true">${TROPHY_ROAD_REWARD_ICONS[reward.icon]}</span><b>${reward.threshold}</b></button>`;
+      const grandfathered = unlocked && grandfatheredIds.has(reward.id);
+      const isNext = reward.id === nextReward?.id;
+      const stateLabel = grandfathered ? 'Kept' : unlocked ? 'Earned' : isNext ? 'Next' : 'Locked';
+      return `<li data-trophy-reward-major="${reward.major}"><button
+          type="button"
+          class="turn-trophy-road-marker ${unlocked ? 'is-unlocked' : 'is-locked'} ${isNext ? 'is-next' : ''} ${selected ? 'is-selected' : ''}"
+          data-trophy-reward="${reward.id}"
+          data-trophy-reward-type="${reward.type}"
+          aria-pressed="${selected}"
+          aria-label="${reward.shortTitle}. ${reward.threshold} trophies. ${stateLabel}."
+        ><span class="turn-trophy-road-marker-state">${unlocked ? '✓ ' : ''}${stateLabel}</span><span class="turn-trophy-road-marker-icon" aria-hidden="true">${TROPHY_ROAD_REWARD_ICONS[reward.icon]}</span><b>${reward.threshold}</b><small>${reward.shortTitle}</small>${unlocked ? '' : `<i class="turn-trophy-road-marker-lock" aria-hidden="true">${LOCK_ICON}</i>`}</button></li>`;
     }).join('');
 
     const reward = getTrophyRoadReward(selectedRewardId) || TROPHY_ROAD_REWARDS[0];
     const unlocked = store.isRewardUnlocked(reward.id);
+    const grandfathered = unlocked && grandfatheredIds.has(reward.id);
     const remaining = Math.max(0, reward.threshold - total);
     trophyRoadDetail.innerHTML = `
       <div class="turn-trophy-road-detail-icon" aria-hidden="true">${TROPHY_ROAD_REWARD_ICONS[reward.icon]}</div>
       <div>
-        <span>${reward.threshold} TROPHIES · ${unlocked ? 'UNLOCKED' : `${remaining} TO GO`}</span>
+        <span>${reward.threshold} TROPHIES · ${grandfathered ? 'KEPT FROM TROPHY ROAD 1' : unlocked ? 'UNLOCKED' : `${remaining} TO GO`}</span>
         <h3>${reward.title}</h3>
         <p>${reward.description}</p>
       </div>`;

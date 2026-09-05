@@ -1,17 +1,13 @@
-import { CATEGORY } from './catalog.js?revision=r222-awd-label';
-import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r220-race-reward';
+import { CATEGORY } from './catalog.js?revision=r240-trophy-road-2';
+import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r240-trophy-road-2';
 import {
   achievementCardMatchesFilters
 } from './filter-state.js?revision=r219-unified-achievement-filters';
 import {
-  LOCK_ICON,
-  TROPHY_ROAD_MAX_THRESHOLD,
   TROPHY_ROAD_REWARD_ICONS,
-  TROPHY_ROAD_VIEWPORT_THRESHOLD,
   getTrophyRoadReward
-} from '../progression/trophy-road.js?revision=r166-bella-records';
+} from '../progression/trophy-road.js?revision=r240-trophy-road-2';
 
-const EDGE_PX = 34;
 const TAG_FILTERS = Object.freeze([
   Object.freeze({ id: 'new', label: 'NEW' }),
   Object.freeze({ id: CATEGORY.ONBOARDING, label: 'GETTING STARTED' }),
@@ -25,11 +21,6 @@ const STATUS_FILTERS = Object.freeze([
   Object.freeze({ id: 'unlocked', label: 'UNLOCKED' }),
   Object.freeze({ id: 'locked', label: 'LOCKED' })
 ]);
-const ROAD_ARROW_ICONS = Object.freeze({
-  previous: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"></path></svg>',
-  next: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg>'
-});
-
 let installed = null;
 
 function ensureFeedbackStylesheet() {
@@ -38,7 +29,7 @@ function ensureFeedbackStylesheet() {
   if (!stylesheet) {
     stylesheet = document.createElement('link');
     stylesheet.rel = 'stylesheet';
-    stylesheet.href = `/turn/progression/trophy-road-r157.css?build=${buildKey}-r166-bella-records`;
+    stylesheet.href = `/turn/progression/trophy-road-r157.css?build=${buildKey}-r240-trophy-road-2`;
     stylesheet.setAttribute('data-turn-trophy-road-feedback', '');
   }
   document.head.appendChild(stylesheet);
@@ -53,15 +44,6 @@ function makeFilterButton(id, label, pressed = false) {
   return button;
 }
 
-function makeRoadScrollButton(direction) {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = `turn-trophy-road-scroll-button is-${direction}`;
-  button.setAttribute('aria-label', `Scroll Trophy Road ${direction === 'previous' ? 'left' : 'right'}`);
-  button.innerHTML = ROAD_ARROW_ICONS[direction];
-  return button;
-}
-
 function prepareSummary(dialog) {
   const summary = dialog.querySelector('.turn-achievements-summary');
   const summaryMain = summary?.querySelector('.turn-achievements-summary-main');
@@ -72,63 +54,17 @@ function prepareSummary(dialog) {
   const track = road?.querySelector('.turn-trophy-road-track');
   if (!summary || !summaryMain || !title || !trophyMetric || !completionMetric || !road || !track) return null;
 
-  let header = summary.querySelector('.turn-achievements-summary-header');
-  if (!header) {
-    header = document.createElement('div');
-    header.className = 'turn-achievements-summary-header';
-    const metrics = document.createElement('div');
-    metrics.className = 'turn-achievements-summary-metrics';
-    metrics.append(trophyMetric, completionMetric);
-    header.append(title, metrics);
-    summary.insertBefore(header, summaryMain);
-  }
-
-  let scroll = road.querySelector('.turn-trophy-road-scroll');
-  let content = road.querySelector('.turn-trophy-road-content');
-  if (!scroll || !content) {
-    scroll = document.createElement('div');
-    scroll.className = 'turn-trophy-road-scroll';
-    scroll.tabIndex = 0;
-    scroll.setAttribute('aria-label', 'Trophy Road. Use arrow keys or the scroll buttons for later rewards.');
-    content = document.createElement('div');
-    content.className = 'turn-trophy-road-content';
-    scroll.appendChild(content);
-    content.appendChild(track);
-  }
-
-  let controls = road.querySelector('.turn-trophy-road-controls');
-  let previousButton = road.querySelector('.turn-trophy-road-scroll-button.is-previous');
-  let nextButton = road.querySelector('.turn-trophy-road-scroll-button.is-next');
-  if (!controls || !previousButton || !nextButton) {
-    controls = document.createElement('div');
-    controls.className = 'turn-trophy-road-controls';
-    previousButton = makeRoadScrollButton('previous');
-    nextButton = makeRoadScrollButton('next');
-    road.replaceChildren(controls);
-    controls.append(previousButton, scroll, nextButton);
-  }
-
-  let help = summary.querySelector('.turn-trophy-road-help');
   const detail = summary.querySelector('.turn-trophy-road-detail');
-  if (!help && detail) {
-    help = document.createElement('p');
-    help.className = 'turn-trophy-road-help';
-    help.textContent = 'Select a reward for details.';
-    detail.before(help);
-  }
+  const markers = track.querySelector('.turn-trophy-road-markers');
+  if (!detail || !markers) return null;
 
   return Object.freeze({
     summary,
     summaryMain,
     road,
     track,
-    scroll,
-    content,
-    controls,
-    previousButton,
-    nextButton,
-    help,
-    detail
+    detail,
+    markers
   });
 }
 
@@ -244,67 +180,11 @@ function prepareFilters(dialog) {
 }
 
 function installRoadBehavior({ achievements, summary }) {
-  const { store } = achievements;
   const dialog = summary.summary.closest('dialog');
-  const markers = summary.track.querySelector('.turn-trophy-road-markers');
-  if (!markers) return null;
+  const { markers } = summary;
   const showcase = createTrophyRoadShowcase();
   let selectedByPlayer = '';
-  let geometryFrame = 0;
   let selectionSyncQueued = false;
-
-  function updateScrollButtons() {
-    const maximum = Math.max(0, summary.scroll.scrollWidth - summary.scroll.clientWidth);
-    const atStart = summary.scroll.scrollLeft <= 1;
-    const atEnd = maximum <= 1 || summary.scroll.scrollLeft >= maximum - 1;
-    summary.previousButton.disabled = atStart;
-    summary.previousButton.setAttribute('aria-disabled', String(atStart));
-    summary.nextButton.disabled = atEnd;
-    summary.nextButton.setAttribute('aria-disabled', String(atEnd));
-  }
-
-  function roadGeometry() {
-    cancelAnimationFrame(geometryFrame);
-    geometryFrame = requestAnimationFrame(() => {
-      const viewportWidth = Math.max(260, summary.scroll.clientWidth || 0);
-      const viewportRoadWidth = Math.max(1, viewportWidth - EDGE_PX * 2);
-      const contentRoadWidth = viewportRoadWidth
-        * (TROPHY_ROAD_MAX_THRESHOLD / TROPHY_ROAD_VIEWPORT_THRESHOLD);
-      const contentWidth = Math.ceil(contentRoadWidth + EDGE_PX * 2);
-      summary.content.style.width = `${contentWidth}px`;
-
-      for (const marker of markers.querySelectorAll('[data-trophy-reward]')) {
-        const reward = getTrophyRoadReward(marker.dataset.trophyReward);
-        if (!reward) continue;
-        marker.style.setProperty(
-          '--turn-trophy-road-position',
-          `${EDGE_PX + (reward.threshold / TROPHY_ROAD_MAX_THRESHOLD) * contentRoadWidth}px`
-        );
-      }
-      updateScrollButtons();
-      showcase.resize();
-    });
-  }
-
-  function decorateMarkers() {
-    for (const marker of markers.querySelectorAll('[data-trophy-reward]')) {
-      const reward = getTrophyRoadReward(marker.dataset.trophyReward);
-      const icon = marker.querySelector('span');
-      if (icon) {
-        icon.classList.add('turn-trophy-road-marker-icon');
-        if (reward?.icon && TROPHY_ROAD_REWARD_ICONS[reward.icon]) {
-          icon.innerHTML = TROPHY_ROAD_REWARD_ICONS[reward.icon];
-        }
-      }
-      if (reward && !store.isRewardUnlocked(reward.id) && !marker.querySelector('.turn-trophy-road-marker-lock')) {
-        const lock = document.createElement('i');
-        lock.className = 'turn-trophy-road-marker-lock';
-        lock.setAttribute('aria-hidden', 'true');
-        lock.innerHTML = LOCK_ICON;
-        marker.appendChild(lock);
-      }
-    }
-  }
 
   function renderedSelection() {
     const selected = markers.querySelector(
@@ -328,7 +208,7 @@ function installRoadBehavior({ achievements, summary }) {
       return;
     }
 
-    if (reward.type === 'track' || reward.type === 'feature' || reward.type === 'vehicle-perk') {
+    if (reward.type !== 'vehicle' && reward.type !== 'vehicle-pack') {
       showcase.clear();
       restoreStaticRewardIcon(reward, host);
       return;
@@ -340,15 +220,11 @@ function installRoadBehavior({ achievements, summary }) {
   }
 
   function preserveUserSelection({ adoptRendered = false } = {}) {
-    decorateMarkers();
-    roadGeometry();
     if (adoptRendered || !selectedByPlayer) {
       selectedByPlayer = renderedSelection() || selectedByPlayer;
     }
     if (!selectedByPlayer) {
       showcase.clear();
-      if (summary.detail) summary.detail.hidden = true;
-      if (summary.help) summary.help.hidden = false;
       return;
     }
     for (const marker of markers.querySelectorAll('[data-trophy-reward]')) {
@@ -356,8 +232,6 @@ function installRoadBehavior({ achievements, summary }) {
       marker.classList.toggle('is-selected', selected);
       marker.setAttribute('aria-pressed', String(selected));
     }
-    if (summary.detail) summary.detail.hidden = false;
-    if (summary.help) summary.help.hidden = true;
     syncShowcase();
   }
 
@@ -370,42 +244,10 @@ function installRoadBehavior({ achievements, summary }) {
     });
   }
 
-  function clearSelection() {
-    selectedByPlayer = '';
-    showcase.clear();
-    for (const marker of markers.querySelectorAll('[data-trophy-reward]')) {
-      marker.classList.remove('is-selected');
-      marker.setAttribute('aria-pressed', 'false');
-    }
-    if (summary.detail) {
-      summary.detail.hidden = true;
-      summary.detail.replaceChildren();
-    }
-    if (summary.help) summary.help.hidden = false;
-  }
-
   function releaseSelection() {
     selectedByPlayer = '';
     showcase.clear();
   }
-
-  function scrollRoad(direction) {
-    const distance = Math.max(180, summary.scroll.clientWidth * 0.78);
-    const reduceMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    summary.scroll.scrollBy({
-      left: direction * distance,
-      behavior: reduceMotion ? 'auto' : 'smooth'
-    });
-  }
-
-  summary.previousButton.addEventListener('click', () => scrollRoad(-1));
-  summary.nextButton.addEventListener('click', () => scrollRoad(1));
-  summary.scroll.addEventListener('scroll', updateScrollButtons, { passive: true });
-  summary.scroll.addEventListener('keydown', (event) => {
-    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
-    event.preventDefault();
-    scrollRoad(event.key === 'ArrowLeft' ? -1 : 1);
-  });
 
   markers.addEventListener('click', (event) => {
     const marker = event.target.closest('[data-trophy-reward]');
@@ -417,34 +259,16 @@ function installRoadBehavior({ achievements, summary }) {
   const markerObserver = new MutationObserver(() => queueSelectionSync());
   markerObserver.observe(markers, { childList: true });
 
-  function alignToProgress() {
-    roadGeometry();
-    requestAnimationFrame(() => {
-      const viewportWidth = summary.scroll.clientWidth || 0;
-      const contentRoadWidth = Math.max(1, summary.content.clientWidth - EDGE_PX * 2);
-      const total = Math.min(store.trophyTotal(), TROPHY_ROAD_MAX_THRESHOLD);
-      const position = EDGE_PX + (total / TROPHY_ROAD_MAX_THRESHOLD) * contentRoadWidth;
-      summary.scroll.scrollLeft = Math.max(0, position - viewportWidth * .35);
-      updateScrollButtons();
-    });
-  }
-
-  window.addEventListener('resize', roadGeometry, { passive: true });
   dialog?.addEventListener('close', showcase.pause);
   preserveUserSelection({ adoptRendered: true });
-  updateScrollButtons();
   return Object.freeze({
-    clearSelection,
     releaseSelection,
     syncRenderedSelection: () => preserveUserSelection({ adoptRendered: true }),
-    alignToProgress,
-    syncScrollButtons: updateScrollButtons,
+    resizeShowcase: showcase.resize,
     pauseShowcase: showcase.pause,
     disconnect() {
-      cancelAnimationFrame(geometryFrame);
       markerObserver.disconnect();
       showcase.dispose();
-      window.removeEventListener('resize', roadGeometry);
       dialog?.removeEventListener('close', showcase.pause);
     }
   });
@@ -465,15 +289,13 @@ export function installTrophyRoadFeedback(achievements = globalThis.__turnAchiev
   function resetView() {
     filters.reset();
     road.syncRenderedSelection();
-    summary.scroll.scrollLeft = 0;
-    road.syncScrollButtons();
   }
 
   const openObserver = new MutationObserver(() => {
     if (!dialog.hasAttribute('open')) return;
     filters.reset();
     road.syncRenderedSelection();
-    road.alignToProgress();
+    road.resizeShowcase();
   });
   openObserver.observe(dialog, { attributes: true, attributeFilter: ['open'] });
   dialog.addEventListener('close', () => {

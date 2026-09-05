@@ -97,7 +97,8 @@ assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 11,
   'GOT STARTED must remain the master of the eleven prerequisite Getting Started achievements, not recursively require itself');
 assert.equal(totalAvailableTrophies(), 3975,
   'Calibrated DRIFT and FLOW achievements must contribute their 900-trophy scoring reservoir');
-assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 3975);
+assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2200,
+  'Trophy Road 2 uses the first 2200 trophies while the full catalog retains headroom');
 assert.equal(
   ACHIEVEMENTS.reduce((total, achievement) => total + achievement.trophies, 0),
   3975
@@ -298,8 +299,8 @@ assert.deepEqual(normalizeChallengeProgress({
 });
 
 const empty = normalizeAchievementState(null);
-assert.equal(empty.version, 7,
-  'Trophy Road v7 adds independently gated vehicle-perk rewards');
+assert.equal(empty.version, 8,
+  'Trophy Road v8 adds the reordered road and explicit grandfathering');
 assert.deepEqual(empty.progress.tracks, []);
 assert.deepEqual(empty.progress.blankTracks, []);
 assert.deepEqual(empty.rewards.unlocked, []);
@@ -360,7 +361,8 @@ assert.equal(store.unlock('an-army-of-me', { trackId: 'midnight-city' })?.trophi
 assert.equal(store.unlock('on-course-of-course', { trackId: 'harbor' })?.trophies, 100);
 assert.equal(store.unlock('save-bella', { trackId: 'countryside', vehicleId: 'firetruck' })?.trophies, 25);
 assert.equal(store.trophyTotal(), 325);
-assert.deepEqual(store.syncRewards().map((reward) => reward.id), ['vintage-racer']);
+assert.deepEqual(store.syncRewards(), [],
+  'Trophy Road 2 intentionally has no reward before the 400-trophy milestone');
 assert.doesNotMatch(storeSource, /rival-storage|clearRivalsState|clearAllRivalsState/,
   'Rival resets must remain independent from achievements');
 
@@ -417,7 +419,7 @@ assert.equal(completedNightShiftSheriff(nightShift, { position: 1, total: 5 }), 
 assert.equal(completedNightShiftSheriff(nightShift, { position: 2, total: 5 }), false);
 
 assert.match(catalogSource, /Stable production achievement facade/);
-assert.match(catalogSource, /catalog-production\.js\?revision=r222-awd-label/);
+assert.match(catalogSource, /catalog-production\.js\?revision=r240-trophy-road-2/);
 assert.doesNotMatch(catalogSource, /id: 'an-army-of-me'/,
   'The stable facade must not duplicate the production achievement definitions');
 assert.match(baseCatalogSource, /id: 'an-army-of-me'/);
@@ -437,7 +439,7 @@ assert.match(productionCatalogSource, /TRACK_SAFETY_ACHIEVEMENTS/);
 assert.match(productionCatalogSource, /countryside: '15 seconds'/);
 assert.match(productionCatalogSource, /'midnight-city': '70 seconds'/);
 assert.match(productionCatalogSource, /mountain: '70 seconds'/);
-assert.match(legacyCatalogSource, /catalog-production\.js\?revision=r222-awd-label/,
+assert.match(legacyCatalogSource, /catalog-production\.js\?revision=r240-trophy-road-2/,
   'The old Chromatic catalog URL must converge on the same production source of truth');
 
 assert.match(secretCatalog, /title: 'FIND LILYA!'/);
@@ -470,7 +472,7 @@ assert.match(timeTrialSource, /seconds >= trial\.targetSeconds/);
 for (const entry of [productionEntry, labEntry]) {
   assert.match(entry, /"\/turn\/achievements\/time-trials\.js\?revision=r166-bella-records": "\/turn\/achievements\/time-trials\.js\?revision=r224-sprint-targets"/,
     'Production and Lab must route cached achievement imports to the new Sprint targets');
-  assert.match(entry, /"\/turn\/achievements\/view\.js\?revision=r166-bella-records": "\/turn\/achievements\/view\.js\?revision=r224-modal-headings"/,
+  assert.match(entry, /"\/turn\/achievements\/view\.js\?revision=r166-bella-records": "\/turn\/achievements\/view\.js\?revision=r240-trophy-road-2"/,
     'Production and Lab must route cached achievement views to the corrected modal header');
 }
 
@@ -521,9 +523,11 @@ for (const source of [runtime, view, storeSource, challengeSource, secretRuntime
   assert.doesNotMatch(source, /catalog-base\.js/,
     'Runtime consumers must use the stable production catalog facade, never the internal base catalog');
 }
-assert.match(runtime, /catalog\.js\?revision=r222-awd-label/,
+assert.match(runtime, /catalog\.js\?revision=r240-trophy-road-2/,
   'Achievement consumers must load the current AWD vehicle label');
-assert.match(runtime, /view\.js\?revision=r166-bella-records/);
+assert.match(runtime, /store\.js\?revision=r240-trophy-road-2/,
+  'The runtime must execute the Trophy Road 2 migration under a fresh module identity');
+assert.match(runtime, /view\.js\?revision=r240-trophy-road-2/);
 assert.match(view, /TROPHY_ROAD_MAX_THRESHOLD/);
 assert.match(storeSource, /Preserve syntactically valid unlock records/);
 assert.match(nightShiftSource, /RIVAL_COUNT = 4/);

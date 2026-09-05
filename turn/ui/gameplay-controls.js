@@ -21,11 +21,11 @@ import {
 import {
   deriveVehicleTuningForCar,
   getCarDefinition
-} from '../vehicle/catalog.js?revision=r230-vehicle-perks';
+} from '../vehicle/catalog.js?revision=r240-trophy-road-2';
 import {
   isFeatureUnlocked,
   isVehiclePerkUnlocked
-} from '../progression/trophy-road.js?revision=r230-vehicle-perks';
+} from '../progression/trophy-road.js?revision=r240-trophy-road-2';
 import {
   VEHICLE_SHIFT_STAT_FIELDS,
   VEHICLE_SHIFT_FEATURE_ID,

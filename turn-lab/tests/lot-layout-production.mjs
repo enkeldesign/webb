@@ -82,8 +82,8 @@ assert.doesNotMatch(wrapper, /installLotLayout|installLotStatLegend|installLotAc
 
 assert.match(enhancementRuntime, /ENHANCEMENT_ID = 'enhanced-lot-r164-vintage-rally-perks'/);
 assert.match(enhancementRuntime, /TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r164-vintage-rally-perks'/);
-assert.match(enhancementRuntime, /lot-perk-disclosure\.js\?revision=r164-vintage-rally-perks/);
-assert.match(enhancementRuntime, /lot-trophy-gate\.js\?revision=r585-visible-locks/);
+assert.match(enhancementRuntime, /lot-perk-disclosure\.js\?revision=r240-trophy-road-2/);
+assert.match(enhancementRuntime, /lot-trophy-gate\.js\?revision=r240-trophy-road-2/);
 assert.match(enhancementRuntime, /lot-accessibility-r118\.js\?build=20260729-r118&revision=r588-canonical-attributes/);
 assert.match(enhancementRuntime, /activeEnhancements = new WeakMap\(\)/);
 assert.match(enhancementRuntime, /LOT_ENTRY_CLICK_GUARD_MS = 600/);

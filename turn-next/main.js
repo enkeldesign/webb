@@ -30,7 +30,7 @@ import { installPerformanceMonitor, recordPerformanceFrame } from '/turn/perform
 import {
   isFeatureUnlocked,
   isVehiclePerkUnlocked
-} from '/turn/progression/trophy-road.js?revision=r230-vehicle-perks';
+} from '/turn/progression/trophy-road.js?revision=r240-trophy-road-2';
 import {
   resetVehiclePerkRuntimeState,
   resolveGraduatedStageFeedback
@@ -39,11 +39,11 @@ import { createScoreFeedback } from '/turn/scoring/score-feedback.js';
 import {
   DRIFT_ATTACK_FEATURE_ID,
   createDriftAttackRuntime
-} from '/turn/scoring/drift-attack-runtime.js';
+} from '/turn/scoring/drift-attack-runtime.js?revision=r240-trophy-road-2';
 import {
   FLOW_FEATURE_ID,
   createFlowRuntime
-} from '/turn/scoring/flow-runtime.js';
+} from '/turn/scoring/flow-runtime.js?revision=r240-trophy-road-2';
 
 const intro = document.querySelector('#intro');
 const hud = document.querySelector('#hud');

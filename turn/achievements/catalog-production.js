@@ -2,7 +2,7 @@ import * as base from './catalog-base.js?revision=r222-awd-label';
 import {
   SCORING_MASTER_ACHIEVEMENT,
   TRACK_SCORING_ACHIEVEMENTS
-} from './scoring-achievements.js?revision=r1-placeholder-targets';
+} from './scoring-achievements.js?revision=r2-calibrated-targets';
 
 const CHROMATIC_CAMOUFLAGE = Object.freeze({
   id: 'chromatic-camouflage',
@@ -142,7 +142,7 @@ export {
   TRACK_SCORING_ACHIEVEMENT_IDS,
   completedAllScoringAchievements,
   qualifyingScoringAchievement
-} from './scoring-achievements.js?revision=r1-placeholder-targets';
+} from './scoring-achievements.js?revision=r2-calibrated-targets';
 
 export const VEHICLE_NAMES = Object.freeze({
   ...base.VEHICLE_NAMES,

@@ -1,9 +1,9 @@
-import { getCarDefinition } from '../vehicle/catalog.js?revision=r230-vehicle-perks';
+import { getCarDefinition } from '../vehicle/catalog.js?revision=r240-trophy-road-2';
 import { vehiclePerkPresentation } from '../vehicle/perk-presentation.js?revision=r220-apex-grip';
 import {
   isVehiclePerkUnlocked,
   rewardForVehiclePerk
-} from '../progression/trophy-road.js?revision=r166-bella-records';
+} from '../progression/trophy-road.js?revision=r240-trophy-road-2';
 
 const STYLE_ID = 'turn-lot-perk-popover-r225-styles';
 const activeDisclosures = new WeakMap();

@@ -160,14 +160,14 @@ assert.equal(
 );
 assert.match(lotPerk, /vehiclePerkPresentation\(vehicleId, getCarDefinition\(vehicleId\)\?\.perk\)/);
 assert.match(lotRuntime, /lot-perk-disclosure\.js\?revision=r217-stable-perk-slot/);
-assert.match(trophyWrapper, /FUTURE_RACER_REWARD_PERK_DESCRIPTION/);
-assert.match(trophyWrapper, /reward\.id !== 'future-racer'/);
+assert.match(trophyWrapper, /export \* from '\.\/trophy-road\.js\?revision=r240-trophy-road-2'/,
+  'The Chromatic compatibility facade must expose the canonical Trophy Road 2 catalog');
 
 for (const index of [productionIndex, labIndex]) {
   assert.match(
     index,
-    /\/turn\/progression\/trophy-road-chromatic-r183\.js\?revision=r230-vehicle-perks/,
-    'Production and LAB must load the fresh Race Car reward and Future Racer copy wrapper'
+    /\/turn\/progression\/trophy-road-chromatic-r183\.js\?revision=r240-trophy-road-2/,
+    'Production and LAB must load the canonical Trophy Road 2 reward catalog'
   );
   assert.match(index, /app\.js\?build=[^"']*r164-long-session-robustness-post-soak/);
   assert.match(

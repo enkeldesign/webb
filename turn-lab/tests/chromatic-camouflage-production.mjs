@@ -23,11 +23,12 @@ import {
   TROPHY_ROAD_REWARD_ICONS
 } from '../../turn/progression/trophy-road-chromatic-r183.js';
 
-const [releaseSource, indexSource, moduleSource, trophyRoadCss] = await Promise.all([
+const [releaseSource, indexSource, moduleSource, trophyRoadCss, trophyRoadBaseCss] = await Promise.all([
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/achievements/chromatic-camouflage-r183.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/progression/trophy-road-r157.css', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/progression/trophy-road-r157.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/progression/trophy-road.css', import.meta.url), 'utf8')
 ]);
 const release = JSON.parse(releaseSource);
 
@@ -160,41 +161,49 @@ assert.equal(
   3975,
   'The calibrated catalog includes the 900-trophy DRIFT and FLOW reservoir'
 );
-assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 3975);
+assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2200);
 assert.deepEqual(
   TROPHY_ROAD_REWARDS.map(({ id, threshold }) => [id, threshold]),
   [
-    ['vintage-racer', 300],
-    ['midnight-city', 400],
-    ['race-car', 500],
-    ['emergency-pack', 600],
-    ['mountain', 700],
-    ['monster', 800],
-    ['paintjob', 900],
-    ['future-racer', 1000],
-    ['rally-racer', 1100],
-    ['awd-traction', 1200],
-    ['truck-torque', 1300],
-    ['van-carry-on', 1400],
-    ['shift', 1500],
-    ['suv-full-tank', 1600],
-    ['sedan-double-shift', 1700],
-    ['sports-car-drift-demon', 1800],
-    ['learner-graduated', 2000]
+    ['paintjob', 400],
+    ['awd-traction', 500],
+    ['drift-attack', 600],
+    ['midnight-city', 700],
+    ['truck-torque', 800],
+    ['vintage-racer', 900],
+    ['shift', 1000],
+    ['race-car', 1100],
+    ['emergency-pack', 1200],
+    ['van-carry-on', 1300],
+    ['mountain', 1400],
+    ['flow', 1500],
+    ['future-racer', 1600],
+    ['suv-full-tank', 1700],
+    ['monster', 1800],
+    ['sedan-double-shift', 1900],
+    ['rally-racer', 2000],
+    ['sports-car-drift-demon', 2100],
+    ['learner-graduated', 2200]
   ]
 );
 assert.deepEqual(TRACK_IDS, [
   'countryside', 'airport', 'cliffside', 'harbor', 'midnight-city', 'mountain'
 ], 'Every-track achievements must include the sixth production track');
 
-assert.match(TROPHY_ROAD_REWARD_ICONS.future, /M3 32h12l7-5/,
-  'Future Racer should use the sharper Formula silhouette in both marker and detail views');
-assert.match(TROPHY_ROAD_REWARD_ICONS.race, /M4 31h10l7-11/,
-  'Race Car should receive a dedicated formula-car reward silhouette');
-assert.match(TROPHY_ROAD_REWARD_ICONS.vintage, /r="7"/,
-  'Vintage Racer should read as an older racer with larger exposed wheels');
-assert.match(TROPHY_ROAD_REWARD_ICONS.rally, /circle cx="27" cy="29"/,
-  'Rally Racer should have recognisable auxiliary rally lamps');
+for (const [icon, authoredClass, file] of [
+  ['future', 'future-racer', 'future-racer.svg'],
+  ['race', 'race-car', 'race-car.svg'],
+  ['vintage', 'vintage-racer', 'vintage-racer.svg'],
+  ['rally', 'rally-racer', 'rally-racer.svg'],
+  ['monster', 'monster-truck', 'monster-truck.svg'],
+  ['shift', 'shift', 'shift.svg']
+]) {
+  assert.match(TROPHY_ROAD_REWARD_ICONS[icon], new RegExp(`is-${authoredClass}`));
+  assert.match(trophyRoadBaseCss, new RegExp(`assets/trophy-road/${file.replace('.', '\\.')}['\"]\\)`),
+    `${icon} must use its approved authored SVG asset`);
+}
+assert.match(TROPHY_ROAD_REWARD_ICONS.drift, /<svg/);
+assert.match(TROPHY_ROAD_REWARD_ICONS.flow, /<svg/);
 
 for (const variable of [
   '--turn-reward-vehicle-locked',
@@ -202,7 +211,9 @@ for (const variable of [
   '--turn-reward-track-locked',
   '--turn-reward-track-unlocked',
   '--turn-reward-feature-locked',
-  '--turn-reward-feature-unlocked'
+  '--turn-reward-feature-unlocked',
+  '--turn-reward-scoring-locked',
+  '--turn-reward-scoring-unlocked'
 ]) {
   assert.match(trophyRoadCss, new RegExp(variable));
 }
@@ -210,6 +221,7 @@ assert.match(trophyRoadCss, /data-trophy-reward-type="track"/);
 assert.match(trophyRoadCss, /data-trophy-reward-type="feature"/);
 assert.match(trophyRoadCss, /data-trophy-reward-type="vehicle-perk"/);
 assert.match(trophyRoadCss, /data-trophy-reward-type="vehicle"/);
+assert.match(trophyRoadCss, /data-trophy-reward-type="scoring-system"/);
 assert.match(trophyRoadCss, /\.is-locked/);
 assert.match(trophyRoadCss, /\.is-unlocked/);
 

@@ -177,7 +177,7 @@ const importMapText = index.match(/<script type="importmap">\s*([\s\S]*?)\s*<\/s
 assert.ok(importMapText, 'Production must expose its import map');
 const imports = JSON.parse(importMapText).imports;
 const releaseTarget = (filePath) => `${filePath}?build=${release.cacheKey}`;
-const vehicleCatalogTarget = '/turn/vehicle/catalog.js?revision=r230-vehicle-perks';
+const vehicleCatalogTarget = '/turn/vehicle/catalog.js?revision=r240-trophy-road-2';
 const carModelBridgeTarget = '/turn/vehicle/emergency-livery-models.js?revision=r223-training-car-taxi';
 
 assert.match(index, new RegExp(`TURN v${release.version.replaceAll('.', '\\.')} · Build ${release.id.replaceAll('.', '\\.')}`));

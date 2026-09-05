@@ -2,7 +2,7 @@ import {
   ACHIEVEMENTS,
   TRACK_IDS,
   getAchievement
-} from './catalog.js?revision=r222-awd-label';
+} from './catalog.js?revision=r240-trophy-road-2';
 import {
   TROPHY_ROAD_REWARDS,
   TROPHY_ROAD_STORAGE_KEY,
@@ -11,7 +11,7 @@ import {
   grandfatheredRewardIdsForVersion,
   migrateStoredRewardIdsForVersion,
   rewardIdsForTrophies
-} from '../progression/trophy-road-perks-r164.js?revision=r230-vehicle-perks';
+} from '../progression/trophy-road-perks-r164.js?revision=r240-trophy-road-2';
 
 export const ACHIEVEMENT_STORAGE_KEY = TROPHY_ROAD_STORAGE_KEY;
 const STORAGE_VERSION = TROPHY_ROAD_STORAGE_VERSION;
@@ -27,7 +27,8 @@ function defaultStoredState() {
     },
     rewards: {
       unlocked: [],
-      seen: []
+      seen: [],
+      grandfathered: []
     }
   };
 }
@@ -93,10 +94,23 @@ export function normalizeAchievementState(value) {
     sourceVersion
   );
   const migratedRewardIds = grandfatheredRewardIdsForVersion(sourceVersion);
+  const storedGrandfatheredIds = normalizedStringArray(
+    value.rewards?.grandfathered,
+    rewardIds
+  );
+  const earnedRewardIdSet = new Set(earnedRewardIds);
+  const migrationGrandfatheredIds = sourceVersion > 0 && sourceVersion < STORAGE_VERSION
+    ? [...storedRewardIds, ...migratedRewardIds].filter((id) => !earnedRewardIdSet.has(id))
+    : [];
+  const grandfatheredRewardIds = [...new Set([
+    ...storedGrandfatheredIds,
+    ...migrationGrandfatheredIds
+  ])];
   const unlockedRewards = [...new Set([
     ...storedRewardIds,
     ...earnedRewardIds,
-    ...migratedRewardIds
+    ...migratedRewardIds,
+    ...grandfatheredRewardIds
   ])];
   const storedSeenRewards = normalizedStringArray(value.rewards?.seen, rewardIds)
     .filter((id) => unlockedRewards.includes(id));
@@ -112,7 +126,8 @@ export function normalizeAchievementState(value) {
     },
     rewards: {
       unlocked: unlockedRewards,
-      seen: seenRewards
+      seen: seenRewards,
+      grandfathered: grandfatheredRewardIds
     }
   };
 }

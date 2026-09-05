@@ -304,6 +304,24 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     'Calibration-pending scoring achievements and anonymous aggregate score statistics',
     'TURN 1.16.0 · 2026.09.04-r199 expressive-scoring release'
   ]
+},
+{
+  period: '5 September',
+  title: 'Trophy Road becomes a legible journey',
+  paragraphs: [
+    'Trophy Road 2 reshapes progression into nineteen rewards at steady one-hundred-trophy intervals from 400 to 2,200. DRIFT ATTACK joins the road at 600 trophies and FLOW at 1,500, so each scoring system activates automatically as a layer of normal racing rather than asking the player to choose a mode.',
+    'The Achievements view now answers three questions before showing the full road: the latest reward, the next reward and the next major reward on the horizon. The complete road follows in native reading order as a responsive reward grid, replacing the long horizontal carousel and its runtime geometry work.',
+    'Existing players keep every reward they previously owned and also receive anything justified by their current trophy total under the new order. Retained rewards are labelled clearly, newly derived rewards use the normal one-time composed feedback, and a versioned migration prevents progress or trophies from being reset.',
+    'DRIFT and FLOW score achievements now use calibrated per-track targets. Approved authored vehicle and SHIFT silhouettes refresh the road artwork, while scoring-system rewards use their own pink family and remain distinct from cars, tracks and perks.'
+  ],
+  milestones: [
+    'Nineteen Trophy Road rewards from 400–2,200 trophies',
+    'Automatic DRIFT ATTACK and FLOW activation at 600 and 1,500 trophies',
+    'Responsive latest / next / horizon overview and complete native-order reward grid',
+    'One-time migration that preserves previous ownership and derives current rewards',
+    'Calibrated scoring achievements and authored Trophy Road artwork',
+    'TURN 1.17.0 · 2026.09.05-r200 Trophy Road 2 release'
+  ]
 }
 ]);
 
@@ -595,11 +613,21 @@ export const CHANGELOG = Object.freeze([
       ['One scoring instrument', 'Completes the permanent cyan DRIFT and pink FLOW paper rows with attached horizontal gauges, independent HUD preferences and a unified top-of-screen LAP / DRIFT / FLOW result.'],
       ['Records and calibration', 'Saves only each track’s best DRIFT and FLOW score, adds explicitly target-pending achievement cards and aggregates anonymous per-track score distributions for playtest calibration.']
     ]
+  },
+  {
+    date: '5 September',
+    entries: [
+      ['1.17.0 r200', 'Rebuilds Trophy Road as nineteen rewards from 400–2,200 trophies, with DRIFT ATTACK at 600 and FLOW at 1,500.'],
+      ['A clearer road', 'Shows latest, next and horizon rewards above a responsive native-order grid instead of requiring a long horizontal carousel.'],
+      ['Safe migration', 'Keeps every previously owned reward, adds rewards earned by the player’s current trophy total and never resets trophies or achievement progress.'],
+      ['Scoring progression', 'Activates DRIFT and FLOW automatically at their milestones, keeps locked processors dormant and applies calibrated score targets to all six tracks.'],
+      ['Authored reward art', 'Uses the approved Vintage, SHIFT, Race, Future, Rally and Monster SVG silhouettes with semantic state colouring.']
+    ]
   }
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.16.0',
-  build: '2026.09.04-r199',
-  note: 'TURN 1.16.0 adds simultaneous DRIFT and FLOW scoring with contextual SHIFT technique.'
+  version: '1.17.0',
+  build: '2026.09.05-r200',
+  note: 'TURN 1.17.0 rebuilds Trophy Road with clear milestones, automatic scoring unlocks and safe migration.'
 });
