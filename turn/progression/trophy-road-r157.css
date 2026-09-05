@@ -24,6 +24,19 @@
   }
 }
 
+/* Trophy Road uses the primitive TURN palette directly so locked/unlocked
+   states stay in the same family on every colour space. */
+:root {
+  --turn-reward-vehicle-locked: var(--turn-blue-100, #bdeeff);
+  --turn-reward-vehicle-unlocked: var(--turn-blue-500, #38d9ff);
+  --turn-reward-track-locked: var(--turn-green-200, #d9f5c2);
+  --turn-reward-track-unlocked: var(--turn-green-500, #8ce99a);
+  --turn-reward-feature-locked: var(--turn-yellow-100, #fff0a8);
+  --turn-reward-feature-unlocked: var(--turn-yellow-400, #ffd43b);
+  --turn-reward-scoring-locked: var(--turn-pink-100, #ffd1e6);
+  --turn-reward-scoring-unlocked: var(--turn-pink-200, #ff8caf);
+}
+
 .turn-trophy-road-marker:is(
   [data-trophy-reward-type="vehicle"],
   [data-trophy-reward-type="vehicle-pack"]
@@ -66,6 +79,15 @@
 }
 
 .turn-trophy-road-marker[data-trophy-reward-type="scoring-system"].is-unlocked {
+  background: var(--turn-reward-scoring-unlocked);
+}
+
+/* SHIFT is a feature mechanically, but belongs to the pink reward family. */
+.turn-trophy-road-marker[data-trophy-reward="shift"].is-locked {
+  background: var(--turn-reward-scoring-locked);
+}
+
+.turn-trophy-road-marker[data-trophy-reward="shift"].is-unlocked {
   background: var(--turn-reward-scoring-unlocked);
 }
 
@@ -132,6 +154,20 @@
 
 .turn-trophy-road-detail[data-trophy-reward-type="scoring-system"][data-trophy-reward-state="unlocked"] {
   background: var(--turn-reward-scoring-unlocked);
+}
+
+.turn-achievements-dialog:has(.turn-trophy-road-marker[data-trophy-reward="shift"].is-selected)
+  .turn-trophy-road-detail[data-trophy-reward-state="locked"] {
+  background: var(--turn-reward-scoring-locked);
+}
+
+.turn-achievements-dialog:has(.turn-trophy-road-marker[data-trophy-reward="shift"].is-selected)
+  .turn-trophy-road-detail[data-trophy-reward-state="unlocked"] {
+  background: var(--turn-reward-scoring-unlocked);
+}
+
+.turn-trophy-road-detail-close {
+  background: var(--turn-orange-500, #ff7b54);
 }
 
 .lot-selected-car-lock {
