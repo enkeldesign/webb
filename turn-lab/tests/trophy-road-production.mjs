@@ -543,7 +543,7 @@ assert.match(view, /data-trophy-reward-type="\$\{reward\.type\}"/,
 assert.doesNotMatch(feedback, /requestAnimationFrame|scrollLeft|scrollBy|scrollWidth|clientWidth/,
   'Trophy Road 2 must not maintain carousel geometry or a layout animation path');
 assert.match(app, /trophy-road\.js\?revision=r240-trophy-road-2/);
-assert.match(app, /trophy-road-r157\.css\?revision=r240-trophy-road-2/);
+assert.match(app, /trophy-road-r157\.css\?revision=r242-serpentine-road/);
 assert.match(workflow, /Run Trophy Road progression regression/);
 assert.match(workflow, /node turn-lab\/tests\/trophy-road-production\.mjs/);
 assert.match(perkWrapper, /export \* from '\.\/trophy-road\.js\?revision=r240-trophy-road-2'/,

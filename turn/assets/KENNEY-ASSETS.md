@@ -4,6 +4,7 @@ The vehicle models in `cars/` are selected from Kenney Prototype Kit 1.0, Toy Ca
 The scenery pieces in `lot-bricks/` are selected from Kenney Brick Kit 1.0.
 The legacy `scenery/fantasy-town/windmill.glb` file is the Fantasy Town Kit 2.0 rotor/blades component, not a complete windmill building. MOUNTAIN r3 deliberately does **not** place it as a freestanding landmark.
 The `scenery/watercraft/ship-ocean-liner.glb` model and its `Textures/colormap.png` palette are from Kenney Watercraft Kit 2.1.
+The three 128 × 128 road primitives in `trophy-road/road-sand-*.png` are unchanged sand-road tiles from Kenney Racing Pack 1.1. Trophy Road uses them only as static straight, bend and checkered scenery behind its semantic HTML reward controls.
 
 ## COUNTRYSIDE planned world
 

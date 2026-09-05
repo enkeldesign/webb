@@ -223,6 +223,9 @@ jobs:
       - name: Run Trophy Road progression regression
         run: node turn-lab/tests/trophy-road-production.mjs
 
+      - name: Run Trophy Road serpentine presentation regression
+        run: node turn-tests/trophy-road-serpentine-production.mjs
+
       - name: Run Trophy Road reward detail regression
         run: node turn-tests/trophy-road-detail-production.mjs
 

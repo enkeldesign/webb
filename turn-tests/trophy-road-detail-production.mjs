@@ -10,6 +10,8 @@ assert.match(feedback, /function renderedSelection\(\)/,
   'The enhanced Trophy Road must adopt the reward selected by the canonical view');
 assert.match(feedback, /trophy-road-showcase\.js\?revision=r240-trophy-road-2/,
   'The reward preview must use the current vehicle catalog through a fresh module identity');
+assert.match(feedback, /trophy-road-r157\.css\?build=\$\{buildKey\}-r242-serpentine-road/,
+  'The detail enhancement must share the current serpentine stylesheet identity');
 assert.match(feedback, /syncRenderedSelection: \(\) => preserveUserSelection\(\{ adoptRendered: true \}\)/,
   'Opening Achievements must preserve the already rendered first reward card');
 assert.doesNotMatch(feedback, /homeTrigger\?\.addEventListener\('click', resetView\)/,

@@ -1,6 +1,14 @@
-# Trophy Road authored SVG sources
+# Trophy Road authored sources
 
 These are the approved authored source icons for the Trophy Road 2 / SVG icon-system work tracked by #740 and #749.
+
+The three `road-sand-*.png` files are unchanged 128 × 128 tiles from Kenney Racing Pack 1.1's `PNG/Tiles/Sand road` set, supplied for #761:
+
+- `road-sand-bend.png` is source tile `road_sand01.png`; CSS rotation creates every bend orientation.
+- `road-sand-straight.png` is source tile `road_sand33.png`; it sits behind the readable category-coloured reward cards.
+- `road-sand-checkered.png` is source tile `road_sand39.png`; it gives START and FINISH their checkered treatment.
+
+Kenney Racing Pack is CC0. These small primitives are kept as original PNGs rather than baking the complete responsive road into one large image.
 
 ## Replace with these sources
 
@@ -32,8 +40,8 @@ EMERGENCY! has no replacement source in this batch.
 - The car silhouettes are filled SVGs; SHIFT is stroke-based. Trophy Road integration must support both rather than globally forcing every reward SVG to `fill: none`.
 - Decorative instances remain hidden from assistive technology; the surrounding reward control owns the accessible name.
 
-## Integration boundary
+## Integration boundaries
 
-This directory intentionally stages source assets only. It does not change current Trophy Road thresholds, reward order, unlock state, progression migration, runtime imports, cache identity or live presentation.
+The road primitives are presentation-only. They do not change Trophy Road thresholds, reward order, unlock state, progression migration or entitlements. The responsive road keeps the reward buttons as semantic HTML above these static images.
 
-When #740/#749 integrates the new icons, remove the legacy FUTURE RACER marker CSS-mask override in `turn/progression/trophy-road.css`; otherwise the authored SVG will be hidden on the road marker even if it is used in the detail view.
+The authored reward icons remain the responsibility of #749; #761 does not redraw or reorder them.

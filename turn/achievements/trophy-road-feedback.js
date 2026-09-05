@@ -29,7 +29,7 @@ function ensureFeedbackStylesheet() {
   if (!stylesheet) {
     stylesheet = document.createElement('link');
     stylesheet.rel = 'stylesheet';
-    stylesheet.href = `/turn/progression/trophy-road-r157.css?build=${buildKey}-r240-trophy-road-2`;
+    stylesheet.href = `/turn/progression/trophy-road-r157.css?build=${buildKey}-r242-serpentine-road`;
     stylesheet.setAttribute('data-turn-trophy-road-feedback', '');
   }
   document.head.appendChild(stylesheet);
