@@ -52,6 +52,24 @@ function installStyles() {
       background: var(--turn-reward-feature-unlocked, #ffd43b);
     }
 
+    .lot-showroom .lot-perk-button.turn-perk-selection-wiggle {
+      animation: turn-perk-selection-wiggle 430ms cubic-bezier(.2,.85,.25,1.15) 1;
+      transform-origin: 50% 50%;
+    }
+
+    /* The legacy first-encounter cue must never animate a Trophy Road perk
+       while that perk is still locked. */
+    .lot-showroom .lot-perk-button.is-locked.turn-first-perk-attention {
+      animation: none !important;
+    }
+
+    @keyframes turn-perk-selection-wiggle {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      28% { transform: rotate(-4deg) scale(1.06); }
+      58% { transform: rotate(4deg) scale(1.06); }
+      82% { transform: rotate(-2deg) scale(1.02); }
+    }
+
     /* Keep the PERK footprint in every title row. Cars without a perk use an
        inert, invisible placeholder so their attributes start at the same height. */
     .lot-showroom .lot-perk-button.is-layout-placeholder {
@@ -165,6 +183,12 @@ function installStyles() {
         font-size: clamp(.66rem, 1.28vw, .8rem);
       }
     }
+
+    @media (prefers-reduced-motion: reduce) {
+      .lot-showroom .lot-perk-button.turn-perk-selection-wiggle {
+        animation: none;
+      }
+    }
   `;
   document.head.appendChild(style);
 }
@@ -264,6 +288,7 @@ export function installLotPerkDisclosure(root = document.body) {
   let isOpen = false;
   let currentPerkText = '';
   let focusFrame = 0;
+  let wiggleTimer = 0;
 
   function positionPopover() {
     if (!isOpen || !trigger.isConnected || !popover.isConnected) return;
@@ -384,7 +409,21 @@ export function installLotPerkDisclosure(root = document.body) {
     }
   }
 
-  function sync() {
+  function wiggleUnlockedPerk() {
+    if (wiggleTimer) {
+      globalThis.clearTimeout?.(wiggleTimer);
+      wiggleTimer = 0;
+    }
+    trigger.classList.remove('turn-perk-selection-wiggle');
+    void trigger.offsetWidth;
+    trigger.classList.add('turn-perk-selection-wiggle');
+    wiggleTimer = globalThis.setTimeout?.(() => {
+      wiggleTimer = 0;
+      trigger.classList.remove('turn-perk-selection-wiggle');
+    }, 650) || 0;
+  }
+
+  function sync({ selectedByPlayer = false } = {}) {
     const vehicleId = selectedVehicleId(screen);
     const vehiclePerk = vehiclePerkPresentation(vehicleId, getCarDefinition(vehicleId)?.perk);
     const perkReward = rewardForVehiclePerk(vehicleId);
@@ -425,18 +464,21 @@ export function installLotPerkDisclosure(root = document.body) {
       ? `${perkDescription} Unlocks at ${perkReward.threshold} trophies.`
       : perkDescription;
     currentPerkText = perkText;
+
+    if (selectedByPlayer && perkUnlocked) wiggleUnlockedPerk();
   }
 
   // Observe only the radio-selection state. The button and popover live outside
   // the picker, so opening, closing or rewriting them cannot recreate the r164
   // mutation loop that previously froze The Lot.
-  const observer = new MutationObserver(sync);
+  const observer = new MutationObserver(() => sync({ selectedByPlayer: true }));
   observer.observe(picker, {
     subtree: true,
     attributes: true,
     attributeFilter: ['aria-checked']
   });
-  globalThis.addEventListener?.('turn:trophy-road-updated', sync);
+  const syncTrophyRoad = () => sync();
+  globalThis.addEventListener?.('turn:trophy-road-updated', syncTrophyRoad);
   sync();
 
   let released = false;
@@ -444,8 +486,11 @@ export function installLotPerkDisclosure(root = document.body) {
     if (released) return;
     released = true;
     observer.disconnect();
-    globalThis.removeEventListener?.('turn:trophy-road-updated', sync);
+    globalThis.removeEventListener?.('turn:trophy-road-updated', syncTrophyRoad);
     closePopover();
+    if (wiggleTimer) globalThis.clearTimeout?.(wiggleTimer);
+    wiggleTimer = 0;
+    trigger.classList.remove('turn-perk-selection-wiggle');
     trigger.removeEventListener('click', handleTriggerClick);
     close.removeEventListener('click', handleCloseClick);
     if (supportsNativePopover) popover.removeEventListener('toggle', handleNativeToggle);
