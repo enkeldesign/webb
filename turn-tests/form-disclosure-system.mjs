@@ -99,21 +99,24 @@ assert.doesNotMatch(
 );
 
 for (const specimen of [
-  'Native form controls',
-  'Legend and heading elements share one floating card-title treatment',
-  'Radio buttons',
-  'Checkboxes',
-  'Disclosure',
-  'Blue trigger, Paper panel',
-  'The decorative state symbol sits directly before the summary text'
+  'Native disclosure',
+  'Steering',
+  'Device steering',
+  'On-screen steering',
+  'Left-handed layout',
+  'Drive By Ear',
+  'Use native',
+  'The visible trigger is blue; expanded information returns to Paper.'
 ]) {
-  assert.ok(design.includes(specimen), `Missing design-system specimen or rule: ${specimen}`);
+  assert.ok(design.includes(specimen), `Missing current design-system specimen or rule: ${specimen}`);
 }
 assert.match(design, /<fieldset class="form-card">[\s\S]*<legend>Steering<\/legend>/);
-assert.match(design, /<section class="form-card" aria-labelledby="designAudioTitle">[\s\S]*<h3 id="designAudioTitle">Audio<\/h3>/);
-assert.match(design, /<input type="radio" name="designSteering" checked>/);
-assert.match(design, /<input type="checkbox" checked>/);
-assert.match(design, /<details class="disclosure-sample"[^>]*>[\s\S]*<summary><span class="disclosure-symbol" aria-hidden="true"><\/span><span>Explore the Drive By Ear sounds<\/span><\/summary>/);
+assert.match(design, /<input type="radio" name="steering" checked>/);
+assert.match(design, /<input type="radio" name="steering">/);
+assert.match(design, /<input type="checkbox">[\s\S]*<strong>Left-handed layout<\/strong>/);
+assert.match(design, /<details class="disclosure-sample">[\s\S]*<summary>Drive By Ear<\/summary>/);
+assert.match(design, /<code>details<\/code>[\s\S]*<code>summary<\/code>/,
+  'The current reference must explicitly prefer native details/summary semantics');
 
 assert.match(
   settingsHome,
