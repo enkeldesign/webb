@@ -3,7 +3,7 @@ export const LEGACY_VEHICLE_ID = 'sedan';
 export const DEFAULT_VEHICLE_COLOR = '#ffcc00';
 export const DEFAULT_VEHICLE_SECONDARY_COLOR = '#f8f9fa';
 export const VEHICLE_SELECTION_KEY = 'turn-vehicle-selection-v1';
-export const VEHICLE_SELECTION_VERSION = 3;
+export const VEHICLE_SELECTION_VERSION = 4;
 export const VEHICLE_STAT_BUDGET = 18;
 export const SPORTS_SEDAN_EASTER_EGG_COLOR = '#666666';
 export const MAXED_VEHICLE_STATS = Object.freeze({
@@ -36,7 +36,7 @@ export const CAR_PALETTE = Object.freeze([
 ]);
 
 const DEFAULT_COLOR_BY_ID = Object.freeze({
-  convertible: Object.freeze({ fallback: '#ff4fa3' }),
+  convertible: Object.freeze({ fallback: '#776655' }),
   classic: Object.freeze({ fallback: '#ffcc00', p3: Object.freeze([1, 0.76, 0]) }),
   'vintage-racer': Object.freeze({ fallback: '#004455' }),
   'toy-racer': Object.freeze({ fallback: '#cccccc' }),
@@ -59,7 +59,7 @@ const DEFAULT_SECONDARY_COLOR_BY_ID = Object.freeze({
   sedan: Object.freeze({ fallback: '#163f45' }),
   van: Object.freeze({ fallback: '#222222' }),
   suv: Object.freeze({ fallback: '#163f7a' }),
-  convertible: Object.freeze({ fallback: '#792766' }),
+  convertible: Object.freeze({ fallback: '#393329' }),
   'vintage-racer': Object.freeze({ fallback: '#222222' }),
   'toy-racer': Object.freeze({ fallback: '#ffcc00' }),
   'monster-truck': Object.freeze({ fallback: '#4f5504' }),
@@ -88,9 +88,16 @@ const RETIRED_VEHICLE_REPLACEMENTS = Object.freeze({
 // They are intentionally matched as pairs so a genuine PAINTJOB color is never
 // replaced just because one channel happens to match an old default.
 const REPLACED_FACTORY_PAINT_BY_ID = Object.freeze({
-  classic: Object.freeze({ color: '#ffcc00', secondaryColor: '#f8f9fa' }),
-  convertible: Object.freeze({ color: '#0555aa', secondaryColor: '#163f7a' }),
-  suv: Object.freeze({ color: '#7d123e', secondaryColor: '#2f0918' })
+  classic: Object.freeze([
+    Object.freeze({ color: '#ffcc00', secondaryColor: '#f8f9fa' })
+  ]),
+  convertible: Object.freeze([
+    Object.freeze({ color: '#0555aa', secondaryColor: '#163f7a' }),
+    Object.freeze({ color: '#ff4fa3', secondaryColor: '#792766' })
+  ]),
+  suv: Object.freeze([
+    Object.freeze({ color: '#7d123e', secondaryColor: '#2f0918' })
+  ])
 });
 
 const SIRENS_PERK = Object.freeze({
@@ -350,10 +357,11 @@ export function normalizeVehicleSelection(selection) {
 
 export function normalizeStoredVehiclePaint(selection, { migrateReplacedFactoryPaint = false } = {}) {
   const normalized = normalizeVehicleSelection(selection);
-  const replacedFactoryPaint = REPLACED_FACTORY_PAINT_BY_ID[normalized.carId];
+  const replacedFactoryPaints = REPLACED_FACTORY_PAINT_BY_ID[normalized.carId] || [];
   const matchesReplacedFactoryPaint = migrateReplacedFactoryPaint
-    && normalized.color === replacedFactoryPaint?.color
-    && normalized.secondaryColor === replacedFactoryPaint?.secondaryColor;
+    && replacedFactoryPaints.some((paint) => (
+      normalized.color === paint.color && normalized.secondaryColor === paint.secondaryColor
+    ));
   const matchesCurrentFactoryPaint = normalized.color === getVehicleDefaultColor(normalized.carId)
     && normalized.secondaryColor === getVehicleDefaultSecondaryColor(normalized.carId);
   const factoryPaint = selection?.factoryPaint === true
