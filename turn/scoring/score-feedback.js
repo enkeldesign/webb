@@ -1,3 +1,5 @@
+import { installScorekeeperRecords } from './scorekeeper-records.js';
+
 export const SCORE_FEEDBACK_CHANNEL = Object.freeze({
   DRIFT: 'drift',
   FLOW: 'flow'
@@ -152,6 +154,10 @@ function formatScore(value) {
   return numberFormatter.format(Math.max(0, Math.round(finiteNumber(value))));
 }
 
+function performanceNow() {
+  return globalThis.performance?.now?.() ?? Date.now();
+}
+
 export function createScoreFeedback({
   root,
   commitIntervalMs = SCORE_FEEDBACK_COMMIT_INTERVAL_MS,
@@ -159,6 +165,11 @@ export function createScoreFeedback({
   onSound = null
 } = {}) {
   if (!root) throw new Error('TURN ScoreFeedback requires a fixed root element.');
+
+  // Scorekeeper history is presentation composition, not a DRIFT runtime side effect.
+  // Install it before retaining any optional DOM references so it can remove the
+  // intentionally hidden FLOW token strip in the production document.
+  installScorekeeperRecords({ documentRef: root.ownerDocument || globalThis.document });
 
   const statePanel = requiredElement(root, '[data-score-feedback-state]');
   const driftReadout = optionalElement(root, '[data-score-feedback-drift-readout]') || statePanel;
@@ -362,6 +373,8 @@ export function createScoreFeedback({
     }
     if (!dirty || (!force && timestamp - lastCommitAt < minCommitInterval)) return false;
 
+    const recordPhase = globalThis.__turnPerfRecordPhase;
+    const phaseStartedAt = typeof recordPhase === 'function' ? performanceNow() : null;
     const flow = channels[SCORE_FEEDBACK_CHANNEL.FLOW];
     const drift = channels[SCORE_FEEDBACK_CHANNEL.DRIFT];
     const driftActive = drift.visible && drift.active;
@@ -454,6 +467,7 @@ export function createScoreFeedback({
     setHidden(root, !drift.visible && !flow.visible && !eventVisible);
     dirty = false;
     lastCommitAt = timestamp;
+    if (phaseStartedAt != null) recordPhase('hud', Math.max(0, performanceNow() - phaseStartedAt));
     return true;
   }
 
