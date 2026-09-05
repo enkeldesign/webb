@@ -160,18 +160,21 @@ assert.equal(runtime.getBestRecord('mountain').score, firstResult.score,
 
 let unlocked = false;
 const dormantFeedback = makeFeedback();
+const dormantTarget = new EventTargetStub();
 const dormant = createDriftAttackRuntime({
   state: { ...state, lapActive: true },
   scoreFeedback: dormantFeedback,
   storage: new MemoryStorage(),
-  eventTarget: new EventTargetStub(),
+  eventTarget: dormantTarget,
   isUnlocked: () => unlocked
 });
 assert.equal(dormant.isEnabled(), false);
 assert.equal(dormant.advance(1, 1000), false);
 assert.equal(dormant.scorer.inspect().sampleCount, 0, 'Locked DRIFT processing remains dormant');
 unlocked = true;
-assert.equal(dormant.refreshEntitlement(2000), true);
+dormantTarget.dispatchEvent({ type: 'turn:achievements-ready' });
+assert.equal(dormant.isEnabled(), true,
+  'The post-migration achievements-ready event must activate newly derived DRIFT entitlement');
 assert.equal(dormantFeedback.visible, true);
 
 const visibleStorage = new MemoryStorage();

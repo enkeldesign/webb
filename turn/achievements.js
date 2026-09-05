@@ -1,4 +1,4 @@
-import './achievements/home-reward-replay-r225.js?revision=r225-home-reward-replay';
+import './achievements/home-reward-replay-r225.js?revision=r240-trophy-road-2';
 
 export {
   ACHIEVEMENTS,
@@ -8,13 +8,13 @@ export {
   TRACK_SCORING_ACHIEVEMENT_IDS,
   completedAllScoringAchievements,
   qualifyingScoringAchievement
-} from './achievements/catalog.js?revision=r222-awd-label';
+} from './achievements/catalog.js?revision=r240-trophy-road-2';
 export {
   ACHIEVEMENT_STORAGE_KEY,
   loadAchievementState,
   normalizeAchievementState,
   totalAvailableTrophies
-} from './achievements/store.js?revision=r164-perks';
+} from './achievements/store.js?revision=r240-trophy-road-2';
 export {
   TIME_TRIALS,
   TIME_TRIAL_ACHIEVEMENT_IDS,
@@ -39,5 +39,5 @@ export {
   isVehicleUnlocked,
   isPaintUnlocked,
   prepareTrophyRoadProfile
-} from './progression/trophy-road-perks-r164.js?revision=r230-vehicle-perks';
-export { installAchievements } from './achievements/runtime.js?revision=r164-long-session-robustness';
+} from './progression/trophy-road-perks-r164.js?revision=r240-trophy-road-2';
+export { installAchievements } from './achievements/runtime.js?revision=r240-trophy-road-2';

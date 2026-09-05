@@ -103,13 +103,13 @@ const VEHICLE_PERK_BY_ID = Object.freeze({
     title: 'TRACTION',
     description: 'Shallow off-road driving causes much less slowdown, while deep off-road remains punishing.',
     rewardId: 'awd-traction',
-    threshold: 1200
+    threshold: 500
   }),
   classic: Object.freeze({
     title: 'GRADUATED',
     description: 'Clean driving improves CONTROL, then ACCELERATION, then TOP SPEED.',
     rewardId: 'learner-graduated',
-    threshold: 2000
+    threshold: 2200
   }),
   'vintage-racer': Object.freeze({
     title: 'DRIFTAGE',
@@ -131,31 +131,31 @@ const VEHICLE_PERK_BY_ID = Object.freeze({
     title: 'DRIFT DEMON',
     description: 'DRIFT builds during sustained DRIFT or LOCK, up to 5/5.',
     rewardId: 'sports-car-drift-demon',
-    threshold: 1800
+    threshold: 2100
   }),
   sedan: Object.freeze({
     title: 'DOUBLE SHIFT',
     description: 'SHIFT moves 2 points between attributes instead of 1.',
     rewardId: 'sedan-double-shift',
-    threshold: 1700
+    threshold: 1900
   }),
   suv: Object.freeze({
     title: 'FULL TANK',
     description: 'Clean driving builds BOOST TANK up to 5/5.',
     rewardId: 'suv-full-tank',
-    threshold: 1600
+    threshold: 1700
   }),
   truck: Object.freeze({
     title: 'TORQUE',
     description: 'ACCELERATION builds while GAS is held, up to 5/5.',
     rewardId: 'truck-torque',
-    threshold: 1300
+    threshold: 800
   }),
   van: Object.freeze({
     title: 'CARRY ON',
     description: 'LOCK loses much less speed.',
     rewardId: 'van-carry-on',
-    threshold: 1400
+    threshold: 1300
   }),
   'race-future': Object.freeze({
     title: 'OVERDRIVE',

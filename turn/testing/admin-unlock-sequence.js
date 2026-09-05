@@ -1,10 +1,10 @@
 import {
   ACHIEVEMENT_STORAGE_KEY,
   normalizeAchievementState
-} from '../achievements/store.js?revision=r166-bella-records';
+} from '../achievements/store.js?revision=r240-trophy-road-2';
 import {
   TROPHY_ROAD_REWARDS
-} from '../progression/trophy-road.js?revision=r166-bella-records';
+} from '../progression/trophy-road.js?revision=r240-trophy-road-2';
 import {
   CHALLENGE_PROGRESS_STORAGE_KEY
 } from '../achievements/challenge-expansion-r166.js?revision=r166-bella-records';
@@ -92,6 +92,7 @@ export function createAdminRewardState(existing, legacyAdminTimestamp = null) {
 
   snapshot.rewards.unlocked = [...rewardIds];
   snapshot.rewards.seen = [...rewardIds];
+  snapshot.rewards.grandfathered = [];
 
   return Object.freeze({
     snapshot,
@@ -141,7 +142,8 @@ function copyStateIntoLiveStore(snapshot) {
   };
   liveState.rewards = {
     unlocked: [...snapshot.rewards.unlocked],
-    seen: [...snapshot.rewards.seen]
+    seen: [...snapshot.rewards.seen],
+    grandfathered: [...(snapshot.rewards.grandfathered || [])]
   };
 }
 

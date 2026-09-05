@@ -35,85 +35,55 @@
 }
 
 .turn-trophy-road {
+  display: grid;
+  gap: 12px;
   min-width: 0;
 }
 
-.turn-trophy-road-controls {
+.turn-trophy-road-position {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 44px;
-  gap: 8px;
+  grid-template-columns: minmax(190px, .62fr) minmax(220px, 1.38fr);
+  gap: 16px;
   align-items: center;
-}
-
-.turn-trophy-road-scroll-button {
-  display: grid;
-  width: 44px;
-  height: 44px;
-  padding: 8px;
-  place-items: center;
-  border: var(--turn-border-compact, 3px) solid var(--turn-ink, #08090a);
-  border-radius: var(--turn-radius-circle, 50%);
-  background: var(--turn-action-information, #38d9ff);
-  color: var(--turn-ink, #08090a);
+  padding: 12px 14px;
+  border: var(--turn-border-default, 4px) solid var(--turn-ink, #08090a);
+  border-radius: var(--turn-radius-default, 18px);
+  background: var(--turn-surface-raised, #fffdf6);
   box-shadow: var(--turn-shadow-compact, 3px 3px 0 #08090a);
-  cursor: pointer;
 }
 
-.turn-trophy-road-scroll-button svg {
-  width: 100%;
-  height: 100%;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.turn-trophy-road-scroll-button:disabled,
-.turn-trophy-road-scroll-button[aria-disabled="true"] {
-  background: var(--turn-muted, #d6d0c2);
-  box-shadow: none;
-  cursor: default;
-  opacity: .32;
-  pointer-events: none;
-}
-
-.turn-trophy-road-scroll {
+.turn-trophy-road-position > div:first-child {
   min-width: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 8px 0 12px;
-  overscroll-behavior-inline: contain;
-  scrollbar-color: var(--turn-ink, #08090a) var(--turn-muted, #d6d0c2);
-  scrollbar-width: thin;
-  touch-action: pan-y;
-  cursor: default;
-  -webkit-overflow-scrolling: touch;
 }
 
-.turn-trophy-road-scroll:focus-visible {
-  outline: 4px solid var(--turn-action-information, #38d9ff);
-  outline-offset: 3px;
-  border-radius: var(--turn-radius-compact, 12px);
+.turn-trophy-road-position span,
+.turn-trophy-road-position strong,
+.turn-trophy-road-position small {
+  display: block;
 }
 
-.turn-trophy-road-content {
-  position: relative;
-  min-width: 100%;
-  height: 74px;
+.turn-trophy-road-position span {
+  font-size: .65rem;
+  font-weight: 950;
+  letter-spacing: .11em;
 }
 
-.turn-trophy-road-track {
-  position: absolute;
-  top: 50%;
-  right: 34px;
-  left: 34px;
-  height: 18px;
-  transform: translateY(-50%);
+.turn-trophy-road-position strong {
+  margin-block: 1px;
+  font-size: clamp(1.35rem, 3.2vw, 2rem);
+  line-height: 1;
+}
+
+.turn-trophy-road-position small {
+  overflow: hidden;
+  font-size: .72rem;
+  font-weight: 800;
+  line-height: 1.15;
+  text-overflow: ellipsis;
 }
 
 .turn-trophy-road-progress {
-  height: 100%;
+  height: 22px;
   overflow: hidden;
   border: var(--turn-border-compact, 3px) solid var(--turn-ink, #08090a);
   border-radius: var(--turn-radius-pill, 999px);
@@ -130,61 +100,185 @@
   background: color-mix(in srgb, var(--turn-action-success, #8ce99a) 62%, var(--turn-ink, #08090a));
 }
 
+.turn-trophy-road-highlights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.turn-trophy-road-highlights > article {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+  min-height: 76px;
+  padding: 9px 10px;
+  border: var(--turn-border-compact, 3px) solid var(--turn-ink, #08090a);
+  border-radius: var(--turn-radius-compact, 12px);
+  background: var(--turn-surface-raised, #fffdf6);
+}
+
+.turn-trophy-road-highlight-icon {
+  display: grid;
+  width: 54px;
+  height: 46px;
+  padding: 4px;
+  place-items: center;
+}
+
+.turn-trophy-road-highlights span,
+.turn-trophy-road-highlights strong,
+.turn-trophy-road-highlights small {
+  display: block;
+}
+
+.turn-trophy-road-highlights span {
+  font-size: .54rem;
+  font-weight: 950;
+  letter-spacing: .1em;
+}
+
+.turn-trophy-road-highlights strong {
+  margin-block: 2px;
+  overflow: hidden;
+  font-size: clamp(.72rem, 1.35vw, .92rem);
+  line-height: 1;
+  text-overflow: ellipsis;
+}
+
+.turn-trophy-road-highlights small {
+  font-size: .61rem;
+  font-weight: 800;
+  line-height: 1.12;
+}
+
+.turn-trophy-road-map {
+  padding: 11px;
+  border: var(--turn-border-default, 4px) solid var(--turn-ink, #08090a);
+  border-radius: var(--turn-radius-default, 18px);
+  background: color-mix(in srgb, var(--turn-surface-raised, #fffdf6) 88%, var(--turn-action-information, #38d9ff));
+}
+
+.turn-trophy-road-map-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: baseline;
+  margin: 0 2px 9px;
+}
+
+.turn-trophy-road-map-heading strong {
+  font-size: .75rem;
+  letter-spacing: .11em;
+}
+
+.turn-trophy-road-map-heading span {
+  font-size: .65rem;
+  font-weight: 800;
+}
+
+.turn-trophy-road-track {
+  min-width: 0;
+}
+
 .turn-trophy-road-markers {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.turn-trophy-road-markers > li {
+  min-width: 0;
+}
+
+.turn-trophy-road-markers > li[data-trophy-reward-major="true"] .turn-trophy-road-marker {
+  border-width: var(--turn-border-default, 4px);
 }
 
 .turn-trophy-road-marker {
-  position: absolute;
-  left: var(--turn-trophy-road-position, 34px);
-  top: 50%;
+  position: relative;
   display: grid;
-  width: 58px;
-  height: 58px;
-  padding: 5px;
-  place-items: center;
+  grid-template-rows: auto minmax(34px, 1fr) auto auto;
+  gap: 2px;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 106px;
+  padding: 7px 6px 6px;
   border: 3px solid var(--turn-ink, #08090a);
-  border-radius: 14px;
+  border-radius: var(--turn-radius-compact, 12px);
   background: var(--turn-surface-raised, #fffdf6);
   color: var(--turn-ink, #08090a);
-  box-shadow: var(--turn-shadow-compact, 3px 3px 0 #08090a);
-  transform: translate(-50%, -50%);
+  box-shadow: 2px 2px 0 var(--turn-ink, #08090a);
   cursor: pointer;
-  pointer-events: auto;
 }
 
-/* TURN's global button press rule must never replace the marker's positioning transform. */
+.turn-trophy-road-marker:focus-visible {
+  outline: 4px solid var(--turn-focus-ring, #ffd43b);
+  outline-offset: 2px;
+}
+
 .turn-achievements-dialog .turn-trophy-road-marker:hover,
 .turn-achievements-dialog .turn-trophy-road-marker:active,
 .turn-achievements-dialog .turn-trophy-road-marker.is-down {
-  box-shadow: var(--turn-shadow-compact, 3px 3px 0 #08090a);
-  transform: translate(-50%, -50%);
+  box-shadow: 2px 2px 0 var(--turn-ink, #08090a);
+  transform: none;
+}
+
+.turn-trophy-road-marker-state {
+  justify-self: start;
+  font-size: .48rem;
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: .09em;
+  text-transform: uppercase;
 }
 
 .turn-trophy-road-marker-icon {
   display: grid;
-  width: 32px;
-  height: 25px;
+  width: 48px;
+  height: 35px;
   place-items: center;
 }
 
-/* A compact side-profile Formula car: front wing, long nose, cockpit and rear wing. */
-.turn-trophy-road-marker[data-trophy-reward="future-racer"] .turn-trophy-road-marker-icon svg {
-  display: none;
-}
-
-.turn-trophy-road-marker[data-trophy-reward="future-racer"] .turn-trophy-road-marker-icon::before {
-  content: '';
+.turn-trophy-road-authored-icon {
+  display: block;
   width: 100%;
   height: 100%;
   background: currentColor;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 48'%3E%3Cpath d='M3 32h12l7-5 4-10h10l5 9h10l3-8h7v7h-7l7 7v5H4Z' fill='none' stroke='black' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M23 27h28M29 17l5 10M5 27v-6h13M52 18h9M53 24h8' fill='none' stroke='black' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='18' cy='39' r='5' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle cx='49' cy='39' r='5' fill='none' stroke='black' stroke-width='3'/%3E%3C/svg%3E") center / contain no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 48'%3E%3Cpath d='M3 32h12l7-5 4-10h10l5 9h10l3-8h7v7h-7l7 7v5H4Z' fill='none' stroke='black' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M23 27h28M29 17l5 10M5 27v-6h13M52 18h9M53 24h8' fill='none' stroke='black' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='18' cy='39' r='5' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle cx='49' cy='39' r='5' fill='none' stroke='black' stroke-width='3'/%3E%3C/svg%3E") center / contain no-repeat;
+  -webkit-mask: var(--turn-trophy-road-authored-source) center / contain no-repeat;
+  mask: var(--turn-trophy-road-authored-source) center / contain no-repeat;
+}
+
+.turn-trophy-road-authored-icon.is-vintage-racer {
+  --turn-trophy-road-authored-source: url('../assets/trophy-road/vintage-racer.svg');
+}
+
+.turn-trophy-road-authored-icon.is-shift {
+  --turn-trophy-road-authored-source: url('../assets/trophy-road/shift.svg');
+}
+
+.turn-trophy-road-authored-icon.is-race-car {
+  --turn-trophy-road-authored-source: url('../assets/trophy-road/race-car.svg');
+}
+
+.turn-trophy-road-authored-icon.is-future-racer {
+  --turn-trophy-road-authored-source: url('../assets/trophy-road/future-racer.svg');
+}
+
+.turn-trophy-road-authored-icon.is-rally-racer {
+  --turn-trophy-road-authored-source: url('../assets/trophy-road/rally-racer.svg');
+}
+
+.turn-trophy-road-authored-icon.is-monster-truck {
+  --turn-trophy-road-authored-source: url('../assets/trophy-road/monster-truck.svg');
 }
 
 .turn-trophy-road-marker svg,
+.turn-trophy-road-highlight-icon svg,
 .turn-trophy-road-detail-icon svg,
 .turn-achievements-trophy-total svg,
 .turn-trophy-reward-toast .turn-achievement-toast-icon svg,
@@ -201,8 +295,18 @@
 }
 
 .turn-trophy-road-marker > b {
-  font-size: .55rem;
+  font-size: .72rem;
   line-height: 1;
+}
+
+.turn-trophy-road-marker > small {
+  width: 100%;
+  overflow: hidden;
+  font-size: .52rem;
+  font-weight: 900;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .turn-trophy-road-marker.is-unlocked {
@@ -211,6 +315,11 @@
 
 .turn-trophy-road-marker.is-locked {
   background: var(--turn-muted, #d6d0c2);
+}
+
+.turn-trophy-road-marker.is-next {
+  outline: 4px solid var(--turn-action-warning, #ffd43b);
+  outline-offset: -7px;
 }
 
 .turn-trophy-road-marker-lock {
@@ -230,14 +339,7 @@
 
 .turn-trophy-road-marker.is-selected {
   outline: 4px solid var(--turn-action-information, #38d9ff);
-  outline-offset: 3px;
-}
-
-.turn-trophy-road-help {
-  margin: 0;
-  font-size: .76rem;
-  font-weight: 850;
-  text-align: center;
+  outline-offset: 2px;
 }
 
 .turn-trophy-road-detail {
@@ -508,15 +610,27 @@
     text-align: left;
   }
 
-  .turn-trophy-road-controls {
-    grid-template-columns: 38px minmax(0, 1fr) 38px;
-    gap: 5px;
+  .turn-trophy-road-position {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
   }
 
-  .turn-trophy-road-scroll-button {
-    width: 38px;
-    height: 38px;
-    padding: 7px;
+  .turn-trophy-road-highlights {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .turn-trophy-road-highlights > article {
+    min-height: 64px;
+  }
+
+  .turn-trophy-road-map-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .turn-trophy-road-markers {
+    grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
   }
 
   .turn-trophy-road-detail {
@@ -530,8 +644,7 @@
   }
 
   .turn-trophy-road-marker {
-    width: 50px;
-    height: 50px;
+    min-height: 94px;
   }
 
   .turn-trophy-road-marker-icon {
@@ -546,25 +659,69 @@
     flex-direction: row;
   }
 
-  .turn-trophy-road-controls {
-    grid-template-columns: 34px minmax(0, 1fr) 34px;
-    gap: 5px;
+  .turn-trophy-road {
+    gap: 8px;
   }
 
-  .turn-trophy-road-scroll-button {
-    width: 34px;
-    height: 34px;
-    padding: 6px;
+  .turn-trophy-road-position {
+    grid-template-columns: minmax(170px, .55fr) minmax(220px, 1.45fr);
+    gap: 10px;
+    padding: 7px 10px;
+  }
+
+  .turn-trophy-road-position strong {
+    font-size: 1.2rem;
+  }
+
+  .turn-trophy-road-position small {
+    font-size: .61rem;
+  }
+
+  .turn-trophy-road-progress {
+    height: 17px;
     border-width: 2px;
   }
 
-  .turn-trophy-road-content {
-    height: 58px;
+  .turn-trophy-road-highlights {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .turn-trophy-road-highlights > article {
+    grid-template-columns: 38px minmax(0, 1fr);
+    min-height: 54px;
+    padding: 5px 7px;
+    border-width: 2px;
+  }
+
+  .turn-trophy-road-highlight-icon {
+    width: 38px;
+    height: 33px;
+    padding: 2px;
+  }
+
+  .turn-trophy-road-highlights small {
+    font-size: .52rem;
+  }
+
+  .turn-trophy-road-map {
+    padding: 7px;
+    border-width: 3px;
+  }
+
+  .turn-trophy-road-map-heading {
+    align-items: baseline;
+    flex-direction: row;
+    margin-bottom: 6px;
+  }
+
+  .turn-trophy-road-markers {
+    grid-template-columns: repeat(auto-fit, minmax(82px, 1fr));
+    gap: 5px;
   }
 
   .turn-trophy-road-marker {
-    width: 44px;
-    height: 44px;
+    min-height: 78px;
     padding: 4px;
     border-width: 2px;
   }
@@ -579,6 +736,15 @@
     right: -7px;
     width: 18px;
     height: 18px;
+  }
+
+  .turn-trophy-road-marker-state,
+  .turn-trophy-road-marker > small {
+    font-size: .43rem;
+  }
+
+  .turn-trophy-road-marker > b {
+    font-size: .6rem;
   }
 
   .turn-trophy-road-detail {

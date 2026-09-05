@@ -1,29 +1,33 @@
 export const TROPHY_ROAD_STORAGE_KEY = 'turn-achievements-v1';
-export const TROPHY_ROAD_STORAGE_VERSION = 7;
-export const TROPHY_ROAD_MAX_THRESHOLD = 2000;
-export const TROPHY_ROAD_VIEWPORT_THRESHOLD = 600;
+export const TROPHY_ROAD_STORAGE_VERSION = 8;
+export const TROPHY_ROAD_MAX_THRESHOLD = 2200;
 
 export const TROPHY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 4h10v4c0 4-2 7-5 8-3-1-5-4-5-8V4Z"></path><path d="M7 6H4v2c0 2 1 3 4 4M17 6h3v2c0 2-1 3-4 4M9 20h6M12 16v4"></path></svg>';
 export const LOCK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="10" width="14" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"></path></svg>';
 
+function authoredRewardIcon(name) {
+  return `<span class="turn-trophy-road-authored-icon is-${name}" aria-hidden="true"></span>`;
+}
+
 export const TROPHY_ROAD_REWARD_ICONS = Object.freeze({
   skyline: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M3 43h58M8 43V24h10v19M21 43V13h13v30M37 43V20h8v23M48 43V9h10v34"></path><path d="M11 29h3M11 35h3M25 19h4M25 26h4M25 33h4M51 15h3M51 22h3M51 29h3"></path><path d="M8 8a8 8 0 1 0 9 9A7 7 0 0 1 8 8Z"></path></svg>',
-  race: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M4 31h10l7-11h22l8 11h9v7H4Z"></path><path d="M22 20h17l7 11M16 27h33M27 20v11M47 17h11v7H51"></path><circle cx="17" cy="39" r="6"></circle><circle cx="50" cy="39" r="6"></circle></svg>',
-  future: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M5 32h8l7-7h9l5-8h8l5 8h9l4 7v7H5Z"></path><path d="M21 25h26M36 17l5 8M47 13h12v6H45"></path><circle cx="17" cy="39" r="5"></circle><circle cx="50" cy="39" r="5"></circle><path d="M2 22h12M1 16h17M7 28h9"></path></svg>',
+  race: authoredRewardIcon('race-car'),
+  future: authoredRewardIcon('future-racer'),
   paint: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M10 7h29v13H10Z"></path><path d="M39 11h8c5 0 7 3 7 7v4H31v8"></path><path d="M27 28h8v16h-8Z"></path><path d="M15 12h18M15 16h12"></path></svg>',
   emergency: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M18 35V21a14 14 0 0 1 28 0v14"></path><path d="M12 35h40v9H12Z"></path><path d="M32 2v7M9 9l6 6M55 9l-6 6M3 25h8M53 25h8"></path><path d="M24 34V22a8 8 0 0 1 16 0v12"></path></svg>',
-  monster: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M10 28h8l5-10h20l7 10h5v9H9Z"></path><path d="M28 18v10M23 28h27M45 22h8l4 6"></path><circle cx="18" cy="38" r="8"></circle><circle cx="48" cy="38" r="8"></circle><circle cx="18" cy="38" r="3"></circle><circle cx="48" cy="38" r="3"></circle></svg>',
-  vintage: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M5 31h9l7-8h20l8 4h9v10H5Z"></path><path d="M21 23l5-8h12l6 8M27 15v8M12 31h39"></path><circle cx="17" cy="38" r="6"></circle><circle cx="49" cy="38" r="6"></circle></svg>',
-  rally: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M7 31h7l6-12h24l8 12h6v7H7Z"></path><path d="M24 19v12M20 24h27M11 27h7M47 15h8l3 7"></path><circle cx="18" cy="39" r="5"></circle><circle cx="49" cy="39" r="5"></circle></svg>',
+  monster: authoredRewardIcon('monster-truck'),
+  vintage: authoredRewardIcon('vintage-racer'),
+  rally: authoredRewardIcon('rally-racer'),
   mountain: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M4 42 23 13l8 12L40 8l20 34Z"></path><path d="m17 22 6-9 5 8 4-6 8-7 7 13"></path><path d="M39 42c5-8 9-11 15-13M43 35l4 2-2 4 5 2"></path></svg>',
-  shift: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M14 39V24c0-8 5-13 13-13h10c8 0 13 5 13 13v15"></path><path d="M20 39h24M32 11v28M23 20h18"></path><circle cx="23" cy="20" r="4"></circle><circle cx="41" cy="20" r="4"></circle><circle cx="32" cy="11" r="4"></circle><circle cx="32" cy="39" r="4"></circle></svg>',
+  shift: authoredRewardIcon('shift'),
+  drift: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M7 10c24 2 35 13 32 33"></path><path d="M21 6c25 5 37 19 31 37"></path><path d="M5 21h8M17 29h8M31 38h8"></path></svg>',
+  flow: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M4 24c8-16 18-16 28 0s20 16 28 0"></path><path d="M4 34c8-16 18-16 28 0s20 16 28 0"></path></svg>',
   perk: '<svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M35 3 14 28h15l-3 17 24-28H35Z"></path><path d="M8 11h12M5 18h10M46 35h11"></path></svg>'
 });
 
-export const TROPHY_ROAD_REWARDS = Object.freeze([
+const TROPHY_ROAD_REWARD_DEFINITIONS = Object.freeze([
   Object.freeze({
     id: 'vintage-racer',
-    threshold: 300,
     title: 'VINTAGE RACER',
     shortTitle: 'Vintage Racer',
     type: 'vehicle',
@@ -35,7 +39,6 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
   }),
   Object.freeze({
     id: 'midnight-city',
-    threshold: 400,
     title: 'MIDNIGHT CITY',
     shortTitle: 'Midnight City',
     type: 'track',
@@ -45,7 +48,6 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
   }),
   Object.freeze({
     id: 'race-car',
-    threshold: 500,
     title: 'RACE CAR',
     shortTitle: 'Race Car',
     type: 'vehicle',
@@ -57,7 +59,6 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
   }),
   Object.freeze({
     id: 'emergency-pack',
-    threshold: 600,
     title: 'EMERGENCY!',
     shortTitle: 'Emergency Pack',
     type: 'vehicle-pack',
@@ -69,7 +70,6 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
   }),
   Object.freeze({
     id: 'mountain',
-    threshold: 700,
     title: 'MOUNTAIN',
     shortTitle: 'Mountain',
     type: 'track',
@@ -79,7 +79,6 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
   }),
   Object.freeze({
     id: 'monster',
-    threshold: 800,
     title: 'MONSTER',
     shortTitle: 'Monster Truck',
     type: 'vehicle',
@@ -91,7 +90,6 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
   }),
   Object.freeze({
     id: 'paintjob',
-    threshold: 900,
     title: 'PAINTJOB',
     shortTitle: 'Paintjob',
     type: 'feature',
@@ -101,7 +99,6 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
   }),
   Object.freeze({
     id: 'future-racer',
-    threshold: 1000,
     title: 'FUTURE RACER',
     shortTitle: 'Future Racer',
     type: 'vehicle',
@@ -113,7 +110,6 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
   }),
   Object.freeze({
     id: 'rally-racer',
-    threshold: 1100,
     title: 'RALLY RACER',
     shortTitle: 'Rally Racer',
     type: 'vehicle',
@@ -125,7 +121,6 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
   }),
   Object.freeze({
     id: 'awd-traction',
-    threshold: 1200,
     title: 'AWD · TRACTION',
     shortTitle: 'AWD Traction',
     type: 'vehicle-perk',
@@ -137,7 +132,6 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
   }),
   Object.freeze({
     id: 'truck-torque',
-    threshold: 1300,
     title: 'TRUCK · TORQUE',
     shortTitle: 'Truck Torque',
     type: 'vehicle-perk',
@@ -149,7 +143,6 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
   }),
   Object.freeze({
     id: 'van-carry-on',
-    threshold: 1400,
     title: 'VAN · CARRY ON',
     shortTitle: 'Van Carry On',
     type: 'vehicle-perk',
@@ -161,7 +154,6 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
   }),
   Object.freeze({
     id: 'shift',
-    threshold: 1500,
     title: 'SHIFT',
     shortTitle: 'Shift',
     type: 'feature',
@@ -170,8 +162,25 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     description: 'Unlock SHIFT for every car. Move one point away from three attributes and into the other three, then toggle between STANDARD and SHIFT while racing.'
   }),
   Object.freeze({
+    id: 'drift-attack',
+    title: 'DRIFT ATTACK',
+    shortTitle: 'Drift Attack',
+    type: 'scoring-system',
+    featureId: 'drift-attack',
+    icon: 'drift',
+    description: 'Unlock DRIFT scoring on every normal lap. Build and bank slides, set a best score for each track, and keep racing against the clock.'
+  }),
+  Object.freeze({
+    id: 'flow',
+    title: 'FLOW',
+    shortTitle: 'Flow',
+    type: 'scoring-system',
+    featureId: 'flow',
+    icon: 'flow',
+    description: 'Unlock FLOW scoring on every normal lap. Link varied driving techniques and clever SHIFT outcomes while DRIFT and lap timing continue alongside it.'
+  }),
+  Object.freeze({
     id: 'suv-full-tank',
-    threshold: 1600,
     title: 'SUV · FULL TANK',
     shortTitle: 'SUV Full Tank',
     type: 'vehicle-perk',
@@ -183,7 +192,6 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
   }),
   Object.freeze({
     id: 'sedan-double-shift',
-    threshold: 1700,
     title: 'SEDAN · DOUBLE SHIFT',
     shortTitle: 'Sedan Double Shift',
     type: 'vehicle-perk',
@@ -195,7 +203,6 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
   }),
   Object.freeze({
     id: 'sports-car-drift-demon',
-    threshold: 1800,
     title: 'SPORTS CAR · DRIFT DEMON',
     shortTitle: 'Sports Car Drift Demon',
     type: 'vehicle-perk',
@@ -207,7 +214,6 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
   }),
   Object.freeze({
     id: 'learner-graduated',
-    threshold: 2000,
     title: 'LEARNER CAR · GRADUATED',
     shortTitle: 'Learner Car Graduated',
     type: 'vehicle-perk',
@@ -218,6 +224,48 @@ export const TROPHY_ROAD_REWARDS = Object.freeze([
     description: 'Unlock <strong>GRADUATED</strong> for Learner Car. Clean driving improves CONTROL, then ACCELERATION, then TOP SPEED.'
   })
 ]);
+
+const REWARD_ORDER = Object.freeze([
+  Object.freeze(['paintjob', 400]),
+  Object.freeze(['awd-traction', 500]),
+  Object.freeze(['drift-attack', 600]),
+  Object.freeze(['midnight-city', 700]),
+  Object.freeze(['truck-torque', 800]),
+  Object.freeze(['vintage-racer', 900]),
+  Object.freeze(['shift', 1000]),
+  Object.freeze(['race-car', 1100]),
+  Object.freeze(['emergency-pack', 1200]),
+  Object.freeze(['van-carry-on', 1300]),
+  Object.freeze(['mountain', 1400]),
+  Object.freeze(['flow', 1500]),
+  Object.freeze(['future-racer', 1600]),
+  Object.freeze(['suv-full-tank', 1700]),
+  Object.freeze(['monster', 1800]),
+  Object.freeze(['sedan-double-shift', 1900]),
+  Object.freeze(['rally-racer', 2000]),
+  Object.freeze(['sports-car-drift-demon', 2100]),
+  Object.freeze(['learner-graduated', 2200])
+]);
+const MAJOR_REWARD_IDS = new Set([
+  'drift-attack',
+  'midnight-city',
+  'shift',
+  'mountain',
+  'flow'
+]);
+const REWARD_DEFINITION_BY_ID = new Map(
+  TROPHY_ROAD_REWARD_DEFINITIONS.map((reward) => [reward.id, reward])
+);
+
+export const TROPHY_ROAD_REWARDS = Object.freeze(REWARD_ORDER.map(([id, threshold]) => {
+  const reward = REWARD_DEFINITION_BY_ID.get(id);
+  if (!reward) throw new Error(`TURN Trophy Road 2 is missing reward ${id}.`);
+  return Object.freeze({
+    ...reward,
+    threshold,
+    major: MAJOR_REWARD_IDS.has(id)
+  });
+}));
 
 const REWARD_BY_ID = new Map(TROPHY_ROAD_REWARDS.map((reward) => [reward.id, reward]));
 const REWARD_BY_TRACK = new Map(
@@ -300,6 +348,41 @@ export function rewardIdsForTrophies(trophies) {
   return TROPHY_ROAD_REWARDS
     .filter((reward) => total >= reward.threshold)
     .map((reward) => reward.id);
+}
+
+export function trophyRoadOverview({
+  trophies = 0,
+  unlockedRewardIds = [],
+  unseenRewardIds = []
+} = {}) {
+  const total = Math.max(0, Number(trophies) || 0);
+  const unlocked = new Set(Array.isArray(unlockedRewardIds) ? unlockedRewardIds : []);
+  const unseen = Array.isArray(unseenRewardIds) ? unseenRewardIds : [];
+  const next = TROPHY_ROAD_REWARDS.find((reward) => !unlocked.has(reward.id)) || null;
+  const newRewards = unseen
+    .map((id) => getTrophyRoadReward(id))
+    .filter((reward) => reward && unlocked.has(reward.id));
+  const newEarned = newRewards.at(-1) || null;
+  const earned = newEarned || [...TROPHY_ROAD_REWARDS]
+    .reverse()
+    .find((reward) => unlocked.has(reward.id)) || null;
+  const horizon = TROPHY_ROAD_REWARDS.find((reward) => (
+    reward.major
+    && !unlocked.has(reward.id)
+    && reward.id !== next?.id
+    && reward.threshold > (next?.threshold || total)
+  )) || null;
+
+  return Object.freeze({
+    total,
+    progress: Math.min(1, total / TROPHY_ROAD_MAX_THRESHOLD),
+    earned,
+    earnedIsNew: Boolean(newEarned),
+    newRewards: Object.freeze(newRewards),
+    next,
+    remaining: next ? Math.max(0, next.threshold - total) : 0,
+    horizon
+  });
 }
 
 function ensureUnlockNotice() {
@@ -446,7 +529,7 @@ function cleanTrophyRoadState() {
     unlocked: {},
     seen: [],
     progress: { tracks: [], blankTracks: [] },
-    rewards: { unlocked: [], seen: [] }
+    rewards: { unlocked: [], seen: [], grandfathered: [] }
   };
 }
 
@@ -508,9 +591,10 @@ export function readTrophyRoadSnapshot(storage = globalThis.localStorage) {
   }
 
   const sourceVersion = Number(state?.version || 0);
-  const stored = Array.isArray(state?.rewards?.unlocked)
-    ? state.rewards.unlocked.filter((id) => REWARD_BY_ID.has(id))
-    : [];
+  const stored = [
+    ...(Array.isArray(state?.rewards?.unlocked) ? state.rewards.unlocked : []),
+    ...(Array.isArray(state?.rewards?.grandfathered) ? state.rewards.grandfathered : [])
+  ].filter((id) => REWARD_BY_ID.has(id));
   const migratedStored = migrateStoredRewardIdsForVersion(stored, sourceVersion);
   const migrated = state ? grandfatheredRewardIdsForVersion(sourceVersion) : [];
   const unlockedRewardIds = [...new Set([...migratedStored, ...migrated])];

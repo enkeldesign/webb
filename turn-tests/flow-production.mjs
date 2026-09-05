@@ -98,6 +98,32 @@ assert.ok(scorer.acceptTechnique({ technique: 'drift', token: 'DRIFT', basePoint
 const originalCustomEvent = globalThis.CustomEvent;
 globalThis.CustomEvent = TurnEvent;
 try {
+  let flowUnlocked = false;
+  const dormantTarget = new EventTargetStub();
+  const dormantFeedback = makeFeedback();
+  const dormantRuntime = createFlowRuntime({
+    state: { lapActive: true, trackId: 'countryside', vehicleId: 'classic' },
+    storage: new MemoryStorage(),
+    eventTarget: dormantTarget,
+    scoreFeedback: dormantFeedback,
+    isUnlocked: () => flowUnlocked
+  });
+  assert.equal(dormantRuntime.isEnabled(), false);
+  dormantTarget.emit('turn:drift-score-event', {
+    type: 'bank',
+    score: 1000,
+    duration: 2,
+    reason: 'exit',
+    at: 100
+  });
+  assert.equal(dormantRuntime.scorer.inspect().lapScore, 0,
+    'Locked FLOW must ignore DRIFT and SHIFT events rather than running a dormant analyzer');
+  flowUnlocked = true;
+  dormantTarget.emit('turn:achievements-ready', {});
+  assert.equal(dormantRuntime.isEnabled(), true,
+    'The post-migration achievements-ready event must activate newly derived FLOW entitlement');
+  assert.equal(dormantFeedback.visible, true);
+
   const state = { lapActive: true, trackId: 'mountain', vehicleId: 'sedan' };
   const storage = new MemoryStorage();
   const eventTarget = new EventTargetStub();

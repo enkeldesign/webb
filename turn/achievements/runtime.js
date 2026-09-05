@@ -2,15 +2,15 @@ import {
   ACHIEVEMENTS,
   TRACK_IDS,
   TRAINING_CAR_ID
-} from './catalog.js?revision=r222-awd-label';
+} from './catalog.js?revision=r240-trophy-road-2';
 import {
   createAchievementStore,
   normalizeAchievementState
-} from './store.js?revision=r166-bella-records';
+} from './store.js?revision=r240-trophy-road-2';
 import {
   allOnboardingComplete,
   createAchievementView
-} from './view.js?revision=r166-bella-records';
+} from './view.js?revision=r240-trophy-road-2';
 import {
   completedNightShiftSheriff,
   createNightShiftAttempt,
@@ -27,7 +27,7 @@ import {
   completedAllScoringAchievements,
   qualifyingScoringAchievement,
   storedScoringAchievementUnlockEntries
-} from './scoring-achievements.js?revision=r1-placeholder-targets';
+} from './scoring-achievements.js?revision=r2-calibrated-targets';
 import { replayFrameAt } from '../race/replay-system.js?revision=r146-achievement-expansion';
 import { getStoredBestLap } from '../race/rival-storage.js';
 

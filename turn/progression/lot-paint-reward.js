@@ -9,7 +9,7 @@ import {
   isPaintUnlocked,
   getTrophyRoadReward,
   showTrophyUnlockNotice
-} from './trophy-road.js?revision=r166-bella-records';
+} from './trophy-road.js?revision=r240-trophy-road-2';
 
 const PAINT_REWARD_ID = 'paintjob';
 const CAR_BY_ID = new Map(CAR_CATALOG.map((car) => [car.id, car]));
@@ -204,7 +204,7 @@ export function gateLotPaintNow(root = document.body) {
       else colors.prepend(button);
     }
 
-    const threshold = reward()?.threshold || 900;
+    const threshold = reward()?.threshold || 400;
     const copy = button.querySelector('.lot-paint-lock-copy');
     if (copy) copy.innerHTML = `<strong>${threshold} 🏆</strong><small>TO UNLOCK</small>`;
     button.setAttribute(

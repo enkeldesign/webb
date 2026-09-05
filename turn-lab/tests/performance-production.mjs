@@ -220,7 +220,7 @@ assert.equal(
 );
 assert.equal(
   imports['/turn/achievements/trophy-road-showcase.js?revision=r160-reward-detail-sync'],
-  '/turn/achievements/trophy-road-showcase.js?revision=r220-race-reward',
+  '/turn/achievements/trophy-road-showcase.js?revision=r240-trophy-road-2',
   'Trophy Road must receive the fresh throttled preview renderer instead of a cached full-refresh module'
 );
 assert.match(app, /performance-profile\.js\?revision=r187-legacy-tablet-mountain-shadows/,

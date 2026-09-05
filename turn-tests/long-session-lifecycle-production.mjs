@@ -150,8 +150,8 @@ assert.match(
 );
 assert.match(
   achievementsFacade,
-  /achievements\/runtime\.js\?revision=r164-long-session-robustness/,
-  'The achievement facade must cache-bust the race-scoped sampler implementation'
+  /achievements\/runtime\.js\?revision=r240-trophy-road-2/,
+  'The achievement facade must cache-bust the race-scoped sampler and Trophy Road implementation'
 );
 
 // The screen-reader coordinator may discover dynamic live regions while Home is being

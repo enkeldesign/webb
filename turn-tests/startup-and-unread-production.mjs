@@ -80,7 +80,7 @@ assert.doesNotMatch(screenReaderCoordinator, /speak\(`\$\{readyMessage\} \$\{NON
   'The old portrait-ready plus onboarding utterance must not return');
 
 assert.match(fixedLayout, /achievements\/unread-markers\.js\?build=\$\{buildKey\}-r219-unified-filters/);
-assert.match(fixedLayout, /achievements\/trophy-road-feedback\.js\?build=\$\{buildKey\}-r219-unified-filters/);
+assert.match(fixedLayout, /achievements\/trophy-road-feedback\.js\?build=\$\{buildKey\}-r240-trophy-road-2/);
 assert.match(fixedLayout, /installAchievementUnreadMarkers\(achievements\)/);
 assert.match(fixedLayout, /achievementUnreadMarkers,/);
 assert.match(fixedLayout, /function installDriveByEarSpokenLabels\(training\)/);

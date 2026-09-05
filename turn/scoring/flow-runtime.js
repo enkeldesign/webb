@@ -460,9 +460,11 @@ export function createFlowRuntime({
   eventTarget?.addEventListener?.('turn:drift-score-event', onDriftScoreEvent);
   eventTarget?.addEventListener?.('turn:boost-outcome', onBoostOutcome);
   eventTarget?.addEventListener?.('turn:overcharge-catch', onOverchargeCatch);
-  eventTarget?.addEventListener?.('turn:trophy-road-updated', () => refreshEntitlement(
+  const refreshFromProgression = () => refreshEntitlement(
     globalThis.performance?.now?.() || 0
-  ));
+  );
+  eventTarget?.addEventListener?.('turn:trophy-road-updated', refreshFromProgression);
+  eventTarget?.addEventListener?.('turn:achievements-ready', refreshFromProgression);
   eventTarget?.addEventListener?.('turn:ui-state-change', handleUiState);
   syncPresentation(0);
 
