@@ -1,23 +1,47 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [design, tokens, semantic, homeFeedback, release, index] = await Promise.all([
+const [design, dialogs, referenceCss, tokens, semantic, releaseSource, index] = await Promise.all([
   fs.readFile(new URL('../turn/design.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/design-dialogs.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/design-reference.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/design-tokens.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/design-semantic.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/home-feedback-r135.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8')
 ]);
 
-assert.match(design, /^<!doctype html>/i);
-assert.match(design, /<html lang="en">/);
-assert.match(design, /<meta name="viewport" content="width=device-width, initial-scale=1">/);
-assert.doesNotMatch(design, /user-scalable=no/);
-assert.doesNotMatch(design, /<script\b/i, 'The reference page must remain static');
-assert.doesNotMatch(design, /https?:\/\//i, 'The reference page must remain dependency-free');
-assert.match(design, /href="\.\/design-tokens\.css\?revision=r162-social-sharing"/);
-assert.match(design, /href="\.\/design-semantic\.css\?revision=r162-social-sharing"/);
+const release = JSON.parse(releaseSource);
+
+for (const page of [design, dialogs]) {
+  assert.match(page, /^<!doctype html>/i);
+  assert.match(page, /<html lang="en">/);
+  assert.match(page, /<meta name="viewport" content="width=device-width, initial-scale=1">/);
+  assert.doesNotMatch(page, /user-scalable=no/);
+  assert.doesNotMatch(page, /<script\b/i, 'Design references must remain static');
+  assert.doesNotMatch(page, /https?:\/\//i, 'Design references must remain dependency-free');
+  assert.match(page, /href="\.\/design-tokens\.css\?revision=r162-social-sharing"/);
+  assert.match(page, /href="\.\/design-semantic\.css\?revision=r162-social-sharing"/);
+  assert.match(page, /href="\.\/design-reference\.css\?revision=r204-current-product-language"/);
+  assert.match(page, /class="system-toolbar" aria-label="Design reference pages"/);
+  assert.match(page, />Design system<\/a>[\s\S]*>Dialogs<\/a>[\s\S]*>Open TURN<\/a>/);
+  assert.match(page, /href="\.\/" target="_blank" rel="noopener">Open TURN<\/a>/,
+    'Open TURN must use a fresh browsing context');
+  assert.match(page, new RegExp(`TURN ${escapeRegex(release.version)}`),
+    'Current design references must identify the canonical production release');
+  assert.match(page, new RegExp(`Build ${escapeRegex(release.id)}`, 'i'),
+    'Current design references must identify the canonical production build');
+}
+
+assert.match(design, /href="\.\/design\.html" aria-current="page">Design system<\/a>/);
+assert.match(dialogs, /href="\.\/design-dialogs\.html" aria-current="page">Dialogs<\/a>/);
+assert.match(design, /Current product language · September 2026/);
+assert.match(design, /Built from the game, not beside it\./);
+assert.match(design, /what the shipped game actually does today instead of presenting an aspirational concept board/);
+assert.doesNotMatch(design, /Normative production system · TURN 1\.7/);
+assert.doesNotMatch(design, /TURN V1\.7\.0 · BUILD 2026\.08\.09-R163/);
+assert.doesNotMatch(design, /TRACK PREVIEW|3D CAR VIEW|Actual components, not substitute illustrations/,
+  'The current reference must use real structural specimens instead of the old placeholder-board vocabulary');
 
 const primitivePalette = new Map([
   ['--turn-ink', '#08090a'],
@@ -52,11 +76,10 @@ assert.equal(
   primitivePalette.size,
   'The reference must show every primitive colour exactly once'
 );
-
 for (const [token, value] of primitivePalette) {
   assert.ok(tokens.includes(`${token}: ${value}`), `Missing primitive definition ${token}: ${value}`);
   assert.ok(design.includes(`data-token="${token}"`), `Missing primitive swatch ${token}`);
-  assert.ok(design.includes(`<code>${token}</code>`), `Missing visible primitive variable name ${token}`);
+  assert.ok(design.includes(`<code>${token}</code>`), `Missing visible primitive variable ${token}`);
   assert.ok(design.includes(`<span>${value}</span>`), `Missing visible primitive value ${value}`);
 }
 
@@ -99,13 +122,12 @@ assert.equal(
   semanticMappings.size,
   'The reference must show every semantic colour role exactly once'
 );
-
 for (const [semanticToken, primitiveToken] of semanticMappings) {
   const definition = `${semanticToken}: var(${primitiveToken})`;
   assert.ok(tokens.includes(definition), `Missing semantic mapping ${definition}`);
   assert.ok(design.includes(`data-semantic="${semanticToken}"`), `Missing semantic reference row ${semanticToken}`);
   assert.ok(design.includes(`<code>${semanticToken}</code>`), `Missing visible semantic variable ${semanticToken}`);
-  assert.ok(design.includes(`<code>var(${primitiveToken})</code>`), `Missing visible semantic mapping ${semanticToken} to ${primitiveToken}`);
+  assert.ok(design.includes(`<code>var(${primitiveToken})</code>`), `Missing visible semantic mapping ${semanticToken}`);
 }
 
 const compatibilityAliases = new Map([
@@ -121,7 +143,6 @@ const compatibilityAliases = new Map([
   ['--m8-yellow', '--turn-yellow-600'],
   ['--m8-blue', '--turn-blue-300']
 ]);
-
 for (const [alias, target] of compatibilityAliases) {
   assert.ok(tokens.includes(`${alias}: var(${target})`), `Missing compatibility alias ${alias}`);
   assert.ok(design.includes(`<code>${alias}</code>`), `Missing visible compatibility alias ${alias}`);
@@ -129,134 +150,85 @@ for (const [alias, target] of compatibilityAliases) {
 }
 
 for (const token of [
-  '--turn-border-micro',
-  '--turn-border-compact',
-  '--turn-border-default',
-  '--turn-border-heavy',
-  '--turn-radius-micro',
-  '--turn-radius-compact',
-  '--turn-radius-default',
-  '--turn-radius-hero',
-  '--turn-radius-pill',
-  '--turn-radius-circle',
-  '--turn-shadow-compact',
-  '--turn-shadow-default',
-  '--turn-shadow-hero'
+  '--turn-border-micro', '--turn-border-compact', '--turn-border-default', '--turn-border-heavy',
+  '--turn-radius-micro', '--turn-radius-compact', '--turn-radius-default', '--turn-radius-hero',
+  '--turn-radius-pill', '--turn-radius-circle', '--turn-shadow-compact', '--turn-shadow-default', '--turn-shadow-hero'
 ]) {
   assert.ok(tokens.includes(token), `Missing geometry or elevation token ${token}`);
 }
 
 assert.match(semantic, /@import url\('\.\/design-tokens\.css\?revision=r162-social-sharing'\)/);
 assert.match(semantic, /\.install-primary,[\s\S]*\.m8-home-fixed-layout \.m8-track-continue,[\s\S]*\.track-select-continue,[\s\S]*\.lot-race/);
-assert.match(semantic, /border-radius: var\(--turn-radius-pill\) !important;/);
-assert.match(semantic, /background: var\(--turn-action-primary\) !important;/);
-assert.match(semantic, /\.turn-yourturn-share-submit,[\s\S]*\.yourturn-actions button\.is-share[\s\S]*var\(--turn-action-share\)/,
-  'TURN and YOUR TURN share actions must consume the same semantic role');
-assert.match(semantic, /\.yourturn-actions button\.is-game[\s\S]*var\(--turn-action-game\)/,
-  'The YOUR TURN → TURN handoff must consume the game-handoff role');
-assert.match(semantic, /\.yourturn-order-1[\s\S]*var\(--turn-social-racer-1\)/);
-assert.match(semantic, /\.yourturn-order-5[\s\S]*var\(--turn-social-racer-5\)/);
-assert.match(semantic, /background: var\(--turn-action-utility\) !important;/);
-assert.match(semantic, /background: var\(--turn-action-navigation\) !important;/);
+assert.match(semantic, /\.drive-drift-zone,[\s\S]*var\(--turn-control-drift\)/);
+assert.match(semantic, /\.drive-pad \.drive-gas-zone,[\s\S]*var\(--turn-control-gas\)/);
+assert.match(semantic, /\.drive-pad \.drive-brake-zone,[\s\S]*var\(--turn-control-brake\)/);
+assert.match(semantic, /\.drive-boost-zone[\s\S]*var\(--turn-control-boost\)[\s\S]*var\(--turn-control-boost-empty\)/);
 
-for (const difficultyContract of [
-  '.track-card-countryside .track-card-difficulty',
-  '.track-card-airport .track-card-difficulty',
-  '.track-card-cliffside .track-card-difficulty',
-  '.track-card-harbor .track-card-difficulty',
-  '.track-card-midnight-city .track-card-difficulty',
-  '.track-card-mountain .track-card-difficulty',
-  '.track-card-locked .track-card-difficulty'
-]) {
-  assert.ok(semantic.includes(difficultyContract), `Missing difficulty contract ${difficultyContract}`);
-}
-
-assert.match(homeFeedback, /Visually a text link; semantically a button because it opens a dialog/);
-assert.match(homeFeedback, /\.m8-home-fixed-layout \.m8-about-trigger[\s\S]*appearance: none/);
-assert.match(homeFeedback, /text-decoration: underline/);
-
-for (const section of ['audit', 'colour', 'patterns', 'screens', 'migration']) {
+for (const section of ['principles', 'foundations', 'components', 'gameplay', 'progression', 'layouts', 'accessibility', 'legacy']) {
   assert.match(design, new RegExp(`id="${section}"`));
   assert.match(design, new RegExp(`href="#${section}"`));
 }
-
 for (const colourLayer of ['primitive-palette', 'semantic-mappings', 'compatibility-aliases']) {
   assert.match(design, new RegExp(`id="${colourLayer}"`));
 }
 
 for (const decision of [
-  'Primitive palette',
-  'Semantic variables and mappings',
-  'Compatibility aliases',
-  'Primary action',
-  'Social share',
-  'Game handoff',
-  'Racer identity',
-  'Utility',
-  'Navigation',
-  'Easy green 200, Medium yellow 200, Advanced orange 200, Expert red 200',
-  'Form controls',
-  'Disclosure',
-  'ABOUT TURN is visually a link but semantically a button',
-  'Install TURN',
-  'Race this track',
-  'Race this car',
-  'Share Your Turn',
-  'Get the Game',
-  'Settings',
-  'How to Play',
-  'Give Feedback',
-  'Race Again',
-  'Leave race',
-  'Close',
-  'Gas',
-  'Drift',
-  'Boost',
-  'Brake · Reverse'
+  'Race this track', 'Settings', 'How to play', 'Achievements', 'Leave race',
+  'Easy', 'Medium', 'Advanced', 'Expert', 'Locked',
+  'Device steering', 'On-screen steering', 'Left-handed layout', 'Drive By Ear',
+  'DRIFT and FLOW scorekeeper', 'Drift', 'Boost', 'Gas', 'Brake · Reverse', 'Lock', 'Shift',
+  'Scorekeeper paper', 'Trophy Road is a literal road now', 'START', 'FINISH',
+  'Vehicle', 'Feature / perk', 'Scoring', 'The Lot', 'SPORTS CAR',
+  'Screen reader', 'Blank screen', 'Reduced motion'
 ]) {
-  assert.ok(design.toLocaleLowerCase('en').includes(decision.toLocaleLowerCase('en')), `Missing design decision ${decision}`);
+  assert.ok(design.toLocaleLowerCase('en').includes(decision.toLocaleLowerCase('en')), `Missing current design decision ${decision}`);
 }
 
 assert.match(design, /Colour reinforces progression but never replaces the label/);
-assert.match(design, /Colour follows stable join order\. A faster lap may change race rank, but never the racer’s social colour\./);
-assert.match(design, /Name is required before sharing/);
-assert.match(design, /stable racer ID carries identity through a challenge chain/);
-assert.match(design, /selected track record and inside a new-personal-best result/);
+assert.match(design, /Social racer colour follows stable join order\. A faster lap may change race rank, but never the racer’s social colour\./);
+assert.match(design, /Vehicle[\s\S]*blue-100 → blue-500/);
+assert.match(design, /Track[\s\S]*green-200 → green-500/);
+assert.match(design, /Feature \/ perk[\s\S]*yellow-100 → yellow-400/);
+assert.match(design, /Scoring[\s\S]*pink-100 → pink-200/);
+assert.match(design, /Locked perks stay still/);
+assert.match(design, /selecting a car with an active perk gives the short confirmation wiggle/);
+assert.match(design, /clicking outside also closes it/i);
+assert.match(design, /detail close button uses[\s\S]*--turn-orange-500/i);
 
-for (const page of [
-  'TURN install page design specimen',
-  'TURN Home and track-selection design specimen',
-  'TURN The Lot design specimen',
-  'TURN race HUD and control design specimen',
-  'YOUR TURN social challenge design specimen',
-  'TURN How to Play dialog design specimen'
-]) {
-  assert.match(design, new RegExp(page));
-}
-for (const placeholder of ['TRACK PREVIEW', '3D CAR VIEW', 'GAME VIEW']) {
-  assert.ok(design.includes(placeholder), `Missing labelled content area ${placeholder}`);
-}
-assert.doesNotMatch(design, /car-shape|track-preview-sample|race-road/);
-assert.match(design, /Actual components, not substitute illustrations\./);
-assert.match(design, /Core game and social challenge patterns are represented\./);
-assert.match(design, /Social challenge semantics: active\./);
-assert.match(design, /class="skip-link" href="#main"/);
-assert.match(design, /aria-label="Design system sections"/);
-assert.match(design, /@media \(prefers-reduced-motion: reduce\)/);
+assert.match(referenceCss, /\.system-header[\s\S]*background: var\(--turn-yellow-600\)/,
+  'The reference itself must use the current solid yellow Home-header language');
+assert.match(referenceCss, /\.system-toolbar[\s\S]*background: var\(--turn-blue-300\)/);
+assert.match(referenceCss, /\.button-sample\.primary[\s\S]*background: var\(--turn-action-primary\)/);
+assert.match(referenceCss, /\.dialog-demo__close[\s\S]*background: var\(--turn-orange-500\)/);
+assert.match(referenceCss, /\.drive-demo__drift[\s\S]*var\(--turn-control-drift\)/);
+assert.match(referenceCss, /\.drive-demo__boost[\s\S]*var\(--turn-control-boost\)/);
+assert.match(referenceCss, /\.drive-demo__gas[\s\S]*var\(--turn-control-gas\)/);
+assert.match(referenceCss, /\.drive-demo__brake[\s\S]*var\(--turn-control-brake\)/);
+assert.match(referenceCss, /\.score-row\.flow \.score-gauge i[\s\S]*var\(--turn-pink-500\)/);
+assert.match(referenceCss, /\.reward-tile\.vehicle\.locked[\s\S]*var\(--turn-blue-100\)/);
+assert.match(referenceCss, /\.reward-tile\.scoring\.unlocked[\s\S]*var\(--turn-pink-200\)/);
+assert.match(referenceCss, /@media \(prefers-reduced-motion: reduce\)/);
 
-const releaseDefinition = JSON.parse(release);
-assert.match(index, new RegExp(`TURN v${escapeRegex(releaseDefinition.version)} · Build ${escapeRegex(releaseDefinition.id)}`));
-assert.match(index, new RegExp(`version: '${escapeRegex(releaseDefinition.version)}'`));
-assert.match(index, new RegExp(`id: '${escapeRegex(releaseDefinition.id)}'`));
-assert.match(index, new RegExp(`cacheKey: '${escapeRegex(releaseDefinition.cacheKey)}'`));
-assert.match(design, /Normative production system · TURN 1\.7/,
-  'The design reference has its own documented design-system revision and need not mirror every game release bump');
-assert.match(design, /TURN V1\.7\.0 · BUILD 2026\.08\.09-R163/,
-  'Static screen specimens remain labelled with the release they document until the design reference itself is revised');
-assert.doesNotMatch(design, /TURN V1\.4\.0|2026\.08\.03-R126/,
-  'The living design reference must not regress to obsolete pre-1.7 metadata');
+assert.match(dialogs, /TURN dialogs/i);
+assert.match(dialogs, /Standardize the shell, not the content\./);
+assert.match(dialogs, /Production dialog inventory/);
+assert.match(dialogs, /About TURN/);
+assert.match(dialogs, /Development history &amp; changelog/);
+assert.match(dialogs, /Drive By Ear 101 introduction/);
+assert.match(dialogs, /Motion access denied/);
+assert.match(dialogs, /In-race audio settings/);
+assert.match(dialogs, /Compact[\s\S]*Standard[\s\S]*Wide[\s\S]*Reader/);
+assert.match(dialogs, /Do not stack modal dialogs/);
+assert.match(dialogs, /Focus the heading first/);
+assert.match(dialogs, /Return focus/);
+assert.match(dialogs, /Contain scrolling/);
 
-console.log('TURN 1.6 primitive palette, social challenge semantics, mappings and component reference passed.');
+assert.match(index, new RegExp(`TURN v${escapeRegex(release.version)} · Build ${escapeRegex(release.id)}`));
+assert.match(index, new RegExp(`version: '${escapeRegex(release.version)}'`));
+assert.match(index, new RegExp(`id: '${escapeRegex(release.id)}'`));
+assert.match(index, new RegExp(`cacheKey: '${escapeRegex(release.cacheKey)}'`));
+
+console.log('TURN current product-language design system, palette, gameplay, progression and dialog reference passed.');
 
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

@@ -13,7 +13,7 @@ const [
   historyCss,
   designMain,
   designReference,
-  designNavigation
+  designReferenceCss
 ] = await Promise.all([
   fs.readFile(new URL('../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
@@ -26,7 +26,7 @@ const [
   fs.readFile(new URL('../turn/about-history-r163.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/design.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/design-dialogs.html', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/design-navigation.css', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/design-reference.css', import.meta.url), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -145,7 +145,6 @@ assert.match(content, /≈4\.7 km/);
 assert.match(content, /≈3\.8 km/);
 assert.doesNotMatch(content, /MOUNTAIN at 1,000 trophies/);
 
-
 for (const size of ['compact', 'standard', 'wide', 'reader']) {
   assert.match(dialogCss, new RegExp(`\\.turn-dialog--${size}`),
     `Dialog system must define the ${size} size`);
@@ -166,7 +165,7 @@ assert.match(historyCss, /\.m8-about-summary[\s\S]*font-size: 0\.8rem !important
 assert.match(historyCss, /\.m8-about-actions[\s\S]*grid-template-columns: 1fr/,
   'The sole About action must span the full available width');
 
-assert.match(designReference, /TURN DIALOGS/);
+assert.match(designReference, /TURN dialogs/i);
 assert.match(designReference, /Standardize the shell, not the content/);
 assert.match(designReference, /Production dialog inventory/);
 assert.match(designReference, /About TURN/);
@@ -180,27 +179,29 @@ assert.match(designReference, /href="\.\/design\.html"/,
   'The dialog reference must remain connected to the main design system');
 
 for (const designPage of [designMain, designReference]) {
-  assert.match(designPage, /href="\.\/design-navigation\.css\?revision=r164-design-navigation"/,
-    'Every design-system page must use the shared navigation pattern');
-  assert.match(designPage, /class="design-page-nav" aria-label="Design system pages"/);
+  assert.match(designPage, /href="\.\/design-reference\.css\?revision=r204-current-product-language"/,
+    'Every design-system page must use the shared current-product reference shell');
+  assert.match(designPage, /class="system-toolbar" aria-label="Design reference pages"/);
   assert.match(designPage, />Design system<\/a>[\s\S]*>Dialogs<\/a>[\s\S]*>Open TURN<\/a>/,
     'Design-system pages must expose the same page navigation in the same order');
-  assert.match(designPage, /href="\/turn\/" target="_blank" rel="noopener noreferrer">Open TURN<\/a>/,
-    'Open TURN must use a fresh browsing context so mobile Safari cannot carry the documentation viewport scale into the game');
-  assert.match(designPage, /class="design-page-scroll" href="#[^"]+"/,
-    'Every design-system hero must visibly indicate that content continues below');
-  assert.match(designPage, /class="section-nav design-section-nav"/,
-    'Every design-system page must use the shared section-navigation treatment');
+  assert.match(designPage, /href="\.\/" target="_blank" rel="noopener">Open TURN<\/a>/,
+    'Open TURN must use a fresh browsing context so mobile Safari cannot carry documentation viewport state into the game');
+  assert.match(designPage, /class="section-nav" aria-label="[^"]+ sections"/,
+    'Every design-system page must expose compact sticky section navigation');
+  assert.match(designPage, new RegExp(`TURN ${escapeRegex(release.version)}`),
+    'Design references must identify the current production version');
+  assert.match(designPage, new RegExp(`Build ${escapeRegex(release.id)}`, 'i'),
+    'Design references must identify the current production build');
 }
 
 assert.match(designMain, /href="\.\/design\.html" aria-current="page">Design system<\/a>/);
 assert.match(designReference, /href="\.\/design-dialogs\.html" aria-current="page">Dialogs<\/a>/);
-assert.match(designNavigation, /min-height: 100svh/);
-assert.match(designNavigation, /\.design-page-nav a\[aria-current='page'\]/);
-assert.match(designNavigation, /\.section-nav\.design-section-nav/);
-assert.match(designNavigation, /prefers-reduced-motion: reduce/);
+assert.match(designReferenceCss, /\.system-header[\s\S]*background: var\(--turn-yellow-600\)/);
+assert.match(designReferenceCss, /\.system-toolbar[\s\S]*background: var\(--turn-blue-300\)/);
+assert.match(designReferenceCss, /\.section-nav[\s\S]*position: sticky/);
+assert.match(designReferenceCss, /prefers-reduced-motion: reduce/);
 
-console.log('TURN website About, history, dialog system and design-system navigation regression passed.');
+console.log('TURN website About, history, dialog system and current design-reference navigation regression passed.');
 
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

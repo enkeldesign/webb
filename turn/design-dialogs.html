@@ -6,331 +6,142 @@
   <meta name="color-scheme" content="light">
   <meta name="robots" content="noindex">
   <title>TURN Design System — Dialogs</title>
-  <link rel="stylesheet" href="./design-tokens.css?revision=r141-form-disclosure">
-  <link rel="stylesheet" href="./design-semantic.css?revision=r141-form-disclosure">
-  <link rel="stylesheet" href="./m8-home.css?revision=r224-modal-headings">
+  <link rel="stylesheet" href="./design-tokens.css?revision=r162-social-sharing">
+  <link rel="stylesheet" href="./design-semantic.css?revision=r162-social-sharing">
   <link rel="stylesheet" href="./dialog-system-r163.css?revision=r163-modal-pattern">
-  <link rel="stylesheet" href="./design-navigation.css?revision=r164-design-navigation">
-  <style>
-    :root {
-      font-family: Inter, ui-rounded, system-ui, sans-serif;
-      color-scheme: light;
-      --design-page-width: 1120px;
-      --m8-ink: var(--turn-ink);
-      --m8-cream: var(--turn-paper);
-      --m8-pink: var(--turn-pink-500);
-      --m8-blue: var(--turn-blue-500);
-      --m8-yellow: var(--turn-yellow-400);
-    }
-
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; background: var(--turn-ink); }
-    body { margin: 0; background: var(--turn-ink); color: var(--turn-paper); font-weight: 780; line-height: 1.48; }
-    a, button { color: inherit; font: inherit; }
-    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-    a:focus-visible, button:focus-visible { outline: 5px solid var(--turn-form-control-focus); outline-offset: 4px; }
-
-    .skip-link {
-      position: fixed;
-      z-index: 100;
-      top: 12px;
-      left: 12px;
-      padding: 10px 14px;
-      border: 4px solid var(--turn-ink);
-      border-radius: var(--turn-radius-compact);
-      background: var(--turn-yellow-400);
-      color: var(--turn-ink);
-      box-shadow: var(--turn-shadow-default);
-      transform: translateY(-180%);
-    }
-
-    .skip-link:focus { transform: none; }
-
-    .hero {
-      padding: clamp(40px, 8vw, 96px) max(22px, calc((100vw - 1120px) / 2));
-      background: linear-gradient(145deg, var(--turn-blue-500), var(--turn-green-500));
-      color: var(--turn-ink);
-    }
-
-    .eyebrow {
-      display: inline-block;
-      padding: 7px 11px;
-      border: 3px solid var(--turn-ink);
-      border-radius: var(--turn-radius-pill);
-      background: var(--turn-yellow-400);
-      box-shadow: var(--turn-shadow-compact);
-      font-size: .72rem;
-      font-weight: 950;
-      letter-spacing: .15em;
-      text-transform: uppercase;
-    }
-
-    h1 { max-width: 9ch; margin: 20px 0 14px; font-size: clamp(3.7rem, 11vw, 7rem); line-height: .78; letter-spacing: -.075em; }
-    .hero p { max-width: 68rem; margin: 0; font-size: clamp(1rem, 2vw, 1.3rem); }
-
-    .section-nav {
-      position: sticky;
-      z-index: 20;
-      top: 0;
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding: 10px max(18px, calc((100vw - 1120px) / 2));
-      border-block: 4px solid var(--turn-ink);
-      background: rgb(255 248 232 / .97);
-      color: var(--turn-ink);
-    }
-
-    .section-nav a { flex: 0 0 auto; padding: 8px 12px; border-radius: var(--turn-radius-pill); text-decoration: none; }
-    .section-nav a:hover { background: var(--turn-yellow-400); }
-    main { width: min(1120px, 100%); margin: auto; padding: 70px 22px 110px; }
-    section { scroll-margin-top: 78px; margin-top: 90px; }
-    section:first-child { margin-top: 0; }
-    .kicker { font-size: .72rem; font-weight: 950; letter-spacing: .15em; text-transform: uppercase; }
-    .section-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, .55fr); gap: 28px; align-items: end; margin-bottom: 26px; }
-    .section-head h2 { margin: 7px 0 0; font-size: clamp(2.2rem, 5vw, 4rem); line-height: .9; letter-spacing: -.055em; }
-    .section-head p { margin: 0; color: rgb(255 248 232 / .78); }
-
-    .card,
-    .table-wrap,
-    .specimen {
-      border: 4px solid var(--turn-ink);
-      border-radius: var(--turn-radius-default);
-      background: var(--turn-paper);
-      color: var(--turn-ink);
-      box-shadow: var(--turn-shadow-default);
-    }
-
-    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-    .card { padding: 20px; }
-    .card h3 { margin: 7px 0 8px; }
-    .card p { margin: 0; }
-    .table-wrap { overflow-x: auto; }
-    table { width: 100%; min-width: 760px; border-collapse: collapse; text-align: left; }
-    th, td { padding: 13px 15px; border-bottom: 2px solid var(--turn-ink); vertical-align: top; }
-    th { background: var(--turn-yellow-400); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; }
-    tr:last-child td { border-bottom: 0; }
-    .status { display: inline-block; padding: 3px 8px; border: 2px solid var(--turn-ink); border-radius: var(--turn-radius-pill); font-size: .68rem; font-weight: 950; white-space: nowrap; }
-    .status.current { background: var(--turn-green-200); }
-    .status.special { background: var(--turn-blue-200); }
-    .status.migrate { background: var(--turn-yellow-200); }
-
-    .anatomy { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; counter-reset: anatomy; }
-    .anatomy li { counter-increment: anatomy; display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 13px; align-items: start; padding: 16px; border: 4px solid var(--turn-ink); border-radius: var(--turn-radius-default); background: var(--turn-paper); color: var(--turn-ink); box-shadow: var(--turn-shadow-compact); }
-    .anatomy li::before { content: counter(anatomy); display: grid; place-items: center; width: 38px; height: 38px; border: 3px solid var(--turn-ink); border-radius: 50%; background: var(--turn-pink-200); font-weight: 950; }
-    .anatomy strong, .anatomy span { display: block; }
-    .anatomy span { margin-top: 3px; font-size: .9rem; }
-
-    .sizes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
-    .size-card { min-width: 0; padding: 18px; border: 4px solid var(--turn-ink); border-radius: var(--turn-radius-default); background: var(--turn-paper); color: var(--turn-ink); box-shadow: var(--turn-shadow-compact); }
-    .size-card span { display: block; font-size: .7rem; font-weight: 950; letter-spacing: .12em; text-transform: uppercase; }
-    .size-card h3 { margin: 5px 0 8px; }
-    .size-card p { margin: 0; font-size: .88rem; }
-
-    .rules { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-    .rules article { padding: 19px; border: 4px solid var(--turn-ink); border-radius: var(--turn-radius-default); background: var(--turn-paper); color: var(--turn-ink); box-shadow: var(--turn-shadow-compact); }
-    .rules h3 { margin: 0 0 8px; }
-    .rules ul { margin: 0; padding-left: 20px; }
-    .rules li + li { margin-top: 7px; }
-
-    .specimen { padding: 24px; }
-    .demo-stage { display: grid; place-items: center; min-height: 240px; padding: 24px; border: 4px dashed var(--turn-ink); border-radius: var(--turn-radius-default); background: var(--turn-blue-200); }
-    .demo-open { min-height: 52px; padding: 10px 18px; border: 4px solid var(--turn-ink); border-radius: var(--turn-radius-pill); background: var(--turn-pink-500); color: var(--turn-ink); box-shadow: var(--turn-shadow-default); font-weight: 950; }
-    .demo-open:active, .m8-dialog button:active { transform: translate(5px, 5px); box-shadow: 1px 1px 0 var(--turn-ink); }
-    .demo-body p { max-width: 58ch; margin: 0; line-height: 1.5; }
-    .demo-actions { margin-top: 18px; }
-    .demo-actions button { min-height: 46px; padding: 9px 16px; border: 4px solid var(--turn-ink); border-radius: var(--turn-radius-pill); background: var(--turn-yellow-400); color: var(--turn-ink); box-shadow: var(--turn-shadow-compact); font-weight: 950; }
-
-    .code-block { overflow-x: auto; padding: 18px; border: 4px solid var(--turn-ink); border-radius: var(--turn-radius-default); background: #151719; color: var(--turn-paper); box-shadow: var(--turn-shadow-default); }
-    .code-block pre { margin: 0; font-size: .82rem; line-height: 1.55; }
-    footer { padding: 38px 22px; border-top: 4px solid var(--turn-ink); background: var(--turn-yellow-600); color: var(--turn-ink); text-align: center; }
-
-    @media (max-width: 900px) {
-      .grid, .sizes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .section-head { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 620px) {
-      .grid, .sizes, .rules { grid-template-columns: 1fr; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-      *, *::before, *::after { transition: none !important; }
-    }
-  </style>
+  <link rel="stylesheet" href="./design-reference.css?revision=r204-current-product-language">
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to dialog guidance</a>
+  <a class="skip-link" href="#main">Skip to dialog system</a>
 
-  <header class="hero design-page-hero">
-    <div class="design-page-shell">
-      <nav class="design-page-nav" aria-label="Design system pages">
-        <a href="./design.html">Design system</a>
-        <a href="./design-dialogs.html" aria-current="page">Dialogs</a>
-        <a href="/turn/" target="_blank" rel="noopener noreferrer">Open TURN</a>
-      </nav>
-      <div class="design-page-hero-content">
-        <span class="eyebrow">Normative component pattern</span>
-        <h1>TURN DIALOGS</h1>
-        <p>One interaction model and one visual anatomy, with deliberate size variants for short decisions, settings, rich tools and long-form reading.</p>
+  <header class="system-header">
+    <div class="system-header__inner">
+      <div class="turn-mark" aria-hidden="true"><span>TURN</span></div>
+      <div class="system-title">
+        <p>Design system · dialog architecture</p>
+        <h1>DIALOG SYSTEM</h1>
       </div>
-      <a class="design-page-scroll" href="#dialog-sections"><span aria-hidden="true">↓</span> Explore dialog guidance</a>
+      <div class="system-meta" aria-label="Reference baseline">
+        <strong>Production reference</strong>
+        <span>TURN 1.17.3</span>
+        <span>Build 2026.09.05-r203</span>
+      </div>
     </div>
   </header>
 
-  <nav id="dialog-sections" class="section-nav design-section-nav" aria-label="Dialog design sections">
-    <a href="#principles">Principles</a>
-    <a href="#inventory">Inventory</a>
+  <div class="system-toolbar" aria-label="Design reference pages">
+    <div class="system-toolbar__inner">
+      <a href="./design.html">Design system</a>
+      <a href="./design-dialogs.html" aria-current="page">Dialogs</a>
+      <a href="./" target="_blank" rel="noopener">Open TURN</a>
+    </div>
+  </div>
+
+  <nav class="section-nav" aria-label="Dialog system sections">
     <a href="#anatomy">Anatomy</a>
     <a href="#sizes">Sizes</a>
-    <a href="#behaviour">Behaviour</a>
-    <a href="#specimen">Specimen</a>
+    <a href="#inventory">Inventory</a>
+    <a href="#behavior">Behavior</a>
   </nav>
 
   <main id="main">
-    <section id="principles">
-      <div class="section-head">
-        <div><span class="kicker">01 · Decision</span><h2>Standardize the shell, not the content.</h2></div>
-        <p>TURN dialogs should feel related and behave predictably. A Trophy Road tool, a denial alert and a long history reader do not need the same dimensions or internal layout.</p>
+    <section id="anatomy" aria-labelledby="dialogs-title">
+      <div class="lead-board">
+        <div class="lead-copy">
+          <span class="kicker">TURN dialogs</span>
+          <h2 id="dialogs-title">Standardize the shell, not the content.</h2>
+          <p>TURN has many kinds of dialog content, but they share one production structure: a strong Paper surface, a compact heading region, one scrolling body when needed, optional actions, and an orange close control. Size is chosen from the system scale rather than invented per feature.</p>
+        </div>
+        <aside class="status-board">
+          <span class="kicker">Dialog contract</span>
+          <strong>One modal at a time.</strong>
+          <div class="status-row"><span class="status-dot" aria-hidden="true"></span><span>Heading receives initial focus where appropriate.</span></div>
+          <div class="status-row"><span class="status-dot" aria-hidden="true"></span><span>Body owns scrolling, not the whole viewport.</span></div>
+          <div class="status-row"><span class="status-dot" aria-hidden="true"></span><span>Close returns focus to the trigger.</span></div>
+        </aside>
       </div>
-      <div class="grid">
-        <article class="card"><span class="kicker">Structure</span><h3>Native dialog</h3><p>Use <code>&lt;dialog&gt;</code>, an accessible name, one visible heading and a real close control.</p></article>
-        <article class="card"><span class="kicker">Ownership</span><h3>One scroll surface</h3><p>The shell remains stable. Long content scrolls inside the body rather than moving the close control away.</p></article>
-        <article class="card"><span class="kicker">Variation</span><h3>Named sizes</h3><p>Choose compact, standard, wide or reader. Avoid one-off pixel widths tied to a single feature.</p></article>
+
+      <div class="specimen" style="margin-top:24px">
+        <div class="specimen-head"><strong>Normative anatomy</strong><span class="specimen-label">Header · body · actions</span></div>
+        <div class="specimen-body">
+          <div class="dialog-demo">
+            <div class="dialog-demo__head">
+              <div><span class="dialog-demo__eyebrow">How to play</span><h3>DRIFT POINTS</h3></div>
+              <button class="dialog-demo__close" type="button" aria-label="Close">×</button>
+            </div>
+            <div class="dialog-demo__body">
+              <div class="dialog-demo__panel"><strong>BODY</strong><p>The content region owns overflow when the dialog is taller than the available viewport.</p></div>
+              <div class="dialog-demo__panel"><strong>ACTIONS</strong><p>Use actions only when the task needs an explicit next step. Close remains a navigation action.</p></div>
+            </div>
+          </div>
+          <div class="table-wrap" style="margin-top:24px">
+            <table>
+              <thead><tr><th>Part</th><th>Production class</th><th>Responsibility</th></tr></thead>
+              <tbody>
+                <tr><td>Dialog</td><td><code>.turn-dialog</code></td><td>Modal root and size variables.</td></tr>
+                <tr><td>Surface</td><td><code>.turn-dialog__surface</code></td><td>Paper card, border, radius, shadow and vertical composition.</td></tr>
+                <tr><td>Header</td><td><code>.turn-dialog__header</code></td><td>Label, title and close control.</td></tr>
+                <tr><td>Body</td><td><code>.turn-dialog__body</code></td><td>Owns scrolling and overscroll containment.</td></tr>
+                <tr><td>Actions</td><td><code>.turn-dialog__actions</code></td><td>Optional task completion or navigation actions.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section id="inventory">
+    <section id="sizes" aria-labelledby="sizes-title">
       <div class="section-head">
-        <div><span class="kicker">02 · Production audit</span><h2>Current modal landscape.</h2></div>
-        <p>The audit covers production Home, race, progression, training and platform dialogs. Installation guidance remains an onboarding overlay outside this in-game pattern.</p>
+        <div><span class="kicker">Size scale</span><h2 id="sizes-title">Compact. Standard. Wide. Reader.</h2></div>
+        <p>Size describes content complexity. It should not be used to make a dialog feel important.</p>
       </div>
-      <div class="table-wrap" tabindex="0" role="region" aria-label="Production dialog inventory">
+      <div class="grid">
+        <article class="card"><span class="token-label">Compact</span><h3>≤ 660px</h3><p>Short decisions, simple notices and small About-style content.</p></article>
+        <article class="card"><span class="token-label">Standard</span><h3>≤ 760px</h3><p>Feedback forms, audio settings and medium-complexity tasks.</p></article>
+        <article class="card"><span class="token-label">Wide</span><h3>≤ 1040px</h3><p>Settings, How to Play, Achievements and multi-column configuration.</p></article>
+        <article class="card"><span class="token-label">Reader</span><h3>Near full screen</h3><p>History and changelog. The shell is fixed; the reading pane scrolls.</p></article>
+      </div>
+    </section>
+
+    <section id="inventory" aria-labelledby="inventory-title">
+      <div class="section-head">
+        <div><span class="kicker">Production dialog inventory</span><h2 id="inventory-title">Map shipped content to the system.</h2></div>
+        <p>Specialized content is expected. Specialized modal mechanics are not.</p>
+      </div>
+      <div class="table-wrap">
         <table>
-          <thead><tr><th>Dialog</th><th>Recommended size</th><th>Status</th><th>Notes</th></tr></thead>
+          <thead><tr><th>Dialog</th><th>Size</th><th>Notes</th></tr></thead>
           <tbody>
-            <tr><td>About TURN</td><td>Compact</td><td><span class="status current">Normative</span></td><td>Short overview, credits, history and design-system actions.</td></tr>
-            <tr><td>Development history &amp; changelog</td><td>Reader</td><td><span class="status current">Normative</span></td><td>Nearly full screen; stable header, tabs and one internal reading surface.</td></tr>
-            <tr><td>Give Feedback</td><td>Standard</td><td><span class="status current">Normative shell</span></td><td>Compact body and action row.</td></tr>
-            <tr><td>How to Play</td><td>Wide</td><td><span class="status current">Normative shell</span></td><td>Card grid needs horizontal room.</td></tr>
-            <tr><td>Home Settings</td><td>Wide</td><td><span class="status current">Normative shell</span></td><td>Two-column form becomes one column in portrait.</td></tr>
-            <tr><td>Achievements / Trophy Road</td><td>Wide or Reader</td><td><span class="status special">Specialized body</span></td><td>Uses the common shell; owns filtering, preview and list layout.</td></tr>
-            <tr><td>Drive By Ear 101 introduction</td><td>Wide</td><td><span class="status special">Specialized focus</span></td><td>Top-preserving focus and delayed WebKit scroll correction are intentional.</td></tr>
-            <tr><td>Drive By Ear 101 part complete</td><td>Wide</td><td><span class="status current">Normative shell</span></td><td>Short instructional content plus navigation actions.</td></tr>
-            <tr><td>Motion access denied</td><td>Compact alert</td><td><span class="status migrate">Migration candidate</span></td><td>Keep the direct acknowledgement flow; align visual anatomy when next touched.</td></tr>
-            <tr><td>In-race audio settings</td><td>Standard</td><td><span class="status migrate">Migration candidate</span></td><td>Legacy visual shell; content semantics remain valid.</td></tr>
-            <tr><td>Reset-rivals confirmation</td><td>Inline confirmation</td><td><span class="status special">Not a modal</span></td><td>Keep the confirmation inside Settings; avoid a dialog on top of a dialog.</td></tr>
+            <tr><td>About TURN</td><td>Compact</td><td>Short product summary and History / Changelog entry.</td></tr>
+            <tr><td>Development history &amp; changelog</td><td>Reader</td><td>Tabbed reader; one internal body owns scroll.</td></tr>
+            <tr><td>Give Feedback</td><td>Standard</td><td>Native form controls and compact heading spacing.</td></tr>
+            <tr><td>Settings</td><td>Wide</td><td>Use available width for grouped controls; avoid a long single column.</td></tr>
+            <tr><td>How to Play</td><td>Wide</td><td>Native disclosures, selectable text and large readable sections.</td></tr>
+            <tr><td>Achievements</td><td>Wide</td><td>Collection and Trophy Road content; reward details may use a contextual modal layer.</td></tr>
+            <tr><td>Drive By Ear 101 introduction</td><td>Wide</td><td>Training setup with clear primary action.</td></tr>
+            <tr><td>Motion access denied</td><td>Compact</td><td>Explains fallback without trapping the player.</td></tr>
+            <tr><td>In-race audio settings</td><td>Standard</td><td>Readable without pausing or obscuring more race state than necessary.</td></tr>
           </tbody>
         </table>
       </div>
     </section>
 
-    <section id="anatomy">
+    <section id="behavior" aria-labelledby="behavior-title">
       <div class="section-head">
-        <div><span class="kicker">03 · Anatomy</span><h2>A stable frame around changing content.</h2></div>
-        <p>Class names describe responsibility. Feature classes may extend the body but should not redefine the complete shell.</p>
+        <div><span class="kicker">Behavior</span><h2 id="behavior-title">The interaction model is as normative as the border.</h2></div>
+        <p>Modal consistency depends on focus, scrolling and dismissal behavior as much as visual styling.</p>
       </div>
-      <ol class="anatomy">
-        <li><div><strong><code>.turn-dialog</code></strong><span>The native dialog element. Owns viewport bounds, backdrop and size variant.</span></div></li>
-        <li><div><strong><code>.turn-dialog__surface</code></strong><span>The bordered TURN card. Owns padding, radius, hard shadow and overflow boundary.</span></div></li>
-        <li><div><strong><code>.turn-dialog__header</code></strong><span>Eyebrow, h2 and close button. Remains visible in reader dialogs.</span></div></li>
-        <li><div><strong><code>.turn-dialog__body</code></strong><span>The sole scroll owner when content exceeds the available block size.</span></div></li>
-        <li><div><strong><code>.turn-dialog__actions</code></strong><span>Optional grouped actions. Use buttons for commands and links for navigation.</span></div></li>
-      </ol>
-    </section>
-
-    <section id="sizes">
-      <div class="section-head">
-        <div><span class="kicker">04 · Size scale</span><h2>Four named choices.</h2></div>
-        <p>Choose the smallest size that supports the content without cramped controls, excessive wrapping or unnecessary empty space.</p>
-      </div>
-      <div class="sizes">
-        <article class="size-card"><span>Compact</span><h3>≈ 660 px</h3><p>About, alerts and short explanations.</p></article>
-        <article class="size-card"><span>Standard</span><h3>≈ 760 px</h3><p>Feedback, simple settings and focused tasks.</p></article>
-        <article class="size-card"><span>Wide</span><h3>≈ 1040 px</h3><p>Card grids, complex settings, training and progression.</p></article>
-        <article class="size-card"><span>Reader</span><h3>Near full screen</h3><p>Long documents, tabs and dense lists where stable navigation matters.</p></article>
-      </div>
-    </section>
-
-    <section id="behaviour">
-      <div class="section-head">
-        <div><span class="kicker">05 · Behaviour</span><h2>Predictable focus and dismissal.</h2></div>
-        <p>Visual consistency without consistent keyboard, screen-reader and scroll behaviour is not a component system.</p>
-      </div>
-      <div class="rules">
-        <article><h3>Opening</h3><ul><li>Record the invoking control.</li><li>Reset the intended scroll surface to the top.</li><li>Focus the close control unless feature testing proves another target is better.</li><li>Use <code>preventScroll</code> when available.</li></ul></article>
-        <article><h3>Closing</h3><ul><li>Close button and backdrop dismiss ordinary dialogs.</li><li>Escape uses native dialog behaviour.</li><li>Return focus to the invoking control.</li><li>Do not return focus to an element inside a dialog that is now closed.</li></ul></article>
-        <article><h3>Long content</h3><ul><li>Keep header and tab controls outside the scrolling body.</li><li>Use one internal scroll owner.</li><li>Contain overscroll to avoid moving the game beneath the dialog.</li><li>Do not shrink body text below a comfortable reading size merely to fit more.</li></ul></article>
-        <article><h3>Dialog transitions</h3><ul><li>Do not stack modal dialogs.</li><li>Close the source, open the destination, then restore the source when appropriate.</li><li>Tabs belong inside one dialog when they describe parallel views of the same object.</li><li>Use a separate dialog when the task changes substantially.</li></ul></article>
-      </div>
-    </section>
-
-    <section id="specimen">
-      <div class="section-head">
-        <div><span class="kicker">06 · Interactive specimen</span><h2>The standard shell.</h2></div>
-        <p>This specimen uses the production dialog stylesheet rather than a visual imitation.</p>
-      </div>
-      <div class="specimen">
-        <div class="demo-stage">
-          <button class="demo-open" type="button" aria-haspopup="dialog">OPEN DIALOG SPECIMEN</button>
-        </div>
-      </div>
-      <div class="code-block" style="margin-top:22px" tabindex="0" role="region" aria-label="Dialog markup example">
-<pre><code>&lt;dialog class="m8-dialog turn-dialog turn-dialog--standard" aria-labelledby="exampleTitle"&gt;
-  &lt;article class="m8-dialog-card turn-dialog__surface"&gt;
-    &lt;header class="m8-dialog-head turn-dialog__header"&gt;
-      &lt;div&gt;&lt;span&gt;EYEBROW&lt;/span&gt;&lt;h2 id="exampleTitle"&gt;TITLE&lt;/h2&gt;&lt;/div&gt;
-      &lt;button type="button" data-dialog-close aria-label="Close title"&gt;×&lt;/button&gt;
-    &lt;/header&gt;
-    &lt;div class="turn-dialog__body"&gt;…&lt;/div&gt;
-    &lt;div class="turn-dialog__actions"&gt;…&lt;/div&gt;
-  &lt;/article&gt;
-&lt;/dialog&gt;</code></pre>
+      <div class="grid">
+        <article class="card"><span class="principle-number">1</span><h3>Do not stack modal dialogs</h3><p>Close the source dialog before opening another modal. Restore the source when the reader or subtask closes if that is the user’s expected return point.</p></article>
+        <article class="card"><span class="principle-number">2</span><h3>Focus the heading first</h3><p>For information-heavy dialogs, focus the labelled heading programmatically with <code>tabindex="-1"</code>. Do not force initial focus to Close.</p></article>
+        <article class="card"><span class="principle-number">3</span><h3>Return focus</h3><p>Closing a dialog returns focus to the control that opened it. This applies to website About as well as in-game dialogs.</p></article>
+        <article class="card"><span class="principle-number">4</span><h3>Contain scrolling</h3><p>Use <code>overscroll-behavior</code>, stable scrollbars and an internal body so the modal shell does not slide around in short landscape viewports.</p></article>
+        <article class="card"><span class="principle-number">5</span><h3>Dismiss outside where appropriate</h3><p>Contextual reward detail can close on outside click. Task dialogs should not accidentally discard user input unless that behavior is explicitly safe.</p></article>
+        <article class="card"><span class="principle-number">6</span><h3>Respect reduced motion</h3><p>Dialog navigation should not depend on decorative animation. Scrolling and transition behavior simplify under reduced-motion preferences.</p></article>
       </div>
     </section>
   </main>
 
-  <dialog class="m8-dialog turn-dialog turn-dialog--standard" aria-labelledby="dialogSpecimenTitle">
-    <article class="m8-dialog-card turn-dialog__surface">
-      <header class="m8-dialog-head turn-dialog__header">
-        <div><span>NORMATIVE EXAMPLE</span><h2 id="dialogSpecimenTitle">DIALOG TITLE</h2></div>
-        <button type="button" data-dialog-close aria-label="Close dialog specimen">×</button>
-      </header>
-      <div class="turn-dialog__body demo-body">
-        <p>The shell owns the backdrop, boundaries, padding, title and close control. Feature content owns only what happens inside this body.</p>
-      </div>
-      <div class="turn-dialog__actions demo-actions">
-        <button type="button" data-dialog-close>DONE</button>
-      </div>
-    </article>
-  </dialog>
-
-  <footer>TURN design system · Dialog pattern · August 2026</footer>
-
-  <script>
-    const trigger = document.querySelector('.demo-open');
-    const dialog = document.querySelector('dialog');
-    const closeButtons = dialog.querySelectorAll('[data-dialog-close]');
-    const open = () => {
-      dialog.__returnFocus = trigger;
-      if (typeof dialog.showModal === 'function') dialog.showModal();
-      else dialog.setAttribute('open', '');
-      dialog.querySelector('.m8-dialog-head [data-dialog-close]')?.focus();
-    };
-    const close = () => {
-      if (typeof dialog.close === 'function' && dialog.open) dialog.close();
-      else {
-        dialog.removeAttribute('open');
-        dialog.__returnFocus?.focus();
-      }
-    };
-    trigger.addEventListener('click', open);
-    closeButtons.forEach((button) => button.addEventListener('click', close));
-    dialog.addEventListener('click', (event) => {
-      if (event.target === dialog) close();
-    });
-    dialog.addEventListener('close', () => dialog.__returnFocus?.focus());
-  </script>
+  <footer><div class="footer-inner"><strong>TURN Dialog System</strong><span>Current product language · September 2026</span></div></footer>
 </body>
 </html>
