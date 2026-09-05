@@ -18,8 +18,17 @@ assert.deepEqual(
     color: '#0555aa',
     secondaryColor: '#163f7a'
   }, { migrateReplacedFactoryPaint: true }),
-  { carId: 'convertible', color: '#ff4fa3', secondaryColor: '#792766', factoryPaint: true },
-  'The briefly shipped blue AWD factory pair must migrate to pink as one atomic pair'
+  { carId: 'convertible', color: '#776655', secondaryColor: '#393329', factoryPaint: true },
+  'The briefly shipped blue AWD factory pair must migrate to the current brown pair atomically'
+);
+assert.deepEqual(
+  catalog.normalizeStoredVehiclePaint({
+    carId: 'convertible',
+    color: '#ff4fa3',
+    secondaryColor: '#792766'
+  }, { migrateReplacedFactoryPaint: true }),
+  { carId: 'convertible', color: '#776655', secondaryColor: '#393329', factoryPaint: true },
+  'The previous pink AWD factory pair must migrate to the current brown pair atomically'
 );
 assert.deepEqual(
   catalog.normalizeStoredVehiclePaint({
@@ -49,14 +58,14 @@ selectionStorage.setItem(catalog.VEHICLE_SELECTION_KEY, JSON.stringify({
 }));
 assert.deepEqual(catalog.loadVehicleSelection(), {
   carId: 'convertible',
-  color: '#ff4fa3',
-  secondaryColor: '#792766'
+  color: '#776655',
+  secondaryColor: '#393329'
 });
 assert.deepEqual(JSON.parse(selectionStorage.getItem(catalog.VEHICLE_SELECTION_KEY)), {
   version: catalog.VEHICLE_SELECTION_VERSION,
   carId: 'convertible',
-  color: '#ff4fa3',
-  secondaryColor: '#792766',
+  color: '#776655',
+  secondaryColor: '#393329',
   factoryPaint: true
 });
 
@@ -154,8 +163,21 @@ assert.deepEqual(
     carSecondaryColor: '#163f7a',
     frames: replayFrames
   })),
-  { carId: 'convertible', carColor: '#ff4fa3', carSecondaryColor: '#792766', factoryPaint: true },
-  'Saved blue AWD ghosts from the swapped release must follow the repaired pink factory paint'
+  { carId: 'convertible', carColor: '#776655', carSecondaryColor: '#393329', factoryPaint: true },
+  'Saved blue AWD ghosts from the swapped release must follow the current brown factory paint'
+);
+assert.deepEqual(
+  (({ carId, carColor, carSecondaryColor, factoryPaint }) => ({
+    carId, carColor, carSecondaryColor, factoryPaint
+  }))(storedReplay({
+    time: 10,
+    carId: 'convertible',
+    carColor: '#ff4fa3',
+    carSecondaryColor: '#792766',
+    frames: replayFrames
+  })),
+  { carId: 'convertible', carColor: '#776655', carSecondaryColor: '#393329', factoryPaint: true },
+  'Saved pink AWD ghosts from the previous factory pair must follow the current brown factory paint'
 );
 assert.deepEqual(
   (({ carId, carColor, carSecondaryColor, factoryPaint }) => ({

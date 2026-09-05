@@ -31,7 +31,7 @@ function importMapFrom(source) {
 
 const expectedFactoryColors = new Map([
   ['classic', ['#ffcc00', '#222222']],
-  ['convertible', ['#ff4fa3', '#792766']],
+  ['convertible', ['#776655', '#393329']],
   ['suv', ['#0555aa', '#163f7a']],
   ['van', ['#ff7700', '#222222']],
   ['race', ['#5d503f', '#222222']],
@@ -49,7 +49,6 @@ for (const [id, [primary, secondary]] of expectedFactoryColors) {
 assert.equal(catalog.getCarDefinition('classic').name, 'Learner Car');
 
 const chromaticFactoryRoute = Object.freeze({
-  countryside: 'convertible',
   airport: 'classic',
   harbor: 'van',
   cliffside: 'sedan',
@@ -62,9 +61,14 @@ for (const [trackId, carId] of Object.entries(chromaticFactoryRoute)) {
   assert.equal(
     matchesTrackColor(trackId, car.defaultColor),
     true,
-    `CHROMATIC CAMOUFLAGE must remain achievable without PAINTJOB: ${car.name} factory ${car.defaultColor} should match ${trackId}`
+    `Existing factory color coverage must remain valid: ${car.name} factory ${car.defaultColor} should match ${trackId}`
   );
 }
+assert.equal(
+  matchesTrackColor('countryside', catalog.getCarDefinition('convertible').defaultColor),
+  false,
+  'The new brown AWD factory paint intentionally no longer doubles as the Countryside pink for CHROMATIC CAMOUFLAGE'
+);
 
 for (const id of ['police', 'ambulance', 'firetruck']) {
   const car = catalog.getCarDefinition(id);

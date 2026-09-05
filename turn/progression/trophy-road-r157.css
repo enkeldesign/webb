@@ -1,27 +1,15 @@
 @import url('./trophy-road.css?revision=r243-reward-modal');
 
+/* Trophy Road locked/unlocked states use the primitive TURN palette directly. */
 :root {
-  --turn-reward-vehicle-locked: #d8eff9;
-  --turn-reward-vehicle-unlocked: #56b9e6;
-  --turn-reward-track-locked: #e0f0d4;
-  --turn-reward-track-unlocked: #a8db86;
-  --turn-reward-feature-locked: #fff1b8;
-  --turn-reward-feature-unlocked: #ffd43b;
-  --turn-reward-scoring-locked: #f7d9e9;
-  --turn-reward-scoring-unlocked: #e649a1;
-}
-
-@supports (color: color(display-p3 1 0 0)) {
-  :root {
-    --turn-reward-vehicle-locked: color(display-p3 .82 .93 .98);
-    --turn-reward-vehicle-unlocked: color(display-p3 .28 .73 .91);
-    --turn-reward-track-locked: color(display-p3 .87 .94 .80);
-    --turn-reward-track-unlocked: color(display-p3 .63 .86 .48);
-    --turn-reward-feature-locked: color(display-p3 1 .94 .69);
-    --turn-reward-feature-unlocked: color(display-p3 1 .82 .18);
-    --turn-reward-scoring-locked: color(display-p3 .96 .83 .90);
-    --turn-reward-scoring-unlocked: color(display-p3 .90 .24 .60);
-  }
+  --turn-reward-vehicle-locked: var(--turn-blue-100, #bdeeff);
+  --turn-reward-vehicle-unlocked: var(--turn-blue-500, #38d9ff);
+  --turn-reward-track-locked: var(--turn-green-200, #d9f5c2);
+  --turn-reward-track-unlocked: var(--turn-green-500, #8ce99a);
+  --turn-reward-feature-locked: var(--turn-yellow-100, #fff0a8);
+  --turn-reward-feature-unlocked: var(--turn-yellow-400, #ffd43b);
+  --turn-reward-scoring-locked: var(--turn-pink-100, #ffd1e6);
+  --turn-reward-scoring-unlocked: var(--turn-pink-200, #ff8caf);
 }
 
 .turn-trophy-road-marker:is(
@@ -132,6 +120,10 @@
 
 .turn-trophy-road-detail[data-trophy-reward-type="scoring-system"][data-trophy-reward-state="unlocked"] {
   background: var(--turn-reward-scoring-unlocked);
+}
+
+.turn-trophy-road-detail-close {
+  background: var(--turn-orange-500, #ff7b54);
 }
 
 .lot-selected-car-lock {
