@@ -15,6 +15,9 @@ export function createTrackSpatialIndex(initialSamples, { cellSize = DEFAULT_CEL
   let totalChecks = 0;
   let maxChecks = 0;
   let lastChecks = 0;
+  let lastQueryX = NaN;
+  let lastQueryZ = NaN;
+  let lastQueryResult = null;
 
   rebuild(initialSamples);
 
@@ -26,6 +29,9 @@ export function createTrackSpatialIndex(initialSamples, { cellSize = DEFAULT_CEL
     maxCellX = -Infinity;
     minCellZ = Infinity;
     maxCellZ = -Infinity;
+    lastQueryX = NaN;
+    lastQueryZ = NaN;
+    lastQueryResult = null;
 
     for (let index = 0; index < samples.length; index += 1) {
       const point = samples[index].point;
@@ -63,6 +69,9 @@ export function createTrackSpatialIndex(initialSamples, { cellSize = DEFAULT_CEL
       return recordResult(findNearestTrackBruteForce(samples, position));
     }
 
+    const cached = reuseLastResult(x, z);
+    if (cached) return cached;
+
     const centerCellX = Math.floor(x / size);
     const centerCellZ = Math.floor(z / size);
 
@@ -75,7 +84,7 @@ export function createTrackSpatialIndex(initialSamples, { cellSize = DEFAULT_CEL
       centerCellZ < minCellZ ||
       centerCellZ > maxCellZ
     ) {
-      return recordResult(findNearestTrackHierarchy(samples, hierarchy, position));
+      return recordResult(findNearestTrackHierarchy(samples, hierarchy, position), x, z);
     }
 
     let bestIndex = -1;
@@ -142,24 +151,47 @@ export function createTrackSpatialIndex(initialSamples, { cellSize = DEFAULT_CEL
       if (radius >= MAX_GRID_RADIUS_BEFORE_HIERARCHY) {
         const hierarchyResult = findNearestTrackHierarchy(samples, hierarchy, position);
         hierarchyResult.checks += checks;
-        return recordResult(hierarchyResult);
+        return recordResult(hierarchyResult, x, z);
       }
     }
 
-    if (bestIndex < 0) return recordResult(findNearestTrackHierarchy(samples, hierarchy, position));
+    if (bestIndex < 0) {
+      return recordResult(findNearestTrackHierarchy(samples, hierarchy, position), x, z);
+    }
     return recordResult({
       index: bestIndex,
       sample: samples[bestIndex],
       distance: Math.sqrt(bestDistanceSq),
       checks
-    });
+    }, x, z);
   }
 
-  function recordResult(result) {
+  function reuseLastResult(x, z) {
+    if (!lastQueryResult || x !== lastQueryX || z !== lastQueryZ) return null;
+    queryCount += 1;
+    lastChecks = 0;
+    return {
+      index: lastQueryResult.index,
+      sample: lastQueryResult.sample,
+      distance: lastQueryResult.distance,
+      checks: 0
+    };
+  }
+
+  function recordResult(result, x = NaN, z = NaN) {
     lastChecks = result.checks;
     queryCount += 1;
     totalChecks += result.checks;
     maxChecks = Math.max(maxChecks, result.checks);
+    if (Number.isFinite(x) && Number.isFinite(z)) {
+      lastQueryX = x;
+      lastQueryZ = z;
+      lastQueryResult = {
+        index: result.index,
+        sample: result.sample,
+        distance: result.distance
+      };
+    }
     return result;
   }
 
