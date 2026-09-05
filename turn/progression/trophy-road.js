@@ -156,7 +156,7 @@ const TROPHY_ROAD_REWARD_DEFINITIONS = Object.freeze([
     id: 'shift',
     title: 'SHIFT',
     shortTitle: 'Shift',
-    type: 'feature',
+    type: 'scoring-system',
     featureId: 'vehicle-shift',
     icon: 'shift',
     description: 'Unlock SHIFT for every car. Move one point away from three attributes and into the other three, then toggle between STANDARD and SHIFT while racing.'
