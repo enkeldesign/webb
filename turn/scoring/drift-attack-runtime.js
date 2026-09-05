@@ -2,7 +2,6 @@ import {
   SCORE_FEEDBACK_CHANNEL,
   SCORE_FEEDBACK_EVENT
 } from './score-feedback.js';
-import './scorekeeper-records.js';
 import { createDriftAttackScorer } from './drift-attack.js';
 import {
   getBestDriftRecord,
@@ -19,6 +18,10 @@ function getStorage(storage) {
   } catch (_) {
     return null;
   }
+}
+
+function performanceNow() {
+  return globalThis.performance?.now?.() ?? Date.now();
 }
 
 export function driftHudVisible(storage) {
@@ -138,15 +141,33 @@ export function createDriftAttackRuntime({
 
   function advance(dt, now) {
     if (!enabled) return false;
-    return scorer.advance(
-      dt,
-      now,
-      state.speed,
-      state.driftSlipAngle,
-      state.offRoad,
-      state.collided,
-      state.lapActive
-    );
+    const recordPhase = globalThis.__turnPerfRecordPhase;
+    if (typeof recordPhase !== 'function') {
+      return scorer.advance(
+        dt,
+        now,
+        state.speed,
+        state.driftSlipAngle,
+        state.offRoad,
+        state.collided,
+        state.lapActive
+      );
+    }
+
+    const startedAt = performanceNow();
+    try {
+      return scorer.advance(
+        dt,
+        now,
+        state.speed,
+        state.driftSlipAngle,
+        state.offRoad,
+        state.collided,
+        state.lapActive
+      );
+    } finally {
+      recordPhase('scoring', Math.max(0, performanceNow() - startedAt));
+    }
   }
 
   function completeLap({

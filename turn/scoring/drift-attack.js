@@ -319,10 +319,9 @@ export function createDriftAttackScorer({ onState = null, onEvent = null } = {})
 
     accumulator += elapsed;
     if (accumulator + Number.EPSILON < DRIFT_ATTACK_SAMPLE_INTERVAL_SECONDS) return false;
-    const sampleDt = accumulator;
-    accumulator = 0;
+    accumulator = Math.max(0, accumulator - DRIFT_ATTACK_SAMPLE_INTERVAL_SECONDS);
     sample(
-      sampleDt,
+      DRIFT_ATTACK_SAMPLE_INTERVAL_SECONDS,
       timestamp,
       Math.max(0, finiteNumber(speed)),
       finiteNumber(slipAngle),

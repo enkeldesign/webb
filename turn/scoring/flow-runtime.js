@@ -39,6 +39,10 @@ function getStorage(storage) {
   }
 }
 
+function performanceNow() {
+  return globalThis.performance?.now?.() ?? Date.now();
+}
+
 function nowFrom(event) {
   return finiteNumber(event?.detail?.at, globalThis.performance?.now?.() || 0);
 }
@@ -144,24 +148,38 @@ export function createFlowRuntime({
 
   function scheduleChainExpiry(now) {
     clearChainTimer();
+    const chainSnapshot = scorer.inspect();
+    const expiresAt = chainSnapshot.lastTechniqueAt + FLOW_CHAIN_WINDOW_MS;
+    const lapScoreAtSchedule = chainSnapshot.lapScore;
     chainTimer = setTimer(() => {
       chainTimer = 0;
-      const expiresAt = scorer.inspect().lastTechniqueAt + FLOW_CHAIN_WINDOW_MS;
       if (scorer.expireChain(expiresAt)) {
         lastMilestoneTier = 1;
         dispatchSemanticEvent(eventTarget, 'turn:flow-score-event', {
           channel: SCORE_FEEDBACK_CHANNEL.FLOW,
           type: 'chain-expired',
-          score: scorer.inspect().lapScore
+          score: lapScoreAtSchedule
         });
       }
-    }, Math.max(0, scorer.inspect().lastTechniqueAt + FLOW_CHAIN_WINDOW_MS - now));
+    }, Math.max(0, expiresAt - now));
   }
 
   function accept(technique, token, basePoints, now, detail = {}) {
-    const result = scorer.acceptTechnique({ technique, token, basePoints, now, detail });
-    if (result) scheduleChainExpiry(now);
-    return result;
+    const recordPhase = globalThis.__turnPerfRecordPhase;
+    if (typeof recordPhase !== 'function') {
+      const result = scorer.acceptTechnique({ technique, token, basePoints, now, detail });
+      if (result) scheduleChainExpiry(now);
+      return result;
+    }
+
+    const startedAt = performanceNow();
+    try {
+      const result = scorer.acceptTechnique({ technique, token, basePoints, now, detail });
+      if (result) scheduleChainExpiry(now);
+      return result;
+    } finally {
+      recordPhase('scoring', Math.max(0, performanceNow() - startedAt));
+    }
   }
 
   function validPendingShift(now) {
