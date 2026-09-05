@@ -202,6 +202,9 @@ jobs:
       - name: Run DRIFT ATTACK runtime regression
         run: node turn-tests/drift-attack-runtime-production.mjs
 
+      - name: Run scoring performance architecture regression
+        run: node turn-tests/scoring-performance-architecture-production.mjs
+
       - name: Run DRIFT ATTACK integration regression
         run: node turn-tests/drift-attack-integration-production.mjs
 
