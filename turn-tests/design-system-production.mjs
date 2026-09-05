@@ -176,7 +176,7 @@ for (const decision of [
   'Race this track', 'Settings', 'How to play', 'Achievements', 'Leave race',
   'Easy', 'Medium', 'Advanced', 'Expert', 'Locked',
   'Device steering', 'On-screen steering', 'Left-handed layout', 'Drive By Ear',
-  'Drift Points', 'Drift', 'Boost', 'Gas', 'Brake · Reverse', 'Lock', 'Shift',
+  'DRIFT and FLOW scorekeeper', 'Drift', 'Boost', 'Gas', 'Brake · Reverse', 'Lock', 'Shift',
   'Scorekeeper paper', 'Trophy Road is a literal road now', 'START', 'FINISH',
   'Vehicle', 'Feature / perk', 'Scoring', 'The Lot', 'SPORTS CAR',
   'Screen reader', 'Blank screen', 'Reduced motion'
@@ -192,8 +192,8 @@ assert.match(design, /Feature \/ perk[\s\S]*yellow-100 → yellow-400/);
 assert.match(design, /Scoring[\s\S]*pink-100 → pink-200/);
 assert.match(design, /Locked perks stay still/);
 assert.match(design, /selecting a car with an active perk gives the short confirmation wiggle/);
-assert.match(design, /reward detail can close on outside click/i);
-assert.match(design, /orange close control/i);
+assert.match(design, /clicking outside also closes it/i);
+assert.match(design, /detail close button uses[\s\S]*--turn-orange-500/i);
 
 assert.match(referenceCss, /\.system-header[\s\S]*background: var\(--turn-yellow-600\)/,
   'The reference itself must use the current solid yellow Home-header language');
