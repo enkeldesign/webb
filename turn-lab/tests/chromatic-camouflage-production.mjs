@@ -158,9 +158,9 @@ challengeApi.disconnect();
 assert.equal(
   ACHIEVEMENTS.reduce((total, item) => total + item.trophies, 0),
   3975,
-  'The raw catalog includes 900 trophies held behind pending score calibration'
+  'The calibrated catalog includes the 900-trophy DRIFT and FLOW reservoir'
 );
-assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 3075);
+assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 3975);
 assert.deepEqual(
   TROPHY_ROAD_REWARDS.map(({ id, threshold }) => [id, threshold]),
   [

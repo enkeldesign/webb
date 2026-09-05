@@ -3,6 +3,8 @@ import {
   TRACK_IDS,
   TRACK_NAMES
 } from './catalog-base.js?revision=r222-awd-label';
+import { getBestDriftRecord } from '../scoring/drift-records.js';
+import { getBestFlowRecord } from '../scoring/flow-records.js';
 
 export const SCORING_MASTER_ACHIEVEMENT_ID = 'drift-flow-master';
 
@@ -82,6 +84,41 @@ export function qualifyingScoringAchievement(channel, trackId, score) {
   return TRACK_SCORING_ACHIEVEMENTS.find((achievement) =>
     achievement.scoreChannel === normalizedChannel && achievement.trackId === trackId
   ) || null;
+}
+
+export function storedScoringAchievementUnlockEntries(storage, isUnlocked = () => false) {
+  const channels = [
+    ['drift', getBestDriftRecord],
+    ['flow', getBestFlowRecord]
+  ];
+  const entries = [];
+  const pendingIds = new Set();
+
+  for (const [channel, getRecord] of channels) {
+    for (const trackId of TRACK_IDS) {
+      const record = getRecord(trackId, storage);
+      const achievement = qualifyingScoringAchievement(channel, trackId, record?.score);
+      if (!achievement) continue;
+      pendingIds.add(achievement.id);
+      entries.push({
+        id: achievement.id,
+        context: {
+          trackId,
+          vehicleId: record?.carId || '',
+          time: Number(record?.lapTime) || null
+        }
+      });
+    }
+  }
+
+  if (completedAllScoringAchievements(isUnlocked, [...pendingIds])) {
+    entries.push({
+      id: SCORING_MASTER_ACHIEVEMENT_ID,
+      context: { trackId: '', vehicleId: '', time: null }
+    });
+  }
+
+  return entries;
 }
 
 export function completedAllScoringAchievements(isUnlocked, additionalIds = []) {

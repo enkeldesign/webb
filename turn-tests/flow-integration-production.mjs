@@ -3,16 +3,18 @@ import fs from 'node:fs/promises';
 import {
   TRACK_SCORING_ACHIEVEMENTS,
   SCORING_MASTER_ACHIEVEMENT,
-  qualifyingScoringAchievement
+  qualifyingScoringAchievement,
+  storedScoringAchievementUnlockEntries
 } from '../turn/achievements/scoring-achievements.js';
 
-const [main, setting, toast, announcements, achievements, scoringCatalog] = await Promise.all([
+const [main, setting, toast, announcements, achievements, scoringCatalog, achievementRuntime] = await Promise.all([
   fs.readFile(new URL('../turn/main.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/drift-attack-setting.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/lap-result-toast.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/race-announcements.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/achievements/catalog-production.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/achievements/scoring-achievements.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/achievements/scoring-achievements.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/achievements/runtime.js', import.meta.url), 'utf8')
 ]);
 
 const toastCss = await fs.readFile(new URL('../turn/lap-result-toast.css', import.meta.url), 'utf8');
@@ -53,5 +55,31 @@ for (const achievement of TRACK_SCORING_ACHIEVEMENTS) {
 }
 assert.match(scoringCatalog, /value < target/,
   'A score equal to the calibrated target must qualify');
+
+const storedRecords = new Map([
+  ['turn-drift-records-v1', JSON.stringify({
+    version: 1,
+    tracks: {
+      countryside: { score: 8000, carId: 'classic', lapTime: 18, hitAt: 1 },
+      airport: { score: 10999, carId: 'race', lapTime: 20, hitAt: 2 }
+    }
+  })],
+  ['turn-flow-records-v1', JSON.stringify({
+    version: 1,
+    tracks: {
+      countryside: { score: 7000, carId: 'classic', lapTime: 18, hitAt: 1 }
+    }
+  })]
+]);
+const recordStorage = {
+  getItem: (key) => storedRecords.get(key) ?? null
+};
+assert.deepEqual(
+  storedScoringAchievementUnlockEntries(recordStorage).map(({ id }) => id),
+  ['countryside-drift-score', 'countryside-flow-score'],
+  'Existing qualifying personal-best records must backfill calibrated achievements without replaying the lap'
+);
+assert.match(achievementRuntime, /importStoredScoringAchievements\(\)/);
+assert.match(achievementRuntime, /storedScoringAchievementUnlockEntries\(undefined, store\.isUnlocked\)/);
 
 console.log('TURN FLOW integration and calibrated scoring-achievement regressions passed.');
