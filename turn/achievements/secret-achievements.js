@@ -1,4 +1,4 @@
-import { ACHIEVEMENTS, ICONS } from './catalog.js?revision=r240-trophy-road-2';
+import { ACHIEVEMENTS, ICONS } from './catalog.js?revision=r241-learning-achievements';
 import {
   acknowledgeSecretAchievement,
   pendingSecretAchievements

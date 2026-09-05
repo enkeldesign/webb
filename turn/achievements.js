@@ -8,13 +8,21 @@ export {
   TRACK_SCORING_ACHIEVEMENT_IDS,
   completedAllScoringAchievements,
   qualifyingScoringAchievement
-} from './achievements/catalog.js?revision=r240-trophy-road-2';
+} from './achievements/catalog.js?revision=r241-learning-achievements';
 export {
   ACHIEVEMENT_STORAGE_KEY,
   loadAchievementState,
   normalizeAchievementState,
   totalAvailableTrophies
-} from './achievements/store.js?revision=r240-trophy-road-2';
+} from './achievements/store.js?revision=r241-learning-achievements';
+export {
+  DRIVE_BY_EAR_ACHIEVEMENT_ID,
+  DRIVE_BY_EAR_PART_IDS,
+  HOW_TO_PLAY_DISCLOSURE_IDS,
+  LEARNING_FEEDBACK_READY_EVENT,
+  LEARN_TO_PLAY_ACHIEVEMENT_ID,
+  completedLearningSet
+} from './achievements/learning-progress.js?revision=r1-learning-achievements';
 export {
   TIME_TRIALS,
   TIME_TRIAL_ACHIEVEMENT_IDS,
@@ -40,4 +48,4 @@ export {
   isPaintUnlocked,
   prepareTrophyRoadProfile
 } from './progression/trophy-road-perks-r164.js?revision=r240-trophy-road-2';
-export { installAchievements } from './achievements/runtime.js?revision=r240-trophy-road-2';
+export { installAchievements } from './achievements/runtime.js?revision=r241-learning-achievements';

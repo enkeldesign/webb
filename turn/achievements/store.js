@@ -2,7 +2,11 @@ import {
   ACHIEVEMENTS,
   TRACK_IDS,
   getAchievement
-} from './catalog.js?revision=r240-trophy-road-2';
+} from './catalog.js?revision=r241-learning-achievements';
+import {
+  DRIVE_BY_EAR_PART_IDS,
+  HOW_TO_PLAY_DISCLOSURE_IDS
+} from './learning-progress.js?revision=r1-learning-achievements';
 import {
   TROPHY_ROAD_REWARDS,
   TROPHY_ROAD_STORAGE_KEY,
@@ -23,7 +27,9 @@ function defaultStoredState() {
     seen: [],
     progress: {
       tracks: [],
-      blankTracks: []
+      blankTracks: [],
+      driveByEarParts: [],
+      howToPlayDisclosures: []
     },
     rewards: {
       unlocked: [],
@@ -81,6 +87,14 @@ export function normalizeAchievementState(value) {
 
   const tracks = normalizedStringArray(value.progress?.tracks, TRACK_IDS);
   const blankTracks = normalizedStringArray(value.progress?.blankTracks, TRACK_IDS);
+  const driveByEarParts = normalizedStringArray(
+    value.progress?.driveByEarParts,
+    DRIVE_BY_EAR_PART_IDS
+  );
+  const howToPlayDisclosures = normalizedStringArray(
+    value.progress?.howToPlayDisclosures,
+    HOW_TO_PLAY_DISCLOSURE_IDS
+  );
   const existingTrustTrack = unlocked['trust-your-ears']?.trackId;
   if (TRACK_IDS.includes(existingTrustTrack) && !blankTracks.includes(existingTrustTrack)) {
     blankTracks.push(existingTrustTrack);
@@ -122,7 +136,9 @@ export function normalizeAchievementState(value) {
     seen: normalizedStringArray(value.seen).filter((id) => Boolean(unlocked[id])),
     progress: {
       tracks,
-      blankTracks
+      blankTracks,
+      driveByEarParts,
+      howToPlayDisclosures
     },
     rewards: {
       unlocked: unlockedRewards,
@@ -238,6 +254,28 @@ export function createAchievementStore(storage = globalThis.localStorage) {
     return addProgressTrack('blankTracks', trackId);
   }
 
+  function addProgressItem(key, id, allowedIds) {
+    const collection = state.progress[key];
+    if (!Array.isArray(collection) || !allowedIds.includes(id) || collection.includes(id)) {
+      return false;
+    }
+    collection.push(id);
+    requestSave();
+    return true;
+  }
+
+  function addDriveByEarPart(partId) {
+    return addProgressItem('driveByEarParts', partId, DRIVE_BY_EAR_PART_IDS);
+  }
+
+  function addHowToPlayDisclosure(disclosureId) {
+    return addProgressItem(
+      'howToPlayDisclosures',
+      disclosureId,
+      HOW_TO_PLAY_DISCLOSURE_IDS
+    );
+  }
+
   function markAllSeen() {
     state.seen = [...new Set([...state.seen, ...knownUnlockedIds(state.unlocked)])];
     state.rewards.seen = [...state.rewards.unlocked];
@@ -270,6 +308,8 @@ export function createAchievementStore(storage = globalThis.localStorage) {
     syncRewards,
     addTrack,
     addBlankTrack,
+    addDriveByEarPart,
+    addHowToPlayDisclosure,
     markAllSeen,
     unseenIds,
     unseenRewardIds,

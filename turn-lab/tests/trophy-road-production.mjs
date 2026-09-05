@@ -159,7 +159,7 @@ assert.deepEqual(productionRewardIdsForTrophies(1900), through1900);
 assert.deepEqual(productionRewardIdsForTrophies(2000), through2000);
 assert.deepEqual(productionRewardIdsForTrophies(2100), through2100);
 assert.deepEqual(productionRewardIdsForTrophies(2200), through2200);
-assert.deepEqual(productionRewardIdsForTrophies(3975), productionRewardIds);
+assert.deepEqual(productionRewardIdsForTrophies(4575), productionRewardIds);
 
 assert.equal(getProductionTrophyRoadReward('mountain')?.threshold, 1400);
 assert.equal(getProductionTrophyRoadReward('paintjob')?.threshold, 400);
@@ -474,11 +474,11 @@ assert.equal(isFeatureUnlocked('drift-attack', progressionStorage), true,
   'DRIFT scoring must activate automatically at 600 trophies');
 assert.equal(isFeatureUnlocked('flow', progressionStorage), false,
   'FLOW must remain dormant until its later reward');
-assert.equal(store.unlock('countryside-sprint', { trackId: 'countryside' })?.trophies, 75,
-  'A sprint must retain its rebalanced 75-trophy value');
-assert.deepEqual(store.syncRewards(), []);
-assert.equal(store.unlock('first-turn', { trackId: 'countryside' })?.trophies, 25);
+assert.equal(store.unlock('countryside-sprint', { trackId: 'countryside' })?.trophies, 100,
+  'A sprint must award its rebalanced 100-trophy value');
 assert.deepEqual(store.syncRewards().map((reward) => reward.id), ['midnight-city']);
+assert.equal(store.unlock('first-turn', { trackId: 'countryside' })?.trophies, 25);
+assert.deepEqual(store.syncRewards(), []);
 assert.equal(isTrackUnlocked('midnight-city', progressionStorage), true,
   'Midnight City must unlock at 700 trophies');
 assert.equal(store.unlock('night-shift-sheriff', { trackId: 'midnight-city', vehicleId: 'police' })?.trophies, 100);

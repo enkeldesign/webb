@@ -228,7 +228,7 @@ assert.match(roadSource, /hasLegacyProfileEvidence\(storage\)/,
 assert.match(roadSource, /repairFalseFreshProfile\(existing, storage\)/,
   'Known accidentally-grandfathered clean profiles must repair during startup');
 assert.match(indexSource,
-  /<script type="module" src="\.\/testing\/admin-unlock-sequence\.js\?revision=r240-trophy-road-2"><\/script>/,
+  /<script type="module" src="\.\/testing\/admin-unlock-sequence\.js\?revision=r241-learning-achievements"><\/script>/,
   'The production entry must publish the rewards-only recognizer with a fresh cache identity');
 assert.match(indexSource,
   new RegExp(`src="\\.\\/live-steering-setting\\.js\\?build=${escapeRegex(release.cacheKey)}-live-steering"`),

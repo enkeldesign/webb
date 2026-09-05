@@ -34,8 +34,7 @@ assert.match(toastCss, /--lap-result-topbar-clearance/);
 assert.match(announcements, /spokenScoreResult\('Flow', flow\)/);
 
 assert.match(achievements, /TRACK_SCORING_ACHIEVEMENTS/);
-assert.equal((scoringCatalog.match(/trophies: 50/g) || []).length, 1,
-  'One generated contract supplies 50 trophies to every track/channel achievement');
+assert.match(scoringCatalog, /trophies: channel === 'drift' \? 75 : 50/);
 assert.match(scoringCatalog, /trophies: 300/);
 for (const target of [8000, 11000, 20000, 18000, 7000, 12000, 13000, 23000, 25000]) {
   assert.match(scoringCatalog, new RegExp(`\\b${target}\\b`), `Missing calibrated scoring target ${target}`);
@@ -43,6 +42,12 @@ for (const target of [8000, 11000, 20000, 18000, 7000, 12000, 13000, 23000, 2500
 assert.match(scoringCatalog, /'midnight-city': 20000/);
 assert.match(scoringCatalog, /mountain: 20000/);
 assert.equal(TRACK_SCORING_ACHIEVEMENTS.length, 12);
+assert.ok(TRACK_SCORING_ACHIEVEMENTS
+  .filter((achievement) => achievement.scoreChannel === 'drift')
+  .every((achievement) => achievement.trophies === 75));
+assert.ok(TRACK_SCORING_ACHIEVEMENTS
+  .filter((achievement) => achievement.scoreChannel === 'flow')
+  .every((achievement) => achievement.trophies === 50));
 assert.ok(TRACK_SCORING_ACHIEVEMENTS.every((achievement) => achievement.calibrationPending === false));
 assert.ok(TRACK_SCORING_ACHIEVEMENTS.every((achievement) => Number.isFinite(achievement.target) && achievement.target > 0));
 assert.equal(SCORING_MASTER_ACHIEVEMENT.calibrationPending, false);

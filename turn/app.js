@@ -366,7 +366,7 @@ const { installDriftAttackSetting } = await import(withBuild('./ui/drift-attack-
 installDriftAttackSetting();
 motionPermissionCancelRecovery.resume(home, globalThis.__turnRuntime);
 const { installHowToPlayGuide } = await import(
-  withBuild('./ui/how-to-play-guide.js?revision=r220-overcharge-disclosure')
+  withBuild('./ui/how-to-play-guide.js?revision=r241-learning-achievements')
 );
 installHowToPlayGuide();
 const { installHomeRivalReset } = await import(

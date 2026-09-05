@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import { HOW_TO_PLAY_DISCLOSURE_IDS } from '../turn/achievements/learning-progress.js';
 
 const [app, guide, css, components, homeReset, resetCss, rivalStorage, trackManager, scorekeeper] = await Promise.all([
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
@@ -18,7 +19,7 @@ assert.match(app, /settings-components-r141\.css\?revision=r220-overcharge-discl
 assert.match(app, /data-turn-m8-how-to-play/);
 assert.match(app, /data-turn-settings-components/);
 assert.match(app, /installStylesheet\('\.\/rival-reset-context-r127\.css', 'data-turn-rival-reset-context'\)/);
-assert.match(app, /how-to-play-guide\.js\?revision=r220-overcharge-disclosure/);
+assert.match(app, /how-to-play-guide\.js\?revision=r241-learning-achievements/);
 assert.match(app, /installHowToPlayGuide\(\)/);
 assert.match(app, /home-rival-reset\.js\?revision=r127-contextual/);
 assert.match(app, /installHomeRivalReset\(\)/);
@@ -31,12 +32,12 @@ assert.ok(
   'The contextual reset enhancer must run only after the shared Settings dialog exists'
 );
 
-assert.match(guide, /GUIDE_VERSION = 'r222-collapsible-cards'/);
+assert.match(guide, /GUIDE_VERSION = 'r241-learning-achievements'/);
 assert.match(guide, /slide between <strong>GAS<\/strong>, <strong>DRIFT<\/strong>, <strong>BOOST<\/strong> and <strong>BRAKE · REVERSE<\/strong>/);
 assert.match(guide, /slide outward past it into <strong>LOCK<\/strong>/);
 assert.match(guide, /<strong>DRIFT<\/strong> charges <strong>BOOST<\/strong> as you slide/);
 assert.match(guide, /With BOOST full, keep using DRIFT to build purple <strong>OVERCHARGE<\/strong>/);
-assert.match(guide, /<details class="m8-guide-disclosure m8-overcharge-guide">/);
+assert.match(guide, /<details class="m8-guide-disclosure m8-overcharge-guide" data-how-to-play-disclosure="catch-and-use-overcharge">/);
 assert.match(guide, /How to catch and use OVERCHARGE/);
 assert.match(guide, /<strong>BUILD<\/strong><span>With BOOST full, keep using DRIFT\.<\/span>/);
 assert.match(guide, /<strong>CATCH<\/strong><span>Slide to GAS before OVERCHARGE leaks away\.<\/span>/);
@@ -75,7 +76,7 @@ assert.doesNotMatch(scorekeeper, /score-feedback-info|data-score-feedback-help|t
 assert.doesNotMatch(scorekeeper, /setInterval|setTimeout|requestAnimationFrame/,
   'The scorekeeper record helper must remain event-driven and add no racing-loop work');
 
-assert.match(guide, /<details class="m8-dbe-guide">/);
+assert.match(guide, /<details class="m8-dbe-guide" data-how-to-play-disclosure="drive-by-ear-sounds">/);
 assert.match(
   guide,
   /<summary><span class="m8-disclosure-symbol" aria-hidden="true"><\/span><span>Explore the Drive By Ear sounds<\/span><\/summary>/
@@ -145,6 +146,21 @@ assert.match(components, /\.m8-guide-disclosure\[open\] \.m8-disclosure-symbol::
 assert.match(components, /\.m8-dbe-guide-panel,[\s\S]*background: var\(--turn-disclosure-panel\)/);
 assert.doesNotMatch(components, /#eaf9ef/);
 assert.doesNotMatch(`${guide}\n${css}\n${components}`, /setInterval|setTimeout|@keyframes|animation:/, 'Help content must add no runtime loop or distracting motion');
+
+assert.equal(HOW_TO_PLAY_DISCLOSURE_IDS.length, 9,
+  'LEARN TO PLAY must cover all seven collapsible guide cards and both nested disclosures');
+for (const disclosureId of HOW_TO_PLAY_DISCLOSURE_IDS) {
+  assert.match(guide, new RegExp(`['"]${disclosureId}['"]`),
+    `How to Play must expose the stable ${disclosureId} progress id`);
+}
+assert.match(guide, /installDisclosureProgress\(dialog\)/);
+assert.match(guide, /details\.addEventListener\('toggle'/);
+assert.match(guide, /if \(!details\.open\) return/,
+  'Closing a disclosure must never count as reading another part');
+assert.match(guide, /HOW_TO_PLAY_DISCLOSURE_OPENED_EVENT/);
+assert.match(guide, /dialog\.addEventListener\('close'/,
+  'The learning achievement must wait until the modal closes before presenting feedback');
+assert.match(guide, /LEARNING_FEEDBACK_READY_EVENT/);
 
 assert.match(homeReset, /function homeIsOpen\(\)/);
 assert.match(homeReset, /document\.body\.classList\.contains\('turn-home-open'\)/);

@@ -1,7 +1,7 @@
 import {
   ONBOARDING_ACHIEVEMENT_IDS,
   TRACK_IDS
-} from './catalog.js?revision=r240-trophy-road-2';
+} from './catalog.js?revision=r241-learning-achievements';
 
 export const CHALLENGE_PROGRESS_STORAGE_KEY = 'turn-achievement-challenges-v1';
 export const CLEAN_LAP_TARGETS = Object.freeze({

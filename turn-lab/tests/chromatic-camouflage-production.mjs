@@ -37,8 +37,8 @@ const mayday = getAchievement('golden-hour');
 const catchTheCharge = getAchievement('catch-the-charge');
 const gotStarted = getAchievement('got-started');
 
-assert.equal(ACHIEVEMENTS.length, 58,
-  'Production TURN should expose the existing achievements plus scoring calibration placeholders');
+assert.equal(ACHIEVEMENTS.length, 60,
+  'Production TURN should expose the complete achievement and scoring catalog');
 assert.equal(GOT_STARTED_ACHIEVEMENT, gotStarted);
 assert.equal(gotStarted?.title, 'GOT STARTED');
 assert.equal(gotStarted?.category, 'onboarding');
@@ -57,6 +57,10 @@ assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 11,
   'GOT STARTED must require every Getting Started lesson, including CATCH THE CHARGE, without requiring itself');
 assert.equal(ONBOARDING_ACHIEVEMENT_IDS.includes('catch-the-charge'), true);
 assert.equal(ONBOARDING_ACHIEVEMENT_IDS.includes('got-started'), false);
+for (const id of ['drive-by-ear', 'learn-to-play']) {
+  assert.equal(getAchievement(id)?.category, 'ways-to-play');
+  assert.equal(getAchievement(id)?.trophies, 50);
+}
 
 assert.equal(achievement?.title, 'CHROMATIC CAMOUFLAGE');
 assert.equal(achievement?.hidden, true);
@@ -88,7 +92,7 @@ for (const trackId of TRACK_IDS) {
   assert.match(winner?.description || '', /four saved rivals/i);
   assert.equal(safety?.title, `${trackName.toUpperCase()} SAFETY`);
   assert.equal(safety?.category, 'racing');
-  assert.equal(safety?.trophies, 50);
+  assert.equal(safety?.trophies, 75);
   assert.match(safety?.description || '', /without going off-road/i);
 }
 
@@ -100,8 +104,8 @@ for (const achievementId of [
   'midnight-sprint',
   'mountain-sprint'
 ]) {
-  assert.equal(getAchievement(achievementId)?.trophies, 75,
-    `${achievementId} should award 75 trophies`);
+  assert.equal(getAchievement(achievementId)?.trophies, 100,
+    `${achievementId} should award 100 trophies`);
 }
 assert.equal(getAchievement('faster-than-the-dev')?.trophies, 300);
 
@@ -158,8 +162,8 @@ challengeApi.disconnect();
 
 assert.equal(
   ACHIEVEMENTS.reduce((total, item) => total + item.trophies, 0),
-  3975,
-  'The calibrated catalog includes the 900-trophy DRIFT and FLOW reservoir'
+  4575,
+  'The learning and balance pass must expose the complete trophy supply'
 );
 assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2200);
 assert.deepEqual(

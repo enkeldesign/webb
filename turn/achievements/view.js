@@ -7,13 +7,19 @@ import {
   TRACK_NAMES,
   VEHICLE_NAMES,
   TRACK_IDS
-} from './catalog.js?revision=r240-trophy-road-2';
+} from './catalog.js?revision=r241-learning-achievements';
 import {
   TIME_TRIAL_ACHIEVEMENT_IDS
 } from './time-trials.js?revision=r166-bella-records';
 import {
   TRACK_SCORING_ACHIEVEMENT_IDS
-} from './scoring-achievements.js?revision=r2-calibrated-targets';
+} from './scoring-achievements.js?revision=r3-trophy-balance';
+import {
+  DRIVE_BY_EAR_ACHIEVEMENT_ID,
+  DRIVE_BY_EAR_PART_IDS,
+  HOW_TO_PLAY_DISCLOSURE_IDS,
+  LEARN_TO_PLAY_ACHIEVEMENT_ID
+} from './learning-progress.js?revision=r1-learning-achievements';
 import {
   LOCK_ICON,
   TROPHY_ICON,
@@ -60,6 +66,15 @@ function progressFor(achievement, store, session) {
   }
   if (achievement.id === 'drift-flow-master') {
     return TRACK_SCORING_ACHIEVEMENT_IDS.filter((id) => store.isUnlocked(id)).length;
+  }
+  if (achievement.id === DRIVE_BY_EAR_ACHIEVEMENT_ID) {
+    return Math.min(DRIVE_BY_EAR_PART_IDS.length, store.state.progress.driveByEarParts.length);
+  }
+  if (achievement.id === LEARN_TO_PLAY_ACHIEVEMENT_ID) {
+    return Math.min(
+      HOW_TO_PLAY_DISCLOSURE_IDS.length,
+      store.state.progress.howToPlayDisclosures.length
+    );
   }
   if (achievement.id === 'listen-closely') {
     return Math.min(10, Math.floor((session.listenCloselyMs || 0) / 1000));

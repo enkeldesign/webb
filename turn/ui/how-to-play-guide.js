@@ -1,5 +1,20 @@
-const GUIDE_VERSION = 'r222-collapsible-cards';
+import {
+  HOW_TO_PLAY_DISCLOSURE_IDS,
+  HOW_TO_PLAY_DISCLOSURE_OPENED_EVENT,
+  LEARNING_FEEDBACK_READY_EVENT
+} from '../achievements/learning-progress.js?revision=r1-learning-achievements';
+
+const GUIDE_VERSION = 'r241-learning-achievements';
 const PACE_NOTE_EXPLANATION = 'Before major corners, one to three beeps play in the ear on the turn side. One beep means a gentler corner, two means medium and three means tight. A long corner keeps the same number of beeps but holds the final beep longer: bip-beeeep for a long medium corner and bip-bip-beeeep for a long tight corner. Separate groups describe linked corners in the order you will meet them.';
+const GUIDE_CARD_ID_BY_NUMBER = Object.freeze({
+  1: 'choose-track-and-car',
+  2: 'turn-device-to-steer',
+  3: 'drive-with-one-thumb',
+  4: 'build-and-use-overcharge',
+  5: 'shift',
+  6: 'drift-points',
+  7: 'flow-points'
+});
 
 export function installHowToPlayGuide(root = document) {
   const dialog = root.querySelector('.m8-how-dialog');
@@ -11,6 +26,8 @@ export function installHowToPlayGuide(root = document) {
   installShiftAndScoringSections(dialog);
   installDriveByEarDisclosure(dialog);
   installGuideCardDisclosures(dialog);
+  installDisclosureProgress(dialog);
+  installLearningFeedbackRelease(dialog, 'how-to-play');
   updateAudioPanelCopy(root);
 
   dialog.dataset.guideVersion = GUIDE_VERSION;
@@ -35,7 +52,7 @@ function updateDriftAndBoostCopy(dialog) {
   content.innerHTML = `
     <h3>Build and use OVERCHARGE</h3>
     <p><strong>DRIFT</strong> charges <strong>BOOST</strong> as you slide. With BOOST full, keep using DRIFT to build purple <strong>OVERCHARGE</strong>.</p>
-    <details class="m8-guide-disclosure m8-overcharge-guide">
+    <details class="m8-guide-disclosure m8-overcharge-guide" data-how-to-play-disclosure="catch-and-use-overcharge">
       <summary><span class="m8-disclosure-symbol" aria-hidden="true"></span><span>How to catch and use OVERCHARGE</span></summary>
       <div class="m8-guide-disclosure-panel">
         <ol class="m8-overcharge-steps">
@@ -49,9 +66,10 @@ function updateDriftAndBoostCopy(dialog) {
     </details>`;
 }
 
-function makeGuideSection(dialog, { number, title, copy }) {
+function makeGuideSection(dialog, { id, number, title, copy }) {
   const section = dialog.ownerDocument.createElement('section');
   section.className = 'm8-guide-system';
+  section.dataset.guideTopic = id;
   section.innerHTML = `
     <strong>${number}</strong>
     <div>
@@ -69,16 +87,19 @@ function installShiftAndScoringSections(dialog) {
   for (const existing of grid.querySelectorAll('.m8-guide-system')) existing.remove();
 
   const shift = makeGuideSection(dialog, {
+    id: 'shift',
     number: '5',
     title: 'SHIFT',
     copy: '<strong>SHIFT</strong> swaps between your car’s normal attributes and the alternate setup you configured in <strong>THE LOT</strong>. It redistributes attribute points — it does not add free power. During a race, slide from GAS into SHIFT to swap setup, then SHIFT again to return. Trade for what you need next: for example more DRIFT or CONTROL into a slide, or more acceleration and BOOST performance on the exit.'
   });
   const drift = makeGuideSection(dialog, {
+    id: 'drift-points',
     number: '6',
     title: 'DRIFT POINTS',
     copy: '<strong>DRIFT POINTS</strong> reward strong, fast, controlled slides — not pressing DRIFT. The large live number is the current drift value at risk and the gauge shows how strongly it is scoring right now. Link drifts to raise <strong>COMBO</strong>. A clean exit <strong>BANKS</strong> the current drift; a failed drift can lose the unbanked points without erasing points already banked this lap. <strong>LAP</strong> is this lap, <strong>LAST</strong> is your previous completed lap and <strong>BEST</strong> is the saved record for this track.'
   });
   const flow = makeGuideSection(dialog, {
+    id: 'flow-points',
     number: '7',
     title: 'FLOW POINTS',
     copy: '<strong>FLOW POINTS</strong> reward useful choreography between systems such as SHIFT, BOOST, DRIFT, LOCK, OVERCHARGE catches and clean exits. Button presses alone score nothing. Variety and useful timing build <strong>COMBO</strong>; repeating the same idea adds less and mistakes can break the chain. The gauge shows your current FLOW momentum. <strong>LAP</strong> is this lap, <strong>LAST</strong> is your previous completed lap and <strong>BEST</strong> is the saved record for this track.'
@@ -100,8 +121,12 @@ function installGuideCardDisclosures(dialog) {
     const heading = content?.querySelector(':scope > h3');
     if (!number || !content || !heading) continue;
 
+    const disclosureId = section.dataset.guideTopic
+      || GUIDE_CARD_ID_BY_NUMBER[number.textContent.trim()];
+
     const details = dialog.ownerDocument.createElement('details');
     details.className = 'm8-guide-card-disclosure';
+    if (disclosureId) details.dataset.howToPlayDisclosure = disclosureId;
 
     const summary = dialog.ownerDocument.createElement('summary');
     const badge = dialog.ownerDocument.createElement('strong');
@@ -137,7 +162,7 @@ function installDriveByEarDisclosure(dialog) {
       <h3>Drive By Ear™</h3>
       <p>Drive By Ear turns the racing line, upcoming corners, grip, surfaces, recovery and nearby rivals into spatial sound. Steer toward the warm guiding hum. Headphones provide the clearest left and right information. Together with a screen reader, it is designed to support complete non-visual play.</p>
 
-      <details class="m8-dbe-guide">
+      <details class="m8-dbe-guide" data-how-to-play-disclosure="drive-by-ear-sounds">
         <summary><span class="m8-disclosure-symbol" aria-hidden="true"></span><span>Explore the Drive By Ear sounds</span></summary>
         <div class="m8-dbe-guide-panel">
           <div class="m8-dbe-guide-content">
@@ -196,6 +221,29 @@ function installDriveByEarDisclosure(dialog) {
         </div>
       </details>
     </div>`;
+}
+
+function installDisclosureProgress(dialog) {
+  const expectedIds = new Set(HOW_TO_PLAY_DISCLOSURE_IDS);
+  const disclosures = dialog.querySelectorAll('details[data-how-to-play-disclosure]');
+  for (const details of disclosures) {
+    const disclosureId = details.dataset.howToPlayDisclosure;
+    if (!expectedIds.has(disclosureId)) continue;
+    details.addEventListener('toggle', () => {
+      if (!details.open) return;
+      globalThis.dispatchEvent(new CustomEvent(HOW_TO_PLAY_DISCLOSURE_OPENED_EVENT, {
+        detail: Object.freeze({ disclosureId })
+      }));
+    });
+  }
+}
+
+function installLearningFeedbackRelease(dialog, source) {
+  dialog.addEventListener('close', () => {
+    globalThis.dispatchEvent(new CustomEvent(LEARNING_FEEDBACK_READY_EVENT, {
+      detail: Object.freeze({ source })
+    }));
+  });
 }
 
 function updateAudioPanelCopy(root) {

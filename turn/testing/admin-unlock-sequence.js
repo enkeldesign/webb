@@ -1,7 +1,7 @@
 import {
   ACHIEVEMENT_STORAGE_KEY,
   normalizeAchievementState
-} from '../achievements/store.js?revision=r240-trophy-road-2';
+} from '../achievements/store.js?revision=r241-learning-achievements';
 import {
   TROPHY_ROAD_REWARDS
 } from '../progression/trophy-road.js?revision=r240-trophy-road-2';

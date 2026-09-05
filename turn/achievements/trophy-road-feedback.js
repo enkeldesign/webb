@@ -1,4 +1,4 @@
-import { CATEGORY } from './catalog.js?revision=r240-trophy-road-2';
+import { CATEGORY } from './catalog.js?revision=r241-learning-achievements';
 import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r240-trophy-road-2';
 import {
   achievementCardMatchesFilters
