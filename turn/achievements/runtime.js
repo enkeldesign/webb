@@ -25,7 +25,8 @@ import {
 import {
   SCORING_MASTER_ACHIEVEMENT_ID,
   completedAllScoringAchievements,
-  qualifyingScoringAchievement
+  qualifyingScoringAchievement,
+  storedScoringAchievementUnlockEntries
 } from './scoring-achievements.js?revision=r1-placeholder-targets';
 import { replayFrameAt } from '../race/replay-system.js?revision=r146-achievement-expansion';
 import { getStoredBestLap } from '../race/rival-storage.js';
@@ -237,6 +238,10 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
     }
 
     unlockSilently(entries);
+  }
+
+  function importStoredScoringAchievements() {
+    unlockSilently(storedScoringAchievementUnlockEntries(undefined, store.isUnlocked));
   }
 
   function sampleListenClosely(state, elapsedMs) {
@@ -490,6 +495,7 @@ export function installAchievements(runtime = globalThis.__turnRuntime) {
   menuObserver?.observe(utilityGroup, { attributes: true, attributeFilter: ['data-menu-state'] });
 
   importStoredTimeTrials();
+  importStoredScoringAchievements();
   syncDrivingSampler();
   syncRaceTriggerVisibility();
 

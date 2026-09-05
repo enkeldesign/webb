@@ -94,7 +94,7 @@ assert.equal(TROPHY_ROAD_STORAGE_VERSION, 7,
   'Independent vehicle-perk entitlements require a versioned Trophy Road migration');
 assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2000,
   'The base module must cover the final defined perk threshold');
-assert.equal(PRODUCTION_TROPHY_ROAD_MAX_THRESHOLD, 3075,
+assert.equal(PRODUCTION_TROPHY_ROAD_MAX_THRESHOLD, 3975,
   'Production must expose the complete current achievement-trophy scale');
 assert.equal(TROPHY_ROAD_VIEWPORT_THRESHOLD, 600);
 
@@ -483,7 +483,7 @@ assert.match(app, /trophy-road\.js\?revision=r166-bella-records/);
 assert.match(fixedLayout, /r166-bella-records/);
 assert.match(workflow, /Run Trophy Road progression regression/);
 assert.match(workflow, /node turn-lab\/tests\/trophy-road-production\.mjs/);
-assert.match(perkWrapper, /TROPHY_ROAD_MAX_THRESHOLD = 3075/);
+assert.match(perkWrapper, /TROPHY_ROAD_MAX_THRESHOLD = 3975/);
 assert.match(perkWrapper, /\['vintage-racer', 300\]/);
 assert.match(perkWrapper, /\['midnight-city', 400\]/);
 assert.match(perkWrapper, /\['race-car', 500\]/);
