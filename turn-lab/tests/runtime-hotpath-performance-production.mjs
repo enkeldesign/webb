@@ -51,8 +51,21 @@ assert.match(achievementView, /render\(\{ force: true \}\)/,
   'Opening Achievements must perform the deferred full render');
 
 // Toasts and trigger pulses may animate, but must not synchronously force layout in the race frame.
-assert.doesNotMatch(achievementView, /\.offsetWidth|\.offsetHeight|getBoundingClientRect\(\)/,
-  'Achievement hot paths must not force synchronous layout');
+// The reward modal is allowed one bounded measurement path on reward click/viewport resize while
+// the modal Achievements surface is open; keep every layout read isolated inside that function.
+const rewardPlacementStart = achievementView.indexOf('  function positionTrophyRoadDetail()');
+const rewardPlacementEnd = achievementView.indexOf('  function closeTrophyRoadDetail(', rewardPlacementStart);
+assert.ok(rewardPlacementStart >= 0 && rewardPlacementEnd > rewardPlacementStart,
+  'Trophy Road must retain one bounded reward-detail placement function');
+const rewardPlacementFunction = achievementView.slice(rewardPlacementStart, rewardPlacementEnd);
+const achievementHotPaths = `${achievementView.slice(0, rewardPlacementStart)}${achievementView.slice(rewardPlacementEnd)}`;
+assert.doesNotMatch(achievementHotPaths, /\.offsetWidth|\.offsetHeight|getBoundingClientRect\(\)/,
+  'Achievement hot paths outside the event-driven reward modal must not force synchronous layout');
+assert.match(rewardPlacementFunction, /row\.getBoundingClientRect\(\)/);
+assert.match(rewardPlacementFunction, /trophyRoadMap\.getBoundingClientRect\(\)/);
+assert.match(rewardPlacementFunction, /trophyRoadDetail\.getBoundingClientRect\(\)\.height/);
+assert.doesNotMatch(rewardPlacementFunction, /requestAnimationFrame|setInterval|setTimeout/,
+  'Reward placement must stay event-driven without adding a monitoring or animation loop');
 assert.match(achievementView, /requestAnimationFrame/,
   'Achievement entrance animations should cross a frame boundary without a forced reflow');
 

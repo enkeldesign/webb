@@ -1,12 +1,12 @@
 import { CATEGORY } from './catalog.js?revision=r241-learning-achievements';
-import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r240-trophy-road-2';
+import { createTrophyRoadShowcase } from './trophy-road-showcase.js?revision=r243-mountain-1300';
 import {
   achievementCardMatchesFilters
 } from './filter-state.js?revision=r219-unified-achievement-filters';
 import {
   TROPHY_ROAD_REWARD_ICONS,
   getTrophyRoadReward
-} from '../progression/trophy-road.js?revision=r240-trophy-road-2';
+} from '../progression/trophy-road.js?revision=r243-mountain-1300';
 
 const TAG_FILTERS = Object.freeze([
   Object.freeze({ id: 'new', label: 'NEW' }),
@@ -29,7 +29,7 @@ function ensureFeedbackStylesheet() {
   if (!stylesheet) {
     stylesheet = document.createElement('link');
     stylesheet.rel = 'stylesheet';
-    stylesheet.href = `/turn/progression/trophy-road-r157.css?build=${buildKey}-r242-serpentine-road`;
+    stylesheet.href = `/turn/progression/trophy-road-r157.css?build=${buildKey}-r243-reward-modal`;
     stylesheet.setAttribute('data-turn-trophy-road-feedback', '');
   }
   document.head.appendChild(stylesheet);
@@ -49,14 +49,14 @@ function prepareSummary(dialog) {
   const summaryMain = summary?.querySelector('.turn-achievements-summary-main');
   const title = summary?.querySelector('#turnAchievementsSummaryTitle');
   const trophyMetric = summary?.querySelector('.turn-achievements-trophy-total');
-  const completionMetric = summary?.querySelector('.turn-achievements-percent')?.closest('p');
   const road = summary?.querySelector('.turn-trophy-road');
   const track = road?.querySelector('.turn-trophy-road-track');
-  if (!summary || !summaryMain || !title || !trophyMetric || !completionMetric || !road || !track) return null;
+  if (!summary || !summaryMain || !title || !trophyMetric || !road || !track) return null;
 
-  const detail = summary.querySelector('.turn-trophy-road-detail');
+  const detail = dialog.querySelector('.turn-trophy-road-detail');
+  const detailLayer = dialog.querySelector('[data-trophy-road-detail-layer]');
   const markers = track.querySelector('.turn-trophy-road-markers');
-  if (!detail || !markers) return null;
+  if (!detail || !detailLayer || !markers) return null;
 
   return Object.freeze({
     summary,
@@ -64,6 +64,7 @@ function prepareSummary(dialog) {
     road,
     track,
     detail,
+    detailLayer,
     markers
   });
 }
@@ -203,7 +204,7 @@ function installRoadBehavior({ achievements, summary }) {
   function syncShowcase() {
     const reward = getTrophyRoadReward(selectedByPlayer);
     const host = summary.detail?.querySelector('.turn-trophy-road-detail-icon');
-    if (!reward || !host) {
+    if (summary.detailLayer.hidden || !reward || !host) {
       showcase.clear();
       return;
     }
@@ -259,6 +260,16 @@ function installRoadBehavior({ achievements, summary }) {
   const markerObserver = new MutationObserver(() => queueSelectionSync());
   markerObserver.observe(markers, { childList: true });
 
+  function handleDetailOpened() {
+    preserveUserSelection({ adoptRendered: true });
+  }
+
+  function handleDetailClosed() {
+    showcase.clear();
+  }
+
+  summary.detailLayer.addEventListener('turn:trophy-road-detail-opened', handleDetailOpened);
+  summary.detailLayer.addEventListener('turn:trophy-road-detail-closed', handleDetailClosed);
   dialog?.addEventListener('close', showcase.pause);
   preserveUserSelection({ adoptRendered: true });
   return Object.freeze({
@@ -269,6 +280,8 @@ function installRoadBehavior({ achievements, summary }) {
     disconnect() {
       markerObserver.disconnect();
       showcase.dispose();
+      summary.detailLayer.removeEventListener('turn:trophy-road-detail-opened', handleDetailOpened);
+      summary.detailLayer.removeEventListener('turn:trophy-road-detail-closed', handleDetailClosed);
       dialog?.removeEventListener('close', showcase.pause);
     }
   });

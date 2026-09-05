@@ -13,7 +13,7 @@ import {
 import { createCarVisual, recolorCarVisual } from '../vehicle/car-models.js?build=20260720-r22';
 import { recordPerformanceFrame } from '../performance-monitor.js?build=20260720-r20';
 import { describeColorCue } from '../accessibility/color-cues.js?revision=r163';
-import { LOCK_ICON } from '../progression/trophy-road.js?revision=r240-trophy-road-2';
+import { LOCK_ICON } from '../progression/trophy-road.js?revision=r243-mountain-1300';
 import {
   hasTriedTrainingCar,
   installTrainingCarGuide,

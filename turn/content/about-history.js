@@ -309,7 +309,7 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   period: '5 September',
   title: 'Trophy Road becomes a legible journey',
   paragraphs: [
-    'Trophy Road 2 reshapes progression into nineteen rewards at steady one-hundred-trophy intervals from 400 to 2,200. DRIFT ATTACK joins the road at 600 trophies and FLOW at 1,500, so each scoring system activates automatically as a layer of normal racing rather than asking the player to choose a mode.',
+    'Trophy Road reshapes progression into nineteen rewards at steady one-hundred-trophy intervals from 400 to 2,200. DRIFT ATTACK joins the road at 600 trophies and FLOW at 1,500, so each scoring system activates automatically as a layer of normal racing rather than asking the player to choose a mode.',
     'The Achievements view now answers three questions before showing the full road: the latest reward, the next reward and the next major reward on the horizon. The complete road follows in native reading order as a responsive reward grid, replacing the long horizontal carousel and its runtime geometry work.',
     'That complete reward grid now reads literally as a top-down TURN circuit. Category-coloured reward sections snake between dedicated checkered START and FINISH tiles, with static Kenney bends connecting every straight. Available width redistributes the same native-order controls across three, five or seven rewards per row, and any future rewards automatically extend the route before FINISH.',
     'Existing players keep every reward they previously owned and also receive anything justified by their current trophy total under the new order. Retained rewards are labelled clearly, newly derived rewards use the normal one-time composed feedback, and a versioned migration prevents progress or trophies from being reset.',
@@ -324,7 +324,7 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     'Calibrated scoring achievements and authored Trophy Road artwork',
     'Persistent Drive By Ear 101 and How to Play learning progress',
     'Literal responsive race-road presentation with native progression focus order',
-    'TURN 1.17.0–1.17.2 · 2026.09.05-r200–r202 Trophy Road 2 release, balance and visual road pass'
+    'TURN 1.17.0–1.17.3 · 2026.09.05-r200–r203 Trophy Road release, balance and visual road pass'
   ]
 }
 ]);
@@ -621,7 +621,10 @@ export const CHANGELOG = Object.freeze([
   {
     date: '5 September',
     entries: [
-      ['1.17.2 r202', 'Turns Trophy Road 2 into a literal responsive top-down race road with checkered START and FINISH tiles plus static Kenney bends.'],
+      ['1.17.3 r203', 'Moves reward information into a row-anchored Trophy Road modal, removes the competing completion percentage and brings MOUNTAIN forward to 1,300 trophies.'],
+      ['Reward detail modal', 'Opens above or below the selected reward row according to available space, closes from its button, Escape or the surrounding surface, and returns focus to the selected reward.'],
+      ['Safe MOUNTAIN swap', 'Moves VAN · CARRY ON to 1,400 trophies while preserving it for players who already earned the old 1,300-trophy entitlement.'],
+      ['1.17.2 r202', 'Turns Trophy Road into a literal responsive top-down race road with checkered START and FINISH tiles plus static Kenney bends.'],
       ['Responsive road order', 'Keeps reward controls in native progression and focus order while the available width selects three, five or seven rewards per alternating row; future rewards automatically extend the same snake.'],
       ['1.17.1 r201', 'Rebalances Trophy Road trophy sources and adds DRIVE BY EAR and LEARN TO PLAY as persistent 50-trophy Ways to Play achievements.'],
       ['Learning progress', 'Records each completed Drive By Ear 101 part and each opened How to Play disclosure once, across sessions, without adding a polling or animation loop.'],
@@ -636,7 +639,7 @@ export const CHANGELOG = Object.freeze([
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.17.2',
-  build: '2026.09.05-r202',
-  note: 'TURN 1.17.2 turns Trophy Road 2 into a literal responsive top-down race road.'
+  version: '1.17.3',
+  build: '2026.09.05-r203',
+  note: 'TURN 1.17.3 adds anchored reward details and moves MOUNTAIN to 1,300 trophies.'
 });

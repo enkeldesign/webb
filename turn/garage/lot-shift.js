@@ -1,10 +1,10 @@
-import { getCarDefinition } from '../vehicle/catalog.js?revision=r240-trophy-road-2';
+import { getCarDefinition } from '../vehicle/catalog.js?revision=r243-mountain-1300';
 import {
   isFeatureUnlocked,
   isVehiclePerkUnlocked,
   rewardForFeature,
   showTrophyUnlockNotice
-} from '../progression/trophy-road.js?revision=r240-trophy-road-2';
+} from '../progression/trophy-road.js?revision=r243-mountain-1300';
 import {
   VEHICLE_SHIFT_FEATURE_ID,
   VEHICLE_SHIFT_STAT_FIELDS,

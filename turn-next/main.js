@@ -30,7 +30,7 @@ import { installPerformanceMonitor, recordPerformanceFrame } from '/turn/perform
 import {
   isFeatureUnlocked,
   isVehiclePerkUnlocked
-} from '/turn/progression/trophy-road.js?revision=r240-trophy-road-2';
+} from '/turn/progression/trophy-road.js?revision=r243-mountain-1300';
 import {
   resetVehiclePerkRuntimeState,
   resolveGraduatedStageFeedback

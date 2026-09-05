@@ -55,7 +55,7 @@ assert.equal(
 );
 assert.equal(
   imports['./garage/lot-enhancement-runtime.js?revision=r163-native-picker-parent-click&build=20260809-r163'],
-  `./garage/lot-enhancement-runtime.js?build=${release.cacheKey}&revision=r223-training-car-taxi`,
+  `./garage/lot-enhancement-runtime.js?build=${release.cacheKey}&revision=r243-mountain-1300`,
   'The interaction-freeze hotfix must retain its cache-safe enhancement-runtime route'
 );
 
@@ -82,8 +82,8 @@ assert.doesNotMatch(wrapper, /installLotLayout|installLotStatLegend|installLotAc
 
 assert.match(enhancementRuntime, /ENHANCEMENT_ID = 'enhanced-lot-r164-vintage-rally-perks'/);
 assert.match(enhancementRuntime, /TROPHY_ROAD_ENHANCEMENT_ID = 'enhanced-lot-r164-vintage-rally-perks'/);
-assert.match(enhancementRuntime, /lot-perk-disclosure\.js\?revision=r240-trophy-road-2/);
-assert.match(enhancementRuntime, /lot-trophy-gate\.js\?revision=r240-trophy-road-2/);
+assert.match(enhancementRuntime, /lot-perk-disclosure\.js\?revision=r243-mountain-1300/);
+assert.match(enhancementRuntime, /lot-trophy-gate\.js\?revision=r243-mountain-1300/);
 assert.match(enhancementRuntime, /lot-accessibility-r118\.js\?build=20260729-r118&revision=r588-canonical-attributes/);
 assert.match(enhancementRuntime, /activeEnhancements = new WeakMap\(\)/);
 assert.match(enhancementRuntime, /LOT_ENTRY_CLICK_GUARD_MS = 600/);

@@ -203,11 +203,11 @@ installStylesheet(
 // Historical stylesheet bundle marker retained for the Trophy Road regression contract:
 // trophy-road-r157.css?revision=r157-paint-monster
 installStylesheet(
-  './progression/trophy-road-r157.css?revision=r242-serpentine-road',
+  './progression/trophy-road-r157.css?revision=r243-reward-modal',
   'data-turn-trophy-road'
 );
 const { prepareTrophyRoadProfile } = await import(
-  withBuild('./progression/trophy-road.js?revision=r240-trophy-road-2')
+  withBuild('./progression/trophy-road.js?revision=r243-mountain-1300')
 );
 prepareTrophyRoadProfile();
 
