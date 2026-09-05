@@ -135,7 +135,7 @@ export function getVehicleSpeedLimit({
     : baseSpeedLimit;
 }
 
-export function updateVehiclePhysicsState({
+function updateVehiclePhysicsStateCore({
   state,
   dt,
   updateMotionInput,
@@ -406,6 +406,18 @@ export function updateVehiclePhysicsState({
   return nearestAfter;
 }
 
+export function updateVehiclePhysicsState(options) {
+  const recordPhase = globalThis.__turnPerfRecordPhase;
+  if (typeof recordPhase !== 'function') return updateVehiclePhysicsStateCore(options);
+
+  const startedAt = performanceNow();
+  try {
+    return updateVehiclePhysicsStateCore(options);
+  } finally {
+    recordPhase('physics', Math.max(0, performanceNow() - startedAt));
+  }
+}
+
 function isForgivingSurface(position) {
   try {
     return globalThis.__turnIsForgivingSurface?.(position) === true;
@@ -420,6 +432,10 @@ function currentCollisionProfile() {
   } catch (_) {
     return null;
   }
+}
+
+function performanceNow() {
+  return globalThis.performance?.now?.() ?? Date.now();
 }
 
 function positiveNumber(value, fallback) {
