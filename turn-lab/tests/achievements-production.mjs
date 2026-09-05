@@ -101,7 +101,7 @@ assert.equal(ONBOARDING_ACHIEVEMENT_IDS.length, 11,
 assert.equal(totalAvailableTrophies(), 4575,
   'The learning and balance pass must expose the complete 4,575-trophy supply');
 assert.equal(TROPHY_ROAD_MAX_THRESHOLD, 2200,
-  'Trophy Road 2 uses the first 2200 trophies while the full catalog retains headroom');
+  'Trophy Road uses the first 2200 trophies while the full catalog retains headroom');
 assert.equal(
   ACHIEVEMENTS.reduce((total, achievement) => total + achievement.trophies, 0),
   4575
@@ -313,7 +313,7 @@ assert.deepEqual(normalizeChallengeProgress({
 });
 
 const empty = normalizeAchievementState(null);
-assert.equal(empty.version, 8,
+assert.equal(empty.version, 9,
   'Trophy Road v8 adds the reordered road and explicit grandfathering');
 assert.deepEqual(empty.progress.tracks, []);
 assert.deepEqual(empty.progress.blankTracks, []);
@@ -405,7 +405,7 @@ assert.equal(store.unlock('on-course-of-course', { trackId: 'harbor' })?.trophie
 assert.equal(store.unlock('save-bella', { trackId: 'countryside', vehicleId: 'firetruck' })?.trophies, 25);
 assert.equal(store.trophyTotal(), 325);
 assert.deepEqual(store.syncRewards(), [],
-  'Trophy Road 2 intentionally has no reward before the 400-trophy milestone');
+  'Trophy Road intentionally has no reward before the 400-trophy milestone');
 assert.doesNotMatch(storeSource, /rival-storage|clearRivalsState|clearAllRivalsState/,
   'Rival resets must remain independent from achievements');
 
@@ -515,7 +515,7 @@ assert.match(timeTrialSource, /seconds >= trial\.targetSeconds/);
 for (const entry of [productionEntry, labEntry]) {
   assert.match(entry, /"\/turn\/achievements\/time-trials\.js\?revision=r166-bella-records": "\/turn\/achievements\/time-trials\.js\?revision=r224-sprint-targets"/,
     'Production and Lab must route cached achievement imports to the new Sprint targets');
-  assert.match(entry, /"\/turn\/achievements\/view\.js\?revision=r166-bella-records": "\/turn\/achievements\/view\.js\?revision=r242-serpentine-road"/,
+  assert.match(entry, /"\/turn\/achievements\/view\.js\?revision=r166-bella-records": "\/turn\/achievements\/view\.js\?revision=r243-reward-modal"/,
     'Production and Lab must route cached achievement views to the corrected modal header');
   assert.match(entry, /"\/turn\/achievements\/catalog-base\.js\?revision=r222-awd-label": "\/turn\/achievements\/catalog-base\.js\?revision=r241-trophy-balance"/,
     'Installed builds must not retain the old LISTEN CLOSELY trophy value');
@@ -572,9 +572,9 @@ for (const source of [runtime, view, storeSource, challengeSource, secretRuntime
 }
 assert.match(runtime, /catalog\.js\?revision=r241-learning-achievements/,
   'Achievement consumers must load the current AWD vehicle label');
-assert.match(runtime, /store\.js\?revision=r241-learning-achievements/,
-  'The runtime must execute the Trophy Road 2 migration under a fresh module identity');
-assert.match(runtime, /view\.js\?revision=r242-serpentine-road/);
+assert.match(runtime, /store\.js\?revision=r243-mountain-1300/,
+  'The runtime must execute the MOUNTAIN threshold migration under a fresh module identity');
+assert.match(runtime, /view\.js\?revision=r243-reward-modal/);
 assert.match(runtime, /DRIVE_BY_EAR_PART_COMPLETED_EVENT/);
 assert.match(runtime, /HOW_TO_PLAY_DISCLOSURE_OPENED_EVENT/);
 assert.match(runtime, /unlock\(\[DRIVE_BY_EAR_ACHIEVEMENT_ID\], \{\}, \{ delay: -1 \}\)/);

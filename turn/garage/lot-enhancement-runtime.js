@@ -24,14 +24,14 @@ export function prepareLotEnhancements() {
   enhancementPreparation = Promise.all([
     import('./lot-stat-legend.js?revision=r225-18-point-budget'),
     import('./lot-layout-r60.js?build=20260729-r116&revision=r213-attributes-typography'),
-    import('./lot-shift.js?revision=r240-trophy-road-2'),
+    import('./lot-shift.js?revision=r243-mountain-1300'),
     import('./lot-accessibility-r118.js?build=20260729-r118&revision=r588-canonical-attributes'),
-    import('./lot-perk-disclosure.js?revision=r240-trophy-road-2'),
+    import('./lot-perk-disclosure.js?revision=r243-mountain-1300'),
     import('./lot-card-scroll-boundary.js?revision=r216-meter-density'),
     import('./lot-vehicle-copy.js?revision=r223-training-car-taxi'),
     import('./lot-trophy-order.js'),
-    import('../progression/lot-trophy-gate.js?revision=r240-trophy-road-2'),
-    import('../progression/lot-paint-reward.js?revision=r240-trophy-road-2')
+    import('../progression/lot-trophy-gate.js?revision=r243-mountain-1300'),
+    import('../progression/lot-paint-reward.js?revision=r243-mountain-1300')
   ]).then(([
     statLegend,
     layout,

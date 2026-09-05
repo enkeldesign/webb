@@ -28,10 +28,12 @@ import {
   TROPHY_ROAD_REWARD_ICONS,
   getTrophyRoadReward,
   trophyRoadOverview
-} from '../progression/trophy-road.js?revision=r240-trophy-road-2';
+} from '../progression/trophy-road.js?revision=r243-mountain-1300';
 
 const TOAST_VISIBLE_MS = 3600;
 const ATTENTION_VISIBLE_MS = 900;
+const TROPHY_ROAD_DETAIL_GAP = 8;
+const TROPHY_ROAD_DETAIL_EDGE = 10;
 const AVAILABLE_ACHIEVEMENTS = Object.freeze(
   ACHIEVEMENTS.filter((achievement) => achievement.calibrationPending !== true)
 );
@@ -40,6 +42,46 @@ export const TROPHY_ROAD_RESPONSIVE_LAYOUTS = Object.freeze([
   Object.freeze({ name: 'medium', rewardsPerRow: 5 }),
   Object.freeze({ name: 'wide', rewardsPerRow: 7 })
 ]);
+
+function clampedNumber(value, minimum, maximum) {
+  return Math.max(minimum, Math.min(maximum, Number(value) || 0));
+}
+
+export function trophyRoadDetailPlacement({
+  rowRect,
+  mapRect,
+  detailHeight,
+  viewportWidth,
+  viewportHeight,
+  gap = TROPHY_ROAD_DETAIL_GAP,
+  edge = TROPHY_ROAD_DETAIL_EDGE
+} = {}) {
+  const safeViewportWidth = Math.max(1, Number(viewportWidth) || 1);
+  const safeViewportHeight = Math.max(1, Number(viewportHeight) || 1);
+  const safeGap = Math.max(0, Number(gap) || 0);
+  const safeEdge = Math.max(0, Number(edge) || 0);
+  const safeDetailHeight = Math.max(0, Number(detailHeight) || 0);
+  const rowTop = Number(rowRect?.top) || 0;
+  const rowBottom = Number(rowRect?.bottom) || rowTop;
+  const mapLeft = Number(mapRect?.left) || safeEdge;
+  const mapRight = Number(mapRect?.right) || (safeViewportWidth - safeEdge);
+  const left = clampedNumber(mapLeft, safeEdge, Math.max(safeEdge, safeViewportWidth - safeEdge));
+  const right = clampedNumber(mapRight, left, Math.max(left, safeViewportWidth - safeEdge));
+  const belowSpace = safeViewportHeight - safeEdge - rowBottom - safeGap;
+  const aboveSpace = rowTop - safeEdge - safeGap;
+  const placement = belowSpace >= safeDetailHeight || belowSpace >= aboveSpace ? 'below' : 'above';
+  const idealTop = placement === 'below'
+    ? rowBottom + safeGap
+    : rowTop - safeGap - safeDetailHeight;
+  const maximumTop = Math.max(safeEdge, safeViewportHeight - safeEdge - safeDetailHeight);
+
+  return Object.freeze({
+    placement,
+    top: clampedNumber(idealTop, safeEdge, maximumTop),
+    left,
+    width: Math.max(0, right - left)
+  });
+}
 
 export function trophyRoadVisualSlot(step, rewardsPerRow) {
   const normalizedRewardsPerRow = Math.max(1, Math.floor(Number(rewardsPerRow) || 1));
@@ -247,14 +289,13 @@ function createDialog() {
             <strong id="turnAchievementsSummaryTitle">0 OF ${AVAILABLE_ACHIEVEMENTS.length} UNLOCKED</strong>
             <div class="turn-achievements-summary-metrics">
               <p class="turn-achievements-trophy-total"><span>TROPHIES</span><strong><i aria-hidden="true">${TROPHY_ICON}</i><b>0</b></strong></p>
-              <p><span>COMPLETION</span><strong class="turn-achievements-percent">0%</strong></p>
             </div>
           </div>
           <div class="turn-achievements-summary-main">
             <div class="turn-trophy-road">
               <div class="turn-trophy-road-position">
                 <div>
-                  <span>TROPHY ROAD 2</span>
+                  <span>TROPHY ROAD</span>
                   <strong data-trophy-road-position>0 / ${TROPHY_ROAD_MAX_THRESHOLD}</strong>
                   <small data-trophy-road-next-copy>First reward at 400 trophies.</small>
                 </div>
@@ -278,7 +319,6 @@ function createDialog() {
               </div>
             </div>
           </div>
-          <div class="turn-trophy-road-detail" aria-live="polite"></div>
         </section>
         <p class="turn-achievements-storage-note" hidden>Achievement progress is available for this session but cannot be saved because local storage is unavailable.</p>
         <div class="turn-achievements-filters" aria-label="Achievement filters">
@@ -290,7 +330,20 @@ function createDialog() {
         </div>
         <div class="turn-achievements-list"></div>
       </div>
-    </article>`;
+    </article>
+    <div class="turn-trophy-road-detail-layer" data-trophy-road-detail-layer hidden>
+      <section
+        id="turnTrophyRoadDetailDialog"
+        class="turn-trophy-road-detail"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="turnTrophyRoadDetailTitle"
+        aria-describedby="turnTrophyRoadDetailDescription"
+      >
+        <button type="button" class="turn-trophy-road-detail-close" data-trophy-road-detail-close aria-label="Close reward details">×</button>
+        <div class="turn-trophy-road-detail-content"></div>
+      </section>
+    </div>`;
   document.body.appendChild(dialog);
   return dialog;
 }
@@ -370,6 +423,11 @@ export function createAchievementView({ store, session, utilityGroup }) {
   const trophyRoadFill = trophyRoad.querySelector('i');
   const trophyRoadMarkers = dialog.querySelector('.turn-trophy-road-markers');
   const trophyRoadDetail = dialog.querySelector('.turn-trophy-road-detail');
+  const trophyRoadDetailLayer = dialog.querySelector('[data-trophy-road-detail-layer]');
+  const trophyRoadDetailContent = dialog.querySelector('.turn-trophy-road-detail-content');
+  const trophyRoadDetailClose = dialog.querySelector('[data-trophy-road-detail-close]');
+  const trophyRoadMap = dialog.querySelector('.turn-trophy-road-map');
+  const achievementsCard = dialog.querySelector('.turn-achievements-card');
   const trophyRoadPosition = dialog.querySelector('[data-trophy-road-position]');
   const trophyRoadNextCopy = dialog.querySelector('[data-trophy-road-next-copy]');
   const trophyRoadHighlights = Object.fromEntries(
@@ -377,7 +435,6 @@ export function createAchievementView({ store, session, utilityGroup }) {
       .map((element) => [element.dataset.trophyRoadHighlight, element])
   );
   const trophyTotal = dialog.querySelector('.turn-achievements-trophy-total b');
-  const percent = dialog.querySelector('.turn-achievements-percent');
   const storageNote = dialog.querySelector('.turn-achievements-storage-note');
   const closeButton = dialog.querySelector('[data-dialog-close]');
   const applyFilter = installFilters(dialog);
@@ -395,6 +452,77 @@ export function createAchievementView({ store, session, utilityGroup }) {
 
   function dialogIsOpen() {
     return dialog.open === true || dialog.hasAttribute('open');
+  }
+
+  function detailIsOpen() {
+    return trophyRoadDetailLayer.hidden === false;
+  }
+
+  function selectedRewardMarker() {
+    return trophyRoadMarkers.querySelector(`[data-trophy-reward="${selectedRewardId}"]`);
+  }
+
+  function syncDetailMarkerState(open = detailIsOpen()) {
+    for (const marker of trophyRoadMarkers.querySelectorAll('[data-trophy-reward]')) {
+      marker.setAttribute(
+        'aria-expanded',
+        String(open && marker.dataset.trophyReward === selectedRewardId)
+      );
+    }
+  }
+
+  function positionTrophyRoadDetail() {
+    if (!detailIsOpen()) return null;
+    const marker = selectedRewardMarker();
+    const row = marker?.closest('li');
+    if (!row || !trophyRoadMap) return null;
+    const visualViewport = globalThis.visualViewport;
+    const rowRect = row.getBoundingClientRect();
+    const mapRect = trophyRoadMap.getBoundingClientRect();
+    const viewportWidth = visualViewport?.width || globalThis.innerWidth;
+    const viewportHeight = visualViewport?.height || globalThis.innerHeight;
+    const horizontalPlacement = trophyRoadDetailPlacement({
+      rowRect,
+      mapRect,
+      detailHeight: 0,
+      viewportWidth,
+      viewportHeight
+    });
+    trophyRoadDetail.style.setProperty('--turn-trophy-road-detail-left', `${horizontalPlacement.left}px`);
+    trophyRoadDetail.style.setProperty('--turn-trophy-road-detail-width', `${horizontalPlacement.width}px`);
+    const placement = trophyRoadDetailPlacement({
+      rowRect,
+      mapRect,
+      detailHeight: trophyRoadDetail.getBoundingClientRect().height,
+      viewportWidth,
+      viewportHeight
+    });
+    trophyRoadDetail.dataset.placement = placement.placement;
+    trophyRoadDetail.style.setProperty('--turn-trophy-road-detail-top', `${placement.top}px`);
+    trophyRoadDetail.style.setProperty('--turn-trophy-road-detail-left', `${placement.left}px`);
+    trophyRoadDetail.style.setProperty('--turn-trophy-road-detail-width', `${placement.width}px`);
+    return placement;
+  }
+
+  function closeTrophyRoadDetail({ restoreFocus = true } = {}) {
+    if (!detailIsOpen()) return false;
+    trophyRoadDetailLayer.hidden = true;
+    achievementsCard.inert = false;
+    dialog.classList.remove('is-trophy-road-detail-open');
+    syncDetailMarkerState(false);
+    trophyRoadDetailLayer.dispatchEvent(new CustomEvent('turn:trophy-road-detail-closed'));
+    if (restoreFocus && dialogIsOpen()) selectedRewardMarker()?.focus({ preventScroll: true });
+    return true;
+  }
+
+  function openTrophyRoadDetail() {
+    trophyRoadDetailLayer.hidden = false;
+    achievementsCard.inert = true;
+    dialog.classList.add('is-trophy-road-detail-open');
+    syncDetailMarkerState(true);
+    positionTrophyRoadDetail();
+    trophyRoadDetailClose.focus({ preventScroll: true });
+    trophyRoadDetailLayer.dispatchEvent(new CustomEvent('turn:trophy-road-detail-opened'));
   }
 
   function renderTrophyRoad(total) {
@@ -480,7 +608,10 @@ export function createAchievementView({ store, session, utilityGroup }) {
           class="turn-trophy-road-marker ${unlocked ? 'is-unlocked' : 'is-locked'} ${isNext ? 'is-next' : ''} ${selected ? 'is-selected' : ''}"
           data-trophy-reward="${reward.id}"
           data-trophy-reward-type="${reward.type}"
+          aria-haspopup="dialog"
           aria-pressed="${selected}"
+          aria-controls="turnTrophyRoadDetailDialog"
+          aria-expanded="${selected && detailIsOpen()}"
           aria-label="${reward.shortTitle}. ${reward.threshold} trophies. ${stateLabel}."
         ><span class="turn-trophy-road-marker-state">${unlocked ? '✓ ' : ''}${stateLabel}</span><span class="turn-trophy-road-marker-icon" aria-hidden="true">${TROPHY_ROAD_REWARD_ICONS[reward.icon]}</span><b>${reward.threshold}</b><small>${reward.shortTitle}</small>${unlocked ? '' : `<i class="turn-trophy-road-marker-lock" aria-hidden="true">${LOCK_ICON}</i>`}</button></li>`;
     }).join('');
@@ -489,13 +620,16 @@ export function createAchievementView({ store, session, utilityGroup }) {
     const unlocked = store.isRewardUnlocked(reward.id);
     const grandfathered = unlocked && grandfatheredIds.has(reward.id);
     const remaining = Math.max(0, reward.threshold - total);
-    trophyRoadDetail.innerHTML = `
+    trophyRoadDetail.dataset.trophyRewardType = reward.type;
+    trophyRoadDetail.dataset.trophyRewardState = unlocked ? 'unlocked' : 'locked';
+    trophyRoadDetailContent.innerHTML = `
       <div class="turn-trophy-road-detail-icon" aria-hidden="true">${TROPHY_ROAD_REWARD_ICONS[reward.icon]}</div>
       <div>
         <span>${reward.threshold} TROPHIES · ${grandfathered ? 'KEPT FROM TROPHY ROAD 1' : unlocked ? 'UNLOCKED' : `${remaining} TO GO`}</span>
-        <h3>${reward.title}</h3>
-        <p>${reward.description}</p>
+        <h3 id="turnTrophyRoadDetailTitle">${reward.title}</h3>
+        <p id="turnTrophyRoadDetailDescription">${reward.description}</p>
       </div>`;
+    if (detailIsOpen()) positionTrophyRoadDetail();
   }
 
   trophyRoadMarkers.addEventListener('click', (event) => {
@@ -503,7 +637,7 @@ export function createAchievementView({ store, session, utilityGroup }) {
     if (!marker) return;
     selectedRewardId = marker.dataset.trophyReward;
     renderTrophyRoad(store.trophyTotal());
-    trophyRoadMarkers.querySelector(`[data-trophy-reward="${selectedRewardId}"]`)?.focus();
+    openTrophyRoadDetail();
   });
 
   function render({ force = false } = {}) {
@@ -515,10 +649,8 @@ export function createAchievementView({ store, session, utilityGroup }) {
       store.isUnlocked(achievement.id)
     )).length;
     const trophies = store.trophyTotal();
-    const completion = Math.round((unlockedCount / AVAILABLE_ACHIEVEMENTS.length) * 100);
     totalTitle.textContent = `${unlockedCount} OF ${AVAILABLE_ACHIEVEMENTS.length} UNLOCKED`;
     trophyTotal.textContent = String(trophies);
-    percent.textContent = `${completion}%`;
     renderTrophyRoad(trophies);
     storageNote.hidden = store.storageAvailable();
     list.innerHTML = ACHIEVEMENTS
@@ -552,6 +684,7 @@ export function createAchievementView({ store, session, utilityGroup }) {
 
   function open(trigger) {
     returnFocus = trigger;
+    closeTrophyRoadDetail({ restoreFocus: false });
     selectedRewardId = initialRewardSelection(store);
     render({ force: true });
     if (typeof dialog.showModal === 'function') dialog.showModal();
@@ -562,6 +695,7 @@ export function createAchievementView({ store, session, utilityGroup }) {
   }
 
   function close() {
+    closeTrophyRoadDetail({ restoreFocus: false });
     if (typeof dialog.close === 'function' && dialog.open) dialog.close();
     else dialog.removeAttribute('open');
     returnFocus?.focus?.();
@@ -570,10 +704,30 @@ export function createAchievementView({ store, session, utilityGroup }) {
   homeTrigger.addEventListener('click', () => open(homeTrigger));
   raceTrigger.addEventListener('click', () => open(raceTrigger));
   closeButton.addEventListener('click', close);
+  trophyRoadDetailClose.addEventListener('click', () => closeTrophyRoadDetail());
+  trophyRoadDetailLayer.addEventListener('click', (event) => {
+    if (event.target === trophyRoadDetailLayer) closeTrophyRoadDetail();
+  });
+  trophyRoadDetailLayer.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      closeTrophyRoadDetail();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    event.preventDefault();
+    trophyRoadDetailClose.focus({ preventScroll: true });
+  });
+  globalThis.addEventListener?.('resize', positionTrophyRoadDetail, { passive: true });
+  globalThis.visualViewport?.addEventListener?.('resize', positionTrophyRoadDetail, { passive: true });
   dialog.addEventListener('click', (event) => {
     if (event.target === dialog) close();
   });
-  dialog.addEventListener('close', () => returnFocus?.focus?.());
+  dialog.addEventListener('close', () => {
+    closeTrophyRoadDetail({ restoreFocus: false });
+    returnFocus?.focus?.();
+  });
 
   function pulseRaceTrigger() {
     window.clearTimeout(attentionTimer);

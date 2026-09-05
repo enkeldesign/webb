@@ -1,5 +1,5 @@
 export const TROPHY_ROAD_STORAGE_KEY = 'turn-achievements-v1';
-export const TROPHY_ROAD_STORAGE_VERSION = 8;
+export const TROPHY_ROAD_STORAGE_VERSION = 9;
 export const TROPHY_ROAD_MAX_THRESHOLD = 2200;
 
 export const TROPHY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 4h10v4c0 4-2 7-5 8-3-1-5-4-5-8V4Z"></path><path d="M7 6H4v2c0 2 1 3 4 4M17 6h3v2c0 2-1 3-4 4M9 20h6M12 16v4"></path></svg>';
@@ -235,8 +235,8 @@ const REWARD_ORDER = Object.freeze([
   Object.freeze(['shift', 1000]),
   Object.freeze(['race-car', 1100]),
   Object.freeze(['emergency-pack', 1200]),
-  Object.freeze(['van-carry-on', 1300]),
-  Object.freeze(['mountain', 1400]),
+  Object.freeze(['mountain', 1300]),
+  Object.freeze(['van-carry-on', 1400]),
   Object.freeze(['flow', 1500]),
   Object.freeze(['future-racer', 1600]),
   Object.freeze(['suv-full-tank', 1700]),
@@ -259,7 +259,7 @@ const REWARD_DEFINITION_BY_ID = new Map(
 
 export const TROPHY_ROAD_REWARDS = Object.freeze(REWARD_ORDER.map(([id, threshold]) => {
   const reward = REWARD_DEFINITION_BY_ID.get(id);
-  if (!reward) throw new Error(`TURN Trophy Road 2 is missing reward ${id}.`);
+  if (!reward) throw new Error(`TURN Trophy Road is missing reward ${id}.`);
   return Object.freeze({
     ...reward,
     threshold,
@@ -339,8 +339,14 @@ export function grandfatheredRewardIdsForVersion(version) {
 
 export function migrateStoredRewardIdsForVersion(ids, version) {
   const storedIds = Array.isArray(ids) ? [...new Set(ids)] : [];
-  if (Number(version) !== 5) return storedIds;
-  return storedIds.filter((id) => id !== 'future-racer' && id !== 'rally-racer');
+  const numericVersion = Number(version);
+  if (numericVersion === 5) {
+    return storedIds.filter((id) => id !== 'future-racer' && id !== 'rally-racer');
+  }
+  if (numericVersion === 8 && storedIds.includes('van-carry-on') && !storedIds.includes('mountain')) {
+    storedIds.push('mountain');
+  }
+  return storedIds;
 }
 
 export function rewardIdsForTrophies(trophies) {

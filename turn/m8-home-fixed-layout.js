@@ -273,7 +273,7 @@ export async function installM8HomeFixedLayout() {
     import(`/turn/achievements/unread-markers.js?build=${buildKey}-r219-unified-filters`),
     import(`/turn/achievements/secret-achievements.js?build=${buildKey}-r174-bella-siren-zone`),
     import(`/turn/achievements/challenge-expansion-r166.js?build=${buildKey}-r166-bella-records`),
-    import(`/turn/achievements/trophy-road-feedback.js?build=${buildKey}-r241-learning-achievements&robustness=r164-long-session`),
+    import(`/turn/achievements/trophy-road-feedback.js?build=${buildKey}-r243-reward-modal&robustness=r164-long-session`),
     import(`/turn/training/drive-by-ear-training.js?build=${buildKey}-r151-dbe-training-device-fixes`)
   ]);
 

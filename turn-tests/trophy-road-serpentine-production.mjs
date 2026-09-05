@@ -29,8 +29,8 @@ const expectedRoad = [
   ['shift', 1000],
   ['race-car', 1100],
   ['emergency-pack', 1200],
-  ['van-carry-on', 1300],
-  ['mountain', 1400],
+  ['mountain', 1300],
+  ['van-carry-on', 1400],
   ['flow', 1500],
   ['future-racer', 1600],
   ['suv-full-tank', 1700],
@@ -44,7 +44,7 @@ const expectedRoad = [
 assert.deepEqual(
   TROPHY_ROAD_REWARDS.map(({ id, threshold }) => [id, threshold]),
   expectedRoad,
-  'The visual road must not change Trophy Road 2 order or thresholds'
+  'The visual road must preserve the current Trophy Road order and thresholds'
 );
 assert.equal(TROPHY_ROAD_REWARDS.length, 19);
 assert.equal(getTrophyRoadReward('?'), null, 'A future teaser must never become a reward entitlement');
@@ -157,8 +157,8 @@ assert.match(viewSource, /aria-label="\$\{reward\.shortTitle\}\. \$\{reward\.thr
   'Existing reward names and textual earned/current/locked state must remain intact');
 assert.match(viewSource, /aria-pressed="\$\{selected\}"/,
   'Current detail selection must remain programmatically exposed');
-assert.match(viewSource, /trophyRoadMarkers\.querySelector\(`\[data-trophy-reward="\$\{selectedRewardId\}"\]`\)\?\.focus\(\)/,
-  'Selecting a reward must preserve the current detail-and-focus behavior');
+assert.match(viewSource, /openTrophyRoadDetail\(\)/,
+  'Selecting a reward must open its anchored detail modal');
 
 assert.match(roadStyles, /container: turn-trophy-road \/ inline-size/,
   'The road must respond to its actual available component width');
@@ -193,5 +193,9 @@ for (const type of ['vehicle', 'track', 'feature', 'scoring-system']) {
   assert.match(semanticStyles, new RegExp(`data-trophy-reward-type="${type}"`),
     `The ${type} category colour contract must remain in place`);
 }
+assert.match(semanticStyles, /\.turn-trophy-road-detail[\s\S]*data-trophy-reward-state="locked"/,
+  'The modal paper must derive its category/state colour directly from its rendered reward data');
+assert.doesNotMatch(semanticStyles, /:has\([^)]*is-selected/,
+  'Reward-modal colour must not require relational marker matching');
 
-console.log('TURN Trophy Road 2 responsive serpentine layout, accessibility and immutable progression regression passed.');
+console.log('TURN Trophy Road responsive serpentine layout, accessibility and immutable progression regression passed.');

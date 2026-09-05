@@ -6,11 +6,11 @@ import {
 import {
   createAchievementStore,
   normalizeAchievementState
-} from './store.js?revision=r241-learning-achievements';
+} from './store.js?revision=r243-mountain-1300';
 import {
   allOnboardingComplete,
   createAchievementView
-} from './view.js?revision=r242-serpentine-road';
+} from './view.js?revision=r243-reward-modal';
 import {
   completedNightShiftSheriff,
   createNightShiftAttempt,

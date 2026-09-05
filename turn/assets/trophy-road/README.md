@@ -1,6 +1,6 @@
 # Trophy Road authored sources
 
-These are the approved authored source icons for the Trophy Road 2 / SVG icon-system work tracked by #740 and #749.
+These are the approved authored source icons for the Trophy Road / SVG icon-system work tracked by #740 and #749.
 
 The three `road-sand-*.png` files are unchanged 128 × 128 tiles from Kenney Racing Pack 1.1's `PNG/Tiles/Sand road` set, supplied for #761:
 

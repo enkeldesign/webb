@@ -155,7 +155,7 @@ const VEHICLE_PERK_BY_ID = Object.freeze({
     title: 'CARRY ON',
     description: 'LOCK loses much less speed.',
     rewardId: 'van-carry-on',
-    threshold: 1300
+    threshold: 1400
   }),
   'race-future': Object.freeze({
     title: 'OVERDRIVE',

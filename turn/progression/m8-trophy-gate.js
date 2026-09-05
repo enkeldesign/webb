@@ -3,7 +3,7 @@ import {
   isTrackUnlocked,
   rewardForTrack,
   showTrophyUnlockNotice
-} from './trophy-road.js?revision=r240-trophy-road-2';
+} from './trophy-road.js?revision=r243-mountain-1300';
 
 export function installM8TrophyGate(homeApi = globalThis.__turnNextHome) {
   const home = document.querySelector('.m8-home');

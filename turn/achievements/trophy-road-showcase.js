@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {
   getVehicleDefaultColor,
   getVehicleDefaultSecondaryColor
-} from '../vehicle/catalog.js?revision=r240-trophy-road-2';
+} from '../vehicle/catalog.js?revision=r243-mountain-1300';
 import { createCarVisual } from '../vehicle/emergency-livery-models.js?build=20260823-r179';
 import { configureRendererWideGamut } from '../vehicle/wide-gamut.js?revision=r157-display-p3';
 

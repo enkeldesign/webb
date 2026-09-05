@@ -1,4 +1,4 @@
-@import url('./trophy-road.css?revision=r242-serpentine-road');
+@import url('./trophy-road.css?revision=r243-reward-modal');
 
 :root {
   --turn-reward-vehicle-locked: #d8eff9;
@@ -89,49 +89,48 @@
   background: var(--turn-reward-scoring-unlocked);
 }
 
-/* Keep the selected reward detail in the same semantic family as its road marker.
-   :has() is progressive enhancement; older engines retain the standard green detail card. */
-.turn-achievements-dialog:has(.turn-trophy-road-marker:is(
+/* Keep the selected reward detail in the same semantic family as its road marker. */
+.turn-trophy-road-detail:is(
   [data-trophy-reward-type="vehicle"],
   [data-trophy-reward-type="vehicle-pack"]
-).is-selected.is-locked) .turn-trophy-road-detail {
+)[data-trophy-reward-state="locked"] {
   background: var(--turn-reward-vehicle-locked);
 }
 
-.turn-achievements-dialog:has(.turn-trophy-road-marker:is(
+.turn-trophy-road-detail:is(
   [data-trophy-reward-type="vehicle"],
   [data-trophy-reward-type="vehicle-pack"]
-).is-selected.is-unlocked) .turn-trophy-road-detail {
+)[data-trophy-reward-state="unlocked"] {
   background: var(--turn-reward-vehicle-unlocked);
 }
 
-.turn-achievements-dialog:has(.turn-trophy-road-marker[data-trophy-reward-type="track"].is-selected.is-locked) .turn-trophy-road-detail {
+.turn-trophy-road-detail[data-trophy-reward-type="track"][data-trophy-reward-state="locked"] {
   background: var(--turn-reward-track-locked);
 }
 
-.turn-achievements-dialog:has(.turn-trophy-road-marker[data-trophy-reward-type="track"].is-selected.is-unlocked) .turn-trophy-road-detail {
+.turn-trophy-road-detail[data-trophy-reward-type="track"][data-trophy-reward-state="unlocked"] {
   background: var(--turn-reward-track-unlocked);
 }
 
-.turn-achievements-dialog:has(.turn-trophy-road-marker:is(
+.turn-trophy-road-detail:is(
   [data-trophy-reward-type="feature"],
   [data-trophy-reward-type="vehicle-perk"]
-).is-selected.is-locked) .turn-trophy-road-detail {
+)[data-trophy-reward-state="locked"] {
   background: var(--turn-reward-feature-locked);
 }
 
-.turn-achievements-dialog:has(.turn-trophy-road-marker:is(
+.turn-trophy-road-detail:is(
   [data-trophy-reward-type="feature"],
   [data-trophy-reward-type="vehicle-perk"]
-).is-selected.is-unlocked) .turn-trophy-road-detail {
+)[data-trophy-reward-state="unlocked"] {
   background: var(--turn-reward-feature-unlocked);
 }
 
-.turn-achievements-dialog:has(.turn-trophy-road-marker[data-trophy-reward-type="scoring-system"].is-selected.is-locked) .turn-trophy-road-detail {
+.turn-trophy-road-detail[data-trophy-reward-type="scoring-system"][data-trophy-reward-state="locked"] {
   background: var(--turn-reward-scoring-locked);
 }
 
-.turn-achievements-dialog:has(.turn-trophy-road-marker[data-trophy-reward-type="scoring-system"].is-selected.is-unlocked) .turn-trophy-road-detail {
+.turn-trophy-road-detail[data-trophy-reward-type="scoring-system"][data-trophy-reward-state="unlocked"] {
   background: var(--turn-reward-scoring-unlocked);
 }
 

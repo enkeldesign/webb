@@ -1,7 +1,7 @@
 import {
   enhanceLotNow,
   prepareLotEnhancements
-} from './lot-enhancement-runtime.js?revision=r240-trophy-road-2';
+} from './lot-enhancement-runtime.js?revision=r243-mountain-1300';
 import { installLotPwaColorSwatches } from './lot-pwa-color-swatch.js?revision=r206-pwa-color';
 import { chooseTrackBeforeLot } from '../tracks/track-manager.js?build=20260722-r52';
 import { showTrackIntro } from '../ui/track-intro.js?build=20260725-r75';
@@ -94,7 +94,7 @@ function prepareShowroomStyles() {
 
 function loadOriginalLot() {
   if (!originalLotPromise) {
-    originalLotPromise = import('./lot-showroom-experiment.js?revision=r240-trophy-road-2')
+    originalLotPromise = import('./lot-showroom-experiment.js?revision=r243-mountain-1300')
       .then((module) => {
         originalLotModule = module;
         return module;
