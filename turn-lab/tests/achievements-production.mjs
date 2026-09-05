@@ -515,7 +515,7 @@ assert.match(timeTrialSource, /seconds >= trial\.targetSeconds/);
 for (const entry of [productionEntry, labEntry]) {
   assert.match(entry, /"\/turn\/achievements\/time-trials\.js\?revision=r166-bella-records": "\/turn\/achievements\/time-trials\.js\?revision=r224-sprint-targets"/,
     'Production and Lab must route cached achievement imports to the new Sprint targets');
-  assert.match(entry, /"\/turn\/achievements\/view\.js\?revision=r166-bella-records": "\/turn\/achievements\/view\.js\?revision=r241-learning-achievements"/,
+  assert.match(entry, /"\/turn\/achievements\/view\.js\?revision=r166-bella-records": "\/turn\/achievements\/view\.js\?revision=r242-serpentine-road"/,
     'Production and Lab must route cached achievement views to the corrected modal header');
   assert.match(entry, /"\/turn\/achievements\/catalog-base\.js\?revision=r222-awd-label": "\/turn\/achievements\/catalog-base\.js\?revision=r241-trophy-balance"/,
     'Installed builds must not retain the old LISTEN CLOSELY trophy value');
@@ -574,7 +574,7 @@ assert.match(runtime, /catalog\.js\?revision=r241-learning-achievements/,
   'Achievement consumers must load the current AWD vehicle label');
 assert.match(runtime, /store\.js\?revision=r241-learning-achievements/,
   'The runtime must execute the Trophy Road 2 migration under a fresh module identity');
-assert.match(runtime, /view\.js\?revision=r241-learning-achievements/);
+assert.match(runtime, /view\.js\?revision=r242-serpentine-road/);
 assert.match(runtime, /DRIVE_BY_EAR_PART_COMPLETED_EVENT/);
 assert.match(runtime, /HOW_TO_PLAY_DISCLOSURE_OPENED_EVENT/);
 assert.match(runtime, /unlock\(\[DRIVE_BY_EAR_ACHIEVEMENT_ID\], \{\}, \{ delay: -1 \}\)/);

@@ -10,7 +10,7 @@ import {
 import {
   allOnboardingComplete,
   createAchievementView
-} from './view.js?revision=r241-learning-achievements';
+} from './view.js?revision=r242-serpentine-road';
 import {
   completedNightShiftSheriff,
   createNightShiftAttempt,

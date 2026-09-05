@@ -35,6 +35,81 @@ const ATTENTION_VISIBLE_MS = 900;
 const AVAILABLE_ACHIEVEMENTS = Object.freeze(
   ACHIEVEMENTS.filter((achievement) => achievement.calibrationPending !== true)
 );
+export const TROPHY_ROAD_RESPONSIVE_LAYOUTS = Object.freeze([
+  Object.freeze({ name: 'narrow', rewardsPerRow: 3 }),
+  Object.freeze({ name: 'medium', rewardsPerRow: 5 }),
+  Object.freeze({ name: 'wide', rewardsPerRow: 7 })
+]);
+
+export function trophyRoadVisualSlot(step, rewardsPerRow) {
+  const normalizedRewardsPerRow = Math.max(1, Math.floor(Number(rewardsPerRow) || 1));
+  const normalizedStep = Math.max(1, Math.floor(Number(step) || 1));
+  const row = Math.floor((normalizedStep - 1) / normalizedRewardsPerRow) + 1;
+  const position = (normalizedStep - 1) % normalizedRewardsPerRow;
+  const column = row % 2 === 1
+    ? position + 2
+    : normalizedRewardsPerRow - position + 1;
+  return Object.freeze({ row, column });
+}
+
+export function trophyRoadVisualLayout(rewardCount, rewardsPerRow) {
+  const normalizedRewardCount = Math.max(0, Math.floor(Number(rewardCount) || 0));
+  const normalizedRewardsPerRow = Math.max(1, Math.floor(Number(rewardsPerRow) || 1));
+  const rowCount = Math.max(1, Math.ceil(normalizedRewardCount / normalizedRewardsPerRow));
+  const columnCount = normalizedRewardsPerRow + 2;
+  const rewardSlots = Object.freeze(
+    Array.from(
+      { length: normalizedRewardCount },
+      (_, index) => trophyRoadVisualSlot(index + 1, normalizedRewardsPerRow)
+    )
+  );
+  const lastReward = rewardSlots.at(-1) || Object.freeze({ row: 1, column: 1 });
+  const finish = Object.freeze({
+    row: lastReward.row,
+    column: lastReward.column + (lastReward.row % 2 === 1 ? 1 : -1)
+  });
+  const bends = [];
+  for (let row = 1; row < rowCount; row += 1) {
+    const onRight = row % 2 === 1;
+    const column = onRight ? columnCount : 1;
+    bends.push(Object.freeze({ row, column, rotation: onRight ? 0 : 270 }));
+    bends.push(Object.freeze({ row: row + 1, column, rotation: onRight ? 90 : 180 }));
+  }
+  return Object.freeze({
+    rewardsPerRow: normalizedRewardsPerRow,
+    rowCount,
+    columnCount,
+    start: Object.freeze({ row: 1, column: 1 }),
+    finish,
+    bends: Object.freeze(bends),
+    rewardSlots
+  });
+}
+
+const TROPHY_ROAD_VISUAL_LAYOUTS = Object.freeze(
+  TROPHY_ROAD_RESPONSIVE_LAYOUTS.map(({ name, rewardsPerRow }) => Object.freeze({
+    name,
+    ...trophyRoadVisualLayout(TROPHY_ROAD_REWARDS.length, rewardsPerRow)
+  }))
+);
+
+function trophyRoadBend({ row, column, rotation }) {
+  return `<i class="turn-trophy-road-bend" style="--turn-road-row:${row};--turn-road-column:${column};--turn-road-rotation:${rotation}deg"></i>`;
+}
+
+function trophyRoadScenery(layout) {
+  const { name, rewardsPerRow, rowCount, start, finish, bends } = layout;
+  return `<div
+    class="turn-trophy-road-scenery is-${name}"
+    data-turn-road-rewards-per-row="${rewardsPerRow}"
+    data-turn-road-rows="${rowCount}"
+    aria-hidden="true"
+  >
+    <span class="turn-trophy-road-landmark is-start" style="--turn-road-row:${start.row};--turn-road-column:${start.column}"><b>START</b></span>
+    ${bends.map(trophyRoadBend).join('')}
+    <span class="turn-trophy-road-landmark is-finish" style="--turn-road-row:${finish.row};--turn-road-column:${finish.column}"><b>FINISH</b></span>
+  </div>`;
+}
 
 function formatTime(seconds) {
   if (!Number.isFinite(seconds)) return '';
@@ -196,7 +271,9 @@ function createDialog() {
                   <span>Choose any reward for details.</span>
                 </div>
                 <div class="turn-trophy-road-track">
-                  <ol class="turn-trophy-road-markers" aria-label="Trophy Road rewards in unlock order"></ol>
+                  <p id="turnTrophyRoadSequence" class="turn-sr-only">The road runs from START through every reward in progression order to FINISH.</p>
+                  ${TROPHY_ROAD_VISUAL_LAYOUTS.map(trophyRoadScenery).join('')}
+                  <ol class="turn-trophy-road-markers" aria-label="Trophy Road rewards in unlock order" aria-describedby="turnTrophyRoadSequence"></ol>
                 </div>
               </div>
             </div>
@@ -383,13 +460,22 @@ export function createAchievementView({ store, session, utilityGroup }) {
       overview.horizon ? `${overview.horizon.threshold} trophies` : `${TROPHY_ROAD_MAX_THRESHOLD} trophies`
     );
 
-    trophyRoadMarkers.innerHTML = TROPHY_ROAD_REWARDS.map((reward) => {
+    trophyRoadMarkers.innerHTML = TROPHY_ROAD_REWARDS.map((reward, index) => {
       const unlocked = store.isRewardUnlocked(reward.id);
       const selected = reward.id === selectedRewardId;
       const grandfathered = unlocked && grandfatheredIds.has(reward.id);
       const isNext = reward.id === nextReward?.id;
       const stateLabel = grandfathered ? 'Kept' : unlocked ? 'Earned' : isNext ? 'Next' : 'Locked';
-      return `<li data-trophy-reward-major="${reward.major}"><button
+      const step = index + 1;
+      const visualPosition = TROPHY_ROAD_VISUAL_LAYOUTS.map(({ name, rewardSlots }) => {
+        const slot = rewardSlots[index];
+        return `--turn-road-${name}-row:${slot.row};--turn-road-${name}-column:${slot.column}`;
+      }).join(';');
+      return `<li
+          data-trophy-road-step="${step}"
+          data-trophy-reward-major="${reward.major}"
+          style="${visualPosition}"
+        ><button
           type="button"
           class="turn-trophy-road-marker ${unlocked ? 'is-unlocked' : 'is-locked'} ${isNext ? 'is-next' : ''} ${selected ? 'is-selected' : ''}"
           data-trophy-reward="${reward.id}"

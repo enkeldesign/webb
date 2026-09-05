@@ -212,6 +212,6 @@ assert.match(lotRuntime, /lot-trophy-gate\.js\?revision=r164-vintage-rally-perks
 assert.match(lotRuntime, /lot-perk-disclosure\.js\?revision=r217-stable-perk-slot/);
 assert.match(perkPresentation, /getCarDefinition\(vehicleId\)\?\.perk/);
 assert.doesNotMatch(perkPresentation, /observer\.observe\(screen,/);
-assert.match(app, /trophy-road-r157\.css\?revision=r240-trophy-road-2/);
+assert.match(app, /trophy-road-r157\.css\?revision=r242-serpentine-road/);
 
 console.log('TURN Lot PWA swatch compositing, factory-color imports, reward-car catalog coherence, state matrix, cue geometry, cache bridge, car order and observer safety regressions passed.');
