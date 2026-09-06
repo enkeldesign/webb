@@ -1,7 +1,8 @@
 export const FLOW_RECORDS_STORAGE_KEY = 'turn-flow-records-v1';
-export const FLOW_RECORDS_STORAGE_VERSION = 1;
+export const FLOW_RECORDS_STORAGE_VERSION = 2;
 
 const DEFAULT_TRACK_ID = 'countryside';
+const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
 
 function storageOrDefault(storage) {
   if (storage !== undefined) return storage;
@@ -22,6 +23,11 @@ function finitePositive(value, fallback = null) {
   return Number.isFinite(number) && number > 0 ? number : fallback;
 }
 
+function normalizePaint(value) {
+  const normalized = typeof value === 'string' ? value.toLowerCase() : '';
+  return HEX_COLOR_PATTERN.test(normalized) ? normalized : null;
+}
+
 function normalizeRecord(record) {
   const score = Math.round(finitePositive(record?.score, 0));
   if (score <= 0) return null;
@@ -30,6 +36,10 @@ function normalizeRecord(record) {
     carId: String(record?.carId || 'classic'),
     hitAt: finitePositive(record?.hitAt)
   };
+  const carColor = normalizePaint(record?.carColor);
+  const carSecondaryColor = normalizePaint(record?.carSecondaryColor);
+  if (carColor) normalized.carColor = carColor;
+  if (carSecondaryColor) normalized.carSecondaryColor = carSecondaryColor;
   const lapTime = finitePositive(record?.lapTime);
   if (lapTime != null) normalized.lapTime = lapTime;
   return Object.freeze(normalized);
@@ -55,12 +65,21 @@ export function saveBestFlowRecord({
   trackId,
   score,
   carId,
+  carColor,
+  carSecondaryColor,
   lapTime,
   hitAt = Date.now()
 } = {}, storage) {
   const targetStorage = storageOrDefault(storage);
   const normalizedTrackId = normalizeTrackId(trackId);
-  const candidate = normalizeRecord({ score, carId, lapTime, hitAt });
+  const candidate = normalizeRecord({
+    score,
+    carId,
+    carColor,
+    carSecondaryColor,
+    lapTime,
+    hitAt
+  });
   const current = getBestFlowRecord(normalizedTrackId, targetStorage);
   if (!candidate || (current && candidate.score <= current.score)) {
     return Object.freeze({ record: current, isNewBest: false, saved: false });
