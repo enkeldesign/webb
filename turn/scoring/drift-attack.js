@@ -234,10 +234,13 @@ export function createDriftAttackScorer({ onState = null, onEvent = null } = {})
   }
 
   function expireChain(now) {
-    if (drifting || !chainExpiresAt || now <= chainExpiresAt) return;
+    if (drifting || !chainExpiresAt || now <= chainExpiresAt) return false;
+    const expiredMultiplier = multiplier;
     chainExpiresAt = 0;
     lastBankDirection = 0;
     multiplier = 1;
+    if (expiredMultiplier >= 2) syncFeedback(now);
+    return true;
   }
 
   function sample(sampleDt, now, speed, slipAngle, offRoad, collided) {
