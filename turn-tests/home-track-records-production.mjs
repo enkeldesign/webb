@@ -119,8 +119,11 @@ assert.match(rowGapCss,
   /is-showing-track-bests[\s\S]*\.m8-track-rail \.track-card \{[\s\S]*grid-template-rows: auto auto auto;[\s\S]*align-content: center;/,
   'Expanded cards must stop squeezing their third row and use the same centered grid behavior as closed cards');
 assert.match(rowGapCss,
-  /is-showing-track-bests[\s\S]*\.m8-track-rail \.track-card-best \{[\s\S]*grid-template-rows: auto repeat\(3, auto\);[\s\S]*row-gap: clamp\(13px, calc\(1\.4vw - 1px\), 15px\);[\s\S]*margin-top: clamp\(13px, calc\(1\.4vw - 1px\), 15px\);/,
+  /is-showing-track-bests[\s\S]*\.m8-track-rail \.track-card-best \{[\s\S]*grid-template-rows: auto repeat\(3, auto\);[\s\S]*row-gap: clamp\(13px, calc\(1\.4vw - 1px\), 15px\);/,
   'BEST, TIME, DRIFT and FLOW must use the same 13–15px vertical rhythm as the closed card grid');
+assert.ok(rowGapCss.includes("margin-top: calc(clamp(13px, calc(1.4vw - 1px), 15px) - 5px);")
+  && rowGapCss.includes("margin-top: calc(clamp(13px, calc(1.4vw - 1px), 15px) - 3px);"),
+  'The BEST section must compensate for the parent compact-card gap so the summary-to-record spacing is also exactly 13–15px');
 assert.match(scrollCss, /padding-bottom: 10px/,
   'The rail must retain a 10px press/selection movement buffer even when default scrolling disappears');
 assert.ok(!rowGapCss.includes('row-gap: 28px'),
