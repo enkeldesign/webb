@@ -98,11 +98,11 @@ assert.ok(rowGapCss.includes('padding: 3px 9px;'),
   'Track cards must use the requested 3px block and 9px inline padding');
 assert.ok(fixedCss.includes('--m8-track-card-min-block-size: 108px;') && fixedCss.includes('padding: 3px 9px;'),
   'Short landscape rows must shrink with their reduced block padding instead of absorbing it');
-assert.ok(rowGapCss.includes('--m8-track-card-min-block-size: clamp(120px, calc(20vh - 12px), 164px);')
+assert.ok(rowGapCss.includes('--m8-track-card-min-block-size: clamp(114px, calc(20vh - 18px), 158px);')
   && rowGapCss.includes('--m8-track-card-min-block-size: clamp(292px, calc(47vh - 12px), 378px);')
-  && rowGapCss.includes('--m8-track-card-min-block-size: 108px;')
+  && rowGapCss.includes('--m8-track-card-min-block-size: 102px;')
   && rowGapCss.includes('--m8-track-card-min-block-size: 274px;'),
-  'The fresh late stylesheet must correct every landscape row floor even when fixed-layout CSS is cached');
+  'The late landscape override must shave another 6px from each compact row without changing expanded records');
 assert.ok(!rowGapCss.includes('row-gap: 28px'),
   'No late-loaded rule may restore the old oversized vertical gap');
 for (const entrypoint of [productionEntry, labEntry]) {
