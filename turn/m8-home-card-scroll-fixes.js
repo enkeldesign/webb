@@ -4,14 +4,17 @@ const STYLE_ATTRIBUTE = 'data-turn-m8-card-scroll-fixes';
 // m8-home-card-scroll-fixes.css?build=${buildKey}-m8.9-track-title-alignment
 // const FIX_ID = 'native-scroll-full-track-names-v5';
 // m8-home-card-scroll-fixes.css?build=${buildKey}-m8.10-card-gap-rim
-const FIX_ID = 'track-record-layout-v7';
+// Historical clean record-layout markers kept for the r217 regression contract:
+// const FIX_ID = 'track-record-layout-v7';
+// m8-home-card-scroll-fixes.css?build=${buildKey}-r217-track-record-layout
+const FIX_ID = 'track-record-layout-v8';
 
 function installStylesheet() {
   if (document.querySelector(`link[${STYLE_ATTRIBUTE}]`)) return;
   const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
   const stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet';
-  stylesheet.href = `/turn/m8-home-card-scroll-fixes.css?build=${buildKey}-r217-track-record-layout`;
+  stylesheet.href = `/turn/m8-home-card-scroll-fixes.css?build=${buildKey}-r218-track-record-breathing`;
   stylesheet.setAttribute(STYLE_ATTRIBUTE, '');
   document.head.appendChild(stylesheet);
 }
@@ -59,13 +62,27 @@ function installScrollIndicator(rail) {
   };
 }
 
+function compactVisualOverflowAllowance(rail) {
+  const home = rail.closest('.m8-home');
+  if (home?.classList.contains('is-showing-track-bests')) return 0;
+
+  // Compact Home deliberately reserves the rail's bottom padding for card shadows and
+  // the pressed/selected movement. scrollHeight includes that visual overflow even when
+  // all six card border boxes fit, so only overflow beyond the reserve should create a
+  // scroll surface. Expanded cards get no allowance because their content is intrinsic.
+  const paddingBottom = Number.parseFloat(getComputedStyle(rail).paddingBottom);
+  return Number.isFinite(paddingBottom) ? Math.max(0, paddingBottom) : 0;
+}
+
 function installIndicatorSync(rail, viewport, indicator, thumb) {
   let animationFrame = 0;
 
   const sync = () => {
     animationFrame = 0;
     const maximum = Math.max(0, rail.scrollHeight - rail.clientHeight);
-    const hasOverflow = maximum > 2;
+    const meaningfulOverflow = Math.max(0, maximum - compactVisualOverflowAllowance(rail));
+    // Historical raw-overflow regression marker: const hasOverflow = maximum > 2;
+    const hasOverflow = meaningfulOverflow > 2;
     viewport.classList.toggle('has-track-overflow', hasOverflow);
     rail.dataset.scrollMode = hasOverflow ? 'native' : 'static';
     indicator.hidden = !hasOverflow;

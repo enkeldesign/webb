@@ -58,6 +58,7 @@
 
 .m8-home-card-scroll-fixes .m8-track-rail {
   height: 100%;
+  /* Reserved for card shadow/pressed movement; compact overflow detection discounts it. */
   padding-bottom: 10px;
   padding-right: 25px;
   column-gap: clamp(14px, 1.4vw, 16px);
@@ -264,6 +265,7 @@
   width: 100%;
   max-width: none;
   margin: 0;
+  padding-block-end: var(--m8-track-row-gap);
   text-align: left;
 }
 

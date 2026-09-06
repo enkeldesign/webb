@@ -119,8 +119,8 @@ assert.match(scrollCss, /\.is-showing-track-bests \.m8-track-rail \.track-card \
   'Expanded cards must append records below the unchanged compact frame');
 assert.match(scrollCss, /\.is-showing-track-bests \.m8-track-rail \.track-card-compact \{[\s\S]*height: var\(--m8-track-compact-card-content-block-size\)/,
   'Opening records must not resize the compact summary frame');
-assert.match(scrollCss, /\.track-card-best \{[\s\S]*grid-template-rows: auto repeat\(3, auto\)[\s\S]*row-gap: var\(--m8-track-row-gap\)/,
-  'BEST, TIME, DRIFT and FLOW must all use natural height and the shared card rhythm');
+assert.match(scrollCss, /\.track-card-best \{[\s\S]*grid-template-rows: auto repeat\(3, auto\)[\s\S]*row-gap: var\(--m8-track-row-gap\)[\s\S]*padding-block-end: var\(--m8-track-row-gap\)/,
+  'BEST, TIME, DRIFT and FLOW must use natural height and finish with the same breathing rhythm at the card bottom');
 assert.match(scrollCss, /\.is-showing-track-bests \.m8-track-rail \{[\s\S]*grid-auto-rows: max-content/,
   'Expanded rail rows must grow to contain FLOW rather than clip it');
 assert.match(scrollCss, /\.track-card-best\[hidden\][\s\S]*display: none !important/);
@@ -133,8 +133,8 @@ assert.match(scrollCss, /padding-left: calc\(var\(--track-record-stripe-width\) 
 assert.match(scrollCss, /\.track-card-record-model\[hidden\][\s\S]*display: none/);
 assert.match(scaleCss, /\.track-card-record[\s\S]*\.track-card-record-model/);
 
-assert.match(scrollCss, /\.m8-track-rail \{[\s\S]*column-gap: clamp\(14px, 1\.4vw, 16px\)[\s\S]*row-gap: var\(--m8-track-row-gap\)/,
-  'Horizontal and vertical card gaps must remain independently controlled');
+assert.match(scrollCss, /\.m8-track-rail \{[\s\S]*padding-bottom: 10px[\s\S]*column-gap: clamp\(14px, 1\.4vw, 16px\)[\s\S]*row-gap: var\(--m8-track-row-gap\)/,
+  'The compact rail must keep its 10px visual movement reserve without changing card geometry');
 assert.match(scrollCss, /\.m8-track-scroll-viewport:not\(\.has-track-overflow\) \.m8-track-rail \{[\s\S]*grid-auto-rows: var\(--m8-track-compact-card-block-size\)[\s\S]*overflow-y: hidden/,
   'When all six compact cards fit, the rail must use the full deterministic frame without scrolling');
 assert.match(scrollCss, /@media \(orientation: landscape\)[\s\S]*\.m8-track-rail \{[\s\S]*padding-right: 10px[\s\S]*\.m8-track-scroll-indicator \{[\s\S]*right: -11px/,
@@ -166,9 +166,13 @@ for (const entrypoint of [productionEntry, labEntry]) {
     'Production and TURN LAB keep the post-782 compatibility stylesheet identity');
 }
 
-assert.match(scroll, /const FIX_ID = 'track-record-layout-v7'/);
-assert.match(scroll, /m8-home-card-scroll-fixes\.css\?build=\$\{buildKey\}-r217-track-record-layout/);
-assert.match(scroll, /const hasOverflow = maximum > 2/);
+assert.match(scroll, /const FIX_ID = 'track-record-layout-v8'/);
+assert.match(scroll, /m8-home-card-scroll-fixes\.css\?build=\$\{buildKey\}-r218-track-record-breathing/);
+assert.match(scroll, /function compactVisualOverflowAllowance\(rail\)[\s\S]*is-showing-track-bests[\s\S]*getComputedStyle\(rail\)\.paddingBottom/,
+  'Only compact Home may discount the rail padding reserved for shadow and press movement');
+assert.match(scroll, /const meaningfulOverflow = Math\.max\(0, maximum - compactVisualOverflowAllowance\(rail\)\)/);
+assert.match(scroll, /const hasOverflow = meaningfulOverflow > 2/,
+  'The compact scrollbar must respond to real content overflow, not reserved visual overflow');
 assert.match(scroll, /viewport\.classList\.toggle\('has-track-overflow', hasOverflow\)/);
 assert.match(scroll, /rail\.dataset\.scrollMode = hasOverflow \? 'native' : 'static'/);
 assert.match(scroll, /if \(rail\.scrollTop !== 0\) rail\.scrollTop = 0/);
@@ -188,8 +192,8 @@ assert.match(rivalReset, /\[data-track-record-kind="time"\]/,
   'Reset Rivals must clear only the time row and leave DRIFT/FLOW records intact');
 
 assert.match(app, /m8-home\.js\?revision=r217-track-record-layout/);
-assert.match(app, /m8-home-fixed-layout\.js\?revision=r217-track-record-layout/);
+assert.match(app, /m8-home-fixed-layout\.js\?revision=r218-track-record-breathing/);
 assert.match(app, /m8-record-car-scale\.css\?revision=r206-three-records/);
-assert.match(fixedLayout, /m8-home-card-scroll-fixes\.js\?build=\$\{buildKey\}-r217-track-record-layout/);
+assert.match(fixedLayout, /m8-home-card-scroll-fixes\.js\?build=\$\{buildKey\}-r218-track-record-breathing/);
 
 console.log('TURN clean compact/expanded TIME, DRIFT and FLOW track record layout passed.');

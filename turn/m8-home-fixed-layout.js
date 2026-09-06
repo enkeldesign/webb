@@ -268,7 +268,8 @@ export async function installM8HomeFixedLayout() {
     // Historical regression markers for the previous aligned-title bundles:
     // /turn/m8-home-card-scroll-fixes.js?build=${buildKey}-m8.9-track-title-alignment
     // /turn/m8-home-card-scroll-fixes.js?build=${buildKey}-m8.10-card-gap-rim
-    import(`/turn/m8-home-card-scroll-fixes.js?build=${buildKey}-r217-track-record-layout`),
+    // import(`/turn/m8-home-card-scroll-fixes.js?build=${buildKey}-r217-track-record-layout`)
+    import(`/turn/m8-home-card-scroll-fixes.js?build=${buildKey}-r218-track-record-breathing`),
     import(`/turn/progression/m8-trophy-gate.js?build=${buildKey}-r157-paint-monster`),
     import(`/turn/achievements.js?build=${buildKey}-r166-bella-records&robustness=r164-long-session`),
     import(`/turn/achievements/unread-markers.js?build=${buildKey}-r219-unified-filters`),
