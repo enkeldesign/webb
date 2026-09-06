@@ -89,7 +89,7 @@ assert.match(scrollCss, /\.track-card-record-model\[hidden\][\s\S]*display: none
 assert.match(scaleCss, /\.track-card-record[\s\S]*\.track-card-record-model/);
 
 assert.match(scrollCss, /\.m8-track-rail \{[\s\S]*column-gap: clamp\(14px, 1\.4vw, 16px\)[\s\S]*row-gap: clamp\(14px, 1\.4vw, 16px\)/,
-  'The good horizontal card spacing must remain while rows sit closer together');
+  'The horizontal card spacing must remain while rows use the requested balanced gap');
 assert.doesNotMatch(scrollCss, /\.m8-track-rail \{[\s\S]{0,180}\n\s+gap: clamp\(14px, 1\.4vw, 16px\)/,
   'Track rows must not inherit the wider horizontal gap again');
 assert.ok(rowGapCss.includes('row-gap: clamp(14px, 1.4vw, 16px)'),
