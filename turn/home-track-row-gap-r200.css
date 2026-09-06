@@ -10,7 +10,7 @@
 /* These late overrides also reach clients with the previous fixed-layout CSS cached. */
 @media (orientation: landscape) {
   .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes .m8-home-tracks {
-    --m8-track-card-min-block-size: clamp(120px, calc(20vh - 12px), 164px);
+    --m8-track-card-min-block-size: clamp(114px, calc(20vh - 18px), 158px);
   }
 
   .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes.is-showing-track-bests .m8-home-tracks {
@@ -20,7 +20,7 @@
 
 @media (max-height: 560px) and (orientation: landscape) {
   .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes .m8-home-tracks {
-    --m8-track-card-min-block-size: 108px;
+    --m8-track-card-min-block-size: 102px;
   }
 
   .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes.is-showing-track-bests .m8-home-tracks {
