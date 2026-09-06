@@ -98,11 +98,19 @@ assert.ok(rowGapCss.includes('padding: 3px 9px;'),
   'Track cards must use the requested 3px block and 9px inline padding');
 assert.ok(fixedCss.includes('--m8-track-card-min-block-size: 108px;') && fixedCss.includes('padding: 3px 9px;'),
   'Short landscape rows must shrink with their reduced block padding instead of absorbing it');
-assert.ok(rowGapCss.includes('--m8-track-card-min-block-size: clamp(114px, calc(20vh - 18px), 158px);')
+assert.ok(rowGapCss.includes('--m8-track-card-min-block-size: clamp(108px, calc(20vh - 24px), 152px);')
   && rowGapCss.includes('--m8-track-card-min-block-size: clamp(292px, calc(47vh - 12px), 378px);')
-  && rowGapCss.includes('--m8-track-card-min-block-size: 102px;')
+  && rowGapCss.includes('--m8-track-card-min-block-size: 96px;')
   && rowGapCss.includes('--m8-track-card-min-block-size: 274px;'),
-  'The late landscape override must shave another 6px from each compact row without changing expanded records');
+  'The final landscape override must create more compact-fit headroom without changing expanded records');
+assert.ok(rowGapCss.includes('height: clamp(72px, 11vh, 104px);')
+  && rowGapCss.includes('height: 66px;'),
+  'Compact preview heights must shrink with the row floors so intrinsic preview size cannot restore overflow');
+assert.ok(rowGapCss.includes('.m8-track-scroll-viewport:not(.has-track-overflow) .m8-track-rail')
+  && rowGapCss.includes('align-content: end;'),
+  'A fitting compact grid must use the spare vertical room above the cards and share the RACE baseline');
+assert.match(scrollCss, /padding-bottom: 10px/,
+  'The rail must retain a 10px press/selection movement buffer even when default scrolling disappears');
 assert.ok(!rowGapCss.includes('row-gap: 28px'),
   'No late-loaded rule may restore the old oversized vertical gap');
 for (const entrypoint of [productionEntry, labEntry]) {
