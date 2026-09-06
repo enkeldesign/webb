@@ -45,6 +45,10 @@ const CHANNEL_LABEL = Object.freeze({
   [SCORE_FEEDBACK_CHANNEL.FLOW]: 'FLOW'
 });
 
+const GAUGE_SATURATION_AT_X1 = 44;
+const GAUGE_SATURATION_STEP = 8;
+const GAUGE_MAX_COMBO_TIER = 8;
+
 const numberFormatter = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 0
 });
@@ -86,6 +90,13 @@ function setData(element, key, value) {
   if (element.dataset[key] !== text) element.dataset[key] = text;
 }
 
+function setStyleProperty(element, property, value) {
+  if (!element?.style?.setProperty) return;
+  const text = String(value);
+  if (element.style.getPropertyValue?.(property) === text) return;
+  element.style.setProperty(property, text);
+}
+
 function requiredElement(root, selector) {
   const element = root?.querySelector?.(selector);
   if (!element) throw new Error(`TURN ScoreFeedback could not find ${selector}.`);
@@ -115,6 +126,46 @@ function heatTier(intensity, active = true) {
   if (value >= 0.74) return 'hot';
   if (value >= 0.5) return 'warm';
   return 'build';
+}
+
+function comboTier(multiplier) {
+  return clamp(
+    Math.floor(Math.max(1, finiteNumber(multiplier, 1))),
+    1,
+    GAUGE_MAX_COMBO_TIER
+  );
+}
+
+function gaugePalette(channel, multiplier) {
+  const tier = comboTier(multiplier);
+  const saturation = Math.min(
+    100,
+    GAUGE_SATURATION_AT_X1 + (tier - 1) * GAUGE_SATURATION_STEP
+  );
+  const highlightSaturation = Math.min(100, saturation + 8);
+  if (channel === SCORE_FEEDBACK_CHANNEL.FLOW) {
+    return {
+      tier,
+      fillA: `hsl(339 ${saturation}% 65%)`,
+      fillB: `hsl(336 ${highlightSaturation}% 78%)`
+    };
+  }
+  return {
+    tier,
+    fillA: `hsl(195 ${saturation}% 50%)`,
+    fillB: `hsl(191 ${highlightSaturation}% 70%)`
+  };
+}
+
+function applyGaugePalette(fill, channel, multiplier) {
+  if (!fill) return comboTier(multiplier);
+  const palette = gaugePalette(channel, multiplier);
+  const gauge = fill.parentElement;
+  for (const target of [gauge, fill]) {
+    setStyleProperty(target, '--score-feedback-gauge-fill-a', palette.fillA);
+    setStyleProperty(target, '--score-feedback-gauge-fill-b', palette.fillB);
+  }
+  return palette.tier;
 }
 
 function defaultEventLabel(type, channel, score, multiplier) {
@@ -396,6 +447,18 @@ export function createScoreFeedback({
     const driftGaugeIntensity = fallbackGaugeToFlow ? flow.intensity : drift.intensity;
     const driftGaugeProgress = driftGaugeActive ? driftGaugeIntensity : 0;
     const flowGaugeProgress = flowActive ? flow.intensity : 0;
+    const driftComboHeld = fallbackGaugeToFlow
+      ? flow.multiplier >= 2
+      : drift.multiplier >= 2;
+    const flowComboHeld = flow.multiplier >= 2;
+    const driftComboTier = applyGaugePalette(
+      driftGaugeFill,
+      fallbackGaugeToFlow ? SCORE_FEEDBACK_CHANNEL.FLOW : SCORE_FEEDBACK_CHANNEL.DRIFT,
+      fallbackGaugeToFlow ? flow.multiplier : drift.multiplier
+    );
+    const flowComboTier = flowGaugeFill
+      ? applyGaugePalette(flowGaugeFill, SCORE_FEEDBACK_CHANNEL.FLOW, flow.multiplier)
+      : comboTier(flow.multiplier);
 
     driftGaugeFill.style.setProperty(
       '--score-feedback-progress',
@@ -413,8 +476,14 @@ export function createScoreFeedback({
     setData(root, 'flowVisible', flow.visible);
     setData(root, 'driftGaugeVisible', driftGaugeVisible);
     setData(root, 'flowGaugeVisible', Boolean(flowHasOwnGauge && flow.visible));
-    setData(root, 'driftGaugeExtended', driftGaugeVisible && driftGaugeProgress > 0);
-    setData(root, 'flowGaugeExtended', Boolean(flowHasOwnGauge && flow.visible && flowGaugeProgress > 0));
+    setData(root, 'driftGaugeExtended', driftGaugeVisible && (driftGaugeProgress > 0 || driftComboHeld));
+    setData(
+      root,
+      'flowGaugeExtended',
+      Boolean(flowHasOwnGauge && flow.visible && (flowGaugeProgress > 0 || flowComboHeld))
+    );
+    setData(root, 'driftComboTier', driftComboTier);
+    setData(root, 'flowComboTier', flowComboTier);
     setData(root, 'driftHeat', heatTier(drift.intensity, driftActive));
     setData(root, 'flowHeat', heatTier(flow.intensity, flowActive));
     setData(root, 'gaugeHeat', heatTier(driftGaugeIntensity, driftGaugeActive));

@@ -113,6 +113,37 @@ assert.equal(hysteresisScorer.inspect().drifting, false,
   'A genuinely settled car banks after the release delay');
 assert.ok(hysteresisScorer.inspect().lapScore > 0);
 
+const expiryStates = [];
+const expiryScorer = createDriftAttackScorer({
+  onState: (snapshot) => expiryStates.push({ ...snapshot })
+});
+expiryScorer.beginLap(0);
+let expiryNow = runFor(expiryScorer, 0.8, 1 / 60);
+expiryNow = runFor(expiryScorer, 0.4, 1 / 60, {
+  slip: radians(4),
+  startAt: expiryNow
+});
+expiryNow = runFor(expiryScorer, 0.55, 1 / 60, {
+  slip: radians(-62),
+  startAt: expiryNow
+});
+assert.equal(expiryScorer.inspect().multiplier, 2,
+  'A linked opposite drift reaches x2 before the presentation-expiry check');
+expiryNow = runFor(expiryScorer, 0.4, 1 / 60, {
+  slip: radians(4),
+  startAt: expiryNow
+});
+const linkedExpiryAt = expiryScorer.inspect().chainExpiresAt;
+assert.ok(linkedExpiryAt > expiryNow,
+  'Banking an x2 drift keeps the chain alive for the normal link window');
+expiryScorer.advance(1 / 60, linkedExpiryAt + 1, 5, 0, false, false, true);
+assert.equal(expiryScorer.inspect().multiplier, 1,
+  'DRIFT combo state returns to x1 when the chain window expires');
+assert.equal(expiryStates.at(-1)?.multiplier, 1,
+  'Chain expiry publishes the x1 state so a held-open HUD gauge can retract promptly');
+assert.equal(expiryStates.at(-1)?.active, false);
+assert.equal(expiryStates.at(-1)?.intensity, 0);
+
 function simulatedScore(dt) {
   const candidate = createDriftAttackScorer();
   candidate.beginLap(0);
