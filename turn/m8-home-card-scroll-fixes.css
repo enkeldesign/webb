@@ -35,8 +35,10 @@
 
 .m8-home-card-scroll-fixes .m8-track-rail {
   height: 100%;
+  padding-bottom: 10px;
   padding-right: 25px;
-  gap: clamp(14px, 1.4vw, 16px);
+  column-gap: clamp(14px, 1.4vw, 16px);
+  row-gap: clamp(8px, 0.85vw, 10px);
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior-y: contain;
@@ -220,6 +222,8 @@
 
 .m8-home-card-scroll-fixes .m8-track-rail .track-card-record {
   --track-record-accent: var(--turn-yellow-400, #ffd43b);
+  --track-record-stripe-gap: clamp(8px, 0.8vw, 11px);
+  --track-record-stripe-width: clamp(8px, 0.7vw, 10px);
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(76px, 39%);
@@ -227,7 +231,7 @@
   gap: clamp(8px, 1vw, 14px);
   min-width: 0;
   min-height: 54px;
-  padding-left: clamp(11px, 1.2vw, 15px);
+  padding-left: calc(var(--track-record-stripe-width) + var(--track-record-stripe-gap));
 }
 
 .m8-home-card-scroll-fixes .m8-track-rail .track-card-record::before {
@@ -235,7 +239,9 @@
   top: 3px;
   bottom: 3px;
   left: 0;
-  width: clamp(5px, 0.55vw, 7px);
+  box-sizing: border-box;
+  width: var(--track-record-stripe-width);
+  border: 2px solid var(--m8-ink);
   border-radius: 999px;
   background: var(--track-record-accent);
   content: '';
@@ -353,7 +359,8 @@
   .m8-home-card-scroll-fixes .m8-track-rail .track-card-record {
     grid-template-columns: minmax(0, 1fr) minmax(64px, 36%);
     min-height: 48px;
-    padding-left: 10px;
+    --track-record-stripe-gap: 7px;
+    --track-record-stripe-width: 8px;
   }
 
   .m8-home-card-scroll-fixes .m8-track-rail .track-card-record-model {
