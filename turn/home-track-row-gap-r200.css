@@ -1,4 +1,4 @@
 .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes .m8-track-rail {
-  /* Match the visible horizontal breathing room after the cards' 10px down-shadow. */
-  row-gap: 28px;
+  /* Keep this late-loaded compatibility rule aligned with the compact grid gap. */
+  row-gap: clamp(8px, 0.85vw, 10px);
 }
