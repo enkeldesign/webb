@@ -309,7 +309,13 @@ export function createFlowRuntime({
       accept('clean-exit', 'EXIT', clamp(18 + duration * 8, 20, 56), now, { outcome: 'controlled-transition' });
     }
     lastDriftBankAt = now;
-    driftContext = null;
+    driftContext = detail.reason === 'lap'
+      ? {
+          active: true,
+          usedLock: latestLockRequested,
+          contextualShift: null
+        }
+      : null;
   }
 
   function onBoostOutcome(event) {
@@ -401,7 +407,6 @@ export function createFlowRuntime({
     carId = state.vehicleId
   } = {}) {
     if (!enabled) return Object.freeze({ available: false });
-    clearChainTimer();
     const scoreResult = scorer.completeLap(now);
     const eligible = valid === true && ranked !== false;
     const previousBest = getBestFlowRecord(trackId, targetStorage);
