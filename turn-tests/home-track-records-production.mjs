@@ -115,6 +115,12 @@ assert.ok(rowGapCss.includes('.m8-track-continue')
   && rowGapCss.includes('margin-bottom: 7px;')
   && rowGapCss.includes('margin-bottom: 5px;'),
   'RACE must reserve its resting/pressed shadow depth so its visual bottom matches the card-shadow baseline');
+assert.match(rowGapCss,
+  /is-showing-track-bests[\s\S]*\.m8-track-rail \.track-card \{[\s\S]*grid-template-rows: auto auto auto;[\s\S]*align-content: center;/,
+  'Expanded cards must stop squeezing their third row and use the same centered grid behavior as closed cards');
+assert.match(rowGapCss,
+  /is-showing-track-bests[\s\S]*\.m8-track-rail \.track-card-best \{[\s\S]*grid-template-rows: auto repeat\(3, auto\);[\s\S]*row-gap: clamp\(13px, calc\(1\.4vw - 1px\), 15px\);[\s\S]*margin-top: clamp\(13px, calc\(1\.4vw - 1px\), 15px\);/,
+  'BEST, TIME, DRIFT and FLOW must use the same 13–15px vertical rhythm as the closed card grid');
 assert.match(scrollCss, /padding-bottom: 10px/,
   'The rail must retain a 10px press/selection movement buffer even when default scrolling disappears');
 assert.ok(!rowGapCss.includes('row-gap: 28px'),
@@ -124,6 +130,14 @@ for (const entrypoint of [productionEntry, labEntry]) {
     'Production and TURN LAB must request the corrected stylesheet with a fresh cache key');
 }
 
+assert.match(scroll, /const TRACK_RECORDS_EXPANDED_KEY = 'turn-track-records-expanded-v1'/);
+assert.match(scroll, /localStorage\?\.getItem\(TRACK_RECORDS_EXPANDED_KEY\)/,
+  'The shared disclosure must restore the player’s saved open/closed choice');
+assert.match(scroll, /localStorage\?\.setItem\(TRACK_RECORDS_EXPANDED_KEY, expanded \? 'true' : 'false'\)/,
+  'The shared disclosure must save both expanded and collapsed choices');
+assert.match(scroll, /toggle\.addEventListener\('click', persistCurrentState\)/);
+assert.match(scroll, /if \(stored !== null && stored !== expanded\) toggle\.click\(\)/,
+  'Restoring the preference must go through the existing toggle behavior so labels, records and models stay synchronized');
 assert.match(scroll, /const hasOverflow = maximum > 2/);
 assert.match(scroll, /viewport\.classList\.toggle\('has-track-overflow', hasOverflow\)/);
 assert.match(scroll, /rail\.dataset\.scrollMode = hasOverflow \? 'native' : 'static'/);
