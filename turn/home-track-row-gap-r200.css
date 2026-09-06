@@ -12,11 +12,25 @@
  * The runtime snapshots the compact card's real top inset and the space needed to
  * begin records below the old card edge. Keeping the preview at its compact size
  * makes the marker, name, difficulty and map stay in exactly the same place.
+ *
+ * The base card clips its paint to the rounded border with overflow:hidden. That
+ * makes an `auto` implicit grid track allowed to stay at its viewport-oriented
+ * minimum even when the BEST content is taller, which clipped the FLOW row. In the
+ * expanded state only, make both the implicit row and the card's minimum height use
+ * intrinsic max-content sizing. The card therefore grows downward until BEST,
+ * TIME, DRIFT and FLOW are all inside the border; the compact summary geometry does
+ * not move.
  */
+.m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes.is-showing-track-bests
+  .m8-track-rail {
+  grid-auto-rows: minmax(var(--m8-track-card-min-block-size), max-content);
+}
+
 .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes.is-showing-track-bests
   .m8-track-rail .track-card {
   grid-template-rows: auto auto auto;
   align-content: start;
+  min-height: max-content;
   padding-top: var(--m8-track-compact-top-padding, 3px);
 }
 
