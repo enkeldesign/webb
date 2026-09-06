@@ -366,7 +366,7 @@ function createHowToPlayDialog() {
         <button type="button" data-dialog-close aria-label="Close How to Play">×</button>
       </header>
       <div class="m8-guide-grid">
-        <section><strong>1</strong><div><h3>Choose a track and car</h3><p>Use SHOW BEST to compare your saved time, DRIFT and FLOW records on every track. TURN races you against recordings of your own fastest laps, not computer drivers.</p></div></section>
+        <section><strong>1</strong><div><h3>Choose a track and car</h3><p>Use SHOW RECORDS to compare your saved time, DRIFT and FLOW records on every track. TURN races you against recordings of your own fastest laps, not computer drivers.</p></div></section>
         <section><strong>2</strong><div><h3>Turn the device to steer</h3><p>Hold the phone or tablet in landscape and rotate it like a steering wheel. Recalibrate at the start line whenever your resting angle changes.</p></div></section>
         <section><strong>3</strong><div><h3>Drive with one thumb</h3><p>Keep one thumb on the drive pad and slide between GAS, DRIFT, BOOST and BRAKE. BRAKE stops at zero; hold it and slide outward into REVERSE to back up. While using DRIFT, slide outward past it into LOCK for a stronger slide.</p></div></section>
         <section><strong>4</strong><div><h3>Build and use OVERCHARGE</h3><p>DRIFT charges BOOST as you slide. With BOOST full, keep using DRIFT to build purple OVERCHARGE. GAS catches it and BOOST spends it.</p></div></section>
@@ -638,7 +638,7 @@ export async function installM8HomeNavigation() {
             type="button"
             aria-controls="m8TrackRail"
             aria-expanded="false"
-          >SHOW BEST</button>
+          >SHOW RECORDS</button>
           <div class="m8-track-scroll-buttons" aria-label="Scroll tracks">
             <button class="m8-track-previous" type="button" aria-label="Scroll to previous tracks">‹</button>
             <button class="m8-track-next" type="button" aria-label="Scroll to more tracks">›</button>
@@ -717,7 +717,7 @@ export async function installM8HomeNavigation() {
 
   function syncTrackBestVisibility() {
     const expanded = trackRecordsAreExpanded(home);
-    trackBestsToggle.textContent = expanded ? 'HIDE BEST' : 'SHOW BEST';
+    trackBestsToggle.textContent = expanded ? 'HIDE RECORDS' : 'SHOW RECORDS';
     trackBestsToggle.setAttribute('aria-expanded', String(expanded));
     trackBestsToggle.setAttribute(
       'aria-label',

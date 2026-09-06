@@ -317,7 +317,7 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     'A progression-balance follow-up makes the route to MOUNTAIN less dependent on obscure challenges. LISTEN CLOSELY now awards 100 trophies; each SAFETY awards 75; each SPRINT awards 100; and each DRIFT target awards 75. DRIVE BY EAR and LEARN TO PLAY add two 50-trophy Ways to Play achievements for completing all five Drive By Ear 101 parts and opening every How to Play disclosure.',
     'Reward messages now open Achievements directly and point new DRIFT ATTACK, SHIFT and FLOW owners to How to Play. The scorekeeper keeps its stable paper rows while idle black gauge bodies retract, then quickly extend when scoring resumes.',
     'BRAKE now settles the car at zero instead of automatically becoming reverse. Holding BRAKE reveals a matching attached R control; sliding outward into it supplies reverse power, and the complete control mirrors for left-handed play.',
-    'Home keeps all six track choices compact by default. One shared SHOW BEST control expands every card into matching TIME, DRIFT and FLOW rows with each record-setting car; HIDE BEST restores the overview. The track grid now enables scrolling only when its measured content actually exceeds the available viewport.'
+    'Home keeps all six track choices compact by default. One shared SHOW RECORDS control expands every card into matching TIME, DRIFT and FLOW rows with each record-setting car; HIDE RECORDS restores the overview. The track grid now enables scrolling only when its measured content actually exceeds the available viewport.'
   ],
   milestones: [
     'Nineteen Trophy Road rewards from 400–2,200 trophies',
@@ -648,7 +648,7 @@ export const CHANGELOG = Object.freeze([
       ['1.17.4 r204', 'Makes Trophy Road reward messages open ACHIEVEMENTS, points new DRIFT ATTACK, SHIFT and FLOW owners to HOW TO PLAY, and lets idle score gauges retract without hiding their paper rows.'],
       ['Calmer scorekeeper', 'DRIFT and FLOW gauge bodies now sit at 75% opacity, retract after a short zero-state delay and expand immediately through compositor-only transforms when scoring resumes.'],
       ['1.17.5 r205', 'Separates BRAKE from REVERSE: BRAKE now stops at zero, while an attached R control slides out for deliberate reversing and mirrors with left-handed controls.'],
-      ['1.17.6 r206', 'Keeps track cards compact until one shared SHOW BEST control reveals every TIME, DRIFT and FLOW record, and removes the chooser scroll surface whenever all six cards fit.']
+      ['1.17.6 r206', 'Keeps track cards compact until one shared SHOW RECORDS control reveals every TIME, DRIFT and FLOW record, and removes the chooser scroll surface whenever all six cards fit.']
     ]
   }
 ]);

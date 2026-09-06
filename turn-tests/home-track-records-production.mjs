@@ -50,7 +50,7 @@ assert.match(home, /aria-controls="m8TrackRail"[\s\S]*aria-expanded="false"/);
 assert.match(home, /trackBestsToggle\.addEventListener\('click', toggleTrackBests\)/);
 assert.match(home, /home\.classList\.toggle\('is-showing-track-bests'\)/);
 assert.match(home, /bestBox\.hidden = !expanded/);
-assert.match(home, /expanded \? 'HIDE BEST' : 'SHOW BEST'/);
+assert.match(home, /expanded \? 'HIDE RECORDS' : 'SHOW RECORDS'/);
 
 assert.match(home, /if \(!record \|\| !model \|\| !renderModels\) return null/,
   'Compact Home must not request decorative WebGL record thumbnails');
@@ -59,7 +59,7 @@ assert.match(home, /for \(const request of requests\)[\s\S]*await renderBestCarT
 assert.match(home, /generation !== previewGeneration \|\| !trackRecordModelsShouldRender\(root\)/,
   'Hiding Home or collapsing BEST must stop the remaining thumbnail queue');
 assert.match(home, /if \(expanded\) refreshTrackRecords\(home, \{ renderModels: true \}\)/,
-  'The one explicit SHOW BEST action may start the queued record-car work');
+  'The one explicit SHOW RECORDS action may start the queued record-car work');
 assert.match(home, /clearTrackRecordModels\(home\)/,
   'Collapsing all records must invalidate pending model publication');
 assert.doesNotMatch(home, /setInterval|setAnimationLoop/,
