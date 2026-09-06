@@ -100,7 +100,7 @@ assert.match(physicsSource, /baseSpeedLimit \* effectiveDriftSpeedMultiplier/, '
 assert.match(physicsSource, /3\.2 \* driftStabilityMultiplier/, 'The DRIFT stat must improve recovery from a slide');
 assert.match(physicsSource, /0\.42 \* driftStabilityMultiplier/, 'The DRIFT stat must improve lateral stability while the control is held');
 
-assert.match(achievementsEntry, /home-reward-replay-r225\.js\?revision=r243-mountain-1300/,
+assert.match(achievementsEntry, /home-reward-replay-r225\.js\?revision=r244-reward-toast-guide/,
   'The achievements entry must install the Home reward reminder persistently');
 assert.match(homeRewardReplay, /PENDING_STORAGE_KEY = 'turn-home-reward-replay-v1'/,
   'A reward reminder must survive closing the installed app or browser');

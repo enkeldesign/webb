@@ -29,7 +29,7 @@ function ensureFeedbackStylesheet() {
   if (!stylesheet) {
     stylesheet = document.createElement('link');
     stylesheet.rel = 'stylesheet';
-    stylesheet.href = `/turn/progression/trophy-road-r157.css?build=${buildKey}-r243-reward-modal`;
+    stylesheet.href = `/turn/progression/trophy-road-r157.css?build=${buildKey}-r244-reward-toast-guide`;
     stylesheet.setAttribute('data-turn-trophy-road-feedback', '');
   }
   document.head.appendChild(stylesheet);

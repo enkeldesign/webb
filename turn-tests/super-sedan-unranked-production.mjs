@@ -171,7 +171,7 @@ for (const index of [productionIndex, labIndex]) {
     'Prod and TURN LAB must route the lap runtime through the fresh MOUNTAIN-safe module URL');
   assert.match(index, new RegExp(`rival-storage\\.js\\?build=${release.cacheKey}&revision=r223-training-car-taxi`),
     'Prod and TURN LAB must cache-bust ranked rival storage with the current release identity');
-  assert.match(index, /achievements\/runtime\.js\?revision=r243-reward-modal/,
+  assert.match(index, /achievements\/runtime\.js\?revision=r244-reward-toast-guide/,
     'Prod and TURN LAB must cache-bust the time-trial guard and perk-entitlement readiness event');
 }
 

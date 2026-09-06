@@ -18,6 +18,7 @@
 .score-feedback-row[hidden],
 .score-feedback-state[hidden],
 .score-feedback-callout[hidden],
+.score-feedback-gauge-shell[hidden],
 .score-feedback-gauge[hidden] {
   display: none;
 }
@@ -159,13 +160,43 @@
 }
 
 /*
- * Reusable horizontal scoring gauge.
+ * Reusable horizontal scoring gauge. The shell owns the quick retract/extend
+ * transition while the inner gauge remains free to carry the heat animation.
  *
  * DRIFT uses `.score-feedback-meter`. FLOW uses the same primitive as
  * `.score-feedback-gauge[data-score-channel="flow"]` with an
  * `<i data-score-feedback-flow-meter-fill>` child. Both fill on the x-axis and
  * sit beside the live number they describe.
  */
+.score-feedback-gauge-shell {
+  position: absolute;
+  z-index: 0;
+  top: var(--score-feedback-gauge-inset-y);
+  left: calc(100% - var(--score-feedback-gauge-overlap));
+  width: var(--score-feedback-gauge-width);
+  height: var(--score-feedback-gauge-height);
+  opacity: .75;
+  transform: translateZ(0) scaleX(1);
+  transform-origin: left center;
+  transition: opacity 110ms linear, transform 140ms ease-out;
+  transition-delay: 0ms;
+  will-change: transform, opacity;
+}
+
+.score-feedback[data-drift-gauge-extended="false"] .score-feedback-gauge-shell[data-score-channel="drift"],
+.score-feedback[data-flow-gauge-extended="false"] .score-feedback-gauge-shell[data-score-channel="flow"] {
+  opacity: 0;
+  transform: translateZ(0) scaleX(0);
+  transition-delay: 180ms;
+}
+
+.score-feedback[data-drift-gauge-visible="false"] .score-feedback-gauge-shell[data-score-channel="drift"],
+.score-feedback[data-flow-gauge-visible="false"] .score-feedback-gauge-shell[data-score-channel="flow"] {
+  opacity: 0;
+  transform: translateZ(0) scaleX(0);
+  transition-delay: 0ms;
+}
+
 .score-feedback-meter,
 .score-feedback-gauge {
   --score-feedback-gauge-fill-a: #0bbcf4;
@@ -173,35 +204,24 @@
   --score-feedback-gauge-track: var(--turn-ink);
   position: absolute;
   z-index: 0;
-  top: var(--score-feedback-gauge-inset-y);
-  left: calc(100% - var(--score-feedback-gauge-overlap));
+  inset: 0;
   box-sizing: border-box;
-  width: var(--score-feedback-gauge-width);
-  height: var(--score-feedback-gauge-height);
+  width: 100%;
+  height: 100%;
   margin: 0;
   overflow: hidden;
   border: 3px solid var(--turn-ink);
   border-radius: 0 10px 10px 0;
   background: var(--score-feedback-gauge-track);
-  opacity: 1;
   transform: translateZ(0);
   transform-origin: left center;
-  transition: opacity 140ms linear, transform 120ms ease-out;
-  will-change: transform, opacity;
-}
-
-.score-feedback[data-drift-gauge-visible="false"] .score-feedback-meter {
-  opacity: 0;
+  will-change: transform;
 }
 
 .score-feedback-gauge[data-score-channel="flow"] {
   --score-feedback-gauge-fill-a: #ff4f8d;
   --score-feedback-gauge-fill-b: #ff91bd;
   --score-feedback-gauge-track: var(--turn-ink);
-}
-
-.score-feedback[data-flow-gauge-visible="false"] .score-feedback-gauge[data-score-channel="flow"] {
-  opacity: 0;
 }
 
 /* A tiny type-coloured remnant marks true zero inside the black instrument. */
@@ -466,6 +486,7 @@
 @media (prefers-reduced-motion: reduce) {
   .score-feedback-state,
   .score-feedback-values strong,
+  .score-feedback-gauge-shell,
   .score-feedback-meter,
   .score-feedback-gauge,
   .score-feedback-meter > i,

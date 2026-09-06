@@ -2,6 +2,7 @@ import {
   TROPHY_ROAD_REWARD_ICONS,
   getTrophyRoadReward
 } from '../progression/trophy-road-perks-r164.js?revision=r243-mountain-1300';
+import { rewardBatchNeedsHowToPlay } from './reward-toast-guide.js?revision=r244-reward-toast-guide';
 
 const PENDING_STORAGE_KEY = 'turn-home-reward-replay-v1';
 const ACHIEVEMENT_STORAGE_KEY = 'turn-achievements-v1';
@@ -75,17 +76,20 @@ function toastIsVisible(toast) {
 
 function writeRewardToast(toast, rewards) {
   const first = rewards[0];
+  const needsHowToPlay = rewardBatchNeedsHowToPlay(rewards);
   toast.querySelector('.turn-achievement-toast-icon').innerHTML = TROPHY_ROAD_REWARD_ICONS[first.icon] || '';
-  toast.querySelector('span').textContent = rewards.length === 1
+  toast.querySelector('[data-achievement-toast-label]').textContent = rewards.length === 1
     ? 'TROPHY ROAD REWARD'
     : `${rewards.length} TROPHY ROAD REWARDS`;
-  toast.querySelector('strong').textContent = rewards.length === 1
+  toast.querySelector('[data-achievement-toast-title]').textContent = rewards.length === 1
     ? first.title
     : `${first.title} + ${rewards.length - 1} MORE`;
-  toast.querySelector('b').textContent = 'UNLOCKED';
+  toast.querySelector('[data-achievement-toast-badge]').textContent = 'UNLOCKED';
+  const guide = toast.querySelector('[data-trophy-reward-guide]');
+  if (guide) guide.hidden = !needsHowToPlay;
   toast.setAttribute(
     'aria-label',
-    `${rewards.length === 1 ? 'Trophy Road reward unlocked' : `${rewards.length} Trophy Road rewards unlocked`}. ${rewards.map((reward) => reward.shortTitle).join(', ')}.`
+    `${rewards.length === 1 ? 'Trophy Road reward unlocked' : `${rewards.length} Trophy Road rewards unlocked`}. ${rewards.map((reward) => reward.shortTitle).join(', ')}.${needsHowToPlay ? ' See How to Play for instructions.' : ''} Open Achievements.`
   );
 }
 

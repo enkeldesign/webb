@@ -306,7 +306,7 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
   ]
 },
 {
-  period: '5 September',
+  period: '5–6 September',
   title: 'Trophy Road becomes a legible journey',
   paragraphs: [
     'Trophy Road reshapes progression into nineteen rewards at steady one-hundred-trophy intervals from 400 to 2,200. DRIFT ATTACK joins the road at 600 trophies and FLOW at 1,500, so each scoring system activates automatically as a layer of normal racing rather than asking the player to choose a mode.',
@@ -314,7 +314,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     'That complete reward grid now reads literally as a top-down TURN circuit. Category-coloured reward sections snake between dedicated checkered START and FINISH tiles, with static Kenney bends connecting every straight. Available width redistributes the same native-order controls across three, five or seven rewards per row, and any future rewards automatically extend the route before FINISH.',
     'Existing players keep every reward they previously owned and also receive anything justified by their current trophy total under the new order. Retained rewards are labelled clearly, newly derived rewards use the normal one-time composed feedback, and a versioned migration prevents progress or trophies from being reset.',
     'DRIFT and FLOW score achievements now use calibrated per-track targets. Approved authored vehicle and SHIFT silhouettes refresh the road artwork, while scoring-system rewards use their own pink family and remain distinct from cars, tracks and perks.',
-    'A progression-balance follow-up makes the route to MOUNTAIN less dependent on obscure challenges. LISTEN CLOSELY now awards 100 trophies; each SAFETY awards 75; each SPRINT awards 100; and each DRIFT target awards 75. DRIVE BY EAR and LEARN TO PLAY add two 50-trophy Ways to Play achievements for completing all five Drive By Ear 101 parts and opening every How to Play disclosure.'
+    'A progression-balance follow-up makes the route to MOUNTAIN less dependent on obscure challenges. LISTEN CLOSELY now awards 100 trophies; each SAFETY awards 75; each SPRINT awards 100; and each DRIFT target awards 75. DRIVE BY EAR and LEARN TO PLAY add two 50-trophy Ways to Play achievements for completing all five Drive By Ear 101 parts and opening every How to Play disclosure.',
+    'Reward messages now open Achievements directly and point new DRIFT ATTACK, SHIFT and FLOW owners to How to Play. The scorekeeper keeps its stable paper rows while idle black gauge bodies retract, then quickly extend when scoring resumes.'
   ],
   milestones: [
     'Nineteen Trophy Road rewards from 400–2,200 trophies',
@@ -324,7 +325,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     'Calibrated scoring achievements and authored Trophy Road artwork',
     'Persistent Drive By Ear 101 and How to Play learning progress',
     'Literal responsive race-road presentation with native progression focus order',
-    'TURN 1.17.0–1.17.3 · 2026.09.05-r200–r203 Trophy Road release, balance and visual road pass'
+    'Actionable reward guidance and retracting idle score gauges',
+    'TURN 1.17.0–1.17.4 · 2026.09.05-r200–2026.09.06-r204 Trophy Road release, balance and visual road pass'
   ]
 }
 ]);
@@ -635,11 +637,18 @@ export const CHANGELOG = Object.freeze([
       ['Scoring progression', 'Activates DRIFT and FLOW automatically at their milestones, keeps locked processors dormant and applies calibrated score targets to all six tracks.'],
       ['Authored reward art', 'Uses the approved Vintage, SHIFT, Race, Future, Rally and Monster SVG silhouettes with semantic state colouring.']
     ]
+  },
+  {
+    date: '6 September',
+    entries: [
+      ['1.17.4 r204', 'Makes Trophy Road reward messages open ACHIEVEMENTS, points new DRIFT ATTACK, SHIFT and FLOW owners to HOW TO PLAY, and lets idle score gauges retract without hiding their paper rows.'],
+      ['Calmer scorekeeper', 'DRIFT and FLOW gauge bodies now sit at 75% opacity, retract after a short zero-state delay and expand immediately through compositor-only transforms when scoring resumes.']
+    ]
   }
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.17.3',
-  build: '2026.09.05-r203',
-  note: 'TURN 1.17.3 adds anchored reward details and moves MOUNTAIN to 1,300 trophies.'
+  version: '1.17.4',
+  build: '2026.09.06-r204',
+  note: 'TURN 1.17.4 adds actionable reward guidance and retracting idle score gauges.'
 });

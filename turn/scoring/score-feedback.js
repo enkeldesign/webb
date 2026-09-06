@@ -394,15 +394,17 @@ export function createScoreFeedback({
     const driftGaugeActive = driftActive || fallbackGaugeToFlow;
     const driftGaugeVisible = drift.visible || fallbackGaugeToFlow;
     const driftGaugeIntensity = fallbackGaugeToFlow ? flow.intensity : drift.intensity;
+    const driftGaugeProgress = driftGaugeActive ? driftGaugeIntensity : 0;
+    const flowGaugeProgress = flowActive ? flow.intensity : 0;
 
     driftGaugeFill.style.setProperty(
       '--score-feedback-progress',
-      String(driftGaugeActive ? driftGaugeIntensity : 0)
+      String(driftGaugeProgress)
     );
     if (flowGaugeFill) {
       flowGaugeFill.style.setProperty(
         '--score-feedback-progress',
-        String(flowActive ? flow.intensity : 0)
+        String(flowGaugeProgress)
       );
     }
     setData(root, 'driftActive', driftActive);
@@ -411,6 +413,8 @@ export function createScoreFeedback({
     setData(root, 'flowVisible', flow.visible);
     setData(root, 'driftGaugeVisible', driftGaugeVisible);
     setData(root, 'flowGaugeVisible', Boolean(flowHasOwnGauge && flow.visible));
+    setData(root, 'driftGaugeExtended', driftGaugeVisible && driftGaugeProgress > 0);
+    setData(root, 'flowGaugeExtended', Boolean(flowHasOwnGauge && flow.visible && flowGaugeProgress > 0));
     setData(root, 'driftHeat', heatTier(drift.intensity, driftActive));
     setData(root, 'flowHeat', heatTier(flow.intensity, flowActive));
     setData(root, 'gaugeHeat', heatTier(driftGaugeIntensity, driftGaugeActive));
