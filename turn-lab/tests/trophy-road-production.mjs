@@ -221,10 +221,21 @@ assert.match(futurePerk?.description || '', /<strong>OVERDRIVE:<\/strong>/);
 const racePerk = getProductionTrophyRoadReward('race-car');
 assert.equal(racePerk?.threshold, 1100);
 assert.equal(racePerk?.perkTitle, 'APEX GRIP');
-assert.equal(racePerk?.perkDescription, 'Increased CONTROL when OVERCHARGED.');
+assert.equal(racePerk?.perkDescription,
+  'OVERCHARGE increases CONTROL and ACCELERATION beyond their ordinary limits.');
 assert.match(racePerk?.description || '', /<strong>APEX GRIP:<\/strong>/);
 assert.equal(getCarDefinition('race').perk?.title, 'APEX GRIP');
-assert.equal(getCarDefinition('race').perk?.description, 'Increased CONTROL when OVERCHARGED.');
+assert.equal(getCarDefinition('race').perk?.description,
+  'OVERCHARGE increases CONTROL and ACCELERATION beyond their ordinary limits.');
+
+const torquePerk = getProductionTrophyRoadReward('truck-torque');
+assert.equal(torquePerk?.threshold, 800);
+assert.equal(torquePerk?.perkTitle, 'TORQUE');
+assert.equal(torquePerk?.perkDescription,
+  'OVERCHARGE increases ACCELERATION and builds BOOST TANK up to 5/5.');
+assert.match(torquePerk?.description || '', /<strong>TORQUE<\/strong>/);
+assert.equal(getCarDefinition('truck').perk?.description,
+  'OVERCHARGE increases ACCELERATION and builds BOOST TANK up to 5/5.');
 
 const emergencyPerk = getProductionTrophyRoadReward('emergency-pack');
 assert.equal(emergencyPerk?.perkTitle, 'SIRENS');
@@ -649,4 +660,4 @@ assert.match(enhancementRuntime, /installLotPerkDisclosure/);
 assert.match(enhancementRuntime, /lot-perk-disclosure\.js\?revision=r243-mountain-1300/);
 assert.match(enhancementRuntime, /lot-trophy-gate\.js\?revision=r243-mountain-1300/);
 
-console.log('TURN Trophy Road Race Car slot migration, APEX GRIP, reward order and perk presentation regression passed.');
+console.log('TURN Trophy Road Race Car slot migration, APEX GRIP, TORQUE, reward order and perk presentation regression passed.');
