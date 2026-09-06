@@ -44,6 +44,26 @@ export function resolveOverchargedControlMultiplier({
   );
 }
 
+export function resolveVehicleOverchargedAccelerationMultiplier({
+  vehicleId = '',
+  perkUnlocked = false,
+  accelerationMultiplier = 1,
+  overchargeAccelerationMultiplier = accelerationMultiplier,
+  overcharge = 0
+} = {}) {
+  const baseAccelerationMultiplier = positiveNumber(accelerationMultiplier, 1);
+  const normalizedVehicleId = String(vehicleId || '');
+  const ownsOverchargeAcceleration = normalizedVehicleId === 'race'
+    || (normalizedVehicleId === 'truck' && perkUnlocked === true);
+  if (!ownsOverchargeAcceleration || nonNegativeNumber(overcharge, 0) <= 0) {
+    return baseAccelerationMultiplier;
+  }
+  return Math.max(
+    baseAccelerationMultiplier,
+    positiveNumber(overchargeAccelerationMultiplier, baseAccelerationMultiplier)
+  );
+}
+
 export function updateVehicleOverdriveState({
   state,
   dt = 0,
@@ -156,14 +176,26 @@ function updateVehiclePhysicsStateCore({
 
   const baseTuning = vehicleTuning || globalThis.__turnVehicleTuning;
   const tuning = resolveVehiclePerkTuning({ state, tuning: baseTuning });
-  const accelerationMultiplier = positiveNumber(tuning?.accelerationMultiplier, 1);
+  const baseAccelerationMultiplier = positiveNumber(tuning?.accelerationMultiplier, 1);
+  const accelerationMultiplier = resolveVehicleOverchargedAccelerationMultiplier({
+    vehicleId: state.vehicleId,
+    perkUnlocked: state.vehiclePerkUnlocked,
+    accelerationMultiplier: baseAccelerationMultiplier,
+    overchargeAccelerationMultiplier: tuning?.overchargeAccelerationMultiplier,
+    overcharge: boostOvercharge
+  });
   const baseControlMultiplier = positiveNumber(tuning?.controlMultiplier, 1);
   const controlMultiplier = resolveOverchargedControlMultiplier({
     controlMultiplier: baseControlMultiplier,
     overchargeControlMultiplier: tuning?.overchargeControlMultiplier,
     overcharge: boostOvercharge
   });
-  state.apexGripActive = controlMultiplier > baseControlMultiplier;
+  state.apexGripActive = String(state.vehicleId || '') === 'race'
+    && (controlMultiplier > baseControlMultiplier
+      || accelerationMultiplier > baseAccelerationMultiplier);
+  state.torqueActive = String(state.vehicleId || '') === 'truck'
+    && state.vehiclePerkUnlocked === true
+    && accelerationMultiplier > baseAccelerationMultiplier;
   const driftEngineMultiplier = positiveNumber(tuning?.driftEngineMultiplier, 0.86);
   const driftDragAdd = nonNegativeNumber(tuning?.driftDragAdd, 0.1);
   const driftSpeedMultiplier = clamp(positiveNumber(tuning?.driftSpeedMultiplier, 0.84), 0.5, 0.99);
@@ -396,7 +428,8 @@ function updateVehiclePhysicsStateCore({
   advanceVehiclePerkRuntimeState({
     state,
     dt,
-    gasHeld: driveThrottle > 0 && !driftHeld && !effectiveBoostActive,
+    overcharge: boostOvercharge,
+    boostActive: effectiveBoostActive,
     driftHeld,
     offRoad: state.offRoad,
     collided: collision.collided,
