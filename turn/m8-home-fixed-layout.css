@@ -71,7 +71,7 @@
 }
 
 .m8-home-fixed-layout .m8-home-tracks {
-  --m8-track-card-min-block-size: clamp(132px, 20vh, 176px);
+  --m8-track-card-min-block-size: clamp(126px, calc(20vh - 6px), 170px);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   min-width: 0;
@@ -79,7 +79,7 @@
 }
 
 .m8-home-fixed-layout.is-showing-track-bests .m8-home-tracks {
-  --m8-track-card-min-block-size: clamp(304px, 47vh, 390px);
+  --m8-track-card-min-block-size: clamp(298px, calc(47vh - 6px), 384px);
 }
 
 .m8-home-fixed-layout .m8-track-heading-row {
@@ -139,7 +139,7 @@
   grid-auto-rows: minmax(var(--m8-track-card-min-block-size), auto);
   align-content: start;
   column-gap: clamp(10px, 1.4vw, 16px);
-  row-gap: clamp(8px, 0.85vw, 10px);
+  row-gap: clamp(14px, 1.4vw, 16px);
   min-width: 0;
   min-height: 0;
   overflow-x: hidden;
@@ -262,11 +262,11 @@
 
 @media (max-height: 560px) and (orientation: landscape) {
   .m8-home-fixed-layout .m8-home-tracks {
-    --m8-track-card-min-block-size: 120px;
+    --m8-track-card-min-block-size: 114px;
   }
 
   .m8-home-fixed-layout.is-showing-track-bests .m8-home-tracks {
-    --m8-track-card-min-block-size: 286px;
+    --m8-track-card-min-block-size: 280px;
   }
 
   .m8-home-fixed-layout .m8-home-shell {
@@ -318,12 +318,12 @@
 
   .m8-home-fixed-layout .m8-track-rail {
     column-gap: 9px;
-    row-gap: 8px;
+    row-gap: 14px;
   }
 
   .m8-home-fixed-layout .m8-track-rail .track-card {
     min-height: var(--m8-track-card-min-block-size);
-    padding: 9px;
+    padding: 6px 9px;
     gap: 5px;
   }
 

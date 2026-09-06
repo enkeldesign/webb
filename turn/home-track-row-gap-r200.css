@@ -1,4 +1,9 @@
 .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes .m8-track-rail {
-  /* Keep this late-loaded compatibility rule aligned with the compact grid gap. */
-  row-gap: clamp(8px, 0.85vw, 10px);
+  /* Keep this late-loaded compatibility rule aligned with the balanced grid gap. */
+  row-gap: clamp(14px, 1.4vw, 16px);
+}
+
+.m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes .m8-track-rail .track-card {
+  /* About 30% less block padding without disturbing the established inline inset. */
+  padding-block: clamp(6px, 0.75vw, 9px);
 }
