@@ -418,18 +418,23 @@
       const summary = card.querySelector('.track-card-summary');
       if (!summary) continue;
 
-      if (!card.disabled) {
-        const name = spokenCardText(card.querySelector('.track-card-name')?.textContent);
-        const difficulty = String(card.querySelector('.track-card-difficulty')?.textContent || '').trim().toLocaleLowerCase('en');
-        const time = String(card.querySelector('.track-card-best-time')?.textContent || '').trim();
-        const car = spokenCardText(card.querySelector('.track-card-best-car:not([hidden])')?.textContent);
-        const label = [`${name}, ${difficulty} difficulty track`];
-        if (time && !/^(?:--:--\.---|NO TIME YET)$/i.test(time)) {
-          label.push(`Best ${time}${car ? ` with ${car}` : ''}`);
+      if (!card.disabled && card.dataset.trophyLocked !== 'true') {
+        const managedLabel = String(card.dataset.trackAccessibleLabel || '').trim();
+        if (managedLabel) {
+          card.setAttribute('aria-label', `${managedLabel.replace(/[.\s]+$/, '')}.`);
         } else {
-          label.push('No time yet');
+          const name = spokenCardText(card.querySelector('.track-card-name')?.textContent);
+          const difficulty = String(card.querySelector('.track-card-difficulty')?.textContent || '').trim().toLocaleLowerCase('en');
+          const time = String(card.querySelector('.track-card-best-time')?.textContent || '').trim();
+          const car = spokenCardText(card.querySelector('.track-card-best-car:not([hidden])')?.textContent);
+          const label = [`${name}, ${difficulty} difficulty track`];
+          if (time && !/^(?:--:--\.---|NO TIME YET)$/i.test(time)) {
+            label.push(`Best ${time}${car ? ` with ${car}` : ''}`);
+          } else {
+            label.push('No time yet');
+          }
+          card.setAttribute('aria-label', `${label.join('. ')}.`);
         }
-        card.setAttribute('aria-label', `${label.join('. ')}.`);
       }
 
       summary.setAttribute('aria-hidden', 'true');

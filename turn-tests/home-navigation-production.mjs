@@ -34,7 +34,7 @@ const [
 ]);
 
 assert.match(productionApp, /installM8HomeNavigation/);
-assert.match(productionApp, /m8-home\.js\?revision=r131-motion-permission-retry/);
+assert.match(productionApp, /m8-home\.js\?revision=r206-shared-track-bests/);
 assert.match(productionApp, /installM8HomeFixedLayout/);
 assert.match(
   productionApp,
@@ -237,8 +237,8 @@ assert.match(homeCss, /turn-m8-active \.audio-settings-button/);
 assert.match(homeCss, /turn-m8-active \.reset-rivals-button/);
 assert.match(homeCss, /prefers-reduced-motion/);
 
-assert.match(fixedLayoutSource, /const LAYOUT_ID = 'fixed-grid-v7'/);
-assert.match(fixedLayoutSource, /m8-home-fixed-layout\.css\?build=\$\{buildKey\}-m8\.7-home-polish/);
+assert.match(fixedLayoutSource, /const LAYOUT_ID = 'fixed-grid-v8-shared-track-bests'/);
+assert.match(fixedLayoutSource, /m8-home-fixed-layout\.css\?build=\$\{buildKey\}-r206-shared-track-bests/);
 assert.match(fixedLayoutSource, /trackBrowser\.append\(headingRow, rail\)/);
 assert.match(fixedLayoutSource, /menu\.append\(settingsButton, howButton, status, raceButton\)/);
 assert.match(fixedLayoutSource, /oldScrollButtons\.hidden = true/);
@@ -246,6 +246,7 @@ assert.match(fixedLayoutSource, /raceButton\.textContent = 'RACE'/);
 assert.match(fixedLayoutSource, /Race on \$\{spokenTrackName\(selectedTrackName\)\}/);
 assert.match(fixedLayoutSource, /new MutationObserver\(syncRaceLabel\)/);
 assert.match(fixedLayoutSource, /\/turn\/m8-home-card-scroll-fixes\.js\?build=\$\{buildKey\}-m8\.9-track-title-alignment/);
+assert.match(fixedLayoutSource, /import\(`\/turn\/m8-home-card-scroll-fixes\.js\?build=\$\{buildKey\}-r206-shared-track-bests`\)/);
 assert.match(fixedLayoutSource, /installM8HomeCardScrollFixes\(\)/);
 assert.match(fixedLayoutSource, /turnHomeLayout = LAYOUT_ID/);
 
@@ -271,8 +272,8 @@ assert.match(fixedLayoutCss, /@media \(max-height: 560px\) and \(orientation: la
 assert.match(fixedLayoutCss, /@media \(max-width: 760px\) and \(orientation: portrait\)[\s\S]*\.m8-home-fixed-layout \.m8-home-head[\s\S]*padding: 0 12px 0 0/);
 assert.match(fixedLayoutCss, /prefers-reduced-motion/);
 
-assert.match(cardScrollSource, /const FIX_ID = 'native-scroll-full-track-names-v4'/);
-assert.match(cardScrollSource, /m8-home-card-scroll-fixes\.css\?build=\$\{buildKey\}-m8\.9-track-title-alignment/);
+assert.match(cardScrollSource, /const FIX_ID = 'shared-track-bests-v6'/);
+assert.match(cardScrollSource, /m8-home-card-scroll-fixes\.css\?build=\$\{buildKey\}-r206-shared-track-bests/);
 assert.match(cardScrollSource, /m8-track-scroll-indicator/);
 assert.match(cardScrollSource, /ResizeObserver/);
 assert.match(cardScrollSource, /rail\.style\.scrollSnapType = 'none'/);
@@ -294,8 +295,8 @@ assert.match(cardScrollCss, /\.track-card-choice[\s\S]*grid-row: 1[\s\S]*align-i
 assert.match(cardScrollCss, /\.track-card-choice-marker[\s\S]*margin-top: 0/);
 assert.match(cardScrollCss, /\.track-card-difficulty[\s\S]*grid-row: 2/);
 assert.match(cardScrollCss, /\.track-card-preview[\s\S]*grid-row: 1 \/ 3/);
-assert.match(cardScrollCss, /\.track-card-best[\s\S]*grid-row: 3/);
-assert.match(cardScrollCss, /\.track-card-best-model[\s\S]*justify-self: end/);
+assert.match(cardScrollCss, /\.track-card-best[\s\S]*grid-row: 3[\s\S]*repeat\(3, minmax\(0, 1fr\)\)/);
+assert.match(cardScrollCss, /\.track-card-record-model[\s\S]*justify-self: end/);
 assert.match(cardScrollCss, /grid-template-columns: minmax\(0, 1fr\) minmax\(108px, 39%\)/);
 assert.match(cardScrollCss, /\.track-card-name[\s\S]*font-size: clamp\(1\.056rem, 1\.86vw, 1\.656rem\)[\s\S]*text-overflow: clip[\s\S]*white-space: normal/);
 assert.match(cardScrollCss, /@media \(max-height: 560px\) and \(orientation: landscape\)[\s\S]*\.track-card-name[\s\S]*font-size: clamp\(0\.96rem, 1\.704vw, 1\.296rem\)/);

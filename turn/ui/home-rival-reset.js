@@ -109,6 +109,9 @@ export function installHomeRivalReset(root = document) {
           TRACK_CATALOG.map((entry) => entry.id)
         );
         clearTrackCardRecords(root);
+        window.dispatchEvent(new CustomEvent('turn:rivals-reset', {
+          detail: { scope: 'all-tracks' }
+        }));
         status.textContent = 'Personal rivals reset on all tracks.';
       } else {
         globalThis.__turnResetRivals?.();
@@ -153,9 +156,10 @@ function clearTrackCardRecord(root, trackId) {
 }
 
 function clearBestBox(bestBox) {
-  const time = bestBox.querySelector('.track-card-best-time');
-  const car = bestBox.querySelector('.track-card-best-car');
-  const model = bestBox.querySelector('.track-card-best-model');
+  const timeRecord = bestBox.querySelector('[data-track-record-kind="time"]') || bestBox;
+  const time = timeRecord.querySelector('.track-card-best-time');
+  const car = timeRecord.querySelector('.track-card-record-car, .track-card-best-car');
+  const model = timeRecord.querySelector('.track-card-record-model, .track-card-best-model');
 
   if (time) time.textContent = 'NO TIME YET';
   if (car) {

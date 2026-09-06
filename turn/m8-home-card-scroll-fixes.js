@@ -1,15 +1,17 @@
 const STYLE_ATTRIBUTE = 'data-turn-m8-card-scroll-fixes';
-// Historical regression markers for the native-scroll/title-alignment bundle:
+// Historical regression markers for the native-scroll/title-alignment bundles:
 // const FIX_ID = 'native-scroll-full-track-names-v4';
 // m8-home-card-scroll-fixes.css?build=${buildKey}-m8.9-track-title-alignment
-const FIX_ID = 'native-scroll-full-track-names-v5';
+// const FIX_ID = 'native-scroll-full-track-names-v5';
+// m8-home-card-scroll-fixes.css?build=${buildKey}-m8.10-card-gap-rim
+const FIX_ID = 'shared-track-bests-v6';
 
 function installStylesheet() {
   if (document.querySelector(`link[${STYLE_ATTRIBUTE}]`)) return;
   const buildKey = globalThis.__TURN_BUILD__?.cacheKey || '';
   const stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet';
-  stylesheet.href = `/turn/m8-home-card-scroll-fixes.css?build=${buildKey}-m8.10-card-gap-rim`;
+  stylesheet.href = `/turn/m8-home-card-scroll-fixes.css?build=${buildKey}-r206-shared-track-bests`;
   stylesheet.setAttribute(STYLE_ATTRIBUTE, '');
   document.head.appendChild(stylesheet);
 }
@@ -64,9 +66,13 @@ function installIndicatorSync(rail, viewport, indicator, thumb) {
     animationFrame = 0;
     const maximum = Math.max(0, rail.scrollHeight - rail.clientHeight);
     const hasOverflow = maximum > 2;
+    viewport.classList.toggle('has-track-overflow', hasOverflow);
+    rail.dataset.scrollMode = hasOverflow ? 'native' : 'static';
     indicator.hidden = !hasOverflow;
     if (!hasOverflow) {
+      if (rail.scrollTop !== 0) rail.scrollTop = 0;
       viewport.classList.remove('has-scroll-above', 'has-scroll-below');
+      indicator.classList.add('is-at-start', 'is-at-end');
       return;
     }
 

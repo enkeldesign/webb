@@ -20,7 +20,7 @@
 
 .m8-home-fixed-layout .m8-track-rail .turn-yourturn-track-slot {
   width: 100%;
-  min-height: clamp(180px, 27vh, 260px);
+  min-height: var(--m8-track-card-min-block-size, clamp(132px, 20vh, 176px));
   scroll-snap-align: start;
 }
 

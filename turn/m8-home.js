@@ -11,6 +11,8 @@ import { showTrackIntro } from '/turn/ui/track-intro.js?source=20260729-r118-m8'
 import { getStoredBestLap } from '/turn/race/rival-storage.js?source=20260729-r118-m8';
 import { getCarDefinition } from '/turn/vehicle/catalog.js?source=20260729-r118-m8';
 import { renderBestCarThumbnail } from '/turn/ui/track-best-car.js?source=20260729-r118-m8';
+import { getBestDriftRecord } from '/turn/scoring/drift-records.js?revision=r206-home-track-records';
+import { getBestFlowRecord } from '/turn/scoring/flow-records.js?revision=r206-home-track-records';
 import { saveDriveByEarEnabled } from '/turn/ui/drive-by-ear-setting.js?source=20260729-r118-m8';
 import {
   CONTROL_HANDEDNESS,
@@ -22,6 +24,8 @@ import {
 const STEERING_MODE_KEY = 'turn-steering-mode-v1';
 const STEERING_MODE = Object.freeze({ MOTION: 'motion', MANUAL: 'manual' });
 const ICON_REVISION = '20260803-profile-512';
+const SCORE_FORMATTER = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+const TRACK_RECORD_KINDS = Object.freeze(['time', 'drift', 'flow']);
 
 let installed = false;
 let previewGeneration = 0;
@@ -95,6 +99,13 @@ function formatTime(seconds) {
   return `${minutes}:${secs}.${ms}`;
 }
 
+function formatScore(score) {
+  const rounded = Math.round(Number(score));
+  return Number.isFinite(rounded) && rounded > 0
+    ? SCORE_FORMATTER.format(rounded)
+    : 'NO SCORE YET';
+}
+
 function makePreviewSvg(trackId, accent) {
   const points = getTrackPreviewPoints(trackId, 110);
   const xs = points.map((point) => point.x);
@@ -131,6 +142,18 @@ function makeLockedPreviewSvg() {
       <path class="track-preview-shadow" d="M48 136 L48 62 Q50 28 84 40 L126 82 L174 42 Q194 28 216 44 L270 74 L270 142 L214 142 L177 116 L137 150 L76 150 Z"></path>
       <path class="track-preview-road" d="M48 136 L48 62 Q50 28 84 40 L126 82 L174 42 Q194 28 216 44 L270 74 L270 142 L214 142 L177 116 L137 150 L76 150 Z"></path>
     </svg>`;
+}
+
+function renderTrackRecord(kind, label, valueClass) {
+  return `
+    <span class="track-card-record is-${kind}" data-track-record-kind="${kind}">
+      <span class="track-card-record-copy">
+        <span class="track-card-record-label">${label}</span>
+        <strong class="track-card-record-value ${valueClass}">${kind === 'time' ? 'NO TIME YET' : 'NO SCORE YET'}</strong>
+        <small class="track-card-record-car" hidden></small>
+      </span>
+      <img class="track-card-record-model" alt="" aria-hidden="true" draggable="false" hidden>
+    </span>`;
 }
 
 function renderTrackCard(track) {
@@ -173,13 +196,11 @@ function renderTrackCard(track) {
           <span class="track-card-choice-marker" aria-hidden="true"></span>
           <strong class="track-card-name">${track.name.toUpperCase()}</strong>
         </span>
-        <span class="track-card-best" data-track-best="${track.id}">
-          <span class="track-card-best-copy">
-            <span>BEST:</span>
-            <strong class="track-card-best-time">--:--.---</strong>
-            <small class="track-card-best-car" hidden></small>
-          </span>
-          <img class="track-card-best-model" alt="" aria-hidden="true" draggable="false" hidden>
+        <span class="track-card-best track-card-records" data-track-best="${track.id}" hidden>
+          <strong class="track-card-records-title">BEST:</strong>
+          ${renderTrackRecord('time', 'TIME', 'track-card-best-time')}
+          ${renderTrackRecord('drift', 'DRIFT', 'track-card-best-drift')}
+          ${renderTrackRecord('flow', 'FLOW', 'track-card-best-flow')}
         </span>
         <strong class="track-card-difficulty">${track.difficulty}</strong>
       </span>
@@ -187,36 +208,129 @@ function renderTrackCard(track) {
     </button>`;
 }
 
-function refreshTrackRecords(root) {
+function recordCarName(record) {
+  return record ? getCarDefinition(record.carId).name.toUpperCase() : '';
+}
+
+function recordAccessibleCopy(kind, record) {
+  const label = kind === 'time' ? 'time' : kind;
+  if (!record) return `No best ${label}`;
+  const value = kind === 'time' ? formatTime(record.time) : formatScore(record.score);
+  return `Best ${label} ${value} with ${getCarDefinition(record.carId).name}`;
+}
+
+function updateTrackCardAccessibleLabel(card, track, records, expanded) {
+  if (!card) return;
+  const baseLabel = `${track.name}, ${track.difficulty} difficulty track`;
+  const recordLabel = TRACK_RECORD_KINDS
+    .map((kind) => recordAccessibleCopy(kind, records[kind]))
+    .join('. ');
+  const label = expanded ? `${baseLabel}. ${recordLabel}` : baseLabel;
+  card.dataset.trackAccessibleLabel = label;
+  if (card.dataset.trophyLocked !== 'true') card.setAttribute('aria-label', `${label}.`);
+}
+
+function resetTrackRecordModel(model) {
+  if (!model) return;
+  model.hidden = true;
+  model.removeAttribute('src');
+  delete model.dataset.previewKey;
+}
+
+function updateTrackRecordRow({
+  kind,
+  record,
+  renderModels,
+  row,
+  track
+}) {
+  if (!row) return null;
+  const value = row.querySelector('.track-card-record-value');
+  const car = row.querySelector('.track-card-record-car');
+  const model = row.querySelector('.track-card-record-model');
+
+  if (value) {
+    value.textContent = kind === 'time'
+      ? formatTime(record?.time ?? Infinity)
+      : formatScore(record?.score);
+  }
+  if (car) {
+    car.textContent = recordCarName(record);
+    car.hidden = !record;
+  }
+  resetTrackRecordModel(model);
+  if (!record || !model || !renderModels) return null;
+
+  const previewKey = [
+    track.id,
+    kind,
+    record.carId,
+    record.carColor,
+    record.carSecondaryColor
+  ].join(':');
+  model.dataset.previewKey = previewKey;
+  return Object.freeze({ kind, model, previewKey, record, track });
+}
+
+function trackRecordsAreExpanded(root) {
+  return root.classList.contains('is-showing-track-bests');
+}
+
+function trackRecordModelsShouldRender(root) {
+  return trackRecordsAreExpanded(root) && !root.hidden;
+}
+
+async function renderTrackRecordModels(root, requests, generation) {
+  for (const request of requests) {
+    if (generation !== previewGeneration || !trackRecordModelsShouldRender(root)) return;
+    try {
+      const source = await renderBestCarThumbnail(request.record);
+      if (
+        generation !== previewGeneration
+        || !trackRecordModelsShouldRender(root)
+        || request.model.dataset.previewKey !== request.previewKey
+      ) return;
+      request.model.src = source;
+      request.model.hidden = false;
+    } catch (error) {
+      console.warn(
+        `TURN: could not render the ${request.track.name} ${request.kind} record car.`,
+        error
+      );
+    }
+  }
+}
+
+function refreshTrackRecords(root, { renderModels = trackRecordModelsShouldRender(root) } = {}) {
   const generation = ++previewGeneration;
+  const expanded = trackRecordsAreExpanded(root);
+  const modelRequests = [];
   for (const track of TRACK_CATALOG) {
     const bestLap = getStoredBestLap(track.id);
+    const bestDrift = getBestDriftRecord(track.id);
+    const bestFlow = getBestFlowRecord(track.id);
+    const records = { time: bestLap, drift: bestDrift, flow: bestFlow };
     const bestBox = root.querySelector(`[data-track-best="${track.id}"]`);
-    const time = bestBox?.querySelector('.track-card-best-time');
-    const car = bestBox?.querySelector('.track-card-best-car');
-    const model = bestBox?.querySelector('.track-card-best-model');
-
-    if (time) time.textContent = formatTime(bestLap?.time ?? Infinity);
-    if (car) {
-      car.textContent = bestLap ? getCarDefinition(bestLap.carId).name.toUpperCase() : '';
-      car.hidden = !bestLap;
+    const card = bestBox?.closest('.track-card');
+    updateTrackCardAccessibleLabel(card, track, records, expanded);
+    for (const kind of TRACK_RECORD_KINDS) {
+      const modelRequest = updateTrackRecordRow({
+        kind,
+        record: records[kind],
+        renderModels,
+        row: bestBox?.querySelector(`[data-track-record-kind="${kind}"]`),
+        track
+      });
+      if (modelRequest) modelRequests.push(modelRequest);
     }
-    if (model) {
-      model.hidden = true;
-      model.removeAttribute('src');
-      delete model.dataset.previewKey;
-    }
-    if (!bestLap || !model) continue;
+  }
+  if (modelRequests.length) void renderTrackRecordModels(root, modelRequests, generation);
+}
 
-    const previewKey = [track.id, bestLap.carId, bestLap.carColor, bestLap.carSecondaryColor].join(':');
-    model.dataset.previewKey = previewKey;
-    renderBestCarThumbnail(bestLap).then((source) => {
-      if (generation !== previewGeneration || model.dataset.previewKey !== previewKey) return;
-      model.src = source;
-      model.hidden = false;
-    }).catch((error) => {
-      console.warn(`TURN: could not render the ${track.name} record car.`, error);
-    });
+function clearTrackRecordModels(root) {
+  previewGeneration += 1;
+  for (const model of root.querySelectorAll('.track-card-record-model')) {
+    resetTrackRecordModel(model);
   }
 }
 
@@ -252,7 +366,7 @@ function createHowToPlayDialog() {
         <button type="button" data-dialog-close aria-label="Close How to Play">×</button>
       </header>
       <div class="m8-guide-grid">
-        <section><strong>1</strong><div><h3>Choose a track and car</h3><p>Your saved best lap appears on each track card. TURN races you against recordings of your own fastest laps, not computer drivers.</p></div></section>
+        <section><strong>1</strong><div><h3>Choose a track and car</h3><p>Use SHOW BEST to compare your saved time, DRIFT and FLOW records on every track. TURN races you against recordings of your own fastest laps, not computer drivers.</p></div></section>
         <section><strong>2</strong><div><h3>Turn the device to steer</h3><p>Hold the phone or tablet in landscape and rotate it like a steering wheel. Recalibrate at the start line whenever your resting angle changes.</p></div></section>
         <section><strong>3</strong><div><h3>Drive with one thumb</h3><p>Keep one thumb on the drive pad and slide between GAS, DRIFT, BOOST and BRAKE. BRAKE stops at zero; hold it and slide outward into REVERSE to back up. While using DRIFT, slide outward past it into LOCK for a stronger slide.</p></div></section>
         <section><strong>4</strong><div><h3>Build and use OVERCHARGE</h3><p>DRIFT charges BOOST as you slide. With BOOST full, keep using DRIFT to build purple OVERCHARGE. GAS catches it and BOOST spends it.</p></div></section>
@@ -519,12 +633,18 @@ export async function installM8HomeNavigation() {
       <main class="m8-home-main">
         <div class="m8-track-heading-row">
           <h1 id="m8HomeTitle" tabindex="-1">CHOOSE YOUR TRACK</h1>
+          <button
+            class="m8-track-bests-toggle"
+            type="button"
+            aria-controls="m8TrackRail"
+            aria-expanded="false"
+          >SHOW BEST</button>
           <div class="m8-track-scroll-buttons" aria-label="Scroll tracks">
             <button class="m8-track-previous" type="button" aria-label="Scroll to previous tracks">‹</button>
             <button class="m8-track-next" type="button" aria-label="Scroll to more tracks">›</button>
           </div>
         </div>
-        <div class="m8-track-rail" aria-label="Available tracks">
+        <div class="m8-track-rail" id="m8TrackRail" aria-label="Available tracks">
           ${TRACK_SELECTION_CATALOG.map(renderTrackCard).join('')}
         </div>
         <button class="m8-track-continue" type="button">CONTINUE</button>
@@ -535,6 +655,7 @@ export async function installM8HomeNavigation() {
 
   const rail = home.querySelector('.m8-track-rail');
   const cards = [...rail.querySelectorAll('.track-card:not([disabled])')];
+  const trackBestsToggle = home.querySelector('.m8-track-bests-toggle');
   const continueButton = home.querySelector('.m8-track-continue');
   const previousButton = home.querySelector('.m8-track-previous');
   const nextButton = home.querySelector('.m8-track-next');
@@ -594,11 +715,41 @@ export async function installM8HomeNavigation() {
     raceSettingsButton.hidden = utilityGroup?.dataset.menuState !== 'staged';
   }
 
+  function syncTrackBestVisibility() {
+    const expanded = trackRecordsAreExpanded(home);
+    trackBestsToggle.textContent = expanded ? 'HIDE BEST' : 'SHOW BEST';
+    trackBestsToggle.setAttribute('aria-expanded', String(expanded));
+    trackBestsToggle.setAttribute(
+      'aria-label',
+      expanded ? 'Hide best records for all tracks' : 'Show best records for all tracks'
+    );
+    for (const bestBox of home.querySelectorAll('[data-track-best]')) {
+      bestBox.hidden = !expanded;
+    }
+
+    if (expanded) refreshTrackRecords(home, { renderModels: true });
+    else {
+      clearTrackRecordModels(home);
+      refreshTrackRecords(home, { renderModels: false });
+      rail.scrollTop = 0;
+    }
+
+    requestAnimationFrame(() => globalThis.__turnHomeCardScrollFixes?.syncIndicator?.());
+    document.dispatchEvent(new CustomEvent('turn:home-track-bests-changed', {
+      detail: { expanded }
+    }));
+  }
+
+  function toggleTrackBests() {
+    home.classList.toggle('is-showing-track-bests');
+    syncTrackBestVisibility();
+  }
+
   function showHome({ focus = false } = {}) {
     intro.hidden = true;
     home.hidden = false;
     document.body.classList.add('turn-m8-active', 'turn-home-open');
-    refreshTrackRecords(home);
+    syncTrackBestVisibility();
     syncSelection();
     requestAnimationFrame(() => {
       syncScrollButtons();
@@ -668,6 +819,7 @@ export async function installM8HomeNavigation() {
     });
   }
   continueButton.addEventListener('click', continueToTrack);
+  trackBestsToggle.addEventListener('click', toggleTrackBests);
   previousButton.addEventListener('click', () => rail.scrollBy({ left: -rail.clientWidth * 0.82, behavior: 'smooth' }));
   nextButton.addEventListener('click', () => rail.scrollBy({ left: rail.clientWidth * 0.82, behavior: 'smooth' }));
   rail.addEventListener('scroll', syncScrollButtons, { passive: true });
@@ -702,7 +854,6 @@ export async function installM8HomeNavigation() {
     getSteeringMode: loadSteeringMode
   });
 
-  syncSelection();
   syncRaceSettingsVisibility();
   showHome();
   return globalThis.__turnNextHome;
