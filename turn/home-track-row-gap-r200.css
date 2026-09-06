@@ -8,6 +8,26 @@
 }
 
 /*
+ * Expanded records are deliberately scrollable, so do not compress their internal
+ * layout to fit the viewport. Keep the compact summary geometry intact, let the
+ * record rows size naturally, and use the same 13–15px vertical rhythm as the
+ * closed card grid between BEST / TIME / DRIFT / FLOW.
+ */
+.m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes.is-showing-track-bests
+  .m8-track-rail .track-card {
+  grid-template-rows: auto auto auto;
+  align-content: center;
+}
+
+.m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes.is-showing-track-bests
+  .m8-track-rail .track-card-best {
+  grid-template-rows: auto repeat(3, auto);
+  row-gap: clamp(13px, calc(1.4vw - 1px), 15px);
+  /* The parent contributes its normal 5px compact-card row gap. */
+  margin-top: calc(clamp(13px, calc(1.4vw - 1px), 15px) - 5px);
+}
+
+/*
  * Compact cards still inherited a preview height large enough to defeat the smaller
  * row floors on some landscape viewports. Trim only the compact preview, then use
  * the existing 10px rail bottom padding as real movement room for the 8–10px
@@ -68,6 +88,12 @@
   .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes:not(.is-showing-track-bests)
     .m8-track-continue {
     margin-bottom: 5px;
+  }
+
+  .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes.is-showing-track-bests
+    .m8-track-rail .track-card-best {
+    /* Short-landscape compact cards contribute a 3px parent row gap. */
+    margin-top: calc(clamp(13px, calc(1.4vw - 1px), 15px) - 3px);
   }
 
   .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes.is-showing-track-bests .m8-home-tracks {
