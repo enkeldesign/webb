@@ -116,8 +116,11 @@ assert.ok(rowGapCss.includes('.m8-track-continue')
   && rowGapCss.includes('margin-bottom: 5px;'),
   'RACE must reserve its resting/pressed shadow depth so its visual bottom matches the card-shadow baseline');
 assert.match(rowGapCss,
-  /is-showing-track-bests[\s\S]*\.m8-track-rail \.track-card \{[\s\S]*grid-template-rows: auto auto auto;[\s\S]*align-content: start;[\s\S]*padding-top: var\(--m8-track-compact-top-padding, 3px\);/,
-  'Expanded cards must anchor the compact summary at its measured closed-state top position');
+  /is-showing-track-bests[\s\S]*\.m8-track-rail \.track-card \{[\s\S]*grid-template-rows: auto auto auto;[\s\S]*align-content: start;[\s\S]*min-height: max-content;[\s\S]*padding-top: var\(--m8-track-compact-top-padding, 3px\);/,
+  'Expanded cards must anchor the compact summary at its measured closed-state top position while growing to fit all records');
+assert.match(rowGapCss,
+  /is-showing-track-bests[\s\S]*\.m8-track-rail \{[\s\S]*grid-auto-rows: minmax\(var\(--m8-track-card-min-block-size\), max-content\);/,
+  'Expanded grid rows must use intrinsic max-content sizing so FLOW cannot be clipped by the viewport-oriented row minimum');
 assert.match(rowGapCss,
   /is-showing-track-bests[\s\S]*\.m8-track-rail \.track-card-preview \{[\s\S]*height: clamp\(72px, 11vh, 104px\);/,
   'The expanded map preview must keep the exact compact height instead of resizing');
