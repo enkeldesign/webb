@@ -5,7 +5,7 @@ const TRACK_RECORDS_EXPANDED_KEY = 'turn-track-records-expanded-v1';
 // m8-home-card-scroll-fixes.css?build=${buildKey}-m8.9-track-title-alignment
 // const FIX_ID = 'native-scroll-full-track-names-v5';
 // m8-home-card-scroll-fixes.css?build=${buildKey}-m8.10-card-gap-rim
-const FIX_ID = 'shared-track-bests-v7';
+const FIX_ID = 'shared-track-bests-v6';
 
 function installStylesheet() {
   if (document.querySelector(`link[${STYLE_ATTRIBUTE}]`)) return;
