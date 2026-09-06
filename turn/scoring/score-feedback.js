@@ -47,7 +47,24 @@ const CHANNEL_LABEL = Object.freeze({
 
 const GAUGE_SATURATION_AT_X1 = 44;
 const GAUGE_SATURATION_STEP = 8;
+const GAUGE_OPACITY_AT_X1 = 0.75;
+const GAUGE_OPACITY_AT_X8 = 1;
 const GAUGE_MAX_COMBO_TIER = 8;
+const DISPLAY_P3_COLOR = 'color(display-p3 1 0 0)';
+const DISPLAY_P3_GAMUT = '(color-gamut: p3)';
+const USE_DISPLAY_P3 = globalThis.CSS?.supports?.('color', DISPLAY_P3_COLOR) === true
+  && globalThis.matchMedia?.(DISPLAY_P3_GAMUT)?.matches === true;
+
+const GAUGE_P3_ENDPOINTS = Object.freeze({
+  [SCORE_FEEDBACK_CHANNEL.DRIFT]: Object.freeze({
+    fillA: Object.freeze([[0.367, 0.603, 0.708], [0, 0.79, 1]]),
+    fillB: Object.freeze([[0.6, 0.792, 0.848], [0.28, 0.94, 1]])
+  }),
+  [SCORE_FEEDBACK_CHANNEL.FLOW]: Object.freeze({
+    fillA: Object.freeze([[0.761, 0.51, 0.601], [1, 0.16, 0.48]]),
+    fillB: Object.freeze([[0.86, 0.675, 0.754], [1, 0.46, 0.72]])
+  })
+});
 
 const numberFormatter = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 0
@@ -136,35 +153,56 @@ function comboTier(multiplier) {
   );
 }
 
+function interpolate(start, end, amount) {
+  return start + (end - start) * amount;
+}
+
+function displayP3Colour([start, end], amount) {
+  const channels = start.map((value, index) => (
+    Math.round(interpolate(value, end[index], amount) * 1000) / 1000
+  ));
+  return `color(display-p3 ${channels.join(' ')})`;
+}
+
 function gaugePalette(channel, multiplier) {
   const tier = comboTier(multiplier);
+  const tierProgress = (tier - 1) / (GAUGE_MAX_COMBO_TIER - 1);
   const saturation = Math.min(
     100,
     GAUGE_SATURATION_AT_X1 + (tier - 1) * GAUGE_SATURATION_STEP
   );
   const highlightSaturation = Math.min(100, saturation + 8);
-  if (channel === SCORE_FEEDBACK_CHANNEL.FLOW) {
-    return {
-      tier,
-      fillA: `hsl(339 ${saturation}% 65%)`,
-      fillB: `hsl(336 ${highlightSaturation}% 78%)`
-    };
-  }
+  const opacity = Math.round(interpolate(
+    GAUGE_OPACITY_AT_X1,
+    GAUGE_OPACITY_AT_X8,
+    tierProgress
+  ) * 1000) / 1000;
+  const endpoints = GAUGE_P3_ENDPOINTS[channel];
+  const fallbackA = channel === SCORE_FEEDBACK_CHANNEL.FLOW
+    ? `hsl(339 ${saturation}% 65%)`
+    : `hsl(195 ${saturation}% 50%)`;
+  const fallbackB = channel === SCORE_FEEDBACK_CHANNEL.FLOW
+    ? `hsl(336 ${highlightSaturation}% 78%)`
+    : `hsl(191 ${highlightSaturation}% 70%)`;
+
   return {
     tier,
-    fillA: `hsl(195 ${saturation}% 50%)`,
-    fillB: `hsl(191 ${highlightSaturation}% 70%)`
+    opacity,
+    fillA: USE_DISPLAY_P3 ? displayP3Colour(endpoints.fillA, tierProgress) : fallbackA,
+    fillB: USE_DISPLAY_P3 ? displayP3Colour(endpoints.fillB, tierProgress) : fallbackB
   };
 }
 
-function applyGaugePalette(fill, channel, multiplier) {
+function applyGaugePresentation(fill, channel, multiplier, extended) {
   if (!fill) return comboTier(multiplier);
   const palette = gaugePalette(channel, multiplier);
   const gauge = fill.parentElement;
+  const shell = gauge?.parentElement;
   for (const target of [gauge, fill]) {
     setStyleProperty(target, '--score-feedback-gauge-fill-a', palette.fillA);
     setStyleProperty(target, '--score-feedback-gauge-fill-b', palette.fillB);
   }
+  setStyleProperty(shell, 'opacity', extended ? palette.opacity : 0);
   return palette.tier;
 }
 
@@ -451,13 +489,23 @@ export function createScoreFeedback({
       ? flow.multiplier >= 2
       : drift.multiplier >= 2;
     const flowComboHeld = flow.multiplier >= 2;
-    const driftComboTier = applyGaugePalette(
+    const driftGaugeExtended = driftGaugeVisible && (driftGaugeProgress > 0 || driftComboHeld);
+    const flowGaugeExtended = Boolean(
+      flowHasOwnGauge && flow.visible && (flowGaugeProgress > 0 || flowComboHeld)
+    );
+    const driftComboTier = applyGaugePresentation(
       driftGaugeFill,
       fallbackGaugeToFlow ? SCORE_FEEDBACK_CHANNEL.FLOW : SCORE_FEEDBACK_CHANNEL.DRIFT,
-      fallbackGaugeToFlow ? flow.multiplier : drift.multiplier
+      fallbackGaugeToFlow ? flow.multiplier : drift.multiplier,
+      driftGaugeExtended
     );
     const flowComboTier = flowGaugeFill
-      ? applyGaugePalette(flowGaugeFill, SCORE_FEEDBACK_CHANNEL.FLOW, flow.multiplier)
+      ? applyGaugePresentation(
+        flowGaugeFill,
+        SCORE_FEEDBACK_CHANNEL.FLOW,
+        flow.multiplier,
+        flowGaugeExtended
+      )
       : comboTier(flow.multiplier);
 
     driftGaugeFill.style.setProperty(
@@ -476,12 +524,8 @@ export function createScoreFeedback({
     setData(root, 'flowVisible', flow.visible);
     setData(root, 'driftGaugeVisible', driftGaugeVisible);
     setData(root, 'flowGaugeVisible', Boolean(flowHasOwnGauge && flow.visible));
-    setData(root, 'driftGaugeExtended', driftGaugeVisible && (driftGaugeProgress > 0 || driftComboHeld));
-    setData(
-      root,
-      'flowGaugeExtended',
-      Boolean(flowHasOwnGauge && flow.visible && (flowGaugeProgress > 0 || flowComboHeld))
-    );
+    setData(root, 'driftGaugeExtended', driftGaugeExtended);
+    setData(root, 'flowGaugeExtended', flowGaugeExtended);
     setData(root, 'driftComboTier', driftComboTier);
     setData(root, 'flowComboTier', flowComboTier);
     setData(root, 'driftHeat', heatTier(drift.intensity, driftActive));
