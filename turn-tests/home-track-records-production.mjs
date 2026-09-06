@@ -67,14 +67,25 @@ assert.doesNotMatch(home, /setInterval|setAnimationLoop/,
 
 assert.match(fixedCss, /--m8-track-card-min-block-size: clamp\(132px, 20vh, 176px\)/,
   'Compact cards must be short enough for a comfortable six-card viewport');
+assert.match(fixedCss, /\.m8-track-rail \{[\s\S]*column-gap: clamp\(10px, 1\.4vw, 16px\)[\s\S]*row-gap: clamp\(8px, 0\.85vw, 10px\)/,
+  'The fixed-layout baseline must keep independently tunable track column and row gaps');
 assert.match(fixedCss, /\.is-showing-track-bests \.m8-home-tracks[\s\S]*--m8-track-card-min-block-size: clamp\(304px, 47vh, 390px\)/,
   'The shared state must expand every card to one consistent record height');
 assert.match(scrollCss, /\.is-showing-track-bests \.m8-track-rail \.track-card[\s\S]*grid-template-rows: auto auto minmax\(0, 1fr\)/);
 assert.match(scrollCss, /\.track-card-best\[hidden\][\s\S]*display: none !important/);
 assert.match(scrollCss, /\.track-card-record\.is-drift[\s\S]*--turn-blue-300/);
 assert.match(scrollCss, /\.track-card-record\.is-flow[\s\S]*--turn-pink-500/);
+assert.match(scrollCss, /\.track-card-record::before[\s\S]*border: 2px solid var\(--m8-ink\)/,
+  'Record accents need a TURN-ink outline so they remain distinct on every track paper colour');
+assert.match(scrollCss, /padding-left: calc\(var\(--track-record-stripe-width\) \+ var\(--track-record-stripe-gap\)\)/,
+  'Record copy must retain deliberate breathing room after the outlined accent stripe');
 assert.match(scrollCss, /\.track-card-record-model\[hidden\][\s\S]*display: none/);
 assert.match(scaleCss, /\.track-card-record[\s\S]*\.track-card-record-model/);
+
+assert.match(scrollCss, /\.m8-track-rail \{[\s\S]*column-gap: clamp\(14px, 1\.4vw, 16px\)[\s\S]*row-gap: clamp\(8px, 0\.85vw, 10px\)/,
+  'The good horizontal card spacing must remain while rows sit closer together');
+assert.doesNotMatch(scrollCss, /\.m8-track-rail \{[\s\S]{0,180}\n\s+gap: clamp\(14px, 1\.4vw, 16px\)/,
+  'Track rows must not inherit the wider horizontal gap again');
 
 assert.match(scroll, /const hasOverflow = maximum > 2/);
 assert.match(scroll, /viewport\.classList\.toggle\('has-track-overflow', hasOverflow\)/);
