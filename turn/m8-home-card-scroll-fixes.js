@@ -47,16 +47,92 @@ function saveTrackRecordsExpandedPreference(expanded) {
   } catch (_) {}
 }
 
-function installTrackRecordsExpandedPreference(home) {
+function px(value) {
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function setPixelVariable(element, name, value) {
+  const rounded = Math.round(Math.max(0, value) * 100) / 100;
+  element.style.setProperty(name, `${rounded}px`);
+}
+
+function captureCompactTrackCardGeometry(home) {
+  if (home.classList.contains('is-showing-track-bests')) return;
+  const rail = home.querySelector('.m8-track-rail');
+  if (!rail) return;
+
+  const railRowGap = px(getComputedStyle(rail).rowGap);
+  for (const card of rail.querySelectorAll('.track-card')) {
+    const choice = card.querySelector('.track-card-choice');
+    const difficulty = card.querySelector('.track-card-difficulty');
+    const preview = card.querySelector('.track-card-preview');
+    if (!choice || !difficulty || !preview) continue;
+
+    const cardRect = card.getBoundingClientRect();
+    if (!(cardRect.width > 0 && cardRect.height > 0)) continue;
+    const choiceRect = choice.getBoundingClientRect();
+    const difficultyRect = difficulty.getBoundingClientRect();
+    const previewRect = preview.getBoundingClientRect();
+    const cardStyle = getComputedStyle(card);
+    const borderTop = px(cardStyle.borderTopWidth);
+    const cardRowGap = px(cardStyle.rowGap);
+
+    const compactContentTop = Math.min(choiceRect.top, previewRect.top);
+    const compactContentBottom = Math.max(
+      choiceRect.bottom,
+      difficultyRect.bottom,
+      previewRect.bottom
+    );
+    const compactTopPadding = compactContentTop - cardRect.top - borderTop;
+    const compactContentBottomFromTop = compactContentBottom - cardRect.top;
+    const expandedRecordsMargin = cardRect.height
+      + railRowGap
+      - compactContentBottomFromTop
+      - cardRowGap;
+
+    setPixelVariable(card, '--m8-track-compact-top-padding', compactTopPadding);
+    setPixelVariable(card, '--m8-track-expanded-records-margin', expandedRecordsMargin);
+  }
+}
+
+function nextAnimationFrame() {
+  return new Promise((resolve) => requestAnimationFrame(resolve));
+}
+
+async function installTrackRecordsExpandedPreference(home) {
   const toggle = home.querySelector('.m8-track-bests-toggle');
   if (!toggle) return null;
 
+  const captureBeforeExpansion = () => {
+    if (!home.classList.contains('is-showing-track-bests')) {
+      captureCompactTrackCardGeometry(home);
+    }
+  };
+  toggle.addEventListener('click', captureBeforeExpansion, { capture: true });
+
   const persistCurrentState = () => {
     queueMicrotask(() => {
-      saveTrackRecordsExpandedPreference(home.classList.contains('is-showing-track-bests'));
+      const expanded = home.classList.contains('is-showing-track-bests');
+      saveTrackRecordsExpandedPreference(expanded);
+      if (!expanded) requestAnimationFrame(() => captureCompactTrackCardGeometry(home));
     });
   };
   toggle.addEventListener('click', persistCurrentState);
+
+  let resizeFrame = 0;
+  window.addEventListener('resize', () => {
+    if (home.classList.contains('is-showing-track-bests') || resizeFrame) return;
+    resizeFrame = requestAnimationFrame(() => {
+      resizeFrame = 0;
+      captureCompactTrackCardGeometry(home);
+    });
+  }, { passive: true });
+
+  // Let the fixed-layout and card-scroll styles settle before taking the geometry
+  // snapshot used by a persisted expanded state. The DOM always starts compact.
+  await nextAnimationFrame();
+  captureCompactTrackCardGeometry(home);
 
   const stored = loadTrackRecordsExpandedPreference();
   const expanded = home.classList.contains('is-showing-track-bests');
@@ -158,7 +234,7 @@ export async function installM8HomeCardScrollFixes() {
   home.classList.add('m8-home-card-scroll-fixes');
   home.dataset.m8CardScrollFixes = FIX_ID;
   document.documentElement.dataset.turnHomeCardScrollFixes = FIX_ID;
-  const trackRecordsPreference = installTrackRecordsExpandedPreference(home);
+  const trackRecordsPreference = await installTrackRecordsExpandedPreference(home);
   indicatorSync.sync();
 
   globalThis.__turnHomeCardScrollFixes = Object.freeze({
