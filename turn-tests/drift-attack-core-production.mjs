@@ -93,6 +93,61 @@ assert.equal(lapResult.score, bankedBeforeLoss);
 assert.equal(lapResult.bankCount, 1);
 assert.equal(scorer.inspect().lapScore, 0, 'Completing a lap starts a fresh DRIFT tally');
 
+const continuityEvents = [];
+const continuityStates = [];
+const continuityScorer = createDriftAttackScorer({
+  onEvent: (type, detail) => continuityEvents.push({ type, detail }),
+  onState: (snapshot) => continuityStates.push({ ...snapshot })
+});
+continuityScorer.beginLap(0);
+let continuityNow = runFor(continuityScorer, 0.9, 1 / 60);
+continuityNow = runFor(continuityScorer, 0.4, 1 / 60, {
+  slip: radians(4),
+  startAt: continuityNow
+});
+continuityNow = runFor(continuityScorer, 0.9, 1 / 60, {
+  slip: radians(-62),
+  startAt: continuityNow
+});
+const beforeFinish = continuityScorer.inspect();
+assert.equal(beforeFinish.drifting, true);
+assert.equal(beforeFinish.multiplier, 2,
+  'The continuity fixture must cross the line in an active x2 drift');
+assert.ok(beforeFinish.unbanked > 0);
+assert.ok(beforeFinish.feedback.intensity > 0);
+const finishResult = continuityScorer.completeLap(continuityNow);
+const afterFinish = continuityScorer.inspect();
+assert.ok(finishResult.score >= beforeFinish.lapScore + beforeFinish.unbanked - 1,
+  'The completed lap must bank the active DRIFT earned up to the finish crossing');
+assert.equal(finishResult.bankCount, 2,
+  'The finish split counts as a bank for the completed lap without ending the live drift');
+assert.equal(afterFinish.lapScore, 0, 'The new lap DRIFT total starts from zero');
+assert.equal(afterFinish.unbanked, 0, 'The carried drift starts a fresh per-lap segment at the line');
+assert.equal(afterFinish.drifting, true, 'Crossing the line must not end an active drift');
+assert.equal(afterFinish.multiplier, beforeFinish.multiplier, 'DRIFT combo must survive the lap boundary');
+assert.equal(afterFinish.driftSeconds, beforeFinish.driftSeconds,
+  'Ongoing drift duration must survive so post-line scoring keeps the same build rate');
+assert.equal(afterFinish.feedback.active, true);
+assert.equal(afterFinish.feedback.score, 0);
+assert.equal(afterFinish.feedback.unbanked, 0);
+assert.equal(afterFinish.feedback.intensity, beforeFinish.feedback.intensity,
+  'The visible DRIFT gauge intensity must not collapse at the finish line');
+assert.ok(continuityEvents.some((event) =>
+  event.type === SCORE_FEEDBACK_EVENT.BANK
+    && event.detail.reason === 'lap'
+    && event.detail.announce === false
+), 'The finish split must expose a silent semantic DRIFT bank for FLOW and lap accounting');
+continuityNow = runFor(continuityScorer, 0.2, 1 / 60, {
+  slip: radians(-62),
+  startAt: continuityNow
+});
+assert.ok(continuityScorer.inspect().unbanked > 0,
+  'The continuing drift must immediately earn points for the new lap');
+assert.equal(continuityScorer.inspect().multiplier, 2);
+assert.ok(continuityScorer.inspect().driftSeconds > beforeFinish.driftSeconds,
+  'The ongoing drift must continue from its pre-line duration rather than restart its intensity curve');
+assert.equal(continuityStates.at(-1)?.active, true);
+
 const hysteresisScorer = createDriftAttackScorer();
 hysteresisScorer.beginLap(0);
 let hysteresisNow = runFor(hysteresisScorer, 1, 1 / 60);

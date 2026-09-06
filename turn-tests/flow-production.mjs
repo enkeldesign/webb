@@ -95,6 +95,51 @@ assert.ok(firstLap.score > 0);
 assert.ok(scorer.acceptTechnique({ technique: 'drift', token: 'DRIFT', basePoints: 50, now: 6100 }),
   'Completing one lap must immediately arm FLOW for the next continuous lap');
 
+const continuityStates = [];
+const continuityScorer = createFlowScorer({
+  onState: (snapshot) => continuityStates.push({ ...snapshot, tokens: [...snapshot.tokens] })
+});
+continuityScorer.beginLap(0);
+continuityScorer.acceptTechnique({ technique: 'drift', token: 'DRIFT', basePoints: 100, now: 100 });
+continuityScorer.acceptTechnique({ technique: 'boost', token: 'BOOST', basePoints: 100, now: 250 });
+continuityScorer.acceptTechnique({ technique: 'overcharge-catch', token: 'CATCH', basePoints: 100, now: 400 });
+const flowBeforeFinish = continuityScorer.inspect();
+const flowStateBeforeFinish = continuityStates.at(-1);
+assert.ok(flowBeforeFinish.multiplier > 1);
+assert.ok(flowStateBeforeFinish.intensity > 0);
+const continuityResult = continuityScorer.completeLap(500);
+const flowAfterFinish = continuityScorer.inspect();
+const flowStateAfterFinish = continuityStates.at(-1);
+assert.equal(continuityResult.score, flowBeforeFinish.lapScore,
+  'The completed lap must bank all FLOW earned up to the finish line');
+assert.equal(flowAfterFinish.lapScore, 0, 'The new lap FLOW total starts from zero');
+assert.equal(flowAfterFinish.multiplier, flowBeforeFinish.multiplier, 'FLOW combo must survive the lap boundary');
+assert.equal(flowAfterFinish.chainLength, flowBeforeFinish.chainLength,
+  'The live FLOW chain must remain continuous through the finish');
+assert.equal(flowAfterFinish.lastTechnique, flowBeforeFinish.lastTechnique);
+assert.equal(flowAfterFinish.lastTechniqueAt, flowBeforeFinish.lastTechniqueAt,
+  'The normal FLOW expiry deadline must remain anchored to the real last technique');
+assert.deepEqual(flowAfterFinish.tokens, flowBeforeFinish.tokens,
+  'FLOW technique history must not visually reset at the line');
+assert.equal(flowAfterFinish.techniqueCount, 0,
+  'Per-lap technique accounting must restart even while the chain itself carries');
+assert.equal(flowStateAfterFinish.active, true);
+assert.equal(flowStateAfterFinish.score, 0);
+assert.equal(flowStateAfterFinish.unbanked, 0);
+assert.equal(flowStateAfterFinish.multiplier, flowStateBeforeFinish.multiplier);
+assert.equal(flowStateAfterFinish.intensity, flowStateBeforeFinish.intensity,
+  'The FLOW gauge intensity must remain unchanged at lap completion');
+const firstNewLapTechnique = continuityScorer.acceptTechnique({
+  technique: 'shift',
+  token: 'SHIFT',
+  basePoints: 100,
+  now: 650
+});
+assert.ok(firstNewLapTechnique.awarded > 100,
+  'The first new-lap technique must benefit immediately from the carried FLOW combo');
+assert.equal(continuityScorer.inspect().lapScore, firstNewLapTechnique.awarded,
+  'Only post-line FLOW points belong to the new lap');
+
 const originalCustomEvent = globalThis.CustomEvent;
 globalThis.CustomEvent = TurnEvent;
 try {
@@ -123,6 +168,75 @@ try {
   assert.equal(dormantRuntime.isEnabled(), true,
     'The post-migration achievements-ready event must activate newly derived FLOW entitlement');
   assert.equal(dormantFeedback.visible, true);
+
+  const carryTarget = new EventTargetStub();
+  const carryFeedback = makeFeedback();
+  const carryTimers = new Map();
+  let nextCarryTimer = 1;
+  const carryRuntime = createFlowRuntime({
+    state: { lapActive: true, trackId: 'harbor', vehicleId: 'sedan' },
+    storage: new MemoryStorage(),
+    eventTarget: carryTarget,
+    scoreFeedback: carryFeedback,
+    isUnlocked: () => true,
+    setTimer(callback, delay) {
+      const id = nextCarryTimer;
+      nextCarryTimer += 1;
+      carryTimers.set(id, { callback, delay });
+      return id;
+    },
+    clearTimer(id) {
+      carryTimers.delete(id);
+    }
+  });
+  carryRuntime.beginLap(0);
+  carryTarget.emit('turn:drive-technique-state', {
+    zone: 'drift',
+    lockRequested: false,
+    at: 20
+  });
+  carryTarget.emit('turn:drift-score-event', { type: 'build', at: 40 });
+  carryTarget.emit('turn:boost-outcome', {
+    useful: true,
+    speedGain: 3,
+    duration: 1,
+    at: 400
+  });
+  carryTarget.emit('turn:drift-score-event', {
+    type: 'bank',
+    score: 650,
+    duration: 1.8,
+    reason: 'lap',
+    at: 900
+  });
+  const carriedFlowBefore = carryRuntime.scorer.inspect();
+  assert.ok(carriedFlowBefore.multiplier > 1,
+    'The lap-boundary DRIFT bank must be part of the completed FLOW chain');
+  assert.equal(carryTimers.size, 1, 'A live FLOW chain must own one expiry timer before the line');
+  const carriedResult = carryRuntime.completeLap({ now: 900, time: 48, valid: false, ranked: true });
+  const carriedFlowAfter = carryRuntime.scorer.inspect();
+  assert.equal(carriedResult.score, carriedFlowBefore.lapScore);
+  assert.equal(carriedFlowAfter.lapScore, 0);
+  assert.equal(carriedFlowAfter.multiplier, carriedFlowBefore.multiplier);
+  assert.equal(carriedFlowAfter.chainLength, carriedFlowBefore.chainLength);
+  assert.equal(carryTimers.size, 1,
+    'Completing a lap must not cancel the normal FLOW combo-expiry timer');
+  carryTarget.emit('turn:drive-technique-state', {
+    zone: 'drift',
+    lockRequested: true,
+    at: 1050
+  });
+  carryTarget.emit('turn:drift-score-event', {
+    type: 'bank',
+    score: 720,
+    duration: 2.1,
+    reason: 'exit',
+    at: 1500
+  });
+  assert.ok(carryRuntime.scorer.inspect().lapScore > 0,
+    'The continuing drift must score FLOW immediately on the new lap without another BUILD event');
+  assert.deepEqual(carryRuntime.scorer.inspect().tokens.slice(-3), ['LOCK', 'DRIFT', 'EXIT'],
+    'Post-line LOCK/DRIFT context must continue from the carried active drift');
 
   const state = { lapActive: true, trackId: 'mountain', vehicleId: 'sedan' };
   const storage = new MemoryStorage();
@@ -293,10 +407,17 @@ try {
   assert.equal(feedback.states.length, hiddenCommitCount,
     'Hidden FLOW presentation does not stop semantic scoring or perform HUD commits');
 
+  const beforeLapCompletion = runtime.scorer.inspect();
   const result = runtime.completeLap({ now: 11900, time: 52, valid: true, ranked: true });
   assert.ok(result.score > 0);
+  assert.equal(result.score, beforeLapCompletion.lapScore);
   assert.equal(result.newBest, true);
   assert.equal(result.maxMultiplier > 1, true);
+  assert.equal(runtime.scorer.inspect().lapScore, 0);
+  assert.equal(runtime.scorer.inspect().multiplier, beforeLapCompletion.multiplier,
+    'Runtime lap completion must preserve the active FLOW multiplier');
+  assert.equal(runtime.scorer.inspect().chainLength, beforeLapCompletion.chainLength,
+    'Runtime lap completion must preserve the active FLOW chain');
   assert.equal(getBestFlowRecord('mountain', storage).score, result.score);
   assert.equal(getBestFlowRecord('mountain', storage).hitAt, 123456);
   assert.ok(JSON.parse(storage.getItem(FLOW_RECORDS_STORAGE_KEY)).tracks.mountain);
@@ -310,11 +431,18 @@ const [flowSource, runtimeSource, controlsSource] = await Promise.all([
   fs.readFile(new URL('../turn/scoring/flow-runtime.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/gameplay-controls.js', import.meta.url), 'utf8')
 ]);
+const runtimeCompleteLapSection = runtimeSource.slice(
+  runtimeSource.indexOf('function completeLap('),
+  runtimeSource.indexOf('function setHudVisible(')
+);
 assert.doesNotMatch(flowSource, /requestAnimationFrame|setInterval|querySelector|localStorage/);
 assert.doesNotMatch(runtimeSource, /requestAnimationFrame|setInterval|driftSlipAngle|velocity|heading/,
   'FLOW is event-driven and never re-analyzes vehicle drift');
 assert.match(runtimeSource, /turn:drift-score-event/);
 assert.match(runtimeSource, /turn:shift-outcome/);
+assert.doesNotMatch(runtimeCompleteLapSection, /clearChainTimer\(\)/,
+  'A lap finish must leave the active FLOW chain expiry timer running');
+assert.match(runtimeCompleteLapSection, /scorer\.completeLap\(now\)/);
 assert.match(controlsSource, /turn:boost-outcome/);
 assert.match(controlsSource, /turn:overcharge-catch/);
 assert.match(controlsSource, /reason === 'lap-started' \|\| reason === 'lap-completed'[\s\S]*resetScoringOutcomeTracking\(\{ continueBoost: true \}\)/,

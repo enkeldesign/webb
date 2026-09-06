@@ -337,16 +337,55 @@ export function createDriftAttackScorer({ onState = null, onEvent = null } = {})
 
   function completeLap(now = 0) {
     const timestamp = finiteNumber(now);
-    if (drifting) bank(timestamp, 'lap');
+    const carriedPhase = feedbackState.phase;
+    const carriedIntensity = feedbackState.intensity;
+
+    if (drifting) {
+      const bankedExact = currentExact;
+      const bankedScore = Math.max(0, Math.round(bankedExact));
+      const bankedDirection = direction;
+      const duration = driftSeconds;
+
+      // The finish line is an accounting boundary, not a handling boundary.
+      // Credit everything earned before the crossing to the completed lap while
+      // leaving the live drift, combo, direction and duration intact for the next.
+      lapExact += bankedExact;
+      currentExact = 0;
+      if (bankedScore >= MIN_BANK_SCORE) {
+        bankCount += 1;
+        bestBank = Math.max(bestBank, bankedScore);
+        maxMultiplier = Math.max(maxMultiplier, multiplier);
+        emitEvent(SCORE_FEEDBACK_EVENT.BANK, {
+          score: bankedScore,
+          lapScore: Math.max(0, Math.round(lapExact)),
+          multiplier,
+          direction: bankedDirection,
+          duration,
+          reason: 'lap',
+          announce: false
+        }, timestamp);
+      }
+    }
+
     const result = Object.freeze({
       score: Math.max(0, Math.round(lapExact)),
       bankCount,
       bestBank,
       maxMultiplier
     });
+
     attemptActive = true;
-    resetLapValues();
-    syncFeedback(timestamp);
+    lapExact = 0;
+    currentExact = 0;
+    bankCount = 0;
+    bestBank = 0;
+    maxMultiplier = Math.max(1, multiplier);
+    syncFeedback(
+      timestamp,
+      drifting,
+      drifting ? carriedPhase : 'quiet',
+      drifting ? carriedIntensity : 0
+    );
     return result;
   }
 
