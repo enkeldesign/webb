@@ -19,13 +19,29 @@
 }
 
 /*
- * Once all six cards genuinely fit including that press buffer, anchor the rows to
- * the bottom of the rail. The final card shadow then shares the RACE button's visual
- * bottom instead of leaving a taller cream strip under the track grid.
+ * When the compact six-card grid fits, use the whole available track body instead
+ * of parking the rows at the bottom. Equal flexible rows preserve the established
+ * 13–15px row gap while aligning the first card row with SETTINGS and keeping the
+ * last row at the shared lower baseline. The scrollbar gutter is no longer needed
+ * in this state, so leave only the 10px needed for the cards' right-hand shadow.
  */
 .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes:not(.is-showing-track-bests)
   .m8-track-scroll-viewport:not(.has-track-overflow) .m8-track-rail {
-  align-content: end;
+  grid-auto-rows: minmax(var(--m8-track-card-min-block-size), 1fr);
+  align-content: stretch;
+  padding-right: 10px;
+}
+
+/*
+ * RACE uses a 7px resting shadow and translates 6px with a 1px shadow when pressed.
+ * Reserve that same 7px below the button so its visual bottom, resting or pressed,
+ * lands on the track-card shadow baseline rather than below it.
+ */
+@media (orientation: landscape) {
+  .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes:not(.is-showing-track-bests)
+    .m8-track-continue {
+    margin-bottom: 7px;
+  }
 }
 
 /* These late overrides also reach clients with the previous fixed-layout CSS cached. */
@@ -47,6 +63,11 @@
   .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes:not(.is-showing-track-bests)
     .m8-track-rail .track-card-preview {
     height: 66px;
+  }
+
+  .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes:not(.is-showing-track-bests)
+    .m8-track-continue {
+    margin-bottom: 5px;
   }
 
   .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes.is-showing-track-bests .m8-home-tracks {

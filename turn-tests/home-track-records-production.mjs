@@ -107,8 +107,14 @@ assert.ok(rowGapCss.includes('height: clamp(72px, 11vh, 104px);')
   && rowGapCss.includes('height: 66px;'),
   'Compact preview heights must shrink with the row floors so intrinsic preview size cannot restore overflow');
 assert.ok(rowGapCss.includes('.m8-track-scroll-viewport:not(.has-track-overflow) .m8-track-rail')
-  && rowGapCss.includes('align-content: end;'),
-  'A fitting compact grid must use the spare vertical room above the cards and share the RACE baseline');
+  && rowGapCss.includes('grid-auto-rows: minmax(var(--m8-track-card-min-block-size), 1fr);')
+  && rowGapCss.includes('align-content: stretch;')
+  && rowGapCss.includes('padding-right: 10px;'),
+  'A fitting compact grid must fill the shared top/bottom frame and reclaim the hidden scrollbar gutter');
+assert.ok(rowGapCss.includes('.m8-track-continue')
+  && rowGapCss.includes('margin-bottom: 7px;')
+  && rowGapCss.includes('margin-bottom: 5px;'),
+  'RACE must reserve its resting/pressed shadow depth so its visual bottom matches the card-shadow baseline');
 assert.match(scrollCss, /padding-bottom: 10px/,
   'The rail must retain a 10px press/selection movement buffer even when default scrolling disappears');
 assert.ok(!rowGapCss.includes('row-gap: 28px'),
