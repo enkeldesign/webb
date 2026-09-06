@@ -71,11 +71,11 @@ assert.match(home, /clearTrackRecordModels\(home\)/,
 assert.doesNotMatch(home, /setInterval|setAnimationLoop/,
   'The shared record view must add no polling or continuous animation loop');
 
-assert.match(fixedCss, /--m8-track-card-min-block-size: clamp\(126px, calc\(20vh - 6px\), 170px\)/,
+assert.match(fixedCss, /--m8-track-card-min-block-size: clamp\(120px, calc\(20vh - 12px\), 164px\)/,
   'Compact cards must be short enough for a comfortable six-card viewport');
-assert.match(fixedCss, /\.m8-track-rail \{[\s\S]*column-gap: clamp\(10px, 1\.4vw, 16px\)[\s\S]*row-gap: clamp\(14px, 1\.4vw, 16px\)/,
+assert.match(fixedCss, /\.m8-track-rail \{[\s\S]*column-gap: clamp\(10px, 1\.4vw, 16px\)[\s\S]*row-gap: clamp\(13px, calc\(1\.4vw - 1px\), 15px\)/,
   'The fixed-layout baseline must keep independently tunable track column and row gaps');
-assert.match(fixedCss, /\.is-showing-track-bests \.m8-home-tracks[\s\S]*--m8-track-card-min-block-size: clamp\(298px, calc\(47vh - 6px\), 384px\)/,
+assert.match(fixedCss, /\.is-showing-track-bests \.m8-home-tracks[\s\S]*--m8-track-card-min-block-size: clamp\(292px, calc\(47vh - 12px\), 378px\)/,
   'The shared state must expand every card to one consistent record height');
 assert.match(scrollCss, /\.is-showing-track-bests \.m8-track-rail \.track-card[\s\S]*grid-template-rows: auto auto minmax\(0, 1fr\)/);
 assert.match(scrollCss, /\.track-card-best\[hidden\][\s\S]*display: none !important/);
@@ -88,20 +88,25 @@ assert.match(scrollCss, /padding-left: calc\(var\(--track-record-stripe-width\) 
 assert.match(scrollCss, /\.track-card-record-model\[hidden\][\s\S]*display: none/);
 assert.match(scaleCss, /\.track-card-record[\s\S]*\.track-card-record-model/);
 
-assert.match(scrollCss, /\.m8-track-rail \{[\s\S]*column-gap: clamp\(14px, 1\.4vw, 16px\)[\s\S]*row-gap: clamp\(14px, 1\.4vw, 16px\)/,
-  'The horizontal card spacing must remain while rows use the requested balanced gap');
+assert.match(scrollCss, /\.m8-track-rail \{[\s\S]*column-gap: clamp\(14px, 1\.4vw, 16px\)[\s\S]*row-gap: clamp\(13px, calc\(1\.4vw - 1px\), 15px\)/,
+  'The horizontal card spacing must remain while every row-gap bound is 1px smaller');
 assert.doesNotMatch(scrollCss, /\.m8-track-rail \{[\s\S]{0,180}\n\s+gap: clamp\(14px, 1\.4vw, 16px\)/,
   'Track rows must not inherit the wider horizontal gap again');
-assert.ok(rowGapCss.includes('row-gap: clamp(14px, 1.4vw, 16px)'),
-  'The late-loaded compatibility stylesheet must preserve the balanced row gap');
-assert.ok(rowGapCss.includes('padding-block: clamp(6px, 0.75vw, 9px)'),
-  'Track cards must use about 30% less top and bottom padding');
-assert.ok(fixedCss.includes('--m8-track-card-min-block-size: 114px;') && fixedCss.includes('padding: 6px 9px;'),
+assert.ok(rowGapCss.includes('row-gap: clamp(13px, calc(1.4vw - 1px), 15px)'),
+  'The late-loaded compatibility stylesheet must preserve the 1px-smaller row gap');
+assert.ok(rowGapCss.includes('padding: 3px 9px;'),
+  'Track cards must use the requested 3px block and 9px inline padding');
+assert.ok(fixedCss.includes('--m8-track-card-min-block-size: 108px;') && fixedCss.includes('padding: 3px 9px;'),
   'Short landscape rows must shrink with their reduced block padding instead of absorbing it');
+assert.ok(rowGapCss.includes('--m8-track-card-min-block-size: clamp(120px, calc(20vh - 12px), 164px);')
+  && rowGapCss.includes('--m8-track-card-min-block-size: clamp(292px, calc(47vh - 12px), 378px);')
+  && rowGapCss.includes('--m8-track-card-min-block-size: 108px;')
+  && rowGapCss.includes('--m8-track-card-min-block-size: 274px;'),
+  'The fresh late stylesheet must correct every landscape row floor even when fixed-layout CSS is cached');
 assert.ok(!rowGapCss.includes('row-gap: 28px'),
   'No late-loaded rule may restore the old oversized vertical gap');
 for (const entrypoint of [productionEntry, labEntry]) {
-  assert.ok(entrypoint.includes('home-track-row-gap-r200.css?revision=r209-balanced-card-spacing'),
+  assert.ok(entrypoint.includes('home-track-row-gap-r200.css?revision=r210-compact-card-padding'),
     'Production and TURN LAB must request the corrected stylesheet with a fresh cache key');
 }
 

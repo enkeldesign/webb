@@ -1,9 +1,29 @@
 .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes .m8-track-rail {
-  /* Keep this late-loaded compatibility rule aligned with the balanced grid gap. */
-  row-gap: clamp(14px, 1.4vw, 16px);
+  /* Keep this late-loaded compatibility rule exactly 1px below the previous gap. */
+  row-gap: clamp(13px, calc(1.4vw - 1px), 15px);
 }
 
 .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes .m8-track-rail .track-card {
-  /* About 30% less block padding without disturbing the established inline inset. */
-  padding-block: clamp(6px, 0.75vw, 9px);
+  padding: 3px 9px;
+}
+
+/* These late overrides also reach clients with the previous fixed-layout CSS cached. */
+@media (orientation: landscape) {
+  .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes .m8-home-tracks {
+    --m8-track-card-min-block-size: clamp(120px, calc(20vh - 12px), 164px);
+  }
+
+  .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes.is-showing-track-bests .m8-home-tracks {
+    --m8-track-card-min-block-size: clamp(292px, calc(47vh - 12px), 378px);
+  }
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes .m8-home-tracks {
+    --m8-track-card-min-block-size: 108px;
+  }
+
+  .m8-home.m8-home-fixed-layout.m8-home-card-scroll-fixes.is-showing-track-bests .m8-home-tracks {
+    --m8-track-card-min-block-size: 274px;
+  }
 }
