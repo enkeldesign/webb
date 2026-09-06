@@ -176,7 +176,7 @@ for (const decision of [
   'Race this track', 'Settings', 'How to play', 'Achievements', 'Leave race',
   'Easy', 'Medium', 'Advanced', 'Expert', 'Locked',
   'Device steering', 'On-screen steering', 'Left-handed layout', 'Drive By Ear',
-  'DRIFT and FLOW scorekeeper', 'Drift', 'Boost', 'Gas', 'Brake · Reverse', 'Lock', 'Shift',
+  'DRIFT and FLOW scorekeeper', 'Drift', 'Boost', 'Gas', 'Brake', 'R', 'Lock', 'Shift',
   'Scorekeeper paper', 'Trophy Road is a literal road now', 'START', 'FINISH',
   'Vehicle', 'Feature / perk', 'Scoring', 'The Lot', 'SPORTS CAR',
   'Screen reader', 'Blank screen', 'Reduced motion'

@@ -65,12 +65,16 @@ export function createDrivingSoundscapeFrame(runtime) {
   const headingError = signedAngle(forward, sample.tangent);
   const headingCorrectionPan = clamp(headingError / (Math.PI * 0.5), -1, 1);
   const offRoad = Boolean(state.offRoad);
+  const brakingOrReversing = Math.max(
+    finiteNumber(state.brake, 0),
+    finiteNumber(state.reverse, 0)
+  ) > 0.05;
   // Off-road recovery owns both road-finding and race-direction alignment.
   // The generic Wrong Way alarm is reserved for a car that is still on the road.
   const wrongWay = !offRoad
     && headingAlignment < -0.42
     && speed > 7
-    && finiteNumber(state.brake, 0) < 0.1;
+    && !brakingOrReversing;
 
   const slider = createTrajectorySlider({
     samples,
@@ -107,7 +111,7 @@ export function createDrivingSoundscapeFrame(runtime) {
     headingAlignment,
     headingCorrectionPan,
     wrongWay,
-    braking: finiteNumber(state.brake, 0) > 0.05,
+    braking: brakingOrReversing,
     nearestRivalDistance: rival.distance,
     nearestRivalPan: rival.pan
   };

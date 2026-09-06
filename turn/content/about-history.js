@@ -315,7 +315,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     'Existing players keep every reward they previously owned and also receive anything justified by their current trophy total under the new order. Retained rewards are labelled clearly, newly derived rewards use the normal one-time composed feedback, and a versioned migration prevents progress or trophies from being reset.',
     'DRIFT and FLOW score achievements now use calibrated per-track targets. Approved authored vehicle and SHIFT silhouettes refresh the road artwork, while scoring-system rewards use their own pink family and remain distinct from cars, tracks and perks.',
     'A progression-balance follow-up makes the route to MOUNTAIN less dependent on obscure challenges. LISTEN CLOSELY now awards 100 trophies; each SAFETY awards 75; each SPRINT awards 100; and each DRIFT target awards 75. DRIVE BY EAR and LEARN TO PLAY add two 50-trophy Ways to Play achievements for completing all five Drive By Ear 101 parts and opening every How to Play disclosure.',
-    'Reward messages now open Achievements directly and point new DRIFT ATTACK, SHIFT and FLOW owners to How to Play. The scorekeeper keeps its stable paper rows while idle black gauge bodies retract, then quickly extend when scoring resumes.'
+    'Reward messages now open Achievements directly and point new DRIFT ATTACK, SHIFT and FLOW owners to How to Play. The scorekeeper keeps its stable paper rows while idle black gauge bodies retract, then quickly extend when scoring resumes.',
+    'BRAKE now settles the car at zero instead of automatically becoming reverse. Holding BRAKE reveals a matching attached R control; sliding outward into it supplies reverse power, and the complete control mirrors for left-handed play.'
   ],
   milestones: [
     'Nineteen Trophy Road rewards from 400–2,200 trophies',
@@ -326,7 +327,8 @@ export const DEVELOPMENT_HISTORY = Object.freeze([
     'Persistent Drive By Ear 101 and How to Play learning progress',
     'Literal responsive race-road presentation with native progression focus order',
     'Actionable reward guidance and retracting idle score gauges',
-    'TURN 1.17.0–1.17.4 · 2026.09.05-r200–2026.09.06-r204 Trophy Road release, balance and visual road pass'
+    'Stopping-only BRAKE with an explicit attached REVERSE control',
+    'TURN 1.17.0–1.17.5 · 2026.09.05-r200–2026.09.06-r205 Trophy Road release, balance and control refinement'
   ]
 }
 ]);
@@ -642,13 +644,14 @@ export const CHANGELOG = Object.freeze([
     date: '6 September',
     entries: [
       ['1.17.4 r204', 'Makes Trophy Road reward messages open ACHIEVEMENTS, points new DRIFT ATTACK, SHIFT and FLOW owners to HOW TO PLAY, and lets idle score gauges retract without hiding their paper rows.'],
-      ['Calmer scorekeeper', 'DRIFT and FLOW gauge bodies now sit at 75% opacity, retract after a short zero-state delay and expand immediately through compositor-only transforms when scoring resumes.']
+      ['Calmer scorekeeper', 'DRIFT and FLOW gauge bodies now sit at 75% opacity, retract after a short zero-state delay and expand immediately through compositor-only transforms when scoring resumes.'],
+      ['1.17.5 r205', 'Separates BRAKE from REVERSE: BRAKE now stops at zero, while an attached R control slides out for deliberate reversing and mirrors with left-handed controls.']
     ]
   }
 ]);
 
 export const CURRENT_RELEASE = Object.freeze({
-  version: '1.17.4',
-  build: '2026.09.06-r204',
-  note: 'TURN 1.17.4 adds actionable reward guidance and retracting idle score gauges.'
+  version: '1.17.5',
+  build: '2026.09.06-r205',
+  note: 'TURN 1.17.5 separates stopping-only BRAKE from the attached REVERSE control.'
 });

@@ -232,6 +232,7 @@ function updateVehiclePhysicsStateCore({
   const directBrake = 0;
   state.throttle = Math.max(directGas, state.touchGas ? 1 : 0);
   state.brake = Math.max(directBrake, state.touchBrake ? 1 : 0);
+  state.reverse = state.touchReverse ? 1 : 0;
 
   const nearestBefore = findNearestTrack(state.position);
   state.nearestTrackIndex = nearestBefore.index;
@@ -252,7 +253,8 @@ function updateVehiclePhysicsStateCore({
   let lateralSpeed = state.velocity.dot(right);
   let speed = state.velocity.length();
 
-  const brakingOrReversing = state.brake > 0;
+  const brakeOrReverseInput = Math.max(state.brake, state.reverse);
+  const brakingOrReversing = brakeOrReverseInput > 0;
   const driveThrottle = brakingOrReversing ? 0 : state.throttle;
   const effectiveBoostActive = boostActive && !brakingOrReversing;
 
@@ -268,26 +270,35 @@ function updateVehiclePhysicsStateCore({
     (driveThrottle * enginePower + boostPower) * dt
   );
 
-  if (state.brake > 0) {
-    const brakeStep = 62 * state.brake * dt;
+  if (brakingOrReversing) {
+    const brakeStep = 62 * brakeOrReverseInput * dt;
     forwardSpeed = state.velocity.dot(forward);
 
     if (forwardSpeed > 0.35) {
-      // First use of the control is always braking while the car still moves forward.
+      // BRAKE and REVERSE both stop forward motion before anything else.
       state.velocity.addScaledVector(
         forward,
         -Math.min(forwardSpeed, brakeStep)
       );
-    } else {
-      // Once forward motion is essentially gone, the same held control becomes reverse.
+    } else if (state.reverse > 0) {
+      // Only the explicit REVERSE control can add backward power.
       const reversePower = lerp(27, 20, offRoadPenalty) * accelerationMultiplier;
-      state.velocity.addScaledVector(forward, -reversePower * state.brake * dt);
+      state.velocity.addScaledVector(forward, -reversePower * state.reverse * dt);
 
       const reverseSpeed = state.velocity.dot(forward);
       const reverseSpeedLimit = effectiveMaxSpeed * 0.32;
       if (reverseSpeed < -reverseSpeedLimit) {
         state.velocity.addScaledVector(forward, -reverseSpeedLimit - reverseSpeed);
       }
+    } else if (forwardSpeed < -0.35) {
+      // BRAKE also stops an already reversing car without driving it forward.
+      state.velocity.addScaledVector(
+        forward,
+        Math.min(-forwardSpeed, brakeStep)
+      );
+    } else {
+      // Remove the final forward/backward creep so BRAKE settles at a true stop.
+      state.velocity.addScaledVector(forward, -forwardSpeed);
     }
 
     forwardSpeed = state.velocity.dot(forward);
@@ -295,7 +306,7 @@ function updateVehiclePhysicsStateCore({
 
   speed = state.velocity.length();
   const speedRatio = clamp(speed / effectiveMaxSpeed, 0, 1);
-  const brakeDriftInput = state.brake > 0 && forwardSpeed > 0 ? state.brake : 0;
+  const brakeDriftInput = brakeOrReverseInput > 0 && forwardSpeed > 0 ? brakeOrReverseInput : 0;
   const driftIntent = clamp(
     Math.abs(state.steering) * speedRatio * 0.9 +
       brakeDriftInput * Math.abs(state.steering) * 1.35 +

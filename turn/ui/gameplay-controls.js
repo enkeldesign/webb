@@ -39,6 +39,10 @@ import {
   pointerUsesShiftToggle
 } from '../input/shift-toggle.js?revision=r227-shift-feedback';
 import {
+  REVERSE_BRAKE_ZONE_START,
+  pointerUsesReverse
+} from '../input/brake-reverse.js?revision=r245-separate-reverse';
+import {
   resolveVehicleShiftFeedback
 } from './shift-feedback.js?revision=r232-double-shift';
 
@@ -156,7 +160,7 @@ function installGameplayUi() {
   drivePad.setAttribute('role', 'group');
   drivePad.setAttribute(
     'aria-label',
-    'Drive control. Double tap and hold, then slide between GAS, DRIFT, BOOST, and BRAKE or REVERSE. DRIFT charges BOOST and builds OVERCHARGE after the bar is full. GAS catches and holds OVERCHARGE. BOOST spends OVERCHARGE before normal BOOST. While holding DRIFT, slide outward into LOCK for rear-wheel lock. When SHIFT is available, slide from GAS into SHIFT each time you want to switch setup.'
+    'Drive control. Double tap and hold, then slide between GAS, DRIFT, BOOST, and BRAKE. BRAKE stops the car without reversing. While holding BRAKE, slide outward into REVERSE. DRIFT charges BOOST and builds OVERCHARGE after the bar is full. GAS catches and holds OVERCHARGE. BOOST spends OVERCHARGE before normal BOOST. While holding DRIFT, slide outward into LOCK for rear-wheel lock. When SHIFT is available, slide from GAS into SHIFT each time you want to switch setup.'
   );
   drivePad.style.setProperty('--boost-charge', '100%');
 
@@ -179,6 +183,12 @@ function installGameplayUi() {
   shiftStatus.setAttribute('aria-live', 'polite');
   shiftStatus.setAttribute('aria-atomic', 'true');
 
+  const reverseBubble = document.createElement('button');
+  reverseBubble.type = 'button';
+  reverseBubble.className = 'drive-reverse-bubble';
+  reverseBubble.textContent = 'R';
+  reverseBubble.setAttribute('aria-label', 'REVERSE. Hold to drive backward.');
+
   const driveTop = document.createElement('div');
   driveTop.className = 'drive-pad-top';
 
@@ -198,13 +208,14 @@ function installGameplayUi() {
   gasButton.textContent = 'Gas';
   gasButton.setAttribute('aria-label', 'GAS. Catches and holds OVERCHARGE.');
 
-  brakeButton.classList.add('drive-brake-zone', 'brake-reverse');
-  brakeButton.textContent = 'Brake · Reverse';
-  brakeButton.setAttribute('aria-label', 'Brake. Hold after stopping to reverse.');
+  brakeButton.classList.add('drive-brake-zone');
+  brakeButton.classList.remove('brake-reverse');
+  brakeButton.textContent = 'Brake';
+  brakeButton.setAttribute('aria-label', 'BRAKE. Stops the car without reversing. While holding BRAKE, slide outward into REVERSE.');
 
   driveTop.append(driftZone, boostZone);
   drivePad.append(driveTop, gasButton, brakeButton);
-  driveStack.append(driftLockBubble, drivePad, shiftBubble, shiftStatus);
+  driveStack.append(driftLockBubble, drivePad, reverseBubble, shiftBubble, shiftStatus);
   pedals.replaceChildren(driveStack);
 
   let controlHandedness = installControlHandedness();
@@ -213,10 +224,13 @@ function installGameplayUi() {
   });
 
   let drivePointerId = null;
+  let directReversePointerId = null;
+  let directReverseKey = '';
   let driveZone = null;
   let boostRequested = false;
   let boostExhausted = false;
   let driftLockRequested = false;
+  let reverseRequested = false;
   let driftLockAmount = 0;
   let shiftAvailable = false;
   let shiftActive = false;
@@ -237,7 +251,7 @@ function installGameplayUi() {
   let shiftDetailsAnnouncedThisRace = false;
   let previousTime = performance.now();
   const TOP_ZONE_SHARE = 0.32;
-  const BRAKE_ZONE_START = 0.76;
+  const BRAKE_ZONE_START = REVERSE_BRAKE_ZONE_START;
   const DEFAULT_BOOST_DRAIN_SECONDS = 2.0;
   const BOOST_TANK_DURATION_MULTIPLIER = 1.5;
   const BOOST_RECHARGE_SECONDS = 4.2;
@@ -670,7 +684,7 @@ function installGameplayUi() {
       bubbleWidth: driftLockBubble.offsetWidth,
       lockSide: driftLockSideForHandedness(controlHandedness)
     });
-    if (lockRequested) return { zone: 'drift', lockRequested: true, shiftRequested: false };
+    if (lockRequested) return { zone: 'drift', lockRequested: true, shiftRequested: false, reverseRequested: false };
 
     const shiftRequested = pointerUsesShiftToggle({
       available: shiftAvailable,
@@ -684,10 +698,23 @@ function installGameplayUi() {
       bubbleWidth: shiftBubble.offsetWidth,
       shiftSide: driftLockSideForHandedness(controlHandedness)
     });
-    if (shiftRequested) return { zone: 'gas', lockRequested: false, shiftRequested: true };
+    if (shiftRequested) return { zone: 'gas', lockRequested: false, shiftRequested: true, reverseRequested: false };
+
+    const reverseInput = pointerUsesReverse({
+      brakeActive: driveZone === 'brake',
+      pointerX: event.clientX,
+      pointerY: event.clientY,
+      padLeft: rect.left,
+      padRight: rect.right,
+      padTop: rect.top,
+      padHeight: rect.height,
+      bubbleWidth: reverseBubble.offsetWidth,
+      reverseSide: driftLockSideForHandedness(controlHandedness)
+    });
+    if (reverseInput) return { zone: 'brake', lockRequested: false, shiftRequested: false, reverseRequested: true };
 
     const zone = zoneFromPointer(event, rect);
-    return { zone, lockRequested: false, shiftRequested: false };
+    return { zone, lockRequested: false, shiftRequested: false, reverseRequested: false };
   }
 
   function setBrakeInput(active) {
@@ -695,15 +722,26 @@ function installGameplayUi() {
     if (runtimeState) runtimeState.touchBrake = Boolean(active);
   }
 
-  function setDriveZone(nextZone, lockRequested = false, { announce = true } = {}) {
+  function setReverseInput(active) {
+    const runtimeState = globalThis.__turnRuntime?.state;
+    if (runtimeState) runtimeState.touchReverse = Boolean(active);
+  }
+
+  function setDriveZone(nextZone, lockRequested = false, {
+    announce = true,
+    reverse: requestedReverse = false
+  } = {}) {
     const nextLockRequested = nextZone === 'drift' && lockRequested === true;
+    const nextReverseRequested = nextZone === 'brake' && requestedReverse === true;
     const zoneChanged = nextZone !== driveZone;
     const lockRequestChanged = nextLockRequested !== driftLockRequested;
-    if (!zoneChanged && !lockRequestChanged) return;
+    const reverseRequestChanged = nextReverseRequested !== reverseRequested;
+    if (!zoneChanged && !lockRequestChanged && !reverseRequestChanged) return;
     const previousZone = driveZone;
     if (previousZone === 'boost' && nextZone !== 'boost') boostExhausted = false;
     driveZone = nextZone;
     driftLockRequested = nextLockRequested;
+    reverseRequested = nextReverseRequested;
     if (nextZone !== 'drift') {
       driftLockAmount = 0;
       globalThis.__turnDriftLockAmount = 0;
@@ -716,16 +754,20 @@ function installGameplayUi() {
     globalThis.__turnDriftHeld = nextZone === 'drift';
     boostRequested = nextZone === 'boost';
     setBrakeInput(nextZone === 'brake');
+    setReverseInput(nextReverseRequested);
     boostVisualDirty = boostVisualDirty || lockRequestChanged || zoneChanged;
 
     drivePad.dataset.driveZone = nextZone || '';
     driveStack.classList.toggle('is-drift-ready', nextZone === 'drift');
     driveStack.classList.toggle('is-drift-locking', nextLockRequested);
     driveStack.classList.toggle('is-gas-ready', nextZone === 'gas' && shiftAvailable);
+    driveStack.classList.toggle('is-brake-ready', nextZone === 'brake');
+    driveStack.classList.toggle('is-reversing', nextReverseRequested);
     gasButton.classList.toggle('is-active', nextZone === 'gas');
     driftZone.classList.toggle('is-active', nextZone === 'drift');
     boostZone.classList.toggle('is-active', nextZone === 'boost');
     brakeButton.classList.toggle('is-active', nextZone === 'brake');
+    reverseBubble.classList.toggle('is-active', nextReverseRequested);
 
     if (announce && nextZone && nextZone !== previousZone && (nextZone === 'drift' || nextZone === 'boost')) {
       safeVibrate(14);
@@ -738,6 +780,7 @@ function installGameplayUi() {
         zone: nextZone || '',
         previousZone: previousZone || '',
         lockRequested: nextLockRequested,
+        reverseRequested: nextReverseRequested,
         at: globalThis.performance?.now?.() || 0
       });
     }
@@ -754,12 +797,17 @@ function installGameplayUi() {
     const input = driveInputFromPointer(event);
     if (enteredShiftToggle(shiftPointerInside, input.shiftRequested)) toggleShift();
     shiftPointerInside = input.shiftRequested;
-    setDriveZone(input.zone, input.lockRequested);
+    setDriveZone(input.zone, input.lockRequested, { reverse: input.reverseRequested });
   }
 
   function releaseDrive(event) {
     if (event) consumeDrivePointer(event);
     if (drivePointerId === null || (event?.pointerId != null && event.pointerId !== drivePointerId)) {
+      if (drivePointerId === null && reverseRequested) {
+        directReversePointerId = null;
+        directReverseKey = '';
+        setDriveZone(null, false, { announce: false });
+      }
       restoreShiftControlAfterInterruption();
       return;
     }
@@ -783,7 +831,10 @@ function installGameplayUi() {
     shiftPointerInside = false;
     drivePad.setPointerCapture?.(event.pointerId);
     const input = driveInputFromPointer(event);
-    setDriveZone(input.zone, input.lockRequested, { announce: false });
+    setDriveZone(input.zone, input.lockRequested, {
+      announce: false,
+      reverse: input.reverseRequested
+    });
   }, { capture: true });
   drivePad.addEventListener('pointermove', updateDrivePointer, { capture: true });
   drivePad.addEventListener('pointerup', releaseDrive, { capture: true });
@@ -792,6 +843,43 @@ function installGameplayUi() {
     if (drivePointerId === event.pointerId) releaseDrive(event);
   });
   shiftBubble.addEventListener('click', () => toggleShift());
+
+  function engageDirectReverse(event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    setDriveZone('brake', false, { announce: false, reverse: true });
+  }
+
+  function releaseDirectReverse(event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    setDriveZone(null, false, { announce: false });
+  }
+
+  reverseBubble.addEventListener('pointerdown', (event) => {
+    if (directReversePointerId !== null || drivePointerId !== null) return;
+    directReversePointerId = event.pointerId;
+    reverseBubble.setPointerCapture?.(event.pointerId);
+    engageDirectReverse(event);
+  });
+  const releaseDirectReversePointer = (event) => {
+    if (directReversePointerId === null || (event?.pointerId != null && event.pointerId !== directReversePointerId)) return;
+    directReversePointerId = null;
+    releaseDirectReverse(event);
+  };
+  reverseBubble.addEventListener('pointerup', releaseDirectReversePointer);
+  reverseBubble.addEventListener('pointercancel', releaseDirectReversePointer);
+  reverseBubble.addEventListener('lostpointercapture', releaseDirectReversePointer);
+  reverseBubble.addEventListener('keydown', (event) => {
+    if (event.repeat || (event.key !== 'Enter' && event.key !== ' ')) return;
+    directReverseKey = event.key;
+    engageDirectReverse(event);
+  });
+  reverseBubble.addEventListener('keyup', (event) => {
+    if (!directReverseKey || event.key !== directReverseKey) return;
+    directReverseKey = '';
+    releaseDirectReverse(event);
+  });
 
   const resetRivalsButton = document.createElement('button');
   resetRivalsButton.type = 'button';
