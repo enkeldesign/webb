@@ -1,10 +1,11 @@
 const STYLE_ATTRIBUTE = 'data-turn-m8-card-scroll-fixes';
+const TRACK_RECORDS_EXPANDED_KEY = 'turn-track-records-expanded-v1';
 // Historical regression markers for the native-scroll/title-alignment bundles:
 // const FIX_ID = 'native-scroll-full-track-names-v4';
 // m8-home-card-scroll-fixes.css?build=${buildKey}-m8.9-track-title-alignment
 // const FIX_ID = 'native-scroll-full-track-names-v5';
 // m8-home-card-scroll-fixes.css?build=${buildKey}-m8.10-card-gap-rim
-const FIX_ID = 'shared-track-bests-v6';
+const FIX_ID = 'shared-track-bests-v7';
 
 function installStylesheet() {
   if (document.querySelector(`link[${STYLE_ATTRIBUTE}]`)) return;
@@ -28,6 +29,43 @@ function waitForFixedHome() {
       resolve(rail);
     });
     observer.observe(document.body, { childList: true, subtree: true });
+  });
+}
+
+function loadTrackRecordsExpandedPreference() {
+  try {
+    const stored = globalThis.localStorage?.getItem(TRACK_RECORDS_EXPANDED_KEY);
+    if (stored === 'true') return true;
+    if (stored === 'false') return false;
+  } catch (_) {}
+  return null;
+}
+
+function saveTrackRecordsExpandedPreference(expanded) {
+  try {
+    globalThis.localStorage?.setItem(TRACK_RECORDS_EXPANDED_KEY, expanded ? 'true' : 'false');
+  } catch (_) {}
+}
+
+function installTrackRecordsExpandedPreference(home) {
+  const toggle = home.querySelector('.m8-track-bests-toggle');
+  if (!toggle) return null;
+
+  const persistCurrentState = () => {
+    queueMicrotask(() => {
+      saveTrackRecordsExpandedPreference(home.classList.contains('is-showing-track-bests'));
+    });
+  };
+  toggle.addEventListener('click', persistCurrentState);
+
+  const stored = loadTrackRecordsExpandedPreference();
+  const expanded = home.classList.contains('is-showing-track-bests');
+  if (stored !== null && stored !== expanded) toggle.click();
+
+  return Object.freeze({
+    key: TRACK_RECORDS_EXPANDED_KEY,
+    toggle,
+    get expanded() { return home.classList.contains('is-showing-track-bests'); }
   });
 }
 
@@ -120,6 +158,8 @@ export async function installM8HomeCardScrollFixes() {
   home.classList.add('m8-home-card-scroll-fixes');
   home.dataset.m8CardScrollFixes = FIX_ID;
   document.documentElement.dataset.turnHomeCardScrollFixes = FIX_ID;
+  const trackRecordsPreference = installTrackRecordsExpandedPreference(home);
+  indicatorSync.sync();
 
   globalThis.__turnHomeCardScrollFixes = Object.freeze({
     id: FIX_ID,
@@ -127,6 +167,7 @@ export async function installM8HomeCardScrollFixes() {
     rail,
     viewport,
     indicator,
+    trackRecordsPreference,
     syncIndicator: indicatorSync.sync
   });
   return globalThis.__turnHomeCardScrollFixes;
