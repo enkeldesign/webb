@@ -8,10 +8,13 @@ const [
   fixedCss,
   scroll,
   scrollCss,
+  rowGapCss,
   scaleCss,
   trophyGate,
   screenReader,
-  rivalReset
+  rivalReset,
+  productionEntry,
+  labEntry
 ] = await Promise.all([
   fs.readFile(new URL('../turn/m8-home.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/app.js', import.meta.url), 'utf8'),
@@ -19,10 +22,13 @@ const [
   fs.readFile(new URL('../turn/m8-home-fixed-layout.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home-card-scroll-fixes.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-home-card-scroll-fixes.css', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/home-track-row-gap-r200.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/m8-record-car-scale.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/progression/m8-trophy-gate.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../turn/ui/startup-screen-reader-handoff-r529.js', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../turn/ui/home-rival-reset.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../turn/ui/home-rival-reset.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn/index.html', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../turn-lab/index.html', import.meta.url), 'utf8')
 ]);
 
 assert.match(home, /getBestDriftRecord/);
@@ -86,6 +92,14 @@ assert.match(scrollCss, /\.m8-track-rail \{[\s\S]*column-gap: clamp\(14px, 1\.4v
   'The good horizontal card spacing must remain while rows sit closer together');
 assert.doesNotMatch(scrollCss, /\.m8-track-rail \{[\s\S]{0,180}\n\s+gap: clamp\(14px, 1\.4vw, 16px\)/,
   'Track rows must not inherit the wider horizontal gap again');
+assert.ok(rowGapCss.includes('row-gap: clamp(8px, 0.85vw, 10px)'),
+  'The late-loaded compatibility stylesheet must preserve the compact row gap');
+assert.ok(!rowGapCss.includes('row-gap: 28px'),
+  'No late-loaded rule may restore the old oversized vertical gap');
+for (const entrypoint of [productionEntry, labEntry]) {
+  assert.ok(entrypoint.includes('home-track-row-gap-r200.css?revision=r208-compact-vertical-gap'),
+    'Production and TURN LAB must request the corrected stylesheet with a fresh cache key');
+}
 
 assert.match(scroll, /const hasOverflow = maximum > 2/);
 assert.match(scroll, /viewport\.classList\.toggle\('has-track-overflow', hasOverflow\)/);
