@@ -1,7 +1,43 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-const [index, releaseSource, app, selector, renderer, css, scaleCss, hud] = await Promise.all([
+import {
+  DRIFT_RECORDS_STORAGE_KEY,
+  getBestDriftRecord,
+  saveBestDriftRecord
+} from '../../turn/scoring/drift-records.js';
+import {
+  FLOW_RECORDS_STORAGE_KEY,
+  getBestFlowRecord,
+  saveBestFlowRecord
+} from '../../turn/scoring/flow-records.js';
+
+class MemoryStorage {
+  constructor() {
+    this.values = new Map();
+  }
+
+  getItem(key) {
+    return this.values.get(key) ?? null;
+  }
+
+  setItem(key, value) {
+    this.values.set(key, String(value));
+  }
+}
+
+const [
+  index,
+  releaseSource,
+  app,
+  selector,
+  renderer,
+  css,
+  scaleCss,
+  hud,
+  driftRuntime,
+  flowRuntime
+] = await Promise.all([
   fs.readFile(new URL('../../turn/index.html', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/release.json', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/app.js', import.meta.url), 'utf8'),
@@ -9,7 +45,9 @@ const [index, releaseSource, app, selector, renderer, css, scaleCss, hud] = awai
   fs.readFile(new URL('../../turn/ui/track-best-car.js', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/track-select-r61.css', import.meta.url), 'utf8'),
   fs.readFile(new URL('../../turn/m8-record-car-scale.css', import.meta.url), 'utf8'),
-  fs.readFile(new URL('../../turn/ui/hud.js', import.meta.url), 'utf8')
+  fs.readFile(new URL('../../turn/ui/hud.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/scoring/drift-attack-runtime.js', import.meta.url), 'utf8'),
+  fs.readFile(new URL('../../turn/scoring/flow-runtime.js', import.meta.url), 'utf8')
 ]);
 
 const release = JSON.parse(releaseSource);
@@ -35,6 +73,10 @@ assert.match(selector, /aria-hidden="true"/, 'The decorative model must not dupl
 assert.match(selector, /model\.hidden = false/, 'The model must appear only after its render succeeds');
 assert.match(selector, /for \(const track of TRACK_CATALOG\)/, 'Locked placeholder slots must never request a record thumbnail');
 
+assert.match(renderer, /getVehicleDefaultColor\(car\.id\)/,
+  'Legacy score records without paint must fall back to that car’s body default, not TURN’s global yellow');
+assert.match(renderer, /getVehicleDefaultSecondaryColor\(car\.id\)/,
+  'Legacy score records without paint must fall back to that car’s secondary default, not global white');
 assert.match(renderer, /createCarVisual\(\{[\s\S]*carId,[\s\S]*color,[\s\S]*secondaryColor/, 'The thumbnail must use the real local GLB and its recorded paint');
 assert.match(renderer, /preserveDrawingBuffer: true/, 'The one-shot WebGL render must remain capturable after drawing');
 assert.match(renderer, /croppedThumbnailDataUrl\(renderer\.domElement\)/, 'The rendered car must be cropped before becoming the reusable image');
@@ -46,6 +88,64 @@ assert.match(renderer, /renderQueue/, 'Multiple record cars must render serially
 assert.match(renderer, /renderer\.dispose\(\)/, 'Each one-shot renderer must release GPU resources');
 assert.match(renderer, /renderer\.forceContextLoss\?\.\(\)/, 'The temporary WebGL context must be explicitly released');
 assert.doesNotMatch(renderer, /requestAnimationFrame|setAnimationLoop|setInterval/, 'Record thumbnails must add no continuous render loop');
+
+for (const [runtimeSource, label] of [[driftRuntime, 'DRIFT'], [flowRuntime, 'FLOW']]) {
+  assert.match(runtimeSource, /carColor = state\.vehicleColor/,
+    `${label} bests must capture the body paint active when the score was set`);
+  assert.match(runtimeSource, /carSecondaryColor = state\.vehicleSecondaryColor/,
+    `${label} bests must capture the secondary paint active when the score was set`);
+  assert.match(runtimeSource, /carId,[\s\S]*carColor,[\s\S]*carSecondaryColor,[\s\S]*lapTime: time/,
+    `${label} runtime must persist the complete record-car paint pair`);
+}
+
+const driftPaintStorage = new MemoryStorage();
+saveBestDriftRecord({
+  trackId: 'countryside',
+  score: 5753,
+  carId: 'classic',
+  carColor: '#FFCC00',
+  carSecondaryColor: '#222222',
+  hitAt: 100
+}, driftPaintStorage);
+assert.deepEqual(getBestDriftRecord('countryside', driftPaintStorage), {
+  score: 5753,
+  carId: 'classic',
+  hitAt: 100,
+  carColor: '#ffcc00',
+  carSecondaryColor: '#222222'
+}, 'DRIFT records must preserve the car paint that produced the best');
+assert.equal(JSON.parse(driftPaintStorage.getItem(DRIFT_RECORDS_STORAGE_KEY)).version, 2);
+
+const flowPaintStorage = new MemoryStorage();
+saveBestFlowRecord({
+  trackId: 'countryside',
+  score: 6037,
+  carId: 'race',
+  carColor: '#5D503F',
+  carSecondaryColor: '#222222',
+  hitAt: 200
+}, flowPaintStorage);
+assert.deepEqual(getBestFlowRecord('countryside', flowPaintStorage), {
+  score: 6037,
+  carId: 'race',
+  hitAt: 200,
+  carColor: '#5d503f',
+  carSecondaryColor: '#222222'
+}, 'FLOW records must preserve the car paint that produced the best');
+assert.equal(JSON.parse(flowPaintStorage.getItem(FLOW_RECORDS_STORAGE_KEY)).version, 2);
+
+const legacyPaintStorage = new MemoryStorage();
+legacyPaintStorage.setItem(DRIFT_RECORDS_STORAGE_KEY, JSON.stringify({
+  version: 1,
+  tracks: {
+    countryside: { score: 1000, carId: 'classic', hitAt: 1 }
+  }
+}));
+assert.deepEqual(getBestDriftRecord('countryside', legacyPaintStorage), {
+  score: 1000,
+  carId: 'classic',
+  hitAt: 1
+}, 'Paint-aware record normalization must keep pre-paint DRIFT saves readable');
 
 assert.match(bestLayoutBlock, /grid-template-columns: max-content max-content;/, 'BEST copy and car must use content-sized columns');
 assert.match(bestLayoutBlock, /justify-content: start;/, 'The BEST cluster must remain left anchored');
@@ -83,4 +183,4 @@ assert.ok(
 );
 assert.doesNotMatch(hud, /queueMicrotask|requestAnimationFrame|setInterval/, 'The player marker must remain part of the existing synchronous HUD paint');
 
-console.log(`TURN ${release.id} three-record Home cars and one top-layer canonical player marker passed.`);
+console.log(`TURN ${release.id} three-record Home cars, exact score paint and one top-layer canonical player marker passed.`);
