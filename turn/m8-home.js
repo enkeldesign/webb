@@ -26,6 +26,7 @@ const STEERING_MODE = Object.freeze({ MOTION: 'motion', MANUAL: 'manual' });
 const ICON_REVISION = '20260803-profile-512';
 const SCORE_FORMATTER = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
 const TRACK_RECORD_KINDS = Object.freeze(['time', 'drift', 'flow']);
+const TRACK_RECORDS_EXPANDED_KEY = 'turn-track-records-expanded-v1';
 
 let installed = false;
 let previewGeneration = 0;
@@ -81,6 +82,23 @@ function saveSteeringMode(mode) {
     localStorage.setItem(STEERING_MODE_KEY, normalized);
   } catch (_) {}
   return normalized;
+}
+
+function loadTrackRecordsExpandedPreference() {
+  try {
+    return localStorage.getItem(TRACK_RECORDS_EXPANDED_KEY) === 'true';
+  } catch (_) {
+    return false;
+  }
+}
+
+function saveTrackRecordsExpandedPreference(expanded) {
+  try {
+    localStorage.setItem(TRACK_RECORDS_EXPANDED_KEY, expanded ? 'true' : 'false');
+    return true;
+  } catch (_) {
+    return false;
+  }
 }
 
 function selectedVehicle(runtime) {
@@ -167,17 +185,19 @@ function renderTrackCard(track) {
         disabled
         style="--track-accent:${track.accent};--track-accent-soft:${track.accentSoft}"
       >
-        <span class="track-card-summary">
-          <span class="track-card-choice">
-            <span class="track-card-choice-marker" aria-hidden="true"></span>
-            <strong class="track-card-name">${track.name}</strong>
+        <span class="track-card-compact">
+          <span class="track-card-summary">
+            <span class="track-card-choice">
+              <span class="track-card-choice-marker" aria-hidden="true"></span>
+              <strong class="track-card-name">${track.name}</strong>
+            </span>
+            <strong class="track-card-difficulty">LOCKED</strong>
           </span>
-          <span class="track-card-best track-card-coming-soon">
-            <span class="track-card-best-copy"><span>BEST:</span><strong>COMING SOON</strong></span>
-          </span>
-          <strong class="track-card-difficulty">LOCKED</strong>
+          <span class="track-card-preview" aria-hidden="true">${makeLockedPreviewSvg()}</span>
         </span>
-        <span class="track-card-preview" aria-hidden="true">${makeLockedPreviewSvg()}</span>
+        <span class="track-card-best track-card-coming-soon">
+          <span class="track-card-best-copy"><span>BEST:</span><strong>COMING SOON</strong></span>
+        </span>
       </button>`;
   }
 
@@ -191,20 +211,22 @@ function renderTrackCard(track) {
       aria-pressed="false"
       style="--track-accent:${track.accent};--track-accent-soft:${track.accentSoft}"
     >
-      <span class="track-card-summary">
-        <span class="track-card-choice">
-          <span class="track-card-choice-marker" aria-hidden="true"></span>
-          <strong class="track-card-name">${track.name.toUpperCase()}</strong>
+      <span class="track-card-compact">
+        <span class="track-card-summary">
+          <span class="track-card-choice">
+            <span class="track-card-choice-marker" aria-hidden="true"></span>
+            <strong class="track-card-name">${track.name.toUpperCase()}</strong>
+          </span>
+          <strong class="track-card-difficulty">${track.difficulty}</strong>
         </span>
-        <span class="track-card-best track-card-records" data-track-best="${track.id}" hidden>
-          <strong class="track-card-records-title">BEST:</strong>
-          ${renderTrackRecord('time', 'TIME', 'track-card-best-time')}
-          ${renderTrackRecord('drift', 'DRIFT', 'track-card-best-drift')}
-          ${renderTrackRecord('flow', 'FLOW', 'track-card-best-flow')}
-        </span>
-        <strong class="track-card-difficulty">${track.difficulty}</strong>
+        <span class="track-card-preview" aria-hidden="true">${makePreviewSvg(track.id, track.accent)}</span>
       </span>
-      <span class="track-card-preview" aria-hidden="true">${makePreviewSvg(track.id, track.accent)}</span>
+      <span class="track-card-best track-card-records" data-track-best="${track.id}" hidden>
+        <strong class="track-card-records-title">BEST:</strong>
+        ${renderTrackRecord('time', 'TIME', 'track-card-best-time')}
+        ${renderTrackRecord('drift', 'DRIFT', 'track-card-best-drift')}
+        ${renderTrackRecord('flow', 'FLOW', 'track-card-best-flow')}
+      </span>
     </button>`;
 }
 
@@ -597,7 +619,6 @@ function installLotRaceGate({ raceSession, getSteeringMode, onAccessReady }) {
       raceButton.focus();
     }
   };
-
   raceButton.addEventListener('click', gate, true);
   return () => raceButton.removeEventListener('click', gate, true);
 }
@@ -617,6 +638,7 @@ export async function installM8HomeNavigation() {
 
   const home = document.createElement('section');
   home.className = 'm8-home';
+  home.classList.toggle('is-showing-track-bests', loadTrackRecordsExpandedPreference());
   home.setAttribute('aria-labelledby', 'm8HomeTitle');
   home.innerHTML = `
     <div class="m8-home-shell">
@@ -740,9 +762,16 @@ export async function installM8HomeNavigation() {
     }));
   }
 
-  function toggleTrackBests() {
-    home.classList.toggle('is-showing-track-bests');
+  function setTrackRecordsExpanded(expanded, { persist = false } = {}) {
+    const next = Boolean(expanded);
+    home.classList.toggle('is-showing-track-bests', next);
+    if (persist) saveTrackRecordsExpandedPreference(next);
     syncTrackBestVisibility();
+    return next;
+  }
+
+  function toggleTrackBests() {
+    setTrackRecordsExpanded(!trackRecordsAreExpanded(home), { persist: true });
   }
 
   function showHome({ focus = false } = {}) {
@@ -851,7 +880,8 @@ export async function installM8HomeNavigation() {
     continueToTrack,
     leaveRaceForHome,
     getSelectedTrackId: () => selectedTrackId,
-    getSteeringMode: loadSteeringMode
+    getSteeringMode: loadSteeringMode,
+    getTrackRecordsExpanded: () => trackRecordsAreExpanded(home)
   });
 
   syncRaceSettingsVisibility();
