@@ -106,6 +106,12 @@ assert.equal(element(fixture, '[data-score-feedback-current]').textContent, '0')
 assert.equal(fixture.root.dataset.driftGaugeVisible, 'true');
 assert.equal(fixture.root.dataset.driftGaugeExtended, 'false',
   'An available zero-state DRIFT row keeps its paper but retracts its gauge');
+assert.equal(fixture.root.dataset.driftComboTier, '1');
+assert.equal(
+  element(fixture, '[data-score-feedback-meter-fill]').style.getPropertyValue('--score-feedback-gauge-fill-a'),
+  'hsl(195 44% 50%)',
+  'DRIFT starts with a deliberately muted cyan at x1'
+);
 
 const driftState = {
   active: true,
@@ -133,6 +139,12 @@ assert.equal(
 assert.equal(fixture.root.dataset.driftGaugeVisible, 'true');
 assert.equal(fixture.root.dataset.driftGaugeExtended, 'true',
   'The DRIFT gauge extends as soon as it has a non-zero fill');
+assert.equal(fixture.root.dataset.driftComboTier, '3');
+assert.equal(
+  element(fixture, '[data-score-feedback-meter-fill]').style.getPropertyValue('--score-feedback-gauge-fill-a'),
+  'hsl(195 60% 50%)',
+  'DRIFT cyan gains saturation at each higher combo tier'
+);
 assert.equal(fixture.root.dataset.flowGaugeVisible, 'false');
 assert.equal(fixture.root.dataset.flowGaugeExtended, 'false');
 assert.equal(fixture.root.dataset.gaugeChannel, 'drift');
@@ -213,7 +225,28 @@ assert.equal(
 assert.equal(fixture.root.dataset.flowGaugeVisible, 'true');
 assert.equal(fixture.root.dataset.flowGaugeExtended, 'true',
   'FLOW owns an independently extending gauge');
+assert.equal(fixture.root.dataset.flowComboTier, '5',
+  'Fractional FLOW multipliers use their floored saturation tier');
+assert.equal(
+  element(fixture, '[data-score-feedback-flow-meter-fill]').style.getPropertyValue('--score-feedback-gauge-fill-a'),
+  'hsl(339 76% 65%)',
+  'FLOW pink gains saturation with the combo tier'
+);
 assert.equal(fixture.root.dataset.flowHeat, 'hot');
+
+feedback.updateState(SCORE_FEEDBACK_CHANNEL.FLOW, {
+  ...flowState,
+  active: false,
+  intensity: 0
+}, 700);
+assert.equal(
+  element(fixture, '[data-score-feedback-flow-meter-fill]').style.getPropertyValue('--score-feedback-progress'),
+  '0',
+  'An idle moment inside a FLOW combo can reach the true zero gauge state'
+);
+assert.equal(fixture.root.dataset.flowGaugeExtended, 'true',
+  'FLOW keeps an empty gauge extended while its x2+ combo remains alive');
+feedback.updateState(SCORE_FEEDBACK_CHANNEL.FLOW, flowState, 800);
 
 feedback.publishEvent(SCORE_FEEDBACK_CHANNEL.DRIFT, SCORE_FEEDBACK_EVENT.BANK, {
   label: 'DRIFT +2,840 ×4',
@@ -267,22 +300,57 @@ assert.equal(fixture.root.hidden, false, 'The DRIFT instrument does not flicker 
 assert.equal(element(fixture, '[data-score-feedback-current]').textContent, '0');
 assert.equal(element(fixture, '[data-score-feedback-total]').textContent, '4,820');
 assert.equal(fixture.root.dataset.driftGaugeExtended, 'false',
-  'A quiet DRIFT row preserves its lap total while retracting only the black gauge');
+  'A quiet x1 DRIFT row preserves its lap total while retracting only the black gauge');
 assert.equal(
   element(fixture, '[data-score-feedback-meter-fill]').style.getPropertyValue('--score-feedback-progress'),
   '0'
 );
+
+feedback.updateState(SCORE_FEEDBACK_CHANNEL.DRIFT, {
+  active: false,
+  score: 4820,
+  unbanked: 0,
+  multiplier: 2,
+  intensity: 0,
+  phase: 'quiet',
+  label: 'DRIFT'
+}, 4300);
+assert.equal(fixture.root.dataset.driftGaugeExtended, 'true',
+  'An empty DRIFT gauge remains extended while an x2+ combo is alive');
+assert.equal(fixture.root.dataset.driftComboTier, '2');
+assert.equal(
+  element(fixture, '[data-score-feedback-meter-fill]').style.getPropertyValue('--score-feedback-progress'),
+  '0',
+  'The held-open gauge exposes the existing cyan zero residue rather than fake fill'
+);
+assert.equal(
+  element(fixture, '[data-score-feedback-meter-fill]').style.getPropertyValue('--score-feedback-gauge-fill-a'),
+  'hsl(195 52% 50%)'
+);
+
+feedback.updateState(SCORE_FEEDBACK_CHANNEL.DRIFT, {
+  active: false,
+  score: 4820,
+  unbanked: 0,
+  multiplier: 1,
+  intensity: 0,
+  phase: 'quiet',
+  label: 'DRIFT'
+}, 4400);
+assert.equal(fixture.root.dataset.driftGaugeExtended, 'false',
+  'Normal gauge retraction resumes as soon as the combo falls below x2');
+
 feedback.publishEvent(SCORE_FEEDBACK_CHANNEL.DRIFT, SCORE_FEEDBACK_EVENT.LOSS, {
   score: 120
-}, 4300);
-feedback.dismissEvent(SCORE_FEEDBACK_CHANNEL.DRIFT, 4350);
+}, 4500);
+feedback.dismissEvent(SCORE_FEEDBACK_CHANNEL.DRIFT, 4550);
 assert.equal(element(fixture, '[data-score-feedback-callout]').hidden, true);
 assert.equal(element(fixture, '[data-score-feedback-total]').textContent, '4,820',
   'Dismissing stale feedback must not clear the persistent lap total');
-feedback.clearChannel(SCORE_FEEDBACK_CHANNEL.DRIFT, 4400);
+feedback.clearChannel(SCORE_FEEDBACK_CHANNEL.DRIFT, 4600);
 assert.equal(fixture.root.hidden, false, 'Clearing a visible channel leaves its zero-state instrument mounted');
 assert.equal(element(fixture, '[data-score-feedback-total]').textContent, '0');
-feedback.setChannelVisible(SCORE_FEEDBACK_CHANNEL.DRIFT, false, 4500);
+feedback.setChannelVisible(SCORE_FEEDBACK_CHANNEL.DRIFT, false, 4700);
 assert.equal(fixture.root.hidden, true, 'The HUD setting still removes the scoring instrument');
 assert.equal(
   element(fixture, '[data-score-feedback-flow-meter-fill]').style.getPropertyValue('--score-feedback-progress'),
@@ -303,6 +371,12 @@ assert.doesNotMatch(source, /createElement|appendChild|replaceChildren/,
   'ScoreFeedback must reuse the fixed document nodes');
 assert.match(source, /data-score-feedback-flow-meter-fill/,
   'The shared engine must already understand the optional future FLOW gauge mount');
+assert.match(source, /GAUGE_SATURATION_AT_X1 = 44/,
+  'The combo palette starts muted instead of at full saturation');
+assert.match(source, /driftGaugeProgress > 0 \|\| driftComboHeld/,
+  'DRIFT gauge persistence is keyed to fill or a live x2+ combo');
+assert.match(source, /flowGaugeProgress > 0 \|\| flowComboHeld/,
+  'FLOW uses the same combo-held gauge rule');
 assert.match(css, /--score-feedback-paper-height: 104px/,
   'Each scoring paper row has a stable gameplay height');
 assert.match(css, /--score-feedback-gauge-height: calc\(var\(--score-feedback-paper-height\) - 14px\)/,
