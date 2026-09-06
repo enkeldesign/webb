@@ -6,7 +6,7 @@ import { createDriftAttackScorer } from './drift-attack.js';
 import {
   getBestDriftRecord,
   saveBestDriftRecord
-} from './drift-records.js';
+} from './drift-records.js?revision=r219-record-paint';
 
 export const DRIFT_ATTACK_FEATURE_ID = 'drift-attack';
 export const DRIFT_HUD_STORAGE_KEY = 'turn-drift-hud-v1';
@@ -176,7 +176,9 @@ export function createDriftAttackRuntime({
     valid = false,
     ranked = true,
     trackId = state.trackId,
-    carId = state.vehicleId
+    carId = state.vehicleId,
+    carColor = state.vehicleColor,
+    carSecondaryColor = state.vehicleSecondaryColor
   } = {}) {
     if (!enabled) return Object.freeze({ available: false });
 
@@ -188,6 +190,8 @@ export function createDriftAttackRuntime({
         trackId,
         score: scoreResult.score,
         carId,
+        carColor,
+        carSecondaryColor,
         lapTime: time,
         hitAt: wallClock()
       }, targetStorage)

@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { createCarVisual } from '../vehicle/car-models.js?build=20260720-r22';
 import {
   getCarDefinition,
+  getVehicleDefaultColor,
+  getVehicleDefaultSecondaryColor,
   normalizeVehicleColor,
   normalizeVehicleSecondaryColor
 } from '../vehicle/catalog.js?build=20260724-r59';
@@ -41,8 +43,14 @@ async function waitForHomeThumbnailSlot() {
 
 export function renderBestCarThumbnail(bestLap) {
   const car = getCarDefinition(bestLap?.carId);
-  const color = normalizeVehicleColor(bestLap?.carColor);
-  const secondaryColor = normalizeVehicleSecondaryColor(bestLap?.carSecondaryColor);
+  const color = normalizeVehicleColor(
+    bestLap?.carColor,
+    getVehicleDefaultColor(car.id)
+  );
+  const secondaryColor = normalizeVehicleSecondaryColor(
+    bestLap?.carSecondaryColor,
+    getVehicleDefaultSecondaryColor(car.id)
+  );
   const cacheKey = `${car.id}:${color}:${secondaryColor}`;
 
   if (!thumbnailCache.has(cacheKey)) {

@@ -9,7 +9,7 @@ import {
 import {
   getBestFlowRecord,
   saveBestFlowRecord
-} from './flow-records.js';
+} from './flow-records.js?revision=r219-record-paint';
 
 export const FLOW_FEATURE_ID = 'flow';
 export const FLOW_HUD_STORAGE_KEY = 'turn-flow-hud-v1';
@@ -404,7 +404,9 @@ export function createFlowRuntime({
     valid = false,
     ranked = true,
     trackId = state.trackId,
-    carId = state.vehicleId
+    carId = state.vehicleId,
+    carColor = state.vehicleColor,
+    carSecondaryColor = state.vehicleSecondaryColor
   } = {}) {
     if (!enabled) return Object.freeze({ available: false });
     const scoreResult = scorer.completeLap(now);
@@ -415,6 +417,8 @@ export function createFlowRuntime({
         trackId,
         score: scoreResult.score,
         carId,
+        carColor,
+        carSecondaryColor,
         lapTime: time,
         hitAt: wallClock()
       }, targetStorage)
